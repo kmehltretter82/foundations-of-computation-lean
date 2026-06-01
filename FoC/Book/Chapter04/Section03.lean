@@ -119,11 +119,39 @@ theorem parse_tree_selected_subtree_frontier_context
         Word.Concat u (Word.Concat (CFG.NonterminalSubtree.frontier subtree) v) :=
   CFG.ParseTree.longestNonterminalSubtree_get_frontier_context tree hget
 
+-- Book: Chapter 4, Section 4.5, among parse trees with a fixed frontier and
+-- root symbol, one can choose a tree of minimal node count.
+theorem parse_tree_exists_minimal_for_frontier
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : CFG.ParseTree G s) :
+    exists minTree : CFG.ParseTree G s,
+      CFG.ParseTree.frontier minTree = CFG.ParseTree.frontier tree ∧
+      CFG.ParseTree.MinimalForFrontier minTree :=
+  CFG.ParseTree.exists_minimal_for_frontier tree
+
 -- Book: Chapter 4, Section 4.3, parse tree for the start symbol generates a word.
 theorem parse_tree_generates_language {G : CFG terminal nonterminal}
     {w : Word terminal} (h : CFG.ParseTreeGenerates G w) :
     w ∈ CFG.GeneratedLanguage G :=
   CFG.parseTree_generates_language h
+
+-- Book: Chapter 4, Section 4.3, a derivation of a terminal word determines
+-- a parse forest with that frontier.
+theorem parse_forest_of_derives_terminal
+    {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} {w : Word terminal}
+    (h : CFG.Derives G sent (SententialForm.terminalWord w)) :
+    exists forest : CFG.ParseForest G sent,
+      CFG.ParseForest.frontier forest = w :=
+  CFG.ParseForest.of_derives_terminal h
+
+-- Book: Chapter 4, Section 4.3, generated-language membership determines a
+-- parse tree rooted at the start symbol.
+theorem parse_tree_of_generated_language {G : CFG terminal nonterminal}
+    {w : Word terminal} (h : w ∈ CFG.GeneratedLanguage G) :
+    exists tree : CFG.ParseTree G (Symbol.nonterminal G.start),
+      CFG.ParseTree.frontier tree = w :=
+  CFG.ParseTree.of_generates_language h
 
 -- Book: Chapter 4, Section 4.3, ambiguity via two parse trees.
 def AmbiguousGrammar (G : CFG terminal nonterminal) : Prop :=

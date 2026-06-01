@@ -57,6 +57,24 @@ def ParseForest.frontier {G : CFG terminal nonterminal}
 
 end
 
+def ParseForest.append {G : CFG terminal nonterminal}
+    {left right : SententialForm terminal nonterminal}
+    (leftForest : ParseForest G left) (rightForest : ParseForest G right) :
+    ParseForest G (left ++ right) :=
+  match leftForest with
+  | ParseForest.nil => rightForest
+  | ParseForest.cons s rest tree forest =>
+      ParseForest.cons s (rest ++ right) tree
+        (ParseForest.append forest rightForest)
+
+def ParseForest.terminalWord {G : CFG terminal nonterminal} :
+    (w : Word terminal) ->
+      ParseForest G (SententialForm.terminalWord (nt := nonterminal) w)
+  | [] => ParseForest.nil
+  | a :: rest =>
+      ParseForest.cons (Symbol.terminal a) (SententialForm.terminalWord rest)
+        (ParseTree.leaf a) (ParseForest.terminalWord rest)
+
 namespace NonterminalSubtree
 
 def frontier {G : CFG terminal nonterminal} (subtree : NonterminalSubtree G) :
@@ -80,6 +98,36 @@ def ParseForest.height {G : CFG terminal nonterminal}
       Nat.max (ParseTree.height tree) (ParseForest.height rest)
 
 end
+
+mutual
+
+def ParseTree.nodeCount {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} : ParseTree G s -> Nat
+  | ParseTree.leaf _ => 1
+  | ParseTree.node _ _ _ children => ParseForest.nodeCount children + 1
+
+def ParseForest.nodeCount {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} :
+    ParseForest G sent -> Nat
+  | ParseForest.nil => 0
+  | ParseForest.cons _ _ tree rest =>
+      ParseTree.nodeCount tree + ParseForest.nodeCount rest
+
+end
+
+namespace NonterminalSubtree
+
+def nodeCount {G : CFG terminal nonterminal} (subtree : NonterminalSubtree G) :
+    Nat :=
+  ParseTree.nodeCount subtree.2
+
+end NonterminalSubtree
+
+def ParseTree.MinimalForFrontier {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s) : Prop :=
+  forall other : ParseTree G s,
+    ParseTree.frontier other = ParseTree.frontier tree ->
+      ParseTree.nodeCount tree <= ParseTree.nodeCount other
 
 mutual
 
@@ -163,6 +211,147 @@ theorem ParseForest.derives {G : CFG terminal nonterminal}
       exact hAll
 
 end
+
+mutual
+
+theorem ParseTree.frontier_append_dummy {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (_tree : ParseTree G s) : True := by
+  trivial
+
+theorem ParseForest.frontier_append {G : CFG terminal nonterminal}
+    {left right : SententialForm terminal nonterminal}
+    (leftForest : ParseForest G left) (rightForest : ParseForest G right) :
+    ParseForest.frontier (ParseForest.append leftForest rightForest) =
+      Word.Concat (ParseForest.frontier leftForest)
+        (ParseForest.frontier rightForest) := by
+  cases leftForest with
+  | nil =>
+      rfl
+  | cons s rest tree forest =>
+      have ih := ParseForest.frontier_append forest rightForest
+      simp [ParseForest.append, ParseForest.frontier, ih, Word.Concat,
+        List.append_assoc]
+
+end
+
+theorem ParseForest.frontier_terminalWord {G : CFG terminal nonterminal}
+    (w : Word terminal) :
+    ParseForest.frontier
+        (ParseForest.terminalWord (G := G) (nonterminal := nonterminal) w) = w := by
+  induction w with
+  | nil =>
+      rfl
+  | cons a rest ih =>
+      simp [ParseForest.terminalWord, ParseForest.frontier, ParseTree.frontier,
+        Word.Concat, ih]
+
+theorem ParseForest.exists_split_append {G : CFG terminal nonterminal}
+    {left right : SententialForm terminal nonterminal}
+    (forest : ParseForest G (left ++ right)) :
+    exists leftForest : ParseForest G left,
+      exists rightForest : ParseForest G right,
+        ParseForest.frontier forest =
+          Word.Concat (ParseForest.frontier leftForest)
+            (ParseForest.frontier rightForest) := by
+  induction left with
+  | nil =>
+      exact ⟨ParseForest.nil, forest, rfl⟩
+  | cons s rest ih =>
+      cases forest with
+      | cons _ _ tree forestTail =>
+          cases ih forestTail with
+          | intro leftTail hleftTail =>
+              cases hleftTail with
+              | intro rightForest hrightForest =>
+                  exists ParseForest.cons s rest tree leftTail
+                  exists rightForest
+                  simp [ParseForest.frontier, hrightForest, Word.Concat,
+                    List.append_assoc]
+
+theorem ParseForest.of_yields_of_forest {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (hstep : Yields G x y) (forestY : ParseForest G y) :
+    exists forestX : ParseForest G x,
+      ParseForest.frontier forestX = ParseForest.frontier forestY := by
+  cases hstep with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases hv with
+          | intro A hA =>
+              cases hA with
+              | intro rhs hrhs =>
+                  cases hrhs with
+                  | intro hprod hrest =>
+                      cases hrest with
+                      | intro hx hy =>
+                          subst x
+                          subst y
+                          cases ParseForest.exists_split_append
+                              (left := u ++ rhs) (right := v) forestY with
+                          | intro forestLeft hforestLeft =>
+                              cases hforestLeft with
+                              | intro forestV houterSplit =>
+                                  cases ParseForest.exists_split_append
+                                      (left := u) (right := rhs) forestLeft with
+                                  | intro forestU hforestU =>
+                                      cases hforestU with
+                                      | intro forestRhs hinnerSplit =>
+                                          let treeA :=
+                                            ParseTree.node A rhs hprod forestRhs
+                                          let forestA :=
+                                            ParseForest.cons
+                                              (Symbol.nonterminal A) []
+                                              treeA ParseForest.nil
+                                          let forestX :=
+                                            ParseForest.append
+                                              (ParseForest.append forestU forestA)
+                                              forestV
+                                          exists forestX
+                                          rw [houterSplit, hinnerSplit]
+                                          simp [forestX, treeA,
+                                            forestA,
+                                            ParseForest.frontier_append,
+                                            ParseForest.frontier,
+                                            ParseTree.frontier, Word.Concat,
+                                            List.append_assoc]
+
+theorem ParseForest.of_derives_toWord {G : CFG terminal nonterminal}
+    {sf out : SententialForm terminal nonterminal} {w : Word terminal}
+    (h : Derives G sf out) (hout : SententialForm.toWord? out = some w) :
+    exists forest : ParseForest G sf, ParseForest.frontier forest = w := by
+  induction h with
+  | refl x =>
+      have hx : x = SententialForm.terminalWord w :=
+        SententialForm.toWord?_some_eq_terminalWord hout
+      subst x
+      exact ⟨ParseForest.terminalWord w, ParseForest.frontier_terminalWord w⟩
+  | step hstep hder ih =>
+      cases ih hout with
+      | intro forestY hforestY =>
+          cases ParseForest.of_yields_of_forest hstep forestY with
+          | intro forestX hforestX =>
+              exists forestX
+              rw [hforestX, hforestY]
+
+theorem ParseForest.of_derives_terminal {G : CFG terminal nonterminal}
+    {sf : SententialForm terminal nonterminal} {w : Word terminal}
+    (h : Derives G sf (SententialForm.terminalWord w)) :
+    exists forest : ParseForest G sf, ParseForest.frontier forest = w :=
+  ParseForest.of_derives_toWord h (SententialForm.terminalWord_toWord w)
+
+theorem ParseTree.of_generates_language {G : CFG terminal nonterminal}
+    {w : Word terminal} (h : w ∈ GeneratedLanguage G) :
+    exists tree : ParseTree G (Symbol.nonterminal G.start),
+      ParseTree.frontier tree = w := by
+  cases ParseForest.of_derives_terminal h with
+  | intro forest hforest =>
+      cases forest with
+      | cons _ _ tree rest =>
+          cases rest with
+          | nil =>
+              exists tree
+              simpa [ParseForest.frontier, Word.Concat] using hforest
 
 mutual
 
@@ -446,6 +635,50 @@ theorem ParseTree.longestNonterminalSubtree_get_frontier_context
         Word.Concat u (Word.Concat (NonterminalSubtree.frontier subtree) v) :=
   ParseTree.longestNonterminalSubtree_frontier_context tree
     (List.mem_of_getElem? hget)
+
+theorem ParseTree.exists_minimal_for_frontier
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s) :
+    exists minTree : ParseTree G s,
+      ParseTree.frontier minTree = ParseTree.frontier tree ∧
+      ParseTree.MinimalForFrontier minTree := by
+  classical
+  let P : Nat -> Prop := fun n =>
+    forall {s : Symbol terminal nonterminal} (tree : ParseTree G s),
+      ParseTree.nodeCount tree = n ->
+        exists minTree : ParseTree G s,
+          ParseTree.frontier minTree = ParseTree.frontier tree ∧
+          ParseTree.MinimalForFrontier minTree
+  have hmain : forall n, P n := by
+    intro n
+    exact Nat.strongRecOn n (motive := P) (fun n ih => by
+        intro s tree hcount
+        by_cases hmin : ParseTree.MinimalForFrontier tree
+        · exact ⟨tree, rfl, hmin⟩
+        · have hsmaller :
+              exists other : ParseTree G s,
+                ParseTree.frontier other = ParseTree.frontier tree ∧
+                ParseTree.nodeCount other < ParseTree.nodeCount tree := by
+            apply Classical.byContradiction
+            intro hnone
+            apply hmin
+            intro other hfrontier
+            by_cases hlt : ParseTree.nodeCount other < ParseTree.nodeCount tree
+            · exact False.elim (hnone ⟨other, hfrontier, hlt⟩)
+            · exact Nat.le_of_not_gt hlt
+          cases hsmaller with
+          | intro other hother =>
+              have hotherCount :
+                  ParseTree.nodeCount other < n := by
+                rw [← hcount]
+                exact hother.right
+              cases ih (ParseTree.nodeCount other) hotherCount other rfl with
+              | intro minTree hminTree =>
+                  exists minTree
+                  constructor
+                  · exact Eq.trans hminTree.left hother.left
+                  · exact hminTree.right)
+  exact hmain (ParseTree.nodeCount tree) tree rfl
 
 mutual
 
