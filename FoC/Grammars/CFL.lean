@@ -34,6 +34,18 @@ theorem concatGrammar_generates (G : CFG terminal left) (H : CFG terminal right)
     Word.Concat x y ∈ CFG.GeneratedLanguage (CFG.ConcatGrammar G H) :=
   CFG.concat_generates G H hx hy
 
+theorem concatGrammar_generates_inv (G : CFG terminal left) (H : CFG terminal right)
+    {w : Word terminal}
+    (h : w ∈ CFG.GeneratedLanguage (CFG.ConcatGrammar G H)) :
+    w ∈ Language.Concat (CFG.GeneratedLanguage G) (CFG.GeneratedLanguage H) :=
+  CFG.concat_generates_inv G H h
+
+theorem concatGrammar_language_exact (G : CFG terminal left) (H : CFG terminal right)
+    (w : Word terminal) :
+    w ∈ CFG.GeneratedLanguage (CFG.ConcatGrammar G H) <->
+      w ∈ Language.Concat (CFG.GeneratedLanguage G) (CFG.GeneratedLanguage H) :=
+  CFG.concat_generated_language_exact G H w
+
 theorem starGrammar_generates_empty (G : CFG terminal nt) :
     ([] : Word terminal) ∈ CFG.GeneratedLanguage (CFG.StarGrammar G) :=
   CFG.star_generates_empty G

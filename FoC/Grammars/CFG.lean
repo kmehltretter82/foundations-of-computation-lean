@@ -122,6 +122,80 @@ theorem terminalWord_toWord (w : Word term) :
         | none => none) = some (a :: rest)
       rw [ih]
 
+theorem toWord?_mapNonterminal (f : nt -> nt')
+    (w : SententialForm term nt) :
+    toWord? (mapNonterminal f w) = toWord? w := by
+  induction w with
+  | nil => rfl
+  | cons s rest ih =>
+      cases s with
+      | terminal a =>
+          change (match toWord? (mapNonterminal f rest) with
+            | some w => some (a :: w)
+            | none => none) =
+            match toWord? rest with
+            | some w => some (a :: w)
+            | none => none
+          rw [ih]
+      | nonterminal A =>
+          rfl
+
+theorem toWord?_append_some {x y : SententialForm term nt}
+    {w : Word term} (h : toWord? (x ++ y) = some w) :
+    exists wx wy, toWord? x = some wx ∧ toWord? y = some wy ∧
+      w = Word.Concat wx wy := by
+  induction x generalizing w with
+  | nil =>
+      exists []
+      exists w
+  | cons s rest ih =>
+      cases s with
+      | terminal a =>
+          simp [toWord?] at h
+          cases hrest : toWord? (rest ++ y) with
+          | none =>
+              rw [hrest] at h
+              cases h
+          | some tail =>
+              rw [hrest] at h
+              cases h
+              cases ih hrest with
+              | intro wx hwx =>
+                  cases hwx with
+                  | intro wy hwy =>
+                      exists a :: wx
+                      exists wy
+                      constructor
+                      · simp [toWord?, hwy.left]
+                      constructor
+                      · exact hwy.right.left
+                      · simp [Word.Concat, hwy.right.right]
+      | nonterminal A =>
+          cases h
+
+theorem toWord?_some_eq_terminalWord {x : SententialForm term nt}
+    {w : Word term} (h : toWord? x = some w) :
+    x = terminalWord w := by
+  induction x generalizing w with
+  | nil =>
+      cases h
+      rfl
+  | cons s rest ih =>
+      cases s with
+      | terminal a =>
+          simp [toWord?] at h
+          cases hrest : toWord? rest with
+          | none =>
+              rw [hrest] at h
+              cases h
+          | some tail =>
+              rw [hrest] at h
+              cases h
+              rw [ih hrest]
+              rfl
+      | nonterminal A =>
+          cases h
+
 end SententialForm
 
 structure CFG (terminal : Type u) (nonterminal : Type v) where
@@ -336,6 +410,74 @@ def inRightForm (w : SententialForm terminal right) :
     SententialForm terminal (SumStart left right) :=
   SententialForm.mapNonterminal SumStart.inRight w
 
+theorem inLeftForm_no_start (x : SententialForm terminal left) :
+    ¬ Symbol.nonterminal (SumStart.start : SumStart left right) ∈
+      inLeftForm (right := right) x := by
+  induction x with
+  | nil =>
+      intro h
+      cases h
+  | cons s rest ih =>
+      intro h
+      cases s with
+      | terminal a =>
+          cases h with
+          | tail _ htail => exact ih htail
+      | nonterminal A =>
+          cases h with
+          | tail _ htail => exact ih htail
+
+theorem inRightForm_no_start (y : SententialForm terminal right) :
+    ¬ Symbol.nonterminal (SumStart.start : SumStart left right) ∈
+      inRightForm (left := left) y := by
+  induction y with
+  | nil =>
+      intro h
+      cases h
+  | cons s rest ih =>
+      intro h
+      cases s with
+      | terminal a =>
+          cases h with
+          | tail _ htail => exact ih htail
+      | nonterminal A =>
+          cases h with
+          | tail _ htail => exact ih htail
+
+theorem inLeftForm_no_inRight (A : right) (x : SententialForm terminal left) :
+    ¬ Symbol.nonterminal (SumStart.inRight A : SumStart left right) ∈
+      inLeftForm x := by
+  induction x with
+  | nil =>
+      intro h
+      cases h
+  | cons s rest ih =>
+      intro h
+      cases s with
+      | terminal a =>
+          cases h with
+          | tail _ htail => exact ih htail
+      | nonterminal B =>
+          cases h with
+          | tail _ htail => exact ih htail
+
+theorem inRightForm_no_inLeft (A : left) (y : SententialForm terminal right) :
+    ¬ Symbol.nonterminal (SumStart.inLeft A : SumStart left right) ∈
+      inRightForm y := by
+  induction y with
+  | nil =>
+      intro h
+      cases h
+  | cons s rest ih =>
+      intro h
+      cases s with
+      | terminal a =>
+          cases h with
+          | tail _ htail => exact ih htail
+      | nonterminal B =>
+          cases h with
+          | tail _ htail => exact ih htail
+
 inductive UnionProduces (G : CFG terminal left) (H : CFG terminal right) :
     SumStart left right -> SententialForm terminal (SumStart left right) -> Prop where
   | chooseLeft :
@@ -426,6 +568,406 @@ def ConcatGrammar (G : CFG terminal left) (H : CFG terminal right) :
   produces := ConcatProduces G H
   nonterminalsFinite := SumStart.finite G.nonterminalsFinite H.nonterminalsFinite
 
+theorem inLeftForm_context_of_eq
+    {x : SententialForm terminal left} {y : SententialForm terminal right}
+    {u v : SententialForm terminal (SumStart left right)} {A : left}
+    (h : inLeftForm x ++ inRightForm y =
+      u ++ [Symbol.nonterminal (SumStart.inLeft A)] ++ v) :
+    exists ux vx,
+      x = ux ++ [Symbol.nonterminal A] ++ vx ∧
+      u = inLeftForm ux ∧
+      v = inLeftForm vx ++ inRightForm y := by
+  induction x generalizing u with
+  | nil =>
+      have hmem : Symbol.nonterminal (SumStart.inLeft A) ∈
+          inRightForm y := by
+        have hmem' : Symbol.nonterminal (SumStart.inLeft A) ∈
+            inLeftForm ([] : SententialForm terminal left) ++ inRightForm y := by
+          rw [h]
+          simp
+        cases List.mem_append.mp hmem' with
+        | inl hnil =>
+            cases hnil
+        | inr hright =>
+            exact hright
+      exact False.elim (inRightForm_no_inLeft A y hmem)
+  | cons s rest ih =>
+      cases s with
+      | terminal a =>
+          cases u with
+          | nil =>
+              simp [inLeftForm, inRightForm, SententialForm.mapNonterminal,
+                Symbol.mapNonterminal] at h
+          | cons head tail =>
+              simp [inLeftForm, inRightForm, SententialForm.mapNonterminal,
+                Symbol.mapNonterminal] at h
+              cases ih (by
+                simpa [inLeftForm, inRightForm, SententialForm.mapNonterminal]
+                  using h.right) with
+              | intro ux hux =>
+                  cases hux with
+                  | intro vx hvx =>
+                      exists Symbol.terminal a :: ux
+                      exists vx
+                      constructor
+                      · rw [hvx.left]
+                        rfl
+                      constructor
+                      · cases h.left
+                        rw [hvx.right.left]
+                        rfl
+                      · exact hvx.right.right
+      | nonterminal B =>
+          cases u with
+          | nil =>
+              simp [inLeftForm, inRightForm, SententialForm.mapNonterminal,
+                Symbol.mapNonterminal] at h
+              cases h.left
+              exists []
+              exists rest
+              constructor
+              · rfl
+              constructor
+              · rfl
+              · simpa [inLeftForm, inRightForm, SententialForm.mapNonterminal]
+                  using h.right.symm
+          | cons head tail =>
+              simp [inLeftForm, inRightForm, SententialForm.mapNonterminal,
+                Symbol.mapNonterminal] at h
+              cases ih (by
+                simpa [inLeftForm, inRightForm, SententialForm.mapNonterminal]
+                  using h.right) with
+              | intro ux hux =>
+                  cases hux with
+                  | intro vx hvx =>
+                      exists Symbol.nonterminal B :: ux
+                      exists vx
+                      constructor
+                      · rw [hvx.left]
+                        rfl
+                      constructor
+                      · cases h.left
+                        rw [hvx.right.left]
+                        rfl
+                      · exact hvx.right.right
+
+theorem inRightForm_context_only_of_eq
+    {y : SententialForm terminal right}
+    {u v : SententialForm terminal (SumStart left right)} {A : right}
+    (h : inRightForm (left := left) y =
+      u ++ [Symbol.nonterminal (SumStart.inRight A)] ++ v) :
+    exists uy vy,
+      y = uy ++ [Symbol.nonterminal A] ++ vy ∧
+      u = inRightForm (left := left) uy ∧
+      v = inRightForm vy := by
+  induction y generalizing u with
+  | nil =>
+      simp [inRightForm, SententialForm.mapNonterminal] at h
+  | cons s rest ih =>
+      cases s with
+      | terminal a =>
+          cases u with
+          | nil =>
+              simp [inRightForm, SententialForm.mapNonterminal,
+                Symbol.mapNonterminal] at h
+          | cons head tail =>
+              simp [inRightForm, SententialForm.mapNonterminal,
+                Symbol.mapNonterminal] at h
+              cases ih (by
+                simpa [inRightForm, SententialForm.mapNonterminal] using h.right) with
+              | intro uy huy =>
+                  cases huy with
+                  | intro vy hvy =>
+                      exists Symbol.terminal a :: uy
+                      exists vy
+                      constructor
+                      · rw [hvy.left]
+                        rfl
+                      constructor
+                      · cases h.left
+                        rw [hvy.right.left]
+                        rfl
+                      · exact hvy.right.right
+      | nonterminal B =>
+          cases u with
+          | nil =>
+              simp [inRightForm, SententialForm.mapNonterminal,
+                Symbol.mapNonterminal] at h
+              cases h.left
+              exists []
+              exists rest
+              constructor
+              · rfl
+              constructor
+              · rfl
+              · simpa [inRightForm, SententialForm.mapNonterminal] using h.right.symm
+          | cons head tail =>
+              simp [inRightForm, SententialForm.mapNonterminal,
+                Symbol.mapNonterminal] at h
+              cases ih (by
+                simpa [inRightForm, SententialForm.mapNonterminal] using h.right) with
+              | intro uy huy =>
+                  cases huy with
+                  | intro vy hvy =>
+                      exists Symbol.nonterminal B :: uy
+                      exists vy
+                      constructor
+                      · rw [hvy.left]
+                        rfl
+                      constructor
+                      · cases h.left
+                        rw [hvy.right.left]
+                        rfl
+                      · exact hvy.right.right
+
+theorem inRightForm_context_of_eq
+    {x : SententialForm terminal left} {y : SententialForm terminal right}
+    {u v : SententialForm terminal (SumStart left right)} {A : right}
+    (h : inLeftForm x ++ inRightForm y =
+      u ++ [Symbol.nonterminal (SumStart.inRight A)] ++ v) :
+    exists uy vy,
+      y = uy ++ [Symbol.nonterminal A] ++ vy ∧
+      u = inLeftForm x ++ inRightForm uy ∧
+      v = inRightForm vy := by
+  induction x generalizing u with
+  | nil =>
+      cases inRightForm_context_only_of_eq
+          (left := left) (y := y) (A := A)
+          (by simpa [inLeftForm] using h) with
+      | intro uy huy =>
+          cases huy with
+          | intro vy hvy =>
+              exists uy
+              exists vy
+  | cons s rest ih =>
+      cases u with
+      | nil =>
+          cases s with
+          | terminal a =>
+              simp [inLeftForm, inRightForm, SententialForm.mapNonterminal,
+                Symbol.mapNonterminal] at h
+          | nonterminal B =>
+              simp [inLeftForm, inRightForm, SententialForm.mapNonterminal,
+                Symbol.mapNonterminal] at h
+      | cons head tail =>
+          cases s with
+          | terminal a =>
+              simp [inLeftForm, inRightForm, SententialForm.mapNonterminal,
+                Symbol.mapNonterminal] at h
+              cases ih (by
+                simpa [inLeftForm, inRightForm, SententialForm.mapNonterminal]
+                  using h.right) with
+              | intro uy huy =>
+                  cases huy with
+                  | intro vy hvy =>
+                      exists uy
+                      exists vy
+                      constructor
+                      · exact hvy.left
+                      constructor
+                      · cases h.left
+                        rw [hvy.right.left]
+                        rfl
+                      · exact hvy.right.right
+          | nonterminal B =>
+              simp [inLeftForm, inRightForm, SententialForm.mapNonterminal,
+                Symbol.mapNonterminal] at h
+              cases ih (by
+                simpa [inLeftForm, inRightForm, SententialForm.mapNonterminal]
+                  using h.right) with
+              | intro uy huy =>
+                  cases huy with
+                  | intro vy hvy =>
+                      exists uy
+                      exists vy
+                      constructor
+                      · exact hvy.left
+                      constructor
+                      · cases h.left
+                        rw [hvy.right.left]
+                        rfl
+                      · exact hvy.right.right
+
+theorem concat_zone_yields_inv (G : CFG terminal left) (H : CFG terminal right)
+    {x : SententialForm terminal left} {y : SententialForm terminal right}
+    {z : SententialForm terminal (SumStart left right)}
+    (h : Yields (ConcatGrammar G H) (inLeftForm x ++ inRightForm y) z) :
+    exists x' y',
+      z = inLeftForm x' ++ inRightForm y' ∧
+      ((Yields G x x' ∧ y' = y) ∨ (x' = x ∧ Yields H y y')) := by
+  cases h with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases hv with
+          | intro A hA =>
+              cases hA with
+              | intro rhs hrhs =>
+                  cases hrhs with
+                  | intro hprod hrest =>
+                      cases hrest with
+                      | intro hx hy =>
+                          cases hprod with
+                          | startRule =>
+                              have hmem : Symbol.nonterminal
+                                  (SumStart.start : SumStart left right) ∈
+                                    inLeftForm x ++ inRightForm y := by
+                                rw [hx]
+                                simp
+                              cases List.mem_append.mp hmem with
+                              | inl hleft =>
+                                  exact False.elim (inLeftForm_no_start x hleft)
+                              | inr hright =>
+                                  exact False.elim (inRightForm_no_start y hright)
+                          | leftRule hG =>
+                              rename_i Aleft rhsl
+                              cases inLeftForm_context_of_eq hx with
+                              | intro ux hux =>
+                                  cases hux with
+                                  | intro vx hvx =>
+                                      exists ux ++ rhsl ++ vx
+                                      exists y
+                                      constructor
+                                      · rw [hy, hvx.right.left, hvx.right.right]
+                                        simp [inLeftForm,
+                                          SententialForm.mapNonterminal_append,
+                                          List.append_assoc]
+                                      · apply Or.inl
+                                        constructor
+                                        · exists ux
+                                          exists vx
+                                          exists Aleft
+                                          exists rhsl
+                                          exact And.intro hG (And.intro hvx.left rfl)
+                                        · rfl
+                          | rightRule hH =>
+                              rename_i Aright rhsr
+                              cases inRightForm_context_of_eq hx with
+                              | intro uy huy =>
+                                  cases huy with
+                                  | intro vy hvy =>
+                                      exists x
+                                      exists uy ++ rhsr ++ vy
+                                      constructor
+                                      · rw [hy, hvy.right.left, hvy.right.right]
+                                        simp [inRightForm,
+                                          SententialForm.mapNonterminal_append,
+                                          List.append_assoc]
+                                      · apply Or.inr
+                                        constructor
+                                        · rfl
+                                        · exists uy
+                                          exists vy
+                                          exists Aright
+                                          exists rhsr
+                                          exact And.intro hH (And.intro hvy.left rfl)
+
+theorem concat_zone_derives_inv_aux
+    (G : CFG terminal left) (H : CFG terminal right)
+    {s z : SententialForm terminal (SumStart left right)}
+    {x : SententialForm terminal left} {y : SententialForm terminal right}
+    (hs : s = inLeftForm x ++ inRightForm y)
+    (h : Derives (ConcatGrammar G H) s z) :
+    exists x' y',
+      z = inLeftForm x' ++ inRightForm y' ∧
+      Derives G x x' ∧ Derives H y y' := by
+  induction h generalizing x y with
+  | refl s =>
+      exists x
+      exists y
+      exact And.intro hs (And.intro (Derives.refl x) (Derives.refl y))
+  | step hstep hrest ih =>
+      rw [hs] at hstep
+      cases concat_zone_yields_inv G H hstep with
+      | intro xmid hxmid =>
+          cases hxmid with
+          | intro ymid hymid =>
+              cases hymid with
+              | intro hmid hcases =>
+                  cases ih hmid with
+                  | intro xfinal hxfinal =>
+                      cases hxfinal with
+                      | intro yfinal hyfinal =>
+                          exists xfinal
+                          exists yfinal
+                          constructor
+                          · exact hyfinal.left
+                          · cases hcases with
+                            | inl hleft =>
+                                cases hleft with
+                                | intro hyield hyEq =>
+                                    cases hyEq
+                                    exact And.intro
+                                      (derives_trans (yields_derives hyield) hyfinal.right.left)
+                                      hyfinal.right.right
+                            | inr hright =>
+                                cases hright with
+                                | intro hxEq hyield =>
+                                    cases hxEq
+                                    exact And.intro hyfinal.right.left
+                                      (derives_trans (yields_derives hyield)
+                                        hyfinal.right.right)
+
+theorem concat_zone_derives_inv
+    (G : CFG terminal left) (H : CFG terminal right)
+    {x : SententialForm terminal left} {y : SententialForm terminal right}
+    {z : SententialForm terminal (SumStart left right)}
+    (h : Derives (ConcatGrammar G H) (inLeftForm x ++ inRightForm y) z) :
+    exists x' y',
+      z = inLeftForm x' ++ inRightForm y' ∧
+      Derives G x x' ∧ Derives H y y' :=
+  concat_zone_derives_inv_aux G H rfl h
+
+theorem concat_start_yields_inv (G : CFG terminal left) (H : CFG terminal right)
+    {z : SententialForm terminal (SumStart left right)}
+    (h : Yields (ConcatGrammar G H) [Symbol.nonterminal SumStart.start] z) :
+    z = [Symbol.nonterminal (SumStart.inLeft G.start),
+      Symbol.nonterminal (SumStart.inRight H.start)] := by
+  cases h with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases hv with
+          | intro A hA =>
+              cases hA with
+              | intro rhs hrhs =>
+                  cases hrhs with
+                  | intro hprod hrest =>
+                      cases hrest with
+                      | intro hx hy =>
+                          cases u <;> simp at hx
+                          subst z
+                          cases hx.left
+                          rw [hx.right]
+                          cases hprod <;> rfl
+
+theorem concat_terminal_split_of_forms
+    {x : SententialForm terminal left} {y : SententialForm terminal right}
+    {w : Word terminal}
+    (h : inLeftForm x ++ inRightForm y =
+      SententialForm.terminalWord (nt := SumStart left right) w) :
+    exists wx wy,
+      x = SententialForm.terminalWord (nt := left) wx ∧
+      y = SententialForm.terminalWord (nt := right) wy ∧
+      w = Word.Concat wx wy := by
+  have hto : SententialForm.toWord? (inLeftForm x ++ inRightForm y) = some w := by
+    rw [h, SententialForm.terminalWord_toWord]
+  cases SententialForm.toWord?_append_some hto with
+  | intro wx hwx =>
+      cases hwx with
+      | intro wy hwy =>
+          have hxWord : SententialForm.toWord? x = some wx := by
+            rw [← SententialForm.toWord?_mapNonterminal SumStart.inLeft x]
+            exact hwy.left
+          have hyWord : SententialForm.toWord? y = some wy := by
+            rw [← SententialForm.toWord?_mapNonterminal SumStart.inRight y]
+            exact hwy.right.left
+          exists wx
+          exists wy
+          exact And.intro (SententialForm.toWord?_some_eq_terminalWord hxWord)
+            (And.intro (SententialForm.toWord?_some_eq_terminalWord hyWord)
+              hwy.right.right)
+
 theorem concat_generates (G : CFG terminal left) (H : CFG terminal right)
     {x y : Word terminal}
     (hx : x ∈ GeneratedLanguage G) (hy : y ∈ GeneratedLanguage H) :
@@ -489,6 +1031,76 @@ theorem concat_generates (G : CFG terminal left) (H : CFG terminal right)
     (SententialForm.terminalWord (Word.Concat x y))
   rw [SententialForm.terminalWord_append]
   exact hAll
+
+theorem concat_generates_inv_aux (G : CFG terminal left) (H : CFG terminal right)
+    {s yform : SententialForm terminal (SumStart left right)} {w : Word terminal}
+    (hs : s = [Symbol.nonterminal (SumStart.start : SumStart left right)])
+    (hyform : yform = SententialForm.terminalWord (nt := SumStart left right) w)
+    (h : Derives (ConcatGrammar G H) s yform) :
+    w ∈ Language.Concat (GeneratedLanguage G) (GeneratedLanguage H) := by
+  induction h with
+  | refl s =>
+      have hbad : SententialForm.toWord? s = some w := by
+        rw [hyform, SententialForm.terminalWord_toWord]
+      rw [hs] at hbad
+      cases hbad
+  | step hstep hrest _ih =>
+      rw [hs] at hstep
+      have hfirst := concat_start_yields_inv G H hstep
+      have hzone := concat_zone_derives_inv_aux G H
+        (x := [Symbol.nonterminal G.start])
+        (y := [Symbol.nonterminal H.start])
+        (by
+          rw [hfirst]
+          simp [inLeftForm, inRightForm, SententialForm.mapNonterminal,
+            Symbol.mapNonterminal])
+        hrest
+      cases hzone with
+      | intro xform hxform =>
+          cases hxform with
+          | intro yform' hyforms =>
+              have hterminal :
+                  inLeftForm xform ++ inRightForm yform' =
+                    SententialForm.terminalWord
+                      (nt := SumStart left right) w := by
+                rw [← hyforms.left, hyform]
+              cases concat_terminal_split_of_forms hterminal with
+              | intro xw hxw =>
+                  cases hxw with
+                  | intro yw hyw =>
+                      exists xw
+                      exists yw
+                      constructor
+                      · rw [hyw.left] at hyforms
+                        exact hyforms.right.left
+                      constructor
+                      · rw [hyw.right.left] at hyforms
+                        exact hyforms.right.right
+                      · exact hyw.right.right
+
+theorem concat_generates_inv (G : CFG terminal left) (H : CFG terminal right)
+    {w : Word terminal}
+    (h : w ∈ GeneratedLanguage (ConcatGrammar G H)) :
+    w ∈ Language.Concat (GeneratedLanguage G) (GeneratedLanguage H) :=
+  concat_generates_inv_aux G H rfl rfl h
+
+theorem concat_generated_language_exact (G : CFG terminal left) (H : CFG terminal right)
+    (w : Word terminal) :
+    w ∈ GeneratedLanguage (ConcatGrammar G H) <->
+      w ∈ Language.Concat (GeneratedLanguage G) (GeneratedLanguage H) := by
+  constructor
+  · exact concat_generates_inv G H
+  · intro h
+    cases h with
+    | intro x hx =>
+        cases hx with
+        | intro y hy =>
+            cases hy with
+            | intro hxG hrest =>
+                cases hrest with
+                | intro hyH hw =>
+                    rw [hw]
+                    exact concat_generates G H hxG hyH
 
 inductive StarNT (nt : Type u) where
   | start : StarNT nt
