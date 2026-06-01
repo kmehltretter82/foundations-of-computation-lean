@@ -24,6 +24,8 @@ Prose-heavy application exercises and results requiring future
 integer/rational/real-number or numeric-cardinality infrastructure are not
 represented as placeholder theorems.
 
+Coverage status is tracked in [data/coverage.yaml](data/coverage.yaml).
+
 Foundation modules currently include:
 
 - propositional-formula syntax and semantics,
