@@ -16,6 +16,8 @@ import FoC.Languages.Language
 import FoC.Languages.RegularExpression
 import FoC.Languages.DFA
 import FoC.Languages.NFA
+import FoC.Languages.NFAPath
+import FoC.Languages.Thompson
 import FoC.Languages.Regular
 import FoC.Languages.Pumping
 import FoC.Book.Chapter01

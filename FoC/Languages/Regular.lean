@@ -1,5 +1,6 @@
 import FoC.Languages.RegularExpression
 import FoC.Languages.NFA
+import FoC.Languages.Thompson
 
 namespace FoC
 namespace Languages
@@ -50,6 +51,22 @@ theorem finite_list_regular (ws : List (Word alpha)) :
 theorem dfa_recognizable_is_nfa_recognizable {L : Language alpha}
     (hL : DFARecognizable L) : NFARecognizable L :=
   NFA.dfa_language_nfa_recognizable hL
+
+theorem regular_expression_nfa_recognizable (r : RegExp alpha) :
+    NFARecognizable (RegExp.Denote r) :=
+  Thompson.regularExpression_nfa r
+
+theorem regular_is_nfa_recognizable {L : Language alpha}
+    (hL : Regular L) : NFARecognizable L := by
+  cases hL with
+  | intro r hr =>
+      cases regular_expression_nfa_recognizable r with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              exists state
+              exists M
+              exact Language.equal_trans hM hr
 
 theorem dfa_recognizable_complement {L : Language alpha}
     (hL : DFARecognizable L) : DFARecognizable (Language.Compl L) :=

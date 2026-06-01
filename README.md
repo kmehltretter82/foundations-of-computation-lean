@@ -20,8 +20,9 @@ Chapter 3 formal cores. Chapter 1 is represented by proved Lean modules for all
 ten sections. Chapter 2 adds proved modules for set operations, Boolean algebra
 of sets, functions, countability examples, Cantor's theorem, relations,
 equivalence classes, partitions, and a small relational-database model. Chapter
-3 adds words, languages, regular expressions, DFA/NFA semantics, subset
-construction, automata closure constructions, and pumping-lemma vocabulary.
+3 adds words, languages, regular expressions, DFA/NFA semantics, Thompson
+regular-expression-to-NFA construction, subset construction, automata closure
+constructions, and pumping-lemma vocabulary.
 Prose-heavy application exercises and results requiring future
 integer/rational/real-number, numeric-cardinality, full state-elimination, or
 pumping-lemma infrastructure are not represented as placeholder theorems.
@@ -40,7 +41,8 @@ Foundation modules currently include:
 - basic arithmetic predicates for divisibility, parity, and proof examples.
 - words and languages as lists and predicates,
 - regular-expression syntax and denotational semantics,
-- deterministic and nondeterministic finite-state automata.
+- deterministic and nondeterministic finite-state automata,
+- NFA path semantics and Thompson construction for regular expressions.
 
 Build with:
 

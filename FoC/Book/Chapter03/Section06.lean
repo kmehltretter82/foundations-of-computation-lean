@@ -36,6 +36,17 @@ theorem finite_language_regular (ws : List (Word alpha)) :
     RegularLanguage.Regular (fun w => w ∈ ws) :=
   RegularLanguage.finite_list_regular ws
 
+-- Book: Chapter 3, Section 3.6, Theorem 3.3.
+theorem regular_expression_language_is_nfa_recognizable (r : RegExp alpha) :
+    RegularLanguage.NFARecognizable (RegExp.Denote r) :=
+  RegularLanguage.regular_expression_nfa_recognizable r
+
+-- Book: Chapter 3, Section 3.6, every regular language is NFA-recognized.
+theorem regular_language_is_nfa_recognizable {L : Language alpha}
+    (hL : RegularLanguage.Regular L) :
+    RegularLanguage.NFARecognizable L :=
+  RegularLanguage.regular_is_nfa_recognizable hL
+
 -- Book: Chapter 3, Section 3.6, DFA-recognizable languages are closed under complement.
 theorem dfa_recognizable_closed_under_complement {L : Language alpha}
     (hL : RegularLanguage.DFARecognizable L) :
@@ -68,9 +79,9 @@ theorem nfa_subset_construction {state : Type} (M : NFA alpha state)
 
 /-!
 Theorem 3.4, the state-elimination direction from DFA/NFA-recognized languages
-to regular expressions, is not asserted as a global premise.  The formal core currently
-contains the subset construction and the regular-expression closure laws that
-feed that theorem.
+to regular expressions, is not asserted as a global premise.  The formal core
+currently contains the Thompson construction, subset construction, and
+regular-expression closure laws that feed that theorem.
 -/
 
 end Section06
