@@ -91,6 +91,17 @@ theorem not_regular_if_no_pumping_property {L : Language alpha}
     ¬ RegularLanguage.Regular L :=
   Pumping.not_regular_of_no_pumping_property pumpingLemma hNoPump
 
+-- Book: Chapter 3, Section 3.7, Theorem 3.6.
+theorem regular_languages_have_pumping_property {L : Language alpha}
+    (hL : RegularLanguage.Regular L) :
+    Pumping.HasPumpingProperty L :=
+  Pumping.regular_hasPumpingProperty hL
+
+-- Book: Chapter 3, Section 3.7, Pumping Lemma conclusion.
+theorem pumping_lemma_conclusion (L : Language alpha) :
+    Pumping.PumpingLemmaConclusion L :=
+  Pumping.regular_pumpingLemmaConclusion L
+
 def anbnLanguage : Language Section01.AB :=
   fun w => exists n,
     w = Word.Concat (Word.RepeatSymbol Section01.AB.a n)
@@ -375,6 +386,13 @@ theorem equal_count_not_regular_from_pumping_lemma
     (pumpingLemma : Pumping.PumpingLemmaConclusion equalCountLanguage) :
     ¬ RegularLanguage.Regular equalCountLanguage :=
   Pumping.not_regular_of_no_pumping_property pumpingLemma
+    equal_count_no_pumping_property
+
+-- Book: Chapter 3, Section 3.7, Exercise 1(a).
+theorem equal_count_not_regular :
+    ¬ RegularLanguage.Regular equalCountLanguage :=
+  Pumping.not_regular_of_no_pumping_property
+    (Pumping.regular_pumpingLemmaConclusion equalCountLanguage)
     equal_count_no_pumping_property
 
 def squareBlockWord (p q : Nat) : Word Section01.AB :=
@@ -701,6 +719,13 @@ theorem square_not_regular_from_pumping_lemma
   Pumping.not_regular_of_no_pumping_property pumpingLemma
     square_no_pumping_property
 
+-- Book: Chapter 3, Section 3.7, Exercise 1(b).
+theorem square_not_regular :
+    ¬ RegularLanguage.Regular squareLanguage :=
+  Pumping.not_regular_of_no_pumping_property
+    (Pumping.regular_pumpingLemmaConclusion squareLanguage)
+    square_no_pumping_property
+
 def doubleBWord : Word Section01.AB :=
   Word.Concat (Word.Symbol Section01.AB.b) (Word.Symbol Section01.AB.b)
 
@@ -966,6 +991,13 @@ theorem reverse_square_not_regular_from_pumping_lemma
   Pumping.not_regular_of_no_pumping_property pumpingLemma
     reverse_square_no_pumping_property
 
+-- Book: Chapter 3, Section 3.7, Exercise 1(c).
+theorem reverse_square_not_regular :
+    ¬ RegularLanguage.Regular reverseSquareLanguage :=
+  Pumping.not_regular_of_no_pumping_property
+    (Pumping.regular_pumpingLemmaConclusion reverseSquareLanguage)
+    reverse_square_no_pumping_property
+
 def moreBsBlockLanguage : Language Section01.AB :=
   fun w => exists aCount bCount,
     aCount < bCount ∧
@@ -1063,6 +1095,13 @@ theorem more_bs_block_not_regular_from_pumping_lemma
   Pumping.not_regular_of_no_pumping_property pumpingLemma
     more_bs_block_no_pumping_property
 
+-- Book: Chapter 3, Section 3.7, Exercise 1(d).
+theorem more_bs_block_not_regular :
+    ¬ RegularLanguage.Regular moreBsBlockLanguage :=
+  Pumping.not_regular_of_no_pumping_property
+    (Pumping.regular_pumpingLemmaConclusion moreBsBlockLanguage)
+    more_bs_block_no_pumping_property
+
 -- Book: Chapter 3, Section 3.7, the concrete pumping contradiction for
 -- `{a^n b^n}`.
 theorem anbn_not_regular_from_pumping_lemma
@@ -1070,12 +1109,18 @@ theorem anbn_not_regular_from_pumping_lemma
     ¬ RegularLanguage.Regular anbnLanguage :=
   Pumping.not_regular_of_no_pumping_property pumpingLemma anbn_no_pumping_property
 
+-- Book: Chapter 3, Section 3.7, Theorem 3.7.
+theorem anbn_not_regular :
+    ¬ RegularLanguage.Regular anbnLanguage :=
+  Pumping.not_regular_of_no_pumping_property
+    (Pumping.regular_pumpingLemmaConclusion anbnLanguage)
+    anbn_no_pumping_property
+
 /-!
 The concrete contradiction for `{ a^n b^n | n >= 0 }` is now formalized:
 no pumping length can satisfy the book's quantified pumping property for this
-language.  The final `not regular` statement remains parameterized by the
-Pumping Lemma conclusion, so this file does not add the Pumping Lemma as an
-unproved global assumption.
+language.  The regular-language pumping lemma is proved in `FoC.Languages.Pumping`,
+so this file also derives the book-facing unconditional non-regularity theorem.
 -/
 
 end Section07

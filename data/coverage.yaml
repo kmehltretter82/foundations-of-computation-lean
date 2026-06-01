@@ -143,7 +143,7 @@ completed:
         reason: "SQL syntax and DBMS behavior are application material; the table-as-relation model with core update operations is formalized."
   - coordinate: "Chapter 3"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 122
+    theorem_declarations: 129
     definition_declarations: 17
     modules:
       - "FoC.Book.Chapter03.Section01"
@@ -182,16 +182,14 @@ completed:
       - "Automatic finite powerset-state witnesses for subset construction from finite state lists"
       - "State-elimination regex for a DFA over a finite symbol list, with soundness, completeness, and DFA/NFA-recognizable-to-regular bridge theorems"
       - "Finite-alphabet complement and intersection regularity for regular languages"
-      - "Pumping-lemma quantified vocabulary and contrapositive schema without introducing the Pumping Lemma as a global premise"
+      - "Pumping-lemma quantified vocabulary, finite-state repetition proof for DFA languages, and transport to regular languages"
       - "Pumping-property extensionality, monotonicity, and generic counterexample schemas for rejecting proposed pumping lengths"
       - "Word repetition/count lemmas and equal-count groundwork for the a^n b^n pumping example"
-      - "Concrete no-pumping-length contradiction for a^n b^n and the conditional non-regularity wrapper from the Pumping Lemma conclusion"
-      - "Pumping-lemma exercise contradictions for all four Section 3.7 exercise languages: equal-count words, xx, xx^R, and block words a^n b^m with n < m; conditional non-regularity wrappers included"
+      - "Concrete no-pumping-length contradiction and unconditional non-regularity theorem for a^n b^n"
+      - "Pumping-lemma exercise contradictions and unconditional non-regularity wrappers for all four Section 3.7 exercise languages: equal-count words, xx, xx^R, and block words a^n b^m with n < m"
     classified_not_formalized_yet:
       - coordinate: "Chapter 3, Section 3.3"
         reason: "Editor-specific search/replace syntax, anchors, word boundaries, escaping conventions, and backreferences are application material; optional, plus, and character-class sugar are formalized."
-      - coordinate: "Chapter 3, Section 3.7, Theorems 3.6 and 3.7"
-        reason: "The pumping property, contrapositive schema, a^n b^n no-pumping contradiction, and all four Section 3.7 exercise contradictions are formalized. The global theorem that every regular language has the pumping property remains deferred rather than added as an unproved assumption."
   - coordinate: "Chapter 4"
     status: "coverage_complete_formal_core"
     theorem_declarations: 61
