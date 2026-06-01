@@ -25,6 +25,7 @@ import FoC.Languages.Regular
 import FoC.Languages.Pumping
 import FoC.Grammars.CFG
 import FoC.Grammars.CFL
+import FoC.Grammars.RightRegular
 import FoC.Grammars.BNF
 import FoC.Grammars.ParseTree
 import FoC.Grammars.PDA

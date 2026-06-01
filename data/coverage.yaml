@@ -191,8 +191,8 @@ completed:
         reason: "The pumping property, contrapositive schema, and a^n b^n count invariants are formalized, but the full pumping lemma and complete non-regularity proof for a^n b^n are not added as unproved assumptions."
   - coordinate: "Chapter 4"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 57
-    definition_declarations: 27
+    theorem_declarations: 61
+    definition_declarations: 28
     modules:
       - "FoC.Book.Chapter04.Section01"
       - "FoC.Book.Chapter04.Section02"
@@ -203,6 +203,7 @@ completed:
     infrastructure_modules:
       - "FoC.Grammars.CFG"
       - "FoC.Grammars.CFL"
+      - "FoC.Grammars.RightRegular"
       - "FoC.Grammars.BNF"
       - "FoC.Grammars.ParseTree"
       - "FoC.Grammars.PDA"
@@ -213,7 +214,7 @@ completed:
       - "The four basic yield laws from Theorem 4.1: one-step inclusion, transitivity, context closure for one-step yields, and context closure for derivations"
       - "Constructive CFG combinators for union, concatenation, and Kleene star, exact generated-language equivalences for all three constructions, and CFL closure under all three operations"
       - "A concrete Chapter 4 grammar for a^n b^n words, with forward generated-word proofs and the exact reverse inclusion for terminal outputs"
-      - "Right-regular grammar right-hand-side vocabulary"
+      - "Right-regular grammar right-hand-side vocabulary, grammar-to-NFA and NFA-to-grammar constructions, and the finite-alphabet equivalence with regular languages from Theorem 4.4"
       - "BNF expression syntax for empty, symbol, sequence, alternatives, optional items, and repetition, with expansion rules"
       - "Parse-tree and parse-forest syntax, frontier computation, and proof that every parse tree induces a derivation"
       - "Additional BNF symbol, sequence, and repeated-item expansion wrappers"
@@ -223,8 +224,6 @@ completed:
       - "Context-free pumping-lemma quantified vocabulary and contrapositive schema"
       - "General grammars with unrestricted left-hand sides, derivations, generated languages, and embedding of CFG derivations into general grammars"
     classified_not_formalized_yet:
-      - coordinate: "Chapter 4, Section 4.1, Theorem 4.4"
-        reason: "Right-regular grammar vocabulary is formalized; the full equivalence with regular languages is deferred pending a grammar-to-NFA construction and the remaining state-elimination direction from Chapter 3."
       - coordinate: "Chapter 4, Section 4.2"
         reason: "Programming-language and English BNF examples are application material; the BNF expansion operators used by those examples are formalized with additional sequence and repetition wrappers."
       - coordinate: "Chapter 4, Section 4.3"
