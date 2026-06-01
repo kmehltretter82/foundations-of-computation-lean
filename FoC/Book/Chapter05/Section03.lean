@@ -44,10 +44,49 @@ theorem undecidable_of_not_decidable {L : Language alpha}
     (h : ¬ TuringDecidable L) : UndecidableTuringLanguage L :=
   Computability.undecidable_of_not_decidable h
 
+-- Book: Chapter 5, Section 5.3, undecidability is extensional.
+theorem undecidable_language_of_equal {L K : Language alpha}
+    (h : UndecidableTuringLanguage L) (hEq : Language.Equal L K) :
+    UndecidableTuringLanguage K :=
+  Computability.undecidable_of_equal h hEq
+
+-- Book: Chapter 5, Section 5.3, undecidability passes to complements.
+theorem undecidable_language_complement {L : Language alpha}
+    (h : UndecidableTuringLanguage L) :
+    UndecidableTuringLanguage (Language.Compl L) :=
+  Computability.undecidable_complement h
+
+-- Book: Chapter 5, Section 5.3, if the complement is undecidable, then so is
+-- the original language.
+theorem undecidable_language_of_undecidable_complement {L : Language alpha}
+    (h : UndecidableTuringLanguage (Language.Compl L)) :
+    UndecidableTuringLanguage L :=
+  Computability.undecidable_of_complement h
+
+-- Book: Chapter 5, Section 5.3, undecidability is equivalent for a language
+-- and its complement.
+theorem undecidable_language_complement_iff {L : Language alpha} :
+    UndecidableTuringLanguage (Language.Compl L) <-> UndecidableTuringLanguage L :=
+  Computability.undecidable_complement_iff
+
 -- Book: Chapter 5, Section 5.3, proof wrapper for non-acceptability by contradiction.
 theorem not_acceptable_of_contradiction {L : Language alpha}
     (h : TuringAcceptable L -> False) : NonTuringAcceptableLanguage L :=
   Computability.not_acceptable_of_diagonal_contradiction h
+
+-- Book: Chapter 5, Section 5.3, non-acceptability is extensional.
+theorem non_acceptable_language_of_equal {L K : Language alpha}
+    (h : NonTuringAcceptableLanguage L) (hEq : Language.Equal L K) :
+    NonTuringAcceptableLanguage K :=
+  Computability.not_acceptable_of_equal h hEq
+
+-- Book: Chapter 5, Section 5.3, non-computability is extensional for
+-- pointwise equal string functions.
+theorem non_computable_function_of_pointwise_equal
+    {f g : Word input -> Word output}
+    (h : NonComputableStringFunction f) (hfg : forall w, f w = g w) :
+    NonComputableStringFunction g :=
+  Computability.nonComputableFunction_of_pointwise_equal h hfg
 
 -- Book: Chapter 5, Section 5.3, abstract diagonal contradiction core.
 theorem diagonal_language_not_self_recognized (acceptsSelf : Word code -> Prop) :

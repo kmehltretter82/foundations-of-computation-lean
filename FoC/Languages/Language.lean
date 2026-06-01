@@ -121,6 +121,19 @@ theorem equal_trans {L M N : Language alpha} (hLM : Equal L M) (hMN : Equal M N)
     Equal L N :=
   FSet.equal_trans hLM hMN
 
+theorem compl_congr {L M : Language alpha} (h : Equal L M) :
+    Equal (Compl L) (Compl M) := by
+  intro w
+  constructor
+  · intro hw hM
+    exact hw ((h w).mpr hM)
+  · intro hw hL
+    exact hw ((h w).mp hL)
+
+theorem double_compl (L : Language alpha) :
+    Equal (Compl (Compl L)) L :=
+  FSet.double_compl L
+
 theorem union_comm (L M : Language alpha) : Equal (Union L M) (Union M L) :=
   FSet.union_comm L M
 

@@ -236,8 +236,8 @@ completed:
         reason: "General grammar definitions and CFG embedding are formalized; equivalence with recursively enumerable languages belongs with the Chapter 5 computability development."
   - coordinate: "Chapter 5"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 12
-    definition_declarations: 20
+    theorem_declarations: 36
+    definition_declarations: 21
     modules:
       - "FoC.Book.Chapter05.Section01"
       - "FoC.Book.Chapter05.Section02"
@@ -255,14 +255,15 @@ completed:
       - "Deterministic one-tape Turing-machine structure with start state, halt state, transition function, and finite state witness"
       - "Configurations, initial input configurations, one-step transition semantics, and reflexive-transitive computation"
       - "Halting, halting with output, acceptance by halting, accepted languages, and recognizer equality vocabulary"
-      - "Computation reflexivity, one-step inclusion, transitivity, and halting-with-output implies halting"
-      - "Turing-computable total and partial string-function vocabulary with explicit input/output encodings"
-      - "Turing-decidable and Turing-acceptable language vocabulary, plus recursive and recursively enumerable aliases"
+      - "Computation reflexivity, one-step inclusion, transitivity, halted-configuration halting, computation-to-halt halting, backward closure of halting over prior computation, and halting-with-output implies halting"
+      - "Machine-recognized languages and accepted languages bridge into the Turing-acceptable-language vocabulary"
+      - "Turing-computable total and partial string-function vocabulary with explicit input/output encodings and pointwise equality transport"
+      - "Turing-decidable and Turing-acceptable language vocabulary, recursive and recursively enumerable aliases, and language-equality transport"
       - "A decider, as modeled by output 0/1, halts on every input"
-      - "Decidable and recursive languages are closed under complement by swapping decider outputs"
-      - "Listing and range-language vocabulary for recursively enumerable languages"
+      - "Decidable and recursive languages are closed under complement by swapping decider outputs, with complement equivalences using double-complement language equality"
+      - "Listing and range-language vocabulary for recursively enumerable languages, including listability/range extensionality"
       - "General grammar versus recursively enumerable language equivalence statement shape"
-      - "Non-computable function, non-acceptable language, undecidable language, diagonal-language, halting-problem, and universal-machine specification vocabulary"
+      - "Non-computable function, non-acceptable language, undecidable language, diagonal-language, halting-problem, and universal-machine specification vocabulary, with extensionality and complement transport"
       - "Abstract diagonal contradiction core for self-recognition predicates"
     classified_not_formalized_yet:
       - coordinate: "Chapter 5, Section 5.1"

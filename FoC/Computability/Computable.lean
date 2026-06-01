@@ -17,6 +17,28 @@ open Languages
 def EncodeWord (encode : alpha -> symbol) (w : Word alpha) : Word symbol :=
   w.map encode
 
+theorem encodeWord_empty (encode : alpha -> symbol) :
+    EncodeWord encode ([] : Word alpha) = [] :=
+  rfl
+
+theorem encodeWord_cons (encode : alpha -> symbol) (a : alpha)
+    (w : Word alpha) :
+    EncodeWord encode (a :: w) = encode a :: EncodeWord encode w :=
+  rfl
+
+theorem encodeWord_append (encode : alpha -> symbol)
+    (x y : Word alpha) :
+    EncodeWord encode (Word.Concat x y) =
+      Word.Concat (EncodeWord encode x) (EncodeWord encode y) := by
+  simp [EncodeWord, Word.Concat]
+
+theorem encodeWord_id (w : Word alpha) :
+    EncodeWord (fun a : alpha => a) w = w := by
+  induction w with
+  | nil => rfl
+  | cons a rest ih =>
+      rw [encodeWord_cons, ih]
+
 def ComputesFunction (M : TuringMachine symbol state)
     (encodeInput : input -> symbol)
     (encodeOutput : output -> symbol)
@@ -59,6 +81,37 @@ theorem computes_function_halts {M : TuringMachine symbol state}
     (h : ComputesFunction M encodeInput encodeOutput f) (w : Word input) :
     TuringMachine.HaltsOnInput M (EncodeWord encodeInput w) :=
   TuringMachine.halts_with_output_implies_halts (h w)
+
+theorem computesFunction_of_pointwise_equal {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {encodeOutput : output -> symbol}
+    {f g : Word input -> Word output}
+    (h : ComputesFunction M encodeInput encodeOutput f)
+    (hfg : forall w, f w = g w) :
+    ComputesFunction M encodeInput encodeOutput g := by
+  intro w
+  rw [← hfg w]
+  exact h w
+
+theorem turingComputable_of_pointwise_equal
+    {f g : Word input -> Word output}
+    (h : TuringComputable f) (hfg : forall w, f w = g w) :
+    TuringComputable g := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro encodeOutput hcomp =>
+                      exists symbol
+                      exists state
+                      exists M
+                      exists encodeInput
+                      exists encodeOutput
+                      exact computesFunction_of_pointwise_equal hcomp hfg
 
 end Computability
 end FoC

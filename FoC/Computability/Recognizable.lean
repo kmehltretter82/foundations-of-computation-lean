@@ -49,6 +49,87 @@ def Recursive (L : Language input) : Prop :=
 def RecursivelyEnumerable (L : Language input) : Prop :=
   TuringAcceptable L
 
+theorem acceptsLanguage_of_equal {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {L K : Language input}
+    (h : AcceptsLanguage M encodeInput L)
+    (hEq : Language.Equal L K) :
+    AcceptsLanguage M encodeInput K := by
+  intro w
+  exact Iff.trans (h w) (hEq w)
+
+theorem turing_acceptable_of_equal {L K : Language input}
+    (h : TuringAcceptable L) (hEq : Language.Equal L K) :
+    TuringAcceptable K := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput hacc =>
+                  exists symbol
+                  exists state
+                  exists M
+                  exists encodeInput
+                  exact acceptsLanguage_of_equal hacc hEq
+
+theorem turing_acceptable_of_recognizes {input : Type} {state : Type}
+    {M : TuringMachine input state}
+    {L : Language input}
+    (h : TuringMachine.Recognizes M L) :
+    TuringAcceptable L := by
+  exists input
+  exists state
+  exists M
+  exists fun a : input => a
+  intro w
+  rw [encodeWord_id]
+  exact h w
+
+theorem turing_acceptable_acceptedLanguage {input : Type} {state : Type}
+    (M : TuringMachine input state) :
+    TuringAcceptable (TuringMachine.AcceptedLanguage M) :=
+  turing_acceptable_of_recognizes (TuringMachine.recognizes_acceptedLanguage M)
+
+theorem decidesLanguage_of_equal {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L K : Language input}
+    (h : DecidesLanguage M encodeInput zero one L)
+    (hEq : Language.Equal L K) :
+    DecidesLanguage M encodeInput zero one K := by
+  intro w
+  constructor
+  · intro hw
+    exact (h w).left ((hEq w).mpr hw)
+  · intro hw
+    apply (h w).right
+    intro hL
+    exact hw ((hEq w).mp hL)
+
+theorem turing_decidable_of_equal {L K : Language input}
+    (h : TuringDecidable L) (hEq : Language.Equal L K) :
+    TuringDecidable K := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro zero hzero =>
+                      cases hzero with
+                      | intro one hdec =>
+                          exists symbol
+                          exists state
+                          exists M
+                          exists encodeInput
+                          exists zero
+                          exists one
+                          exact decidesLanguage_of_equal hdec hEq
+
 theorem decider_halts_on_all_inputs {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
     {L : Language input}
@@ -124,9 +205,37 @@ theorem turing_decidable_complement {L : Language input}
                           exists zero
                           exact decides_complement hone
 
+theorem turing_decidable_of_complement {L : Language input}
+    (h : TuringDecidable (Language.Compl L)) : TuringDecidable L :=
+  turing_decidable_of_equal (turing_decidable_complement h) (Language.double_compl L)
+
+theorem turing_decidable_complement_iff {L : Language input} :
+    TuringDecidable (Language.Compl L) <-> TuringDecidable L := by
+  constructor
+  · exact turing_decidable_of_complement
+  · exact turing_decidable_complement
+
 theorem recursive_complement {L : Language input}
     (h : Recursive L) : Recursive (Language.Compl L) :=
   turing_decidable_complement h
+
+theorem recursive_of_complement {L : Language input}
+    (h : Recursive (Language.Compl L)) : Recursive L :=
+  turing_decidable_of_complement h
+
+theorem recursive_complement_iff {L : Language input} :
+    Recursive (Language.Compl L) <-> Recursive L :=
+  turing_decidable_complement_iff
+
+theorem recursive_of_equal {L K : Language input}
+    (h : Recursive L) (hEq : Language.Equal L K) :
+    Recursive K :=
+  turing_decidable_of_equal h hEq
+
+theorem recursivelyEnumerable_of_equal {L K : Language input}
+    (h : RecursivelyEnumerable L) (hEq : Language.Equal L K) :
+    RecursivelyEnumerable K :=
+  turing_acceptable_of_equal h hEq
 
 end Computability
 end FoC

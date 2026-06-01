@@ -106,9 +106,44 @@ theorem halts_with_output_implies_halts {M : TuringMachine symbol state}
   | intro final hfinal =>
       exact Exists.intro final (And.intro hfinal.left hfinal.right.left)
 
+theorem halts_from_halted {M : TuringMachine symbol state}
+    {c : Configuration symbol state} (h : Halted M c) :
+    HaltsFrom M c := by
+  exists c
+  exact And.intro (Computes.refl c) h
+
+theorem halts_from_of_computes {M : TuringMachine symbol state}
+    {c d : Configuration symbol state}
+    (hcomp : Computes M c d) (hhalt : Halted M d) :
+    HaltsFrom M c :=
+  Exists.intro d (And.intro hcomp hhalt)
+
+theorem halts_from_of_computes_prefix {M : TuringMachine symbol state}
+    {c d : Configuration symbol state}
+    (hcomp : Computes M c d) (hhalt : HaltsFrom M d) :
+    HaltsFrom M c := by
+  cases hhalt with
+  | intro final hfinal =>
+      exists final
+      exact And.intro (computes_trans hcomp hfinal.left) hfinal.right
+
+theorem halts_on_input_of_initial_halted {M : TuringMachine symbol state}
+    {w : Word symbol} (h : Halted M (initial M w)) :
+    HaltsOnInput M w :=
+  halts_from_halted h
+
 theorem accepted_language_mem (M : TuringMachine symbol state) (w : Word symbol) :
     w ∈ AcceptedLanguage M <-> HaltsOnInput M w :=
   Iff.rfl
+
+theorem recognizes_acceptedLanguage (M : TuringMachine symbol state) :
+    Recognizes M (AcceptedLanguage M) :=
+  Language.equal_refl (AcceptedLanguage M)
+
+theorem recognizes_accepts_iff {M : TuringMachine symbol state}
+    {L : Language symbol} (h : Recognizes M L) (w : Word symbol) :
+    Accepts M w <-> w ∈ L :=
+  h w
 
 end TuringMachine
 

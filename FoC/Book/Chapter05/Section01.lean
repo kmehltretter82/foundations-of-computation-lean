@@ -43,6 +43,51 @@ theorem halts_with_output_implies_halts {M : TuringMachine symbol state}
     TuringMachine.HaltsOnInput M w :=
   TuringMachine.halts_with_output_implies_halts h
 
+-- Book: Chapter 5, Section 5.1, a halted configuration halts immediately.
+theorem halted_configuration_halts {M : TuringMachine symbol state}
+    {c : TuringMachine.Configuration symbol state}
+    (h : TuringMachine.Halted M c) :
+    TuringMachine.HaltsFrom M c :=
+  TuringMachine.halts_from_halted h
+
+-- Book: Chapter 5, Section 5.1, a computation to a halted configuration halts.
+theorem computation_to_halted_configuration_halts {M : TuringMachine symbol state}
+    {c d : TuringMachine.Configuration symbol state}
+    (hcomp : TuringMachine.Computes M c d)
+    (hhalt : TuringMachine.Halted M d) :
+    TuringMachine.HaltsFrom M c :=
+  TuringMachine.halts_from_of_computes hcomp hhalt
+
+-- Book: Chapter 5, Section 5.1, halting is closed under adding previous
+-- computation steps.
+theorem halting_after_previous_computation {M : TuringMachine symbol state}
+    {c d : TuringMachine.Configuration symbol state}
+    (hcomp : TuringMachine.Computes M c d)
+    (hhalt : TuringMachine.HaltsFrom M d) :
+    TuringMachine.HaltsFrom M c :=
+  TuringMachine.halts_from_of_computes_prefix hcomp hhalt
+
+-- Book: Chapter 5, Section 5.1, the accepted language is recognized by its machine.
+theorem machine_recognizes_accepted_language (M : TuringMachine symbol state) :
+    TuringMachine.Recognizes M (TuringMachine.AcceptedLanguage M) :=
+  TuringMachine.recognizes_acceptedLanguage M
+
+-- Book: Chapter 5, Section 5.1, a direct machine recognizer gives a
+-- Turing-acceptable language.
+theorem recognized_language_is_turing_acceptable
+    {input : Type} {state : Type}
+    {M : TuringMachine input state} {L : Language input}
+    (h : TuringMachine.Recognizes M L) :
+    TuringAcceptable L :=
+  Computability.turing_acceptable_of_recognizes h
+
+-- Book: Chapter 5, Section 5.1, every machine's accepted language is
+-- Turing-acceptable.
+theorem accepted_language_is_turing_acceptable {input : Type} {state : Type}
+    (M : TuringMachine input state) :
+    TuringAcceptable (TuringMachine.AcceptedLanguage M) :=
+  Computability.turing_acceptable_acceptedLanguage M
+
 -- Book: Chapter 5, Section 5.1, Turing-computable string functions.
 def TuringComputableFunction (f : Word input -> Word output) : Prop :=
   TuringComputable f
@@ -77,6 +122,33 @@ theorem decidable_language_complement {L : Language input}
     (h : TuringDecidableLanguage L) :
     TuringDecidableLanguage (Language.Compl L) :=
   Computability.turing_decidable_complement h
+
+-- Book: Chapter 5, Section 5.1, if the complement is decidable, then so is
+-- the original language.
+theorem decidable_language_of_decidable_complement {L : Language input}
+    (h : TuringDecidableLanguage (Language.Compl L)) :
+    TuringDecidableLanguage L :=
+  Computability.turing_decidable_of_complement h
+
+-- Book: Chapter 5, Section 5.1, decidability is equivalent for a language and
+-- its complement.
+theorem decidable_language_complement_iff {L : Language input} :
+    TuringDecidableLanguage (Language.Compl L) <-> TuringDecidableLanguage L :=
+  Computability.turing_decidable_complement_iff
+
+-- Book: Chapter 5, Section 5.1, Turing-acceptability is extensional in the
+-- accepted language.
+theorem turing_acceptable_language_of_equal {L K : Language input}
+    (h : TuringAcceptableLanguage L) (hEq : Language.Equal L K) :
+    TuringAcceptableLanguage K :=
+  Computability.turing_acceptable_of_equal h hEq
+
+-- Book: Chapter 5, Section 5.1, Turing-decidability is extensional in the
+-- decided language.
+theorem turing_decidable_language_of_equal {L K : Language input}
+    (h : TuringDecidableLanguage L) (hEq : Language.Equal L K) :
+    TuringDecidableLanguage K :=
+  Computability.turing_decidable_of_equal h hEq
 
 end Section01
 end Chapter05
