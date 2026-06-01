@@ -1,3 +1,5 @@
+import FoC.Foundation.Summation
+
 namespace FoC
 namespace Book
 namespace Chapter01
@@ -59,6 +61,28 @@ def fib : Nat -> Nat
 -- Book: Chapter 1, Section 1.8, Fibonacci recurrence infrastructure
 theorem fib_succ_succ (n : Nat) : fib (n + 2) = fib (n + 1) + fib n :=
   rfl
+
+open Foundation
+
+-- Book: Chapter 1, Section 1.8, Theorem 1.12
+theorem simple_sum_formula (n : Nat) :
+    NatSum.SumUpTo (fun i => i) n = n * (n + 1) / 2 :=
+  NatSum.sum_identity_closed_form n
+
+-- Book: Chapter 1, Section 1.8, Theorem 1.13
+theorem weighted_power_sum_formula (n : Nat) :
+    NatSum.SumUpTo NatSum.WeightedPowerTerm (n + 1) = n * 2 ^ (n + 1) + 1 :=
+  NatSum.weighted_power_sum_closed_form_succ n
+
+-- Book: Chapter 1, Section 1.8, Exercise 4
+theorem geometric_sum_powers_of_two (n : Nat) :
+    NatSum.SumZeroTo (fun i => 2 ^ i) n = 2 ^ (n + 1) - 1 :=
+  NatSum.geometric_two_sum n
+
+-- Book: Chapter 1, Section 1.8, Exercise 6
+theorem odd_sum_square (n : Nat) :
+    NatSum.SumUpTo (fun i => 2 * i - 1) n = n * n :=
+  NatSum.odd_sum_square n
 
 end Section08
 end Chapter01

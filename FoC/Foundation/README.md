@@ -14,3 +14,5 @@ definitions or lemmas.
 | `Countable.lean` | Chapter 2 countability by explicit natural-number enumeration. |
 | `Relations.lean` | Chapter 2 binary relations, equivalence classes, partitions, and transitive closure. |
 | `Arithmetic.lean` | Chapter 1 proof examples using divisibility and parity. |
+| `Summation.lean` | Chapter 1 induction examples with finite sums; later Chapter 2 finite-cardinality arithmetic. |
+| `Integers.lean` | Chapter 1 integer parity and divisibility examples; later Chapter 2 integer countability. |

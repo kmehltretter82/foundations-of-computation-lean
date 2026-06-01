@@ -6,5 +6,7 @@ import FoC.Foundation.Finite
 import FoC.Foundation.Countable
 import FoC.Foundation.Relations
 import FoC.Foundation.Arithmetic
+import FoC.Foundation.Summation
+import FoC.Foundation.Integers
 import FoC.Book.Chapter01
 import FoC.Book.Chapter02
