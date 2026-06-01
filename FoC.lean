@@ -7,3 +7,4 @@ import FoC.Foundation.Countable
 import FoC.Foundation.Relations
 import FoC.Foundation.Arithmetic
 import FoC.Book.Chapter01
+import FoC.Book.Chapter02

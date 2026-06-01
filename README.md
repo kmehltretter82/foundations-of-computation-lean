@@ -15,11 +15,14 @@ Source textbook metadata:
 This project is intentionally self-contained: it does not depend on Mathlib,
 CSLib, or other external Lean libraries.
 
-Current status: standalone foundation layer plus the Chapter 1 formal core.
-The formal core of Chapter 1 is represented by proved Lean modules for all ten
-sections; prose-heavy application exercises and results requiring future
-integer/rational/real-number infrastructure are not represented as placeholder
-theorems.
+Current status: standalone foundation layer plus the Chapter 1 and Chapter 2
+formal cores. Chapter 1 is represented by proved Lean modules for all ten
+sections. Chapter 2 adds proved modules for set operations, Boolean algebra of
+sets, functions, countability examples, Cantor's theorem, relations,
+equivalence classes, partitions, and a small relational-database model.
+Prose-heavy application exercises and results requiring future
+integer/rational/real-number or numeric-cardinality infrastructure are not
+represented as placeholder theorems.
 
 Foundation modules currently include:
 
