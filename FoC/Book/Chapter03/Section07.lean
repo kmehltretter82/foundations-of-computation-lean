@@ -24,6 +24,66 @@ theorem pumped_decomposition_original_word_mem
     (h : Pumping.Decomposition L n w) : w ∈ L :=
   Pumping.decomposition_original_word_mem h
 
+-- Book: Chapter 3, Section 3.7, pumping decompositions are extensional in the
+-- language being pumped.
+theorem pumped_decomposition_of_equal {L M : Language alpha} {n : Nat}
+    {w : Word alpha}
+    (hEq : Language.Equal L M) (h : Pumping.Decomposition L n w) :
+    Pumping.Decomposition M n w :=
+  Pumping.decomposition_of_equal hEq h
+
+-- Book: Chapter 3, Section 3.7, pumping lengths are extensional in the
+-- language being pumped.
+theorem pumping_length_of_equal {L M : Language alpha} {n : Nat}
+    (hEq : Language.Equal L M) (h : Pumping.PumpingLength L n) :
+    Pumping.PumpingLength M n :=
+  Pumping.pumpingLength_of_equal hEq h
+
+-- Book: Chapter 3, Section 3.7, the pumping property is extensional in the
+-- language being pumped.
+theorem pumping_property_of_equal {L M : Language alpha}
+    (hEq : Language.Equal L M) (h : Pumping.HasPumpingProperty L) :
+    Pumping.HasPumpingProperty M :=
+  Pumping.hasPumpingProperty_of_equal hEq h
+
+-- Book: Chapter 3, Section 3.7, a larger pumping length remains valid.
+theorem pumping_length_monotone {L : Language alpha} {n m : Nat}
+    (hnm : n <= m) (h : Pumping.PumpingLength L n) :
+    Pumping.PumpingLength L m :=
+  Pumping.pumpingLength_mono hnm h
+
+-- Book: Chapter 3, Section 3.7, one sufficiently long bad word refutes a
+-- proposed pumping length.
+theorem not_pumping_length_of_counterexample {L : Language alpha} {n : Nat}
+    {w : Word alpha}
+    (hw : w ∈ L) (hlen : n <= Word.Length w)
+    (hbad :
+      forall x y z : Word alpha,
+        w = Word.Concat x (Word.Concat y z) ->
+        Word.Length (Word.Concat x y) <= n ->
+        Word.Length y > 0 ->
+        exists k : Nat,
+          ¬ Word.Concat x (Word.Concat (Word.RepeatWord y k) z) ∈ L) :
+    ¬ Pumping.PumpingLength L n :=
+  Pumping.not_pumpingLength_of_counterexample hw hlen hbad
+
+-- Book: Chapter 3, Section 3.7, a family of bad words refutes the pumping
+-- property.
+theorem not_pumping_property_of_counterexamples {L : Language alpha}
+    (hbad :
+      forall n : Nat, n > 0 ->
+        exists w : Word alpha,
+          w ∈ L ∧
+          n <= Word.Length w ∧
+          forall x y z : Word alpha,
+            w = Word.Concat x (Word.Concat y z) ->
+            Word.Length (Word.Concat x y) <= n ->
+            Word.Length y > 0 ->
+            exists k : Nat,
+              ¬ Word.Concat x (Word.Concat (Word.RepeatWord y k) z) ∈ L) :
+    ¬ Pumping.HasPumpingProperty L :=
+  Pumping.not_hasPumpingProperty_of_counterexamples hbad
+
 -- Book: Chapter 3, Section 3.7, contrapositive use of the Pumping Lemma.
 theorem not_regular_if_no_pumping_property {L : Language alpha}
     (pumpingLemma : Pumping.PumpingLemmaConclusion L)
@@ -45,10 +105,21 @@ theorem anbn_membership (w : Word Section01.AB) :
   Iff.rfl
 
 -- Book: Chapter 3, Section 3.7, counting groundwork for the `a^n b^n` example.
-theorem anbn_word_count_a (n : Nat) :
+theorem ablock_word_count_a (aCount bCount : Nat) :
     Word.Count Section01.AB.a
-      (Word.Concat (Word.RepeatSymbol Section01.AB.a n)
-        (Word.RepeatSymbol Section01.AB.b n)) = n := by
+      (Word.Concat (Word.RepeatSymbol Section01.AB.a aCount)
+        (Word.RepeatSymbol Section01.AB.b bCount)) = aCount := by
+  rw [Word.count_concat, Word.count_repeatSymbol_same]
+  rw [Word.count_repeatSymbol_different]
+  · omega
+  · intro h
+    cases h
+
+-- Book: Chapter 3, Section 3.7, counting groundwork for block-word examples.
+theorem ablock_word_count_b (aCount bCount : Nat) :
+    Word.Count Section01.AB.b
+      (Word.Concat (Word.RepeatSymbol Section01.AB.a aCount)
+        (Word.RepeatSymbol Section01.AB.b bCount)) = bCount := by
   rw [Word.count_concat, Word.count_repeatSymbol_same]
   rw [Word.count_repeatSymbol_different]
   · omega
@@ -56,15 +127,25 @@ theorem anbn_word_count_a (n : Nat) :
     cases h
 
 -- Book: Chapter 3, Section 3.7, counting groundwork for the `a^n b^n` example.
+theorem anbn_word_count_a (n : Nat) :
+    Word.Count Section01.AB.a
+      (Word.Concat (Word.RepeatSymbol Section01.AB.a n)
+        (Word.RepeatSymbol Section01.AB.b n)) = n := by
+  exact ablock_word_count_a n n
+
+-- Book: Chapter 3, Section 3.7, counting groundwork for the `a^n b^n` example.
 theorem anbn_word_count_b (n : Nat) :
     Word.Count Section01.AB.b
       (Word.Concat (Word.RepeatSymbol Section01.AB.a n)
         (Word.RepeatSymbol Section01.AB.b n)) = n := by
-  rw [Word.count_concat, Word.count_repeatSymbol_same]
-  rw [Word.count_repeatSymbol_different]
-  · omega
-  · intro h
-    cases h
+  exact ablock_word_count_b n n
+
+theorem repeatSymbol_concat_same (a : alpha) (m n : Nat) :
+    Word.Concat (Word.RepeatSymbol a m) (Word.RepeatSymbol a n) =
+      Word.RepeatSymbol a (m + n) := by
+  induction m with
+  | zero => simp [Word.Concat, Word.RepeatSymbol]
+  | succ _ _ => simp [Word.Concat, Word.RepeatSymbol]
 
 -- Book: Chapter 3, Section 3.7, every word in `{a^n b^n}` has equal counts.
 theorem anbn_members_have_equal_counts {w : Word Section01.AB}
@@ -74,11 +155,927 @@ theorem anbn_members_have_equal_counts {w : Word Section01.AB}
   | intro n hn =>
       rw [hn, anbn_word_count_a n, anbn_word_count_b n]
 
+theorem ab_count_a_pos_of_length_pos_count_b_zero {w : Word Section01.AB}
+    (hlen : 0 < Word.Length w)
+    (hb : Word.Count Section01.AB.b w = 0) :
+    0 < Word.Count Section01.AB.a w := by
+  cases w with
+  | nil =>
+      cases hlen
+  | cons c rest =>
+      cases c with
+      | a =>
+          simp [Word.Count]
+          omega
+      | b =>
+          simp [Word.Count] at hb
+
+theorem ablock_prefix_before_boundary_count_b_zero
+    {x y z : Word Section01.AB} {aCount bCount : Nat}
+    (hword :
+      Word.Concat (Word.RepeatSymbol Section01.AB.a aCount)
+        (Word.RepeatSymbol Section01.AB.b bCount) =
+          Word.Concat x (Word.Concat y z))
+    (hxy : Word.Length (Word.Concat x y) <= aCount) :
+    Word.Count Section01.AB.b y = 0 := by
+  have hprefix :
+      Word.Concat x y =
+        List.take (Word.Length (Word.Concat x y))
+          (Word.Concat (Word.RepeatSymbol Section01.AB.a aCount)
+            (Word.RepeatSymbol Section01.AB.b bCount)) := by
+    calc
+      Word.Concat x y =
+          List.take (Word.Length (Word.Concat x y))
+            (Word.Concat (Word.Concat x y) z) := by
+            change Word.Concat x y =
+              List.take (List.length (Word.Concat x y))
+                (List.append (Word.Concat x y) z)
+            have htleft :
+                List.take (List.length (Word.Concat x y))
+                  (List.append (Word.Concat x y) z) = Word.Concat x y := by
+              simpa [Word.Concat] using
+                (List.take_left (l₁ := Word.Concat x y) (l₂ := z))
+            exact htleft.symm
+      _ = List.take (Word.Length (Word.Concat x y))
+          (Word.Concat x (Word.Concat y z)) := by
+            rw [Word.concat_assoc]
+      _ = List.take (Word.Length (Word.Concat x y))
+          (Word.Concat (Word.RepeatSymbol Section01.AB.a aCount)
+            (Word.RepeatSymbol Section01.AB.b bCount)) := by
+            rw [← hword]
+  have htake :
+      List.take (Word.Length (Word.Concat x y))
+        (Word.Concat (Word.RepeatSymbol Section01.AB.a aCount)
+          (Word.RepeatSymbol Section01.AB.b bCount)) =
+        Word.RepeatSymbol Section01.AB.a (Word.Length (Word.Concat x y)) := by
+    have hxy' :
+        List.length (Word.Concat x y) <=
+          List.length (Word.RepeatSymbol Section01.AB.a aCount) := by
+      simpa [Word.Length, Word.Concat, Word.RepeatSymbol] using hxy
+    have hxyNat : List.length (Word.Concat x y) <= aCount := by
+      simpa [Word.Length, Word.Concat] using hxy
+    change List.take (List.length (Word.Concat x y))
+        (List.append (Word.RepeatSymbol Section01.AB.a aCount)
+          (Word.RepeatSymbol Section01.AB.b bCount)) =
+      Word.RepeatSymbol Section01.AB.a (List.length (Word.Concat x y))
+    have ht :
+        List.take (List.length (Word.Concat x y))
+          (List.append (Word.RepeatSymbol Section01.AB.a aCount)
+            (Word.RepeatSymbol Section01.AB.b bCount)) =
+          List.take (List.length (Word.Concat x y))
+            (Word.RepeatSymbol Section01.AB.a aCount) := by
+      simpa [Word.Concat] using
+        (List.take_append_of_le_length
+          (l₁ := Word.RepeatSymbol Section01.AB.a aCount)
+          (l₂ := Word.RepeatSymbol Section01.AB.b bCount) hxy')
+    rw [ht]
+    simp [Word.RepeatSymbol, Nat.min_eq_left hxyNat]
+  have hxyRep :
+      Word.Concat x y =
+        Word.RepeatSymbol Section01.AB.a (Word.Length (Word.Concat x y)) := by
+    exact Eq.trans hprefix htake
+  have hbxy : Word.Count Section01.AB.b (Word.Concat x y) = 0 := by
+    rw [hxyRep]
+    exact Word.count_repeatSymbol_different (by intro h; cases h)
+      (Word.Length (Word.Concat x y))
+  rw [Word.count_concat] at hbxy
+  omega
+
+theorem anbn_prefix_before_boundary_count_b_zero
+    {x y z : Word Section01.AB} {n : Nat}
+    (hword :
+      Word.Concat (Word.RepeatSymbol Section01.AB.a n)
+        (Word.RepeatSymbol Section01.AB.b n) =
+          Word.Concat x (Word.Concat y z))
+    (hxy : Word.Length (Word.Concat x y) <= n) :
+    Word.Count Section01.AB.b y = 0 :=
+  ablock_prefix_before_boundary_count_b_zero hword hxy
+
+theorem anbn_pump_zero_unequal_counts
+    {x y z : Word Section01.AB} {n : Nat}
+    (hword :
+      Word.Concat (Word.RepeatSymbol Section01.AB.a n)
+        (Word.RepeatSymbol Section01.AB.b n) =
+          Word.Concat x (Word.Concat y z))
+    (hxy : Word.Length (Word.Concat x y) <= n)
+    (hy : Word.Length y > 0) :
+    Word.Count Section01.AB.a (Word.Concat x z) ≠
+      Word.Count Section01.AB.b (Word.Concat x z) := by
+  intro hcountsZero
+  have hbY :
+      Word.Count Section01.AB.b y = 0 :=
+    anbn_prefix_before_boundary_count_b_zero hword hxy
+  have haYPos :
+      0 < Word.Count Section01.AB.a y :=
+    ab_count_a_pos_of_length_pos_count_b_zero hy hbY
+  have hcountAOriginal :
+      Word.Count Section01.AB.a
+        (Word.Concat x (Word.Concat y z)) = n := by
+    rw [← hword]
+    exact anbn_word_count_a n
+  have hcountBOriginal :
+      Word.Count Section01.AB.b
+        (Word.Concat x (Word.Concat y z)) = n := by
+    rw [← hword]
+    exact anbn_word_count_b n
+  rw [Word.count_concat, Word.count_concat] at hcountAOriginal
+  rw [Word.count_concat, Word.count_concat] at hcountBOriginal
+  rw [Word.count_concat, Word.count_concat] at hcountsZero
+  omega
+
+theorem anbn_no_pumping_property :
+    ¬ Pumping.HasPumpingProperty anbnLanguage := by
+  intro hpump
+  cases hpump with
+  | intro n hn =>
+      let w : Word Section01.AB :=
+        Word.Concat (Word.RepeatSymbol Section01.AB.a n)
+          (Word.RepeatSymbol Section01.AB.b n)
+      have hwMem : w ∈ anbnLanguage := by
+        exists n
+      have hwLength : n <= Word.Length w := by
+        simp [w, Word.length_concat, Word.length_repeatSymbol]
+      have hdec := hn.right w hwMem hwLength
+      cases hdec with
+      | intro x hx =>
+          cases hx with
+          | intro y hy =>
+              cases hy with
+              | intro z hz =>
+                  cases hz with
+                  | intro hword hrest =>
+                      have hunequal :
+                          Word.Count Section01.AB.a (Word.Concat x z) ≠
+                            Word.Count Section01.AB.b (Word.Concat x z) :=
+                        anbn_pump_zero_unequal_counts hword hrest.left
+                          hrest.right.left
+                      have hpumpZero := hrest.right.right 0
+                      have hcountsZero :=
+                        anbn_members_have_equal_counts hpumpZero
+                      have hcountsZero' :
+                        Word.Count Section01.AB.a (Word.Concat x z) =
+                          Word.Count Section01.AB.b (Word.Concat x z) := by
+                        simpa [Word.RepeatWord, Word.Concat] using hcountsZero
+                      exact hunequal hcountsZero'
+
+def equalCountLanguage : Language Section01.AB :=
+  fun w => Word.Count Section01.AB.a w = Word.Count Section01.AB.b w
+
+-- Book: Chapter 3, Section 3.7, Exercise 1(a).
+theorem equal_count_language_membership (w : Word Section01.AB) :
+    w ∈ equalCountLanguage <->
+      Word.Count Section01.AB.a w = Word.Count Section01.AB.b w :=
+  Iff.rfl
+
+-- Book: Chapter 3, Section 3.7, Exercise 1(a).
+theorem equal_count_no_pumping_property :
+    ¬ Pumping.HasPumpingProperty equalCountLanguage := by
+  intro hpump
+  cases hpump with
+  | intro n hn =>
+      let w : Word Section01.AB :=
+        Word.Concat (Word.RepeatSymbol Section01.AB.a n)
+          (Word.RepeatSymbol Section01.AB.b n)
+      have hwMem : w ∈ equalCountLanguage := by
+        change
+          Word.Count Section01.AB.a
+            (Word.Concat (Word.RepeatSymbol Section01.AB.a n)
+              (Word.RepeatSymbol Section01.AB.b n)) =
+            Word.Count Section01.AB.b
+              (Word.Concat (Word.RepeatSymbol Section01.AB.a n)
+                (Word.RepeatSymbol Section01.AB.b n))
+        rw [anbn_word_count_a n, anbn_word_count_b n]
+      have hwLength : n <= Word.Length w := by
+        simp [w, Word.length_concat, Word.length_repeatSymbol]
+      have hdec := hn.right w hwMem hwLength
+      cases hdec with
+      | intro x hx =>
+          cases hx with
+          | intro y hy =>
+              cases hy with
+              | intro z hz =>
+                  cases hz with
+                  | intro hword hrest =>
+                      have hunequal :
+                          Word.Count Section01.AB.a (Word.Concat x z) ≠
+                            Word.Count Section01.AB.b (Word.Concat x z) :=
+                        anbn_pump_zero_unequal_counts hword hrest.left
+                          hrest.right.left
+                      have hpumpZero := hrest.right.right 0
+                      have hcountsZero :
+                          Word.Count Section01.AB.a (Word.Concat x z) =
+                            Word.Count Section01.AB.b (Word.Concat x z) := by
+                        simpa [equalCountLanguage, Word.RepeatWord, Word.Concat]
+                          using hpumpZero
+                      exact hunequal hcountsZero
+
+-- Book: Chapter 3, Section 3.7, Exercise 1(a), conditional on the Pumping
+-- Lemma conclusion.
+theorem equal_count_not_regular_from_pumping_lemma
+    (pumpingLemma : Pumping.PumpingLemmaConclusion equalCountLanguage) :
+    ¬ RegularLanguage.Regular equalCountLanguage :=
+  Pumping.not_regular_of_no_pumping_property pumpingLemma
+    equal_count_no_pumping_property
+
+def squareBlockWord (p q : Nat) : Word Section01.AB :=
+  Word.Concat (Word.RepeatSymbol Section01.AB.a p)
+    (Word.Concat (Word.Symbol Section01.AB.b)
+      (Word.Concat (Word.RepeatSymbol Section01.AB.a q) (Word.Symbol Section01.AB.b)))
+
+def squareLanguage : Language Section01.AB :=
+  fun w => exists u, w = Word.Concat u u
+
+-- Book: Chapter 3, Section 3.7, Exercise 1(b).
+theorem square_language_membership (w : Word Section01.AB) :
+    w ∈ squareLanguage <-> exists u, w = Word.Concat u u :=
+  Iff.rfl
+
+theorem squareBlock_count_b (p q : Nat) :
+    Word.Count Section01.AB.b (squareBlockWord p q) = 2 := by
+  unfold squareBlockWord
+  rw [Word.count_concat, Word.count_concat, Word.count_concat]
+  rw [Word.count_repeatSymbol_different, Word.count_repeatSymbol_different]
+  · simp [Word.Count, Word.Symbol]
+  · intro h
+    cases h
+  · intro h
+    cases h
+
+theorem squareBlock_length (p q : Nat) :
+    Word.Length (squareBlockWord p q) = p + q + 2 := by
+  unfold squareBlockWord
+  simp [Word.Length, Word.Concat, Word.RepeatSymbol, Word.Symbol]
+  omega
+
+theorem squareBlock_take_before_first_b_count_b {p q l : Nat}
+    (hl : l <= p) :
+    Word.Count Section01.AB.b (List.take l (squareBlockWord p q)) = 0 := by
+  unfold squareBlockWord
+  have hle : l <= List.length (Word.RepeatSymbol Section01.AB.a p) := by
+    simpa [Word.RepeatSymbol] using hl
+  have ht : List.take l
+      (List.append (Word.RepeatSymbol Section01.AB.a p)
+        (Word.Concat (Word.Symbol Section01.AB.b)
+          (Word.Concat (Word.RepeatSymbol Section01.AB.a q) (Word.Symbol Section01.AB.b)))) =
+      List.take l (Word.RepeatSymbol Section01.AB.a p) := by
+    simpa [Word.Concat] using
+      (List.take_append_of_le_length
+        (l₁ := Word.RepeatSymbol Section01.AB.a p)
+        (l₂ := Word.Concat (Word.Symbol Section01.AB.b)
+          (Word.Concat (Word.RepeatSymbol Section01.AB.a q) (Word.Symbol Section01.AB.b))) hle)
+  change Word.Count Section01.AB.b
+      (List.take l
+        (List.append (Word.RepeatSymbol Section01.AB.a p)
+          (Word.Concat (Word.Symbol Section01.AB.b)
+            (Word.Concat (Word.RepeatSymbol Section01.AB.a q) (Word.Symbol Section01.AB.b))))) = 0
+  rw [ht]
+  have hmin : min l p = l := by omega
+  rw [show List.take l (Word.RepeatSymbol Section01.AB.a p) =
+      Word.RepeatSymbol Section01.AB.a l by
+    simp [Word.RepeatSymbol, hmin]]
+  exact Word.count_repeatSymbol_different (by intro h; cases h) l
+
+theorem squareBlock_take_middle {p q l : Nat}
+    (hp : p < l) (hl : l <= p + q + 1) :
+    List.take l (squareBlockWord p q) =
+      Word.Concat (Word.RepeatSymbol Section01.AB.a p)
+        (Word.Concat (Word.Symbol Section01.AB.b)
+          (Word.RepeatSymbol Section01.AB.a (l - p - 1))) := by
+  unfold squareBlockWord
+  simp [Word.Concat, Word.RepeatSymbol, Word.Symbol, List.take_append, List.take_replicate]
+  have hmin1 : min l p = p := by omega
+  rw [hmin1]
+  have hpos : l - p = (l - p - 1) + 1 := by omega
+  rw [hpos]
+  simp [List.take_append, List.take_replicate]
+  have hmin2 : min (l - p - 1) q = l - p - 1 := by omega
+  rw [hmin2]
+  have hzero : l - p - 1 - q = 0 := by omega
+  rw [hzero]
+  simp
+
+theorem squareBlock_drop_middle {p q l : Nat}
+    (hp : p < l) (hl : l <= p + q + 1) :
+    List.drop l (squareBlockWord p q) =
+      Word.Concat (Word.RepeatSymbol Section01.AB.a (p + q + 1 - l))
+        (Word.Symbol Section01.AB.b) := by
+  unfold squareBlockWord
+  simp [Word.Concat, Word.RepeatSymbol, Word.Symbol, List.drop_append, List.drop_replicate]
+  have hpzero : p - l = 0 := by omega
+  rw [hpzero]
+  have hdropP : l - p = (l - p - 1) + 1 := by omega
+  rw [hdropP]
+  simp [List.drop_append, List.drop_replicate]
+  have harith : q - (l - p - 1) = p + q + 1 - l := by omega
+  rw [harith]
+  have hzero : l - p - 1 - q = 0 := by omega
+  rw [hzero]
+  simp
+
+theorem single_b_block_eq_trailing_b {p r s : Nat}
+    (h : Word.Concat (Word.RepeatSymbol Section01.AB.a p)
+        (Word.Concat (Word.Symbol Section01.AB.b)
+          (Word.RepeatSymbol Section01.AB.a r)) =
+      Word.Concat (Word.RepeatSymbol Section01.AB.a s) (Word.Symbol Section01.AB.b)) :
+    p = s ∧ r = 0 := by
+  induction p generalizing r s with
+  | zero =>
+      cases s with
+      | zero =>
+          constructor
+          · rfl
+          · cases r with
+            | zero => rfl
+            | succ _ =>
+                simp [Word.Concat, Word.RepeatSymbol, Word.Symbol, List.replicate_succ] at h
+                cases h
+      | succ _ =>
+          simp [Word.Concat, Word.RepeatSymbol, Word.Symbol, List.replicate_succ] at h
+          cases h
+  | succ p ih =>
+      cases s with
+      | zero =>
+          simp [Word.Concat, Word.RepeatSymbol, Word.Symbol, List.replicate_succ] at h
+          cases h
+      | succ s =>
+          simp [Word.Concat, Word.RepeatSymbol, Word.Symbol, List.replicate_succ] at h
+          injection h with _ htail
+          have htail' :
+              Word.Concat (Word.RepeatSymbol Section01.AB.a p)
+                  (Word.Concat (Word.Symbol Section01.AB.b)
+                    (Word.RepeatSymbol Section01.AB.a r)) =
+                Word.Concat (Word.RepeatSymbol Section01.AB.a s) (Word.Symbol Section01.AB.b) := by
+            simpa [Word.Concat, Word.RepeatSymbol, Word.Symbol] using htail
+          cases ih htail' with
+          | intro hps hr =>
+              constructor
+              · omega
+              · exact hr
+
+theorem square_block_members_have_equal_a_blocks {u : Word Section01.AB}
+    {p q : Nat}
+    (h : Word.Concat u u = squareBlockWord p q) :
+    p = q := by
+  let l := Word.Length u
+  have huPrefix : u = List.take l (squareBlockWord p q) := by
+    calc
+      u = List.take l (Word.Concat u u) := by
+        change u = List.take (List.length u) (List.append u u)
+        exact (List.take_left (l₁ := u) (l₂ := u)).symm
+      _ = List.take l (squareBlockWord p q) := by rw [h]
+  have huSuffix : u = List.drop l (squareBlockWord p q) := by
+    calc
+      u = List.drop l (Word.Concat u u) := by
+        change u = List.drop (List.length u) (List.append u u)
+        exact (List.drop_left (l₁ := u) (l₂ := u)).symm
+      _ = List.drop l (squareBlockWord p q) := by rw [h]
+  have hcount : Word.Count Section01.AB.b u = 1 := by
+    have hc := congrArg (Word.Count Section01.AB.b) h
+    rw [Word.count_concat, squareBlock_count_b p q] at hc
+    omega
+  have hlen : p + q + 2 = 2 * l := by
+    have hl := congrArg Word.Length h
+    rw [Word.length_concat, squareBlock_length p q] at hl
+    omega
+  have hlpos : 0 < l := by
+    cases u with
+    | nil =>
+        simp [Word.Count] at hcount
+    | cons _ _ =>
+        simp [l, Word.Length]
+  have hp : p < l := by
+    by_cases hplt : p < l
+    · exact hplt
+    · have hle : l <= p := by omega
+      have hczero : Word.Count Section01.AB.b u = 0 := by
+        rw [huPrefix]
+        exact squareBlock_take_before_first_b_count_b hle
+      omega
+  have hlmid : l <= p + q + 1 := by omega
+  have hshape :
+      Word.Concat (Word.RepeatSymbol Section01.AB.a p)
+          (Word.Concat (Word.Symbol Section01.AB.b)
+            (Word.RepeatSymbol Section01.AB.a (l - p - 1))) =
+        Word.Concat (Word.RepeatSymbol Section01.AB.a (p + q + 1 - l))
+          (Word.Symbol Section01.AB.b) := by
+    rw [← squareBlock_take_middle hp hlmid]
+    rw [← squareBlock_drop_middle hp hlmid]
+    rw [← huPrefix, ← huSuffix]
+  cases single_b_block_eq_trailing_b hshape with
+  | intro _ _ =>
+      omega
+
+theorem squareBlock_delete_initial_a
+    {x y z : Word Section01.AB} {n : Nat}
+    (hword : squareBlockWord n n = Word.Concat x (Word.Concat y z))
+    (hxy : Word.Length (Word.Concat x y) <= n) :
+    Word.Concat x z = squareBlockWord (n - Word.Length y) n := by
+  let lenx := Word.Length x
+  let leny := Word.Length y
+  let lenxy := Word.Length (Word.Concat x y)
+  have hlenxy : lenxy = lenx + leny := by
+    simp [lenxy, lenx, leny, Word.length_concat]
+  let suffix : Word Section01.AB :=
+    Word.Concat (Word.Symbol Section01.AB.b)
+      (Word.Concat (Word.RepeatSymbol Section01.AB.a n) (Word.Symbol Section01.AB.b))
+  have hxyRep : Word.Concat x y = Word.RepeatSymbol Section01.AB.a lenxy := by
+    have hprefix :
+        Word.Concat x y = List.take lenxy (squareBlockWord n n) := by
+      calc
+        Word.Concat x y = List.take lenxy (Word.Concat (Word.Concat x y) z) := by
+          change Word.Concat x y = List.take (List.length (Word.Concat x y))
+            (List.append (Word.Concat x y) z)
+          exact (List.take_left (l₁ := Word.Concat x y) (l₂ := z)).symm
+        _ = List.take lenxy (Word.Concat x (Word.Concat y z)) := by
+          rw [Word.concat_assoc]
+        _ = List.take lenxy (squareBlockWord n n) := by
+          rw [← hword]
+    have htake : List.take lenxy (squareBlockWord n n) =
+        Word.RepeatSymbol Section01.AB.a lenxy := by
+      have hle : lenxy <= List.length (Word.RepeatSymbol Section01.AB.a n) := by
+        simpa [lenxy, Word.Length, Word.Concat, Word.RepeatSymbol] using hxy
+      have hleNat : lenxy <= n := by
+        simpa [lenxy] using hxy
+      unfold squareBlockWord
+      change List.take lenxy
+          (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
+        Word.RepeatSymbol Section01.AB.a lenxy
+      have ht : List.take lenxy
+          (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
+          List.take lenxy (Word.RepeatSymbol Section01.AB.a n) := by
+        simpa [suffix, Word.Concat] using
+          (List.take_append_of_le_length
+            (l₁ := Word.RepeatSymbol Section01.AB.a n) (l₂ := suffix) hle)
+      rw [ht]
+      simp [Word.RepeatSymbol, Nat.min_eq_left hleNat]
+    exact Eq.trans hprefix htake
+  have hxRep : x = Word.RepeatSymbol Section01.AB.a lenx := by
+    have htake : x = List.take lenx (Word.Concat x y) := by
+      change x = List.take (List.length x) (List.append x y)
+      exact (List.take_left (l₁ := x) (l₂ := y)).symm
+    rw [htake, hxyRep]
+    have hle : lenx <= lenxy := by
+      simp [lenxy, lenx, Word.Length, Word.Concat]
+    simp [Word.RepeatSymbol, Nat.min_eq_left hle]
+  have hzRep : z = Word.Concat (Word.RepeatSymbol Section01.AB.a (n - lenxy)) suffix := by
+    have hzDrop : z = List.drop lenxy (squareBlockWord n n) := by
+      calc
+        z = List.drop lenxy (Word.Concat (Word.Concat x y) z) := by
+          change z = List.drop (List.length (Word.Concat x y))
+            (List.append (Word.Concat x y) z)
+          exact (List.drop_left (l₁ := Word.Concat x y) (l₂ := z)).symm
+        _ = List.drop lenxy (Word.Concat x (Word.Concat y z)) := by
+          rw [Word.concat_assoc]
+        _ = List.drop lenxy (squareBlockWord n n) := by
+          rw [← hword]
+    rw [hzDrop]
+    have hle : lenxy <= List.length (Word.RepeatSymbol Section01.AB.a n) := by
+      simpa [lenxy, Word.Length, Word.Concat, Word.RepeatSymbol] using hxy
+    unfold squareBlockWord
+    change List.drop lenxy
+        (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
+      Word.Concat (Word.RepeatSymbol Section01.AB.a (n - lenxy)) suffix
+    have hd : List.drop lenxy
+        (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
+        List.append (List.drop lenxy (Word.RepeatSymbol Section01.AB.a n)) suffix := by
+      simpa [suffix, Word.Concat] using
+        (List.drop_append_of_le_length
+          (l₁ := Word.RepeatSymbol Section01.AB.a n) (l₂ := suffix) hle)
+    rw [hd]
+    simp [Word.Concat, Word.RepeatSymbol]
+  rw [hxRep, hzRep]
+  unfold squareBlockWord
+  rw [← Word.concat_assoc]
+  rw [repeatSymbol_concat_same]
+  have harith : lenx + (n - lenxy) = n - leny := by omega
+  rw [harith]
+
+-- Book: Chapter 3, Section 3.7, Exercise 1(b).
+theorem square_no_pumping_property :
+    ¬ Pumping.HasPumpingProperty squareLanguage := by
+  intro hpump
+  cases hpump with
+  | intro n hn =>
+      let half : Word Section01.AB :=
+        Word.Concat (Word.RepeatSymbol Section01.AB.a n) (Word.Symbol Section01.AB.b)
+      let w : Word Section01.AB := squareBlockWord n n
+      have hwMem : w ∈ squareLanguage := by
+        exists half
+        change squareBlockWord n n = Word.Concat half half
+        unfold half squareBlockWord Word.Concat Word.Symbol Word.RepeatSymbol
+        simp [List.append_assoc]
+      have hwLength : n <= Word.Length w := by
+        simp [w, squareBlock_length]
+        omega
+      have hdec := hn.right w hwMem hwLength
+      cases hdec with
+      | intro x hx =>
+          cases hx with
+          | intro y hy =>
+              cases hy with
+              | intro z hz =>
+                  cases hz with
+                  | intro hword hrest =>
+                      have hdeleted :
+                          Word.Concat x z = squareBlockWord (n - Word.Length y) n :=
+                        squareBlock_delete_initial_a hword hrest.left
+                      have hpumpZero := hrest.right.right 0
+                      cases hpumpZero with
+                      | intro u hu =>
+                          have hsquare :
+                              Word.Concat u u = squareBlockWord (n - Word.Length y) n := by
+                            rw [← hu]
+                            exact hdeleted
+                          have hEq := square_block_members_have_equal_a_blocks hsquare
+                          have hyLe : Word.Length y <= n := by
+                            have hyLeXY : Word.Length y <= Word.Length (Word.Concat x y) := by
+                              simp [Word.length_concat]
+                            omega
+                          omega
+
+-- Book: Chapter 3, Section 3.7, Exercise 1(b), conditional on the Pumping
+-- Lemma conclusion.
+theorem square_not_regular_from_pumping_lemma
+    (pumpingLemma : Pumping.PumpingLemmaConclusion squareLanguage) :
+    ¬ RegularLanguage.Regular squareLanguage :=
+  Pumping.not_regular_of_no_pumping_property pumpingLemma
+    square_no_pumping_property
+
+def doubleBWord : Word Section01.AB :=
+  Word.Concat (Word.Symbol Section01.AB.b) (Word.Symbol Section01.AB.b)
+
+def mirrorBlockWord (p q : Nat) : Word Section01.AB :=
+  Word.Concat (Word.RepeatSymbol Section01.AB.a p)
+    (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a q))
+
+def reverseSquareLanguage : Language Section01.AB :=
+  fun w => exists u, w = Word.Concat u (Word.Reverse u)
+
+-- Book: Chapter 3, Section 3.7, Exercise 1(c).
+theorem reverse_square_language_membership (w : Word Section01.AB) :
+    w ∈ reverseSquareLanguage <-> exists u, w = Word.Concat u (Word.Reverse u) :=
+  Iff.rfl
+
+theorem mirrorBlock_succ_succ (p q : Nat) :
+    mirrorBlockWord (p + 1) (q + 1) =
+      Section01.AB.a :: Word.Concat (mirrorBlockWord p q) (Word.Symbol Section01.AB.a) := by
+  unfold mirrorBlockWord doubleBWord Word.Concat Word.RepeatSymbol Word.Symbol
+  rw [List.replicate_succ]
+  rw [List.replicate_succ']
+  simp [List.append_assoc]
+
+theorem mirrorBlock_succ_zero (p : Nat) :
+    mirrorBlockWord (p + 1) 0 =
+      Section01.AB.a :: Word.Concat
+        (Word.Concat (Word.RepeatSymbol Section01.AB.a p) (Word.Symbol Section01.AB.b))
+        (Word.Symbol Section01.AB.b) := by
+  unfold mirrorBlockWord doubleBWord Word.Concat Word.RepeatSymbol Word.Symbol
+  rw [List.replicate_succ]
+  simp [List.append_assoc]
+
+theorem mirrorBlock_zero_succ (q : Nat) :
+    mirrorBlockWord 0 (q + 1) =
+      Section01.AB.b :: Word.Concat
+        (Word.Concat (Word.Symbol Section01.AB.b) (Word.RepeatSymbol Section01.AB.a q))
+        (Word.Symbol Section01.AB.a) := by
+  unfold mirrorBlockWord doubleBWord Word.Concat Word.RepeatSymbol Word.Symbol
+  rw [List.replicate_succ']
+  simp
+
+theorem mirror_strip_a {u middle : Word Section01.AB}
+    (h : Word.Concat u (Word.Reverse u) =
+      Section01.AB.a :: Word.Concat middle (Word.Symbol Section01.AB.a)) :
+    exists v, u = Section01.AB.a :: v ∧
+      Word.Concat v (Word.Reverse v) = middle := by
+  cases u with
+  | nil =>
+      simp [Word.Concat, Word.Reverse, Word.Symbol] at h
+  | cons c v =>
+      cases c with
+      | a =>
+          exists v
+          constructor
+          · rfl
+          · simp [Word.Concat, Word.Reverse, Word.Symbol, List.reverse_cons] at h
+            injection h with _ htail
+            rw [← List.append_assoc] at htail
+            exact List.append_cancel_right htail
+      | b =>
+          cases h
+
+theorem mirror_not_a_to_b {u middle : Word Section01.AB} :
+    Word.Concat u (Word.Reverse u) ≠
+      Section01.AB.a :: Word.Concat middle (Word.Symbol Section01.AB.b) := by
+  intro h
+  cases u with
+  | nil =>
+      simp [Word.Concat, Word.Reverse, Word.Symbol] at h
+  | cons c v =>
+      cases c with
+      | a =>
+          simp [Word.Concat, Word.Reverse, Word.Symbol, List.reverse_cons] at h
+          injection h with _ htail
+          have hrev := congrArg List.reverse htail
+          simp [List.reverse_append] at hrev
+      | b =>
+          cases h
+
+theorem mirror_not_b_to_a {u middle : Word Section01.AB} :
+    Word.Concat u (Word.Reverse u) ≠
+      Section01.AB.b :: Word.Concat middle (Word.Symbol Section01.AB.a) := by
+  intro h
+  cases u with
+  | nil =>
+      simp [Word.Concat, Word.Reverse, Word.Symbol] at h
+  | cons c v =>
+      cases c with
+      | a =>
+          cases h
+      | b =>
+          simp [Word.Concat, Word.Reverse, Word.Symbol, List.reverse_cons] at h
+          injection h with _ htail
+          have hrev := congrArg List.reverse htail
+          simp [List.reverse_append] at hrev
+
+theorem mirror_block_members_have_equal_a_blocks {u : Word Section01.AB}
+    {p q : Nat}
+    (h : Word.Concat u (Word.Reverse u) = mirrorBlockWord p q) :
+    p = q := by
+  induction p generalizing q u with
+  | zero =>
+      cases q with
+      | zero => rfl
+      | succ q =>
+          exfalso
+          rw [mirrorBlock_zero_succ q] at h
+          exact mirror_not_b_to_a h
+  | succ p ih =>
+      cases q with
+      | zero =>
+          exfalso
+          rw [mirrorBlock_succ_zero p] at h
+          exact mirror_not_a_to_b h
+      | succ q =>
+          rw [mirrorBlock_succ_succ p q] at h
+          cases mirror_strip_a h with
+          | intro _ hv =>
+              have hpq := ih hv.right
+              omega
+
+theorem mirrorBlock_delete_initial_a
+    {x y z : Word Section01.AB} {n : Nat}
+    (hword : mirrorBlockWord n n = Word.Concat x (Word.Concat y z))
+    (hxy : Word.Length (Word.Concat x y) <= n) :
+    Word.Concat x z = mirrorBlockWord (n - Word.Length y) n := by
+  let lenx := Word.Length x
+  let leny := Word.Length y
+  let lenxy := Word.Length (Word.Concat x y)
+  have hlenxy : lenxy = lenx + leny := by
+    simp [lenxy, lenx, leny, Word.length_concat]
+  have hxyRep : Word.Concat x y = Word.RepeatSymbol Section01.AB.a lenxy := by
+    have hprefix :
+        Word.Concat x y = List.take lenxy (mirrorBlockWord n n) := by
+      calc
+        Word.Concat x y = List.take lenxy (Word.Concat (Word.Concat x y) z) := by
+          change Word.Concat x y = List.take (List.length (Word.Concat x y))
+            (List.append (Word.Concat x y) z)
+          exact (List.take_left (l₁ := Word.Concat x y) (l₂ := z)).symm
+        _ = List.take lenxy (Word.Concat x (Word.Concat y z)) := by
+          rw [Word.concat_assoc]
+        _ = List.take lenxy (mirrorBlockWord n n) := by
+          rw [← hword]
+    have htake : List.take lenxy (mirrorBlockWord n n) =
+        Word.RepeatSymbol Section01.AB.a lenxy := by
+      have hle : lenxy <= List.length (Word.RepeatSymbol Section01.AB.a n) := by
+        simpa [lenxy, Word.Length, Word.Concat, Word.RepeatSymbol] using hxy
+      have hleNat : lenxy <= n := by
+        simpa [lenxy] using hxy
+      unfold mirrorBlockWord
+      change List.take lenxy
+          (List.append (Word.RepeatSymbol Section01.AB.a n)
+            (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n))) =
+        Word.RepeatSymbol Section01.AB.a lenxy
+      have ht : List.take lenxy
+          (List.append (Word.RepeatSymbol Section01.AB.a n)
+            (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n))) =
+          List.take lenxy (Word.RepeatSymbol Section01.AB.a n) := by
+        simpa [Word.Concat] using
+          (List.take_append_of_le_length
+            (l₁ := Word.RepeatSymbol Section01.AB.a n)
+            (l₂ := Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n)) hle)
+      rw [ht]
+      simp [Word.RepeatSymbol, Nat.min_eq_left hleNat]
+    exact Eq.trans hprefix htake
+  have hxRep : x = Word.RepeatSymbol Section01.AB.a lenx := by
+    have htake : x = List.take lenx (Word.Concat x y) := by
+      change x = List.take (List.length x) (List.append x y)
+      exact (List.take_left (l₁ := x) (l₂ := y)).symm
+    rw [htake, hxyRep]
+    have hle : lenx <= lenxy := by
+      simp [lenxy, lenx, Word.Length, Word.Concat]
+    simp [Word.RepeatSymbol, Nat.min_eq_left hle]
+  have hzRep : z = Word.Concat (Word.RepeatSymbol Section01.AB.a (n - lenxy))
+      (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n)) := by
+    have hzDrop : z = List.drop lenxy (mirrorBlockWord n n) := by
+      calc
+        z = List.drop lenxy (Word.Concat (Word.Concat x y) z) := by
+          change z = List.drop (List.length (Word.Concat x y))
+            (List.append (Word.Concat x y) z)
+          exact (List.drop_left (l₁ := Word.Concat x y) (l₂ := z)).symm
+        _ = List.drop lenxy (Word.Concat x (Word.Concat y z)) := by
+          rw [Word.concat_assoc]
+        _ = List.drop lenxy (mirrorBlockWord n n) := by
+          rw [← hword]
+    rw [hzDrop]
+    have hle : lenxy <= List.length (Word.RepeatSymbol Section01.AB.a n) := by
+      simpa [lenxy, Word.Length, Word.Concat, Word.RepeatSymbol] using hxy
+    unfold mirrorBlockWord
+    change List.drop lenxy
+        (List.append (Word.RepeatSymbol Section01.AB.a n)
+          (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n))) =
+      Word.Concat (Word.RepeatSymbol Section01.AB.a (n - lenxy))
+        (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n))
+    have hd : List.drop lenxy
+        (List.append (Word.RepeatSymbol Section01.AB.a n)
+          (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n))) =
+        List.append (List.drop lenxy (Word.RepeatSymbol Section01.AB.a n))
+          (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n)) := by
+      simpa [Word.Concat] using
+        (List.drop_append_of_le_length
+          (l₁ := Word.RepeatSymbol Section01.AB.a n)
+          (l₂ := Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n)) hle)
+    rw [hd]
+    simp [Word.Concat, Word.RepeatSymbol]
+  rw [hxRep, hzRep]
+  unfold mirrorBlockWord
+  rw [← Word.concat_assoc]
+  rw [repeatSymbol_concat_same]
+  have harith : lenx + (n - lenxy) = n - leny := by
+    omega
+  rw [harith]
+
+-- Book: Chapter 3, Section 3.7, Exercise 1(c).
+theorem reverse_square_no_pumping_property :
+    ¬ Pumping.HasPumpingProperty reverseSquareLanguage := by
+  intro hpump
+  cases hpump with
+  | intro n hn =>
+      let half : Word Section01.AB :=
+        Word.Concat (Word.RepeatSymbol Section01.AB.a n) (Word.Symbol Section01.AB.b)
+      let w : Word Section01.AB := mirrorBlockWord n n
+      have hwMem : w ∈ reverseSquareLanguage := by
+        exists half
+        change mirrorBlockWord n n = Word.Concat half (Word.Reverse half)
+        unfold half mirrorBlockWord doubleBWord Word.Concat Word.Reverse Word.Symbol Word.RepeatSymbol
+        simp [List.reverse_append, List.reverse_replicate, List.append_assoc]
+      have hwLength : n <= Word.Length w := by
+        simp [w, mirrorBlockWord, doubleBWord, Word.length_concat, Word.length_repeatSymbol,
+          Word.Symbol]
+      have hdec := hn.right w hwMem hwLength
+      cases hdec with
+      | intro x hx =>
+          cases hx with
+          | intro y hy =>
+              cases hy with
+              | intro z hz =>
+                  cases hz with
+                  | intro hword hrest =>
+                      have hdeleted :
+                          Word.Concat x z = mirrorBlockWord (n - Word.Length y) n :=
+                        mirrorBlock_delete_initial_a hword hrest.left
+                      have hpumpZero := hrest.right.right 0
+                      cases hpumpZero with
+                      | intro u hu =>
+                          have hmirror :
+                              Word.Concat u (Word.Reverse u) =
+                                mirrorBlockWord (n - Word.Length y) n := by
+                            rw [← hu]
+                            exact hdeleted
+                          have hEq := mirror_block_members_have_equal_a_blocks hmirror
+                          have hyLe : Word.Length y <= n := by
+                            have hyLeXY : Word.Length y <= Word.Length (Word.Concat x y) := by
+                              simp [Word.length_concat]
+                            omega
+                          omega
+
+-- Book: Chapter 3, Section 3.7, Exercise 1(c), conditional on the Pumping
+-- Lemma conclusion.
+theorem reverse_square_not_regular_from_pumping_lemma
+    (pumpingLemma : Pumping.PumpingLemmaConclusion reverseSquareLanguage) :
+    ¬ RegularLanguage.Regular reverseSquareLanguage :=
+  Pumping.not_regular_of_no_pumping_property pumpingLemma
+    reverse_square_no_pumping_property
+
+def moreBsBlockLanguage : Language Section01.AB :=
+  fun w => exists aCount bCount,
+    aCount < bCount ∧
+      w = Word.Concat (Word.RepeatSymbol Section01.AB.a aCount)
+        (Word.RepeatSymbol Section01.AB.b bCount)
+
+-- Book: Chapter 3, Section 3.7, Exercise 1(d).
+theorem more_bs_block_language_membership (w : Word Section01.AB) :
+    w ∈ moreBsBlockLanguage <->
+      exists aCount bCount,
+        aCount < bCount ∧
+          w = Word.Concat (Word.RepeatSymbol Section01.AB.a aCount)
+            (Word.RepeatSymbol Section01.AB.b bCount) :=
+  Iff.rfl
+
+-- Book: Chapter 3, Section 3.7, Exercise 1(d).
+theorem more_bs_block_members_have_more_b_counts {w : Word Section01.AB}
+    (hw : w ∈ moreBsBlockLanguage) :
+    Word.Count Section01.AB.a w < Word.Count Section01.AB.b w := by
+  cases hw with
+  | intro aCount haCount =>
+      cases haCount with
+      | intro bCount hbCount =>
+          rw [hbCount.right, ablock_word_count_a aCount bCount,
+            ablock_word_count_b aCount bCount]
+          exact hbCount.left
+
+theorem more_bs_block_pump_two_not_mem
+    {x y z : Word Section01.AB} {n : Nat}
+    (hword :
+      Word.Concat (Word.RepeatSymbol Section01.AB.a n)
+        (Word.RepeatSymbol Section01.AB.b (n + 1)) =
+          Word.Concat x (Word.Concat y z))
+    (hxy : Word.Length (Word.Concat x y) <= n)
+    (hy : Word.Length y > 0) :
+    ¬ Word.Concat x (Word.Concat (Word.RepeatWord y 2) z) ∈
+      moreBsBlockLanguage := by
+  intro hmem
+  have hcountLess := more_bs_block_members_have_more_b_counts hmem
+  have hbY : Word.Count Section01.AB.b y = 0 :=
+    ablock_prefix_before_boundary_count_b_zero hword hxy
+  have haYPos : 0 < Word.Count Section01.AB.a y :=
+    ab_count_a_pos_of_length_pos_count_b_zero hy hbY
+  have hcountAOriginal :
+      Word.Count Section01.AB.a
+        (Word.Concat x (Word.Concat y z)) = n := by
+    rw [← hword]
+    exact ablock_word_count_a n (n + 1)
+  have hcountBOriginal :
+      Word.Count Section01.AB.b
+        (Word.Concat x (Word.Concat y z)) = n + 1 := by
+    rw [← hword]
+    exact ablock_word_count_b n (n + 1)
+  rw [show Word.RepeatWord y 2 = Word.Concat y y by
+    simp [Word.RepeatWord, Word.Concat]] at hcountLess
+  repeat rw [Word.count_concat] at hcountLess
+  rw [Word.count_concat, Word.count_concat] at hcountAOriginal
+  rw [Word.count_concat, Word.count_concat] at hcountBOriginal
+  omega
+
+-- Book: Chapter 3, Section 3.7, Exercise 1(d).
+theorem more_bs_block_no_pumping_property :
+    ¬ Pumping.HasPumpingProperty moreBsBlockLanguage := by
+  intro hpump
+  cases hpump with
+  | intro n hn =>
+      let w : Word Section01.AB :=
+        Word.Concat (Word.RepeatSymbol Section01.AB.a n)
+          (Word.RepeatSymbol Section01.AB.b (n + 1))
+      have hwMem : w ∈ moreBsBlockLanguage := by
+        exists n
+        exists n + 1
+        constructor
+        · omega
+        · rfl
+      have hwLength : n <= Word.Length w := by
+        simp [w, Word.length_concat, Word.length_repeatSymbol]
+      have hdec := hn.right w hwMem hwLength
+      cases hdec with
+      | intro x hx =>
+          cases hx with
+          | intro y hy =>
+              cases hy with
+              | intro z hz =>
+                  cases hz with
+                  | intro hword hrest =>
+                      exact more_bs_block_pump_two_not_mem hword hrest.left
+                        hrest.right.left (hrest.right.right 2)
+
+-- Book: Chapter 3, Section 3.7, Exercise 1(d), conditional on the Pumping
+-- Lemma conclusion.
+theorem more_bs_block_not_regular_from_pumping_lemma
+    (pumpingLemma : Pumping.PumpingLemmaConclusion moreBsBlockLanguage) :
+    ¬ RegularLanguage.Regular moreBsBlockLanguage :=
+  Pumping.not_regular_of_no_pumping_property pumpingLemma
+    more_bs_block_no_pumping_property
+
+-- Book: Chapter 3, Section 3.7, the concrete pumping contradiction for
+-- `{a^n b^n}`.
+theorem anbn_not_regular_from_pumping_lemma
+    (pumpingLemma : Pumping.PumpingLemmaConclusion anbnLanguage) :
+    ¬ RegularLanguage.Regular anbnLanguage :=
+  Pumping.not_regular_of_no_pumping_property pumpingLemma anbn_no_pumping_property
+
 /-!
-The book's full proof that `{ a^n b^n | n >= 0 }` is not regular depends on the
-Pumping Lemma.  This section formalizes the pumping property and its
-contrapositive use without treating the Pumping Lemma itself as an unproved
-global assumption.
+The concrete contradiction for `{ a^n b^n | n >= 0 }` is now formalized:
+no pumping length can satisfy the book's quantified pumping property for this
+language.  The final `not regular` statement remains parameterized by the
+Pumping Lemma conclusion, so this file does not add the Pumping Lemma as an
+unproved global assumption.
 -/
 
 end Section07
