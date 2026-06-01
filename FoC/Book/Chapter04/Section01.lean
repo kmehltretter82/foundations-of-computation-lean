@@ -56,6 +56,26 @@ theorem union_grammar_generates_right (G : CFG terminal left) (H : CFG terminal 
     w ∈ CFG.GeneratedLanguage (CFG.UnionGrammar G H) :=
   CFL.unionGrammar_generates_right G H hw
 
+-- Book: Chapter 4, Section 4.1, Theorem 4.3, union grammar converse.
+theorem union_grammar_generates_inv (G : CFG terminal left) (H : CFG terminal right)
+    {w : Word terminal}
+    (h : w ∈ CFG.GeneratedLanguage (CFG.UnionGrammar G H)) :
+    w ∈ Language.Union (CFG.GeneratedLanguage G) (CFG.GeneratedLanguage H) :=
+  CFL.unionGrammar_generates_inv G H h
+
+-- Book: Chapter 4, Section 4.1, Theorem 4.3, exact union grammar language.
+theorem union_grammar_language_exact (G : CFG terminal left) (H : CFG terminal right)
+    (w : Word terminal) :
+    w ∈ CFG.GeneratedLanguage (CFG.UnionGrammar G H) <->
+      w ∈ Language.Union (CFG.GeneratedLanguage G) (CFG.GeneratedLanguage H) :=
+  CFL.unionGrammar_language_exact G H w
+
+-- Book: Chapter 4, Section 4.1, Theorem 4.3, CFL closure under union.
+theorem context_free_languages_closed_under_union {L M : Language terminal}
+    (hL : ContextFreeLanguage L) (hM : ContextFreeLanguage M) :
+    ContextFreeLanguage (Language.Union L M) :=
+  CFL.union_context_free hL hM
+
 -- Book: Chapter 4, Section 4.1, concatenation grammar construction.
 theorem concat_grammar_generates (G : CFG terminal left) (H : CFG terminal right)
     {x y : Word terminal}
@@ -77,6 +97,12 @@ theorem concat_grammar_language_exact (G : CFG terminal left) (H : CFG terminal 
       w ∈ Language.Concat (CFG.GeneratedLanguage G) (CFG.GeneratedLanguage H) :=
   CFL.concatGrammar_language_exact G H w
 
+-- Book: Chapter 4, Section 4.1, Theorem 4.3, CFL closure under concatenation.
+theorem context_free_languages_closed_under_concatenation {L M : Language terminal}
+    (hL : ContextFreeLanguage L) (hM : ContextFreeLanguage M) :
+    ContextFreeLanguage (Language.Concat L M) :=
+  CFL.concat_context_free hL hM
+
 -- Book: Chapter 4, Section 4.1, Kleene-star grammar construction.
 theorem star_grammar_generates_empty (G : CFG terminal nt) :
     ([] : Word terminal) ∈ CFG.GeneratedLanguage (CFG.StarGrammar G) :=
@@ -89,6 +115,24 @@ theorem star_grammar_generates_cons (G : CFG terminal nt)
     (hy : y ∈ CFG.GeneratedLanguage (CFG.StarGrammar G)) :
     Word.Concat x y ∈ CFG.GeneratedLanguage (CFG.StarGrammar G) :=
   CFL.starGrammar_generates_cons G hx hy
+
+-- Book: Chapter 4, Section 4.1, Theorem 4.3, Kleene-star grammar converse.
+theorem star_grammar_generates_inv (G : CFG terminal nt) {w : Word terminal}
+    (h : w ∈ CFG.GeneratedLanguage (CFG.StarGrammar G)) :
+    w ∈ Language.Star (CFG.GeneratedLanguage G) :=
+  CFL.starGrammar_generates_inv G h
+
+-- Book: Chapter 4, Section 4.1, Theorem 4.3, exact Kleene-star grammar language.
+theorem star_grammar_language_exact (G : CFG terminal nt) (w : Word terminal) :
+    w ∈ CFG.GeneratedLanguage (CFG.StarGrammar G) <->
+      w ∈ Language.Star (CFG.GeneratedLanguage G) :=
+  CFL.starGrammar_language_exact G w
+
+-- Book: Chapter 4, Section 4.1, Theorem 4.3, CFL closure under Kleene star.
+theorem context_free_languages_closed_under_kleene_star {L : Language terminal}
+    (hL : ContextFreeLanguage L) :
+    ContextFreeLanguage (Language.Star L) :=
+  CFL.star_context_free hL
 
 inductive AB where
   | a : AB

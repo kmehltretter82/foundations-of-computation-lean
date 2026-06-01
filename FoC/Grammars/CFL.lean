@@ -28,6 +28,42 @@ theorem unionGrammar_generates_right (G : CFG terminal left) (H : CFG terminal r
     w ∈ CFG.GeneratedLanguage (CFG.UnionGrammar G H) :=
   CFG.union_generates_right G H hw
 
+theorem unionGrammar_generates_inv (G : CFG terminal left) (H : CFG terminal right)
+    {w : Word terminal}
+    (h : w ∈ CFG.GeneratedLanguage (CFG.UnionGrammar G H)) :
+    w ∈ Language.Union (CFG.GeneratedLanguage G) (CFG.GeneratedLanguage H) :=
+  CFG.union_generates_inv G H h
+
+theorem unionGrammar_language_exact (G : CFG terminal left) (H : CFG terminal right)
+    (w : Word terminal) :
+    w ∈ CFG.GeneratedLanguage (CFG.UnionGrammar G H) <->
+      w ∈ Language.Union (CFG.GeneratedLanguage G) (CFG.GeneratedLanguage H) :=
+  CFG.union_generated_language_exact G H w
+
+theorem union_context_free {L M : Language terminal}
+    (hL : ContextFreeLanguage L) (hM : ContextFreeLanguage M) :
+    ContextFreeLanguage (Language.Union L M) := by
+  cases hL with
+  | intro left hleft =>
+      cases hleft with
+      | intro G hG =>
+          cases hM with
+          | intro right hright =>
+              cases hright with
+              | intro H hH =>
+                  exists CFG.SumStart left right
+                  exists CFG.UnionGrammar G H
+                  intro w
+                  constructor
+                  · intro hw
+                    cases CFG.union_generates_inv G H hw with
+                    | inl hwG => exact Or.inl ((hG w).mp hwG)
+                    | inr hwH => exact Or.inr ((hH w).mp hwH)
+                  · intro hw
+                    cases hw with
+                    | inl hwL => exact CFG.union_generates_left G H ((hG w).mpr hwL)
+                    | inr hwM => exact CFG.union_generates_right G H ((hH w).mpr hwM)
+
 theorem concatGrammar_generates (G : CFG terminal left) (H : CFG terminal right)
     {x y : Word terminal}
     (hx : x ∈ CFG.GeneratedLanguage G) (hy : y ∈ CFG.GeneratedLanguage H) :
@@ -46,6 +82,42 @@ theorem concatGrammar_language_exact (G : CFG terminal left) (H : CFG terminal r
       w ∈ Language.Concat (CFG.GeneratedLanguage G) (CFG.GeneratedLanguage H) :=
   CFG.concat_generated_language_exact G H w
 
+theorem concat_context_free {L M : Language terminal}
+    (hL : ContextFreeLanguage L) (hM : ContextFreeLanguage M) :
+    ContextFreeLanguage (Language.Concat L M) := by
+  cases hL with
+  | intro left hleft =>
+      cases hleft with
+      | intro G hG =>
+          cases hM with
+          | intro right hright =>
+              cases hright with
+              | intro H hH =>
+                  exists CFG.SumStart left right
+                  exists CFG.ConcatGrammar G H
+                  intro w
+                  constructor
+                  · intro hw
+                    cases CFG.concat_generates_inv G H hw with
+                    | intro x hx =>
+                        cases hx with
+                        | intro y hy =>
+                            exists x
+                            exists y
+                            constructor
+                            · exact (hG x).mp hy.left
+                            constructor
+                            · exact (hH y).mp hy.right.left
+                            · exact hy.right.right
+                  · intro hw
+                    cases hw with
+                    | intro x hx =>
+                        cases hx with
+                        | intro y hy =>
+                            rw [hy.right.right]
+                            exact CFG.concat_generates G H
+                              ((hG x).mpr hy.left) ((hH y).mpr hy.right.left)
+
 theorem starGrammar_generates_empty (G : CFG terminal nt) :
     ([] : Word terminal) ∈ CFG.GeneratedLanguage (CFG.StarGrammar G) :=
   CFG.star_generates_empty G
@@ -56,6 +128,43 @@ theorem starGrammar_generates_cons (G : CFG terminal nt)
     (hy : y ∈ CFG.GeneratedLanguage (CFG.StarGrammar G)) :
     Word.Concat x y ∈ CFG.GeneratedLanguage (CFG.StarGrammar G) :=
   CFG.star_generates_cons G hx hy
+
+theorem starGrammar_generates_inv (G : CFG terminal nt) {w : Word terminal}
+    (h : w ∈ CFG.GeneratedLanguage (CFG.StarGrammar G)) :
+    w ∈ Language.Star (CFG.GeneratedLanguage G) :=
+  CFG.star_generates_inv G h
+
+theorem starGrammar_language_exact (G : CFG terminal nt) (w : Word terminal) :
+    w ∈ CFG.GeneratedLanguage (CFG.StarGrammar G) <->
+      w ∈ Language.Star (CFG.GeneratedLanguage G) :=
+  CFG.star_generated_language_exact G w
+
+theorem star_context_free {L : Language terminal}
+    (hL : ContextFreeLanguage L) :
+    ContextFreeLanguage (Language.Star L) := by
+  cases hL with
+  | intro nt hnt =>
+      cases hnt with
+      | intro G hG =>
+          exists CFG.StarNT nt
+          exists CFG.StarGrammar G
+          intro w
+          constructor
+          · intro hw
+            cases CFG.star_generates_inv G hw with
+            | intro pieces hpieces =>
+                exists pieces
+                constructor
+                · intro p hp
+                  exact (hG p).mp (hpieces.left p hp)
+                · exact hpieces.right
+          · intro hw
+            cases hw with
+            | intro pieces hpieces =>
+                rw [← hpieces.right]
+                exact CFG.star_generates_of_pieces G pieces (by
+                  intro p hp
+                  exact (hG p).mpr (hpieces.left p hp))
 
 def Concat3 (x y z : Word terminal) : Word terminal :=
   Word.Concat x (Word.Concat y z)

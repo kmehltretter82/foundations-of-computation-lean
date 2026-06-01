@@ -221,6 +221,19 @@ inductive Derives (G : CFG terminal nonterminal) :
 def GeneratedLanguage (G : CFG terminal nonterminal) : Language terminal :=
   fun w => Derives G [Symbol.nonterminal G.start] (SententialForm.terminalWord w)
 
+def GeneratedFrom (G : CFG terminal nonterminal) (A : nonterminal) : Language terminal :=
+  fun w => Derives G [Symbol.nonterminal A] (SententialForm.terminalWord w)
+
+def DerivationSymbolLanguage (G : CFG terminal nonterminal) :
+    Symbol terminal nonterminal -> Language terminal
+  | Symbol.terminal a => Language.Singleton (Word.Symbol a)
+  | Symbol.nonterminal A => GeneratedFrom G A
+
+def FormLanguage (symbolLanguage : Symbol terminal nonterminal -> Language terminal) :
+    SententialForm terminal nonterminal -> Language terminal
+  | [] => Language.Singleton Word.Empty
+  | s :: rest => Language.Concat (symbolLanguage s) (FormLanguage symbolLanguage rest)
+
 def ContextFree (L : Language terminal) : Prop :=
   exists nonterminal : Type, exists G : CFG terminal nonterminal,
     Language.Equal (GeneratedLanguage G) L
@@ -306,6 +319,184 @@ theorem generated_language_mem (G : CFG terminal nonterminal) (w : Word terminal
     w ∈ GeneratedLanguage G <->
       Derives G [Symbol.nonterminal G.start] (SententialForm.terminalWord w) :=
   Iff.rfl
+
+theorem formLanguage_empty
+    (symbolLanguage : Symbol terminal nonterminal -> Language terminal) :
+    Word.Empty ∈ FormLanguage symbolLanguage [] :=
+  rfl
+
+theorem formLanguage_append
+    (symbolLanguage : Symbol terminal nonterminal -> Language terminal)
+    (x y : SententialForm terminal nonterminal) :
+    Language.Equal (FormLanguage symbolLanguage (x ++ y))
+      (Language.Concat (FormLanguage symbolLanguage x) (FormLanguage symbolLanguage y)) := by
+  induction x with
+  | nil =>
+      intro w
+      constructor
+      · intro hw
+        exists Word.Empty
+        exists w
+      · intro hw
+        cases hw with
+        | intro wx hwx =>
+            cases hwx with
+            | intro wy hwy =>
+                cases hwy.left
+                cases hwy.right.right
+                exact hwy.right.left
+  | cons s rest ih =>
+      intro w
+      constructor
+      · intro hw
+        cases hw with
+        | intro first hfirst =>
+            cases hfirst with
+            | intro tail htail =>
+                have htailSplit := (ih tail).mp htail.right.left
+                cases htailSplit with
+                | intro restWord hrestWord =>
+                    cases hrestWord with
+                    | intro yWord hyWord =>
+                        exists Word.Concat first restWord
+                        exists yWord
+                        constructor
+                        · exists first
+                          exists restWord
+                          exact And.intro htail.left
+                            (And.intro hyWord.left rfl)
+                        constructor
+                        · exact hyWord.right.left
+                        · calc
+                            w = Word.Concat first tail := htail.right.right
+                            _ = Word.Concat first (Word.Concat restWord yWord) := by
+                              rw [hyWord.right.right]
+                            _ = Word.Concat (Word.Concat first restWord) yWord := by
+                              rw [← Word.concat_assoc]
+      · intro hw
+        cases hw with
+        | intro pref hp =>
+            cases hp with
+            | intro suffix hs =>
+                cases hs.left with
+                | intro first hfirst =>
+                    cases hfirst with
+                    | intro restWord hrestWord =>
+                        have htail : Word.Concat restWord suffix ∈
+                            FormLanguage symbolLanguage (rest ++ y) :=
+                          (ih (Word.Concat restWord suffix)).mpr
+                            (Exists.intro restWord
+                              (Exists.intro suffix
+                                (And.intro hrestWord.right.left
+                                  (And.intro hs.right.left rfl))))
+                        exists first
+                        exists Word.Concat restWord suffix
+                        constructor
+                        · exact hrestWord.left
+                        constructor
+                        · exact htail
+                        · calc
+                            w = Word.Concat pref suffix := hs.right.right
+                            _ = Word.Concat (Word.Concat first restWord) suffix := by
+                              rw [hrestWord.right.right]
+                            _ = Word.Concat first (Word.Concat restWord suffix) := by
+                              rw [Word.concat_assoc]
+
+theorem formLanguage_replace_sound
+    (symbolLanguage : Symbol terminal nonterminal -> Language terminal)
+    {u rhs v : SententialForm terminal nonterminal}
+    {A : nonterminal} {w : Word terminal}
+    (hlocal : forall x, x ∈ FormLanguage symbolLanguage rhs ->
+      x ∈ symbolLanguage (Symbol.nonterminal A))
+    (hw : w ∈ FormLanguage symbolLanguage (u ++ rhs ++ v)) :
+    w ∈ FormLanguage symbolLanguage (u ++ [Symbol.nonterminal A] ++ v) := by
+  have hu := (formLanguage_append symbolLanguage u (rhs ++ v) w).mp (by
+    simpa [List.append_assoc] using hw)
+  cases hu with
+  | intro pref hp =>
+      cases hp with
+      | intro suffix hs =>
+          have hsSplit := (formLanguage_append symbolLanguage rhs v suffix).mp hs.right.left
+          cases hsSplit with
+          | intro middle hm =>
+              cases hm with
+              | intro tail ht =>
+                  have hnew : w ∈ FormLanguage symbolLanguage
+                      (u ++ ([Symbol.nonterminal A] ++ v)) := by
+                    apply (formLanguage_append symbolLanguage u
+                      ([Symbol.nonterminal A] ++ v) w).mpr
+                    exists pref
+                    exists Word.Concat middle tail
+                    constructor
+                    · exact hs.left
+                    constructor
+                    · exists middle
+                      exists tail
+                      exact And.intro (hlocal middle ht.left)
+                        (And.intro ht.right.left rfl)
+                    · calc
+                        w = Word.Concat pref suffix := hs.right.right
+                        _ = Word.Concat pref (Word.Concat middle tail) := by
+                          rw [ht.right.right]
+                  simpa [List.append_assoc] using hnew
+
+theorem terminalWord_mem_formLanguage
+    (symbolLanguage : Symbol terminal nonterminal -> Language terminal)
+    (hterminal : forall a, Word.Symbol a ∈ symbolLanguage (Symbol.terminal a))
+    (w : Word terminal) :
+    w ∈ FormLanguage symbolLanguage (SententialForm.terminalWord (nt := nonterminal) w) := by
+  induction w with
+  | nil =>
+      rfl
+  | cons a rest ih =>
+      exists [a]
+      exists rest
+      constructor
+      · exact hterminal a
+      constructor
+      · exact ih
+      · rfl
+
+theorem formLanguage_derives {G : CFG terminal nonterminal}
+    {sf : SententialForm terminal nonterminal} {w : Word terminal}
+    (h : w ∈ FormLanguage (DerivationSymbolLanguage G) sf) :
+    Derives G sf (SententialForm.terminalWord w) := by
+  induction sf generalizing w with
+  | nil =>
+      cases h
+      exact Derives.refl []
+  | cons s rest ih =>
+      cases h with
+      | intro first hfirst =>
+          cases hfirst with
+          | intro tail htail =>
+              have hrest := ih htail.right.left
+              cases s with
+              | terminal a =>
+                  have hfirstEq : first = [a] := htail.left
+                  rw [htail.right.right, hfirstEq]
+                  change Derives G (Symbol.terminal a :: rest)
+                    (SententialForm.terminalWord (Word.Concat [a] tail))
+                  have hctx := derives_context hrest [Symbol.terminal a] []
+                  rw [SententialForm.terminalWord_append]
+                  simpa [SententialForm.terminalWord] using hctx
+              | nonterminal A =>
+                  have hsym : Derives G [Symbol.nonterminal A]
+                      (SententialForm.terminalWord first) := htail.left
+                  rw [htail.right.right]
+                  change Derives G (Symbol.nonterminal A :: rest)
+                    (SententialForm.terminalWord (Word.Concat first tail))
+                  have hleft :
+                      Derives G (Symbol.nonterminal A :: rest)
+                        (SententialForm.terminalWord first ++ rest) := by
+                    simpa using derives_context hsym [] rest
+                  have hright :
+                      Derives G (SententialForm.terminalWord first ++ rest)
+                        (SententialForm.terminalWord first ++
+                          SententialForm.terminalWord tail) := by
+                    simpa using derives_context hrest (SententialForm.terminalWord first) []
+                  rw [SententialForm.terminalWord_append]
+                  exact derives_trans hleft hright
 
 theorem context_free_of_equal {L M : Language terminal}
     (hL : ContextFree L) (hEq : Language.Equal L M) : ContextFree M := by
@@ -495,6 +686,159 @@ def UnionGrammar (G : CFG terminal left) (H : CFG terminal right) :
   produces := UnionProduces G H
   nonterminalsFinite := SumStart.finite G.nonterminalsFinite H.nonterminalsFinite
 
+def UnionSymbolLanguage (G : CFG terminal left) (H : CFG terminal right) :
+    Symbol terminal (SumStart left right) -> Language terminal
+  | Symbol.terminal a => Language.Singleton (Word.Symbol a)
+  | Symbol.nonterminal SumStart.start =>
+      Language.Union (GeneratedLanguage G) (GeneratedLanguage H)
+  | Symbol.nonterminal (SumStart.inLeft A) => GeneratedFrom G A
+  | Symbol.nonterminal (SumStart.inRight A) => GeneratedFrom H A
+
+theorem inLeftForm_formLanguage_to_derivation
+    (G : CFG terminal left) (H : CFG terminal right)
+    {sf : SententialForm terminal left} {w : Word terminal}
+    (h : w ∈ FormLanguage (UnionSymbolLanguage G H) (inLeftForm sf)) :
+    w ∈ FormLanguage (DerivationSymbolLanguage G) sf := by
+  induction sf generalizing w with
+  | nil =>
+      exact h
+  | cons s rest ih =>
+      cases s with
+      | terminal a =>
+          cases h with
+          | intro first hfirst =>
+              cases hfirst with
+              | intro tail htail =>
+                  exists first
+                  exists tail
+                  exact And.intro htail.left
+                    (And.intro (ih htail.right.left) htail.right.right)
+      | nonterminal A =>
+          cases h with
+          | intro first hfirst =>
+              cases hfirst with
+              | intro tail htail =>
+                  exists first
+                  exists tail
+                  exact And.intro htail.left
+                    (And.intro (ih htail.right.left) htail.right.right)
+
+theorem inRightForm_formLanguage_to_derivation
+    (G : CFG terminal left) (H : CFG terminal right)
+    {sf : SententialForm terminal right} {w : Word terminal}
+    (h : w ∈ FormLanguage (UnionSymbolLanguage G H) (inRightForm sf)) :
+    w ∈ FormLanguage (DerivationSymbolLanguage H) sf := by
+  induction sf generalizing w with
+  | nil =>
+      exact h
+  | cons s rest ih =>
+      cases s with
+      | terminal a =>
+          cases h with
+          | intro first hfirst =>
+              cases hfirst with
+              | intro tail htail =>
+                  exists first
+                  exists tail
+                  exact And.intro htail.left
+                    (And.intro (ih htail.right.left) htail.right.right)
+      | nonterminal A =>
+          cases h with
+          | intro first hfirst =>
+              cases hfirst with
+              | intro tail htail =>
+                  exists first
+                  exists tail
+                  exact And.intro htail.left
+                    (And.intro (ih htail.right.left) htail.right.right)
+
+theorem union_production_sound (G : CFG terminal left) (H : CFG terminal right)
+    {A : SumStart left right} {rhs : SententialForm terminal (SumStart left right)}
+    (hprod : UnionProduces G H A rhs) :
+    forall w, w ∈ FormLanguage (UnionSymbolLanguage G H) rhs ->
+      w ∈ UnionSymbolLanguage G H (Symbol.nonterminal A) := by
+  intro w hw
+  cases hprod with
+  | chooseLeft =>
+      cases hw with
+      | intro first hfirst =>
+          cases hfirst with
+          | intro tail htail =>
+              cases htail.right.left
+              rw [htail.right.right, Word.concat_empty_right]
+              exact Or.inl htail.left
+  | chooseRight =>
+      cases hw with
+      | intro first hfirst =>
+          cases hfirst with
+          | intro tail htail =>
+              cases htail.right.left
+              rw [htail.right.right, Word.concat_empty_right]
+              exact Or.inr htail.left
+  | leftRule hG =>
+      rename_i A rhs
+      have hbody := inLeftForm_formLanguage_to_derivation G H hw
+      have hstep : Yields G [Symbol.nonterminal A] rhs := by
+        exists []
+        exists []
+        exists A
+        exists rhs
+        constructor
+        · exact hG
+        constructor
+        · rfl
+        · simp
+      exact Derives.step hstep (formLanguage_derives hbody)
+  | rightRule hH =>
+      rename_i A rhs
+      have hbody := inRightForm_formLanguage_to_derivation G H hw
+      have hstep : Yields H [Symbol.nonterminal A] rhs := by
+        exists []
+        exists []
+        exists A
+        exists rhs
+        constructor
+        · exact hH
+        constructor
+        · rfl
+        · simp
+      exact Derives.step hstep (formLanguage_derives hbody)
+
+theorem union_yields_sound (G : CFG terminal left) (H : CFG terminal right)
+    {x y : SententialForm terminal (SumStart left right)} {w : Word terminal}
+    (h : Yields (UnionGrammar G H) x y)
+    (hw : w ∈ FormLanguage (UnionSymbolLanguage G H) y) :
+    w ∈ FormLanguage (UnionSymbolLanguage G H) x := by
+  cases h with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases hv with
+          | intro A hA =>
+              cases hA with
+              | intro rhs hrhs =>
+                  cases hrhs with
+                  | intro hprod hrest =>
+                      cases hrest with
+                      | intro hx hy =>
+                          rw [hy] at hw
+                          rw [hx]
+                          exact formLanguage_replace_sound
+                            (UnionSymbolLanguage G H)
+                            (union_production_sound G H hprod)
+                            hw
+
+theorem union_derives_sound (G : CFG terminal left) (H : CFG terminal right)
+    {x y : SententialForm terminal (SumStart left right)} {w : Word terminal}
+    (h : Derives (UnionGrammar G H) x y)
+    (hw : w ∈ FormLanguage (UnionSymbolLanguage G H) y) :
+    w ∈ FormLanguage (UnionSymbolLanguage G H) x := by
+  induction h with
+  | refl _ =>
+      exact hw
+  | step hstep _ ih =>
+      exact union_yields_sound G H hstep (ih hw)
+
 theorem union_generates_left (G : CFG terminal left) (H : CFG terminal right)
     {w : Word terminal} (hw : w ∈ GeneratedLanguage G) :
     w ∈ GeneratedLanguage (UnionGrammar G H) := by
@@ -550,6 +894,35 @@ theorem union_generates_right (G : CFG terminal left) (H : CFG terminal right)
     rw [SententialForm.mapNonterminal_terminalWord] at hMapped
     exact hMapped
   exact Derives.step hStart hMap
+
+theorem union_generates_inv (G : CFG terminal left) (H : CFG terminal right)
+    {w : Word terminal}
+    (h : w ∈ GeneratedLanguage (UnionGrammar G H)) :
+    w ∈ Language.Union (GeneratedLanguage G) (GeneratedLanguage H) := by
+  have hterminal : w ∈ FormLanguage (UnionSymbolLanguage G H)
+      (SententialForm.terminalWord (nt := SumStart left right) w) :=
+    terminalWord_mem_formLanguage (UnionSymbolLanguage G H) (by intro a; rfl) w
+  have hsound := union_derives_sound G H h hterminal
+  cases hsound with
+  | intro first hfirst =>
+      cases hfirst with
+      | intro tail htail =>
+          cases htail.right.left
+          rw [htail.right.right, Word.concat_empty_right]
+          exact htail.left
+
+theorem union_generated_language_exact (G : CFG terminal left) (H : CFG terminal right)
+    (w : Word terminal) :
+    w ∈ GeneratedLanguage (UnionGrammar G H) <->
+      w ∈ Language.Union (GeneratedLanguage G) (GeneratedLanguage H) := by
+  constructor
+  · exact union_generates_inv G H
+  · intro hw
+    cases hw with
+    | inl hleft =>
+        exact union_generates_left G H hleft
+    | inr hright =>
+        exact union_generates_right G H hright
 
 inductive ConcatProduces (G : CFG terminal left) (H : CFG terminal right) :
     SumStart left right -> SententialForm terminal (SumStart left right) -> Prop where
@@ -1138,6 +1511,132 @@ def StarGrammar (G : CFG terminal nt) : CFG terminal (StarNT nt) where
   produces := StarProduces G
   nonterminalsFinite := StarNT.finite G.nonterminalsFinite
 
+def StarSymbolLanguage (G : CFG terminal nt) :
+    Symbol terminal (StarNT nt) -> Language terminal
+  | Symbol.terminal a => Language.Singleton (Word.Symbol a)
+  | Symbol.nonterminal StarNT.start => Language.Star (GeneratedLanguage G)
+  | Symbol.nonterminal (StarNT.body A) => GeneratedFrom G A
+
+theorem starBodyForm_formLanguage_to_derivation
+    (G : CFG terminal nt) {sf : SententialForm terminal nt} {w : Word terminal}
+    (h : w ∈ FormLanguage (StarSymbolLanguage G) (starBodyForm sf)) :
+    w ∈ FormLanguage (DerivationSymbolLanguage G) sf := by
+  induction sf generalizing w with
+  | nil =>
+      exact h
+  | cons s rest ih =>
+      cases s with
+      | terminal a =>
+          cases h with
+          | intro first hfirst =>
+              cases hfirst with
+              | intro tail htail =>
+                  exists first
+                  exists tail
+                  exact And.intro htail.left
+                    (And.intro (ih htail.right.left) htail.right.right)
+      | nonterminal A =>
+          cases h with
+          | intro first hfirst =>
+              cases hfirst with
+              | intro tail htail =>
+                  exists first
+                  exists tail
+                  exact And.intro htail.left
+                    (And.intro (ih htail.right.left) htail.right.right)
+
+theorem star_production_sound (G : CFG terminal nt)
+    {A : StarNT nt} {rhs : SententialForm terminal (StarNT nt)}
+    (hprod : StarProduces G A rhs) :
+    forall w, w ∈ FormLanguage (StarSymbolLanguage G) rhs ->
+      w ∈ StarSymbolLanguage G (Symbol.nonterminal A) := by
+  intro w hw
+  cases hprod with
+  | stop =>
+      cases hw
+      exact Language.star_empty_word (GeneratedLanguage G)
+  | more =>
+      cases hw with
+      | intro first hfirst =>
+          cases hfirst with
+          | intro tail htail =>
+              have htailStar : tail ∈ Language.Star (GeneratedLanguage G) := by
+                cases htail.right.left with
+                | intro starPart hstarPart =>
+                    cases hstarPart with
+                    | intro emptyPart hemptyPart =>
+                      cases hemptyPart.right.left
+                      rw [hemptyPart.right.right, Word.concat_empty_right]
+                      exact hemptyPart.left
+              rw [htail.right.right]
+              exact Language.star_concat
+                (Language.star_of_mem (GeneratedLanguage G) htail.left)
+                htailStar
+  | bodyRule hG =>
+      rename_i A rhs
+      have hbody := starBodyForm_formLanguage_to_derivation G hw
+      have hstep : Yields G [Symbol.nonterminal A] rhs := by
+        exists []
+        exists []
+        exists A
+        exists rhs
+        constructor
+        · exact hG
+        constructor
+        · rfl
+        · simp
+      exact Derives.step hstep (formLanguage_derives hbody)
+
+theorem star_yields_sound (G : CFG terminal nt)
+    {x y : SententialForm terminal (StarNT nt)} {w : Word terminal}
+    (h : Yields (StarGrammar G) x y)
+    (hw : w ∈ FormLanguage (StarSymbolLanguage G) y) :
+    w ∈ FormLanguage (StarSymbolLanguage G) x := by
+  cases h with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases hv with
+          | intro A hA =>
+              cases hA with
+              | intro rhs hrhs =>
+                  cases hrhs with
+                  | intro hprod hrest =>
+                      cases hrest with
+                      | intro hx hy =>
+                          rw [hy] at hw
+                          rw [hx]
+                          exact formLanguage_replace_sound
+                            (StarSymbolLanguage G)
+                            (star_production_sound G hprod)
+                            hw
+
+theorem star_derives_sound (G : CFG terminal nt)
+    {x y : SententialForm terminal (StarNT nt)} {w : Word terminal}
+    (h : Derives (StarGrammar G) x y)
+    (hw : w ∈ FormLanguage (StarSymbolLanguage G) y) :
+    w ∈ FormLanguage (StarSymbolLanguage G) x := by
+  induction h with
+  | refl _ =>
+      exact hw
+  | step hstep _ ih =>
+      exact star_yields_sound G hstep (ih hw)
+
+theorem star_generates_inv (G : CFG terminal nt) {w : Word terminal}
+    (h : w ∈ GeneratedLanguage (StarGrammar G)) :
+    w ∈ Language.Star (GeneratedLanguage G) := by
+  have hterminal : w ∈ FormLanguage (StarSymbolLanguage G)
+      (SententialForm.terminalWord (nt := StarNT nt) w) :=
+    terminalWord_mem_formLanguage (StarSymbolLanguage G) (by intro a; rfl) w
+  have hsound := star_derives_sound G h hterminal
+  cases hsound with
+  | intro starPart hstarPart =>
+      cases hstarPart with
+      | intro emptyPart hemptyPart =>
+          cases hemptyPart.right.left
+          rw [hemptyPart.right.right, Word.concat_empty_right]
+          exact hemptyPart.left
+
 theorem star_generates_empty (G : CFG terminal nt) :
     ([] : Word terminal) ∈ GeneratedLanguage (StarGrammar G) := by
   apply yields_derives
@@ -1194,6 +1693,30 @@ theorem star_generates_cons (G : CFG terminal nt)
     (SententialForm.terminalWord (Word.Concat x y))
   rw [SententialForm.terminalWord_append]
   exact hAll
+
+theorem star_generates_of_pieces (G : CFG terminal nt)
+    (pieces : List (Word terminal))
+    (hall : forall p, p ∈ pieces -> p ∈ GeneratedLanguage G) :
+    Language.ConcatWords pieces ∈ GeneratedLanguage (StarGrammar G) := by
+  induction pieces with
+  | nil =>
+      exact star_generates_empty G
+  | cons p rest ih =>
+      exact star_generates_cons G (hall p (List.Mem.head rest))
+        (ih (by
+          intro q hq
+          exact hall q (List.Mem.tail p hq)))
+
+theorem star_generated_language_exact (G : CFG terminal nt) (w : Word terminal) :
+    w ∈ GeneratedLanguage (StarGrammar G) <->
+      w ∈ Language.Star (GeneratedLanguage G) := by
+  constructor
+  · exact star_generates_inv G
+  · intro hw
+    cases hw with
+    | intro pieces hpieces =>
+        rw [← hpieces.right]
+        exact star_generates_of_pieces G pieces hpieces.left
 
 end CFG
 

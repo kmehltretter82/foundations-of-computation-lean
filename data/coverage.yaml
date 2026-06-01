@@ -191,7 +191,7 @@ completed:
         reason: "The pumping property, contrapositive schema, and a^n b^n count invariants are formalized, but the full pumping lemma and complete non-regularity proof for a^n b^n are not added as unproved assumptions."
   - coordinate: "Chapter 4"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 50
+    theorem_declarations: 57
     definition_declarations: 27
     modules:
       - "FoC.Book.Chapter04.Section01"
@@ -211,7 +211,7 @@ completed:
       - "Terminals, nonterminals, sentential forms, and terminal-word embeddings"
       - "Context-free grammar structure, one-step yields, reflexive-transitive derivations, generated languages, and context-free-language vocabulary"
       - "The four basic yield laws from Theorem 4.1: one-step inclusion, transitivity, context closure for one-step yields, and context closure for derivations"
-      - "Constructive CFG combinators for union, concatenation, and Kleene star, including exact language equivalence for the concatenation grammar"
+      - "Constructive CFG combinators for union, concatenation, and Kleene star, exact generated-language equivalences for all three constructions, and CFL closure under all three operations"
       - "A concrete Chapter 4 grammar for a^n b^n words, with forward generated-word proofs and the exact reverse inclusion for terminal outputs"
       - "Right-regular grammar right-hand-side vocabulary"
       - "BNF expression syntax for empty, symbol, sequence, alternatives, optional items, and repetition, with expansion rules"
@@ -223,8 +223,6 @@ completed:
       - "Context-free pumping-lemma quantified vocabulary and contrapositive schema"
       - "General grammars with unrestricted left-hand sides, derivations, generated languages, and embedding of CFG derivations into general grammars"
     classified_not_formalized_yet:
-      - coordinate: "Chapter 4, Section 4.1, Theorem 4.3"
-        reason: "Concatenation has an exact constructed-grammar equivalence. Kleene-star still has only forward generation lemmas; its converse needs a multi-zone derivation invariant because arbitrary derivations may expand later star copies before earlier body copies finish."
       - coordinate: "Chapter 4, Section 4.1, Theorem 4.4"
         reason: "Right-regular grammar vocabulary is formalized; the full equivalence with regular languages is deferred pending a grammar-to-NFA construction and the remaining state-elimination direction from Chapter 3."
       - coordinate: "Chapter 4, Section 4.2"
