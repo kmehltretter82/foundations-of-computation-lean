@@ -44,6 +44,36 @@ theorem anbn_membership (w : Word Section01.AB) :
           (Word.RepeatSymbol Section01.AB.b n) :=
   Iff.rfl
 
+-- Book: Chapter 3, Section 3.7, counting groundwork for the `a^n b^n` example.
+theorem anbn_word_count_a (n : Nat) :
+    Word.Count Section01.AB.a
+      (Word.Concat (Word.RepeatSymbol Section01.AB.a n)
+        (Word.RepeatSymbol Section01.AB.b n)) = n := by
+  rw [Word.count_concat, Word.count_repeatSymbol_same]
+  rw [Word.count_repeatSymbol_different]
+  · omega
+  · intro h
+    cases h
+
+-- Book: Chapter 3, Section 3.7, counting groundwork for the `a^n b^n` example.
+theorem anbn_word_count_b (n : Nat) :
+    Word.Count Section01.AB.b
+      (Word.Concat (Word.RepeatSymbol Section01.AB.a n)
+        (Word.RepeatSymbol Section01.AB.b n)) = n := by
+  rw [Word.count_concat, Word.count_repeatSymbol_same]
+  rw [Word.count_repeatSymbol_different]
+  · omega
+  · intro h
+    cases h
+
+-- Book: Chapter 3, Section 3.7, every word in `{a^n b^n}` has equal counts.
+theorem anbn_members_have_equal_counts {w : Word Section01.AB}
+    (hw : w ∈ anbnLanguage) :
+    Word.Count Section01.AB.a w = Word.Count Section01.AB.b w := by
+  cases hw with
+  | intro n hn =>
+      rw [hn, anbn_word_count_a n, anbn_word_count_b n]
+
 /-!
 The book's full proof that `{ a^n b^n | n >= 0 }` is not regular depends on the
 Pumping Lemma.  This section formalizes the pumping property and its

@@ -11,6 +11,17 @@ Book: Chapter 4, Section 4.2, Application: BNF.
 
 open Grammars
 
+-- Book: Chapter 4, Section 4.2, a BNF symbol expands to its singleton RHS.
+theorem bnf_symbol_expands (s : Symbol terminal nonterminal) :
+    BNF.Expr.Expands (BNF.Expr.symbol s) [s] :=
+  BNF.Expr.Expands.symbol s
+
+-- Book: Chapter 4, Section 4.2, sequencing concatenates expanded RHS lists.
+theorem bnf_sequence_expands {e f : BNF.Expr terminal nonterminal} {x y}
+    (hx : BNF.Expr.Expands e x) (hy : BNF.Expr.Expands f y) :
+    BNF.Expr.Expands (BNF.Expr.seq e f) (x ++ y) :=
+  BNF.Expr.Expands.seq hx hy
+
 -- Book: Chapter 4, Section 4.2, BNF alternatives.
 theorem bnf_alternative_expands {e f : BNF.Expr terminal nonterminal} {rhs}
     (h : BNF.Expr.Expands (BNF.Expr.alt e f) rhs) :
@@ -45,6 +56,15 @@ theorem bnf_repeat_cons {e : BNF.Expr terminal nonterminal} {first rest}
     (hrest : BNF.Expr.Expands (BNF.Expr.many e) rest) :
     BNF.Expr.Expands (BNF.Expr.many e) (first ++ rest) :=
   BNF.Expr.repeat_cons hfirst hrest
+
+-- Book: Chapter 4, Section 4.2, two repeated BNF items expand by two `many` steps.
+theorem bnf_repeat_two {e : BNF.Expr terminal nonterminal} {first second}
+    (hfirst : BNF.Expr.Expands e first)
+    (hsecond : BNF.Expr.Expands e second) :
+    BNF.Expr.Expands (BNF.Expr.many e) (first ++ second) := by
+  exact BNF.Expr.repeat_cons hfirst (by
+    simpa [List.append_nil] using
+      BNF.Expr.repeat_cons hsecond (BNF.Expr.repeat_empty e))
 
 end Section02
 end Chapter04

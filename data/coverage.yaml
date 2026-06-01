@@ -143,7 +143,7 @@ completed:
         reason: "SQL syntax and DBMS behavior are application material; the table-as-relation model with core update operations is formalized."
   - coordinate: "Chapter 3"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 62
+    theorem_declarations: 65
     definition_declarations: 10
     modules:
       - "FoC.Book.Chapter03.Section01"
@@ -179,6 +179,7 @@ completed:
       - "Thompson-style NFAs for empty language, epsilon, symbols, union, concatenation, and Kleene star"
       - "Recursive compiler proving every regular-expression language is NFA-recognizable"
       - "Pumping-lemma quantified vocabulary and contrapositive schema without introducing the Pumping Lemma as a global premise"
+      - "Word repetition/count lemmas and equal-count groundwork for the a^n b^n pumping example"
     classified_not_formalized_yet:
       - coordinate: "Chapter 3, Section 3.3"
         reason: "Editor-specific search/replace syntax, anchors, word boundaries, escaping conventions, and backreferences are application material; optional, plus, and character-class sugar are formalized."
@@ -187,11 +188,11 @@ completed:
       - coordinate: "Chapter 3, Section 3.6, Theorem 3.5"
         reason: "Union, concatenation, and Kleene star are proved for regular expressions; complement and intersection are proved at the DFA-recognizable level pending state elimination."
       - coordinate: "Chapter 3, Section 3.7, Theorems 3.6 and 3.7"
-        reason: "The pumping property and contrapositive schema are formalized, but the full pumping lemma and non-regularity proof for a^n b^n are not added as unproved assumptions."
+        reason: "The pumping property, contrapositive schema, and a^n b^n count invariants are formalized, but the full pumping lemma and complete non-regularity proof for a^n b^n are not added as unproved assumptions."
   - coordinate: "Chapter 4"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 30
-    definition_declarations: 13
+    theorem_declarations: 34
+    definition_declarations: 23
     modules:
       - "FoC.Book.Chapter04.Section01"
       - "FoC.Book.Chapter04.Section02"
@@ -215,7 +216,8 @@ completed:
       - "Right-regular grammar right-hand-side vocabulary"
       - "BNF expression syntax for empty, symbol, sequence, alternatives, optional items, and repetition, with expansion rules"
       - "Parse-tree and parse-forest syntax, frontier computation, and proof that every parse tree induces a derivation"
-      - "Ambiguity vocabulary via two parse trees with the same frontier"
+      - "Additional BNF symbol, sequence, and repeated-item expansion wrappers"
+      - "Ambiguity vocabulary via two parse trees with the same frontier, plus an explicit ambiguous grammar witness"
       - "Pushdown automata with configurations, epsilon and input-consuming transitions, multi-step computations, final-state-plus-empty-stack acceptance, final-state-only acceptance, empty-stack-only acceptance, accepted languages, recognizability, and determinism vocabulary"
       - "PDA computation transitivity and implication from book acceptance to final-state-only and empty-stack-only acceptance"
       - "Context-free pumping-lemma quantified vocabulary and contrapositive schema"
@@ -228,9 +230,9 @@ completed:
       - coordinate: "Chapter 4, Section 4.1, Theorem 4.4"
         reason: "Right-regular grammar vocabulary is formalized; the full equivalence with regular languages is deferred pending a grammar-to-NFA construction and the remaining state-elimination direction from Chapter 3."
       - coordinate: "Chapter 4, Section 4.2"
-        reason: "Programming-language and English BNF examples are application material; the BNF expansion operators used by those examples are formalized."
+        reason: "Programming-language and English BNF examples are application material; the BNF expansion operators used by those examples are formalized with additional sequence and repetition wrappers."
       - coordinate: "Chapter 4, Section 4.3"
-        reason: "Parse trees and the parse-tree-to-derivation direction are formalized; the one-to-one correspondence with left derivations and full LL(1)/LR(1) parser construction are classified as later parsing infrastructure."
+        reason: "Parse trees, the parse-tree-to-derivation direction, and an explicit ambiguous grammar witness are formalized; the one-to-one correspondence with left derivations and full LL(1)/LR(1) parser construction are classified as later parsing infrastructure."
       - coordinate: "Chapter 4, Section 4.4"
         reason: "PDA definitions and computation semantics are formalized; full CFG-to-PDA and PDA-to-CFG equivalence is not asserted without the larger construction proof."
       - coordinate: "Chapter 4, Section 4.5"
@@ -239,7 +241,7 @@ completed:
         reason: "General grammar definitions and CFG embedding are formalized; equivalence with recursively enumerable languages belongs with the Chapter 5 computability development."
   - coordinate: "Chapter 5"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 8
+    theorem_declarations: 12
     definition_declarations: 20
     modules:
       - "FoC.Book.Chapter05.Section01"
@@ -262,9 +264,11 @@ completed:
       - "Turing-computable total and partial string-function vocabulary with explicit input/output encodings"
       - "Turing-decidable and Turing-acceptable language vocabulary, plus recursive and recursively enumerable aliases"
       - "A decider, as modeled by output 0/1, halts on every input"
+      - "Decidable and recursive languages are closed under complement by swapping decider outputs"
       - "Listing and range-language vocabulary for recursively enumerable languages"
       - "General grammar versus recursively enumerable language equivalence statement shape"
       - "Non-computable function, non-acceptable language, undecidable language, diagonal-language, halting-problem, and universal-machine specification vocabulary"
+      - "Abstract diagonal contradiction core for self-recognition predicates"
     classified_not_formalized_yet:
       - coordinate: "Chapter 5, Section 5.1"
         reason: "Concrete transition diagrams and machine programs are application artifacts; the formal core provides tape/configuration/machine semantics and computability vocabulary."
@@ -275,6 +279,6 @@ completed:
       - coordinate: "Chapter 5, Section 5.2"
         reason: "The theorem that recursive languages are exactly those whose language and complement are recursively enumerable requires dovetailing-machine construction and is deferred."
       - coordinate: "Chapter 5, Section 5.3"
-        reason: "Universal-machine construction, concrete machine encodings, diagonal non-enumerability, and halting-problem undecidability require encoding and interpreter infrastructure not yet present."
+        reason: "The abstract diagonal contradiction core is formalized. Universal-machine construction, concrete machine encodings, diagonal non-enumerability, and halting-problem undecidability require encoding and interpreter infrastructure not yet present."
 in_progress: []
 planned: []

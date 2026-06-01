@@ -64,6 +64,22 @@ theorem length_concat (x y : Word alpha) :
     Length (Concat x y) = Length x + Length y := by
   simp [Length, Concat]
 
+theorem length_repeatWord (w : Word alpha) (n : Nat) :
+    Length (RepeatWord w n) = n * Length w := by
+  induction n with
+  | zero =>
+      simp [RepeatWord, Length]
+  | succ n ih =>
+      calc
+        Length (RepeatWord w (n + 1))
+            = Length w + Length (RepeatWord w n) := by
+                simp [RepeatWord, Length, List.length_append]
+        _ = Length w + n * Length w := by
+                rw [ih]
+        _ = (n + 1) * Length w := by
+                rw [Nat.succ_mul]
+                omega
+
 theorem reverse_concat (x y : Word alpha) :
     Reverse (Concat x y) = Concat (Reverse y) (Reverse x) := by
   simp [Reverse, Concat]
@@ -93,6 +109,39 @@ theorem count_cons_same [DecidableEq alpha] (a : alpha) (w : Word alpha) :
 theorem count_cons_different [DecidableEq alpha] {a b : alpha} (h : b ≠ a)
     (w : Word alpha) : Count a (b :: w) = Count a w := by
   simp [Count, h]
+
+theorem count_concat [DecidableEq alpha] (a : alpha) (x y : Word alpha) :
+    Count a (Concat x y) = Count a x + Count a y := by
+  unfold Concat
+  induction x with
+  | nil =>
+      simp [Count]
+  | cons b x ih =>
+      change Count a (List.append x y) = Count a x + Count a y at ih
+      by_cases h : b = a
+      · simp [Count, h]
+        have ih' : Count a (List.append x y) = Count a x + Count a y := ih
+        change 1 + Count a (List.append x y) = 1 + Count a x + Count a y
+        omega
+      · simp [Count, h]
+        simpa using ih
+
+theorem count_repeatSymbol_same [DecidableEq alpha] (a : alpha) (n : Nat) :
+    Count a (RepeatSymbol a n) = n := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+      rw [show RepeatSymbol a (n + 1) = a :: RepeatSymbol a n by rfl]
+      simp [Count, ih, Nat.add_comm]
+
+theorem count_repeatSymbol_different [DecidableEq alpha] {a b : alpha}
+    (h : b ≠ a) (n : Nat) :
+    Count a (RepeatSymbol b n) = 0 := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+      rw [show RepeatSymbol b (n + 1) = b :: RepeatSymbol b n by rfl]
+      simp [Count, h, ih]
 
 end Word
 end Languages

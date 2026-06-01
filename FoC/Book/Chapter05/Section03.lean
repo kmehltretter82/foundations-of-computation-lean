@@ -49,6 +49,12 @@ theorem not_acceptable_of_contradiction {L : Language alpha}
     (h : TuringAcceptable L -> False) : NonTuringAcceptableLanguage L :=
   Computability.not_acceptable_of_diagonal_contradiction h
 
+-- Book: Chapter 5, Section 5.3, abstract diagonal contradiction core.
+theorem diagonal_language_not_self_recognized (acceptsSelf : Word code -> Prop) :
+    ¬ forall w : Word code,
+      acceptsSelf w <-> w ∈ TuringDiagonalLanguage acceptsSelf :=
+  Computability.diagonal_not_self_recognized acceptsSelf
+
 /-!
 The section's universal-machine and diagonalization theorems require a concrete
 encoding of machines as strings.  This module records the formal statement

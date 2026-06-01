@@ -64,6 +64,20 @@ theorem decider_halts_on_all_inputs {M : TuringMachine symbol state}
     TuringMachine.HaltsOnInput M (EncodeWord encodeInput w) :=
   Computability.decider_halts_on_all_inputs h w
 
+-- Book: Chapter 5, Section 5.1, complementing a 0/1 decider swaps outputs.
+theorem decider_for_complement {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : DecidesLanguage M encodeInput zero one L) :
+    DecidesLanguage M encodeInput one zero (Language.Compl L) :=
+  Computability.decides_complement h
+
+-- Book: Chapter 5, Section 5.1, decidable languages are closed under complement.
+theorem decidable_language_complement {L : Language input}
+    (h : TuringDecidableLanguage L) :
+    TuringDecidableLanguage (Language.Compl L) :=
+  Computability.turing_decidable_complement h
+
 end Section01
 end Chapter05
 end Book

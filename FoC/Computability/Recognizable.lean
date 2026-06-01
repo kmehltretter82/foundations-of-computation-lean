@@ -59,6 +59,23 @@ theorem decider_halts_on_all_inputs {M : TuringMachine symbol state}
   · exact TuringMachine.halts_with_output_implies_halts ((h w).left hw)
   · exact TuringMachine.halts_with_output_implies_halts ((h w).right hw)
 
+theorem decides_complement {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : DecidesLanguage M encodeInput zero one L) :
+    DecidesLanguage M encodeInput one zero (Language.Compl L) := by
+  classical
+  intro w
+  constructor
+  · intro hw
+    exact (h w).right hw
+  · intro hw
+    have hL : w ∈ L := by
+      apply Classical.byContradiction
+      intro hnot
+      exact hw hnot
+    exact (h w).left hL
+
 theorem turing_decidable_has_total_halting_decider {L : Language input}
     (h : TuringDecidable L) :
     exists symbol : Type, exists state : Type,
@@ -84,6 +101,32 @@ theorem turing_decidable_has_total_halting_decider {L : Language input}
                           exists encodeInput
                           intro w
                           exact decider_halts_on_all_inputs hone w
+
+theorem turing_decidable_complement {L : Language input}
+    (h : TuringDecidable L) : TuringDecidable (Language.Compl L) := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro zero hzero =>
+                      cases hzero with
+                      | intro one hone =>
+                          exists symbol
+                          exists state
+                          exists M
+                          exists encodeInput
+                          exists one
+                          exists zero
+                          exact decides_complement hone
+
+theorem recursive_complement {L : Language input}
+    (h : Recursive L) : Recursive (Language.Compl L) :=
+  turing_decidable_complement h
 
 end Computability
 end FoC

@@ -22,6 +22,11 @@ def RecursivelyEnumerableLanguage (L : Language alpha) : Prop :=
 def RecursiveLanguage (L : Language alpha) : Prop :=
   Recursive L
 
+-- Book: Chapter 5, Section 5.2, recursive languages are closed under complement.
+theorem recursive_language_complement {L : Language alpha}
+    (h : RecursiveLanguage L) : RecursiveLanguage (Language.Compl L) :=
+  Computability.recursive_complement h
+
 -- Book: Chapter 5, Section 5.2, languages listed by a stream of words.
 def LanguageListedBy (stream : Nat -> Word alpha) (L : Language alpha) : Prop :=
   ListedBy stream L

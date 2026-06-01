@@ -46,5 +46,13 @@ theorem not_acceptable_of_diagonal_contradiction {L : Language alpha}
   intro hL
   exact h hL
 
+theorem diagonal_not_self_recognized (acceptsSelf : Word code -> Prop) :
+    ¬ forall w : Word code, acceptsSelf w <-> w ∈ DiagonalLanguage acceptsSelf := by
+  intro h
+  have hdiag := h (Word.Empty : Word code)
+  by_cases hself : acceptsSelf (Word.Empty : Word code)
+  · exact (hdiag.mp hself) hself
+  · exact hself (hdiag.mpr hself)
+
 end Computability
 end FoC

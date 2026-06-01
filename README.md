@@ -26,14 +26,17 @@ equivalence classes, partitions, and a small relational-database model. Chapter
 2 also includes countable-union and uncountable-difference theorems by explicit
 enumeration. Chapter 3 adds words, languages, regular expressions, DFA/NFA semantics, Thompson
 regular-expression-to-NFA construction, subset construction, automata closure
-constructions, and pumping-lemma vocabulary. Chapter 4 adds context-free
-grammar derivations, CFG construction lemmas, BNF expansion vocabulary, parse
-trees, pushdown automata, context-free pumping vocabulary, and general grammars.
+constructions, pumping-lemma vocabulary, and count groundwork for the
+`a^n b^n` example. Chapter 4 adds context-free grammar derivations, CFG
+construction lemmas, BNF expansion vocabulary, parse trees, an explicit
+ambiguous-grammar witness, pushdown automata, context-free pumping vocabulary,
+and general grammars.
 Chapter 5 adds finite-window Turing-machine tapes, deterministic one-tape
 machines, configurations, step and multi-step computation, halting/output,
 Turing-computable functions, decidable and acceptable languages, recursive and
 recursively enumerable vocabulary, enumeration/range formulations, and
-undecidability vocabulary.
+undecidability vocabulary, including decidable-language complement closure and
+an abstract diagonal contradiction core.
 The foundation layer also includes future-real-compatible reduced rational
 representatives for the square-root irrationality arguments, a tiny quadratic
 surd surrogate for the `sqrt(2)` product counterexample, and binary digit-stream
