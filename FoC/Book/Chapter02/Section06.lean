@@ -2,6 +2,7 @@ import FoC.Foundation.Countable
 import FoC.Foundation.Functions
 import FoC.Foundation.Cardinality
 import FoC.Foundation.Rationals
+import FoC.Foundation.DigitStreams
 
 namespace FoC
 namespace Book
@@ -139,6 +140,11 @@ theorem cantor_no_bijection_with_powerset (f : alpha -> FSet alpha) :
       exists x
       rw [hx]
       exact FSet.equal_refl A
+
+-- Book: Chapter 2, Section 2.6, diagonal core for real uncountability.
+theorem binary_digit_streams_uncountable :
+    FSet.Uncountable (FSet.Univ : FSet DigitStream) :=
+  DigitStream.uncountable_univ
 
 end Section06
 end Chapter02

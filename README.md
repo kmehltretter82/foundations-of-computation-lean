@@ -30,10 +30,14 @@ machines, configurations, step and multi-step computation, halting/output,
 Turing-computable functions, decidable and acceptable languages, recursive and
 recursively enumerable vocabulary, enumeration/range formulations, and
 undecidability vocabulary.
+The foundation layer also includes future-real-compatible reduced rational
+representatives for the square-root irrationality arguments, a tiny quadratic
+surd surrogate for the `sqrt(2)` product counterexample, and binary digit-stream
+diagonalization for the real-uncountability argument.
 Prose-heavy application exercises and results requiring future
-integer/rational/real-number, numeric-cardinality, full state-elimination, or
-pumping-lemma, full CFG/PDA-equivalence, and machine-encoding/simulation
-infrastructure are not represented as placeholder theorems.
+full real-number, numeric-cardinality, full state-elimination, or pumping-lemma,
+full CFG/PDA-equivalence, and machine-encoding/simulation infrastructure are not
+represented as placeholder theorems.
 
 Coverage status is tracked in [data/coverage.yaml](data/coverage.yaml).
 
@@ -51,6 +55,8 @@ Foundation modules currently include:
 - regular-expression syntax and denotational semantics,
 - deterministic and nondeterministic finite-state automata,
 - NFA path semantics and Thompson construction for regular expressions.
+- reduced rational square-root contradiction cores, quadratic-surd surrogates,
+  and digit-stream diagonalization.
 - context-free grammars, parse trees, pushdown automata, and general grammars.
 - Turing-machine tapes, configurations, computations, and computability
   vocabulary.

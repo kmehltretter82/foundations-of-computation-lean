@@ -17,5 +17,8 @@ definitions or lemmas.
 | `Summation.lean` | Chapter 1 induction examples with finite sums; later Chapter 2 finite-cardinality arithmetic. |
 | `Integers.lean` | Chapter 1 integer parity and divisibility examples; later Chapter 2 integer countability. |
 | `Rationals.lean` | Chapter 1 rational-number closure examples; later Chapter 2 rational countability. |
+| `RationalCore.lean` | Chapter 1 reduced rational-square-root contradiction proofs; future quotient-rational and real embedding bridge. |
+| `QuadraticSurd.lean` | Chapter 1 surrogate model for `sqrt(2)` examples before a full real-number construction exists. |
+| `DigitStreams.lean` | Chapter 2 diagonal uncountability core for future real-number uncountability. |
 | `Primes.lean` | Chapter 1 prime divisor and product-of-primes induction examples. |
 | `Cardinality.lean` | Chapter 2 finite-cardinality laws via explicit list products, sublists, tuples, and cardinality witnesses. |

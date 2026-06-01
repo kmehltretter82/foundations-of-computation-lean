@@ -13,6 +13,9 @@ foundation:
     - "FoC.Foundation.Summation"
     - "FoC.Foundation.Integers"
     - "FoC.Foundation.Rationals"
+    - "FoC.Foundation.RationalCore"
+    - "FoC.Foundation.QuadraticSurd"
+    - "FoC.Foundation.DigitStreams"
     - "FoC.Foundation.Primes"
     - "FoC.Foundation.Cardinality"
   traceability:
@@ -21,7 +24,7 @@ foundation:
 completed:
   - coordinate: "Chapter 1"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 103
+    theorem_declarations: 108
     modules:
       - "FoC.Book.Chapter01.Section01"
       - "FoC.Book.Chapter01.Section02"
@@ -55,6 +58,8 @@ completed:
       - "Prime and composite definitions over natural numbers"
       - "Prime divisor existence for every natural number greater than one"
       - "Product-of-primes representation for every natural number greater than one"
+      - "Reduced positive-rational-representative contradiction cores for sqrt(2) and sqrt(3)"
+      - "Quadratic-surd surrogate for sqrt(2) and the counterexample that a product of irrational-like quantities can be rational-like"
       - "Proof-by-contradiction schema"
       - "Ordinary and strong mathematical induction schemas"
       - "Finite summation over natural-number ranges"
@@ -70,9 +75,9 @@ completed:
       - coordinate: "Chapter 1, Section 1.3"
         reason: "Circuit drawings and design exercises are application artifacts; the DNF semantic core is formalized."
       - coordinate: "Chapter 1, Section 1.6"
-        reason: "Irrational and real-number proof exercises require future standalone numeric infrastructure; integer square parity and rational closure examples are now formalized."
+        reason: "Full real-number proof exercises require future real infrastructure; integer square parity, rational closure examples, and a sqrt(2) quadratic-surd counterexample surrogate are formalized."
       - coordinate: "Chapter 1, Section 1.7"
-        reason: "sqrt(3), Euclid's infinitude-of-primes theorem, and pigeonhole examples remain classified until quotient-rational/real infrastructure or a stronger pigeonhole layer exists; prime divisor and product-of-primes existence are formalized."
+        reason: "The reduced-rational contradiction cores for sqrt(2) and sqrt(3) are formalized; Euclid's infinitude-of-primes theorem, pigeonhole examples, and full real-number wrappers remain classified until stronger finite-cardinality or real infrastructure exists."
       - coordinate: "Chapter 1, Section 1.8"
         reason: "Real-valued geometric-series exercises remain classified until rational/real-number infrastructure is added."
       - coordinate: "Chapter 1, Section 1.9"
@@ -81,7 +86,7 @@ completed:
         reason: "The book's Fibonacci lower bound uses rational/real exponentiation; the natural-number Fibonacci recurrence and exercise upper bound are formalized."
   - coordinate: "Chapter 2"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 80
+    theorem_declarations: 81
     definition_declarations: 18
     modules:
       - "FoC.Book.Chapter02.Section01"
@@ -108,6 +113,7 @@ completed:
       - "Natural-number and integer encodings, diagonal stages for Nat x Nat, and injective staged rational-representative codes"
       - "Generic uncountable-outside-countable-cover principle"
       - "Cantor diagonal theorem: no surjective map, hence no bijection, from a type to its powerset"
+      - "Binary digit-stream diagonalization core for real-number uncountability"
       - "Relation properties: reflexive, symmetric, antisymmetric, transitive, equivalence, partial order, total order"
       - "Equivalence classes contain representatives, related representatives have equal classes, and equivalence classes form a partition"
       - "Function fibers form equivalence relations"
@@ -121,7 +127,7 @@ completed:
       - coordinate: "Chapter 2, Section 2.5"
         reason: "C++ and JavaScript examples are represented by total/partial function, higher-order, and composition semantics, not by language runtimes."
       - coordinate: "Chapter 2, Section 2.6"
-        reason: "Real/irrational countability and exact quotient-rational enumeration remain deferred by request; finite-cardinality laws, integer encodings, Nat x Nat diagonal stages, and injective rational-representative coding are formalized."
+        reason: "Real/irrational countability now has a binary digit-stream diagonalization core; exact quotient-rational enumeration and transport from digit streams into a full real type remain deferred."
       - coordinate: "Chapter 2, Section 2.8"
         reason: "SQL syntax and DBMS behavior are application material; the table-as-relation model with core update operations is formalized."
   - coordinate: "Chapter 3"

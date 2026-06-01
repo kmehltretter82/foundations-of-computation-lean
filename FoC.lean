@@ -9,6 +9,9 @@ import FoC.Foundation.Arithmetic
 import FoC.Foundation.Summation
 import FoC.Foundation.Integers
 import FoC.Foundation.Rationals
+import FoC.Foundation.RationalCore
+import FoC.Foundation.QuadraticSurd
+import FoC.Foundation.DigitStreams
 import FoC.Foundation.Primes
 import FoC.Foundation.Cardinality
 import FoC.Languages.Words
