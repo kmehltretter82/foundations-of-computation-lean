@@ -104,6 +104,19 @@ theorem runFrom_append (M : DFA alpha state) (q : state) (x y : Word alpha) :
   | cons a rest ih =>
       exact ih (M.step q a)
 
+theorem runFrom_concatWords_loop (M : DFA alpha state) (q : state)
+    (pieces : List (Word alpha))
+    (hall : forall p, p ∈ pieces -> RunFrom M q p = q) :
+    RunFrom M q (Language.ConcatWords pieces) = q := by
+  induction pieces with
+  | nil =>
+      rfl
+  | cons p rest ih =>
+      rw [Language.ConcatWords, runFrom_append, hall p (List.Mem.head rest)]
+      exact ih (by
+        intro x hx
+        exact hall x (List.Mem.tail p hx))
+
 theorem complement_accepts (M : DFA alpha state) (w : Word alpha) :
     Accepts (Complement M) w <-> ¬ Accepts M w := by
   unfold Accepts Run

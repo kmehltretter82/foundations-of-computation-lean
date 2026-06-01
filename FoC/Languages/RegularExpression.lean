@@ -46,6 +46,10 @@ def CharClass : List alpha -> RegExp alpha
   | [] => empty
   | a :: rest => alt (sym a) (CharClass rest)
 
+def AltList : List (RegExp alpha) -> RegExp alpha
+  | [] => empty
+  | r :: rest => alt r (AltList rest)
+
 def OfWord : Word alpha -> RegExp alpha
   | [] => eps
   | a :: w => seq (sym a) (OfWord w)
@@ -210,6 +214,42 @@ theorem charClass_denote (chars : List alpha) (w : Word alpha) :
                 exact Or.inl hb.right
             | tail _ htail =>
                 exact Or.inr (ih.mpr (Exists.intro b (And.intro htail hb.right)))
+
+theorem altList_denote (rs : List (RegExp alpha)) (w : Word alpha) :
+    w ∈ Denote (AltList rs) <-> exists r, r ∈ rs ∧ w ∈ Denote r := by
+  induction rs with
+  | nil =>
+      constructor
+      · intro hw
+        cases hw
+      · intro hw
+        cases hw with
+        | intro r hr =>
+            cases hr.left
+  | cons r rest ih =>
+      constructor
+      · intro hw
+        cases hw with
+        | inl hwr =>
+            exists r
+            constructor
+            · exact List.Mem.head rest
+            · exact hwr
+        | inr hwrest =>
+            cases (ih.mp hwrest) with
+            | intro s hs =>
+                exists s
+                constructor
+                · exact List.Mem.tail r hs.left
+                · exact hs.right
+      · intro hw
+        cases hw with
+        | intro s hs =>
+            cases hs.left with
+            | head =>
+                exact Or.inl hs.right
+            | tail _ htail =>
+                exact Or.inr (ih.mpr (Exists.intro s (And.intro htail hs.right)))
 
 theorem denote_ofWord (w x : Word alpha) :
     x ∈ Denote (OfWord w) <-> x = w := by
