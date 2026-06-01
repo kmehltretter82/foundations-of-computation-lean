@@ -8,5 +8,8 @@ import FoC.Foundation.Relations
 import FoC.Foundation.Arithmetic
 import FoC.Foundation.Summation
 import FoC.Foundation.Integers
+import FoC.Foundation.Rationals
+import FoC.Foundation.Primes
+import FoC.Foundation.Cardinality
 import FoC.Book.Chapter01
 import FoC.Book.Chapter02

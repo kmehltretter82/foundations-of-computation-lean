@@ -1,5 +1,6 @@
 import FoC.Foundation.Arithmetic
 import FoC.Foundation.Integers
+import FoC.Foundation.Rationals
 import FoC.Book.Chapter01.Section01
 import FoC.Book.Chapter01.Section02
 
@@ -98,6 +99,33 @@ theorem square_divisible_by_four_does_not_force_number_divisible_by_four :
   constructor
   · exists 1
   · exact IntPred.not_four_divides_two
+
+-- Book: Chapter 1, Section 1.6, rational-number definition.
+theorem rational_representation_definition {a b : Int}
+    (hb : b ≠ 0) : Rational.IsRepresentation a b :=
+  Rational.representation_of_den_ne_zero hb
+
+-- Book: Chapter 1, Section 1.6, proof example: sum of rationals.
+theorem sum_of_rational_representations {a b c d : Int}
+    (hb : b ≠ 0) (hd : d ≠ 0) :
+    Rational.IsRepresentation (a * d + c * b) (b * d) :=
+  Rational.add_representation hb hd
+
+-- Book: Chapter 1, Section 1.6, same proof as an explicit rational object.
+theorem sum_of_rational_numbers_is_rational (x y : Rational) :
+    (Rational.add x y).den ≠ 0 :=
+  Rational.add_den_ne_zero x y
+
+-- Book: Chapter 1, Section 1.6, Exercise 8(f): product of rationals.
+theorem product_of_rational_representations {a b c d : Int}
+    (hb : b ≠ 0) (hd : d ≠ 0) :
+    Rational.IsRepresentation (a * c) (b * d) :=
+  Rational.mul_representation hb hd
+
+-- Book: Chapter 1, Section 1.6, Exercise 8(f), object-level form.
+theorem product_of_rational_numbers_is_rational (x y : Rational) :
+    (Rational.mul x y).den ≠ 0 :=
+  Rational.mul_den_ne_zero x y
 
 end Section06
 end Chapter01

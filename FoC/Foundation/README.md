@@ -16,3 +16,6 @@ definitions or lemmas.
 | `Arithmetic.lean` | Chapter 1 proof examples using divisibility and parity. |
 | `Summation.lean` | Chapter 1 induction examples with finite sums; later Chapter 2 finite-cardinality arithmetic. |
 | `Integers.lean` | Chapter 1 integer parity and divisibility examples; later Chapter 2 integer countability. |
+| `Rationals.lean` | Chapter 1 rational-number closure examples; later Chapter 2 rational countability. |
+| `Primes.lean` | Chapter 1 prime divisor and product-of-primes induction examples. |
+| `Cardinality.lean` | Chapter 2 finite-cardinality laws via explicit list products, sublists, tuples, and cardinality witnesses. |

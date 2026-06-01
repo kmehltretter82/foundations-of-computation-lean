@@ -1,4 +1,5 @@
 import FoC.Foundation.Summation
+import FoC.Foundation.Primes
 
 namespace FoC
 namespace Book
@@ -83,6 +84,11 @@ theorem geometric_sum_powers_of_two (n : Nat) :
 theorem odd_sum_square (n : Nat) :
     NatSum.SumUpTo (fun i => 2 * i - 1) n = n * n :=
   NatSum.odd_sum_square n
+
+-- Book: Chapter 1, Section 1.8, product-of-primes induction example.
+theorem product_of_primes_exists (n : Nat) (hn : 1 < n) :
+    NatPrime.ProductOfPrimes n :=
+  NatPrime.product_of_primes_exists n hn
 
 end Section08
 end Chapter01
