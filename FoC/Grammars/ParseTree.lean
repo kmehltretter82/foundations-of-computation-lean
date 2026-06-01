@@ -30,6 +30,17 @@ inductive ParseForest (G : CFG terminal nonterminal) :
 
 end
 
+def NonterminalSubtree (G : CFG terminal nonterminal) : Type _ :=
+  Sigma (fun A : nonterminal => ParseTree G (Symbol.nonterminal A))
+
+namespace NonterminalSubtree
+
+def root {G : CFG terminal nonterminal} (subtree : NonterminalSubtree G) :
+    nonterminal :=
+  subtree.1
+
+end NonterminalSubtree
+
 mutual
 
 def ParseTree.frontier {G : CFG terminal nonterminal}
@@ -43,6 +54,71 @@ def ParseForest.frontier {G : CFG terminal nonterminal}
   | ParseForest.nil => []
   | ParseForest.cons _ _ tree rest =>
       Word.Concat (ParseTree.frontier tree) (ParseForest.frontier rest)
+
+end
+
+namespace NonterminalSubtree
+
+def frontier {G : CFG terminal nonterminal} (subtree : NonterminalSubtree G) :
+    Word terminal :=
+  ParseTree.frontier subtree.2
+
+end NonterminalSubtree
+
+mutual
+
+def ParseTree.height {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} : ParseTree G s -> Nat
+  | ParseTree.leaf _ => 0
+  | ParseTree.node _ _ _ children => ParseForest.height children + 1
+
+def ParseForest.height {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} :
+    ParseForest G sent -> Nat
+  | ParseForest.nil => 0
+  | ParseForest.cons _ _ tree rest =>
+      Nat.max (ParseTree.height tree) (ParseForest.height rest)
+
+end
+
+mutual
+
+def ParseTree.longestNonterminalPath {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} : ParseTree G s -> List nonterminal
+  | ParseTree.leaf _ => []
+  | ParseTree.node A _ _ children => A :: ParseForest.longestNonterminalPath children
+
+def ParseForest.longestNonterminalPath {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} :
+    ParseForest G sent -> List nonterminal
+  | ParseForest.nil => []
+  | ParseForest.cons _ _ tree rest =>
+      if ParseTree.height tree < ParseForest.height rest then
+        ParseForest.longestNonterminalPath rest
+      else
+        ParseTree.longestNonterminalPath tree
+
+end
+
+mutual
+
+def ParseTree.longestNonterminalSubtrees {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} :
+    ParseTree G s -> List (NonterminalSubtree G)
+  | ParseTree.leaf _ => []
+  | ParseTree.node A rhs hprod children =>
+      ⟨A, ParseTree.node A rhs hprod children⟩ ::
+        ParseForest.longestNonterminalSubtrees children
+
+def ParseForest.longestNonterminalSubtrees {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} :
+    ParseForest G sent -> List (NonterminalSubtree G)
+  | ParseForest.nil => []
+  | ParseForest.cons _ _ tree rest =>
+      if ParseTree.height tree < ParseForest.height rest then
+        ParseForest.longestNonterminalSubtrees rest
+      else
+        ParseTree.longestNonterminalSubtrees tree
 
 end
 
@@ -85,6 +161,359 @@ theorem ParseForest.derives {G : CFG terminal nonterminal}
           (Word.Concat (ParseTree.frontier tree) (ParseForest.frontier forest)))
       rw [SententialForm.terminalWord_append]
       exact hAll
+
+end
+
+mutual
+
+theorem ParseTree.longestNonterminalPath_length
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s) :
+    (ParseTree.longestNonterminalPath tree).length = ParseTree.height tree := by
+  cases tree with
+  | leaf a =>
+      simp [ParseTree.longestNonterminalPath, ParseTree.height]
+  | node A rhs hprod children =>
+      have hChildren := ParseForest.longestNonterminalPath_length children
+      simp [ParseTree.longestNonterminalPath, ParseTree.height, hChildren]
+
+theorem ParseForest.longestNonterminalPath_length
+    {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} (forest : ParseForest G sent) :
+    (ParseForest.longestNonterminalPath forest).length = ParseForest.height forest := by
+  cases forest with
+  | nil =>
+      simp [ParseForest.longestNonterminalPath, ParseForest.height]
+  | cons s restSent tree rest =>
+      have hTree := ParseTree.longestNonterminalPath_length tree
+      have hRest := ParseForest.longestNonterminalPath_length rest
+      by_cases hlt : ParseTree.height tree < ParseForest.height rest
+      · simp [ParseForest.longestNonterminalPath, ParseForest.height, hlt, hRest]
+        exact (Nat.max_eq_right (Nat.le_of_lt hlt)).symm
+      · simp [ParseForest.longestNonterminalPath, ParseForest.height, hlt, hTree]
+        have hle : ParseForest.height rest <= ParseTree.height tree := by omega
+        exact (Nat.max_eq_left hle).symm
+
+end
+
+mutual
+
+theorem ParseTree.longestNonterminalSubtrees_length
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s) :
+    (ParseTree.longestNonterminalSubtrees tree).length = ParseTree.height tree := by
+  cases tree with
+  | leaf a =>
+      simp [ParseTree.longestNonterminalSubtrees, ParseTree.height]
+  | node A rhs hprod children =>
+      have hChildren := ParseForest.longestNonterminalSubtrees_length children
+      simp [ParseTree.longestNonterminalSubtrees, ParseTree.height, hChildren]
+
+theorem ParseForest.longestNonterminalSubtrees_length
+    {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} (forest : ParseForest G sent) :
+    (ParseForest.longestNonterminalSubtrees forest).length = ParseForest.height forest := by
+  cases forest with
+  | nil =>
+      simp [ParseForest.longestNonterminalSubtrees, ParseForest.height]
+  | cons s restSent tree rest =>
+      have hTree := ParseTree.longestNonterminalSubtrees_length tree
+      have hRest := ParseForest.longestNonterminalSubtrees_length rest
+      by_cases hlt : ParseTree.height tree < ParseForest.height rest
+      · simp [ParseForest.longestNonterminalSubtrees, ParseForest.height, hlt, hRest]
+        exact (Nat.max_eq_right (Nat.le_of_lt hlt)).symm
+      · simp [ParseForest.longestNonterminalSubtrees, ParseForest.height, hlt, hTree]
+        have hle : ParseForest.height rest <= ParseTree.height tree := by omega
+        exact (Nat.max_eq_left hle).symm
+
+end
+
+mutual
+
+theorem ParseTree.longestNonterminalSubtrees_roots
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s) :
+    (ParseTree.longestNonterminalSubtrees tree).map
+        (fun subtree => NonterminalSubtree.root subtree) =
+      ParseTree.longestNonterminalPath tree := by
+  cases tree with
+  | leaf a =>
+      simp [ParseTree.longestNonterminalSubtrees, ParseTree.longestNonterminalPath]
+  | node A rhs hprod children =>
+      have hChildren := ParseForest.longestNonterminalSubtrees_roots children
+      simp [ParseTree.longestNonterminalSubtrees, ParseTree.longestNonterminalPath,
+        NonterminalSubtree.root]
+      simpa [NonterminalSubtree.root] using hChildren
+
+theorem ParseForest.longestNonterminalSubtrees_roots
+    {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} (forest : ParseForest G sent) :
+    (ParseForest.longestNonterminalSubtrees forest).map
+        (fun subtree => NonterminalSubtree.root subtree) =
+      ParseForest.longestNonterminalPath forest := by
+  cases forest with
+  | nil =>
+      simp [ParseForest.longestNonterminalSubtrees, ParseForest.longestNonterminalPath]
+  | cons s restSent tree rest =>
+      have hTree := ParseTree.longestNonterminalSubtrees_roots tree
+      have hRest := ParseForest.longestNonterminalSubtrees_roots rest
+      by_cases hlt : ParseTree.height tree < ParseForest.height rest
+      · simp [ParseForest.longestNonterminalSubtrees, ParseForest.longestNonterminalPath,
+          hlt, hRest]
+      · simp [ParseForest.longestNonterminalSubtrees, ParseForest.longestNonterminalPath,
+          hlt, hTree]
+
+end
+
+mutual
+
+theorem ParseTree.longestNonterminalPath_all_mem
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s)
+    {A : nonterminal}
+    (hA : A ∈ ParseTree.longestNonterminalPath tree) :
+    A ∈ G.nonterminalsFinite.elems := by
+  cases tree with
+  | leaf a =>
+      cases hA
+  | node B rhs hprod children =>
+      simp [ParseTree.longestNonterminalPath] at hA
+      cases hA with
+      | inl hEq =>
+          rw [hEq]
+          exact G.nonterminalsFinite.complete B
+      | inr hTail =>
+          exact ParseForest.longestNonterminalPath_all_mem children hTail
+
+theorem ParseForest.longestNonterminalPath_all_mem
+    {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} (forest : ParseForest G sent)
+    {A : nonterminal}
+    (hA : A ∈ ParseForest.longestNonterminalPath forest) :
+    A ∈ G.nonterminalsFinite.elems := by
+  cases forest with
+  | nil =>
+      cases hA
+  | cons s restSent tree rest =>
+      by_cases hlt : ParseTree.height tree < ParseForest.height rest
+      · simp [ParseForest.longestNonterminalPath, hlt] at hA
+        exact ParseForest.longestNonterminalPath_all_mem rest hA
+      · simp [ParseForest.longestNonterminalPath, hlt] at hA
+        exact ParseTree.longestNonterminalPath_all_mem tree hA
+
+end
+
+theorem ParseTree.exists_duplicate_nonterminal_on_long_path
+    [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s)
+    (hheight : G.nonterminalsFinite.elems.length < ParseTree.height tree) :
+    exists i j A,
+      i < j ∧
+      j < ParseTree.height tree ∧
+      (ParseTree.longestNonterminalPath tree)[i]? = some A ∧
+      (ParseTree.longestNonterminalPath tree)[j]? = some A := by
+  let path := ParseTree.longestNonterminalPath tree
+  have hlen : G.nonterminalsFinite.elems.length < path.length := by
+    simpa [path, ParseTree.longestNonterminalPath_length tree] using hheight
+  have hall : forall A, A ∈ path -> A ∈ G.nonterminalsFinite.elems := by
+    intro A hA
+    exact ParseTree.longestNonterminalPath_all_mem tree hA
+  cases Foundation.list_duplicate_indices_of_length_gt hlen hall with
+  | intro i hi =>
+      cases hi with
+      | intro j hj =>
+          cases hj with
+          | intro A hA =>
+              exists i
+              exists j
+              exists A
+              constructor
+              · exact hA.left
+              constructor
+              · have hjPath : j < path.length := hA.right.left
+                simpa [path, ParseTree.longestNonterminalPath_length tree] using hjPath
+              · exact hA.right.right
+
+theorem ParseTree.exists_duplicate_root_subtrees_on_long_path
+    [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s)
+    (hheight : G.nonterminalsFinite.elems.length < ParseTree.height tree) :
+    exists i j upper lower,
+      i < j ∧
+      j < ParseTree.height tree ∧
+      (ParseTree.longestNonterminalSubtrees tree)[i]? = some upper ∧
+      (ParseTree.longestNonterminalSubtrees tree)[j]? = some lower ∧
+      NonterminalSubtree.root upper = NonterminalSubtree.root lower := by
+  cases ParseTree.exists_duplicate_nonterminal_on_long_path tree hheight with
+  | intro i hi =>
+      cases hi with
+      | intro j hj =>
+          cases hj with
+          | intro A hA =>
+              have hRootI :
+                  ((ParseTree.longestNonterminalSubtrees tree).map
+                    (fun subtree => NonterminalSubtree.root subtree))[i]? = some A := by
+                rw [ParseTree.longestNonterminalSubtrees_roots tree]
+                exact hA.right.right.left
+              have hRootJ :
+                  ((ParseTree.longestNonterminalSubtrees tree).map
+                    (fun subtree => NonterminalSubtree.root subtree))[j]? = some A := by
+                rw [ParseTree.longestNonterminalSubtrees_roots tree]
+                exact hA.right.right.right
+              cases Foundation.list_getElem?_of_map_eq_some hRootI with
+              | intro upper hUpper =>
+                  cases Foundation.list_getElem?_of_map_eq_some hRootJ with
+                  | intro lower hLower =>
+                      exists i
+                      exists j
+                      exists upper
+                      exists lower
+                      constructor
+                      · exact hA.left
+                      constructor
+                      · exact hA.right.left
+                      constructor
+                      · exact hUpper.left
+                      constructor
+                      · exact hLower.left
+                      · exact Eq.trans hUpper.right hLower.right.symm
+
+mutual
+
+theorem ParseTree.longestNonterminalSubtree_frontier_context
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s)
+    {subtree : NonterminalSubtree G}
+    (hsub : subtree ∈ ParseTree.longestNonterminalSubtrees tree) :
+    exists u v : Word terminal,
+      ParseTree.frontier tree =
+        Word.Concat u (Word.Concat (NonterminalSubtree.frontier subtree) v) := by
+  cases tree with
+  | leaf a =>
+      cases hsub
+  | node A rhs hprod children =>
+      simp [ParseTree.longestNonterminalSubtrees] at hsub
+      cases hsub with
+      | inl hhead =>
+          subst subtree
+          exists []
+          exists []
+          simp [ParseTree.frontier, NonterminalSubtree.frontier, Word.Concat]
+      | inr htail =>
+          exact ParseForest.longestNonterminalSubtree_frontier_context children htail
+
+theorem ParseForest.longestNonterminalSubtree_frontier_context
+    {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} (forest : ParseForest G sent)
+    {subtree : NonterminalSubtree G}
+    (hsub : subtree ∈ ParseForest.longestNonterminalSubtrees forest) :
+    exists u v : Word terminal,
+      ParseForest.frontier forest =
+        Word.Concat u (Word.Concat (NonterminalSubtree.frontier subtree) v) := by
+  cases forest with
+  | nil =>
+      cases hsub
+  | cons s restSent tree rest =>
+      by_cases hlt : ParseTree.height tree < ParseForest.height rest
+      · simp [ParseForest.longestNonterminalSubtrees, hlt] at hsub
+        cases ParseForest.longestNonterminalSubtree_frontier_context rest hsub with
+        | intro u hu =>
+            cases hu with
+            | intro v hv =>
+                exists Word.Concat (ParseTree.frontier tree) u
+                exists v
+                simp [ParseForest.frontier, Word.Concat, hv, List.append_assoc]
+      · simp [ParseForest.longestNonterminalSubtrees, hlt] at hsub
+        cases ParseTree.longestNonterminalSubtree_frontier_context tree hsub with
+        | intro u hu =>
+            cases hu with
+            | intro v hv =>
+                exists u
+                exists Word.Concat v (ParseForest.frontier rest)
+                simp [ParseForest.frontier, Word.Concat, hv, List.append_assoc]
+
+end
+
+theorem ParseTree.longestNonterminalSubtree_get_frontier_context
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s)
+    {i : Nat} {subtree : NonterminalSubtree G}
+    (hget : (ParseTree.longestNonterminalSubtrees tree)[i]? = some subtree) :
+    exists u v : Word terminal,
+      ParseTree.frontier tree =
+        Word.Concat u (Word.Concat (NonterminalSubtree.frontier subtree) v) :=
+  ParseTree.longestNonterminalSubtree_frontier_context tree
+    (List.mem_of_getElem? hget)
+
+mutual
+
+theorem ParseTree.frontier_length_le_pow
+    {G : CFG terminal nonterminal} {B : Nat}
+    (hB : 0 < B)
+    (hBound : forall A rhs, G.produces A rhs -> rhs.length < B)
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s) :
+    Word.Length (ParseTree.frontier tree) <= B ^ ParseTree.height tree := by
+  cases tree with
+  | leaf a =>
+      simp [ParseTree.frontier, ParseTree.height, Word.Length]
+  | node A rhs hprod children =>
+      have hForest := ParseForest.frontier_length_le_pow hB hBound children
+      have hRhs := hBound A rhs hprod
+      simp [ParseTree.frontier, ParseTree.height]
+      calc
+        Word.Length (ParseForest.frontier children) <=
+            rhs.length * B ^ ParseForest.height children := hForest
+        _ <= B * B ^ ParseForest.height children := by
+          exact Nat.mul_le_mul_right _ (Nat.le_of_lt hRhs)
+        _ = B ^ (ParseForest.height children + 1) := by
+          rw [Nat.pow_succ, Nat.mul_comm]
+
+theorem ParseForest.frontier_length_le_pow
+    {G : CFG terminal nonterminal} {B : Nat}
+    (hB : 0 < B)
+    (hBound : forall A rhs, G.produces A rhs -> rhs.length < B)
+    {sent : SententialForm terminal nonterminal} (forest : ParseForest G sent) :
+    Word.Length (ParseForest.frontier forest) <=
+      sent.length * B ^ ParseForest.height forest := by
+  cases forest with
+  | nil =>
+      simp [ParseForest.frontier, ParseForest.height, Word.Length]
+  | cons s restSent tree rest =>
+      have hTree := ParseTree.frontier_length_le_pow hB hBound tree
+      have hRest := ParseForest.frontier_length_le_pow hB hBound rest
+      have hTreePow :
+          B ^ ParseTree.height tree <=
+            B ^ Nat.max (ParseTree.height tree) (ParseForest.height rest) :=
+        Nat.pow_le_pow_right hB (Nat.le_max_left _ _)
+      have hRestPow :
+          B ^ ParseForest.height rest <=
+            B ^ Nat.max (ParseTree.height tree) (ParseForest.height rest) :=
+        Nat.pow_le_pow_right hB (Nat.le_max_right _ _)
+      have hTreeBound :
+          Word.Length (ParseTree.frontier tree) <=
+            B ^ Nat.max (ParseTree.height tree) (ParseForest.height rest) :=
+        Nat.le_trans hTree hTreePow
+      have hRestBound :
+          Word.Length (ParseForest.frontier rest) <=
+            restSent.length *
+              B ^ Nat.max (ParseTree.height tree) (ParseForest.height rest) :=
+        Nat.le_trans hRest (Nat.mul_le_mul_left restSent.length hRestPow)
+      rw [ParseForest.frontier, Word.length_concat]
+      simp [ParseForest.height]
+      have hsum := Nat.add_le_add hTreeBound hRestBound
+      calc
+        Word.Length (ParseTree.frontier tree) +
+            Word.Length (ParseForest.frontier rest) <=
+            B ^ Nat.max (ParseTree.height tree) (ParseForest.height rest) +
+              restSent.length *
+                B ^ Nat.max (ParseTree.height tree) (ParseForest.height rest) :=
+          hsum
+        _ = (restSent.length + 1) *
+              B ^ Nat.max (ParseTree.height tree) (ParseForest.height rest) := by
+          symm
+          rw [Nat.add_mul, Nat.one_mul, Nat.add_comm]
 
 end
 

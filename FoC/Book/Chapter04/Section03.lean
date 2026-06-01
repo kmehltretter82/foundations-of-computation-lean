@@ -19,6 +19,106 @@ theorem parse_tree_frontier_derives {G : CFG terminal nonterminal}
       (SententialForm.terminalWord (CFG.ParseTree.frontier tree)) :=
   CFG.ParseTree.derives tree
 
+-- Book: Chapter 4, Section 4.3, parse-tree height vocabulary used by the
+-- Section 4.5 pumping-lemma proof.
+theorem parse_tree_frontier_length_bound
+    {G : CFG terminal nonterminal} {B : Nat}
+    (hB : 0 < B)
+    (hBound : forall A rhs, G.produces A rhs -> rhs.length < B)
+    {s : Symbol terminal nonterminal} (tree : CFG.ParseTree G s) :
+    Word.Length (CFG.ParseTree.frontier tree) <=
+      B ^ CFG.ParseTree.height tree :=
+  CFG.ParseTree.frontier_length_le_pow hB hBound tree
+
+-- Book: Chapter 4, Section 4.3, parse-forest height vocabulary used by the
+-- Section 4.5 pumping-lemma proof.
+theorem parse_forest_frontier_length_bound
+    {G : CFG terminal nonterminal} {B : Nat}
+    (hB : 0 < B)
+    (hBound : forall A rhs, G.produces A rhs -> rhs.length < B)
+    {sent : SententialForm terminal nonterminal} (forest : CFG.ParseForest G sent) :
+    Word.Length (CFG.ParseForest.frontier forest) <=
+      sent.length * B ^ CFG.ParseForest.height forest :=
+  CFG.ParseForest.frontier_length_le_pow hB hBound forest
+
+-- Book: Chapter 4, Section 4.3, the selected longest nonterminal path has
+-- length equal to the parse-tree height.
+theorem parse_tree_longest_nonterminal_path_length
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : CFG.ParseTree G s) :
+    (CFG.ParseTree.longestNonterminalPath tree).length =
+      CFG.ParseTree.height tree :=
+  CFG.ParseTree.longestNonterminalPath_length tree
+
+-- Book: Chapter 4, Section 4.3, the selected longest nonterminal path through
+-- a parse forest has length equal to the forest height.
+theorem parse_forest_longest_nonterminal_path_length
+    {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} (forest : CFG.ParseForest G sent) :
+    (CFG.ParseForest.longestNonterminalPath forest).length =
+      CFG.ParseForest.height forest :=
+  CFG.ParseForest.longestNonterminalPath_length forest
+
+-- Book: Chapter 4, Section 4.3/4.5, the selected nonterminal-subtree spine
+-- has length equal to the parse-tree height.
+theorem parse_tree_longest_subtree_spine_length
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : CFG.ParseTree G s) :
+    (CFG.ParseTree.longestNonterminalSubtrees tree).length =
+      CFG.ParseTree.height tree :=
+  CFG.ParseTree.longestNonterminalSubtrees_length tree
+
+-- Book: Chapter 4, Section 4.3/4.5, root labels of the selected
+-- nonterminal-subtree spine recover the selected nonterminal path.
+theorem parse_tree_longest_subtree_spine_roots
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : CFG.ParseTree G s) :
+    (CFG.ParseTree.longestNonterminalSubtrees tree).map
+        (fun subtree => CFG.NonterminalSubtree.root subtree) =
+      CFG.ParseTree.longestNonterminalPath tree :=
+  CFG.ParseTree.longestNonterminalSubtrees_roots tree
+
+-- Book: Chapter 4, Section 4.3/4.5, a parse tree whose selected nonterminal
+-- path is longer than the finite nonterminal list repeats a nonterminal.
+theorem parse_tree_duplicate_nonterminal_on_long_path
+    [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : CFG.ParseTree G s)
+    (hheight : G.nonterminalsFinite.elems.length < CFG.ParseTree.height tree) :
+    exists i j A,
+      i < j ∧
+      j < CFG.ParseTree.height tree ∧
+      (CFG.ParseTree.longestNonterminalPath tree)[i]? = some A ∧
+      (CFG.ParseTree.longestNonterminalPath tree)[j]? = some A :=
+  CFG.ParseTree.exists_duplicate_nonterminal_on_long_path tree hheight
+
+-- Book: Chapter 4, Section 4.3/4.5, duplicate labels on the selected
+-- nonterminal path lift to duplicate-root selected subtrees.
+theorem parse_tree_duplicate_root_subtrees_on_long_path
+    [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : CFG.ParseTree G s)
+    (hheight : G.nonterminalsFinite.elems.length < CFG.ParseTree.height tree) :
+    exists i j upper lower,
+      i < j ∧
+      j < CFG.ParseTree.height tree ∧
+      (CFG.ParseTree.longestNonterminalSubtrees tree)[i]? = some upper ∧
+      (CFG.ParseTree.longestNonterminalSubtrees tree)[j]? = some lower ∧
+      CFG.NonterminalSubtree.root upper = CFG.NonterminalSubtree.root lower :=
+  CFG.ParseTree.exists_duplicate_root_subtrees_on_long_path tree hheight
+
+-- Book: Chapter 4, Section 4.3/4.5, every indexed subtree on the selected
+-- nonterminal spine contributes a contiguous frontier segment.
+theorem parse_tree_selected_subtree_frontier_context
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : CFG.ParseTree G s)
+    {i : Nat} {subtree : CFG.NonterminalSubtree G}
+    (hget : (CFG.ParseTree.longestNonterminalSubtrees tree)[i]? = some subtree) :
+    exists u v : Word terminal,
+      CFG.ParseTree.frontier tree =
+        Word.Concat u (Word.Concat (CFG.NonterminalSubtree.frontier subtree) v) :=
+  CFG.ParseTree.longestNonterminalSubtree_get_frontier_context tree hget
+
 -- Book: Chapter 4, Section 4.3, parse tree for the start symbol generates a word.
 theorem parse_tree_generates_language {G : CFG terminal nonterminal}
     {w : Word terminal} (h : CFG.ParseTreeGenerates G w) :

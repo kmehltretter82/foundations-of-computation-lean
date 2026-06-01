@@ -192,7 +192,7 @@ completed:
         reason: "Editor-specific search/replace syntax, anchors, word boundaries, escaping conventions, and backreferences are application material; optional, plus, and character-class sugar are formalized."
   - coordinate: "Chapter 4"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 87
+    theorem_declarations: 96
     definition_declarations: 32
     modules:
       - "FoC.Book.Chapter04.Section01"
@@ -217,7 +217,7 @@ completed:
       - "A concrete Chapter 4 grammar for a^n b^n words, with forward generated-word proofs and the exact reverse inclusion for terminal outputs"
       - "Right-regular grammar right-hand-side vocabulary, grammar-to-NFA and NFA-to-grammar constructions, and the finite-alphabet equivalence with regular languages from Theorem 4.4"
       - "BNF expression syntax for empty, symbol, sequence, alternatives, optional items, and repetition, with expansion rules"
-      - "Parse-tree and parse-forest syntax, frontier computation, and proof that every parse tree induces a derivation"
+      - "Parse-tree and parse-forest syntax, frontier computation, height, selected nonterminal-subtree spines, longest nonterminal paths, duplicate-nonterminal and duplicate-root subtree extraction, selected-subtree frontier contexts, frontier-length bounds, and proof that every parse tree induces a derivation"
       - "Additional BNF symbol, sequence, and repeated-item expansion wrappers"
       - "Ambiguity vocabulary via two parse trees with the same frontier, plus an explicit ambiguous grammar witness"
       - "Pushdown automata with configurations, epsilon and input-consuming transitions, multi-step computations, final-state-plus-empty-stack acceptance, final-state-only acceptance, empty-stack-only acceptance, accepted languages, recognizability, and determinism vocabulary"
@@ -230,11 +230,11 @@ completed:
       - coordinate: "Chapter 4, Section 4.2"
         reason: "Programming-language and English BNF examples are application material; the BNF expansion operators used by those examples are formalized with additional sequence and repetition wrappers."
       - coordinate: "Chapter 4, Section 4.3"
-        reason: "Parse trees, the parse-tree-to-derivation direction, and an explicit ambiguous grammar witness are formalized; the one-to-one correspondence with left derivations and full LL(1)/LR(1) parser construction are classified as later parsing infrastructure."
+        reason: "Parse trees, height/frontier-length infrastructure, the parse-tree-to-derivation direction, and an explicit ambiguous grammar witness are formalized; the one-to-one correspondence with left derivations and full LL(1)/LR(1) parser construction are classified as later parsing infrastructure."
       - coordinate: "Chapter 4, Section 4.4"
         reason: "PDA definitions and computation semantics are formalized; full CFG-to-PDA and PDA-to-CFG equivalence is not asserted without the larger construction proof."
       - coordinate: "Chapter 4, Section 4.5"
-        reason: "The finite-production vocabulary, pumping property, contrapositive schema, reusable counterexample schemas, and the a^n b^n c^n no-pumping contradiction are formalized. The global parse-tree-height proof of the full CFL Pumping Lemma and later examples such as {ww} remain deferred pending parse-tree height and tree-surgery infrastructure."
+        reason: "The finite-production vocabulary, parse-tree height/frontier bounds, selected nonterminal-subtree spines, longest nonterminal paths, duplicate-nonterminal and duplicate-root selected-subtree extraction, selected-subtree frontier contexts, pumping property, contrapositive schema, reusable counterexample schemas, and the a^n b^n c^n no-pumping contradiction are formalized. The global proof of the full CFL Pumping Lemma and later examples such as {ww} remain deferred pending full tree-surgery infrastructure."
       - coordinate: "Chapter 4, Section 4.6"
         reason: "General grammar definitions and CFG embedding are formalized; equivalence with recursively enumerable languages belongs with the Chapter 5 computability development."
   - coordinate: "Chapter 5"
