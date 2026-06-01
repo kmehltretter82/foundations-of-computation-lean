@@ -15,17 +15,20 @@ Source textbook metadata:
 This project is intentionally self-contained: it does not depend on Mathlib,
 CSLib, or other external Lean libraries.
 
-Current status: standalone foundation layer plus the Chapter 1, Chapter 2, and
-Chapter 3 formal cores. Chapter 1 is represented by proved Lean modules for all
+Current status: standalone foundation layer plus the Chapter 1, Chapter 2,
+Chapter 3, and Chapter 4 formal cores. Chapter 1 is represented by proved Lean modules for all
 ten sections. Chapter 2 adds proved modules for set operations, Boolean algebra
 of sets, functions, countability examples, Cantor's theorem, relations,
 equivalence classes, partitions, and a small relational-database model. Chapter
 3 adds words, languages, regular expressions, DFA/NFA semantics, Thompson
 regular-expression-to-NFA construction, subset construction, automata closure
-constructions, and pumping-lemma vocabulary.
+constructions, and pumping-lemma vocabulary. Chapter 4 adds context-free
+grammar derivations, CFG construction lemmas, BNF expansion vocabulary, parse
+trees, pushdown automata, context-free pumping vocabulary, and general grammars.
 Prose-heavy application exercises and results requiring future
 integer/rational/real-number, numeric-cardinality, full state-elimination, or
-pumping-lemma infrastructure are not represented as placeholder theorems.
+pumping-lemma and full CFG/PDA-equivalence infrastructure are not represented
+as placeholder theorems.
 
 Coverage status is tracked in [data/coverage.yaml](data/coverage.yaml).
 
@@ -43,6 +46,7 @@ Foundation modules currently include:
 - regular-expression syntax and denotational semantics,
 - deterministic and nondeterministic finite-state automata,
 - NFA path semantics and Thompson construction for regular expressions.
+- context-free grammars, parse trees, pushdown automata, and general grammars.
 
 Build with:
 
