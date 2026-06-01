@@ -1,0 +1,12 @@
+/.lake/
+/.elan/
+*.olean
+*.ilean
+*.c
+*.o
+*.so
+*.dll
+*.dylib
+*.trace
+*.log
+
