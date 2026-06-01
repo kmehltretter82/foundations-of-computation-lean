@@ -192,8 +192,8 @@ completed:
         reason: "Editor-specific search/replace syntax, anchors, word boundaries, escaping conventions, and backreferences are application material; optional, plus, and character-class sugar are formalized."
   - coordinate: "Chapter 4"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 61
-    definition_declarations: 28
+    theorem_declarations: 87
+    definition_declarations: 32
     modules:
       - "FoC.Book.Chapter04.Section01"
       - "FoC.Book.Chapter04.Section02"
@@ -222,7 +222,9 @@ completed:
       - "Ambiguity vocabulary via two parse trees with the same frontier, plus an explicit ambiguous grammar witness"
       - "Pushdown automata with configurations, epsilon and input-consuming transitions, multi-step computations, final-state-plus-empty-stack acceptance, final-state-only acceptance, empty-stack-only acceptance, accepted languages, recognizability, and determinism vocabulary"
       - "PDA computation transitivity and implication from book acceptance to final-state-only and empty-stack-only acceptance"
-      - "Context-free pumping-lemma quantified vocabulary and contrapositive schema"
+      - "Finite-production CFG/CFL vocabulary and production right-hand-side length bounds for the future parse-tree pumping proof"
+      - "Context-free pumping-lemma quantified vocabulary, extensionality and counterexample schemas, and contrapositive schema"
+      - "Concrete no-pumping-length contradiction for a^n b^n c^n and the conditional non-context-free wrapper from the CFL Pumping Lemma conclusion"
       - "General grammars with unrestricted left-hand sides, derivations, generated languages, and embedding of CFG derivations into general grammars"
     classified_not_formalized_yet:
       - coordinate: "Chapter 4, Section 4.2"
@@ -232,7 +234,7 @@ completed:
       - coordinate: "Chapter 4, Section 4.4"
         reason: "PDA definitions and computation semantics are formalized; full CFG-to-PDA and PDA-to-CFG equivalence is not asserted without the larger construction proof."
       - coordinate: "Chapter 4, Section 4.5"
-        reason: "The pumping property and contrapositive schema are formalized, but parse-tree-height proof of the full pumping lemma and selected non-context-free language proofs are deferred."
+        reason: "The finite-production vocabulary, pumping property, contrapositive schema, reusable counterexample schemas, and the a^n b^n c^n no-pumping contradiction are formalized. The global parse-tree-height proof of the full CFL Pumping Lemma and later examples such as {ww} remain deferred pending parse-tree height and tree-surgery infrastructure."
       - coordinate: "Chapter 4, Section 4.6"
         reason: "General grammar definitions and CFG embedding are formalized; equivalence with recursively enumerable languages belongs with the Chapter 5 computability development."
   - coordinate: "Chapter 5"

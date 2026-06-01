@@ -205,6 +205,56 @@ structure CFG (terminal : Type u) (nonterminal : Type v) where
 
 namespace CFG
 
+structure Production (terminal : Type u) (nonterminal : Type v) where
+  lhs : nonterminal
+  rhs : SententialForm terminal nonterminal
+
+namespace ProductionList
+
+def MaxRhsLength : List (Production terminal nonterminal) -> Nat
+  | [] => 0
+  | rule :: rules => Nat.max rule.rhs.length (MaxRhsLength rules)
+
+theorem rhs_length_le_max {rule : Production terminal nonterminal}
+    {rules : List (Production terminal nonterminal)}
+    (h : rule ∈ rules) :
+    rule.rhs.length <= MaxRhsLength rules := by
+  induction rules with
+  | nil =>
+      cases h
+  | cons head tail ih =>
+      cases h with
+      | head =>
+          exact Nat.le_max_left _ _
+      | tail _ htail =>
+          have hle := ih htail
+          exact Nat.le_trans hle (Nat.le_max_right _ _)
+
+end ProductionList
+
+def HasFiniteProductions (G : CFG terminal nonterminal) : Prop :=
+  exists rules : List (Production terminal nonterminal),
+    forall A rhs,
+      G.produces A rhs <->
+        exists rule, rule ∈ rules ∧ rule.lhs = A ∧ rule.rhs = rhs
+
+theorem finiteProductions_rhs_length_bound
+    {G : CFG terminal nonterminal}
+    (hG : HasFiniteProductions G) :
+    exists B : Nat,
+      B > 0 ∧ forall A rhs, G.produces A rhs -> rhs.length < B := by
+  cases hG with
+  | intro rules hrules =>
+      exists ProductionList.MaxRhsLength rules + 1
+      constructor
+      · omega
+      · intro A rhs hprod
+        cases (hrules A rhs).mp hprod with
+        | intro rule hrule =>
+            have hlen := ProductionList.rhs_length_le_max hrule.left
+            rw [← hrule.right.right]
+            omega
+
 def Yields (G : CFG terminal nonterminal)
     (x y : SententialForm terminal nonterminal) : Prop :=
   exists u, exists v, exists A, exists rhs,
