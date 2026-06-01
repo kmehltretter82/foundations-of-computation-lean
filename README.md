@@ -16,7 +16,7 @@ This project is intentionally self-contained: it does not depend on Mathlib,
 CSLib, or other external Lean libraries.
 
 Current status: standalone foundation layer plus the Chapter 1, Chapter 2,
-Chapter 3, and Chapter 4 formal cores. Chapter 1 is represented by proved Lean modules for all
+Chapter 3, Chapter 4, and Chapter 5 formal cores. Chapter 1 is represented by proved Lean modules for all
 ten sections. Chapter 2 adds proved modules for set operations, Boolean algebra
 of sets, functions, countability examples, Cantor's theorem, relations,
 equivalence classes, partitions, and a small relational-database model. Chapter
@@ -25,10 +25,15 @@ regular-expression-to-NFA construction, subset construction, automata closure
 constructions, and pumping-lemma vocabulary. Chapter 4 adds context-free
 grammar derivations, CFG construction lemmas, BNF expansion vocabulary, parse
 trees, pushdown automata, context-free pumping vocabulary, and general grammars.
+Chapter 5 adds finite-window Turing-machine tapes, deterministic one-tape
+machines, configurations, step and multi-step computation, halting/output,
+Turing-computable functions, decidable and acceptable languages, recursive and
+recursively enumerable vocabulary, enumeration/range formulations, and
+undecidability vocabulary.
 Prose-heavy application exercises and results requiring future
 integer/rational/real-number, numeric-cardinality, full state-elimination, or
-pumping-lemma and full CFG/PDA-equivalence infrastructure are not represented
-as placeholder theorems.
+pumping-lemma, full CFG/PDA-equivalence, and machine-encoding/simulation
+infrastructure are not represented as placeholder theorems.
 
 Coverage status is tracked in [data/coverage.yaml](data/coverage.yaml).
 
@@ -47,6 +52,8 @@ Foundation modules currently include:
 - deterministic and nondeterministic finite-state automata,
 - NFA path semantics and Thompson construction for regular expressions.
 - context-free grammars, parse trees, pushdown automata, and general grammars.
+- Turing-machine tapes, configurations, computations, and computability
+  vocabulary.
 
 Build with:
 

@@ -220,6 +220,44 @@ completed:
         reason: "The pumping property and contrapositive schema are formalized, but parse-tree-height proof of the full pumping lemma and selected non-context-free language proofs are deferred."
       - coordinate: "Chapter 4, Section 4.6"
         reason: "General grammar definitions and CFG embedding are formalized; equivalence with recursively enumerable languages belongs with the Chapter 5 computability development."
+  - coordinate: "Chapter 5"
+    status: "coverage_complete_formal_core"
+    theorem_declarations: 8
+    definition_declarations: 20
+    modules:
+      - "FoC.Book.Chapter05.Section01"
+      - "FoC.Book.Chapter05.Section02"
+      - "FoC.Book.Chapter05.Section03"
+    infrastructure_modules:
+      - "FoC.Computability.Tape"
+      - "FoC.Computability.TuringMachine"
+      - "FoC.Computability.Computable"
+      - "FoC.Computability.Recognizable"
+      - "FoC.Computability.Enumerable"
+      - "FoC.Computability.Undecidable"
+    proved_core:
+      - "Turing-machine directions and finite-window tapes with blanks as option-valued cells"
+      - "Tape input/output representation, reading, writing, and left/right movement"
+      - "Deterministic one-tape Turing-machine structure with start state, halt state, transition function, and finite state witness"
+      - "Configurations, initial input configurations, one-step transition semantics, and reflexive-transitive computation"
+      - "Halting, halting with output, acceptance by halting, accepted languages, and recognizer equality vocabulary"
+      - "Computation reflexivity, one-step inclusion, transitivity, and halting-with-output implies halting"
+      - "Turing-computable total and partial string-function vocabulary with explicit input/output encodings"
+      - "Turing-decidable and Turing-acceptable language vocabulary, plus recursive and recursively enumerable aliases"
+      - "A decider, as modeled by output 0/1, halts on every input"
+      - "Listing and range-language vocabulary for recursively enumerable languages"
+      - "General grammar versus recursively enumerable language equivalence statement shape"
+      - "Non-computable function, non-acceptable language, undecidable language, diagonal-language, halting-problem, and universal-machine specification vocabulary"
+    classified_not_formalized_yet:
+      - coordinate: "Chapter 5, Section 5.1"
+        reason: "Concrete transition diagrams and machine programs are application artifacts; the formal core provides tape/configuration/machine semantics and computability vocabulary."
+      - coordinate: "Chapter 5, Section 5.1"
+        reason: "The construction modifying a decider into an acceptor is not asserted without a transition-level machine transformation."
+      - coordinate: "Chapter 5, Section 5.2"
+        reason: "Simulation equivalences among one-tape machines, multi-tape machines, programs, listings, ranges, and general grammars are recorded as statement shapes, not assumed as proved theorems."
+      - coordinate: "Chapter 5, Section 5.2"
+        reason: "The theorem that recursive languages are exactly those whose language and complement are recursively enumerable requires dovetailing-machine construction and is deferred."
+      - coordinate: "Chapter 5, Section 5.3"
+        reason: "Universal-machine construction, concrete machine encodings, diagonal non-enumerability, and halting-problem undecidability require encoding and interpreter infrastructure not yet present."
 in_progress: []
-planned:
-  - "Chapter 5"
+planned: []

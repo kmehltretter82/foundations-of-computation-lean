@@ -26,7 +26,14 @@ import FoC.Grammars.BNF
 import FoC.Grammars.ParseTree
 import FoC.Grammars.PDA
 import FoC.Grammars.GeneralGrammar
+import FoC.Computability.Tape
+import FoC.Computability.TuringMachine
+import FoC.Computability.Computable
+import FoC.Computability.Recognizable
+import FoC.Computability.Enumerable
+import FoC.Computability.Undecidable
 import FoC.Book.Chapter01
 import FoC.Book.Chapter02
 import FoC.Book.Chapter03
 import FoC.Book.Chapter04
+import FoC.Book.Chapter05
