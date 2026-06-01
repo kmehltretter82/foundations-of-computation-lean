@@ -29,6 +29,20 @@ def Uncountable (A : FSet alpha) : Prop :=
 def EvenNaturals : FSet Nat :=
   fun n => exists k, n = 2 * k
 
+def InterleaveEnumerations (f g : Nat -> Option alpha) (n : Nat) : Option alpha :=
+  if n % 2 = 0 then f (n / 2) else g (n / 2)
+
+theorem interleave_even (f g : Nat -> Option alpha) (n : Nat) :
+    InterleaveEnumerations f g (2 * n) = f n := by
+  simp [InterleaveEnumerations]
+
+theorem interleave_odd (f g : Nat -> Option alpha) (n : Nat) :
+    InterleaveEnumerations f g (2 * n + 1) = g n := by
+  have hdiv : (2 * n + 1) / 2 = n := by
+    rw [Nat.mul_add_div (by decide : 2 > 0)]
+    simp
+  simp [InterleaveEnumerations, hdiv]
+
 theorem empty_countable : Countable (Empty : FSet alpha) := by
   exists fun _ => none
   intro x
@@ -63,6 +77,84 @@ theorem even_naturals_countable : Countable EvenNaturals := by
     | intro n hn =>
         cases hn
         exact Exists.intro n rfl
+
+theorem countable_of_equal {A B : FSet alpha}
+    (hAB : Equal A B) (hA : Countable A) : Countable B := by
+  cases hA with
+  | intro f hf =>
+      exists f
+      intro x
+      constructor
+      · intro hxB
+        exact (hf x).mp ((hAB x).mpr hxB)
+      · intro hx
+        exact (hAB x).mp ((hf x).mpr hx)
+
+-- Book: Chapter 2, Section 2.6, Exercise 11(b).
+theorem countable_union {A B : FSet alpha}
+    (hA : Countable A) (hB : Countable B) :
+    Countable (Union A B) := by
+  cases hA with
+  | intro f hf =>
+      cases hB with
+      | intro g hg =>
+          exists InterleaveEnumerations f g
+          intro x
+          constructor
+          · intro hx
+            cases hx with
+            | inl hxA =>
+                cases (hf x).mp hxA with
+                | intro n hn =>
+                    exists 2 * n
+                    rw [interleave_even, hn]
+            | inr hxB =>
+                cases (hg x).mp hxB with
+                | intro n hn =>
+                    exists 2 * n + 1
+                    rw [interleave_odd, hn]
+          · intro hx
+            cases hx with
+            | intro n hn =>
+                by_cases hpar : n % 2 = 0
+                · left
+                  exact (hf x).mpr (Exists.intro (n / 2) (by
+                    simp [InterleaveEnumerations, hpar] at hn
+                    exact hn))
+                · right
+                  exact (hg x).mpr (Exists.intro (n / 2) (by
+                    simp [InterleaveEnumerations, hpar] at hn
+                    exact hn))
+
+-- Book: Chapter 2, Section 2.6, Exercise 11(a).
+theorem countably_infinite_union {A B : FSet alpha}
+    (hA : CountablyInfinite A) (hB : CountablyInfinite B) :
+    CountablyInfinite (Union A B) := by
+  constructor
+  · exact countable_union hA.left hB.left
+  · intro hfinite
+    exact hA.right (finite_subset (union_left_subset A B) hfinite)
+
+-- Book: Chapter 2, Section 2.6, Theorem 2.9.
+theorem uncountable_diff_countable_subset {X K : FSet alpha}
+    (hX : Uncountable X) (hK : Countable K) (hKX : Subset K X) :
+    Uncountable (Diff X K) := by
+  intro hdiff
+  apply hX
+  apply countable_of_equal
+    (A := Union K (Diff X K))
+    (B := X)
+  · intro x
+    constructor
+    · intro hx
+      cases hx with
+      | inl hxK => exact hKX x hxK
+      | inr hxDiff => exact hxDiff.left
+    · intro hxX
+      by_cases hxK : x ∈ K
+      · exact Or.inl hxK
+      · exact Or.inr (And.intro hxX hxK)
+  · exact countable_union hK hdiff
 
 theorem exists_outside_of_uncountable_and_countable_cover {A B : FSet alpha}
     (hA : Uncountable A)

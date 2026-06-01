@@ -43,8 +43,26 @@ theorem singleton_finite (a : alpha) : Finite (Singleton a) := by
     | tail _ htail =>
         cases htail
 
+-- Book: Chapter 2, Section 2.6, Exercise 12(c).
+theorem finite_subset {A B : FSet alpha}
+    (hAB : Subset A B) (hB : Finite B) : Finite A := by
+  classical
+  cases hB with
+  | intro xs hxs =>
+      exists xs.filter (fun x => decide (x ∈ A))
+      intro x
+      constructor
+      · intro hxA
+        have hxB := hAB x hxA
+        have hxList := (hxs x).mp hxB
+        simp [hxList]
+        exact hxA
+      · intro hxFilter
+        have hx : x ∈ xs ∧ x ∈ A := by
+          simpa using hxFilter
+        exact hx.right
+
 end FSet
 
 end Foundation
 end FoC
-

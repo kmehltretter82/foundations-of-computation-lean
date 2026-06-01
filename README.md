@@ -17,10 +17,14 @@ CSLib, or other external Lean libraries.
 
 Current status: standalone foundation layer plus the Chapter 1, Chapter 2,
 Chapter 3, Chapter 4, and Chapter 5 formal cores. Chapter 1 is represented by proved Lean modules for all
-ten sections. Chapter 2 adds proved modules for set operations, Boolean algebra
+ten sections, including expanded Section 1.1 truth-table wrappers, NOR-only
+operator encodings, Euclid's prime-list argument, a pigeonhole collision
+schema, generalized natural-number geometric sums, and a scaled Fibonacci lower
+bound. Chapter 2 adds proved modules for set operations, Boolean algebra
 of sets, functions, countability examples, Cantor's theorem, relations,
 equivalence classes, partitions, and a small relational-database model. Chapter
-3 adds words, languages, regular expressions, DFA/NFA semantics, Thompson
+2 also includes countable-union and uncountable-difference theorems by explicit
+enumeration. Chapter 3 adds words, languages, regular expressions, DFA/NFA semantics, Thompson
 regular-expression-to-NFA construction, subset construction, automata closure
 constructions, and pumping-lemma vocabulary. Chapter 4 adds context-free
 grammar derivations, CFG construction lemmas, BNF expansion vocabulary, parse
@@ -39,7 +43,9 @@ full real-number, numeric-cardinality, full state-elimination, or pumping-lemma,
 full CFG/PDA-equivalence, and machine-encoding/simulation infrastructure are not
 represented as placeholder theorems.
 
-Coverage status is tracked in [data/coverage.yaml](data/coverage.yaml).
+Coverage status is tracked in [data/coverage.yaml](data/coverage.yaml). Chapter
+1 item-level traceability is tracked in
+[data/chapter1_formalization_map.yaml](data/chapter1_formalization_map.yaml).
 
 Foundation modules currently include:
 

@@ -49,6 +49,14 @@ theorem divides_mul_right {a b : Nat} (h : NatPred.Divides a b) (c : Nat) :
       exists k * c
       rw [hk, Nat.mul_assoc]
 
+theorem divides_mul_left {a b : Nat} (h : NatPred.Divides a b) (c : Nat) :
+    NatPred.Divides a (c * b) := by
+  cases h with
+  | intro k hk =>
+      exists c * k
+      rw [hk]
+      simp [Nat.mul_left_comm]
+
 theorem factor_lt_left {n a b : Nat}
     (hnab : n = a * b) (ha : 1 < a) (hb : 1 < b) : a < n := by
   have hapos : a > 0 := by
@@ -138,6 +146,69 @@ theorem allPrime_append {xs ys : List Nat}
       cases hxs with
       | intro hx hrest =>
           exact And.intro hx (ih hrest)
+
+theorem product_pos_of_allPrime {ps : List Nat}
+    (hps : AllPrime ps) : 0 < Product ps := by
+  induction ps with
+  | nil =>
+      simp [Product]
+  | cons p ps ih =>
+      cases hps with
+      | intro hp hrest =>
+          exact Nat.mul_pos (by
+            have hpgt := prime_gt_one hp
+            omega) (ih hrest)
+
+theorem divides_product_of_mem {p : Nat} {ps : List Nat}
+    (hmem : p ∈ ps) : NatPred.Divides p (Product ps) := by
+  induction ps with
+  | nil =>
+      cases hmem
+  | cons x xs ih =>
+      cases hmem with
+      | head =>
+          exists Product xs
+      | tail _ htail =>
+          exact divides_mul_left (ih htail) x
+
+theorem not_divides_product_succ {p m : Nat}
+    (hp : 1 < p) (hpm : NatPred.Divides p m) :
+    ¬ NatPred.Divides p (m + 1) := by
+  intro hsucc
+  cases hpm with
+  | intro a ha =>
+      cases hsucc with
+      | intro b hb =>
+          rw [ha] at hb
+          have hmod_left : (p * a + 1) % p = 1 := by
+            rw [Nat.add_mod, Nat.mul_mod_right]
+            simp
+            exact Nat.mod_eq_of_lt hp
+          have hmod_right : (p * b) % p = 0 :=
+            Nat.mul_mod_right p b
+          rw [hb, hmod_right] at hmod_left
+          omega
+
+-- Euclid-style infinitude core: every finite list of primes omits a prime.
+theorem exists_prime_not_in_list (ps : List Nat) (hps : AllPrime ps) :
+    exists p, Prime p ∧ p ∉ ps := by
+  let n := Product ps + 1
+  have hprod_pos : 0 < Product ps :=
+    product_pos_of_allPrime hps
+  have hn : 1 < n := by
+    dsimp [n]
+    omega
+  cases prime_divisor_exists n hn with
+  | intro p hpdata =>
+      exists p
+      constructor
+      · exact hpdata.left
+      · intro hmem
+        have hprod_div : NatPred.Divides p (Product ps) :=
+          divides_product_of_mem hmem
+        have hnot : ¬ NatPred.Divides p (Product ps + 1) :=
+          not_divides_product_succ (prime_gt_one hpdata.left) hprod_div
+        exact hnot (by simpa [n] using hpdata.right)
 
 -- Book: Chapter 1, Section 1.8, product-of-primes induction example.
 theorem product_of_primes_exists (n : Nat) (hn : 1 < n) : ProductOfPrimes n := by

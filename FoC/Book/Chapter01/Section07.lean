@@ -1,4 +1,5 @@
 import FoC.Foundation.Integers
+import FoC.Foundation.Functions
 import FoC.Foundation.Primes
 import FoC.Foundation.RationalCore
 import FoC.Foundation.QuadraticSurd
@@ -37,6 +38,18 @@ theorem odd_integer_square_not_even {n : Int}
 theorem prime_divisor_exists (n : Nat) (hn : 1 < n) :
     exists p, NatPrime.Prime p ∧ NatPred.Divides p n :=
   NatPrime.prime_divisor_exists n hn
+
+-- Book: Chapter 1, Section 1.7, Euclid infinitude-of-primes core.
+theorem euclid_prime_not_in_finite_prime_list (ps : List Nat)
+    (hps : NatPrime.AllPrime ps) :
+    exists p, NatPrime.Prime p ∧ p ∉ ps :=
+  NatPrime.exists_prime_not_in_list ps hps
+
+-- Book: Chapter 1, Section 1.7, pigeonhole-principle collision core.
+theorem pigeonhole_collision_schema {alpha : Type u} {beta : Type v}
+    {f : alpha -> beta} (h : ¬ Fn.Injective f) :
+    exists x y, x ≠ y ∧ f x = f y :=
+  Fn.collision_of_not_injective h
 
 -- Book: Chapter 1, Section 1.7, formal core for the `sqrt(2)` exercise.
 theorem no_reduced_rational_square_root_two (q : PositiveRatRep)

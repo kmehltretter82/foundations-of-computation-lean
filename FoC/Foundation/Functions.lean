@@ -134,6 +134,19 @@ theorem injective_iff_distinct_images (f : alpha -> beta) :
     · exact hxy
     · exact False.elim (h x y hxy hImage)
 
+theorem collision_of_not_injective {f : alpha -> beta}
+    (h : ¬ Injective f) : exists x y, x ≠ y ∧ f x = f y := by
+  classical
+  apply Classical.byContradiction
+  intro hno
+  apply h
+  intro x y hxy
+  by_cases hxy' : x = y
+  · exact hxy'
+  · exfalso
+    apply hno
+    exact Exists.intro x (Exists.intro y (And.intro hxy' hxy))
+
 theorem total_as_partial_defined (f : alpha -> beta) (x : alpha) :
     TotalAsPartial f x = some (f x) :=
   rfl

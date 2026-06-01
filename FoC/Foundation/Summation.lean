@@ -114,6 +114,28 @@ theorem geometric_two_sum (n : Nat) :
                 have hpos : 0 < 2 ^ (n + 1) := Nat.pow_pos (by decide : 0 < 2)
                 omega
 
+-- Book: Chapter 1, Section 1.8, Exercise 2, division-free natural-number core.
+theorem geometric_successor_base_sum (b n : Nat) :
+    b * SumZeroTo (fun i => (b + 1) ^ i) n = (b + 1) ^ (n + 1) - 1 := by
+  induction n with
+  | zero =>
+      simp [SumZeroTo]
+  | succ n ih =>
+      calc
+        b * SumZeroTo (fun i => (b + 1) ^ i) (n + 1)
+            = b * (SumZeroTo (fun i => (b + 1) ^ i) n + (b + 1) ^ (n + 1)) := by
+                rw [SumZeroTo.succ]
+        _ = b * SumZeroTo (fun i => (b + 1) ^ i) n + b * (b + 1) ^ (n + 1) := by
+                rw [Nat.mul_add]
+        _ = ((b + 1) ^ (n + 1) - 1) + b * (b + 1) ^ (n + 1) := by
+                rw [ih]
+        _ = (b + 1) ^ (n + 1 + 1) - 1 := by
+                rw [show (b + 1) ^ (n + 1 + 1) = (b + 1) ^ (n + 1) * (b + 1) by
+                  rw [Nat.pow_succ]]
+                have hpos : 0 < (b + 1) ^ (n + 1) := Nat.pow_pos (Nat.succ_pos b)
+                simp [Nat.add_mul, Nat.mul_comm]
+                omega
+
 -- Book: Chapter 1, Section 1.8, Exercise 6.
 theorem odd_sum_square (n : Nat) :
     SumUpTo (fun i => 2 * i - 1) n = n * n := by

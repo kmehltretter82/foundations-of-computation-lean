@@ -31,6 +31,18 @@ theorem natural_numbers_countable : FSet.Countable (FSet.Univ : FSet Nat) :=
 theorem even_natural_numbers_countable : FSet.Countable FSet.EvenNaturals :=
   FSet.even_naturals_countable
 
+-- Book: Chapter 2, Section 2.6, Exercise 11(b).
+theorem union_of_countable_sets_countable {A B : FSet alpha}
+    (hA : FSet.Countable A) (hB : FSet.Countable B) :
+    FSet.Countable (FSet.Union A B) :=
+  FSet.countable_union hA hB
+
+-- Book: Chapter 2, Section 2.6, Exercise 11(a).
+theorem union_of_countably_infinite_sets_countably_infinite {A B : FSet alpha}
+    (hA : FSet.CountablyInfinite A) (hB : FSet.CountablyInfinite B) :
+    FSet.CountablyInfinite (FSet.Union A B) :=
+  FSet.countably_infinite_union hA hB
+
 -- Book: Chapter 2, Section 2.6, natural numbers are encodable by natural numbers.
 theorem natural_numbers_encodable : Countability.EncodableByNat Nat :=
   Countability.nat_encodable
@@ -97,6 +109,12 @@ theorem cardinality_respects_set_equality {A B : FSet alpha} {n : Nat}
     FSet.HasCardinality B n :=
   FSet.hasCardinality_of_equal hAB hA
 
+-- Book: Chapter 2, Section 2.6, Exercise 12(c).
+theorem subset_of_finite_set_finite {A B : FSet alpha}
+    (hAB : FSet.Subset A B) (hB : FSet.Finite B) :
+    FSet.Finite A :=
+  FSet.finite_subset hAB hB
+
 -- Book: Chapter 2, Section 2.6, product cardinality.
 theorem list_product_cardinality (xs : List alpha) (ys : List beta) :
     (ListCard.Pairs xs ys).length = xs.length * ys.length :=
@@ -145,6 +163,13 @@ theorem cantor_no_bijection_with_powerset (f : alpha -> FSet alpha) :
 theorem binary_digit_streams_uncountable :
     FSet.Uncountable (FSet.Univ : FSet DigitStream) :=
   DigitStream.uncountable_univ
+
+-- Book: Chapter 2, Section 2.6, Theorem 2.9.
+theorem uncountable_complement_of_countable_subset {X K : FSet alpha}
+    (hX : FSet.Uncountable X) (hK : FSet.Countable K)
+    (hKX : FSet.Subset K X) :
+    FSet.Uncountable (FSet.Diff X K) :=
+  FSet.uncountable_diff_countable_subset hX hK hKX
 
 end Section06
 end Chapter02

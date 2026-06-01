@@ -80,6 +80,11 @@ theorem geometric_sum_powers_of_two (n : Nat) :
     NatSum.SumZeroTo (fun i => 2 ^ i) n = 2 ^ (n + 1) - 1 :=
   NatSum.geometric_two_sum n
 
+-- Book: Chapter 1, Section 1.8, Exercise 2, division-free natural-number core.
+theorem geometric_successor_base_sum (b n : Nat) :
+    b * NatSum.SumZeroTo (fun i => (b + 1) ^ i) n = (b + 1) ^ (n + 1) - 1 :=
+  NatSum.geometric_successor_base_sum b n
+
 -- Book: Chapter 1, Section 1.8, Exercise 6
 theorem odd_sum_square (n : Nat) :
     NatSum.SumUpTo (fun i => 2 * i - 1) n = n * n :=
