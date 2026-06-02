@@ -40,10 +40,11 @@ recursively enumerable vocabulary, enumeration/range formulations, and
 undecidability vocabulary, including decidable-language complement closure and
 an abstract diagonal contradiction core.
 The foundation layer also includes quotient rational numbers over
-positive-denominator integer fractions, future-real-compatible reduced rational
-representatives for the square-root irrationality arguments, a tiny quadratic
-surd surrogate for the `sqrt(2)` product counterexample, and binary digit-stream
-diagonalization for the real-uncountability argument.
+positive-denominator integer fractions, Dedekind-cut real numbers over quotient
+rationals, future-real-compatible reduced rational representatives for the
+square-root irrationality arguments, a tiny quadratic surd surrogate for the
+`sqrt(2)` product counterexample, and binary digit-stream diagonalization for
+the real-uncountability argument.
 Prose-heavy application exercises and results requiring future
 full real-number, numeric-cardinality, full state-elimination, or pumping-lemma,
 full CFG/PDA-equivalence, and machine-encoding/simulation infrastructure are not
@@ -66,7 +67,8 @@ Foundation modules currently include:
 - deterministic and nondeterministic finite-state automata,
 - NFA path semantics and Thompson construction for regular expressions.
 - quotient rational arithmetic, order, density, embeddings from existing
-  rational representatives, reduced rational square-root contradiction cores,
+  rational representatives, Dedekind-cut real numbers with rational embedding
+  and order/density, reduced rational square-root contradiction cores,
   quadratic-surd surrogates, and digit-stream diagonalization.
 - context-free grammars, parse trees, pushdown automata, and general grammars.
 - Turing-machine tapes, configurations, computations, and computability

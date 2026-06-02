@@ -19,6 +19,7 @@ definitions or lemmas.
 | `Rationals.lean` | Chapter 1 rational-number closure examples; later Chapter 2 rational countability. |
 | `RationalCore.lean` | Chapter 1 reduced rational-square-root contradiction proofs; future quotient-rational and real embedding bridge. |
 | `QuotientRationals.lean` | Quotient rational numbers over positive-denominator integer fractions, with arithmetic, order, density, and embeddings for future Dedekind-cut reals. |
+| `Reals.lean` | Dedekind-cut real numbers over quotient rationals, with rational embedding, order, density, and rational/irrational predicates for future book wrappers. |
 | `QuadraticSurd.lean` | Chapter 1 surrogate model for `sqrt(2)` examples before a full real-number construction exists. |
 | `DigitStreams.lean` | Chapter 2 diagonal uncountability core for future real-number uncountability. |
 | `Primes.lean` | Chapter 1 prime divisor, Euclid prime-list, and product-of-primes induction examples. |
