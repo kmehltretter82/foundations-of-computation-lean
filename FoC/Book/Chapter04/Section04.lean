@@ -587,6 +587,167 @@ theorem pda_to_cfg_between_epsilon_of_step_top_pop
       (SententialForm.terminalWord (Word.Empty : Word input)) :=
   PDA.toCFG_betweenEpsilon_of_step_topPop hnorm hstep
 
+-- Book: Chapter 4, Section 4.4, a step that starts and ends with empty stack
+-- either consumes epsilon or one input symbol, with the matching
+-- tail-preserving PDA-to-CFG derivation.
+theorem pda_to_cfg_empty_derives_cases_of_step_empty_stack
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p q : state} {sourceInput targetInput : Word input}
+    (hstep : PDA.Step M
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    (sourceInput = targetInput ∧
+      CFG.Derives (PDAToCFG M presentation)
+        [Symbol.nonterminal (PDA.ToCFGNonterminal.empty p q)]
+        (SententialForm.terminalWord (Word.Empty : Word input))) ∨
+    (exists a : input,
+      sourceInput = a :: targetInput ∧
+        CFG.Derives (PDAToCFG M presentation)
+          [Symbol.nonterminal (PDA.ToCFGNonterminal.empty p q)]
+          (SententialForm.terminalWord (Word.Symbol a))) :=
+  PDA.toCFG_emptyDerives_cases_of_step_emptyStack hstep
+
+-- Book: Chapter 4, Section 4.4, a step that removes the current stack top
+-- either consumes epsilon or one input symbol, with the matching `between`
+-- PDA-to-CFG derivation.
+theorem pda_to_cfg_between_derives_cases_of_step_top_pop
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p q : state} {A : stack}
+    {sourceInput targetInput : Word input} {tail : Word stack}
+    (hnorm : PDA.PopsAtMostOne M)
+    (hstep : PDA.Step M
+      { state := p, unread := sourceInput, stack := A :: tail }
+      { state := q, unread := targetInput, stack := tail }) :
+    (sourceInput = targetInput ∧
+      CFG.Derives (PDAToCFG M presentation)
+        [Symbol.nonterminal (PDA.ToCFGNonterminal.between p A q)]
+        (SententialForm.terminalWord (Word.Empty : Word input))) ∨
+    (exists a : input,
+      sourceInput = a :: targetInput ∧
+        CFG.Derives (PDAToCFG M presentation)
+          [Symbol.nonterminal (PDA.ToCFGNonterminal.between p A q)]
+          (SententialForm.terminalWord (Word.Symbol a))) :=
+  PDA.toCFG_betweenDerives_cases_of_step_topPop hnorm hstep
+
+-- Book: Chapter 4, Section 4.4, a one-step top-pop computation that ends
+-- with empty stack must have started with empty stack or a singleton stack.
+theorem pda_step_source_stack_empty_or_single_of_step_to_empty_stack
+    {M : PDA input stack state}
+    {p q : state} {sourceInput targetInput : Word input}
+    {sourceStack : Word stack}
+    (hnorm : PDA.PopsAtMostOne M)
+    (hstep : PDA.Step M
+      { state := p, unread := sourceInput, stack := sourceStack }
+      { state := q, unread := targetInput, stack := [] }) :
+    sourceStack = [] ∨ exists A : stack, sourceStack = [A] :=
+  PDA.step_sourceStack_empty_or_single_of_step_to_emptyStack hnorm hstep
+
+-- Book: Chapter 4, Section 4.4, zero-step empty-stack computations give an
+-- `empty p q` PDA-to-CFG derivation of the consumed input segment.
+theorem pda_to_cfg_empty_derives_of_computes_in_zero_empty_stack
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p q : state} {sourceInput targetInput : Word input}
+    (hcomp : PDA.ComputesIn M 0
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        CFG.Derives (PDAToCFG M presentation)
+          [Symbol.nonterminal (PDA.ToCFGNonterminal.empty p q)]
+          (SententialForm.terminalWord consumed) :=
+  PDA.toCFG_emptyDerives_of_computesIn_zero_emptyStack hcomp
+
+-- Book: Chapter 4, Section 4.4, one-step empty-stack computations give an
+-- `empty p q` PDA-to-CFG derivation of the consumed input segment.
+theorem pda_to_cfg_empty_derives_of_computes_in_one_empty_stack
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p q : state} {sourceInput targetInput : Word input}
+    (hcomp : PDA.ComputesIn M 1
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        CFG.Derives (PDAToCFG M presentation)
+          [Symbol.nonterminal (PDA.ToCFGNonterminal.empty p q)]
+          (SententialForm.terminalWord consumed) :=
+  PDA.toCFG_emptyDerives_of_computesIn_one_emptyStack hcomp
+
+-- Book: Chapter 4, Section 4.4, zero- and one-step empty-stack computations
+-- give an `empty p q` PDA-to-CFG derivation of the consumed input segment.
+theorem pda_to_cfg_empty_derives_of_computes_in_at_most_one_empty_stack
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (hn : n <= 1)
+    (hcomp : PDA.ComputesIn M n
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        CFG.Derives (PDAToCFG M presentation)
+          [Symbol.nonterminal (PDA.ToCFGNonterminal.empty p q)]
+          (SententialForm.terminalWord consumed) :=
+  PDA.toCFG_emptyDerives_of_computesIn_atMostOne_emptyStack hn hcomp
+
+-- Book: Chapter 4, Section 4.4, one-step top-pop computations give a
+-- `between p A q` PDA-to-CFG derivation of the consumed input segment.
+theorem pda_to_cfg_between_derives_of_computes_in_one_top_pop
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p q : state} {A : stack}
+    {sourceInput targetInput : Word input} {tail : Word stack}
+    (hnorm : PDA.PopsAtMostOne M)
+    (hcomp : PDA.ComputesIn M 1
+      { state := p, unread := sourceInput, stack := A :: tail }
+      { state := q, unread := targetInput, stack := tail }) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        CFG.Derives (PDAToCFG M presentation)
+          [Symbol.nonterminal (PDA.ToCFGNonterminal.between p A q)]
+          (SententialForm.terminalWord consumed) :=
+  PDA.toCFG_betweenDerives_of_computesIn_one_topPop hnorm hcomp
+
+-- Book: Chapter 4, Section 4.4, two-step empty-stack computations of a
+-- top-pop PDA give an `empty p q` derivation of the consumed input segment.
+theorem pda_to_cfg_empty_derives_of_computes_in_two_empty_stack
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p q : state} {sourceInput targetInput : Word input}
+    (hnorm : PDA.PopsAtMostOne M)
+    (hcomp : PDA.ComputesIn M 2
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        CFG.Derives (PDAToCFG M presentation)
+          [Symbol.nonterminal (PDA.ToCFGNonterminal.empty p q)]
+          (SententialForm.terminalWord consumed) :=
+  PDA.toCFG_emptyDerives_of_computesIn_two_emptyStack hnorm hcomp
+
+-- Book: Chapter 4, Section 4.4, zero-, one-, and two-step empty-stack
+-- computations of a top-pop PDA give an `empty p q` derivation of the
+-- consumed input segment.
+theorem pda_to_cfg_empty_derives_of_computes_in_at_most_two_empty_stack
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (hnorm : PDA.PopsAtMostOne M)
+    (hn : n <= 2)
+    (hcomp : PDA.ComputesIn M n
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        CFG.Derives (PDAToCFG M presentation)
+          [Symbol.nonterminal (PDA.ToCFGNonterminal.empty p q)]
+          (SententialForm.terminalWord consumed) :=
+  PDA.toCFG_emptyDerives_of_computesIn_atMostTwo_emptyStack
+    hnorm hn hcomp
+
 -- Book: Chapter 4, Section 4.4, zero-step accepting computations are
 -- generated by the PDA-to-CFG construction.
 theorem pda_to_cfg_generates_of_accepts_in_zero
@@ -612,6 +773,19 @@ theorem pda_to_cfg_generates_of_accepts_in_one
     w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
   PDA.toCFG_generates_of_acceptsIn_one haccept hcomp
 
+-- Book: Chapter 4, Section 4.4, any two-step accepting computation of a
+-- top-pop PDA is generated by the constructed PDA-to-CFG grammar.
+theorem pda_to_cfg_generates_of_accepts_in_two
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {w : Word input} {qf : state}
+    (hnorm : PDA.PopsAtMostOne M)
+    (haccept : M.accept qf)
+    (hcomp : PDA.ComputesIn M 2 (PDA.initial M w)
+      { state := qf, unread := [], stack := [] }) :
+    w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
+  PDA.toCFG_generates_of_acceptsIn_two hnorm haccept hcomp
+
 -- Book: Chapter 4, Section 4.4, the zero- and one-step base cases for the
 -- reverse PDA-to-CFG language direction.
 theorem pda_to_cfg_generates_of_accepts_in_at_most_one
@@ -624,6 +798,20 @@ theorem pda_to_cfg_generates_of_accepts_in_at_most_one
       { state := qf, unread := [], stack := [] }) :
     w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
   PDA.toCFG_generates_of_acceptsIn_atMostOne hn haccept hcomp
+
+-- Book: Chapter 4, Section 4.4, the zero-, one-, and two-step base cases for
+-- the reverse PDA-to-CFG language direction.
+theorem pda_to_cfg_generates_of_accepts_in_at_most_two
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {n : Nat} {w : Word input} {qf : state}
+    (hnorm : PDA.PopsAtMostOne M)
+    (hn : n <= 2)
+    (haccept : M.accept qf)
+    (hcomp : PDA.ComputesIn M n (PDA.initial M w)
+      { state := qf, unread := [], stack := [] }) :
+    w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
+  PDA.toCFG_generates_of_acceptsIn_atMostTwo hnorm hn haccept hcomp
 
 inductive AnBnPDAStack where
   | marker
