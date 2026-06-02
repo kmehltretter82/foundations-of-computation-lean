@@ -23,8 +23,8 @@ foundation:
     - "FoC.Foundation.Cardinality"
   traceability:
     file: "FoC/Foundation/README.md"
-    item_map: "data/chapter1_formalization_map.yaml"
     policy: "Each foundation module and major reusable addition should have a book-coordinate reason."
+    detail_policy: "Section-level formalization detail belongs in this coverage file; avoid one-off chapter sidecar maps unless they are generated."
 completed:
   - coordinate: "Chapter 1"
     status: "coverage_complete_formal_core"
@@ -85,6 +85,107 @@ completed:
       - "Binary-tree traversal sum correctness for TreeSum"
       - "Fibonacci recurrence and the exercise bound fib n < 2^n"
       - "Scaled natural-number form of the Fibonacci lower bound f_n > (3/2)^(n-1) for n >= 6"
+    sections:
+      - coordinate: "Chapter 1, Section 1.1"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Foundation.Logic.PropForm"
+            reason: "Propositional formulas, Boolean semantics, tautology, contradiction, logical equivalence, implication, substitution, and contexts."
+          - artifact: "FoC.Book.Chapter01.Section01"
+            reason: "Definition 1.1/1.2 truth-table connectives, Definition 1.3/1.4 logical vocabulary, Figure 1.1 equivalence, selected exercise classifications, associativity examples, equivalent sentence forms, and NOR encodings."
+        missing: []
+        deferred: []
+      - coordinate: "Chapter 1, Section 1.2"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter01.Section02"
+            reason: "Boolean algebra laws from Figure 1.2, De Morgan laws, first and second substitution laws, equivalence chains, and negated implication."
+        missing: []
+        deferred: []
+      - coordinate: "Chapter 1, Section 1.3"
+        status: "partial_application_material_deferred"
+        formalized:
+          - artifact: "FoC.Book.Chapter01.Section03"
+            reason: "Literal, conjunction, and DNF semantics plus the DNF-to-propositional-formula evaluation bridge."
+        missing: []
+        deferred:
+          - item: "Circuit drawings and design exercises"
+            reason: "Application artifacts; the formal semantic core is present."
+      - coordinate: "Chapter 1, Section 1.4"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter01.Section04"
+            reason: "Predicate-logic quantifier laws from Figure 1.5, including negated forall/exists and quantifier commutation."
+        missing: []
+        deferred: []
+      - coordinate: "Chapter 1, Section 1.5"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter01.Section05"
+            reason: "Logical implication vocabulary, modus ponens, modus tollens, syllogism, disjunctive syllogism, conjunction/disjunction rules, formal-proof-step vocabulary, and invalid argument countervaluations."
+        missing: []
+        deferred: []
+      - coordinate: "Chapter 1, Section 1.6"
+        status: "partial_large_real_arithmetic_deferred"
+        formalized:
+          - artifact: "FoC.Foundation.Arithmetic"
+            reason: "Natural-number divisibility and parity infrastructure for proof examples."
+          - artifact: "FoC.Foundation.Integers"
+            reason: "Integer parity and divisibility examples, including square-parity wrappers."
+          - artifact: "FoC.Foundation.Rationals"
+            reason: "Rational representatives and rational closure under addition and multiplication."
+          - artifact: "FoC.Foundation.Reals"
+            reason: "Dedekind-cut real density, rational embedding arithmetic, rational real operations, scaling, division by embedded rationals, and concrete square-root cut candidates."
+          - artifact: "FoC.Book.Chapter01.Section06"
+            reason: "Book-facing wrappers for proof examples, rational closure, real density, embedded-rational arithmetic, and irrational-product surrogate examples."
+        missing:
+          - item: "Direct square-root square equalities for concrete Dedekind cuts"
+            blocker: "Requires finishing the cut square characterization for the concrete sqrt(2)/sqrt(3) candidates."
+          - item: "Direct real irrational-product counterexample"
+            blocker: "Currently represented by the quadratic-surd surrogate pending concrete square-root equalities."
+        deferred: []
+      - coordinate: "Chapter 1, Section 1.7"
+        status: "partial_large_cardinality_and_real_bridges_deferred"
+        formalized:
+          - artifact: "FoC.Book.Chapter01.Section07"
+            reason: "Proof by contradiction, contradiction elimination, odd-square contradiction core, prime divisor existence, Euclid prime-list theorem, pigeonhole collision schema, sqrt(2)/sqrt(3) rational contradiction cores, quotient-rational no-square-root theorems, irrationality preservation wrappers, and concrete square-root-cut nonnegativity."
+          - artifact: "FoC.Foundation.Primes"
+            reason: "Prime divisor, Euclid-style prime-list, and product-of-primes infrastructure."
+          - artifact: "FoC.Foundation.RationalCore"
+            reason: "Reduced positive-rational-representative contradiction cores for sqrt(2) and sqrt(3)."
+          - artifact: "FoC.Foundation.QuadraticSurd"
+            reason: "Temporary sqrt(2)-like surrogate model for irrational-product examples."
+        missing:
+          - item: "Full finite-cardinality pigeonhole theorem"
+            blocker: "Only the reusable non-injective collision schema is formalized here."
+          - item: "Square-root square equalities for direct real irrationality examples"
+            blocker: "Same concrete Dedekind-cut square-characterization gap as Section 1.6."
+        deferred: []
+      - coordinate: "Chapter 1, Section 1.8"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter01.Section08"
+            reason: "Ordinary induction, induction from a starting point, strong induction, factorial/Fibonacci recurrences, finite-sum identities, natural and quotient-rational geometric-series identities, embedded-real geometric-series wrappers, odd-sum square identity, and product-of-primes induction example."
+          - artifact: "FoC.Foundation.Summation"
+            reason: "Reusable finite summation and geometric-series kernels."
+        missing: []
+        deferred: []
+      - coordinate: "Chapter 1, Section 1.9"
+        status: "partial_application_material_deferred"
+        formalized:
+          - artifact: "FoC.Book.Chapter01.Section09"
+            reason: "Recursive kernels for Hanoi move counts/move lists and binary-tree traversal sums, with correctness/length facts."
+        missing: []
+        deferred:
+          - item: "Java subroutine semantics"
+            reason: "Represented by recursive mathematical kernels, not by a Java runtime formalization."
+      - coordinate: "Chapter 1, Section 1.10"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter01.Section10"
+            reason: "Fibonacci recurrence, fib n < 2^n exercise, and Theorem 1.18 in scaled natural, quotient-rational, embedded-real, and real-power wrapper forms."
+        missing: []
+        deferred: []
     classified_not_formalized_yet:
       - coordinate: "Chapter 1, Section 1.3"
         reason: "Circuit drawings and design exercises are application artifacts; the DNF semantic core is formalized."
@@ -138,6 +239,91 @@ completed:
       - "Function fibers form equivalence relations"
       - "Transitive closure is transitive; transitive closure of a reflexive symmetric relation is an equivalence relation"
       - "Relational-database table model with insert, select, delete, update, primary keys, and primary-key preservation"
+    sections:
+      - coordinate: "Chapter 2, Section 2.1"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter02.Section01"
+            reason: "Set equality by mutual subset, subset transitivity, powerset membership, empty-subset facts, and chapter induction schemas."
+          - artifact: "FoC.Foundation.Sets"
+            reason: "Typed predicate-set model and reusable subset/set-operation infrastructure."
+        missing: []
+        deferred:
+          - item: "Russell's paradox as an untyped-set construction"
+            reason: "Represented as a typed-set design boundary: self-membership is ill-typed."
+      - coordinate: "Chapter 2, Section 2.2"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter02.Section02"
+            reason: "Complement, Figure 2.1 set laws, De Morgan laws, and generalized De Morgan laws for finite indexed families."
+          - artifact: "FoC.Foundation.Sets"
+            reason: "Boolean algebra of set operations and finite-family set operators."
+        missing: []
+        deferred: []
+      - coordinate: "Chapter 2, Section 2.3"
+        status: "partial_application_material_deferred"
+        formalized:
+          - artifact: "FoC.Book.Chapter02.Section03"
+            reason: "Elementwise tests for union, intersection, difference, and complement, plus bit-vector set operation semantics."
+        missing: []
+        deferred:
+          - item: "Programming-language representation details"
+            reason: "Application material; pointwise set-operation semantics and a bit-vector model are formalized."
+      - coordinate: "Chapter 2, Section 2.4"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter02.Section04"
+            reason: "Function composition, graph of a function, injective/surjective/bijective vocabulary, contrapositive injectivity, evaluation, and selected composition exercises."
+          - artifact: "FoC.Foundation.Functions"
+            reason: "Reusable graph/image/preimage/composition/injectivity/surjectivity/bijection infrastructure."
+        missing: []
+        deferred: []
+      - coordinate: "Chapter 2, Section 2.5"
+        status: "partial_application_material_deferred"
+        formalized:
+          - artifact: "FoC.Book.Chapter02.Section05"
+            reason: "Total functions as partial functions, JavaScript-style composition exercise, first-class/higher-order function vocabulary, and partial-composition definedness facts."
+          - artifact: "FoC.Foundation.Functions"
+            reason: "Option-valued partial-function model and higher-order function semantics."
+        missing: []
+        deferred:
+          - item: "C++ and JavaScript runtime behavior"
+            reason: "Represented by total/partial function, higher-order, and composition semantics."
+      - coordinate: "Chapter 2, Section 2.6"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter02.Section06"
+            reason: "Finite examples, countability of naturals/integers/rationals, diagonal staging for Nat x Nat, finite-cardinality witnesses, product/disjoint-union/inclusion-exclusion/powerset/function-space cardinality, Cantor theorem, digit-stream diagonalization, quotient-rational countability, real uncountability, irrational-real uncountability, and Theorem 2.9."
+          - artifact: "FoC.Foundation.Finite"
+            reason: "Finite sets by explicit enumeration, finite subsets, and finite product/sum witnesses."
+          - artifact: "FoC.Foundation.Countable"
+            reason: "Countability, countable unions, and uncountable-difference arguments."
+          - artifact: "FoC.Foundation.Cardinality"
+            reason: "Finite-cardinality laws and tuple/function-space witnesses."
+          - artifact: "FoC.Foundation.DigitStreams"
+            reason: "Binary digit-stream diagonalization core."
+          - artifact: "FoC.Foundation.RealUncountability"
+            reason: "Digit-stream injection into Dedekind-cut reals, real uncountability, and irrational-real uncountability."
+        missing: []
+        deferred: []
+      - coordinate: "Chapter 2, Section 2.7"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter02.Section07"
+            reason: "Relation properties, equivalence relations, equivalence classes, partitions, function fibers, and transitive-closure examples."
+          - artifact: "FoC.Foundation.Relations"
+            reason: "Reusable relation predicates, equivalence-class/partition infrastructure, and transitive closure."
+        missing: []
+        deferred: []
+      - coordinate: "Chapter 2, Section 2.8"
+        status: "partial_application_material_deferred"
+        formalized:
+          - artifact: "FoC.Book.Chapter02.Section08"
+            reason: "Relational-database table model with insert, select, delete, update, row membership, and primary-key preservation."
+        missing: []
+        deferred:
+          - item: "SQL syntax and DBMS behavior"
+            reason: "Application material; the table-as-relation model with core update operations is formalized."
     classified_not_formalized_yet:
       - coordinate: "Chapter 2, Section 2.1"
         reason: "Russell's paradox is represented as a design boundary: typed predicate sets make self-membership ill-typed."
@@ -196,6 +382,80 @@ completed:
       - "Section 3.3 backreference exercise target language a^n b a^n, with a no-pumping-property contradiction and unconditional non-regularity theorem"
       - "Concrete no-pumping-length contradiction and unconditional non-regularity theorem for a^n b^n"
       - "Pumping-lemma exercise contradictions and unconditional non-regularity wrappers for all four Section 3.7 exercise languages: equal-count words, xx, xx^R, and block words a^n b^m with n < m"
+    sections:
+      - coordinate: "Chapter 3, Section 3.1"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter03.Section01"
+            reason: "Strings as finite words, concatenation laws, empty string facts, language union/intersection/complement/concatenation/Kleene star, singleton finite-language witness, and Cantor-style diagonal form of Theorem 3.1."
+          - artifact: "FoC.Languages.Words"
+            reason: "Word operations: empty word, symbol words, concatenation, length, reversal, repetition, and symbol counts."
+          - artifact: "FoC.Languages.Language"
+            reason: "Language operations and equality vocabulary."
+        missing: []
+        deferred: []
+      - coordinate: "Chapter 3, Section 3.2"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter03.Section02"
+            reason: "Regular-expression definitions, denotational semantics, regular-language vocabulary, closure under union/concatenation/Kleene star, selected exercise regular expressions, and sample membership."
+          - artifact: "FoC.Languages.RegularExpression"
+            reason: "Regular-expression syntax and semantic language interpretation."
+          - artifact: "FoC.Languages.Regular"
+            reason: "Regular-language predicates and regular-expression closure constructors."
+        missing: []
+        deferred: []
+      - coordinate: "Chapter 3, Section 3.3"
+        status: "partial_application_material_deferred"
+        formalized:
+          - artifact: "FoC.Book.Chapter03.Section03"
+            reason: "Optional expression, one-or-more expression, finite character classes, digit-class sample, and backreference exercise target-language vocabulary/witness."
+          - artifact: "FoC.Book.Chapter03.Section07"
+            reason: "Backreference exercise target language a^n b a^n is proved non-regular via the pumping-lemma infrastructure."
+        missing: []
+        deferred:
+          - item: "Editor-specific search/replace syntax, anchors, word boundaries, and escaping conventions"
+            reason: "Application material; regex semantic sugar and the backreference target-language result are formalized."
+      - coordinate: "Chapter 3, Section 3.4"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter03.Section04"
+            reason: "DFA structure, recursive extended transition, accepted language, sample runs, complement construction, and product constructions for union/intersection."
+          - artifact: "FoC.Languages.DFA"
+            reason: "Reusable DFA semantics and closure constructions."
+        missing: []
+        deferred: []
+      - coordinate: "Chapter 3, Section 3.5"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter03.Section05"
+            reason: "NFA structure, epsilon transitions, accepted language, DFA-as-NFA bridge, and subset-construction run invariant/equivalence."
+          - artifact: "FoC.Languages.NFA"
+            reason: "NFA structure, epsilon closure, reachability-set semantics, and accepted-language definitions."
+          - artifact: "FoC.Languages.NFAPath"
+            reason: "Explicit NFA path semantics and equivalence with reachability-set acceptance."
+        missing: []
+        deferred: []
+      - coordinate: "Chapter 3, Section 3.6"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter03.Section06"
+            reason: "Regular-expression closure under union/concatenation/star, finite-language regularity, finite-alphabet universal language, regular-to-NFA/DFA recognition, DFA complement/union/intersection closure, subset construction, and state-elimination soundness/completeness bridges."
+          - artifact: "FoC.Languages.Thompson"
+            reason: "Thompson-style NFAs for regex constructors and compiler from regex languages to NFA-recognizable languages."
+          - artifact: "FoC.Languages.Regular"
+            reason: "Finite powerset witnesses, subset construction, state-elimination regex, DFA/NFA-recognizable-to-regular bridges, and finite-alphabet complement/intersection regularity."
+        missing: []
+        deferred: []
+      - coordinate: "Chapter 3, Section 3.7"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter03.Section07"
+            reason: "Pumping Lemma vocabulary and theorem, pumping-property extensionality/monotonicity, generic counterexample schemas, no-pumping contradictions for a^n b^n and backreference language, plus selected exercise non-regularity results for equal-count words, xx, xx^R, and n < m block words."
+          - artifact: "FoC.Languages.Pumping"
+            reason: "Finite-state repetition proof for DFA languages, transport to regular languages, and pumping-property infrastructure."
+        missing: []
+        deferred: []
     classified_not_formalized_yet:
       - coordinate: "Chapter 3, Section 3.3"
         reason: "Editor-specific search/replace syntax, anchors, word boundaries, and escaping conventions are application material; optional, plus, character-class sugar, and the backreference exercise's non-regular target language are formalized."
@@ -237,6 +497,91 @@ completed:
       - "Context-free pumping-lemma quantified vocabulary, pumped-loop derivation iteration, extensionality, reusable bad-word-family counterexample schemas, and contrapositive schema"
       - "Concrete no-pumping-length contradiction for a^n b^n c^n, the unconditional book-facing non-context-free result from the CFL Pumping Lemma, concrete finite-production witness grammars for a^n b^n c^* and a^* b^n c^n with exact intersection a^n b^n c^n, CFL intersection nonclosure for the book-facing finite-production predicate, the complement nonclosure schema, PDA-recognizable intersection with DFA-recognizable languages via a product construction, finite-language DFA recognizability, and PDA-recognizable closure under subtracting a finite language"
       - "General grammars with unrestricted left-hand sides, finite-production presentation vocabulary, derivations, generated languages, embedding of CFG derivations into general grammars with finite-production preservation, concrete equal-count/general-grammar examples, an invariant proof for the equal-count grammar, and sample derivations for baabcc, aabbcc, and a^4"
+    sections:
+      - coordinate: "Chapter 4, Section 4.1"
+        status: "complete_formal_core"
+        formalized:
+          - artifact: "FoC.Book.Chapter04.Section01"
+            reason: "Theorem 4.1 yield/derive laws, context-free-language vocabulary, right/left-regular vocabulary, reversal grammar exactness, CFL closure under reversal/union/concatenation/Kleene star, right/left-regular equivalences, and exact grammar for {a^n b^n | n >= 0}."
+          - artifact: "FoC.Grammars.CFG"
+            reason: "CFG structure, productions, yields, derivations, generated languages, form-language semantics, finite-production vocabulary, and grammar combinators."
+          - artifact: "FoC.Grammars.CFL"
+            reason: "Book-facing context-free-language vocabulary and finite-production variants."
+          - artifact: "FoC.Grammars.RightRegular"
+            reason: "Right/left-regular grammar constructions and equivalence with regular languages over finite alphabets."
+        missing: []
+        deferred: []
+      - coordinate: "Chapter 4, Section 4.2"
+        status: "partial_application_material_deferred"
+        formalized:
+          - artifact: "FoC.Book.Chapter04.Section02"
+            reason: "BNF expression syntax and expansion rules for symbols, sequences, alternatives, optional items, and repetition, plus representative digit/sign/declaration/integer, English, Java-statement, arithmetic-expression, real-number, Java-variable, try/catch, and compound-proposition examples."
+          - artifact: "FoC.Grammars.BNF"
+            reason: "Reusable BNF expression and expansion infrastructure."
+        missing: []
+        deferred:
+          - item: "Fully enumerating every sentence/program fragment from larger listings"
+            reason: "Application material beyond the formal expansion operators and representative examples."
+          - item: "Exact language proofs for larger BNF-derived grammars"
+            reason: "Larger parser/language developments, not needed for the current formal core."
+      - coordinate: "Chapter 4, Section 4.3"
+        status: "partial_parser_algorithm_material_deferred"
+        formalized:
+          - artifact: "FoC.Book.Chapter04.Section03"
+            reason: "LL(1)/LR(1)/shift-reduce parser-table vocabulary, parse-tree/frontier derivation bridges, height/frontier bounds, selected subtree/spine machinery, ambiguity equivalence, canonical left-derivation traces, and parse-tree/left-derivation trace correspondence."
+          - artifact: "FoC.Grammars.ParseTree"
+            reason: "Parse trees, forests, frontier computation, node/height measures, derivation bridges, ambiguity infrastructure, and pumping-support subtree machinery."
+        missing: []
+        deferred:
+          - item: "Executable parser algorithms with correctness proofs"
+            reason: "Vocabulary is present; algorithmic parser construction is optional infrastructure."
+      - coordinate: "Chapter 4, Section 4.4"
+        status: "partial_pda_to_cfg_exactness_deferred"
+        formalized:
+          - artifact: "FoC.Book.Chapter04.Section04"
+            reason: "PDA computation transitivity, acceptance variants, deterministic-CFL end-marker vocabulary, CFG-to-PDA exactness wrappers, PDA-to-CFG construction wrappers, finite-production and forward-soundness wrappers, and exact concrete PDA examples for {a^n b^n}, range languages, deterministic a^n b^n, and {w c w^R}."
+          - artifact: "FoC.Grammars.PDA"
+            reason: "PDA configurations, epsilon/input steps, computations, acceptance, recognizability, determinism, finite-presentation vocabulary, and top-pop normal-form predicate."
+          - artifact: "FoC.Grammars.CFGToPDA"
+            reason: "Standard CFG-to-PDA construction with exact accepted-language theorem."
+          - artifact: "FoC.Grammars.PDAToCFG"
+            reason: "Top-pop PDA-to-CFG nonterminals and production schema, finite production-list generators, finite-production proof, bidirectional schema/list bridge, summary semantics, and generated-to-accepted forward soundness."
+        missing:
+          - item: "PDA-to-CFG accepted-to-generated direction"
+            blocker: "Needs stack-prefix splitting/decomposition for computations after a transition pushes a word."
+          - item: "Normalization from arbitrary finite-presented PDAs to the top-pop grammar-friendly form"
+            blocker: "Needs fresh bottom marker, wrapper states, finite transition presentation preservation, and accepted-language exactness."
+          - item: "Full PDA-to-CFG exact language theorem"
+            blocker: "Depends on the accepted-to-generated direction and normalization bridge."
+        deferred:
+          - item: "Selected deterministic-CFL exercise examples"
+            reason: "Concrete deterministic vocabulary and examples exist; remaining exercises are lower priority than PDA-to-CFG exactness."
+      - coordinate: "Chapter 4, Section 4.5"
+        status: "partial_subtraction_theorem_deferred"
+        formalized:
+          - artifact: "FoC.Book.Chapter04.Section05"
+            reason: "Finite-production CFG/CFL vocabulary, finite-production preservation for union/concatenation/star, RHS length bounds, CFL Pumping Lemma, bad-word counterexample schemas, a^n b^n c^n no-pumping contradiction, unconditional non-context-free theorem, finite-production intersection witnesses, nonclosure schemas, PDA/DFA intersection product, finite-language DFA recognizability, and PDA-recognizable finite-language subtraction."
+          - artifact: "FoC.Grammars.ParseTree"
+            reason: "Parse-tree pumping infrastructure used by the CFL Pumping Lemma."
+        missing:
+          - item: "Full CFL finite-language subtraction theorem"
+            blocker: "Deferred until PDA-to-CFG exactness can turn the PDA-recognizable subtraction construction back into a finite-production CFG/CFL."
+        deferred:
+          - item: "Later examples such as {ww}"
+            reason: "Reusable pumping infrastructure exists; these examples remain larger exercise proofs."
+      - coordinate: "Chapter 4, Section 4.6"
+        status: "partial_general_grammar_exactness_deferred"
+        formalized:
+          - artifact: "FoC.Book.Chapter04.Section06"
+            reason: "General-grammar definitions, finite-production presentation vocabulary, CFG embedding with finite-production preservation, equal-count grammar invariant, and representative derivations for equal-count, ordered a^n b^n c^n, and a^(n^2) grammars."
+          - artifact: "FoC.Grammars.GeneralGrammar"
+            reason: "Unrestricted general grammar structure, finite-production vocabulary, derivations, generated languages, and CFG embedding."
+        missing:
+          - item: "Exact generated-language proofs for sample general grammars"
+            blocker: "Representative derivations and invariants exist, but full exactness proofs remain larger developments."
+          - item: "Equivalence between general grammars and recursively enumerable languages"
+            blocker: "Belongs with Chapter 5 computability machinery and concrete interpreter/encoding infrastructure."
+        deferred: []
     classified_not_formalized_yet:
       - coordinate: "Chapter 4, Section 4.2"
         reason: "The BNF expansion operators and representative digit, sign, optional-semicolon declaration, integer, English sentence, Java statement, arithmetic expression, real-number, Java-variable, try/catch, and compound-proposition examples are formalized; fully enumerating every sentence/program fragment from the larger listings and exact language proofs for larger BNF-derived grammars remain application material."
@@ -289,6 +634,56 @@ completed:
       - "Reduction reflexivity/transitivity, complement preservation for decidable reductions, undecidability transfer along decidable reductions, and non-acceptability transfer along acceptable reductions"
       - "Abstract diagonal contradiction core for self-recognition predicates, no decoder row for a decoder's own diagonal language, missing-language and no-universal-decoder theorems, non-acceptability under decoder universality, self-diagonal/complement-self-halting equivalence, conditional self-halting not-recursive/not-RE-complement theorem shape, halting-problem membership/elimination/extensionality, explicitly paired halting-problem and self-halting-pair vocabulary, diagonal-pair transfer of undecidability, and universal-machine pair-halting/pair-decoding facts"
       - "Word-map preimage languages, decidable-preimage principles, injective pair-encoding vocabulary, diagonal pair maps, and the theorem that an injective pair encoding makes the diagonal preimage of pair-halting exactly self-halting"
+    sections:
+      - coordinate: "Chapter 5, Section 5.1"
+        status: "partial_machine_transformation_deferred"
+        formalized:
+          - artifact: "FoC.Book.Chapter05.Section01"
+            reason: "Tape movement, finite-window tapes, deterministic one-tape machines, configurations, steps, computations, finite-step halting, deterministic uniqueness, stopped-halting stability, halting-with-output, accepted languages, recognizer equality, Turing-computable total/partial functions, partial-function domains, decidable/acceptable languages, characteristic functions, 0/1 decider traces, exact stopped-decider output classification, and complement closure."
+          - artifact: "FoC.Computability.Tape"
+            reason: "Tape representation, input/output encoding, read/write/move operations, and output-word extraction."
+          - artifact: "FoC.Computability.TuringMachine"
+            reason: "Turing-machine structure, configurations, deterministic step relation, computations, halting, and output uniqueness."
+          - artifact: "FoC.Computability.Computable"
+            reason: "Computable total/partial string-function vocabulary and domain-language bridge."
+          - artifact: "FoC.Computability.Recognizable"
+            reason: "Accepted languages, recognizers, decidability/acceptability, stopped deciders, characteristic functions, and complement closure."
+        missing:
+          - item: "Transition-level construction converting an arbitrary decider into a halting-only acceptor"
+            blocker: "Requires an explicit machine transformation and no-false-accept invariant."
+        deferred:
+          - item: "Concrete transition diagrams and machine programs"
+            reason: "Application artifacts; semantic tape/configuration/machine infrastructure is formalized."
+      - coordinate: "Chapter 5, Section 5.2"
+        status: "partial_concrete_construction_deferred"
+        formalized:
+          - artifact: "FoC.Book.Chapter05.Section02"
+            reason: "Co-RE vocabulary, finite-stage acceptance traces, complementary acceptance traces, bounded trace-hit search, RE/co-RE bounded-search classification core, stopped-decider complementary traces, conditional recursive iff RE/co-RE theorem from construction principles, listability/range vocabulary, unary-input bridge, semantic listability/range equivalence, computable range descriptions, and grammar/RE-language theorem shapes."
+          - artifact: "FoC.Computability.Enumerable"
+            reason: "Listability, range-language, recursive-enumerability, unary-input bridge, and semantic listing/range equivalence infrastructure."
+        missing:
+          - item: "Concrete transition-level dovetailing decider from paired recognizers"
+            blocker: "Current theorem is assembled from explicit construction principles rather than a constructed machine."
+          - item: "Concrete machine/program/listing equivalences"
+            blocker: "Requires simulation infrastructure among one-tape machines, multi-tape machines, programs, computable listings, and ranges."
+          - item: "Concrete general-grammar-to-RE and RE-to-general-grammar constructions"
+            blocker: "Current coverage records statement shapes and grammar-pair characterizations, not full construction proofs."
+        deferred: []
+      - coordinate: "Chapter 5, Section 5.3"
+        status: "partial_encoding_and_universal_machine_deferred"
+        formalized:
+          - artifact: "FoC.Book.Chapter05.Section03"
+            reason: "Non-computable/non-acceptable/undecidable vocabulary, decidable and acceptable reductions, reduction reflexivity/transitivity, complement preservation, undecidability/non-acceptability transfer, diagonal language and decoder-row recognition, abstract diagonal contradiction core, no-universal-decoder theorem, decoder universality consequences, self-halting and halting-problem vocabulary, abstract and paired halting membership facts, injective pair encodings, diagonal pair maps, word-map preimages, diagonal preimage equality, and conditional halting-problem theorem shapes."
+          - artifact: "FoC.Computability.Undecidable"
+            reason: "Reusable diagonalization, reduction, halting-problem, self-halting, decoder, and universal-machine specification vocabulary."
+        missing:
+          - item: "Universal-machine construction"
+            blocker: "Needs concrete machine encoding and interpreter infrastructure."
+          - item: "Concrete halting-problem undecidability theorem"
+            blocker: "Current result is conditional on universal-machine/pair-decoding facts and diagonal preimage computability."
+          - item: "Concrete computability of diagonal pair maps"
+            blocker: "Requires explicit encoding and computable map construction."
+        deferred: []
     classified_not_formalized_yet:
       - coordinate: "Chapter 5, Section 5.1"
         reason: "Concrete transition diagrams and machine programs are application artifacts; the formal core provides tape/configuration/machine semantics, finite-step halting traces, and computability vocabulary."
