@@ -163,6 +163,190 @@ theorem pda_to_cfg_accepts_of_generates
     PDA.Accepts M w :=
   PDA.toCFG_accepts_of_generates h
 
+-- Book: Chapter 4, Section 4.4, reverse-direction local constructor for the
+-- PDA-to-CFG start production.
+theorem pda_to_cfg_start_derives
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {q : state} {w : Word input}
+    (haccept : M.accept q)
+    (hbody : CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.empty M.start q)]
+      (SententialForm.terminalWord w)) :
+    w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
+  PDA.toCFG_start_derives haccept hbody
+
+-- Book: Chapter 4, Section 4.4, reverse-direction local constructor for the
+-- reflexive empty-stack-tail summary production.
+theorem pda_to_cfg_empty_refl_derives
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {q : state} :
+    CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.empty q q)]
+      (SententialForm.terminalWord (Word.Empty : Word input)) :=
+  PDA.toCFG_emptyRefl_derives
+
+-- Book: Chapter 4, Section 4.4, reverse-direction local constructor for a
+-- one-symbol-pop transition production.
+theorem pda_to_cfg_pop_step_derives
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p r q : state} {A : stack} {a? : Option input}
+    {push : Word stack}
+    {chainRhs : SententialForm input (PDA.ToCFGNonterminal stack state)}
+    {pref chainWord : Word input}
+    (htransition : M.transition p a? [A] r push)
+    (hchain : PDA.ToCFGChain r push q chainRhs)
+    (hpref : pref ∈ CFG.FormLanguage
+      (CFG.DerivationSymbolLanguage (PDAToCFG M presentation))
+      (PDA.inputPrefix (nonterminal := PDA.ToCFGNonterminal stack state) a?))
+    (hchainWord : chainWord ∈ CFG.FormLanguage
+      (CFG.DerivationSymbolLanguage (PDAToCFG M presentation)) chainRhs) :
+    CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.between p A q)]
+      (SententialForm.terminalWord (Word.Concat pref chainWord)) :=
+  PDA.toCFG_popStep_derives htransition hchain hpref hchainWord
+
+-- Book: Chapter 4, Section 4.4, reverse-direction local constructor for an
+-- empty-pop transition that preserves the current stack tail.
+theorem pda_to_cfg_empty_step_derives
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p r s q : state} {a? : Option input}
+    {push : Word stack}
+    {chainRhs : SententialForm input (PDA.ToCFGNonterminal stack state)}
+    {pref chainWord emptyWord : Word input}
+    (htransition : M.transition p a? [] r push)
+    (hchain : PDA.ToCFGChain r push s chainRhs)
+    (hpref : pref ∈ CFG.FormLanguage
+      (CFG.DerivationSymbolLanguage (PDAToCFG M presentation))
+      (PDA.inputPrefix (nonterminal := PDA.ToCFGNonterminal stack state) a?))
+    (hchainWord : chainWord ∈ CFG.FormLanguage
+      (CFG.DerivationSymbolLanguage (PDAToCFG M presentation)) chainRhs)
+    (hempty : CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.empty s q)]
+      (SententialForm.terminalWord emptyWord)) :
+    CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.empty p q)]
+      (SententialForm.terminalWord
+        (Word.Concat pref (Word.Concat chainWord emptyWord))) :=
+  PDA.toCFG_emptyStep_derives htransition hchain hpref hchainWord hempty
+
+-- Book: Chapter 4, Section 4.4, reverse-direction local constructor for an
+-- empty-pop transition taken before removing the current top stack symbol.
+theorem pda_to_cfg_empty_before_top_derives
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p r s q : state} {A : stack} {a? : Option input}
+    {push : Word stack}
+    {chainRhs : SententialForm input (PDA.ToCFGNonterminal stack state)}
+    {pref chainWord topWord : Word input}
+    (htransition : M.transition p a? [] r push)
+    (hchain : PDA.ToCFGChain r push s chainRhs)
+    (hpref : pref ∈ CFG.FormLanguage
+      (CFG.DerivationSymbolLanguage (PDAToCFG M presentation))
+      (PDA.inputPrefix (nonterminal := PDA.ToCFGNonterminal stack state) a?))
+    (hchainWord : chainWord ∈ CFG.FormLanguage
+      (CFG.DerivationSymbolLanguage (PDAToCFG M presentation)) chainRhs)
+    (htop : CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.between s A q)]
+      (SententialForm.terminalWord topWord)) :
+    CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.between p A q)]
+      (SententialForm.terminalWord
+        (Word.Concat pref (Word.Concat chainWord topWord))) :=
+  PDA.toCFG_emptyBeforeTop_derives htransition hchain hpref hchainWord htop
+
+-- Book: Chapter 4, Section 4.4, a decomposed derivation for a pushed stack
+-- word is equivalent to a `ToCFGChain` RHS with generated pieces.
+theorem pda_to_cfg_chain_derives_formLanguage
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p q : state} {push : Word stack} {w : Word input}
+    (h : PDA.ToCFGChainDerives M presentation p push q w) :
+    exists rhs : SententialForm input (PDA.ToCFGNonterminal stack state),
+      PDA.ToCFGChain p push q rhs ∧
+        w ∈ CFG.FormLanguage
+          (CFG.DerivationSymbolLanguage (PDAToCFG M presentation)) rhs :=
+  PDA.toCFGChainDerives_formLanguage h
+
+-- Book: Chapter 4, Section 4.4, reconstruct the decomposed derivation for a
+-- pushed stack word from a `ToCFGChain` RHS and generated pieces.
+theorem pda_to_cfg_chain_derives_of_formLanguage
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p q : state} {push : Word stack}
+    {rhs : SententialForm input (PDA.ToCFGNonterminal stack state)}
+    (hchain : PDA.ToCFGChain p push q rhs)
+    {w : Word input}
+    (hw : w ∈ CFG.FormLanguage
+      (CFG.DerivationSymbolLanguage (PDAToCFG M presentation)) rhs) :
+    PDA.ToCFGChainDerives M presentation p push q w :=
+  PDA.toCFGChainDerives_of_formLanguage hchain hw
+
+-- Book: Chapter 4, Section 4.4, use a decomposed pushed-word derivation in a
+-- one-symbol-pop production.
+theorem pda_to_cfg_pop_step_of_chain_derives
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p r q : state} {A : stack} {a? : Option input}
+    {push : Word stack}
+    {pref chainWord : Word input}
+    (htransition : M.transition p a? [A] r push)
+    (hchain : PDA.ToCFGChainDerives M presentation r push q chainWord)
+    (hpref : pref ∈ CFG.FormLanguage
+      (CFG.DerivationSymbolLanguage (PDAToCFG M presentation))
+      (PDA.inputPrefix (nonterminal := PDA.ToCFGNonterminal stack state) a?)) :
+    CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.between p A q)]
+      (SententialForm.terminalWord (Word.Concat pref chainWord)) :=
+  PDA.toCFG_popStep_of_chainDerives htransition hchain hpref
+
+-- Book: Chapter 4, Section 4.4, use a decomposed pushed-word derivation in an
+-- empty-pop tail-preserving production.
+theorem pda_to_cfg_empty_step_of_chain_derives
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p r s q : state} {a? : Option input}
+    {push : Word stack}
+    {pref chainWord emptyWord : Word input}
+    (htransition : M.transition p a? [] r push)
+    (hchain : PDA.ToCFGChainDerives M presentation r push s chainWord)
+    (hpref : pref ∈ CFG.FormLanguage
+      (CFG.DerivationSymbolLanguage (PDAToCFG M presentation))
+      (PDA.inputPrefix (nonterminal := PDA.ToCFGNonterminal stack state) a?))
+    (hempty : CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.empty s q)]
+      (SententialForm.terminalWord emptyWord)) :
+    CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.empty p q)]
+      (SententialForm.terminalWord
+        (Word.Concat pref (Word.Concat chainWord emptyWord))) :=
+  PDA.toCFG_emptyStep_of_chainDerives htransition hchain hpref hempty
+
+-- Book: Chapter 4, Section 4.4, use a decomposed pushed-word derivation in an
+-- empty-pop production taken before removing the current top symbol.
+theorem pda_to_cfg_empty_before_top_of_chain_derives
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p r s q : state} {A : stack} {a? : Option input}
+    {push : Word stack}
+    {pref chainWord topWord : Word input}
+    (htransition : M.transition p a? [] r push)
+    (hchain : PDA.ToCFGChainDerives M presentation r push s chainWord)
+    (hpref : pref ∈ CFG.FormLanguage
+      (CFG.DerivationSymbolLanguage (PDAToCFG M presentation))
+      (PDA.inputPrefix (nonterminal := PDA.ToCFGNonterminal stack state) a?))
+    (htop : CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.between s A q)]
+      (SententialForm.terminalWord topWord)) :
+    CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.between p A q)]
+      (SententialForm.terminalWord
+        (Word.Concat pref (Word.Concat chainWord topWord))) :=
+  PDA.toCFG_emptyBeforeTop_of_chainDerives htransition hchain hpref htop
+
 inductive AnBnPDAStack where
   | marker
 deriving DecidableEq
