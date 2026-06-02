@@ -168,6 +168,91 @@ theorem pda_recognizable_inter_dfa_recognizable
                         exact (pda_intersect_dfa_accepted_language_exact P D w).mpr
                           (And.intro ((hP w).mpr hw.left) ((hD w).mpr hw.right))
 
+-- Book: Chapter 4, Sections 4.4-4.5, the grammar-to-PDA construction gives
+-- every finite-production CFL a pushdown recognizer.
+theorem finite_production_context_free_pda_recognizable {input : Type}
+    {L : Language input}
+    (hL : CFL.FiniteProductionContextFreeLanguage L) :
+    PDA.Recognizable L := by
+  cases hL with
+  | intro nonterminal hnt =>
+      cases hnt with
+      | intro G hG =>
+          exists Symbol input nonterminal
+          exists CFG.ToPDAState
+          exists CFG.ToPDA G
+          exact Language.equal_trans (CFG.toPDA_acceptedLanguage_exact G) hG.right
+
+theorem context_free_language_pda_recognizable {input : Type}
+    {L : Language input}
+    (hL : CFL.ContextFreeLanguage L) :
+    PDA.Recognizable L :=
+  finite_production_context_free_pda_recognizable hL
+
+-- Book: Chapter 4, Section 4.5, concrete finite word lists are regular, hence
+-- DFA-recognizable.
+theorem finite_list_dfa_recognizable (ws : List (Word input)) :
+    DFA.Recognizable (fun w : Word input => w ∈ ws) :=
+  RegularLanguage.regular_is_dfa_recognizable
+    (RegularLanguage.finite_list_regular ws)
+
+theorem finite_language_dfa_recognizable {M : Language input}
+    (hM : Language.Finite M) :
+    DFA.Recognizable M := by
+  cases hM with
+  | intro ws hws =>
+      cases finite_list_dfa_recognizable ws with
+      | intro state hstate =>
+          cases hstate with
+          | intro D hD =>
+              exists state
+              exists D
+              intro w
+              constructor
+              · intro hw
+                exact Foundation.ListEnumerates.right hws ((hD w).mp hw)
+              · intro hw
+                exact (hD w).mpr (Foundation.ListEnumerates.left hws hw)
+
+theorem finite_language_complement_dfa_recognizable {M : Language input}
+    (hM : Language.Finite M) :
+    DFA.Recognizable (Language.Compl M) :=
+  DFA.recognizable_complement (finite_language_dfa_recognizable hM)
+
+theorem pda_recognizable_diff_dfa_recognizable {L R : Language input}
+    (hL : PDA.Recognizable L) (hR : DFA.Recognizable R) :
+    PDA.Recognizable (Language.Diff L R) := by
+  simpa [Language.Diff, Language.Inter, Language.Compl, Foundation.FSet.Diff,
+    Foundation.FSet.Inter, Foundation.FSet.Compl] using
+    pda_recognizable_inter_dfa_recognizable hL
+      (DFA.recognizable_complement hR)
+
+-- Book: Chapter 4, Section 4.5, PDA-recognizable languages are closed under
+-- removing finitely many explicitly listed words.
+theorem pda_recognizable_diff_finite_list {L : Language input}
+    (hL : PDA.Recognizable L) (ws : List (Word input)) :
+    PDA.Recognizable (Language.Diff L (fun w : Word input => w ∈ ws)) :=
+  pda_recognizable_diff_dfa_recognizable hL
+    (finite_list_dfa_recognizable ws)
+
+-- Book: Chapter 4, Section 4.5, PDA-recognizable languages are closed under
+-- removing an abstract finite language.
+theorem pda_recognizable_diff_finite_language {L M : Language input}
+    (hL : PDA.Recognizable L) (hM : Language.Finite M) :
+    PDA.Recognizable (Language.Diff L M) :=
+  pda_recognizable_diff_dfa_recognizable hL
+    (finite_language_dfa_recognizable hM)
+
+-- Without the PDA-to-CFG conversion, this is the strongest formal closure
+-- consequence available for book-facing CFLs: the result has a PDA recognizer.
+theorem context_free_diff_finite_language_pda_recognizable
+    {input : Type}
+    {L M : Language input}
+    (hL : CFL.ContextFreeLanguage L) (hM : Language.Finite M) :
+    PDA.Recognizable (Language.Diff L M) :=
+  pda_recognizable_diff_finite_language
+    (context_free_language_pda_recognizable hL) hM
+
 inductive ABC where
   | a
   | b
@@ -1192,6 +1277,39 @@ theorem not_context_free_of_no_pumping_property {terminal : Type}
     (hNoPump : ¬ CFLHasPumpingProperty L) :
     ¬ CFL.ContextFreeLanguage L :=
   CFL.not_context_free_of_no_pumping_property hNoPump
+
+-- Book: Chapter 4, Section 4.5, reusable schema for pumping-lemma
+-- counterexamples.
+def CFLPumpingBadWordFamily (L : Language terminal) : Prop :=
+  forall K : Nat, K > 0 ->
+    exists w : Word terminal,
+      w ∈ L ∧
+      K <= Word.Length w ∧
+      forall u x y z v : Word terminal,
+        w = CFL.Concat5 u x y z v ->
+        (x ≠ Word.Empty ∨ z ≠ Word.Empty) ->
+        Word.Length (CFL.Concat3 x y z) < K ->
+        exists n : Nat, ¬ CFL.Pumped u x y z v n ∈ L
+
+theorem not_pumping_property_of_bad_word_family {L : Language terminal}
+    (hbad : CFLPumpingBadWordFamily L) :
+    ¬ CFLHasPumpingProperty L :=
+  not_pumping_property_of_counterexamples hbad
+
+theorem not_context_free_of_bad_word_family {terminal : Type}
+    {L : Language terminal}
+    (hbad : CFLPumpingBadWordFamily L) :
+    ¬ CFL.ContextFreeLanguage L :=
+  not_context_free_of_no_pumping_property
+    (not_pumping_property_of_bad_word_family hbad)
+
+theorem not_finite_production_context_free_of_bad_word_family
+    {terminal : Type} {L : Language terminal}
+    (hbad : CFLPumpingBadWordFamily L) :
+    ¬ FiniteProductionContextFreeLanguage L := by
+  intro hcf
+  exact not_pumping_property_of_bad_word_family hbad
+    (finite_production_pumping_property hcf)
 
 -- Book: Chapter 4, Section 4.5, the language used in the first
 -- non-context-free example.
