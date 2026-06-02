@@ -102,6 +102,193 @@ theorem pumping_lemma_conclusion (L : Language alpha) :
     Pumping.PumpingLemmaConclusion L :=
   Pumping.regular_pumpingLemmaConclusion L
 
+theorem repeatSymbol_concat_same (a : alpha) (m n : Nat) :
+    Word.Concat (Word.RepeatSymbol a m) (Word.RepeatSymbol a n) =
+      Word.RepeatSymbol a (m + n) := by
+  induction m with
+  | zero => simp [Word.Concat, Word.RepeatSymbol]
+  | succ _ _ => simp [Word.Concat, Word.RepeatSymbol]
+
+theorem anbanWord_injective {p q r s : Nat}
+    (h : Section03.anbanWord p q = Section03.anbanWord r s) :
+    p = r ∧ q = s := by
+  induction p generalizing r q s with
+  | zero =>
+      cases r with
+      | zero =>
+          constructor
+          · rfl
+          · unfold Section03.anbanWord at h
+            simp [Word.Concat, Word.Symbol, Word.RepeatSymbol] at h
+            have hlen := congrArg List.length h
+            simpa using hlen
+      | succ _ =>
+          unfold Section03.anbanWord at h
+          simp [Word.Concat, Word.Symbol, Word.RepeatSymbol, List.replicate_succ] at h
+          cases h
+  | succ p ih =>
+      cases r with
+      | zero =>
+          unfold Section03.anbanWord at h
+          simp [Word.Concat, Word.Symbol, Word.RepeatSymbol, List.replicate_succ] at h
+          cases h
+      | succ r =>
+          unfold Section03.anbanWord at h
+          simp [Word.Concat, Word.Symbol, Word.RepeatSymbol, List.replicate_succ] at h
+          injection h with _ htail
+          have htail' : Section03.anbanWord p q = Section03.anbanWord r s := by
+            simpa [Section03.anbanWord, Word.Concat, Word.Symbol, Word.RepeatSymbol] using htail
+          cases ih htail' with
+          | intro hpr hqs =>
+              constructor
+              · omega
+              · exact hqs
+
+theorem anban_members_have_equal_blocks {p q : Nat}
+    (h : Section03.anbanWord p q ∈ Section03.anbanLanguage) :
+    p = q := by
+  cases h with
+  | intro n hn =>
+      have hinj := anbanWord_injective hn
+      rw [hinj.left, hinj.right]
+
+theorem anbanWord_delete_initial_a
+    {x y z : Word Section01.AB} {n : Nat}
+    (hword : Section03.anbanWord n n = Word.Concat x (Word.Concat y z))
+    (hxy : Word.Length (Word.Concat x y) <= n) :
+    Word.Concat x z = Section03.anbanWord (n - Word.Length y) n := by
+  let lenx := Word.Length x
+  let leny := Word.Length y
+  let lenxy := Word.Length (Word.Concat x y)
+  have hlenxy : lenxy = lenx + leny := by
+    simp [lenxy, lenx, leny, Word.length_concat]
+  let suffix : Word Section01.AB :=
+    Word.Concat (Word.Symbol Section01.AB.b) (Word.RepeatSymbol Section01.AB.a n)
+  have hxyRep : Word.Concat x y = Word.RepeatSymbol Section01.AB.a lenxy := by
+    have hprefix :
+        Word.Concat x y = List.take lenxy (Section03.anbanWord n n) := by
+      calc
+        Word.Concat x y = List.take lenxy (Word.Concat (Word.Concat x y) z) := by
+          change Word.Concat x y = List.take (List.length (Word.Concat x y))
+            (List.append (Word.Concat x y) z)
+          exact (List.take_left (l₁ := Word.Concat x y) (l₂ := z)).symm
+        _ = List.take lenxy (Word.Concat x (Word.Concat y z)) := by
+          rw [Word.concat_assoc]
+        _ = List.take lenxy (Section03.anbanWord n n) := by
+          rw [← hword]
+    have htake : List.take lenxy (Section03.anbanWord n n) =
+        Word.RepeatSymbol Section01.AB.a lenxy := by
+      have hle : lenxy <= List.length (Word.RepeatSymbol Section01.AB.a n) := by
+        simpa [lenxy, Word.Length, Word.Concat, Word.RepeatSymbol] using hxy
+      have hleNat : lenxy <= n := by
+        simpa [lenxy] using hxy
+      unfold Section03.anbanWord
+      change List.take lenxy
+          (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
+        Word.RepeatSymbol Section01.AB.a lenxy
+      have ht : List.take lenxy
+          (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
+          List.take lenxy (Word.RepeatSymbol Section01.AB.a n) := by
+        simpa [suffix, Word.Concat] using
+          (List.take_append_of_le_length
+            (l₁ := Word.RepeatSymbol Section01.AB.a n) (l₂ := suffix) hle)
+      rw [ht]
+      simp [Word.RepeatSymbol, Nat.min_eq_left hleNat]
+    exact Eq.trans hprefix htake
+  have hxRep : x = Word.RepeatSymbol Section01.AB.a lenx := by
+    have htake : x = List.take lenx (Word.Concat x y) := by
+      change x = List.take (List.length x) (List.append x y)
+      exact (List.take_left (l₁ := x) (l₂ := y)).symm
+    rw [htake, hxyRep]
+    have hle : lenx <= lenxy := by
+      simp [lenxy, lenx, Word.Length, Word.Concat]
+    simp [Word.RepeatSymbol, Nat.min_eq_left hle]
+  have hzRep : z = Word.Concat (Word.RepeatSymbol Section01.AB.a (n - lenxy)) suffix := by
+    have hzDrop : z = List.drop lenxy (Section03.anbanWord n n) := by
+      calc
+        z = List.drop lenxy (Word.Concat (Word.Concat x y) z) := by
+          change z = List.drop (List.length (Word.Concat x y))
+            (List.append (Word.Concat x y) z)
+          exact (List.drop_left (l₁ := Word.Concat x y) (l₂ := z)).symm
+        _ = List.drop lenxy (Word.Concat x (Word.Concat y z)) := by
+          rw [Word.concat_assoc]
+        _ = List.drop lenxy (Section03.anbanWord n n) := by
+          rw [← hword]
+    rw [hzDrop]
+    have hle : lenxy <= List.length (Word.RepeatSymbol Section01.AB.a n) := by
+      simpa [lenxy, Word.Length, Word.Concat, Word.RepeatSymbol] using hxy
+    unfold Section03.anbanWord
+    change List.drop lenxy
+        (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
+      Word.Concat (Word.RepeatSymbol Section01.AB.a (n - lenxy)) suffix
+    have hd : List.drop lenxy
+        (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
+        List.append (List.drop lenxy (Word.RepeatSymbol Section01.AB.a n)) suffix := by
+      simpa [suffix, Word.Concat] using
+        (List.drop_append_of_le_length
+          (l₁ := Word.RepeatSymbol Section01.AB.a n) (l₂ := suffix) hle)
+    rw [hd]
+    simp [Word.Concat, Word.RepeatSymbol]
+  rw [hxRep, hzRep]
+  unfold Section03.anbanWord
+  rw [← Word.concat_assoc]
+  rw [repeatSymbol_concat_same]
+  have harith : lenx + (n - lenxy) = n - leny := by omega
+  rw [harith]
+
+-- Book: Chapter 3, Section 3.3, Exercise 4, proved using the Section 3.7
+-- Pumping Lemma infrastructure.
+theorem anban_no_pumping_property :
+    ¬ Pumping.HasPumpingProperty Section03.anbanLanguage := by
+  intro hpump
+  cases hpump with
+  | intro n hn =>
+      let w : Word Section01.AB := Section03.anbanWord n n
+      have hwMem : w ∈ Section03.anbanLanguage := by
+        exact Section03.anban_word_mem n
+      have hwLength : n <= Word.Length w := by
+        simp [w, Section03.anbanWord, Word.length_concat, Word.length_repeatSymbol,
+          Word.Symbol]
+      have hdec := hn.right w hwMem hwLength
+      cases hdec with
+      | intro x hx =>
+          cases hx with
+          | intro y hy =>
+              cases hy with
+              | intro z hz =>
+                  cases hz with
+                  | intro hword hrest =>
+                      have hdeleted :
+                          Word.Concat x z = Section03.anbanWord (n - Word.Length y) n :=
+                        anbanWord_delete_initial_a hword hrest.left
+                      have hpumpZero := hrest.right.right 0
+                      have hmemDeleted :
+                          Section03.anbanWord (n - Word.Length y) n ∈
+                            Section03.anbanLanguage := by
+                        rw [← hdeleted]
+                        exact hpumpZero
+                      have hEq := anban_members_have_equal_blocks hmemDeleted
+                      have hyLe : Word.Length y <= n := by
+                        have hyLeXY : Word.Length y <= Word.Length (Word.Concat x y) := by
+                          simp [Word.length_concat]
+                        omega
+                      omega
+
+-- Book: Chapter 3, Section 3.3, Exercise 4, conditional on the Pumping
+-- Lemma conclusion.
+theorem anban_not_regular_from_pumping_lemma
+    (pumpingLemma : Pumping.PumpingLemmaConclusion Section03.anbanLanguage) :
+    ¬ RegularLanguage.Regular Section03.anbanLanguage :=
+  Pumping.not_regular_of_no_pumping_property pumpingLemma
+    anban_no_pumping_property
+
+-- Book: Chapter 3, Section 3.3, Exercise 4.
+theorem anban_not_regular :
+    ¬ RegularLanguage.Regular Section03.anbanLanguage :=
+  Pumping.not_regular_of_no_pumping_property
+    (Pumping.regular_pumpingLemmaConclusion Section03.anbanLanguage)
+    anban_no_pumping_property
+
 def anbnLanguage : Language Section01.AB :=
   fun w => exists n,
     w = Word.Concat (Word.RepeatSymbol Section01.AB.a n)
@@ -150,13 +337,6 @@ theorem anbn_word_count_b (n : Nat) :
       (Word.Concat (Word.RepeatSymbol Section01.AB.a n)
         (Word.RepeatSymbol Section01.AB.b n)) = n := by
   exact ablock_word_count_b n n
-
-theorem repeatSymbol_concat_same (a : alpha) (m n : Nat) :
-    Word.Concat (Word.RepeatSymbol a m) (Word.RepeatSymbol a n) =
-      Word.RepeatSymbol a (m + n) := by
-  induction m with
-  | zero => simp [Word.Concat, Word.RepeatSymbol]
-  | succ _ _ => simp [Word.Concat, Word.RepeatSymbol]
 
 -- Book: Chapter 3, Section 3.7, every word in `{a^n b^n}` has equal counts.
 theorem anbn_members_have_equal_counts {w : Word Section01.AB}

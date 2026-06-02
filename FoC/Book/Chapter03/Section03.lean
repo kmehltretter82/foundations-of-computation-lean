@@ -38,10 +38,30 @@ theorem digit_class_accepts_7 :
   exact (RegExp.charClass_denote _ _).mpr
     (Exists.intro 7 (And.intro (by simp) rfl))
 
+def anbanWord (left right : Nat) : Word Section01.AB :=
+  Word.Concat (Word.RepeatSymbol Section01.AB.a left)
+    (Word.Concat (Word.Symbol Section01.AB.b)
+      (Word.RepeatSymbol Section01.AB.a right))
+
+def anbanLanguage : Language Section01.AB :=
+  fun w => exists n, w = anbanWord n n
+
+-- Book: Chapter 3, Section 3.3, Exercise 4 backreference target language
+-- `{ a^n b a^n | n >= 0 }`.
+theorem anban_language_membership (w : Word Section01.AB) :
+    w ∈ anbanLanguage <-> exists n, w = anbanWord n n :=
+  Iff.rfl
+
+-- Book: Chapter 3, Section 3.3, Exercise 4 witness word.
+theorem anban_word_mem (n : Nat) :
+    anbanWord n n ∈ anbanLanguage := by
+  exists n
+
 /-!
 Backreferences in some programming-language "regular expressions" are noted in
-the book as adding expressive power beyond regular expressions.  They are
-classified as application syntax, not part of the formal `RegExp` grammar.
+the book as adding expressive power beyond regular expressions.  The exact
+target language from the exercise is recorded here; its non-regularity is
+proved later in Section 3.7, after the Pumping Lemma is available.
 -/
 
 end Section03

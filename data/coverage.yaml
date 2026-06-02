@@ -143,8 +143,8 @@ completed:
         reason: "SQL syntax and DBMS behavior are application material; the table-as-relation model with core update operations is formalized."
   - coordinate: "Chapter 3"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 129
-    definition_declarations: 17
+    theorem_declarations: 137
+    definition_declarations: 19
     modules:
       - "FoC.Book.Chapter03.Section01"
       - "FoC.Book.Chapter03.Section02"
@@ -185,11 +185,12 @@ completed:
       - "Pumping-lemma quantified vocabulary, finite-state repetition proof for DFA languages, and transport to regular languages"
       - "Pumping-property extensionality, monotonicity, and generic counterexample schemas for rejecting proposed pumping lengths"
       - "Word repetition/count lemmas and equal-count groundwork for the a^n b^n pumping example"
+      - "Section 3.3 backreference exercise target language a^n b a^n, with a no-pumping-property contradiction and unconditional non-regularity theorem"
       - "Concrete no-pumping-length contradiction and unconditional non-regularity theorem for a^n b^n"
       - "Pumping-lemma exercise contradictions and unconditional non-regularity wrappers for all four Section 3.7 exercise languages: equal-count words, xx, xx^R, and block words a^n b^m with n < m"
     classified_not_formalized_yet:
       - coordinate: "Chapter 3, Section 3.3"
-        reason: "Editor-specific search/replace syntax, anchors, word boundaries, escaping conventions, and backreferences are application material; optional, plus, and character-class sugar are formalized."
+        reason: "Editor-specific search/replace syntax, anchors, word boundaries, and escaping conventions are application material; optional, plus, character-class sugar, and the backreference exercise's non-regular target language are formalized."
   - coordinate: "Chapter 4"
     status: "coverage_complete_formal_core"
     theorem_declarations: 107
