@@ -19,6 +19,34 @@ Used by:
 open Foundation
 open Languages
 
+namespace FiniteType
+
+def PairElems : List alpha -> List beta -> List (alpha × beta)
+  | [], _ => []
+  | x :: xs, ys => (ys.map fun y => (x, y)) ++ PairElems xs ys
+
+theorem pair_mem {xs : List alpha} {ys : List beta}
+    {x : alpha} {y : beta} (hx : x ∈ xs) (hy : y ∈ ys) :
+    (x, y) ∈ PairElems xs ys := by
+  induction xs with
+  | nil =>
+      cases hx
+  | cons z zs ih =>
+      cases hx with
+      | head =>
+          simp [PairElems, hy]
+      | tail _ htail =>
+          exact List.mem_append.mpr (Or.inr (ih htail))
+
+def product (left : FiniteType alpha) (right : FiniteType beta) :
+    FiniteType (alpha × beta) where
+  elems := PairElems left.elems right.elems
+  complete := by
+    intro p
+    exact pair_mem (left.complete p.1) (right.complete p.2)
+
+end FiniteType
+
 structure PDA (input : Type u) (stack : Type v) (state : Type w) where
   start : state
   transition : state -> Option input -> Word stack -> state -> Word stack -> Prop
@@ -26,6 +54,50 @@ structure PDA (input : Type u) (stack : Type v) (state : Type w) where
   statesFinite : FiniteType state
 
 namespace PDA
+
+structure TransitionRule (input : Type u) (stack : Type v) (state : Type w) where
+  source : state
+  input? : Option input
+  pop : Word stack
+  target : state
+  push : Word stack
+
+def TransitionRule.Applies
+    (rule : TransitionRule input stack state)
+    (q : state) (a? : Option input) (pop : Word stack)
+    (r : state) (push : Word stack) : Prop :=
+  rule.source = q ∧ rule.input? = a? ∧ rule.pop = pop ∧
+    rule.target = r ∧ rule.push = push
+
+structure FinitePresentation
+    (M : PDA input stack state) where
+  stackFinite : FiniteType stack
+  transitionRules : List (TransitionRule input stack state)
+  transition_complete :
+    forall q a? pop r push,
+      M.transition q a? pop r push <->
+        exists rule, rule ∈ transitionRules ∧
+          rule.Applies q a? pop r push
+  acceptingStates : List state
+  accept_complete :
+    forall q, M.accept q <-> q ∈ acceptingStates
+
+def HasFinitePresentation (M : PDA input stack state) : Prop :=
+  Nonempty (FinitePresentation M)
+
+def HasFiniteTransitions (M : PDA input stack state) : Prop :=
+  exists rules : List (TransitionRule input stack state),
+    forall q a? pop r push,
+      M.transition q a? pop r push <->
+        exists rule, rule ∈ rules ∧ rule.Applies q a? pop r push
+
+def HasFiniteStackAlphabet (_M : PDA input stack state) : Prop :=
+  Nonempty (FiniteType stack)
+
+def PopsAtMostOne (M : PDA input stack state) : Prop :=
+  forall q a? pop r push,
+    M.transition q a? pop r push ->
+      pop = [] ∨ exists A : stack, pop = [A]
 
 structure Configuration (input : Type u) (stack : Type v) (state : Type w) where
   state : state
@@ -75,6 +147,11 @@ def AcceptsByEmptyStack (M : PDA input stack state) (w : Word input) : Prop :=
 
 def AcceptedLanguage (M : PDA input stack state) : Language input :=
   fun w => Accepts M w
+
+def FinitePresentationRecognizable (L : Language input) : Prop :=
+  exists stack : Type, exists state : Type, exists M : PDA input stack state,
+    exists _presentation : FinitePresentation M,
+      Language.Equal (AcceptedLanguage M) L
 
 def Recognizable (L : Language input) : Prop :=
   exists stack : Type, exists state : Type, exists M : PDA input stack state,

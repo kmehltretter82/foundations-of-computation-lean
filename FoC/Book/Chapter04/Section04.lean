@@ -1,5 +1,6 @@
 import FoC.Book.Chapter04.Section01
 import FoC.Grammars.CFGToPDA
+import FoC.Grammars.PDAToCFG
 
 namespace FoC
 namespace Book
@@ -29,6 +30,23 @@ theorem pda_step_is_computation {M : PDA input stack state}
 -- Book: Chapter 4, Section 4.4, accepted language of a PDA.
 def PDAAcceptedLanguage (M : PDA input stack state) : Language input :=
   PDA.AcceptedLanguage M
+
+-- Book: Chapter 4, Section 4.4, a finite PDA presentation includes a finite
+-- stack alphabet, a finite transition table, and a finite accepting-state
+-- table.  The state set is already finite in the base `PDA` structure.
+def FinitePresentationPDA (M : PDA input stack state) : Prop :=
+  PDA.HasFinitePresentation M
+
+-- Book: Chapter 4, Section 4.4, top-pop normal-form PDAs are the direct input
+-- to the standard PDA-to-CFG construction: each transition pops either no stack
+-- symbol or exactly the current top stack symbol.
+def TopPopNormalFormPDA (M : PDA input stack state) : Prop :=
+  PDA.PopsAtMostOne M
+
+-- Book: Chapter 4, Section 4.4, languages recognized by explicitly finite
+-- PDA presentations.
+def FinitePresentationPDARecognizable (L : Language input) : Prop :=
+  PDA.FinitePresentationRecognizable L
 
 -- Book: Chapter 4, Section 4.4, acceptance by final state and empty stack
 -- implies final-state-only acceptance.
@@ -99,6 +117,30 @@ theorem cfg_to_pda_generates_of_accepts
     {w : Word terminal} (h : PDA.Accepts (CFGToPDA G) w) :
     w ∈ CFG.GeneratedLanguage G :=
   CFG.toPDA_generates_of_accepts h
+
+-- Book: Chapter 4, Section 4.4, the standard PDA-to-CFG construction for a
+-- finite-presented top-pop PDA.
+def PDAToCFG (M : PDA input stack state)
+    (presentation : PDA.FinitePresentation M) :
+    CFG input (PDA.ToCFGNonterminal stack state) :=
+  PDA.ToCFG M presentation
+
+-- Book: Chapter 4, Section 4.4, exactness target for the PDA-to-CFG
+-- construction.  The construction module keeps this as the main theorem target
+-- while the normalization and bidirectional proof are completed.
+def PDAToCFGExact (M : PDA input stack state)
+    (presentation : PDA.FinitePresentation M) : Prop :=
+  PDA.ToCFGTopPopExact M presentation
+
+-- Book: Chapter 4, Section 4.4, the PDA-to-CFG construction has a finite
+-- nonterminal type from the finite state and stack alphabets.
+theorem pda_to_cfg_nonterminals_finite
+    (M : PDA input stack state)
+    (presentation : PDA.FinitePresentation M) :
+    (PDAToCFG M presentation).nonterminalsFinite =
+      PDA.ToCFGNonterminal.finite
+        presentation.stackFinite M.statesFinite :=
+  PDA.toCFG_nonterminals_finite M presentation
 
 inductive AnBnPDAStack where
   | marker
