@@ -107,6 +107,40 @@ theorem general_yields_of_production {G : GeneralGrammar terminal nonterminal}
   exists lhs
   exists rhs
 
+-- Book: Chapter 4, Section 4.6, unrestricted grammar steps are closed under
+-- arbitrary sentential-form context.
+theorem general_yields_context {G : GeneralGrammar terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (h : GeneralGrammar.Yields G x y)
+    (u v : SententialForm terminal nonterminal) :
+    GeneralGrammar.Yields G (u ++ x ++ v) (u ++ y ++ v) := by
+  rcases h with ⟨u₀, v₀, lhs, rhs, hprod, hx, hy⟩
+  exists u ++ u₀
+  exists v₀ ++ v
+  exists lhs
+  exists rhs
+  constructor
+  · exact hprod
+  constructor
+  · rw [hx]
+    simp [List.append_assoc]
+  · rw [hy]
+    simp [List.append_assoc]
+
+-- Book: Chapter 4, Section 4.6, unrestricted derivations are closed under
+-- arbitrary sentential-form context.
+theorem general_derives_context {G : GeneralGrammar terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (h : GeneralGrammar.Derives G x y)
+    (u v : SententialForm terminal nonterminal) :
+    GeneralGrammar.Derives G (u ++ x ++ v) (u ++ y ++ v) := by
+  induction h with
+  | refl z =>
+      exact GeneralGrammar.Derives.refl (G := G) (u ++ z ++ v)
+  | step hstep _ ih =>
+      exact GeneralGrammar.Derives.step
+        (general_yields_context hstep u v) ih
+
 def ggTerminal (a : terminal) : Symbol terminal nonterminal :=
   Symbol.terminal a
 
@@ -1870,6 +1904,233 @@ theorem orderedABCDGrammar_generates_aabbccdd :
   simpa [GeneralGrammar.GeneratedLanguage, OrderedABCDGrammar, aabbccddWord,
     SententialForm.terminalWord, S, a, b, c, d] using hderives
 
+inductive StrictMoreBNT where
+  | start
+  | tail
+deriving DecidableEq
+
+namespace StrictMoreBNT
+
+def finite : Foundation.FiniteType StrictMoreBNT where
+  elems := [start, tail]
+  complete := by
+    intro A
+    cases A <;> simp
+
+end StrictMoreBNT
+
+def moreBN (A : StrictMoreBNT) :
+    Symbol EqualCountTerminal StrictMoreBNT :=
+  ggNonterminal A
+
+def moreBT (tok : EqualCountTerminal) :
+    Symbol EqualCountTerminal StrictMoreBNT :=
+  ggTerminal tok
+
+inductive StrictMoreBProduces :
+    SententialForm EqualCountTerminal StrictMoreBNT ->
+      SententialForm EqualCountTerminal StrictMoreBNT -> Prop where
+  | wrapPair :
+      StrictMoreBProduces [moreBN StrictMoreBNT.start]
+        [moreBT EqualCountTerminal.a, moreBN StrictMoreBNT.start,
+          moreBT EqualCountTerminal.b]
+  | toTail :
+      StrictMoreBProduces [moreBN StrictMoreBNT.start]
+        [moreBN StrictMoreBNT.tail]
+  | tailMore :
+      StrictMoreBProduces [moreBN StrictMoreBNT.tail]
+        [moreBT EqualCountTerminal.b, moreBN StrictMoreBNT.tail]
+  | tailOne :
+      StrictMoreBProduces [moreBN StrictMoreBNT.tail]
+        [moreBT EqualCountTerminal.b]
+
+def StrictMoreBGrammar :
+    GeneralGrammar EqualCountTerminal StrictMoreBNT where
+  start := StrictMoreBNT.start
+  produces := StrictMoreBProduces
+  lhsContainsNonterminal := by
+    intro lhs rhs h
+    cases h <;> simp [SententialForm.containsNonterminal, moreBN,
+      ggNonterminal]
+  nonterminalsFinite := StrictMoreBNT.finite
+
+def StrictMoreBProductionList :
+    List (GeneralGrammar.Production EqualCountTerminal StrictMoreBNT) :=
+  [{ lhs := [moreBN StrictMoreBNT.start],
+     rhs := [moreBT EqualCountTerminal.a, moreBN StrictMoreBNT.start,
+       moreBT EqualCountTerminal.b] },
+   { lhs := [moreBN StrictMoreBNT.start],
+     rhs := [moreBN StrictMoreBNT.tail] },
+   { lhs := [moreBN StrictMoreBNT.tail],
+     rhs := [moreBT EqualCountTerminal.b, moreBN StrictMoreBNT.tail] },
+   { lhs := [moreBN StrictMoreBNT.tail],
+     rhs := [moreBT EqualCountTerminal.b] }]
+
+-- Book: Chapter 4, Section 4.6, selected exercise grammar for ordered
+-- strict-count words `a^n b^m` with `n < m`.
+theorem strictMoreBGrammar_has_finite_productions :
+    GeneralGrammar.HasFiniteProductions StrictMoreBGrammar := by
+  exists StrictMoreBProductionList
+  intro lhs rhs
+  constructor
+  · intro h
+    cases h <;> simp [StrictMoreBProductionList]
+  · intro h
+    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
+    simp [StrictMoreBProductionList] at hmem
+    rcases hmem with hrule | hrule | hrule | hrule
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictMoreBProduces.wrapPair
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictMoreBProduces.toTail
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictMoreBProduces.tailMore
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictMoreBProduces.tailOne
+
+theorem strictMoreBGrammar_finite_production_generated :
+    FiniteProductionGeneralLanguage
+      (GeneralGrammar.GeneratedLanguage StrictMoreBGrammar) := by
+  exists StrictMoreBNT
+  exists StrictMoreBGrammar
+  constructor
+  · exact strictMoreBGrammar_has_finite_productions
+  · intro word
+    rfl
+
+def strictMoreBCountA
+    (sf : SententialForm EqualCountTerminal StrictMoreBNT) : Nat :=
+  SententialCountTerminal EqualCountTerminal.a sf
+
+def strictMoreBCountBWithCredits
+    (sf : SententialForm EqualCountTerminal StrictMoreBNT) : Nat :=
+  SententialCountTerminal EqualCountTerminal.b sf +
+    SententialCountNonterminal StrictMoreBNT.start sf +
+    SententialCountNonterminal StrictMoreBNT.tail sf
+
+def strictMoreBMargin
+    (sf : SententialForm EqualCountTerminal StrictMoreBNT) : Prop :=
+  strictMoreBCountA sf < strictMoreBCountBWithCredits sf
+
+theorem strictMoreB_start_margin :
+    strictMoreBMargin [moreBN StrictMoreBNT.start] := by
+  simp [strictMoreBMargin, strictMoreBCountA,
+    strictMoreBCountBWithCredits, SententialCountTerminal,
+    SententialCountNonterminal, moreBN, ggNonterminal]
+
+theorem strictMoreB_yields_preserves_margin
+    {x y : SententialForm EqualCountTerminal StrictMoreBNT}
+    (h : GeneralGrammar.Yields StrictMoreBGrammar x y) :
+    strictMoreBMargin x -> strictMoreBMargin y := by
+  intro hmargin
+  cases h with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases hv with
+          | intro lhs hlhs =>
+              cases hlhs with
+              | intro rhs hrhs =>
+                  cases hrhs with
+                  | intro hprod hrest =>
+                      cases hrest with
+                      | intro hx hy =>
+                          rw [hx] at hmargin
+                          rw [hy]
+                          cases hprod <;>
+                            simp [strictMoreBMargin, strictMoreBCountA,
+                              strictMoreBCountBWithCredits,
+                              sententialCountTerminal_append,
+                              sententialCountNonterminal_append,
+                              SententialCountTerminal,
+                              SententialCountNonterminal, moreBN, moreBT,
+                              ggNonterminal, ggTerminal] at hmargin ⊢ <;>
+                            omega
+
+theorem strictMoreB_derives_preserves_margin
+    {x y : SententialForm EqualCountTerminal StrictMoreBNT}
+    (h : GeneralGrammar.Derives StrictMoreBGrammar x y) :
+    strictMoreBMargin x -> strictMoreBMargin y := by
+  induction h with
+  | refl _ =>
+      intro hmargin
+      exact hmargin
+  | step hstep _ ih =>
+      intro hmargin
+      exact ih (strictMoreB_yields_preserves_margin hstep hmargin)
+
+theorem strictMoreBGrammar_generated_has_fewer_as_than_bs
+    {word : Word EqualCountTerminal}
+    (h : word ∈ GeneralGrammar.GeneratedLanguage StrictMoreBGrammar) :
+    Word.Count EqualCountTerminal.a word <
+      Word.Count EqualCountTerminal.b word := by
+  have hderives :
+      GeneralGrammar.Derives StrictMoreBGrammar
+        [moreBN StrictMoreBNT.start]
+        (SententialForm.terminalWord word) := by
+    simpa [GeneralGrammar.GeneratedLanguage, StrictMoreBGrammar, moreBN,
+      ggNonterminal] using h
+  have hmargin :=
+    strictMoreB_derives_preserves_margin hderives
+      strictMoreB_start_margin
+  simpa [strictMoreBMargin, strictMoreBCountA,
+    strictMoreBCountBWithCredits, sententialCountTerminal_terminalWord,
+    sententialCountNonterminal_terminalWord] using hmargin
+
+def aabbbWord : Word EqualCountTerminal :=
+  [EqualCountTerminal.a, EqualCountTerminal.a, EqualCountTerminal.b,
+    EqualCountTerminal.b, EqualCountTerminal.b]
+
+-- Book: Chapter 4, Section 4.6, concrete derivation for the selected
+-- strict-count grammar.
+theorem strictMoreBGrammar_generates_aabbb :
+    aabbbWord ∈ GeneralGrammar.GeneratedLanguage StrictMoreBGrammar := by
+  let S := moreBN StrictMoreBNT.start
+  let T := moreBN StrictMoreBNT.tail
+  let a := moreBT EqualCountTerminal.a
+  let b := moreBT EqualCountTerminal.b
+  have h1 :
+      GeneralGrammar.Yields StrictMoreBGrammar [S] [a, S, b] := by
+    simpa [S, a, b] using
+      general_yields_of_production (G := StrictMoreBGrammar)
+        StrictMoreBProduces.wrapPair [] []
+  have h2 :
+      GeneralGrammar.Yields StrictMoreBGrammar [a, S, b]
+        [a, a, S, b, b] := by
+    simpa [S, a, b] using
+      general_yields_of_production (G := StrictMoreBGrammar)
+        StrictMoreBProduces.wrapPair [a] [b]
+  have h3 :
+      GeneralGrammar.Yields StrictMoreBGrammar [a, a, S, b, b]
+        [a, a, T, b, b] := by
+    simpa [S, T, a, b] using
+      general_yields_of_production (G := StrictMoreBGrammar)
+        StrictMoreBProduces.toTail [a, a] [b, b]
+  have h4 :
+      GeneralGrammar.Yields StrictMoreBGrammar [a, a, T, b, b]
+        [a, a, b, b, b] := by
+    simpa [T, a, b] using
+      general_yields_of_production (G := StrictMoreBGrammar)
+        StrictMoreBProduces.tailOne [a, a] [b, b]
+  have hderives :
+      GeneralGrammar.Derives StrictMoreBGrammar [S]
+        [a, a, b, b, b] :=
+    GeneralGrammar.Derives.step h1
+      (GeneralGrammar.Derives.step h2
+        (GeneralGrammar.Derives.step h3
+          (GeneralGrammar.Derives.step h4
+            (GeneralGrammar.Derives.refl [a, a, b, b, b]))))
+  simpa [GeneralGrammar.GeneratedLanguage, StrictMoreBGrammar, aabbbWord,
+    SententialForm.terminalWord, S, a, b] using hderives
+
 inductive SquareTerminal where
   | a
 deriving DecidableEq
@@ -2172,6 +2433,319 @@ theorem squareGrammar_generates_four_as :
                                           (GeneralGrammar.Derives.refl
                                             [a, a, a, a])))))))))))))))))))
   simpa [GeneralGrammar.GeneratedLanguage, SquareGrammar, fourAsWord,
+    SententialForm.terminalWord, S, a] using hderives
+
+inductive PowerTwoNT where
+  | start
+  | h
+  | d
+  | r
+  | boundary
+  | markA
+deriving DecidableEq
+
+namespace PowerTwoNT
+
+def finite : Foundation.FiniteType PowerTwoNT where
+  elems := [start, h, d, r, boundary, markA]
+  complete := by
+    intro A
+    cases A <;> simp
+
+end PowerTwoNT
+
+def powN (A : PowerTwoNT) : Symbol SquareTerminal PowerTwoNT :=
+  ggNonterminal A
+
+def powT (tok : SquareTerminal) : Symbol SquareTerminal PowerTwoNT :=
+  ggTerminal tok
+
+inductive PowerTwoProduces :
+    SententialForm SquareTerminal PowerTwoNT ->
+      SententialForm SquareTerminal PowerTwoNT -> Prop where
+  | start :
+      PowerTwoProduces [powN PowerTwoNT.start]
+        [powN PowerTwoNT.h, powN PowerTwoNT.markA,
+          powN PowerTwoNT.boundary]
+  | beginDouble :
+      PowerTwoProduces [powN PowerTwoNT.h] [powN PowerTwoNT.d]
+  | duplicate :
+      PowerTwoProduces [powN PowerTwoNT.d, powN PowerTwoNT.markA]
+        [powN PowerTwoNT.markA, powN PowerTwoNT.markA,
+          powN PowerTwoNT.d]
+  | turnAround :
+      PowerTwoProduces [powN PowerTwoNT.d, powN PowerTwoNT.boundary]
+        [powN PowerTwoNT.r, powN PowerTwoNT.boundary]
+  | returnLeft :
+      PowerTwoProduces [powN PowerTwoNT.markA, powN PowerTwoNT.r]
+        [powN PowerTwoNT.r, powN PowerTwoNT.markA]
+  | ready :
+      PowerTwoProduces [powN PowerTwoNT.r] [powN PowerTwoNT.h]
+  | finishH :
+      PowerTwoProduces [powN PowerTwoNT.h] []
+  | finishBoundary :
+      PowerTwoProduces [powN PowerTwoNT.boundary] []
+  | emitA :
+      PowerTwoProduces [powN PowerTwoNT.markA]
+        [powT SquareTerminal.a]
+
+def PowerTwoGrammar : GeneralGrammar SquareTerminal PowerTwoNT where
+  start := PowerTwoNT.start
+  produces := PowerTwoProduces
+  lhsContainsNonterminal := by
+    intro lhs rhs h
+    cases h <;> simp [SententialForm.containsNonterminal, powN,
+      ggNonterminal]
+  nonterminalsFinite := PowerTwoNT.finite
+
+def PowerTwoProductionList :
+    List (GeneralGrammar.Production SquareTerminal PowerTwoNT) :=
+  [{ lhs := [powN PowerTwoNT.start],
+     rhs := [powN PowerTwoNT.h, powN PowerTwoNT.markA,
+       powN PowerTwoNT.boundary] },
+   { lhs := [powN PowerTwoNT.h],
+     rhs := [powN PowerTwoNT.d] },
+   { lhs := [powN PowerTwoNT.d, powN PowerTwoNT.markA],
+     rhs := [powN PowerTwoNT.markA, powN PowerTwoNT.markA,
+       powN PowerTwoNT.d] },
+   { lhs := [powN PowerTwoNT.d, powN PowerTwoNT.boundary],
+     rhs := [powN PowerTwoNT.r, powN PowerTwoNT.boundary] },
+   { lhs := [powN PowerTwoNT.markA, powN PowerTwoNT.r],
+     rhs := [powN PowerTwoNT.r, powN PowerTwoNT.markA] },
+   { lhs := [powN PowerTwoNT.r],
+     rhs := [powN PowerTwoNT.h] },
+   { lhs := [powN PowerTwoNT.h],
+     rhs := [] },
+   { lhs := [powN PowerTwoNT.boundary],
+     rhs := [] },
+   { lhs := [powN PowerTwoNT.markA],
+     rhs := [powT SquareTerminal.a] }]
+
+-- Book: Chapter 4, Section 4.6, selected exercise grammar for unary powers
+-- of two.  The head `d` doubles the current block of `A` markers and the
+-- return head `r` resets the machine for another doubling pass.
+theorem powerTwoGrammar_has_finite_productions :
+    GeneralGrammar.HasFiniteProductions PowerTwoGrammar := by
+  exists PowerTwoProductionList
+  intro lhs rhs
+  constructor
+  · intro h
+    cases h <;> simp [PowerTwoProductionList]
+  · intro h
+    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
+    simp [PowerTwoProductionList] at hmem
+    rcases hmem with
+      hrule | hrule | hrule | hrule | hrule |
+      hrule | hrule | hrule | hrule
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact PowerTwoProduces.start
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact PowerTwoProduces.beginDouble
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact PowerTwoProduces.duplicate
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact PowerTwoProduces.turnAround
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact PowerTwoProduces.returnLeft
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact PowerTwoProduces.ready
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact PowerTwoProduces.finishH
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact PowerTwoProduces.finishBoundary
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact PowerTwoProduces.emitA
+
+theorem powerTwoGrammar_finite_production_generated :
+    FiniteProductionGeneralLanguage
+      (GeneralGrammar.GeneratedLanguage PowerTwoGrammar) := by
+  exists PowerTwoNT
+  exists PowerTwoGrammar
+  constructor
+  · exact powerTwoGrammar_has_finite_productions
+  · intro word
+    rfl
+
+-- Book: Chapter 4, Section 4.6, concrete `2^2` derivation for the selected
+-- powers-of-two grammar.
+theorem powerTwoGrammar_generates_four_as :
+    fourAsWord ∈ GeneralGrammar.GeneratedLanguage PowerTwoGrammar := by
+  let S := powN PowerTwoNT.start
+  let H := powN PowerTwoNT.h
+  let D := powN PowerTwoNT.d
+  let R := powN PowerTwoNT.r
+  let E := powN PowerTwoNT.boundary
+  let A := powN PowerTwoNT.markA
+  let a := powT SquareTerminal.a
+  have h1 :
+      GeneralGrammar.Yields PowerTwoGrammar [S] [H, A, E] := by
+    simpa [S, H, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.start [] []
+  have h2 :
+      GeneralGrammar.Yields PowerTwoGrammar [H, A, E] [D, A, E] := by
+    simpa [H, D, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.beginDouble [] [A, E]
+  have h3 :
+      GeneralGrammar.Yields PowerTwoGrammar [D, A, E] [A, A, D, E] := by
+    simpa [D, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.duplicate [] [E]
+  have h4 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, D, E] [A, A, R, E] := by
+    simpa [D, R, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.turnAround [A, A] []
+  have h5 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, R, E] [A, R, A, E] := by
+    simpa [R, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.returnLeft [A] [E]
+  have h6 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, R, A, E] [R, A, A, E] := by
+    simpa [R, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.returnLeft [] [A, E]
+  have h7 :
+      GeneralGrammar.Yields PowerTwoGrammar [R, A, A, E] [H, A, A, E] := by
+    simpa [H, R, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.ready [] [A, A, E]
+  have h8 :
+      GeneralGrammar.Yields PowerTwoGrammar [H, A, A, E] [D, A, A, E] := by
+    simpa [H, D, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.beginDouble [] [A, A, E]
+  have h9 :
+      GeneralGrammar.Yields PowerTwoGrammar [D, A, A, E]
+        [A, A, D, A, E] := by
+    simpa [D, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.duplicate [] [A, E]
+  have h10 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, D, A, E]
+        [A, A, A, A, D, E] := by
+    simpa [D, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.duplicate [A, A] [E]
+  have h11 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, A, D, E]
+        [A, A, A, A, R, E] := by
+    simpa [D, R, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.turnAround [A, A, A, A] []
+  have h12 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, A, R, E]
+        [A, A, A, R, A, E] := by
+    simpa [R, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.returnLeft [A, A, A] [E]
+  have h13 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, R, A, E]
+        [A, A, R, A, A, E] := by
+    simpa [R, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.returnLeft [A, A] [A, E]
+  have h14 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, R, A, A, E]
+        [A, R, A, A, A, E] := by
+    simpa [R, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.returnLeft [A] [A, A, E]
+  have h15 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, R, A, A, A, E]
+        [R, A, A, A, A, E] := by
+    simpa [R, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.returnLeft [] [A, A, A, E]
+  have h16 :
+      GeneralGrammar.Yields PowerTwoGrammar [R, A, A, A, A, E]
+        [H, A, A, A, A, E] := by
+    simpa [H, R, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.ready [] [A, A, A, A, E]
+  have h17 :
+      GeneralGrammar.Yields PowerTwoGrammar [H, A, A, A, A, E]
+        [A, A, A, A, E] := by
+    simpa [H, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.finishH [] [A, A, A, A, E]
+  have h18 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, A, E]
+        [A, A, A, A] := by
+    simpa [A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.finishBoundary [A, A, A, A] []
+  have h19 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, A]
+        [a, A, A, A] := by
+    simpa [A, a] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.emitA [] [A, A, A]
+  have h20 :
+      GeneralGrammar.Yields PowerTwoGrammar [a, A, A, A]
+        [a, a, A, A] := by
+    simpa [A, a] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.emitA [a] [A, A]
+  have h21 :
+      GeneralGrammar.Yields PowerTwoGrammar [a, a, A, A]
+        [a, a, a, A] := by
+    simpa [A, a] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.emitA [a, a] [A]
+  have h22 :
+      GeneralGrammar.Yields PowerTwoGrammar [a, a, a, A]
+        [a, a, a, a] := by
+    simpa [A, a] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.emitA [a, a, a] []
+  have hderives :
+      GeneralGrammar.Derives PowerTwoGrammar [S] [a, a, a, a] :=
+    GeneralGrammar.Derives.step h1
+      (GeneralGrammar.Derives.step h2
+        (GeneralGrammar.Derives.step h3
+          (GeneralGrammar.Derives.step h4
+            (GeneralGrammar.Derives.step h5
+              (GeneralGrammar.Derives.step h6
+                (GeneralGrammar.Derives.step h7
+                  (GeneralGrammar.Derives.step h8
+                    (GeneralGrammar.Derives.step h9
+                      (GeneralGrammar.Derives.step h10
+                        (GeneralGrammar.Derives.step h11
+                          (GeneralGrammar.Derives.step h12
+                            (GeneralGrammar.Derives.step h13
+                              (GeneralGrammar.Derives.step h14
+                                (GeneralGrammar.Derives.step h15
+                                  (GeneralGrammar.Derives.step h16
+                                    (GeneralGrammar.Derives.step h17
+                                      (GeneralGrammar.Derives.step h18
+                                        (GeneralGrammar.Derives.step h19
+                                          (GeneralGrammar.Derives.step h20
+                                            (GeneralGrammar.Derives.step h21
+                                              (GeneralGrammar.Derives.step h22
+                                                (GeneralGrammar.Derives.refl
+                                                  [a, a, a, a]))))))))))))))))))))))
+  simpa [GeneralGrammar.GeneratedLanguage, PowerTwoGrammar, fourAsWord,
     SententialForm.terminalWord, S, a] using hderives
 
 end Section06
