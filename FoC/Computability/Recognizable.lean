@@ -49,6 +49,30 @@ def Recursive (L : Language input) : Prop :=
 def RecursivelyEnumerable (L : Language input) : Prop :=
   TuringAcceptable L
 
+def CoRecursivelyEnumerable (L : Language input) : Prop :=
+  RecursivelyEnumerable (Language.Compl L)
+
+def RecursivelyEnumerableWithComplement (L : Language input) : Prop :=
+  RecursivelyEnumerable L ∧ CoRecursivelyEnumerable L
+
+def AcceptanceTrace (trace : Word input -> Nat -> Prop)
+    (L : Language input) : Prop :=
+  forall w : Word input, (exists n : Nat, trace w n) <-> w ∈ L
+
+def ComplementaryAcceptanceTraces
+    (accept reject : Word input -> Nat -> Prop)
+    (L : Language input) : Prop :=
+  AcceptanceTrace accept L ∧ AcceptanceTrace reject (Language.Compl L)
+
+def TraceHitsBy (trace : Word input -> Nat -> Prop)
+    (w : Word input) (limit : Nat) : Prop :=
+  exists n : Nat, n ≤ limit ∧ trace w n
+
+def ComplementaryTraceSearchHit
+    (accept reject : Word input -> Nat -> Prop)
+    (w : Word input) (limit : Nat) : Prop :=
+  TraceHitsBy accept w limit ∨ TraceHitsBy reject w limit
+
 theorem acceptsLanguage_of_equal {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {L K : Language input}
     (h : AcceptsLanguage M encodeInput L)
@@ -91,6 +115,246 @@ theorem turing_acceptable_acceptedLanguage {input : Type} {state : Type}
     (M : TuringMachine input state) :
     TuringAcceptable (TuringMachine.AcceptedLanguage M) :=
   turing_acceptable_of_recognizes (TuringMachine.recognizes_acceptedLanguage M)
+
+theorem acceptanceTrace_sound {trace : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : AcceptanceTrace trace L) {w : Word input} {n : Nat}
+    (hn : trace w n) :
+    w ∈ L :=
+  (h w).mp (Exists.intro n hn)
+
+theorem acceptanceTrace_complete {trace : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : AcceptanceTrace trace L) {w : Word input}
+    (hw : w ∈ L) :
+    exists n : Nat, trace w n :=
+  (h w).mpr hw
+
+theorem traceHitsBy_of_trace {trace : Word input -> Nat -> Prop}
+    {w : Word input} {n : Nat}
+    (hn : trace w n) :
+    TraceHitsBy trace w n :=
+  Exists.intro n (And.intro (Nat.le_refl n) hn)
+
+theorem traceHitsBy_mono {trace : Word input -> Nat -> Prop}
+    {w : Word input} {m n : Nat}
+    (hmn : m ≤ n)
+    (h : TraceHitsBy trace w m) :
+    TraceHitsBy trace w n := by
+  cases h with
+  | intro k hk =>
+      exists k
+      exact And.intro (Nat.le_trans hk.left hmn) hk.right
+
+theorem traceHitsBy_sound {trace : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : AcceptanceTrace trace L)
+    {w : Word input} {limit : Nat}
+    (hit : TraceHitsBy trace w limit) :
+    w ∈ L := by
+  cases hit with
+  | intro n hn =>
+      exact acceptanceTrace_sound h hn.right
+
+theorem traceHitsBy_complete {trace : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : AcceptanceTrace trace L)
+    {w : Word input}
+    (hw : w ∈ L) :
+    exists limit : Nat, TraceHitsBy trace w limit := by
+  cases acceptanceTrace_complete h hw with
+  | intro n hn =>
+      exact Exists.intro n (traceHitsBy_of_trace hn)
+
+theorem complementaryAcceptanceTraces_accept_sound
+    {accept reject : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : ComplementaryAcceptanceTraces accept reject L)
+    {w : Word input} {n : Nat}
+    (hn : accept w n) :
+    w ∈ L :=
+  acceptanceTrace_sound h.left hn
+
+theorem complementaryAcceptanceTraces_reject_sound
+    {accept reject : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : ComplementaryAcceptanceTraces accept reject L)
+    {w : Word input} {n : Nat}
+    (hn : reject w n) :
+    ¬ w ∈ L :=
+  acceptanceTrace_sound h.right hn
+
+theorem complementaryAcceptanceTraces_accept_complete
+    {accept reject : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : ComplementaryAcceptanceTraces accept reject L)
+    {w : Word input}
+    (hw : w ∈ L) :
+    exists n : Nat, accept w n :=
+  acceptanceTrace_complete h.left hw
+
+theorem complementaryAcceptanceTraces_reject_complete
+    {accept reject : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : ComplementaryAcceptanceTraces accept reject L)
+    {w : Word input}
+    (hw : ¬ w ∈ L) :
+    exists n : Nat, reject w n :=
+  acceptanceTrace_complete h.right hw
+
+theorem complementaryAcceptanceTraces_eventually_hits
+    {accept reject : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : ComplementaryAcceptanceTraces accept reject L)
+    (w : Word input) :
+    (w ∈ L -> exists n : Nat, accept w n) ∧
+      (¬ w ∈ L -> exists n : Nat, reject w n) :=
+  And.intro
+    (fun hw => complementaryAcceptanceTraces_accept_complete h hw)
+    (fun hw => complementaryAcceptanceTraces_reject_complete h hw)
+
+theorem complementaryAcceptanceTraces_eventually_hits_classical
+    {accept reject : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : ComplementaryAcceptanceTraces accept reject L)
+    (w : Word input) :
+    exists n : Nat, accept w n ∨ reject w n := by
+  classical
+  by_cases hw : w ∈ L
+  · cases complementaryAcceptanceTraces_accept_complete h hw with
+    | intro n hn => exact Exists.intro n (Or.inl hn)
+  · cases complementaryAcceptanceTraces_reject_complete h hw with
+    | intro n hn => exact Exists.intro n (Or.inr hn)
+
+theorem complementaryTraceAcceptsBy_sound
+    {accept reject : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : ComplementaryAcceptanceTraces accept reject L)
+    {w : Word input} {limit : Nat}
+    (hit : TraceHitsBy accept w limit) :
+    w ∈ L :=
+  traceHitsBy_sound h.left hit
+
+theorem complementaryTraceRejectsBy_sound
+    {accept reject : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : ComplementaryAcceptanceTraces accept reject L)
+    {w : Word input} {limit : Nat}
+    (hit : TraceHitsBy reject w limit) :
+    ¬ w ∈ L :=
+  traceHitsBy_sound h.right hit
+
+theorem complementaryTraceAcceptsBy_complete
+    {accept reject : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : ComplementaryAcceptanceTraces accept reject L)
+    {w : Word input}
+    (hw : w ∈ L) :
+    exists limit : Nat, TraceHitsBy accept w limit :=
+  traceHitsBy_complete h.left hw
+
+theorem complementaryTraceRejectsBy_complete
+    {accept reject : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : ComplementaryAcceptanceTraces accept reject L)
+    {w : Word input}
+    (hw : ¬ w ∈ L) :
+    exists limit : Nat, TraceHitsBy reject w limit :=
+  traceHitsBy_complete h.right hw
+
+theorem complementaryTraceSearch_no_conflict
+    {accept reject : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : ComplementaryAcceptanceTraces accept reject L)
+    {w : Word input} {acceptLimit rejectLimit : Nat}
+    (ha : TraceHitsBy accept w acceptLimit)
+    (hr : TraceHitsBy reject w rejectLimit) :
+    False :=
+  complementaryTraceRejectsBy_sound h hr
+    (complementaryTraceAcceptsBy_sound h ha)
+
+theorem complementaryTraceSearch_eventually_hits_by
+    {accept reject : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : ComplementaryAcceptanceTraces accept reject L)
+    (w : Word input) :
+    exists limit : Nat, ComplementaryTraceSearchHit accept reject w limit := by
+  cases complementaryAcceptanceTraces_eventually_hits_classical h w with
+  | intro n hn =>
+      exists n
+      cases hn with
+      | inl ha => exact Or.inl (traceHitsBy_of_trace ha)
+      | inr hr => exact Or.inr (traceHitsBy_of_trace hr)
+
+theorem complementaryTraceSearch_eventually_classifies
+    {accept reject : Word input -> Nat -> Prop}
+    {L : Language input}
+    (h : ComplementaryAcceptanceTraces accept reject L)
+    (w : Word input) :
+    exists limit : Nat,
+      (TraceHitsBy accept w limit ∧ w ∈ L) ∨
+        (TraceHitsBy reject w limit ∧ ¬ w ∈ L) := by
+  cases complementaryTraceSearch_eventually_hits_by h w with
+  | intro limit hit =>
+      exists limit
+      cases hit with
+      | inl ha =>
+          exact Or.inl (And.intro ha (complementaryTraceAcceptsBy_sound h ha))
+      | inr hr =>
+          exact Or.inr (And.intro hr (complementaryTraceRejectsBy_sound h hr))
+
+theorem acceptsLanguage_acceptanceTrace
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {L : Language input}
+    (h : AcceptsLanguage M encodeInput L) :
+    AcceptanceTrace
+      (fun w n => TuringMachine.HaltsOnInputIn M n (EncodeWord encodeInput w))
+      L := by
+  intro w
+  exact Iff.trans
+    (TuringMachine.halts_on_input_iff_exists_halts_on_input_in
+      M (EncodeWord encodeInput w)).symm
+    (h w)
+
+theorem turing_acceptable_has_acceptanceTrace {L : Language input}
+    (h : TuringAcceptable L) :
+    exists trace : Word input -> Nat -> Prop, AcceptanceTrace trace L := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput hacc =>
+                  exists fun w n =>
+                    TuringMachine.HaltsOnInputIn M n (EncodeWord encodeInput w)
+                  exact acceptsLanguage_acceptanceTrace hacc
+
+theorem recursivelyEnumerable_has_acceptanceTrace {L : Language input}
+    (h : RecursivelyEnumerable L) :
+    exists trace : Word input -> Nat -> Prop, AcceptanceTrace trace L :=
+  turing_acceptable_has_acceptanceTrace h
+
+theorem turing_acceptable_with_complement_has_complementaryTraces
+    {L : Language input}
+    (hL : TuringAcceptable L)
+    (hCompl : TuringAcceptable (Language.Compl L)) :
+    exists accept reject : Word input -> Nat -> Prop,
+      ComplementaryAcceptanceTraces accept reject L := by
+  cases turing_acceptable_has_acceptanceTrace hL with
+  | intro accept haccept =>
+      cases turing_acceptable_has_acceptanceTrace hCompl with
+      | intro reject hreject =>
+          exact Exists.intro accept
+            (Exists.intro reject (And.intro haccept hreject))
+
+theorem recursivelyEnumerable_with_complement_has_complementaryTraces
+    {L : Language input}
+    (h : RecursivelyEnumerableWithComplement L) :
+    exists accept reject : Word input -> Nat -> Prop,
+      ComplementaryAcceptanceTraces accept reject L :=
+  turing_acceptable_with_complement_has_complementaryTraces h.left h.right
 
 theorem decidesLanguage_of_equal {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
@@ -139,6 +403,43 @@ theorem decider_halts_on_all_inputs {M : TuringMachine symbol state}
   by_cases hw : w ∈ L
   · exact TuringMachine.halts_with_output_implies_halts ((h w).left hw)
   · exact TuringMachine.halts_with_output_implies_halts ((h w).right hw)
+
+theorem decider_halts_in_on_all_inputs {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : DecidesLanguage M encodeInput zero one L)
+    (w : Word input) :
+    exists n : Nat,
+      TuringMachine.HaltsOnInputIn M n (EncodeWord encodeInput w) :=
+  (TuringMachine.halts_on_input_iff_exists_halts_on_input_in
+    M (EncodeWord encodeInput w)).mp
+    (decider_halts_on_all_inputs h w)
+
+theorem decider_accepts_in_of_mem {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : DecidesLanguage M encodeInput zero one L)
+    {w : Word input}
+    (hw : w ∈ L) :
+    exists n : Nat,
+      TuringMachine.HaltsWithOutputIn
+        M n (EncodeWord encodeInput w) [one] :=
+  (TuringMachine.halts_with_output_iff_exists_halts_with_output_in
+    M (EncodeWord encodeInput w) [one]).mp
+    ((h w).left hw)
+
+theorem decider_rejects_in_of_not_mem {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : DecidesLanguage M encodeInput zero one L)
+    {w : Word input}
+    (hw : ¬ w ∈ L) :
+    exists n : Nat,
+      TuringMachine.HaltsWithOutputIn
+        M n (EncodeWord encodeInput w) [zero] :=
+  (TuringMachine.halts_with_output_iff_exists_halts_with_output_in
+    M (EncodeWord encodeInput w) [zero]).mp
+    ((h w).right hw)
 
 theorem decides_complement {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}

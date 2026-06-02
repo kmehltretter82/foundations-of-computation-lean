@@ -37,11 +37,34 @@ theorem turing_computation_transitive {M : TuringMachine symbol state}
     TuringMachine.Computes M a c :=
   TuringMachine.computes_trans hab hbc
 
+-- Book: Chapter 5, Section 5.1, a finite-step computation is a computation.
+theorem turing_computation_in_steps_is_computation {M : TuringMachine symbol state}
+    {n : Nat} {c d : TuringMachine.Configuration symbol state}
+    (h : TuringMachine.ComputesIn M n c d) :
+    TuringMachine.Computes M c d :=
+  TuringMachine.computesIn_to_computes h
+
+-- Book: Chapter 5, Section 5.1, every finite computation has a step count.
+theorem turing_computation_has_step_count {M : TuringMachine symbol state}
+    {c d : TuringMachine.Configuration symbol state}
+    (h : TuringMachine.Computes M c d) :
+    exists n : Nat, TuringMachine.ComputesIn M n c d :=
+  TuringMachine.computes_to_computesIn h
+
 -- Book: Chapter 5, Section 5.1, halting with output implies halting.
 theorem halts_with_output_implies_halts {M : TuringMachine symbol state}
     {w out : Word symbol} (h : TuringMachine.HaltsWithOutput M w out) :
     TuringMachine.HaltsOnInput M w :=
   TuringMachine.halts_with_output_implies_halts h
+
+-- Book: Chapter 5, Section 5.1, halting with output in n steps implies
+-- halting in n steps.
+theorem halts_with_output_in_steps_implies_halts_in_steps
+    {M : TuringMachine symbol state}
+    {n : Nat} {w out : Word symbol}
+    (h : TuringMachine.HaltsWithOutputIn M n w out) :
+    TuringMachine.HaltsOnInputIn M n w :=
+  TuringMachine.halts_with_output_in_implies_halts_in h
 
 -- Book: Chapter 5, Section 5.1, a halted configuration halts immediately.
 theorem halted_configuration_halts {M : TuringMachine symbol state}
@@ -57,6 +80,22 @@ theorem computation_to_halted_configuration_halts {M : TuringMachine symbol stat
     (hhalt : TuringMachine.Halted M d) :
     TuringMachine.HaltsFrom M c :=
   TuringMachine.halts_from_of_computes hcomp hhalt
+
+-- Book: Chapter 5, Section 5.1, halting is equivalent to halting after
+-- some finite number of steps.
+theorem halting_iff_halting_in_some_steps
+    (M : TuringMachine symbol state) (w : Word symbol) :
+    TuringMachine.HaltsOnInput M w <->
+      exists n : Nat, TuringMachine.HaltsOnInputIn M n w :=
+  TuringMachine.halts_on_input_iff_exists_halts_on_input_in M w
+
+-- Book: Chapter 5, Section 5.1, halting with output is equivalent to
+-- halting with that output after some finite number of steps.
+theorem halting_with_output_iff_halting_with_output_in_some_steps
+    (M : TuringMachine symbol state) (w out : Word symbol) :
+    TuringMachine.HaltsWithOutput M w out <->
+      exists n : Nat, TuringMachine.HaltsWithOutputIn M n w out :=
+  TuringMachine.halts_with_output_iff_exists_halts_with_output_in M w out
 
 -- Book: Chapter 5, Section 5.1, halting is closed under adding previous
 -- computation steps.
@@ -108,6 +147,46 @@ theorem decider_halts_on_all_inputs {M : TuringMachine symbol state}
     (w : Word input) :
     TuringMachine.HaltsOnInput M (EncodeWord encodeInput w) :=
   Computability.decider_halts_on_all_inputs h w
+
+-- Book: Chapter 5, Section 5.1, a decider has a finite halting time on every
+-- input.
+theorem decider_halts_in_some_steps_on_all_inputs
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : DecidesLanguage M encodeInput zero one L)
+    (w : Word input) :
+    exists n : Nat,
+      TuringMachine.HaltsOnInputIn M n (EncodeWord encodeInput w) :=
+  Computability.decider_halts_in_on_all_inputs h w
+
+-- Book: Chapter 5, Section 5.1, accepting decider outputs happen at a finite
+-- stage.
+theorem decider_accepts_in_some_steps_of_mem
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : DecidesLanguage M encodeInput zero one L)
+    {w : Word input}
+    (hw : w ∈ L) :
+    exists n : Nat,
+      TuringMachine.HaltsWithOutputIn
+        M n (EncodeWord encodeInput w) [one] :=
+  Computability.decider_accepts_in_of_mem h hw
+
+-- Book: Chapter 5, Section 5.1, rejecting decider outputs happen at a finite
+-- stage.
+theorem decider_rejects_in_some_steps_of_not_mem
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : DecidesLanguage M encodeInput zero one L)
+    {w : Word input}
+    (hw : ¬ w ∈ L) :
+    exists n : Nat,
+      TuringMachine.HaltsWithOutputIn
+        M n (EncodeWord encodeInput w) [zero] :=
+  Computability.decider_rejects_in_of_not_mem h hw
 
 -- Book: Chapter 5, Section 5.1, complementing a 0/1 decider swaps outputs.
 theorem decider_for_complement {M : TuringMachine symbol state}
