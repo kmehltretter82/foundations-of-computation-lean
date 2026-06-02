@@ -524,6 +524,368 @@ theorem balanced_parens_context_free :
   · exact balanced_parens_has_finite_productions
   · exact balanced_parens_generated_language_exact
 
+inductive Bracket where
+  | roundLeft : Bracket
+  | roundRight : Bracket
+  | squareLeft : Bracket
+  | squareRight : Bracket
+deriving DecidableEq
+
+inductive BalancedBracketsNT where
+  | S : BalancedBracketsNT
+deriving DecidableEq
+
+def Bracket.finite : FiniteType Bracket where
+  elems := [Bracket.roundLeft, Bracket.roundRight,
+    Bracket.squareLeft, Bracket.squareRight]
+  complete := by
+    intro x
+    cases x <;> simp
+
+def BalancedBracketsNT.finite : FiniteType BalancedBracketsNT where
+  elems := [BalancedBracketsNT.S]
+  complete := by
+    intro x
+    cases x
+    simp
+
+inductive BalancedBracketsProduces :
+    BalancedBracketsNT -> SententialForm Bracket BalancedBracketsNT -> Prop where
+  | empty :
+      BalancedBracketsProduces BalancedBracketsNT.S []
+  | roundPair :
+      BalancedBracketsProduces BalancedBracketsNT.S
+        [Symbol.terminal Bracket.roundLeft,
+          Symbol.nonterminal BalancedBracketsNT.S,
+          Symbol.terminal Bracket.roundRight,
+          Symbol.nonterminal BalancedBracketsNT.S]
+  | squarePair :
+      BalancedBracketsProduces BalancedBracketsNT.S
+        [Symbol.terminal Bracket.squareLeft,
+          Symbol.nonterminal BalancedBracketsNT.S,
+          Symbol.terminal Bracket.squareRight,
+          Symbol.nonterminal BalancedBracketsNT.S]
+
+def BalancedBracketsGrammar : CFG Bracket BalancedBracketsNT where
+  start := BalancedBracketsNT.S
+  produces := BalancedBracketsProduces
+  nonterminalsFinite := BalancedBracketsNT.finite
+
+inductive BalancedBrackets : Word Bracket -> Prop where
+  | empty : BalancedBrackets []
+  | roundPair {inside rest : Word Bracket} :
+      BalancedBrackets inside ->
+        BalancedBrackets rest ->
+          BalancedBrackets
+            (Bracket.roundLeft :: Word.Concat inside (Bracket.roundRight :: rest))
+  | squarePair {inside rest : Word Bracket} :
+      BalancedBrackets inside ->
+        BalancedBrackets rest ->
+          BalancedBrackets
+            (Bracket.squareLeft :: Word.Concat inside (Bracket.squareRight :: rest))
+
+def BalancedBracketsSymbolLanguage :
+    Symbol Bracket BalancedBracketsNT -> Language Bracket
+  | Symbol.terminal a => Language.Singleton (Word.Symbol a)
+  | Symbol.nonterminal BalancedBracketsNT.S => BalancedBrackets
+
+def balancedBracketsEmptyProduction :
+    CFG.Production Bracket BalancedBracketsNT where
+  lhs := BalancedBracketsNT.S
+  rhs := []
+
+def balancedBracketsRoundPairProduction :
+    CFG.Production Bracket BalancedBracketsNT where
+  lhs := BalancedBracketsNT.S
+  rhs :=
+    [Symbol.terminal Bracket.roundLeft,
+      Symbol.nonterminal BalancedBracketsNT.S,
+      Symbol.terminal Bracket.roundRight,
+      Symbol.nonterminal BalancedBracketsNT.S]
+
+def balancedBracketsSquarePairProduction :
+    CFG.Production Bracket BalancedBracketsNT where
+  lhs := BalancedBracketsNT.S
+  rhs :=
+    [Symbol.terminal Bracket.squareLeft,
+      Symbol.nonterminal BalancedBracketsNT.S,
+      Symbol.terminal Bracket.squareRight,
+      Symbol.nonterminal BalancedBracketsNT.S]
+
+-- Book: Chapter 4, Section 4.1, the two-bracket balanced-brackets grammar is
+-- a finite grammar presentation.
+theorem balanced_brackets_has_finite_productions :
+    CFG.HasFiniteProductions BalancedBracketsGrammar := by
+  exists [balancedBracketsEmptyProduction, balancedBracketsRoundPairProduction,
+    balancedBracketsSquarePairProduction]
+  intro A rhs
+  constructor
+  · intro h
+    cases h with
+    | empty =>
+        exact ⟨balancedBracketsEmptyProduction,
+          by simp [balancedBracketsEmptyProduction], rfl, rfl⟩
+    | roundPair =>
+        exact ⟨balancedBracketsRoundPairProduction,
+          by simp [balancedBracketsRoundPairProduction], rfl, rfl⟩
+    | squarePair =>
+        exact ⟨balancedBracketsSquarePairProduction,
+          by simp [balancedBracketsSquarePairProduction], rfl, rfl⟩
+  · intro h
+    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
+    simp [balancedBracketsEmptyProduction, balancedBracketsRoundPairProduction,
+      balancedBracketsSquarePairProduction] at hmem
+    rcases hmem with hrule | hrule | hrule
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact BalancedBracketsProduces.empty
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact BalancedBracketsProduces.roundPair
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact BalancedBracketsProduces.squarePair
+
+theorem balanced_brackets_round_pair_form_language
+    {w : Word Bracket}
+    (hw : w ∈ CFG.FormLanguage BalancedBracketsSymbolLanguage
+      [Symbol.terminal Bracket.roundLeft,
+        Symbol.nonterminal BalancedBracketsNT.S,
+        Symbol.terminal Bracket.roundRight,
+        Symbol.nonterminal BalancedBracketsNT.S]) :
+    BalancedBrackets w := by
+  rcases hw with ⟨leftWord, tail1, hleft, htail1, hwEq⟩
+  cases hleft
+  rcases htail1 with ⟨inside, tail2, hinside, htail2, htail1Eq⟩
+  rcases htail2 with ⟨rightWord, tail3, hright, htail3, htail2Eq⟩
+  cases hright
+  rcases htail3 with ⟨rest, tail4, hrest, htail4, htail3Eq⟩
+  cases htail4
+  rw [hwEq, htail1Eq, htail2Eq, htail3Eq]
+  simpa [Word.Concat, Word.Symbol, Word.Empty, List.append_assoc] using
+    BalancedBrackets.roundPair hinside hrest
+
+theorem balanced_brackets_square_pair_form_language
+    {w : Word Bracket}
+    (hw : w ∈ CFG.FormLanguage BalancedBracketsSymbolLanguage
+      [Symbol.terminal Bracket.squareLeft,
+        Symbol.nonterminal BalancedBracketsNT.S,
+        Symbol.terminal Bracket.squareRight,
+        Symbol.nonterminal BalancedBracketsNT.S]) :
+    BalancedBrackets w := by
+  rcases hw with ⟨leftWord, tail1, hleft, htail1, hwEq⟩
+  cases hleft
+  rcases htail1 with ⟨inside, tail2, hinside, htail2, htail1Eq⟩
+  rcases htail2 with ⟨rightWord, tail3, hright, htail3, htail2Eq⟩
+  cases hright
+  rcases htail3 with ⟨rest, tail4, hrest, htail4, htail3Eq⟩
+  cases htail4
+  rw [hwEq, htail1Eq, htail2Eq, htail3Eq]
+  simpa [Word.Concat, Word.Symbol, Word.Empty, List.append_assoc] using
+    BalancedBrackets.squarePair hinside hrest
+
+theorem balanced_brackets_production_sound
+    (A : BalancedBracketsNT) (rhs : SententialForm Bracket BalancedBracketsNT)
+    (hprod : BalancedBracketsGrammar.produces A rhs) :
+    forall w, w ∈ CFG.FormLanguage BalancedBracketsSymbolLanguage rhs ->
+      w ∈ BalancedBracketsSymbolLanguage (Symbol.nonterminal A) := by
+  intro w hw
+  cases hprod with
+  | empty =>
+      cases hw
+      exact BalancedBrackets.empty
+  | roundPair =>
+      exact balanced_brackets_round_pair_form_language hw
+  | squarePair =>
+      exact balanced_brackets_square_pair_form_language hw
+
+theorem balanced_brackets_start_form_language
+    {w : Word Bracket}
+    (h : w ∈ CFG.FormLanguage BalancedBracketsSymbolLanguage
+      [Symbol.nonterminal BalancedBracketsNT.S]) :
+    BalancedBrackets w := by
+  rcases h with ⟨balanced, tail, hbalanced, htail, hwEq⟩
+  cases htail
+  rw [hwEq]
+  simpa [Word.Concat, Word.Empty] using hbalanced
+
+-- Book: Chapter 4, Section 4.1, every word generated by the two-bracket
+-- grammar is structurally balanced.
+theorem balanced_brackets_generated_only_balanced {w : Word Bracket}
+    (h : w ∈ CFG.GeneratedLanguage BalancedBracketsGrammar) :
+    BalancedBrackets w := by
+  have hterminal : w ∈ CFG.FormLanguage BalancedBracketsSymbolLanguage
+      (SententialForm.terminalWord
+        (nt := BalancedBracketsNT) w) :=
+    CFG.terminalWord_mem_formLanguage BalancedBracketsSymbolLanguage
+      (by intro a; rfl) w
+  exact balanced_brackets_start_form_language
+    (form_language_derives_sound_of_productions
+      balanced_brackets_production_sound h hterminal)
+
+theorem balanced_brackets_empty_generated :
+    ([] : Word Bracket) ∈ CFG.GeneratedLanguage BalancedBracketsGrammar := by
+  apply CFG.yields_derives
+  exists []
+  exists []
+  exists BalancedBracketsNT.S
+  exists ([] : SententialForm Bracket BalancedBracketsNT)
+  constructor
+  · exact BalancedBracketsProduces.empty
+  constructor <;> rfl
+
+theorem balanced_brackets_round_pair_generated {inside rest : Word Bracket}
+    (hinside : inside ∈ CFG.GeneratedLanguage BalancedBracketsGrammar)
+    (hrest : rest ∈ CFG.GeneratedLanguage BalancedBracketsGrammar) :
+    Bracket.roundLeft :: Word.Concat inside (Bracket.roundRight :: rest) ∈
+      CFG.GeneratedLanguage BalancedBracketsGrammar := by
+  have hStart : CFG.Yields BalancedBracketsGrammar
+      [Symbol.nonterminal BalancedBracketsNT.S]
+      [Symbol.terminal Bracket.roundLeft,
+        Symbol.nonterminal BalancedBracketsNT.S,
+        Symbol.terminal Bracket.roundRight,
+        Symbol.nonterminal BalancedBracketsNT.S] := by
+    exists []
+    exists []
+    exists BalancedBracketsNT.S
+    exists [Symbol.terminal Bracket.roundLeft,
+      Symbol.nonterminal BalancedBracketsNT.S,
+      Symbol.terminal Bracket.roundRight,
+      Symbol.nonterminal BalancedBracketsNT.S]
+    constructor
+    · exact BalancedBracketsProduces.roundPair
+    constructor <;> rfl
+  have hform :
+      Bracket.roundLeft :: Word.Concat inside (Bracket.roundRight :: rest) ∈
+        CFG.FormLanguage (CFG.DerivationSymbolLanguage BalancedBracketsGrammar)
+          [Symbol.terminal Bracket.roundLeft,
+            Symbol.nonterminal BalancedBracketsNT.S,
+            Symbol.terminal Bracket.roundRight,
+            Symbol.nonterminal BalancedBracketsNT.S] := by
+    exists [Bracket.roundLeft]
+    exists Word.Concat inside (Bracket.roundRight :: rest)
+    constructor
+    · rfl
+    constructor
+    · exists inside
+      exists Bracket.roundRight :: rest
+      constructor
+      · exact hinside
+      constructor
+      · exists [Bracket.roundRight]
+        exists rest
+        constructor
+        · rfl
+        constructor
+        · exists rest
+          exists ([] : Word Bracket)
+          constructor
+          · exact hrest
+          constructor
+          · rfl
+          · exact (Word.concat_empty_right rest).symm
+        · rfl
+      · rfl
+    · rfl
+  have hAll := CFG.Derives.step hStart (CFG.formLanguage_derives hform)
+  change CFG.Derives BalancedBracketsGrammar
+    [Symbol.nonterminal BalancedBracketsNT.S]
+    (SententialForm.terminalWord
+      (Bracket.roundLeft :: Word.Concat inside (Bracket.roundRight :: rest)))
+  simpa [SententialForm.terminalWord, Word.Concat, List.append_assoc] using hAll
+
+theorem balanced_brackets_square_pair_generated {inside rest : Word Bracket}
+    (hinside : inside ∈ CFG.GeneratedLanguage BalancedBracketsGrammar)
+    (hrest : rest ∈ CFG.GeneratedLanguage BalancedBracketsGrammar) :
+    Bracket.squareLeft :: Word.Concat inside (Bracket.squareRight :: rest) ∈
+      CFG.GeneratedLanguage BalancedBracketsGrammar := by
+  have hStart : CFG.Yields BalancedBracketsGrammar
+      [Symbol.nonterminal BalancedBracketsNT.S]
+      [Symbol.terminal Bracket.squareLeft,
+        Symbol.nonterminal BalancedBracketsNT.S,
+        Symbol.terminal Bracket.squareRight,
+        Symbol.nonterminal BalancedBracketsNT.S] := by
+    exists []
+    exists []
+    exists BalancedBracketsNT.S
+    exists [Symbol.terminal Bracket.squareLeft,
+      Symbol.nonterminal BalancedBracketsNT.S,
+      Symbol.terminal Bracket.squareRight,
+      Symbol.nonterminal BalancedBracketsNT.S]
+    constructor
+    · exact BalancedBracketsProduces.squarePair
+    constructor <;> rfl
+  have hform :
+      Bracket.squareLeft :: Word.Concat inside (Bracket.squareRight :: rest) ∈
+        CFG.FormLanguage (CFG.DerivationSymbolLanguage BalancedBracketsGrammar)
+          [Symbol.terminal Bracket.squareLeft,
+            Symbol.nonterminal BalancedBracketsNT.S,
+            Symbol.terminal Bracket.squareRight,
+            Symbol.nonterminal BalancedBracketsNT.S] := by
+    exists [Bracket.squareLeft]
+    exists Word.Concat inside (Bracket.squareRight :: rest)
+    constructor
+    · rfl
+    constructor
+    · exists inside
+      exists Bracket.squareRight :: rest
+      constructor
+      · exact hinside
+      constructor
+      · exists [Bracket.squareRight]
+        exists rest
+        constructor
+        · rfl
+        constructor
+        · exists rest
+          exists ([] : Word Bracket)
+          constructor
+          · exact hrest
+          constructor
+          · rfl
+          · exact (Word.concat_empty_right rest).symm
+        · rfl
+      · rfl
+    · rfl
+  have hAll := CFG.Derives.step hStart (CFG.formLanguage_derives hform)
+  change CFG.Derives BalancedBracketsGrammar
+    [Symbol.nonterminal BalancedBracketsNT.S]
+    (SententialForm.terminalWord
+      (Bracket.squareLeft :: Word.Concat inside (Bracket.squareRight :: rest)))
+  simpa [SententialForm.terminalWord, Word.Concat, List.append_assoc] using hAll
+
+theorem balanced_brackets_words_generated {w : Word Bracket}
+    (h : BalancedBrackets w) :
+    w ∈ CFG.GeneratedLanguage BalancedBracketsGrammar := by
+  induction h with
+  | empty =>
+      exact balanced_brackets_empty_generated
+  | roundPair hinside hrest ihinside ihrest =>
+      exact balanced_brackets_round_pair_generated ihinside ihrest
+  | squarePair hinside hrest ihinside ihrest =>
+      exact balanced_brackets_square_pair_generated ihinside ihrest
+
+-- Book: Chapter 4, Section 4.1, exact language of the two-bracket balanced
+-- grammar.
+theorem balanced_brackets_generated_language_exact (w : Word Bracket) :
+    w ∈ CFG.GeneratedLanguage BalancedBracketsGrammar <-> BalancedBrackets w := by
+  constructor
+  · exact balanced_brackets_generated_only_balanced
+  · exact balanced_brackets_words_generated
+
+-- Book: Chapter 4, Section 4.1, balanced brackets with two bracket types form
+-- a book-facing finite-production context-free language.
+theorem balanced_brackets_context_free :
+    ContextFreeLanguage BalancedBrackets := by
+  exists BalancedBracketsNT
+  exists BalancedBracketsGrammar
+  constructor
+  · exact balanced_brackets_has_finite_productions
+  · exact balanced_brackets_generated_language_exact
+
 inductive AB where
   | a : AB
   | b : AB

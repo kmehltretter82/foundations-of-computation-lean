@@ -872,6 +872,20 @@ theorem toCFGChainDerives_formLanguage_iff
     rcases h with ⟨rhs, hchain, hform⟩
     exact toCFGChainDerives_of_formLanguage hchain hform
 
+theorem toCFGChainDerives_append
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {p r q : state} {left right : Word stack} {x y : Word input}
+    (hleft : ToCFGChainDerives M presentation p left r x)
+    (hright : ToCFGChainDerives M presentation r right q y) :
+    ToCFGChainDerives M presentation p (Word.Concat left right) q
+      (Word.Concat x y) := by
+  induction hleft generalizing right q y with
+  | nil r =>
+      simpa [Word.Concat, Word.Empty] using hright
+  | cons hbetween htail ih =>
+      simpa [Word.Concat, List.append_assoc] using
+        ToCFGChainDerives.cons hbetween (ih hright)
+
 theorem toCFG_derives_of_production_word
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {A : ToCFGNonterminal stack state}
@@ -2148,6 +2162,16 @@ inductive EmptySummaryComputesIn (M : PDA input stack state) :
             EmptySummaryComputesIn M (m + n + 1) p
               midInput q targetInput
 
+def StackSummaryComputes (M : PDA input stack state)
+    (p : state) (stackWord : Word stack) (sourceInput : Word input)
+    (q : state) (targetInput : Word input) : Prop :=
+  exists n, StackSummaryComputesIn M n p stackWord sourceInput q targetInput
+
+def EmptySummaryComputes (M : PDA input stack state)
+    (p : state) (sourceInput : Word input)
+    (q : state) (targetInput : Word input) : Prop :=
+  exists n, EmptySummaryComputesIn M n p sourceInput q targetInput
+
 theorem stackSummaryComputesIn_computesIn
     {M : PDA input stack state}
     {n : Nat} {p q : state} {stackWord : Word stack}
@@ -2227,6 +2251,20 @@ theorem stackSummaryComputesIn_computesIn
       simpa [Word.Concat, List.append_assoc] using
         ComputesIn.succ hstep hrest
 
+theorem stackSummaryComputes_computes
+    {M : PDA input stack state}
+    {p q : state} {stackWord : Word stack}
+    {sourceInput targetInput : Word input}
+    (h : StackSummaryComputes M p stackWord sourceInput q targetInput) :
+    forall tail : Word stack,
+      Computes M
+        { state := p, unread := sourceInput,
+          stack := Word.Concat stackWord tail }
+        { state := q, unread := targetInput, stack := tail } := by
+  rcases h with ⟨n, hn⟩
+  intro tail
+  exact computesIn_computes (stackSummaryComputesIn_computesIn hn tail)
+
 theorem stackSummaryComputesIn_computes
     {M : PDA input stack state}
     {n : Nat} {p q : state} {stackWord : Word stack}
@@ -2240,44 +2278,57 @@ theorem stackSummaryComputesIn_computes
   intro tail
   exact computesIn_computes (stackSummaryComputesIn_computesIn h tail)
 
+theorem emptySummaryComputesIn_computesIn_tail
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptySummaryComputesIn M n p sourceInput q targetInput) :
+    forall tail : Word stack,
+      ComputesIn M n
+        { state := p, unread := sourceInput, stack := tail }
+        { state := q, unread := targetInput, stack := tail } := by
+  induction h with
+  | zero q unread =>
+      intro tail
+      exact ComputesIn.zero _
+  | read htransition hpush hempty ihempty =>
+      rename_i m n p r s q a push midInput emptyInput targetInput
+      intro tail
+      have hstep : Step M
+          { state := p, unread := a :: midInput, stack := tail }
+          { state := r, unread := midInput,
+            stack := Word.Concat push tail } := by
+        simpa [Word.Concat] using
+          Step.read (M := M) (unread := midInput)
+            (restStack := tail) htransition
+      have hpushComp := stackSummaryComputesIn_computesIn hpush tail
+      have hemptyComp := ihempty tail
+      have hrest := computesIn_trans hpushComp hemptyComp
+      simpa [Word.Concat, List.append_assoc] using
+        ComputesIn.succ hstep hrest
+  | epsilon htransition hpush hempty ihempty =>
+      rename_i m n p r s q push midInput emptyInput targetInput
+      intro tail
+      have hstep : Step M
+          { state := p, unread := midInput, stack := tail }
+          { state := r, unread := midInput,
+            stack := Word.Concat push tail } := by
+        simpa [Word.Concat] using
+          Step.epsilon (M := M) (unread := midInput)
+            (restStack := tail) htransition
+      have hpushComp := stackSummaryComputesIn_computesIn hpush tail
+      have hemptyComp := ihempty tail
+      have hrest := computesIn_trans hpushComp hemptyComp
+      simpa [Word.Concat, List.append_assoc] using
+        ComputesIn.succ hstep hrest
+
 theorem emptySummaryComputesIn_computesIn
     {M : PDA input stack state}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
     (h : EmptySummaryComputesIn M n p sourceInput q targetInput) :
     ComputesIn M n
       { state := p, unread := sourceInput, stack := [] }
-      { state := q, unread := targetInput, stack := [] } := by
-  induction h with
-  | zero q unread =>
-      exact ComputesIn.zero _
-  | read htransition hpush hempty ihempty =>
-      rename_i m n p r s q a push midInput emptyInput targetInput
-      have hstep : Step M
-          { state := p, unread := a :: midInput, stack := [] }
-          { state := r, unread := midInput,
-            stack := Word.Concat push ([] : Word stack) } := by
-        simpa [Word.Concat] using
-          Step.read (M := M) (unread := midInput)
-            (restStack := ([] : Word stack)) htransition
-      have hpushComp := stackSummaryComputesIn_computesIn hpush
-        ([] : Word stack)
-      have hrest := computesIn_trans hpushComp ihempty
-      simpa [Word.Concat, Word.Empty, List.append_assoc] using
-        ComputesIn.succ hstep hrest
-  | epsilon htransition hpush hempty ihempty =>
-      rename_i m n p r s q push midInput emptyInput targetInput
-      have hstep : Step M
-          { state := p, unread := midInput, stack := [] }
-          { state := r, unread := midInput,
-            stack := Word.Concat push ([] : Word stack) } := by
-        simpa [Word.Concat] using
-          Step.epsilon (M := M) (unread := midInput)
-            (restStack := ([] : Word stack)) htransition
-      have hpushComp := stackSummaryComputesIn_computesIn hpush
-        ([] : Word stack)
-      have hrest := computesIn_trans hpushComp ihempty
-      simpa [Word.Concat, Word.Empty, List.append_assoc] using
-        ComputesIn.succ hstep hrest
+      { state := q, unread := targetInput, stack := [] } :=
+  emptySummaryComputesIn_computesIn_tail h ([] : Word stack)
 
 theorem emptySummaryComputesIn_computes
     {M : PDA input stack state}
@@ -2287,6 +2338,52 @@ theorem emptySummaryComputesIn_computes
       { state := p, unread := sourceInput, stack := [] }
       { state := q, unread := targetInput, stack := [] } :=
   computesIn_computes (emptySummaryComputesIn_computesIn h)
+
+theorem emptySummaryComputesIn_computes_tail
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptySummaryComputesIn M n p sourceInput q targetInput)
+    (tail : Word stack) :
+    Computes M
+      { state := p, unread := sourceInput, stack := tail }
+      { state := q, unread := targetInput, stack := tail } :=
+  computesIn_computes (emptySummaryComputesIn_computesIn_tail h tail)
+
+theorem emptySummaryComputes_computes
+    {M : PDA input stack state}
+    {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptySummaryComputes M p sourceInput q targetInput) :
+    Computes M
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] } := by
+  rcases h with ⟨n, hn⟩
+  exact emptySummaryComputesIn_computes hn
+
+theorem emptySummaryComputes_computes_tail
+    {M : PDA input stack state}
+    {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptySummaryComputes M p sourceInput q targetInput)
+    (tail : Word stack) :
+    Computes M
+      { state := p, unread := sourceInput, stack := tail }
+      { state := q, unread := targetInput, stack := tail } := by
+  rcases h with ⟨n, hn⟩
+  exact emptySummaryComputesIn_computes_tail hn tail
+
+theorem stackSummaryComputes_of_stackSummaryComputesIn
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {stackWord : Word stack}
+    {sourceInput targetInput : Word input}
+    (h : StackSummaryComputesIn M n p stackWord sourceInput q targetInput) :
+    StackSummaryComputes M p stackWord sourceInput q targetInput :=
+  ⟨n, h⟩
+
+theorem emptySummaryComputes_of_emptySummaryComputesIn
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptySummaryComputesIn M n p sourceInput q targetInput) :
+    EmptySummaryComputes M p sourceInput q targetInput :=
+  ⟨n, h⟩
 
 theorem emptySummaryComputesIn_of_emptyStackComputesIn
     {M : PDA input stack state}
@@ -2841,6 +2938,18 @@ theorem toCFGChainDerives_of_stackSummaryComputesIn
             (ToCFGChainDerives.nil (M := M)
               (presentation := presentation) q)
 
+theorem toCFGChainDerives_of_stackSummaryComputes
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {p q : state} {stackWord : Word stack}
+    {sourceInput targetInput : Word input}
+    (h : StackSummaryComputes M p stackWord sourceInput q targetInput) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        ToCFGChainDerives M presentation p stackWord q consumed := by
+  rcases h with ⟨n, hn⟩
+  exact toCFGChainDerives_of_stackSummaryComputesIn
+    (M := M) (presentation := presentation) hn
+
 theorem toCFG_emptyDerives_of_emptySummaryComputesIn
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -2893,6 +3002,19 @@ theorem toCFG_emptyDerives_of_emptySummaryComputesIn
       rw [hchainInput, hemptyInput]
       simp [consumed, Word.Concat, List.append_assoc]
 
+theorem toCFG_emptyDerives_of_emptySummaryComputes
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptySummaryComputes M p sourceInput q targetInput) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        CFG.Derives (ToCFG M presentation)
+          [Symbol.nonterminal (ToCFGNonterminal.empty p q)]
+          (SententialForm.terminalWord consumed) := by
+  rcases h with ⟨n, hn⟩
+  exact toCFG_emptyDerives_of_emptySummaryComputesIn
+    (M := M) (presentation := presentation) hn
+
 theorem toCFG_emptyDerives_of_computesIn_atMostTwo_emptyStack_viaSummary
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -2917,6 +3039,21 @@ theorem toCFG_generates_of_emptySummaryAcceptsIn
     (hcomp : EmptySummaryComputesIn M n M.start w qf []) :
     w ∈ CFG.GeneratedLanguage (ToCFG M presentation) := by
   rcases toCFG_emptyDerives_of_emptySummaryComputesIn
+      (M := M) (presentation := presentation) hcomp with
+    ⟨consumed, hinput, hbody⟩
+  have hgen := toCFG_start_derives
+    (M := M) (presentation := presentation)
+    (q := qf) (w := consumed) haccept hbody
+  rw [hinput]
+  simpa [Word.Concat, Word.Empty] using hgen
+
+theorem toCFG_generates_of_emptySummaryAccepts
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {w : Word input} {qf : state}
+    (haccept : M.accept qf)
+    (hcomp : EmptySummaryComputes M M.start w qf []) :
+    w ∈ CFG.GeneratedLanguage (ToCFG M presentation) := by
+  rcases toCFG_emptyDerives_of_emptySummaryComputes
       (M := M) (presentation := presentation) hcomp with
     ⟨consumed, hinput, hbody⟩
   have hgen := toCFG_start_derives
@@ -3076,8 +3213,23 @@ def EmptySummaryCompleteUpTo (M : PDA input stack state)
         { state := q, unread := targetInput, stack := [] } ->
           EmptySummaryComputesIn M n p sourceInput q targetInput
 
+def EmptySummaryCompleteForComputes (M : PDA input stack state) : Prop :=
+  forall p q sourceInput targetInput,
+    _root_.FoC.Grammars.PDA.Computes M
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] } ->
+        EmptySummaryComputes M p sourceInput q targetInput
+
 def TopPopEmptySummaryComplete (M : PDA input stack state) : Prop :=
   PopsAtMostOne M -> EmptySummaryComplete M
+
+theorem emptySummaryCompleteForComputes_of_emptySummaryComplete
+    {M : PDA input stack state}
+    (hcomplete : EmptySummaryComplete M) :
+    EmptySummaryCompleteForComputes M := by
+  intro p q sourceInput targetInput hcomp
+  rcases computes_exists_length hcomp with ⟨n, hcompIn⟩
+  exact ⟨n, hcomplete n p q sourceInput targetInput hcompIn⟩
 
 theorem emptySummaryCompleteUpTo_two_of_topPop
     {M : PDA input stack state}
@@ -3125,6 +3277,17 @@ theorem toCFG_generates_of_accepts_of_emptySummaryComplete
     (M := M) (presentation := presentation)
     hcomplete haccept hcompIn
 
+theorem toCFG_generates_of_accepts_of_emptySummaryCompleteForComputes
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {w : Word input}
+    (hcomplete : EmptySummaryCompleteForComputes M)
+    (haccepts : Accepts M w) :
+    w ∈ CFG.GeneratedLanguage (ToCFG M presentation) := by
+  rcases haccepts with ⟨qf, haccept, hcomp⟩
+  exact toCFG_generates_of_emptySummaryAccepts
+    (M := M) (presentation := presentation)
+    haccept (hcomplete M.start qf w ([] : Word input) hcomp)
+
 theorem toCFG_language_exact_of_emptySummaryComplete
     {M : PDA input stack state} {presentation : FinitePresentation M}
     (hcomplete : EmptySummaryComplete M) :
@@ -3136,6 +3299,19 @@ theorem toCFG_language_exact_of_emptySummaryComplete
     exact toCFG_accepts_of_generates h
   · intro h
     exact toCFG_generates_of_accepts_of_emptySummaryComplete
+      (M := M) (presentation := presentation) hcomplete h
+
+theorem toCFG_language_exact_of_emptySummaryCompleteForComputes
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    (hcomplete : EmptySummaryCompleteForComputes M) :
+    Language.Equal (CFG.GeneratedLanguage (ToCFG M presentation))
+      (AcceptedLanguage M) := by
+  intro w
+  constructor
+  · intro h
+    exact toCFG_accepts_of_generates h
+  · intro h
+    exact toCFG_generates_of_accepts_of_emptySummaryCompleteForComputes
       (M := M) (presentation := presentation) hcomplete h
 
 def ToCFGTopPopExact (M : PDA input stack state)
