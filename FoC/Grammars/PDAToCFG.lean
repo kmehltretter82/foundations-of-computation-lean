@@ -1170,6 +1170,325 @@ theorem toCFG_emptyBeforeTopEpsilon_of_chainDerives
         (ToCFG M presentation))
       htop
 
+theorem toCFG_emptyRead_of_step_emptyStack
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {p q : state} {a : input} {restInput : Word input}
+    (hstep : Step M
+      { state := p, unread := a :: restInput, stack := [] }
+      { state := q, unread := restInput, stack := [] }) :
+    CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.empty p q)]
+      (SententialForm.terminalWord (Word.Symbol a)) := by
+  rcases step_cases hstep with hread | heps
+  · rcases hread with
+      ⟨p', q', a', unread, pop, push, restStack,
+        htransition, hc, hd⟩
+    have hp : p = p' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hc
+    have hunreadSource : a :: restInput = a' :: unread := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.unread) hc
+    have ha : a = a' := (List.cons.inj hunreadSource).1
+    have hunread : restInput = unread := (List.cons.inj hunreadSource).2
+    have hpop : ([] : Word stack) = Word.Concat pop restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hc
+    have hq : q = q' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hd
+    have hpush : ([] : Word stack) = Word.Concat push restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hd
+    have hpopNil : pop = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hpop
+      simp [Word.Concat] at hlen
+      omega
+    have hrestNil : restStack = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hpop
+      simp [Word.Concat] at hlen
+      omega
+    have hpushNil : push = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hpush
+      simp [Word.Concat, hrestNil] at hlen
+      omega
+    have htransition' : M.transition p (some a) [] q [] := by
+      simpa [hp, hq, ha, hunread, hpopNil, hpushNil] using htransition
+    have hbody :=
+      toCFG_emptyRead_of_chainDerives
+        (M := M) (presentation := presentation)
+        (p := p) (r := q) (s := q) (q := q)
+        (a := a) (push := ([] : Word stack))
+        (chainWord := (Word.Empty : Word input))
+        (emptyWord := (Word.Empty : Word input))
+        htransition'
+        (ToCFGChainDerives.nil (M := M) (presentation := presentation) q)
+        (toCFG_emptyRefl_derives
+          (M := M) (presentation := presentation) (q := q))
+    simpa [Word.Concat, Word.Empty] using hbody
+  · rcases heps with
+      ⟨p', q', unread, pop, push, restStack,
+        _htransition, hc, hd⟩
+    have hunreadSource : a :: restInput = unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hc
+    have hunreadTarget : restInput = unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hd
+    have hbad : a :: restInput = restInput := by
+      exact hunreadSource.trans hunreadTarget.symm
+    have hlen := congrArg List.length hbad
+    simp at hlen
+
+theorem toCFG_emptyEpsilon_of_step_emptyStack
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {p q : state} {restInput : Word input}
+    (hstep : Step M
+      { state := p, unread := restInput, stack := [] }
+      { state := q, unread := restInput, stack := [] }) :
+    CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.empty p q)]
+      (SententialForm.terminalWord (Word.Empty : Word input)) := by
+  rcases step_cases hstep with hread | heps
+  · rcases hread with
+      ⟨p', q', a, unread, pop, push, restStack,
+        _htransition, hc, hd⟩
+    have hunreadSource : restInput = a :: unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hc
+    have hunreadTarget : restInput = unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hd
+    have hbad : a :: unread = unread := by
+      exact hunreadSource.symm.trans hunreadTarget
+    have hlen := congrArg List.length hbad
+    simp at hlen
+  · rcases heps with
+      ⟨p', q', unread, pop, push, restStack,
+        htransition, hc, hd⟩
+    have hp : p = p' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hc
+    have hunread : restInput = unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hc
+    have hpop : ([] : Word stack) = Word.Concat pop restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hc
+    have hq : q = q' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hd
+    have hpush : ([] : Word stack) = Word.Concat push restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hd
+    have hpopNil : pop = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hpop
+      simp [Word.Concat] at hlen
+      omega
+    have hrestNil : restStack = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hpop
+      simp [Word.Concat] at hlen
+      omega
+    have hpushNil : push = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hpush
+      simp [Word.Concat, hrestNil] at hlen
+      omega
+    have htransition' : M.transition p none [] q [] := by
+      simpa [hp, hq, hunread, hpopNil, hpushNil] using htransition
+    have hbody :=
+      toCFG_emptyEpsilon_of_chainDerives
+        (M := M) (presentation := presentation)
+        (p := p) (r := q) (s := q) (q := q)
+        (push := ([] : Word stack))
+        (chainWord := (Word.Empty : Word input))
+        (emptyWord := (Word.Empty : Word input))
+        htransition'
+        (ToCFGChainDerives.nil (M := M) (presentation := presentation) q)
+        (toCFG_emptyRefl_derives
+          (M := M) (presentation := presentation) (q := q))
+    simpa [Word.Concat, Word.Empty] using hbody
+
+theorem toCFG_betweenRead_of_step_topPop
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {p q : state} {A : stack} {a : input}
+    {restInput : Word input} {tail : Word stack}
+    (hnorm : PopsAtMostOne M)
+    (hstep : Step M
+      { state := p, unread := a :: restInput, stack := A :: tail }
+      { state := q, unread := restInput, stack := tail }) :
+    CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.between p A q)]
+      (SententialForm.terminalWord (Word.Symbol a)) := by
+  rcases step_cases hstep with hread | heps
+  · rcases hread with
+      ⟨p', q', a', unread, pop, push, restStack,
+        htransition, hc, hd⟩
+    have hp : p = p' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hc
+    have hunreadSource : a :: restInput = a' :: unread := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.unread) hc
+    have ha : a = a' := (List.cons.inj hunreadSource).1
+    have hunread : restInput = unread := (List.cons.inj hunreadSource).2
+    have hsourceStack : A :: tail = Word.Concat pop restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hc
+    have hq : q = q' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hd
+    have htargetStack : tail = Word.Concat push restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hd
+    rcases hnorm p' (some a') pop q' push htransition with
+      hpopEmpty | hpopSingle
+    · have hsourceLen := congrArg List.length hsourceStack
+      have htargetLen := congrArg List.length htargetStack
+      simp [Word.Concat, hpopEmpty] at hsourceLen htargetLen
+      omega
+    · rcases hpopSingle with ⟨B, hpopSingle⟩
+      have hsourceCons : A :: tail = B :: restStack := by
+        simpa [Word.Concat, hpopSingle] using hsourceStack
+      have hA : A = B := (List.cons.inj hsourceCons).1
+      have hrest : tail = restStack := (List.cons.inj hsourceCons).2
+      have hpushNil : push = [] := by
+        apply List.eq_nil_of_length_eq_zero
+        have hrestLen := congrArg List.length hrest
+        have hlen := congrArg List.length htargetStack
+        simp [Word.Concat] at hrestLen hlen
+        omega
+      have htransition' : M.transition p (some a) [A] q [] := by
+        simpa [hp, hq, ha, hunread, hpopSingle, hA, hpushNil] using
+          htransition
+      have hbody :=
+        toCFG_popRead_of_chainDerives
+          (M := M) (presentation := presentation)
+          (p := p) (r := q) (q := q)
+          (A := A) (a := a) (push := ([] : Word stack))
+          (chainWord := (Word.Empty : Word input))
+          htransition'
+          (ToCFGChainDerives.nil (M := M)
+            (presentation := presentation) q)
+      simpa [Word.Concat, Word.Empty] using hbody
+  · rcases heps with
+      ⟨p', q', unread, pop, push, restStack,
+        _htransition, hc, hd⟩
+    have hunreadSource : a :: restInput = unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hc
+    have hunreadTarget : restInput = unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hd
+    have hbad : a :: restInput = restInput := by
+      exact hunreadSource.trans hunreadTarget.symm
+    have hlen := congrArg List.length hbad
+    simp at hlen
+
+theorem toCFG_betweenEpsilon_of_step_topPop
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {p q : state} {A : stack}
+    {restInput : Word input} {tail : Word stack}
+    (hnorm : PopsAtMostOne M)
+    (hstep : Step M
+      { state := p, unread := restInput, stack := A :: tail }
+      { state := q, unread := restInput, stack := tail }) :
+    CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.between p A q)]
+      (SententialForm.terminalWord (Word.Empty : Word input)) := by
+  rcases step_cases hstep with hread | heps
+  · rcases hread with
+      ⟨p', q', a, unread, pop, push, restStack,
+        _htransition, hc, hd⟩
+    have hunreadSource : restInput = a :: unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hc
+    have hunreadTarget : restInput = unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hd
+    have hbad : a :: unread = unread := by
+      exact hunreadSource.symm.trans hunreadTarget
+    have hlen := congrArg List.length hbad
+    simp at hlen
+  · rcases heps with
+      ⟨p', q', unread, pop, push, restStack,
+        htransition, hc, hd⟩
+    have hp : p = p' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hc
+    have hunread : restInput = unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hc
+    have hsourceStack : A :: tail = Word.Concat pop restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hc
+    have hq : q = q' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hd
+    have htargetStack : tail = Word.Concat push restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hd
+    rcases hnorm p' none pop q' push htransition with
+      hpopEmpty | hpopSingle
+    · have hsourceLen := congrArg List.length hsourceStack
+      have htargetLen := congrArg List.length htargetStack
+      simp [Word.Concat, hpopEmpty] at hsourceLen htargetLen
+      omega
+    · rcases hpopSingle with ⟨B, hpopSingle⟩
+      have hsourceCons : A :: tail = B :: restStack := by
+        simpa [Word.Concat, hpopSingle] using hsourceStack
+      have hA : A = B := (List.cons.inj hsourceCons).1
+      have hrest : tail = restStack := (List.cons.inj hsourceCons).2
+      have hpushNil : push = [] := by
+        apply List.eq_nil_of_length_eq_zero
+        have hrestLen := congrArg List.length hrest
+        have hlen := congrArg List.length htargetStack
+        simp [Word.Concat] at hrestLen hlen
+        omega
+      have htransition' : M.transition p none [A] q [] := by
+        simpa [hp, hq, hunread, hpopSingle, hA, hpushNil] using
+          htransition
+      have hbody :=
+        toCFG_popEpsilon_of_chainDerives
+          (M := M) (presentation := presentation)
+          (p := p) (r := q) (q := q)
+          (A := A) (push := ([] : Word stack))
+          (chainWord := (Word.Empty : Word input))
+          htransition'
+          (ToCFGChainDerives.nil (M := M)
+            (presentation := presentation) q)
+      simpa [Word.Concat, Word.Empty] using hbody
+
+theorem toCFG_generates_of_acceptsIn_zero
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {w : Word input} {qf : state}
+    (haccept : M.accept qf)
+    (hcomp : ComputesIn M 0 (initial M w)
+      { state := qf, unread := [], stack := [] }) :
+    w ∈ CFG.GeneratedLanguage (ToCFG M presentation) := by
+  have hend := computesIn_zero_eq hcomp
+  have hstate : M.start = qf := by
+    simpa [initial] using congrArg
+      (fun c : Configuration input stack state => c.state) hend
+  have hunread : w = [] := by
+    simpa [initial] using congrArg
+      (fun c : Configuration input stack state => c.unread) hend
+  have hbody : CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.empty M.start qf)]
+      (SententialForm.terminalWord (Word.Empty : Word input)) := by
+    simpa [hstate] using
+      toCFG_emptyRefl_derives
+        (M := M) (presentation := presentation) (q := M.start)
+  have hgen := toCFG_start_derives
+    (M := M) (presentation := presentation)
+    (q := qf) (w := Word.Empty) haccept hbody
+  simpa [hunread] using hgen
+
 theorem toCFG_generates_of_acceptsIn_one
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {w : Word input} {qf : state}
@@ -1251,6 +1570,28 @@ theorem toCFG_generates_of_acceptsIn_one
       (M := M) (presentation := presentation)
       (q := qf) (w := Word.Empty) haccept hbody
     simpa [hw, hunread, Word.Empty] using hgen
+
+theorem toCFG_generates_of_acceptsIn_atMostOne
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {n : Nat} {w : Word input} {qf : state}
+    (hn : n <= 1)
+    (haccept : M.accept qf)
+    (hcomp : ComputesIn M n (initial M w)
+      { state := qf, unread := [], stack := [] }) :
+    w ∈ CFG.GeneratedLanguage (ToCFG M presentation) := by
+  cases n with
+  | zero =>
+      exact toCFG_generates_of_acceptsIn_zero
+        (M := M) (presentation := presentation)
+        (w := w) (qf := qf) haccept hcomp
+  | succ n =>
+      cases n with
+      | zero =>
+          exact toCFG_generates_of_acceptsIn_one
+            (M := M) (presentation := presentation)
+            (w := w) (qf := qf) haccept hcomp
+      | succ n =>
+          omega
 
 theorem toCFG_yields_sound
     {M : PDA input stack state} {presentation : FinitePresentation M}
