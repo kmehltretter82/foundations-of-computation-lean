@@ -300,6 +300,11 @@ theorem listed_word_in_language {stream : Nat -> Word alpha} {L : Language alpha
 def LanguageListable (L : Language alpha) : Prop :=
   Listable L
 
+-- Book: Chapter 5, Section 5.2, the nth unary input string a^n, represented
+-- over a singleton alphabet.
+def UnaryInputString (n : Nat) : Word Unit :=
+  UnaryInputWord n
+
 -- Book: Chapter 5, Section 5.2, listability is extensional.
 theorem listable_language_of_equal {L K : Language alpha}
     (h : LanguageListable L) (hEq : Language.Equal L K) :
@@ -309,6 +314,51 @@ theorem listable_language_of_equal {L K : Language alpha}
 -- Book: Chapter 5, Section 5.2, languages as ranges of functions.
 def FunctionRangeLanguage (f : Word input -> Word output) : Language output :=
   RangeLanguage f
+
+-- Book: Chapter 5, Section 5.2, a listing stream viewed as a function on
+-- unary strings by using the input length.
+def ListingAsUnaryStringFunction (stream : Nat -> Word output) :
+    Word Unit -> Word output :=
+  ListingAsUnaryFunction stream
+
+-- Book: Chapter 5, Section 5.2, the nth unary input string has length n.
+theorem unary_input_string_length (n : Nat) :
+    Word.Length (UnaryInputString n) = n :=
+  Computability.unaryInputWord_length n
+
+-- Book: Chapter 5, Section 5.2, the range of a function on unary strings is
+-- listed by evaluating it at a^0, a^1, a^2, and so on.
+theorem unary_function_range_is_listed
+    (f : Word Unit -> Word output) :
+    LanguageListedBy
+      (fun n => f (UnaryInputString n))
+      (FunctionRangeLanguage f) :=
+  Computability.unaryFunctionRange_listedBy f
+
+-- Book: Chapter 5, Section 5.2, every function on unary strings has a
+-- listable range.
+theorem unary_function_range_is_listable
+    (f : Word Unit -> Word output) :
+    LanguageListable (FunctionRangeLanguage f) :=
+  Computability.unaryFunctionRange_listable f
+
+-- Book: Chapter 5, Section 5.2, a listing stream determines a unary-input
+-- function with exactly the listed language as its range.
+theorem listed_language_range_of_unary_function
+    {stream : Nat -> Word output} {L : Language output}
+    (h : LanguageListedBy stream L) :
+    Language.Equal
+      (FunctionRangeLanguage (ListingAsUnaryStringFunction stream)) L :=
+  Computability.listedBy_rangeLanguage_listingAsUnaryFunction h
+
+-- Book: Chapter 5, Section 5.2, every listable language is the range of some
+-- function on unary strings.
+theorem listable_language_has_unary_range_function
+    {L : Language output}
+    (h : LanguageListable L) :
+    exists f : Word Unit -> Word output,
+      Language.Equal (FunctionRangeLanguage f) L :=
+  Computability.listable_has_unary_range_function h
 
 -- Book: Chapter 5, Section 5.2, a function value is in its range language.
 theorem function_value_in_range (f : Word input -> Word output) (x : Word input) :

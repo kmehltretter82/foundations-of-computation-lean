@@ -239,8 +239,8 @@ completed:
         reason: "General grammar definitions and CFG embedding are formalized; equivalence with recursively enumerable languages belongs with the Chapter 5 computability development."
   - coordinate: "Chapter 5"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 97
-    definition_declarations: 39
+    theorem_declarations: 102
+    definition_declarations: 41
     modules:
       - "FoC.Book.Chapter05.Section01"
       - "FoC.Book.Chapter05.Section02"
@@ -270,7 +270,7 @@ completed:
       - "Stopped 0/1 decider output soundness, complementary finite output traces, and bounded-search classification for stopped deciders"
       - "Decidable and recursive languages are closed under complement by swapping decider outputs, with complement equivalences using double-complement language equality"
       - "Co-recursively enumerable language vocabulary, finite-stage acceptance traces for recursively enumerable languages, complementary acceptance traces for RE plus co-RE languages, bounded trace-hit search, no-conflict lemmas, and the classical bounded classification core that underlies dovetailing"
-      - "Listing and range-language vocabulary for recursively enumerable languages, including listability/range extensionality"
+      - "Listing and range-language vocabulary for recursively enumerable languages, including listability/range extensionality and the unary-input bridge between listings and ranges"
       - "General grammar versus recursively enumerable language equivalence statement shape"
       - "Non-computable function, non-acceptable language, undecidable language, decidable and acceptable reductions, diagonal-language, decoder-row recognition, decoder-universality for acceptable languages and for all languages, self-halting language, halting-problem, and universal-machine specification vocabulary, with extensionality and complement transport"
       - "Reduction reflexivity/transitivity, complement preservation for decidable reductions, undecidability transfer along decidable reductions, and non-acceptability transfer along acceptable reductions"
