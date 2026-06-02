@@ -242,9 +242,85 @@ theorem parse_tree_of_generated_language {G : CFG terminal nonterminal}
       CFG.ParseTree.frontier tree = w :=
   CFG.ParseTree.of_generates_language h
 
+-- Book: Chapter 4, Section 4.3, leftmost replacement in a derivation step.
+def LeftmostYields (G : CFG terminal nonterminal)
+    (x y : SententialForm terminal nonterminal) : Prop :=
+  CFG.LeftmostYields G x y
+
+-- Book: Chapter 4, Section 4.3, rightmost replacement in a derivation step.
+def RightmostYields (G : CFG terminal nonterminal)
+    (x y : SententialForm terminal nonterminal) : Prop :=
+  CFG.RightmostYields G x y
+
+-- Book: Chapter 4, Section 4.3, Type-valued left-derivation traces.
+def LeftDerivationTrace (G : CFG terminal nonterminal)
+    (x y : SententialForm terminal nonterminal) : Type :=
+  CFG.LeftDerivationTrace G x y
+
+-- Book: Chapter 4, Section 4.3, Type-valued right-derivation traces.
+def RightDerivationTrace (G : CFG terminal nonterminal)
+    (x y : SententialForm terminal nonterminal) : Type :=
+  CFG.RightDerivationTrace G x y
+
+-- Book: Chapter 4, Section 4.3, each parse tree has a canonical left
+-- derivation trace.
+def parse_tree_left_derivation_trace
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : CFG.ParseTree G s) :
+    CFG.LeftDerivationTrace G [s]
+      (SententialForm.terminalWord (CFG.ParseTree.frontier tree)) :=
+  CFG.ParseTree.leftDerivationTrace tree
+
+-- Book: Chapter 4, Section 4.3, each parse forest has a canonical left
+-- derivation trace.
+def parse_forest_left_derivation_trace
+    {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} (forest : CFG.ParseForest G sent) :
+    CFG.LeftDerivationTrace G sent
+      (SententialForm.terminalWord (CFG.ParseForest.frontier forest)) :=
+  CFG.ParseForest.leftDerivationTrace forest
+
+-- Book: Chapter 4, Section 4.3, a left derivation trace forgets to an ordinary
+-- CFG derivation.
+theorem left_derivation_trace_derives
+    {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (trace : CFG.LeftDerivationTrace G x y) :
+    CFG.Derives G x y :=
+  CFG.LeftDerivationTrace.toDerives trace
+
+-- Book: Chapter 4, Section 4.3, left derivation traces of terminal words
+-- determine parse forests.
+theorem parse_forest_of_left_derivation_trace
+    {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} {w : Word terminal}
+    (trace :
+      CFG.LeftDerivationTrace G sent (SententialForm.terminalWord w)) :
+    exists forest : CFG.ParseForest G sent,
+      CFG.ParseForest.frontier forest = w :=
+  CFG.leftDerivationTrace_to_parseForest_terminal trace
+
+-- Book: Chapter 4, Section 4.3, parse trees rooted at the start symbol
+-- correspond to left derivation traces of terminal words.
+theorem parse_tree_left_derivation_trace_correspondence
+    {G : CFG terminal nonterminal} {w : Word terminal} :
+    (exists tree : CFG.ParseTree G (Symbol.nonterminal G.start),
+      CFG.ParseTree.frontier tree = w) <->
+    Nonempty
+      (CFG.LeftDerivationTrace G [Symbol.nonterminal G.start]
+        (SententialForm.terminalWord w)) :=
+  CFG.parseTree_leftDerivationTrace_correspondence
+
 -- Book: Chapter 4, Section 4.3, ambiguity via two parse trees.
 def AmbiguousGrammar (G : CFG terminal nonterminal) : Prop :=
   CFG.AmbiguousByParseTrees G
+
+-- Book: Chapter 4, Section 4.3, ambiguity via canonical left derivations is
+-- equivalent to ambiguity via parse trees.
+theorem ambiguous_by_parse_trees_iff_left_derivations
+    (G : CFG terminal nonterminal) :
+    CFG.AmbiguousByParseTrees G <-> CFG.AmbiguousByLeftDerivations G :=
+  CFG.ambiguousByParseTrees_iff_leftDerivations G
 
 inductive AmbiguousExampleTerminal where
   | a

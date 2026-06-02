@@ -1484,12 +1484,331 @@ theorem parseTree_generates_language {G : CFG terminal nonterminal}
       rw [hfrontier] at hDerives
       exact hDerives
 
+def LeftmostYields (G : CFG terminal nonterminal)
+    (x y : SententialForm terminal nonterminal) : Prop :=
+  exists u v A rhs,
+    SententialForm.allTerminals u ∧
+      G.produces A rhs ∧
+      x = u ++ [Symbol.nonterminal A] ++ v ∧
+      y = u ++ rhs ++ v
+
+def RightmostYields (G : CFG terminal nonterminal)
+    (x y : SententialForm terminal nonterminal) : Prop :=
+  exists u v A rhs,
+    SententialForm.allTerminals v ∧
+      G.produces A rhs ∧
+      x = u ++ [Symbol.nonterminal A] ++ v ∧
+      y = u ++ rhs ++ v
+
+theorem leftmostYields_yields {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (h : LeftmostYields G x y) : Yields G x y := by
+  cases h with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases hv with
+          | intro A hA =>
+              cases hA with
+              | intro rhs hrhs =>
+                  exists u
+                  exists v
+                  exists A
+                  exists rhs
+                  exact And.intro hrhs.right.left hrhs.right.right
+
+theorem rightmostYields_yields {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (h : RightmostYields G x y) : Yields G x y := by
+  cases h with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases hv with
+          | intro A hA =>
+              cases hA with
+              | intro rhs hrhs =>
+                  exists u
+                  exists v
+                  exists A
+                  exists rhs
+                  exact And.intro hrhs.right.left hrhs.right.right
+
+theorem leftmostYields_append_right {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (h : LeftmostYields G x y)
+    (suffix : SententialForm terminal nonterminal) :
+    LeftmostYields G (x ++ suffix) (y ++ suffix) := by
+  cases h with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases hv with
+          | intro A hA =>
+              cases hA with
+              | intro rhs hrhs =>
+                  exists u
+                  exists v ++ suffix
+                  exists A
+                  exists rhs
+                  constructor
+                  · exact hrhs.left
+                  constructor
+                  · exact hrhs.right.left
+                  constructor
+                  · rw [hrhs.right.right.left]
+                    simp [List.append_assoc]
+                  · rw [hrhs.right.right.right]
+                    simp [List.append_assoc]
+
+theorem leftmostYields_append_left_of_allTerminals
+    {G : CFG terminal nonterminal}
+    {x y pref : SententialForm terminal nonterminal}
+    (hpref : SententialForm.allTerminals pref)
+    (h : LeftmostYields G x y) :
+    LeftmostYields G (pref ++ x) (pref ++ y) := by
+  cases h with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases hv with
+          | intro A hA =>
+              cases hA with
+              | intro rhs hrhs =>
+                  exists pref ++ u
+                  exists v
+                  exists A
+                  exists rhs
+                  constructor
+                  · exact SententialForm.allTerminals_append_of hpref hrhs.left
+                  constructor
+                  · exact hrhs.right.left
+                  constructor
+                  · rw [hrhs.right.right.left]
+                    simp [List.append_assoc]
+                  · rw [hrhs.right.right.right]
+                    simp [List.append_assoc]
+
+inductive LeftDerivationTrace (G : CFG terminal nonterminal) :
+    SententialForm terminal nonterminal ->
+      SententialForm terminal nonterminal -> Type where
+  | refl (x : SententialForm terminal nonterminal) :
+      LeftDerivationTrace G x x
+  | step {x y z : SententialForm terminal nonterminal} :
+      LeftmostYields G x y ->
+        LeftDerivationTrace G y z -> LeftDerivationTrace G x z
+
+inductive RightDerivationTrace (G : CFG terminal nonterminal) :
+    SententialForm terminal nonterminal ->
+      SententialForm terminal nonterminal -> Type where
+  | refl (x : SententialForm terminal nonterminal) :
+      RightDerivationTrace G x x
+  | step {x y z : SententialForm terminal nonterminal} :
+      RightmostYields G x y ->
+        RightDerivationTrace G y z -> RightDerivationTrace G x z
+
+def LeftDerives (G : CFG terminal nonterminal)
+    (x y : SententialForm terminal nonterminal) : Prop :=
+  Nonempty (LeftDerivationTrace G x y)
+
+def RightDerives (G : CFG terminal nonterminal)
+    (x y : SententialForm terminal nonterminal) : Prop :=
+  Nonempty (RightDerivationTrace G x y)
+
+namespace LeftDerivationTrace
+
+def trans {G : CFG terminal nonterminal}
+    {x y z : SententialForm terminal nonterminal}
+    (hxy : LeftDerivationTrace G x y)
+    (hyz : LeftDerivationTrace G y z) :
+    LeftDerivationTrace G x z :=
+  match hxy with
+  | refl _ => hyz
+  | step hstep hrest => step hstep (trans hrest hyz)
+
+def appendRight {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (h : LeftDerivationTrace G x y)
+    (suffix : SententialForm terminal nonterminal) :
+    LeftDerivationTrace G (x ++ suffix) (y ++ suffix) :=
+  match h with
+  | refl _ => refl _
+  | step hstep hrest =>
+      step (leftmostYields_append_right hstep suffix)
+        (appendRight hrest suffix)
+
+def appendLeftTerminals {G : CFG terminal nonterminal}
+    {x y pref : SententialForm terminal nonterminal}
+    (hpref : SententialForm.allTerminals pref)
+    (h : LeftDerivationTrace G x y) :
+    LeftDerivationTrace G (pref ++ x) (pref ++ y) :=
+  match h with
+  | refl _ => refl _
+  | step hstep hrest =>
+      step (leftmostYields_append_left_of_allTerminals hpref hstep)
+        (appendLeftTerminals hpref hrest)
+
+theorem toDerives {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (h : LeftDerivationTrace G x y) : Derives G x y := by
+  induction h with
+  | refl x =>
+      exact Derives.refl x
+  | step hstep _ ih =>
+      exact Derives.step (leftmostYields_yields hstep) ih
+
+end LeftDerivationTrace
+
+namespace RightDerivationTrace
+
+theorem toDerives {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (h : RightDerivationTrace G x y) : Derives G x y := by
+  induction h with
+  | refl x =>
+      exact Derives.refl x
+  | step hstep _ ih =>
+      exact Derives.step (rightmostYields_yields hstep) ih
+
+end RightDerivationTrace
+
+mutual
+
+def ParseTree.leftDerivationTrace {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s) :
+    LeftDerivationTrace G [s]
+      (SententialForm.terminalWord (ParseTree.frontier tree)) := by
+  cases tree with
+  | leaf a =>
+      exact LeftDerivationTrace.refl _
+  | node A rhs hprod children =>
+      exact LeftDerivationTrace.step
+        (x := [Symbol.nonterminal A]) (y := rhs)
+        (by exact ⟨[], [], A, rhs, trivial, hprod, rfl, by simp⟩)
+        (by
+          simpa [ParseTree.frontier] using
+            ParseForest.leftDerivationTrace children)
+
+def ParseForest.leftDerivationTrace {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} (forest : ParseForest G sent) :
+    LeftDerivationTrace G sent
+      (SententialForm.terminalWord (ParseForest.frontier forest)) := by
+  cases forest with
+  | nil =>
+      exact LeftDerivationTrace.refl _
+  | cons s restSent tree rest =>
+      have hTree :=
+        (ParseTree.leftDerivationTrace tree).appendRight restSent
+      have hRestPrefix :
+          SententialForm.allTerminals
+            (SententialForm.terminalWord
+              (nt := nonterminal) (ParseTree.frontier tree)) :=
+        SententialForm.terminalWord_allTerminals _
+      have hRest :=
+        (ParseForest.leftDerivationTrace rest).appendLeftTerminals hRestPrefix
+      have hAll := hTree.trans hRest
+      change LeftDerivationTrace G (s :: restSent)
+        (SententialForm.terminalWord
+          (Word.Concat (ParseTree.frontier tree)
+            (ParseForest.frontier rest)))
+      rw [SententialForm.terminalWord_append]
+      exact hAll
+
+end
+
+theorem leftDerivationTrace_to_parseForest_terminal
+    {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} {w : Word terminal}
+    (h : LeftDerivationTrace G sent (SententialForm.terminalWord w)) :
+    exists forest : ParseForest G sent, ParseForest.frontier forest = w :=
+  ParseForest.of_derives_terminal (LeftDerivationTrace.toDerives h)
+
+theorem parseTree_leftDerivationTrace_correspondence
+    {G : CFG terminal nonterminal} {w : Word terminal} :
+    (exists tree : ParseTree G (Symbol.nonterminal G.start),
+      ParseTree.frontier tree = w) <->
+    Nonempty
+      (LeftDerivationTrace G [Symbol.nonterminal G.start]
+        (SententialForm.terminalWord w)) := by
+  constructor
+  · intro h
+    cases h with
+    | intro tree hfront =>
+        constructor
+        rw [← hfront]
+        exact ParseTree.leftDerivationTrace tree
+  · intro h
+    cases h with
+    | intro trace =>
+        cases leftDerivationTrace_to_parseForest_terminal trace with
+        | intro forest hfront =>
+            cases forest with
+            | cons _ _ tree rest =>
+                cases rest with
+                | nil =>
+                    exists tree
+                    simpa [ParseForest.frontier, Word.Concat] using hfront
+
+structure StartLeftDerivation (G : CFG terminal nonterminal)
+    (w : Word terminal) where
+  tree : ParseTree G (Symbol.nonterminal G.start)
+  trace :
+    LeftDerivationTrace G [Symbol.nonterminal G.start]
+      (SententialForm.terminalWord w)
+  frontier_eq : ParseTree.frontier tree = w
+
+def StartLeftDerivation.ofParseTree {G : CFG terminal nonterminal}
+    {w : Word terminal}
+    (tree : ParseTree G (Symbol.nonterminal G.start))
+    (hfrontier : ParseTree.frontier tree = w) :
+    StartLeftDerivation G w where
+  tree := tree
+  trace := by
+    rw [← hfrontier]
+    exact ParseTree.leftDerivationTrace tree
+  frontier_eq := hfrontier
+
+def AmbiguousByLeftDerivations (G : CFG terminal nonterminal) : Prop :=
+  exists w, exists d1 : StartLeftDerivation G w,
+    exists d2 : StartLeftDerivation G w, d1.tree ≠ d2.tree
+
 def AmbiguousByParseTrees (G : CFG terminal nonterminal) : Prop :=
   exists w, exists t1 : ParseTree G (Symbol.nonterminal G.start),
     exists t2 : ParseTree G (Symbol.nonterminal G.start),
       ParseTree.frontier t1 = w ∧
       ParseTree.frontier t2 = w ∧
       t1 ≠ t2
+
+theorem ambiguousByParseTrees_iff_leftDerivations
+    (G : CFG terminal nonterminal) :
+    AmbiguousByParseTrees G <-> AmbiguousByLeftDerivations G := by
+  constructor
+  · intro h
+    cases h with
+    | intro w hw =>
+        cases hw with
+        | intro t1 ht1 =>
+            cases ht1 with
+            | intro t2 ht2 =>
+                exists w
+                exists StartLeftDerivation.ofParseTree t1 ht2.left
+                exists StartLeftDerivation.ofParseTree t2 ht2.right.left
+                exact ht2.right.right
+  · intro h
+    cases h with
+    | intro w hw =>
+        cases hw with
+        | intro d1 hd1 =>
+            cases hd1 with
+            | intro d2 hne =>
+                exists w
+                exists d1.tree
+                exists d2.tree
+                constructor
+                · exact d1.frontier_eq
+                constructor
+                · exact d2.frontier_eq
+                · exact hne
 
 end CFG
 

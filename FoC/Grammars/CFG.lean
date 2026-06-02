@@ -112,6 +112,19 @@ theorem terminalWord_allTerminals (w : Word term) :
   | cons _ rest ih =>
       exact ih
 
+theorem allTerminals_append_of {x y : SententialForm term nt}
+    (hx : allTerminals x) (hy : allTerminals y) :
+    allTerminals (x ++ y) := by
+  induction x with
+  | nil =>
+      exact hy
+  | cons s rest ih =>
+      cases s with
+      | terminal _ =>
+          exact ih hx
+      | nonterminal _ =>
+          cases hx
+
 theorem terminalWord_toWord (w : Word term) :
     toWord? (terminalWord (nt := nt) w) = some w := by
   induction w with
