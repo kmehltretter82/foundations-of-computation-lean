@@ -1,5 +1,6 @@
 import FoC.Foundation.Summation
 import FoC.Foundation.Primes
+import FoC.Foundation.QuotientRationals
 
 namespace FoC
 namespace Book
@@ -84,6 +85,41 @@ theorem geometric_sum_powers_of_two (n : Nat) :
 theorem geometric_successor_base_sum (b n : Nat) :
     b * NatSum.SumZeroTo (fun i => (b + 1) ^ i) n = (b + 1) ^ (n + 1) - 1 :=
   NatSum.geometric_successor_base_sum b n
+
+def qratPower (r : QRat) : Nat -> QRat
+  | 0 => 1
+  | n + 1 => qratPower r n * r
+
+def qratGeometricSum (r : QRat) : Nat -> QRat
+  | 0 => 1
+  | n + 1 => qratGeometricSum r n + qratPower r (n + 1)
+
+-- Book: Chapter 1, Section 1.8, geometric-series identity before division.
+theorem quotient_rational_geometric_series_mul_one_sub (r : QRat) (n : Nat) :
+    qratGeometricSum r n * (1 - r) = 1 - qratPower r (n + 1) := by
+  induction n with
+  | zero =>
+      apply QRat.eq_of_toRat_eq
+      simp [qratGeometricSum, qratPower, QRat.toRat_mul, QRat.toRat_sub,
+        QRat.toRat_one]
+  | succ n ih =>
+      apply QRat.eq_of_toRat_eq
+      have ihRat := congrArg QRat.toRat ih
+      simp [qratGeometricSum, qratPower, QRat.toRat_mul, QRat.toRat_add,
+        QRat.toRat_sub, QRat.toRat_one] at ihRat ⊢
+      grind [Rat.add_mul, Rat.sub_eq_add_neg, Rat.mul_add, Rat.mul_neg,
+        Rat.pow_succ]
+
+-- Book: Chapter 1, Section 1.8, geometric-series formula with division by `1 - r`.
+theorem quotient_rational_geometric_series_formula
+    (r : QRat) (n : Nat) (hr : 1 - r ≠ 0) :
+    qratGeometricSum r n = (1 - qratPower r (n + 1)) / (1 - r) := by
+  calc
+    qratGeometricSum r n =
+        qratGeometricSum r n * (1 - r) / (1 - r) := by
+      exact (QRat.mul_div_cancel (qratGeometricSum r n) hr).symm
+    _ = (1 - qratPower r (n + 1)) / (1 - r) := by
+      rw [quotient_rational_geometric_series_mul_one_sub]
 
 -- Book: Chapter 1, Section 1.8, Exercise 6
 theorem odd_sum_square (n : Nat) :

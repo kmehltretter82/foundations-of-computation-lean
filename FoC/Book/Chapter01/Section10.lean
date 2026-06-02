@@ -1,4 +1,5 @@
 import FoC.Book.Chapter01.Section08
+import FoC.Foundation.Reals
 
 namespace FoC
 namespace Book
@@ -8,6 +9,8 @@ namespace Section10
 /-!
 Book: Chapter 1, Section 1.10, Recursive Definitions.
 -/
+
+open Foundation
 
 def fib : Nat -> Nat :=
   Section08.fib
@@ -97,6 +100,26 @@ theorem fib_lower_bound_three_halves_scaled (n : Nat) (hn : 6 <= n) :
       rw [hd]
       have h := fib_lower_bound_scaled_shifted d
       simpa [scaledFibLower, fib, Nat.add_comm, Nat.add_assoc, Nat.add_left_comm] using h
+
+-- Book: Chapter 1, Section 1.10, Theorem 1.18 as a quotient-rational bound.
+theorem fib_lower_bound_three_halves_qrat (n : Nat) (hn : 6 <= n) :
+    QRat.ofNat (3 ^ (n - 1)) / QRat.ofNat (2 ^ (n - 1)) < QRat.ofNat (fib n) := by
+  have hscaled := fib_lower_bound_three_halves_scaled n hn
+  have hdenpos : (0 : QRat) < QRat.ofNat (2 ^ (n - 1)) := by
+    apply QRat.lt_of_toRat_lt
+    rw [QRat.toRat_zero, QRat.toRat_ofNat]
+    exact Rat.natCast_pos.mpr (Nat.pow_pos (by decide : 0 < 2))
+  rw [QRat.div_lt_iff hdenpos]
+  apply QRat.lt_of_toRat_lt
+  rw [QRat.toRat_ofNat, QRat.toRat_mul, QRat.toRat_ofNat, QRat.toRat_ofNat]
+  rw [← Rat.natCast_mul]
+  exact Rat.natCast_lt_natCast.mpr hscaled
+
+-- Book: Chapter 1, Section 1.10, Theorem 1.18 embedded into the real cuts.
+theorem fib_lower_bound_three_halves_real (n : Nat) (hn : 6 <= n) :
+    Real.qreal (QRat.ofNat (3 ^ (n - 1)) / QRat.ofNat (2 ^ (n - 1))) <
+      Real.qreal (QRat.ofNat (fib n)) :=
+  Real.qreal_order_preserving (fib_lower_bound_three_halves_qrat n hn)
 
 end Section10
 end Chapter01

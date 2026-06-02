@@ -2,6 +2,7 @@ import FoC.Foundation.Arithmetic
 import FoC.Foundation.Integers
 import FoC.Foundation.Rationals
 import FoC.Foundation.Reals
+import FoC.Foundation.QuadraticSurd
 import FoC.Book.Chapter01.Section01
 import FoC.Book.Chapter01.Section02
 
@@ -132,6 +133,14 @@ theorem product_of_rational_numbers_is_rational (x y : Rational) :
 theorem real_number_between {x y : Real} (h : x < y) :
     exists z : Real, x < z ∧ z < y :=
   Real.exists_between h
+
+-- Book: Chapter 1, Section 1.6, irrational-product counterexample surrogate.
+theorem product_of_irrational_surrogates_can_be_rational :
+    Quad2.IrrationalLike Quad2.sqrtTwo ∧
+      Quad2.IrrationalLike Quad2.sqrtTwo ∧
+      Quad2.RationalLike (Quad2.mul Quad2.sqrtTwo Quad2.sqrtTwo) := by
+  exact And.intro Quad2.sqrtTwo_irrationalLike
+    (And.intro Quad2.sqrtTwo_irrationalLike Quad2.sqrtTwo_mul_self_rationalLike)
 
 -- Book: Chapter 1, Section 1.6, embedded rational real addition.
 theorem embedded_rational_real_addition (a b : QRat) :
