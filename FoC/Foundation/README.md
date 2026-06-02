@@ -11,7 +11,7 @@ definitions or lemmas.
 | `Sets.lean` | Chapter 2 set operations, Boolean algebra of sets, powersets, and Cantor diagonalization. |
 | `Functions.lean` | Chapter 2 functions, graphs, image/preimage, composition, partial functions, evaluation, and the Chapter 1 pigeonhole collision schema. |
 | `Finite.lean` | Chapter 2 finite sets by list enumeration, including finite-subset closure; later finite automata state sets. |
-| `Countable.lean` | Chapter 2 countability by explicit natural-number enumeration, countable unions, and uncountable-difference arguments. |
+| `Countable.lean` | Chapter 2 countability by explicit natural-number enumeration, countable unions, and uncountable-difference arguments; Chapter 4 finite grammar presentation encodings via option/sum/product/list codes. |
 | `Relations.lean` | Chapter 2 binary relations, equivalence classes, partitions, and transitive closure. |
 | `Arithmetic.lean` | Chapter 1 proof examples using divisibility and parity. |
 | `Summation.lean` | Chapter 1 induction examples with finite sums and geometric-series cores; later Chapter 2 finite-cardinality arithmetic. |

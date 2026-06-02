@@ -385,9 +385,34 @@ theorem pda_intersect_dfa_context_free_of_empty_summary_complete_auto
   exact pda_intersect_dfa_context_free_of_empty_summary_complete
     P D presentation (dfaAcceptingPresentation D) hcomplete
 
+-- Book: Chapter 4, Section 4.5, after the arbitrary finite-presented
+-- PDA-to-CFG theorem, the PDA/DFA product gives an unconditional
+-- finite-production CFL closure theorem for intersection with a DFA language.
+theorem pda_intersect_dfa_context_free
+    {input stack pstate dstate : Type}
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P) :
+    CFL.ContextFreeLanguage
+      (Language.Inter (PDA.AcceptedLanguage P) (DFA.Language D)) := by
+  let productPresentation :=
+    pdaIntersectDFA_finitePresentation_auto P D presentation
+  have hProduct :
+      CFL.ContextFreeLanguage
+        (PDA.AcceptedLanguage (PDAIntersectDFA P D)) :=
+    Section04.finite_presentation_pda_context_free
+      (M := PDAIntersectDFA P D)
+      (presentation := productPresentation)
+  rcases hProduct with ⟨nonterminal, G, hfinite, hEq⟩
+  exists nonterminal
+  exists G
+  constructor
+  · exact hfinite
+  · exact Language.equal_trans hEq
+      (fun w => pda_intersect_dfa_accepted_language_exact P D w)
+
 -- Book: Chapter 4, Section 4.5, conditional finite-production CFL closure
--- under subtraction by a DFA language.  The remaining non-conditional work is
--- to prove the empty-summary completeness hypothesis for the product PDA.
+-- under subtraction by a DFA language, retained as a local exactness-reduction
+-- wrapper for product PDAs with explicit empty-summary completeness.
 theorem pda_diff_dfa_context_free_of_empty_summary_complete
     {input stack pstate dstate : Type}
     (P : PDA input stack pstate) (D : DFA input dstate)
@@ -436,6 +461,35 @@ theorem pda_diff_dfa_context_free_of_empty_summary_complete_auto
   exact pda_diff_dfa_context_free_of_empty_summary_complete
     P D presentation (dfaComplementAcceptingPresentation D) hcomplete
 
+-- Book: Chapter 4, Section 4.5, unconditional finite-production CFL closure
+-- under subtracting a DFA language from a finite-presented PDA language.
+theorem pda_diff_dfa_context_free
+    {input stack pstate dstate : Type}
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P) :
+    CFL.ContextFreeLanguage
+      (Language.Diff (PDA.AcceptedLanguage P) (DFA.Language D)) := by
+  have hProduct :=
+    pda_intersect_dfa_context_free P (DFA.Complement D) presentation
+  rcases hProduct with ⟨nonterminal, G, hfinite, hEq⟩
+  exists nonterminal
+  exists G
+  constructor
+  · exact hfinite
+  · intro w
+    constructor
+    · intro hw
+      have hInter := (hEq w).mp hw
+      constructor
+      · exact hInter.left
+      · intro hD
+        exact (DFA.complement_accepts D w).mp hInter.right hD
+    · intro hw
+      apply (hEq w).mpr
+      constructor
+      · exact hw.left
+      · exact (DFA.complement_accepts D w).mpr hw.right
+
 -- Book: Chapter 4, Section 4.5, language-equality wrapper for conditional
 -- finite-production CFL closure under intersection with a DFA language.
 theorem finite_presentation_pda_language_inter_dfa_context_free_of_empty_summary_complete
@@ -451,6 +505,32 @@ theorem finite_presentation_pda_language_inter_dfa_context_free_of_empty_summary
   have hBase :=
     pda_intersect_dfa_context_free_of_empty_summary_complete_auto
       P D presentation hcomplete
+  rcases hBase with ⟨nonterminal, G, hfinite, hEq⟩
+  exists nonterminal
+  exists G
+  constructor
+  · exact hfinite
+  · intro w
+    constructor
+    · intro hw
+      have hprod := (hEq w).mp hw
+      exact And.intro ((hP w).mp hprod.left) ((hD w).mp hprod.right)
+    · intro hw
+      apply (hEq w).mpr
+      exact And.intro ((hP w).mpr hw.left) ((hD w).mpr hw.right)
+
+-- Book: Chapter 4, Section 4.5, language-equality wrapper for the
+-- unconditional finite-production CFL closure theorem under intersection with
+-- a DFA language.
+theorem finite_presentation_pda_language_inter_dfa_context_free
+    {input stack pstate dstate : Type}
+    {L R : Language input}
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    (hP : Language.Equal (PDA.AcceptedLanguage P) L)
+    (hD : Language.Equal (DFA.Language D) R) :
+    CFL.ContextFreeLanguage (Language.Inter L R) := by
+  have hBase := pda_intersect_dfa_context_free P D presentation
   rcases hBase with ⟨nonterminal, G, hfinite, hEq⟩
   exists nonterminal
   exists G
@@ -481,6 +561,38 @@ theorem finite_presentation_pda_language_diff_dfa_context_free_of_empty_summary_
   have hBase :=
     pda_diff_dfa_context_free_of_empty_summary_complete_auto
       P D presentation hcomplete
+  rcases hBase with ⟨nonterminal, G, hfinite, hEq⟩
+  exists nonterminal
+  exists G
+  constructor
+  · exact hfinite
+  · intro w
+    constructor
+    · intro hw
+      have hdiff := (hEq w).mp hw
+      constructor
+      · exact (hP w).mp hdiff.left
+      · intro hR
+        exact hdiff.right ((hD w).mpr hR)
+    · intro hw
+      apply (hEq w).mpr
+      constructor
+      · exact (hP w).mpr hw.left
+      · intro hDfa
+        exact hw.right ((hD w).mp hDfa)
+
+-- Book: Chapter 4, Section 4.5, language-equality wrapper for the
+-- unconditional finite-production CFL closure theorem under subtracting a DFA
+-- language.
+theorem finite_presentation_pda_language_diff_dfa_context_free
+    {input stack pstate dstate : Type}
+    {L R : Language input}
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    (hP : Language.Equal (PDA.AcceptedLanguage P) L)
+    (hD : Language.Equal (DFA.Language D) R) :
+    CFL.ContextFreeLanguage (Language.Diff L R) := by
+  have hBase := pda_diff_dfa_context_free P D presentation
   rcases hBase with ⟨nonterminal, G, hfinite, hEq⟩
   exists nonterminal
   exists G
@@ -720,8 +832,8 @@ theorem pda_recognizable_diff_finite_language {L M : Language input}
   pda_recognizable_diff_dfa_recognizable hL
     (finite_language_dfa_recognizable hM)
 
--- Without the PDA-to-CFG conversion, this is the strongest formal closure
--- consequence available for book-facing CFLs: the result has a PDA recognizer.
+-- Book: Chapter 4, Section 4.5, automaton-side closure consequence for
+-- finite-language subtraction from book-facing CFLs.
 theorem context_free_diff_finite_language_pda_recognizable
     {input : Type}
     {L M : Language input}
@@ -742,6 +854,91 @@ theorem context_free_diff_finite_language_finite_presentation_pda_recognizable
   finite_presentation_pda_recognizable_diff_finite_language
     (context_free_language_finite_presentation_pda_recognizable
       inputFinite hL) hM
+
+-- Book: Chapter 4, Section 4.5, over an explicitly finite alphabet, a
+-- book-facing finite-production CFL remains context-free after intersection
+-- with a DFA language.
+theorem context_free_inter_dfa_context_free
+    {input dstate : Type}
+    (inputFinite : Foundation.FiniteType input)
+    {L R : Language input}
+    (hL : CFL.ContextFreeLanguage L)
+    (D : DFA input dstate)
+    (hR : Language.Equal (DFA.Language D) R) :
+    CFL.ContextFreeLanguage (Language.Inter L R) := by
+  rcases context_free_language_finite_presentation_pda_recognizable
+      inputFinite hL with
+    ⟨stack, pstate, P, presentation, hP⟩
+  exact finite_presentation_pda_language_inter_dfa_context_free
+    P D presentation hP hR
+
+-- Book: Chapter 4, Section 4.5, over an explicitly finite alphabet, a
+-- book-facing finite-production CFL remains context-free after intersection
+-- with a DFA-recognizable language.
+theorem context_free_inter_dfa_recognizable_context_free
+    {input : Type}
+    (inputFinite : Foundation.FiniteType input)
+    {L R : Language input}
+    (hL : CFL.ContextFreeLanguage L)
+    (hR : DFA.Recognizable R) :
+    CFL.ContextFreeLanguage (Language.Inter L R) := by
+  rcases hR with ⟨dstate, D, hD⟩
+  exact context_free_inter_dfa_context_free inputFinite hL D hD
+
+-- Book: Chapter 4, Section 4.5, over an explicitly finite alphabet, a
+-- book-facing finite-production CFL remains context-free after subtracting a
+-- DFA language.
+theorem context_free_diff_dfa_context_free
+    {input dstate : Type}
+    (inputFinite : Foundation.FiniteType input)
+    {L R : Language input}
+    (hL : CFL.ContextFreeLanguage L)
+    (D : DFA input dstate)
+    (hR : Language.Equal (DFA.Language D) R) :
+    CFL.ContextFreeLanguage (Language.Diff L R) := by
+  rcases context_free_language_finite_presentation_pda_recognizable
+      inputFinite hL with
+    ⟨stack, pstate, P, presentation, hP⟩
+  exact finite_presentation_pda_language_diff_dfa_context_free
+    P D presentation hP hR
+
+-- Book: Chapter 4, Section 4.5, over an explicitly finite alphabet, a
+-- book-facing finite-production CFL remains context-free after subtracting a
+-- DFA-recognizable language.
+theorem context_free_diff_dfa_recognizable_context_free
+    {input : Type}
+    (inputFinite : Foundation.FiniteType input)
+    {L R : Language input}
+    (hL : CFL.ContextFreeLanguage L)
+    (hR : DFA.Recognizable R) :
+    CFL.ContextFreeLanguage (Language.Diff L R) := by
+  rcases hR with ⟨dstate, D, hD⟩
+  exact context_free_diff_dfa_context_free inputFinite hL D hD
+
+-- Book: Chapter 4, Section 4.5, finite-language subtraction from a
+-- book-facing CFL preserves context-freeness over an explicitly finite
+-- terminal alphabet.
+theorem context_free_diff_finite_list_context_free
+    {input : Type}
+    (inputFinite : Foundation.FiniteType input)
+    {L : Language input}
+    (hL : CFL.ContextFreeLanguage L)
+    (ws : List (Word input)) :
+    CFL.ContextFreeLanguage
+      (Language.Diff L (fun w : Word input => w ∈ ws)) :=
+  context_free_diff_dfa_recognizable_context_free inputFinite hL
+    (finite_list_dfa_recognizable ws)
+
+-- Book: Chapter 4, Section 4.5, full finite-language subtraction theorem for
+-- book-facing CFLs over an explicitly finite terminal alphabet.
+theorem context_free_diff_finite_language_context_free
+    {input : Type}
+    (inputFinite : Foundation.FiniteType input)
+    {L M : Language input}
+    (hL : CFL.ContextFreeLanguage L) (hM : Language.Finite M) :
+    CFL.ContextFreeLanguage (Language.Diff L M) :=
+  context_free_diff_dfa_recognizable_context_free inputFinite hL
+    (finite_language_dfa_recognizable hM)
 
 inductive ABC where
   | a

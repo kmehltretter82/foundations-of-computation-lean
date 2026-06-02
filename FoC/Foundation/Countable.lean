@@ -254,6 +254,104 @@ theorem pairCode_injective : Fn.Injective (fun p : Nat × Nat => PairCode p.1 p.
               cases hb
               rfl
 
+def OptionCode (code : alpha -> Nat) : Option alpha -> Nat
+  | none => 0
+  | some x => code x + 1
+
+theorem optionCode_injective {code : alpha -> Nat}
+    (hcode : Fn.Injective code) :
+    Fn.Injective (OptionCode code) := by
+  intro x y h
+  cases x <;> cases y <;> simp [OptionCode] at h ⊢
+  exact hcode h
+
+theorem option_encodable {alpha : Type u}
+    (hα : EncodableByNat alpha) :
+    EncodableByNat (Option alpha) := by
+  rcases hα with ⟨code, hcode⟩
+  exact ⟨OptionCode code, optionCode_injective hcode⟩
+
+def SumCode (leftCode : alpha -> Nat) (rightCode : beta -> Nat) :
+    Sum alpha beta -> Nat
+  | Sum.inl x => 2 * leftCode x
+  | Sum.inr y => 2 * rightCode y + 1
+
+theorem sumCode_injective {leftCode : alpha -> Nat} {rightCode : beta -> Nat}
+    (hleft : Fn.Injective leftCode) (hright : Fn.Injective rightCode) :
+    Fn.Injective (SumCode leftCode rightCode) := by
+  intro x y h
+  cases x <;> cases y <;> simp [SumCode] at h ⊢
+  · exact hleft (by omega)
+  · omega
+  · omega
+  · exact hright (by omega)
+
+theorem sum_encodable {alpha : Type u} {beta : Type v}
+    (hα : EncodableByNat alpha) (hβ : EncodableByNat beta) :
+    EncodableByNat (Sum alpha beta) := by
+  rcases hα with ⟨leftCode, hleft⟩
+  rcases hβ with ⟨rightCode, hright⟩
+  exact ⟨SumCode leftCode rightCode,
+    sumCode_injective hleft hright⟩
+
+def ProdCode (leftCode : alpha -> Nat) (rightCode : beta -> Nat)
+    (p : alpha × beta) : Nat :=
+  PairCode (leftCode p.1) (rightCode p.2)
+
+theorem prodCode_injective {leftCode : alpha -> Nat} {rightCode : beta -> Nat}
+    (hleft : Fn.Injective leftCode) (hright : Fn.Injective rightCode) :
+    Fn.Injective (ProdCode leftCode rightCode) := by
+  intro x y h
+  rcases x with ⟨x₁, x₂⟩
+  rcases y with ⟨y₁, y₂⟩
+  rcases pairCode_injective_left h with ⟨h₁, h₂⟩
+  exact Prod.ext (hleft h₁) (hright h₂)
+
+theorem prod_encodable {alpha : Type u} {beta : Type v}
+    (hα : EncodableByNat alpha) (hβ : EncodableByNat beta) :
+    EncodableByNat (alpha × beta) := by
+  rcases hα with ⟨leftCode, hleft⟩
+  rcases hβ with ⟨rightCode, hright⟩
+  exact ⟨ProdCode leftCode rightCode,
+    prodCode_injective hleft hright⟩
+
+def ListCode (code : alpha -> Nat) : List alpha -> Nat
+  | [] => 0
+  | x :: xs => PairCode (code x) (ListCode code xs) + 1
+
+theorem listCode_injective {code : alpha -> Nat}
+    (hcode : Fn.Injective code) :
+    Fn.Injective (ListCode code) := by
+  intro xs ys h
+  induction xs generalizing ys with
+  | nil =>
+      cases ys with
+      | nil => rfl
+      | cons _ _ =>
+          simp [ListCode] at h
+  | cons x xs ih =>
+      cases ys with
+      | nil =>
+          simp [ListCode] at h
+      | cons y ys =>
+          have hpair :
+              PairCode (code x) (ListCode code xs) =
+                PairCode (code y) (ListCode code ys) := by
+            simp [ListCode] at h
+            omega
+          rcases pairCode_injective_left hpair with ⟨hhead, htail⟩
+          have hxy : x = y := hcode hhead
+          have hxsys : xs = ys := ih htail
+          cases hxy
+          cases hxsys
+          rfl
+
+theorem list_encodable {alpha : Type u}
+    (hα : EncodableByNat alpha) :
+    EncodableByNat (List alpha) := by
+  rcases hα with ⟨code, hcode⟩
+  exact ⟨ListCode code, listCode_injective hcode⟩
+
 def DiagonalList : Nat -> List (Nat × Nat)
   | 0 => [(0, 0)]
   | n + 1 => (0, n + 1) :: (DiagonalList n).map (fun p => (p.1 + 1, p.2))

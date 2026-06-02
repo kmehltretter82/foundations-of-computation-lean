@@ -1,4 +1,5 @@
 import FoC.Foundation.Finite
+import FoC.Foundation.Countable
 import FoC.Languages.Language
 
 namespace FoC
@@ -58,6 +59,32 @@ def isTerminal : Symbol term nt -> Prop
   | terminal _ => True
   | nonterminal _ => False
 
+def Code (terminalCode : term -> Nat) (nonterminalCode : nt -> Nat) :
+    Symbol term nt -> Nat
+  | terminal a => 2 * terminalCode a
+  | nonterminal A => 2 * nonterminalCode A + 1
+
+theorem code_injective {terminalCode : term -> Nat}
+    {nonterminalCode : nt -> Nat}
+    (hterminal : Foundation.Fn.Injective terminalCode)
+    (hnonterminal : Foundation.Fn.Injective nonterminalCode) :
+    Foundation.Fn.Injective (Code terminalCode nonterminalCode) := by
+  intro x y h
+  cases x <;> cases y <;> simp [Code] at h ⊢
+  · exact hterminal (by omega)
+  · omega
+  · omega
+  · exact hnonterminal (by omega)
+
+theorem encodable
+    (hterminal : Foundation.Countability.EncodableByNat term)
+    (hnonterminal : Foundation.Countability.EncodableByNat nt) :
+    Foundation.Countability.EncodableByNat (Symbol term nt) := by
+  rcases hterminal with ⟨terminalCode, hterminalCode⟩
+  rcases hnonterminal with ⟨nonterminalCode, hnonterminalCode⟩
+  exact ⟨Code terminalCode nonterminalCode,
+    code_injective hterminalCode hnonterminalCode⟩
+
 end Symbol
 
 abbrev SententialForm (terminal : Type u) (nonterminal : Type v) :=
@@ -116,6 +143,14 @@ theorem terminalWord_allTerminals (w : Word term) :
   | nil => trivial
   | cons _ rest ih =>
       exact ih
+
+theorem encodable
+    (hterminal : Foundation.Countability.EncodableByNat terminal)
+    (hnonterminal : Foundation.Countability.EncodableByNat nonterminal) :
+    Foundation.Countability.EncodableByNat
+      (SententialForm terminal nonterminal) :=
+  Foundation.Countability.list_encodable
+    (Symbol.encodable hterminal hnonterminal)
 
 theorem allTerminals_append_of {x y : SententialForm term nt}
     (hx : allTerminals x) (hy : allTerminals y) :
@@ -226,6 +261,97 @@ namespace CFG
 structure Production (terminal : Type u) (nonterminal : Type v) where
   lhs : nonterminal
   rhs : SententialForm terminal nonterminal
+
+namespace Production
+
+def Code (terminalCode : terminal -> Nat) (nonterminalCode : nonterminal -> Nat)
+    (rule : Production terminal nonterminal) : Nat :=
+  Foundation.Countability.PairCode
+    (nonterminalCode rule.lhs)
+    (Foundation.Countability.ListCode
+      (Symbol.Code terminalCode nonterminalCode) rule.rhs)
+
+theorem code_injective {terminalCode : terminal -> Nat}
+    {nonterminalCode : nonterminal -> Nat}
+    (hterminal : Foundation.Fn.Injective terminalCode)
+    (hnonterminal : Foundation.Fn.Injective nonterminalCode) :
+    Foundation.Fn.Injective (Code terminalCode nonterminalCode) := by
+  intro x y h
+  rcases x with ⟨xLhs, xRhs⟩
+  rcases y with ⟨yLhs, yRhs⟩
+  rcases Foundation.Countability.pairCode_injective_left h with
+    ⟨hlhs, hrhs⟩
+  have hLhs : xLhs = yLhs := hnonterminal hlhs
+  have hRhs : xRhs = yRhs :=
+    Foundation.Countability.listCode_injective
+      (Symbol.code_injective hterminal hnonterminal) hrhs
+  cases hLhs
+  cases hRhs
+  rfl
+
+theorem encodable
+    (hterminal : Foundation.Countability.EncodableByNat terminal)
+    (hnonterminal : Foundation.Countability.EncodableByNat nonterminal) :
+    Foundation.Countability.EncodableByNat
+      (Production terminal nonterminal) := by
+  rcases hterminal with ⟨terminalCode, hterminalCode⟩
+  rcases hnonterminal with ⟨nonterminalCode, hnonterminalCode⟩
+  exact ⟨Code terminalCode nonterminalCode,
+    code_injective hterminalCode hnonterminalCode⟩
+
+end Production
+
+structure FinitePresentationCode (terminal : Type u) (nonterminal : Type v) where
+  start : nonterminal
+  rules : List (Production terminal nonterminal)
+
+namespace FinitePresentationCode
+
+def Code (terminalCode : terminal -> Nat) (nonterminalCode : nonterminal -> Nat)
+    (presentation : FinitePresentationCode terminal nonterminal) : Nat :=
+  Foundation.Countability.PairCode
+    (nonterminalCode presentation.start)
+    (Foundation.Countability.ListCode
+      (Production.Code terminalCode nonterminalCode) presentation.rules)
+
+theorem code_injective {terminalCode : terminal -> Nat}
+    {nonterminalCode : nonterminal -> Nat}
+    (hterminal : Foundation.Fn.Injective terminalCode)
+    (hnonterminal : Foundation.Fn.Injective nonterminalCode) :
+    Foundation.Fn.Injective (Code terminalCode nonterminalCode) := by
+  intro x y h
+  rcases x with ⟨xStart, xRules⟩
+  rcases y with ⟨yStart, yRules⟩
+  rcases Foundation.Countability.pairCode_injective_left h with
+    ⟨hstart, hrules⟩
+  have hStart : xStart = yStart := hnonterminal hstart
+  have hRules : xRules = yRules :=
+    Foundation.Countability.listCode_injective
+      (Production.code_injective hterminal hnonterminal) hrules
+  cases hStart
+  cases hRules
+  rfl
+
+theorem encodable
+    (hterminal : Foundation.Countability.EncodableByNat terminal)
+    (hnonterminal : Foundation.Countability.EncodableByNat nonterminal) :
+    Foundation.Countability.EncodableByNat
+      (FinitePresentationCode terminal nonterminal) := by
+  rcases hterminal with ⟨terminalCode, hterminalCode⟩
+  rcases hnonterminal with ⟨nonterminalCode, hnonterminalCode⟩
+  exact ⟨Code terminalCode nonterminalCode,
+    code_injective hterminalCode hnonterminalCode⟩
+
+theorem countable
+    (hterminal : Foundation.Countability.EncodableByNat terminal)
+    (hnonterminal : Foundation.Countability.EncodableByNat nonterminal) :
+    Foundation.FSet.Countable
+      (Foundation.FSet.Univ :
+        Foundation.FSet (FinitePresentationCode terminal nonterminal)) :=
+  Foundation.Countability.countable_univ_of_encodableByNat
+    (encodable hterminal hnonterminal)
+
+end FinitePresentationCode
 
 namespace ProductionList
 

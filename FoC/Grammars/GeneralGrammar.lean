@@ -41,6 +41,100 @@ structure Production (terminal : Type u) (nonterminal : Type v) where
   lhs : SententialForm terminal nonterminal
   rhs : SententialForm terminal nonterminal
 
+namespace Production
+
+def Code (terminalCode : terminal -> Nat) (nonterminalCode : nonterminal -> Nat)
+    (rule : Production terminal nonterminal) : Nat :=
+  Foundation.Countability.PairCode
+    (Foundation.Countability.ListCode
+      (Symbol.Code terminalCode nonterminalCode) rule.lhs)
+    (Foundation.Countability.ListCode
+      (Symbol.Code terminalCode nonterminalCode) rule.rhs)
+
+theorem code_injective {terminalCode : terminal -> Nat}
+    {nonterminalCode : nonterminal -> Nat}
+    (hterminal : Foundation.Fn.Injective terminalCode)
+    (hnonterminal : Foundation.Fn.Injective nonterminalCode) :
+    Foundation.Fn.Injective (Code terminalCode nonterminalCode) := by
+  intro x y h
+  rcases x with ⟨xLhs, xRhs⟩
+  rcases y with ⟨yLhs, yRhs⟩
+  rcases Foundation.Countability.pairCode_injective_left h with
+    ⟨hlhs, hrhs⟩
+  have hLhs : xLhs = yLhs :=
+    Foundation.Countability.listCode_injective
+      (Symbol.code_injective hterminal hnonterminal) hlhs
+  have hRhs : xRhs = yRhs :=
+    Foundation.Countability.listCode_injective
+      (Symbol.code_injective hterminal hnonterminal) hrhs
+  cases hLhs
+  cases hRhs
+  rfl
+
+theorem encodable
+    (hterminal : Foundation.Countability.EncodableByNat terminal)
+    (hnonterminal : Foundation.Countability.EncodableByNat nonterminal) :
+    Foundation.Countability.EncodableByNat
+      (Production terminal nonterminal) := by
+  rcases hterminal with ⟨terminalCode, hterminalCode⟩
+  rcases hnonterminal with ⟨nonterminalCode, hnonterminalCode⟩
+  exact ⟨Code terminalCode nonterminalCode,
+    code_injective hterminalCode hnonterminalCode⟩
+
+end Production
+
+structure FinitePresentationCode (terminal : Type u) (nonterminal : Type v) where
+  start : nonterminal
+  rules : List (Production terminal nonterminal)
+
+namespace FinitePresentationCode
+
+def Code (terminalCode : terminal -> Nat) (nonterminalCode : nonterminal -> Nat)
+    (presentation : FinitePresentationCode terminal nonterminal) : Nat :=
+  Foundation.Countability.PairCode
+    (nonterminalCode presentation.start)
+    (Foundation.Countability.ListCode
+      (Production.Code terminalCode nonterminalCode) presentation.rules)
+
+theorem code_injective {terminalCode : terminal -> Nat}
+    {nonterminalCode : nonterminal -> Nat}
+    (hterminal : Foundation.Fn.Injective terminalCode)
+    (hnonterminal : Foundation.Fn.Injective nonterminalCode) :
+    Foundation.Fn.Injective (Code terminalCode nonterminalCode) := by
+  intro x y h
+  rcases x with ⟨xStart, xRules⟩
+  rcases y with ⟨yStart, yRules⟩
+  rcases Foundation.Countability.pairCode_injective_left h with
+    ⟨hstart, hrules⟩
+  have hStart : xStart = yStart := hnonterminal hstart
+  have hRules : xRules = yRules :=
+    Foundation.Countability.listCode_injective
+      (Production.code_injective hterminal hnonterminal) hrules
+  cases hStart
+  cases hRules
+  rfl
+
+theorem encodable
+    (hterminal : Foundation.Countability.EncodableByNat terminal)
+    (hnonterminal : Foundation.Countability.EncodableByNat nonterminal) :
+    Foundation.Countability.EncodableByNat
+      (FinitePresentationCode terminal nonterminal) := by
+  rcases hterminal with ⟨terminalCode, hterminalCode⟩
+  rcases hnonterminal with ⟨nonterminalCode, hnonterminalCode⟩
+  exact ⟨Code terminalCode nonterminalCode,
+    code_injective hterminalCode hnonterminalCode⟩
+
+theorem countable
+    (hterminal : Foundation.Countability.EncodableByNat terminal)
+    (hnonterminal : Foundation.Countability.EncodableByNat nonterminal) :
+    Foundation.FSet.Countable
+      (Foundation.FSet.Univ :
+        Foundation.FSet (FinitePresentationCode terminal nonterminal)) :=
+  Foundation.Countability.countable_univ_of_encodableByNat
+    (encodable hterminal hnonterminal)
+
+end FinitePresentationCode
+
 def HasFiniteProductions (G : GeneralGrammar terminal nonterminal) : Prop :=
   exists rules : List (Production terminal nonterminal),
     forall lhs rhs,

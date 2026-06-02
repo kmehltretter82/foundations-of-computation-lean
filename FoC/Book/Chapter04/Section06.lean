@@ -41,6 +41,42 @@ def FiniteProductionGeneralGrammar
 def FiniteProductionGeneralLanguage (L : Language terminal) : Prop :=
   GeneralGrammar.FiniteProductionGenerated L
 
+-- Book: Chapter 4, finite grammars/countability discussion: a finite CFG
+-- presentation is represented by a start nonterminal and a finite production
+-- list.
+def CFGFinitePresentationCode (terminal nonterminal : Type) :=
+  CFG.FinitePresentationCode terminal nonterminal
+
+-- Book: Chapter 4, finite grammars/countability discussion: a finite
+-- unrestricted grammar presentation is represented by a start nonterminal and
+-- a finite production list with arbitrary sentential-form left-hand sides.
+def GeneralGrammarFinitePresentationCode (terminal nonterminal : Type) :=
+  GeneralGrammar.FinitePresentationCode terminal nonterminal
+
+-- Book: Chapter 4, finite grammars/countability discussion.  If terminal and
+-- nonterminal symbols are explicitly encodable by natural numbers, then the
+-- finite CFG presentation descriptions over those symbols are countable.
+theorem cfg_finite_presentation_codes_countable
+    (hterminal : Foundation.Countability.EncodableByNat terminal)
+    (hnonterminal : Foundation.Countability.EncodableByNat nonterminal) :
+    Foundation.FSet.Countable
+      (Foundation.FSet.Univ :
+        Foundation.FSet
+          (CFGFinitePresentationCode terminal nonterminal)) :=
+  CFG.FinitePresentationCode.countable hterminal hnonterminal
+
+-- Book: Chapter 4, finite grammars/countability discussion.  The same
+-- countability statement holds for finite unrestricted grammar presentation
+-- descriptions.
+theorem general_grammar_finite_presentation_codes_countable
+    (hterminal : Foundation.Countability.EncodableByNat terminal)
+    (hnonterminal : Foundation.Countability.EncodableByNat nonterminal) :
+    Foundation.FSet.Countable
+      (Foundation.FSet.Univ :
+        Foundation.FSet
+          (GeneralGrammarFinitePresentationCode terminal nonterminal)) :=
+  GeneralGrammar.FinitePresentationCode.countable hterminal hnonterminal
+
 -- Book: Chapter 4, Section 4.6, finite-production CFGs embed as
 -- finite-production general grammars.
 theorem finite_production_cfg_is_finite_production_general
@@ -498,6 +534,431 @@ theorem equalCountGrammar_generates_baabcc :
                               [b, a, a, b, c, c]))))))))))))
   simpa [GeneralGrammar.GeneratedLanguage, EqualCountGrammar, baabccWord,
     SententialForm.terminalWord, S, a, b, c] using hderives
+
+inductive FourCountTerminal where
+  | a
+  | b
+  | c
+  | d
+deriving DecidableEq
+
+inductive FourCountNT where
+  | start
+  | markA
+  | markB
+  | markC
+  | markD
+deriving DecidableEq
+
+namespace FourCountNT
+
+def finite : Foundation.FiniteType FourCountNT where
+  elems := [start, markA, markB, markC, markD]
+  complete := by
+    intro A
+    cases A <;> simp
+
+end FourCountNT
+
+def fcT (tok : FourCountTerminal) :
+    Symbol FourCountTerminal FourCountNT :=
+  ggTerminal tok
+
+def fcN (A : FourCountNT) :
+    Symbol FourCountTerminal FourCountNT :=
+  ggNonterminal A
+
+inductive FourCountProduces :
+    SententialForm FourCountTerminal FourCountNT ->
+      SententialForm FourCountTerminal FourCountNT -> Prop where
+  | grow :
+      FourCountProduces [fcN FourCountNT.start]
+        [fcN FourCountNT.start, fcN FourCountNT.markA,
+          fcN FourCountNT.markB, fcN FourCountNT.markC,
+          fcN FourCountNT.markD]
+  | stop :
+      FourCountProduces [fcN FourCountNT.start] []
+  | swapAB :
+      FourCountProduces [fcN FourCountNT.markA, fcN FourCountNT.markB]
+        [fcN FourCountNT.markB, fcN FourCountNT.markA]
+  | swapBA :
+      FourCountProduces [fcN FourCountNT.markB, fcN FourCountNT.markA]
+        [fcN FourCountNT.markA, fcN FourCountNT.markB]
+  | swapAC :
+      FourCountProduces [fcN FourCountNT.markA, fcN FourCountNT.markC]
+        [fcN FourCountNT.markC, fcN FourCountNT.markA]
+  | swapCA :
+      FourCountProduces [fcN FourCountNT.markC, fcN FourCountNT.markA]
+        [fcN FourCountNT.markA, fcN FourCountNT.markC]
+  | swapAD :
+      FourCountProduces [fcN FourCountNT.markA, fcN FourCountNT.markD]
+        [fcN FourCountNT.markD, fcN FourCountNT.markA]
+  | swapDA :
+      FourCountProduces [fcN FourCountNT.markD, fcN FourCountNT.markA]
+        [fcN FourCountNT.markA, fcN FourCountNT.markD]
+  | swapBC :
+      FourCountProduces [fcN FourCountNT.markB, fcN FourCountNT.markC]
+        [fcN FourCountNT.markC, fcN FourCountNT.markB]
+  | swapCB :
+      FourCountProduces [fcN FourCountNT.markC, fcN FourCountNT.markB]
+        [fcN FourCountNT.markB, fcN FourCountNT.markC]
+  | swapBD :
+      FourCountProduces [fcN FourCountNT.markB, fcN FourCountNT.markD]
+        [fcN FourCountNT.markD, fcN FourCountNT.markB]
+  | swapDB :
+      FourCountProduces [fcN FourCountNT.markD, fcN FourCountNT.markB]
+        [fcN FourCountNT.markB, fcN FourCountNT.markD]
+  | swapCD :
+      FourCountProduces [fcN FourCountNT.markC, fcN FourCountNT.markD]
+        [fcN FourCountNT.markD, fcN FourCountNT.markC]
+  | swapDC :
+      FourCountProduces [fcN FourCountNT.markD, fcN FourCountNT.markC]
+        [fcN FourCountNT.markC, fcN FourCountNT.markD]
+  | emitA :
+      FourCountProduces [fcN FourCountNT.markA]
+        [fcT FourCountTerminal.a]
+  | emitB :
+      FourCountProduces [fcN FourCountNT.markB]
+        [fcT FourCountTerminal.b]
+  | emitC :
+      FourCountProduces [fcN FourCountNT.markC]
+        [fcT FourCountTerminal.c]
+  | emitD :
+      FourCountProduces [fcN FourCountNT.markD]
+        [fcT FourCountTerminal.d]
+
+def FourCountGrammar :
+    GeneralGrammar FourCountTerminal FourCountNT where
+  start := FourCountNT.start
+  produces := FourCountProduces
+  lhsContainsNonterminal := by
+    intro lhs rhs h
+    cases h <;> simp [SententialForm.containsNonterminal, fcN,
+      ggNonterminal]
+  nonterminalsFinite := FourCountNT.finite
+
+def FourCountProductionList :
+    List (GeneralGrammar.Production FourCountTerminal FourCountNT) :=
+  [{ lhs := [fcN FourCountNT.start],
+     rhs := [fcN FourCountNT.start, fcN FourCountNT.markA,
+       fcN FourCountNT.markB, fcN FourCountNT.markC,
+       fcN FourCountNT.markD] },
+   { lhs := [fcN FourCountNT.start],
+     rhs := [] },
+   { lhs := [fcN FourCountNT.markA, fcN FourCountNT.markB],
+     rhs := [fcN FourCountNT.markB, fcN FourCountNT.markA] },
+   { lhs := [fcN FourCountNT.markB, fcN FourCountNT.markA],
+     rhs := [fcN FourCountNT.markA, fcN FourCountNT.markB] },
+   { lhs := [fcN FourCountNT.markA, fcN FourCountNT.markC],
+     rhs := [fcN FourCountNT.markC, fcN FourCountNT.markA] },
+   { lhs := [fcN FourCountNT.markC, fcN FourCountNT.markA],
+     rhs := [fcN FourCountNT.markA, fcN FourCountNT.markC] },
+   { lhs := [fcN FourCountNT.markA, fcN FourCountNT.markD],
+     rhs := [fcN FourCountNT.markD, fcN FourCountNT.markA] },
+   { lhs := [fcN FourCountNT.markD, fcN FourCountNT.markA],
+     rhs := [fcN FourCountNT.markA, fcN FourCountNT.markD] },
+   { lhs := [fcN FourCountNT.markB, fcN FourCountNT.markC],
+     rhs := [fcN FourCountNT.markC, fcN FourCountNT.markB] },
+   { lhs := [fcN FourCountNT.markC, fcN FourCountNT.markB],
+     rhs := [fcN FourCountNT.markB, fcN FourCountNT.markC] },
+   { lhs := [fcN FourCountNT.markB, fcN FourCountNT.markD],
+     rhs := [fcN FourCountNT.markD, fcN FourCountNT.markB] },
+   { lhs := [fcN FourCountNT.markD, fcN FourCountNT.markB],
+     rhs := [fcN FourCountNT.markB, fcN FourCountNT.markD] },
+   { lhs := [fcN FourCountNT.markC, fcN FourCountNT.markD],
+     rhs := [fcN FourCountNT.markD, fcN FourCountNT.markC] },
+   { lhs := [fcN FourCountNT.markD, fcN FourCountNT.markC],
+     rhs := [fcN FourCountNT.markC, fcN FourCountNT.markD] },
+   { lhs := [fcN FourCountNT.markA],
+     rhs := [fcT FourCountTerminal.a] },
+   { lhs := [fcN FourCountNT.markB],
+     rhs := [fcT FourCountTerminal.b] },
+   { lhs := [fcN FourCountNT.markC],
+     rhs := [fcT FourCountTerminal.c] },
+   { lhs := [fcN FourCountNT.markD],
+     rhs := [fcT FourCountTerminal.d] }]
+
+-- Book: Chapter 4, Section 4.6, selected exercise grammar for words with
+-- equal numbers of four different terminals.
+theorem fourCountGrammar_has_finite_productions :
+    GeneralGrammar.HasFiniteProductions FourCountGrammar := by
+  exists FourCountProductionList
+  intro lhs rhs
+  constructor
+  · intro h
+    cases h <;> simp [FourCountProductionList]
+  · intro h
+    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
+    simp [FourCountProductionList] at hmem
+    rcases hmem with
+      hrule | hrule | hrule | hrule | hrule | hrule |
+      hrule | hrule | hrule | hrule | hrule | hrule |
+      hrule | hrule | hrule | hrule | hrule | hrule
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.grow
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.stop
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.swapAB
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.swapBA
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.swapAC
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.swapCA
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.swapAD
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.swapDA
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.swapBC
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.swapCB
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.swapBD
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.swapDB
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.swapCD
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.swapDC
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.emitA
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.emitB
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.emitC
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact FourCountProduces.emitD
+
+theorem fourCountGrammar_finite_production_generated :
+    FiniteProductionGeneralLanguage
+      (GeneralGrammar.GeneratedLanguage FourCountGrammar) := by
+  exists FourCountNT
+  exists FourCountGrammar
+  constructor
+  · exact fourCountGrammar_has_finite_productions
+  · intro w
+    rfl
+
+def fourCountTotalA (sf : SententialForm FourCountTerminal FourCountNT) :
+    Nat :=
+  SententialCountTerminal FourCountTerminal.a sf +
+    SententialCountNonterminal FourCountNT.markA sf
+
+def fourCountTotalB (sf : SententialForm FourCountTerminal FourCountNT) :
+    Nat :=
+  SententialCountTerminal FourCountTerminal.b sf +
+    SententialCountNonterminal FourCountNT.markB sf
+
+def fourCountTotalC (sf : SententialForm FourCountTerminal FourCountNT) :
+    Nat :=
+  SententialCountTerminal FourCountTerminal.c sf +
+    SententialCountNonterminal FourCountNT.markC sf
+
+def fourCountTotalD (sf : SententialForm FourCountTerminal FourCountNT) :
+    Nat :=
+  SententialCountTerminal FourCountTerminal.d sf +
+    SententialCountNonterminal FourCountNT.markD sf
+
+def fourCountBalanced
+    (sf : SententialForm FourCountTerminal FourCountNT) : Prop :=
+  fourCountTotalA sf = fourCountTotalB sf ∧
+    fourCountTotalB sf = fourCountTotalC sf ∧
+    fourCountTotalC sf = fourCountTotalD sf
+
+theorem fourCount_start_balanced :
+    fourCountBalanced [fcN FourCountNT.start] := by
+  simp [fourCountBalanced, fourCountTotalA, fourCountTotalB,
+    fourCountTotalC, fourCountTotalD, SententialCountTerminal,
+    SententialCountNonterminal, fcN, ggNonterminal]
+
+theorem fourCount_yields_preserves_balanced
+    {x y : SententialForm FourCountTerminal FourCountNT}
+    (h : GeneralGrammar.Yields FourCountGrammar x y) :
+    fourCountBalanced x -> fourCountBalanced y := by
+  intro hbalanced
+  cases h with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases hv with
+          | intro lhs hlhs =>
+              cases hlhs with
+              | intro rhs hrhs =>
+                  cases hrhs with
+                  | intro hprod hrest =>
+                      cases hrest with
+                      | intro hx hy =>
+                          rw [hx] at hbalanced
+                          rw [hy]
+                          cases hprod <;>
+                            simp [fourCountBalanced, fourCountTotalA,
+                              fourCountTotalB, fourCountTotalC,
+                              fourCountTotalD,
+                              sententialCountTerminal_append,
+                              sententialCountNonterminal_append,
+                              SententialCountTerminal,
+                              SententialCountNonterminal, fcN, fcT,
+                              ggNonterminal, ggTerminal] at hbalanced ⊢ <;>
+                            omega
+
+theorem fourCount_derives_preserves_balanced
+    {x y : SententialForm FourCountTerminal FourCountNT}
+    (h : GeneralGrammar.Derives FourCountGrammar x y) :
+    fourCountBalanced x -> fourCountBalanced y := by
+  induction h with
+  | refl _ =>
+      intro hbalanced
+      exact hbalanced
+  | step hstep _ ih =>
+      intro hbalanced
+      exact ih (fourCount_yields_preserves_balanced hstep hbalanced)
+
+theorem fourCountGrammar_generated_has_equal_terminal_counts
+    {w : Word FourCountTerminal}
+    (h : w ∈ GeneralGrammar.GeneratedLanguage FourCountGrammar) :
+    Word.Count FourCountTerminal.a w = Word.Count FourCountTerminal.b w ∧
+      Word.Count FourCountTerminal.b w = Word.Count FourCountTerminal.c w ∧
+      Word.Count FourCountTerminal.c w = Word.Count FourCountTerminal.d w := by
+  have hderives :
+      GeneralGrammar.Derives FourCountGrammar [fcN FourCountNT.start]
+        (SententialForm.terminalWord w) := by
+    simpa [GeneralGrammar.GeneratedLanguage, FourCountGrammar, fcN,
+      ggNonterminal] using h
+  have hbalanced :=
+    fourCount_derives_preserves_balanced hderives fourCount_start_balanced
+  simpa [fourCountBalanced, fourCountTotalA, fourCountTotalB,
+    fourCountTotalC, fourCountTotalD,
+    sententialCountTerminal_terminalWord,
+    sententialCountNonterminal_terminalWord] using hbalanced
+
+def dacbWord : Word FourCountTerminal :=
+  [FourCountTerminal.d, FourCountTerminal.a, FourCountTerminal.c,
+    FourCountTerminal.b]
+
+-- Book: Chapter 4, Section 4.6, concrete derivation from the four-equal-count
+-- exercise grammar.
+theorem fourCountGrammar_generates_dacb :
+    dacbWord ∈ GeneralGrammar.GeneratedLanguage FourCountGrammar := by
+  let S := fcN FourCountNT.start
+  let A := fcN FourCountNT.markA
+  let B := fcN FourCountNT.markB
+  let C := fcN FourCountNT.markC
+  let D := fcN FourCountNT.markD
+  let a := fcT FourCountTerminal.a
+  let b := fcT FourCountTerminal.b
+  let c := fcT FourCountTerminal.c
+  let d := fcT FourCountTerminal.d
+  have h1 : GeneralGrammar.Yields FourCountGrammar [S] [S, A, B, C, D] := by
+    simpa [S, A, B, C, D] using
+      general_yields_of_production (G := FourCountGrammar)
+        FourCountProduces.grow [] []
+  have h2 :
+      GeneralGrammar.Yields FourCountGrammar [S, A, B, C, D]
+        [A, B, C, D] := by
+    simpa [S, A, B, C, D] using
+      general_yields_of_production (G := FourCountGrammar)
+        FourCountProduces.stop [] [A, B, C, D]
+  have h3 :
+      GeneralGrammar.Yields FourCountGrammar [A, B, C, D]
+        [A, B, D, C] := by
+    simpa [A, B, C, D] using
+      general_yields_of_production (G := FourCountGrammar)
+        FourCountProduces.swapCD [A, B] []
+  have h4 :
+      GeneralGrammar.Yields FourCountGrammar [A, B, D, C]
+        [A, D, B, C] := by
+    simpa [A, B, C, D] using
+      general_yields_of_production (G := FourCountGrammar)
+        FourCountProduces.swapBD [A] [C]
+  have h5 :
+      GeneralGrammar.Yields FourCountGrammar [A, D, B, C]
+        [D, A, B, C] := by
+    simpa [A, B, C, D] using
+      general_yields_of_production (G := FourCountGrammar)
+        FourCountProduces.swapAD [] [B, C]
+  have h6 :
+      GeneralGrammar.Yields FourCountGrammar [D, A, B, C]
+        [D, A, C, B] := by
+    simpa [A, B, C, D] using
+      general_yields_of_production (G := FourCountGrammar)
+        FourCountProduces.swapBC [D, A] []
+  have h7 :
+      GeneralGrammar.Yields FourCountGrammar [D, A, C, B]
+        [d, A, C, B] := by
+    simpa [A, B, C, D, d] using
+      general_yields_of_production (G := FourCountGrammar)
+        FourCountProduces.emitD [] [A, C, B]
+  have h8 :
+      GeneralGrammar.Yields FourCountGrammar [d, A, C, B]
+        [d, a, C, B] := by
+    simpa [A, B, C, a, d] using
+      general_yields_of_production (G := FourCountGrammar)
+        FourCountProduces.emitA [d] [C, B]
+  have h9 :
+      GeneralGrammar.Yields FourCountGrammar [d, a, C, B]
+        [d, a, c, B] := by
+    simpa [B, C, a, c, d] using
+      general_yields_of_production (G := FourCountGrammar)
+        FourCountProduces.emitC [d, a] [B]
+  have h10 :
+      GeneralGrammar.Yields FourCountGrammar [d, a, c, B]
+        [d, a, c, b] := by
+    simpa [B, a, b, c, d] using
+      general_yields_of_production (G := FourCountGrammar)
+        FourCountProduces.emitB [d, a, c] []
+  have hderives :
+      GeneralGrammar.Derives FourCountGrammar [S] [d, a, c, b] :=
+    GeneralGrammar.Derives.step h1
+      (GeneralGrammar.Derives.step h2
+        (GeneralGrammar.Derives.step h3
+          (GeneralGrammar.Derives.step h4
+            (GeneralGrammar.Derives.step h5
+              (GeneralGrammar.Derives.step h6
+                (GeneralGrammar.Derives.step h7
+                  (GeneralGrammar.Derives.step h8
+                    (GeneralGrammar.Derives.step h9
+                      (GeneralGrammar.Derives.step h10
+                        (GeneralGrammar.Derives.refl [d, a, c, b]))))))))))
+  simpa [GeneralGrammar.GeneratedLanguage, FourCountGrammar, dacbWord,
+    SententialForm.terminalWord, S, a, b, c, d] using hderives
 
 inductive OrderedABCNT where
   | start
