@@ -356,6 +356,753 @@ theorem anbnPDA_accepted_language_exact (w : Word Section01.AB) :
         rw [hn]
         exact anbnPDA_accepts_anbn_words n
 
+inductive Range12PDAState where
+  | push
+  | pop
+deriving DecidableEq
+
+namespace Range12PDAState
+
+def finite : Foundation.FiniteType Range12PDAState where
+  elems := [push, pop]
+  complete := by
+    intro q
+    cases q <;> simp
+
+end Range12PDAState
+
+inductive Range12PDATransition :
+    Range12PDAState -> Option Section01.AB -> Word AnBnPDAStack ->
+      Range12PDAState -> Word AnBnPDAStack -> Prop where
+  | pushOne :
+      Range12PDATransition Range12PDAState.push (some Section01.AB.a) []
+        Range12PDAState.push [AnBnPDAStack.marker]
+  | pushTwo :
+      Range12PDATransition Range12PDAState.push (some Section01.AB.a) []
+        Range12PDAState.push [AnBnPDAStack.marker, AnBnPDAStack.marker]
+  | startPop :
+      Range12PDATransition Range12PDAState.push none []
+        Range12PDAState.pop []
+  | popB :
+      Range12PDATransition Range12PDAState.pop (some Section01.AB.b)
+        [AnBnPDAStack.marker] Range12PDAState.pop []
+
+def Range12PDA : PDA Section01.AB AnBnPDAStack Range12PDAState where
+  start := Range12PDAState.push
+  transition := Range12PDATransition
+  accept := fun q => q = Range12PDAState.pop
+  statesFinite := Range12PDAState.finite
+
+def AnBmWord (n m : Nat) : Word Section01.AB :=
+  Word.Concat (Word.RepeatSymbol Section01.AB.a n)
+    (Word.RepeatSymbol Section01.AB.b m)
+
+def Range12Language : Language Section01.AB :=
+  fun w => exists n m, n <= m ∧ m <= 2 * n ∧ w = AnBmWord n m
+
+theorem range12PDA_push_as_with_extra (n extra : Nat) (hextra : extra <= n)
+    (rest : Word Section01.AB) (stack : Word AnBnPDAStack) :
+    PDA.Computes Range12PDA
+      { state := Range12PDAState.push,
+        unread := Word.Concat (Word.RepeatSymbol Section01.AB.a n) rest,
+        stack := stack }
+      { state := Range12PDAState.push,
+        unread := rest,
+        stack :=
+          Word.Concat (AnBnPDAStackWord (n + extra)) stack } := by
+  induction n generalizing extra stack with
+  | zero =>
+      have hextraZero : extra = 0 := by omega
+      subst extra
+      simp [Word.Concat, Word.RepeatSymbol, AnBnPDAStackWord]
+      exact PDA.Computes.refl _
+  | succ n ih =>
+      cases extra with
+      | zero =>
+          have hstep : PDA.Step Range12PDA
+              { state := Range12PDAState.push,
+                unread := Section01.AB.a ::
+                  Word.Concat (Word.RepeatSymbol Section01.AB.a n) rest,
+                stack := stack }
+              { state := Range12PDAState.push,
+                unread := Word.Concat (Word.RepeatSymbol Section01.AB.a n) rest,
+                stack := AnBnPDAStack.marker :: stack } := by
+            exact PDA.Step.read (M := Range12PDA)
+              (unread := Word.Concat (Word.RepeatSymbol Section01.AB.a n) rest)
+              (restStack := stack) Range12PDATransition.pushOne
+          have hrest := ih 0 (by omega) (AnBnPDAStack.marker :: stack)
+          have htarget :
+              Word.Concat (AnBnPDAStackWord n)
+                  (AnBnPDAStack.marker :: stack) =
+                Word.Concat (AnBnPDAStackWord (n + 1)) stack := by
+            simp [AnBnPDAStackWord, Word.Concat, Word.RepeatSymbol,
+              Section01.replicate_succ_eq_append AnBnPDAStack.marker n,
+              List.append_assoc]
+          exact PDA.Computes.step hstep (by
+            simpa [htarget] using hrest)
+      | succ extra =>
+          have hstep : PDA.Step Range12PDA
+              { state := Range12PDAState.push,
+                unread := Section01.AB.a ::
+                  Word.Concat (Word.RepeatSymbol Section01.AB.a n) rest,
+                stack := stack }
+              { state := Range12PDAState.push,
+                unread := Word.Concat (Word.RepeatSymbol Section01.AB.a n) rest,
+                stack := AnBnPDAStack.marker :: AnBnPDAStack.marker :: stack } := by
+            exact PDA.Step.read (M := Range12PDA)
+              (unread := Word.Concat (Word.RepeatSymbol Section01.AB.a n) rest)
+              (restStack := stack) Range12PDATransition.pushTwo
+          have hrest := ih extra (by omega)
+            (AnBnPDAStack.marker :: AnBnPDAStack.marker :: stack)
+          have htarget :
+              Word.Concat (AnBnPDAStackWord (n + extra))
+                  (AnBnPDAStack.marker :: AnBnPDAStack.marker :: stack) =
+                Word.Concat (AnBnPDAStackWord (n + 1 + (extra + 1))) stack := by
+            have hnat : n + extra + 2 = n + 1 + (extra + 1) := by omega
+            simp [AnBnPDAStackWord, Word.Concat, Word.RepeatSymbol]
+            rw [← hnat]
+            rw [Section01.replicate_succ_eq_append AnBnPDAStack.marker
+              (n + extra + 1)]
+            rw [Section01.replicate_succ_eq_append AnBnPDAStack.marker
+              (n + extra)]
+            simp [List.append_assoc]
+          exact PDA.Computes.step hstep (by
+            simpa [htarget] using hrest)
+
+theorem range12PDA_switch_to_pop (unread : Word Section01.AB)
+    (stack : Word AnBnPDAStack) :
+    PDA.Step Range12PDA
+      { state := Range12PDAState.push, unread := unread, stack := stack }
+      { state := Range12PDAState.pop, unread := unread, stack := stack } := by
+  simpa [Word.Concat] using
+    (PDA.Step.epsilon (M := Range12PDA) (unread := unread)
+      (restStack := stack) Range12PDATransition.startPop)
+
+theorem range12PDA_pop_bs (m : Nat) (rest : Word Section01.AB)
+    (stack : Word AnBnPDAStack) :
+    PDA.Computes Range12PDA
+      { state := Range12PDAState.pop,
+        unread := Word.Concat (Word.RepeatSymbol Section01.AB.b m) rest,
+        stack := Word.Concat (AnBnPDAStackWord m) stack }
+      { state := Range12PDAState.pop, unread := rest, stack := stack } := by
+  induction m generalizing stack with
+  | zero =>
+      simp [Word.Concat, Word.RepeatSymbol, AnBnPDAStackWord]
+      exact PDA.Computes.refl _
+  | succ m ih =>
+      have hstep : PDA.Step Range12PDA
+          { state := Range12PDAState.pop,
+            unread := Section01.AB.b ::
+              Word.Concat (Word.RepeatSymbol Section01.AB.b m) rest,
+            stack := AnBnPDAStack.marker ::
+              Word.Concat (AnBnPDAStackWord m) stack }
+          { state := Range12PDAState.pop,
+            unread := Word.Concat (Word.RepeatSymbol Section01.AB.b m) rest,
+            stack := Word.Concat (AnBnPDAStackWord m) stack } := by
+        exact PDA.Step.read (M := Range12PDA)
+          (unread := Word.Concat (Word.RepeatSymbol Section01.AB.b m) rest)
+          (restStack := Word.Concat (AnBnPDAStackWord m) stack)
+          Range12PDATransition.popB
+      exact PDA.Computes.step hstep (ih stack)
+
+-- Book: Chapter 4, Section 4.4, a PDA for `{a^n b^m | n <= m <= 2*n}`.
+theorem range12PDA_accepts_range_words {n m : Nat}
+    (hLower : n <= m) (hUpper : m <= 2 * n) :
+    PDA.Accepts Range12PDA (AnBmWord n m) := by
+  let extra := m - n
+  have hm : m = n + extra := by
+    simp [extra]
+    omega
+  have hextra : extra <= n := by
+    simp [extra]
+    omega
+  exists Range12PDAState.pop
+  constructor
+  · rfl
+  · unfold PDA.initial AnBmWord
+    have hpush :=
+      range12PDA_push_as_with_extra n extra hextra
+        (Word.RepeatSymbol Section01.AB.b m) ([] : Word AnBnPDAStack)
+    have hswitch : PDA.Computes Range12PDA
+        { state := Range12PDAState.push,
+          unread := Word.RepeatSymbol Section01.AB.b m,
+          stack := Word.Concat (AnBnPDAStackWord (n + extra)) [] }
+        { state := Range12PDAState.pop,
+          unread := Word.RepeatSymbol Section01.AB.b m,
+          stack := Word.Concat (AnBnPDAStackWord (n + extra)) [] } := by
+      exact PDA.computes_of_step
+        (range12PDA_switch_to_pop (Word.RepeatSymbol Section01.AB.b m)
+          (Word.Concat (AnBnPDAStackWord (n + extra)) []))
+    have hpop : PDA.Computes Range12PDA
+        { state := Range12PDAState.pop,
+          unread := Word.RepeatSymbol Section01.AB.b m,
+          stack := Word.Concat (AnBnPDAStackWord (n + extra)) [] }
+        { state := Range12PDAState.pop, unread := [], stack := [] } := by
+      rw [hm]
+      simpa [Word.Concat] using range12PDA_pop_bs (n + extra) [] []
+    exact PDA.computes_trans hpush
+      (PDA.computes_trans hswitch hpop)
+
+theorem range12PDA_pop_accepts_only_config
+    {c d : PDA.Configuration Section01.AB AnBnPDAStack Range12PDAState}
+    (h : PDA.Computes Range12PDA c d)
+    (hstate : c.state = Range12PDAState.pop)
+    (hfinal :
+      d = { state := Range12PDAState.pop, unread := [], stack := [] }) :
+    c.unread = Word.RepeatSymbol Section01.AB.b (Word.Length c.stack) := by
+  induction h with
+  | refl c =>
+      rw [hfinal]
+      rfl
+  | step hstep hrest ih =>
+      cases hstep with
+      | read htrans =>
+          cases hstate
+          cases htrans
+          have htail := ih rfl hfinal
+          simp [Word.Length, Word.RepeatSymbol, Word.Concat] at htail ⊢
+          rw [htail]
+          rw [Section01.replicate_succ_eq_cons Section01.AB.b]
+      | epsilon htrans =>
+          cases hstate
+          cases htrans
+
+theorem range12PDA_push_accepts_only_config
+    {c d : PDA.Configuration Section01.AB AnBnPDAStack Range12PDAState}
+    (h : PDA.Computes Range12PDA c d)
+    (hstate : c.state = Range12PDAState.push)
+    (hfinal :
+      d = { state := Range12PDAState.pop, unread := [], stack := [] }) :
+    exists n k,
+      n <= k ∧ k <= 2 * n ∧
+      c.unread =
+        Word.Concat (Word.RepeatSymbol Section01.AB.a n)
+          (Word.RepeatSymbol Section01.AB.b (Word.Length c.stack + k)) := by
+  induction h with
+  | refl c =>
+      rw [hfinal] at hstate
+      cases hstate
+  | step hstep hrest ih =>
+      cases hstep with
+      | read htrans =>
+          cases hstate
+          cases htrans
+          · cases ih rfl hfinal with
+            | intro n hn =>
+                cases hn with
+                | intro k hk =>
+                    exists n + 1
+                    exists k + 1
+                    constructor
+                    · omega
+                    constructor
+                    · omega
+                    · simp [Word.Concat, Word.RepeatSymbol, Word.Length] at hk ⊢
+                      rw [hk.right.right]
+                      simp [Section01.replicate_succ_eq_cons,
+                        Nat.add_comm, Nat.add_left_comm]
+          · cases ih rfl hfinal with
+            | intro n hn =>
+                cases hn with
+                | intro k hk =>
+                    exists n + 1
+                    exists k + 2
+                    constructor
+                    · omega
+                    constructor
+                    · omega
+                    · simp [Word.Concat, Word.RepeatSymbol, Word.Length] at hk ⊢
+                      rw [hk.right.right]
+                      simp [Section01.replicate_succ_eq_cons,
+                        Nat.add_comm, Nat.add_left_comm]
+      | epsilon htrans =>
+          cases hstate
+          cases htrans
+          exists 0
+          exists 0
+          constructor
+          · omega
+          constructor
+          · omega
+          · have hpop := range12PDA_pop_accepts_only_config hrest rfl hfinal
+            simpa [Word.Concat, Word.RepeatSymbol, Word.Length] using hpop
+
+theorem range12PDA_accepts_only_range_words {w : Word Section01.AB}
+    (h : PDA.Accepts Range12PDA w) :
+    w ∈ Range12Language := by
+  cases h with
+  | intro q hq =>
+      cases hq.left
+      have hshape := range12PDA_push_accepts_only_config hq.right rfl rfl
+      cases hshape with
+      | intro n hn =>
+          cases hn with
+          | intro k hk =>
+              exists n
+              exists k
+              constructor
+              · exact hk.left
+              constructor
+              · exact hk.right.left
+              · simpa [PDA.initial, AnBmWord, Word.Length, Word.Concat]
+                  using hk.right.right
+
+-- Book: Chapter 4, Section 4.4, exact accepted language of the range PDA.
+theorem range12PDA_accepted_language_exact (w : Word Section01.AB) :
+    w ∈ PDA.AcceptedLanguage Range12PDA <-> w ∈ Range12Language := by
+  constructor
+  · exact range12PDA_accepts_only_range_words
+  · intro hw
+    cases hw with
+    | intro n hn =>
+        cases hn with
+        | intro m hm =>
+            rw [hm.right.right]
+            exact range12PDA_accepts_range_words hm.left hm.right.left
+
+inductive HalfRangePDAState where
+  | ready
+  | needSecond
+  | pop
+deriving DecidableEq
+
+namespace HalfRangePDAState
+
+def finite : Foundation.FiniteType HalfRangePDAState where
+  elems := [ready, needSecond, pop]
+  complete := by
+    intro q
+    cases q <;> simp
+
+end HalfRangePDAState
+
+inductive HalfRangePDATransition :
+    HalfRangePDAState -> Option Section01.AB -> Word AnBnPDAStack ->
+      HalfRangePDAState -> Word AnBnPDAStack -> Prop where
+  | oneA :
+      HalfRangePDATransition HalfRangePDAState.ready (some Section01.AB.a) []
+        HalfRangePDAState.ready [AnBnPDAStack.marker]
+  | firstOfPair :
+      HalfRangePDATransition HalfRangePDAState.ready (some Section01.AB.a) []
+        HalfRangePDAState.needSecond []
+  | secondOfPair :
+      HalfRangePDATransition HalfRangePDAState.needSecond (some Section01.AB.a) []
+        HalfRangePDAState.ready [AnBnPDAStack.marker]
+  | startPop :
+      HalfRangePDATransition HalfRangePDAState.ready none []
+        HalfRangePDAState.pop []
+  | popB :
+      HalfRangePDATransition HalfRangePDAState.pop (some Section01.AB.b)
+        [AnBnPDAStack.marker] HalfRangePDAState.pop []
+
+def HalfRangePDA : PDA Section01.AB AnBnPDAStack HalfRangePDAState where
+  start := HalfRangePDAState.ready
+  transition := HalfRangePDATransition
+  accept := fun q => q = HalfRangePDAState.pop
+  statesFinite := HalfRangePDAState.finite
+
+def HalfRangeLanguage : Language Section01.AB :=
+  fun w => exists n m, m <= n ∧ n <= 2 * m ∧ w = AnBmWord n m
+
+def halfRangeExampleWord : Word Section01.AB :=
+  AnBmWord 3 2
+
+-- Book: Chapter 4, Section 4.4, representative PDA computation for
+-- `{a^n b^m | n/2 <= m <= n}`: `a^3 b^2`.
+theorem halfRangePDA_accepts_three_a_two_b :
+    PDA.Accepts HalfRangePDA halfRangeExampleWord := by
+  exists HalfRangePDAState.pop
+  constructor
+  · rfl
+  · unfold halfRangeExampleWord AnBmWord PDA.initial
+    let c0 : PDA.Configuration Section01.AB AnBnPDAStack HalfRangePDAState :=
+      { state := HalfRangePDAState.ready,
+        unread := [Section01.AB.a, Section01.AB.a, Section01.AB.a,
+          Section01.AB.b, Section01.AB.b],
+        stack := [] }
+    let c1 : PDA.Configuration Section01.AB AnBnPDAStack HalfRangePDAState :=
+      { state := HalfRangePDAState.needSecond,
+        unread := [Section01.AB.a, Section01.AB.a, Section01.AB.b, Section01.AB.b],
+        stack := [] }
+    let c2 : PDA.Configuration Section01.AB AnBnPDAStack HalfRangePDAState :=
+      { state := HalfRangePDAState.ready,
+        unread := [Section01.AB.a, Section01.AB.b, Section01.AB.b],
+        stack := [AnBnPDAStack.marker] }
+    let c3 : PDA.Configuration Section01.AB AnBnPDAStack HalfRangePDAState :=
+      { state := HalfRangePDAState.ready,
+        unread := [Section01.AB.b, Section01.AB.b],
+        stack := [AnBnPDAStack.marker, AnBnPDAStack.marker] }
+    let c4 : PDA.Configuration Section01.AB AnBnPDAStack HalfRangePDAState :=
+      { state := HalfRangePDAState.pop,
+        unread := [Section01.AB.b, Section01.AB.b],
+        stack := [AnBnPDAStack.marker, AnBnPDAStack.marker] }
+    let c5 : PDA.Configuration Section01.AB AnBnPDAStack HalfRangePDAState :=
+      { state := HalfRangePDAState.pop,
+        unread := [Section01.AB.b],
+        stack := [AnBnPDAStack.marker] }
+    let c6 : PDA.Configuration Section01.AB AnBnPDAStack HalfRangePDAState :=
+      { state := HalfRangePDAState.pop,
+        unread := [],
+        stack := [] }
+    have h01 : PDA.Step HalfRangePDA c0 c1 := by
+      exact PDA.Step.read (M := HalfRangePDA)
+        (unread := [Section01.AB.a, Section01.AB.a,
+          Section01.AB.b, Section01.AB.b])
+        (restStack := []) HalfRangePDATransition.firstOfPair
+    have h12 : PDA.Step HalfRangePDA c1 c2 := by
+      exact PDA.Step.read (M := HalfRangePDA)
+        (unread := [Section01.AB.a, Section01.AB.b, Section01.AB.b])
+        (restStack := []) HalfRangePDATransition.secondOfPair
+    have h23 : PDA.Step HalfRangePDA c2 c3 := by
+      exact PDA.Step.read (M := HalfRangePDA)
+        (unread := [Section01.AB.b, Section01.AB.b])
+        (restStack := [AnBnPDAStack.marker]) HalfRangePDATransition.oneA
+    have h34 : PDA.Step HalfRangePDA c3 c4 := by
+      exact PDA.Step.epsilon (M := HalfRangePDA)
+        (unread := [Section01.AB.b, Section01.AB.b])
+        (restStack := [AnBnPDAStack.marker, AnBnPDAStack.marker])
+        HalfRangePDATransition.startPop
+    have h45 : PDA.Step HalfRangePDA c4 c5 := by
+      exact PDA.Step.read (M := HalfRangePDA)
+        (unread := [Section01.AB.b])
+        (restStack := [AnBnPDAStack.marker]) HalfRangePDATransition.popB
+    have h56 : PDA.Step HalfRangePDA c5 c6 := by
+      exact PDA.Step.read (M := HalfRangePDA)
+        (unread := [])
+        (restStack := []) HalfRangePDATransition.popB
+    change PDA.Computes HalfRangePDA c0 c6
+    exact PDA.Computes.step h01
+      (PDA.Computes.step h12
+        (PDA.Computes.step h23
+          (PDA.Computes.step h34
+            (PDA.Computes.step h45
+              (PDA.Computes.step h56 (PDA.Computes.refl c6))))))
+
+inductive DetAnBnPDAState where
+  | read
+  | pop
+deriving DecidableEq
+
+namespace DetAnBnPDAState
+
+def finite : Foundation.FiniteType DetAnBnPDAState where
+  elems := [read, pop]
+  complete := by
+    intro q
+    cases q <;> simp
+
+end DetAnBnPDAState
+
+inductive DetAnBnPDATransition :
+    DetAnBnPDAState -> Option Section01.AB -> Word AnBnPDAStack ->
+      DetAnBnPDAState -> Word AnBnPDAStack -> Prop where
+  | readA :
+      DetAnBnPDATransition DetAnBnPDAState.read (some Section01.AB.a) []
+        DetAnBnPDAState.read [AnBnPDAStack.marker]
+  | firstB :
+      DetAnBnPDATransition DetAnBnPDAState.read (some Section01.AB.b)
+        [AnBnPDAStack.marker] DetAnBnPDAState.pop []
+  | popB :
+      DetAnBnPDATransition DetAnBnPDAState.pop (some Section01.AB.b)
+        [AnBnPDAStack.marker] DetAnBnPDAState.pop []
+
+def DetAnBnPDA : PDA Section01.AB AnBnPDAStack DetAnBnPDAState where
+  start := DetAnBnPDAState.read
+  transition := DetAnBnPDATransition
+  accept := fun q => q = DetAnBnPDAState.read ∨ q = DetAnBnPDAState.pop
+  statesFinite := DetAnBnPDAState.finite
+
+theorem detAnBnPDA_push_as (n : Nat) (rest : Word Section01.AB)
+    (stack : Word AnBnPDAStack) :
+    PDA.Computes DetAnBnPDA
+      { state := DetAnBnPDAState.read,
+        unread := Word.Concat (Word.RepeatSymbol Section01.AB.a n) rest,
+        stack := stack }
+      { state := DetAnBnPDAState.read,
+        unread := rest,
+        stack := Word.Concat (AnBnPDAStackWord n) stack } := by
+  induction n generalizing stack with
+  | zero =>
+      simp [Word.Concat, Word.RepeatSymbol, AnBnPDAStackWord]
+      exact PDA.Computes.refl _
+  | succ n ih =>
+      have hstep : PDA.Step DetAnBnPDA
+          { state := DetAnBnPDAState.read,
+            unread := Section01.AB.a ::
+              Word.Concat (Word.RepeatSymbol Section01.AB.a n) rest,
+            stack := stack }
+          { state := DetAnBnPDAState.read,
+            unread := Word.Concat (Word.RepeatSymbol Section01.AB.a n) rest,
+            stack := AnBnPDAStack.marker :: stack } := by
+        exact PDA.Step.read (M := DetAnBnPDA)
+          (unread := Word.Concat (Word.RepeatSymbol Section01.AB.a n) rest)
+          (restStack := stack) DetAnBnPDATransition.readA
+      have hrest := ih (AnBnPDAStack.marker :: stack)
+      have htarget :
+          Word.Concat (AnBnPDAStackWord n)
+              (AnBnPDAStack.marker :: stack) =
+            Word.Concat (AnBnPDAStackWord (n + 1)) stack := by
+        simp [AnBnPDAStackWord, Word.Concat, Word.RepeatSymbol,
+          Section01.replicate_succ_eq_append AnBnPDAStack.marker n,
+          List.append_assoc]
+      exact PDA.Computes.step hstep (by
+        simpa [htarget] using hrest)
+
+theorem detAnBnPDA_first_b (rest : Word Section01.AB)
+    (stack : Word AnBnPDAStack) :
+    PDA.Step DetAnBnPDA
+      { state := DetAnBnPDAState.read,
+        unread := Section01.AB.b :: rest,
+        stack := AnBnPDAStack.marker :: stack }
+      { state := DetAnBnPDAState.pop, unread := rest, stack := stack } := by
+  simpa [Word.Concat] using
+    (PDA.Step.read (M := DetAnBnPDA) (unread := rest)
+      (restStack := stack) DetAnBnPDATransition.firstB)
+
+theorem detAnBnPDA_pop_bs (n : Nat) (rest : Word Section01.AB)
+    (stack : Word AnBnPDAStack) :
+    PDA.Computes DetAnBnPDA
+      { state := DetAnBnPDAState.pop,
+        unread := Word.Concat (Word.RepeatSymbol Section01.AB.b n) rest,
+        stack := Word.Concat (AnBnPDAStackWord n) stack }
+      { state := DetAnBnPDAState.pop, unread := rest, stack := stack } := by
+  induction n generalizing stack with
+  | zero =>
+      simp [Word.Concat, Word.RepeatSymbol, AnBnPDAStackWord]
+      exact PDA.Computes.refl _
+  | succ n ih =>
+      have hstep : PDA.Step DetAnBnPDA
+          { state := DetAnBnPDAState.pop,
+            unread := Section01.AB.b ::
+              Word.Concat (Word.RepeatSymbol Section01.AB.b n) rest,
+            stack := AnBnPDAStack.marker ::
+              Word.Concat (AnBnPDAStackWord n) stack }
+          { state := DetAnBnPDAState.pop,
+            unread := Word.Concat (Word.RepeatSymbol Section01.AB.b n) rest,
+            stack := Word.Concat (AnBnPDAStackWord n) stack } := by
+        exact PDA.Step.read (M := DetAnBnPDA)
+          (unread := Word.Concat (Word.RepeatSymbol Section01.AB.b n) rest)
+          (restStack := Word.Concat (AnBnPDAStackWord n) stack)
+          DetAnBnPDATransition.popB
+      exact PDA.Computes.step hstep (ih stack)
+
+-- Book: Chapter 4, Section 4.4, deterministic PDA variant for `a^n b^n`.
+theorem detAnBnPDA_accepts_anbn_words (n : Nat) :
+    PDA.Accepts DetAnBnPDA (Section01.AnBnWord n) := by
+  cases n with
+  | zero =>
+      exists DetAnBnPDAState.read
+      constructor
+      · exact Or.inl rfl
+      · simp [Section01.AnBnWord, PDA.initial, Word.Concat, Word.RepeatSymbol]
+        exact PDA.Computes.refl _
+  | succ n =>
+      exists DetAnBnPDAState.pop
+      constructor
+      · exact Or.inr rfl
+      · unfold Section01.AnBnWord PDA.initial
+        have hpush :=
+          detAnBnPDA_push_as (n + 1)
+            (Word.RepeatSymbol Section01.AB.b (n + 1))
+            ([] : Word AnBnPDAStack)
+        have hfirst : PDA.Computes DetAnBnPDA
+            { state := DetAnBnPDAState.read,
+              unread := Section01.AB.b :: Word.RepeatSymbol Section01.AB.b n,
+              stack := Word.Concat (AnBnPDAStackWord (n + 1)) [] }
+            { state := DetAnBnPDAState.pop,
+              unread := Word.RepeatSymbol Section01.AB.b n,
+              stack := Word.Concat (AnBnPDAStackWord n) [] } := by
+          simpa [AnBnPDAStackWord, Word.Concat, Word.RepeatSymbol] using
+            PDA.computes_of_step (detAnBnPDA_first_b
+              (Word.RepeatSymbol Section01.AB.b n)
+              (Word.Concat (AnBnPDAStackWord n) []))
+        have hpop : PDA.Computes DetAnBnPDA
+            { state := DetAnBnPDAState.pop,
+              unread := Word.RepeatSymbol Section01.AB.b n,
+              stack := Word.Concat (AnBnPDAStackWord n) [] }
+            { state := DetAnBnPDAState.pop, unread := [], stack := [] } := by
+          simpa [Word.Concat] using detAnBnPDA_pop_bs n [] []
+        exact PDA.computes_trans hpush
+          (PDA.computes_trans hfirst hpop)
+
+inductive CopyInput where
+  | a
+  | b
+  | c
+deriving DecidableEq
+
+inductive CopyPDAState where
+  | push
+  | pop
+deriving DecidableEq
+
+namespace CopyPDAState
+
+def finite : Foundation.FiniteType CopyPDAState where
+  elems := [push, pop]
+  complete := by
+    intro q
+    cases q <;> simp
+
+end CopyPDAState
+
+def copyInputOfAB : Section01.AB -> CopyInput
+  | Section01.AB.a => CopyInput.a
+  | Section01.AB.b => CopyInput.b
+
+def copyInputWord (w : Word Section01.AB) : Word CopyInput :=
+  w.map copyInputOfAB
+
+def copyCenteredWord (w : Word Section01.AB) : Word CopyInput :=
+  Word.Concat (copyInputWord w)
+    (CopyInput.c :: copyInputWord (Word.Reverse w))
+
+inductive CopyPDATransition :
+    CopyPDAState -> Option CopyInput -> Word Section01.AB ->
+      CopyPDAState -> Word Section01.AB -> Prop where
+  | pushA :
+      CopyPDATransition CopyPDAState.push (some CopyInput.a) []
+        CopyPDAState.push [Section01.AB.a]
+  | pushB :
+      CopyPDATransition CopyPDAState.push (some CopyInput.b) []
+        CopyPDAState.push [Section01.AB.b]
+  | readCenter :
+      CopyPDATransition CopyPDAState.push (some CopyInput.c) []
+        CopyPDAState.pop []
+  | popA :
+      CopyPDATransition CopyPDAState.pop (some CopyInput.a)
+        [Section01.AB.a] CopyPDAState.pop []
+  | popB :
+      CopyPDATransition CopyPDAState.pop (some CopyInput.b)
+        [Section01.AB.b] CopyPDAState.pop []
+
+def CopyPDA : PDA CopyInput Section01.AB CopyPDAState where
+  start := CopyPDAState.push
+  transition := CopyPDATransition
+  accept := fun q => q = CopyPDAState.pop
+  statesFinite := CopyPDAState.finite
+
+theorem copyPDA_push_word (w : Word Section01.AB) (rest : Word CopyInput)
+    (stack : Word Section01.AB) :
+    PDA.Computes CopyPDA
+      { state := CopyPDAState.push,
+        unread := Word.Concat (copyInputWord w) rest,
+        stack := stack }
+      { state := CopyPDAState.push,
+        unread := rest,
+        stack := Word.Concat (Word.Reverse w) stack } := by
+  induction w generalizing stack with
+  | nil =>
+      simp [copyInputWord, Word.Concat, Word.Reverse]
+      exact PDA.Computes.refl _
+  | cons sym tail ih =>
+      cases sym
+      · have hstep : PDA.Step CopyPDA
+            { state := CopyPDAState.push,
+              unread := CopyInput.a :: Word.Concat (copyInputWord tail) rest,
+              stack := stack }
+            { state := CopyPDAState.push,
+              unread := Word.Concat (copyInputWord tail) rest,
+              stack := Section01.AB.a :: stack } := by
+          exact PDA.Step.read (M := CopyPDA)
+            (unread := Word.Concat (copyInputWord tail) rest)
+            (restStack := stack) CopyPDATransition.pushA
+        have hrest := ih (Section01.AB.a :: stack)
+        exact PDA.Computes.step hstep (by
+          simpa [copyInputWord, copyInputOfAB, Word.Concat, Word.Reverse,
+            List.map_reverse, List.append_assoc] using hrest)
+      · have hstep : PDA.Step CopyPDA
+            { state := CopyPDAState.push,
+              unread := CopyInput.b :: Word.Concat (copyInputWord tail) rest,
+              stack := stack }
+            { state := CopyPDAState.push,
+              unread := Word.Concat (copyInputWord tail) rest,
+              stack := Section01.AB.b :: stack } := by
+          exact PDA.Step.read (M := CopyPDA)
+            (unread := Word.Concat (copyInputWord tail) rest)
+            (restStack := stack) CopyPDATransition.pushB
+        have hrest := ih (Section01.AB.b :: stack)
+        exact PDA.Computes.step hstep (by
+          simpa [copyInputWord, copyInputOfAB, Word.Concat, Word.Reverse,
+            List.map_reverse, List.append_assoc] using hrest)
+
+theorem copyPDA_read_center (rest : Word CopyInput)
+    (stack : Word Section01.AB) :
+    PDA.Step CopyPDA
+      { state := CopyPDAState.push,
+        unread := CopyInput.c :: rest,
+        stack := stack }
+      { state := CopyPDAState.pop, unread := rest, stack := stack } := by
+  simpa [Word.Concat] using
+    (PDA.Step.read (M := CopyPDA) (unread := rest)
+      (restStack := stack) CopyPDATransition.readCenter)
+
+theorem copyPDA_pop_word (w : Word Section01.AB) (rest : Word CopyInput)
+    (stack : Word Section01.AB) :
+    PDA.Computes CopyPDA
+      { state := CopyPDAState.pop,
+        unread := Word.Concat (copyInputWord w) rest,
+        stack := Word.Concat w stack }
+      { state := CopyPDAState.pop, unread := rest, stack := stack } := by
+  induction w generalizing stack with
+  | nil =>
+      simp [copyInputWord, Word.Concat]
+      exact PDA.Computes.refl _
+  | cons sym tail ih =>
+      cases sym
+      · have hstep : PDA.Step CopyPDA
+            { state := CopyPDAState.pop,
+              unread := CopyInput.a :: Word.Concat (copyInputWord tail) rest,
+              stack := Section01.AB.a :: Word.Concat tail stack }
+            { state := CopyPDAState.pop,
+              unread := Word.Concat (copyInputWord tail) rest,
+              stack := Word.Concat tail stack } := by
+          exact PDA.Step.read (M := CopyPDA)
+            (unread := Word.Concat (copyInputWord tail) rest)
+            (restStack := Word.Concat tail stack) CopyPDATransition.popA
+        exact PDA.Computes.step hstep (ih stack)
+      · have hstep : PDA.Step CopyPDA
+            { state := CopyPDAState.pop,
+              unread := CopyInput.b :: Word.Concat (copyInputWord tail) rest,
+              stack := Section01.AB.b :: Word.Concat tail stack }
+            { state := CopyPDAState.pop,
+              unread := Word.Concat (copyInputWord tail) rest,
+              stack := Word.Concat tail stack } := by
+          exact PDA.Step.read (M := CopyPDA)
+            (unread := Word.Concat (copyInputWord tail) rest)
+            (restStack := Word.Concat tail stack) CopyPDATransition.popB
+        exact PDA.Computes.step hstep (ih stack)
+
+-- Book: Chapter 4, Section 4.4, stack-copy PDA for `{w c w^R}`.
+theorem copyPDA_accepts_centered_reverse (w : Word Section01.AB) :
+    PDA.Accepts CopyPDA (copyCenteredWord w) := by
+  exists CopyPDAState.pop
+  constructor
+  · rfl
+  · unfold PDA.initial copyCenteredWord
+    have hpush :=
+      copyPDA_push_word w
+        (CopyInput.c :: copyInputWord (Word.Reverse w))
+        ([] : Word Section01.AB)
+    have hcenter : PDA.Computes CopyPDA
+        { state := CopyPDAState.push,
+          unread := CopyInput.c :: copyInputWord (Word.Reverse w),
+          stack := Word.Concat (Word.Reverse w) [] }
+        { state := CopyPDAState.pop,
+          unread := copyInputWord (Word.Reverse w),
+          stack := Word.Concat (Word.Reverse w) [] } := by
+      exact PDA.computes_of_step
+        (copyPDA_read_center (copyInputWord (Word.Reverse w))
+          (Word.Concat (Word.Reverse w) []))
+    have hpop : PDA.Computes CopyPDA
+        { state := CopyPDAState.pop,
+          unread := copyInputWord (Word.Reverse w),
+          stack := Word.Concat (Word.Reverse w) [] }
+        { state := CopyPDAState.pop, unread := [], stack := [] } := by
+      simpa [Word.Concat] using copyPDA_pop_word (Word.Reverse w) [] []
+    exact PDA.computes_trans hpush
+      (PDA.computes_trans hcenter hpop)
+
 end Section04
 end Chapter04
 end Book

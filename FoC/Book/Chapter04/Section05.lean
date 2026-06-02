@@ -1,3 +1,4 @@
+import FoC.Book.Chapter04.Section04
 import FoC.Grammars.CFL
 
 namespace FoC
@@ -11,6 +12,161 @@ Book: Chapter 4, Section 4.5, Non-context-free Languages.
 
 open Languages
 open Grammars
+
+def PDAIntersectDFA (P : PDA input stack pstate) (D : DFA input dstate) :
+    PDA input stack (pstate × dstate) where
+  start := (P.start, D.start)
+  transition := fun q input pop r push =>
+    match input with
+    | none => P.transition q.1 none pop r.1 push ∧ r.2 = q.2
+    | some a => P.transition q.1 (some a) pop r.1 push ∧ r.2 = D.step q.2 a
+  accept := fun q => P.accept q.1 ∧ D.accept q.2
+  statesFinite := FiniteState.Product P.statesFinite D.statesFinite
+
+theorem pda_intersect_dfa_lift_to_empty
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    {c d : PDA.Configuration input stack pstate}
+    (h : PDA.Computes P c d) (hd : d.unread = [])
+    (r : dstate) :
+    PDA.Computes (PDAIntersectDFA P D)
+      { state := (c.state, r), unread := c.unread, stack := c.stack }
+      { state := (d.state, DFA.RunFrom D r c.unread),
+        unread := [], stack := d.stack } := by
+  induction h generalizing r with
+  | refl c =>
+      rw [hd]
+      simp [DFA.RunFrom]
+      exact PDA.Computes.refl _
+  | step hstep hrest ih =>
+      cases hstep with
+      | read htrans =>
+          rename_i p s a unread pop push restStack
+          have hprodStep : PDA.Step (PDAIntersectDFA P D)
+              { state := (p, r),
+                unread := a :: unread,
+                stack := Word.Concat pop restStack }
+              { state := (s, D.step r a),
+                unread := unread,
+                stack := Word.Concat push restStack } := by
+            exact PDA.Step.read (M := PDAIntersectDFA P D)
+              (unread := unread) (restStack := restStack)
+              (And.intro htrans rfl)
+          exact PDA.Computes.step hprodStep (ih hd (D.step r a))
+      | epsilon htrans =>
+          rename_i p s unread pop push restStack
+          have hprodStep : PDA.Step (PDAIntersectDFA P D)
+              { state := (p, r),
+                unread := unread,
+                stack := Word.Concat pop restStack }
+              { state := (s, r),
+                unread := unread,
+                stack := Word.Concat push restStack } := by
+            exact PDA.Step.epsilon (M := PDAIntersectDFA P D)
+              (unread := unread) (restStack := restStack)
+              (And.intro htrans rfl)
+          exact PDA.Computes.step hprodStep (ih hd r)
+
+theorem pda_intersect_dfa_project_computation
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    {c d : PDA.Configuration input stack (pstate × dstate)}
+    (h : PDA.Computes (PDAIntersectDFA P D) c d) :
+    PDA.Computes P
+      { state := c.state.1, unread := c.unread, stack := c.stack }
+      { state := d.state.1, unread := d.unread, stack := d.stack } := by
+  induction h with
+  | refl c =>
+      exact PDA.Computes.refl _
+  | step hstep _ ih =>
+      cases hstep with
+      | read htrans =>
+          exact PDA.Computes.step
+            (PDA.Step.read (M := P) htrans.left) ih
+      | epsilon htrans =>
+          exact PDA.Computes.step
+            (PDA.Step.epsilon (M := P) htrans.left) ih
+
+theorem pda_intersect_dfa_final_run
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    {c d : PDA.Configuration input stack (pstate × dstate)}
+    (h : PDA.Computes (PDAIntersectDFA P D) c d) (hd : d.unread = []) :
+    d.state.2 = DFA.RunFrom D c.state.2 c.unread := by
+  induction h with
+  | refl c =>
+      rw [hd]
+      rfl
+  | step hstep _ ih =>
+      cases hstep with
+      | read htrans =>
+          rw [ih hd, htrans.right]
+          rfl
+      | epsilon htrans =>
+          rw [ih hd, htrans.right]
+
+theorem pda_intersect_dfa_accepted_language_exact
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (w : Word input) :
+    w ∈ PDA.AcceptedLanguage (PDAIntersectDFA P D) <->
+      w ∈ Language.Inter (PDA.AcceptedLanguage P) (DFA.Language D) := by
+  constructor
+  · intro h
+    cases h with
+    | intro q hq =>
+        have hpdaComp :=
+          pda_intersect_dfa_project_computation P D hq.right
+        have hrun :=
+          pda_intersect_dfa_final_run P D hq.right rfl
+        have hrun' : q.2 = DFA.Run D w := by
+          simpa [PDA.initial, PDAIntersectDFA, DFA.Run] using hrun
+        constructor
+        · exists q.1
+          constructor
+          · exact hq.left.left
+          · simpa [PDA.initial, PDAIntersectDFA] using hpdaComp
+        · unfold DFA.Language DFA.Accepts DFA.Run
+          change D.accept (DFA.Run D w)
+          rw [← hrun']
+          exact hq.left.right
+  · intro h
+    cases h.left with
+    | intro q hq =>
+        exists (q, DFA.Run D w)
+        constructor
+        · constructor
+          · exact hq.left
+          · exact h.right
+        · simpa [PDA.initial, PDAIntersectDFA, DFA.Run] using
+            pda_intersect_dfa_lift_to_empty P D hq.right rfl D.start
+
+-- Book: Chapter 4, Section 4.5, automaton-side closure of PDA-recognizable
+-- languages under intersection with a regular language.
+theorem pda_recognizable_inter_dfa_recognizable
+    {L R : Language input}
+    (hL : PDA.Recognizable L) (hR : DFA.Recognizable R) :
+    PDA.Recognizable (Language.Inter L R) := by
+  cases hL with
+  | intro stack hstack =>
+      cases hstack with
+      | intro pstate hpstate =>
+          cases hpstate with
+          | intro P hP =>
+              cases hR with
+              | intro dstate hdstate =>
+                  cases hdstate with
+                  | intro D hD =>
+                      exists stack
+                      exists pstate × dstate
+                      exists PDAIntersectDFA P D
+                      intro w
+                      constructor
+                      · intro hw
+                        have hExact :=
+                          (pda_intersect_dfa_accepted_language_exact P D w).mp hw
+                        constructor
+                        · exact (hP w).mp hExact.left
+                        · exact (hD w).mp hExact.right
+                      · intro hw
+                        exact (pda_intersect_dfa_accepted_language_exact P D w).mpr
+                          (And.intro ((hP w).mpr hw.left) ((hD w).mpr hw.right))
 
 inductive ABC where
   | a
@@ -43,12 +199,44 @@ def CFLPumpingLength (L : Language terminal) (K : Nat) : Prop :=
 def CFLHasPumpingProperty (L : Language terminal) : Prop :=
   CFL.HasPumpingProperty L
 
+def LanguageClassExtensional (C : Language terminal -> Prop) : Prop :=
+  forall L M, Language.Equal L M -> C L -> C M
+
+def ClosedUnderIntersection (C : Language terminal -> Prop) : Prop :=
+  forall L M, C L -> C M -> C (Language.Inter L M)
+
+def ClosedUnderUnion (C : Language terminal -> Prop) : Prop :=
+  forall L M, C L -> C M -> C (Language.Union L M)
+
+def ClosedUnderComplement (C : Language terminal -> Prop) : Prop :=
+  forall L, C L -> C (Language.Compl L)
+
 -- Book: Chapter 4, Section 4.5, finite-production CFLs are CFLs under the
 -- existing grammar-generated-language definition.
 theorem finite_production_context_free {L : Language terminal}
     (hL : FiniteProductionContextFreeLanguage L) :
     CFL.ContextFreeLanguage L :=
   CFL.finiteProduction_contextFree hL
+
+theorem finite_production_context_free_of_equal {L M : Language terminal}
+    (hEq : Language.Equal L M)
+    (hL : FiniteProductionContextFreeLanguage L) :
+    FiniteProductionContextFreeLanguage M := by
+  cases hL with
+  | intro nonterminal hnt =>
+      cases hnt with
+      | intro G hG =>
+          exists nonterminal
+          exists G
+          constructor
+          · exact hG.left
+          · exact Language.equal_trans hG.right hEq
+
+theorem finite_production_context_free_extensional :
+    LanguageClassExtensional
+      (FiniteProductionContextFreeLanguage (terminal := terminal)) := by
+  intro L M hEq hL
+  exact finite_production_context_free_of_equal hEq hL
 
 -- Book: Chapter 4, Section 4.5, finite production lists give a bound on
 -- production right-hand-side lengths.
@@ -466,6 +654,81 @@ theorem anbncn_not_finite_production_context_free :
   intro hcf
   exact anbncn_no_pumping_property
     (finite_production_pumping_property hcf)
+
+-- Book: Chapter 4, Section 4.5, intersection nonclosure schema using the
+-- standard `{a^n b^n c^n}` contradiction.  Once two finite-production CFL
+-- witnesses have intersection exactly `anbncnLanguage`, closure under
+-- intersection is impossible.
+theorem finite_production_cfl_intersection_nonclosure_from_anbncn_witnesses
+    {L M : Language ABC}
+    (hL : FiniteProductionContextFreeLanguage L)
+    (hM : FiniteProductionContextFreeLanguage M)
+    (hEq : Language.Equal (Language.Inter L M) anbncnLanguage) :
+    ¬ ClosedUnderIntersection
+      (FiniteProductionContextFreeLanguage (terminal := ABC)) := by
+  intro hClosed
+  have hInter : FiniteProductionContextFreeLanguage (Language.Inter L M) :=
+    hClosed L M hL hM
+  exact anbncn_not_finite_production_context_free
+    (finite_production_context_free_of_equal hEq hInter)
+
+theorem complement_closure_and_union_closure_imply_intersection_closure
+    {C : Language terminal -> Prop}
+    (hExt : LanguageClassExtensional C)
+    (hUnion : ClosedUnderUnion C)
+    (hCompl : ClosedUnderComplement C) :
+    ClosedUnderIntersection C := by
+  classical
+  intro L M hL hM
+  let N : Language terminal :=
+    Language.Compl (Language.Union (Language.Compl L) (Language.Compl M))
+  have hN : C N := by
+    have hUnionCompl : C (Language.Union (Language.Compl L) (Language.Compl M)) :=
+      hUnion (Language.Compl L) (Language.Compl M)
+      (hCompl L hL) (hCompl M hM)
+    simpa [N] using hCompl
+      (Language.Union (Language.Compl L) (Language.Compl M)) hUnionCompl
+  apply hExt N (Language.Inter L M)
+  · intro w
+    constructor
+    · intro hw
+      change ¬ w ∈ Language.Union (Language.Compl L) (Language.Compl M) at hw
+      constructor
+      · by_cases hmem : w ∈ L
+        · exact hmem
+        · exact False.elim (hw (Or.inl hmem))
+      · by_cases hmem : w ∈ M
+        · exact hmem
+        · exact False.elim (hw (Or.inr hmem))
+    · intro hw
+      change ¬ w ∈ Language.Union (Language.Compl L) (Language.Compl M)
+      intro hUnionMem
+      cases hUnionMem with
+      | inl hnotL => exact hnotL hw.left
+      | inr hnotM => exact hnotM hw.right
+  · exact hN
+
+-- Book: Chapter 4, Section 4.5, complement nonclosure follows from union
+-- closure plus the intersection counterexample.
+theorem finite_production_cfl_complement_nonclosure_from_anbncn_witnesses
+    {L M : Language ABC}
+    (hL : FiniteProductionContextFreeLanguage L)
+    (hM : FiniteProductionContextFreeLanguage M)
+    (hEq : Language.Equal (Language.Inter L M) anbncnLanguage)
+    (hUnion :
+      ClosedUnderUnion
+        (FiniteProductionContextFreeLanguage (terminal := ABC))) :
+    ¬ ClosedUnderComplement
+      (FiniteProductionContextFreeLanguage (terminal := ABC)) := by
+  intro hCompl
+  have hInterClosed :
+      ClosedUnderIntersection
+        (FiniteProductionContextFreeLanguage (terminal := ABC)) :=
+    complement_closure_and_union_closure_imply_intersection_closure
+      finite_production_context_free_extensional hUnion hCompl
+  exact
+    finite_production_cfl_intersection_nonclosure_from_anbncn_witnesses
+      hL hM hEq hInterClosed
 
 -- Book: Chapter 4, Section 4.5, conditional non-context-freeness for
 -- `{a^n b^n c^n | n >= 0}` from the CFL Pumping Lemma conclusion.
