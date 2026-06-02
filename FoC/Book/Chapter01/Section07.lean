@@ -13,11 +13,12 @@ namespace Section07
 /-!
 Book: Chapter 1, Section 1.7, Proof by Contradiction.
 
-Concrete square-root cuts remain classified in coverage because arbitrary cut
-multiplication is still deferred.  The reduced-rational and quotient-rational
-square-root contradiction cores, real square-characterization irrationality
-bridges, prime-factor existence, and Dedekind-cut real order layer are
-formalized in the foundation.
+Concrete square-root cuts remain classified in coverage because the cut
+definitions and square-equality proofs are still deferred.  The
+reduced-rational and quotient-rational square-root contradiction cores, real
+square-characterization irrationality bridges, prime-factor existence,
+Dedekind-cut real order layer, and real multiplication are formalized in the
+foundation.
 -/
 
 open Foundation

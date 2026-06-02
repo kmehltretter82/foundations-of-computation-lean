@@ -152,6 +152,11 @@ theorem embedded_rational_real_subtraction (a b : QRat) :
     Real.qreal a - Real.qreal b = Real.qreal (a - b) :=
   Real.qreal_sub a b
 
+-- Book: Chapter 1, Section 1.6, embedded rational real multiplication.
+theorem embedded_rational_real_multiplication (a b : QRat) :
+    Real.qreal a * Real.qreal b = Real.qreal (a * b) :=
+  Real.qreal_mul a b
+
 -- Book: Chapter 1, Section 1.6, rational real sums remain rational.
 theorem sum_of_rational_reals_is_rational {x y : Real}
     (hx : Real.Rational x) (hy : Real.Rational y) :
@@ -163,6 +168,12 @@ theorem difference_of_rational_reals_is_rational {x y : Real}
     (hx : Real.Rational x) (hy : Real.Rational y) :
     Real.Rational (x - y) :=
   Real.rational_sub hx hy
+
+-- Book: Chapter 1, Section 1.6, rational real products remain rational.
+theorem product_of_rational_reals_is_rational {x y : Real}
+    (hx : Real.Rational x) (hy : Real.Rational y) :
+    Real.Rational (x * y) :=
+  Real.rational_mul hx hy
 
 -- Book: Chapter 1, Section 1.6, positive embedded-rational scaling.
 theorem positive_rational_scale_of_rational_real_is_rational

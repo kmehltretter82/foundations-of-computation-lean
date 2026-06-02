@@ -19,9 +19,9 @@ definitions or lemmas.
 | `Rationals.lean` | Chapter 1 rational-number closure examples; later Chapter 2 rational countability. |
 | `RationalCore.lean` | Chapter 1 reduced rational-square-root contradiction proofs; bridge material for quotient-rational and real wrappers. |
 | `QuotientRationals.lean` | Quotient rational numbers over positive-denominator integer fractions, with arithmetic, order, density, countability, embeddings for Dedekind-cut reals, and no-square-root theorems for 2 and 3. |
-| `Reals.lean` | Dedekind-cut real numbers over quotient rationals, with rational embedding, order, density, cut addition/subtraction, rational scaling, and rational/irrational predicates plus square-characterization irrationality bridges for book wrappers. |
-| `QuadraticSurd.lean` | Chapter 1 surrogate model for `sqrt(2)` examples until square-root cuts and cut arithmetic replace it. |
-| `DigitStreams.lean` | Chapter 2 binary digit-stream diagonalization core. |
+| `Reals.lean` | Dedekind-cut real numbers over quotient rationals, with rational embedding, order, density, cut addition/subtraction/multiplication, rational scaling, and rational/irrational predicates plus square-characterization irrationality bridges for book wrappers. |
+| `QuadraticSurd.lean` | Historical Chapter 1 surrogate model for `sqrt(2)` examples until square-root cuts replace it. |
+| `DigitStreams.lean` | Chapter 2 binary digit-stream diagonalization core used by the real-uncountability bridge. |
 | `RealUncountability.lean` | Chapter 2 Cantor-style injection of digit streams into Dedekind-cut reals, real uncountability, countable embedded rational reals, and irrational-real uncountability. |
 | `Primes.lean` | Chapter 1 prime divisor, Euclid prime-list, and product-of-primes induction examples. |
 | `Cardinality.lean` | Chapter 2 finite-cardinality laws via explicit list products, sublists, tuples, and cardinality witnesses. |

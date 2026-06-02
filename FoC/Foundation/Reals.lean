@@ -8,14 +8,14 @@ Dedekind-cut real numbers over quotient rationals.
 
 This module is the first real-number layer needed by the book formalization.
 It uses one-sided lower cuts over `QRat`: nonempty, proper, downward closed,
-and open upward/no-greatest-element.  Arithmetic on cuts is intentionally left
-to later phases; this phase establishes rational embeddings, order, density,
-and rational/irrational predicates.
+and open upward/no-greatest-element.  It establishes rational embeddings,
+order, density, cut addition/subtraction/multiplication, rational scaling, and
+rational/irrational predicates.
 
 Used by:
-- Future Chapter 1 real-number wrappers for density and irrational examples
+- Chapter 1 real-number wrappers for density and irrational examples
 - Future square-root cuts and irrationality transport
-- Future Chapter 2 real-number uncountability bridge
+- Chapter 2 real-number uncountability bridge
 -/
 
 structure Real where
@@ -238,6 +238,36 @@ theorem qreal_order_preserving {a b : QRat} (h : a < b) :
 theorem qreal_order_reflecting {a b : QRat} (h : qreal a < qreal b) :
     a < b :=
   qrat_lt_of_qreal_lt h
+
+theorem qreal_nonneg_iff (r : QRat) :
+    (0 : Real) ≤ qreal r <-> ¬ r < 0 := by
+  constructor
+  · intro h hr0
+    have hrr : (qreal r).lower r := h r hr0
+    exact QRat.lt_irrefl r hrr
+  · intro hr q hq0
+    cases QRat.lt_trichotomy q r with
+    | inl hqr =>
+        exact hqr
+    | inr hrest =>
+        cases hrest with
+        | inl hqrEq =>
+            rw [hqrEq] at hq0
+            exact False.elim (hr hq0)
+        | inr hrq =>
+            exact False.elim (hr (QRat.lt_trans hrq hq0))
+
+theorem lower_lt_of_not_lower {x : Real} {a u : QRat}
+    (ha : x.lower a) (hu : ¬ x.lower u) : a < u := by
+  cases QRat.lt_trichotomy a u with
+  | inl hau =>
+      exact hau
+  | inr hrest =>
+      cases hrest with
+      | inl hauEq =>
+          exact False.elim (hu (by rwa [hauEq] at ha))
+      | inr hua =>
+          exact False.elim (hu (x.downward_closed u a hua ha))
 
 def add (x y : Real) : Real where
   lower := fun q => exists a b, x.lower a ∧ y.lower b ∧ q < a + b
@@ -479,6 +509,293 @@ theorem qreal_sub (r s : QRat) :
     _ = qreal r + qreal (-s) := by rw [qreal_neg]
     _ = qreal (r + -s) := qreal_add r (-s)
     _ = qreal (r - s) := rfl
+
+theorem nonneg_neg_of_not_nonneg {x : Real}
+    (hx : ¬ (0 : Real) ≤ x) : (0 : Real) ≤ -x := by
+  classical
+  have hw : exists r : QRat, r < 0 ∧ ¬ x.lower r := Classical.byContradiction (by
+    intro hnone
+    apply hx
+    intro r hr0
+    exact Classical.byContradiction (by
+      intro hxr
+      exact hnone (Exists.intro r (And.intro hr0 hxr))))
+  intro q hq0
+  cases hw with
+  | intro r hr =>
+      exact Exists.intro r
+        (And.intro hr.right (QRat.lt_trans hq0 (QRat.neg_pos_of_neg hr.left)))
+
+theorem exists_pos_not_lower_of_nonneg {x : Real}
+    (_hx : (0 : Real) ≤ x) : exists u : QRat, 0 < u ∧ ¬ x.lower u := by
+  cases x.proper with
+  | intro u hu =>
+      cases QRat.lt_trichotomy 0 u with
+      | inl h0u =>
+          exact Exists.intro u (And.intro h0u hu)
+      | inr hrest =>
+          cases QRat.exists_lower_upper (0 : QRat) with
+          | intro _ hvrest =>
+              cases hvrest with
+              | intro v hv =>
+                  exists v
+                  constructor
+                  · exact hv.right
+                  · intro hvx
+                    cases hrest with
+                    | inl h0uEq =>
+                        have h0x : x.lower 0 :=
+                          x.downward_closed 0 v hv.right hvx
+                        exact hu (by simpa [← h0uEq] using h0x)
+                    | inr hu0 =>
+                        exact hu (x.downward_closed u v
+                          (QRat.lt_trans hu0 hv.right) hvx)
+
+def mulNonneg (x y : Real)
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y) : Real where
+  lower := fun q =>
+    q < 0 ∨ exists a b,
+      0 < a ∧ 0 < b ∧ x.lower a ∧ y.lower b ∧ q < a * b
+  nonempty := by
+    cases QRat.exists_lower_upper (0 : QRat) with
+    | intro l hrest =>
+        cases hrest with
+        | intro _ hbounds =>
+            exact Exists.intro l (Or.inl hbounds.left)
+  proper := by
+    cases exists_pos_not_lower_of_nonneg hx with
+    | intro ux hux =>
+        cases exists_pos_not_lower_of_nonneg hy with
+        | intro uy huy =>
+            exists ux * uy
+            intro h
+            cases h with
+            | inl hneg =>
+                exact QRat.lt_asymm (QRat.mul_pos hux.left huy.left) hneg
+            | inr hprod =>
+                cases hprod with
+                | intro a harest =>
+                    cases harest with
+                    | intro b hbounds =>
+                        have haux : a < ux :=
+                          lower_lt_of_not_lower hbounds.right.right.left hux.right
+                        have hbuy : b < uy :=
+                          lower_lt_of_not_lower hbounds.right.right.right.left huy.right
+                        have habuxuy : a * b < ux * uy :=
+                          QRat.mul_lt_mul_of_pos haux hbuy
+                            hbounds.left hbounds.right.left
+                        exact QRat.lt_asymm hbounds.right.right.right.right habuxuy
+  downward_closed := by
+    intro q r hqr hr
+    cases hr with
+    | inl hr0 =>
+        exact Or.inl (QRat.lt_trans hqr hr0)
+    | inr hprod =>
+        cases hprod with
+        | intro a harest =>
+            cases harest with
+            | intro b hbounds =>
+                exact Or.inr (Exists.intro a (Exists.intro b
+                  (And.intro hbounds.left
+                    (And.intro hbounds.right.left
+                      (And.intro hbounds.right.right.left
+                        (And.intro hbounds.right.right.right.left
+                          (QRat.lt_trans hqr hbounds.right.right.right.right)))))))
+  open_upward := by
+    intro q hq
+    cases hq with
+    | inl hq0 =>
+        cases QRat.density hq0 with
+        | intro r hr =>
+            exact Exists.intro r (And.intro hr.left (Or.inl hr.right))
+    | inr hprod =>
+        cases hprod with
+        | intro a harest =>
+            cases harest with
+            | intro b hbounds =>
+                cases QRat.density hbounds.right.right.right.right with
+                | intro r hr =>
+                    exact Exists.intro r
+                      (And.intro hr.left
+                        (Or.inr (Exists.intro a (Exists.intro b
+                          (And.intro hbounds.left
+                            (And.intro hbounds.right.left
+                              (And.intro hbounds.right.right.left
+                                (And.intro hbounds.right.right.right.left hr.right))))))))
+
+theorem mulNonneg_congr {x x' y y' : Real}
+    (hxx : x = x') (hyy : y = y')
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y)
+    (hx' : (0 : Real) ≤ x') (hy' : (0 : Real) ≤ y') :
+    mulNonneg x y hx hy = mulNonneg x' y' hx' hy' := by
+  cases hxx
+  cases hyy
+  apply ext
+  intro q
+  rfl
+
+theorem qreal_mulNonneg {a b : QRat}
+    (ha : (0 : Real) ≤ qreal a) (hb : (0 : Real) ≤ qreal b) :
+    mulNonneg (qreal a) (qreal b) ha hb = qreal (a * b) := by
+  apply ext
+  intro q
+  have hanna : ¬ a < 0 := (qreal_nonneg_iff a).mp ha
+  have hannb : ¬ b < 0 := (qreal_nonneg_iff b).mp hb
+  constructor
+  · intro hq
+    cases hq with
+    | inl hq0 =>
+        exact QRat.lt_of_lt_zero_of_not_lt_zero hq0
+          (QRat.mul_nonneg hanna hannb)
+    | inr hprod =>
+        cases hprod with
+        | intro c hcrest =>
+            cases hcrest with
+            | intro d hd =>
+                have hcprod : c * d < a * b :=
+                  QRat.mul_lt_mul_of_pos
+                    hd.right.right.left
+                    hd.right.right.right.left
+                    hd.left
+                    hd.right.left
+                exact QRat.lt_trans hd.right.right.right.right hcprod
+  · intro hq
+    by_cases hq0 : q < 0
+    · exact Or.inl hq0
+    · have hprodpos : 0 < a * b :=
+        QRat.zero_lt_of_not_lt_zero_of_lt hq0 hq
+      have hapos : 0 < a :=
+        QRat.pos_of_nonneg_mul_pos_left hanna hannb hprodpos
+      have hbpos : 0 < b :=
+        QRat.pos_of_nonneg_mul_pos_right hanna hannb hprodpos
+      have hqdiva : q / b < a :=
+        (QRat.div_lt_iff (x := q) (y := b) (c := a) hbpos).mpr hq
+      cases QRat.density hqdiva with
+      | intro c hc =>
+          have hcpos : 0 < c :=
+            QRat.zero_lt_of_not_lt_zero_of_lt
+              (QRat.div_nonneg hq0 hbpos) hc.left
+          have hqcb : q < c * b :=
+            (QRat.div_lt_iff (x := q) (y := b) (c := c) hbpos).mp hc.left
+          have hqdivb : q / c < b := by
+            apply (QRat.div_lt_iff (x := q) (y := c) (c := b) hcpos).mpr
+            simpa [QRat.mul_comm] using hqcb
+          cases QRat.density hqdivb with
+          | intro d hd =>
+              have hdpos : 0 < d :=
+                QRat.zero_lt_of_not_lt_zero_of_lt
+                  (QRat.div_nonneg hq0 hcpos) hd.left
+              have hqcd : q < c * d := by
+                have hqdc : q < d * c :=
+                  (QRat.div_lt_iff (x := q) (y := c) (c := d) hcpos).mp hd.left
+                simpa [QRat.mul_comm] using hqdc
+              exact Or.inr (Exists.intro c (Exists.intro d
+                (And.intro hcpos
+                  (And.intro hdpos
+                    (And.intro hc.right
+                      (And.intro hd.right hqcd))))))
+
+theorem qreal_mulNonneg_neg_right {a b : QRat}
+    (ha : (0 : Real) ≤ qreal a) (hb : (0 : Real) ≤ -qreal b) :
+    mulNonneg (qreal a) (-qreal b) ha hb = qreal (a * -b) := by
+  have hb' : (0 : Real) ≤ qreal (-b) := by
+    rwa [← qreal_neg]
+  calc
+    mulNonneg (qreal a) (-qreal b) ha hb
+        = mulNonneg (qreal a) (qreal (-b)) ha hb' :=
+            mulNonneg_congr rfl (qreal_neg b) ha hb ha hb'
+    _ = qreal (a * -b) :=
+            qreal_mulNonneg ha hb'
+
+theorem qreal_mulNonneg_neg_left {a b : QRat}
+    (ha : (0 : Real) ≤ -qreal a) (hb : (0 : Real) ≤ qreal b) :
+    mulNonneg (-qreal a) (qreal b) ha hb = qreal ((-a) * b) := by
+  have ha' : (0 : Real) ≤ qreal (-a) := by
+    rwa [← qreal_neg]
+  calc
+    mulNonneg (-qreal a) (qreal b) ha hb
+        = mulNonneg (qreal (-a)) (qreal b) ha' hb :=
+            mulNonneg_congr (qreal_neg a) rfl ha hb ha' hb
+    _ = qreal ((-a) * b) :=
+            qreal_mulNonneg ha' hb
+
+theorem qreal_mulNonneg_neg_neg {a b : QRat}
+    (ha : (0 : Real) ≤ -qreal a) (hb : (0 : Real) ≤ -qreal b) :
+    mulNonneg (-qreal a) (-qreal b) ha hb = qreal ((-a) * (-b)) := by
+  have ha' : (0 : Real) ≤ qreal (-a) := by
+    rwa [← qreal_neg]
+  have hb' : (0 : Real) ≤ qreal (-b) := by
+    rwa [← qreal_neg]
+  calc
+    mulNonneg (-qreal a) (-qreal b) ha hb
+        = mulNonneg (qreal (-a)) (qreal (-b)) ha' hb' :=
+            mulNonneg_congr (qreal_neg a) (qreal_neg b) ha hb ha' hb'
+    _ = qreal ((-a) * (-b)) :=
+            qreal_mulNonneg ha' hb'
+
+noncomputable def mul (x y : Real) : Real := by
+  classical
+  exact
+    if hx : (0 : Real) ≤ x then
+      if hy : (0 : Real) ≤ y then
+        mulNonneg x y hx hy
+      else
+        -(mulNonneg x (-y) hx (nonneg_neg_of_not_nonneg hy))
+    else if hy : (0 : Real) ≤ y then
+      -(mulNonneg (-x) y (nonneg_neg_of_not_nonneg hx) hy)
+    else
+      mulNonneg (-x) (-y)
+        (nonneg_neg_of_not_nonneg hx)
+        (nonneg_neg_of_not_nonneg hy)
+
+noncomputable instance : Mul Real where
+  mul := mul
+
+theorem qreal_mul (a b : QRat) :
+    qreal a * qreal b = qreal (a * b) := by
+  classical
+  change mul (qreal a) (qreal b) = qreal (a * b)
+  unfold mul
+  by_cases ha : (0 : Real) ≤ qreal a
+  · simp [ha]
+    by_cases hb : (0 : Real) ≤ qreal b
+    · simp [hb, qreal_mulNonneg]
+    · simp [hb]
+      calc
+        -(mulNonneg (qreal a) (-qreal b) ha (nonneg_neg_of_not_nonneg hb))
+            = -qreal (a * -b) := by
+                rw [qreal_mulNonneg_neg_right]
+        _ = qreal (-(a * -b)) := qreal_neg (a * -b)
+        _ = qreal (a * b) := by
+            rw [QRat.mul_neg, QRat.neg_neg]
+  · simp [ha]
+    by_cases hb : (0 : Real) ≤ qreal b
+    · simp [hb]
+      calc
+        -(mulNonneg (-qreal a) (qreal b) (nonneg_neg_of_not_nonneg ha) hb)
+            = -qreal ((-a) * b) := by
+                rw [qreal_mulNonneg_neg_left]
+        _ = qreal (-((-a) * b)) := qreal_neg ((-a) * b)
+        _ = qreal (a * b) := by
+            rw [QRat.neg_mul, QRat.neg_neg]
+    · simp [hb]
+      calc
+        mulNonneg (-qreal a) (-qreal b)
+            (nonneg_neg_of_not_nonneg ha)
+            (nonneg_neg_of_not_nonneg hb)
+            = qreal ((-a) * (-b)) := by
+                rw [qreal_mulNonneg_neg_neg]
+        _ = qreal (a * b) := by
+            rw [QRat.neg_mul_neg]
+
+theorem rational_mul {x y : Real}
+    (hx : Rational x) (hy : Rational y) : Rational (x * y) := by
+  cases hx with
+  | intro a hxa =>
+      cases hy with
+      | intro b hyb =>
+          exists a * b
+          rw [hxa, hyb, qreal_mul]
 
 def scalePos (c : QRat) (hc : 0 < c) (x : Real) : Real where
   lower := fun q => exists a, x.lower a ∧ q < c * a

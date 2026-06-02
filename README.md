@@ -41,17 +41,18 @@ undecidability vocabulary, including decidable-language complement closure and
 an abstract diagonal contradiction core.
 The foundation layer also includes quotient rational numbers over
 positive-denominator integer fractions, Dedekind-cut real numbers over quotient
-rationals with cut addition/subtraction and rational scaling,
-future-real-compatible reduced rational representatives, quotient-rational
-no-square-root theorems for 2 and 3, real square-characterization bridges for
-the square-root irrationality arguments, a tiny quadratic surd surrogate for the
-`sqrt(2)` product counterexample, binary digit-stream diagonalization, a
+rationals with cut addition/subtraction/multiplication and rational scaling,
+reduced rational representatives used by the quotient-rational and real
+bridges, quotient-rational no-square-root theorems for 2 and 3, real
+square-characterization bridges for the square-root irrationality arguments, a
+tiny quadratic surd surrogate for the `sqrt(2)` product counterexample, binary
+digit-stream diagonalization, a
 Cantor-style digit-stream injection into Dedekind-cut reals, real
 uncountability, and irrational-real uncountability.
-Prose-heavy application exercises and results requiring future
-full real-number, numeric-cardinality, full state-elimination, or pumping-lemma,
-full CFG/PDA-equivalence, and machine-encoding/simulation infrastructure are not
-represented as placeholder theorems.
+Prose-heavy application exercises and results requiring remaining full
+ordered-field real-number, numeric-cardinality, full state-elimination or
+pumping-lemma, full CFG/PDA-equivalence, and machine-encoding/simulation
+infrastructure are not represented as placeholder theorems.
 
 Coverage status is tracked in [data/coverage.yaml](data/coverage.yaml).
 
@@ -71,10 +72,11 @@ Foundation modules currently include:
 - NFA path semantics and Thompson construction for regular expressions.
 - quotient rational arithmetic, order, density, embeddings from existing
   rational representatives, Dedekind-cut real numbers with rational embedding
-  and order/density plus cut addition/subtraction and rational scaling, reduced
-  rational and quotient-rational square-root contradiction cores, real
-  square-characterization irrationality bridges, quadratic-surd surrogates, and
-  digit-stream diagonalization with real and irrational-real uncountability.
+  and order/density plus cut addition/subtraction/multiplication and rational
+  scaling, reduced rational and quotient-rational square-root contradiction
+  cores, real square-characterization irrationality bridges, quadratic-surd
+  surrogates, and digit-stream diagonalization with real and irrational-real
+  uncountability.
 - context-free grammars, parse trees, pushdown automata, and general grammars.
 - Turing-machine tapes, configurations, computations, and computability
   vocabulary.
