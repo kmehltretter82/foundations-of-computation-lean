@@ -141,6 +141,82 @@ theorem general_derives_context {G : GeneralGrammar terminal nonterminal}
       exact GeneralGrammar.Derives.step
         (general_yields_context hstep u v) ih
 
+theorem general_formLanguage_replace_sound
+    (symbolLanguage : Symbol terminal nonterminal -> Language terminal)
+    {u lhs rhs v : SententialForm terminal nonterminal}
+    {w : Word terminal}
+    (hlocal : forall x, x ∈ CFG.FormLanguage symbolLanguage rhs ->
+      x ∈ CFG.FormLanguage symbolLanguage lhs)
+    (hw : w ∈ CFG.FormLanguage symbolLanguage (u ++ rhs ++ v)) :
+    w ∈ CFG.FormLanguage symbolLanguage (u ++ lhs ++ v) := by
+  have hu := (CFG.formLanguage_append symbolLanguage u (rhs ++ v) w).mp (by
+    simpa [List.append_assoc] using hw)
+  rcases hu with ⟨pref, suffix, hpref, hsuffix, hwEq⟩
+  have hsSplit :=
+    (CFG.formLanguage_append symbolLanguage rhs v suffix).mp hsuffix
+  rcases hsSplit with ⟨middle, tail, hmiddle, htail, hsuffixEq⟩
+  have hnew : w ∈ CFG.FormLanguage symbolLanguage (u ++ (lhs ++ v)) := by
+    apply (CFG.formLanguage_append symbolLanguage u (lhs ++ v) w).mpr
+    refine ⟨pref, Word.Concat middle tail, hpref, ?_, ?_⟩
+    · apply (CFG.formLanguage_append symbolLanguage lhs v
+        (Word.Concat middle tail)).mpr
+      exact ⟨middle, tail, hlocal middle hmiddle, htail, rfl⟩
+    · calc
+        w = Word.Concat pref suffix := hwEq
+        _ = Word.Concat pref (Word.Concat middle tail) := by
+          rw [hsuffixEq]
+  simpa [List.append_assoc] using hnew
+
+theorem general_yields_sound_for_symbol_language
+    {G : GeneralGrammar terminal nonterminal}
+    (symbolLanguage : Symbol terminal nonterminal -> Language terminal)
+    (hprod : forall lhs rhs, G.produces lhs rhs -> forall w,
+      w ∈ CFG.FormLanguage symbolLanguage rhs ->
+        w ∈ CFG.FormLanguage symbolLanguage lhs)
+    {x y : SententialForm terminal nonterminal} {w : Word terminal}
+    (h : GeneralGrammar.Yields G x y)
+    (hw : w ∈ CFG.FormLanguage symbolLanguage y) :
+    w ∈ CFG.FormLanguage symbolLanguage x := by
+  rcases h with ⟨u, v, lhs, rhs, hprodRule, hx, hy⟩
+  rw [hy] at hw
+  rw [hx]
+  exact general_formLanguage_replace_sound symbolLanguage
+    (hprod lhs rhs hprodRule) hw
+
+theorem general_derives_sound_for_symbol_language_aux
+    {G : GeneralGrammar terminal nonterminal}
+    (symbolLanguage : Symbol terminal nonterminal -> Language terminal)
+    (hterminal : forall a,
+      Word.Symbol a ∈ symbolLanguage (Symbol.terminal a))
+    (hprod : forall lhs rhs, G.produces lhs rhs -> forall w,
+      w ∈ CFG.FormLanguage symbolLanguage rhs ->
+        w ∈ CFG.FormLanguage symbolLanguage lhs)
+    {x y : SententialForm terminal nonterminal} {w : Word terminal}
+    (hy : y = SententialForm.terminalWord w)
+    (h : GeneralGrammar.Derives G x y) :
+    w ∈ CFG.FormLanguage symbolLanguage x := by
+  induction h generalizing w with
+  | refl _ =>
+      rw [hy]
+      exact CFG.terminalWord_mem_formLanguage symbolLanguage hterminal w
+  | step hstep _ ih =>
+      exact general_yields_sound_for_symbol_language symbolLanguage hprod hstep
+        (ih hy)
+
+theorem general_derives_sound_for_symbol_language
+    {G : GeneralGrammar terminal nonterminal}
+    (symbolLanguage : Symbol terminal nonterminal -> Language terminal)
+    (hterminal : forall a,
+      Word.Symbol a ∈ symbolLanguage (Symbol.terminal a))
+    (hprod : forall lhs rhs, G.produces lhs rhs -> forall w,
+      w ∈ CFG.FormLanguage symbolLanguage rhs ->
+        w ∈ CFG.FormLanguage symbolLanguage lhs)
+    {x : SententialForm terminal nonterminal} {w : Word terminal}
+    (h : GeneralGrammar.Derives G x (SententialForm.terminalWord w)) :
+    w ∈ CFG.FormLanguage symbolLanguage x :=
+  general_derives_sound_for_symbol_language_aux symbolLanguage hterminal hprod
+    rfl h
+
 def ggTerminal (a : terminal) : Symbol terminal nonterminal :=
   Symbol.terminal a
 
@@ -200,6 +276,17 @@ theorem sententialCountNonterminal_terminalWord [DecidableEq nonterminal]
   | cons _ rest ih =>
       change SententialCountNonterminal A (SententialForm.terminalWord rest) = 0
       exact ih
+
+theorem repeatSymbol_succ_eq_append (a : terminal) (n : Nat) :
+    Word.RepeatSymbol a (n + 1) =
+      Word.Concat (Word.RepeatSymbol a n) [a] := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change a :: Word.RepeatSymbol a (n + 1) =
+        a :: Word.Concat (Word.RepeatSymbol a n) [a]
+      rw [ih]
 
 inductive EqualCountTerminal where
   | a
@@ -1250,6 +1337,428 @@ theorem orderedABCGrammar_generated_has_equal_terminal_counts
     orderedABCTotalC, sententialCountTerminal_terminalWord,
     sententialCountNonterminal_terminalWord] using hbalanced
 
+def orderedABCBlockWord (n : Nat) : Word EqualCountTerminal :=
+  Word.Concat (Word.RepeatSymbol EqualCountTerminal.a n)
+    (Word.Concat (Word.RepeatSymbol EqualCountTerminal.b n)
+      (Word.RepeatSymbol EqualCountTerminal.c n))
+
+def orderedABCLanguage : Language EqualCountTerminal :=
+  fun word => exists n, word = orderedABCBlockWord n
+
+def orderedABCAForm (n : Nat) :
+    SententialForm EqualCountTerminal OrderedABCNT :=
+  List.replicate n (orderedN OrderedABCNT.markA)
+
+def orderedABCBForm (n : Nat) :
+    SententialForm EqualCountTerminal OrderedABCNT :=
+  List.replicate n (orderedN OrderedABCNT.markB)
+
+def orderedABCCForm (n : Nat) :
+    SententialForm EqualCountTerminal OrderedABCNT :=
+  List.replicate n (orderedN OrderedABCNT.markC)
+
+def orderedABCMarkerBlock :
+    SententialForm EqualCountTerminal OrderedABCNT :=
+  [orderedN OrderedABCNT.markA, orderedN OrderedABCNT.markB,
+    orderedN OrderedABCNT.markC]
+
+def orderedABCRepeatedMarkers (n : Nat) :
+    SententialForm EqualCountTerminal OrderedABCNT :=
+  Word.RepeatWord orderedABCMarkerBlock n
+
+def orderedABCSortedMarkers (n : Nat) :
+    SententialForm EqualCountTerminal OrderedABCNT :=
+  orderedABCAForm n ++ orderedABCBForm n ++ orderedABCCForm n
+
+theorem orderedABC_moveC_right_over_as
+    (n : Nat) (pre suffix : SententialForm EqualCountTerminal OrderedABCNT) :
+    GeneralGrammar.Derives OrderedABCGrammar
+      (pre ++ [orderedN OrderedABCNT.markC] ++
+        orderedABCAForm n ++ suffix)
+      (pre ++ orderedABCAForm n ++ [orderedN OrderedABCNT.markC] ++
+        suffix) := by
+  induction n generalizing pre with
+  | zero =>
+      simpa [orderedABCAForm] using
+        (GeneralGrammar.Derives.refl (G := OrderedABCGrammar)
+          (pre ++ [orderedN OrderedABCNT.markC] ++ suffix))
+  | succ n ih =>
+      let A := orderedN OrderedABCNT.markA
+      let C := orderedN OrderedABCNT.markC
+      have hstep :
+          GeneralGrammar.Yields OrderedABCGrammar
+            (pre ++ [C, A] ++ orderedABCAForm n ++ suffix)
+            (pre ++ [A, C] ++ orderedABCAForm n ++ suffix) := by
+        simpa [A, C, List.append_assoc] using
+          general_yields_of_production (G := OrderedABCGrammar)
+            OrderedABCProduces.swapCA pre
+            (orderedABCAForm n ++ suffix)
+      have hrest :
+          GeneralGrammar.Derives OrderedABCGrammar
+            (pre ++ [A, C] ++ orderedABCAForm n ++ suffix)
+            (pre ++ [A] ++ orderedABCAForm n ++ [C] ++ suffix) := by
+        simpa [A, C, List.append_assoc] using ih (pre ++ [A])
+      have hall := GeneralGrammar.Derives.step hstep hrest
+      simpa [orderedABCAForm, A, C, List.append_assoc] using hall
+
+theorem orderedABC_moveB_right_over_as
+    (n : Nat) (pre suffix : SententialForm EqualCountTerminal OrderedABCNT) :
+    GeneralGrammar.Derives OrderedABCGrammar
+      (pre ++ [orderedN OrderedABCNT.markB] ++
+        orderedABCAForm n ++ suffix)
+      (pre ++ orderedABCAForm n ++ [orderedN OrderedABCNT.markB] ++
+        suffix) := by
+  induction n generalizing pre with
+  | zero =>
+      simpa [orderedABCAForm] using
+        (GeneralGrammar.Derives.refl (G := OrderedABCGrammar)
+          (pre ++ [orderedN OrderedABCNT.markB] ++ suffix))
+  | succ n ih =>
+      let A := orderedN OrderedABCNT.markA
+      let B := orderedN OrderedABCNT.markB
+      have hstep :
+          GeneralGrammar.Yields OrderedABCGrammar
+            (pre ++ [B, A] ++ orderedABCAForm n ++ suffix)
+            (pre ++ [A, B] ++ orderedABCAForm n ++ suffix) := by
+        simpa [A, B, List.append_assoc] using
+          general_yields_of_production (G := OrderedABCGrammar)
+            OrderedABCProduces.swapBA pre
+            (orderedABCAForm n ++ suffix)
+      have hrest :
+          GeneralGrammar.Derives OrderedABCGrammar
+            (pre ++ [A, B] ++ orderedABCAForm n ++ suffix)
+            (pre ++ [A] ++ orderedABCAForm n ++ [B] ++ suffix) := by
+        simpa [A, B, List.append_assoc] using ih (pre ++ [A])
+      have hall := GeneralGrammar.Derives.step hstep hrest
+      simpa [orderedABCAForm, A, B, List.append_assoc] using hall
+
+theorem orderedABC_moveC_right_over_bs
+    (n : Nat) (pre suffix : SententialForm EqualCountTerminal OrderedABCNT) :
+    GeneralGrammar.Derives OrderedABCGrammar
+      (pre ++ [orderedN OrderedABCNT.markC] ++
+        orderedABCBForm n ++ suffix)
+      (pre ++ orderedABCBForm n ++ [orderedN OrderedABCNT.markC] ++
+        suffix) := by
+  induction n generalizing pre with
+  | zero =>
+      simpa [orderedABCBForm] using
+        (GeneralGrammar.Derives.refl (G := OrderedABCGrammar)
+          (pre ++ [orderedN OrderedABCNT.markC] ++ suffix))
+  | succ n ih =>
+      let B := orderedN OrderedABCNT.markB
+      let C := orderedN OrderedABCNT.markC
+      have hstep :
+          GeneralGrammar.Yields OrderedABCGrammar
+            (pre ++ [C, B] ++ orderedABCBForm n ++ suffix)
+            (pre ++ [B, C] ++ orderedABCBForm n ++ suffix) := by
+        simpa [B, C, List.append_assoc] using
+          general_yields_of_production (G := OrderedABCGrammar)
+            OrderedABCProduces.swapCB pre
+            (orderedABCBForm n ++ suffix)
+      have hrest :
+          GeneralGrammar.Derives OrderedABCGrammar
+            (pre ++ [B, C] ++ orderedABCBForm n ++ suffix)
+            (pre ++ [B] ++ orderedABCBForm n ++ [C] ++ suffix) := by
+        simpa [B, C, List.append_assoc] using ih (pre ++ [B])
+      have hall := GeneralGrammar.Derives.step hstep hrest
+      simpa [orderedABCBForm, B, C, List.append_assoc] using hall
+
+theorem orderedABC_sort_markers_derives (n : Nat) :
+    GeneralGrammar.Derives OrderedABCGrammar
+      (orderedABCRepeatedMarkers n) (orderedABCSortedMarkers n) := by
+  induction n with
+  | zero =>
+      exact GeneralGrammar.Derives.refl []
+  | succ n ih =>
+      let A := orderedN OrderedABCNT.markA
+      let B := orderedN OrderedABCNT.markB
+      let C := orderedN OrderedABCNT.markC
+      have hsortTail :
+          GeneralGrammar.Derives OrderedABCGrammar
+            (orderedABCMarkerBlock ++ orderedABCRepeatedMarkers n)
+            (orderedABCMarkerBlock ++ orderedABCSortedMarkers n) := by
+        simpa [orderedABCMarkerBlock, A, B, C, List.append_assoc] using
+          general_derives_context ih orderedABCMarkerBlock []
+      have hmoveCAs :
+          GeneralGrammar.Derives OrderedABCGrammar
+            (orderedABCMarkerBlock ++ orderedABCSortedMarkers n)
+            ([A, B] ++ orderedABCAForm n ++ [C] ++
+              orderedABCBForm n ++ orderedABCCForm n) := by
+        simpa [orderedABCMarkerBlock, orderedABCSortedMarkers, A, B, C,
+          List.append_assoc] using
+          orderedABC_moveC_right_over_as n [A, B]
+            (orderedABCBForm n ++ orderedABCCForm n)
+      have hmoveBAs :
+          GeneralGrammar.Derives OrderedABCGrammar
+            ([A, B] ++ orderedABCAForm n ++ [C] ++
+              orderedABCBForm n ++ orderedABCCForm n)
+            ([A] ++ orderedABCAForm n ++ [B, C] ++
+              orderedABCBForm n ++ orderedABCCForm n) := by
+        simpa [A, B, C, List.append_assoc] using
+          orderedABC_moveB_right_over_as n [A]
+            ([C] ++ orderedABCBForm n ++ orderedABCCForm n)
+      have hmoveCBs :
+          GeneralGrammar.Derives OrderedABCGrammar
+            ([A] ++ orderedABCAForm n ++ [B, C] ++
+              orderedABCBForm n ++ orderedABCCForm n)
+            (orderedABCSortedMarkers (n + 1)) := by
+        simpa [orderedABCSortedMarkers, orderedABCAForm, orderedABCBForm,
+          orderedABCCForm, A, B, C, List.append_assoc] using
+          orderedABC_moveC_right_over_bs n
+            ([A] ++ orderedABCAForm n ++ [B]) (orderedABCCForm n)
+      exact GeneralGrammar.derives_trans hsortTail
+        (GeneralGrammar.derives_trans hmoveCAs
+          (GeneralGrammar.derives_trans hmoveBAs hmoveCBs))
+
+theorem orderedABC_grow_repeated_markers_derives (n : Nat) :
+    GeneralGrammar.Derives OrderedABCGrammar [orderedN OrderedABCNT.start]
+      ([orderedN OrderedABCNT.start] ++ orderedABCRepeatedMarkers n) := by
+  induction n with
+  | zero =>
+      simpa [orderedABCRepeatedMarkers, Word.RepeatWord] using
+        (GeneralGrammar.Derives.refl (G := OrderedABCGrammar)
+          [orderedN OrderedABCNT.start])
+  | succ n ih =>
+      have hstep :
+          GeneralGrammar.Yields OrderedABCGrammar
+            ([orderedN OrderedABCNT.start] ++ orderedABCRepeatedMarkers n)
+            ([orderedN OrderedABCNT.start] ++ orderedABCMarkerBlock ++
+              orderedABCRepeatedMarkers n) := by
+        simpa [orderedABCMarkerBlock, List.append_assoc] using
+          general_yields_of_production (G := OrderedABCGrammar)
+            OrderedABCProduces.grow [] (orderedABCRepeatedMarkers n)
+      have hall := GeneralGrammar.derives_trans ih
+        (GeneralGrammar.yields_derives hstep)
+      simpa [orderedABCRepeatedMarkers, orderedABCMarkerBlock,
+        Word.RepeatWord, List.append_assoc] using hall
+
+theorem orderedABC_start_to_repeated_markers_derives (n : Nat) :
+    GeneralGrammar.Derives OrderedABCGrammar [orderedN OrderedABCNT.start]
+      ([orderedN OrderedABCNT.x] ++ orderedABCRepeatedMarkers n) := by
+  have hgrow := orderedABC_grow_repeated_markers_derives n
+  have hstep :
+      GeneralGrammar.Yields OrderedABCGrammar
+        ([orderedN OrderedABCNT.start] ++ orderedABCRepeatedMarkers n)
+        ([orderedN OrderedABCNT.x] ++ orderedABCRepeatedMarkers n) := by
+    simpa [List.append_assoc] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.startX [] (orderedABCRepeatedMarkers n)
+  exact GeneralGrammar.derives_trans hgrow
+    (GeneralGrammar.yields_derives hstep)
+
+theorem orderedABC_convert_x_as_derives
+    (n : Nat) (pre suffix : SententialForm EqualCountTerminal OrderedABCNT) :
+    GeneralGrammar.Derives OrderedABCGrammar
+      (pre ++ [orderedN OrderedABCNT.x] ++ orderedABCAForm n ++ suffix)
+      (pre ++
+        SententialForm.terminalWord
+          (Word.RepeatSymbol EqualCountTerminal.a n) ++
+        [orderedN OrderedABCNT.x] ++ suffix) := by
+  induction n generalizing pre with
+  | zero =>
+      simpa [orderedABCAForm, Word.RepeatSymbol,
+        SententialForm.terminalWord, List.append_assoc] using
+        (GeneralGrammar.Derives.refl (G := OrderedABCGrammar)
+          (pre ++ [orderedN OrderedABCNT.x] ++ suffix))
+  | succ n ih =>
+      let X := orderedN OrderedABCNT.x
+      let A := orderedN OrderedABCNT.markA
+      let a := orderedT EqualCountTerminal.a
+      have hstep :
+          GeneralGrammar.Yields OrderedABCGrammar
+            (pre ++ [X, A] ++ orderedABCAForm n ++ suffix)
+            (pre ++ [a, X] ++ orderedABCAForm n ++ suffix) := by
+        simpa [X, A, a, List.append_assoc] using
+          general_yields_of_production (G := OrderedABCGrammar)
+            OrderedABCProduces.convertXA pre (orderedABCAForm n ++ suffix)
+      have hrest :
+          GeneralGrammar.Derives OrderedABCGrammar
+            (pre ++ [a, X] ++ orderedABCAForm n ++ suffix)
+            (pre ++ [a] ++
+              SententialForm.terminalWord
+                (Word.RepeatSymbol EqualCountTerminal.a n) ++
+              [X] ++ suffix) := by
+        simpa [X, a, List.append_assoc] using ih (pre ++ [a])
+      have hall := GeneralGrammar.Derives.step hstep hrest
+      simpa [orderedABCAForm, X, A, a, Word.RepeatSymbol,
+        SententialForm.terminalWord, List.append_assoc] using hall
+
+theorem orderedABC_convert_y_bs_derives
+    (n : Nat) (pre suffix : SententialForm EqualCountTerminal OrderedABCNT) :
+    GeneralGrammar.Derives OrderedABCGrammar
+      (pre ++ [orderedN OrderedABCNT.y] ++ orderedABCBForm n ++ suffix)
+      (pre ++
+        SententialForm.terminalWord
+          (Word.RepeatSymbol EqualCountTerminal.b n) ++
+        [orderedN OrderedABCNT.y] ++ suffix) := by
+  induction n generalizing pre with
+  | zero =>
+      simpa [orderedABCBForm, Word.RepeatSymbol,
+        SententialForm.terminalWord, List.append_assoc] using
+        (GeneralGrammar.Derives.refl (G := OrderedABCGrammar)
+          (pre ++ [orderedN OrderedABCNT.y] ++ suffix))
+  | succ n ih =>
+      let Y := orderedN OrderedABCNT.y
+      let B := orderedN OrderedABCNT.markB
+      let b := orderedT EqualCountTerminal.b
+      have hstep :
+          GeneralGrammar.Yields OrderedABCGrammar
+            (pre ++ [Y, B] ++ orderedABCBForm n ++ suffix)
+            (pre ++ [b, Y] ++ orderedABCBForm n ++ suffix) := by
+        simpa [Y, B, b, List.append_assoc] using
+          general_yields_of_production (G := OrderedABCGrammar)
+            OrderedABCProduces.convertYB pre (orderedABCBForm n ++ suffix)
+      have hrest :
+          GeneralGrammar.Derives OrderedABCGrammar
+            (pre ++ [b, Y] ++ orderedABCBForm n ++ suffix)
+            (pre ++ [b] ++
+              SententialForm.terminalWord
+                (Word.RepeatSymbol EqualCountTerminal.b n) ++
+              [Y] ++ suffix) := by
+        simpa [Y, b, List.append_assoc] using ih (pre ++ [b])
+      have hall := GeneralGrammar.Derives.step hstep hrest
+      simpa [orderedABCBForm, Y, B, b, Word.RepeatSymbol,
+        SententialForm.terminalWord, List.append_assoc] using hall
+
+theorem orderedABC_convert_z_cs_derives
+    (n : Nat) (pre suffix : SententialForm EqualCountTerminal OrderedABCNT) :
+    GeneralGrammar.Derives OrderedABCGrammar
+      (pre ++ [orderedN OrderedABCNT.z] ++ orderedABCCForm n ++ suffix)
+      (pre ++
+        SententialForm.terminalWord
+          (Word.RepeatSymbol EqualCountTerminal.c n) ++
+        [orderedN OrderedABCNT.z] ++ suffix) := by
+  induction n generalizing pre with
+  | zero =>
+      simpa [orderedABCCForm, Word.RepeatSymbol,
+        SententialForm.terminalWord, List.append_assoc] using
+        (GeneralGrammar.Derives.refl (G := OrderedABCGrammar)
+          (pre ++ [orderedN OrderedABCNT.z] ++ suffix))
+  | succ n ih =>
+      let Z := orderedN OrderedABCNT.z
+      let C := orderedN OrderedABCNT.markC
+      let c := orderedT EqualCountTerminal.c
+      have hstep :
+          GeneralGrammar.Yields OrderedABCGrammar
+            (pre ++ [Z, C] ++ orderedABCCForm n ++ suffix)
+            (pre ++ [c, Z] ++ orderedABCCForm n ++ suffix) := by
+        simpa [Z, C, c, List.append_assoc] using
+          general_yields_of_production (G := OrderedABCGrammar)
+            OrderedABCProduces.convertZC pre (orderedABCCForm n ++ suffix)
+      have hrest :
+          GeneralGrammar.Derives OrderedABCGrammar
+            (pre ++ [c, Z] ++ orderedABCCForm n ++ suffix)
+            (pre ++ [c] ++
+              SententialForm.terminalWord
+                (Word.RepeatSymbol EqualCountTerminal.c n) ++
+              [Z] ++ suffix) := by
+        simpa [Z, c, List.append_assoc] using ih (pre ++ [c])
+      have hall := GeneralGrammar.Derives.step hstep hrest
+      simpa [orderedABCCForm, Z, C, c, Word.RepeatSymbol,
+        SententialForm.terminalWord, List.append_assoc] using hall
+
+theorem orderedABC_sorted_markers_to_word_derives (n : Nat) :
+    GeneralGrammar.Derives OrderedABCGrammar
+      ([orderedN OrderedABCNT.x] ++ orderedABCSortedMarkers n)
+      (SententialForm.terminalWord (orderedABCBlockWord n)) := by
+  let X := orderedN OrderedABCNT.x
+  let Y := orderedN OrderedABCNT.y
+  let Z := orderedN OrderedABCNT.z
+  let aWord : SententialForm EqualCountTerminal OrderedABCNT :=
+    SententialForm.terminalWord (Word.RepeatSymbol EqualCountTerminal.a n)
+  let bWord : SententialForm EqualCountTerminal OrderedABCNT :=
+    SententialForm.terminalWord (Word.RepeatSymbol EqualCountTerminal.b n)
+  let cWord : SententialForm EqualCountTerminal OrderedABCNT :=
+    SententialForm.terminalWord (Word.RepeatSymbol EqualCountTerminal.c n)
+  have hAs :
+      GeneralGrammar.Derives OrderedABCGrammar
+        ([X] ++ orderedABCSortedMarkers n)
+        (aWord ++ [X] ++ orderedABCBForm n ++ orderedABCCForm n) := by
+    simpa [orderedABCSortedMarkers, X, aWord, List.append_assoc] using
+      orderedABC_convert_x_as_derives n []
+        (orderedABCBForm n ++ orderedABCCForm n)
+  have hXToY :
+      GeneralGrammar.Derives OrderedABCGrammar
+        (aWord ++ [X] ++ orderedABCBForm n ++ orderedABCCForm n)
+        (aWord ++ [Y] ++ orderedABCBForm n ++ orderedABCCForm n) := by
+    have hstep :
+        GeneralGrammar.Yields OrderedABCGrammar
+          (aWord ++ [X] ++ orderedABCBForm n ++ orderedABCCForm n)
+          (aWord ++ [Y] ++ orderedABCBForm n ++ orderedABCCForm n) := by
+      simpa [X, Y, List.append_assoc] using
+        general_yields_of_production (G := OrderedABCGrammar)
+          OrderedABCProduces.xToY aWord
+          (orderedABCBForm n ++ orderedABCCForm n)
+    exact GeneralGrammar.yields_derives hstep
+  have hBs :
+      GeneralGrammar.Derives OrderedABCGrammar
+        (aWord ++ [Y] ++ orderedABCBForm n ++ orderedABCCForm n)
+        (aWord ++ bWord ++ [Y] ++ orderedABCCForm n) := by
+    simpa [Y, bWord, List.append_assoc] using
+      orderedABC_convert_y_bs_derives n aWord (orderedABCCForm n)
+  have hYToZ :
+      GeneralGrammar.Derives OrderedABCGrammar
+        (aWord ++ bWord ++ [Y] ++ orderedABCCForm n)
+        (aWord ++ bWord ++ [Z] ++ orderedABCCForm n) := by
+    have hstep :
+        GeneralGrammar.Yields OrderedABCGrammar
+          (aWord ++ bWord ++ [Y] ++ orderedABCCForm n)
+          (aWord ++ bWord ++ [Z] ++ orderedABCCForm n) := by
+      simpa [Y, Z, List.append_assoc] using
+        general_yields_of_production (G := OrderedABCGrammar)
+          OrderedABCProduces.yToZ (aWord ++ bWord) (orderedABCCForm n)
+    exact GeneralGrammar.yields_derives hstep
+  have hCs :
+      GeneralGrammar.Derives OrderedABCGrammar
+        (aWord ++ bWord ++ [Z] ++ orderedABCCForm n)
+        (aWord ++ bWord ++ cWord ++ [Z]) := by
+    simpa [Z, cWord, List.append_assoc] using
+      orderedABC_convert_z_cs_derives n (aWord ++ bWord) []
+  have hFinish :
+      GeneralGrammar.Derives OrderedABCGrammar
+        (aWord ++ bWord ++ cWord ++ [Z])
+        (aWord ++ bWord ++ cWord) := by
+    have hstep :
+        GeneralGrammar.Yields OrderedABCGrammar
+          (aWord ++ bWord ++ cWord ++ [Z])
+          (aWord ++ bWord ++ cWord) := by
+      simpa [Z, List.append_assoc] using
+        general_yields_of_production (G := OrderedABCGrammar)
+          OrderedABCProduces.finish (aWord ++ bWord ++ cWord) []
+    exact GeneralGrammar.yields_derives hstep
+  have hall := GeneralGrammar.derives_trans hAs
+    (GeneralGrammar.derives_trans hXToY
+      (GeneralGrammar.derives_trans hBs
+        (GeneralGrammar.derives_trans hYToZ
+          (GeneralGrammar.derives_trans hCs hFinish))))
+  rw [orderedABCBlockWord, SententialForm.terminalWord_append,
+    SententialForm.terminalWord_append]
+  simpa [aWord, bWord, cWord, Word.Concat, List.append_assoc] using hall
+
+theorem orderedABC_words_generated (n : Nat) :
+    orderedABCBlockWord n ∈
+      GeneralGrammar.GeneratedLanguage OrderedABCGrammar := by
+  have hstart := orderedABC_start_to_repeated_markers_derives n
+  have hsort :
+      GeneralGrammar.Derives OrderedABCGrammar
+        ([orderedN OrderedABCNT.x] ++ orderedABCRepeatedMarkers n)
+        ([orderedN OrderedABCNT.x] ++ orderedABCSortedMarkers n) := by
+    simpa [List.append_assoc] using
+      general_derives_context (orderedABC_sort_markers_derives n)
+        [orderedN OrderedABCNT.x] []
+  have hconvert := orderedABC_sorted_markers_to_word_derives n
+  have hall := GeneralGrammar.derives_trans hstart
+    (GeneralGrammar.derives_trans hsort hconvert)
+  simpa [GeneralGrammar.GeneratedLanguage, OrderedABCGrammar, orderedN,
+    ggNonterminal] using hall
+
+theorem orderedABC_language_subset_generated {word : Word EqualCountTerminal}
+    (h : word ∈ orderedABCLanguage) :
+    word ∈ GeneralGrammar.GeneratedLanguage OrderedABCGrammar := by
+  rcases h with ⟨n, hword⟩
+  rw [hword]
+  exact orderedABC_words_generated n
+
 def aabbccWord : Word EqualCountTerminal :=
   [EqualCountTerminal.a, EqualCountTerminal.a, EqualCountTerminal.b,
     EqualCountTerminal.b, EqualCountTerminal.c, EqualCountTerminal.c]
@@ -2084,6 +2593,253 @@ theorem strictMoreBGrammar_generated_has_fewer_as_than_bs
   simpa [strictMoreBMargin, strictMoreBCountA,
     strictMoreBCountBWithCredits, sententialCountTerminal_terminalWord,
     sententialCountNonterminal_terminalWord] using hmargin
+
+def strictMoreBWord (n extra : Nat) : Word EqualCountTerminal :=
+  Word.Concat (Word.RepeatSymbol EqualCountTerminal.a n)
+    (Word.RepeatSymbol EqualCountTerminal.b (n + extra + 1))
+
+def strictMoreBTailWord (extra : Nat) : Word EqualCountTerminal :=
+  Word.RepeatSymbol EqualCountTerminal.b (extra + 1)
+
+def strictMoreBLanguage : Language EqualCountTerminal :=
+  fun word => exists n extra, word = strictMoreBWord n extra
+
+def strictMoreBTailLanguage : Language EqualCountTerminal :=
+  fun word => exists extra, word = strictMoreBTailWord extra
+
+theorem strictMoreB_word_zero (extra : Nat) :
+    strictMoreBWord 0 extra = strictMoreBTailWord extra := by
+  simp [strictMoreBWord, strictMoreBTailWord, Word.Concat,
+    Word.RepeatSymbol]
+
+theorem strictMoreB_tail_more_word (extra : Nat) :
+    EqualCountTerminal.b :: strictMoreBTailWord extra =
+      strictMoreBTailWord (extra + 1) := by
+  unfold strictMoreBTailWord
+  rw [show extra + 1 + 1 = (extra + 1) + 1 by omega]
+  rfl
+
+theorem strictMoreB_wrap_word (n extra : Nat) :
+    EqualCountTerminal.a ::
+        Word.Concat (strictMoreBWord n extra) [EqualCountTerminal.b] =
+      strictMoreBWord (n + 1) extra := by
+  unfold strictMoreBWord
+  rw [show Word.RepeatSymbol EqualCountTerminal.a (n + 1) =
+    EqualCountTerminal.a :: Word.RepeatSymbol EqualCountTerminal.a n by rfl]
+  have hb :
+      Word.RepeatSymbol EqualCountTerminal.b (n + 1 + extra + 1) =
+        Word.Concat
+          (Word.RepeatSymbol EqualCountTerminal.b (n + extra + 1))
+          [EqualCountTerminal.b] := by
+    have hnat : n + 1 + extra + 1 = (n + extra + 1) + 1 := by
+      omega
+    rw [hnat, repeatSymbol_succ_eq_append]
+  rw [hb]
+  simp [Word.Concat, List.append_assoc]
+
+def strictMoreBSymbolLanguage :
+    Symbol EqualCountTerminal StrictMoreBNT -> Language EqualCountTerminal
+  | Symbol.terminal token => Language.Singleton (Word.Symbol token)
+  | Symbol.nonterminal StrictMoreBNT.start => strictMoreBLanguage
+  | Symbol.nonterminal StrictMoreBNT.tail => strictMoreBTailLanguage
+
+theorem strictMoreB_tail_one_derives :
+    GeneralGrammar.Derives StrictMoreBGrammar [moreBN StrictMoreBNT.tail]
+      (SententialForm.terminalWord (strictMoreBTailWord 0)) := by
+  have hstep :
+      GeneralGrammar.Yields StrictMoreBGrammar [moreBN StrictMoreBNT.tail]
+        [moreBT EqualCountTerminal.b] := by
+    simpa [moreBN, moreBT] using
+      general_yields_of_production (G := StrictMoreBGrammar)
+        StrictMoreBProduces.tailOne [] []
+  simpa [strictMoreBTailWord, SententialForm.terminalWord,
+    Word.RepeatSymbol, moreBT] using
+    GeneralGrammar.yields_derives hstep
+
+theorem strictMoreB_tail_more_derives {word : Word EqualCountTerminal}
+    (h : GeneralGrammar.Derives StrictMoreBGrammar [moreBN StrictMoreBNT.tail]
+      (SententialForm.terminalWord word)) :
+    GeneralGrammar.Derives StrictMoreBGrammar [moreBN StrictMoreBNT.tail]
+      (SententialForm.terminalWord (EqualCountTerminal.b :: word)) := by
+  have hstep :
+      GeneralGrammar.Yields StrictMoreBGrammar [moreBN StrictMoreBNT.tail]
+        [moreBT EqualCountTerminal.b, moreBN StrictMoreBNT.tail] := by
+    simpa [moreBN, moreBT] using
+      general_yields_of_production (G := StrictMoreBGrammar)
+        StrictMoreBProduces.tailMore [] []
+  have hcontext :
+      GeneralGrammar.Derives StrictMoreBGrammar
+        [moreBT EqualCountTerminal.b, moreBN StrictMoreBNT.tail]
+        (moreBT EqualCountTerminal.b :: SententialForm.terminalWord word) := by
+    simpa [moreBT] using
+      general_derives_context h [moreBT EqualCountTerminal.b] []
+  exact GeneralGrammar.Derives.step hstep (by
+    simpa [SententialForm.terminalWord, moreBT] using hcontext)
+
+theorem strictMoreB_tail_words_derives (extra : Nat) :
+    GeneralGrammar.Derives StrictMoreBGrammar [moreBN StrictMoreBNT.tail]
+      (SententialForm.terminalWord (strictMoreBTailWord extra)) := by
+  induction extra with
+  | zero =>
+      exact strictMoreB_tail_one_derives
+  | succ extra ih =>
+      simpa [strictMoreB_tail_more_word extra] using
+        strictMoreB_tail_more_derives ih
+
+theorem strictMoreB_zero_words_derives (extra : Nat) :
+    GeneralGrammar.Derives StrictMoreBGrammar [moreBN StrictMoreBNT.start]
+      (SententialForm.terminalWord (strictMoreBWord 0 extra)) := by
+  have hstep :
+      GeneralGrammar.Yields StrictMoreBGrammar [moreBN StrictMoreBNT.start]
+        [moreBN StrictMoreBNT.tail] := by
+    simpa [moreBN] using
+      general_yields_of_production (G := StrictMoreBGrammar)
+        StrictMoreBProduces.toTail [] []
+  have htail := strictMoreB_tail_words_derives extra
+  have hall := GeneralGrammar.Derives.step hstep htail
+  simpa [strictMoreB_word_zero] using hall
+
+theorem strictMoreB_wrap_derives {word : Word EqualCountTerminal}
+    (h : GeneralGrammar.Derives StrictMoreBGrammar [moreBN StrictMoreBNT.start]
+      (SententialForm.terminalWord word)) :
+    GeneralGrammar.Derives StrictMoreBGrammar [moreBN StrictMoreBNT.start]
+      (SententialForm.terminalWord
+        (EqualCountTerminal.a :: Word.Concat word [EqualCountTerminal.b])) := by
+  have hstep :
+      GeneralGrammar.Yields StrictMoreBGrammar [moreBN StrictMoreBNT.start]
+        [moreBT EqualCountTerminal.a, moreBN StrictMoreBNT.start,
+          moreBT EqualCountTerminal.b] := by
+    simpa [moreBN, moreBT] using
+      general_yields_of_production (G := StrictMoreBGrammar)
+        StrictMoreBProduces.wrapPair [] []
+  have hcontext :
+      GeneralGrammar.Derives StrictMoreBGrammar
+        [moreBT EqualCountTerminal.a, moreBN StrictMoreBNT.start,
+          moreBT EqualCountTerminal.b]
+        (moreBT EqualCountTerminal.a ::
+          SententialForm.terminalWord word ++ [moreBT EqualCountTerminal.b]) := by
+    simpa [moreBT] using
+      general_derives_context h [moreBT EqualCountTerminal.a]
+        [moreBT EqualCountTerminal.b]
+  have hall := GeneralGrammar.Derives.step hstep hcontext
+  change GeneralGrammar.Derives StrictMoreBGrammar
+    [moreBN StrictMoreBNT.start]
+    (SententialForm.terminalWord
+      (EqualCountTerminal.a :: Word.Concat word [EqualCountTerminal.b]))
+  simpa [SententialForm.terminalWord, Word.Concat, moreBT] using hall
+
+theorem strictMoreB_words_generated (n extra : Nat) :
+    strictMoreBWord n extra ∈
+      GeneralGrammar.GeneratedLanguage StrictMoreBGrammar := by
+  induction n with
+  | zero =>
+      simpa [GeneralGrammar.GeneratedLanguage, StrictMoreBGrammar, moreBN,
+        ggNonterminal] using strictMoreB_zero_words_derives extra
+  | succ n ih =>
+      have hderives :
+          GeneralGrammar.Derives StrictMoreBGrammar [moreBN StrictMoreBNT.start]
+            (SententialForm.terminalWord
+              (EqualCountTerminal.a ::
+                Word.Concat (strictMoreBWord n extra)
+                  [EqualCountTerminal.b])) := by
+        exact strictMoreB_wrap_derives (by
+          simpa [GeneralGrammar.GeneratedLanguage, StrictMoreBGrammar, moreBN,
+            ggNonterminal] using ih)
+      simpa [GeneralGrammar.GeneratedLanguage, StrictMoreBGrammar, moreBN,
+        ggNonterminal, strictMoreB_wrap_word n extra] using hderives
+
+theorem strictMoreB_production_sound
+    (lhs rhs : SententialForm EqualCountTerminal StrictMoreBNT)
+    (hprod : StrictMoreBGrammar.produces lhs rhs) :
+    forall word,
+      word ∈ CFG.FormLanguage strictMoreBSymbolLanguage rhs ->
+        word ∈ CFG.FormLanguage strictMoreBSymbolLanguage lhs := by
+  intro word hword
+  cases hprod with
+  | wrapPair =>
+      simp [CFG.FormLanguage, strictMoreBSymbolLanguage,
+        moreBN, moreBT, ggNonterminal, ggTerminal] at hword
+      rcases hword with
+        ⟨first, tail, hfirst, htail, hwordEq⟩
+      rcases htail with
+        ⟨middle, lastPart, hmiddle, hlastPart, htailEq⟩
+      rcases hmiddle with ⟨n, extra, hmiddleEq⟩
+      rcases hlastPart with
+        ⟨last, empty, hlast, hempty, hlastPartEq⟩
+      refine ⟨strictMoreBWord (n + 1) extra, Word.Empty,
+        ⟨n + 1, extra, rfl⟩, rfl, ?_⟩
+      rw [hwordEq, hfirst, htailEq, hmiddleEq, hlastPartEq, hlast,
+        hempty]
+      simpa [Word.Symbol, Word.Concat, Word.Empty] using
+        strictMoreB_wrap_word n extra
+  | toTail =>
+      simp [CFG.FormLanguage, strictMoreBSymbolLanguage,
+        moreBN, ggNonterminal] at hword
+      rcases hword with ⟨tailWord, empty, htailWord, hempty, hwordEq⟩
+      rcases htailWord with ⟨extra, htailWordEq⟩
+      refine ⟨strictMoreBWord 0 extra, Word.Empty,
+        ⟨0, extra, rfl⟩, rfl, ?_⟩
+      rw [hwordEq, htailWordEq, hempty]
+      simp [Word.Concat, Word.Empty, strictMoreB_word_zero extra]
+  | tailMore =>
+      simp [CFG.FormLanguage, strictMoreBSymbolLanguage,
+        moreBN, moreBT, ggNonterminal, ggTerminal] at hword
+      rcases hword with
+        ⟨first, tail, hfirst, htail, hwordEq⟩
+      rcases htail with
+        ⟨middle, empty, hmiddle, hempty, htailEq⟩
+      rcases hmiddle with ⟨extra, hmiddleEq⟩
+      refine ⟨strictMoreBTailWord (extra + 1), Word.Empty,
+        ⟨extra + 1, rfl⟩, rfl, ?_⟩
+      rw [hwordEq, hfirst, htailEq, hmiddleEq, hempty]
+      simpa [Word.Symbol, Word.Concat, Word.Empty] using
+        strictMoreB_tail_more_word extra
+  | tailOne =>
+      simp [CFG.FormLanguage, strictMoreBSymbolLanguage,
+        moreBT, ggTerminal] at hword
+      rcases hword with ⟨first, empty, hfirst, hempty, hwordEq⟩
+      refine ⟨strictMoreBTailWord 0, Word.Empty, ⟨0, rfl⟩, rfl, ?_⟩
+      rw [hwordEq, hfirst, hempty]
+      simp [strictMoreBTailWord, Word.Symbol, Word.Concat, Word.Empty,
+        Word.RepeatSymbol]
+
+theorem strictMoreB_generated_only_language {word : Word EqualCountTerminal}
+    (h : word ∈ GeneralGrammar.GeneratedLanguage StrictMoreBGrammar) :
+    word ∈ strictMoreBLanguage := by
+  have hderives :
+      GeneralGrammar.Derives StrictMoreBGrammar
+        [moreBN StrictMoreBNT.start]
+        (SententialForm.terminalWord word) := by
+    simpa [GeneralGrammar.GeneratedLanguage, StrictMoreBGrammar, moreBN,
+      ggNonterminal] using h
+  have hs := general_derives_sound_for_symbol_language
+    strictMoreBSymbolLanguage (by intro token; rfl)
+    strictMoreB_production_sound hderives
+  simp [CFG.FormLanguage, strictMoreBSymbolLanguage] at hs
+  rcases hs with ⟨startWord, empty, hstartWord, hempty, hwordEq⟩
+  rw [hwordEq]
+  have hemptyEq : empty = Word.Empty := hempty
+  rw [hemptyEq, Word.concat_empty_right]
+  exact hstartWord
+
+theorem strictMoreB_generated_language_exact (word : Word EqualCountTerminal) :
+    word ∈ GeneralGrammar.GeneratedLanguage StrictMoreBGrammar <->
+      word ∈ strictMoreBLanguage := by
+  constructor
+  · exact strictMoreB_generated_only_language
+  · intro h
+    rcases h with ⟨n, extra, hword⟩
+    rw [hword]
+    exact strictMoreB_words_generated n extra
+
+theorem strictMoreBLanguage_finite_production_generated :
+    FiniteProductionGeneralLanguage strictMoreBLanguage := by
+  exists StrictMoreBNT
+  exists StrictMoreBGrammar
+  constructor
+  · exact strictMoreBGrammar_has_finite_productions
+  · intro word
+    exact strictMoreB_generated_language_exact word
 
 def aabbbWord : Word EqualCountTerminal :=
   [EqualCountTerminal.a, EqualCountTerminal.a, EqualCountTerminal.b,
