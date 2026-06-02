@@ -441,6 +441,110 @@ theorem decider_rejects_in_of_not_mem {M : TuringMachine symbol state}
     M (EncodeWord encodeInput w) [zero]).mp
     ((h w).right hw)
 
+theorem decider_accept_output_sound_of_stopped
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (hstop : TuringMachine.HaltingTransitionsDisabled M)
+    (hzeroOne : zero ≠ one)
+    (h : DecidesLanguage M encodeInput zero one L)
+    {w : Word input}
+    (hout : TuringMachine.HaltsWithOutput
+      M (EncodeWord encodeInput w) [one]) :
+    w ∈ L := by
+  classical
+  by_cases hw : w ∈ L
+  · exact hw
+  · exfalso
+    have hzero := (h w).right hw
+    have houtEq := TuringMachine.halts_with_output_unique hstop hout hzero
+    have honeZero : one = zero := by
+      cases houtEq
+      rfl
+    exact hzeroOne honeZero.symm
+
+theorem decider_reject_output_sound_of_stopped
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (hstop : TuringMachine.HaltingTransitionsDisabled M)
+    (hzeroOne : zero ≠ one)
+    (h : DecidesLanguage M encodeInput zero one L)
+    {w : Word input}
+    (hout : TuringMachine.HaltsWithOutput
+      M (EncodeWord encodeInput w) [zero]) :
+    ¬ w ∈ L := by
+  intro hw
+  have hone := (h w).left hw
+  have houtEq := TuringMachine.halts_with_output_unique hstop hout hone
+  have hzeroEqOne : zero = one := by
+    cases houtEq
+    rfl
+  exact hzeroOne hzeroEqOne
+
+theorem decider_accept_output_in_sound_of_stopped
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (hstop : TuringMachine.HaltingTransitionsDisabled M)
+    (hzeroOne : zero ≠ one)
+    (h : DecidesLanguage M encodeInput zero one L)
+    {w : Word input} {n : Nat}
+    (hout : TuringMachine.HaltsWithOutputIn
+      M n (EncodeWord encodeInput w) [one]) :
+    w ∈ L :=
+  decider_accept_output_sound_of_stopped hstop hzeroOne h
+    (TuringMachine.halts_with_output_in_to_halts_with_output hout)
+
+theorem decider_reject_output_in_sound_of_stopped
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (hstop : TuringMachine.HaltingTransitionsDisabled M)
+    (hzeroOne : zero ≠ one)
+    (h : DecidesLanguage M encodeInput zero one L)
+    {w : Word input} {n : Nat}
+    (hout : TuringMachine.HaltsWithOutputIn
+      M n (EncodeWord encodeInput w) [zero]) :
+    ¬ w ∈ L :=
+  decider_reject_output_sound_of_stopped hstop hzeroOne h
+    (TuringMachine.halts_with_output_in_to_halts_with_output hout)
+
+theorem stopped_decider_has_complementary_output_traces
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (hstop : TuringMachine.HaltingTransitionsDisabled M)
+    (hzeroOne : zero ≠ one)
+    (h : DecidesLanguage M encodeInput zero one L) :
+    ComplementaryAcceptanceTraces
+      (fun w n =>
+        TuringMachine.HaltsWithOutputIn
+          M n (EncodeWord encodeInput w) [one])
+      (fun w n =>
+        TuringMachine.HaltsWithOutputIn
+          M n (EncodeWord encodeInput w) [zero])
+      L := by
+  constructor
+  · intro w
+    constructor
+    · intro hit
+      cases hit with
+      | intro n hn =>
+          exact decider_accept_output_in_sound_of_stopped
+            hstop hzeroOne h hn
+    · intro hw
+      exact decider_accepts_in_of_mem h hw
+  · intro w
+    constructor
+    · intro hit
+      cases hit with
+      | intro n hn =>
+          exact decider_reject_output_in_sound_of_stopped
+            hstop hzeroOne h hn
+    · intro hw
+      exact decider_rejects_in_of_not_mem h hw
+
 theorem decides_complement {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
     {L : Language input}

@@ -18,9 +18,19 @@ def MoveDirection := Direction
 -- Book: Chapter 5, Section 5.1, finite-window tape representation.
 def MachineTape (symbol : Type u) := Tape symbol
 
+-- Book: Chapter 5, Section 5.1, output tapes determine their output word.
+theorem machine_tape_output_injective :
+    Function.Injective (Tape.output : Word symbol -> Tape symbol) :=
+  Tape.output_injective
+
 -- Book: Chapter 5, Section 5.1, deterministic one-tape Turing machine.
 def Machine (symbol : Type u) (state : Type v) :=
   TuringMachine symbol state
+
+-- Book: Chapter 5, Section 5.1, the halting state has no outgoing
+-- transition.
+def MachineHaltingTransitionsDisabled (M : TuringMachine symbol state) : Prop :=
+  TuringMachine.HaltingTransitionsDisabled M
 
 -- Book: Chapter 5, Section 5.1, one computation step is a multi-step computation.
 theorem turing_step_is_computation {M : TuringMachine symbol state}
@@ -28,6 +38,25 @@ theorem turing_step_is_computation {M : TuringMachine symbol state}
     (h : TuringMachine.Step M c d) :
     TuringMachine.Computes M c d :=
   TuringMachine.computes_of_step h
+
+-- Book: Chapter 5, Section 5.1, the next configuration is unique.
+theorem turing_step_deterministic {M : TuringMachine symbol state}
+    {c d e : TuringMachine.Configuration symbol state}
+    (hcd : TuringMachine.Step M c d)
+    (hce : TuringMachine.Step M c e) :
+    d = e :=
+  TuringMachine.step_deterministic hcd hce
+
+-- Book: Chapter 5, Section 5.1, a stopped halting state has no next
+-- configuration.
+theorem stopped_machine_has_no_step_from_halted
+    {M : TuringMachine symbol state}
+    (hstop : MachineHaltingTransitionsDisabled M)
+    {c d : TuringMachine.Configuration symbol state}
+    (hhalt : TuringMachine.Halted M c)
+    (hstep : TuringMachine.Step M c d) :
+    False :=
+  TuringMachine.no_step_from_halted hstop hhalt hstep
 
 -- Book: Chapter 5, Section 5.1, computations compose.
 theorem turing_computation_transitive {M : TuringMachine symbol state}
@@ -50,6 +79,49 @@ theorem turing_computation_has_step_count {M : TuringMachine symbol state}
     (h : TuringMachine.Computes M c d) :
     exists n : Nat, TuringMachine.ComputesIn M n c d :=
   TuringMachine.computes_to_computesIn h
+
+-- Book: Chapter 5, Section 5.1, exact-step computations compose with added
+-- step counts.
+theorem turing_computation_in_steps_transitive {M : TuringMachine symbol state}
+    {m n : Nat} {a b c : TuringMachine.Configuration symbol state}
+    (hab : TuringMachine.ComputesIn M m a b)
+    (hbc : TuringMachine.ComputesIn M n b c) :
+    TuringMachine.ComputesIn M (m + n) a c :=
+  TuringMachine.computesIn_trans hab hbc
+
+-- Book: Chapter 5, Section 5.1, a deterministic machine has at most one
+-- configuration after a fixed number of steps.
+theorem turing_computation_in_steps_deterministic
+    {M : TuringMachine symbol state}
+    {n : Nat} {c d e : TuringMachine.Configuration symbol state}
+    (hcd : TuringMachine.ComputesIn M n c d)
+    (hce : TuringMachine.ComputesIn M n c e) :
+    d = e :=
+  TuringMachine.computesIn_deterministic hcd hce
+
+-- Book: Chapter 5, Section 5.1, a stopped halted configuration cannot move
+-- along a computation.
+theorem stopped_machine_computation_from_halted_eq
+    {M : TuringMachine symbol state}
+    (hstop : MachineHaltingTransitionsDisabled M)
+    {c d : TuringMachine.Configuration symbol state}
+    (hhalt : TuringMachine.Halted M c)
+    (hcomp : TuringMachine.Computes M c d) :
+    c = d :=
+  TuringMachine.computes_from_halted_eq hstop hhalt hcomp
+
+-- Book: Chapter 5, Section 5.1, halted final configurations are unique for a
+-- stopped deterministic machine.
+theorem stopped_machine_halted_final_unique
+    {M : TuringMachine symbol state}
+    (hstop : MachineHaltingTransitionsDisabled M)
+    {c d e : TuringMachine.Configuration symbol state}
+    (hcd : TuringMachine.Computes M c d)
+    (hd : TuringMachine.Halted M d)
+    (hce : TuringMachine.Computes M c e)
+    (he : TuringMachine.Halted M e) :
+    d = e :=
+  TuringMachine.computes_to_halted_unique hstop hcd hd hce he
 
 -- Book: Chapter 5, Section 5.1, halting with output implies halting.
 theorem halts_with_output_implies_halts {M : TuringMachine symbol state}
@@ -96,6 +168,27 @@ theorem halting_with_output_iff_halting_with_output_in_some_steps
     TuringMachine.HaltsWithOutput M w out <->
       exists n : Nat, TuringMachine.HaltsWithOutputIn M n w out :=
   TuringMachine.halts_with_output_iff_exists_halts_with_output_in M w out
+
+-- Book: Chapter 5, Section 5.1, a deterministic machine has at most one
+-- output at a fixed halting time.
+theorem halting_with_output_in_steps_unique
+    {M : TuringMachine symbol state}
+    {n : Nat} {w out1 out2 : Word symbol}
+    (h1 : TuringMachine.HaltsWithOutputIn M n w out1)
+    (h2 : TuringMachine.HaltsWithOutputIn M n w out2) :
+    out1 = out2 :=
+  TuringMachine.halts_with_output_in_output_unique h1 h2
+
+-- Book: Chapter 5, Section 5.1, a stopped deterministic machine has at most
+-- one halting output.
+theorem stopped_machine_halting_output_unique
+    {M : TuringMachine symbol state}
+    (hstop : MachineHaltingTransitionsDisabled M)
+    {w out1 out2 : Word symbol}
+    (h1 : TuringMachine.HaltsWithOutput M w out1)
+    (h2 : TuringMachine.HaltsWithOutput M w out2) :
+    out1 = out2 :=
+  TuringMachine.halts_with_output_unique hstop h1 h2
 
 -- Book: Chapter 5, Section 5.1, halting is closed under adding previous
 -- computation steps.
@@ -187,6 +280,38 @@ theorem decider_rejects_in_some_steps_of_not_mem
       TuringMachine.HaltsWithOutputIn
         M n (EncodeWord encodeInput w) [zero] :=
   Computability.decider_rejects_in_of_not_mem h hw
+
+-- Book: Chapter 5, Section 5.1, for a stopped decider with distinct 0/1
+-- symbols, output 1 is sound for membership.
+theorem stopped_decider_accept_output_sound
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (hstop : MachineHaltingTransitionsDisabled M)
+    (hzeroOne : zero ≠ one)
+    (h : DecidesLanguage M encodeInput zero one L)
+    {w : Word input}
+    (hout : TuringMachine.HaltsWithOutput
+      M (EncodeWord encodeInput w) [one]) :
+    w ∈ L :=
+  Computability.decider_accept_output_sound_of_stopped
+    hstop hzeroOne h hout
+
+-- Book: Chapter 5, Section 5.1, for a stopped decider with distinct 0/1
+-- symbols, output 0 is sound for nonmembership.
+theorem stopped_decider_reject_output_sound
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (hstop : MachineHaltingTransitionsDisabled M)
+    (hzeroOne : zero ≠ one)
+    (h : DecidesLanguage M encodeInput zero one L)
+    {w : Word input}
+    (hout : TuringMachine.HaltsWithOutput
+      M (EncodeWord encodeInput w) [zero]) :
+    ¬ w ∈ L :=
+  Computability.decider_reject_output_sound_of_stopped
+    hstop hzeroOne h hout
 
 -- Book: Chapter 5, Section 5.1, complementing a 0/1 decider swaps outputs.
 theorem decider_for_complement {M : TuringMachine symbol state}

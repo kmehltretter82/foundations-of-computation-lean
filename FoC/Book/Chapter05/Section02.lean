@@ -221,6 +221,50 @@ theorem re_and_co_re_bounded_search_eventually_classifies
           · exact hreject
           · exact complementary_trace_search_eventually_classifies hreject w
 
+-- Book: Chapter 5, Section 5.2, a stopped 0/1 decider gives complementary
+-- finite output traces.
+theorem stopped_decider_has_complementary_output_traces
+    {M : TuringMachine symbol state}
+    {encodeInput : alpha -> symbol} {zero one : symbol}
+    {L : Language alpha}
+    (hstop : TuringMachine.HaltingTransitionsDisabled M)
+    (hzeroOne : zero ≠ one)
+    (h : DecidesLanguage M encodeInput zero one L) :
+    LanguageComplementaryAcceptanceTraces
+      (fun w n =>
+        TuringMachine.HaltsWithOutputIn
+          M n (EncodeWord encodeInput w) [one])
+      (fun w n =>
+        TuringMachine.HaltsWithOutputIn
+          M n (EncodeWord encodeInput w) [zero])
+      L :=
+  Computability.stopped_decider_has_complementary_output_traces
+    hstop hzeroOne h
+
+-- Book: Chapter 5, Section 5.2, a stopped 0/1 decider has a bounded output
+-- search classification stage for every input.
+theorem stopped_decider_bounded_search_eventually_classifies
+    {M : TuringMachine symbol state}
+    {encodeInput : alpha -> symbol} {zero one : symbol}
+    {L : Language alpha}
+    (hstop : TuringMachine.HaltingTransitionsDisabled M)
+    (hzeroOne : zero ≠ one)
+    (h : DecidesLanguage M encodeInput zero one L)
+    (w : Word alpha) :
+    exists limit : Nat,
+      (LanguageTraceHitsBy
+        (fun x n =>
+          TuringMachine.HaltsWithOutputIn
+            M n (EncodeWord encodeInput x) [one])
+        w limit ∧ w ∈ L) ∨
+        (LanguageTraceHitsBy
+          (fun x n =>
+            TuringMachine.HaltsWithOutputIn
+              M n (EncodeWord encodeInput x) [zero])
+          w limit ∧ ¬ w ∈ L) :=
+  complementary_trace_search_eventually_classifies
+    (stopped_decider_has_complementary_output_traces hstop hzeroOne h) w
+
 -- Book: Chapter 5, Section 5.2, languages listed by a stream of words.
 def LanguageListedBy (stream : Nat -> Word alpha) (L : Language alpha) : Prop :=
   ListedBy stream L

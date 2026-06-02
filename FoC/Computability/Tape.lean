@@ -77,6 +77,46 @@ theorem input_cons (a : symbol) (rest : Word symbol) :
     input (a :: rest) = { left := [], head := some a, right := rest.map some } :=
   rfl
 
+theorem list_map_some_injective {xs ys : List symbol}
+    (h : xs.map some = ys.map some) : xs = ys := by
+  induction xs generalizing ys with
+  | nil =>
+      cases ys with
+      | nil => rfl
+      | cons _ _ => simp at h
+  | cons x xs ih =>
+      cases ys with
+      | nil => simp at h
+      | cons y ys =>
+          simp at h
+          cases h.left
+          rw [ih h.right]
+
+theorem input_injective : Function.Injective (input : Word symbol -> Tape symbol) := by
+  intro x y h
+  cases x with
+  | nil =>
+      cases y with
+      | nil => rfl
+      | cons _ _ =>
+          have hhead := congrArg Tape.head h
+          simp [input, blank] at hhead
+  | cons _ _ =>
+      cases y with
+      | nil =>
+          have hhead := congrArg Tape.head h
+          simp [input, blank] at hhead
+      | cons _ _ =>
+          have hhead := congrArg Tape.head h
+          have hright := congrArg Tape.right h
+          simp [input] at hhead hright
+          cases hhead
+          rw [list_map_some_injective hright]
+
+theorem output_injective : Function.Injective (output : Word symbol -> Tape symbol) := by
+  intro x y h
+  exact input_injective h
+
 theorem read_input_cons (a : symbol) (rest : Word symbol) :
     read (input (a :: rest)) = some a :=
   rfl
