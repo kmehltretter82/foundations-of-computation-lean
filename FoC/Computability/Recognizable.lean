@@ -87,6 +87,46 @@ def ComplementaryTraceSearchHit
     (w : Word input) (limit : Nat) : Prop :=
   TraceHitsBy accept w limit ∨ TraceHitsBy reject w limit
 
+noncomputable def CharacteristicFunction (L : Language input) :
+    Word input -> Word Bool :=
+  by
+    classical
+    exact fun w => if w ∈ L then [true] else [false]
+
+def BoolCharacteristic (χ : Word input -> Word Bool)
+    (L : Language input) : Prop :=
+  forall w : Word input,
+    (w ∈ L -> χ w = [true]) ∧ (¬ w ∈ L -> χ w = [false])
+
+def HasComputableCharacteristic (L : Language input) : Prop :=
+  exists χ : Word input -> Word Bool,
+    TuringComputable χ ∧ BoolCharacteristic χ L
+
+def AcceptsByOneOutput (M : TuringMachine symbol state)
+    (encodeInput : input -> symbol) (one : symbol)
+    (L : Language input) : Prop :=
+  forall w : Word input,
+    TuringMachine.HaltsWithOutput M (EncodeWord encodeInput w) [one] <->
+      w ∈ L
+
+def RejectsByZeroOutput (M : TuringMachine symbol state)
+    (encodeInput : input -> symbol) (zero : symbol)
+    (L : Language input) : Prop :=
+  forall w : Word input,
+    TuringMachine.HaltsWithOutput M (EncodeWord encodeInput w) [zero] <->
+      ¬ w ∈ L
+
+def DecidableToAcceptablePrinciple (input : Type u) : Prop :=
+  forall L : Language input, TuringDecidable L -> TuringAcceptable L
+
+def ReCoReToDecidablePrinciple (input : Type u) : Prop :=
+  forall L : Language input,
+    RecursivelyEnumerableWithComplement L -> TuringDecidable L
+
+def RecursiveIffReCoRePrinciple (input : Type u) : Prop :=
+  forall L : Language input,
+    Recursive L <-> RecursivelyEnumerableWithComplement L
+
 theorem acceptsLanguage_of_equal {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {L K : Language input}
     (h : AcceptsLanguage M encodeInput L)
@@ -129,6 +169,122 @@ theorem turing_acceptable_acceptedLanguage {input : Type} {state : Type}
     (M : TuringMachine input state) :
     TuringAcceptable (TuringMachine.AcceptedLanguage M) :=
   turing_acceptable_of_recognizes (TuringMachine.recognizes_acceptedLanguage M)
+
+theorem characteristicFunction_is_boolCharacteristic
+    (L : Language input) :
+    BoolCharacteristic (CharacteristicFunction L) L := by
+  classical
+  intro w
+  constructor
+  · intro hw
+    simp [CharacteristicFunction, hw]
+  · intro hw
+    simp [CharacteristicFunction, hw]
+
+theorem boolCharacteristic_of_equal
+    {χ : Word input -> Word Bool} {L K : Language input}
+    (hχ : BoolCharacteristic χ L) (hEq : Language.Equal L K) :
+    BoolCharacteristic χ K := by
+  intro w
+  constructor
+  · intro hw
+    exact (hχ w).left ((hEq w).mpr hw)
+  · intro hw
+    exact (hχ w).right (fun hL => hw ((hEq w).mp hL))
+
+theorem computesFunction_characteristicFunction
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : DecidesLanguage M encodeInput zero one L) :
+    ComputesFunction M encodeInput
+      (fun b : Bool => if b then one else zero)
+      (CharacteristicFunction L) := by
+  classical
+  intro w
+  by_cases hw : w ∈ L
+  · simpa [CharacteristicFunction, hw, EncodeWord] using (h w).left hw
+  · simpa [CharacteristicFunction, hw, EncodeWord] using (h w).right hw
+
+theorem turingDecidable_characteristicFunction_turingComputable
+    {L : Language input}
+    (h : TuringDecidable L) :
+    TuringComputable (CharacteristicFunction L) := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro zero hzero =>
+                      cases hzero with
+                      | intro one hdec =>
+                          exists symbol
+                          exists state
+                          exists M
+                          exists encodeInput
+                          exists fun b : Bool => if b then one else zero
+                          exact computesFunction_characteristicFunction hdec
+
+theorem turingDecidable_has_computableCharacteristic
+    {L : Language input}
+    (h : TuringDecidable L) :
+    HasComputableCharacteristic L :=
+  Exists.intro (CharacteristicFunction L)
+    (And.intro
+      (turingDecidable_characteristicFunction_turingComputable h)
+      (characteristicFunction_is_boolCharacteristic L))
+
+theorem boolCharacteristic_turingDecidable
+    {χ : Word input -> Word Bool} {L : Language input}
+    (hcomp : TuringComputable χ) (hχ : BoolCharacteristic χ L) :
+    TuringDecidable L := by
+  cases hcomp with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro encodeOutput hcomputes =>
+                      exists symbol
+                      exists state
+                      exists M
+                      exists encodeInput
+                      exists encodeOutput false
+                      exists encodeOutput true
+                      intro w
+                      constructor
+                      · intro hw
+                        have hχw : χ w = [true] := (hχ w).left hw
+                        have hhalt := hcomputes w
+                        rw [hχw] at hhalt
+                        simpa [EncodeWord] using hhalt
+                      · intro hw
+                        have hχw : χ w = [false] := (hχ w).right hw
+                        have hhalt := hcomputes w
+                        rw [hχw] at hhalt
+                        simpa [EncodeWord] using hhalt
+
+theorem hasComputableCharacteristic_turingDecidable
+    {L : Language input}
+    (h : HasComputableCharacteristic L) :
+    TuringDecidable L := by
+  cases h with
+  | intro χ hχ =>
+      exact boolCharacteristic_turingDecidable hχ.left hχ.right
+
+theorem turingDecidable_iff_hasComputableCharacteristic
+    (L : Language input) :
+    TuringDecidable L <-> HasComputableCharacteristic L := by
+  constructor
+  · exact turingDecidable_has_computableCharacteristic
+  · exact hasComputableCharacteristic_turingDecidable
 
 theorem computesPartialFunction_accepts_domain
     {M : TuringMachine symbol state}
@@ -646,6 +802,65 @@ theorem stoppedTuringDecidable_has_complementary_output_traces
                             hstopped.left hstopped.right.left
                             hstopped.right.right
 
+theorem stoppedDecidesLanguage_acceptsByOneOutput
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : StoppedDecidesLanguage M encodeInput zero one L) :
+    AcceptsByOneOutput M encodeInput one L := by
+  intro w
+  constructor
+  · intro hout
+    exact decider_accept_output_sound_of_stopped h.left h.right.left
+      h.right.right hout
+  · intro hw
+    exact (h.right.right w).left hw
+
+theorem stoppedDecidesLanguage_rejectsByZeroOutput
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : StoppedDecidesLanguage M encodeInput zero one L) :
+    RejectsByZeroOutput M encodeInput zero L := by
+  intro w
+  constructor
+  · intro hout
+    exact decider_reject_output_sound_of_stopped h.left h.right.left
+      h.right.right hout
+  · intro hw
+    exact (h.right.right w).right hw
+
+theorem stoppedTuringDecidable_has_output_classifiers
+    {L : Language input}
+    (h : StoppedTuringDecidable L) :
+    exists symbol : Type, exists state : Type,
+      exists M : TuringMachine symbol state,
+        exists encodeInput : input -> symbol,
+          exists zero : symbol, exists one : symbol,
+            AcceptsByOneOutput M encodeInput one L ∧
+              RejectsByZeroOutput M encodeInput zero L := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro zero hzero =>
+                      cases hzero with
+                      | intro one hstopped =>
+                          exists symbol
+                          exists state
+                          exists M
+                          exists encodeInput
+                          exists zero
+                          exists one
+                          exact And.intro
+                            (stoppedDecidesLanguage_acceptsByOneOutput hstopped)
+                            (stoppedDecidesLanguage_rejectsByZeroOutput hstopped)
+
 theorem stoppedTuringDecidable_bounded_search_eventually_classifies
     {L : Language input}
     (h : StoppedTuringDecidable L)
@@ -781,6 +996,31 @@ theorem recursive_of_complement {L : Language input}
 theorem recursive_complement_iff {L : Language input} :
     Recursive (Language.Compl L) <-> Recursive L :=
   turing_decidable_complement_iff
+
+theorem recursive_reCoRe_of_decidableToAcceptable
+    (haccept : DecidableToAcceptablePrinciple input)
+    {L : Language input}
+    (h : Recursive L) :
+    RecursivelyEnumerableWithComplement L := by
+  constructor
+  · exact haccept L h
+  · exact haccept (Language.Compl L) (turing_decidable_complement h)
+
+theorem recursive_iff_reCoRe_of_principles
+    (haccept : DecidableToAcceptablePrinciple input)
+    (hdovetail : ReCoReToDecidablePrinciple input)
+    (L : Language input) :
+    Recursive L <-> RecursivelyEnumerableWithComplement L := by
+  constructor
+  · exact recursive_reCoRe_of_decidableToAcceptable haccept
+  · intro h
+    exact hdovetail L h
+
+theorem recursiveIffReCoRePrinciple_of_principles
+    (haccept : DecidableToAcceptablePrinciple input)
+    (hdovetail : ReCoReToDecidablePrinciple input) :
+    RecursiveIffReCoRePrinciple input :=
+  recursive_iff_reCoRe_of_principles haccept hdovetail
 
 theorem recursive_of_equal {L K : Language input}
     (h : Recursive L) (hEq : Language.Equal L K) :

@@ -269,6 +269,46 @@ theorem compl_selfHalting_not_acceptable_if_decoder_universal
     (self_diagonal_not_acceptable_if_decoder_universal huniv)
     (selfDiagonal_equal_compl_selfHalting decodeAccepts)
 
+theorem compl_selfHalting_not_recursivelyEnumerable_if_decoder_universal
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (huniv : DecoderUniversalForAcceptableLanguages decodeAccepts) :
+    ¬ RecursivelyEnumerable
+      (Language.Compl (SelfHaltingLanguage decodeAccepts)) :=
+  compl_selfHalting_not_acceptable_if_decoder_universal huniv
+
+theorem selfHalting_not_recursive_if_decoder_universal
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (haccept : DecidableToAcceptablePrinciple code)
+    (huniv : DecoderUniversalForAcceptableLanguages decodeAccepts) :
+    ¬ Recursive (SelfHaltingLanguage decodeAccepts) := by
+  intro hrecursive
+  exact compl_selfHalting_not_recursivelyEnumerable_if_decoder_universal
+    huniv
+    (haccept (Language.Compl (SelfHaltingLanguage decodeAccepts))
+      (turing_decidable_complement hrecursive))
+
+theorem selfHalting_undecidable_if_decoder_universal
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (haccept : DecidableToAcceptablePrinciple code)
+    (huniv : DecoderUniversalForAcceptableLanguages decodeAccepts) :
+    UndecidableLanguage (SelfHaltingLanguage decodeAccepts) :=
+  selfHalting_not_recursive_if_decoder_universal haccept huniv
+
+theorem selfHalting_re_not_recursive_and_compl_not_re_if_decoder_universal
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (haccept : DecidableToAcceptablePrinciple code)
+    (huniv : DecoderUniversalForAcceptableLanguages decodeAccepts)
+    (hself : RecursivelyEnumerable (SelfHaltingLanguage decodeAccepts)) :
+    RecursivelyEnumerable (SelfHaltingLanguage decodeAccepts) ∧
+      ¬ Recursive (SelfHaltingLanguage decodeAccepts) ∧
+        ¬ RecursivelyEnumerable
+          (Language.Compl (SelfHaltingLanguage decodeAccepts)) := by
+  constructor
+  · exact hself
+  constructor
+  · exact selfHalting_not_recursive_if_decoder_universal haccept huniv
+  · exact compl_selfHalting_not_recursivelyEnumerable_if_decoder_universal huniv
+
 theorem haltingProblem_mem
     (haltsOnCodeInput : Word code -> Word code -> Prop)
     (encodedPair : Word code) :

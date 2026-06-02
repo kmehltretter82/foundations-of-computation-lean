@@ -24,6 +24,19 @@ def NonTuringAcceptableLanguage (L : Language alpha) : Prop :=
 def UndecidableTuringLanguage (L : Language alpha) : Prop :=
   UndecidableLanguage L
 
+-- Book: Chapter 5, Section 5.3, recursive languages.
+def RecursiveTuringLanguage (L : Language alpha) : Prop :=
+  Recursive L
+
+-- Book: Chapter 5, Section 5.3, recursively enumerable languages.
+def RecursivelyEnumerableTuringLanguage (L : Language alpha) : Prop :=
+  RecursivelyEnumerable L
+
+-- Book: Chapter 5, Section 5.3, construction principle used by the diagonal
+-- theorem: every decidable language can be made acceptable.
+def DecidableToAcceptableConstruction (alpha : Type u) : Prop :=
+  DecidableToAcceptablePrinciple alpha
+
 -- Book: Chapter 5, Section 5.3, abstract reductions preserving
 -- decidability.
 def TuringDecidableReduction
@@ -264,6 +277,52 @@ theorem complement_self_halting_not_acceptable_if_decoder_universal
     NonTuringAcceptableLanguage
       (Language.Compl (TuringSelfHaltingLanguage decodeAccepts)) :=
   Computability.compl_selfHalting_not_acceptable_if_decoder_universal huniv
+
+-- Book: Chapter 5, Section 5.3, decoder universality makes the complement of
+-- the self-halting language non-recursively enumerable.
+theorem complement_self_halting_not_recursively_enumerable_if_decoder_universal
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (huniv : TuringDecoderUniversalForAcceptableLanguages decodeAccepts) :
+    ¬ RecursivelyEnumerableTuringLanguage
+      (Language.Compl (TuringSelfHaltingLanguage decodeAccepts)) :=
+  Computability.compl_selfHalting_not_recursivelyEnumerable_if_decoder_universal
+    huniv
+
+-- Book: Chapter 5, Section 5.3, under the decider-to-acceptor construction,
+-- self-halting is not recursive.
+theorem self_halting_not_recursive_if_decoder_universal
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (haccept : DecidableToAcceptableConstruction code)
+    (huniv : TuringDecoderUniversalForAcceptableLanguages decodeAccepts) :
+    ¬ RecursiveTuringLanguage (TuringSelfHaltingLanguage decodeAccepts) :=
+  Computability.selfHalting_not_recursive_if_decoder_universal
+    haccept huniv
+
+-- Book: Chapter 5, Section 5.3, the same conditional result in
+-- undecidability vocabulary.
+theorem self_halting_undecidable_if_decoder_universal
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (haccept : DecidableToAcceptableConstruction code)
+    (huniv : TuringDecoderUniversalForAcceptableLanguages decodeAccepts) :
+    UndecidableTuringLanguage (TuringSelfHaltingLanguage decodeAccepts) :=
+  Computability.selfHalting_undecidable_if_decoder_universal
+    haccept huniv
+
+-- Book: Chapter 5, Section 5.3, conditional book theorem shape: self-halting
+-- is RE but not recursive, while its complement is not RE.
+theorem self_halting_re_not_recursive_and_complement_not_re_if_decoder_universal
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (haccept : DecidableToAcceptableConstruction code)
+    (huniv : TuringDecoderUniversalForAcceptableLanguages decodeAccepts)
+    (hself : RecursivelyEnumerableTuringLanguage
+      (TuringSelfHaltingLanguage decodeAccepts)) :
+    RecursivelyEnumerableTuringLanguage
+        (TuringSelfHaltingLanguage decodeAccepts) ∧
+      ¬ RecursiveTuringLanguage (TuringSelfHaltingLanguage decodeAccepts) ∧
+        ¬ RecursivelyEnumerableTuringLanguage
+          (Language.Compl (TuringSelfHaltingLanguage decodeAccepts)) :=
+  Computability.selfHalting_re_not_recursive_and_compl_not_re_if_decoder_universal
+    haccept huniv hself
 
 -- Book: Chapter 5, Section 5.3, membership in the abstract halting problem.
 theorem halting_problem_mem

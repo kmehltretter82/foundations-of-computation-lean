@@ -36,6 +36,21 @@ def RecursiveLanguage (L : Language alpha) : Prop :=
 def StoppedTuringDecidableLanguage (L : Language alpha) : Prop :=
   StoppedTuringDecidable L
 
+-- Book: Chapter 5, Section 5.2, construction principle for turning a
+-- decidable language into an acceptable language.
+def DecidableToAcceptableConstruction (alpha : Type u) : Prop :=
+  DecidableToAcceptablePrinciple alpha
+
+-- Book: Chapter 5, Section 5.2, construction principle for turning paired
+-- recognizers for a language and its complement into a decider.
+def DovetailingDecidableConstruction (alpha : Type u) : Prop :=
+  ReCoReToDecidablePrinciple alpha
+
+-- Book: Chapter 5, Section 5.2, statement shape for Theorem 5.2: recursive
+-- iff recursively enumerable with recursively enumerable complement.
+def RecursiveIffReCoREConstruction (alpha : Type u) : Prop :=
+  RecursiveIffReCoRePrinciple alpha
+
 -- Book: Chapter 5, Section 5.2, the domain language of a partial string
 -- function.
 def PartialFunctionDomainLanguage
@@ -321,6 +336,33 @@ theorem stopped_turing_decidable_language_bounded_search_eventually_classifies
           (LanguageTraceHitsBy accept w limit ∧ w ∈ L) ∨
             (LanguageTraceHitsBy reject w limit ∧ ¬ w ∈ L) :=
   Computability.stoppedTuringDecidable_bounded_search_eventually_classifies h w
+
+-- Book: Chapter 5, Section 5.2, the decider-to-acceptor construction gives
+-- the easy direction of Theorem 5.2.
+theorem recursive_language_re_and_co_re_of_decidable_to_acceptable
+    (haccept : DecidableToAcceptableConstruction alpha)
+    {L : Language alpha}
+    (h : RecursiveLanguage L) :
+    RecursivelyEnumerableLanguageWithComplement L :=
+  Computability.recursive_reCoRe_of_decidableToAcceptable haccept h
+
+-- Book: Chapter 5, Section 5.2, the decider-to-acceptor and dovetailing
+-- constructions together give Theorem 5.2.
+theorem recursive_language_iff_re_and_co_re_of_constructions
+    (haccept : DecidableToAcceptableConstruction alpha)
+    (hdovetail : DovetailingDecidableConstruction alpha)
+    (L : Language alpha) :
+    RecursiveLanguage L <-> RecursivelyEnumerableLanguageWithComplement L :=
+  Computability.recursive_iff_reCoRe_of_principles haccept hdovetail L
+
+-- Book: Chapter 5, Section 5.2, the two construction principles assemble into
+-- the reusable theorem statement.
+theorem recursive_iff_re_co_re_construction_of_principles
+    (haccept : DecidableToAcceptableConstruction alpha)
+    (hdovetail : DovetailingDecidableConstruction alpha) :
+    RecursiveIffReCoREConstruction alpha :=
+  Computability.recursiveIffReCoRePrinciple_of_principles
+    haccept hdovetail
 
 -- Book: Chapter 5, Section 5.2, languages listed by a stream of words.
 def LanguageListedBy (stream : Nat -> Word alpha) (L : Language alpha) : Prop :=

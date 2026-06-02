@@ -295,6 +295,77 @@ def TuringDecidableLanguage (L : Language input) : Prop :=
 def TuringAcceptableLanguage (L : Language input) : Prop :=
   TuringAcceptable L
 
+-- Book: Chapter 5, Section 5.1, the characteristic function of a language,
+-- returning a one-symbol Boolean output word.
+noncomputable def LanguageCharacteristicFunction (L : Language input) :
+    Word input -> Word Bool :=
+  CharacteristicFunction L
+
+-- Book: Chapter 5, Section 5.1, a Boolean-valued function is the
+-- characteristic function of a language.
+def LanguageBoolCharacteristic (χ : Word input -> Word Bool)
+    (L : Language input) : Prop :=
+  BoolCharacteristic χ L
+
+-- Book: Chapter 5, Section 5.1, a language has a Turing-computable
+-- characteristic function.
+def LanguageHasComputableCharacteristic (L : Language input) : Prop :=
+  HasComputableCharacteristic L
+
+-- Book: Chapter 5, Section 5.1, a machine classifies membership by output 1.
+def MachineAcceptsByOneOutput (M : TuringMachine symbol state)
+    (encodeInput : input -> symbol) (one : symbol)
+    (L : Language input) : Prop :=
+  AcceptsByOneOutput M encodeInput one L
+
+-- Book: Chapter 5, Section 5.1, a machine classifies nonmembership by output 0.
+def MachineRejectsByZeroOutput (M : TuringMachine symbol state)
+    (encodeInput : input -> symbol) (zero : symbol)
+    (L : Language input) : Prop :=
+  RejectsByZeroOutput M encodeInput zero L
+
+-- Book: Chapter 5, Section 5.1, the characteristic function is a
+-- Boolean characteristic.
+theorem language_characteristic_function_is_bool_characteristic
+    (L : Language input) :
+    LanguageBoolCharacteristic (LanguageCharacteristicFunction L) L :=
+  Computability.characteristicFunction_is_boolCharacteristic L
+
+-- Book: Chapter 5, Section 5.1, a 0/1 decider computes the characteristic
+-- function using the corresponding Boolean output encoding.
+theorem decider_computes_language_characteristic_function
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : DecidesLanguage M encodeInput zero one L) :
+    ComputesFunction M encodeInput
+      (fun b : Bool => if b then one else zero)
+      (LanguageCharacteristicFunction L) :=
+  Computability.computesFunction_characteristicFunction h
+
+-- Book: Chapter 5, Section 5.1, decidability gives a computable
+-- characteristic function.
+theorem decidable_language_has_computable_characteristic
+    {L : Language input}
+    (h : TuringDecidableLanguage L) :
+    LanguageHasComputableCharacteristic L :=
+  Computability.turingDecidable_has_computableCharacteristic h
+
+-- Book: Chapter 5, Section 5.1, a computable Boolean characteristic function
+-- gives a decider.
+theorem computable_characteristic_decidable_language
+    {L : Language input}
+    (h : LanguageHasComputableCharacteristic L) :
+    TuringDecidableLanguage L :=
+  Computability.hasComputableCharacteristic_turingDecidable h
+
+-- Book: Chapter 5, Section 5.1, Turing-decidability is equivalent to having a
+-- computable characteristic function.
+theorem decidable_language_iff_has_computable_characteristic
+    (L : Language input) :
+    TuringDecidableLanguage L <-> LanguageHasComputableCharacteristic L :=
+  Computability.turingDecidable_iff_hasComputableCharacteristic L
+
 -- Book: Chapter 5, Section 5.1, a decider halts on every input.
 theorem decider_halts_on_all_inputs {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
@@ -375,6 +446,26 @@ theorem stopped_decider_reject_output_sound
     ¬ w ∈ L :=
   Computability.decider_reject_output_sound_of_stopped
     hstop hzeroOne h hout
+
+-- Book: Chapter 5, Section 5.1, a stopped 0/1 decider's output 1 is exact for
+-- membership.
+theorem stopped_decider_accepts_by_one_output
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : StoppedDecidesLanguage M encodeInput zero one L) :
+    MachineAcceptsByOneOutput M encodeInput one L :=
+  Computability.stoppedDecidesLanguage_acceptsByOneOutput h
+
+-- Book: Chapter 5, Section 5.1, a stopped 0/1 decider's output 0 is exact for
+-- nonmembership.
+theorem stopped_decider_rejects_by_zero_output
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : StoppedDecidesLanguage M encodeInput zero one L) :
+    MachineRejectsByZeroOutput M encodeInput zero L :=
+  Computability.stoppedDecidesLanguage_rejectsByZeroOutput h
 
 -- Book: Chapter 5, Section 5.1, complementing a 0/1 decider swaps outputs.
 theorem decider_for_complement {M : TuringMachine symbol state}
