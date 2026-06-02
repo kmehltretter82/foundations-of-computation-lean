@@ -489,6 +489,10 @@ theorem concat_regular {L M : Language alpha}
 theorem star_regular {L : Language alpha} (hL : Regular L) : Regular (Language.Star L) :=
   RegExp.regular_star hL
 
+theorem reverse_regular {L : Language alpha} (hL : Regular L) :
+    Regular (Language.Reverse L) :=
+  RegExp.regular_reverse hL
+
 theorem finite_list_regular (ws : List (Word alpha)) :
     Regular (fun w => w ∈ ws) :=
   RegExp.finite_language_regular ws

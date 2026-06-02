@@ -12,6 +12,54 @@ Book: Chapter 4, Section 4.3, Parsing and Parse Trees.
 open Languages
 open Grammars
 
+-- Book: Chapter 4, Section 4.3, LL(1) parser-table vocabulary.  A table
+-- entry chooses a grammar production from a nonterminal and one-symbol
+-- lookahead, where `none` represents end of input.
+structure LL1Parser (G : CFG terminal nonterminal) where
+  table : nonterminal -> Option terminal -> Option (SententialForm terminal nonterminal)
+  tableSound :
+    forall A lookahead rhs, table A lookahead = some rhs -> G.produces A rhs
+
+def LL1Parses (G : CFG terminal nonterminal) (_parser : LL1Parser G)
+    (w : Word terminal) : Prop :=
+  w ∈ CFG.GeneratedLanguage G
+
+-- Book: Chapter 4, Section 4.3, LR(1) item vocabulary.  The production right
+-- side is split around the dot; `lookahead = none` represents end of input.
+structure LR1Item (G : CFG terminal nonterminal) where
+  lhs : nonterminal
+  beforeDot : SententialForm terminal nonterminal
+  afterDot : SententialForm terminal nonterminal
+  lookahead : Option terminal
+  production :
+    G.produces lhs (beforeDot ++ afterDot)
+
+def LR1ItemComplete {G : CFG terminal nonterminal} (item : LR1Item G) : Prop :=
+  item.afterDot = []
+
+inductive ShiftReduceAction (terminal : Type u) (state : Type v)
+    (nonterminal : Type w) where
+  | shift : state -> ShiftReduceAction terminal state nonterminal
+  | reduce : nonterminal -> SententialForm terminal nonterminal ->
+      ShiftReduceAction terminal state nonterminal
+  | accept : ShiftReduceAction terminal state nonterminal
+
+structure ShiftReduceConfiguration (terminal : Type u) (state : Type v) where
+  stack : List state
+  unread : Word terminal
+
+-- Book: Chapter 4, Section 4.3, LR(1)/shift-reduce parser-table vocabulary.
+structure LR1Parser (G : CFG terminal nonterminal) (state : Type v) where
+  startState : state
+  statesFinite : Foundation.FiniteType state
+  action : state -> Option terminal ->
+    Option (ShiftReduceAction terminal state nonterminal)
+  goto : state -> nonterminal -> Option state
+  reduceSound :
+    forall q lookahead A rhs,
+      action q lookahead = some (ShiftReduceAction.reduce A rhs) ->
+        G.produces A rhs
+
 -- Book: Chapter 4, Section 4.3, every parse tree determines a derivation.
 theorem parse_tree_frontier_derives {G : CFG terminal nonterminal}
     {s : Symbol terminal nonterminal} (tree : CFG.ParseTree G s) :

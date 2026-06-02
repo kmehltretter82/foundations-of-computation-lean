@@ -58,6 +58,14 @@ def OfFiniteLanguage : List (Word alpha) -> RegExp alpha
   | [] => empty
   | w :: ws => alt (OfWord w) (OfFiniteLanguage ws)
 
+def Reverse : RegExp alpha -> RegExp alpha
+  | empty => empty
+  | eps => eps
+  | sym a => sym a
+  | alt r s => alt (Reverse r) (Reverse s)
+  | seq r s => seq (Reverse s) (Reverse r)
+  | star r => star (Reverse r)
+
 theorem denote_empty (w : Word alpha) : w ∈ Denote (empty : RegExp alpha) <-> False :=
   Iff.rfl
 
@@ -91,6 +99,111 @@ theorem regular_epsilon : Regular (Language.Singleton (Word.Empty : Word alpha))
 theorem regular_symbol (a : alpha) : Regular (Language.Singleton (Word.Symbol a)) := by
   exists sym a
   exact Language.equal_refl _
+
+theorem reverse_denote (r : RegExp alpha) :
+    Language.Equal (Denote (Reverse r)) (Language.Reverse (Denote r)) := by
+  induction r with
+  | empty =>
+      intro w
+      constructor <;> intro h <;> cases h
+  | eps =>
+      intro w
+      constructor
+      · intro hw
+        rw [hw]
+        rfl
+      · intro hw
+        have hrev := congrArg Word.Reverse hw
+        simpa [Word.Reverse, Word.Empty] using hrev
+  | sym a =>
+      intro w
+      constructor
+      · intro hw
+        rw [hw]
+        rfl
+      · intro hw
+        have hrev := congrArg Word.Reverse hw
+        simpa [Word.Reverse, Word.Symbol] using hrev
+  | alt r s ihr ihs =>
+      intro w
+      constructor
+      · intro hw
+        cases hw with
+        | inl hr => exact Or.inl ((ihr w).mp hr)
+        | inr hs => exact Or.inr ((ihs w).mp hs)
+      · intro hw
+        cases hw with
+        | inl hr => exact Or.inl ((ihr w).mpr hr)
+        | inr hs => exact Or.inr ((ihs w).mpr hs)
+  | seq r s ihr ihs =>
+      intro w
+      constructor
+      · intro hw
+        apply (Language.reverse_concat (Denote r) (Denote s) w).mpr
+        cases hw with
+        | intro x hx =>
+            cases hx with
+            | intro y hy =>
+                exists x
+                exists y
+                constructor
+                · exact (ihs x).mp hy.left
+                constructor
+                · exact (ihr y).mp hy.right.left
+                · exact hy.right.right
+      · intro hw
+        have hconcat :=
+          (Language.reverse_concat (Denote r) (Denote s) w).mp hw
+        cases hconcat with
+        | intro x hx =>
+            cases hx with
+            | intro y hy =>
+                exists x
+                exists y
+                constructor
+                · exact (ihs x).mpr hy.left
+                constructor
+                · exact (ihr y).mpr hy.right.left
+                · exact hy.right.right
+  | star r ih =>
+      intro w
+      constructor
+      · intro hw
+        have hstar :=
+          (Language.reverse_star (Denote r) w).mpr
+            (by
+              cases hw with
+              | intro pieces hpieces =>
+                  exists pieces
+                  constructor
+                  · intro p hp
+                    exact (ih p).mp (hpieces.left p hp)
+                  · exact hpieces.right)
+        exact hstar
+      · intro hw
+        have hstar :=
+          (Language.reverse_star (Denote r) w).mp hw
+        cases hstar with
+        | intro pieces hpieces =>
+            exists pieces
+            constructor
+            · intro p hp
+              exact (ih p).mpr (hpieces.left p hp)
+            · exact hpieces.right
+
+theorem regular_reverse {L : Language alpha}
+    (hL : Regular L) : Regular (Language.Reverse L) := by
+  cases hL with
+  | intro r hr =>
+      exists Reverse r
+      exact Language.equal_trans (reverse_denote r)
+        (by
+          intro w
+          constructor
+          · intro hw
+            exact (hr (Word.Reverse w)).mp hw
+          · intro hw
+            exact (hr (Word.Reverse w)).mpr hw)
 
 theorem regular_union {L M : Language alpha}
     (hL : Regular L) (hM : Regular M) : Regular (Language.Union L M) := by

@@ -37,6 +37,16 @@ structure GeneralGrammar (terminal : Type u) (nonterminal : Type v) where
 
 namespace GeneralGrammar
 
+structure Production (terminal : Type u) (nonterminal : Type v) where
+  lhs : SententialForm terminal nonterminal
+  rhs : SententialForm terminal nonterminal
+
+def HasFiniteProductions (G : GeneralGrammar terminal nonterminal) : Prop :=
+  exists rules : List (Production terminal nonterminal),
+    forall lhs rhs,
+      G.produces lhs rhs <->
+        exists rule, rule ∈ rules ∧ rule.lhs = lhs ∧ rule.rhs = rhs
+
 def Yields (G : GeneralGrammar terminal nonterminal)
     (x y : SententialForm terminal nonterminal) : Prop :=
   exists u, exists v, exists lhs, exists rhs,
@@ -54,6 +64,10 @@ def GeneratedLanguage (G : GeneralGrammar terminal nonterminal) : Language termi
 def Generated (L : Language terminal) : Prop :=
   exists nonterminal : Type, exists G : GeneralGrammar terminal nonterminal,
     Language.Equal (GeneratedLanguage G) L
+
+def FiniteProductionGenerated (L : Language terminal) : Prop :=
+  exists nonterminal : Type, exists G : GeneralGrammar terminal nonterminal,
+    HasFiniteProductions G ∧ Language.Equal (GeneratedLanguage G) L
 
 theorem yields_derives {G : GeneralGrammar terminal nonterminal}
     {x y : SententialForm terminal nonterminal} (h : Yields G x y) :
@@ -79,6 +93,45 @@ def FromCFG (G : CFG terminal nonterminal) : GeneralGrammar terminal nonterminal
             rw [hlhs]
             exact SententialForm.containsNonterminal_singleton A
   nonterminalsFinite := G.nonterminalsFinite
+
+theorem fromCFG_hasFiniteProductions {G : CFG terminal nonterminal}
+    (hG : CFG.HasFiniteProductions G) :
+    HasFiniteProductions (FromCFG G) := by
+  cases hG with
+  | intro rules hrules =>
+      exists rules.map
+        (fun rule : CFG.Production terminal nonterminal =>
+          { lhs := [Symbol.nonterminal rule.lhs], rhs := rule.rhs })
+      intro lhs rhs
+      constructor
+      · intro hprod
+        cases hprod with
+        | intro A hA =>
+            cases hA with
+            | intro hlhs hArhs =>
+                cases (hrules A rhs).mp hArhs with
+                | intro rule hrule =>
+                    exists { lhs := [Symbol.nonterminal rule.lhs], rhs := rule.rhs }
+                    constructor
+                    · apply List.mem_map.mpr
+                      exists rule
+                      exact ⟨hrule.left, rfl⟩
+                    constructor
+                    · rw [hlhs, hrule.right.left]
+                    · exact hrule.right.right
+      · intro hrule
+        cases hrule with
+        | intro rule' hrule' =>
+            have hmem := List.mem_map.mp hrule'.left
+            cases hmem with
+            | intro rule hrule =>
+                rw [← hrule.right] at hrule'
+                exists rule.lhs
+                constructor
+                · exact hrule'.right.left.symm
+                · rw [← hrule'.right.right]
+                  exact (hrules rule.lhs rule.rhs).mpr
+                    ⟨rule, hrule.left, rfl, rfl⟩
 
 theorem cfg_yields_embeds {G : CFG terminal nonterminal}
     {x y : SententialForm terminal nonterminal}

@@ -203,6 +203,32 @@ theorem star_context_free {L : Language terminal}
                     intro p hp
                     exact (hG.right p).mpr (hpieces.left p hp))
 
+theorem reverseGrammar_language_exact (G : CFG terminal nonterminal) :
+    Language.Equal (CFG.GeneratedLanguage (CFG.ReverseGrammar G))
+      (Language.Reverse (CFG.GeneratedLanguage G)) :=
+  CFG.reverseGrammar_language_exact G
+
+theorem reverse_context_free {L : Language terminal}
+    (hL : ContextFreeLanguage L) :
+    ContextFreeLanguage (Language.Reverse L) := by
+  cases hL with
+  | intro nt hnt =>
+      cases hnt with
+      | intro G hG =>
+          exists nt
+          exists CFG.ReverseGrammar G
+          constructor
+          · exact CFG.reverseGrammar_hasFiniteProductions hG.left
+          · intro w
+            constructor
+            · intro hw
+              have hrev :=
+                (CFG.reverseGrammar_language_exact G w).mp hw
+              exact (hG.right (Word.Reverse w)).mp hrev
+            · intro hw
+              exact (CFG.reverseGrammar_language_exact G w).mpr
+                ((hG.right (Word.Reverse w)).mpr hw)
+
 def Concat3 (x y z : Word terminal) : Word terminal :=
   Word.Concat x (Word.Concat y z)
 

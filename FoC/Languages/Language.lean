@@ -65,6 +65,9 @@ def ConcatWords : List (Word alpha) -> Word alpha
   | [] => Word.Empty
   | w :: ws => Word.Concat w (ConcatWords ws)
 
+def ReversePieces (pieces : List (Word alpha)) : List (Word alpha) :=
+  pieces.reverse.map Word.Reverse
+
 def Power (L : Language alpha) : Nat -> Language alpha
   | 0 => Singleton Word.Empty
   | n + 1 => Concat L (Power L n)
@@ -210,12 +213,95 @@ theorem concat_assoc (L M N : Language alpha) :
                                     · exact hzN
                                     · rw [hwEq, hyzEq, Word.concat_assoc]
 
+theorem reverse_concat (L M : Language alpha) :
+    Equal (Reverse (Concat L M)) (Concat (Reverse M) (Reverse L)) := by
+  intro w
+  constructor
+  · intro hw
+    cases hw with
+    | intro x hx =>
+        cases hx with
+        | intro y hy =>
+            exists Word.Reverse y
+            exists Word.Reverse x
+            constructor
+            · change Word.Reverse (Word.Reverse y) ∈ M
+              simpa [Word.Reverse] using hy.right.left
+            constructor
+            · change Word.Reverse (Word.Reverse x) ∈ L
+              simpa [Word.Reverse] using hy.left
+            · have hwEq := congrArg Word.Reverse hy.right.right
+              simpa [Word.reverse_concat, Word.Reverse, Word.Concat] using hwEq
+  · intro hw
+    cases hw with
+    | intro yrev hyrev =>
+        cases hyrev with
+        | intro xrev hxrev =>
+            exists Word.Reverse xrev
+            exists Word.Reverse yrev
+            constructor
+            · exact hxrev.right.left
+            constructor
+            · exact hxrev.left
+            · have hwEq := congrArg Word.Reverse hxrev.right.right
+              simpa [Word.reverse_concat, Word.Reverse, Word.Concat] using hwEq
+
 theorem concatWords_append (xs ys : List (Word alpha)) :
     ConcatWords (xs ++ ys) = Word.Concat (ConcatWords xs) (ConcatWords ys) := by
   induction xs with
   | nil => rfl
   | cons x xs ih =>
       simp [ConcatWords, Word.Concat, ih, List.append_assoc]
+
+theorem concatWords_reversePieces (pieces : List (Word alpha)) :
+    ConcatWords (ReversePieces pieces) =
+      Word.Reverse (ConcatWords pieces) := by
+  induction pieces with
+  | nil =>
+      rfl
+  | cons p rest ih =>
+      rw [show ReversePieces (p :: rest) =
+          ReversePieces rest ++ [Word.Reverse p] by
+        simp [ReversePieces]]
+      change ConcatWords (ReversePieces rest ++ [Word.Reverse p]) =
+        Word.Reverse (Word.Concat p (ConcatWords rest))
+      rw [concatWords_append, ih]
+      simp [ConcatWords, Word.Reverse, Word.Concat, Word.Empty]
+
+theorem reverse_star (L : Language alpha) :
+    Equal (Reverse (Star L)) (Star (Reverse L)) := by
+  intro w
+  constructor
+  · intro hw
+    cases hw with
+    | intro pieces hpieces =>
+        exists ReversePieces pieces
+        constructor
+        · intro p hp
+          unfold Reverse
+          unfold ReversePieces at hp
+          cases List.mem_map.mp hp with
+          | intro original horiginal =>
+              rw [← horiginal.right]
+              change Word.Reverse (Word.Reverse original) ∈ L
+              simpa [Word.Reverse] using
+                hpieces.left original (List.mem_reverse.mp horiginal.left)
+        · rw [concatWords_reversePieces, hpieces.right]
+          simp [Word.Reverse]
+  · intro hw
+    cases hw with
+    | intro pieces hpieces =>
+        exists ReversePieces pieces
+        constructor
+        · intro p hp
+          unfold ReversePieces at hp
+          cases List.mem_map.mp hp with
+          | intro original horiginal =>
+              have horigRev : Word.Reverse original ∈ L :=
+                hpieces.left original (List.mem_reverse.mp horiginal.left)
+              rw [← horiginal.right]
+              exact horigRev
+        · rw [concatWords_reversePieces, hpieces.right]
 
 theorem star_empty_word (L : Language alpha) : Word.Empty ∈ Star L := by
   exists []

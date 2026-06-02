@@ -106,6 +106,17 @@ inductive BNFExampleTerminal where
   | lbrace
   | rbrace
   | equals
+  | dot
+  | eTok
+  | underscore
+  | letter
+  | tryTok
+  | catchTok
+  | finallyTok
+  | trueTok
+  | falseTok
+  | notTok
+  | orTok
   | ident
   | number
 deriving DecidableEq
@@ -132,6 +143,12 @@ inductive BNFExampleNT where
   | expression
   | term
   | factor
+  | digitSeq
+  | realNumber
+  | javaVariable
+  | catchClause
+  | proposition
+  | atomicProposition
 deriving DecidableEq
 
 def bnfTerminal (t : BNFExampleTerminal) :
@@ -266,6 +283,66 @@ def javaFactorExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
       (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.lparen)
         (BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.expression)
           (bnfTerminalExpr BNFExampleTerminal.rparen))))
+
+def digitSeqExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.digit)
+    (BNF.Expr.many (bnfNonterminalExpr BNFExampleNT.digit))
+
+def realFractionExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.dot)
+    (bnfNonterminalExpr BNFExampleNT.digitSeq)
+
+def realExponentExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.eTok)
+    (BNF.Expr.seq (BNF.Expr.optional signAlternativeExpr)
+      (bnfNonterminalExpr BNFExampleNT.digitSeq))
+
+def realNumberExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq (BNF.Expr.optional signAlternativeExpr)
+    (BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.digitSeq)
+      (BNF.Expr.seq (BNF.Expr.optional realFractionExpr)
+        (BNF.Expr.optional realExponentExpr)))
+
+def javaVariableTailAtomExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.letter)
+    (BNF.Expr.alt (bnfNonterminalExpr BNFExampleNT.digit)
+      (bnfTerminalExpr BNFExampleTerminal.underscore))
+
+def javaVariableExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.letter)
+    (BNF.Expr.many javaVariableTailAtomExpr)
+
+def javaCatchClauseExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.catchTok)
+    (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.lparen)
+      (BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.variable)
+        (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.rparen)
+          (bnfNonterminalExpr BNFExampleNT.blockStatement))))
+
+def javaTryCatchExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.tryTok)
+    (BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.blockStatement)
+      (BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.catchClause)
+        (BNF.Expr.optional
+          (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.finallyTok)
+            (bnfNonterminalExpr BNFExampleNT.blockStatement)))))
+
+def atomicPropositionExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.trueTok)
+    (BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.falseTok)
+      (bnfTerminalExpr BNFExampleTerminal.ident))
+
+def propositionConnectiveExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.andTok)
+    (bnfTerminalExpr BNFExampleTerminal.orTok)
+
+def compoundPropositionExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq
+    (BNF.Expr.optional (bnfTerminalExpr BNFExampleTerminal.notTok))
+    (BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.atomicProposition)
+      (BNF.Expr.many
+        (BNF.Expr.seq propositionConnectiveExpr
+          (bnfNonterminalExpr BNFExampleNT.atomicProposition))))
 
 -- Book: Chapter 4, Section 4.2, a concrete digit alternative.
 theorem bnf_digit_seven_expands :
@@ -546,6 +623,125 @@ theorem bnf_java_parenthesized_factor_expands :
     (BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.expression))
       (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.rparen)))
+
+-- Book: Chapter 4, Section 4.2, exercise BNF for real numbers.
+theorem bnf_real_number_decimal_with_exponent_expands :
+    BNF.Expr.Expands realNumberExpr
+      [bnfTerminal BNFExampleTerminal.minus,
+        bnfNonterminal BNFExampleNT.digitSeq,
+        bnfTerminal BNFExampleTerminal.dot,
+        bnfNonterminal BNFExampleNT.digitSeq,
+        bnfTerminal BNFExampleTerminal.eTok,
+        bnfTerminal BNFExampleTerminal.plus,
+        bnfNonterminal BNFExampleNT.digitSeq] := by
+  unfold realNumberExpr realFractionExpr realExponentExpr
+  simpa using BNF.Expr.Expands.seq
+    (BNF.Expr.Expands.optionalSome bnf_sign_minus_expands)
+    (BNF.Expr.Expands.seq
+      (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.digitSeq))
+      (BNF.Expr.Expands.seq
+        (BNF.Expr.Expands.optionalSome
+          (BNF.Expr.Expands.seq
+            (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.dot))
+            (BNF.Expr.Expands.symbol
+              (bnfNonterminal BNFExampleNT.digitSeq))))
+        (BNF.Expr.Expands.optionalSome
+          (BNF.Expr.Expands.seq
+            (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.eTok))
+            (BNF.Expr.Expands.seq
+              (BNF.Expr.Expands.optionalSome bnf_sign_plus_expands)
+              (BNF.Expr.Expands.symbol
+                (bnfNonterminal BNFExampleNT.digitSeq)))))))
+
+-- Book: Chapter 4, Section 4.2, exercise BNF for Java-style variables.
+theorem bnf_java_variable_letter_digit_underscore_expands :
+    BNF.Expr.Expands javaVariableExpr
+      [bnfTerminal BNFExampleTerminal.letter,
+        bnfNonterminal BNFExampleNT.digit,
+        bnfTerminal BNFExampleTerminal.underscore] := by
+  unfold javaVariableExpr javaVariableTailAtomExpr
+  simpa using BNF.Expr.Expands.seq
+    (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.letter))
+    (BNF.Expr.repeat_cons
+      (BNF.Expr.Expands.altRight
+        (BNF.Expr.Expands.altLeft
+          (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.digit))))
+      (BNF.Expr.repeat_cons
+        (BNF.Expr.Expands.altRight
+          (BNF.Expr.Expands.altRight
+            (BNF.Expr.Expands.symbol
+              (bnfTerminal BNFExampleTerminal.underscore))))
+        (BNF.Expr.repeat_empty
+          (BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.letter)
+            (BNF.Expr.alt (bnfNonterminalExpr BNFExampleNT.digit)
+              (bnfTerminalExpr BNFExampleTerminal.underscore))))))
+
+-- Book: Chapter 4, Section 4.2, exercise BNF for try/catch syntax.
+theorem bnf_java_try_catch_without_finally_expands :
+    BNF.Expr.Expands javaTryCatchExpr
+      [bnfTerminal BNFExampleTerminal.tryTok,
+        bnfNonterminal BNFExampleNT.blockStatement,
+        bnfNonterminal BNFExampleNT.catchClause] := by
+  unfold javaTryCatchExpr
+  simpa using BNF.Expr.Expands.seq
+    (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.tryTok))
+    (BNF.Expr.Expands.seq
+      (BNF.Expr.Expands.symbol
+        (bnfNonterminal BNFExampleNT.blockStatement))
+      (BNF.Expr.Expands.seq
+        (BNF.Expr.Expands.symbol
+          (bnfNonterminal BNFExampleNT.catchClause))
+        (BNF.Expr.Expands.optionalNone
+          (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.finallyTok)
+            (bnfNonterminalExpr BNFExampleNT.blockStatement)))))
+
+-- Book: Chapter 4, Section 4.2, exercise BNF for a concrete catch clause.
+theorem bnf_java_catch_clause_expands :
+    BNF.Expr.Expands javaCatchClauseExpr
+      [bnfTerminal BNFExampleTerminal.catchTok,
+        bnfTerminal BNFExampleTerminal.lparen,
+        bnfNonterminal BNFExampleNT.variable,
+        bnfTerminal BNFExampleTerminal.rparen,
+        bnfNonterminal BNFExampleNT.blockStatement] := by
+  unfold javaCatchClauseExpr
+  simpa using BNF.Expr.Expands.seq
+    (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.catchTok))
+    (BNF.Expr.Expands.seq
+      (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.lparen))
+      (BNF.Expr.Expands.seq
+        (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.variable))
+        (BNF.Expr.Expands.seq
+          (BNF.Expr.Expands.symbol
+            (bnfTerminal BNFExampleTerminal.rparen))
+          (BNF.Expr.Expands.symbol
+            (bnfNonterminal BNFExampleNT.blockStatement)))))
+
+-- Book: Chapter 4, Section 4.2, exercise BNF for compound propositions.
+theorem bnf_compound_proposition_not_and_expands :
+    BNF.Expr.Expands compoundPropositionExpr
+      [bnfTerminal BNFExampleTerminal.notTok,
+        bnfNonterminal BNFExampleNT.atomicProposition,
+        bnfTerminal BNFExampleTerminal.andTok,
+        bnfNonterminal BNFExampleNT.atomicProposition] := by
+  unfold compoundPropositionExpr propositionConnectiveExpr
+  simpa using BNF.Expr.Expands.seq
+    (BNF.Expr.Expands.optionalSome
+      (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.notTok)))
+    (BNF.Expr.Expands.seq
+      (BNF.Expr.Expands.symbol
+        (bnfNonterminal BNFExampleNT.atomicProposition))
+      (BNF.Expr.repeat_cons
+        (BNF.Expr.Expands.seq
+          (BNF.Expr.Expands.altLeft
+            (BNF.Expr.Expands.symbol
+              (bnfTerminal BNFExampleTerminal.andTok)))
+          (BNF.Expr.Expands.symbol
+            (bnfNonterminal BNFExampleNT.atomicProposition)))
+        (BNF.Expr.repeat_empty
+          (BNF.Expr.seq
+            (BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.andTok)
+              (bnfTerminalExpr BNFExampleTerminal.orTok))
+            (bnfNonterminalExpr BNFExampleNT.atomicProposition)))))
 
 end Section02
 end Chapter04

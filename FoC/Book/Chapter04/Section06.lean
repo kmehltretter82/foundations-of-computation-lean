@@ -30,6 +30,25 @@ def GeneralGrammarFromCFG (G : CFG terminal nonterminal) :
     GeneralGrammar terminal nonterminal :=
   GeneralGrammar.FromCFG G
 
+-- Book: Chapter 4, Section 4.6, finite-production presentation for general
+-- grammars.
+def FiniteProductionGeneralGrammar
+    (G : GeneralGrammar terminal nonterminal) : Prop :=
+  GeneralGrammar.HasFiniteProductions G
+
+-- Book: Chapter 4, Section 4.6, finite-production general-grammar language
+-- vocabulary.
+def FiniteProductionGeneralLanguage (L : Language terminal) : Prop :=
+  GeneralGrammar.FiniteProductionGenerated L
+
+-- Book: Chapter 4, Section 4.6, finite-production CFGs embed as
+-- finite-production general grammars.
+theorem finite_production_cfg_is_finite_production_general
+    {G : CFG terminal nonterminal}
+    (hG : CFG.HasFiniteProductions G) :
+    FiniteProductionGeneralGrammar (GeneralGrammarFromCFG G) :=
+  GeneralGrammar.fromCFG_hasFiniteProductions hG
+
 -- Book: Chapter 4, Section 4.6, CFG derivations embed in general grammars.
 theorem cfg_derivation_is_general_derivation {G : CFG terminal nonterminal}
     {x y : SententialForm terminal nonterminal}

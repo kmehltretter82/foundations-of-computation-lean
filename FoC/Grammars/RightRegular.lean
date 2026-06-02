@@ -203,6 +203,76 @@ def RightRegularLanguage (L : Language terminal) : Prop :=
   exists nt : Type, exists G : CFG terminal nt,
     RightRegular G ∧ Language.Equal (GeneratedLanguage G) L
 
+def LeftRegularLanguage (L : Language terminal) : Prop :=
+  exists nt : Type, exists G : CFG terminal nt,
+    LeftRegular G ∧ Language.Equal (GeneratedLanguage G) L
+
+theorem leftRegularLanguage_reverse_rightRegular {L : Language terminal}
+    (hL : LeftRegularLanguage L) :
+    RightRegularLanguage (Language.Reverse L) := by
+  cases hL with
+  | intro nt hnt =>
+      cases hnt with
+      | intro G hG =>
+          exists nt
+          exists ReverseGrammar G
+          constructor
+          · exact leftRegular_reverseGrammar_rightRegular hG.left
+          · intro w
+            constructor
+            · intro hw
+              have hrev :=
+                (reverseGrammar_language_exact G w).mp hw
+              exact (hG.right (Word.Reverse w)).mp hrev
+            · intro hw
+              exact (reverseGrammar_language_exact G w).mpr
+                ((hG.right (Word.Reverse w)).mpr hw)
+
+theorem rightRegularLanguage_reverse_leftRegular {L : Language terminal}
+    (hL : RightRegularLanguage L) :
+    LeftRegularLanguage (Language.Reverse L) := by
+  cases hL with
+  | intro nt hnt =>
+      cases hnt with
+      | intro G hG =>
+          exists nt
+          exists ReverseGrammar G
+          constructor
+          · exact rightRegular_reverseGrammar_leftRegular hG.left
+          · intro w
+            constructor
+            · intro hw
+              have hrev :=
+                (reverseGrammar_language_exact G w).mp hw
+              exact (hG.right (Word.Reverse w)).mp hrev
+            · intro hw
+              exact (reverseGrammar_language_exact G w).mpr
+                ((hG.right (Word.Reverse w)).mpr hw)
+
+theorem leftRegularLanguage_iff_reverse_rightRegular {L : Language terminal} :
+    LeftRegularLanguage L <-> RightRegularLanguage (Language.Reverse L) := by
+  constructor
+  · exact leftRegularLanguage_reverse_rightRegular
+  · intro hRev
+    cases rightRegularLanguage_reverse_leftRegular hRev with
+    | intro nt hnt =>
+        cases hnt with
+        | intro G hG =>
+            exists nt
+            exists G
+            constructor
+            · exact hG.left
+            · intro w
+              constructor
+              · intro hw
+                have hrr := (hG.right w).mp hw
+                change Word.Reverse (Word.Reverse w) ∈ L at hrr
+                simpa [Word.Reverse, List.reverse_reverse] using hrr
+              · intro hw
+                apply (hG.right w).mpr
+                change Word.Reverse (Word.Reverse w) ∈ L
+                simpa [Word.Reverse, List.reverse_reverse] using hw
+
 theorem rightRegularLanguage_regular (alphabet : List terminal)
     (halphabet : forall a, a ∈ alphabet) {L : Language terminal}
     (hL : RightRegularLanguage L) :
@@ -223,6 +293,33 @@ theorem rightRegularLanguage_regular (alphabet : List terminal)
                 (Language.equal_trans
                   (Language.equal_symm (rightRegularNFA_language_exact G hG.left))
                   hG.right)
+
+theorem leftRegularLanguage_regular (alphabet : List terminal)
+    (halphabet : forall a, a ∈ alphabet) {L : Language terminal}
+    (hL : LeftRegularLanguage L) :
+    Languages.RegularLanguage.Regular L := by
+  have hRevRight : RightRegularLanguage (Language.Reverse L) :=
+    leftRegularLanguage_reverse_rightRegular hL
+  have hRevReg :
+      Languages.RegularLanguage.Regular (Language.Reverse L) :=
+    rightRegularLanguage_regular alphabet halphabet hRevRight
+  have hDouble :
+      Languages.RegularLanguage.Regular
+        (Language.Reverse (Language.Reverse L)) :=
+    Languages.RegularLanguage.reverse_regular hRevReg
+  cases hDouble with
+  | intro r hr =>
+      exists r
+      intro w
+      constructor
+      · intro hw
+        have hmem := (hr w).mp hw
+        change Word.Reverse (Word.Reverse w) ∈ L at hmem
+        simpa [Word.Reverse, List.reverse_reverse] using hmem
+      · intro hw
+        apply (hr w).mpr
+        change Word.Reverse (Word.Reverse w) ∈ L
+        simpa [Word.Reverse, List.reverse_reverse] using hw
 
 def NFARightRegularProduces (M : NFA terminal state) :
     state -> SententialForm terminal state -> Prop
@@ -455,12 +552,26 @@ theorem regular_rightRegularLanguage {L : Language terminal}
           · exact nfaRightRegularGrammar_rightRegular M
           · exact Language.equal_trans (nfaRightRegularGrammar_language_exact M) hM
 
+theorem regular_leftRegularLanguage {L : Language terminal}
+    (hL : Languages.RegularLanguage.Regular L) :
+    LeftRegularLanguage L :=
+  leftRegularLanguage_iff_reverse_rightRegular.mpr
+    (regular_rightRegularLanguage
+      (Languages.RegularLanguage.reverse_regular hL))
+
 theorem regular_iff_rightRegularLanguage (alphabet : List terminal)
     (halphabet : forall a, a ∈ alphabet) {L : Language terminal} :
     Languages.RegularLanguage.Regular L <-> RightRegularLanguage L := by
   constructor
   · exact regular_rightRegularLanguage
   · exact rightRegularLanguage_regular alphabet halphabet
+
+theorem regular_iff_leftRegularLanguage (alphabet : List terminal)
+    (halphabet : forall a, a ∈ alphabet) {L : Language terminal} :
+    Languages.RegularLanguage.Regular L <-> LeftRegularLanguage L := by
+  constructor
+  · exact regular_leftRegularLanguage
+  · exact leftRegularLanguage_regular alphabet halphabet
 
 end CFG
 

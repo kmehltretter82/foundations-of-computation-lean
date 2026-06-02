@@ -91,6 +91,11 @@ theorem terminalWord_append (x y : Word term) :
       terminalWord x ++ terminalWord y := by
   simp [terminalWord, Word.Concat]
 
+theorem terminalWord_reverse (w : Word term) :
+    (terminalWord (nt := nt) w).reverse =
+      terminalWord (nt := nt) (Word.Reverse w) := by
+  simp [terminalWord, Word.Reverse]
+
 theorem mapNonterminal_append (f : nt -> nt')
     (x y : SententialForm term nt) :
     mapNonterminal f (x ++ y) = mapNonterminal f x ++ mapNonterminal f y := by
@@ -314,6 +319,23 @@ inductive RightRegularRHS : SententialForm terminal nonterminal -> Prop where
 def RightRegular (G : CFG terminal nonterminal) : Prop :=
   forall A rhs, G.produces A rhs -> RightRegularRHS rhs
 
+inductive LeftRegularRHS : SententialForm terminal nonterminal -> Prop where
+  | epsilon : LeftRegularRHS []
+  | nonterminal (A : nonterminal) :
+      LeftRegularRHS [Symbol.nonterminal A]
+  | nonterminalThenTerminal (A : nonterminal) (a : terminal) :
+      LeftRegularRHS [Symbol.nonterminal A, Symbol.terminal a]
+
+def LeftRegular (G : CFG terminal nonterminal) : Prop :=
+  forall A rhs, G.produces A rhs -> LeftRegularRHS rhs
+
+def ReverseGrammar (G : CFG terminal nonterminal) :
+    CFG terminal nonterminal where
+  start := G.start
+  produces := fun A rhs =>
+    exists original, G.produces A original ∧ rhs = original.reverse
+  nonterminalsFinite := G.nonterminalsFinite
+
 theorem derives_refl (G : CFG terminal nonterminal)
     (x : SententialForm terminal nonterminal) : Derives G x x :=
   Derives.refl x
@@ -357,6 +379,169 @@ theorem yields_context {G : CFG terminal nonterminal}
                             simp [List.append_assoc]
                           · rw [hy]
                             simp [List.append_assoc]
+
+theorem reverseGrammar_hasFiniteProductions
+    {G : CFG terminal nonterminal}
+    (hG : HasFiniteProductions G) :
+    HasFiniteProductions (ReverseGrammar G) := by
+  cases hG with
+  | intro rules hrules =>
+      exists rules.map
+        (fun rule : Production terminal nonterminal =>
+          { lhs := rule.lhs, rhs := rule.rhs.reverse })
+      intro A rhs
+      constructor
+      · intro hprod
+        cases hprod with
+        | intro original horiginal =>
+            cases (hrules A original).mp horiginal.left with
+            | intro rule hrule =>
+                exists { lhs := rule.lhs, rhs := rule.rhs.reverse }
+                constructor
+                · apply List.mem_map.mpr
+                  exists rule
+                  exact ⟨hrule.left, rfl⟩
+                constructor
+                · rw [hrule.right.left]
+                · rw [horiginal.right, hrule.right.right]
+      · intro hrule
+        cases hrule with
+        | intro reversedRule hreversedRule =>
+            have hmem :=
+              List.mem_map.mp hreversedRule.left
+            cases hmem with
+            | intro rule hrule =>
+                rw [← hrule.right] at hreversedRule
+                exists rule.rhs
+                constructor
+                · exact (hrules A rule.rhs).mpr
+                    ⟨rule, hrule.left, hreversedRule.right.left, rfl⟩
+                · exact hreversedRule.right.right.symm
+
+theorem reverseGrammar_yields {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (h : Yields G x y) :
+    Yields (ReverseGrammar G) x.reverse y.reverse := by
+  cases h with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases hv with
+          | intro A hA =>
+              cases hA with
+              | intro rhs hrhs =>
+                  exists v.reverse
+                  exists u.reverse
+                  exists A
+                  exists rhs.reverse
+                  constructor
+                  · exists rhs
+                    exact ⟨hrhs.left, rfl⟩
+                  constructor
+                  · rw [hrhs.right.left]
+                    simp [List.reverse_append]
+                  · rw [hrhs.right.right]
+                    simp [List.reverse_append, List.append_assoc]
+
+theorem reverseGrammar_yields_inv {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (h : Yields (ReverseGrammar G) x y) :
+    Yields G x.reverse y.reverse := by
+  cases h with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases hv with
+          | intro A hA =>
+              cases hA with
+              | intro rhs hrhs =>
+                  cases hrhs.left with
+                  | intro original horiginal =>
+                      exists v.reverse
+                      exists u.reverse
+                      exists A
+                      exists original
+                      constructor
+                      · exact horiginal.left
+                      constructor
+                      · rw [hrhs.right.left]
+                        simp [List.reverse_append]
+                      · rw [hrhs.right.right, horiginal.right]
+                        simp [List.reverse_append, List.append_assoc]
+
+theorem reverseGrammar_derives {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (h : Derives G x y) :
+    Derives (ReverseGrammar G) x.reverse y.reverse := by
+  induction h with
+  | refl x =>
+      exact Derives.refl x.reverse
+  | step hstep _ ih =>
+      exact Derives.step (reverseGrammar_yields hstep) ih
+
+theorem reverseGrammar_derives_inv {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (h : Derives (ReverseGrammar G) x y) :
+    Derives G x.reverse y.reverse := by
+  induction h with
+  | refl x =>
+      exact Derives.refl x.reverse
+  | step hstep _ ih =>
+      exact Derives.step (reverseGrammar_yields_inv hstep) ih
+
+theorem reverseGrammar_generates {G : CFG terminal nonterminal}
+    {w : Word terminal} (h : w ∈ GeneratedLanguage G) :
+    Word.Reverse w ∈ GeneratedLanguage (ReverseGrammar G) := by
+  have hrev := reverseGrammar_derives h
+  simpa [GeneratedLanguage, SententialForm.terminalWord_reverse] using hrev
+
+theorem reverseGrammar_generates_inv {G : CFG terminal nonterminal}
+    {w : Word terminal} (h : w ∈ GeneratedLanguage (ReverseGrammar G)) :
+    Word.Reverse w ∈ GeneratedLanguage G := by
+  have hrev := reverseGrammar_derives_inv h
+  simpa [GeneratedLanguage, SententialForm.terminalWord_reverse] using hrev
+
+theorem reverseGrammar_language_exact (G : CFG terminal nonterminal) :
+    Language.Equal (GeneratedLanguage (ReverseGrammar G))
+      (Language.Reverse (GeneratedLanguage G)) := by
+  intro w
+  constructor
+  · exact reverseGrammar_generates_inv
+  · intro hw
+    have hgen := reverseGrammar_generates (G := G) hw
+    simpa [Word.Reverse] using hgen
+
+theorem leftRegular_reverseGrammar_rightRegular
+    {G : CFG terminal nonterminal}
+    (hG : LeftRegular G) :
+    RightRegular (ReverseGrammar G) := by
+  intro A rhs hprod
+  cases hprod with
+  | intro original horiginal =>
+      rw [horiginal.right]
+      cases hG A original horiginal.left with
+      | epsilon =>
+          exact RightRegularRHS.epsilon
+      | nonterminal B =>
+          exact RightRegularRHS.nonterminal B
+      | nonterminalThenTerminal B a =>
+          exact RightRegularRHS.terminalThenNonterminal a B
+
+theorem rightRegular_reverseGrammar_leftRegular
+    {G : CFG terminal nonterminal}
+    (hG : RightRegular G) :
+    LeftRegular (ReverseGrammar G) := by
+  intro A rhs hprod
+  cases hprod with
+  | intro original horiginal =>
+      rw [horiginal.right]
+      cases hG A original horiginal.left with
+      | epsilon =>
+          exact LeftRegularRHS.epsilon
+      | nonterminal B =>
+          exact LeftRegularRHS.nonterminal B
+      | terminalThenNonterminal a B =>
+          exact LeftRegularRHS.nonterminalThenTerminal B a
 
 theorem derives_context {G : CFG terminal nonterminal}
     {x y : SententialForm terminal nonterminal} (h : Derives G x y)
