@@ -75,12 +75,87 @@ def TuringComputablePartial (f : Word input -> Option (Word output)) : Prop :=
         exists encodeOutput : output -> symbol,
           ComputesPartialFunction M encodeInput encodeOutput f
 
+def TotalAsPartial (f : Word input -> Word output) :
+    Word input -> Option (Word output) :=
+  fun w => some (f w)
+
+def PartialFunctionDomain
+    (f : Word input -> Option (Word output)) : Language input :=
+  fun w => exists out : Word output, f w = some out
+
 theorem computes_function_halts {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {encodeOutput : output -> symbol}
     {f : Word input -> Word output}
     (h : ComputesFunction M encodeInput encodeOutput f) (w : Word input) :
     TuringMachine.HaltsOnInput M (EncodeWord encodeInput w) :=
   TuringMachine.halts_with_output_implies_halts (h w)
+
+theorem computesFunction_to_partial
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {encodeOutput : output -> symbol}
+    {f : Word input -> Word output}
+    (h : ComputesFunction M encodeInput encodeOutput f) :
+    ComputesPartialFunction M encodeInput encodeOutput (TotalAsPartial f) := by
+  intro w
+  exact h w
+
+theorem turingComputable_to_partial
+    {f : Word input -> Word output}
+    (h : TuringComputable f) :
+    TuringComputablePartial (TotalAsPartial f) := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro encodeOutput hcomp =>
+                      exact ⟨symbol, state, M, encodeInput, encodeOutput,
+                        computesFunction_to_partial hcomp⟩
+
+theorem partialFunctionDomain_mem
+    {f : Word input -> Option (Word output)} (w : Word input) :
+    w ∈ PartialFunctionDomain f <->
+      exists out : Word output, f w = some out :=
+  Iff.rfl
+
+theorem totalAsPartial_domain_universal
+    (f : Word input -> Word output) :
+    Language.Equal (PartialFunctionDomain (TotalAsPartial f))
+      (Language.Universal : Language input) := by
+  intro w
+  constructor
+  · intro _h
+    trivial
+  · intro _h
+    exact Exists.intro (f w) rfl
+
+theorem computesPartialFunction_halts_iff_domain
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {encodeOutput : output -> symbol}
+    {f : Word input -> Option (Word output)}
+    (h : ComputesPartialFunction M encodeInput encodeOutput f)
+    (w : Word input) :
+    TuringMachine.HaltsOnInput M (EncodeWord encodeInput w) <->
+      w ∈ PartialFunctionDomain f := by
+  constructor
+  · intro hhalt
+    cases hf : f w with
+    | none =>
+        have hw := h w
+        rw [hf] at hw
+        exact False.elim (hw hhalt)
+    | some out =>
+        exact Exists.intro out hf
+  · intro hdomain
+    cases hdomain with
+    | intro out hout =>
+        have hw := h w
+        rw [hout] at hw
+        exact TuringMachine.halts_with_output_implies_halts hw
 
 theorem computesFunction_of_pointwise_equal {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {encodeOutput : output -> symbol}
@@ -112,6 +187,58 @@ theorem turingComputable_of_pointwise_equal
                       exists encodeInput
                       exists encodeOutput
                       exact computesFunction_of_pointwise_equal hcomp hfg
+
+theorem partialFunctionDomain_equal_of_pointwise
+    {f g : Word input -> Option (Word output)}
+    (hfg : forall w, f w = g w) :
+    Language.Equal (PartialFunctionDomain f) (PartialFunctionDomain g) := by
+  intro w
+  constructor
+  · intro hdomain
+    cases hdomain with
+    | intro out hout =>
+        exists out
+        rw [← hfg w]
+        exact hout
+  · intro hdomain
+    cases hdomain with
+    | intro out hout =>
+        exists out
+        rw [hfg w]
+        exact hout
+
+theorem computesPartialFunction_of_pointwise_equal
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {encodeOutput : output -> symbol}
+    {f g : Word input -> Option (Word output)}
+    (h : ComputesPartialFunction M encodeInput encodeOutput f)
+    (hfg : forall w, f w = g w) :
+    ComputesPartialFunction M encodeInput encodeOutput g := by
+  intro w
+  rw [← hfg w]
+  exact h w
+
+theorem turingComputablePartial_of_pointwise_equal
+    {f g : Word input -> Option (Word output)}
+    (h : TuringComputablePartial f) (hfg : forall w, f w = g w) :
+    TuringComputablePartial g := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro encodeOutput hcomp =>
+                      exists symbol
+                      exists state
+                      exists M
+                      exists encodeInput
+                      exists encodeOutput
+                      exact computesPartialFunction_of_pointwise_equal
+                        hcomp hfg
 
 end Computability
 end FoC

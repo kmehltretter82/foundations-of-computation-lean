@@ -116,6 +116,41 @@ theorem turing_acceptable_acceptedLanguage {input : Type} {state : Type}
     TuringAcceptable (TuringMachine.AcceptedLanguage M) :=
   turing_acceptable_of_recognizes (TuringMachine.recognizes_acceptedLanguage M)
 
+theorem computesPartialFunction_accepts_domain
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {encodeOutput : output -> symbol}
+    {f : Word input -> Option (Word output)}
+    (h : ComputesPartialFunction M encodeInput encodeOutput f) :
+    AcceptsLanguage M encodeInput (PartialFunctionDomain f) := by
+  intro w
+  exact computesPartialFunction_halts_iff_domain h w
+
+theorem turingComputablePartial_domain_acceptable
+    {f : Word input -> Option (Word output)}
+    (h : TuringComputablePartial f) :
+    TuringAcceptable (PartialFunctionDomain f) := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro encodeOutput hcomp =>
+                      exists symbol
+                      exists state
+                      exists M
+                      exists encodeInput
+                      exact computesPartialFunction_accepts_domain hcomp
+
+theorem turingComputablePartial_domain_recursivelyEnumerable
+    {f : Word input -> Option (Word output)}
+    (h : TuringComputablePartial f) :
+    RecursivelyEnumerable (PartialFunctionDomain f) :=
+  turingComputablePartial_domain_acceptable h
+
 theorem acceptanceTrace_sound {trace : Word input -> Nat -> Prop}
     {L : Language input}
     (h : AcceptanceTrace trace L) {w : Word input} {n : Nat}

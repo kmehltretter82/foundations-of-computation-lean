@@ -239,8 +239,8 @@ completed:
         reason: "General grammar definitions and CFG embedding are formalized; equivalence with recursively enumerable languages belongs with the Chapter 5 computability development."
   - coordinate: "Chapter 5"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 91
-    definition_declarations: 35
+    theorem_declarations: 97
+    definition_declarations: 39
     modules:
       - "FoC.Book.Chapter05.Section01"
       - "FoC.Book.Chapter05.Section02"
@@ -263,7 +263,8 @@ completed:
       - "Halting, halting with output, acceptance by halting, accepted languages, and recognizer equality vocabulary"
       - "Computation reflexivity, one-step inclusion, transitivity, halted-configuration halting, computation-to-halt halting, backward closure of halting over prior computation, and halting-with-output implies halting"
       - "Machine-recognized languages and accepted languages bridge into the Turing-acceptable-language vocabulary"
-      - "Turing-computable total and partial string-function vocabulary with explicit input/output encodings and pointwise equality transport"
+      - "Turing-computable total and partial string-function vocabulary with explicit input/output encodings, total-as-partial embedding, universal-domain fact, and pointwise equality transport"
+      - "Partial computable function domains, exact halting/domain equivalence, and the theorem that every partial computable function domain is Turing-acceptable and recursively enumerable"
       - "Turing-decidable and Turing-acceptable language vocabulary, recursive and recursively enumerable aliases, and language-equality transport"
       - "A decider, as modeled by output 0/1, halts on every input and has finite-stage accepting/rejecting output traces"
       - "Stopped 0/1 decider output soundness, complementary finite output traces, and bounded-search classification for stopped deciders"

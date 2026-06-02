@@ -31,6 +31,12 @@ def RecursivelyEnumerableLanguageWithComplement (L : Language alpha) : Prop :=
 def RecursiveLanguage (L : Language alpha) : Prop :=
   Recursive L
 
+-- Book: Chapter 5, Section 5.2, the domain language of a partial string
+-- function.
+def PartialFunctionDomainLanguage
+    (f : Word input -> Option (Word output)) : Language input :=
+  PartialFunctionDomain f
+
 -- Book: Chapter 5, Section 5.2, finite-stage acceptance traces for RE
 -- languages.
 def LanguageAcceptanceTrace
@@ -87,6 +93,14 @@ theorem recursively_enumerable_language_of_equal {L K : Language alpha}
     (h : RecursivelyEnumerableLanguage L) (hEq : Language.Equal L K) :
     RecursivelyEnumerableLanguage K :=
   Computability.recursivelyEnumerable_of_equal h hEq
+
+-- Book: Chapter 5, Section 5.2, the domain of a partial computable function
+-- is recursively enumerable.
+theorem partial_computable_function_domain_is_recursively_enumerable
+    {f : Word input -> Option (Word output)}
+    (h : TuringComputablePartial f) :
+    RecursivelyEnumerableLanguage (PartialFunctionDomainLanguage f) :=
+  Computability.turingComputablePartial_domain_recursivelyEnumerable h
 
 -- Book: Chapter 5, Section 5.2, every recursively enumerable language has a
 -- finite-stage acceptance trace.

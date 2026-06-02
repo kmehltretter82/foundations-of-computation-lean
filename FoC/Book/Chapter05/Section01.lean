@@ -224,6 +224,69 @@ theorem accepted_language_is_turing_acceptable {input : Type} {state : Type}
 def TuringComputableFunction (f : Word input -> Word output) : Prop :=
   TuringComputable f
 
+-- Book: Chapter 5, Section 5.1, Turing-computable partial string functions.
+def TuringComputablePartialFunction
+    (f : Word input -> Option (Word output)) : Prop :=
+  TuringComputablePartial f
+
+-- Book: Chapter 5, Section 5.1, a total string function viewed as a partial
+-- function defined everywhere.
+def TotalFunctionAsPartial (f : Word input -> Word output) :
+    Word input -> Option (Word output) :=
+  TotalAsPartial f
+
+-- Book: Chapter 5, Section 5.1, the domain language of a partial string
+-- function.
+def PartialFunctionDomainLanguage
+    (f : Word input -> Option (Word output)) : Language input :=
+  PartialFunctionDomain f
+
+-- Book: Chapter 5, Section 5.1, total computability gives partial
+-- computability for the everywhere-defined partial function.
+theorem computable_function_as_partial
+    {f : Word input -> Word output}
+    (h : TuringComputableFunction f) :
+    TuringComputablePartialFunction (TotalFunctionAsPartial f) :=
+  Computability.turingComputable_to_partial h
+
+-- Book: Chapter 5, Section 5.1, the domain of a total function viewed as a
+-- partial function is the universal language.
+theorem total_function_as_partial_domain_is_universal
+    (f : Word input -> Word output) :
+    Language.Equal
+      (PartialFunctionDomainLanguage (TotalFunctionAsPartial f))
+      (Language.Universal : Language input) :=
+  Computability.totalAsPartial_domain_universal f
+
+-- Book: Chapter 5, Section 5.1, a machine computing a partial function halts
+-- exactly on the function's domain.
+theorem partial_computable_function_halting_iff_domain
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {encodeOutput : output -> symbol}
+    {f : Word input -> Option (Word output)}
+    (h : ComputesPartialFunction M encodeInput encodeOutput f)
+    (w : Word input) :
+    TuringMachine.HaltsOnInput M (EncodeWord encodeInput w) <->
+      w ∈ PartialFunctionDomainLanguage f :=
+  Computability.computesPartialFunction_halts_iff_domain h w
+
+-- Book: Chapter 5, Section 5.1, pointwise equal partial functions preserve
+-- Turing computability.
+theorem partial_computable_function_of_pointwise_equal
+    {f g : Word input -> Option (Word output)}
+    (h : TuringComputablePartialFunction f)
+    (hfg : forall w, f w = g w) :
+    TuringComputablePartialFunction g :=
+  Computability.turingComputablePartial_of_pointwise_equal h hfg
+
+-- Book: Chapter 5, Section 5.1, the domain of a Turing-computable partial
+-- function is Turing-acceptable.
+theorem partial_computable_function_domain_is_turing_acceptable
+    {f : Word input -> Option (Word output)}
+    (h : TuringComputablePartialFunction f) :
+    TuringAcceptable (PartialFunctionDomainLanguage f) :=
+  Computability.turingComputablePartial_domain_acceptable h
+
 -- Book: Chapter 5, Section 5.1, decidable languages.
 def TuringDecidableLanguage (L : Language input) : Prop :=
   TuringDecidable L
