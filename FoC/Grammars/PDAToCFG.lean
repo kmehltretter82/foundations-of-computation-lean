@@ -1,5 +1,5 @@
 import FoC.Grammars.CFG
-import FoC.Grammars.PDA
+import FoC.Grammars.PDANormalize
 
 namespace FoC
 namespace Grammars
@@ -4391,6 +4391,44 @@ theorem toCFG_topPopExact
   intro hnorm
   exact toCFG_language_exact_of_topPop
     (M := M) (presentation := presentation) hnorm
+
+def PopNormalizeLanguageExact
+    (M : PDA input stack state) (presentation : FinitePresentation M) :
+    Prop :=
+  Language.Equal (AcceptedLanguage (PopNormalize M presentation))
+    (AcceptedLanguage M)
+
+def ToCFGNormalized (M : PDA input stack state)
+    (presentation : FinitePresentation M) :
+    CFG input
+      (ToCFGNonterminal stack
+        (PopNormalizedState (M := M) presentation)) :=
+  ToCFG (PopNormalize M presentation)
+    (popNormalizeFinitePresentation M presentation)
+
+theorem toCFGNormalized_hasFiniteProductions
+    (M : PDA input stack state) (presentation : FinitePresentation M) :
+    CFG.HasFiniteProductions (ToCFGNormalized M presentation) :=
+  toCFG_hasFiniteProductions (PopNormalize M presentation)
+    (popNormalizeFinitePresentation M presentation)
+
+theorem toCFGNormalized_language_exact
+    (M : PDA input stack state) (presentation : FinitePresentation M) :
+    Language.Equal (CFG.GeneratedLanguage (ToCFGNormalized M presentation))
+      (AcceptedLanguage (PopNormalize M presentation)) :=
+  toCFG_language_exact_of_topPop
+    (M := PopNormalize M presentation)
+    (presentation := popNormalizeFinitePresentation M presentation)
+    (popNormalize_popsAtMostOne M presentation)
+
+theorem toCFGNormalized_language_exact_of_popNormalizeLanguageExact
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    (hexact : PopNormalizeLanguageExact M presentation) :
+    Language.Equal (CFG.GeneratedLanguage (ToCFGNormalized M presentation))
+      (AcceptedLanguage M) := by
+  intro w
+  exact Iff.trans (toCFGNormalized_language_exact M presentation w)
+    (hexact w)
 
 theorem toCFG_nonterminals_finite
     (M : PDA input stack state) (presentation : FinitePresentation M) :

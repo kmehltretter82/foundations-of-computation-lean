@@ -32,6 +32,7 @@ import FoC.Grammars.RightRegular
 import FoC.Grammars.BNF
 import FoC.Grammars.ParseTree
 import FoC.Grammars.PDA
+import FoC.Grammars.PDANormalize
 import FoC.Grammars.GeneralGrammar
 import FoC.Computability.Tape
 import FoC.Computability.TuringMachine
