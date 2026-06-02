@@ -43,6 +43,763 @@ theorem cfg_generated_word_is_general_generated (G : CFG terminal nonterminal)
     w ∈ GeneralGrammar.GeneratedLanguage (GeneralGrammar.FromCFG G) :=
   GeneralGrammar.cfg_generated_language_embeds G h
 
+theorem general_yields_of_production {G : GeneralGrammar terminal nonterminal}
+    {lhs rhs : SententialForm terminal nonterminal}
+    (hprod : G.produces lhs rhs) (u v : SententialForm terminal nonterminal) :
+    GeneralGrammar.Yields G (u ++ lhs ++ v) (u ++ rhs ++ v) := by
+  exists u
+  exists v
+  exists lhs
+  exists rhs
+
+def ggTerminal (a : terminal) : Symbol terminal nonterminal :=
+  Symbol.terminal a
+
+def ggNonterminal (A : nonterminal) : Symbol terminal nonterminal :=
+  Symbol.nonterminal A
+
+def SententialCountTerminal [DecidableEq terminal] (a : terminal) :
+    SententialForm terminal nonterminal -> Nat
+  | [] => 0
+  | Symbol.terminal b :: rest =>
+      (if b = a then 1 else 0) + SententialCountTerminal a rest
+  | Symbol.nonterminal _ :: rest => SententialCountTerminal a rest
+
+def SententialCountNonterminal [DecidableEq nonterminal] (A : nonterminal) :
+    SententialForm terminal nonterminal -> Nat
+  | [] => 0
+  | Symbol.terminal _ :: rest => SententialCountNonterminal A rest
+  | Symbol.nonterminal B :: rest =>
+      (if B = A then 1 else 0) + SententialCountNonterminal A rest
+
+theorem sententialCountTerminal_append [DecidableEq terminal]
+    (a : terminal) (x y : SententialForm terminal nonterminal) :
+    SententialCountTerminal a (x ++ y) =
+      SententialCountTerminal a x + SententialCountTerminal a y := by
+  induction x with
+  | nil => simp [SententialCountTerminal]
+  | cons s rest ih =>
+      cases s <;> simp [SententialCountTerminal, ih] <;> omega
+
+theorem sententialCountNonterminal_append [DecidableEq nonterminal]
+    (A : nonterminal) (x y : SententialForm terminal nonterminal) :
+    SententialCountNonterminal A (x ++ y) =
+      SententialCountNonterminal A x + SententialCountNonterminal A y := by
+  induction x with
+  | nil => simp [SententialCountNonterminal]
+  | cons s rest ih =>
+      cases s <;> simp [SententialCountNonterminal, ih] <;> omega
+
+theorem sententialCountTerminal_terminalWord [DecidableEq terminal]
+    (a : terminal) (w : Word terminal) :
+    SententialCountTerminal (nonterminal := nonterminal) a
+      (SententialForm.terminalWord w) =
+      Word.Count a w := by
+  induction w with
+  | nil => rfl
+  | cons b rest ih =>
+      change (if b = a then 1 else 0) +
+          SententialCountTerminal a (SententialForm.terminalWord rest) =
+        (if b = a then 1 else 0) + Word.Count a rest
+      rw [ih]
+
+theorem sententialCountNonterminal_terminalWord [DecidableEq nonterminal]
+    (A : nonterminal) (w : Word terminal) :
+    SententialCountNonterminal A (SententialForm.terminalWord w) = 0 := by
+  induction w with
+  | nil => rfl
+  | cons _ rest ih =>
+      change SententialCountNonterminal A (SententialForm.terminalWord rest) = 0
+      exact ih
+
+inductive EqualCountTerminal where
+  | a
+  | b
+  | c
+deriving DecidableEq
+
+inductive EqualCountNT where
+  | start
+  | markA
+  | markB
+  | markC
+deriving DecidableEq
+
+namespace EqualCountNT
+
+def finite : Foundation.FiniteType EqualCountNT where
+  elems := [start, markA, markB, markC]
+  complete := by
+    intro A
+    cases A <;> simp
+
+end EqualCountNT
+
+def ecT (tok : EqualCountTerminal) :
+    Symbol EqualCountTerminal EqualCountNT :=
+  ggTerminal tok
+
+def ecN (A : EqualCountNT) :
+    Symbol EqualCountTerminal EqualCountNT :=
+  ggNonterminal A
+
+inductive EqualCountProduces :
+    SententialForm EqualCountTerminal EqualCountNT ->
+      SententialForm EqualCountTerminal EqualCountNT -> Prop where
+  | grow :
+      EqualCountProduces [ecN EqualCountNT.start]
+        [ecN EqualCountNT.start, ecN EqualCountNT.markA,
+          ecN EqualCountNT.markB, ecN EqualCountNT.markC]
+  | stop :
+      EqualCountProduces [ecN EqualCountNT.start] []
+  | swapAB :
+      EqualCountProduces [ecN EqualCountNT.markA, ecN EqualCountNT.markB]
+        [ecN EqualCountNT.markB, ecN EqualCountNT.markA]
+  | swapBA :
+      EqualCountProduces [ecN EqualCountNT.markB, ecN EqualCountNT.markA]
+        [ecN EqualCountNT.markA, ecN EqualCountNT.markB]
+  | swapAC :
+      EqualCountProduces [ecN EqualCountNT.markA, ecN EqualCountNT.markC]
+        [ecN EqualCountNT.markC, ecN EqualCountNT.markA]
+  | swapCA :
+      EqualCountProduces [ecN EqualCountNT.markC, ecN EqualCountNT.markA]
+        [ecN EqualCountNT.markA, ecN EqualCountNT.markC]
+  | swapBC :
+      EqualCountProduces [ecN EqualCountNT.markB, ecN EqualCountNT.markC]
+        [ecN EqualCountNT.markC, ecN EqualCountNT.markB]
+  | swapCB :
+      EqualCountProduces [ecN EqualCountNT.markC, ecN EqualCountNT.markB]
+        [ecN EqualCountNT.markB, ecN EqualCountNT.markC]
+  | emitA :
+      EqualCountProduces [ecN EqualCountNT.markA]
+        [ecT EqualCountTerminal.a]
+  | emitB :
+      EqualCountProduces [ecN EqualCountNT.markB]
+        [ecT EqualCountTerminal.b]
+  | emitC :
+      EqualCountProduces [ecN EqualCountNT.markC]
+        [ecT EqualCountTerminal.c]
+
+def EqualCountGrammar :
+    GeneralGrammar EqualCountTerminal EqualCountNT where
+  start := EqualCountNT.start
+  produces := EqualCountProduces
+  lhsContainsNonterminal := by
+    intro lhs rhs h
+    cases h <;> simp [SententialForm.containsNonterminal, ecN,
+      ggNonterminal]
+  nonterminalsFinite := EqualCountNT.finite
+
+def equalCountTotalA (sf : SententialForm EqualCountTerminal EqualCountNT) :
+    Nat :=
+  SententialCountTerminal EqualCountTerminal.a sf +
+    SententialCountNonterminal EqualCountNT.markA sf
+
+def equalCountTotalB (sf : SententialForm EqualCountTerminal EqualCountNT) :
+    Nat :=
+  SententialCountTerminal EqualCountTerminal.b sf +
+    SententialCountNonterminal EqualCountNT.markB sf
+
+def equalCountTotalC (sf : SententialForm EqualCountTerminal EqualCountNT) :
+    Nat :=
+  SententialCountTerminal EqualCountTerminal.c sf +
+    SententialCountNonterminal EqualCountNT.markC sf
+
+def equalCountBalanced
+    (sf : SententialForm EqualCountTerminal EqualCountNT) : Prop :=
+  equalCountTotalA sf = equalCountTotalB sf ∧
+    equalCountTotalB sf = equalCountTotalC sf
+
+theorem equalCount_start_balanced :
+    equalCountBalanced [ecN EqualCountNT.start] := by
+  simp [equalCountBalanced, equalCountTotalA, equalCountTotalB,
+    equalCountTotalC, SententialCountTerminal, SententialCountNonterminal,
+    ecN, ggNonterminal]
+
+-- Book: Chapter 4, Section 4.6, the equal-count general grammar preserves
+-- the invariant `n_A+n_a = n_B+n_b = n_C+n_c`.
+theorem equalCount_yields_preserves_balanced
+    {x y : SententialForm EqualCountTerminal EqualCountNT}
+    (h : GeneralGrammar.Yields EqualCountGrammar x y) :
+    equalCountBalanced x -> equalCountBalanced y := by
+  intro hbalanced
+  cases h with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases hv with
+          | intro lhs hlhs =>
+              cases hlhs with
+              | intro rhs hrhs =>
+                  cases hrhs with
+                  | intro hprod hrest =>
+                      cases hrest with
+                      | intro hx hy =>
+                          rw [hx] at hbalanced
+                          rw [hy]
+                          cases hprod <;>
+                            simp [equalCountBalanced, equalCountTotalA,
+                              equalCountTotalB, equalCountTotalC,
+                              sententialCountTerminal_append,
+                              sententialCountNonterminal_append,
+                              SententialCountTerminal,
+                              SententialCountNonterminal, ecN, ecT,
+                              ggNonterminal, ggTerminal] at hbalanced ⊢ <;>
+                            omega
+
+-- Book: Chapter 4, Section 4.6, the equal-count invariant is stable through
+-- derivations.
+theorem equalCount_derives_preserves_balanced
+    {x y : SententialForm EqualCountTerminal EqualCountNT}
+    (h : GeneralGrammar.Derives EqualCountGrammar x y) :
+    equalCountBalanced x -> equalCountBalanced y := by
+  induction h with
+  | refl _ =>
+      intro hbalanced
+      exact hbalanced
+  | step hstep _ ih =>
+      intro hbalanced
+      exact ih (equalCount_yields_preserves_balanced hstep hbalanced)
+
+-- Book: Chapter 4, Section 4.6, every terminal word generated by the
+-- equal-count grammar has the same number of a's, b's, and c's.
+theorem equalCountGrammar_generated_has_equal_terminal_counts
+    {w : Word EqualCountTerminal}
+    (h : w ∈ GeneralGrammar.GeneratedLanguage EqualCountGrammar) :
+    Word.Count EqualCountTerminal.a w = Word.Count EqualCountTerminal.b w ∧
+      Word.Count EqualCountTerminal.b w = Word.Count EqualCountTerminal.c w := by
+  have hderives :
+      GeneralGrammar.Derives EqualCountGrammar [ecN EqualCountNT.start]
+        (SententialForm.terminalWord w) := by
+    simpa [GeneralGrammar.GeneratedLanguage, EqualCountGrammar, ecN,
+      ggNonterminal] using h
+  have hbalanced :=
+    equalCount_derives_preserves_balanced hderives equalCount_start_balanced
+  simpa [equalCountBalanced, equalCountTotalA, equalCountTotalB,
+    equalCountTotalC, sententialCountTerminal_terminalWord,
+    sententialCountNonterminal_terminalWord] using hbalanced
+
+def baabccWord : Word EqualCountTerminal :=
+  [EqualCountTerminal.b, EqualCountTerminal.a, EqualCountTerminal.a,
+    EqualCountTerminal.b, EqualCountTerminal.c, EqualCountTerminal.c]
+
+-- Book: Chapter 4, Section 4.6, the sample derivation of `baabcc`.
+theorem equalCountGrammar_generates_baabcc :
+    baabccWord ∈ GeneralGrammar.GeneratedLanguage EqualCountGrammar := by
+  let S := ecN EqualCountNT.start
+  let A := ecN EqualCountNT.markA
+  let B := ecN EqualCountNT.markB
+  let C := ecN EqualCountNT.markC
+  let a := ecT EqualCountTerminal.a
+  let b := ecT EqualCountTerminal.b
+  let c := ecT EqualCountTerminal.c
+  have h1 : GeneralGrammar.Yields EqualCountGrammar [S] [S, A, B, C] := by
+    simpa [S, A, B, C] using
+      general_yields_of_production (G := EqualCountGrammar)
+        EqualCountProduces.grow [] []
+  have h2 :
+      GeneralGrammar.Yields EqualCountGrammar [S, A, B, C]
+        [S, A, B, C, A, B, C] := by
+    simpa [S, A, B, C] using
+      general_yields_of_production (G := EqualCountGrammar)
+        EqualCountProduces.grow [] [A, B, C]
+  have h3 :
+      GeneralGrammar.Yields EqualCountGrammar [S, A, B, C, A, B, C]
+        [A, B, C, A, B, C] := by
+    simpa [S, A, B, C] using
+      general_yields_of_production (G := EqualCountGrammar)
+        EqualCountProduces.stop [] [A, B, C, A, B, C]
+  have h4 :
+      GeneralGrammar.Yields EqualCountGrammar [A, B, C, A, B, C]
+        [B, A, C, A, B, C] := by
+    simpa [A, B, C] using
+      general_yields_of_production (G := EqualCountGrammar)
+        EqualCountProduces.swapAB [] [C, A, B, C]
+  have h5 :
+      GeneralGrammar.Yields EqualCountGrammar [B, A, C, A, B, C]
+        [B, A, A, C, B, C] := by
+    simpa [A, B, C] using
+      general_yields_of_production (G := EqualCountGrammar)
+        EqualCountProduces.swapCA [B, A] [B, C]
+  have h6 :
+      GeneralGrammar.Yields EqualCountGrammar [B, A, A, C, B, C]
+        [B, A, A, B, C, C] := by
+    simpa [A, B, C] using
+      general_yields_of_production (G := EqualCountGrammar)
+        EqualCountProduces.swapCB [B, A, A] [C]
+  have h7 :
+      GeneralGrammar.Yields EqualCountGrammar [B, A, A, B, C, C]
+        [b, A, A, B, C, C] := by
+    simpa [A, B, C, b] using
+      general_yields_of_production (G := EqualCountGrammar)
+        EqualCountProduces.emitB [] [A, A, B, C, C]
+  have h8 :
+      GeneralGrammar.Yields EqualCountGrammar [b, A, A, B, C, C]
+        [b, a, A, B, C, C] := by
+    simpa [A, B, C, a, b] using
+      general_yields_of_production (G := EqualCountGrammar)
+        EqualCountProduces.emitA [b] [A, B, C, C]
+  have h9 :
+      GeneralGrammar.Yields EqualCountGrammar [b, a, A, B, C, C]
+        [b, a, a, B, C, C] := by
+    simpa [A, B, C, a, b] using
+      general_yields_of_production (G := EqualCountGrammar)
+        EqualCountProduces.emitA [b, a] [B, C, C]
+  have h10 :
+      GeneralGrammar.Yields EqualCountGrammar [b, a, a, B, C, C]
+        [b, a, a, b, C, C] := by
+    simpa [A, B, C, a, b] using
+      general_yields_of_production (G := EqualCountGrammar)
+        EqualCountProduces.emitB [b, a, a] [C, C]
+  have h11 :
+      GeneralGrammar.Yields EqualCountGrammar [b, a, a, b, C, C]
+        [b, a, a, b, c, C] := by
+    simpa [A, B, C, a, b, c] using
+      general_yields_of_production (G := EqualCountGrammar)
+        EqualCountProduces.emitC [b, a, a, b] [C]
+  have h12 :
+      GeneralGrammar.Yields EqualCountGrammar [b, a, a, b, c, C]
+        [b, a, a, b, c, c] := by
+    simpa [A, B, C, a, b, c] using
+      general_yields_of_production (G := EqualCountGrammar)
+        EqualCountProduces.emitC [b, a, a, b, c] []
+  have hderives :
+      GeneralGrammar.Derives EqualCountGrammar [S] [b, a, a, b, c, c] :=
+    GeneralGrammar.Derives.step h1
+      (GeneralGrammar.Derives.step h2
+        (GeneralGrammar.Derives.step h3
+          (GeneralGrammar.Derives.step h4
+            (GeneralGrammar.Derives.step h5
+              (GeneralGrammar.Derives.step h6
+                (GeneralGrammar.Derives.step h7
+                  (GeneralGrammar.Derives.step h8
+                    (GeneralGrammar.Derives.step h9
+                      (GeneralGrammar.Derives.step h10
+                        (GeneralGrammar.Derives.step h11
+                          (GeneralGrammar.Derives.step h12
+                            (GeneralGrammar.Derives.refl
+                              [b, a, a, b, c, c]))))))))))))
+  simpa [GeneralGrammar.GeneratedLanguage, EqualCountGrammar, baabccWord,
+    SententialForm.terminalWord, S, a, b, c] using hderives
+
+inductive OrderedABCNT where
+  | start
+  | markA
+  | markB
+  | markC
+  | x
+  | y
+  | z
+deriving DecidableEq
+
+namespace OrderedABCNT
+
+def finite : Foundation.FiniteType OrderedABCNT where
+  elems := [start, markA, markB, markC, x, y, z]
+  complete := by
+    intro A
+    cases A <;> simp
+
+end OrderedABCNT
+
+def orderedN (A : OrderedABCNT) :
+    Symbol EqualCountTerminal OrderedABCNT :=
+  ggNonterminal A
+
+def orderedT (tok : EqualCountTerminal) :
+    Symbol EqualCountTerminal OrderedABCNT :=
+  ggTerminal tok
+
+inductive OrderedABCProduces :
+    SententialForm EqualCountTerminal OrderedABCNT ->
+      SententialForm EqualCountTerminal OrderedABCNT -> Prop where
+  | grow :
+      OrderedABCProduces [orderedN OrderedABCNT.start]
+        [orderedN OrderedABCNT.start, orderedN OrderedABCNT.markA,
+          orderedN OrderedABCNT.markB, orderedN OrderedABCNT.markC]
+  | startX :
+      OrderedABCProduces [orderedN OrderedABCNT.start] [orderedN OrderedABCNT.x]
+  | swapBA :
+      OrderedABCProduces [orderedN OrderedABCNT.markB, orderedN OrderedABCNT.markA]
+        [orderedN OrderedABCNT.markA, orderedN OrderedABCNT.markB]
+  | swapCA :
+      OrderedABCProduces [orderedN OrderedABCNT.markC, orderedN OrderedABCNT.markA]
+        [orderedN OrderedABCNT.markA, orderedN OrderedABCNT.markC]
+  | swapCB :
+      OrderedABCProduces [orderedN OrderedABCNT.markC, orderedN OrderedABCNT.markB]
+        [orderedN OrderedABCNT.markB, orderedN OrderedABCNT.markC]
+  | convertXA :
+      OrderedABCProduces [orderedN OrderedABCNT.x, orderedN OrderedABCNT.markA]
+        [orderedT EqualCountTerminal.a, orderedN OrderedABCNT.x]
+  | xToY :
+      OrderedABCProduces [orderedN OrderedABCNT.x] [orderedN OrderedABCNT.y]
+  | convertYB :
+      OrderedABCProduces [orderedN OrderedABCNT.y, orderedN OrderedABCNT.markB]
+        [orderedT EqualCountTerminal.b, orderedN OrderedABCNT.y]
+  | yToZ :
+      OrderedABCProduces [orderedN OrderedABCNT.y] [orderedN OrderedABCNT.z]
+  | convertZC :
+      OrderedABCProduces [orderedN OrderedABCNT.z, orderedN OrderedABCNT.markC]
+        [orderedT EqualCountTerminal.c, orderedN OrderedABCNT.z]
+  | finish :
+      OrderedABCProduces [orderedN OrderedABCNT.z] []
+
+def OrderedABCGrammar :
+    GeneralGrammar EqualCountTerminal OrderedABCNT where
+  start := OrderedABCNT.start
+  produces := OrderedABCProduces
+  lhsContainsNonterminal := by
+    intro lhs rhs h
+    cases h <;> simp [SententialForm.containsNonterminal, orderedN,
+      ggNonterminal]
+  nonterminalsFinite := OrderedABCNT.finite
+
+def aabbccWord : Word EqualCountTerminal :=
+  [EqualCountTerminal.a, EqualCountTerminal.a, EqualCountTerminal.b,
+    EqualCountTerminal.b, EqualCountTerminal.c, EqualCountTerminal.c]
+
+-- Book: Chapter 4, Section 4.6, the ordered general grammar generates
+-- `aabbcc`, illustrating the `{a^n b^n c^n}` construction.
+theorem orderedABCGrammar_generates_aabbcc :
+    aabbccWord ∈ GeneralGrammar.GeneratedLanguage OrderedABCGrammar := by
+  let S := orderedN OrderedABCNT.start
+  let A := orderedN OrderedABCNT.markA
+  let B := orderedN OrderedABCNT.markB
+  let C := orderedN OrderedABCNT.markC
+  let X := orderedN OrderedABCNT.x
+  let Y := orderedN OrderedABCNT.y
+  let Z := orderedN OrderedABCNT.z
+  let a := orderedT EqualCountTerminal.a
+  let b := orderedT EqualCountTerminal.b
+  let c := orderedT EqualCountTerminal.c
+  have h1 : GeneralGrammar.Yields OrderedABCGrammar [S] [S, A, B, C] := by
+    simpa [S, A, B, C] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.grow [] []
+  have h2 :
+      GeneralGrammar.Yields OrderedABCGrammar [S, A, B, C]
+        [S, A, B, C, A, B, C] := by
+    simpa [S, A, B, C] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.grow [] [A, B, C]
+  have h3 :
+      GeneralGrammar.Yields OrderedABCGrammar [S, A, B, C, A, B, C]
+        [X, A, B, C, A, B, C] := by
+    simpa [S, A, B, C, X] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.startX [] [A, B, C, A, B, C]
+  have h4 :
+      GeneralGrammar.Yields OrderedABCGrammar [X, A, B, C, A, B, C]
+        [X, A, B, A, C, B, C] := by
+    simpa [X, A, B, C] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.swapCA [X, A, B] [B, C]
+  have h5 :
+      GeneralGrammar.Yields OrderedABCGrammar [X, A, B, A, C, B, C]
+        [X, A, A, B, C, B, C] := by
+    simpa [X, A, B, C] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.swapBA [X, A] [C, B, C]
+  have h6 :
+      GeneralGrammar.Yields OrderedABCGrammar [X, A, A, B, C, B, C]
+        [X, A, A, B, B, C, C] := by
+    simpa [X, A, B, C] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.swapCB [X, A, A, B] [C]
+  have h7 :
+      GeneralGrammar.Yields OrderedABCGrammar [X, A, A, B, B, C, C]
+        [a, X, A, B, B, C, C] := by
+    simpa [X, A, B, C, a] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.convertXA [] [A, B, B, C, C]
+  have h8 :
+      GeneralGrammar.Yields OrderedABCGrammar [a, X, A, B, B, C, C]
+        [a, a, X, B, B, C, C] := by
+    simpa [X, A, B, C, a] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.convertXA [a] [B, B, C, C]
+  have h9 :
+      GeneralGrammar.Yields OrderedABCGrammar [a, a, X, B, B, C, C]
+        [a, a, Y, B, B, C, C] := by
+    simpa [X, Y, B, C, a] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.xToY [a, a] [B, B, C, C]
+  have h10 :
+      GeneralGrammar.Yields OrderedABCGrammar [a, a, Y, B, B, C, C]
+        [a, a, b, Y, B, C, C] := by
+    simpa [Y, B, C, a, b] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.convertYB [a, a] [B, C, C]
+  have h11 :
+      GeneralGrammar.Yields OrderedABCGrammar [a, a, b, Y, B, C, C]
+        [a, a, b, b, Y, C, C] := by
+    simpa [Y, B, C, a, b] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.convertYB [a, a, b] [C, C]
+  have h12 :
+      GeneralGrammar.Yields OrderedABCGrammar [a, a, b, b, Y, C, C]
+        [a, a, b, b, Z, C, C] := by
+    simpa [Y, Z, C, a, b] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.yToZ [a, a, b, b] [C, C]
+  have h13 :
+      GeneralGrammar.Yields OrderedABCGrammar [a, a, b, b, Z, C, C]
+        [a, a, b, b, c, Z, C] := by
+    simpa [Z, C, a, b, c] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.convertZC [a, a, b, b] [C]
+  have h14 :
+      GeneralGrammar.Yields OrderedABCGrammar [a, a, b, b, c, Z, C]
+        [a, a, b, b, c, c, Z] := by
+    simpa [Z, C, a, b, c] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.convertZC [a, a, b, b, c] []
+  have h15 :
+      GeneralGrammar.Yields OrderedABCGrammar [a, a, b, b, c, c, Z]
+        [a, a, b, b, c, c] := by
+    simpa [Z, a, b, c] using
+      general_yields_of_production (G := OrderedABCGrammar)
+        OrderedABCProduces.finish [a, a, b, b, c, c] []
+  have hderives :
+      GeneralGrammar.Derives OrderedABCGrammar [S] [a, a, b, b, c, c] :=
+    GeneralGrammar.Derives.step h1
+      (GeneralGrammar.Derives.step h2
+        (GeneralGrammar.Derives.step h3
+          (GeneralGrammar.Derives.step h4
+            (GeneralGrammar.Derives.step h5
+              (GeneralGrammar.Derives.step h6
+                (GeneralGrammar.Derives.step h7
+                  (GeneralGrammar.Derives.step h8
+                    (GeneralGrammar.Derives.step h9
+                      (GeneralGrammar.Derives.step h10
+                        (GeneralGrammar.Derives.step h11
+                          (GeneralGrammar.Derives.step h12
+                            (GeneralGrammar.Derives.step h13
+                              (GeneralGrammar.Derives.step h14
+                                (GeneralGrammar.Derives.step h15
+                                  (GeneralGrammar.Derives.refl
+                                    [a, a, b, b, c, c])))))))))))))))
+  simpa [GeneralGrammar.GeneratedLanguage, OrderedABCGrammar, aabbccWord,
+    SententialForm.terminalWord, S, a, b, c] using hderives
+
+inductive SquareTerminal where
+  | a
+deriving DecidableEq
+
+inductive SquareNT where
+  | start
+  | d
+  | t
+  | e
+  | b
+  | markA
+deriving DecidableEq
+
+namespace SquareNT
+
+def finite : Foundation.FiniteType SquareNT where
+  elems := [start, d, t, e, b, markA]
+  complete := by
+    intro A
+    cases A <;> simp
+
+end SquareNT
+
+def squareT (tok : SquareTerminal) : Symbol SquareTerminal SquareNT :=
+  ggTerminal tok
+
+def squareN (A : SquareNT) : Symbol SquareTerminal SquareNT :=
+  ggNonterminal A
+
+inductive SquareProduces :
+    SententialForm SquareTerminal SquareNT ->
+      SententialForm SquareTerminal SquareNT -> Prop where
+  | start :
+      SquareProduces [squareN SquareNT.start]
+        [squareN SquareNT.d, squareN SquareNT.t, squareN SquareNT.e]
+  | grow :
+      SquareProduces [squareN SquareNT.t]
+        [squareN SquareNT.b, squareN SquareNT.t, squareN SquareNT.markA]
+  | stop :
+      SquareProduces [squareN SquareNT.t] []
+  | moveBA :
+      SquareProduces [squareN SquareNT.b, squareN SquareNT.markA]
+        [squareN SquareNT.markA, squareT SquareTerminal.a, squareN SquareNT.b]
+  | moveBa :
+      SquareProduces [squareN SquareNT.b, squareT SquareTerminal.a]
+        [squareT SquareTerminal.a, squareN SquareNT.b]
+  | removeBE :
+      SquareProduces [squareN SquareNT.b, squareN SquareNT.e]
+        [squareN SquareNT.e]
+  | removeDA :
+      SquareProduces [squareN SquareNT.d, squareN SquareNT.markA]
+        [squareN SquareNT.d]
+  | moveDa :
+      SquareProduces [squareN SquareNT.d, squareT SquareTerminal.a]
+        [squareT SquareTerminal.a, squareN SquareNT.d]
+  | finish :
+      SquareProduces [squareN SquareNT.d, squareN SquareNT.e] []
+
+def SquareGrammar : GeneralGrammar SquareTerminal SquareNT where
+  start := SquareNT.start
+  produces := SquareProduces
+  lhsContainsNonterminal := by
+    intro lhs rhs h
+    cases h <;> simp [SententialForm.containsNonterminal, squareN,
+      ggNonterminal]
+  nonterminalsFinite := SquareNT.finite
+
+def fourAsWord : Word SquareTerminal :=
+  [SquareTerminal.a, SquareTerminal.a, SquareTerminal.a, SquareTerminal.a]
+
+-- Book: Chapter 4, Section 4.6, a concrete derivation from the
+-- `{a^(n^2)}` general grammar: the n = 2 case generates four a's.
+theorem squareGrammar_generates_four_as :
+    fourAsWord ∈ GeneralGrammar.GeneratedLanguage SquareGrammar := by
+  let S := squareN SquareNT.start
+  let D := squareN SquareNT.d
+  let T := squareN SquareNT.t
+  let E := squareN SquareNT.e
+  let B := squareN SquareNT.b
+  let A := squareN SquareNT.markA
+  let a := squareT SquareTerminal.a
+  have h1 : GeneralGrammar.Yields SquareGrammar [S] [D, T, E] := by
+    simpa [S, D, T, E] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.start [] []
+  have h2 :
+      GeneralGrammar.Yields SquareGrammar [D, T, E] [D, B, T, A, E] := by
+    simpa [D, T, E, B, A] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.grow [D] [E]
+  have h3 :
+      GeneralGrammar.Yields SquareGrammar [D, B, T, A, E]
+        [D, B, B, T, A, A, E] := by
+    simpa [D, T, E, B, A] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.grow [D, B] [A, E]
+  have h4 :
+      GeneralGrammar.Yields SquareGrammar [D, B, B, T, A, A, E]
+        [D, B, B, A, A, E] := by
+    simpa [D, T, E, B, A] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.stop [D, B, B] [A, A, E]
+  have h5 :
+      GeneralGrammar.Yields SquareGrammar [D, B, B, A, A, E]
+        [D, B, A, a, B, A, E] := by
+    simpa [D, E, B, A, a] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.moveBA [D, B] [A, E]
+  have h6 :
+      GeneralGrammar.Yields SquareGrammar [D, B, A, a, B, A, E]
+        [D, B, A, a, A, a, B, E] := by
+    simpa [D, E, B, A, a] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.moveBA [D, B, A, a] [E]
+  have h7 :
+      GeneralGrammar.Yields SquareGrammar [D, B, A, a, A, a, B, E]
+        [D, B, A, a, A, a, E] := by
+    simpa [D, E, B, A, a] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.removeBE [D, B, A, a, A, a] []
+  have h8 :
+      GeneralGrammar.Yields SquareGrammar [D, B, A, a, A, a, E]
+        [D, A, a, B, a, A, a, E] := by
+    simpa [D, E, B, A, a] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.moveBA [D] [a, A, a, E]
+  have h9 :
+      GeneralGrammar.Yields SquareGrammar [D, A, a, B, a, A, a, E]
+        [D, A, a, a, B, A, a, E] := by
+    simpa [D, E, B, A, a] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.moveBa [D, A, a] [A, a, E]
+  have h10 :
+      GeneralGrammar.Yields SquareGrammar [D, A, a, a, B, A, a, E]
+        [D, A, a, a, A, a, B, a, E] := by
+    simpa [D, E, B, A, a] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.moveBA [D, A, a, a] [a, E]
+  have h11 :
+      GeneralGrammar.Yields SquareGrammar [D, A, a, a, A, a, B, a, E]
+        [D, A, a, a, A, a, a, B, E] := by
+    simpa [D, E, B, A, a] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.moveBa [D, A, a, a, A, a] [E]
+  have h12 :
+      GeneralGrammar.Yields SquareGrammar [D, A, a, a, A, a, a, B, E]
+        [D, A, a, a, A, a, a, E] := by
+    simpa [D, E, B, A, a] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.removeBE [D, A, a, a, A, a, a] []
+  have h13 :
+      GeneralGrammar.Yields SquareGrammar [D, A, a, a, A, a, a, E]
+        [D, a, a, A, a, a, E] := by
+    simpa [D, E, A, a] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.removeDA [] [a, a, A, a, a, E]
+  have h14 :
+      GeneralGrammar.Yields SquareGrammar [D, a, a, A, a, a, E]
+        [a, D, a, A, a, a, E] := by
+    simpa [D, E, A, a] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.moveDa [] [a, A, a, a, E]
+  have h15 :
+      GeneralGrammar.Yields SquareGrammar [a, D, a, A, a, a, E]
+        [a, a, D, A, a, a, E] := by
+    simpa [D, E, A, a] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.moveDa [a] [A, a, a, E]
+  have h16 :
+      GeneralGrammar.Yields SquareGrammar [a, a, D, A, a, a, E]
+        [a, a, D, a, a, E] := by
+    simpa [D, E, A, a] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.removeDA [a, a] [a, a, E]
+  have h17 :
+      GeneralGrammar.Yields SquareGrammar [a, a, D, a, a, E]
+        [a, a, a, D, a, E] := by
+    simpa [D, E, a] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.moveDa [a, a] [a, E]
+  have h18 :
+      GeneralGrammar.Yields SquareGrammar [a, a, a, D, a, E]
+        [a, a, a, a, D, E] := by
+    simpa [D, E, a] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.moveDa [a, a, a] [E]
+  have h19 :
+      GeneralGrammar.Yields SquareGrammar [a, a, a, a, D, E]
+        [a, a, a, a] := by
+    simpa [D, E, a] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.finish [a, a, a, a] []
+  have hderives :
+      GeneralGrammar.Derives SquareGrammar [S] [a, a, a, a] :=
+    GeneralGrammar.Derives.step h1
+      (GeneralGrammar.Derives.step h2
+        (GeneralGrammar.Derives.step h3
+          (GeneralGrammar.Derives.step h4
+            (GeneralGrammar.Derives.step h5
+              (GeneralGrammar.Derives.step h6
+                (GeneralGrammar.Derives.step h7
+                  (GeneralGrammar.Derives.step h8
+                    (GeneralGrammar.Derives.step h9
+                      (GeneralGrammar.Derives.step h10
+                        (GeneralGrammar.Derives.step h11
+                          (GeneralGrammar.Derives.step h12
+                            (GeneralGrammar.Derives.step h13
+                              (GeneralGrammar.Derives.step h14
+                                (GeneralGrammar.Derives.step h15
+                                  (GeneralGrammar.Derives.step h16
+                                    (GeneralGrammar.Derives.step h17
+                                      (GeneralGrammar.Derives.step h18
+                                        (GeneralGrammar.Derives.step h19
+                                          (GeneralGrammar.Derives.refl
+                                            [a, a, a, a])))))))))))))))))))
+  simpa [GeneralGrammar.GeneratedLanguage, SquareGrammar, fourAsWord,
+    SententialForm.terminalWord, S, a] using hderives
+
 end Section06
 end Chapter04
 end Book

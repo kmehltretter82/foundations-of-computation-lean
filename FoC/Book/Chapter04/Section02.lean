@@ -79,13 +79,59 @@ inductive BNFExampleTerminal where
   | nine
   | plus
   | minus
+  | times
+  | divide
   | semicolon
+  | andTok
+  | who
+  | the
+  | a
+  | man
+  | woman
+  | dog
+  | cat
+  | computer
+  | runs
+  | jumps
+  | hides
+  | knows
+  | loves
+  | chases
+  | owns
+  | ifTok
+  | elseTok
+  | whileTok
+  | lparen
+  | rparen
+  | lbrace
+  | rbrace
+  | equals
+  | ident
+  | number
 deriving DecidableEq
 
 inductive BNFExampleNT where
   | digit
   | type
   | variable
+  | sentence
+  | simpleSentence
+  | nounPart
+  | verbPart
+  | article
+  | noun
+  | intransitiveVerb
+  | transitiveVerb
+  | statement
+  | blockStatement
+  | ifStatement
+  | whileStatement
+  | assignmentStatement
+  | nullStatement
+  | condition
+  | expression
+  | term
+  | factor
 deriving DecidableEq
 
 def bnfTerminal (t : BNFExampleTerminal) :
@@ -128,6 +174,98 @@ def declarationExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
 def integerExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
   BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.digit)
     (BNF.Expr.many (bnfNonterminalExpr BNFExampleNT.digit))
+
+def englishSentenceExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.simpleSentence)
+    (BNF.Expr.many
+      (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.andTok)
+        (bnfNonterminalExpr BNFExampleNT.simpleSentence)))
+
+def englishNounPartExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.article)
+    (BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.noun)
+      (BNF.Expr.many
+        (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.who)
+          (bnfNonterminalExpr BNFExampleNT.verbPart))))
+
+def englishVerbPartExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.alt (bnfNonterminalExpr BNFExampleNT.intransitiveVerb)
+    (BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.transitiveVerb)
+      (bnfNonterminalExpr BNFExampleNT.nounPart))
+
+def englishArticleExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.the)
+    (bnfTerminalExpr BNFExampleTerminal.a)
+
+def englishNounExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.man)
+    (BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.woman)
+      (BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.dog)
+        (BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.cat)
+          (bnfTerminalExpr BNFExampleTerminal.computer))))
+
+def javaStatementExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.alt (bnfNonterminalExpr BNFExampleNT.blockStatement)
+    (BNF.Expr.alt (bnfNonterminalExpr BNFExampleNT.ifStatement)
+      (BNF.Expr.alt (bnfNonterminalExpr BNFExampleNT.whileStatement)
+        (BNF.Expr.alt (bnfNonterminalExpr BNFExampleNT.assignmentStatement)
+          (bnfNonterminalExpr BNFExampleNT.nullStatement))))
+
+def javaBlockStatementExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.lbrace)
+    (BNF.Expr.seq
+      (BNF.Expr.many (bnfNonterminalExpr BNFExampleNT.statement))
+      (bnfTerminalExpr BNFExampleTerminal.rbrace))
+
+def javaIfStatementExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.ifTok)
+    (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.lparen)
+      (BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.condition)
+        (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.rparen)
+          (BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.statement)
+            (BNF.Expr.optional
+              (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.elseTok)
+                (bnfNonterminalExpr BNFExampleNT.statement)))))))
+
+def javaWhileStatementExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.whileTok)
+    (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.lparen)
+      (BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.condition)
+        (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.rparen)
+          (bnfNonterminalExpr BNFExampleNT.statement))))
+
+def javaAssignmentStatementExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.variable)
+    (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.equals)
+      (BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.expression)
+        (bnfTerminalExpr BNFExampleTerminal.semicolon)))
+
+def javaAdditiveTermExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq
+    (BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.plus)
+      (bnfTerminalExpr BNFExampleTerminal.minus))
+    (bnfNonterminalExpr BNFExampleNT.term)
+
+def javaExpressionExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.term)
+    (BNF.Expr.many javaAdditiveTermExpr)
+
+def javaMultiplicativeFactorExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq
+    (BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.times)
+      (bnfTerminalExpr BNFExampleTerminal.divide))
+    (bnfNonterminalExpr BNFExampleNT.factor)
+
+def javaTermExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.factor)
+    (BNF.Expr.many javaMultiplicativeFactorExpr)
+
+def javaFactorExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
+  BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.ident)
+    (BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.number)
+      (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.lparen)
+        (BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.expression)
+          (bnfTerminalExpr BNFExampleTerminal.rparen))))
 
 -- Book: Chapter 4, Section 4.2, a concrete digit alternative.
 theorem bnf_digit_seven_expands :
@@ -203,6 +341,211 @@ theorem bnf_integer_three_digits_expands :
       (BNF.Expr.repeat_cons
         (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.digit))
         (BNF.Expr.repeat_empty (bnfNonterminalExpr BNFExampleNT.digit))))
+
+-- Book: Chapter 4, Section 4.2, English sentence BNF with one `and`.
+theorem bnf_english_sentence_with_and_expands :
+    BNF.Expr.Expands englishSentenceExpr
+      [bnfNonterminal BNFExampleNT.simpleSentence,
+        bnfTerminal BNFExampleTerminal.andTok,
+        bnfNonterminal BNFExampleNT.simpleSentence] := by
+  unfold englishSentenceExpr
+  simpa using BNF.Expr.Expands.seq
+    (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.simpleSentence))
+    (BNF.Expr.repeat_cons
+      (BNF.Expr.Expands.seq
+        (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.andTok))
+        (BNF.Expr.Expands.symbol
+          (bnfNonterminal BNFExampleNT.simpleSentence)))
+      (BNF.Expr.repeat_empty
+        (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.andTok)
+          (bnfNonterminalExpr BNFExampleNT.simpleSentence))))
+
+-- Book: Chapter 4, Section 4.2, English noun phrase with a relative clause.
+theorem bnf_english_noun_part_with_relative_clause_expands :
+    BNF.Expr.Expands englishNounPartExpr
+      [bnfNonterminal BNFExampleNT.article, bnfNonterminal BNFExampleNT.noun,
+        bnfTerminal BNFExampleTerminal.who,
+        bnfNonterminal BNFExampleNT.verbPart] := by
+  unfold englishNounPartExpr
+  simpa using BNF.Expr.Expands.seq
+    (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.article))
+    (BNF.Expr.Expands.seq
+      (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.noun))
+      (BNF.Expr.repeat_cons
+        (BNF.Expr.Expands.seq
+          (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.who))
+          (BNF.Expr.Expands.symbol
+            (bnfNonterminal BNFExampleNT.verbPart)))
+        (BNF.Expr.repeat_empty
+          (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.who)
+            (bnfNonterminalExpr BNFExampleNT.verbPart)))))
+
+-- Book: Chapter 4, Section 4.2, English transitive verb phrase.
+theorem bnf_english_transitive_verb_part_expands :
+    BNF.Expr.Expands englishVerbPartExpr
+      [bnfNonterminal BNFExampleNT.transitiveVerb,
+        bnfNonterminal BNFExampleNT.nounPart] := by
+  unfold englishVerbPartExpr
+  exact BNF.Expr.Expands.altRight
+    (BNF.Expr.Expands.seq
+      (BNF.Expr.Expands.symbol
+        (bnfNonterminal BNFExampleNT.transitiveVerb))
+      (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.nounPart)))
+
+-- Book: Chapter 4, Section 4.2, English lexical alternatives.
+theorem bnf_english_article_the_expands :
+    BNF.Expr.Expands englishArticleExpr [bnfTerminal BNFExampleTerminal.the] := by
+  unfold englishArticleExpr
+  exact BNF.Expr.Expands.altLeft
+    (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.the))
+
+-- Book: Chapter 4, Section 4.2, English lexical alternatives.
+theorem bnf_english_noun_dog_expands :
+    BNF.Expr.Expands englishNounExpr [bnfTerminal BNFExampleTerminal.dog] := by
+  unfold englishNounExpr
+  apply BNF.Expr.Expands.altRight
+  apply BNF.Expr.Expands.altRight
+  apply BNF.Expr.Expands.altLeft
+  exact BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.dog)
+
+-- Book: Chapter 4, Section 4.2, Java statement alternatives.
+theorem bnf_java_statement_if_expands :
+    BNF.Expr.Expands javaStatementExpr [bnfNonterminal BNFExampleNT.ifStatement] := by
+  unfold javaStatementExpr
+  apply BNF.Expr.Expands.altRight
+  apply BNF.Expr.Expands.altLeft
+  exact BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.ifStatement)
+
+-- Book: Chapter 4, Section 4.2, Java block statement with two statements.
+theorem bnf_java_block_two_statements_expands :
+    BNF.Expr.Expands javaBlockStatementExpr
+      [bnfTerminal BNFExampleTerminal.lbrace,
+        bnfNonterminal BNFExampleNT.statement,
+        bnfNonterminal BNFExampleNT.statement,
+        bnfTerminal BNFExampleTerminal.rbrace] := by
+  unfold javaBlockStatementExpr
+  simpa using BNF.Expr.Expands.seq
+    (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.lbrace))
+    (BNF.Expr.Expands.seq
+      (BNF.Expr.repeat_cons
+        (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.statement))
+        (BNF.Expr.repeat_cons
+          (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.statement))
+          (BNF.Expr.repeat_empty
+            (bnfNonterminalExpr BNFExampleNT.statement))))
+      (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.rbrace)))
+
+-- Book: Chapter 4, Section 4.2, Java if statement with optional else present.
+theorem bnf_java_if_with_else_expands :
+    BNF.Expr.Expands javaIfStatementExpr
+      [bnfTerminal BNFExampleTerminal.ifTok,
+        bnfTerminal BNFExampleTerminal.lparen,
+        bnfNonterminal BNFExampleNT.condition,
+        bnfTerminal BNFExampleTerminal.rparen,
+        bnfNonterminal BNFExampleNT.statement,
+        bnfTerminal BNFExampleTerminal.elseTok,
+        bnfNonterminal BNFExampleNT.statement] := by
+  unfold javaIfStatementExpr
+  simpa using BNF.Expr.Expands.seq
+    (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.ifTok))
+    (BNF.Expr.Expands.seq
+      (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.lparen))
+      (BNF.Expr.Expands.seq
+        (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.condition))
+        (BNF.Expr.Expands.seq
+          (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.rparen))
+          (BNF.Expr.Expands.seq
+            (BNF.Expr.Expands.symbol
+              (bnfNonterminal BNFExampleNT.statement))
+            (BNF.Expr.Expands.optionalSome
+              (BNF.Expr.Expands.seq
+                (BNF.Expr.Expands.symbol
+                  (bnfTerminal BNFExampleTerminal.elseTok))
+                (BNF.Expr.Expands.symbol
+                  (bnfNonterminal BNFExampleNT.statement))))))))
+
+-- Book: Chapter 4, Section 4.2, Java assignment statement.
+theorem bnf_java_assignment_expands :
+    BNF.Expr.Expands javaAssignmentStatementExpr
+      [bnfNonterminal BNFExampleNT.variable,
+        bnfTerminal BNFExampleTerminal.equals,
+        bnfNonterminal BNFExampleNT.expression,
+        bnfTerminal BNFExampleTerminal.semicolon] := by
+  unfold javaAssignmentStatementExpr
+  simpa using BNF.Expr.Expands.seq
+    (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.variable))
+    (BNF.Expr.Expands.seq
+      (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.equals))
+      (BNF.Expr.Expands.seq
+        (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.expression))
+        (BNF.Expr.Expands.symbol
+          (bnfTerminal BNFExampleTerminal.semicolon))))
+
+-- Book: Chapter 4, Section 4.2, expression as three terms separated by
+-- plus and minus signs.
+theorem bnf_java_expression_three_terms_expands :
+    BNF.Expr.Expands javaExpressionExpr
+      [bnfNonterminal BNFExampleNT.term,
+        bnfTerminal BNFExampleTerminal.plus,
+        bnfNonterminal BNFExampleNT.term,
+        bnfTerminal BNFExampleTerminal.minus,
+        bnfNonterminal BNFExampleNT.term] := by
+  unfold javaExpressionExpr javaAdditiveTermExpr
+  simpa using BNF.Expr.Expands.seq
+    (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.term))
+    (BNF.Expr.repeat_cons
+      (BNF.Expr.Expands.seq
+        (BNF.Expr.Expands.altLeft
+          (BNF.Expr.Expands.symbol
+            (bnfTerminal BNFExampleTerminal.plus)))
+        (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.term)))
+      (BNF.Expr.repeat_cons
+        (BNF.Expr.Expands.seq
+          (BNF.Expr.Expands.altRight
+            (BNF.Expr.Expands.symbol
+              (bnfTerminal BNFExampleTerminal.minus)))
+          (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.term)))
+        (BNF.Expr.repeat_empty
+          (BNF.Expr.seq
+            (BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.plus)
+              (bnfTerminalExpr BNFExampleTerminal.minus))
+            (bnfNonterminalExpr BNFExampleNT.term)))))
+
+-- Book: Chapter 4, Section 4.2, term as two factors separated by `*`.
+theorem bnf_java_term_two_factors_expands :
+    BNF.Expr.Expands javaTermExpr
+      [bnfNonterminal BNFExampleNT.factor,
+        bnfTerminal BNFExampleTerminal.times,
+        bnfNonterminal BNFExampleNT.factor] := by
+  unfold javaTermExpr javaMultiplicativeFactorExpr
+  simpa using BNF.Expr.Expands.seq
+    (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.factor))
+    (BNF.Expr.repeat_cons
+      (BNF.Expr.Expands.seq
+        (BNF.Expr.Expands.altLeft
+          (BNF.Expr.Expands.symbol
+            (bnfTerminal BNFExampleTerminal.times)))
+        (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.factor)))
+      (BNF.Expr.repeat_empty
+        (BNF.Expr.seq
+          (BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.times)
+            (bnfTerminalExpr BNFExampleTerminal.divide))
+          (bnfNonterminalExpr BNFExampleNT.factor))))
+
+-- Book: Chapter 4, Section 4.2, factor as parenthesized expression.
+theorem bnf_java_parenthesized_factor_expands :
+    BNF.Expr.Expands javaFactorExpr
+      [bnfTerminal BNFExampleTerminal.lparen,
+        bnfNonterminal BNFExampleNT.expression,
+        bnfTerminal BNFExampleTerminal.rparen] := by
+  unfold javaFactorExpr
+  apply BNF.Expr.Expands.altRight
+  apply BNF.Expr.Expands.altRight
+  exact BNF.Expr.Expands.seq
+    (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.lparen))
+    (BNF.Expr.Expands.seq
+      (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.expression))
+      (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.rparen)))
 
 end Section02
 end Chapter04
