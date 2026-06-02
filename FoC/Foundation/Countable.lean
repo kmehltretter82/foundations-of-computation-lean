@@ -178,6 +178,26 @@ namespace Countability
 def EncodableByNat (alpha : Type u) : Prop :=
   exists code : alpha -> Nat, Fn.Injective code
 
+theorem countable_univ_of_encodableByNat {alpha : Type u}
+    (henc : EncodableByNat alpha) :
+    FSet.Countable (FSet.Univ : FSet alpha) := by
+  classical
+  cases henc with
+  | intro code hcode =>
+      let enum : Nat -> Option alpha := fun n =>
+        if h : exists x : alpha, code x = n then some (Classical.choose h) else none
+      exists enum
+      intro x
+      constructor
+      · intro _
+        let h : exists y : alpha, code y = code x := Exists.intro x rfl
+        exists code x
+        dsimp [enum]
+        rw [dif_pos h]
+        exact congrArg some (hcode (Classical.choose_spec h))
+      · intro _
+        exact True.intro
+
 def IntCode : Int -> Nat
   | Int.ofNat n => 2 * n
   | Int.negSucc n => 2 * n + 1
@@ -194,6 +214,45 @@ theorem nat_encodable : EncodableByNat Nat := by
 
 theorem int_encodable : EncodableByNat Int := by
   exact Exists.intro IntCode intCode_injective
+
+def PairCode : Nat -> Nat -> Nat
+  | 0, b => 2 * b
+  | a + 1, b => 2 * PairCode a b + 1
+
+theorem pairCode_injective_left {a c b d : Nat}
+    (h : PairCode a b = PairCode c d) : a = c ∧ b = d := by
+  induction a generalizing c b d with
+  | zero =>
+      cases c with
+      | zero =>
+          simp [PairCode] at h
+          omega
+      | succ c =>
+          simp [PairCode] at h
+          omega
+  | succ a ih =>
+      cases c with
+      | zero =>
+          simp [PairCode] at h
+          omega
+      | succ c =>
+          simp [PairCode] at h
+          have hprev : PairCode a b = PairCode c d := by omega
+          cases ih hprev with
+          | intro ha hb =>
+              constructor <;> omega
+
+theorem pairCode_injective : Fn.Injective (fun p : Nat × Nat => PairCode p.1 p.2) := by
+  intro p q h
+  cases p with
+  | mk a b =>
+      cases q with
+      | mk c d =>
+          cases pairCode_injective_left h with
+          | intro ha hb =>
+              cases ha
+              cases hb
+              rfl
 
 def DiagonalList : Nat -> List (Nat × Nat)
   | 0 => [(0, 0)]

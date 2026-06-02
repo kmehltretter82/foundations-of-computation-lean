@@ -14,6 +14,7 @@ import FoC.Foundation.QuotientRationals
 import FoC.Foundation.Reals
 import FoC.Foundation.QuadraticSurd
 import FoC.Foundation.DigitStreams
+import FoC.Foundation.RealUncountability
 import FoC.Foundation.Primes
 import FoC.Foundation.Cardinality
 import FoC.Languages.Words

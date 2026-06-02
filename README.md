@@ -45,8 +45,9 @@ rationals with cut addition/subtraction and rational scaling,
 future-real-compatible reduced rational representatives, quotient-rational
 no-square-root theorems for 2 and 3, real square-characterization bridges for
 the square-root irrationality arguments, a tiny quadratic surd surrogate for the
-`sqrt(2)` product counterexample, and binary digit-stream diagonalization for
-the real-uncountability argument.
+`sqrt(2)` product counterexample, binary digit-stream diagonalization, a
+Cantor-style digit-stream injection into Dedekind-cut reals, real
+uncountability, and irrational-real uncountability.
 Prose-heavy application exercises and results requiring future
 full real-number, numeric-cardinality, full state-elimination, or pumping-lemma,
 full CFG/PDA-equivalence, and machine-encoding/simulation infrastructure are not
@@ -73,7 +74,7 @@ Foundation modules currently include:
   and order/density plus cut addition/subtraction and rational scaling, reduced
   rational and quotient-rational square-root contradiction cores, real
   square-characterization irrationality bridges, quadratic-surd surrogates, and
-  digit-stream diagonalization.
+  digit-stream diagonalization with real and irrational-real uncountability.
 - context-free grammars, parse trees, pushdown automata, and general grammars.
 - Turing-machine tapes, configurations, computations, and computability
   vocabulary.

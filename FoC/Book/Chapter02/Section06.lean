@@ -4,6 +4,7 @@ import FoC.Foundation.Cardinality
 import FoC.Foundation.Rationals
 import FoC.Foundation.DigitStreams
 import FoC.Foundation.Reals
+import FoC.Foundation.RealUncountability
 
 namespace FoC
 namespace Book
@@ -165,41 +166,31 @@ theorem binary_digit_streams_uncountable :
     FSet.Uncountable (FSet.Univ : FSet DigitStream) :=
   DigitStream.uncountable_univ
 
+-- Book: Chapter 2, Section 2.6, quotient rationals are countable.
+theorem quotient_rationals_countable :
+    FSet.Countable (FSet.Univ : FSet QRat) :=
+  QRat.countable_univ
+
+-- Book: Chapter 2, Section 2.6, embedded rational reals are countable.
+theorem embedded_rational_reals_countable :
+    FSet.Countable Real.rationalSet :=
+  Real.rationalSet_countable
+
 -- Book: Chapter 2, Section 2.6, real uncountability transport from digit streams.
 theorem real_uncountable_from_digit_stream_embedding
     (embed : DigitStream -> Real) (hembed : Fn.Injective embed) :
-    FSet.Uncountable (FSet.Univ : FSet Real) := by
-  classical
-  intro hRealCountable
-  apply DigitStream.uncountable_univ
-  cases hRealCountable with
-  | intro f hf =>
-      let preimage : Real -> Option DigitStream := fun x =>
-        if h : exists s : DigitStream, embed s = x then
-          some (Classical.choose h)
-        else
-          none
-      let g : Nat -> Option DigitStream := fun n =>
-        match f n with
-        | some x => preimage x
-        | none => none
-      exists g
-      intro s
-      constructor
-      · intro _
-        have hlisted := (hf (embed s)).mp True.intro
-        cases hlisted with
-        | intro n hn =>
-            have hex : exists t : DigitStream, embed t = embed s :=
-              Exists.intro s rfl
-            have hpre : preimage (embed s) = some s := by
-              dsimp [preimage]
-              rw [dif_pos hex]
-              exact congrArg some (hembed (Classical.choose_spec hex))
-            exists n
-            simp [g, hn, hpre]
-      · intro _
-        exact True.intro
+    FSet.Uncountable (FSet.Univ : FSet Real) :=
+  Real.uncountable_univ_of_digitStream_injective embed hembed
+
+-- Book: Chapter 2, Section 2.6, the real numbers are uncountable.
+theorem real_numbers_uncountable :
+    FSet.Uncountable (FSet.Univ : FSet Real) :=
+  Real.uncountable_univ
+
+-- Book: Chapter 2, Section 2.6, the irrational real numbers are uncountable.
+theorem irrational_real_numbers_uncountable :
+    FSet.Uncountable Real.irrationalSet :=
+  Real.irrationalSet_uncountable
 
 -- Book: Chapter 2, Section 2.6, Theorem 2.9.
 theorem uncountable_complement_of_countable_subset {X K : FSet alpha}

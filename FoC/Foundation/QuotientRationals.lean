@@ -940,5 +940,40 @@ theorem no_square_root_three (q : QRat) :
 
 end QRat
 
+namespace Countability
+
+def RatCode (r : Rat) : Nat :=
+  PairCode (IntCode r.num) r.den
+
+theorem ratCode_injective : Fn.Injective RatCode := by
+  intro x y h
+  have hp : (IntCode x.num, x.den) = (IntCode y.num, y.den) :=
+    pairCode_injective h
+  have hnumCode : IntCode x.num = IntCode y.num :=
+    congrArg Prod.fst hp
+  have hden : x.den = y.den :=
+    congrArg Prod.snd hp
+  exact Rat.ext (intCode_injective hnumCode) hden
+
+def QRatCode (q : QRat) : Nat :=
+  RatCode (QRat.toRat q)
+
+theorem qratCode_injective : Fn.Injective QRatCode := by
+  intro x y h
+  exact QRat.toRat_injective (ratCode_injective h)
+
+theorem qrat_encodable : EncodableByNat QRat := by
+  exists QRatCode
+  exact qratCode_injective
+
+end Countability
+
+namespace QRat
+
+theorem countable_univ : FSet.Countable (FSet.Univ : FSet QRat) :=
+  Countability.countable_univ_of_encodableByNat Countability.qrat_encodable
+
+end QRat
+
 end Foundation
 end FoC

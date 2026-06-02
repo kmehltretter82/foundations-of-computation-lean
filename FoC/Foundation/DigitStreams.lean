@@ -7,13 +7,12 @@ namespace Foundation
 Cantor diagonalization for binary digit streams.
 
 This module provides the formal core of the book's real-number diagonal
-argument without committing to a full real-number construction.  A future
-`Real` module can prove that suitable digit streams inject into the real
-interval `[0,1]`, then transport this uncountability theorem to reals.
+argument.  `FoC.Foundation.RealUncountability` injects these streams into the
+Dedekind-cut real type and transports this theorem to real uncountability.
 
 Used by:
 - Chapter 2, Section 2.6: real-number uncountability diagonal argument
-- Future `Real` bridge: uncountability of an interval and of `Real`
+- `Real` bridge: uncountability of an interval and of `Real`
 -/
 
 def DigitStream : Type :=
