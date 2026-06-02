@@ -15,6 +15,8 @@ Source textbook metadata:
 This project is intentionally self-contained: it does not depend on Mathlib,
 CSLib, or other external Lean libraries.
 
+This formalization was developed with assistance from OpenAI Codex.
+
 Current status: standalone foundation layer plus the Chapter 1, Chapter 2,
 Chapter 3, Chapter 4, and Chapter 5 formal cores. Chapter 1 is represented by proved Lean modules for all
 ten sections, including expanded Section 1.1 truth-table wrappers, NOR-only
@@ -46,9 +48,7 @@ full real-number, numeric-cardinality, full state-elimination, or pumping-lemma,
 full CFG/PDA-equivalence, and machine-encoding/simulation infrastructure are not
 represented as placeholder theorems.
 
-Coverage status is tracked in [data/coverage.yaml](data/coverage.yaml). Chapter
-1 item-level traceability is tracked in
-[data/chapter1_formalization_map.yaml](data/chapter1_formalization_map.yaml).
+Coverage status is tracked in [data/coverage.yaml](data/coverage.yaml).
 
 Foundation modules currently include:
 
