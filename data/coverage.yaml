@@ -239,8 +239,8 @@ completed:
         reason: "General grammar definitions and CFG embedding are formalized; equivalence with recursively enumerable languages belongs with the Chapter 5 computability development."
   - coordinate: "Chapter 5"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 135
-    definition_declarations: 58
+    theorem_declarations: 153
+    definition_declarations: 66
     modules:
       - "FoC.Book.Chapter05.Section01"
       - "FoC.Book.Chapter05.Section02"
@@ -269,6 +269,7 @@ completed:
       - "Characteristic-function vocabulary for languages, proof that the canonical Boolean characteristic function is characteristic, and equivalence between Turing-decidability and having a Turing-computable Boolean characteristic function"
       - "A decider, as modeled by output 0/1, halts on every input and has finite-stage accepting/rejecting output traces"
       - "Stopped 0/1 decider witness vocabulary, ordinary-decidability projection, complement closure, output soundness, exact output-1/output-0 classification, complementary finite output traces, and bounded-search classification for stopped deciders"
+      - "Stopped-decider accepting and rejecting output traces as exact finite acceptance traces for a language and its complement"
       - "Decidable and recursive languages are closed under complement by swapping decider outputs, with complement equivalences using double-complement language equality"
       - "Co-recursively enumerable language vocabulary, finite-stage acceptance traces for recursively enumerable languages, complementary acceptance traces for RE plus co-RE languages, bounded trace-hit search, no-conflict lemmas, the classical bounded classification core that underlies dovetailing, and a conditional proof of the recursive iff RE/co-RE theorem from the decider-to-acceptor and dovetailing construction principles"
       - "Listing and range-language vocabulary for recursively enumerable languages, including listability/range extensionality, the unary-input bridge between listings and ranges, and the semantic equivalence between listability and range-of-unary-function descriptions"
@@ -276,16 +277,17 @@ completed:
       - "Non-computable function, non-acceptable language, undecidable language, decidable and acceptable reductions, diagonal-language, decoder-row recognition, decoder-universality for acceptable languages and for all languages, self-halting language, halting-problem, and universal-machine specification vocabulary, with extensionality and complement transport"
       - "Reduction reflexivity/transitivity, complement preservation for decidable reductions, undecidability transfer along decidable reductions, and non-acceptability transfer along acceptable reductions"
       - "Abstract diagonal contradiction core for self-recognition predicates, no decoder row for a decoder's own diagonal language, missing-language and no-universal-decoder theorems, non-acceptability under decoder universality, self-diagonal/complement-self-halting equivalence, conditional self-halting not-recursive/not-RE-complement theorem shape, halting-problem membership/elimination/extensionality, explicitly paired halting-problem and self-halting-pair vocabulary, diagonal-pair transfer of undecidability, and universal-machine pair-halting/pair-decoding facts"
+      - "Word-map preimage languages, decidable-preimage principles, injective pair-encoding vocabulary, diagonal pair maps, and the theorem that an injective pair encoding makes the diagonal preimage of pair-halting exactly self-halting"
     classified_not_formalized_yet:
       - coordinate: "Chapter 5, Section 5.1"
         reason: "Concrete transition diagrams and machine programs are application artifacts; the formal core provides tape/configuration/machine semantics, finite-step halting traces, and computability vocabulary."
       - coordinate: "Chapter 5, Section 5.1"
-        reason: "Characteristic-function decidability and stopped-decider exact output classification are formalized; the construction modifying an arbitrary decider into an acceptor is recorded as a named principle but is not asserted without a transition-level machine transformation."
+        reason: "Characteristic-function decidability, stopped-decider exact output classification, and stopped-decider acceptance traces are formalized; the construction modifying an arbitrary decider into a halting-only acceptor is still separated because it needs a transition-level machine transformation and no-false-accept invariant."
       - coordinate: "Chapter 5, Section 5.2"
         reason: "The semantic listing/range equivalence and conditional grammar-pair characterization of recursive languages are formalized. Simulation equivalences among one-tape machines, multi-tape machines, programs, computable listings/ranges, and concrete general-grammar constructions are recorded as statement shapes, not assumed as proved transition-level theorems."
       - coordinate: "Chapter 5, Section 5.2"
-        reason: "Finite-step acceptance traces, stopped-decider complementary output traces, the RE/co-RE bounded-search classification core, and the recursive iff RE/co-RE theorem derived from explicit construction principles are formalized; the transition-level dovetailing machine that turns paired recognizers into a concrete decider remains deferred."
+        reason: "Finite-step acceptance traces, stopped-decider complementary output traces, exact stopped-decider acceptance traces for the language and complement, the RE/co-RE bounded-search classification core, and the recursive iff RE/co-RE theorem derived from explicit construction principles are formalized; the transition-level dovetailing machine that turns paired recognizers into a concrete decider remains deferred."
       - coordinate: "Chapter 5, Section 5.3"
-        reason: "The abstract diagonal contradiction core, decoder-row diagonalization, no-universal-decoder theorem, reduction-transfer schemas, self-halting complement bridge, abstract and paired halting-problem membership facts, diagonal-pair undecidability transfer, conditional non-acceptability under decoder universality, and conditional self-halting RE/not-recursive/non-RE-complement theorem shape are formalized. Universal-machine construction, concrete machine encodings, concrete diagonal pair-map computability, and concrete halting-problem undecidability require encoding and interpreter infrastructure not yet present."
+        reason: "The abstract diagonal contradiction core, decoder-row diagonalization, no-universal-decoder theorem, reduction-transfer schemas, self-halting complement bridge, abstract and paired halting-problem membership facts, injective-pair diagonal preimage equality, diagonal-pair undecidability transfer from decidable preimage, conditional non-acceptability under decoder universality, and conditional self-halting RE/not-recursive/non-RE-complement theorem shape are formalized. Universal-machine construction, concrete machine encodings, concrete diagonal pair-map computability, and concrete halting-problem undecidability require encoding and interpreter infrastructure not yet present."
 in_progress: []
 planned: []

@@ -291,6 +291,39 @@ theorem stopped_decider_has_complementary_output_traces
   Computability.stopped_decider_has_complementary_output_traces
     hstop hzeroOne h
 
+-- Book: Chapter 5, Section 5.2, the accepting-output half of a stopped
+-- 0/1 decider is an acceptance trace for the language.
+theorem stopped_decider_acceptance_trace
+    {M : TuringMachine symbol state}
+    {encodeInput : alpha -> symbol} {zero one : symbol}
+    {L : Language alpha}
+    (hstop : TuringMachine.HaltingTransitionsDisabled M)
+    (hzeroOne : zero ≠ one)
+    (h : DecidesLanguage M encodeInput zero one L) :
+    LanguageAcceptanceTrace
+      (fun w n =>
+        TuringMachine.HaltsWithOutputIn
+          M n (EncodeWord encodeInput w) [one])
+      L :=
+  Computability.stopped_decider_acceptanceTrace hstop hzeroOne h
+
+-- Book: Chapter 5, Section 5.2, the rejecting-output half of a stopped
+-- 0/1 decider is an acceptance trace for the complement.
+theorem stopped_decider_complement_acceptance_trace
+    {M : TuringMachine symbol state}
+    {encodeInput : alpha -> symbol} {zero one : symbol}
+    {L : Language alpha}
+    (hstop : TuringMachine.HaltingTransitionsDisabled M)
+    (hzeroOne : zero ≠ one)
+    (h : DecidesLanguage M encodeInput zero one L) :
+    LanguageAcceptanceTrace
+      (fun w n =>
+        TuringMachine.HaltsWithOutputIn
+          M n (EncodeWord encodeInput w) [zero])
+      (Language.Compl L) :=
+  Computability.stopped_decider_complement_acceptanceTrace
+    hstop hzeroOne h
+
 -- Book: Chapter 5, Section 5.2, a stopped 0/1 decider has a bounded output
 -- search classification stage for every input.
 theorem stopped_decider_bounded_search_eventually_classifies
@@ -323,6 +356,24 @@ theorem stopped_turing_decidable_language_has_complementary_output_traces
     exists accept reject : Word alpha -> Nat -> Prop,
       LanguageComplementaryAcceptanceTraces accept reject L :=
   Computability.stoppedTuringDecidable_has_complementary_output_traces h
+
+-- Book: Chapter 5, Section 5.2, a stopped 0/1 decider witness supplies a
+-- finite acceptance trace for the language itself.
+theorem stopped_turing_decidable_language_has_acceptance_trace
+    {L : Language alpha}
+    (h : StoppedTuringDecidableLanguage L) :
+    exists trace : Word alpha -> Nat -> Prop,
+      LanguageAcceptanceTrace trace L :=
+  Computability.stoppedTuringDecidable_has_acceptanceTrace h
+
+-- Book: Chapter 5, Section 5.2, a stopped 0/1 decider witness supplies a
+-- finite acceptance trace for the complement.
+theorem stopped_turing_decidable_language_complement_has_acceptance_trace
+    {L : Language alpha}
+    (h : StoppedTuringDecidableLanguage L) :
+    exists trace : Word alpha -> Nat -> Prop,
+      LanguageAcceptanceTrace trace (Language.Compl L) :=
+  Computability.stoppedTuringDecidable_complement_has_acceptanceTrace h
 
 -- Book: Chapter 5, Section 5.2, a stopped 0/1 decider witness supplies the
 -- bounded-search classification core used by the dovetailing proof.

@@ -775,6 +775,34 @@ theorem stopped_decider_has_complementary_output_traces
     · intro hw
       exact decider_rejects_in_of_not_mem h hw
 
+theorem stopped_decider_acceptanceTrace
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (hstop : TuringMachine.HaltingTransitionsDisabled M)
+    (hzeroOne : zero ≠ one)
+    (h : DecidesLanguage M encodeInput zero one L) :
+    AcceptanceTrace
+      (fun w n =>
+        TuringMachine.HaltsWithOutputIn
+          M n (EncodeWord encodeInput w) [one])
+      L :=
+  (stopped_decider_has_complementary_output_traces hstop hzeroOne h).left
+
+theorem stopped_decider_complement_acceptanceTrace
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (hstop : TuringMachine.HaltingTransitionsDisabled M)
+    (hzeroOne : zero ≠ one)
+    (h : DecidesLanguage M encodeInput zero one L) :
+    AcceptanceTrace
+      (fun w n =>
+        TuringMachine.HaltsWithOutputIn
+          M n (EncodeWord encodeInput w) [zero])
+      (Language.Compl L) :=
+  (stopped_decider_has_complementary_output_traces hstop hzeroOne h).right
+
 theorem stoppedTuringDecidable_has_complementary_output_traces
     {L : Language input}
     (h : StoppedTuringDecidable L) :
@@ -801,6 +829,28 @@ theorem stoppedTuringDecidable_has_complementary_output_traces
                           exact stopped_decider_has_complementary_output_traces
                             hstopped.left hstopped.right.left
                             hstopped.right.right
+
+theorem stoppedTuringDecidable_has_acceptanceTrace
+    {L : Language input}
+    (h : StoppedTuringDecidable L) :
+    exists trace : Word input -> Nat -> Prop,
+      AcceptanceTrace trace L := by
+  cases stoppedTuringDecidable_has_complementary_output_traces h with
+  | intro accept haccept =>
+      cases haccept with
+      | intro reject htraces =>
+          exact Exists.intro accept htraces.left
+
+theorem stoppedTuringDecidable_complement_has_acceptanceTrace
+    {L : Language input}
+    (h : StoppedTuringDecidable L) :
+    exists trace : Word input -> Nat -> Prop,
+      AcceptanceTrace trace (Language.Compl L) := by
+  cases stoppedTuringDecidable_has_complementary_output_traces h with
+  | intro accept haccept =>
+      cases haccept with
+      | intro reject htraces =>
+          exact Exists.intro reject htraces.right
 
 theorem stoppedDecidesLanguage_acceptsByOneOutput
     {M : TuringMachine symbol state}

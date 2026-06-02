@@ -109,6 +109,30 @@ def DiagonalPairDecidablePreimageConstruction
     (encodePair : Word code -> Word code -> Word pairSymbol) : Prop :=
   DiagonalPairDecidablePreimagePrinciple encodePair
 
+-- Book: Chapter 5, Section 5.3, preimage of a language under a word map.
+def TuringWordPreimageLanguage
+    (map : Word input -> Word output)
+    (L : Language output) : Language input :=
+  WordPreimageLanguage map L
+
+-- Book: Chapter 5, Section 5.3, construction principle for pulling a
+-- decider back along a word map.
+def TuringDecidablePreimageConstruction
+    (map : Word input -> Word output) : Prop :=
+  DecidablePreimagePrinciple map
+
+-- Book: Chapter 5, Section 5.3, an explicit pair encoding has no coordinate
+-- collisions.
+def TuringPairEncodingInjective
+    (encodePair : Word code -> Word code -> Word pairSymbol) : Prop :=
+  PairEncodingInjective encodePair
+
+-- Book: Chapter 5, Section 5.3, the diagonal map m ↦ <m,m>.
+def TuringDiagonalPairMap
+    (encodePair : Word code -> Word code -> Word pairSymbol) :
+    Word code -> Word pairSymbol :=
+  DiagonalPairMap encodePair
+
 -- Book: Chapter 5, Section 5.3, universal-machine specification shape.
 def UniversalTuringMachineSpec
     (universal : TuringMachine symbol state)
@@ -452,6 +476,41 @@ theorem self_halting_pair_language_subset_pair_halting_problem
   Computability.selfHaltingPairLanguage_subset_pairHaltingProblem
     encodePair haltsOnCodeInput
 
+-- Book: Chapter 5, Section 5.3, membership in a word-map preimage language.
+theorem word_preimage_language_mem
+    (map : Word input -> Word output)
+    (L : Language output)
+    (w : Word input) :
+    w ∈ TuringWordPreimageLanguage map L <-> map w ∈ L :=
+  Computability.wordPreimageLanguage_mem map L w
+
+-- Book: Chapter 5, Section 5.3, with an injective pair encoding, the
+-- diagonal preimage of pair-halting is exactly self-halting.
+theorem diagonal_pair_preimage_pair_halting_equal_self_halting
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    {haltsOnCodeInput : Word code -> Word code -> Prop}
+    (hinj : TuringPairEncodingInjective encodePair) :
+    Language.Equal
+      (TuringWordPreimageLanguage
+        (TuringDiagonalPairMap encodePair)
+        (TuringPairHaltingProblem encodePair haltsOnCodeInput))
+      (TuringSelfHaltingLanguage haltsOnCodeInput) :=
+  Computability.diagonalPairMap_preimage_pairHalting_equal_selfHalting
+    (encodePair := encodePair)
+    (haltsOnCodeInput := haltsOnCodeInput)
+    hinj
+
+-- Book: Chapter 5, Section 5.3, injective pair encoding plus decidable
+-- preimage for the diagonal map gives the diagonal pair-preimage construction.
+theorem diagonal_pair_decidable_preimage_construction_of_preimage
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    (hinj : TuringPairEncodingInjective encodePair)
+    (hpreimage :
+      TuringDecidablePreimageConstruction (TuringDiagonalPairMap encodePair)) :
+    DiagonalPairDecidablePreimageConstruction encodePair :=
+  Computability.diagonalPairDecidablePreimagePrinciple_of_preimage
+    hinj hpreimage
+
 -- Book: Chapter 5, Section 5.3, pointwise equivalent halting predicates give
 -- the same abstract halting-problem language.
 theorem halting_problem_of_pointwise_iff
@@ -488,6 +547,22 @@ theorem pair_halting_undecidable_if_self_halting_undecidable
   Computability.pairHalting_undecidable_if_selfHalting_undecidable
     hdiag hself
 
+-- Book: Chapter 5, Section 5.3, the same undecidability transfer assembled
+-- from an injective pair encoding and decidable preimage for the diagonal map.
+theorem pair_halting_undecidable_if_self_halting_undecidable_of_preimage
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    {haltsOnCodeInput : Word code -> Word code -> Prop}
+    (hinj : TuringPairEncodingInjective encodePair)
+    (hpreimage :
+      TuringDecidablePreimageConstruction (TuringDiagonalPairMap encodePair))
+    (hself :
+      UndecidableTuringLanguage
+        (TuringSelfHaltingLanguage haltsOnCodeInput)) :
+    UndecidableTuringLanguage
+      (TuringPairHaltingProblem encodePair haltsOnCodeInput) :=
+  Computability.pairHalting_undecidable_if_selfHalting_undecidable_of_preimage
+    hinj hpreimage hself
+
 -- Book: Chapter 5, Section 5.3, conditional halting-problem theorem shape:
 -- decoder universality plus the diagonal preimage construction makes the
 -- paired halting problem undecidable.
@@ -502,6 +577,21 @@ theorem pair_halting_undecidable_if_decoder_universal
       (TuringPairHaltingProblem encodePair decodeAccepts) :=
   Computability.pairHalting_undecidable_if_decoder_universal
     haccept hdiag huniv
+
+-- Book: Chapter 5, Section 5.3, decoder universality gives paired-halting
+-- undecidability from injective pairing and diagonal-map decidable preimage.
+theorem pair_halting_undecidable_if_decoder_universal_of_preimage
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (haccept : DecidableToAcceptableConstruction code)
+    (hinj : TuringPairEncodingInjective encodePair)
+    (hpreimage :
+      TuringDecidablePreimageConstruction (TuringDiagonalPairMap encodePair))
+    (huniv : TuringDecoderUniversalForAcceptableLanguages decodeAccepts) :
+    UndecidableTuringLanguage
+      (TuringPairHaltingProblem encodePair decodeAccepts) :=
+  Computability.pairHalting_undecidable_if_decoder_universal_of_preimage
+    haccept hinj hpreimage huniv
 
 -- Book: Chapter 5, Section 5.3, a universal-machine specification turns a
 -- decoded accepting pair into a universal-machine halting fact.

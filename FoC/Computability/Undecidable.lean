@@ -80,6 +80,26 @@ def DiagonalPairDecidablePreimagePrinciple
     TuringDecidable (PairHaltingProblem encodePair haltsOnCodeInput) ->
       TuringDecidable (SelfHaltingLanguage haltsOnCodeInput)
 
+def WordPreimageLanguage
+    (map : Word input -> Word output)
+    (L : Language output) : Language input :=
+  fun w => map w ∈ L
+
+def DecidablePreimagePrinciple
+    (map : Word input -> Word output) : Prop :=
+  forall L : Language output,
+    TuringDecidable L -> TuringDecidable (WordPreimageLanguage map L)
+
+def PairEncodingInjective
+    (encodePair : Word code -> Word code -> Word pairSymbol) : Prop :=
+  forall a b c d : Word code,
+    encodePair a b = encodePair c d -> a = c ∧ b = d
+
+def DiagonalPairMap
+    (encodePair : Word code -> Word code -> Word pairSymbol) :
+    Word code -> Word pairSymbol :=
+  fun machine => encodePair machine machine
+
 def UniversalMachineSpec
     (universal : TuringMachine symbol state)
   (decodeAccepts : Word symbol -> Word symbol -> Prop) : Prop :=
@@ -416,6 +436,53 @@ theorem selfHaltingPairLanguage_subset_pairHaltingProblem
   | intro machine hmachine =>
       exact Exists.intro machine (Exists.intro machine hmachine)
 
+theorem wordPreimageLanguage_mem
+    (map : Word input -> Word output)
+    (L : Language output)
+    (w : Word input) :
+    w ∈ WordPreimageLanguage map L <-> map w ∈ L :=
+  Iff.rfl
+
+theorem diagonalPairMap_preimage_pairHalting_equal_selfHalting
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    {haltsOnCodeInput : Word code -> Word code -> Prop}
+    (hinj : PairEncodingInjective encodePair) :
+    Language.Equal
+      (WordPreimageLanguage
+        (DiagonalPairMap encodePair)
+        (PairHaltingProblem encodePair haltsOnCodeInput))
+      (SelfHaltingLanguage haltsOnCodeInput) := by
+  intro machine
+  constructor
+  · intro hpre
+    cases hpre with
+    | intro decodedMachine hmachine =>
+        cases hmachine with
+        | intro input hinput =>
+            have hcoords :=
+              hinj machine machine decodedMachine input hinput.left
+            have hdecoded : decodedMachine = machine := hcoords.left.symm
+            have hinputEq : input = machine := hcoords.right.symm
+            rw [hdecoded, hinputEq] at hinput
+            exact hinput.right
+  · intro hself
+    exact Exists.intro machine
+      (Exists.intro machine (And.intro rfl hself))
+
+theorem diagonalPairDecidablePreimagePrinciple_of_preimage
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    (hinj : PairEncodingInjective encodePair)
+    (hpreimage :
+      DecidablePreimagePrinciple (DiagonalPairMap encodePair)) :
+    DiagonalPairDecidablePreimagePrinciple encodePair := by
+  intro haltsOnCodeInput hpair
+  exact turing_decidable_of_equal
+    (hpreimage (PairHaltingProblem encodePair haltsOnCodeInput) hpair)
+    (diagonalPairMap_preimage_pairHalting_equal_selfHalting
+      (encodePair := encodePair)
+      (haltsOnCodeInput := haltsOnCodeInput)
+      hinj)
+
 theorem haltingProblem_of_pointwise_iff
     {halts1 halts2 : Word code -> Word code -> Prop}
     (hiff : forall machine input : Word code,
@@ -482,6 +549,21 @@ theorem pairHalting_undecidable_if_selfHalting_undecidable
   intro hpair
   exact hself (hdiag haltsOnCodeInput hpair)
 
+theorem pairHalting_undecidable_if_selfHalting_undecidable_of_preimage
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    {haltsOnCodeInput : Word code -> Word code -> Prop}
+    (hinj : PairEncodingInjective encodePair)
+    (hpreimage :
+      DecidablePreimagePrinciple (DiagonalPairMap encodePair))
+    (hself :
+      UndecidableLanguage (SelfHaltingLanguage haltsOnCodeInput)) :
+    UndecidableLanguage
+      (PairHaltingProblem encodePair haltsOnCodeInput) :=
+  pairHalting_undecidable_if_selfHalting_undecidable
+    (diagonalPairDecidablePreimagePrinciple_of_preimage
+      hinj hpreimage)
+    hself
+
 theorem pairHalting_undecidable_if_decoder_universal
     {encodePair : Word code -> Word code -> Word pairSymbol}
     {decodeAccepts : Word code -> Word code -> Prop}
@@ -493,6 +575,20 @@ theorem pairHalting_undecidable_if_decoder_universal
       (PairHaltingProblem encodePair decodeAccepts) :=
   pairHalting_undecidable_if_selfHalting_undecidable
     hdiag
+    (selfHalting_undecidable_if_decoder_universal haccept huniv)
+
+theorem pairHalting_undecidable_if_decoder_universal_of_preimage
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (haccept : DecidableToAcceptablePrinciple code)
+    (hinj : PairEncodingInjective encodePair)
+    (hpreimage :
+      DecidablePreimagePrinciple (DiagonalPairMap encodePair))
+    (huniv : DecoderUniversalForAcceptableLanguages decodeAccepts) :
+    UndecidableLanguage
+      (PairHaltingProblem encodePair decodeAccepts) :=
+  pairHalting_undecidable_if_selfHalting_undecidable_of_preimage
+    hinj hpreimage
     (selfHalting_undecidable_if_decoder_universal haccept huniv)
 
 theorem universalMachineSpec_pair_halts
