@@ -277,6 +277,70 @@ theorem step_cases {M : PDA input stack state}
       repeat first | apply Exists.intro _
       exact ⟨htransition, rfl, rfl⟩
 
+theorem step_consumes_empty_or_symbol {M : PDA input stack state}
+    {c d : Configuration input stack state}
+    (h : Step M c d) :
+    (c.unread = d.unread) ∨
+      exists a : input, c.unread = a :: d.unread := by
+  rcases step_cases h with hread | heps
+  · rcases hread with
+      ⟨q, r, a, unread, pop, push, restStack,
+        _htransition, hc, hd⟩
+    right
+    refine ⟨a, ?_⟩
+    have hsource : c.unread = a :: unread := by
+      simpa using congrArg
+        (fun config : Configuration input stack state => config.unread) hc
+    have htarget : d.unread = unread := by
+      simpa using congrArg
+        (fun config : Configuration input stack state => config.unread) hd
+    simpa [htarget] using hsource
+  · rcases heps with
+      ⟨q, r, unread, pop, push, restStack,
+        _htransition, hc, hd⟩
+    left
+    have hsource : c.unread = unread := by
+      simpa using congrArg
+        (fun config : Configuration input stack state => config.unread) hc
+    have htarget : d.unread = unread := by
+      simpa using congrArg
+        (fun config : Configuration input stack state => config.unread) hd
+    exact hsource.trans htarget.symm
+
+theorem step_consumes_prefix {M : PDA input stack state}
+    {c d : Configuration input stack state}
+    (h : Step M c d) :
+    exists consumed : Word input,
+      c.unread = Word.Concat consumed d.unread := by
+  rcases step_consumes_empty_or_symbol h with hinput | hinput
+  · exact ⟨Word.Empty, by simpa [Word.Concat, Word.Empty] using hinput⟩
+  · rcases hinput with ⟨a, hinput⟩
+    exact ⟨Word.Symbol a, by
+      simpa [Word.Concat, Word.Symbol] using hinput⟩
+
+theorem computesIn_consumes_prefix {M : PDA input stack state}
+    {n : Nat} {c d : Configuration input stack state}
+    (h : ComputesIn M n c d) :
+    exists consumed : Word input,
+      c.unread = Word.Concat consumed d.unread := by
+  induction h with
+  | zero c =>
+      exact ⟨Word.Empty, by simp [Word.Concat, Word.Empty]⟩
+  | succ hstep _ ih =>
+      rcases step_consumes_prefix hstep with ⟨first, hfirst⟩
+      rcases ih with ⟨tail, htail⟩
+      exact ⟨Word.Concat first tail, by
+        rw [hfirst, htail]
+        simp [Word.Concat, List.append_assoc]⟩
+
+theorem computes_consumes_prefix {M : PDA input stack state}
+    {c d : Configuration input stack state}
+    (h : Computes M c d) :
+    exists consumed : Word input,
+      c.unread = Word.Concat consumed d.unread := by
+  rcases computes_exists_length h with ⟨n, hn⟩
+  exact computesIn_consumes_prefix hn
+
 theorem accepts_implies_final_state_accepts {M : PDA input stack state}
     {w : Word input} (h : Accepts M w) : AcceptsByFinalState M w := by
   cases h with

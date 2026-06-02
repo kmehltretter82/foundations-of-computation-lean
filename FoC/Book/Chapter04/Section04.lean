@@ -100,6 +100,46 @@ theorem pda_bounded_computation_one_inv
     PDA.Step M a c :=
   PDA.computesIn_one_inv h
 
+-- Book: Chapter 4, Section 4.4, a PDA step consumes either no input or one
+-- leading input symbol.
+theorem pda_step_consumes_empty_or_symbol
+    {M : PDA input stack state}
+    {c d : PDA.Configuration input stack state}
+    (h : PDA.Step M c d) :
+    (c.unread = d.unread) ∨
+      exists a : input, c.unread = a :: d.unread :=
+  PDA.step_consumes_empty_or_symbol h
+
+-- Book: Chapter 4, Section 4.4, a PDA step consumes a prefix of the source
+-- unread word.
+theorem pda_step_consumes_prefix
+    {M : PDA input stack state}
+    {c d : PDA.Configuration input stack state}
+    (h : PDA.Step M c d) :
+    exists consumed : Word input,
+      c.unread = Word.Concat consumed d.unread :=
+  PDA.step_consumes_prefix h
+
+-- Book: Chapter 4, Section 4.4, a bounded PDA computation consumes a prefix
+-- of the source unread word.
+theorem pda_bounded_computation_consumes_prefix
+    {M : PDA input stack state}
+    {n : Nat} {c d : PDA.Configuration input stack state}
+    (h : PDA.ComputesIn M n c d) :
+    exists consumed : Word input,
+      c.unread = Word.Concat consumed d.unread :=
+  PDA.computesIn_consumes_prefix h
+
+-- Book: Chapter 4, Section 4.4, any PDA computation consumes a prefix of the
+-- source unread word.
+theorem pda_computation_consumes_prefix
+    {M : PDA input stack state}
+    {c d : PDA.Configuration input stack state}
+    (h : PDA.Computes M c d) :
+    exists consumed : Word input,
+      c.unread = Word.Concat consumed d.unread :=
+  PDA.computes_consumes_prefix h
+
 -- Book: Chapter 4, Section 4.4, accepted language of a PDA.
 def PDAAcceptedLanguage (M : PDA input stack state) : Language input :=
   PDA.AcceptedLanguage M
@@ -812,6 +852,284 @@ theorem pda_to_cfg_generates_of_accepts_in_at_most_two
       { state := qf, unread := [], stack := [] }) :
     w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
   PDA.toCFG_generates_of_acceptsIn_atMostTwo hnorm hn haccept hcomp
+
+-- Book: Chapter 4, Section 4.4, length-indexed PDA traces whose stack is
+-- empty at every step.  This is a reusable reverse-direction branch for the
+-- PDA-to-CFG construction before the full pushed-stack splitting theorem is
+-- available.
+def EmptyStackPDAComputesIn (M : PDA input stack state)
+    (n : Nat) (p : state) (sourceInput : Word input)
+    (q : state) (targetInput : Word input) : Prop :=
+  PDA.EmptyStackComputesIn M n p sourceInput q targetInput
+
+-- Book: Chapter 4, Section 4.4, an empty-stack trace is a bounded PDA
+-- computation with empty stack at both endpoints.
+theorem pda_empty_stack_trace_is_bounded_computation
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptyStackPDAComputesIn M n p sourceInput q targetInput) :
+    PDA.ComputesIn M n
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] } :=
+  PDA.emptyStackComputesIn_computesIn h
+
+-- Book: Chapter 4, Section 4.4, an empty-stack trace is an ordinary PDA
+-- computation with empty stack at both endpoints.
+theorem pda_empty_stack_trace_is_computation
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptyStackPDAComputesIn M n p sourceInput q targetInput) :
+    PDA.Computes M
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] } :=
+  PDA.emptyStackComputesIn_computes h
+
+-- Book: Chapter 4, Section 4.4, any finite empty-stack trace gives an
+-- `empty p q` PDA-to-CFG derivation of the consumed input segment.
+theorem pda_to_cfg_empty_derives_of_empty_stack_trace
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptyStackPDAComputesIn M n p sourceInput q targetInput) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        CFG.Derives (PDAToCFG M presentation)
+          [Symbol.nonterminal (PDA.ToCFGNonterminal.empty p q)]
+          (SententialForm.terminalWord consumed) :=
+  PDA.toCFG_emptyDerives_of_emptyStackComputesIn h
+
+-- Book: Chapter 4, Section 4.4, any accepting empty-stack trace is generated
+-- by the PDA-to-CFG construction.
+theorem pda_to_cfg_generates_of_empty_stack_accepts_in
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {n : Nat} {w : Word input} {qf : state}
+    (haccept : M.accept qf)
+    (hcomp : EmptyStackPDAComputesIn M n M.start w qf []) :
+    w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
+  PDA.toCFG_generates_of_emptyStackAcceptsIn haccept hcomp
+
+-- Book: Chapter 4, Section 4.4, grammar-aligned traces that remove an
+-- explicit stack word while preserving the stack tail.  This is the
+-- decomposition target for pushed stack segments in the PDA-to-CFG reverse
+-- direction.
+def StackSummaryPDAComputesIn (M : PDA input stack state)
+    (n : Nat) (p : state) (stackWord : Word stack)
+    (sourceInput : Word input) (q : state)
+    (targetInput : Word input) : Prop :=
+  PDA.StackSummaryComputesIn M n p stackWord sourceInput q targetInput
+
+-- Book: Chapter 4, Section 4.4, grammar-aligned empty-stack traces that may
+-- push stack words, remove them through stack-summary traces, and then
+-- continue with empty stack.
+def EmptySummaryPDAComputesIn (M : PDA input stack state)
+    (n : Nat) (p : state) (sourceInput : Word input)
+    (q : state) (targetInput : Word input) : Prop :=
+  PDA.EmptySummaryComputesIn M n p sourceInput q targetInput
+
+-- Book: Chapter 4, Section 4.4, a stack-summary trace is a bounded PDA
+-- computation that removes the explicit stack prefix and preserves any tail.
+theorem pda_stack_summary_trace_is_bounded_computation
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {stackWord : Word stack}
+    {sourceInput targetInput : Word input}
+    (h : StackSummaryPDAComputesIn M n p stackWord sourceInput q targetInput)
+    (tail : Word stack) :
+    PDA.ComputesIn M n
+      { state := p, unread := sourceInput,
+        stack := Word.Concat stackWord tail }
+      { state := q, unread := targetInput, stack := tail } :=
+  PDA.stackSummaryComputesIn_computesIn h tail
+
+-- Book: Chapter 4, Section 4.4, a stack-summary trace is an ordinary PDA
+-- computation that removes the explicit stack prefix and preserves any tail.
+theorem pda_stack_summary_trace_is_computation
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {stackWord : Word stack}
+    {sourceInput targetInput : Word input}
+    (h : StackSummaryPDAComputesIn M n p stackWord sourceInput q targetInput)
+    (tail : Word stack) :
+    PDA.Computes M
+      { state := p, unread := sourceInput,
+        stack := Word.Concat stackWord tail }
+      { state := q, unread := targetInput, stack := tail } :=
+  PDA.stackSummaryComputesIn_computes h tail
+
+-- Book: Chapter 4, Section 4.4, an empty-summary trace is a bounded PDA
+-- computation with empty stack at both endpoints.
+theorem pda_empty_summary_trace_is_bounded_computation
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptySummaryPDAComputesIn M n p sourceInput q targetInput) :
+    PDA.ComputesIn M n
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] } :=
+  PDA.emptySummaryComputesIn_computesIn h
+
+-- Book: Chapter 4, Section 4.4, an empty-summary trace is an ordinary PDA
+-- computation with empty stack at both endpoints.
+theorem pda_empty_summary_trace_is_computation
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptySummaryPDAComputesIn M n p sourceInput q targetInput) :
+    PDA.Computes M
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] } :=
+  PDA.emptySummaryComputesIn_computes h
+
+-- Book: Chapter 4, Section 4.4, an empty-stack trace is a special case of
+-- the grammar-aligned empty-summary trace relation.
+theorem pda_empty_summary_trace_of_empty_stack_trace
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptyStackPDAComputesIn M n p sourceInput q targetInput) :
+    EmptySummaryPDAComputesIn M n p sourceInput q targetInput :=
+  PDA.emptySummaryComputesIn_of_emptyStackComputesIn h
+
+-- Book: Chapter 4, Section 4.4, a single PDA step from empty stack to empty
+-- stack gives a grammar-aligned empty-summary trace.
+theorem pda_empty_summary_trace_of_step_empty_stack
+    {M : PDA input stack state}
+    {p q : state} {sourceInput targetInput : Word input}
+    (hstep : PDA.Step M
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    EmptySummaryPDAComputesIn M 1 p sourceInput q targetInput :=
+  PDA.emptySummaryComputesIn_of_step_emptyStack hstep
+
+-- Book: Chapter 4, Section 4.4, a zero-step empty-stack computation gives a
+-- grammar-aligned empty-summary trace.
+theorem pda_empty_summary_trace_of_computes_in_zero_empty_stack
+    {M : PDA input stack state}
+    {p q : state} {sourceInput targetInput : Word input}
+    (hcomp : PDA.ComputesIn M 0
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    EmptySummaryPDAComputesIn M 0 p sourceInput q targetInput :=
+  PDA.emptySummaryComputesIn_of_computesIn_zero_emptyStack hcomp
+
+-- Book: Chapter 4, Section 4.4, a one-step empty-stack computation gives a
+-- grammar-aligned empty-summary trace.
+theorem pda_empty_summary_trace_of_computes_in_one_empty_stack
+    {M : PDA input stack state}
+    {p q : state} {sourceInput targetInput : Word input}
+    (hcomp : PDA.ComputesIn M 1
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    EmptySummaryPDAComputesIn M 1 p sourceInput q targetInput :=
+  PDA.emptySummaryComputesIn_of_computesIn_one_emptyStack hcomp
+
+-- Book: Chapter 4, Section 4.4, a single top-pop PDA step gives a
+-- grammar-aligned stack-summary trace for the removed top symbol.
+theorem pda_stack_summary_trace_of_step_top_pop
+    {M : PDA input stack state}
+    {p q : state} {A : stack}
+    {sourceInput targetInput : Word input} {tail : Word stack}
+    (hnorm : PDA.PopsAtMostOne M)
+    (hstep : PDA.Step M
+      { state := p, unread := sourceInput, stack := A :: tail }
+      { state := q, unread := targetInput, stack := tail }) :
+    StackSummaryPDAComputesIn M 1 p [A] sourceInput q targetInput :=
+  PDA.stackSummaryComputesIn_of_step_topPop hnorm hstep
+
+-- Book: Chapter 4, Section 4.4, a one-step top-pop computation gives a
+-- grammar-aligned stack-summary trace for the removed top symbol.
+theorem pda_stack_summary_trace_of_computes_in_one_top_pop
+    {M : PDA input stack state}
+    {p q : state} {A : stack}
+    {sourceInput targetInput : Word input} {tail : Word stack}
+    (hnorm : PDA.PopsAtMostOne M)
+    (hcomp : PDA.ComputesIn M 1
+      { state := p, unread := sourceInput, stack := A :: tail }
+      { state := q, unread := targetInput, stack := tail }) :
+    StackSummaryPDAComputesIn M 1 p [A] sourceInput q targetInput :=
+  PDA.stackSummaryComputesIn_of_computesIn_one_topPop hnorm hcomp
+
+-- Book: Chapter 4, Section 4.4, any two-step empty-stack computation of a
+-- top-pop PDA decomposes into the grammar-aligned empty-summary trace
+-- relation.
+theorem pda_empty_summary_trace_of_computes_in_two_empty_stack
+    {M : PDA input stack state}
+    {p q : state} {sourceInput targetInput : Word input}
+    (hnorm : PDA.PopsAtMostOne M)
+    (hcomp : PDA.ComputesIn M 2
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    EmptySummaryPDAComputesIn M 2 p sourceInput q targetInput :=
+  PDA.emptySummaryComputesIn_of_computesIn_two_emptyStack hnorm hcomp
+
+-- Book: Chapter 4, Section 4.4, any zero-, one-, or two-step empty-stack
+-- computation of a top-pop PDA decomposes into the grammar-aligned
+-- empty-summary trace relation.
+theorem pda_empty_summary_trace_of_computes_in_at_most_two_empty_stack
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (hnorm : PDA.PopsAtMostOne M)
+    (hn : n <= 2)
+    (hcomp : PDA.ComputesIn M n
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    EmptySummaryPDAComputesIn M n p sourceInput q targetInput :=
+  PDA.emptySummaryComputesIn_of_computesIn_atMostTwo_emptyStack
+    hnorm hn hcomp
+
+-- Book: Chapter 4, Section 4.4, stack-summary traces give decomposed
+-- `ToCFGChainDerives` witnesses for the removed stack word.
+theorem pda_to_cfg_chain_derives_of_stack_summary_trace
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {n : Nat} {p q : state} {stackWord : Word stack}
+    {sourceInput targetInput : Word input}
+    (h : StackSummaryPDAComputesIn M n p stackWord sourceInput q targetInput) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        PDA.ToCFGChainDerives M presentation p stackWord q consumed :=
+  PDA.toCFGChainDerives_of_stackSummaryComputesIn h
+
+-- Book: Chapter 4, Section 4.4, empty-summary traces give `empty p q`
+-- PDA-to-CFG derivations of the consumed input segment.
+theorem pda_to_cfg_empty_derives_of_empty_summary_trace
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptySummaryPDAComputesIn M n p sourceInput q targetInput) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        CFG.Derives (PDAToCFG M presentation)
+          [Symbol.nonterminal (PDA.ToCFGNonterminal.empty p q)]
+          (SententialForm.terminalWord consumed) :=
+  PDA.toCFG_emptyDerives_of_emptySummaryComputesIn h
+
+-- Book: Chapter 4, Section 4.4, the zero-, one-, and two-step empty-stack
+-- derivation theorem can be routed through the grammar-aligned summary trace
+-- decomposition.
+theorem pda_to_cfg_empty_derives_of_computes_in_at_most_two_via_summary
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (hnorm : PDA.PopsAtMostOne M)
+    (hn : n <= 2)
+    (hcomp : PDA.ComputesIn M n
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        CFG.Derives (PDAToCFG M presentation)
+          [Symbol.nonterminal (PDA.ToCFGNonterminal.empty p q)]
+          (SententialForm.terminalWord consumed) :=
+  PDA.toCFG_emptyDerives_of_computesIn_atMostTwo_emptyStack_viaSummary
+    hnorm hn hcomp
+
+-- Book: Chapter 4, Section 4.4, accepting empty-summary traces are generated
+-- by the PDA-to-CFG construction.
+theorem pda_to_cfg_generates_of_empty_summary_accepts_in
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {n : Nat} {w : Word input} {qf : state}
+    (haccept : M.accept qf)
+    (hcomp : EmptySummaryPDAComputesIn M n M.start w qf []) :
+    w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
+  PDA.toCFG_generates_of_emptySummaryAcceptsIn haccept hcomp
 
 inductive AnBnPDAStack where
   | marker

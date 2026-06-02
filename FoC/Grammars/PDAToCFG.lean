@@ -1970,6 +1970,961 @@ theorem toCFG_emptyDerives_of_computesIn_atMostTwo_emptyStack
           | succ n =>
               omega
 
+inductive EmptyStackComputesIn (M : PDA input stack state) :
+    Nat -> state -> Word input -> state -> Word input -> Prop where
+  | zero (q : state) (unread : Word input) :
+      EmptyStackComputesIn M 0 q unread q unread
+  | read {n : Nat} {p r q : state} {a : input}
+      {midInput targetInput : Word input} :
+      M.transition p (some a) [] r [] ->
+        EmptyStackComputesIn M n r midInput q targetInput ->
+          EmptyStackComputesIn M (n + 1) p (a :: midInput) q targetInput
+  | epsilon {n : Nat} {p r q : state}
+      {midInput targetInput : Word input} :
+      M.transition p none [] r [] ->
+        EmptyStackComputesIn M n r midInput q targetInput ->
+          EmptyStackComputesIn M (n + 1) p midInput q targetInput
+
+theorem emptyStackComputesIn_computesIn
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptyStackComputesIn M n p sourceInput q targetInput) :
+    ComputesIn M n
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] } := by
+  induction h with
+  | zero q unread =>
+      exact ComputesIn.zero _
+  | read htransition htail ih =>
+      rename_i p0 r0 q0 a0 midInput0 targetInput0
+      have hstep : Step M
+          { state := p0, unread := a0 :: midInput0, stack := [] }
+          { state := r0, unread := midInput0, stack := [] } := by
+        simpa [Word.Concat] using
+          Step.read (M := M) (unread := midInput0)
+            (restStack := ([] : Word stack)) htransition
+      exact ComputesIn.succ hstep ih
+  | epsilon htransition htail ih =>
+      rename_i p0 r0 q0 midInput0 targetInput0
+      have hstep : Step M
+          { state := p0, unread := midInput0, stack := [] }
+          { state := r0, unread := midInput0, stack := [] } := by
+        simpa [Word.Concat] using
+          Step.epsilon (M := M) (unread := midInput0)
+            (restStack := ([] : Word stack)) htransition
+      exact ComputesIn.succ hstep ih
+
+theorem emptyStackComputesIn_computes
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptyStackComputesIn M n p sourceInput q targetInput) :
+    Computes M
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] } :=
+  computesIn_computes (emptyStackComputesIn_computesIn h)
+
+theorem toCFG_emptyDerives_of_emptyStackComputesIn
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptyStackComputesIn M n p sourceInput q targetInput) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        CFG.Derives (ToCFG M presentation)
+          [Symbol.nonterminal (ToCFGNonterminal.empty p q)]
+          (SententialForm.terminalWord consumed) := by
+  induction h with
+  | zero q unread =>
+      refine ⟨Word.Empty, ?_, ?_⟩
+      · simp [Word.Concat, Word.Empty]
+      · simpa [SententialForm.terminalWord, Word.Empty] using
+          toCFG_emptyRefl_derives
+            (M := M) (presentation := presentation) (q := q)
+  | read htransition htail ih =>
+      rename_i p0 r0 q0 a0 midInput0 targetInput0
+      rcases ih with ⟨tailWord, htailInput, htailDerive⟩
+      refine ⟨Word.Concat (Word.Symbol a0) tailWord, ?_, ?_⟩
+      · rw [htailInput]
+        simp [Word.Concat, Word.Symbol]
+      · simpa [Word.Concat, Word.Symbol, Word.Empty, List.append_assoc] using
+          toCFG_emptyRead_of_chainDerives
+            (M := M) (presentation := presentation)
+            (p := p0) (r := r0) (s := r0) (q := q0)
+            (a := a0) (push := ([] : Word stack))
+            (chainWord := (Word.Empty : Word input))
+            (emptyWord := tailWord)
+            htransition
+            (ToCFGChainDerives.nil (M := M)
+              (presentation := presentation) r0)
+            htailDerive
+  | epsilon htransition htail ih =>
+      rename_i p0 r0 q0 midInput0 targetInput0
+      rcases ih with ⟨tailWord, htailInput, htailDerive⟩
+      refine ⟨tailWord, ?_, ?_⟩
+      · exact htailInput
+      · simpa [Word.Concat, Word.Empty, List.append_assoc] using
+          toCFG_emptyEpsilon_of_chainDerives
+            (M := M) (presentation := presentation)
+            (p := p0) (r := r0) (s := r0) (q := q0)
+            (push := ([] : Word stack))
+            (chainWord := (Word.Empty : Word input))
+            (emptyWord := tailWord)
+            htransition
+            (ToCFGChainDerives.nil (M := M)
+              (presentation := presentation) r0)
+            htailDerive
+
+theorem toCFG_generates_of_emptyStackAcceptsIn
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {n : Nat} {w : Word input} {qf : state}
+    (haccept : M.accept qf)
+    (hcomp : EmptyStackComputesIn M n M.start w qf []) :
+    w ∈ CFG.GeneratedLanguage (ToCFG M presentation) := by
+  rcases toCFG_emptyDerives_of_emptyStackComputesIn
+      (M := M) (presentation := presentation) hcomp with
+    ⟨consumed, hinput, hbody⟩
+  have hgen := toCFG_start_derives
+    (M := M) (presentation := presentation)
+    (q := qf) (w := consumed) haccept hbody
+  rw [hinput]
+  simpa [Word.Concat, Word.Empty] using hgen
+
+inductive StackSummaryComputesIn (M : PDA input stack state) :
+    Nat -> state -> Word stack -> Word input -> state -> Word input -> Prop where
+  | nil (q : state) (unread : Word input) :
+      StackSummaryComputesIn M 0 q [] unread q unread
+  | cons {m n : Nat} {p r q : state} {A : stack}
+      {rest : Word stack} {sourceInput midInput targetInput : Word input} :
+      StackSummaryComputesIn M m p [A] sourceInput r midInput ->
+        StackSummaryComputesIn M n r rest midInput q targetInput ->
+          StackSummaryComputesIn M (m + n) p (A :: rest)
+            sourceInput q targetInput
+  | popRead {n : Nat} {p r q : state} {A : stack} {a : input}
+      {push : Word stack} {midInput targetInput : Word input} :
+      M.transition p (some a) [A] r push ->
+        StackSummaryComputesIn M n r push midInput q targetInput ->
+          StackSummaryComputesIn M (n + 1) p [A]
+            (a :: midInput) q targetInput
+  | popEpsilon {n : Nat} {p r q : state} {A : stack}
+      {push : Word stack} {midInput targetInput : Word input} :
+      M.transition p none [A] r push ->
+        StackSummaryComputesIn M n r push midInput q targetInput ->
+          StackSummaryComputesIn M (n + 1) p [A]
+            midInput q targetInput
+  | emptyBeforeTopRead {m n : Nat} {p r s q : state}
+      {A : stack} {a : input} {push : Word stack}
+      {midInput topInput targetInput : Word input} :
+      M.transition p (some a) [] r push ->
+        StackSummaryComputesIn M m r push midInput s topInput ->
+          StackSummaryComputesIn M n s [A] topInput q targetInput ->
+            StackSummaryComputesIn M (m + n + 1) p [A]
+              (a :: midInput) q targetInput
+  | emptyBeforeTopEpsilon {m n : Nat} {p r s q : state}
+      {A : stack} {push : Word stack}
+      {midInput topInput targetInput : Word input} :
+      M.transition p none [] r push ->
+        StackSummaryComputesIn M m r push midInput s topInput ->
+          StackSummaryComputesIn M n s [A] topInput q targetInput ->
+            StackSummaryComputesIn M (m + n + 1) p [A]
+              midInput q targetInput
+
+inductive EmptySummaryComputesIn (M : PDA input stack state) :
+    Nat -> state -> Word input -> state -> Word input -> Prop where
+  | zero (q : state) (unread : Word input) :
+      EmptySummaryComputesIn M 0 q unread q unread
+  | read {m n : Nat} {p r s q : state} {a : input}
+      {push : Word stack}
+      {midInput emptyInput targetInput : Word input} :
+      M.transition p (some a) [] r push ->
+        StackSummaryComputesIn M m r push midInput s emptyInput ->
+          EmptySummaryComputesIn M n s emptyInput q targetInput ->
+            EmptySummaryComputesIn M (m + n + 1) p
+              (a :: midInput) q targetInput
+  | epsilon {m n : Nat} {p r s q : state}
+      {push : Word stack}
+      {midInput emptyInput targetInput : Word input} :
+      M.transition p none [] r push ->
+        StackSummaryComputesIn M m r push midInput s emptyInput ->
+          EmptySummaryComputesIn M n s emptyInput q targetInput ->
+            EmptySummaryComputesIn M (m + n + 1) p
+              midInput q targetInput
+
+theorem stackSummaryComputesIn_computesIn
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {stackWord : Word stack}
+    {sourceInput targetInput : Word input}
+    (h : StackSummaryComputesIn M n p stackWord sourceInput q targetInput) :
+    forall tail : Word stack,
+      ComputesIn M n
+        { state := p, unread := sourceInput,
+          stack := Word.Concat stackWord tail }
+        { state := q, unread := targetInput, stack := tail } := by
+  induction h with
+  | nil q unread =>
+      intro tail
+      simpa [Word.Concat, Word.Empty] using
+        ComputesIn.zero
+          ({ state := q, unread := unread, stack := tail } :
+            Configuration input stack state)
+  | cons htop hrest ihtop ihrest =>
+      rename_i m n p r q A rest sourceInput midInput targetInput
+      intro tail
+      have hfirst := ihtop (Word.Concat rest tail)
+      have htail := ihrest tail
+      simpa [Word.Concat, List.append_assoc] using
+        computesIn_trans hfirst htail
+  | popRead htransition htail ih =>
+      rename_i n p r q A a push midInput targetInput
+      intro tail
+      have hstep : Step M
+          { state := p, unread := a :: midInput, stack := A :: tail }
+          { state := r, unread := midInput,
+            stack := Word.Concat push tail } := by
+        simpa [Word.Concat] using
+          Step.read (M := M) (unread := midInput)
+            (restStack := tail) htransition
+      simpa [Word.Concat] using
+        ComputesIn.succ hstep (ih tail)
+  | popEpsilon htransition htail ih =>
+      rename_i n p r q A push midInput targetInput
+      intro tail
+      have hstep : Step M
+          { state := p, unread := midInput, stack := A :: tail }
+          { state := r, unread := midInput,
+            stack := Word.Concat push tail } := by
+        simpa [Word.Concat] using
+          Step.epsilon (M := M) (unread := midInput)
+            (restStack := tail) htransition
+      simpa [Word.Concat] using
+        ComputesIn.succ hstep (ih tail)
+  | emptyBeforeTopRead htransition hpush htop ihpush ihtop =>
+      rename_i m n p r s q A a push midInput topInput targetInput
+      intro tail
+      have hstep : Step M
+          { state := p, unread := a :: midInput, stack := A :: tail }
+          { state := r, unread := midInput,
+            stack := Word.Concat push (A :: tail) } := by
+        simpa [Word.Concat] using
+          Step.read (M := M) (unread := midInput)
+            (restStack := A :: tail) htransition
+      have hpushComp := ihpush (A :: tail)
+      have htopComp := ihtop tail
+      have hrest := computesIn_trans hpushComp htopComp
+      simpa [Word.Concat, List.append_assoc] using
+        ComputesIn.succ hstep hrest
+  | emptyBeforeTopEpsilon htransition hpush htop ihpush ihtop =>
+      rename_i m n p r s q A push midInput topInput targetInput
+      intro tail
+      have hstep : Step M
+          { state := p, unread := midInput, stack := A :: tail }
+          { state := r, unread := midInput,
+            stack := Word.Concat push (A :: tail) } := by
+        simpa [Word.Concat] using
+          Step.epsilon (M := M) (unread := midInput)
+            (restStack := A :: tail) htransition
+      have hpushComp := ihpush (A :: tail)
+      have htopComp := ihtop tail
+      have hrest := computesIn_trans hpushComp htopComp
+      simpa [Word.Concat, List.append_assoc] using
+        ComputesIn.succ hstep hrest
+
+theorem stackSummaryComputesIn_computes
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {stackWord : Word stack}
+    {sourceInput targetInput : Word input}
+    (h : StackSummaryComputesIn M n p stackWord sourceInput q targetInput) :
+    forall tail : Word stack,
+      Computes M
+        { state := p, unread := sourceInput,
+          stack := Word.Concat stackWord tail }
+        { state := q, unread := targetInput, stack := tail } := by
+  intro tail
+  exact computesIn_computes (stackSummaryComputesIn_computesIn h tail)
+
+theorem emptySummaryComputesIn_computesIn
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptySummaryComputesIn M n p sourceInput q targetInput) :
+    ComputesIn M n
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] } := by
+  induction h with
+  | zero q unread =>
+      exact ComputesIn.zero _
+  | read htransition hpush hempty ihempty =>
+      rename_i m n p r s q a push midInput emptyInput targetInput
+      have hstep : Step M
+          { state := p, unread := a :: midInput, stack := [] }
+          { state := r, unread := midInput,
+            stack := Word.Concat push ([] : Word stack) } := by
+        simpa [Word.Concat] using
+          Step.read (M := M) (unread := midInput)
+            (restStack := ([] : Word stack)) htransition
+      have hpushComp := stackSummaryComputesIn_computesIn hpush
+        ([] : Word stack)
+      have hrest := computesIn_trans hpushComp ihempty
+      simpa [Word.Concat, Word.Empty, List.append_assoc] using
+        ComputesIn.succ hstep hrest
+  | epsilon htransition hpush hempty ihempty =>
+      rename_i m n p r s q push midInput emptyInput targetInput
+      have hstep : Step M
+          { state := p, unread := midInput, stack := [] }
+          { state := r, unread := midInput,
+            stack := Word.Concat push ([] : Word stack) } := by
+        simpa [Word.Concat] using
+          Step.epsilon (M := M) (unread := midInput)
+            (restStack := ([] : Word stack)) htransition
+      have hpushComp := stackSummaryComputesIn_computesIn hpush
+        ([] : Word stack)
+      have hrest := computesIn_trans hpushComp ihempty
+      simpa [Word.Concat, Word.Empty, List.append_assoc] using
+        ComputesIn.succ hstep hrest
+
+theorem emptySummaryComputesIn_computes
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptySummaryComputesIn M n p sourceInput q targetInput) :
+    Computes M
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] } :=
+  computesIn_computes (emptySummaryComputesIn_computesIn h)
+
+theorem emptySummaryComputesIn_of_emptyStackComputesIn
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptyStackComputesIn M n p sourceInput q targetInput) :
+    EmptySummaryComputesIn M n p sourceInput q targetInput := by
+  induction h with
+  | zero q unread =>
+      exact EmptySummaryComputesIn.zero q unread
+  | read htransition htail ih =>
+      rename_i p r q a midInput targetInput
+      have hpush :
+          StackSummaryComputesIn M 0 r ([] : Word stack) midInput r midInput :=
+        StackSummaryComputesIn.nil r midInput
+      simpa using
+        EmptySummaryComputesIn.read htransition hpush ih
+  | epsilon htransition htail ih =>
+      rename_i p r q midInput targetInput
+      have hpush :
+          StackSummaryComputesIn M 0 r ([] : Word stack) midInput r midInput :=
+        StackSummaryComputesIn.nil r midInput
+      simpa using
+        EmptySummaryComputesIn.epsilon htransition hpush ih
+
+theorem emptySummaryComputesIn_of_step_emptyStack
+    {M : PDA input stack state}
+    {p q : state} {sourceInput targetInput : Word input}
+    (hstep : Step M
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    EmptySummaryComputesIn M 1 p sourceInput q targetInput := by
+  rcases step_cases hstep with hread | heps
+  · rcases hread with
+      ⟨p', q', a, unread, pop, push, restStack,
+        htransition, hc, hd⟩
+    have hp : p = p' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hc
+    have hsource : sourceInput = a :: unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hc
+    have htarget : targetInput = unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hd
+    have hstack : ([] : Word stack) = Word.Concat pop restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hc
+    have hq : q = q' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hd
+    have hpushStack : ([] : Word stack) = Word.Concat push restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hd
+    have hpopNil : pop = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hstack
+      simp [Word.Concat] at hlen
+      omega
+    have hrestNil : restStack = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hstack
+      simp [Word.Concat] at hlen
+      omega
+    have hpushNil : push = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hpushStack
+      simp [Word.Concat, hrestNil] at hlen
+      omega
+    have htransition' : M.transition p (some a) [] q [] := by
+      simpa [hp, hq, hpopNil, hpushNil] using htransition
+    have hsummary : EmptySummaryComputesIn M 1 p (a :: unread) q unread := by
+      have hpushSummary :
+          StackSummaryComputesIn M 0 q ([] : Word stack) unread q unread :=
+        StackSummaryComputesIn.nil q unread
+      have hempty :
+          EmptySummaryComputesIn M 0 q unread q unread :=
+        EmptySummaryComputesIn.zero q unread
+      simpa using
+        EmptySummaryComputesIn.read htransition' hpushSummary hempty
+    simpa [hsource, htarget] using hsummary
+  · rcases heps with
+      ⟨p', q', unread, pop, push, restStack,
+        htransition, hc, hd⟩
+    have hp : p = p' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hc
+    have hsource : sourceInput = unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hc
+    have htarget : targetInput = unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hd
+    have hstack : ([] : Word stack) = Word.Concat pop restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hc
+    have hq : q = q' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hd
+    have hpushStack : ([] : Word stack) = Word.Concat push restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hd
+    have hpopNil : pop = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hstack
+      simp [Word.Concat] at hlen
+      omega
+    have hrestNil : restStack = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hstack
+      simp [Word.Concat] at hlen
+      omega
+    have hpushNil : push = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hpushStack
+      simp [Word.Concat, hrestNil] at hlen
+      omega
+    have htransition' : M.transition p none [] q [] := by
+      simpa [hp, hq, hpopNil, hpushNil] using htransition
+    have hsummary : EmptySummaryComputesIn M 1 p unread q unread := by
+      have hpushSummary :
+          StackSummaryComputesIn M 0 q ([] : Word stack) unread q unread :=
+        StackSummaryComputesIn.nil q unread
+      have hempty :
+          EmptySummaryComputesIn M 0 q unread q unread :=
+        EmptySummaryComputesIn.zero q unread
+      simpa using
+        EmptySummaryComputesIn.epsilon htransition' hpushSummary hempty
+    simpa [hsource, htarget] using hsummary
+
+theorem emptySummaryComputesIn_of_computesIn_zero_emptyStack
+    {M : PDA input stack state}
+    {p q : state} {sourceInput targetInput : Word input}
+    (hcomp : ComputesIn M 0
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    EmptySummaryComputesIn M 0 p sourceInput q targetInput := by
+  have hend := computesIn_zero_eq hcomp
+  have hstate : p = q := by
+    simpa using congrArg
+      (fun c : Configuration input stack state => c.state) hend
+  have hunread : sourceInput = targetInput := by
+    simpa using congrArg
+      (fun c : Configuration input stack state => c.unread) hend
+  simpa [hstate, hunread] using
+    EmptySummaryComputesIn.zero p sourceInput
+
+theorem emptySummaryComputesIn_of_computesIn_one_emptyStack
+    {M : PDA input stack state}
+    {p q : state} {sourceInput targetInput : Word input}
+    (hcomp : ComputesIn M 1
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    EmptySummaryComputesIn M 1 p sourceInput q targetInput :=
+  emptySummaryComputesIn_of_step_emptyStack (computesIn_one_inv hcomp)
+
+theorem stackSummaryComputesIn_of_step_topPop
+    {M : PDA input stack state}
+    {p q : state} {A : stack}
+    {sourceInput targetInput : Word input} {tail : Word stack}
+    (hnorm : PopsAtMostOne M)
+    (hstep : Step M
+      { state := p, unread := sourceInput, stack := A :: tail }
+      { state := q, unread := targetInput, stack := tail }) :
+    StackSummaryComputesIn M 1 p [A] sourceInput q targetInput := by
+  rcases step_cases hstep with hread | heps
+  · rcases hread with
+      ⟨p', q', a, unread, pop, push, restStack,
+        htransition, hc, hd⟩
+    have hp : p = p' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hc
+    have hsource : sourceInput = a :: unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hc
+    have htarget : targetInput = unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hd
+    have hsourceStack : A :: tail = Word.Concat pop restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hc
+    have hq : q = q' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hd
+    have htargetStack : tail = Word.Concat push restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hd
+    rcases hnorm p' (some a) pop q' push htransition with
+      hpopNil | hpopSingle
+    · have hsourceLen := congrArg List.length hsourceStack
+      have htargetLen := congrArg List.length htargetStack
+      simp [Word.Concat, hpopNil] at hsourceLen htargetLen
+      omega
+    · rcases hpopSingle with ⟨B, hpopSingle⟩
+      have hsourceCons : A :: tail = B :: restStack := by
+        simpa [Word.Concat, hpopSingle] using hsourceStack
+      have hA : A = B := (List.cons.inj hsourceCons).1
+      have hrest : tail = restStack := (List.cons.inj hsourceCons).2
+      have hpushNil : push = [] := by
+        apply List.eq_nil_of_length_eq_zero
+        have hrestLen := congrArg List.length hrest
+        have hlen := congrArg List.length htargetStack
+        simp [Word.Concat] at hrestLen hlen
+        omega
+      have htransition' : M.transition p (some a) [A] q [] := by
+        simpa [hp, hq, hpopSingle, hA, hpushNil] using htransition
+      have hsummary : StackSummaryComputesIn M 1 p [A] (a :: unread) q unread := by
+        simpa using
+          StackSummaryComputesIn.popRead htransition'
+            (StackSummaryComputesIn.nil (M := M) q unread)
+      simpa [hsource, htarget] using hsummary
+  · rcases heps with
+      ⟨p', q', unread, pop, push, restStack,
+        htransition, hc, hd⟩
+    have hp : p = p' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hc
+    have hsource : sourceInput = unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hc
+    have htarget : targetInput = unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hd
+    have hsourceStack : A :: tail = Word.Concat pop restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hc
+    have hq : q = q' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hd
+    have htargetStack : tail = Word.Concat push restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hd
+    rcases hnorm p' none pop q' push htransition with
+      hpopNil | hpopSingle
+    · have hsourceLen := congrArg List.length hsourceStack
+      have htargetLen := congrArg List.length htargetStack
+      simp [Word.Concat, hpopNil] at hsourceLen htargetLen
+      omega
+    · rcases hpopSingle with ⟨B, hpopSingle⟩
+      have hsourceCons : A :: tail = B :: restStack := by
+        simpa [Word.Concat, hpopSingle] using hsourceStack
+      have hA : A = B := (List.cons.inj hsourceCons).1
+      have hrest : tail = restStack := (List.cons.inj hsourceCons).2
+      have hpushNil : push = [] := by
+        apply List.eq_nil_of_length_eq_zero
+        have hrestLen := congrArg List.length hrest
+        have hlen := congrArg List.length htargetStack
+        simp [Word.Concat] at hrestLen hlen
+        omega
+      have htransition' : M.transition p none [A] q [] := by
+        simpa [hp, hq, hpopSingle, hA, hpushNil] using htransition
+      have hsummary : StackSummaryComputesIn M 1 p [A] unread q unread := by
+        simpa using
+          StackSummaryComputesIn.popEpsilon htransition'
+            (StackSummaryComputesIn.nil (M := M) q unread)
+      simpa [hsource, htarget] using hsummary
+
+theorem stackSummaryComputesIn_of_computesIn_one_topPop
+    {M : PDA input stack state}
+    {p q : state} {A : stack}
+    {sourceInput targetInput : Word input} {tail : Word stack}
+    (hnorm : PopsAtMostOne M)
+    (hcomp : ComputesIn M 1
+      { state := p, unread := sourceInput, stack := A :: tail }
+      { state := q, unread := targetInput, stack := tail }) :
+    StackSummaryComputesIn M 1 p [A] sourceInput q targetInput :=
+  stackSummaryComputesIn_of_step_topPop hnorm (computesIn_one_inv hcomp)
+
+theorem emptySummaryComputesIn_of_computesIn_two_emptyStack
+    {M : PDA input stack state}
+    {p q : state} {sourceInput targetInput : Word input}
+    (hnorm : PopsAtMostOne M)
+    (hcomp : ComputesIn M 2
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    EmptySummaryComputesIn M 2 p sourceInput q targetInput := by
+  rcases computesIn_succ_inv (M := M) (n := 1) hcomp with
+    ⟨mid, hfirst, htail⟩
+  have hsecond0 : Step M mid
+      { state := q, unread := targetInput, stack := [] } :=
+    computesIn_one_inv htail
+  rcases step_cases hfirst with hread | heps
+  · rcases hread with
+      ⟨p', r, a, unread, pop, push, restStack,
+        htransition, hc, hd⟩
+    have hp : p = p' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hc
+    have hsource : sourceInput = a :: unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hc
+    have hstack : ([] : Word stack) = Word.Concat pop restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hc
+    have hpopNil : pop = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hstack
+      simp [Word.Concat] at hlen
+      omega
+    have hrestNil : restStack = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hstack
+      simp [Word.Concat] at hlen
+      omega
+    have htransition' :
+        M.transition p (some a) [] r push := by
+      simpa [hp, hpopNil] using htransition
+    cases hd
+    have hsecond : Step M
+        { state := r, unread := unread, stack := push }
+        { state := q, unread := targetInput, stack := [] } := by
+      simpa [Word.Concat, hrestNil] using hsecond0
+    rcases step_sourceStack_empty_or_single_of_step_to_emptyStack
+        (M := M) hnorm hsecond with hpushNil | hpushSingle
+    · have htransitionEmpty :
+          M.transition p (some a) [] r [] := by
+        simpa [hpushNil] using htransition'
+      have hsecondEmpty : Step M
+          { state := r, unread := unread, stack := [] }
+          { state := q, unread := targetInput, stack := [] } := by
+        simpa [hpushNil] using hsecond
+      have hemptyTail :=
+        emptySummaryComputesIn_of_step_emptyStack
+          (M := M) (p := r) (q := q) hsecondEmpty
+      have hpushSummary :
+          StackSummaryComputesIn M 0 r ([] : Word stack) unread r unread :=
+        StackSummaryComputesIn.nil r unread
+      have hsummary : EmptySummaryComputesIn M 2 p (a :: unread) q targetInput := by
+        simpa using
+          EmptySummaryComputesIn.read htransitionEmpty hpushSummary hemptyTail
+      simpa [hsource] using hsummary
+    · rcases hpushSingle with ⟨A, hpushSingle⟩
+      have htransitionSingle :
+          M.transition p (some a) [] r [A] := by
+        simpa [hpushSingle] using htransition'
+      have hsecondTop : Step M
+          { state := r, unread := unread, stack := A :: ([] : Word stack) }
+          { state := q, unread := targetInput, stack := [] } := by
+        simpa [hpushSingle] using hsecond
+      have htopSummary :=
+        stackSummaryComputesIn_of_step_topPop
+          (M := M) (p := r) (q := q) (A := A)
+          (tail := ([] : Word stack)) hnorm hsecondTop
+      have hemptyTail :
+          EmptySummaryComputesIn M 0 q targetInput q targetInput :=
+        EmptySummaryComputesIn.zero q targetInput
+      have hsummary : EmptySummaryComputesIn M 2 p (a :: unread) q targetInput := by
+        simpa using
+          EmptySummaryComputesIn.read htransitionSingle htopSummary hemptyTail
+      simpa [hsource] using hsummary
+  · rcases heps with
+      ⟨p', r, unread, pop, push, restStack,
+        htransition, hc, hd⟩
+    have hp : p = p' := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.state) hc
+    have hsource : sourceInput = unread := by
+      simpa using congrArg
+        (fun c : Configuration input stack state => c.unread) hc
+    have hstack : ([] : Word stack) = Word.Concat pop restStack := by
+      exact congrArg
+        (fun c : Configuration input stack state => c.stack) hc
+    have hpopNil : pop = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hstack
+      simp [Word.Concat] at hlen
+      omega
+    have hrestNil : restStack = [] := by
+      apply List.eq_nil_of_length_eq_zero
+      have hlen := congrArg List.length hstack
+      simp [Word.Concat] at hlen
+      omega
+    have htransition' :
+        M.transition p none [] r push := by
+      simpa [hp, hpopNil] using htransition
+    cases hd
+    have hsecond : Step M
+        { state := r, unread := unread, stack := push }
+        { state := q, unread := targetInput, stack := [] } := by
+      simpa [Word.Concat, hrestNil] using hsecond0
+    rcases step_sourceStack_empty_or_single_of_step_to_emptyStack
+        (M := M) hnorm hsecond with hpushNil | hpushSingle
+    · have htransitionEmpty :
+          M.transition p none [] r [] := by
+        simpa [hpushNil] using htransition'
+      have hsecondEmpty : Step M
+          { state := r, unread := unread, stack := [] }
+          { state := q, unread := targetInput, stack := [] } := by
+        simpa [hpushNil] using hsecond
+      have hemptyTail :=
+        emptySummaryComputesIn_of_step_emptyStack
+          (M := M) (p := r) (q := q) hsecondEmpty
+      have hpushSummary :
+          StackSummaryComputesIn M 0 r ([] : Word stack) unread r unread :=
+        StackSummaryComputesIn.nil r unread
+      have hsummary : EmptySummaryComputesIn M 2 p unread q targetInput := by
+        simpa using
+          EmptySummaryComputesIn.epsilon htransitionEmpty hpushSummary hemptyTail
+      simpa [hsource] using hsummary
+    · rcases hpushSingle with ⟨A, hpushSingle⟩
+      have htransitionSingle :
+          M.transition p none [] r [A] := by
+        simpa [hpushSingle] using htransition'
+      have hsecondTop : Step M
+          { state := r, unread := unread, stack := A :: ([] : Word stack) }
+          { state := q, unread := targetInput, stack := [] } := by
+        simpa [hpushSingle] using hsecond
+      have htopSummary :=
+        stackSummaryComputesIn_of_step_topPop
+          (M := M) (p := r) (q := q) (A := A)
+          (tail := ([] : Word stack)) hnorm hsecondTop
+      have hemptyTail :
+          EmptySummaryComputesIn M 0 q targetInput q targetInput :=
+        EmptySummaryComputesIn.zero q targetInput
+      have hsummary : EmptySummaryComputesIn M 2 p unread q targetInput := by
+        simpa using
+          EmptySummaryComputesIn.epsilon htransitionSingle htopSummary hemptyTail
+      simpa [hsource] using hsummary
+
+theorem emptySummaryComputesIn_of_computesIn_atMostTwo_emptyStack
+    {M : PDA input stack state}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (hnorm : PopsAtMostOne M)
+    (hn : n <= 2)
+    (hcomp : ComputesIn M n
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    EmptySummaryComputesIn M n p sourceInput q targetInput := by
+  cases n with
+  | zero =>
+      exact emptySummaryComputesIn_of_computesIn_zero_emptyStack hcomp
+  | succ n =>
+      cases n with
+      | zero =>
+          exact emptySummaryComputesIn_of_computesIn_one_emptyStack hcomp
+      | succ n =>
+          cases n with
+          | zero =>
+              exact emptySummaryComputesIn_of_computesIn_two_emptyStack
+                hnorm hcomp
+          | succ n =>
+              omega
+
+theorem toCFG_betweenDerives_of_singleton_chainDerives
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {p q : state} {A : stack} {w : Word input}
+    (h : ToCFGChainDerives M presentation p [A] q w) :
+    CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.between p A q)]
+      (SententialForm.terminalWord w) := by
+  cases h with
+  | cons hbetween htail =>
+      cases htail with
+      | nil _ =>
+          simpa [Word.Concat, Word.Empty] using hbetween
+
+theorem toCFGChainDerives_of_stackSummaryComputesIn
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {n : Nat} {p q : state} {stackWord : Word stack}
+    {sourceInput targetInput : Word input}
+    (h : StackSummaryComputesIn M n p stackWord sourceInput q targetInput) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        ToCFGChainDerives M presentation p stackWord q consumed := by
+  induction h with
+  | nil q unread =>
+      exact ⟨Word.Empty, by simp [Word.Concat, Word.Empty],
+        ToCFGChainDerives.nil (M := M) (presentation := presentation) q⟩
+  | cons htop hrest ihtop ihrest =>
+      rename_i m n p r q A rest sourceInput midInput targetInput
+      rcases ihtop with ⟨topWord, htopInput, htopChain⟩
+      rcases ihrest with ⟨restWord, hrestInput, hrestChain⟩
+      have hbetween :=
+        toCFG_betweenDerives_of_singleton_chainDerives htopChain
+      refine ⟨Word.Concat topWord restWord, ?_, ?_⟩
+      · rw [htopInput, hrestInput]
+        simp [Word.Concat, List.append_assoc]
+      · exact ToCFGChainDerives.cons hbetween hrestChain
+  | popRead htransition hpush ih =>
+      rename_i n p r q A a push midInput targetInput
+      rcases ih with ⟨chainWord, hchainInput, hchainDerives⟩
+      let consumed := Word.Concat (Word.Symbol a) chainWord
+      have hbetween : CFG.Derives (ToCFG M presentation)
+          [Symbol.nonterminal (ToCFGNonterminal.between p A q)]
+          (SententialForm.terminalWord consumed) := by
+        simpa [consumed] using
+          toCFG_popRead_of_chainDerives
+            (M := M) (presentation := presentation)
+            htransition hchainDerives
+      refine ⟨consumed, ?_, ?_⟩
+      · rw [hchainInput]
+        simp [consumed, Word.Concat, Word.Symbol]
+      · simpa [consumed, Word.Concat, Word.Empty] using
+          ToCFGChainDerives.cons hbetween
+            (ToCFGChainDerives.nil (M := M)
+              (presentation := presentation) q)
+  | popEpsilon htransition hpush ih =>
+      rename_i n p r q A push midInput targetInput
+      rcases ih with ⟨chainWord, hchainInput, hchainDerives⟩
+      have hbetween : CFG.Derives (ToCFG M presentation)
+          [Symbol.nonterminal (ToCFGNonterminal.between p A q)]
+          (SententialForm.terminalWord chainWord) :=
+        toCFG_popEpsilon_of_chainDerives
+          (M := M) (presentation := presentation)
+          htransition hchainDerives
+      refine ⟨chainWord, ?_, ?_⟩
+      · exact hchainInput
+      · simpa [Word.Concat, Word.Empty] using
+          ToCFGChainDerives.cons hbetween
+            (ToCFGChainDerives.nil (M := M)
+              (presentation := presentation) q)
+  | emptyBeforeTopRead htransition hpush htop ihpush ihtop =>
+      rename_i m n p r s q A a push midInput topInput targetInput
+      rcases ihpush with ⟨chainWord, hchainInput, hchainDerives⟩
+      rcases ihtop with ⟨topWord, htopInput, htopChain⟩
+      have htopDerives :=
+        toCFG_betweenDerives_of_singleton_chainDerives htopChain
+      let consumed :=
+        Word.Concat (Word.Symbol a) (Word.Concat chainWord topWord)
+      have hbetween : CFG.Derives (ToCFG M presentation)
+          [Symbol.nonterminal (ToCFGNonterminal.between p A q)]
+          (SententialForm.terminalWord consumed) := by
+        simpa [consumed] using
+          toCFG_emptyBeforeTopRead_of_chainDerives
+            (M := M) (presentation := presentation)
+            htransition hchainDerives htopDerives
+      refine ⟨consumed, ?_, ?_⟩
+      · rw [hchainInput, htopInput]
+        simp [consumed, Word.Concat, Word.Symbol, List.append_assoc]
+      · simpa [consumed, Word.Concat, Word.Empty] using
+          ToCFGChainDerives.cons hbetween
+            (ToCFGChainDerives.nil (M := M)
+              (presentation := presentation) q)
+  | emptyBeforeTopEpsilon htransition hpush htop ihpush ihtop =>
+      rename_i m n p r s q A push midInput topInput targetInput
+      rcases ihpush with ⟨chainWord, hchainInput, hchainDerives⟩
+      rcases ihtop with ⟨topWord, htopInput, htopChain⟩
+      have htopDerives :=
+        toCFG_betweenDerives_of_singleton_chainDerives htopChain
+      let consumed := Word.Concat chainWord topWord
+      have hbetween : CFG.Derives (ToCFG M presentation)
+          [Symbol.nonterminal (ToCFGNonterminal.between p A q)]
+          (SententialForm.terminalWord consumed) := by
+        simpa [consumed] using
+          toCFG_emptyBeforeTopEpsilon_of_chainDerives
+            (M := M) (presentation := presentation)
+            htransition hchainDerives htopDerives
+      refine ⟨consumed, ?_, ?_⟩
+      · rw [hchainInput, htopInput]
+        simp [consumed, Word.Concat, List.append_assoc]
+      · simpa [consumed, Word.Concat, Word.Empty] using
+          ToCFGChainDerives.cons hbetween
+            (ToCFGChainDerives.nil (M := M)
+              (presentation := presentation) q)
+
+theorem toCFG_emptyDerives_of_emptySummaryComputesIn
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (h : EmptySummaryComputesIn M n p sourceInput q targetInput) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        CFG.Derives (ToCFG M presentation)
+          [Symbol.nonterminal (ToCFGNonterminal.empty p q)]
+          (SententialForm.terminalWord consumed) := by
+  induction h with
+  | zero q unread =>
+      refine ⟨Word.Empty, ?_, ?_⟩
+      · simp [Word.Concat, Word.Empty]
+      · simpa [SententialForm.terminalWord, Word.Empty] using
+          toCFG_emptyRefl_derives
+            (M := M) (presentation := presentation) (q := q)
+  | read htransition hpush hempty ihempty =>
+      rename_i m n p r s q a push midInput emptyInput targetInput
+      rcases toCFGChainDerives_of_stackSummaryComputesIn
+          (M := M) (presentation := presentation) hpush with
+        ⟨chainWord, hchainInput, hchainDerives⟩
+      rcases ihempty with ⟨emptyWord, hemptyInput, hemptyDerives⟩
+      let consumed :=
+        Word.Concat (Word.Symbol a) (Word.Concat chainWord emptyWord)
+      have hbody : CFG.Derives (ToCFG M presentation)
+          [Symbol.nonterminal (ToCFGNonterminal.empty p q)]
+          (SententialForm.terminalWord consumed) := by
+        simpa [consumed] using
+          toCFG_emptyRead_of_chainDerives
+            (M := M) (presentation := presentation)
+            htransition hchainDerives hemptyDerives
+      refine ⟨consumed, ?_, hbody⟩
+      rw [hchainInput, hemptyInput]
+      simp [consumed, Word.Concat, Word.Symbol, List.append_assoc]
+  | epsilon htransition hpush hempty ihempty =>
+      rename_i m n p r s q push midInput emptyInput targetInput
+      rcases toCFGChainDerives_of_stackSummaryComputesIn
+          (M := M) (presentation := presentation) hpush with
+        ⟨chainWord, hchainInput, hchainDerives⟩
+      rcases ihempty with ⟨emptyWord, hemptyInput, hemptyDerives⟩
+      let consumed := Word.Concat chainWord emptyWord
+      have hbody : CFG.Derives (ToCFG M presentation)
+          [Symbol.nonterminal (ToCFGNonterminal.empty p q)]
+          (SententialForm.terminalWord consumed) := by
+        simpa [consumed] using
+          toCFG_emptyEpsilon_of_chainDerives
+            (M := M) (presentation := presentation)
+            htransition hchainDerives hemptyDerives
+      refine ⟨consumed, ?_, hbody⟩
+      rw [hchainInput, hemptyInput]
+      simp [consumed, Word.Concat, List.append_assoc]
+
+theorem toCFG_emptyDerives_of_computesIn_atMostTwo_emptyStack_viaSummary
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
+    (hnorm : PopsAtMostOne M)
+    (hn : n <= 2)
+    (hcomp : ComputesIn M n
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] }) :
+    exists consumed : Word input,
+      sourceInput = Word.Concat consumed targetInput ∧
+        CFG.Derives (ToCFG M presentation)
+          [Symbol.nonterminal (ToCFGNonterminal.empty p q)]
+          (SententialForm.terminalWord consumed) :=
+  toCFG_emptyDerives_of_emptySummaryComputesIn
+    (emptySummaryComputesIn_of_computesIn_atMostTwo_emptyStack
+      hnorm hn hcomp)
+
+theorem toCFG_generates_of_emptySummaryAcceptsIn
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {n : Nat} {w : Word input} {qf : state}
+    (haccept : M.accept qf)
+    (hcomp : EmptySummaryComputesIn M n M.start w qf []) :
+    w ∈ CFG.GeneratedLanguage (ToCFG M presentation) := by
+  rcases toCFG_emptyDerives_of_emptySummaryComputesIn
+      (M := M) (presentation := presentation) hcomp with
+    ⟨consumed, hinput, hbody⟩
+  have hgen := toCFG_start_derives
+    (M := M) (presentation := presentation)
+    (q := qf) (w := consumed) haccept hbody
+  rw [hinput]
+  simpa [Word.Concat, Word.Empty] using hgen
+
 theorem toCFG_generates_of_acceptsIn_zero
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {w : Word input} {qf : state}
@@ -2057,17 +3012,9 @@ theorem toCFG_generates_of_acceptsIn_atMostTwo
     (hcomp : ComputesIn M n (initial M w)
       { state := qf, unread := [], stack := [] }) :
     w ∈ CFG.GeneratedLanguage (ToCFG M presentation) := by
-  rcases toCFG_emptyDerives_of_computesIn_atMostTwo_emptyStack
-      (M := M) (presentation := presentation)
-      (p := M.start) (q := qf)
-      (sourceInput := w) (targetInput := ([] : Word input))
-      hnorm hn (by simpa [initial] using hcomp) with
-    ⟨consumed, hinput, hbody⟩
-  have hgen := toCFG_start_derives
-    (M := M) (presentation := presentation)
-    (q := qf) (w := consumed) haccept hbody
-  rw [hinput]
-  simpa [Word.Concat, Word.Empty] using hgen
+  apply toCFG_generates_of_emptySummaryAcceptsIn haccept
+  exact emptySummaryComputesIn_of_computesIn_atMostTwo_emptyStack
+    hnorm hn (by simpa [initial] using hcomp)
 
 theorem toCFG_yields_sound
     {M : PDA input stack state} {presentation : FinitePresentation M}
