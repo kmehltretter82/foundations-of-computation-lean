@@ -3,6 +3,7 @@ import FoC.Foundation.Functions
 import FoC.Foundation.Primes
 import FoC.Foundation.RationalCore
 import FoC.Foundation.QuadraticSurd
+import FoC.Foundation.Reals
 
 namespace FoC
 namespace Book
@@ -12,10 +13,10 @@ namespace Section07
 /-!
 Book: Chapter 1, Section 1.7, Proof by Contradiction.
 
-Full real-number wrappers remain classified in coverage because the standalone
-project intentionally does not yet build real numbers.  The reduced-rational
-square-root contradiction cores and prime-factor existence are formalized in
-the foundation.
+Full real-number wrappers remain classified in coverage because cut arithmetic
+and square-root cuts are still deferred.  The reduced-rational square-root
+contradiction cores, prime-factor existence, and Dedekind-cut real order layer
+are formalized in the foundation.
 -/
 
 open Foundation
@@ -74,6 +75,29 @@ theorem product_of_irrational_surrogates_can_be_rational :
 theorem sqrt_two_surrogate_square_eq_two :
     Quad2.mul Quad2.sqrtTwo Quad2.sqrtTwo = Quad2.ofInt 2 :=
   Quad2.sqrtTwo_mul_self_eq_two
+
+-- Book: Chapter 1, Section 1.7, negating an irrational real stays irrational.
+theorem negation_of_irrational_real_is_irrational {x : Real}
+    (hx : Real.Irrational x) : Real.Irrational (-x) :=
+  Real.irrational_neg hx
+
+-- Book: Chapter 1, Section 1.7, rational plus irrational is irrational.
+theorem rational_real_plus_irrational_is_irrational
+    {x : Real} {q : QRat} (hx : Real.Irrational x) :
+    Real.Irrational (Real.qreal q + x) :=
+  Real.irrational_qreal_add hx
+
+-- Book: Chapter 1, Section 1.7, irrational plus rational is irrational.
+theorem irrational_plus_rational_real_is_irrational
+    {x : Real} {q : QRat} (hx : Real.Irrational x) :
+    Real.Irrational (x + Real.qreal q) :=
+  Real.irrational_add_qreal hx
+
+-- Book: Chapter 1, Section 1.7, nonzero rational scaling preserves irrationality.
+theorem nonzero_rational_real_times_irrational_is_irrational
+    {x : Real} {q : QRat} (hq : q ≠ 0) (hx : Real.Irrational x) :
+    Real.Irrational (Real.scale q x) :=
+  Real.irrational_scale_nonzero hq hx
 
 end Section07
 end Chapter01

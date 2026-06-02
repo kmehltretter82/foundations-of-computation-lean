@@ -1,6 +1,7 @@
 import FoC.Foundation.Arithmetic
 import FoC.Foundation.Integers
 import FoC.Foundation.Rationals
+import FoC.Foundation.Reals
 import FoC.Book.Chapter01.Section01
 import FoC.Book.Chapter01.Section02
 
@@ -126,6 +127,39 @@ theorem product_of_rational_representations {a b c d : Int}
 theorem product_of_rational_numbers_is_rational (x y : Rational) :
     (Rational.mul x y).den ≠ 0 :=
   Rational.mul_den_ne_zero x y
+
+-- Book: Chapter 1, Section 1.6, real-number density.
+theorem real_number_between {x y : Real} (h : x < y) :
+    exists z : Real, x < z ∧ z < y :=
+  Real.exists_between h
+
+-- Book: Chapter 1, Section 1.6, embedded rational real addition.
+theorem embedded_rational_real_addition (a b : QRat) :
+    Real.qreal a + Real.qreal b = Real.qreal (a + b) :=
+  Real.qreal_add a b
+
+-- Book: Chapter 1, Section 1.6, embedded rational real subtraction.
+theorem embedded_rational_real_subtraction (a b : QRat) :
+    Real.qreal a - Real.qreal b = Real.qreal (a - b) :=
+  Real.qreal_sub a b
+
+-- Book: Chapter 1, Section 1.6, rational real sums remain rational.
+theorem sum_of_rational_reals_is_rational {x y : Real}
+    (hx : Real.Rational x) (hy : Real.Rational y) :
+    Real.Rational (x + y) :=
+  Real.rational_add hx hy
+
+-- Book: Chapter 1, Section 1.6, rational real differences remain rational.
+theorem difference_of_rational_reals_is_rational {x y : Real}
+    (hx : Real.Rational x) (hy : Real.Rational y) :
+    Real.Rational (x - y) :=
+  Real.rational_sub hx hy
+
+-- Book: Chapter 1, Section 1.6, positive embedded-rational scaling.
+theorem positive_rational_scale_of_rational_real_is_rational
+    {x : Real} {c : QRat} (hc : 0 < c) (hx : Real.Rational x) :
+    Real.Rational (Real.scalePos c hc x) :=
+  Real.rational_scalePos hc hx
 
 end Section06
 end Chapter01

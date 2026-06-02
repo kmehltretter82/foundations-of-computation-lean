@@ -239,6 +239,452 @@ theorem qreal_order_reflecting {a b : QRat} (h : qreal a < qreal b) :
     a < b :=
   qrat_lt_of_qreal_lt h
 
+def add (x y : Real) : Real where
+  lower := fun q => exists a b, x.lower a ∧ y.lower b ∧ q < a + b
+  nonempty := by
+    cases x.nonempty with
+    | intro a ha =>
+        cases y.nonempty with
+        | intro b hb =>
+            cases QRat.exists_lower_upper (a + b) with
+            | intro l hrest =>
+                cases hrest with
+                | intro _ hl =>
+                    exact Exists.intro l
+                      (Exists.intro a (Exists.intro b
+                        (And.intro ha (And.intro hb hl.left))))
+  proper := by
+    cases x.proper with
+    | intro ux hux =>
+        cases y.proper with
+        | intro uy huy =>
+            exists ux + uy
+            intro h
+            cases h with
+            | intro a hrest =>
+                cases hrest with
+                | intro b hbounds =>
+                    have hax : a < ux := by
+                      cases QRat.lt_trichotomy a ux with
+                      | inl hlt =>
+                          exact hlt
+                      | inr hcases =>
+                          cases hcases with
+                          | inl heq =>
+                              rw [← heq] at hux
+                              exact False.elim (hux hbounds.left)
+                          | inr huxlt =>
+                              exact False.elim (hux
+                                (x.downward_closed ux a huxlt hbounds.left))
+                    have hby : b < uy := by
+                      cases QRat.lt_trichotomy b uy with
+                      | inl hlt =>
+                          exact hlt
+                      | inr hcases =>
+                          cases hcases with
+                          | inl heq =>
+                              rw [← heq] at huy
+                              exact False.elim (huy hbounds.right.left)
+                          | inr huylt =>
+                              exact False.elim (huy
+                                (y.downward_closed uy b huylt hbounds.right.left))
+                    exact QRat.lt_asymm hbounds.right.right (QRat.add_lt_add hax hby)
+  downward_closed := by
+    intro q r hqr hr
+    cases hr with
+    | intro a hrest =>
+        cases hrest with
+        | intro b hbounds =>
+            exact Exists.intro a (Exists.intro b
+              (And.intro hbounds.left
+                (And.intro hbounds.right.left
+                  (QRat.lt_trans hqr hbounds.right.right))))
+  open_upward := by
+    intro q hq
+    cases hq with
+    | intro a hrest =>
+        cases hrest with
+        | intro b hbounds =>
+            cases QRat.density hbounds.right.right with
+            | intro r hr =>
+                exact Exists.intro r
+                  (And.intro hr.left
+                    (Exists.intro a (Exists.intro b
+                      (And.intro hbounds.left
+                        (And.intro hbounds.right.left hr.right)))))
+
+def neg (x : Real) : Real where
+  lower := fun q => exists r, ¬ x.lower r ∧ q < -r
+  nonempty := by
+    cases x.proper with
+    | intro r hr =>
+        cases QRat.exists_lower_upper (-r) with
+        | intro l hrest =>
+            cases hrest with
+            | intro _ hl =>
+                exact Exists.intro l
+                  (Exists.intro r (And.intro hr hl.left))
+  proper := by
+    cases x.nonempty with
+    | intro a ha =>
+        exists -a
+        intro h
+        cases h with
+        | intro r hr =>
+            have hra : r < a := by
+              have hneg := QRat.neg_lt_neg hr.right
+              rwa [QRat.neg_neg, QRat.neg_neg] at hneg
+            exact hr.left (x.downward_closed r a hra ha)
+  downward_closed := by
+    intro q s hqs hs
+    cases hs with
+    | intro r hr =>
+        exact Exists.intro r
+          (And.intro hr.left (QRat.lt_trans hqs hr.right))
+  open_upward := by
+    intro q hq
+    cases hq with
+    | intro r hr =>
+        cases QRat.density hr.right with
+        | intro s hs =>
+            exact Exists.intro s
+              (And.intro hs.left (Exists.intro r (And.intro hr.left hs.right)))
+
+def sub (x y : Real) : Real :=
+  add x (neg y)
+
+instance : Add Real where
+  add := add
+
+instance : Neg Real where
+  neg := neg
+
+instance : Sub Real where
+  sub := sub
+
+theorem add_comm (x y : Real) : x + y = y + x := by
+  apply ext
+  intro q
+  constructor
+  · intro h
+    cases h with
+    | intro a hrest =>
+        cases hrest with
+        | intro b hbounds =>
+            have hqba : q < b + a := by
+              simpa [QRat.add_comm] using hbounds.right.right
+            exact Exists.intro b (Exists.intro a
+              (And.intro hbounds.right.left
+                (And.intro hbounds.left hqba)))
+  · intro h
+    cases h with
+    | intro b hrest =>
+        cases hrest with
+        | intro a hbounds =>
+            have hqab : q < a + b := by
+              simpa [QRat.add_comm] using hbounds.right.right
+            exact Exists.intro a (Exists.intro b
+              (And.intro hbounds.right.left
+                (And.intro hbounds.left hqab)))
+
+theorem add_qreal_lower_iff (x : Real) (q p : QRat) :
+    (x + qreal q).lower p <-> x.lower (p - q) := by
+  constructor
+  · intro h
+    cases h with
+    | intro a hrest =>
+        cases hrest with
+        | intro b hbounds =>
+            have habq : a + b < a + q :=
+              QRat.add_lt_add_left a hbounds.right.left
+            have hpaq : p < a + q :=
+              QRat.lt_trans hbounds.right.right habq
+            exact x.downward_closed (p - q) a
+              (QRat.sub_lt_iff.mpr hpaq) hbounds.left
+  · intro hp
+    cases x.open_upward (p - q) hp with
+    | intro a ha =>
+        have hpaq : p < a + q := QRat.sub_lt_iff.mp ha.left
+        have hpqa : p < q + a := by
+          rwa [QRat.add_comm] at hpaq
+        have hpa_lt_q : p - a < q := QRat.sub_lt_iff.mpr hpqa
+        cases QRat.density hpa_lt_q with
+        | intro b hb =>
+            have hpab : p < a + b := by
+              have hpba : p < b + a := QRat.sub_lt_iff.mp hb.left
+              rwa [QRat.add_comm] at hpba
+            exact Exists.intro a (Exists.intro b
+              (And.intro ha.right (And.intro hb.right hpab)))
+
+theorem qreal_add (r s : QRat) :
+    qreal r + qreal s = qreal (r + s) := by
+  apply ext
+  intro p
+  rw [add_qreal_lower_iff, qreal_lower_iff, qreal_lower_iff]
+  exact QRat.sub_lt_iff
+
+theorem qreal_neg (r : QRat) :
+    -qreal r = qreal (-r) := by
+  apply ext
+  intro q
+  constructor
+  · intro h
+    cases h with
+    | intro a ha =>
+        cases QRat.lt_trichotomy r a with
+        | inl hra =>
+            exact QRat.lt_trans ha.right (QRat.neg_lt_neg hra)
+        | inr hrest =>
+            cases hrest with
+            | inl hraEq =>
+                rw [hraEq]
+                exact ha.right
+            | inr har =>
+                exact False.elim (ha.left har)
+  · intro h
+    exact Exists.intro r (And.intro (QRat.lt_irrefl r) h)
+
+theorem neg_neg (x : Real) : -(-x) = x := by
+  apply ext
+  intro q
+  constructor
+  · intro h
+    cases h with
+    | intro r hr =>
+        apply Classical.byContradiction
+        intro hq
+        have hrnq : r < -q := by
+          have hneg := QRat.neg_lt_neg hr.right
+          rwa [QRat.neg_neg] at hneg
+        exact hr.left (Exists.intro q (And.intro hq hrnq))
+  · intro hq
+    cases x.open_upward q hq with
+    | intro a ha =>
+        exists -a
+        constructor
+        · intro hneg
+          cases hneg with
+          | intro s hs =>
+              have hsa : s < a := by
+                have hneglt := QRat.neg_lt_neg hs.right
+                rwa [QRat.neg_neg, QRat.neg_neg] at hneglt
+              exact hs.left (x.downward_closed s a hsa ha.right)
+        · rw [QRat.neg_neg]
+          exact ha.left
+
+theorem qreal_sub (r s : QRat) :
+    qreal r - qreal s = qreal (r - s) := by
+  calc
+    qreal r - qreal s = qreal r + -(qreal s) := rfl
+    _ = qreal r + qreal (-s) := by rw [qreal_neg]
+    _ = qreal (r + -s) := qreal_add r (-s)
+    _ = qreal (r - s) := rfl
+
+def scalePos (c : QRat) (hc : 0 < c) (x : Real) : Real where
+  lower := fun q => exists a, x.lower a ∧ q < c * a
+  nonempty := by
+    cases x.nonempty with
+    | intro a ha =>
+        cases QRat.exists_lower_upper (c * a) with
+        | intro l hrest =>
+            cases hrest with
+            | intro _ hl =>
+                exact Exists.intro l (Exists.intro a (And.intro ha hl.left))
+  proper := by
+    cases x.proper with
+    | intro u hu =>
+        exists c * u
+        intro h
+        cases h with
+        | intro a ha =>
+            have hua : u < a :=
+              QRat.lt_of_mul_lt_mul_left ha.right hc
+            exact hu (x.downward_closed u a hua ha.left)
+  downward_closed := by
+    intro q r hqr hr
+    cases hr with
+    | intro a ha =>
+        exact Exists.intro a
+          (And.intro ha.left (QRat.lt_trans hqr ha.right))
+  open_upward := by
+    intro q hq
+    cases hq with
+    | intro a ha =>
+        cases QRat.density ha.right with
+        | intro r hr =>
+            exact Exists.intro r
+              (And.intro hr.left
+                (Exists.intro a (And.intro ha.left hr.right)))
+
+theorem scalePos_lower_iff (c : QRat) (hc : 0 < c) (x : Real) (p : QRat) :
+    (scalePos c hc x).lower p <-> x.lower (p / c) := by
+  constructor
+  · intro h
+    cases h with
+    | intro a ha =>
+        have hpac : p < a * c := by
+          simpa [QRat.mul_comm] using ha.right
+        exact x.downward_closed (p / c) a
+          ((QRat.div_lt_iff (x := p) (y := c) (c := a) hc).mpr hpac) ha.left
+  · intro hp
+    cases x.open_upward (p / c) hp with
+    | intro a ha =>
+        have hpac : p < a * c :=
+          (QRat.div_lt_iff (x := p) (y := c) (c := a) hc).mp ha.left
+        have hpca : p < c * a := by
+          rwa [QRat.mul_comm] at hpac
+        exact Exists.intro a (And.intro ha.right hpca)
+
+theorem qreal_scalePos (c : QRat) (hc : 0 < c) (r : QRat) :
+    scalePos c hc (qreal r) = qreal (c * r) := by
+  apply ext
+  intro p
+  rw [scalePos_lower_iff, qreal_lower_iff, qreal_lower_iff]
+  simpa [QRat.mul_comm] using
+    (QRat.div_lt_iff (x := p) (y := c) (c := r) hc)
+
+theorem rational_scalePos {x : Real} {c : QRat} (hc : 0 < c)
+    (hx : Rational x) : Rational (scalePos c hc x) := by
+  cases hx with
+  | intro r hxr =>
+      exists c * r
+      rw [hxr, qreal_scalePos]
+
+theorem irrational_scalePos {x : Real} {c : QRat} (hc : 0 < c)
+    (hx : Irrational x) : Irrational (scalePos c hc x) := by
+  intro hrat
+  cases hrat with
+  | intro r hxr =>
+      apply hx
+      exists r / c
+      have hc_ne : c ≠ 0 := by
+        intro hzero
+        rw [hzero] at hc
+        exact QRat.lt_irrefl 0 hc
+      apply ext
+      intro p
+      constructor
+      · intro hp
+        have hscale : (scalePos c hc x).lower (c * p) := by
+          rw [scalePos_lower_iff]
+          have hcancel : c * p / c = p := by
+            rw [QRat.mul_comm]
+            exact QRat.mul_div_cancel p hc_ne
+          rwa [hcancel]
+        have hr : (qreal r).lower (c * p) :=
+          (lower_congr hxr (c * p)).mp hscale
+        have hpc : p * c < r := by
+          simpa [QRat.mul_comm] using hr
+        exact (qreal_lower_iff (r / c) p).mpr
+          ((QRat.lt_div_iff (x := p) (y := r) (c := c) hc).mpr hpc)
+      · intro hpr
+        have hpc : p * c < r :=
+          (QRat.lt_div_iff (x := p) (y := r) (c := c) hc).mp hpr
+        have hcp : c * p < r := by
+          simpa [QRat.mul_comm] using hpc
+        have hscale : (scalePos c hc x).lower (c * p) :=
+          (lower_congr hxr (c * p)).mpr hcp
+        have hp : x.lower (c * p / c) :=
+          (scalePos_lower_iff c hc x (c * p)).mp hscale
+        have hcancel : c * p / c = p := by
+          rw [QRat.mul_comm]
+          exact QRat.mul_div_cancel p hc_ne
+        rwa [hcancel] at hp
+
+theorem rational_add {x y : Real}
+    (hx : Rational x) (hy : Rational y) : Rational (x + y) := by
+  cases hx with
+  | intro a hxa =>
+      cases hy with
+      | intro b hyb =>
+          exists a + b
+          rw [hxa, hyb, qreal_add]
+
+theorem rational_neg {x : Real} (hx : Rational x) : Rational (-x) := by
+  cases hx with
+  | intro a hxa =>
+      exists -a
+      rw [hxa, qreal_neg]
+
+theorem rational_sub {x y : Real}
+    (hx : Rational x) (hy : Rational y) : Rational (x - y) := by
+  cases hx with
+  | intro a hxa =>
+      cases hy with
+      | intro b hyb =>
+          exists a - b
+          rw [hxa, hyb, qreal_sub]
+
+theorem irrational_neg {x : Real} (hx : Irrational x) : Irrational (-x) := by
+  intro hrat
+  apply hx
+  have hnn : Rational (-(-x)) := rational_neg hrat
+  rwa [neg_neg] at hnn
+
+noncomputable def scale (c : QRat) (x : Real) : Real := by
+  classical
+  exact
+    if hpos : 0 < c then
+      scalePos c hpos x
+    else if hneg : c < 0 then
+      -(scalePos (-c) (QRat.neg_pos_of_neg hneg) x)
+    else
+      0
+
+theorem irrational_scale_nonzero {x : Real} {c : QRat}
+    (hc : c ≠ 0) (hx : Irrational x) : Irrational (scale c x) := by
+  classical
+  unfold scale
+  by_cases hpos : 0 < c
+  · simp [hpos]
+    exact irrational_scalePos hpos hx
+  · by_cases hneg : c < 0
+    · simp [hpos, hneg]
+      exact irrational_neg (irrational_scalePos (QRat.neg_pos_of_neg hneg) hx)
+    · have hzero : c = 0 := by
+        cases QRat.lt_trichotomy 0 c with
+        | inl hlt =>
+            exact False.elim (hpos hlt)
+        | inr hrest =>
+            cases hrest with
+            | inl heq =>
+                exact heq.symm
+            | inr hlt =>
+                exact False.elim (hneg hlt)
+      exact False.elim (hc hzero)
+
+theorem irrational_add_qreal {x : Real} {q : QRat}
+    (hx : Irrational x) : Irrational (x + qreal q) := by
+  intro hrat
+  cases hrat with
+  | intro r hxr =>
+      apply hx
+      exists r - q
+      apply ext
+      intro p
+      constructor
+      · intro hp
+        have hsum : (x + qreal q).lower (p + q) := by
+          rw [add_qreal_lower_iff, QRat.add_sub_cancel]
+          exact hp
+        have hpqr : (qreal r).lower (p + q) :=
+          (lower_congr hxr (p + q)).mp hsum
+        exact (qreal_lower_iff (r - q) p).mpr
+          (QRat.lt_sub_right_iff_add_lt.mpr hpqr)
+      · intro hpr
+        have hpqr : p + q < r :=
+          QRat.lt_sub_right_iff_add_lt.mp hpr
+        have hsum : (x + qreal q).lower (p + q) :=
+          (lower_congr hxr (p + q)).mpr hpqr
+        have hp : x.lower ((p + q) - q) :=
+          (add_qreal_lower_iff x q (p + q)).mp hsum
+        rwa [QRat.add_sub_cancel] at hp
+
+theorem irrational_qreal_add {x : Real} {q : QRat}
+    (hx : Irrational x) : Irrational (qreal q + x) := by
+  rw [add_comm]
+  exact irrational_add_qreal hx
+
 theorem density {x y : Real} (h : x < y) :
     exists z : Real, x < z ∧ z < y := by
   cases h.right with
