@@ -27,6 +27,30 @@ structure DFAAcceptingPresentation (D : DFA input dstate) where
   acceptingStates : List dstate
   accept_complete : forall q, D.accept q <-> q ∈ acceptingStates
 
+-- Book: Chapter 4, Section 4.5, every finite-state DFA has an explicit
+-- accepting-state list by filtering its finite state enumeration.
+noncomputable def dfaAcceptingPresentation (D : DFA input dstate) :
+    DFAAcceptingPresentation D := by
+  classical
+  exact {
+    acceptingStates := D.statesFinite.elems.filter (fun q => D.accept q),
+    accept_complete := by
+      intro q
+      constructor
+      · intro hq
+        apply List.mem_filter.mpr
+        constructor
+        · exact D.statesFinite.complete q
+        · simpa using hq
+      · intro hq
+        simpa using (List.mem_filter.mp hq).2 }
+
+-- Book: Chapter 4, Section 4.5, the same automatic accepting-state
+-- presentation applies to a DFA complement.
+noncomputable def dfaComplementAcceptingPresentation (D : DFA input dstate) :
+    DFAAcceptingPresentation (DFA.Complement D) :=
+  dfaAcceptingPresentation (DFA.Complement D)
+
 def pdaIntersectDFA_transitionRule
     (D : DFA input dstate)
     (rule : PDA.TransitionRule input stack pstate)
@@ -195,6 +219,16 @@ def pdaIntersectDFA_finitePresentation
   accept_complete :=
     pdaIntersectDFA_accept_complete P D presentation accepting
 
+-- Book: Chapter 4, Section 4.5, the product finite presentation can be built
+-- directly from the finite state list of the DFA; callers no longer need to
+-- supply the accepting-state table by hand.
+noncomputable def pdaIntersectDFA_finitePresentation_auto
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P) :
+    PDA.FinitePresentation (PDAIntersectDFA P D) :=
+  pdaIntersectDFA_finitePresentation P D presentation
+    (dfaAcceptingPresentation D)
+
 theorem pda_intersect_dfa_lift_to_empty
     (P : PDA input stack pstate) (D : DFA input dstate)
     {c d : PDA.Configuration input stack pstate}
@@ -337,6 +371,20 @@ theorem pda_intersect_dfa_context_free_of_empty_summary_complete
   · exact Language.equal_trans hEq
       (fun w => pda_intersect_dfa_accepted_language_exact P D w)
 
+-- Book: Chapter 4, Section 4.5, automatic accepting-state presentation form
+-- of the conditional PDA/DFA intersection CFL theorem.
+theorem pda_intersect_dfa_context_free_of_empty_summary_complete_auto
+    {input stack pstate dstate : Type}
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    (hcomplete :
+      Section04.EmptySummaryPDAComplete (PDAIntersectDFA P D)) :
+    CFL.ContextFreeLanguage
+      (Language.Inter (PDA.AcceptedLanguage P) (DFA.Language D)) := by
+  classical
+  exact pda_intersect_dfa_context_free_of_empty_summary_complete
+    P D presentation (dfaAcceptingPresentation D) hcomplete
+
 -- Book: Chapter 4, Section 4.5, conditional finite-production CFL closure
 -- under subtraction by a DFA language.  The remaining non-conditional work is
 -- to prove the empty-summary completeness hypothesis for the product PDA.
@@ -373,6 +421,86 @@ theorem pda_diff_dfa_context_free_of_empty_summary_complete
       · exact hw.left
       · exact (DFA.complement_accepts D w).mpr hw.right
 
+-- Book: Chapter 4, Section 4.5, automatic accepting-state presentation form
+-- of the conditional DFA-language subtraction theorem.
+theorem pda_diff_dfa_context_free_of_empty_summary_complete_auto
+    {input stack pstate dstate : Type}
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    (hcomplete :
+      Section04.EmptySummaryPDAComplete
+        (PDAIntersectDFA P (DFA.Complement D))) :
+    CFL.ContextFreeLanguage
+      (Language.Diff (PDA.AcceptedLanguage P) (DFA.Language D)) := by
+  classical
+  exact pda_diff_dfa_context_free_of_empty_summary_complete
+    P D presentation (dfaComplementAcceptingPresentation D) hcomplete
+
+-- Book: Chapter 4, Section 4.5, language-equality wrapper for conditional
+-- finite-production CFL closure under intersection with a DFA language.
+theorem finite_presentation_pda_language_inter_dfa_context_free_of_empty_summary_complete
+    {input stack pstate dstate : Type}
+    {L R : Language input}
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    (hP : Language.Equal (PDA.AcceptedLanguage P) L)
+    (hD : Language.Equal (DFA.Language D) R)
+    (hcomplete :
+      Section04.EmptySummaryPDAComplete (PDAIntersectDFA P D)) :
+    CFL.ContextFreeLanguage (Language.Inter L R) := by
+  have hBase :=
+    pda_intersect_dfa_context_free_of_empty_summary_complete_auto
+      P D presentation hcomplete
+  rcases hBase with ⟨nonterminal, G, hfinite, hEq⟩
+  exists nonterminal
+  exists G
+  constructor
+  · exact hfinite
+  · intro w
+    constructor
+    · intro hw
+      have hprod := (hEq w).mp hw
+      exact And.intro ((hP w).mp hprod.left) ((hD w).mp hprod.right)
+    · intro hw
+      apply (hEq w).mpr
+      exact And.intro ((hP w).mpr hw.left) ((hD w).mpr hw.right)
+
+-- Book: Chapter 4, Section 4.5, language-equality wrapper for conditional
+-- finite-production CFL closure under subtracting a DFA language.
+theorem finite_presentation_pda_language_diff_dfa_context_free_of_empty_summary_complete
+    {input stack pstate dstate : Type}
+    {L R : Language input}
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    (hP : Language.Equal (PDA.AcceptedLanguage P) L)
+    (hD : Language.Equal (DFA.Language D) R)
+    (hcomplete :
+      Section04.EmptySummaryPDAComplete
+        (PDAIntersectDFA P (DFA.Complement D))) :
+    CFL.ContextFreeLanguage (Language.Diff L R) := by
+  have hBase :=
+    pda_diff_dfa_context_free_of_empty_summary_complete_auto
+      P D presentation hcomplete
+  rcases hBase with ⟨nonterminal, G, hfinite, hEq⟩
+  exists nonterminal
+  exists G
+  constructor
+  · exact hfinite
+  · intro w
+    constructor
+    · intro hw
+      have hdiff := (hEq w).mp hw
+      constructor
+      · exact (hP w).mp hdiff.left
+      · intro hR
+        exact hdiff.right ((hD w).mpr hR)
+    · intro hw
+      apply (hEq w).mpr
+      constructor
+      · exact (hP w).mpr hw.left
+      · intro hDfa
+        exact hw.right ((hD w).mp hDfa)
+
 -- Book: Chapter 4, Section 4.5, automaton-side closure of PDA-recognizable
 -- languages under intersection with a regular language.
 theorem pda_recognizable_inter_dfa_recognizable
@@ -404,6 +532,75 @@ theorem pda_recognizable_inter_dfa_recognizable
                         exact (pda_intersect_dfa_accepted_language_exact P D w).mpr
                           (And.intro ((hP w).mpr hw.left) ((hD w).mpr hw.right))
 
+-- Book: Chapter 4, Section 4.5, the same product construction preserves
+-- explicitly finite PDA presentations.
+theorem finite_presentation_pda_recognizable_inter_dfa
+    {L R : Language input}
+    (hL : PDA.FinitePresentationRecognizable L)
+    {dstate : Type} (D : DFA input dstate)
+    (hR : Language.Equal (DFA.Language D) R) :
+    PDA.FinitePresentationRecognizable (Language.Inter L R) := by
+  classical
+  rcases hL with ⟨stack, pstate, P, presentation, hP⟩
+  exists stack
+  exists pstate × dstate
+  exists PDAIntersectDFA P D
+  exists pdaIntersectDFA_finitePresentation_auto P D presentation
+  intro w
+  constructor
+  · intro hw
+    have hExact :=
+      (pda_intersect_dfa_accepted_language_exact P D w).mp hw
+    exact And.intro ((hP w).mp hExact.left) ((hR w).mp hExact.right)
+  · intro hw
+    exact (pda_intersect_dfa_accepted_language_exact P D w).mpr
+      (And.intro ((hP w).mpr hw.left) ((hR w).mpr hw.right))
+
+-- Book: Chapter 4, Section 4.5, finite-presentation PDA-recognizable
+-- languages are closed under intersection with DFA-recognizable languages.
+theorem finite_presentation_pda_recognizable_inter_dfa_recognizable
+    {L R : Language input}
+    (hL : PDA.FinitePresentationRecognizable L)
+    (hR : DFA.Recognizable R) :
+    PDA.FinitePresentationRecognizable (Language.Inter L R) := by
+  rcases hR with ⟨dstate, D, hD⟩
+  exact finite_presentation_pda_recognizable_inter_dfa hL D hD
+
+-- Book: Chapter 4, Section 4.5, finite-presentation PDA-recognizable
+-- languages are closed under subtracting a DFA language.
+theorem finite_presentation_pda_recognizable_diff_dfa
+    {L R : Language input}
+    (hL : PDA.FinitePresentationRecognizable L)
+    {dstate : Type} (D : DFA input dstate)
+    (hR : Language.Equal (DFA.Language D) R) :
+    PDA.FinitePresentationRecognizable (Language.Diff L R) := by
+  have hComplement :
+      Language.Equal (DFA.Language (DFA.Complement D)) (Language.Compl R) := by
+    intro w
+    constructor
+    · intro hw hRmem
+      exact (DFA.complement_accepts D w).mp hw ((hR w).mpr hRmem)
+    · intro hw
+      exact (DFA.complement_accepts D w).mpr (by
+        intro hAccept
+        exact hw ((hR w).mp hAccept))
+  have hInter :=
+    finite_presentation_pda_recognizable_inter_dfa
+      hL (DFA.Complement D) hComplement
+  simpa [Language.Diff, Language.Inter, Language.Compl,
+    Foundation.FSet.Diff, Foundation.FSet.Inter, Foundation.FSet.Compl]
+    using hInter
+
+-- Book: Chapter 4, Section 4.5, finite-presentation PDA-recognizable
+-- languages are closed under subtracting DFA-recognizable languages.
+theorem finite_presentation_pda_recognizable_diff_dfa_recognizable
+    {L R : Language input}
+    (hL : PDA.FinitePresentationRecognizable L)
+    (hR : DFA.Recognizable R) :
+    PDA.FinitePresentationRecognizable (Language.Diff L R) := by
+  rcases hR with ⟨dstate, D, hD⟩
+  exact finite_presentation_pda_recognizable_diff_dfa hL D hD
+
 -- Book: Chapter 4, Sections 4.4-4.5, the grammar-to-PDA construction gives
 -- every finite-production CFL a pushdown recognizer.
 theorem finite_production_context_free_pda_recognizable {input : Type}
@@ -419,11 +616,36 @@ theorem finite_production_context_free_pda_recognizable {input : Type}
           exists CFG.ToPDA G
           exact Language.equal_trans (CFG.toPDA_acceptedLanguage_exact G) hG.right
 
+-- Book: Chapter 4, Sections 4.4-4.5, over an explicitly finite input
+-- alphabet, the grammar-to-PDA construction gives every finite-production CFL
+-- a finite-presentation pushdown recognizer.
+theorem finite_production_context_free_finite_presentation_pda_recognizable
+    {input : Type}
+    (inputFinite : Foundation.FiniteType input)
+    {L : Language input}
+    (hL : CFL.FiniteProductionContextFreeLanguage L) :
+    PDA.FinitePresentationRecognizable L := by
+  rcases hL with ⟨nonterminal, G, hG⟩
+  exists Symbol input nonterminal
+  exists CFG.ToPDAState
+  exists CFG.ToPDA G
+  exists CFG.toPDA_finitePresentation G inputFinite hG.left
+  exact Language.equal_trans (CFG.toPDA_acceptedLanguage_exact G) hG.right
+
 theorem context_free_language_pda_recognizable {input : Type}
     {L : Language input}
     (hL : CFL.ContextFreeLanguage L) :
     PDA.Recognizable L :=
   finite_production_context_free_pda_recognizable hL
+
+theorem context_free_language_finite_presentation_pda_recognizable
+    {input : Type}
+    (inputFinite : Foundation.FiniteType input)
+    {L : Language input}
+    (hL : CFL.ContextFreeLanguage L) :
+    PDA.FinitePresentationRecognizable L :=
+  finite_production_context_free_finite_presentation_pda_recognizable
+    inputFinite hL
 
 -- Book: Chapter 4, Section 4.5, concrete finite word lists are regular, hence
 -- DFA-recognizable.
@@ -454,6 +676,25 @@ theorem finite_language_complement_dfa_recognizable {M : Language input}
     (hM : Language.Finite M) :
     DFA.Recognizable (Language.Compl M) :=
   DFA.recognizable_complement (finite_language_dfa_recognizable hM)
+
+-- Book: Chapter 4, Section 4.5, finite-presentation PDA-recognizable
+-- languages are closed under removing finitely many explicitly listed words.
+theorem finite_presentation_pda_recognizable_diff_finite_list
+    {L : Language input}
+    (hL : PDA.FinitePresentationRecognizable L) (ws : List (Word input)) :
+    PDA.FinitePresentationRecognizable
+      (Language.Diff L (fun w : Word input => w ∈ ws)) :=
+  finite_presentation_pda_recognizable_diff_dfa_recognizable hL
+    (finite_list_dfa_recognizable ws)
+
+-- Book: Chapter 4, Section 4.5, finite-presentation PDA-recognizable
+-- languages are closed under removing an abstract finite language.
+theorem finite_presentation_pda_recognizable_diff_finite_language
+    {L M : Language input}
+    (hL : PDA.FinitePresentationRecognizable L) (hM : Language.Finite M) :
+    PDA.FinitePresentationRecognizable (Language.Diff L M) :=
+  finite_presentation_pda_recognizable_diff_dfa_recognizable hL
+    (finite_language_dfa_recognizable hM)
 
 theorem pda_recognizable_diff_dfa_recognizable {L R : Language input}
     (hL : PDA.Recognizable L) (hR : DFA.Recognizable R) :
@@ -488,6 +729,19 @@ theorem context_free_diff_finite_language_pda_recognizable
     PDA.Recognizable (Language.Diff L M) :=
   pda_recognizable_diff_finite_language
     (context_free_language_pda_recognizable hL) hM
+
+-- Book: Chapter 4, Section 4.5, finite-language subtraction from a
+-- book-facing CFL preserves finite-presentation PDA recognizability when the
+-- ambient terminal alphabet is explicitly finite.
+theorem context_free_diff_finite_language_finite_presentation_pda_recognizable
+    {input : Type}
+    (inputFinite : Foundation.FiniteType input)
+    {L M : Language input}
+    (hL : CFL.ContextFreeLanguage L) (hM : Language.Finite M) :
+    PDA.FinitePresentationRecognizable (Language.Diff L M) :=
+  finite_presentation_pda_recognizable_diff_finite_language
+    (context_free_language_finite_presentation_pda_recognizable
+      inputFinite hL) hM
 
 inductive ABC where
   | a

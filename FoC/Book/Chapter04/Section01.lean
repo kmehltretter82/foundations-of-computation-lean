@@ -238,6 +238,292 @@ theorem context_free_languages_closed_under_kleene_star {L : Language terminal}
     ContextFreeLanguage (Language.Star L) :=
   CFL.star_context_free hL
 
+-- Generic soundness principle used by the concrete exact grammar examples
+-- below: if every production is sound for a chosen symbol interpretation, then
+-- every derivation is sound for that interpretation.
+theorem form_language_yields_sound_of_productions
+    {G : CFG terminal nonterminal}
+    {symbolLanguage : Symbol terminal nonterminal -> Language terminal}
+    (hprod : forall A rhs,
+      G.produces A rhs ->
+        forall w, w ∈ CFG.FormLanguage symbolLanguage rhs ->
+          w ∈ symbolLanguage (Symbol.nonterminal A))
+    {x y : SententialForm terminal nonterminal} {w : Word terminal}
+    (h : CFG.Yields G x y)
+    (hw : w ∈ CFG.FormLanguage symbolLanguage y) :
+    w ∈ CFG.FormLanguage symbolLanguage x := by
+  rcases h with ⟨u, v, A, rhs, hA, hx, hy⟩
+  rw [hy] at hw
+  rw [hx]
+  exact CFG.formLanguage_replace_sound symbolLanguage (hprod A rhs hA) hw
+
+theorem form_language_derives_sound_of_productions
+    {G : CFG terminal nonterminal}
+    {symbolLanguage : Symbol terminal nonterminal -> Language terminal}
+    (hprod : forall A rhs,
+      G.produces A rhs ->
+        forall w, w ∈ CFG.FormLanguage symbolLanguage rhs ->
+          w ∈ symbolLanguage (Symbol.nonterminal A))
+    {x y : SententialForm terminal nonterminal} {w : Word terminal}
+    (h : CFG.Derives G x y)
+    (hw : w ∈ CFG.FormLanguage symbolLanguage y) :
+    w ∈ CFG.FormLanguage symbolLanguage x := by
+  induction h with
+  | refl _ =>
+      exact hw
+  | step hstep _ ih =>
+      exact form_language_yields_sound_of_productions hprod hstep (ih hw)
+
+inductive Paren where
+  | left : Paren
+  | right : Paren
+deriving DecidableEq
+
+inductive BalancedParensNT where
+  | S : BalancedParensNT
+deriving DecidableEq
+
+def Paren.finite : FiniteType Paren where
+  elems := [Paren.left, Paren.right]
+  complete := by
+    intro x
+    cases x <;> simp
+
+def BalancedParensNT.finite : FiniteType BalancedParensNT where
+  elems := [BalancedParensNT.S]
+  complete := by
+    intro x
+    cases x
+    simp
+
+inductive BalancedParensProduces :
+    BalancedParensNT -> SententialForm Paren BalancedParensNT -> Prop where
+  | empty :
+      BalancedParensProduces BalancedParensNT.S []
+  | pair :
+      BalancedParensProduces BalancedParensNT.S
+        [Symbol.terminal Paren.left,
+          Symbol.nonterminal BalancedParensNT.S,
+          Symbol.terminal Paren.right,
+          Symbol.nonterminal BalancedParensNT.S]
+
+def BalancedParensGrammar : CFG Paren BalancedParensNT where
+  start := BalancedParensNT.S
+  produces := BalancedParensProduces
+  nonterminalsFinite := BalancedParensNT.finite
+
+inductive BalancedParens : Word Paren -> Prop where
+  | empty : BalancedParens []
+  | pair {inside rest : Word Paren} :
+      BalancedParens inside ->
+        BalancedParens rest ->
+          BalancedParens
+            (Paren.left :: Word.Concat inside (Paren.right :: rest))
+
+def BalancedParensSymbolLanguage :
+    Symbol Paren BalancedParensNT -> Language Paren
+  | Symbol.terminal a => Language.Singleton (Word.Symbol a)
+  | Symbol.nonterminal BalancedParensNT.S => BalancedParens
+
+def balancedParensEmptyProduction :
+    CFG.Production Paren BalancedParensNT where
+  lhs := BalancedParensNT.S
+  rhs := []
+
+def balancedParensPairProduction :
+    CFG.Production Paren BalancedParensNT where
+  lhs := BalancedParensNT.S
+  rhs :=
+    [Symbol.terminal Paren.left,
+      Symbol.nonterminal BalancedParensNT.S,
+      Symbol.terminal Paren.right,
+      Symbol.nonterminal BalancedParensNT.S]
+
+-- Book: Chapter 4, Section 4.1, the balanced-parentheses grammar is a finite
+-- grammar presentation.
+theorem balanced_parens_has_finite_productions :
+    CFG.HasFiniteProductions BalancedParensGrammar := by
+  exists [balancedParensEmptyProduction, balancedParensPairProduction]
+  intro A rhs
+  constructor
+  · intro h
+    cases h with
+    | empty =>
+        exact ⟨balancedParensEmptyProduction, by simp [balancedParensEmptyProduction],
+          rfl, rfl⟩
+    | pair =>
+        exact ⟨balancedParensPairProduction,
+          by simp [balancedParensPairProduction], rfl, rfl⟩
+  · intro h
+    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
+    simp [balancedParensEmptyProduction, balancedParensPairProduction] at hmem
+    rcases hmem with hrule | hrule
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact BalancedParensProduces.empty
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact BalancedParensProduces.pair
+
+theorem balanced_parens_pair_form_language
+    {w : Word Paren}
+    (hw : w ∈ CFG.FormLanguage BalancedParensSymbolLanguage
+      [Symbol.terminal Paren.left,
+        Symbol.nonterminal BalancedParensNT.S,
+        Symbol.terminal Paren.right,
+        Symbol.nonterminal BalancedParensNT.S]) :
+    BalancedParens w := by
+  rcases hw with ⟨leftWord, tail1, hleft, htail1, hwEq⟩
+  cases hleft
+  rcases htail1 with ⟨inside, tail2, hinside, htail2, htail1Eq⟩
+  rcases htail2 with ⟨rightWord, tail3, hright, htail3, htail2Eq⟩
+  cases hright
+  rcases htail3 with ⟨rest, tail4, hrest, htail4, htail3Eq⟩
+  cases htail4
+  rw [hwEq, htail1Eq, htail2Eq, htail3Eq]
+  simpa [Word.Concat, Word.Symbol, Word.Empty, List.append_assoc] using
+    BalancedParens.pair hinside hrest
+
+theorem balanced_parens_production_sound
+    (A : BalancedParensNT) (rhs : SententialForm Paren BalancedParensNT)
+    (hprod : BalancedParensGrammar.produces A rhs) :
+    forall w, w ∈ CFG.FormLanguage BalancedParensSymbolLanguage rhs ->
+      w ∈ BalancedParensSymbolLanguage (Symbol.nonterminal A) := by
+  intro w hw
+  cases hprod with
+  | empty =>
+      cases hw
+      exact BalancedParens.empty
+  | pair =>
+      exact balanced_parens_pair_form_language hw
+
+theorem balanced_parens_start_form_language
+    {w : Word Paren}
+    (h : w ∈ CFG.FormLanguage BalancedParensSymbolLanguage
+      [Symbol.nonterminal BalancedParensNT.S]) :
+    BalancedParens w := by
+  rcases h with ⟨balanced, tail, hbalanced, htail, hwEq⟩
+  cases htail
+  rw [hwEq]
+  simpa [Word.Concat, Word.Empty] using hbalanced
+
+-- Book: Chapter 4, Section 4.1, every word generated by the
+-- balanced-parentheses grammar is structurally balanced.
+theorem balanced_parens_generated_only_balanced {w : Word Paren}
+    (h : w ∈ CFG.GeneratedLanguage BalancedParensGrammar) :
+    BalancedParens w := by
+  have hterminal : w ∈ CFG.FormLanguage BalancedParensSymbolLanguage
+      (SententialForm.terminalWord
+        (nt := BalancedParensNT) w) :=
+    CFG.terminalWord_mem_formLanguage BalancedParensSymbolLanguage
+      (by intro a; rfl) w
+  exact balanced_parens_start_form_language
+    (form_language_derives_sound_of_productions
+      balanced_parens_production_sound h hterminal)
+
+-- Book: Chapter 4, Section 4.1, the empty balanced word is generated.
+theorem balanced_parens_empty_generated :
+    ([] : Word Paren) ∈ CFG.GeneratedLanguage BalancedParensGrammar := by
+  apply CFG.yields_derives
+  exists []
+  exists []
+  exists BalancedParensNT.S
+  exists ([] : SententialForm Paren BalancedParensNT)
+  constructor
+  · exact BalancedParensProduces.empty
+  constructor <;> rfl
+
+-- Book: Chapter 4, Section 4.1, balanced words are closed under the grammar's
+-- wrapping/concatenation production.
+theorem balanced_parens_pair_generated {inside rest : Word Paren}
+    (hinside : inside ∈ CFG.GeneratedLanguage BalancedParensGrammar)
+    (hrest : rest ∈ CFG.GeneratedLanguage BalancedParensGrammar) :
+    Paren.left :: Word.Concat inside (Paren.right :: rest) ∈
+      CFG.GeneratedLanguage BalancedParensGrammar := by
+  have hStart : CFG.Yields BalancedParensGrammar
+      [Symbol.nonterminal BalancedParensNT.S]
+      [Symbol.terminal Paren.left,
+        Symbol.nonterminal BalancedParensNT.S,
+        Symbol.terminal Paren.right,
+        Symbol.nonterminal BalancedParensNT.S] := by
+    exists []
+    exists []
+    exists BalancedParensNT.S
+    exists [Symbol.terminal Paren.left,
+      Symbol.nonterminal BalancedParensNT.S,
+      Symbol.terminal Paren.right,
+      Symbol.nonterminal BalancedParensNT.S]
+    constructor
+    · exact BalancedParensProduces.pair
+    constructor <;> rfl
+  have hform :
+      Paren.left :: Word.Concat inside (Paren.right :: rest) ∈
+        CFG.FormLanguage (CFG.DerivationSymbolLanguage BalancedParensGrammar)
+          [Symbol.terminal Paren.left,
+            Symbol.nonterminal BalancedParensNT.S,
+            Symbol.terminal Paren.right,
+            Symbol.nonterminal BalancedParensNT.S] := by
+    exists [Paren.left]
+    exists Word.Concat inside (Paren.right :: rest)
+    constructor
+    · rfl
+    constructor
+    · exists inside
+      exists Paren.right :: rest
+      constructor
+      · exact hinside
+      constructor
+      · exists [Paren.right]
+        exists rest
+        constructor
+        · rfl
+        constructor
+        · exists rest
+          exists ([] : Word Paren)
+          constructor
+          · exact hrest
+          constructor
+          · rfl
+          · exact (Word.concat_empty_right rest).symm
+        · rfl
+      · rfl
+    · rfl
+  have hAll := CFG.Derives.step hStart (CFG.formLanguage_derives hform)
+  change CFG.Derives BalancedParensGrammar
+    [Symbol.nonterminal BalancedParensNT.S]
+    (SententialForm.terminalWord
+      (Paren.left :: Word.Concat inside (Paren.right :: rest)))
+  simpa [SententialForm.terminalWord, Word.Concat, List.append_assoc] using hAll
+
+theorem balanced_parens_words_generated {w : Word Paren}
+    (h : BalancedParens w) :
+    w ∈ CFG.GeneratedLanguage BalancedParensGrammar := by
+  induction h with
+  | empty =>
+      exact balanced_parens_empty_generated
+  | pair hinside hrest ihinside ihrest =>
+      exact balanced_parens_pair_generated ihinside ihrest
+
+-- Book: Chapter 4, Section 4.1, exact language of the
+-- balanced-parentheses grammar.
+theorem balanced_parens_generated_language_exact (w : Word Paren) :
+    w ∈ CFG.GeneratedLanguage BalancedParensGrammar <-> BalancedParens w := by
+  constructor
+  · exact balanced_parens_generated_only_balanced
+  · exact balanced_parens_words_generated
+
+-- Book: Chapter 4, Section 4.1, balanced parentheses form a book-facing
+-- finite-production context-free language.
+theorem balanced_parens_context_free :
+    ContextFreeLanguage BalancedParens := by
+  exists BalancedParensNT
+  exists BalancedParensGrammar
+  constructor
+  · exact balanced_parens_has_finite_productions
+  · exact balanced_parens_generated_language_exact
+
 inductive AB where
   | a : AB
   | b : AB
@@ -546,6 +832,379 @@ theorem anbn_generated_language_exact (w : Word AB) :
     | intro n hn =>
         rw [hn]
         exact anbn_words_generated n
+
+inductive PalindromeNT where
+  | S : PalindromeNT
+deriving DecidableEq
+
+def PalindromeNT.finite : FiniteType PalindromeNT where
+  elems := [PalindromeNT.S]
+  complete := by
+    intro x
+    cases x
+    simp
+
+inductive PalindromeProduces :
+    PalindromeNT -> SententialForm AB PalindromeNT -> Prop where
+  | empty :
+      PalindromeProduces PalindromeNT.S []
+  | singleA :
+      PalindromeProduces PalindromeNT.S [Symbol.terminal AB.a]
+  | singleB :
+      PalindromeProduces PalindromeNT.S [Symbol.terminal AB.b]
+  | wrapA :
+      PalindromeProduces PalindromeNT.S
+        [Symbol.terminal AB.a,
+          Symbol.nonterminal PalindromeNT.S,
+          Symbol.terminal AB.a]
+  | wrapB :
+      PalindromeProduces PalindromeNT.S
+        [Symbol.terminal AB.b,
+          Symbol.nonterminal PalindromeNT.S,
+          Symbol.terminal AB.b]
+
+def PalindromeGrammar : CFG AB PalindromeNT where
+  start := PalindromeNT.S
+  produces := PalindromeProduces
+  nonterminalsFinite := PalindromeNT.finite
+
+inductive PalindromeAB : Word AB -> Prop where
+  | empty : PalindromeAB []
+  | singleA : PalindromeAB [AB.a]
+  | singleB : PalindromeAB [AB.b]
+  | wrapA {w : Word AB} :
+      PalindromeAB w -> PalindromeAB (AB.a :: Word.Concat w [AB.a])
+  | wrapB {w : Word AB} :
+      PalindromeAB w -> PalindromeAB (AB.b :: Word.Concat w [AB.b])
+
+def PalindromeSymbolLanguage : Symbol AB PalindromeNT -> Language AB
+  | Symbol.terminal sym => Language.Singleton (Word.Symbol sym)
+  | Symbol.nonterminal PalindromeNT.S => PalindromeAB
+
+def palindromeEmptyProduction : CFG.Production AB PalindromeNT where
+  lhs := PalindromeNT.S
+  rhs := []
+
+def palindromeSingleAProduction : CFG.Production AB PalindromeNT where
+  lhs := PalindromeNT.S
+  rhs := [Symbol.terminal AB.a]
+
+def palindromeSingleBProduction : CFG.Production AB PalindromeNT where
+  lhs := PalindromeNT.S
+  rhs := [Symbol.terminal AB.b]
+
+def palindromeWrapAProduction : CFG.Production AB PalindromeNT where
+  lhs := PalindromeNT.S
+  rhs :=
+    [Symbol.terminal AB.a,
+      Symbol.nonterminal PalindromeNT.S,
+      Symbol.terminal AB.a]
+
+def palindromeWrapBProduction : CFG.Production AB PalindromeNT where
+  lhs := PalindromeNT.S
+  rhs :=
+    [Symbol.terminal AB.b,
+      Symbol.nonterminal PalindromeNT.S,
+      Symbol.terminal AB.b]
+
+-- Book: Chapter 4, Section 4.1, the palindrome grammar is a finite grammar
+-- presentation.
+theorem palindrome_has_finite_productions :
+    CFG.HasFiniteProductions PalindromeGrammar := by
+  exists [palindromeEmptyProduction, palindromeSingleAProduction,
+    palindromeSingleBProduction, palindromeWrapAProduction,
+    palindromeWrapBProduction]
+  intro A rhs
+  constructor
+  · intro h
+    cases h with
+    | empty =>
+        exact ⟨palindromeEmptyProduction, by simp [palindromeEmptyProduction],
+          rfl, rfl⟩
+    | singleA =>
+        exact ⟨palindromeSingleAProduction,
+          by simp [palindromeSingleAProduction], rfl, rfl⟩
+    | singleB =>
+        exact ⟨palindromeSingleBProduction,
+          by simp [palindromeSingleBProduction], rfl, rfl⟩
+    | wrapA =>
+        exact ⟨palindromeWrapAProduction,
+          by simp [palindromeWrapAProduction], rfl, rfl⟩
+    | wrapB =>
+        exact ⟨palindromeWrapBProduction,
+          by simp [palindromeWrapBProduction], rfl, rfl⟩
+  · intro h
+    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
+    simp [palindromeEmptyProduction, palindromeSingleAProduction,
+      palindromeSingleBProduction, palindromeWrapAProduction,
+      palindromeWrapBProduction] at hmem
+    rcases hmem with hrule | hrule | hrule | hrule | hrule
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact PalindromeProduces.empty
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact PalindromeProduces.singleA
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact PalindromeProduces.singleB
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact PalindromeProduces.wrapA
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact PalindromeProduces.wrapB
+
+theorem palindrome_single_a_form_language {w : Word AB}
+    (hw : w ∈ CFG.FormLanguage PalindromeSymbolLanguage
+      [Symbol.terminal AB.a]) :
+    PalindromeAB w := by
+  rcases hw with ⟨first, tail, hfirst, htail, hwEq⟩
+  cases hfirst
+  cases htail
+  rw [hwEq]
+  simpa [Word.Concat, Word.Symbol, Word.Empty] using PalindromeAB.singleA
+
+theorem palindrome_single_b_form_language {w : Word AB}
+    (hw : w ∈ CFG.FormLanguage PalindromeSymbolLanguage
+      [Symbol.terminal AB.b]) :
+    PalindromeAB w := by
+  rcases hw with ⟨first, tail, hfirst, htail, hwEq⟩
+  cases hfirst
+  cases htail
+  rw [hwEq]
+  simpa [Word.Concat, Word.Symbol, Word.Empty] using PalindromeAB.singleB
+
+theorem palindrome_wrap_a_form_language {w : Word AB}
+    (hw : w ∈ CFG.FormLanguage PalindromeSymbolLanguage
+      [Symbol.terminal AB.a,
+        Symbol.nonterminal PalindromeNT.S,
+        Symbol.terminal AB.a]) :
+    PalindromeAB w := by
+  rcases hw with ⟨leftWord, tail1, hleft, htail1, hwEq⟩
+  cases hleft
+  rcases htail1 with ⟨middle, tail2, hmiddle, htail2, htail1Eq⟩
+  rcases htail2 with ⟨rightWord, tail3, hright, htail3, htail2Eq⟩
+  cases hright
+  cases htail3
+  rw [hwEq, htail1Eq, htail2Eq]
+  simpa [Word.Concat, Word.Symbol, Word.Empty, List.append_assoc] using
+    PalindromeAB.wrapA hmiddle
+
+theorem palindrome_wrap_b_form_language {w : Word AB}
+    (hw : w ∈ CFG.FormLanguage PalindromeSymbolLanguage
+      [Symbol.terminal AB.b,
+        Symbol.nonterminal PalindromeNT.S,
+        Symbol.terminal AB.b]) :
+    PalindromeAB w := by
+  rcases hw with ⟨leftWord, tail1, hleft, htail1, hwEq⟩
+  cases hleft
+  rcases htail1 with ⟨middle, tail2, hmiddle, htail2, htail1Eq⟩
+  rcases htail2 with ⟨rightWord, tail3, hright, htail3, htail2Eq⟩
+  cases hright
+  cases htail3
+  rw [hwEq, htail1Eq, htail2Eq]
+  simpa [Word.Concat, Word.Symbol, Word.Empty, List.append_assoc] using
+    PalindromeAB.wrapB hmiddle
+
+theorem palindrome_production_sound
+    (A : PalindromeNT) (rhs : SententialForm AB PalindromeNT)
+    (hprod : PalindromeGrammar.produces A rhs) :
+    forall w, w ∈ CFG.FormLanguage PalindromeSymbolLanguage rhs ->
+      w ∈ PalindromeSymbolLanguage (Symbol.nonterminal A) := by
+  intro w hw
+  cases hprod with
+  | empty =>
+      cases hw
+      exact PalindromeAB.empty
+  | singleA =>
+      exact palindrome_single_a_form_language hw
+  | singleB =>
+      exact palindrome_single_b_form_language hw
+  | wrapA =>
+      exact palindrome_wrap_a_form_language hw
+  | wrapB =>
+      exact palindrome_wrap_b_form_language hw
+
+theorem palindrome_start_form_language {w : Word AB}
+    (h : w ∈ CFG.FormLanguage PalindromeSymbolLanguage
+      [Symbol.nonterminal PalindromeNT.S]) :
+    PalindromeAB w := by
+  rcases h with ⟨pal, tail, hpal, htail, hwEq⟩
+  cases htail
+  rw [hwEq]
+  simpa [Word.Concat, Word.Empty] using hpal
+
+-- Book: Chapter 4, Section 4.1, every word generated by the palindrome
+-- grammar is a structural palindrome.
+theorem palindrome_generated_only_palindrome {w : Word AB}
+    (h : w ∈ CFG.GeneratedLanguage PalindromeGrammar) :
+    PalindromeAB w := by
+  have hterminal : w ∈ CFG.FormLanguage PalindromeSymbolLanguage
+      (SententialForm.terminalWord (nt := PalindromeNT) w) :=
+    CFG.terminalWord_mem_formLanguage PalindromeSymbolLanguage
+      (by intro sym; rfl) w
+  exact palindrome_start_form_language
+    (form_language_derives_sound_of_productions
+      palindrome_production_sound h hterminal)
+
+theorem palindrome_empty_generated :
+    ([] : Word AB) ∈ CFG.GeneratedLanguage PalindromeGrammar := by
+  apply CFG.yields_derives
+  exists []
+  exists []
+  exists PalindromeNT.S
+  exists ([] : SententialForm AB PalindromeNT)
+  constructor
+  · exact PalindromeProduces.empty
+  constructor <;> rfl
+
+theorem palindrome_single_a_generated :
+    [AB.a] ∈ CFG.GeneratedLanguage PalindromeGrammar := by
+  apply CFG.yields_derives
+  exists []
+  exists []
+  exists PalindromeNT.S
+  exists [Symbol.terminal AB.a]
+  constructor
+  · exact PalindromeProduces.singleA
+  constructor <;> rfl
+
+theorem palindrome_single_b_generated :
+    [AB.b] ∈ CFG.GeneratedLanguage PalindromeGrammar := by
+  apply CFG.yields_derives
+  exists []
+  exists []
+  exists PalindromeNT.S
+  exists [Symbol.terminal AB.b]
+  constructor
+  · exact PalindromeProduces.singleB
+  constructor <;> rfl
+
+theorem palindrome_wrap_a_generated {w : Word AB}
+    (h : w ∈ CFG.GeneratedLanguage PalindromeGrammar) :
+    AB.a :: Word.Concat w [AB.a] ∈
+      CFG.GeneratedLanguage PalindromeGrammar := by
+  have hStart : CFG.Yields PalindromeGrammar
+      [Symbol.nonterminal PalindromeNT.S]
+      [Symbol.terminal AB.a,
+        Symbol.nonterminal PalindromeNT.S,
+        Symbol.terminal AB.a] := by
+    exists []
+    exists []
+    exists PalindromeNT.S
+    exists [Symbol.terminal AB.a,
+      Symbol.nonterminal PalindromeNT.S,
+      Symbol.terminal AB.a]
+    constructor
+    · exact PalindromeProduces.wrapA
+    constructor <;> rfl
+  have hform :
+      AB.a :: Word.Concat w [AB.a] ∈
+        CFG.FormLanguage (CFG.DerivationSymbolLanguage PalindromeGrammar)
+          [Symbol.terminal AB.a,
+            Symbol.nonterminal PalindromeNT.S,
+            Symbol.terminal AB.a] := by
+    exists [AB.a]
+    exists Word.Concat w [AB.a]
+    constructor
+    · rfl
+    constructor
+    · exists w
+      exists [AB.a]
+      constructor
+      · exact h
+      constructor
+      · exact CFG.terminalWord_mem_formLanguage
+          (CFG.DerivationSymbolLanguage PalindromeGrammar)
+          (by intro sym; rfl) [AB.a]
+      · rfl
+    · rfl
+  have hAll := CFG.Derives.step hStart (CFG.formLanguage_derives hform)
+  change CFG.Derives PalindromeGrammar [Symbol.nonterminal PalindromeNT.S]
+    (SententialForm.terminalWord (AB.a :: Word.Concat w [AB.a]))
+  simpa [SententialForm.terminalWord, Word.Concat, List.append_assoc] using hAll
+
+theorem palindrome_wrap_b_generated {w : Word AB}
+    (h : w ∈ CFG.GeneratedLanguage PalindromeGrammar) :
+    AB.b :: Word.Concat w [AB.b] ∈
+      CFG.GeneratedLanguage PalindromeGrammar := by
+  have hStart : CFG.Yields PalindromeGrammar
+      [Symbol.nonterminal PalindromeNT.S]
+      [Symbol.terminal AB.b,
+        Symbol.nonterminal PalindromeNT.S,
+        Symbol.terminal AB.b] := by
+    exists []
+    exists []
+    exists PalindromeNT.S
+    exists [Symbol.terminal AB.b,
+      Symbol.nonterminal PalindromeNT.S,
+      Symbol.terminal AB.b]
+    constructor
+    · exact PalindromeProduces.wrapB
+    constructor <;> rfl
+  have hform :
+      AB.b :: Word.Concat w [AB.b] ∈
+        CFG.FormLanguage (CFG.DerivationSymbolLanguage PalindromeGrammar)
+          [Symbol.terminal AB.b,
+            Symbol.nonterminal PalindromeNT.S,
+            Symbol.terminal AB.b] := by
+    exists [AB.b]
+    exists Word.Concat w [AB.b]
+    constructor
+    · rfl
+    constructor
+    · exists w
+      exists [AB.b]
+      constructor
+      · exact h
+      constructor
+      · exact CFG.terminalWord_mem_formLanguage
+          (CFG.DerivationSymbolLanguage PalindromeGrammar)
+          (by intro sym; rfl) [AB.b]
+      · rfl
+    · rfl
+  have hAll := CFG.Derives.step hStart (CFG.formLanguage_derives hform)
+  change CFG.Derives PalindromeGrammar [Symbol.nonterminal PalindromeNT.S]
+    (SententialForm.terminalWord (AB.b :: Word.Concat w [AB.b]))
+  simpa [SententialForm.terminalWord, Word.Concat, List.append_assoc] using hAll
+
+theorem palindrome_words_generated {w : Word AB}
+    (h : PalindromeAB w) :
+    w ∈ CFG.GeneratedLanguage PalindromeGrammar := by
+  induction h with
+  | empty =>
+      exact palindrome_empty_generated
+  | singleA =>
+      exact palindrome_single_a_generated
+  | singleB =>
+      exact palindrome_single_b_generated
+  | wrapA hpal ih =>
+      exact palindrome_wrap_a_generated ih
+  | wrapB hpal ih =>
+      exact palindrome_wrap_b_generated ih
+
+-- Book: Chapter 4, Section 4.1, exact language of the palindrome grammar.
+theorem palindrome_generated_language_exact (w : Word AB) :
+    w ∈ CFG.GeneratedLanguage PalindromeGrammar <-> PalindromeAB w := by
+  constructor
+  · exact palindrome_generated_only_palindrome
+  · exact palindrome_words_generated
+
+-- Book: Chapter 4, Section 4.1, palindromes over the two-letter alphabet form
+-- a book-facing finite-production context-free language.
+theorem palindrome_context_free :
+    ContextFreeLanguage PalindromeAB := by
+  exists PalindromeNT
+  exists PalindromeGrammar
+  constructor
+  · exact palindrome_has_finite_productions
+  · exact palindrome_generated_language_exact
 
 end Section01
 end Chapter04

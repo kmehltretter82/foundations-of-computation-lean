@@ -215,6 +215,25 @@ theorem cfg_to_pda_language_exact
       (CFG.GeneratedLanguage G) :=
   CFG.toPDA_acceptedLanguage_exact G
 
+-- Book: Chapter 4, Section 4.4, over an explicitly finite terminal alphabet,
+-- a finite-production CFG gives a finite PDA presentation for the standard
+-- grammar-to-PDA construction.
+noncomputable def cfg_to_pda_finite_presentation
+    (G : CFG terminal nonterminal)
+    (terminalFinite : Foundation.FiniteType terminal)
+    (hG : CFG.HasFiniteProductions G) :
+    PDA.FinitePresentation (CFGToPDA G) :=
+  CFG.toPDA_finitePresentation G terminalFinite hG
+
+-- Book: Chapter 4, Section 4.4, proposition-valued finite-presentation
+-- wrapper for the standard CFG-to-PDA construction.
+theorem cfg_to_pda_has_finite_presentation
+    (G : CFG terminal nonterminal)
+    (terminalFinite : Foundation.FiniteType terminal)
+    (hG : CFG.HasFiniteProductions G) :
+    FinitePresentationPDA (CFGToPDA G) :=
+  CFG.toPDA_hasFinitePresentation G terminalFinite hG
+
 -- Book: Chapter 4, Section 4.4, every grammar derivation is accepted by the
 -- constructed PDA.
 theorem cfg_to_pda_accepts_of_generates

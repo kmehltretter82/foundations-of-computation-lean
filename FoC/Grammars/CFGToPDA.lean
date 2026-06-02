@@ -53,6 +53,165 @@ def ToPDA (G : CFG terminal nonterminal) :
   accept := fun q => q = ToPDAState.run
   statesFinite := ToPDAState.finite
 
+def toPDAStackFinite
+    (terminalFinite : FiniteType terminal)
+    (nonterminalFinite : FiniteType nonterminal) :
+    FiniteType (Symbol terminal nonterminal) where
+  elems := terminalFinite.elems.map Symbol.terminal ++
+    nonterminalFinite.elems.map Symbol.nonterminal
+  complete := by
+    intro s
+    cases s with
+    | terminal a =>
+        apply List.mem_append_left
+        exact List.mem_map.mpr ⟨a, terminalFinite.complete a, rfl⟩
+    | nonterminal A =>
+        apply List.mem_append_right
+        exact List.mem_map.mpr ⟨A, nonterminalFinite.complete A, rfl⟩
+
+def toPDAStartTransitionRule (G : CFG terminal nonterminal) :
+    PDA.TransitionRule terminal (Symbol terminal nonterminal) ToPDAState where
+  source := ToPDAState.start
+  input? := none
+  pop := []
+  target := ToPDAState.run
+  push := [Symbol.nonterminal G.start]
+
+def toPDAExpandTransitionRule
+    (rule : Production terminal nonterminal) :
+    PDA.TransitionRule terminal (Symbol terminal nonterminal) ToPDAState where
+  source := ToPDAState.run
+  input? := none
+  pop := [Symbol.nonterminal rule.lhs]
+  target := ToPDAState.run
+  push := rule.rhs
+
+def toPDAMatchTransitionRule (a : terminal) :
+    PDA.TransitionRule terminal (Symbol terminal nonterminal) ToPDAState where
+  source := ToPDAState.run
+  input? := some a
+  pop := [Symbol.terminal a]
+  target := ToPDAState.run
+  push := []
+
+def toPDATransitionRules
+    (G : CFG terminal nonterminal)
+    (terminalFinite : FiniteType terminal)
+    (rules : List (Production terminal nonterminal)) :
+    List (PDA.TransitionRule terminal (Symbol terminal nonterminal)
+      ToPDAState) :=
+  [toPDAStartTransitionRule G] ++
+    rules.map toPDAExpandTransitionRule ++
+      terminalFinite.elems.map toPDAMatchTransitionRule
+
+theorem toPDA_transition_complete
+    (G : CFG terminal nonterminal)
+    (terminalFinite : FiniteType terminal)
+    (rules : List (Production terminal nonterminal))
+    (hrules : forall A rhs,
+      G.produces A rhs <->
+        exists rule, rule ∈ rules ∧ rule.lhs = A ∧ rule.rhs = rhs) :
+    forall q a? pop r push,
+      (ToPDA G).transition q a? pop r push <->
+        exists rule,
+          rule ∈ toPDATransitionRules G terminalFinite rules ∧
+            rule.Applies q a? pop r push := by
+  intro q a? pop r push
+  constructor
+  · intro h
+    cases h with
+    | start =>
+        exists toPDAStartTransitionRule G
+        constructor
+        · simp [toPDATransitionRules]
+        · simp [PDA.TransitionRule.Applies, toPDAStartTransitionRule]
+    | expand hprod =>
+        rcases (hrules _ _).mp hprod with ⟨rule, hrule, hlhs, hrhs⟩
+        exists toPDAExpandTransitionRule rule
+        constructor
+        · unfold toPDATransitionRules
+          apply List.mem_append.mpr
+          left
+          apply List.mem_append.mpr
+          right
+          exact List.mem_map.mpr ⟨rule, hrule, rfl⟩
+        · simp [PDA.TransitionRule.Applies, toPDAExpandTransitionRule,
+            hlhs, hrhs]
+    | matchTerminal a =>
+        exists toPDAMatchTransitionRule a
+        constructor
+        · unfold toPDATransitionRules
+          apply List.mem_append.mpr
+          right
+          exact List.mem_map.mpr ⟨a, terminalFinite.complete a, rfl⟩
+        · simp [PDA.TransitionRule.Applies, toPDAMatchTransitionRule]
+  · intro h
+    rcases h with ⟨rule, hmem, happlies⟩
+    unfold toPDATransitionRules at hmem
+    simp only [List.mem_append, List.mem_singleton, List.mem_map] at hmem
+    rcases happlies with ⟨hsource, hinput, hpop, htarget, hpush⟩
+    rcases hmem with hleft | hmatch
+    · rcases hleft with hstart | hexpand
+      · subst rule
+        simp [toPDAStartTransitionRule] at hsource hinput hpop htarget hpush
+        subst q
+        subst a?
+        subst pop
+        subst r
+        subst push
+        exact ToPDATransition.start
+      · rcases hexpand with ⟨base, hbase, hruleEq⟩
+        subst rule
+        simp [toPDAExpandTransitionRule] at hsource hinput hpop htarget hpush
+        subst q
+        subst a?
+        subst pop
+        subst r
+        subst push
+        exact ToPDATransition.expand ((hrules base.lhs base.rhs).mpr
+          ⟨base, hbase, rfl, rfl⟩)
+    · rcases hmatch with ⟨a, _ha, hruleEq⟩
+      subst rule
+      simp [toPDAMatchTransitionRule] at hsource hinput hpop htarget hpush
+      subst q
+      subst a?
+      subst pop
+      subst r
+      subst push
+      exact ToPDATransition.matchTerminal a
+
+theorem toPDA_accept_complete (G : CFG terminal nonterminal) :
+    forall q, (ToPDA G).accept q <-> q ∈ [ToPDAState.run] := by
+  intro q
+  constructor
+  · intro h
+    simpa [ToPDA] using h
+  · intro h
+    simpa [ToPDA] using h
+
+noncomputable def toPDA_finitePresentation
+    (G : CFG terminal nonterminal)
+    (terminalFinite : FiniteType terminal)
+    (hG : HasFiniteProductions G) :
+    PDA.FinitePresentation (ToPDA G) := by
+  classical
+  let rules := Classical.choose hG
+  have hrules := Classical.choose_spec hG
+  exact {
+    stackFinite := toPDAStackFinite terminalFinite G.nonterminalsFinite,
+    transitionRules := toPDATransitionRules G terminalFinite rules,
+    transition_complete :=
+      toPDA_transition_complete G terminalFinite rules hrules,
+    acceptingStates := [ToPDAState.run],
+    accept_complete := toPDA_accept_complete G }
+
+theorem toPDA_hasFinitePresentation
+    (G : CFG terminal nonterminal)
+    (terminalFinite : FiniteType terminal)
+    (hG : HasFiniteProductions G) :
+    PDA.HasFinitePresentation (ToPDA G) :=
+  Nonempty.intro (toPDA_finitePresentation G terminalFinite hG)
+
 theorem toPDA_start_step (G : CFG terminal nonterminal)
     (w : Word terminal) :
     PDA.Step (ToPDA G)
