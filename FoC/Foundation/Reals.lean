@@ -685,6 +685,26 @@ theorem irrational_qreal_add {x : Real} {q : QRat}
   rw [add_comm]
   exact irrational_add_qreal hx
 
+def qrealSquareCharacterization (x : Real) (c : Nat) : Prop :=
+  forall q : QRat, x = qreal q -> q * q = QRat.ofNat c
+
+theorem irrational_of_qreal_square_characterization
+    {x : Real} {c : Nat}
+    (hno : forall q : QRat, q * q ≠ QRat.ofNat c)
+    (hsquare : qrealSquareCharacterization x c) : Irrational x := by
+  intro hx
+  cases hx with
+  | intro q hq =>
+      exact hno q (hsquare q hq)
+
+theorem irrational_of_qreal_square_eq_two {x : Real}
+    (hsquare : qrealSquareCharacterization x 2) : Irrational x :=
+  irrational_of_qreal_square_characterization QRat.no_square_root_two hsquare
+
+theorem irrational_of_qreal_square_eq_three {x : Real}
+    (hsquare : qrealSquareCharacterization x 3) : Irrational x :=
+  irrational_of_qreal_square_characterization QRat.no_square_root_three hsquare
+
 theorem density {x y : Real} (h : x < y) :
     exists z : Real, x < z ∧ z < y := by
   cases h.right with

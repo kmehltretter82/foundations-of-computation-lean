@@ -901,6 +901,43 @@ theorem mul_div_cancel (x : QRat) {y : QRat} (hy : y ≠ 0) :
   rw [toRat_div, toRat_mul]
   exact Rat.mul_div_cancel (toRat_ne_zero_of_ne_zero hy)
 
+def toPositiveRatRep (q : QRat) : PositiveRatRep where
+  num := (toRat q).num
+  den := (toRat q).den
+  den_pos := Rat.den_pos (toRat q)
+
+theorem toPositiveRatRep_reduced (q : QRat) :
+    (toPositiveRatRep q).Reduced := by
+  exact (toRat q).reduced
+
+theorem toPositiveRatRep_squareRootOfNat_of_square_eq_ofNat
+    {q : QRat} {c : Nat} (h : q * q = QRat.ofNat c) :
+    (toPositiveRatRep q).SquareRootOfNat c := by
+  have hpow : (toRat q) ^ 2 = (c : Rat) := by
+    have hRat : toRat q * toRat q = (c : Rat) := by
+      have hcongr := congrArg QRat.toRat h
+      simpa [QRat.toRat_mul, QRat.toRat_ofNat] using hcongr
+    simpa [Rat.pow_succ, Rat.pow_zero, Rat.one_mul] using hRat
+  have hnum := congrArg Rat.num hpow
+  have hden := congrArg Rat.den hpow
+  simp [toPositiveRatRep, PositiveRatRep.SquareRootOfNat] at hnum hden ⊢
+  rw [hden]
+  simpa [Int.pow_succ, Int.pow_zero, Int.one_mul] using hnum
+
+theorem no_square_root_two (q : QRat) :
+    q * q ≠ QRat.ofNat 2 := by
+  intro h
+  exact PositiveRatRep.no_reduced_square_root_two (toPositiveRatRep q)
+    (toPositiveRatRep_reduced q)
+    (toPositiveRatRep_squareRootOfNat_of_square_eq_ofNat h)
+
+theorem no_square_root_three (q : QRat) :
+    q * q ≠ QRat.ofNat 3 := by
+  intro h
+  exact PositiveRatRep.no_reduced_square_root_three (toPositiveRatRep q)
+    (toPositiveRatRep_reduced q)
+    (toPositiveRatRep_squareRootOfNat_of_square_eq_ofNat h)
+
 end QRat
 
 end Foundation

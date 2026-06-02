@@ -13,10 +13,11 @@ namespace Section07
 /-!
 Book: Chapter 1, Section 1.7, Proof by Contradiction.
 
-Full real-number wrappers remain classified in coverage because cut arithmetic
-and square-root cuts are still deferred.  The reduced-rational square-root
-contradiction cores, prime-factor existence, and Dedekind-cut real order layer
-are formalized in the foundation.
+Concrete square-root cuts remain classified in coverage because arbitrary cut
+multiplication is still deferred.  The reduced-rational and quotient-rational
+square-root contradiction cores, real square-characterization irrationality
+bridges, prime-factor existence, and Dedekind-cut real order layer are
+formalized in the foundation.
 -/
 
 open Foundation
@@ -62,6 +63,16 @@ theorem no_reduced_rational_square_root_three (q : PositiveRatRep)
     (hred : q.Reduced) : ¬ q.SquareRootOfNat 3 :=
   PositiveRatRep.no_reduced_square_root_three q hred
 
+-- Book: Chapter 1, Section 1.7, quotient-rational form of `sqrt(2)` irrationality.
+theorem no_quotient_rational_square_root_two (q : QRat) :
+    q * q ≠ QRat.ofNat 2 :=
+  QRat.no_square_root_two q
+
+-- Book: Chapter 1, Section 1.7, quotient-rational form of `sqrt(3)` irrationality.
+theorem no_quotient_rational_square_root_three (q : QRat) :
+    q * q ≠ QRat.ofNat 3 :=
+  QRat.no_square_root_three q
+
 -- Book: Chapter 1, Sections 1.6-1.7, `sqrt(2)` surrogate before full reals.
 theorem sqrt_two_surrogate_irrational :
     Quad2.IrrationalLike Quad2.sqrtTwo :=
@@ -98,6 +109,18 @@ theorem nonzero_rational_real_times_irrational_is_irrational
     {x : Real} {q : QRat} (hq : q ≠ 0) (hx : Real.Irrational x) :
     Real.Irrational (Real.scale q x) :=
   Real.irrational_scale_nonzero hq hx
+
+-- Book: Chapter 1, Section 1.7, real bridge for a future `sqrt(2)` cut.
+theorem real_with_square_two_characterization_is_irrational {x : Real}
+    (hsquare : Real.qrealSquareCharacterization x 2) :
+    Real.Irrational x :=
+  Real.irrational_of_qreal_square_eq_two hsquare
+
+-- Book: Chapter 1, Section 1.7, real bridge for a future `sqrt(3)` cut.
+theorem real_with_square_three_characterization_is_irrational {x : Real}
+    (hsquare : Real.qrealSquareCharacterization x 3) :
+    Real.Irrational x :=
+  Real.irrational_of_qreal_square_eq_three hsquare
 
 end Section07
 end Chapter01
