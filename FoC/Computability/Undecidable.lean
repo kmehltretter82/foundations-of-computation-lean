@@ -55,9 +55,30 @@ def HaltingProblem (haltsOnCodeInput : Word code -> Word code -> Prop) :
   fun encodedPair => exists machine input : Word code,
     encodedPair = Languages.Word.Concat machine input ∧ haltsOnCodeInput machine input
 
+def PairHaltingProblem
+    (encodePair : Word code -> Word code -> Word pairSymbol)
+    (haltsOnCodeInput : Word code -> Word code -> Prop) :
+    Language pairSymbol :=
+  fun encodedPair => exists machine input : Word code,
+    encodedPair = encodePair machine input ∧ haltsOnCodeInput machine input
+
 def SelfHaltingLanguage
     (haltsOnCodeInput : Word code -> Word code -> Prop) : Language code :=
   fun machine => haltsOnCodeInput machine machine
+
+def SelfHaltingPairLanguage
+    (encodePair : Word code -> Word code -> Word pairSymbol)
+    (haltsOnCodeInput : Word code -> Word code -> Prop) :
+    Language pairSymbol :=
+  fun encodedPair => exists machine : Word code,
+    encodedPair = encodePair machine machine ∧
+      haltsOnCodeInput machine machine
+
+def DiagonalPairDecidablePreimagePrinciple
+    (encodePair : Word code -> Word code -> Word pairSymbol) : Prop :=
+  forall haltsOnCodeInput : Word code -> Word code -> Prop,
+    TuringDecidable (PairHaltingProblem encodePair haltsOnCodeInput) ->
+      TuringDecidable (SelfHaltingLanguage haltsOnCodeInput)
 
 def UniversalMachineSpec
     (universal : TuringMachine symbol state)
@@ -318,11 +339,39 @@ theorem haltingProblem_mem
           haltsOnCodeInput machine input :=
   Iff.rfl
 
+theorem pairHaltingProblem_mem
+    (encodePair : Word code -> Word code -> Word pairSymbol)
+    (haltsOnCodeInput : Word code -> Word code -> Prop)
+    (encodedPair : Word pairSymbol) :
+    encodedPair ∈ PairHaltingProblem encodePair haltsOnCodeInput <->
+      exists machine input : Word code,
+        encodedPair = encodePair machine input ∧
+          haltsOnCodeInput machine input :=
+  Iff.rfl
+
+theorem haltingProblem_equal_pairHaltingProblem_concat
+    (haltsOnCodeInput : Word code -> Word code -> Prop) :
+    Language.Equal (HaltingProblem haltsOnCodeInput)
+      (PairHaltingProblem
+        (fun machine input : Word code => Languages.Word.Concat machine input)
+        haltsOnCodeInput) :=
+  Language.equal_refl (HaltingProblem haltsOnCodeInput)
+
 theorem haltingProblem_contains_encoded_halting_pair
     (haltsOnCodeInput : Word code -> Word code -> Prop)
     {machine input : Word code}
     (hhalts : haltsOnCodeInput machine input) :
     Languages.Word.Concat machine input ∈ HaltingProblem haltsOnCodeInput :=
+  Exists.intro machine
+    (Exists.intro input (And.intro rfl hhalts))
+
+theorem pairHaltingProblem_contains_encoded_halting_pair
+    (encodePair : Word code -> Word code -> Word pairSymbol)
+    (haltsOnCodeInput : Word code -> Word code -> Prop)
+    {machine input : Word code}
+    (hhalts : haltsOnCodeInput machine input) :
+    encodePair machine input ∈
+      PairHaltingProblem encodePair haltsOnCodeInput :=
   Exists.intro machine
     (Exists.intro input (And.intro rfl hhalts))
 
@@ -334,6 +383,38 @@ theorem haltingProblem_pair_elim
       encodedPair = Languages.Word.Concat machine input ∧
         haltsOnCodeInput machine input :=
   h
+
+theorem pairHaltingProblem_pair_elim
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    {haltsOnCodeInput : Word code -> Word code -> Prop}
+    {encodedPair : Word pairSymbol}
+    (h : encodedPair ∈ PairHaltingProblem encodePair haltsOnCodeInput) :
+    exists machine input : Word code,
+      encodedPair = encodePair machine input ∧
+        haltsOnCodeInput machine input :=
+  h
+
+theorem selfHaltingPairLanguage_mem
+    (encodePair : Word code -> Word code -> Word pairSymbol)
+    (haltsOnCodeInput : Word code -> Word code -> Prop)
+    (encodedPair : Word pairSymbol) :
+    encodedPair ∈
+        SelfHaltingPairLanguage encodePair haltsOnCodeInput <->
+      exists machine : Word code,
+        encodedPair = encodePair machine machine ∧
+          haltsOnCodeInput machine machine :=
+  Iff.rfl
+
+theorem selfHaltingPairLanguage_subset_pairHaltingProblem
+    (encodePair : Word code -> Word code -> Word pairSymbol)
+    (haltsOnCodeInput : Word code -> Word code -> Prop) :
+    Language.Subset
+      (SelfHaltingPairLanguage encodePair haltsOnCodeInput)
+      (PairHaltingProblem encodePair haltsOnCodeInput) := by
+  intro encodedPair hself
+  cases hself with
+  | intro machine hmachine =>
+      exact Exists.intro machine (Exists.intro machine hmachine)
 
 theorem haltingProblem_of_pointwise_iff
     {halts1 halts2 : Word code -> Word code -> Prop}
@@ -360,6 +441,59 @@ theorem haltingProblem_of_pointwise_iff
             exists input
             exact And.intro hinput.left
               ((hiff machine input).mpr hinput.right)
+
+theorem pairHaltingProblem_of_pointwise_iff
+    (encodePair : Word code -> Word code -> Word pairSymbol)
+    {halts1 halts2 : Word code -> Word code -> Prop}
+    (hiff : forall machine input : Word code,
+      halts1 machine input <-> halts2 machine input) :
+    Language.Equal (PairHaltingProblem encodePair halts1)
+      (PairHaltingProblem encodePair halts2) := by
+  intro encodedPair
+  constructor
+  · intro h
+    cases h with
+    | intro machine hmachine =>
+        cases hmachine with
+        | intro input hinput =>
+            exists machine
+            exists input
+            exact And.intro hinput.left
+              ((hiff machine input).mp hinput.right)
+  · intro h
+    cases h with
+    | intro machine hmachine =>
+        cases hmachine with
+        | intro input hinput =>
+            exists machine
+            exists input
+            exact And.intro hinput.left
+              ((hiff machine input).mpr hinput.right)
+
+theorem pairHalting_undecidable_if_selfHalting_undecidable
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    {haltsOnCodeInput : Word code -> Word code -> Prop}
+    (hdiag :
+      DiagonalPairDecidablePreimagePrinciple encodePair)
+    (hself :
+      UndecidableLanguage (SelfHaltingLanguage haltsOnCodeInput)) :
+    UndecidableLanguage
+      (PairHaltingProblem encodePair haltsOnCodeInput) := by
+  intro hpair
+  exact hself (hdiag haltsOnCodeInput hpair)
+
+theorem pairHalting_undecidable_if_decoder_universal
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (haccept : DecidableToAcceptablePrinciple code)
+    (hdiag :
+      DiagonalPairDecidablePreimagePrinciple encodePair)
+    (huniv : DecoderUniversalForAcceptableLanguages decodeAccepts) :
+    UndecidableLanguage
+      (PairHaltingProblem encodePair decodeAccepts) :=
+  pairHalting_undecidable_if_selfHalting_undecidable
+    hdiag
+    (selfHalting_undecidable_if_decoder_universal haccept huniv)
 
 theorem universalMachineSpec_pair_halts
     {universal : TuringMachine symbol state}

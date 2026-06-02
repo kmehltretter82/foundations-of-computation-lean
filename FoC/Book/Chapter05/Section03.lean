@@ -82,10 +82,32 @@ def TuringHaltingProblem (haltsOnCodeInput : Word code -> Word code -> Prop) :
     Language code :=
   HaltingProblem haltsOnCodeInput
 
+-- Book: Chapter 5, Section 5.3, halting-problem vocabulary with an explicit
+-- pair encoding.
+def TuringPairHaltingProblem
+    (encodePair : Word code -> Word code -> Word pairSymbol)
+    (haltsOnCodeInput : Word code -> Word code -> Prop) :
+    Language pairSymbol :=
+  PairHaltingProblem encodePair haltsOnCodeInput
+
 -- Book: Chapter 5, Section 5.3, machines that halt on their own code.
 def TuringSelfHaltingLanguage
     (haltsOnCodeInput : Word code -> Word code -> Prop) : Language code :=
   SelfHaltingLanguage haltsOnCodeInput
+
+-- Book: Chapter 5, Section 5.3, encoded diagonal pairs whose machine halts
+-- on its own code.
+def TuringSelfHaltingPairLanguage
+    (encodePair : Word code -> Word code -> Word pairSymbol)
+    (haltsOnCodeInput : Word code -> Word code -> Prop) :
+    Language pairSymbol :=
+  SelfHaltingPairLanguage encodePair haltsOnCodeInput
+
+-- Book: Chapter 5, Section 5.3, construction principle for pulling a
+-- decider for pair-halting back along the diagonal pair map.
+def DiagonalPairDecidablePreimageConstruction
+    (encodePair : Word code -> Word code -> Word pairSymbol) : Prop :=
+  DiagonalPairDecidablePreimagePrinciple encodePair
 
 -- Book: Chapter 5, Section 5.3, universal-machine specification shape.
 def UniversalTuringMachineSpec
@@ -334,6 +356,31 @@ theorem halting_problem_mem
           haltsOnCodeInput machine input :=
   Computability.haltingProblem_mem haltsOnCodeInput encodedPair
 
+-- Book: Chapter 5, Section 5.3, membership in an explicitly paired halting
+-- problem.
+theorem pair_halting_problem_mem
+    (encodePair : Word code -> Word code -> Word pairSymbol)
+    (haltsOnCodeInput : Word code -> Word code -> Prop)
+    (encodedPair : Word pairSymbol) :
+    encodedPair ∈
+        TuringPairHaltingProblem encodePair haltsOnCodeInput <->
+      exists machine input : Word code,
+        encodedPair = encodePair machine input ∧
+          haltsOnCodeInput machine input :=
+  Computability.pairHaltingProblem_mem
+    encodePair haltsOnCodeInput encodedPair
+
+-- Book: Chapter 5, Section 5.3, the earlier concatenation-based halting
+-- problem is the explicitly paired halting problem for concatenation.
+theorem halting_problem_equal_concat_pair_halting_problem
+    (haltsOnCodeInput : Word code -> Word code -> Prop) :
+    Language.Equal (TuringHaltingProblem haltsOnCodeInput)
+      (TuringPairHaltingProblem
+        (fun machine input : Word code => Languages.Word.Concat machine input)
+        haltsOnCodeInput) :=
+  Computability.haltingProblem_equal_pairHaltingProblem_concat
+    haltsOnCodeInput
+
 -- Book: Chapter 5, Section 5.3, a halting pair belongs to the abstract
 -- halting-problem language.
 theorem halting_problem_contains_encoded_halting_pair
@@ -344,6 +391,18 @@ theorem halting_problem_contains_encoded_halting_pair
       TuringHaltingProblem haltsOnCodeInput :=
   Computability.haltingProblem_contains_encoded_halting_pair
     haltsOnCodeInput hhalts
+
+-- Book: Chapter 5, Section 5.3, a halting pair belongs to the explicitly
+-- paired halting problem.
+theorem pair_halting_problem_contains_encoded_halting_pair
+    (encodePair : Word code -> Word code -> Word pairSymbol)
+    (haltsOnCodeInput : Word code -> Word code -> Prop)
+    {machine input : Word code}
+    (hhalts : haltsOnCodeInput machine input) :
+    encodePair machine input ∈
+      TuringPairHaltingProblem encodePair haltsOnCodeInput :=
+  Computability.pairHaltingProblem_contains_encoded_halting_pair
+    encodePair haltsOnCodeInput hhalts
 
 -- Book: Chapter 5, Section 5.3, membership in the abstract halting problem
 -- exposes a machine/input pair.
@@ -356,6 +415,43 @@ theorem halting_problem_pair_elim
         haltsOnCodeInput machine input :=
   Computability.haltingProblem_pair_elim h
 
+-- Book: Chapter 5, Section 5.3, membership in the explicitly paired halting
+-- problem exposes a decoded machine/input pair.
+theorem pair_halting_problem_pair_elim
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    {haltsOnCodeInput : Word code -> Word code -> Prop}
+    {encodedPair : Word pairSymbol}
+    (h : encodedPair ∈
+      TuringPairHaltingProblem encodePair haltsOnCodeInput) :
+    exists machine input : Word code,
+      encodedPair = encodePair machine input ∧
+        haltsOnCodeInput machine input :=
+  Computability.pairHaltingProblem_pair_elim h
+
+-- Book: Chapter 5, Section 5.3, membership in the self-halting pair language.
+theorem self_halting_pair_language_mem
+    (encodePair : Word code -> Word code -> Word pairSymbol)
+    (haltsOnCodeInput : Word code -> Word code -> Prop)
+    (encodedPair : Word pairSymbol) :
+    encodedPair ∈
+        TuringSelfHaltingPairLanguage encodePair haltsOnCodeInput <->
+      exists machine : Word code,
+        encodedPair = encodePair machine machine ∧
+          haltsOnCodeInput machine machine :=
+  Computability.selfHaltingPairLanguage_mem
+    encodePair haltsOnCodeInput encodedPair
+
+-- Book: Chapter 5, Section 5.3, every self-halting diagonal pair is a
+-- halting pair.
+theorem self_halting_pair_language_subset_pair_halting_problem
+    (encodePair : Word code -> Word code -> Word pairSymbol)
+    (haltsOnCodeInput : Word code -> Word code -> Prop) :
+    Language.Subset
+      (TuringSelfHaltingPairLanguage encodePair haltsOnCodeInput)
+      (TuringPairHaltingProblem encodePair haltsOnCodeInput) :=
+  Computability.selfHaltingPairLanguage_subset_pairHaltingProblem
+    encodePair haltsOnCodeInput
+
 -- Book: Chapter 5, Section 5.3, pointwise equivalent halting predicates give
 -- the same abstract halting-problem language.
 theorem halting_problem_of_pointwise_iff
@@ -365,6 +461,47 @@ theorem halting_problem_of_pointwise_iff
     Language.Equal (TuringHaltingProblem halts1)
       (TuringHaltingProblem halts2) :=
   Computability.haltingProblem_of_pointwise_iff hiff
+
+-- Book: Chapter 5, Section 5.3, pointwise equivalent halting predicates give
+-- the same explicitly paired halting-problem language.
+theorem pair_halting_problem_of_pointwise_iff
+    (encodePair : Word code -> Word code -> Word pairSymbol)
+    {halts1 halts2 : Word code -> Word code -> Prop}
+    (hiff : forall machine input : Word code,
+      halts1 machine input <-> halts2 machine input) :
+    Language.Equal (TuringPairHaltingProblem encodePair halts1)
+      (TuringPairHaltingProblem encodePair halts2) :=
+  Computability.pairHaltingProblem_of_pointwise_iff encodePair hiff
+
+-- Book: Chapter 5, Section 5.3, a diagonal preimage construction transfers
+-- self-halting undecidability to the paired halting problem.
+theorem pair_halting_undecidable_if_self_halting_undecidable
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    {haltsOnCodeInput : Word code -> Word code -> Prop}
+    (hdiag :
+      DiagonalPairDecidablePreimageConstruction encodePair)
+    (hself :
+      UndecidableTuringLanguage
+        (TuringSelfHaltingLanguage haltsOnCodeInput)) :
+    UndecidableTuringLanguage
+      (TuringPairHaltingProblem encodePair haltsOnCodeInput) :=
+  Computability.pairHalting_undecidable_if_selfHalting_undecidable
+    hdiag hself
+
+-- Book: Chapter 5, Section 5.3, conditional halting-problem theorem shape:
+-- decoder universality plus the diagonal preimage construction makes the
+-- paired halting problem undecidable.
+theorem pair_halting_undecidable_if_decoder_universal
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (haccept : DecidableToAcceptableConstruction code)
+    (hdiag :
+      DiagonalPairDecidablePreimageConstruction encodePair)
+    (huniv : TuringDecoderUniversalForAcceptableLanguages decodeAccepts) :
+    UndecidableTuringLanguage
+      (TuringPairHaltingProblem encodePair decodeAccepts) :=
+  Computability.pairHalting_undecidable_if_decoder_universal
+    haccept hdiag huniv
 
 -- Book: Chapter 5, Section 5.3, a universal-machine specification turns a
 -- decoded accepting pair into a universal-machine halting fact.

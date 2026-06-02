@@ -27,6 +27,9 @@ def RangeOfComputableFunction (L : Language output) : Prop :=
   exists input : Type, exists f : Word input -> Word output,
     TuringComputable f ∧ Language.Equal (RangeLanguage f) L
 
+def RangeOfUnaryFunction (L : Language output) : Prop :=
+  exists f : Word Unit -> Word output, Language.Equal (RangeLanguage f) L
+
 def UnaryInputWord (n : Nat) : Word Unit :=
   Word.RepeatSymbol () n
 
@@ -136,6 +139,25 @@ theorem listable_has_unary_range_function {L : Language output}
       exists ListingAsUnaryFunction stream
       exact listedBy_rangeLanguage_listingAsUnaryFunction hstream
 
+theorem listable_rangeOfUnaryFunction {L : Language output}
+    (h : Listable L) :
+    RangeOfUnaryFunction L :=
+  listable_has_unary_range_function h
+
+theorem rangeOfUnaryFunction_listable {L : Language output}
+    (h : RangeOfUnaryFunction L) :
+    Listable L := by
+  cases h with
+  | intro f hf =>
+      exact listable_of_equal
+        (unaryFunctionRange_listable f) hf
+
+theorem listable_iff_rangeOfUnaryFunction (L : Language output) :
+    Listable L <-> RangeOfUnaryFunction L := by
+  constructor
+  · exact listable_rangeOfUnaryFunction
+  · exact rangeOfUnaryFunction_listable
+
 theorem rangeLanguage_equal_of_pointwise
     {f g : Word input -> Word output}
     (hfg : forall x, f x = g x) :
@@ -167,6 +189,14 @@ theorem rangeOfComputableFunction_of_equal {L K : Language output}
           constructor
           · exact hf.left
           · exact Language.equal_trans hf.right hEq
+
+theorem rangeOfUnaryFunction_of_equal {L K : Language output}
+    (h : RangeOfUnaryFunction L) (hEq : Language.Equal L K) :
+    RangeOfUnaryFunction K := by
+  cases h with
+  | intro f hf =>
+      exists f
+      exact Language.equal_trans hf hEq
 
 end Computability
 end FoC
