@@ -41,7 +41,8 @@ undecidability vocabulary, including decidable-language complement closure and
 an abstract diagonal contradiction core.
 The foundation layer also includes quotient rational numbers over
 positive-denominator integer fractions, Dedekind-cut real numbers over quotient
-rationals with cut addition/subtraction/multiplication and rational scaling,
+rationals with cut addition/subtraction/multiplication, powers, rational
+scaling, embedded-rational division, and concrete square-root cut candidates,
 reduced rational representatives used by the quotient-rational and real
 bridges, quotient-rational no-square-root theorems for 2 and 3, real
 square-characterization bridges for the square-root irrationality arguments, a
@@ -73,7 +74,8 @@ Foundation modules currently include:
 - quotient rational arithmetic, order, density, embeddings from existing
   rational representatives, Dedekind-cut real numbers with rational embedding
   and order/density plus cut addition/subtraction/multiplication and rational
-  scaling, reduced rational and quotient-rational square-root contradiction
+  powers, rational scaling, embedded-rational division, concrete square-root cut
+  candidates, reduced rational and quotient-rational square-root contradiction
   cores, real square-characterization irrationality bridges, quadratic-surd
   surrogates, and digit-stream diagonalization with real and irrational-real
   uncountability.

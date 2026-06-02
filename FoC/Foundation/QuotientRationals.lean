@@ -622,6 +622,23 @@ theorem lt_of_toRat_lt {x y : QRat} (h : toRat x < toRat y) :
           have hyxRat : toRat y < toRat x := toRat_lt_of_lt hyx
           exact False.elim ((Rat.not_le.mpr h) (Rat.le_of_lt hyxRat))
 
+theorem ofNat_pos {n : Nat} (hn : 0 < n) : (0 : QRat) < ofNat n := by
+  apply lt_of_toRat_lt
+  rw [toRat_zero, toRat_ofNat]
+  exact Rat.natCast_pos.mpr hn
+
+theorem ofNat_lt_of_nat_lt {m n : Nat} (h : m < n) :
+    ofNat m < ofNat n := by
+  apply lt_of_toRat_lt
+  rw [toRat_ofNat, toRat_ofNat]
+  exact Rat.natCast_lt_natCast.mpr h
+
+theorem ofNat_ne_zero {n : Nat} (hn : 0 < n) : ofNat n ≠ 0 := by
+  intro h
+  have hpos : (0 : QRat) < ofNat n := ofNat_pos hn
+  rw [h] at hpos
+  exact lt_irrefl 0 hpos
+
 theorem lt_iff_toRat_lt (x y : QRat) :
     x < y <-> toRat x < toRat y := by
   constructor
@@ -816,9 +833,20 @@ theorem mul_assoc (x y z : QRat) : (x * y) * z = x * (y * z) := by
   apply eq_of_toRat_eq
   rw [toRat_mul, toRat_mul, toRat_mul, toRat_mul, Rat.mul_assoc]
 
+theorem ofNat_mul (m n : Nat) :
+    ofNat (m * n) = ofNat m * ofNat n := by
+  apply eq_of_toRat_eq
+  rw [toRat_ofNat, toRat_mul, toRat_ofNat, toRat_ofNat, Rat.natCast_mul]
+
 theorem zero_lt_one : (0 : QRat) < 1 := by
   change RatPair.RawLt (RatPair.ofInt 0) (RatPair.ofInt 1)
   simp [RatPair.RawLt, RatPair.ofInt]
+
+theorem one_ne_zero : (1 : QRat) ≠ 0 := by
+  intro h
+  have hlt : (0 : QRat) < 1 := zero_lt_one
+  rw [h] at hlt
+  exact lt_irrefl 0 hlt
 
 theorem zero_mul (x : QRat) : 0 * x = 0 := by
   apply eq_of_toRat_eq
@@ -1080,6 +1108,36 @@ theorem mul_inv_cancel {x : QRat} (hx : x ≠ 0) : x * x⁻¹ = 1 := by
 
 theorem div_self {x : QRat} (hx : x ≠ 0) : x / x = 1 := by
   exact mul_inv_cancel hx
+
+theorem inv_ne_zero {x : QRat} (hx : x ≠ 0) : x⁻¹ ≠ 0 := by
+  intro hinv
+  have hmul := congrArg (fun t : QRat => t * x) hinv
+  change x⁻¹ * x = 0 * x at hmul
+  rw [inv_mul_cancel hx, zero_mul] at hmul
+  exact one_ne_zero hmul
+
+def powNat (x : QRat) : Nat -> QRat
+  | 0 => 1
+  | n + 1 => powNat x n * x
+
+theorem powNat_zero (x : QRat) : powNat x 0 = 1 :=
+  rfl
+
+theorem powNat_succ (x : QRat) (n : Nat) :
+    powNat x (n + 1) = powNat x n * x :=
+  rfl
+
+theorem powNat_ofNat (m n : Nat) :
+    powNat (ofNat m) n = ofNat (m ^ n) := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      calc
+        powNat (ofNat m) (n + 1) = powNat (ofNat m) n * ofNat m := rfl
+        _ = ofNat (m ^ n) * ofNat m := by rw [ih]
+        _ = ofNat (m ^ n * m) := by rw [← ofNat_mul]
+        _ = ofNat (m ^ (n + 1)) := by rw [Nat.pow_succ]
 
 def toPositiveRatRep (q : QRat) : PositiveRatRep where
   num := (toRat q).num

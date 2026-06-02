@@ -797,6 +797,36 @@ theorem rational_mul {x y : Real}
           exists a * b
           rw [hxa, hyb, qreal_mul]
 
+noncomputable def powNat (x : Real) : Nat -> Real
+  | 0 => 1
+  | n + 1 => powNat x n * x
+
+theorem powNat_zero (x : Real) : powNat x 0 = 1 :=
+  rfl
+
+theorem powNat_succ (x : Real) (n : Nat) :
+    powNat x (n + 1) = powNat x n * x :=
+  rfl
+
+theorem qreal_powNat (q : QRat) (n : Nat) :
+    powNat (qreal q) n = qreal (QRat.powNat q n) := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      calc
+        powNat (qreal q) (n + 1) = powNat (qreal q) n * qreal q := rfl
+        _ = qreal (QRat.powNat q n) * qreal q := by rw [ih]
+        _ = qreal (QRat.powNat q n * q) := qreal_mul (QRat.powNat q n) q
+        _ = qreal (QRat.powNat q (n + 1)) := rfl
+
+theorem rational_powNat {x : Real} (n : Nat)
+    (hx : Rational x) : Rational (powNat x n) := by
+  cases hx with
+  | intro q hxq =>
+      exists QRat.powNat q n
+      rw [hxq, qreal_powNat]
+
 def scalePos (c : QRat) (hc : 0 < c) (x : Real) : Real where
   lower := fun q => exists a, x.lower a ∧ q < c * a
   nonempty := by
@@ -947,6 +977,155 @@ noncomputable def scale (c : QRat) (x : Real) : Real := by
       -(scalePos (-c) (QRat.neg_pos_of_neg hneg) x)
     else
       0
+
+theorem qreal_scale (c r : QRat) :
+    scale c (qreal r) = qreal (c * r) := by
+  classical
+  unfold scale
+  by_cases hpos : 0 < c
+  · simp [hpos, qreal_scalePos]
+  · by_cases hneg : c < 0
+    · simp [hpos, hneg]
+      calc
+        -(scalePos (-c) (QRat.neg_pos_of_neg hneg) (qreal r))
+            = -qreal ((-c) * r) := by
+                rw [qreal_scalePos]
+        _ = qreal (-((-c) * r)) := qreal_neg ((-c) * r)
+        _ = qreal (c * r) := by
+            rw [QRat.neg_mul, QRat.neg_neg]
+    · have hzero : c = 0 := by
+        cases QRat.lt_trichotomy 0 c with
+        | inl hcpos =>
+            exact False.elim (hpos hcpos)
+        | inr hrest =>
+            cases hrest with
+            | inl heq =>
+                exact heq.symm
+            | inr hcneg =>
+                exact False.elim (hneg hcneg)
+      have h00 : ¬ (0 : QRat) < 0 := QRat.lt_irrefl 0
+      simp [hzero, h00, QRat.zero_mul]
+      rfl
+
+noncomputable def divByQ (x : Real) (q : QRat) (_hq : q ≠ 0) : Real :=
+  scale q⁻¹ x
+
+theorem qreal_divByQ (r q : QRat) (hq : q ≠ 0) :
+    divByQ (qreal r) q hq = qreal (r / q) := by
+  unfold divByQ
+  calc
+    scale q⁻¹ (qreal r) = qreal (q⁻¹ * r) := qreal_scale q⁻¹ r
+    _ = qreal (r / q) := by
+        change qreal (q⁻¹ * r) = qreal (r * q⁻¹)
+        rw [QRat.mul_comm]
+
+theorem rational_divByQ {x : Real} {q : QRat}
+    (hq : q ≠ 0) (hx : Rational x) : Rational (divByQ x q hq) := by
+  cases hx with
+  | intro r hxr =>
+      exists r / q
+      rw [hxr, qreal_divByQ]
+
+def sqrtNatLower (c : Nat) (q : QRat) : Prop :=
+  q < 0 ∨ exists r : QRat, q < r ∧ r * r < QRat.ofNat c
+
+theorem sqrtNatLower_nonempty (c : Nat) :
+    exists q : QRat, sqrtNatLower c q := by
+  cases QRat.exists_lower_upper (0 : QRat) with
+  | intro l hrest =>
+      cases hrest with
+      | intro _ hbounds =>
+          exact Exists.intro l (Or.inl hbounds.left)
+
+theorem sqrtNatLower_downward_closed (c : Nat) {q r : QRat}
+    (hqr : q < r) (hr : sqrtNatLower c r) : sqrtNatLower c q := by
+  cases hr with
+  | inl hr0 =>
+      exact Or.inl (QRat.lt_trans hqr hr0)
+  | inr hsq =>
+      cases hsq with
+      | intro s hs =>
+          exact Or.inr (Exists.intro s
+            (And.intro (QRat.lt_trans hqr hs.left) hs.right))
+
+theorem sqrtNatLower_open_upward (c : Nat) {q : QRat}
+    (hq : sqrtNatLower c q) :
+    exists r : QRat, q < r ∧ sqrtNatLower c r := by
+  cases hq with
+  | inl hq0 =>
+      cases QRat.density hq0 with
+      | intro r hr =>
+          exact Exists.intro r (And.intro hr.left (Or.inl hr.right))
+  | inr hsq =>
+      cases hsq with
+      | intro s hs =>
+          cases QRat.density hs.left with
+          | intro r hr =>
+              exact Exists.intro r
+                (And.intro hr.left
+                  (Or.inr (Exists.intro s (And.intro hr.right hs.right))))
+
+theorem sqrtNatLower_proper_of_one_lt {c : Nat} (hc : 1 < c) :
+    exists q : QRat, ¬ sqrtNatLower c q := by
+  exists QRat.ofNat c
+  intro h
+  have h0c : (0 : QRat) < QRat.ofNat c :=
+    QRat.ofNat_pos (Nat.lt_trans (by decide : 0 < 1) hc)
+  cases h with
+  | inl hc0 =>
+      exact QRat.lt_asymm h0c hc0
+  | inr hsq =>
+      cases hsq with
+      | intro r hr =>
+          have hcr : QRat.ofNat c < r := hr.left
+          have hccrr : QRat.ofNat c * QRat.ofNat c < r * r :=
+            QRat.mul_lt_mul_of_pos hcr hcr h0c h0c
+          have hccrr' : QRat.ofNat (c * c) < r * r := by
+            rw [QRat.ofNat_mul]
+            exact hccrr
+          have hlarge : QRat.ofNat c < QRat.ofNat (c * c) := by
+            apply QRat.ofNat_lt_of_nat_lt
+            have hcpos : 0 < c := Nat.lt_trans (by decide : 0 < 1) hc
+            simpa [Nat.mul_one] using Nat.mul_lt_mul_of_pos_left hc hcpos
+          exact QRat.lt_asymm hlarge (QRat.lt_trans hccrr' hr.right)
+
+def sqrtTwoCut : Real where
+  lower := sqrtNatLower 2
+  nonempty := sqrtNatLower_nonempty 2
+  proper := sqrtNatLower_proper_of_one_lt (by decide : 1 < 2)
+  downward_closed := by
+    intro q r hqr hr
+    exact sqrtNatLower_downward_closed 2 hqr hr
+  open_upward := by
+    intro q hq
+    exact sqrtNatLower_open_upward 2 hq
+
+def sqrtThreeCut : Real where
+  lower := sqrtNatLower 3
+  nonempty := sqrtNatLower_nonempty 3
+  proper := sqrtNatLower_proper_of_one_lt (by decide : 1 < 3)
+  downward_closed := by
+    intro q r hqr hr
+    exact sqrtNatLower_downward_closed 3 hqr hr
+  open_upward := by
+    intro q hq
+    exact sqrtNatLower_open_upward 3 hq
+
+theorem sqrtTwoCut_lower_iff (q : QRat) :
+    sqrtTwoCut.lower q <-> sqrtNatLower 2 q :=
+  Iff.rfl
+
+theorem sqrtThreeCut_lower_iff (q : QRat) :
+    sqrtThreeCut.lower q <-> sqrtNatLower 3 q :=
+  Iff.rfl
+
+theorem sqrtTwoCut_nonneg : (0 : Real) ≤ sqrtTwoCut := by
+  intro q hq0
+  exact Or.inl hq0
+
+theorem sqrtThreeCut_nonneg : (0 : Real) ≤ sqrtThreeCut := by
+  intro q hq0
+  exact Or.inl hq0
 
 theorem irrational_scale_nonzero {x : Real} {c : QRat}
     (hc : c ≠ 0) (hx : Irrational x) : Irrational (scale c x) := by

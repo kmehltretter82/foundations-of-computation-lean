@@ -1,6 +1,6 @@
 import FoC.Foundation.Summation
 import FoC.Foundation.Primes
-import FoC.Foundation.QuotientRationals
+import FoC.Foundation.Reals
 
 namespace FoC
 namespace Book
@@ -90,9 +90,41 @@ def qratPower (r : QRat) : Nat -> QRat
   | 0 => 1
   | n + 1 => qratPower r n * r
 
+theorem qratPower_eq_powNat (r : QRat) (n : Nat) :
+    qratPower r n = QRat.powNat r n := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      rw [qratPower, QRat.powNat_succ, ih]
+
 def qratGeometricSum (r : QRat) : Nat -> QRat
   | 0 => 1
   | n + 1 => qratGeometricSum r n + qratPower r (n + 1)
+
+noncomputable def realGeometricSum (x : Real) : Nat -> Real
+  | 0 => 1
+  | n + 1 => realGeometricSum x n + Real.powNat x (n + 1)
+
+theorem real_geometric_sum_qreal (r : QRat) (n : Nat) :
+    realGeometricSum (Real.qreal r) n =
+      Real.qreal (qratGeometricSum r n) := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      calc
+        realGeometricSum (Real.qreal r) (n + 1) =
+            realGeometricSum (Real.qreal r) n +
+              Real.powNat (Real.qreal r) (n + 1) := rfl
+        _ = Real.qreal (qratGeometricSum r n) +
+              Real.qreal (QRat.powNat r (n + 1)) := by
+            rw [ih, Real.qreal_powNat]
+        _ = Real.qreal (qratGeometricSum r n + QRat.powNat r (n + 1)) := by
+            rw [Real.qreal_add]
+        _ = Real.qreal (qratGeometricSum r n + qratPower r (n + 1)) := by
+            rw [← qratPower_eq_powNat]
+        _ = Real.qreal (qratGeometricSum r (n + 1)) := rfl
 
 -- Book: Chapter 1, Section 1.8, geometric-series identity before division.
 theorem quotient_rational_geometric_series_mul_one_sub (r : QRat) (n : Nat) :
@@ -120,6 +152,61 @@ theorem quotient_rational_geometric_series_formula
       exact (QRat.mul_div_cancel (qratGeometricSum r n) hr).symm
     _ = (1 - qratPower r (n + 1)) / (1 - r) := by
       rw [quotient_rational_geometric_series_mul_one_sub]
+
+-- Book: Chapter 1, Section 1.8, real-valued geometric-series identity.
+theorem real_geometric_series_mul_one_sub (r : QRat) (n : Nat) :
+    realGeometricSum (Real.qreal r) n * (1 - Real.qreal r) =
+      1 - Real.powNat (Real.qreal r) (n + 1) := by
+  have hden : (1 : Real) - Real.qreal r = Real.qreal (1 - r) :=
+    Real.qreal_sub 1 r
+  have hpow :
+      Real.powNat (Real.qreal r) (n + 1) =
+        Real.qreal (qratPower r (n + 1)) := by
+    rw [Real.qreal_powNat, ← qratPower_eq_powNat]
+  have hnum :
+      (1 : Real) - Real.powNat (Real.qreal r) (n + 1) =
+        Real.qreal (1 - qratPower r (n + 1)) := by
+    rw [hpow]
+    change Real.qreal 1 - Real.qreal (qratPower r (n + 1)) =
+      Real.qreal (1 - qratPower r (n + 1))
+    rw [Real.qreal_sub]
+  calc
+    realGeometricSum (Real.qreal r) n * (1 - Real.qreal r)
+        = Real.qreal (qratGeometricSum r n) * ((1 : Real) - Real.qreal r) := by
+            rw [real_geometric_sum_qreal]
+    _ = Real.qreal (qratGeometricSum r n) * Real.qreal (1 - r) := by
+            rw [hden]
+    _ = Real.qreal (qratGeometricSum r n * (1 - r)) := by
+            rw [Real.qreal_mul]
+    _ = Real.qreal (1 - qratPower r (n + 1)) := by
+            rw [quotient_rational_geometric_series_mul_one_sub]
+    _ = 1 - Real.powNat (Real.qreal r) (n + 1) := hnum.symm
+
+-- Book: Chapter 1, Section 1.8, real-valued geometric-series division form.
+theorem real_geometric_series_formula
+    (r : QRat) (n : Nat) (hr : 1 - r ≠ 0) :
+    realGeometricSum (Real.qreal r) n =
+      Real.divByQ (1 - Real.powNat (Real.qreal r) (n + 1)) (1 - r) hr := by
+  have hpow :
+      Real.powNat (Real.qreal r) (n + 1) =
+        Real.qreal (qratPower r (n + 1)) := by
+    rw [Real.qreal_powNat, ← qratPower_eq_powNat]
+  have hnum :
+      (1 : Real) - Real.powNat (Real.qreal r) (n + 1) =
+        Real.qreal (1 - qratPower r (n + 1)) := by
+    rw [hpow]
+    change Real.qreal 1 - Real.qreal (qratPower r (n + 1)) =
+      Real.qreal (1 - qratPower r (n + 1))
+    rw [Real.qreal_sub]
+  calc
+    realGeometricSum (Real.qreal r) n = Real.qreal (qratGeometricSum r n) := by
+        rw [real_geometric_sum_qreal]
+    _ = Real.qreal ((1 - qratPower r (n + 1)) / (1 - r)) := by
+        rw [quotient_rational_geometric_series_formula r n hr]
+    _ = Real.divByQ (Real.qreal (1 - qratPower r (n + 1))) (1 - r) hr := by
+        rw [Real.qreal_divByQ]
+    _ = Real.divByQ (1 - Real.powNat (Real.qreal r) (n + 1)) (1 - r) hr := by
+        rw [hnum]
 
 -- Book: Chapter 1, Section 1.8, Exercise 6
 theorem odd_sum_square (n : Nat) :

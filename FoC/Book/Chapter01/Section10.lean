@@ -121,6 +121,40 @@ theorem fib_lower_bound_three_halves_real (n : Nat) (hn : 6 <= n) :
       Real.qreal (QRat.ofNat (fib n)) :=
   Real.qreal_order_preserving (fib_lower_bound_three_halves_qrat n hn)
 
+noncomputable def realThreeHalvesPower (n : Nat) : Real :=
+  Real.divByQ
+    (Real.powNat (Real.qreal (QRat.ofNat 3)) n)
+    (QRat.ofNat (2 ^ n))
+    (QRat.ofNat_ne_zero (Nat.pow_pos (by decide : 0 < 2)))
+
+theorem realThreeHalvesPower_eq_qreal (n : Nat) :
+    realThreeHalvesPower n =
+      Real.qreal (QRat.ofNat (3 ^ n) / QRat.ofNat (2 ^ n)) := by
+  unfold realThreeHalvesPower
+  calc
+    Real.divByQ
+        (Real.powNat (Real.qreal (QRat.ofNat 3)) n)
+        (QRat.ofNat (2 ^ n))
+        (QRat.ofNat_ne_zero (Nat.pow_pos (by decide : 0 < 2)))
+        = Real.divByQ
+            (Real.qreal (QRat.powNat (QRat.ofNat 3) n))
+            (QRat.ofNat (2 ^ n))
+            (QRat.ofNat_ne_zero (Nat.pow_pos (by decide : 0 < 2))) := by
+            rw [Real.qreal_powNat]
+    _ = Real.divByQ
+          (Real.qreal (QRat.ofNat (3 ^ n)))
+          (QRat.ofNat (2 ^ n))
+          (QRat.ofNat_ne_zero (Nat.pow_pos (by decide : 0 < 2))) := by
+          rw [QRat.powNat_ofNat]
+    _ = Real.qreal (QRat.ofNat (3 ^ n) / QRat.ofNat (2 ^ n)) := by
+          rw [Real.qreal_divByQ]
+
+-- Book: Chapter 1, Section 1.10, Theorem 1.18 using the real power wrapper.
+theorem fib_lower_bound_three_halves_real_power (n : Nat) (hn : 6 <= n) :
+    realThreeHalvesPower (n - 1) < Real.qreal (QRat.ofNat (fib n)) := by
+  rw [realThreeHalvesPower_eq_qreal]
+  exact fib_lower_bound_three_halves_real n hn
+
 end Section10
 end Chapter01
 end Book

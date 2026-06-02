@@ -28,7 +28,7 @@ foundation:
 completed:
   - coordinate: "Chapter 1"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 140
+    theorem_declarations: 148
     modules:
       - "FoC.Book.Chapter01.Section01"
       - "FoC.Book.Chapter01.Section02"
@@ -69,7 +69,8 @@ completed:
       - "Product-of-primes representation for every natural number greater than one"
       - "Reduced positive-rational-representative contradiction cores for sqrt(2) and sqrt(3)"
       - "Quotient-rational no-square-root theorems for 2 and 3, with real square-characterization irrationality bridges"
-      - "Dedekind-cut real density, rational embedding arithmetic for addition/subtraction/multiplication, rational-real product closure, and rational scaling wrappers"
+      - "Dedekind-cut real density, rational embedding arithmetic for addition/subtraction/multiplication, powers, embedded-rational division, rational-real product closure, and rational scaling wrappers"
+      - "Concrete Dedekind-cut candidates for sqrt(2) and sqrt(3), with nonnegativity wrappers"
       - "Quadratic-surd surrogate for sqrt(2) and the counterexample that a product of irrational-like quantities can be rational-like"
       - "Proof-by-contradiction schema"
       - "Ordinary and strong mathematical induction schemas"
@@ -88,15 +89,15 @@ completed:
       - coordinate: "Chapter 1, Section 1.3"
         reason: "Circuit drawings and design exercises are application artifacts; the DNF semantic core is formalized."
       - coordinate: "Chapter 1, Section 1.6"
-        reason: "Dedekind-cut real infrastructure with rational embedding/order/density, cut addition/subtraction/multiplication, rational-real arithmetic wrappers, positive rational scaling, and quotient-rational square-root contradiction bridges are formalized. Concrete square-root cuts and the direct real irrational-product counterexample remain deferred; integer square parity, rational closure examples, and a sqrt(2) quadratic-surd counterexample surrogate are formalized."
+        reason: "Dedekind-cut real infrastructure with rational embedding/order/density, cut addition/subtraction/multiplication, powers, embedded-rational division, rational-real arithmetic wrappers, positive rational scaling, concrete square-root cut candidates, and quotient-rational square-root contradiction bridges are formalized. Square-root square equalities and the direct real irrational-product counterexample remain deferred; integer square parity, rational closure examples, and a sqrt(2) quadratic-surd counterexample surrogate are formalized."
       - coordinate: "Chapter 1, Section 1.7"
-        reason: "The reduced-rational and quotient-rational contradiction cores for sqrt(2) and sqrt(3), real square-characterization irrationality bridges, Euclid prime-list theorem, pigeonhole collision schema, Dedekind-cut real order/rational embedding/multiplication, rational-plus-irrational wrappers, and nonzero rational scaling of irrational reals are formalized; full finite-cardinality pigeonhole and concrete square-root real cuts remain deferred."
+        reason: "The reduced-rational and quotient-rational contradiction cores for sqrt(2) and sqrt(3), concrete square-root cut candidates, real square-characterization irrationality bridges, Euclid prime-list theorem, pigeonhole collision schema, Dedekind-cut real order/rational embedding/multiplication, rational-plus-irrational wrappers, and nonzero rational scaling of irrational reals are formalized; full finite-cardinality pigeonhole and square-root square equalities remain deferred."
       - coordinate: "Chapter 1, Section 1.8"
-        reason: "Natural-number geometric identities, including a division-free successor-base form, are formalized; the real-valued division form remains deferred until real division or an embedded-rational division wrapper is formalized."
+        reason: "Natural-number geometric identities, quotient-rational geometric-series identities, and embedded-real geometric-series wrappers with division by a nonzero embedded rational are formalized."
       - coordinate: "Chapter 1, Section 1.9"
         reason: "Java subroutine correctness prose is represented by recursive mathematical kernels, not a Java semantics."
       - coordinate: "Chapter 1, Section 1.10, Theorem 1.18"
-        reason: "A scaled natural-number form of the Fibonacci lower bound is formalized; a direct rational/real exponentiation wrapper remains deferred."
+        reason: "A scaled natural-number form, quotient-rational form, embedded-real form, and real power-wrapper form of the Fibonacci lower bound are formalized."
   - coordinate: "Chapter 2"
     status: "coverage_complete_formal_core"
     theorem_declarations: 90

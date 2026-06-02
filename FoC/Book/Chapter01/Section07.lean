@@ -13,12 +13,11 @@ namespace Section07
 /-!
 Book: Chapter 1, Section 1.7, Proof by Contradiction.
 
-Concrete square-root cuts remain classified in coverage because the cut
-definitions and square-equality proofs are still deferred.  The
-reduced-rational and quotient-rational square-root contradiction cores, real
-square-characterization irrationality bridges, prime-factor existence,
-Dedekind-cut real order layer, and real multiplication are formalized in the
-foundation.
+Concrete square-root cuts now exist as Dedekind-cut candidates, but their
+square-equality proofs are still deferred.  The reduced-rational and
+quotient-rational square-root contradiction cores, real square-characterization
+irrationality bridges, prime-factor existence, Dedekind-cut real order layer,
+and real multiplication are formalized in the foundation.
 -/
 
 open Foundation
@@ -74,7 +73,7 @@ theorem no_quotient_rational_square_root_three (q : QRat) :
     q * q ≠ QRat.ofNat 3 :=
   QRat.no_square_root_three q
 
--- Book: Chapter 1, Sections 1.6-1.7, `sqrt(2)` surrogate before full reals.
+-- Book: Chapter 1, Sections 1.6-1.7, `sqrt(2)` surrogate before square equalities.
 theorem sqrt_two_surrogate_irrational :
     Quad2.IrrationalLike Quad2.sqrtTwo :=
   Quad2.sqrtTwo_irrationalLike
@@ -110,6 +109,16 @@ theorem nonzero_rational_real_times_irrational_is_irrational
     {x : Real} {q : QRat} (hq : q ≠ 0) (hx : Real.Irrational x) :
     Real.Irrational (Real.scale q x) :=
   Real.irrational_scale_nonzero hq hx
+
+-- Book: Chapter 1, Section 1.7, concrete Dedekind-cut candidate for `sqrt(2)`.
+theorem sqrt_two_cut_nonnegative :
+    (0 : Real) ≤ Real.sqrtTwoCut :=
+  Real.sqrtTwoCut_nonneg
+
+-- Book: Chapter 1, Section 1.7, concrete Dedekind-cut candidate for `sqrt(3)`.
+theorem sqrt_three_cut_nonnegative :
+    (0 : Real) ≤ Real.sqrtThreeCut :=
+  Real.sqrtThreeCut_nonneg
 
 -- Book: Chapter 1, Section 1.7, real bridge for a future `sqrt(2)` cut.
 theorem real_with_square_two_characterization_is_irrational {x : Real}
