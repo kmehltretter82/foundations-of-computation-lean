@@ -137,7 +137,7 @@ completed:
           - artifact: "FoC.Foundation.Reals"
             reason: "Dedekind-cut real density, rational embedding arithmetic, rational real operations, scaling, division by embedded rationals, and concrete square-root cut candidates."
           - artifact: "FoC.Book.Chapter01.Section06"
-            reason: "Book-facing wrappers for proof examples, rational closure, real density, embedded-rational arithmetic, and irrational-product surrogate examples."
+            reason: "Book-facing wrappers for proof examples, correctly coordinated Section 1.6 exercise parity/divisibility/rational-closure statements, real density, embedded-rational arithmetic, and irrational-product surrogate examples."
         missing:
           - item: "Direct square-root square equalities for concrete Dedekind cuts"
             blocker: "Requires finishing the cut square characterization for the concrete sqrt(2)/sqrt(3) candidates."
@@ -165,7 +165,7 @@ completed:
         status: "complete_formal_core"
         formalized:
           - artifact: "FoC.Book.Chapter01.Section08"
-            reason: "Ordinary induction, induction from a starting point, strong induction, factorial/Fibonacci recurrences, finite-sum identities, natural and quotient-rational geometric-series identities, embedded-real geometric-series wrappers, odd-sum square identity, and product-of-primes induction example."
+            reason: "Ordinary induction, induction from a starting point, strong induction, factorial/Fibonacci recurrences, finite-sum identities, natural and quotient-rational geometric-series identities, explicitly embedded quotient-rational real geometric-series specializations, odd-sum square identity, and product-of-primes induction example."
           - artifact: "FoC.Foundation.Summation"
             reason: "Reusable finite summation and geometric-series kernels."
         missing: []
@@ -194,7 +194,7 @@ completed:
       - coordinate: "Chapter 1, Section 1.7"
         reason: "The reduced-rational and quotient-rational contradiction cores for sqrt(2) and sqrt(3), concrete square-root cut candidates, real square-characterization irrationality bridges, Euclid prime-list theorem, pigeonhole collision schema, Dedekind-cut real order/rational embedding/multiplication, rational-plus-irrational wrappers, and nonzero rational scaling of irrational reals are formalized; full finite-cardinality pigeonhole and square-root square equalities remain deferred."
       - coordinate: "Chapter 1, Section 1.8"
-        reason: "Natural-number geometric identities, quotient-rational geometric-series identities, and embedded-real geometric-series wrappers with division by a nonzero embedded rational are formalized."
+        reason: "Natural-number geometric identities, quotient-rational geometric-series identities, and embedded quotient-rational real geometric-series wrappers with division by a nonzero embedded rational are formalized; this is intentionally not yet the arbitrary-real division statement from the printed exercise."
       - coordinate: "Chapter 1, Section 1.9"
         reason: "Java subroutine correctness prose is represented by recursive mathematical kernels, not a Java semantics."
       - coordinate: "Chapter 1, Section 1.10, Theorem 1.18"
@@ -487,7 +487,7 @@ completed:
       - "Constructive CFG combinators for union, concatenation, Kleene star, and reversal, exact generated-language equivalences for these constructions, and CFL closure under union, concatenation, Kleene star, and reversal"
       - "A concrete Chapter 4 grammar for a^n b^n words, with forward generated-word proofs and the exact reverse inclusion for terminal outputs"
       - "Right-regular and left-regular grammar right-hand-side vocabulary, grammar-to-NFA and NFA-to-grammar constructions, the finite-alphabet equivalence between right-regular languages and regular languages, and the finite-alphabet equivalence between left-regular languages and regular languages via reversal"
-      - "BNF expression syntax for empty, symbol, sequence, alternatives, optional items, and repetition, with expansion rules and concrete digit/sign/declaration/integer, English-sentence, Java-statement, arithmetic-expression, real-number, Java-variable, try/catch, and compound-proposition examples"
+      - "BNF expression syntax for empty, symbol, sequence, alternatives, optional items, and repetition, with expansion rules and concrete digit/sign/declaration/integer, English-sentence, Java-statement, arithmetic-expression, real-number examples including leading decimals and uppercase exponents, Java-variable references with field/index tails, try/catch syntax with one-or-more catches and optional finally, and recursive compound-proposition examples"
       - "Parse-tree and parse-forest syntax, frontier computation, height, node counts, minimal-frontier parse-tree existence, selected nonterminal-subtree spines, selected-spine containment, selected-subtree replacement/minimality surgery, longest nonterminal paths, duplicate-nonterminal and duplicate-root subtree extraction, bottommost duplicate-root subtree extraction with frontier bound, selected-subtree frontier contexts, loop derivations, frontier-length bounds, parse-tree-to-derivation and derivation-to-parse-tree bridges, leftmost/rightmost derivation-step vocabulary, Type-valued left/right derivation traces, parse-tree-to-left-derivation trace construction, left-derivation trace to parse-forest reconstruction for terminal words, the parse-tree/left-derivation trace correspondence, and LL(1)/LR(1)/shift-reduce parser-table vocabulary"
       - "Additional BNF symbol, sequence, and repeated-item expansion wrappers"
       - "Ambiguity vocabulary via two parse trees with the same frontier, equivalence with canonical left-derivation ambiguity, plus an explicit ambiguous grammar witness"
@@ -515,7 +515,7 @@ completed:
         status: "partial_application_material_deferred"
         formalized:
           - artifact: "FoC.Book.Chapter04.Section02"
-            reason: "BNF expression syntax and expansion rules for symbols, sequences, alternatives, optional items, and repetition, plus representative digit/sign/declaration/integer, English, Java-statement, arithmetic-expression, real-number, Java-variable, try/catch, and compound-proposition examples."
+            reason: "BNF expression syntax and expansion rules for symbols, sequences, alternatives, optional items, and repetition, plus representative digit/sign/declaration/integer, English, Java-statement, arithmetic-expression, real-number examples including leading decimals and e/E exponents, Java variable references with field and index tails, try/catch syntax with one-or-more catches and optional finally, and recursive compound-proposition examples with propositional variables, parentheses, AND/OR, and NOT."
           - artifact: "FoC.Grammars.BNF"
             reason: "Reusable BNF expression and expansion infrastructure."
         missing: []
@@ -584,7 +584,7 @@ completed:
         deferred: []
     classified_not_formalized_yet:
       - coordinate: "Chapter 4, Section 4.2"
-        reason: "The BNF expansion operators and representative digit, sign, optional-semicolon declaration, integer, English sentence, Java statement, arithmetic expression, real-number, Java-variable, try/catch, and compound-proposition examples are formalized; fully enumerating every sentence/program fragment from the larger listings and exact language proofs for larger BNF-derived grammars remain application material."
+        reason: "The BNF expansion operators and representative digit, sign, optional-semicolon declaration, integer, English sentence, Java statement, arithmetic expression, real-number examples including leading decimals and e/E exponents, Java-variable field/index references, try/catch syntax with one-or-more catches and optional finally, and recursive compound-proposition examples are formalized; fully enumerating every sentence/program fragment from the larger listings and exact language proofs for larger BNF-derived grammars remain application material."
       - coordinate: "Chapter 4, Section 4.3"
         reason: "Parse trees, height/frontier-length infrastructure, derivation-to-parse-tree bridges, ordered left/right derivation traces, parse-tree/left-derivation trace correspondence, ambiguity equivalence, an explicit ambiguous grammar witness, and LL(1)/LR(1)/shift-reduce parser-table vocabulary are formalized; executable parser algorithms with correctness proofs remain optional parsing infrastructure."
       - coordinate: "Chapter 4, Section 4.4"

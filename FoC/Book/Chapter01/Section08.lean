@@ -142,7 +142,8 @@ theorem quotient_rational_geometric_series_mul_one_sub (r : QRat) (n : Nat) :
       grind [Rat.add_mul, Rat.sub_eq_add_neg, Rat.mul_add, Rat.mul_neg,
         Rat.pow_succ]
 
--- Book: Chapter 1, Section 1.8, geometric-series formula with division by `1 - r`.
+-- Book: Chapter 1, Section 1.8, Exercise 2, quotient-rational specialization
+-- of the geometric-series formula with division by `1 - r`.
 theorem quotient_rational_geometric_series_formula
     (r : QRat) (n : Nat) (hr : 1 - r ≠ 0) :
     qratGeometricSum r n = (1 - qratPower r (n + 1)) / (1 - r) := by
@@ -153,7 +154,8 @@ theorem quotient_rational_geometric_series_formula
     _ = (1 - qratPower r (n + 1)) / (1 - r) := by
       rw [quotient_rational_geometric_series_mul_one_sub]
 
--- Book: Chapter 1, Section 1.8, real-valued geometric-series identity.
+-- Book: Chapter 1, Section 1.8, Exercise 2, embedded quotient-rational
+-- specialization of the real-valued geometric-series identity.
 theorem real_geometric_series_mul_one_sub (r : QRat) (n : Nat) :
     realGeometricSum (Real.qreal r) n * (1 - Real.qreal r) =
       1 - Real.powNat (Real.qreal r) (n + 1) := by
@@ -182,7 +184,8 @@ theorem real_geometric_series_mul_one_sub (r : QRat) (n : Nat) :
             rw [quotient_rational_geometric_series_mul_one_sub]
     _ = 1 - Real.powNat (Real.qreal r) (n + 1) := hnum.symm
 
--- Book: Chapter 1, Section 1.8, real-valued geometric-series division form.
+-- Book: Chapter 1, Section 1.8, Exercise 2, embedded quotient-rational
+-- specialization of the real-valued geometric-series division form.
 theorem real_geometric_series_formula
     (r : QRat) (n : Nat) (hr : 1 - r ≠ 0) :
     realGeometricSum (Real.qreal r) n =

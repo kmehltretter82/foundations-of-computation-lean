@@ -63,7 +63,7 @@ theorem integer_even_square_even {n : Int}
     (h : IntPred.Even n) : IntPred.Even (n * n) :=
   IntPred.even_square h
 
--- Book: Chapter 1, Section 1.6, Exercise 8(a).
+-- Book: Chapter 1, Section 1.6, Exercise 6.
 theorem integer_odd_square_odd {n : Int}
     (h : IntPred.Odd n) : IntPred.Odd (n * n) :=
   IntPred.odd_square h
@@ -73,29 +73,29 @@ theorem integer_divides_square_if_divides {a n : Int}
     (h : IntPred.Divides a n) : IntPred.Divides a (n * n) :=
   IntPred.divides_square_of_divides h
 
--- Book: Chapter 1, Section 1.6, Exercise 8(c), true direction.
+-- Book: Chapter 1, Section 1.6, Exercise 7, true direction.
 theorem integer_square_divisible_by_three_if_number_divisible_by_three {n : Int}
     (h : IntPred.Divides 3 n) : IntPred.Divides 3 (n * n) :=
   IntPred.divides_square_of_divides h
 
--- Book: Chapter 1, Section 1.6, Exercise 8(d).
+-- Book: Chapter 1, Section 1.6, Exercise 8(a).
 theorem integer_product_of_two_even_numbers_even {m n : Int}
     (hm : IntPred.Even m) (_hn : IntPred.Even n) : IntPred.Even (m * n) :=
   IntPred.even_mul_left hm
 
--- Book: Chapter 1, Section 1.6, Exercise 8(e), counterexample to the printed claim.
+-- Book: Chapter 1, Section 1.6, Exercise 8(b), counterexample to the printed claim.
 theorem product_even_does_not_force_both_factors_even :
     IntPred.Even (2 * 3) ∧ ¬ IntPred.Even 3 := by
   constructor
   · exact IntPred.even_mul_left (IntPred.even_of_double 1)
   · exact IntPred.not_even_of_odd IntPred.three_odd
 
--- Book: Chapter 1, Section 1.6, Exercise 8(g).
+-- Book: Chapter 1, Section 1.6, Exercise 8(e).
 theorem integer_square_divisible_by_four_if_number_divisible_by_four {n : Int}
     (h : IntPred.Divides 4 n) : IntPred.Divides 4 (n * n) :=
   IntPred.divides_square_of_divides h
 
--- Book: Chapter 1, Section 1.6, Exercise 8(h), counterexample to the printed claim.
+-- Book: Chapter 1, Section 1.6, Exercise 8(f), counterexample to the printed claim.
 theorem square_divisible_by_four_does_not_force_number_divisible_by_four :
     IntPred.Divides 4 (2 * 2) ∧ ¬ IntPred.Divides 4 2 := by
   constructor
@@ -118,13 +118,13 @@ theorem sum_of_rational_numbers_is_rational (x y : Rational) :
     (Rational.add x y).den ≠ 0 :=
   Rational.add_den_ne_zero x y
 
--- Book: Chapter 1, Section 1.6, Exercise 8(f): product of rationals.
+-- Book: Chapter 1, Section 1.6, Exercise 8(c): product of rationals.
 theorem product_of_rational_representations {a b c d : Int}
     (hb : b ≠ 0) (hd : d ≠ 0) :
     Rational.IsRepresentation (a * c) (b * d) :=
   Rational.mul_representation hb hd
 
--- Book: Chapter 1, Section 1.6, Exercise 8(f), object-level form.
+-- Book: Chapter 1, Section 1.6, Exercise 8(c), object-level form.
 theorem product_of_rational_numbers_is_rational (x y : Rational) :
     (Rational.mul x y).den ≠ 0 :=
   Rational.mul_den_ne_zero x y
