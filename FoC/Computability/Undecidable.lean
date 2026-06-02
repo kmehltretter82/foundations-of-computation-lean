@@ -55,6 +55,10 @@ def HaltingProblem (haltsOnCodeInput : Word code -> Word code -> Prop) :
   fun encodedPair => exists machine input : Word code,
     encodedPair = Languages.Word.Concat machine input ∧ haltsOnCodeInput machine input
 
+def SelfHaltingLanguage
+    (haltsOnCodeInput : Word code -> Word code -> Prop) : Language code :=
+  fun machine => haltsOnCodeInput machine machine
+
 def UniversalMachineSpec
     (universal : TuringMachine symbol state)
   (decodeAccepts : Word symbol -> Word symbol -> Prop) : Prop :=
@@ -250,6 +254,30 @@ theorem exists_nonacceptable_language_if_decoder_universal
   Exists.intro (SelfDiagonalLanguage decodeAccepts)
     (self_diagonal_not_acceptable_if_decoder_universal huniv)
 
+theorem selfDiagonal_equal_compl_selfHalting
+    (haltsOnCodeInput : Word code -> Word code -> Prop) :
+    Language.Equal (SelfDiagonalLanguage haltsOnCodeInput)
+      (Language.Compl (SelfHaltingLanguage haltsOnCodeInput)) :=
+  Language.equal_refl (SelfDiagonalLanguage haltsOnCodeInput)
+
+theorem compl_selfHalting_not_acceptable_if_decoder_universal
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (huniv : DecoderUniversalForAcceptableLanguages decodeAccepts) :
+    NonAcceptableLanguage
+      (Language.Compl (SelfHaltingLanguage decodeAccepts)) :=
+  not_acceptable_of_equal
+    (self_diagonal_not_acceptable_if_decoder_universal huniv)
+    (selfDiagonal_equal_compl_selfHalting decodeAccepts)
+
+theorem haltingProblem_mem
+    (haltsOnCodeInput : Word code -> Word code -> Prop)
+    (encodedPair : Word code) :
+    encodedPair ∈ HaltingProblem haltsOnCodeInput <->
+      exists machine input : Word code,
+        encodedPair = Languages.Word.Concat machine input ∧
+          haltsOnCodeInput machine input :=
+  Iff.rfl
+
 theorem haltingProblem_contains_encoded_halting_pair
     (haltsOnCodeInput : Word code -> Word code -> Prop)
     {machine input : Word code}
@@ -257,6 +285,61 @@ theorem haltingProblem_contains_encoded_halting_pair
     Languages.Word.Concat machine input ∈ HaltingProblem haltsOnCodeInput :=
   Exists.intro machine
     (Exists.intro input (And.intro rfl hhalts))
+
+theorem haltingProblem_pair_elim
+    {haltsOnCodeInput : Word code -> Word code -> Prop}
+    {encodedPair : Word code}
+    (h : encodedPair ∈ HaltingProblem haltsOnCodeInput) :
+    exists machine input : Word code,
+      encodedPair = Languages.Word.Concat machine input ∧
+        haltsOnCodeInput machine input :=
+  h
+
+theorem haltingProblem_of_pointwise_iff
+    {halts1 halts2 : Word code -> Word code -> Prop}
+    (hiff : forall machine input : Word code,
+      halts1 machine input <-> halts2 machine input) :
+    Language.Equal (HaltingProblem halts1) (HaltingProblem halts2) := by
+  intro encodedPair
+  constructor
+  · intro h
+    cases h with
+    | intro machine hmachine =>
+        cases hmachine with
+        | intro input hinput =>
+            exists machine
+            exists input
+            exact And.intro hinput.left
+              ((hiff machine input).mp hinput.right)
+  · intro h
+    cases h with
+    | intro machine hmachine =>
+        cases hmachine with
+        | intro input hinput =>
+            exists machine
+            exists input
+            exact And.intro hinput.left
+              ((hiff machine input).mpr hinput.right)
+
+theorem universalMachineSpec_pair_halts
+    {universal : TuringMachine symbol state}
+    {decodeAccepts : Word symbol -> Word symbol -> Prop}
+    (hspec : UniversalMachineSpec universal decodeAccepts)
+    {machine input : Word symbol}
+    (hdecode : decodeAccepts machine input) :
+    TuringMachine.HaltsOnInput universal
+      (Languages.Word.Concat machine input) :=
+  (hspec machine input).mpr hdecode
+
+theorem universalMachineSpec_pair_decode
+    {universal : TuringMachine symbol state}
+    {decodeAccepts : Word symbol -> Word symbol -> Prop}
+    (hspec : UniversalMachineSpec universal decodeAccepts)
+    {machine input : Word symbol}
+    (hhalts : TuringMachine.HaltsOnInput universal
+      (Languages.Word.Concat machine input)) :
+    decodeAccepts machine input :=
+  (hspec machine input).mp hhalts
 
 end Computability
 end FoC

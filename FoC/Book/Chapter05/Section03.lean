@@ -69,6 +69,11 @@ def TuringHaltingProblem (haltsOnCodeInput : Word code -> Word code -> Prop) :
     Language code :=
   HaltingProblem haltsOnCodeInput
 
+-- Book: Chapter 5, Section 5.3, machines that halt on their own code.
+def TuringSelfHaltingLanguage
+    (haltsOnCodeInput : Word code -> Word code -> Prop) : Language code :=
+  SelfHaltingLanguage haltsOnCodeInput
+
 -- Book: Chapter 5, Section 5.3, universal-machine specification shape.
 def UniversalTuringMachineSpec
     (universal : TuringMachine symbol state)
@@ -243,6 +248,33 @@ theorem exists_nonacceptable_language_if_decoder_universal
     exists L : Language code, NonTuringAcceptableLanguage L :=
   Computability.exists_nonacceptable_language_if_decoder_universal huniv
 
+-- Book: Chapter 5, Section 5.3, the decoder's self-diagonal language is the
+-- complement of its self-halting language.
+theorem self_diagonal_equal_complement_self_halting
+    (haltsOnCodeInput : Word code -> Word code -> Prop) :
+    Language.Equal (TuringSelfDiagonalLanguage haltsOnCodeInput)
+      (Language.Compl (TuringSelfHaltingLanguage haltsOnCodeInput)) :=
+  Computability.selfDiagonal_equal_compl_selfHalting haltsOnCodeInput
+
+-- Book: Chapter 5, Section 5.3, decoder universality for acceptable languages
+-- makes the complement of the self-halting language non-acceptable.
+theorem complement_self_halting_not_acceptable_if_decoder_universal
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (huniv : TuringDecoderUniversalForAcceptableLanguages decodeAccepts) :
+    NonTuringAcceptableLanguage
+      (Language.Compl (TuringSelfHaltingLanguage decodeAccepts)) :=
+  Computability.compl_selfHalting_not_acceptable_if_decoder_universal huniv
+
+-- Book: Chapter 5, Section 5.3, membership in the abstract halting problem.
+theorem halting_problem_mem
+    (haltsOnCodeInput : Word code -> Word code -> Prop)
+    (encodedPair : Word code) :
+    encodedPair ∈ TuringHaltingProblem haltsOnCodeInput <->
+      exists machine input : Word code,
+        encodedPair = Languages.Word.Concat machine input ∧
+          haltsOnCodeInput machine input :=
+  Computability.haltingProblem_mem haltsOnCodeInput encodedPair
+
 -- Book: Chapter 5, Section 5.3, a halting pair belongs to the abstract
 -- halting-problem language.
 theorem halting_problem_contains_encoded_halting_pair
@@ -253,6 +285,51 @@ theorem halting_problem_contains_encoded_halting_pair
       TuringHaltingProblem haltsOnCodeInput :=
   Computability.haltingProblem_contains_encoded_halting_pair
     haltsOnCodeInput hhalts
+
+-- Book: Chapter 5, Section 5.3, membership in the abstract halting problem
+-- exposes a machine/input pair.
+theorem halting_problem_pair_elim
+    {haltsOnCodeInput : Word code -> Word code -> Prop}
+    {encodedPair : Word code}
+    (h : encodedPair ∈ TuringHaltingProblem haltsOnCodeInput) :
+    exists machine input : Word code,
+      encodedPair = Languages.Word.Concat machine input ∧
+        haltsOnCodeInput machine input :=
+  Computability.haltingProblem_pair_elim h
+
+-- Book: Chapter 5, Section 5.3, pointwise equivalent halting predicates give
+-- the same abstract halting-problem language.
+theorem halting_problem_of_pointwise_iff
+    {halts1 halts2 : Word code -> Word code -> Prop}
+    (hiff : forall machine input : Word code,
+      halts1 machine input <-> halts2 machine input) :
+    Language.Equal (TuringHaltingProblem halts1)
+      (TuringHaltingProblem halts2) :=
+  Computability.haltingProblem_of_pointwise_iff hiff
+
+-- Book: Chapter 5, Section 5.3, a universal-machine specification turns a
+-- decoded accepting pair into a universal-machine halting fact.
+theorem universal_machine_spec_pair_halts
+    {universal : TuringMachine symbol state}
+    {decodeAccepts : Word symbol -> Word symbol -> Prop}
+    (hspec : UniversalTuringMachineSpec universal decodeAccepts)
+    {machine input : Word symbol}
+    (hdecode : decodeAccepts machine input) :
+    TuringMachine.HaltsOnInput universal
+      (Languages.Word.Concat machine input) :=
+  Computability.universalMachineSpec_pair_halts hspec hdecode
+
+-- Book: Chapter 5, Section 5.3, a universal-machine halting fact for an
+-- encoded pair gives the decoded accepting fact.
+theorem universal_machine_spec_pair_decode
+    {universal : TuringMachine symbol state}
+    {decodeAccepts : Word symbol -> Word symbol -> Prop}
+    (hspec : UniversalTuringMachineSpec universal decodeAccepts)
+    {machine input : Word symbol}
+    (hhalts : TuringMachine.HaltsOnInput universal
+      (Languages.Word.Concat machine input)) :
+    decodeAccepts machine input :=
+  Computability.universalMachineSpec_pair_decode hspec hhalts
 
 /-!
 The section's universal-machine and diagonalization theorems require a concrete
