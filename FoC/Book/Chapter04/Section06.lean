@@ -217,6 +217,51 @@ theorem general_derives_sound_for_symbol_language
   general_derives_sound_for_symbol_language_aux symbolLanguage hterminal hprod
     rfl h
 
+theorem language_singleton_empty_only {word : Word terminal}
+    (h : word ∈ Language.Singleton (Word.Empty : Word terminal)) :
+    word = Word.Empty := h
+
+theorem language_singleton_empty_mem :
+    (Word.Empty : Word terminal) ∈
+      Language.Singleton (Word.Empty : Word terminal) :=
+  rfl
+
+theorem language_concat_empty_only {L M : Language terminal}
+    (hL : forall word, word ∈ L -> word = Word.Empty)
+    (hM : forall word, word ∈ M -> word = Word.Empty) :
+    forall word, word ∈ Language.Concat L M -> word = Word.Empty := by
+  intro word h
+  rcases h with ⟨left, right, hleft, hright, hword⟩
+  rw [hL left hleft, hM right hright] at hword
+  simpa [Word.Concat, Word.Empty] using hword
+
+theorem language_concat_empty_mem {L M : Language terminal}
+    (hL : (Word.Empty : Word terminal) ∈ L)
+    (hM : (Word.Empty : Word terminal) ∈ M) :
+    (Word.Empty : Word terminal) ∈ Language.Concat L M := by
+  exists Word.Empty
+  exists Word.Empty
+
+theorem language_concat_right_empty_only_mem {L M : Language terminal}
+    {word : Word terminal}
+    (hM : forall suffix, suffix ∈ M -> suffix = Word.Empty)
+    (h : word ∈ Language.Concat L M) :
+    word ∈ L := by
+  rcases h with ⟨left, right, hleft, hright, hword⟩
+  rw [hM right hright] at hword
+  simp [Word.Concat, Word.Empty] at hword
+  rw [hword]
+  exact hleft
+
+theorem language_concat_right_empty_mem {L M : Language terminal}
+    {word : Word terminal}
+    (hM : (Word.Empty : Word terminal) ∈ M)
+    (h : word ∈ L) :
+    word ∈ Language.Concat L M := by
+  exists word
+  exists Word.Empty
+  exact ⟨h, hM, by simp [Word.Concat, Word.Empty]⟩
+
 def ggTerminal (a : terminal) : Symbol terminal nonterminal :=
   Symbol.terminal a
 
@@ -287,6 +332,40 @@ theorem repeatSymbol_succ_eq_append (a : terminal) (n : Nat) :
       change a :: Word.RepeatSymbol a (n + 1) =
         a :: Word.Concat (Word.RepeatSymbol a n) [a]
       rw [ih]
+
+theorem word_count_concat [DecidableEq terminal]
+    (a : terminal) (x y : Word terminal) :
+    Word.Count a (Word.Concat x y) = Word.Count a x + Word.Count a y := by
+  induction x with
+  | nil =>
+      simp [Word.Concat, Word.Count]
+  | cons b rest ih =>
+      change (if b = a then 1 else 0) +
+          Word.Count a (Word.Concat rest y) =
+        (if b = a then 1 else 0) + Word.Count a rest +
+          Word.Count a y
+      rw [ih]
+      omega
+
+theorem word_count_repeat_same [DecidableEq terminal] (a : terminal) (n : Nat) :
+    Word.Count a (Word.RepeatSymbol a n) = n := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change Word.Count a (a :: Word.RepeatSymbol a n) = n + 1
+      simp [Word.Count, ih]
+      omega
+
+theorem word_count_repeat_of_ne [DecidableEq terminal]
+    {a b : terminal} (h : b ≠ a) (n : Nat) :
+    Word.Count a (Word.RepeatSymbol b n) = 0 := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change Word.Count a (b :: Word.RepeatSymbol b n) = 0
+      simp [Word.Count, h, ih]
 
 inductive EqualCountTerminal where
   | a
@@ -1758,6 +1837,282 @@ theorem orderedABC_language_subset_generated {word : Word EqualCountTerminal}
   rcases h with ⟨n, hword⟩
   rw [hword]
   exact orderedABC_words_generated n
+
+def orderedABCShapeWord (aCount bCount cCount : Nat) :
+    Word EqualCountTerminal :=
+  Word.Concat (Word.RepeatSymbol EqualCountTerminal.a aCount)
+    (Word.Concat (Word.RepeatSymbol EqualCountTerminal.b bCount)
+      (Word.RepeatSymbol EqualCountTerminal.c cCount))
+
+def orderedABCBCShapeWord (bCount cCount : Nat) :
+    Word EqualCountTerminal :=
+  Word.Concat (Word.RepeatSymbol EqualCountTerminal.b bCount)
+    (Word.RepeatSymbol EqualCountTerminal.c cCount)
+
+def orderedABCCShapeWord (cCount : Nat) : Word EqualCountTerminal :=
+  Word.RepeatSymbol EqualCountTerminal.c cCount
+
+def orderedABCShapeLanguage : Language EqualCountTerminal :=
+  fun word => exists aCount bCount cCount,
+    word = orderedABCShapeWord aCount bCount cCount
+
+def orderedABCBCShapeLanguage : Language EqualCountTerminal :=
+  fun word => exists bCount cCount,
+    word = orderedABCBCShapeWord bCount cCount
+
+def orderedABCCShapeLanguage : Language EqualCountTerminal :=
+  fun word => exists cCount, word = orderedABCCShapeWord cCount
+
+def orderedABCSymbolLanguage :
+    Symbol EqualCountTerminal OrderedABCNT -> Language EqualCountTerminal
+  | Symbol.terminal token => Language.Singleton (Word.Symbol token)
+  | Symbol.nonterminal OrderedABCNT.start => orderedABCShapeLanguage
+  | Symbol.nonterminal OrderedABCNT.markA => Language.Singleton Word.Empty
+  | Symbol.nonterminal OrderedABCNT.markB => Language.Singleton Word.Empty
+  | Symbol.nonterminal OrderedABCNT.markC => Language.Singleton Word.Empty
+  | Symbol.nonterminal OrderedABCNT.x => orderedABCShapeLanguage
+  | Symbol.nonterminal OrderedABCNT.y => orderedABCBCShapeLanguage
+  | Symbol.nonterminal OrderedABCNT.z => orderedABCCShapeLanguage
+
+theorem orderedABCShape_cons_a {word : Word EqualCountTerminal}
+    (h : word ∈ orderedABCShapeLanguage) :
+    Word.Concat [EqualCountTerminal.a] word ∈ orderedABCShapeLanguage := by
+  rcases h with ⟨aCount, bCount, cCount, hword⟩
+  exists Nat.succ aCount
+  exists bCount
+  exists cCount
+  rw [hword]
+  change EqualCountTerminal.a ::
+      orderedABCShapeWord aCount bCount cCount =
+    orderedABCShapeWord (Nat.succ aCount) bCount cCount
+  rfl
+
+theorem orderedABCBCShape_cons_b {word : Word EqualCountTerminal}
+    (h : word ∈ orderedABCBCShapeLanguage) :
+    Word.Concat [EqualCountTerminal.b] word ∈ orderedABCBCShapeLanguage := by
+  rcases h with ⟨bCount, cCount, hword⟩
+  exists Nat.succ bCount
+  exists cCount
+  rw [hword]
+  change EqualCountTerminal.b :: orderedABCBCShapeWord bCount cCount =
+    orderedABCBCShapeWord (Nat.succ bCount) cCount
+  rfl
+
+theorem orderedABCCShape_cons_c {word : Word EqualCountTerminal}
+    (h : word ∈ orderedABCCShapeLanguage) :
+    Word.Concat [EqualCountTerminal.c] word ∈ orderedABCCShapeLanguage := by
+  rcases h with ⟨cCount, hword⟩
+  exists Nat.succ cCount
+  rw [hword]
+  change EqualCountTerminal.c :: orderedABCCShapeWord cCount =
+    orderedABCCShapeWord (Nat.succ cCount)
+  rfl
+
+theorem orderedABCBCShape_subset_shape {word : Word EqualCountTerminal}
+    (h : word ∈ orderedABCBCShapeLanguage) :
+    word ∈ orderedABCShapeLanguage := by
+  rcases h with ⟨bCount, cCount, hword⟩
+  exists 0
+  exists bCount
+  exists cCount
+
+theorem orderedABCCShape_subset_bcShape {word : Word EqualCountTerminal}
+    (h : word ∈ orderedABCCShapeLanguage) :
+    word ∈ orderedABCBCShapeLanguage := by
+  rcases h with ⟨cCount, hword⟩
+  exists 0
+  exists cCount
+
+theorem orderedABCCShape_empty :
+    Word.Empty ∈ orderedABCCShapeLanguage := by
+  exists 0
+
+theorem orderedABCShapeWord_count_a (aCount bCount cCount : Nat) :
+    Word.Count EqualCountTerminal.a
+      (orderedABCShapeWord aCount bCount cCount) = aCount := by
+  simp [orderedABCShapeWord, word_count_concat,
+    word_count_repeat_same, word_count_repeat_of_ne]
+
+theorem orderedABCShapeWord_count_b (aCount bCount cCount : Nat) :
+    Word.Count EqualCountTerminal.b
+      (orderedABCShapeWord aCount bCount cCount) = bCount := by
+  simp [orderedABCShapeWord, word_count_concat,
+    word_count_repeat_same, word_count_repeat_of_ne]
+
+theorem orderedABCShapeWord_count_c (aCount bCount cCount : Nat) :
+    Word.Count EqualCountTerminal.c
+      (orderedABCShapeWord aCount bCount cCount) = cCount := by
+  simp [orderedABCShapeWord, word_count_concat,
+    word_count_repeat_same, word_count_repeat_of_ne]
+
+theorem orderedABCBlockWord_eq_shape (n : Nat) :
+    orderedABCBlockWord n = orderedABCShapeWord n n n := by
+  rfl
+
+theorem orderedABCShape_equal_counts_language
+    {word : Word EqualCountTerminal}
+    (hshape : word ∈ orderedABCShapeLanguage)
+    (hcounts :
+      Word.Count EqualCountTerminal.a word =
+          Word.Count EqualCountTerminal.b word ∧
+        Word.Count EqualCountTerminal.b word =
+          Word.Count EqualCountTerminal.c word) :
+    word ∈ orderedABCLanguage := by
+  rcases hshape with ⟨aCount, bCount, cCount, hword⟩
+  have ha :
+      Word.Count EqualCountTerminal.a word = aCount := by
+    rw [hword]
+    exact orderedABCShapeWord_count_a aCount bCount cCount
+  have hb :
+      Word.Count EqualCountTerminal.b word = bCount := by
+    rw [hword]
+    exact orderedABCShapeWord_count_b aCount bCount cCount
+  have hc :
+      Word.Count EqualCountTerminal.c word = cCount := by
+    rw [hword]
+    exact orderedABCShapeWord_count_c aCount bCount cCount
+  have hab : aCount = bCount := by
+    omega
+  have hbc : bCount = cCount := by
+    omega
+  exists aCount
+  rw [hword, orderedABCBlockWord_eq_shape, hab, hbc]
+
+theorem orderedABC_production_shape_sound
+    {lhs rhs : SententialForm EqualCountTerminal OrderedABCNT}
+    (hprod : OrderedABCGrammar.produces lhs rhs) :
+    forall word, word ∈ CFG.FormLanguage orderedABCSymbolLanguage rhs ->
+      word ∈ CFG.FormLanguage orderedABCSymbolLanguage lhs := by
+  intro word hw
+  let eps : Language EqualCountTerminal :=
+    Language.Singleton (Word.Empty : Word EqualCountTerminal)
+  have hepsOnly : forall suffix, suffix ∈ eps -> suffix = Word.Empty := by
+    intro suffix hsuffix
+    exact hsuffix
+  have hepsMem : (Word.Empty : Word EqualCountTerminal) ∈ eps := rfl
+  have heps2Only :
+      forall suffix, suffix ∈ Language.Concat eps eps ->
+        suffix = Word.Empty :=
+    language_concat_empty_only hepsOnly hepsOnly
+  have heps2Mem :
+      (Word.Empty : Word EqualCountTerminal) ∈ Language.Concat eps eps :=
+    language_concat_empty_mem hepsMem hepsMem
+  have heps3Only :
+      forall suffix, suffix ∈ Language.Concat eps (Language.Concat eps eps) ->
+        suffix = Word.Empty :=
+    language_concat_empty_only hepsOnly heps2Only
+  have heps4Only :
+      forall suffix,
+        suffix ∈
+          Language.Concat eps
+            (Language.Concat eps (Language.Concat eps eps)) ->
+        suffix = Word.Empty :=
+    language_concat_empty_only hepsOnly heps3Only
+  cases hprod
+  · simp [CFG.FormLanguage, orderedABCSymbolLanguage, orderedN,
+      ggNonterminal] at hw ⊢
+    have hshape :=
+      language_concat_right_empty_only_mem heps4Only hw
+    exact language_concat_right_empty_mem hepsMem hshape
+  · simpa [OrderedABCGrammar, CFG.FormLanguage, orderedABCSymbolLanguage,
+      orderedN, orderedT, ggNonterminal, ggTerminal] using hw
+  · simpa [OrderedABCGrammar, CFG.FormLanguage, orderedABCSymbolLanguage,
+      orderedN, orderedT, ggNonterminal, ggTerminal] using hw
+  · simpa [OrderedABCGrammar, CFG.FormLanguage, orderedABCSymbolLanguage,
+      orderedN, orderedT, ggNonterminal, ggTerminal] using hw
+  · simpa [OrderedABCGrammar, CFG.FormLanguage, orderedABCSymbolLanguage,
+      orderedN, orderedT, ggNonterminal, ggTerminal] using hw
+  · simp [CFG.FormLanguage, orderedABCSymbolLanguage,
+      orderedN, orderedT, ggNonterminal, ggTerminal] at hw ⊢
+    rcases hw with ⟨pref, suffix, hpref, hsuffix, hword⟩
+    have hsuffixShape :
+        suffix ∈ orderedABCShapeLanguage :=
+      language_concat_right_empty_only_mem hepsOnly hsuffix
+    have hshape : word ∈ orderedABCShapeLanguage := by
+      rw [hword, hpref]
+      simpa [Word.Symbol] using orderedABCShape_cons_a hsuffixShape
+    exact language_concat_right_empty_mem heps2Mem hshape
+  · simp [CFG.FormLanguage, orderedABCSymbolLanguage, orderedN,
+      ggNonterminal] at hw ⊢
+    have htail :=
+      language_concat_right_empty_only_mem hepsOnly hw
+    exact language_concat_right_empty_mem hepsMem
+      (orderedABCBCShape_subset_shape htail)
+  · simp [CFG.FormLanguage, orderedABCSymbolLanguage,
+      orderedN, orderedT, ggNonterminal, ggTerminal] at hw ⊢
+    rcases hw with ⟨pref, suffix, hpref, hsuffix, hword⟩
+    have hsuffixShape :
+        suffix ∈ orderedABCBCShapeLanguage :=
+      language_concat_right_empty_only_mem hepsOnly hsuffix
+    have hshape : word ∈ orderedABCBCShapeLanguage := by
+      rw [hword, hpref]
+      simpa [Word.Symbol] using orderedABCBCShape_cons_b hsuffixShape
+    exact language_concat_right_empty_mem heps2Mem hshape
+  · simp [CFG.FormLanguage, orderedABCSymbolLanguage, orderedN,
+      ggNonterminal] at hw ⊢
+    have htail :=
+      language_concat_right_empty_only_mem hepsOnly hw
+    exact language_concat_right_empty_mem hepsMem
+      (orderedABCCShape_subset_bcShape htail)
+  · simp [CFG.FormLanguage, orderedABCSymbolLanguage,
+      orderedN, orderedT, ggNonterminal, ggTerminal] at hw ⊢
+    rcases hw with ⟨pref, suffix, hpref, hsuffix, hword⟩
+    have hsuffixShape :
+        suffix ∈ orderedABCCShapeLanguage :=
+      language_concat_right_empty_only_mem hepsOnly hsuffix
+    have hshape : word ∈ orderedABCCShapeLanguage := by
+      rw [hword, hpref]
+      simpa [Word.Symbol] using orderedABCCShape_cons_c hsuffixShape
+    exact language_concat_right_empty_mem heps2Mem hshape
+  · simp [CFG.FormLanguage, orderedABCSymbolLanguage, orderedN,
+      ggNonterminal] at hw ⊢
+    rw [hw]
+    exact language_concat_right_empty_mem hepsMem orderedABCCShape_empty
+
+theorem orderedABCGrammar_generated_has_ordered_shape
+    {word : Word EqualCountTerminal}
+    (h : word ∈ GeneralGrammar.GeneratedLanguage OrderedABCGrammar) :
+    word ∈ orderedABCShapeLanguage := by
+  have hderives :
+      GeneralGrammar.Derives OrderedABCGrammar [orderedN OrderedABCNT.start]
+        (SententialForm.terminalWord word) := by
+    simpa [GeneralGrammar.GeneratedLanguage, OrderedABCGrammar, orderedN,
+      ggNonterminal] using h
+  have hs := general_derives_sound_for_symbol_language
+    orderedABCSymbolLanguage (by intro token; rfl)
+    (by
+      intro lhs rhs hprod word hw
+      exact orderedABC_production_shape_sound hprod word hw)
+    hderives
+  simp [CFG.FormLanguage, orderedABCSymbolLanguage, orderedN, ggNonterminal]
+    at hs
+  exact language_concat_right_empty_only_mem
+    (fun suffix hsuffix => hsuffix) hs
+
+theorem orderedABC_generated_only_language
+    {word : Word EqualCountTerminal}
+    (h : word ∈ GeneralGrammar.GeneratedLanguage OrderedABCGrammar) :
+    word ∈ orderedABCLanguage := by
+  exact orderedABCShape_equal_counts_language
+    (orderedABCGrammar_generated_has_ordered_shape h)
+    (orderedABCGrammar_generated_has_equal_terminal_counts h)
+
+theorem orderedABC_generated_language_exact
+    (word : Word EqualCountTerminal) :
+    word ∈ GeneralGrammar.GeneratedLanguage OrderedABCGrammar <->
+      word ∈ orderedABCLanguage := by
+  constructor
+  · exact orderedABC_generated_only_language
+  · exact orderedABC_language_subset_generated
+
+theorem orderedABCLanguage_finite_production_generated :
+    FiniteProductionGeneralLanguage orderedABCLanguage := by
+  exists OrderedABCNT
+  exists OrderedABCGrammar
+  constructor
+  · exact orderedABCGrammar_has_finite_productions
+  · intro word
+    exact orderedABC_generated_language_exact word
 
 def aabbccWord : Word EqualCountTerminal :=
   [EqualCountTerminal.a, EqualCountTerminal.a, EqualCountTerminal.b,
