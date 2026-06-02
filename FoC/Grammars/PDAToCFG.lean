@@ -627,6 +627,154 @@ theorem toCFG_producesFromList_sound
       | cons head tail =>
           simp [hpop] at hbefore
 
+theorem toCFG_producesFromList_complete
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {A : ToCFGNonterminal stack state}
+    {rhs : SententialForm input (ToCFGNonterminal stack state)}
+    (hprod : ToCFGProduces M A rhs) :
+    ToCFGProducesFromList M presentation A rhs := by
+  cases hprod with
+  | start haccept =>
+      rename_i q
+      refine
+        ⟨{ lhs := ToCFGNonterminal.start,
+           rhs := [Symbol.nonterminal (ToCFGNonterminal.empty M.start q)] },
+          ?_, rfl, rfl⟩
+      have hq : q ∈ presentation.acceptingStates :=
+        (presentation.accept_complete q).mp haccept
+      simp [productionList, startProductions]
+      left
+      exact ⟨q, hq, rfl⟩
+  | emptyRefl =>
+      rename_i q
+      refine
+        ⟨{ lhs := ToCFGNonterminal.empty q q, rhs := [] },
+          ?_, rfl, rfl⟩
+      simp [productionList, emptyReflProductions]
+      right
+      left
+      exact ⟨q, M.statesFinite.complete q, rfl⟩
+  | emptyStep htransition hchain =>
+      rename_i p r s q a? push chainRhs
+      rcases (presentation.transition_complete p a? [] r push).mp htransition with
+        ⟨rule, hrule, hApplies⟩
+      rcases hApplies with
+        ⟨hsource, hinput, hpop, htarget, hpush⟩
+      have hendpoint :
+          (s, chainRhs) ∈
+            chainEndpointForms (input := input) M.statesFinite.elems
+              rule.target rule.push := by
+        rw [htarget, hpush]
+        exact chainEndpointForms_complete M.statesFinite.complete hchain
+      let produced : CFG.Production input (ToCFGNonterminal stack state) :=
+        { lhs := ToCFGNonterminal.empty rule.source q,
+          rhs := inputPrefix rule.input? ++ chainRhs ++
+            [Symbol.nonterminal (ToCFGNonterminal.empty s q)] }
+      have hcase : produced ∈ emptyStepProductionsForRule M rule := by
+        unfold produced emptyStepProductionsForRule
+        rw [hpop]
+        simp
+        exact ⟨s, chainRhs, hendpoint, q, M.statesFinite.complete q,
+          rfl, rfl, rfl⟩
+      have htransitionProductions :
+          produced ∈ transitionProductions M presentation := by
+        unfold transitionProductions
+        apply List.mem_flatMap.mpr
+        refine ⟨rule, hrule, ?_⟩
+        simp [hcase]
+      refine ⟨produced, ?_, ?_, ?_⟩
+      · simp [productionList, htransitionProductions]
+      · simp [produced, hsource]
+      · simp [produced, hinput]
+  | popStep htransition hchain =>
+      rename_i p r q A a? push chainRhs
+      rcases (presentation.transition_complete p a? [A] r push).mp htransition with
+        ⟨rule, hrule, hApplies⟩
+      rcases hApplies with
+        ⟨hsource, hinput, hpop, htarget, hpush⟩
+      have hendpoint :
+          (q, chainRhs) ∈
+            chainEndpointForms (input := input) M.statesFinite.elems
+              rule.target rule.push := by
+        rw [htarget, hpush]
+        exact chainEndpointForms_complete M.statesFinite.complete hchain
+      let produced : CFG.Production input (ToCFGNonterminal stack state) :=
+        { lhs := ToCFGNonterminal.between rule.source A q,
+          rhs := inputPrefix rule.input? ++ chainRhs }
+      have hcase : produced ∈ popStepProductionsForRule M rule := by
+        unfold produced popStepProductionsForRule
+        rw [hpop]
+        simp
+        exact ⟨q, hendpoint, rfl⟩
+      have htransitionProductions :
+          produced ∈ transitionProductions M presentation := by
+        unfold transitionProductions
+        apply List.mem_flatMap.mpr
+        refine ⟨rule, hrule, ?_⟩
+        simp [hcase]
+      refine ⟨produced, ?_, ?_, ?_⟩
+      · simp [productionList, htransitionProductions]
+      · simp [produced, hsource]
+      · simp [produced, hinput]
+  | emptyBeforeTop htransition hchain =>
+      rename_i p r s q A a? push chainRhs
+      rcases (presentation.transition_complete p a? [] r push).mp htransition with
+        ⟨rule, hrule, hApplies⟩
+      rcases hApplies with
+        ⟨hsource, hinput, hpop, htarget, hpush⟩
+      have hendpoint :
+          (s, chainRhs) ∈
+            chainEndpointForms (input := input) M.statesFinite.elems
+              rule.target rule.push := by
+        rw [htarget, hpush]
+        exact chainEndpointForms_complete M.statesFinite.complete hchain
+      let produced : CFG.Production input (ToCFGNonterminal stack state) :=
+        { lhs := ToCFGNonterminal.between rule.source A q,
+          rhs := inputPrefix rule.input? ++ chainRhs ++
+            [Symbol.nonterminal (ToCFGNonterminal.between s A q)] }
+      have hcase :
+          produced ∈ emptyBeforeTopProductionsForRule M presentation rule := by
+        unfold produced emptyBeforeTopProductionsForRule
+        rw [hpop]
+        simp
+        exact ⟨s, chainRhs, hendpoint, A,
+          presentation.stackFinite.complete A, q,
+          M.statesFinite.complete q, rfl, rfl, rfl⟩
+      have htransitionProductions :
+          produced ∈ transitionProductions M presentation := by
+        unfold transitionProductions
+        apply List.mem_flatMap.mpr
+        refine ⟨rule, hrule, ?_⟩
+        simp [hcase]
+      refine ⟨produced, ?_, ?_, ?_⟩
+      · simp [productionList, htransitionProductions]
+      · simp [produced, hsource]
+      · simp [produced, hinput]
+
+theorem toCFG_producesFromList_iff
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {A : ToCFGNonterminal stack state}
+    {rhs : SententialForm input (ToCFGNonterminal stack state)} :
+    ToCFGProducesFromList M presentation A rhs <->
+      ToCFGProduces M A rhs := by
+  constructor
+  · exact toCFG_producesFromList_sound
+  · exact toCFG_producesFromList_complete
+
+theorem toCFG_derives_of_production
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {A : ToCFGNonterminal stack state}
+    {rhs : SententialForm input (ToCFGNonterminal stack state)}
+    (hprod : ToCFGProduces M A rhs) :
+    CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal A] rhs := by
+  apply CFG.Derives.step
+  · refine ⟨[], [], A, rhs, ?_, ?_, ?_⟩
+    · exact toCFG_producesFromList_complete hprod
+    · rfl
+    · rfl
+  · simpa using CFG.Derives.refl (G := ToCFG M presentation) rhs
+
 theorem toCFG_yields_sound
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {x y : SententialForm input (ToCFGNonterminal stack state)}
@@ -673,8 +821,9 @@ theorem toCFG_accepts_of_generates
 
 def ToCFGTopPopExact (M : PDA input stack state)
     (presentation : FinitePresentation M) : Prop :=
-  Language.Equal (CFG.GeneratedLanguage (ToCFG M presentation))
-    (PDA.AcceptedLanguage M)
+  PopsAtMostOne M ->
+    Language.Equal (CFG.GeneratedLanguage (ToCFG M presentation))
+      (PDA.AcceptedLanguage M)
 
 theorem toCFG_nonterminals_finite
     (M : PDA input stack state) (presentation : FinitePresentation M) :

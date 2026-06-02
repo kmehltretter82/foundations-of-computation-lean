@@ -126,8 +126,9 @@ def PDAToCFG (M : PDA input stack state)
   PDA.ToCFG M presentation
 
 -- Book: Chapter 4, Section 4.4, exactness target for the PDA-to-CFG
--- construction.  The construction module keeps this as the main theorem target
--- while the normalization and bidirectional proof are completed.
+-- construction under the top-pop normal-form assumption.  The construction
+-- module keeps this as the main theorem target while the normalization and
+-- reverse direction are completed.
 def PDAToCFGExact (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) : Prop :=
   PDA.ToCFGTopPopExact M presentation
