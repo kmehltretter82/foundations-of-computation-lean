@@ -1187,11 +1187,11 @@ theorem not_pumping_property_of_counterexamples {L : Language terminal}
   CFL.not_hasPumpingProperty_of_counterexamples hbad
 
 -- Book: Chapter 4, Section 4.5, contrapositive schema for pumping arguments.
-theorem not_context_free_of_no_pumping_property {L : Language terminal}
-    (pumpingLemma : CFL.PumpingLemmaConclusion L)
+theorem not_context_free_of_no_pumping_property {terminal : Type}
+    {L : Language terminal}
     (hNoPump : ¬ CFLHasPumpingProperty L) :
     ¬ CFL.ContextFreeLanguage L :=
-  CFL.not_context_free_of_no_pumping_property pumpingLemma hNoPump
+  CFL.not_context_free_of_no_pumping_property hNoPump
 
 -- Book: Chapter 4, Section 4.5, the language used in the first
 -- non-context-free example.
@@ -1515,6 +1515,12 @@ theorem anbncn_not_finite_production_context_free :
   exact anbncn_no_pumping_property
     (finite_production_pumping_property hcf)
 
+-- Book: Chapter 4, Section 4.5, `{a^n b^n c^n | n >= 0}` is not
+-- context-free for the book-facing finite-production CFL predicate.
+theorem anbncn_not_context_free :
+    ¬ CFL.ContextFreeLanguage anbncnLanguage :=
+  not_context_free_of_no_pumping_property anbncn_no_pumping_property
+
 -- Book: Chapter 4, Section 4.5, intersection nonclosure schema using the
 -- standard `{a^n b^n c^n}` contradiction.  Once two finite-production CFL
 -- witnesses have intersection exactly `anbncnLanguage`, closure under
@@ -1600,21 +1606,19 @@ theorem finite_production_cfl_complement_nonclosure_from_anbncn_witnesses
     finite_production_cfl_intersection_nonclosure_from_anbncn_witnesses
       hL hM hEq hInterClosed
 
--- Book: Chapter 4, Section 4.5, conditional non-context-freeness for
--- `{a^n b^n c^n | n >= 0}` from the CFL Pumping Lemma conclusion.
+-- Book: Chapter 4, Section 4.5, compatibility wrapper for older statements
+-- that supplied the pumping-lemma conclusion explicitly.
 theorem anbncn_not_context_free_from_pumping_lemma
-    (pumpingLemma : CFL.PumpingLemmaConclusion anbncnLanguage) :
+    (_pumpingLemma : CFL.PumpingLemmaConclusion anbncnLanguage) :
     ¬ CFL.ContextFreeLanguage anbncnLanguage :=
-  CFL.not_context_free_of_no_pumping_property pumpingLemma
-    anbncn_no_pumping_property
+  anbncn_not_context_free
 
 /-!
 The concrete contradiction for `{ a^n b^n c^n | n >= 0 }` is now formalized:
 no pumping length can satisfy the book's quantified CFL pumping property for
-this language, and the finite-production version of the CFL Pumping Lemma is
-formalized.  The final `not context-free` theorem remains parameterized only for
-the broader `ContextFreeLanguage` definition, which permits arbitrary production
-relations rather than requiring a finite production presentation.
+this language. Since the public `CFL.ContextFreeLanguage` predicate is now the
+book-facing finite-production predicate, this gives the unconditional
+`anbncn_not_context_free` theorem.
 -/
 
 end Section05

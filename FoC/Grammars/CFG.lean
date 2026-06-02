@@ -786,6 +786,111 @@ def UnionGrammar (G : CFG terminal left) (H : CFG terminal right) :
   produces := UnionProduces G H
   nonterminalsFinite := SumStart.finite G.nonterminalsFinite H.nonterminalsFinite
 
+def unionChooseLeftProduction (G : CFG terminal left) :
+    Production terminal (SumStart left right) where
+  lhs := SumStart.start
+  rhs := [Symbol.nonterminal (SumStart.inLeft G.start)]
+
+def unionChooseRightProduction (H : CFG terminal right) :
+    Production terminal (SumStart left right) where
+  lhs := SumStart.start
+  rhs := [Symbol.nonterminal (SumStart.inRight H.start)]
+
+def unionLeftProduction (rule : Production terminal left) :
+    Production terminal (SumStart left right) where
+  lhs := SumStart.inLeft rule.lhs
+  rhs := inLeftForm rule.rhs
+
+def unionRightProduction (rule : Production terminal right) :
+    Production terminal (SumStart left right) where
+  lhs := SumStart.inRight rule.lhs
+  rhs := inRightForm rule.rhs
+
+theorem union_hasFiniteProductions
+    {G : CFG terminal left} {H : CFG terminal right}
+    (hG : HasFiniteProductions G) (hH : HasFiniteProductions H) :
+    HasFiniteProductions (UnionGrammar G H) := by
+  cases hG with
+  | intro rulesG hrulesG =>
+      cases hH with
+      | intro rulesH hrulesH =>
+          exists [unionChooseLeftProduction (right := right) G,
+            unionChooseRightProduction (left := left) H] ++
+            rulesG.map (unionLeftProduction (right := right)) ++
+            rulesH.map (unionRightProduction (left := left))
+          intro A rhs
+          constructor
+          · intro h
+            cases h with
+            | chooseLeft =>
+                exists unionChooseLeftProduction (right := right) G
+                simp [unionChooseLeftProduction]
+            | chooseRight =>
+                exists unionChooseRightProduction (left := left) H
+                simp [unionChooseRightProduction]
+            | leftRule hprod =>
+                cases (hrulesG _ _).mp hprod with
+                | intro rule hrule =>
+                    exists unionLeftProduction (right := right) rule
+                    constructor
+                    · apply List.mem_append_left
+                      apply List.mem_append_right
+                      exact List.mem_map.mpr
+                        (Exists.intro rule (And.intro hrule.left rfl))
+                    · constructor
+                      · simp [unionLeftProduction, hrule.right.left]
+                      · simp [unionLeftProduction, hrule.right.right]
+            | rightRule hprod =>
+                cases (hrulesH _ _).mp hprod with
+                | intro rule hrule =>
+                    exists unionRightProduction (left := left) rule
+                    constructor
+                    · apply List.mem_append_right
+                      exact List.mem_map.mpr
+                        (Exists.intro rule (And.intro hrule.left rfl))
+                    · constructor
+                      · simp [unionRightProduction, hrule.right.left]
+                      · simp [unionRightProduction, hrule.right.right]
+          · intro h
+            cases h with
+            | intro rule hrule =>
+                have hmem := hrule.left
+                simp [unionChooseLeftProduction, unionChooseRightProduction,
+                  unionLeftProduction, unionRightProduction] at hmem
+                cases hmem with
+                | inl hleft =>
+                    rw [← hrule.right.left, ← hrule.right.right, hleft]
+                    exact UnionProduces.chooseLeft
+                | inr hrest =>
+                    cases hrest with
+                    | inl hright =>
+                        rw [← hrule.right.left, ← hrule.right.right, hright]
+                        exact UnionProduces.chooseRight
+                    | inr hrest' =>
+                        cases hrest' with
+                        | inl hleftRule =>
+                            cases hleftRule with
+                            | intro base hbase =>
+                                cases hbase with
+                                | intro hbaseMem hbaseEq =>
+                                    rw [← hrule.right.left, ← hrule.right.right, ← hbaseEq]
+                                    exact UnionProduces.leftRule
+                                      ((hrulesG base.lhs base.rhs).mpr
+                                        (Exists.intro base
+                                          (And.intro hbaseMem
+                                            (And.intro rfl rfl))))
+                        | inr hrightRule =>
+                            cases hrightRule with
+                            | intro base hbase =>
+                                cases hbase with
+                                | intro hbaseMem hbaseEq =>
+                                    rw [← hrule.right.left, ← hrule.right.right, ← hbaseEq]
+                                    exact UnionProduces.rightRule
+                                      ((hrulesH base.lhs base.rhs).mpr
+                                        (Exists.intro base
+                                          (And.intro hbaseMem
+                                            (And.intro rfl rfl))))
+
 def UnionSymbolLanguage (G : CFG terminal left) (H : CFG terminal right) :
     Symbol terminal (SumStart left right) -> Language terminal
   | Symbol.terminal a => Language.Singleton (Word.Symbol a)
@@ -1040,6 +1145,96 @@ def ConcatGrammar (G : CFG terminal left) (H : CFG terminal right) :
   start := SumStart.start
   produces := ConcatProduces G H
   nonterminalsFinite := SumStart.finite G.nonterminalsFinite H.nonterminalsFinite
+
+def concatStartProduction (G : CFG terminal left) (H : CFG terminal right) :
+    Production terminal (SumStart left right) where
+  lhs := SumStart.start
+  rhs := [Symbol.nonterminal (SumStart.inLeft G.start),
+    Symbol.nonterminal (SumStart.inRight H.start)]
+
+def concatLeftProduction (rule : Production terminal left) :
+    Production terminal (SumStart left right) where
+  lhs := SumStart.inLeft rule.lhs
+  rhs := inLeftForm rule.rhs
+
+def concatRightProduction (rule : Production terminal right) :
+    Production terminal (SumStart left right) where
+  lhs := SumStart.inRight rule.lhs
+  rhs := inRightForm rule.rhs
+
+theorem concat_hasFiniteProductions
+    {G : CFG terminal left} {H : CFG terminal right}
+    (hG : HasFiniteProductions G) (hH : HasFiniteProductions H) :
+    HasFiniteProductions (ConcatGrammar G H) := by
+  cases hG with
+  | intro rulesG hrulesG =>
+      cases hH with
+      | intro rulesH hrulesH =>
+          exists [concatStartProduction G H] ++
+            rulesG.map (concatLeftProduction (right := right)) ++
+            rulesH.map (concatRightProduction (left := left))
+          intro A rhs
+          constructor
+          · intro h
+            cases h with
+            | startRule =>
+                exists concatStartProduction G H
+                simp [concatStartProduction]
+            | leftRule hprod =>
+                cases (hrulesG _ _).mp hprod with
+                | intro rule hrule =>
+                    exists concatLeftProduction (right := right) rule
+                    constructor
+                    · apply List.mem_append_left
+                      apply List.mem_append_right
+                      exact List.mem_map.mpr
+                        (Exists.intro rule (And.intro hrule.left rfl))
+                    · constructor
+                      · simp [concatLeftProduction, hrule.right.left]
+                      · simp [concatLeftProduction, hrule.right.right]
+            | rightRule hprod =>
+                cases (hrulesH _ _).mp hprod with
+                | intro rule hrule =>
+                    exists concatRightProduction (left := left) rule
+                    constructor
+                    · apply List.mem_append_right
+                      exact List.mem_map.mpr
+                        (Exists.intro rule (And.intro hrule.left rfl))
+                    · constructor
+                      · simp [concatRightProduction, hrule.right.left]
+                      · simp [concatRightProduction, hrule.right.right]
+          · intro h
+            cases h with
+            | intro rule hrule =>
+                have hmem := hrule.left
+                simp [concatStartProduction, concatLeftProduction,
+                  concatRightProduction] at hmem
+                cases hmem with
+                | inl hstart =>
+                    rw [← hrule.right.left, ← hrule.right.right, hstart]
+                    exact ConcatProduces.startRule
+                | inr hrest =>
+                    cases hrest with
+                    | inl hleftRule =>
+                        cases hleftRule with
+                        | intro base hbase =>
+                            cases hbase with
+                            | intro hbaseMem hbaseEq =>
+                                rw [← hrule.right.left, ← hrule.right.right, ← hbaseEq]
+                                exact ConcatProduces.leftRule
+                                  ((hrulesG base.lhs base.rhs).mpr
+                                    (Exists.intro base
+                                      (And.intro hbaseMem (And.intro rfl rfl))))
+                    | inr hrightRule =>
+                        cases hrightRule with
+                        | intro base hbase =>
+                            cases hbase with
+                            | intro hbaseMem hbaseEq =>
+                                rw [← hrule.right.left, ← hrule.right.right, ← hbaseEq]
+                                exact ConcatProduces.rightRule
+                                  ((hrulesH base.lhs base.rhs).mpr
+                                    (Exists.intro base
+                                      (And.intro hbaseMem (And.intro rfl rfl))))
 
 theorem inLeftForm_context_of_eq
     {x : SententialForm terminal left} {y : SententialForm terminal right}
@@ -1610,6 +1805,74 @@ def StarGrammar (G : CFG terminal nt) : CFG terminal (StarNT nt) where
   start := StarNT.start
   produces := StarProduces G
   nonterminalsFinite := StarNT.finite G.nonterminalsFinite
+
+def starStopProduction : Production terminal (StarNT nt) where
+  lhs := StarNT.start
+  rhs := []
+
+def starMoreProduction (G : CFG terminal nt) :
+    Production terminal (StarNT nt) where
+  lhs := StarNT.start
+  rhs := [Symbol.nonterminal (StarNT.body G.start), Symbol.nonterminal StarNT.start]
+
+def starBodyProduction (rule : Production terminal nt) :
+    Production terminal (StarNT nt) where
+  lhs := StarNT.body rule.lhs
+  rhs := starBodyForm rule.rhs
+
+theorem star_hasFiniteProductions
+    {G : CFG terminal nt}
+    (hG : HasFiniteProductions G) :
+    HasFiniteProductions (StarGrammar G) := by
+  cases hG with
+  | intro rules hrules =>
+      exists [starStopProduction (terminal := terminal) (nt := nt),
+        starMoreProduction G] ++ rules.map starBodyProduction
+      intro A rhs
+      constructor
+      · intro h
+        cases h with
+        | stop =>
+            exists starStopProduction (terminal := terminal) (nt := nt)
+            simp [starStopProduction]
+        | more =>
+            exists starMoreProduction G
+            simp [starMoreProduction]
+        | bodyRule hprod =>
+            cases (hrules _ _).mp hprod with
+            | intro rule hrule =>
+                exists starBodyProduction rule
+                constructor
+                · apply List.mem_append_right
+                  exact List.mem_map.mpr
+                    (Exists.intro rule (And.intro hrule.left rfl))
+                · constructor
+                  · simp [starBodyProduction, hrule.right.left]
+                  · simp [starBodyProduction, hrule.right.right]
+      · intro h
+        cases h with
+        | intro rule hrule =>
+            have hmem := hrule.left
+            simp [starStopProduction, starMoreProduction, starBodyProduction] at hmem
+            cases hmem with
+            | inl hstop =>
+                rw [← hrule.right.left, ← hrule.right.right, hstop]
+                exact StarProduces.stop
+            | inr hrest =>
+                cases hrest with
+                | inl hmore =>
+                    rw [← hrule.right.left, ← hrule.right.right, hmore]
+                    exact StarProduces.more
+                | inr hbody =>
+                    cases hbody with
+                    | intro base hbase =>
+                        cases hbase with
+                        | intro hbaseMem hbaseEq =>
+                            rw [← hrule.right.left, ← hrule.right.right, ← hbaseEq]
+                            exact StarProduces.bodyRule
+                              ((hrules base.lhs base.rhs).mpr
+                                (Exists.intro base
+                                  (And.intro hbaseMem (And.intro rfl rfl))))
 
 def StarSymbolLanguage (G : CFG terminal nt) :
     Symbol terminal (StarNT nt) -> Language terminal

@@ -15,16 +15,19 @@ open Languages
 
 namespace CFL
 
-def ContextFreeLanguage (L : Language terminal) : Prop :=
+def GeneratedByCFG (L : Language terminal) : Prop :=
   CFG.ContextFree L
 
 def FiniteProductionContextFreeLanguage (L : Language terminal) : Prop :=
   exists nonterminal : Type, exists G : CFG terminal nonterminal,
     CFG.HasFiniteProductions G ∧ Language.Equal (CFG.GeneratedLanguage G) L
 
-theorem finiteProduction_contextFree {L : Language terminal}
-    (hL : FiniteProductionContextFreeLanguage L) :
-    ContextFreeLanguage L := by
+def ContextFreeLanguage (L : Language terminal) : Prop :=
+  FiniteProductionContextFreeLanguage L
+
+theorem contextFree_generatedByCFG {L : Language terminal}
+    (hL : ContextFreeLanguage L) :
+    GeneratedByCFG L := by
   cases hL with
   | intro nonterminal hnt =>
       cases hnt with
@@ -32,6 +35,11 @@ theorem finiteProduction_contextFree {L : Language terminal}
           exists nonterminal
           exists G
           exact hG.right
+
+theorem finiteProduction_contextFree {L : Language terminal}
+    (hL : FiniteProductionContextFreeLanguage L) :
+    ContextFreeLanguage L :=
+  hL
 
 theorem finiteProduction_rhs_length_bound {G : CFG terminal nonterminal}
     (hG : CFG.HasFiniteProductions G) :
@@ -74,16 +82,20 @@ theorem union_context_free {L M : Language terminal}
               | intro H hH =>
                   exists CFG.SumStart left right
                   exists CFG.UnionGrammar G H
-                  intro w
                   constructor
-                  · intro hw
-                    cases CFG.union_generates_inv G H hw with
-                    | inl hwG => exact Or.inl ((hG w).mp hwG)
-                    | inr hwH => exact Or.inr ((hH w).mp hwH)
-                  · intro hw
-                    cases hw with
-                    | inl hwL => exact CFG.union_generates_left G H ((hG w).mpr hwL)
-                    | inr hwM => exact CFG.union_generates_right G H ((hH w).mpr hwM)
+                  · exact CFG.union_hasFiniteProductions hG.left hH.left
+                  · intro w
+                    constructor
+                    · intro hw
+                      cases CFG.union_generates_inv G H hw with
+                      | inl hwG => exact Or.inl ((hG.right w).mp hwG)
+                      | inr hwH => exact Or.inr ((hH.right w).mp hwH)
+                    · intro hw
+                      cases hw with
+                      | inl hwL =>
+                          exact CFG.union_generates_left G H ((hG.right w).mpr hwL)
+                      | inr hwM =>
+                          exact CFG.union_generates_right G H ((hH.right w).mpr hwM)
 
 theorem concatGrammar_generates (G : CFG terminal left) (H : CFG terminal right)
     {x y : Word terminal}
@@ -116,28 +128,30 @@ theorem concat_context_free {L M : Language terminal}
               | intro H hH =>
                   exists CFG.SumStart left right
                   exists CFG.ConcatGrammar G H
-                  intro w
                   constructor
-                  · intro hw
-                    cases CFG.concat_generates_inv G H hw with
-                    | intro x hx =>
-                        cases hx with
-                        | intro y hy =>
-                            exists x
-                            exists y
-                            constructor
-                            · exact (hG x).mp hy.left
-                            constructor
-                            · exact (hH y).mp hy.right.left
-                            · exact hy.right.right
-                  · intro hw
-                    cases hw with
-                    | intro x hx =>
-                        cases hx with
-                        | intro y hy =>
-                            rw [hy.right.right]
-                            exact CFG.concat_generates G H
-                              ((hG x).mpr hy.left) ((hH y).mpr hy.right.left)
+                  · exact CFG.concat_hasFiniteProductions hG.left hH.left
+                  · intro w
+                    constructor
+                    · intro hw
+                      cases CFG.concat_generates_inv G H hw with
+                      | intro x hx =>
+                          cases hx with
+                          | intro y hy =>
+                              exists x
+                              exists y
+                              constructor
+                              · exact (hG.right x).mp hy.left
+                              constructor
+                              · exact (hH.right y).mp hy.right.left
+                              · exact hy.right.right
+                    · intro hw
+                      cases hw with
+                      | intro x hx =>
+                          cases hx with
+                          | intro y hy =>
+                              rw [hy.right.right]
+                              exact CFG.concat_generates G H
+                                ((hG.right x).mpr hy.left) ((hH.right y).mpr hy.right.left)
 
 theorem starGrammar_generates_empty (G : CFG terminal nt) :
     ([] : Word terminal) ∈ CFG.GeneratedLanguage (CFG.StarGrammar G) :=
@@ -169,23 +183,25 @@ theorem star_context_free {L : Language terminal}
       | intro G hG =>
           exists CFG.StarNT nt
           exists CFG.StarGrammar G
-          intro w
           constructor
-          · intro hw
-            cases CFG.star_generates_inv G hw with
-            | intro pieces hpieces =>
-                exists pieces
-                constructor
-                · intro p hp
-                  exact (hG p).mp (hpieces.left p hp)
-                · exact hpieces.right
-          · intro hw
-            cases hw with
-            | intro pieces hpieces =>
-                rw [← hpieces.right]
-                exact CFG.star_generates_of_pieces G pieces (by
-                  intro p hp
-                  exact (hG p).mpr (hpieces.left p hp))
+          · exact CFG.star_hasFiniteProductions hG.left
+          · intro w
+            constructor
+            · intro hw
+              cases CFG.star_generates_inv G hw with
+              | intro pieces hpieces =>
+                  exists pieces
+                  constructor
+                  · intro p hp
+                    exact (hG.right p).mp (hpieces.left p hp)
+                  · exact hpieces.right
+            · intro hw
+              cases hw with
+              | intro pieces hpieces =>
+                  rw [← hpieces.right]
+                  exact CFG.star_generates_of_pieces G pieces (by
+                    intro p hp
+                    exact (hG.right p).mpr (hpieces.left p hp))
 
 def Concat3 (x y z : Word terminal) : Word terminal :=
   Word.Concat x (Word.Concat y z)
@@ -524,6 +540,17 @@ theorem finiteProduction_hasPumpingProperty {terminal : Type}
           exact hasPumpingProperty_of_equal hG.right
             (finiteProduction_generated_hasPumpingProperty hG.left)
 
+theorem contextFree_hasPumpingProperty {terminal : Type}
+    {L : Language terminal}
+    (hL : ContextFreeLanguage L) :
+    HasPumpingProperty L :=
+  finiteProduction_hasPumpingProperty hL
+
+theorem pumpingLemmaConclusion {terminal : Type}
+    (L : Language terminal) :
+    PumpingLemmaConclusion L :=
+  contextFree_hasPumpingProperty
+
 theorem pumpingLength_mono {L : Language terminal} {K M : Nat}
     (hKM : K <= M) (h : PumpingLength L K) :
     PumpingLength L M := by
@@ -599,7 +626,15 @@ theorem not_hasPumpingProperty_of_counterexamples {L : Language terminal}
           exact not_pumpingLength_of_counterexample hw.left hw.right.left
             hw.right.right hK
 
-theorem not_context_free_of_no_pumping_property {L : Language terminal}
+theorem not_context_free_of_no_pumping_property {terminal : Type}
+    {L : Language terminal}
+    (hNoPump : ¬ HasPumpingProperty L) :
+    ¬ ContextFreeLanguage L := by
+  intro hcf
+  exact hNoPump (contextFree_hasPumpingProperty hcf)
+
+theorem not_context_free_of_no_pumping_property_from_conclusion
+    {terminal : Type} {L : Language terminal}
     (pumpingLemma : PumpingLemmaConclusion L)
     (hNoPump : ¬ HasPumpingProperty L) :
     ¬ ContextFreeLanguage L := by
