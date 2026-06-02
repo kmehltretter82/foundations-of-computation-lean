@@ -239,8 +239,8 @@ completed:
         reason: "General grammar definitions and CFG embedding are formalized; equivalence with recursively enumerable languages belongs with the Chapter 5 computability development."
   - coordinate: "Chapter 5"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 69
-    definition_declarations: 28
+    theorem_declarations: 84
+    definition_declarations: 34
     modules:
       - "FoC.Book.Chapter05.Section01"
       - "FoC.Book.Chapter05.Section02"
@@ -271,8 +271,9 @@ completed:
       - "Co-recursively enumerable language vocabulary, finite-stage acceptance traces for recursively enumerable languages, complementary acceptance traces for RE plus co-RE languages, bounded trace-hit search, no-conflict lemmas, and the classical bounded classification core that underlies dovetailing"
       - "Listing and range-language vocabulary for recursively enumerable languages, including listability/range extensionality"
       - "General grammar versus recursively enumerable language equivalence statement shape"
-      - "Non-computable function, non-acceptable language, undecidable language, diagonal-language, halting-problem, and universal-machine specification vocabulary, with extensionality and complement transport"
-      - "Abstract diagonal contradiction core for self-recognition predicates"
+      - "Non-computable function, non-acceptable language, undecidable language, decidable and acceptable reductions, diagonal-language, decoder-row recognition, decoder-universality for acceptable languages and for all languages, halting-problem, and universal-machine specification vocabulary, with extensionality and complement transport"
+      - "Reduction reflexivity/transitivity, complement preservation for decidable reductions, undecidability transfer along decidable reductions, and non-acceptability transfer along acceptable reductions"
+      - "Abstract diagonal contradiction core for self-recognition predicates, no decoder row for a decoder's own diagonal language, missing-language and no-universal-decoder theorems, non-acceptability under decoder universality, and halting-pair membership in the abstract halting-problem language"
     classified_not_formalized_yet:
       - coordinate: "Chapter 5, Section 5.1"
         reason: "Concrete transition diagrams and machine programs are application artifacts; the formal core provides tape/configuration/machine semantics, finite-step halting traces, and computability vocabulary."
@@ -283,6 +284,6 @@ completed:
       - coordinate: "Chapter 5, Section 5.2"
         reason: "Finite-step acceptance traces, stopped-decider complementary output traces, and the RE/co-RE bounded-search classification core are formalized; the transition-level dovetailing machine that turns paired recognizers into a concrete decider remains deferred."
       - coordinate: "Chapter 5, Section 5.3"
-        reason: "The abstract diagonal contradiction core is formalized. Universal-machine construction, concrete machine encodings, diagonal non-enumerability, and halting-problem undecidability require encoding and interpreter infrastructure not yet present."
+        reason: "The abstract diagonal contradiction core, decoder-row diagonalization, no-universal-decoder theorem, reduction-transfer schemas, and conditional non-acceptability under decoder universality are formalized. Universal-machine construction, concrete machine encodings, and concrete halting-problem undecidability require encoding and interpreter infrastructure not yet present."
 in_progress: []
 planned: []
