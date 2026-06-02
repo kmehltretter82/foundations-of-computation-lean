@@ -131,6 +131,14 @@ inductive Computes (M : PDA input stack state) :
   | step {c d e : Configuration input stack state} :
       Step M c d -> Computes M d e -> Computes M c e
 
+inductive ComputesIn (M : PDA input stack state) :
+    Nat -> Configuration input stack state ->
+      Configuration input stack state -> Prop where
+  | zero (c : Configuration input stack state) :
+      ComputesIn M 0 c c
+  | succ {n : Nat} {c d e : Configuration input stack state} :
+      Step M c d -> ComputesIn M n d e -> ComputesIn M (n + 1) c e
+
 def Accepts (M : PDA input stack state) (w : Word input) : Prop :=
   exists q : state,
     M.accept q ∧
@@ -171,6 +179,103 @@ theorem computes_of_step {M : PDA input stack state}
     {a b : Configuration input stack state} (h : Step M a b) :
     Computes M a b :=
   Computes.step h (Computes.refl b)
+
+theorem computesIn_computes {M : PDA input stack state}
+    {n : Nat} {a b : Configuration input stack state}
+    (h : ComputesIn M n a b) : Computes M a b := by
+  induction h with
+  | zero c =>
+      exact Computes.refl c
+  | succ hstep _ ih =>
+      exact Computes.step hstep ih
+
+theorem computes_exists_length {M : PDA input stack state}
+    {a b : Configuration input stack state}
+    (h : Computes M a b) :
+    exists n : Nat, ComputesIn M n a b := by
+  induction h with
+  | refl c =>
+      exact ⟨0, ComputesIn.zero c⟩
+  | step hstep _ ih =>
+      rcases ih with ⟨n, hn⟩
+      exact ⟨n + 1, ComputesIn.succ hstep hn⟩
+
+theorem computes_iff_exists_computesIn {M : PDA input stack state}
+    {a b : Configuration input stack state} :
+    Computes M a b <-> exists n : Nat, ComputesIn M n a b := by
+  constructor
+  · exact computes_exists_length
+  · intro h
+    rcases h with ⟨n, hn⟩
+    exact computesIn_computes hn
+
+theorem computesIn_of_step {M : PDA input stack state}
+    {a b : Configuration input stack state} (h : Step M a b) :
+    ComputesIn M 1 a b := by
+  simpa using ComputesIn.succ (n := 0) h (ComputesIn.zero b)
+
+theorem computesIn_trans {M : PDA input stack state}
+    {m n : Nat} {a b c : Configuration input stack state}
+    (hab : ComputesIn M m a b) (hbc : ComputesIn M n b c) :
+    ComputesIn M (m + n) a c := by
+  induction hab generalizing n c with
+  | zero _ =>
+      simpa using hbc
+  | succ hstep _ ih =>
+      simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using
+        ComputesIn.succ hstep (ih hbc)
+
+theorem computesIn_zero_eq {M : PDA input stack state}
+    {a b : Configuration input stack state}
+    (h : ComputesIn M 0 a b) : a = b := by
+  cases h
+  rfl
+
+theorem computesIn_succ_inv {M : PDA input stack state}
+    {n : Nat} {a c : Configuration input stack state}
+    (h : ComputesIn M (n + 1) a c) :
+    exists b : Configuration input stack state,
+      Step M a b ∧ ComputesIn M n b c := by
+  cases h with
+  | succ hstep hrest =>
+      exact ⟨_, hstep, hrest⟩
+
+theorem computesIn_one_inv {M : PDA input stack state}
+    {a c : Configuration input stack state}
+    (h : ComputesIn M 1 a c) :
+    Step M a c := by
+  rcases computesIn_succ_inv (n := 0) h with ⟨b, hstep, hrest⟩
+  have hb : b = c := computesIn_zero_eq hrest
+  rwa [hb] at hstep
+
+theorem step_cases {M : PDA input stack state}
+    {c d : Configuration input stack state}
+    (h : Step M c d) :
+    (exists q : state, exists r : state, exists a : input,
+      exists unread : Word input, exists pop : Word stack,
+      exists push : Word stack, exists restStack : Word stack,
+        M.transition q (some a) pop r push ∧
+          c = { state := q, unread := a :: unread,
+                stack := Word.Concat pop restStack } ∧
+          d = { state := r, unread := unread,
+                stack := Word.Concat push restStack }) ∨
+    (exists q : state, exists r : state, exists unread : Word input,
+      exists pop : Word stack, exists push : Word stack,
+      exists restStack : Word stack,
+        M.transition q none pop r push ∧
+          c = { state := q, unread := unread,
+                stack := Word.Concat pop restStack } ∧
+          d = { state := r, unread := unread,
+                stack := Word.Concat push restStack }) := by
+  cases h with
+  | read htransition =>
+      left
+      repeat first | apply Exists.intro _
+      exact ⟨htransition, rfl, rfl⟩
+  | epsilon htransition =>
+      right
+      repeat first | apply Exists.intro _
+      exact ⟨htransition, rfl, rfl⟩
 
 theorem accepts_implies_final_state_accepts {M : PDA input stack state}
     {w : Word input} (h : Accepts M w) : AcceptsByFinalState M w := by

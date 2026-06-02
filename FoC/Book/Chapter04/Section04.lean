@@ -27,6 +27,79 @@ theorem pda_step_is_computation {M : PDA input stack state}
     PDA.Computes M a b :=
   PDA.computes_of_step h
 
+-- Book: Chapter 4, Section 4.4, a length-indexed PDA computation is an
+-- ordinary multi-step computation.
+theorem pda_bounded_computation_is_computation
+    {M : PDA input stack state}
+    {n : Nat} {a b : PDA.Configuration input stack state}
+    (h : PDA.ComputesIn M n a b) :
+    PDA.Computes M a b :=
+  PDA.computesIn_computes h
+
+-- Book: Chapter 4, Section 4.4, every ordinary multi-step computation has a
+-- finite step count.
+theorem pda_computation_has_length
+    {M : PDA input stack state}
+    {a b : PDA.Configuration input stack state}
+    (h : PDA.Computes M a b) :
+    exists n : Nat, PDA.ComputesIn M n a b :=
+  PDA.computes_exists_length h
+
+-- Book: Chapter 4, Section 4.4, ordinary and length-indexed PDA computations
+-- are equivalent up to existentially hiding the step count.
+theorem pda_computation_iff_has_length
+    {M : PDA input stack state}
+    {a b : PDA.Configuration input stack state} :
+    PDA.Computes M a b <->
+      exists n : Nat, PDA.ComputesIn M n a b :=
+  PDA.computes_iff_exists_computesIn
+
+-- Book: Chapter 4, Section 4.4, one PDA step is a one-step indexed
+-- computation.
+theorem pda_step_is_bounded_computation
+    {M : PDA input stack state}
+    {a b : PDA.Configuration input stack state}
+    (h : PDA.Step M a b) :
+    PDA.ComputesIn M 1 a b :=
+  PDA.computesIn_of_step h
+
+-- Book: Chapter 4, Section 4.4, length-indexed PDA computations compose and
+-- their lengths add.
+theorem pda_bounded_computation_transitive
+    {M : PDA input stack state}
+    {m n : Nat} {a b c : PDA.Configuration input stack state}
+    (hab : PDA.ComputesIn M m a b)
+    (hbc : PDA.ComputesIn M n b c) :
+    PDA.ComputesIn M (m + n) a c :=
+  PDA.computesIn_trans hab hbc
+
+-- Book: Chapter 4, Section 4.4, a zero-length indexed computation has equal
+-- endpoints.
+theorem pda_bounded_computation_zero_eq
+    {M : PDA input stack state}
+    {a b : PDA.Configuration input stack state}
+    (h : PDA.ComputesIn M 0 a b) : a = b :=
+  PDA.computesIn_zero_eq h
+
+-- Book: Chapter 4, Section 4.4, a positive-length indexed computation splits
+-- into its first step and the remaining indexed computation.
+theorem pda_bounded_computation_succ_inv
+    {M : PDA input stack state}
+    {n : Nat} {a c : PDA.Configuration input stack state}
+    (h : PDA.ComputesIn M (n + 1) a c) :
+    exists b : PDA.Configuration input stack state,
+      PDA.Step M a b ∧ PDA.ComputesIn M n b c :=
+  PDA.computesIn_succ_inv h
+
+-- Book: Chapter 4, Section 4.4, a one-step indexed computation is exactly a
+-- PDA step.
+theorem pda_bounded_computation_one_inv
+    {M : PDA input stack state}
+    {a c : PDA.Configuration input stack state}
+    (h : PDA.ComputesIn M 1 a c) :
+    PDA.Step M a c :=
+  PDA.computesIn_one_inv h
+
 -- Book: Chapter 4, Section 4.4, accepted language of a PDA.
 def PDAAcceptedLanguage (M : PDA input stack state) : Language input :=
   PDA.AcceptedLanguage M
@@ -346,6 +419,126 @@ theorem pda_to_cfg_empty_before_top_of_chain_derives
       (SententialForm.terminalWord
         (Word.Concat pref (Word.Concat chainWord topWord))) :=
   PDA.toCFG_emptyBeforeTop_of_chainDerives htransition hchain hpref htop
+
+-- Book: Chapter 4, Section 4.4, read-transition specialization of the
+-- one-symbol-pop chain-decomposition constructor.
+theorem pda_to_cfg_pop_read_of_chain_derives
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p r q : state} {A : stack} {a : input}
+    {push : Word stack} {chainWord : Word input}
+    (htransition : M.transition p (some a) [A] r push)
+    (hchain : PDA.ToCFGChainDerives M presentation r push q chainWord) :
+    CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.between p A q)]
+      (SententialForm.terminalWord
+        (Word.Concat (Word.Symbol a) chainWord)) :=
+  PDA.toCFG_popRead_of_chainDerives htransition hchain
+
+-- Book: Chapter 4, Section 4.4, epsilon-transition specialization of the
+-- one-symbol-pop chain-decomposition constructor.
+theorem pda_to_cfg_pop_epsilon_of_chain_derives
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p r q : state} {A : stack}
+    {push : Word stack} {chainWord : Word input}
+    (htransition : M.transition p none [A] r push)
+    (hchain : PDA.ToCFGChainDerives M presentation r push q chainWord) :
+    CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.between p A q)]
+      (SententialForm.terminalWord chainWord) :=
+  PDA.toCFG_popEpsilon_of_chainDerives htransition hchain
+
+-- Book: Chapter 4, Section 4.4, read-transition specialization of the
+-- empty-pop tail-preserving chain-decomposition constructor.
+theorem pda_to_cfg_empty_read_of_chain_derives
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p r s q : state} {a : input}
+    {push : Word stack}
+    {chainWord emptyWord : Word input}
+    (htransition : M.transition p (some a) [] r push)
+    (hchain : PDA.ToCFGChainDerives M presentation r push s chainWord)
+    (hempty : CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.empty s q)]
+      (SententialForm.terminalWord emptyWord)) :
+    CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.empty p q)]
+      (SententialForm.terminalWord
+        (Word.Concat (Word.Symbol a)
+          (Word.Concat chainWord emptyWord))) :=
+  PDA.toCFG_emptyRead_of_chainDerives htransition hchain hempty
+
+-- Book: Chapter 4, Section 4.4, epsilon-transition specialization of the
+-- empty-pop tail-preserving chain-decomposition constructor.
+theorem pda_to_cfg_empty_epsilon_of_chain_derives
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p r s q : state}
+    {push : Word stack}
+    {chainWord emptyWord : Word input}
+    (htransition : M.transition p none [] r push)
+    (hchain : PDA.ToCFGChainDerives M presentation r push s chainWord)
+    (hempty : CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.empty s q)]
+      (SententialForm.terminalWord emptyWord)) :
+    CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.empty p q)]
+      (SententialForm.terminalWord
+        (Word.Concat chainWord emptyWord)) :=
+  PDA.toCFG_emptyEpsilon_of_chainDerives htransition hchain hempty
+
+-- Book: Chapter 4, Section 4.4, read-transition specialization of the
+-- empty-pop before-top chain-decomposition constructor.
+theorem pda_to_cfg_empty_before_top_read_of_chain_derives
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p r s q : state} {A : stack} {a : input}
+    {push : Word stack}
+    {chainWord topWord : Word input}
+    (htransition : M.transition p (some a) [] r push)
+    (hchain : PDA.ToCFGChainDerives M presentation r push s chainWord)
+    (htop : CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.between s A q)]
+      (SententialForm.terminalWord topWord)) :
+    CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.between p A q)]
+      (SententialForm.terminalWord
+        (Word.Concat (Word.Symbol a)
+          (Word.Concat chainWord topWord))) :=
+  PDA.toCFG_emptyBeforeTopRead_of_chainDerives htransition hchain htop
+
+-- Book: Chapter 4, Section 4.4, epsilon-transition specialization of the
+-- empty-pop before-top chain-decomposition constructor.
+theorem pda_to_cfg_empty_before_top_epsilon_of_chain_derives
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {p r s q : state} {A : stack}
+    {push : Word stack}
+    {chainWord topWord : Word input}
+    (htransition : M.transition p none [] r push)
+    (hchain : PDA.ToCFGChainDerives M presentation r push s chainWord)
+    (htop : CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.between s A q)]
+      (SententialForm.terminalWord topWord)) :
+    CFG.Derives (PDAToCFG M presentation)
+      [Symbol.nonterminal (PDA.ToCFGNonterminal.between p A q)]
+      (SententialForm.terminalWord
+        (Word.Concat chainWord topWord)) :=
+  PDA.toCFG_emptyBeforeTopEpsilon_of_chainDerives htransition hchain htop
+
+-- Book: Chapter 4, Section 4.4, first reverse-language theorem for the
+-- PDA-to-CFG construction: any one-step accepting computation is generated by
+-- the constructed grammar.
+theorem pda_to_cfg_generates_of_accepts_in_one
+    {M : PDA input stack state}
+    {presentation : PDA.FinitePresentation M}
+    {w : Word input} {qf : state}
+    (haccept : M.accept qf)
+    (hcomp : PDA.ComputesIn M 1 (PDA.initial M w)
+      { state := qf, unread := [], stack := [] }) :
+    w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
+  PDA.toCFG_generates_of_acceptsIn_one haccept hcomp
 
 inductive AnBnPDAStack where
   | marker

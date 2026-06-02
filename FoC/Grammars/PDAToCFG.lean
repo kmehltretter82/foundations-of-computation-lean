@@ -1062,6 +1062,196 @@ theorem toCFG_emptyBeforeTop_of_chainDerives
   exact toCFG_emptyBeforeTop_derives htransition hchainRhs hpref
     hchainWord htop
 
+theorem toCFG_popRead_of_chainDerives
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {p r q : state} {A : stack} {a : input}
+    {push : Word stack} {chainWord : Word input}
+    (htransition : M.transition p (some a) [A] r push)
+    (hchain : ToCFGChainDerives M presentation r push q chainWord) :
+    CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.between p A q)]
+      (SententialForm.terminalWord
+        (Word.Concat (Word.Symbol a) chainWord)) := by
+  exact toCFG_popStep_of_chainDerives htransition hchain
+    (inputPrefix_some_mem_derivationSymbolLanguage
+      (ToCFG M presentation) a)
+
+theorem toCFG_popEpsilon_of_chainDerives
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {p r q : state} {A : stack}
+    {push : Word stack} {chainWord : Word input}
+    (htransition : M.transition p none [A] r push)
+    (hchain : ToCFGChainDerives M presentation r push q chainWord) :
+    CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.between p A q)]
+      (SententialForm.terminalWord chainWord) := by
+  simpa [Word.Concat, Word.Empty] using
+    toCFG_popStep_of_chainDerives htransition hchain
+      (inputPrefix_none_mem_derivationSymbolLanguage
+        (ToCFG M presentation))
+
+theorem toCFG_emptyRead_of_chainDerives
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {p r s q : state} {a : input}
+    {push : Word stack}
+    {chainWord emptyWord : Word input}
+    (htransition : M.transition p (some a) [] r push)
+    (hchain : ToCFGChainDerives M presentation r push s chainWord)
+    (hempty : CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.empty s q)]
+      (SententialForm.terminalWord emptyWord)) :
+    CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.empty p q)]
+      (SententialForm.terminalWord
+        (Word.Concat (Word.Symbol a)
+          (Word.Concat chainWord emptyWord))) := by
+  exact toCFG_emptyStep_of_chainDerives htransition hchain
+    (inputPrefix_some_mem_derivationSymbolLanguage
+      (ToCFG M presentation) a)
+    hempty
+
+theorem toCFG_emptyEpsilon_of_chainDerives
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {p r s q : state}
+    {push : Word stack}
+    {chainWord emptyWord : Word input}
+    (htransition : M.transition p none [] r push)
+    (hchain : ToCFGChainDerives M presentation r push s chainWord)
+    (hempty : CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.empty s q)]
+      (SententialForm.terminalWord emptyWord)) :
+    CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.empty p q)]
+      (SententialForm.terminalWord
+        (Word.Concat chainWord emptyWord)) := by
+  simpa [Word.Concat, Word.Empty] using
+    toCFG_emptyStep_of_chainDerives htransition hchain
+      (inputPrefix_none_mem_derivationSymbolLanguage
+        (ToCFG M presentation))
+      hempty
+
+theorem toCFG_emptyBeforeTopRead_of_chainDerives
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {p r s q : state} {A : stack} {a : input}
+    {push : Word stack}
+    {chainWord topWord : Word input}
+    (htransition : M.transition p (some a) [] r push)
+    (hchain : ToCFGChainDerives M presentation r push s chainWord)
+    (htop : CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.between s A q)]
+      (SententialForm.terminalWord topWord)) :
+    CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.between p A q)]
+      (SententialForm.terminalWord
+        (Word.Concat (Word.Symbol a)
+          (Word.Concat chainWord topWord))) := by
+  exact toCFG_emptyBeforeTop_of_chainDerives htransition hchain
+    (inputPrefix_some_mem_derivationSymbolLanguage
+      (ToCFG M presentation) a)
+    htop
+
+theorem toCFG_emptyBeforeTopEpsilon_of_chainDerives
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {p r s q : state} {A : stack}
+    {push : Word stack}
+    {chainWord topWord : Word input}
+    (htransition : M.transition p none [] r push)
+    (hchain : ToCFGChainDerives M presentation r push s chainWord)
+    (htop : CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.between s A q)]
+      (SententialForm.terminalWord topWord)) :
+    CFG.Derives (ToCFG M presentation)
+      [Symbol.nonterminal (ToCFGNonterminal.between p A q)]
+      (SententialForm.terminalWord
+        (Word.Concat chainWord topWord)) := by
+  simpa [Word.Concat, Word.Empty] using
+    toCFG_emptyBeforeTop_of_chainDerives htransition hchain
+      (inputPrefix_none_mem_derivationSymbolLanguage
+        (ToCFG M presentation))
+      htop
+
+theorem toCFG_generates_of_acceptsIn_one
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {w : Word input} {qf : state}
+    (haccept : M.accept qf)
+    (hcomp : ComputesIn M 1 (initial M w)
+      { state := qf, unread := [], stack := [] }) :
+    w ∈ CFG.GeneratedLanguage (ToCFG M presentation) := by
+  have hstep := computesIn_one_inv hcomp
+  rcases step_cases hstep with hread | heps
+  · rcases hread with
+      ⟨q, r, a, unread, pop, push, restStack,
+        htransition, hc, hd⟩
+    simp [initial, Word.Concat] at hc hd
+    rcases hc with ⟨hstart, hw, hpop⟩
+    rcases hd with ⟨hr, hunread, hpush⟩
+    have hpopNil : pop = [] := by
+      cases pop with
+      | nil => rfl
+      | cons _ _ => cases hpop
+    have hpushNil : push = [] := by
+      cases push with
+      | nil => rfl
+      | cons _ _ => cases hpush
+    have htransition' :
+        M.transition M.start (some a) [] qf [] := by
+      simpa [hstart, hr, hpopNil, hpushNil] using htransition
+    have hbody : CFG.Derives (ToCFG M presentation)
+        [Symbol.nonterminal (ToCFGNonterminal.empty M.start qf)]
+        (SententialForm.terminalWord (Word.Symbol a)) := by
+      simpa [Word.Concat, Word.Empty] using
+        toCFG_emptyRead_of_chainDerives
+          (M := M) (presentation := presentation)
+          (p := M.start) (r := qf) (s := qf) (q := qf)
+          (a := a) (push := ([] : Word stack))
+          (chainWord := (Word.Empty : Word input))
+          (emptyWord := (Word.Empty : Word input))
+          htransition'
+          (ToCFGChainDerives.nil (M := M)
+            (presentation := presentation) qf)
+          (toCFG_emptyRefl_derives
+            (M := M) (presentation := presentation) (q := qf))
+    have hgen := toCFG_start_derives
+      (M := M) (presentation := presentation)
+      (q := qf) (w := Word.Symbol a) haccept hbody
+    simpa [hw, hunread, Word.Symbol] using hgen
+  · rcases heps with
+      ⟨q, r, unread, pop, push, restStack,
+        htransition, hc, hd⟩
+    simp [initial, Word.Concat] at hc hd
+    rcases hc with ⟨hstart, hw, hpop⟩
+    rcases hd with ⟨hr, hunread, hpush⟩
+    have hpopNil : pop = [] := by
+      cases pop with
+      | nil => rfl
+      | cons _ _ => cases hpop
+    have hpushNil : push = [] := by
+      cases push with
+      | nil => rfl
+      | cons _ _ => cases hpush
+    have htransition' :
+        M.transition M.start none [] qf [] := by
+      simpa [hstart, hr, hpopNil, hpushNil] using htransition
+    have hbody : CFG.Derives (ToCFG M presentation)
+        [Symbol.nonterminal (ToCFGNonterminal.empty M.start qf)]
+        (SententialForm.terminalWord (Word.Empty : Word input)) := by
+      simpa [Word.Concat, Word.Empty] using
+        toCFG_emptyEpsilon_of_chainDerives
+          (M := M) (presentation := presentation)
+          (p := M.start) (r := qf) (s := qf) (q := qf)
+          (push := ([] : Word stack))
+          (chainWord := (Word.Empty : Word input))
+          (emptyWord := (Word.Empty : Word input))
+          htransition'
+          (ToCFGChainDerives.nil (M := M)
+            (presentation := presentation) qf)
+          (toCFG_emptyRefl_derives
+            (M := M) (presentation := presentation) (q := qf))
+    have hgen := toCFG_start_derives
+      (M := M) (presentation := presentation)
+      (q := qf) (w := Word.Empty) haccept hbody
+    simpa [hw, hunread, Word.Empty] using hgen
+
 theorem toCFG_yields_sound
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {x y : SententialForm input (ToCFGNonterminal stack state)}
