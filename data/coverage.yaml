@@ -239,8 +239,8 @@ completed:
         reason: "General grammar definitions and CFG embedding are formalized; equivalence with recursively enumerable languages belongs with the Chapter 5 computability development."
   - coordinate: "Chapter 5"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 102
-    definition_declarations: 41
+    theorem_declarations: 106
+    definition_declarations: 42
     modules:
       - "FoC.Book.Chapter05.Section01"
       - "FoC.Book.Chapter05.Section02"
@@ -267,7 +267,7 @@ completed:
       - "Partial computable function domains, exact halting/domain equivalence, and the theorem that every partial computable function domain is Turing-acceptable and recursively enumerable"
       - "Turing-decidable and Turing-acceptable language vocabulary, recursive and recursively enumerable aliases, and language-equality transport"
       - "A decider, as modeled by output 0/1, halts on every input and has finite-stage accepting/rejecting output traces"
-      - "Stopped 0/1 decider output soundness, complementary finite output traces, and bounded-search classification for stopped deciders"
+      - "Stopped 0/1 decider witness vocabulary, ordinary-decidability projection, complement closure, output soundness, complementary finite output traces, and bounded-search classification for stopped deciders"
       - "Decidable and recursive languages are closed under complement by swapping decider outputs, with complement equivalences using double-complement language equality"
       - "Co-recursively enumerable language vocabulary, finite-stage acceptance traces for recursively enumerable languages, complementary acceptance traces for RE plus co-RE languages, bounded trace-hit search, no-conflict lemmas, and the classical bounded classification core that underlies dovetailing"
       - "Listing and range-language vocabulary for recursively enumerable languages, including listability/range extensionality and the unary-input bridge between listings and ranges"

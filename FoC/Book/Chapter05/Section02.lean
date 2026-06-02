@@ -31,6 +31,11 @@ def RecursivelyEnumerableLanguageWithComplement (L : Language alpha) : Prop :=
 def RecursiveLanguage (L : Language alpha) : Prop :=
   Recursive L
 
+-- Book: Chapter 5, Section 5.2, recursive languages with a stopped
+-- distinct-output 0/1 decider witness.
+def StoppedTuringDecidableLanguage (L : Language alpha) : Prop :=
+  StoppedTuringDecidable L
+
 -- Book: Chapter 5, Section 5.2, the domain language of a partial string
 -- function.
 def PartialFunctionDomainLanguage
@@ -80,6 +85,22 @@ theorem recursive_language_of_recursive_complement {L : Language alpha}
 theorem recursive_language_complement_iff {L : Language alpha} :
     RecursiveLanguage (Language.Compl L) <-> RecursiveLanguage L :=
   Computability.recursive_complement_iff
+
+-- Book: Chapter 5, Section 5.2, a stopped 0/1 decider witness gives an
+-- ordinary recursive language.
+theorem stopped_turing_decidable_language_is_recursive
+    {L : Language alpha}
+    (h : StoppedTuringDecidableLanguage L) :
+    RecursiveLanguage L :=
+  Computability.stoppedTuringDecidable_to_turingDecidable h
+
+-- Book: Chapter 5, Section 5.2, stopped 0/1 decidability is closed under
+-- complement by swapping the output symbols.
+theorem stopped_turing_decidable_language_complement
+    {L : Language alpha}
+    (h : StoppedTuringDecidableLanguage L) :
+    StoppedTuringDecidableLanguage (Language.Compl L) :=
+  Computability.stoppedTuringDecidable_complement h
 
 -- Book: Chapter 5, Section 5.2, recursive languages are extensional.
 theorem recursive_language_of_equal {L K : Language alpha}
@@ -278,6 +299,28 @@ theorem stopped_decider_bounded_search_eventually_classifies
           w limit ∧ ¬ w ∈ L) :=
   complementary_trace_search_eventually_classifies
     (stopped_decider_has_complementary_output_traces hstop hzeroOne h) w
+
+-- Book: Chapter 5, Section 5.2, a stopped 0/1 decider witness supplies
+-- complementary finite output traces.
+theorem stopped_turing_decidable_language_has_complementary_output_traces
+    {L : Language alpha}
+    (h : StoppedTuringDecidableLanguage L) :
+    exists accept reject : Word alpha -> Nat -> Prop,
+      LanguageComplementaryAcceptanceTraces accept reject L :=
+  Computability.stoppedTuringDecidable_has_complementary_output_traces h
+
+-- Book: Chapter 5, Section 5.2, a stopped 0/1 decider witness supplies the
+-- bounded-search classification core used by the dovetailing proof.
+theorem stopped_turing_decidable_language_bounded_search_eventually_classifies
+    {L : Language alpha}
+    (h : StoppedTuringDecidableLanguage L)
+    (w : Word alpha) :
+    exists accept reject : Word alpha -> Nat -> Prop,
+      LanguageComplementaryAcceptanceTraces accept reject L ∧
+        exists limit : Nat,
+          (LanguageTraceHitsBy accept w limit ∧ w ∈ L) ∨
+            (LanguageTraceHitsBy reject w limit ∧ ¬ w ∈ L) :=
+  Computability.stoppedTuringDecidable_bounded_search_eventually_classifies h w
 
 -- Book: Chapter 5, Section 5.2, languages listed by a stream of words.
 def LanguageListedBy (stream : Nat -> Word alpha) (L : Language alpha) : Prop :=

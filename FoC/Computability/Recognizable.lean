@@ -36,12 +36,26 @@ def DecidesLanguage (M : TuringMachine symbol state)
     (¬ w ∈ L ->
       TuringMachine.HaltsWithOutput M (EncodeWord encodeInput w) [zero])
 
+def StoppedDecidesLanguage (M : TuringMachine symbol state)
+    (encodeInput : input -> symbol)
+    (zero one : symbol)
+    (L : Language input) : Prop :=
+  TuringMachine.HaltingTransitionsDisabled M ∧
+    zero ≠ one ∧ DecidesLanguage M encodeInput zero one L
+
 def TuringDecidable (L : Language input) : Prop :=
   exists symbol : Type, exists state : Type,
     exists M : TuringMachine symbol state,
       exists encodeInput : input -> symbol,
         exists zero : symbol, exists one : symbol,
           DecidesLanguage M encodeInput zero one L
+
+def StoppedTuringDecidable (L : Language input) : Prop :=
+  exists symbol : Type, exists state : Type,
+    exists M : TuringMachine symbol state,
+      exists encodeInput : input -> symbol,
+        exists zero : symbol, exists one : symbol,
+          StoppedDecidesLanguage M encodeInput zero one L
 
 def Recursive (L : Language input) : Prop :=
   TuringDecidable L
@@ -406,6 +420,31 @@ theorem decidesLanguage_of_equal {M : TuringMachine symbol state}
     intro hL
     exact hw ((hEq w).mp hL)
 
+theorem stoppedDecidesLanguage_decides {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : StoppedDecidesLanguage M encodeInput zero one L) :
+    DecidesLanguage M encodeInput zero one L :=
+  h.right.right
+
+theorem stoppedTuringDecidable_to_turingDecidable {L : Language input}
+    (h : StoppedTuringDecidable L) :
+    TuringDecidable L := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro zero hzero =>
+                      cases hzero with
+                      | intro one hstop =>
+                          exact ⟨symbol, state, M, encodeInput, zero, one,
+                            stoppedDecidesLanguage_decides hstop⟩
+
 theorem turing_decidable_of_equal {L K : Language input}
     (h : TuringDecidable L) (hEq : Language.Equal L K) :
     TuringDecidable K := by
@@ -580,6 +619,52 @@ theorem stopped_decider_has_complementary_output_traces
     · intro hw
       exact decider_rejects_in_of_not_mem h hw
 
+theorem stoppedTuringDecidable_has_complementary_output_traces
+    {L : Language input}
+    (h : StoppedTuringDecidable L) :
+    exists accept reject : Word input -> Nat -> Prop,
+      ComplementaryAcceptanceTraces accept reject L := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro zero hzero =>
+                      cases hzero with
+                      | intro one hstopped =>
+                          exists fun w n =>
+                            TuringMachine.HaltsWithOutputIn
+                              M n (EncodeWord encodeInput w) [one]
+                          exists fun w n =>
+                            TuringMachine.HaltsWithOutputIn
+                              M n (EncodeWord encodeInput w) [zero]
+                          exact stopped_decider_has_complementary_output_traces
+                            hstopped.left hstopped.right.left
+                            hstopped.right.right
+
+theorem stoppedTuringDecidable_bounded_search_eventually_classifies
+    {L : Language input}
+    (h : StoppedTuringDecidable L)
+    (w : Word input) :
+    exists accept reject : Word input -> Nat -> Prop,
+      ComplementaryAcceptanceTraces accept reject L ∧
+        exists limit : Nat,
+          (TraceHitsBy accept w limit ∧ w ∈ L) ∨
+            (TraceHitsBy reject w limit ∧ ¬ w ∈ L) := by
+  cases stoppedTuringDecidable_has_complementary_output_traces h with
+  | intro accept haccept =>
+      cases haccept with
+      | intro reject hreject =>
+          exists accept
+          exists reject
+          constructor
+          · exact hreject
+          · exact complementaryTraceSearch_eventually_classifies hreject w
+
 theorem decides_complement {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
     {L : Language input}
@@ -596,6 +681,18 @@ theorem decides_complement {M : TuringMachine symbol state}
       intro hnot
       exact hw hnot
     exact (h w).left hL
+
+theorem stoppedDecidesLanguage_complement {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : StoppedDecidesLanguage M encodeInput zero one L) :
+    StoppedDecidesLanguage M encodeInput one zero (Language.Compl L) := by
+  constructor
+  · exact h.left
+  constructor
+  · intro honeZero
+    exact h.right.left honeZero.symm
+  · exact decides_complement h.right.right
 
 theorem turing_decidable_has_total_halting_decider {L : Language input}
     (h : TuringDecidable L) :
@@ -644,6 +741,24 @@ theorem turing_decidable_complement {L : Language input}
                           exists one
                           exists zero
                           exact decides_complement hone
+
+theorem stoppedTuringDecidable_complement {L : Language input}
+    (h : StoppedTuringDecidable L) :
+    StoppedTuringDecidable (Language.Compl L) := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro zero hzero =>
+                      cases hzero with
+                      | intro one hstopped =>
+                          exact ⟨symbol, state, M, encodeInput, one, zero,
+                            stoppedDecidesLanguage_complement hstopped⟩
 
 theorem turing_decidable_of_complement {L : Language input}
     (h : TuringDecidable (Language.Compl L)) : TuringDecidable L :=
