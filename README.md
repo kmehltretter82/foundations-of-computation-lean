@@ -17,44 +17,6 @@ CSLib, or other external Lean libraries.
 
 This formalization was developed with assistance from OpenAI Codex.
 
-Current status: standalone foundation layer plus the Chapter 1, Chapter 2,
-Chapter 3, Chapter 4, and Chapter 5 formal cores. Chapter 1 is represented by proved Lean modules for all
-ten sections, including expanded Section 1.1 truth-table wrappers, NOR-only
-operator encodings, Euclid's prime-list argument, a pigeonhole collision
-schema, generalized natural-number geometric sums, and a scaled Fibonacci lower
-bound. Chapter 2 adds proved modules for set operations, Boolean algebra
-of sets, functions, countability examples, Cantor's theorem, relations,
-equivalence classes, partitions, and a small relational-database model. Chapter
-2 also includes countable-union and uncountable-difference theorems by explicit
-enumeration. Chapter 3 adds words, languages, regular expressions, DFA/NFA semantics, Thompson
-regular-expression-to-NFA construction, subset construction, automata closure
-constructions, pumping-lemma vocabulary, and count groundwork for the
-`a^n b^n` example. Chapter 4 adds context-free grammar derivations, CFG
-construction lemmas, BNF expansion vocabulary, parse trees, an explicit
-ambiguous-grammar witness, pushdown automata, context-free pumping vocabulary,
-and general grammars.
-Chapter 5 adds finite-window Turing-machine tapes, deterministic one-tape
-machines, configurations, step and multi-step computation, halting/output,
-Turing-computable functions, decidable and acceptable languages, recursive and
-recursively enumerable vocabulary, enumeration/range formulations, and
-undecidability vocabulary, including decidable-language complement closure and
-an abstract diagonal contradiction core.
-The foundation layer also includes quotient rational numbers over
-positive-denominator integer fractions, Dedekind-cut real numbers over quotient
-rationals with cut addition/subtraction/multiplication, powers, rational
-scaling, embedded-rational division, and concrete square-root cut candidates,
-reduced rational representatives used by the quotient-rational and real
-bridges, quotient-rational no-square-root theorems for 2 and 3, real
-square-characterization bridges for the square-root irrationality arguments, a
-tiny quadratic surd surrogate for the `sqrt(2)` product counterexample, binary
-digit-stream diagonalization, a
-Cantor-style digit-stream injection into Dedekind-cut reals, real
-uncountability, and irrational-real uncountability.
-Prose-heavy application exercises and results requiring remaining full
-ordered-field real-number, numeric-cardinality, full state-elimination or
-pumping-lemma, full CFG/PDA-equivalence, and machine-encoding/simulation
-infrastructure are not represented as placeholder theorems.
-
 Coverage status is tracked in [data/coverage.yaml](data/coverage.yaml).
 
 Foundation modules currently include:
