@@ -96,17 +96,9 @@ inductive ToCFGProduces (M : PDA input stack state) :
       {chainRhs : SententialForm input (ToCFGNonterminal stack state)} :
       M.transition p a? [] r push ->
         ToCFGChain r push s chainRhs ->
-          ToCFGProduces M (ToCFGNonterminal.between p A q)
-            (inputPrefix a? ++ chainRhs ++
-              [Symbol.nonterminal (ToCFGNonterminal.between s A q)])
-
-def ToCFG (M : PDA input stack state)
-    (presentation : FinitePresentation M) :
-    CFG input (ToCFGNonterminal stack state) where
-  start := ToCFGNonterminal.start
-  produces := ToCFGProduces M
-  nonterminalsFinite :=
-    ToCFGNonterminal.finite presentation.stackFinite M.statesFinite
+        ToCFGProduces M (ToCFGNonterminal.between p A q)
+          (inputPrefix a? ++ chainRhs ++
+            [Symbol.nonterminal (ToCFGNonterminal.between s A q)])
 
 def chainEndpointForms (states : List state) (p : state) :
     Word stack ->
@@ -198,6 +190,32 @@ def productionList (M : PDA input stack state)
     emptyReflProductions M ++
     transitionProductions M presentation
 
+def ToCFGProducesFromList (M : PDA input stack state)
+    (presentation : FinitePresentation M)
+    (A : ToCFGNonterminal stack state)
+    (rhs : SententialForm input (ToCFGNonterminal stack state)) : Prop :=
+  exists rule, rule ∈ productionList M presentation ∧
+    rule.lhs = A ∧ rule.rhs = rhs
+
+def ToCFG (M : PDA input stack state)
+    (presentation : FinitePresentation M) :
+    CFG input (ToCFGNonterminal stack state) where
+  start := ToCFGNonterminal.start
+  produces := ToCFGProducesFromList M presentation
+  nonterminalsFinite :=
+    ToCFGNonterminal.finite presentation.stackFinite M.statesFinite
+
+theorem toCFG_hasFiniteProductions
+    (M : PDA input stack state) (presentation : FinitePresentation M) :
+    CFG.HasFiniteProductions (ToCFG M presentation) := by
+  exists productionList M presentation
+  intro A rhs
+  constructor
+  · intro h
+    exact h
+  · intro h
+    exact h
+
 theorem chainEndpointForms_sound
     {states : List state} {p q : state} {push : Word stack}
     {rhs : SententialForm input (ToCFGNonterminal stack state)}
@@ -243,6 +261,415 @@ theorem chainEndpointForms_complete
         constructor
         · rfl
         · rfl
+
+def EmptySummary (M : PDA input stack state) (p q : state) :
+    Language input :=
+  fun w =>
+    forall restInput tail,
+      Computes M
+        { state := p, unread := Word.Concat w restInput, stack := tail }
+        { state := q, unread := restInput, stack := tail }
+
+def BetweenSummary (M : PDA input stack state) (p : state) (A : stack)
+    (q : state) : Language input :=
+  fun w =>
+    forall restInput tail,
+      Computes M
+        { state := p, unread := Word.Concat w restInput, stack := A :: tail }
+        { state := q, unread := restInput, stack := tail }
+
+def ToCFGSymbolLanguage (M : PDA input stack state) :
+    Symbol input (ToCFGNonterminal stack state) -> Language input
+  | Symbol.terminal a => Language.Singleton (Word.Symbol a)
+  | Symbol.nonterminal (Sum.inl ()) => AcceptedLanguage M
+  | Symbol.nonterminal (Sum.inr (Sum.inl (p, q))) =>
+      EmptySummary M p q
+  | Symbol.nonterminal (Sum.inr (Sum.inr ((p, A), q))) =>
+      BetweenSummary M p A q
+
+theorem toCFGChain_formLanguage_computes
+    {M : PDA input stack state}
+    {p q : state} {push : Word stack}
+    {rhs : SententialForm input (ToCFGNonterminal stack state)}
+    (hchain : ToCFGChain p push q rhs)
+    {w : Word input}
+    (hw : w ∈ CFG.FormLanguage (ToCFGSymbolLanguage M) rhs) :
+    forall restInput tail,
+      Computes M
+        { state := p, unread := Word.Concat w restInput,
+          stack := Word.Concat push tail }
+        { state := q, unread := restInput, stack := tail } := by
+  induction hchain with
+  | nil q =>
+      intro restInput tail
+      cases hw
+      simpa [Word.Concat] using
+        Computes.refl
+          ({ state := q, unread := restInput, stack := tail } :
+            Configuration _ _ _)
+  | cons hrest ih =>
+      rename_i p q r A rest rhs
+      intro restInput tail
+      rcases hw with ⟨first, tailWord, hfirst, htail, hwEq⟩
+      have hfirstComp :=
+        hfirst (Word.Concat tailWord restInput) (Word.Concat rest tail)
+      have hrestComp := ih htail restInput tail
+      have hfirstComp' : Computes M
+          { state := p,
+            unread := Word.Concat (Word.Concat first tailWord) restInput,
+            stack := Word.Concat (A :: rest) tail }
+          { state := r,
+            unread := Word.Concat tailWord restInput,
+            stack := Word.Concat rest tail } := by
+        simpa [Word.Concat, List.append_assoc] using hfirstComp
+      rw [hwEq]
+      exact computes_trans hfirstComp' hrestComp
+
+theorem inputPrefix_formLanguage_step
+    {M : PDA input stack state}
+    {p r : state} {a? : Option input} {pop push : Word stack}
+    (htransition : M.transition p a? pop r push)
+    {pref : Word input}
+    (hprefix :
+      pref ∈ CFG.FormLanguage (ToCFGSymbolLanguage M)
+        (inputPrefix (nonterminal := ToCFGNonterminal stack state) a?)) :
+    forall restInput tail,
+      Computes M
+        { state := p, unread := Word.Concat pref restInput,
+          stack := Word.Concat pop tail }
+        { state := r, unread := restInput,
+          stack := Word.Concat push tail } := by
+  cases a? with
+  | none =>
+      intro restInput tail
+      cases hprefix
+      simpa [inputPrefix, Word.Concat] using
+        computes_of_step
+          (Step.epsilon (M := M) (unread := restInput)
+            (restStack := tail) htransition)
+  | some a =>
+      intro restInput tail
+      rcases hprefix with ⟨first, tailWord, hfirst, htail, hprefixEq⟩
+      cases hfirst
+      cases htail
+      rw [hprefixEq]
+      simpa [inputPrefix, Word.Concat] using
+        computes_of_step
+          (Step.read (M := M) (unread := restInput)
+            (restStack := tail) htransition)
+
+theorem toCFG_production_sound
+    {M : PDA input stack state}
+    {A : ToCFGNonterminal stack state}
+    {rhs : SententialForm input (ToCFGNonterminal stack state)}
+    (hprod : ToCFGProduces M A rhs) :
+    forall w, w ∈ CFG.FormLanguage (ToCFGSymbolLanguage M) rhs ->
+      w ∈ ToCFGSymbolLanguage M (Symbol.nonterminal A) := by
+  intro w hw
+  cases hprod with
+  | start haccept =>
+      rename_i q
+      change Accepts M w
+      rcases hw with ⟨first, tailWord, hfirst, htail, hwEq⟩
+      cases htail
+      rw [hwEq, Word.concat_empty_right]
+      exists q
+      constructor
+      · exact haccept
+      · simpa [initial, Word.Concat] using hfirst [] []
+  | emptyRefl =>
+      rename_i q
+      change EmptySummary M q q w
+      intro restInput tail
+      cases hw
+      simpa [Word.Concat] using
+        Computes.refl
+          ({ state := q, unread := restInput, stack := tail } :
+            Configuration _ _ _)
+  | emptyStep htransition hchain =>
+      rename_i p r s q a? push chainRhs
+      change EmptySummary M p q w
+      intro restInput tail
+      have hwAssoc : w ∈ CFG.FormLanguage (ToCFGSymbolLanguage M)
+          (inputPrefix (nonterminal := ToCFGNonterminal stack state) a? ++
+            (chainRhs ++
+              [Symbol.nonterminal (ToCFGNonterminal.empty s q)])) := by
+        simpa [List.append_assoc] using hw
+      have hsplit :=
+        (CFG.formLanguage_append (ToCFGSymbolLanguage M)
+          (inputPrefix (nonterminal := ToCFGNonterminal stack state) a?)
+          (chainRhs ++
+            [Symbol.nonterminal (ToCFGNonterminal.empty s q)]) w).mp hwAssoc
+      rcases hsplit with ⟨pref, suffix, hpref, hsuffix, hwEq⟩
+      have hsuffixSplit :=
+        (CFG.formLanguage_append (ToCFGSymbolLanguage M)
+          chainRhs [Symbol.nonterminal (ToCFGNonterminal.empty s q)]
+          suffix).mp hsuffix
+      rcases hsuffixSplit with
+        ⟨chainWord, emptyWord, hchainWord, hemptyForm, hsuffixEq⟩
+      rcases hemptyForm with
+        ⟨emptyHead, emptyTail, hempty, hemptyTail, hemptyEq⟩
+      cases hemptyTail
+      have hemptyWordEq : emptyWord = emptyHead := by
+        simpa [Word.Concat, Word.Empty] using hemptyEq
+      have hstep :=
+        inputPrefix_formLanguage_step htransition hpref
+          (Word.Concat suffix restInput) tail
+      have hchainComp :=
+        toCFGChain_formLanguage_computes hchain hchainWord
+          (Word.Concat emptyWord restInput) tail
+      have hemptyComp := hempty restInput tail
+      have hstep' : Computes M
+          { state := p, unread := Word.Concat w restInput,
+            stack := tail }
+          { state := r,
+            unread := Word.Concat chainWord (Word.Concat emptyWord restInput),
+            stack := Word.Concat push tail } := by
+        simpa [Word.Concat, Word.Empty, List.append_assoc, hwEq,
+          hsuffixEq, hemptyWordEq] using hstep
+      have hchainComp' : Computes M
+          { state := r,
+            unread := Word.Concat chainWord (Word.Concat emptyWord restInput),
+            stack := Word.Concat push tail }
+          { state := s, unread := Word.Concat emptyWord restInput,
+            stack := tail } := by
+        simpa [Word.Concat, List.append_assoc] using hchainComp
+      have hemptyComp' : Computes M
+          { state := s, unread := Word.Concat emptyWord restInput,
+            stack := tail }
+          { state := q, unread := restInput, stack := tail } := by
+        rw [hemptyWordEq]
+        exact hemptyComp
+      exact computes_trans hstep'
+        (computes_trans hchainComp' hemptyComp')
+  | popStep htransition hchain =>
+      rename_i p r q A a? push chainRhs
+      change BetweenSummary M p A q w
+      intro restInput tail
+      have hsplit :=
+        (CFG.formLanguage_append (ToCFGSymbolLanguage M)
+          (inputPrefix (nonterminal := ToCFGNonterminal stack state) a?)
+          chainRhs w).mp hw
+      rcases hsplit with ⟨pref, chainWord, hpref, hchainWord, hwEq⟩
+      have hstep :=
+        inputPrefix_formLanguage_step htransition hpref
+          (Word.Concat chainWord restInput) tail
+      have hchainComp :=
+        toCFGChain_formLanguage_computes hchain hchainWord restInput tail
+      have hstep' : Computes M
+          { state := p, unread := Word.Concat w restInput,
+            stack := A :: tail }
+          { state := r, unread := Word.Concat chainWord restInput,
+            stack := Word.Concat push tail } := by
+        rw [hwEq]
+        simpa [Word.Concat, List.append_assoc] using hstep
+      exact computes_trans hstep' hchainComp
+  | emptyBeforeTop htransition hchain =>
+      rename_i p r s q A a? push chainRhs
+      change BetweenSummary M p A q w
+      intro restInput tail
+      have hwAssoc : w ∈ CFG.FormLanguage (ToCFGSymbolLanguage M)
+          (inputPrefix (nonterminal := ToCFGNonterminal stack state) a? ++
+            (chainRhs ++
+              [Symbol.nonterminal (ToCFGNonterminal.between s A q)])) := by
+        simpa [List.append_assoc] using hw
+      have hsplit :=
+        (CFG.formLanguage_append (ToCFGSymbolLanguage M)
+          (inputPrefix (nonterminal := ToCFGNonterminal stack state) a?)
+          (chainRhs ++
+            [Symbol.nonterminal (ToCFGNonterminal.between s A q)]) w).mp hwAssoc
+      rcases hsplit with ⟨pref, suffix, hpref, hsuffix, hwEq⟩
+      have hsuffixSplit :=
+        (CFG.formLanguage_append (ToCFGSymbolLanguage M)
+          chainRhs [Symbol.nonterminal (ToCFGNonterminal.between s A q)]
+          suffix).mp hsuffix
+      rcases hsuffixSplit with
+        ⟨chainWord, topWord, hchainWord, htopForm, hsuffixEq⟩
+      rcases htopForm with
+        ⟨topHead, topTail, htop, htopTail, htopEq⟩
+      cases htopTail
+      have htopWordEq : topWord = topHead := by
+        simpa [Word.Concat, Word.Empty] using htopEq
+      have hstep :=
+        inputPrefix_formLanguage_step htransition hpref
+          (Word.Concat suffix restInput) (A :: tail)
+      have hchainComp :=
+        toCFGChain_formLanguage_computes hchain hchainWord
+          (Word.Concat topWord restInput) (A :: tail)
+      have htopComp := htop restInput tail
+      have hstep' : Computes M
+          { state := p, unread := Word.Concat w restInput,
+            stack := A :: tail }
+          { state := r,
+            unread := Word.Concat chainWord (Word.Concat topWord restInput),
+            stack := Word.Concat push (A :: tail) } := by
+        simpa [Word.Concat, Word.Empty, List.append_assoc, hwEq,
+          hsuffixEq, htopWordEq] using hstep
+      have hchainComp' : Computes M
+          { state := r,
+            unread := Word.Concat chainWord (Word.Concat topWord restInput),
+            stack := Word.Concat push (A :: tail) }
+          { state := s, unread := Word.Concat topWord restInput,
+            stack := A :: tail } := by
+        simpa [Word.Concat, List.append_assoc] using hchainComp
+      have htopComp' : Computes M
+          { state := s, unread := Word.Concat topWord restInput,
+            stack := A :: tail }
+          { state := q, unread := restInput, stack := tail } := by
+        rw [htopWordEq]
+        exact htopComp
+      exact computes_trans hstep'
+        (computes_trans hchainComp' htopComp')
+
+theorem toCFG_producesFromList_sound
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {A : ToCFGNonterminal stack state}
+    {rhs : SententialForm input (ToCFGNonterminal stack state)}
+    (hprod : ToCFGProducesFromList M presentation A rhs) :
+    ToCFGProduces M A rhs := by
+  rcases hprod with ⟨rule, hmem, hlhs, hrhs⟩
+  unfold productionList at hmem
+  rcases List.mem_append.mp hmem with hprefix | htransition
+  · rcases List.mem_append.mp hprefix with hstart | hempty
+    · unfold startProductions at hstart
+      rcases List.mem_map.mp hstart with ⟨q, hq, hqrule⟩
+      rw [← hlhs, ← hrhs, ← hqrule]
+      exact ToCFGProduces.start ((presentation.accept_complete q).mpr hq)
+    · unfold emptyReflProductions at hempty
+      rcases List.mem_map.mp hempty with ⟨q, _hq, hqrule⟩
+      rw [← hlhs, ← hrhs, ← hqrule]
+      exact ToCFGProduces.emptyRefl
+  · unfold transitionProductions at htransition
+    simp only [List.mem_flatMap, List.mem_append] at htransition
+    rcases htransition with ⟨transitionRule, htransitionRule, hcase⟩
+    rcases hcase with hprefix | hbefore
+    rcases hprefix with hemptyStep | hpopStep
+    · unfold emptyStepProductionsForRule at hemptyStep
+      cases hpop : transitionRule.pop with
+      | nil =>
+          simp [hpop, List.mem_flatMap] at hemptyStep
+          rcases hemptyStep with ⟨s, chainRhs, hendpoint, q, hqrule⟩
+          rcases hqrule with ⟨_hq, hrule⟩
+          rw [← hlhs, ← hrhs, ← hrule]
+          change M.ToCFGProduces (ToCFGNonterminal.empty transitionRule.source q)
+            (inputPrefix transitionRule.input? ++
+              (chainRhs ++
+                [Symbol.nonterminal (ToCFGNonterminal.empty s q)]))
+          have htransition' :
+              M.transition transitionRule.source transitionRule.input? []
+                transitionRule.target transitionRule.push :=
+            (presentation.transition_complete
+              transitionRule.source transitionRule.input? []
+              transitionRule.target transitionRule.push).mpr
+              ⟨transitionRule, htransitionRule, by
+                simp [TransitionRule.Applies, hpop]⟩
+          have hprod :
+              M.ToCFGProduces (ToCFGNonterminal.empty transitionRule.source q)
+                ((inputPrefix transitionRule.input? ++ chainRhs) ++
+                  [Symbol.nonterminal (ToCFGNonterminal.empty s q)]) :=
+            ToCFGProduces.emptyStep htransition'
+              (chainEndpointForms_sound hendpoint)
+          simpa [List.append_assoc] using hprod
+      | cons head tail =>
+          simp [hpop] at hemptyStep
+    · unfold popStepProductionsForRule at hpopStep
+      cases hpop : transitionRule.pop with
+      | nil =>
+          simp [hpop] at hpopStep
+      | cons A popTail =>
+          cases popTail with
+          | nil =>
+              simp [hpop] at hpopStep
+              rcases hpopStep with ⟨q, chainRhs, hendpoint, hrule⟩
+              rw [← hlhs, ← hrhs, ← hrule]
+              change M.ToCFGProduces
+                (ToCFGNonterminal.between transitionRule.source A q)
+                (inputPrefix transitionRule.input? ++ chainRhs)
+              apply ToCFGProduces.popStep
+              · exact (presentation.transition_complete
+                  transitionRule.source transitionRule.input? [A]
+                  transitionRule.target transitionRule.push).mpr
+                  ⟨transitionRule, htransitionRule, by
+                    simp [TransitionRule.Applies, hpop]⟩
+              · exact chainEndpointForms_sound hendpoint
+          | cons B rest =>
+              simp [hpop] at hpopStep
+    · unfold emptyBeforeTopProductionsForRule at hbefore
+      cases hpop : transitionRule.pop with
+      | nil =>
+          simp [hpop, List.mem_flatMap] at hbefore
+          rcases hbefore with
+            ⟨s, chainRhs, hendpoint, A, _hA, q, hqrule⟩
+          rcases hqrule with ⟨_hq, hrule⟩
+          rw [← hlhs, ← hrhs, ← hrule]
+          change M.ToCFGProduces
+            (ToCFGNonterminal.between transitionRule.source A q)
+            (inputPrefix transitionRule.input? ++
+              (chainRhs ++
+                [Symbol.nonterminal (ToCFGNonterminal.between s A q)]))
+          have htransition' :
+              M.transition transitionRule.source transitionRule.input? []
+                transitionRule.target transitionRule.push :=
+            (presentation.transition_complete
+              transitionRule.source transitionRule.input? []
+              transitionRule.target transitionRule.push).mpr
+              ⟨transitionRule, htransitionRule, by
+                simp [TransitionRule.Applies, hpop]⟩
+          have hprod :
+              M.ToCFGProduces
+                (ToCFGNonterminal.between transitionRule.source A q)
+                ((inputPrefix transitionRule.input? ++ chainRhs) ++
+                  [Symbol.nonterminal
+                    (ToCFGNonterminal.between s A q)]) :=
+            ToCFGProduces.emptyBeforeTop htransition'
+              (chainEndpointForms_sound hendpoint)
+          simpa [List.append_assoc] using hprod
+      | cons head tail =>
+          simp [hpop] at hbefore
+
+theorem toCFG_yields_sound
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {x y : SententialForm input (ToCFGNonterminal stack state)}
+    {w : Word input}
+    (h : CFG.Yields (ToCFG M presentation) x y)
+    (hw : w ∈ CFG.FormLanguage (ToCFGSymbolLanguage M) y) :
+    w ∈ CFG.FormLanguage (ToCFGSymbolLanguage M) x := by
+  rcases h with ⟨u, v, A, rhs, hprod, hx, hy⟩
+  rw [hy] at hw
+  rw [hx]
+  exact CFG.formLanguage_replace_sound
+    (ToCFGSymbolLanguage M)
+    (toCFG_production_sound (toCFG_producesFromList_sound hprod))
+    hw
+
+theorem toCFG_derives_sound
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {x y : SententialForm input (ToCFGNonterminal stack state)}
+    {w : Word input}
+    (h : CFG.Derives (ToCFG M presentation) x y)
+    (hw : w ∈ CFG.FormLanguage (ToCFGSymbolLanguage M) y) :
+    w ∈ CFG.FormLanguage (ToCFGSymbolLanguage M) x := by
+  induction h with
+  | refl _ =>
+      exact hw
+  | step hstep _ ih =>
+      exact toCFG_yields_sound hstep (ih hw)
+
+theorem toCFG_accepts_of_generates
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {w : Word input}
+    (h : w ∈ CFG.GeneratedLanguage (ToCFG M presentation)) :
+    Accepts M w := by
+  have hterminal : w ∈ CFG.FormLanguage (ToCFGSymbolLanguage M)
+      (SententialForm.terminalWord
+        (nt := ToCFGNonterminal stack state) w) :=
+    CFG.terminalWord_mem_formLanguage (ToCFGSymbolLanguage M)
+      (by intro a; rfl) w
+  have hsound := toCFG_derives_sound h hterminal
+  rcases hsound with ⟨first, tailWord, hfirst, htail, hwEq⟩
+  cases htail
+  rw [hwEq, Word.concat_empty_right]
+  exact hfirst
 
 def ToCFGTopPopExact (M : PDA input stack state)
     (presentation : FinitePresentation M) : Prop :=
