@@ -3060,11 +3060,97 @@ theorem toCFG_accepts_of_generates
   rw [hwEq, Word.concat_empty_right]
   exact hfirst
 
+def EmptySummaryComplete (M : PDA input stack state) : Prop :=
+  forall n p q sourceInput targetInput,
+    _root_.FoC.Grammars.PDA.ComputesIn M n
+      { state := p, unread := sourceInput, stack := [] }
+      { state := q, unread := targetInput, stack := [] } ->
+        EmptySummaryComputesIn M n p sourceInput q targetInput
+
+def EmptySummaryCompleteUpTo (M : PDA input stack state)
+    (bound : Nat) : Prop :=
+  forall n p q sourceInput targetInput,
+    n <= bound ->
+      _root_.FoC.Grammars.PDA.ComputesIn M n
+        { state := p, unread := sourceInput, stack := [] }
+        { state := q, unread := targetInput, stack := [] } ->
+          EmptySummaryComputesIn M n p sourceInput q targetInput
+
+def TopPopEmptySummaryComplete (M : PDA input stack state) : Prop :=
+  PopsAtMostOne M -> EmptySummaryComplete M
+
+theorem emptySummaryCompleteUpTo_two_of_topPop
+    {M : PDA input stack state}
+    (hnorm : PopsAtMostOne M) :
+    EmptySummaryCompleteUpTo M 2 := by
+  intro n p q sourceInput targetInput hn hcomp
+  exact emptySummaryComputesIn_of_computesIn_atMostTwo_emptyStack
+    hnorm hn hcomp
+
+theorem toCFG_generates_of_acceptsIn_of_emptySummaryComplete
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {n : Nat} {w : Word input} {qf : state}
+    (hcomplete : EmptySummaryComplete M)
+    (haccept : M.accept qf)
+    (hcomp : _root_.FoC.Grammars.PDA.ComputesIn M n (initial M w)
+      { state := qf, unread := [], stack := [] }) :
+    w ∈ CFG.GeneratedLanguage (ToCFG M presentation) := by
+  apply toCFG_generates_of_emptySummaryAcceptsIn haccept
+  exact hcomplete n M.start qf w ([] : Word input)
+    (by simpa [initial] using hcomp)
+
+theorem toCFG_generates_of_acceptsIn_of_emptySummaryCompleteUpTo
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {bound n : Nat} {w : Word input} {qf : state}
+    (hcomplete : EmptySummaryCompleteUpTo M bound)
+    (hn : n <= bound)
+    (haccept : M.accept qf)
+    (hcomp : _root_.FoC.Grammars.PDA.ComputesIn M n (initial M w)
+      { state := qf, unread := [], stack := [] }) :
+    w ∈ CFG.GeneratedLanguage (ToCFG M presentation) := by
+  apply toCFG_generates_of_emptySummaryAcceptsIn haccept
+  exact hcomplete n M.start qf w ([] : Word input) hn
+    (by simpa [initial] using hcomp)
+
+theorem toCFG_generates_of_accepts_of_emptySummaryComplete
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    {w : Word input}
+    (hcomplete : EmptySummaryComplete M)
+    (haccepts : Accepts M w) :
+    w ∈ CFG.GeneratedLanguage (ToCFG M presentation) := by
+  rcases haccepts with ⟨qf, haccept, hcomp⟩
+  rcases _root_.FoC.Grammars.PDA.computes_exists_length hcomp with
+    ⟨n, hcompIn⟩
+  exact toCFG_generates_of_acceptsIn_of_emptySummaryComplete
+    (M := M) (presentation := presentation)
+    hcomplete haccept hcompIn
+
+theorem toCFG_language_exact_of_emptySummaryComplete
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    (hcomplete : EmptySummaryComplete M) :
+    Language.Equal (CFG.GeneratedLanguage (ToCFG M presentation))
+      (AcceptedLanguage M) := by
+  intro w
+  constructor
+  · intro h
+    exact toCFG_accepts_of_generates h
+  · intro h
+    exact toCFG_generates_of_accepts_of_emptySummaryComplete
+      (M := M) (presentation := presentation) hcomplete h
+
 def ToCFGTopPopExact (M : PDA input stack state)
     (presentation : FinitePresentation M) : Prop :=
   PopsAtMostOne M ->
     Language.Equal (CFG.GeneratedLanguage (ToCFG M presentation))
       (PDA.AcceptedLanguage M)
+
+theorem toCFG_topPopExact_of_emptySummaryComplete
+    {M : PDA input stack state} {presentation : FinitePresentation M}
+    (hcomplete : TopPopEmptySummaryComplete M) :
+    ToCFGTopPopExact M presentation := by
+  intro hnorm
+  exact toCFG_language_exact_of_emptySummaryComplete
+    (M := M) (presentation := presentation) (hcomplete hnorm)
 
 theorem toCFG_nonterminals_finite
     (M : PDA input stack state) (presentation : FinitePresentation M) :

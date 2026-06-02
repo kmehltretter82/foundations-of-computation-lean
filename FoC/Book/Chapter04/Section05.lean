@@ -23,6 +23,178 @@ def PDAIntersectDFA (P : PDA input stack pstate) (D : DFA input dstate) :
   accept := fun q => P.accept q.1 ∧ D.accept q.2
   statesFinite := FiniteState.Product P.statesFinite D.statesFinite
 
+structure DFAAcceptingPresentation (D : DFA input dstate) where
+  acceptingStates : List dstate
+  accept_complete : forall q, D.accept q <-> q ∈ acceptingStates
+
+def pdaIntersectDFA_transitionRule
+    (D : DFA input dstate)
+    (rule : PDA.TransitionRule input stack pstate)
+    (q : dstate) : PDA.TransitionRule input stack (pstate × dstate) :=
+  { source := (rule.source, q),
+    input? := rule.input?,
+    pop := rule.pop,
+    target :=
+      (rule.target,
+        match rule.input? with
+        | none => q
+        | some a => D.step q a),
+    push := rule.push }
+
+def pdaIntersectDFA_transitionRulesForRule
+    (D : DFA input dstate)
+    (rule : PDA.TransitionRule input stack pstate) :
+    List (PDA.TransitionRule input stack (pstate × dstate)) :=
+  D.statesFinite.elems.map (pdaIntersectDFA_transitionRule D rule)
+
+def pdaIntersectDFA_transitionRules
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P) :
+    List (PDA.TransitionRule input stack (pstate × dstate)) :=
+  presentation.transitionRules.flatMap
+    (pdaIntersectDFA_transitionRulesForRule D)
+
+def pdaIntersectDFA_acceptingStates
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    (accepting : DFAAcceptingPresentation D) :
+    List (pstate × dstate) :=
+  presentation.acceptingStates.flatMap
+    (fun p => accepting.acceptingStates.map (fun q => (p, q)))
+
+theorem pdaIntersectDFA_transition_complete
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P) :
+    forall q a? pop r push,
+      (PDAIntersectDFA P D).transition q a? pop r push <->
+        exists rule,
+          rule ∈ pdaIntersectDFA_transitionRules P D presentation ∧
+            rule.Applies q a? pop r push := by
+  intro q a? pop r push
+  constructor
+  · intro h
+    cases a? with
+    | none =>
+        rcases h with ⟨hP, hr⟩
+        rcases (presentation.transition_complete
+            q.1 none pop r.1 push).mp hP with
+          ⟨baseRule, hbaseRule, hbaseApplies⟩
+        refine
+          ⟨pdaIntersectDFA_transitionRule D baseRule q.2, ?_, ?_⟩
+        · unfold pdaIntersectDFA_transitionRules
+          apply List.mem_flatMap.mpr
+          refine ⟨baseRule, hbaseRule, ?_⟩
+          unfold pdaIntersectDFA_transitionRulesForRule
+          exact List.mem_map.mpr
+            ⟨q.2, D.statesFinite.complete q.2, rfl⟩
+        · rcases hbaseApplies with
+            ⟨hsource, hinput, hpop, htarget, hpush⟩
+          have htargetPair : (baseRule.target, q.2) = r := by
+            apply Prod.ext
+            · exact htarget
+            · exact hr.symm
+          simp [PDA.TransitionRule.Applies,
+            pdaIntersectDFA_transitionRule, hsource, hinput, hpop,
+            hpush, htargetPair]
+    | some a =>
+        rcases h with ⟨hP, hr⟩
+        rcases (presentation.transition_complete
+            q.1 (some a) pop r.1 push).mp hP with
+          ⟨baseRule, hbaseRule, hbaseApplies⟩
+        refine
+          ⟨pdaIntersectDFA_transitionRule D baseRule q.2, ?_, ?_⟩
+        · unfold pdaIntersectDFA_transitionRules
+          apply List.mem_flatMap.mpr
+          refine ⟨baseRule, hbaseRule, ?_⟩
+          unfold pdaIntersectDFA_transitionRulesForRule
+          exact List.mem_map.mpr
+            ⟨q.2, D.statesFinite.complete q.2, rfl⟩
+        · rcases hbaseApplies with
+            ⟨hsource, hinput, hpop, htarget, hpush⟩
+          have htargetPair : (baseRule.target, D.step q.2 a) = r := by
+            apply Prod.ext
+            · exact htarget
+            · exact hr.symm
+          simp [PDA.TransitionRule.Applies,
+            pdaIntersectDFA_transitionRule, hsource, hinput, hpop,
+            hpush, htargetPair]
+  · intro h
+    rcases h with ⟨rule, hrule, happlies⟩
+    unfold pdaIntersectDFA_transitionRules at hrule
+    rcases List.mem_flatMap.mp hrule with
+      ⟨baseRule, hbaseRule, hgenerated⟩
+    unfold pdaIntersectDFA_transitionRulesForRule at hgenerated
+    rcases List.mem_map.mp hgenerated with ⟨d, _hd, hruleEq⟩
+    subst rule
+    rcases happlies with ⟨hsource, hinput, hpop, htarget, hpush⟩
+    have hsourceP : baseRule.source = q.1 := by
+      exact congrArg Prod.fst hsource
+    have hd : d = q.2 := by
+      exact congrArg Prod.snd hsource
+    have hinputP : baseRule.input? = a? := by
+      simpa [pdaIntersectDFA_transitionRule] using hinput
+    have htargetP : baseRule.target = r.1 := by
+      exact congrArg Prod.fst htarget
+    have hP : P.transition q.1 a? pop r.1 push :=
+      (presentation.transition_complete q.1 a? pop r.1 push).mpr
+        ⟨baseRule, hbaseRule,
+          ⟨hsourceP, hinputP, hpop, htargetP, hpush⟩⟩
+    cases a? with
+    | none =>
+        constructor
+        · exact hP
+        · have htargetD : d = r.2 := by
+            have htargetSecond := congrArg Prod.snd htarget
+            simpa [pdaIntersectDFA_transitionRule, hinputP] using
+              htargetSecond
+          exact htargetD.symm.trans hd
+    | some a =>
+        constructor
+        · exact hP
+        · have htargetD : D.step d a = r.2 := by
+            have htargetSecond := congrArg Prod.snd htarget
+            simpa [pdaIntersectDFA_transitionRule, hinputP] using
+              htargetSecond
+          simpa [hd] using htargetD.symm
+
+theorem pdaIntersectDFA_accept_complete
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    (accepting : DFAAcceptingPresentation D) :
+    forall q,
+      (PDAIntersectDFA P D).accept q <->
+        q ∈ pdaIntersectDFA_acceptingStates P D presentation accepting := by
+  intro q
+  constructor
+  · intro h
+    unfold pdaIntersectDFA_acceptingStates
+    apply List.mem_flatMap.mpr
+    refine ⟨q.1, (presentation.accept_complete q.1).mp h.left, ?_⟩
+    exact List.mem_map.mpr
+      ⟨q.2, (accepting.accept_complete q.2).mp h.right, rfl⟩
+  · intro h
+    unfold pdaIntersectDFA_acceptingStates at h
+    rcases List.mem_flatMap.mp h with ⟨p, hp, hpair⟩
+    rcases List.mem_map.mp hpair with ⟨d, hd, hq⟩
+    have hpAccept : P.accept p := (presentation.accept_complete p).mpr hp
+    have hdAccept : D.accept d := (accepting.accept_complete d).mpr hd
+    cases hq
+    exact ⟨hpAccept, hdAccept⟩
+
+def pdaIntersectDFA_finitePresentation
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    (accepting : DFAAcceptingPresentation D) :
+    PDA.FinitePresentation (PDAIntersectDFA P D) where
+  stackFinite := presentation.stackFinite
+  transitionRules := pdaIntersectDFA_transitionRules P D presentation
+  transition_complete :=
+    pdaIntersectDFA_transition_complete P D presentation
+  acceptingStates :=
+    pdaIntersectDFA_acceptingStates P D presentation accepting
+  accept_complete :=
+    pdaIntersectDFA_accept_complete P D presentation accepting
+
 theorem pda_intersect_dfa_lift_to_empty
     (P : PDA input stack pstate) (D : DFA input dstate)
     {c d : PDA.Configuration input stack pstate}
@@ -136,6 +308,70 @@ theorem pda_intersect_dfa_accepted_language_exact
           · exact h.right
         · simpa [PDA.initial, PDAIntersectDFA, DFA.Run] using
             pda_intersect_dfa_lift_to_empty P D hq.right rfl D.start
+
+-- Book: Chapter 4, Section 4.5, the PDA/DFA product has a finite-production
+-- context-free language once the product PDA's empty-stack computations have
+-- the grammar-aligned summaries required by the PDA-to-CFG theorem.
+theorem pda_intersect_dfa_context_free_of_empty_summary_complete
+    {input stack pstate dstate : Type}
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    (accepting : DFAAcceptingPresentation D)
+    (hcomplete :
+      Section04.EmptySummaryPDAComplete (PDAIntersectDFA P D)) :
+    CFL.ContextFreeLanguage
+      (Language.Inter (PDA.AcceptedLanguage P) (DFA.Language D)) := by
+  let productPresentation :=
+    pdaIntersectDFA_finitePresentation P D presentation accepting
+  have hProduct :
+      CFL.ContextFreeLanguage
+        (PDA.AcceptedLanguage (PDAIntersectDFA P D)) :=
+    Section04.finite_presentation_pda_context_free_of_empty_summary_complete
+      (M := PDAIntersectDFA P D)
+      (presentation := productPresentation) hcomplete
+  rcases hProduct with ⟨nonterminal, G, hfinite, hEq⟩
+  exists nonterminal
+  exists G
+  constructor
+  · exact hfinite
+  · exact Language.equal_trans hEq
+      (fun w => pda_intersect_dfa_accepted_language_exact P D w)
+
+-- Book: Chapter 4, Section 4.5, conditional finite-production CFL closure
+-- under subtraction by a DFA language.  The remaining non-conditional work is
+-- to prove the empty-summary completeness hypothesis for the product PDA.
+theorem pda_diff_dfa_context_free_of_empty_summary_complete
+    {input stack pstate dstate : Type}
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    (acceptingComplement :
+      DFAAcceptingPresentation (DFA.Complement D))
+    (hcomplete :
+      Section04.EmptySummaryPDAComplete
+        (PDAIntersectDFA P (DFA.Complement D))) :
+    CFL.ContextFreeLanguage
+      (Language.Diff (PDA.AcceptedLanguage P) (DFA.Language D)) := by
+  have hProduct :=
+    pda_intersect_dfa_context_free_of_empty_summary_complete
+      P (DFA.Complement D) presentation acceptingComplement hcomplete
+  rcases hProduct with ⟨nonterminal, G, hfinite, hEq⟩
+  exists nonterminal
+  exists G
+  constructor
+  · exact hfinite
+  · intro w
+    constructor
+    · intro hw
+      have hInter := (hEq w).mp hw
+      constructor
+      · exact hInter.left
+      · intro hD
+        exact (DFA.complement_accepts D w).mp hInter.right hD
+    · intro hw
+      apply (hEq w).mpr
+      constructor
+      · exact hw.left
+      · exact (DFA.complement_accepts D w).mpr hw.right
 
 -- Book: Chapter 4, Section 4.5, automaton-side closure of PDA-recognizable
 -- languages under intersection with a regular language.
