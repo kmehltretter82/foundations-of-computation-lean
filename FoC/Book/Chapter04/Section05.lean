@@ -58,6 +58,22 @@ theorem finite_production_rhs_length_bound {G : CFG terminal nonterminal}
       B > 0 ∧ forall A rhs, G.produces A rhs -> rhs.length < B :=
   CFL.finiteProduction_rhs_length_bound hG
 
+-- Book: Chapter 4, Section 4.5, every finite-production grammar satisfies
+-- the CFL pumping property for its generated language.
+theorem finite_production_grammar_pumping_property
+    {terminal nonterminal : Type} {G : CFG terminal nonterminal}
+    (hG : CFG.HasFiniteProductions G) :
+    CFLHasPumpingProperty (CFG.GeneratedLanguage G) :=
+  CFL.finiteProduction_generated_hasPumpingProperty hG
+
+-- Book: Chapter 4, Section 4.5, the CFL Pumping Lemma for languages
+-- presented by a finite-production grammar.
+theorem finite_production_pumping_property {terminal : Type}
+    {L : Language terminal}
+    (hL : FiniteProductionContextFreeLanguage L) :
+    CFLHasPumpingProperty L :=
+  CFL.finiteProduction_hasPumpingProperty hL
+
 -- Book: Chapter 4, Section 4.5, the original word is the n = 1 pumped word.
 theorem pumping_decomposition_original_word_mem {L : Language terminal}
     {K : Nat} {w : Word terminal}
@@ -443,6 +459,14 @@ theorem anbncn_no_pumping_property :
                             hv.right.left hv.right.right.left
                             (hv.right.right.right 2)
 
+-- Book: Chapter 4, Section 4.5, `{a^n b^n c^n | n >= 0}` is not generated
+-- by any finite-production context-free grammar.
+theorem anbncn_not_finite_production_context_free :
+    ¬ FiniteProductionContextFreeLanguage anbncnLanguage := by
+  intro hcf
+  exact anbncn_no_pumping_property
+    (finite_production_pumping_property hcf)
+
 -- Book: Chapter 4, Section 4.5, conditional non-context-freeness for
 -- `{a^n b^n c^n | n >= 0}` from the CFL Pumping Lemma conclusion.
 theorem anbncn_not_context_free_from_pumping_lemma
@@ -454,10 +478,10 @@ theorem anbncn_not_context_free_from_pumping_lemma
 /-!
 The concrete contradiction for `{ a^n b^n c^n | n >= 0 }` is now formalized:
 no pumping length can satisfy the book's quantified CFL pumping property for
-this language.  The final `not context-free` theorem remains parameterized by
-the CFL Pumping Lemma conclusion.  Proving that global conclusion still requires
-finite-production grammar infrastructure and parse-tree height/tree-surgery
-lemmas.
+this language, and the finite-production version of the CFL Pumping Lemma is
+formalized.  The final `not context-free` theorem remains parameterized only for
+the broader `ContextFreeLanguage` definition, which permits arbitrary production
+relations rather than requiring a finite production presentation.
 -/
 
 end Section05

@@ -91,6 +91,25 @@ theorem repeatWord_succ (w : Word alpha) (n : Nat) :
     RepeatWord w (n + 1) = Concat w (RepeatWord w n) :=
   rfl
 
+theorem repeatWord_concat_self (w : Word alpha) (n : Nat) :
+    Concat (RepeatWord w n) w = Concat w (RepeatWord w n) := by
+  induction n with
+  | zero =>
+      simp [RepeatWord, Concat]
+  | succ n ih =>
+      calc
+        Concat (RepeatWord w (n + 1)) w =
+            Concat (Concat w (RepeatWord w n)) w := rfl
+        _ = Concat w (Concat (RepeatWord w n) w) := by
+              simp [Concat, List.append_assoc]
+        _ = Concat w (Concat w (RepeatWord w n)) := by
+              rw [ih]
+        _ = Concat w (RepeatWord w (n + 1)) := rfl
+
+theorem repeatWord_succ_right (w : Word alpha) (n : Nat) :
+    Concat (RepeatWord w n) w = RepeatWord w (n + 1) := by
+  rw [repeatWord_concat_self, repeatWord_succ]
+
 theorem repeatSymbol_zero (a : alpha) : RepeatSymbol a 0 = Empty :=
   rfl
 

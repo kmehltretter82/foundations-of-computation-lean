@@ -192,7 +192,7 @@ completed:
         reason: "Editor-specific search/replace syntax, anchors, word boundaries, escaping conventions, and backreferences are application material; optional, plus, and character-class sugar are formalized."
   - coordinate: "Chapter 4"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 99
+    theorem_declarations: 107
     definition_declarations: 32
     modules:
       - "FoC.Book.Chapter04.Section01"
@@ -217,14 +217,14 @@ completed:
       - "A concrete Chapter 4 grammar for a^n b^n words, with forward generated-word proofs and the exact reverse inclusion for terminal outputs"
       - "Right-regular grammar right-hand-side vocabulary, grammar-to-NFA and NFA-to-grammar constructions, and the finite-alphabet equivalence with regular languages from Theorem 4.4"
       - "BNF expression syntax for empty, symbol, sequence, alternatives, optional items, and repetition, with expansion rules"
-      - "Parse-tree and parse-forest syntax, frontier computation, height, node counts, minimal-frontier parse-tree existence, selected nonterminal-subtree spines, longest nonterminal paths, duplicate-nonterminal and duplicate-root subtree extraction, selected-subtree frontier contexts, frontier-length bounds, parse-tree-to-derivation and derivation-to-parse-tree bridges"
+      - "Parse-tree and parse-forest syntax, frontier computation, height, node counts, minimal-frontier parse-tree existence, selected nonterminal-subtree spines, selected-spine containment, selected-subtree replacement/minimality surgery, longest nonterminal paths, duplicate-nonterminal and duplicate-root subtree extraction, bottommost duplicate-root subtree extraction with frontier bound, selected-subtree frontier contexts, loop derivations, frontier-length bounds, parse-tree-to-derivation and derivation-to-parse-tree bridges"
       - "Additional BNF symbol, sequence, and repeated-item expansion wrappers"
       - "Ambiguity vocabulary via two parse trees with the same frontier, plus an explicit ambiguous grammar witness"
       - "Pushdown automata with configurations, epsilon and input-consuming transitions, multi-step computations, final-state-plus-empty-stack acceptance, final-state-only acceptance, empty-stack-only acceptance, accepted languages, recognizability, and determinism vocabulary"
       - "PDA computation transitivity and implication from book acceptance to final-state-only and empty-stack-only acceptance"
-      - "Finite-production CFG/CFL vocabulary and production right-hand-side length bounds for the future parse-tree pumping proof"
-      - "Context-free pumping-lemma quantified vocabulary, extensionality and counterexample schemas, and contrapositive schema"
-      - "Concrete no-pumping-length contradiction for a^n b^n c^n and the conditional non-context-free wrapper from the CFL Pumping Lemma conclusion"
+      - "Finite-production CFG/CFL vocabulary, production right-hand-side length bounds, and the finite-production CFL Pumping Lemma via parse-tree pumping"
+      - "Context-free pumping-lemma quantified vocabulary, pumped-loop derivation iteration, extensionality and counterexample schemas, and contrapositive schema"
+      - "Concrete no-pumping-length contradiction for a^n b^n c^n, plus non-finite-production-context-free result from the finite-production CFL Pumping Lemma and the conditional broader non-context-free wrapper"
       - "General grammars with unrestricted left-hand sides, derivations, generated languages, and embedding of CFG derivations into general grammars"
     classified_not_formalized_yet:
       - coordinate: "Chapter 4, Section 4.2"
@@ -234,7 +234,7 @@ completed:
       - coordinate: "Chapter 4, Section 4.4"
         reason: "PDA definitions and computation semantics are formalized; full CFG-to-PDA and PDA-to-CFG equivalence is not asserted without the larger construction proof."
       - coordinate: "Chapter 4, Section 4.5"
-        reason: "The finite-production vocabulary, parse-tree height/frontier bounds, node-count minimal-frontier selection, derivation-to-parse-tree bridge, selected nonterminal-subtree spines, longest nonterminal paths, duplicate-nonterminal and duplicate-root selected-subtree extraction, selected-subtree frontier contexts, pumping property, contrapositive schema, reusable counterexample schemas, and the a^n b^n c^n no-pumping contradiction are formalized. The global proof of the full CFL Pumping Lemma and later examples such as {ww} remain deferred pending full tree-surgery infrastructure."
+        reason: "The finite-production vocabulary, parse-tree height/frontier bounds, node-count minimal-frontier selection, selected-subtree replacement/minimality surgery, derivation-to-parse-tree bridge, selected nonterminal-subtree spines, selected-spine containment, longest nonterminal paths, duplicate-nonterminal and duplicate-root selected-subtree extraction, bottommost duplicate-root selected-subtree extraction with frontier bound, selected-subtree frontier contexts, loop derivation iteration, finite-production CFL Pumping Lemma, pumping property, contrapositive schema, reusable counterexample schemas, the a^n b^n c^n no-pumping contradiction, and the non-finite-production-context-free result for a^n b^n c^n are formalized. The broader ContextFreeLanguage pumping conclusion remains separated because that definition permits arbitrary production relations rather than requiring a finite production presentation; later examples such as {ww} remain deferred."
       - coordinate: "Chapter 4, Section 4.6"
         reason: "General grammar definitions and CFG embedding are formalized; equivalence with recursively enumerable languages belongs with the Chapter 5 computability development."
   - coordinate: "Chapter 5"

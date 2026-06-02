@@ -1,4 +1,4 @@
-import FoC.Grammars.CFG
+import FoC.Grammars.ParseTree
 
 namespace FoC
 namespace Grammars
@@ -212,6 +212,243 @@ def HasPumpingProperty (L : Language terminal) : Prop :=
 def PumpingLemmaConclusion (L : Language terminal) : Prop :=
   ContextFreeLanguage L -> HasPumpingProperty L
 
+theorem pumped_derivations_from_repeated_selected_subtrees
+    {G : CFG terminal nonterminal}
+    (tree : CFG.ParseTree G (Symbol.nonterminal G.start))
+    {i j : Nat} {upper lower : CFG.NonterminalSubtree G}
+    (hij : i <= j)
+    (hupper :
+      (CFG.ParseTree.longestNonterminalSubtrees tree)[i]? = some upper)
+    (hlower :
+      (CFG.ParseTree.longestNonterminalSubtrees tree)[j]? = some lower)
+    (hroot :
+      CFG.NonterminalSubtree.root upper = CFG.NonterminalSubtree.root lower) :
+    exists u x y z v : Word terminal,
+      CFG.ParseTree.frontier tree = Concat5 u x y z v ∧
+      Concat3 x y z = CFG.NonterminalSubtree.frontier upper ∧
+      forall n : Nat,
+        CFG.Derives G [Symbol.nonterminal G.start]
+          (SententialForm.terminalWord (Pumped u x y z v n)) := by
+  cases CFG.ParseTree.derives_with_selected_subtree_hole tree hupper with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases CFG.ParseTree.loop_derivation_from_repeated_selected_subtrees
+              tree hij hupper hlower hroot with
+          | intro x hx =>
+              cases hx with
+              | intro z hz =>
+                  let y := CFG.NonterminalSubtree.frontier lower
+                  exists u
+                  exists x
+                  exists y
+                  exists z
+                  exists v
+                  constructor
+                  · rw [hv.left, hz.left]
+                    simp [Concat5, y, Word.Concat, List.append_assoc]
+                  constructor
+                  · simp [Concat3, y, hz.left, Word.Concat]
+                  · intro n
+                    have hbase : CFG.Derives G
+                        [Symbol.nonterminal
+                          (CFG.NonterminalSubtree.root upper)]
+                        (SententialForm.terminalWord y) := by
+                      have hlowerDerives := CFG.ParseTree.derives lower.2
+                      rw [hroot]
+                      exact hlowerDerives
+                    have hpump :=
+                      CFG.derives_pumped_loop hz.right hbase n
+                    have hctx :
+                        CFG.Derives G
+                          (SententialForm.terminalWord u ++
+                            [Symbol.nonterminal
+                              (CFG.NonterminalSubtree.root upper)] ++
+                            SententialForm.terminalWord v)
+                          (SententialForm.terminalWord u ++
+                            SententialForm.terminalWord
+                              (Word.Concat (Word.RepeatWord x n)
+                                (Word.Concat y (Word.RepeatWord z n))) ++
+                            SententialForm.terminalWord v) := by
+                      simpa [List.append_assoc] using
+                        CFG.derives_context hpump
+                          (SententialForm.terminalWord u)
+                          (SententialForm.terminalWord v)
+                    have hAll := CFG.derives_trans hv.right hctx
+                    have htarget :
+                        SententialForm.terminalWord (nt := nonterminal)
+                            (Pumped u x y z v n) =
+                          SententialForm.terminalWord (nt := nonterminal) u ++
+                            SententialForm.terminalWord (nt := nonterminal)
+                              (Word.Concat (Word.RepeatWord x n)
+                                (Word.Concat y (Word.RepeatWord z n))) ++
+                            SententialForm.terminalWord (nt := nonterminal) v := by
+                      simp [Pumped, Concat5, SententialForm.terminalWord,
+                        Word.Concat, List.append_assoc]
+                    rw [htarget]
+                    exact hAll
+
+theorem pumping_decomposition_from_repeated_selected_subtrees
+    {G : CFG terminal nonterminal}
+    (tree : CFG.ParseTree G (Symbol.nonterminal G.start))
+    (hminimal : CFG.ParseTree.MinimalForFrontier tree)
+    {i j : Nat} {upper lower : CFG.NonterminalSubtree G}
+    (hij : i < j)
+    (hupper :
+      (CFG.ParseTree.longestNonterminalSubtrees tree)[i]? = some upper)
+    (hlower :
+      (CFG.ParseTree.longestNonterminalSubtrees tree)[j]? = some lower)
+    (hroot :
+      CFG.NonterminalSubtree.root upper = CFG.NonterminalSubtree.root lower) :
+    exists u x y z v : Word terminal,
+      CFG.ParseTree.frontier tree = Concat5 u x y z v ∧
+      (x ≠ Word.Empty ∨ z ≠ Word.Empty) ∧
+      Concat3 x y z = CFG.NonterminalSubtree.frontier upper ∧
+      forall n : Nat,
+        CFG.Derives G [Symbol.nonterminal G.start]
+          (SententialForm.terminalWord (Pumped u x y z v n)) := by
+  cases CFG.ParseTree.derives_with_selected_subtree_hole tree hupper with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases CFG.ParseTree.loop_derivation_from_repeated_selected_subtrees_nonempty
+              tree hminimal hij hupper hlower hroot with
+          | intro x hx =>
+              cases hx with
+              | intro z hz =>
+                  let y := CFG.NonterminalSubtree.frontier lower
+                  exists u
+                  exists x
+                  exists y
+                  exists z
+                  exists v
+                  constructor
+                  · rw [hv.left, hz.left]
+                    simp [Concat5, y, Word.Concat, List.append_assoc]
+                  constructor
+                  · exact hz.right.left
+                  constructor
+                  · simp [Concat3, y, hz.left, Word.Concat]
+                  · intro n
+                    have hbase : CFG.Derives G
+                        [Symbol.nonterminal
+                          (CFG.NonterminalSubtree.root upper)]
+                        (SententialForm.terminalWord y) := by
+                      have hlowerDerives := CFG.ParseTree.derives lower.2
+                      rw [hroot]
+                      exact hlowerDerives
+                    have hpump :=
+                      CFG.derives_pumped_loop hz.right.right hbase n
+                    have hctx :
+                        CFG.Derives G
+                          (SententialForm.terminalWord u ++
+                            [Symbol.nonterminal
+                              (CFG.NonterminalSubtree.root upper)] ++
+                            SententialForm.terminalWord v)
+                          (SententialForm.terminalWord u ++
+                            SententialForm.terminalWord
+                              (Word.Concat (Word.RepeatWord x n)
+                                (Word.Concat y (Word.RepeatWord z n))) ++
+                            SententialForm.terminalWord v) := by
+                      simpa [List.append_assoc] using
+                        CFG.derives_context hpump
+                          (SententialForm.terminalWord u)
+                          (SententialForm.terminalWord v)
+                    have hAll := CFG.derives_trans hv.right hctx
+                    have htarget :
+                        SententialForm.terminalWord (nt := nonterminal)
+                            (Pumped u x y z v n) =
+                          SententialForm.terminalWord (nt := nonterminal) u ++
+                            SententialForm.terminalWord (nt := nonterminal)
+                              (Word.Concat (Word.RepeatWord x n)
+                                (Word.Concat y (Word.RepeatWord z n))) ++
+                            SententialForm.terminalWord (nt := nonterminal) v := by
+                      simp [Pumped, Concat5, SententialForm.terminalWord,
+                        Word.Concat, List.append_assoc]
+                    rw [htarget]
+                    exact hAll
+
+theorem finiteProduction_generated_hasPumpingProperty
+    {terminal nonterminal : Type} {G : CFG terminal nonterminal}
+    (hG : CFG.HasFiniteProductions G) :
+    HasPumpingProperty (CFG.GeneratedLanguage G) := by
+  let _ : DecidableEq nonterminal :=
+    fun A B => Classical.propDecidable (A = B)
+  cases finiteProduction_rhs_length_bound hG with
+  | intro B hB =>
+      let C := B + 1
+      let K := C ^ (G.nonterminalsFinite.elems.length + 1) + 1
+      exists K
+      constructor
+      · simp [K]
+      · intro w hw hlen
+        cases CFG.ParseTree.of_generates_language hw with
+        | intro tree htree =>
+            cases CFG.ParseTree.exists_minimal_for_frontier tree with
+            | intro minTree hminTree =>
+                have hminFrontier : CFG.ParseTree.frontier minTree = w := by
+                  rw [hminTree.left, htree]
+                have hBoundC :
+                    forall A rhs, G.produces A rhs -> rhs.length < C := by
+                  intro A rhs hprod
+                  have hlt := hB.right A rhs hprod
+                  simp [C]
+                  omega
+                have hPowLen :
+                    C ^ (G.nonterminalsFinite.elems.length + 1) <=
+                      Word.Length (CFG.ParseTree.frontier minTree) := by
+                  rw [hminFrontier]
+                  exact Nat.le_trans (Nat.le_succ _) hlen
+                have hheight :=
+                  CFG.ParseTree.height_gt_nonterminals_of_frontier_length_ge
+                    (G := G) (B := C) (by simp [C]; omega) hBoundC
+                    minTree hPowLen
+                cases CFG.ParseTree.exists_duplicate_root_subtrees_near_bottom_frontier_bound
+                    (G := G) (B := C) (by simp [C]) hBoundC
+                    minTree hheight with
+                | intro i hi =>
+                    cases hi with
+                    | intro j hj =>
+                        cases hj with
+                        | intro upper hupper =>
+                            cases hupper with
+                            | intro lower hlower =>
+                                cases pumping_decomposition_from_repeated_selected_subtrees
+                                    minTree hminTree.right hlower.left
+                                    hlower.right.right.left
+                                    hlower.right.right.right.left
+                                    hlower.right.right.right.right.left with
+                                | intro u hu =>
+                                    cases hu with
+                                    | intro x hx =>
+                                        cases hx with
+                                        | intro y hy =>
+                                            cases hy with
+                                            | intro z hz =>
+                                                cases hz with
+                                                | intro v hv =>
+                                                    exists u
+                                                    exists x
+                                                    exists y
+                                                    exists z
+                                                    exists v
+                                                    constructor
+                                                    · rw [← hminFrontier]
+                                                      exact hv.left
+                                                    constructor
+                                                    · exact hv.right.left
+                                                    constructor
+                                                    · have hxyzLen :
+                                                          Word.Length (Concat3 x y z) <=
+                                                            C ^ (G.nonterminalsFinite.elems.length + 1) := by
+                                                        rw [hv.right.right.left]
+                                                        exact
+                                                          hlower.right.right.right.right.right.right
+                                                      simp [K]
+                                                      omega
+                                                    · intro n
+                                                      exact hv.right.right.right n
+
 theorem pumping_decomposition_original_word_mem {L : Language terminal}
     {K : Nat} {w : Word terminal}
     (h : PumpingDecomposition L K w) : w ∈ L := by
@@ -275,6 +512,17 @@ theorem hasPumpingProperty_of_equal {L M : Language terminal}
   | intro K hK =>
       exists K
       exact pumpingLength_of_equal hEq hK
+
+theorem finiteProduction_hasPumpingProperty {terminal : Type}
+    {L : Language terminal}
+    (hL : FiniteProductionContextFreeLanguage L) :
+    HasPumpingProperty L := by
+  cases hL with
+  | intro nonterminal hnt =>
+      cases hnt with
+      | intro G hG =>
+          exact hasPumpingProperty_of_equal hG.right
+            (finiteProduction_generated_hasPumpingProperty hG.left)
 
 theorem pumpingLength_mono {L : Language terminal} {K M : Nat}
     (hKM : K <= M) (h : PumpingLength L K) :

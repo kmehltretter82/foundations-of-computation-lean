@@ -107,6 +107,95 @@ theorem parse_tree_duplicate_root_subtrees_on_long_path
       CFG.NonterminalSubtree.root upper = CFG.NonterminalSubtree.root lower :=
   CFG.ParseTree.exists_duplicate_root_subtrees_on_long_path tree hheight
 
+-- Book: Chapter 4, Section 4.5, an indexed selected subtree has height equal
+-- to the remaining length of the selected nonterminal spine.
+theorem parse_tree_selected_subtree_height_at_index
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : CFG.ParseTree G s)
+    {i : Nat} {subtree : CFG.NonterminalSubtree G}
+    (hget : (CFG.ParseTree.longestNonterminalSubtrees tree)[i]? = some subtree) :
+    CFG.NonterminalSubtree.height subtree + i =
+      CFG.ParseTree.height tree :=
+  CFG.ParseTree.longestNonterminalSubtree_height_at_index tree hget
+
+-- Book: Chapter 4, Section 4.5, repeated nonterminals can be chosen among the
+-- bottommost |V|+1 selected nonterminal subtrees, bounding the upper subtree.
+theorem parse_tree_duplicate_root_subtrees_near_bottom
+    [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : CFG.ParseTree G s)
+    (hheight : G.nonterminalsFinite.elems.length < CFG.ParseTree.height tree) :
+    exists i j upper lower,
+      i < j ∧
+      j < CFG.ParseTree.height tree ∧
+      (CFG.ParseTree.longestNonterminalSubtrees tree)[i]? = some upper ∧
+      (CFG.ParseTree.longestNonterminalSubtrees tree)[j]? = some lower ∧
+      CFG.NonterminalSubtree.root upper = CFG.NonterminalSubtree.root lower ∧
+      CFG.NonterminalSubtree.height upper <=
+        G.nonterminalsFinite.elems.length + 1 :=
+  CFG.ParseTree.exists_duplicate_root_subtrees_near_bottom tree hheight
+
+-- Book: Chapter 4, Section 4.5, the upper repeated subtree has frontier
+-- length bounded by the production-branching bound raised to |V|+1.
+theorem parse_tree_duplicate_root_subtrees_near_bottom_frontier_bound
+    [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal} {B : Nat}
+    (hB : 0 < B)
+    (hBound : forall A rhs, G.produces A rhs -> rhs.length < B)
+    {s : Symbol terminal nonterminal} (tree : CFG.ParseTree G s)
+    (hheight : G.nonterminalsFinite.elems.length < CFG.ParseTree.height tree) :
+    exists i j upper lower,
+      i < j ∧
+      j < CFG.ParseTree.height tree ∧
+      (CFG.ParseTree.longestNonterminalSubtrees tree)[i]? = some upper ∧
+      (CFG.ParseTree.longestNonterminalSubtrees tree)[j]? = some lower ∧
+      CFG.NonterminalSubtree.root upper = CFG.NonterminalSubtree.root lower ∧
+      CFG.NonterminalSubtree.height upper <=
+        G.nonterminalsFinite.elems.length + 1 ∧
+      Word.Length (CFG.NonterminalSubtree.frontier upper) <=
+        B ^ (G.nonterminalsFinite.elems.length + 1) :=
+  CFG.ParseTree.exists_duplicate_root_subtrees_near_bottom_frontier_bound
+    hB hBound tree hheight
+
+-- Book: Chapter 4, Section 4.5, a later subtree on the selected spine is on
+-- the selected spine of the earlier subtree.
+theorem parse_tree_later_selected_subtree_in_selected_subtree
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : CFG.ParseTree G s)
+    {i j : Nat} {upper lower : CFG.NonterminalSubtree G}
+    (hij : i <= j)
+    (hupper :
+      (CFG.ParseTree.longestNonterminalSubtrees tree)[i]? = some upper)
+    (hlower :
+      (CFG.ParseTree.longestNonterminalSubtrees tree)[j]? = some lower) :
+    (CFG.ParseTree.longestNonterminalSubtrees upper.2)[j - i]? = some lower :=
+  CFG.ParseTree.later_selected_subtree_in_selected_subtree
+    tree hij hupper hlower
+
+-- Book: Chapter 4, Section 4.5, the repeated-root selected subtree pair gives
+-- the loop derivation A =>* xAz used by the pumping construction.
+theorem parse_tree_loop_derivation_from_repeated_selected_subtrees
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : CFG.ParseTree G s)
+    {i j : Nat} {upper lower : CFG.NonterminalSubtree G}
+    (hij : i <= j)
+    (hupper :
+      (CFG.ParseTree.longestNonterminalSubtrees tree)[i]? = some upper)
+    (hlower :
+      (CFG.ParseTree.longestNonterminalSubtrees tree)[j]? = some lower)
+    (hroot :
+      CFG.NonterminalSubtree.root upper = CFG.NonterminalSubtree.root lower) :
+    exists x z : Word terminal,
+      CFG.NonterminalSubtree.frontier upper =
+        Word.Concat x (Word.Concat (CFG.NonterminalSubtree.frontier lower) z) ∧
+      CFG.Derives G
+        [Symbol.nonterminal (CFG.NonterminalSubtree.root upper)]
+        (SententialForm.terminalWord x ++
+          [Symbol.nonterminal (CFG.NonterminalSubtree.root upper)] ++
+          SententialForm.terminalWord z) :=
+  CFG.ParseTree.loop_derivation_from_repeated_selected_subtrees
+    tree hij hupper hlower hroot
+
 -- Book: Chapter 4, Section 4.3/4.5, every indexed subtree on the selected
 -- nonterminal spine contributes a contiguous frontier segment.
 theorem parse_tree_selected_subtree_frontier_context

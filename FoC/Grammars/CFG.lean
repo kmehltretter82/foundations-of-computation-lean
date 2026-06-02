@@ -365,6 +365,56 @@ theorem derives_append_right {G : CFG terminal nonterminal}
     Derives G (x ++ t) (y ++ t) := by
   simpa using derives_context h [] t
 
+theorem derives_pumped_loop {G : CFG terminal nonterminal}
+    {A : nonterminal} {x y z : Word terminal}
+    (hloop :
+      Derives G [Symbol.nonterminal A]
+        (SententialForm.terminalWord x ++ [Symbol.nonterminal A] ++
+          SententialForm.terminalWord z))
+    (hbase :
+      Derives G [Symbol.nonterminal A] (SententialForm.terminalWord y)) :
+    forall n : Nat,
+      Derives G [Symbol.nonterminal A]
+        (SententialForm.terminalWord
+          (Word.Concat (Word.RepeatWord x n)
+            (Word.Concat y (Word.RepeatWord z n)))) := by
+  intro n
+  induction n with
+  | zero =>
+      simpa [Word.RepeatWord, Word.Concat] using hbase
+  | succ n ih =>
+      have hctx :
+          Derives G
+            (SententialForm.terminalWord x ++ [Symbol.nonterminal A] ++
+              SententialForm.terminalWord z)
+            (SententialForm.terminalWord x ++
+              SententialForm.terminalWord
+                (Word.Concat (Word.RepeatWord x n)
+                  (Word.Concat y (Word.RepeatWord z n))) ++
+              SententialForm.terminalWord z) := by
+        simpa [List.append_assoc] using
+          derives_context ih (SententialForm.terminalWord x)
+            (SententialForm.terminalWord z)
+      have hAll := derives_trans hloop hctx
+      have htarget :
+          SententialForm.terminalWord (nt := nonterminal) x ++
+              SententialForm.terminalWord (nt := nonterminal)
+                (Word.Concat (Word.RepeatWord x n)
+                  (Word.Concat y (Word.RepeatWord z n))) ++
+              SententialForm.terminalWord (nt := nonterminal) z =
+            SententialForm.terminalWord (nt := nonterminal)
+              (Word.Concat (Word.RepeatWord x (n + 1))
+                (Word.Concat y (Word.RepeatWord z (n + 1)))) := by
+        simp [SententialForm.terminalWord, Word.Concat, Word.RepeatWord,
+          List.append_assoc]
+        simpa [Word.Concat] using
+          congrArg
+            (fun w : Word terminal =>
+              w.map (Symbol.terminal (nonterminal := nonterminal)))
+            (Word.repeatWord_concat_self z n)
+      rw [← htarget]
+      exact hAll
+
 theorem generated_language_mem (G : CFG terminal nonterminal) (w : Word terminal) :
     w ∈ GeneratedLanguage G <->
       Derives G [Symbol.nonterminal G.start] (SententialForm.terminalWord w) :=
