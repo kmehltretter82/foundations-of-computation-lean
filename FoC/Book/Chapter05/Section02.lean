@@ -1,145 +1,139 @@
 import FoC.Computability.Enumerable
 import FoC.Grammars.GeneralGrammar
 
+set_option doc.verso true
+
 namespace FoC
 namespace Book
 namespace Chapter05
 namespace Section02
 
 /-!
-Book: Chapter 5, Section 5.2, Computability.
+# Chapter 5, Section 5.2: Computability
+
+This section connects recursive, recursively enumerable, acceptable, and
+listable languages. It also records the statement shape for the theorem that
+finite general grammars generate exactly the recursively enumerable languages.
+The reusable modules are {module}`FoC.Computability.Enumerable` and
+{module}`FoC.Grammars.GeneralGrammar`.
 -/
 
 open Languages
 open Computability
 open Grammars
 
--- Book: Chapter 5, Section 5.2, recursively enumerable languages.
+/-!
+## Recursive and Recursively Enumerable Languages
+
+The definitions name the main language classes and the construction principles
+used by the book's proofs: decidable-to-acceptable conversion and dovetailing
+paired recognizers for a language and its complement.
+-/
+
 def RecursivelyEnumerableLanguage (L : Language alpha) : Prop :=
   RecursivelyEnumerable L
 
--- Book: Chapter 5, Section 5.2, co-recursively enumerable languages.
 def CoRecursivelyEnumerableLanguage (L : Language alpha) : Prop :=
   CoRecursivelyEnumerable L
 
--- Book: Chapter 5, Section 5.2, languages whose language and complement are
--- recursively enumerable.
 def RecursivelyEnumerableLanguageWithComplement (L : Language alpha) : Prop :=
   RecursivelyEnumerableWithComplement L
 
--- Book: Chapter 5, Section 5.2, recursive languages.
 def RecursiveLanguage (L : Language alpha) : Prop :=
   Recursive L
 
--- Book: Chapter 5, Section 5.2, recursive languages with a stopped
--- distinct-output 0/1 decider witness.
 def StoppedTuringDecidableLanguage (L : Language alpha) : Prop :=
   StoppedTuringDecidable L
 
--- Book: Chapter 5, Section 5.2, construction principle for turning a
--- decidable language into an acceptable language.
 def DecidableToAcceptableConstruction (alpha : Type u) : Prop :=
   DecidableToAcceptablePrinciple alpha
 
--- Book: Chapter 5, Section 5.2, construction principle for turning paired
--- recognizers for a language and its complement into a decider.
 def DovetailingDecidableConstruction (alpha : Type u) : Prop :=
   ReCoReToDecidablePrinciple alpha
 
--- Book: Chapter 5, Section 5.2, statement shape for Theorem 5.2: recursive
--- iff recursively enumerable with recursively enumerable complement.
 def RecursiveIffReCoREConstruction (alpha : Type u) : Prop :=
   RecursiveIffReCoRePrinciple alpha
 
--- Book: Chapter 5, Section 5.2, the domain language of a partial string
--- function.
 def PartialFunctionDomainLanguage
     (f : Word input -> Option (Word output)) : Language input :=
   PartialFunctionDomain f
 
--- Book: Chapter 5, Section 5.2, finite-stage acceptance traces for RE
--- languages.
 def LanguageAcceptanceTrace
     (trace : Word alpha -> Nat -> Prop)
     (L : Language alpha) : Prop :=
   AcceptanceTrace trace L
 
--- Book: Chapter 5, Section 5.2, paired acceptance traces for a language and
--- its complement.
 def LanguageComplementaryAcceptanceTraces
     (accept reject : Word alpha -> Nat -> Prop)
     (L : Language alpha) : Prop :=
   ComplementaryAcceptanceTraces accept reject L
 
--- Book: Chapter 5, Section 5.2, a trace has hit by a bounded search stage.
 def LanguageTraceHitsBy
     (trace : Word alpha -> Nat -> Prop)
     (w : Word alpha) (limit : Nat) : Prop :=
   TraceHitsBy trace w limit
 
--- Book: Chapter 5, Section 5.2, bounded dovetailing has found an accepting
--- or rejecting trace hit.
 def LanguageDovetailSearchHit
     (accept reject : Word alpha -> Nat -> Prop)
     (w : Word alpha) (limit : Nat) : Prop :=
   ComplementaryTraceSearchHit accept reject w limit
 
--- Book: Chapter 5, Section 5.2, recursive languages are closed under complement.
+/-!
+## Complements and Extensionality
+
+Recursive languages are closed under complement, stopped deciders can be
+swapped to decide complements, and both recursive and recursively enumerable
+properties are invariant under language equality.
+-/
+
 theorem recursive_language_complement {L : Language alpha}
     (h : RecursiveLanguage L) : RecursiveLanguage (Language.Compl L) :=
   Computability.recursive_complement h
 
--- Book: Chapter 5, Section 5.2, if the complement is recursive, then so is
--- the original language.
 theorem recursive_language_of_recursive_complement {L : Language alpha}
     (h : RecursiveLanguage (Language.Compl L)) : RecursiveLanguage L :=
   Computability.recursive_of_complement h
 
--- Book: Chapter 5, Section 5.2, recursiveness is equivalent for a language
--- and its complement.
 theorem recursive_language_complement_iff {L : Language alpha} :
     RecursiveLanguage (Language.Compl L) <-> RecursiveLanguage L :=
   Computability.recursive_complement_iff
 
--- Book: Chapter 5, Section 5.2, a stopped 0/1 decider witness gives an
--- ordinary recursive language.
 theorem stopped_turing_decidable_language_is_recursive
     {L : Language alpha}
     (h : StoppedTuringDecidableLanguage L) :
     RecursiveLanguage L :=
   Computability.stoppedTuringDecidable_to_turingDecidable h
 
--- Book: Chapter 5, Section 5.2, stopped 0/1 decidability is closed under
--- complement by swapping the output symbols.
 theorem stopped_turing_decidable_language_complement
     {L : Language alpha}
     (h : StoppedTuringDecidableLanguage L) :
     StoppedTuringDecidableLanguage (Language.Compl L) :=
   Computability.stoppedTuringDecidable_complement h
 
--- Book: Chapter 5, Section 5.2, recursive languages are extensional.
 theorem recursive_language_of_equal {L K : Language alpha}
     (h : RecursiveLanguage L) (hEq : Language.Equal L K) :
     RecursiveLanguage K :=
   Computability.recursive_of_equal h hEq
 
--- Book: Chapter 5, Section 5.2, recursively enumerable languages are
--- extensional.
 theorem recursively_enumerable_language_of_equal {L K : Language alpha}
     (h : RecursivelyEnumerableLanguage L) (hEq : Language.Equal L K) :
     RecursivelyEnumerableLanguage K :=
   Computability.recursivelyEnumerable_of_equal h hEq
 
--- Book: Chapter 5, Section 5.2, the domain of a partial computable function
--- is recursively enumerable.
+/-!
+## Traces and Dovetailing
+
+Acceptance traces represent finite-stage evidence for RE languages. With
+complementary traces, bounded dovetailing eventually classifies each input and
+gives the formal core of the RE/co-RE-to-recursive theorem.
+-/
+
 theorem partial_computable_function_domain_is_recursively_enumerable
     {f : Word input -> Option (Word output)}
     (h : TuringComputablePartial f) :
     RecursivelyEnumerableLanguage (PartialFunctionDomainLanguage f) :=
   Computability.turingComputablePartial_domain_recursivelyEnumerable h
 
--- Book: Chapter 5, Section 5.2, every recursively enumerable language has a
--- finite-stage acceptance trace.
 theorem recursively_enumerable_language_has_acceptance_trace
     {L : Language alpha}
     (h : RecursivelyEnumerableLanguage L) :
@@ -147,8 +141,6 @@ theorem recursively_enumerable_language_has_acceptance_trace
       LanguageAcceptanceTrace trace L :=
   Computability.recursivelyEnumerable_has_acceptanceTrace h
 
--- Book: Chapter 5, Section 5.2, RE plus co-RE supplies complementary finite
--- acceptance traces.
 theorem re_and_co_re_have_complementary_acceptance_traces
     {L : Language alpha}
     (h : RecursivelyEnumerableLanguageWithComplement L) :
@@ -156,7 +148,6 @@ theorem re_and_co_re_have_complementary_acceptance_traces
       LanguageComplementaryAcceptanceTraces accept reject L :=
   Computability.recursivelyEnumerable_with_complement_has_complementaryTraces h
 
--- Book: Chapter 5, Section 5.2, an accepting trace hit is sound.
 theorem complementary_trace_accept_sound
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
@@ -166,7 +157,6 @@ theorem complementary_trace_accept_sound
     w ∈ L :=
   Computability.complementaryAcceptanceTraces_accept_sound h hn
 
--- Book: Chapter 5, Section 5.2, a rejecting trace hit is sound.
 theorem complementary_trace_reject_sound
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
@@ -176,8 +166,6 @@ theorem complementary_trace_reject_sound
     ¬ w ∈ L :=
   Computability.complementaryAcceptanceTraces_reject_sound h hn
 
--- Book: Chapter 5, Section 5.2, paired traces eventually give either an
--- accepting or rejecting finite hit on each input.
 theorem complementary_traces_eventually_hit
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
@@ -186,8 +174,6 @@ theorem complementary_traces_eventually_hit
     exists n : Nat, accept w n ∨ reject w n :=
   Computability.complementaryAcceptanceTraces_eventually_hits_classical h w
 
--- Book: Chapter 5, Section 5.2, bounded trace hits are monotone in the search
--- bound.
 theorem language_trace_hit_mono
     {trace : Word alpha -> Nat -> Prop}
     {w : Word alpha} {m n : Nat}
@@ -196,7 +182,6 @@ theorem language_trace_hit_mono
     LanguageTraceHitsBy trace w n :=
   Computability.traceHitsBy_mono hmn h
 
--- Book: Chapter 5, Section 5.2, an accepting bounded trace hit is sound.
 theorem complementary_trace_accepts_by_sound
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
@@ -206,7 +191,6 @@ theorem complementary_trace_accepts_by_sound
     w ∈ L :=
   Computability.complementaryTraceAcceptsBy_sound h hit
 
--- Book: Chapter 5, Section 5.2, a rejecting bounded trace hit is sound.
 theorem complementary_trace_rejects_by_sound
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
@@ -216,8 +200,6 @@ theorem complementary_trace_rejects_by_sound
     ¬ w ∈ L :=
   Computability.complementaryTraceRejectsBy_sound h hit
 
--- Book: Chapter 5, Section 5.2, accepting and rejecting bounded hits cannot
--- both occur for complementary traces.
 theorem complementary_trace_search_no_conflict
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
@@ -228,8 +210,6 @@ theorem complementary_trace_search_no_conflict
     False :=
   Computability.complementaryTraceSearch_no_conflict h ha hr
 
--- Book: Chapter 5, Section 5.2, complementary traces eventually have a
--- bounded search stage with a hit.
 theorem complementary_trace_search_eventually_hits_by
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
@@ -238,8 +218,6 @@ theorem complementary_trace_search_eventually_hits_by
     exists limit : Nat, LanguageDovetailSearchHit accept reject w limit :=
   Computability.complementaryTraceSearch_eventually_hits_by h w
 
--- Book: Chapter 5, Section 5.2, complementary traces eventually classify
--- each input by a bounded search stage.
 theorem complementary_trace_search_eventually_classifies
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
@@ -250,8 +228,6 @@ theorem complementary_trace_search_eventually_classifies
         (LanguageTraceHitsBy reject w limit ∧ ¬ w ∈ L) :=
   Computability.complementaryTraceSearch_eventually_classifies h w
 
--- Book: Chapter 5, Section 5.2, RE plus co-RE gives the bounded-search core
--- used by the standard dovetailing proof.
 theorem re_and_co_re_bounded_search_eventually_classifies
     {L : Language alpha}
     (h : RecursivelyEnumerableLanguageWithComplement L)
@@ -271,8 +247,6 @@ theorem re_and_co_re_bounded_search_eventually_classifies
           · exact hreject
           · exact complementary_trace_search_eventually_classifies hreject w
 
--- Book: Chapter 5, Section 5.2, a stopped 0/1 decider gives complementary
--- finite output traces.
 theorem stopped_decider_has_complementary_output_traces
     {M : TuringMachine symbol state}
     {encodeInput : alpha -> symbol} {zero one : symbol}
@@ -291,8 +265,6 @@ theorem stopped_decider_has_complementary_output_traces
   Computability.stopped_decider_has_complementary_output_traces
     hstop hzeroOne h
 
--- Book: Chapter 5, Section 5.2, the accepting-output half of a stopped
--- 0/1 decider is an acceptance trace for the language.
 theorem stopped_decider_acceptance_trace
     {M : TuringMachine symbol state}
     {encodeInput : alpha -> symbol} {zero one : symbol}
@@ -307,8 +279,6 @@ theorem stopped_decider_acceptance_trace
       L :=
   Computability.stopped_decider_acceptanceTrace hstop hzeroOne h
 
--- Book: Chapter 5, Section 5.2, the rejecting-output half of a stopped
--- 0/1 decider is an acceptance trace for the complement.
 theorem stopped_decider_complement_acceptance_trace
     {M : TuringMachine symbol state}
     {encodeInput : alpha -> symbol} {zero one : symbol}
@@ -324,8 +294,6 @@ theorem stopped_decider_complement_acceptance_trace
   Computability.stopped_decider_complement_acceptanceTrace
     hstop hzeroOne h
 
--- Book: Chapter 5, Section 5.2, a stopped 0/1 decider has a bounded output
--- search classification stage for every input.
 theorem stopped_decider_bounded_search_eventually_classifies
     {M : TuringMachine symbol state}
     {encodeInput : alpha -> symbol} {zero one : symbol}
@@ -348,8 +316,6 @@ theorem stopped_decider_bounded_search_eventually_classifies
   complementary_trace_search_eventually_classifies
     (stopped_decider_has_complementary_output_traces hstop hzeroOne h) w
 
--- Book: Chapter 5, Section 5.2, a stopped 0/1 decider witness supplies
--- complementary finite output traces.
 theorem stopped_turing_decidable_language_has_complementary_output_traces
     {L : Language alpha}
     (h : StoppedTuringDecidableLanguage L) :
@@ -357,8 +323,6 @@ theorem stopped_turing_decidable_language_has_complementary_output_traces
       LanguageComplementaryAcceptanceTraces accept reject L :=
   Computability.stoppedTuringDecidable_has_complementary_output_traces h
 
--- Book: Chapter 5, Section 5.2, a stopped 0/1 decider witness supplies a
--- finite acceptance trace for the language itself.
 theorem stopped_turing_decidable_language_has_acceptance_trace
     {L : Language alpha}
     (h : StoppedTuringDecidableLanguage L) :
@@ -366,8 +330,6 @@ theorem stopped_turing_decidable_language_has_acceptance_trace
       LanguageAcceptanceTrace trace L :=
   Computability.stoppedTuringDecidable_has_acceptanceTrace h
 
--- Book: Chapter 5, Section 5.2, a stopped 0/1 decider witness supplies a
--- finite acceptance trace for the complement.
 theorem stopped_turing_decidable_language_complement_has_acceptance_trace
     {L : Language alpha}
     (h : StoppedTuringDecidableLanguage L) :
@@ -375,8 +337,6 @@ theorem stopped_turing_decidable_language_complement_has_acceptance_trace
       LanguageAcceptanceTrace trace (Language.Compl L) :=
   Computability.stoppedTuringDecidable_complement_has_acceptanceTrace h
 
--- Book: Chapter 5, Section 5.2, a stopped 0/1 decider witness supplies the
--- bounded-search classification core used by the dovetailing proof.
 theorem stopped_turing_decidable_language_bounded_search_eventually_classifies
     {L : Language alpha}
     (h : StoppedTuringDecidableLanguage L)
@@ -388,8 +348,6 @@ theorem stopped_turing_decidable_language_bounded_search_eventually_classifies
             (LanguageTraceHitsBy reject w limit ∧ ¬ w ∈ L) :=
   Computability.stoppedTuringDecidable_bounded_search_eventually_classifies h w
 
--- Book: Chapter 5, Section 5.2, the decider-to-acceptor construction gives
--- the easy direction of Theorem 5.2.
 theorem recursive_language_re_and_co_re_of_decidable_to_acceptable
     (haccept : DecidableToAcceptableConstruction alpha)
     {L : Language alpha}
@@ -397,8 +355,6 @@ theorem recursive_language_re_and_co_re_of_decidable_to_acceptable
     RecursivelyEnumerableLanguageWithComplement L :=
   Computability.recursive_reCoRe_of_decidableToAcceptable haccept h
 
--- Book: Chapter 5, Section 5.2, the decider-to-acceptor and dovetailing
--- constructions together give Theorem 5.2.
 theorem recursive_language_iff_re_and_co_re_of_constructions
     (haccept : DecidableToAcceptableConstruction alpha)
     (hdovetail : DovetailingDecidableConstruction alpha)
@@ -406,8 +362,6 @@ theorem recursive_language_iff_re_and_co_re_of_constructions
     RecursiveLanguage L <-> RecursivelyEnumerableLanguageWithComplement L :=
   Computability.recursive_iff_reCoRe_of_principles haccept hdovetail L
 
--- Book: Chapter 5, Section 5.2, the two construction principles assemble into
--- the reusable theorem statement.
 theorem recursive_iff_re_co_re_construction_of_principles
     (haccept : DecidableToAcceptableConstruction alpha)
     (hdovetail : DovetailingDecidableConstruction alpha) :
@@ -415,60 +369,53 @@ theorem recursive_iff_re_co_re_construction_of_principles
   Computability.recursiveIffReCoRePrinciple_of_principles
     haccept hdovetail
 
--- Book: Chapter 5, Section 5.2, languages listed by a stream of words.
+/-!
+## Listings and Ranges
+
+Listable languages are represented by streams of words. The range theorems
+connect listability with unary string functions, matching the book's
+enumerator viewpoint.
+-/
+
 def LanguageListedBy (stream : Nat -> Word alpha) (L : Language alpha) : Prop :=
   ListedBy stream L
 
--- Book: Chapter 5, Section 5.2, listed languages are extensional.
 theorem listed_language_of_equal {stream : Nat -> Word alpha}
     {L K : Language alpha}
     (h : LanguageListedBy stream L) (hEq : Language.Equal L K) :
     LanguageListedBy stream K :=
   listedBy_of_equal h hEq
 
--- Book: Chapter 5, Section 5.2, every listed word belongs to the listed language.
 theorem listed_word_in_language {stream : Nat -> Word alpha} {L : Language alpha}
     (h : LanguageListedBy stream L) (n : Nat) :
     stream n ∈ L :=
   listed_word_mem h n
 
--- Book: Chapter 5, Section 5.2, language-listability vocabulary.
 def LanguageListable (L : Language alpha) : Prop :=
   Listable L
 
--- Book: Chapter 5, Section 5.2, the nth unary input string a^n, represented
--- over a singleton alphabet.
 def UnaryInputString (n : Nat) : Word Unit :=
   UnaryInputWord n
 
--- Book: Chapter 5, Section 5.2, listability is extensional.
 theorem listable_language_of_equal {L K : Language alpha}
     (h : LanguageListable L) (hEq : Language.Equal L K) :
     LanguageListable K :=
   listable_of_equal h hEq
 
--- Book: Chapter 5, Section 5.2, languages as ranges of functions.
 def FunctionRangeLanguage (f : Word input -> Word output) : Language output :=
   RangeLanguage f
 
--- Book: Chapter 5, Section 5.2, languages that are ranges of functions
--- from unary strings.
 def RangeOfUnaryStringFunction (L : Language output) : Prop :=
   RangeOfUnaryFunction L
 
--- Book: Chapter 5, Section 5.2, a listing stream viewed as a function on
--- unary strings by using the input length.
 def ListingAsUnaryStringFunction (stream : Nat -> Word output) :
     Word Unit -> Word output :=
   ListingAsUnaryFunction stream
 
--- Book: Chapter 5, Section 5.2, the nth unary input string has length n.
 theorem unary_input_string_length (n : Nat) :
     Word.Length (UnaryInputString n) = n :=
   Computability.unaryInputWord_length n
 
--- Book: Chapter 5, Section 5.2, the range of a function on unary strings is
--- listed by evaluating it at a^0, a^1, a^2, and so on.
 theorem unary_function_range_is_listed
     (f : Word Unit -> Word output) :
     LanguageListedBy
@@ -476,15 +423,11 @@ theorem unary_function_range_is_listed
       (FunctionRangeLanguage f) :=
   Computability.unaryFunctionRange_listedBy f
 
--- Book: Chapter 5, Section 5.2, every function on unary strings has a
--- listable range.
 theorem unary_function_range_is_listable
     (f : Word Unit -> Word output) :
     LanguageListable (FunctionRangeLanguage f) :=
   Computability.unaryFunctionRange_listable f
 
--- Book: Chapter 5, Section 5.2, a listing stream determines a unary-input
--- function with exactly the listed language as its range.
 theorem listed_language_range_of_unary_function
     {stream : Nat -> Word output} {L : Language output}
     (h : LanguageListedBy stream L) :
@@ -492,8 +435,6 @@ theorem listed_language_range_of_unary_function
       (FunctionRangeLanguage (ListingAsUnaryStringFunction stream)) L :=
   Computability.listedBy_rangeLanguage_listingAsUnaryFunction h
 
--- Book: Chapter 5, Section 5.2, every listable language is the range of some
--- function on unary strings.
 theorem listable_language_has_unary_range_function
     {L : Language output}
     (h : LanguageListable L) :
@@ -501,80 +442,67 @@ theorem listable_language_has_unary_range_function
       Language.Equal (FunctionRangeLanguage f) L :=
   Computability.listable_has_unary_range_function h
 
--- Book: Chapter 5, Section 5.2, every listable language is the range of a
--- function on unary strings.
 theorem listable_language_range_of_unary_string_function
     {L : Language output}
     (h : LanguageListable L) :
     RangeOfUnaryStringFunction L :=
   Computability.listable_rangeOfUnaryFunction h
 
--- Book: Chapter 5, Section 5.2, every unary-string range is listable by
--- evaluating the function on a^0, a^1, a^2, and so on.
 theorem unary_string_function_range_is_listable
     {L : Language output}
     (h : RangeOfUnaryStringFunction L) :
     LanguageListable L :=
   Computability.rangeOfUnaryFunction_listable h
 
--- Book: Chapter 5, Section 5.2, semantic listing/range equivalence for
--- unary-input functions.
 theorem listable_language_iff_range_of_unary_string_function
     (L : Language output) :
     LanguageListable L <-> RangeOfUnaryStringFunction L :=
   Computability.listable_iff_rangeOfUnaryFunction L
 
--- Book: Chapter 5, Section 5.2, a function value is in its range language.
 theorem function_value_in_range (f : Word input -> Word output) (x : Word input) :
     f x ∈ FunctionRangeLanguage f :=
   range_mem x
 
--- Book: Chapter 5, Section 5.2, pointwise equal functions have the same range.
 theorem function_range_equal_of_pointwise
     {f g : Word input -> Word output}
     (hfg : forall x, f x = g x) :
     Language.Equal (FunctionRangeLanguage f) (FunctionRangeLanguage g) :=
   rangeLanguage_equal_of_pointwise hfg
 
--- Book: Chapter 5, Section 5.2, computable-function range descriptions are
--- extensional.
 theorem computable_range_language_of_equal {L K : Language output}
     (h : RangeOfComputableFunction L) (hEq : Language.Equal L K) :
     RangeOfComputableFunction K :=
   rangeOfComputableFunction_of_equal h hEq
 
--- Book: Chapter 5, Section 5.2, unary range descriptions are extensional.
 theorem unary_range_language_of_equal {L K : Language output}
     (h : RangeOfUnaryStringFunction L) (hEq : Language.Equal L K) :
     RangeOfUnaryStringFunction K :=
   rangeOfUnaryFunction_of_equal h hEq
 
--- Book: Chapter 5, Section 5.2, equivalence vocabulary for RE languages.
 def AcceptableListingEquivalenceStatement (L : Language alpha) : Prop :=
   AcceptableListingEquivalence L
 
--- Book: Chapter 5, Section 5.2, equivalence vocabulary for computable ranges.
 def AcceptableRangeEquivalenceStatement (L : Language alpha) : Prop :=
   AcceptableRangeEquivalence L
 
--- Book: Chapter 5, Section 5.2, general grammar generated languages.
+/-!
+## General Grammars and RE Languages
+
+The final definitions relate unrestricted grammar generation to recursive
+enumerability, then state the recursive-language equivalence for a language
+and its complement under those construction principles.
+-/
+
 def GeneralGrammarGeneratedLanguage (G : GeneralGrammar terminal nonterminal) :
     Language terminal :=
   GeneralGrammar.GeneratedLanguage G
 
--- Book: Chapter 5, Section 5.2, grammar/RE-language equivalence statement.
 def GeneralGrammarAcceptabilityEquivalence (L : Language terminal) : Prop :=
   GeneralGrammar.Generated L <-> RecursivelyEnumerable L
 
--- Book: Chapter 5, Section 5.2, grammar witnesses for a language and its
--- complement.
 def GeneralGrammarPairGenerated (L : Language terminal) : Prop :=
   GeneralGrammar.Generated L ∧ GeneralGrammar.Generated (Language.Compl L)
 
--- Book: Chapter 5, Section 5.2, conditional exercise/theorem wrapper:
--- recursive languages are exactly the languages whose language and complement
--- are generated by general grammars, once the grammar/RE equivalence and
--- recursive iff RE/co-RE construction are available.
 theorem recursive_language_iff_general_grammar_pair
     {L : Language terminal}
     (hre : RecursiveIffReCoREConstruction terminal)
@@ -594,9 +522,6 @@ theorem recursive_language_iff_general_grammar_pair
     · exact hgrammarL.mp hgrammar.left
     · exact hgrammarCompl.mp hgrammar.right
 
--- Book: Chapter 5, Section 5.2, the same grammar characterization assembled
--- directly from the decider-to-acceptor and dovetailing construction
--- principles plus a uniform grammar/RE equivalence.
 theorem recursive_language_iff_general_grammar_pair_of_constructions
     (haccept : DecidableToAcceptableConstruction terminal)
     (hdovetail : DovetailingDecidableConstruction terminal)
@@ -611,7 +536,7 @@ theorem recursive_language_iff_general_grammar_pair_of_constructions
 
 /-!
 The theorem equating general grammars with recursively enumerable languages is
-recorded as an explicit statement shape.  The construction proof is deferred
+recorded as an explicit statement shape. The construction proof is deferred
 until the formalization has enough machine-encoding and simulation
 infrastructure.
 -/

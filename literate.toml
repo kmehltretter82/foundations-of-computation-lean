@@ -1,5 +1,6 @@
 landing_page = "FoC"
 hide_commands = ["import", "open", "set_option", "namespace", "end"]
+show_imports = false
 docstrings_as_text = true
 
 order = ["FoC"]
@@ -64,14 +65,146 @@ description = "In-source Verso HTML companion for the Lean formalization of Foun
 [modules."FoC.Foundation"]
 title = "Foundation"
 
+[modules."FoC.Foundation.Arithmetic"]
+title = "Arithmetic"
+
+[modules."FoC.Foundation.Cardinality"]
+title = "Cardinality"
+
+[modules."FoC.Foundation.Countable"]
+title = "Countable"
+
+[modules."FoC.Foundation.DigitStreams"]
+title = "Digit Streams"
+
+[modules."FoC.Foundation.Finite"]
+title = "Finite"
+
+[modules."FoC.Foundation.Functions"]
+title = "Functions"
+
+[modules."FoC.Foundation.Integers"]
+title = "Integers"
+
+[modules."FoC.Foundation.Lists"]
+title = "Lists"
+
+[modules."FoC.Foundation.Logic"]
+title = "Logic"
+
+[modules."FoC.Foundation.Primes"]
+title = "Primes"
+
+[modules."FoC.Foundation.QuadraticSurd"]
+title = "Quadratic Surds"
+
+[modules."FoC.Foundation.QuotientRationals"]
+title = "Quotient Rationals"
+
+[modules."FoC.Foundation.RationalCore"]
+title = "Rational Core"
+
+[modules."FoC.Foundation.Rationals"]
+title = "Rationals"
+
+[modules."FoC.Foundation.RealUncountability"]
+title = "Real Uncountability"
+
+[modules."FoC.Foundation.Reals"]
+title = "Reals"
+
+[modules."FoC.Foundation.Relations"]
+title = "Relations"
+
+[modules."FoC.Foundation.Sets"]
+title = "Sets"
+
+[modules."FoC.Foundation.Summation"]
+title = "Summation"
+
 [modules."FoC.Languages"]
 title = "Languages"
+
+[modules."FoC.Languages.DFA"]
+title = "DFA"
+
+[modules."FoC.Languages.Language"]
+title = "Language"
+
+[modules."FoC.Languages.NFA"]
+title = "NFA"
+
+[modules."FoC.Languages.NFAPath"]
+title = "NFA Paths"
+
+[modules."FoC.Languages.Pumping"]
+title = "Pumping"
+
+[modules."FoC.Languages.Regular"]
+title = "Regular Languages"
+
+[modules."FoC.Languages.RegularExpression"]
+title = "Regular Expressions"
+
+[modules."FoC.Languages.Thompson"]
+title = "Thompson Construction"
+
+[modules."FoC.Languages.Words"]
+title = "Words"
 
 [modules."FoC.Grammars"]
 title = "Grammars"
 
+[modules."FoC.Grammars.BNF"]
+title = "BNF"
+
+[modules."FoC.Grammars.CFG"]
+title = "Context-Free Grammars"
+
+[modules."FoC.Grammars.CFGToPDA"]
+title = "CFG to PDA"
+
+[modules."FoC.Grammars.CFL"]
+title = "Context-Free Languages"
+
+[modules."FoC.Grammars.GeneralGrammar"]
+title = "General Grammars"
+
+[modules."FoC.Grammars.PDA"]
+title = "Pushdown Automata"
+
+[modules."FoC.Grammars.PDANormalize"]
+title = "PDA Normalization"
+
+[modules."FoC.Grammars.PDAToCFG"]
+title = "PDA to CFG"
+
+[modules."FoC.Grammars.ParseTree"]
+title = "Parse Trees"
+
+[modules."FoC.Grammars.RightRegular"]
+title = "Right-Regular Grammars"
+
 [modules."FoC.Computability"]
 title = "Computability"
+
+[modules."FoC.Computability.Computable"]
+title = "Computable Functions"
+
+[modules."FoC.Computability.Enumerable"]
+title = "Enumerable Languages"
+
+[modules."FoC.Computability.Recognizable"]
+title = "Recognizable Languages"
+
+[modules."FoC.Computability.Tape"]
+title = "Tapes"
+
+[modules."FoC.Computability.TuringMachine"]
+title = "Turing Machines"
+
+[modules."FoC.Computability.Undecidable"]
+title = "Undecidability"
 
 [modules."FoC.Book.Chapter01"]
 title = "Chapter 1: Logic and Proof"

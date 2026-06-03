@@ -1,61 +1,60 @@
 import FoC.Grammars.GeneralGrammar
 
+set_option doc.verso true
+
 namespace FoC
 namespace Book
 namespace Chapter04
 namespace Section06
 
 /-!
-Book: Chapter 4, Section 4.6, General Grammars.
+# Chapter 4, Section 4.6: General Grammars
+
+General grammars relax context-free productions by allowing arbitrary
+sentential forms on the left-hand side. This section records the derivation
+API, finite-presentation countability statements, the embedding of CFGs, and
+example language arguments. The reusable layer is
+{module}`FoC.Grammars.GeneralGrammar`.
 -/
 
 open Languages
 open Grammars
 
--- Book: Chapter 4, Section 4.6, one general-grammar step is a derivation.
+/-!
+## General Derivations
+
+General-grammar yields generate derivations, derivations compose, and CFG
+productions embed as unrestricted grammar productions.
+-/
+
 theorem general_yields_implies_derives {G : GeneralGrammar terminal nonterminal}
     {x y : SententialForm terminal nonterminal} (h : GeneralGrammar.Yields G x y) :
     GeneralGrammar.Derives G x y :=
   GeneralGrammar.yields_derives h
 
--- Book: Chapter 4, Section 4.6, derivations are transitive.
 theorem general_derives_transitive {G : GeneralGrammar terminal nonterminal}
     {x y z : SententialForm terminal nonterminal}
     (hxy : GeneralGrammar.Derives G x y) (hyz : GeneralGrammar.Derives G y z) :
     GeneralGrammar.Derives G x z :=
   GeneralGrammar.derives_trans hxy hyz
 
--- Book: Chapter 4, Section 4.6, every CFG rule is a valid general-grammar rule.
 def GeneralGrammarFromCFG (G : CFG terminal nonterminal) :
     GeneralGrammar terminal nonterminal :=
   GeneralGrammar.FromCFG G
 
--- Book: Chapter 4, Section 4.6, finite-production presentation for general
--- grammars.
 def FiniteProductionGeneralGrammar
     (G : GeneralGrammar terminal nonterminal) : Prop :=
   GeneralGrammar.HasFiniteProductions G
 
--- Book: Chapter 4, Section 4.6, finite-production general-grammar language
--- vocabulary.
 def FiniteProductionGeneralLanguage (L : Language terminal) : Prop :=
   GeneralGrammar.FiniteProductionGenerated L
 
--- Book: Chapter 4, finite grammars/countability discussion: a finite CFG
--- presentation is represented by a start nonterminal and a finite production
--- list.
 def CFGFinitePresentationCode (terminal nonterminal : Type) :=
   CFG.FinitePresentationCode terminal nonterminal
 
--- Book: Chapter 4, finite grammars/countability discussion: a finite
--- unrestricted grammar presentation is represented by a start nonterminal and
--- a finite production list with arbitrary sentential-form left-hand sides.
 def GeneralGrammarFinitePresentationCode (terminal nonterminal : Type) :=
   GeneralGrammar.FinitePresentationCode terminal nonterminal
 
--- Book: Chapter 4, finite grammars/countability discussion.  If terminal and
--- nonterminal symbols are explicitly encodable by natural numbers, then the
--- finite CFG presentation descriptions over those symbols are countable.
 theorem cfg_finite_presentation_codes_countable
     (hterminal : Foundation.Countability.EncodableByNat terminal)
     (hnonterminal : Foundation.Countability.EncodableByNat nonterminal) :
@@ -65,9 +64,6 @@ theorem cfg_finite_presentation_codes_countable
           (CFGFinitePresentationCode terminal nonterminal)) :=
   CFG.FinitePresentationCode.countable hterminal hnonterminal
 
--- Book: Chapter 4, finite grammars/countability discussion.  The same
--- countability statement holds for finite unrestricted grammar presentation
--- descriptions.
 theorem general_grammar_finite_presentation_codes_countable
     (hterminal : Foundation.Countability.EncodableByNat terminal)
     (hnonterminal : Foundation.Countability.EncodableByNat nonterminal) :
@@ -77,26 +73,30 @@ theorem general_grammar_finite_presentation_codes_countable
           (GeneralGrammarFinitePresentationCode terminal nonterminal)) :=
   GeneralGrammar.FinitePresentationCode.countable hterminal hnonterminal
 
--- Book: Chapter 4, Section 4.6, finite-production CFGs embed as
--- finite-production general grammars.
 theorem finite_production_cfg_is_finite_production_general
     {G : CFG terminal nonterminal}
     (hG : CFG.HasFiniteProductions G) :
     FiniteProductionGeneralGrammar (GeneralGrammarFromCFG G) :=
   GeneralGrammar.fromCFG_hasFiniteProductions hG
 
--- Book: Chapter 4, Section 4.6, CFG derivations embed in general grammars.
 theorem cfg_derivation_is_general_derivation {G : CFG terminal nonterminal}
     {x y : SententialForm terminal nonterminal}
     (h : CFG.Derives G x y) :
     GeneralGrammar.Derives (GeneralGrammar.FromCFG G) x y :=
   GeneralGrammar.cfg_derives_embeds h
 
--- Book: Chapter 4, Section 4.6, CFG-generated words are general-grammar generated.
 theorem cfg_generated_word_is_general_generated (G : CFG terminal nonterminal)
     {w : Word terminal} (h : w ∈ CFG.GeneratedLanguage G) :
     w ∈ GeneralGrammar.GeneratedLanguage (GeneralGrammar.FromCFG G) :=
   GeneralGrammar.cfg_generated_language_embeds G h
+
+/-!
+## Finite Presentations and Countability
+
+The chapter's countability discussion is represented by finite presentation
+codes. If terminal and nonterminal symbols are encodable by natural numbers,
+then finite grammar descriptions over those symbols are countable.
+-/
 
 theorem general_yields_of_production {G : GeneralGrammar terminal nonterminal}
     {lhs rhs : SententialForm terminal nonterminal}
@@ -107,8 +107,6 @@ theorem general_yields_of_production {G : GeneralGrammar terminal nonterminal}
   exists lhs
   exists rhs
 
--- Book: Chapter 4, Section 4.6, unrestricted grammar steps are closed under
--- arbitrary sentential-form context.
 theorem general_yields_context {G : GeneralGrammar terminal nonterminal}
     {x y : SententialForm terminal nonterminal}
     (h : GeneralGrammar.Yields G x y)
@@ -127,8 +125,6 @@ theorem general_yields_context {G : GeneralGrammar terminal nonterminal}
   · rw [hy]
     simp [List.append_assoc]
 
--- Book: Chapter 4, Section 4.6, unrestricted derivations are closed under
--- arbitrary sentential-form context.
 theorem general_derives_context {G : GeneralGrammar terminal nonterminal}
     {x y : SententialForm terminal nonterminal}
     (h : GeneralGrammar.Derives G x y)
@@ -140,6 +136,14 @@ theorem general_derives_context {G : GeneralGrammar terminal nonterminal}
   | step hstep _ ih =>
       exact GeneralGrammar.Derives.step
         (general_yields_context hstep u v) ih
+
+/-!
+## Soundness Helpers and Examples
+
+The remaining helper lemmas interpret sentential forms as languages and count
+symbols in sentential forms. They support the concrete unrestricted-grammar
+examples later in the file.
+-/
 
 theorem general_formLanguage_replace_sound
     (symbolLanguage : Symbol terminal nonterminal -> Language terminal)
@@ -502,8 +506,6 @@ def EqualCountProductionList :
    { lhs := [ecN EqualCountNT.markC],
      rhs := [ecT EqualCountTerminal.c] }]
 
--- Book: Chapter 4, Section 4.6, the equal-count general grammar has a finite
--- production presentation.
 theorem equalCountGrammar_has_finite_productions :
     GeneralGrammar.HasFiniteProductions EqualCountGrammar := by
   exists EqualCountProductionList
@@ -562,8 +564,6 @@ theorem equalCountGrammar_has_finite_productions :
       cases hrhs
       exact EqualCountProduces.emitC
 
--- Book: Chapter 4, Section 4.6, the language generated by the equal-count
--- example grammar is generated by a finite general grammar.
 theorem equalCountGrammar_finite_production_generated :
     FiniteProductionGeneralLanguage
       (GeneralGrammar.GeneratedLanguage EqualCountGrammar) := by
@@ -600,8 +600,6 @@ theorem equalCount_start_balanced :
     equalCountTotalC, SententialCountTerminal, SententialCountNonterminal,
     ecN, ggNonterminal]
 
--- Book: Chapter 4, Section 4.6, the equal-count general grammar preserves
--- the invariant `n_A+n_a = n_B+n_b = n_C+n_c`.
 theorem equalCount_yields_preserves_balanced
     {x y : SententialForm EqualCountTerminal EqualCountNT}
     (h : GeneralGrammar.Yields EqualCountGrammar x y) :
@@ -631,8 +629,6 @@ theorem equalCount_yields_preserves_balanced
                               ggNonterminal, ggTerminal] at hbalanced ⊢ <;>
                             omega
 
--- Book: Chapter 4, Section 4.6, the equal-count invariant is stable through
--- derivations.
 theorem equalCount_derives_preserves_balanced
     {x y : SententialForm EqualCountTerminal EqualCountNT}
     (h : GeneralGrammar.Derives EqualCountGrammar x y) :
@@ -645,8 +641,6 @@ theorem equalCount_derives_preserves_balanced
       intro hbalanced
       exact ih (equalCount_yields_preserves_balanced hstep hbalanced)
 
--- Book: Chapter 4, Section 4.6, every terminal word generated by the
--- equal-count grammar has the same number of a's, b's, and c's.
 theorem equalCountGrammar_generated_has_equal_terminal_counts
     {w : Word EqualCountTerminal}
     (h : w ∈ GeneralGrammar.GeneratedLanguage EqualCountGrammar) :
@@ -1250,7 +1244,6 @@ def baabccWord : Word EqualCountTerminal :=
   [EqualCountTerminal.b, EqualCountTerminal.a, EqualCountTerminal.a,
     EqualCountTerminal.b, EqualCountTerminal.c, EqualCountTerminal.c]
 
--- Book: Chapter 4, Section 4.6, the sample derivation of `baabcc`.
 theorem equalCountGrammar_generates_baabcc :
     baabccWord ∈ GeneralGrammar.GeneratedLanguage EqualCountGrammar := by
   let S := ecN EqualCountNT.start
@@ -1492,8 +1485,6 @@ def FourCountProductionList :
    { lhs := [fcN FourCountNT.markD],
      rhs := [fcT FourCountTerminal.d] }]
 
--- Book: Chapter 4, Section 4.6, selected exercise grammar for words with
--- equal numbers of four different terminals.
 theorem fourCountGrammar_has_finite_productions :
     GeneralGrammar.HasFiniteProductions FourCountGrammar := by
   exists FourCountProductionList
@@ -1687,8 +1678,6 @@ def dacbWord : Word FourCountTerminal :=
   [FourCountTerminal.d, FourCountTerminal.a, FourCountTerminal.c,
     FourCountTerminal.b]
 
--- Book: Chapter 4, Section 4.6, concrete derivation from the four-equal-count
--- exercise grammar.
 theorem fourCountGrammar_generates_dacb :
     dacbWord ∈ GeneralGrammar.GeneratedLanguage FourCountGrammar := by
   let S := fcN FourCountNT.start
@@ -1872,8 +1861,6 @@ def OrderedABCProductionList :
    { lhs := [orderedN OrderedABCNT.z],
      rhs := [] }]
 
--- Book: Chapter 4, Section 4.6, the ordered a^n b^n c^n example grammar has
--- a finite production presentation.
 theorem orderedABCGrammar_has_finite_productions :
     GeneralGrammar.HasFiniteProductions OrderedABCGrammar := by
   exists OrderedABCProductionList
@@ -1932,8 +1919,6 @@ theorem orderedABCGrammar_has_finite_productions :
       cases hrhs
       exact OrderedABCProduces.finish
 
--- Book: Chapter 4, Section 4.6, the language generated by the ordered sample
--- grammar is generated by a finite general grammar.
 theorem orderedABCGrammar_finite_production_generated :
     FiniteProductionGeneralLanguage
       (GeneralGrammar.GeneratedLanguage OrderedABCGrammar) := by
@@ -2732,8 +2717,6 @@ def aabbccWord : Word EqualCountTerminal :=
   [EqualCountTerminal.a, EqualCountTerminal.a, EqualCountTerminal.b,
     EqualCountTerminal.b, EqualCountTerminal.c, EqualCountTerminal.c]
 
--- Book: Chapter 4, Section 4.6, the ordered general grammar generates
--- `aabbcc`, illustrating the `{a^n b^n c^n}` construction.
 theorem orderedABCGrammar_generates_aabbcc :
     aabbccWord ∈ GeneralGrammar.GeneratedLanguage OrderedABCGrammar := by
   let S := orderedN OrderedABCNT.start
@@ -2996,8 +2979,6 @@ def OrderedABCDProductionList :
    { lhs := [ordered4N OrderedABCDNT.q],
      rhs := [] }]
 
--- Book: Chapter 4, Section 4.6, selected exercise grammar for ordered
--- `a^n b^n c^n d^n` words.
 theorem orderedABCDGrammar_has_finite_productions :
     GeneralGrammar.HasFiniteProductions OrderedABCDGrammar := by
   exists OrderedABCDProductionList
@@ -3077,8 +3058,6 @@ theorem orderedABCDGrammar_has_finite_productions :
       cases hrhs
       exact OrderedABCDProduces.finish
 
--- Book: Chapter 4, Section 4.6, the ordered four-block exercise language is
--- generated by a finite unrestricted grammar.
 theorem orderedABCDGrammar_finite_production_generated :
     FiniteProductionGeneralLanguage
       (GeneralGrammar.GeneratedLanguage OrderedABCDGrammar) := by
@@ -3191,8 +3170,6 @@ def aabbccddWord : Word FourCountTerminal :=
     FourCountTerminal.b, FourCountTerminal.c, FourCountTerminal.c,
     FourCountTerminal.d, FourCountTerminal.d]
 
--- Book: Chapter 4, Section 4.6, concrete n = 2 derivation for the selected
--- ordered four-block exercise grammar.
 theorem orderedABCDGrammar_generates_aabbccdd :
     aabbccddWord ∈ GeneralGrammar.GeneratedLanguage OrderedABCDGrammar := by
   let S := ordered4N OrderedABCDNT.start
@@ -3444,8 +3421,6 @@ def StrictMoreBProductionList :
    { lhs := [moreBN StrictMoreBNT.tail],
      rhs := [moreBT EqualCountTerminal.b] }]
 
--- Book: Chapter 4, Section 4.6, selected exercise grammar for ordered
--- strict-count words `a^n b^m` with `n < m`.
 theorem strictMoreBGrammar_has_finite_productions :
     GeneralGrammar.HasFiniteProductions StrictMoreBGrammar := by
   exists StrictMoreBProductionList
@@ -3814,8 +3789,6 @@ def aabbbWord : Word EqualCountTerminal :=
   [EqualCountTerminal.a, EqualCountTerminal.a, EqualCountTerminal.b,
     EqualCountTerminal.b, EqualCountTerminal.b]
 
--- Book: Chapter 4, Section 4.6, concrete derivation for the selected
--- strict-count grammar.
 theorem strictMoreBGrammar_generates_aabbb :
     aabbbWord ∈ GeneralGrammar.GeneratedLanguage StrictMoreBGrammar := by
   let S := moreBN StrictMoreBNT.start
@@ -4028,9 +4001,6 @@ def StrictABCGreaterProductionList :
    { lhs := [strictABCGreaterN StrictABCGreaterNT.markC],
      rhs := [strictABCGreaterT EqualCountTerminal.c] }]
 
--- Book: Chapter 4, Section 4.6, selected exercise grammar for words over
--- `{a,b,c}` with strictly more `a`s than `b`s and strictly more `b`s than
--- `c`s.
 theorem strictABCGreaterGrammar_has_finite_productions :
     GeneralGrammar.HasFiniteProductions StrictABCGreaterGrammar := by
   exists StrictABCGreaterProductionList
@@ -4222,8 +4192,6 @@ theorem strictABCGreaterGrammar_generated_has_strict_counts
 def strictABCGreaterAABWord : Word EqualCountTerminal :=
   [EqualCountTerminal.a, EqualCountTerminal.a, EqualCountTerminal.b]
 
--- Book: Chapter 4, Section 4.6, concrete derivation for the selected
--- strict `n_a > n_b > n_c` exercise grammar.
 theorem strictABCGreaterGrammar_generates_aab :
     strictABCGreaterAABWord ∈
       GeneralGrammar.GeneratedLanguage StrictABCGreaterGrammar := by
@@ -4377,8 +4345,6 @@ def SquareProductionList :
    { lhs := [squareN SquareNT.d, squareN SquareNT.e],
      rhs := [] }]
 
--- Book: Chapter 4, Section 4.6, the unary-square example grammar has a finite
--- production presentation.
 theorem squareGrammar_has_finite_productions :
     GeneralGrammar.HasFiniteProductions SquareGrammar := by
   exists SquareProductionList
@@ -4429,8 +4395,6 @@ theorem squareGrammar_has_finite_productions :
       cases hrhs
       exact SquareProduces.finish
 
--- Book: Chapter 4, Section 4.6, the language generated by the unary-square
--- sample grammar is generated by a finite general grammar.
 theorem squareGrammar_finite_production_generated :
     FiniteProductionGeneralLanguage
       (GeneralGrammar.GeneratedLanguage SquareGrammar) := by
@@ -4942,8 +4906,6 @@ theorem square_derivation_shape_terminal_square_of_terminal
 def fourAsWord : Word SquareTerminal :=
   [SquareTerminal.a, SquareTerminal.a, SquareTerminal.a, SquareTerminal.a]
 
--- Book: Chapter 4, Section 4.6, a concrete derivation from the
--- `{a^(n^2)}` general grammar: the n = 2 case generates four a's.
 theorem squareGrammar_generates_four_as :
     fourAsWord ∈ GeneralGrammar.GeneratedLanguage SquareGrammar := by
   let S := squareN SquareNT.start
@@ -5176,9 +5138,6 @@ def PowerTwoProductionList :
    { lhs := [powN PowerTwoNT.markA],
      rhs := [powT SquareTerminal.a] }]
 
--- Book: Chapter 4, Section 4.6, selected exercise grammar for unary powers
--- of two.  The head `d` doubles the current block of `A` markers and the
--- return head `r` resets the machine for another doubling pass.
 theorem powerTwoGrammar_has_finite_productions :
     GeneralGrammar.HasFiniteProductions PowerTwoGrammar := by
   exists PowerTwoProductionList
@@ -5239,8 +5198,6 @@ theorem powerTwoGrammar_finite_production_generated :
   · intro word
     rfl
 
--- Book: Chapter 4, Section 4.6, concrete `2^2` derivation for the selected
--- powers-of-two grammar.
 theorem powerTwoGrammar_generates_four_as :
     fourAsWord ∈ GeneralGrammar.GeneratedLanguage PowerTwoGrammar := by
   let S := powN PowerTwoNT.start

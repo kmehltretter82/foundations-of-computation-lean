@@ -1,54 +1,77 @@
 import FoC.Foundation.Relations
 
+set_option doc.verso true
+
 namespace FoC
 namespace Book
 namespace Chapter02
 namespace Section07
 
 /-!
-Book: Chapter 2, Section 2.7, Relations.
+# Chapter 2, Section 2.7: Relations
+
+This section formalizes the chapter's relation vocabulary using the reusable
+definitions in {module}`FoC.Foundation.Relations`. The focus is on equivalence
+relations, equivalence classes, partitions, and transitive closure.
 -/
 
 open Foundation
 
--- Book: Chapter 2, Section 2.7, equality is an equivalence relation.
+/-!
+## Equivalence Relations and Classes
+
+Equality is the canonical equivalence relation. For an arbitrary equivalence
+relation, each element belongs to its own class, and related representatives
+determine the same class.
+-/
+
 theorem equality_is_equivalence : Rel.Equivalence (fun x y : alpha => x = y) :=
   Rel.equality_equivalence
 
--- Book: Chapter 2, Section 2.7, equivalence classes contain their representative.
 theorem representative_in_equivalence_class {R : Rel alpha}
     (h : Rel.Equivalence R) (x : alpha) :
     x ∈ Rel.Class R x :=
   Rel.class_self h x
 
--- Book: Chapter 2, Section 2.7, related representatives have equal classes.
 theorem related_representatives_have_equal_classes {R : Rel alpha}
     (h : Rel.Equivalence R) {a b : alpha} (hab : R a b) :
     FSet.Equal (Rel.Class R a) (Rel.Class R b) :=
   Rel.class_equal_of_related h hab
 
--- Book: Chapter 2, Section 2.7, Theorem: equivalence classes form a partition.
+/-!
+## Partitions and Fibers
+
+The classes of an equivalence relation form a partition. Conversely, functions
+give natural equivalence relations by putting two inputs in the same class when
+they have the same output.
+-/
+
 def equivalence_classes_form_partition {R : Rel alpha}
     (h : Rel.Equivalence R) : Rel.Partition alpha :=
   Rel.classes_partition h
 
--- Book: Chapter 2, Section 2.7, a function induces an equivalence relation by equal values.
 theorem function_fiber_equivalence (f : alpha -> beta) :
     Rel.Equivalence (fun x y : alpha => f x = f y) :=
   Rel.same_fiber_equivalence f
 
--- Book: Chapter 2, Section 2.7, symmetric and antisymmetric relations imply equality.
+/-!
+## Relation Properties and Closure
+
+The final statements connect the named relation properties. A relation that is
+both symmetric and antisymmetric cannot relate distinct elements, and the
+transitive closure construction produces a transitive relation. If the starting
+relation is reflexive and symmetric, that closure is an equivalence relation.
+-/
+
 theorem symmetric_antisymmetric_relation_is_subidentity {R : Rel alpha}
     (hs : Rel.Symmetric R) (ha : Rel.Antisymmetric R) :
     forall {x y}, R x y -> x = y :=
   Rel.symmetric_antisymmetric_implies_eq hs ha
 
--- Book: Chapter 2, Section 2.7, transitive closure is transitive.
 theorem transitive_closure_is_transitive {R : Rel alpha} :
     Rel.Transitive (Rel.TransitiveClosure R) :=
   Rel.transitiveClosure_transitive
 
--- Book: Chapter 2, Section 2.7, transitive closure of a reflexive symmetric relation is an equivalence relation.
 theorem transitive_closure_equivalence_of_reflexive_symmetric {R : Rel alpha}
     (hr : Rel.Reflexive R) (hs : Rel.Symmetric R) :
     Rel.Equivalence (Rel.TransitiveClosure R) :=

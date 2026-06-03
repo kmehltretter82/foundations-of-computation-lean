@@ -1,13 +1,20 @@
 import FoC.Book.Chapter03.Section03
 import FoC.Languages.DFA
 
+set_option doc.verso true
+
 namespace FoC
 namespace Book
 namespace Chapter03
 namespace Section04
 
 /-!
-Book: Chapter 3, Section 3.4, Finite-State Automata.
+# Chapter 3, Section 3.4: Finite-State Automata
+
+This section introduces deterministic finite automata. A DFA has a finite
+state type, a start state, a transition function, and an accepting predicate;
+running the machine folds the transition function over the input word. The
+core reusable API is {module}`FoC.Languages.DFA`.
 -/
 
 open Foundation
@@ -40,41 +47,42 @@ def atLeastTwoOnesDFA : DFA Section01.Bit TwoOnesState where
     | _ => False
   statesFinite := TwoOnesStateFinite
 
--- Book: Chapter 3, Section 3.4, Definition 3.5.
+/-!
+## Runs and Acceptance
+
+The first definitions describe the extended transition function and acceptance
+predicate. The concrete DFA above recognizes binary words with at least two
+ones, matching the section's finite-state-machine examples.
+-/
+
 theorem dfa_run_empty (M : DFA alpha state) (q : state) :
     DFA.RunFrom M q Word.Empty = q :=
   DFA.runFrom_empty M q
 
--- Book: Chapter 3, Section 3.4, recursive extended transition function.
 theorem dfa_run_cons (M : DFA alpha state) (q : state) (a : alpha) (w : Word alpha) :
     DFA.RunFrom M q (a :: w) = DFA.RunFrom M (M.step q a) w :=
   DFA.runFrom_cons M q a w
 
--- Book: Chapter 3, Section 3.4, Definition 3.6.
 theorem dfa_acceptance_definition (M : DFA alpha state) (w : Word alpha) :
     DFA.Accepts M w <-> M.accept (DFA.Run M w) :=
   Iff.rfl
 
--- Book: Chapter 3, Section 3.4, language accepted by a DFA.
 theorem dfa_language_membership (M : DFA alpha state) (w : Word alpha) :
     w ∈ DFA.Language M <-> DFA.Accepts M w :=
   Iff.rfl
 
--- Book: Chapter 3, Section 3.4, Example 3.10 sample run.
 theorem atLeastTwoOnes_run_0011 :
     DFA.Run atLeastTwoOnesDFA
       [Section01.Bit.zero, Section01.Bit.zero, Section01.Bit.one, Section01.Bit.one] =
         TwoOnesState.twoOrMore :=
   rfl
 
--- Book: Chapter 3, Section 3.4, Example 3.10 sample acceptance.
 theorem atLeastTwoOnes_accepts_0011 :
     DFA.Accepts atLeastTwoOnesDFA
       [Section01.Bit.zero, Section01.Bit.zero, Section01.Bit.one, Section01.Bit.one] := by
   unfold DFA.Accepts DFA.Run atLeastTwoOnesDFA DFA.RunFrom
   trivial
 
--- Book: Chapter 3, Section 3.4, sample rejection.
 theorem atLeastTwoOnes_rejects_010 :
     ¬ DFA.Accepts atLeastTwoOnesDFA
       [Section01.Bit.zero, Section01.Bit.one, Section01.Bit.zero] := by
@@ -82,18 +90,23 @@ theorem atLeastTwoOnes_rejects_010 :
   unfold DFA.Accepts DFA.Run atLeastTwoOnesDFA DFA.RunFrom at h
   cases h
 
--- Book: Chapter 3, Section 3.4, complement machine switches final and non-final states.
+/-!
+## DFA Constructions
+
+Complement and product constructions give the standard closure operations for
+finite-state languages. They are stated as exact acceptance equivalences for
+each input word.
+-/
+
 theorem dfa_complement_acceptance (M : DFA alpha state) (w : Word alpha) :
     DFA.Accepts (DFA.Complement M) w <-> ¬ DFA.Accepts M w :=
   DFA.complement_accepts M w
 
--- Book: Chapter 3, Section 3.4, product construction for intersection.
 theorem dfa_intersection_acceptance
     (M : DFA alpha state₁) (N : DFA alpha state₂) (w : Word alpha) :
     DFA.Accepts (DFA.Intersection M N) w <-> DFA.Accepts M w ∧ DFA.Accepts N w :=
   DFA.intersection_accepts M N w
 
--- Book: Chapter 3, Section 3.4, product construction for union.
 theorem dfa_union_acceptance
     (M : DFA alpha state₁) (N : DFA alpha state₂) (w : Word alpha) :
     DFA.Accepts (DFA.Union M N) w <-> DFA.Accepts M w ∨ DFA.Accepts N w :=

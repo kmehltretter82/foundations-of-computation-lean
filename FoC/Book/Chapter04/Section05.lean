@@ -1,17 +1,32 @@
 import FoC.Book.Chapter04.Section04
 import FoC.Grammars.CFL
 
+set_option doc.verso true
+
 namespace FoC
 namespace Book
 namespace Chapter04
 namespace Section05
 
 /-!
-Book: Chapter 4, Section 4.5, Non-context-free Languages.
+# Chapter 4, Section 4.5: Non-Context-Free Languages
+
+This section develops closure and pumping-lemma machinery for separating
+languages from the context-free class. It combines finite-state automata from
+{module}`FoC.Languages.DFA`, pushdown automata from {module}`FoC.Grammars.PDA`,
+and context-free language wrappers from {module}`FoC.Grammars.CFL`.
 -/
 
 open Languages
 open Grammars
+
+/-!
+## Intersecting PDAs with DFAs
+
+The product construction runs a PDA and DFA in parallel. It is the main
+closure tool for intersecting a PDA language with a regular language, and for
+subtracting a regular language by intersecting with a DFA complement.
+-/
 
 def PDAIntersectDFA (P : PDA input stack pstate) (D : DFA input dstate) :
     PDA input stack (pstate × dstate) where
@@ -27,8 +42,6 @@ structure DFAAcceptingPresentation (D : DFA input dstate) where
   acceptingStates : List dstate
   accept_complete : forall q, D.accept q <-> q ∈ acceptingStates
 
--- Book: Chapter 4, Section 4.5, every finite-state DFA has an explicit
--- accepting-state list by filtering its finite state enumeration.
 noncomputable def dfaAcceptingPresentation (D : DFA input dstate) :
     DFAAcceptingPresentation D := by
   classical
@@ -45,8 +58,6 @@ noncomputable def dfaAcceptingPresentation (D : DFA input dstate) :
       · intro hq
         simpa using (List.mem_filter.mp hq).2 }
 
--- Book: Chapter 4, Section 4.5, the same automatic accepting-state
--- presentation applies to a DFA complement.
 noncomputable def dfaComplementAcceptingPresentation (D : DFA input dstate) :
     DFAAcceptingPresentation (DFA.Complement D) :=
   dfaAcceptingPresentation (DFA.Complement D)
@@ -219,9 +230,14 @@ def pdaIntersectDFA_finitePresentation
   accept_complete :=
     pdaIntersectDFA_accept_complete P D presentation accepting
 
--- Book: Chapter 4, Section 4.5, the product finite presentation can be built
--- directly from the finite state list of the DFA; callers no longer need to
--- supply the accepting-state table by hand.
+/-!
+## Product Exactness
+
+The lifting and projection lemmas relate computations of the product PDA to
+computations of the original PDA and runs of the DFA. Their language-level
+summary is exact intersection.
+-/
+
 noncomputable def pdaIntersectDFA_finitePresentation_auto
     (P : PDA input stack pstate) (D : DFA input dstate)
     (presentation : PDA.FinitePresentation P) :
@@ -343,9 +359,15 @@ theorem pda_intersect_dfa_accepted_language_exact
         · simpa [PDA.initial, PDAIntersectDFA, DFA.Run] using
             pda_intersect_dfa_lift_to_empty P D hq.right rfl D.start
 
--- Book: Chapter 4, Section 4.5, the PDA/DFA product has a finite-production
--- context-free language once the product PDA's empty-stack computations have
--- the grammar-aligned summaries required by the PDA-to-CFG theorem.
+/-!
+## Context-Free Closure
+
+Once the product PDA has a finite presentation, the PDA-to-CFG theorem turns
+intersection and difference with DFA languages into context-free languages.
+Some wrappers keep the older conditional exactness target explicit, while the
+later theorems use the unconditional finite-presentation theorem.
+-/
+
 theorem pda_intersect_dfa_context_free_of_empty_summary_complete
     {input stack pstate dstate : Type}
     (P : PDA input stack pstate) (D : DFA input dstate)
@@ -371,8 +393,6 @@ theorem pda_intersect_dfa_context_free_of_empty_summary_complete
   · exact Language.equal_trans hEq
       (fun w => pda_intersect_dfa_accepted_language_exact P D w)
 
--- Book: Chapter 4, Section 4.5, automatic accepting-state presentation form
--- of the conditional PDA/DFA intersection CFL theorem.
 theorem pda_intersect_dfa_context_free_of_empty_summary_complete_auto
     {input stack pstate dstate : Type}
     (P : PDA input stack pstate) (D : DFA input dstate)
@@ -385,9 +405,6 @@ theorem pda_intersect_dfa_context_free_of_empty_summary_complete_auto
   exact pda_intersect_dfa_context_free_of_empty_summary_complete
     P D presentation (dfaAcceptingPresentation D) hcomplete
 
--- Book: Chapter 4, Section 4.5, after the arbitrary finite-presented
--- PDA-to-CFG theorem, the PDA/DFA product gives an unconditional
--- finite-production CFL closure theorem for intersection with a DFA language.
 theorem pda_intersect_dfa_context_free
     {input stack pstate dstate : Type}
     (P : PDA input stack pstate) (D : DFA input dstate)
@@ -410,9 +427,6 @@ theorem pda_intersect_dfa_context_free
   · exact Language.equal_trans hEq
       (fun w => pda_intersect_dfa_accepted_language_exact P D w)
 
--- Book: Chapter 4, Section 4.5, conditional finite-production CFL closure
--- under subtraction by a DFA language, retained as a local exactness-reduction
--- wrapper for product PDAs with explicit empty-summary completeness.
 theorem pda_diff_dfa_context_free_of_empty_summary_complete
     {input stack pstate dstate : Type}
     (P : PDA input stack pstate) (D : DFA input dstate)
@@ -446,8 +460,6 @@ theorem pda_diff_dfa_context_free_of_empty_summary_complete
       · exact hw.left
       · exact (DFA.complement_accepts D w).mpr hw.right
 
--- Book: Chapter 4, Section 4.5, automatic accepting-state presentation form
--- of the conditional DFA-language subtraction theorem.
 theorem pda_diff_dfa_context_free_of_empty_summary_complete_auto
     {input stack pstate dstate : Type}
     (P : PDA input stack pstate) (D : DFA input dstate)
@@ -461,8 +473,6 @@ theorem pda_diff_dfa_context_free_of_empty_summary_complete_auto
   exact pda_diff_dfa_context_free_of_empty_summary_complete
     P D presentation (dfaComplementAcceptingPresentation D) hcomplete
 
--- Book: Chapter 4, Section 4.5, unconditional finite-production CFL closure
--- under subtracting a DFA language from a finite-presented PDA language.
 theorem pda_diff_dfa_context_free
     {input stack pstate dstate : Type}
     (P : PDA input stack pstate) (D : DFA input dstate)
@@ -490,8 +500,6 @@ theorem pda_diff_dfa_context_free
       · exact hw.left
       · exact (DFA.complement_accepts D w).mpr hw.right
 
--- Book: Chapter 4, Section 4.5, language-equality wrapper for conditional
--- finite-production CFL closure under intersection with a DFA language.
 theorem finite_presentation_pda_language_inter_dfa_context_free_of_empty_summary_complete
     {input stack pstate dstate : Type}
     {L R : Language input}
@@ -519,9 +527,6 @@ theorem finite_presentation_pda_language_inter_dfa_context_free_of_empty_summary
       apply (hEq w).mpr
       exact And.intro ((hP w).mpr hw.left) ((hD w).mpr hw.right)
 
--- Book: Chapter 4, Section 4.5, language-equality wrapper for the
--- unconditional finite-production CFL closure theorem under intersection with
--- a DFA language.
 theorem finite_presentation_pda_language_inter_dfa_context_free
     {input stack pstate dstate : Type}
     {L R : Language input}
@@ -545,8 +550,6 @@ theorem finite_presentation_pda_language_inter_dfa_context_free
       apply (hEq w).mpr
       exact And.intro ((hP w).mpr hw.left) ((hD w).mpr hw.right)
 
--- Book: Chapter 4, Section 4.5, language-equality wrapper for conditional
--- finite-production CFL closure under subtracting a DFA language.
 theorem finite_presentation_pda_language_diff_dfa_context_free_of_empty_summary_complete
     {input stack pstate dstate : Type}
     {L R : Language input}
@@ -581,9 +584,6 @@ theorem finite_presentation_pda_language_diff_dfa_context_free_of_empty_summary_
       · intro hDfa
         exact hw.right ((hD w).mp hDfa)
 
--- Book: Chapter 4, Section 4.5, language-equality wrapper for the
--- unconditional finite-production CFL closure theorem under subtracting a DFA
--- language.
 theorem finite_presentation_pda_language_diff_dfa_context_free
     {input stack pstate dstate : Type}
     {L R : Language input}
@@ -613,8 +613,14 @@ theorem finite_presentation_pda_language_diff_dfa_context_free
       · intro hDfa
         exact hw.right ((hD w).mp hDfa)
 
--- Book: Chapter 4, Section 4.5, automaton-side closure of PDA-recognizable
--- languages under intersection with a regular language.
+/-!
+## Recognizability Wrappers
+
+The final group states the automaton-side closure theorems: PDA-recognizable
+and finite-presentation PDA-recognizable languages are closed under
+intersection with, and subtraction by, regular languages.
+-/
+
 theorem pda_recognizable_inter_dfa_recognizable
     {L R : Language input}
     (hL : PDA.Recognizable L) (hR : DFA.Recognizable R) :
@@ -644,8 +650,6 @@ theorem pda_recognizable_inter_dfa_recognizable
                         exact (pda_intersect_dfa_accepted_language_exact P D w).mpr
                           (And.intro ((hP w).mpr hw.left) ((hD w).mpr hw.right))
 
--- Book: Chapter 4, Section 4.5, the same product construction preserves
--- explicitly finite PDA presentations.
 theorem finite_presentation_pda_recognizable_inter_dfa
     {L R : Language input}
     (hL : PDA.FinitePresentationRecognizable L)
@@ -668,8 +672,6 @@ theorem finite_presentation_pda_recognizable_inter_dfa
     exact (pda_intersect_dfa_accepted_language_exact P D w).mpr
       (And.intro ((hP w).mpr hw.left) ((hR w).mpr hw.right))
 
--- Book: Chapter 4, Section 4.5, finite-presentation PDA-recognizable
--- languages are closed under intersection with DFA-recognizable languages.
 theorem finite_presentation_pda_recognizable_inter_dfa_recognizable
     {L R : Language input}
     (hL : PDA.FinitePresentationRecognizable L)
@@ -678,8 +680,6 @@ theorem finite_presentation_pda_recognizable_inter_dfa_recognizable
   rcases hR with ⟨dstate, D, hD⟩
   exact finite_presentation_pda_recognizable_inter_dfa hL D hD
 
--- Book: Chapter 4, Section 4.5, finite-presentation PDA-recognizable
--- languages are closed under subtracting a DFA language.
 theorem finite_presentation_pda_recognizable_diff_dfa
     {L R : Language input}
     (hL : PDA.FinitePresentationRecognizable L)
@@ -703,8 +703,6 @@ theorem finite_presentation_pda_recognizable_diff_dfa
     Foundation.FSet.Diff, Foundation.FSet.Inter, Foundation.FSet.Compl]
     using hInter
 
--- Book: Chapter 4, Section 4.5, finite-presentation PDA-recognizable
--- languages are closed under subtracting DFA-recognizable languages.
 theorem finite_presentation_pda_recognizable_diff_dfa_recognizable
     {L R : Language input}
     (hL : PDA.FinitePresentationRecognizable L)
@@ -713,8 +711,6 @@ theorem finite_presentation_pda_recognizable_diff_dfa_recognizable
   rcases hR with ⟨dstate, D, hD⟩
   exact finite_presentation_pda_recognizable_diff_dfa hL D hD
 
--- Book: Chapter 4, Sections 4.4-4.5, the grammar-to-PDA construction gives
--- every finite-production CFL a pushdown recognizer.
 theorem finite_production_context_free_pda_recognizable {input : Type}
     {L : Language input}
     (hL : CFL.FiniteProductionContextFreeLanguage L) :
@@ -728,9 +724,6 @@ theorem finite_production_context_free_pda_recognizable {input : Type}
           exists CFG.ToPDA G
           exact Language.equal_trans (CFG.toPDA_acceptedLanguage_exact G) hG.right
 
--- Book: Chapter 4, Sections 4.4-4.5, over an explicitly finite input
--- alphabet, the grammar-to-PDA construction gives every finite-production CFL
--- a finite-presentation pushdown recognizer.
 theorem finite_production_context_free_finite_presentation_pda_recognizable
     {input : Type}
     (inputFinite : Foundation.FiniteType input)
@@ -759,8 +752,6 @@ theorem context_free_language_finite_presentation_pda_recognizable
   finite_production_context_free_finite_presentation_pda_recognizable
     inputFinite hL
 
--- Book: Chapter 4, Section 4.5, concrete finite word lists are regular, hence
--- DFA-recognizable.
 theorem finite_list_dfa_recognizable (ws : List (Word input)) :
     DFA.Recognizable (fun w : Word input => w ∈ ws) :=
   RegularLanguage.regular_is_dfa_recognizable
@@ -789,8 +780,6 @@ theorem finite_language_complement_dfa_recognizable {M : Language input}
     DFA.Recognizable (Language.Compl M) :=
   DFA.recognizable_complement (finite_language_dfa_recognizable hM)
 
--- Book: Chapter 4, Section 4.5, finite-presentation PDA-recognizable
--- languages are closed under removing finitely many explicitly listed words.
 theorem finite_presentation_pda_recognizable_diff_finite_list
     {L : Language input}
     (hL : PDA.FinitePresentationRecognizable L) (ws : List (Word input)) :
@@ -799,8 +788,6 @@ theorem finite_presentation_pda_recognizable_diff_finite_list
   finite_presentation_pda_recognizable_diff_dfa_recognizable hL
     (finite_list_dfa_recognizable ws)
 
--- Book: Chapter 4, Section 4.5, finite-presentation PDA-recognizable
--- languages are closed under removing an abstract finite language.
 theorem finite_presentation_pda_recognizable_diff_finite_language
     {L M : Language input}
     (hL : PDA.FinitePresentationRecognizable L) (hM : Language.Finite M) :
@@ -816,24 +803,18 @@ theorem pda_recognizable_diff_dfa_recognizable {L R : Language input}
     pda_recognizable_inter_dfa_recognizable hL
       (DFA.recognizable_complement hR)
 
--- Book: Chapter 4, Section 4.5, PDA-recognizable languages are closed under
--- removing finitely many explicitly listed words.
 theorem pda_recognizable_diff_finite_list {L : Language input}
     (hL : PDA.Recognizable L) (ws : List (Word input)) :
     PDA.Recognizable (Language.Diff L (fun w : Word input => w ∈ ws)) :=
   pda_recognizable_diff_dfa_recognizable hL
     (finite_list_dfa_recognizable ws)
 
--- Book: Chapter 4, Section 4.5, PDA-recognizable languages are closed under
--- removing an abstract finite language.
 theorem pda_recognizable_diff_finite_language {L M : Language input}
     (hL : PDA.Recognizable L) (hM : Language.Finite M) :
     PDA.Recognizable (Language.Diff L M) :=
   pda_recognizable_diff_dfa_recognizable hL
     (finite_language_dfa_recognizable hM)
 
--- Book: Chapter 4, Section 4.5, automaton-side closure consequence for
--- finite-language subtraction from book-facing CFLs.
 theorem context_free_diff_finite_language_pda_recognizable
     {input : Type}
     {L M : Language input}
@@ -842,9 +823,6 @@ theorem context_free_diff_finite_language_pda_recognizable
   pda_recognizable_diff_finite_language
     (context_free_language_pda_recognizable hL) hM
 
--- Book: Chapter 4, Section 4.5, finite-language subtraction from a
--- book-facing CFL preserves finite-presentation PDA recognizability when the
--- ambient terminal alphabet is explicitly finite.
 theorem context_free_diff_finite_language_finite_presentation_pda_recognizable
     {input : Type}
     (inputFinite : Foundation.FiniteType input)
@@ -855,9 +833,6 @@ theorem context_free_diff_finite_language_finite_presentation_pda_recognizable
     (context_free_language_finite_presentation_pda_recognizable
       inputFinite hL) hM
 
--- Book: Chapter 4, Section 4.5, over an explicitly finite alphabet, a
--- book-facing finite-production CFL remains context-free after intersection
--- with a DFA language.
 theorem context_free_inter_dfa_context_free
     {input dstate : Type}
     (inputFinite : Foundation.FiniteType input)
@@ -872,9 +847,6 @@ theorem context_free_inter_dfa_context_free
   exact finite_presentation_pda_language_inter_dfa_context_free
     P D presentation hP hR
 
--- Book: Chapter 4, Section 4.5, over an explicitly finite alphabet, a
--- book-facing finite-production CFL remains context-free after intersection
--- with a DFA-recognizable language.
 theorem context_free_inter_dfa_recognizable_context_free
     {input : Type}
     (inputFinite : Foundation.FiniteType input)
@@ -885,9 +857,6 @@ theorem context_free_inter_dfa_recognizable_context_free
   rcases hR with ⟨dstate, D, hD⟩
   exact context_free_inter_dfa_context_free inputFinite hL D hD
 
--- Book: Chapter 4, Section 4.5, over an explicitly finite alphabet, a
--- book-facing finite-production CFL remains context-free after subtracting a
--- DFA language.
 theorem context_free_diff_dfa_context_free
     {input dstate : Type}
     (inputFinite : Foundation.FiniteType input)
@@ -902,9 +871,6 @@ theorem context_free_diff_dfa_context_free
   exact finite_presentation_pda_language_diff_dfa_context_free
     P D presentation hP hR
 
--- Book: Chapter 4, Section 4.5, over an explicitly finite alphabet, a
--- book-facing finite-production CFL remains context-free after subtracting a
--- DFA-recognizable language.
 theorem context_free_diff_dfa_recognizable_context_free
     {input : Type}
     (inputFinite : Foundation.FiniteType input)
@@ -915,9 +881,6 @@ theorem context_free_diff_dfa_recognizable_context_free
   rcases hR with ⟨dstate, D, hD⟩
   exact context_free_diff_dfa_context_free inputFinite hL D hD
 
--- Book: Chapter 4, Section 4.5, finite-language subtraction from a
--- book-facing CFL preserves context-freeness over an explicitly finite
--- terminal alphabet.
 theorem context_free_diff_finite_list_context_free
     {input : Type}
     (inputFinite : Foundation.FiniteType input)
@@ -929,8 +892,6 @@ theorem context_free_diff_finite_list_context_free
   context_free_diff_dfa_recognizable_context_free inputFinite hL
     (finite_list_dfa_recognizable ws)
 
--- Book: Chapter 4, Section 4.5, full finite-language subtraction theorem for
--- book-facing CFLs over an explicitly finite terminal alphabet.
 theorem context_free_diff_finite_language_context_free
     {input : Type}
     (inputFinite : Foundation.FiniteType input)
@@ -1778,8 +1739,6 @@ theorem astarBnCnWord_diagonal (n : Nat) :
     astarBnCnWord n n = anbncnBlockWord n := by
   simp [astarBnCnWord, abcBnCnWord, anbncnBlockWord, Word.Concat]
 
--- Book: Chapter 4, Section 4.5, the two standard CFL witnesses intersect
--- exactly in `{a^n b^n c^n | n >= 0}`.
 theorem anbnCstar_inter_astarBnCn_exact :
     Language.Equal (Language.Inter anbnCstarLanguage astarBnCnLanguage)
       anbncnLanguage := by
@@ -1813,21 +1772,16 @@ theorem anbnCstar_inter_astarBnCn_exact :
     · exists n
       exists n
 
--- Book: Chapter 4, Section 4.5, the finite-production boundary used by the
--- book's proof of the CFL Pumping Lemma.
 def FiniteProductionContextFreeLanguage (L : Language terminal) : Prop :=
   CFL.FiniteProductionContextFreeLanguage L
 
--- Book: Chapter 4, Section 4.5, pumping-lemma decomposition vocabulary.
 def CFLPumpingDecomposition (L : Language terminal) (K : Nat) (w : Word terminal) :
     Prop :=
   CFL.PumpingDecomposition L K w
 
--- Book: Chapter 4, Section 4.5, pumping length vocabulary.
 def CFLPumpingLength (L : Language terminal) (K : Nat) : Prop :=
   CFL.PumpingLength L K
 
--- Book: Chapter 4, Section 4.5, pumping property vocabulary.
 def CFLHasPumpingProperty (L : Language terminal) : Prop :=
   CFL.HasPumpingProperty L
 
@@ -1843,8 +1797,6 @@ def ClosedUnderUnion (C : Language terminal -> Prop) : Prop :=
 def ClosedUnderComplement (C : Language terminal -> Prop) : Prop :=
   forall L, C L -> C (Language.Compl L)
 
--- Book: Chapter 4, Section 4.5, finite-production CFLs are CFLs under the
--- existing grammar-generated-language definition.
 theorem finite_production_context_free {L : Language terminal}
     (hL : FiniteProductionContextFreeLanguage L) :
     CFL.ContextFreeLanguage L :=
@@ -1870,66 +1822,50 @@ theorem finite_production_context_free_extensional :
   intro L M hEq hL
   exact finite_production_context_free_of_equal hEq hL
 
--- Book: Chapter 4, Section 4.5, finite production lists give a bound on
--- production right-hand-side lengths.
 theorem finite_production_rhs_length_bound {G : CFG terminal nonterminal}
     (hG : CFG.HasFiniteProductions G) :
     exists B : Nat,
       B > 0 ∧ forall A rhs, G.produces A rhs -> rhs.length < B :=
   CFL.finiteProduction_rhs_length_bound hG
 
--- Book: Chapter 4, Section 4.5, every finite-production grammar satisfies
--- the CFL pumping property for its generated language.
 theorem finite_production_grammar_pumping_property
     {terminal nonterminal : Type} {G : CFG terminal nonterminal}
     (hG : CFG.HasFiniteProductions G) :
     CFLHasPumpingProperty (CFG.GeneratedLanguage G) :=
   CFL.finiteProduction_generated_hasPumpingProperty hG
 
--- Book: Chapter 4, Section 4.5, the CFL Pumping Lemma for languages
--- presented by a finite-production grammar.
 theorem finite_production_pumping_property {terminal : Type}
     {L : Language terminal}
     (hL : FiniteProductionContextFreeLanguage L) :
     CFLHasPumpingProperty L :=
   CFL.finiteProduction_hasPumpingProperty hL
 
--- Book: Chapter 4, Section 4.5, the original word is the n = 1 pumped word.
 theorem pumping_decomposition_original_word_mem {L : Language terminal}
     {K : Nat} {w : Word terminal}
     (h : CFLPumpingDecomposition L K w) : w ∈ L :=
   CFL.pumping_decomposition_original_word_mem h
 
--- Book: Chapter 4, Section 4.5, pumping decompositions are extensional in the
--- language being pumped.
 theorem pumping_decomposition_of_equal {L M : Language terminal} {K : Nat}
     {w : Word terminal}
     (hEq : Language.Equal L M) (h : CFLPumpingDecomposition L K w) :
     CFLPumpingDecomposition M K w :=
   CFL.pumping_decomposition_of_equal hEq h
 
--- Book: Chapter 4, Section 4.5, pumping lengths are extensional in the
--- language being pumped.
 theorem pumping_length_of_equal {L M : Language terminal} {K : Nat}
     (hEq : Language.Equal L M) (h : CFLPumpingLength L K) :
     CFLPumpingLength M K :=
   CFL.pumpingLength_of_equal hEq h
 
--- Book: Chapter 4, Section 4.5, the pumping property is extensional in the
--- language being pumped.
 theorem pumping_property_of_equal {L M : Language terminal}
     (hEq : Language.Equal L M) (h : CFLHasPumpingProperty L) :
     CFLHasPumpingProperty M :=
   CFL.hasPumpingProperty_of_equal hEq h
 
--- Book: Chapter 4, Section 4.5, a larger pumping length remains valid.
 theorem pumping_length_monotone {L : Language terminal} {K M : Nat}
     (hKM : K <= M) (h : CFLPumpingLength L K) :
     CFLPumpingLength L M :=
   CFL.pumpingLength_mono hKM h
 
--- Book: Chapter 4, Section 4.5, one sufficiently long bad word refutes a
--- proposed CFL pumping length.
 theorem not_pumping_length_of_counterexample {L : Language terminal} {K : Nat}
     {w : Word terminal}
     (hw : w ∈ L) (hlen : K <= Word.Length w)
@@ -1942,8 +1878,6 @@ theorem not_pumping_length_of_counterexample {L : Language terminal} {K : Nat}
     ¬ CFLPumpingLength L K :=
   CFL.not_pumpingLength_of_counterexample hw hlen hbad
 
--- Book: Chapter 4, Section 4.5, a family of bad words refutes the CFL pumping
--- property.
 theorem not_pumping_property_of_counterexamples {L : Language terminal}
     (hbad :
       forall K : Nat, K > 0 ->
@@ -1958,15 +1892,12 @@ theorem not_pumping_property_of_counterexamples {L : Language terminal}
     ¬ CFLHasPumpingProperty L :=
   CFL.not_hasPumpingProperty_of_counterexamples hbad
 
--- Book: Chapter 4, Section 4.5, contrapositive schema for pumping arguments.
 theorem not_context_free_of_no_pumping_property {terminal : Type}
     {L : Language terminal}
     (hNoPump : ¬ CFLHasPumpingProperty L) :
     ¬ CFL.ContextFreeLanguage L :=
   CFL.not_context_free_of_no_pumping_property hNoPump
 
--- Book: Chapter 4, Section 4.5, reusable schema for pumping-lemma
--- counterexamples.
 def CFLPumpingBadWordFamily (L : Language terminal) : Prop :=
   forall K : Nat, K > 0 ->
     exists w : Word terminal,
@@ -1998,8 +1929,6 @@ theorem not_finite_production_context_free_of_bad_word_family
   exact not_pumping_property_of_bad_word_family hbad
     (finite_production_pumping_property hcf)
 
--- Book: Chapter 4, Section 4.5, the language used in the first
--- non-context-free example.
 theorem anbncn_membership (w : Word ABC) :
     w ∈ anbncnLanguage <-> exists n, w = anbncnBlockWord n :=
   Iff.rfl
@@ -2284,8 +2213,6 @@ theorem anbncn_pump_two_not_mem
       have ha0 : Word.Count ABC.a (Word.Concat x z) = 0 := by omega
       omega
 
--- Book: Chapter 4, Section 4.5, no pumping length works for
--- `{a^n b^n c^n | n >= 0}`.
 theorem anbncn_no_pumping_property :
     ¬ CFLHasPumpingProperty anbncnLanguage := by
   intro hpump
@@ -2312,24 +2239,16 @@ theorem anbncn_no_pumping_property :
                             hv.right.left hv.right.right.left
                             (hv.right.right.right 2)
 
--- Book: Chapter 4, Section 4.5, `{a^n b^n c^n | n >= 0}` is not generated
--- by any finite-production context-free grammar.
 theorem anbncn_not_finite_production_context_free :
     ¬ FiniteProductionContextFreeLanguage anbncnLanguage := by
   intro hcf
   exact anbncn_no_pumping_property
     (finite_production_pumping_property hcf)
 
--- Book: Chapter 4, Section 4.5, `{a^n b^n c^n | n >= 0}` is not
--- context-free for the book-facing finite-production CFL predicate.
 theorem anbncn_not_context_free :
     ¬ CFL.ContextFreeLanguage anbncnLanguage :=
   not_context_free_of_no_pumping_property anbncn_no_pumping_property
 
--- Book: Chapter 4, Section 4.5, intersection nonclosure schema using the
--- standard `{a^n b^n c^n}` contradiction.  Once two finite-production CFL
--- witnesses have intersection exactly `anbncnLanguage`, closure under
--- intersection is impossible.
 theorem finite_production_cfl_intersection_nonclosure_from_anbncn_witnesses
     {L M : Language ABC}
     (hL : FiniteProductionContextFreeLanguage L)
@@ -2343,8 +2262,6 @@ theorem finite_production_cfl_intersection_nonclosure_from_anbncn_witnesses
   exact anbncn_not_finite_production_context_free
     (finite_production_context_free_of_equal hEq hInter)
 
--- Book: Chapter 4, Section 4.5, finite-production CFLs are not closed under
--- intersection.
 theorem finite_production_cfls_not_closed_under_intersection :
     ¬ ClosedUnderIntersection
       (FiniteProductionContextFreeLanguage (terminal := ABC)) :=
@@ -2389,8 +2306,6 @@ theorem complement_closure_and_union_closure_imply_intersection_closure
       | inr hnotM => exact hnotM hw.right
   · exact hN
 
--- Book: Chapter 4, Section 4.5, complement nonclosure follows from union
--- closure plus the intersection counterexample.
 theorem finite_production_cfl_complement_nonclosure_from_anbncn_witnesses
     {L M : Language ABC}
     (hL : FiniteProductionContextFreeLanguage L)
@@ -2411,8 +2326,6 @@ theorem finite_production_cfl_complement_nonclosure_from_anbncn_witnesses
     finite_production_cfl_intersection_nonclosure_from_anbncn_witnesses
       hL hM hEq hInterClosed
 
--- Book: Chapter 4, Section 4.5, compatibility wrapper for older statements
--- that supplied the pumping-lemma conclusion explicitly.
 theorem anbncn_not_context_free_from_pumping_lemma
     (_pumpingLemma : CFL.PumpingLemmaConclusion anbncnLanguage) :
     ¬ CFL.ContextFreeLanguage anbncnLanguage :=
@@ -2421,9 +2334,9 @@ theorem anbncn_not_context_free_from_pumping_lemma
 /-!
 The concrete contradiction for `{ a^n b^n c^n | n >= 0 }` is now formalized:
 no pumping length can satisfy the book's quantified CFL pumping property for
-this language. Since the public `CFL.ContextFreeLanguage` predicate is now the
-book-facing finite-production predicate, this gives the unconditional
-`anbncn_not_context_free` theorem.
+this language. Since the public {lean}`CFL.ContextFreeLanguage` predicate is
+now the book-facing finite-production predicate, this gives the unconditional
+{lean}`anbncn_not_context_free` theorem.
 -/
 
 end Section05

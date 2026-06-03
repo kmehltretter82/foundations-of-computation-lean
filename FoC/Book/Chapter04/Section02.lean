@@ -1,63 +1,70 @@
 import FoC.Grammars.BNF
 
+set_option doc.verso true
+
 namespace FoC
 namespace Book
 namespace Chapter04
 namespace Section02
 
 /-!
-Book: Chapter 4, Section 4.2, Application: BNF.
+# Chapter 4, Section 4.2: Application - BNF
+
+BNF expressions are formalized as a compact notation that expands to ordinary
+grammar right-hand sides. This section checks the expansion rules and records
+the book's examples for digits, declarations, English fragments, Java-like
+syntax, real-number notation, identifiers, and propositions. The reusable
+BNF layer is {module}`FoC.Grammars.BNF`.
 -/
 
 open Grammars
 
--- Book: Chapter 4, Section 4.2, a BNF symbol expands to its singleton RHS.
+/-!
+## BNF Operators
+
+Sequencing concatenates expansions, alternatives choose one side, optional
+items may be omitted or present, and repeated items expand by zero or more
+copies. These statements are the core semantics for the examples below.
+-/
+
 theorem bnf_symbol_expands (s : Symbol terminal nonterminal) :
     BNF.Expr.Expands (BNF.Expr.symbol s) [s] :=
   BNF.Expr.Expands.symbol s
 
--- Book: Chapter 4, Section 4.2, sequencing concatenates expanded RHS lists.
 theorem bnf_sequence_expands {e f : BNF.Expr terminal nonterminal} {x y}
     (hx : BNF.Expr.Expands e x) (hy : BNF.Expr.Expands f y) :
     BNF.Expr.Expands (BNF.Expr.seq e f) (x ++ y) :=
   BNF.Expr.Expands.seq hx hy
 
--- Book: Chapter 4, Section 4.2, BNF alternatives.
 theorem bnf_alternative_expands {e f : BNF.Expr terminal nonterminal} {rhs}
     (h : BNF.Expr.Expands (BNF.Expr.alt e f) rhs) :
     BNF.Expr.Expands e rhs ∨ BNF.Expr.Expands f rhs :=
   (BNF.Expr.alt_expands).mp h
 
--- Book: Chapter 4, Section 4.2, BNF alternatives.
 theorem bnf_expands_alternative_left {e f : BNF.Expr terminal nonterminal} {rhs}
     (h : BNF.Expr.Expands e rhs) :
     BNF.Expr.Expands (BNF.Expr.alt e f) rhs :=
   (BNF.Expr.alt_expands).mpr (Or.inl h)
 
--- Book: Chapter 4, Section 4.2, optional BNF item omitted.
 theorem bnf_optional_empty (e : BNF.Expr terminal nonterminal) :
     BNF.Expr.Expands (BNF.Expr.optional e) [] :=
   BNF.Expr.optional_empty e
 
--- Book: Chapter 4, Section 4.2, optional BNF item present.
 theorem bnf_optional_some {e : BNF.Expr terminal nonterminal} {rhs}
     (h : BNF.Expr.Expands e rhs) :
     BNF.Expr.Expands (BNF.Expr.optional e) rhs :=
   BNF.Expr.optional_some h
 
--- Book: Chapter 4, Section 4.2, repeated BNF item omitted.
 theorem bnf_repeat_empty (e : BNF.Expr terminal nonterminal) :
     BNF.Expr.Expands (BNF.Expr.many e) [] :=
   BNF.Expr.repeat_empty e
 
--- Book: Chapter 4, Section 4.2, repeated BNF item extended.
 theorem bnf_repeat_cons {e : BNF.Expr terminal nonterminal} {first rest}
     (hfirst : BNF.Expr.Expands e first)
     (hrest : BNF.Expr.Expands (BNF.Expr.many e) rest) :
     BNF.Expr.Expands (BNF.Expr.many e) (first ++ rest) :=
   BNF.Expr.repeat_cons hfirst hrest
 
--- Book: Chapter 4, Section 4.2, two repeated BNF items expand by two `many` steps.
 theorem bnf_repeat_two {e : BNF.Expr terminal nonterminal} {first second}
     (hfirst : BNF.Expr.Expands e first)
     (hsecond : BNF.Expr.Expands e second) :
@@ -65,6 +72,14 @@ theorem bnf_repeat_two {e : BNF.Expr terminal nonterminal} {first second}
   exact BNF.Expr.repeat_cons hfirst (by
     simpa [List.append_nil] using
       BNF.Expr.repeat_cons hsecond (BNF.Expr.repeat_empty e))
+
+/-!
+## Example Vocabulary
+
+The terminal and nonterminal types collect the symbols used across the
+section's BNF examples. The expression definitions then translate printed BNF
+schemata into Lean syntax trees.
+-/
 
 inductive BNFExampleTerminal where
   | zero
@@ -380,7 +395,14 @@ def compoundPropositionExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
     (BNF.Expr.many
       (BNF.Expr.seq propositionConnectiveExpr propositionOperandExpr))
 
--- Book: Chapter 4, Section 4.2, a concrete digit alternative.
+/-!
+## Checked Expansions
+
+The theorems below prove concrete expansions from the BNF expressions. They
+serve as small executable checks that optional parts, repetition, alternatives,
+and nested syntax examples behave as the textbook descriptions intend.
+-/
+
 theorem bnf_digit_seven_expands :
     BNF.Expr.Expands digitAlternativeExpr [bnfTerminal BNFExampleTerminal.seven] := by
   unfold digitAlternativeExpr
@@ -394,19 +416,16 @@ theorem bnf_digit_seven_expands :
   apply BNF.Expr.Expands.altLeft
   exact BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.seven)
 
--- Book: Chapter 4, Section 4.2, sign alternatives.
 theorem bnf_sign_plus_expands :
     BNF.Expr.Expands signAlternativeExpr [bnfTerminal BNFExampleTerminal.plus] := by
   exact BNF.Expr.Expands.altLeft
     (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.plus))
 
--- Book: Chapter 4, Section 4.2, sign alternatives.
 theorem bnf_sign_minus_expands :
     BNF.Expr.Expands signAlternativeExpr [bnfTerminal BNFExampleTerminal.minus] := by
   exact BNF.Expr.Expands.altRight
     (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.minus))
 
--- Book: Chapter 4, Section 4.2, optional semicolon omitted.
 theorem bnf_declaration_without_semicolon_expands :
     BNF.Expr.Expands declarationExpr
       [bnfNonterminal BNFExampleNT.type, bnfNonterminal BNFExampleNT.variable] := by
@@ -418,7 +437,6 @@ theorem bnf_declaration_without_semicolon_expands :
       (BNF.Expr.Expands.optionalNone
         (bnfTerminalExpr BNFExampleTerminal.semicolon)))
 
--- Book: Chapter 4, Section 4.2, optional semicolon present.
 theorem bnf_declaration_with_semicolon_expands :
     BNF.Expr.Expands declarationExpr
       [bnfNonterminal BNFExampleNT.type, bnfNonterminal BNFExampleNT.variable,
@@ -432,7 +450,6 @@ theorem bnf_declaration_with_semicolon_expands :
         (BNF.Expr.Expands.symbol
           (bnfTerminal BNFExampleTerminal.semicolon))))
 
--- Book: Chapter 4, Section 4.2, integer as one digit followed by no repeats.
 theorem bnf_integer_one_digit_expands :
     BNF.Expr.Expands integerExpr [bnfNonterminal BNFExampleNT.digit] := by
   unfold integerExpr
@@ -441,7 +458,6 @@ theorem bnf_integer_one_digit_expands :
     (BNF.Expr.Expands.manyZero
       (bnfNonterminalExpr BNFExampleNT.digit))
 
--- Book: Chapter 4, Section 4.2, integer as one digit followed by two repeats.
 theorem bnf_integer_three_digits_expands :
     BNF.Expr.Expands integerExpr
       [bnfNonterminal BNFExampleNT.digit, bnfNonterminal BNFExampleNT.digit,
@@ -455,7 +471,6 @@ theorem bnf_integer_three_digits_expands :
         (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.digit))
         (BNF.Expr.repeat_empty (bnfNonterminalExpr BNFExampleNT.digit))))
 
--- Book: Chapter 4, Section 4.2, English sentence BNF with one `and`.
 theorem bnf_english_sentence_with_and_expands :
     BNF.Expr.Expands englishSentenceExpr
       [bnfNonterminal BNFExampleNT.simpleSentence,
@@ -473,7 +488,6 @@ theorem bnf_english_sentence_with_and_expands :
         (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.andTok)
           (bnfNonterminalExpr BNFExampleNT.simpleSentence))))
 
--- Book: Chapter 4, Section 4.2, English noun phrase with a relative clause.
 theorem bnf_english_noun_part_with_relative_clause_expands :
     BNF.Expr.Expands englishNounPartExpr
       [bnfNonterminal BNFExampleNT.article, bnfNonterminal BNFExampleNT.noun,
@@ -493,7 +507,6 @@ theorem bnf_english_noun_part_with_relative_clause_expands :
           (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.who)
             (bnfNonterminalExpr BNFExampleNT.verbPart)))))
 
--- Book: Chapter 4, Section 4.2, English transitive verb phrase.
 theorem bnf_english_transitive_verb_part_expands :
     BNF.Expr.Expands englishVerbPartExpr
       [bnfNonterminal BNFExampleNT.transitiveVerb,
@@ -505,14 +518,12 @@ theorem bnf_english_transitive_verb_part_expands :
         (bnfNonterminal BNFExampleNT.transitiveVerb))
       (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.nounPart)))
 
--- Book: Chapter 4, Section 4.2, English lexical alternatives.
 theorem bnf_english_article_the_expands :
     BNF.Expr.Expands englishArticleExpr [bnfTerminal BNFExampleTerminal.the] := by
   unfold englishArticleExpr
   exact BNF.Expr.Expands.altLeft
     (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.the))
 
--- Book: Chapter 4, Section 4.2, English lexical alternatives.
 theorem bnf_english_noun_dog_expands :
     BNF.Expr.Expands englishNounExpr [bnfTerminal BNFExampleTerminal.dog] := by
   unfold englishNounExpr
@@ -521,7 +532,6 @@ theorem bnf_english_noun_dog_expands :
   apply BNF.Expr.Expands.altLeft
   exact BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.dog)
 
--- Book: Chapter 4, Section 4.2, Java statement alternatives.
 theorem bnf_java_statement_if_expands :
     BNF.Expr.Expands javaStatementExpr [bnfNonterminal BNFExampleNT.ifStatement] := by
   unfold javaStatementExpr
@@ -529,7 +539,6 @@ theorem bnf_java_statement_if_expands :
   apply BNF.Expr.Expands.altLeft
   exact BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.ifStatement)
 
--- Book: Chapter 4, Section 4.2, Java block statement with two statements.
 theorem bnf_java_block_two_statements_expands :
     BNF.Expr.Expands javaBlockStatementExpr
       [bnfTerminal BNFExampleTerminal.lbrace,
@@ -548,7 +557,6 @@ theorem bnf_java_block_two_statements_expands :
             (bnfNonterminalExpr BNFExampleNT.statement))))
       (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.rbrace)))
 
--- Book: Chapter 4, Section 4.2, Java if statement with optional else present.
 theorem bnf_java_if_with_else_expands :
     BNF.Expr.Expands javaIfStatementExpr
       [bnfTerminal BNFExampleTerminal.ifTok,
@@ -577,7 +585,6 @@ theorem bnf_java_if_with_else_expands :
                 (BNF.Expr.Expands.symbol
                   (bnfNonterminal BNFExampleNT.statement))))))))
 
--- Book: Chapter 4, Section 4.2, Java assignment statement.
 theorem bnf_java_assignment_expands :
     BNF.Expr.Expands javaAssignmentStatementExpr
       [bnfNonterminal BNFExampleNT.variable,
@@ -594,8 +601,6 @@ theorem bnf_java_assignment_expands :
         (BNF.Expr.Expands.symbol
           (bnfTerminal BNFExampleTerminal.semicolon))))
 
--- Book: Chapter 4, Section 4.2, expression as three terms separated by
--- plus and minus signs.
 theorem bnf_java_expression_three_terms_expands :
     BNF.Expr.Expands javaExpressionExpr
       [bnfNonterminal BNFExampleNT.term,
@@ -624,7 +629,6 @@ theorem bnf_java_expression_three_terms_expands :
               (bnfTerminalExpr BNFExampleTerminal.minus))
             (bnfNonterminalExpr BNFExampleNT.term)))))
 
--- Book: Chapter 4, Section 4.2, term as two factors separated by `*`.
 theorem bnf_java_term_two_factors_expands :
     BNF.Expr.Expands javaTermExpr
       [bnfNonterminal BNFExampleNT.factor,
@@ -645,7 +649,6 @@ theorem bnf_java_term_two_factors_expands :
             (bnfTerminalExpr BNFExampleTerminal.divide))
           (bnfNonterminalExpr BNFExampleNT.factor))))
 
--- Book: Chapter 4, Section 4.2, factor as parenthesized expression.
 theorem bnf_java_parenthesized_factor_expands :
     BNF.Expr.Expands javaFactorExpr
       [bnfTerminal BNFExampleTerminal.lparen,
@@ -660,7 +663,6 @@ theorem bnf_java_parenthesized_factor_expands :
       (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.expression))
       (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.rparen)))
 
--- Book: Chapter 4, Section 4.2, exercise BNF for real numbers.
 theorem bnf_real_number_decimal_with_exponent_expands :
     BNF.Expr.Expands realNumberExpr
       [bnfTerminal BNFExampleTerminal.minus,
@@ -700,8 +702,6 @@ theorem bnf_real_number_decimal_with_exponent_expands :
           (BNF.Expr.Expands.optionalSome hFraction)))
       (BNF.Expr.Expands.optionalSome hExponent))
 
--- Book: Chapter 4, Section 4.2, exercise BNF for real numbers, including
--- examples with a leading decimal point.
 theorem bnf_real_number_leading_decimal_expands :
     BNF.Expr.Expands realNumberExpr
       [bnfTerminal BNFExampleTerminal.dot,
@@ -721,8 +721,6 @@ theorem bnf_real_number_leading_decimal_expands :
       (BNF.Expr.Expands.altRight hFraction)
       (BNF.Expr.Expands.optionalNone realExponentExpr))
 
--- Book: Chapter 4, Section 4.2, exercise BNF for real numbers, including
--- uppercase exponent markers from the printed examples.
 theorem bnf_real_number_upper_exponent_expands :
     BNF.Expr.Expands realNumberExpr
       [bnfNonterminal BNFExampleNT.digitSeq,
@@ -753,7 +751,6 @@ theorem bnf_real_number_upper_exponent_expands :
     (BNF.Expr.Expands.seq hMantissa
       (BNF.Expr.Expands.optionalSome hExponent))
 
--- Book: Chapter 4, Section 4.2, exercise BNF for Java-style identifiers.
 theorem bnf_java_identifier_letter_digit_underscore_expands :
     BNF.Expr.Expands javaIdentifierExpr
       [bnfTerminal BNFExampleTerminal.letter,
@@ -776,7 +773,6 @@ theorem bnf_java_identifier_letter_digit_underscore_expands :
             (BNF.Expr.alt (bnfNonterminalExpr BNFExampleNT.digit)
               (bnfTerminalExpr BNFExampleTerminal.underscore))))))
 
--- Book: Chapter 4, Section 4.2, exercise BNF for Java-style variables.
 theorem bnf_java_variable_letter_digit_underscore_expands :
     BNF.Expr.Expands javaVariableExpr
       [bnfTerminal BNFExampleTerminal.letter,
@@ -787,8 +783,6 @@ theorem bnf_java_variable_letter_digit_underscore_expands :
     bnf_java_identifier_letter_digit_underscore_expands
     (BNF.Expr.repeat_empty javaVariableTailExpr)
 
--- Book: Chapter 4, Section 4.2, exercise BNF for Java-style variables,
--- including field selection such as `list.next`.
 theorem bnf_java_variable_field_expands :
     BNF.Expr.Expands javaVariableExpr
       [bnfTerminal BNFExampleTerminal.letter,
@@ -816,8 +810,6 @@ theorem bnf_java_variable_field_expands :
     (BNF.Expr.repeat_cons hField
       (BNF.Expr.repeat_empty javaVariableTailExpr))
 
--- Book: Chapter 4, Section 4.2, exercise BNF for Java-style variables,
--- including array indexing such as `A[7]`.
 theorem bnf_java_variable_index_expands :
     BNF.Expr.Expands javaVariableExpr
       [bnfTerminal BNFExampleTerminal.letter,
@@ -849,8 +841,6 @@ theorem bnf_java_variable_index_expands :
     (BNF.Expr.repeat_cons hIndex
       (BNF.Expr.repeat_empty javaVariableTailExpr))
 
--- Book: Chapter 4, Section 4.2, exercise BNF for Java-style variables,
--- including mixed field and index chains.
 theorem bnf_java_variable_field_index_field_expands :
     BNF.Expr.Expands javaVariableExpr
       [bnfTerminal BNFExampleTerminal.letter,
@@ -898,7 +888,6 @@ theorem bnf_java_variable_field_index_field_expands :
         (BNF.Expr.repeat_cons hField
           (BNF.Expr.repeat_empty javaVariableTailExpr))))
 
--- Book: Chapter 4, Section 4.2, exercise BNF for try/catch syntax.
 theorem bnf_java_try_catch_without_finally_expands :
     BNF.Expr.Expands javaTryCatchExpr
       [bnfTerminal BNFExampleTerminal.tryTok,
@@ -923,8 +912,6 @@ theorem bnf_java_try_catch_without_finally_expands :
           (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.finallyTok)
             (bnfNonterminalExpr BNFExampleNT.blockStatement)))))
 
--- Book: Chapter 4, Section 4.2, exercise BNF for try/catch syntax, with
--- multiple catches and an optional finally block.
 theorem bnf_java_try_two_catches_with_finally_expands :
     BNF.Expr.Expands javaTryCatchExpr
       [bnfTerminal BNFExampleTerminal.tryTok,
@@ -958,7 +945,6 @@ theorem bnf_java_try_two_catches_with_finally_expands :
             (BNF.Expr.Expands.symbol
               (bnfNonterminal BNFExampleNT.blockStatement))))))
 
--- Book: Chapter 4, Section 4.2, exercise BNF for a concrete catch clause.
 theorem bnf_java_catch_clause_expands :
     BNF.Expr.Expands javaCatchClauseExpr
       [bnfTerminal BNFExampleTerminal.catchTok,
@@ -979,8 +965,6 @@ theorem bnf_java_catch_clause_expands :
           (BNF.Expr.Expands.symbol
             (bnfNonterminal BNFExampleNT.blockStatement)))))
 
--- Book: Chapter 4, Section 4.2, exercise BNF for compound propositions,
--- including parenthesized subpropositions.
 theorem bnf_atomic_proposition_parenthesized_expands :
     BNF.Expr.Expands atomicPropositionExpr
       [bnfTerminal BNFExampleTerminal.lparen,
@@ -994,7 +978,6 @@ theorem bnf_atomic_proposition_parenthesized_expands :
         (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.proposition))
         (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.rparen))))
 
--- Book: Chapter 4, Section 4.2, exercise BNF for compound propositions.
 theorem bnf_compound_proposition_not_and_expands :
     BNF.Expr.Expands compoundPropositionExpr
       [bnfTerminal BNFExampleTerminal.notTok,
@@ -1034,8 +1017,6 @@ theorem bnf_compound_proposition_not_and_expands :
       (BNF.Expr.repeat_empty
         (BNF.Expr.seq propositionConnectiveExpr propositionOperandExpr)))
 
--- Book: Chapter 4, Section 4.2, exercise BNF for compound propositions,
--- including parenthesized operands and recursive negation.
 theorem bnf_compound_proposition_parenthesized_or_not_expands :
     BNF.Expr.Expands compoundPropositionExpr
       [bnfTerminal BNFExampleTerminal.lparen,

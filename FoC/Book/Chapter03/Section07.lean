@@ -1,59 +1,63 @@
 import FoC.Book.Chapter03.Section06
 import FoC.Languages.Pumping
 
+set_option doc.verso true
+
 namespace FoC
 namespace Book
 namespace Chapter03
 namespace Section07
 
 /-!
-Book: Chapter 3, Section 3.7, Non-regular Languages.
+# Chapter 3, Section 3.7: Non-Regular Languages
+
+This section formalizes the Pumping Lemma interface and its use for proving
+languages non-regular. The reusable proof infrastructure lives in
+{module}`FoC.Languages.Pumping`; this file applies it to the book's
+{lit}`a^n b a^n` and {lit}`a^n b^n` examples.
 -/
 
 open Languages
 
--- Book: Chapter 3, Section 3.7, Pumping Lemma quantified conclusion.
+/-!
+## Pumping Lemma Vocabulary
+
+The first theorems expose the quantified shape of pumping lengths,
+decompositions, extensionality, monotonicity, and counterexample principles.
+These are the tools used to turn a family of bad words into non-regularity.
+-/
+
 theorem pumping_length_definition (L : Language alpha) (n : Nat) :
     Pumping.PumpingLength L n <->
       n > 0 ∧ forall w, w ∈ L -> n <= Word.Length w -> Pumping.Decomposition L n w :=
   Iff.rfl
 
--- Book: Chapter 3, Section 3.7, pumped decompositions keep the original word.
 theorem pumped_decomposition_original_word_mem
     {L : Language alpha} {n : Nat} {w : Word alpha}
     (h : Pumping.Decomposition L n w) : w ∈ L :=
   Pumping.decomposition_original_word_mem h
 
--- Book: Chapter 3, Section 3.7, pumping decompositions are extensional in the
--- language being pumped.
 theorem pumped_decomposition_of_equal {L M : Language alpha} {n : Nat}
     {w : Word alpha}
     (hEq : Language.Equal L M) (h : Pumping.Decomposition L n w) :
     Pumping.Decomposition M n w :=
   Pumping.decomposition_of_equal hEq h
 
--- Book: Chapter 3, Section 3.7, pumping lengths are extensional in the
--- language being pumped.
 theorem pumping_length_of_equal {L M : Language alpha} {n : Nat}
     (hEq : Language.Equal L M) (h : Pumping.PumpingLength L n) :
     Pumping.PumpingLength M n :=
   Pumping.pumpingLength_of_equal hEq h
 
--- Book: Chapter 3, Section 3.7, the pumping property is extensional in the
--- language being pumped.
 theorem pumping_property_of_equal {L M : Language alpha}
     (hEq : Language.Equal L M) (h : Pumping.HasPumpingProperty L) :
     Pumping.HasPumpingProperty M :=
   Pumping.hasPumpingProperty_of_equal hEq h
 
--- Book: Chapter 3, Section 3.7, a larger pumping length remains valid.
 theorem pumping_length_monotone {L : Language alpha} {n m : Nat}
     (hnm : n <= m) (h : Pumping.PumpingLength L n) :
     Pumping.PumpingLength L m :=
   Pumping.pumpingLength_mono hnm h
 
--- Book: Chapter 3, Section 3.7, one sufficiently long bad word refutes a
--- proposed pumping length.
 theorem not_pumping_length_of_counterexample {L : Language alpha} {n : Nat}
     {w : Word alpha}
     (hw : w ∈ L) (hlen : n <= Word.Length w)
@@ -67,8 +71,6 @@ theorem not_pumping_length_of_counterexample {L : Language alpha} {n : Nat}
     ¬ Pumping.PumpingLength L n :=
   Pumping.not_pumpingLength_of_counterexample hw hlen hbad
 
--- Book: Chapter 3, Section 3.7, a family of bad words refutes the pumping
--- property.
 theorem not_pumping_property_of_counterexamples {L : Language alpha}
     (hbad :
       forall n : Nat, n > 0 ->
@@ -84,23 +86,29 @@ theorem not_pumping_property_of_counterexamples {L : Language alpha}
     ¬ Pumping.HasPumpingProperty L :=
   Pumping.not_hasPumpingProperty_of_counterexamples hbad
 
--- Book: Chapter 3, Section 3.7, contrapositive use of the Pumping Lemma.
 theorem not_regular_if_no_pumping_property {L : Language alpha}
     (pumpingLemma : Pumping.PumpingLemmaConclusion L)
     (hNoPump : ¬ Pumping.HasPumpingProperty L) :
     ¬ RegularLanguage.Regular L :=
   Pumping.not_regular_of_no_pumping_property pumpingLemma hNoPump
 
--- Book: Chapter 3, Section 3.7, Theorem 3.6.
 theorem regular_languages_have_pumping_property {L : Language alpha}
     (hL : RegularLanguage.Regular L) :
     Pumping.HasPumpingProperty L :=
   Pumping.regular_hasPumpingProperty hL
 
--- Book: Chapter 3, Section 3.7, Pumping Lemma conclusion.
 theorem pumping_lemma_conclusion (L : Language alpha) :
     Pumping.PumpingLemmaConclusion L :=
   Pumping.regular_pumpingLemmaConclusion L
+
+/-!
+## Backreference Language
+
+The language {lit}`a^n b a^n` was introduced in Section 3.3 as the target of
+a backreference-style expression. The next lemmas establish the bookkeeping
+needed to delete a pumped initial block of {lit}`a` symbols and derive a
+contradiction.
+-/
 
 theorem repeatSymbol_concat_same (a : alpha) (m n : Nat) :
     Word.Concat (Word.RepeatSymbol a m) (Word.RepeatSymbol a n) =
@@ -236,8 +244,6 @@ theorem anbanWord_delete_initial_a
   have harith : lenx + (n - lenxy) = n - leny := by omega
   rw [harith]
 
--- Book: Chapter 3, Section 3.3, Exercise 4, proved using the Section 3.7
--- Pumping Lemma infrastructure.
 theorem anban_no_pumping_property :
     ¬ Pumping.HasPumpingProperty Section03.anbanLanguage := by
   intro hpump
@@ -274,27 +280,31 @@ theorem anban_no_pumping_property :
                         omega
                       omega
 
--- Book: Chapter 3, Section 3.3, Exercise 4, conditional on the Pumping
--- Lemma conclusion.
 theorem anban_not_regular_from_pumping_lemma
     (pumpingLemma : Pumping.PumpingLemmaConclusion Section03.anbanLanguage) :
     ¬ RegularLanguage.Regular Section03.anbanLanguage :=
   Pumping.not_regular_of_no_pumping_property pumpingLemma
     anban_no_pumping_property
 
--- Book: Chapter 3, Section 3.3, Exercise 4.
 theorem anban_not_regular :
     ¬ RegularLanguage.Regular Section03.anbanLanguage :=
   Pumping.not_regular_of_no_pumping_property
     (Pumping.regular_pumpingLemmaConclusion Section03.anbanLanguage)
     anban_no_pumping_property
 
+/-!
+## The {lit}`a^n b^n` Example
+
+The final part of the section sets up and proves non-regularity for the
+standard equal-block language. Counting lemmas identify how many {lit}`a` and
+{lit}`b` symbols occur in block words, which is what pumping breaks.
+-/
+
 def anbnLanguage : Language Section01.AB :=
   fun w => exists n,
     w = Word.Concat (Word.RepeatSymbol Section01.AB.a n)
       (Word.RepeatSymbol Section01.AB.b n)
 
--- Book: Chapter 3, Section 3.7, the language used in Theorem 3.7.
 theorem anbn_membership (w : Word Section01.AB) :
     w ∈ anbnLanguage <->
       exists n,
@@ -302,7 +312,6 @@ theorem anbn_membership (w : Word Section01.AB) :
           (Word.RepeatSymbol Section01.AB.b n) :=
   Iff.rfl
 
--- Book: Chapter 3, Section 3.7, counting groundwork for the `a^n b^n` example.
 theorem ablock_word_count_a (aCount bCount : Nat) :
     Word.Count Section01.AB.a
       (Word.Concat (Word.RepeatSymbol Section01.AB.a aCount)
@@ -313,7 +322,6 @@ theorem ablock_word_count_a (aCount bCount : Nat) :
   · intro h
     cases h
 
--- Book: Chapter 3, Section 3.7, counting groundwork for block-word examples.
 theorem ablock_word_count_b (aCount bCount : Nat) :
     Word.Count Section01.AB.b
       (Word.Concat (Word.RepeatSymbol Section01.AB.a aCount)
@@ -324,21 +332,18 @@ theorem ablock_word_count_b (aCount bCount : Nat) :
   · intro h
     cases h
 
--- Book: Chapter 3, Section 3.7, counting groundwork for the `a^n b^n` example.
 theorem anbn_word_count_a (n : Nat) :
     Word.Count Section01.AB.a
       (Word.Concat (Word.RepeatSymbol Section01.AB.a n)
         (Word.RepeatSymbol Section01.AB.b n)) = n := by
   exact ablock_word_count_a n n
 
--- Book: Chapter 3, Section 3.7, counting groundwork for the `a^n b^n` example.
 theorem anbn_word_count_b (n : Nat) :
     Word.Count Section01.AB.b
       (Word.Concat (Word.RepeatSymbol Section01.AB.a n)
         (Word.RepeatSymbol Section01.AB.b n)) = n := by
   exact ablock_word_count_b n n
 
--- Book: Chapter 3, Section 3.7, every word in `{a^n b^n}` has equal counts.
 theorem anbn_members_have_equal_counts {w : Word Section01.AB}
     (hw : w ∈ anbnLanguage) :
     Word.Count Section01.AB.a w = Word.Count Section01.AB.b w := by
@@ -512,13 +517,11 @@ theorem anbn_no_pumping_property :
 def equalCountLanguage : Language Section01.AB :=
   fun w => Word.Count Section01.AB.a w = Word.Count Section01.AB.b w
 
--- Book: Chapter 3, Section 3.7, Exercise 1(a).
 theorem equal_count_language_membership (w : Word Section01.AB) :
     w ∈ equalCountLanguage <->
       Word.Count Section01.AB.a w = Word.Count Section01.AB.b w :=
   Iff.rfl
 
--- Book: Chapter 3, Section 3.7, Exercise 1(a).
 theorem equal_count_no_pumping_property :
     ¬ Pumping.HasPumpingProperty equalCountLanguage := by
   intro hpump
@@ -560,15 +563,12 @@ theorem equal_count_no_pumping_property :
                           using hpumpZero
                       exact hunequal hcountsZero
 
--- Book: Chapter 3, Section 3.7, Exercise 1(a), conditional on the Pumping
--- Lemma conclusion.
 theorem equal_count_not_regular_from_pumping_lemma
     (pumpingLemma : Pumping.PumpingLemmaConclusion equalCountLanguage) :
     ¬ RegularLanguage.Regular equalCountLanguage :=
   Pumping.not_regular_of_no_pumping_property pumpingLemma
     equal_count_no_pumping_property
 
--- Book: Chapter 3, Section 3.7, Exercise 1(a).
 theorem equal_count_not_regular :
     ¬ RegularLanguage.Regular equalCountLanguage :=
   Pumping.not_regular_of_no_pumping_property
@@ -583,7 +583,6 @@ def squareBlockWord (p q : Nat) : Word Section01.AB :=
 def squareLanguage : Language Section01.AB :=
   fun w => exists u, w = Word.Concat u u
 
--- Book: Chapter 3, Section 3.7, Exercise 1(b).
 theorem square_language_membership (w : Word Section01.AB) :
     w ∈ squareLanguage <-> exists u, w = Word.Concat u u :=
   Iff.rfl
@@ -848,7 +847,6 @@ theorem squareBlock_delete_initial_a
   have harith : lenx + (n - lenxy) = n - leny := by omega
   rw [harith]
 
--- Book: Chapter 3, Section 3.7, Exercise 1(b).
 theorem square_no_pumping_property :
     ¬ Pumping.HasPumpingProperty squareLanguage := by
   intro hpump
@@ -891,15 +889,12 @@ theorem square_no_pumping_property :
                             omega
                           omega
 
--- Book: Chapter 3, Section 3.7, Exercise 1(b), conditional on the Pumping
--- Lemma conclusion.
 theorem square_not_regular_from_pumping_lemma
     (pumpingLemma : Pumping.PumpingLemmaConclusion squareLanguage) :
     ¬ RegularLanguage.Regular squareLanguage :=
   Pumping.not_regular_of_no_pumping_property pumpingLemma
     square_no_pumping_property
 
--- Book: Chapter 3, Section 3.7, Exercise 1(b).
 theorem square_not_regular :
     ¬ RegularLanguage.Regular squareLanguage :=
   Pumping.not_regular_of_no_pumping_property
@@ -916,7 +911,6 @@ def mirrorBlockWord (p q : Nat) : Word Section01.AB :=
 def reverseSquareLanguage : Language Section01.AB :=
   fun w => exists u, w = Word.Concat u (Word.Reverse u)
 
--- Book: Chapter 3, Section 3.7, Exercise 1(c).
 theorem reverse_square_language_membership (w : Word Section01.AB) :
     w ∈ reverseSquareLanguage <-> exists u, w = Word.Concat u (Word.Reverse u) :=
   Iff.rfl
@@ -1119,7 +1113,6 @@ theorem mirrorBlock_delete_initial_a
     omega
   rw [harith]
 
--- Book: Chapter 3, Section 3.7, Exercise 1(c).
 theorem reverse_square_no_pumping_property :
     ¬ Pumping.HasPumpingProperty reverseSquareLanguage := by
   intro hpump
@@ -1163,15 +1156,12 @@ theorem reverse_square_no_pumping_property :
                             omega
                           omega
 
--- Book: Chapter 3, Section 3.7, Exercise 1(c), conditional on the Pumping
--- Lemma conclusion.
 theorem reverse_square_not_regular_from_pumping_lemma
     (pumpingLemma : Pumping.PumpingLemmaConclusion reverseSquareLanguage) :
     ¬ RegularLanguage.Regular reverseSquareLanguage :=
   Pumping.not_regular_of_no_pumping_property pumpingLemma
     reverse_square_no_pumping_property
 
--- Book: Chapter 3, Section 3.7, Exercise 1(c).
 theorem reverse_square_not_regular :
     ¬ RegularLanguage.Regular reverseSquareLanguage :=
   Pumping.not_regular_of_no_pumping_property
@@ -1184,7 +1174,6 @@ def moreBsBlockLanguage : Language Section01.AB :=
       w = Word.Concat (Word.RepeatSymbol Section01.AB.a aCount)
         (Word.RepeatSymbol Section01.AB.b bCount)
 
--- Book: Chapter 3, Section 3.7, Exercise 1(d).
 theorem more_bs_block_language_membership (w : Word Section01.AB) :
     w ∈ moreBsBlockLanguage <->
       exists aCount bCount,
@@ -1193,7 +1182,6 @@ theorem more_bs_block_language_membership (w : Word Section01.AB) :
             (Word.RepeatSymbol Section01.AB.b bCount) :=
   Iff.rfl
 
--- Book: Chapter 3, Section 3.7, Exercise 1(d).
 theorem more_bs_block_members_have_more_b_counts {w : Word Section01.AB}
     (hw : w ∈ moreBsBlockLanguage) :
     Word.Count Section01.AB.a w < Word.Count Section01.AB.b w := by
@@ -1238,7 +1226,6 @@ theorem more_bs_block_pump_two_not_mem
   rw [Word.count_concat, Word.count_concat] at hcountBOriginal
   omega
 
--- Book: Chapter 3, Section 3.7, Exercise 1(d).
 theorem more_bs_block_no_pumping_property :
     ¬ Pumping.HasPumpingProperty moreBsBlockLanguage := by
   intro hpump
@@ -1267,29 +1254,23 @@ theorem more_bs_block_no_pumping_property :
                       exact more_bs_block_pump_two_not_mem hword hrest.left
                         hrest.right.left (hrest.right.right 2)
 
--- Book: Chapter 3, Section 3.7, Exercise 1(d), conditional on the Pumping
--- Lemma conclusion.
 theorem more_bs_block_not_regular_from_pumping_lemma
     (pumpingLemma : Pumping.PumpingLemmaConclusion moreBsBlockLanguage) :
     ¬ RegularLanguage.Regular moreBsBlockLanguage :=
   Pumping.not_regular_of_no_pumping_property pumpingLemma
     more_bs_block_no_pumping_property
 
--- Book: Chapter 3, Section 3.7, Exercise 1(d).
 theorem more_bs_block_not_regular :
     ¬ RegularLanguage.Regular moreBsBlockLanguage :=
   Pumping.not_regular_of_no_pumping_property
     (Pumping.regular_pumpingLemmaConclusion moreBsBlockLanguage)
     more_bs_block_no_pumping_property
 
--- Book: Chapter 3, Section 3.7, the concrete pumping contradiction for
--- `{a^n b^n}`.
 theorem anbn_not_regular_from_pumping_lemma
     (pumpingLemma : Pumping.PumpingLemmaConclusion anbnLanguage) :
     ¬ RegularLanguage.Regular anbnLanguage :=
   Pumping.not_regular_of_no_pumping_property pumpingLemma anbn_no_pumping_property
 
--- Book: Chapter 3, Section 3.7, Theorem 3.7.
 theorem anbn_not_regular :
     ¬ RegularLanguage.Regular anbnLanguage :=
   Pumping.not_regular_of_no_pumping_property
@@ -1299,8 +1280,9 @@ theorem anbn_not_regular :
 /-!
 The concrete contradiction for `{ a^n b^n | n >= 0 }` is now formalized:
 no pumping length can satisfy the book's quantified pumping property for this
-language.  The regular-language pumping lemma is proved in `FoC.Languages.Pumping`,
-so this file also derives the book-facing unconditional non-regularity theorem.
+language. The regular-language pumping lemma is proved in
+{module}`FoC.Languages.Pumping`, so this file also derives the book-facing
+unconditional non-regularity theorem.
 -/
 
 end Section07

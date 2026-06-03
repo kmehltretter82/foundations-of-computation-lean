@@ -6,62 +6,89 @@ import FoC.Foundation.DigitStreams
 import FoC.Foundation.Reals
 import FoC.Foundation.RealUncountability
 
+set_option doc.verso true
+
 namespace FoC
 namespace Book
 namespace Chapter02
 namespace Section06
 
 /-!
-Book: Chapter 2, Section 2.6, Counting Past Infinity.
+# Chapter 2, Section 2.6: Counting Past Infinity
+
+This section formalizes the chapter's finite, countable, countably infinite,
+and uncountable vocabulary. The reusable infrastructure comes from
+{module}`FoC.Foundation.Countable`, {module}`FoC.Foundation.Cardinality`,
+{module}`FoC.Foundation.DigitStreams`, and {module}`FoC.Foundation.Reals`.
+
+The formalization separates three ideas that the textbook presents together:
+explicit finite cardinality, encodings by natural numbers, and diagonal
+arguments proving that some collections cannot be enumerated.
 -/
 
 open Foundation
 
--- Book: Chapter 2, Section 2.6, finite sets by explicit enumeration.
+/-!
+## Finite and Countable Sets
+
+The opening statements give basic examples: the empty set and singletons are
+finite, while the natural numbers and even natural numbers are countable.
+Exercise 11 is represented by closure of countability under union and by the
+corresponding countably-infinite union statement.
+-/
+
 theorem empty_set_is_finite : FSet.Finite (FSet.Empty : FSet alpha) :=
   FSet.empty_finite
 
--- Book: Chapter 2, Section 2.6, singleton sets are finite.
 theorem singleton_set_is_finite (x : alpha) : FSet.Finite (FSet.Singleton x) :=
   FSet.singleton_finite x
 
--- Book: Chapter 2, Section 2.6, natural numbers are countable.
 theorem natural_numbers_countable : FSet.Countable (FSet.Univ : FSet Nat) :=
   FSet.nat_univ_countable
 
--- Book: Chapter 2, Section 2.6, even natural numbers are countable.
 theorem even_natural_numbers_countable : FSet.Countable FSet.EvenNaturals :=
   FSet.even_naturals_countable
 
--- Book: Chapter 2, Section 2.6, Exercise 11(b).
 theorem union_of_countable_sets_countable {A B : FSet alpha}
     (hA : FSet.Countable A) (hB : FSet.Countable B) :
     FSet.Countable (FSet.Union A B) :=
   FSet.countable_union hA hB
 
--- Book: Chapter 2, Section 2.6, Exercise 11(a).
 theorem union_of_countably_infinite_sets_countably_infinite {A B : FSet alpha}
     (hA : FSet.CountablyInfinite A) (hB : FSet.CountablyInfinite B) :
     FSet.CountablyInfinite (FSet.Union A B) :=
   FSet.countably_infinite_union hA hB
 
--- Book: Chapter 2, Section 2.6, natural numbers are encodable by natural numbers.
+/-!
+## Natural-Number Encodings
+
+The next group records explicit encodings. Naturals are encoded directly,
+integers use the project's integer code, and pairs of naturals are organized by
+diagonals. This is the formal counterpart of the chapter's listing arguments.
+-/
+
 theorem natural_numbers_encodable : Countability.EncodableByNat Nat :=
   Countability.nat_encodable
 
--- Book: Chapter 2, Section 2.6, integers are countable by an explicit code.
 theorem integers_encodable : Countability.EncodableByNat Int :=
   Countability.int_encodable
 
--- Book: Chapter 2, Section 2.6, every pair of natural numbers appears on a diagonal.
 theorem nat_pair_on_diagonal (a b : Nat) :
     (a, b) ∈ Countability.DiagonalList (a + b) :=
   Countability.pair_mem_diagonalList a b
 
--- Book: Chapter 2, Section 2.6, each diagonal for Nat x Nat is finite.
 theorem nat_pair_diagonal_length (s : Nat) :
     (Countability.DiagonalList s).length = s + 1 :=
   Countability.length_diagonalList s
+
+/-!
+## Rational Representatives
+
+Rational representatives are assigned finite stages by combining the natural
+codes of numerator and denominator. The Lean statements make the diagonal
+listing explicit: each representative has a code, the code is injective, and
+the pair code appears on the expected diagonal.
+-/
 
 def RationalRepresentativeStage (s : Nat) : FSet Rational :=
   fun q => Countability.IntCode q.num + Countability.IntCode q.den = s
@@ -69,7 +96,6 @@ def RationalRepresentativeStage (s : Nat) : FSet Rational :=
 def RationalRepresentativeCode (q : Rational) : Nat × Nat :=
   (Countability.IntCode q.num, Countability.IntCode q.den)
 
--- Book: Chapter 2, Section 2.6, rational representatives have injective pair codes.
 theorem rational_representative_code_injective :
     Fn.Injective RationalRepresentativeCode := by
   intro q r h
@@ -84,72 +110,75 @@ theorem rational_representative_code_injective :
           cases hden
           rfl
 
--- Book: Chapter 2, Section 2.6, rational representatives appear in finite-code stages.
 theorem rational_representative_in_stage (q : Rational) :
     q ∈ RationalRepresentativeStage (Countability.IntCode q.num + Countability.IntCode q.den) :=
   rfl
 
--- Book: Chapter 2, Section 2.6, rational representative codes appear on diagonals.
 theorem rational_representative_code_on_diagonal (q : Rational) :
     RationalRepresentativeCode q ∈
       Countability.DiagonalList ((RationalRepresentativeCode q).1 + (RationalRepresentativeCode q).2) :=
   Countability.pair_mem_diagonalList (RationalRepresentativeCode q).1 (RationalRepresentativeCode q).2
 
--- Book: Chapter 2, Section 2.6, empty finite set has cardinality zero.
+/-!
+## Finite Cardinality Formulas
+
+The cardinality statements cover the elementary finite cases and list-based
+models for products, disjoint unions, inclusion-exclusion, powersets, and
+finite function spaces.
+-/
+
 theorem empty_has_cardinality_zero :
     FSet.HasCardinality (FSet.Empty : FSet alpha) 0 :=
   FSet.empty_has_cardinality_zero
 
--- Book: Chapter 2, Section 2.6, singleton finite set has cardinality one.
 theorem singleton_has_cardinality_one (x : alpha) :
     FSet.HasCardinality (FSet.Singleton x) 1 :=
   FSet.singleton_has_cardinality_one x
 
--- Book: Chapter 2, Section 2.6, cardinality is well-defined for equal sets.
 theorem cardinality_respects_set_equality {A B : FSet alpha} {n : Nat}
     (hAB : FSet.Equal A B) (hA : FSet.HasCardinality A n) :
     FSet.HasCardinality B n :=
   FSet.hasCardinality_of_equal hAB hA
 
--- Book: Chapter 2, Section 2.6, Exercise 12(c).
 theorem subset_of_finite_set_finite {A B : FSet alpha}
     (hAB : FSet.Subset A B) (hB : FSet.Finite B) :
     FSet.Finite A :=
   FSet.finite_subset hAB hB
 
--- Book: Chapter 2, Section 2.6, product cardinality.
 theorem list_product_cardinality (xs : List alpha) (ys : List beta) :
     (ListCard.Pairs xs ys).length = xs.length * ys.length :=
   ListCard.length_pairs xs ys
 
--- Book: Chapter 2, Section 2.6, disjoint-union cardinality.
 theorem list_disjoint_union_cardinality (xs ys : List alpha) :
     (xs ++ ys).length = xs.length + ys.length :=
   ListCard.length_append xs ys
 
--- Book: Chapter 2, Section 2.6, inclusion-exclusion cardinality by disjoint parts.
 theorem union_cardinality_by_parts (leftOnly both rightOnly : Nat) :
     leftOnly + both + rightOnly =
       (leftOnly + both) + (both + rightOnly) - both :=
   ListCard.union_cardinality_by_parts leftOnly both rightOnly
 
--- Book: Chapter 2, Section 2.6, powerset cardinality.
 theorem list_powerset_cardinality (xs : List alpha) :
     (ListCard.Sublists xs).length = 2 ^ xs.length :=
   ListCard.length_sublists xs
 
--- Book: Chapter 2, Section 2.6, finite function-space cardinality.
 theorem list_function_space_cardinality (choices : List alpha) (domainSize : Nat) :
     (ListCard.Tuples choices domainSize).length = choices.length ^ domainSize :=
   ListCard.length_tuples choices domainSize
 
--- Book: Chapter 2, Section 2.6, Theorem: no set has the cardinality of its powerset.
+/-!
+## Cantor's Theorem
+
+Cantor's argument appears as a no-surjection theorem from a type into its
+powerset. The bijection version follows because a bijection would in particular
+be surjective.
+-/
+
 theorem cantor_no_one_to_one_correspondence_with_powerset
     (f : alpha -> FSet alpha) :
     ¬ (forall A : FSet alpha, exists x : alpha, FSet.Equal (f x) A) :=
   FSet.cantor_no_surjective_powerset f
 
--- Book: Chapter 2, Section 2.6, no bijective function reaches the powerset.
 theorem cantor_no_bijection_with_powerset (f : alpha -> FSet alpha) :
     ¬ Fn.Bijective f := by
   intro hf
@@ -161,38 +190,39 @@ theorem cantor_no_bijection_with_powerset (f : alpha -> FSet alpha) :
       rw [hx]
       exact FSet.equal_refl A
 
--- Book: Chapter 2, Section 2.6, diagonal core for real uncountability.
+/-!
+## Reals, Rationals, and Uncountability
+
+The final group connects diagonal digit streams to real-number uncountability.
+Rationals and embedded rational reals are countable, while the full real line
+and the irrational reals are uncountable.
+-/
+
 theorem binary_digit_streams_uncountable :
     FSet.Uncountable (FSet.Univ : FSet DigitStream) :=
   DigitStream.uncountable_univ
 
--- Book: Chapter 2, Section 2.6, quotient rationals are countable.
 theorem quotient_rationals_countable :
     FSet.Countable (FSet.Univ : FSet QRat) :=
   QRat.countable_univ
 
--- Book: Chapter 2, Section 2.6, embedded rational reals are countable.
 theorem embedded_rational_reals_countable :
     FSet.Countable Real.rationalSet :=
   Real.rationalSet_countable
 
--- Book: Chapter 2, Section 2.6, real uncountability transport from digit streams.
 theorem real_uncountable_from_digit_stream_embedding
     (embed : DigitStream -> Real) (hembed : Fn.Injective embed) :
     FSet.Uncountable (FSet.Univ : FSet Real) :=
   Real.uncountable_univ_of_digitStream_injective embed hembed
 
--- Book: Chapter 2, Section 2.6, the real numbers are uncountable.
 theorem real_numbers_uncountable :
     FSet.Uncountable (FSet.Univ : FSet Real) :=
   Real.uncountable_univ
 
--- Book: Chapter 2, Section 2.6, the irrational real numbers are uncountable.
 theorem irrational_real_numbers_uncountable :
     FSet.Uncountable Real.irrationalSet :=
   Real.irrationalSet_uncountable
 
--- Book: Chapter 2, Section 2.6, Theorem 2.9.
 theorem uncountable_complement_of_countable_subset {X K : FSet alpha}
     (hX : FSet.Uncountable X) (hK : FSet.Countable K)
     (hKX : FSet.Subset K X) :

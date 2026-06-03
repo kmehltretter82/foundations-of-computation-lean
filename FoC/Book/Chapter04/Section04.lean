@@ -2,33 +2,45 @@ import FoC.Book.Chapter04.Section01
 import FoC.Grammars.CFGToPDA
 import FoC.Grammars.PDAToCFG
 
+set_option doc.verso true
+
 namespace FoC
 namespace Book
 namespace Chapter04
 namespace Section04
 
 /-!
-Book: Chapter 4, Section 4.4, Pushdown Automata.
+# Chapter 4, Section 4.4: Pushdown Automata
+
+Pushdown automata add a stack to finite-state control. This section states
+the computation API, acceptance modes, deterministic-PDA vocabulary, and the
+standard conversions between CFGs and PDAs. The reusable modules are
+{module}`FoC.Grammars.PDA`, {module}`FoC.Grammars.CFGToPDA`, and
+{module}`FoC.Grammars.PDAToCFG`.
 -/
 
 open Languages
 open Grammars
 
--- Book: Chapter 4, Section 4.4, multi-step PDA computation is transitive.
+/-!
+## PDA Computations
+
+The first group relates one-step moves, arbitrary finite computations, and
+length-indexed computations. The prefix-consumption lemmas make precise that a
+PDA can only consume a prefix of its unread input.
+-/
+
 theorem pda_computation_transitive {M : PDA input stack state}
     {a b c : PDA.Configuration input stack state}
     (hab : PDA.Computes M a b) (hbc : PDA.Computes M b c) :
     PDA.Computes M a c :=
   PDA.computes_trans hab hbc
 
--- Book: Chapter 4, Section 4.4, one PDA step is a computation.
 theorem pda_step_is_computation {M : PDA input stack state}
     {a b : PDA.Configuration input stack state} (h : PDA.Step M a b) :
     PDA.Computes M a b :=
   PDA.computes_of_step h
 
--- Book: Chapter 4, Section 4.4, a length-indexed PDA computation is an
--- ordinary multi-step computation.
 theorem pda_bounded_computation_is_computation
     {M : PDA input stack state}
     {n : Nat} {a b : PDA.Configuration input stack state}
@@ -36,8 +48,6 @@ theorem pda_bounded_computation_is_computation
     PDA.Computes M a b :=
   PDA.computesIn_computes h
 
--- Book: Chapter 4, Section 4.4, every ordinary multi-step computation has a
--- finite step count.
 theorem pda_computation_has_length
     {M : PDA input stack state}
     {a b : PDA.Configuration input stack state}
@@ -45,8 +55,6 @@ theorem pda_computation_has_length
     exists n : Nat, PDA.ComputesIn M n a b :=
   PDA.computes_exists_length h
 
--- Book: Chapter 4, Section 4.4, ordinary and length-indexed PDA computations
--- are equivalent up to existentially hiding the step count.
 theorem pda_computation_iff_has_length
     {M : PDA input stack state}
     {a b : PDA.Configuration input stack state} :
@@ -54,8 +62,6 @@ theorem pda_computation_iff_has_length
       exists n : Nat, PDA.ComputesIn M n a b :=
   PDA.computes_iff_exists_computesIn
 
--- Book: Chapter 4, Section 4.4, one PDA step is a one-step indexed
--- computation.
 theorem pda_step_is_bounded_computation
     {M : PDA input stack state}
     {a b : PDA.Configuration input stack state}
@@ -63,8 +69,6 @@ theorem pda_step_is_bounded_computation
     PDA.ComputesIn M 1 a b :=
   PDA.computesIn_of_step h
 
--- Book: Chapter 4, Section 4.4, length-indexed PDA computations compose and
--- their lengths add.
 theorem pda_bounded_computation_transitive
     {M : PDA input stack state}
     {m n : Nat} {a b c : PDA.Configuration input stack state}
@@ -73,16 +77,12 @@ theorem pda_bounded_computation_transitive
     PDA.ComputesIn M (m + n) a c :=
   PDA.computesIn_trans hab hbc
 
--- Book: Chapter 4, Section 4.4, a zero-length indexed computation has equal
--- endpoints.
 theorem pda_bounded_computation_zero_eq
     {M : PDA input stack state}
     {a b : PDA.Configuration input stack state}
     (h : PDA.ComputesIn M 0 a b) : a = b :=
   PDA.computesIn_zero_eq h
 
--- Book: Chapter 4, Section 4.4, a positive-length indexed computation splits
--- into its first step and the remaining indexed computation.
 theorem pda_bounded_computation_succ_inv
     {M : PDA input stack state}
     {n : Nat} {a c : PDA.Configuration input stack state}
@@ -91,8 +91,6 @@ theorem pda_bounded_computation_succ_inv
       PDA.Step M a b ∧ PDA.ComputesIn M n b c :=
   PDA.computesIn_succ_inv h
 
--- Book: Chapter 4, Section 4.4, a one-step indexed computation is exactly a
--- PDA step.
 theorem pda_bounded_computation_one_inv
     {M : PDA input stack state}
     {a c : PDA.Configuration input stack state}
@@ -100,8 +98,6 @@ theorem pda_bounded_computation_one_inv
     PDA.Step M a c :=
   PDA.computesIn_one_inv h
 
--- Book: Chapter 4, Section 4.4, a PDA step consumes either no input or one
--- leading input symbol.
 theorem pda_step_consumes_empty_or_symbol
     {M : PDA input stack state}
     {c d : PDA.Configuration input stack state}
@@ -110,8 +106,6 @@ theorem pda_step_consumes_empty_or_symbol
       exists a : input, c.unread = a :: d.unread :=
   PDA.step_consumes_empty_or_symbol h
 
--- Book: Chapter 4, Section 4.4, a PDA step consumes a prefix of the source
--- unread word.
 theorem pda_step_consumes_prefix
     {M : PDA input stack state}
     {c d : PDA.Configuration input stack state}
@@ -120,8 +114,6 @@ theorem pda_step_consumes_prefix
       c.unread = Word.Concat consumed d.unread :=
   PDA.step_consumes_prefix h
 
--- Book: Chapter 4, Section 4.4, a bounded PDA computation consumes a prefix
--- of the source unread word.
 theorem pda_bounded_computation_consumes_prefix
     {M : PDA input stack state}
     {n : Nat} {c d : PDA.Configuration input stack state}
@@ -130,8 +122,6 @@ theorem pda_bounded_computation_consumes_prefix
       c.unread = Word.Concat consumed d.unread :=
   PDA.computesIn_consumes_prefix h
 
--- Book: Chapter 4, Section 4.4, any PDA computation consumes a prefix of the
--- source unread word.
 theorem pda_computation_consumes_prefix
     {M : PDA input stack state}
     {c d : PDA.Configuration input stack state}
@@ -140,47 +130,38 @@ theorem pda_computation_consumes_prefix
       c.unread = Word.Concat consumed d.unread :=
   PDA.computes_consumes_prefix h
 
--- Book: Chapter 4, Section 4.4, accepted language of a PDA.
+/-!
+## Acceptance and Determinism
+
+The definitions name accepted languages, finite presentations, top-pop normal
+form, and deterministic context-free languages with an explicit end marker.
+-/
+
 def PDAAcceptedLanguage (M : PDA input stack state) : Language input :=
   PDA.AcceptedLanguage M
 
--- Book: Chapter 4, Section 4.4, a finite PDA presentation includes a finite
--- stack alphabet, a finite transition table, and a finite accepting-state
--- table.  The state set is already finite in the base `PDA` structure.
 def FinitePresentationPDA (M : PDA input stack state) : Prop :=
   PDA.HasFinitePresentation M
 
--- Book: Chapter 4, Section 4.4, top-pop normal-form PDAs are the direct input
--- to the standard PDA-to-CFG construction: each transition pops either no stack
--- symbol or exactly the current top stack symbol.
 def TopPopNormalFormPDA (M : PDA input stack state) : Prop :=
   PDA.PopsAtMostOne M
 
--- Book: Chapter 4, Section 4.4, languages recognized by explicitly finite
--- PDA presentations.
 def FinitePresentationPDARecognizable (L : Language input) : Prop :=
   PDA.FinitePresentationRecognizable L
 
--- Book: Chapter 4, Section 4.4, acceptance by final state and empty stack
--- implies final-state-only acceptance.
 theorem pda_accepts_implies_final_state_accepts {M : PDA input stack state}
     {w : Word input} (h : PDA.Accepts M w) :
     PDA.AcceptsByFinalState M w :=
   PDA.accepts_implies_final_state_accepts h
 
--- Book: Chapter 4, Section 4.4, acceptance by final state and empty stack
--- implies empty-stack-only acceptance.
 theorem pda_accepts_implies_empty_stack_accepts {M : PDA input stack state}
     {w : Word input} (h : PDA.Accepts M w) :
     PDA.AcceptsByEmptyStack M w :=
   PDA.accepts_implies_empty_stack_accepts h
 
--- Book: Chapter 4, Section 4.4, deterministic PDA vocabulary.
 def DeterministicPDA (M : PDA input stack state) : Prop :=
   PDA.Deterministic M
 
--- Book: Chapter 4, Section 4.4, deterministic CFL presentations use an
--- explicit end marker so the deterministic PDA can see the end of input.
 inductive EndMarked (input : Type u) where
   | symbol : input -> EndMarked input
   | end : EndMarked input
@@ -194,30 +175,30 @@ def endMarkedWord (w : Word input) : Word (EndMarked input) :=
 def EndMarkedLanguage (L : Language input) : Language (EndMarked input) :=
   fun w => exists base : Word input, base ∈ L ∧ w = endMarkedWord base
 
--- Book: Chapter 4, Section 4.4, deterministic context-free language
--- vocabulary with an explicit end marker.
 def DeterministicContextFreeLanguageWithEndMarker (L : Language input) : Prop :=
   exists stack : Type, exists state : Type,
     exists M : PDA (EndMarked input) stack state,
       PDA.Deterministic M ∧
         Language.Equal (PDA.AcceptedLanguage M) (EndMarkedLanguage L)
 
--- Book: Chapter 4, Section 4.4, the standard PDA constructed from a CFG.
+/-!
+## CFG to PDA
+
+The standard construction simulates grammar derivations with a stack of
+grammar symbols. The exactness theorem says it accepts precisely the generated
+language.
+-/
+
 def CFGToPDA (G : CFG terminal nonterminal) :
     PDA terminal (Symbol terminal nonterminal) CFG.ToPDAState :=
   CFG.ToPDA G
 
--- Book: Chapter 4, Section 4.4, the CFG-to-PDA construction recognizes
--- exactly the grammar-generated language.
 theorem cfg_to_pda_language_exact
     {terminal nonterminal : Type} (G : CFG terminal nonterminal) :
     Language.Equal (PDA.AcceptedLanguage (CFGToPDA G))
       (CFG.GeneratedLanguage G) :=
   CFG.toPDA_acceptedLanguage_exact G
 
--- Book: Chapter 4, Section 4.4, over an explicitly finite terminal alphabet,
--- a finite-production CFG gives a finite PDA presentation for the standard
--- grammar-to-PDA construction.
 noncomputable def cfg_to_pda_finite_presentation
     (G : CFG terminal nonterminal)
     (terminalFinite : Foundation.FiniteType terminal)
@@ -225,8 +206,6 @@ noncomputable def cfg_to_pda_finite_presentation
     PDA.FinitePresentation (CFGToPDA G) :=
   CFG.toPDA_finitePresentation G terminalFinite hG
 
--- Book: Chapter 4, Section 4.4, proposition-valued finite-presentation
--- wrapper for the standard CFG-to-PDA construction.
 theorem cfg_to_pda_has_finite_presentation
     (G : CFG terminal nonterminal)
     (terminalFinite : Foundation.FiniteType terminal)
@@ -234,54 +213,44 @@ theorem cfg_to_pda_has_finite_presentation
     FinitePresentationPDA (CFGToPDA G) :=
   CFG.toPDA_hasFinitePresentation G terminalFinite hG
 
--- Book: Chapter 4, Section 4.4, every grammar derivation is accepted by the
--- constructed PDA.
 theorem cfg_to_pda_accepts_of_generates
     {terminal nonterminal : Type} {G : CFG terminal nonterminal}
     {w : Word terminal} (h : w ∈ CFG.GeneratedLanguage G) :
     PDA.Accepts (CFGToPDA G) w :=
   CFG.toPDA_accepts_of_generates h
 
--- Book: Chapter 4, Section 4.4, every word accepted by the constructed PDA is
--- generated by the grammar.
 theorem cfg_to_pda_generates_of_accepts
     {terminal nonterminal : Type} {G : CFG terminal nonterminal}
     {w : Word terminal} (h : PDA.Accepts (CFGToPDA G) w) :
     w ∈ CFG.GeneratedLanguage G :=
   CFG.toPDA_generates_of_accepts h
 
--- Book: Chapter 4, Section 4.4, the standard PDA-to-CFG construction for a
--- finite-presented top-pop PDA.
+/-!
+## PDA to CFG
+
+The reverse direction is organized around finite presentations and a top-pop
+normal form. Pop normalization splits longer pops into finite helper-state
+chains before applying the PDA-to-CFG construction.
+-/
+
 def PDAToCFG (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) :
     CFG input (PDA.ToCFGNonterminal stack state) :=
   PDA.ToCFG M presentation
 
--- Book: Chapter 4, Section 4.4, exactness target for the PDA-to-CFG
--- construction under the top-pop normal-form assumption.  The construction
--- module keeps this as the main theorem target while the normalization and
--- reverse direction are completed.
 def PDAToCFGExact (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) : Prop :=
   PDA.ToCFGTopPopExact M presentation
 
--- Book: Chapter 4, Section 4.4, finite helper-state pop normalization for a
--- finite PDA presentation.  Longer-pop transitions are split into a finite
--- chain of one-symbol pops.
 def PDAPopNormalize (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) :
     PDA input stack (PDA.PopNormalizedState (M := M) presentation) :=
   PDA.PopNormalize M presentation
 
--- Book: Chapter 4, Section 4.4, language-exactness target for the
--- pop-normalization bridge from arbitrary finite-presented PDAs to the
--- top-pop PDA-to-CFG theorem.
 def PDAPopNormalizeLanguageExact (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) : Prop :=
   PDA.PopNormalizeLanguageExact M presentation
 
--- Book: Chapter 4, Section 4.4, PDA-to-CFG after pop-normalizing a finite PDA
--- presentation.
 def PDAToCFGNormalized (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) :
     CFG input
@@ -289,24 +258,18 @@ def PDAToCFGNormalized (M : PDA input stack state)
         (PDA.PopNormalizedState (M := M) presentation)) :=
   PDA.ToCFGNormalized M presentation
 
--- Book: Chapter 4, Section 4.4, the pop-normalized PDA has a finite
--- presentation over the original stack alphabet.
 def pda_pop_normalize_finite_presentation
     (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) :
     PDA.FinitePresentation (PDAPopNormalize M presentation) :=
   PDA.popNormalizeFinitePresentation M presentation
 
--- Book: Chapter 4, Section 4.4, the pop-normalized PDA is in the top-pop
--- normal form required by the exact PDA-to-CFG theorem.
 theorem pda_pop_normalize_top_pop
     (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) :
     TopPopNormalFormPDA (PDAPopNormalize M presentation) :=
   PDA.popNormalize_popsAtMostOne M presentation
 
--- Book: Chapter 4, Section 4.4, every original PDA computation accepted by a
--- finite presentation is accepted by its pop-normalized PDA.
 theorem pda_pop_normalize_accepts_of_accepts
     {M : PDA input stack state}
     (presentation : PDA.FinitePresentation M)
@@ -315,8 +278,6 @@ theorem pda_pop_normalize_accepts_of_accepts
     PDA.Accepts (PDAPopNormalize M presentation) w :=
   PDA.popNormalize_accepts_of_accepts presentation h
 
--- Book: Chapter 4, Section 4.4, the original accepted language is included in
--- the pop-normalized accepted language.
 theorem pda_accepted_language_subset_pop_normalize
     {M : PDA input stack state}
     (presentation : PDA.FinitePresentation M) :
@@ -324,8 +285,6 @@ theorem pda_accepted_language_subset_pop_normalize
       (PDA.AcceptedLanguage (PDAPopNormalize M presentation)) :=
   PDA.acceptedLanguage_subset_popNormalizeLanguage presentation
 
--- Book: Chapter 4, Section 4.4, every word accepted by the pop-normalized PDA
--- is accepted by the original finite-presented PDA.
 theorem pda_pop_normalize_accepts_original_of_accepts
     {M : PDA input stack state}
     (presentation : PDA.FinitePresentation M)
@@ -334,16 +293,12 @@ theorem pda_pop_normalize_accepts_original_of_accepts
     PDA.Accepts M w :=
   PDA.popNormalize_accepts_original_of_accepts presentation h
 
--- Book: Chapter 4, Section 4.4, pop-normalization preserves the accepted
--- language exactly.
 theorem pda_pop_normalize_language_exact
     (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) :
     PDAPopNormalizeLanguageExact M presentation :=
   PDA.popNormalizeLanguageExact M presentation
 
--- Book: Chapter 4, Section 4.4, the PDA-to-CFG construction has a finite
--- nonterminal type from the finite state and stack alphabets.
 theorem pda_to_cfg_nonterminals_finite
     (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) :
@@ -352,26 +307,18 @@ theorem pda_to_cfg_nonterminals_finite
         presentation.stackFinite M.statesFinite :=
   PDA.toCFG_nonterminals_finite M presentation
 
--- Book: Chapter 4, Section 4.4, the PDA-to-CFG construction has a finite
--- production presentation from the finite PDA transition, state, accepting,
--- and stack-symbol lists.
 theorem pda_to_cfg_hasFiniteProductions
     (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) :
     CFG.HasFiniteProductions (PDAToCFG M presentation) :=
   PDA.toCFG_hasFiniteProductions M presentation
 
--- Book: Chapter 4, Section 4.4, the normalized PDA-to-CFG construction has a
--- finite production presentation.
 theorem pda_to_cfg_normalized_hasFiniteProductions
     (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) :
     CFG.HasFiniteProductions (PDAToCFGNormalized M presentation) :=
   PDA.toCFGNormalized_hasFiniteProductions M presentation
 
--- Book: Chapter 4, Section 4.4, soundness direction of the PDA-to-CFG
--- construction: every word generated by the constructed grammar is accepted by
--- the original PDA.
 theorem pda_to_cfg_accepts_of_generates
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -380,8 +327,6 @@ theorem pda_to_cfg_accepts_of_generates
     PDA.Accepts M w :=
   PDA.toCFG_accepts_of_generates h
 
--- Book: Chapter 4, Section 4.4, reverse-direction local constructor for the
--- PDA-to-CFG start production.
 theorem pda_to_cfg_start_derives
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -393,8 +338,6 @@ theorem pda_to_cfg_start_derives
     w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
   PDA.toCFG_start_derives haccept hbody
 
--- Book: Chapter 4, Section 4.4, reverse-direction local constructor for the
--- reflexive empty-stack-tail summary production.
 theorem pda_to_cfg_empty_refl_derives
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -404,8 +347,6 @@ theorem pda_to_cfg_empty_refl_derives
       (SententialForm.terminalWord (Word.Empty : Word input)) :=
   PDA.toCFG_emptyRefl_derives
 
--- Book: Chapter 4, Section 4.4, reverse-direction local constructor for a
--- one-symbol-pop transition production.
 theorem pda_to_cfg_pop_step_derives
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -425,8 +366,6 @@ theorem pda_to_cfg_pop_step_derives
       (SententialForm.terminalWord (Word.Concat pref chainWord)) :=
   PDA.toCFG_popStep_derives htransition hchain hpref hchainWord
 
--- Book: Chapter 4, Section 4.4, reverse-direction local constructor for an
--- empty-pop transition that preserves the current stack tail.
 theorem pda_to_cfg_empty_step_derives
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -450,8 +389,6 @@ theorem pda_to_cfg_empty_step_derives
         (Word.Concat pref (Word.Concat chainWord emptyWord))) :=
   PDA.toCFG_emptyStep_derives htransition hchain hpref hchainWord hempty
 
--- Book: Chapter 4, Section 4.4, reverse-direction local constructor for an
--- empty-pop transition taken before removing the current top stack symbol.
 theorem pda_to_cfg_empty_before_top_derives
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -475,8 +412,6 @@ theorem pda_to_cfg_empty_before_top_derives
         (Word.Concat pref (Word.Concat chainWord topWord))) :=
   PDA.toCFG_emptyBeforeTop_derives htransition hchain hpref hchainWord htop
 
--- Book: Chapter 4, Section 4.4, a decomposed derivation for a pushed stack
--- word is equivalent to a `ToCFGChain` RHS with generated pieces.
 theorem pda_to_cfg_chain_derives_formLanguage
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -488,8 +423,6 @@ theorem pda_to_cfg_chain_derives_formLanguage
           (CFG.DerivationSymbolLanguage (PDAToCFG M presentation)) rhs :=
   PDA.toCFGChainDerives_formLanguage h
 
--- Book: Chapter 4, Section 4.4, reconstruct the decomposed derivation for a
--- pushed stack word from a `ToCFGChain` RHS and generated pieces.
 theorem pda_to_cfg_chain_derives_of_formLanguage
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -502,8 +435,6 @@ theorem pda_to_cfg_chain_derives_of_formLanguage
     PDA.ToCFGChainDerives M presentation p push q w :=
   PDA.toCFGChainDerives_of_formLanguage hchain hw
 
--- Book: Chapter 4, Section 4.4, decomposed pushed-stack derivations compose
--- by concatenating the stack segment and the generated input segment.
 theorem pda_to_cfg_chain_derives_append
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -514,8 +445,6 @@ theorem pda_to_cfg_chain_derives_append
       (Word.Concat x y) :=
   PDA.toCFGChainDerives_append hleft hright
 
--- Book: Chapter 4, Section 4.4, use a decomposed pushed-word derivation in a
--- one-symbol-pop production.
 theorem pda_to_cfg_pop_step_of_chain_derives
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -532,8 +461,6 @@ theorem pda_to_cfg_pop_step_of_chain_derives
       (SententialForm.terminalWord (Word.Concat pref chainWord)) :=
   PDA.toCFG_popStep_of_chainDerives htransition hchain hpref
 
--- Book: Chapter 4, Section 4.4, use a decomposed pushed-word derivation in an
--- empty-pop tail-preserving production.
 theorem pda_to_cfg_empty_step_of_chain_derives
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -554,8 +481,6 @@ theorem pda_to_cfg_empty_step_of_chain_derives
         (Word.Concat pref (Word.Concat chainWord emptyWord))) :=
   PDA.toCFG_emptyStep_of_chainDerives htransition hchain hpref hempty
 
--- Book: Chapter 4, Section 4.4, use a decomposed pushed-word derivation in an
--- empty-pop production taken before removing the current top symbol.
 theorem pda_to_cfg_empty_before_top_of_chain_derives
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -576,8 +501,6 @@ theorem pda_to_cfg_empty_before_top_of_chain_derives
         (Word.Concat pref (Word.Concat chainWord topWord))) :=
   PDA.toCFG_emptyBeforeTop_of_chainDerives htransition hchain hpref htop
 
--- Book: Chapter 4, Section 4.4, read-transition specialization of the
--- one-symbol-pop chain-decomposition constructor.
 theorem pda_to_cfg_pop_read_of_chain_derives
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -591,8 +514,6 @@ theorem pda_to_cfg_pop_read_of_chain_derives
         (Word.Concat (Word.Symbol a) chainWord)) :=
   PDA.toCFG_popRead_of_chainDerives htransition hchain
 
--- Book: Chapter 4, Section 4.4, epsilon-transition specialization of the
--- one-symbol-pop chain-decomposition constructor.
 theorem pda_to_cfg_pop_epsilon_of_chain_derives
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -605,8 +526,6 @@ theorem pda_to_cfg_pop_epsilon_of_chain_derives
       (SententialForm.terminalWord chainWord) :=
   PDA.toCFG_popEpsilon_of_chainDerives htransition hchain
 
--- Book: Chapter 4, Section 4.4, read-transition specialization of the
--- empty-pop tail-preserving chain-decomposition constructor.
 theorem pda_to_cfg_empty_read_of_chain_derives
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -625,8 +544,6 @@ theorem pda_to_cfg_empty_read_of_chain_derives
           (Word.Concat chainWord emptyWord))) :=
   PDA.toCFG_emptyRead_of_chainDerives htransition hchain hempty
 
--- Book: Chapter 4, Section 4.4, epsilon-transition specialization of the
--- empty-pop tail-preserving chain-decomposition constructor.
 theorem pda_to_cfg_empty_epsilon_of_chain_derives
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -644,8 +561,6 @@ theorem pda_to_cfg_empty_epsilon_of_chain_derives
         (Word.Concat chainWord emptyWord)) :=
   PDA.toCFG_emptyEpsilon_of_chainDerives htransition hchain hempty
 
--- Book: Chapter 4, Section 4.4, read-transition specialization of the
--- empty-pop before-top chain-decomposition constructor.
 theorem pda_to_cfg_empty_before_top_read_of_chain_derives
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -664,8 +579,6 @@ theorem pda_to_cfg_empty_before_top_read_of_chain_derives
           (Word.Concat chainWord topWord))) :=
   PDA.toCFG_emptyBeforeTopRead_of_chainDerives htransition hchain htop
 
--- Book: Chapter 4, Section 4.4, epsilon-transition specialization of the
--- empty-pop before-top chain-decomposition constructor.
 theorem pda_to_cfg_empty_before_top_epsilon_of_chain_derives
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -683,8 +596,6 @@ theorem pda_to_cfg_empty_before_top_epsilon_of_chain_derives
         (Word.Concat chainWord topWord)) :=
   PDA.toCFG_emptyBeforeTopEpsilon_of_chainDerives htransition hchain htop
 
--- Book: Chapter 4, Section 4.4, a read step that starts and ends with empty
--- stack gives the matching tail-preserving PDA-to-CFG derivation.
 theorem pda_to_cfg_empty_read_of_step_empty_stack
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -697,8 +608,6 @@ theorem pda_to_cfg_empty_read_of_step_empty_stack
       (SententialForm.terminalWord (Word.Symbol a)) :=
   PDA.toCFG_emptyRead_of_step_emptyStack hstep
 
--- Book: Chapter 4, Section 4.4, an epsilon step that starts and ends with
--- empty stack gives the matching tail-preserving PDA-to-CFG derivation.
 theorem pda_to_cfg_empty_epsilon_of_step_empty_stack
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -711,8 +620,6 @@ theorem pda_to_cfg_empty_epsilon_of_step_empty_stack
       (SententialForm.terminalWord (Word.Empty : Word input)) :=
   PDA.toCFG_emptyEpsilon_of_step_emptyStack hstep
 
--- Book: Chapter 4, Section 4.4, a read step that removes exactly the current
--- top stack symbol gives the matching `between` PDA-to-CFG derivation.
 theorem pda_to_cfg_between_read_of_step_top_pop
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -727,8 +634,6 @@ theorem pda_to_cfg_between_read_of_step_top_pop
       (SententialForm.terminalWord (Word.Symbol a)) :=
   PDA.toCFG_betweenRead_of_step_topPop hnorm hstep
 
--- Book: Chapter 4, Section 4.4, an epsilon step that removes exactly the
--- current top stack symbol gives the matching `between` PDA-to-CFG derivation.
 theorem pda_to_cfg_between_epsilon_of_step_top_pop
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -743,9 +648,6 @@ theorem pda_to_cfg_between_epsilon_of_step_top_pop
       (SententialForm.terminalWord (Word.Empty : Word input)) :=
   PDA.toCFG_betweenEpsilon_of_step_topPop hnorm hstep
 
--- Book: Chapter 4, Section 4.4, a step that starts and ends with empty stack
--- either consumes epsilon or one input symbol, with the matching
--- tail-preserving PDA-to-CFG derivation.
 theorem pda_to_cfg_empty_derives_cases_of_step_empty_stack
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -764,9 +666,6 @@ theorem pda_to_cfg_empty_derives_cases_of_step_empty_stack
           (SententialForm.terminalWord (Word.Symbol a))) :=
   PDA.toCFG_emptyDerives_cases_of_step_emptyStack hstep
 
--- Book: Chapter 4, Section 4.4, a step that removes the current stack top
--- either consumes epsilon or one input symbol, with the matching `between`
--- PDA-to-CFG derivation.
 theorem pda_to_cfg_between_derives_cases_of_step_top_pop
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -787,8 +686,6 @@ theorem pda_to_cfg_between_derives_cases_of_step_top_pop
           (SententialForm.terminalWord (Word.Symbol a))) :=
   PDA.toCFG_betweenDerives_cases_of_step_topPop hnorm hstep
 
--- Book: Chapter 4, Section 4.4, a one-step top-pop computation that ends
--- with empty stack must have started with empty stack or a singleton stack.
 theorem pda_step_source_stack_empty_or_single_of_step_to_empty_stack
     {M : PDA input stack state}
     {p q : state} {sourceInput targetInput : Word input}
@@ -800,8 +697,6 @@ theorem pda_step_source_stack_empty_or_single_of_step_to_empty_stack
     sourceStack = [] ∨ exists A : stack, sourceStack = [A] :=
   PDA.step_sourceStack_empty_or_single_of_step_to_emptyStack hnorm hstep
 
--- Book: Chapter 4, Section 4.4, zero-step empty-stack computations give an
--- `empty p q` PDA-to-CFG derivation of the consumed input segment.
 theorem pda_to_cfg_empty_derives_of_computes_in_zero_empty_stack
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -816,8 +711,6 @@ theorem pda_to_cfg_empty_derives_of_computes_in_zero_empty_stack
           (SententialForm.terminalWord consumed) :=
   PDA.toCFG_emptyDerives_of_computesIn_zero_emptyStack hcomp
 
--- Book: Chapter 4, Section 4.4, one-step empty-stack computations give an
--- `empty p q` PDA-to-CFG derivation of the consumed input segment.
 theorem pda_to_cfg_empty_derives_of_computes_in_one_empty_stack
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -832,8 +725,6 @@ theorem pda_to_cfg_empty_derives_of_computes_in_one_empty_stack
           (SententialForm.terminalWord consumed) :=
   PDA.toCFG_emptyDerives_of_computesIn_one_emptyStack hcomp
 
--- Book: Chapter 4, Section 4.4, zero- and one-step empty-stack computations
--- give an `empty p q` PDA-to-CFG derivation of the consumed input segment.
 theorem pda_to_cfg_empty_derives_of_computes_in_at_most_one_empty_stack
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -849,8 +740,6 @@ theorem pda_to_cfg_empty_derives_of_computes_in_at_most_one_empty_stack
           (SententialForm.terminalWord consumed) :=
   PDA.toCFG_emptyDerives_of_computesIn_atMostOne_emptyStack hn hcomp
 
--- Book: Chapter 4, Section 4.4, one-step top-pop computations give a
--- `between p A q` PDA-to-CFG derivation of the consumed input segment.
 theorem pda_to_cfg_between_derives_of_computes_in_one_top_pop
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -867,8 +756,6 @@ theorem pda_to_cfg_between_derives_of_computes_in_one_top_pop
           (SententialForm.terminalWord consumed) :=
   PDA.toCFG_betweenDerives_of_computesIn_one_topPop hnorm hcomp
 
--- Book: Chapter 4, Section 4.4, two-step empty-stack computations of a
--- top-pop PDA give an `empty p q` derivation of the consumed input segment.
 theorem pda_to_cfg_empty_derives_of_computes_in_two_empty_stack
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -884,9 +771,6 @@ theorem pda_to_cfg_empty_derives_of_computes_in_two_empty_stack
           (SententialForm.terminalWord consumed) :=
   PDA.toCFG_emptyDerives_of_computesIn_two_emptyStack hnorm hcomp
 
--- Book: Chapter 4, Section 4.4, zero-, one-, and two-step empty-stack
--- computations of a top-pop PDA give an `empty p q` derivation of the
--- consumed input segment.
 theorem pda_to_cfg_empty_derives_of_computes_in_at_most_two_empty_stack
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -904,8 +788,6 @@ theorem pda_to_cfg_empty_derives_of_computes_in_at_most_two_empty_stack
   PDA.toCFG_emptyDerives_of_computesIn_atMostTwo_emptyStack
     hnorm hn hcomp
 
--- Book: Chapter 4, Section 4.4, zero-step accepting computations are
--- generated by the PDA-to-CFG construction.
 theorem pda_to_cfg_generates_of_accepts_in_zero
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -916,9 +798,6 @@ theorem pda_to_cfg_generates_of_accepts_in_zero
     w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
   PDA.toCFG_generates_of_acceptsIn_zero haccept hcomp
 
--- Book: Chapter 4, Section 4.4, first reverse-language theorem for the
--- PDA-to-CFG construction: any one-step accepting computation is generated by
--- the constructed grammar.
 theorem pda_to_cfg_generates_of_accepts_in_one
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -929,8 +808,6 @@ theorem pda_to_cfg_generates_of_accepts_in_one
     w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
   PDA.toCFG_generates_of_acceptsIn_one haccept hcomp
 
--- Book: Chapter 4, Section 4.4, any two-step accepting computation of a
--- top-pop PDA is generated by the constructed PDA-to-CFG grammar.
 theorem pda_to_cfg_generates_of_accepts_in_two
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -942,8 +819,6 @@ theorem pda_to_cfg_generates_of_accepts_in_two
     w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
   PDA.toCFG_generates_of_acceptsIn_two hnorm haccept hcomp
 
--- Book: Chapter 4, Section 4.4, the zero- and one-step base cases for the
--- reverse PDA-to-CFG language direction.
 theorem pda_to_cfg_generates_of_accepts_in_at_most_one
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -955,8 +830,6 @@ theorem pda_to_cfg_generates_of_accepts_in_at_most_one
     w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
   PDA.toCFG_generates_of_acceptsIn_atMostOne hn haccept hcomp
 
--- Book: Chapter 4, Section 4.4, the zero-, one-, and two-step base cases for
--- the reverse PDA-to-CFG language direction.
 theorem pda_to_cfg_generates_of_accepts_in_at_most_two
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -969,17 +842,11 @@ theorem pda_to_cfg_generates_of_accepts_in_at_most_two
     w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
   PDA.toCFG_generates_of_acceptsIn_atMostTwo hnorm hn haccept hcomp
 
--- Book: Chapter 4, Section 4.4, length-indexed PDA traces whose stack is
--- empty at every step.  This is a reusable reverse-direction branch for the
--- PDA-to-CFG construction before the full pushed-stack splitting theorem is
--- available.
 def EmptyStackPDAComputesIn (M : PDA input stack state)
     (n : Nat) (p : state) (sourceInput : Word input)
     (q : state) (targetInput : Word input) : Prop :=
   PDA.EmptyStackComputesIn M n p sourceInput q targetInput
 
--- Book: Chapter 4, Section 4.4, an empty-stack trace is a bounded PDA
--- computation with empty stack at both endpoints.
 theorem pda_empty_stack_trace_is_bounded_computation
     {M : PDA input stack state}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -989,8 +856,6 @@ theorem pda_empty_stack_trace_is_bounded_computation
       { state := q, unread := targetInput, stack := [] } :=
   PDA.emptyStackComputesIn_computesIn h
 
--- Book: Chapter 4, Section 4.4, an empty-stack trace is an ordinary PDA
--- computation with empty stack at both endpoints.
 theorem pda_empty_stack_trace_is_computation
     {M : PDA input stack state}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -1000,8 +865,6 @@ theorem pda_empty_stack_trace_is_computation
       { state := q, unread := targetInput, stack := [] } :=
   PDA.emptyStackComputesIn_computes h
 
--- Book: Chapter 4, Section 4.4, any finite empty-stack trace gives an
--- `empty p q` PDA-to-CFG derivation of the consumed input segment.
 theorem pda_to_cfg_empty_derives_of_empty_stack_trace
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1014,8 +877,6 @@ theorem pda_to_cfg_empty_derives_of_empty_stack_trace
           (SententialForm.terminalWord consumed) :=
   PDA.toCFG_emptyDerives_of_emptyStackComputesIn h
 
--- Book: Chapter 4, Section 4.4, any accepting empty-stack trace is generated
--- by the PDA-to-CFG construction.
 theorem pda_to_cfg_generates_of_empty_stack_accepts_in
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1025,41 +886,27 @@ theorem pda_to_cfg_generates_of_empty_stack_accepts_in
     w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
   PDA.toCFG_generates_of_emptyStackAcceptsIn haccept hcomp
 
--- Book: Chapter 4, Section 4.4, grammar-aligned traces that remove an
--- explicit stack word while preserving the stack tail.  This is the
--- decomposition target for pushed stack segments in the PDA-to-CFG reverse
--- direction.
 def StackSummaryPDAComputesIn (M : PDA input stack state)
     (n : Nat) (p : state) (stackWord : Word stack)
     (sourceInput : Word input) (q : state)
     (targetInput : Word input) : Prop :=
   PDA.StackSummaryComputesIn M n p stackWord sourceInput q targetInput
 
--- Book: Chapter 4, Section 4.4, unindexed stack-summary trace vocabulary for
--- ordinary finite computations after the length has been hidden.
 def StackSummaryPDAComputes (M : PDA input stack state)
     (p : state) (stackWord : Word stack) (sourceInput : Word input)
     (q : state) (targetInput : Word input) : Prop :=
   PDA.StackSummaryComputes M p stackWord sourceInput q targetInput
 
--- Book: Chapter 4, Section 4.4, grammar-aligned empty-stack traces that may
--- push stack words, remove them through stack-summary traces, and then
--- continue with empty stack.
 def EmptySummaryPDAComputesIn (M : PDA input stack state)
     (n : Nat) (p : state) (sourceInput : Word input)
     (q : state) (targetInput : Word input) : Prop :=
   PDA.EmptySummaryComputesIn M n p sourceInput q targetInput
 
--- Book: Chapter 4, Section 4.4, unindexed empty-summary trace vocabulary for
--- ordinary finite computations after the length has been hidden.
 def EmptySummaryPDAComputes (M : PDA input stack state)
     (p : state) (sourceInput : Word input)
     (q : state) (targetInput : Word input) : Prop :=
   PDA.EmptySummaryComputes M p sourceInput q targetInput
 
--- Book: Chapter 4, Section 4.4, a pushed stack segment followed by the
--- remaining empty-stack computation.  This packages the first-return
--- decomposition needed after an empty-stack PDA transition pushes symbols.
 def StackThenEmptySummaryPDAComputesIn (M : PDA input stack state)
     (n : Nat) (p : state) (stackWord : Word stack)
     (sourceInput : Word input) (q : state)
@@ -1067,59 +914,38 @@ def StackThenEmptySummaryPDAComputesIn (M : PDA input stack state)
   PDA.StackThenEmptySummaryComputesIn M n p stackWord sourceInput
     q targetInput
 
--- Book: Chapter 4, Section 4.4, unindexed version of the stack-then-empty
--- trace package.
 def StackThenEmptySummaryPDAComputes (M : PDA input stack state)
     (p : state) (stackWord : Word stack) (sourceInput : Word input)
     (q : state) (targetInput : Word input) : Prop :=
   PDA.StackThenEmptySummaryComputes M p stackWord sourceInput
     q targetInput
 
--- Book: Chapter 4, Section 4.4, the remaining reverse-direction decomposition
--- target for the PDA-to-CFG exactness theorem: every empty-stack computation is
--- represented by a grammar-aligned empty-summary trace.
 def EmptySummaryPDAComplete (M : PDA input stack state) : Prop :=
   PDA.EmptySummaryComplete M
 
--- Book: Chapter 4, Section 4.4, bounded version of the empty-summary
--- completeness target, useful for incremental reverse-direction theorems.
 def EmptySummaryPDACompleteUpTo (M : PDA input stack state)
     (bound : Nat) : Prop :=
   PDA.EmptySummaryCompleteUpTo M bound
 
--- Book: Chapter 4, Section 4.4, ordinary-computation version of the remaining
--- reverse-direction decomposition target.  The indexed target implies this by
--- extracting a computation length.
 def EmptySummaryPDACompleteForComputes
     (M : PDA input stack state) : Prop :=
   PDA.EmptySummaryCompleteForComputes M
 
--- Book: Chapter 4, Section 4.4, sharper remainder-completeness target: every
--- computation from an explicit pushed stack word to empty stack decomposes as
--- a stack-summary trace followed by an empty-summary trace.
 def StackThenEmptySummaryPDAComplete
     (M : PDA input stack state) : Prop :=
   PDA.StackThenEmptySummaryComplete M
 
--- Book: Chapter 4, Section 4.4, ordinary-computation version of the
--- stack-then-empty remainder-completeness target.
 def StackThenEmptySummaryPDACompleteForComputes
     (M : PDA input stack state) : Prop :=
   PDA.StackThenEmptySummaryCompleteForComputes M
 
--- Book: Chapter 4, Section 4.4, top-pop normal-form version of the
--- empty-summary completeness target.
 def TopPopEmptySummaryPDAComplete (M : PDA input stack state) : Prop :=
   PDA.TopPopEmptySummaryComplete M
 
--- Book: Chapter 4, Section 4.4, top-pop normal-form version of the
--- stack-then-empty remainder-completeness target.
 def TopPopStackThenEmptySummaryPDAComplete
     (M : PDA input stack state) : Prop :=
   PDA.TopPopStackThenEmptySummaryComplete M
 
--- Book: Chapter 4, Section 4.4, a stack-summary trace is a bounded PDA
--- computation that removes the explicit stack prefix and preserves any tail.
 theorem pda_stack_summary_trace_is_bounded_computation
     {M : PDA input stack state}
     {n : Nat} {p q : state} {stackWord : Word stack}
@@ -1132,8 +958,6 @@ theorem pda_stack_summary_trace_is_bounded_computation
       { state := q, unread := targetInput, stack := tail } :=
   PDA.stackSummaryComputesIn_computesIn h tail
 
--- Book: Chapter 4, Section 4.4, a stack-summary trace is an ordinary PDA
--- computation that removes the explicit stack prefix and preserves any tail.
 theorem pda_stack_summary_trace_is_computation
     {M : PDA input stack state}
     {n : Nat} {p q : state} {stackWord : Word stack}
@@ -1146,9 +970,6 @@ theorem pda_stack_summary_trace_is_computation
       { state := q, unread := targetInput, stack := tail } :=
   PDA.stackSummaryComputesIn_computes h tail
 
--- Book: Chapter 4, Section 4.4, an unindexed stack-summary trace is an
--- ordinary PDA computation that removes the explicit stack prefix and
--- preserves any tail.
 theorem pda_stack_summary_trace_is_computation_unindexed
     {M : PDA input stack state}
     {p q : state} {stackWord : Word stack}
@@ -1161,8 +982,6 @@ theorem pda_stack_summary_trace_is_computation_unindexed
       { state := q, unread := targetInput, stack := tail } :=
   PDA.stackSummaryComputes_computes h tail
 
--- Book: Chapter 4, Section 4.4, an empty-summary trace is a bounded PDA
--- computation with empty stack at both endpoints.
 theorem pda_empty_summary_trace_is_bounded_computation
     {M : PDA input stack state}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -1172,8 +991,6 @@ theorem pda_empty_summary_trace_is_bounded_computation
       { state := q, unread := targetInput, stack := [] } :=
   PDA.emptySummaryComputesIn_computesIn h
 
--- Book: Chapter 4, Section 4.4, an empty-summary trace preserves an arbitrary
--- stack tail, not just the empty stack.
 theorem pda_empty_summary_trace_is_bounded_computation_with_tail
     {M : PDA input stack state}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -1184,8 +1001,6 @@ theorem pda_empty_summary_trace_is_bounded_computation_with_tail
       { state := q, unread := targetInput, stack := tail } :=
   PDA.emptySummaryComputesIn_computesIn_tail h tail
 
--- Book: Chapter 4, Section 4.4, an empty-summary trace is an ordinary PDA
--- computation with empty stack at both endpoints.
 theorem pda_empty_summary_trace_is_computation
     {M : PDA input stack state}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -1195,8 +1010,6 @@ theorem pda_empty_summary_trace_is_computation
       { state := q, unread := targetInput, stack := [] } :=
   PDA.emptySummaryComputesIn_computes h
 
--- Book: Chapter 4, Section 4.4, an empty-summary trace is an ordinary PDA
--- computation preserving any stack tail.
 theorem pda_empty_summary_trace_is_computation_with_tail
     {M : PDA input stack state}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -1207,8 +1020,6 @@ theorem pda_empty_summary_trace_is_computation_with_tail
       { state := q, unread := targetInput, stack := tail } :=
   PDA.emptySummaryComputesIn_computes_tail h tail
 
--- Book: Chapter 4, Section 4.4, an unindexed empty-summary trace is an
--- ordinary PDA computation with empty stack at both endpoints.
 theorem pda_empty_summary_trace_is_computation_unindexed
     {M : PDA input stack state}
     {p q : state} {sourceInput targetInput : Word input}
@@ -1218,8 +1029,6 @@ theorem pda_empty_summary_trace_is_computation_unindexed
       { state := q, unread := targetInput, stack := [] } :=
   PDA.emptySummaryComputes_computes h
 
--- Book: Chapter 4, Section 4.4, an unindexed empty-summary trace preserves
--- any stack tail as an ordinary PDA computation.
 theorem pda_empty_summary_trace_is_computation_unindexed_with_tail
     {M : PDA input stack state}
     {p q : state} {sourceInput targetInput : Word input}
@@ -1230,8 +1039,6 @@ theorem pda_empty_summary_trace_is_computation_unindexed_with_tail
       { state := q, unread := targetInput, stack := tail } :=
   PDA.emptySummaryComputes_computes_tail h tail
 
--- Book: Chapter 4, Section 4.4, a stack-then-empty trace is a bounded PDA
--- computation that removes the explicit stack word and preserves any tail.
 theorem pda_stack_then_empty_summary_trace_is_bounded_computation_with_tail
     {M : PDA input stack state}
     {n : Nat} {p q : state} {stackWord : Word stack}
@@ -1245,8 +1052,6 @@ theorem pda_stack_then_empty_summary_trace_is_bounded_computation_with_tail
       { state := q, unread := targetInput, stack := tail } :=
   PDA.stackThenEmptySummaryComputesIn_computesIn_tail h tail
 
--- Book: Chapter 4, Section 4.4, unindexed stack-then-empty traces are
--- ordinary PDA computations preserving an arbitrary tail.
 theorem pda_stack_then_empty_summary_trace_is_computation_with_tail
     {M : PDA input stack state}
     {p q : state} {stackWord : Word stack}
@@ -1260,8 +1065,6 @@ theorem pda_stack_then_empty_summary_trace_is_computation_with_tail
       { state := q, unread := targetInput, stack := tail } :=
   PDA.stackThenEmptySummaryComputes_computes_tail h tail
 
--- Book: Chapter 4, Section 4.4, hide the explicit length of a stack-summary
--- trace.
 theorem pda_stack_summary_trace_unindexed_of_indexed
     {M : PDA input stack state}
     {n : Nat} {p q : state} {stackWord : Word stack}
@@ -1270,8 +1073,6 @@ theorem pda_stack_summary_trace_unindexed_of_indexed
     StackSummaryPDAComputes M p stackWord sourceInput q targetInput :=
   PDA.stackSummaryComputes_of_stackSummaryComputesIn h
 
--- Book: Chapter 4, Section 4.4, hide the explicit length of an empty-summary
--- trace.
 theorem pda_empty_summary_trace_unindexed_of_indexed
     {M : PDA input stack state}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -1279,8 +1080,6 @@ theorem pda_empty_summary_trace_unindexed_of_indexed
     EmptySummaryPDAComputes M p sourceInput q targetInput :=
   PDA.emptySummaryComputes_of_emptySummaryComputesIn h
 
--- Book: Chapter 4, Section 4.4, package a stack-summary trace followed by an
--- empty-summary trace as the pushed-remainder decomposition.
 theorem pda_stack_then_empty_summary_trace_of_stack_and_empty
     {M : PDA input stack state}
     {m n : Nat} {p r q : state} {stackWord : Word stack}
@@ -1292,8 +1091,6 @@ theorem pda_stack_then_empty_summary_trace_of_stack_and_empty
       sourceInput q targetInput :=
   PDA.stackThenEmptySummaryComputesIn_of_stack_and_empty hstack hempty
 
--- Book: Chapter 4, Section 4.4, empty-summary traces are stack-then-empty
--- traces with an empty explicit stack word.
 theorem pda_stack_then_empty_summary_trace_of_empty
     {M : PDA input stack state}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -1302,8 +1099,6 @@ theorem pda_stack_then_empty_summary_trace_of_empty
       sourceInput q targetInput :=
   PDA.stackThenEmptySummaryComputesIn_of_empty hempty
 
--- Book: Chapter 4, Section 4.4, an empty explicit stack word in a
--- stack-then-empty trace recovers an empty-summary trace.
 theorem pda_empty_summary_trace_of_stack_then_empty_empty_stack
     {M : PDA input stack state}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -1312,9 +1107,6 @@ theorem pda_empty_summary_trace_of_stack_then_empty_empty_stack
     EmptySummaryPDAComputesIn M n p sourceInput q targetInput :=
   PDA.emptySummaryComputesIn_of_stackThenEmptySummaryComputesIn_nil h
 
--- Book: Chapter 4, Section 4.4, arbitrary top-pop computations from an
--- explicit stack word to empty stack decompose into a stack-then-empty
--- pushed-remainder trace.
 theorem pda_stack_then_empty_summary_trace_of_computes_in_top_pop
     {M : PDA input stack state}
     {n : Nat} {p q : state} {stackWord : Word stack}
@@ -1328,8 +1120,6 @@ theorem pda_stack_then_empty_summary_trace_of_computes_in_top_pop
   PDA.stackThenEmptySummaryComputesIn_of_computesIn_topPop
     hnorm hcomp
 
--- Book: Chapter 4, Section 4.4, an empty-stack trace is a special case of
--- the grammar-aligned empty-summary trace relation.
 theorem pda_empty_summary_trace_of_empty_stack_trace
     {M : PDA input stack state}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -1337,8 +1127,6 @@ theorem pda_empty_summary_trace_of_empty_stack_trace
     EmptySummaryPDAComputesIn M n p sourceInput q targetInput :=
   PDA.emptySummaryComputesIn_of_emptyStackComputesIn h
 
--- Book: Chapter 4, Section 4.4, a single PDA step from empty stack to empty
--- stack gives a grammar-aligned empty-summary trace.
 theorem pda_empty_summary_trace_of_step_empty_stack
     {M : PDA input stack state}
     {p q : state} {sourceInput targetInput : Word input}
@@ -1348,8 +1136,6 @@ theorem pda_empty_summary_trace_of_step_empty_stack
     EmptySummaryPDAComputesIn M 1 p sourceInput q targetInput :=
   PDA.emptySummaryComputesIn_of_step_emptyStack hstep
 
--- Book: Chapter 4, Section 4.4, a zero-step empty-stack computation gives a
--- grammar-aligned empty-summary trace.
 theorem pda_empty_summary_trace_of_computes_in_zero_empty_stack
     {M : PDA input stack state}
     {p q : state} {sourceInput targetInput : Word input}
@@ -1359,8 +1145,6 @@ theorem pda_empty_summary_trace_of_computes_in_zero_empty_stack
     EmptySummaryPDAComputesIn M 0 p sourceInput q targetInput :=
   PDA.emptySummaryComputesIn_of_computesIn_zero_emptyStack hcomp
 
--- Book: Chapter 4, Section 4.4, a one-step empty-stack computation gives a
--- grammar-aligned empty-summary trace.
 theorem pda_empty_summary_trace_of_computes_in_one_empty_stack
     {M : PDA input stack state}
     {p q : state} {sourceInput targetInput : Word input}
@@ -1370,8 +1154,6 @@ theorem pda_empty_summary_trace_of_computes_in_one_empty_stack
     EmptySummaryPDAComputesIn M 1 p sourceInput q targetInput :=
   PDA.emptySummaryComputesIn_of_computesIn_one_emptyStack hcomp
 
--- Book: Chapter 4, Section 4.4, a single top-pop PDA step gives a
--- grammar-aligned stack-summary trace for the removed top symbol.
 theorem pda_stack_summary_trace_of_step_top_pop
     {M : PDA input stack state}
     {p q : state} {A : stack}
@@ -1383,8 +1165,6 @@ theorem pda_stack_summary_trace_of_step_top_pop
     StackSummaryPDAComputesIn M 1 p [A] sourceInput q targetInput :=
   PDA.stackSummaryComputesIn_of_step_topPop hnorm hstep
 
--- Book: Chapter 4, Section 4.4, a one-step top-pop computation gives a
--- grammar-aligned stack-summary trace for the removed top symbol.
 theorem pda_stack_summary_trace_of_computes_in_one_top_pop
     {M : PDA input stack state}
     {p q : state} {A : stack}
@@ -1396,9 +1176,6 @@ theorem pda_stack_summary_trace_of_computes_in_one_top_pop
     StackSummaryPDAComputesIn M 1 p [A] sourceInput q targetInput :=
   PDA.stackSummaryComputesIn_of_computesIn_one_topPop hnorm hcomp
 
--- Book: Chapter 4, Section 4.4, any two-step empty-stack computation of a
--- top-pop PDA decomposes into the grammar-aligned empty-summary trace
--- relation.
 theorem pda_empty_summary_trace_of_computes_in_two_empty_stack
     {M : PDA input stack state}
     {p q : state} {sourceInput targetInput : Word input}
@@ -1409,9 +1186,6 @@ theorem pda_empty_summary_trace_of_computes_in_two_empty_stack
     EmptySummaryPDAComputesIn M 2 p sourceInput q targetInput :=
   PDA.emptySummaryComputesIn_of_computesIn_two_emptyStack hnorm hcomp
 
--- Book: Chapter 4, Section 4.4, any zero-, one-, or two-step empty-stack
--- computation of a top-pop PDA decomposes into the grammar-aligned
--- empty-summary trace relation.
 theorem pda_empty_summary_trace_of_computes_in_at_most_two_empty_stack
     {M : PDA input stack state}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -1424,8 +1198,6 @@ theorem pda_empty_summary_trace_of_computes_in_at_most_two_empty_stack
   PDA.emptySummaryComputesIn_of_computesIn_atMostTwo_emptyStack
     hnorm hn hcomp
 
--- Book: Chapter 4, Section 4.4, stack-summary traces give decomposed
--- `ToCFGChainDerives` witnesses for the removed stack word.
 theorem pda_to_cfg_chain_derives_of_stack_summary_trace
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1437,8 +1209,6 @@ theorem pda_to_cfg_chain_derives_of_stack_summary_trace
         PDA.ToCFGChainDerives M presentation p stackWord q consumed :=
   PDA.toCFGChainDerives_of_stackSummaryComputesIn h
 
--- Book: Chapter 4, Section 4.4, unindexed stack-summary traces give
--- decomposed `ToCFGChainDerives` witnesses for the removed stack word.
 theorem pda_to_cfg_chain_derives_of_stack_summary_trace_unindexed
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1450,8 +1220,6 @@ theorem pda_to_cfg_chain_derives_of_stack_summary_trace_unindexed
         PDA.ToCFGChainDerives M presentation p stackWord q consumed :=
   PDA.toCFGChainDerives_of_stackSummaryComputes h
 
--- Book: Chapter 4, Section 4.4, empty-summary traces give `empty p q`
--- PDA-to-CFG derivations of the consumed input segment.
 theorem pda_to_cfg_empty_derives_of_empty_summary_trace
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1464,8 +1232,6 @@ theorem pda_to_cfg_empty_derives_of_empty_summary_trace
           (SententialForm.terminalWord consumed) :=
   PDA.toCFG_emptyDerives_of_emptySummaryComputesIn h
 
--- Book: Chapter 4, Section 4.4, unindexed empty-summary traces give
--- `empty p q` PDA-to-CFG derivations of the consumed input segment.
 theorem pda_to_cfg_empty_derives_of_empty_summary_trace_unindexed
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1478,9 +1244,6 @@ theorem pda_to_cfg_empty_derives_of_empty_summary_trace_unindexed
           (SententialForm.terminalWord consumed) :=
   PDA.toCFG_emptyDerives_of_emptySummaryComputes h
 
--- Book: Chapter 4, Section 4.4, a read empty-stack transition followed by a
--- stack-then-empty pushed-remainder trace derives the corresponding
--- `empty p q` nonterminal.
 theorem pda_to_cfg_empty_derives_of_read_stack_then_empty_summary
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1498,9 +1261,6 @@ theorem pda_to_cfg_empty_derives_of_read_stack_then_empty_summary
   PDA.toCFG_emptyDerives_of_read_stackThenEmptySummary
     htransition hrest
 
--- Book: Chapter 4, Section 4.4, an epsilon empty-stack transition followed
--- by a stack-then-empty pushed-remainder trace derives the corresponding
--- `empty p q` nonterminal.
 theorem pda_to_cfg_empty_derives_of_epsilon_stack_then_empty_summary
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1518,9 +1278,6 @@ theorem pda_to_cfg_empty_derives_of_epsilon_stack_then_empty_summary
   PDA.toCFG_emptyDerives_of_epsilon_stackThenEmptySummary
     htransition hrest
 
--- Book: Chapter 4, Section 4.4, the zero-, one-, and two-step empty-stack
--- derivation theorem can be routed through the grammar-aligned summary trace
--- decomposition.
 theorem pda_to_cfg_empty_derives_of_computes_in_at_most_two_via_summary
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1538,8 +1295,6 @@ theorem pda_to_cfg_empty_derives_of_computes_in_at_most_two_via_summary
   PDA.toCFG_emptyDerives_of_computesIn_atMostTwo_emptyStack_viaSummary
     hnorm hn hcomp
 
--- Book: Chapter 4, Section 4.4, accepting empty-summary traces are generated
--- by the PDA-to-CFG construction.
 theorem pda_to_cfg_generates_of_empty_summary_accepts_in
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1549,8 +1304,6 @@ theorem pda_to_cfg_generates_of_empty_summary_accepts_in
     w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
   PDA.toCFG_generates_of_emptySummaryAcceptsIn haccept hcomp
 
--- Book: Chapter 4, Section 4.4, accepting unindexed empty-summary traces are
--- generated by the PDA-to-CFG construction.
 theorem pda_to_cfg_generates_of_empty_summary_accepts
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1560,26 +1313,18 @@ theorem pda_to_cfg_generates_of_empty_summary_accepts
     w ∈ CFG.GeneratedLanguage (PDAToCFG M presentation) :=
   PDA.toCFG_generates_of_emptySummaryAccepts haccept hcomp
 
--- Book: Chapter 4, Section 4.4, indexed empty-summary completeness implies
--- the ordinary-computation completeness target.
 theorem pda_empty_summary_complete_for_computes_of_empty_summary_complete
     {M : PDA input stack state}
     (hcomplete : EmptySummaryPDAComplete M) :
     EmptySummaryPDACompleteForComputes M :=
   PDA.emptySummaryCompleteForComputes_of_emptySummaryComplete hcomplete
 
--- Book: Chapter 4, Section 4.4, indexed stack-then-empty remainder
--- completeness implies the original empty-summary completeness target.
 theorem pda_empty_summary_complete_of_stack_then_empty_summary_complete
     {M : PDA input stack state}
     (hcomplete : StackThenEmptySummaryPDAComplete M) :
     EmptySummaryPDAComplete M :=
   PDA.emptySummaryComplete_of_stackThenEmptySummaryComplete hcomplete
 
--- Book: Chapter 4, Section 4.4, first-step bridge for the reverse
--- PDA-to-CFG proof: once the computation after the first empty-stack step is
--- decomposed as a stack-then-empty remainder, the whole nonzero computation is
--- an empty-summary trace.
 theorem pda_empty_summary_trace_of_step_empty_stack_and_stack_then_empty_complete
     {M : PDA input stack state}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -1593,8 +1338,6 @@ theorem pda_empty_summary_trace_of_step_empty_stack_and_stack_then_empty_complet
   PDA.emptySummaryComputesIn_of_step_emptyStack_of_stackThenEmptySummaryComplete
     hcomplete hstep hrest
 
--- Book: Chapter 4, Section 4.4, the first-step bridge also yields the
--- original indexed empty-summary completeness target.
 theorem pda_empty_summary_complete_of_stack_then_empty_summary_complete_by_first_step
     {M : PDA input stack state}
     (hcomplete : StackThenEmptySummaryPDAComplete M) :
@@ -1602,16 +1345,12 @@ theorem pda_empty_summary_complete_of_stack_then_empty_summary_complete_by_first
   PDA.emptySummaryComplete_of_stackThenEmptySummaryComplete_by_first_step
     hcomplete
 
--- Book: Chapter 4, Section 4.4, indexed stack-then-empty remainder
--- completeness implies its ordinary-computation variant.
 theorem pda_stack_then_empty_summary_complete_for_computes_of_complete
     {M : PDA input stack state}
     (hcomplete : StackThenEmptySummaryPDAComplete M) :
     StackThenEmptySummaryPDACompleteForComputes M :=
   PDA.stackThenEmptySummaryCompleteForComputes_of_complete hcomplete
 
--- Book: Chapter 4, Section 4.4, ordinary stack-then-empty remainder
--- completeness implies the ordinary empty-summary completeness target.
 theorem pda_empty_summary_complete_for_computes_of_stack_then_empty_summary_complete_for_computes
     {M : PDA input stack state}
     (hcomplete : StackThenEmptySummaryPDACompleteForComputes M) :
@@ -1619,47 +1358,34 @@ theorem pda_empty_summary_complete_for_computes_of_stack_then_empty_summary_comp
   PDA.emptySummaryCompleteForComputes_of_stackThenEmptySummaryCompleteForComputes
     hcomplete
 
--- Book: Chapter 4, Section 4.4, top-pop PDAs satisfy the stack-then-empty
--- pushed-remainder completeness target.
 theorem pda_stack_then_empty_summary_complete_of_top_pop
     {M : PDA input stack state}
     (hnorm : PDA.PopsAtMostOne M) :
     StackThenEmptySummaryPDAComplete M :=
   PDA.stackThenEmptySummaryComplete_of_topPop hnorm
 
--- Book: Chapter 4, Section 4.4, top-pop PDAs satisfy the packaged
--- stack-then-empty completeness predicate.
 theorem pda_top_pop_stack_then_empty_summary_complete
     (M : PDA input stack state) :
     TopPopStackThenEmptySummaryPDAComplete M :=
   PDA.topPopStackThenEmptySummaryComplete M
 
--- Book: Chapter 4, Section 4.4, top-pop PDAs satisfy the original
--- empty-summary completeness target.
 theorem pda_empty_summary_complete_of_top_pop
     {M : PDA input stack state}
     (hnorm : PDA.PopsAtMostOne M) :
     EmptySummaryPDAComplete M :=
   PDA.emptySummaryComplete_of_topPop hnorm
 
--- Book: Chapter 4, Section 4.4, top-pop PDAs satisfy the packaged
--- empty-summary completeness predicate.
 theorem pda_top_pop_empty_summary_complete
     (M : PDA input stack state) :
     TopPopEmptySummaryPDAComplete M :=
   PDA.topPopEmptySummaryComplete M
 
--- Book: Chapter 4, Section 4.4, top-pop PDAs have empty-summary completeness
--- through the currently formalized two-step bound.
 theorem pda_empty_summary_complete_up_to_two_of_top_pop
     {M : PDA input stack state}
     (hnorm : PDA.PopsAtMostOne M) :
     EmptySummaryPDACompleteUpTo M 2 :=
   PDA.emptySummaryCompleteUpTo_two_of_topPop hnorm
 
--- Book: Chapter 4, Section 4.4, once an accepting bounded computation has a
--- grammar-aligned empty-summary decomposition, it is generated by the
--- PDA-to-CFG construction.
 theorem pda_to_cfg_generates_of_accepts_in_of_empty_summary_complete
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1672,8 +1398,6 @@ theorem pda_to_cfg_generates_of_accepts_in_of_empty_summary_complete
   PDA.toCFG_generates_of_acceptsIn_of_emptySummaryComplete
     hcomplete haccept hcomp
 
--- Book: Chapter 4, Section 4.4, bounded variant of the accepted-to-generated
--- theorem for the PDA-to-CFG construction.
 theorem pda_to_cfg_generates_of_accepts_in_of_empty_summary_complete_up_to
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1687,8 +1411,6 @@ theorem pda_to_cfg_generates_of_accepts_in_of_empty_summary_complete_up_to
   PDA.toCFG_generates_of_acceptsIn_of_emptySummaryCompleteUpTo
     hcomplete hn haccept hcomp
 
--- Book: Chapter 4, Section 4.4, the reverse language direction follows from
--- the empty-summary completeness target.
 theorem pda_to_cfg_generates_of_accepts_of_empty_summary_complete
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1699,8 +1421,6 @@ theorem pda_to_cfg_generates_of_accepts_of_empty_summary_complete
   PDA.toCFG_generates_of_accepts_of_emptySummaryComplete
     hcomplete haccepts
 
--- Book: Chapter 4, Section 4.4, ordinary-computation variant of the reverse
--- language direction.
 theorem pda_to_cfg_generates_of_accepts_of_empty_summary_complete_for_computes
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1711,8 +1431,6 @@ theorem pda_to_cfg_generates_of_accepts_of_empty_summary_complete_for_computes
   PDA.toCFG_generates_of_accepts_of_emptySummaryCompleteForComputes
     hcomplete haccepts
 
--- Book: Chapter 4, Section 4.4, the PDA-to-CFG construction is language-exact
--- under the empty-summary completeness target.
 theorem pda_to_cfg_language_exact_of_empty_summary_complete
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1721,8 +1439,6 @@ theorem pda_to_cfg_language_exact_of_empty_summary_complete
       (PDA.AcceptedLanguage M) :=
   PDA.toCFG_language_exact_of_emptySummaryComplete hcomplete
 
--- Book: Chapter 4, Section 4.4, ordinary-computation variant of the
--- conditional PDA-to-CFG language exactness theorem.
 theorem pda_to_cfg_language_exact_of_empty_summary_complete_for_computes
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1731,8 +1447,6 @@ theorem pda_to_cfg_language_exact_of_empty_summary_complete_for_computes
       (PDA.AcceptedLanguage M) :=
   PDA.toCFG_language_exact_of_emptySummaryCompleteForComputes hcomplete
 
--- Book: Chapter 4, Section 4.4, the PDA-to-CFG construction is language-exact
--- under the sharper stack-then-empty remainder-completeness target.
 theorem pda_to_cfg_language_exact_of_stack_then_empty_summary_complete
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1741,8 +1455,6 @@ theorem pda_to_cfg_language_exact_of_stack_then_empty_summary_complete
       (PDA.AcceptedLanguage M) :=
   PDA.toCFG_language_exact_of_stackThenEmptySummaryComplete hcomplete
 
--- Book: Chapter 4, Section 4.4, ordinary-computation variant of the
--- stack-then-empty conditional PDA-to-CFG language exactness theorem.
 theorem pda_to_cfg_language_exact_of_stack_then_empty_summary_complete_for_computes
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1752,8 +1464,6 @@ theorem pda_to_cfg_language_exact_of_stack_then_empty_summary_complete_for_compu
   PDA.toCFG_language_exact_of_stackThenEmptySummaryCompleteForComputes
     hcomplete
 
--- Book: Chapter 4, Section 4.4, top-pop normal-form PDAs are exactly
--- represented by the PDA-to-CFG construction.
 theorem pda_to_cfg_language_exact_of_top_pop
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1762,8 +1472,6 @@ theorem pda_to_cfg_language_exact_of_top_pop
       (PDA.AcceptedLanguage M) :=
   PDA.toCFG_language_exact_of_topPop hnorm
 
--- Book: Chapter 4, Section 4.4, the PDA-to-CFG construction is exact for the
--- pop-normalized PDA because the normalized machine is top-pop.
 theorem pda_to_cfg_normalized_language_exact
     (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) :
@@ -1772,8 +1480,6 @@ theorem pda_to_cfg_normalized_language_exact
       (PDA.AcceptedLanguage (PDAPopNormalize M presentation)) :=
   PDA.toCFGNormalized_language_exact M presentation
 
--- Book: Chapter 4, Section 4.4, accepted words of the original finite PDA are
--- generated by the CFG obtained from its pop-normalized PDA.
 theorem pda_to_cfg_normalized_generates_of_accepts
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1782,9 +1488,6 @@ theorem pda_to_cfg_normalized_generates_of_accepts
     w ∈ CFG.GeneratedLanguage (PDAToCFGNormalized M presentation) :=
   PDA.toCFGNormalized_generates_of_accepts h
 
--- Book: Chapter 4, Section 4.4, one direction of arbitrary finite-presented
--- PDA-to-CFG exactness: the original PDA language is included in the generated
--- language of the normalized construction.
 theorem pda_accepted_language_subset_to_cfg_normalized
     {M : PDA input stack state}
     (presentation : PDA.FinitePresentation M) :
@@ -1792,8 +1495,6 @@ theorem pda_accepted_language_subset_to_cfg_normalized
       (CFG.GeneratedLanguage (PDAToCFGNormalized M presentation)) :=
   PDA.acceptedLanguage_subset_toCFGNormalized presentation
 
--- Book: Chapter 4, Section 4.4, arbitrary finite-presented PDA exactness now
--- reduces to the language-equivalence proof for the pop-normalization bridge.
 theorem pda_to_cfg_normalized_language_exact_of_pop_normalize_language_exact
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1803,8 +1504,6 @@ theorem pda_to_cfg_normalized_language_exact_of_pop_normalize_language_exact
       (PDA.AcceptedLanguage M) :=
   PDA.toCFGNormalized_language_exact_of_popNormalizeLanguageExact hexact
 
--- Book: Chapter 4, Section 4.4, arbitrary finite-presented PDAs are exactly
--- represented by the CFG built from their pop-normalized PDA.
 theorem pda_to_cfg_normalized_language_exact_original
     (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) :
@@ -1813,8 +1512,6 @@ theorem pda_to_cfg_normalized_language_exact_original
       (PDA.AcceptedLanguage M) :=
   PDA.toCFGNormalized_language_exact_original M presentation
 
--- Book: Chapter 4, Section 4.4, the current top-pop exactness target follows
--- once arbitrary empty-stack computations decompose into empty-summary traces.
 theorem pda_to_cfg_top_pop_exact_of_empty_summary_complete
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1822,8 +1519,6 @@ theorem pda_to_cfg_top_pop_exact_of_empty_summary_complete
     PDAToCFGExact M presentation :=
   PDA.toCFG_topPopExact_of_emptySummaryComplete hcomplete
 
--- Book: Chapter 4, Section 4.4, top-pop exactness follows from the sharper
--- stack-then-empty first-return/remainder completeness target.
 theorem pda_to_cfg_top_pop_exact_of_stack_then_empty_summary_complete
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1831,17 +1526,12 @@ theorem pda_to_cfg_top_pop_exact_of_stack_then_empty_summary_complete
     PDAToCFGExact M presentation :=
   PDA.toCFG_topPopExact_of_stackThenEmptySummaryComplete hcomplete
 
--- Book: Chapter 4, Section 4.4, unconditional top-pop exactness for the
--- PDA-to-CFG construction.
 theorem pda_to_cfg_top_pop_exact
     (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) :
     PDAToCFGExact M presentation :=
   PDA.toCFG_topPopExact M presentation
 
--- Book: Chapter 4, Section 4.4, a finite-presented PDA whose empty-stack
--- computations have grammar-aligned summary decompositions recognizes a
--- book-facing finite-production context-free language.
 theorem finite_presentation_pda_context_free_of_empty_summary_complete
     {input stack state : Type}
     {M : PDA input stack state}
@@ -1855,9 +1545,6 @@ theorem finite_presentation_pda_context_free_of_empty_summary_complete
   · exact pda_to_cfg_language_exact_of_empty_summary_complete
       (M := M) (presentation := presentation) hcomplete
 
--- Book: Chapter 4, Section 4.4, finite-presented top-pop PDAs recognize
--- book-facing finite-production context-free languages by the PDA-to-CFG
--- construction.
 theorem finite_presentation_top_pop_pda_context_free
     {input stack state : Type}
     {M : PDA input stack state}
@@ -1871,10 +1558,6 @@ theorem finite_presentation_top_pop_pda_context_free
   · exact pda_to_cfg_language_exact_of_top_pop
       (M := M) (presentation := presentation) hnorm
 
--- Book: Chapter 4, Section 4.4, after pop-normalization is shown
--- language-exact, every finite-presented PDA recognizes a book-facing
--- finite-production context-free language via the normalized PDA-to-CFG
--- construction.
 theorem finite_presentation_pda_context_free_of_pop_normalize_language_exact
     {input stack state : Type}
     {M : PDA input stack state}
@@ -1890,8 +1573,6 @@ theorem finite_presentation_pda_context_free_of_pop_normalize_language_exact
       pda_to_cfg_normalized_language_exact_of_pop_normalize_language_exact
         (M := M) (presentation := presentation) hexact
 
--- Book: Chapter 4, Section 4.4, every finite-presented PDA recognizes a
--- book-facing finite-production context-free language.
 theorem finite_presentation_pda_context_free
     {input stack state : Type}
     {M : PDA input stack state}
@@ -2033,7 +1714,6 @@ theorem anbnPDA_finish :
       (restStack := ([] : Word AnBnPDAStack))
       AnBnPDATransition.finish)
 
--- Book: Chapter 4, Section 4.4, the concrete PDA accepts `a^n b^n`.
 theorem anbnPDA_accepts_anbn_words (n : Nat) :
     PDA.Accepts AnBnPDA (Section01.AnBnWord n) := by
   exists AnBnPDAState.accept
@@ -2183,7 +1863,6 @@ theorem anbnPDA_push_accepts_only
           (Word.RepeatSymbol Section01.AB.b (Word.Length stack + n)) :=
   anbnPDA_push_accepts_only_config h rfl rfl
 
--- Book: Chapter 4, Section 4.4, the concrete PDA accepts only `a^n b^n`.
 theorem anbnPDA_accepts_only_anbn_words {w : Word Section01.AB}
     (h : PDA.Accepts AnBnPDA w) :
     exists n, w = Section01.AnBnWord n := by
@@ -2197,7 +1876,6 @@ theorem anbnPDA_accepts_only_anbn_words {w : Word Section01.AB}
           simpa [Section01.AnBnWord, Word.Length, Word.Concat,
             Word.RepeatSymbol] using hn
 
--- Book: Chapter 4, Section 4.4, exact language of the concrete PDA.
 theorem anbnPDA_accepted_language_exact (w : Word Section01.AB) :
     w ∈ PDA.AcceptedLanguage AnBnPDA <->
       exists n, w = Section01.AnBnWord n := by
@@ -2358,7 +2036,6 @@ theorem range12PDA_pop_bs (m : Nat) (rest : Word Section01.AB)
           Range12PDATransition.popB
       exact PDA.Computes.step hstep (ih stack)
 
--- Book: Chapter 4, Section 4.4, a PDA for `{a^n b^m | n <= m <= 2*n}`.
 theorem range12PDA_accepts_range_words {n m : Nat}
     (hLower : n <= m) (hUpper : m <= 2 * n) :
     PDA.Accepts Range12PDA (AnBmWord n m) := by
@@ -2500,7 +2177,6 @@ theorem range12PDA_accepts_only_range_words {w : Word Section01.AB}
               · simpa [PDA.initial, AnBmWord, Word.Length, Word.Concat]
                   using hk.right.right
 
--- Book: Chapter 4, Section 4.4, exact accepted language of the range PDA.
 theorem range12PDA_accepted_language_exact (w : Word Section01.AB) :
     w ∈ PDA.AcceptedLanguage Range12PDA <-> w ∈ Range12Language := by
   constructor
@@ -2560,8 +2236,6 @@ def HalfRangeLanguage : Language Section01.AB :=
 def halfRangeExampleWord : Word Section01.AB :=
   AnBmWord 3 2
 
--- Book: Chapter 4, Section 4.4, representative PDA computation for
--- `{a^n b^m | n/2 <= m <= n}`: `a^3 b^2`.
 theorem halfRangePDA_accepts_three_a_two_b :
     PDA.Accepts HalfRangePDA halfRangeExampleWord := by
   exists HalfRangePDAState.pop
@@ -2815,8 +2489,6 @@ theorem halfRangePDA_pop_bs (m : Nat) (rest : Word Section01.AB)
           HalfRangePDATransition.popB
       exact PDA.Computes.step hstep (ih stack)
 
--- Book: Chapter 4, Section 4.4, the half-range PDA accepts
--- `{a^n b^m | m <= n <= 2*m}`.
 theorem halfRangePDA_accepts_range_words {n m : Nat}
     (hLower : m <= n) (hUpper : n <= 2 * m) :
     PDA.Accepts HalfRangePDA (AnBmWord n m) := by
@@ -2987,7 +2659,6 @@ theorem halfRangePDA_accepts_only_range_words {w : Word Section01.AB}
                   HalfRangeLanguage, AnBmWord, Word.Length, Word.Concat]
                   using hm.right.right
 
--- Book: Chapter 4, Section 4.4, exact accepted language of the half-range PDA.
 theorem halfRangePDA_accepted_language_exact (w : Word Section01.AB) :
     w ∈ PDA.AcceptedLanguage HalfRangePDA <-> w ∈ HalfRangeLanguage := by
   constructor
@@ -3108,7 +2779,6 @@ theorem detAnBnPDA_pop_bs (n : Nat) (rest : Word Section01.AB)
           DetAnBnPDATransition.popB
       exact PDA.Computes.step hstep (ih stack)
 
--- Book: Chapter 4, Section 4.4, deterministic PDA variant for `a^n b^n`.
 theorem detAnBnPDA_accepts_anbn_words (n : Nat) :
     PDA.Accepts DetAnBnPDA (Section01.AnBnWord n) := by
   cases n with
@@ -3247,7 +2917,6 @@ theorem detAnBnPDA_accepts_only_anbn_words {w : Word Section01.AB}
               simpa [PDA.initial, DetAnBnPopFinalTail, Section01.AnBnWord,
                 Word.Length, Word.Concat] using hn
 
--- Book: Chapter 4, Section 4.4, exact language of the deterministic PDA.
 theorem detAnBnPDA_accepted_language_exact (w : Word Section01.AB) :
     w ∈ PDA.AcceptedLanguage DetAnBnPDA <->
       exists n, w = Section01.AnBnWord n := by
@@ -3407,7 +3076,6 @@ theorem copyPDA_pop_word (w : Word Section01.AB) (rest : Word CopyInput)
             (restStack := Word.Concat tail stack) CopyPDATransition.popB
         exact PDA.Computes.step hstep (ih stack)
 
--- Book: Chapter 4, Section 4.4, stack-copy PDA for `{w c w^R}`.
 theorem copyPDA_accepts_centered_reverse (w : Word Section01.AB) :
     PDA.Accepts CopyPDA (copyCenteredWord w) := by
   exists CopyPDAState.pop
@@ -3512,7 +3180,6 @@ theorem copyPDA_accepts_only_centered_reverse {input : Word CopyInput}
           simpa [PDA.initial, CopyAcceptedTail, CopyCenteredLanguage,
             copyCenteredWord, Word.Concat] using hw
 
--- Book: Chapter 4, Section 4.4, exact accepted language of the stack-copy PDA.
 theorem copyPDA_accepted_language_exact (input : Word CopyInput) :
     input ∈ PDA.AcceptedLanguage CopyPDA <->
       input ∈ CopyCenteredLanguage := by
