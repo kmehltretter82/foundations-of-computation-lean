@@ -1,6 +1,9 @@
+import FoC.Foundation
 import FoC.Foundation.Summation
 import FoC.Foundation.Primes
 import FoC.Foundation.Reals
+
+set_option doc.verso true
 
 namespace FoC
 namespace Book
@@ -8,10 +11,21 @@ namespace Chapter01
 namespace Section08
 
 /-!
-Book: Chapter 1, Section 1.8, Mathematical Induction.
+# Chapter 1, Section 1.8: Mathematical Induction
+
+This section records the induction principles and recursive numerical examples
+used in the book's introduction to mathematical induction. The first three
+theorems isolate ordinary induction from zero, induction beginning at an
+arbitrary lower bound, and strong induction.
+
+The later statements are the formal kernels behind the textbook examples:
+factorial and Fibonacci recursion, closed forms for finite sums, geometric
+series identities over the quotient rationals and embedded reals, the sum of
+odd numbers, and the existence of a product-of-primes factorization.
 -/
 
--- Book: Chapter 1, Section 1.8, Theorem 1.6
+/-- Ordinary induction from zero: a base case and successor step prove every
+instance of a predicate on natural numbers. -/
 theorem mathematical_induction (P : Nat -> Prop)
     (base : P 0)
     (step : forall k, P k -> P (k + 1)) :
@@ -22,7 +36,6 @@ theorem mathematical_induction (P : Nat -> Prop)
   | succ n ih =>
       exact step n ih
 
--- Book: Chapter 1, Section 1.8, extended induction from a starting point
 theorem induction_from (P : Nat -> Prop) (m : Nat)
     (base : P m)
     (step : forall k, m <= k -> P k -> P (k + 1)) :
@@ -40,18 +53,24 @@ theorem induction_from (P : Nat -> Prop) (m : Nat)
       rw [hd]
       exact hQ d
 
--- Book: Chapter 1, Section 1.8, second form of induction
 theorem strong_induction_book (P : Nat -> Prop)
     (step : forall n, (forall k, k < n -> P k) -> P n) :
     forall n, P n := by
   intro n
   exact Nat.strongRecOn (motive := P) n step
 
+/-!
+# Recursive Numerical Definitions
+
+The next definitions mirror the textbook's recursive definitions. In Lean, the
+equations for factorial and Fibonacci are definitional, so the successor
+theorems are proved by reflexivity.
+-/
+
 def factorial : Nat -> Nat
   | 0 => 1
   | n + 1 => factorial n * (n + 1)
 
--- Book: Chapter 1, Section 1.8, recursive factorial equation
 theorem factorial_succ (n : Nat) : factorial (n + 1) = factorial n * (n + 1) :=
   rfl
 
@@ -60,28 +79,30 @@ def fib : Nat -> Nat
   | 1 => 1
   | n + 2 => fib (n + 1) + fib n
 
--- Book: Chapter 1, Section 1.8, Fibonacci recurrence infrastructure
 theorem fib_succ_succ (n : Nat) : fib (n + 2) = fib (n + 1) + fib n :=
   rfl
 
 open Foundation
 
--- Book: Chapter 1, Section 1.8, Theorem 1.12
+/-!
+# Finite Sums and Geometric Series
+
+These statements reuse the finite-summation library from {module}`FoC.Foundation`.
+They put the familiar closed forms from the book into the chapter-facing order.
+-/
+
 theorem simple_sum_formula (n : Nat) :
     NatSum.SumUpTo (fun i => i) n = n * (n + 1) / 2 :=
   NatSum.sum_identity_closed_form n
 
--- Book: Chapter 1, Section 1.8, Theorem 1.13
 theorem weighted_power_sum_formula (n : Nat) :
     NatSum.SumUpTo NatSum.WeightedPowerTerm (n + 1) = n * 2 ^ (n + 1) + 1 :=
   NatSum.weighted_power_sum_closed_form_succ n
 
--- Book: Chapter 1, Section 1.8, Exercise 4
 theorem geometric_sum_powers_of_two (n : Nat) :
     NatSum.SumZeroTo (fun i => 2 ^ i) n = 2 ^ (n + 1) - 1 :=
   NatSum.geometric_two_sum n
 
--- Book: Chapter 1, Section 1.8, Exercise 2, division-free natural-number core.
 theorem geometric_successor_base_sum (b n : Nat) :
     b * NatSum.SumZeroTo (fun i => (b + 1) ^ i) n = (b + 1) ^ (n + 1) - 1 :=
   NatSum.geometric_successor_base_sum b n
@@ -126,7 +147,6 @@ theorem real_geometric_sum_qreal (r : QRat) (n : Nat) :
             rw [← qratPower_eq_powNat]
         _ = Real.qreal (qratGeometricSum r (n + 1)) := rfl
 
--- Book: Chapter 1, Section 1.8, geometric-series identity before division.
 theorem quotient_rational_geometric_series_mul_one_sub (r : QRat) (n : Nat) :
     qratGeometricSum r n * (1 - r) = 1 - qratPower r (n + 1) := by
   induction n with
@@ -142,8 +162,7 @@ theorem quotient_rational_geometric_series_mul_one_sub (r : QRat) (n : Nat) :
       grind [Rat.add_mul, Rat.sub_eq_add_neg, Rat.mul_add, Rat.mul_neg,
         Rat.pow_succ]
 
--- Book: Chapter 1, Section 1.8, Exercise 2, quotient-rational specialization
--- of the geometric-series formula with division by `1 - r`.
+/-- Division form of the quotient-rational geometric-series formula. -/
 theorem quotient_rational_geometric_series_formula
     (r : QRat) (n : Nat) (hr : 1 - r ≠ 0) :
     qratGeometricSum r n = (1 - qratPower r (n + 1)) / (1 - r) := by
@@ -154,8 +173,8 @@ theorem quotient_rational_geometric_series_formula
     _ = (1 - qratPower r (n + 1)) / (1 - r) := by
       rw [quotient_rational_geometric_series_mul_one_sub]
 
--- Book: Chapter 1, Section 1.8, Exercise 2, embedded quotient-rational
--- specialization of the real-valued geometric-series identity.
+/-- Embedded-real specialization of the multiplication form of the
+geometric-series identity. -/
 theorem real_geometric_series_mul_one_sub (r : QRat) (n : Nat) :
     realGeometricSum (Real.qreal r) n * (1 - Real.qreal r) =
       1 - Real.powNat (Real.qreal r) (n + 1) := by
@@ -184,8 +203,8 @@ theorem real_geometric_series_mul_one_sub (r : QRat) (n : Nat) :
             rw [quotient_rational_geometric_series_mul_one_sub]
     _ = 1 - Real.powNat (Real.qreal r) (n + 1) := hnum.symm
 
--- Book: Chapter 1, Section 1.8, Exercise 2, embedded quotient-rational
--- specialization of the real-valued geometric-series division form.
+/-- Embedded-real specialization of the division form of the geometric-series
+identity. -/
 theorem real_geometric_series_formula
     (r : QRat) (n : Nat) (hr : 1 - r ≠ 0) :
     realGeometricSum (Real.qreal r) n =
@@ -211,12 +230,15 @@ theorem real_geometric_series_formula
     _ = Real.divByQ (1 - Real.powNat (Real.qreal r) (n + 1)) (1 - r) hr := by
         rw [hnum]
 
--- Book: Chapter 1, Section 1.8, Exercise 6
+/-!
+The final two theorem statements are examples where induction or strong
+induction supplies a number-theoretic result rather than merely a closed form.
+-/
+
 theorem odd_sum_square (n : Nat) :
     NatSum.SumUpTo (fun i => 2 * i - 1) n = n * n :=
   NatSum.odd_sum_square n
 
--- Book: Chapter 1, Section 1.8, product-of-primes induction example.
 theorem product_of_primes_exists (n : Nat) (hn : 1 < n) :
     NatPrime.ProductOfPrimes n :=
   NatPrime.product_of_primes_exists n hn

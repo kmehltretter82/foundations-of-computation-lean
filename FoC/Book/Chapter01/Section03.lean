@@ -1,20 +1,28 @@
 import FoC.Foundation.Logic
 
+set_option doc.verso true
+
 namespace FoC
 namespace Book
 namespace Chapter01
 namespace Section03
 
 /-!
-Book: Chapter 1, Section 1.3, Application: Logic Circuits.
+# Chapter 1, Section 1.3: Logic Circuits and DNF
 
 The circuit drawings and design exercises are classified in coverage as
 application material. This module records the reusable formal objects behind
 the section's DNF discussion.
+
+The formalization models literals, conjunctions of literals, and disjunctions
+of such conjunctions. The two bridge theorems prove that evaluating these
+list-based objects agrees with evaluating the propositional formula obtained
+from them.
 -/
 
 open Foundation
 
+/-! A literal is either a variable or the negation of a variable. -/
 inductive Literal (Var : Type u) where
   | positive : Var -> Literal Var
   | negative : Var -> Literal Var
@@ -43,7 +51,10 @@ def dnfToPropForm : List (List (Literal Var)) -> PropForm Var
   | [] => PropForm.falsity
   | clause :: rest => PropForm.or (conjunctionToPropForm clause) (dnfToPropForm rest)
 
--- Book: Chapter 1, Section 1.3, Definition 1.5
+/-!
+Translating one conjunction of literals into a formula preserves its truth
+value under every valuation.
+-/
 theorem conjunctionToPropForm_eval (valuation : Var -> Bool) :
     forall clause, PropForm.eval valuation (conjunctionToPropForm clause) =
       Conjunction.eval valuation clause
@@ -53,7 +64,10 @@ theorem conjunctionToPropForm_eval (valuation : Var -> Bool) :
         simp [conjunctionToPropForm, Conjunction.eval, Literal.toPropForm, Literal.eval,
           PropForm.eval, conjunctionToPropForm_eval valuation rest]
 
--- Book: Chapter 1, Section 1.3, Theorem 1.3, DNF representation mechanism
+/-!
+The DNF theorem lifts the conjunction result to a disjunction of conjunctions.
+This is the semantic core of the section's DNF representation mechanism.
+-/
 theorem dnfToPropForm_eval (valuation : Var -> Bool) :
     forall dnf, PropForm.eval valuation (dnfToPropForm dnf) = DNF.eval valuation dnf
   | [] => rfl

@@ -1,25 +1,33 @@
+set_option doc.verso true
+
 namespace FoC
 namespace Book
 namespace Chapter01
 namespace Section04
 
 /-!
-Book: Chapter 1, Section 1.4, Predicates and Quantifiers.
+# Chapter 1, Section 1.4: Predicates and Quantifiers
+
+This section moves from propositional formulas to predicates over a domain.
+Lean's ordinary function and proposition types already represent the book's
+one-place predicates, universal statements, and existential statements.
+
+The theorem group formalizes the Figure 1.5 quantifier laws: negating a
+universal statement, negating an existential statement, and commuting two
+quantifiers of the same kind.
 -/
 
--- Book: Chapter 1, Section 1.4, Definition 1.6
+/-! A one-place predicate on a domain is a proposition-valued function. -/
 def OnePlacePredicate (domain : Type u) : Type u :=
   domain -> Prop
 
--- Book: Chapter 1, Section 1.4, Definition 1.7
 def Universal (P : alpha -> Prop) : Prop :=
   forall x, P x
 
--- Book: Chapter 1, Section 1.4, Definition 1.7
 def Existential (P : alpha -> Prop) : Prop :=
   exists x, P x
 
--- Book: Chapter 1, Section 1.4, Figure 1.5
+/-! Negating a universal statement is equivalent to giving a counterexample. -/
 theorem not_forall_equiv_exists_not (P : alpha -> Prop) :
     (¬ forall x, P x) <-> exists x, ¬ P x := by
   classical
@@ -34,7 +42,6 @@ theorem not_forall_equiv_exists_not (P : alpha -> Prop) :
     | intro x hx =>
         exact hx (hforall x)
 
--- Book: Chapter 1, Section 1.4, Figure 1.5
 theorem not_exists_equiv_forall_not (P : alpha -> Prop) :
     (¬ exists x, P x) <-> forall x, ¬ P x := by
   constructor
@@ -45,7 +52,6 @@ theorem not_exists_equiv_forall_not (P : alpha -> Prop) :
     | intro x hx =>
         exact h x hx
 
--- Book: Chapter 1, Section 1.4, Figure 1.5
 theorem forall_comm (Q : alpha -> beta -> Prop) :
     (forall x, forall y, Q x y) <-> forall y, forall x, Q x y := by
   constructor
@@ -54,7 +60,6 @@ theorem forall_comm (Q : alpha -> beta -> Prop) :
   · intro h x y
     exact h y x
 
--- Book: Chapter 1, Section 1.4, Figure 1.5
 theorem exists_comm (Q : alpha -> beta -> Prop) :
     (exists x, exists y, Q x y) <-> exists y, exists x, Q x y := by
   constructor

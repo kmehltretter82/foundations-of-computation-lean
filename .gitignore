@@ -1,5 +1,6 @@
 /.lake/
 /.elan/
+.DS_Store
 *.olean
 *.ilean
 *.c
@@ -9,4 +10,4 @@
 *.dylib
 *.trace
 *.log
-
+/html/

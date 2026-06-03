@@ -1,0 +1,192 @@
+landing_page = "FoC"
+hide_commands = ["import", "open", "set_option", "namespace", "end"]
+docstrings_as_text = true
+
+order = ["FoC"]
+
+[metadata]
+title = "Foundations of Computation Lean Companion"
+description = "In-source Verso HTML companion for the Lean formalization of Foundations of Computation."
+
+[order_children]
+"FoC.Book" = [
+  "FoC.Book.Chapter01",
+  "FoC.Book.Chapter02",
+  "FoC.Book.Chapter03",
+  "FoC.Book.Chapter04",
+  "FoC.Book.Chapter05"
+]
+"FoC.Book.Chapter01" = [
+  "FoC.Book.Chapter01.Section01",
+  "FoC.Book.Chapter01.Section02",
+  "FoC.Book.Chapter01.Section03",
+  "FoC.Book.Chapter01.Section04",
+  "FoC.Book.Chapter01.Section05",
+  "FoC.Book.Chapter01.Section06",
+  "FoC.Book.Chapter01.Section07",
+  "FoC.Book.Chapter01.Section08",
+  "FoC.Book.Chapter01.Section09",
+  "FoC.Book.Chapter01.Section10"
+]
+"FoC.Book.Chapter02" = [
+  "FoC.Book.Chapter02.Section01",
+  "FoC.Book.Chapter02.Section02",
+  "FoC.Book.Chapter02.Section03",
+  "FoC.Book.Chapter02.Section04",
+  "FoC.Book.Chapter02.Section05",
+  "FoC.Book.Chapter02.Section06",
+  "FoC.Book.Chapter02.Section07",
+  "FoC.Book.Chapter02.Section08"
+]
+"FoC.Book.Chapter03" = [
+  "FoC.Book.Chapter03.Section01",
+  "FoC.Book.Chapter03.Section02",
+  "FoC.Book.Chapter03.Section03",
+  "FoC.Book.Chapter03.Section04",
+  "FoC.Book.Chapter03.Section05",
+  "FoC.Book.Chapter03.Section06",
+  "FoC.Book.Chapter03.Section07"
+]
+"FoC.Book.Chapter04" = [
+  "FoC.Book.Chapter04.Section01",
+  "FoC.Book.Chapter04.Section02",
+  "FoC.Book.Chapter04.Section03",
+  "FoC.Book.Chapter04.Section04",
+  "FoC.Book.Chapter04.Section05",
+  "FoC.Book.Chapter04.Section06"
+]
+"FoC.Book.Chapter05" = [
+  "FoC.Book.Chapter05.Section01",
+  "FoC.Book.Chapter05.Section02",
+  "FoC.Book.Chapter05.Section03"
+]
+
+[modules."FoC.Foundation"]
+title = "Foundation"
+
+[modules."FoC.Languages"]
+title = "Languages"
+
+[modules."FoC.Grammars"]
+title = "Grammars"
+
+[modules."FoC.Computability"]
+title = "Computability"
+
+[modules."FoC.Book.Chapter01"]
+title = "Chapter 1: Logic and Proof"
+
+[modules."FoC.Book.Chapter01.Section01"]
+title = "Section 1.1: Propositional Logic"
+hide_commands = ["import", "open", "set_option", "namespace", "end"]
+
+[modules."FoC.Book.Chapter01.Section02"]
+title = "Section 1.2: Boolean Algebra"
+
+[modules."FoC.Book.Chapter01.Section03"]
+title = "Section 1.3: Logic Circuits"
+
+[modules."FoC.Book.Chapter01.Section04"]
+title = "Section 1.4: Predicates and Quantifiers"
+
+[modules."FoC.Book.Chapter01.Section05"]
+title = "Section 1.5: Deduction"
+
+[modules."FoC.Book.Chapter01.Section06"]
+title = "Section 1.6: Proof"
+
+[modules."FoC.Book.Chapter01.Section07"]
+title = "Section 1.7: Proof by Contradiction"
+
+[modules."FoC.Book.Chapter01.Section08"]
+title = "Section 1.8: Mathematical Induction"
+
+[modules."FoC.Book.Chapter01.Section09"]
+title = "Section 1.9: Recursion and Induction"
+
+[modules."FoC.Book.Chapter01.Section10"]
+title = "Section 1.10: Fibonacci Numbers"
+
+[modules."FoC.Book.Chapter02"]
+title = "Chapter 2: Sets, Functions, and Relations"
+
+[modules."FoC.Book.Chapter02.Section01"]
+title = "Section 2.1: Basic Concepts"
+
+[modules."FoC.Book.Chapter02.Section02"]
+title = "Section 2.2: Boolean Algebra of Sets"
+
+[modules."FoC.Book.Chapter02.Section03"]
+title = "Section 2.3: Programming with Sets"
+
+[modules."FoC.Book.Chapter02.Section04"]
+title = "Section 2.4: Functions"
+
+[modules."FoC.Book.Chapter02.Section05"]
+title = "Section 2.5: Programming with Functions"
+
+[modules."FoC.Book.Chapter02.Section06"]
+title = "Section 2.6: Counting Past Infinity"
+
+[modules."FoC.Book.Chapter02.Section07"]
+title = "Section 2.7: Relations"
+
+[modules."FoC.Book.Chapter02.Section08"]
+title = "Section 2.8: Relational Databases"
+
+[modules."FoC.Book.Chapter03"]
+title = "Chapter 3: Regular Languages"
+
+[modules."FoC.Book.Chapter03.Section01"]
+title = "Section 3.1: Languages"
+
+[modules."FoC.Book.Chapter03.Section02"]
+title = "Section 3.2: Regular Expressions"
+
+[modules."FoC.Book.Chapter03.Section03"]
+title = "Section 3.3: Using Regular Expressions"
+
+[modules."FoC.Book.Chapter03.Section04"]
+title = "Section 3.4: Finite-State Automata"
+
+[modules."FoC.Book.Chapter03.Section05"]
+title = "Section 3.5: Nondeterministic Automata"
+
+[modules."FoC.Book.Chapter03.Section06"]
+title = "Section 3.6: Automata and Regular Languages"
+
+[modules."FoC.Book.Chapter03.Section07"]
+title = "Section 3.7: Non-Regular Languages"
+
+[modules."FoC.Book.Chapter04"]
+title = "Chapter 4: Grammars and Pushdown Automata"
+
+[modules."FoC.Book.Chapter04.Section01"]
+title = "Section 4.1: Context-Free Grammars"
+
+[modules."FoC.Book.Chapter04.Section02"]
+title = "Section 4.2: BNF"
+
+[modules."FoC.Book.Chapter04.Section03"]
+title = "Section 4.3: Parsing and Parse Trees"
+
+[modules."FoC.Book.Chapter04.Section04"]
+title = "Section 4.4: Pushdown Automata"
+
+[modules."FoC.Book.Chapter04.Section05"]
+title = "Section 4.5: Non-Context-Free Languages"
+
+[modules."FoC.Book.Chapter04.Section06"]
+title = "Section 4.6: General Grammars"
+
+[modules."FoC.Book.Chapter05"]
+title = "Chapter 5: Turing Machines and Computability"
+
+[modules."FoC.Book.Chapter05.Section01"]
+title = "Section 5.1: Turing Machines"
+
+[modules."FoC.Book.Chapter05.Section02"]
+title = "Section 5.2: Computability"
+
+[modules."FoC.Book.Chapter05.Section03"]
+title = "Section 5.3: Limits of Computation"

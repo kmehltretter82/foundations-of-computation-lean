@@ -51,6 +51,24 @@ Build with:
 lake build
 ```
 
+Build the in-source literate HTML companion with Verso:
+
+```sh
+lake build :literateHtml
+```
+
+The generated site is written to `.lake/build/literate-html/`. For local
+preview, serve it over HTTP rather than opening files directly:
+
+```sh
+python3 -m http.server 8000 --directory .lake/build/literate-html
+```
+
+Then open <http://localhost:8000/>.
+
+GitHub Pages builds the same site from source with the workflow in
+`.github/workflows/verso-literate-pages.yml`.
+
 ## License
 
 This repository is distributed under the Creative Commons

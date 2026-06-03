@@ -1,33 +1,46 @@
 import FoC.Book.Chapter01.Section08
 import FoC.Foundation.Reals
 
+set_option doc.verso true
+
 namespace FoC
 namespace Book
 namespace Chapter01
 namespace Section10
 
 /-!
-Book: Chapter 1, Section 1.10, Recursive Definitions.
+# Chapter 1, Section 1.10: Recursive Definitions
+
+This section revisits recursive definitions through the Fibonacci sequence. The
+formal file exposes the recursive equations, proves an elementary exponential
+upper bound, and then develops the scaled lower bound used to compare Fibonacci
+growth with powers of three halves.
 -/
 
 open Foundation
 
+/-- The Fibonacci function used here is the one defined in Section 1.8. -/
 def fib : Nat -> Nat :=
   Section08.fib
 
--- Book: Chapter 1, Section 1.10
+/-- The first base equation for Fibonacci numbers. -/
 theorem fib_zero : fib 0 = 0 :=
   rfl
 
--- Book: Chapter 1, Section 1.10
+/-- The second base equation for Fibonacci numbers. -/
 theorem fib_one : fib 1 = 1 :=
   rfl
 
--- Book: Chapter 1, Section 1.10
+/-- The recursive Fibonacci equation. -/
 theorem fib_recurrence (n : Nat) : fib (n + 2) = fib (n + 1) + fib n :=
   rfl
 
--- Book: Chapter 1, Section 1.10, Exercise 1
+/-!
+The first bound states that Fibonacci numbers grow more slowly than powers of
+two. The proof follows the recursive definition and compares the two recursive
+upper estimates.
+-/
+
 theorem fib_lt_two_pow : forall n, fib n < 2 ^ n
   | 0 => by simp [fib, Section08.fib]
   | 1 => by simp [fib, Section08.fib]
@@ -42,6 +55,14 @@ theorem fib_lt_two_pow : forall n, fib n < 2 ^ n
         rw [Nat.pow_succ, Nat.pow_succ]
         omega
       exact Nat.lt_trans hsum hbound
+
+/-!
+# Lower Bound by Three Halves
+
+The lower-bound proof avoids rational exponents by multiplying both sides by a
+power of two. The private helper below is the scaled statement that makes the
+induction arithmetic purely natural-number arithmetic.
+-/
 
 def scaledFibLower (n : Nat) : Nat :=
   fib (n + 6) * 2 ^ (n + 5)
@@ -92,7 +113,6 @@ private theorem fib_lower_bound_scaled_shifted : forall n, 3 ^ (n + 5) < scaledF
       rw [scaledFibLower_recurrence]
       exact htarget
 
--- Book: Chapter 1, Section 1.10, Theorem 1.18, scaled natural-number form.
 theorem fib_lower_bound_three_halves_scaled (n : Nat) (hn : 6 <= n) :
     3 ^ (n - 1) < fib n * 2 ^ (n - 1) := by
   cases Nat.exists_eq_add_of_le hn with
@@ -101,7 +121,12 @@ theorem fib_lower_bound_three_halves_scaled (n : Nat) (hn : 6 <= n) :
       have h := fib_lower_bound_scaled_shifted d
       simpa [scaledFibLower, fib, Nat.add_comm, Nat.add_assoc, Nat.add_left_comm] using h
 
--- Book: Chapter 1, Section 1.10, Theorem 1.18 as a quotient-rational bound.
+/-!
+The remaining statements translate the scaled natural-number inequality into
+the quotient-rational and embedded-real versions used by the surrounding real
+number formalization.
+-/
+
 theorem fib_lower_bound_three_halves_qrat (n : Nat) (hn : 6 <= n) :
     QRat.ofNat (3 ^ (n - 1)) / QRat.ofNat (2 ^ (n - 1)) < QRat.ofNat (fib n) := by
   have hscaled := fib_lower_bound_three_halves_scaled n hn
@@ -115,7 +140,6 @@ theorem fib_lower_bound_three_halves_qrat (n : Nat) (hn : 6 <= n) :
   rw [← Rat.natCast_mul]
   exact Rat.natCast_lt_natCast.mpr hscaled
 
--- Book: Chapter 1, Section 1.10, Theorem 1.18 embedded into the real cuts.
 theorem fib_lower_bound_three_halves_real (n : Nat) (hn : 6 <= n) :
     Real.qreal (QRat.ofNat (3 ^ (n - 1)) / QRat.ofNat (2 ^ (n - 1))) <
       Real.qreal (QRat.ofNat (fib n)) :=
@@ -149,7 +173,6 @@ theorem realThreeHalvesPower_eq_qreal (n : Nat) :
     _ = Real.qreal (QRat.ofNat (3 ^ n) / QRat.ofNat (2 ^ n)) := by
           rw [Real.qreal_divByQ]
 
--- Book: Chapter 1, Section 1.10, Theorem 1.18 using the real power wrapper.
 theorem fib_lower_bound_three_halves_real_power (n : Nat) (hn : 6 <= n) :
     realThreeHalvesPower (n - 1) < Real.qreal (QRat.ofNat (fib n)) := by
   rw [realThreeHalvesPower_eq_qreal]

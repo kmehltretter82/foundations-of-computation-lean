@@ -1,27 +1,30 @@
 import FoC.Book.Chapter01.Section08
 
+set_option doc.verso true
+
 namespace FoC
 namespace Book
 namespace Chapter01
 namespace Section09
 
 /-!
-Book: Chapter 1, Section 1.9, Application: Recursion and Induction.
+# Chapter 1, Section 1.9: Recursion and Induction Applications
 
-The Java subroutines and data-structure proofs are classified in coverage as
-application material. This file formalizes the recursive mathematical kernels.
+This section formalizes the recursive kernels behind the book's application
+examples. The source text discusses Java subroutines and data-structure
+arguments; this file keeps the executable mathematics: Tower of Hanoi move
+counts and structural recursion over binary trees.
 -/
 
+/-- The recursive move-count equation for the Tower of Hanoi puzzle. -/
 def hanoiMoveCount : Nat -> Nat
   | 0 => 0
   | n + 1 => 2 * hanoiMoveCount n + 1
 
--- Book: Chapter 1, Section 1.9, Hanoi recurrence
 theorem hanoiMoveCount_succ (n : Nat) :
     hanoiMoveCount (n + 1) = 2 * hanoiMoveCount n + 1 :=
   rfl
 
--- Book: Chapter 1, Section 1.9, Hanoi closed-form move count.
 theorem hanoiMoveCount_closed_form (n : Nat) :
     hanoiMoveCount n = 2 ^ n - 1 := by
   induction n with
@@ -31,6 +34,11 @@ theorem hanoiMoveCount_closed_form (n : Nat) :
       rw [Nat.pow_succ]
       have hpos : 0 < 2 ^ n := Nat.pow_pos (by decide : 0 < 2)
       omega
+
+/-!
+The move list itself is also recursive: move the top stack to the spare peg,
+move the bottom disk, and then move the saved stack to the target peg.
+-/
 
 inductive Peg where
   | left : Peg
@@ -43,7 +51,6 @@ def hanoiMoves : Nat -> Peg -> Peg -> Peg -> List (Peg × Peg)
       hanoiMoves n source spare target ++ [(source, target)] ++
         hanoiMoves n spare target source
 
--- Book: Chapter 1, Section 1.9, the recursive Hanoi program has the expected length.
 theorem hanoiMoves_length (n : Nat) (source target spare : Peg) :
     (hanoiMoves n source target spare).length = hanoiMoveCount n := by
   induction n generalizing source target spare with
@@ -51,6 +58,15 @@ theorem hanoiMoves_length (n : Nat) (source target spare : Peg) :
   | succ n ih =>
       simp [hanoiMoves, hanoiMoveCount, ih]
       omega
+
+/-!
+# Binary Trees
+
+The binary-tree definitions show structural recursion: every computation over a
+tree is determined by the empty-tree case and the node case. The final theorem
+connects the recursive tree sum with the sum of the list obtained by an inorder
+traversal.
+-/
 
 inductive BinaryTree where
   | empty : BinaryTree
@@ -77,11 +93,9 @@ def treeValues : BinaryTree -> List Int
   | BinaryTree.empty => []
   | BinaryTree.node left value right => treeValues left ++ [value] ++ treeValues right
 
--- Book: Chapter 1, Section 1.9, TreeSum base case
 theorem treeSum_empty : treeSum BinaryTree.empty = 0 :=
   rfl
 
--- Book: Chapter 1, Section 1.9, TreeSum recursive case
 theorem treeSum_node (left right : BinaryTree) (value : Int) :
     treeSum (BinaryTree.node left value right) = treeSum left + value + treeSum right :=
   rfl
@@ -92,7 +106,6 @@ theorem intListSum_append (xs ys : List Int) :
   | nil => simp [intListSum]
   | cons x xs ih => simp [intListSum, ih, Int.add_assoc]
 
--- Book: Chapter 1, Section 1.9, TreeSum equals a traversal sum.
 theorem treeSum_eq_intListSum (t : BinaryTree) :
     treeSum t = intListSum (treeValues t) := by
   induction t with
@@ -101,20 +114,16 @@ theorem treeSum_eq_intListSum (t : BinaryTree) :
       simp [treeSum, treeValues, intListSum_append, intListSum, ihl, ihr]
       omega
 
--- Book: Chapter 1, Section 1.9, NodeCount base case
 theorem nodeCount_empty : nodeCount BinaryTree.empty = 0 :=
   rfl
 
--- Book: Chapter 1, Section 1.9, NodeCount recursive case
 theorem nodeCount_node (left right : BinaryTree) (value : Int) :
     nodeCount (BinaryTree.node left value right) = nodeCount left + 1 + nodeCount right :=
   rfl
 
--- Book: Chapter 1, Section 1.9, LeafCount base case
 theorem leafCount_empty : leafCount BinaryTree.empty = 0 :=
   rfl
 
--- Book: Chapter 1, Section 1.9, a one-node tree has one leaf.
 theorem leafCount_singleton (value : Int) :
     leafCount (BinaryTree.node BinaryTree.empty value BinaryTree.empty) = 1 :=
   rfl
