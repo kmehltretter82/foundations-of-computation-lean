@@ -322,6 +322,32 @@ theorem sententialCountNonterminal_terminalWord [DecidableEq nonterminal]
       change SententialCountNonterminal A (SententialForm.terminalWord rest) = 0
       exact ih
 
+theorem sententialCountNonterminal_terminal_absurd
+    [DecidableEq nonterminal]
+    {A : nonterminal} {sf : SententialForm terminal nonterminal}
+    {w : Word terminal}
+    (hcount : SententialCountNonterminal A sf = 1)
+    (hsf : sf = SententialForm.terminalWord w) : False := by
+  have hzero : SententialCountNonterminal A sf = 0 := by
+    rw [hsf]
+    exact sententialCountNonterminal_terminalWord A w
+  omega
+
+theorem sententialCountNonterminal_repeat_nonterminal_of_ne
+    [DecidableEq nonterminal]
+    {A B : nonterminal} (hne : B ≠ A) (n : Nat) :
+    SententialCountNonterminal A
+      (Word.RepeatSymbol (ggNonterminal B) n :
+        SententialForm terminal nonterminal) = 0 := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change (if B = A then 1 else 0) +
+          SententialCountNonterminal A
+            (Word.RepeatSymbol (ggNonterminal B) n) = 0
+      simp [hne, ih]
+
 theorem repeatSymbol_succ_eq_append (a : terminal) (n : Nat) :
     Word.RepeatSymbol a (n + 1) =
       Word.Concat (Word.RepeatSymbol a n) [a] := by
@@ -332,6 +358,11 @@ theorem repeatSymbol_succ_eq_append (a : terminal) (n : Nat) :
       change a :: Word.RepeatSymbol a (n + 1) =
         a :: Word.Concat (Word.RepeatSymbol a n) [a]
       rw [ih]
+
+theorem repeatSymbol_add_eq_concat (a : terminal) (m n : Nat) :
+    Word.RepeatSymbol a (m + n) =
+      Word.Concat (Word.RepeatSymbol a m) (Word.RepeatSymbol a n) := by
+  simp [Word.RepeatSymbol, Word.Concat, List.replicate_append_replicate]
 
 theorem word_count_concat [DecidableEq terminal]
     (a : terminal) (x y : Word terminal) :
@@ -3825,6 +3856,438 @@ theorem strictMoreBGrammar_generates_aabbb :
   simpa [GeneralGrammar.GeneratedLanguage, StrictMoreBGrammar, aabbbWord,
     SententialForm.terminalWord, S, a, b] using hderives
 
+inductive StrictABCGreaterNT where
+  | start
+  | pair
+  | extraA
+  | done
+  | markA
+  | markB
+  | markC
+deriving DecidableEq
+
+namespace StrictABCGreaterNT
+
+def finite : Foundation.FiniteType StrictABCGreaterNT where
+  elems := [start, pair, extraA, done, markA, markB, markC]
+  complete := by
+    intro A
+    cases A <;> simp
+
+end StrictABCGreaterNT
+
+def strictABCGreaterN (A : StrictABCGreaterNT) :
+    Symbol EqualCountTerminal StrictABCGreaterNT :=
+  ggNonterminal A
+
+def strictABCGreaterT (tok : EqualCountTerminal) :
+    Symbol EqualCountTerminal StrictABCGreaterNT :=
+  ggTerminal tok
+
+inductive StrictABCGreaterProduces :
+    SententialForm EqualCountTerminal StrictABCGreaterNT ->
+      SententialForm EqualCountTerminal StrictABCGreaterNT -> Prop where
+  | growTriple :
+      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.start]
+        [strictABCGreaterN StrictABCGreaterNT.start,
+          strictABCGreaterN StrictABCGreaterNT.markA,
+          strictABCGreaterN StrictABCGreaterNT.markB,
+          strictABCGreaterN StrictABCGreaterNT.markC]
+  | toPair :
+      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.start]
+        [strictABCGreaterN StrictABCGreaterNT.pair]
+  | growPair :
+      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.pair]
+        [strictABCGreaterN StrictABCGreaterNT.pair,
+          strictABCGreaterN StrictABCGreaterNT.markA,
+          strictABCGreaterN StrictABCGreaterNT.markB]
+  | endPair :
+      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.pair]
+        [strictABCGreaterN StrictABCGreaterNT.extraA,
+          strictABCGreaterN StrictABCGreaterNT.markA,
+          strictABCGreaterN StrictABCGreaterNT.markB]
+  | growExtraA :
+      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.extraA]
+        [strictABCGreaterN StrictABCGreaterNT.extraA,
+          strictABCGreaterN StrictABCGreaterNT.markA]
+  | endExtraA :
+      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.extraA]
+        [strictABCGreaterN StrictABCGreaterNT.done,
+          strictABCGreaterN StrictABCGreaterNT.markA]
+  | finish :
+      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.done] []
+  | swapAB :
+      StrictABCGreaterProduces
+        [strictABCGreaterN StrictABCGreaterNT.markA,
+          strictABCGreaterN StrictABCGreaterNT.markB]
+        [strictABCGreaterN StrictABCGreaterNT.markB,
+          strictABCGreaterN StrictABCGreaterNT.markA]
+  | swapBA :
+      StrictABCGreaterProduces
+        [strictABCGreaterN StrictABCGreaterNT.markB,
+          strictABCGreaterN StrictABCGreaterNT.markA]
+        [strictABCGreaterN StrictABCGreaterNT.markA,
+          strictABCGreaterN StrictABCGreaterNT.markB]
+  | swapAC :
+      StrictABCGreaterProduces
+        [strictABCGreaterN StrictABCGreaterNT.markA,
+          strictABCGreaterN StrictABCGreaterNT.markC]
+        [strictABCGreaterN StrictABCGreaterNT.markC,
+          strictABCGreaterN StrictABCGreaterNT.markA]
+  | swapCA :
+      StrictABCGreaterProduces
+        [strictABCGreaterN StrictABCGreaterNT.markC,
+          strictABCGreaterN StrictABCGreaterNT.markA]
+        [strictABCGreaterN StrictABCGreaterNT.markA,
+          strictABCGreaterN StrictABCGreaterNT.markC]
+  | swapBC :
+      StrictABCGreaterProduces
+        [strictABCGreaterN StrictABCGreaterNT.markB,
+          strictABCGreaterN StrictABCGreaterNT.markC]
+        [strictABCGreaterN StrictABCGreaterNT.markC,
+          strictABCGreaterN StrictABCGreaterNT.markB]
+  | swapCB :
+      StrictABCGreaterProduces
+        [strictABCGreaterN StrictABCGreaterNT.markC,
+          strictABCGreaterN StrictABCGreaterNT.markB]
+        [strictABCGreaterN StrictABCGreaterNT.markB,
+          strictABCGreaterN StrictABCGreaterNT.markC]
+  | emitA :
+      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.markA]
+        [strictABCGreaterT EqualCountTerminal.a]
+  | emitB :
+      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.markB]
+        [strictABCGreaterT EqualCountTerminal.b]
+  | emitC :
+      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.markC]
+        [strictABCGreaterT EqualCountTerminal.c]
+
+def StrictABCGreaterGrammar :
+    GeneralGrammar EqualCountTerminal StrictABCGreaterNT where
+  start := StrictABCGreaterNT.start
+  produces := StrictABCGreaterProduces
+  lhsContainsNonterminal := by
+    intro lhs rhs h
+    cases h <;> simp [SententialForm.containsNonterminal,
+      strictABCGreaterN, ggNonterminal]
+  nonterminalsFinite := StrictABCGreaterNT.finite
+
+def StrictABCGreaterProductionList :
+    List (GeneralGrammar.Production EqualCountTerminal StrictABCGreaterNT) :=
+  [{ lhs := [strictABCGreaterN StrictABCGreaterNT.start],
+     rhs := [strictABCGreaterN StrictABCGreaterNT.start,
+       strictABCGreaterN StrictABCGreaterNT.markA,
+       strictABCGreaterN StrictABCGreaterNT.markB,
+       strictABCGreaterN StrictABCGreaterNT.markC] },
+   { lhs := [strictABCGreaterN StrictABCGreaterNT.start],
+     rhs := [strictABCGreaterN StrictABCGreaterNT.pair] },
+   { lhs := [strictABCGreaterN StrictABCGreaterNT.pair],
+     rhs := [strictABCGreaterN StrictABCGreaterNT.pair,
+       strictABCGreaterN StrictABCGreaterNT.markA,
+       strictABCGreaterN StrictABCGreaterNT.markB] },
+   { lhs := [strictABCGreaterN StrictABCGreaterNT.pair],
+     rhs := [strictABCGreaterN StrictABCGreaterNT.extraA,
+       strictABCGreaterN StrictABCGreaterNT.markA,
+       strictABCGreaterN StrictABCGreaterNT.markB] },
+   { lhs := [strictABCGreaterN StrictABCGreaterNT.extraA],
+     rhs := [strictABCGreaterN StrictABCGreaterNT.extraA,
+       strictABCGreaterN StrictABCGreaterNT.markA] },
+   { lhs := [strictABCGreaterN StrictABCGreaterNT.extraA],
+     rhs := [strictABCGreaterN StrictABCGreaterNT.done,
+       strictABCGreaterN StrictABCGreaterNT.markA] },
+   { lhs := [strictABCGreaterN StrictABCGreaterNT.done],
+     rhs := [] },
+   { lhs := [strictABCGreaterN StrictABCGreaterNT.markA,
+       strictABCGreaterN StrictABCGreaterNT.markB],
+     rhs := [strictABCGreaterN StrictABCGreaterNT.markB,
+       strictABCGreaterN StrictABCGreaterNT.markA] },
+   { lhs := [strictABCGreaterN StrictABCGreaterNT.markB,
+       strictABCGreaterN StrictABCGreaterNT.markA],
+     rhs := [strictABCGreaterN StrictABCGreaterNT.markA,
+       strictABCGreaterN StrictABCGreaterNT.markB] },
+   { lhs := [strictABCGreaterN StrictABCGreaterNT.markA,
+       strictABCGreaterN StrictABCGreaterNT.markC],
+     rhs := [strictABCGreaterN StrictABCGreaterNT.markC,
+       strictABCGreaterN StrictABCGreaterNT.markA] },
+   { lhs := [strictABCGreaterN StrictABCGreaterNT.markC,
+       strictABCGreaterN StrictABCGreaterNT.markA],
+     rhs := [strictABCGreaterN StrictABCGreaterNT.markA,
+       strictABCGreaterN StrictABCGreaterNT.markC] },
+   { lhs := [strictABCGreaterN StrictABCGreaterNT.markB,
+       strictABCGreaterN StrictABCGreaterNT.markC],
+     rhs := [strictABCGreaterN StrictABCGreaterNT.markC,
+       strictABCGreaterN StrictABCGreaterNT.markB] },
+   { lhs := [strictABCGreaterN StrictABCGreaterNT.markC,
+       strictABCGreaterN StrictABCGreaterNT.markB],
+     rhs := [strictABCGreaterN StrictABCGreaterNT.markB,
+       strictABCGreaterN StrictABCGreaterNT.markC] },
+   { lhs := [strictABCGreaterN StrictABCGreaterNT.markA],
+     rhs := [strictABCGreaterT EqualCountTerminal.a] },
+   { lhs := [strictABCGreaterN StrictABCGreaterNT.markB],
+     rhs := [strictABCGreaterT EqualCountTerminal.b] },
+   { lhs := [strictABCGreaterN StrictABCGreaterNT.markC],
+     rhs := [strictABCGreaterT EqualCountTerminal.c] }]
+
+-- Book: Chapter 4, Section 4.6, selected exercise grammar for words over
+-- `{a,b,c}` with strictly more `a`s than `b`s and strictly more `b`s than
+-- `c`s.
+theorem strictABCGreaterGrammar_has_finite_productions :
+    GeneralGrammar.HasFiniteProductions StrictABCGreaterGrammar := by
+  exists StrictABCGreaterProductionList
+  intro lhs rhs
+  constructor
+  · intro h
+    cases h <;> simp [StrictABCGreaterProductionList]
+  · intro h
+    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
+    simp [StrictABCGreaterProductionList] at hmem
+    rcases hmem with
+      hrule | hrule | hrule | hrule | hrule | hrule |
+      hrule | hrule | hrule | hrule | hrule | hrule |
+      hrule | hrule | hrule | hrule
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.growTriple
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.toPair
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.growPair
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.endPair
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.growExtraA
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.endExtraA
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.finish
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.swapAB
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.swapBA
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.swapAC
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.swapCA
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.swapBC
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.swapCB
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.emitA
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.emitB
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact StrictABCGreaterProduces.emitC
+
+theorem strictABCGreaterGrammar_finite_production_generated :
+    FiniteProductionGeneralLanguage
+      (GeneralGrammar.GeneratedLanguage StrictABCGreaterGrammar) := by
+  exists StrictABCGreaterNT
+  exists StrictABCGreaterGrammar
+  constructor
+  · exact strictABCGreaterGrammar_has_finite_productions
+  · intro word
+    rfl
+
+def strictABCGreaterTotalA
+    (sf : SententialForm EqualCountTerminal StrictABCGreaterNT) : Nat :=
+  SententialCountTerminal EqualCountTerminal.a sf +
+    SententialCountNonterminal StrictABCGreaterNT.markA sf +
+    2 * SententialCountNonterminal StrictABCGreaterNT.start sf +
+    2 * SententialCountNonterminal StrictABCGreaterNT.pair sf +
+    SententialCountNonterminal StrictABCGreaterNT.extraA sf
+
+def strictABCGreaterTotalB
+    (sf : SententialForm EqualCountTerminal StrictABCGreaterNT) : Nat :=
+  SententialCountTerminal EqualCountTerminal.b sf +
+    SententialCountNonterminal StrictABCGreaterNT.markB sf +
+    SententialCountNonterminal StrictABCGreaterNT.start sf +
+    SententialCountNonterminal StrictABCGreaterNT.pair sf
+
+def strictABCGreaterTotalC
+    (sf : SententialForm EqualCountTerminal StrictABCGreaterNT) : Nat :=
+  SententialCountTerminal EqualCountTerminal.c sf +
+    SententialCountNonterminal StrictABCGreaterNT.markC sf
+
+def strictABCGreaterMargin
+    (sf : SententialForm EqualCountTerminal StrictABCGreaterNT) : Prop :=
+  strictABCGreaterTotalA sf > strictABCGreaterTotalB sf ∧
+    strictABCGreaterTotalB sf > strictABCGreaterTotalC sf
+
+theorem strictABCGreater_start_margin :
+    strictABCGreaterMargin
+      [strictABCGreaterN StrictABCGreaterNT.start] := by
+  simp [strictABCGreaterMargin, strictABCGreaterTotalA,
+    strictABCGreaterTotalB, strictABCGreaterTotalC,
+    SententialCountTerminal, SententialCountNonterminal,
+    strictABCGreaterN, ggNonterminal]
+
+theorem strictABCGreater_yields_preserves_margin
+    {x y : SententialForm EqualCountTerminal StrictABCGreaterNT}
+    (h : GeneralGrammar.Yields StrictABCGreaterGrammar x y) :
+    strictABCGreaterMargin x -> strictABCGreaterMargin y := by
+  intro hmargin
+  cases h with
+  | intro u hu =>
+      cases hu with
+      | intro v hv =>
+          cases hv with
+          | intro lhs hlhs =>
+              cases hlhs with
+              | intro rhs hrhs =>
+                  cases hrhs with
+                  | intro hprod hrest =>
+                      cases hrest with
+                      | intro hx hy =>
+                          rw [hx] at hmargin
+                          rw [hy]
+                          cases hprod <;>
+                            simp [strictABCGreaterMargin,
+                              strictABCGreaterTotalA,
+                              strictABCGreaterTotalB,
+                              strictABCGreaterTotalC,
+                              sententialCountTerminal_append,
+                              sententialCountNonterminal_append,
+                              SententialCountTerminal,
+                              SententialCountNonterminal,
+                              strictABCGreaterN, strictABCGreaterT,
+                              ggNonterminal, ggTerminal] at hmargin ⊢ <;>
+                            omega
+
+theorem strictABCGreater_derives_preserves_margin
+    {x y : SententialForm EqualCountTerminal StrictABCGreaterNT}
+    (h : GeneralGrammar.Derives StrictABCGreaterGrammar x y) :
+    strictABCGreaterMargin x -> strictABCGreaterMargin y := by
+  induction h with
+  | refl _ =>
+      intro hmargin
+      exact hmargin
+  | step hstep _ ih =>
+      intro hmargin
+      exact ih (strictABCGreater_yields_preserves_margin hstep hmargin)
+
+theorem strictABCGreaterGrammar_generated_has_strict_counts
+    {word : Word EqualCountTerminal}
+    (h : word ∈
+      GeneralGrammar.GeneratedLanguage StrictABCGreaterGrammar) :
+    Word.Count EqualCountTerminal.a word >
+        Word.Count EqualCountTerminal.b word ∧
+      Word.Count EqualCountTerminal.b word >
+        Word.Count EqualCountTerminal.c word := by
+  have hderives :
+      GeneralGrammar.Derives StrictABCGreaterGrammar
+        [strictABCGreaterN StrictABCGreaterNT.start]
+        (SententialForm.terminalWord word) := by
+    simpa [GeneralGrammar.GeneratedLanguage, StrictABCGreaterGrammar,
+      strictABCGreaterN, ggNonterminal] using h
+  have hmargin :=
+    strictABCGreater_derives_preserves_margin hderives
+      strictABCGreater_start_margin
+  simpa [strictABCGreaterMargin, strictABCGreaterTotalA,
+    strictABCGreaterTotalB, strictABCGreaterTotalC,
+    sententialCountTerminal_terminalWord,
+    sententialCountNonterminal_terminalWord] using hmargin
+
+def strictABCGreaterAABWord : Word EqualCountTerminal :=
+  [EqualCountTerminal.a, EqualCountTerminal.a, EqualCountTerminal.b]
+
+-- Book: Chapter 4, Section 4.6, concrete derivation for the selected
+-- strict `n_a > n_b > n_c` exercise grammar.
+theorem strictABCGreaterGrammar_generates_aab :
+    strictABCGreaterAABWord ∈
+      GeneralGrammar.GeneratedLanguage StrictABCGreaterGrammar := by
+  let S := strictABCGreaterN StrictABCGreaterNT.start
+  let P := strictABCGreaterN StrictABCGreaterNT.pair
+  let X := strictABCGreaterN StrictABCGreaterNT.extraA
+  let R := strictABCGreaterN StrictABCGreaterNT.done
+  let A := strictABCGreaterN StrictABCGreaterNT.markA
+  let B := strictABCGreaterN StrictABCGreaterNT.markB
+  let a := strictABCGreaterT EqualCountTerminal.a
+  let b := strictABCGreaterT EqualCountTerminal.b
+  have h1 : GeneralGrammar.Yields StrictABCGreaterGrammar [S] [P] := by
+    simpa [S, P] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.toPair [] []
+  have h2 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [P] [X, A, B] := by
+    simpa [P, X, A, B] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.endPair [] []
+  have h3 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [X, A, B]
+        [R, A, A, B] := by
+    simpa [X, R, A, B] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.endExtraA [] [A, B]
+  have h4 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [R, A, A, B]
+        [A, A, B] := by
+    simpa [R, A, B] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.finish [] [A, A, B]
+  have h5 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [A, A, B]
+        [a, A, B] := by
+    simpa [A, B, a] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.emitA [] [A, B]
+  have h6 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [a, A, B]
+        [a, a, B] := by
+    simpa [A, B, a] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.emitA [a] [B]
+  have h7 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [a, a, B]
+        [a, a, b] := by
+    simpa [A, B, a, b] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.emitB [a, a] []
+  have hderives :
+      GeneralGrammar.Derives StrictABCGreaterGrammar [S] [a, a, b] :=
+    GeneralGrammar.Derives.step h1
+      (GeneralGrammar.Derives.step h2
+        (GeneralGrammar.Derives.step h3
+          (GeneralGrammar.Derives.step h4
+            (GeneralGrammar.Derives.step h5
+              (GeneralGrammar.Derives.step h6
+                (GeneralGrammar.Derives.step h7
+                  (GeneralGrammar.Derives.refl [a, a, b])))))))
+  simpa [GeneralGrammar.GeneratedLanguage, StrictABCGreaterGrammar,
+    strictABCGreaterAABWord, SententialForm.terminalWord, S, a, b] using
+    hderives
+
 inductive SquareTerminal where
   | a
 deriving DecidableEq
@@ -3977,6 +4440,504 @@ theorem squareGrammar_finite_production_generated :
   · exact squareGrammar_has_finite_productions
   · intro w
     rfl
+
+def squareWord (n : Nat) : Word SquareTerminal :=
+  Word.RepeatSymbol SquareTerminal.a (n * n)
+
+def squareLanguage : Language SquareTerminal :=
+  fun word => exists n, word = squareWord n
+
+def squareTerminalAForm (n : Nat) :
+    SententialForm SquareTerminal SquareNT :=
+  SententialForm.terminalWord (Word.RepeatSymbol SquareTerminal.a n)
+
+def squareBForm (n : Nat) :
+    SententialForm SquareTerminal SquareNT :=
+  Word.RepeatSymbol (squareN SquareNT.b) n
+
+def squareMarkerAForm (n : Nat) :
+    SententialForm SquareTerminal SquareNT :=
+  Word.RepeatSymbol (squareN SquareNT.markA) n
+
+def squareRows (rowWidth rows : Nat) :
+    SententialForm SquareTerminal SquareNT :=
+  match rows with
+  | 0 => []
+  | rows + 1 =>
+      [squareN SquareNT.markA] ++ squareTerminalAForm rowWidth ++
+        squareRows rowWidth rows
+
+theorem squareRows_zero_eq_markerAForm (n : Nat) :
+    squareRows 0 n = squareMarkerAForm n := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change [squareN SquareNT.markA] ++ squareTerminalAForm 0 ++
+          squareRows 0 n =
+        squareMarkerAForm (Nat.succ n)
+      rw [ih]
+      rfl
+
+def squareGrowForm (n : Nat) :
+    SententialForm SquareTerminal SquareNT :=
+  [squareN SquareNT.d] ++ squareBForm n ++ [squareN SquareNT.t] ++
+    squareMarkerAForm n ++ [squareN SquareNT.e]
+
+def squareProcessForm (remaining rowWidth rows : Nat) :
+    SententialForm SquareTerminal SquareNT :=
+  [squareN SquareNT.d] ++ squareBForm remaining ++
+    squareRows rowWidth rows ++ [squareN SquareNT.e]
+
+theorem squareBForm_succ_eq_append (n : Nat) :
+    squareBForm (n + 1) =
+      squareBForm n ++ [squareN SquareNT.b] := by
+  simpa [squareBForm] using
+    repeatSymbol_succ_eq_append (squareN SquareNT.b) n
+
+theorem square_t_grow_derives (n : Nat) :
+    GeneralGrammar.Derives SquareGrammar
+      [squareN SquareNT.d, squareN SquareNT.t, squareN SquareNT.e]
+      (squareGrowForm n) := by
+  induction n with
+  | zero =>
+      simpa [squareGrowForm, squareBForm, squareMarkerAForm,
+        Word.RepeatSymbol] using
+        (GeneralGrammar.Derives.refl (G := SquareGrammar)
+          [squareN SquareNT.d, squareN SquareNT.t, squareN SquareNT.e])
+  | succ n ih =>
+      have hstep :
+          GeneralGrammar.Yields SquareGrammar
+            (squareGrowForm n)
+            ([squareN SquareNT.d] ++ squareBForm n ++
+              [squareN SquareNT.b, squareN SquareNT.t,
+                squareN SquareNT.markA] ++
+              squareMarkerAForm n ++ [squareN SquareNT.e]) := by
+        simpa [squareGrowForm, List.append_assoc] using
+          general_yields_of_production (G := SquareGrammar)
+            SquareProduces.grow
+            ([squareN SquareNT.d] ++ squareBForm n)
+            (squareMarkerAForm n ++ [squareN SquareNT.e])
+      have hall := GeneralGrammar.Derives.step hstep
+        (GeneralGrammar.Derives.refl _)
+      have htail := GeneralGrammar.derives_trans ih hall
+      simpa [squareGrowForm, squareBForm_succ_eq_append,
+        squareMarkerAForm, Word.RepeatSymbol, List.append_assoc] using htail
+
+theorem square_start_to_process_zero_derives (n : Nat) :
+    GeneralGrammar.Derives SquareGrammar [squareN SquareNT.start]
+      (squareProcessForm n 0 n) := by
+  have hstart :
+      GeneralGrammar.Yields SquareGrammar [squareN SquareNT.start]
+        [squareN SquareNT.d, squareN SquareNT.t, squareN SquareNT.e] := by
+    simpa using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.start [] []
+  have hgrow := square_t_grow_derives n
+  have hstop :
+      GeneralGrammar.Yields SquareGrammar (squareGrowForm n)
+        ([squareN SquareNT.d] ++ squareBForm n ++
+          squareMarkerAForm n ++ [squareN SquareNT.e]) := by
+    simpa [squareGrowForm, List.append_assoc] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.stop ([squareN SquareNT.d] ++ squareBForm n)
+        (squareMarkerAForm n ++ [squareN SquareNT.e])
+  have hall := GeneralGrammar.Derives.step hstart
+    (GeneralGrammar.derives_trans hgrow (GeneralGrammar.yields_derives hstop))
+  simpa [squareProcessForm, squareRows, squareMarkerAForm,
+    squareRows_zero_eq_markerAForm, squareTerminalAForm, Word.RepeatSymbol,
+    SententialForm.terminalWord, List.append_assoc] using hall
+
+theorem square_move_b_right_over_terminal_as
+    (n : Nat) (pre suffix : SententialForm SquareTerminal SquareNT) :
+    GeneralGrammar.Derives SquareGrammar
+      (pre ++ [squareN SquareNT.b] ++ squareTerminalAForm n ++ suffix)
+      (pre ++ squareTerminalAForm n ++ [squareN SquareNT.b] ++ suffix) := by
+  induction n generalizing pre with
+  | zero =>
+      simpa [squareTerminalAForm, Word.RepeatSymbol,
+        SententialForm.terminalWord] using
+        (GeneralGrammar.Derives.refl (G := SquareGrammar)
+          (pre ++ [squareN SquareNT.b] ++ suffix))
+  | succ n ih =>
+      let B := squareN SquareNT.b
+      let a := squareT SquareTerminal.a
+      have hstep :
+          GeneralGrammar.Yields SquareGrammar
+            (pre ++ [B, a] ++ squareTerminalAForm n ++ suffix)
+            (pre ++ [a, B] ++ squareTerminalAForm n ++ suffix) := by
+        simpa [B, a, List.append_assoc] using
+          general_yields_of_production (G := SquareGrammar)
+            SquareProduces.moveBa pre (squareTerminalAForm n ++ suffix)
+      have hrest :
+          GeneralGrammar.Derives SquareGrammar
+            (pre ++ [a, B] ++ squareTerminalAForm n ++ suffix)
+            (pre ++ [a] ++ squareTerminalAForm n ++ [B] ++ suffix) := by
+        simpa [B, a, List.append_assoc] using ih (pre ++ [a])
+      have hall := GeneralGrammar.Derives.step hstep hrest
+      simpa [squareTerminalAForm, Word.RepeatSymbol,
+        SententialForm.terminalWord, B, a, List.append_assoc] using hall
+
+theorem square_move_b_right_over_rows
+    (rowWidth rows : Nat)
+    (pre suffix : SententialForm SquareTerminal SquareNT) :
+    GeneralGrammar.Derives SquareGrammar
+      (pre ++ [squareN SquareNT.b] ++ squareRows rowWidth rows ++ suffix)
+      (pre ++ squareRows (rowWidth + 1) rows ++
+        [squareN SquareNT.b] ++ suffix) := by
+  induction rows generalizing pre with
+  | zero =>
+      simpa [squareRows] using
+        (GeneralGrammar.Derives.refl (G := SquareGrammar)
+          (pre ++ [squareN SquareNT.b] ++ suffix))
+  | succ rows ih =>
+      let A := squareN SquareNT.markA
+      let B := squareN SquareNT.b
+      let a := squareT SquareTerminal.a
+      have hstep :
+          GeneralGrammar.Yields SquareGrammar
+            (pre ++ [B, A] ++ squareTerminalAForm rowWidth ++
+              squareRows rowWidth rows ++ suffix)
+            (pre ++ [A, a, B] ++ squareTerminalAForm rowWidth ++
+              squareRows rowWidth rows ++ suffix) := by
+        simpa [A, B, a, List.append_assoc] using
+          general_yields_of_production (G := SquareGrammar)
+            SquareProduces.moveBA pre
+            (squareTerminalAForm rowWidth ++ squareRows rowWidth rows ++
+              suffix)
+      have hmoveAs :
+          GeneralGrammar.Derives SquareGrammar
+            (pre ++ [A, a, B] ++ squareTerminalAForm rowWidth ++
+              squareRows rowWidth rows ++ suffix)
+            (pre ++ [A, a] ++ squareTerminalAForm rowWidth ++
+              [B] ++ squareRows rowWidth rows ++ suffix) := by
+        simpa [A, B, a, List.append_assoc] using
+          square_move_b_right_over_terminal_as rowWidth
+            (pre ++ [A, a]) (squareRows rowWidth rows ++ suffix)
+      have hrest :
+          GeneralGrammar.Derives SquareGrammar
+            (pre ++ [A, a] ++ squareTerminalAForm rowWidth ++
+              [B] ++ squareRows rowWidth rows ++ suffix)
+            (pre ++ [A, a] ++ squareTerminalAForm rowWidth ++
+              squareRows (rowWidth + 1) rows ++ [B] ++ suffix) := by
+        simpa [A, B, a, squareTerminalAForm, Word.RepeatSymbol,
+          SententialForm.terminalWord, List.append_assoc] using
+          ih (pre ++ [A] ++ squareTerminalAForm (rowWidth + 1))
+      have hall := GeneralGrammar.Derives.step hstep
+        (GeneralGrammar.derives_trans hmoveAs hrest)
+      simpa [squareRows, A, B, a, squareTerminalAForm, Word.RepeatSymbol,
+        SententialForm.terminalWord, List.append_assoc] using hall
+
+theorem square_process_one_b_derives
+    (rowWidth rows : Nat)
+    (pre : SententialForm SquareTerminal SquareNT) :
+    GeneralGrammar.Derives SquareGrammar
+      (pre ++ [squareN SquareNT.b] ++ squareRows rowWidth rows ++
+        [squareN SquareNT.e])
+      (pre ++ squareRows (rowWidth + 1) rows ++ [squareN SquareNT.e]) := by
+  have hmove :=
+    square_move_b_right_over_rows rowWidth rows pre [squareN SquareNT.e]
+  have hremove :
+      GeneralGrammar.Yields SquareGrammar
+        (pre ++ squareRows (rowWidth + 1) rows ++
+          [squareN SquareNT.b, squareN SquareNT.e])
+        (pre ++ squareRows (rowWidth + 1) rows ++
+          [squareN SquareNT.e]) := by
+    simpa [List.append_assoc] using
+      general_yields_of_production (G := SquareGrammar)
+        SquareProduces.removeBE
+        (pre ++ squareRows (rowWidth + 1) rows) []
+  have hremoveDerives :
+      GeneralGrammar.Derives SquareGrammar
+        (pre ++ squareRows (rowWidth + 1) rows ++
+          [squareN SquareNT.b] ++ [squareN SquareNT.e])
+        (pre ++ squareRows (rowWidth + 1) rows ++
+          [squareN SquareNT.e]) := by
+    simpa [List.append_assoc] using GeneralGrammar.yields_derives hremove
+  exact GeneralGrammar.derives_trans hmove hremoveDerives
+
+theorem square_process_all_b_derives
+    (rows rowWidth remaining : Nat) :
+    GeneralGrammar.Derives SquareGrammar
+      (squareProcessForm remaining rowWidth rows)
+      (squareProcessForm 0 (rowWidth + remaining) rows) := by
+  induction remaining generalizing rowWidth with
+  | zero =>
+      simpa [squareProcessForm, squareBForm, Word.RepeatSymbol] using
+        (GeneralGrammar.Derives.refl (G := SquareGrammar)
+          (squareProcessForm 0 rowWidth rows))
+  | succ remaining ih =>
+      have hpass :
+          GeneralGrammar.Derives SquareGrammar
+            (squareProcessForm (remaining + 1) rowWidth rows)
+            (squareProcessForm remaining (rowWidth + 1) rows) := by
+        simpa [squareProcessForm, squareBForm_succ_eq_append,
+          List.append_assoc] using
+          square_process_one_b_derives rowWidth rows
+            ([squareN SquareNT.d] ++ squareBForm remaining)
+      have hrest := ih (rowWidth + 1)
+      have hall := GeneralGrammar.derives_trans hpass hrest
+      have hnat : rowWidth + (remaining + 1) = rowWidth + 1 + remaining := by
+        omega
+      simpa [squareProcessForm, hnat, List.append_assoc] using hall
+
+theorem square_move_d_right_over_terminal_as
+    (n : Nat) (pre suffix : SententialForm SquareTerminal SquareNT) :
+    GeneralGrammar.Derives SquareGrammar
+      (pre ++ [squareN SquareNT.d] ++ squareTerminalAForm n ++ suffix)
+      (pre ++ squareTerminalAForm n ++ [squareN SquareNT.d] ++ suffix) := by
+  induction n generalizing pre with
+  | zero =>
+      simpa [squareTerminalAForm, Word.RepeatSymbol,
+        SententialForm.terminalWord] using
+        (GeneralGrammar.Derives.refl (G := SquareGrammar)
+          (pre ++ [squareN SquareNT.d] ++ suffix))
+  | succ n ih =>
+      let D := squareN SquareNT.d
+      let a := squareT SquareTerminal.a
+      have hstep :
+          GeneralGrammar.Yields SquareGrammar
+            (pre ++ [D, a] ++ squareTerminalAForm n ++ suffix)
+            (pre ++ [a, D] ++ squareTerminalAForm n ++ suffix) := by
+        simpa [D, a, List.append_assoc] using
+          general_yields_of_production (G := SquareGrammar)
+            SquareProduces.moveDa pre (squareTerminalAForm n ++ suffix)
+      have hrest :
+          GeneralGrammar.Derives SquareGrammar
+            (pre ++ [a, D] ++ squareTerminalAForm n ++ suffix)
+            (pre ++ [a] ++ squareTerminalAForm n ++ [D] ++ suffix) := by
+        simpa [D, a, List.append_assoc] using ih (pre ++ [a])
+      have hall := GeneralGrammar.Derives.step hstep hrest
+      simpa [squareTerminalAForm, Word.RepeatSymbol,
+        SententialForm.terminalWord, D, a, List.append_assoc] using hall
+
+theorem square_terminal_rows_append (rowWidth rows : Nat) :
+    squareTerminalAForm rowWidth ++
+        SententialForm.terminalWord
+          (Word.RepeatSymbol SquareTerminal.a (rowWidth * rows)) =
+      SententialForm.terminalWord
+        (Word.RepeatSymbol SquareTerminal.a (rowWidth * (rows + 1))) := by
+  have hnat : rowWidth * (rows + 1) = rowWidth + rowWidth * rows := by
+    rw [Nat.mul_succ]
+    omega
+  rw [hnat]
+  simp [squareTerminalAForm, SententialForm.terminalWord,
+    Word.RepeatSymbol, List.replicate_append_replicate]
+
+theorem square_finish_rows_derives (rowWidth rows : Nat) :
+    GeneralGrammar.Derives SquareGrammar
+      ([squareN SquareNT.d] ++ squareRows rowWidth rows ++
+        [squareN SquareNT.e])
+      (SententialForm.terminalWord
+        (Word.RepeatSymbol SquareTerminal.a (rowWidth * rows))) := by
+  induction rows with
+  | zero =>
+      have hfinish :
+          GeneralGrammar.Yields SquareGrammar
+            [squareN SquareNT.d, squareN SquareNT.e] [] := by
+        simpa using
+          general_yields_of_production (G := SquareGrammar)
+            SquareProduces.finish [] []
+      simpa [squareRows, Word.RepeatSymbol,
+        SententialForm.terminalWord] using
+        GeneralGrammar.yields_derives hfinish
+  | succ rows ih =>
+      have hremove :
+          GeneralGrammar.Yields SquareGrammar
+            ([squareN SquareNT.d, squareN SquareNT.markA] ++
+              squareTerminalAForm rowWidth ++ squareRows rowWidth rows ++
+              [squareN SquareNT.e])
+            ([squareN SquareNT.d] ++ squareTerminalAForm rowWidth ++
+              squareRows rowWidth rows ++ [squareN SquareNT.e]) := by
+        simpa [List.append_assoc] using
+          general_yields_of_production (G := SquareGrammar)
+            SquareProduces.removeDA []
+            (squareTerminalAForm rowWidth ++ squareRows rowWidth rows ++
+              [squareN SquareNT.e])
+      have hmove :
+          GeneralGrammar.Derives SquareGrammar
+            ([squareN SquareNT.d] ++ squareTerminalAForm rowWidth ++
+              squareRows rowWidth rows ++ [squareN SquareNT.e])
+            (squareTerminalAForm rowWidth ++ [squareN SquareNT.d] ++
+              squareRows rowWidth rows ++ [squareN SquareNT.e]) := by
+        simpa [List.append_assoc] using
+          square_move_d_right_over_terminal_as rowWidth []
+            (squareRows rowWidth rows ++ [squareN SquareNT.e])
+      have hrest :
+          GeneralGrammar.Derives SquareGrammar
+            (squareTerminalAForm rowWidth ++ [squareN SquareNT.d] ++
+              squareRows rowWidth rows ++ [squareN SquareNT.e])
+            (squareTerminalAForm rowWidth ++
+              SententialForm.terminalWord
+                (Word.RepeatSymbol SquareTerminal.a (rowWidth * rows))) := by
+        simpa [List.append_assoc] using
+          general_derives_context ih (squareTerminalAForm rowWidth) []
+      have hall := GeneralGrammar.Derives.step hremove
+        (GeneralGrammar.derives_trans hmove hrest)
+      simpa [squareRows, square_terminal_rows_append, List.append_assoc] using
+        hall
+
+theorem square_words_generated (n : Nat) :
+    squareWord n ∈ GeneralGrammar.GeneratedLanguage SquareGrammar := by
+  have hstart := square_start_to_process_zero_derives n
+  have hprocess := square_process_all_b_derives n 0 n
+  have hfinish := square_finish_rows_derives n n
+  have hprocess' :
+      GeneralGrammar.Derives SquareGrammar
+        (squareProcessForm n 0 n)
+        ([squareN SquareNT.d] ++ squareRows n n ++ [squareN SquareNT.e]) := by
+    simpa [squareProcessForm] using hprocess
+  have hall := GeneralGrammar.derives_trans hstart
+    (GeneralGrammar.derives_trans hprocess' hfinish)
+  simpa [GeneralGrammar.GeneratedLanguage, SquareGrammar, squareWord,
+    squareN, ggNonterminal] using hall
+
+theorem square_language_subset_generated {word : Word SquareTerminal}
+    (h : word ∈ squareLanguage) :
+    word ∈ GeneralGrammar.GeneratedLanguage SquareGrammar := by
+  rcases h with ⟨n, hword⟩
+  rw [hword]
+  exact square_words_generated n
+
+def squareFinishRowsForm (rowWidth processed remaining : Nat) :
+    SententialForm SquareTerminal SquareNT :=
+  squareTerminalAForm (rowWidth * processed) ++ [squareN SquareNT.d] ++
+    squareRows rowWidth remaining ++ [squareN SquareNT.e]
+
+def squareFinishMoveForm
+    (rowWidth processed moved remaining : Nat) :
+    SententialForm SquareTerminal SquareNT :=
+  squareTerminalAForm (rowWidth * processed + moved) ++
+    [squareN SquareNT.d] ++
+      squareTerminalAForm (rowWidth - moved) ++
+        squareRows rowWidth remaining ++ [squareN SquareNT.e]
+
+inductive SquareDerivationShape :
+    SententialForm SquareTerminal SquareNT -> Prop where
+  | start :
+      SquareDerivationShape [squareN SquareNT.start]
+  | grow (n : Nat) :
+      SquareDerivationShape (squareGrowForm n)
+  | process (total remaining rowWidth : Nat)
+      (hbalance : rowWidth + remaining = total) :
+      SquareDerivationShape
+        (squareProcessForm remaining rowWidth total)
+  | finishRows (rowWidth processed remaining : Nat)
+      (hbalance : processed + remaining = rowWidth) :
+      SquareDerivationShape
+        (squareFinishRowsForm rowWidth processed remaining)
+  | finishMove (rowWidth processed moved remaining : Nat)
+      (hmoved : moved <= rowWidth)
+      (hbalance : processed + 1 + remaining = rowWidth) :
+      SquareDerivationShape
+        (squareFinishMoveForm rowWidth processed moved remaining)
+  | terminal (n : Nat) :
+      SquareDerivationShape
+        (SententialForm.terminalWord (squareWord n))
+
+theorem square_start_form_count_start :
+    SententialCountNonterminal SquareNT.start [squareN SquareNT.start] = 1 := by
+  simp [SententialCountNonterminal, squareN, ggNonterminal]
+
+theorem squareTerminalAForm_count_nonterminal (A : SquareNT) (n : Nat) :
+    SententialCountNonterminal A (squareTerminalAForm n) = 0 := by
+  simp [squareTerminalAForm, sententialCountNonterminal_terminalWord]
+
+theorem squareBForm_count_d (n : Nat) :
+    SententialCountNonterminal SquareNT.d (squareBForm n) = 0 := by
+  simpa [squareBForm] using
+    (sententialCountNonterminal_repeat_nonterminal_of_ne
+      (terminal := SquareTerminal) (A := SquareNT.d) (B := SquareNT.b)
+      (by intro h; cases h) n)
+
+theorem squareMarkerAForm_count_d (n : Nat) :
+    SententialCountNonterminal SquareNT.d (squareMarkerAForm n) = 0 := by
+  simpa [squareMarkerAForm] using
+    (sententialCountNonterminal_repeat_nonterminal_of_ne
+      (terminal := SquareTerminal) (A := SquareNT.d)
+      (B := SquareNT.markA) (by intro h; cases h) n)
+
+theorem squareRows_count_d (rowWidth rows : Nat) :
+    SententialCountNonterminal SquareNT.d
+      (squareRows rowWidth rows) = 0 := by
+  induction rows with
+  | zero =>
+      rfl
+  | succ rows ih =>
+      simp [squareRows, sententialCountNonterminal_append,
+        squareTerminalAForm_count_nonterminal, ih, squareN,
+        ggNonterminal, SententialCountNonterminal]
+
+theorem squareGrowForm_count_d (n : Nat) :
+    SententialCountNonterminal SquareNT.d (squareGrowForm n) = 1 := by
+  simp [squareGrowForm, sententialCountNonterminal_append,
+    squareBForm_count_d, squareMarkerAForm_count_d, squareN,
+    ggNonterminal, SententialCountNonterminal]
+
+theorem squareProcessForm_count_d
+    (remaining rowWidth rows : Nat) :
+    SententialCountNonterminal SquareNT.d
+      (squareProcessForm remaining rowWidth rows) = 1 := by
+  simp [squareProcessForm, sententialCountNonterminal_append,
+    squareBForm_count_d, squareRows_count_d, squareN,
+    ggNonterminal, SententialCountNonterminal]
+
+theorem squareFinishRowsForm_count_d
+    (rowWidth processed remaining : Nat) :
+    SententialCountNonterminal SquareNT.d
+      (squareFinishRowsForm rowWidth processed remaining) = 1 := by
+  simp [squareFinishRowsForm, sententialCountNonterminal_append,
+    squareTerminalAForm_count_nonterminal, squareRows_count_d, squareN,
+    ggNonterminal, SententialCountNonterminal]
+
+theorem squareFinishMoveForm_count_d
+    (rowWidth processed moved remaining : Nat) :
+    SententialCountNonterminal SquareNT.d
+      (squareFinishMoveForm rowWidth processed moved remaining) = 1 := by
+  simp [squareFinishMoveForm, sententialCountNonterminal_append,
+    squareTerminalAForm_count_nonterminal, squareRows_count_d, squareN,
+    ggNonterminal, SententialCountNonterminal]
+
+theorem square_derivation_shape_terminal_square
+    {sf : SententialForm SquareTerminal SquareNT}
+    (hshape : SquareDerivationShape sf)
+    {word : Word SquareTerminal}
+    (hsf : sf = SententialForm.terminalWord word) :
+    word ∈ squareLanguage := by
+  cases hshape with
+  | start =>
+      exact False.elim
+        (sententialCountNonterminal_terminal_absurd
+          square_start_form_count_start hsf)
+  | grow n =>
+      exact False.elim
+        (sententialCountNonterminal_terminal_absurd
+          (squareGrowForm_count_d n) hsf)
+  | process total remaining rowWidth hbalance =>
+      exact False.elim
+        (sententialCountNonterminal_terminal_absurd
+          (squareProcessForm_count_d remaining rowWidth total) hsf)
+  | finishRows rowWidth processed remaining hbalance =>
+      exact False.elim
+        (sententialCountNonterminal_terminal_absurd
+          (squareFinishRowsForm_count_d rowWidth processed remaining) hsf)
+  | finishMove rowWidth processed moved remaining hmoved hbalance =>
+      exact False.elim
+        (sententialCountNonterminal_terminal_absurd
+          (squareFinishMoveForm_count_d rowWidth processed moved remaining)
+          hsf)
+  | terminal n =>
+      have hword : squareWord n = word := by
+        have hto := congrArg SententialForm.toWord? hsf
+        simpa [SententialForm.terminalWord_toWord] using hto
+      exists n
+      exact hword.symm
+
+theorem square_derivation_shape_terminal_square_of_terminal
+    {word : Word SquareTerminal}
+    (hshape : SquareDerivationShape (SententialForm.terminalWord word)) :
+    word ∈ squareLanguage :=
+  square_derivation_shape_terminal_square hshape rfl
 
 def fourAsWord : Word SquareTerminal :=
   [SquareTerminal.a, SquareTerminal.a, SquareTerminal.a, SquareTerminal.a]
