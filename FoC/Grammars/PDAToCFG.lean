@@ -1,28 +1,40 @@
 import FoC.Grammars.CFG
 import FoC.Grammars.PDANormalize
 
-namespace FoC
-namespace Grammars
+set_option doc.verso true
 
 /-!
-The standard PDA-to-CFG construction for PDAs in top-pop normal form.
+# From PDAs to CFGs
+
+## Summary nonterminals
 
 The construction is factored around two summary nonterminal forms:
 
-* `empty p q` generates words for computations that preserve the stack tail
-  while moving from state `p` to state `q`.
-* `between p A q` generates words for computations that remove one stack
-  symbol `A`, leaving the stack tail unchanged, while moving from `p` to `q`.
+* {lit}`empty p q` generates words for computations that preserve the stack tail
+  while moving from state {lit}`p` to state {lit}`q`.
+* {lit}`between p A q` generates words for computations that remove one stack
+  symbol {lit}`A`, leaving the stack tail unchanged, while moving from {lit}`p`
+  to {lit}`q`.
 
 The production rules are stated for PDAs whose transitions pop either no stack
 symbol or exactly the current top stack symbol.  This is the grammar-friendly
 normal form targeted by Chapter 4's PDA-to-CFG theorem.
 -/
 
+namespace FoC
+namespace Grammars
+
 open Foundation
 open Languages
 
 namespace PDA
+
+/-!
+# Summary nonterminal syntax
+
+The nonterminal type contains a start symbol plus the two summary forms used to
+describe empty-stack and single-stack-symbol computations.
+-/
 
 abbrev ToCFGNonterminal (stack : Type v) (state : Type w) :=
   Unit ⊕ (state × state) ⊕ ((state × stack) × state)
@@ -49,6 +61,14 @@ def finite (stackFinite : FiniteType stack) (stateFinite : FiniteType state) :
         stateFinite))
 
 end ToCFGNonterminal
+
+/-!
+# Summary productions
+
+The production relation mirrors normalized PDA steps: start productions choose
+an accepting state, empty summaries preserve stack tails, and between summaries
+remove one stack symbol.
+-/
 
 def inputPrefix (a? : Option input) :
     SententialForm input nonterminal :=
@@ -99,6 +119,13 @@ inductive ToCFGProduces (M : PDA input stack state) :
         ToCFGProduces M (ToCFGNonterminal.between p A q)
           (inputPrefix a? ++ chainRhs ++
             [Symbol.nonterminal (ToCFGNonterminal.between s A q)])
+
+/-!
+# Finite production list
+
+For a finite PDA presentation, the abstract production relation is compiled
+into an explicit finite CFG production list.
+-/
 
 def chainEndpointForms (states : List state) (p : state) :
     Word stack ->
@@ -204,6 +231,13 @@ def ToCFG (M : PDA input stack state)
   produces := ToCFGProducesFromList M presentation
   nonterminalsFinite :=
     ToCFGNonterminal.finite presentation.stackFinite M.statesFinite
+
+/-!
+# Production-list correctness
+
+These lemmas prove that the finite list presents exactly the abstract summary
+production relation.
+-/
 
 theorem toCFG_hasFiniteProductions
     (M : PDA input stack state) (presentation : FinitePresentation M) :
@@ -357,6 +391,13 @@ theorem inputPrefix_formLanguage_step
         computes_of_step
           (Step.read (M := M) (unread := restInput)
             (restStack := tail) htransition)
+
+/-!
+# Production soundness
+
+Each generated CFG production corresponds to a valid summarized PDA
+computation, first for abstract productions and then for the finite list.
+-/
 
 theorem toCFG_production_sound
     {M : PDA input stack state}
@@ -4021,6 +4062,13 @@ theorem toCFG_yields_sound
     (toCFG_production_sound (toCFG_producesFromList_sound hprod))
     hw
 
+/-!
+# Soundness: CFG to PDA
+
+If the constructed grammar derives a terminal word, the original PDA accepts
+that word.
+-/
+
 theorem toCFG_derives_sound
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {x y : SententialForm input (ToCFGNonterminal stack state)}
@@ -4049,6 +4097,13 @@ theorem toCFG_accepts_of_generates
   cases htail
   rw [hwEq, Word.concat_empty_right]
   exact hfirst
+
+/-!
+# Summary-completeness assumptions
+
+Completeness of the reverse direction is factored through summary-completeness
+predicates. Normalized top-pop PDAs satisfy these predicates.
+-/
 
 def EmptySummaryComplete (M : PDA input stack state) : Prop :=
   forall n p q sourceInput targetInput,
@@ -4391,6 +4446,13 @@ theorem toCFG_topPopExact
   intro hnorm
   exact toCFG_language_exact_of_topPop
     (M := M) (presentation := presentation) hnorm
+
+/-!
+# Normalized PDA conversion
+
+For an arbitrary finitely presented PDA, pop normalization produces the
+top-pop form needed by the exact PDA-to-CFG construction.
+-/
 
 def PopNormalizeLanguageExact
     (M : PDA input stack state) (presentation : FinitePresentation M) :

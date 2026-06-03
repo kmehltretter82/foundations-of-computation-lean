@@ -2,19 +2,37 @@ import FoC.Foundation.Finite
 import FoC.Languages.Language
 import FoC.Computability.Tape
 
-namespace FoC
-namespace Computability
+set_option doc.verso true
 
 /-!
-Deterministic one-tape Turing machines.
+# Turing machines
+
+## Configurations and computation
+
+This module formalizes the deterministic one-tape machines used in Chapter 5.
+A machine has a start state, a halting state, a partial transition function, and
+a finite-state witness.  Configurations pair a state with a tape, and
+computation is the reflexive-transitive closure of single-machine steps.
+
+## Book coordinates
 
 Used by:
 - Chapter 5, Section 5.1: Turing-machine definition, configurations,
   step-by-step computation, halting, output, and acceptance by halting.
 -/
 
+namespace FoC
+namespace Computability
+
 open Foundation
 open Languages
+
+/-!
+# Machine structure
+
+A deterministic one-tape machine has a start state, halting state, partial
+transition function, and finite-state witness.
+-/
 
 structure TuringMachine (symbol : Type u) (state : Type v) where
   start : state
@@ -24,6 +42,14 @@ structure TuringMachine (symbol : Type u) (state : Type v) where
   statesFinite : FiniteType state
 
 namespace TuringMachine
+
+/-!
+# Configurations and steps
+
+Configurations pair a control state with a tape. A step reads the current cell,
+writes a new cell value, moves the head, and changes state according to the
+partial transition function.
+-/
 
 structure Configuration (symbol : Type u) (state : Type v) where
   state : state
@@ -60,6 +86,13 @@ inductive ComputesIn (M : TuringMachine symbol state) :
   | zero (c : Configuration symbol state) : ComputesIn M 0 c c
   | succ {n : Nat} {c d e : Configuration symbol state} :
       Step M c d -> ComputesIn M n d e -> ComputesIn M (n + 1) c e
+
+/-!
+# Halting and accepted languages
+
+Halting predicates are stated from an arbitrary configuration, from an input
+word, and with a specified output tape.
+-/
 
 def Halted (M : TuringMachine symbol state)
     (c : Configuration symbol state) : Prop :=
@@ -105,6 +138,13 @@ def AcceptedLanguage (M : TuringMachine symbol state) : Language symbol :=
 
 def Recognizes (M : TuringMachine symbol state) (L : Language symbol) : Prop :=
   Language.Equal (AcceptedLanguage M) L
+
+/-!
+# Computation algebra
+
+The basic facts prove reflexivity, determinism, transitivity, and equivalence
+between unbounded computations and length-indexed computations.
+-/
 
 theorem computes_refl (M : TuringMachine symbol state)
     (c : Configuration symbol state) :

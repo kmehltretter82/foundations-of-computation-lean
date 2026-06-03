@@ -1,11 +1,18 @@
 import FoC.Foundation.Finite
 import FoC.Languages.Language
 
-namespace FoC
-namespace Languages
+set_option doc.verso true
 
 /-!
-Deterministic finite-state automata.
+# Deterministic finite automata
+
+## Deterministic runs
+
+A DFA is represented by a start state, a deterministic transition function, an
+accepting-state predicate, and a finite-state witness.  The extended transition
+function runs by recursion over input words, matching the textbook construction.
+
+## Book coordinates
 
 Used by:
 - Chapter 3, Section 3.4: DFA definitions, extended transition function, and
@@ -15,9 +22,19 @@ Used by:
 - Chapter 3, Section 3.7: pumping-lemma vocabulary
 -/
 
+namespace FoC
+namespace Languages
+
 open Foundation
 
 namespace FiniteState
+
+/-!
+# Finite product states
+
+Closure under Boolean operations uses product automata. This helper packages
+the finite-state witness for a product of two finite state types.
+-/
 
 def PairElems : List state₁ -> List state₂ -> List (state₁ × state₂)
   | [], _ => []
@@ -45,6 +62,13 @@ def Product (A : FiniteType state₁) (B : FiniteType state₂) :
 
 end FiniteState
 
+/-!
+# DFA structure
+
+A deterministic automaton consists of a start state, one next state for each
+state-symbol pair, an accepting predicate, and a finite-state witness.
+-/
+
 structure DFA (alpha : Type u) (state : Type v) where
   start : state
   step : state -> alpha -> state
@@ -52,6 +76,13 @@ structure DFA (alpha : Type u) (state : Type v) where
   statesFinite : FiniteType state
 
 namespace DFA
+
+/-!
+# Runs and accepted language
+
+The extended transition function consumes a word recursively. Acceptance and
+recognizability are then stated as predicates on the resulting final state.
+-/
 
 def RunFrom (M : DFA alpha state) : state -> Word alpha -> state
   | q, [] => q
@@ -68,6 +99,13 @@ def Language (M : DFA alpha state) : Languages.Language alpha :=
 
 def Recognizable (L : Languages.Language alpha) : Prop :=
   exists state : Type, exists M : DFA alpha state, Languages.Language.Equal (Language M) L
+
+/-!
+# Product and complement automata
+
+The closure constructions change only the accepting predicate for complements
+and run two machines in lockstep for intersections and unions.
+-/
 
 def Complement (M : DFA alpha state) : DFA alpha state where
   start := M.start
@@ -88,6 +126,13 @@ def Union (M : DFA alpha state₁) (N : DFA alpha state₂) :
   step := fun q a => (M.step q.1 a, N.step q.2 a)
   accept := fun q => M.accept q.1 ∨ N.accept q.2
   statesFinite := FiniteState.Product M.statesFinite N.statesFinite
+
+/-!
+# Run equations
+
+These equations are the computational facts used to relate constructed
+automata to the intended language operations.
+-/
 
 theorem runFrom_empty (M : DFA alpha state) (q : state) :
     RunFrom M q Word.Empty = q :=
@@ -148,6 +193,13 @@ theorem runFrom_union (M : DFA alpha state₁) (N : DFA alpha state₂)
   | nil => rfl
   | cons a rest ih =>
       exact ih (M.step q.1 a, N.step q.2 a)
+
+/-!
+# Recognizable closure
+
+The final theorems package the automata constructions as language-level closure
+properties for DFA-recognizable languages.
+-/
 
 theorem intersection_accepts (M : DFA alpha state₁) (N : DFA alpha state₂)
     (w : Word alpha) :

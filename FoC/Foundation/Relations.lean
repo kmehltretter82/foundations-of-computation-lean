@@ -1,14 +1,32 @@
 import FoC.Foundation.Sets
 
-namespace FoC
-namespace Foundation
+set_option doc.verso true
 
 /-!
-Standalone relation vocabulary for Chapter 2.
+# Relations
+
+## Relation properties
+
+This module formalizes the relation vocabulary from Chapter 2: reflexive,
+symmetric, antisymmetric, transitive, equivalence, partial order, total order,
+equivalence classes, and partitions.  Relations are represented directly as
+binary predicates.
+
+## Book coordinates
 
 Used by:
 - Chapter 2, Section 2.7: Relations
 - Later transition-system chapters that need reachability-style relations
+-/
+
+namespace FoC
+namespace Foundation
+
+/-!
+# Relation predicates
+
+A relation is a binary predicate.  The first definitions package the usual
+properties and order/equivalence combinations.
 -/
 
 def Rel (alpha : Type u) : Type u :=
@@ -50,6 +68,13 @@ structure Partition (alpha : Type u) where
   overlap_equal :
     forall A B, A ∈ block -> B ∈ block ->
       (exists x, x ∈ A ∧ x ∈ B) -> FSet.Equal A B
+
+/-!
+# Equivalence classes and partitions
+
+Equivalence relations determine classes, and those classes form a partition of
+the underlying type.
+-/
 
 theorem equivalence_reflexive {R : Rel alpha} (h : Equivalence R) : Reflexive R :=
   h.left
@@ -119,6 +144,13 @@ theorem same_fiber_equivalence (f : alpha -> beta) :
       exact hxy.symm
     · intro x y z hxy hyz
       exact Eq.trans hxy hyz
+
+/-!
+# Transitive closure
+
+The transitive closure is the reachability-style relation reused by later
+transition-system material.
+-/
 
 theorem symmetric_antisymmetric_implies_eq {R : Rel alpha}
     (hs : Symmetric R) (ha : Antisymmetric R) :

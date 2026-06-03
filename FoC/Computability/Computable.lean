@@ -1,10 +1,17 @@
 import FoC.Computability.TuringMachine
 
-namespace FoC
-namespace Computability
+set_option doc.verso true
 
 /-!
-Turing-computable functions.
+# Computable functions
+
+## Encoding string functions
+
+The book's computable functions operate on strings.  This module represents
+input and output encodings explicitly and defines total and partial
+Turing-computable string functions in terms of machine output behavior.
+
+## Book coordinates
 
 Used by:
 - Chapter 5, Section 5.1: Turing-computable string functions.
@@ -12,7 +19,18 @@ Used by:
   computable functions.
 -/
 
+namespace FoC
+namespace Computability
+
 open Languages
+
+/-!
+# Word encodings
+
+Computable functions may use separate input and output alphabets. Encoding maps
+lift symbol encodings to words while preserving the word operations needed
+later.
+-/
 
 def EncodeWord (encode : alpha -> symbol) (w : Word alpha) : Word symbol :=
   w.map encode
@@ -39,6 +57,13 @@ theorem encodeWord_id (w : Word alpha) :
   | cons a rest ih =>
       rw [encodeWord_cons, ih]
 
+/-!
+# Total computable functions
+
+A total string function is computed when the machine halts on every encoded
+input with the encoded output word.
+-/
+
 def ComputesFunction (M : TuringMachine symbol state)
     (encodeInput : input -> symbol)
     (encodeOutput : output -> symbol)
@@ -54,6 +79,13 @@ def TuringComputable (f : Word input -> Word output) : Prop :=
       exists encodeInput : input -> symbol,
         exists encodeOutput : output -> symbol,
           ComputesFunction M encodeInput encodeOutput f
+
+/-!
+# Partial computable functions
+
+Partial functions are represented by options. Undefined inputs correspond to
+nonhalting machine behavior.
+-/
 
 def ComputesPartialFunction (M : TuringMachine symbol state)
     (encodeInput : input -> symbol)
@@ -80,8 +112,15 @@ def TotalAsPartial (f : Word input -> Word output) :
   fun w => some (f w)
 
 def PartialFunctionDomain
-    (f : Word input -> Option (Word output)) : Language input :=
+  (f : Word input -> Option (Word output)) : Language input :=
   fun w => exists out : Word output, f w = some out
+
+/-!
+# Total-to-partial bridge
+
+Every total computable function is a partial computable function with universal
+domain.
+-/
 
 theorem computes_function_halts {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {encodeOutput : output -> symbol}
@@ -156,6 +195,13 @@ theorem computesPartialFunction_halts_iff_domain
         have hw := h w
         rw [hout] at hw
         exact TuringMachine.halts_with_output_implies_halts hw
+
+/-!
+# Extensionality
+
+Computability and partial-function domains are invariant under pointwise equal
+functions.
+-/
 
 theorem computesFunction_of_pointwise_equal {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {encodeOutput : output -> symbol}

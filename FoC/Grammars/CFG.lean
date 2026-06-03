@@ -2,11 +2,18 @@ import FoC.Foundation.Finite
 import FoC.Foundation.Countable
 import FoC.Languages.Language
 
-namespace FoC
-namespace Grammars
+set_option doc.verso true
 
 /-!
-Context-free grammars and derivations.
+# Context-free grammars
+
+## Grammar syntax and derivations
+
+This file is the core formal model for Chapter 4.  It represents terminals and
+nonterminals as a tagged symbol type, sentential forms as lists of symbols, and
+derivations as the reflexive-transitive closure of one-step production use.
+
+## Book coordinates
 
 Used by:
 - Chapter 4, Section 4.1: context-free grammar definitions, one-step
@@ -16,10 +23,20 @@ Used by:
 - Chapter 4, Section 4.6: context-free grammars embed into general grammars.
 -/
 
+namespace FoC
+namespace Grammars
+
 open Foundation
 open Languages
 
 namespace FiniteType
+
+/-!
+# Finite helper types
+
+Closure constructions introduce unit and sum nonterminal types. These helpers
+carry the finite-witness bookkeeping required by the grammar structures.
+-/
 
 def unit : FiniteType Unit where
   elems := [()]
@@ -42,6 +59,13 @@ def sum (left : FiniteType alpha) (right : FiniteType beta) :
         exact List.mem_map.mpr (Exists.intro b (And.intro (right.complete b) rfl))
 
 end FiniteType
+
+/-!
+# Symbols
+
+A sentential form contains terminals and nonterminals in one tagged type. The
+encoding lemmas support the countability arguments for grammars.
+-/
 
 inductive Symbol (terminal : Type u) (nonterminal : Type v) where
   | terminal : terminal -> Symbol terminal nonterminal
@@ -86,6 +110,13 @@ theorem encodable
     code_injective hterminalCode hnonterminalCode⟩
 
 end Symbol
+
+/-!
+# Sentential forms
+
+Sentential forms are lists of symbols. This section defines terminal words,
+nonterminal maps, terminal-only checks, and conversion back to words.
+-/
 
 abbrev SententialForm (terminal : Type u) (nonterminal : Type v) :=
   List (Symbol terminal nonterminal)
@@ -251,6 +282,14 @@ theorem toWord?_some_eq_terminalWord {x : SententialForm term nt}
 
 end SententialForm
 
+/-!
+# Grammar structures and finite presentations
+
+A CFG consists of a start nonterminal, a production predicate, and finite
+nonterminal data. The finite-presentation records and encodings package the
+book's finite list of productions as Lean data.
+-/
+
 structure CFG (terminal : Type u) (nonterminal : Type v) where
   start : nonterminal
   produces : nonterminal -> SententialForm terminal nonterminal -> Prop
@@ -382,6 +421,13 @@ def HasFiniteProductions (G : CFG terminal nonterminal) : Prop :=
       G.produces A rhs <->
         exists rule, rule ∈ rules ∧ rule.lhs = A ∧ rule.rhs = rhs
 
+/-!
+# Production bounds
+
+Finite production lists have a maximum right-hand-side length. That bound is
+used later in pumping and finite-presentation arguments.
+-/
+
 theorem finiteProductions_rhs_length_bound
     {G : CFG terminal nonterminal}
     (hG : HasFiniteProductions G) :
@@ -398,6 +444,14 @@ theorem finiteProductions_rhs_length_bound
             have hlen := ProductionList.rhs_length_le_max hrule.left
             rw [← hrule.right.right]
             omega
+
+/-!
+# Derivations and generated languages
+
+One-step yields replace a single nonterminal occurrence by a right-hand side.
+Derivations are the reflexive-transitive closure, and generated languages are
+terminal words reachable from the start nonterminal.
+-/
 
 def Yields (G : CFG terminal nonterminal)
     (x y : SententialForm terminal nonterminal) : Prop :=
@@ -435,6 +489,13 @@ def ContextFree (L : Language terminal) : Prop :=
 def Equivalent (G H : CFG terminal nonterminal) : Prop :=
   Language.Equal (GeneratedLanguage G) (GeneratedLanguage H)
 
+/-!
+# Regular grammar shapes
+
+Right-regular and left-regular grammars are classified by the shape of every
+production right-hand side.
+-/
+
 inductive RightRegularRHS : SententialForm terminal nonterminal -> Prop where
   | epsilon : RightRegularRHS []
   | nonterminal (A : nonterminal) :
@@ -454,6 +515,14 @@ inductive LeftRegularRHS : SententialForm terminal nonterminal -> Prop where
 
 def LeftRegular (G : CFG terminal nonterminal) : Prop :=
   forall A rhs, G.produces A rhs -> LeftRegularRHS rhs
+
+/-!
+# Reverse grammars and derivation algebra
+
+Reversing each production right-hand side defines the reverse grammar. The
+following derivation lemmas provide context, transitivity, and word-level
+reasoning used by parse-tree and closure constructions.
+-/
 
 def ReverseGrammar (G : CFG terminal nonterminal) :
     CFG terminal nonterminal where

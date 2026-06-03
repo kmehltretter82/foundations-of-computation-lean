@@ -1,17 +1,35 @@
 import FoC.Grammars.CFG
 
-namespace FoC
-namespace Grammars
+set_option doc.verso true
 
 /-!
-Small BNF notation model.
+# BNF notation
+
+## BNF expressions
+
+The textbook uses BNF conveniences such as alternatives, optional pieces, and
+repetition.  This module treats those conveniences as expressions that expand
+to ordinary context-free right-hand sides.
+
+## Book coordinates
 
 Used by:
 - Chapter 4, Section 4.2: alternatives, optional items, and repeated items
   are expanded into ordinary context-free right-hand sides.
 -/
 
+namespace FoC
+namespace Grammars
+
 namespace BNF
+
+/-!
+# Expression syntax
+
+BNF forms are syntax trees over ordinary grammar symbols: empty pieces, single
+symbols, sequencing, alternatives, optional expressions, and repeated
+expressions.
+-/
 
 inductive Expr (terminal : Type u) (nonterminal : Type v) where
   | empty : Expr terminal nonterminal
@@ -22,6 +40,14 @@ inductive Expr (terminal : Type u) (nonterminal : Type v) where
   | many : Expr terminal nonterminal -> Expr terminal nonterminal
 
 namespace Expr
+
+/-!
+# Expansion relation
+
+Expansion interprets a BNF expression as one ordinary sentential form. The
+constructors are the formal counterpart of replacing BNF notation by concrete
+right-hand sides.
+-/
 
 inductive Expands :
     Expr terminal nonterminal -> SententialForm terminal nonterminal -> Prop where
@@ -41,6 +67,13 @@ inductive Expands :
       Expands (many e) []
   | manyMore {e : Expr terminal nonterminal} {x xs} :
       Expands e x -> Expands (many e) xs -> Expands (many e) (x ++ xs)
+
+/-!
+# BNF laws
+
+These lemmas give the useful introduction and equivalence rules for
+alternatives, optional pieces, and repetitions.
+-/
 
 theorem alt_expands {e f : Expr terminal nonterminal} {x} :
     Expands (alt e f) x <-> Expands e x ∨ Expands f x := by

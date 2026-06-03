@@ -1,11 +1,16 @@
-namespace FoC
-namespace Foundation
+set_option doc.verso true
 
 /-!
-Standalone set infrastructure.
+# Sets
 
-The book treats sets extensionally. We represent a set of `alpha` as a
-predicate `alpha -> Prop`, and use `FSet.Equal` for book-style equality.
+## Predicate sets
+
+The book treats sets extensionally. We represent a set of {lit}`alpha` as a
+predicate {lit}`alpha -> Prop`, and use {lit}`FSet.Equal` for book-style equality.
+This keeps set membership and set equality close to the textbook notation while
+remaining simple enough to use throughout the formalization.
+
+## Book coordinates
 
 Used by:
 - Chapter 2, Section 2.1: Basic Concepts
@@ -13,6 +18,16 @@ Used by:
 - Chapter 2, Section 2.4: Functions
 - Chapter 2, Section 2.6: Counting Past Infinity
 - Chapter 2, Section 2.7: Relations
+-/
+
+namespace FoC
+namespace Foundation
+
+/-!
+# Set representation
+
+Sets are predicates, so membership is function application and extensional
+equality is pointwise equivalence of membership.
 -/
 
 def FSet (alpha : Type u) : Type u :=
@@ -73,6 +88,12 @@ def ListInter : List (FSet alpha) -> FSet alpha
   | [] => Univ
   | A :: As => Inter A (ListInter As)
 
+/-!
+# Membership laws
+
+The first theorems unfold membership for the primitive set constructors.
+-/
+
 theorem mem_empty (x : alpha) : x ∈ (Empty : FSet alpha) <-> False :=
   Iff.rfl
 
@@ -104,6 +125,12 @@ theorem mem_diff (x : alpha) (A B : FSet alpha) :
 theorem mem_powerset (B A : FSet alpha) :
     B ∈ Powerset A <-> Subset B A :=
   Iff.rfl
+
+/-!
+# Subsets and extensional equality
+
+Subset and equality lemmas provide the basic rewriting API for predicate sets.
+-/
 
 theorem subset_refl (A : FSet alpha) : Subset A A := by
   intro x hx
@@ -162,6 +189,13 @@ theorem not_equal_of_mem_not_mem {A B : FSet alpha} {x : alpha}
     (hA : x ∈ A) (hB : ¬ x ∈ B) : ¬ Equal A B := by
   intro h
   exact hB ((h x).mp hA)
+
+/-!
+# Boolean algebra of sets
+
+The algebraic laws cover union, intersection, complements, distributivity, and
+De Morgan laws.
+-/
 
 theorem union_left_subset (A B : FSet alpha) : Subset A (Union A B) := by
   intro x hx
@@ -446,7 +480,12 @@ theorem compl_listInter (sets : List (FSet alpha)) :
             have htailCompl : x ∈ Compl (ListInter As) := (ih x).mpr htail
             exact htailCompl hInter.right
 
--- Book: Chapter 2, Section 2.6, Cantor diagonal argument.
+/-!
+# Cantor diagonalization
+
+Cantor's powerset argument is formalized directly: no function from a type to
+its powerset can be surjective.
+-/
 theorem cantor_no_surjective_powerset (f : alpha -> FSet alpha) :
     ¬ (forall A : FSet alpha, exists x : alpha, Equal (f x) A) := by
   intro hsurj

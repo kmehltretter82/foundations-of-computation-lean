@@ -1,11 +1,29 @@
 import FoC.Foundation.Lists
 import FoC.Foundation.Sets
 
+set_option doc.verso true
+
+/-!
+# Finite sets
+
+## Finite witnesses
+
+The Foundation library represents finite sets by explicit list enumerations.
+This matches the book's concrete use of finite collections while giving Lean a
+witness that can be inspected and reused in later cardinality arguments.
+
+The duplicate-free variant records the stronger fact needed when a list is used
+as a cardinality witness.
+-/
+
 namespace FoC
 namespace Foundation
 
 /-!
-Finite sets and finite types, represented by explicit list enumerations.
+# Finite types
+
+A finite type is represented by a list that contains every value of the type.
+This is the finite-state witness reused by automata and grammar modules.
 -/
 
 structure FiniteType (alpha : Type u) where
@@ -13,6 +31,14 @@ structure FiniteType (alpha : Type u) where
   complete : forall x : alpha, x ∈ elems
 
 namespace FSet
+
+/-!
+# Finite predicate sets
+
+For sets represented as predicates, finiteness means that some list enumerates
+exactly the members of the predicate.  The duplicate-free variant is the one
+used for cardinality witnesses.
+-/
 
 def Finite (A : FSet alpha) : Prop :=
   exists xs : List alpha, ListEnumerates xs A
@@ -43,7 +69,12 @@ theorem singleton_finite (a : alpha) : Finite (Singleton a) := by
     | tail _ htail =>
         cases htail
 
--- Book: Chapter 2, Section 2.6, Exercise 12(c).
+/-!
+# Finite subsets
+
+Exercise 12(c) is the finite-subset principle: every subset of a finite set is
+finite.  The proof filters the finite list for the larger set.
+-/
 theorem finite_subset {A B : FSet alpha}
     (hAB : Subset A B) (hB : Finite B) : Finite A := by
   classical

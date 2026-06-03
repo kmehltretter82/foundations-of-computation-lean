@@ -1,10 +1,13 @@
 import FoC.Languages.Regular
 
-namespace FoC
-namespace Languages
+set_option doc.verso true
 
 /-!
-Pumping-lemma vocabulary for regular languages.
+# Pumping regular languages
+
+## Pumping decompositions
+
+## Book coordinates
 
 Used by:
 - Chapter 3, Section 3.7: Non-regular Languages
@@ -14,7 +17,17 @@ lemma, proves it for DFA-recognizable languages by a finite-state repetition
 argument, and transports it to regular languages through the DFA/regular bridge.
 -/
 
+namespace FoC
+namespace Languages
+
 namespace Pumping
+
+/-!
+# Pumping vocabulary
+
+A decomposition splits a long word into prefix, nonempty loop, and suffix, with
+the loop repeatable any number of times.
+-/
 
 def Decomposition (L : Language alpha) (n : Nat) (w : Word alpha) : Prop :=
   exists x y z : Word alpha,
@@ -31,6 +44,13 @@ def HasPumpingProperty (L : Language alpha) : Prop :=
 
 def PumpingLemmaConclusion (L : Language alpha) : Prop :=
   RegularLanguage.Regular L -> HasPumpingProperty L
+
+/-!
+# Prefix states
+
+For a DFA run, the list of prefix states has one more entry than the input word
+has symbols. A long enough word therefore repeats a state.
+-/
 
 def PrefixStatesFrom (M : DFA alpha state) : state -> Word alpha -> List state
   | q, [] => [q]
@@ -187,6 +207,13 @@ theorem duplicate_indices_of_length_gt {α : Type u} [DecidableEq α]
                           exists j
                           exists a
 
+/-!
+# Word splitting at repeated states
+
+Repeated prefix states determine the pumping split. These lemmas reconstruct
+the word around the repeated segment and prove the repeated segment is nonempty.
+-/
+
 theorem word_split_reconstruct (w : Word alpha) {i j : Nat}
     (hij : i <= j) :
     w = Word.Concat (List.take i w)
@@ -256,6 +283,13 @@ theorem runFrom_repeatWord_loop (M : DFA alpha state) (q : state)
       rfl
   | succ k ih =>
       rw [Word.repeatWord_succ, DFA.runFrom_append, hloop, ih]
+
+/-!
+# DFA pumping lemma
+
+The repeated state in a long DFA run yields a loop that can be traversed any
+number of times without changing the accepting state.
+-/
 
 theorem dfa_pumpingLength (M : DFA alpha state) :
     PumpingLength (DFA.Language M) (M.statesFinite.elems.length + 1) := by
@@ -391,6 +425,13 @@ theorem dfa_hasPumpingProperty (M : DFA alpha state) :
   exists M.statesFinite.elems.length + 1
   exact dfa_pumpingLength M
 
+/-!
+# Transfer to regular languages
+
+The DFA pumping property is transported across language equality and then
+through the regular-language to DFA-recognizable bridge.
+-/
+
 theorem decomposition_original_word_mem {L : Language alpha} {n : Nat} {w : Word alpha}
     (h : Decomposition L n w) : w ∈ L := by
   cases h with
@@ -487,6 +528,13 @@ theorem pumpingLength_mono {L : Language alpha} {n m : Nat}
                     constructor
                     · exact Nat.le_trans hrest.left hnm
                     exact hrest.right
+
+/-!
+# Pumping counterexamples
+
+These are the contrapositive tools used in the book examples: exhibit, for
+every proposed pumping length, a long word whose every valid split fails.
+-/
 
 theorem not_pumpingLength_of_counterexample {L : Language alpha} {n : Nat}
     {w : Word alpha}

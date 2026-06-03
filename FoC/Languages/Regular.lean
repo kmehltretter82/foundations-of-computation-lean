@@ -3,16 +3,27 @@ import FoC.Languages.RegularExpression
 import FoC.Languages.NFA
 import FoC.Languages.Thompson
 
-namespace FoC
-namespace Languages
+set_option doc.verso true
 
 /-!
-Regular-language vocabulary and closure theorems.
+# Regular languages
+
+## Regular-language predicates
+
+This module collects the reusable predicates and closure theorems for regular
+languages.  It relates regular-expression generation, DFA recognizability, and
+NFA recognizability, then packages the constructions needed by the chapter
+statements.
+
+## Book coordinates
 
 Used by:
 - Chapter 3, Section 3.2: definition of regular language
 - Chapter 3, Section 3.6: closure properties and automata comparison
 -/
+
+namespace FoC
+namespace Languages
 
 namespace RegularLanguage
 
@@ -24,6 +35,13 @@ def DFARecognizable (L : Language alpha) : Prop :=
 
 def NFARecognizable (L : Language alpha) : Prop :=
   NFA.Recognizable L
+
+/-!
+# Finite subsets of states
+
+The subset construction needs a finite type of state sets. This section builds
+finite set witnesses from sublists of the original finite state list.
+-/
 
 def FSetOfList (xs : List state) : Foundation.FSet state :=
   fun x => x ∈ xs
@@ -76,6 +94,13 @@ noncomputable def finiteFSetType (finite : Foundation.FiniteType state) :
         apply List.mem_map.mpr
         exists xs }
 
+/-!
+# State-elimination regexes
+
+The DFA-to-regular-expression direction is formalized by expressions for paths
+whose intermediate states are restricted to a finite allowed list.
+-/
+
 noncomputable def StepRegex (alphabet : List alpha) (M : DFA alpha state)
     (q r : state) : RegExp alpha := by
   classical
@@ -101,6 +126,13 @@ noncomputable def DFARegex (alphabet : List alpha) (M : DFA alpha state) :
   exact RegExp.AltList
     ((M.statesFinite.elems.filter fun q => M.accept q).map
       (fun q => PathRegex alphabet M M.statesFinite.elems M.start q))
+
+/-!
+# Alphabet-restricted paths
+
+The state-elimination proof tracks that each input symbol belongs to the chosen
+finite alphabet and relates restricted paths to DFA runs.
+-/
 
 def AllSymbolsIn (alphabet : List alpha) (w : Word alpha) : Prop :=
   forall a, List.Mem a w -> a ∈ alphabet
@@ -469,6 +501,13 @@ theorem dfaRegex_complete (alphabet : List alpha) (M : DFA alpha state)
         unfold DFA.Run
         exact pathVia_allStates M M.start w)
 
+/-!
+# Basic regular constructions
+
+These theorems expose the regular-expression closure facts as language-level
+regularity statements.
+-/
+
 theorem empty_regular : Regular (Language.Empty : Language alpha) :=
   RegExp.regular_empty
 
@@ -517,6 +556,13 @@ theorem finite_alphabet_universal_regular (alphabet : List alpha)
           (Language.star_of_mem (RegExp.Denote (RegExp.CharClass alphabet)) hhead)
           (ih True.intro)
         simpa [Word.Concat] using hconcat
+
+/-!
+# Regular expressions and automata
+
+Thompson construction gives NFAs from regular expressions, and the subset
+construction gives DFAs from NFAs.
+-/
 
 theorem dfa_recognizable_is_nfa_recognizable {L : Language alpha}
     (hL : DFARecognizable L) : NFARecognizable L :=
@@ -571,6 +617,13 @@ theorem nfa_subset_construction {state : Type} (M : NFA alpha state)
 theorem nfa_subset_construction_auto {state : Type} (M : NFA alpha state) :
     DFARecognizable (NFA.AcceptedLanguage M) :=
   nfa_subset_construction M (finiteFSetType M.statesFinite)
+
+/-!
+# Automata to regular expressions
+
+For a finite alphabet, state-elimination turns DFA-recognizable languages back
+into regular-expression languages, completing the equivalence.
+-/
 
 theorem dfa_recognizable_regular (alphabet : List alpha)
     (halphabet : forall a, a ∈ alphabet) {L : Language alpha}

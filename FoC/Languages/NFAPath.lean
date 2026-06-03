@@ -1,22 +1,36 @@
 import FoC.Languages.NFA
 
-namespace FoC
-namespace Languages
+set_option doc.verso true
 
 /-!
-Path semantics for NFAs.
+# NFA path semantics
+
+## Path semantics
+
+## Book coordinates
 
 Used by:
 - Chapter 3, Section 3.6: regular-expression-to-NFA constructions
 
-The core `NFA.Accepts` definition is reachability-set based because that is
-convenient for subset construction.  Thompson-style constructions are easier to
-prove with explicit paths.  This module proves that both views agree.
+The core {lit}`NFA.Accepts` definition is reachability-set based because that
+is convenient for subset construction.  Thompson-style constructions are easier
+to prove with explicit paths.  This module proves that both views agree.
 -/
+
+namespace FoC
+namespace Languages
 
 open Foundation
 
 namespace NFA
+
+/-!
+# Explicit paths
+
+The inductive path relation records a concrete accepting computation: epsilon
+steps may occur before reading the next input symbol, and word labels compose
+along the path.
+-/
 
 inductive Path (M : NFA alpha state) : state -> Word alpha -> state -> Prop where
   | nil (q : state) : Path M q Word.Empty q
@@ -27,6 +41,13 @@ inductive Path (M : NFA alpha state) : state -> Word alpha -> state -> Prop wher
 
 def PathAccepts (M : NFA alpha state) (w : Word alpha) : Prop :=
   exists q, Path M M.start w q ∧ M.accept q
+
+/-!
+# Empty paths and composition
+
+These facts connect empty-word paths with epsilon reachability and show that
+paths compose across word concatenation.
+-/
 
 theorem epsilonReach_trans {M : NFA alpha state} {q r s : state}
     (hqr : EpsilonReach M q r) (hrs : EpsilonReach M r s) :
@@ -74,6 +95,13 @@ theorem path_append {M : NFA alpha state} {q r s : state}
       exact Path.eps hstep (ih hyz)
   | sym hstep _ ih =>
       exact Path.sym hstep (ih hyz)
+
+/-!
+# Closed reachable sets
+
+The set-based semantics used by the subset construction is related back to
+explicit paths by closure lemmas for starts, next states, and reachable sets.
+-/
 
 def EpsilonClosed (M : NFA alpha state) (S : FSet state) : Prop :=
   forall {q r}, q ∈ S -> EpsilonReach M q r -> r ∈ S
@@ -167,6 +195,13 @@ theorem reachFromSet_path_iff {M : NFA alpha state} {S : FSet state}
             | intro p hp =>
                 exact (ih (next_closed M S a) r).mpr
                   (Exists.intro p (And.intro hp.left hp.right))
+
+/-!
+# Acceptance equivalence
+
+The final theorem proves that the set-of-states acceptance predicate agrees
+with the explicit path semantics.
+-/
 
 theorem pathAccepts_iff_accepts (M : NFA alpha state) (w : Word alpha) :
     PathAccepts M w <-> Accepts M w := by

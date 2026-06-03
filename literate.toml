@@ -65,6 +65,9 @@ description = "In-source Verso HTML companion for the Lean formalization of Foun
 [modules."FoC.Foundation"]
 title = "Foundation"
 
+[modules."FoC.Book"]
+title = "Book"
+
 [modules."FoC.Foundation.Arithmetic"]
 title = "Arithmetic"
 

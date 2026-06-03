@@ -44,16 +44,14 @@ import FoC.Foundation
 import FoC.Languages
 import FoC.Grammars
 import FoC.Computability
-import FoC.Book.Chapter01
-import FoC.Book.Chapter02
-import FoC.Book.Chapter03
-import FoC.Book.Chapter04
-import FoC.Book.Chapter05
+import FoC.Book
 
 set_option doc.verso true
 
 /-!
 # Foundations of Computation Lean Companion
+
+## Companion site
 
 This Lean library is an in-source companion to the textbook Foundations of
 Computation. The rendered HTML site uses Verso to show the actual formalization
@@ -66,9 +64,10 @@ Second Edition, Version 2.3.2, by Carol Critchlow and David Eck. This Lean
 project is a companion formalization; it is not a replacement for the textbook
 and does not copy the book text.
 
-The `FoC.Book` modules are organized in the order of the textbook. They state
-the book-facing definitions and theorems. The reusable infrastructure lives in
-the foundation, language, grammar, and computability modules:
+The {module -checked}`FoC.Book` modules are organized in the order of the
+textbook. They state the book-facing definitions and theorems. The reusable
+infrastructure lives in the foundation, language, grammar, and computability
+modules:
 
 * {module}`FoC.Foundation` develops the logic, set, function, arithmetic,
   rational, real-number, countability, and relation vocabulary used by the early

@@ -1,8 +1,15 @@
-namespace FoC
-namespace Foundation
+set_option doc.verso true
 
 /-!
-Standalone finite-summation infrastructure.
+# Finite sums and induction examples
+
+## Recursive finite sums
+
+Chapter 1 introduces induction through closed forms for finite sums and related
+recursive identities.  This module records the recursive sum operators and the
+algebraic lemmas used to state those examples in Lean.
+
+## Book coordinates
 
 Used by:
 - Chapter 1, Section 1.8: Mathematical Induction
@@ -10,7 +17,17 @@ Used by:
 - Chapter 2, Section 2.6: finite cardinality arithmetic, later
 -/
 
+namespace FoC
+namespace Foundation
+
 namespace NatSum
+
+/-!
+# Recursive sums
+
+The two summation operators cover sums from {lit}`1` to {lit}`n` and from
+{lit}`0` to {lit}`n`.
+-/
 
 def SumUpTo (f : Nat -> Nat) : Nat -> Nat
   | 0 => 0
@@ -22,6 +39,12 @@ def SumZeroTo (f : Nat -> Nat) : Nat -> Nat
 
 def WeightedPowerTerm (i : Nat) : Nat :=
   i * 2 ^ (i - 1)
+
+/-!
+# Unfolding laws
+
+These equations expose the base and successor cases used in induction proofs.
+-/
 
 theorem SumUpTo.zero (f : Nat -> Nat) :
     SumUpTo f 0 = 0 :=
@@ -38,6 +61,13 @@ theorem SumZeroTo.zero (f : Nat -> Nat) :
 theorem SumZeroTo.succ (f : Nat -> Nat) (n : Nat) :
     SumZeroTo f (n + 1) = SumZeroTo f n + f (n + 1) :=
   rfl
+
+/-!
+# Closed forms
+
+The main statements prove the finite-sum identities used in the induction
+examples and exercises.
+-/
 
 theorem two_mul_sum_identity (n : Nat) :
     2 * SumUpTo (fun i => i) n = n * (n + 1) := by
@@ -57,7 +87,10 @@ theorem two_mul_sum_identity (n : Nat) :
                   Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
                 omega
 
--- Book: Chapter 1, Section 1.8, Theorem 1.12.
+/-!
+Theorem 1.12 gives the closed form for the sum of the first {lit}`n` positive
+integers.
+-/
 theorem sum_identity_closed_form (n : Nat) :
     SumUpTo (fun i => i) n = n * (n + 1) / 2 := by
   have h := two_mul_sum_identity n
@@ -77,7 +110,10 @@ theorem weighted_power_algebra (n p : Nat) :
     _ = (n + 1) * (p * 2) + 1 := by
       rw [Nat.mul_assoc, Nat.mul_comm 2 p, ← Nat.mul_assoc]
 
--- Book: Chapter 1, Section 1.8, Theorem 1.13.
+/-!
+Theorem 1.13 is the weighted power-sum identity used as a second induction
+example.
+-/
 theorem weighted_power_sum_closed_form_succ (n : Nat) :
     SumUpTo WeightedPowerTerm (n + 1) = n * 2 ^ (n + 1) + 1 := by
   induction n with
@@ -96,7 +132,9 @@ theorem weighted_power_sum_closed_form_succ (n : Nat) :
                   rw [Nat.pow_succ]]
                 exact weighted_power_algebra n (2 ^ (n + 1))
 
--- Book: Chapter 1, Section 1.8, Exercise 4.
+/-!
+Exercise 4 is the finite geometric sum for powers of two.
+-/
 theorem geometric_two_sum (n : Nat) :
     SumZeroTo (fun i => 2 ^ i) n = 2 ^ (n + 1) - 1 := by
   induction n with
@@ -114,7 +152,10 @@ theorem geometric_two_sum (n : Nat) :
                 have hpos : 0 < 2 ^ (n + 1) := Nat.pow_pos (by decide : 0 < 2)
                 omega
 
--- Book: Chapter 1, Section 1.8, Exercise 2, division-free natural-number core.
+/-!
+Exercise 2 is recorded in a division-free natural-number form, avoiding a field
+development while preserving the inductive identity.
+-/
 theorem geometric_successor_base_sum (b n : Nat) :
     b * SumZeroTo (fun i => (b + 1) ^ i) n = (b + 1) ^ (n + 1) - 1 := by
   induction n with
@@ -136,7 +177,10 @@ theorem geometric_successor_base_sum (b n : Nat) :
                 simp [Nat.add_mul, Nat.mul_comm]
                 omega
 
--- Book: Chapter 1, Section 1.8, Exercise 6.
+/-!
+Exercise 6 states the classic identity that the sum of the first {lit}`n` odd
+numbers is {lit}`n ^ 2`.
+-/
 theorem odd_sum_square (n : Nat) :
     SumUpTo (fun i => 2 * i - 1) n = n * n := by
   induction n with

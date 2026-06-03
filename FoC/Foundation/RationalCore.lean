@@ -1,22 +1,36 @@
 import Init.Data.Nat.Coprime
 import Init.Data.Nat.Dvd
 
-namespace FoC
-namespace Foundation
+set_option doc.verso true
 
 /-!
-Future-compatible rational-number core.
+# Reduced rational cores
 
-The earlier `Rational` module models raw integer-over-integer representatives.
+## Reduced rational representatives
+
+The earlier {module -checked}`FoC.Foundation.Rationals` module models raw
+integer-over-integer representatives.
 This module adds the reduced positive-denominator representative shape needed
 for the book's square-root irrationality arguments.  It intentionally stops
-short of quotienting representatives; a future full `Real` development can
+short of quotienting representatives; a future full {lit}`Real` development can
 embed this exact reduced core into a quotient rational field first.
+
+## Book coordinates
 
 Used by:
 - Chapter 1, Section 1.7: irrationality of square roots of 2 and 3
 - Chapter 2, Section 2.6: exact quotient-rational countability, later
-- Future `Real` bridge: rational embedding and irrationality transport
+- Future {lit}`Real` bridge: rational embedding and irrationality transport
+-/
+
+namespace FoC
+namespace Foundation
+
+/-!
+# Reduced square-root witnesses
+
+Reduced positive rational representatives provide the exact data needed for the
+classic contradiction proofs about square roots.
 -/
 
 structure PositiveRatRep where
@@ -43,7 +57,12 @@ end PositiveRatRep
 
 namespace NatDivisibility
 
--- Book: Chapter 1, Section 1.6, Exercise 6, divisibility core for 2.
+/-!
+# Divisibility of squares
+
+Exercise 6 in Section 1.6 needs the elementary fact that if {lit}`2` divides a
+square, then {lit}`2` divides the original natural number.
+-/
 theorem two_dvd_of_two_dvd_square {n : Nat} (h : 2 ∣ n * n) : 2 ∣ n := by
   rw [Nat.dvd_iff_mod_eq_zero] at h ⊢
   rw [Nat.mul_mod] at h
@@ -56,7 +75,10 @@ theorem two_dvd_of_two_dvd_square {n : Nat} (h : 2 ∣ n * n) : 2 ∣ n := by
       rw [h1] at h
       contradiction
 
--- Book: Chapter 1, Section 1.6, Exercise 7, divisibility core for 3.
+/-!
+The analogous divisibility lemma for {lit}`3` is used by the square-root-of-three
+irrationality argument.
+-/
 theorem three_dvd_of_three_dvd_square {n : Nat} (h : 3 ∣ n * n) : 3 ∣ n := by
   rw [Nat.dvd_iff_mod_eq_zero] at h ⊢
   rw [Nat.mul_mod] at h
@@ -122,7 +144,12 @@ end NatDivisibility
 
 namespace PositiveRatRep
 
--- Book: Chapter 1, Section 1.7, formal core for `sqrt(2)` irrationality.
+/-!
+# Irrationality cores
+
+The square-root-of-two statement is phrased for reduced positive rational
+representatives.  A reduced rational cannot square to {lit}`2`.
+-/
 theorem no_reduced_square_root_two (q : PositiveRatRep)
     (hred : q.Reduced) : ¬ q.SquareRootOfNat 2 := by
   intro h
@@ -130,7 +157,9 @@ theorem no_reduced_square_root_two (q : PositiveRatRep)
   rw [Nat.mul_assoc] at habs
   exact NatDivisibility.no_coprime_square_root_two hred habs
 
--- Book: Chapter 1, Section 1.7, formal core for `sqrt(3)` irrationality.
+/-!
+The same reduced-rational argument rules out a rational square root of {lit}`3`.
+-/
 theorem no_reduced_square_root_three (q : PositiveRatRep)
     (hred : q.Reduced) : ¬ q.SquareRootOfNat 3 := by
   intro h

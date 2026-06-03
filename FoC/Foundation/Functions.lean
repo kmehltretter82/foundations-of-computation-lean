@@ -1,10 +1,18 @@
 import FoC.Foundation.Sets
 
-namespace FoC
-namespace Foundation
+set_option doc.verso true
 
 /-!
-Standalone function vocabulary used in Chapter 2.
+# Functions
+
+## Function vocabulary
+
+Chapter 2 treats functions as mathematical objects with graphs, images,
+preimages, injectivity, surjectivity, and bijectivity.  This module packages
+that vocabulary in a small namespace so later chapters can reuse the same
+language for encodings, automata maps, and computability statements.
+
+## Book coordinates
 
 Used by:
 - Chapter 2, Section 2.4: Functions
@@ -12,7 +20,17 @@ Used by:
 - Chapter 2, Section 2.6: Counting Past Infinity
 -/
 
+namespace FoC
+namespace Foundation
+
 namespace Fn
+
+/-!
+# Core function notions
+
+The basic predicates record identity, composition, injectivity, surjectivity,
+bijectivity, graphs, images, preimages, function spaces, and partial functions.
+-/
 
 def Identity (alpha : Type u) : alpha -> alpha :=
   fun x => x
@@ -49,6 +67,13 @@ def Partial (alpha : Type u) (beta : Type v) : Type (max u v) :=
 
 def TotalAsPartial {alpha : Type u} {beta : Type v} (f : alpha -> beta) : Partial alpha beta :=
   fun x => some (f x)
+
+/-!
+# Identity and composition
+
+The first proof block establishes the expected identity, associativity, and
+composition facts.
+-/
 
 theorem identity_injective : Injective (Identity alpha) := by
   intro x y h
@@ -107,6 +132,13 @@ theorem surjective_of_comp_surjective {f : alpha -> beta} {g : beta -> gamma}
   | intro x hx =>
       exact Exists.intro (f x) hx
 
+/-!
+# Graphs, images, and preimages
+
+Graphs are represented as sets of ordered pairs, and images/preimages are
+represented by existential or direct membership conditions.
+-/
+
 theorem graph_contains_value (f : alpha -> beta) (x : alpha) :
     (x, f x) ∈ Graph f :=
   rfl
@@ -122,6 +154,13 @@ theorem image_intro {f : alpha -> beta} {A : FSet alpha}
 theorem preimage_intro {f : alpha -> beta} {B : FSet beta} {x : alpha}
     (hx : f x ∈ B) : x ∈ Preimage f B :=
   hx
+
+/-!
+# Injectivity tests
+
+The remaining function lemmas rephrase injectivity in terms of distinct images
+and explicit collisions.
+-/
 
 theorem injective_iff_distinct_images (f : alpha -> beta) :
     Injective f <-> forall x y, x ≠ y -> f x ≠ f y := by
@@ -146,6 +185,13 @@ theorem collision_of_not_injective {f : alpha -> beta}
   · exfalso
     apply hno
     exact Exists.intro x (Exists.intro y (And.intro hxy' hxy))
+
+/-!
+# Partial functions
+
+Total functions embed into partial functions by wrapping every output in
+{lit}`some`.
+-/
 
 theorem total_as_partial_defined (f : alpha -> beta) (x : alpha) :
     TotalAsPartial f x = some (f x) :=

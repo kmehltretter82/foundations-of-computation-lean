@@ -1,11 +1,26 @@
+set_option doc.verso true
+
+/-!
+# Lists as finite witnesses
+
+## List enumeration witnesses
+
+Lists are used throughout the Foundation layer as explicit finite witnesses:
+a list can enumerate a set, enumerate it without duplicates, or provide the
+finite data behind automata and grammar constructions.
+
+The lemmas in this file keep that representation usable.  They are low-level
+support facts for the finite-set, cardinality, and countability modules.
+-/
+
 namespace FoC
 namespace Foundation
 
 /-!
-Small list lemmas and definitions used by the standalone development.
+# Enumeration predicates
 
-This file starts intentionally small. It should grow only as the book
-formalization needs concrete list facts.
+These predicates say that a list contains a value, enumerates a predicate, has
+no duplicates, or uniquely enumerates a predicate.
 -/
 
 def ListContains (xs : List alpha) (x : alpha) : Prop :=
@@ -27,6 +42,13 @@ theorem ListEnumerates.left {xs : List alpha} {p : alpha -> Prop}
 theorem ListEnumerates.right {xs : List alpha} {p : alpha -> Prop}
     (h : ListEnumerates xs p) {x : alpha} : x ∈ xs -> p x :=
   (h x).mpr
+
+/-!
+# Map and subset lemmas
+
+These list lemmas support finite-cardinality and pumping arguments where a
+duplicate-free list is compared with another finite list.
+-/
 
 theorem list_getElem?_of_map_eq_some {α : Type u} {β : Type v}
     {xs : List α} {f : α -> β} {i : Nat} {b : β}
@@ -63,6 +85,14 @@ theorem list_nodup_length_le_of_subset {α : Type u} [DecidableEq α]
       have hxpos : 0 < xs.length := List.length_pos_iff_exists_mem.mpr ⟨y, hyxs⟩
       simp
       omega
+
+/-!
+# Duplicate witnesses
+
+The pumping arguments need duplicate positions in long finite lists.  These
+lemmas turn non-duplication failures or length bounds into explicit repeated
+entries.
+-/
 
 theorem list_not_nodup_exists_duplicate_split {α : Type u} [DecidableEq α]
     {xs : List α} (h : ¬ xs.Nodup) :

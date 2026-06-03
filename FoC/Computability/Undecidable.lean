@@ -1,17 +1,34 @@
 import FoC.Computability.Enumerable
 
-namespace FoC
-namespace Computability
+set_option doc.verso true
 
 /-!
-Undecidability vocabulary.
+# Undecidability
+
+## Diagonal and halting vocabularies
+
+The final section of Chapter 5 uses diagonal languages, halting-problem style
+predicates, reductions, and noncomputability statements.  This module keeps that
+vocabulary separate from the concrete Turing-machine model.
+
+## Book coordinates
 
 Used by:
 - Chapter 5, Section 5.3: limits of computation, diagonal languages, and
   halting-problem style statements.
 -/
 
+namespace FoC
+namespace Computability
+
 open Languages
+
+/-!
+# Negative computability predicates
+
+The chapter-facing undecidability statements use explicit negations of
+computability, acceptability, and decidability.
+-/
 
 def NonComputableFunction (f : Word input -> Word output) : Prop :=
   ¬ TuringComputable f
@@ -27,6 +44,14 @@ def DecidableReduction (L : Language input) (K : Language output) : Prop :=
 
 def AcceptableReduction (L : Language input) (K : Language output) : Prop :=
   TuringAcceptable K -> TuringAcceptable L
+
+/-!
+# Diagonal languages
+
+Diagonal languages are parameterized by an abstract decoding relation so the
+formal statements can separate the logical argument from any concrete machine
+encoding.
+-/
 
 def DiagonalLanguage (acceptsSelf : Word code -> Prop) : Language code :=
   fun w => ¬ acceptsSelf w
@@ -49,6 +74,13 @@ def DecoderUniversalForAllLanguages
     (decodeAccepts : Word code -> Word code -> Prop) : Prop :=
   forall L : Language code,
     exists machine : Word code, DecoderRecognizes decodeAccepts machine L
+
+/-!
+# Halting-problem vocabularies
+
+The halting-problem predicates are stated both with concatenated encodings and
+with an explicit pair encoder.
+-/
 
 def HaltingProblem (haltsOnCodeInput : Word code -> Word code -> Prop) :
     Language code :=
@@ -106,6 +138,13 @@ def UniversalMachineSpec
   forall machine input : Word symbol,
     TuringMachine.HaltsOnInput universal (Languages.Word.Concat machine input) <->
       decodeAccepts machine input
+
+/-!
+# Undecidability transport
+
+Undecidability is stable under language equality, complement, and decidable
+reductions.
+-/
 
 theorem undecidable_of_not_decidable {L : Language alpha}
     (h : ¬ TuringDecidable L) : UndecidableLanguage L :=
@@ -174,6 +213,13 @@ theorem undecidable_of_decidableReduction
   intro hK
   exact hL (hred hK)
 
+/-!
+# Nonacceptability and acceptable reductions
+
+The corresponding facts for acceptability support diagonal non-recognizability
+arguments.
+-/
+
 theorem not_acceptable_of_diagonal_contradiction {L : Language alpha}
     (h : TuringAcceptable L -> False) : NonAcceptableLanguage L := by
   intro hL
@@ -224,6 +270,14 @@ theorem nonComputableFunction_of_pointwise_equal
     NonComputableFunction g := by
   intro hg
   exact h (turingComputable_of_pointwise_equal hg (fun w => Eq.symm (hfg w)))
+
+/-!
+# Diagonal contradiction
+
+The central diagonal argument says no decoder row can recognize its own
+self-diagonal language, which yields nonacceptability under a universal decoder
+assumption.
+-/
 
 theorem decoderRecognizes_of_equal
     {decodeAccepts : Word code -> Word code -> Prop}
@@ -349,6 +403,13 @@ theorem selfHalting_re_not_recursive_and_compl_not_re_if_decoder_universal
   constructor
   · exact selfHalting_not_recursive_if_decoder_universal haccept huniv
   · exact compl_selfHalting_not_recursivelyEnumerable_if_decoder_universal huniv
+
+/-!
+# Halting problem reductions
+
+The remaining lemmas relate self-halting, pair-halting, and concatenated
+halting encodings by membership equivalences and preimage reductions.
+-/
 
 theorem haltingProblem_mem
     (haltsOnCodeInput : Word code -> Word code -> Prop)

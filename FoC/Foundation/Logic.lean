@@ -1,13 +1,28 @@
+set_option doc.verso true
+
+/-!
+# Propositional logic
+
+## Formulas and valuations
+
+Chapter 1 begins with truth tables for propositional logic.  This module gives
+that material a reusable Lean representation: formulas are syntax trees,
+valuations assign Boolean values to variables, and semantic notions are
+quantified over all valuations.
+
+The same syntax also supports substitution and formula contexts, which are used
+by later chapter-facing statements to express standard equivalence and
+replacement principles.
+-/
+
 namespace FoC
 namespace Foundation
 
 /-!
-Standalone logical infrastructure for the formalization of
-*Foundations of Computation*.
+# Formula syntax
 
-This module intentionally depends only on Lean's core environment. The first
-substantial target is the propositional-formula syntax and semantics used in
-Chapter 1, Section 1.1.
+Propositional formulas are syntax trees with variables, truth constants, the
+usual Boolean connectives, implication, biconditional, and exclusive-or.
 -/
 
 inductive PropForm (Var : Type u) where
@@ -23,6 +38,14 @@ inductive PropForm (Var : Type u) where
 deriving Repr
 
 namespace PropForm
+
+/-!
+# Truth-table semantics
+
+Evaluation takes a Boolean valuation for variables and recursively computes the
+truth value of a formula.  Tautology, contradiction, equivalence, and implication
+are semantic predicates over all valuations.
+-/
 
 def eval (valuation : Var -> Bool) : PropForm Var -> Bool
   | var v => valuation v
@@ -49,6 +72,13 @@ def Contradiction (p : PropForm Var) : Prop :=
 def LogicallyImplies (p q : PropForm Var) : Prop :=
   Tautology (imp p q)
 
+/-!
+# Substitution
+
+Substitution replaces each variable by a formula.  The evaluation theorem states
+that substitution is semantically the same as changing the valuation.
+-/
+
 def subst (sigma : Var -> PropForm Var') : PropForm Var -> PropForm Var'
   | var v => sigma v
   | truth => truth
@@ -73,6 +103,13 @@ theorem eval_subst (sigma : Var -> PropForm Var') (valuation : Var' -> Bool)
   | imp p q ihp ihq => simp [subst, eval, ihp, ihq]
   | iff p q ihp ihq => simp [subst, eval, ihp, ihq]
   | xor p q ihp ihq => simp [subst, eval, ihp, ihq]
+
+/-!
+# Formula contexts
+
+A context is a formula with one hole.  Plugging equivalent formulas into the
+same context preserves logical equivalence.
+-/
 
 inductive Context (Var : Type u) where
   | hole : Context Var
@@ -133,6 +170,13 @@ theorem congr (c : Context Var) {p q : PropForm Var}
       rw [plug, plug, eval, eval, ih]
 
 end Context
+
+/-!
+# Semantic laws
+
+The final lemmas give reusable laws connecting tautologies, contradictions,
+logical equivalence, biconditionals, and substitution.
+-/
 
 theorem tautology_not_iff_contradiction (p : PropForm Var) :
     Tautology (not p) <-> Contradiction p := by

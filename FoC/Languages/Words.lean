@@ -1,8 +1,16 @@
-namespace FoC
-namespace Languages
+set_option doc.verso true
 
 /-!
-Words over an alphabet.
+# Words
+
+## Words as lists
+
+Chapter 3 treats strings as finite words over an alphabet.  In Lean, a word is
+represented by a list of alphabet symbols.  This file fixes that representation
+and collects the basic operations used throughout the language, automata,
+grammar, and computability developments.
+
+## Book coordinates
 
 Used by:
 - Chapter 3, Section 3.1: Languages
@@ -11,6 +19,17 @@ Used by:
 - Chapter 3, Section 3.5: Nondeterministic Finite-State Automata
 - Chapter 3, Section 3.7: Non-regular Languages
 - Later grammar and computability chapters that use strings of symbols
+-/
+
+namespace FoC
+namespace Languages
+
+/-!
+# Word representation
+
+Words are lists, with named constructors for the empty word, one-symbol words,
+concatenation, length, and reversal. These names keep the book-facing Lean
+statements close to the textbook notation.
 -/
 
 def Word (alpha : Type u) : Type u :=
@@ -40,9 +59,24 @@ def RepeatWord (w : Word alpha) : Nat -> Word alpha
 def RepeatSymbol (a : alpha) (n : Nat) : Word alpha :=
   List.replicate n a
 
+/-!
+# Counting symbols
+
+The counting operation is used in non-regular-language and context-free
+language examples where statements compare the number of occurrences of
+particular alphabet symbols.
+-/
+
 def Count [DecidableEq alpha] (a : alpha) : Word alpha -> Nat
   | [] => 0
   | b :: w => (if b = a then 1 else 0) + Count a w
+
+/-!
+# Word algebra
+
+These lemmas collect the algebra of empty words, associativity, reversal,
+repetition, and symbol counts needed by later automata and pumping arguments.
+-/
 
 theorem length_empty : Length (Empty : Word alpha) = 0 :=
   rfl

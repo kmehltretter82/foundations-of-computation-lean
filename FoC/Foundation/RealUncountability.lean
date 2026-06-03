@@ -1,22 +1,36 @@
 import FoC.Foundation.DigitStreams
 import FoC.Foundation.Reals
 
-namespace FoC
-namespace Foundation
+set_option doc.verso true
 
 /-!
-Cantor-style embedding of binary digit streams into Dedekind-cut reals.
+# Real uncountability
 
-Streams are interpreted as base-4 expansions with digits `0` and `2`.  The
+## Embedding streams into reals
+
+Streams are interpreted as base-4 expansions with digits {lit}`0` and {lit}`2`.  The
 larger digit gap gives a direct injectivity proof without ambiguous binary or
 decimal-expansion endpoints.
+
+## Book coordinates
 
 Used by:
 - Chapter 2, Section 2.6: real-number uncountability
 - Irrational-real uncountability by removing the countable embedded rationals
 -/
 
+namespace FoC
+namespace Foundation
+
 namespace QRat
+
+/-!
+# Natural rational fractions
+
+The base-4 construction needs concrete rational fractions with natural
+numerators and positive natural denominators, plus comparison lemmas expressed
+as natural-number inequalities.
+-/
 
 def natFrac (num den : Nat) (hden : 0 < den) : QRat :=
   QRat.mk { num := (num : Int), den := den, den_pos := hden }
@@ -51,6 +65,13 @@ theorem one_gt_natFrac {a d : Nat} (hd : 0 < d) (h : a < d) :
 end QRat
 
 namespace DigitStream
+
+/-!
+# Base-four stream approximations
+
+Each Boolean digit becomes either {lit}`0` or {lit}`2`. Partial sums and probe
+rationals then separate streams at the first coordinate where they differ.
+-/
 
 def cantorDigit (b : Bool) : Nat :=
   if b then 2 else 0
@@ -207,6 +228,14 @@ theorem streamPartial_lt_probe_of_false {s : DigitStream} {m : Nat}
     exact QRat.natFrac_lt_of_cross (pow_four_pos n) (pow_four_pos (m + 1))
       (by simpa [hden] using hcross)
 
+/-!
+# Embedding streams into reals
+
+The stream is sent to the lower cut below some finite partial sum. The digit gap
+proves injectivity because a probe rational lies on opposite sides of the two
+cuts at the first differing digit.
+-/
+
 def streamToReal (s : DigitStream) : Real where
   lower q := exists n : Nat, q < streamPartial s n
   nonempty := by
@@ -285,6 +314,13 @@ theorem streamToReal_injective : Fn.Injective streamToReal := by
 end DigitStream
 
 namespace Real
+
+/-!
+# Countability transfer
+
+The final section transports uncountability from digit streams to reals, then
+removes the countable embedded rationals to get an irrational-real statement.
+-/
 
 def rationalSet : FSet Real :=
   fun x => Rational x

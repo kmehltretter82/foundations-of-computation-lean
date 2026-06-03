@@ -1,18 +1,36 @@
 import FoC.Grammars.CFG
 
-namespace FoC
-namespace Grammars
+set_option doc.verso true
 
 /-!
-Parse trees for context-free grammars.
+# Parse trees
+
+## Trees and frontiers
+
+Parse trees give a tree-shaped account of derivations.  This module defines
+parse trees and forests, their frontiers, and the bridge back to context-free
+grammar derivations.
+
+## Book coordinates
 
 Used by:
 - Chapter 4, Section 4.3: parsing, parse trees, and ambiguity.
 -/
 
+namespace FoC
+namespace Grammars
+
 open Languages
 
 namespace CFG
+
+/-!
+# Tree and forest syntax
+
+Parse trees are indexed by the symbol they derive. A forest is the parallel
+structure for a sentential form, so a node can carry one child tree per symbol
+on the production right-hand side.
+-/
 
 mutual
 
@@ -40,6 +58,13 @@ def root {G : CFG terminal nonterminal} (subtree : NonterminalSubtree G) :
   subtree.1
 
 end NonterminalSubtree
+
+/-!
+# Frontiers
+
+The frontier reads the terminal leaves from left to right. Forest append and
+terminal-word forests provide the basic constructors used in derivation proofs.
+-/
 
 mutual
 
@@ -82,6 +107,13 @@ def frontier {G : CFG terminal nonterminal} (subtree : NonterminalSubtree G) :
   ParseTree.frontier subtree.2
 
 end NonterminalSubtree
+
+/-!
+# Height, size, and minimal trees
+
+Height and node counts are the combinatorial measures used later in pumping.
+Minimality chooses a smallest parse tree among those with the same frontier.
+-/
 
 mutual
 
@@ -133,6 +165,13 @@ def ParseTree.MinimalForFrontier {G : CFG terminal nonterminal}
     ParseTree.frontier other = ParseTree.frontier tree ->
       ParseTree.nodeCount tree <= ParseTree.nodeCount other
 
+/-!
+# Longest nonterminal paths
+
+The pumping argument follows a longest path of nonterminal nodes and extracts
+the corresponding nested subtrees.
+-/
+
 mutual
 
 def ParseTree.longestNonterminalPath {G : CFG terminal nonterminal}
@@ -173,6 +212,13 @@ def ParseForest.longestNonterminalSubtrees {G : CFG terminal nonterminal}
         ParseTree.longestNonterminalSubtrees tree
 
 end
+
+/-!
+# Derivations from trees
+
+Every parse tree gives a grammar derivation of its frontier, and the selected
+subtree lemmas expose a context around a nested nonterminal subtree.
+-/
 
 mutual
 
@@ -1748,6 +1794,13 @@ theorem parseTree_leftDerivationTrace_correspondence
                 | nil =>
                     exists tree
                     simpa [ParseForest.frontier, Word.Concat] using hfront
+
+/-!
+# Left derivations and ambiguity
+
+The final section records left-derivation traces and proves that ambiguity by
+parse trees is equivalent to ambiguity by left derivations.
+-/
 
 structure StartLeftDerivation (G : CFG terminal nonterminal)
     (w : Word terminal) where

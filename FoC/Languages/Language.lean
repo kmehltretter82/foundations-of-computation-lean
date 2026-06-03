@@ -2,11 +2,18 @@ import FoC.Foundation.Sets
 import FoC.Foundation.Finite
 import FoC.Languages.Words
 
-namespace FoC
-namespace Languages
+set_option doc.verso true
 
 /-!
-Languages as sets of words.
+# Languages as sets of words
+
+## Languages as predicates
+
+The book defines a language as a set of strings.  This module represents a
+language as a predicate on words and then reuses the extensional set operations
+from {module}`FoC.Foundation.Sets`.
+
+## Book coordinates
 
 Used by:
 - Chapter 3, Section 3.1: language definition and operations
@@ -15,7 +22,18 @@ Used by:
 - Chapter 3, Section 3.7: pumping-lemma statements
 -/
 
+namespace FoC
+namespace Languages
+
 open Foundation
+
+/-!
+# Predicates over words
+
+A language is represented extensionally as a predicate on words. The empty,
+universal, singleton, pair, equality, and subset definitions mirror the first
+set-theoretic language operations from Chapter 3.
+-/
 
 def Language (alpha : Type u) : Type u :=
   Word alpha -> Prop
@@ -24,6 +42,13 @@ namespace Language
 
 instance : Membership (Word alpha) (Language alpha) where
   mem L w := L w
+
+/-!
+# Boolean operations
+
+Union, intersection, complement, and difference are pointwise set operations on
+the word predicate.
+-/
 
 def Empty : Language alpha :=
   fun _ => False
@@ -55,6 +80,13 @@ def Compl (L : Language alpha) : Language alpha :=
 def Diff (L M : Language alpha) : Language alpha :=
   FSet.Diff L M
 
+/-!
+# Concatenation, reversal, and star
+
+The operations that are specific to formal languages are defined by splitting a
+word into pieces, reversing words, and concatenating finite lists of pieces.
+-/
+
 def Reverse (L : Language alpha) : Language alpha :=
   fun w => (Word.Reverse w) ∈ L
 
@@ -79,6 +111,13 @@ def Star (L : Language alpha) : Language alpha :=
 
 def Finite (L : Language alpha) : Prop :=
   FSet.Finite L
+
+/-!
+# Membership laws
+
+These lemmas expose the membership rules for the language constructors and
+finite examples.
+-/
 
 theorem mem_empty (w : Word alpha) : w ∈ (Empty : Language alpha) <-> False :=
   Iff.rfl
@@ -113,6 +152,13 @@ theorem empty_finite : Finite (Empty : Language alpha) :=
 
 theorem singleton_finite (w : Word alpha) : Finite (Singleton w) :=
   FSet.singleton_finite w
+
+/-!
+# Extensional algebra
+
+Language equality is pointwise logical equivalence. These facts provide the
+set-algebra and concatenation laws used throughout the regular-language proofs.
+-/
 
 theorem equal_refl (L : Language alpha) : Equal L L :=
   FSet.equal_refl L

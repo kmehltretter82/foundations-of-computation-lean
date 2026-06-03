@@ -1,16 +1,28 @@
 import FoC.Foundation.Arithmetic
 
-namespace FoC
-namespace Foundation
+set_option doc.verso true
 
 /-!
-Standalone prime-number infrastructure.
+# Prime numbers
+
+The prime-number file supports the proof and induction examples in Chapter 1.
+It uses the book's elementary factor-based definition of primality, then builds
+the reusable divisibility and product-of-primes statements needed by the
+chapter-facing layer.
 
 Used by:
 - Chapter 1, Section 1.7: prime divisor existence
 - Chapter 1, Section 1.8: product-of-primes induction example
 - Later arithmetic and countability examples
+
+## Prime predicates
+
+The first declarations define primality, compositeness, products of lists of
+natural numbers, and the predicate that every entry of a list is prime.
 -/
+
+namespace FoC
+namespace Foundation
 
 namespace NatPrime
 
@@ -103,7 +115,12 @@ theorem nonprime_factorization {n : Nat} (hn : 1 < n) (hnp : ¬ Prime n) :
         exact hno (Exists.intro a
           (Exists.intro b (And.intro hab (And.intro hapos hbpos))))
 
--- Book: Chapter 1, Section 1.7, prime divisor existence.
+/-!
+# Prime divisors
+
+The prime-divisor theorem is the arithmetic core used in the Chapter 1 proof
+section.  Every natural number greater than one has a prime divisor.
+-/
 theorem prime_divisor_exists (n : Nat) (hn : 1 < n) :
     exists p, Prime p ∧ NatPred.Divides p n := by
   exact Nat.strongRecOn
@@ -189,7 +206,12 @@ theorem not_divides_product_succ {p m : Nat}
           rw [hb, hmod_right] at hmod_left
           omega
 
--- Euclid-style infinitude core: every finite list of primes omits a prime.
+/-!
+# Euclid-style infinitude
+
+Euclid's argument is recorded as a finite-list statement: every finite list of
+prime numbers omits some prime.
+-/
 theorem exists_prime_not_in_list (ps : List Nat) (hps : AllPrime ps) :
     exists p, Prime p ∧ p ∉ ps := by
   let n := Product ps + 1
@@ -210,7 +232,12 @@ theorem exists_prime_not_in_list (ps : List Nat) (hps : AllPrime ps) :
           not_divides_product_succ (prime_gt_one hpdata.left) hprod_div
         exact hnot (by simpa [n] using hpdata.right)
 
--- Book: Chapter 1, Section 1.8, product-of-primes induction example.
+/-!
+# Products of primes
+
+The product-of-primes theorem is the induction example from Section 1.8.  The
+formal proof uses strong induction and the prime-divisor machinery above.
+-/
 theorem product_of_primes_exists (n : Nat) (hn : 1 < n) : ProductOfPrimes n := by
   exact Nat.strongRecOn
     (motive := fun n => 1 < n -> ProductOfPrimes n)

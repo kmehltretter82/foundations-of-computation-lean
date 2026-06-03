@@ -1,20 +1,35 @@
 import FoC.Grammars.ParseTree
 import FoC.Grammars.PDA
 
-namespace FoC
-namespace Grammars
+set_option doc.verso true
 
 /-!
-The standard construction from a context-free grammar to a pushdown automaton.
+# From CFGs to PDAs
+
+## Simulating derivations with a stack
 
 The constructed PDA starts with an empty stack, pushes the grammar start symbol,
 then repeatedly expands nonterminals or matches terminals at the stack top.
+
+This is the reusable construction behind the chapter theorem that every
+context-free language is accepted by a pushdown automaton.
 -/
+
+namespace FoC
+namespace Grammars
 
 open Foundation
 open Languages
 
 namespace CFG
+
+/-!
+# Control states and transitions
+
+The constructed PDA has a start state and a running state. Its transitions push
+the grammar start symbol, expand nonterminals, and match terminal stack symbols
+against input.
+-/
 
 inductive ToPDAState where
   | start
@@ -52,6 +67,13 @@ def ToPDA (G : CFG terminal nonterminal) :
   transition := ToPDATransition G
   accept := fun q => q = ToPDAState.run
   statesFinite := ToPDAState.finite
+
+/-!
+# Finite transition presentation
+
+When the grammar has finite productions and finite terminal alphabet, the PDA
+construction has a finite stack alphabet and finite transition-rule list.
+-/
 
 def toPDAStackFinite
     (terminalFinite : FiniteType terminal)
@@ -212,6 +234,13 @@ theorem toPDA_hasFinitePresentation
     PDA.HasFinitePresentation (ToPDA G) :=
   Nonempty.intro (toPDA_finitePresentation G terminalFinite hG)
 
+/-!
+# Completeness: grammar to PDA
+
+Parse trees and generated words produce accepting PDA computations by expanding
+grammar symbols on the stack and matching terminals.
+-/
+
 theorem toPDA_start_step (G : CFG terminal nonterminal)
     (w : Word terminal) :
     PDA.Step (ToPDA G)
@@ -339,6 +368,13 @@ theorem toPDA_accepts_of_generates
   cases ParseTree.of_generates_language h with
   | intro tree hfrontier =>
       exact toPDA_accepts_of_parseTree tree hfrontier
+
+/-!
+# Soundness: PDA to grammar
+
+Conversely, accepting computations are read back as grammar derivations, giving
+the exact language equality for the construction.
+-/
 
 theorem toPDA_running_computes_sound_config
     {G : CFG terminal nonterminal}

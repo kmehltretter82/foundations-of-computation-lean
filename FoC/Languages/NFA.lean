@@ -1,22 +1,35 @@
 import FoC.Foundation.Finite
 import FoC.Languages.DFA
 
-namespace FoC
-namespace Languages
+set_option doc.verso true
 
 /-!
-Nondeterministic finite-state automata with epsilon transitions.
+# Nondeterministic finite automata
+
+## Epsilon transitions and reachable sets
 
 The book's NFAs allow transitions labeled by either an input symbol or the
-empty string.  We model that by using `Option alpha`, where `none` is an
-epsilon transition and `some a` consumes the symbol `a`.
+empty string.  We model that by using {lit}`Option alpha`, where {lit}`none` is
+an epsilon transition and {lit}`some a` consumes the symbol {lit}`a`.
+
+## Book coordinates
 
 Used by:
 - Chapter 3, Section 3.5: NFA definition, acceptance, and subset construction
 - Chapter 3, Section 3.6: comparison between automata and regular languages
 -/
 
+namespace FoC
+namespace Languages
+
 open Foundation
+
+/-!
+# NFA structure
+
+An NFA has a start state, finite state space, accepting states, and a transition
+function that may consume a symbol or take an epsilon transition.
+-/
 
 structure NFA (alpha : Type u) (state : Type v) where
   start : state
@@ -25,6 +38,13 @@ structure NFA (alpha : Type u) (state : Type v) where
   statesFinite : FiniteType state
 
 namespace NFA
+
+/-!
+# Epsilon closure and reachability
+
+Reachable-state sets are built from epsilon closure, symbol moves, and the
+recursive extension of the transition relation to input words.
+-/
 
 inductive EpsilonReach (M : NFA alpha state) : state -> state -> Prop where
   | refl (q : state) : EpsilonReach M q q
@@ -58,6 +78,13 @@ def AcceptedLanguage (M : NFA alpha state) : FoC.Languages.Language alpha :=
 
 def Recognizable (L : FoC.Languages.Language alpha) : Prop :=
   exists state : Type, exists M : NFA alpha state, FoC.Languages.Language.Equal (AcceptedLanguage M) L
+
+/-!
+# Subset construction
+
+The deterministic machine whose states are sets of NFA states recognizes the
+same language, provided the set-of-states type is finite.
+-/
 
 def SubsetDFA (M : NFA alpha state) (subsetsFinite : FiniteType (FSet state)) :
     DFA alpha (FSet state) where
@@ -103,6 +130,13 @@ theorem subsetDFA_language (M : NFA alpha state)
     FoC.Languages.Language.Equal (DFA.Language (SubsetDFA M subsetsFinite)) (AcceptedLanguage M) := by
   intro w
   exact subsetDFA_accepts M subsetsFinite w
+
+/-!
+# Deterministic automata as NFAs
+
+A DFA embeds into an NFA by using no epsilon transitions and a singleton symbol
+move. The following lemmas prove that the accepted language is unchanged.
+-/
 
 def FromDFA (M : DFA alpha state) : NFA alpha state where
   start := M.start

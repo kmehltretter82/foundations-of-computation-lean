@@ -1,8 +1,16 @@
-namespace FoC
-namespace Foundation
+set_option doc.verso true
 
 /-!
-Standalone integer predicates for Chapter 1 proof examples.
+# Integer divisibility and parity
+
+## Integer predicates
+
+The proof sections in Chapter 1 use ordinary integer divisibility, evenness, and
+oddness.  This module keeps those predicates separate from the natural-number
+versions so the book-facing files can choose the domain that matches the
+statement being formalized.
+
+## Book coordinates
 
 Used by:
 - Chapter 1, Section 1.6: Proof
@@ -10,7 +18,17 @@ Used by:
 - Chapter 2, Section 2.6: countability of integers, later
 -/
 
+namespace FoC
+namespace Foundation
+
 namespace IntPred
+
+/-!
+# Integer predicates
+
+The integer predicates mirror the natural-number versions, but factors and
+witnesses now range over all integers.
+-/
 
 def Divides (a b : Int) : Prop :=
   exists k : Int, b = a * k
@@ -20,6 +38,13 @@ def Even (n : Int) : Prop :=
 
 def Odd (n : Int) : Prop :=
   exists k : Int, n = 2 * k + 1
+
+/-!
+# Divisibility algebra
+
+These lemmas collect the closure properties of divisibility under transitivity,
+zero, multiplication, addition, subtraction, and squaring.
+-/
 
 theorem divides_refl (n : Int) : Divides n n := by
   exists 1
@@ -78,6 +103,13 @@ theorem divides_square_of_divides {a n : Int} (h : Divides a n) :
     Divides a (n * n) :=
   divides_mul_right h n
 
+/-!
+# Parity algebra
+
+The parity lemmas prove the basic incompatibility and closure results used by
+the Chapter 1 proof examples.
+-/
+
 theorem even_of_double (k : Int) : Even (2 * k) := by
   exists k
 
@@ -130,7 +162,11 @@ theorem odd_add_odd_even {m n : Int} (hm : Odd m) (hn : Odd n) : Even (m + n) :=
           rw [hk, hl]
           omega
 
--- Book: Chapter 1, Section 1.6, integer parity proof example.
+/-!
+# Squares and counterexamples
+
+The integer parity example proves that the square of an even integer is even.
+-/
 theorem even_square {n : Int} (h : Even n) : Even (n * n) := by
   cases h with
   | intro k hk =>
@@ -138,7 +174,9 @@ theorem even_square {n : Int} (h : Even n) : Even (n * n) := by
       rw [hk]
       ac_rfl
 
--- Book: Chapter 1, Section 1.6, Exercise 8(a).
+/-!
+Exercise 8(a) proves the corresponding statement for odd integers.
+-/
 theorem odd_square {n : Int} (h : Odd n) : Odd (n * n) := by
   cases h with
   | intro k hk =>

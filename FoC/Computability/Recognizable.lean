@@ -1,10 +1,17 @@
 import FoC.Computability.Computable
 
-namespace FoC
-namespace Computability
+set_option doc.verso true
 
 /-!
-Turing-decidable and Turing-acceptable languages.
+# Recognizable and decidable languages
+
+## Acceptance and decision
+
+This module packages the Chapter 5 language predicates.  A language is
+acceptable when some machine halts exactly on its members, and decidable when a
+machine gives explicit yes/no outputs for every input.
+
+## Book coordinates
 
 Used by:
 - Chapter 5, Section 5.1: decidable and acceptable languages.
@@ -13,7 +20,17 @@ Used by:
 - Chapter 5, Section 5.3: undecidability statements.
 -/
 
+namespace FoC
+namespace Computability
+
 open Languages
+
+/-!
+# Acceptance and decidability predicates
+
+Acceptability is halting exactly on members. Decidability is halting with one
+of two output symbols according to membership.
+-/
 
 def AcceptsLanguage (M : TuringMachine symbol state)
     (encodeInput : input -> symbol) (L : Language input) : Prop :=
@@ -69,6 +86,13 @@ def CoRecursivelyEnumerable (L : Language input) : Prop :=
 def RecursivelyEnumerableWithComplement (L : Language input) : Prop :=
   RecursivelyEnumerable L ∧ CoRecursivelyEnumerable L
 
+/-!
+# Trace-search principles
+
+The trace predicates abstract the dovetailing argument that searches accepting
+and rejecting computations in parallel.
+-/
+
 def AcceptanceTrace (trace : Word input -> Nat -> Prop)
     (L : Language input) : Prop :=
   forall w : Word input, (exists n : Nat, trace w n) <-> w ∈ L
@@ -86,6 +110,13 @@ def ComplementaryTraceSearchHit
     (accept reject : Word input -> Nat -> Prop)
     (w : Word input) (limit : Nat) : Prop :=
   TraceHitsBy accept w limit ∨ TraceHitsBy reject w limit
+
+/-!
+# Characteristic functions
+
+Decidability can be represented by a computable Boolean characteristic function
+with explicit true and false outputs.
+-/
 
 noncomputable def CharacteristicFunction (L : Language input) :
     Word input -> Word Bool :=
@@ -116,6 +147,13 @@ def RejectsByZeroOutput (M : TuringMachine symbol state)
     TuringMachine.HaltsWithOutput M (EncodeWord encodeInput w) [zero] <->
       ¬ w ∈ L
 
+/-!
+# Classical equivalence principles
+
+These proposition-level principles state the standard relationships between
+decidable, recursively enumerable, and co-recursively enumerable languages.
+-/
+
 def DecidableToAcceptablePrinciple (input : Type u) : Prop :=
   forall L : Language input, TuringDecidable L -> TuringAcceptable L
 
@@ -126,6 +164,13 @@ def ReCoReToDecidablePrinciple (input : Type u) : Prop :=
 def RecursiveIffReCoRePrinciple (input : Type u) : Prop :=
   forall L : Language input,
     Recursive L <-> RecursivelyEnumerableWithComplement L
+
+/-!
+# Extensionality and accepted languages
+
+The first theorem group transports recognizability and acceptability across
+language equality and the machine-level accepted-language predicate.
+-/
 
 theorem acceptsLanguage_of_equal {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {L K : Language input}
@@ -191,6 +236,13 @@ theorem boolCharacteristic_of_equal
     exact (hχ w).left ((hEq w).mpr hw)
   · intro hw
     exact (hχ w).right (fun hL => hw ((hEq w).mp hL))
+
+/-!
+# Decidability implies computable characteristic
+
+Given a decider, its yes/no outputs compute the Boolean characteristic function
+of the language.
+-/
 
 theorem computesFunction_characteristicFunction
     {M : TuringMachine symbol state}

@@ -3,21 +3,36 @@ import FoC.Foundation.RationalCore
 import FoC.Foundation.Rationals
 import Init.Data.Rat.Lemmas
 
-namespace FoC
-namespace Foundation
+set_option doc.verso true
 
 /-!
-Quotient rational numbers.
+# Quotient rational numbers
 
-The earlier `Rational` module keeps raw integer-over-integer representatives.
+## Rational representatives modulo equality
+
+The earlier {module}`FoC.Foundation.Rationals` module keeps raw
+integer-over-integer representatives.
 This module introduces the quotient-rational layer needed before Dedekind cuts:
 integer numerators, positive natural denominators, and equality by cross
 multiplication.
 
+## Book coordinates
+
 Used by:
-- `Real` construction: Dedekind cuts over quotient rationals
+- {lit}`Real` construction: Dedekind cuts over quotient rationals
 - Chapter 1 real-number examples: rational embedding and arithmetic transport
 - Chapter 2 countability examples: rationals as countable data
+-/
+
+namespace FoC
+namespace Foundation
+
+/-!
+# Raw rational pairs
+
+{lit}`RatPair` stores an integer numerator and a positive natural denominator.
+Equality is cross-multiplication, and raw order is the corresponding
+cross-multiplied inequality.
 -/
 
 structure RatPair where
@@ -76,6 +91,13 @@ instance instSetoid : Setoid RatPair where
       exact rel_symm
     · intro p q r
       exact rel_trans
+
+/-!
+# Representative arithmetic
+
+The raw representative operations mirror the usual rational formulas and then
+prove compatibility with the standard {lit}`Rat` interpretation.
+-/
 
 def ofInt (n : Int) : RatPair where
   num := n
@@ -374,6 +396,13 @@ theorem rawLt_self_succ (p : RatPair) : RawLt p (succ p) := by
 
 end RatPair
 
+/-!
+# Quotient rationals
+
+{lit}`QRat` is the quotient of raw rational pairs by cross-multiplied equality. The
+API is built by transporting arithmetic and order through representatives.
+-/
+
 abbrev QRat : Type :=
   Quotient RatPair.instSetoid
 
@@ -552,6 +581,14 @@ theorem mul_eq_of_toRat (x y : QRat) :
     toRat (x * y) = toRat x * toRat y :=
   toRat_mul x y
 
+/-!
+# Order and density
+
+Order is defined by choosing representatives and using raw order.  The density
+theorems provide lower, upper, and intermediate rationals for the real-number
+cut construction.
+-/
+
 def lt (x y : QRat) : Prop :=
   Quotient.liftOn₂ x y RatPair.RawLt
     (by
@@ -723,6 +760,13 @@ theorem le_antisymm {x y : QRat} (hxy : x ≤ y) (hyx : y ≤ x) : x = y := by
 
 theorem eq_of_toRat_eq {x y : QRat} (h : toRat x = toRat y) : x = y :=
   toRat_injective h
+
+/-!
+# Algebraic laws
+
+The quotient-rational operations inherit the expected additive and
+multiplicative laws from their standard rational interpretation.
+-/
 
 theorem add_comm (x y : QRat) : x + y = y + x := by
   apply eq_of_toRat_eq
@@ -1116,6 +1160,13 @@ theorem inv_ne_zero {x : QRat} (hx : x ≠ 0) : x⁻¹ ≠ 0 := by
   rw [inv_mul_cancel hx, zero_mul] at hmul
   exact one_ne_zero hmul
 
+/-!
+# Powers and square-root obstructions
+
+Natural powers and reduced-rational representatives connect the quotient
+rationals back to the irrationality cores for square roots of two and three.
+-/
+
 def powNat (x : QRat) : Nat -> QRat
   | 0 => 1
   | n + 1 => powNat x n * x
@@ -1179,6 +1230,13 @@ theorem no_square_root_three (q : QRat) :
 end QRat
 
 namespace Countability
+
+/-!
+# Countability of rationals
+
+Quotient rationals are countable by coding their standard rational
+representatives injectively into natural numbers.
+-/
 
 def RatCode (r : Rat) : Nat :=
   PairCode (IntCode r.num) r.den

@@ -1,10 +1,16 @@
 import FoC.Grammars.CFG
 
-namespace FoC
-namespace Grammars
+set_option doc.verso true
 
 /-!
-General grammars with unrestricted left-hand sides.
+# General grammars
+
+## Unrestricted productions
+
+General grammars allow productions whose left-hand side is an arbitrary
+sentential form containing at least one nonterminal.  This is the unrestricted
+grammar model needed at the end of Chapter 4 and for the transition to
+recursively enumerable languages in Chapter 5.
 
 Used by:
 - Chapter 4, Section 4.6: general grammars and unrestricted derivations.
@@ -12,7 +18,18 @@ Used by:
   grammars.
 -/
 
+namespace FoC
+namespace Grammars
+
 open Languages
+
+/-!
+# Left-hand side condition
+
+An unrestricted grammar rule may replace a whole sentential form, not just one
+nonterminal.  The only side condition is that the left-hand side must contain at
+least one nonterminal; otherwise a rule would rewrite a purely terminal word.
+-/
 
 namespace SententialForm
 
@@ -36,6 +53,15 @@ structure GeneralGrammar (terminal : Type u) (nonterminal : Type v) where
   nonterminalsFinite : Foundation.FiniteType nonterminal
 
 namespace GeneralGrammar
+
+/-!
+# Finite presentations
+
+The textbook later compares grammars with machines, so this file records a
+countable coding of finite grammar presentations.  A production is coded by
+coding its left and right sentential forms; a finite presentation is coded by
+the start symbol together with a finite list of productions.
+-/
 
 structure Production (terminal : Type u) (nonterminal : Type v) where
   lhs : SententialForm terminal nonterminal
@@ -141,6 +167,15 @@ def HasFiniteProductions (G : GeneralGrammar terminal nonterminal) : Prop :=
       G.produces lhs rhs <->
         exists rule, rule ∈ rules ∧ rule.lhs = lhs ∧ rule.rhs = rhs
 
+/-!
+# Derivations and generated languages
+
+One step of a general derivation rewrites an occurrence of a left-hand side
+inside a larger sentential form.  The reflexive-transitive closure of those
+steps defines derivability, and the generated language consists of terminal
+words derivable from the start nonterminal.
+-/
+
 def Yields (G : GeneralGrammar terminal nonterminal)
     (x y : SententialForm terminal nonterminal) : Prop :=
   exists u, exists v, exists lhs, exists rhs,
@@ -163,6 +198,13 @@ def FiniteProductionGenerated (L : Language terminal) : Prop :=
   exists nonterminal : Type, exists G : GeneralGrammar terminal nonterminal,
     HasFiniteProductions G ∧ Language.Equal (GeneratedLanguage G) L
 
+/-!
+# Derivation algebra
+
+The basic proof API mirrors the context-free grammar layer: every single yield
+is a derivation, and derivations compose transitively.
+-/
+
 theorem yields_derives {G : GeneralGrammar terminal nonterminal}
     {x y : SententialForm terminal nonterminal} (h : Yields G x y) :
     Derives G x y :=
@@ -174,6 +216,14 @@ theorem derives_trans {G : GeneralGrammar terminal nonterminal}
   induction hxy with
   | refl _ => exact hyz
   | step hstep _ ih => exact Derives.step hstep (ih hyz)
+
+/-!
+# Embedding context-free grammars
+
+Every context-free grammar is a general grammar whose left-hand sides are
+single nonterminals.  The embedding preserves finite production lists,
+derivations, and generated languages.
+-/
 
 def FromCFG (G : CFG terminal nonterminal) : GeneralGrammar terminal nonterminal where
   start := G.start

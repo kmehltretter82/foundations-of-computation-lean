@@ -1,19 +1,32 @@
-namespace FoC
-namespace Foundation
+set_option doc.verso true
 
 /-!
-Tiny quadratic-surd surrogate.
+# A small quadratic-surd model
 
-`Quad2` represents expressions of the form `a + b√2` with integer
+## The Quad2 model
+
+{lit}`Quad2` represents expressions of the form {lit}`a + b√2` with integer
 coefficients.  This is not a real-number implementation; it is a small algebraic
 model for the book exercise showing that the product of two irrational numbers
-need not be irrational.  A future `Real` module can embed this structure by
+need not be irrational.  A future {lit}`Real` module can embed this structure by
 mapping `a + b√2` to the corresponding real expression.
+
+## Book coordinates
 
 Used by:
 - Chapter 1, Section 1.6: counterexample to "the product of two irrational
   numbers is irrational"
 - Chapter 1, Section 1.7: surrogate for `√2` before full real numbers exist
+-/
+
+namespace FoC
+namespace Foundation
+
+/-!
+# Algebraic surrogate
+
+{lit}`Quad2` stores the integer coefficients of an expression of the form
+{lit}`a + b√2`.
 -/
 
 structure Quad2 where
@@ -22,6 +35,13 @@ structure Quad2 where
 deriving DecidableEq
 
 namespace Quad2
+
+/-!
+# Operations and rational-like elements
+
+The small algebra supports addition, negation, subtraction, multiplication, and
+the predicates needed for the Chapter 1 irrational-product example.
+-/
 
 def ofInt (n : Int) : Quad2 :=
   { rational := n, radical := 0 }
@@ -52,6 +72,13 @@ def IrrationalLike (x : Quad2) : Prop :=
 
 theorem ofInt_rationalLike (n : Int) : RationalLike (ofInt n) :=
   rfl
+
+/-!
+# The square root of two example
+
+The formal facts record that {lit}`sqrtTwo` is irrational-like while its square
+is rational-like.
+-/
 
 theorem sqrtTwo_irrationalLike : IrrationalLike sqrtTwo := by
   intro h

@@ -2,17 +2,41 @@ import FoC.Foundation.Sets
 import FoC.Foundation.Finite
 import FoC.Foundation.Functions
 
-namespace FoC
-namespace Foundation
+set_option doc.verso true
 
 /-!
-Countability via explicit partial enumerations by natural numbers.
+# Countability
+
+## Enumerations by natural numbers
+
+Countability is formalized by explicit partial enumerations from natural
+numbers.  A set is countable when every member appears somewhere in such an
+enumeration.  This representation fits the book's "list the elements in a
+sequence" intuition while allowing enumerations to skip positions with
+{lean}`Option.none`.
+
+The module contains reusable constructions for empty sets, natural numbers,
+even naturals, finite sets, products, unions, integers, and selected diagonal
+arguments.
+
+## Book coordinates
 
 Used by:
 - Chapter 2, Section 2.6: Counting Past Infinity
 -/
 
+namespace FoC
+namespace Foundation
+
 namespace FSet
+
+/-!
+# Countability predicates
+
+A countable set is one that can be enumerated by a partial function from natural
+numbers.  The partial codomain lets an enumeration skip positions without
+changing the set it enumerates.
+-/
 
 def EnumeratedBy (A : FSet alpha) (f : Nat -> Option alpha) : Prop :=
   forall x, x ∈ A <-> exists n, f n = some x
@@ -31,6 +55,13 @@ def EvenNaturals : FSet Nat :=
 
 def InterleaveEnumerations (f g : Nat -> Option alpha) (n : Nat) : Option alpha :=
   if n % 2 = 0 then f (n / 2) else g (n / 2)
+
+/-!
+# Basic enumerations
+
+The first examples enumerate the empty set, all natural numbers, and the even
+natural numbers.
+-/
 
 theorem interleave_even (f g : Nat -> Option alpha) (n : Nat) :
     InterleaveEnumerations f g (2 * n) = f n := by
@@ -90,7 +121,13 @@ theorem countable_of_equal {A B : FSet alpha}
       · intro hx
         exact (hAB x).mp ((hf x).mpr hx)
 
--- Book: Chapter 2, Section 2.6, Exercise 11(b).
+/-!
+# Countable unions
+
+Exercise 11(b) from Section 2.6 is represented by interleaving two
+enumerations.  Even positions enumerate the first set and odd positions
+enumerate the second.
+-/
 theorem countable_union {A B : FSet alpha}
     (hA : Countable A) (hB : Countable B) :
     Countable (Union A B) := by
@@ -126,7 +163,10 @@ theorem countable_union {A B : FSet alpha}
                     simp [InterleaveEnumerations, hpar] at hn
                     exact hn))
 
--- Book: Chapter 2, Section 2.6, Exercise 11(a).
+/-!
+Exercise 11(a) uses the union construction above.  If the first input is
+already infinite, then the union cannot become finite.
+-/
 theorem countably_infinite_union {A B : FSet alpha}
     (hA : CountablyInfinite A) (hB : CountablyInfinite B) :
     CountablyInfinite (Union A B) := by
@@ -135,7 +175,14 @@ theorem countably_infinite_union {A B : FSet alpha}
   · intro hfinite
     exact hA.right (finite_subset (union_left_subset A B) hfinite)
 
--- Book: Chapter 2, Section 2.6, Theorem 2.9.
+/-!
+# Removing countable subsets
+
+Theorem 2.9 says that removing a countable subset from an uncountable set still
+leaves an uncountable set.  The formal proof argues by contradiction: if the
+difference were countable, the original set would be the union of two countable
+sets.
+-/
 theorem uncountable_diff_countable_subset {X K : FSet alpha}
     (hX : Uncountable X) (hK : Countable K) (hKX : Subset K X) :
     Uncountable (Diff X K) := by
@@ -175,6 +222,13 @@ end FSet
 
 namespace Countability
 
+/-!
+# Encodable types
+
+An encodable type injects into natural numbers.  Such an injection gives a
+countable universal set by searching for the first value with a given code.
+-/
+
 def EncodableByNat (alpha : Type u) : Prop :=
   exists code : alpha -> Nat, Fn.Injective code
 
@@ -202,7 +256,12 @@ def IntCode : Int -> Nat
   | Int.ofNat n => 2 * n
   | Int.negSucc n => 2 * n + 1
 
--- Book: Chapter 2, Section 2.6, integers are countable by explicit coding.
+/-!
+# Integer encodings
+
+Integers are countable by an explicit code into natural numbers: nonnegative
+integers go to even codes and negative successors go to odd codes.
+-/
 theorem intCode_injective : Fn.Injective IntCode := by
   intro x y h
   cases x <;> cases y <;> simp [IntCode] at h ⊢ <;> omega
@@ -214,6 +273,14 @@ theorem nat_encodable : EncodableByNat Nat := by
 
 theorem int_encodable : EncodableByNat Int := by
   exact Exists.intro IntCode intCode_injective
+
+/-!
+# Compound encodings
+
+Pairs, options, sums, products, and lists are encoded by combining natural
+number codes.  These are the reusable countability constructions used by later
+grammar and computability representations.
+-/
 
 def PairCode : Nat -> Nat -> Nat
   | 0, b => 2 * b
@@ -352,6 +419,13 @@ theorem list_encodable {alpha : Type u}
   rcases hα with ⟨code, hcode⟩
   exact ⟨ListCode code, listCode_injective hcode⟩
 
+/-!
+# Diagonal pair enumeration
+
+The diagonal lists enumerate pairs by increasing sum of coordinates, matching
+the standard grid-walk proof that {lit}`Nat × Nat` is countable.
+-/
+
 def DiagonalList : Nat -> List (Nat × Nat)
   | 0 => [(0, 0)]
   | n + 1 => (0, n + 1) :: (DiagonalList n).map (fun p => (p.1 + 1, p.2))
@@ -361,7 +435,11 @@ theorem zero_mem_diagonalList (b : Nat) : (0, b) ∈ DiagonalList b := by
   | zero => simp [DiagonalList]
   | succ b => simp [DiagonalList]
 
--- Book: Chapter 2, Section 2.6, diagonal model for enumerating Nat x Nat.
+/-!
+The usual diagonal enumeration of pairs is modeled by collecting all pairs with
+the same sum.  This theorem shows that a pair appears on the diagonal indexed by
+that sum.
+-/
 theorem pair_mem_diagonalList (a b : Nat) :
     (a, b) ∈ DiagonalList (a + b) := by
   induction a with

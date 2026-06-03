@@ -1,15 +1,32 @@
 import FoC.Languages.Language
 
+set_option doc.verso true
+
+/-!
+# Regular expressions
+
+## Syntax and semantics
+
+Regular expressions are represented as syntax trees.  Their meaning is a
+language, defined by structural recursion: empty language, epsilon, symbols,
+union, concatenation, and star.
+
+## Book coordinates
+
+Used by:
+- Chapter 3, Section 3.2: definitions of regular expression and generated language
+- Chapter 3, Section 3.3: application syntax sugar for {lit}`+` and {lit}`?`
+- Chapter 3, Section 3.6: regular-language closure properties
+-/
+
 namespace FoC
 namespace Languages
 
 /-!
-Regular expressions and their generated languages.
+# Expression syntax
 
-Used by:
-- Chapter 3, Section 3.2: definitions of regular expression and generated language
-- Chapter 3, Section 3.3: application syntax sugar for `+` and `?`
-- Chapter 3, Section 3.6: regular-language closure properties
+Regular expressions are syntax trees with constructors for the empty language,
+epsilon, symbols, union, concatenation, and Kleene star.
 -/
 
 inductive RegExp (alpha : Type u) where
@@ -21,6 +38,13 @@ inductive RegExp (alpha : Type u) where
   | star : RegExp alpha -> RegExp alpha
 
 namespace RegExp
+
+/-!
+# Denotational semantics
+
+The meaning of an expression is a language, defined structurally by translating
+each syntactic constructor to the corresponding language operation.
+-/
 
 def Denote : RegExp alpha -> Language alpha
   | empty => Language.Empty
@@ -35,6 +59,14 @@ def Generates (r : RegExp alpha) (L : Language alpha) : Prop :=
 
 def Regular (L : Language alpha) : Prop :=
   exists r : RegExp alpha, Generates r L
+
+/-!
+# Derived expression forms
+
+The textbook abbreviations such as optional, plus, character classes, finite
+alternations, finite languages, and reversal are encoded as ordinary expression
+transformations.
+-/
 
 def Optional (r : RegExp alpha) : RegExp alpha :=
   alt r eps
@@ -65,6 +97,13 @@ def Reverse : RegExp alpha -> RegExp alpha
   | alt r s => alt (Reverse r) (Reverse s)
   | seq r s => seq (Reverse s) (Reverse r)
   | star r => star (Reverse r)
+
+/-!
+# Semantic equations
+
+These theorems expose the membership rules for each expression constructor and
+register the base regular languages.
+-/
 
 theorem denote_empty (w : Word alpha) : w ∈ Denote (empty : RegExp alpha) <-> False :=
   Iff.rfl
@@ -99,6 +138,13 @@ theorem regular_epsilon : Regular (Language.Singleton (Word.Empty : Word alpha))
 theorem regular_symbol (a : alpha) : Regular (Language.Singleton (Word.Symbol a)) := by
   exists sym a
   exact Language.equal_refl _
+
+/-!
+# Closure constructions
+
+The remaining theorems prove that the semantic language class is closed under
+reversal, union, concatenation, star, and finite-language constructions.
+-/
 
 theorem reverse_denote (r : RegExp alpha) :
     Language.Equal (Denote (Reverse r)) (Language.Reverse (Denote r)) := by

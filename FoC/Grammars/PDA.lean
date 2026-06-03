@@ -1,25 +1,36 @@
 import FoC.Foundation.Finite
 import FoC.Languages.Language
 
-namespace FoC
-namespace Grammars
+set_option doc.verso true
 
 /-!
-Pushdown automata.
+# Pushdown automata
 
 The stack top is represented by the head of the stack list.  A transition
-label `(input, pop, push)` consumes either one input symbol or epsilon, removes
-`pop` from the top of the stack, and replaces it with `push`.
+label {lit}`(input, pop, push)` consumes either one input symbol or epsilon,
+removes {lit}`pop` from the top of the stack, and replaces it with {lit}`push`.
+
+## Book coordinates
 
 Used by:
 - Chapter 4, Section 4.4: pushdown automata, configurations, computations,
   and acceptance by final state with empty stack.
 -/
 
+namespace FoC
+namespace Grammars
+
 open Foundation
 open Languages
 
 namespace FiniteType
+
+/-!
+# Finite product states
+
+PDA constructions often add control information by taking products of finite
+state types. This helper supplies the required finite witness.
+-/
 
 def PairElems : List alpha -> List beta -> List (alpha × beta)
   | [], _ => []
@@ -47,6 +58,13 @@ def product (left : FiniteType alpha) (right : FiniteType beta) :
 
 end FiniteType
 
+/-!
+# PDA structure
+
+A PDA is given by a start state, a transition relation over optional input and
+stack words, an accepting-state predicate, and a finite-state witness.
+-/
+
 structure PDA (input : Type u) (stack : Type v) (state : Type w) where
   start : state
   transition : state -> Option input -> Word stack -> state -> Word stack -> Prop
@@ -54,6 +72,13 @@ structure PDA (input : Type u) (stack : Type v) (state : Type w) where
   statesFinite : FiniteType state
 
 namespace PDA
+
+/-!
+# Finite presentations
+
+The finite-presentation layer turns an arbitrary transition relation into the
+book's finite list of transition rules and accepting states.
+-/
 
 structure TransitionRule (input : Type u) (stack : Type v) (state : Type w) where
   source : state
@@ -99,6 +124,14 @@ def PopsAtMostOne (M : PDA input stack state) : Prop :=
     M.transition q a? pop r push ->
       pop = [] ∨ exists A : stack, pop = [A]
 
+/-!
+# Configurations and steps
+
+Configurations record the current state, unread input, and stack. A step either
+reads one symbol or takes an epsilon transition while replacing the matched
+stack prefix.
+-/
+
 structure Configuration (input : Type u) (stack : Type v) (state : Type w) where
   state : state
   unread : Word input
@@ -139,6 +172,14 @@ inductive ComputesIn (M : PDA input stack state) :
   | succ {n : Nat} {c d e : Configuration input stack state} :
       Step M c d -> ComputesIn M n d e -> ComputesIn M (n + 1) c e
 
+/-!
+# Acceptance modes
+
+The default accepted language uses final state and empty stack. The companion
+predicates keep the final-state-only and empty-stack-only variants available for
+conversion theorems.
+-/
+
 def Accepts (M : PDA input stack state) (w : Word input) : Prop :=
   exists q : state,
     M.accept q ∧
@@ -167,6 +208,13 @@ def Recognizable (L : Language input) : Prop :=
 
 def Deterministic (M : PDA input stack state) : Prop :=
   forall c d e, Step M c d -> Step M c e -> d = e
+
+/-!
+# Computation algebra
+
+The reflexive-transitive computation relation and its length-indexed variant
+are interconvertible and compose in the expected way.
+-/
 
 theorem computes_trans {M : PDA input stack state}
     {a b c : Configuration input stack state}

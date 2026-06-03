@@ -1,17 +1,32 @@
-namespace FoC
-namespace Foundation
+set_option doc.verso true
 
 /-!
-Standalone rational-number representatives.
+# Rational representatives
+
+## Raw rational representatives
 
 The book introduces rational numbers as ratios of integers with nonzero
 denominator. This module formalizes that representation directly. It does not
-yet quotient different representatives such as `1/2` and `2/4`.
+yet quotient different representatives such as {lit}`1/2` and {lit}`2/4`; that
+quotient layer is developed separately in
+{module -checked}`FoC.Foundation.QuotientRationals`.
+
+## Book coordinates
 
 Used by:
 - Chapter 1, Section 1.6: rational-number proof examples
 - Chapter 1, Section 1.7: irrationality statements, later
 - Chapter 2, Section 2.6: countability of rationals, later
+-/
+
+namespace FoC
+namespace Foundation
+
+/-!
+# Raw representatives
+
+A rational number is represented by an integer numerator and a nonzero integer
+denominator.  No quotienting is performed in this file.
 -/
 
 structure Rational where
@@ -20,6 +35,13 @@ structure Rational where
   den_ne_zero : den ≠ 0
 
 namespace Rational
+
+/-!
+# Arithmetic operations
+
+The operations are defined by the usual representative formulas, with each
+definition carrying the proof that the new denominator is nonzero.
+-/
 
 def IsRepresentation (_num den : Int) : Prop :=
   den ≠ 0
@@ -104,13 +126,21 @@ theorem div_den_ne_zero (x y : Rational) (h : y.num ≠ 0) :
     (div x y h).den ≠ 0 :=
   (div x y h).den_ne_zero
 
--- Book: Chapter 1, Section 1.6, rational addition proof.
+/-!
+# Representability checks
+
+The rational-addition proof checks that the usual common-denominator formula
+still has a nonzero denominator.
+-/
 theorem add_representation {a b c d : Int}
     (hb : b ≠ 0) (hd : d ≠ 0) :
     IsRepresentation (a * d + c * b) (b * d) :=
   Int.mul_ne_zero hb hd
 
--- Book: Chapter 1, Section 1.6, rational multiplication exercise.
+/-!
+The rational-multiplication exercise has the same shape: the product
+denominator is nonzero when both input denominators are nonzero.
+-/
 theorem mul_representation {a b c d : Int}
     (hb : b ≠ 0) (hd : d ≠ 0) :
     IsRepresentation (a * c) (b * d) :=

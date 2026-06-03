@@ -1,20 +1,38 @@
 import FoC.Languages.NFAPath
 import FoC.Languages.RegularExpression
 
-namespace FoC
-namespace Languages
+set_option doc.verso true
 
 /-!
-Thompson-style NFA constructions for regular expressions.
+# Thompson constructions
+
+## Structural NFA construction
+
+This file gives the standard structural construction of an NFA from a regular
+expression.  The proofs use the explicit NFA path semantics from
+{module}`FoC.Languages.NFAPath`, which makes the inductive cases for union,
+concatenation, and star direct.
+
+## Book coordinates
 
 Used by:
 - Chapter 3, Section 3.6, Theorem 3.3: every regular-expression language can
   be recognized by an NFA.
 -/
 
+namespace FoC
+namespace Languages
+
 open Foundation
 
 namespace Thompson
+
+/-!
+# Base NFAs
+
+The base regular expressions are implemented by tiny two-state NFAs for the
+empty language, epsilon, and a single symbol.
+-/
 
 def BoolFinite : FiniteType Bool where
   elems := [false, true]
@@ -138,6 +156,13 @@ theorem symbolNFA_language (a : alpha) :
     constructor
     · exact NFA.Path.sym (And.intro rfl (And.intro rfl rfl)) (NFA.Path.nil true)
     · rfl
+
+/-!
+# Union construction
+
+The union NFA adds a fresh start state with epsilon transitions into the two
+component machines and preserves accepting states from either branch.
+-/
 
 inductive UnionState (leftState rightState : Type) where
   | start : UnionState leftState rightState
@@ -365,6 +390,13 @@ def SumFinite (leftFinite : FiniteType leftState) (rightFinite : FiniteType righ
         simp [leftFinite.complete q]
     | inr q =>
         simp [rightFinite.complete q]
+
+/-!
+# Concatenation construction
+
+The concatenation NFA starts in the left machine and uses epsilon transitions
+from left accepting states into the right start state.
+-/
 
 def ConcatNFA (M : NFA alpha leftState) (N : NFA alpha rightState) :
     NFA alpha (Sum leftState rightState) where
@@ -616,6 +648,13 @@ def OptionFinite (stateFinite : FiniteType state) : FiniteType (Option state) wh
         simp
     | some q =>
         simp [stateFinite.complete q]
+
+/-!
+# Star construction
+
+The star NFA adds a fresh accepting start state and loops from accepting
+component states back to the component start by epsilon transitions.
+-/
 
 def StarNFA (M : NFA alpha state) : NFA alpha (Option state) where
   start := none
@@ -875,6 +914,13 @@ theorem star_equal_of_equal {L M : Language alpha}
         · intro p hp
           exact (h p).mpr (hpieces.left p hp)
         · exact hpieces.right
+
+/-!
+# Structural induction
+
+The final compiler recursively translates any regular expression into an NFA
+whose accepted language is exactly the expression's denotation.
+-/
 
 structure RegexNFA (r : RegExp alpha) where
   state : Type

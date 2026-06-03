@@ -1,21 +1,34 @@
 import FoC.Languages.Words
 
-namespace FoC
-namespace Computability
+set_option doc.verso true
 
 /-!
-Finite-window tapes for Turing machines.
+# Tapes
+
+## Finite tape windows
 
 The book's tape is infinite in both directions and blank except for finitely
 many cells.  We represent the finite visible window by a left context, current
 cell, and right context.  Cells outside the stored lists are blank, represented
-by `none`.
+by {lit}`none`.
+
+## Book coordinates
 
 Used by:
 - Chapter 5, Section 5.1: Turing-machine tapes, reading, writing, and moving.
 -/
 
+namespace FoC
+namespace Computability
+
 open Languages
+
+/-!
+# Directions and tape representation
+
+The tape stores only a finite window around the head. Moving beyond the stored
+window exposes a blank cell.
+-/
 
 inductive Direction where
   | left : Direction
@@ -29,6 +42,13 @@ structure Tape (symbol : Type u) where
 deriving DecidableEq
 
 namespace Tape
+
+/-!
+# Basic tape operations
+
+Input and output words are loaded into the visible window; reading, writing,
+and moving update only the local head and neighboring contexts.
+-/
 
 def blank : Tape symbol where
   left := []
@@ -62,6 +82,13 @@ def move : Direction -> Tape symbol -> Tape symbol
 
 def output (w : Word symbol) : Tape symbol :=
   input w
+
+/-!
+# Operation laws
+
+These small equations and injectivity facts are the reusable interface for the
+Turing-machine configuration layer.
+-/
 
 theorem read_write (cell : Option symbol) (T : Tape symbol) :
     read (write cell T) = cell :=

@@ -1,10 +1,17 @@
 import FoC.Computability.Recognizable
 
-namespace FoC
-namespace Computability
+set_option doc.verso true
 
 /-!
-Enumeration vocabulary for recursively enumerable languages.
+# Enumerable languages
+
+## Listings and ranges
+
+Recursively enumerable languages can be viewed through machines, listings, or
+ranges of computable functions.  This module records those equivalent-looking
+forms as reusable predicates and bridges.
+
+## Book coordinates
 
 Used by:
 - Chapter 5, Section 5.2: equivalent descriptions of recursively enumerable
@@ -12,13 +19,30 @@ Used by:
   functions.
 -/
 
+namespace FoC
+namespace Computability
+
 open Languages
+
+/-!
+# Listings
+
+A listing is a stream of words whose range is extensionally equal to the
+language.
+-/
 
 def ListedBy (stream : Nat -> Word alpha) (L : Language alpha) : Prop :=
   Language.Equal (fun w => exists n : Nat, stream n = w) L
 
 def Listable (L : Language alpha) : Prop :=
   exists stream : Nat -> Word alpha, ListedBy stream L
+
+/-!
+# Ranges of functions
+
+Enumerable languages can also be described as ranges of string functions, with
+or without an explicit computability requirement.
+-/
 
 def RangeLanguage (f : Word input -> Word output) : Language output :=
   fun w => exists x : Word input, f x = w
@@ -37,11 +61,25 @@ def ListingAsUnaryFunction (stream : Nat -> Word output) :
     Word Unit -> Word output :=
   fun w => stream (Word.Length w)
 
+/-!
+# Equivalence predicates
+
+These proposition-level predicates name the standard equivalences discussed in
+the textbook.
+-/
+
 def AcceptableListingEquivalence (L : Language alpha) : Prop :=
   TuringAcceptable L <-> Listable L
 
 def AcceptableRangeEquivalence (L : Language alpha) : Prop :=
   TuringAcceptable L <-> RangeOfComputableFunction L
+
+/-!
+# Listing laws
+
+The first lemmas expose membership in a listed language and preserve listability
+under language equality.
+-/
 
 theorem listedBy_mem {stream : Nat -> Word alpha} {L : Language alpha}
     (h : ListedBy stream L) (w : Word alpha) :
@@ -69,6 +107,13 @@ theorem listed_word_mem {stream : Nat -> Word alpha} {L : Language alpha}
 theorem range_mem {f : Word input -> Word output} (x : Word input) :
     f x ∈ RangeLanguage f :=
   Exists.intro x rfl
+
+/-!
+# Unary range conversion
+
+Unary input words encode natural indices, turning any listing stream into a
+unary-input range function and conversely.
+-/
 
 theorem unaryInputWord_length (n : Nat) :
     Word.Length (UnaryInputWord n) = n := by
@@ -157,6 +202,13 @@ theorem listable_iff_rangeOfUnaryFunction (L : Language output) :
   constructor
   · exact listable_rangeOfUnaryFunction
   · exact rangeOfUnaryFunction_listable
+
+/-!
+# Extensional range laws
+
+Range predicates are invariant under pointwise equal functions and language
+equality.
+-/
 
 theorem rangeLanguage_equal_of_pointwise
     {f g : Word input -> Word output}

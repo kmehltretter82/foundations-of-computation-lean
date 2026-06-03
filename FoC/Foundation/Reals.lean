@@ -1,21 +1,35 @@
 import FoC.Foundation.QuotientRationals
 
-namespace FoC
-namespace Foundation
+set_option doc.verso true
 
 /-!
-Dedekind-cut real numbers over quotient rationals.
+# Dedekind-cut real numbers
 
-This module is the first real-number layer needed by the book formalization.
-It uses one-sided lower cuts over `QRat`: nonempty, proper, downward closed,
-and open upward/no-greatest-element.  It establishes rational embeddings,
+## Dedekind cuts
+
+This module is the first real-number layer needed by the book formalization. It
+uses one-sided lower cuts over {lit}`QRat`: nonempty, proper, downward closed,
+and open upward with no greatest element.  It establishes rational embeddings,
 order, density, cut addition/subtraction/multiplication, rational scaling, and
 rational/irrational predicates.
+
+## Book coordinates
 
 Used by:
 - Chapter 1 real-number wrappers for density and irrational examples
 - Future square-root cuts and irrationality transport
 - Chapter 2 real-number uncountability bridge
+-/
+
+namespace FoC
+namespace Foundation
+
+/-!
+# Lower cuts
+
+A real is a lower set of quotient rationals with the usual Dedekind-cut
+conditions: inhabited, proper, downward closed, and with no greatest lower
+element.
 -/
 
 structure Real where
@@ -41,6 +55,14 @@ theorem ext {x y : Real} (h : forall q, x.lower q <-> y.lower q) : x = y := by
 theorem lower_congr {x y : Real} (h : x = y) (q : QRat) :
     x.lower q <-> y.lower q := by
   rw [h]
+
+/-!
+# Rational embedding
+
+The embedding {lit}`qreal r` is the cut of rationals strictly below {lit}`r`.
+The surrounding lemmas show that equality and order of embedded rationals
+reflect quotient-rational equality and order.
+-/
 
 def qreal (r : QRat) : Real where
   lower := fun q => q < r
@@ -80,6 +102,13 @@ instance : OfNat Real n where
 
 instance : IntCast Real where
   intCast n := qreal (QRat.ofInt n)
+
+/-!
+# Order and rationality
+
+Real order is inclusion of lower cuts. Strict order is proper inclusion, and the
+rationality predicate records exactly those cuts that come from {lit}`qreal`.
+-/
 
 def le (x y : Real) : Prop :=
   forall q, x.lower q -> y.lower q
@@ -268,6 +297,14 @@ theorem lower_lt_of_not_lower {x : Real} {a u : QRat}
           exact False.elim (hu (by rwa [hauEq] at ha))
       | inr hua =>
           exact False.elim (hu (x.downward_closed u a hua ha))
+
+/-!
+# Cut arithmetic
+
+Arithmetic is defined directly on cuts, then related back to rational
+arithmetic. These definitions support the book-facing real-number examples
+without importing a larger real-number development.
+-/
 
 def add (x y : Real) : Real where
   lower := fun q => exists a b, x.lower a ∧ y.lower b ∧ q < a + b
@@ -1026,6 +1063,14 @@ theorem rational_divByQ {x : Real} {q : QRat}
       exists r / q
       rw [hxr, qreal_divByQ]
 
+/-!
+# Square-root cuts and irrationality bridges
+
+Square-root cuts are specified by rational square inequalities. The bridge
+theorems turn quotient-rational no-square-root facts into real irrationality
+statements.
+-/
+
 def sqrtNatLower (c : Nat) (q : QRat) : Prop :=
   q < 0 ∨ exists r : QRat, q < r ∧ r * r < QRat.ofNat c
 
@@ -1200,6 +1245,13 @@ theorem irrational_of_qreal_square_eq_two {x : Real}
 theorem irrational_of_qreal_square_eq_three {x : Real}
     (hsquare : qrealSquareCharacterization x 3) : Irrational x :=
   irrational_of_qreal_square_characterization QRat.no_square_root_three hsquare
+
+/-!
+# Density
+
+The final theorem constructs a rational cut strictly between any two ordered
+Dedekind cuts, matching the dense-order statement used in the book layer.
+-/
 
 theorem density {x y : Real} (h : x < y) :
     exists z : Real, x < z ∧ z < y := by

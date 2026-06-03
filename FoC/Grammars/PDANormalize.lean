@@ -1,23 +1,37 @@
 import FoC.Grammars.CFG
 import FoC.Grammars.PDA
 
-namespace FoC
-namespace Grammars
+set_option doc.verso true
 
 /-!
-Finite pop-normalization for pushdown automata.
+# PDA pop normalization
 
-The PDA-to-CFG construction in `FoC.Grammars.PDAToCFG` is exact for PDAs whose
+The PDA-to-CFG construction in {module -checked}`FoC.Grammars.PDAToCFG` is exact for PDAs whose
 transitions pop either no stack symbol or exactly one stack symbol.  A general
 finite presentation can contain transitions that pop a longer stack word.  This
 module builds the finite helper-state machine that splits those longer pops
 into one-symbol pops while preserving the original stack alphabet.
+
+## Helper states
+
+Long pop words are represented by helper states that remember the original
+transition rule and the remaining suffix that still has to be popped.
 -/
+
+namespace FoC
+namespace Grammars
 
 open Foundation
 open Languages
 
 namespace PDA
+
+/-!
+# Finite helper-state enumeration
+
+The helper states are finite because they are built from the finite list of
+transition rules and the finite list of suffixes of each pop word.
+-/
 
 def suffixesWithNil : Word stack -> List (Word stack)
   | [] => [[]]
@@ -124,6 +138,14 @@ def popNormalizedStateFinite {M : PDA input stack state}
             List.mem_attach (popNormalizeHelperPairs presentation) helper,
             rfl⟩
 
+/-!
+# Normalized transition rules
+
+Original rules that pop zero or one stack symbol are copied directly.  Rules
+with longer pop words are split into a first real transition followed by helper
+transitions that pop one symbol at a time.
+-/
+
 def popNormalizedDirectTransitionRulesForRule
     {M : PDA input stack state} (presentation : FinitePresentation M)
     (rule : TransitionRule input stack state) :
@@ -220,6 +242,13 @@ def popNormalizedTransitionRules {M : PDA input stack state}
     (popNormalizedStartSplitTransitionRulesForRule presentation) ++
   (popNormalizeHelperPairs presentation).attach.map
     (popNormalizedHelperTransitionRule presentation)
+
+/-!
+# Pop-bound proof
+
+The generated finite presentation satisfies the normal-form condition: every
+transition pops either no symbol or exactly one stack symbol.
+-/
 
 theorem popNormalizedDirectTransitionRulesForRule_popsAtMostOne
     {M : PDA input stack state} {presentation : FinitePresentation M}
@@ -351,6 +380,13 @@ theorem popNormalize_hasFinitePresentation
     (M : PDA input stack state) (presentation : FinitePresentation M) :
     HasFinitePresentation (PopNormalize M presentation) :=
   Nonempty.intro (popNormalizeFinitePresentation M presentation)
+
+/-!
+# Simulating original transitions
+
+The remaining lemmas show that each original transition can be simulated by a
+finite computation in the normalized PDA.
+-/
 
 def popNormalizeConfiguration {M : PDA input stack state}
     (presentation : FinitePresentation M)
