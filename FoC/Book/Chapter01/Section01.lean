@@ -25,6 +25,13 @@ The later statements in the file also formalize selected exercises: standard
 tautologies, countervaluations for formulas that are not tautologies or not
 contradictions, associativity behavior for implication and biconditional, and
 the construction of the usual connectives from the NOR operator.
+
+Read the declarations in this page as a formal truth-table. A theorem whose
+conclusion is `PropForm.Tautology p` says that every valuation makes `p` true.
+A theorem whose conclusion is an existential statement gives a concrete
+valuation witnessing failure of a proposed universal property. Near the end,
+the NOR definitions show a different kind of result: one connective is
+expressive enough to rebuild the usual propositional connectives.
 -/
 
 open Foundation

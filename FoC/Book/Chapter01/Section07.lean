@@ -25,6 +25,12 @@ The section begins with proof-by-contradiction vocabulary, then formalizes the
 number-theoretic examples: odd-square contradiction, prime-divisor existence,
 Euclid's finite-list theorem for primes, pigeonhole collision vocabulary, and
 square-root irrationality cores.
+
+The common pattern is to assume the opposite of the target statement and
+derive an impossible combination of facts. In the finite-prime theorem, the
+contradiction comes from constructing a prime divisor outside a proposed list.
+In the square-root examples, the contradiction comes from divisibility facts
+for a reduced rational representative.
 -/
 
 open Foundation
@@ -61,6 +67,11 @@ theorem pigeonhole_collision_schema {alpha : Type u} {beta : Type v}
 The reduced-rational and quotient-rational theorems are the formal core of the
 sqrt(2) and sqrt(3) irrationality arguments. The later real bridges say that
 any nonnegative real whose square has the relevant value would be irrational.
+
+The formalization separates the textbook proof into layers. First, no reduced
+rational representative can square to 2 or 3. Second, the quotient-rational
+version removes dependence on a chosen representative. Third, real-number
+bridge theorems turn square characterizations into irrationality statements.
 -/
 
 theorem no_reduced_rational_square_root_two (q : PositiveRatRep)

@@ -14,6 +14,10 @@ This section formalizes the set laws from Figure 2.1. The statements are close
 to the propositional laws from Chapter 1, but now the connectives act on
 membership predicates: union is disjunction, intersection is conjunction, and
 complement is negation.
+
+A set equality theorem here should be read pointwise. To prove, for example,
+that two compound set expressions are equal, Lean unfolds membership in each
+side and proves the corresponding logical statement about an arbitrary element.
 -/
 
 open Foundation
@@ -34,6 +38,10 @@ theorem complement_membership (A : FSet alpha) (x : alpha) :
 
 The figure's laws are packaged as extensional equality of sets. Each theorem
 says that the two displayed set expressions have exactly the same members.
+
+This mirrors Section 1.2: Boolean algebra of formulas and Boolean algebra of
+sets have the same logical shape once membership in a set is read as a
+proposition.
 -/
 
 theorem double_complement (A : FSet alpha) :
@@ -79,6 +87,9 @@ theorem intersection_distributes_over_union (A B C : FSet alpha) :
 
 The finite-family versions express the same complement-switching principle for
 lists of sets, which is enough for the book-facing finite examples.
+
+The list-based versions are the formal counterpart of applying De Morgan's law
+to a finite union or finite intersection one set at a time.
 -/
 
 theorem demorgan_union (A B : FSet alpha) :

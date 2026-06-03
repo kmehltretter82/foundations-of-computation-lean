@@ -14,6 +14,10 @@ namespace Section05
 Nondeterministic automata use sets of possible states rather than a single
 current state. This page records epsilon-closure, reachability acceptance, the
 DFA-to-NFA embedding, and the subset construction from {module}`FoC.Languages.NFA`.
+
+The formal model does not choose one branch of the computation. Instead, after
+reading a word it computes the set of all states that could be reached. The NFA
+accepts if at least one reachable state is accepting.
 -/
 
 open Foundation
@@ -25,6 +29,10 @@ open Languages
 The acceptance predicate says that some reachable state is accepting after the
 whole word is read. The DFA embedding theorem states that deterministic
 machines are a special case of NFAs with the same language.
+
+Epsilon closure accounts for moves that consume no input. The acceptance
+definition packages both ordinary input-consuming moves and epsilon moves into
+one reachability predicate.
 -/
 
 theorem epsilon_closure_contains_start_set
@@ -54,6 +62,10 @@ theorem dfa_recognizable_implies_nfa_recognizable {L : Language alpha}
 The subset construction turns an NFA into a DFA whose states are sets of NFA
 states. The run invariant is stated first, then the language-equivalence
 theorem follows.
+
+The deterministic state remembers the whole set of possible NFA states. The
+run invariant says that this memory is exact after every input word, which is
+why the constructed DFA recognizes the same language.
 -/
 
 theorem subset_construction_run

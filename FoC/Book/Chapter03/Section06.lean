@@ -15,6 +15,11 @@ This section connects the two presentations of regular languages: regular
 expressions and finite automata. The statements use the reusable equivalence
 machinery in {module}`FoC.Languages.Regular`, together with the DFA and NFA
 constructions from the previous sections.
+
+The section proves both directions of the equivalence. Regular expressions can
+be compiled to automata, and automata can be converted back to regular
+expressions. Closure theorems can then be proved using whichever representation
+is more convenient.
 -/
 
 open Foundation
@@ -26,6 +31,10 @@ open Languages
 Union, concatenation, Kleene star, finite languages, and the universal finite
 alphabet language are regular because the corresponding regular expressions
 can be built directly.
+
+This block uses the expression view of regularity. It shows how to construct a
+regular expression for the new language once regular expressions for the input
+languages are known.
 -/
 
 theorem regular_languages_closed_under_union {L M : Language alpha}
@@ -57,6 +66,9 @@ theorem finite_alphabet_universal_language_regular
 
 Theorem 3.3 is represented by the NFA-recognizability of every regular
 expression language. The subset construction then gives DFA recognizers.
+
+This is the compiler direction: parse a regular expression into an NFA, then
+determinize the NFA when a deterministic machine is needed.
 -/
 
 theorem regular_expression_language_is_nfa_recognizable (r : RegExp alpha) :
@@ -108,6 +120,9 @@ theorem nfa_subset_construction_auto {state : Type} (M : NFA alpha state) :
 State elimination supplies a regular expression for every DFA language over an
 explicit finite alphabet list. This completes the equivalence between regular
 languages and finite automata.
+
+The finite alphabet list is an explicit hypothesis because the construction
+must build expressions that account for every symbol a transition may read.
 -/
 
 theorem dfa_state_elimination_regex_sound
@@ -146,6 +161,11 @@ theorem nfa_recognizable_language_is_regular
 
 Theorem 3.5 is formalized through DFA-backed closure first, then transported
 back to regular languages using the automata-expression equivalence.
+
+Complement and intersection are easiest at the automaton level: flip accepting
+states for complement, and run machines in parallel for intersection. The final
+regular-language theorems transfer those constructions back to the expression
+definition of regularity.
 -/
 
 theorem dfa_backed_regular_languages_closed_under_complement

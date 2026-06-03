@@ -22,6 +22,11 @@ The later statements are the formal kernels behind the textbook examples:
 factorial and Fibonacci recursion, closed forms for finite sums, geometric
 series identities over the quotient rationals and embedded reals, the sum of
 odd numbers, and the existence of a product-of-primes factorization.
+
+Induction in Lean is a recursion principle for proofs. To prove a proposition
+about every natural number, the declarations below either supply a base case
+and successor step, shift the base case to a lower bound, or use strong
+induction where all smaller cases are available at once.
 -/
 
 /-- Ordinary induction from zero: a base case and successor step prove every
@@ -89,6 +94,11 @@ open Foundation
 
 These statements reuse the finite-summation library from {module}`FoC.Foundation`.
 They put the familiar closed forms from the book into the chapter-facing order.
+
+The early formulas are natural-number identities. The geometric-series results
+then move through quotient rationals and embedded reals so the chapter can
+state the familiar division form while still relying on checked algebraic
+infrastructure.
 -/
 
 theorem simple_sum_formula (n : Nat) :
@@ -233,6 +243,10 @@ theorem real_geometric_series_formula
 /-!
 The final two theorem statements are examples where induction or strong
 induction supplies a number-theoretic result rather than merely a closed form.
+
+`odd_sum_square` is the standard induction identity for sums of odd numbers.
+`product_of_primes_exists` uses strong induction: after extracting a factor,
+the proof appeals to the result for smaller numbers.
 -/
 
 theorem odd_sum_square (n : Nat) :

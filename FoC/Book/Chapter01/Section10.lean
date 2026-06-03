@@ -15,6 +15,11 @@ This section revisits recursive definitions through the Fibonacci sequence. The
 formal file exposes the recursive equations, proves an elementary exponential
 upper bound, and then develops the scaled lower bound used to compare Fibonacci
 growth with powers of three halves.
+
+The upper bound is a direct induction over the Fibonacci recurrence. The lower
+bound is more delicate because `(3/2)^n` is rational rather than natural. The
+formal proof first clears denominators and proves a natural-number inequality,
+then translates the result back to quotient rationals and embedded reals.
 -/
 
 open Foundation
@@ -125,6 +130,11 @@ theorem fib_lower_bound_three_halves_scaled (n : Nat) (hn : 6 <= n) :
 The remaining statements translate the scaled natural-number inequality into
 the quotient-rational and embedded-real versions used by the surrounding real
 number formalization.
+
+This final translation step is why the page contains both `QRat` and `Real`
+versions: the arithmetic proof lives over naturals, the exact comparison lives
+over quotient rationals, and the book-facing growth statement can be stated in
+the real-number layer.
 -/
 
 theorem fib_lower_bound_three_halves_qrat (n : Nat) (hn : 6 <= n) :

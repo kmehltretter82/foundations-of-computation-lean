@@ -17,6 +17,11 @@ tests that an implementation would compute.
 The first group works with predicate sets from {module}`FoC.Foundation.Sets`.
 The second group introduces a bit-vector style model, represented as a Boolean
 function from indices to bits.
+
+The point of the page is the translation between mathematics and simple
+programming representations. Predicate sets give clean specifications; bit
+vectors show how finite-set operations can be implemented by applying Boolean
+operations independently at each index.
 -/
 
 open Foundation
@@ -51,6 +56,10 @@ theorem complement_membership_test (A : FSet alpha) (x : alpha) :
 For finite universes, the book describes sets as bit vectors. This model uses
 {lean}`Nat -> Bool`, so each operation becomes a pointwise Boolean operation on
 indices.
+
+The theorems in this namespace are intentionally definitional: evaluating an
+operation at index `i` immediately reduces to the Boolean expression for that
+bit.
 -/
 
 namespace BitVectorSet

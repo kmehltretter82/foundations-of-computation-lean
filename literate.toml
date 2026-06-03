@@ -1,18 +1,77 @@
-landing_page = "FoC.Book"
+landing_page = "FoC"
 hide_commands = ["import", "open", "set_option", "namespace", "end"]
 show_imports = false
 docstrings_as_text = true
 
-order = ["FoC.Book"]
+order = ["FoC"]
 
 [[targets]]
-module = "FoC.Book"
+module = "FoC"
 
 [metadata]
 title = "Foundations of Computation Lean Companion"
 description = "In-source Verso HTML companion for the Lean formalization of Foundations of Computation."
 
 [order_children]
+"FoC" = [
+  "FoC.Foundation",
+  "FoC.Languages",
+  "FoC.Grammars",
+  "FoC.Computability",
+  "FoC.Book"
+]
+"FoC.Foundation" = [
+  "FoC.Foundation.Logic",
+  "FoC.Foundation.Lists",
+  "FoC.Foundation.Sets",
+  "FoC.Foundation.Functions",
+  "FoC.Foundation.Finite",
+  "FoC.Foundation.Countable",
+  "FoC.Foundation.Relations",
+  "FoC.Foundation.Arithmetic",
+  "FoC.Foundation.Summation",
+  "FoC.Foundation.Integers",
+  "FoC.Foundation.Rationals",
+  "FoC.Foundation.RationalCore",
+  "FoC.Foundation.QuotientRationals",
+  "FoC.Foundation.Reals",
+  "FoC.Foundation.QuadraticSurd",
+  "FoC.Foundation.DigitStreams",
+  "FoC.Foundation.RealUncountability",
+  "FoC.Foundation.Primes",
+  "FoC.Foundation.Cardinality"
+]
+"FoC.Languages" = [
+  "FoC.Languages.Words",
+  "FoC.Languages.Language",
+  "FoC.Languages.RegularExpression",
+  "FoC.Languages.DFA",
+  "FoC.Languages.NFA",
+  "FoC.Languages.NFAPath",
+  "FoC.Languages.Thompson",
+  "FoC.Languages.Regular",
+  "FoC.Languages.Pumping"
+]
+"FoC.Grammars" = [
+  "FoC.Grammars.CFG",
+  "FoC.Grammars.CFL",
+  "FoC.Grammars.RightRegular",
+  "FoC.Grammars.BNF",
+  "FoC.Grammars.ParseTree",
+  "FoC.Grammars.PDA",
+  "FoC.Grammars.PDANormalize",
+  "FoC.Grammars.CFGToPDA",
+  "FoC.Grammars.PDAToCFG",
+  "FoC.Grammars.GeneralGrammar"
+]
+"FoC.Computability" = [
+  "FoC.Computability.Tape",
+  "FoC.Computability.TuringMachine",
+  "FoC.Computability.Computable",
+  "FoC.Computability.Recognizable",
+  "FoC.Computability.Enumerable",
+  "FoC.Computability.Undecidable"
+]
 "FoC.Book" = [
   "FoC.Book.Chapter01",
   "FoC.Book.Chapter02",
@@ -64,6 +123,9 @@ description = "In-source Verso HTML companion for the Lean formalization of Foun
   "FoC.Book.Chapter05.Section02",
   "FoC.Book.Chapter05.Section03"
 ]
+
+[modules."FoC"]
+title = "Overview"
 
 [modules."FoC.Foundation"]
 title = "Foundation"

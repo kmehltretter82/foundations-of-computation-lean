@@ -15,6 +15,12 @@ one-place predicates, universal statements, and existential statements.
 The theorem group formalizes the Figure 1.5 quantifier laws: negating a
 universal statement, negating an existential statement, and commuting two
 quantifiers of the same kind.
+
+Lean distinguishes Boolean computation from propositions. Here the predicates
+return `Prop`, so a universal statement is literally a dependent function
+`forall x, P x`, and an existential statement is a pair containing a witness
+and a proof that the witness has the property. The theorems below are the
+formal versions of the book's quantifier transformations.
 -/
 
 /-! A one-place predicate on a domain is a proposition-valued function. -/

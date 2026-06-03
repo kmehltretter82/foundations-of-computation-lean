@@ -16,6 +16,12 @@ are equivalent when they have the same truth value under every valuation.
 
 Most laws are proved by truth-table splitting. Lean considers the possible
 Boolean values of the formula variables and then simplifies.
+
+The important point is that these are not syntactic rewrite rules about how a
+formula is printed. They are semantic laws: replacing one side by the other
+preserves the truth value for every assignment of truth values to variables.
+That is why the same theorem can later justify algebraic rewriting inside
+larger formulas.
 -/
 
 open Foundation
@@ -26,6 +32,10 @@ open Foundation
 The first group records double negation, excluded middle, contradiction,
 identity laws, idempotence, commutativity, associativity, distributivity, and
 De Morgan's laws.
+
+Each declaration names one familiar Boolean law and states it as
+`PropForm.LogicallyEquivalent ... ...`. The proof scripts are short because
+the mathematical work is the exhaustive truth-table check.
 -/
 
 theorem double_negation (p : PropForm Var) :
@@ -142,6 +152,10 @@ The first substitution law says that replacing variables in a tautology by
 arbitrary formulas preserves tautology. The second says that equivalent
 formulas can be exchanged inside any one-hole context. The final statements
 package common uses of equivalence chaining and negated implication.
+
+This is the bridge from isolated truth-table laws to algebraic calculation:
+once equivalence is known, it can be used inside contexts and longer chains of
+rewrites.
 -/
 
 theorem first_substitution_law {p : PropForm Var} (h : PropForm.Tautology p)

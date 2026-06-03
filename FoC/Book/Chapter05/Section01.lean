@@ -16,6 +16,11 @@ decidable languages. The reusable machine and computability APIs are in
 {module}`FoC.Computability.Tape`, {module}`FoC.Computability.TuringMachine`,
 {module}`FoC.Computability.Computable`, and
 {module}`FoC.Computability.Recognizable`.
+
+The page moves from machine mechanics to language classes. A computation is a
+finite sequence of configurations, halting is the existence of a halted final
+configuration, recognizability accepts members by halting successfully, and
+decidability requires a total yes/no behavior.
 -/
 
 open Languages
@@ -28,6 +33,11 @@ The first definitions identify the book-facing vocabulary for moves, tapes,
 machines, and halted configurations. The computation lemmas state determinism,
 composition, exact-step computations, and uniqueness of halted results for
 machines whose halting state has no outgoing transition.
+
+The exact-step relation is useful for induction over time. The ordinary
+computation relation hides the number of steps but still records reachability.
+The stopped-machine hypotheses ensure a halted configuration is genuinely
+final.
 -/
 
 def MoveDirection := Direction
@@ -125,6 +135,9 @@ theorem stopped_machine_halted_final_unique
 
 Halting with output refines ordinary halting. The exact-step and stopped-machine
 lemmas ensure that deterministic machines have unique outputs when they halt.
+
+This is the machine-level basis for computable functions: an input word is
+mapped to the output word left on the tape at the unique halted result.
 -/
 
 theorem halts_with_output_implies_halts {M : TuringMachine symbol state}
@@ -194,6 +207,10 @@ theorem halting_after_previous_computation {M : TuringMachine symbol state}
 Accepted languages are Turing-acceptable, and partial computable functions
 halt exactly on their domains. These statements connect machines, languages,
 and partial string functions.
+
+Partial computable functions are allowed to diverge. Their domains are
+therefore recognizable languages: run the machine and accept exactly when it
+halts with some output.
 -/
 
 theorem machine_recognizes_accepted_language (M : TuringMachine symbol state) :
@@ -269,6 +286,11 @@ theorem partial_computable_function_domain_is_turing_acceptable
 The last group formalizes decidable languages through computable Boolean
 characteristic functions and stopped 0/1 deciders. Complement and extensional
 transport theorems give the basic closure properties used in Section 5.2.
+
+Decidability is stronger than recognizability because both membership and
+nonmembership must eventually produce an answer. The characteristic-function
+theorems express the same idea functionally: a decider computes a total Boolean
+answer for every input.
 -/
 
 def TuringDecidableLanguage (L : Language input) : Prop :=

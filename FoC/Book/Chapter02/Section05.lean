@@ -14,6 +14,11 @@ This section gives a small programming-oriented layer over the function
 definitions from {module}`FoC.Foundation.Functions`. It records total
 functions as always-defined partial functions, higher-order functions, and
 composition for optional results.
+
+The page separates mathematical total functions from program-like partial
+computations. `Option beta` is the formal stand-in for "the computation may
+fail to return a beta", and the partial-composition theorems describe how that
+failure propagates.
 -/
 
 open Foundation
@@ -43,6 +48,9 @@ theorem evaluation_of_function_value (f : alpha -> beta) (x : alpha) :
 
 {lit}`ApplyTwice` is a minimal example of a function that takes another
 function as an input. The theorem states its defining equation.
+
+This is the book's first-class function idea in its smallest form: the input
+`f` is data that the new function can call.
 -/
 
 def ApplyTwice (f : alpha -> alpha) (x : alpha) : alpha :=
@@ -57,6 +65,10 @@ theorem apply_twice_value (f : alpha -> alpha) (x : alpha) :
 
 Partial composition stops when the first computation is undefined and otherwise
 continues by feeding the produced value into the second partial function.
+
+The two following theorems are the two cases a program would branch on: if the
+first result is `none`, the composite is `none`; if it is `some y`, the second
+function receives `y`.
 -/
 
 def PartialCompose (g : beta -> Option gamma) (f : alpha -> Option beta) :

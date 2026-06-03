@@ -14,6 +14,10 @@ This section gives formal vocabulary for parser tables, parse trees, and
 leftmost/rightmost derivation traces. The parse-tree theorems are also used
 later by the context-free pumping lemma. The reusable definitions are in
 {module}`FoC.Grammars.ParseTree`.
+
+The page connects three views of parsing. A parser table describes operational
+decisions, a derivation is a sequence of grammar rewrites, and a parse tree is
+a structured witness explaining how a terminal word was generated.
 -/
 
 open Languages
@@ -25,6 +29,10 @@ open Grammars
 The LL(1), LR(1), and shift-reduce structures record the table shapes used in
 the book. They are lightweight formal objects here: enough to state soundness
 of table entries and to connect parsing vocabulary to grammar generation.
+
+The formalization does not implement a full parser generator. It records the
+objects and soundness obligations needed to state the book's parsing concepts
+precisely.
 -/
 
 structure LL1Parser (G : CFG terminal nonterminal) where
@@ -75,6 +83,10 @@ structure LR1Parser (G : CFG terminal nonterminal) (state : Type v) where
 Parse trees determine derivations, and generated-language membership can be
 converted back into a parse tree rooted at the start symbol. These statements
 bridge the derivational and tree views of CFGs.
+
+The frontier of a parse tree is the terminal word read from its leaves. The
+bridge theorems say that parse trees and derivations are equivalent ways to
+witness membership in a generated language.
 -/
 
 theorem parse_tree_frontier_derives {G : CFG terminal nonterminal}
@@ -277,6 +289,10 @@ theorem parse_tree_of_generated_language {G : CFG terminal nonterminal}
 The height bounds and repeated-subtree lemmas are the formal groundwork for
 the context-free pumping lemma. They identify a repeated nonterminal on a long
 path and extract the loop derivation used for pumping.
+
+If a parse tree is taller than the number of nonterminals, some nonterminal
+must repeat along a path. The later pumping argument uses the upper occurrence
+and lower occurrence as a replaceable loop.
 -/
 
 def LeftmostYields (G : CFG terminal nonterminal)

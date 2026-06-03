@@ -14,6 +14,11 @@ This section introduces context-free grammars, derivations, context-free
 languages, and the regular-grammar boundary. The reusable grammar API is in
 {module}`FoC.Grammars.CFG`, {module}`FoC.Grammars.CFL`, and
 {module}`FoC.Grammars.RightRegular`.
+
+The central idea is that a grammar generates a language by repeatedly
+rewriting nonterminals until only terminals remain. The early declarations name
+the derivation relation; the later ones show how grammar constructions produce
+language closure theorems and concrete examples.
 -/
 
 open Foundation
@@ -26,6 +31,10 @@ open Grammars
 One-step yields generate multi-step derivations, derivations compose, and both
 notions are stable under adding sentential-form context around the rewritten
 substring.
+
+A one-step yield applies one production in one surrounding context. A
+derivation is any finite chain of such steps. The context lemmas are what let a
+local production be used inside a longer sentential form.
 -/
 
 theorem yields_implies_derives {G : CFG terminal nonterminal}
@@ -57,6 +66,9 @@ theorem derives_inside_context {G : CFG terminal nonterminal}
 The next definitions name the book-facing classes: context-free languages,
 right-regular languages, and left-regular languages. These are thin wrappers
 over the reusable grammar definitions.
+
+These wrappers keep the section close to the book's terminology while the
+implementation lives in the reusable grammar library.
 -/
 
 def ContextFreeLanguage (L : Language terminal) : Prop :=
@@ -77,6 +89,9 @@ def ReverseGrammar (G : CFG terminal nonterminal) : CFG terminal nonterminal :=
 Reversing productions reverses the generated language. This relates left- and
 right-regular grammars, and connects both regular-grammar forms with regular
 languages over an explicit finite alphabet list.
+
+The explicit alphabet hypothesis appears when a regular grammar is converted
+back into a regular expression or automaton-style regular-language statement.
 -/
 
 theorem reverse_grammar_language_exact (G : CFG terminal nonterminal) :
@@ -154,6 +169,10 @@ theorem regular_iff_right_regular_language
 
 The closure theorems for union, concatenation, and Kleene star are proved by
 constructing new grammars and then showing their generated languages are exact.
+
+Each construction has two kinds of theorem: generation lemmas saying how to
+build words in the new grammar, and inverse lemmas saying every generated word
+has the expected language-theoretic shape.
 -/
 
 theorem union_grammar_generates_left (G : CFG terminal left) (H : CFG terminal right)
@@ -238,6 +257,10 @@ theorem context_free_languages_closed_under_kleene_star {L : Language terminal}
 The remaining code in this section builds exact grammar examples, beginning
 with balanced parentheses. The helper soundness principles let a grammar proof
 be checked by giving a semantic interpretation to each symbol.
+
+For examples, the formalization often proves exactness by assigning a language
+meaning to each nonterminal. Every production must be sound for that meaning,
+and derivation soundness then follows for the generated language.
 -/
 
 theorem form_language_yields_sound_of_productions

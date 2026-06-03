@@ -15,6 +15,11 @@ This section introduces deterministic finite automata. A DFA has a finite
 state type, a start state, a transition function, and an accepting predicate;
 running the machine folds the transition function over the input word. The
 core reusable API is {module}`FoC.Languages.DFA`.
+
+The example machine records only the information needed for its language:
+whether no `1` has been seen, exactly one `1` has been seen, or two or more
+have been seen. This is the finite-memory intuition behind deterministic
+finite automata.
 -/
 
 open Foundation
@@ -53,6 +58,10 @@ def atLeastTwoOnesDFA : DFA Section01.Bit TwoOnesState where
 The first definitions describe the extended transition function and acceptance
 predicate. The concrete DFA above recognizes binary words with at least two
 ones, matching the section's finite-state-machine examples.
+
+`DFA.RunFrom` starts in an arbitrary state, while `DFA.Run` starts in the
+machine's designated start state. Acceptance checks the final state after the
+whole input word has been consumed.
 -/
 
 theorem dfa_run_empty (M : DFA alpha state) (q : state) :
@@ -96,6 +105,10 @@ theorem atLeastTwoOnes_rejects_010 :
 Complement and product constructions give the standard closure operations for
 finite-state languages. They are stated as exact acceptance equivalences for
 each input word.
+
+The complement construction flips the accepting states. The product
+constructions run two machines in parallel so a word can be accepted by both
+machines for intersection or by at least one for union.
 -/
 
 theorem dfa_complement_acceptance (M : DFA alpha state) (w : Word alpha) :

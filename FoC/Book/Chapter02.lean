@@ -21,4 +21,15 @@ algebraic laws.
 
 The companion HTML rendered from these files is meant to show the actual Lean
 statements alongside short explanations of the modeling choices.
+
+The main modeling choice is that a set of elements of type `alpha` is
+represented by its membership predicate, `alpha -> Prop`. This makes set
+equality, subsets, unions, intersections, and complements ordinary logical
+statements about membership. Functions and relations are then introduced on top
+of those typed domains.
+
+The later sections use the same perspective for counting arguments. Finite
+sets are represented by finite presentations, countability is represented by
+encodings into natural numbers, and diagonal arguments are stated as theorems
+about what no enumeration or surjection can accomplish.
 -/

@@ -14,6 +14,11 @@ This section formalizes the recursive kernels behind the book's application
 examples. The source text discusses Java subroutines and data-structure
 arguments; this file keeps the executable mathematics: Tower of Hanoi move
 counts and structural recursion over binary trees.
+
+The declarations show two faces of recursion. For Hanoi, recursion describes a
+process and the proof extracts a closed form for its length. For trees,
+recursion describes how a value is computed from subtrees, and induction over
+the tree proves that two computations agree.
 -/
 
 /-- The recursive move-count equation for the Tower of Hanoi puzzle. -/
@@ -38,6 +43,10 @@ theorem hanoiMoveCount_closed_form (n : Nat) :
 /-!
 The move list itself is also recursive: move the top stack to the spare peg,
 move the bottom disk, and then move the saved stack to the target peg.
+
+The theorem `hanoiMoves_length` connects the concrete list of moves to the
+earlier recurrence for move counts, so the algorithm and the counting formula
+are not separate stories.
 -/
 
 inductive Peg where
@@ -66,6 +75,10 @@ The binary-tree definitions show structural recursion: every computation over a
 tree is determined by the empty-tree case and the node case. The final theorem
 connects the recursive tree sum with the sum of the list obtained by an inorder
 traversal.
+
+The point of the final equality is representation independence. Summing by
+following the tree shape and summing after flattening by inorder traversal give
+the same integer.
 -/
 
 inductive BinaryTree where

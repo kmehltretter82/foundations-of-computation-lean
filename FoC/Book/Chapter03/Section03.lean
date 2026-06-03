@@ -14,6 +14,10 @@ This section formalizes programming-language conveniences built on top of the
 core regular-expression constructors from {module}`FoC.Languages.RegularExpression`.
 The key point is that optional expressions, plus, and character classes are
 notation for ordinary regular-expression combinations.
+
+This is why those conveniences do not change the class of regular languages:
+each convenience expands into the primitive regular-expression syntax already
+formalized in Section 3.2.
 -/
 
 open Languages
@@ -26,6 +30,10 @@ and finite alternatives. Their canonical semantic theorems are
 {lit}`RegExp.optional_denote`, {lit}`RegExp.plus_denote`, and
 {lit}`RegExp.charClass_denote`. The sample digit class demonstrates
 character-class membership for a concrete one-symbol word.
+
+The digit-class example is deliberately simple. It shows how a character class
+is interpreted as "one of the listed symbols" rather than as a new matching
+primitive.
 -/
 
 def digitClass : RegExp Nat :=
@@ -43,6 +51,11 @@ The book explains that backreferences add power beyond regular expressions.
 The formalization records the target language {lit}`a^n b a^n` now, then
 proves its non-regularity later in Section 3.7 after the Pumping Lemma is
 available.
+
+The definition `anbanWord left right` keeps the two blocks separate so later
+proofs can talk about what happens when only the first block is shortened by a
+pumping argument. The actual language requires the two block lengths to be
+equal.
 -/
 
 def anbanWord (left right : Nat) : Word Section01.AB :=

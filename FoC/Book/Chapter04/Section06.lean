@@ -15,16 +15,25 @@ sentential forms on the left-hand side. This section records the derivation
 API, finite-presentation countability statements, the embedding of CFGs, and
 example language arguments. The reusable layer is
 {module}`FoC.Grammars.GeneralGrammar`.
+
+The additional power comes from productions that can inspect or move context
+around a nonterminal. Many examples below use marker symbols, swapping rules,
+and cleanup phases to enforce counting or ordering constraints that are beyond
+context-free grammars.
 -/
 
 open Languages
 open Grammars
 
 /-!
-## General Derivations
+# General Derivations
 
 General-grammar yields generate derivations, derivations compose, and CFG
 productions embed as unrestricted grammar productions.
+
+The embedding theorem says every context-free derivation is also a general
+grammar derivation. This makes general grammars a genuine extension of the
+grammar model from Section 4.1.
 -/
 
 theorem general_yields_implies_derives {G : GeneralGrammar terminal nonterminal}
@@ -91,11 +100,14 @@ theorem cfg_generated_word_is_general_generated (G : CFG terminal nonterminal)
   GeneralGrammar.cfg_generated_language_embeds G h
 
 /-!
-## Finite Presentations and Countability
+# Finite Presentations and Countability
 
 The chapter's countability discussion is represented by finite presentation
 codes. If terminal and nonterminal symbols are encodable by natural numbers,
 then finite grammar descriptions over those symbols are countable.
+
+This is the formal version of "finite descriptions can be listed": once each
+symbol has a natural-number code, finite production lists can also be encoded.
 -/
 
 theorem general_yields_of_production {G : GeneralGrammar terminal nonterminal}
@@ -138,11 +150,16 @@ theorem general_derives_context {G : GeneralGrammar terminal nonterminal}
         (general_yields_context hstep u v) ih
 
 /-!
-## Soundness Helpers and Examples
+# Soundness Helpers and Examples
 
 The remaining helper lemmas interpret sentential forms as languages and count
 symbols in sentential forms. They support the concrete unrestricted-grammar
 examples later in the file.
+
+The examples use two proof styles. Generation theorems explicitly construct
+derivations for target words. Soundness theorems assign invariants to
+sentential forms, such as equal symbol counts or ordered block shape, and prove
+every production preserves the invariant.
 -/
 
 theorem general_formLanguage_replace_sound
@@ -402,6 +419,15 @@ theorem word_count_repeat_of_ne [DecidableEq terminal]
       change Word.Count a (b :: Word.RepeatSymbol b n) = 0
       simp [Word.Count, h, ih]
 
+/-!
+# Equal Counts over Three Symbols
+
+The first unrestricted grammar generates all words with the same number of
+`a`, `b`, and `c` symbols, regardless of order. It grows one marker of each
+kind, freely swaps markers, and then emits terminals. The proof separates
+count preservation from explicit generation of any balanced word.
+-/
+
 inductive EqualCountTerminal where
   | a
   | b
@@ -574,6 +600,12 @@ theorem equalCountGrammar_finite_production_generated :
   · intro w
     rfl
 
+/-!
+Soundness for this grammar is an invariant proof. Terminals already emitted and
+markers not yet emitted are counted together; every production preserves the
+total number of future {lit}`a`s, {lit}`b`s, and {lit}`c`s.
+-/
+
 def equalCountTotalA (sf : SententialForm EqualCountTerminal EqualCountNT) :
     Nat :=
   SententialCountTerminal EqualCountTerminal.a sf +
@@ -697,6 +729,13 @@ def equalCountMarkerOfTerminal :
 def equalCountMarkerWord (w : Word EqualCountTerminal) :
     SententialForm EqualCountTerminal EqualCountNT :=
   w.map (fun token => ecN (equalCountMarkerOfTerminal token))
+
+/-!
+Completeness is constructive. First grow a bag with the same number of
+{lit}`A`, {lit}`B`, and {lit}`C` markers. Then use swap rules to reorder the bag
+so it matches the target word's symbol order, and finally emit terminals from
+those markers.
+-/
 
 theorem equalCount_moveB_left_over_as
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal EqualCountNT) :
@@ -1240,6 +1279,12 @@ theorem equalCountLanguage_finite_production_generated :
   · intro word
     exact equalCount_generated_language_exact word
 
+/-!
+The concrete word {lit}`baabcc` shows the unrestricted feature directly:
+markers can be swapped into an arbitrary order before they are emitted as
+terminals.
+-/
+
 def baabccWord : Word EqualCountTerminal :=
   [EqualCountTerminal.b, EqualCountTerminal.a, EqualCountTerminal.a,
     EqualCountTerminal.b, EqualCountTerminal.c, EqualCountTerminal.c]
@@ -1341,6 +1386,14 @@ theorem equalCountGrammar_generates_baabcc :
                               [b, a, a, b, c, c]))))))))))))
   simpa [GeneralGrammar.GeneratedLanguage, EqualCountGrammar, baabccWord,
     SententialForm.terminalWord, S, a, b, c] using hderives
+
+/-!
+# Equal Counts over Four Symbols
+
+This is the four-symbol analogue of the previous construction. The same marker
+and swapping strategy proves that equal counts of `a`, `b`, `c`, and `d` are
+preserved by every generated terminal word.
+-/
 
 inductive FourCountTerminal where
   | a
@@ -1582,6 +1635,13 @@ theorem fourCountGrammar_finite_production_generated :
   · intro w
     rfl
 
+/-!
+The four-symbol grammar is the same invariant idea with one more marker class.
+The grow rule creates one marker for each of {lit}`a`, {lit}`b`, {lit}`c`, and
+{lit}`d`; all swap rules preserve the four totals; emission converts markers
+into terminals without changing the totals.
+-/
+
 def fourCountTotalA (sf : SententialForm FourCountTerminal FourCountNT) :
     Nat :=
   SententialCountTerminal FourCountTerminal.a sf +
@@ -1674,6 +1734,11 @@ theorem fourCountGrammar_generated_has_equal_terminal_counts
     sententialCountTerminal_terminalWord,
     sententialCountNonterminal_terminalWord] using hbalanced
 
+/-!
+The concrete word {lit}`dacb` shows that the grammar is not enforcing order. It
+only enforces equal counts.
+-/
+
 def dacbWord : Word FourCountTerminal :=
   [FourCountTerminal.d, FourCountTerminal.a, FourCountTerminal.c,
     FourCountTerminal.b]
@@ -1762,6 +1827,15 @@ theorem fourCountGrammar_generates_dacb :
                         (GeneralGrammar.Derives.refl [d, a, c, b]))))))))))
   simpa [GeneralGrammar.GeneratedLanguage, FourCountGrammar, dacbWord,
     SententialForm.terminalWord, S, a, b, c, d] using hderives
+
+/-!
+# Ordered {lit}`a^n b^n c^n`
+
+The ordered construction first creates equal markers, then uses swapping and
+phase nonterminals to force all `a`s before all `b`s before all `c`s. The
+exactness theorem states that the generated language is exactly the ordered
+block language.
+-/
 
 inductive OrderedABCNT where
   | start
@@ -1929,6 +2003,13 @@ theorem orderedABCGrammar_finite_production_generated :
   · intro w
     rfl
 
+/-!
+The ordered grammar still grows one marker of each kind, but the cleanup rules
+force the marker blocks into {lit}`A* B* C*` order before terminals are emitted.
+The invariant below proves equal counts; a later shape proof proves that the
+terminal order is also correct.
+-/
+
 def orderedABCTotalA (sf : SententialForm EqualCountTerminal OrderedABCNT) :
     Nat :=
   SententialCountTerminal EqualCountTerminal.a sf +
@@ -2047,6 +2128,12 @@ def orderedABCRepeatedMarkers (n : Nat) :
 def orderedABCSortedMarkers (n : Nat) :
     SententialForm EqualCountTerminal OrderedABCNT :=
   orderedABCAForm n ++ orderedABCBForm n ++ orderedABCCForm n
+
+/-!
+The generation proof is a pipeline: sort the generated markers, convert all
+{lit}`X` markers to {lit}`a`s, convert all {lit}`Y` markers to {lit}`b`s, and
+convert all {lit}`Z` markers to {lit}`c`s.
+-/
 
 theorem orderedABC_moveC_right_over_as
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal OrderedABCNT) :
@@ -2473,6 +2560,12 @@ def orderedABCSymbolLanguage :
   | Symbol.nonterminal OrderedABCNT.y => orderedABCBCShapeLanguage
   | Symbol.nonterminal OrderedABCNT.z => orderedABCCShapeLanguage
 
+/-!
+The soundness proof uses shape languages. They track not just the counts, but
+also the phase of the ordered block: full {lit}`a* b* c*`, then {lit}`b* c*`,
+then {lit}`c*`.
+-/
+
 theorem orderedABCShape_cons_a {word : Word EqualCountTerminal}
     (h : word ∈ orderedABCShapeLanguage) :
     Word.Concat [EqualCountTerminal.a] word ∈ orderedABCShapeLanguage := by
@@ -2839,6 +2932,14 @@ theorem orderedABCGrammar_generates_aabbcc :
   simpa [GeneralGrammar.GeneratedLanguage, OrderedABCGrammar, aabbccWord,
     SententialForm.terminalWord, S, a, b, c] using hderives
 
+/-!
+# Ordered Four-Block Counts
+
+This example extends the ordered-block method to four terminals, producing
+words of the form `a^n b^n c^n d^n` and sample derivations such as
+`aabbccdd`.
+-/
+
 inductive OrderedABCDNT where
   | start
   | markA
@@ -2978,6 +3079,12 @@ def OrderedABCDProductionList :
      rhs := [ordered4T FourCountTerminal.d, ordered4N OrderedABCDNT.q] },
    { lhs := [ordered4N OrderedABCDNT.q],
      rhs := [] }]
+
+/-!
+The ordered four-block example repeats the ordered three-block pattern at
+larger scale. The long production list consists of grow rules, marker-sorting
+rules, phase-change rules, terminal-emission rules, and one final cleanup rule.
+-/
 
 theorem orderedABCDGrammar_has_finite_productions :
     GeneralGrammar.HasFiniteProductions OrderedABCDGrammar := by
@@ -3359,6 +3466,14 @@ theorem orderedABCDGrammar_generates_aabbccdd :
   simpa [GeneralGrammar.GeneratedLanguage, OrderedABCDGrammar, aabbccddWord,
     SententialForm.terminalWord, S, a, b, c, d] using hderives
 
+/-!
+# Strict Block Inequalities
+
+The strict-more-`b` grammar generates ordered block words with more `b`s than
+`a`s. The proof uses a tail phase that adds at least one extra `b` after all
+balanced `a`/`b` pairs have been produced.
+-/
+
 inductive StrictMoreBNT where
   | start
   | tail
@@ -3550,6 +3665,13 @@ def strictMoreBLanguage : Language EqualCountTerminal :=
 
 def strictMoreBTailLanguage : Language EqualCountTerminal :=
   fun word => exists extra, word = strictMoreBTailWord extra
+
+/-!
+Generation and soundness split cleanly here. Generation wraps balanced
+{lit}`a`/{lit}`b` pairs around a tail with at least one extra {lit}`b`; soundness
+uses the two nonterminal meanings below to prove no other shape can be
+generated.
+-/
 
 theorem strictMoreB_word_zero (extra : Nat) :
     strictMoreBWord 0 extra = strictMoreBTailWord extra := by
@@ -3828,6 +3950,14 @@ theorem strictMoreBGrammar_generates_aabbb :
             (GeneralGrammar.Derives.refl [a, a, b, b, b]))))
   simpa [GeneralGrammar.GeneratedLanguage, StrictMoreBGrammar, aabbbWord,
     SententialForm.terminalWord, S, a, b] using hderives
+
+/-!
+# Strict Three-Way Counts
+
+This grammar targets strict count inequalities among `a`, `b`, and `c`
+symbols. The invariant records count margins so each production can be checked
+locally against the intended strict ordering.
+-/
 
 inductive StrictABCGreaterNT where
   | start
@@ -4189,6 +4319,12 @@ theorem strictABCGreaterGrammar_generated_has_strict_counts
     sententialCountTerminal_terminalWord,
     sententialCountNonterminal_terminalWord] using hmargin
 
+/-!
+The strict three-way grammar is used mainly as a count-invariant example. It
+guarantees a strict inequality among the three terminal counts, and the concrete
+derivation below witnesses a small generated word.
+-/
+
 def strictABCGreaterAABWord : Word EqualCountTerminal :=
   [EqualCountTerminal.a, EqualCountTerminal.a, EqualCountTerminal.b]
 
@@ -4255,6 +4391,15 @@ theorem strictABCGreaterGrammar_generates_aab :
   simpa [GeneralGrammar.GeneratedLanguage, StrictABCGreaterGrammar,
     strictABCGreaterAABWord, SententialForm.terminalWord, S, a, b] using
     hderives
+
+/-!
+# Unary Squares
+
+The square grammar generates words `a^(n^2)`. Its marker phases simulate
+building an `n` by `n` grid and then emitting one `a` for each cell. The
+theorems prove both a family of generated square words and a concrete
+derivation of `aaaa`.
+-/
 
 inductive SquareTerminal where
   | a
@@ -4411,6 +4556,13 @@ def squareWord (n : Nat) : Word SquareTerminal :=
 def squareLanguage : Language SquareTerminal :=
   fun word => exists n, word = squareWord n
 
+/-!
+The forms below name the stages of the square derivation. The grammar first
+creates {lit}`n` row markers and {lit}`n` moving {lit}`b` markers. Each moving
+marker crosses all rows, adding one terminal {lit}`a` to every row; after
+{lit}`n` passes, the rows contain {lit}`n * n` terminals.
+-/
+
 def squareTerminalAForm (n : Nat) :
     SententialForm SquareTerminal SquareNT :=
   SententialForm.terminalWord (Word.RepeatSymbol SquareTerminal.a n)
@@ -4458,6 +4610,12 @@ theorem squareBForm_succ_eq_append (n : Nat) :
       squareBForm n ++ [squareN SquareNT.b] := by
   simpa [squareBForm] using
     repeatSymbol_succ_eq_append (squareN SquareNT.b) n
+
+/-!
+The generation proof follows the stage names. Grow the row and mover markers,
+process every mover through every row, then remove the control markers while
+concatenating the terminal rows into one unary word.
+-/
 
 theorem square_t_grow_derives (n : Nat) :
     GeneralGrammar.Derives SquareGrammar
@@ -4763,6 +4921,12 @@ theorem square_language_subset_generated {word : Word SquareTerminal}
   rw [hword]
   exact square_words_generated n
 
+/-!
+The remaining square lemmas are soundness checks. They classify every reachable
+sentential form into one of the derivation stages above; if a derivation is
+already terminal, that terminal word must be one of the square-length words.
+-/
+
 def squareFinishRowsForm (rowWidth processed remaining : Nat) :
     SententialForm SquareTerminal SquareNT :=
   squareTerminalAForm (rowWidth * processed) ++ [squareN SquareNT.d] ++
@@ -5052,6 +5216,13 @@ theorem squareGrammar_generates_four_as :
   simpa [GeneralGrammar.GeneratedLanguage, SquareGrammar, fourAsWord,
     SententialForm.terminalWord, S, a] using hderives
 
+/-!
+# Powers of Two
+
+The final example uses a doubling phase: each pass duplicates the current
+markers and returns to the left before either doubling again or finishing.
+-/
+
 inductive PowerTwoNT where
   | start
   | h
@@ -5138,6 +5309,12 @@ def PowerTwoProductionList :
    { lhs := [powN PowerTwoNT.markA],
      rhs := [powT SquareTerminal.a] }]
 
+/-!
+As above, the finite-production theorem only checks that the displayed rules
+are exactly the grammar's rules. The final concrete derivation shows the
+intended doubling behavior on the word of length four.
+-/
+
 theorem powerTwoGrammar_has_finite_productions :
     GeneralGrammar.HasFiniteProductions PowerTwoGrammar := by
   exists PowerTwoProductionList
@@ -5197,6 +5374,11 @@ theorem powerTwoGrammar_finite_production_generated :
   · exact powerTwoGrammar_has_finite_productions
   · intro word
     rfl
+
+/-!
+The sample derivation demonstrates generation of four `a`s by running two
+doubling passes and then emitting the accumulated markers.
+-/
 
 theorem powerTwoGrammar_generates_four_as :
     fourAsWord ∈ GeneralGrammar.GeneratedLanguage PowerTwoGrammar := by

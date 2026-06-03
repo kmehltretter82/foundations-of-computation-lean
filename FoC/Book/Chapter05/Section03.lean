@@ -14,6 +14,11 @@ This section formalizes the diagonal and halting-problem statements that mark
 the limits of computation. The definitions are book-facing wrappers over
 {module}`FoC.Computability.Undecidable`, with languages represented as
 predicates on encoded words.
+
+The page keeps machine encodings abstract. Instead of committing to a concrete
+binary code for Turing machines, it states the diagonal and halting arguments
+relative to a decoder or universal-machine specification. This exposes the
+logical structure of the impossibility proofs.
 -/
 
 open Languages
@@ -25,6 +30,10 @@ open Computability
 The first definitions name non-computable functions, non-acceptable languages,
 undecidable languages, reductions, diagonal languages, universal decoders, and
 halting-problem variants.
+
+The wrappers distinguish two kinds of impossibility. An undecidable language
+has no total decider. A non-acceptable language has no recognizer at all. The
+diagonal languages are the standard tools for proving such statements.
 -/
 
 def NonComputableStringFunction (f : Word input -> Word output) : Prop :=
@@ -126,6 +135,10 @@ def UniversalTuringMachineSpec
 Undecidability and non-acceptability are transported by equality and by the
 appropriate reduction notions. Complement theorems record that decidability
 and undecidability are symmetric under language complement.
+
+A reduction packages the idea "if the target problem were solvable, then the
+source problem would be solvable." Therefore an impossible source problem
+transfers impossibility to the target.
 -/
 
 theorem undecidable_of_not_decidable {L : Language alpha}
@@ -222,6 +235,10 @@ theorem decoder_recognizes_of_equal
 The diagonal language differs from every listed row. If a decoder were
 universal for all languages, the self-diagonal language would be one of its
 rows, contradicting the diagonal theorem.
+
+The construction flips the answer on the diagonal: at code `w`, it disagrees
+with what the `w`-th decoded machine says about `w`. No row can therefore be
+the diagonal language.
 -/
 
 theorem diagonal_language_not_self_recognized (acceptsSelf : Word code -> Prop) :
@@ -274,6 +291,10 @@ theorem exists_nonacceptable_language_if_decoder_universal
 The self-diagonal language is the complement of self-halting. Under a universal
 decoder, this yields the standard undecidability and non-RE complement results,
 then relates self-halting to pair-encoded halting problems.
+
+Self-halting asks whether a machine halts on its own code. The ordinary
+two-input halting problem is at least as hard because self-halting is the
+preimage obtained by feeding the same code into both slots.
 -/
 
 theorem self_diagonal_equal_complement_self_halting
@@ -540,6 +561,9 @@ theorem universal_machine_spec_pair_decode
 The section's universal-machine and diagonalization theorems require a concrete
 encoding of machines as strings.  This module records the formal statement
 vocabulary without adding an unproved universal-machine assumption.
+
+Once a concrete universal machine and encoding are supplied, these statements
+can be instantiated to recover the usual textbook halting-problem theorems.
 -/
 
 end Section03

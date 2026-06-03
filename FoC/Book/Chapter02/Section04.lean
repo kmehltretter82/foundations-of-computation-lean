@@ -13,6 +13,10 @@ namespace Section04
 This section records the chapter's function vocabulary: composition, graphs,
 surjective and injective functions, bijections, and the evaluation operation.
 The reusable definitions live in {module}`FoC.Foundation.Functions`.
+
+Lean's function type already represents total mathematical functions. This
+page mostly names the properties the book studies and records how they behave
+under composition, graphs, and evaluation.
 -/
 
 open Foundation
@@ -44,6 +48,10 @@ theorem graph_unique_value {f : alpha -> beta} {x : alpha} {y z : beta}
 The next statements expose the formal meanings of one-to-one, onto, and
 bijection. The distinct-images theorem is the usual contrapositive form of
 injectivity.
+
+The quantifier order matters: injectivity starts with two inputs and compares
+their outputs, while surjectivity starts with a desired output and asks for an
+input that reaches it.
 -/
 
 theorem surjective_definition (f : alpha -> beta) :

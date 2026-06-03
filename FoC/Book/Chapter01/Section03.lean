@@ -18,6 +18,13 @@ The formalization models literals, conjunctions of literals, and disjunctions
 of such conjunctions. The two bridge theorems prove that evaluating these
 list-based objects agrees with evaluating the propositional formula obtained
 from them.
+
+This page does not redraw the circuits. Instead, it formalizes the data
+structure that a circuit-to-DNF procedure manipulates. A clause is a list of
+literals interpreted as an AND gate; a DNF is a list of clauses interpreted as
+an OR of those AND gates. The two evaluation theorems say that the list
+representation and the corresponding propositional formula compute the same
+truth value.
 -/
 
 open Foundation

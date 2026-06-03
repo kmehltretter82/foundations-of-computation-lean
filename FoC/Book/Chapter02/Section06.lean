@@ -24,6 +24,11 @@ and uncountable vocabulary. The reusable infrastructure comes from
 The formalization separates three ideas that the textbook presents together:
 explicit finite cardinality, encodings by natural numbers, and diagonal
 arguments proving that some collections cannot be enumerated.
+
+The first two ideas prove countability by building data: finite lists,
+encodings, or staged enumerations. The diagonal arguments prove
+uncountability by contradiction: given any proposed listing, construct an
+object that differs from the listed object at its own index.
 -/
 
 open Foundation
@@ -35,6 +40,10 @@ The opening statements give basic examples: the empty set and singletons are
 finite, while the natural numbers and even natural numbers are countable.
 Exercise 11 is represented by closure of countability under union and by the
 corresponding countably-infinite union statement.
+
+These declarations distinguish finite from countable. Finite sets have a
+specific finite presentation, while countable sets only need an enumeration or
+encoding by natural numbers.
 -/
 
 theorem empty_set_is_finite : FSet.Finite (FSet.Empty : FSet alpha) :=
@@ -172,6 +181,10 @@ theorem list_function_space_cardinality (choices : List alpha) (domainSize : Nat
 Cantor's argument appears as a no-surjection theorem from a type into its
 powerset. The bijection version follows because a bijection would in particular
 be surjective.
+
+The diagonal set contains exactly those elements that are not in their own
+image under the proposed map. That set cannot be equal to any listed image,
+which rules out a surjection.
 -/
 
 theorem cantor_no_one_to_one_correspondence_with_powerset
@@ -196,6 +209,10 @@ theorem cantor_no_bijection_with_powerset (f : alpha -> FSet alpha) :
 The final group connects diagonal digit streams to real-number uncountability.
 Rationals and embedded rational reals are countable, while the full real line
 and the irrational reals are uncountable.
+
+This is the formal version of the book's contrast: rationals can be listed by
+diagonalizing numerator-denominator codes, but digit streams and real numbers
+cannot be exhausted by a single sequence.
 -/
 
 theorem binary_digit_streams_uncountable :

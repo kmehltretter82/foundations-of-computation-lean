@@ -18,6 +18,11 @@ later in Chapter 2.
 The project represents a set over a type as a predicate on that type. Set
 equality is therefore extensional equality: two sets are equal when every
 object has the same membership status in both sets.
+
+This representation keeps the set theory typed. A set of `alpha` values can
+only contain `alpha` values, and membership is a proposition rather than a
+runtime lookup. As a result, many familiar set identities become direct logical
+equivalences about a generic element.
 -/
 
 open Foundation
@@ -28,6 +33,10 @@ open Foundation
 The book's usual criterion for equality is captured as mutual subset inclusion.
 The subset exercise then reuses the transitivity theorem from
 {module}`FoC.Foundation.Sets`.
+
+The first theorem is the extensionality principle readers use informally: to
+show two sets are equal, prove inclusion both ways. The second theorem is a
+typical reuse of that inclusion vocabulary.
 -/
 
 theorem set_equality_iff_mutual_subset {A B : FSet alpha} :
@@ -87,6 +96,11 @@ theorem strong_induction (P : Nat -> Prop)
 Russell's paradox is discussed in this section as a warning about unrestricted
 set comprehension. The standalone development avoids the paradox by using
 typed predicate sets, so self-membership is not a well-typed operation here.
+
+Because there is no universal type of all sets in this model, the expression
+"the set of all sets that do not contain themselves" cannot be formed as a
+well-typed object. The formal page therefore records the modeling boundary
+rather than a contradiction theorem.
 -/
 
 end Section01

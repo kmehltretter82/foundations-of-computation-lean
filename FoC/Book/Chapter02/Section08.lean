@@ -14,6 +14,10 @@ The section explains relational databases as finite relations over product
 types. The formal core below models table insertion as adding a row to a
 relation, selection and deletion as predicate filters, and updates as a
 combination of transformed matching rows with unchanged nonmatching rows.
+
+The page treats database operations by their effect on row membership. This is
+close to SQL's declarative reading: an output table is specified by the rows
+that belong to it, not by an implementation strategy for finding them.
 -/
 
 open Foundation
@@ -80,6 +84,10 @@ theorem updated_row_present {T : Table row} {P : row -> Prop} {u : row -> row} {
 A primary key is modeled as injectivity of the key function on rows currently
 in the table. Inserting a row with a key that is fresh relative to all old rows
 preserves that invariant.
+
+Freshness is the important side condition. If no old row has the new key, then
+any two rows with the same key after insertion are either both old, both the
+new row, or one old and one new; the mixed case is impossible by freshness.
 -/
 
 theorem insert_preserves_primary_key {key : row -> keytype} {T : Table row} {new : row}

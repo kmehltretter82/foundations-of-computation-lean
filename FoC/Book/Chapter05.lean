@@ -15,4 +15,11 @@ and undecidability vocabulary.
 The reusable computability vocabulary lives in {module}`FoC.Computability`.
 The companion rendering should help readers see how the informal computation
 concepts are represented as Lean structures and predicates.
+
+The section pages move from a concrete machine model to language-level notions.
+A Turing machine has configurations and computations; a computable or
+recognizable language is then a predicate for which some machine has the right
+behavior. The final page abstracts further to reductions and diagonal
+arguments, where the key statements are impossibility theorems rather than
+machine constructions.
 -/

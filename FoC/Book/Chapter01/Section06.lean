@@ -23,6 +23,12 @@ numbers.
 Some real-number statements use the project's Dedekind-cut real infrastructure.
 The irrational-product example is represented by a quadratic-surd surrogate,
 because the direct square-root cut equalities are still deferred.
+
+The page is intentionally a sampler. The first block is still propositional
+logic, but the later blocks demonstrate how ordinary mathematical proof
+obligations appear in Lean: parity is an existential predicate, divisibility is
+an existential integer multiple, rationality is a representation theorem, and
+real-number closure is delegated to the reusable real-number layer.
 -/
 
 open Foundation
@@ -123,6 +129,11 @@ The rational-number statements show closure under addition and multiplication.
 The real-number statements give density, rational-real closure wrappers, and
 the surrogate example showing that a product of irrational-like quantities can
 be rational-like.
+
+The rational results are concrete algebra on numerator-denominator
+representations. The real results are phrased at the predicate level: a real is
+rational if it is represented by an embedded quotient rational, and irrational
+if no such representation exists.
 -/
 
 theorem rational_representation_definition {a b : Int}

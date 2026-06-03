@@ -15,6 +15,10 @@ grammar right-hand sides. This section checks the expansion rules and records
 the book's examples for digits, declarations, English fragments, Java-like
 syntax, real-number notation, identifiers, and propositions. The reusable
 BNF layer is {module}`FoC.Grammars.BNF`.
+
+The important distinction is that BNF is notation, not a new kind of grammar.
+The expansion relation turns BNF expressions into ordinary right-hand sides
+for grammar productions.
 -/
 
 open Grammars
@@ -25,6 +29,10 @@ open Grammars
 Sequencing concatenates expansions, alternatives choose one side, optional
 items may be omitted or present, and repeated items expand by zero or more
 copies. These statements are the core semantics for the examples below.
+
+The theorems in this block are small because they are the operational rules of
+the notation. Later examples combine these rules to justify concrete expanded
+right-hand sides.
 -/
 
 theorem bnf_symbol_expands (s : Symbol terminal nonterminal) :
@@ -79,6 +87,10 @@ theorem bnf_repeat_two {e : BNF.Expr terminal nonterminal} {first second}
 The terminal and nonterminal types collect the symbols used across the
 section's BNF examples. The expression definitions then translate printed BNF
 schemata into Lean syntax trees.
+
+These declarations are a vocabulary table for the examples: terminals are the
+tokens that appear in generated strings, while nonterminals name syntactic
+categories such as digits, identifiers, and propositions.
 -/
 
 inductive BNFExampleTerminal where

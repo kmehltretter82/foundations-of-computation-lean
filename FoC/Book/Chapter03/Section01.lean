@@ -21,6 +21,10 @@ predicate on words. The reusable vocabulary is developed in
 The concrete alphabets below give the book's binary and a/b examples small
 finite types, so later automata and grammar examples can state
 membership facts with actual words.
+
+The key modeling choice is extensional: a language is not a list of words, but
+a predicate saying which words belong. This is why theorems about language
+operations look like set-theoretic membership laws.
 -/
 
 open Foundation
@@ -84,6 +88,11 @@ theorem empty_string_concat_right (w : Word alpha) :
 Language operations are set operations on word predicates. The definitions of
 union, intersection, complement, concatenation, singleton languages, and
 Kleene star are unfolded here in the book's order.
+
+Concatenation and Kleene star are the first genuinely language-specific
+operations. Concatenation asks for a split of the word into a left part and a
+right part; star asks for a finite list of pieces whose concatenation is the
+word.
 -/
 
 theorem language_membership_definition (L : Language alpha) (w : Word alpha) :
@@ -121,6 +130,11 @@ theorem singleton_language_finite (w : Word alpha) :
 The final theorem is the Cantor-style statement from the section: there is no
 word-indexed listing of all languages over an alphabet. This is the language
 version of the powerset diagonal argument from {module}`FoC.Foundation.Sets`.
+
+Even when the alphabet is small, the set of all languages over that alphabet
+is too large to be listed by words. The proof is the same diagonal idea as for
+powersets: a proposed list misses the language that flips membership at each
+listed word.
 -/
 
 theorem no_word_indexed_listing_of_all_languages

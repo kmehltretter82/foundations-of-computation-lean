@@ -15,17 +15,26 @@ This section develops closure and pumping-lemma machinery for separating
 languages from the context-free class. It combines finite-state automata from
 {module}`FoC.Languages.DFA`, pushdown automata from {module}`FoC.Grammars.PDA`,
 and context-free language wrappers from {module}`FoC.Grammars.CFL`.
+
+The section has two complementary methods. Closure under intersection with a
+regular language lets us filter a context-free language by a finite-state
+property. The context-free Pumping Lemma gives a direct obstruction to being
+context-free, used here for the language `{ a^n b^n c^n | n >= 0 }`.
 -/
 
 open Languages
 open Grammars
 
 /-!
-## Intersecting PDAs with DFAs
+# Intersecting PDAs with DFAs
 
 The product construction runs a PDA and DFA in parallel. It is the main
 closure tool for intersecting a PDA language with a regular language, and for
 subtracting a regular language by intersecting with a DFA complement.
+
+The PDA component owns the stack; the DFA component tracks only finite-state
+information about the same consumed input. Epsilon PDA moves leave the DFA
+state unchanged, while input-consuming PDA moves also advance the DFA.
 -/
 
 def PDAIntersectDFA (P : PDA input stack pstate) (D : DFA input dstate) :
@@ -41,6 +50,13 @@ def PDAIntersectDFA (P : PDA input stack pstate) (D : DFA input dstate) :
 structure DFAAcceptingPresentation (D : DFA input dstate) where
   acceptingStates : List dstate
   accept_complete : forall q, D.accept q <-> q ∈ acceptingStates
+
+/-!
+The product PDA must also have a finite presentation. The next definitions turn
+each transition rule of the original PDA into one rule for every DFA state. For
+epsilon PDA moves the DFA coordinate stays fixed; for input-consuming moves it
+updates with {lit}`D.step`.
+-/
 
 noncomputable def dfaAcceptingPresentation (D : DFA input dstate) :
     DFAAcceptingPresentation D := by
@@ -96,6 +112,13 @@ def pdaIntersectDFA_acceptingStates
     List (pstate × dstate) :=
   presentation.acceptingStates.flatMap
     (fun p => accepting.acceptingStates.map (fun q => (p, q)))
+
+/-!
+The longest proof in this block is just the finite-presentation check. It says
+that a transition of the product machine is present exactly when it came from
+one of the finitely many source PDA rules and one of the finitely many DFA
+states.
+-/
 
 theorem pdaIntersectDFA_transition_complete
     (P : PDA input stack pstate) (D : DFA input dstate)
@@ -231,11 +254,15 @@ def pdaIntersectDFA_finitePresentation
     pdaIntersectDFA_accept_complete P D presentation accepting
 
 /-!
-## Product Exactness
+# Product Exactness
 
 The lifting and projection lemmas relate computations of the product PDA to
 computations of the original PDA and runs of the DFA. Their language-level
 summary is exact intersection.
+
+Exactness has two directions. A product computation projects to a PDA
+computation and a DFA run, and a PDA computation whose input is accepted by
+the DFA can be lifted to a product computation.
 -/
 
 noncomputable def pdaIntersectDFA_finitePresentation_auto
@@ -244,6 +271,12 @@ noncomputable def pdaIntersectDFA_finitePresentation_auto
     PDA.FinitePresentation (PDAIntersectDFA P D) :=
   pdaIntersectDFA_finitePresentation P D presentation
     (dfaAcceptingPresentation D)
+
+/-!
+The first exactness direction lifts a PDA computation into the product machine.
+The DFA state is not guessed: after consuming the whole input it must be
+{lit}`DFA.RunFrom D r c.unread`.
+-/
 
 theorem pda_intersect_dfa_lift_to_empty
     (P : PDA input stack pstate) (D : DFA input dstate)
@@ -287,6 +320,12 @@ theorem pda_intersect_dfa_lift_to_empty
               (unread := unread) (restStack := restStack)
               (And.intro htrans rfl)
           exact PDA.Computes.step hprodStep (ih hd r)
+
+/-!
+The projection direction forgets the DFA coordinate. A companion lemma records
+that the forgotten coordinate was exactly the DFA run on the consumed input.
+Together they prove the product accepts precisely the intersection language.
+-/
 
 theorem pda_intersect_dfa_project_computation
     (P : PDA input stack pstate) (D : DFA input dstate)
@@ -360,7 +399,7 @@ theorem pda_intersect_dfa_accepted_language_exact
             pda_intersect_dfa_lift_to_empty P D hq.right rfl D.start
 
 /-!
-## Context-Free Closure
+# Context-Free Closure
 
 Once the product PDA has a finite presentation, the PDA-to-CFG theorem turns
 intersection and difference with DFA languages into context-free languages.
@@ -500,6 +539,13 @@ theorem pda_diff_dfa_context_free
       · exact hw.left
       · exact (DFA.complement_accepts D w).mpr hw.right
 
+/-!
+The following language-level wrappers remove the concrete product machine from
+the statement. They say: if {lit}`L` is recognized by a finite-presentation PDA
+and {lit}`R` is recognized by a DFA, then {lit}`L ∩ R` and {lit}`L \\ R` are
+context-free.
+-/
+
 theorem finite_presentation_pda_language_inter_dfa_context_free_of_empty_summary_complete
     {input stack pstate dstate : Type}
     {L R : Language input}
@@ -614,11 +660,15 @@ theorem finite_presentation_pda_language_diff_dfa_context_free
         exact hw.right ((hD w).mp hDfa)
 
 /-!
-## Recognizability Wrappers
+# Recognizability Wrappers
 
 The final group states the automaton-side closure theorems: PDA-recognizable
 and finite-presentation PDA-recognizable languages are closed under
 intersection with, and subtraction by, regular languages.
+
+These wrappers translate the concrete product construction into the language
+classes used in the book. They are also used later to subtract finite
+languages from context-free languages.
 -/
 
 theorem pda_recognizable_inter_dfa_recognizable
@@ -710,6 +760,13 @@ theorem finite_presentation_pda_recognizable_diff_dfa_recognizable
     PDA.FinitePresentationRecognizable (Language.Diff L R) := by
   rcases hR with ⟨dstate, D, hD⟩
   exact finite_presentation_pda_recognizable_diff_dfa hL D hD
+
+/-!
+The next group switches between the two equivalent viewpoints used in the
+chapter: a context-free language can be represented by a CFG, and a finite CFG
+can be converted into a finite-presentation PDA using the construction from
+Section 4.4.
+-/
 
 theorem finite_production_context_free_pda_recognizable {input : Type}
     {L : Language input}
@@ -901,6 +958,16 @@ theorem context_free_diff_finite_language_context_free
   context_free_diff_dfa_recognizable_context_free inputFinite hL
     (finite_language_dfa_recognizable hM)
 
+/-!
+# The {lit}`a^n b^n c^n` Witness Setup
+
+The language `{ a^n b^n c^n | n >= 0 }` is the standard example that is not
+context-free. The auxiliary languages `{ a^n b^n c^* }` and
+`{ a^* b^n c^n }` are context-free, and their intersection is exactly
+`{ a^n b^n c^n }`. This gives the closure-based nonclosure argument after the
+pumping proof establishes the target language is not context-free.
+-/
+
 inductive ABC where
   | a
   | b
@@ -973,6 +1040,12 @@ theorem abcAstar_cons_word (k : Nat) :
     ABC.a :: Word.RepeatSymbol ABC.a k =
       Word.RepeatSymbol ABC.a (k + 1) :=
   rfl
+
+/-!
+The witness grammars below are proved exact with a reusable soundness pattern.
+Instead of inspecting a final derivation directly, we assign a language meaning
+to each nonterminal and prove every production is sound for that meaning.
+-/
 
 theorem cfg_yields_sound_for_symbol_language
     {G : CFG terminal nonterminal}
@@ -1078,6 +1151,12 @@ def anbnCstarSymbolLanguage : Symbol ABC AnBnCstarNT -> Language ABC
   | Symbol.nonterminal AnBnCstarNT.start => anbnCstarLanguage
   | Symbol.nonterminal AnBnCstarNT.pair => abcAnBnLanguage
   | Symbol.nonterminal AnBnCstarNT.ctail => abcCstarLanguage
+
+/-!
+The {lit}`a^n b^n c^*` grammar has two independent phases: one nonterminal
+generates the matched {lit}`a`/{lit}`b` prefix, and the other generates the
+arbitrary tail of {lit}`c`s.
+-/
 
 theorem anbnCstar_pair_stop_generated :
     CFG.Derives AnBnCstarGrammar [Symbol.nonterminal AnBnCstarNT.pair]
@@ -1342,6 +1421,12 @@ theorem anbnCstar_finite_production_context_free :
   constructor
   · exact anbnCstar_hasFiniteProductions
   · exact anbnCstar_generated_language_exact
+
+/-!
+The second witness grammar is symmetric: it generates an arbitrary prefix of
+{lit}`a`s followed by a matched {lit}`b`/{lit}`c` block. Intersecting this
+language with the previous one forces all three counts to agree.
+-/
 
 inductive AstarBnCnNT where
   | start
@@ -1652,6 +1737,13 @@ theorem astarBnCn_finite_production_context_free :
   · exact astarBnCn_hasFiniteProductions
   · exact astarBnCn_generated_language_exact
 
+/-!
+The intersection proof is arithmetic on symbol counts. Membership in the first
+language gives equal {lit}`a` and {lit}`b` counts; membership in the second gives
+equal {lit}`b` and {lit}`c` counts. Together they identify a word of the exact
+form {lit}`a^n b^n c^n`.
+-/
+
 theorem anbnCstar_word_count_a (n k : Nat) :
     Word.Count ABC.a (anbnCstarWord n k) = n := by
   unfold anbnCstarWord abcAnBnWord
@@ -1771,6 +1863,16 @@ theorem anbnCstar_inter_astarBnCn_exact :
       exact (anbnCstarWord_diagonal n).symm
     · exists n
       exists n
+
+/-!
+# Finite-Production CFLs and Pumping Vocabulary
+
+The book-facing context-free predicate requires a finite production list. The
+CFL Pumping Lemma uses a five-part decomposition `u x y z v`, where pumping
+repeats the two outer middle pieces `x` and `z` together. At least one of
+`x` or `z` is nonempty, and the combined middle region `x y z` is bounded by
+the pumping length.
+-/
 
 def FiniteProductionContextFreeLanguage (L : Language terminal) : Prop :=
   CFL.FiniteProductionContextFreeLanguage L
@@ -1892,6 +1994,12 @@ theorem not_pumping_property_of_counterexamples {L : Language terminal}
     ¬ CFLHasPumpingProperty L :=
   CFL.not_hasPumpingProperty_of_counterexamples hbad
 
+/-!
+These wrappers are the practical way to use the CFL Pumping Lemma on this page:
+build a bad-word family for every proposed pumping length, then conclude that
+the language is not context-free.
+-/
+
 theorem not_context_free_of_no_pumping_property {terminal : Type}
     {L : Language terminal}
     (hNoPump : ¬ CFLHasPumpingProperty L) :
@@ -1928,6 +2036,16 @@ theorem not_finite_production_context_free_of_bad_word_family
   intro hcf
   exact not_pumping_property_of_bad_word_family hbad
     (finite_production_pumping_property hcf)
+
+/-!
+# Pumping {lit}`a^n b^n c^n`
+
+For a proposed CFL pumping length `K`, choose `a^K b^K c^K`. The bounded
+middle region `x y z` cannot cover all three block boundaries at once, so
+pumping `x` and `z` with count `2` changes at most two of the three symbol
+counts. The resulting word cannot still have equal numbers of `a`, `b`, and
+`c`.
+-/
 
 theorem anbncn_membership (w : Word ABC) :
     w ∈ anbncnLanguage <-> exists n, w = anbncnBlockWord n :=
@@ -1987,6 +2105,12 @@ theorem anbncn_members_have_equal_counts {w : Word ABC}
       rw [hn, anbncn_block_count_a n, anbncn_block_count_b n,
         anbncn_block_count_c n]
       exact ⟨rfl, rfl⟩
+
+/-!
+The pumping contradiction needs one combinatorial fact: because the pumpable
+middle region is shorter than {lit}`K`, it cannot touch both the first
+{lit}`a`-block and the final {lit}`c`-block of {lit}`a^K b^K c^K`.
+-/
 
 theorem abc_count_sum_pos_of_nonempty {w : Word ABC}
     (h : w ≠ Word.Empty) :
@@ -2126,6 +2250,13 @@ theorem cfl_pumped_two_count (s : ABC) (u x y z v : Word ABC) :
   repeat rw [Word.count_concat]
   omega
 
+/-!
+Pumping with count {lit}`2` adds one extra copy of {lit}`x` and one extra copy
+of {lit}`z`. Since {lit}`x ++ z` is nonempty but misses either all {lit}`a`s or
+all {lit}`c`s, at least one of the three counts changes differently from the
+others.
+-/
+
 theorem anbncn_xz_count_a_or_c_zero
     {u x y z v : Word ABC} {K : Nat}
     (hword : anbncnBlockWord K = CFL.Concat5 u x y z v)
@@ -2248,6 +2379,16 @@ theorem anbncn_not_finite_production_context_free :
 theorem anbncn_not_context_free :
     ¬ CFL.ContextFreeLanguage anbncnLanguage :=
   not_context_free_of_no_pumping_property anbncn_no_pumping_property
+
+/-!
+# Nonclosure Consequences
+
+Because `{ a^n b^n c^* }` and `{ a^* b^n c^n }` are context-free but their
+intersection is `{ a^n b^n c^n }`, finite-production context-free languages
+are not closed under intersection. If they were closed under complement as
+well as union, De Morgan's law would give intersection closure, so complement
+closure fails too.
+-/
 
 theorem finite_production_cfl_intersection_nonclosure_from_anbncn_witnesses
     {L M : Language ABC}

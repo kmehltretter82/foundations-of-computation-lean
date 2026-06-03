@@ -13,6 +13,10 @@ namespace Section07
 This section formalizes the chapter's relation vocabulary using the reusable
 definitions in {module}`FoC.Foundation.Relations`. The focus is on equivalence
 relations, equivalence classes, partitions, and transitive closure.
+
+A relation is modeled as a proposition-valued function of two inputs. The
+properties below, such as reflexive, symmetric, antisymmetric, and transitive,
+are predicates on that two-input function.
 -/
 
 open Foundation
@@ -23,6 +27,10 @@ open Foundation
 Equality is the canonical equivalence relation. For an arbitrary equivalence
 relation, each element belongs to its own class, and related representatives
 determine the same class.
+
+The class of an element is the set of all elements related to it. The theorem
+about related representatives is the familiar fact that equivalence classes do
+not depend on which representative from the class is chosen.
 -/
 
 theorem equality_is_equivalence : Rel.Equivalence (fun x y : alpha => x = y) :=
