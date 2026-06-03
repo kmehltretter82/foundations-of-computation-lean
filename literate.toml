@@ -1,9 +1,12 @@
-landing_page = "FoC"
+landing_page = "FoC.Book"
 hide_commands = ["import", "open", "set_option", "namespace", "end"]
 show_imports = false
 docstrings_as_text = true
 
-order = ["FoC"]
+order = ["FoC.Book"]
+
+[[targets]]
+module = "FoC.Book"
 
 [metadata]
 title = "Foundations of Computation Lean Companion"

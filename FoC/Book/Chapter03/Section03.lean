@@ -22,24 +22,11 @@ open Languages
 ## Derived Operators
 
 Optional, plus, and character classes expand to union, concatenation, star,
-and finite alternatives. The sample digit class demonstrates character-class
-membership for a concrete one-symbol word.
+and finite alternatives. Their canonical semantic theorems are
+{lit}`RegExp.optional_denote`, {lit}`RegExp.plus_denote`, and
+{lit}`RegExp.charClass_denote`. The sample digit class demonstrates
+character-class membership for a concrete one-symbol word.
 -/
-
-theorem optional_regular_expression (r : RegExp alpha) :
-    Language.Equal (RegExp.Denote (RegExp.Optional r))
-      (Language.Union (RegExp.Denote r) (Language.Singleton Word.Empty)) :=
-  RegExp.optional_denote r
-
-theorem plus_regular_expression (r : RegExp alpha) :
-    Language.Equal (RegExp.Denote (RegExp.Plus r))
-      (Language.Concat (RegExp.Denote r) (Language.Star (RegExp.Denote r))) :=
-  RegExp.plus_denote r
-
-theorem character_class_language (chars : List alpha) (w : Word alpha) :
-    w ∈ RegExp.Denote (RegExp.CharClass chars) <->
-      exists a, a ∈ chars ∧ w = Word.Symbol a :=
-  RegExp.charClass_denote chars w
 
 def digitClass : RegExp Nat :=
   RegExp.CharClass [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]

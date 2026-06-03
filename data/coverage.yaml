@@ -337,7 +337,7 @@ completed:
         reason: "SQL syntax and DBMS behavior are application material; the table-as-relation model with core update operations is formalized."
   - coordinate: "Chapter 3"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 137
+    theorem_declarations: 123
     definition_declarations: 19
     modules:
       - "FoC.Book.Chapter03.Section01"
@@ -398,7 +398,7 @@ completed:
         status: "complete_formal_core"
         formalized:
           - artifact: "FoC.Book.Chapter03.Section02"
-            reason: "Regular-expression definitions, denotational semantics, regular-language vocabulary, closure under union/concatenation/Kleene star, selected exercise regular expressions, and sample membership."
+            reason: "Textbook-coordinate narrative for regular-expression definitions and regular-language vocabulary, with canonical implementation links, selected exercise regular expressions, and sample membership."
           - artifact: "FoC.Languages.RegularExpression"
             reason: "Regular-expression syntax and semantic language interpretation."
           - artifact: "FoC.Languages.Regular"
@@ -409,7 +409,7 @@ completed:
         status: "partial_application_material_deferred"
         formalized:
           - artifact: "FoC.Book.Chapter03.Section03"
-            reason: "Optional expression, one-or-more expression, finite character classes, digit-class sample, and backreference exercise target-language vocabulary/witness."
+            reason: "Canonical links for optional expression, one-or-more expression, and finite character classes, plus digit-class sample and backreference exercise target-language vocabulary/witness."
           - artifact: "FoC.Book.Chapter03.Section07"
             reason: "Backreference exercise target language a^n b a^n is proved non-regular via the pumping-lemma infrastructure."
         missing: []
