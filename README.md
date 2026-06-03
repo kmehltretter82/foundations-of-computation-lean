@@ -3,6 +3,9 @@
 Standalone Lean formalization companion for the textbook *Foundations of
 Computation*, Second Edition, Version 2.3.2.
 
+Rendered Verso HTML companion:
+<https://kmehltretter82.github.io/foundations-of-computation-lean/>
+
 Source textbook metadata:
 
 - Textbook website: <https://math.hws.edu/FoundationsOfComputation/>

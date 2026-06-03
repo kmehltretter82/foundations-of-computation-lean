@@ -60,6 +60,12 @@ Computation. The rendered HTML site uses Verso to show the actual formalization
 files, enriched with short explanations, book coordinates, links between
 definitions, and proof-state information.
 
+The original textbook is
+[Foundations of Computation](https://math.hws.edu/FoundationsOfComputation/),
+Second Edition, Version 2.3.2, by Carol Critchlow and David Eck. This Lean
+project is a companion formalization; it is not a replacement for the textbook
+and does not copy the book text.
+
 The `FoC.Book` modules are organized in the order of the textbook. They state
 the book-facing definitions and theorems. The reusable infrastructure lives in
 the foundation, language, grammar, and computability modules:
@@ -78,4 +84,13 @@ the foundation, language, grammar, and computability modules:
 The goal of the companion is not to copy the textbook. It explains how the
 mathematical and computational ideas are represented in Lean, then lets the
 reader inspect the checked statements and proofs directly.
+
+Source code and issue tracking are available in the
+[GitHub repository](https://github.com/kmehltretter82/foundations-of-computation-lean).
+
+This formalization is distributed under the Creative Commons
+Attribution-NonCommercial-ShareAlike 4.0 International License; see the
+[license file](https://github.com/kmehltretter82/foundations-of-computation-lean/blob/main/LICENSE.md)
+and [notice file](https://github.com/kmehltretter82/foundations-of-computation-lean/blob/main/NOTICE.md)
+for details.
 -/
