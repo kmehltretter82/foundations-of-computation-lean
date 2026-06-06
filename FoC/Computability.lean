@@ -2,6 +2,7 @@ import FoC.Computability.Tape
 import FoC.Computability.TuringMachine
 import FoC.Computability.Computable
 import FoC.Computability.Recognizable
+import FoC.Computability.Transform
 import FoC.Computability.Enumerable
 import FoC.Computability.Undecidable
 
@@ -25,7 +26,8 @@ multi-step computations, halting, output, and acceptance by halting.
 The next files separate the common language-theoretic predicates.
 {module}`FoC.Computability.Computable` defines total and partial computable
 string functions.  {module}`FoC.Computability.Recognizable` defines
-Turing-acceptable and Turing-decidable languages.  {module}`FoC.Computability.Enumerable`
+Turing-acceptable and Turing-decidable languages.  {module}`FoC.Computability.Transform`
+contains reusable machine transformations.  {module}`FoC.Computability.Enumerable`
 records the enumeration and range-of-computable-function views of recursively
 enumerable languages.
 
