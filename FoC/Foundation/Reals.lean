@@ -599,6 +599,19 @@ theorem neg_neg (x : Real) : -(-x) = x := by
         · rw [QRat.neg_neg]
           exact ha.left
 
+theorem neg_eq_zero_iff {x : Real} : -x = 0 <-> x = 0 := by
+  constructor
+  · intro h
+    have hneg := congrArg (fun t : Real => -t) h
+    change -(-x) = -(0 : Real) at hneg
+    rwa [neg_neg, neg_zero] at hneg
+  · intro h
+    rw [h, neg_zero]
+
+theorem neg_ne_zero {x : Real} (hx : x ≠ 0) : -x ≠ 0 := by
+  intro h
+  exact hx (neg_eq_zero_iff.mp h)
+
 /-!
 **Cut approximation.** The additive inverse theorem for {lean}`Real` needs one
 standard Dedekind-cut fact: for every positive rational tolerance, a cut has a
@@ -745,6 +758,74 @@ theorem neg_add_cancel (x : Real) : -x + x = 0 := by
   rw [add_comm]
   exact add_neg_cancel x
 
+theorem add_left_cancel {a b c : Real} (h : a + b = a + c) : b = c := by
+  have hcong := congrArg (fun t : Real => -a + t) h
+  calc
+    b = 0 + b := (zero_add b).symm
+    _ = (-a + a) + b := by rw [neg_add_cancel]
+    _ = -a + (a + b) := add_assoc (-a) a b
+    _ = -a + (a + c) := hcong
+    _ = (-a + a) + c := (add_assoc (-a) a c).symm
+    _ = 0 + c := by rw [neg_add_cancel]
+    _ = c := zero_add c
+
+theorem add_right_cancel {a b c : Real} (h : b + a = c + a) : b = c := by
+  apply add_left_cancel (a := a)
+  rw [add_comm a b, add_comm a c]
+  exact h
+
+theorem add_neg_right_cancel (x y : Real) : (x + y) + -y = x := by
+  calc
+    (x + y) + -y = x + (y + -y) := add_assoc x y (-y)
+    _ = x + 0 := by rw [add_neg_cancel]
+    _ = x := add_zero x
+
+theorem add_neg_add_cancel (x y : Real) : (x + -y) + y = x := by
+  calc
+    (x + -y) + y = x + (-y + y) := add_assoc x (-y) y
+    _ = x + 0 := by rw [neg_add_cancel]
+    _ = x := add_zero x
+
+theorem eq_of_add_neg_eq_zero {a b : Real} (h : a + -b = 0) : a = b := by
+  calc
+    a = a + 0 := (add_zero a).symm
+    _ = a + (-b + b) := by rw [neg_add_cancel]
+    _ = (a + -b) + b := (add_assoc a (-b) b).symm
+    _ = 0 + b := by rw [h]
+    _ = b := zero_add b
+
+theorem eq_add_of_add_neg_eq {a b c : Real} (h : a + -c = b) : a = b + c := by
+  calc
+    a = (a + -c) + c := (add_neg_add_cancel a c).symm
+    _ = b + c := by rw [h]
+
+theorem neg_add (x y : Real) : -(x + y) = -x + -y := by
+  have hsum : (-x + -y) + (x + y) = 0 := by
+    calc
+      (-x + -y) + (x + y) = ((-x + -y) + x) + y :=
+        (add_assoc (-x + -y) x y).symm
+      _ = (-x + (-y + x)) + y := by rw [add_assoc (-x) (-y) x]
+      _ = (-x + (x + -y)) + y := by rw [add_comm (-y) x]
+      _ = ((-x + x) + -y) + y := by rw [← add_assoc (-x) x (-y)]
+      _ = (0 + -y) + y := by rw [neg_add_cancel]
+      _ = -y + y := by rw [zero_add]
+      _ = 0 := neg_add_cancel y
+  have h : (-x + -y) + -(-(x + y)) = 0 := by
+    rwa [neg_neg]
+  exact (eq_of_add_neg_eq_zero h).symm
+
+theorem neg_add_add_left_cancel (x y : Real) : -(x + y) + x = -y := by
+  apply eq_of_add_neg_eq_zero
+  change (-(x + y) + x) + -(-y) = 0
+  rw [neg_neg]
+  calc
+    (-(x + y) + x) + y = -(x + y) + (x + y) := add_assoc (-(x + y)) x y
+    _ = 0 := neg_add_cancel (x + y)
+
+theorem neg_add_add_right_cancel (x y : Real) : -(x + y) + y = -x := by
+  rw [add_comm x y]
+  exact neg_add_add_left_cancel y x
+
 theorem eq_zero_of_nonneg_of_neg_nonneg {x : Real}
     (hx : (0 : Real) ≤ x) (hnx : (0 : Real) ≤ -x) : x = 0 := by
   apply ext
@@ -777,6 +858,71 @@ theorem qreal_sub (r s : QRat) :
     _ = qreal r + qreal (-s) := by rw [qreal_neg]
     _ = qreal (r + -s) := qreal_add r (-s)
     _ = qreal (r - s) := rfl
+
+theorem add_nonneg {x y : Real}
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y) :
+    (0 : Real) ≤ x + y := by
+  intro q hq0
+  rcases QRat.exists_neg_split_gt hq0 with ⟨a, b, ha0, hb0, hqab⟩
+  exact ⟨a, b, hx a ha0, hy b hb0, hqab⟩
+
+theorem le_zero_of_no_pos_lower {x : Real}
+    (hpos : ¬ exists q : QRat, 0 < q ∧ x.lower q) : x ≤ 0 := by
+  intro q hxq
+  change q < 0
+  cases QRat.lt_trichotomy q 0 with
+  | inl hq0 =>
+      exact hq0
+  | inr hrest =>
+      cases hrest with
+      | inl hq0eq =>
+          rcases x.open_upward q hxq with ⟨r, hqr, hrx⟩
+          have h0r : 0 < r := by rwa [hq0eq] at hqr
+          exact False.elim (hpos ⟨r, h0r, hrx⟩)
+      | inr h0q =>
+          exact False.elim (hpos ⟨q, h0q, hxq⟩)
+
+theorem exists_pos_lower_of_nonneg_ne_zero {x : Real}
+    (hx : (0 : Real) ≤ x) (hne : x ≠ 0) :
+    exists q : QRat, 0 < q ∧ x.lower q := by
+  classical
+  exact Classical.byContradiction (by
+    intro hpos
+    apply hne
+    exact (le_antisymm (x := 0) (y := x) hx
+      (le_zero_of_no_pos_lower hpos)).symm)
+
+theorem not_zero_lower_of_pos {q : QRat} (hq : 0 < q) :
+    ¬ (0 : Real).lower q := by
+  change ¬ q < 0
+  exact QRat.lt_asymm hq
+
+theorem zero_lt_of_nonneg_ne_zero {x : Real}
+    (hx : (0 : Real) ≤ x) (hne : x ≠ 0) : (0 : Real) < x := by
+  constructor
+  · exact hx
+  · rcases exists_pos_lower_of_nonneg_ne_zero hx hne with ⟨q, hq0, hxq⟩
+    exact ⟨q, hxq, not_zero_lower_of_pos hq0⟩
+
+theorem exists_pos_lower_of_zero_lt {x : Real} (hx : (0 : Real) < x) :
+    exists q : QRat, 0 < q ∧ x.lower q := by
+  rcases hx.right with ⟨q, hxq, hqnot0⟩
+  cases QRat.lt_trichotomy 0 q with
+  | inl h0q =>
+      exact ⟨q, h0q, hxq⟩
+  | inr hrest =>
+      cases hrest with
+      | inl h0qeq =>
+          rcases x.open_upward q hxq with ⟨r, hqr, hrx⟩
+          have h0r : 0 < r := by rwa [← h0qeq] at hqr
+          exact ⟨r, h0r, hrx⟩
+      | inr hq0 =>
+          exact False.elim (hqnot0 hq0)
+
+theorem ne_zero_of_zero_lt {x : Real} (hx : (0 : Real) < x) : x ≠ 0 := by
+  intro h
+  rw [h] at hx
+  exact lt_irrefl 0 hx
 
 theorem nonneg_neg_of_not_nonneg {x : Real}
     (hx : ¬ (0 : Real) ≤ x) : (0 : Real) ≤ -x := by
@@ -906,6 +1052,183 @@ theorem mulNonneg_congr {x x' y y' : Real}
   apply ext
   intro q
   rfl
+
+theorem mulNonneg_nonneg (x y : Real)
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y) :
+    (0 : Real) ≤ mulNonneg x y hx hy := by
+  intro q hq0
+  exact Or.inl hq0
+
+theorem mulNonneg_lower_of_lt_mul_of_right_pos {x y : Real}
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y)
+    {q a b : QRat} (ha : x.lower a) (hb : y.lower b)
+    (hb0 : 0 < b) (hq : q < a * b) :
+    (mulNonneg x y hx hy).lower q := by
+  by_cases ha0 : 0 < a
+  · exact Or.inr ⟨a, b, ha0, hb0, ha, hb, hq⟩
+  · exact Or.inl (QRat.lt_zero_of_lt_mul_of_not_pos_left hq ha0 hb0)
+
+theorem mulNonneg_comm (x y : Real)
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y) :
+    mulNonneg x y hx hy = mulNonneg y x hy hx := by
+  apply ext
+  intro q
+  constructor
+  · intro hq
+    cases hq with
+    | inl hq0 =>
+        exact Or.inl hq0
+    | inr hprod =>
+        rcases hprod with ⟨a, b, ha0, hb0, ha, hb, hqab⟩
+        exact Or.inr
+          ⟨b, a, hb0, ha0, hb, ha, by simpa [QRat.mul_comm] using hqab⟩
+  · intro hq
+    cases hq with
+    | inl hq0 =>
+        exact Or.inl hq0
+    | inr hprod =>
+        rcases hprod with ⟨b, a, hb0, ha0, hb, ha, hqba⟩
+        exact Or.inr
+          ⟨a, b, ha0, hb0, ha, hb, by simpa [QRat.mul_comm] using hqba⟩
+
+theorem mulNonneg_add_right (x y z : Real)
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y)
+    (hz : (0 : Real) ≤ z) :
+    mulNonneg (x + y) z (add_nonneg hx hy) hz =
+      mulNonneg x z hx hz + mulNonneg y z hy hz := by
+  apply ext
+  intro q
+  constructor
+  · intro hq
+    cases hq with
+    | inl hq0 =>
+        exact add_nonneg
+          (mulNonneg_nonneg x z hx hz)
+          (mulNonneg_nonneg y z hy hz) q hq0
+    | inr hprod =>
+        rcases hprod with ⟨s, e, hs0, he0, hsum, hze, hqse⟩
+        rcases hsum with ⟨a, b, hxa, hyb, hsab⟩
+        have hqabe : q < (a + b) * e := by
+          exact QRat.lt_trans hqse (QRat.mul_lt_mul_of_pos_right hsab he0)
+        have hqsum : q < a * e + b * e := by
+          simpa [QRat.add_mul] using hqabe
+        rcases QRat.exists_add_split_lt hqsum with ⟨u, v, huae, hvbe, hquv⟩
+        exact ⟨u, v,
+          mulNonneg_lower_of_lt_mul_of_right_pos hx hz hxa hze he0 huae,
+          mulNonneg_lower_of_lt_mul_of_right_pos hy hz hyb hze he0 hvbe,
+          hquv⟩
+  · intro hq
+    rcases hq with ⟨u, v, huxz, hvyz, hquv⟩
+    by_cases hq0 : q < 0
+    · exact Or.inl hq0
+    cases huxz with
+    | inl hu0 =>
+        cases hvyz with
+        | inl hv0 =>
+            have huv0 : u + v < 0 := by
+              have h := QRat.add_lt_add hu0 hv0
+              simpa [QRat.zero_add] using h
+            exact False.elim (hq0 (QRat.lt_trans hquv huv0))
+        | inr hprodv =>
+            rcases hprodv with ⟨b, d, hb0, hd0, hyb, hzd, hvbd⟩
+            rcases z.open_upward d hzd with ⟨e, hde, hze⟩
+            have he0 : 0 < e := QRat.lt_trans hd0 hde
+            rcases QRat.exists_neg_factor_mul_gt hu0 he0 with ⟨a, ha0, huae⟩
+            have hy_a : x.lower a := hx a ha0
+            have hvbe : v < b * e := by
+              exact QRat.lt_trans hvbd (QRat.mul_lt_mul_of_pos_left hde hb0)
+            have hqabe : q < (a + b) * e := by
+              have hsum := QRat.lt_trans hquv (QRat.add_lt_add huae hvbe)
+              simpa [QRat.add_mul] using hsum
+            have hqdiv : q / e < a + b :=
+              (QRat.div_lt_iff (x := q) (y := e) (c := a + b) he0).mpr hqabe
+            rcases QRat.density hqdiv with ⟨s, hqs, hsab⟩
+            have hqdiv_nonneg : ¬ q / e < 0 := QRat.div_nonneg hq0 he0
+            have hs0 : 0 < s :=
+              QRat.zero_lt_of_not_lt_zero_of_lt hqdiv_nonneg hqs
+            have hqse : q < s * e :=
+              (QRat.div_lt_iff (x := q) (y := e) (c := s) he0).mp hqs
+            exact Or.inr ⟨s, e, hs0, he0,
+              ⟨a, b, hy_a, hyb, hsab⟩, hze, hqse⟩
+    | inr hprodu =>
+        cases hvyz with
+        | inl hv0 =>
+            rcases hprodu with ⟨a, c, ha0, hc0, hxa, hzc, huac⟩
+            rcases z.open_upward c hzc with ⟨e, hce, hze⟩
+            have he0 : 0 < e := QRat.lt_trans hc0 hce
+            have huae : u < a * e := by
+              exact QRat.lt_trans huac (QRat.mul_lt_mul_of_pos_left hce ha0)
+            rcases QRat.exists_neg_factor_mul_gt hv0 he0 with ⟨b, hb0, hvbe⟩
+            have hy_b : y.lower b := hy b hb0
+            have hqabe : q < (a + b) * e := by
+              have hsum := QRat.lt_trans hquv (QRat.add_lt_add huae hvbe)
+              simpa [QRat.add_mul] using hsum
+            have hqdiv : q / e < a + b :=
+              (QRat.div_lt_iff (x := q) (y := e) (c := a + b) he0).mpr hqabe
+            rcases QRat.density hqdiv with ⟨s, hqs, hsab⟩
+            have hqdiv_nonneg : ¬ q / e < 0 := QRat.div_nonneg hq0 he0
+            have hs0 : 0 < s :=
+              QRat.zero_lt_of_not_lt_zero_of_lt hqdiv_nonneg hqs
+            have hqse : q < s * e :=
+              (QRat.div_lt_iff (x := q) (y := e) (c := s) he0).mp hqs
+            exact Or.inr ⟨s, e, hs0, he0,
+              ⟨a, b, hxa, hy_b, hsab⟩, hze, hqse⟩
+        | inr hprodv =>
+            rcases hprodu with ⟨a, c, ha0, hc0, hxa, hzc, huac⟩
+            rcases hprodv with ⟨b, d, hb0, hd0, hyb, hzd, hvbd⟩
+            have hcommon :
+                exists e : QRat, c < e ∧ d < e ∧ z.lower e := by
+              cases QRat.lt_trichotomy c d with
+              | inl hcd =>
+                  rcases z.open_upward d hzd with ⟨e, hde, hze⟩
+                  exact ⟨e, QRat.lt_trans hcd hde, hde, hze⟩
+              | inr hrest =>
+                  cases hrest with
+                  | inl hcdEq =>
+                      rcases z.open_upward c hzc with ⟨e, hce, hze⟩
+                      exact ⟨e, hce, by rwa [← hcdEq], hze⟩
+                  | inr hdc =>
+                      rcases z.open_upward c hzc with ⟨e, hce, hze⟩
+                      exact ⟨e, hce, QRat.lt_trans hdc hce, hze⟩
+            rcases hcommon with ⟨e, hce, hde, hze⟩
+            have he0 : 0 < e := QRat.lt_trans hc0 hce
+            have huae : u < a * e := by
+              exact QRat.lt_trans huac (QRat.mul_lt_mul_of_pos_left hce ha0)
+            have hvbe : v < b * e := by
+              exact QRat.lt_trans hvbd (QRat.mul_lt_mul_of_pos_left hde hb0)
+            have hqabe : q < (a + b) * e := by
+              have hsum := QRat.lt_trans hquv (QRat.add_lt_add huae hvbe)
+              simpa [QRat.add_mul] using hsum
+            have hqdiv : q / e < a + b :=
+              (QRat.div_lt_iff (x := q) (y := e) (c := a + b) he0).mpr hqabe
+            rcases QRat.density hqdiv with ⟨s, hqs, hsab⟩
+            have hqdiv_nonneg : ¬ q / e < 0 := QRat.div_nonneg hq0 he0
+            have hs0 : 0 < s :=
+              QRat.zero_lt_of_not_lt_zero_of_lt hqdiv_nonneg hqs
+            have hqse : q < s * e :=
+              (QRat.div_lt_iff (x := q) (y := e) (c := s) he0).mp hqs
+            exact Or.inr ⟨s, e, hs0, he0,
+              ⟨a, b, hxa, hyb, hsab⟩, hze, hqse⟩
+
+theorem mulNonneg_pos_of_pos {x y : Real}
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y)
+    (hxp : (0 : Real) < x) (hyp : (0 : Real) < y) :
+    (0 : Real) < mulNonneg x y hx hy := by
+  constructor
+  · intro q hq0
+    exact Or.inl hq0
+  · rcases exists_pos_lower_of_zero_lt hxp with ⟨a, ha0, hxa⟩
+    rcases exists_pos_lower_of_zero_lt hyp with ⟨b, hb0, hyb⟩
+    have hab0 : 0 < a * b := QRat.mul_pos ha0 hb0
+    rcases QRat.density hab0 with ⟨q, h0q, hqab⟩
+    exact ⟨q, Or.inr ⟨a, b, ha0, hb0, hxa, hyb, hqab⟩,
+      not_zero_lower_of_pos h0q⟩
+
+theorem mulNonneg_ne_zero_of_pos {x y : Real}
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y)
+    (hxp : (0 : Real) < x) (hyp : (0 : Real) < y) :
+    mulNonneg x y hx hy ≠ 0 := by
+  exact ne_zero_of_zero_lt (mulNonneg_pos_of_pos hx hy hxp hyp)
 
 theorem qreal_mulNonneg {a b : QRat}
     (ha : (0 : Real) ≤ qreal a) (hb : (0 : Real) ≤ qreal b) :
@@ -1130,6 +1453,66 @@ noncomputable def mul (x y : Real) : Real := by
 noncomputable instance : Mul Real where
   mul := mul
 
+theorem mul_comm (x y : Real) : x * y = y * x := by
+  classical
+  change mul x y = mul y x
+  unfold mul
+  by_cases hx : (0 : Real) ≤ x
+  · simp [hx]
+    by_cases hy : (0 : Real) ≤ y
+    · simp [hy]
+      exact mulNonneg_comm x y hx hy
+    · simp [hy]
+      change -mulNonneg x (-y) hx (nonneg_neg_of_not_nonneg hy) =
+        -mulNonneg (-y) x (nonneg_neg_of_not_nonneg hy) hx
+      rw [mulNonneg_comm]
+  · simp [hx]
+    by_cases hy : (0 : Real) ≤ y
+    · simp [hy]
+      change -mulNonneg (-x) y (nonneg_neg_of_not_nonneg hx) hy =
+        -mulNonneg y (-x) hy (nonneg_neg_of_not_nonneg hx)
+      rw [mulNonneg_comm]
+    · simp [hy]
+      change mulNonneg (-x) (-y) (nonneg_neg_of_not_nonneg hx)
+          (nonneg_neg_of_not_nonneg hy) =
+        mulNonneg (-y) (-x) (nonneg_neg_of_not_nonneg hy)
+          (nonneg_neg_of_not_nonneg hx)
+      exact mulNonneg_comm (-x) (-y)
+        (nonneg_neg_of_not_nonneg hx) (nonneg_neg_of_not_nonneg hy)
+
+theorem mul_ne_zero {x y : Real} (hxne : x ≠ 0) (hyne : y ≠ 0) :
+    x * y ≠ 0 := by
+  classical
+  change mul x y ≠ 0
+  unfold mul
+  by_cases hx : (0 : Real) ≤ x
+  · simp [hx]
+    by_cases hy : (0 : Real) ≤ y
+    · simp [hy]
+      exact mulNonneg_ne_zero_of_pos hx hy
+        (zero_lt_of_nonneg_ne_zero hx hxne)
+        (zero_lt_of_nonneg_ne_zero hy hyne)
+    · simp [hy]
+      apply neg_ne_zero
+      have hny : (0 : Real) ≤ -y := nonneg_neg_of_not_nonneg hy
+      exact mulNonneg_ne_zero_of_pos hx hny
+        (zero_lt_of_nonneg_ne_zero hx hxne)
+        (zero_lt_of_nonneg_ne_zero hny (neg_ne_zero hyne))
+  · simp [hx]
+    by_cases hy : (0 : Real) ≤ y
+    · simp [hy]
+      apply neg_ne_zero
+      have hnx : (0 : Real) ≤ -x := nonneg_neg_of_not_nonneg hx
+      exact mulNonneg_ne_zero_of_pos hnx hy
+        (zero_lt_of_nonneg_ne_zero hnx (neg_ne_zero hxne))
+        (zero_lt_of_nonneg_ne_zero hy hyne)
+    · simp [hy]
+      have hnx : (0 : Real) ≤ -x := nonneg_neg_of_not_nonneg hx
+      have hny : (0 : Real) ≤ -y := nonneg_neg_of_not_nonneg hy
+      exact mulNonneg_ne_zero_of_pos hnx hny
+        (zero_lt_of_nonneg_ne_zero hnx (neg_ne_zero hxne))
+        (zero_lt_of_nonneg_ne_zero hny (neg_ne_zero hyne))
+
 theorem one_mul (x : Real) : 1 * x = x := by
   classical
   change mul 1 x = x
@@ -1231,6 +1614,135 @@ theorem mul_neg (x y : Real) : x * -y = -(x * y) := by
       rw [mulNonneg_congr rfl (neg_neg y) (nonneg_neg_of_not_nonneg hx)
         (nonneg_neg_of_not_nonneg hny) (nonneg_neg_of_not_nonneg hx) hy,
         neg_neg]
+
+theorem neg_mul (x y : Real) : -x * y = -(x * y) := by
+  calc
+    -x * y = y * -x := mul_comm (-x) y
+    _ = -(y * x) := mul_neg y x
+    _ = -(x * y) := by rw [mul_comm y x]
+
+theorem right_distrib_nonneg (x y z : Real)
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y)
+    (hz : (0 : Real) ≤ z) :
+    (x + y) * z = x * z + y * z := by
+  classical
+  change mul (x + y) z = mul x z + mul y z
+  unfold mul
+  have hxy : (0 : Real) ≤ x + y := add_nonneg hx hy
+  simp [hxy, hx, hy, hz]
+  exact mulNonneg_add_right x y z hx hy hz
+
+private theorem right_distrib_nonneg_right_first_nonneg_second_neg
+    (x y z : Real) (hx : (0 : Real) ≤ x) (hy : ¬ (0 : Real) ≤ y)
+    (hz : (0 : Real) ≤ z) :
+    (x + y) * z = x * z + y * z := by
+  have hny : (0 : Real) ≤ -y := nonneg_neg_of_not_nonneg hy
+  by_cases hsum : (0 : Real) ≤ x + y
+  · have hdist := right_distrib_nonneg (x + y) (-y) z hsum hny hz
+    have hcancel : (x + y) * z + -(y * z) = x * z := by
+      simpa [add_neg_right_cancel, neg_mul] using hdist.symm
+    exact eq_add_of_add_neg_eq hcancel
+  · have hneg_sum : (0 : Real) ≤ -(x + y) := nonneg_neg_of_not_nonneg hsum
+    have hdist := right_distrib_nonneg (-(x + y)) x z hneg_sum hx hz
+    have hneg :
+        -(y * z) = -((x + y) * z) + x * z := by
+      simpa [neg_add_add_left_cancel, neg_mul] using hdist
+    have hcancel : (x + y) * z + -(y * z) = x * z := by
+      calc
+        (x + y) * z + -(y * z) =
+            (x + y) * z + (-((x + y) * z) + x * z) := by rw [hneg]
+        _ = ((x + y) * z + -((x + y) * z)) + x * z :=
+            (add_assoc ((x + y) * z) (-((x + y) * z)) (x * z)).symm
+        _ = 0 + x * z := by rw [add_neg_cancel]
+        _ = x * z := zero_add (x * z)
+    exact eq_add_of_add_neg_eq hcancel
+
+theorem right_distrib_nonneg_right (x y z : Real)
+    (hz : (0 : Real) ≤ z) :
+    (x + y) * z = x * z + y * z := by
+  by_cases hx : (0 : Real) ≤ x
+  · by_cases hy : (0 : Real) ≤ y
+    · exact right_distrib_nonneg x y z hx hy hz
+    · exact right_distrib_nonneg_right_first_nonneg_second_neg x y z hx hy hz
+  · by_cases hy : (0 : Real) ≤ y
+    · calc
+        (x + y) * z = (y + x) * z := by rw [add_comm x y]
+        _ = y * z + x * z :=
+            right_distrib_nonneg_right_first_nonneg_second_neg y x z hy hx hz
+        _ = x * z + y * z := add_comm (y * z) (x * z)
+    · have hnx : (0 : Real) ≤ -x := nonneg_neg_of_not_nonneg hx
+      have hny : (0 : Real) ≤ -y := nonneg_neg_of_not_nonneg hy
+      have hdist := right_distrib_nonneg (-x) (-y) z hnx hny hz
+      have hneg :
+          -((x + y) * z) = -(x * z) + -(y * z) := by
+        simpa [← neg_add x y, neg_mul] using hdist
+      have htarget_neg :
+          -((x + y) * z) = -(x * z + y * z) := by
+        simpa [neg_add] using hneg
+      have hcong := congrArg (fun t : Real => -t) htarget_neg
+      simpa [neg_neg] using hcong
+
+theorem right_distrib (x y z : Real) :
+    (x + y) * z = x * z + y * z := by
+  by_cases hz : (0 : Real) ≤ z
+  · exact right_distrib_nonneg_right x y z hz
+  · have hnz : (0 : Real) ≤ -z := nonneg_neg_of_not_nonneg hz
+    have hdist := right_distrib_nonneg_right x y (-z) hnz
+    have hneg :
+        -((x + y) * z) = -(x * z) + -(y * z) := by
+      simpa [mul_neg] using hdist
+    have htarget_neg :
+        -((x + y) * z) = -(x * z + y * z) := by
+      simpa [neg_add] using hneg
+    have hcong := congrArg (fun t : Real => -t) htarget_neg
+    simpa [neg_neg] using hcong
+
+/-!
+**Nonzero division by cancellation.** The theorem {name}`right_distrib` and
+{name}`mul_ne_zero` turn equality after multiplication by a nonzero denominator
+into cancellation. The quotient selector below uses classical choice only to
+pick a preimage; the cancellation theorem proves that, for an actual product
+{lit}`a * d`, the selected quotient is the original {lit}`a`.
+-/
+
+theorem mul_right_cancel_of_right_distrib
+    (right_distrib : forall a b c : Real, (a + b) * c = a * c + b * c)
+    {a b d : Real} (hd : d ≠ 0) (h : a * d = b * d) : a = b := by
+  by_cases hdiff : a + -b = 0
+  · exact eq_of_add_neg_eq_zero hdiff
+  · have hprod_ne : (a + -b) * d ≠ 0 := mul_ne_zero hdiff hd
+    exfalso
+    apply hprod_ne
+    calc
+      (a + -b) * d = a * d + (-b) * d := right_distrib a (-b) d
+      _ = a * d + -(b * d) := by rw [neg_mul]
+      _ = b * d + -(b * d) := by rw [h]
+      _ = 0 := add_neg_cancel (b * d)
+
+noncomputable def divByNonzeroOfRightDistrib
+    (_right_distrib : forall a b c : Real, (a + b) * c = a * c + b * c)
+    (num : Real) (d : Real) (_hd : d ≠ 0) : Real := by
+  classical
+  exact if h : exists q : Real, q * d = num then Classical.choose h else 0
+
+theorem divByNonzeroOfRightDistrib_mul_cancel
+    (right_distrib : forall a b c : Real, (a + b) * c = a * c + b * c)
+    (a d : Real) (hd : d ≠ 0) :
+    divByNonzeroOfRightDistrib right_distrib (a * d) d hd = a := by
+  classical
+  unfold divByNonzeroOfRightDistrib
+  by_cases h : exists q : Real, q * d = a * d
+  · simp [h]
+    exact mul_right_cancel_of_right_distrib right_distrib hd
+      (Classical.choose_spec h)
+  · exact False.elim (h ⟨a, rfl⟩)
+
+noncomputable def divByNonzero (num : Real) (d : Real) (hd : d ≠ 0) : Real :=
+  divByNonzeroOfRightDistrib right_distrib num d hd
+
+theorem divByNonzero_mul_cancel (a d : Real) (hd : d ≠ 0) :
+    divByNonzero (a * d) d hd = a :=
+  divByNonzeroOfRightDistrib_mul_cancel right_distrib a d hd
 
 theorem qreal_mul (a b : QRat) :
     qreal a * qreal b = qreal (a * b) := by

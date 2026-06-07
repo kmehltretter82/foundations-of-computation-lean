@@ -873,6 +873,19 @@ theorem lt_add_iff_sub_lt {a b c : QRat} :
     a < b + c <-> a - c < b :=
   Iff.symm sub_lt_iff
 
+theorem exists_add_split_lt {q a b : QRat} (h : q < a + b) :
+    exists u v : QRat, u < a ∧ v < b ∧ q < u + v := by
+  have hqa : q - b < a := sub_lt_iff.mpr h
+  rcases density hqa with ⟨u, hqu, hua⟩
+  have hqub : q < u + b := sub_lt_iff.mp hqu
+  have hqsub : q - u < b := by
+    apply sub_lt_iff.mpr
+    simpa [add_comm] using hqub
+  rcases density hqsub with ⟨v, hqv, hvb⟩
+  refine ⟨u, v, hua, hvb, ?_⟩
+  have hqvu : q < v + u := sub_lt_iff.mp hqv
+  simpa [add_comm] using hqvu
+
 theorem sub_pos_of_lt {q c : QRat} (h : q < c) : 0 < c - q := by
   apply (lt_sub_right_iff_add_lt (a := 0) (b := q) (c := c)).mpr
   rwa [zero_add]
@@ -1059,6 +1072,20 @@ theorem mul_lt_mul_of_pos_right {x y c : QRat}
   rw [toRat_mul, toRat_mul]
   exact Rat.mul_lt_mul_of_pos_right (toRat_lt_of_lt hxy) (toRat_lt_of_lt hc)
 
+theorem lt_zero_of_lt_mul_of_not_pos_left {q a b : QRat}
+    (hqa : q < a * b) (ha : ¬ 0 < a) (hb : 0 < b) : q < 0 := by
+  cases lt_trichotomy a 0 with
+  | inl ha0 =>
+      exact lt_trans hqa (by
+        have hmul := mul_lt_mul_of_pos_right ha0 hb
+        rwa [zero_mul] at hmul)
+  | inr hrest =>
+      cases hrest with
+      | inl hazero =>
+          rwa [hazero, zero_mul] at hqa
+      | inr hapos =>
+          exact False.elim (ha hapos)
+
 theorem mul_lt_mul_of_pos {a b c d : QRat}
     (hab : a < b) (hcd : c < d) (ha : 0 < a) (hc : 0 < c) :
     a * c < b * d := by
@@ -1132,6 +1159,15 @@ theorem div_lt_iff {x y c : QRat} (hy : 0 < y) :
     have ht := toRat_lt_of_lt h
     rw [toRat_mul] at ht
     exact Rat.div_lt_iff (toRat_lt_of_lt hy) |>.mpr ht
+
+theorem exists_neg_factor_mul_gt {q c : QRat}
+    (hq : q < 0) (hc : 0 < c) :
+    exists a : QRat, a < 0 ∧ q < a * c := by
+  have hdiv : q / c < 0 := by
+    apply (div_lt_iff (x := q) (y := c) (c := 0) hc).mpr
+    rwa [zero_mul]
+  rcases density hdiv with ⟨a, hqa, ha0⟩
+  exact ⟨a, ha0, (div_lt_iff (x := q) (y := c) (c := a) hc).mp hqa⟩
 
 theorem div_nonneg {x y : QRat}
     (hx : ¬ x < 0) (hy : 0 < y) : ¬ x / y < 0 := by
@@ -1233,6 +1269,29 @@ theorem half_lt_self {x : QRat} (hx : 0 < x) :
   rw [toRat_div, toRat_ofNat]
   have hxRat : 0 < toRat x := toRat_lt_of_lt hx
   grind
+
+theorem half_add_half (x : QRat) : x / ofNat 2 + x / ofNat 2 = x := by
+  apply eq_of_toRat_eq
+  simp [toRat_add, toRat_div, toRat_ofNat]
+  grind
+
+theorem half_neg_of_neg {x : QRat} (hx : x < 0) : x / ofNat 2 < 0 := by
+  apply lt_of_toRat_lt
+  simp [toRat_div, toRat_zero, toRat_ofNat]
+  have hxRat : toRat x < 0 := by
+    simpa [toRat_zero] using toRat_lt_of_lt hx
+  grind
+
+theorem exists_neg_split_gt {q : QRat} (hq : q < 0) :
+    exists a b : QRat, a < 0 ∧ b < 0 ∧ q < a + b := by
+  rcases density hq with ⟨r, hqr, hr0⟩
+  exists r / ofNat 2
+  exists r / ofNat 2
+  constructor
+  · exact half_neg_of_neg hr0
+  · constructor
+    · exact half_neg_of_neg hr0
+    · rwa [half_add_half]
 
 /-!
 # Natural rational fractions
