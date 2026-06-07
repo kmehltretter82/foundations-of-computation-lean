@@ -6657,6 +6657,40 @@ theorem squareMiddleClean_append
           · exact ih hleft
           · exact ih hleft
 
+theorem squareMiddleClean_append_left
+    {left right : SententialForm SquareTerminal SquareNT}
+    (h : SquareMiddleClean (left ++ right)) :
+    SquareMiddleClean left := by
+  induction left with
+  | nil =>
+      trivial
+  | cons head tail ih =>
+      cases head with
+      | terminal tok =>
+          cases tok
+          exact ih h
+      | nonterminal A =>
+          cases A <;> try cases h
+          · exact ih h
+          · exact ih h
+
+theorem squareMiddleClean_append_right
+    {left right : SententialForm SquareTerminal SquareNT}
+    (h : SquareMiddleClean (left ++ right)) :
+    SquareMiddleClean right := by
+  induction left with
+  | nil =>
+      simpa using h
+  | cons head tail ih =>
+      cases head with
+      | terminal tok =>
+          cases tok
+          exact ih h
+      | nonterminal A =>
+          cases A <;> try cases h
+          · exact ih h
+          · exact ih h
+
 theorem squareMiddleClean_single_b :
     SquareMiddleClean [squareN SquareNT.b] := by
   simp [SquareMiddleClean, squareN, ggNonterminal]
@@ -6710,6 +6744,35 @@ def SquarePostStopState (n : Nat)
     sf = squarePostStopForm emitted middle ∧
       SquareMiddleClean middle ∧
         emitted + squareMiddlePotential middle = n * n
+
+def SquarePostStopLocalState (n emitted : Nat)
+    (middle : SententialForm SquareTerminal SquareNT) : Prop :=
+  SquareMiddleClean middle ∧
+    emitted + squareMiddlePotential middle = n * n
+
+/-!
+**Local square invariant.** The existential state above is convenient for
+derivation statements, while {name}`SquarePostStopLocalState` is the exact
+payload needed after a list split has located a rewrite inside the middle
+segment. The lemmas below show that each post-stop rule preserves that local
+payload, or in the terminal case produces a square word.
+-/
+
+theorem squarePostStopState_of_local
+    {n emitted : Nat}
+    {middle : SententialForm SquareTerminal SquareNT}
+    (hlocal : SquarePostStopLocalState n emitted middle) :
+    SquarePostStopState n (squarePostStopForm emitted middle) := by
+  exact ⟨emitted, middle, rfl, hlocal.left, hlocal.right⟩
+
+theorem squarePostStopLocal_initial (n : Nat) :
+    SquarePostStopLocalState n 0
+      (squareBForm n ++ squareMarkerAForm n) := by
+  constructor
+  · exact squareMiddleClean_append (squareBForm_clean n)
+      (squareMarkerAForm_clean n)
+  · rw [squareMiddlePotential_initial_stopped]
+    omega
 
 theorem squarePostStop_initial (n : Nat) :
     SquarePostStopState n
@@ -6814,6 +6877,32 @@ theorem squarePostStop_moveBA
   · rw [← squareMiddlePotential_moveBA]
     exact hbalance
 
+theorem squarePostStopLocal_moveBA
+    {n emitted : Nat}
+    {left right : SententialForm SquareTerminal SquareNT}
+    (hlocal : SquarePostStopLocalState n emitted
+      (left ++ [squareN SquareNT.b, squareN SquareNT.markA] ++ right)) :
+    SquarePostStopLocalState n emitted
+      (left ++ [squareN SquareNT.markA, squareT SquareTerminal.a,
+        squareN SquareNT.b] ++ right) := by
+  constructor
+  · have hclean :
+        SquareMiddleClean
+          (left ++ ([squareN SquareNT.b, squareN SquareNT.markA] ++
+            right)) := by
+      simpa [List.append_assoc] using hlocal.left
+    have hleft : SquareMiddleClean left :=
+      squareMiddleClean_append_left hclean
+    have htail :
+        SquareMiddleClean
+          ([squareN SquareNT.b, squareN SquareNT.markA] ++ right) :=
+      squareMiddleClean_append_right hclean
+    have hright : SquareMiddleClean right :=
+      squareMiddleClean_append_right htail
+    exact squareMiddleClean_moveBA left right hleft hright
+  · rw [← squareMiddlePotential_moveBA]
+    exact hlocal.right
+
 theorem squarePostStop_moveBa
     {n emitted : Nat}
     {left right : SententialForm SquareTerminal SquareNT}
@@ -6835,6 +6924,31 @@ theorem squarePostStop_moveBa
   · rw [← squareMiddlePotential_moveBa]
     exact hbalance
 
+theorem squarePostStopLocal_moveBa
+    {n emitted : Nat}
+    {left right : SententialForm SquareTerminal SquareNT}
+    (hlocal : SquarePostStopLocalState n emitted
+      (left ++ [squareN SquareNT.b, squareT SquareTerminal.a] ++ right)) :
+    SquarePostStopLocalState n emitted
+      (left ++ [squareT SquareTerminal.a, squareN SquareNT.b] ++ right) := by
+  constructor
+  · have hclean :
+        SquareMiddleClean
+          (left ++ ([squareN SquareNT.b, squareT SquareTerminal.a] ++
+            right)) := by
+      simpa [List.append_assoc] using hlocal.left
+    have hleft : SquareMiddleClean left :=
+      squareMiddleClean_append_left hclean
+    have htail :
+        SquareMiddleClean
+          ([squareN SquareNT.b, squareT SquareTerminal.a] ++ right) :=
+      squareMiddleClean_append_right hclean
+    have hright : SquareMiddleClean right :=
+      squareMiddleClean_append_right htail
+    exact squareMiddleClean_moveBa left right hleft hright
+  · rw [← squareMiddlePotential_moveBa]
+    exact hlocal.right
+
 theorem squarePostStop_removeBE
     {n emitted : Nat}
     {middle : SententialForm SquareTerminal SquareNT}
@@ -6850,6 +6964,18 @@ theorem squarePostStop_removeBE
   constructor
   · exact (squareMiddleClean_trailing_b_iff middle).mp hclean
   · rw [squareMiddlePotential_trailing_b] at hbalance
+    exact hbalance
+
+theorem squarePostStopLocal_removeBE
+    {n emitted : Nat}
+    {middle : SententialForm SquareTerminal SquareNT}
+    (hlocal : SquarePostStopLocalState n emitted
+      (middle ++ [squareN SquareNT.b])) :
+    SquarePostStopLocalState n emitted middle := by
+  constructor
+  · exact (squareMiddleClean_trailing_b_iff middle).mp hlocal.left
+  · have hbalance := hlocal.right
+    rw [squareMiddlePotential_trailing_b] at hbalance
     exact hbalance
 
 theorem squarePostStop_removeDA
@@ -6869,6 +6995,18 @@ theorem squarePostStop_removeDA
   · rw [squareMiddlePotential_leading_markA] at hbalance
     exact hbalance
 
+theorem squarePostStopLocal_removeDA
+    {n emitted : Nat}
+    {middle : SententialForm SquareTerminal SquareNT}
+    (hlocal : SquarePostStopLocalState n emitted
+      ([squareN SquareNT.markA] ++ middle)) :
+    SquarePostStopLocalState n emitted middle := by
+  constructor
+  · exact hlocal.left
+  · have hbalance := hlocal.right
+    rw [squareMiddlePotential_leading_markA] at hbalance
+    exact hbalance
+
 theorem squarePostStop_moveDa
     {n emitted : Nat}
     {middle : SententialForm SquareTerminal SquareNT}
@@ -6886,6 +7024,18 @@ theorem squarePostStop_moveDa
   · rw [squareMiddlePotential_leading_terminal_a] at hbalance
     omega
 
+theorem squarePostStopLocal_moveDa
+    {n emitted : Nat}
+    {middle : SententialForm SquareTerminal SquareNT}
+    (hlocal : SquarePostStopLocalState n emitted
+      ([squareT SquareTerminal.a] ++ middle)) :
+    SquarePostStopLocalState n (emitted + 1) middle := by
+  constructor
+  · exact hlocal.left
+  · have hbalance := hlocal.right
+    rw [squareMiddlePotential_leading_terminal_a] at hbalance
+    omega
+
 theorem squarePostStop_finish_word
     {n emitted : Nat}
     (hbalance : emitted + squareMiddlePotential [] = n * n) :
@@ -6896,8 +7046,17 @@ theorem squarePostStop_finish_word
   exists n
   simp [squareWord, hemitted]
 
+theorem squarePostStopLocal_finish_word
+    {n emitted : Nat}
+    (hlocal : SquarePostStopLocalState n emitted []) :
+    Word.RepeatSymbol SquareTerminal.a emitted ∈ squareLanguage :=
+  squarePostStop_finish_word hlocal.right
+
 def fourAsWord : Word SquareTerminal :=
   [SquareTerminal.a, SquareTerminal.a, SquareTerminal.a, SquareTerminal.a]
+
+def threeAsWord : Word SquareTerminal :=
+  [SquareTerminal.a, SquareTerminal.a, SquareTerminal.a]
 
 theorem squareGrammar_generates_four_as :
     fourAsWord ∈ GeneralGrammar.GeneratedLanguage SquareGrammar := by
@@ -7501,10 +7660,13 @@ theorem powerTwo_generated_language_exact_of_soundness
   · exact powerTwo_language_subset_generated
 
 /-!
-The sample derivation below is retained as a concrete trace, but the theorem
-{name}`powerTwo_words_generated` now proves the whole intended family:
-after {lit}`n` doubling passes the grammar derives {lit}`a^(2^n)`. The reverse
-direction is isolated as {name}`PowerTwoGeneratedOnlyLanguageConstruction`.
+The sample derivation below is retained as a concrete trace, and the theorem
+{name}`powerTwo_words_generated` proves the intended family: after {lit}`n`
+doubling passes the grammar derives {lit}`a^(2^n)`. The following
+counterexample shows why the current exercise grammar is generation-only rather
+than exact: the unrestricted rule {name}`PowerTwoProduces.ready` can fire before
+the return marker has moved all the way left, so a later doubling pass can
+duplicate only a suffix of the marker block.
 -/
 
 theorem powerTwoGrammar_generates_four_as :
@@ -7668,6 +7830,145 @@ theorem powerTwoGrammar_generates_four_as :
                                                   [a, a, a, a]))))))))))))))))))))))
   simpa [GeneralGrammar.GeneratedLanguage, PowerTwoGrammar, fourAsWord,
     SententialForm.terminalWord, S, a] using hderives
+
+theorem powerTwoGrammar_generates_three_as :
+    threeAsWord ∈ GeneralGrammar.GeneratedLanguage PowerTwoGrammar := by
+  let S := powN PowerTwoNT.start
+  let H := powN PowerTwoNT.h
+  let D := powN PowerTwoNT.d
+  let R := powN PowerTwoNT.r
+  let E := powN PowerTwoNT.boundary
+  let A := powN PowerTwoNT.markA
+  let a := powT SquareTerminal.a
+  have h1 :
+      GeneralGrammar.Yields PowerTwoGrammar [S] [H, A, E] := by
+    simpa [S, H, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.start [] []
+  have h2 :
+      GeneralGrammar.Yields PowerTwoGrammar [H, A, E] [D, A, E] := by
+    simpa [H, D, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.beginDouble [] [A, E]
+  have h3 :
+      GeneralGrammar.Yields PowerTwoGrammar [D, A, E] [A, A, D, E] := by
+    simpa [D, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.duplicate [] [E]
+  have h4 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, D, E] [A, A, R, E] := by
+    simpa [D, R, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.turnAround [A, A] []
+  have h5 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, R, E] [A, R, A, E] := by
+    simpa [R, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.returnLeft [A] [E]
+  have h6 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, R, A, E] [A, H, A, E] := by
+    simpa [H, R, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.ready [A] [A, E]
+  have h7 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, H, A, E] [A, D, A, E] := by
+    simpa [H, D, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.beginDouble [A] [A, E]
+  have h8 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, D, A, E]
+        [A, A, A, D, E] := by
+    simpa [D, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.duplicate [A] [E]
+  have h9 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, D, E]
+        [A, A, A, R, E] := by
+    simpa [D, R, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.turnAround [A, A, A] []
+  have h10 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, R, E]
+        [A, A, A, H, E] := by
+    simpa [H, R, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.ready [A, A, A] [E]
+  have h11 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, H, E]
+        [A, A, A, E] := by
+    simpa [H, A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.finishH [A, A, A] [E]
+  have h12 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, E] [A, A, A] := by
+    simpa [A, E] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.finishBoundary [A, A, A] []
+  have h13 :
+      GeneralGrammar.Yields PowerTwoGrammar [A, A, A] [a, A, A] := by
+    simpa [A, a] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.emitA [] [A, A]
+  have h14 :
+      GeneralGrammar.Yields PowerTwoGrammar [a, A, A] [a, a, A] := by
+    simpa [A, a] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.emitA [a] [A]
+  have h15 :
+      GeneralGrammar.Yields PowerTwoGrammar [a, a, A] [a, a, a] := by
+    simpa [A, a] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.emitA [a, a] []
+  have hderives :
+      GeneralGrammar.Derives PowerTwoGrammar [S] [a, a, a] :=
+    GeneralGrammar.Derives.step h1
+      (GeneralGrammar.Derives.step h2
+        (GeneralGrammar.Derives.step h3
+          (GeneralGrammar.Derives.step h4
+            (GeneralGrammar.Derives.step h5
+              (GeneralGrammar.Derives.step h6
+                (GeneralGrammar.Derives.step h7
+                  (GeneralGrammar.Derives.step h8
+                    (GeneralGrammar.Derives.step h9
+                      (GeneralGrammar.Derives.step h10
+                        (GeneralGrammar.Derives.step h11
+                          (GeneralGrammar.Derives.step h12
+                            (GeneralGrammar.Derives.step h13
+                              (GeneralGrammar.Derives.step h14
+                                (GeneralGrammar.Derives.step h15
+                                  (GeneralGrammar.Derives.refl
+                                    [a, a, a])))))))))))))))
+  simpa [GeneralGrammar.GeneratedLanguage, PowerTwoGrammar, threeAsWord,
+    SententialForm.terminalWord, S, a] using hderives
+
+theorem two_pow_ne_three (n : Nat) :
+    2 ^ n ≠ 3 := by
+  induction n with
+  | zero =>
+      simp
+  | succ n _ =>
+      cases n with
+      | zero =>
+          simp
+      | succ n =>
+          intro h
+          rw [Nat.pow_succ, Nat.pow_succ] at h
+          have hpos : 0 < 2 ^ n := Nat.pow_pos (by decide : 0 < 2)
+          omega
+
+theorem threeAsWord_not_powerTwoLanguage :
+    threeAsWord ∉ powerTwoLanguage := by
+  intro h
+  rcases h with ⟨n, hword⟩
+  have hlen := congrArg Word.Length hword
+  simp [threeAsWord, powerTwoWord, Word.Length, Word.RepeatSymbol] at hlen
+  exact (two_pow_ne_three n) hlen.symm
+
+theorem not_powerTwoGeneratedOnlyLanguageConstruction :
+    ¬ PowerTwoGeneratedOnlyLanguageConstruction := by
+  intro hsound
+  exact threeAsWord_not_powerTwoLanguage
+    (hsound threeAsWord powerTwoGrammar_generates_three_as)
 
 end Section06
 end Chapter04
