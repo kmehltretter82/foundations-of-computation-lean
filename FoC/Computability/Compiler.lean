@@ -404,6 +404,11 @@ def DescriptionProgramBoolDeciderCompilationPrinciple : Prop :=
   forall P : StagedProgram Bool Bool,
     exists D : MachineDescription, BoolProgramCompiledByDescription P D
 
+def DovetailDescriptionCompilerPrinciple : Prop :=
+  forall accept reject : Word Bool -> Nat -> Prop,
+    exists D : MachineDescription,
+      BoolProgramCompiledByDescription (DovetailProgram accept reject) D
+
 theorem programAcceptorCompilationPrinciple_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
     ProgramAcceptorCompilationPrinciple Bool := by
@@ -425,6 +430,36 @@ theorem programBoolDeciderCompilationPrinciple_of_descriptionCompiler
       | intro D hD =>
           exact programBoolDecidableByDescription_turingDecidable
             (Exists.intro P (Exists.intro D (And.intro hP hD)))
+
+theorem complementaryTraces_turingDecidable_of_dovetailDescriptionCompiler
+    (hcompile : DovetailDescriptionCompilerPrinciple)
+    {L : Language Bool}
+    {accept reject : Word Bool -> Nat -> Prop}
+    (htraces : ComplementaryAcceptanceTraces accept reject L) :
+    TuringDecidable L := by
+  cases hcompile accept reject with
+  | intro D hD =>
+      exact programBoolDecidableByDescription_turingDecidable
+        (Exists.intro (DovetailProgram accept reject)
+          (Exists.intro D (And.intro (dovetailProgram_decides htraces) hD)))
+
+theorem reCoRe_turingDecidable_of_dovetailDescriptionCompiler
+    (hcompile : DovetailDescriptionCompilerPrinciple)
+    {L : Language Bool}
+    (h : RecursivelyEnumerableWithComplement L) :
+    TuringDecidable L := by
+  cases recursivelyEnumerable_with_complement_has_complementaryTraces h with
+  | intro accept haccept =>
+      cases haccept with
+      | intro reject htraces =>
+          exact complementaryTraces_turingDecidable_of_dovetailDescriptionCompiler
+            hcompile htraces
+
+theorem reCoReToDecidablePrinciple_of_dovetailDescriptionCompiler
+    (hcompile : DovetailDescriptionCompilerPrinciple) :
+    ReCoReToDecidablePrinciple Bool := by
+  intro L h
+  exact reCoRe_turingDecidable_of_dovetailDescriptionCompiler hcompile h
 
 /-!
 ## Compiled partial-function ranges
@@ -481,6 +516,11 @@ def CompiledPartialUnaryFunctionProgramRange (L : Language Bool) : Prop :=
     PartialFunctionCompiledByDescription f (fun _ : Unit => true) D ∧
       Language.Equal (ProgramRangeLanguage (PartialFunctionProgram f)) L
 
+def PartialUnaryRangeDescriptionCompilerPrinciple : Prop :=
+  forall f : Word Unit -> Option (Word Bool),
+    exists D : MachineDescription,
+      PartialFunctionCompiledByDescription f (fun _ : Unit => true) D
+
 theorem compiledPartialUnaryRange_partialRangeOfUnaryFunction
     {L : Language Bool}
     (h : CompiledPartialUnaryRange L) :
@@ -535,6 +575,47 @@ theorem compiledPartialUnaryFunctionProgramRange_partialRange
     PartialRangeOfUnaryFunction L :=
   compiledPartialUnaryRange_partialRangeOfUnaryFunction
     (compiledPartialUnaryFunctionProgramRange_compiledRange h)
+
+theorem compiledPartialUnaryRange_of_partialRangeOfUnaryFunction
+    (hcompile : PartialUnaryRangeDescriptionCompilerPrinciple)
+    {L : Language Bool}
+    (h : PartialRangeOfUnaryFunction L) :
+    CompiledPartialUnaryRange L := by
+  cases h with
+  | intro f hf =>
+      cases hcompile f with
+      | intro D hD =>
+          exact Exists.intro f (Exists.intro D (And.intro hD hf))
+
+theorem compiledPartialUnaryRange_of_partiallyListable
+    (hcompile : PartialUnaryRangeDescriptionCompilerPrinciple)
+    {L : Language Bool}
+    (h : PartiallyListable L) :
+    CompiledPartialUnaryRange L :=
+  compiledPartialUnaryRange_of_partialRangeOfUnaryFunction
+    hcompile (partiallyListable_partialRangeOfUnaryFunction h)
+
+theorem compiledPartialUnaryFunctionProgramRange_of_partialRangeOfUnaryFunction
+    (hcompile : PartialUnaryRangeDescriptionCompilerPrinciple)
+    {L : Language Bool}
+    (h : PartialRangeOfUnaryFunction L) :
+    CompiledPartialUnaryFunctionProgramRange L := by
+  cases h with
+  | intro f hf =>
+      cases hcompile f with
+      | intro D hD =>
+          exact Exists.intro f
+            (Exists.intro D
+              (And.intro hD
+                (Language.equal_trans (partialFunctionProgram_range f) hf)))
+
+theorem compiledPartialUnaryFunctionProgramRange_of_partiallyListable
+    (hcompile : PartialUnaryRangeDescriptionCompilerPrinciple)
+    {L : Language Bool}
+    (h : PartiallyListable L) :
+    CompiledPartialUnaryFunctionProgramRange L :=
+  compiledPartialUnaryFunctionProgramRange_of_partialRangeOfUnaryFunction
+    hcompile (partiallyListable_partialRangeOfUnaryFunction h)
 
 end Computability
 end FoC

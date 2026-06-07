@@ -122,6 +122,11 @@ def DecidablePreimagePrinciple
   forall L : Language output,
     TuringDecidable L -> TuringDecidable (WordPreimageLanguage map L)
 
+def ComputableMapDecidablePreimagePrinciple
+    (input : Type u) (output : Type v) : Prop :=
+  forall map : Word input -> Word output,
+    TuringComputable map -> DecidablePreimagePrinciple map
+
 def PairEncodingInjective
     (encodePair : Word code -> Word code -> Word pairSymbol) : Prop :=
   forall a b c d : Word code,
@@ -138,6 +143,13 @@ def UniversalMachineSpec
   forall machine input : Word symbol,
     TuringMachine.HaltsOnInput universal (Languages.Word.Concat machine input) <->
       decodeAccepts machine input
+
+theorem decidablePreimagePrinciple_of_computableMapPrinciple
+    {map : Word input -> Word output}
+    (hpreimage : ComputableMapDecidablePreimagePrinciple input output)
+    (hcomputable : TuringComputable map) :
+    DecidablePreimagePrinciple map :=
+  hpreimage map hcomputable
 
 /-!
 # Undecidability transport
@@ -543,6 +555,17 @@ theorem diagonalPairDecidablePreimagePrinciple_of_preimage
       (encodePair := encodePair)
       (haltsOnCodeInput := haltsOnCodeInput)
       hinj)
+
+theorem diagonalPairDecidablePreimagePrinciple_of_computableMapPrinciple
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    (hinj : PairEncodingInjective encodePair)
+    (hpreimage : ComputableMapDecidablePreimagePrinciple code pairSymbol)
+    (hcomputable : TuringComputable (DiagonalPairMap encodePair)) :
+    DiagonalPairDecidablePreimagePrinciple encodePair :=
+  diagonalPairDecidablePreimagePrinciple_of_preimage
+    hinj
+    (decidablePreimagePrinciple_of_computableMapPrinciple
+      hpreimage hcomputable)
 
 theorem haltingProblem_of_pointwise_iff
     {halts1 halts2 : Word code -> Word code -> Prop}

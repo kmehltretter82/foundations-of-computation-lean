@@ -180,6 +180,18 @@ theorem diagonalPairDecidablePreimagePrinciple_of_concrete_preimage
   exact diagonalPairDecidablePreimagePrinciple_of_preimage
     encodePair_injective hpreimage
 
+theorem diagonalPairDecidablePreimagePrinciple_of_concrete_computable_map
+    (hpreimage :
+      ComputableMapDecidablePreimagePrinciple code (PairCodeSymbol code))
+    (hcomputable :
+      TuringComputable
+        (diagonalMap : Word code -> Word (PairCodeSymbol code))) :
+    DiagonalPairDecidablePreimagePrinciple
+      (encodePair : Word code -> Word code -> Word (PairCodeSymbol code)) := by
+  rw [diagonalMap_eq_diagonalPairMap] at hcomputable
+  exact diagonalPairDecidablePreimagePrinciple_of_computableMapPrinciple
+    encodePair_injective hpreimage hcomputable
+
 theorem concretePairHalting_undecidable_if_decoder_universal_of_preimage
     {decodeAccepts : Word code -> Word code -> Prop}
     (haccept : DecidableToAcceptablePrinciple code)
@@ -193,6 +205,25 @@ theorem concretePairHalting_undecidable_if_decoder_universal_of_preimage
   pairHalting_undecidable_if_decoder_universal
     haccept
     (diagonalPairDecidablePreimagePrinciple_of_concrete_preimage hpreimage)
+    huniv
+
+theorem concretePairHalting_undecidable_if_decoder_universal_of_computable_map
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (haccept : DecidableToAcceptablePrinciple code)
+    (hpreimage :
+      ComputableMapDecidablePreimagePrinciple code (PairCodeSymbol code))
+    (hcomputable :
+      TuringComputable
+        (diagonalMap : Word code -> Word (PairCodeSymbol code)))
+    (huniv : DecoderUniversalForAcceptableLanguages decodeAccepts) :
+    UndecidableLanguage
+      (PairHaltingProblem
+        (encodePair : Word code -> Word code -> Word (PairCodeSymbol code))
+        decodeAccepts) :=
+  pairHalting_undecidable_if_decoder_universal
+    haccept
+    (diagonalPairDecidablePreimagePrinciple_of_concrete_computable_map
+      hpreimage hcomputable)
     huniv
 
 end PairCodeSymbol

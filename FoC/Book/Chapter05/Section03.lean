@@ -118,6 +118,13 @@ def TuringDecidablePreimageConstruction
     (map : Word input -> Word output) : Prop :=
   DecidablePreimagePrinciple map
 
+def ComputableMapDecidablePreimageConstruction
+    (input : Type u) (output : Type v) : Prop :=
+  ComputableMapDecidablePreimagePrinciple input output
+
+def TuringComputableWordMap (map : Word input -> Word output) : Prop :=
+  TuringComputable map
+
 def TuringPairEncodingInjective
     (encodePair : Word code -> Word code -> Word pairSymbol) : Prop :=
   PairEncodingInjective encodePair
@@ -140,6 +147,12 @@ def ConcreteDiagonalPairMap (w : Word code) :
 
 def ConcreteMachineCodeSymbol : Type :=
   MachineCodeSymbol
+
+def ConcreteDiagonalPairMapComputable : Prop :=
+  TuringComputableWordMap
+    (ConcreteDiagonalPairMap :
+      Word ConcreteMachineCodeSymbol ->
+        Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol))
 
 def ConcreteMachineCodeSymbolFinite :
     Foundation.FiniteType ConcreteMachineCodeSymbol :=
@@ -701,6 +714,42 @@ theorem concrete_diagonal_pair_decidable_preimage_construction_of_preimage
   PairCodeSymbol.diagonalPairDecidablePreimagePrinciple_of_concrete_preimage
     hpreimage
 
+theorem decidable_preimage_construction_of_computable_map_construction
+    (hpreimage : ComputableMapDecidablePreimageConstruction input output)
+    {map : Word input -> Word output}
+    (hcomputable : TuringComputableWordMap map) :
+    TuringDecidablePreimageConstruction map :=
+  Computability.decidablePreimagePrinciple_of_computableMapPrinciple
+    hpreimage hcomputable
+
+theorem diagonal_pair_decidable_preimage_construction_of_computable_map
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    (hinj : TuringPairEncodingInjective encodePair)
+    (hpreimage : ComputableMapDecidablePreimageConstruction code pairSymbol)
+    (hcomputable : TuringComputableWordMap (TuringDiagonalPairMap encodePair)) :
+    DiagonalPairDecidablePreimageConstruction encodePair :=
+  Computability.diagonalPairDecidablePreimagePrinciple_of_computableMapPrinciple
+    hinj hpreimage hcomputable
+
+theorem concrete_diagonal_pair_decidable_preimage_construction_of_computable_map
+    (hpreimage :
+      ComputableMapDecidablePreimageConstruction
+        ConcreteMachineCodeSymbol
+        (ConcretePairCodeSymbol ConcreteMachineCodeSymbol))
+    (hcomputable : ConcreteDiagonalPairMapComputable) :
+    DiagonalPairDecidablePreimageConstruction
+      (ConcretePairEncoding :
+        Word ConcreteMachineCodeSymbol ->
+          Word ConcreteMachineCodeSymbol ->
+            Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol)) := by
+  simpa [DiagonalPairDecidablePreimageConstruction,
+    ConcretePairEncoding, ConcretePairCodeSymbol, ConcreteDiagonalPairMap,
+    ConcreteDiagonalPairMapComputable,
+    ComputableMapDecidablePreimageConstruction, TuringComputableWordMap]
+    using
+      PairCodeSymbol.diagonalPairDecidablePreimagePrinciple_of_concrete_computable_map
+        (code := ConcreteMachineCodeSymbol) hpreimage hcomputable
+
 theorem halting_problem_of_pointwise_iff
     {halts1 halts2 : Word code -> Word code -> Prop}
     (hiff : forall machine input : Word code,
@@ -770,6 +819,22 @@ theorem pair_halting_undecidable_if_decoder_universal_of_preimage
   Computability.pairHalting_undecidable_if_decoder_universal_of_preimage
     haccept hinj hpreimage huniv
 
+theorem pair_halting_undecidable_if_decoder_universal_of_computable_map
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (haccept : DecidableToAcceptableConstruction code)
+    (hinj : TuringPairEncodingInjective encodePair)
+    (hpreimage : ComputableMapDecidablePreimageConstruction code pairSymbol)
+    (hcomputable : TuringComputableWordMap (TuringDiagonalPairMap encodePair))
+    (huniv : TuringDecoderUniversalForAcceptableLanguages decodeAccepts) :
+    UndecidableTuringLanguage
+      (TuringPairHaltingProblem encodePair decodeAccepts) :=
+  Computability.pairHalting_undecidable_if_decoder_universal
+    haccept
+    (diagonal_pair_decidable_preimage_construction_of_computable_map
+      hinj hpreimage hcomputable)
+    huniv
+
 theorem concrete_pair_halting_undecidable_if_decoder_universal_of_preimage
     {decodeAccepts : Word code -> Word code -> Prop}
     (haccept : DecidableToAcceptableConstruction code)
@@ -785,6 +850,24 @@ theorem concrete_pair_halting_undecidable_if_decoder_universal_of_preimage
         decodeAccepts) :=
   PairCodeSymbol.concretePairHalting_undecidable_if_decoder_universal_of_preimage
     haccept hpreimage huniv
+
+theorem concrete_pair_halting_undecidable_if_decoder_universal_of_computable_map
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (haccept : DecidableToAcceptableConstruction code)
+    (hpreimage :
+      ComputableMapDecidablePreimageConstruction code (ConcretePairCodeSymbol code))
+    (hcomputable :
+      TuringComputableWordMap
+        (ConcreteDiagonalPairMap :
+          Word code -> Word (ConcretePairCodeSymbol code)))
+    (huniv : TuringDecoderUniversalForAcceptableLanguages decodeAccepts) :
+    UndecidableTuringLanguage
+      (TuringPairHaltingProblem
+        (ConcretePairEncoding :
+          Word code -> Word code -> Word (ConcretePairCodeSymbol code))
+        decodeAccepts) :=
+  PairCodeSymbol.concretePairHalting_undecidable_if_decoder_universal_of_computable_map
+    haccept hpreimage hcomputable huniv
 
 theorem concrete_machine_self_halting_undecidable_if_decoder_universal
     (haccept :
@@ -839,6 +922,23 @@ theorem concrete_machine_pair_halting_undecidable_if_decoder_universal_of_preima
         (code := ConcreteMachineCodeSymbol)
         (decodeAccepts := ConcreteMachineCodeAccepts)
         haccept hpreimage huniv
+
+theorem concrete_machine_pair_halting_undecidable_if_decoder_universal_of_computable_map
+    (haccept :
+      DecidableToAcceptableConstruction ConcreteMachineCodeSymbol)
+    (hpreimage :
+      ComputableMapDecidablePreimageConstruction
+        ConcreteMachineCodeSymbol
+        (ConcretePairCodeSymbol ConcreteMachineCodeSymbol))
+    (hcomputable : ConcreteDiagonalPairMapComputable)
+    (huniv : ConcreteMachineDecoderUniversalForAcceptableLanguages) :
+    UndecidableTuringLanguage ConcreteMachinePairHaltingProblem := by
+  simpa [ConcreteMachinePairHaltingProblem]
+    using
+      concrete_pair_halting_undecidable_if_decoder_universal_of_computable_map
+        (code := ConcreteMachineCodeSymbol)
+        (decodeAccepts := ConcreteMachineCodeAccepts)
+        haccept hpreimage hcomputable huniv
 
 theorem universal_machine_spec_pair_halts
     {universal : TuringMachine symbol state}
