@@ -100,6 +100,109 @@ theorem atLeastTwoOnes_rejects_010 :
   cases h
 
 /-!
+## A DFA With an Exact Language Statement
+
+The next small machine accepts exactly the nonempty words whose first symbol is
+{lit}`a`. It demonstrates the common DFA pattern of remembering a permanent
+classification after reading the first input symbol.
+-/
+
+inductive StartsWithAState where
+  | start
+  | yes
+  | no
+deriving DecidableEq
+
+def StartsWithAStateFinite : FiniteType StartsWithAState where
+  elems := [StartsWithAState.start, StartsWithAState.yes, StartsWithAState.no]
+  complete := by
+    intro q
+    cases q <;> simp
+
+def startsWithADFA : DFA Section01.AB StartsWithAState where
+  start := StartsWithAState.start
+  step := fun q input =>
+    match q, input with
+    | StartsWithAState.start, Section01.AB.a => StartsWithAState.yes
+    | StartsWithAState.start, Section01.AB.b => StartsWithAState.no
+    | StartsWithAState.yes, _ => StartsWithAState.yes
+    | StartsWithAState.no, _ => StartsWithAState.no
+  accept := fun q =>
+    match q with
+    | StartsWithAState.yes => True
+    | _ => False
+  statesFinite := StartsWithAStateFinite
+
+theorem startsWithADFA_runFrom_yes (w : Word Section01.AB) :
+    DFA.RunFrom startsWithADFA StartsWithAState.yes w = StartsWithAState.yes := by
+  induction w with
+  | nil =>
+      rfl
+  | cons head tail ih =>
+      cases head <;> exact ih
+
+theorem startsWithADFA_runFrom_no (w : Word Section01.AB) :
+    DFA.RunFrom startsWithADFA StartsWithAState.no w = StartsWithAState.no := by
+  induction w with
+  | nil =>
+      rfl
+  | cons head tail ih =>
+      cases head <;> exact ih
+
+theorem startsWithADFA_accepts_exact (w : Word Section01.AB) :
+    DFA.Accepts startsWithADFA w <->
+      exists rest : Word Section01.AB, w = Section01.AB.a :: rest := by
+  cases w with
+  | nil =>
+      constructor
+      · intro h
+        unfold DFA.Accepts DFA.Run DFA.RunFrom startsWithADFA at h
+        cases h
+      · intro h
+        rcases h with ⟨rest, hrest⟩
+        cases hrest
+  | cons head rest =>
+      cases head
+      · constructor
+        · intro _
+          exact ⟨rest, rfl⟩
+        · intro _
+          have hrun :
+              DFA.Run startsWithADFA (Section01.AB.a :: rest) =
+                StartsWithAState.yes := by
+            simpa [DFA.Run, DFA.RunFrom, startsWithADFA] using
+              startsWithADFA_runFrom_yes rest
+          unfold DFA.Accepts
+          rw [hrun]
+          trivial
+      · constructor
+        · intro h
+          have hrun :
+              DFA.Run startsWithADFA (Section01.AB.b :: rest) =
+                StartsWithAState.no := by
+            simpa [DFA.Run, DFA.RunFrom, startsWithADFA] using
+              startsWithADFA_runFrom_no rest
+          unfold DFA.Accepts at h
+          rw [hrun] at h
+          cases h
+        · intro h
+          rcases h with ⟨rest', hrest'⟩
+          cases hrest'
+
+theorem startsWithADFA_accepts_abb :
+    DFA.Accepts startsWithADFA
+      [Section01.AB.a, Section01.AB.b, Section01.AB.b] := by
+  exact (startsWithADFA_accepts_exact _).mpr
+    ⟨[Section01.AB.b, Section01.AB.b], rfl⟩
+
+theorem startsWithADFA_rejects_baa :
+    ¬ DFA.Accepts startsWithADFA
+      [Section01.AB.b, Section01.AB.a, Section01.AB.a] := by
+  intro h
+  rcases (startsWithADFA_accepts_exact _).mp h with ⟨rest, hrest⟩
+  cases hrest
+
+/-!
 ## DFA Constructions
 
 Complement and product constructions give the standard closure operations for

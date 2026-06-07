@@ -1,5 +1,5 @@
 import FoC.Book.Chapter03.Section04
-import FoC.Languages.NFA
+import FoC.Languages.NFAPath
 
 set_option doc.verso true
 
@@ -57,11 +57,77 @@ theorem dfa_recognizable_implies_nfa_recognizable {L : Language alpha}
   NFA.dfa_language_nfa_recognizable hL
 
 /-!
+## A Concrete Epsilon-NFA
+
+This two-state NFA accepts exactly the empty word by taking one epsilon
+transition from the start state to the accepting state. It is intentionally
+small: the point is to expose the explicit path semantics and show how it
+matches the set-of-states acceptance predicate.
+-/
+
+inductive EpsilonOnlyState where
+  | start
+  | accept
+deriving DecidableEq
+
+def EpsilonOnlyStateFinite : FiniteType EpsilonOnlyState where
+  elems := [EpsilonOnlyState.start, EpsilonOnlyState.accept]
+  complete := by
+    intro q
+    cases q <;> simp
+
+def epsilonOnlyNFA : NFA Section01.AB EpsilonOnlyState where
+  start := EpsilonOnlyState.start
+  step := fun q input =>
+    match q, input with
+    | EpsilonOnlyState.start, none => FSet.Singleton EpsilonOnlyState.accept
+    | _, _ => FSet.Empty
+  accept := fun q => q = EpsilonOnlyState.accept
+  statesFinite := EpsilonOnlyStateFinite
+
+theorem epsilonOnlyNFA_path_accepts_empty :
+    NFA.PathAccepts epsilonOnlyNFA Word.Empty := by
+  exists EpsilonOnlyState.accept
+  constructor
+  · exact NFA.Path.eps rfl (NFA.Path.nil EpsilonOnlyState.accept)
+  · rfl
+
+theorem epsilonOnlyNFA_path_word_empty
+    {q r : EpsilonOnlyState} {w : Word Section01.AB}
+    (hpath : NFA.Path epsilonOnlyNFA q w r) :
+    w = Word.Empty := by
+  induction hpath with
+  | nil _ =>
+      rfl
+  | eps _ _ ih =>
+      exact ih
+  | sym hstep _ _ =>
+      cases q <;> simp [epsilonOnlyNFA] at hstep <;> cases hstep
+
+theorem epsilonOnlyNFA_language_exact (w : Word Section01.AB) :
+    w ∈ NFA.AcceptedLanguage epsilonOnlyNFA <-> w = Word.Empty := by
+  constructor
+  · intro hw
+    have hpath := (NFA.pathAccepts_iff_accepts epsilonOnlyNFA w).mpr hw
+    rcases hpath with ⟨q, hq, _haccept⟩
+    exact epsilonOnlyNFA_path_word_empty hq
+  · intro hw
+    rw [hw]
+    exact (NFA.pathAccepts_iff_accepts epsilonOnlyNFA Word.Empty).mp
+      epsilonOnlyNFA_path_accepts_empty
+
+theorem epsilonOnlyNFA_rejects_a :
+    ¬ NFA.Accepts epsilonOnlyNFA [Section01.AB.a] := by
+  intro h
+  have hword := (epsilonOnlyNFA_language_exact [Section01.AB.a]).mp h
+  cases hword
+
+/-!
 ## Subset Construction
 
 The subset construction turns an NFA into a DFA whose states are sets of NFA
 states. The run invariant is stated first, then the language-equivalence
-theorem follows.
+theorem comes next.
 
 The deterministic state remembers the whole set of possible NFA states. The
 run invariant says that this memory is exact after every input word, which is

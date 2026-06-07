@@ -95,6 +95,66 @@ theorem aStarBStar_accepts_aab :
     · rfl
   · rfl
 
+/-!
+## Another Book Expression
+
+The expression `(a|aa|aaa)(bb)*` has a finite initial choice followed by any
+number of two-{lit}`b` blocks. The formal expression below uses
+{lit}`RegExp.AltList` and {lit}`RegExp.OfWord` to keep the finite alternatives
+visible.
+-/
+
+def oneToThreeAsThenEvenBs : RegExp Section01.AB :=
+  RegExp.seq
+    (RegExp.AltList
+      [RegExp.OfWord [Section01.AB.a],
+       RegExp.OfWord [Section01.AB.a, Section01.AB.a],
+       RegExp.OfWord [Section01.AB.a, Section01.AB.a, Section01.AB.a]])
+    (RegExp.star (RegExp.OfWord [Section01.AB.b, Section01.AB.b]))
+
+theorem oneToThreeAsThenEvenBs_accepts_aaabbbb :
+    [Section01.AB.a, Section01.AB.a, Section01.AB.a,
+      Section01.AB.b, Section01.AB.b, Section01.AB.b, Section01.AB.b] ∈
+        RegExp.Denote oneToThreeAsThenEvenBs := by
+  exists [Section01.AB.a, Section01.AB.a, Section01.AB.a]
+  exists [Section01.AB.b, Section01.AB.b, Section01.AB.b, Section01.AB.b]
+  constructor
+  · apply (RegExp.altList_denote _ _).mpr
+    exists RegExp.OfWord [Section01.AB.a, Section01.AB.a, Section01.AB.a]
+    constructor
+    · simp
+    · exact (RegExp.denote_ofWord _ _).mpr rfl
+  constructor
+  · exists [[Section01.AB.b, Section01.AB.b],
+      [Section01.AB.b, Section01.AB.b]]
+    constructor
+    · intro p hp
+      cases hp with
+      | head =>
+          exact (RegExp.denote_ofWord _ _).mpr rfl
+      | tail _ htail =>
+          cases htail with
+          | head =>
+              exact (RegExp.denote_ofWord _ _).mpr rfl
+          | tail _ hnil =>
+              cases hnil
+    · rfl
+  · rfl
+
+theorem oneToThreeAsThenEvenBs_accepts_a :
+    [Section01.AB.a] ∈ RegExp.Denote oneToThreeAsThenEvenBs := by
+  exists [Section01.AB.a]
+  exists []
+  constructor
+  · apply (RegExp.altList_denote _ _).mpr
+    exists RegExp.OfWord [Section01.AB.a]
+    constructor
+    · simp
+    · exact (RegExp.denote_ofWord _ _).mpr rfl
+  constructor
+  · exact Language.star_empty_word _
+  · rfl
+
 end Section02
 end Chapter03
 end Book

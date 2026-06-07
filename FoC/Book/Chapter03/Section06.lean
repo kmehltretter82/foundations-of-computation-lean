@@ -85,6 +85,24 @@ theorem regular_language_is_dfa_recognizable {L : Language alpha}
     RegularLanguage.DFARecognizable L :=
   RegularLanguage.regular_is_dfa_recognizable hL
 
+theorem theorem_regex_to_nfa (r : RegExp alpha) :
+    RegularLanguage.NFARecognizable (RegExp.Denote r) :=
+  regular_expression_language_is_nfa_recognizable r
+
+theorem theorem_regular_to_dfa {L : Language alpha}
+    (hL : RegularLanguage.Regular L) :
+    RegularLanguage.DFARecognizable L :=
+  regular_language_is_dfa_recognizable hL
+
+theorem aStarBStar_nfa_recognizable :
+    RegularLanguage.NFARecognizable (RegExp.Denote Section02.aStarBStar) :=
+  theorem_regex_to_nfa Section02.aStarBStar
+
+theorem oneToThreeAsThenEvenBs_nfa_recognizable :
+    RegularLanguage.NFARecognizable
+      (RegExp.Denote Section02.oneToThreeAsThenEvenBs) :=
+  theorem_regex_to_nfa Section02.oneToThreeAsThenEvenBs
+
 theorem dfa_recognizable_closed_under_complement {L : Language alpha}
     (hL : RegularLanguage.DFARecognizable L) :
     RegularLanguage.DFARecognizable (Language.Compl L) :=
@@ -155,6 +173,34 @@ theorem nfa_recognizable_language_is_regular
     {L : Language alpha} (hL : RegularLanguage.NFARecognizable L) :
     RegularLanguage.Regular L :=
   RegularLanguage.nfa_recognizable_regular alphabet halphabet hL
+
+theorem theorem_dfa_to_regex
+    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    {L : Language alpha} (hL : RegularLanguage.DFARecognizable L) :
+    RegularLanguage.Regular L :=
+  dfa_recognizable_language_is_regular alphabet halphabet hL
+
+theorem theorem_nfa_to_regex
+    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    {L : Language alpha} (hL : RegularLanguage.NFARecognizable L) :
+    RegularLanguage.Regular L :=
+  nfa_recognizable_language_is_regular alphabet halphabet hL
+
+theorem regular_iff_dfa_recognizable_over_finite_alphabet
+    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    (L : Language alpha) :
+    RegularLanguage.Regular L <-> RegularLanguage.DFARecognizable L := by
+  constructor
+  · exact regular_language_is_dfa_recognizable
+  · exact dfa_recognizable_language_is_regular alphabet halphabet
+
+theorem regular_iff_nfa_recognizable_over_finite_alphabet
+    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    (L : Language alpha) :
+    RegularLanguage.Regular L <-> RegularLanguage.NFARecognizable L := by
+  constructor
+  · exact regular_language_is_nfa_recognizable
+  · exact nfa_recognizable_language_is_regular alphabet halphabet
 
 /-!
 ## Complement and Intersection

@@ -44,6 +44,89 @@ theorem digit_class_accepts_7 :
   exact (RegExp.charClass_denote _ _).mpr
     (Exists.intro 7 (And.intro (by simp) rfl))
 
+def optionalA : RegExp Section01.AB :=
+  RegExp.Optional (RegExp.sym Section01.AB.a)
+
+theorem optionalA_accepts_empty :
+    Word.Empty ∈ RegExp.Denote optionalA := by
+  exact Or.inr rfl
+
+theorem optionalA_accepts_a :
+    [Section01.AB.a] ∈ RegExp.Denote optionalA := by
+  exact Or.inl rfl
+
+def oneOrMoreBs : RegExp Section01.AB :=
+  RegExp.Plus (RegExp.sym Section01.AB.b)
+
+theorem oneOrMoreBs_accepts_bb :
+    [Section01.AB.b, Section01.AB.b] ∈ RegExp.Denote oneOrMoreBs := by
+  exists [Section01.AB.b]
+  exists [Section01.AB.b]
+  constructor
+  · rfl
+  constructor
+  · exact Language.star_of_mem _ rfl
+  · rfl
+
+inductive TinyIdentifierChar where
+  | upperA
+  | upperB
+  | lowerA
+  | lowerB
+  | digit0
+deriving DecidableEq
+
+def tinyUpperClass : RegExp TinyIdentifierChar :=
+  RegExp.CharClass [TinyIdentifierChar.upperA, TinyIdentifierChar.upperB]
+
+def tinyLetterClass : RegExp TinyIdentifierChar :=
+  RegExp.CharClass
+    [TinyIdentifierChar.upperA, TinyIdentifierChar.upperB,
+      TinyIdentifierChar.lowerA, TinyIdentifierChar.lowerB]
+
+def tinyIdentifierPattern : RegExp TinyIdentifierChar :=
+  RegExp.seq tinyUpperClass (RegExp.star tinyLetterClass)
+
+theorem tinyIdentifier_accepts_upper_lower_upper :
+    [TinyIdentifierChar.upperA, TinyIdentifierChar.lowerB,
+      TinyIdentifierChar.upperB] ∈ RegExp.Denote tinyIdentifierPattern := by
+  exists [TinyIdentifierChar.upperA]
+  exists [TinyIdentifierChar.lowerB, TinyIdentifierChar.upperB]
+  constructor
+  · exact (RegExp.charClass_denote _ _).mpr
+      ⟨TinyIdentifierChar.upperA, by simp, rfl⟩
+  constructor
+  · exists [[TinyIdentifierChar.lowerB], [TinyIdentifierChar.upperB]]
+    constructor
+    · intro p hp
+      cases hp with
+      | head =>
+          exact (RegExp.charClass_denote _ _).mpr
+            ⟨TinyIdentifierChar.lowerB, by simp, rfl⟩
+      | tail _ htail =>
+          cases htail with
+          | head =>
+              exact (RegExp.charClass_denote _ _).mpr
+                ⟨TinyIdentifierChar.upperB, by simp, rfl⟩
+          | tail _ hnil =>
+              cases hnil
+    · rfl
+  · rfl
+
+theorem tinyIdentifier_rejects_initial_digit :
+    ¬ [TinyIdentifierChar.digit0] ∈ RegExp.Denote tinyIdentifierPattern := by
+  intro h
+  rcases h with ⟨first, rest, hfirst, _hrest, hword⟩
+  rcases (RegExp.charClass_denote _ _).mp hfirst with ⟨head, hhead, hfirstEq⟩
+  rw [hfirstEq] at hword
+  simp [Word.Concat, Word.Symbol] at hword
+  cases head
+  · cases hword
+  · cases hword
+  · simp at hhead
+  · simp at hhead
+  · simp at hhead
+
 /-!
 ## Backreference Target Language
 

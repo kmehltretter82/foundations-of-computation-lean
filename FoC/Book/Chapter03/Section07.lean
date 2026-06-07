@@ -137,6 +137,15 @@ theorem pumping_lemma_conclusion (L : Language alpha) :
     Pumping.PumpingLemmaConclusion L :=
   Pumping.regular_pumpingLemmaConclusion L
 
+theorem pump_two_count_symbol [DecidableEq alpha]
+    (sym : alpha) (x y z : Word alpha) :
+    Word.Count sym (Word.Concat x (Word.Concat (Word.RepeatWord y 2) z)) =
+      Word.Count sym (Word.Concat x (Word.Concat y z)) + Word.Count sym y := by
+  rw [show Word.RepeatWord y 2 = Word.Concat y y by
+    simp [Word.RepeatWord, Word.Concat]]
+  repeat rw [Word.count_concat]
+  omega
+
 /-!
 # Backreference Language
 
@@ -331,6 +340,10 @@ theorem anban_not_regular_from_pumping_lemma
 theorem anban_not_regular :
     ¬ RegularLanguage.Regular Section03.anbanLanguage :=
   Pumping.not_regular_of_no_pumping_property_regular anban_no_pumping_property
+
+theorem backreference_target_language_not_regular :
+    ¬ RegularLanguage.Regular Section03.anbanLanguage :=
+  anban_not_regular
 
 /-!
 # The {lit}`a^n b^n` Example
@@ -645,8 +658,15 @@ def squareBlockWord (p q : Nat) : Word Section01.AB :=
 def squareLanguage : Language Section01.AB :=
   fun w => exists u, w = Word.Concat u u
 
+def duplicateWordLanguage : Language Section01.AB :=
+  squareLanguage
+
 theorem square_language_membership (w : Word Section01.AB) :
     w ∈ squareLanguage <-> exists u, w = Word.Concat u u :=
+  Iff.rfl
+
+theorem duplicate_word_language_membership (w : Word Section01.AB) :
+    w ∈ duplicateWordLanguage <-> exists u, w = Word.Concat u u :=
   Iff.rfl
 
 theorem squareBlock_count_b (p q : Nat) :
@@ -961,6 +981,10 @@ theorem square_not_regular :
     ¬ RegularLanguage.Regular squareLanguage :=
   Pumping.not_regular_of_no_pumping_property_regular square_no_pumping_property
 
+theorem duplicate_word_not_regular :
+    ¬ RegularLanguage.Regular duplicateWordLanguage :=
+  square_not_regular
+
 /-!
 # The {lit}`x x^R` Language
 
@@ -980,8 +1004,15 @@ def mirrorBlockWord (p q : Nat) : Word Section01.AB :=
 def reverseSquareLanguage : Language Section01.AB :=
   fun w => exists u, w = Word.Concat u (Word.Reverse u)
 
+def evenPalindromeLanguage : Language Section01.AB :=
+  reverseSquareLanguage
+
 theorem reverse_square_language_membership (w : Word Section01.AB) :
     w ∈ reverseSquareLanguage <-> exists u, w = Word.Concat u (Word.Reverse u) :=
+  Iff.rfl
+
+theorem even_palindrome_language_membership (w : Word Section01.AB) :
+    w ∈ evenPalindromeLanguage <-> exists u, w = Word.Concat u (Word.Reverse u) :=
   Iff.rfl
 
 theorem mirrorBlock_succ_succ (p q : Nat) :
@@ -1235,6 +1266,10 @@ theorem reverse_square_not_regular :
     ¬ RegularLanguage.Regular reverseSquareLanguage :=
   Pumping.not_regular_of_no_pumping_property_regular reverse_square_no_pumping_property
 
+theorem even_palindrome_not_regular :
+    ¬ RegularLanguage.Regular evenPalindromeLanguage :=
+  reverse_square_not_regular
+
 /-!
 # More {lit}`b`s Than {lit}`a`s in Blocks
 
@@ -1294,11 +1329,9 @@ theorem more_bs_block_pump_two_not_mem
         (Word.Concat x (Word.Concat y z)) = n + 1 := by
     rw [← hword]
     exact ablock_word_count_b n (n + 1)
-  rw [show Word.RepeatWord y 2 = Word.Concat y y by
-    simp [Word.RepeatWord, Word.Concat]] at hcountLess
-  repeat rw [Word.count_concat] at hcountLess
-  rw [Word.count_concat, Word.count_concat] at hcountAOriginal
-  rw [Word.count_concat, Word.count_concat] at hcountBOriginal
+  rw [pump_two_count_symbol Section01.AB.a x y z,
+    pump_two_count_symbol Section01.AB.b x y z,
+    hcountAOriginal, hcountBOriginal, hbY] at hcountLess
   omega
 
 theorem more_bs_block_no_pumping_property :
