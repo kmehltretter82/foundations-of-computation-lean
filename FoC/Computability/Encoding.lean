@@ -448,6 +448,73 @@ theorem decodeDescription_encodeDescription
     decodeNat_encodeNatAppend,
     decodeTransitions_encodeTransitions_append]
 
+/-!
+# Description-backed code-word decoder
+
+The universal-machine layer treats both machine descriptions and machine inputs
+as words over one code alphabet.  Concrete descriptions still run on Boolean
+tapes, so the input code word is first expanded into a Boolean input word.
+-/
+
+def encodeCodeSymbolAsInput : MachineCodeSymbol -> Word Bool
+  | MachineCodeSymbol.header => [false, false, false, false]
+  | MachineCodeSymbol.transition => [false, false, false, true]
+  | MachineCodeSymbol.tick => [false, false, true, false]
+  | MachineCodeSymbol.done => [false, false, true, true]
+  | MachineCodeSymbol.blank => [false, true, false, false]
+  | MachineCodeSymbol.zero => [false, true, false, true]
+  | MachineCodeSymbol.one => [false, true, true, false]
+  | MachineCodeSymbol.moveLeft => [false, true, true, true]
+  | MachineCodeSymbol.moveRight => [true, false, false, false]
+
+def encodeCodeWordAsInput : Word MachineCodeSymbol -> Word Bool
+  | [] => []
+  | symbol :: rest =>
+      List.append (encodeCodeSymbolAsInput symbol)
+        (encodeCodeWordAsInput rest)
+
+def CodeAccepts
+    (machine input : Word MachineCodeSymbol) : Prop :=
+  exists D : MachineDescription,
+    decodeDescription machine = some D ∧
+      D.HaltsOnInput (encodeCodeWordAsInput input)
+
+def CodeAcceptedLanguage
+    (machine : Word MachineCodeSymbol) : Language MachineCodeSymbol :=
+  fun input => CodeAccepts machine input
+
+def EncodedInputLanguage
+    (D : MachineDescription) : Language MachineCodeSymbol :=
+  fun input => D.HaltsOnInput (encodeCodeWordAsInput input)
+
+theorem codeAccepts_encodeDescription_iff
+    (D : MachineDescription) (input : Word MachineCodeSymbol) :
+    CodeAccepts (encodeDescription D) input <->
+      D.HaltsOnInput (encodeCodeWordAsInput input) := by
+  constructor
+  · intro h
+    cases h with
+    | intro decoded hdecoded =>
+        have henc := decodeDescription_encodeDescription D
+        rw [henc] at hdecoded
+        cases hdecoded.left
+        exact hdecoded.right
+  · intro h
+    exact Exists.intro D
+      (And.intro (decodeDescription_encodeDescription D) h)
+
+theorem codeAccepts_of_encodeDescription
+    {D : MachineDescription} {input : Word MachineCodeSymbol}
+    (h : D.HaltsOnInput (encodeCodeWordAsInput input)) :
+    CodeAccepts (encodeDescription D) input :=
+  (codeAccepts_encodeDescription_iff D input).mpr h
+
+theorem encodeDescription_codeAccepts_elim
+    {D : MachineDescription} {input : Word MachineCodeSymbol}
+    (h : CodeAccepts (encodeDescription D) input) :
+    D.HaltsOnInput (encodeCodeWordAsInput input) :=
+  (codeAccepts_encodeDescription_iff D input).mp h
+
 end MachineDescription
 
 end Computability

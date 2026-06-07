@@ -183,6 +183,48 @@ def ConcreteMachineHaltsOnInput (D : ConcreteMachineDescription)
     (w : Word Bool) : Prop :=
   D.HaltsOnInput w
 
+def ConcreteMachineEncodeCodeInput
+    (input : Word ConcreteMachineCodeSymbol) : Word Bool :=
+  MachineDescription.encodeCodeWordAsInput input
+
+def ConcreteMachineCodeAccepts
+    (machine input : Word ConcreteMachineCodeSymbol) : Prop :=
+  MachineDescription.CodeAccepts machine input
+
+def ConcreteMachineCodeAcceptedLanguage
+    (machine : Word ConcreteMachineCodeSymbol) :
+    Language ConcreteMachineCodeSymbol :=
+  MachineDescription.CodeAcceptedLanguage machine
+
+def ConcreteMachineEncodedInputLanguage
+    (D : ConcreteMachineDescription) :
+    Language ConcreteMachineCodeSymbol :=
+  MachineDescription.EncodedInputLanguage D
+
+def ConcreteMachineSelfHaltingLanguage :
+    Language ConcreteMachineCodeSymbol :=
+  TuringSelfHaltingLanguage ConcreteMachineCodeAccepts
+
+def ConcreteMachinePairHaltingProblem :
+    Language (ConcretePairCodeSymbol ConcreteMachineCodeSymbol) :=
+  TuringPairHaltingProblem
+    (ConcretePairEncoding :
+      Word ConcreteMachineCodeSymbol ->
+        Word ConcreteMachineCodeSymbol ->
+          Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol))
+    ConcreteMachineCodeAccepts
+
+def ConcreteMachineDiagonalPairPreimageLanguage :
+    Language ConcreteMachineCodeSymbol :=
+  TuringWordPreimageLanguage
+    (ConcreteDiagonalPairMap :
+      Word ConcreteMachineCodeSymbol ->
+        Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol))
+    ConcreteMachinePairHaltingProblem
+
+def ConcreteMachineDecoderUniversalForAcceptableLanguages : Prop :=
+  TuringDecoderUniversalForAcceptableLanguages ConcreteMachineCodeAccepts
+
 def ConcreteMachineToTuringMachine (D : ConcreteMachineDescription) :
     TuringMachine Bool (Fin (D.stateCount + 1)) :=
   D.toTuringMachine
@@ -191,6 +233,10 @@ def UniversalTuringMachineSpec
     (universal : TuringMachine symbol state)
     (decodeAccepts : Word symbol -> Word symbol -> Prop) : Prop :=
   UniversalMachineSpec universal decodeAccepts
+
+def ConcreteUniversalMachineSpec
+    (universal : TuringMachine ConcreteMachineCodeSymbol state) : Prop :=
+  UniversalTuringMachineSpec universal ConcreteMachineCodeAccepts
 
 /-!
 ## Reductions and Closure
@@ -527,6 +573,61 @@ theorem concrete_machine_decode_encode
     ConcreteMachineDecode (ConcreteMachineEncode D) = some D :=
   MachineDescription.decodeDescription_encodeDescription D
 
+theorem concrete_machine_code_accepts_encode_description_iff
+    (D : ConcreteMachineDescription)
+    (input : Word ConcreteMachineCodeSymbol) :
+    ConcreteMachineCodeAccepts (ConcreteMachineEncode D) input <->
+      ConcreteMachineHaltsOnInput D
+        (ConcreteMachineEncodeCodeInput input) :=
+  MachineDescription.codeAccepts_encodeDescription_iff D input
+
+theorem concrete_machine_encoded_description_accepts
+    {D : ConcreteMachineDescription}
+    {input : Word ConcreteMachineCodeSymbol}
+    (h : ConcreteMachineHaltsOnInput D
+      (ConcreteMachineEncodeCodeInput input)) :
+    ConcreteMachineCodeAccepts (ConcreteMachineEncode D) input :=
+  (concrete_machine_code_accepts_encode_description_iff D input).mpr h
+
+theorem concrete_machine_encoded_description_accepts_elim
+    {D : ConcreteMachineDescription}
+    {input : Word ConcreteMachineCodeSymbol}
+    (h : ConcreteMachineCodeAccepts (ConcreteMachineEncode D) input) :
+    ConcreteMachineHaltsOnInput D
+      (ConcreteMachineEncodeCodeInput input) :=
+  (concrete_machine_code_accepts_encode_description_iff D input).mp h
+
+theorem concrete_machine_encoded_description_recognizes_input_language
+    (D : ConcreteMachineDescription) :
+    TuringDecoderRecognizes ConcreteMachineCodeAccepts
+      (ConcreteMachineEncode D)
+      (ConcreteMachineEncodedInputLanguage D) := by
+  intro input
+  exact concrete_machine_code_accepts_encode_description_iff D input
+
+theorem concrete_universal_machine_spec_accepts_iff
+    {universal : TuringMachine ConcreteMachineCodeSymbol state}
+    (hspec : ConcreteUniversalMachineSpec universal)
+    (machine input : Word ConcreteMachineCodeSymbol) :
+    TuringMachine.HaltsOnInput universal
+      (Languages.Word.Concat machine input) <->
+        ConcreteMachineCodeAccepts machine input :=
+  hspec machine input
+
+theorem concrete_universal_machine_halts_on_encoded_description_iff
+    {universal : TuringMachine ConcreteMachineCodeSymbol state}
+    (hspec : ConcreteUniversalMachineSpec universal)
+    (D : ConcreteMachineDescription)
+    (input : Word ConcreteMachineCodeSymbol) :
+    TuringMachine.HaltsOnInput universal
+      (Languages.Word.Concat (ConcreteMachineEncode D) input) <->
+        ConcreteMachineHaltsOnInput D
+          (ConcreteMachineEncodeCodeInput input) :=
+  Iff.trans
+    (concrete_universal_machine_spec_accepts_iff
+      hspec (ConcreteMachineEncode D) input)
+    (concrete_machine_code_accepts_encode_description_iff D input)
+
 theorem concrete_machine_compiled_transition_of_lookup
     {D : ConcreteMachineDescription}
     {source : Nat} {read : Option Bool}
@@ -572,6 +673,13 @@ theorem concrete_diagonal_pair_preimage_pair_halting_equal_self_halting
           haltsOnCodeInput))
       (TuringSelfHaltingLanguage haltsOnCodeInput) :=
   PairCodeSymbol.diagonalMap_preimage_pairHalting_equal_selfHalting
+
+theorem concrete_machine_diagonal_pair_preimage_pair_halting_equal_self_halting :
+    Language.Equal
+      ConcreteMachineDiagonalPairPreimageLanguage
+      ConcreteMachineSelfHaltingLanguage :=
+  concrete_diagonal_pair_preimage_pair_halting_equal_self_halting
+    (haltsOnCodeInput := ConcreteMachineCodeAccepts)
 
 theorem diagonal_pair_decidable_preimage_construction_of_preimage
     {encodePair : Word code -> Word code -> Word pairSymbol}
@@ -677,6 +785,60 @@ theorem concrete_pair_halting_undecidable_if_decoder_universal_of_preimage
         decodeAccepts) :=
   PairCodeSymbol.concretePairHalting_undecidable_if_decoder_universal_of_preimage
     haccept hpreimage huniv
+
+theorem concrete_machine_self_halting_undecidable_if_decoder_universal
+    (haccept :
+      DecidableToAcceptableConstruction ConcreteMachineCodeSymbol)
+    (huniv : ConcreteMachineDecoderUniversalForAcceptableLanguages) :
+    UndecidableTuringLanguage ConcreteMachineSelfHaltingLanguage :=
+  self_halting_undecidable_if_decoder_universal
+    haccept huniv
+
+theorem concrete_machine_complement_self_halting_not_recursively_enumerable_if_decoder_universal
+    (huniv : ConcreteMachineDecoderUniversalForAcceptableLanguages) :
+    ¬ RecursivelyEnumerableTuringLanguage
+      (Language.Compl ConcreteMachineSelfHaltingLanguage) :=
+  complement_self_halting_not_recursively_enumerable_if_decoder_universal
+    huniv
+
+theorem concrete_machine_pair_halting_undecidable_if_self_halting_undecidable_of_preimage
+    (hpreimage :
+      TuringDecidablePreimageConstruction
+        (ConcreteDiagonalPairMap :
+          Word ConcreteMachineCodeSymbol ->
+            Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol)))
+    (hself :
+      UndecidableTuringLanguage ConcreteMachineSelfHaltingLanguage) :
+    UndecidableTuringLanguage ConcreteMachinePairHaltingProblem := by
+  simpa [ConcreteMachinePairHaltingProblem]
+    using
+      pair_halting_undecidable_if_self_halting_undecidable_of_preimage
+        (encodePair :=
+          (ConcretePairEncoding :
+            Word ConcreteMachineCodeSymbol ->
+              Word ConcreteMachineCodeSymbol ->
+                Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol)))
+        (haltsOnCodeInput := ConcreteMachineCodeAccepts)
+        concrete_pair_encoding_injective
+        hpreimage
+        hself
+
+theorem concrete_machine_pair_halting_undecidable_if_decoder_universal_of_preimage
+    (haccept :
+      DecidableToAcceptableConstruction ConcreteMachineCodeSymbol)
+    (hpreimage :
+      TuringDecidablePreimageConstruction
+        (ConcreteDiagonalPairMap :
+          Word ConcreteMachineCodeSymbol ->
+            Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol)))
+    (huniv : ConcreteMachineDecoderUniversalForAcceptableLanguages) :
+    UndecidableTuringLanguage ConcreteMachinePairHaltingProblem := by
+  simpa [ConcreteMachinePairHaltingProblem]
+    using
+      concrete_pair_halting_undecidable_if_decoder_universal_of_preimage
+        (code := ConcreteMachineCodeSymbol)
+        (decodeAccepts := ConcreteMachineCodeAccepts)
+        haccept hpreimage huniv
 
 theorem universal_machine_spec_pair_halts
     {universal : TuringMachine symbol state}

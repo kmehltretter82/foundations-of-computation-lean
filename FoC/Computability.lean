@@ -46,10 +46,12 @@ of computation section.  {module}`FoC.Computability.Coding` supplies concrete
 pair-code words and injectivity facts for those reductions.
 {module}`FoC.Computability.Encoding` starts the concrete machine-description
 and interpreter layer needed to discharge the remaining compiler and universal
-machine theorem shapes.  {module}`FoC.Computability.Compiler` proves exact
-simulation between well-formed descriptions and their compiled one-tape
-machines, then exposes description-backed compiler bridges for staged
-acceptors, Boolean deciders, and partial unary range programs.
+machine theorem shapes, including a description-backed code-word decoder
+relation for Section 5.3 diagonalization.
+{module}`FoC.Computability.Compiler` proves exact simulation between
+well-formed descriptions and their compiled one-tape machines, then exposes
+description-backed compiler bridges for staged acceptors, Boolean deciders,
+and partial unary range programs.
 {module}`FoC.Computability.FiniteProgram` packages finite executable
 program-description syntax and proves concrete bridges for trace recognizers,
 Boolean deciders, dovetailing deciders, and partial unary range outputs when
