@@ -98,10 +98,38 @@ set comprehension. The standalone development avoids the paradox by using
 typed predicate sets, so self-membership is not a well-typed operation here.
 
 Because there is no universal type of all sets in this model, the expression
-"the set of all sets that do not contain themselves" cannot be formed as a
-well-typed object. The formal page therefore records the modeling boundary
-rather than a contradiction theorem.
+"the set of all sets that do not contain themselves" cannot be formed directly
+as a typed predicate set.  The two theorems below record the book's paradox as
+an abstract schema over a hypothetical self-membership relation.
 -/
+
+theorem russell_no_unrestricted_comprehension
+    (Mem : entity -> entity -> Prop) :
+    ¬ (forall P : entity -> Prop,
+        exists R : entity, forall X : entity, Mem X R <-> P X) := by
+  intro hcomp
+  cases hcomp (fun X => ¬ Mem X X) with
+  | intro R hR =>
+      have hnot : ¬ Mem R R := by
+        intro hmem
+        exact (hR R).mp hmem hmem
+      exact hnot ((hR R).mpr hnot)
+
+theorem russell_no_universal_set_with_separation
+    (Mem : entity -> entity -> Prop)
+    (separation :
+      forall A : entity, forall P : entity -> Prop,
+        exists R : entity, forall X : entity, Mem X R <-> Mem X A ∧ P X) :
+    ¬ (exists V : entity, forall X : entity, Mem X V) := by
+  intro hVexists
+  cases hVexists with
+  | intro V hV =>
+      cases separation V (fun X => ¬ Mem X X) with
+      | intro R hR =>
+          have hnot : ¬ Mem R R := by
+            intro hmem
+            exact ((hR R).mp hmem).right hmem
+          exact hnot ((hR R).mpr (And.intro (hV R) hnot))
 
 end Section01
 end Chapter02

@@ -49,8 +49,8 @@ formalized, while the proof shows that Lean can check the required cases.
 The formal core of the chapter is covered. Coverage records a few intentional
 deferrals for application-style material such as circuit drawings and some
 exercise-specific presentation details. The finite-cardinality pigeonhole
-principle and direct square-equation irrationality bridges are now checked; the
-remaining mathematical deferral is the concrete square equality for the
-Dedekind-cut square-root candidates. The logical, arithmetic, induction, and
-recursive-definition machinery is present in checked form.
+principle, direct square-equation irrationality bridges, and concrete
+Dedekind-cut square equalities for the square-root candidates are now checked.
+The logical, arithmetic, induction, and recursive-definition machinery is
+present in checked form.
 -/

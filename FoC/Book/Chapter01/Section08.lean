@@ -65,6 +65,41 @@ theorem strong_induction_book (P : Nat -> Prop)
   exact Nat.strongRecOn (motive := P) n step
 
 /-!
+# First Induction Example
+
+The book's first worked induction example proves that {lit}`2^(2n) - 1` is
+divisible by {lit}`3`.  The formal statement uses the elementary divisibility
+predicate from {module}`FoC.Foundation.Arithmetic`.
+-/
+
+theorem two_to_even_power_minus_one_divisible_by_three (n : Nat) :
+    Foundation.NatPred.Divides 3 (2 ^ (2 * n) - 1) := by
+  induction n with
+  | zero =>
+      exists 0
+  | succ n ih =>
+      cases ih with
+      | intro k hk =>
+          exists 4 * k + 1
+          have hpow : 2 ^ (2 * (n + 1)) = 4 * 2 ^ (2 * n) := by
+            rw [show 2 * (n + 1) = 2 * n + 2 by omega]
+            rw [show 2 ^ (2 * n + 2) = 2 ^ (2 * n) * 4 by
+              rw [show 2 * n + 2 = 2 * n + 1 + 1 by omega]
+              rw [Nat.pow_succ, Nat.pow_succ]
+              omega]
+            omega
+          have hpos : 0 < 2 ^ (2 * n) := Nat.pow_pos (by decide : 0 < 2)
+          calc
+            2 ^ (2 * (n + 1)) - 1 = 4 * 2 ^ (2 * n) - 1 := by
+              rw [hpow]
+            _ = 4 * (2 ^ (2 * n) - 1) + 3 := by
+              omega
+            _ = 4 * (3 * k) + 3 := by
+              rw [hk]
+            _ = 3 * (4 * k + 1) := by
+              omega
+
+/-!
 # Recursive Numerical Definitions
 
 The next definitions mirror the textbook's recursive definitions. In Lean, the
@@ -108,6 +143,14 @@ theorem simple_sum_formula (n : Nat) :
 theorem weighted_power_sum_formula (n : Nat) :
     NatSum.SumUpTo NatSum.WeightedPowerTerm (n + 1) = n * 2 ^ (n + 1) + 1 :=
   NatSum.weighted_power_sum_closed_form_succ n
+
+theorem weighted_power_sum_formula_positive (n : Nat) (hn : 0 < n) :
+    NatSum.SumUpTo NatSum.WeightedPowerTerm n = (n - 1) * 2 ^ n + 1 := by
+  cases n with
+  | zero =>
+      cases hn
+  | succ n =>
+      simpa using NatSum.weighted_power_sum_closed_form_succ n
 
 theorem geometric_sum_powers_of_two (n : Nat) :
     NatSum.SumZeroTo (fun i => 2 ^ i) n = 2 ^ (n + 1) - 1 :=

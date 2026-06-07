@@ -27,7 +27,7 @@ foundation:
 completed:
   - coordinate: "Chapter 1"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 159
+    theorem_declarations: 162
     modules:
       - "FoC.Book.Chapter01.Section01"
       - "FoC.Book.Chapter01.Section02"
@@ -73,9 +73,10 @@ completed:
       - "Direct Dedekind-cut example showing that a product of irrational quantities can be rational"
       - "Proof-by-contradiction schema"
       - "Ordinary and strong mathematical induction schemas"
+      - "Book's first induction example: 2^(2n)-1 is divisible by 3"
       - "Finite summation over natural-number ranges"
       - "Closed form for the sum of the first n positive integers"
-      - "Closed form for sum i*2^(i-1)"
+      - "Closed form for sum i*2^(i-1), including the direct positive-n book statement"
       - "Closed form for the finite geometric sum of powers of two"
       - "Division-free successor-base finite geometric sum identity over natural numbers"
       - "Closed form for the sum of the first n odd positive integers"
@@ -160,7 +161,7 @@ completed:
         status: "complete_formal_core"
         formalized:
           - artifact: "FoC.Book.Chapter01.Section08"
-            reason: "Ordinary induction, induction from a starting point, strong induction, factorial/Fibonacci recurrences, finite-sum identities, natural and quotient-rational geometric-series identities, explicitly embedded quotient-rational real geometric-series specializations, odd-sum square identity, and product-of-primes induction example."
+            reason: "Ordinary induction, induction from a starting point, strong induction, the first worked divisibility induction example, factorial/Fibonacci recurrences, finite-sum identities including the direct positive-n weighted power-sum statement, natural and quotient-rational geometric-series identities, explicitly embedded quotient-rational real geometric-series specializations, odd-sum square identity, and product-of-primes induction example."
           - artifact: "FoC.Foundation.Summation"
             reason: "Reusable finite summation and geometric-series kernels."
         missing: []
@@ -192,7 +193,7 @@ completed:
         reason: "A scaled natural-number form, quotient-rational form, embedded-real form, and real power-wrapper form of the Fibonacci lower bound are formalized."
   - coordinate: "Chapter 2"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 92
+    theorem_declarations: 94
     definition_declarations: 18
     modules:
       - "FoC.Book.Chapter02.Section01"
@@ -206,6 +207,7 @@ completed:
     proved_core:
       - "Set equality via mutual subset"
       - "Subset transitivity, powerset membership, and empty-subset facts"
+      - "Russell-style contradiction schemas for unrestricted comprehension and universal-set-plus-separation"
       - "Complement, union, intersection, difference, and pointwise set-membership tests"
       - "Bit-vector model for finite subsets with pointwise Boolean set operations"
       - "Boolean algebra laws for sets, including associativity, commutativity, distributivity, complements, and De Morgan laws"
@@ -235,13 +237,11 @@ completed:
         status: "complete_formal_core"
         formalized:
           - artifact: "FoC.Book.Chapter02.Section01"
-            reason: "Set equality by mutual subset, subset transitivity, powerset membership, empty-subset facts, and chapter induction schemas."
+            reason: "Set equality by mutual subset, subset transitivity, powerset membership, empty-subset facts, Russell-style contradiction schemas, and chapter induction schemas."
           - artifact: "FoC.Foundation.Sets"
             reason: "Typed predicate-set model and reusable subset/set-operation infrastructure."
         missing: []
-        deferred:
-          - item: "Russell's paradox as an untyped-set construction"
-            reason: "Represented as a typed-set design boundary: self-membership is ill-typed."
+        deferred: []
       - coordinate: "Chapter 2, Section 2.2"
         status: "complete_formal_core"
         formalized:
@@ -316,8 +316,6 @@ completed:
           - item: "SQL syntax and DBMS behavior"
             reason: "Application material; the table-as-relation model with core update operations is formalized."
     classified_not_formalized_yet:
-      - coordinate: "Chapter 2, Section 2.1"
-        reason: "Russell's paradox is represented as a design boundary: typed predicate sets make self-membership ill-typed."
       - coordinate: "Chapter 2, Section 2.3"
         reason: "Programming-language representation details are application material; pointwise set-operation semantics and a bit-vector model are formalized."
       - coordinate: "Chapter 2, Section 2.5"

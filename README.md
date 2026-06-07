@@ -65,8 +65,8 @@ The coverage file is the source of truth, but the current high-level picture is:
 
 | Chapter | Area | Status | Declarations |
 | --- | --- | --- | --- |
-| 1 | Logic and proof | formal core covered | 159 theorem declarations |
-| 2 | Sets, functions, and relations | formal core covered | 92 theorem / 18 definition declarations |
+| 1 | Logic and proof | formal core covered | 162 theorem declarations |
+| 2 | Sets, functions, and relations | formal core covered | 94 theorem / 18 definition declarations |
 | 3 | Regular languages | formal core covered | 125 theorem / 19 definition declarations |
 | 4 | Grammars and pushdown automata | formal core covered | 629 theorem / 365 definition declarations |
 | 5 | Turing machines and computability | formal core covered | 250 theorem / 151 definition declarations |
