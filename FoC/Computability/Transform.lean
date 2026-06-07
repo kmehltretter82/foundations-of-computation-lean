@@ -679,6 +679,567 @@ theorem normalizedDeciderToAcceptor_sweepLeft_symbol_step
     simp [normalizedDeciderToAcceptor,
       normalizedDeciderToAcceptorTransition, hread, ha])
 
+/-!
+**Scanner tape shapes.**  The scanner proof uses explicit finite tape windows:
+blocks of marker cells, blocks of blanks, and a distinguished accepting cell.
+The right-target and left-target shapes describe the moment when the scanner is
+looking at the next unvisited cell on the corresponding side.
+-/
+
+def scannerZeroBlock (zero : symbol) (n : Nat) : List (Option symbol) :=
+  List.replicate n (some zero)
+
+def scannerBlankBlock (n : Nat) : List (Option symbol) :=
+  List.replicate n none
+
+theorem list_replicate_append_self
+    (a : α) (n : Nat) (rest : List α) :
+    List.replicate n a ++ a :: rest =
+      List.replicate (n + 1) a ++ rest := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change
+        a :: (List.replicate n a ++ a :: rest) =
+          a :: (List.replicate (n + 1) a ++ rest)
+      rw [ih]
+
+theorem scannerZeroBlock_append_marker
+    (zero : symbol) (n : Nat) (rest : List (Option symbol)) :
+    scannerZeroBlock zero n ++ some zero :: rest =
+      scannerZeroBlock zero (n + 1) ++ rest := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change
+        some zero :: (scannerZeroBlock zero n ++ some zero :: rest) =
+          some zero :: (scannerZeroBlock zero (n + 1) ++ rest)
+      rw [ih]
+
+def scannerRightTargetTape
+    (zero one : symbol) (markedLeft blanksLeft blanksRight : Nat)
+    (tail : List (Option symbol)) : Tape symbol :=
+  match blanksRight with
+  | 0 =>
+      { left := scannerZeroBlock zero markedLeft ++
+          scannerBlankBlock blanksLeft,
+        head := some one,
+        right := tail }
+  | n + 1 =>
+      { left := scannerZeroBlock zero markedLeft ++
+          scannerBlankBlock blanksLeft,
+        head := none,
+        right := scannerBlankBlock n ++ some one :: tail }
+
+def scannerLeftTargetTape
+    (zero one : symbol) (markedRight blanksRight blanksLeft : Nat)
+    (tail : List (Option symbol)) : Tape symbol :=
+  match blanksLeft with
+  | 0 =>
+      { left := tail,
+        head := some one,
+        right := scannerZeroBlock zero markedRight ++
+          scannerBlankBlock blanksRight }
+  | n + 1 =>
+      { left := scannerBlankBlock n ++ some one :: tail,
+        head := none,
+        right := scannerZeroBlock zero markedRight ++
+          scannerBlankBlock blanksRight }
+
+def scannerRightCrossTape
+    (zero : symbol) (crossed : Nat) (left rest : List (Option symbol)) :
+    Tape symbol :=
+  match rest with
+  | [] =>
+      { left := scannerZeroBlock zero crossed ++ left,
+        head := none,
+        right := [] }
+  | cell :: cells =>
+      { left := scannerZeroBlock zero crossed ++ left,
+        head := cell,
+        right := cells }
+
+def scannerLeftCrossTape
+    (zero : symbol) (crossed : Nat) (right rest : List (Option symbol)) :
+    Tape symbol :=
+  match rest with
+  | [] =>
+      { left := [],
+        head := none,
+        right := scannerZeroBlock zero crossed ++ right }
+  | cell :: cells =>
+      { left := cells,
+        head := cell,
+        right := scannerZeroBlock zero crossed ++ right }
+
+/-!
+**Crossing marker blocks.**  Once a boundary blank has been marked, the scanner
+travels back across a finite block of markers. These two lemmas package those
+straight-line runs so the expansion cycles below can talk about whole sweeps
+instead of individual marker steps.
+-/
+
+theorem normalizedDeciderToAcceptor_sweepRight_cross_zeroBlock
+    (M : TuringMachine symbol state) {zero one : symbol}
+    (hzeroOne : zero ≠ one) (zeros crossed : Nat)
+    (left rest : List (Option symbol)) :
+    Computes (normalizedDeciderToAcceptor M zero one)
+      { state := NormalizedDeciderToAcceptorState.sweepRight,
+        tape := scannerRightCrossTape zero crossed left
+          (scannerZeroBlock zero zeros ++ rest) }
+      { state := NormalizedDeciderToAcceptorState.sweepRight,
+        tape := scannerRightCrossTape zero (crossed + zeros) left rest } := by
+  induction zeros generalizing crossed with
+  | zero =>
+      exact Computes.refl _
+  | succ zeros ih =>
+      have hstep :
+          Step (normalizedDeciderToAcceptor M zero one)
+            { state := NormalizedDeciderToAcceptorState.sweepRight,
+              tape := scannerRightCrossTape zero crossed left
+                (scannerZeroBlock zero (Nat.succ zeros) ++ rest) }
+            { state := NormalizedDeciderToAcceptorState.sweepRight,
+              tape := scannerRightCrossTape zero (crossed + 1) left
+                (scannerZeroBlock zero zeros ++ rest) } := by
+        exact normalizedDeciderToAcceptor_sweepRight_symbol_step
+          M zero one zero
+          (by simp [scannerZeroBlock, scannerRightCrossTape,
+            Tape.read, List.replicate_succ])
+          hzeroOne
+      have hrest := ih (crossed + 1)
+      exact Computes.step hstep (by
+        simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+          using hrest)
+
+theorem normalizedDeciderToAcceptor_sweepLeft_cross_zeroBlock
+    (M : TuringMachine symbol state) {zero one : symbol}
+    (hzeroOne : zero ≠ one) (zeros crossed : Nat)
+    (right rest : List (Option symbol)) :
+    Computes (normalizedDeciderToAcceptor M zero one)
+      { state := NormalizedDeciderToAcceptorState.sweepLeft,
+        tape := scannerLeftCrossTape zero crossed right
+          (scannerZeroBlock zero zeros ++ rest) }
+      { state := NormalizedDeciderToAcceptorState.sweepLeft,
+        tape := scannerLeftCrossTape zero (crossed + zeros) right rest } := by
+  induction zeros generalizing crossed with
+  | zero =>
+      exact Computes.refl _
+  | succ zeros ih =>
+      have hstep :
+          Step (normalizedDeciderToAcceptor M zero one)
+            { state := NormalizedDeciderToAcceptorState.sweepLeft,
+              tape := scannerLeftCrossTape zero crossed right
+                (scannerZeroBlock zero (Nat.succ zeros) ++ rest) }
+            { state := NormalizedDeciderToAcceptorState.sweepLeft,
+              tape := scannerLeftCrossTape zero (crossed + 1) right
+                (scannerZeroBlock zero zeros ++ rest) } := by
+        exact normalizedDeciderToAcceptor_sweepLeft_symbol_step
+          M zero one zero
+          (by simp [scannerZeroBlock, scannerLeftCrossTape,
+            Tape.read, List.replicate_succ])
+          hzeroOne
+      have hrest := ih (crossed + 1)
+      exact Computes.step hstep (by
+        simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+          using hrest)
+
+/-!
+**Expansion cycles.**  If the scanner reaches a blank before seeing the
+accepting symbol, it marks that blank, sweeps to the opposite boundary, marks
+one blank there, and returns to the next unvisited cell. Each cycle strictly
+reduces the number of blanks between the frontier and the accepting cell.
+-/
+
+theorem normalizedDeciderToAcceptor_sweepRight_target_blank_cycle
+    (M : TuringMachine symbol state) {zero one : symbol}
+    (hzeroOne : zero ≠ one)
+    (markedLeft blanksLeft blanksRight : Nat)
+    (tail : List (Option symbol)) :
+    Computes (normalizedDeciderToAcceptor M zero one)
+      { state := NormalizedDeciderToAcceptorState.sweepRight,
+        tape := scannerRightTargetTape zero one markedLeft blanksLeft
+          (blanksRight + 1) tail }
+      { state := NormalizedDeciderToAcceptorState.sweepRight,
+        tape := scannerRightTargetTape zero one (markedLeft + 2)
+          blanksLeft.pred blanksRight tail } := by
+  let rightCtx :=
+    some zero :: scannerBlankBlock blanksRight ++ some one :: tail
+  let leftRest := scannerZeroBlock zero markedLeft ++
+    scannerBlankBlock blanksLeft
+  let afterRightMark : Tape symbol :=
+    scannerLeftCrossTape zero 0 rightCtx leftRest
+  have hstepRight :
+      Step (normalizedDeciderToAcceptor M zero one)
+        { state := NormalizedDeciderToAcceptorState.sweepRight,
+          tape := scannerRightTargetTape zero one markedLeft blanksLeft
+            (blanksRight + 1) tail }
+        { state := NormalizedDeciderToAcceptorState.sweepLeft,
+          tape := afterRightMark } := by
+    simpa [afterRightMark, rightCtx, leftRest, scannerRightTargetTape,
+      scannerLeftCrossTape, Tape.read, Tape.move, Tape.moveLeft,
+      Tape.write, scannerBlankBlock, scannerZeroBlock,
+      List.replicate_succ, List.append_assoc]
+      using
+        normalizedDeciderToAcceptor_sweepRight_blank_step
+          M zero one
+          (T := scannerRightTargetTape zero one markedLeft blanksLeft
+            (blanksRight + 1) tail)
+          (by simp [scannerRightTargetTape, Tape.read])
+  let leftBoundary : Tape symbol :=
+    scannerLeftCrossTape zero (0 + markedLeft) rightCtx
+      (scannerBlankBlock blanksLeft)
+  have hcrossLeft :
+      Computes (normalizedDeciderToAcceptor M zero one)
+        { state := NormalizedDeciderToAcceptorState.sweepLeft,
+          tape := afterRightMark }
+        { state := NormalizedDeciderToAcceptorState.sweepLeft,
+          tape := leftBoundary } := by
+    simpa [afterRightMark, leftBoundary, leftRest, rightCtx]
+      using
+        normalizedDeciderToAcceptor_sweepLeft_cross_zeroBlock
+          M hzeroOne markedLeft 0 rightCtx
+          (scannerBlankBlock blanksLeft)
+  let afterLeftMark : Tape symbol :=
+    scannerRightCrossTape zero 1 (scannerBlankBlock blanksLeft.pred)
+      (scannerZeroBlock zero (markedLeft + 1) ++
+        scannerBlankBlock blanksRight ++ some one :: tail)
+  have hstepLeft :
+      Step (normalizedDeciderToAcceptor M zero one)
+        { state := NormalizedDeciderToAcceptorState.sweepLeft,
+          tape := leftBoundary }
+        { state := NormalizedDeciderToAcceptorState.sweepRight,
+          tape := afterLeftMark } := by
+    cases blanksLeft with
+    | zero =>
+        simpa [leftBoundary, afterLeftMark, rightCtx, scannerLeftCrossTape,
+          scannerRightCrossTape, scannerBlankBlock, scannerZeroBlock,
+          scannerZeroBlock_append_marker, list_replicate_append_self,
+          Tape.read, Tape.move, Tape.moveRight, Tape.write,
+          List.append_assoc]
+          using
+            normalizedDeciderToAcceptor_sweepLeft_blank_step
+              M zero one
+              (T := leftBoundary)
+              (by simp [leftBoundary, scannerLeftCrossTape, Tape.read,
+                scannerBlankBlock])
+    | succ blanksLeft =>
+        simpa [leftBoundary, afterLeftMark, rightCtx, scannerLeftCrossTape,
+          scannerRightCrossTape, scannerBlankBlock, scannerZeroBlock,
+          scannerZeroBlock_append_marker, list_replicate_append_self,
+          Tape.read, Tape.move, Tape.moveRight, Tape.write,
+          List.replicate_succ, List.append_assoc]
+          using
+            normalizedDeciderToAcceptor_sweepLeft_blank_step
+              M zero one
+              (T := leftBoundary)
+              (by simp [leftBoundary, scannerLeftCrossTape, Tape.read,
+                scannerBlankBlock, List.replicate_succ])
+  have hcrossRight :
+      Computes (normalizedDeciderToAcceptor M zero one)
+        { state := NormalizedDeciderToAcceptorState.sweepRight,
+          tape := afterLeftMark }
+        { state := NormalizedDeciderToAcceptorState.sweepRight,
+          tape := scannerRightTargetTape zero one (markedLeft + 2)
+            blanksLeft.pred blanksRight tail } := by
+    have h :=
+      normalizedDeciderToAcceptor_sweepRight_cross_zeroBlock
+        M hzeroOne (markedLeft + 1) 1
+        (scannerBlankBlock blanksLeft.pred)
+        (scannerBlankBlock blanksRight ++ some one :: tail)
+    cases blanksRight with
+    | zero =>
+        simpa [afterLeftMark, rightCtx, scannerRightTargetTape,
+          scannerRightCrossTape, scannerBlankBlock, scannerZeroBlock,
+          List.replicate_succ, List.append_assoc,
+          Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+          using h
+    | succ blanksRight =>
+        simpa [afterLeftMark, rightCtx, scannerRightTargetTape,
+          scannerRightCrossTape, scannerBlankBlock, scannerZeroBlock,
+          List.replicate_succ, List.append_assoc,
+          Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+          using h
+  exact Computes.step hstepRight
+    (computes_trans hcrossLeft
+      (Computes.step hstepLeft hcrossRight))
+
+theorem normalizedDeciderToAcceptor_sweepLeft_target_blank_cycle
+    (M : TuringMachine symbol state) {zero one : symbol}
+    (hzeroOne : zero ≠ one)
+    (markedRight blanksRight blanksLeft : Nat)
+    (tail : List (Option symbol)) :
+    Computes (normalizedDeciderToAcceptor M zero one)
+      { state := NormalizedDeciderToAcceptorState.sweepLeft,
+        tape := scannerLeftTargetTape zero one markedRight blanksRight
+          (blanksLeft + 1) tail }
+      { state := NormalizedDeciderToAcceptorState.sweepLeft,
+        tape := scannerLeftTargetTape zero one (markedRight + 2)
+          blanksRight.pred blanksLeft tail } := by
+  let leftCtx :=
+    some zero :: scannerBlankBlock blanksLeft ++ some one :: tail
+  let rightRest := scannerZeroBlock zero markedRight ++
+    scannerBlankBlock blanksRight
+  let afterLeftMark : Tape symbol :=
+    scannerRightCrossTape zero 0 leftCtx rightRest
+  have hstepLeft :
+      Step (normalizedDeciderToAcceptor M zero one)
+        { state := NormalizedDeciderToAcceptorState.sweepLeft,
+          tape := scannerLeftTargetTape zero one markedRight blanksRight
+            (blanksLeft + 1) tail }
+        { state := NormalizedDeciderToAcceptorState.sweepRight,
+          tape := afterLeftMark } := by
+    simpa [afterLeftMark, leftCtx, rightRest, scannerLeftTargetTape,
+      scannerRightCrossTape, Tape.read, Tape.move, Tape.moveRight,
+      Tape.write, scannerBlankBlock, scannerZeroBlock,
+      List.replicate_succ, List.append_assoc]
+      using
+        normalizedDeciderToAcceptor_sweepLeft_blank_step
+          M zero one
+          (T := scannerLeftTargetTape zero one markedRight blanksRight
+            (blanksLeft + 1) tail)
+          (by simp [scannerLeftTargetTape, Tape.read])
+  let rightBoundary : Tape symbol :=
+    scannerRightCrossTape zero (0 + markedRight) leftCtx
+      (scannerBlankBlock blanksRight)
+  have hcrossRight :
+      Computes (normalizedDeciderToAcceptor M zero one)
+        { state := NormalizedDeciderToAcceptorState.sweepRight,
+          tape := afterLeftMark }
+        { state := NormalizedDeciderToAcceptorState.sweepRight,
+          tape := rightBoundary } := by
+    simpa [afterLeftMark, rightBoundary, rightRest, leftCtx]
+      using
+        normalizedDeciderToAcceptor_sweepRight_cross_zeroBlock
+          M hzeroOne markedRight 0 leftCtx
+          (scannerBlankBlock blanksRight)
+  let afterRightMark : Tape symbol :=
+    scannerLeftCrossTape zero 1 (scannerBlankBlock blanksRight.pred)
+      (scannerZeroBlock zero (markedRight + 1) ++
+        scannerBlankBlock blanksLeft ++ some one :: tail)
+  have hstepRight :
+      Step (normalizedDeciderToAcceptor M zero one)
+        { state := NormalizedDeciderToAcceptorState.sweepRight,
+          tape := rightBoundary }
+        { state := NormalizedDeciderToAcceptorState.sweepLeft,
+          tape := afterRightMark } := by
+    cases blanksRight with
+    | zero =>
+        simpa [rightBoundary, afterRightMark, leftCtx,
+          scannerRightCrossTape, scannerLeftCrossTape, scannerBlankBlock,
+          scannerZeroBlock, scannerZeroBlock_append_marker,
+          list_replicate_append_self,
+          Tape.read, Tape.move, Tape.moveLeft, Tape.write,
+          List.append_assoc]
+          using
+            normalizedDeciderToAcceptor_sweepRight_blank_step
+              M zero one
+              (T := rightBoundary)
+              (by simp [rightBoundary, scannerRightCrossTape, Tape.read,
+                scannerBlankBlock])
+    | succ blanksRight =>
+        simpa [rightBoundary, afterRightMark, leftCtx,
+          scannerRightCrossTape, scannerLeftCrossTape, scannerBlankBlock,
+          scannerZeroBlock, scannerZeroBlock_append_marker,
+          list_replicate_append_self,
+          Tape.read, Tape.move, Tape.moveLeft, Tape.write,
+          List.replicate_succ, List.append_assoc]
+          using
+            normalizedDeciderToAcceptor_sweepRight_blank_step
+              M zero one
+              (T := rightBoundary)
+              (by simp [rightBoundary, scannerRightCrossTape, Tape.read,
+                scannerBlankBlock, List.replicate_succ])
+  have hcrossLeft :
+      Computes (normalizedDeciderToAcceptor M zero one)
+        { state := NormalizedDeciderToAcceptorState.sweepLeft,
+          tape := afterRightMark }
+        { state := NormalizedDeciderToAcceptorState.sweepLeft,
+          tape := scannerLeftTargetTape zero one (markedRight + 2)
+            blanksRight.pred blanksLeft tail } := by
+    have h :=
+      normalizedDeciderToAcceptor_sweepLeft_cross_zeroBlock
+        M hzeroOne (markedRight + 1) 1
+        (scannerBlankBlock blanksRight.pred)
+        (scannerBlankBlock blanksLeft ++ some one :: tail)
+    cases blanksLeft with
+    | zero =>
+        simpa [afterRightMark, leftCtx, scannerLeftTargetTape,
+          scannerLeftCrossTape, scannerBlankBlock, scannerZeroBlock,
+          List.replicate_succ, List.append_assoc,
+          Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+          using h
+    | succ blanksLeft =>
+        simpa [afterRightMark, leftCtx, scannerLeftTargetTape,
+          scannerLeftCrossTape, scannerBlankBlock, scannerZeroBlock,
+          List.replicate_succ, List.append_assoc,
+          Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+          using h
+  exact Computes.step hstepLeft
+    (computes_trans hcrossRight
+      (Computes.step hstepRight hcrossLeft))
+
+/-!
+**Finite scanner termination.**  The target-side proofs are ordinary induction
+on the number of blanks between the current frontier and the accepting cell.
+At distance zero the next step accepts; otherwise one expansion cycle decreases
+the distance.
+-/
+
+theorem normalizedDeciderToAcceptor_sweepRight_target_zero_halts
+    (M : TuringMachine symbol state) (zero one : symbol)
+    (markedLeft blanksLeft : Nat) (tail : List (Option symbol)) :
+    HaltsFrom (normalizedDeciderToAcceptor M zero one)
+      { state := NormalizedDeciderToAcceptorState.sweepRight,
+        tape := scannerRightTargetTape zero one markedLeft blanksLeft 0 tail } := by
+  let acceptConfig :
+      Configuration symbol (NormalizedDeciderToAcceptorState state) :=
+    { state := NormalizedDeciderToAcceptorState.accept,
+      tape := Tape.move Direction.right
+        (Tape.write (some one)
+          (scannerRightTargetTape zero one markedLeft blanksLeft 0 tail)) }
+  have hstep :
+      Step (normalizedDeciderToAcceptor M zero one)
+        { state := NormalizedDeciderToAcceptorState.sweepRight,
+          tape := scannerRightTargetTape zero one markedLeft blanksLeft 0 tail }
+        acceptConfig := by
+    exact normalizedDeciderToAcceptor_sweepRight_accept_step
+      M zero one (by simp [scannerRightTargetTape, Tape.read])
+  exact ⟨acceptConfig,
+    Computes.step hstep (Computes.refl acceptConfig), rfl⟩
+
+theorem normalizedDeciderToAcceptor_sweepLeft_target_zero_halts
+    (M : TuringMachine symbol state) (zero one : symbol)
+    (markedRight blanksRight : Nat) (tail : List (Option symbol)) :
+    HaltsFrom (normalizedDeciderToAcceptor M zero one)
+      { state := NormalizedDeciderToAcceptorState.sweepLeft,
+        tape := scannerLeftTargetTape zero one markedRight blanksRight 0 tail } := by
+  let acceptConfig :
+      Configuration symbol (NormalizedDeciderToAcceptorState state) :=
+    { state := NormalizedDeciderToAcceptorState.accept,
+      tape := Tape.move Direction.right
+        (Tape.write (some one)
+          (scannerLeftTargetTape zero one markedRight blanksRight 0 tail)) }
+  have hstep :
+      Step (normalizedDeciderToAcceptor M zero one)
+        { state := NormalizedDeciderToAcceptorState.sweepLeft,
+          tape := scannerLeftTargetTape zero one markedRight blanksRight 0 tail }
+        acceptConfig := by
+    exact normalizedDeciderToAcceptor_sweepLeft_accept_step
+      M zero one (by simp [scannerLeftTargetTape, Tape.read])
+  exact ⟨acceptConfig,
+    Computes.step hstep (Computes.refl acceptConfig), rfl⟩
+
+theorem normalizedDeciderToAcceptor_sweepRight_target_halts
+    (M : TuringMachine symbol state) {zero one : symbol}
+    (hzeroOne : zero ≠ one)
+    (blanksRight markedLeft blanksLeft : Nat)
+    (tail : List (Option symbol)) :
+    HaltsFrom (normalizedDeciderToAcceptor M zero one)
+      { state := NormalizedDeciderToAcceptorState.sweepRight,
+        tape := scannerRightTargetTape zero one markedLeft blanksLeft
+          blanksRight tail } := by
+  induction blanksRight generalizing markedLeft blanksLeft with
+  | zero =>
+      exact normalizedDeciderToAcceptor_sweepRight_target_zero_halts
+        M zero one markedLeft blanksLeft tail
+  | succ blanksRight ih =>
+      exact halts_from_of_computes_prefix
+        (normalizedDeciderToAcceptor_sweepRight_target_blank_cycle
+          M hzeroOne markedLeft blanksLeft blanksRight tail)
+        (ih (markedLeft + 2) blanksLeft.pred)
+
+theorem normalizedDeciderToAcceptor_sweepLeft_target_halts
+    (M : TuringMachine symbol state) {zero one : symbol}
+    (hzeroOne : zero ≠ one)
+    (blanksLeft markedRight blanksRight : Nat)
+    (tail : List (Option symbol)) :
+    HaltsFrom (normalizedDeciderToAcceptor M zero one)
+      { state := NormalizedDeciderToAcceptorState.sweepLeft,
+        tape := scannerLeftTargetTape zero one markedRight blanksRight
+          blanksLeft tail } := by
+  induction blanksLeft generalizing markedRight blanksRight with
+  | zero =>
+      exact normalizedDeciderToAcceptor_sweepLeft_target_zero_halts
+        M zero one markedRight blanksRight tail
+  | succ blanksLeft ih =>
+      exact halts_from_of_computes_prefix
+        (normalizedDeciderToAcceptor_sweepLeft_target_blank_cycle
+          M hzeroOne markedRight blanksRight blanksLeft tail)
+        (ih (markedRight + 2) blanksRight.pred)
+
+/-!
+**Normalized output to scanner starts.**  A halted tape with normalized output
+{lit}`[one]` has exactly one nonblank contribution to the output list. The
+following list lemmas split such a tape into the head, right-side, and left-side
+scanner-start cases used by {lit}`normalizedOutputScannerComplete`.
+-/
+
+theorem filterMap_singleton_decompose
+    {cells : List (Option symbol)} {one : symbol}
+    (h : cells.filterMap (fun cell => cell) = [one]) :
+    exists blanks : Nat, exists tail : List (Option symbol),
+      cells = scannerBlankBlock blanks ++ some one :: tail := by
+  induction cells with
+  | nil =>
+      simp at h
+  | cons cell rest ih =>
+      cases cell with
+      | none =>
+          simp at h
+          rcases ih h with ⟨blanks, tail, htail⟩
+          exists blanks + 1
+          exists tail
+          simp [scannerBlankBlock, List.replicate_succ, htail]
+      | some a =>
+          simp at h
+          exists 0
+          exists rest
+          simp [scannerBlankBlock, h.left]
+
+theorem filterMap_nil_eq_blankBlock
+    {cells : List (Option symbol)}
+    (h : cells.filterMap (fun cell => cell) = ([] : List symbol)) :
+    cells = scannerBlankBlock cells.length := by
+  induction cells with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      cases cell with
+      | none =>
+          have hrest :
+              rest.filterMap (fun cell => cell) = ([] : List symbol) := by
+            simpa using h
+          rw [ih hrest]
+          simp [scannerBlankBlock, List.replicate_succ]
+      | some a =>
+          simp at h
+
+theorem filterMap_nil_decompose
+    {cells : List (Option symbol)}
+    (h : cells.filterMap (fun cell => cell) = ([] : List symbol)) :
+    exists blanks : Nat, cells = scannerBlankBlock blanks := by
+  exact ⟨cells.length, filterMap_nil_eq_blankBlock h⟩
+
+theorem filterMap_of_reverse_nil
+    {cells : List (Option symbol)}
+    (h : cells.reverse.filterMap (fun cell => cell) = ([] : List symbol)) :
+    cells.filterMap (fun cell => cell) = ([] : List symbol) := by
+  have hrev :
+      (cells.filterMap (fun cell => cell)).reverse = ([] : List symbol) := by
+    simpa [List.filterMap_reverse] using h
+  simpa using congrArg List.reverse hrev
+
+theorem filterMap_of_reverse_singleton
+    {cells : List (Option symbol)} {one : symbol}
+    (h : cells.reverse.filterMap (fun cell => cell) = [one]) :
+    cells.filterMap (fun cell => cell) = [one] := by
+  have hrev :
+      (cells.filterMap (fun cell => cell)).reverse = [one] := by
+    simpa [List.filterMap_reverse] using h
+  simpa using congrArg List.reverse hrev
+
 def NormalizedOutputScannerComplete
     (M : TuringMachine symbol state) (zero one : symbol) : Prop :=
   forall final : Configuration symbol state,
@@ -687,12 +1248,288 @@ def NormalizedOutputScannerComplete
         HaltsFrom (normalizedDeciderToAcceptor M zero one)
           (normalizedRunConfig final)
 
+theorem normalizedOutputScannerComplete
+    (M : TuringMachine symbol state) {zero one : symbol}
+    (hzeroOne : zero ≠ one) :
+    NormalizedOutputScannerComplete M zero one := by
+  intro final hhalt hout
+  rcases final with ⟨finalState, tape⟩
+  cases tape with
+  | mk left head right =>
+      simp [Halted] at hhalt
+      cases head with
+      | none =>
+          have hsplit :
+              (left.reverse.filterMap (fun cell => cell) = ([] : List symbol) ∧
+                  right.filterMap (fun cell => cell) = [one]) ∨
+                (left.reverse.filterMap (fun cell => cell) = [one] ∧
+                  right.filterMap (fun cell => cell) = ([] : List symbol)) := by
+            have hfull :
+                left.reverse.filterMap (fun cell => cell) ++
+                    right.filterMap (fun cell => cell) = [one] := by
+              simpa [Tape.normalizedOutput, Tape.cells,
+                List.filterMap_append] using hout
+            exact List.append_eq_singleton_iff.mp hfull
+          cases hsplit with
+          | inl hright =>
+              rcases hright with ⟨hleftOut, hrightOut⟩
+              rcases filterMap_nil_decompose
+                  (filterMap_of_reverse_nil hleftOut) with
+                ⟨blanksLeftCtx, hleftBlank⟩
+              rcases filterMap_singleton_decompose hrightOut with
+                ⟨blanksRight, tail, hrightShape⟩
+              let startConfig :
+                  Configuration symbol
+                    (NormalizedDeciderToAcceptorState state) :=
+                normalizedRunConfig
+                  { state := finalState,
+                    tape := { left := left, head := none, right := right } }
+              let targetConfig :
+                  Configuration symbol
+                    (NormalizedDeciderToAcceptorState state) :=
+                { state := NormalizedDeciderToAcceptorState.sweepRight,
+                  tape := scannerRightTargetTape zero one 1 blanksLeftCtx
+                    blanksRight tail }
+              have hstep :
+                  Step (normalizedDeciderToAcceptor M zero one)
+                    startConfig targetConfig := by
+                cases blanksRight with
+                | zero =>
+                    simpa [startConfig, targetConfig, normalizedRunConfig,
+                      normalizedDeciderToAcceptor,
+                      normalizedDeciderToAcceptorTransition, hhalt,
+                      hleftBlank, hrightShape, scannerRightTargetTape,
+                      scannerBlankBlock, scannerZeroBlock, Tape.read,
+                      Tape.move, Tape.moveRight, Tape.write]
+                      using
+                        (Step.mk
+                          (M := normalizedDeciderToAcceptor M zero one)
+                          (c := startConfig)
+                          (write := some zero)
+                          (dir := Direction.right)
+                          (nextState :=
+                            NormalizedDeciderToAcceptorState.sweepRight)
+                          (by
+                            simp [startConfig, normalizedRunConfig,
+                              normalizedDeciderToAcceptor,
+                              normalizedDeciderToAcceptorTransition, hhalt,
+                              Tape.read]))
+                | succ blanksRight =>
+                    simpa [startConfig, targetConfig, normalizedRunConfig,
+                      normalizedDeciderToAcceptor,
+                      normalizedDeciderToAcceptorTransition, hhalt,
+                      hleftBlank, hrightShape, scannerRightTargetTape,
+                      scannerBlankBlock, scannerZeroBlock, Tape.read,
+                      Tape.move, Tape.moveRight, Tape.write,
+                      List.replicate_succ]
+                      using
+                        (Step.mk
+                          (M := normalizedDeciderToAcceptor M zero one)
+                          (c := startConfig)
+                          (write := some zero)
+                          (dir := Direction.right)
+                          (nextState :=
+                            NormalizedDeciderToAcceptorState.sweepRight)
+                          (by
+                            simp [startConfig, normalizedRunConfig,
+                              normalizedDeciderToAcceptor,
+                              normalizedDeciderToAcceptorTransition, hhalt,
+                              Tape.read]))
+              exact halts_from_of_computes_prefix
+                (computes_of_step hstep)
+                (normalizedDeciderToAcceptor_sweepRight_target_halts
+                  M hzeroOne blanksRight 1 blanksLeftCtx tail)
+          | inr hleft =>
+              rcases hleft with ⟨hleftOut, hrightOut⟩
+              rcases filterMap_nil_decompose hrightOut with
+                ⟨rightBlanks, hrightBlank⟩
+              have hleftForward :
+                  left.filterMap (fun cell => cell) = [one] :=
+                filterMap_of_reverse_singleton hleftOut
+              rcases filterMap_singleton_decompose hleftForward with
+                ⟨blanksLeft, tail, hleftShape⟩
+              let startConfig :
+                  Configuration symbol
+                    (NormalizedDeciderToAcceptorState state) :=
+                normalizedRunConfig
+                  { state := finalState,
+                    tape := { left := left, head := none, right := right } }
+              let afterRunConfig :
+                  Configuration symbol
+                    (NormalizedDeciderToAcceptorState state) :=
+                { state := NormalizedDeciderToAcceptorState.sweepRight,
+                  tape :=
+                    scannerRightCrossTape zero 1
+                      (scannerBlankBlock blanksLeft ++ some one :: tail)
+                      (scannerBlankBlock rightBlanks) }
+              have hstepRun :
+                  Step (normalizedDeciderToAcceptor M zero one)
+                    startConfig afterRunConfig := by
+                cases rightBlanks with
+                | zero =>
+                    simpa [startConfig, afterRunConfig, normalizedRunConfig,
+                      normalizedDeciderToAcceptor,
+                      normalizedDeciderToAcceptorTransition, hhalt,
+                      hleftShape, hrightBlank, scannerRightCrossTape,
+                      scannerBlankBlock, scannerZeroBlock, Tape.read,
+                      Tape.move, Tape.moveRight, Tape.write]
+                      using
+                        (Step.mk
+                          (M := normalizedDeciderToAcceptor M zero one)
+                          (c := startConfig)
+                          (write := some zero)
+                          (dir := Direction.right)
+                          (nextState :=
+                            NormalizedDeciderToAcceptorState.sweepRight)
+                          (by
+                            simp [startConfig, normalizedRunConfig,
+                              normalizedDeciderToAcceptor,
+                              normalizedDeciderToAcceptorTransition, hhalt,
+                              Tape.read]))
+                | succ rightPred =>
+                    simpa [startConfig, afterRunConfig, normalizedRunConfig,
+                      normalizedDeciderToAcceptor,
+                      normalizedDeciderToAcceptorTransition, hhalt,
+                      hleftShape, hrightBlank, scannerRightCrossTape,
+                      scannerBlankBlock, scannerZeroBlock, Tape.read,
+                      Tape.move, Tape.moveRight, Tape.write,
+                      List.replicate_succ]
+                      using
+                        (Step.mk
+                          (M := normalizedDeciderToAcceptor M zero one)
+                          (c := startConfig)
+                          (write := some zero)
+                          (dir := Direction.right)
+                          (nextState :=
+                            NormalizedDeciderToAcceptorState.sweepRight)
+                          (by
+                            simp [startConfig, normalizedRunConfig,
+                              normalizedDeciderToAcceptor,
+                              normalizedDeciderToAcceptorTransition, hhalt,
+                              Tape.read]))
+              let rightCtx :=
+                some zero :: scannerBlankBlock rightBlanks.pred
+              let leftRest :=
+                scannerZeroBlock zero 1 ++
+                  scannerBlankBlock blanksLeft ++ some one :: tail
+              let afterRightMark : Tape symbol :=
+                scannerLeftCrossTape zero 0 rightCtx leftRest
+              have hstepRight :
+                  Step (normalizedDeciderToAcceptor M zero one)
+                    afterRunConfig
+                    { state := NormalizedDeciderToAcceptorState.sweepLeft,
+                      tape := afterRightMark } := by
+                cases rightBlanks with
+                | zero =>
+                    simpa [afterRunConfig, afterRightMark, rightCtx,
+                      leftRest, scannerRightCrossTape,
+                      scannerLeftCrossTape, scannerBlankBlock,
+                      scannerZeroBlock, Tape.read, Tape.move,
+                      Tape.moveLeft, Tape.write]
+                      using
+                        normalizedDeciderToAcceptor_sweepRight_blank_step
+                          M zero one
+                          (T := afterRunConfig.tape)
+                          (by
+                            simp [afterRunConfig, scannerRightCrossTape,
+                              Tape.read, scannerBlankBlock])
+                | succ rightPred =>
+                    simpa [afterRunConfig, afterRightMark, rightCtx,
+                      leftRest, scannerRightCrossTape,
+                      scannerLeftCrossTape, scannerBlankBlock,
+                      scannerZeroBlock, Tape.read, Tape.move,
+                      Tape.moveLeft, Tape.write, List.replicate_succ]
+                      using
+                        normalizedDeciderToAcceptor_sweepRight_blank_step
+                          M zero one
+                          (T := afterRunConfig.tape)
+                          (by
+                            simp [afterRunConfig, scannerRightCrossTape,
+                              Tape.read, scannerBlankBlock,
+                              List.replicate_succ])
+              have hcrossLeft :
+                  Computes (normalizedDeciderToAcceptor M zero one)
+                    { state := NormalizedDeciderToAcceptorState.sweepLeft,
+                      tape := afterRightMark }
+                    { state := NormalizedDeciderToAcceptorState.sweepLeft,
+                      tape := scannerLeftTargetTape zero one 2
+                        rightBlanks.pred blanksLeft tail } := by
+                have h :=
+                  normalizedDeciderToAcceptor_sweepLeft_cross_zeroBlock
+                    M hzeroOne 1 0 rightCtx
+                    (scannerBlankBlock blanksLeft ++ some one :: tail)
+                cases blanksLeft with
+                | zero =>
+                    simpa [afterRightMark, rightCtx, leftRest,
+                      scannerLeftTargetTape, scannerLeftCrossTape,
+                      scannerBlankBlock, scannerZeroBlock,
+                      List.replicate_succ, List.append_assoc]
+                      using h
+                | succ blanksLeft =>
+                    simpa [afterRightMark, rightCtx, leftRest,
+                      scannerLeftTargetTape, scannerLeftCrossTape,
+                      scannerBlankBlock, scannerZeroBlock,
+                      List.replicate_succ, List.append_assoc]
+                      using h
+              exact halts_from_of_computes_prefix
+                (Computes.step hstepRun
+                  (Computes.step hstepRight hcrossLeft))
+                (normalizedDeciderToAcceptor_sweepLeft_target_halts
+                  M hzeroOne blanksLeft 2 rightBlanks.pred tail)
+      | some a =>
+          by_cases ha : a = one
+          · subst a
+            let startConfig :
+                Configuration symbol
+                  (NormalizedDeciderToAcceptorState state) :=
+              normalizedRunConfig
+                { state := finalState,
+                  tape := { left := left, head := some one, right := right } }
+            let acceptConfig :
+                Configuration symbol
+                  (NormalizedDeciderToAcceptorState state) :=
+              { state := NormalizedDeciderToAcceptorState.accept,
+                tape := Tape.move Direction.right
+                  (Tape.write (some one)
+                    { left := left, head := some one, right := right }) }
+            have hstep :
+                Step (normalizedDeciderToAcceptor M zero one)
+                  startConfig acceptConfig := by
+              simpa [startConfig, acceptConfig, normalizedRunConfig,
+                normalizedDeciderToAcceptor,
+                normalizedDeciderToAcceptorTransition, hhalt, Tape.read]
+                using
+                  (Step.mk
+                    (M := normalizedDeciderToAcceptor M zero one)
+                    (c := startConfig)
+                    (write := some one)
+                    (dir := Direction.right)
+                    (nextState := NormalizedDeciderToAcceptorState.accept)
+                    (by
+                      simp [startConfig, normalizedRunConfig,
+                        normalizedDeciderToAcceptor,
+                        normalizedDeciderToAcceptorTransition, hhalt,
+                        Tape.read]))
+            exact ⟨acceptConfig,
+              Computes.step hstep (Computes.refl acceptConfig), rfl⟩
+          · have haMem :
+                a ∈ (left.reverse ++ some a :: right).filterMap
+                    (fun cell => cell) := by
+              simp
+            have houtCells :
+                (left.reverse ++ some a :: right).filterMap
+                    (fun cell => cell) = [one] := by
+              simpa [Tape.normalizedOutput, Tape.cells] using hout
+            rw [houtCells] at haMem
+            simp at haMem
+            exact False.elim (ha haMem)
+
 theorem normalizedDeciderToAcceptor_halts_of_mem
     {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
     {L : Language input}
     (hstop : HaltingTransitionsDisabled M)
-    (hscanner : NormalizedOutputScannerComplete M zero one)
+    (hzeroOne : zero ≠ one)
     (hdec : DecidesLanguage M encodeInput zero one L)
     {w : Word input}
     (hw : w ∈ L) :
@@ -701,13 +1538,13 @@ theorem normalizedDeciderToAcceptor_halts_of_mem
   rcases (hdec w).left hw with ⟨final, hcomp, hhalt, hout⟩
   have hsim := normalizedDeciderToAcceptor_simulates_computes
     (M := M) (zero := zero) (one := one) hstop hcomp
-  exact halts_from_of_computes_prefix hsim (hscanner final hhalt hout)
+  exact halts_from_of_computes_prefix hsim
+    (normalizedOutputScannerComplete M hzeroOne final hhalt hout)
 
 theorem normalizedDeciderToAcceptor_acceptsLanguage_of_stopped_decider
     {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
     {L : Language input}
-    (hscanner : NormalizedOutputScannerComplete M zero one)
     (h : StoppedDecidesLanguage M encodeInput zero one L) :
     AcceptsLanguage (normalizedDeciderToAcceptor M zero one) encodeInput L := by
   intro w
@@ -715,7 +1552,31 @@ theorem normalizedDeciderToAcceptor_acceptsLanguage_of_stopped_decider
   · exact normalizedDeciderToAcceptor_halts_sound_of_stopped_decider
       h.left h.right.left h.right.right
   · exact normalizedDeciderToAcceptor_halts_of_mem
-      h.left hscanner h.right.right
+      h.left h.right.left h.right.right
+
+theorem stoppedDecidesLanguage_to_turingAcceptable
+    {symbol state input : Type}
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : StoppedDecidesLanguage M encodeInput zero one L) :
+    TuringAcceptable L := by
+  exists symbol
+  exists NormalizedDeciderToAcceptorState state
+  exists normalizedDeciderToAcceptor M zero one
+  exists encodeInput
+  exact normalizedDeciderToAcceptor_acceptsLanguage_of_stopped_decider h
+
+theorem stoppedTuringDecidable_to_turingAcceptable
+    {input : Type} {L : Language input}
+    (h : StoppedTuringDecidable L) :
+    TuringAcceptable L := by
+  rcases h with ⟨symbol, state, M, encodeInput, zero, one, hdec⟩
+  exists symbol
+  exists NormalizedDeciderToAcceptorState state
+  exists normalizedDeciderToAcceptor M zero one
+  exists encodeInput
+  exact normalizedDeciderToAcceptor_acceptsLanguage_of_stopped_decider hdec
 
 def runConfig (c : Configuration symbol state) :
     Configuration symbol (DeciderToAcceptorState state) where

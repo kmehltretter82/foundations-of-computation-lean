@@ -27,11 +27,11 @@ finite sequence of configurations, halting is the existence of a halted final
 configuration, recognizability accepts members by halting successfully, and
 decidability requires a total yes/no behavior.
 
-The strongest concrete construction on this page is the head-output
+The strongest concrete construction on this page is the normalized-output
 stopped-decider to acceptor transformation. It models the standard proof that a
-decider can be used as a recognizer for its yes-language, but the local
-transition construction requires the halted head cell itself to carry the
-accepting or rejecting symbol.
+decider can be used as a recognizer for its yes-language even when the halted
+head is not sitting on the output symbol: after the decider halts, the
+transformed machine performs a finite outward scan for the accepting symbol.
 -/
 
 open Languages
@@ -528,17 +528,55 @@ theorem stopped_turing_decidable_language_has_output_classifiers
   Computability.stoppedTuringDecidable_has_output_classifiers h
 
 /-!
-The next theorem is the concrete transition-level construction behind the
-standard statement that a yes/no decider recognizes its yes-language, for
-deciders whose halted head cell carries the accepting or rejecting symbol. The
-transformed machine simulates the stopped decider and enters its own halt state
-exactly when that simulated halted output cell is the accepting symbol.
+The next theorems are the concrete transition-level construction behind the
+standard statement that a yes/no decider recognizes its yes-language. The
+transformed machine simulates the stopped decider. If the simulated halted
+head already reads the accepting symbol, it accepts immediately; otherwise it
+uses the rejecting symbol as a temporary marker and alternately expands a
+finite search window to the right and left until it finds the accepting symbol.
 
-This is the sound local transition construction. With normalized output
-semantics, a general decider may leave the head away from the normalized output
-symbol, so converting arbitrary stopped deciders to acceptors requires an
-additional output-scanning construction.
+The head-output construction that follows is kept as the simpler local special
+case where the halted head cell itself carries the accepting or rejecting
+symbol.
 -/
+
+def NormalizedDeciderToAcceptorMachineState (state : Type u) :=
+  NormalizedDeciderToAcceptorState state
+
+noncomputable def NormalizedDeciderToAcceptorMachine
+    (M : TuringMachine symbol state) (zero one : symbol) :
+    TuringMachine symbol (NormalizedDeciderToAcceptorMachineState state) :=
+  TuringMachine.normalizedDeciderToAcceptor M zero one
+
+theorem normalized_output_scanner_complete
+    (M : TuringMachine symbol state) {zero one : symbol}
+    (hzeroOne : zero ≠ one) :
+    TuringMachine.NormalizedOutputScannerComplete M zero one :=
+  TuringMachine.normalizedOutputScannerComplete M hzeroOne
+
+theorem stopped_normalized_decider_to_acceptor_accepts_language
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : StoppedDecidesLanguage M encodeInput zero one L) :
+    AcceptsLanguage
+      (NormalizedDeciderToAcceptorMachine M zero one) encodeInput L :=
+  TuringMachine.normalizedDeciderToAcceptor_acceptsLanguage_of_stopped_decider h
+
+theorem stopped_normalized_decider_language_is_turing_acceptable
+    {symbol state input : Type}
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : StoppedDecidesLanguage M encodeInput zero one L) :
+    TuringAcceptableLanguage L :=
+  TuringMachine.stoppedDecidesLanguage_to_turingAcceptable h
+
+theorem stopped_normalized_decidable_language_is_turing_acceptable
+    {input : Type} {L : Language input}
+    (h : StoppedTuringDecidable L) :
+    TuringAcceptableLanguage L :=
+  TuringMachine.stoppedTuringDecidable_to_turingAcceptable h
 
 def DeciderToAcceptorMachineState (state : Type u) :=
   DeciderToAcceptorState state

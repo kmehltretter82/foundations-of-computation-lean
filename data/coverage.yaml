@@ -611,7 +611,7 @@ completed:
       - "Characteristic-function vocabulary for languages, proof that the canonical Boolean characteristic function is characteristic, and equivalence between Turing-decidability and having a Turing-computable Boolean characteristic function"
       - "A decider, as modeled by output 0/1, halts on every input and has finite-stage accepting/rejecting output traces"
       - "Stopped 0/1 decider witness vocabulary, ordinary-decidability projection, complement closure, output soundness, normalized output-1/output-0 classification, complementary finite output traces, and bounded-search classification for stopped deciders"
-      - "Concrete head-output stopped-decider-to-acceptor machine transformation, with simulation, reachability invariant, no-false-accept soundness, and Turing-acceptability consequence"
+      - "Concrete normalized-output stopped-decider-to-acceptor machine transformation, with finite outward scanner, scanner-completeness proof, simulation, reachability invariant, no-false-accept soundness, and Turing-acceptability consequence"
       - "Stopped-decider accepting and rejecting output traces as finite acceptance traces for a language and its complement"
       - "Decidable and recursive languages are closed under complement by swapping decider outputs, with complement equivalences using double-complement language equality"
       - "Co-recursively enumerable language vocabulary, finite-stage acceptance traces for recursively enumerable languages, complementary acceptance traces for RE plus co-RE languages, bounded trace-hit search, no-conflict lemmas, the classical bounded classification core that underlies dovetailing, and a conditional proof of the recursive iff RE/co-RE theorem from the decider-to-acceptor and dovetailing construction principles"
@@ -632,7 +632,7 @@ completed:
         status: "complete_stopped_decider_transformation_core"
         formalized:
           - artifact: "FoC.Book.Chapter05.Section01"
-            reason: "Tape movement, finite-window tapes, deterministic one-tape machines, configurations, steps, computations, finite-step halting, deterministic uniqueness, stopped-halting stability, normalized halting-with-output, accepted languages, recognizer equality, Turing-computable total/partial functions, partial-function domains, decidable/acceptable languages, characteristic functions, 0/1 decider traces, stopped-decider normalized-output classification, concrete head-output stopped-decider-to-acceptor wrapper, and complement closure."
+            reason: "Tape movement, finite-window tapes, deterministic one-tape machines, configurations, steps, computations, finite-step halting, deterministic uniqueness, stopped-halting stability, normalized halting-with-output, accepted languages, recognizer equality, Turing-computable total/partial functions, partial-function domains, decidable/acceptable languages, characteristic functions, 0/1 decider traces, stopped-decider normalized-output classification, concrete normalized-output stopped-decider-to-acceptor wrapper, head-output special-case wrapper, and complement closure."
           - artifact: "FoC.Computability.Tape"
             reason: "Tape representation, input/output encoding, normalized output extraction, read/write/move operations, and exact-output canonical-tape lemmas."
           - artifact: "FoC.Computability.TuringMachine"
@@ -642,13 +642,11 @@ completed:
           - artifact: "FoC.Computability.Recognizable"
             reason: "Accepted languages, recognizers, decidability/acceptability, stopped deciders, head-output stopped-decider vocabulary, characteristic functions, output traces, bounded classification, and complement closure."
           - artifact: "FoC.Computability.Transform"
-            reason: "Concrete head-output stopped-decider-to-acceptor machine transformation, simulation of the original computation, reachability invariant for the transformed machine, accepting-output soundness, and head-output stopped-decidable-to-acceptable theorem."
+            reason: "Concrete normalized-output stopped-decider-to-acceptor machine transformation, finite outward output scanner, scanner-completeness proof for arbitrary stopped normalized-output deciders, simulation of the original computation, reachability invariant for the transformed machine, accepting-output soundness, normalized-output stopped-decidable-to-acceptable theorem, and head-output special-case transformation."
         missing: []
         deferred:
           - item: "Concrete transition diagrams and machine programs"
             reason: "Application artifacts; semantic tape/configuration/machine infrastructure is formalized."
-          - item: "Transition-level output-scanning construction for arbitrary normalized-output deciders"
-            reason: "The local transition construction is formalized for head-output stopped deciders. Under normalized output semantics, an arbitrary decider may halt with the head away from the yes/no output symbol, so a general transition-level decider-to-acceptor construction needs an additional output-scanning machine."
       - coordinate: "Chapter 5, Section 5.2"
         status: "partial_description_compiler_deferred"
         formalized:
@@ -700,8 +698,6 @@ completed:
     classified_not_formalized_yet:
       - coordinate: "Chapter 5, Section 5.1"
         reason: "Concrete transition diagrams and machine programs are application artifacts; the formal core provides tape/configuration/machine semantics, finite-step halting traces, and computability vocabulary."
-      - coordinate: "Chapter 5, Section 5.1"
-        reason: "Characteristic-function decidability, stopped-decider normalized-output classification, stopped-decider acceptance traces, and the concrete head-output stopped-decider-to-acceptor transition-level transformation are formalized; extending this to arbitrary normalized-output deciders requires an output-scanning construction because the halted head need not be on the output symbol."
       - coordinate: "Chapter 5, Section 5.2"
         reason: "The semantic total listing/range equivalence, partial listing/range/program equivalences, program-acceptability iff finite acceptance traces, concrete staged-program dovetailing from complementary traces, staged-program compiler construction principles, description-backed acceptor/Boolean-decider compiler bridges, finite supplied-description acceptor/Boolean/dovetail/range bridges, finite recognizer presentation closeouts, finite complementary-recognizer recursive-language consequences under a finite dovetail compiler, finite-dovetail compiler-construction existence and description-backed consequences, compiled partial unary range/program-range bridges, conditional compiled-range iff statements under concrete compiler principles, finite output-complete/output-functional partial-unary compiled-range bridges, finite partial-unary presentation closeouts, named compiler-construction consequences for arbitrary partial-unary ranges, dovetailing, and Boolean grammar recognizers, finite-derivation grammar-to-staged-program recognizers, compiler-conditional and supplied-description generated-language-to-RE bridges, finite grammar recognizer presentation consequences, grammar-to-RE construction surfaces, finite-production grammar compiler consequences, and conditional grammar-pair characterizations of recursive languages are formalized. Proving the uniform concrete finite-description compiler constructions remains deferred."
       - coordinate: "Chapter 5, Section 5.2"
