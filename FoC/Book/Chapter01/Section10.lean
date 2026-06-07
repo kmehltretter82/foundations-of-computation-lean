@@ -40,6 +40,24 @@ theorem fib_one : fib 1 = 1 :=
 theorem fib_recurrence (n : Nat) : fib (n + 2) = fib (n + 1) + fib n :=
   rfl
 
+theorem fib_two : fib 2 = 1 :=
+  rfl
+
+theorem fib_three : fib 3 = 2 :=
+  rfl
+
+theorem fib_four : fib 4 = 3 :=
+  rfl
+
+theorem fib_five : fib 5 = 5 :=
+  rfl
+
+theorem fib_six : fib 6 = 8 :=
+  rfl
+
+theorem fib_seven : fib 7 = 13 :=
+  rfl
+
 /-!
 The first bound states that Fibonacci numbers grow more slowly than powers of
 two. The proof follows the recursive definition and compares the two recursive

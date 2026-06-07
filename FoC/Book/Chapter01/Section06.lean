@@ -97,9 +97,18 @@ theorem integer_divides_square_if_divides {a n : Int}
     (h : IntPred.Divides a n) : IntPred.Divides a (n * n) :=
   IntPred.divides_square_of_divides h
 
+theorem integer_divisibility_transitive {r s t : Int}
+    (hrs : IntPred.Divides r s) (hst : IntPred.Divides s t) :
+    IntPred.Divides r t :=
+  IntPred.divides_trans hrs hst
+
 theorem integer_square_divisible_by_three_if_number_divisible_by_three {n : Int}
     (h : IntPred.Divides 3 n) : IntPred.Divides 3 (n * n) :=
   IntPred.divides_square_of_divides h
+
+theorem sum_of_two_even_integers_even {m n : Int}
+    (hm : IntPred.Even m) (hn : IntPred.Even n) : IntPred.Even (m + n) :=
+  IntPred.even_add hm hn
 
 theorem integer_product_of_two_even_numbers_even {m n : Int}
     (hm : IntPred.Even m) (_hn : IntPred.Even n) : IntPred.Even (m * n) :=
@@ -121,8 +130,38 @@ theorem square_divisible_by_four_does_not_force_number_divisible_by_four :
   · exists 1
   · exact IntPred.not_four_divides_two
 
+def fourDigitValue (d1 d2 d3 d4 : Int) : Int :=
+  1000 * d1 + 100 * d2 + 10 * d3 + d4
+
+def digitSum (d1 d2 d3 d4 : Int) : Int :=
+  d1 + d2 + d3 + d4
+
 /-!
-## Rational and Real Arithmetic
+The book's direct proof that a four-digit number is divisible by 3 exactly when
+the sum of its digits is divisible by 3.
+-/
+theorem four_digit_divisible_by_three_iff_digit_sum_divisible_by_three
+    (d1 d2 d3 d4 : Int) :
+    IntPred.Divides 3 (fourDigitValue d1 d2 d3 d4) <->
+      IntPred.Divides 3 (digitSum d1 d2 d3 d4) := by
+  constructor
+  · intro h
+    cases h with
+    | intro k hk =>
+        exists k - (333 * d1 + 33 * d2 + 3 * d3)
+        unfold fourDigitValue at hk
+        unfold digitSum
+        omega
+  · intro h
+    cases h with
+    | intro k hk =>
+        exists 333 * d1 + 33 * d2 + 3 * d3 + k
+        unfold digitSum at hk
+        unfold fourDigitValue
+        omega
+
+/-!
+# Rational and Real Arithmetic
 
 The rational-number statements show closure under addition and multiplication.
 The real-number statements give density, rational-real closure wrappers, and
@@ -138,6 +177,14 @@ if no such representation exists.
 theorem rational_representation_definition {a b : Int}
     (hb : b ≠ 0) : Rational.IsRepresentation a b :=
   Rational.representation_of_den_ne_zero hb
+
+theorem six_is_rational_representation :
+    Rational.IsRepresentation 6 1 :=
+  Rational.representation_of_den_ne_zero (by decide)
+
+theorem three_halves_is_rational_representation :
+    Rational.IsRepresentation 3 2 :=
+  Rational.representation_of_den_ne_zero (by decide)
 
 theorem sum_of_rational_representations {a b c d : Int}
     (hb : b ≠ 0) (hd : d ≠ 0) :

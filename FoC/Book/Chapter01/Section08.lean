@@ -114,6 +114,15 @@ def factorial : Nat -> Nat
 theorem factorial_succ (n : Nat) : factorial (n + 1) = factorial n * (n + 1) :=
   rfl
 
+theorem factorial_zero : factorial 0 = 1 :=
+  rfl
+
+theorem factorial_one : factorial 1 = 1 :=
+  rfl
+
+theorem factorial_five : factorial 5 = 120 :=
+  rfl
+
 def fib : Nat -> Nat
   | 0 => 0
   | 1 => 1
@@ -140,6 +149,10 @@ theorem simple_sum_formula (n : Nat) :
     NatSum.SumUpTo (fun i => i) n = n * (n + 1) / 2 :=
   NatSum.sum_identity_closed_form n
 
+theorem sum_first_hundred_integers :
+    NatSum.SumUpTo (fun i => i) 100 = 5050 := by
+  simpa using simple_sum_formula 100
+
 theorem weighted_power_sum_formula (n : Nat) :
     NatSum.SumUpTo NatSum.WeightedPowerTerm (n + 1) = n * 2 ^ (n + 1) + 1 :=
   NatSum.weighted_power_sum_closed_form_succ n
@@ -152,9 +165,17 @@ theorem weighted_power_sum_formula_positive (n : Nat) (hn : 0 < n) :
   | succ n =>
       simpa using NatSum.weighted_power_sum_closed_form_succ n
 
+theorem weighted_power_sum_five :
+    NatSum.SumUpTo NatSum.WeightedPowerTerm 5 = 129 := by
+  simpa using weighted_power_sum_formula_positive 5 (by decide)
+
 theorem geometric_sum_powers_of_two (n : Nat) :
     NatSum.SumZeroTo (fun i => 2 ^ i) n = 2 ^ (n + 1) - 1 :=
   NatSum.geometric_two_sum n
+
+theorem geometric_sum_powers_of_two_to_ten :
+    NatSum.SumZeroTo (fun i => 2 ^ i) 10 = 2047 := by
+  simpa using geometric_sum_powers_of_two 10
 
 theorem geometric_successor_base_sum (b n : Nat) :
     b * NatSum.SumZeroTo (fun i => (b + 1) ^ i) n = (b + 1) ^ (n + 1) - 1 :=
@@ -295,6 +316,10 @@ the proof appeals to the result for smaller numbers.
 theorem odd_sum_square (n : Nat) :
     NatSum.SumUpTo (fun i => 2 * i - 1) n = n * n :=
   NatSum.odd_sum_square n
+
+theorem sum_first_ten_odd_numbers :
+    NatSum.SumUpTo (fun i => 2 * i - 1) 10 = 100 := by
+  simpa using odd_sum_square 10
 
 theorem product_of_primes_exists (n : Nat) (hn : 1 < n) :
     NatPrime.ProductOfPrimes n :=

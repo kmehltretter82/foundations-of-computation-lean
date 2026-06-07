@@ -60,6 +60,15 @@ def hanoiMoves : Nat -> Peg -> Peg -> Peg -> List (Peg × Peg)
       hanoiMoves n source spare target ++ [(source, target)] ++
         hanoiMoves n spare target source
 
+theorem hanoiMoves_one (source target spare : Peg) :
+    hanoiMoves 1 source target spare = [(source, target)] :=
+  rfl
+
+theorem hanoiMoves_two (source target spare : Peg) :
+    hanoiMoves 2 source target spare =
+      [(source, spare), (source, target), (spare, target)] :=
+  rfl
+
 theorem hanoiMoves_length (n : Nat) (source target spare : Peg) :
     (hanoiMoves n source target spare).length = hanoiMoveCount n := by
   induction n generalizing source target spare with
@@ -106,6 +115,11 @@ def treeValues : BinaryTree -> List Int
   | BinaryTree.empty => []
   | BinaryTree.node left value right => treeValues left ++ [value] ++ treeValues right
 
+def leafValues : BinaryTree -> List Int
+  | BinaryTree.empty => []
+  | BinaryTree.node BinaryTree.empty value BinaryTree.empty => [value]
+  | BinaryTree.node left _ right => leafValues left ++ leafValues right
+
 theorem treeSum_empty : treeSum BinaryTree.empty = 0 :=
   rfl
 
@@ -140,6 +154,19 @@ theorem leafCount_empty : leafCount BinaryTree.empty = 0 :=
 theorem leafCount_singleton (value : Int) :
     leafCount (BinaryTree.node BinaryTree.empty value BinaryTree.empty) = 1 :=
   rfl
+
+/-!
+The leaf-count exercise is represented by an independent leaf enumeration. The
+recursive counter agrees with the length of that enumeration for every tree.
+-/
+theorem leafCount_eq_leafValues_length (t : BinaryTree) :
+    leafCount t = (leafValues t).length := by
+  induction t with
+  | empty =>
+      rfl
+  | node left value right ihLeft ihRight =>
+      cases left <;> cases right <;>
+        simp [leafCount, leafValues, ihLeft, ihRight]
 
 end Section09
 end Chapter01

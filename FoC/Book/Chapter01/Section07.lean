@@ -152,6 +152,21 @@ theorem sqrt_three_cut_is_irrational :
     Real.Irrational Real.sqrtThreeCut :=
   Real.sqrtThreeCut_irrational
 
+theorem sqrt_two_cut_square_is_rational :
+    Real.Rational (Real.sqrtTwoCut * Real.sqrtTwoCut) :=
+  Real.sqrtTwoCut_square_rational
+
+theorem sqrt_three_cut_square_is_rational :
+    Real.Rational (Real.sqrtThreeCut * Real.sqrtThreeCut) :=
+  Real.sqrtThreeCut_square_rational
+
+theorem product_of_sqrt_three_cut_with_itself_is_rational :
+    Real.Irrational Real.sqrtThreeCut ∧
+      Real.Irrational Real.sqrtThreeCut ∧
+      Real.Rational (Real.sqrtThreeCut * Real.sqrtThreeCut) := by
+  exact And.intro Real.sqrtThreeCut_irrational
+    (And.intro Real.sqrtThreeCut_irrational Real.sqrtThreeCut_square_rational)
+
 theorem real_with_square_two_characterization_is_irrational {x : Real}
     (hsquare : Real.qrealSquareCharacterization x 2) :
     Real.Irrational x :=

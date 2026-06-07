@@ -63,6 +63,36 @@ theorem false_or_identity (p : PropForm Var) :
   intro valuation
   cases hp : PropForm.eval valuation p <;> simp [PropForm.eval, hp]
 
+theorem and_true_identity_right (p : PropForm Var) :
+    PropForm.LogicallyEquivalent (PropForm.and p PropForm.truth) p := by
+  intro valuation
+  cases hp : PropForm.eval valuation p <;> simp [PropForm.eval, hp]
+
+theorem or_false_identity_right (p : PropForm Var) :
+    PropForm.LogicallyEquivalent (PropForm.or p PropForm.falsity) p := by
+  intro valuation
+  cases hp : PropForm.eval valuation p <;> simp [PropForm.eval, hp]
+
+theorem false_and_annihilator (p : PropForm Var) :
+    PropForm.LogicallyEquivalent (PropForm.and PropForm.falsity p) PropForm.falsity := by
+  intro valuation
+  cases hp : PropForm.eval valuation p <;> simp [PropForm.eval, hp]
+
+theorem and_false_annihilator (p : PropForm Var) :
+    PropForm.LogicallyEquivalent (PropForm.and p PropForm.falsity) PropForm.falsity := by
+  intro valuation
+  cases hp : PropForm.eval valuation p <;> simp [PropForm.eval, hp]
+
+theorem true_or_annihilator (p : PropForm Var) :
+    PropForm.LogicallyEquivalent (PropForm.or PropForm.truth p) PropForm.truth := by
+  intro valuation
+  cases hp : PropForm.eval valuation p <;> simp [PropForm.eval, hp]
+
+theorem or_true_annihilator (p : PropForm Var) :
+    PropForm.LogicallyEquivalent (PropForm.or p PropForm.truth) PropForm.truth := by
+  intro valuation
+  cases hp : PropForm.eval valuation p <;> simp [PropForm.eval, hp]
+
 theorem and_idempotent (p : PropForm Var) :
     PropForm.LogicallyEquivalent (PropForm.and p p) p := by
   intro valuation
@@ -127,6 +157,26 @@ theorem or_distributive_over_and (p q r : PropForm Var) :
     cases hr : PropForm.eval valuation r <;>
     simp [PropForm.eval, hp, hq, hr]
 
+theorem right_and_distributive_over_or (p q r : PropForm Var) :
+    PropForm.LogicallyEquivalent
+      (PropForm.and (PropForm.or p q) r)
+      (PropForm.or (PropForm.and p r) (PropForm.and q r)) := by
+  intro valuation
+  cases hp : PropForm.eval valuation p <;>
+    cases hq : PropForm.eval valuation q <;>
+    cases hr : PropForm.eval valuation r <;>
+    simp [PropForm.eval, hp, hq, hr]
+
+theorem right_or_distributive_over_and (p q r : PropForm Var) :
+    PropForm.LogicallyEquivalent
+      (PropForm.or (PropForm.and p q) r)
+      (PropForm.and (PropForm.or p r) (PropForm.or q r)) := by
+  intro valuation
+  cases hp : PropForm.eval valuation p <;>
+    cases hq : PropForm.eval valuation q <;>
+    cases hr : PropForm.eval valuation r <;>
+    simp [PropForm.eval, hp, hq, hr]
+
 theorem demorgan_and (p q : PropForm Var) :
     PropForm.LogicallyEquivalent
       (PropForm.not (PropForm.and p q))
@@ -179,6 +229,15 @@ theorem not_implication (p q : PropForm Var) :
     PropForm.LogicallyEquivalent
       (PropForm.not (PropForm.imp p q))
       (PropForm.and p (PropForm.not q)) := by
+  intro valuation
+  cases hp : PropForm.eval valuation p <;>
+    cases hq : PropForm.eval valuation q <;>
+    simp [PropForm.eval, hp, hq]
+
+theorem boolean_algebra_chain_p_and_imp (p q : PropForm Var) :
+    PropForm.LogicallyEquivalent
+      (PropForm.and p (PropForm.imp p q))
+      (PropForm.and p q) := by
   intro valuation
   cases hp : PropForm.eval valuation p <;>
     cases hq : PropForm.eval valuation q <;>
