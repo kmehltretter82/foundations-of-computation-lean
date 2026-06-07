@@ -41,6 +41,7 @@ import FoC.Computability.Recognizable
 import FoC.Computability.Enumerable
 import FoC.Computability.Undecidable
 import FoC.Computability.Coding
+import FoC.Computability.Encoding
 import FoC.Foundation
 import FoC.Languages
 import FoC.Grammars
@@ -79,7 +80,7 @@ modules:
   automata, and grammar-automaton conversions.
 * {module}`FoC.Computability` contains Turing-machine tapes, configurations,
   computations, computability, recognizability, enumerability, coding helpers,
-  and undecidability vocabulary.
+  machine-description interpreters, and undecidability vocabulary.
 
 The goal of the companion is not to copy the textbook. It explains how the
 mathematical and computational ideas are represented in Lean, then lets the

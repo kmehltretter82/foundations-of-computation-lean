@@ -1,0 +1,454 @@
+import FoC.Computability.TuringMachine
+
+set_option doc.verso true
+
+/-!
+# Machine descriptions and interpretation
+
+This module starts the concrete encoding/interpreter layer needed for the
+remaining Chapter 5 theorems.  It introduces a finite token alphabet for
+binary-tape machine descriptions, a decoder for that syntax, a well-formedness
+predicate for decoded transition tables, and an interpreter semantics that can
+also be compiled into the existing one-tape
+{name}`FoC.Computability.TuringMachine` model.
+
+The descriptions here are intentionally first-order data: they are finite
+lists of transition records, not arbitrary Lean functions.  This keeps later
+compiler and universal-machine theorems tied to concrete syntax.
+
+## Book coordinates
+
+Used by:
+- Chapter 5, Sections 5.2 and 5.3: concrete machine encodings and universal
+  interpretation infrastructure.
+-/
+
+namespace FoC
+namespace Computability
+
+open Foundation
+open Languages
+
+/-!
+# Finite description alphabet
+
+Natural numbers are encoded in unary by a sequence of {lit}`tick` tokens
+terminated by {lit}`done`.  The remaining tokens identify headers,
+transition records, cells, and movement directions.
+-/
+
+inductive MachineCodeSymbol where
+  | header : MachineCodeSymbol
+  | transition : MachineCodeSymbol
+  | tick : MachineCodeSymbol
+  | done : MachineCodeSymbol
+  | blank : MachineCodeSymbol
+  | zero : MachineCodeSymbol
+  | one : MachineCodeSymbol
+  | moveLeft : MachineCodeSymbol
+  | moveRight : MachineCodeSymbol
+deriving DecidableEq
+
+namespace MachineCodeSymbol
+
+def finite : FiniteType MachineCodeSymbol where
+  elems :=
+    [ header, transition, tick, done, blank, zero, one, moveLeft, moveRight ]
+  complete := by
+    intro symbol
+    cases symbol <;> simp
+
+end MachineCodeSymbol
+
+def finFinite (n : Nat) : FiniteType (Fin n) where
+  elems := List.finRange n
+  complete := List.mem_finRange
+
+/-!
+# Transition and machine descriptions
+-/
+
+structure TransitionDescription where
+  source : Nat
+  read : Option Bool
+  write : Option Bool
+  move : Direction
+  target : Nat
+deriving DecidableEq
+
+structure MachineDescription where
+  stateCount : Nat
+  start : Nat
+  halt : Nat
+  transitions : List TransitionDescription
+deriving DecidableEq
+
+namespace TransitionDescription
+
+def WellFormed (stateCount : Nat) (t : TransitionDescription) : Prop :=
+  t.source < stateCount ∧ t.target < stateCount
+
+def SameKey (t u : TransitionDescription) : Prop :=
+  t.source = u.source ∧ t.read = u.read
+
+def SameAction (t u : TransitionDescription) : Prop :=
+  t.write = u.write ∧ t.move = u.move ∧ t.target = u.target
+
+end TransitionDescription
+
+namespace MachineDescription
+
+def Deterministic (D : MachineDescription) : Prop :=
+  forall t u : TransitionDescription,
+    t ∈ D.transitions -> u ∈ D.transitions ->
+      TransitionDescription.SameKey t u ->
+        TransitionDescription.SameAction t u
+
+def WellFormed (D : MachineDescription) : Prop :=
+  0 < D.stateCount ∧
+    D.start < D.stateCount ∧
+    D.halt < D.stateCount ∧
+    (forall t : TransitionDescription,
+      t ∈ D.transitions ->
+        TransitionDescription.WellFormed D.stateCount t) ∧
+    D.Deterministic
+
+def Matches (source : Nat) (read : Option Bool)
+    (t : TransitionDescription) : Bool :=
+  t.source == source && t.read == read
+
+def lookupTransition (D : MachineDescription)
+    (source : Nat) (read : Option Bool) :
+    Option TransitionDescription :=
+  D.transitions.find? (Matches source read)
+
+structure Configuration where
+  state : Nat
+  tape : Tape Bool
+deriving DecidableEq
+
+def initial (D : MachineDescription) (w : Word Bool) :
+    Configuration where
+  state := D.start
+  tape := Tape.input w
+
+def stepConfig (D : MachineDescription)
+    (c : Configuration) : Option Configuration :=
+  match D.lookupTransition c.state (Tape.read c.tape) with
+  | none => none
+  | some t =>
+      some
+        { state := t.target
+          tape := Tape.move t.move (Tape.write t.write c.tape) }
+
+def runConfig (D : MachineDescription) :
+    Nat -> Configuration -> Configuration
+  | 0, c => c
+  | n + 1, c =>
+      match D.stepConfig c with
+      | none => c
+      | some next => runConfig D n next
+
+def HaltsIn (D : MachineDescription) (n : Nat) (w : Word Bool) : Prop :=
+  (D.runConfig n (D.initial w)).state = D.halt
+
+def HaltsOnInput (D : MachineDescription) (w : Word Bool) : Prop :=
+  exists n : Nat, D.HaltsIn n w
+
+def stateOfNat (D : MachineDescription) (n : Nat) :
+    Fin (D.stateCount + 1) :=
+  if h : n < D.stateCount + 1 then
+    ⟨n, h⟩
+  else
+    ⟨D.stateCount, Nat.lt_succ_self D.stateCount⟩
+
+theorem stateOfNat_val_of_lt {D : MachineDescription} {n : Nat}
+    (h : n < D.stateCount + 1) :
+    (D.stateOfNat n).val = n := by
+  simp [stateOfNat, h]
+
+def toTMConfig (D : MachineDescription) (c : Configuration) :
+    TuringMachine.Configuration Bool (Fin (D.stateCount + 1)) where
+  state := D.stateOfNat c.state
+  tape := c.tape
+
+def toTuringMachine (D : MachineDescription) :
+    TuringMachine Bool (Fin (D.stateCount + 1)) where
+  start := D.stateOfNat D.start
+  halt := D.stateOfNat D.halt
+  transition := fun q cell =>
+    match D.lookupTransition q.val cell with
+    | none => none
+    | some t => some (t.write, t.move, D.stateOfNat t.target)
+  statesFinite := finFinite (D.stateCount + 1)
+
+theorem toTuringMachine_transition_of_lookup
+    {D : MachineDescription} {source : Nat} {read : Option Bool}
+    {t : TransitionDescription}
+    (hsource : source < D.stateCount + 1)
+    (hlookup : D.lookupTransition source read = some t) :
+    (D.toTuringMachine).transition (D.stateOfNat source) read =
+      some (t.write, t.move, D.stateOfNat t.target) := by
+  simp [toTuringMachine, stateOfNat_val_of_lt hsource, hlookup]
+
+theorem toTuringMachine_step_of_stepConfig
+    {D : MachineDescription} {c d : Configuration}
+    (hsource : c.state < D.stateCount + 1)
+    (hstep : D.stepConfig c = some d) :
+    TuringMachine.Step D.toTuringMachine
+      (D.toTMConfig c) (D.toTMConfig d) := by
+  unfold stepConfig at hstep
+  cases hlookup : D.lookupTransition c.state (Tape.read c.tape) with
+  | none =>
+      rw [hlookup] at hstep
+      cases hstep
+  | some t =>
+      rw [hlookup] at hstep
+      cases hstep
+      exact TuringMachine.Step.mk
+        (toTuringMachine_transition_of_lookup
+          (D := D) (source := c.state)
+          (read := Tape.read c.tape) hsource hlookup)
+
+/-!
+# Encoding and decoding
+-/
+
+def encodeNat : Nat -> Word MachineCodeSymbol
+  | 0 => [MachineCodeSymbol.done]
+  | n + 1 => MachineCodeSymbol.tick :: encodeNat n
+
+def decodeNat : Word MachineCodeSymbol ->
+    Option (Nat × Word MachineCodeSymbol)
+  | MachineCodeSymbol.done :: rest => some (0, rest)
+  | MachineCodeSymbol.tick :: rest =>
+      match decodeNat rest with
+      | none => none
+      | some (n, rest') => some (n + 1, rest')
+  | _ => none
+
+theorem decodeNat_encodeNat_append
+    (n : Nat) (suffix : Word MachineCodeSymbol) :
+    decodeNat (List.append (encodeNat n) suffix) = some (n, suffix) := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change
+        (match decodeNat (List.append (encodeNat n) suffix) with
+        | none => none
+        | some (n, rest') => some (n + 1, rest')) =
+          some (n + 1, suffix)
+      rw [ih]
+
+def encodeCell : Option Bool -> Word MachineCodeSymbol
+  | none => [MachineCodeSymbol.blank]
+  | some false => [MachineCodeSymbol.zero]
+  | some true => [MachineCodeSymbol.one]
+
+def decodeCell : Word MachineCodeSymbol ->
+    Option (Option Bool × Word MachineCodeSymbol)
+  | MachineCodeSymbol.blank :: rest => some (none, rest)
+  | MachineCodeSymbol.zero :: rest => some (some false, rest)
+  | MachineCodeSymbol.one :: rest => some (some true, rest)
+  | _ => none
+
+theorem decodeCell_encodeCell_append
+    (cell : Option Bool) (suffix : Word MachineCodeSymbol) :
+    decodeCell (List.append (encodeCell cell) suffix) =
+      some (cell, suffix) := by
+  cases cell with
+  | none => rfl
+  | some b =>
+      cases b <;> rfl
+
+def encodeDirection : Direction -> Word MachineCodeSymbol
+  | Direction.left => [MachineCodeSymbol.moveLeft]
+  | Direction.right => [MachineCodeSymbol.moveRight]
+
+def decodeDirection : Word MachineCodeSymbol ->
+    Option (Direction × Word MachineCodeSymbol)
+  | MachineCodeSymbol.moveLeft :: rest => some (Direction.left, rest)
+  | MachineCodeSymbol.moveRight :: rest => some (Direction.right, rest)
+  | _ => none
+
+theorem decodeDirection_encodeDirection_append
+    (dir : Direction) (suffix : Word MachineCodeSymbol) :
+    decodeDirection (List.append (encodeDirection dir) suffix) =
+      some (dir, suffix) := by
+  cases dir <;> rfl
+
+def encodeNatAppend (n : Nat) (suffix : Word MachineCodeSymbol) :
+    Word MachineCodeSymbol :=
+  List.append (encodeNat n) suffix
+
+def encodeCellAppend (cell : Option Bool)
+    (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
+  List.append (encodeCell cell) suffix
+
+def encodeDirectionAppend (dir : Direction)
+    (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
+  List.append (encodeDirection dir) suffix
+
+theorem decodeNat_encodeNatAppend
+    (n : Nat) (suffix : Word MachineCodeSymbol) :
+    decodeNat (encodeNatAppend n suffix) = some (n, suffix) :=
+  decodeNat_encodeNat_append n suffix
+
+theorem decodeCell_encodeCellAppend
+    (cell : Option Bool) (suffix : Word MachineCodeSymbol) :
+    decodeCell (encodeCellAppend cell suffix) = some (cell, suffix) :=
+  decodeCell_encodeCell_append cell suffix
+
+theorem decodeDirection_encodeDirectionAppend
+    (dir : Direction) (suffix : Word MachineCodeSymbol) :
+    decodeDirection (encodeDirectionAppend dir suffix) =
+      some (dir, suffix) :=
+  decodeDirection_encodeDirection_append dir suffix
+
+def encodeTransitionAppend (t : TransitionDescription)
+    (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
+  MachineCodeSymbol.transition ::
+    encodeNatAppend t.source
+      (encodeCellAppend t.read
+        (encodeCellAppend t.write
+          (encodeDirectionAppend t.move
+            (encodeNatAppend t.target suffix))))
+
+def encodeTransition (t : TransitionDescription) :
+    Word MachineCodeSymbol :=
+  encodeTransitionAppend t []
+
+def decodeTransition (tokens : Word MachineCodeSymbol) :
+    Option (TransitionDescription × Word MachineCodeSymbol) :=
+  match tokens with
+  | MachineCodeSymbol.transition :: rest =>
+      match decodeNat rest with
+      | none => none
+      | some (source, rest) =>
+          match decodeCell rest with
+          | none => none
+          | some (read, rest) =>
+              match decodeCell rest with
+              | none => none
+              | some (write, rest) =>
+                  match decodeDirection rest with
+                  | none => none
+                  | some (move, rest) =>
+                      match decodeNat rest with
+                      | none => none
+                      | some (target, rest) =>
+                          some
+                            ({ source := source
+                               read := read
+                               write := write
+                               move := move
+                               target := target }, rest)
+  | _ => none
+
+theorem decodeTransition_encodeTransition_append
+    (t : TransitionDescription) (suffix : Word MachineCodeSymbol) :
+    decodeTransition (encodeTransitionAppend t suffix) =
+      some (t, suffix) := by
+  cases t
+  simp [encodeTransitionAppend, decodeTransition,
+    decodeNat_encodeNatAppend,
+    decodeCell_encodeCellAppend,
+    decodeDirection_encodeDirectionAppend]
+
+theorem decodeTransition_encodeTransition :
+    decodeTransition (encodeTransition t) = some (t, []) := by
+  exact decodeTransition_encodeTransition_append t []
+
+def encodeTransitionsAppend : List TransitionDescription ->
+    Word MachineCodeSymbol -> Word MachineCodeSymbol
+  | [], suffix => suffix
+  | t :: rest, suffix =>
+      encodeTransitionAppend t (encodeTransitionsAppend rest suffix)
+
+def encodeTransitions (transitions : List TransitionDescription) :
+    Word MachineCodeSymbol :=
+  encodeTransitionsAppend transitions []
+
+def decodeTransitions : Nat -> Word MachineCodeSymbol ->
+    Option (List TransitionDescription × Word MachineCodeSymbol)
+  | 0, tokens => some ([], tokens)
+  | n + 1, tokens =>
+      match decodeTransition tokens with
+      | none => none
+      | some (t, rest) =>
+          match decodeTransitions n rest with
+          | none => none
+          | some (ts, rest') => some (t :: ts, rest')
+
+theorem decodeTransitions_encodeTransitions_append
+    (transitions : List TransitionDescription)
+    (suffix : Word MachineCodeSymbol) :
+    decodeTransitions transitions.length
+      (encodeTransitionsAppend transitions suffix) =
+        some (transitions, suffix) := by
+  induction transitions with
+  | nil =>
+      rfl
+  | cons t rest ih =>
+      simp [encodeTransitionsAppend, decodeTransitions,
+        decodeTransition_encodeTransition_append, ih]
+
+theorem decodeTransitions_encodeTransitions
+    (transitions : List TransitionDescription) :
+    decodeTransitions transitions.length (encodeTransitions transitions) =
+      some (transitions, []) :=
+  decodeTransitions_encodeTransitions_append transitions []
+
+def encodeDescriptionAppend (D : MachineDescription)
+    (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
+  MachineCodeSymbol.header ::
+    encodeNatAppend D.stateCount
+      (encodeNatAppend D.start
+        (encodeNatAppend D.halt
+          (encodeNatAppend D.transitions.length
+            (encodeTransitionsAppend D.transitions suffix))))
+
+def encodeDescription (D : MachineDescription) :
+    Word MachineCodeSymbol :=
+  encodeDescriptionAppend D []
+
+def decodeDescription (tokens : Word MachineCodeSymbol) :
+    Option MachineDescription :=
+  match tokens with
+  | MachineCodeSymbol.header :: rest =>
+      match decodeNat rest with
+      | none => none
+      | some (stateCount, rest) =>
+          match decodeNat rest with
+          | none => none
+          | some (start, rest) =>
+              match decodeNat rest with
+              | none => none
+              | some (halt, rest) =>
+                  match decodeNat rest with
+                  | none => none
+                  | some (transitionCount, rest) =>
+                      match decodeTransitions transitionCount rest with
+                      | none => none
+                      | some (transitions, []) =>
+                          some
+                            { stateCount := stateCount
+                              start := start
+                              halt := halt
+                              transitions := transitions }
+                      | some (_, _ :: _) => none
+  | _ => none
+
+theorem decodeDescription_encodeDescription
+    (D : MachineDescription) :
+    decodeDescription (encodeDescription D) = some D := by
+  cases D
+  simp [encodeDescription, encodeDescriptionAppend, decodeDescription,
+    decodeNat_encodeNatAppend,
+    decodeTransitions_encodeTransitions_append]
+
+end MachineDescription
+
+end Computability
+end FoC

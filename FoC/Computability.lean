@@ -8,6 +8,7 @@ import FoC.Computability.Program
 import FoC.Computability.Grammar
 import FoC.Computability.Undecidable
 import FoC.Computability.Coding
+import FoC.Computability.Encoding
 
 set_option doc.verso true
 
@@ -41,6 +42,9 @@ Finally, {module}`FoC.Computability.Undecidable` packages the diagonal,
 halting-problem, reduction, and noncomputability vocabulary used by the limits
 of computation section.  {module}`FoC.Computability.Coding` supplies concrete
 pair-code words and injectivity facts for those reductions.
+{module}`FoC.Computability.Encoding` starts the concrete machine-description
+and interpreter layer needed to discharge the remaining compiler and universal
+machine theorem shapes.
 
 The chapter-facing material in {module -checked}`FoC.Book.Chapter05` points to
 these definitions while keeping the textbook-order statements separate from the

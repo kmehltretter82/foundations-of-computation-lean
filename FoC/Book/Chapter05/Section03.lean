@@ -1,4 +1,5 @@
 import FoC.Computability.Coding
+import FoC.Computability.Encoding
 
 set_option doc.verso true
 
@@ -12,15 +13,15 @@ namespace Section03
 
 This section formalizes the diagonal and halting-problem statements that mark
 the limits of computation. The definitions are book-facing wrappers over
-{module}`FoC.Computability.Undecidable` and
-{module}`FoC.Computability.Coding`, with languages represented as predicates
+{module}`FoC.Computability.Undecidable`,
+{module}`FoC.Computability.Coding`, and
+{module}`FoC.Computability.Encoding`, with languages represented as predicates
 on encoded words.
 
 The page supplies a concrete pair-code alphabet for halting-problem reductions.
-It still keeps machine decoding and universal-machine execution abstract:
-those statements are relative to a decoder or universal-machine specification.
-This exposes the logical structure of the impossibility proofs without adding
-an unproved interpreter.
+It also exposes the first concrete machine-description syntax and interpreter.
+Universal-machine execution is still relative to a later proof that this
+interpreter can itself be implemented by a concrete machine.
 -/
 
 open Languages
@@ -137,6 +138,55 @@ def ConcreteDiagonalPairMap (w : Word code) :
     Word (ConcretePairCodeSymbol code) :=
   PairCodeSymbol.diagonalMap w
 
+def ConcreteMachineCodeSymbol : Type :=
+  MachineCodeSymbol
+
+def ConcreteMachineCodeSymbolFinite :
+    Foundation.FiniteType ConcreteMachineCodeSymbol :=
+  MachineCodeSymbol.finite
+
+def ConcreteMachineTransition : Type :=
+  TransitionDescription
+
+def ConcreteMachineDescription : Type :=
+  MachineDescription
+
+def ConcreteMachineWellFormed (D : ConcreteMachineDescription) : Prop :=
+  MachineDescription.WellFormed D
+
+def ConcreteMachineEncode (D : ConcreteMachineDescription) :
+    Word ConcreteMachineCodeSymbol :=
+  MachineDescription.encodeDescription D
+
+def ConcreteMachineDecode (w : Word ConcreteMachineCodeSymbol) :
+    Option ConcreteMachineDescription :=
+  MachineDescription.decodeDescription w
+
+def ConcreteMachineConfiguration : Type :=
+  MachineDescription.Configuration
+
+def ConcreteMachineInitial (D : ConcreteMachineDescription)
+    (w : Word Bool) : ConcreteMachineConfiguration :=
+  D.initial w
+
+def ConcreteMachineStep (D : ConcreteMachineDescription)
+    (c : ConcreteMachineConfiguration) :
+    Option ConcreteMachineConfiguration :=
+  D.stepConfig c
+
+def ConcreteMachineRunConfig (D : ConcreteMachineDescription)
+    (n : Nat) (c : ConcreteMachineConfiguration) :
+    ConcreteMachineConfiguration :=
+  D.runConfig n c
+
+def ConcreteMachineHaltsOnInput (D : ConcreteMachineDescription)
+    (w : Word Bool) : Prop :=
+  D.HaltsOnInput w
+
+def ConcreteMachineToTuringMachine (D : ConcreteMachineDescription) :
+    TuringMachine Bool (Fin (D.stateCount + 1)) :=
+  D.toTuringMachine
+
 def UniversalTuringMachineSpec
     (universal : TuringMachine symbol state)
     (decodeAccepts : Word symbol -> Word symbol -> Prop) : Prop :=
@@ -249,8 +299,8 @@ The diagonal language differs from every listed row. If a decoder were
 universal for all languages, the self-diagonal language would be one of its
 rows, contradicting the diagonal theorem.
 
-The construction flips the answer on the diagonal: at code `w`, it disagrees
-with what the `w`-th decoded machine says about `w`. No row can therefore be
+The construction flips the answer on the diagonal: at code {lit}`w`, it disagrees
+with what the {lit}`w`-th decoded machine says about {lit}`w`. No row can therefore be
 the diagonal language.
 -/
 
@@ -471,6 +521,33 @@ theorem diagonal_pair_preimage_pair_halting_equal_self_halting
     (encodePair := encodePair)
     (haltsOnCodeInput := haltsOnCodeInput)
     hinj
+
+theorem concrete_machine_decode_encode
+    (D : ConcreteMachineDescription) :
+    ConcreteMachineDecode (ConcreteMachineEncode D) = some D :=
+  MachineDescription.decodeDescription_encodeDescription D
+
+theorem concrete_machine_compiled_transition_of_lookup
+    {D : ConcreteMachineDescription}
+    {source : Nat} {read : Option Bool}
+    {t : ConcreteMachineTransition}
+    (hsource : source < D.stateCount + 1)
+    (hlookup : D.lookupTransition source read = some t) :
+    (ConcreteMachineToTuringMachine D).transition
+      (D.stateOfNat source) read =
+        some (t.write, t.move, D.stateOfNat t.target) :=
+  MachineDescription.toTuringMachine_transition_of_lookup
+    hsource hlookup
+
+theorem concrete_machine_turing_step_of_interpreter_step
+    {D : ConcreteMachineDescription}
+    {c d : ConcreteMachineConfiguration}
+    (hsource : c.state < D.stateCount + 1)
+    (hstep : ConcreteMachineStep D c = some d) :
+    TuringMachine.Step (ConcreteMachineToTuringMachine D)
+      (D.toTMConfig c) (D.toTMConfig d) :=
+  MachineDescription.toTuringMachine_step_of_stepConfig
+    hsource hstep
 
 def concrete_pair_code_symbol_finite
     (h : Foundation.FiniteType code) :
