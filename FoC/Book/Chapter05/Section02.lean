@@ -1625,6 +1625,25 @@ abbrev ConcreteBooleanSection52CompilerCloseout :=
 abbrev ConcreteBooleanFiniteGrammarSection52Closeout :=
   BooleanFiniteGrammarSection52Closeout
 
+theorem concrete_finite_grammar_recognizer_compiler_of_general_compiler
+    (hcompile : ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction) :
+    ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction := by
+  intro nonterminal G _hfinite
+  exact hcompile G
+
+theorem concrete_finite_section52_closeout_of_semantic_closeout
+    (hclose : ConcreteBooleanSection52CompilerCloseout)
+    (hfinite :
+      RecursivelyEnumerableToFiniteGeneralGrammarConstruction Bool) :
+    ConcreteBooleanFiniteGrammarSection52Closeout where
+  decidableToAcceptable := hclose.decidableToAcceptable
+  dovetailDescription := hclose.dovetailDescription
+  partialUnaryRangeDescription := hclose.partialUnaryRangeDescription
+  finiteGrammarRecognizerDescription :=
+    concrete_finite_grammar_recognizer_compiler_of_general_compiler
+      hclose.grammarRecognizerDescription
+  recursivelyEnumerableToFiniteGrammar := hfinite
+
 def GeneralGrammarREEquivalenceConstruction
     (terminal : Type u) : Prop :=
   GeneralGrammarREEquivalencePrinciple terminal
@@ -2078,6 +2097,24 @@ theorem boolean_recursive_language_iff_finite_general_grammar_pair_of_finite_sec
     hclose.recursivelyEnumerableToFiniteGrammar
     L
 
+theorem boolean_finite_general_grammar_re_equivalence_construction_of_semantic_section52_closeout
+    (hclose : ConcreteBooleanSection52CompilerCloseout)
+    (hfinite :
+      RecursivelyEnumerableToFiniteGeneralGrammarConstruction Bool) :
+    FiniteGeneralGrammarREEquivalenceConstruction Bool :=
+  boolean_finite_general_grammar_re_equivalence_construction_of_finite_section52_closeout
+    (concrete_finite_section52_closeout_of_semantic_closeout hclose hfinite)
+
+theorem boolean_recursive_language_iff_finite_general_grammar_pair_of_semantic_section52_closeout
+    (hclose : ConcreteBooleanSection52CompilerCloseout)
+    (hfinite :
+      RecursivelyEnumerableToFiniteGeneralGrammarConstruction Bool)
+    (L : Language Bool) :
+    RecursiveLanguage L <-> FiniteGeneralGrammarPairGenerated L :=
+  boolean_recursive_language_iff_finite_general_grammar_pair_of_finite_section52_closeout
+    (concrete_finite_section52_closeout_of_semantic_closeout hclose hfinite)
+    L
+
 /-!
 The theorem equating general grammars with recursively enumerable languages is
 now split into two statements. For semantic unrestricted grammars, the reverse
@@ -2091,11 +2128,12 @@ The declarations above now pin that infrastructure down as
 {name}`ConcreteBooleanSection52CompilerCloseout` for the semantic grammar page
 and {name}`ConcreteBooleanFiniteGrammarSection52Closeout` for the finite grammar
 page. The semantic closeout no longer assumes the reverse grammar construction.
-The finite closeout keeps the exact remaining finite assumptions: decidable-to-
-acceptable conversion, a concrete dovetail-description compiler, a partial
-unary range-description compiler, a finite grammar recognizer compiler, and the
+The finite closeout keeps the exact remaining finite assumptions, but it is now
+compositional: {name}`concrete_finite_section52_closeout_of_semantic_closeout`
+shows that the semantic recognizer compiler supplies the finite recognizer
+compiler automatically. What remains for the finite textbook theorem is the
 reverse construction from recursively enumerable languages to finite-production
-general grammars.
+general grammars, together with the already named concrete compiler fields.
 -/
 
 end Section02

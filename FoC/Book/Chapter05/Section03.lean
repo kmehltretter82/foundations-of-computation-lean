@@ -355,6 +355,18 @@ def ConcreteUniversalRunnerConstruction : Prop :=
 abbrev ConcreteSection53UniversalCloseout :=
   CodeUniversalSection53Closeout
 
+theorem concrete_section53_universal_closeout_of_constructions
+    (hcompiler : ConcreteEncodedInputProgramAcceptorCompilationConstruction)
+    (hrunner : ConcreteUniversalRunnerConstruction) :
+    ConcreteSection53UniversalCloseout where
+  encodedInputProgramCompiler := hcompiler
+  universalRunner := hrunner
+
+theorem concrete_encoded_input_program_compiler_of_section53_closeout
+    (hclose : ConcreteSection53UniversalCloseout) :
+    ConcreteEncodedInputProgramAcceptorCompilationConstruction :=
+  hclose.encodedInputProgramCompiler
+
 def ConcreteUniversalMachineRowsCoverAcceptableLanguages
     (universal : TuringMachine ConcreteMachineCodeSymbol state) : Prop :=
   UniversalMachineRowsCoverAcceptableLanguages universal
@@ -1593,6 +1605,17 @@ theorem exists_concrete_universal_machine_rows_cover_of_section53_closeout
       hclose)
     hclose.universalRunner
 
+theorem exists_concrete_universal_machine_rows_cover_of_program_compiler_and_runner
+    (hcompiler : ConcreteEncodedInputProgramAcceptorCompilationConstruction)
+    (hrunner : ConcreteUniversalRunnerConstruction) :
+    exists state : Type,
+      exists universal : TuringMachine ConcreteMachineCodeSymbol state,
+        ConcreteUniversalMachineSpec universal ∧
+          ConcreteUniversalMachineRowsCoverAcceptableLanguages universal :=
+  exists_concrete_universal_machine_rows_cover_of_section53_closeout
+    (concrete_section53_universal_closeout_of_constructions
+      hcompiler hrunner)
+
 /-!
 The section's universal-machine and diagonalization theorems require a concrete
 encoding of machines as strings.  This module records the formal statement
@@ -1613,9 +1636,10 @@ The remaining concrete work is packaged by
 input staged recognizers into Boolean machine descriptions, which derives
 {name}`ConcreteEncodedInputDescriptionCompilerConstruction`; its second field is
 {name}`ConcreteUniversalRunnerConstruction`, one finite machine implementing
-{name}`ConcreteMachineCodeAccepts` on concatenated code words. Together they
-imply row coverage by
-{name}`exists_concrete_universal_machine_rows_cover_of_section53_closeout`.
+{name}`ConcreteMachineCodeAccepts` on concatenated code words. The constructor
+{name}`concrete_section53_universal_closeout_of_constructions` records that
+these are exactly the remaining fields. Together they imply row coverage by
+{name}`exists_concrete_universal_machine_rows_cover_of_program_compiler_and_runner`.
 -/
 
 end Section03

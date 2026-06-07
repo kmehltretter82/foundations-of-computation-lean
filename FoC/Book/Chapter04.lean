@@ -55,13 +55,16 @@ single-use repetition directly.
 
 The parse-tree section connects generated-language membership, parse trees,
 and leftmost derivation traces in both directions. The PDA sections include
-computation APIs, CFG-to-PDA and PDA-to-CFG conversion boundaries, exact PDA
-examples, intersection/difference with DFA and regular languages, CFL pumping,
-and nonclosure proofs. General grammars include finite-presentation
-countability, CFG embedding, and substantial counting/order examples.
+computation APIs, CFG-to-PDA conversion, exact normalized PDA-to-CFG conversion,
+exact PDA examples, intersection/difference with DFA and regular languages,
+CFL pumping, and nonclosure proofs. General grammars include finite-presentation
+countability, CFG embedding, substantial counting/order examples, constructive
+square-word generation, and family-level generation of the power-of-two unary
+language.
 
 Remaining deferrals are parser-generator algorithms, large purely
-application-oriented BNF enumerations, and optional exercise families whose
+application-oriented BNF enumerations, optional exercise families whose
 mathematical pattern is already represented by the general closure, pumping,
-or exact-language theorem schemas.
+or exact-language theorem schemas, and the final soundness/completeness
+preservation lemmas for the square and power-of-two unrestricted grammars.
 -/

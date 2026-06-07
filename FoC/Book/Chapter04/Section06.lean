@@ -5383,6 +5383,41 @@ theorem square_derivation_shape_terminal_square_of_terminal
     word ∈ squareLanguage :=
   square_derivation_shape_terminal_square hshape rfl
 
+def SquareDerivationShapeCompleteness : Prop :=
+  forall {sf : SententialForm SquareTerminal SquareNT},
+    GeneralGrammar.Derives SquareGrammar [squareN SquareNT.start] sf ->
+      SquareDerivationShape sf
+
+theorem square_generated_only_language_of_shape_completeness
+    (hcomplete : SquareDerivationShapeCompleteness)
+    {word : Word SquareTerminal}
+    (h : word ∈ GeneralGrammar.GeneratedLanguage SquareGrammar) :
+    word ∈ squareLanguage := by
+  have hderives :
+      GeneralGrammar.Derives SquareGrammar [squareN SquareNT.start]
+        (SententialForm.terminalWord word) := by
+    simpa [GeneralGrammar.GeneratedLanguage, SquareGrammar, squareN,
+      ggNonterminal] using h
+  exact square_derivation_shape_terminal_square_of_terminal
+    (hcomplete hderives)
+
+theorem square_generated_language_exact_of_shape_completeness
+    (hcomplete : SquareDerivationShapeCompleteness) :
+    Language.Equal (GeneralGrammar.GeneratedLanguage SquareGrammar)
+      squareLanguage := by
+  intro word
+  constructor
+  · exact square_generated_only_language_of_shape_completeness hcomplete
+  · exact square_language_subset_generated
+
+/-!
+The square grammar now has a constructive completeness direction for every
+square word. The reverse direction has been narrowed to the single preservation
+lemma {name}`SquareDerivationShapeCompleteness`: once every one-step derivation
+is shown to remain in one of the named phases above, the exact-language theorem
+follows immediately.
+-/
+
 def squareMiddleInversionsFrom (seenB : Nat) :
     SententialForm SquareTerminal SquareNT -> Nat
   | [] => 0
@@ -6233,9 +6268,307 @@ theorem powerTwoGrammar_finite_production_generated :
   · intro word
     rfl
 
+def powerTwoMarkerForm (n : Nat) :
+    SententialForm SquareTerminal PowerTwoNT :=
+  Word.RepeatSymbol (powN PowerTwoNT.markA) n
+
+def powerTwoControlForm (markers : Nat) :
+    SententialForm SquareTerminal PowerTwoNT :=
+  [powN PowerTwoNT.h] ++ powerTwoMarkerForm markers ++
+    [powN PowerTwoNT.boundary]
+
+def powerTwoWord (n : Nat) : Word SquareTerminal :=
+  Word.RepeatSymbol SquareTerminal.a (2 ^ n)
+
+def powerTwoLanguage : Language SquareTerminal :=
+  fun word => exists n, word = powerTwoWord n
+
 /-!
-The sample derivation demonstrates generation of four {lit}`a`s by running two
-doubling passes and then emitting the accumulated markers.
+**Marker algebra.** The next lemmas formalize the two moving-head phases in the
+book grammar. A {name}`PowerTwoNT.d` marker scans right and doubles every
+{name}`PowerTwoNT.markA`; a {name}`PowerTwoNT.r` marker then returns left.
+-/
+
+theorem powerTwoMarkerForm_succ_eq_append (n : Nat) :
+    powerTwoMarkerForm (n + 1) =
+      powerTwoMarkerForm n ++ [powN PowerTwoNT.markA] := by
+  simpa [powerTwoMarkerForm] using
+    repeatSymbol_succ_eq_append (powN PowerTwoNT.markA) n
+
+theorem powerTwo_duplicate_markers_derives
+    (n : Nat) (pre suffix : SententialForm SquareTerminal PowerTwoNT) :
+    GeneralGrammar.Derives PowerTwoGrammar
+      (pre ++ [powN PowerTwoNT.d] ++ powerTwoMarkerForm n ++ suffix)
+      (pre ++ powerTwoMarkerForm (n + n) ++ [powN PowerTwoNT.d] ++
+        suffix) := by
+  induction n generalizing pre with
+  | zero =>
+      simpa [powerTwoMarkerForm, Word.RepeatSymbol, List.append_assoc] using
+        (GeneralGrammar.Derives.refl (G := PowerTwoGrammar)
+          (pre ++ [powN PowerTwoNT.d] ++ suffix))
+  | succ n ih =>
+      let D := powN PowerTwoNT.d
+      let A := powN PowerTwoNT.markA
+      have hstep :
+          GeneralGrammar.Yields PowerTwoGrammar
+            (pre ++ [D, A] ++ powerTwoMarkerForm n ++ suffix)
+            (pre ++ [A, A, D] ++ powerTwoMarkerForm n ++ suffix) := by
+        simpa [D, A, List.append_assoc] using
+          general_yields_of_production (G := PowerTwoGrammar)
+            PowerTwoProduces.duplicate pre (powerTwoMarkerForm n ++ suffix)
+      have hrest :
+          GeneralGrammar.Derives PowerTwoGrammar
+            (pre ++ [A, A, D] ++ powerTwoMarkerForm n ++ suffix)
+            (pre ++ [A, A] ++ powerTwoMarkerForm (n + n) ++ [D] ++
+              suffix) := by
+        simpa [D, A, List.append_assoc] using
+          ih (pre ++ [A, A])
+      have hall := GeneralGrammar.Derives.step hstep hrest
+      have hmarkers :
+          powerTwoMarkerForm ((n + 1) + (n + 1)) =
+            [A, A] ++ powerTwoMarkerForm (n + n) := by
+        have hnat : (n + 1) + (n + 1) = 2 + (n + n) := by omega
+        rw [hnat]
+        simpa [powerTwoMarkerForm, A] using
+          repeatSymbol_add_eq_concat (powN PowerTwoNT.markA) 2 (n + n)
+      have hsuccFront :
+          powerTwoMarkerForm (n + 1) = [A] ++ powerTwoMarkerForm n := by
+        have hnat : n + 1 = Nat.succ n := by omega
+        unfold powerTwoMarkerForm
+        rw [hnat]
+        rfl
+      have hsource :
+          pre ++ [D] ++ powerTwoMarkerForm (n + 1) ++ suffix =
+            pre ++ [D, A] ++ powerTwoMarkerForm n ++ suffix := by
+        rw [hsuccFront]
+        simp [List.append_assoc]
+      have htarget :
+          pre ++ powerTwoMarkerForm ((n + 1) + (n + 1)) ++ [D] ++ suffix =
+            pre ++ [A, A] ++ powerTwoMarkerForm (n + n) ++ [D] ++ suffix := by
+        rw [hmarkers]
+        simp [List.append_assoc]
+      rw [hsource, htarget]
+      exact hall
+
+theorem powerTwo_return_left_derives
+    (n : Nat) (pre suffix : SententialForm SquareTerminal PowerTwoNT) :
+    GeneralGrammar.Derives PowerTwoGrammar
+      (pre ++ powerTwoMarkerForm n ++ [powN PowerTwoNT.r] ++ suffix)
+      (pre ++ [powN PowerTwoNT.r] ++ powerTwoMarkerForm n ++ suffix) := by
+  induction n generalizing suffix with
+  | zero =>
+      simpa [powerTwoMarkerForm, Word.RepeatSymbol, List.append_assoc] using
+        (GeneralGrammar.Derives.refl (G := PowerTwoGrammar)
+          (pre ++ [powN PowerTwoNT.r] ++ suffix))
+  | succ n ih =>
+      let R := powN PowerTwoNT.r
+      let A := powN PowerTwoNT.markA
+      have hstep :
+          GeneralGrammar.Yields PowerTwoGrammar
+            (pre ++ powerTwoMarkerForm n ++ [A, R] ++ suffix)
+            (pre ++ powerTwoMarkerForm n ++ [R, A] ++ suffix) := by
+        simpa [A, R, List.append_assoc] using
+          general_yields_of_production (G := PowerTwoGrammar)
+            PowerTwoProduces.returnLeft
+            (pre ++ powerTwoMarkerForm n) suffix
+      have hrest :
+          GeneralGrammar.Derives PowerTwoGrammar
+            (pre ++ powerTwoMarkerForm n ++ [R, A] ++ suffix)
+            (pre ++ [R] ++ powerTwoMarkerForm n ++ [A] ++ suffix) := by
+        simpa [A, R, List.append_assoc] using ih ([A] ++ suffix)
+      have hall := GeneralGrammar.Derives.step hstep hrest
+      simpa [powerTwoMarkerForm_succ_eq_append, A, R,
+        List.append_assoc] using hall
+
+/-!
+**Doubling passes.** One pass changes {lit}`H A^n E` into {lit}`H A^(2n) E`.
+Iterating that pass from the single marker introduced by the start production
+gives the control form with {lit}`2^n` markers.
+-/
+
+theorem powerTwo_doubling_pass_derives (n : Nat) :
+    GeneralGrammar.Derives PowerTwoGrammar
+      (powerTwoControlForm n)
+      (powerTwoControlForm (n + n)) := by
+  let H := powN PowerTwoNT.h
+  let D := powN PowerTwoNT.d
+  let R := powN PowerTwoNT.r
+  let E := powN PowerTwoNT.boundary
+  have hbegin :
+      GeneralGrammar.Yields PowerTwoGrammar
+        ([H] ++ powerTwoMarkerForm n ++ [E])
+        ([D] ++ powerTwoMarkerForm n ++ [E]) := by
+    simpa [H, D, E, List.append_assoc] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.beginDouble [] (powerTwoMarkerForm n ++ [E])
+  have hdup :
+      GeneralGrammar.Derives PowerTwoGrammar
+        ([D] ++ powerTwoMarkerForm n ++ [E])
+        (powerTwoMarkerForm (n + n) ++ [D, E]) := by
+    simpa [D, E, List.append_assoc] using
+      powerTwo_duplicate_markers_derives n [] [E]
+  have hturn :
+      GeneralGrammar.Yields PowerTwoGrammar
+        (powerTwoMarkerForm (n + n) ++ [D, E])
+        (powerTwoMarkerForm (n + n) ++ [R, E]) := by
+    simpa [D, R, E, List.append_assoc] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.turnAround (powerTwoMarkerForm (n + n)) []
+  have hreturn :
+      GeneralGrammar.Derives PowerTwoGrammar
+        (powerTwoMarkerForm (n + n) ++ [R, E])
+        ([R] ++ powerTwoMarkerForm (n + n) ++ [E]) := by
+    simpa [R, E, List.append_assoc] using
+      powerTwo_return_left_derives (n + n) [] [E]
+  have hready :
+      GeneralGrammar.Yields PowerTwoGrammar
+        ([R] ++ powerTwoMarkerForm (n + n) ++ [E])
+        ([H] ++ powerTwoMarkerForm (n + n) ++ [E]) := by
+    simpa [H, R, E, List.append_assoc] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.ready [] (powerTwoMarkerForm (n + n) ++ [E])
+  have hall := GeneralGrammar.Derives.step hbegin
+    (GeneralGrammar.derives_trans hdup
+      (GeneralGrammar.Derives.step hturn
+        (GeneralGrammar.derives_trans hreturn
+          (GeneralGrammar.yields_derives hready))))
+  simpa [powerTwoControlForm, H, D, R, E, List.append_assoc] using hall
+
+theorem powerTwo_start_control_derives :
+    GeneralGrammar.Derives PowerTwoGrammar [powN PowerTwoNT.start]
+      (powerTwoControlForm 1) := by
+  have hstart :
+      GeneralGrammar.Yields PowerTwoGrammar [powN PowerTwoNT.start]
+        [powN PowerTwoNT.h, powN PowerTwoNT.markA,
+          powN PowerTwoNT.boundary] := by
+    simpa using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.start [] []
+  simpa [powerTwoControlForm, powerTwoMarkerForm, Word.RepeatSymbol,
+    List.append_assoc] using GeneralGrammar.yields_derives hstart
+
+theorem powerTwo_control_derives_pow (n : Nat) :
+    GeneralGrammar.Derives PowerTwoGrammar [powN PowerTwoNT.start]
+      (powerTwoControlForm (2 ^ n)) := by
+  induction n with
+  | zero =>
+      simpa using powerTwo_start_control_derives
+  | succ n ih =>
+      have hpass := powerTwo_doubling_pass_derives (2 ^ n)
+      have hall := GeneralGrammar.derives_trans ih hpass
+      have hpow : 2 ^ (n + 1) = 2 ^ n + 2 ^ n := by
+        rw [Nat.pow_succ]
+        omega
+      simpa [hpow] using hall
+
+/-!
+**Emitting terminals.** After the control marker decides to stop, the boundary
+is removed and each accumulated marker becomes a terminal {lit}`a`.
+-/
+
+theorem powerTwo_emit_markers_derives_context
+    (n : Nat) (pre suffix : SententialForm SquareTerminal PowerTwoNT) :
+    GeneralGrammar.Derives PowerTwoGrammar
+      (pre ++ powerTwoMarkerForm n ++ suffix)
+      (pre ++ SententialForm.terminalWord
+        (Word.RepeatSymbol SquareTerminal.a n) ++ suffix) := by
+  induction n generalizing pre with
+  | zero =>
+      simpa [powerTwoMarkerForm, Word.RepeatSymbol,
+        SententialForm.terminalWord, List.append_assoc] using
+        (GeneralGrammar.Derives.refl (G := PowerTwoGrammar)
+          (pre ++ suffix))
+  | succ n ih =>
+      let A := powN PowerTwoNT.markA
+      let a := powT SquareTerminal.a
+      have hemit :
+          GeneralGrammar.Yields PowerTwoGrammar
+            (pre ++ [A] ++ powerTwoMarkerForm n ++ suffix)
+            (pre ++ [a] ++ powerTwoMarkerForm n ++ suffix) := by
+        simpa [A, a, List.append_assoc] using
+          general_yields_of_production (G := PowerTwoGrammar)
+            PowerTwoProduces.emitA pre (powerTwoMarkerForm n ++ suffix)
+      have hrest :
+          GeneralGrammar.Derives PowerTwoGrammar
+            (pre ++ [a] ++ powerTwoMarkerForm n ++ suffix)
+            (pre ++ [a] ++ SententialForm.terminalWord
+              (Word.RepeatSymbol SquareTerminal.a n) ++ suffix) := by
+        simpa [a, List.append_assoc] using ih (pre ++ [a])
+      have hall := GeneralGrammar.Derives.step hemit hrest
+      simpa [powerTwoMarkerForm, Word.RepeatSymbol,
+        SententialForm.terminalWord, A, a, powT, ggTerminal,
+        List.append_assoc] using hall
+
+theorem powerTwo_finish_control_derives (n : Nat) :
+    GeneralGrammar.Derives PowerTwoGrammar
+      (powerTwoControlForm n)
+      (SententialForm.terminalWord
+        (Word.RepeatSymbol SquareTerminal.a n)) := by
+  let H := powN PowerTwoNT.h
+  let E := powN PowerTwoNT.boundary
+  have hfinishH :
+      GeneralGrammar.Yields PowerTwoGrammar
+        ([H] ++ powerTwoMarkerForm n ++ [E])
+        (powerTwoMarkerForm n ++ [E]) := by
+    simpa [H, E, List.append_assoc] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.finishH [] (powerTwoMarkerForm n ++ [E])
+  have hfinishBoundary :
+      GeneralGrammar.Yields PowerTwoGrammar
+        (powerTwoMarkerForm n ++ [E])
+        (powerTwoMarkerForm n) := by
+    simpa [E, List.append_assoc] using
+      general_yields_of_production (G := PowerTwoGrammar)
+        PowerTwoProduces.finishBoundary (powerTwoMarkerForm n) []
+  have hemits :
+      GeneralGrammar.Derives PowerTwoGrammar
+        (powerTwoMarkerForm n)
+        (SententialForm.terminalWord
+          (Word.RepeatSymbol SquareTerminal.a n)) := by
+    simpa using powerTwo_emit_markers_derives_context n [] []
+  have hall := GeneralGrammar.Derives.step hfinishH
+    (GeneralGrammar.Derives.step hfinishBoundary hemits)
+  simpa [powerTwoControlForm, H, E, List.append_assoc] using hall
+
+theorem powerTwo_words_generated (n : Nat) :
+    powerTwoWord n ∈ GeneralGrammar.GeneratedLanguage PowerTwoGrammar := by
+  have hcontrol := powerTwo_control_derives_pow n
+  have hfinish := powerTwo_finish_control_derives (2 ^ n)
+  have hall := GeneralGrammar.derives_trans hcontrol hfinish
+  simpa [GeneralGrammar.GeneratedLanguage, PowerTwoGrammar, powerTwoWord,
+    powN, ggNonterminal] using hall
+
+/-!
+**Power-of-two closeout.** The constructive direction now covers the full
+family. Exactness is reduced to the remaining soundness statement that every
+terminal derivation has power-of-two length.
+-/
+
+theorem powerTwo_language_subset_generated {word : Word SquareTerminal}
+    (h : word ∈ powerTwoLanguage) :
+    word ∈ GeneralGrammar.GeneratedLanguage PowerTwoGrammar := by
+  rcases h with ⟨n, hword⟩
+  rw [hword]
+  exact powerTwo_words_generated n
+
+def PowerTwoGeneratedOnlyLanguageConstruction : Prop :=
+  Language.Subset (GeneralGrammar.GeneratedLanguage PowerTwoGrammar)
+    powerTwoLanguage
+
+theorem powerTwo_generated_language_exact_of_soundness
+    (hsound : PowerTwoGeneratedOnlyLanguageConstruction) :
+    Language.Equal (GeneralGrammar.GeneratedLanguage PowerTwoGrammar)
+      powerTwoLanguage := by
+  intro word
+  constructor
+  · exact hsound word
+  · exact powerTwo_language_subset_generated
+
+/-!
+The sample derivation below is retained as a concrete trace, but the theorem
+{name}`powerTwo_words_generated` now proves the whole intended family:
+after {lit}`n` doubling passes the grammar derives {lit}`a^(2^n)`. The reverse
+direction is isolated as {name}`PowerTwoGeneratedOnlyLanguageConstruction`.
 -/
 
 theorem powerTwoGrammar_generates_four_as :

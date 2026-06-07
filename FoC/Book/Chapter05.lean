@@ -73,8 +73,11 @@ undecidability, inspect {module}`FoC.Computability.Encoding`,
 The chapter's formal core is covered. The remaining work is not hidden: the
 book pages and reusable APIs identify concrete finite compiler constructions,
 finite/effective grammar construction, and the universal-machine construction
-as explicit deferred surfaces. The surrounding theorems are therefore stated
-with closeout records or named construction hypotheses where a textbook proof
-says "build the machine" but the formal repository has not yet completed that
-finite machine description.
+as explicit deferred surfaces. The closeout records have been narrowed to the
+actual construction handoffs: Section 5.2 now relates semantic and finite
+grammar closeouts directly, while Section 5.3 packages row coverage from the
+encoded-input program compiler plus one universal runner. The surrounding
+theorems are therefore stated with closeout records or named construction
+hypotheses where a textbook proof says "build the machine" but the formal
+repository has not yet completed that finite machine description.
 -/
