@@ -898,6 +898,19 @@ theorem ofNat_mul (m n : Nat) :
   apply eq_of_toRat_eq
   rw [toRat_ofNat, toRat_mul, toRat_ofNat, toRat_ofNat, Rat.natCast_mul]
 
+theorem ofNat_add (m n : Nat) :
+    ofNat (m + n) = ofNat m + ofNat n := by
+  apply eq_of_toRat_eq
+  rw [toRat_ofNat, toRat_add, toRat_ofNat, toRat_ofNat, Rat.natCast_add]
+
+theorem add_mul (x y z : QRat) : (x + y) * z = x * z + y * z := by
+  apply eq_of_toRat_eq
+  rw [toRat_mul, toRat_add, toRat_add, toRat_mul, toRat_mul, Rat.add_mul]
+
+theorem mul_add (x y z : QRat) : x * (y + z) = x * y + x * z := by
+  apply eq_of_toRat_eq
+  rw [toRat_mul, toRat_add, toRat_add, toRat_mul, toRat_mul, Rat.mul_add]
+
 theorem zero_lt_one : (0 : QRat) < 1 := by
   change RatPair.RawLt (RatPair.ofInt 0) (RatPair.ofInt 1)
   simp [RatPair.RawLt, RatPair.ofInt]
@@ -1128,6 +1141,13 @@ theorem div_nonneg {x y : QRat}
   rw [zero_mul] at hx0
   exact hx hx0
 
+theorem div_pos {x y : QRat} (hx : 0 < x) (hy : 0 < y) :
+    0 < x / y := by
+  apply lt_of_toRat_lt
+  rw [toRat_zero, toRat_div, Rat.div_def]
+  exact Rat.mul_pos (toRat_lt_of_lt hx)
+    (Rat.inv_pos.mpr (toRat_lt_of_lt hy))
+
 theorem lt_div_iff {x y c : QRat} (hc : 0 < c) :
     x < y / c <-> x * c < y := by
   constructor
@@ -1175,6 +1195,44 @@ theorem inv_ne_zero {x : QRat} (hx : x ≠ 0) : x⁻¹ ≠ 0 := by
   change x⁻¹ * x = 0 * x at hmul
   rw [inv_mul_cancel hx, zero_mul] at hmul
   exact one_ne_zero hmul
+
+theorem exists_nat_mul_pos_gt (z : QRat) {c : QRat} (hc : 0 < c) :
+    exists n : Nat, z < ofNat n * c := by
+  let r : Rat := toRat z / toRat c
+  let k : Int := r.floor + 1
+  let n : Nat := Int.toNat k + 1
+  have hkltInt : k < Int.ofNat n := by
+    dsimp [n]
+    have hle : k ≤ Int.ofNat (Int.toNat k) := Int.self_le_toNat k
+    have hlt : Int.ofNat (Int.toNat k) < Int.ofNat (Int.toNat k + 1) :=
+      Int.ofNat_lt.mpr (Nat.lt_succ_self _)
+    exact Int.lt_of_le_of_lt hle hlt
+  have hrk : r < (k : Rat) := by
+    dsimp [k]
+    exact Rat.lt_floor_add_one r
+  have hkn : (k : Rat) < (n : Rat) := by
+    have h :=
+      (Rat.intCast_lt_intCast (a := k) (b := Int.ofNat n)).mpr hkltInt
+    simpa using h
+  have hrn : r < (n : Rat) := by
+    grind
+  have hzc : toRat z < (n : Rat) * toRat c := by
+    have hcRat : 0 < toRat c := toRat_lt_of_lt hc
+    exact (Rat.div_lt_iff hcRat).mp hrn
+  exact Exists.intro n (lt_of_toRat_lt (by
+    rw [toRat_mul, toRat_ofNat]
+    exact hzc))
+
+theorem half_pos {x : QRat} (hx : 0 < x) :
+    0 < x / ofNat 2 :=
+  div_pos hx (ofNat_pos (by decide : 0 < 2))
+
+theorem half_lt_self {x : QRat} (hx : 0 < x) :
+    x / ofNat 2 < x := by
+  apply lt_of_toRat_lt
+  rw [toRat_div, toRat_ofNat]
+  have hxRat : 0 < toRat x := toRat_lt_of_lt hx
+  grind
 
 /-!
 # Natural rational fractions

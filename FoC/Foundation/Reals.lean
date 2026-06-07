@@ -599,6 +599,152 @@ theorem neg_neg (x : Real) : -(-x) = x := by
         · rw [QRat.neg_neg]
           exact ha.left
 
+/-!
+**Cut approximation.** The additive inverse theorem for {lean}`Real` needs one
+standard Dedekind-cut fact: for every positive rational tolerance, a cut has a
+lower rational and an upper rational closer than that tolerance. The proof uses
+the Archimedean step bound for {lean}`QRat`, walks along a finite rational grid,
+and finds the first grid point that leaves the cut.
+-/
+
+private theorem qrat_grid_succ (base step : QRat) (i : Nat) :
+    base + QRat.ofNat (i + 1) * step =
+      (base + step) + QRat.ofNat i * step := by
+  apply QRat.eq_of_toRat_eq
+  rw [QRat.toRat_add, QRat.toRat_mul, QRat.toRat_add, QRat.toRat_add,
+    QRat.toRat_mul, QRat.toRat_ofNat, QRat.toRat_ofNat]
+  grind [Rat.add_mul, Rat.mul_add]
+
+private theorem qrat_grid_zero (base step : QRat) :
+    base + QRat.ofNat 0 * step = base := by
+  rw [show QRat.ofNat 0 = (0 : QRat) by rfl, QRat.zero_mul, QRat.add_zero]
+
+private theorem qrat_grid_one (base step : QRat) :
+    base + QRat.ofNat 1 * step = base + step := by
+  rw [show QRat.ofNat 1 = (1 : QRat) by rfl, QRat.one_mul]
+
+private theorem grid_transition (x : Real) (base step : QRat) :
+    forall N : Nat,
+      x.lower base ->
+      ¬ x.lower (base + QRat.ofNat (N + 1) * step) ->
+      exists i : Nat,
+        i <= N ∧
+          x.lower (base + QRat.ofNat i * step) ∧
+          ¬ x.lower (base + QRat.ofNat (i + 1) * step)
+  | 0, hbase, hend => by
+      exists 0
+      constructor
+      · exact Nat.le_refl 0
+      · constructor
+        · rwa [qrat_grid_zero]
+        · simpa [qrat_grid_one] using hend
+  | N + 1, hbase, hend => by
+      by_cases hnext : x.lower (base + step)
+      · have hend' : ¬ x.lower ((base + step) + QRat.ofNat (N + 1) * step) := by
+          intro h
+          apply hend
+          rwa [← qrat_grid_succ base step (N + 1)] at h
+        rcases grid_transition x (base + step) step N hnext hend' with
+          ⟨i, hiN, hlow, hnot⟩
+        exists i + 1
+        constructor
+        · exact Nat.succ_le_succ hiN
+        · constructor
+          · rwa [qrat_grid_succ base step i]
+          · rwa [qrat_grid_succ base step (i + 1)]
+      · exists 0
+        constructor
+        · exact Nat.zero_le (N + 1)
+        · constructor
+          · rwa [qrat_grid_zero]
+          · rwa [qrat_grid_one]
+
+private theorem qrat_adjacent_grid_gap (base step : QRat) (i : Nat) :
+    (base + QRat.ofNat (i + 1) * step) -
+        (base + QRat.ofNat i * step) = step := by
+  apply QRat.eq_of_toRat_eq
+  rw [QRat.toRat_sub, QRat.toRat_add, QRat.toRat_mul, QRat.toRat_ofNat,
+    QRat.toRat_add, QRat.toRat_mul, QRat.toRat_ofNat]
+  grind [Rat.add_mul, Rat.mul_add]
+
+theorem exists_lower_upper_gap {x : Real} {eps : QRat} (heps : 0 < eps) :
+    exists a u : QRat, x.lower a ∧ ¬ x.lower u ∧ u - a < eps := by
+  rcases x.nonempty with ⟨l, hl⟩
+  rcases x.proper with ⟨u0, hu0⟩
+  let step := eps / QRat.ofNat 2
+  have hstep : 0 < step := by
+    dsimp [step]
+    exact QRat.half_pos heps
+  rcases QRat.exists_nat_mul_pos_gt (u0 - l) hstep with ⟨N, hN⟩
+  have hu0_end : u0 < l + QRat.ofNat (N + 1) * step := by
+    have hbase : u0 < QRat.ofNat N * step + l :=
+      (QRat.sub_lt_iff (a := u0) (b := QRat.ofNat N * step) (c := l)).mp hN
+    have hbase' : u0 < l + QRat.ofNat N * step := by
+      simpa [QRat.add_comm] using hbase
+    have hNsucc : QRat.ofNat N * step < QRat.ofNat (N + 1) * step :=
+      QRat.mul_lt_mul_of_pos_right
+        (QRat.ofNat_lt_of_nat_lt (Nat.lt_succ_self N)) hstep
+    have hinc :
+        l + QRat.ofNat N * step < l + QRat.ofNat (N + 1) * step :=
+      QRat.add_lt_add_left l hNsucc
+    exact QRat.lt_trans hbase' hinc
+  have hend : ¬ x.lower (l + QRat.ofNat (N + 1) * step) := by
+    intro h
+    exact hu0 (x.downward_closed u0 (l + QRat.ofNat (N + 1) * step) hu0_end h)
+  rcases grid_transition x l step N hl hend with ⟨i, _hiN, ha, hu⟩
+  exists l + QRat.ofNat i * step
+  exists l + QRat.ofNat (i + 1) * step
+  constructor
+  · exact ha
+  · constructor
+    · exact hu
+    · rw [qrat_adjacent_grid_gap]
+      dsimp [step]
+      exact QRat.half_lt_self heps
+
+private theorem qrat_lt_add_neg_of_sub_lt_neg {q a u : QRat}
+    (hgap : u - a < -q) : q < a + -u := by
+  apply QRat.lt_of_toRat_lt
+  have hgapRat := QRat.toRat_lt_of_lt hgap
+  rw [QRat.toRat_sub, QRat.toRat_neg] at hgapRat
+  rw [QRat.toRat_add, QRat.toRat_neg]
+  grind
+
+theorem add_neg_cancel (x : Real) : x + -x = 0 := by
+  apply ext
+  intro q
+  change (x + -x).lower q ↔ q < 0
+  constructor
+  · intro h
+    rcases h with ⟨a, b, ha, hbneg, hq⟩
+    rcases hbneg with ⟨u, hu, hbu⟩
+    have hau : a < u := lower_lt_of_not_lower ha hu
+    have habu : a + b < a + -u := QRat.add_lt_add_left a hbu
+    have hau0 : a + -u < 0 := by
+      have h := QRat.add_lt_add_right (-u) hau
+      rwa [QRat.add_neg_cancel] at h
+    exact QRat.lt_trans hq (QRat.lt_trans habu hau0)
+  · intro hq0
+    have heps : 0 < -q := QRat.neg_pos_of_neg hq0
+    rcases exists_lower_upper_gap (x := x) heps with ⟨a, u, ha, hu, hgap⟩
+    have hqa : q < a + -u := qrat_lt_add_neg_of_sub_lt_neg hgap
+    rcases QRat.density hqa with ⟨c, hqc, hcu⟩
+    let b := c - a
+    have hbneg : b < -u := by
+      dsimp [b]
+      apply (QRat.sub_lt_iff (a := c) (b := -u) (c := a)).mpr
+      simpa [QRat.add_comm] using hcu
+    have hqab : q < a + b := by
+      dsimp [b]
+      have hcancel : a + (c - a) = c := by
+        rw [QRat.add_comm, QRat.sub_add_cancel]
+      rwa [hcancel]
+    exact ⟨a, b, ha, ⟨u, hu, hbneg⟩, hqab⟩
+
+theorem neg_add_cancel (x : Real) : -x + x = 0 := by
+  rw [add_comm]
+  exact add_neg_cancel x
+
 theorem eq_zero_of_nonneg_of_neg_nonneg {x : Real}
     (hx : (0 : Real) ≤ x) (hnx : (0 : Real) ≤ -x) : x = 0 := by
   apply ext
