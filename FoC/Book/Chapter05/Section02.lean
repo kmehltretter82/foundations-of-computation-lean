@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler
 import FoC.Computability.Grammar
 
 set_option doc.verso true
@@ -14,8 +15,9 @@ This section connects recursive, recursively enumerable, acceptable, and
 listable languages. It also records the statement shape for the theorem that
 finite general grammars generate exactly the recursively enumerable languages.
 The reusable modules are {module}`FoC.Computability.Enumerable`,
-{module}`FoC.Computability.Program`, {module}`FoC.Computability.Grammar`,
-and {module}`FoC.Grammars.GeneralGrammar`.
+{module}`FoC.Computability.Program`, {module}`FoC.Computability.Compiler`,
+{module}`FoC.Computability.Grammar`, and
+{module}`FoC.Grammars.GeneralGrammar`.
 
 The guiding distinction is total decision versus semi-decision. Recursive
 languages have deciders. Recursively enumerable languages have recognizers or
@@ -69,6 +71,12 @@ def StagedAcceptorCompilationConstruction (alpha : Type u) : Prop :=
 def StagedBoolDeciderCompilationConstruction (alpha : Type u) : Prop :=
   ProgramBoolDeciderCompilationPrinciple alpha
 
+def ConcreteDescriptionAcceptorCompilationConstruction : Prop :=
+  DescriptionProgramAcceptorCompilationPrinciple
+
+def ConcreteDescriptionBoolDeciderCompilationConstruction : Prop :=
+  DescriptionProgramBoolDeciderCompilationPrinciple
+
 def PartialFunctionDomainLanguage
     (f : Word input -> Option (Word output)) : Language input :=
   PartialFunctionDomain f
@@ -107,6 +115,30 @@ def ProgramBoolDecidableLanguage (L : Language alpha) : Prop :=
 
 def ProgramAcceptableLanguage (L : Language alpha) : Prop :=
   ProgramAcceptable L
+
+def ConcreteMachineDescriptionAccepts
+    (D : MachineDescription) (L : Language Bool) : Prop :=
+  MachineDescriptionAcceptsLanguage D L
+
+def ConcreteMachineDescriptionDecides
+    (D : MachineDescription) (L : Language Bool) : Prop :=
+  MachineDescriptionDecidesLanguage D L
+
+def ConcreteProgramCompiledByDescription
+    (P : StagedProgram Bool Unit) (D : MachineDescription) : Prop :=
+  ProgramCompiledByDescription P D
+
+def ConcreteBoolProgramCompiledByDescription
+    (P : StagedProgram Bool Bool) (D : MachineDescription) : Prop :=
+  BoolProgramCompiledByDescription P D
+
+def ConcreteProgramAcceptableByDescription
+    (L : Language Bool) : Prop :=
+  ProgramAcceptableByDescription L
+
+def ConcreteProgramBoolDecidableByDescription
+    (L : Language Bool) : Prop :=
+  ProgramBoolDecidableByDescription L
 
 def LanguageProgramAcceptanceTrace
     (P : StagedProgram alpha Unit)
@@ -363,6 +395,49 @@ theorem dovetailing_decidable_construction_of_staged_program_compiler
     (hcompile : StagedBoolDeciderCompilationConstruction alpha) :
     DovetailingDecidableConstruction alpha :=
   Computability.reCoReToDecidablePrinciple_of_programBoolCompiler hcompile
+
+theorem staged_acceptor_compilation_construction_of_concrete_descriptions
+    (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
+    StagedAcceptorCompilationConstruction Bool :=
+  Computability.programAcceptorCompilationPrinciple_of_descriptionCompiler
+    hcompile
+
+theorem staged_bool_decider_compilation_construction_of_concrete_descriptions
+    (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
+    StagedBoolDeciderCompilationConstruction Bool :=
+  Computability.programBoolDeciderCompilationPrinciple_of_descriptionCompiler
+    hcompile
+
+theorem dovetailing_decidable_construction_of_concrete_description_compiler
+    (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
+    DovetailingDecidableConstruction Bool :=
+  dovetailing_decidable_construction_of_staged_program_compiler
+    (staged_bool_decider_compilation_construction_of_concrete_descriptions
+      hcompile)
+
+theorem concrete_machine_description_accepts_turing_acceptable
+    {D : MachineDescription} {L : Language Bool}
+    (h : ConcreteMachineDescriptionAccepts D L) :
+    RecursivelyEnumerableLanguage L :=
+  Computability.machineDescriptionAcceptsLanguage_turingAcceptable h
+
+theorem concrete_machine_description_decides_turing_decidable
+    {D : MachineDescription} {L : Language Bool}
+    (h : ConcreteMachineDescriptionDecides D L) :
+    RecursiveLanguage L :=
+  Computability.machineDescriptionDecidesLanguage_turingDecidable h
+
+theorem concrete_program_acceptable_by_description_turing_acceptable
+    {L : Language Bool}
+    (h : ConcreteProgramAcceptableByDescription L) :
+    RecursivelyEnumerableLanguage L :=
+  Computability.programAcceptableByDescription_turingAcceptable h
+
+theorem concrete_program_bool_decidable_by_description_turing_decidable
+    {L : Language Bool}
+    (h : ConcreteProgramBoolDecidableByDescription L) :
+    RecursiveLanguage L :=
+  Computability.programBoolDecidableByDescription_turingDecidable h
 
 theorem stopped_decider_has_complementary_output_traces
     {M : TuringMachine symbol state}
@@ -687,6 +762,12 @@ def LanguagePartialFunctionProgram
     StagedProgram input output :=
   PartialFunctionProgram f
 
+def ConcretePartialFunctionCompiledByDescription
+    (f : Word input -> Option (Word Bool))
+    (encodeInput : input -> Bool)
+    (D : MachineDescription) : Prop :=
+  PartialFunctionCompiledByDescription f encodeInput D
+
 def LanguageProgramRange (P : StagedProgram input output) :
     Language output :=
   ProgramRangeLanguage P
@@ -694,6 +775,18 @@ def LanguageProgramRange (P : StagedProgram input output) :
 def LanguagePartialUnaryFunctionProgramRange
     (L : Language output) : Prop :=
   PartialUnaryFunctionProgramRange L
+
+def ConcretePartialUnaryTuringComputableRange
+    (L : Language Bool) : Prop :=
+  PartialUnaryTuringComputableRange L
+
+def ConcreteCompiledPartialUnaryRange
+    (L : Language Bool) : Prop :=
+  CompiledPartialUnaryRange L
+
+def ConcreteCompiledPartialUnaryFunctionProgramRange
+    (L : Language Bool) : Prop :=
+  CompiledPartialUnaryFunctionProgramRange L
 
 theorem listing_program_iff_partially_listable_language
     (L : Language output) :
@@ -728,6 +821,38 @@ theorem partially_listable_language_iff_partial_unary_function_program_range
     LanguagePartiallyListable L <->
       LanguagePartialUnaryFunctionProgramRange L :=
   Computability.partiallyListable_iff_partialUnaryFunctionProgramRange L
+
+theorem concrete_partial_function_compiled_turing_computable_partial
+    {f : Word input -> Option (Word Bool)}
+    {encodeInput : input -> Bool}
+    {D : MachineDescription}
+    (h : ConcretePartialFunctionCompiledByDescription f encodeInput D) :
+    TuringComputablePartial f :=
+  Computability.partialFunctionCompiledByDescription_turingComputablePartial h
+
+theorem concrete_compiled_partial_unary_range_is_partial_range
+    {L : Language Bool}
+    (h : ConcreteCompiledPartialUnaryRange L) :
+    PartialRangeOfUnaryStringFunction L :=
+  Computability.compiledPartialUnaryRange_partialRangeOfUnaryFunction h
+
+theorem concrete_compiled_partial_unary_range_has_turing_computable_range
+    {L : Language Bool}
+    (h : ConcreteCompiledPartialUnaryRange L) :
+    ConcretePartialUnaryTuringComputableRange L :=
+  Computability.compiledPartialUnaryRange_turingComputableRange h
+
+theorem concrete_compiled_partial_unary_function_program_range_is_partial_range
+    {L : Language Bool}
+    (h : ConcreteCompiledPartialUnaryFunctionProgramRange L) :
+    PartialRangeOfUnaryStringFunction L :=
+  Computability.compiledPartialUnaryFunctionProgramRange_partialRange h
+
+theorem concrete_compiled_partial_unary_function_program_range_has_turing_computable_range
+    {L : Language Bool}
+    (h : ConcreteCompiledPartialUnaryFunctionProgramRange L) :
+    ConcretePartialUnaryTuringComputableRange L :=
+  Computability.compiledPartialUnaryFunctionProgramRange_turingComputableRange h
 
 theorem function_value_in_range (f : Word input -> Word output) (x : Word input) :
     f x ∈ FunctionRangeLanguage f :=

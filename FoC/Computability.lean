@@ -9,6 +9,7 @@ import FoC.Computability.Grammar
 import FoC.Computability.Undecidable
 import FoC.Computability.Coding
 import FoC.Computability.Encoding
+import FoC.Computability.Compiler
 
 set_option doc.verso true
 
@@ -44,7 +45,10 @@ of computation section.  {module}`FoC.Computability.Coding` supplies concrete
 pair-code words and injectivity facts for those reductions.
 {module}`FoC.Computability.Encoding` starts the concrete machine-description
 and interpreter layer needed to discharge the remaining compiler and universal
-machine theorem shapes.
+machine theorem shapes.  {module}`FoC.Computability.Compiler` proves exact
+simulation between well-formed descriptions and their compiled one-tape
+machines, then exposes description-backed compiler bridges for staged
+acceptors, Boolean deciders, and partial unary range programs.
 
 The chapter-facing material in {module -checked}`FoC.Book.Chapter05` points to
 these definitions while keeping the textbook-order statements separate from the
