@@ -28,8 +28,10 @@ For the full source-of-truth status, see [`data/coverage.yaml`](data/coverage.ya
   - `PowerTwoGeneratedOnlyLanguageConstruction`
 - **Larger unrestricted grammar exercise exactness.** Representative derivations,
   invariants, finite-production witnesses, and several exact-language theorems
-  are present, but exact generated-language proofs for every larger sample
-  grammar remain deferred.
+  are present. The four-symbol equal-count grammar now has an exact
+  generated-language theorem and finite-production wrapper. Exact
+  generated-language proofs for the remaining larger sample grammars, such as
+  the ordered four-block and strict three-way count examples, remain deferred.
 
 ### Chapter 5
 
