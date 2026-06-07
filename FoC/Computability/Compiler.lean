@@ -510,6 +510,130 @@ def CodeUniversalMachineSpec
       (Languages.Word.Concat machine input) <->
         MachineDescription.CodeAccepts machine input
 
+def ImmediateHaltingDescription : MachineDescription where
+  stateCount := 1
+  start := 0
+  halt := 0
+  transitions := []
+
+theorem immediateHaltingDescription_haltsOnInput
+    (input : Word Bool) :
+    ImmediateHaltingDescription.HaltsOnInput input := by
+  exact ⟨0, rfl⟩
+
+theorem codeAccepts_empty_false
+    (input : Word MachineCodeSymbol) :
+    ¬ MachineDescription.CodeAccepts [] input := by
+  intro h
+  rcases h with ⟨D, hdecode, _⟩
+  simp [MachineDescription.decodeDescription] at hdecode
+
+theorem codeUniversalMachineSpec_rawConcat_inconsistent
+    (universal : TuringMachine MachineCodeSymbol state) :
+    ¬ CodeUniversalMachineSpec universal := by
+  intro hspec
+  let D := ImmediateHaltingDescription
+  have haccept :
+      MachineDescription.CodeAccepts
+        (MachineDescription.encodeDescription D) [] :=
+    MachineDescription.codeAccepts_of_encodeDescription
+      (immediateHaltingDescription_haltsOnInput [])
+  have hhalts :
+      TuringMachine.HaltsOnInput universal
+        (Languages.Word.Concat (MachineDescription.encodeDescription D) []) :=
+    (hspec (MachineDescription.encodeDescription D) []).mpr haccept
+  have hhaltsEmpty :
+      TuringMachine.HaltsOnInput universal
+        (Languages.Word.Concat [] (MachineDescription.encodeDescription D)) := by
+    simpa [Languages.Word.Concat] using hhalts
+  have hfalse :
+      MachineDescription.CodeAccepts []
+        (MachineDescription.encodeDescription D) :=
+    (hspec [] (MachineDescription.encodeDescription D)).mp hhaltsEmpty
+  exact codeAccepts_empty_false (MachineDescription.encodeDescription D) hfalse
+
+def CodeUniversalPrefixMachineSpec
+    (universal : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall encoded : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput universal encoded <->
+      MachineDescription.CodePrefixAccepts encoded
+
+def CodeUniversalPrefixMachineRowLanguage
+    (universal : TuringMachine MachineCodeSymbol state)
+    (machine : Word MachineCodeSymbol) : Language MachineCodeSymbol :=
+  fun input => TuringMachine.HaltsOnInput universal
+    (Languages.Word.Concat machine input)
+
+def CodeUniversalPrefixRowsCoverAcceptableLanguages
+    (universal : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall L : Language MachineCodeSymbol, RecursivelyEnumerable L ->
+    exists machine : Word MachineCodeSymbol,
+      Language.Equal
+        (CodeUniversalPrefixMachineRowLanguage universal machine) L
+
+def CodeUniversalPrefixRunnerConstruction : Prop :=
+  exists state : Type,
+    exists universal : TuringMachine MachineCodeSymbol state,
+      CodeUniversalPrefixMachineSpec universal
+
+def CodeUniversalPrefixRowsCoverConstruction : Prop :=
+  exists state : Type,
+    exists universal : TuringMachine MachineCodeSymbol state,
+      CodeUniversalPrefixMachineSpec universal ∧
+        CodeUniversalPrefixRowsCoverAcceptableLanguages universal
+
+structure CodeUniversalPrefixSection53Closeout where
+  encodedInputProgramCompiler : EncodedInputProgramAcceptorCompilationPrinciple
+  universalRunner : CodeUniversalPrefixRunnerConstruction
+
+theorem codeUniversalPrefixMachine_halts_on_encoded_description_iff
+    {universal : TuringMachine MachineCodeSymbol state}
+    (hspec : CodeUniversalPrefixMachineSpec universal)
+    (D : MachineDescription)
+    (input : Word MachineCodeSymbol) :
+    TuringMachine.HaltsOnInput universal
+      (Languages.Word.Concat (MachineDescription.encodeDescription D) input) <->
+        D.HaltsOnInput (MachineDescription.encodeCodeWordAsInput input) := by
+  exact Iff.trans
+    (hspec (Languages.Word.Concat (MachineDescription.encodeDescription D) input))
+    (MachineDescription.codePrefixAccepts_encodeDescription_append_iff D input)
+
+theorem codeUniversalPrefixMachine_rowLanguage_equal_encodedInputLanguage
+    {universal : TuringMachine MachineCodeSymbol state}
+    (hspec : CodeUniversalPrefixMachineSpec universal)
+    (D : MachineDescription) :
+    Language.Equal
+      (CodeUniversalPrefixMachineRowLanguage universal
+        (MachineDescription.encodeDescription D))
+      (MachineDescription.EncodedInputLanguage D) :=
+  codeUniversalPrefixMachine_halts_on_encoded_description_iff hspec D
+
+theorem codeUniversalPrefixRowsCoverAcceptableLanguages_of_encodedInputDescriptionCompiler
+    {universal : TuringMachine MachineCodeSymbol state}
+    (hspec : CodeUniversalPrefixMachineSpec universal)
+    (hcompile : EncodedInputDescriptionCompilerPrinciple) :
+    CodeUniversalPrefixRowsCoverAcceptableLanguages universal := by
+  intro L hL
+  cases hcompile L hL with
+  | intro D hD =>
+      exists MachineDescription.encodeDescription D
+      exact Language.equal_trans
+        (codeUniversalPrefixMachine_rowLanguage_equal_encodedInputLanguage
+          hspec D)
+        hD.right
+
+theorem codeUniversalPrefixRowsCoverConstruction_of_constructions
+    (hcompile : EncodedInputDescriptionCompilerPrinciple)
+    (hrunner : CodeUniversalPrefixRunnerConstruction) :
+    CodeUniversalPrefixRowsCoverConstruction := by
+  unfold CodeUniversalPrefixRunnerConstruction at hrunner
+  rcases hrunner with ⟨state, universal, hspec⟩
+  exact
+    ⟨state, universal,
+      hspec,
+      codeUniversalPrefixRowsCoverAcceptableLanguages_of_encodedInputDescriptionCompiler
+        hspec hcompile⟩
+
 def CodeUniversalMachineRowLanguage
     (universal : TuringMachine MachineCodeSymbol state)
     (machine : Word MachineCodeSymbol) : Language MachineCodeSymbol :=
@@ -527,6 +651,13 @@ def CodeUniversalRunnerConstruction : Prop :=
     exists universal : TuringMachine MachineCodeSymbol state,
       CodeUniversalMachineSpec universal
 
+theorem not_codeUniversalRunnerConstruction :
+    ¬ CodeUniversalRunnerConstruction := by
+  intro h
+  unfold CodeUniversalRunnerConstruction at h
+  rcases h with ⟨state, universal, hspec⟩
+  exact codeUniversalMachineSpec_rawConcat_inconsistent universal hspec
+
 def CodeUniversalRowsCoverConstruction : Prop :=
   exists state : Type,
     exists universal : TuringMachine MachineCodeSymbol state,
@@ -536,6 +667,11 @@ def CodeUniversalRowsCoverConstruction : Prop :=
 structure CodeUniversalSection53Closeout where
   encodedInputProgramCompiler : EncodedInputProgramAcceptorCompilationPrinciple
   universalRunner : CodeUniversalRunnerConstruction
+
+theorem not_codeUniversalSection53Closeout :
+    ¬ CodeUniversalSection53Closeout := by
+  intro hclose
+  exact not_codeUniversalRunnerConstruction hclose.universalRunner
 
 theorem encodedInputProgramCompiledByDescription_acceptsLanguage
     {P : StagedProgram MachineCodeSymbol Unit}
@@ -617,6 +753,14 @@ theorem encodedInputDescriptionCompilerPrinciple_of_section53Closeout
     EncodedInputDescriptionCompilerPrinciple :=
   encodedInputDescriptionCompilerPrinciple_of_programCompiler
     hclose.encodedInputProgramCompiler
+
+theorem codeUniversalPrefixRowsCoverConstruction_of_section53Closeout
+    (hclose : CodeUniversalPrefixSection53Closeout) :
+    CodeUniversalPrefixRowsCoverConstruction :=
+  codeUniversalPrefixRowsCoverConstruction_of_constructions
+    (encodedInputDescriptionCompilerPrinciple_of_programCompiler
+      hclose.encodedInputProgramCompiler)
+    hclose.universalRunner
 
 theorem codeUniversalRowsCoverConstruction_of_section53Closeout
     (hclose : CodeUniversalSection53Closeout) :

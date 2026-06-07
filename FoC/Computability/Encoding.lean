@@ -370,6 +370,19 @@ def encodeTransitions (transitions : List TransitionDescription) :
     Word MachineCodeSymbol :=
   encodeTransitionsAppend transitions []
 
+theorem encodeTransitionsAppend_append
+    (transitions : List TransitionDescription)
+    (suffix tail : Word MachineCodeSymbol) :
+    List.append (encodeTransitionsAppend transitions suffix) tail =
+      encodeTransitionsAppend transitions (List.append suffix tail) := by
+  induction transitions with
+  | nil =>
+      rfl
+  | cons t rest ih =>
+      simpa [encodeTransitionsAppend, encodeTransitionAppend,
+        encodeNatAppend, encodeCellAppend, encodeDirectionAppend,
+        List.append_assoc] using ih
+
 def decodeTransitions : Nat -> Word MachineCodeSymbol ->
     Option (List TransitionDescription × Word MachineCodeSymbol)
   | 0, tokens => some ([], tokens)
@@ -440,6 +453,32 @@ def decodeDescription (tokens : Word MachineCodeSymbol) :
                       | some (_, _ :: _) => none
   | _ => none
 
+def decodeDescriptionPrefix (tokens : Word MachineCodeSymbol) :
+    Option (MachineDescription × Word MachineCodeSymbol) :=
+  match tokens with
+  | MachineCodeSymbol.header :: rest =>
+      match decodeNat rest with
+      | none => none
+      | some (stateCount, rest) =>
+          match decodeNat rest with
+          | none => none
+          | some (start, rest) =>
+              match decodeNat rest with
+              | none => none
+              | some (halt, rest) =>
+                  match decodeNat rest with
+                  | none => none
+                  | some (transitionCount, rest) =>
+                      match decodeTransitions transitionCount rest with
+                      | none => none
+                      | some (transitions, suffix) =>
+                          some
+                            ({ stateCount := stateCount
+                               start := start
+                               halt := halt
+                               transitions := transitions }, suffix)
+  | _ => none
+
 theorem decodeDescription_encodeDescription
     (D : MachineDescription) :
     decodeDescription (encodeDescription D) = some D := by
@@ -447,6 +486,30 @@ theorem decodeDescription_encodeDescription
   simp [encodeDescription, encodeDescriptionAppend, decodeDescription,
     decodeNat_encodeNatAppend,
     decodeTransitions_encodeTransitions_append]
+
+theorem decodeDescriptionPrefix_encodeDescriptionAppend
+    (D : MachineDescription) (suffix : Word MachineCodeSymbol) :
+    decodeDescriptionPrefix (encodeDescriptionAppend D suffix) =
+      some (D, suffix) := by
+  cases D
+  simp [encodeDescriptionAppend, decodeDescriptionPrefix,
+    decodeNat_encodeNatAppend,
+    decodeTransitions_encodeTransitions_append]
+
+theorem decodeDescriptionPrefix_encodeDescription_append
+    (D : MachineDescription) (suffix : Word MachineCodeSymbol) :
+    decodeDescriptionPrefix (List.append (encodeDescription D) suffix) =
+      some (D, suffix) := by
+  have hword :
+      List.append (encodeDescription D) suffix =
+        encodeDescriptionAppend D suffix := by
+    cases D
+    rename_i stateCount start halt transitions
+    simpa [encodeDescription, encodeDescriptionAppend, encodeNatAppend,
+      List.append_assoc]
+      using (encodeTransitionsAppend_append transitions [] suffix)
+  rw [hword]
+  exact decodeDescriptionPrefix_encodeDescriptionAppend D suffix
 
 /-!
 # Description-backed code-word decoder
@@ -479,9 +542,17 @@ def CodeAccepts
     decodeDescription machine = some D ∧
       D.HaltsOnInput (encodeCodeWordAsInput input)
 
+def CodePrefixAccepts (encoded : Word MachineCodeSymbol) : Prop :=
+  exists D : MachineDescription, exists input : Word MachineCodeSymbol,
+    decodeDescriptionPrefix encoded = some (D, input) ∧
+      D.HaltsOnInput (encodeCodeWordAsInput input)
+
 def CodeAcceptedLanguage
     (machine : Word MachineCodeSymbol) : Language MachineCodeSymbol :=
   fun input => CodeAccepts machine input
+
+def CodePrefixAcceptedLanguage : Language MachineCodeSymbol :=
+  fun encoded => CodePrefixAccepts encoded
 
 def EncodedInputLanguage
     (D : MachineDescription) : Language MachineCodeSymbol :=
@@ -508,6 +579,28 @@ theorem codeAccepts_of_encodeDescription
     (h : D.HaltsOnInput (encodeCodeWordAsInput input)) :
     CodeAccepts (encodeDescription D) input :=
   (codeAccepts_encodeDescription_iff D input).mpr h
+
+theorem codePrefixAccepts_encodeDescription_append_iff
+    (D : MachineDescription) (input : Word MachineCodeSymbol) :
+    CodePrefixAccepts (List.append (encodeDescription D) input) <->
+      D.HaltsOnInput (encodeCodeWordAsInput input) := by
+  constructor
+  · intro h
+    rcases h with ⟨decoded, decodedInput, hdecode, hhalts⟩
+    have hprefix :=
+      decodeDescriptionPrefix_encodeDescription_append D input
+    rw [hprefix] at hdecode
+    cases hdecode
+    exact hhalts
+  · intro h
+    exact ⟨D, input,
+      decodeDescriptionPrefix_encodeDescription_append D input, h⟩
+
+theorem codePrefixAccepts_of_encodeDescription_append
+    {D : MachineDescription} {input : Word MachineCodeSymbol}
+    (h : D.HaltsOnInput (encodeCodeWordAsInput input)) :
+    CodePrefixAccepts (List.append (encodeDescription D) input) :=
+  (codePrefixAccepts_encodeDescription_append_iff D input).mpr h
 
 theorem encodeDescription_codeAccepts_elim
     {D : MachineDescription} {input : Word MachineCodeSymbol}
