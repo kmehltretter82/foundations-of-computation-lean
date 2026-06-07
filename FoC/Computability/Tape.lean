@@ -83,6 +83,9 @@ def move : Direction -> Tape symbol -> Tape symbol
 def output (w : Word symbol) : Tape symbol :=
   input w
 
+def contextLength (T : Tape symbol) : Nat :=
+  T.left.length + T.right.length
+
 /-!
 # Operation laws
 
@@ -98,6 +101,13 @@ theorem input_empty : input ([] : Word symbol) = blank :=
   rfl
 
 theorem output_empty : output ([] : Word symbol) = blank :=
+  rfl
+
+theorem contextLength_blank : contextLength (blank : Tape symbol) = 0 :=
+  rfl
+
+theorem contextLength_output_single (a : symbol) :
+    contextLength (output [a]) = 0 :=
   rfl
 
 theorem input_cons (a : symbol) (rest : Word symbol) :
@@ -143,6 +153,27 @@ theorem input_injective : Function.Injective (input : Word symbol -> Tape symbol
 theorem output_injective : Function.Injective (output : Word symbol -> Tape symbol) := by
   intro x y h
   exact input_injective h
+
+theorem contextLength_move_write_ge (dir : Direction) (cell : Option symbol)
+    (T : Tape symbol) :
+    contextLength T ≤ contextLength (move dir (write cell T)) := by
+  cases T with
+  | mk left head right =>
+      cases dir with
+      | left =>
+          cases left with
+          | nil =>
+              simp [contextLength, move, moveLeft, write]
+          | cons leftHead leftTail =>
+              simp [contextLength, move, moveLeft, write]
+              omega
+      | right =>
+          cases right with
+          | nil =>
+              simp [contextLength, move, moveRight, write]
+          | cons rightHead rightTail =>
+              simp [contextLength, move, moveRight, write]
+              omega
 
 theorem read_input_cons (a : symbol) (rest : Word symbol) :
     read (input (a :: rest)) = some a :=

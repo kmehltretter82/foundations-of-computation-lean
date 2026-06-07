@@ -88,6 +88,61 @@ inductive ComputesIn (M : TuringMachine symbol state) :
       Step M c d -> ComputesIn M n d e -> ComputesIn M (n + 1) c e
 
 /-!
+# Exact tape-window invariants
+
+The current output relation compares final tapes literally with {name}`Tape.output`.
+Moving off either end of the stored window grows the stored context and the
+model does not normalize blank context cells away.  These lemmas make that
+limitation explicit for later computability claims.
+-/
+
+theorem step_contextLength_mono {M : TuringMachine symbol state}
+    {c d : Configuration symbol state} (h : Step M c d) :
+    Tape.contextLength c.tape ≤ Tape.contextLength d.tape := by
+  cases h with
+  | mk =>
+      exact Tape.contextLength_move_write_ge _ _ _
+
+theorem computesIn_contextLength_mono {M : TuringMachine symbol state}
+    {n : Nat} {c d : Configuration symbol state}
+    (h : ComputesIn M n c d) :
+    Tape.contextLength c.tape ≤ Tape.contextLength d.tape := by
+  induction h with
+  | zero c => exact Nat.le_refl _
+  | succ hstep _ ih =>
+      exact Nat.le_trans (step_contextLength_mono hstep) ih
+
+theorem step_from_empty_contextLength_pos {M : TuringMachine symbol state}
+    {d : Configuration symbol state}
+    (h : Step M (initial M ([] : Word symbol)) d) :
+    0 < Tape.contextLength d.tape := by
+  cases h with
+  | mk =>
+      cases ‹Direction› <;>
+        simp [initial, Tape.input_empty, Tape.contextLength, Tape.blank,
+          Tape.move, Tape.moveLeft, Tape.moveRight, Tape.write]
+
+theorem computesIn_empty_not_output_single {M : TuringMachine symbol state}
+    {n : Nat} {final : Configuration symbol state} (a : symbol)
+    (hcomp : ComputesIn M n (initial M ([] : Word symbol)) final)
+    (htape : final.tape = Tape.output [a]) :
+    False := by
+  cases hcomp with
+  | zero c =>
+      have hhead := congrArg Tape.head htape
+      simp [initial, Tape.input_empty, Tape.output, Tape.blank] at hhead
+      cases hhead
+  | succ hstep hrest =>
+      have hfirst := step_from_empty_contextLength_pos hstep
+      have hmono := computesIn_contextLength_mono hrest
+      have hpos : 0 < Tape.contextLength final.tape :=
+        Nat.lt_of_lt_of_le hfirst hmono
+      have hzero : Tape.contextLength final.tape = 0 := by
+        rw [htape]
+        exact Tape.contextLength_output_single a
+      omega
+
+/-!
 # Halting and accepted languages
 
 Halting predicates are stated from an arbitrary configuration, from an input
@@ -383,6 +438,16 @@ theorem halts_with_output_to_halts_with_output_in
       | intro n hn =>
           exists n
           exact Exists.intro final (And.intro hn hfinal.right)
+
+theorem not_haltsWithOutput_empty_single (M : TuringMachine symbol state)
+    (a : symbol) :
+    ¬ HaltsWithOutput M ([] : Word symbol) [a] := by
+  intro h
+  cases h with
+  | intro final hfinal =>
+      cases computes_to_computesIn hfinal.left with
+      | intro n hn =>
+          exact computesIn_empty_not_output_single a hn hfinal.right.right
 
 theorem halts_with_output_iff_exists_halts_with_output_in
     (M : TuringMachine symbol state) (w out : Word symbol) :

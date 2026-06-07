@@ -127,6 +127,12 @@ def ComputableMapDecidablePreimagePrinciple
   forall map : Word input -> Word output,
     TuringComputable map -> DecidablePreimagePrinciple map
 
+theorem decidablePreimagePrinciple_vacuous_exact_output
+    (map : Word input -> Word output) :
+    DecidablePreimagePrinciple map := by
+  intro L hdecidable
+  exact False.elim (not_turingDecidable_exact_output L hdecidable)
+
 def PairEncodingInjective
     (encodePair : Word code -> Word code -> Word pairSymbol) : Prop :=
   forall a b c d : Word code,

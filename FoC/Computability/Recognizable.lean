@@ -87,6 +87,70 @@ def RecursivelyEnumerableWithComplement (L : Language input) : Prop :=
   RecursivelyEnumerable L ∧ CoRecursivelyEnumerable L
 
 /-!
+# Exact-output obstruction
+
+With the current exact tape comparison, a decider would have to halt on the
+empty encoded input with a one-symbol output word.  The tape model cannot
+produce that exact final tape from an empty input, so the weak decider predicate
+has no concrete inhabitants until output semantics are normalized or the
+decision-output convention is changed.
+-/
+
+theorem not_decidesLanguage_empty_input (M : TuringMachine symbol state)
+    (encodeInput : input -> symbol) (zero one : symbol)
+    (L : Language input) :
+    ¬ DecidesLanguage M encodeInput zero one L := by
+  intro hdec
+  classical
+  by_cases hempty : ([] : Word input) ∈ L
+  · have hhalt :
+        TuringMachine.HaltsWithOutput M ([] : Word symbol) [one] := by
+      simpa [EncodeWord] using (hdec ([] : Word input)).left hempty
+    exact TuringMachine.not_haltsWithOutput_empty_single M one hhalt
+  · have hhalt :
+        TuringMachine.HaltsWithOutput M ([] : Word symbol) [zero] := by
+      simpa [EncodeWord] using (hdec ([] : Word input)).right hempty
+    exact TuringMachine.not_haltsWithOutput_empty_single M zero hhalt
+
+theorem not_turingDecidable_exact_output (L : Language input) :
+    ¬ TuringDecidable L := by
+  intro hdecidable
+  cases hdecidable with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro zero hzero =>
+                      cases hzero with
+                      | intro one hdec =>
+                          exact
+                            not_decidesLanguage_empty_input M encodeInput
+                              zero one L hdec
+
+theorem not_stoppedTuringDecidable_exact_output (L : Language input) :
+    ¬ StoppedTuringDecidable L := by
+  intro hstopped
+  cases hstopped with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro zero hzero =>
+                      cases hzero with
+                      | intro one hdec =>
+                          exact
+                            not_decidesLanguage_empty_input M encodeInput
+                              zero one L hdec.right.right
+
+/-!
 # Trace-search principles
 
 The trace predicates abstract the dovetailing argument that searches accepting

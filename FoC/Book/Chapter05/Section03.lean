@@ -173,6 +173,21 @@ def ConcreteDiagonalPairMapComputable : Prop :=
       Word ConcreteMachineCodeSymbol ->
         Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol))
 
+theorem concrete_diagonal_pair_map_empty :
+    ConcreteDiagonalPairMap ([] : Word ConcreteMachineCodeSymbol) =
+      [PairCodeSymbol.separator] :=
+  rfl
+
+theorem not_concrete_diagonal_pair_map_computable :
+    ¬ ConcreteDiagonalPairMapComputable := by
+  exact
+    not_turingComputable_of_empty_singleton_output
+      (f :=
+        (ConcreteDiagonalPairMap :
+          Word ConcreteMachineCodeSymbol ->
+            Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol)))
+      concrete_diagonal_pair_map_empty
+
 def ConcreteMachineCodeSymbolFinite :
     Foundation.FiniteType ConcreteMachineCodeSymbol :=
   MachineCodeSymbol.finite
@@ -866,6 +881,18 @@ theorem concrete_diagonal_pair_decidable_preimage_construction_of_preimage
   PairCodeSymbol.diagonalPairDecidablePreimagePrinciple_of_concrete_preimage
     hpreimage
 
+theorem turing_decidable_preimage_construction_vacuous_exact_output
+    (map : Word input -> Word output) :
+    TuringDecidablePreimageConstruction map :=
+  Computability.decidablePreimagePrinciple_vacuous_exact_output map
+
+theorem concrete_diagonal_pair_decidable_preimage_construction_vacuous :
+    TuringDecidablePreimageConstruction
+      (ConcreteDiagonalPairMap :
+        Word ConcreteMachineCodeSymbol ->
+          Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol)) :=
+  turing_decidable_preimage_construction_vacuous_exact_output _
+
 theorem decidable_preimage_construction_of_computable_map_construction
     (hpreimage : ComputableMapDecidablePreimageConstruction input output)
     {map : Word input -> Word output}
@@ -957,6 +984,13 @@ theorem concrete_machine_self_halting_reduces_to_pair_halting_of_preimage
         (haltsOnCodeInput := ConcreteMachineCodeAccepts)
         (concrete_diagonal_pair_decidable_preimage_construction_of_preimage
           (code := ConcreteMachineCodeSymbol) hpreimage)
+
+theorem concrete_machine_self_halting_reduces_to_pair_halting_vacuous_exact_output :
+    TuringDecidableReduction
+      ConcreteMachineSelfHaltingLanguage
+      ConcreteMachinePairHaltingProblem :=
+  concrete_machine_self_halting_reduces_to_pair_halting_of_preimage
+    concrete_diagonal_pair_decidable_preimage_construction_vacuous
 
 theorem concrete_machine_self_halting_reduces_to_pair_halting_of_computable_map
     (hpreimage :
@@ -1301,8 +1335,14 @@ can be instantiated to recover the usual textbook halting-problem theorems.
 
 This is the current status boundary for Section 5.3. The encoding, interpreter,
 compiled-machine simulation, decoder-row wrappers, and pair-code reductions are
-formalized; the finite universal-machine construction and the named concrete
-diagonal-map computability/preimage constructions remain to be discharged.
+formalized. The exact-output semantics also refute the current
+{name}`ConcreteDiagonalPairMapComputable` proposition, because the diagonal pair
+map sends empty input to a singleton separator output. They also make the
+concrete diagonal-map decidable-preimage construction true only vacuously:
+under the current singleton-output decider convention, no
+{name}`TuringDecidable` language is inhabited. The remaining meaningful route is
+the finite universal-machine construction plus normalized output semantics, or
+a revised decision-output convention.
 -/
 
 end Section03
