@@ -1953,6 +1953,12 @@ theorem finite_production_context_free_extensional :
   intro L M hEq hL
   exact finite_production_context_free_of_equal hEq hL
 
+theorem finite_production_cfls_closed_under_union :
+    ClosedUnderUnion
+      (FiniteProductionContextFreeLanguage (terminal := terminal)) := by
+  intro L M hL hM
+  exact CFL.union_context_free hL hM
+
 theorem finite_production_rhs_length_bound {G : CFG terminal nonterminal}
     (hG : CFG.HasFiniteProductions G) :
     exists B : Nat,
@@ -2373,31 +2379,22 @@ theorem anbncn_pump_two_not_mem
       have ha0 : Word.Count ABC.a (Word.Concat x z) = 0 := by omega
       omega
 
+theorem anbncn_bad_word_family :
+    CFLPumpingBadWordFamily anbncnLanguage := by
+  intro K hK
+  let w : Word ABC := anbncnBlockWord K
+  have hwMem : w ∈ anbncnLanguage := by
+    exists K
+  have hwLength : K <= Word.Length w := by
+    simp [w, anbncn_block_length]
+    omega
+  refine ⟨w, hwMem, hwLength, ?_⟩
+  intro u x y z v hword hnonempty hshort
+  exact ⟨2, anbncn_pump_two_not_mem hword hnonempty hshort⟩
+
 theorem anbncn_no_pumping_property :
-    ¬ CFLHasPumpingProperty anbncnLanguage := by
-  intro hpump
-  cases hpump with
-  | intro K hK =>
-      let w : Word ABC := anbncnBlockWord K
-      have hwMem : w ∈ anbncnLanguage := by
-        exists K
-      have hwLength : K <= Word.Length w := by
-        simp [w, anbncn_block_length]
-        omega
-      have hdec := hK.right w hwMem hwLength
-      cases hdec with
-      | intro u hu =>
-          cases hu with
-          | intro x hx =>
-              cases hx with
-              | intro y hy =>
-                  cases hy with
-                  | intro z hz =>
-                      cases hz with
-                      | intro v hv =>
-                          exact anbncn_pump_two_not_mem hv.left
-                            hv.right.left hv.right.right.left
-                            (hv.right.right.right 2)
+    ¬ CFLHasPumpingProperty anbncnLanguage :=
+  not_pumping_property_of_bad_word_family anbncn_bad_word_family
 
 theorem anbncn_not_finite_production_context_free :
     ¬ FiniteProductionContextFreeLanguage anbncnLanguage := by
@@ -2495,6 +2492,15 @@ theorem finite_production_cfl_complement_nonclosure_from_anbncn_witnesses
   exact
     finite_production_cfl_intersection_nonclosure_from_anbncn_witnesses
       hL hM hEq hInterClosed
+
+theorem finite_production_cfls_not_closed_under_complement :
+    ¬ ClosedUnderComplement
+      (FiniteProductionContextFreeLanguage (terminal := ABC)) :=
+  finite_production_cfl_complement_nonclosure_from_anbncn_witnesses
+    anbnCstar_finite_production_context_free
+    astarBnCn_finite_production_context_free
+    anbnCstar_inter_astarBnCn_exact
+    finite_production_cfls_closed_under_union
 
 theorem anbncn_not_context_free_from_pumping_lemma
     (_pumpingLemma : CFL.PumpingLemmaConclusion anbncnLanguage) :

@@ -5034,6 +5034,15 @@ def squareFinishMoveForm
       squareTerminalAForm (rowWidth - moved) ++
         squareRows rowWidth remaining ++ [squareN SquareNT.e]
 
+def squareProcessMoveForm
+    (remaining rowWidth processed moved afterRows : Nat) :
+    SententialForm SquareTerminal SquareNT :=
+  [squareN SquareNT.d] ++ squareBForm remaining ++
+    squareRows (rowWidth + 1) processed ++
+      [squareN SquareNT.markA] ++ squareTerminalAForm (moved + 1) ++
+        [squareN SquareNT.b] ++ squareTerminalAForm (rowWidth - moved) ++
+          squareRows rowWidth afterRows ++ [squareN SquareNT.e]
+
 inductive SquareDerivationShape :
     SententialForm SquareTerminal SquareNT -> Prop where
   | start :
@@ -5044,6 +5053,10 @@ inductive SquareDerivationShape :
       (hbalance : rowWidth + remaining = total) :
       SquareDerivationShape
         (squareProcessForm remaining rowWidth total)
+  | processMove (remaining rowWidth processed moved afterRows : Nat)
+      (hmoved : moved <= rowWidth) :
+      SquareDerivationShape
+        (squareProcessMoveForm remaining rowWidth processed moved afterRows)
   | finishRows (rowWidth processed remaining : Nat)
       (hbalance : processed + remaining = rowWidth) :
       SquareDerivationShape
@@ -5104,6 +5117,15 @@ theorem squareProcessForm_count_d
     squareBForm_count_d, squareRows_count_d, squareN,
     ggNonterminal, SententialCountNonterminal]
 
+theorem squareProcessMoveForm_count_d
+    (remaining rowWidth processed moved afterRows : Nat) :
+    SententialCountNonterminal SquareNT.d
+      (squareProcessMoveForm remaining rowWidth processed moved afterRows) = 1 := by
+  simp [squareProcessMoveForm, sententialCountNonterminal_append,
+    squareBForm_count_d, squareRows_count_d,
+    squareTerminalAForm_count_nonterminal, squareN,
+    ggNonterminal, SententialCountNonterminal]
+
 theorem squareFinishRowsForm_count_d
     (rowWidth processed remaining : Nat) :
     SententialCountNonterminal SquareNT.d
@@ -5145,6 +5167,11 @@ theorem square_derivation_shape_terminal_square
       exact False.elim
         (sententialCountNonterminal_terminal_absurd
           (squareProcessForm_count_d remaining rowWidth total) hsf)
+  | processMove remaining rowWidth processed moved afterRows hmoved =>
+      exact False.elim
+        (sententialCountNonterminal_terminal_absurd
+          (squareProcessMoveForm_count_d remaining rowWidth processed moved afterRows)
+          hsf)
   | finishRows rowWidth processed remaining hbalance =>
       exact False.elim
         (sententialCountNonterminal_terminal_absurd
@@ -5166,6 +5193,283 @@ theorem square_derivation_shape_terminal_square_of_terminal
     (hshape : SquareDerivationShape (SententialForm.terminalWord word)) :
     word ∈ squareLanguage :=
   square_derivation_shape_terminal_square hshape rfl
+
+def squareMiddleInversionsFrom (seenB : Nat) :
+    SententialForm SquareTerminal SquareNT -> Nat
+  | [] => 0
+  | Symbol.nonterminal SquareNT.b :: rest =>
+      squareMiddleInversionsFrom (seenB + 1) rest
+  | Symbol.nonterminal SquareNT.markA :: rest =>
+      seenB + squareMiddleInversionsFrom seenB rest
+  | _ :: rest =>
+      squareMiddleInversionsFrom seenB rest
+
+def squareMiddleInversions (middle : SententialForm SquareTerminal SquareNT) :
+    Nat :=
+  squareMiddleInversionsFrom 0 middle
+
+def squareMiddlePotential
+    (middle : SententialForm SquareTerminal SquareNT) : Nat :=
+  SententialCountTerminal SquareTerminal.a middle +
+    squareMiddleInversions middle
+
+/-!
+For the square grammar's post-stop phase, the central invariant is the number
+of terminal {lit}`a`s plus the number of remaining {lit}`B`-before-{lit}`A`
+pairs. The unrestricted rule {lit}`BA -> AaB` preserves that sum by exchanging
+one inversion for one emitted terminal.
+-/
+
+theorem squareMiddleInversionsFrom_trailing_b
+    (seenB : Nat) (middle : SententialForm SquareTerminal SquareNT) :
+    squareMiddleInversionsFrom seenB
+        (middle ++ [squareN SquareNT.b]) =
+      squareMiddleInversionsFrom seenB middle := by
+  induction middle generalizing seenB with
+  | nil =>
+      simp [squareMiddleInversionsFrom, squareN, ggNonterminal]
+  | cons head tail ih =>
+      cases head with
+      | terminal tok =>
+          change squareMiddleInversionsFrom seenB
+              (tail ++ [squareN SquareNT.b]) =
+            squareMiddleInversionsFrom seenB tail
+          exact ih seenB
+      | nonterminal A =>
+          cases A
+          · change squareMiddleInversionsFrom seenB
+              (tail ++ [squareN SquareNT.b]) =
+              squareMiddleInversionsFrom seenB tail
+            exact ih seenB
+          · change squareMiddleInversionsFrom seenB
+              (tail ++ [squareN SquareNT.b]) =
+              squareMiddleInversionsFrom seenB tail
+            exact ih seenB
+          · change squareMiddleInversionsFrom seenB
+              (tail ++ [squareN SquareNT.b]) =
+              squareMiddleInversionsFrom seenB tail
+            exact ih seenB
+          · change squareMiddleInversionsFrom seenB
+              (tail ++ [squareN SquareNT.b]) =
+              squareMiddleInversionsFrom seenB tail
+            exact ih seenB
+          · change squareMiddleInversionsFrom (seenB + 1)
+              (tail ++ [squareN SquareNT.b]) =
+              squareMiddleInversionsFrom (seenB + 1) tail
+            exact ih (seenB + 1)
+          · change seenB +
+              squareMiddleInversionsFrom seenB
+                (tail ++ [squareN SquareNT.b]) =
+              seenB + squareMiddleInversionsFrom seenB tail
+            rw [ih seenB]
+
+theorem squareMiddlePotential_trailing_b
+    (middle : SententialForm SquareTerminal SquareNT) :
+    squareMiddlePotential (middle ++ [squareN SquareNT.b]) =
+      squareMiddlePotential middle := by
+  have hinv := squareMiddleInversionsFrom_trailing_b 0 middle
+  rw [squareMiddlePotential, squareMiddlePotential]
+  simp [squareMiddleInversions, sententialCountTerminal_append,
+    SententialCountTerminal, squareN, ggNonterminal] at hinv ⊢
+  exact hinv
+
+theorem squareMiddlePotential_leading_markA
+    (middle : SententialForm SquareTerminal SquareNT) :
+    squareMiddlePotential ([squareN SquareNT.markA] ++ middle) =
+      squareMiddlePotential middle := by
+  simp [squareMiddlePotential, squareMiddleInversions,
+    squareMiddleInversionsFrom, SententialCountTerminal, squareN,
+    ggNonterminal]
+
+theorem squareMiddlePotential_leading_terminal_a
+    (middle : SententialForm SquareTerminal SquareNT) :
+    squareMiddlePotential ([squareT SquareTerminal.a] ++ middle) =
+      squareMiddlePotential middle + 1 := by
+  simp [squareMiddlePotential, squareMiddleInversions,
+    squareMiddleInversionsFrom, SententialCountTerminal, squareT,
+    ggTerminal]
+  omega
+
+def squareMiddleCreditFrom (seenB : Nat)
+    (middle : SententialForm SquareTerminal SquareNT) : Nat :=
+  SententialCountTerminal SquareTerminal.a middle +
+    squareMiddleInversionsFrom seenB middle
+
+theorem squareMiddleCreditFrom_moveBA
+    (seenB : Nat)
+    (left right : SententialForm SquareTerminal SquareNT) :
+    squareMiddleCreditFrom seenB
+        (left ++ [squareN SquareNT.b, squareN SquareNT.markA] ++ right) =
+      squareMiddleCreditFrom seenB
+        (left ++ [squareN SquareNT.markA, squareT SquareTerminal.a,
+          squareN SquareNT.b] ++ right) := by
+  induction left generalizing seenB with
+  | nil =>
+      simp [squareMiddleCreditFrom,
+        squareMiddleInversionsFrom, SententialCountTerminal, squareN,
+        squareT, ggNonterminal, ggTerminal]
+      omega
+  | cons head tail ih =>
+      cases head with
+      | terminal tok =>
+          cases tok
+          have htail := ih seenB
+          simp [squareMiddleCreditFrom, squareMiddleInversionsFrom,
+            SententialCountTerminal, squareN, squareT, ggNonterminal,
+            ggTerminal] at htail ⊢
+          omega
+      | nonterminal A =>
+          cases A
+          · simpa [squareMiddleCreditFrom, squareMiddleInversionsFrom,
+              SententialCountTerminal, squareN, squareT, ggNonterminal,
+              ggTerminal] using ih seenB
+          · simpa [squareMiddleCreditFrom, squareMiddleInversionsFrom,
+              SententialCountTerminal, squareN, squareT, ggNonterminal,
+              ggTerminal] using ih seenB
+          · simpa [squareMiddleCreditFrom, squareMiddleInversionsFrom,
+              SententialCountTerminal, squareN, squareT, ggNonterminal,
+              ggTerminal] using ih seenB
+          · simpa [squareMiddleCreditFrom, squareMiddleInversionsFrom,
+              SententialCountTerminal, squareN, squareT, ggNonterminal,
+              ggTerminal] using ih seenB
+          · simpa [squareMiddleCreditFrom, squareMiddleInversionsFrom,
+              SententialCountTerminal, squareN, squareT, ggNonterminal,
+              ggTerminal] using ih (seenB + 1)
+          · have htail := ih seenB
+            simp [squareMiddleCreditFrom, squareMiddleInversionsFrom,
+              SententialCountTerminal, squareN, squareT, ggNonterminal,
+              ggTerminal] at htail ⊢
+            omega
+
+theorem squareMiddlePotential_moveBA
+    (left right : SententialForm SquareTerminal SquareNT) :
+    squareMiddlePotential
+        (left ++ [squareN SquareNT.b, squareN SquareNT.markA] ++ right) =
+      squareMiddlePotential
+        (left ++ [squareN SquareNT.markA, squareT SquareTerminal.a,
+          squareN SquareNT.b] ++ right) := by
+  simpa [squareMiddlePotential, squareMiddleInversions,
+    squareMiddleCreditFrom] using
+    squareMiddleCreditFrom_moveBA 0 left right
+
+theorem squareMiddleCreditFrom_moveBa
+    (seenB : Nat)
+    (left right : SententialForm SquareTerminal SquareNT) :
+    squareMiddleCreditFrom seenB
+        (left ++ [squareN SquareNT.b, squareT SquareTerminal.a] ++ right) =
+      squareMiddleCreditFrom seenB
+        (left ++ [squareT SquareTerminal.a, squareN SquareNT.b] ++ right) := by
+  induction left generalizing seenB with
+  | nil =>
+      simp [squareMiddleCreditFrom,
+        squareMiddleInversionsFrom, SententialCountTerminal, squareN,
+        squareT, ggNonterminal, ggTerminal]
+  | cons head tail ih =>
+      cases head with
+      | terminal tok =>
+          cases tok
+          have htail := ih seenB
+          simp [squareMiddleCreditFrom, squareMiddleInversionsFrom,
+            SententialCountTerminal, squareN, squareT, ggNonterminal,
+            ggTerminal] at htail ⊢
+          omega
+      | nonterminal A =>
+          cases A
+          · simpa [squareMiddleCreditFrom, squareMiddleInversionsFrom,
+              SententialCountTerminal, squareN, squareT, ggNonterminal,
+              ggTerminal] using ih seenB
+          · simpa [squareMiddleCreditFrom, squareMiddleInversionsFrom,
+              SententialCountTerminal, squareN, squareT, ggNonterminal,
+              ggTerminal] using ih seenB
+          · simpa [squareMiddleCreditFrom, squareMiddleInversionsFrom,
+              SententialCountTerminal, squareN, squareT, ggNonterminal,
+              ggTerminal] using ih seenB
+          · simpa [squareMiddleCreditFrom, squareMiddleInversionsFrom,
+              SententialCountTerminal, squareN, squareT, ggNonterminal,
+              ggTerminal] using ih seenB
+          · simpa [squareMiddleCreditFrom, squareMiddleInversionsFrom,
+              SententialCountTerminal, squareN, squareT, ggNonterminal,
+              ggTerminal] using ih (seenB + 1)
+          · have htail := ih seenB
+            simp [squareMiddleCreditFrom, squareMiddleInversionsFrom,
+              SententialCountTerminal, squareN, squareT, ggNonterminal,
+              ggTerminal] at htail ⊢
+            omega
+
+theorem squareMiddlePotential_moveBa
+    (left right : SententialForm SquareTerminal SquareNT) :
+    squareMiddlePotential
+        (left ++ [squareN SquareNT.b, squareT SquareTerminal.a] ++ right) =
+      squareMiddlePotential
+        (left ++ [squareT SquareTerminal.a, squareN SquareNT.b] ++ right) := by
+  simpa [squareMiddlePotential, squareMiddleInversions,
+    squareMiddleCreditFrom] using
+    squareMiddleCreditFrom_moveBa 0 left right
+
+theorem squareMiddleInversionsFrom_markerAForm
+    (seenB n : Nat) :
+    squareMiddleInversionsFrom seenB (squareMarkerAForm n) =
+      seenB * n := by
+  induction n with
+  | zero =>
+      simp [squareMarkerAForm, Word.RepeatSymbol,
+        squareMiddleInversionsFrom]
+  | succ n ih =>
+      change squareMiddleInversionsFrom seenB
+          (squareN SquareNT.markA :: squareMarkerAForm n) =
+        seenB * (n + 1)
+      simp [squareMiddleInversionsFrom, squareN, ggNonterminal, ih,
+        Nat.mul_succ]
+      omega
+
+theorem squareMiddleInversionsFrom_bForm_append_markerAForm
+    (seenB bCount aCount : Nat) :
+    squareMiddleInversionsFrom seenB
+        (squareBForm bCount ++ squareMarkerAForm aCount) =
+      (seenB + bCount) * aCount := by
+  induction bCount generalizing seenB with
+  | zero =>
+      simpa [squareBForm, Word.RepeatSymbol, Nat.zero_add] using
+        squareMiddleInversionsFrom_markerAForm seenB aCount
+  | succ bCount ih =>
+      change squareMiddleInversionsFrom seenB
+          (squareN SquareNT.b ::
+            (squareBForm bCount ++ squareMarkerAForm aCount)) =
+        (seenB + (bCount + 1)) * aCount
+      have htail := ih (seenB + 1)
+      have hnat : seenB + 1 + bCount = seenB + (bCount + 1) := by
+        omega
+      simp [squareMiddleInversionsFrom, squareN, ggNonterminal] at htail ⊢
+      simpa [hnat] using htail
+
+theorem squareBForm_count_terminal_a (n : Nat) :
+    SententialCountTerminal SquareTerminal.a (squareBForm n) = 0 := by
+  induction n with
+  | zero =>
+      simp [squareBForm, Word.RepeatSymbol, SententialCountTerminal]
+  | succ n ih =>
+      change SententialCountTerminal SquareTerminal.a
+          (squareN SquareNT.b :: squareBForm n) = 0
+      simp [SententialCountTerminal, squareN, ggNonterminal, ih]
+
+theorem squareMarkerAForm_count_terminal_a (n : Nat) :
+    SententialCountTerminal SquareTerminal.a (squareMarkerAForm n) = 0 := by
+  induction n with
+  | zero =>
+      simp [squareMarkerAForm, Word.RepeatSymbol, SententialCountTerminal]
+  | succ n ih =>
+      change SententialCountTerminal SquareTerminal.a
+          (squareN SquareNT.markA :: squareMarkerAForm n) = 0
+      simp [SententialCountTerminal, squareN, ggNonterminal, ih]
+
+theorem squareMiddlePotential_initial_stopped (n : Nat) :
+    squareMiddlePotential (squareBForm n ++ squareMarkerAForm n) =
+      n * n := by
+  rw [squareMiddlePotential, squareMiddleInversions,
+    sententialCountTerminal_append,
+    squareBForm_count_terminal_a, squareMarkerAForm_count_terminal_a,
+    squareMiddleInversionsFrom_bForm_append_markerAForm]
+  simp
 
 def fourAsWord : Word SquareTerminal :=
   [SquareTerminal.a, SquareTerminal.a, SquareTerminal.a, SquareTerminal.a]

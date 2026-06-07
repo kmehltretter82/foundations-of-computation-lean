@@ -176,6 +176,10 @@ theorem pda_accepts_implies_empty_stack_accepts {M : PDA input stack state}
 def DeterministicPDA (M : PDA input stack state) : Prop :=
   PDA.Deterministic M
 
+def DeterministicPDARecognizable (L : Language input) : Prop :=
+  exists stack : Type, exists state : Type, exists M : PDA input stack state,
+    PDA.Deterministic M ∧ Language.Equal (PDA.AcceptedLanguage M) L
+
 inductive EndMarked (input : Type u) where
   | symbol : input -> EndMarked input
   | end : EndMarked input
@@ -3204,6 +3208,43 @@ theorem detAnBnPDA_accepted_language_exact (w : Word Section01.AB) :
             rw [hn]
             exact detAnBnPDA_accepts_anbn_words n
 
+def AnBnBlockLanguage : Language Section01.AB :=
+  fun w => exists n, w = Section01.AnBnWord n
+
+theorem detAnBnPDA_deterministic :
+    DeterministicPDA DetAnBnPDA := by
+  intro c d e hd he
+  rcases PDA.step_cases hd with hreadD | hepsD
+  · rcases hreadD with
+      ⟨qD, rD, aD, unreadD, popD, pushD, restD,
+        htransD, hcD, hdD⟩
+    rcases PDA.step_cases he with hreadE | hepsE
+    · rcases hreadE with
+        ⟨qE, rE, aE, unreadE, popE, pushE, restE,
+          htransE, hcE, heE⟩
+      subst d
+      subst e
+      subst c
+      cases htransD <;> cases htransE <;> cases hcE <;> rfl
+    · rcases hepsE with
+        ⟨qE, rE, unreadE, popE, pushE, restE,
+          htransE, hcE, heE⟩
+      cases htransE
+  · rcases hepsD with
+      ⟨qD, rD, unreadD, popD, pushD, restD,
+        htransD, hcD, hdD⟩
+    cases htransD
+
+theorem anbn_block_language_deterministic_pda_recognizable :
+    DeterministicPDARecognizable AnBnBlockLanguage := by
+  exists AnBnPDAStack
+  exists DetAnBnPDAState
+  exists DetAnBnPDA
+  constructor
+  · exact detAnBnPDA_deterministic
+  · intro w
+    exact detAnBnPDA_accepted_language_exact w
+
 /-!
 # Copy Across a Center Marker
 
@@ -3487,6 +3528,40 @@ theorem copyPDA_accepted_language_exact (input : Word CopyInput) :
     | intro w hw =>
         rw [hw]
         exact copyPDA_accepts_centered_reverse w
+
+theorem copyPDA_deterministic :
+    DeterministicPDA CopyPDA := by
+  intro c d e hd he
+  rcases PDA.step_cases hd with hreadD | hepsD
+  · rcases hreadD with
+      ⟨qD, rD, aD, unreadD, popD, pushD, restD,
+        htransD, hcD, hdD⟩
+    rcases PDA.step_cases he with hreadE | hepsE
+    · rcases hreadE with
+        ⟨qE, rE, aE, unreadE, popE, pushE, restE,
+          htransE, hcE, heE⟩
+      subst d
+      subst e
+      subst c
+      cases htransD <;> cases htransE <;> cases hcE <;> rfl
+    · rcases hepsE with
+        ⟨qE, rE, unreadE, popE, pushE, restE,
+          htransE, hcE, heE⟩
+      cases htransE
+  · rcases hepsD with
+      ⟨qD, rD, unreadD, popD, pushD, restD,
+        htransD, hcD, hdD⟩
+    cases htransD
+
+theorem copy_centered_language_deterministic_pda_recognizable :
+    DeterministicPDARecognizable CopyCenteredLanguage := by
+  exists Section01.AB
+  exists CopyPDAState
+  exists CopyPDA
+  constructor
+  · exact copyPDA_deterministic
+  · intro input
+    exact copyPDA_accepted_language_exact input
 
 end Section04
 end Chapter04
