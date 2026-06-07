@@ -378,6 +378,17 @@ theorem sentential_no_nonterminal_occurrence_absurd
   simp [SententialCountNonterminal, ggNonterminal] at hc
   omega
 
+theorem sentential_no_terminal_occurrence_absurd
+    [DecidableEq terminal]
+    {a : terminal} {sf u v : SententialForm terminal nonterminal}
+    (hcount : SententialCountTerminal a sf = 0)
+    (h : sf = u ++ [ggTerminal a] ++ v) : False := by
+  have hc := congrArg (SententialCountTerminal a) h
+  rw [hcount, sententialCountTerminal_append,
+    sententialCountTerminal_append] at hc
+  simp [SententialCountTerminal, ggTerminal] at hc
+  omega
+
 theorem sentential_unique_nonterminal_occurrence
     [DecidableEq nonterminal]
     {A : nonterminal}
@@ -6348,10 +6359,12 @@ theorem square_generated_language_exact_of_shape_completeness
 
 /-!
 The square grammar now has a constructive completeness direction for every
-square word. The reverse direction has been narrowed to the single preservation
-lemma {name}`SquareDerivationShapeCompleteness`: once every one-step derivation
-is shown to remain in one of the named phases above, the exact-language theorem
-follows immediately.
+square word. The named phase-shape theorem above is retained as a compact
+terminal-state consequence, but the exact proof below uses a stronger
+reachability invariant: start, growth, post-stop, and terminal-square states
+are each preserved by every unrestricted one-step yield. Derivation induction
+then gives the reverse generated-language inclusion without any remaining
+shape-completeness assumption.
 -/
 
 def squareMiddleInversionsFrom (seenB : Nat) :
@@ -6732,6 +6745,112 @@ theorem squareTerminalAForm_clean (n : Nat) :
         squareTerminalAForm n)
       exact ih
 
+theorem squareMiddleClean_count_d
+    {middle : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle) :
+    SententialCountNonterminal SquareNT.d middle = 0 := by
+  induction middle with
+  | nil =>
+      rfl
+  | cons head tail ih =>
+      cases head with
+      | terminal tok =>
+          cases tok
+          exact ih hclean
+      | nonterminal A =>
+          cases A <;> try cases hclean
+          · simpa [SententialCountNonterminal] using ih hclean
+          · simpa [SententialCountNonterminal] using ih hclean
+
+theorem squareMiddleClean_count_start
+    {middle : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle) :
+    SententialCountNonterminal SquareNT.start middle = 0 := by
+  induction middle with
+  | nil =>
+      rfl
+  | cons head tail ih =>
+      cases head with
+      | terminal tok =>
+          cases tok
+          exact ih hclean
+      | nonterminal A =>
+          cases A <;> try cases hclean
+          · simpa [SententialCountNonterminal] using ih hclean
+          · simpa [SententialCountNonterminal] using ih hclean
+
+theorem squareMiddleClean_count_t
+    {middle : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle) :
+    SententialCountNonterminal SquareNT.t middle = 0 := by
+  induction middle with
+  | nil =>
+      rfl
+  | cons head tail ih =>
+      cases head with
+      | terminal tok =>
+          cases tok
+          exact ih hclean
+      | nonterminal A =>
+          cases A <;> try cases hclean
+          · simpa [SententialCountNonterminal] using ih hclean
+          · simpa [SententialCountNonterminal] using ih hclean
+
+theorem squareMiddle_leading_markA_of_tail
+    {middle v : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle)
+    (h : [squareN SquareNT.markA] ++ v =
+      middle ++ [squareN SquareNT.e]) :
+    exists rest,
+      middle = [squareN SquareNT.markA] ++ rest ∧
+        v = rest ++ [squareN SquareNT.e] := by
+  cases middle with
+  | nil =>
+      simp [squareN, ggNonterminal] at h
+  | cons head rest =>
+      simp at h
+      have hhead : head = squareN SquareNT.markA := h.left.symm
+      subst head
+      exists rest
+      simp [h.right]
+
+theorem squareMiddle_leading_terminal_a_of_tail
+    {middle v : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle)
+    (h : [squareT SquareTerminal.a] ++ v =
+      middle ++ [squareN SquareNT.e]) :
+    exists rest,
+      middle = [squareT SquareTerminal.a] ++ rest ∧
+        v = rest ++ [squareN SquareNT.e] := by
+  cases middle with
+  | nil =>
+      simp [squareN, squareT, ggNonterminal, ggTerminal] at h
+  | cons head rest =>
+      simp at h
+      have hhead : head = squareT SquareTerminal.a := h.left.symm
+      subst head
+      exists rest
+      simp [h.right]
+
+theorem squareMiddle_empty_of_E_tail
+    {middle v : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle)
+    (h : [squareN SquareNT.e] ++ v =
+      middle ++ [squareN SquareNT.e]) :
+    middle = [] ∧ v = [] := by
+  cases middle with
+  | nil =>
+      simp at h
+      exact ⟨rfl, h⟩
+  | cons head rest =>
+      cases head with
+      | terminal tok =>
+          cases tok
+          simp [squareN, ggNonterminal] at h
+      | nonterminal A =>
+          cases A <;> try cases hclean
+          all_goals simp [squareN, ggNonterminal] at h
+
 def squarePostStopForm
     (emitted : Nat) (middle : SententialForm SquareTerminal SquareNT) :
     SententialForm SquareTerminal SquareNT :=
@@ -6854,6 +6973,333 @@ theorem squareMiddleClean_trailing_b_iff
   · intro h
     exact squareMiddleClean_append h squareMiddleClean_single_b
 
+theorem squareMiddle_pair_split_before_E_markA
+    {middle u v : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle)
+    (h : middle ++ [squareN SquareNT.e] =
+      u ++ [squareN SquareNT.b, squareN SquareNT.markA] ++ v) :
+    exists left right,
+      middle = left ++ [squareN SquareNT.b, squareN SquareNT.markA] ++ right ∧
+        u = left ∧ v = right ++ [squareN SquareNT.e] := by
+  induction middle generalizing u with
+  | nil =>
+      cases u <;> simp [squareN, ggNonterminal] at h
+  | cons head tail ih =>
+      cases u with
+      | nil =>
+          simp at h
+          have hhead : head = squareN SquareNT.b := h.left
+          subst head
+          cases tail with
+          | nil =>
+              simp [squareN, ggNonterminal] at h
+          | cons tailHead tailRest =>
+              simp at h
+              have htailHead : tailHead = squareN SquareNT.markA := h.left
+              subst tailHead
+              exists []
+              exists tailRest
+              simp [h.right]
+      | cons uhead urest =>
+          simp at h
+          have hhead : uhead = head := h.left.symm
+          subst uhead
+          have htailClean : SquareMiddleClean tail := by
+            cases head with
+            | terminal tok =>
+                cases tok
+                exact hclean
+            | nonterminal A =>
+                cases A <;> try cases hclean
+                · exact hclean
+                · exact hclean
+          have htail :
+              tail ++ [squareN SquareNT.e] =
+                urest ++ [squareN SquareNT.b, squareN SquareNT.markA] ++ v := by
+            simpa using h.right
+          rcases ih htailClean htail with ⟨left, right, hmid, hu, hv⟩
+          exists head :: left
+          exists right
+          constructor
+          · simp [hmid, List.append_assoc]
+          constructor
+          · simp [hu]
+          · exact hv
+
+theorem squareMiddle_pair_split_before_E_terminal_a
+    {middle u v : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle)
+    (h : middle ++ [squareN SquareNT.e] =
+      u ++ [squareN SquareNT.b, squareT SquareTerminal.a] ++ v) :
+    exists left right,
+      middle = left ++ [squareN SquareNT.b, squareT SquareTerminal.a] ++ right ∧
+        u = left ∧ v = right ++ [squareN SquareNT.e] := by
+  induction middle generalizing u with
+  | nil =>
+      cases u <;> simp [squareN, squareT, ggNonterminal, ggTerminal] at h
+  | cons head tail ih =>
+      cases u with
+      | nil =>
+          simp at h
+          have hhead : head = squareN SquareNT.b := h.left
+          subst head
+          cases tail with
+          | nil =>
+              simp [squareN, squareT, ggNonterminal, ggTerminal] at h
+          | cons tailHead tailRest =>
+              simp at h
+              have htailHead : tailHead = squareT SquareTerminal.a := h.left
+              subst tailHead
+              exists []
+              exists tailRest
+              simp [h.right]
+      | cons uhead urest =>
+          simp at h
+          have hhead : uhead = head := h.left.symm
+          subst uhead
+          have htailClean : SquareMiddleClean tail := by
+            cases head with
+            | terminal tok =>
+                cases tok
+                exact hclean
+            | nonterminal A =>
+                cases A <;> try cases hclean
+                · exact hclean
+                · exact hclean
+          have htail :
+              tail ++ [squareN SquareNT.e] =
+                urest ++ [squareN SquareNT.b, squareT SquareTerminal.a] ++ v := by
+            simpa using h.right
+          rcases ih htailClean htail with ⟨left, right, hmid, hu, hv⟩
+          exists head :: left
+          exists right
+          constructor
+          · simp [hmid, List.append_assoc]
+          constructor
+          · simp [hu]
+          · exact hv
+
+theorem sentential_pair_after_nonterminal_delimiter
+    [DecidableEq nonterminal]
+    {A C : nonterminal}
+    {second : Symbol terminal nonterminal}
+    {pref tail u v : SententialForm terminal nonterminal}
+    (hne : C ≠ A)
+    (hpref : SententialCountNonterminal A pref = 0)
+    (h : pref ++ [ggNonterminal C] ++ tail =
+      u ++ [ggNonterminal A, second] ++ v) :
+    exists rest,
+      u = pref ++ [ggNonterminal C] ++ rest ∧
+        tail = rest ++ [ggNonterminal A, second] ++ v := by
+  induction pref generalizing u with
+  | nil =>
+      simp at h
+      cases u with
+      | nil =>
+          simp [ggNonterminal] at h
+          exact False.elim (hne h.left)
+      | cons uhead urest =>
+          simp at h
+          exists urest
+          constructor
+          · simp [h.left]
+          · simpa using h.right
+  | cons head rest ih =>
+      cases u with
+      | nil =>
+          simp at h
+          cases head with
+          | terminal _ =>
+              simp [ggNonterminal] at h
+          | nonterminal B =>
+              simp [ggNonterminal] at h
+              have hBA : B = A := h.left
+              subst B
+              simp [SententialCountNonterminal] at hpref
+      | cons uhead urest =>
+          simp at h
+          have hhead : uhead = head := h.left.symm
+          subst uhead
+          have hrestCount :
+              SententialCountNonterminal A rest = 0 := by
+            cases head with
+            | terminal _ =>
+                simpa [SententialCountNonterminal] using hpref
+            | nonterminal B =>
+                simp [SententialCountNonterminal] at hpref
+                exact hpref.right
+          have htail :
+              rest ++ [ggNonterminal C] ++ tail =
+                urest ++ [ggNonterminal A, second] ++ v := by
+            simpa using h.right
+          rcases ih hrestCount htail with ⟨after, hu, htailEq⟩
+          exists after
+          constructor
+          · simp [hu]
+          · exact htailEq
+
+theorem sentential_single_after_nonterminal_delimiter
+    [DecidableEq nonterminal]
+    {A C : nonterminal}
+    {pref tail u : SententialForm terminal nonterminal}
+    (hne : C ≠ A)
+    (hpref : SententialCountNonterminal A pref = 0)
+    (h : pref ++ [ggNonterminal C] ++ tail =
+      u ++ [ggNonterminal A]) :
+    exists rest,
+      u = pref ++ [ggNonterminal C] ++ rest ∧
+        tail = rest ++ [ggNonterminal A] := by
+  induction pref generalizing u with
+  | nil =>
+      simp at h
+      cases u with
+      | nil =>
+          simp [ggNonterminal] at h
+          exact False.elim (hne h.left)
+      | cons uhead urest =>
+          simp at h
+          exists urest
+          constructor
+          · simp [h.left]
+          · simpa using h.right
+  | cons head rest ih =>
+      cases u with
+      | nil =>
+          simp at h
+      | cons uhead urest =>
+          simp at h
+          have hhead : uhead = head := h.left.symm
+          subst uhead
+          have hrestCount :
+              SententialCountNonterminal A rest = 0 := by
+            cases head with
+            | terminal _ =>
+                simpa [SententialCountNonterminal] using hpref
+            | nonterminal B =>
+                simp [SententialCountNonterminal] at hpref
+                exact hpref.right
+          have htail :
+              rest ++ [ggNonterminal C] ++ tail =
+                urest ++ [ggNonterminal A] := by
+            simpa using h.right
+          rcases ih hrestCount htail with ⟨after, hu, htailEq⟩
+          exists after
+          constructor
+          · simp [hu]
+          · exact htailEq
+
+theorem squareMiddle_trailing_b_split_before_E
+    {middle u v : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle)
+    (h : middle ++ [squareN SquareNT.e] =
+      u ++ [squareN SquareNT.b, squareN SquareNT.e] ++ v) :
+    exists left,
+      middle = left ++ [squareN SquareNT.b] ∧ u = left ∧ v = [] := by
+  induction middle generalizing u with
+  | nil =>
+      cases u <;> simp [squareN, ggNonterminal] at h
+  | cons head tail ih =>
+      cases u with
+      | nil =>
+          simp at h
+          have hhead : head = squareN SquareNT.b := h.left
+          subst head
+          cases tail with
+          | nil =>
+              simp at h
+              exists []
+          | cons tailHead tailRest =>
+              simp at h
+              have htailHead : tailHead = squareN SquareNT.e := h.left
+              subst tailHead
+              simp [SquareMiddleClean, squareN, ggNonterminal] at hclean
+      | cons uhead urest =>
+          simp at h
+          have hhead : uhead = head := h.left.symm
+          subst uhead
+          have htailClean : SquareMiddleClean tail := by
+            cases head with
+            | terminal tok =>
+                cases tok
+                exact hclean
+            | nonterminal A =>
+                cases A <;> try cases hclean
+                · exact hclean
+                · exact hclean
+          have htail :
+              tail ++ [squareN SquareNT.e] =
+                urest ++ [squareN SquareNT.b, squareN SquareNT.e] ++ v := by
+            simpa using h.right
+          rcases ih htailClean htail with ⟨left, hmid, hu, hv⟩
+          exists head :: left
+          constructor
+          · simp [hmid]
+          constructor
+          · simp [hu]
+          · exact hv
+
+theorem squareSeparatedTail_no_B_pair
+    (bCount aCount : Nat)
+    {second : Symbol SquareTerminal SquareNT}
+    (hsecondT : squareN SquareNT.t ≠ second)
+    (hsecondB : squareN SquareNT.b ≠ second)
+    {u v : SententialForm SquareTerminal SquareNT}
+    (h : squareBForm bCount ++ [squareN SquareNT.t] ++
+        squareMarkerAForm aCount ++ [squareN SquareNT.e] =
+      u ++ [squareN SquareNT.b, second] ++ v) :
+    False := by
+  induction bCount generalizing u with
+  | zero =>
+      have hcount :
+          SententialCountNonterminal SquareNT.b
+            (squareBForm 0 ++ [squareN SquareNT.t] ++
+              squareMarkerAForm aCount ++ [squareN SquareNT.e]) = 0 := by
+        have hmarkers :
+            SententialCountNonterminal SquareNT.b
+              (squareMarkerAForm aCount) = 0 := by
+          simpa [squareMarkerAForm] using
+            (sententialCountNonterminal_repeat_nonterminal_of_ne
+              (terminal := SquareTerminal) (A := SquareNT.b)
+              (B := SquareNT.markA) (by intro hba; cases hba) aCount)
+        simp [squareBForm, Word.RepeatSymbol,
+          sententialCountNonterminal_append, hmarkers,
+          SententialCountNonterminal, squareN, ggNonterminal]
+      exact sentential_no_nonterminal_occurrence_absurd hcount (by
+        simpa [List.append_assoc] using
+          (show squareBForm 0 ++ [squareN SquareNT.t] ++
+              squareMarkerAForm aCount ++ [squareN SquareNT.e] =
+            u ++ [squareN SquareNT.b] ++ (second :: v) by
+              simpa [List.append_assoc] using h))
+  | succ bCount ih =>
+      change squareN SquareNT.b ::
+          (squareBForm bCount ++ [squareN SquareNT.t] ++
+            squareMarkerAForm aCount ++ [squareN SquareNT.e]) =
+        u ++ [squareN SquareNT.b, second] ++ v at h
+      cases u with
+      | nil =>
+          simp at h
+          have htail :
+              squareBForm bCount ++ [squareN SquareNT.t] ++
+                  squareMarkerAForm aCount ++ [squareN SquareNT.e] =
+                second :: v := by
+            simpa [List.append_assoc] using h
+          cases bCount with
+          | zero =>
+              simp [squareBForm, Word.RepeatSymbol] at htail
+              exact hsecondT htail.left
+          | succ b =>
+              change squareN SquareNT.b ::
+                  (squareBForm b ++ [squareN SquareNT.t] ++
+                    squareMarkerAForm aCount ++ [squareN SquareNT.e]) =
+                second :: v at htail
+              simp at htail
+              exact hsecondB htail.left
+      | cons head rest =>
+          simp at h
+          have hhead : head = squareN SquareNT.b := h.left.symm
+          subst head
+          exact ih (by simpa [List.append_assoc] using h.right)
+
 theorem squarePostStop_moveBA
     {n emitted : Nat}
     {left right : SententialForm SquareTerminal SquareNT}
@@ -6876,6 +7322,61 @@ theorem squarePostStop_moveBA
   · exact squareMiddleClean_moveBA left right hleft hright
   · rw [← squareMiddlePotential_moveBA]
     exact hbalance
+
+theorem squarePostStopState_step_moveBA
+    {n emitted : Nat}
+    {middle u v : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle)
+    (hbalance : emitted + squareMiddlePotential middle = n * n)
+    (h : squarePostStopForm emitted middle =
+      u ++ [squareN SquareNT.b, squareN SquareNT.markA] ++ v) :
+    SquarePostStopState n
+      (u ++ [squareN SquareNT.markA, squareT SquareTerminal.a,
+        squareN SquareNT.b] ++ v) := by
+  have hafter := sentential_pair_after_nonterminal_delimiter
+    (terminal := SquareTerminal) (nonterminal := SquareNT)
+    (A := SquareNT.b) (C := SquareNT.d)
+    (second := squareN SquareNT.markA)
+    (by intro hbd; cases hbd)
+    (squareTerminalAForm_count_nonterminal SquareNT.b emitted)
+    (pref := squareTerminalAForm emitted) (tail := middle ++ [squareN SquareNT.e])
+    (u := u) (v := v) (by
+      simpa [squarePostStopForm, squareN, List.append_assoc] using h)
+  rcases hafter with ⟨afterD, hu, htail⟩
+  rcases squareMiddle_pair_split_before_E_markA hclean htail with
+    ⟨left, right, hmiddle, hafterEq, hv⟩
+  have hlocalClean :
+      SquareMiddleClean
+        (left ++ [squareN SquareNT.b, squareN SquareNT.markA] ++ right) := by
+    rw [← hmiddle]
+    exact hclean
+  have hleft : SquareMiddleClean left := by
+    have hclean' :
+        SquareMiddleClean
+          (left ++ ([squareN SquareNT.b, squareN SquareNT.markA] ++
+            right)) := by
+      simpa [List.append_assoc] using hlocalClean
+    exact squareMiddleClean_append_left hclean'
+  have htailClean :
+      SquareMiddleClean
+        ([squareN SquareNT.b, squareN SquareNT.markA] ++ right) := by
+    have hclean' :
+        SquareMiddleClean
+          (left ++ ([squareN SquareNT.b, squareN SquareNT.markA] ++
+            right)) := by
+      simpa [List.append_assoc] using hlocalClean
+    exact squareMiddleClean_append_right hclean'
+  have hright : SquareMiddleClean right :=
+    squareMiddleClean_append_right htailClean
+  have hbalance' :
+      emitted + squareMiddlePotential
+        (left ++ [squareN SquareNT.b, squareN SquareNT.markA] ++ right) =
+        n * n := by
+    rw [← hmiddle]
+    exact hbalance
+  have hstate := squarePostStop_moveBA hleft hright hbalance'
+  rw [hu, hafterEq, hv]
+  simpa [squarePostStopForm, List.append_assoc] using hstate
 
 theorem squarePostStopLocal_moveBA
     {n emitted : Nat}
@@ -6924,6 +7425,60 @@ theorem squarePostStop_moveBa
   · rw [← squareMiddlePotential_moveBa]
     exact hbalance
 
+theorem squarePostStopState_step_moveBa
+    {n emitted : Nat}
+    {middle u v : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle)
+    (hbalance : emitted + squareMiddlePotential middle = n * n)
+    (h : squarePostStopForm emitted middle =
+      u ++ [squareN SquareNT.b, squareT SquareTerminal.a] ++ v) :
+    SquarePostStopState n
+      (u ++ [squareT SquareTerminal.a, squareN SquareNT.b] ++ v) := by
+  have hafter := sentential_pair_after_nonterminal_delimiter
+    (terminal := SquareTerminal) (nonterminal := SquareNT)
+    (A := SquareNT.b) (C := SquareNT.d)
+    (second := squareT SquareTerminal.a)
+    (by intro hbd; cases hbd)
+    (squareTerminalAForm_count_nonterminal SquareNT.b emitted)
+    (pref := squareTerminalAForm emitted) (tail := middle ++ [squareN SquareNT.e])
+    (u := u) (v := v) (by
+      simpa [squarePostStopForm, squareN, List.append_assoc] using h)
+  rcases hafter with ⟨afterD, hu, htail⟩
+  rcases squareMiddle_pair_split_before_E_terminal_a hclean htail with
+    ⟨left, right, hmiddle, hafterEq, hv⟩
+  have hlocalClean :
+      SquareMiddleClean
+        (left ++ [squareN SquareNT.b, squareT SquareTerminal.a] ++ right) := by
+    rw [← hmiddle]
+    exact hclean
+  have hleft : SquareMiddleClean left := by
+    have hclean' :
+        SquareMiddleClean
+          (left ++ ([squareN SquareNT.b, squareT SquareTerminal.a] ++
+            right)) := by
+      simpa [List.append_assoc] using hlocalClean
+    exact squareMiddleClean_append_left hclean'
+  have htailClean :
+      SquareMiddleClean
+        ([squareN SquareNT.b, squareT SquareTerminal.a] ++ right) := by
+    have hclean' :
+        SquareMiddleClean
+          (left ++ ([squareN SquareNT.b, squareT SquareTerminal.a] ++
+            right)) := by
+      simpa [List.append_assoc] using hlocalClean
+    exact squareMiddleClean_append_right hclean'
+  have hright : SquareMiddleClean right :=
+    squareMiddleClean_append_right htailClean
+  have hbalance' :
+      emitted + squareMiddlePotential
+        (left ++ [squareN SquareNT.b, squareT SquareTerminal.a] ++ right) =
+        n * n := by
+    rw [← hmiddle]
+    exact hbalance
+  have hstate := squarePostStop_moveBa hleft hright hbalance'
+  rw [hu, hafterEq, hv]
+  simpa [squarePostStopForm, List.append_assoc] using hstate
+
 theorem squarePostStopLocal_moveBa
     {n emitted : Nat}
     {left right : SententialForm SquareTerminal SquareNT}
@@ -6966,6 +7521,38 @@ theorem squarePostStop_removeBE
   · rw [squareMiddlePotential_trailing_b] at hbalance
     exact hbalance
 
+theorem squarePostStopState_step_removeBE
+    {n emitted : Nat}
+    {middle u v : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle)
+    (hbalance : emitted + squareMiddlePotential middle = n * n)
+    (h : squarePostStopForm emitted middle =
+      u ++ [squareN SquareNT.b, squareN SquareNT.e] ++ v) :
+    SquarePostStopState n (u ++ [squareN SquareNT.e] ++ v) := by
+  have hafter := sentential_pair_after_nonterminal_delimiter
+    (terminal := SquareTerminal) (nonterminal := SquareNT)
+    (A := SquareNT.b) (C := SquareNT.d)
+    (second := squareN SquareNT.e)
+    (by intro hbd; cases hbd)
+    (squareTerminalAForm_count_nonterminal SquareNT.b emitted)
+    (pref := squareTerminalAForm emitted) (tail := middle ++ [squareN SquareNT.e])
+    (u := u) (v := v) (by
+      simpa [squarePostStopForm, squareN, List.append_assoc] using h)
+  rcases hafter with ⟨afterD, hu, htail⟩
+  rcases squareMiddle_trailing_b_split_before_E hclean htail with
+    ⟨left, hmiddle, hafterEq, hv⟩
+  have hlocalClean : SquareMiddleClean (left ++ [squareN SquareNT.b]) := by
+    rw [← hmiddle]
+    exact hclean
+  have hbalance' :
+      emitted + squareMiddlePotential (left ++ [squareN SquareNT.b]) =
+        n * n := by
+    rw [← hmiddle]
+    exact hbalance
+  have hstate := squarePostStop_removeBE hlocalClean hbalance'
+  rw [hu, hafterEq, hv]
+  simpa [squarePostStopForm, List.append_assoc] using hstate
+
 theorem squarePostStopLocal_removeBE
     {n emitted : Nat}
     {middle : SententialForm SquareTerminal SquareNT}
@@ -6994,6 +7581,42 @@ theorem squarePostStop_removeDA
   · exact hclean
   · rw [squareMiddlePotential_leading_markA] at hbalance
     exact hbalance
+
+theorem squarePostStopState_step_removeDA
+    {n emitted : Nat}
+    {middle u v : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle)
+    (hbalance : emitted + squareMiddlePotential middle = n * n)
+    (h : squarePostStopForm emitted middle =
+      u ++ [squareN SquareNT.d, squareN SquareNT.markA] ++ v) :
+    SquarePostStopState n (u ++ [squareN SquareNT.d] ++ v) := by
+  have htailCount :
+      SententialCountNonterminal SquareNT.d
+        (middle ++ [squareN SquareNT.e]) = 0 := by
+    rw [sententialCountNonterminal_append, squareMiddleClean_count_d hclean]
+    simp [SententialCountNonterminal, squareN, ggNonterminal]
+  have huniq := sentential_unique_nonterminal_occurrence
+    (terminal := SquareTerminal) (nonterminal := SquareNT)
+    (A := SquareNT.d)
+    (pref := squareTerminalAForm emitted) (tail := middle ++ [squareN SquareNT.e])
+    (u := u) (v := [squareN SquareNT.markA] ++ v)
+    (squareTerminalAForm_count_nonterminal SquareNT.d emitted)
+    htailCount
+    (by simpa [squarePostStopForm, squareN, List.append_assoc] using h)
+  rcases huniq with ⟨hu, htail⟩
+  rcases squareMiddle_leading_markA_of_tail hclean htail with
+    ⟨rest, hmiddle, hv⟩
+  have hlocalClean : SquareMiddleClean ([squareN SquareNT.markA] ++ rest) := by
+    rw [← hmiddle]
+    exact hclean
+  have hbalance' :
+      emitted + squareMiddlePotential ([squareN SquareNT.markA] ++ rest) =
+        n * n := by
+    rw [← hmiddle]
+    exact hbalance
+  have hstate := squarePostStop_removeDA hlocalClean hbalance'
+  rw [hu, hv]
+  simpa [squarePostStopForm, List.append_assoc] using hstate
 
 theorem squarePostStopLocal_removeDA
     {n emitted : Nat}
@@ -7024,6 +7647,56 @@ theorem squarePostStop_moveDa
   · rw [squareMiddlePotential_leading_terminal_a] at hbalance
     omega
 
+theorem squareTerminalAForm_succ_eq_append (n : Nat) :
+    squareTerminalAForm (n + 1) =
+      squareTerminalAForm n ++ [squareT SquareTerminal.a] := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change squareT SquareTerminal.a :: squareTerminalAForm (n + 1) =
+        squareT SquareTerminal.a ::
+          (squareTerminalAForm n ++ [squareT SquareTerminal.a])
+      rw [ih]
+
+theorem squarePostStopState_step_moveDa
+    {n emitted : Nat}
+    {middle u v : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle)
+    (hbalance : emitted + squareMiddlePotential middle = n * n)
+    (h : squarePostStopForm emitted middle =
+      u ++ [squareN SquareNT.d, squareT SquareTerminal.a] ++ v) :
+    SquarePostStopState n
+      (u ++ [squareT SquareTerminal.a, squareN SquareNT.d] ++ v) := by
+  have htailCount :
+      SententialCountNonterminal SquareNT.d
+        (middle ++ [squareN SquareNT.e]) = 0 := by
+    rw [sententialCountNonterminal_append, squareMiddleClean_count_d hclean]
+    simp [SententialCountNonterminal, squareN, ggNonterminal]
+  have huniq := sentential_unique_nonterminal_occurrence
+    (terminal := SquareTerminal) (nonterminal := SquareNT)
+    (A := SquareNT.d)
+    (pref := squareTerminalAForm emitted) (tail := middle ++ [squareN SquareNT.e])
+    (u := u) (v := [squareT SquareTerminal.a] ++ v)
+    (squareTerminalAForm_count_nonterminal SquareNT.d emitted)
+    htailCount
+    (by simpa [squarePostStopForm, squareN, List.append_assoc] using h)
+  rcases huniq with ⟨hu, htail⟩
+  rcases squareMiddle_leading_terminal_a_of_tail hclean htail with
+    ⟨rest, hmiddle, hv⟩
+  have hlocalClean : SquareMiddleClean ([squareT SquareTerminal.a] ++ rest) := by
+    rw [← hmiddle]
+    exact hclean
+  have hbalance' :
+      emitted + squareMiddlePotential ([squareT SquareTerminal.a] ++ rest) =
+        n * n := by
+    rw [← hmiddle]
+    exact hbalance
+  have hstate := squarePostStop_moveDa hlocalClean hbalance'
+  rw [hu, hv]
+  simpa [squarePostStopForm, squareTerminalAForm_succ_eq_append,
+    List.append_assoc] using hstate
+
 theorem squarePostStopLocal_moveDa
     {n emitted : Nat}
     {middle : SententialForm SquareTerminal SquareNT}
@@ -7046,11 +7719,541 @@ theorem squarePostStop_finish_word
   exists n
   simp [squareWord, hemitted]
 
+theorem squarePostStopState_step_finish_square
+    {n emitted : Nat}
+    {middle u v : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle)
+    (hbalance : emitted + squareMiddlePotential middle = n * n)
+    (h : squarePostStopForm emitted middle =
+      u ++ [squareN SquareNT.d, squareN SquareNT.e] ++ v) :
+    exists word,
+      u ++ v = SententialForm.terminalWord word ∧
+        word ∈ squareLanguage := by
+  have htailCount :
+      SententialCountNonterminal SquareNT.d
+        (middle ++ [squareN SquareNT.e]) = 0 := by
+    rw [sententialCountNonterminal_append, squareMiddleClean_count_d hclean]
+    simp [SententialCountNonterminal, squareN, ggNonterminal]
+  have huniq := sentential_unique_nonterminal_occurrence
+    (terminal := SquareTerminal) (nonterminal := SquareNT)
+    (A := SquareNT.d)
+    (pref := squareTerminalAForm emitted) (tail := middle ++ [squareN SquareNT.e])
+    (u := u) (v := [squareN SquareNT.e] ++ v)
+    (squareTerminalAForm_count_nonterminal SquareNT.d emitted)
+    htailCount
+    (by simpa [squarePostStopForm, squareN, List.append_assoc] using h)
+  rcases huniq with ⟨hu, htail⟩
+  rcases squareMiddle_empty_of_E_tail hclean htail with ⟨hmiddle, hv⟩
+  have hbalance' : emitted + squareMiddlePotential [] = n * n := by
+    rw [← hmiddle]
+    exact hbalance
+  exists Word.RepeatSymbol SquareTerminal.a emitted
+  constructor
+  · rw [hu, hv]
+    simp [squareTerminalAForm, SententialForm.terminalWord]
+  · exact squarePostStop_finish_word hbalance'
+
 theorem squarePostStopLocal_finish_word
     {n emitted : Nat}
     (hlocal : SquarePostStopLocalState n emitted []) :
     Word.RepeatSymbol SquareTerminal.a emitted ∈ squareLanguage :=
   squarePostStop_finish_word hlocal.right
+
+inductive SquareReachableState :
+    SententialForm SquareTerminal SquareNT -> Prop where
+  | start :
+      SquareReachableState [squareN SquareNT.start]
+  | grow (n : Nat) :
+      SquareReachableState (squareGrowForm n)
+  | post {sf : SententialForm SquareTerminal SquareNT}
+      (n : Nat) (hpost : SquarePostStopState n sf) :
+      SquareReachableState sf
+  | terminal {word : Word SquareTerminal}
+      (hword : word ∈ squareLanguage) :
+      SquareReachableState (SententialForm.terminalWord word)
+
+theorem squarePostStopForm_count_start
+    {emitted : Nat} {middle : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle) :
+    SententialCountNonterminal SquareNT.start
+      (squarePostStopForm emitted middle) = 0 := by
+  simp [squarePostStopForm, sententialCountNonterminal_append,
+    squareTerminalAForm_count_nonterminal,
+    squareMiddleClean_count_start hclean, SententialCountNonterminal,
+    squareN, ggNonterminal]
+
+theorem squarePostStopForm_count_t
+    {emitted : Nat} {middle : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle) :
+    SententialCountNonterminal SquareNT.t
+      (squarePostStopForm emitted middle) = 0 := by
+  simp [squarePostStopForm, sententialCountNonterminal_append,
+    squareTerminalAForm_count_nonterminal,
+    squareMiddleClean_count_t hclean, SententialCountNonterminal,
+    squareN, ggNonterminal]
+
+theorem squarePostStopState_yields_reachable
+    {x y : SententialForm SquareTerminal SquareNT}
+    {n : Nat}
+    (hpost : SquarePostStopState n x)
+    (hstep : GeneralGrammar.Yields SquareGrammar x y) :
+    SquareReachableState y := by
+  rcases hpost with ⟨emitted, middle, hx, hclean, hbalance⟩
+  rcases hstep with ⟨u, v, lhs, rhs, hprod, hxstep, hystep⟩
+  rw [hx] at hxstep
+  rw [hystep]
+  cases hprod with
+  | start =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (squarePostStopForm_count_start hclean) hxstep)
+  | grow =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (squarePostStopForm_count_t hclean) hxstep)
+  | stop =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (squarePostStopForm_count_t hclean) hxstep)
+  | moveBA =>
+      exact SquareReachableState.post n
+        (squarePostStopState_step_moveBA hclean hbalance hxstep)
+  | moveBa =>
+      exact SquareReachableState.post n
+        (squarePostStopState_step_moveBa hclean hbalance hxstep)
+  | removeBE =>
+      exact SquareReachableState.post n
+        (squarePostStopState_step_removeBE hclean hbalance hxstep)
+  | removeDA =>
+      exact SquareReachableState.post n
+        (squarePostStopState_step_removeDA hclean hbalance hxstep)
+  | moveDa =>
+      exact SquareReachableState.post n
+        (squarePostStopState_step_moveDa hclean hbalance hxstep)
+  | finish =>
+      rcases squarePostStopState_step_finish_square hclean hbalance hxstep with
+        ⟨word, hy, hword⟩
+      have hterminal : SquareReachableState (u ++ v) := by
+        rw [hy]
+        exact SquareReachableState.terminal hword
+      simpa using hterminal
+
+theorem squareGrowForm_count_start (n : Nat) :
+    SententialCountNonterminal SquareNT.start (squareGrowForm n) = 0 := by
+  have hb :
+      SententialCountNonterminal SquareNT.start (squareBForm n) = 0 := by
+    simpa [squareBForm] using
+      (sententialCountNonterminal_repeat_nonterminal_of_ne
+        (terminal := SquareTerminal) (A := SquareNT.start) (B := SquareNT.b)
+        (by intro h; cases h) n)
+  have ha :
+      SententialCountNonterminal SquareNT.start (squareMarkerAForm n) = 0 := by
+    simpa [squareMarkerAForm] using
+      (sententialCountNonterminal_repeat_nonterminal_of_ne
+        (terminal := SquareTerminal) (A := SquareNT.start)
+        (B := SquareNT.markA) (by intro h; cases h) n)
+  simp [squareGrowForm, sententialCountNonterminal_append,
+    hb, ha, SententialCountNonterminal, squareN, ggNonterminal]
+
+theorem squareGrowForm_count_terminal_a (n : Nat) :
+    SententialCountTerminal SquareTerminal.a (squareGrowForm n) = 0 := by
+  simp [squareGrowForm, sententialCountTerminal_append,
+    squareBForm_count_terminal_a, squareMarkerAForm_count_terminal_a,
+    SententialCountTerminal, squareN, ggNonterminal]
+
+theorem squareGrowForm_yields_reachable
+    {y : SententialForm SquareTerminal SquareNT}
+    (n : Nat)
+    (hstep : GeneralGrammar.Yields SquareGrammar (squareGrowForm n) y) :
+    SquareReachableState y := by
+  rcases hstep with ⟨u, v, lhs, rhs, hprod, hxstep, hystep⟩
+  rw [hystep]
+  cases hprod with
+  | start =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (squareGrowForm_count_start n) hxstep)
+  | grow =>
+      have hocc := squareGrowForm_t_occurrence n hxstep
+      rw [hocc.left, hocc.right]
+      simpa [squareGrowForm, squareBForm_succ_eq_append,
+        squareMarkerAForm, Word.RepeatSymbol, List.append_assoc] using
+        SquareReachableState.grow (n + 1)
+  | stop =>
+      exact SquareReachableState.post n
+        (squareGrowForm_stop_post_state n (by simpa using hxstep))
+  | moveBA =>
+      have hafter := sentential_pair_after_nonterminal_delimiter
+        (terminal := SquareTerminal) (nonterminal := SquareNT)
+        (A := SquareNT.b) (C := SquareNT.d)
+        (second := squareN SquareNT.markA)
+        (by intro hbd; cases hbd)
+        (by simp [SententialCountNonterminal])
+        (pref := []) (tail := squareBForm n ++ [squareN SquareNT.t] ++
+          squareMarkerAForm n ++ [squareN SquareNT.e])
+        (u := u) (v := v) (by
+          simpa [squareGrowForm, squareN, List.append_assoc] using hxstep)
+      rcases hafter with ⟨afterD, hu, htail⟩
+      exact False.elim
+        (squareSeparatedTail_no_B_pair n n
+          (by intro htm; cases htm)
+          (by intro hbm; cases hbm)
+          htail)
+  | moveBa =>
+      exact False.elim
+        (sentential_no_terminal_occurrence_absurd
+          (squareGrowForm_count_terminal_a n) (by
+            exact
+              (show squareGrowForm n =
+                  (u ++ [squareN SquareNT.b]) ++
+                    [ggTerminal SquareTerminal.a] ++ v by
+                simpa [squareT, List.append_assoc] using hxstep)))
+  | removeBE =>
+      have hafter := sentential_pair_after_nonterminal_delimiter
+        (terminal := SquareTerminal) (nonterminal := SquareNT)
+        (A := SquareNT.b) (C := SquareNT.d)
+        (second := squareN SquareNT.e)
+        (by intro hbd; cases hbd)
+        (by simp [SententialCountNonterminal])
+        (pref := []) (tail := squareBForm n ++ [squareN SquareNT.t] ++
+          squareMarkerAForm n ++ [squareN SquareNT.e])
+        (u := u) (v := v) (by
+          simpa [squareGrowForm, squareN, List.append_assoc] using hxstep)
+      rcases hafter with ⟨afterD, hu, htail⟩
+      exact False.elim
+        (squareSeparatedTail_no_B_pair n n
+          (by intro hte; cases hte)
+          (by intro hbe; cases hbe)
+          htail)
+  | removeDA =>
+      have htailCount :
+          SententialCountNonterminal SquareNT.d
+            (squareBForm n ++ [squareN SquareNT.t] ++
+              squareMarkerAForm n ++ [squareN SquareNT.e]) = 0 := by
+        simp [sententialCountNonterminal_append, squareBForm_count_d,
+          squareMarkerAForm_count_d, SententialCountNonterminal,
+          squareN, ggNonterminal]
+      have huniq := sentential_unique_nonterminal_occurrence
+        (terminal := SquareTerminal) (nonterminal := SquareNT)
+        (A := SquareNT.d)
+        (pref := []) (tail := squareBForm n ++ [squareN SquareNT.t] ++
+          squareMarkerAForm n ++ [squareN SquareNT.e])
+        (u := u) (v := [squareN SquareNT.markA] ++ v)
+        (by simp [SententialCountNonterminal]) htailCount
+        (by simpa [squareGrowForm, squareN, List.append_assoc] using hxstep)
+      rcases huniq with ⟨hu, htail⟩
+      cases n with
+      | zero =>
+          simp [squareBForm, squareMarkerAForm, Word.RepeatSymbol,
+            squareN, ggNonterminal] at htail
+      | succ n =>
+          change squareN SquareNT.markA :: v =
+            squareN SquareNT.b ::
+              (squareBForm n ++ [squareN SquareNT.t] ++
+                squareMarkerAForm (n + 1) ++ [squareN SquareNT.e]) at htail
+          simp [squareN, ggNonterminal] at htail
+  | moveDa =>
+      exact False.elim
+        (sentential_no_terminal_occurrence_absurd
+          (squareGrowForm_count_terminal_a n) (by
+            exact
+              (show squareGrowForm n =
+                  (u ++ [squareN SquareNT.d]) ++
+                    [ggTerminal SquareTerminal.a] ++ v by
+                simpa [squareT, List.append_assoc] using hxstep)))
+  | finish =>
+      have htailCount :
+          SententialCountNonterminal SquareNT.d
+            (squareBForm n ++ [squareN SquareNT.t] ++
+              squareMarkerAForm n ++ [squareN SquareNT.e]) = 0 := by
+        simp [sententialCountNonterminal_append, squareBForm_count_d,
+          squareMarkerAForm_count_d, SententialCountNonterminal,
+          squareN, ggNonterminal]
+      have huniq := sentential_unique_nonterminal_occurrence
+        (terminal := SquareTerminal) (nonterminal := SquareNT)
+        (A := SquareNT.d)
+        (pref := []) (tail := squareBForm n ++ [squareN SquareNT.t] ++
+          squareMarkerAForm n ++ [squareN SquareNT.e])
+        (u := u) (v := [squareN SquareNT.e] ++ v)
+        (by simp [SententialCountNonterminal]) htailCount
+        (by simpa [squareGrowForm, squareN, List.append_assoc] using hxstep)
+      rcases huniq with ⟨hu, htail⟩
+      cases n with
+      | zero =>
+          simp [squareBForm, squareMarkerAForm, Word.RepeatSymbol,
+            squareN, ggNonterminal] at htail
+      | succ n =>
+          change squareN SquareNT.e :: v =
+            squareN SquareNT.b ::
+              (squareBForm n ++ [squareN SquareNT.t] ++
+                squareMarkerAForm (n + 1) ++ [squareN SquareNT.e]) at htail
+          simp [squareN, ggNonterminal] at htail
+
+theorem squareStart_yields_reachable
+    {y : SententialForm SquareTerminal SquareNT}
+    (hstep : GeneralGrammar.Yields SquareGrammar [squareN SquareNT.start] y) :
+    SquareReachableState y := by
+  rcases hstep with ⟨u, v, lhs, rhs, hprod, hxstep, hystep⟩
+  rw [hystep]
+  cases hprod with
+  | start =>
+      have huniq := sentential_unique_nonterminal_occurrence
+        (terminal := SquareTerminal) (nonterminal := SquareNT)
+        (A := SquareNT.start)
+        (pref := []) (tail := []) (u := u) (v := v)
+        (by simp [SententialCountNonterminal])
+        (by simp [SententialCountNonterminal])
+        (by simpa [squareN] using hxstep)
+      rcases huniq with ⟨hu, hv⟩
+      rw [hu, hv]
+      simpa [squareGrowForm, squareBForm, squareMarkerAForm,
+        Word.RepeatSymbol, List.append_assoc] using
+        SquareReachableState.grow 0
+  | grow =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
+            SententialCountNonterminal SquareNT.t [squareN SquareNT.start] = 0)
+          (by simpa [squareN] using hxstep))
+  | stop =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
+            SententialCountNonterminal SquareNT.t [squareN SquareNT.start] = 0)
+          (by simpa [squareN] using hxstep))
+  | moveBA =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
+            SententialCountNonterminal SquareNT.b [squareN SquareNT.start] = 0)
+          (by simpa [squareN, List.append_assoc] using
+            (show [squareN SquareNT.start] =
+                u ++ [squareN SquareNT.b] ++
+                  ([squareN SquareNT.markA] ++ v) by
+              simpa [List.append_assoc] using hxstep)))
+  | moveBa =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
+            SententialCountNonterminal SquareNT.b [squareN SquareNT.start] = 0)
+          (by simpa [squareN, List.append_assoc] using
+            (show [squareN SquareNT.start] =
+                u ++ [squareN SquareNT.b] ++
+                  ([squareT SquareTerminal.a] ++ v) by
+              simpa [List.append_assoc] using hxstep)))
+  | removeBE =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
+            SententialCountNonterminal SquareNT.b [squareN SquareNT.start] = 0)
+          (by simpa [squareN, List.append_assoc] using
+            (show [squareN SquareNT.start] =
+                u ++ [squareN SquareNT.b] ++
+                  ([squareN SquareNT.e] ++ v) by
+              simpa [List.append_assoc] using hxstep)))
+  | removeDA =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
+            SententialCountNonterminal SquareNT.d [squareN SquareNT.start] = 0)
+          (by simpa [squareN, List.append_assoc] using
+            (show [squareN SquareNT.start] =
+                u ++ [squareN SquareNT.d] ++
+                  ([squareN SquareNT.markA] ++ v) by
+              simpa [List.append_assoc] using hxstep)))
+  | moveDa =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
+            SententialCountNonterminal SquareNT.d [squareN SquareNT.start] = 0)
+          (by simpa [squareN, List.append_assoc] using
+            (show [squareN SquareNT.start] =
+                u ++ [squareN SquareNT.d] ++
+                  ([squareT SquareTerminal.a] ++ v) by
+              simpa [List.append_assoc] using hxstep)))
+  | finish =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
+            SententialCountNonterminal SquareNT.d [squareN SquareNT.start] = 0)
+          (by simpa [squareN, List.append_assoc] using
+            (show [squareN SquareNT.start] =
+                u ++ [squareN SquareNT.d] ++
+                  ([squareN SquareNT.e] ++ v) by
+              simpa [List.append_assoc] using hxstep)))
+
+theorem squareTerminalState_yields_reachable
+    {word : Word SquareTerminal}
+    (_hword : word ∈ squareLanguage)
+    {y : SententialForm SquareTerminal SquareNT}
+    (hstep : GeneralGrammar.Yields SquareGrammar
+      (SententialForm.terminalWord word) y) :
+    SquareReachableState y := by
+  rcases hstep with ⟨u, v, lhs, rhs, hprod, hxstep, hystep⟩
+  cases hprod with
+  | start =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (sententialCountNonterminal_terminalWord SquareNT.start word)
+          (by simpa [squareN] using hxstep))
+  | grow =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (sententialCountNonterminal_terminalWord SquareNT.t word)
+          (by simpa [squareN] using hxstep))
+  | stop =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (sententialCountNonterminal_terminalWord SquareNT.t word)
+          (by simpa [squareN] using hxstep))
+  | moveBA =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (sententialCountNonterminal_terminalWord SquareNT.b word)
+          (by simpa [squareN, List.append_assoc] using
+            (show SententialForm.terminalWord word =
+                u ++ [squareN SquareNT.b] ++
+                  ([squareN SquareNT.markA] ++ v) by
+              simpa [List.append_assoc] using hxstep)))
+  | moveBa =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (sententialCountNonterminal_terminalWord SquareNT.b word)
+          (by simpa [squareN, List.append_assoc] using
+            (show SententialForm.terminalWord word =
+                u ++ [squareN SquareNT.b] ++
+                  ([squareT SquareTerminal.a] ++ v) by
+              simpa [List.append_assoc] using hxstep)))
+  | removeBE =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (sententialCountNonterminal_terminalWord SquareNT.b word)
+          (by simpa [squareN, List.append_assoc] using
+            (show SententialForm.terminalWord word =
+                u ++ [squareN SquareNT.b] ++
+                  ([squareN SquareNT.e] ++ v) by
+              simpa [List.append_assoc] using hxstep)))
+  | removeDA =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (sententialCountNonterminal_terminalWord SquareNT.d word)
+          (by simpa [squareN, List.append_assoc] using
+            (show SententialForm.terminalWord word =
+                u ++ [squareN SquareNT.d] ++
+                  ([squareN SquareNT.markA] ++ v) by
+              simpa [List.append_assoc] using hxstep)))
+  | moveDa =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (sententialCountNonterminal_terminalWord SquareNT.d word)
+          (by simpa [squareN, List.append_assoc] using
+            (show SententialForm.terminalWord word =
+                u ++ [squareN SquareNT.d] ++
+                  ([squareT SquareTerminal.a] ++ v) by
+              simpa [List.append_assoc] using hxstep)))
+  | finish =>
+      exact False.elim
+        (sentential_no_nonterminal_occurrence_absurd
+          (sententialCountNonterminal_terminalWord SquareNT.d word)
+          (by simpa [squareN, List.append_assoc] using
+            (show SententialForm.terminalWord word =
+                u ++ [squareN SquareNT.d] ++
+                  ([squareN SquareNT.e] ++ v) by
+              simpa [List.append_assoc] using hxstep)))
+
+theorem squareReachableState_yields_reachable
+    {x y : SententialForm SquareTerminal SquareNT}
+    (hx : SquareReachableState x)
+    (hstep : GeneralGrammar.Yields SquareGrammar x y) :
+    SquareReachableState y := by
+  cases hx with
+  | start =>
+      exact squareStart_yields_reachable hstep
+  | grow n =>
+      exact squareGrowForm_yields_reachable n hstep
+  | post n hpost =>
+      exact squarePostStopState_yields_reachable hpost hstep
+  | terminal hword =>
+      exact squareTerminalState_yields_reachable hword hstep
+
+theorem squareReachableState_derives
+    {x y : SententialForm SquareTerminal SquareNT}
+    (h : GeneralGrammar.Derives SquareGrammar x y)
+    (hx : SquareReachableState x) :
+    SquareReachableState y := by
+  induction h with
+  | refl _ =>
+      exact hx
+  | step hstep _ ih =>
+      exact ih (squareReachableState_yields_reachable hx hstep)
+
+theorem squarePostStopForm_count_d
+    {emitted : Nat} {middle : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean middle) :
+    SententialCountNonterminal SquareNT.d
+      (squarePostStopForm emitted middle) = 1 := by
+  simp [squarePostStopForm, sententialCountNonterminal_append,
+    squareTerminalAForm_count_nonterminal, squareMiddleClean_count_d hclean,
+    SententialCountNonterminal, squareN, ggNonterminal]
+
+theorem squareReachableState_terminal_square
+    {word : Word SquareTerminal}
+    (hstate : SquareReachableState (SententialForm.terminalWord word)) :
+    word ∈ squareLanguage := by
+  generalize hsf : SententialForm.terminalWord word = sf at hstate
+  cases hstate with
+  | start =>
+      exact False.elim
+        (sententialCountNonterminal_terminal_absurd
+          square_start_form_count_start hsf.symm)
+  | grow n =>
+      exact False.elim
+        (sententialCountNonterminal_terminal_absurd
+          (squareGrowForm_count_d n) hsf.symm)
+  | post n hpost =>
+      rcases hpost with ⟨emitted, middle, hpostForm, hclean, hbalance⟩
+      have hcount :
+          SententialCountNonterminal SquareNT.d sf = 1 := by
+        rw [hpostForm]
+        exact squarePostStopForm_count_d hclean
+      exact False.elim
+        (sententialCountNonterminal_terminal_absurd hcount hsf.symm)
+  | terminal hword =>
+      have hto :=
+        congrArg
+          (SententialForm.toWord?
+            (term := SquareTerminal) (nt := SquareNT)) hsf
+      simp [SententialForm.terminalWord_toWord] at hto
+      cases hto
+      exact hword
+
+theorem square_generated_only_language
+    {word : Word SquareTerminal}
+    (h : word ∈ GeneralGrammar.GeneratedLanguage SquareGrammar) :
+    word ∈ squareLanguage := by
+  have hderives :
+      GeneralGrammar.Derives SquareGrammar [squareN SquareNT.start]
+        (SententialForm.terminalWord word) := by
+    simpa [GeneralGrammar.GeneratedLanguage, SquareGrammar, squareN,
+      ggNonterminal] using h
+  exact squareReachableState_terminal_square
+    (squareReachableState_derives hderives SquareReachableState.start)
+
+theorem square_generated_language_exact :
+    Language.Equal (GeneralGrammar.GeneratedLanguage SquareGrammar)
+      squareLanguage := by
+  intro word
+  constructor
+  · exact square_generated_only_language
+  · exact square_language_subset_generated
+
+theorem squareGrammar_finite_production_squareLanguage :
+    FiniteProductionGeneralLanguage squareLanguage := by
+  exists SquareNT
+  exists SquareGrammar
+  constructor
+  · exact squareGrammar_has_finite_productions
+  · exact square_generated_language_exact
 
 def fourAsWord : Word SquareTerminal :=
   [SquareTerminal.a, SquareTerminal.a, SquareTerminal.a, SquareTerminal.a]

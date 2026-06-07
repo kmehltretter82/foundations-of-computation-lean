@@ -4,14 +4,12 @@ This is a standalone Lean 4 formalization companion for Carol Critchlow and
 David Eck's textbook *Foundations of Computation*, Second Edition, Version
 2.3.2.
 
-The public reading experience is the rendered Verso site:
-
-<https://kmehltretter82.github.io/foundations-of-computation-lean/>
-
-The site is generated from the Lean source in this repository. It is meant to
-be read beside the textbook, not instead of it: the textbook supplies the
-exposition and exercises, while this project records checked definitions,
-theorems, constructions, examples, and formal status notes.
+The public reading experience is the
+[rendered Verso site](https://kmehltretter82.github.io/foundations-of-computation-lean/),
+generated from the Lean source in this repository. It is meant to be read
+beside the textbook, not instead of it: the textbook supplies the exposition and
+exercises, while this project records checked definitions, theorems,
+constructions, examples, and formal status notes.
 
 ## What This Project Does
 
