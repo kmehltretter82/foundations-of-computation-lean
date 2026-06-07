@@ -4,6 +4,7 @@ import FoC.Computability.Computable
 import FoC.Computability.Recognizable
 import FoC.Computability.Transform
 import FoC.Computability.Enumerable
+import FoC.Computability.Program
 import FoC.Computability.Undecidable
 
 set_option doc.verso true
@@ -29,7 +30,9 @@ string functions.  {module}`FoC.Computability.Recognizable` defines
 Turing-acceptable and Turing-decidable languages.  {module}`FoC.Computability.Transform`
 contains reusable machine transformations.  {module}`FoC.Computability.Enumerable`
 records the enumeration and range-of-computable-function views of recursively
-enumerable languages.
+enumerable languages.  {module}`FoC.Computability.Program` supplies a staged
+program semantics for trace-level dovetailing and partial listing/range/program
+equivalences.
 
 Finally, {module}`FoC.Computability.Undecidable` packages the diagonal,
 halting-problem, reduction, and noncomputability vocabulary used by the limits

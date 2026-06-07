@@ -594,8 +594,8 @@ completed:
         reason: "General grammar definitions, finite-production presentation vocabulary, finite-presentation code types and countability wrappers for CFG and unrestricted grammar production-list descriptions, unrestricted derivation context closure, form-language soundness lemmas for unrestricted productions and derivations, CFG embedding with finite-production preservation, finite production-list witnesses and finite-production generated-language wrappers for the three sample grammars, the equal-count and ordered a^n b^n c^n grammar invariants, exact generated-language theorem and exact finite-production generated-language wrapper for equal-count words over {a,b,c}, parametric generated-language inclusion for every ordered a^n b^n c^n block word, exact generated-language theorem and exact finite-production generated-language wrapper for the ordered a^n b^n c^n block language, parametric generated-language inclusion for every unary-square target word a^(n^2), unary-square reachability-shape vocabulary and terminal-shape consequence, selected four-equal-count, ordered a^n b^n c^n d^n, ordered strict-count, powers-of-two, and strict n_a > n_b > n_c exercise grammars with invariants or soundness where applicable and concrete derivations, exact generated-language theorem for ordered strict-count words, and representative derivations for the book's equal-count, ordered a^n b^n c^n, and a^(n^2) grammars are formalized; reverse generated-only proof for the unary-square sample grammar and equivalence with recursively enumerable languages remain larger developments, with the latter belonging to Chapter 5 computability."
   - coordinate: "Chapter 5"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 153
-    definition_declarations: 66
+    theorem_declarations: 167
+    definition_declarations: 78
     modules:
       - "FoC.Book.Chapter05.Section01"
       - "FoC.Book.Chapter05.Section02"
@@ -607,6 +607,7 @@ completed:
       - "FoC.Computability.Recognizable"
       - "FoC.Computability.Transform"
       - "FoC.Computability.Enumerable"
+      - "FoC.Computability.Program"
       - "FoC.Computability.Undecidable"
     proved_core:
       - "Turing-machine directions and finite-window tapes with blanks as option-valued cells"
@@ -629,7 +630,8 @@ completed:
       - "Stopped-decider accepting and rejecting output traces as exact finite acceptance traces for a language and its complement"
       - "Decidable and recursive languages are closed under complement by swapping decider outputs, with complement equivalences using double-complement language equality"
       - "Co-recursively enumerable language vocabulary, finite-stage acceptance traces for recursively enumerable languages, complementary acceptance traces for RE plus co-RE languages, bounded trace-hit search, no-conflict lemmas, the classical bounded classification core that underlies dovetailing, and a conditional proof of the recursive iff RE/co-RE theorem from the decider-to-acceptor and dovetailing construction principles"
-      - "Listing and range-language vocabulary for recursively enumerable languages, including listability/range extensionality, the unary-input bridge between listings and ranges, and the semantic equivalence between listability and range-of-unary-function descriptions"
+      - "Staged program semantics with a concrete trace-level dovetailing program that decides a language from complementary acceptance traces"
+      - "Listing and range-language vocabulary for recursively enumerable languages, including listability/range extensionality, partial listings that can represent the empty language, unary-input bridges between listings and ranges, and semantic equivalences among partial listings, partial unary ranges, and partial-function programs"
       - "General grammar versus recursively enumerable language equivalence statement shape, grammar witnesses for a language plus its complement, and a conditional grammar-pair characterization of recursive languages from the recursive iff RE/co-RE construction"
       - "Non-computable function, non-acceptable language, undecidable language, decidable and acceptable reductions, diagonal-language, decoder-row recognition, decoder-universality for acceptable languages and for all languages, self-halting language, halting-problem, and universal-machine specification vocabulary, with extensionality and complement transport"
       - "Reduction reflexivity/transitivity, complement preservation for decidable reductions, undecidability transfer along decidable reductions, and non-acceptability transfer along acceptable reductions"
@@ -658,17 +660,19 @@ completed:
           - item: "Transition-level construction for the weak non-stopped TuringDecidable predicate"
             reason: "The sound construction is formalized for stopped 0/1 deciders. The existing weak predicate permits nonterminal halting behavior and does not require distinct yes/no symbols, so it is not a sound source for a no-false-accept transition-level construction without strengthening the predicate."
       - coordinate: "Chapter 5, Section 5.2"
-        status: "partial_concrete_construction_deferred"
+        status: "partial_turing_interpreter_deferred"
         formalized:
           - artifact: "FoC.Book.Chapter05.Section02"
-            reason: "Co-RE vocabulary, finite-stage acceptance traces, complementary acceptance traces, bounded trace-hit search, RE/co-RE bounded-search classification core, stopped-decider complementary traces, conditional recursive iff RE/co-RE theorem from construction principles, listability/range vocabulary, unary-input bridge, semantic listability/range equivalence, computable range descriptions, and grammar/RE-language theorem shapes."
+            reason: "Co-RE vocabulary, finite-stage acceptance traces, complementary acceptance traces, bounded trace-hit search, RE/co-RE bounded-search classification core, concrete trace-level dovetailing program, stopped-decider complementary traces, conditional recursive iff RE/co-RE theorem from construction principles, total and partial listability/range vocabulary, unary-input bridges, semantic listing/range/program equivalences, computable range descriptions, and grammar/RE-language theorem shapes."
           - artifact: "FoC.Computability.Enumerable"
-            reason: "Listability, range-language, recursive-enumerability, unary-input bridge, and semantic listing/range equivalence infrastructure."
+            reason: "Total and partial listability, total and partial range-language vocabulary, recursive-enumerability, unary-input bridges, empty-language partial listing, and semantic listing/range equivalence infrastructure."
+          - artifact: "FoC.Computability.Program"
+            reason: "Staged program semantics, concrete bounded dovetailing program over complementary traces, Boolean program-decision correctness, partial listing programs, partial unary range programs, partial-function programs, and semantic equivalences among these descriptions."
         missing:
-          - item: "Concrete transition-level dovetailing decider from paired recognizers"
-            blocker: "Current theorem is assembled from explicit construction principles rather than a constructed machine."
-          - item: "Concrete machine/program/listing equivalences"
-            blocker: "Requires simulation infrastructure among one-tape machines, multi-tape machines, programs, computable listings, and ranges."
+          - item: "Concrete transition-level Turing-machine dovetailing decider from paired recognizers"
+            blocker: "A sound staged-program dovetailer over complementary traces is formalized; compiling it to the one-tape Turing-machine layer requires interpreter/simulation infrastructure."
+          - item: "Concrete Turing-machine/program/listing equivalences through compiled programs"
+            blocker: "Partial listing/range/program equivalences are formalized at the staged-program layer; simulation infrastructure among one-tape machines, multi-tape machines, programs, computable listings, and ranges remains."
           - item: "Concrete general-grammar-to-RE and RE-to-general-grammar constructions"
             blocker: "Current coverage records statement shapes and grammar-pair characterizations, not full construction proofs."
         deferred: []
@@ -693,9 +697,9 @@ completed:
       - coordinate: "Chapter 5, Section 5.1"
         reason: "Characteristic-function decidability, stopped-decider exact output classification, stopped-decider acceptance traces, and the concrete stopped-decider-to-acceptor transition-level transformation are formalized; extending this to the current weak non-stopped TuringDecidable predicate would require strengthening that predicate first."
       - coordinate: "Chapter 5, Section 5.2"
-        reason: "The semantic listing/range equivalence and conditional grammar-pair characterization of recursive languages are formalized. Simulation equivalences among one-tape machines, multi-tape machines, programs, computable listings/ranges, and concrete general-grammar constructions are recorded as statement shapes, not assumed as proved transition-level theorems."
+        reason: "The semantic total listing/range equivalence, partial listing/range/program equivalences, concrete staged-program dovetailing from complementary traces, and conditional grammar-pair characterization of recursive languages are formalized. Simulation equivalences among one-tape machines, multi-tape machines, compiled programs, computable listings/ranges, and concrete general-grammar constructions are recorded as statement shapes, not assumed as proved transition-level theorems."
       - coordinate: "Chapter 5, Section 5.2"
-        reason: "Finite-step acceptance traces, stopped-decider complementary output traces, exact stopped-decider acceptance traces for the language and complement, the RE/co-RE bounded-search classification core, and the recursive iff RE/co-RE theorem derived from explicit construction principles are formalized; the transition-level dovetailing machine that turns paired recognizers into a concrete decider remains deferred."
+        reason: "Finite-step acceptance traces, stopped-decider complementary output traces, exact stopped-decider acceptance traces for the language and complement, the RE/co-RE bounded-search classification core, a concrete staged-program dovetailer over paired traces, and the recursive iff RE/co-RE theorem derived from explicit construction principles are formalized; the transition-level Turing-machine dovetailer that turns paired recognizers into a concrete decider remains deferred."
       - coordinate: "Chapter 5, Section 5.3"
         reason: "The abstract diagonal contradiction core, decoder-row diagonalization, no-universal-decoder theorem, reduction-transfer schemas, self-halting complement bridge, abstract and paired halting-problem membership facts, injective-pair diagonal preimage equality, diagonal-pair undecidability transfer from decidable preimage, conditional non-acceptability under decoder universality, and conditional self-halting RE/not-recursive/non-RE-complement theorem shape are formalized. Universal-machine construction, concrete machine encodings, concrete diagonal pair-map computability, and concrete halting-problem undecidability require encoding and interpreter infrastructure not yet present."
 in_progress: []

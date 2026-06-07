@@ -1,4 +1,4 @@
-import FoC.Computability.Enumerable
+import FoC.Computability.Program
 import FoC.Grammars.GeneralGrammar
 
 set_option doc.verso true
@@ -14,8 +14,8 @@ namespace Section02
 This section connects recursive, recursively enumerable, acceptable, and
 listable languages. It also records the statement shape for the theorem that
 finite general grammars generate exactly the recursively enumerable languages.
-The reusable modules are {module}`FoC.Computability.Enumerable` and
-{module}`FoC.Grammars.GeneralGrammar`.
+The reusable modules are {module}`FoC.Computability.Enumerable`,
+{module}`FoC.Computability.Program`, and {module}`FoC.Grammars.GeneralGrammar`.
 
 The guiding distinction is total decision versus semi-decision. Recursive
 languages have deciders. Recursively enumerable languages have recognizers or
@@ -86,6 +86,15 @@ def LanguageDovetailSearchHit
     (accept reject : Word alpha -> Nat -> Prop)
     (w : Word alpha) (limit : Nat) : Prop :=
   ComplementaryTraceSearchHit accept reject w limit
+
+noncomputable def TraceDovetailProgram
+    (accept reject : Word alpha -> Nat -> Prop) :
+    StagedProgram alpha Bool :=
+  Computability.DovetailProgram accept reject
+
+def ProgramBoolDecidesLanguage
+    (P : StagedProgram alpha Bool) (L : Language alpha) : Prop :=
+  ProgramBoolDecides P L
 
 /-!
 ## Complements and Extensionality
@@ -264,6 +273,23 @@ theorem re_and_co_re_bounded_search_eventually_classifies
           · exact hreject
           · exact complementary_trace_search_eventually_classifies hreject w
 
+theorem complementary_traces_dovetailing_program_decides
+    {accept reject : Word alpha -> Nat -> Prop}
+    {L : Language alpha}
+    (h : LanguageComplementaryAcceptanceTraces accept reject L) :
+    ProgramBoolDecidesLanguage
+      (TraceDovetailProgram accept reject) L :=
+  Computability.dovetailProgram_decides h
+
+theorem re_and_co_re_have_dovetailing_program
+    {L : Language alpha}
+    (h : RecursivelyEnumerableLanguageWithComplement L) :
+    exists accept reject : Word alpha -> Nat -> Prop,
+      LanguageComplementaryAcceptanceTraces accept reject L ∧
+        ProgramBoolDecidesLanguage
+          (TraceDovetailProgram accept reject) L :=
+  Computability.reCoRe_has_dovetailProgram h
+
 theorem stopped_decider_has_complementary_output_traces
     {M : TuringMachine symbol state}
     {encodeInput : alpha -> symbol} {zero one : symbol}
@@ -401,19 +427,40 @@ stream.
 def LanguageListedBy (stream : Nat -> Word alpha) (L : Language alpha) : Prop :=
   ListedBy stream L
 
+def LanguagePartiallyListedBy
+    (stream : Nat -> Option (Word alpha)) (L : Language alpha) : Prop :=
+  PartiallyListedBy stream L
+
 theorem listed_language_of_equal {stream : Nat -> Word alpha}
     {L K : Language alpha}
     (h : LanguageListedBy stream L) (hEq : Language.Equal L K) :
     LanguageListedBy stream K :=
   listedBy_of_equal h hEq
 
+theorem partially_listed_language_of_equal
+    {stream : Nat -> Option (Word alpha)} {L K : Language alpha}
+    (h : LanguagePartiallyListedBy stream L) (hEq : Language.Equal L K) :
+    LanguagePartiallyListedBy stream K :=
+  partiallyListedBy_of_equal h hEq
+
 theorem listed_word_in_language {stream : Nat -> Word alpha} {L : Language alpha}
     (h : LanguageListedBy stream L) (n : Nat) :
     stream n ∈ L :=
   listed_word_mem h n
 
+theorem partially_listed_word_in_language
+    {stream : Nat -> Option (Word alpha)} {L : Language alpha}
+    (h : LanguagePartiallyListedBy stream L)
+    {n : Nat} {w : Word alpha}
+    (hn : stream n = some w) :
+    w ∈ L :=
+  partially_listed_word_mem h hn
+
 def LanguageListable (L : Language alpha) : Prop :=
   Listable L
+
+def LanguagePartiallyListable (L : Language alpha) : Prop :=
+  PartiallyListable L
 
 def UnaryInputString (n : Nat) : Word Unit :=
   UnaryInputWord n
@@ -423,15 +470,36 @@ theorem listable_language_of_equal {L K : Language alpha}
     LanguageListable K :=
   listable_of_equal h hEq
 
+theorem partially_listable_language_of_equal {L K : Language alpha}
+    (h : LanguagePartiallyListable L) (hEq : Language.Equal L K) :
+    LanguagePartiallyListable K :=
+  partiallyListable_of_equal h hEq
+
+theorem empty_language_is_partially_listable :
+    LanguagePartiallyListable (Language.Empty : Language alpha) :=
+  Computability.empty_partiallyListable
+
 def FunctionRangeLanguage (f : Word input -> Word output) : Language output :=
   RangeLanguage f
+
+def PartialFunctionRangeLanguage
+    (f : Word input -> Option (Word output)) : Language output :=
+  PartialRangeLanguage f
 
 def RangeOfUnaryStringFunction (L : Language output) : Prop :=
   RangeOfUnaryFunction L
 
+def PartialRangeOfUnaryStringFunction (L : Language output) : Prop :=
+  PartialRangeOfUnaryFunction L
+
 def ListingAsUnaryStringFunction (stream : Nat -> Word output) :
     Word Unit -> Word output :=
   ListingAsUnaryFunction stream
+
+def PartialListingAsUnaryStringFunction
+    (stream : Nat -> Option (Word output)) :
+    Word Unit -> Option (Word output) :=
+  PartialListingAsUnaryFunction stream
 
 theorem unary_input_string_length (n : Nat) :
     Word.Length (UnaryInputString n) = n :=
@@ -449,12 +517,33 @@ theorem unary_function_range_is_listable
     LanguageListable (FunctionRangeLanguage f) :=
   Computability.unaryFunctionRange_listable f
 
+theorem partial_unary_function_range_is_partially_listed
+    (f : Word Unit -> Option (Word output)) :
+    LanguagePartiallyListedBy
+      (fun n => f (UnaryInputString n))
+      (PartialFunctionRangeLanguage f) :=
+  Computability.partialUnaryFunctionRange_partiallyListedBy f
+
+theorem partial_unary_function_range_is_partially_listable
+    (f : Word Unit -> Option (Word output)) :
+    LanguagePartiallyListable (PartialFunctionRangeLanguage f) :=
+  Computability.partialUnaryFunctionRange_partiallyListable f
+
 theorem listed_language_range_of_unary_function
     {stream : Nat -> Word output} {L : Language output}
     (h : LanguageListedBy stream L) :
     Language.Equal
       (FunctionRangeLanguage (ListingAsUnaryStringFunction stream)) L :=
   Computability.listedBy_rangeLanguage_listingAsUnaryFunction h
+
+theorem partially_listed_language_range_of_partial_unary_function
+    {stream : Nat -> Option (Word output)} {L : Language output}
+    (h : LanguagePartiallyListedBy stream L) :
+    Language.Equal
+      (PartialFunctionRangeLanguage
+        (PartialListingAsUnaryStringFunction stream)) L :=
+  Computability.partiallyListedBy_partialRangeLanguage_partialListingAsUnaryFunction
+    h
 
 theorem listable_language_has_unary_range_function
     {L : Language output}
@@ -463,11 +552,24 @@ theorem listable_language_has_unary_range_function
       Language.Equal (FunctionRangeLanguage f) L :=
   Computability.listable_has_unary_range_function h
 
+theorem partially_listable_language_has_partial_unary_range_function
+    {L : Language output}
+    (h : LanguagePartiallyListable L) :
+    exists f : Word Unit -> Option (Word output),
+      Language.Equal (PartialFunctionRangeLanguage f) L :=
+  Computability.partiallyListable_has_partial_unary_range_function h
+
 theorem listable_language_range_of_unary_string_function
     {L : Language output}
     (h : LanguageListable L) :
     RangeOfUnaryStringFunction L :=
   Computability.listable_rangeOfUnaryFunction h
+
+theorem partially_listable_language_range_of_partial_unary_string_function
+    {L : Language output}
+    (h : LanguagePartiallyListable L) :
+    PartialRangeOfUnaryStringFunction L :=
+  Computability.partiallyListable_partialRangeOfUnaryFunction h
 
 theorem unary_string_function_range_is_listable
     {L : Language output}
@@ -475,10 +577,83 @@ theorem unary_string_function_range_is_listable
     LanguageListable L :=
   Computability.rangeOfUnaryFunction_listable h
 
+theorem partial_unary_string_function_range_is_partially_listable
+    {L : Language output}
+    (h : PartialRangeOfUnaryStringFunction L) :
+    LanguagePartiallyListable L :=
+  Computability.partialRangeOfUnaryFunction_partiallyListable h
+
 theorem listable_language_iff_range_of_unary_string_function
     (L : Language output) :
     LanguageListable L <-> RangeOfUnaryStringFunction L :=
   Computability.listable_iff_rangeOfUnaryFunction L
+
+theorem partially_listable_language_iff_partial_range_of_unary_string_function
+    (L : Language output) :
+    LanguagePartiallyListable L <-> PartialRangeOfUnaryStringFunction L :=
+  Computability.partiallyListable_iff_partialRangeOfUnaryFunction L
+
+def LanguageListingProgram (output : Type u) : Type u :=
+  ListingProgram output
+
+def LanguageListingProgramLists
+    (stream : LanguageListingProgram output) (L : Language output) : Prop :=
+  ListingProgramLists stream L
+
+def LanguagePartialUnaryRangeProgram (output : Type u) : Type u :=
+  PartialUnaryRangeProgram output
+
+def LanguagePartialUnaryRangeProgramGenerates
+    (f : LanguagePartialUnaryRangeProgram output)
+    (L : Language output) : Prop :=
+  PartialUnaryRangeProgramGenerates f L
+
+def LanguagePartialFunctionProgram
+    (f : Word input -> Option (Word output)) :
+    StagedProgram input output :=
+  PartialFunctionProgram f
+
+def LanguageProgramRange (P : StagedProgram input output) :
+    Language output :=
+  ProgramRangeLanguage P
+
+def LanguagePartialUnaryFunctionProgramRange
+    (L : Language output) : Prop :=
+  PartialUnaryFunctionProgramRange L
+
+theorem listing_program_iff_partially_listable_language
+    (L : Language output) :
+    (exists stream : LanguageListingProgram output,
+      LanguageListingProgramLists stream L) <->
+        LanguagePartiallyListable L :=
+  Computability.listingProgram_iff_partiallyListable L
+
+theorem partial_unary_range_program_iff_partial_range_of_unary_function
+    (L : Language output) :
+    (exists f : LanguagePartialUnaryRangeProgram output,
+      LanguagePartialUnaryRangeProgramGenerates f L) <->
+        PartialRangeOfUnaryStringFunction L :=
+  Computability.partialUnaryRangeProgram_iff_partialRangeOfUnaryFunction L
+
+theorem partial_function_program_range_language
+    (f : Word input -> Option (Word output)) :
+    Language.Equal
+      (LanguageProgramRange (LanguagePartialFunctionProgram f))
+      (PartialFunctionRangeLanguage f) :=
+  Computability.partialFunctionProgram_range f
+
+theorem partial_unary_function_program_range_iff_partial_range
+    (L : Language output) :
+    LanguagePartialUnaryFunctionProgramRange L <->
+      PartialRangeOfUnaryStringFunction L :=
+  Computability.partialUnaryFunctionProgramRange_iff_partialRangeOfUnaryFunction
+    L
+
+theorem partially_listable_language_iff_partial_unary_function_program_range
+    (L : Language output) :
+    LanguagePartiallyListable L <->
+      LanguagePartialUnaryFunctionProgramRange L :=
+  Computability.partiallyListable_iff_partialUnaryFunctionProgramRange L
 
 theorem function_value_in_range (f : Word input -> Word output) (x : Word input) :
     f x ∈ FunctionRangeLanguage f :=
@@ -490,6 +665,13 @@ theorem function_range_equal_of_pointwise
     Language.Equal (FunctionRangeLanguage f) (FunctionRangeLanguage g) :=
   rangeLanguage_equal_of_pointwise hfg
 
+theorem partial_function_range_equal_of_pointwise
+    {f g : Word input -> Option (Word output)}
+    (hfg : forall x, f x = g x) :
+    Language.Equal
+      (PartialFunctionRangeLanguage f) (PartialFunctionRangeLanguage g) :=
+  partialRangeLanguage_equal_of_pointwise hfg
+
 theorem computable_range_language_of_equal {L K : Language output}
     (h : RangeOfComputableFunction L) (hEq : Language.Equal L K) :
     RangeOfComputableFunction K :=
@@ -499,6 +681,11 @@ theorem unary_range_language_of_equal {L K : Language output}
     (h : RangeOfUnaryStringFunction L) (hEq : Language.Equal L K) :
     RangeOfUnaryStringFunction K :=
   rangeOfUnaryFunction_of_equal h hEq
+
+theorem partial_unary_range_language_of_equal {L K : Language output}
+    (h : PartialRangeOfUnaryStringFunction L) (hEq : Language.Equal L K) :
+    PartialRangeOfUnaryStringFunction K :=
+  partialRangeOfUnaryFunction_of_equal h hEq
 
 def AcceptableListingEquivalenceStatement (L : Language alpha) : Prop :=
   AcceptableListingEquivalence L
