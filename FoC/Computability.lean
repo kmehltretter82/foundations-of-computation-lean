@@ -5,7 +5,9 @@ import FoC.Computability.Recognizable
 import FoC.Computability.Transform
 import FoC.Computability.Enumerable
 import FoC.Computability.Program
+import FoC.Computability.Grammar
 import FoC.Computability.Undecidable
+import FoC.Computability.Coding
 
 set_option doc.verso true
 
@@ -32,11 +34,13 @@ contains reusable machine transformations.  {module}`FoC.Computability.Enumerabl
 records the enumeration and range-of-computable-function views of recursively
 enumerable languages.  {module}`FoC.Computability.Program` supplies a staged
 program semantics for trace-level dovetailing and partial listing/range/program
-equivalences.
+equivalences.  {module}`FoC.Computability.Grammar` connects finite general
+grammar derivations with staged program recognizers.
 
 Finally, {module}`FoC.Computability.Undecidable` packages the diagonal,
 halting-problem, reduction, and noncomputability vocabulary used by the limits
-of computation section.
+of computation section.  {module}`FoC.Computability.Coding` supplies concrete
+pair-code words and injectivity facts for those reductions.
 
 The chapter-facing material in {module -checked}`FoC.Book.Chapter05` points to
 these definitions while keeping the textbook-order statements separate from the

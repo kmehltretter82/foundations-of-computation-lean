@@ -1,5 +1,4 @@
-import FoC.Computability.Program
-import FoC.Grammars.GeneralGrammar
+import FoC.Computability.Grammar
 
 set_option doc.verso true
 
@@ -15,7 +14,8 @@ This section connects recursive, recursively enumerable, acceptable, and
 listable languages. It also records the statement shape for the theorem that
 finite general grammars generate exactly the recursively enumerable languages.
 The reusable modules are {module}`FoC.Computability.Enumerable`,
-{module}`FoC.Computability.Program`, and {module}`FoC.Grammars.GeneralGrammar`.
+{module}`FoC.Computability.Program`, {module}`FoC.Computability.Grammar`,
+and {module}`FoC.Grammars.GeneralGrammar`.
 
 The guiding distinction is total decision versus semi-decision. Recursive
 languages have deciders. Recursively enumerable languages have recognizers or
@@ -63,6 +63,12 @@ def DovetailingDecidableConstruction (alpha : Type u) : Prop :=
 def RecursiveIffReCoREConstruction (alpha : Type u) : Prop :=
   RecursiveIffReCoRePrinciple alpha
 
+def StagedAcceptorCompilationConstruction (alpha : Type u) : Prop :=
+  ProgramAcceptorCompilationPrinciple alpha
+
+def StagedBoolDeciderCompilationConstruction (alpha : Type u) : Prop :=
+  ProgramBoolDeciderCompilationPrinciple alpha
+
 def PartialFunctionDomainLanguage
     (f : Word input -> Option (Word output)) : Language input :=
   PartialFunctionDomain f
@@ -95,6 +101,22 @@ noncomputable def TraceDovetailProgram
 def ProgramBoolDecidesLanguage
     (P : StagedProgram alpha Bool) (L : Language alpha) : Prop :=
   ProgramBoolDecides P L
+
+def ProgramBoolDecidableLanguage (L : Language alpha) : Prop :=
+  ProgramBoolDecidable L
+
+def ProgramAcceptableLanguage (L : Language alpha) : Prop :=
+  ProgramAcceptable L
+
+def LanguageProgramAcceptanceTrace
+    (P : StagedProgram alpha Unit)
+    (w : Word alpha) (n : Nat) : Prop :=
+  ProgramAcceptanceTrace P w n
+
+noncomputable def AcceptanceTraceStagedRecognizer
+    (trace : Word alpha -> Nat -> Prop) :
+    StagedProgram alpha Unit :=
+  TraceRecognizerProgram trace
 
 /-!
 ## Complements and Extensionality
@@ -166,6 +188,47 @@ theorem recursively_enumerable_language_has_acceptance_trace
     exists trace : Word alpha -> Nat -> Prop,
       LanguageAcceptanceTrace trace L :=
   Computability.recursivelyEnumerable_has_acceptanceTrace h
+
+theorem program_accepts_language_has_acceptance_trace
+    {P : StagedProgram alpha Unit} {L : Language alpha}
+    (h : ProgramAcceptsLanguage P L) :
+    LanguageAcceptanceTrace (LanguageProgramAcceptanceTrace P) L :=
+  Computability.programAcceptsLanguage_acceptanceTrace h
+
+theorem program_acceptable_language_has_acceptance_trace
+    {L : Language alpha}
+    (h : ProgramAcceptableLanguage L) :
+    exists trace : Word alpha -> Nat -> Prop,
+      LanguageAcceptanceTrace trace L :=
+  Computability.programAcceptable_has_acceptanceTrace h
+
+theorem acceptance_trace_staged_recognizer_accepts_language
+    {trace : Word alpha -> Nat -> Prop} {L : Language alpha}
+    (h : LanguageAcceptanceTrace trace L) :
+    ProgramAcceptsLanguage
+      (AcceptanceTraceStagedRecognizer trace) L :=
+  Computability.traceRecognizerProgram_acceptsLanguage h
+
+theorem acceptance_trace_has_program_acceptable_language
+    {trace : Word alpha -> Nat -> Prop} {L : Language alpha}
+    (h : LanguageAcceptanceTrace trace L) :
+    ProgramAcceptableLanguage L :=
+  Computability.acceptanceTrace_programAcceptable h
+
+theorem program_acceptable_language_iff_has_acceptance_trace
+    (L : Language alpha) :
+    ProgramAcceptableLanguage L <->
+      exists trace : Word alpha -> Nat -> Prop,
+        LanguageAcceptanceTrace trace L :=
+  Computability.programAcceptable_iff_has_acceptanceTrace L
+
+theorem recursively_enumerable_language_is_program_acceptable
+    {L : Language alpha}
+    (h : RecursivelyEnumerableLanguage L) :
+    ProgramAcceptableLanguage L := by
+  cases recursively_enumerable_language_has_acceptance_trace h with
+  | intro trace htrace =>
+      exact acceptance_trace_has_program_acceptable_language htrace
 
 theorem re_and_co_re_have_complementary_acceptance_traces
     {L : Language alpha}
@@ -289,6 +352,17 @@ theorem re_and_co_re_have_dovetailing_program
         ProgramBoolDecidesLanguage
           (TraceDovetailProgram accept reject) L :=
   Computability.reCoRe_has_dovetailProgram h
+
+theorem re_and_co_re_have_program_bool_decider
+    {L : Language alpha}
+    (h : RecursivelyEnumerableLanguageWithComplement L) :
+    ProgramBoolDecidableLanguage L :=
+  Computability.reCoRe_programBoolDecidable h
+
+theorem dovetailing_decidable_construction_of_staged_program_compiler
+    (hcompile : StagedBoolDeciderCompilationConstruction alpha) :
+    DovetailingDecidableConstruction alpha :=
+  Computability.reCoReToDecidablePrinciple_of_programBoolCompiler hcompile
 
 theorem stopped_decider_has_complementary_output_traces
     {M : TuringMachine symbol state}
@@ -700,21 +774,83 @@ The final definitions relate unrestricted grammar generation to recursive
 enumerability, then state the recursive-language equivalence for a language
 and its complement under those construction principles.
 
-The formalization records the theorem shape rather than constructing a
-universal interpreter here: if general grammars and recognizers are known to
-match, then recursive languages are exactly those whose language and complement
-are both generated by finite general grammars.
+Finite derivations are also finite-stage evidence: the reusable grammar bridge
+turns derivation length into an acceptance trace and a staged recognizer
+program.  The full Turing-machine equivalence remains a theorem shape until
+the formalization has the universal/interpreter infrastructure needed to
+compile that staged recognizer.
 -/
 
 def GeneralGrammarGeneratedLanguage (G : GeneralGrammar terminal nonterminal) :
     Language terminal :=
   GeneralGrammar.GeneratedLanguage G
 
+def GeneralGrammarDerivationTraceLanguage
+    (G : GeneralGrammar terminal nonterminal)
+    (w : Word terminal) (n : Nat) : Prop :=
+  GeneralGrammarDerivationTrace G w n
+
+noncomputable def GeneralGrammarStagedRecognizer
+    (G : GeneralGrammar terminal nonterminal) :
+    StagedProgram terminal Unit :=
+  GeneralGrammarRecognizerProgram G
+
 def GeneralGrammarAcceptabilityEquivalence (L : Language terminal) : Prop :=
   GeneralGrammar.Generated L <-> RecursivelyEnumerable L
 
+def FiniteGeneralGrammarGenerated (L : Language terminal) : Prop :=
+  GeneralGrammar.FiniteProductionGenerated L
+
 def GeneralGrammarPairGenerated (L : Language terminal) : Prop :=
   GeneralGrammar.Generated L ∧ GeneralGrammar.Generated (Language.Compl L)
+
+theorem general_grammar_derivation_trace_accepts_generated_language
+    (G : GeneralGrammar terminal nonterminal) :
+    LanguageAcceptanceTrace
+      (GeneralGrammarDerivationTraceLanguage G)
+      (GeneralGrammarGeneratedLanguage G) :=
+  Computability.generalGrammar_derivationTrace_acceptance G
+
+theorem general_grammar_staged_recognizer_accepts_generated_language
+    (G : GeneralGrammar terminal nonterminal) :
+    ProgramAcceptsLanguage
+      (GeneralGrammarStagedRecognizer G)
+      (GeneralGrammarGeneratedLanguage G) :=
+  Computability.generalGrammarRecognizerProgram_acceptsLanguage G
+
+theorem general_grammar_generated_language_is_program_acceptable
+    (G : GeneralGrammar terminal nonterminal) :
+    ProgramAcceptableLanguage (GeneralGrammarGeneratedLanguage G) :=
+  Computability.generalGrammar_generatedLanguage_programAcceptable G
+
+theorem finite_general_grammar_generated_language_is_program_acceptable
+    {L : Language terminal}
+    (h : FiniteGeneralGrammarGenerated L) :
+    ProgramAcceptableLanguage L :=
+  Computability.finiteProductionGenerated_programAcceptable h
+
+theorem general_grammar_generated_language_is_recursively_enumerable_of_staged_program_compiler
+    (hcompile : StagedAcceptorCompilationConstruction terminal)
+    (G : GeneralGrammar terminal nonterminal) :
+    RecursivelyEnumerableLanguage (GeneralGrammarGeneratedLanguage G) :=
+  Computability.generalGrammar_generatedLanguage_recursivelyEnumerable_of_programCompiler
+    hcompile G
+
+theorem general_grammar_generated_is_recursively_enumerable_of_staged_program_compiler
+    (hcompile : StagedAcceptorCompilationConstruction terminal)
+    {L : Language terminal}
+    (h : GeneralGrammar.Generated L) :
+    RecursivelyEnumerableLanguage L :=
+  Computability.generalGrammar_generated_recursivelyEnumerable_of_programCompiler
+    hcompile h
+
+theorem finite_general_grammar_generated_language_is_recursively_enumerable_of_staged_program_compiler
+    (hcompile : StagedAcceptorCompilationConstruction terminal)
+    {L : Language terminal}
+    (h : FiniteGeneralGrammarGenerated L) :
+    RecursivelyEnumerableLanguage L :=
+  Computability.finiteProductionGenerated_recursivelyEnumerable_of_programCompiler
+    hcompile h
 
 theorem recursive_language_iff_general_grammar_pair
     {L : Language terminal}

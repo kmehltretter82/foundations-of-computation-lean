@@ -594,8 +594,8 @@ completed:
         reason: "General grammar definitions, finite-production presentation vocabulary, finite-presentation code types and countability wrappers for CFG and unrestricted grammar production-list descriptions, unrestricted derivation context closure, form-language soundness lemmas for unrestricted productions and derivations, CFG embedding with finite-production preservation, finite production-list witnesses and finite-production generated-language wrappers for the three sample grammars, the equal-count and ordered a^n b^n c^n grammar invariants, exact generated-language theorem and exact finite-production generated-language wrapper for equal-count words over {a,b,c}, parametric generated-language inclusion for every ordered a^n b^n c^n block word, exact generated-language theorem and exact finite-production generated-language wrapper for the ordered a^n b^n c^n block language, parametric generated-language inclusion for every unary-square target word a^(n^2), unary-square reachability-shape vocabulary and terminal-shape consequence, selected four-equal-count, ordered a^n b^n c^n d^n, ordered strict-count, powers-of-two, and strict n_a > n_b > n_c exercise grammars with invariants or soundness where applicable and concrete derivations, exact generated-language theorem for ordered strict-count words, and representative derivations for the book's equal-count, ordered a^n b^n c^n, and a^(n^2) grammars are formalized; reverse generated-only proof for the unary-square sample grammar and equivalence with recursively enumerable languages remain larger developments, with the latter belonging to Chapter 5 computability."
   - coordinate: "Chapter 5"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 167
-    definition_declarations: 78
+    theorem_declarations: 186
+    definition_declarations: 91
     modules:
       - "FoC.Book.Chapter05.Section01"
       - "FoC.Book.Chapter05.Section02"
@@ -608,7 +608,9 @@ completed:
       - "FoC.Computability.Transform"
       - "FoC.Computability.Enumerable"
       - "FoC.Computability.Program"
+      - "FoC.Computability.Grammar"
       - "FoC.Computability.Undecidable"
+      - "FoC.Computability.Coding"
     proved_core:
       - "Turing-machine directions and finite-window tapes with blanks as option-valued cells"
       - "Tape input/output representation, reading, writing, and left/right movement"
@@ -630,13 +632,14 @@ completed:
       - "Stopped-decider accepting and rejecting output traces as exact finite acceptance traces for a language and its complement"
       - "Decidable and recursive languages are closed under complement by swapping decider outputs, with complement equivalences using double-complement language equality"
       - "Co-recursively enumerable language vocabulary, finite-stage acceptance traces for recursively enumerable languages, complementary acceptance traces for RE plus co-RE languages, bounded trace-hit search, no-conflict lemmas, the classical bounded classification core that underlies dovetailing, and a conditional proof of the recursive iff RE/co-RE theorem from the decider-to-acceptor and dovetailing construction principles"
-      - "Staged program semantics with a concrete trace-level dovetailing program that decides a language from complementary acceptance traces"
+      - "Staged program semantics with acceptance-trace equivalence, trace recognizer programs, a concrete trace-level dovetailing program that decides a language from complementary acceptance traces, and explicit staged-program compiler principles that derive Turing-layer dovetailing and grammar-recognition consequences once an interpreter is supplied"
       - "Listing and range-language vocabulary for recursively enumerable languages, including listability/range extensionality, partial listings that can represent the empty language, unary-input bridges between listings and ranges, and semantic equivalences among partial listings, partial unary ranges, and partial-function programs"
+      - "Length-indexed unrestricted grammar derivations, grammar derivation acceptance traces, staged recognizer programs for generated languages, program-acceptability for finite-production generated general-grammar languages, and the generated-language-to-RE bridge conditional on staged-program compilation"
       - "General grammar versus recursively enumerable language equivalence statement shape, grammar witnesses for a language plus its complement, and a conditional grammar-pair characterization of recursive languages from the recursive iff RE/co-RE construction"
       - "Non-computable function, non-acceptable language, undecidable language, decidable and acceptable reductions, diagonal-language, decoder-row recognition, decoder-universality for acceptable languages and for all languages, self-halting language, halting-problem, and universal-machine specification vocabulary, with extensionality and complement transport"
       - "Reduction reflexivity/transitivity, complement preservation for decidable reductions, undecidability transfer along decidable reductions, and non-acceptability transfer along acceptable reductions"
       - "Abstract diagonal contradiction core for self-recognition predicates, no decoder row for a decoder's own diagonal language, missing-language and no-universal-decoder theorems, non-acceptability under decoder universality, self-diagonal/complement-self-halting equivalence, conditional self-halting not-recursive/not-RE-complement theorem shape, halting-problem membership/elimination/extensionality, explicitly paired halting-problem and self-halting-pair vocabulary, diagonal-pair transfer of undecidability, and universal-machine pair-halting/pair-decoding facts"
-      - "Word-map preimage languages, decidable-preimage principles, injective pair-encoding vocabulary, diagonal pair maps, and the theorem that an injective pair encoding makes the diagonal preimage of pair-halting exactly self-halting"
+      - "Word-map preimage languages, decidable-preimage principles, injective pair-encoding vocabulary, diagonal pair maps, the theorem that an injective pair encoding makes the diagonal preimage of pair-halting exactly self-halting, and a concrete finite-preserving pair-code alphabet with injectivity and specialized pair-halting reductions"
     sections:
       - coordinate: "Chapter 5, Section 5.1"
         status: "complete_stopped_decider_transformation_core"
@@ -663,33 +666,39 @@ completed:
         status: "partial_turing_interpreter_deferred"
         formalized:
           - artifact: "FoC.Book.Chapter05.Section02"
-            reason: "Co-RE vocabulary, finite-stage acceptance traces, complementary acceptance traces, bounded trace-hit search, RE/co-RE bounded-search classification core, concrete trace-level dovetailing program, stopped-decider complementary traces, conditional recursive iff RE/co-RE theorem from construction principles, total and partial listability/range vocabulary, unary-input bridges, semantic listing/range/program equivalences, computable range descriptions, and grammar/RE-language theorem shapes."
+            reason: "Co-RE vocabulary, finite-stage acceptance traces, program-acceptability iff acceptance traces, RE-to-staged-recognizer bridge, complementary acceptance traces, bounded trace-hit search, RE/co-RE bounded-search classification core, concrete trace-level dovetailing program, stopped-decider complementary traces, staged-program compiler construction principles, conditional recursive iff RE/co-RE theorem from construction principles, total and partial listability/range vocabulary, unary-input bridges, semantic listing/range/program equivalences, computable range descriptions, length-indexed grammar derivation traces, staged grammar recognizers, finite general-grammar program-acceptability, compiler-conditional generated-language-to-RE bridges, and grammar/RE-language theorem shapes."
           - artifact: "FoC.Computability.Enumerable"
             reason: "Total and partial listability, total and partial range-language vocabulary, recursive-enumerability, unary-input bridges, empty-language partial listing, and semantic listing/range equivalence infrastructure."
           - artifact: "FoC.Computability.Program"
-            reason: "Staged program semantics, concrete bounded dovetailing program over complementary traces, Boolean program-decision correctness, partial listing programs, partial unary range programs, partial-function programs, and semantic equivalences among these descriptions."
+            reason: "Staged program semantics, program acceptance traces, trace recognizer programs, equivalence between program-acceptability and finite acceptance traces, concrete bounded dovetailing program over complementary traces, Boolean program-decision correctness, staged acceptor/Boolean-decider compiler principles, RE/co-RE-to-program-decider bridge, partial listing programs, partial unary range programs, partial-function programs, and semantic equivalences among these descriptions."
+          - artifact: "FoC.Computability.Grammar"
+            reason: "General-grammar derivation traces, staged recognizer program for generated languages, program-acceptability of generated and finite-production generated general-grammar languages, and compiler-conditional recursively-enumerable consequences."
+          - artifact: "FoC.Grammars.GeneralGrammar"
+            reason: "Length-indexed unrestricted derivations and their equivalence with ordinary derivability."
         missing:
           - item: "Concrete transition-level Turing-machine dovetailing decider from paired recognizers"
-            blocker: "A sound staged-program dovetailer over complementary traces is formalized; compiling it to the one-tape Turing-machine layer requires interpreter/simulation infrastructure."
+            blocker: "A sound staged-program dovetailer over complementary traces is formalized, and the Turing-layer construction follows from the explicit staged Boolean-decider compiler principle; proving that principle requires interpreter/simulation infrastructure."
           - item: "Concrete Turing-machine/program/listing equivalences through compiled programs"
             blocker: "Partial listing/range/program equivalences are formalized at the staged-program layer; simulation infrastructure among one-tape machines, multi-tape machines, programs, computable listings, and ranges remains."
-          - item: "Concrete general-grammar-to-RE and RE-to-general-grammar constructions"
-            blocker: "Current coverage records statement shapes and grammar-pair characterizations, not full construction proofs."
+          - item: "Concrete Turing-machine general-grammar-to-RE and RE-to-general-grammar constructions"
+            blocker: "Grammar-to-staged-program recognition is formalized, and generated-language RE follows from the explicit staged acceptor compiler principle; proving that compiler and constructing grammars from concrete Turing recognizers require encoding/interpreter infrastructure."
         deferred: []
       - coordinate: "Chapter 5, Section 5.3"
         status: "partial_encoding_and_universal_machine_deferred"
         formalized:
           - artifact: "FoC.Book.Chapter05.Section03"
-            reason: "Non-computable/non-acceptable/undecidable vocabulary, decidable and acceptable reductions, reduction reflexivity/transitivity, complement preservation, undecidability/non-acceptability transfer, diagonal language and decoder-row recognition, abstract diagonal contradiction core, no-universal-decoder theorem, decoder universality consequences, self-halting and halting-problem vocabulary, abstract and paired halting membership facts, injective pair encodings, diagonal pair maps, word-map preimages, diagonal preimage equality, and conditional halting-problem theorem shapes."
+            reason: "Non-computable/non-acceptable/undecidable vocabulary, decidable and acceptable reductions, reduction reflexivity/transitivity, complement preservation, undecidability/non-acceptability transfer, diagonal language and decoder-row recognition, abstract diagonal contradiction core, no-universal-decoder theorem, decoder universality consequences, self-halting and halting-problem vocabulary, abstract and paired halting membership facts, injective pair encodings, concrete pair-code alphabet, concrete diagonal pair maps, word-map preimages, concrete and abstract diagonal preimage equality, and conditional halting-problem theorem shapes."
           - artifact: "FoC.Computability.Undecidable"
             reason: "Reusable diagonalization, reduction, halting-problem, self-halting, decoder, and universal-machine specification vocabulary."
+          - artifact: "FoC.Computability.Coding"
+            reason: "Concrete finite-preserving pair-code alphabet, left/right projections, injective pair encoding, concrete diagonal-pair preimage equality, concrete diagonal preimage construction bridge, and concrete pair-halting undecidability theorem conditional on decoder universality and diagonal decidable-preimage infrastructure."
         missing:
           - item: "Universal-machine construction"
             blocker: "Needs concrete machine encoding and interpreter infrastructure."
           - item: "Concrete halting-problem undecidability theorem"
-            blocker: "Current result is conditional on universal-machine/pair-decoding facts and diagonal preimage computability."
-          - item: "Concrete computability of diagonal pair maps"
-            blocker: "Requires explicit encoding and computable map construction."
+            blocker: "Current result is specialized to a concrete pair encoding but remains conditional on universal-machine/pair-decoding facts and diagonal decidable-preimage computability."
+          - item: "Concrete decidable-preimage/computability theorem for the concrete diagonal pair map"
+            blocker: "The concrete pair encoding and diagonal preimage equality are formalized; turning the diagonal map into a Turing-computable preimage construction still requires compiler/interpreter infrastructure."
         deferred: []
     classified_not_formalized_yet:
       - coordinate: "Chapter 5, Section 5.1"
@@ -697,10 +706,10 @@ completed:
       - coordinate: "Chapter 5, Section 5.1"
         reason: "Characteristic-function decidability, stopped-decider exact output classification, stopped-decider acceptance traces, and the concrete stopped-decider-to-acceptor transition-level transformation are formalized; extending this to the current weak non-stopped TuringDecidable predicate would require strengthening that predicate first."
       - coordinate: "Chapter 5, Section 5.2"
-        reason: "The semantic total listing/range equivalence, partial listing/range/program equivalences, concrete staged-program dovetailing from complementary traces, and conditional grammar-pair characterization of recursive languages are formalized. Simulation equivalences among one-tape machines, multi-tape machines, compiled programs, computable listings/ranges, and concrete general-grammar constructions are recorded as statement shapes, not assumed as proved transition-level theorems."
+        reason: "The semantic total listing/range equivalence, partial listing/range/program equivalences, program-acceptability iff finite acceptance traces, concrete staged-program dovetailing from complementary traces, staged-program compiler construction principles, finite-derivation grammar-to-staged-program recognizers, compiler-conditional generated-language-to-RE bridges, and conditional grammar-pair characterization of recursive languages are formalized. Simulation equivalences among one-tape machines, multi-tape machines, compiled programs, computable listings/ranges, and the Turing-machine side of concrete general-grammar constructions are recorded as statement shapes, not assumed as proved transition-level theorems."
       - coordinate: "Chapter 5, Section 5.2"
-        reason: "Finite-step acceptance traces, stopped-decider complementary output traces, exact stopped-decider acceptance traces for the language and complement, the RE/co-RE bounded-search classification core, a concrete staged-program dovetailer over paired traces, and the recursive iff RE/co-RE theorem derived from explicit construction principles are formalized; the transition-level Turing-machine dovetailer that turns paired recognizers into a concrete decider remains deferred."
+        reason: "Finite-step acceptance traces, stopped-decider complementary output traces, exact stopped-decider acceptance traces for the language and complement, the RE/co-RE bounded-search classification core, a concrete staged-program dovetailer over paired traces, the staged Boolean-decider compiler bridge, and the recursive iff RE/co-RE theorem derived from explicit construction principles are formalized; the transition-level compiler/interpreter that turns paired recognizers into a concrete decider remains deferred."
       - coordinate: "Chapter 5, Section 5.3"
-        reason: "The abstract diagonal contradiction core, decoder-row diagonalization, no-universal-decoder theorem, reduction-transfer schemas, self-halting complement bridge, abstract and paired halting-problem membership facts, injective-pair diagonal preimage equality, diagonal-pair undecidability transfer from decidable preimage, conditional non-acceptability under decoder universality, and conditional self-halting RE/not-recursive/non-RE-complement theorem shape are formalized. Universal-machine construction, concrete machine encodings, concrete diagonal pair-map computability, and concrete halting-problem undecidability require encoding and interpreter infrastructure not yet present."
+        reason: "The abstract diagonal contradiction core, decoder-row diagonalization, no-universal-decoder theorem, reduction-transfer schemas, self-halting complement bridge, abstract and paired halting-problem membership facts, concrete finite-preserving pair encoding, injective-pair diagonal preimage equality, concrete-pair diagonal preimage equality, diagonal-pair undecidability transfer from decidable preimage, conditional non-acceptability under decoder universality, and conditional self-halting RE/not-recursive/non-RE-complement theorem shape are formalized. Universal-machine construction, concrete machine encodings, concrete diagonal pair-map computability/preimage construction, and concrete halting-problem undecidability require encoding and interpreter infrastructure not yet present."
 in_progress: []
 planned: []

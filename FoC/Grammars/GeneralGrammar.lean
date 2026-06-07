@@ -187,6 +187,13 @@ inductive Derives (G : GeneralGrammar terminal nonterminal) :
   | step {x y z : SententialForm terminal nonterminal} :
       Yields G x y -> Derives G y z -> Derives G x z
 
+inductive DerivesIn (G : GeneralGrammar terminal nonterminal) :
+    Nat -> SententialForm terminal nonterminal ->
+      SententialForm terminal nonterminal -> Prop where
+  | zero (x : SententialForm terminal nonterminal) : DerivesIn G 0 x x
+  | step {n : Nat} {x y z : SententialForm terminal nonterminal} :
+      Yields G x y -> DerivesIn G n y z -> DerivesIn G (n + 1) x z
+
 def GeneratedLanguage (G : GeneralGrammar terminal nonterminal) : Language terminal :=
   fun w => Derives G [Symbol.nonterminal G.start] (SententialForm.terminalWord w)
 
@@ -209,6 +216,39 @@ theorem yields_derives {G : GeneralGrammar terminal nonterminal}
     {x y : SententialForm terminal nonterminal} (h : Yields G x y) :
     Derives G x y :=
   Derives.step h (Derives.refl y)
+
+theorem derivesIn_derives {G : GeneralGrammar terminal nonterminal}
+    {n : Nat} {x y : SententialForm terminal nonterminal}
+    (h : DerivesIn G n x y) :
+    Derives G x y := by
+  induction h with
+  | zero x =>
+      exact Derives.refl x
+  | step hstep _ ih =>
+      exact Derives.step hstep ih
+
+theorem derives_derivesIn {G : GeneralGrammar terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (h : Derives G x y) :
+    exists n : Nat, DerivesIn G n x y := by
+  induction h with
+  | refl x =>
+      exact Exists.intro 0 (DerivesIn.zero x)
+  | step hstep _ ih =>
+      cases ih with
+      | intro n hn =>
+          exact Exists.intro (n + 1) (DerivesIn.step hstep hn)
+
+theorem derives_iff_exists_derivesIn
+    {G : GeneralGrammar terminal nonterminal}
+    {x y : SententialForm terminal nonterminal} :
+    Derives G x y <-> exists n : Nat, DerivesIn G n x y := by
+  constructor
+  · exact derives_derivesIn
+  · intro h
+    cases h with
+    | intro _ hn =>
+        exact derivesIn_derives hn
 
 theorem derives_trans {G : GeneralGrammar terminal nonterminal}
     {x y z : SententialForm terminal nonterminal}

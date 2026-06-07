@@ -1,4 +1,4 @@
-import FoC.Computability.Undecidable
+import FoC.Computability.Coding
 
 set_option doc.verso true
 
@@ -12,13 +12,15 @@ namespace Section03
 
 This section formalizes the diagonal and halting-problem statements that mark
 the limits of computation. The definitions are book-facing wrappers over
-{module}`FoC.Computability.Undecidable`, with languages represented as
-predicates on encoded words.
+{module}`FoC.Computability.Undecidable` and
+{module}`FoC.Computability.Coding`, with languages represented as predicates
+on encoded words.
 
-The page keeps machine encodings abstract. Instead of committing to a concrete
-binary code for Turing machines, it states the diagonal and halting arguments
-relative to a decoder or universal-machine specification. This exposes the
-logical structure of the impossibility proofs.
+The page supplies a concrete pair-code alphabet for halting-problem reductions.
+It still keeps machine decoding and universal-machine execution abstract:
+those statements are relative to a decoder or universal-machine specification.
+This exposes the logical structure of the impossibility proofs without adding
+an unproved interpreter.
 -/
 
 open Languages
@@ -123,6 +125,17 @@ def TuringDiagonalPairMap
     (encodePair : Word code -> Word code -> Word pairSymbol) :
     Word code -> Word pairSymbol :=
   DiagonalPairMap encodePair
+
+def ConcretePairCodeSymbol (code : Type u) : Type u :=
+  PairCodeSymbol code
+
+def ConcretePairEncoding (left right : Word code) :
+    Word (ConcretePairCodeSymbol code) :=
+  PairCodeSymbol.encodePair left right
+
+def ConcreteDiagonalPairMap (w : Word code) :
+    Word (ConcretePairCodeSymbol code) :=
+  PairCodeSymbol.diagonalMap w
 
 def UniversalTuringMachineSpec
     (universal : TuringMachine symbol state)
@@ -459,6 +472,30 @@ theorem diagonal_pair_preimage_pair_halting_equal_self_halting
     (haltsOnCodeInput := haltsOnCodeInput)
     hinj
 
+def concrete_pair_code_symbol_finite
+    (h : Foundation.FiniteType code) :
+    Foundation.FiniteType (ConcretePairCodeSymbol code) :=
+  PairCodeSymbol.finite h
+
+theorem concrete_pair_encoding_injective :
+    TuringPairEncodingInjective
+      (ConcretePairEncoding :
+        Word code -> Word code -> Word (ConcretePairCodeSymbol code)) :=
+  PairCodeSymbol.encodePair_injective
+
+theorem concrete_diagonal_pair_preimage_pair_halting_equal_self_halting
+    {haltsOnCodeInput : Word code -> Word code -> Prop} :
+    Language.Equal
+      (TuringWordPreimageLanguage
+        (ConcreteDiagonalPairMap :
+          Word code -> Word (ConcretePairCodeSymbol code))
+        (TuringPairHaltingProblem
+          (ConcretePairEncoding :
+            Word code -> Word code -> Word (ConcretePairCodeSymbol code))
+          haltsOnCodeInput))
+      (TuringSelfHaltingLanguage haltsOnCodeInput) :=
+  PairCodeSymbol.diagonalMap_preimage_pairHalting_equal_selfHalting
+
 theorem diagonal_pair_decidable_preimage_construction_of_preimage
     {encodePair : Word code -> Word code -> Word pairSymbol}
     (hinj : TuringPairEncodingInjective encodePair)
@@ -467,6 +504,17 @@ theorem diagonal_pair_decidable_preimage_construction_of_preimage
     DiagonalPairDecidablePreimageConstruction encodePair :=
   Computability.diagonalPairDecidablePreimagePrinciple_of_preimage
     hinj hpreimage
+
+theorem concrete_diagonal_pair_decidable_preimage_construction_of_preimage
+    (hpreimage :
+      TuringDecidablePreimageConstruction
+        (ConcreteDiagonalPairMap :
+          Word code -> Word (ConcretePairCodeSymbol code))) :
+    DiagonalPairDecidablePreimageConstruction
+      (ConcretePairEncoding :
+        Word code -> Word code -> Word (ConcretePairCodeSymbol code)) :=
+  PairCodeSymbol.diagonalPairDecidablePreimagePrinciple_of_concrete_preimage
+    hpreimage
 
 theorem halting_problem_of_pointwise_iff
     {halts1 halts2 : Word code -> Word code -> Prop}
@@ -536,6 +584,22 @@ theorem pair_halting_undecidable_if_decoder_universal_of_preimage
       (TuringPairHaltingProblem encodePair decodeAccepts) :=
   Computability.pairHalting_undecidable_if_decoder_universal_of_preimage
     haccept hinj hpreimage huniv
+
+theorem concrete_pair_halting_undecidable_if_decoder_universal_of_preimage
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (haccept : DecidableToAcceptableConstruction code)
+    (hpreimage :
+      TuringDecidablePreimageConstruction
+        (ConcreteDiagonalPairMap :
+          Word code -> Word (ConcretePairCodeSymbol code)))
+    (huniv : TuringDecoderUniversalForAcceptableLanguages decodeAccepts) :
+    UndecidableTuringLanguage
+      (TuringPairHaltingProblem
+        (ConcretePairEncoding :
+          Word code -> Word code -> Word (ConcretePairCodeSymbol code))
+        decodeAccepts) :=
+  PairCodeSymbol.concretePairHalting_undecidable_if_decoder_universal_of_preimage
+    haccept hpreimage huniv
 
 theorem universal_machine_spec_pair_halts
     {universal : TuringMachine symbol state}

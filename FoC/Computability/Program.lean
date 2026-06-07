@@ -44,16 +44,107 @@ def ProgramAcceptsLanguage (P : StagedProgram input Unit)
     (L : Language input) : Prop :=
   forall w : Word input, ProgramHaltsWithOutput P w [] <-> w ∈ L
 
+def ProgramAcceptable (L : Language input) : Prop :=
+  exists P : StagedProgram input Unit, ProgramAcceptsLanguage P L
+
 def ProgramBoolDecides (P : StagedProgram input Bool)
     (L : Language input) : Prop :=
   (forall w : Word input, ProgramHaltsWithOutput P w [true] <-> w ∈ L) ∧
     (forall w : Word input,
       ProgramHaltsWithOutput P w [false] <-> ¬ w ∈ L)
 
+def ProgramBoolDecidable (L : Language input) : Prop :=
+  exists P : StagedProgram input Bool, ProgramBoolDecides P L
+
 def ProgramRangeLanguage (P : StagedProgram input output) :
     Language output :=
   fun out => exists w : Word input, exists n : Nat,
     P.run w n = some out
+
+def ProgramAcceptorCompilationPrinciple (input : Type u) : Prop :=
+  forall L : Language input, ProgramAcceptable L -> TuringAcceptable L
+
+def ProgramBoolDeciderCompilationPrinciple (input : Type u) : Prop :=
+  forall L : Language input, ProgramBoolDecidable L -> TuringDecidable L
+
+/-!
+# Acceptance traces and programs
+-/
+
+def ProgramAcceptanceTrace (P : StagedProgram input Unit)
+    (w : Word input) (n : Nat) : Prop :=
+  P.run w n = some []
+
+theorem programAcceptsLanguage_acceptanceTrace
+    {P : StagedProgram input Unit} {L : Language input}
+    (h : ProgramAcceptsLanguage P L) :
+    AcceptanceTrace (ProgramAcceptanceTrace P) L := by
+  intro w
+  constructor
+  · intro hit
+    exact (h w).mp hit
+  · intro hw
+    exact (h w).mpr hw
+
+theorem programAcceptable_has_acceptanceTrace
+    {L : Language input}
+    (h : ProgramAcceptable L) :
+    exists trace : Word input -> Nat -> Prop, AcceptanceTrace trace L := by
+  cases h with
+  | intro P hP =>
+      exact Exists.intro (ProgramAcceptanceTrace P)
+        (programAcceptsLanguage_acceptanceTrace hP)
+
+noncomputable def TraceRecognizerProgram
+    (trace : Word input -> Nat -> Prop) :
+    StagedProgram input Unit :=
+  by
+    classical
+    exact { run := fun w n => if trace w n then some [] else none }
+
+theorem traceRecognizerProgram_run_of_trace
+    {trace : Word input -> Nat -> Prop}
+    {w : Word input} {n : Nat}
+    (h : trace w n) :
+    (TraceRecognizerProgram trace).run w n = some [] := by
+  classical
+  simp [TraceRecognizerProgram, h]
+  rfl
+
+theorem traceRecognizerProgram_acceptsLanguage
+    {trace : Word input -> Nat -> Prop} {L : Language input}
+    (h : AcceptanceTrace trace L) :
+    ProgramAcceptsLanguage (TraceRecognizerProgram trace) L := by
+  intro w
+  constructor
+  · intro hit
+    cases hit with
+    | intro n hn =>
+        by_cases htrace : trace w n
+        · exact (h w).mp (Exists.intro n htrace)
+        · simp [TraceRecognizerProgram, htrace] at hn
+  · intro hw
+    cases (h w).mpr hw with
+    | intro n hn =>
+        exact Exists.intro n (traceRecognizerProgram_run_of_trace hn)
+
+theorem acceptanceTrace_programAcceptable
+    {trace : Word input -> Nat -> Prop} {L : Language input}
+    (h : AcceptanceTrace trace L) :
+    ProgramAcceptable L :=
+  Exists.intro (TraceRecognizerProgram trace)
+    (traceRecognizerProgram_acceptsLanguage h)
+
+theorem programAcceptable_iff_has_acceptanceTrace
+    (L : Language input) :
+    ProgramAcceptable L <->
+      exists trace : Word input -> Nat -> Prop, AcceptanceTrace trace L := by
+  constructor
+  · exact programAcceptable_has_acceptanceTrace
+  · intro h
+    cases h with
+    | intro trace htrace =>
+        exact acceptanceTrace_programAcceptable htrace
 
 /-!
 # Dovetailing complementary traces
@@ -103,6 +194,21 @@ theorem dovetailProgram_run_no_hit
     (DovetailProgram accept reject).run w limit = none := by
   classical
   simp [DovetailProgram, noAccept, noReject]
+
+theorem programAcceptsLanguage_of_equal
+    {P : StagedProgram input Unit} {L K : Language input}
+    (h : ProgramAcceptsLanguage P L) (hEq : Language.Equal L K) :
+    ProgramAcceptsLanguage P K := by
+  intro w
+  exact Iff.trans (h w) (hEq w)
+
+theorem programAcceptable_of_equal
+    {L K : Language input}
+    (h : ProgramAcceptable L) (hEq : Language.Equal L K) :
+    ProgramAcceptable K := by
+  cases h with
+  | intro P hP =>
+      exact Exists.intro P (programAcceptsLanguage_of_equal hP hEq)
 
 theorem dovetailProgram_true_sound
     {accept reject : Word input -> Nat -> Prop}
@@ -207,6 +313,35 @@ theorem reCoRe_has_dovetailProgram {L : Language input}
           exact Exists.intro accept
             (Exists.intro reject
               (And.intro hreject (dovetailProgram_decides hreject)))
+
+theorem reCoRe_programBoolDecidable {L : Language input}
+    (h : RecursivelyEnumerableWithComplement L) :
+    ProgramBoolDecidable L := by
+  cases reCoRe_has_dovetailProgram h with
+  | intro accept haccept =>
+      cases haccept with
+      | intro reject hreject =>
+          exact Exists.intro (DovetailProgram accept reject) hreject.right
+
+theorem reCoReToDecidablePrinciple_of_programBoolCompiler
+    (hcompile : ProgramBoolDeciderCompilationPrinciple input) :
+    ReCoReToDecidablePrinciple input := by
+  intro L h
+  exact hcompile L (reCoRe_programBoolDecidable h)
+
+theorem turingAcceptable_of_programCompiler
+    (hcompile : ProgramAcceptorCompilationPrinciple input)
+    {L : Language input}
+    (h : ProgramAcceptable L) :
+    TuringAcceptable L :=
+  hcompile L h
+
+theorem recursivelyEnumerable_of_programCompiler
+    (hcompile : ProgramAcceptorCompilationPrinciple input)
+    {L : Language input}
+    (h : ProgramAcceptable L) :
+    RecursivelyEnumerable L :=
+  hcompile L h
 
 /-!
 # Partial listings, ranges, and programs
