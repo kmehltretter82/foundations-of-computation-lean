@@ -53,8 +53,10 @@ contains reusable machine transformations.  {module}`FoC.Computability.Enumerabl
 records the enumeration and range-of-computable-function views of recursively
 enumerable languages.  {module}`FoC.Computability.Program` supplies a staged
 program semantics for trace-level dovetailing and partial listing/range/program
-equivalences.  {module}`FoC.Computability.Grammar` connects finite general
-grammar derivations with staged program recognizers.
+equivalences.  {module}`FoC.Computability.Grammar` connects general grammar
+derivations with staged program recognizers, proves the semantic
+one-nonterminal grammar construction for arbitrary unrestricted production
+relations, and separates that from the finite/effective grammar theorem shape.
 
 The staged-program layer is a proof tool, not a replacement for Turing
 machines. It captures finite-stage acceptance and bounded search directly, then
