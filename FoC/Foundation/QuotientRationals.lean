@@ -817,6 +817,18 @@ theorem add_lt_add {a b c d : QRat} (hab : a < b) (hcd : c < d) :
     a + c < b + d := by
   exact lt_trans (add_lt_add_right c hab) (add_lt_add_left b hcd)
 
+theorem lt_of_add_lt_add_right {x y z : QRat} (h : x + z < y + z) : x < y := by
+  apply lt_of_toRat_lt
+  have ht := toRat_lt_of_lt h
+  rw [toRat_add, toRat_add] at ht
+  exact (Rat.add_lt_add_right (c := toRat z)).mp ht
+
+theorem lt_of_add_lt_add_left {x y z : QRat} (h : z + x < z + y) : x < y := by
+  apply lt_of_toRat_lt
+  have ht := toRat_lt_of_lt h
+  rw [toRat_add, toRat_add] at ht
+  exact (Rat.add_lt_add_left (c := toRat z)).mp ht
+
 theorem neg_lt_neg {x y : QRat} (h : x < y) : -y < -x := by
   apply lt_of_toRat_lt
   rw [toRat_neg, toRat_neg]
@@ -860,6 +872,10 @@ theorem lt_sub_right_iff_add_lt {a b c : QRat} :
 theorem lt_add_iff_sub_lt {a b c : QRat} :
     a < b + c <-> a - c < b :=
   Iff.symm sub_lt_iff
+
+theorem sub_pos_of_lt {q c : QRat} (h : q < c) : 0 < c - q := by
+  apply (lt_sub_right_iff_add_lt (a := 0) (b := q) (c := c)).mpr
+  rwa [zero_add]
 
 theorem add_sub_cancel (x y : QRat) : x + y - y = x := by
   apply eq_of_toRat_eq
@@ -1194,6 +1210,30 @@ theorem natFrac_lt_one_over_of_cross {a d e : Nat} (hd : 0 < d) (he : 0 < e)
     natFrac a e he < natFrac 1 d hd := by
   exact natFrac_lt_of_cross he hd (by simpa [Nat.mul_one] using h)
 
+theorem exists_natFrac_one_lt {d : QRat} (hd : (0 : QRat) < d) :
+    exists n : Nat, natFrac 1 (n + 1) (Nat.succ_pos n) < d := by
+  revert hd
+  refine Quotient.inductionOn d ?_
+  intro p hd
+  exists p.den
+  unfold natFrac
+  apply QRat.lt_mk_of_rawLt
+  unfold RatPair.RawLt
+  simp
+  have hpnum_pos : 0 < p.num := by
+    change RatPair.RawLt (RatPair.ofInt 0) p at hd
+    unfold RatPair.RawLt RatPair.ofInt at hd
+    simpa using hd
+  have hden_lt : (p.den : Int) < (p.den : Int) + 1 := by omega
+  have hle : (p.den : Int) + 1 ≤ p.num * ((p.den : Int) + 1) := by
+    calc
+      (p.den : Int) + 1 = 1 * ((p.den : Int) + 1) := by omega
+      _ ≤ p.num * ((p.den : Int) + 1) := by
+          apply Int.mul_le_mul_of_nonneg_right
+          · omega
+          · omega
+  exact Int.lt_of_lt_of_le hden_lt hle
+
 theorem one_gt_natFrac {a d : Nat} (hd : 0 < d) (h : a < d) :
     natFrac a d hd < (1 : QRat) := by
   change natFrac a d hd < QRat.ofNat 1
@@ -1246,6 +1286,15 @@ theorem natFrac_square_add_gap_eq_of_num_square_add_gap {p q c gap : Nat}
           rw [hi]
     _ = (c : Int) * (((q : Int) * (q : Int)) * ((q : Int) * (q : Int))) := by
           ac_rfl
+
+theorem lt_of_square_add_gap_eq_of_gap_lt_sub {q sq gap c : QRat}
+    (hgap : gap < c - q) (heq : sq + gap = c) : q < sq := by
+  have hgq : gap + q < c :=
+    (lt_sub_right_iff_add_lt (a := gap) (b := q) (c := c)).mp hgap
+  have hqg : q + gap < sq + gap := by
+    rw [heq]
+    simpa [add_comm] using hgq
+  exact lt_of_add_lt_add_right hqg
 
 /-!
 # Square-root approximation sequences
@@ -1351,6 +1400,22 @@ theorem exists_sqrtTwoApproxGap_lt_natFrac_one (bound : Nat) :
     exact Nat.le_mul_of_pos_right (sqrtTwoApproxDen n) (sqrtTwoApproxDen_pos n)
   exact Nat.lt_of_lt_of_le hden hle
 
+theorem sqrtTwoApprox_square_cofinal {q : QRat} (hq : q < QRat.ofNat 2) :
+    exists t : QRat, 0 < t ∧ q < t * t ∧ t * t < QRat.ofNat 2 := by
+  have hgap_pos : 0 < QRat.ofNat 2 - q := QRat.sub_pos_of_lt hq
+  cases QRat.exists_natFrac_one_lt hgap_pos with
+  | intro n hn =>
+      cases QRat.exists_sqrtTwoApproxGap_lt_natFrac_one n with
+      | intro m hm =>
+          exists QRat.sqrtTwoApprox m
+          constructor
+          · exact QRat.sqrtTwoApprox_pos m
+          · constructor
+            · apply QRat.lt_of_square_add_gap_eq_of_gap_lt_sub
+              · exact QRat.lt_trans hm hn
+              · exact QRat.sqrtTwoApprox_square_gap_eq_two m
+            · exact QRat.sqrtTwoApprox_square_lt_two m
+
 mutual
   def sqrtThreeApproxNum : Nat -> Nat
     | 0 => 1
@@ -1443,6 +1508,22 @@ theorem exists_sqrtThreeApproxGap_lt_natFrac_one (bound : Nat) :
   have hle : sqrtThreeApproxDen n ≤ sqrtThreeApproxDen n * sqrtThreeApproxDen n := by
     exact Nat.le_mul_of_pos_right (sqrtThreeApproxDen n) (sqrtThreeApproxDen_pos n)
   exact Nat.lt_of_lt_of_le hden hle
+
+theorem sqrtThreeApprox_square_cofinal {q : QRat} (hq : q < QRat.ofNat 3) :
+    exists t : QRat, 0 < t ∧ q < t * t ∧ t * t < QRat.ofNat 3 := by
+  have hgap_pos : 0 < QRat.ofNat 3 - q := QRat.sub_pos_of_lt hq
+  cases QRat.exists_natFrac_one_lt hgap_pos with
+  | intro n hn =>
+      cases QRat.exists_sqrtThreeApproxGap_lt_natFrac_one n with
+      | intro m hm =>
+          exists QRat.sqrtThreeApprox m
+          constructor
+          · exact QRat.sqrtThreeApprox_pos m
+          · constructor
+            · apply QRat.lt_of_square_add_gap_eq_of_gap_lt_sub
+              · exact QRat.lt_trans hm hn
+              · exact QRat.sqrtThreeApprox_square_gap_eq_three m
+            · exact QRat.sqrtThreeApprox_square_lt_three m
 
 /-!
 # Powers and square-root obstructions

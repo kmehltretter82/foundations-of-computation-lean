@@ -3,7 +3,6 @@ import FoC.Foundation.Functions
 import FoC.Foundation.Cardinality
 import FoC.Foundation.Primes
 import FoC.Foundation.RationalCore
-import FoC.Foundation.QuadraticSurd
 import FoC.Foundation.Reals
 
 set_option doc.verso true
@@ -16,11 +15,12 @@ namespace Section07
 /-!
 # Chapter 1, Section 1.7: Proof by Contradiction
 
-Concrete square-root cuts now exist as Dedekind-cut candidates, but their
-square-equality proofs are still deferred.  The reduced-rational and
-quotient-rational square-root contradiction cores, direct real square-equality
-irrationality bridges, prime-factor existence, Dedekind-cut real order layer,
-and real multiplication are formalized in the foundation.
+Concrete square-root cuts now exist as Dedekind-cut candidates, and their
+square-equality proofs are formalized for sqrt(2) and sqrt(3).  The
+reduced-rational and quotient-rational square-root contradiction cores, direct
+real square-equality irrationality bridges, prime-factor existence,
+Dedekind-cut real order layer, and real multiplication are formalized in the
+foundation.
 
 The section begins with proof-by-contradiction vocabulary, then formalizes the
 number-theoretic examples: odd-square contradiction, prime-divisor existence,
@@ -109,18 +109,6 @@ theorem no_quotient_rational_square_root_three (q : QRat) :
     q * q ≠ QRat.ofNat 3 :=
   QRat.no_square_root_three q
 
-theorem sqrt_two_surrogate_irrational :
-    Quad2.IrrationalLike Quad2.sqrtTwo :=
-  Quad2.sqrtTwo_irrationalLike
-
-theorem product_of_irrational_surrogates_can_be_rational :
-    Quad2.RationalLike (Quad2.mul Quad2.sqrtTwo Quad2.sqrtTwo) :=
-  Quad2.sqrtTwo_mul_self_rationalLike
-
-theorem sqrt_two_surrogate_square_eq_two :
-    Quad2.mul Quad2.sqrtTwo Quad2.sqrtTwo = Quad2.ofInt 2 :=
-  Quad2.sqrtTwo_mul_self_eq_two
-
 theorem negation_of_irrational_real_is_irrational {x : Real}
     (hx : Real.Irrational x) : Real.Irrational (-x) :=
   Real.irrational_neg hx
@@ -147,6 +135,22 @@ theorem sqrt_two_cut_nonnegative :
 theorem sqrt_three_cut_nonnegative :
     (0 : Real) ≤ Real.sqrtThreeCut :=
   Real.sqrtThreeCut_nonneg
+
+theorem sqrt_two_cut_square_eq_two :
+    Real.sqrtTwoCut * Real.sqrtTwoCut = (2 : Real) :=
+  Real.sqrtTwoCut_mul_self_eq_two
+
+theorem sqrt_three_cut_square_eq_three :
+    Real.sqrtThreeCut * Real.sqrtThreeCut = (3 : Real) :=
+  Real.sqrtThreeCut_mul_self_eq_three
+
+theorem sqrt_two_cut_is_irrational :
+    Real.Irrational Real.sqrtTwoCut :=
+  Real.sqrtTwoCut_irrational
+
+theorem sqrt_three_cut_is_irrational :
+    Real.Irrational Real.sqrtThreeCut :=
+  Real.sqrtThreeCut_irrational
 
 theorem real_with_square_two_characterization_is_irrational {x : Real}
     (hsquare : Real.qrealSquareCharacterization x 2) :

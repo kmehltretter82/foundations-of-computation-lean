@@ -16,7 +16,6 @@ foundation:
     - "FoC.Foundation.RationalCore"
     - "FoC.Foundation.QuotientRationals"
     - "FoC.Foundation.Reals"
-    - "FoC.Foundation.QuadraticSurd"
     - "FoC.Foundation.DigitStreams"
     - "FoC.Foundation.RealUncountability"
     - "FoC.Foundation.Primes"
@@ -68,10 +67,10 @@ completed:
       - "Pigeonhole collision schema and full finite-cardinality pigeonhole theorem"
       - "Product-of-primes representation for every natural number greater than one"
       - "Reduced positive-rational-representative contradiction cores for sqrt(2) and sqrt(3)"
-      - "Quotient-rational no-square-root theorems for 2 and 3, with explicit natural-fraction square-root approximants, real square-characterization, and direct square-equality irrationality bridges"
+      - "Quotient-rational no-square-root theorems for 2 and 3, with explicit natural-fraction square-root approximants, concrete Dedekind-cut square equalities, real square-characterization, and direct square-equality irrationality bridges"
       - "Dedekind-cut real density, rational embedding arithmetic for addition/subtraction/multiplication, powers, embedded-rational division, rational-real product closure, and rational scaling wrappers"
-      - "Concrete Dedekind-cut candidates for sqrt(2) and sqrt(3), with nonnegativity wrappers"
-      - "Quadratic-surd surrogate for sqrt(2) and the counterexample that a product of irrational-like quantities can be rational-like"
+      - "Concrete Dedekind-cut candidates for sqrt(2) and sqrt(3), with nonnegativity, square-equality, and irrationality wrappers"
+      - "Direct Dedekind-cut example showing that a product of irrational quantities can be rational"
       - "Proof-by-contradiction schema"
       - "Ordinary and strong mathematical induction schemas"
       - "Finite summation over natural-number ranges"
@@ -126,7 +125,7 @@ completed:
         missing: []
         deferred: []
       - coordinate: "Chapter 1, Section 1.6"
-        status: "partial_large_real_arithmetic_deferred"
+        status: "complete_formal_core"
         formalized:
           - artifact: "FoC.Foundation.Arithmetic"
             reason: "Natural-number divisibility and parity infrastructure for proof examples."
@@ -135,22 +134,18 @@ completed:
           - artifact: "FoC.Foundation.Rationals"
             reason: "Rational representatives and rational closure under addition and multiplication."
           - artifact: "FoC.Foundation.Reals"
-            reason: "Dedekind-cut real density, rational embedding arithmetic, rational real operations, scaling, division by embedded rationals, concrete square-root cut candidates, and square-equality irrationality bridges."
+            reason: "Dedekind-cut real density, rational embedding arithmetic, rational real operations, scaling, division by embedded rationals, concrete square-root cut candidates, square equalities for sqrt(2) and sqrt(3), and square-equality irrationality bridges."
           - artifact: "FoC.Foundation.QuotientRationals"
-            reason: "Natural-fraction QRat helpers and explicit Pell-style square-root approximants below sqrt(2) and sqrt(3), including denominator-growth and exact square-gap lemmas."
+            reason: "Natural-fraction QRat helpers and explicit Pell-style square-root approximants below sqrt(2) and sqrt(3), including denominator-growth, exact square-gap, and square-cofinality lemmas."
           - artifact: "FoC.Book.Chapter01.Section06"
-            reason: "Book-facing wrappers for proof examples, correctly coordinated Section 1.6 exercise parity/divisibility/rational-closure statements, real density, embedded-rational arithmetic, and irrational-product surrogate examples."
-        missing:
-          - item: "Direct square-root square equalities for concrete Dedekind cuts"
-            blocker: "Requires finishing the cut square characterization for the concrete sqrt(2)/sqrt(3) candidates."
-          - item: "Direct real irrational-product counterexample"
-            blocker: "Currently represented by the quadratic-surd surrogate pending concrete square-root equalities."
+            reason: "Book-facing wrappers for proof examples, correctly coordinated Section 1.6 exercise parity/divisibility/rational-closure statements, real density, embedded-rational arithmetic, and direct Dedekind-cut irrational-product example."
+        missing: []
         deferred: []
       - coordinate: "Chapter 1, Section 1.7"
-        status: "partial_concrete_sqrt_cut_equalities_deferred"
+        status: "complete_formal_core"
         formalized:
           - artifact: "FoC.Book.Chapter01.Section07"
-            reason: "Proof by contradiction, contradiction elimination, odd-square contradiction core, prime divisor existence, Euclid prime-list theorem, pigeonhole collision schema, full finite-cardinality pigeonhole theorem, sqrt(2)/sqrt(3) rational contradiction cores, quotient-rational no-square-root theorems, direct real square-equality irrationality wrappers, irrationality preservation wrappers, and concrete square-root-cut nonnegativity."
+            reason: "Proof by contradiction, contradiction elimination, odd-square contradiction core, prime divisor existence, Euclid prime-list theorem, pigeonhole collision schema, full finite-cardinality pigeonhole theorem, sqrt(2)/sqrt(3) rational contradiction cores, quotient-rational no-square-root theorems, direct real square-equality irrationality wrappers, irrationality preservation wrappers, concrete square-root-cut nonnegativity, concrete square equalities, and concrete irrationality wrappers."
           - artifact: "FoC.Foundation.Cardinality"
             reason: "Finite-cardinality pigeonhole theorem via duplicate-free list enumerations and length comparison."
           - artifact: "FoC.Foundation.Primes"
@@ -158,12 +153,8 @@ completed:
           - artifact: "FoC.Foundation.RationalCore"
             reason: "Reduced positive-rational-representative contradiction cores for sqrt(2) and sqrt(3)."
           - artifact: "FoC.Foundation.QuotientRationals"
-            reason: "Quotient-rational no-square-root theorems plus explicit natural-fraction square-root approximants for 2 and 3."
-          - artifact: "FoC.Foundation.QuadraticSurd"
-            reason: "Temporary sqrt(2)-like surrogate model for irrational-product examples."
-        missing:
-          - item: "Square-root square equalities for concrete Dedekind cuts"
-            blocker: "Same concrete Dedekind-cut square-characterization gap as Section 1.6."
+            reason: "Quotient-rational no-square-root theorems plus explicit natural-fraction square-root approximants and square-cofinality lemmas for 2 and 3."
+        missing: []
         deferred: []
       - coordinate: "Chapter 1, Section 1.8"
         status: "complete_formal_core"
@@ -193,10 +184,6 @@ completed:
     classified_not_formalized_yet:
       - coordinate: "Chapter 1, Section 1.3"
         reason: "Circuit drawings and design exercises are application artifacts; the DNF semantic core is formalized."
-      - coordinate: "Chapter 1, Section 1.6"
-        reason: "Dedekind-cut real infrastructure with rational embedding/order/density, cut addition/subtraction/multiplication, powers, embedded-rational division, rational-real arithmetic wrappers, positive rational scaling, concrete square-root cut candidates, quotient-rational square-root contradiction bridges, and direct square-equality-to-irrationality bridges are formalized. Square-root square equalities for the concrete cuts and the direct real irrational-product counterexample remain deferred; integer square parity, rational closure examples, and a sqrt(2) quadratic-surd counterexample surrogate are formalized."
-      - coordinate: "Chapter 1, Section 1.7"
-        reason: "The reduced-rational and quotient-rational contradiction cores for sqrt(2) and sqrt(3), concrete square-root cut candidates, real square-characterization and direct square-equality irrationality bridges, Euclid prime-list theorem, pigeonhole collision schema, full finite-cardinality pigeonhole theorem, Dedekind-cut real order/rational embedding/multiplication, rational-plus-irrational wrappers, and nonzero rational scaling of irrational reals are formalized; square-root square equalities for the concrete cuts remain deferred."
       - coordinate: "Chapter 1, Section 1.8"
         reason: "Natural-number geometric identities, quotient-rational geometric-series identities, and embedded quotient-rational real geometric-series wrappers with division by a nonzero embedded rational are formalized; this is intentionally not yet the arbitrary-real division statement from the printed exercise."
       - coordinate: "Chapter 1, Section 1.9"

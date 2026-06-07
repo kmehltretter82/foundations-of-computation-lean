@@ -35,7 +35,6 @@ description = "Reader-oriented Verso companion for the standalone Lean formaliza
   "FoC.Foundation.RationalCore",
   "FoC.Foundation.QuotientRationals",
   "FoC.Foundation.Reals",
-  "FoC.Foundation.QuadraticSurd",
   "FoC.Foundation.DigitStreams",
   "FoC.Foundation.RealUncountability",
   "FoC.Foundation.Primes",
@@ -169,9 +168,6 @@ title = "Logic"
 
 [modules."FoC.Foundation.Primes"]
 title = "Primes"
-
-[modules."FoC.Foundation.QuadraticSurd"]
-title = "Quadratic Surds"
 
 [modules."FoC.Foundation.QuotientRationals"]
 title = "Quotient Rationals"

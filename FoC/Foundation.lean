@@ -12,7 +12,6 @@ import FoC.Foundation.Rationals
 import FoC.Foundation.RationalCore
 import FoC.Foundation.QuotientRationals
 import FoC.Foundation.Reals
-import FoC.Foundation.QuadraticSurd
 import FoC.Foundation.DigitStreams
 import FoC.Foundation.RealUncountability
 import FoC.Foundation.Primes
@@ -69,15 +68,11 @@ starts with raw rational representatives, {module}`FoC.Foundation.RationalCore`
 contains reduced-rational divisibility arguments, and
 {module}`FoC.Foundation.QuotientRationals` supplies quotient rationals for the
 Dedekind-cut construction in {module}`FoC.Foundation.Reals`, including explicit
-natural-fraction square-root approximants used to approach the concrete
-square-root cuts.  The
+natural-fraction square-root approximants used to prove the concrete
+square-root cut equalities.  The
 diagonalization modules, {module}`FoC.Foundation.DigitStreams` and
 {module}`FoC.Foundation.RealUncountability`, connect the countability material
 to the book's proof that the real numbers are uncountable.
-
-The auxiliary module {module}`FoC.Foundation.QuadraticSurd` records a controlled
-surrogate for square-root examples. It keeps the irrationality arguments usable
-without requiring a full imported real-analysis development.
 
 ## Reading the Foundation API
 

@@ -2,7 +2,6 @@ import FoC.Foundation.Arithmetic
 import FoC.Foundation.Integers
 import FoC.Foundation.Rationals
 import FoC.Foundation.Reals
-import FoC.Foundation.QuadraticSurd
 import FoC.Book.Chapter01.Section01
 import FoC.Book.Chapter01.Section02
 
@@ -21,8 +20,8 @@ propositional equivalence, parity, divisibility, rational numbers, and real
 numbers.
 
 Some real-number statements use the project's Dedekind-cut real infrastructure.
-The irrational-product example is represented by a quadratic-surd surrogate,
-because the direct square-root cut equalities are still deferred.
+The irrational-product example now uses the concrete Dedekind-cut square-root
+construction.
 
 The page is intentionally a sampler. The first block is still propositional
 logic, but the later blocks demonstrate how ordinary mathematical proof
@@ -127,8 +126,8 @@ theorem square_divisible_by_four_does_not_force_number_divisible_by_four :
 
 The rational-number statements show closure under addition and multiplication.
 The real-number statements give density, rational-real closure wrappers, and
-the surrogate example showing that a product of irrational-like quantities can
-be rational-like.
+the direct Dedekind-cut example showing that products of irrational quantities
+can be rational.
 
 The rational results are concrete algebra on numerator-denominator
 representations. The real results are phrased at the predicate level: a real is
@@ -162,12 +161,12 @@ theorem real_number_between {x y : Real} (h : x < y) :
     exists z : Real, x < z ∧ z < y :=
   Real.exists_between h
 
-theorem product_of_irrational_surrogates_can_be_rational :
-    Quad2.IrrationalLike Quad2.sqrtTwo ∧
-      Quad2.IrrationalLike Quad2.sqrtTwo ∧
-      Quad2.RationalLike (Quad2.mul Quad2.sqrtTwo Quad2.sqrtTwo) := by
-  exact And.intro Quad2.sqrtTwo_irrationalLike
-    (And.intro Quad2.sqrtTwo_irrationalLike Quad2.sqrtTwo_mul_self_rationalLike)
+theorem product_of_concrete_irrational_reals_can_be_rational :
+    Real.Irrational Real.sqrtTwoCut ∧
+      Real.Irrational Real.sqrtTwoCut ∧
+      Real.Rational (Real.sqrtTwoCut * Real.sqrtTwoCut) := by
+  exact And.intro Real.sqrtTwoCut_irrational
+    (And.intro Real.sqrtTwoCut_irrational Real.sqrtTwoCut_square_rational)
 
 theorem embedded_rational_real_addition (a b : QRat) :
     Real.qreal a + Real.qreal b = Real.qreal (a + b) :=

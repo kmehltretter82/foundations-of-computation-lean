@@ -1068,9 +1068,9 @@ theorem rational_divByQ {x : Real} {q : QRat}
 
 Square-root cuts are specified by rational square inequalities. The bridge
 theorems turn quotient-rational no-square-root facts into real irrationality
-statements.  The concrete cut equalities are intentionally separate from this
-transport layer: once a real square has value {lit}`2` or {lit}`3`, the
-irrationality proof no longer depends on the details of the cut presentation.
+statements.  The concrete cut equalities for sqrt(2) and sqrt(3) use explicit
+quotient-rational approximants to prove that the cut products are exactly the
+embedded rationals {lit}`2` and {lit}`3`.
 -/
 
 def sqrtNatLower (c : Nat) (q : QRat) : Prop :=
@@ -1174,6 +1174,147 @@ theorem sqrtThreeCut_nonneg : (0 : Real) ≤ sqrtThreeCut := by
   intro q hq0
   exact Or.inl hq0
 
+theorem sqrtNatLower_positive_witness {c : Nat} {q : QRat}
+    (hq0 : 0 < q) (hq : sqrtNatLower c q) :
+    exists r : QRat, 0 < r ∧ q < r ∧ r * r < QRat.ofNat c := by
+  cases hq with
+  | inl hqneg =>
+      exact False.elim (QRat.lt_asymm hq0 hqneg)
+  | inr hw =>
+      cases hw with
+      | intro r hr =>
+          exact Exists.intro r
+            (And.intro (QRat.lt_trans hq0 hr.left) hr)
+
+theorem qrat_mul_lt_of_square_bounds {r s c : QRat}
+    (hr0 : 0 < r) (hs0 : 0 < s)
+    (hrr : r * r < c) (hss : s * s < c) : r * s < c := by
+  cases QRat.lt_trichotomy r s with
+  | inl hrs =>
+      exact QRat.lt_trans (QRat.mul_lt_mul_of_pos_right hrs hs0) hss
+  | inr hrest =>
+      cases hrest with
+      | inl hrsEq =>
+          rw [hrsEq]
+          exact hss
+      | inr hsr =>
+          have hsrr : s * r < r * r :=
+            QRat.mul_lt_mul_of_pos_right hsr hr0
+          have hrsr : r * s < r * r := by
+            simpa [QRat.mul_comm] using hsrr
+          exact QRat.lt_trans hrsr hrr
+
+theorem sqrtNatLower_product_lt_of_pos {c : Nat} {a b : QRat}
+    (ha0 : 0 < a) (hb0 : 0 < b)
+    (ha : sqrtNatLower c a) (hb : sqrtNatLower c b) :
+    a * b < QRat.ofNat c := by
+  cases sqrtNatLower_positive_witness ha0 ha with
+  | intro r hr =>
+      cases sqrtNatLower_positive_witness hb0 hb with
+      | intro s hs =>
+          have habrs : a * b < r * s :=
+            QRat.mul_lt_mul_of_pos hr.right.left hs.right.left ha0 hb0
+          exact QRat.lt_trans habrs
+            (qrat_mul_lt_of_square_bounds hr.left hs.left
+              hr.right.right hs.right.right)
+
+theorem sqrtNatLower_mulNonneg_self_eq_qreal
+    (x : Real) (c : Nat)
+    (hx : forall q : QRat, x.lower q <-> sqrtNatLower c q)
+    (hxnonneg : (0 : Real) ≤ x)
+    (hcpos : 0 < c)
+    (hcofinal : forall q : QRat, q < QRat.ofNat c ->
+      exists t : QRat, 0 < t ∧ q < t * t ∧ t * t < QRat.ofNat c) :
+    mulNonneg x x hxnonneg hxnonneg = qreal (QRat.ofNat c) := by
+  apply ext
+  intro q
+  constructor
+  · intro hq
+    cases hq with
+    | inl hq0 =>
+        exact QRat.lt_trans hq0 (QRat.ofNat_pos hcpos)
+    | inr hprod =>
+        cases hprod with
+        | intro a harest =>
+            cases harest with
+            | intro b hbounds =>
+                have ha : sqrtNatLower c a :=
+                  (hx a).mp hbounds.right.right.left
+                have hb : sqrtNatLower c b :=
+                  (hx b).mp hbounds.right.right.right.left
+                have habc : a * b < QRat.ofNat c :=
+                  sqrtNatLower_product_lt_of_pos
+                    hbounds.left hbounds.right.left ha hb
+                exact QRat.lt_trans hbounds.right.right.right.right habc
+  · intro hq
+    by_cases hq0 : q < 0
+    · exact Or.inl hq0
+    · cases hcofinal q hq with
+      | intro t ht =>
+          have hqdivt : q / t < t :=
+            (QRat.div_lt_iff (x := q) (y := t) (c := t) ht.left).mpr
+              ht.right.left
+          cases QRat.density hqdivt with
+          | intro a ha =>
+              have hqdivt_nonneg : ¬ q / t < 0 :=
+                QRat.div_nonneg hq0 ht.left
+              have ha0 : 0 < a :=
+                QRat.zero_lt_of_not_lt_zero_of_lt hqdivt_nonneg ha.left
+              have hqat : q < a * t :=
+                (QRat.div_lt_iff (x := q) (y := t) (c := a) ht.left).mp
+                  ha.left
+              have hqdiva : q / a < t := by
+                apply (QRat.div_lt_iff (x := q) (y := a) (c := t) ha0).mpr
+                simpa [QRat.mul_comm] using hqat
+              cases QRat.density hqdiva with
+              | intro b hb =>
+                  have hqdiva_nonneg : ¬ q / a < 0 :=
+                    QRat.div_nonneg hq0 ha0
+                  have hb0 : 0 < b :=
+                    QRat.zero_lt_of_not_lt_zero_of_lt hqdiva_nonneg hb.left
+                  have hqab : q < a * b := by
+                    have hqba : q < b * a :=
+                      (QRat.div_lt_iff (x := q) (y := a) (c := b) ha0).mp
+                        hb.left
+                    simpa [QRat.mul_comm] using hqba
+                  exact Or.inr (Exists.intro a (Exists.intro b
+                    (And.intro ha0
+                      (And.intro hb0
+                        (And.intro ((hx a).mpr
+                          (Or.inr (Exists.intro t
+                            (And.intro ha.right ht.right.right))))
+                          (And.intro ((hx b).mpr
+                            (Or.inr (Exists.intro t
+                              (And.intro hb.right ht.right.right))))
+                            hqab))))))
+
+theorem sqrtTwoCut_mul_self_eq_two :
+    sqrtTwoCut * sqrtTwoCut = (2 : Real) := by
+  classical
+  have hmul : mulNonneg sqrtTwoCut sqrtTwoCut sqrtTwoCut_nonneg sqrtTwoCut_nonneg =
+      qreal (QRat.ofNat 2) :=
+    sqrtNatLower_mulNonneg_self_eq_qreal sqrtTwoCut 2
+      (fun q => sqrtTwoCut_lower_iff q)
+      sqrtTwoCut_nonneg (by decide)
+      (fun q hq => QRat.sqrtTwoApprox_square_cofinal hq)
+  change FoC.Foundation.Real.mul sqrtTwoCut sqrtTwoCut = qreal (QRat.ofNat 2)
+  unfold FoC.Foundation.Real.mul
+  simp [sqrtTwoCut_nonneg, hmul]
+
+theorem sqrtThreeCut_mul_self_eq_three :
+    sqrtThreeCut * sqrtThreeCut = (3 : Real) := by
+  classical
+  have hmul :
+      mulNonneg sqrtThreeCut sqrtThreeCut sqrtThreeCut_nonneg sqrtThreeCut_nonneg =
+        qreal (QRat.ofNat 3) :=
+    sqrtNatLower_mulNonneg_self_eq_qreal sqrtThreeCut 3
+      (fun q => sqrtThreeCut_lower_iff q)
+      sqrtThreeCut_nonneg (by decide)
+      (fun q hq => QRat.sqrtThreeApprox_square_cofinal hq)
+  change FoC.Foundation.Real.mul sqrtThreeCut sqrtThreeCut = qreal (QRat.ofNat 3)
+  unfold FoC.Foundation.Real.mul
+  simp [sqrtThreeCut_nonneg, hmul]
+
 theorem irrational_scale_nonzero {x : Real} {c : QRat}
     (hc : c ≠ 0) (hx : Irrational x) : Irrational (scale c x) := by
   classical
@@ -1275,6 +1416,20 @@ theorem irrational_of_square_eq_two {x : Real}
 theorem irrational_of_square_eq_three {x : Real}
     (hsquare : x * x = (3 : Real)) : Irrational x :=
   irrational_of_square_eq_qreal QRat.no_square_root_three hsquare
+
+theorem sqrtTwoCut_irrational : Irrational sqrtTwoCut :=
+  irrational_of_square_eq_two sqrtTwoCut_mul_self_eq_two
+
+theorem sqrtThreeCut_irrational : Irrational sqrtThreeCut :=
+  irrational_of_square_eq_three sqrtThreeCut_mul_self_eq_three
+
+theorem sqrtTwoCut_square_rational : Rational (sqrtTwoCut * sqrtTwoCut) := by
+  rw [sqrtTwoCut_mul_self_eq_two]
+  exact rational_qreal (QRat.ofNat 2)
+
+theorem sqrtThreeCut_square_rational : Rational (sqrtThreeCut * sqrtThreeCut) := by
+  rw [sqrtThreeCut_mul_self_eq_three]
+  exact rational_qreal (QRat.ofNat 3)
 
 theorem rational_not_square_eq_two {x : Real}
     (hx : Rational x) : x * x ≠ (2 : Real) := by
