@@ -32,7 +32,8 @@ of table entries and to connect parsing vocabulary to grammar generation.
 
 The formalization does not implement a full parser generator. It records the
 objects and soundness obligations needed to state the book's parsing concepts
-precisely.
+precisely, together with a fuel-bounded executable LL(1) runner whose
+successful runs return parse trees.
 -/
 
 structure LL1Parser (G : CFG terminal nonterminal) where
@@ -56,6 +57,272 @@ theorem ll1_parse_sound {G : CFG terminal nonterminal}
     (h : LL1Parses G parser w) :
     w ∈ CFG.GeneratedLanguage G :=
   h
+
+/-
+**Executable LL(1) runner.**  The table vocabulary above is intentionally
+semantic: it records the productions licensed by a table entry.  The following
+fuel-bounded runner is operational.  It consumes a word from left to right and,
+on success, returns a parse tree whose frontier is exactly the consumed input.
+
+This is the first layer of a parser-generator formalization.  Later table
+generation can compute the table from FIRST/FOLLOW data; the runner below is
+already executable once a table is supplied.
+-/
+
+def LL1Lookahead : Word terminal -> Option terminal
+  | [] => none
+  | a :: _ => some a
+
+def LL1Parser.tableProduction {G : CFG terminal nonterminal}
+    (parser : LL1Parser G) (A : nonterminal) (lookahead : Option terminal) :
+    Option {rhs : SententialForm terminal nonterminal // G.produces A rhs} :=
+  match htable : parser.table A lookahead with
+  | none => none
+  | some rhs => some ⟨rhs, parser.tableSound A lookahead rhs htable⟩
+
+mutual
+
+def LL1Parser.parseSymbol [DecidableEq terminal] {G : CFG terminal nonterminal}
+    (parser : LL1Parser G) :
+    Nat -> (s : Symbol terminal nonterminal) -> Word terminal ->
+      Option (Sigma fun _rest : Word terminal => CFG.ParseTree G s)
+  | 0, _, _ => none
+  | _fuel + 1, Symbol.terminal a, input =>
+      match input with
+      | [] => none
+      | b :: rest =>
+          if b = a then
+            some ⟨rest, CFG.ParseTree.leaf a⟩
+          else
+            none
+  | fuel + 1, Symbol.nonterminal A, input =>
+      match LL1Parser.tableProduction parser A (LL1Lookahead input) with
+      | none => none
+      | some ⟨rhs, hprod⟩ =>
+          match LL1Parser.parseSententialForm parser fuel rhs input with
+          | none => none
+          | some ⟨rest, forest⟩ =>
+              some ⟨rest, CFG.ParseTree.node A rhs hprod forest⟩
+
+def LL1Parser.parseSententialForm [DecidableEq terminal]
+    {G : CFG terminal nonterminal} (parser : LL1Parser G) :
+    Nat -> (sent : SententialForm terminal nonterminal) -> Word terminal ->
+      Option (Sigma fun _rest : Word terminal => CFG.ParseForest G sent)
+  | _, [], input => some ⟨input, CFG.ParseForest.nil⟩
+  | 0, _ :: _, _ => none
+  | fuel + 1, s :: restSent, input =>
+      match LL1Parser.parseSymbol parser fuel s input with
+      | none => none
+      | some ⟨middle, tree⟩ =>
+          match LL1Parser.parseSententialForm parser fuel restSent middle with
+          | none => none
+          | some ⟨rest, forest⟩ =>
+              some ⟨rest, CFG.ParseForest.cons s restSent tree forest⟩
+
+end
+
+def LL1Parser.run [DecidableEq terminal] {G : CFG terminal nonterminal}
+    (parser : LL1Parser G) (fuel : Nat) (w : Word terminal) :
+    Option (CFG.ParseTree G (Symbol.nonterminal G.start)) :=
+  match LL1Parser.parseSymbol parser fuel (Symbol.nonterminal G.start) w with
+  | some ⟨[], tree⟩ => some tree
+  | _ => none
+
+mutual
+
+theorem LL1Parser.parseSymbol_frontier [DecidableEq terminal]
+    {G : CFG terminal nonterminal} (parser : LL1Parser G)
+    (fuel : Nat) (s : Symbol terminal nonterminal) (input : Word terminal)
+    (rest : Word terminal) (tree : CFG.ParseTree G s)
+    (h :
+      LL1Parser.parseSymbol parser fuel s input = some ⟨rest, tree⟩) :
+    input = Word.Concat (CFG.ParseTree.frontier tree) rest := by
+  cases fuel with
+  | zero =>
+      simp [LL1Parser.parseSymbol] at h
+  | succ fuel =>
+      cases s with
+      | terminal a =>
+          cases input with
+          | nil =>
+              simp [LL1Parser.parseSymbol] at h
+          | cons b rest =>
+              by_cases hb : b = a
+              · simp [LL1Parser.parseSymbol, hb] at h
+                cases h
+                rename_i hrest htree
+                cases hrest
+                cases htree
+                cases hb
+                rfl
+              · simp [LL1Parser.parseSymbol, hb] at h
+      | nonterminal A =>
+          cases htable : LL1Parser.tableProduction parser A (LL1Lookahead input) with
+          | none =>
+              simp [LL1Parser.parseSymbol, htable] at h
+          | some production =>
+              rcases production with ⟨rhs, hprod⟩
+              cases hparse :
+                  LL1Parser.parseSententialForm parser fuel rhs input with
+              | none =>
+                  simp [LL1Parser.parseSymbol, htable, hparse] at h
+              | some parsed =>
+                  rcases parsed with ⟨rest, forest⟩
+                  simp [LL1Parser.parseSymbol, htable, hparse] at h
+                  cases h
+                  rename_i hrest htree
+                  cases hrest
+                  cases htree
+                  have hs :=
+                    LL1Parser.parseSententialForm_frontier parser fuel rhs input
+                      rest forest hparse
+                  simpa [CFG.ParseTree.frontier] using hs
+
+theorem LL1Parser.parseSententialForm_frontier [DecidableEq terminal]
+    {G : CFG terminal nonterminal} (parser : LL1Parser G)
+    (fuel : Nat) (sent : SententialForm terminal nonterminal)
+    (input : Word terminal)
+    (rest : Word terminal) (forest : CFG.ParseForest G sent)
+    (h :
+      LL1Parser.parseSententialForm parser fuel sent input =
+        some ⟨rest, forest⟩) :
+    input = Word.Concat (CFG.ParseForest.frontier forest) rest := by
+  cases sent with
+  | nil =>
+      simp [LL1Parser.parseSententialForm] at h
+      cases h
+      rename_i hrest hforest
+      cases hrest
+      cases hforest
+      rfl
+  | cons s restSent =>
+      cases fuel with
+      | zero =>
+          simp [LL1Parser.parseSententialForm] at h
+      | succ fuel =>
+          cases hsymbol : LL1Parser.parseSymbol parser fuel s input with
+          | none =>
+              simp [LL1Parser.parseSententialForm, hsymbol] at h
+          | some parsedSymbol =>
+              rcases parsedSymbol with ⟨middle, tree⟩
+              cases hrest :
+                  LL1Parser.parseSententialForm parser fuel restSent middle with
+              | none =>
+                  simp [LL1Parser.parseSententialForm, hsymbol, hrest] at h
+              | some parsedRest =>
+                  rcases parsedRest with ⟨rest, forest⟩
+                  simp [LL1Parser.parseSententialForm, hsymbol, hrest] at h
+                  cases h
+                  rename_i hrestEq hforestEq
+                  cases hrestEq
+                  cases hforestEq
+                  have hTree :=
+                    LL1Parser.parseSymbol_frontier parser fuel s input
+                      middle tree hsymbol
+                  have hForest :=
+                    LL1Parser.parseSententialForm_frontier parser fuel restSent
+                      middle rest forest hrest
+                  rw [hTree, hForest]
+                  simp [CFG.ParseForest.frontier, Word.Concat,
+                    List.append_assoc]
+
+end
+
+theorem LL1Parser.run_frontier [DecidableEq terminal]
+    {G : CFG terminal nonterminal} (parser : LL1Parser G)
+    (fuel : Nat) (w : Word terminal)
+    (tree : CFG.ParseTree G (Symbol.nonterminal G.start))
+    (h : LL1Parser.run parser fuel w = some tree) :
+    CFG.ParseTree.frontier tree = w := by
+  cases hparse :
+      LL1Parser.parseSymbol parser fuel (Symbol.nonterminal G.start) w with
+  | none =>
+      simp [LL1Parser.run, hparse] at h
+  | some parsed =>
+      rcases parsed with ⟨rest, parsedTree⟩
+      cases rest with
+      | nil =>
+          have hfrontier :=
+            LL1Parser.parseSymbol_frontier parser fuel
+              (Symbol.nonterminal G.start) w [] parsedTree hparse
+          simp [LL1Parser.run, hparse] at h
+          cases h
+          simpa [Word.Concat] using hfrontier.symm
+      | cons a restTail =>
+          simp [LL1Parser.run, hparse] at h
+
+theorem LL1Parser.run_sound [DecidableEq terminal]
+    {G : CFG terminal nonterminal} (parser : LL1Parser G)
+    (fuel : Nat) (w : Word terminal)
+    (tree : CFG.ParseTree G (Symbol.nonterminal G.start))
+    (h : LL1Parser.run parser fuel w = some tree) :
+    w ∈ CFG.GeneratedLanguage G := by
+  have hfrontier := LL1Parser.run_frontier parser fuel w tree h
+  have hderives := CFG.ParseTree.derives tree
+  simpa [CFG.GeneratedLanguage, hfrontier] using hderives
+
+structure LL1TableEntry (terminal : Type u) (nonterminal : Type v) where
+  lhs : nonterminal
+  lookahead : Option terminal
+  rhs : SententialForm terminal nonterminal
+
+structure LL1ParserCode (terminal : Type u) (nonterminal : Type v) where
+  entries : List (LL1TableEntry terminal nonterminal)
+
+namespace LL1ParserCode
+
+def lookupFrom [DecidableEq terminal] [DecidableEq nonterminal] :
+    List (LL1TableEntry terminal nonterminal) -> nonterminal -> Option terminal ->
+      Option (SententialForm terminal nonterminal)
+  | [], _, _ => none
+  | entry :: rest, A, lookahead =>
+      if entry.lhs = A then
+        if entry.lookahead = lookahead then
+          some entry.rhs
+        else
+          lookupFrom rest A lookahead
+      else
+        lookupFrom rest A lookahead
+
+def lookup [DecidableEq terminal] [DecidableEq nonterminal]
+    (code : LL1ParserCode terminal nonterminal)
+    (A : nonterminal) (lookahead : Option terminal) :
+    Option (SententialForm terminal nonterminal) :=
+  lookupFrom code.entries A lookahead
+
+def toParser [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    (code : LL1ParserCode terminal nonterminal)
+    (hSound :
+      forall A lookahead rhs,
+        code.lookup A lookahead = some rhs -> G.produces A rhs) :
+    LL1Parser G where
+  table := code.lookup
+  tableSound := hSound
+
+def run [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    (code : LL1ParserCode terminal nonterminal)
+    (hSound :
+      forall A lookahead rhs,
+        code.lookup A lookahead = some rhs -> G.produces A rhs)
+    (fuel : Nat) (w : Word terminal) :
+    Option (CFG.ParseTree G (Symbol.nonterminal G.start)) :=
+  LL1Parser.run (code.toParser hSound) fuel w
+
+theorem run_sound [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    (code : LL1ParserCode terminal nonterminal)
+    (hSound :
+      forall A lookahead rhs,
+        code.lookup A lookahead = some rhs -> G.produces A rhs)
+    (fuel : Nat) (w : Word terminal)
+    (tree : CFG.ParseTree G (Symbol.nonterminal G.start))
+    (h : code.run hSound fuel w = some tree) :
+    w ∈ CFG.GeneratedLanguage G :=
+  LL1Parser.run_sound (code.toParser hSound) fuel w tree h
+
+end LL1ParserCode
 
 structure LR1Item (G : CFG terminal nonterminal) where
   lhs : nonterminal
