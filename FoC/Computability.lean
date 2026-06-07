@@ -56,7 +56,8 @@ paired-trace dovetailing, and partial unary range programs.
 {module}`FoC.Computability.FiniteProgram` packages finite executable
 program-description syntax and proves concrete bridges for trace recognizers,
 Boolean deciders, dovetailing deciders, and partial unary range outputs when
-their descriptions are explicitly supplied.
+their descriptions are explicitly supplied, including finite construction
+surfaces for dovetailing and output-complete partial unary range descriptions.
 
 The chapter-facing material in {module -checked}`FoC.Book.Chapter05` points to
 these definitions while keeping the textbook-order statements separate from the

@@ -84,6 +84,9 @@ def ConcreteDescriptionBoolDeciderCompilationConstruction : Prop :=
 def ConcreteDovetailDescriptionCompilerConstruction : Prop :=
   DovetailDescriptionCompilerPrinciple
 
+def ConcreteFiniteDovetailCompilerConstruction : Prop :=
+  FiniteDovetailProgram.CompilerConstruction
+
 def ConcretePartialUnaryRangeDescriptionCompilerConstruction : Prop :=
   PartialUnaryRangeDescriptionCompilerPrinciple
 
@@ -197,6 +200,19 @@ noncomputable def ConcreteFiniteDovetailStagedProgram
 def ConcreteFiniteDovetailCompiled
     (P : ConcreteFiniteDovetailProgram) : Prop :=
   P.Compiled
+
+def ConcreteFinitePartialUnaryOutputComplete
+    (P : ConcreteFinitePartialUnaryRangeProgram) : Prop :=
+  P.OutputComplete
+
+def ConcreteFinitePartialUnaryOutputFunctional
+    (P : ConcreteFinitePartialUnaryRangeProgram) : Prop :=
+  P.OutputFunctional
+
+noncomputable def ConcreteFinitePartialUnaryOutputFunction
+    (P : ConcreteFinitePartialUnaryRangeProgram) :
+    Word Unit -> Option (Word Bool) :=
+  P.outputFunction
 
 def ConcreteFinitePartialUnaryRangeStagedProgram
     (P : ConcreteFinitePartialUnaryRangeProgram) :
@@ -666,6 +682,20 @@ theorem concrete_finite_dovetail_program_turing_decidable
     using Computability.FiniteDovetailProgram.turingDecidable
       P htraces hcompiled
 
+theorem concrete_finite_dovetail_program_turing_decidable_of_compiler_construction
+    (hcompile : ConcreteFiniteDovetailCompilerConstruction)
+    {accept reject : ConcreteFiniteAcceptorProgram}
+    {L : Language Bool}
+    (htraces : LanguageComplementaryAcceptanceTraces
+      (ConcreteFiniteAcceptorTrace accept)
+      (ConcreteFiniteAcceptorTrace reject) L) :
+    RecursiveLanguage L := by
+  simpa [ConcreteFiniteDovetailCompilerConstruction,
+    ConcreteFiniteAcceptorTrace]
+    using
+      Computability.FiniteDovetailProgram.turingDecidable_of_compilerConstruction
+        hcompile htraces
+
 theorem stopped_decider_has_complementary_output_traces
     {M : TuringMachine symbol state}
     {encodeInput : alpha -> symbol} {zero one : symbol}
@@ -1132,6 +1162,61 @@ theorem concrete_finite_partial_unary_range_equal_description_outputs
       Computability.FinitePartialUnaryRangeProgram.outputRange_equal_descriptionOutputRange
         P
 
+theorem concrete_finite_partial_unary_output_function_compiled_by_description
+    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (hD : P.description.WellFormed)
+    (hcomplete : ConcreteFinitePartialUnaryOutputComplete P) :
+    ConcretePartialFunctionCompiledByDescription
+      (ConcreteFinitePartialUnaryOutputFunction P)
+      (fun _ : Unit => true)
+      P.description := by
+  simpa [ConcreteFinitePartialUnaryOutputFunction,
+    ConcreteFinitePartialUnaryOutputComplete]
+    using
+      Computability.FinitePartialUnaryRangeProgram.outputFunction_compiledByDescription
+        P hD hcomplete
+
+theorem concrete_finite_partial_unary_output_function_range_equal_description_outputs
+    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
+    Language.Equal
+      (PartialFunctionRangeLanguage
+        (ConcreteFinitePartialUnaryOutputFunction P))
+      (ConcreteFinitePartialUnaryDescriptionOutputRange P) := by
+  simpa [PartialFunctionRangeLanguage,
+    ConcreteFinitePartialUnaryOutputFunction,
+    ConcreteFinitePartialUnaryDescriptionOutputRange,
+    ConcreteFinitePartialUnaryOutputFunctional]
+    using
+      Computability.FinitePartialUnaryRangeProgram.partialRange_outputFunction_equal_descriptionOutputRange
+        P hfunctional
+
+theorem concrete_finite_partial_unary_description_output_range_compiled
+    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (hD : P.description.WellFormed)
+    (hcomplete : ConcreteFinitePartialUnaryOutputComplete P)
+    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
+    ConcreteCompiledPartialUnaryRange
+      (ConcreteFinitePartialUnaryDescriptionOutputRange P) := by
+  simpa [ConcreteCompiledPartialUnaryRange,
+    ConcreteFinitePartialUnaryDescriptionOutputRange,
+    ConcreteFinitePartialUnaryOutputComplete,
+    ConcreteFinitePartialUnaryOutputFunctional]
+    using
+      Computability.FinitePartialUnaryRangeProgram.compiledPartialUnaryRange_descriptionOutputRange
+        P hD hcomplete hfunctional
+
+theorem concrete_finite_partial_unary_description_output_range_turing_computable
+    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (hD : P.description.WellFormed)
+    (hcomplete : ConcreteFinitePartialUnaryOutputComplete P)
+    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
+    ConcretePartialUnaryTuringComputableRange
+      (ConcreteFinitePartialUnaryDescriptionOutputRange P) :=
+  concrete_compiled_partial_unary_range_has_turing_computable_range
+    (concrete_finite_partial_unary_description_output_range_compiled
+      P hD hcomplete hfunctional)
+
 theorem function_value_in_range (f : Word input -> Word output) (x : Word input) :
     f x ∈ FunctionRangeLanguage f :=
   range_mem x
@@ -1202,6 +1287,12 @@ def ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
   forall {nonterminal : Type}, forall G : GeneralGrammar Bool nonterminal,
     exists D : MachineDescription,
       ConcreteProgramCompiledByDescription (GeneralGrammarStagedRecognizer G) D
+
+def ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
+  forall {nonterminal : Type}, forall G : GeneralGrammar Bool nonterminal,
+    GeneralGrammar.HasFiniteProductions G ->
+      exists D : MachineDescription,
+        ConcreteProgramCompiledByDescription (GeneralGrammarStagedRecognizer G) D
 
 def GeneralGrammarAcceptabilityEquivalence (L : Language terminal) : Prop :=
   GeneralGrammar.Generated L <-> RecursivelyEnumerable L
@@ -1293,6 +1384,21 @@ theorem boolean_finite_general_grammar_generated_is_recursively_enumerable_of_co
           exact
             boolean_general_grammar_generated_is_recursively_enumerable_of_concrete_grammar_compiler
               hcompile (nonterminal := nonterminal) G hG.right
+
+theorem boolean_finite_general_grammar_generated_is_recursively_enumerable_of_concrete_finite_grammar_compiler
+    (hcompile : ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction)
+    {L : Language Bool}
+    (h : FiniteGeneralGrammarGenerated L) :
+    RecursivelyEnumerableLanguage L := by
+  cases h with
+  | intro nonterminal hnonterminal =>
+      cases hnonterminal with
+      | intro G hG =>
+          cases hcompile (nonterminal := nonterminal) G hG.left with
+          | intro D hD =>
+              exact
+                boolean_general_grammar_generated_is_recursively_enumerable_of_concrete_description
+                  G hD hG.right
 
 theorem finite_general_grammar_generated_language_is_program_acceptable
     {L : Language terminal}

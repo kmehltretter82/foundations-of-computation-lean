@@ -398,6 +398,12 @@ noncomputable def toStagedProgram (P : FiniteDovetailProgram) :
 def Compiled (P : FiniteDovetailProgram) : Prop :=
   BoolProgramCompiledByDescription P.toStagedProgram P.decider.compile
 
+def CompilerConstruction : Prop :=
+  forall accept reject : FiniteAcceptorProgram,
+    exists decider : FiniteBoolProgram,
+      ({ accept := accept, reject := reject, decider := decider } :
+        FiniteDovetailProgram).Compiled
+
 theorem programBoolDecidableByDescription
     (P : FiniteDovetailProgram)
     {L : Language Bool}
@@ -418,6 +424,20 @@ theorem turingDecidable
     TuringDecidable L :=
   programBoolDecidableByDescription_turingDecidable
     (programBoolDecidableByDescription P htraces hcompiled)
+
+theorem turingDecidable_of_compilerConstruction
+    (hcompile : CompilerConstruction)
+    {accept reject : FiniteAcceptorProgram}
+    {L : Language Bool}
+    (htraces :
+      ComplementaryAcceptanceTraces accept.trace reject.trace L) :
+    TuringDecidable L := by
+  cases hcompile accept reject with
+  | intro decider hcompiled =>
+      exact turingDecidable
+        ({ accept := accept, reject := reject, decider := decider } :
+          FiniteDovetailProgram)
+        htraces hcompiled
 
 end FiniteDovetailProgram
 
@@ -451,6 +471,29 @@ def descriptionOutputRange (P : FinitePartialUnaryRangeProgram) :
     Language Bool :=
   fun out => exists w : Word Unit, exists n : Nat,
     P.description.HaltsWithOutputIn n (encodeInput w) out
+
+def OutputComplete (P : FinitePartialUnaryRangeProgram) : Prop :=
+  forall w : Word Unit,
+    P.description.HaltsOnInput (encodeInput w) ->
+      exists out : Word Bool,
+        P.description.HaltsWithOutput (encodeInput w) out
+
+def OutputFunctional (P : FinitePartialUnaryRangeProgram) : Prop :=
+  forall w : Word Unit, forall out₁ out₂ : Word Bool,
+    P.description.HaltsWithOutput (encodeInput w) out₁ ->
+      P.description.HaltsWithOutput (encodeInput w) out₂ ->
+        out₁ = out₂
+
+noncomputable def outputFunction (P : FinitePartialUnaryRangeProgram) :
+    Word Unit -> Option (Word Bool) :=
+  fun w => by
+    classical
+    exact
+      if h : exists out : Word Bool,
+          P.description.HaltsWithOutput (encodeInput w) out then
+        some (Classical.choose h)
+      else
+        none
 
 theorem outputRange_equal_descriptionOutputRange
     (P : FinitePartialUnaryRangeProgram) :
@@ -486,6 +529,70 @@ theorem outputRange_equal_descriptionOutputRange
             exists n
             unfold toStagedProgram
             simp [hn.left, hn.right, Tape.toOutput?_output]
+
+theorem outputFunction_compiledByDescription
+    (P : FinitePartialUnaryRangeProgram)
+    (hD : P.description.WellFormed)
+    (hcomplete : P.OutputComplete) :
+    PartialFunctionCompiledByDescription
+      P.outputFunction (fun _ : Unit => true) P.description := by
+  constructor
+  · exact hD
+  · intro w
+    classical
+    by_cases h : exists out : Word Bool,
+        P.description.HaltsWithOutput (encodeInput w) out
+    · simp [outputFunction, h]
+      exact Classical.choose_spec h
+    · simp [outputFunction, h]
+      intro hhalt
+      exact h (hcomplete w hhalt)
+
+theorem partialRange_outputFunction_equal_descriptionOutputRange
+    (P : FinitePartialUnaryRangeProgram)
+    (hfunctional : P.OutputFunctional) :
+    Language.Equal
+      (PartialRangeLanguage P.outputFunction)
+      P.descriptionOutputRange := by
+  intro out
+  constructor
+  · intro h
+    cases h with
+    | intro w hw =>
+        classical
+        by_cases hex : exists out : Word Bool,
+            P.description.HaltsWithOutput (encodeInput w) out
+        · simp [outputFunction, hex] at hw
+          have hchoose := Classical.choose_spec hex
+          rw [hw] at hchoose
+          exact Exists.intro w hchoose
+        · simp [outputFunction, hex] at hw
+  · intro h
+    cases h with
+    | intro w hw =>
+        classical
+        have hout :
+            P.description.HaltsWithOutput (encodeInput w) out := hw
+        exists w
+        let hex : exists out : Word Bool,
+            P.description.HaltsWithOutput (encodeInput w) out :=
+          Exists.intro out hout
+        simp [outputFunction, hex]
+        exact hfunctional w (Classical.choose hex) out
+          (Classical.choose_spec hex) hout
+
+theorem compiledPartialUnaryRange_descriptionOutputRange
+    (P : FinitePartialUnaryRangeProgram)
+    (hD : P.description.WellFormed)
+    (hcomplete : P.OutputComplete)
+    (hfunctional : P.OutputFunctional) :
+    CompiledPartialUnaryRange P.descriptionOutputRange :=
+  Exists.intro P.outputFunction
+    (Exists.intro P.description
+      (And.intro
+        (outputFunction_compiledByDescription P hD hcomplete)
+        (partialRange_outputFunction_equal_descriptionOutputRange
+          P hfunctional)))
 
 end FinitePartialUnaryRangeProgram
 
