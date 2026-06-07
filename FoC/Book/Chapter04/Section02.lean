@@ -252,6 +252,12 @@ def englishNounExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
         (BNF.Expr.alt (bnfTerminalExpr BNFExampleTerminal.cat)
           (bnfTerminalExpr BNFExampleTerminal.computer))))
 
+/-!
+The Java-like fragment is intentionally layered. Statements refer to blocks,
+conditionals, loops, assignments, and expressions; those pieces are then checked
+by concrete expansion examples later in the file.
+-/
+
 def javaStatementExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
   BNF.Expr.alt (bnfNonterminalExpr BNFExampleNT.blockStatement)
     (BNF.Expr.alt (bnfNonterminalExpr BNFExampleNT.ifStatement)
@@ -338,6 +344,12 @@ def realMantissaExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
       (BNF.Expr.optional realFractionExpr))
     realFractionExpr
 
+/-!
+The numeric examples show how optional signs, repeated digit sequences,
+fractional parts, and optional exponents combine into a compact BNF expression
+while still expanding to explicit token sequences.
+-/
+
 def realNumberExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
   BNF.Expr.seq (BNF.Expr.optional signAlternativeExpr)
     (BNF.Expr.seq realMantissaExpr
@@ -408,7 +420,7 @@ def compoundPropositionExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
       (BNF.Expr.seq propositionConnectiveExpr propositionOperandExpr))
 
 /-!
-## Checked Expansions
+**Checked Expansions.**
 
 The theorems below prove concrete expansions from the BNF expressions. They
 serve as small executable checks that optional parts, repetition, alternatives,
@@ -544,6 +556,12 @@ theorem bnf_english_noun_dog_expands :
   apply BNF.Expr.Expands.altLeft
   exact BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.dog)
 
+/-!
+The Java statement examples begin with small statements and then scale up to
+block nesting and expression precedence. Each theorem chooses the relevant
+alternative branch before composing the subexpression expansions.
+-/
+
 theorem bnf_java_statement_if_expands :
     BNF.Expr.Expands javaStatementExpr [bnfNonterminal BNFExampleNT.ifStatement] := by
   unfold javaStatementExpr
@@ -674,6 +692,12 @@ theorem bnf_java_parenthesized_factor_expands :
     (BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.expression))
       (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.rparen)))
+
+/-!
+The real-number checks are longer because every optional or repeated component
+has to choose a branch. The proofs make those choices explicit: sign, mantissa,
+fraction, exponent marker, exponent sign, and exponent digits.
+-/
 
 theorem bnf_real_number_decimal_with_exponent_expands :
     BNF.Expr.Expands realNumberExpr
@@ -899,6 +923,12 @@ theorem bnf_java_variable_field_index_field_expands :
       (BNF.Expr.repeat_cons hIndex
         (BNF.Expr.repeat_cons hField
           (BNF.Expr.repeat_empty javaVariableTailExpr))))
+
+/-!
+The final examples exercise nested Java and proposition expressions. They are
+not new theory; they demonstrate that the BNF constructors compose through
+larger concrete examples with alternatives, repetition, and optional clauses.
+-/
 
 theorem bnf_java_try_catch_without_finally_expands :
     BNF.Expr.Expands javaTryCatchExpr

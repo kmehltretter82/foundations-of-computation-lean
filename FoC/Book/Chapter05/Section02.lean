@@ -24,6 +24,21 @@ The reusable modules are {module}`FoC.Computability.Enumerable`,
 The guiding distinction is total decision versus semi-decision. Recursive
 languages have deciders. Recursively enumerable languages have recognizers or
 listings: members eventually appear, but nonmembers may never be ruled out.
+
+The formal page separates three levels of argument.
+
+* At the semantic level, traces, listings, ranges, partial functions, and staged
+  programs are related directly.
+* At the compiler-principle level, those staged programs are connected to
+  Turing machines by named construction hypotheses.
+* At the finite-description level, concrete supplied descriptions and finite
+  program records expose the exact construction surfaces still needed for fully
+  executable machine descriptions.
+
+This makes the theorem statements honest about implementation work. When a
+textbook proof says to dovetail two recognizers, this page proves the trace-level
+dovetailing core and names the remaining finite compiler construction instead
+of treating it as implicit.
 -/
 
 open Languages
@@ -43,6 +58,12 @@ The construction principles are kept as explicit hypotheses where the reusable
 library avoids assuming a concrete universal machine. This lets the page state
 the textbook theorem shapes without smuggling in unproved implementation
 details.
+
+The many definitions at the start of the file are mostly vocabulary adapters:
+they give book-facing names to reusable predicates, staged-program compiler
+principles, finite program descriptions, and concrete machine-description
+relations. The theorem groups later in the page explain how those names fit
+together.
 -/
 
 def RecursivelyEnumerableLanguage (L : Language alpha) : Prop :=
@@ -129,6 +150,13 @@ def ProgramBoolDecidableLanguage (L : Language alpha) : Prop :=
 def ProgramAcceptableLanguage (L : Language alpha) : Prop :=
   ProgramAcceptable L
 
+/-!
+The next group changes representation level. The preceding staged-program
+predicates are semantic; the description predicates say that a supplied finite
+machine description realizes the same staged computation. Later theorems use
+these bridges to state exactly which compiler facts are still assumptions.
+-/
+
 def ConcreteMachineDescriptionAccepts
     (D : MachineDescription) (L : Language Bool) : Prop :=
   MachineDescriptionAcceptsLanguage D L
@@ -152,6 +180,13 @@ def ConcreteProgramAcceptableByDescription
 def ConcreteProgramBoolDecidableByDescription
     (L : Language Bool) : Prop :=
   ProgramBoolDecidableByDescription L
+
+/-!
+Finite program wrappers give concrete handles for the examples and compiler
+interfaces used below. They expose traces, compiled descriptions, staged
+programs, and output-range conditions while keeping the reusable implementation
+in the computability library.
+-/
 
 def ConcreteFiniteAcceptorProgram : Type :=
   FiniteAcceptorProgram
@@ -240,7 +275,7 @@ noncomputable def AcceptanceTraceStagedRecognizer
   TraceRecognizerProgram trace
 
 /-!
-## Complements and Extensionality
+**Complements and Extensionality.**
 
 Recursive languages are closed under complement, stopped deciders can be
 swapped to decide complements, and both recursive and recursively enumerable
@@ -249,6 +284,11 @@ properties are invariant under language equality.
 The contrast with recursively enumerable languages is important: complement
 closure is immediate for deciders, but not for recognizers unless a recognizer
 for the complement is also available.
+
+These lemmas are small but structurally important. They make later equivalence
+theorems insensitive to the particular predicate expression used for a language,
+and they keep complement arguments reusable rather than tied to one concrete
+machine.
 -/
 
 theorem recursive_language_complement {L : Language alpha}
@@ -286,7 +326,7 @@ theorem recursively_enumerable_language_of_equal {L K : Language alpha}
   Computability.recursivelyEnumerable_of_equal h hEq
 
 /-!
-## Traces and Dovetailing
+**Traces and Dovetailing.**
 
 Acceptance traces represent finite-stage evidence for RE languages. With
 complementary traces, bounded dovetailing eventually classifies each input and
@@ -295,6 +335,12 @@ gives the formal core of the RE/co-RE-to-recursive theorem.
 A trace is a time-indexed witness that some recognizer has accepted by a
 bounded stage. Dovetailing searches both the language trace and complement
 trace in increasing bounds until one side hits.
+
+This is the didactic center of the page. The trace-level dovetailer is a
+concrete staged program: it is not merely a postulated language theorem. The
+remaining compiler hypotheses say exactly what is still needed to turn that
+staged program into a concrete Turing-machine description in every intended
+setting.
 -/
 
 theorem partial_computable_function_domain_is_recursively_enumerable
@@ -350,6 +396,13 @@ theorem recursively_enumerable_language_is_program_acceptable
   cases recursively_enumerable_language_has_acceptance_trace h with
   | intro trace htrace =>
       exact acceptance_trace_has_program_acceptable_language htrace
+
+/-!
+Complementary traces are the finite evidence supplied by recognizers for a
+language and for its complement. Soundness says a hit on one side decides the
+input's status; eventuality says at least one side eventually hits for every
+input.
+-/
 
 theorem re_and_co_re_have_complementary_acceptance_traces
     {L : Language alpha}
@@ -480,6 +533,13 @@ theorem re_and_co_re_have_program_bool_decider
     ProgramBoolDecidableLanguage L :=
   Computability.reCoRe_programBoolDecidable h
 
+/-!
+This is the compiler handoff. The trace-level dovetailer already decides the
+language as a staged program; the following theorems explain how different
+compiler hypotheses turn that staged decider into an ordinary recursive-language
+statement.
+-/
+
 theorem dovetailing_decidable_construction_of_staged_program_compiler
     (hcompile : StagedBoolDeciderCompilationConstruction alpha) :
     DovetailingDecidableConstruction alpha :=
@@ -537,6 +597,13 @@ theorem recursive_language_iff_re_and_co_re_of_concrete_dovetail_description_com
     (Computability.reCoReToDecidablePrinciple_of_dovetailDescriptionCompiler
       hcompile)
     L
+
+/-!
+The concrete-description consequences are bookkeeping rather than new
+diagonalization. They say that once a program or Boolean program is compiled by
+a well-formed description, the usual Turing-acceptable or Turing-decidable
+classification follows.
+-/
 
 theorem concrete_machine_description_accepts_turing_acceptable
     {D : MachineDescription} {L : Language Bool}
@@ -625,8 +692,14 @@ theorem concrete_finite_trace_recognizer_recursively_enumerable
     (htrace : LanguageAcceptanceTrace
       (ConcreteFiniteAcceptorTrace P) L) :
     RecursivelyEnumerableLanguage L :=
-  Computability.FiniteAcceptorProgram.traceRecognizer_turingAcceptable
+      Computability.FiniteAcceptorProgram.traceRecognizer_turingAcceptable
     P hD htrace
+
+/-!
+The next cluster is the deciding analogue of the acceptor cluster above. Boolean
+programs compile to descriptions that decide a language, while dovetail programs
+combine two finite acceptor traces into one Boolean decision procedure.
+-/
 
 theorem concrete_finite_bool_program_compiled_by_description
     (P : ConcreteFiniteBoolProgram)
@@ -695,6 +768,13 @@ theorem concrete_finite_dovetail_program_turing_decidable_of_compiler_constructi
     using
       Computability.FiniteDovetailProgram.turingDecidable_of_compilerConstruction
         hcompile htraces
+
+/-!
+Stopped deciders supply a concrete source of complementary traces: one trace
+looks for a halted accepting output, while the other looks for a halted
+rejecting output. This connects the Section 5.1 machine-level decider facts to
+the dovetailing proof in this section.
+-/
 
 theorem stopped_decider_has_complementary_output_traces
     {M : TuringMachine symbol state}
@@ -819,7 +899,7 @@ theorem recursive_iff_re_co_re_construction_of_principles
     haccept hdovetail
 
 /-!
-## Listings and Ranges
+**Listings and Ranges.**
 
 Listable languages are represented by streams of words. The range theorems
 connect listability with unary string functions, matching the book's
@@ -828,6 +908,13 @@ enumerator viewpoint.
 The list may repeat words and does not have to decide absence. What matters is
 eventual appearance: every member of the language occurs somewhere in the
 stream.
+
+The formalization includes total listings, partial listings that can represent
+the empty language, unary-input range functions, and partial-function programs.
+These versions are extensionally equivalent at the semantic layer. The concrete
+compiled-range theorems then identify the finite output-completeness and
+functionality conditions needed to recover the same range from a supplied
+machine description.
 -/
 
 def LanguageListedBy (stream : Nat -> Word alpha) (L : Language alpha) : Prop :=
@@ -911,6 +998,12 @@ theorem unary_input_string_length (n : Nat) :
     Word.Length (UnaryInputString n) = n :=
   Computability.unaryInputWord_length n
 
+/-!
+Unary inputs turn an index into a word. This small coding step is what makes a
+list stream look like the range of a string function, and it also explains why
+partial listings become partial unary functions rather than total ones.
+-/
+
 theorem unary_function_range_is_listed
     (f : Word Unit -> Word output) :
     LanguageListedBy
@@ -965,6 +1058,13 @@ theorem partially_listable_language_has_partial_unary_range_function
       Language.Equal (PartialFunctionRangeLanguage f) L :=
   Computability.partiallyListable_has_partial_unary_range_function h
 
+/-!
+The range direction goes back from a stream to a function. Unary inputs encode
+the stream index, so a total stream becomes a total unary function and a partial
+stream becomes a partial unary function. The following equivalences package that
+translation as language-class facts.
+-/
+
 theorem listable_language_range_of_unary_string_function
     {L : Language output}
     (h : LanguageListable L) :
@@ -998,6 +1098,12 @@ theorem partially_listable_language_iff_partial_range_of_unary_string_function
     (L : Language output) :
     LanguagePartiallyListable L <-> PartialRangeOfUnaryStringFunction L :=
   Computability.partiallyListable_iff_partialRangeOfUnaryFunction L
+
+/-!
+Programs are the operational version of the same listing/range story. A listing
+program may skip outputs by being partial; a partial unary range program
+generates exactly the language elements that appear as defined outputs.
+-/
 
 def LanguageListingProgram (output : Type u) : Type u :=
   ListingProgram output
@@ -1079,6 +1185,13 @@ theorem partially_listable_language_iff_partial_unary_function_program_range
       LanguagePartialUnaryFunctionProgramRange L :=
   Computability.partiallyListable_iff_partialUnaryFunctionProgramRange L
 
+/-!
+The compiled-range theorems state what a concrete description must provide to
+serve as an enumerator. The semantic range is already a partial unary range; the
+compiler hypothesis upgrades it to a machine-description-backed range over the
+Boolean alphabet.
+-/
+
 theorem concrete_partial_function_compiled_turing_computable_partial
     {f : Word input -> Option (Word Bool)}
     {encodeInput : input -> Bool}
@@ -1141,6 +1254,13 @@ theorem partially_listable_language_has_concrete_compiled_partial_unary_program_
     ConcreteCompiledPartialUnaryFunctionProgramRange L :=
   Computability.compiledPartialUnaryFunctionProgramRange_of_partiallyListable
     hcompile h
+
+/-!
+Finite partial-unary programs make the range story executable. Output
+completeness supplies a compiled partial function, while functionality ensures
+that the output relation really determines one partial function and therefore
+one range language.
+-/
 
 theorem concrete_finite_partial_unary_output_range_is_program_range
     (P : ConcreteFinitePartialUnaryRangeProgram) :
@@ -1256,7 +1376,7 @@ def AcceptableRangeEquivalenceStatement (L : Language alpha) : Prop :=
   AcceptableRangeEquivalence L
 
 /-!
-## General Grammars and RE Languages
+**General Grammars and RE Languages.**
 
 The final definitions relate unrestricted grammar generation to recursive
 enumerability, then state the recursive-language equivalence for a language
@@ -1267,6 +1387,12 @@ turns derivation length into an acceptance trace and a staged recognizer
 program.  The full Turing-machine equivalence remains a theorem shape until
 the formalization has the universal/interpreter infrastructure needed to
 compile that staged recognizer.
+
+For finite-production general grammars, the page already contains the
+program-acceptability bridge and the supplied-description consequences. What
+remains open is the concrete finite-description compiler that uniformly builds
+the recognizer machine description, plus the reverse construction from concrete
+Turing recognizers back to unrestricted grammars.
 -/
 
 def GeneralGrammarGeneratedLanguage (G : GeneralGrammar terminal nonterminal) :
@@ -1302,6 +1428,12 @@ def FiniteGeneralGrammarGenerated (L : Language terminal) : Prop :=
 
 def GeneralGrammarPairGenerated (L : Language terminal) : Prop :=
   GeneralGrammar.Generated L ∧ GeneralGrammar.Generated (Language.Compl L)
+
+/-!
+For unrestricted grammars, a finite derivation is a finite acceptance trace.
+The first theorems in this block build that trace-level recognizer before any
+machine compiler is assumed.
+-/
 
 theorem general_grammar_derivation_trace_accepts_generated_language
     (G : GeneralGrammar terminal nonterminal) :
@@ -1429,6 +1561,13 @@ theorem finite_general_grammar_generated_language_is_recursively_enumerable_of_s
   Computability.finiteProductionGenerated_recursivelyEnumerable_of_programCompiler
     hcompile h
 
+/-!
+The last equivalence is stated in terms of a grammar for the language and a
+grammar for its complement. Once grammar generation and recursive enumerability
+are known equivalent, this is exactly the RE/co-RE characterization of recursive
+languages.
+-/
+
 theorem recursive_language_iff_general_grammar_pair
     {L : Language terminal}
     (hre : RecursiveIffReCoREConstruction terminal)
@@ -1465,6 +1604,10 @@ The theorem equating general grammars with recursively enumerable languages is
 recorded as an explicit statement shape. The construction proof is deferred
 until the formalization has enough machine-encoding and simulation
 infrastructure.
+
+The declarations above are therefore useful now: they pin down the exact
+interface that the future construction must satisfy, and they already allow
+downstream theorems to be stated without changing their mathematical shape.
 -/
 
 end Section02

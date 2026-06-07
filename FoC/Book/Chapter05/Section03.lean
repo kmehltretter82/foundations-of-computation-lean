@@ -22,6 +22,13 @@ The page supplies a concrete pair-code alphabet for halting-problem reductions.
 It also exposes the first concrete machine-description syntax and interpreter.
 Universal-machine execution is still relative to a later proof that this
 interpreter can itself be implemented by a concrete machine.
+
+The structure mirrors the standard textbook argument but keeps the implementation
+boundary visible. Abstract decoder and diagonalization theorems are proved in
+full generality. Concrete code words, machine descriptions, pair encodings, and
+interpreter semantics are present. The final step, a single finite universal
+machine implementing the decoder relation, remains an explicit construction
+target rather than an implicit assumption.
 -/
 
 open Languages
@@ -37,6 +44,11 @@ halting-problem variants.
 The wrappers distinguish two kinds of impossibility. An undecidable language
 has no total decider. A non-acceptable language has no recognizer at all. The
 diagonal languages are the standard tools for proving such statements.
+
+The concrete definitions in this group are intentionally low-level: they expose
+machine code symbols, description encoders and decoders, well-formed transition
+tables, interpreter configurations, and description-backed self-halting and
+pair-halting languages. This gives later construction work a precise target.
 -/
 
 def NonComputableStringFunction (f : Word input -> Word output) : Prop :=
@@ -133,6 +145,13 @@ def TuringDiagonalPairMap
     (encodePair : Word code -> Word code -> Word pairSymbol) :
     Word code -> Word pairSymbol :=
   DiagonalPairMap encodePair
+
+/-!
+The concrete alphabet below is the file's current machine-code model. It
+provides pair encodings, finite code symbols, machine descriptions, decoders,
+interpreter configurations, and the encoded self-halting languages used by the
+later reduction theorems.
+-/
 
 def ConcretePairCodeSymbol (code : Type u) : Type u :=
   PairCodeSymbol code
@@ -252,7 +271,7 @@ def ConcreteUniversalMachineSpec
   UniversalTuringMachineSpec universal ConcreteMachineCodeAccepts
 
 /-!
-## Reductions and Closure
+**Reductions and Closure.**
 
 Undecidability and non-acceptability are transported by equality and by the
 appropriate reduction notions. Complement theorems record that decidability
@@ -261,6 +280,11 @@ and undecidability are symmetric under language complement.
 A reduction packages the idea "if the target problem were solvable, then the
 source problem would be solvable." Therefore an impossible source problem
 transfers impossibility to the target.
+
+The section uses two reduction strengths. Decidable reductions are enough for
+undecidability transfer. Acceptable reductions are used when the conclusion is
+non-acceptability. The pair-halting results later specialize these general
+transfer principles to concrete diagonal pair encodings.
 -/
 
 theorem undecidable_of_not_decidable {L : Language alpha}
@@ -352,7 +376,7 @@ theorem decoder_recognizes_of_equal
   Computability.decoderRecognizes_of_equal h hEq
 
 /-!
-## Diagonalization
+**Diagonalization.**
 
 The diagonal language differs from every listed row. If a decoder were
 universal for all languages, the self-diagonal language would be one of its
@@ -361,6 +385,10 @@ rows, contradicting the diagonal theorem.
 The construction flips the answer on the diagonal: at code {lit}`w`, it disagrees
 with what the {lit}`w`-th decoded machine says about {lit}`w`. No row can therefore be
 the diagonal language.
+
+This block is intentionally abstract. It does not depend on a particular
+machine encoding, so it cleanly separates the mathematical contradiction from
+the engineering task of implementing a universal decoder.
 -/
 
 theorem diagonal_language_not_self_recognized (acceptsSelf : Word code -> Prop) :
@@ -408,7 +436,7 @@ theorem exists_nonacceptable_language_if_decoder_universal
   Computability.exists_nonacceptable_language_if_decoder_universal huniv
 
 /-!
-## Self-Halting and the Halting Problem
+**Self-Halting and the Halting Problem.**
 
 The self-diagonal language is the complement of self-halting. Under a universal
 decoder, this yields the standard undecidability and non-RE complement results,
@@ -417,6 +445,11 @@ then relates self-halting to pair-encoded halting problems.
 Self-halting asks whether a machine halts on its own code. The ordinary
 two-input halting problem is at least as hard because self-halting is the
 preimage obtained by feeding the same code into both slots.
+
+The concrete pair-code alphabet makes that preimage statement exact for encoded
+machine descriptions. The remaining computability/preimage construction
+theorems name the compiler and universal-runner facts required to turn the
+abstract reduction into the final concrete halting-problem theorem.
 -/
 
 theorem self_diagonal_equal_complement_self_halting
@@ -469,6 +502,12 @@ theorem self_halting_re_not_recursive_and_complement_not_re_if_decoder_universal
           (Language.Compl (TuringSelfHaltingLanguage decodeAccepts)) :=
   Computability.selfHalting_re_not_recursive_and_compl_not_re_if_decoder_universal
     haccept huniv hself
+
+/-!
+These membership lemmas unfold the halting-problem encodings. They make the
+two-input problem explicit either as concatenation or as a supplied pair encoder,
+then identify self-halting as the diagonal preimage of pair halting.
+-/
 
 theorem halting_problem_mem
     (haltsOnCodeInput : Word code -> Word code -> Prop)
@@ -581,6 +620,13 @@ theorem diagonal_pair_preimage_pair_halting_equal_self_halting
     (haltsOnCodeInput := haltsOnCodeInput)
     hinj
 
+/-!
+The next facts specialize the abstract decoder story to concrete machine
+descriptions. Encoding then decoding a description is exact, and a universal
+machine specification is phrased as an iff between universal-machine halting and
+the description-level acceptance relation.
+-/
+
 theorem concrete_machine_decode_encode
     (D : ConcreteMachineDescription) :
     ConcreteMachineDecode (ConcreteMachineEncode D) = some D :=
@@ -662,6 +708,12 @@ theorem concrete_machine_turing_step_of_interpreter_step
       (D.toTMConfig c) (D.toTMConfig d) :=
   MachineDescription.toTuringMachine_step_of_stepConfig
     hsource hstep
+
+/-!
+Concrete pair codes discharge the injectivity part of diagonal preimages. The
+remaining preimage principles say when a decider for pair halting would induce a
+decider for self-halting by composing with the diagonal map.
+-/
 
 def concrete_pair_code_symbol_finite
     (h : Foundation.FiniteType code) :
@@ -767,6 +819,13 @@ theorem pair_halting_problem_of_pointwise_iff
       (TuringPairHaltingProblem encodePair halts2) :=
   Computability.pairHaltingProblem_of_pointwise_iff encodePair hiff
 
+/-!
+The pair-halting transfer theorems now apply the diagonal preimage argument.
+An undecidable self-halting language forces the corresponding pair-halting
+language to be undecidable; universal decoders supply the self-halting
+undecidability needed for the standard theorem.
+-/
+
 theorem pair_halting_undecidable_if_self_halting_undecidable
     {encodePair : Word code -> Word code -> Word pairSymbol}
     {haltsOnCodeInput : Word code -> Word code -> Prop}
@@ -869,6 +928,13 @@ theorem concrete_pair_halting_undecidable_if_decoder_universal_of_computable_map
   PairCodeSymbol.concretePairHalting_undecidable_if_decoder_universal_of_computable_map
     haccept hpreimage hcomputable huniv
 
+/-!
+The concrete machine statements instantiate the abstract results with the
+machine-code alphabet and description decoder. They remain conditional on the
+acceptability principle, universal decoder, and diagonal-map preimage or
+computability hypotheses named in their signatures.
+-/
+
 theorem concrete_machine_self_halting_undecidable_if_decoder_universal
     (haccept :
       DecidableToAcceptableConstruction ConcreteMachineCodeSymbol)
@@ -940,6 +1006,13 @@ theorem concrete_machine_pair_halting_undecidable_if_decoder_universal_of_comput
         (decodeAccepts := ConcreteMachineCodeAccepts)
         haccept hpreimage hcomputable huniv
 
+/-!
+The universal-machine specification is intentionally small: it only records the
+two directions between universal-machine halting on encoded pairs and the
+decoder acceptance predicate. Concrete universal machines can instantiate this
+interface later.
+-/
+
 theorem universal_machine_spec_pair_halts
     {universal : TuringMachine symbol state}
     {decodeAccepts : Word symbol -> Word symbol -> Prop}
@@ -967,6 +1040,11 @@ vocabulary without adding an unproved universal-machine assumption.
 
 Once a concrete universal machine and encoding are supplied, these statements
 can be instantiated to recover the usual textbook halting-problem theorems.
+
+This is the current status boundary for Section 5.3. The encoding, interpreter,
+compiled-machine simulation, decoder-row wrappers, and pair-code reductions are
+formalized; the finite universal-machine construction and the named concrete
+diagonal-map computability/preimage constructions remain to be discharged.
 -/
 
 end Section03

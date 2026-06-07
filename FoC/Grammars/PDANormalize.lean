@@ -552,6 +552,14 @@ theorem popNormalize_helper_transition_cons
           · simp [popNormalizedHelperTransitionRule,
               TransitionRule.Applies]
 
+/-!
+Once the normalized machine has entered a helper state, no more input is read.
+The helper state remembers the original transition rule and the part of its
+pop word that still has to be consumed.  The next lemma packages that invariant:
+starting with exactly the remembered suffix on top of the stack, the helper
+states remove it one symbol at a time and then install the original push word.
+-/
+
 theorem popNormalize_helper_computes_aux
     {M : PDA input stack state} (presentation : FinitePresentation M)
     (rule : TransitionRule input stack state)
@@ -751,6 +759,14 @@ theorem popNormalize_rule_computes
                     hstart'
               simpa [hinput, hpop] using Computes.step hstep hhelpers
 
+/-!
+The forward simulation is now local.  A one-symbol pop in the original machine
+becomes one normalized step, while a longer pop becomes a first normalized step
+into a helper state followed by the helper computation above.  This is the
+point where the normalization construction changes from bookkeeping lemmas into
+an actual simulation theorem.
+-/
+
 theorem popNormalize_simulates_step
     {M : PDA input stack state} (presentation : FinitePresentation M)
     {c d : Configuration input stack state}
@@ -809,6 +825,14 @@ theorem acceptedLanguage_subset_popNormalize
       (AcceptedLanguage (PopNormalize M presentation)) := by
   intro w hw
   exact popNormalize_accepts_of_accepts presentation hw
+
+/-!
+For the reverse inclusion we inspect the normalized transition relation.  A step
+from an original state is either an unchanged original transition, or the first
+piece of a split transition whose remaining work is represented by a helper
+state.  The disjunction below is deliberately explicit so later compression
+proofs can choose the right reconstruction without redoing the case analysis.
+-/
 
 theorem popNormalize_original_transition_cases
     {M : PDA input stack state} {presentation : FinitePresentation M}
@@ -996,6 +1020,16 @@ theorem popNormalize_helper_transition_cases
                     exact hprop
           exact popNormalizeHelperPairs_tail_mem hpair
         · exact ⟨hremaining, hpop.symm, htarget.symm, hpush.symm⟩
+
+/-!
+Compression is the inverse of the simulation story.  The proof proceeds by the
+length of the normalized computation and proves two statements together: paths
+between original states compress to genuine computations of the source PDA, and
+paths that start in helper states can be reattached to the original transition
+that created the helper.  Carrying both statements at once is what lets the
+induction consume an arbitrary normalized path without losing the context that a
+helper state encodes.
+-/
 
 theorem popNormalize_compresses_original_and_helper_computesIn
     {M : PDA input stack state} (presentation : FinitePresentation M)

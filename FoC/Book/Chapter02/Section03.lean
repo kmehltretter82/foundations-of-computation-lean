@@ -58,7 +58,7 @@ For finite universes, the book describes sets as bit vectors. This model uses
 indices.
 
 The theorems in this namespace are intentionally definitional: evaluating an
-operation at index `i` immediately reduces to the Boolean expression for that
+operation at index {lit}`i` immediately reduces to the Boolean expression for that
 bit.
 -/
 

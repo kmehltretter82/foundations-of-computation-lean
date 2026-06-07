@@ -361,6 +361,12 @@ theorem leftRegularLanguage_regular (alphabet : List terminal)
         change Word.Reverse (Word.Reverse w) ∈ L
         simpa [Word.Reverse, List.reverse_reverse] using hw
 
+/-!
+The reverse construction turns an NFA into a right-regular grammar. Transitions
+become terminal-then-state productions, accepting states get empty productions,
+and the generated language is later shown to be exactly the NFA language.
+-/
+
 def NFARightRegularProduces (M : NFA terminal state) :
     state -> SententialForm terminal state -> Prop
   | q, [] => M.accept q
@@ -464,6 +470,12 @@ theorem nfaRightRegular_accepts_to_generates (M : NFA terminal state)
           constructor <;> rfl
         simpa using yields_context hLocal (SententialForm.terminalWord w) []
       exact derives_trans hPrefix (yields_derives hFinalYield)
+
+/-!
+Soundness for the NFA-derived grammar interprets each production as one NFA
+move, or as acceptance when the production is empty. This is the local step that
+lets generated derivations collapse back to automaton paths.
+-/
 
 theorem nfaRightRegular_production_sound (M : NFA terminal state)
     {q : state} {rhs : SententialForm terminal state}

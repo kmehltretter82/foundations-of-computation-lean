@@ -17,7 +17,7 @@ running the machine folds the transition function over the input word. The
 core reusable API is {module}`FoC.Languages.DFA`.
 
 The example machine records only the information needed for its language:
-whether no `1` has been seen, exactly one `1` has been seen, or two or more
+whether no {lit}`1` has been seen, exactly one {lit}`1` has been seen, or two or more
 have been seen. This is the finite-memory intuition behind deterministic
 finite automata.
 -/
@@ -59,7 +59,7 @@ The first definitions describe the extended transition function and acceptance
 predicate. The concrete DFA above recognizes binary words with at least two
 ones, matching the section's finite-state-machine examples.
 
-`DFA.RunFrom` starts in an arbitrary state, while `DFA.Run` starts in the
+{lit}`DFA.RunFrom` starts in an arbitrary state, while {lit}`DFA.Run` starts in the
 machine's designated start state. Acceptance checks the final state after the
 whole input word has been consumed.
 -/

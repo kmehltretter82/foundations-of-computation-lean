@@ -19,7 +19,7 @@ represented by explicit countervaluations.
 
 The valid-rule declarations package a premise and conclusion into a single
 formula implication. For example, modus ponens is formalized as: whenever
-`p -> q` and `p` are true under a valuation, `q` is true under that valuation.
+{lit}`p -> q` and {lit}`p` are true under a valuation, {lit}`q` is true under that valuation.
 The invalid-rule declarations have the opposite shape: they exhibit a
 valuation that makes the premises true while the proposed conclusion is false.
 -/
@@ -96,7 +96,7 @@ inductive FormalProofStep (Statement : Type u) where
   | derived : Statement -> List Statement -> FormalProofStep Statement
 
 /-!
-`FormalProofStep` is lightweight vocabulary for the book's discussion of proof
+{lit}`FormalProofStep` is lightweight vocabulary for the book's discussion of proof
 lines: a step is either a premise or something derived from earlier statements.
 The semantic soundness of particular rules is handled by the implication
 theorems above.

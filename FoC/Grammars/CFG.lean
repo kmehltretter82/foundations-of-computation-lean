@@ -613,6 +613,12 @@ theorem reverseGrammar_hasFiniteProductions
                     ⟨rule, hrule.left, hreversedRule.right.left, rfl⟩
                 · exact hreversedRule.right.right.symm
 
+/-!
+Reversal is proved one derivation step at a time. A yield in the original grammar
+becomes a yield in the reversed grammar after reversing both the context and the
+right-hand side of the production.
+-/
+
 theorem reverseGrammar_yields {G : CFG terminal nonterminal}
     {x y : SententialForm terminal nonterminal}
     (h : Yields G x y) :
@@ -738,6 +744,13 @@ theorem rightRegular_reverseGrammar_leftRegular
       | terminalThenNonterminal a B =>
           exact LeftRegularRHS.nonterminalThenTerminal B a
 
+/-!
+The context lemmas below are the shared algebra for all closure constructions.
+They say that a derivation can be placed inside surrounding sentential forms and
+that a self-embedding derivation can be iterated, which is the proof shape used
+later for pumping-style arguments.
+-/
+
 theorem derives_context {G : CFG terminal nonterminal}
     {x y : SententialForm terminal nonterminal} (h : Derives G x y)
     (s t : SententialForm terminal nonterminal) :
@@ -818,6 +831,12 @@ theorem formLanguage_empty
     Word.Empty ∈ FormLanguage symbolLanguage [] :=
   rfl
 
+/-!
+Form-language concatenation is the semantic counterpart of list append on
+sentential forms. It provides the standard split-and-combine interface used by
+the closure proofs below.
+-/
+
 theorem formLanguage_append
     (symbolLanguage : Symbol terminal nonterminal -> Language terminal)
     (x y : SententialForm terminal nonterminal) :
@@ -894,6 +913,12 @@ theorem formLanguage_append
                               rw [hrestWord.right.right]
                             _ = Word.Concat first (Word.Concat restWord suffix) := by
                               rw [Word.concat_assoc]
+
+/-!
+Replacement soundness is the local semantic rule for one grammar step inside a
+larger context. If the replacement right-hand side denotes only words from the
+nonterminal language, then the whole surrounding form remains sound.
+-/
 
 theorem formLanguage_replace_sound
     (symbolLanguage : Symbol terminal nonterminal -> Language terminal)
@@ -1000,6 +1025,12 @@ theorem context_free_of_equal {L M : Language terminal}
           exists nt
           exists G
           exact Language.equal_trans hG hEq
+
+/-!
+Nonterminal-mapping lemmas let a grammar be embedded into a larger grammar with
+a tagged nonterminal type. The union and concatenation constructions both use
+this to reuse the original derivations without reproving them symbol by symbol.
+-/
 
 def mapYieldsNonterminal
     (f : nonterminal -> nonterminal')
@@ -1162,6 +1193,13 @@ theorem inRightForm_no_inLeft (A : left) (y : SententialForm terminal right) :
           cases h with
           | tail _ htail => exact ih htail
 
+/-!
+The union grammar has one fresh start symbol that chooses the left or right
+grammar, then all subsequent derivations remain inside that chosen side. The
+finite-production proof compiles this tagged presentation into an explicit
+finite rule list.
+-/
+
 inductive UnionProduces (G : CFG terminal left) (H : CFG terminal right) :
     SumStart left right -> SententialForm terminal (SumStart left right) -> Prop where
   | chooseLeft :
@@ -1291,6 +1329,12 @@ def UnionSymbolLanguage (G : CFG terminal left) (H : CFG terminal right) :
       Language.Union (GeneratedLanguage G) (GeneratedLanguage H)
   | Symbol.nonterminal (SumStart.inLeft A) => GeneratedFrom G A
   | Symbol.nonterminal (SumStart.inRight A) => GeneratedFrom H A
+
+/-!
+Union soundness reads a derivation in the tagged grammar back into the language
+chosen by the start rule. The inverse direction uses mapped derivations from the
+left or right grammar to build a derivation in the union grammar.
+-/
 
 theorem inLeftForm_formLanguage_to_derivation
     (G : CFG terminal left) (H : CFG terminal right)
@@ -1437,6 +1481,12 @@ theorem union_derives_sound (G : CFG terminal left) (H : CFG terminal right)
   | step hstep _ ih =>
       exact union_yields_sound G H hstep (ih hw)
 
+/-!
+The union grammar has two constructive directions, one for each summand. These
+theorems inject an existing derivation from the left or right grammar into the
+tagged grammar under the fresh start symbol.
+-/
+
 theorem union_generates_left (G : CFG terminal left) (H : CFG terminal right)
     {w : Word terminal} (hw : w ∈ GeneratedLanguage G) :
     w ∈ GeneratedLanguage (UnionGrammar G H) := by
@@ -1522,6 +1572,13 @@ theorem union_generated_language_exact (G : CFG terminal left) (H : CFG terminal
     | inr hright =>
         exact union_generates_right G H hright
 
+/-!
+The concatenation grammar also uses a fresh start symbol, but its start rule
+places a left derivation followed by a right derivation. The harder direction is
+showing that every derivation from that start form preserves the left/right zone
+split.
+-/
+
 inductive ConcatProduces (G : CFG terminal left) (H : CFG terminal right) :
     SumStart left right -> SententialForm terminal (SumStart left right) -> Prop where
   | startRule :
@@ -1554,6 +1611,12 @@ def concatRightProduction (rule : Production terminal right) :
     Production terminal (SumStart left right) where
   lhs := SumStart.inRight rule.lhs
   rhs := inRightForm rule.rhs
+
+/-!
+The concatenation grammar has one new start production plus tagged copies of the
+left and right production lists. The finite-production proof records that
+concrete list before the soundness and inverse-zone lemmas inspect it.
+-/
 
 theorem concat_hasFiniteProductions
     {G : CFG terminal left} {H : CFG terminal right}
@@ -1628,6 +1691,12 @@ theorem concat_hasFiniteProductions
                                   ((hrulesH base.lhs base.rhs).mpr
                                     (Exists.intro base
                                       (And.intro hbaseMem (And.intro rfl rfl))))
+
+/-!
+The concat inverse proofs need context-zone lemmas: an equality whose middle
+symbol is tagged as left can only have come from a left-tagged region, up to the
+surrounding context. This prevents left and right derivations from being mixed.
+-/
 
 theorem inLeftForm_context_of_eq
     {x : SententialForm terminal left} {y : SententialForm terminal right}
@@ -1711,6 +1780,12 @@ theorem inLeftForm_context_of_eq
                         rw [hvx.right.left]
                         rfl
                       · exact hvx.right.right
+
+/-!
+The right-zone version is slightly different because right-tagged forms occur
+after the left grammar has already produced terminals. These lemmas isolate the
+right component while preserving the terminal prefix around it.
+-/
 
 theorem inRightForm_context_only_of_eq
     {y : SententialForm terminal right}
@@ -1848,6 +1923,13 @@ theorem inRightForm_context_of_eq
                         rw [hvy.right.left]
                         rfl
                       · exact hvy.right.right
+
+/-!
+Zone inversion is the central concatenation argument. If a sentential form is a
+tagged left part followed by a tagged right part, then one derivation step either
+rewrites inside the left zone or inside the right zone; it cannot cross the
+boundary or reintroduce the start symbol.
+-/
 
 theorem concat_zone_yields_inv (G : CFG terminal left) (H : CFG terminal right)
     {x : SententialForm terminal left} {y : SententialForm terminal right}
@@ -2029,6 +2111,12 @@ theorem concat_terminal_split_of_forms
             (And.intro (SententialForm.toWord?_some_eq_terminalWord hyWord)
               hwy.right.right)
 
+/-!
+After zone inversion, the language proof is straightforward: one mapped
+derivation produces the left word, one mapped derivation produces the right word,
+and terminal forms split into exactly the two generated pieces.
+-/
+
 theorem concat_generates (G : CFG terminal left) (H : CFG terminal right)
     {x y : Word terminal}
     (hx : x ∈ GeneratedLanguage G) (hy : y ∈ GeneratedLanguage H) :
@@ -2163,6 +2251,12 @@ theorem concat_generated_language_exact (G : CFG terminal left) (H : CFG termina
                     rw [hw]
                     exact concat_generates G H hxG hyH
 
+/-!
+Kleene star uses a fresh start symbol that either stops with the empty word or
+emits one body derivation and recurs. The body nonterminals are tagged copies of
+the original grammar's nonterminals.
+-/
+
 inductive StarNT (nt : Type u) where
   | start : StarNT nt
   | body : nt -> StarNT nt
@@ -2212,6 +2306,12 @@ def starBodyProduction (rule : Production terminal nt) :
     Production terminal (StarNT nt) where
   lhs := StarNT.body rule.lhs
   rhs := starBodyForm rule.rhs
+
+/-!
+The star grammar adds a stop production, a recursive "more" production, and
+tagged copies of the body grammar. The finite-production proof makes that finite
+list explicit before the semantic induction over repeated pieces begins.
+-/
 
 theorem star_hasFiniteProductions
     {G : CFG terminal nt}
@@ -2301,6 +2401,12 @@ theorem starBodyForm_formLanguage_to_derivation
                   exact And.intro htail.left
                     (And.intro (ih htail.right.left) htail.right.right)
 
+/-!
+Star soundness follows the grammar structure: stop generates the empty list of
+pieces, more adds one generated body word and recurses, and body productions are
+interpreted through the tagged body form language.
+-/
+
 theorem star_production_sound (G : CFG terminal nt)
     {A : StarNT nt} {rhs : SententialForm terminal (StarNT nt)}
     (hprod : StarProduces G A rhs) :
@@ -2377,6 +2483,12 @@ theorem star_derives_sound (G : CFG terminal nt)
       exact hw
   | step hstep _ ih =>
       exact star_yields_sound G hstep (ih hw)
+
+/-!
+The final star theorems prove both directions. Soundness interprets every
+generated word as a concatenation of generated pieces; completeness builds a
+star derivation by repeatedly using the recursive start production.
+-/
 
 theorem star_generates_inv (G : CFG terminal nt) {w : Word terminal}
     (h : w ∈ GeneratedLanguage (StarGrammar G)) :

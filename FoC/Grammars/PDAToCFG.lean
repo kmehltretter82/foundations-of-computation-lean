@@ -562,6 +562,13 @@ theorem toCFG_production_sound
       exact computes_trans hstep'
         (computes_trans hchainComp' htopComp')
 
+/-!
+The abstract production relation is implemented by a finite production list.
+Soundness reads a list entry back into one of the abstract production cases, and
+completeness shows that every abstract production was emitted by the finite
+enumeration.
+-/
+
 theorem toCFG_producesFromList_sound
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {A : ToCFGNonterminal stack state}
@@ -667,6 +674,13 @@ theorem toCFG_producesFromList_sound
           simpa [List.append_assoc] using hprod
       | cons head tail =>
           simp [hpop] at hbefore
+
+/-!
+Completeness for the finite list runs the previous theorem in reverse. Each
+abstract production constructor is matched with the exact list entry emitted by
+the production-list generator, using the finite presentation to recover the
+recorded transition rule.
+-/
 
 theorem toCFG_producesFromList_complete
     {M : PDA input stack state} {presentation : FinitePresentation M}
@@ -802,6 +816,13 @@ theorem toCFG_producesFromList_iff
   · exact toCFG_producesFromList_sound
   · exact toCFG_producesFromList_complete
 
+/-!
+The next helpers move from one production to derivations of terminal words.
+They introduce chain derivations, which mirror the stack word that a PDA
+transition pushes and let the grammar derive the input consumed while later
+summaries discharge each pushed symbol.
+-/
+
 theorem toCFG_derives_of_production
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {A : ToCFGNonterminal stack state}
@@ -926,6 +947,12 @@ theorem toCFGChainDerives_append
   | cons hbetween htail ih =>
       simpa [Word.Concat, List.append_assoc] using
         ToCFGChainDerives.cons hbetween (ih hright)
+
+/-!
+The next derivation helpers erase form-language bookkeeping. They convert
+production-level evidence into derivations of concrete terminal words, which is
+the shape needed by the later PDA-step simulations.
+-/
 
 theorem toCFG_derives_of_production_word
     {M : PDA input stack state} {presentation : FinitePresentation M}
@@ -1055,6 +1082,12 @@ theorem toCFG_emptyBeforeTop_derives
   simpa [List.append_assoc] using
     formLanguage_append_mem
       (CFG.DerivationSymbolLanguage (ToCFG M presentation)) hpref htail
+
+/-!
+The preceding derivation lemmas work with an explicit right-hand-side chain.
+The following variants package that chain as a derivation object and split the
+read and epsilon cases, matching the way PDA steps are analyzed later.
+-/
 
 theorem toCFG_popStep_of_chainDerives
     {M : PDA input stack state} {presentation : FinitePresentation M}
@@ -1225,6 +1258,12 @@ theorem toCFG_emptyBeforeTopEpsilon_of_chainDerives
         (ToCFG M presentation))
       htop
 
+/-!
+Now the proof turns one concrete PDA step into the corresponding CFG
+derivation. There are separate empty-stack and top-pop cases because the summary
+nonterminals describe those two stack effects directly.
+-/
+
 theorem toCFG_emptyRead_of_step_emptyStack
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {p q : state} {a : input} {restInput : Word input}
@@ -1368,6 +1407,13 @@ theorem toCFG_emptyEpsilon_of_step_emptyStack
         (toCFG_emptyRefl_derives
           (M := M) (presentation := presentation) (q := q))
     simpa [Word.Concat, Word.Empty] using hbody
+
+/-!
+The top-pop step cases are the stack-sensitive analogue of the empty-stack
+cases. The PDA step consumes a top symbol, the chain derivation handles whatever
+the transition pushes, and the generated word records the input consumed by the
+step plus the input consumed while discharging the pushed stack.
+-/
 
 theorem toCFG_betweenRead_of_step_topPop
     {M : PDA input stack state} {presentation : FinitePresentation M}
@@ -1519,6 +1565,13 @@ theorem toCFG_betweenEpsilon_of_step_topPop
             (presentation := presentation) q)
       simpa [Word.Concat, Word.Empty] using hbody
 
+/-!
+After the individual read and epsilon cases, the next lemmas package them into
+case splitters. They are convenient interfaces for induction on computations:
+the caller supplies a PDA step, and the lemma returns the consumed prefix plus
+the matching summary derivation.
+-/
+
 theorem toCFG_emptyDerives_cases_of_step_emptyStack
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {p q : state} {sourceInput targetInput : Word input}
@@ -1629,6 +1682,12 @@ theorem toCFG_betweenDerives_cases_of_step_topPop
     exact toCFG_betweenEpsilon_of_step_topPop
       (M := M) (presentation := presentation) hnorm hstep'
 
+/-!
+For short computations, the proof can reason by explicit step count. These
+bounded lemmas are the base cases for the later summary-computation induction:
+zero, one, and two normalized PDA steps are converted into CFG derivations.
+-/
+
 theorem step_sourceStack_empty_or_single_of_step_to_emptyStack
     {M : PDA input stack state}
     {p q : state} {sourceInput targetInput : Word input}
@@ -1708,6 +1767,12 @@ theorem toCFG_emptyDerives_of_computesIn_zero_emptyStack
       toCFG_emptyRefl_derives
         (M := M) (presentation := presentation) (q := p)
 
+/-!
+For one-step empty-stack computations, the zero-step base case above is joined
+with the step case splitter. This is the first bounded-computation theorem that
+turns a concrete PDA run into a CFG derivation.
+-/
+
 theorem toCFG_emptyDerives_of_computesIn_one_emptyStack
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {p q : state} {sourceInput targetInput : Word input}
@@ -1781,6 +1846,13 @@ theorem toCFG_betweenDerives_of_computesIn_one_topPop
     refine ⟨Word.Symbol a, ?_, ?_⟩
     · simpa [Word.Concat, Word.Symbol] using hinput
     · exact hderive
+
+/-!
+Two-step empty-stack computations are the first place where normalization
+matters. The first step may expose a temporary stack symbol; the proof handles
+that by deriving a between-summary for the top symbol and then closing the
+remaining empty-stack suffix.
+-/
 
 theorem toCFG_emptyDerives_of_computesIn_two_emptyStack
     {M : PDA input stack state} {presentation : FinitePresentation M}
@@ -1995,6 +2067,12 @@ theorem toCFG_emptyDerives_of_computesIn_two_emptyStack
               (M := M) (presentation := presentation) (q := q))
       exact ⟨topWord, hsourceConsumed, hbody⟩
 
+/-!
+The at-most-two wrapper keeps the small-computation interface uniform. It
+dispatches to the zero-, one-, or two-step theorem and hides the arithmetic case
+split from downstream conversion lemmas.
+-/
+
 theorem toCFG_emptyDerives_of_computesIn_atMostTwo_emptyStack
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -2024,6 +2102,19 @@ theorem toCFG_emptyDerives_of_computesIn_atMostTwo_emptyStack
                 (M := M) (presentation := presentation) hnorm hcomp
           | succ n =>
               omega
+
+/-!
+The summary-computation predicates are custom induction principles for the
+conversion proof. Instead of inducting over arbitrary PDA computations, they
+classify runs by the stack effect that the matching CFG nonterminal is meant to
+summarize.
+-/
+
+/-!
+The summary predicates below are a more scalable replacement for the explicit
+zero/one/two-step lemmas. They record just the stack effect that matters to the
+CFG construction: empty-stack paths and paths that remove a specified stack word.
+-/
 
 inductive EmptyStackComputesIn (M : PDA input stack state) :
     Nat -> state -> Word input -> state -> Word input -> Prop where
@@ -2143,6 +2234,13 @@ theorem toCFG_generates_of_emptyStackAcceptsIn
   rw [hinput]
   simpa [Word.Concat, Word.Empty] using hgen
 
+/-!
+Stack summaries generalize the empty-stack predicate. They describe the input
+consumed while removing an entire pushed stack word, and the combined
+stack-then-empty predicate links that removal to the remaining computation to an
+accepting empty stack.
+-/
+
 inductive StackSummaryComputesIn (M : PDA input stack state) :
     Nat -> state -> Word stack -> Word input -> state -> Word input -> Prop where
   | nil (q : state) (unread : Word input) :
@@ -2230,6 +2328,12 @@ def StackThenEmptySummaryComputes (M : PDA input stack state)
     (q : state) (targetInput : Word input) : Prop :=
   exists n, StackThenEmptySummaryComputesIn M n p stackWord sourceInput
     q targetInput
+
+/-!
+Soundness of the summary predicates says that their inductive structure really
+does describe PDA computations. The proofs thread an arbitrary stack tail through
+the path, because summaries are meant to compose inside larger stack contexts.
+-/
 
 theorem stackSummaryComputesIn_computesIn
     {M : PDA input stack state}
@@ -2337,6 +2441,12 @@ theorem stackSummaryComputesIn_computes
   intro tail
   exact computesIn_computes (stackSummaryComputesIn_computesIn h tail)
 
+/-!
+Empty summaries are also interpreted in an arbitrary tail context. This tail
+version is the workhorse for composing an empty-stack summary after another
+summary has exposed the rest of the stack.
+-/
+
 theorem emptySummaryComputesIn_computesIn_tail
     {M : PDA input stack state}
     {n : Nat} {p q : state} {sourceInput targetInput : Word input}
@@ -2443,6 +2553,13 @@ theorem emptySummaryComputes_of_emptySummaryComputesIn
     (h : EmptySummaryComputesIn M n p sourceInput q targetInput) :
     EmptySummaryComputes M p sourceInput q targetInput :=
   ⟨n, h⟩
+
+/-!
+The combined stack-then-empty summary represents the common shape of a
+transition that first discharges a pushed stack word and then continues with an
+empty-stack computation. These lemmas connect the combined predicate back to
+ordinary PDA computations with a tail stack.
+-/
 
 theorem stackThenEmptySummaryComputesIn_computesIn_tail
     {M : PDA input stack state}
@@ -2569,6 +2686,12 @@ theorem stackThenEmptySummaryComputes_of_empty
   rcases hempty with ⟨n, hn⟩
   exact ⟨n, stackThenEmptySummaryComputesIn_of_empty hn⟩
 
+/-!
+Transitivity is what makes summaries usable as proof objects rather than just
+descriptions of individual steps. Once a computation has been split into
+summary-sized pieces, these lemmas put the pieces back together.
+-/
+
 theorem emptySummaryComputesIn_trans
     {M : PDA input stack state}
     {m n : Nat} {p r q : state}
@@ -2654,6 +2777,19 @@ theorem stackSummaryComputes_cons_prefix
   rcases htop with ⟨m, hm⟩
   rcases hrest with ⟨n, hn⟩
   exact ⟨m + n, stackSummaryComputesIn_cons_prefix hm hn⟩
+
+/-!
+Splitting a stack summary is the main structural lemma for the induction: a run
+that removes an appended stack word can be decomposed into the part that removes
+the prefix and the part that removes the suffix. This mirrors how the generated
+CFG chain is split into adjacent nonterminal summaries.
+-/
+
+/-!
+Splitting a stack summary at a concatenation boundary is the key algebraic fact
+for pushed stack words. The equality-indexed version performs the induction; the
+plain append version below specializes it to an explicit prefix and suffix.
+-/
 
 theorem stackSummaryComputesIn_split_append_of_eq
     {M : PDA input stack state}
@@ -2836,6 +2972,12 @@ theorem stackSummaryComputesIn_split_append_of_eq
           · simpa [hright] using
               StackSummaryComputesIn.nil (M := M) q targetInput
 
+/-!
+The append-facing split theorem is the version used by callers. It removes the
+explicit equality parameter from the induction lemma and exposes the midpoint
+input where the prefix summary ends and the suffix summary begins.
+-/
+
 theorem stackSummaryComputesIn_split_append
     {M : PDA input stack state}
     {n : Nat} {p q : state} {left right : Word stack}
@@ -2867,6 +3009,12 @@ theorem stackSummaryComputes_split_append
       _hlen, hleft, hright⟩
   exact ⟨middleState, middleInput, ⟨leftSteps, hleft⟩,
     ⟨rightSteps, hright⟩⟩
+
+/-!
+Stack-then-empty summaries can also be split at a stack prefix. The result keeps
+the empty-stack continuation attached to the suffix part, so prefix processing
+can be peeled off without losing the final empty-stack goal.
+-/
 
 theorem stackThenEmptySummaryComputesIn_split_stack_prefix
     {M : PDA input stack state}
@@ -2909,6 +3057,12 @@ theorem stackThenEmptySummaryComputes_split_stack_prefix
   exact ⟨middleState, middleInput, ⟨prefixSteps, hprefix⟩,
     ⟨suffixSteps, hsuffix⟩⟩
 
+/-!
+After a split, a stack-then-empty summary can be extended by one leading stack
+symbol. This is the composition step used when a PDA transition pushes several
+symbols and the CFG chain has to account for them one at a time.
+-/
+
 theorem stackThenEmptySummaryComputesIn_cons_of_stack_and_stackThenEmpty
     {M : PDA input stack state}
     {m n : Nat} {p r q : state} {A : stack} {rest : Word stack}
@@ -2940,6 +3094,20 @@ theorem stackThenEmptySummaryComputes_cons_of_stack_and_stackThenEmpty
   exact ⟨m + n,
     stackThenEmptySummaryComputesIn_cons_of_stack_and_stackThenEmpty
       hm hn⟩
+
+/-!
+Here the proof consumes the first concrete PDA step and reconstructs the matching
+summary predicate. The top-pop normal form keeps the case analysis manageable:
+the first step either pops one top symbol or preserves the top symbol while a
+pushed prefix is handled first.
+-/
+
+/-!
+The next reconstruction lemmas turn a real top-pop PDA step into a
+stack-then-empty summary. They inspect whether the step consumed input, then
+attach the summary for the pushed stack word to the summary for the remaining
+empty-stack computation.
+-/
 
 theorem stackThenEmptySummaryComputesIn_of_step_of_stackThenEmpty_topPop
     {M : PDA input stack state}
@@ -3121,6 +3289,12 @@ theorem stackThenEmptySummaryComputesIn_of_step_of_stackThenEmpty_topPop
       simpa [hsource, hstackRest, hrestLen,
         Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using hsummary
 
+/-!
+This theorem is the general first-step reconstruction for top-pop computations.
+It finds the first PDA step, turns that step into a stack-then-empty summary, and
+uses the remaining computation as the continuation.
+-/
+
 theorem stackThenEmptySummaryComputesIn_of_computesIn_topPop
     {M : PDA input stack state}
     {n : Nat} {p q : state} {stackWord : Word stack}
@@ -3212,6 +3386,12 @@ theorem emptySummaryComputes_of_stackThenEmptySummaryComputes_nil
   rcases h with ⟨n, hn⟩
   exact ⟨n, emptySummaryComputesIn_of_stackThenEmptySummaryComputesIn_nil hn⟩
 
+/-!
+When a transition starts from an empty stack and later returns to an empty stack,
+the intermediate pushed stack can be hidden inside an empty-summary witness. The
+read and epsilon variants below package that first-step pattern.
+-/
+
 theorem emptySummaryComputesIn_read_of_stackThenEmptySummary
     {M : PDA input stack state}
     {n : Nat} {p r q : state} {a : input}
@@ -3242,6 +3422,12 @@ theorem emptySummaryComputesIn_epsilon_of_stackThenEmptySummary
       hlen, hstack, hempty⟩
   simpa [hlen, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using
     EmptySummaryComputesIn.epsilon htransition hstack hempty
+
+/-!
+The following lemmas connect ordinary bounded PDA computations back to the
+summary predicates. They are the reverse-direction counterpart of the earlier
+soundness lemmas that interpreted CFG summaries as real computations.
+-/
 
 theorem emptySummaryComputesIn_of_emptyStackComputesIn
     {M : PDA input stack state}
@@ -3397,6 +3583,12 @@ theorem emptySummaryComputesIn_of_computesIn_one_emptyStack
     EmptySummaryComputesIn M 1 p sourceInput q targetInput :=
   emptySummaryComputesIn_of_step_emptyStack (computesIn_one_inv hcomp)
 
+/-!
+Once the first-step reconstruction exists, the one-step top-pop summary follows
+by taking an empty continuation. This gives the compact bridge used by the
+bounded-computation cases below.
+-/
+
 theorem stackSummaryComputesIn_of_step_topPop
     {M : PDA input stack state}
     {p q : state} {A : stack}
@@ -3508,6 +3700,12 @@ theorem stackSummaryComputesIn_of_computesIn_one_topPop
       { state := q, unread := targetInput, stack := tail }) :
     StackSummaryComputesIn M 1 p [A] sourceInput q targetInput :=
   stackSummaryComputesIn_of_step_topPop hnorm (computesIn_one_inv hcomp)
+
+/-!
+The two-step and at-most-two empty-stack summaries mirror the earlier direct CFG
+lemmas, but now they work through summary predicates. This keeps the final CFG
+generation theorem from depending on a large step-by-step case analysis.
+-/
 
 theorem emptySummaryComputesIn_of_computesIn_two_emptyStack
     {M : PDA input stack state}
@@ -3684,6 +3882,13 @@ theorem emptySummaryComputesIn_of_computesIn_atMostTwo_emptyStack
           | succ n =>
               omega
 
+/-!
+Once a summary predicate is available, the proof returns to CFG syntax. Stack
+summaries become chain derivations, empty summaries become derivations from
+{lit}`empty p q`, and accepting empty summaries yield generated words from the
+start symbol.
+-/
+
 theorem toCFG_betweenDerives_of_singleton_chainDerives
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {p q : state} {A : stack} {w : Word input}
@@ -3807,6 +4012,12 @@ theorem toCFGChainDerives_of_stackSummaryComputes
   rcases h with ⟨n, hn⟩
   exact toCFGChainDerives_of_stackSummaryComputesIn
     (M := M) (presentation := presentation) hn
+
+/-!
+Empty-summary derivations are obtained by induction on the summary witness. The
+consumed word extracted from the PDA summary becomes the terminal frontier of
+the CFG derivation from the corresponding empty-stack nonterminal.
+-/
 
 theorem toCFG_emptyDerives_of_emptySummaryComputesIn
     {M : PDA input stack state} {presentation : FinitePresentation M}
@@ -3956,6 +4167,13 @@ theorem toCFG_generates_of_emptySummaryAccepts
   rw [hinput]
   simpa [Word.Concat, Word.Empty] using hgen
 
+/-!
+The final generated-language wrappers specialize the summary bridge to accepting
+computations from the initial configuration. They cover the explicit small
+bounds first, then hand off to the summary-completeness assumptions later in the
+file.
+-/
+
 theorem toCFG_generates_of_acceptsIn_zero
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {w : Word input} {qf : state}
@@ -4046,6 +4264,12 @@ theorem toCFG_generates_of_acceptsIn_atMostTwo
   apply toCFG_generates_of_emptySummaryAcceptsIn haccept
   exact emptySummaryComputesIn_of_computesIn_atMostTwo_emptyStack
     hnorm hn (by simpa [initial] using hcomp)
+
+/-!
+The final soundness step for generated CFG words goes the other direction:
+derivations in the constructed grammar denote real PDA computations, so a word
+generated from the start symbol is accepted by the original PDA.
+-/
 
 theorem toCFG_yields_sound
     {M : PDA input stack state} {presentation : FinitePresentation M}
@@ -4175,6 +4399,13 @@ theorem emptySummaryComplete_of_stackThenEmptySummaryComplete
   intro n p q sourceInput targetInput hcomp
   exact emptySummaryComputesIn_of_stackThenEmptySummaryComputesIn_nil
     (hcomplete n p q ([] : Word stack) sourceInput targetInput hcomp)
+
+/-!
+Completeness is proved by reducing an ordinary empty-stack computation to the
+stronger stack-then-empty summary property. The first-step lemma below handles
+the nonzero case by asking the completeness hypothesis to summarize the pushed
+stack after that first step.
+-/
 
 theorem emptySummaryComputesIn_of_step_emptyStack_of_stackThenEmptySummaryComplete
     {M : PDA input stack state}
@@ -4314,6 +4545,13 @@ theorem emptySummaryCompleteUpTo_two_of_topPop
   intro n p q sourceInput targetInput hn hcomp
   exact emptySummaryComputesIn_of_computesIn_atMostTwo_emptyStack
     hnorm hn hcomp
+
+/-!
+The final exactness statements combine both inclusions: every generated word is
+accepted by soundness, and every accepted word is generated once the appropriate
+summary-completeness principle is available. Top-pop normalized PDAs satisfy
+that principle.
+-/
 
 theorem toCFG_generates_of_acceptsIn_of_emptySummaryComplete
     {M : PDA input stack state} {presentation : FinitePresentation M}

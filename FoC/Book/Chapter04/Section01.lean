@@ -296,6 +296,13 @@ theorem form_language_derives_sound_of_productions
   | step hstep _ ih =>
       exact form_language_yields_sound_of_productions hprod hstep (ih hw)
 
+/-!
+The first concrete grammar example is balanced parentheses with one bracket
+kind. The proof shows both directions: each production preserves the inductive
+balanced-parentheses language, and every inductively balanced word is generated
+by the grammar.
+-/
+
 inductive Paren where
   | left : Paren
   | right : Paren
@@ -387,6 +394,12 @@ theorem balanced_parens_has_finite_productions :
       cases hrhs
       exact BalancedParensProduces.pair
 
+/-!
+For soundness, the pair production is the only nontrivial case. Membership in
+the form language splits the generated word into the left terminal, the inside
+word, the right terminal, and the remaining balanced suffix.
+-/
+
 theorem balanced_parens_pair_form_language
     {w : Word Paren}
     (hw : w ∈ CFG.FormLanguage BalancedParensSymbolLanguage
@@ -451,6 +464,13 @@ theorem balanced_parens_empty_generated :
   constructor
   · exact BalancedParensProduces.empty
   constructor <;> rfl
+
+/-!
+Completeness goes in the constructive direction. Each inductive balanced word is
+turned into a derivation by first using the grammar's pair production and then
+placing the recursively generated inside and suffix in the two nonterminal
+slots.
+-/
 
 theorem balanced_parens_pair_generated {inside rest : Word Paren}
     (hinside : inside ∈ CFG.GeneratedLanguage BalancedParensGrammar)
@@ -534,6 +554,12 @@ theorem balanced_parens_context_free :
   constructor
   · exact balanced_parens_has_finite_productions
   · exact balanced_parens_generated_language_exact
+
+/-!
+Balanced brackets are the same proof pattern with two bracket kinds. The
+round-pair and square-pair productions each get their own generation theorem,
+then the induction over balanced words dispatches to the matching constructor.
+-/
 
 inductive Bracket where
   | roundLeft : Bracket
@@ -658,6 +684,12 @@ theorem balanced_brackets_has_finite_productions :
       cases hrhs
       exact BalancedBracketsProduces.squarePair
 
+/-!
+The two-bracket grammar repeats the parenthesis soundness argument twice. Each
+case has the same form-language split, but the terminal symbols determine which
+inductive constructor is available.
+-/
+
 theorem balanced_brackets_round_pair_form_language
     {w : Word Bracket}
     (hw : w ∈ CFG.FormLanguage BalancedBracketsSymbolLanguage
@@ -743,6 +775,12 @@ theorem balanced_brackets_empty_generated :
   constructor
   · exact BalancedBracketsProduces.empty
   constructor <;> rfl
+
+/-!
+The generation proofs for brackets mirror the two wrapping productions. They are
+kept separate so the final induction over balanced bracket words can dispatch to
+the round or square constructor without hiding either derivation shape.
+-/
 
 theorem balanced_brackets_round_pair_generated {inside rest : Word Bracket}
     (hinside : inside ∈ CFG.GeneratedLanguage BalancedBracketsGrammar)
@@ -889,6 +927,12 @@ theorem balanced_brackets_context_free :
   · exact balanced_brackets_has_finite_productions
   · exact balanced_brackets_generated_language_exact
 
+/-!
+The {lit}`a^n b^n` example is more arithmetic than the bracket grammars. The
+support lemmas track the open sentential form with one remaining nonterminal and
+show that any terminal derivation has exactly the matched prefix/suffix shape.
+-/
+
 inductive AB where
   | a : AB
   | b : AB
@@ -941,6 +985,13 @@ def AnBnOpenForm (n : Nat) : SententialForm AB AnBnNT :=
 
 def AnBnClosedForm (n : Nat) : SententialForm AB AnBnNT :=
   SententialForm.terminalWord (AnBnWord n)
+
+/-!
+The {lit}`a^n b^n` proof needs a little list algebra because the grammar keeps
+one central nonterminal between terminal prefixes and suffixes. The split lemma
+below says that this distinguished nonterminal can be recovered uniquely from
+the surrounding terminal-only lists.
+-/
 
 theorem list_append_cons_inj_of_not_mem {alpha : Type u}
     {xs ys zs ws : List alpha} {a b : alpha}
@@ -1107,6 +1158,13 @@ theorem anbn_open_not_terminal (n : Nat) (w : Word AB) :
   rw [h] at hmem
   exact nonterminal_not_mem_terminalWord AnBnNT.S w hmem
 
+/-!
+This is the main invariant for the grammar: starting from an open form, any
+terminal derivation either keeps wrapping and eventually stops, or is impossible.
+The result extracts the number of wraps and therefore the matching word
+{lit}`a^n b^n`.
+-/
+
 theorem anbn_open_derives_terminal_exact_aux
     {xform yform : SententialForm AB AnBnNT} {w : Word AB}
     (hopen : exists n, xform = AnBnOpenForm n)
@@ -1193,6 +1251,12 @@ theorem anbn_generated_language_exact (w : Word AB) :
         rw [hn]
         exact anbn_words_generated n
 
+/-!
+The palindrome grammar is the final example. Its soundness proof separates
+single-letter productions from the two wrapping productions; completeness then
+follows by induction over the inductive palindrome predicate.
+-/
+
 inductive PalindromeNT where
   | S : PalindromeNT
 deriving DecidableEq
@@ -1266,6 +1330,12 @@ def palindromeWrapBProduction : CFG.Production AB PalindromeNT where
     [Symbol.terminal AB.b,
       Symbol.nonterminal PalindromeNT.S,
       Symbol.terminal AB.b]
+
+/-!
+For palindromes, finite production bookkeeping has five cases: the empty word,
+the two one-letter words, and the two symmetric wrappers. Naming each production
+keeps the generated-language proof readable later.
+-/
 
 theorem palindrome_has_finite_productions :
     CFG.HasFiniteProductions PalindromeGrammar := by
@@ -1441,6 +1511,12 @@ theorem palindrome_single_b_generated :
   constructor
   · exact PalindromeProduces.singleB
   constructor <;> rfl
+
+/-!
+The palindrome completeness proof is again constructive. The base productions
+generate empty and singleton palindromes directly; the wrapper productions embed
+an already generated palindrome in matching terminal symbols.
+-/
 
 theorem palindrome_wrap_a_generated {w : Word AB}
     (h : w ∈ CFG.GeneratedLanguage PalindromeGrammar) :

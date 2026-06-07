@@ -17,7 +17,7 @@ upper bound, and then develops the scaled lower bound used to compare Fibonacci
 growth with powers of three halves.
 
 The upper bound is a direct induction over the Fibonacci recurrence. The lower
-bound is more delicate because `(3/2)^n` is rational rather than natural. The
+bound is more delicate because {lit}`(3/2)^n` is rational rather than natural. The
 formal proof first clears denominators and proves a natural-number inequality,
 then translates the result back to quotient rationals and embedded reals.
 -/
@@ -131,7 +131,7 @@ The remaining statements translate the scaled natural-number inequality into
 the quotient-rational and embedded-real versions used by the surrounding real
 number formalization.
 
-This final translation step is why the page contains both `QRat` and `Real`
+This final translation step is why the page contains both {lit}`QRat` and {lit}`Real`
 versions: the arithmetic proof lives over naturals, the exact comparison lives
 over quotient rationals, and the book-facing growth statement can be stated in
 the real-number layer.

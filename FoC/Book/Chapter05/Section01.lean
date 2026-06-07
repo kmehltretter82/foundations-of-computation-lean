@@ -17,10 +17,21 @@ decidable languages. The reusable machine and computability APIs are in
 {module}`FoC.Computability.Computable`, and
 {module}`FoC.Computability.Recognizable`.
 
+The page is deliberately semantic. It does not try to reproduce every machine
+diagram from the textbook; instead, it gives the checked objects that make those
+diagrams meaningful: tapes, configurations, transitions, finite runs, halted
+results, input/output encodings, and the language predicates derived from them.
+
 The page moves from machine mechanics to language classes. A computation is a
 finite sequence of configurations, halting is the existence of a halted final
 configuration, recognizability accepts members by halting successfully, and
 decidability requires a total yes/no behavior.
+
+The strongest concrete construction on this page is the stopped-decider to
+acceptor transformation. It models the standard proof that a decider can be used
+as a recognizer for its yes-language, but it does so for stopped deciders whose
+halting state has no outgoing transitions and whose outputs are explicitly
+distinguished.
 -/
 
 open Languages
@@ -38,6 +49,11 @@ The exact-step relation is useful for induction over time. The ordinary
 computation relation hides the number of steps but still records reachability.
 The stopped-machine hypotheses ensure a halted configuration is genuinely
 final.
+
+Read this group as the trusted base of Chapter 5. Later claims about
+recognizers, deciders, and computable functions are all routed through these
+finite computation relations, so uniqueness and halted-stability lemmas remove
+ambiguity about what a machine's final result means.
 -/
 
 def MoveDirection := Direction
@@ -138,6 +154,10 @@ lemmas ensure that deterministic machines have unique outputs when they halt.
 
 This is the machine-level basis for computable functions: an input word is
 mapped to the output word left on the tape at the unique halted result.
+
+The formalization keeps the output relation separate from bare halting because
+many textbook arguments only need semi-decision, while computable functions need
+a specific final word. The bridge lemmas make that distinction explicit.
 -/
 
 theorem halts_with_output_implies_halts {M : TuringMachine symbol state}
@@ -211,6 +231,10 @@ and partial string functions.
 Partial computable functions are allowed to diverge. Their domains are
 therefore recognizable languages: run the machine and accept exactly when it
 halts with some output.
+
+This is the first place where a machine fact becomes a language-class fact. The
+theorems below show how an operational witness, a machine run, produces the
+abstract predicates used in Section 5.2.
 -/
 
 theorem machine_recognizes_accepted_language (M : TuringMachine symbol state) :
@@ -291,6 +315,11 @@ Decidability is stronger than recognizability because both membership and
 nonmembership must eventually produce an answer. The characteristic-function
 theorems express the same idea functionally: a decider computes a total Boolean
 answer for every input.
+
+The stopped-decider vocabulary is intentionally more precise than the weakest
+possible decidability predicate. It carries enough operational information to
+support an actual transition-level acceptor construction instead of relying only
+on an extensional language-class argument.
 -/
 
 def TuringDecidableLanguage (L : Language input) : Prop :=
@@ -352,6 +381,14 @@ theorem decidable_language_iff_has_computable_characteristic
     TuringDecidableLanguage L <-> LanguageHasComputableCharacteristic L :=
   Computability.turingDecidable_iff_hasComputableCharacteristic L
 
+/-!
+The next facts turn the extensional decider specification into operational
+consequences. A decider does not merely compute the right Boolean value when it
+halts; the definition guarantees that every input reaches a halting
+configuration, and the accepting and rejecting outcomes appear at some finite
+step.
+-/
+
 theorem decider_halts_on_all_inputs {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
     {L : Language input}
@@ -393,6 +430,12 @@ theorem decider_rejects_in_some_steps_of_not_mem
       TuringMachine.HaltsWithOutputIn
         M n (EncodeWord encodeInput w) [zero] :=
   Computability.decider_rejects_in_of_not_mem h hw
+
+/-!
+Stopped deciders add the final-state discipline needed to read output cells
+back into language facts. The separation condition {lit}`zero ≠ one` prevents a
+single halted output from serving as both an accepting and rejecting witness.
+-/
 
 theorem stopped_decider_accept_output_sound
     {M : TuringMachine symbol state}
@@ -443,6 +486,11 @@ The next theorem is the concrete transition-level construction behind the
 standard statement that a yes/no decider recognizes its yes-language.  The
 transformed machine simulates the stopped decider and enters its own halt state
 exactly when the simulated halted output cell is the accepting symbol.
+
+This is the sound construction used by later Chapter 5 pages. Extending the
+same transition-level proof to a weaker non-stopped decider predicate would
+require strengthening that predicate first, because the weaker form does not
+record enough final-state and output separation data.
 -/
 
 def DeciderToAcceptorMachineState (state : Type u) :=
@@ -476,6 +524,13 @@ theorem stopped_decidable_language_is_turing_acceptable
     (h : StoppedTuringDecidable L) :
     TuringAcceptableLanguage L :=
   TuringMachine.stoppedTuringDecidable_to_turingAcceptable h
+
+/-!
+The final small block records the complement and extensional transport rules
+used throughout the rest of Chapter 5. Complementing a decider swaps the
+accepting and rejecting symbols; changing the predicate by language equality
+does not change recognizability or decidability.
+-/
 
 theorem decider_for_complement {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}

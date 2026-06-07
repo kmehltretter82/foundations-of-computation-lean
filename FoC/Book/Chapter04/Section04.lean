@@ -1771,8 +1771,8 @@ and every word of the intended shape has an accepting computation.
 /-!
 # The {lit}`a^n b^n` PDA
 
-This standard PDA pushes one marker for each `a`, then pops one marker for
-each `b`. Acceptance requires the input and stack to be empty, so the counts
+This standard PDA pushes one marker for each {lit}`a`, then pops one marker for
+each {lit}`b`. Acceptance requires the input and stack to be empty, so the counts
 must match.
 -/
 
@@ -2096,9 +2096,9 @@ theorem anbnPDA_accepted_language_exact (w : Word Section01.AB) :
 /-!
 # The Range {lit}`n <= m <= 2n`
 
-The next PDA recognizes block words `a^n b^m` where each `a` contributes one
-or two stack markers. Popping one marker per `b` allows exactly the range
-between `n` and `2n`.
+The next PDA recognizes block words {lit}`a^n b^m` where each {lit}`a` contributes one
+or two stack markers. Popping one marker per {lit}`b` allows exactly the range
+between {lit}`n` and `2n`.
 -/
 
 inductive Range12PDAState where
@@ -2420,8 +2420,8 @@ theorem range12PDA_accepted_language_exact (w : Word Section01.AB) :
 # The Half-Range Variant
 
 This machine recognizes the complementary block-range pattern `m <= n <= 2m`.
-It nondeterministically groups some `a`s in pairs before switching to the
-`b`-popping phase.
+It nondeterministically groups some {lit}`a`s in pairs before switching to the
+{lit}`b`-popping phase.
 -/
 
 inductive HalfRangePDAState where
@@ -2928,7 +2928,7 @@ theorem halfRangePDA_accepted_language_exact (w : Word Section01.AB) :
 /-!
 # A Deterministic {lit}`a^n b^n` PDA
 
-This variant removes epsilon guessing: the first `b` deterministically switches
+This variant removes epsilon guessing: the first {lit}`b` deterministically switches
 from pushing to popping. It illustrates the deterministic vocabulary introduced
 earlier in the section.
 -/

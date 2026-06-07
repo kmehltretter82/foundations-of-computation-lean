@@ -12,12 +12,15 @@ set_option doc.verso true
 /-!
 # Chapter 3: Regular Languages
 
-The Chapter 3 formalization develops words, languages, regular expressions,
-deterministic and nondeterministic finite automata, NFA paths, Thompson-style
-constructions, and regular-language closure statements.
+Chapter 3 is the first automata-theory chapter. It starts with words and
+languages, then shows that regular expressions and finite automata describe the
+same class of languages, and finally uses pumping arguments to prove that some
+languages are not regular.
 
 These files are the chapter-facing layer over reusable language and automata
 modules in {module}`FoC.Languages`.
+
+## Story of the Chapter
 
 The chapter follows the book's progression. Sections 3.1 through 3.3 set up
 languages and regular expressions, including the book's programming-oriented
@@ -27,4 +30,25 @@ that explain why regular expressions and finite automata describe the same
 class of languages. Section 3.7 then turns the equivalence around: the Pumping
 Lemma gives a reusable obstruction to regularity, and the formalization applies
 it to the book's non-regular examples and selected exercises.
+
+## What to Inspect
+
+For words and language operations, start with {module}`FoC.Languages.Words` and
+{module}`FoC.Languages.Language`. For regular expressions, see
+{module}`FoC.Languages.RegularExpression`. For automata, compare
+{module}`FoC.Languages.DFA`, {module}`FoC.Languages.NFA`, and
+{module}`FoC.Languages.NFAPath`.
+
+The equivalence machinery is split deliberately. {module}`FoC.Languages.Thompson`
+constructs NFAs from regular expressions, while {module}`FoC.Languages.Regular`
+collects regular-language closure and recognition theorems. The pumping
+infrastructure lives in {module}`FoC.Languages.Pumping` and is used by
+{module}`FoC.Book.Chapter03.Section07`.
+
+## Status Notes
+
+The formal core is covered, including selected non-regularity exercises.
+Editor-specific regular-expression syntax and search/replace behavior are
+classified as application material; the semantic operators and the mathematical
+non-regularity results are formalized.
 -/

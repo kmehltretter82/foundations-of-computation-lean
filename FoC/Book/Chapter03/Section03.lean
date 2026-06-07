@@ -52,7 +52,7 @@ The formalization records the target language {lit}`a^n b a^n` now, then
 proves its non-regularity later in Section 3.7 after the Pumping Lemma is
 available.
 
-The definition `anbanWord left right` keeps the two blocks separate so later
+The definition {lit}`anbanWord left right` keeps the two blocks separate so later
 proofs can talk about what happens when only the first block is shortened by a
 pumping argument. The actual language requires the two block lengths to be
 equal.

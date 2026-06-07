@@ -44,7 +44,7 @@ theorem hanoiMoveCount_closed_form (n : Nat) :
 The move list itself is also recursive: move the top stack to the spare peg,
 move the bottom disk, and then move the saved stack to the target peg.
 
-The theorem `hanoiMoves_length` connects the concrete list of moves to the
+The theorem {lit}`hanoiMoves_length` connects the concrete list of moves to the
 earlier recurrence for move counts, so the algorithm and the counting formula
 are not separate stories.
 -/

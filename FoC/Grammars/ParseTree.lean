@@ -264,6 +264,12 @@ end
 
 mutual
 
+/-
+Selected-subtree derivations decompose a tree into a context and one chosen
+nonterminal subtree. The hole form records the context; a derivation of the
+selected subtree can then be plugged back into that context.
+-/
+
 theorem ParseTree.derives_with_selected_subtree_hole
     {G : CFG terminal nonterminal}
     {s : Symbol terminal nonterminal} (tree : ParseTree G s)
@@ -414,6 +420,13 @@ end
 
 mutual
 
+/-
+The frontier lemmas below are bookkeeping for forests. They make the append
+structure of a forest visible at the word level, which is necessary when a
+derivation step splits a sentential form into left context, subtree, and right
+context.
+-/
+
 theorem ParseTree.frontier_append_dummy {G : CFG terminal nonterminal}
     {s : Symbol terminal nonterminal} (_tree : ParseTree G s) : True := by
   trivial
@@ -467,6 +480,12 @@ theorem ParseForest.exists_split_append {G : CFG terminal nonterminal}
                   exists rightForest
                   simp [ParseForest.frontier, hrightForest, Word.Concat,
                     List.append_assoc]
+
+/-!
+The next direction reconstructs parse forests from derivations. One yield step
+is inverted by splitting the existing forest around the rewritten substring and
+replacing the production's right-hand-side forest with a single node.
+-/
 
 theorem ParseForest.of_yields_of_forest {G : CFG terminal nonterminal}
     {x y : SententialForm terminal nonterminal}
@@ -552,6 +571,12 @@ theorem ParseTree.of_generates_language {G : CFG terminal nonterminal}
           | nil =>
               exists tree
               simpa [ParseForest.frontier, Word.Concat] using hforest
+
+/-!
+The height and selected-subtree lemmas prepare the pumping-style arguments. A
+longest nonterminal path is mirrored by a list of actual subtrees, so repeated
+nonterminal names can later be turned into a nested pair of parse subtrees.
+-/
 
 mutual
 
@@ -722,6 +747,12 @@ theorem ParseForest.longestNonterminalSubtrees_suffix_at_index
 
 end
 
+/-!
+Given two selected subtrees on the same longest path, the lower one is inside
+the upper one. If their roots match, replacing the lower subtree by a
+nonterminal hole gives the loop derivation used by context-free pumping proofs.
+-/
+
 theorem ParseTree.later_selected_subtree_in_selected_subtree
     {G : CFG terminal nonterminal}
     {s : Symbol terminal nonterminal} (tree : ParseTree G s)
@@ -773,6 +804,12 @@ theorem ParseTree.loop_derivation_from_repeated_selected_subtrees
             exact hder
 
 mutual
+
+/-
+The selected subtree is genuinely a subtree of the original parse tree, so its
+node count is bounded by the whole tree. The strict version later gives the
+minimality contradiction used in pumping-style replacement arguments.
+-/
 
 theorem ParseTree.selected_subtree_nodeCount_le
     {G : CFG terminal nonterminal}
@@ -842,6 +879,12 @@ theorem ParseTree.selected_subtree_nodeCount_lt_of_pos_index
           omega
 
 mutual
+
+/-
+Replacement reconstructs a parse tree after swapping the selected subtree with
+another tree rooted at the same nonterminal. This is the tree-level operation
+behind the derivation loop used by the context-free pumping argument.
+-/
 
 theorem ParseTree.exists_replace_selected_subtree
     {G : CFG terminal nonterminal}
@@ -919,6 +962,12 @@ theorem ParseForest.exists_replace_selected_subtree
               omega
 
 end
+
+/-
+Minimality transfers to selected subtrees when the replacement would preserve the
+same frontier. This lets later proofs reason locally about a repeated subtree
+without violating the global minimal-tree assumption.
+-/
 
 theorem ParseTree.selected_subtree_minimal_for_frontier
     {G : CFG terminal nonterminal}
@@ -1014,6 +1063,12 @@ theorem ParseTree.loop_derivation_from_repeated_selected_subtrees_nonempty
             · exact Or.inl hxempty
           · exact hz.right
 
+/-!
+The next group connects the selected-subtree list back to finite nonterminal
+sets. Long paths force duplicate roots by pigeonhole, and the "near bottom"
+version chooses a duplicate whose upper subtree has bounded height.
+-/
+
 mutual
 
 theorem ParseTree.longestNonterminalSubtrees_roots
@@ -1088,6 +1143,12 @@ theorem ParseForest.longestNonterminalPath_all_mem
         exact ParseTree.longestNonterminalPath_all_mem tree hA
 
 end
+
+/-
+A longest path with more nonterminal nodes than the finite nonterminal set must
+repeat a root label. The following lemmas refine that pigeonhole fact into
+actual subtrees on the path.
+-/
 
 theorem ParseTree.exists_duplicate_nonterminal_on_long_path
     [DecidableEq nonterminal]
@@ -1165,6 +1226,12 @@ theorem ParseTree.exists_duplicate_root_subtrees_on_long_path
                       constructor
                       · exact hLower.left
                       · exact Eq.trans hUpper.right hLower.right.symm
+
+/-
+For pumping, it is not enough to find any duplicate labels; the repeated
+subtrees must be positioned near the bottom so their frontiers are bounded. This
+lemma selects that lower pair.
+-/
 
 theorem ParseTree.exists_duplicate_root_subtrees_near_bottom
     [DecidableEq nonterminal]
@@ -1249,6 +1316,12 @@ theorem ParseTree.exists_duplicate_root_subtrees_near_bottom
                         omega
 
 mutual
+
+/-
+The frontier-context lemmas recover the terminal words around a selected
+nonterminal subtree. They connect the structural longest-path choice to the word
+decomposition needed by language statements.
+-/
 
 theorem ParseTree.longestNonterminalSubtree_frontier_context
     {G : CFG terminal nonterminal}
@@ -1358,6 +1431,12 @@ theorem ParseTree.exists_minimal_for_frontier
                   · exact Eq.trans hminTree.left hother.left
                   · exact hminTree.right)
   exact hmain (ParseTree.nodeCount tree) tree rfl
+
+/-!
+Bounded production width controls frontier length exponentially in tree height.
+Combining that bound with duplicate-subtree selection gives the small upper
+subtree needed for finite pumping bounds.
+-/
 
 mutual
 
@@ -1530,6 +1609,12 @@ theorem parseTree_generates_language {G : CFG terminal nonterminal}
       rw [hfrontier] at hDerives
       exact hDerives
 
+/-!
+Leftmost and rightmost derivation traces give operational derivation orders.
+The leftmost trace is tied back to parse trees, which lets the ambiguity
+definition switch between distinct parse trees and distinct left derivations.
+-/
+
 def LeftmostYields (G : CFG terminal nonterminal)
     (x y : SententialForm terminal nonterminal) : Prop :=
   exists u v A rhs,
@@ -1635,6 +1720,12 @@ theorem leftmostYields_append_left_of_allTerminals
                   · rw [hrhs.right.right.right]
                     simp [List.append_assoc]
 
+/-
+Leftmost and rightmost derivation traces make the deterministic choice of a
+rewrite position explicit. The trace constructors are later related back to
+ordinary derivations and to parse-tree construction.
+-/
+
 inductive LeftDerivationTrace (G : CFG terminal nonterminal) :
     SententialForm terminal nonterminal ->
       SententialForm terminal nonterminal -> Type where
@@ -1719,6 +1810,12 @@ theorem toDerives {G : CFG terminal nonterminal}
 end RightDerivationTrace
 
 mutual
+
+/-
+Every parse tree induces a left derivation by expanding the root production and
+then processing the forest from left to right. This is the direction needed to
+compare ambiguity by parse trees with ambiguity by left derivations.
+-/
 
 def ParseTree.leftDerivationTrace {G : CFG terminal nonterminal}
     {s : Symbol terminal nonterminal} (tree : ParseTree G s) :

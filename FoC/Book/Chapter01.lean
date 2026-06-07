@@ -15,14 +15,15 @@ set_option doc.verso true
 /-!
 # Chapter 1: Logic and Proof
 
-The Chapter 1 files are book-indexed entry points for the formalized core of
-the textbook's introduction to propositional logic, predicate logic, proof
-methods, induction, elementary number theory examples, finite sums, recursion,
-and Fibonacci estimates.
+Chapter 1 is where the companion establishes the habit that every later chapter
+uses: informal mathematical claims are translated into precise Lean statements,
+and proof techniques become reusable theorem patterns.
 
-The reusable definitions are mostly in {module}`FoC.Foundation`. These section
-modules keep the statements close to the book coordinates, while still using
-Lean definitions that can be reused by later chapters.
+The reusable definitions are mostly in {module}`FoC.Foundation`. The section
+modules keep statements close to the book coordinates, while still using Lean
+definitions that later chapters can reuse.
+
+## Story of the Chapter
 
 The chapter begins with truth-table semantics for propositional formulas, then
 uses those semantics to explain Boolean algebra and deduction rules. The middle
@@ -31,8 +32,22 @@ contradiction, induction, and recursive definitions. The final sections use the
 same methods on small mathematical objects such as parity predicates, rational
 representations, finite sums, Fibonacci numbers, and binary trees.
 
-When reading a section page, the definitions name the book concepts and the
-theorems record the examples or laws. Many short proofs are truth-table splits
-or induction, so the important content is usually the type of the declaration:
-it tells which informal statement has been formalized.
+## What to Inspect
+
+Start with {module}`FoC.Book.Chapter01.Section01` and
+{module}`FoC.Foundation.Logic` for the logic syntax and semantics. Then compare
+the proof-method sections with the arithmetic support files:
+{module}`FoC.Foundation.Arithmetic`, {module}`FoC.Foundation.Integers`,
+{module}`FoC.Foundation.Primes`, and {module}`FoC.Foundation.Summation`.
+
+Many short proofs are truth-table splits or induction, so the important content
+is often the theorem type itself. It tells which informal statement has been
+formalized, while the proof shows that Lean can check the required cases.
+
+## Status Notes
+
+The formal core of the chapter is covered. Coverage records a few intentional
+deferrals for application-style material such as circuit drawings and some
+exercise-specific presentation details; the logical, arithmetic, induction, and
+recursive-definition machinery is present in checked form.
 -/

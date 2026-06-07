@@ -239,6 +239,12 @@ theorem pdaIntersectDFA_accept_complete
     cases hq
     exact ⟨hpAccept, hdAccept⟩
 
+/-!
+The product PDA is finite because both components are finite. The finite
+presentation packages the generated transition list and accepting product states
+so the closure theorems can call the generic PDA-to-CFG pipeline.
+-/
+
 def pdaIntersectDFA_finitePresentation
     (P : PDA input stack pstate) (D : DFA input dstate)
     (presentation : PDA.FinitePresentation P)
@@ -362,6 +368,12 @@ theorem pda_intersect_dfa_final_run
           rfl
       | epsilon htrans =>
           rw [ih hd, htrans.right]
+
+/-!
+Correctness of the product construction has two projections: the PDA component
+tracks the context-free language, and the DFA component tracks the regular
+language. Exactness combines those projections into intersection.
+-/
 
 theorem pda_intersect_dfa_accepted_language_exact
     (P : PDA input stack pstate) (D : DFA input dstate)
@@ -964,7 +976,7 @@ theorem context_free_diff_finite_language_context_free
 The language `{ a^n b^n c^n | n >= 0 }` is the standard example that is not
 context-free. The auxiliary languages `{ a^n b^n c^* }` and
 `{ a^* b^n c^n }` are context-free, and their intersection is exactly
-`{ a^n b^n c^n }`. This gives the closure-based nonclosure argument after the
+{lit}`{ a^n b^n c^n }`. This gives the closure-based nonclosure argument after the
 pumping proof establishes the target language is not context-free.
 -/
 
@@ -1296,6 +1308,12 @@ theorem anbnCstar_words_generated (n k : Nat) :
   rw [anbnCstarWord, SententialForm.terminalWord_append]
   exact hAll
 
+/-!
+For the {lit}`a^n b^n c^*` grammar, generation is constructive first and
+soundness second. The production-soundness theorem checks that each production
+preserves the intended language of the current nonterminal.
+-/
+
 theorem anbnCstar_production_sound
     (A : AnBnCstarNT) (rhs : SententialForm ABC AnBnCstarNT)
     (hprod : AnBnCstarGrammar.produces A rhs) :
@@ -1487,6 +1505,12 @@ theorem astarBnCn_a_stop_generated :
   · rfl
   · simp [Word.RepeatSymbol, SententialForm.terminalWord]
 
+/-!
+The {lit}`a^* b^n c^n` grammar reuses the same proof pattern with the free
+prefix and matched suffix swapped. The next block builds the generated words
+before proving that no other terminal shapes are generated.
+-/
+
 theorem astarBnCn_a_more_generated {w : Word ABC}
     (h : CFG.Derives AstarBnCnGrammar [Symbol.nonterminal AstarBnCnNT.ahead]
       (SententialForm.terminalWord w)) :
@@ -1569,6 +1593,11 @@ theorem astarBnCn_pair_words_generated (n : Nat) :
   | zero => exact astarBnCn_pair_stop_generated
   | succ n ih =>
       simpa [abcBnCn_wrap_word n] using astarBnCn_pair_wrap_generated ih
+
+/-!
+The full generated-word theorem combines the free a-prefix derivation with the
+matched b/c suffix derivation under the grammar's start production.
+-/
 
 theorem astarBnCn_words_generated (k n : Nat) :
     astarBnCnWord k n ∈ CFG.GeneratedLanguage AstarBnCnGrammar := by
@@ -1868,9 +1897,9 @@ theorem anbnCstar_inter_astarBnCn_exact :
 # Finite-Production CFLs and Pumping Vocabulary
 
 The book-facing context-free predicate requires a finite production list. The
-CFL Pumping Lemma uses a five-part decomposition `u x y z v`, where pumping
-repeats the two outer middle pieces `x` and `z` together. At least one of
-`x` or `z` is nonempty, and the combined middle region `x y z` is bounded by
+CFL Pumping Lemma uses a five-part decomposition {lit}`u x y z v`, where pumping
+repeats the two outer middle pieces {lit}`x` and {lit}`z` together. At least one of
+{lit}`x` or {lit}`z` is nonempty, and the combined middle region {lit}`x y z` is bounded by
 the pumping length.
 -/
 
@@ -2040,11 +2069,11 @@ theorem not_finite_production_context_free_of_bad_word_family
 /-!
 # Pumping {lit}`a^n b^n c^n`
 
-For a proposed CFL pumping length `K`, choose `a^K b^K c^K`. The bounded
-middle region `x y z` cannot cover all three block boundaries at once, so
-pumping `x` and `z` with count `2` changes at most two of the three symbol
-counts. The resulting word cannot still have equal numbers of `a`, `b`, and
-`c`.
+For a proposed CFL pumping length {lit}`K`, choose {lit}`a^K b^K c^K`. The bounded
+middle region {lit}`x y z` cannot cover all three block boundaries at once, so
+pumping {lit}`x` and {lit}`z` with count {lit}`2` changes at most two of the three symbol
+counts. The resulting word cannot still have equal numbers of {lit}`a`, {lit}`b`, and
+{lit}`c`.
 -/
 
 theorem anbncn_membership (w : Word ABC) :
@@ -2384,7 +2413,7 @@ theorem anbncn_not_context_free :
 # Nonclosure Consequences
 
 Because `{ a^n b^n c^* }` and `{ a^* b^n c^n }` are context-free but their
-intersection is `{ a^n b^n c^n }`, finite-production context-free languages
+intersection is {lit}`{ a^n b^n c^n }`, finite-production context-free languages
 are not closed under intersection. If they were closed under complement as
 well as union, De Morgan's law would give intersection closure, so complement
 closure fails too.

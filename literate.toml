@@ -10,7 +10,7 @@ module = "FoC"
 
 [metadata]
 title = "Foundations of Computation Lean Companion"
-description = "In-source Verso HTML companion for the Lean formalization of Foundations of Computation."
+description = "Reader-oriented Verso companion for the standalone Lean formalization of Foundations of Computation."
 
 [order_children]
 "FoC" = [
@@ -69,8 +69,15 @@ description = "In-source Verso HTML companion for the Lean formalization of Foun
   "FoC.Computability.TuringMachine",
   "FoC.Computability.Computable",
   "FoC.Computability.Recognizable",
+  "FoC.Computability.Transform",
   "FoC.Computability.Enumerable",
-  "FoC.Computability.Undecidable"
+  "FoC.Computability.Program",
+  "FoC.Computability.Grammar",
+  "FoC.Computability.Undecidable",
+  "FoC.Computability.Coding",
+  "FoC.Computability.Encoding",
+  "FoC.Computability.Compiler",
+  "FoC.Computability.FiniteProgram"
 ]
 "FoC.Book" = [
   "FoC.Book.Chapter01",
@@ -125,13 +132,13 @@ description = "In-source Verso HTML companion for the Lean formalization of Foun
 ]
 
 [modules."FoC"]
-title = "Overview"
+title = "Companion Overview"
 
 [modules."FoC.Foundation"]
-title = "Foundation"
+title = "Foundational Mathematics"
 
 [modules."FoC.Book"]
-title = "Book"
+title = "Book-Facing Modules"
 
 [modules."FoC.Foundation.Arithmetic"]
 title = "Arithmetic"
@@ -254,19 +261,40 @@ title = "Parse Trees"
 title = "Right-Regular Grammars"
 
 [modules."FoC.Computability"]
-title = "Computability"
+title = "Computability Infrastructure"
+
+[modules."FoC.Computability.Coding"]
+title = "Coding and Reductions"
 
 [modules."FoC.Computability.Computable"]
 title = "Computable Functions"
 
+[modules."FoC.Computability.Compiler"]
+title = "Compiler Bridges"
+
 [modules."FoC.Computability.Enumerable"]
 title = "Enumerable Languages"
+
+[modules."FoC.Computability.Encoding"]
+title = "Machine Descriptions"
+
+[modules."FoC.Computability.FiniteProgram"]
+title = "Finite Program Descriptions"
+
+[modules."FoC.Computability.Grammar"]
+title = "Grammar Recognizers"
+
+[modules."FoC.Computability.Program"]
+title = "Staged Programs"
 
 [modules."FoC.Computability.Recognizable"]
 title = "Recognizable Languages"
 
 [modules."FoC.Computability.Tape"]
 title = "Tapes"
+
+[modules."FoC.Computability.Transform"]
+title = "Machine Transformations"
 
 [modules."FoC.Computability.TuringMachine"]
 title = "Turing Machines"

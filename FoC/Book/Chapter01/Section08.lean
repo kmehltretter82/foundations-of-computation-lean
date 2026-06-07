@@ -244,8 +244,8 @@ theorem real_geometric_series_formula
 The final two theorem statements are examples where induction or strong
 induction supplies a number-theoretic result rather than merely a closed form.
 
-`odd_sum_square` is the standard induction identity for sums of odd numbers.
-`product_of_primes_exists` uses strong induction: after extracting a factor,
+{lit}`odd_sum_square` is the standard induction identity for sums of odd numbers.
+{lit}`product_of_primes_exists` uses strong induction: after extracting a factor,
 the proof appeals to the result for smaller numbers.
 -/
 

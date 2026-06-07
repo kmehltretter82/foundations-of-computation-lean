@@ -16,7 +16,7 @@ functions as always-defined partial functions, higher-order functions, and
 composition for optional results.
 
 The page separates mathematical total functions from program-like partial
-computations. `Option beta` is the formal stand-in for "the computation may
+computations. {lit}`Option beta` is the formal stand-in for "the computation may
 fail to return a beta", and the partial-composition theorems describe how that
 failure propagates.
 -/
@@ -50,7 +50,7 @@ theorem evaluation_of_function_value (f : alpha -> beta) (x : alpha) :
 function as an input. The theorem states its defining equation.
 
 This is the book's first-class function idea in its smallest form: the input
-`f` is data that the new function can call.
+{lit}`f` is data that the new function can call.
 -/
 
 def ApplyTwice (f : alpha -> alpha) (x : alpha) : alpha :=
@@ -67,8 +67,8 @@ Partial composition stops when the first computation is undefined and otherwise
 continues by feeding the produced value into the second partial function.
 
 The two following theorems are the two cases a program would branch on: if the
-first result is `none`, the composite is `none`; if it is `some y`, the second
-function receives `y`.
+first result is {lit}`none`, the composite is {lit}`none`; if it is {lit}`some y`, the second
+function receives {lit}`y`.
 -/
 
 def PartialCompose (g : beta -> Option gamma) (f : alpha -> Option beta) :

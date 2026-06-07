@@ -17,11 +17,11 @@ languages non-regular. The reusable proof infrastructure lives in
 {lit}`a^n b a^n` and {lit}`a^n b^n` examples.
 
 Informally, the Pumping Lemma says that every regular language has a positive
-number `n` such that every word in the language of length at least `n` can be
-split as `x y z`, with `y` nonempty and `x y` near the front of the word, so
-that repeating `y` any number of times keeps the word in the language. To prove
+number {lit}`n` such that every word in the language of length at least {lit}`n` can be
+split as {lit}`x y z`, with {lit}`y` nonempty and {lit}`x y` near the front of the word, so
+that repeating {lit}`y` any number of times keeps the word in the language. To prove
 a language non-regular, we prove the opposite pumping behavior: every proposed
-`n` has a long word for which every legal split can be broken by pumping.
+{lit}`n` has a long word for which every legal split can be broken by pumping.
 -/
 
 open Languages
@@ -33,13 +33,13 @@ The first theorems expose the quantified shape of pumping lengths,
 decompositions, extensionality, monotonicity, and counterexample principles.
 These are the tools used to turn a family of bad words into non-regularity.
 
-`Pumping.PumpingLength L n` is the formal version of "n is a valid pumping
-length for L". It contains three pieces of information: `n > 0`; every long
-word `w` in `L` admits a decomposition; and that decomposition includes the
-conditions `w = x y z`, `|x y| <= n`, `|y| > 0`, and membership of every pumped
-word `x y^k z`.
+{lit}`Pumping.PumpingLength L n` is the formal version of "n is a valid pumping
+length for L". It contains three pieces of information: {lit}`n > 0`; every long
+word {lit}`w` in {lit}`L` admits a decomposition; and that decomposition includes the
+conditions {lit}`w = x y z`, `|x y| <= n`, `|y| > 0`, and membership of every pumped
+word {lit}`x y^k z`.
 
-`Pumping.HasPumpingProperty L` says that at least one such `n` exists. The
+{lit}`Pumping.HasPumpingProperty L` says that at least one such {lit}`n` exists. The
 regular-language Pumping Lemma is the theorem that regular languages have this
 property.
 -/
@@ -77,9 +77,9 @@ theorem pumping_length_monotone {L : Language alpha} {n m : Nat}
 
 /-!
 The next two declarations are the reusable "bad word" principle. For a fixed
-candidate pumping length `n`, it is enough to produce one long word `w` in the
-language such that every legal split `w = x y z` fails after some pump count
-`k`. If such a bad word exists for every positive `n`, then the language has no
+candidate pumping length {lit}`n`, it is enough to produce one long word {lit}`w` in the
+language such that every legal split {lit}`w = x y z` fails after some pump count
+{lit}`k`. If such a bad word exists for every positive {lit}`n`, then the language has no
 pumping property at all.
 -/
 
@@ -113,8 +113,8 @@ theorem not_pumping_property_of_counterexamples {L : Language alpha}
 
 /-!
 The final vocabulary statements connect the counterexample method to
-regularity. If the regular-language Pumping Lemma is available for `L`, then
-showing that `L` has no pumping property proves `L` is not regular.
+regularity. If the regular-language Pumping Lemma is available for {lit}`L`, then
+showing that {lit}`L` has no pumping property proves {lit}`L` is not regular.
 -/
 
 theorem not_regular_if_no_pumping_property {L : Language alpha}
@@ -140,10 +140,10 @@ a backreference-style expression. The next lemmas establish the bookkeeping
 needed to delete a pumped initial block of {lit}`a` symbols and derive a
 contradiction.
 
-The bad word for a proposed pumping length `n` is `a^n b a^n`. Because the
-split must satisfy `|x y| <= n`, the pumped portion `y` lies entirely in the
-first block of `a` symbols. Pumping with `k = 0` deletes at least one initial
-`a`, leaving fewer `a`s before the middle `b` than after it. That word cannot
+The bad word for a proposed pumping length {lit}`n` is {lit}`a^n b a^n`. Because the
+split must satisfy `|x y| <= n`, the pumped portion {lit}`y` lies entirely in the
+first block of {lit}`a` symbols. Pumping with {lit}`k = 0` deletes at least one initial
+{lit}`a`, leaving fewer {lit}`a`s before the middle {lit}`b` than after it. That word cannot
 belong to `{ a^n b a^n | n >= 0 }`.
 -/
 
@@ -337,10 +337,10 @@ standard equal-block language. Counting lemmas identify how many {lit}`a` and
 {lit}`b` symbols occur in block words, which is what pumping breaks.
 
 The proof follows the same shape as the backreference language. For a proposed
-pumping length `n`, choose `a^n b^n`. Any legal `y` lies inside the initial
-`a` block. Pumping with `k = 0` removes at least one `a` and no `b`, so the
+pumping length {lit}`n`, choose {lit}`a^n b^n`. Any legal {lit}`y` lies inside the initial
+{lit}`a` block. Pumping with {lit}`k = 0` removes at least one {lit}`a` and no {lit}`b`, so the
 result has unequal symbol counts and cannot be another word of the form
-`a^m b^m`.
+{lit}`a^m b^m`.
 -/
 
 def anbnLanguage : Language Section01.AB :=
@@ -560,10 +560,10 @@ theorem anbn_no_pumping_property :
 /-!
 # Equal Counts Without Block Order
 
-The language of all words with equally many `a` and `b` symbols is also
-non-regular. The same bad word `a^n b^n` works: deleting a pumped piece from
-the initial `a` block destroys equality of counts, even though this language
-does not require all `a`s to come before all `b`s.
+The language of all words with equally many {lit}`a` and {lit}`b` symbols is also
+non-regular. The same bad word {lit}`a^n b^n` works: deleting a pumped piece from
+the initial {lit}`a` block destroys equality of counts, even though this language
+does not require all {lit}`a`s to come before all {lit}`b`s.
 -/
 
 def equalCountLanguage : Language Section01.AB :=
@@ -632,8 +632,8 @@ theorem equal_count_not_regular :
 
 The language `{ x x | x in {a,b}* }` contains duplicated words. The bad family
 uses words of the form `(a^n b)(a^n b)`. Pumping near the front changes only
-the first `a` block. The supporting lemmas prove that a word with two `b`s of
-this shape is a square only when the two `a` blocks have equal length.
+the first {lit}`a` block. The supporting lemmas prove that a word with two {lit}`b`s of
+this shape is a square only when the two {lit}`a` blocks have equal length.
 -/
 
 def squareBlockWord (p q : Nat) : Word Section01.AB :=
@@ -966,9 +966,9 @@ theorem square_not_regular :
 # The {lit}`x x^R` Language
 
 The language `{ x reverse(x) | x in {a,b}* }` is handled by a mirror-image
-variant of the square argument. The bad word is `a^n b b a^n`; deleting a
-pumped piece from the first `a` block breaks the symmetry around the two
-central `b` symbols.
+variant of the square argument. The bad word is {lit}`a^n b b a^n`; deleting a
+pumped piece from the first {lit}`a` block breaks the symmetry around the two
+central {lit}`b` symbols.
 -/
 
 def doubleBWord : Word Section01.AB :=
@@ -1241,9 +1241,9 @@ theorem reverse_square_not_regular :
 /-!
 # More {lit}`b`s Than {lit}`a`s in Blocks
 
-For the block language `{ a^n b^m | n < m }`, the bad word is `a^n b^(n+1)`.
-This time pumping with `k = 2` duplicates some initial `a`s. The result has at
-least as many `a`s as `b`s, so it cannot remain in the language.
+For the block language `{ a^n b^m | n < m }`, the bad word is {lit}`a^n b^(n+1)`.
+This time pumping with {lit}`k = 2` duplicates some initial {lit}`a`s. The result has at
+least as many {lit}`a`s as {lit}`b`s, so it cannot remain in the language.
 -/
 
 def moreBsBlockLanguage : Language Section01.AB :=

@@ -19,8 +19,8 @@ The project represents a set over a type as a predicate on that type. Set
 equality is therefore extensional equality: two sets are equal when every
 object has the same membership status in both sets.
 
-This representation keeps the set theory typed. A set of `alpha` values can
-only contain `alpha` values, and membership is a proposition rather than a
+This representation keeps the set theory typed. A set of {lit}`alpha` values can
+only contain {lit}`alpha` values, and membership is a proposition rather than a
 runtime lookup. As a result, many familiar set identities become direct logical
 equivalences about a generic element.
 -/
