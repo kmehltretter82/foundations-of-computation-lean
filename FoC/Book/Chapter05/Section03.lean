@@ -312,6 +312,18 @@ def ConcreteMachineDiagonalPairPreimageLanguage :
 def ConcreteMachineDecoderUniversalForAcceptableLanguages : Prop :=
   TuringDecoderUniversalForAcceptableLanguages ConcreteMachineCodeAccepts
 
+def ConcreteMachineDescriptionAcceptsEncodedInputLanguage
+    (D : ConcreteMachineDescription)
+    (L : Language ConcreteMachineCodeSymbol) : Prop :=
+  D.WellFormed ∧
+    Language.Equal (ConcreteMachineEncodedInputLanguage D) L
+
+def ConcreteEncodedInputDescriptionCompilerConstruction : Prop :=
+  forall L : Language ConcreteMachineCodeSymbol,
+    RecursivelyEnumerableTuringLanguage L ->
+      exists D : ConcreteMachineDescription,
+        ConcreteMachineDescriptionAcceptsEncodedInputLanguage D L
+
 def ConcreteMachineToTuringMachine (D : ConcreteMachineDescription) :
     TuringMachine Bool (Fin (D.stateCount + 1)) :=
   D.toTuringMachine
@@ -336,6 +348,11 @@ def UniversalMachineRowsCoverAcceptableLanguages
 def ConcreteUniversalMachineSpec
     (universal : TuringMachine ConcreteMachineCodeSymbol state) : Prop :=
   UniversalTuringMachineSpec universal ConcreteMachineCodeAccepts
+
+def ConcreteUniversalRunnerConstruction : Prop :=
+  exists state : Type,
+    exists universal : TuringMachine ConcreteMachineCodeSymbol state,
+      ConcreteUniversalMachineSpec universal
 
 def ConcreteUniversalMachineRowsCoverAcceptableLanguages
     (universal : TuringMachine ConcreteMachineCodeSymbol state) : Prop :=
@@ -735,6 +752,19 @@ theorem concrete_machine_encoded_description_recognizes_input_language
   intro input
   exact concrete_machine_code_accepts_encode_description_iff D input
 
+theorem concrete_encoded_input_description_compiler_decoder_universal
+    (hcompile : ConcreteEncodedInputDescriptionCompilerConstruction) :
+    ConcreteMachineDecoderUniversalForAcceptableLanguages := by
+  intro L hL
+  cases hcompile L hL with
+  | intro D hD =>
+      exists ConcreteMachineEncode D
+      intro input
+      exact Iff.trans
+        (concrete_machine_encoded_description_recognizes_input_language
+          D input)
+        (hD.right input)
+
 theorem concrete_universal_machine_spec_accepts_iff
     {universal : TuringMachine ConcreteMachineCodeSymbol state}
     (hspec : ConcreteUniversalMachineSpec universal)
@@ -775,6 +805,19 @@ theorem concrete_universal_machine_row_language_equal_encoded_input_language
       (UniversalMachineRowLanguage universal (ConcreteMachineEncode D))
       (ConcreteMachineEncodedInputLanguage D) :=
   concrete_universal_machine_halts_on_encoded_description_iff hspec D
+
+theorem concrete_universal_machine_row_language_equal_compiled_encoded_input_language
+    {universal : TuringMachine ConcreteMachineCodeSymbol state}
+    (hspec : ConcreteUniversalMachineSpec universal)
+    {D : ConcreteMachineDescription}
+    {L : Language ConcreteMachineCodeSymbol}
+    (hD : ConcreteMachineDescriptionAcceptsEncodedInputLanguage D L) :
+    Language.Equal
+      (UniversalMachineRowLanguage universal (ConcreteMachineEncode D)) L :=
+  Language.equal_trans
+    (concrete_universal_machine_row_language_equal_encoded_input_language
+      hspec D)
+    hD.right
 
 theorem concrete_machine_compiled_transition_of_lookup
     {D : ConcreteMachineDescription}
@@ -1482,6 +1525,15 @@ theorem concrete_universal_machine_rows_cover_of_decoder_universal
     ConcreteUniversalMachineRowsCoverAcceptableLanguages universal :=
   universal_machine_rows_cover_of_decoder_universal hspec huniv
 
+theorem concrete_universal_machine_rows_cover_of_encoded_input_description_compiler
+    {universal : TuringMachine ConcreteMachineCodeSymbol state}
+    (hspec : ConcreteUniversalMachineSpec universal)
+    (hcompile : ConcreteEncodedInputDescriptionCompilerConstruction) :
+    ConcreteUniversalMachineRowsCoverAcceptableLanguages universal :=
+  concrete_universal_machine_rows_cover_of_decoder_universal
+    hspec
+    (concrete_encoded_input_description_compiler_decoder_universal hcompile)
+
 theorem concrete_decoder_universal_of_universal_machine_rows_cover
     {universal : TuringMachine ConcreteMachineCodeSymbol state}
     (hspec : ConcreteUniversalMachineSpec universal)
@@ -1496,6 +1548,24 @@ theorem concrete_universal_machine_rows_cover_iff_decoder_universal
       ConcreteMachineDecoderUniversalForAcceptableLanguages :=
   universal_machine_rows_cover_iff_decoder_universal hspec
 
+theorem exists_concrete_universal_machine_rows_cover_of_constructions
+    (hcompile : ConcreteEncodedInputDescriptionCompilerConstruction)
+    (hrunner : ConcreteUniversalRunnerConstruction) :
+    exists state : Type,
+      exists universal : TuringMachine ConcreteMachineCodeSymbol state,
+        ConcreteUniversalMachineSpec universal ∧
+          ConcreteUniversalMachineRowsCoverAcceptableLanguages universal := by
+  cases hrunner with
+  | intro state hstate =>
+      cases hstate with
+      | intro universal hspec =>
+          exact
+            Exists.intro state
+              (Exists.intro universal
+                (And.intro hspec
+                  (concrete_universal_machine_rows_cover_of_encoded_input_description_compiler
+                    hspec hcompile)))
+
 /-!
 The section's universal-machine and diagonalization theorems require a concrete
 encoding of machines as strings.  This module records the formal statement
@@ -1508,11 +1578,17 @@ This is the current status boundary for Section 5.3. The encoding, interpreter,
 compiled-machine simulation, decoder-row wrappers, and pair-code reductions are
 formalized. Machine output is now read through normalized tape contents, so
 singleton outputs from empty input and Boolean deciders are no longer blocked by
-finite tape-window artifacts. The concrete diagonal pair map now has an
-explicit finite-machine witness for the current non-injective output-encoding
-interface. The remaining concrete work is the finite universal-machine
-construction, or a stronger faithful copy-machine theorem if computable string
-functions are later refined to require injective encodings.
+finite tape-window artifacts. The concrete diagonal pair map now has a faithful
+finite-machine witness.
+
+The remaining concrete work is narrowed to two named construction principles:
+{name}`ConcreteEncodedInputDescriptionCompilerConstruction`, which compiles
+every acceptable code-language recognizer to a Boolean machine description
+running on {name}`ConcreteMachineEncodeCodeInput`, and
+{name}`ConcreteUniversalRunnerConstruction`, which supplies one finite machine
+that implements {name}`ConcreteMachineCodeAccepts` on concatenated code words.
+Together they imply row coverage by
+{name}`exists_concrete_universal_machine_rows_cover_of_constructions`.
 -/
 
 end Section03

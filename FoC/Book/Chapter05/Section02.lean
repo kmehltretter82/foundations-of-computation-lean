@@ -1494,6 +1494,35 @@ theorem concrete_finite_partial_unary_description_output_range_has_program_range
     (concrete_finite_partial_unary_description_output_range_partially_listable
       P hD hcomplete hfunctional)
 
+theorem concrete_finite_partial_unary_description_output_range_closeout
+    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (hD : P.description.WellFormed)
+    (hcomplete : ConcreteFinitePartialUnaryOutputComplete P)
+    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
+    ConcreteCompiledPartialUnaryRange
+        (ConcreteFinitePartialUnaryDescriptionOutputRange P) ∧
+      ConcretePartialUnaryTuringComputableRange
+        (ConcreteFinitePartialUnaryDescriptionOutputRange P) ∧
+      LanguagePartiallyListable
+        (ConcreteFinitePartialUnaryDescriptionOutputRange P) ∧
+      LanguagePartialUnaryFunctionProgramRange
+        (ConcreteFinitePartialUnaryDescriptionOutputRange P) := by
+  constructor
+  · exact
+      concrete_finite_partial_unary_description_output_range_compiled
+        P hD hcomplete hfunctional
+  · constructor
+    · exact
+        concrete_finite_partial_unary_description_output_range_turing_computable
+          P hD hcomplete hfunctional
+    · constructor
+      · exact
+          concrete_finite_partial_unary_description_output_range_partially_listable
+            P hD hcomplete hfunctional
+      · exact
+          concrete_finite_partial_unary_description_output_range_has_program_range
+            P hD hcomplete hfunctional
+
 theorem function_value_in_range (f : Word input -> Word output) (x : Word input) :
     f x ∈ FunctionRangeLanguage f :=
   range_mem x
@@ -1589,6 +1618,16 @@ def RecursivelyEnumerableToGeneralGrammarConstruction
     (terminal : Type u) : Prop :=
   forall L : Language terminal,
     RecursivelyEnumerableLanguage L -> GeneralGrammar.Generated L
+
+structure ConcreteBooleanSection52CompilerCloseout where
+  decidableToAcceptable : DecidableToAcceptableConstruction Bool
+  dovetailDescription : ConcreteDovetailDescriptionCompilerConstruction
+  partialUnaryRangeDescription :
+    ConcretePartialUnaryRangeDescriptionCompilerConstruction
+  grammarRecognizerDescription :
+    ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction
+  recursivelyEnumerableToGrammar :
+    RecursivelyEnumerableToGeneralGrammarConstruction Bool
 
 def GeneralGrammarREEquivalenceConstruction
     (terminal : Type u) : Prop :=
@@ -1876,15 +1915,82 @@ theorem boolean_recursive_language_iff_general_grammar_pair_of_concrete_grammar_
       hcompile)
     hfrom L
 
+theorem dovetailing_decidable_construction_of_section52_closeout
+    (hclose : ConcreteBooleanSection52CompilerCloseout) :
+    DovetailingDecidableConstruction Bool :=
+  dovetailing_decidable_construction_of_concrete_dovetail_description_compiler
+    hclose.dovetailDescription
+
+theorem recursive_language_iff_re_and_co_re_of_section52_closeout
+    (hclose : ConcreteBooleanSection52CompilerCloseout)
+    (L : Language Bool) :
+    RecursiveLanguage L <-> RecursivelyEnumerableLanguageWithComplement L :=
+  recursive_language_iff_re_and_co_re_of_constructions
+    hclose.decidableToAcceptable
+    (dovetailing_decidable_construction_of_section52_closeout hclose)
+    L
+
+theorem partially_listable_language_iff_concrete_compiled_partial_unary_range_of_section52_closeout
+    (hclose : ConcreteBooleanSection52CompilerCloseout)
+    (L : Language Bool) :
+    LanguagePartiallyListable L <-> ConcreteCompiledPartialUnaryRange L :=
+  partially_listable_language_iff_concrete_compiled_partial_unary_range_of_concrete_compiler
+    hclose.partialUnaryRangeDescription L
+
+theorem partially_listable_language_iff_concrete_compiled_partial_unary_program_range_of_section52_closeout
+    (hclose : ConcreteBooleanSection52CompilerCloseout)
+    (L : Language Bool) :
+    LanguagePartiallyListable L <->
+      ConcreteCompiledPartialUnaryFunctionProgramRange L :=
+  partially_listable_language_iff_concrete_compiled_partial_unary_program_range_of_concrete_compiler
+    hclose.partialUnaryRangeDescription L
+
+theorem boolean_general_grammar_to_recursively_enumerable_construction_of_section52_closeout
+    (hclose : ConcreteBooleanSection52CompilerCloseout) :
+    GeneralGrammarToRecursivelyEnumerableConstruction Bool :=
+  boolean_general_grammar_to_recursively_enumerable_construction_of_concrete_grammar_compiler
+    hclose.grammarRecognizerDescription
+
+theorem boolean_general_grammar_re_equivalence_construction_of_section52_closeout
+    (hclose : ConcreteBooleanSection52CompilerCloseout) :
+    GeneralGrammarREEquivalenceConstruction Bool :=
+  general_grammar_re_equivalence_construction_of_constructions
+    (boolean_general_grammar_to_recursively_enumerable_construction_of_section52_closeout
+      hclose)
+    hclose.recursivelyEnumerableToGrammar
+
+theorem finite_general_grammar_to_recursively_enumerable_construction_of_section52_closeout
+    (hclose : ConcreteBooleanSection52CompilerCloseout) :
+    FiniteGeneralGrammarToRecursivelyEnumerableConstruction Bool :=
+  boolean_finite_general_grammar_to_recursively_enumerable_construction_of_concrete_grammar_compiler
+    hclose.grammarRecognizerDescription
+
+theorem boolean_recursive_language_iff_general_grammar_pair_of_section52_closeout
+    (hclose : ConcreteBooleanSection52CompilerCloseout)
+    (L : Language Bool) :
+    RecursiveLanguage L <-> GeneralGrammarPairGenerated L :=
+  recursive_language_iff_general_grammar_pair_of_grammar_constructions
+    hclose.decidableToAcceptable
+    (dovetailing_decidable_construction_of_section52_closeout hclose)
+    (boolean_general_grammar_to_recursively_enumerable_construction_of_section52_closeout
+      hclose)
+    hclose.recursivelyEnumerableToGrammar
+    L
+
 /-!
 The theorem equating general grammars with recursively enumerable languages is
 recorded as an explicit statement shape. The construction proof is deferred
-until the formalization has enough machine-encoding and simulation
-infrastructure.
+until the formalization has enough compiler construction infrastructure.
 
-The declarations above are therefore useful now: they pin down the exact
-interface that the future construction must satisfy, and they already allow
-downstream theorems to be stated without changing their mathematical shape.
+The declarations above now pin that infrastructure down as
+{name}`ConcreteBooleanSection52CompilerCloseout`. Its fields are the exact
+remaining assumptions for the Boolean version of this section: decidable-to-
+acceptable conversion, a concrete dovetail-description compiler, a partial
+unary range-description compiler, a concrete grammar recognizer compiler, and
+the reverse construction from recursively enumerable languages to general
+grammars. From that one boundary object, the recursive/RE-co-RE theorem, the
+compiled listing/range/program equivalences, and the grammar-pair
+characterization are all available without further hypotheses.
 -/
 
 end Section02
