@@ -1161,6 +1161,290 @@ theorem inv_ne_zero {x : QRat} (hx : x ≠ 0) : x⁻¹ ≠ 0 := by
   exact one_ne_zero hmul
 
 /-!
+# Natural rational fractions
+
+Concrete rational fractions with natural numerators and positive natural
+denominators are useful both for digit-stream real encodings and for explicit
+square-root approximations.  The comparison lemmas keep those constructions in
+natural-number arithmetic whenever possible.
+-/
+
+def natFrac (num den : Nat) (hden : 0 < den) : QRat :=
+  QRat.mk { num := (num : Int), den := den, den_pos := hden }
+
+theorem natFrac_lt_natFrac {a b d : Nat} (hd : 0 < d) (h : a < b) :
+    natFrac a d hd < natFrac b d hd := by
+  apply QRat.lt_mk_of_rawLt
+  unfold RatPair.RawLt
+  change (a : Int) * (d : Int) < (b : Int) * (d : Int)
+  rw [← Int.natCast_mul, ← Int.natCast_mul]
+  exact Int.ofNat_lt.mpr ((Nat.mul_lt_mul_right hd).mpr h)
+
+theorem natFrac_lt_of_cross {a b da db : Nat} (hda : 0 < da) (hdb : 0 < db)
+    (h : a * db < b * da) :
+    natFrac a da hda < natFrac b db hdb := by
+  apply QRat.lt_mk_of_rawLt
+  unfold RatPair.RawLt
+  change (a : Int) * (db : Int) < (b : Int) * (da : Int)
+  rw [← Int.natCast_mul, ← Int.natCast_mul]
+  exact Int.ofNat_lt.mpr h
+
+theorem natFrac_lt_one_over_of_cross {a d e : Nat} (hd : 0 < d) (he : 0 < e)
+    (h : a * d < e) :
+    natFrac a e he < natFrac 1 d hd := by
+  exact natFrac_lt_of_cross he hd (by simpa [Nat.mul_one] using h)
+
+theorem one_gt_natFrac {a d : Nat} (hd : 0 < d) (h : a < d) :
+    natFrac a d hd < (1 : QRat) := by
+  change natFrac a d hd < QRat.ofNat 1
+  unfold QRat.ofNat QRat.ofInt
+  apply QRat.lt_mk_of_rawLt
+  unfold RatPair.RawLt
+  change (a : Int) * (1 : Int) < (1 : Int) * (d : Int)
+  simp
+  exact h
+
+theorem natFrac_pos {a d : Nat} (ha : 0 < a) (hd : 0 < d) :
+    (0 : QRat) < natFrac a d hd := by
+  change QRat.ofInt 0 < natFrac a d hd
+  unfold natFrac QRat.ofInt
+  apply QRat.lt_mk_of_rawLt
+  unfold RatPair.RawLt RatPair.ofInt
+  simp
+  exact ha
+
+theorem natFrac_mul_self_lt_of_square_lt {p q c : Nat} (hq : 0 < q)
+    (h : p * p < c * q * q) :
+    natFrac p q hq * natFrac p q hq < QRat.ofNat c := by
+  unfold natFrac QRat.ofNat QRat.ofInt
+  apply QRat.lt_mk_of_rawLt
+  unfold RatPair.RawLt RatPair.mul RatPair.ofInt
+  simp [Int.natCast_mul]
+  exact Int.ofNat_lt.mpr (by simpa [Nat.mul_assoc] using h)
+
+theorem natFrac_square_add_gap_eq_of_num_square_add_gap {p q c gap : Nat}
+    (hq : 0 < q) (h : p * p + gap = c * q * q) :
+    natFrac p q hq * natFrac p q hq +
+      natFrac gap (q * q) (Nat.mul_pos hq hq) = QRat.ofNat c := by
+  unfold natFrac QRat.ofNat QRat.ofInt
+  apply Quotient.sound
+  change RatPair.Rel
+    (RatPair.add (RatPair.mul { num := (p : Int), den := q, den_pos := hq }
+      { num := (p : Int), den := q, den_pos := hq })
+      { num := (gap : Int), den := q * q, den_pos := Nat.mul_pos hq hq })
+    (RatPair.ofInt (c : Int))
+  unfold RatPair.Rel RatPair.add RatPair.mul RatPair.ofInt
+  simp [Int.natCast_mul]
+  have hi : (p * p + gap : Int) = (c * q * q : Int) := by
+    exact congrArg (fun t : Nat => (t : Int)) h
+  calc
+    (p : Int) * (p : Int) * ((q : Int) * (q : Int)) +
+        (gap : Int) * ((q : Int) * (q : Int))
+        = ((p : Int) * (p : Int) + (gap : Int)) * ((q : Int) * (q : Int)) := by
+          rw [Int.add_mul]
+    _ = ((c : Int) * (q : Int) * (q : Int)) * ((q : Int) * (q : Int)) := by
+          rw [hi]
+    _ = (c : Int) * (((q : Int) * (q : Int)) * ((q : Int) * (q : Int))) := by
+          ac_rfl
+
+/-!
+# Square-root approximation sequences
+
+The concrete Dedekind-cut square roots need quotient-rational approximants from
+below.  The following Pell-style recurrences give explicit unbounded-denominator
+families whose squares are just below {lit}`2` and {lit}`3`; the exact gap
+equalities record the quantitative error term available for the later cut
+proofs.
+-/
+
+mutual
+  def sqrtTwoApproxNum : Nat -> Nat
+    | 0 => 1
+    | n + 1 => 3 * sqrtTwoApproxNum n + 4 * sqrtTwoApproxDen n
+
+  def sqrtTwoApproxDen : Nat -> Nat
+    | 0 => 1
+    | n + 1 => 2 * sqrtTwoApproxNum n + 3 * sqrtTwoApproxDen n
+end
+
+theorem sqrtTwoApprox_pell (n : Nat) :
+    sqrtTwoApproxNum n * sqrtTwoApproxNum n + 1 =
+      2 * sqrtTwoApproxDen n * sqrtTwoApproxDen n := by
+  induction n with
+  | zero => decide
+  | succ n ih =>
+      simp [sqrtTwoApproxNum, sqrtTwoApproxDen]
+      grind
+
+theorem sqrtTwoApproxNum_pos (n : Nat) : 0 < sqrtTwoApproxNum n := by
+  induction n with
+  | zero => decide
+  | succ n ih =>
+      simp [sqrtTwoApproxNum]
+      omega
+
+theorem sqrtTwoApproxDen_pos (n : Nat) : 0 < sqrtTwoApproxDen n := by
+  induction n with
+  | zero => decide
+  | succ n ih =>
+      simp [sqrtTwoApproxDen]
+      omega
+
+theorem sqrtTwoApproxDen_linear_growth (n : Nat) :
+    n + 1 ≤ sqrtTwoApproxDen n := by
+  induction n with
+  | zero => decide
+  | succ n ih =>
+      simp [sqrtTwoApproxDen]
+      omega
+
+theorem sqrtTwoApproxDen_gt_self (n : Nat) : n < sqrtTwoApproxDen n := by
+  have h := sqrtTwoApproxDen_linear_growth n
+  omega
+
+theorem exists_sqrtTwoApproxDen_gt (bound : Nat) :
+    exists n : Nat, bound < sqrtTwoApproxDen n := by
+  exists bound
+  exact sqrtTwoApproxDen_gt_self bound
+
+def sqrtTwoApprox (n : Nat) : QRat :=
+  natFrac (sqrtTwoApproxNum n) (sqrtTwoApproxDen n) (sqrtTwoApproxDen_pos n)
+
+def sqrtTwoApproxGap (n : Nat) : QRat :=
+  natFrac 1 (sqrtTwoApproxDen n * sqrtTwoApproxDen n)
+    (Nat.mul_pos (sqrtTwoApproxDen_pos n) (sqrtTwoApproxDen_pos n))
+
+theorem sqrtTwoApprox_pos (n : Nat) : (0 : QRat) < sqrtTwoApprox n := by
+  unfold sqrtTwoApprox
+  exact natFrac_pos (sqrtTwoApproxNum_pos n) (sqrtTwoApproxDen_pos n)
+
+theorem sqrtTwoApprox_num_square_lt_two_den_square (n : Nat) :
+    sqrtTwoApproxNum n * sqrtTwoApproxNum n <
+      2 * sqrtTwoApproxDen n * sqrtTwoApproxDen n := by
+  have h := sqrtTwoApprox_pell n
+  omega
+
+theorem sqrtTwoApprox_square_lt_two (n : Nat) :
+    sqrtTwoApprox n * sqrtTwoApprox n < (2 : QRat) := by
+  change sqrtTwoApprox n * sqrtTwoApprox n < QRat.ofNat 2
+  unfold sqrtTwoApprox
+  exact natFrac_mul_self_lt_of_square_lt (sqrtTwoApproxDen_pos n)
+    (sqrtTwoApprox_num_square_lt_two_den_square n)
+
+theorem sqrtTwoApprox_square_gap_eq_two (n : Nat) :
+    sqrtTwoApprox n * sqrtTwoApprox n + sqrtTwoApproxGap n = (2 : QRat) := by
+  change sqrtTwoApprox n * sqrtTwoApprox n + sqrtTwoApproxGap n = QRat.ofNat 2
+  unfold sqrtTwoApprox sqrtTwoApproxGap
+  exact natFrac_square_add_gap_eq_of_num_square_add_gap (sqrtTwoApproxDen_pos n)
+    (sqrtTwoApprox_pell n)
+
+theorem exists_sqrtTwoApproxGap_lt_natFrac_one (bound : Nat) :
+    exists n : Nat, sqrtTwoApproxGap n < natFrac 1 (bound + 1) (Nat.succ_pos bound) := by
+  let n := bound + 1
+  exists n
+  unfold sqrtTwoApproxGap
+  apply natFrac_lt_one_over_of_cross
+  simp
+  have hden : bound + 1 < sqrtTwoApproxDen n := by
+    simpa [n] using sqrtTwoApproxDen_gt_self n
+  have hle : sqrtTwoApproxDen n ≤ sqrtTwoApproxDen n * sqrtTwoApproxDen n := by
+    exact Nat.le_mul_of_pos_right (sqrtTwoApproxDen n) (sqrtTwoApproxDen_pos n)
+  exact Nat.lt_of_lt_of_le hden hle
+
+mutual
+  def sqrtThreeApproxNum : Nat -> Nat
+    | 0 => 1
+    | n + 1 => 2 * sqrtThreeApproxNum n + 3 * sqrtThreeApproxDen n
+
+  def sqrtThreeApproxDen : Nat -> Nat
+    | 0 => 1
+    | n + 1 => sqrtThreeApproxNum n + 2 * sqrtThreeApproxDen n
+end
+
+theorem sqrtThreeApprox_pell (n : Nat) :
+    sqrtThreeApproxNum n * sqrtThreeApproxNum n + 2 =
+      3 * sqrtThreeApproxDen n * sqrtThreeApproxDen n := by
+  induction n with
+  | zero => decide
+  | succ n ih =>
+      simp [sqrtThreeApproxNum, sqrtThreeApproxDen]
+      grind
+
+theorem sqrtThreeApproxNum_pos (n : Nat) : 0 < sqrtThreeApproxNum n := by
+  induction n with
+  | zero => decide
+  | succ n ih =>
+      simp [sqrtThreeApproxNum]
+      omega
+
+theorem sqrtThreeApproxDen_pos (n : Nat) : 0 < sqrtThreeApproxDen n := by
+  induction n with
+  | zero => decide
+  | succ n ih =>
+      simp [sqrtThreeApproxDen]
+      omega
+
+theorem sqrtThreeApproxDen_linear_growth (n : Nat) :
+    n + 1 ≤ sqrtThreeApproxDen n := by
+  induction n with
+  | zero => decide
+  | succ n ih =>
+      simp [sqrtThreeApproxDen]
+      omega
+
+theorem sqrtThreeApproxDen_gt_self (n : Nat) : n < sqrtThreeApproxDen n := by
+  have h := sqrtThreeApproxDen_linear_growth n
+  omega
+
+theorem exists_sqrtThreeApproxDen_gt (bound : Nat) :
+    exists n : Nat, bound < sqrtThreeApproxDen n := by
+  exists bound
+  exact sqrtThreeApproxDen_gt_self bound
+
+def sqrtThreeApprox (n : Nat) : QRat :=
+  natFrac (sqrtThreeApproxNum n) (sqrtThreeApproxDen n) (sqrtThreeApproxDen_pos n)
+
+def sqrtThreeApproxGap (n : Nat) : QRat :=
+  natFrac 2 (sqrtThreeApproxDen n * sqrtThreeApproxDen n)
+    (Nat.mul_pos (sqrtThreeApproxDen_pos n) (sqrtThreeApproxDen_pos n))
+
+theorem sqrtThreeApprox_pos (n : Nat) : (0 : QRat) < sqrtThreeApprox n := by
+  unfold sqrtThreeApprox
+  exact natFrac_pos (sqrtThreeApproxNum_pos n) (sqrtThreeApproxDen_pos n)
+
+theorem sqrtThreeApprox_num_square_lt_three_den_square (n : Nat) :
+    sqrtThreeApproxNum n * sqrtThreeApproxNum n <
+      3 * sqrtThreeApproxDen n * sqrtThreeApproxDen n := by
+  have h := sqrtThreeApprox_pell n
+  omega
+
+theorem sqrtThreeApprox_square_lt_three (n : Nat) :
+    sqrtThreeApprox n * sqrtThreeApprox n < (3 : QRat) := by
+  change sqrtThreeApprox n * sqrtThreeApprox n < QRat.ofNat 3
+  unfold sqrtThreeApprox
+  exact natFrac_mul_self_lt_of_square_lt (sqrtThreeApproxDen_pos n)
+    (sqrtThreeApprox_num_square_lt_three_den_square n)
+
+theorem sqrtThreeApprox_square_gap_eq_three (n : Nat) :
+    sqrtThreeApprox n * sqrtThreeApprox n + sqrtThreeApproxGap n = (3 : QRat) := by
+  change sqrtThreeApprox n * sqrtThreeApprox n + sqrtThreeApproxGap n = QRat.ofNat 3
+  unfold sqrtThreeApprox sqrtThreeApproxGap
+  exact natFrac_square_add_gap_eq_of_num_square_add_gap (sqrtThreeApproxDen_pos n)
+    (sqrtThreeApprox_pell n)
+
+theorem exists_sqrtThreeApproxGap_lt_natFrac_one (bound : Nat) :
+    exists n : Nat, sqrtThreeApproxGap n < natFrac 1 (bound + 1) (Nat.succ_pos bound) := by
+  let n := 2 * (bound + 1)
+  exists n
+  unfold sqrtThreeApproxGap
+  apply natFrac_lt_one_over_of_cross
+  have hden : 2 * (bound + 1) < sqrtThreeApproxDen n := by
+    simpa [n] using sqrtThreeApproxDen_gt_self n
+  have hle : sqrtThreeApproxDen n ≤ sqrtThreeApproxDen n * sqrtThreeApproxDen n := by
+    exact Nat.le_mul_of_pos_right (sqrtThreeApproxDen n) (sqrtThreeApproxDen_pos n)
+  exact Nat.lt_of_lt_of_le hden hle
+
+/-!
 # Powers and square-root obstructions
 
 Natural powers and reduced-rational representatives connect the quotient

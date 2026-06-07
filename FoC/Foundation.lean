@@ -68,7 +68,9 @@ reuse exactly the amount of structure they need.  {module}`FoC.Foundation.Ration
 starts with raw rational representatives, {module}`FoC.Foundation.RationalCore`
 contains reduced-rational divisibility arguments, and
 {module}`FoC.Foundation.QuotientRationals` supplies quotient rationals for the
-Dedekind-cut construction in {module}`FoC.Foundation.Reals`.  The
+Dedekind-cut construction in {module}`FoC.Foundation.Reals`, including explicit
+natural-fraction square-root approximants used to approach the concrete
+square-root cuts.  The
 diagonalization modules, {module}`FoC.Foundation.DigitStreams` and
 {module}`FoC.Foundation.RealUncountability`, connect the countability material
 to the book's proof that the real numbers are uncountable.

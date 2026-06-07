@@ -18,7 +18,7 @@ definitions or lemmas.
 | `Integers.lean` | Chapter 1 integer parity and divisibility examples; later Chapter 2 integer countability. |
 | `Rationals.lean` | Chapter 1 rational-number closure examples; later Chapter 2 rational countability. |
 | `RationalCore.lean` | Chapter 1 reduced rational-square-root contradiction proofs; bridge material for quotient-rational and real wrappers. |
-| `QuotientRationals.lean` | Quotient rational numbers over positive-denominator integer fractions, with arithmetic, order, density, countability, embeddings for Dedekind-cut reals, and no-square-root theorems for 2 and 3. |
+| `QuotientRationals.lean` | Quotient rational numbers over positive-denominator integer fractions, with arithmetic, order, density, countability, natural-fraction comparison helpers, explicit square-root approximants for 2 and 3, embeddings for Dedekind-cut reals, and no-square-root theorems for 2 and 3. |
 | `Reals.lean` | Dedekind-cut real numbers over quotient rationals, with rational embedding, order, density, cut addition/subtraction/multiplication, powers, rational scaling, embedded-rational division, concrete square-root cut candidates, and rational/irrational predicates plus square-characterization and square-equation irrationality bridges for book wrappers. |
 | `QuadraticSurd.lean` | Historical Chapter 1 surrogate model for `sqrt(2)` examples until square-root square equalities replace it in book-facing wrappers. |
 | `DigitStreams.lean` | Chapter 2 binary digit-stream diagonalization core used by the real-uncountability bridge. |

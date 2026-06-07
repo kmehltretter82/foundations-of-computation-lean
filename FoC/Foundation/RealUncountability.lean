@@ -22,48 +22,6 @@ Used by:
 namespace FoC
 namespace Foundation
 
-namespace QRat
-
-/-!
-# Natural rational fractions
-
-The base-4 construction needs concrete rational fractions with natural
-numerators and positive natural denominators, plus comparison lemmas expressed
-as natural-number inequalities.
--/
-
-def natFrac (num den : Nat) (hden : 0 < den) : QRat :=
-  QRat.mk { num := (num : Int), den := den, den_pos := hden }
-
-theorem natFrac_lt_natFrac {a b d : Nat} (hd : 0 < d) (h : a < b) :
-    natFrac a d hd < natFrac b d hd := by
-  apply QRat.lt_mk_of_rawLt
-  unfold RatPair.RawLt
-  change (a : Int) * (d : Int) < (b : Int) * (d : Int)
-  rw [← Int.natCast_mul, ← Int.natCast_mul]
-  exact Int.ofNat_lt.mpr ((Nat.mul_lt_mul_right hd).mpr h)
-
-theorem natFrac_lt_of_cross {a b da db : Nat} (hda : 0 < da) (hdb : 0 < db)
-    (h : a * db < b * da) :
-    natFrac a da hda < natFrac b db hdb := by
-  apply QRat.lt_mk_of_rawLt
-  unfold RatPair.RawLt
-  change (a : Int) * (db : Int) < (b : Int) * (da : Int)
-  rw [← Int.natCast_mul, ← Int.natCast_mul]
-  exact Int.ofNat_lt.mpr h
-
-theorem one_gt_natFrac {a d : Nat} (hd : 0 < d) (h : a < d) :
-    natFrac a d hd < (1 : QRat) := by
-  change natFrac a d hd < QRat.ofNat 1
-  unfold QRat.ofNat QRat.ofInt
-  apply QRat.lt_mk_of_rawLt
-  unfold RatPair.RawLt
-  change (a : Int) * (1 : Int) < (1 : Int) * (d : Int)
-  simp
-  exact h
-
-end QRat
-
 namespace DigitStream
 
 /-!
