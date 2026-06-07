@@ -81,6 +81,54 @@ def TuringComputable (f : Word input -> Word output) : Prop :=
           ComputesFunction M encodeInput encodeOutput f
 
 /-!
+The faithful variants record the usual string-encoding discipline explicitly:
+different source symbols must remain distinguishable after encoding. The older
+definitions above are kept as the compatibility layer used by existing chapter
+statements.
+-/
+
+def FaithfulComputesFunction (M : TuringMachine symbol state)
+    (encodeInput : input -> symbol)
+    (encodeOutput : output -> symbol)
+    (f : Word input -> Word output) : Prop :=
+  Function.Injective encodeInput ∧
+    Function.Injective encodeOutput ∧
+      ComputesFunction M encodeInput encodeOutput f
+
+def FaithfulTuringComputable (f : Word input -> Word output) : Prop :=
+  exists symbol : Type, exists state : Type,
+    exists M : TuringMachine symbol state,
+      exists encodeInput : input -> symbol,
+        exists encodeOutput : output -> symbol,
+          FaithfulComputesFunction M encodeInput encodeOutput f
+
+theorem faithfulComputesFunction_to_computesFunction
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {encodeOutput : output -> symbol}
+    {f : Word input -> Word output}
+    (h : FaithfulComputesFunction M encodeInput encodeOutput f) :
+    ComputesFunction M encodeInput encodeOutput f :=
+  h.right.right
+
+theorem faithfulTuringComputable_to_turingComputable
+    {f : Word input -> Word output}
+    (h : FaithfulTuringComputable f) :
+    TuringComputable f := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro encodeOutput hcomp =>
+                      exact
+                        ⟨symbol, state, M, encodeInput, encodeOutput,
+                          faithfulComputesFunction_to_computesFunction hcomp⟩
+
+/-!
 # Partial computable functions
 
 Partial functions are represented by options. Undefined inputs correspond to
@@ -106,6 +154,49 @@ def TuringComputablePartial (f : Word input -> Option (Word output)) : Prop :=
       exists encodeInput : input -> symbol,
         exists encodeOutput : output -> symbol,
           ComputesPartialFunction M encodeInput encodeOutput f
+
+def FaithfulComputesPartialFunction (M : TuringMachine symbol state)
+    (encodeInput : input -> symbol)
+    (encodeOutput : output -> symbol)
+    (f : Word input -> Option (Word output)) : Prop :=
+  Function.Injective encodeInput ∧
+    Function.Injective encodeOutput ∧
+      ComputesPartialFunction M encodeInput encodeOutput f
+
+def FaithfulTuringComputablePartial
+    (f : Word input -> Option (Word output)) : Prop :=
+  exists symbol : Type, exists state : Type,
+    exists M : TuringMachine symbol state,
+      exists encodeInput : input -> symbol,
+        exists encodeOutput : output -> symbol,
+          FaithfulComputesPartialFunction M encodeInput encodeOutput f
+
+theorem faithfulComputesPartialFunction_to_computesPartialFunction
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {encodeOutput : output -> symbol}
+    {f : Word input -> Option (Word output)}
+    (h : FaithfulComputesPartialFunction M encodeInput encodeOutput f) :
+    ComputesPartialFunction M encodeInput encodeOutput f :=
+  h.right.right
+
+theorem faithfulTuringComputablePartial_to_turingComputablePartial
+    {f : Word input -> Option (Word output)}
+    (h : FaithfulTuringComputablePartial f) :
+    TuringComputablePartial f := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro encodeOutput hcomp =>
+                      exact
+                        ⟨symbol, state, M, encodeInput, encodeOutput,
+                          faithfulComputesPartialFunction_to_computesPartialFunction
+                            hcomp⟩
 
 def TotalAsPartial (f : Word input -> Word output) :
     Word input -> Option (Word output) :=
@@ -138,6 +229,17 @@ theorem computesFunction_to_partial
   intro w
   exact h w
 
+theorem faithfulComputesFunction_to_partial
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {encodeOutput : output -> symbol}
+    {f : Word input -> Word output}
+    (h : FaithfulComputesFunction M encodeInput encodeOutput f) :
+    FaithfulComputesPartialFunction M encodeInput encodeOutput
+      (TotalAsPartial f) :=
+  ⟨h.left, h.right.left,
+    computesFunction_to_partial
+      (faithfulComputesFunction_to_computesFunction h)⟩
+
 theorem turingComputable_to_partial
     {f : Word input -> Word output}
     (h : TuringComputable f) :
@@ -154,6 +256,23 @@ theorem turingComputable_to_partial
                   | intro encodeOutput hcomp =>
                       exact ⟨symbol, state, M, encodeInput, encodeOutput,
                         computesFunction_to_partial hcomp⟩
+
+theorem faithfulTuringComputable_to_partial
+    {f : Word input -> Word output}
+    (h : FaithfulTuringComputable f) :
+    FaithfulTuringComputablePartial (TotalAsPartial f) := by
+  cases h with
+  | intro symbol hsymbol =>
+      cases hsymbol with
+      | intro state hstate =>
+          cases hstate with
+          | intro M hM =>
+              cases hM with
+              | intro encodeInput henc =>
+                  cases henc with
+                  | intro encodeOutput hcomp =>
+                      exact ⟨symbol, state, M, encodeInput, encodeOutput,
+                        faithfulComputesFunction_to_partial hcomp⟩
 
 theorem partialFunctionDomain_mem
     {f : Word input -> Option (Word output)} (w : Word input) :

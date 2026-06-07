@@ -41,6 +41,7 @@ import FoC.Computability.Enumerable
 import FoC.Computability.Undecidable
 import FoC.Computability.Coding
 import FoC.Computability.Encoding
+import FoC.Computability.DiagonalPairMachine
 import FoC.Computability.Compiler
 import FoC.Computability.FiniteProgram
 import FoC.Foundation
@@ -108,8 +109,8 @@ The reusable infrastructure is split into four large layers.
 * {module}`FoC.Computability` builds the Chapter 5 layer: Turing-machine tapes,
   configurations, computations, total and partial computability,
   recognizability, enumerability, staged programs, finite machine descriptions,
-  compiler bridges, reductions, diagonalization, and halting-problem
-  vocabulary.
+  compiler bridges, reductions, diagonalization, concrete diagonal-pair
+  machine witnesses, and halting-problem vocabulary.
 
 ## Chapter route
 

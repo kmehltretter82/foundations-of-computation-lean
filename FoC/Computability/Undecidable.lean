@@ -127,6 +127,11 @@ def ComputableMapDecidablePreimagePrinciple
   forall map : Word input -> Word output,
     TuringComputable map -> DecidablePreimagePrinciple map
 
+def FaithfulComputableMapDecidablePreimagePrinciple
+    (input : Type u) (output : Type v) : Prop :=
+  forall map : Word input -> Word output,
+    FaithfulTuringComputable map -> DecidablePreimagePrinciple map
+
 def PairEncodingInjective
     (encodePair : Word code -> Word code -> Word pairSymbol) : Prop :=
   forall a b c d : Word code,
@@ -150,6 +155,22 @@ theorem decidablePreimagePrinciple_of_computableMapPrinciple
     (hcomputable : TuringComputable map) :
     DecidablePreimagePrinciple map :=
   hpreimage map hcomputable
+
+theorem decidablePreimagePrinciple_of_faithfulComputableMapPrinciple
+    {map : Word input -> Word output}
+    (hpreimage :
+      FaithfulComputableMapDecidablePreimagePrinciple input output)
+    (hcomputable : FaithfulTuringComputable map) :
+    DecidablePreimagePrinciple map :=
+  hpreimage map hcomputable
+
+theorem faithfulComputableMapDecidablePreimagePrinciple_of_computableMapPrinciple
+    (hpreimage : ComputableMapDecidablePreimagePrinciple input output) :
+    FaithfulComputableMapDecidablePreimagePrinciple input output := by
+  intro map hcomputable
+  exact
+    hpreimage map
+      (faithfulTuringComputable_to_turingComputable hcomputable)
 
 /-!
 # Undecidability transport
@@ -565,6 +586,18 @@ theorem diagonalPairDecidablePreimagePrinciple_of_computableMapPrinciple
   diagonalPairDecidablePreimagePrinciple_of_preimage
     hinj
     (decidablePreimagePrinciple_of_computableMapPrinciple
+      hpreimage hcomputable)
+
+theorem diagonalPairDecidablePreimagePrinciple_of_faithfulComputableMapPrinciple
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    (hinj : PairEncodingInjective encodePair)
+    (hpreimage :
+      FaithfulComputableMapDecidablePreimagePrinciple code pairSymbol)
+    (hcomputable : FaithfulTuringComputable (DiagonalPairMap encodePair)) :
+    DiagonalPairDecidablePreimagePrinciple encodePair :=
+  diagonalPairDecidablePreimagePrinciple_of_preimage
+    hinj
+    (decidablePreimagePrinciple_of_faithfulComputableMapPrinciple
       hpreimage hcomputable)
 
 theorem haltingProblem_of_pointwise_iff

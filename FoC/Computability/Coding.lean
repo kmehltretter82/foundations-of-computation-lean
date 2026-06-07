@@ -192,6 +192,19 @@ theorem diagonalPairDecidablePreimagePrinciple_of_concrete_computable_map
   exact diagonalPairDecidablePreimagePrinciple_of_computableMapPrinciple
     encodePair_injective hpreimage hcomputable
 
+theorem diagonalPairDecidablePreimagePrinciple_of_concrete_faithful_computable_map
+    (hpreimage :
+      FaithfulComputableMapDecidablePreimagePrinciple code
+        (PairCodeSymbol code))
+    (hcomputable :
+      FaithfulTuringComputable
+        (diagonalMap : Word code -> Word (PairCodeSymbol code))) :
+    DiagonalPairDecidablePreimagePrinciple
+      (encodePair : Word code -> Word code -> Word (PairCodeSymbol code)) := by
+  rw [diagonalMap_eq_diagonalPairMap] at hcomputable
+  exact diagonalPairDecidablePreimagePrinciple_of_faithfulComputableMapPrinciple
+    encodePair_injective hpreimage hcomputable
+
 theorem concretePairHalting_undecidable_if_decoder_universal_of_preimage
     {decodeAccepts : Word code -> Word code -> Prop}
     (haccept : DecidableToAcceptablePrinciple code)
@@ -223,6 +236,26 @@ theorem concretePairHalting_undecidable_if_decoder_universal_of_computable_map
   pairHalting_undecidable_if_decoder_universal
     haccept
     (diagonalPairDecidablePreimagePrinciple_of_concrete_computable_map
+      hpreimage hcomputable)
+    huniv
+
+theorem concretePairHalting_undecidable_if_decoder_universal_of_faithful_computable_map
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (haccept : DecidableToAcceptablePrinciple code)
+    (hpreimage :
+      FaithfulComputableMapDecidablePreimagePrinciple code
+        (PairCodeSymbol code))
+    (hcomputable :
+      FaithfulTuringComputable
+        (diagonalMap : Word code -> Word (PairCodeSymbol code)))
+    (huniv : DecoderUniversalForAcceptableLanguages decodeAccepts) :
+    UndecidableLanguage
+      (PairHaltingProblem
+        (encodePair : Word code -> Word code -> Word (PairCodeSymbol code))
+        decodeAccepts) :=
+  pairHalting_undecidable_if_decoder_universal
+    haccept
+    (diagonalPairDecidablePreimagePrinciple_of_concrete_faithful_computable_map
       hpreimage hcomputable)
     huniv
 

@@ -36,9 +36,10 @@ concrete machine-description compilers are exposed as named construction
 surfaces.
 
 Section 5.3 states the diagonal, reduction, self-halting, pair-halting,
-machine-encoding, and universal-machine vocabulary. The concrete encoding and
-interpreter layers are present, while the final finite universal-runner theorem
-is still an explicit construction target.
+machine-encoding, and universal-machine vocabulary. The concrete encoding,
+interpreter, and non-injective diagonal-pair machine witness are present, while
+the faithful copy-machine theorem and final finite universal-runner theorem are
+still explicit construction targets.
 
 ## What to Inspect
 

@@ -9,6 +9,7 @@ import FoC.Computability.Grammar
 import FoC.Computability.Undecidable
 import FoC.Computability.Coding
 import FoC.Computability.Encoding
+import FoC.Computability.DiagonalPairMachine
 import FoC.Computability.Compiler
 import FoC.Computability.FiniteProgram
 
@@ -45,7 +46,8 @@ exact-step runs and ordinary reachability.
 
 The next files separate the common language-theoretic predicates.
 {module}`FoC.Computability.Computable` defines total and partial computable
-string functions.  {module}`FoC.Computability.Recognizable` defines
+string functions, with both compatibility-level encodings and faithful
+injective-encoding variants.  {module}`FoC.Computability.Recognizable` defines
 Turing-acceptable and Turing-decidable languages.  {module}`FoC.Computability.Transform`
 contains reusable machine transformations.  {module}`FoC.Computability.Enumerable`
 records the enumeration and range-of-computable-function views of recursively
@@ -70,6 +72,10 @@ injectivity facts, and computable-map preimage bridges for those reductions.
 and interpreter layer needed to discharge the remaining compiler and universal
 machine theorem shapes, including a description-backed code-word decoder
 relation for Section 5.3 diagonalization.
+{module}`FoC.Computability.DiagonalPairMachine` contains the extracted finite
+machine witness for the concrete diagonal pair map under the current
+non-injective compatibility interface, and records the faithful copy-machine
+target separately.
 {module}`FoC.Computability.Compiler` proves simulation equivalences between
 well-formed descriptions and their compiled one-tape machines, using normalized
 output for output comparisons, then exposes description-backed compiler bridges
