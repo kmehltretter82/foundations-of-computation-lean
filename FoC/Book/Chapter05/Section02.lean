@@ -264,6 +264,48 @@ def ConcreteFinitePartialUnaryDescriptionOutputRange
     Language Bool :=
   P.descriptionOutputRange
 
+def ConcreteFiniteAcceptorRecognizesLanguage
+    (P : ConcreteFiniteAcceptorProgram) (L : Language Bool) : Prop :=
+  P.description.WellFormed ∧
+    LanguageAcceptanceTrace (ConcreteFiniteAcceptorTrace P) L
+
+def ConcreteFiniteRecognizableLanguage (L : Language Bool) : Prop :=
+  exists P : ConcreteFiniteAcceptorProgram,
+    ConcreteFiniteAcceptorRecognizesLanguage P L
+
+def ConcreteFiniteComplementaryRecognizers
+    (L : Language Bool) : Prop :=
+  exists accept reject : ConcreteFiniteAcceptorProgram,
+    accept.description.WellFormed ∧ reject.description.WellFormed ∧
+      LanguageComplementaryAcceptanceTraces
+        (ConcreteFiniteAcceptorTrace accept)
+        (ConcreteFiniteAcceptorTrace reject) L
+
+def ConcreteFinitePartialUnaryRangePresentsLanguage
+    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (L : Language Bool) : Prop :=
+  P.description.WellFormed ∧
+    ConcreteFinitePartialUnaryOutputComplete P ∧
+      ConcreteFinitePartialUnaryOutputFunctional P ∧
+        Language.Equal
+          (ConcreteFinitePartialUnaryDescriptionOutputRange P) L
+
+def ConcreteFinitePartialUnaryRangeLanguage
+    (L : Language Bool) : Prop :=
+  exists P : ConcreteFinitePartialUnaryRangeProgram,
+    ConcreteFinitePartialUnaryRangePresentsLanguage P L
+
+/-!
+**Finite source presentations.**  These predicates name the concrete case where
+the source object is already a finite supplied description.  A finite acceptor
+recognizes a language by its halting trace, paired finite acceptors provide the
+finite-source version of RE/co-RE dovetailing, and a finite partial-unary range
+program presents a language when its normalized output range is extensionally
+that language.  The later compiler assumptions are therefore only about
+synthesizing these finite descriptions uniformly, not about the consequences of
+having them.
+-/
+
 def LanguageProgramAcceptanceTrace
     (P : StagedProgram alpha Unit)
     (w : Word alpha) (n : Nat) : Prop :=
@@ -695,6 +737,40 @@ theorem concrete_finite_trace_recognizer_recursively_enumerable
       Computability.FiniteAcceptorProgram.traceRecognizer_turingAcceptable
     P hD htrace
 
+theorem concrete_finite_acceptor_recognizes_language_recursively_enumerable
+    (P : ConcreteFiniteAcceptorProgram)
+    {L : Language Bool}
+    (h : ConcreteFiniteAcceptorRecognizesLanguage P L) :
+    RecursivelyEnumerableLanguage L :=
+  concrete_finite_trace_recognizer_recursively_enumerable
+    P h.left h.right
+
+theorem concrete_finite_recognizable_language_recursively_enumerable
+    {L : Language Bool}
+    (h : ConcreteFiniteRecognizableLanguage L) :
+    RecursivelyEnumerableLanguage L := by
+  cases h with
+  | intro P hP =>
+      exact
+        concrete_finite_acceptor_recognizes_language_recursively_enumerable
+          P hP
+
+theorem concrete_finite_complementary_recognizers_have_re_and_co_re
+    {L : Language Bool}
+    (h : ConcreteFiniteComplementaryRecognizers L) :
+    RecursivelyEnumerableLanguageWithComplement L := by
+  cases h with
+  | intro accept haccept =>
+      cases haccept with
+      | intro reject hreject =>
+          constructor
+          · exact
+              concrete_finite_trace_recognizer_recursively_enumerable
+                accept hreject.left hreject.right.right.left
+          · exact
+              concrete_finite_trace_recognizer_recursively_enumerable
+                reject hreject.right.left hreject.right.right.right
+
 /-!
 The next cluster is the deciding analogue of the acceptor cluster above. Boolean
 programs compile to descriptions that decide a language, while dovetail programs
@@ -814,6 +890,44 @@ theorem finite_complementary_traces_recursive_language_of_finite_dovetail_compil
           exact
             concrete_finite_dovetail_program_turing_decidable_of_compiler_construction
               hcompile htraces
+
+theorem concrete_finite_complementary_recognizers_recursive_language_of_finite_dovetail_compiler
+    (hcompile : ConcreteFiniteDovetailCompilerConstruction)
+    {L : Language Bool}
+    (h : ConcreteFiniteComplementaryRecognizers L) :
+    RecursiveLanguage L := by
+  cases h with
+  | intro accept haccept =>
+      cases haccept with
+      | intro reject hreject =>
+          exact
+            concrete_finite_dovetail_program_turing_decidable_of_compiler_construction
+              hcompile hreject.right.right
+
+theorem concrete_finite_complementary_recognizers_have_compiled_dovetail_program
+    (hcompile : ConcreteFiniteDovetailCompilerConstruction)
+    {L : Language Bool}
+    (h : ConcreteFiniteComplementaryRecognizers L) :
+    exists P : ConcreteFiniteDovetailProgram,
+      ProgramBoolDecidesLanguage
+        (ConcreteFiniteDovetailStagedProgram P) L ∧
+        ConcreteFiniteDovetailCompiled P := by
+  cases h with
+  | intro accept haccept =>
+      cases haccept with
+      | intro reject hreject =>
+          cases
+            concrete_finite_dovetail_program_exists_of_compiler_construction
+              hcompile accept reject with
+          | intro P hP =>
+              exists P
+              constructor
+              · cases hP.left
+                cases hP.right.left
+                exact
+                  complementary_traces_dovetailing_program_decides
+                    hreject.right.right
+              · exact hP.right.right
 
 /-!
 Stopped deciders supply a concrete source of complementary traces: one trace
@@ -1336,6 +1450,34 @@ theorem concrete_compiled_partial_unary_function_program_range_is_partially_list
     (concrete_compiled_partial_unary_function_program_range_has_turing_computable_range
       h)
 
+theorem concrete_compiled_partial_unary_range_of_equal
+    {L K : Language Bool}
+    (h : ConcreteCompiledPartialUnaryRange L)
+    (hEq : Language.Equal L K) :
+    ConcreteCompiledPartialUnaryRange K := by
+  cases h with
+  | intro f hf =>
+      cases hf with
+      | intro D hD =>
+          exists f
+          exists D
+          exact And.intro hD.left
+            (Language.equal_trans hD.right hEq)
+
+theorem concrete_compiled_partial_unary_function_program_range_of_equal
+    {L K : Language Bool}
+    (h : ConcreteCompiledPartialUnaryFunctionProgramRange L)
+    (hEq : Language.Equal L K) :
+    ConcreteCompiledPartialUnaryFunctionProgramRange K := by
+  cases h with
+  | intro f hf =>
+      cases hf with
+      | intro D hD =>
+          exists f
+          exists D
+          exact And.intro hD.left
+            (Language.equal_trans hD.right hEq)
+
 theorem partial_unary_string_function_range_has_concrete_compiled_range_of_concrete_compiler
     (hcompile : ConcretePartialUnaryRangeDescriptionCompilerConstruction)
     {L : Language Bool}
@@ -1523,6 +1665,73 @@ theorem concrete_finite_partial_unary_description_output_range_closeout
           concrete_finite_partial_unary_description_output_range_has_program_range
             P hD hcomplete hfunctional
 
+theorem concrete_finite_partial_unary_description_output_range_compiled_program_range
+    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (hD : P.description.WellFormed)
+    (hcomplete : ConcreteFinitePartialUnaryOutputComplete P)
+    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
+    ConcreteCompiledPartialUnaryFunctionProgramRange
+      (ConcreteFinitePartialUnaryDescriptionOutputRange P) := by
+  exists ConcreteFinitePartialUnaryOutputFunction P
+  exists P.description
+  constructor
+  · exact
+      concrete_finite_partial_unary_output_function_compiled_by_description
+        P hD hcomplete
+  · exact
+      Language.equal_trans
+        (partial_function_program_range_language
+          (ConcreteFinitePartialUnaryOutputFunction P))
+        (concrete_finite_partial_unary_output_function_range_equal_description_outputs
+          P hfunctional)
+
+theorem concrete_finite_partial_unary_range_presentation_compiled_range
+    (P : ConcreteFinitePartialUnaryRangeProgram)
+    {L : Language Bool}
+    (h : ConcreteFinitePartialUnaryRangePresentsLanguage P L) :
+    ConcreteCompiledPartialUnaryRange L :=
+  concrete_compiled_partial_unary_range_of_equal
+    (concrete_finite_partial_unary_description_output_range_compiled
+      P h.left h.right.left h.right.right.left)
+    h.right.right.right
+
+theorem concrete_finite_partial_unary_range_presentation_compiled_program_range
+    (P : ConcreteFinitePartialUnaryRangeProgram)
+    {L : Language Bool}
+    (h : ConcreteFinitePartialUnaryRangePresentsLanguage P L) :
+    ConcreteCompiledPartialUnaryFunctionProgramRange L :=
+  concrete_compiled_partial_unary_function_program_range_of_equal
+    (concrete_finite_partial_unary_description_output_range_compiled_program_range
+      P h.left h.right.left h.right.right.left)
+    h.right.right.right
+
+theorem concrete_finite_partial_unary_range_language_compiled_range
+    {L : Language Bool}
+    (h : ConcreteFinitePartialUnaryRangeLanguage L) :
+    ConcreteCompiledPartialUnaryRange L := by
+  cases h with
+  | intro P hP =>
+      exact
+        concrete_finite_partial_unary_range_presentation_compiled_range
+          P hP
+
+theorem concrete_finite_partial_unary_range_language_compiled_program_range
+    {L : Language Bool}
+    (h : ConcreteFinitePartialUnaryRangeLanguage L) :
+    ConcreteCompiledPartialUnaryFunctionProgramRange L := by
+  cases h with
+  | intro P hP =>
+      exact
+        concrete_finite_partial_unary_range_presentation_compiled_program_range
+          P hP
+
+theorem concrete_finite_partial_unary_range_language_partially_listable
+    {L : Language Bool}
+    (h : ConcreteFinitePartialUnaryRangeLanguage L) :
+    LanguagePartiallyListable L :=
+  concrete_compiled_partial_unary_range_is_partially_listable
+    (concrete_finite_partial_unary_range_language_compiled_range h)
+
 theorem function_value_in_range (f : Word input -> Word output) (x : Word input) :
     f x ∈ FunctionRangeLanguage f :=
   range_mem x
@@ -1667,6 +1876,30 @@ def FiniteGeneralGrammarPairGenerated (L : Language terminal) : Prop :=
   FiniteGeneralGrammarGenerated L ∧
     FiniteGeneralGrammarGenerated (Language.Compl L)
 
+def ConcreteFiniteGeneralGrammarRecognizerPresentsLanguage
+    {nonterminal : Type}
+    (G : GeneralGrammar Bool nonterminal)
+    (L : Language Bool) : Prop :=
+  GeneralGrammar.HasFiniteProductions G ∧
+    Language.Equal (GeneralGrammarGeneratedLanguage G) L ∧
+      exists D : MachineDescription,
+        ConcreteProgramCompiledByDescription
+          (GeneralGrammarStagedRecognizer G) D
+
+def ConcreteFiniteGeneralGrammarRecognizerLanguage
+    (L : Language Bool) : Prop :=
+  exists nonterminal : Type,
+    exists G : GeneralGrammar Bool nonterminal,
+      ConcreteFiniteGeneralGrammarRecognizerPresentsLanguage G L
+
+/-!
+**Finite grammar recognizer presentations.**  A finite unrestricted grammar
+together with a supplied description for its derivation-search recognizer is
+already enough to obtain recursive enumerability of the generated language.
+The harder compiler theorem is the uniform construction of that description
+from the finite production list.
+-/
+
 /-!
 For unrestricted grammars, a finite derivation is a finite acceptance trace.
 The first theorems in this block build that trace-level recognizer before any
@@ -1718,6 +1951,52 @@ theorem boolean_general_grammar_generated_is_recursively_enumerable_of_concrete_
     (boolean_general_grammar_generated_language_is_recursively_enumerable_of_concrete_description
       G hcompile)
     hEq
+
+theorem concrete_finite_general_grammar_recognizer_presentation_recursively_enumerable
+    {nonterminal : Type}
+    (G : GeneralGrammar Bool nonterminal)
+    {L : Language Bool}
+    (h : ConcreteFiniteGeneralGrammarRecognizerPresentsLanguage G L) :
+    RecursivelyEnumerableLanguage L := by
+  cases h.right.right with
+  | intro D hD =>
+      exact
+        boolean_general_grammar_generated_is_recursively_enumerable_of_concrete_description
+          G hD h.right.left
+
+theorem concrete_finite_general_grammar_recognizer_language_recursively_enumerable
+    {L : Language Bool}
+    (h : ConcreteFiniteGeneralGrammarRecognizerLanguage L) :
+    RecursivelyEnumerableLanguage L := by
+  cases h with
+  | intro nonterminal hnonterminal =>
+      cases hnonterminal with
+      | intro G hG =>
+          exact
+            concrete_finite_general_grammar_recognizer_presentation_recursively_enumerable
+              G hG
+
+theorem concrete_finite_general_grammar_recognizer_presentation_generated
+    {nonterminal : Type}
+    (G : GeneralGrammar Bool nonterminal)
+    {L : Language Bool}
+    (h : ConcreteFiniteGeneralGrammarRecognizerPresentsLanguage G L) :
+    FiniteGeneralGrammarGenerated L := by
+  exists nonterminal
+  exists G
+  exact And.intro h.left h.right.left
+
+theorem concrete_finite_general_grammar_recognizer_language_generated
+    {L : Language Bool}
+    (h : ConcreteFiniteGeneralGrammarRecognizerLanguage L) :
+    FiniteGeneralGrammarGenerated L := by
+  cases h with
+  | intro nonterminal hnonterminal =>
+      cases hnonterminal with
+      | intro G hG =>
+          exact
+            concrete_finite_general_grammar_recognizer_presentation_generated
+              G hG
 
 theorem boolean_general_grammar_generated_language_is_recursively_enumerable_of_concrete_grammar_compiler
     {nonterminal : Type}
@@ -1781,6 +2060,35 @@ theorem boolean_finite_general_grammar_generated_is_recursively_enumerable_of_co
               exact
                 boolean_general_grammar_generated_is_recursively_enumerable_of_concrete_description
                   G hD hG.right
+
+theorem concrete_finite_general_grammar_recognizer_presentation_of_finite_compiler
+    (hcompile : ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction)
+    {nonterminal : Type}
+    (G : GeneralGrammar Bool nonterminal)
+    (hfinite : GeneralGrammar.HasFiniteProductions G) :
+    ConcreteFiniteGeneralGrammarRecognizerPresentsLanguage
+      G (GeneralGrammarGeneratedLanguage G) := by
+  cases hcompile G hfinite with
+  | intro D hD =>
+      constructor
+      · exact hfinite
+      · constructor
+        · intro w
+          rfl
+        · exists D
+
+theorem concrete_finite_general_grammar_recognizer_language_of_finite_compiler
+    (hcompile : ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction)
+    {nonterminal : Type}
+    (G : GeneralGrammar Bool nonterminal)
+    (hfinite : GeneralGrammar.HasFiniteProductions G) :
+    ConcreteFiniteGeneralGrammarRecognizerLanguage
+      (GeneralGrammarGeneratedLanguage G) := by
+  exists nonterminal
+  exists G
+  exact
+    concrete_finite_general_grammar_recognizer_presentation_of_finite_compiler
+      hcompile G hfinite
 
 theorem boolean_finite_general_grammar_to_recursively_enumerable_construction_of_concrete_grammar_compiler
     (hcompile : ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction) :

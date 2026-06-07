@@ -37,12 +37,17 @@ For the full source-of-truth status, see [`data/coverage.yaml`](data/coverage.ya
   head-output stopped-decider transformation is formalized. The arbitrary
   normalized-output decider version is deferred because the halted head might
   not be on the output symbol, so it needs an output-scanning construction.
-- **Concrete Section 5.2 compiler constructions.** The semantic and staged
-  equivalences are formalized, but several finite machine-description compilers
-  remain explicit construction surfaces:
-  - dovetailing decider compiler from paired recognizers;
-  - partial unary range/listing/program description compilers;
-  - general-grammar recognizer description compiler;
+- **Uniform Section 5.2 finite compiler synthesis.** The semantic and staged
+  equivalences are formalized, and the finite supplied-description layer now
+  has explicit presentation predicates and closeout theorems for finite
+  recognizers, paired finite recognizers, finite partial-unary range programs,
+  and finite grammar recognizers. What remains deferred is the uniform
+  transition-table synthesis that constructs those descriptions from source
+  syntax:
+  - dovetailing decider compiler from paired finite recognizers;
+  - partial unary range/listing/program description compilers from finite
+    listing or range syntax;
+  - finite-production general-grammar recognizer description compiler;
   - recursively-enumerable-to-finite-production-general-grammar construction.
 - **Concrete Section 5.3 universal machine.** The encoding, interpreter,
   compiled-machine simulation, decoder rows, diagonalization, and row-coverage
