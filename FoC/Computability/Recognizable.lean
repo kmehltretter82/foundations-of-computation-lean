@@ -53,12 +53,37 @@ def DecidesLanguage (M : TuringMachine symbol state)
     (¬ w ∈ L ->
       TuringMachine.HaltsWithOutput M (EncodeWord encodeInput w) [zero])
 
+def DecidesLanguageByHeadOutput (M : TuringMachine symbol state)
+    (encodeInput : input -> symbol)
+    (zero one : symbol)
+    (L : Language input) : Prop :=
+  forall w : Word input,
+    (w ∈ L ->
+      exists final,
+        TuringMachine.Computes M (TuringMachine.initial M
+          (EncodeWord encodeInput w)) final ∧
+          TuringMachine.Halted M final ∧
+          Tape.read final.tape = some one) ∧
+    (¬ w ∈ L ->
+      exists final,
+        TuringMachine.Computes M (TuringMachine.initial M
+          (EncodeWord encodeInput w)) final ∧
+          TuringMachine.Halted M final ∧
+          Tape.read final.tape = some zero)
+
 def StoppedDecidesLanguage (M : TuringMachine symbol state)
     (encodeInput : input -> symbol)
     (zero one : symbol)
     (L : Language input) : Prop :=
   TuringMachine.HaltingTransitionsDisabled M ∧
     zero ≠ one ∧ DecidesLanguage M encodeInput zero one L
+
+def StoppedDecidesLanguageByHeadOutput (M : TuringMachine symbol state)
+    (encodeInput : input -> symbol)
+    (zero one : symbol)
+    (L : Language input) : Prop :=
+  TuringMachine.HaltingTransitionsDisabled M ∧
+    zero ≠ one ∧ DecidesLanguageByHeadOutput M encodeInput zero one L
 
 def TuringDecidable (L : Language input) : Prop :=
   exists symbol : Type, exists state : Type,
@@ -74,6 +99,13 @@ def StoppedTuringDecidable (L : Language input) : Prop :=
         exists zero : symbol, exists one : symbol,
           StoppedDecidesLanguage M encodeInput zero one L
 
+def StoppedTuringDecidableByHeadOutput (L : Language input) : Prop :=
+  exists symbol : Type, exists state : Type,
+    exists M : TuringMachine symbol state,
+      exists encodeInput : input -> symbol,
+        exists zero : symbol, exists one : symbol,
+          StoppedDecidesLanguageByHeadOutput M encodeInput zero one L
+
 def Recursive (L : Language input) : Prop :=
   TuringDecidable L
 
@@ -85,70 +117,6 @@ def CoRecursivelyEnumerable (L : Language input) : Prop :=
 
 def RecursivelyEnumerableWithComplement (L : Language input) : Prop :=
   RecursivelyEnumerable L ∧ CoRecursivelyEnumerable L
-
-/-!
-# Exact-output obstruction
-
-With the current exact tape comparison, a decider would have to halt on the
-empty encoded input with a one-symbol output word.  The tape model cannot
-produce that exact final tape from an empty input, so the weak decider predicate
-has no concrete inhabitants until output semantics are normalized or the
-decision-output convention is changed.
--/
-
-theorem not_decidesLanguage_empty_input (M : TuringMachine symbol state)
-    (encodeInput : input -> symbol) (zero one : symbol)
-    (L : Language input) :
-    ¬ DecidesLanguage M encodeInput zero one L := by
-  intro hdec
-  classical
-  by_cases hempty : ([] : Word input) ∈ L
-  · have hhalt :
-        TuringMachine.HaltsWithOutput M ([] : Word symbol) [one] := by
-      simpa [EncodeWord] using (hdec ([] : Word input)).left hempty
-    exact TuringMachine.not_haltsWithOutput_empty_single M one hhalt
-  · have hhalt :
-        TuringMachine.HaltsWithOutput M ([] : Word symbol) [zero] := by
-      simpa [EncodeWord] using (hdec ([] : Word input)).right hempty
-    exact TuringMachine.not_haltsWithOutput_empty_single M zero hhalt
-
-theorem not_turingDecidable_exact_output (L : Language input) :
-    ¬ TuringDecidable L := by
-  intro hdecidable
-  cases hdecidable with
-  | intro symbol hsymbol =>
-      cases hsymbol with
-      | intro state hstate =>
-          cases hstate with
-          | intro M hM =>
-              cases hM with
-              | intro encodeInput henc =>
-                  cases henc with
-                  | intro zero hzero =>
-                      cases hzero with
-                      | intro one hdec =>
-                          exact
-                            not_decidesLanguage_empty_input M encodeInput
-                              zero one L hdec
-
-theorem not_stoppedTuringDecidable_exact_output (L : Language input) :
-    ¬ StoppedTuringDecidable L := by
-  intro hstopped
-  cases hstopped with
-  | intro symbol hsymbol =>
-      cases hsymbol with
-      | intro state hstate =>
-          cases hstate with
-          | intro M hM =>
-              cases hM with
-              | intro encodeInput henc =>
-                  cases henc with
-                  | intro zero hzero =>
-                      cases hzero with
-                      | intro one hdec =>
-                          exact
-                            not_decidesLanguage_empty_input M encodeInput
-                              zero one L hdec.right.right
 
 /-!
 # Trace-search principles

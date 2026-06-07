@@ -31,9 +31,10 @@ namespace Tape
 /-!
 ## Output tape decoding
 
-The machine layer states output using {name}`Tape.output`.  Finite partial
-range programs need the inverse direction: if a halted configuration is in
-standard output form, extract the word it displays.
+The exact tape layer still exposes {name}`Tape.output`.  Most Chapter 5 output
+statements now use {name}`Tape.normalizedOutput`, but these exact decoding
+lemmas remain useful when a construction intentionally produces the canonical
+output tape shape.
 -/
 
 def outputRight? : List (Option symbol) -> Option (Word symbol)
@@ -133,7 +134,7 @@ theorem haltsWithOutputIn_output_unique {D : MachineDescription}
     (h₁ : D.HaltsWithOutputIn n w out₁)
     (h₂ : D.HaltsWithOutputIn n w out₂) :
     out₁ = out₂ := by
-  exact Tape.output_injective (Eq.trans h₁.right.symm h₂.right)
+  exact Eq.trans h₁.right.symm h₂.right
 
 end MachineDescription
 
@@ -251,18 +252,20 @@ structure FiniteBoolProgram where
 
 namespace FiniteBoolProgram
 
-def toStagedProgram (P : FiniteBoolProgram) :
+noncomputable def toStagedProgram (P : FiniteBoolProgram) :
     StagedProgram Bool Bool where
-  run w n :=
+  run w n := by
+    classical
     let final := P.description.runConfig n (P.description.initial w)
-    if final.state = P.description.halt ∧
-        final.tape = Tape.output [true] then
-      some [true]
-    else if final.state = P.description.halt ∧
-        final.tape = Tape.output [false] then
-      some [false]
-    else
-      none
+    exact
+      if final.state = P.description.halt ∧
+          Tape.normalizedOutput final.tape = [true] then
+        some [true]
+      else if final.state = P.description.halt ∧
+          Tape.normalizedOutput final.tape = [false] then
+        some [false]
+      else
+        none
 
 def compile (P : FiniteBoolProgram) : MachineDescription :=
   P.description
@@ -279,21 +282,36 @@ theorem toStagedProgram_run_false_of_halts
     {P : FiniteBoolProgram} {w : Word Bool} {n : Nat}
     (h : P.description.HaltsWithOutputIn n w [false]) :
     P.toStagedProgram.run w n = some [false] := by
+  classical
   unfold MachineDescription.HaltsWithOutputIn at h
   have hnot :
       ¬((P.description.runConfig n (P.description.initial w)).state =
           P.description.halt ∧
-        (P.description.runConfig n (P.description.initial w)).tape =
-          Tape.output [true]) := by
+        Tape.normalizedOutput
+          (P.description.runConfig n (P.description.initial w)).tape =
+          [true]) := by
     intro htrue
     have hEq := MachineDescription.haltsWithOutputIn_output_unique htrue h
     cases hEq
-  have hTapeNe : Tape.output [false] ≠ Tape.output [true] := by
-    intro htape
-    have hEq := Tape.output_injective htape
-    cases hEq
-  simp [toStagedProgram, h, hTapeNe]
-  rfl
+  change
+    (if
+        (P.description.runConfig n (P.description.initial w)).state =
+            P.description.halt ∧
+          Tape.normalizedOutput
+            (P.description.runConfig n (P.description.initial w)).tape =
+            [true] then
+        some [true]
+      else if
+        (P.description.runConfig n (P.description.initial w)).state =
+            P.description.halt ∧
+          Tape.normalizedOutput
+            (P.description.runConfig n (P.description.initial w)).tape =
+            [false] then
+        some [false]
+      else
+        none) = some [false]
+  rw [if_neg hnot]
+  simp [h]
 
 theorem compiledByDescription
     (P : FiniteBoolProgram)
@@ -315,15 +333,19 @@ theorem compiledByDescription
             by_cases htrue :
               (P.description.runConfig n (P.description.initial w)).state =
                   P.description.halt ∧
-                  (P.description.runConfig n (P.description.initial w)).tape =
-                  Tape.output [true]
+                  Tape.normalizedOutput
+                    (P.description.runConfig n
+                      (P.description.initial w)).tape =
+                    [true]
             · simp [toStagedProgram, htrue] at hn
               cases hn
             · by_cases hfalse :
                 (P.description.runConfig n (P.description.initial w)).state =
                     P.description.halt ∧
-                  (P.description.runConfig n (P.description.initial w)).tape =
-                    Tape.output [false]
+                  Tape.normalizedOutput
+                    (P.description.runConfig n
+                      (P.description.initial w)).tape =
+                    [false]
               · exact Exists.intro n hfalse
               · simp [toStagedProgram, htrue, hfalse] at hn
     · constructor
@@ -338,20 +360,24 @@ theorem compiledByDescription
             by_cases htrue :
               (P.description.runConfig n (P.description.initial w)).state =
                   P.description.halt ∧
-                (P.description.runConfig n (P.description.initial w)).tape =
-                  Tape.output [true]
+                Tape.normalizedOutput
+                  (P.description.runConfig n
+                    (P.description.initial w)).tape =
+                  [true]
             · exact Exists.intro n htrue
             · by_cases hfalse :
                 (P.description.runConfig n (P.description.initial w)).state =
                     P.description.halt ∧
-                  (P.description.runConfig n (P.description.initial w)).tape =
-                    Tape.output [false]
-              · have hTapeNe : Tape.output [false] ≠ Tape.output [true] := by
-                  intro htape
-                  have hEq := Tape.output_injective htape
+                  Tape.normalizedOutput
+                    (P.description.runConfig n
+                      (P.description.initial w)).tape =
+                    [false]
+              · simp [toStagedProgram, hfalse] at hn
+                have hne : ¬ ([false] : Word Bool) = [true] := by
+                  intro hEq
                   cases hEq
-                simp [toStagedProgram, hfalse, hTapeNe] at hn
-                cases hn
+                have hEq := hn hne
+                cases hEq
               · simp [toStagedProgram, htrue, hfalse] at hn
 
 theorem programBoolDecidableByDescription
@@ -459,7 +485,7 @@ def toStagedProgram (P : FinitePartialUnaryRangeProgram) :
     let final := P.description.runConfig n
       (P.description.initial (encodeInput w))
     if final.state = P.description.halt then
-      Tape.toOutput? final.tape
+      some (Tape.normalizedOutput final.tape)
     else
       none
 
@@ -512,13 +538,12 @@ theorem outputRange_equal_descriptionOutputRange
                 (P.description.initial (encodeInput w))).state =
                 P.description.halt
             · have hout :
-                Tape.toOutput?
+                Tape.normalizedOutput
                   (P.description.runConfig n
                     (P.description.initial (encodeInput w))).tape =
-                    some out := by
+                    out := by
                   simpa [hhalt] using hn
-              have htape := Tape.toOutput?_eq_some_output hout
-              exact Exists.intro w (Exists.intro n (And.intro hhalt htape))
+              exact Exists.intro w (Exists.intro n (And.intro hhalt hout))
             · simp [hhalt] at hn
   · intro h
     cases h with
@@ -528,7 +553,7 @@ theorem outputRange_equal_descriptionOutputRange
             exists w
             exists n
             unfold toStagedProgram
-            simp [hn.left, hn.right, Tape.toOutput?_output]
+            simp [hn.left, hn.right]
 
 theorem outputFunction_compiledByDescription
     (P : FinitePartialUnaryRangeProgram)

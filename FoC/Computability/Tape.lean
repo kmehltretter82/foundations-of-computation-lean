@@ -83,6 +83,12 @@ def move : Direction -> Tape symbol -> Tape symbol
 def output (w : Word symbol) : Tape symbol :=
   input w
 
+def cells (T : Tape symbol) : List (Option symbol) :=
+  T.left.reverse ++ T.head :: T.right
+
+def normalizedOutput (T : Tape symbol) : Word symbol :=
+  (cells T).filterMap (fun cell => cell)
+
 def contextLength (T : Tape symbol) : Nat :=
   T.left.length + T.right.length
 
@@ -103,6 +109,10 @@ theorem input_empty : input ([] : Word symbol) = blank :=
 theorem output_empty : output ([] : Word symbol) = blank :=
   rfl
 
+theorem normalizedOutput_empty :
+    normalizedOutput (blank : Tape symbol) = [] :=
+  rfl
+
 theorem contextLength_blank : contextLength (blank : Tape symbol) = 0 :=
   rfl
 
@@ -113,6 +123,28 @@ theorem contextLength_output_single (a : symbol) :
 theorem input_cons (a : symbol) (rest : Word symbol) :
     input (a :: rest) = { left := [], head := some a, right := rest.map some } :=
   rfl
+
+theorem filterMap_id_map_some (w : Word symbol) :
+    (w.map (fun a => some a)).filterMap (fun cell => cell) = w := by
+  induction w with
+  | nil => rfl
+  | cons a rest ih =>
+      simp [ih]
+
+theorem normalizedOutput_output (w : Word symbol) :
+    normalizedOutput (output w) = w := by
+  cases w with
+  | nil => rfl
+  | cons a rest =>
+      change
+        a :: ((rest.map (fun a => some a)).filterMap (fun cell => cell)) =
+          a :: rest
+      rw [filterMap_id_map_some]
+
+theorem normalizedOutput_of_eq_output {T : Tape symbol} {w : Word symbol}
+    (h : T = output w) :
+    normalizedOutput T = w := by
+  rw [h, normalizedOutput_output]
 
 theorem list_map_some_injective {xs ys : List symbol}
     (h : xs.map some = ys.map some) : xs = ys := by

@@ -224,16 +224,13 @@ theorem deciderToAcceptor_halts_of_mem
     {encodeInput : input -> symbol} {zero one : symbol}
     {L : Language input}
     (hstop : HaltingTransitionsDisabled M)
-    (hdec : DecidesLanguage M encodeInput zero one L)
+    (hdec : DecidesLanguageByHeadOutput M encodeInput zero one L)
     {w : Word input}
     (hw : w ∈ L) :
     HaltsOnInput (deciderToAcceptor M one) (EncodeWord encodeInput w) := by
-  rcases (hdec w).left hw with ⟨final, hcomp, hhalt, htape⟩
+  rcases (hdec w).left hw with ⟨final, hcomp, hhalt, hread⟩
   have hsim := deciderToAcceptor_simulates_computes
     (M := M) (one := one) hstop hcomp
-  have hread : Tape.read final.tape = some one := by
-    rw [htape]
-    rfl
   have hhaltState : final.state = M.halt := hhalt
   let acceptConfig :
       Configuration symbol (DeciderToAcceptorState state) :=
@@ -254,7 +251,7 @@ theorem deciderToAcceptor_halts_sound_of_stopped_decider
     {L : Language input}
     (hstop : HaltingTransitionsDisabled M)
     (hzeroOne : zero ≠ one)
-    (hdec : DecidesLanguage M encodeInput zero one L)
+    (hdec : DecidesLanguageByHeadOutput M encodeInput zero one L)
     {w : Word input}
     (hhalt :
       HaltsOnInput (deciderToAcceptor M one) (EncodeWord encodeInput w)) :
@@ -276,13 +273,13 @@ theorem deciderToAcceptor_halts_sound_of_stopped_decider
       apply Classical.byContradiction
       intro hnot
       rcases (hdec w).right hnot with ⟨rejectFinal, hcompReject,
-        hhaltReject, htapeReject⟩
+        hhaltReject, hreadReject⟩
       have hEq :=
         computes_to_halted_unique hstop hcompM hhalted
           hcompReject hhaltReject
       have hreadZero : Tape.read halted.tape = some zero := by
-        rw [hEq, htapeReject]
-        rfl
+        rw [hEq]
+        exact hreadReject
       rw [hreadOne] at hreadZero
       have honeZero : one = zero := by
         simpa using hreadZero
@@ -296,7 +293,7 @@ theorem deciderToAcceptor_acceptsLanguage_of_stopped_decider
     {L : Language input}
     (hstop : HaltingTransitionsDisabled M)
     (hzeroOne : zero ≠ one)
-    (hdec : DecidesLanguage M encodeInput zero one L) :
+    (hdec : DecidesLanguageByHeadOutput M encodeInput zero one L) :
     AcceptsLanguage (deciderToAcceptor M one) encodeInput L := by
   intro w
   constructor
@@ -304,12 +301,12 @@ theorem deciderToAcceptor_acceptsLanguage_of_stopped_decider
       hstop hzeroOne hdec
   · exact deciderToAcceptor_halts_of_mem hstop hdec
 
-theorem stoppedDecidesLanguage_to_turingAcceptable
+theorem stoppedDecidesLanguageByHeadOutput_to_turingAcceptable
     {symbol state input : Type}
     {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
     {L : Language input}
-    (h : StoppedDecidesLanguage M encodeInput zero one L) :
+    (h : StoppedDecidesLanguageByHeadOutput M encodeInput zero one L) :
     TuringAcceptable L := by
   exists symbol
   exists DeciderToAcceptorState state
@@ -318,9 +315,9 @@ theorem stoppedDecidesLanguage_to_turingAcceptable
   exact deciderToAcceptor_acceptsLanguage_of_stopped_decider
     h.left h.right.left h.right.right
 
-theorem stoppedTuringDecidable_to_turingAcceptable
+theorem stoppedTuringDecidableByHeadOutput_to_turingAcceptable
     {input : Type} {L : Language input}
-    (h : StoppedTuringDecidable L) :
+    (h : StoppedTuringDecidableByHeadOutput L) :
     TuringAcceptable L := by
   rcases h with ⟨symbol, state, M, encodeInput, zero, one, hdec⟩
   exists symbol

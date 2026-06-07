@@ -80,30 +80,6 @@ def TuringComputable (f : Word input -> Word output) : Prop :=
         exists encodeOutput : output -> symbol,
           ComputesFunction M encodeInput encodeOutput f
 
-theorem not_turingComputable_of_empty_singleton_output
-    {f : Word input -> Word output} {out : output}
-    (hf : f [] = [out]) :
-    ¬ TuringComputable f := by
-  intro hcomp
-  cases hcomp with
-  | intro symbol hsymbol =>
-      cases hsymbol with
-      | intro state hstate =>
-          cases hstate with
-          | intro M hM =>
-              cases hM with
-              | intro encodeInput henc =>
-                  cases henc with
-                  | intro encodeOutput hcomputes =>
-                      have hhalt :
-                          TuringMachine.HaltsWithOutput M
-                            ([] : Word symbol) [encodeOutput out] := by
-                        simpa [EncodeWord, hf] using
-                          hcomputes ([] : Word input)
-                      exact
-                        TuringMachine.not_haltsWithOutput_empty_single M
-                          (encodeOutput out) hhalt
-
 /-!
 # Partial computable functions
 

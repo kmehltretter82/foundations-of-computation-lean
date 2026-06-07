@@ -90,10 +90,10 @@ inductive ComputesIn (M : TuringMachine symbol state) :
 /-!
 # Exact tape-window invariants
 
-The current output relation compares final tapes literally with {name}`Tape.output`.
-Moving off either end of the stored window grows the stored context and the
-model does not normalize blank context cells away.  These lemmas make that
-limitation explicit for later computability claims.
+The exact output relation compares final tapes literally with {name}`Tape.output`.
+Moving off either end of the stored window grows the stored context. These
+lemmas record the old exact-output obstruction while the public output
+predicates below use normalized tape contents.
 -/
 
 theorem step_contextLength_mono {M : TuringMachine symbol state}
@@ -122,7 +122,7 @@ theorem step_from_empty_contextLength_pos {M : TuringMachine symbol state}
         simp [initial, Tape.input_empty, Tape.contextLength, Tape.blank,
           Tape.move, Tape.moveLeft, Tape.moveRight, Tape.write]
 
-theorem computesIn_empty_not_output_single {M : TuringMachine symbol state}
+theorem computesIn_empty_not_exact_output_single {M : TuringMachine symbol state}
     {n : Nat} {final : Configuration symbol state} (a : symbol)
     (hcomp : ComputesIn M n (initial M ([] : Word symbol)) final)
     (htape : final.tape = Tape.output [a]) :
@@ -163,12 +163,19 @@ def HaltsFrom (M : TuringMachine symbol state)
 def HaltsOnInput (M : TuringMachine symbol state) (w : Word symbol) : Prop :=
   HaltsFrom M (initial M w)
 
-def HaltsWithOutput (M : TuringMachine symbol state)
+def HaltsWithExactOutput (M : TuringMachine symbol state)
     (w out : Word symbol) : Prop :=
   exists final,
     Computes M (initial M w) final ∧
       Halted M final ∧
       final.tape = Tape.output out
+
+def HaltsWithOutput (M : TuringMachine symbol state)
+    (w out : Word symbol) : Prop :=
+  exists final,
+    Computes M (initial M w) final ∧
+      Halted M final ∧
+      Tape.normalizedOutput final.tape = out
 
 def HaltsFromIn (M : TuringMachine symbol state) (n : Nat)
     (c : Configuration symbol state) : Prop :=
@@ -178,12 +185,19 @@ def HaltsOnInputIn (M : TuringMachine symbol state) (n : Nat)
     (w : Word symbol) : Prop :=
   HaltsFromIn M n (initial M w)
 
-def HaltsWithOutputIn (M : TuringMachine symbol state) (n : Nat)
+def HaltsWithExactOutputIn (M : TuringMachine symbol state) (n : Nat)
     (w out : Word symbol) : Prop :=
   exists final,
     ComputesIn M n (initial M w) final ∧
       Halted M final ∧
       final.tape = Tape.output out
+
+def HaltsWithOutputIn (M : TuringMachine symbol state) (n : Nat)
+    (w out : Word symbol) : Prop :=
+  exists final,
+    ComputesIn M n (initial M w) final ∧
+      Halted M final ∧
+      Tape.normalizedOutput final.tape = out
 
 def Accepts (M : TuringMachine symbol state) (w : Word symbol) : Prop :=
   HaltsOnInput M w
@@ -439,15 +453,43 @@ theorem halts_with_output_to_halts_with_output_in
           exists n
           exact Exists.intro final (And.intro hn hfinal.right)
 
-theorem not_haltsWithOutput_empty_single (M : TuringMachine symbol state)
+theorem halts_with_exact_output_in_to_halts_with_output_in
+    {M : TuringMachine symbol state}
+    {n : Nat} {w out : Word symbol}
+    (h : HaltsWithExactOutputIn M n w out) :
+    HaltsWithOutputIn M n w out := by
+  cases h with
+  | intro final hfinal =>
+      exists final
+      constructor
+      · exact hfinal.left
+      · constructor
+        · exact hfinal.right.left
+        · exact Tape.normalizedOutput_of_eq_output hfinal.right.right
+
+theorem halts_with_exact_output_to_halts_with_output
+    {M : TuringMachine symbol state}
+    {w out : Word symbol}
+    (h : HaltsWithExactOutput M w out) :
+    HaltsWithOutput M w out := by
+  cases h with
+  | intro final hfinal =>
+      exists final
+      constructor
+      · exact hfinal.left
+      · constructor
+        · exact hfinal.right.left
+        · exact Tape.normalizedOutput_of_eq_output hfinal.right.right
+
+theorem not_haltsWithExactOutput_empty_single (M : TuringMachine symbol state)
     (a : symbol) :
-    ¬ HaltsWithOutput M ([] : Word symbol) [a] := by
+    ¬ HaltsWithExactOutput M ([] : Word symbol) [a] := by
   intro h
   cases h with
   | intro final hfinal =>
       cases computes_to_computesIn hfinal.left with
       | intro n hn =>
-          exact computesIn_empty_not_output_single a hn hfinal.right.right
+          exact computesIn_empty_not_exact_output_single a hn hfinal.right.right
 
 theorem halts_with_output_iff_exists_halts_with_output_in
     (M : TuringMachine symbol state) (w out : Word symbol) :

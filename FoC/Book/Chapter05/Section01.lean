@@ -27,11 +27,11 @@ finite sequence of configurations, halting is the existence of a halted final
 configuration, recognizability accepts members by halting successfully, and
 decidability requires a total yes/no behavior.
 
-The strongest concrete construction on this page is the stopped-decider to
-acceptor transformation. It models the standard proof that a decider can be used
-as a recognizer for its yes-language, but it does so for stopped deciders whose
-halting state has no outgoing transitions and whose outputs are explicitly
-distinguished.
+The strongest concrete construction on this page is the head-output
+stopped-decider to acceptor transformation. It models the standard proof that a
+decider can be used as a recognizer for its yes-language, but the local
+transition construction requires the halted head cell itself to carry the
+accepting or rejecting symbol.
 -/
 
 open Languages
@@ -149,8 +149,10 @@ theorem stopped_machine_halted_final_unique
 /-!
 ## Halting and Output
 
-Halting with output refines ordinary halting. The exact-step and stopped-machine
-lemmas ensure that deterministic machines have unique outputs when they halt.
+Halting with output refines ordinary halting. Output words are read from the
+normalized nonblank tape contents, so finite blank padding and head position do
+not affect the result. The exact-step and stopped-machine lemmas ensure that
+deterministic machines have unique outputs when they halt.
 
 This is the machine-level basis for computable functions: an input word is
 mapped to the output word left on the tape at the unique halted result.
@@ -432,9 +434,10 @@ theorem decider_rejects_in_some_steps_of_not_mem
   Computability.decider_rejects_in_of_not_mem h hw
 
 /-!
-Stopped deciders add the final-state discipline needed to read output cells
-back into language facts. The separation condition {lit}`zero ≠ one` prevents a
-single halted output from serving as both an accepting and rejecting witness.
+Stopped deciders add the final-state discipline needed to turn normalized
+yes/no outputs back into language facts. The separation condition
+{lit}`zero ≠ one` prevents a single halted output from serving as both an
+accepting and rejecting witness.
 -/
 
 theorem stopped_decider_accept_output_sound
@@ -526,14 +529,15 @@ theorem stopped_turing_decidable_language_has_output_classifiers
 
 /-!
 The next theorem is the concrete transition-level construction behind the
-standard statement that a yes/no decider recognizes its yes-language.  The
+standard statement that a yes/no decider recognizes its yes-language, for
+deciders whose halted head cell carries the accepting or rejecting symbol. The
 transformed machine simulates the stopped decider and enters its own halt state
-exactly when the simulated halted output cell is the accepting symbol.
+exactly when that simulated halted output cell is the accepting symbol.
 
-This is the sound construction used by later Chapter 5 pages. Extending the
-same transition-level proof to a weaker non-stopped decider predicate would
-require strengthening that predicate first, because the weaker form does not
-record enough final-state and output separation data.
+This is the sound local transition construction. With normalized output
+semantics, a general decider may leave the head away from the normalized output
+symbol, so converting arbitrary stopped deciders to acceptors requires an
+additional output-scanning construction.
 -/
 
 def DeciderToAcceptorMachineState (state : Type u) :=
@@ -548,7 +552,7 @@ theorem stopped_decider_to_acceptor_accepts_language
     {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
     {L : Language input}
-    (h : StoppedDecidesLanguage M encodeInput zero one L) :
+    (h : StoppedDecidesLanguageByHeadOutput M encodeInput zero one L) :
     AcceptsLanguage (DeciderToAcceptorMachine M one) encodeInput L :=
   TuringMachine.deciderToAcceptor_acceptsLanguage_of_stopped_decider
     h.left h.right.left h.right.right
@@ -558,15 +562,15 @@ theorem stopped_decider_language_is_turing_acceptable
     {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
     {L : Language input}
-    (h : StoppedDecidesLanguage M encodeInput zero one L) :
+    (h : StoppedDecidesLanguageByHeadOutput M encodeInput zero one L) :
     TuringAcceptableLanguage L :=
-  TuringMachine.stoppedDecidesLanguage_to_turingAcceptable h
+  TuringMachine.stoppedDecidesLanguageByHeadOutput_to_turingAcceptable h
 
 theorem stopped_decidable_language_is_turing_acceptable
     {input : Type} {L : Language input}
-    (h : StoppedTuringDecidable L) :
+    (h : StoppedTuringDecidableByHeadOutput L) :
     TuringAcceptableLanguage L :=
-  TuringMachine.stoppedTuringDecidable_to_turingAcceptable h
+  TuringMachine.stoppedTuringDecidableByHeadOutput_to_turingAcceptable h
 
 /-!
 The final small block records the complement and extensional transport rules

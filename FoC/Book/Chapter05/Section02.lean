@@ -222,7 +222,7 @@ def ConcreteFiniteAcceptorStagedProgram
     StagedProgram Bool Unit :=
   P.toStagedProgram
 
-def ConcreteFiniteBoolStagedProgram
+noncomputable def ConcreteFiniteBoolStagedProgram
     (P : ConcreteFiniteBoolProgram) :
     StagedProgram Bool Bool :=
   P.toStagedProgram

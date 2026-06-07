@@ -190,11 +190,20 @@ theorem toTuringMachine_computesIn_to_runConfig {D : MachineDescription}
 def HaltsWithOutputIn (D : MachineDescription)
     (n : Nat) (w out : Word Bool) : Prop :=
   let final := D.runConfig n (D.initial w)
+  final.state = D.halt ∧ Tape.normalizedOutput final.tape = out
+
+def HaltsWithExactOutputIn (D : MachineDescription)
+    (n : Nat) (w out : Word Bool) : Prop :=
+  let final := D.runConfig n (D.initial w)
   final.state = D.halt ∧ final.tape = Tape.output out
 
 def HaltsWithOutput (D : MachineDescription)
     (w out : Word Bool) : Prop :=
   exists n : Nat, D.HaltsWithOutputIn n w out
+
+def HaltsWithExactOutput (D : MachineDescription)
+    (w out : Word Bool) : Prop :=
+  exists n : Nat, D.HaltsWithExactOutputIn n w out
 
 theorem toTuringMachine_haltsOnInput_iff {D : MachineDescription}
     (hD : D.WellFormed) (w : Word Bool) :
@@ -270,7 +279,7 @@ theorem toTuringMachine_haltsWithOutput_iff {D : MachineDescription}
         · constructor
           · change D.stateOfNat final.state = D.stateOfNat D.halt
             rw [hn.left]
-          · change final.tape = Tape.output out
+          · change Tape.normalizedOutput final.tape = out
             exact hn.right
 
 end MachineDescription

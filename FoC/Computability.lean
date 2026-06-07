@@ -70,10 +70,11 @@ injectivity facts, and computable-map preimage bridges for those reductions.
 and interpreter layer needed to discharge the remaining compiler and universal
 machine theorem shapes, including a description-backed code-word decoder
 relation for Section 5.3 diagonalization.
-{module}`FoC.Computability.Compiler` proves exact simulation between
-well-formed descriptions and their compiled one-tape machines, then exposes
-description-backed compiler bridges for staged acceptors, Boolean deciders,
-paired-trace dovetailing, and partial unary range programs.
+{module}`FoC.Computability.Compiler` proves simulation equivalences between
+well-formed descriptions and their compiled one-tape machines, using normalized
+output for output comparisons, then exposes description-backed compiler bridges
+for staged acceptors, Boolean deciders, paired-trace dovetailing, and partial
+unary range programs.
 {module}`FoC.Computability.FiniteProgram` packages finite executable
 program-description syntax and proves concrete bridges for trace recognizers,
 Boolean deciders, dovetailing deciders, and partial unary range outputs when
@@ -81,7 +82,7 @@ their descriptions are explicitly supplied, including finite construction
 surfaces for dovetailing and output-complete partial unary range descriptions.
 
 The current Chapter 5 boundary is visible here. Description encodings,
-interpreter semantics, exact compiled-machine simulation, supplied-description
+interpreter semantics, compiled-machine simulation, supplied-description
 bridges, and finite construction surfaces are present. The remaining universal
 runner and some uniform finite compiler constructions are named explicitly so
 that downstream theorem statements can be precise without pretending those
