@@ -62,6 +62,90 @@ theorem SumZeroTo.succ (f : Nat -> Nat) (n : Nat) :
     SumZeroTo f (n + 1) = SumZeroTo f n + f (n + 1) :=
   rfl
 
+namespace GeometricSeries
+
+/-!
+## Algebraic geometric-series core
+
+The textbook's arbitrary-base geometric-series proof is an induction that uses
+only a small package of ring-style laws. This self-contained project does not
+import Mathlib's algebra hierarchy, so the laws are recorded explicitly here.
+
+The theorem below is representation-independent: any future real-number layer
+that proves these laws can instantiate the book formula immediately.
+-/
+
+structure Algebra (α : Type u) [Zero α] [One α] [Add α] [Neg α] [Sub α]
+    [Mul α] where
+  add_assoc : forall a b c : α, (a + b) + c = a + (b + c)
+  zero_add : forall a : α, 0 + a = a
+  neg_add_cancel : forall a : α, -a + a = 0
+  sub_eq_add_neg : forall a b : α, a - b = a + -b
+  one_mul : forall a : α, 1 * a = a
+  mul_one : forall a : α, a * 1 = a
+  left_distrib : forall a b c : α, a * (b + c) = a * b + a * c
+  right_distrib : forall a b c : α, (a + b) * c = a * c + b * c
+  mul_neg : forall a b : α, a * -b = -(a * b)
+
+def Pow {α : Type u} [One α] [Mul α] (x : α) : Nat -> α
+  | 0 => 1
+  | n + 1 => Pow x n * x
+
+def Sum {α : Type u} [One α] [Add α] [Mul α] (x : α) : Nat -> α
+  | 0 => 1
+  | n + 1 => Sum x n + Pow x (n + 1)
+
+theorem add_neg_middle
+    {α : Type u} [Zero α] [One α] [Add α] [Neg α] [Sub α] [Mul α]
+    (laws : Algebra α) (a b c : α) :
+    (a + -b) + (b + c) = a + c := by
+  calc
+    (a + -b) + (b + c) = a + (-b + (b + c)) :=
+      laws.add_assoc a (-b) (b + c)
+    _ = a + ((-b + b) + c) := by
+      rw [← laws.add_assoc (-b) b c]
+    _ = a + (0 + c) := by
+      rw [laws.neg_add_cancel]
+    _ = a + c := by
+      rw [laws.zero_add]
+
+theorem mul_one_sub
+    {α : Type u} [Zero α] [One α] [Add α] [Neg α] [Sub α] [Mul α]
+    (laws : Algebra α) (x : α) (n : Nat) :
+    Sum x n * (1 - x) = 1 - Pow x (n + 1) := by
+  induction n with
+  | zero =>
+      calc
+        Sum x 0 * (1 - x) = 1 * (1 - x) := rfl
+        _ = 1 - x := laws.one_mul (1 - x)
+        _ = 1 - Pow x (0 + 1) := by
+          change 1 - x = 1 - (1 * x)
+          rw [laws.one_mul]
+  | succ n ih =>
+      let p := Pow x (n + 1)
+      have hpow : Pow x (n + 1 + 1) = p * x := rfl
+      calc
+        Sum x (n + 1) * (1 - x) =
+            (Sum x n + p) * (1 - x) := rfl
+        _ = Sum x n * (1 - x) + p * (1 - x) := by
+          rw [laws.right_distrib]
+        _ = (1 - p) + p * (1 - x) := by
+          rw [ih]
+        _ = (1 + -p) + p * (1 + -x) := by
+          rw [laws.sub_eq_add_neg, laws.sub_eq_add_neg]
+        _ = (1 + -p) + (p * 1 + p * -x) := by
+          rw [laws.left_distrib]
+        _ = (1 + -p) + (p + -(p * x)) := by
+          rw [laws.mul_one, laws.mul_neg]
+        _ = 1 + -(p * x) := by
+          exact add_neg_middle laws 1 p (-(p * x))
+        _ = 1 - p * x := by
+          rw [laws.sub_eq_add_neg]
+        _ = 1 - Pow x (n + 1 + 1) := by
+          rw [hpow]
+
+end GeometricSeries
+
 /-!
 # Closed forms
 

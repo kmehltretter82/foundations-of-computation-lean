@@ -209,6 +209,53 @@ noncomputable def realGeometricSum (x : Real) : Nat -> Real
   | 0 => 1
   | n + 1 => realGeometricSum x n + Real.powNat x (n + 1)
 
+theorem real_powNat_eq_algebraic_pow (x : Real) (n : Nat) :
+    Real.powNat x n = NatSum.GeometricSeries.Pow x n := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      calc
+        Real.powNat x (n + 1) = Real.powNat x n * x := rfl
+        _ = NatSum.GeometricSeries.Pow x n * x := by rw [ih]
+        _ = NatSum.GeometricSeries.Pow x (n + 1) := rfl
+
+theorem real_geometric_sum_eq_algebraic_sum (x : Real) (n : Nat) :
+    realGeometricSum x n = NatSum.GeometricSeries.Sum x n := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      calc
+        realGeometricSum x (n + 1) =
+            realGeometricSum x n + Real.powNat x (n + 1) := rfl
+        _ = NatSum.GeometricSeries.Sum x n +
+              NatSum.GeometricSeries.Pow x (n + 1) := by
+            rw [ih, real_powNat_eq_algebraic_pow]
+        _ = NatSum.GeometricSeries.Sum x (n + 1) := rfl
+
+def DedekindRealGeometricSeriesAlgebra : Prop :=
+  NatSum.GeometricSeries.Algebra Real
+
+theorem arbitrary_real_geometric_series_mul_one_sub_of_algebra
+    (laws : DedekindRealGeometricSeriesAlgebra)
+    (x : Real) (n : Nat) :
+    realGeometricSum x n * (1 - x) =
+      1 - Real.powNat x (n + 1) := by
+  have h := NatSum.GeometricSeries.mul_one_sub laws x n
+  rw [real_geometric_sum_eq_algebraic_sum,
+    real_powNat_eq_algebraic_pow]
+  exact h
+
+/-!
+The theorem above is the arbitrary-real induction core for the book's
+geometric-series formula, stated against the exact algebra laws needed by the
+calculation. The custom Dedekind-real layer has not yet proved the full
+ring-law package in {name}`DedekindRealGeometricSeriesAlgebra`, so the
+unconditional custom-real division statement remains separate from the
+quotient-rational and embedded-rational specializations below.
+-/
+
 theorem real_geometric_sum_qreal (r : QRat) (n : Nat) :
     realGeometricSum (Real.qreal r) n =
       Real.qreal (qratGeometricSum r n) := by

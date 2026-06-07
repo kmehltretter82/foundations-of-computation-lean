@@ -27,7 +27,7 @@ foundation:
 completed:
   - coordinate: "Chapter 1"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 162
+    theorem_declarations: 165
     modules:
       - "FoC.Book.Chapter01.Section01"
       - "FoC.Book.Chapter01.Section02"
@@ -79,6 +79,7 @@ completed:
       - "Closed form for sum i*2^(i-1), including the direct positive-n book statement"
       - "Closed form for the finite geometric sum of powers of two"
       - "Division-free successor-base finite geometric sum identity over natural numbers"
+      - "Abstract algebraic finite geometric-series theorem and conditional Dedekind-real arbitrary-base multiplication form from the exact ring laws it needs"
       - "Closed form for the sum of the first n odd positive integers"
       - "Recursive kernels for factorial, Fibonacci, Hanoi move counts, and binary trees"
       - "Closed-form Hanoi move count and move-list length correctness"
@@ -161,9 +162,9 @@ completed:
         status: "complete_formal_core"
         formalized:
           - artifact: "FoC.Book.Chapter01.Section08"
-            reason: "Ordinary induction, induction from a starting point, strong induction, the first worked divisibility induction example, factorial/Fibonacci recurrences, finite-sum identities including the direct positive-n weighted power-sum statement, natural and quotient-rational geometric-series identities, explicitly embedded quotient-rational real geometric-series specializations, odd-sum square identity, and product-of-primes induction example."
+            reason: "Ordinary induction, induction from a starting point, strong induction, the first worked divisibility induction example, factorial/Fibonacci recurrences, finite-sum identities including the direct positive-n weighted power-sum statement, natural and quotient-rational geometric-series identities, explicitly embedded quotient-rational real geometric-series specializations, the abstract algebraic arbitrary-base geometric-series induction core, the conditional Dedekind-real arbitrary-base multiplication form from the exact ring laws it needs, odd-sum square identity, and product-of-primes induction example."
           - artifact: "FoC.Foundation.Summation"
-            reason: "Reusable finite summation and geometric-series kernels."
+            reason: "Reusable finite summation kernels, natural-number geometric-series kernels, and an abstract algebraic finite geometric-series theorem."
         missing: []
         deferred: []
       - coordinate: "Chapter 1, Section 1.9"
@@ -186,7 +187,7 @@ completed:
       - coordinate: "Chapter 1, Section 1.3"
         reason: "Circuit drawings and design exercises are application artifacts; the DNF semantic core is formalized."
       - coordinate: "Chapter 1, Section 1.8"
-        reason: "Natural-number geometric identities, quotient-rational geometric-series identities, and embedded quotient-rational real geometric-series wrappers with division by a nonzero embedded rational are formalized; this is intentionally not yet the arbitrary-real division statement from the printed exercise."
+        reason: "Natural-number geometric identities, quotient-rational geometric-series identities, embedded quotient-rational real geometric-series wrappers with division by a nonzero embedded rational, the abstract algebraic arbitrary-base geometric-series induction theorem, and the conditional Dedekind-real arbitrary-base multiplication form are formalized. The unconditional custom Dedekind-real division statement from the printed exercise still needs the missing general real ring laws and arbitrary-real inverse/division infrastructure."
       - coordinate: "Chapter 1, Section 1.9"
         reason: "Java subroutine correctness prose is represented by recursive mathematical kernels, not a Java semantics."
       - coordinate: "Chapter 1, Section 1.10, Theorem 1.18"

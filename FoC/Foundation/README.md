@@ -14,7 +14,7 @@ definitions or lemmas.
 | `Countable.lean` | Chapter 2 countability by explicit natural-number enumeration, subset closure, countable unions, and uncountable-difference arguments; Chapter 4 finite grammar presentation encodings via option/sum/product/list codes. |
 | `Relations.lean` | Chapter 2 binary relations, equivalence classes, equal-class iff related-representative characterization, partitions, and transitive closure. |
 | `Arithmetic.lean` | Chapter 1 proof examples using divisibility and parity. |
-| `Summation.lean` | Chapter 1 induction examples with finite sums and geometric-series cores; later Chapter 2 finite-cardinality arithmetic. |
+| `Summation.lean` | Chapter 1 induction examples with finite sums, geometric-series cores, and the abstract algebraic finite geometric-series theorem; later Chapter 2 finite-cardinality arithmetic. |
 | `Integers.lean` | Chapter 1 integer parity and divisibility examples; later Chapter 2 integer countability. |
 | `Rationals.lean` | Chapter 1 rational-number closure examples; later Chapter 2 rational countability. |
 | `RationalCore.lean` | Chapter 1 reduced rational-square-root contradiction proofs; bridge material for quotient-rational and real wrappers. |
