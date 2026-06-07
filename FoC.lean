@@ -55,39 +55,96 @@ set_option doc.verso true
 /-!
 # Foundations of Computation Lean Companion
 
-## Companion site
+## What this site is
 
-This Lean library is an in-source companion to the textbook Foundations of
-Computation. The rendered HTML site uses Verso to show the actual formalization
-files, enriched with short explanations, book coordinates, links between
-definitions, and proof-state information.
-
-The original textbook is
+This is a Lean 4 companion to the textbook
 [Foundations of Computation](https://math.hws.edu/FoundationsOfComputation/),
-Second Edition, Version 2.3.2, by Carol Critchlow and David Eck. This Lean
-project is a companion formalization; it is not a replacement for the textbook
-and does not copy the book text.
+Second Edition, Version 2.3.2, by Carol Critchlow and David Eck. The textbook is
+the source for exposition, motivation, and exercises. This site shows the
+checked Lean development that follows the book's mathematical and computational
+content.
 
-The {module -checked}`FoC.Book` modules are organized in the order of the
-textbook. They state the book-facing definitions and theorems. The reusable
-infrastructure lives in the foundation, language, grammar, and computability
-modules:
+The pages here are generated directly from the source files. That matters:
+after each explanatory note, the definitions and theorems you see are the
+actual declarations checked by Lean. Module links lead to neighboring parts of
+the development, and declaration links let you inspect the exact statement that
+supports a chapter claim.
 
-* {module}`FoC.Foundation` develops the logic, set, function, arithmetic,
-  rational, real-number, countability, and relation vocabulary used by the early
-  chapters.
-* {module}`FoC.Languages` contains words, languages, regular expressions,
-  finite automata, regular-language constructions, and pumping-style material.
-* {module}`FoC.Grammars` contains context-free grammars, parse trees, pushdown
-  automata, and grammar-automaton conversions.
-* {module}`FoC.Computability` contains Turing-machine tapes, configurations,
-  computations, computability, recognizability, enumerability, coding helpers,
-  machine-description interpreters, compiler bridges, finite executable
-  program descriptions, and undecidability vocabulary.
+This formalization is not a copy of the textbook text. It is a companion layer:
+it explains how the ideas are represented in Lean, records which parts have
+been formalized, and exposes the reusable API used to state and prove the
+book-facing results.
 
-The goal of the companion is not to copy the textbook. It explains how the
-mathematical and computational ideas are represented in Lean, then lets the
-reader inspect the checked statements and proofs directly.
+## How to read it
+
+There are two useful paths through the site.
+
+* Follow {module -checked}`FoC.Book` if you want textbook order. These modules
+  mirror the chapters and sections, state book-facing definitions and theorems,
+  and point back to reusable constructions when a section relies on larger
+  infrastructure.
+* Follow the reusable libraries if you want the formal API. These modules are
+  organized by mathematical role rather than by chapter, so they are the right
+  place to inspect definitions, closure constructions, machine semantics, and
+  proof infrastructure.
+
+When reading a declaration, focus first on the type. A theorem's type is the
+checked mathematical statement; the proof term below it is the certificate that
+Lean accepted. Many chapter pages include short wrappers around reusable
+theorems so that the statement appears under a textbook-coordinate name.
+
+## Library map
+
+The reusable infrastructure is split into four large layers.
+
+* {module}`FoC.Foundation` develops the logic, set, function, relation,
+  arithmetic, finite, countable, rational, real-number, prime-number, and
+  diagonalization vocabulary used by the early chapters.
+* {module}`FoC.Languages` treats words as lists, languages as predicates, and
+  regular languages through regular expressions, finite automata, Thompson
+  construction, closure operations, state elimination, and pumping arguments.
+* {module}`FoC.Grammars` develops context-free grammars, BNF expression
+  semantics, parse trees, pushdown automata, CFG/PDA conversions, CFL pumping,
+  and unrestricted grammars.
+* {module}`FoC.Computability` builds the Chapter 5 layer: Turing-machine tapes,
+  configurations, computations, total and partial computability,
+  recognizability, enumerability, staged programs, finite machine descriptions,
+  compiler bridges, reductions, diagonalization, and halting-problem
+  vocabulary.
+
+## Chapter route
+
+The chapter-facing pages collect the formal statements in the order a textbook
+reader expects.
+
+* {module}`FoC.Book.Chapter01` covers propositional logic, Boolean algebra,
+  predicates, deduction, proof methods, induction, recursion, finite sums,
+  divisibility, primes, and Fibonacci estimates.
+* {module}`FoC.Book.Chapter02` covers sets, functions, relations, finite and
+  countable collections, quotient rationals, Dedekind-cut reals, and
+  diagonalization.
+* {module}`FoC.Book.Chapter03` covers languages, regular expressions, finite
+  automata, regular-language closure, state elimination, and non-regularity via
+  pumping arguments.
+* {module}`FoC.Book.Chapter04` covers context-free grammars, BNF, parse trees,
+  pushdown automata, grammar/automaton conversions, CFL pumping, and general
+  grammars.
+* {module}`FoC.Book.Chapter05` covers Turing machines, computable functions,
+  decidable and recursively enumerable languages, compiler and encoding
+  surfaces, reductions, diagonalization, and the halting problem.
+
+The current coverage classification is maintained in the repository's
+{lit}`data/coverage.yaml`. It distinguishes the checked formal core from
+application examples, drawings, language-specific programming details, and
+larger construction surfaces that are intentionally recorded as conditional
+theorem shapes.
+
+## Design notes
+
+The project is intentionally self-contained. It does not depend on Mathlib,
+CSLib, or other external Lean libraries; the development builds its own small
+vocabulary for the book's purposes. Verso is used only to render this in-source
+literate HTML companion.
 
 Source code and issue tracking are available in the
 [GitHub repository](https://github.com/kmehltretter82/foundations-of-computation-lean).
