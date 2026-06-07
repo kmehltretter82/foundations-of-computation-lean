@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler
+import FoC.Computability.FiniteProgram
 import FoC.Computability.Grammar
 
 set_option doc.verso true
@@ -16,6 +17,7 @@ listable languages. It also records the statement shape for the theorem that
 finite general grammars generate exactly the recursively enumerable languages.
 The reusable modules are {module}`FoC.Computability.Enumerable`,
 {module}`FoC.Computability.Program`, {module}`FoC.Computability.Compiler`,
+{module}`FoC.Computability.FiniteProgram`,
 {module}`FoC.Computability.Grammar`, and
 {module}`FoC.Grammars.GeneralGrammar`.
 
@@ -139,6 +141,69 @@ def ConcreteProgramAcceptableByDescription
 def ConcreteProgramBoolDecidableByDescription
     (L : Language Bool) : Prop :=
   ProgramBoolDecidableByDescription L
+
+def ConcreteFiniteAcceptorProgram : Type :=
+  FiniteAcceptorProgram
+
+def ConcreteFiniteBoolProgram : Type :=
+  FiniteBoolProgram
+
+def ConcreteFiniteDovetailProgram : Type :=
+  FiniteDovetailProgram
+
+def ConcreteFinitePartialUnaryRangeProgram : Type :=
+  FinitePartialUnaryRangeProgram
+
+def ConcreteFiniteAcceptorTrace
+    (P : ConcreteFiniteAcceptorProgram)
+    (w : Word Bool) (n : Nat) : Prop :=
+  P.trace w n
+
+def ConcreteFiniteAcceptorDescription
+    (P : ConcreteFiniteAcceptorProgram) : MachineDescription :=
+  P.compile
+
+def ConcreteFiniteBoolDescription
+    (P : ConcreteFiniteBoolProgram) : MachineDescription :=
+  P.compile
+
+def ConcreteFiniteDovetailDescription
+    (P : ConcreteFiniteDovetailProgram) : MachineDescription :=
+  P.decider.compile
+
+def ConcreteFiniteAcceptorStagedProgram
+    (P : ConcreteFiniteAcceptorProgram) :
+    StagedProgram Bool Unit :=
+  P.toStagedProgram
+
+def ConcreteFiniteBoolStagedProgram
+    (P : ConcreteFiniteBoolProgram) :
+    StagedProgram Bool Bool :=
+  P.toStagedProgram
+
+noncomputable def ConcreteFiniteDovetailStagedProgram
+    (P : ConcreteFiniteDovetailProgram) :
+    StagedProgram Bool Bool :=
+  P.toStagedProgram
+
+def ConcreteFiniteDovetailCompiled
+    (P : ConcreteFiniteDovetailProgram) : Prop :=
+  P.Compiled
+
+def ConcreteFinitePartialUnaryRangeStagedProgram
+    (P : ConcreteFinitePartialUnaryRangeProgram) :
+    StagedProgram Unit Bool :=
+  P.toStagedProgram
+
+def ConcreteFinitePartialUnaryOutputRange
+    (P : ConcreteFinitePartialUnaryRangeProgram) :
+    Language Bool :=
+  P.outputRange
+
+def ConcreteFinitePartialUnaryDescriptionOutputRange
+    (P : ConcreteFinitePartialUnaryRangeProgram) :
+    Language Bool :=
+  P.descriptionOutputRange
 
 def LanguageProgramAcceptanceTrace
     (P : StagedProgram alpha Unit)
@@ -438,6 +503,126 @@ theorem concrete_program_bool_decidable_by_description_turing_decidable
     (h : ConcreteProgramBoolDecidableByDescription L) :
     RecursiveLanguage L :=
   Computability.programBoolDecidableByDescription_turingDecidable h
+
+theorem concrete_finite_acceptor_compiled_by_description
+    (P : ConcreteFiniteAcceptorProgram)
+    (hD : P.description.WellFormed) :
+    ConcreteProgramCompiledByDescription
+      (ConcreteFiniteAcceptorStagedProgram P)
+      (ConcreteFiniteAcceptorDescription P) :=
+  Computability.FiniteAcceptorProgram.compiledByDescription P hD
+
+theorem concrete_finite_acceptor_program_acceptable_by_description
+    (P : ConcreteFiniteAcceptorProgram)
+    (hD : P.description.WellFormed)
+    {L : Language Bool}
+    (haccepts :
+      ProgramAcceptsLanguage
+        (ConcreteFiniteAcceptorStagedProgram P) L) :
+    ConcreteProgramAcceptableByDescription L := by
+  exists ConcreteFiniteAcceptorStagedProgram P
+  exists ConcreteFiniteAcceptorDescription P
+  exact And.intro haccepts
+    (concrete_finite_acceptor_compiled_by_description P hD)
+
+theorem concrete_finite_acceptor_recursively_enumerable
+    (P : ConcreteFiniteAcceptorProgram)
+    (hD : P.description.WellFormed)
+    {L : Language Bool}
+    (haccepts :
+      ProgramAcceptsLanguage
+        (ConcreteFiniteAcceptorStagedProgram P) L) :
+    RecursivelyEnumerableLanguage L :=
+  concrete_program_acceptable_by_description_turing_acceptable
+    (concrete_finite_acceptor_program_acceptable_by_description
+      P hD haccepts)
+
+theorem concrete_finite_trace_recognizer_compiled_by_description
+    (P : ConcreteFiniteAcceptorProgram)
+    (hD : P.description.WellFormed) :
+    ConcreteProgramCompiledByDescription
+      (AcceptanceTraceStagedRecognizer
+        (ConcreteFiniteAcceptorTrace P))
+      (ConcreteFiniteAcceptorDescription P) := by
+  simpa [AcceptanceTraceStagedRecognizer,
+    ConcreteFiniteAcceptorTrace, ConcreteFiniteAcceptorDescription]
+    using
+      Computability.FiniteAcceptorProgram.traceRecognizer_compiledByDescription
+        P hD
+
+theorem concrete_finite_trace_recognizer_acceptable_by_description
+    (P : ConcreteFiniteAcceptorProgram)
+    (hD : P.description.WellFormed)
+    {L : Language Bool}
+    (htrace : LanguageAcceptanceTrace
+      (ConcreteFiniteAcceptorTrace P) L) :
+    ConcreteProgramAcceptableByDescription L :=
+  Computability.FiniteAcceptorProgram.traceRecognizer_programAcceptableByDescription
+    P hD htrace
+
+theorem concrete_finite_trace_recognizer_recursively_enumerable
+    (P : ConcreteFiniteAcceptorProgram)
+    (hD : P.description.WellFormed)
+    {L : Language Bool}
+    (htrace : LanguageAcceptanceTrace
+      (ConcreteFiniteAcceptorTrace P) L) :
+    RecursivelyEnumerableLanguage L :=
+  Computability.FiniteAcceptorProgram.traceRecognizer_turingAcceptable
+    P hD htrace
+
+theorem concrete_finite_bool_program_compiled_by_description
+    (P : ConcreteFiniteBoolProgram)
+    (hD : P.description.WellFormed) :
+    ConcreteBoolProgramCompiledByDescription
+      (ConcreteFiniteBoolStagedProgram P)
+      (ConcreteFiniteBoolDescription P) :=
+  Computability.FiniteBoolProgram.compiledByDescription P hD
+
+theorem concrete_finite_bool_program_bool_decidable_by_description
+    (P : ConcreteFiniteBoolProgram)
+    (hD : P.description.WellFormed)
+    {L : Language Bool}
+    (hdecides :
+      ProgramBoolDecidesLanguage
+        (ConcreteFiniteBoolStagedProgram P) L) :
+    ConcreteProgramBoolDecidableByDescription L :=
+  Computability.FiniteBoolProgram.programBoolDecidableByDescription
+    P hD hdecides
+
+theorem concrete_finite_bool_program_turing_decidable
+    (P : ConcreteFiniteBoolProgram)
+    (hD : P.description.WellFormed)
+    {L : Language Bool}
+    (hdecides :
+      ProgramBoolDecidesLanguage
+        (ConcreteFiniteBoolStagedProgram P) L) :
+    RecursiveLanguage L :=
+  Computability.FiniteBoolProgram.turingDecidable P hD hdecides
+
+theorem concrete_finite_dovetail_program_bool_decidable_by_description
+    (P : ConcreteFiniteDovetailProgram)
+    {L : Language Bool}
+    (htraces : LanguageComplementaryAcceptanceTraces
+      (ConcreteFiniteAcceptorTrace P.accept)
+      (ConcreteFiniteAcceptorTrace P.reject) L)
+    (hcompiled : ConcreteFiniteDovetailCompiled P) :
+    ConcreteProgramBoolDecidableByDescription L := by
+  simpa [ConcreteFiniteDovetailCompiled, ConcreteFiniteAcceptorTrace]
+    using
+      Computability.FiniteDovetailProgram.programBoolDecidableByDescription
+        P htraces hcompiled
+
+theorem concrete_finite_dovetail_program_turing_decidable
+    (P : ConcreteFiniteDovetailProgram)
+    {L : Language Bool}
+    (htraces : LanguageComplementaryAcceptanceTraces
+      (ConcreteFiniteAcceptorTrace P.accept)
+      (ConcreteFiniteAcceptorTrace P.reject) L)
+    (hcompiled : ConcreteFiniteDovetailCompiled P) :
+    RecursiveLanguage L := by
+  simpa [ConcreteFiniteDovetailCompiled, ConcreteFiniteAcceptorTrace]
+    using Computability.FiniteDovetailProgram.turingDecidable
+      P htraces hcompiled
 
 theorem stopped_decider_has_complementary_output_traces
     {M : TuringMachine symbol state}
@@ -854,6 +1039,26 @@ theorem concrete_compiled_partial_unary_function_program_range_has_turing_comput
     ConcretePartialUnaryTuringComputableRange L :=
   Computability.compiledPartialUnaryFunctionProgramRange_turingComputableRange h
 
+theorem concrete_finite_partial_unary_output_range_is_program_range
+    (P : ConcreteFinitePartialUnaryRangeProgram) :
+    Language.Equal
+      (ConcreteFinitePartialUnaryOutputRange P)
+      (LanguageProgramRange
+        (ConcreteFinitePartialUnaryRangeStagedProgram P)) := by
+  intro out
+  rfl
+
+theorem concrete_finite_partial_unary_range_equal_description_outputs
+    (P : ConcreteFinitePartialUnaryRangeProgram) :
+    Language.Equal
+      (ConcreteFinitePartialUnaryOutputRange P)
+      (ConcreteFinitePartialUnaryDescriptionOutputRange P) := by
+  simpa [ConcreteFinitePartialUnaryOutputRange,
+    ConcreteFinitePartialUnaryDescriptionOutputRange]
+    using
+      Computability.FinitePartialUnaryRangeProgram.outputRange_equal_descriptionOutputRange
+        P
+
 theorem function_value_in_range (f : Word input -> Word output) (x : Word input) :
     f x ∈ FunctionRangeLanguage f :=
   range_mem x
@@ -947,6 +1152,33 @@ theorem general_grammar_generated_language_is_program_acceptable
     (G : GeneralGrammar terminal nonterminal) :
     ProgramAcceptableLanguage (GeneralGrammarGeneratedLanguage G) :=
   Computability.generalGrammar_generatedLanguage_programAcceptable G
+
+theorem boolean_general_grammar_generated_language_is_recursively_enumerable_of_concrete_description
+    (G : GeneralGrammar Bool nonterminal)
+    {D : MachineDescription}
+    (hcompile : ConcreteProgramCompiledByDescription
+      (GeneralGrammarStagedRecognizer G) D) :
+    RecursivelyEnumerableLanguage (GeneralGrammarGeneratedLanguage G) :=
+  concrete_program_acceptable_by_description_turing_acceptable
+    (by
+      exists GeneralGrammarStagedRecognizer G
+      exists D
+      exact And.intro
+        (general_grammar_staged_recognizer_accepts_generated_language G)
+        hcompile)
+
+theorem boolean_general_grammar_generated_is_recursively_enumerable_of_concrete_description
+    {L : Language Bool}
+    (G : GeneralGrammar Bool nonterminal)
+    {D : MachineDescription}
+    (hcompile : ConcreteProgramCompiledByDescription
+      (GeneralGrammarStagedRecognizer G) D)
+    (hEq : Language.Equal (GeneralGrammarGeneratedLanguage G) L) :
+    RecursivelyEnumerableLanguage L :=
+  recursively_enumerable_language_of_equal
+    (boolean_general_grammar_generated_language_is_recursively_enumerable_of_concrete_description
+      G hcompile)
+    hEq
 
 theorem finite_general_grammar_generated_language_is_program_acceptable
     {L : Language terminal}

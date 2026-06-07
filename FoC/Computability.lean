@@ -10,6 +10,7 @@ import FoC.Computability.Undecidable
 import FoC.Computability.Coding
 import FoC.Computability.Encoding
 import FoC.Computability.Compiler
+import FoC.Computability.FiniteProgram
 
 set_option doc.verso true
 
@@ -49,6 +50,10 @@ machine theorem shapes.  {module}`FoC.Computability.Compiler` proves exact
 simulation between well-formed descriptions and their compiled one-tape
 machines, then exposes description-backed compiler bridges for staged
 acceptors, Boolean deciders, and partial unary range programs.
+{module}`FoC.Computability.FiniteProgram` packages finite executable
+program-description syntax and proves concrete bridges for trace recognizers,
+Boolean deciders, dovetailing deciders, and partial unary range outputs when
+their descriptions are explicitly supplied.
 
 The chapter-facing material in {module -checked}`FoC.Book.Chapter05` points to
 these definitions while keeping the textbook-order statements separate from the
