@@ -7055,9 +7055,6 @@ theorem squarePostStopLocal_finish_word
 def fourAsWord : Word SquareTerminal :=
   [SquareTerminal.a, SquareTerminal.a, SquareTerminal.a, SquareTerminal.a]
 
-def threeAsWord : Word SquareTerminal :=
-  [SquareTerminal.a, SquareTerminal.a, SquareTerminal.a]
-
 theorem squareGrammar_generates_four_as :
     fourAsWord ∈ GeneralGrammar.GeneratedLanguage SquareGrammar := by
   let S := squareN SquareNT.start
@@ -7213,6 +7210,7 @@ markers and returns to the left before either doubling again or finishing.
 
 inductive PowerTwoNT where
   | start
+  | left
   | h
   | d
   | r
@@ -7223,7 +7221,7 @@ deriving DecidableEq
 namespace PowerTwoNT
 
 def finite : Foundation.FiniteType PowerTwoNT where
-  elems := [start, h, d, r, boundary, markA]
+  elems := [start, left, h, d, r, boundary, markA]
   complete := by
     intro A
     cases A <;> simp
@@ -7241,7 +7239,7 @@ inductive PowerTwoProduces :
       SententialForm SquareTerminal PowerTwoNT -> Prop where
   | start :
       PowerTwoProduces [powN PowerTwoNT.start]
-        [powN PowerTwoNT.h, powN PowerTwoNT.markA,
+        [powN PowerTwoNT.left, powN PowerTwoNT.h, powN PowerTwoNT.markA,
           powN PowerTwoNT.boundary]
   | beginDouble :
       PowerTwoProduces [powN PowerTwoNT.h] [powN PowerTwoNT.d]
@@ -7256,9 +7254,10 @@ inductive PowerTwoProduces :
       PowerTwoProduces [powN PowerTwoNT.markA, powN PowerTwoNT.r]
         [powN PowerTwoNT.r, powN PowerTwoNT.markA]
   | ready :
-      PowerTwoProduces [powN PowerTwoNT.r] [powN PowerTwoNT.h]
+      PowerTwoProduces [powN PowerTwoNT.left, powN PowerTwoNT.r]
+        [powN PowerTwoNT.left, powN PowerTwoNT.h]
   | finishH :
-      PowerTwoProduces [powN PowerTwoNT.h] []
+      PowerTwoProduces [powN PowerTwoNT.left, powN PowerTwoNT.h] []
   | finishBoundary :
       PowerTwoProduces [powN PowerTwoNT.boundary] []
   | emitA :
@@ -7277,7 +7276,8 @@ def PowerTwoGrammar : GeneralGrammar SquareTerminal PowerTwoNT where
 def PowerTwoProductionList :
     List (GeneralGrammar.Production SquareTerminal PowerTwoNT) :=
   [{ lhs := [powN PowerTwoNT.start],
-     rhs := [powN PowerTwoNT.h, powN PowerTwoNT.markA,
+     rhs := [powN PowerTwoNT.left, powN PowerTwoNT.h,
+       powN PowerTwoNT.markA,
        powN PowerTwoNT.boundary] },
    { lhs := [powN PowerTwoNT.h],
      rhs := [powN PowerTwoNT.d] },
@@ -7288,9 +7288,9 @@ def PowerTwoProductionList :
      rhs := [powN PowerTwoNT.r, powN PowerTwoNT.boundary] },
    { lhs := [powN PowerTwoNT.markA, powN PowerTwoNT.r],
      rhs := [powN PowerTwoNT.r, powN PowerTwoNT.markA] },
-   { lhs := [powN PowerTwoNT.r],
-     rhs := [powN PowerTwoNT.h] },
-   { lhs := [powN PowerTwoNT.h],
+   { lhs := [powN PowerTwoNT.left, powN PowerTwoNT.r],
+     rhs := [powN PowerTwoNT.left, powN PowerTwoNT.h] },
+   { lhs := [powN PowerTwoNT.left, powN PowerTwoNT.h],
      rhs := [] },
    { lhs := [powN PowerTwoNT.boundary],
      rhs := [] },
@@ -7369,7 +7369,7 @@ def powerTwoMarkerForm (n : Nat) :
 
 def powerTwoControlForm (markers : Nat) :
     SententialForm SquareTerminal PowerTwoNT :=
-  [powN PowerTwoNT.h] ++ powerTwoMarkerForm markers ++
+  [powN PowerTwoNT.left, powN PowerTwoNT.h] ++ powerTwoMarkerForm markers ++
     [powN PowerTwoNT.boundary]
 
 def powerTwoWord (n : Nat) : Word SquareTerminal :=
@@ -7485,41 +7485,43 @@ theorem powerTwo_doubling_pass_derives (n : Nat) :
     GeneralGrammar.Derives PowerTwoGrammar
       (powerTwoControlForm n)
       (powerTwoControlForm (n + n)) := by
+  let L := powN PowerTwoNT.left
   let H := powN PowerTwoNT.h
   let D := powN PowerTwoNT.d
   let R := powN PowerTwoNT.r
   let E := powN PowerTwoNT.boundary
   have hbegin :
       GeneralGrammar.Yields PowerTwoGrammar
-        ([H] ++ powerTwoMarkerForm n ++ [E])
-        ([D] ++ powerTwoMarkerForm n ++ [E]) := by
-    simpa [H, D, E, List.append_assoc] using
+        ([L, H] ++ powerTwoMarkerForm n ++ [E])
+        ([L, D] ++ powerTwoMarkerForm n ++ [E]) := by
+    simpa [L, H, D, E, List.append_assoc] using
       general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.beginDouble [] (powerTwoMarkerForm n ++ [E])
+        PowerTwoProduces.beginDouble [L] (powerTwoMarkerForm n ++ [E])
   have hdup :
       GeneralGrammar.Derives PowerTwoGrammar
-        ([D] ++ powerTwoMarkerForm n ++ [E])
-        (powerTwoMarkerForm (n + n) ++ [D, E]) := by
-    simpa [D, E, List.append_assoc] using
-      powerTwo_duplicate_markers_derives n [] [E]
+        ([L, D] ++ powerTwoMarkerForm n ++ [E])
+        ([L] ++ powerTwoMarkerForm (n + n) ++ [D, E]) := by
+    simpa [L, D, E, List.append_assoc] using
+      powerTwo_duplicate_markers_derives n [L] [E]
   have hturn :
       GeneralGrammar.Yields PowerTwoGrammar
-        (powerTwoMarkerForm (n + n) ++ [D, E])
-        (powerTwoMarkerForm (n + n) ++ [R, E]) := by
-    simpa [D, R, E, List.append_assoc] using
+        ([L] ++ powerTwoMarkerForm (n + n) ++ [D, E])
+        ([L] ++ powerTwoMarkerForm (n + n) ++ [R, E]) := by
+    simpa [L, D, R, E, List.append_assoc] using
       general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.turnAround (powerTwoMarkerForm (n + n)) []
+        PowerTwoProduces.turnAround
+          ([L] ++ powerTwoMarkerForm (n + n)) []
   have hreturn :
       GeneralGrammar.Derives PowerTwoGrammar
-        (powerTwoMarkerForm (n + n) ++ [R, E])
-        ([R] ++ powerTwoMarkerForm (n + n) ++ [E]) := by
-    simpa [R, E, List.append_assoc] using
-      powerTwo_return_left_derives (n + n) [] [E]
+        ([L] ++ powerTwoMarkerForm (n + n) ++ [R, E])
+        ([L, R] ++ powerTwoMarkerForm (n + n) ++ [E]) := by
+    simpa [L, R, E, List.append_assoc] using
+      powerTwo_return_left_derives (n + n) [L] [E]
   have hready :
       GeneralGrammar.Yields PowerTwoGrammar
-        ([R] ++ powerTwoMarkerForm (n + n) ++ [E])
-        ([H] ++ powerTwoMarkerForm (n + n) ++ [E]) := by
-    simpa [H, R, E, List.append_assoc] using
+        ([L, R] ++ powerTwoMarkerForm (n + n) ++ [E])
+        ([L, H] ++ powerTwoMarkerForm (n + n) ++ [E]) := by
+    simpa [L, H, R, E, List.append_assoc] using
       general_yields_of_production (G := PowerTwoGrammar)
         PowerTwoProduces.ready [] (powerTwoMarkerForm (n + n) ++ [E])
   have hall := GeneralGrammar.Derives.step hbegin
@@ -7527,14 +7529,15 @@ theorem powerTwo_doubling_pass_derives (n : Nat) :
       (GeneralGrammar.Derives.step hturn
         (GeneralGrammar.derives_trans hreturn
           (GeneralGrammar.yields_derives hready))))
-  simpa [powerTwoControlForm, H, D, R, E, List.append_assoc] using hall
+  simpa [powerTwoControlForm, L, H, D, R, E, List.append_assoc] using hall
 
 theorem powerTwo_start_control_derives :
     GeneralGrammar.Derives PowerTwoGrammar [powN PowerTwoNT.start]
       (powerTwoControlForm 1) := by
   have hstart :
       GeneralGrammar.Yields PowerTwoGrammar [powN PowerTwoNT.start]
-        [powN PowerTwoNT.h, powN PowerTwoNT.markA,
+        [powN PowerTwoNT.left, powN PowerTwoNT.h,
+          powN PowerTwoNT.markA,
           powN PowerTwoNT.boundary] := by
     simpa using
       general_yields_of_production (G := PowerTwoGrammar)
@@ -7599,13 +7602,14 @@ theorem powerTwo_finish_control_derives (n : Nat) :
       (powerTwoControlForm n)
       (SententialForm.terminalWord
         (Word.RepeatSymbol SquareTerminal.a n)) := by
+  let L := powN PowerTwoNT.left
   let H := powN PowerTwoNT.h
   let E := powN PowerTwoNT.boundary
   have hfinishH :
       GeneralGrammar.Yields PowerTwoGrammar
-        ([H] ++ powerTwoMarkerForm n ++ [E])
+        ([L, H] ++ powerTwoMarkerForm n ++ [E])
         (powerTwoMarkerForm n ++ [E]) := by
-    simpa [H, E, List.append_assoc] using
+    simpa [L, H, E, List.append_assoc] using
       general_yields_of_production (G := PowerTwoGrammar)
         PowerTwoProduces.finishH [] (powerTwoMarkerForm n ++ [E])
   have hfinishBoundary :
@@ -7623,7 +7627,7 @@ theorem powerTwo_finish_control_derives (n : Nat) :
     simpa using powerTwo_emit_markers_derives_context n [] []
   have hall := GeneralGrammar.Derives.step hfinishH
     (GeneralGrammar.Derives.step hfinishBoundary hemits)
-  simpa [powerTwoControlForm, H, E, List.append_assoc] using hall
+  simpa [powerTwoControlForm, L, H, E, List.append_assoc] using hall
 
 theorem powerTwo_words_generated (n : Nat) :
     powerTwoWord n ∈ GeneralGrammar.GeneratedLanguage PowerTwoGrammar := by
@@ -7660,315 +7664,15 @@ theorem powerTwo_generated_language_exact_of_soundness
   · exact powerTwo_language_subset_generated
 
 /-!
-The sample derivation below is retained as a concrete trace, and the theorem
-{name}`powerTwo_words_generated` proves the intended family: after {lit}`n`
-doubling passes the grammar derives {lit}`a^(2^n)`. The following
-counterexample shows why the current exercise grammar is generation-only rather
-than exact: the unrestricted rule {name}`PowerTwoProduces.ready` can fire before
-the return marker has moved all the way left, so a later doubling pass can
-duplicate only a suffix of the marker block.
+The theorem {name}`powerTwo_words_generated` proves the intended family: after
+{lit}`n` doubling passes the grammar derives {lit}`a^(2^n)`. The concrete
+{lit}`aaaa` example is just the case {lit}`n = 2`.
 -/
 
 theorem powerTwoGrammar_generates_four_as :
     fourAsWord ∈ GeneralGrammar.GeneratedLanguage PowerTwoGrammar := by
-  let S := powN PowerTwoNT.start
-  let H := powN PowerTwoNT.h
-  let D := powN PowerTwoNT.d
-  let R := powN PowerTwoNT.r
-  let E := powN PowerTwoNT.boundary
-  let A := powN PowerTwoNT.markA
-  let a := powT SquareTerminal.a
-  have h1 :
-      GeneralGrammar.Yields PowerTwoGrammar [S] [H, A, E] := by
-    simpa [S, H, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.start [] []
-  have h2 :
-      GeneralGrammar.Yields PowerTwoGrammar [H, A, E] [D, A, E] := by
-    simpa [H, D, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.beginDouble [] [A, E]
-  have h3 :
-      GeneralGrammar.Yields PowerTwoGrammar [D, A, E] [A, A, D, E] := by
-    simpa [D, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.duplicate [] [E]
-  have h4 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, D, E] [A, A, R, E] := by
-    simpa [D, R, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.turnAround [A, A] []
-  have h5 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, R, E] [A, R, A, E] := by
-    simpa [R, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.returnLeft [A] [E]
-  have h6 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, R, A, E] [R, A, A, E] := by
-    simpa [R, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.returnLeft [] [A, E]
-  have h7 :
-      GeneralGrammar.Yields PowerTwoGrammar [R, A, A, E] [H, A, A, E] := by
-    simpa [H, R, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.ready [] [A, A, E]
-  have h8 :
-      GeneralGrammar.Yields PowerTwoGrammar [H, A, A, E] [D, A, A, E] := by
-    simpa [H, D, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.beginDouble [] [A, A, E]
-  have h9 :
-      GeneralGrammar.Yields PowerTwoGrammar [D, A, A, E]
-        [A, A, D, A, E] := by
-    simpa [D, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.duplicate [] [A, E]
-  have h10 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, D, A, E]
-        [A, A, A, A, D, E] := by
-    simpa [D, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.duplicate [A, A] [E]
-  have h11 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, A, D, E]
-        [A, A, A, A, R, E] := by
-    simpa [D, R, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.turnAround [A, A, A, A] []
-  have h12 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, A, R, E]
-        [A, A, A, R, A, E] := by
-    simpa [R, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.returnLeft [A, A, A] [E]
-  have h13 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, R, A, E]
-        [A, A, R, A, A, E] := by
-    simpa [R, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.returnLeft [A, A] [A, E]
-  have h14 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, R, A, A, E]
-        [A, R, A, A, A, E] := by
-    simpa [R, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.returnLeft [A] [A, A, E]
-  have h15 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, R, A, A, A, E]
-        [R, A, A, A, A, E] := by
-    simpa [R, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.returnLeft [] [A, A, A, E]
-  have h16 :
-      GeneralGrammar.Yields PowerTwoGrammar [R, A, A, A, A, E]
-        [H, A, A, A, A, E] := by
-    simpa [H, R, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.ready [] [A, A, A, A, E]
-  have h17 :
-      GeneralGrammar.Yields PowerTwoGrammar [H, A, A, A, A, E]
-        [A, A, A, A, E] := by
-    simpa [H, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.finishH [] [A, A, A, A, E]
-  have h18 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, A, E]
-        [A, A, A, A] := by
-    simpa [A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.finishBoundary [A, A, A, A] []
-  have h19 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, A]
-        [a, A, A, A] := by
-    simpa [A, a] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.emitA [] [A, A, A]
-  have h20 :
-      GeneralGrammar.Yields PowerTwoGrammar [a, A, A, A]
-        [a, a, A, A] := by
-    simpa [A, a] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.emitA [a] [A, A]
-  have h21 :
-      GeneralGrammar.Yields PowerTwoGrammar [a, a, A, A]
-        [a, a, a, A] := by
-    simpa [A, a] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.emitA [a, a] [A]
-  have h22 :
-      GeneralGrammar.Yields PowerTwoGrammar [a, a, a, A]
-        [a, a, a, a] := by
-    simpa [A, a] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.emitA [a, a, a] []
-  have hderives :
-      GeneralGrammar.Derives PowerTwoGrammar [S] [a, a, a, a] :=
-    GeneralGrammar.Derives.step h1
-      (GeneralGrammar.Derives.step h2
-        (GeneralGrammar.Derives.step h3
-          (GeneralGrammar.Derives.step h4
-            (GeneralGrammar.Derives.step h5
-              (GeneralGrammar.Derives.step h6
-                (GeneralGrammar.Derives.step h7
-                  (GeneralGrammar.Derives.step h8
-                    (GeneralGrammar.Derives.step h9
-                      (GeneralGrammar.Derives.step h10
-                        (GeneralGrammar.Derives.step h11
-                          (GeneralGrammar.Derives.step h12
-                            (GeneralGrammar.Derives.step h13
-                              (GeneralGrammar.Derives.step h14
-                                (GeneralGrammar.Derives.step h15
-                                  (GeneralGrammar.Derives.step h16
-                                    (GeneralGrammar.Derives.step h17
-                                      (GeneralGrammar.Derives.step h18
-                                        (GeneralGrammar.Derives.step h19
-                                          (GeneralGrammar.Derives.step h20
-                                            (GeneralGrammar.Derives.step h21
-                                              (GeneralGrammar.Derives.step h22
-                                                (GeneralGrammar.Derives.refl
-                                                  [a, a, a, a]))))))))))))))))))))))
-  simpa [GeneralGrammar.GeneratedLanguage, PowerTwoGrammar, fourAsWord,
-    SententialForm.terminalWord, S, a] using hderives
-
-theorem powerTwoGrammar_generates_three_as :
-    threeAsWord ∈ GeneralGrammar.GeneratedLanguage PowerTwoGrammar := by
-  let S := powN PowerTwoNT.start
-  let H := powN PowerTwoNT.h
-  let D := powN PowerTwoNT.d
-  let R := powN PowerTwoNT.r
-  let E := powN PowerTwoNT.boundary
-  let A := powN PowerTwoNT.markA
-  let a := powT SquareTerminal.a
-  have h1 :
-      GeneralGrammar.Yields PowerTwoGrammar [S] [H, A, E] := by
-    simpa [S, H, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.start [] []
-  have h2 :
-      GeneralGrammar.Yields PowerTwoGrammar [H, A, E] [D, A, E] := by
-    simpa [H, D, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.beginDouble [] [A, E]
-  have h3 :
-      GeneralGrammar.Yields PowerTwoGrammar [D, A, E] [A, A, D, E] := by
-    simpa [D, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.duplicate [] [E]
-  have h4 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, D, E] [A, A, R, E] := by
-    simpa [D, R, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.turnAround [A, A] []
-  have h5 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, R, E] [A, R, A, E] := by
-    simpa [R, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.returnLeft [A] [E]
-  have h6 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, R, A, E] [A, H, A, E] := by
-    simpa [H, R, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.ready [A] [A, E]
-  have h7 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, H, A, E] [A, D, A, E] := by
-    simpa [H, D, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.beginDouble [A] [A, E]
-  have h8 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, D, A, E]
-        [A, A, A, D, E] := by
-    simpa [D, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.duplicate [A] [E]
-  have h9 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, D, E]
-        [A, A, A, R, E] := by
-    simpa [D, R, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.turnAround [A, A, A] []
-  have h10 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, R, E]
-        [A, A, A, H, E] := by
-    simpa [H, R, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.ready [A, A, A] [E]
-  have h11 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, H, E]
-        [A, A, A, E] := by
-    simpa [H, A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.finishH [A, A, A] [E]
-  have h12 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, A, E] [A, A, A] := by
-    simpa [A, E] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.finishBoundary [A, A, A] []
-  have h13 :
-      GeneralGrammar.Yields PowerTwoGrammar [A, A, A] [a, A, A] := by
-    simpa [A, a] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.emitA [] [A, A]
-  have h14 :
-      GeneralGrammar.Yields PowerTwoGrammar [a, A, A] [a, a, A] := by
-    simpa [A, a] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.emitA [a] [A]
-  have h15 :
-      GeneralGrammar.Yields PowerTwoGrammar [a, a, A] [a, a, a] := by
-    simpa [A, a] using
-      general_yields_of_production (G := PowerTwoGrammar)
-        PowerTwoProduces.emitA [a, a] []
-  have hderives :
-      GeneralGrammar.Derives PowerTwoGrammar [S] [a, a, a] :=
-    GeneralGrammar.Derives.step h1
-      (GeneralGrammar.Derives.step h2
-        (GeneralGrammar.Derives.step h3
-          (GeneralGrammar.Derives.step h4
-            (GeneralGrammar.Derives.step h5
-              (GeneralGrammar.Derives.step h6
-                (GeneralGrammar.Derives.step h7
-                  (GeneralGrammar.Derives.step h8
-                    (GeneralGrammar.Derives.step h9
-                      (GeneralGrammar.Derives.step h10
-                        (GeneralGrammar.Derives.step h11
-                          (GeneralGrammar.Derives.step h12
-                            (GeneralGrammar.Derives.step h13
-                              (GeneralGrammar.Derives.step h14
-                                (GeneralGrammar.Derives.step h15
-                                  (GeneralGrammar.Derives.refl
-                                    [a, a, a])))))))))))))))
-  simpa [GeneralGrammar.GeneratedLanguage, PowerTwoGrammar, threeAsWord,
-    SententialForm.terminalWord, S, a] using hderives
-
-theorem two_pow_ne_three (n : Nat) :
-    2 ^ n ≠ 3 := by
-  induction n with
-  | zero =>
-      simp
-  | succ n _ =>
-      cases n with
-      | zero =>
-          simp
-      | succ n =>
-          intro h
-          rw [Nat.pow_succ, Nat.pow_succ] at h
-          have hpos : 0 < 2 ^ n := Nat.pow_pos (by decide : 0 < 2)
-          omega
-
-theorem threeAsWord_not_powerTwoLanguage :
-    threeAsWord ∉ powerTwoLanguage := by
-  intro h
-  rcases h with ⟨n, hword⟩
-  have hlen := congrArg Word.Length hword
-  simp [threeAsWord, powerTwoWord, Word.Length, Word.RepeatSymbol] at hlen
-  exact (two_pow_ne_three n) hlen.symm
-
-theorem not_powerTwoGeneratedOnlyLanguageConstruction :
-    ¬ PowerTwoGeneratedOnlyLanguageConstruction := by
-  intro hsound
-  exact threeAsWord_not_powerTwoLanguage
-    (hsound threeAsWord powerTwoGrammar_generates_three_as)
+  simpa [fourAsWord, powerTwoWord, Word.RepeatSymbol] using
+    powerTwo_words_generated 2
 
 end Section06
 end Chapter04
