@@ -51,7 +51,7 @@ equivalences, grammar-recognizer traces, diagonalization, self-halting and
 pair-halting reductions, concrete machine descriptions, and universal-machine
 row coverage. The places where the textbook says to construct a machine are now
 represented either by concrete descriptions/proofs or by named compiler
-principles in the reusable computability layer.
+principles and closeout records in the reusable computability layer.
 
 ## What to Inspect
 
@@ -71,9 +71,10 @@ undecidability, inspect {module}`FoC.Computability.Encoding`,
 ## Status Notes
 
 The chapter's formal core is covered. The remaining work is not hidden: the
-book pages and reusable APIs identify concrete finite compiler constructions
-and the universal-machine construction as explicit deferred surfaces. The
-surrounding theorems are therefore stated with named construction hypotheses
-where a textbook proof says "build the machine" but the formal repository has
-not yet completed that finite machine description.
+book pages and reusable APIs identify concrete finite compiler constructions,
+finite/effective grammar construction, and the universal-machine construction
+as explicit deferred surfaces. The surrounding theorems are therefore stated
+with closeout records or named construction hypotheses where a textbook proof
+says "build the machine" but the formal repository has not yet completed that
+finite machine description.
 -/

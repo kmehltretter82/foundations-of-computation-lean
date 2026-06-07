@@ -81,8 +81,8 @@ used by the Chapter 5 reductions that require injective encodings.
 {module}`FoC.Computability.Compiler` proves simulation equivalences between
 well-formed descriptions and their compiled one-tape machines, using normalized
 output for output comparisons, then exposes description-backed compiler bridges
-for staged acceptors, Boolean deciders, paired-trace dovetailing, and partial
-unary range programs.
+for staged acceptors, Boolean deciders, paired-trace dovetailing, partial unary
+range programs, encoded-input recognizers, and universal row coverage.
 {module}`FoC.Computability.FiniteProgram` packages finite executable
 program-description syntax and proves concrete bridges for trace recognizers,
 Boolean deciders, dovetailing deciders, and partial unary range outputs when
@@ -91,10 +91,10 @@ surfaces for dovetailing and output-complete partial unary range descriptions.
 
 The current Chapter 5 boundary is visible here. Description encodings,
 interpreter semantics, compiled-machine simulation, supplied-description
-bridges, and finite construction surfaces are present. The remaining universal
-runner and some uniform finite compiler constructions are named explicitly so
-that downstream theorem statements can be precise without pretending those
-finite machines have already been built.
+bridges, semantic grammar closure, and finite construction surfaces are present.
+The remaining universal runner and uniform finite compiler constructions are
+packaged as closeout records so downstream theorem statements can be precise
+without pretending those finite machines have already been built.
 
 ## Reading Route
 

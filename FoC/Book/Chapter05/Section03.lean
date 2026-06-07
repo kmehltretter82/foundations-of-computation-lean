@@ -352,6 +352,9 @@ def ConcreteUniversalMachineSpec
 def ConcreteUniversalRunnerConstruction : Prop :=
   CodeUniversalRunnerConstruction
 
+abbrev ConcreteSection53UniversalCloseout :=
+  CodeUniversalSection53Closeout
+
 def ConcreteUniversalMachineRowsCoverAcceptableLanguages
     (universal : TuringMachine ConcreteMachineCodeSymbol state) : Prop :=
   UniversalMachineRowsCoverAcceptableLanguages universal
@@ -755,6 +758,12 @@ theorem concrete_encoded_input_description_compiler_of_program_compiler
     ConcreteEncodedInputDescriptionCompilerConstruction :=
   Computability.encodedInputDescriptionCompilerPrinciple_of_programCompiler
     hcompile
+
+theorem concrete_encoded_input_description_compiler_of_section53_closeout
+    (hclose : ConcreteSection53UniversalCloseout) :
+    ConcreteEncodedInputDescriptionCompilerConstruction :=
+  Computability.encodedInputDescriptionCompilerPrinciple_of_section53Closeout
+    hclose
 
 theorem concrete_encoded_input_description_compiler_decoder_universal
     (hcompile : ConcreteEncodedInputDescriptionCompilerConstruction) :
@@ -1573,6 +1582,17 @@ theorem exists_concrete_universal_machine_rows_cover_of_constructions
                   (concrete_universal_machine_rows_cover_of_encoded_input_description_compiler
                     hspec' hcompile)))
 
+theorem exists_concrete_universal_machine_rows_cover_of_section53_closeout
+    (hclose : ConcreteSection53UniversalCloseout) :
+    exists state : Type,
+      exists universal : TuringMachine ConcreteMachineCodeSymbol state,
+        ConcreteUniversalMachineSpec universal ∧
+          ConcreteUniversalMachineRowsCoverAcceptableLanguages universal :=
+  exists_concrete_universal_machine_rows_cover_of_constructions
+    (concrete_encoded_input_description_compiler_of_section53_closeout
+      hclose)
+    hclose.universalRunner
+
 /-!
 The section's universal-machine and diagonalization theorems require a concrete
 encoding of machines as strings.  This module records the formal statement
@@ -1588,14 +1608,14 @@ singleton outputs from empty input and Boolean deciders are no longer blocked by
 finite tape-window artifacts. The concrete diagonal pair map now has a faithful
 finite-machine witness.
 
-The remaining concrete work is narrowed to two named construction principles:
-{name}`ConcreteEncodedInputDescriptionCompilerConstruction`, which compiles
-every acceptable code-language recognizer to a Boolean machine description
-running on {name}`ConcreteMachineEncodeCodeInput`, and
-{name}`ConcreteUniversalRunnerConstruction`, which supplies one finite machine
-that implements {name}`ConcreteMachineCodeAccepts` on concatenated code words.
-Together they imply row coverage by
-{name}`exists_concrete_universal_machine_rows_cover_of_constructions`.
+The remaining concrete work is packaged by
+{name}`ConcreteSection53UniversalCloseout`. Its first field compiles encoded
+input staged recognizers into Boolean machine descriptions, which derives
+{name}`ConcreteEncodedInputDescriptionCompilerConstruction`; its second field is
+{name}`ConcreteUniversalRunnerConstruction`, one finite machine implementing
+{name}`ConcreteMachineCodeAccepts` on concatenated code words. Together they
+imply row coverage by
+{name}`exists_concrete_universal_machine_rows_cover_of_section53_closeout`.
 -/
 
 end Section03
