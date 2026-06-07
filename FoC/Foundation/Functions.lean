@@ -155,6 +155,88 @@ theorem preimage_intro {f : alpha -> beta} {B : FSet beta} {x : alpha}
     (hx : f x ∈ B) : x ∈ Preimage f B :=
   hx
 
+theorem image_membership (f : alpha -> beta) (A : FSet alpha) (y : beta) :
+    y ∈ Image f A <-> exists x, x ∈ A ∧ f x = y :=
+  Iff.rfl
+
+theorem preimage_membership (f : alpha -> beta) (B : FSet beta) (x : alpha) :
+    x ∈ Preimage f B <-> f x ∈ B :=
+  Iff.rfl
+
+theorem preimage_compose (g : beta -> gamma) (f : alpha -> beta) (C : FSet gamma) :
+    FSet.Equal (Preimage (Compose g f) C) (Preimage f (Preimage g C)) := by
+  intro x
+  constructor <;> intro hx <;> exact hx
+
+theorem preimage_union (f : alpha -> beta) (A B : FSet beta) :
+    FSet.Equal (Preimage f (FSet.Union A B))
+      (FSet.Union (Preimage f A) (Preimage f B)) := by
+  intro x
+  constructor
+  · intro hx
+    exact hx
+  · intro hx
+    exact hx
+
+theorem preimage_inter (f : alpha -> beta) (A B : FSet beta) :
+    FSet.Equal (Preimage f (FSet.Inter A B))
+      (FSet.Inter (Preimage f A) (Preimage f B)) := by
+  intro x
+  constructor
+  · intro hx
+    exact hx
+  · intro hx
+    exact hx
+
+theorem preimage_compl (f : alpha -> beta) (A : FSet beta) :
+    FSet.Equal (Preimage f (FSet.Compl A)) (FSet.Compl (Preimage f A)) := by
+  intro x
+  constructor
+  · intro hx
+    exact hx
+  · intro hx
+    exact hx
+
+theorem image_union (f : alpha -> beta) (A B : FSet alpha) :
+    FSet.Equal (Image f (FSet.Union A B))
+      (FSet.Union (Image f A) (Image f B)) := by
+  intro y
+  constructor
+  · intro hy
+    cases hy with
+    | intro x hx =>
+        cases hx.left with
+        | inl hA => exact Or.inl (Exists.intro x (And.intro hA hx.right))
+        | inr hB => exact Or.inr (Exists.intro x (And.intro hB hx.right))
+  · intro hy
+    cases hy with
+    | inl hA =>
+        cases hA with
+        | intro x hx =>
+            exact Exists.intro x (And.intro (Or.inl hx.left) hx.right)
+    | inr hB =>
+        cases hB with
+        | intro x hx =>
+            exact Exists.intro x (And.intro (Or.inr hx.left) hx.right)
+
+theorem image_compose (g : beta -> gamma) (f : alpha -> beta) (A : FSet alpha) :
+    FSet.Equal (Image (Compose g f) A) (Image g (Image f A)) := by
+  intro z
+  constructor
+  · intro hz
+    cases hz with
+    | intro x hx =>
+        exact Exists.intro (f x)
+          (And.intro (Exists.intro x (And.intro hx.left rfl)) hx.right)
+  · intro hz
+    cases hz with
+    | intro y hy =>
+        cases hy.left with
+        | intro x hx =>
+            exact Exists.intro x (And.intro hx.left (by
+              unfold Compose
+              rw [hx.right, hy.right]))
+
 /-!
 # Injectivity tests
 

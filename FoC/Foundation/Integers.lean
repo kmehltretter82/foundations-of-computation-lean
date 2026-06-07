@@ -162,6 +162,16 @@ theorem odd_add_odd_even {m n : Int} (hm : Odd m) (hn : Odd n) : Even (m + n) :=
           rw [hk, hl]
           omega
 
+theorem odd_mul {m n : Int} (hm : Odd m) (hn : Odd n) : Odd (m * n) := by
+  cases hm with
+  | intro k hk =>
+      cases hn with
+      | intro l hl =>
+          exists 2 * k * l + k + l
+          rw [hk, hl]
+          grind [Int.mul_add, Int.add_mul, Int.add_assoc, Int.add_comm,
+            Int.add_left_comm, Int.mul_assoc, Int.mul_comm, Int.mul_left_comm]
+
 /-!
 # Squares and counterexamples
 

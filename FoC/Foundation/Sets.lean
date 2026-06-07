@@ -274,6 +274,17 @@ theorem empty_union (A : FSet alpha) : Equal (Union Empty A) A := by
 theorem union_empty (A : FSet alpha) : Equal (Union A Empty) A := by
   exact equal_trans (union_comm A Empty) (empty_union A)
 
+theorem union_univ (A : FSet alpha) : Equal (Union A Univ) Univ := by
+  intro x
+  constructor
+  · intro _
+    exact True.intro
+  · intro _
+    exact Or.inr True.intro
+
+theorem univ_union (A : FSet alpha) : Equal (Union Univ A) Univ := by
+  exact equal_trans (union_comm Univ A) (union_univ A)
+
 theorem inter_comm (A B : FSet alpha) : Equal (Inter A B) (Inter B A) := by
   intro x
   constructor
@@ -320,6 +331,82 @@ theorem univ_inter (A : FSet alpha) : Equal (Inter Univ A) A := by
 
 theorem inter_univ (A : FSet alpha) : Equal (Inter A Univ) A := by
   exact equal_trans (inter_comm A Univ) (univ_inter A)
+
+theorem union_absorption (A B : FSet alpha) : Equal (Union A (Inter A B)) A := by
+  intro x
+  constructor
+  · intro hx
+    cases hx with
+    | inl hA => exact hA
+    | inr hAB => exact hAB.left
+  · intro hx
+    exact Or.inl hx
+
+theorem inter_absorption (A B : FSet alpha) : Equal (Inter A (Union A B)) A := by
+  intro x
+  constructor
+  · intro hx
+    exact hx.left
+  · intro hx
+    exact And.intro hx (Or.inl hx)
+
+theorem diff_self (A : FSet alpha) : Equal (Diff A A) Empty := by
+  intro x
+  constructor
+  · intro hx
+    exact hx.right hx.left
+  · intro hx
+    cases hx
+
+theorem diff_empty (A : FSet alpha) : Equal (Diff A Empty) A := by
+  intro x
+  constructor
+  · intro hx
+    exact hx.left
+  · intro hx
+    exact And.intro hx (fun hEmpty => hEmpty)
+
+theorem empty_diff (A : FSet alpha) : Equal (Diff Empty A) Empty := by
+  intro x
+  constructor
+  · intro hx
+    exact hx.left
+  · intro hx
+    cases hx
+
+theorem diff_univ (A : FSet alpha) : Equal (Diff A Univ) Empty := by
+  intro x
+  constructor
+  · intro hx
+    exact hx.right True.intro
+  · intro hx
+    cases hx
+
+theorem union_subset_iff {A B C : FSet alpha} :
+    Subset (Union A B) C <-> Subset A C ∧ Subset B C := by
+  constructor
+  · intro h
+    constructor
+    · intro x hx
+      exact h x (Or.inl hx)
+    · intro x hx
+      exact h x (Or.inr hx)
+  · intro h x hx
+    cases hx with
+    | inl hA => exact h.left x hA
+    | inr hB => exact h.right x hB
+
+theorem subset_inter_iff {A B C : FSet alpha} :
+    Subset A (Inter B C) <-> Subset A B ∧ Subset A C := by
+  constructor
+  · intro h
+    constructor
+    · intro x hx
+      exact (h x hx).left
+    · intro x hx
+      exact (h x hx).right
+  · intro h x hx
+    exact And.intro (h.left x hx) (h.right x hx)
 
 theorem union_distrib_inter (A B C : FSet alpha) :
     Equal (Union A (Inter B C)) (Inter (Union A B) (Union A C)) := by

@@ -78,6 +78,37 @@ theorem updated_row_present {T : Table row} {P : row -> Prop} {u : row -> row} {
     (hT : r ∈ T) (hP : P r) : u r ∈ Update T P u := by
   exact Or.inl (Exists.intro r (And.intro hT (And.intro hP rfl)))
 
+theorem unchanged_row_present_after_update {T : Table row} {P : row -> Prop}
+    {u : row -> row} {r : row} (hT : r ∈ T) (hP : ¬ P r) :
+    r ∈ Update T P u := by
+  exact Or.inr (And.intro hT hP)
+
+theorem select_subset_table (T : Table row) (P : row -> Prop) :
+    FSet.Subset (Select T P) T := by
+  intro r hr
+  exact hr.left
+
+theorem delete_subset_table (T : Table row) (P : row -> Prop) :
+    FSet.Subset (Delete T P) T := by
+  intro r hr
+  exact hr.left
+
+theorem selected_rows_satisfy_predicate {T : Table row} {P : row -> Prop} {r : row}
+    (hr : r ∈ Select T P) : P r :=
+  hr.right
+
+theorem deleted_rows_do_not_satisfy_predicate {T : Table row} {P : row -> Prop} {r : row}
+    (hr : r ∈ Delete T P) : ¬ P r :=
+  hr.right
+
+theorem select_select_membership (T : Table row) (P Q : row -> Prop) (r : row) :
+    r ∈ Select (Select T P) Q <-> r ∈ T ∧ P r ∧ Q r := by
+  constructor
+  · intro hr
+    exact And.intro hr.left.left (And.intro hr.left.right hr.right)
+  · intro hr
+    exact And.intro (And.intro hr.left hr.right.left) hr.right.right
+
 /-!
 ## Primary Keys
 
@@ -115,6 +146,18 @@ theorem insert_preserves_primary_key {key : row -> keytype} {T : Table row} {new
           exact hfresh r2 h2old hkeyNew
       | inr h2new =>
           rw [h1new, h2new]
+
+theorem select_preserves_primary_key {key : row -> keytype} {T : Table row}
+    {P : row -> Prop} (hpk : PrimaryKey key T) :
+    PrimaryKey key (Select T P) := by
+  intro r1 r2 h1 h2 hkey
+  exact hpk r1 r2 h1.left h2.left hkey
+
+theorem delete_preserves_primary_key {key : row -> keytype} {T : Table row}
+    {P : row -> Prop} (hpk : PrimaryKey key T) :
+    PrimaryKey key (Delete T P) := by
+  intro r1 r2 h1 h2 hkey
+  exact hpk r1 r2 h1.left h2.left hkey
 
 end Section08
 end Chapter02

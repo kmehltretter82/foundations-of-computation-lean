@@ -96,6 +96,22 @@ theorem sum_identity_closed_form (n : Nat) :
   have h := two_mul_sum_identity n
   omega
 
+theorem even_sum_closed_form (n : Nat) :
+    SumUpTo (fun i => 2 * i) n = n * (n + 1) := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+      calc
+        SumUpTo (fun i => 2 * i) (n + 1)
+            = SumUpTo (fun i => 2 * i) n + 2 * (n + 1) := by
+                rw [SumUpTo.succ]
+        _ = n * (n + 1) + 2 * (n + 1) := by
+                rw [ih]
+        _ = (n + 1) * (n + 1 + 1) := by
+                simp [Nat.left_distrib, Nat.right_distrib,
+                  Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+                omega
+
 theorem weighted_power_algebra (n p : Nat) :
     n * p + 1 + (n + 2) * p = (n + 1) * (p * 2) + 1 := by
   calc

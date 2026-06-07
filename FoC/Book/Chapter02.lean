@@ -47,8 +47,21 @@ and relations, use {module}`FoC.Foundation.Functions` and
 
 ## Status Notes
 
-The formal core of the chapter is covered. Programming-language examples and
-database-management-system behavior are treated as application material; the
-semantic set, function, relation, countability, and diagonalization content is
-represented by checked definitions and theorems.
+The formal core of the chapter is covered. The set sections include the
+membership tests, subset/equality principles, Boolean algebra laws, De Morgan
+laws, absorption identities, universe/empty identities, and difference
+simplifications. The programming-with-sets section mirrors these laws in the
+bit-vector model where finite-set operations are pointwise Boolean operations.
+
+The function and counting sections cover graphs, images, preimages,
+composition, injectivity, surjectivity, countability, Cantor diagonalization,
+and the rational/real uncountability bridge. Recent cleanup adds exact
+image/preimage transport laws for composition, union, intersection, and
+complement.
+
+The relation and database sections cover equivalence classes, partitions,
+class overlap/disjointness, transitive closure, relational tables, filtering,
+updates, and primary-key preservation under insertion, selection, and deletion.
+Programming-language examples and database-management-system implementation
+details remain application material rather than formal source obligations.
 -/

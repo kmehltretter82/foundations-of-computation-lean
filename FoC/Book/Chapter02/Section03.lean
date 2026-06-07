@@ -101,6 +101,26 @@ theorem compl_apply (A : BitSet) (i : Nat) :
     compl A i = !(A i) :=
   rfl
 
+theorem union_commutative (A B : BitSet) (i : Nat) :
+    union A B i = union B A i := by
+  grind [union]
+
+theorem inter_commutative (A B : BitSet) (i : Nat) :
+    inter A B i = inter B A i := by
+  grind [inter]
+
+theorem union_absorption (A B : BitSet) (i : Nat) :
+    union A (inter A B) i = A i := by
+  grind [union, inter]
+
+theorem inter_absorption (A B : BitSet) (i : Nat) :
+    inter A (union A B) i = A i := by
+  grind [union, inter]
+
+theorem double_complement (A : BitSet) (i : Nat) :
+    compl (compl A) i = A i := by
+  grind [compl]
+
 end BitVectorSet
 
 end Section03

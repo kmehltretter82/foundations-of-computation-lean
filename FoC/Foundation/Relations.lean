@@ -115,6 +115,24 @@ theorem class_equal_iff_related {R : Rel alpha} (h : Equivalence R)
     exact (hClass b).mpr (class_self h b)
   · exact class_equal_of_related h
 
+theorem overlapping_classes_equal {R : Rel alpha} (h : Equivalence R)
+    {a b : alpha} (hoverlap : exists x, x ∈ Class R a ∧ x ∈ Class R b) :
+    FSet.Equal (Class R a) (Class R b) := by
+  cases hoverlap with
+  | intro x hx =>
+      have hab : R a b := h.right.right hx.left (h.right.left hx.right)
+      exact class_equal_of_related h hab
+
+theorem classes_equal_or_disjoint {R : Rel alpha} (h : Equivalence R)
+    (a b : alpha) :
+    FSet.Equal (Class R a) (Class R b) ∨ FSet.Disjoint (Class R a) (Class R b) := by
+  classical
+  by_cases hoverlap : exists x, x ∈ Class R a ∧ x ∈ Class R b
+  · exact Or.inl (overlapping_classes_equal h hoverlap)
+  · exact Or.inr (by
+      intro x hx
+      exact hoverlap (Exists.intro x hx))
+
 def classes_partition {R : Rel alpha} (h : Equivalence R) : Partition alpha where
   block := Classes R
   covers := by

@@ -46,11 +46,18 @@ formalized, while the proof shows that Lean can check the required cases.
 
 ## Status Notes
 
-The formal core of the chapter is covered. Coverage records a few intentional
-deferrals for application-style material such as circuit drawings and some
-exercise-specific presentation details. The finite-cardinality pigeonhole
-principle, direct square-equation irrationality bridges, and concrete
-Dedekind-cut square equalities for the square-root candidates are now checked.
-The logical, arithmetic, induction, and recursive-definition machinery is
-present in checked form.
+The formal core of the chapter is covered. The propositional-logic and Boolean
+algebra sections include truth-table equivalences, substitution laws, NOR
+expressibility, and circuit/formula bridges. The circuit section now also links
+the full-adder DNF tables to compact XOR and carry formulas, so the table,
+formula, and gate-reading presentations are checked against one another.
+
+The proof sections cover parity, divisibility, rational closure, irrational
+real examples, contradiction, pigeonhole, induction, finite sums, recursive
+definitions, Hanoi move counts, and binary-tree recursions. Recent cleanup
+adds explicit odd-plus-odd, odd-times-odd, and even-sum induction wrappers.
+
+Remaining deferrals are intentionally presentational: drawn circuit layouts,
+long exercise lists whose Lean counterparts are already represented by more
+general theorem schemas, and informal prose about proof-writing style.
 -/

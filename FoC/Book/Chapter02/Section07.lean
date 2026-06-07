@@ -51,6 +51,18 @@ theorem equal_classes_iff_related_representatives {R : Rel alpha}
     FSet.Equal (Rel.Class R a) (Rel.Class R b) <-> R a b :=
   Rel.class_equal_iff_related h
 
+theorem overlapping_equivalence_classes_are_equal {R : Rel alpha}
+    (h : Rel.Equivalence R) {a b : alpha}
+    (hoverlap : exists x, x ∈ Rel.Class R a ∧ x ∈ Rel.Class R b) :
+    FSet.Equal (Rel.Class R a) (Rel.Class R b) :=
+  Rel.overlapping_classes_equal h hoverlap
+
+theorem equivalence_classes_equal_or_disjoint {R : Rel alpha}
+    (h : Rel.Equivalence R) (a b : alpha) :
+    FSet.Equal (Rel.Class R a) (Rel.Class R b) ∨
+      FSet.Disjoint (Rel.Class R a) (Rel.Class R b) :=
+  Rel.classes_equal_or_disjoint h a b
+
 /-!
 ## Partitions and Fibers
 

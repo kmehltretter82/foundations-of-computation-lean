@@ -149,9 +149,17 @@ theorem simple_sum_formula (n : Nat) :
     NatSum.SumUpTo (fun i => i) n = n * (n + 1) / 2 :=
   NatSum.sum_identity_closed_form n
 
+theorem sum_first_even_numbers (n : Nat) :
+    NatSum.SumUpTo (fun i => 2 * i) n = n * (n + 1) :=
+  NatSum.even_sum_closed_form n
+
 theorem sum_first_hundred_integers :
     NatSum.SumUpTo (fun i => i) 100 = 5050 := by
   simpa using simple_sum_formula 100
+
+theorem sum_first_ten_even_numbers :
+    NatSum.SumUpTo (fun i => 2 * i) 10 = 110 := by
+  simpa using sum_first_even_numbers 10
 
 theorem weighted_power_sum_formula (n : Nat) :
     NatSum.SumUpTo NatSum.WeightedPowerTerm (n + 1) = n * 2 ^ (n + 1) + 1 :=

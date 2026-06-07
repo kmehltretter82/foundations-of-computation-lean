@@ -110,9 +110,17 @@ theorem sum_of_two_even_integers_even {m n : Int}
     (hm : IntPred.Even m) (hn : IntPred.Even n) : IntPred.Even (m + n) :=
   IntPred.even_add hm hn
 
+theorem sum_of_two_odd_integers_even {m n : Int}
+    (hm : IntPred.Odd m) (hn : IntPred.Odd n) : IntPred.Even (m + n) :=
+  IntPred.odd_add_odd_even hm hn
+
 theorem integer_product_of_two_even_numbers_even {m n : Int}
     (hm : IntPred.Even m) (_hn : IntPred.Even n) : IntPred.Even (m * n) :=
   IntPred.even_mul_left hm
+
+theorem integer_product_of_two_odd_numbers_odd {m n : Int}
+    (hm : IntPred.Odd m) (hn : IntPred.Odd n) : IntPred.Odd (m * n) :=
+  IntPred.odd_mul hm hn
 
 theorem product_even_does_not_force_both_factors_even :
     IntPred.Even (2 * 3) ∧ ¬ IntPred.Even 3 := by

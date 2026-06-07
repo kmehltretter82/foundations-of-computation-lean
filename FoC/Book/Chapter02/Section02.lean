@@ -82,6 +82,42 @@ theorem intersection_distributes_over_union (A B C : FSet alpha) :
       (FSet.Union (FSet.Inter A B) (FSet.Inter A C)) :=
   FSet.inter_distrib_union A B C
 
+theorem union_absorption (A B : FSet alpha) :
+    FSet.Equal (FSet.Union A (FSet.Inter A B)) A :=
+  FSet.union_absorption A B
+
+theorem intersection_absorption (A B : FSet alpha) :
+    FSet.Equal (FSet.Inter A (FSet.Union A B)) A :=
+  FSet.inter_absorption A B
+
+theorem union_with_universal_set (A : FSet alpha) :
+    FSet.Equal (FSet.Union A FSet.Univ) FSet.Univ :=
+  FSet.union_univ A
+
+theorem intersection_with_universal_set (A : FSet alpha) :
+    FSet.Equal (FSet.Inter A FSet.Univ) A :=
+  FSet.inter_univ A
+
+theorem union_with_empty_set (A : FSet alpha) :
+    FSet.Equal (FSet.Union A FSet.Empty) A :=
+  FSet.union_empty A
+
+theorem intersection_with_empty_set (A : FSet alpha) :
+    FSet.Equal (FSet.Inter A FSet.Empty) FSet.Empty :=
+  FSet.inter_empty A
+
+theorem difference_with_self (A : FSet alpha) :
+    FSet.Equal (FSet.Diff A A) FSet.Empty :=
+  FSet.diff_self A
+
+theorem difference_with_empty_set (A : FSet alpha) :
+    FSet.Equal (FSet.Diff A FSet.Empty) A :=
+  FSet.diff_empty A
+
+theorem difference_with_universal_set (A : FSet alpha) :
+    FSet.Equal (FSet.Diff A FSet.Univ) FSet.Empty :=
+  FSet.diff_univ A
+
 /-!
 ## De Morgan's Laws
 

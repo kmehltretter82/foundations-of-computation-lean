@@ -42,6 +42,14 @@ theorem graph_unique_value {f : alpha -> beta} {x : alpha} {y z : beta}
     (hy : (x, y) ∈ Fn.Graph f) (hz : (x, z) ∈ Fn.Graph f) : y = z :=
   Fn.graph_unique_value hy hz
 
+theorem image_membership (f : alpha -> beta) (A : FSet alpha) (y : beta) :
+    y ∈ Fn.Image f A <-> exists x, x ∈ A ∧ f x = y :=
+  Fn.image_membership f A y
+
+theorem preimage_membership (f : alpha -> beta) (B : FSet beta) (x : alpha) :
+    x ∈ Fn.Preimage f B <-> f x ∈ B :=
+  Fn.preimage_membership f B x
+
 /-!
 ## Injective, Surjective, and Bijective
 
@@ -86,6 +94,36 @@ theorem composition_associative
     (h : gamma -> delta) (g : beta -> gamma) (f : alpha -> beta) :
     Fn.Compose h (Fn.Compose g f) = Fn.Compose (Fn.Compose h g) f :=
   Fn.compose_assoc h g f
+
+theorem image_of_composite
+    (g : beta -> gamma) (f : alpha -> beta) (A : FSet alpha) :
+    FSet.Equal (Fn.Image (Fn.Compose g f) A) (Fn.Image g (Fn.Image f A)) :=
+  Fn.image_compose g f A
+
+theorem preimage_of_composite
+    (g : beta -> gamma) (f : alpha -> beta) (C : FSet gamma) :
+    FSet.Equal (Fn.Preimage (Fn.Compose g f) C)
+      (Fn.Preimage f (Fn.Preimage g C)) :=
+  Fn.preimage_compose g f C
+
+theorem image_preserves_union (f : alpha -> beta) (A B : FSet alpha) :
+    FSet.Equal (Fn.Image f (FSet.Union A B))
+      (FSet.Union (Fn.Image f A) (Fn.Image f B)) :=
+  Fn.image_union f A B
+
+theorem preimage_preserves_union (f : alpha -> beta) (A B : FSet beta) :
+    FSet.Equal (Fn.Preimage f (FSet.Union A B))
+      (FSet.Union (Fn.Preimage f A) (Fn.Preimage f B)) :=
+  Fn.preimage_union f A B
+
+theorem preimage_preserves_intersection (f : alpha -> beta) (A B : FSet beta) :
+    FSet.Equal (Fn.Preimage f (FSet.Inter A B))
+      (FSet.Inter (Fn.Preimage f A) (Fn.Preimage f B)) :=
+  Fn.preimage_inter f A B
+
+theorem preimage_preserves_complement (f : alpha -> beta) (A : FSet beta) :
+    FSet.Equal (Fn.Preimage f (FSet.Compl A)) (FSet.Compl (Fn.Preimage f A)) :=
+  Fn.preimage_compl f A
 
 theorem composition_injective_implies_first_injective
     {f : alpha -> beta} {g : beta -> gamma}

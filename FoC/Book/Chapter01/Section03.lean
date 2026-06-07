@@ -403,6 +403,54 @@ theorem fullAdderCarryDNF_table (a b c : Bool) :
   cases a <;> cases b <;> cases c <;>
     rfl
 
+/-!
+The compact formulas below are the ordinary circuit descriptions of the same
+adder: the sum bit is the exclusive-or of the three inputs, and the carry bit
+is true when at least two inputs are true.
+-/
+
+def fullAdderSumFormula : PropForm ThreeInput :=
+  PropForm.xor (PropForm.xor firstFormula secondFormula) thirdFormula
+
+def fullAdderCarryFormula : PropForm ThreeInput :=
+  PropForm.or
+    (PropForm.and firstFormula secondFormula)
+    (PropForm.or
+      (PropForm.and firstFormula thirdFormula)
+      (PropForm.and secondFormula thirdFormula))
+
+theorem fullAdderSumFormula_table (a b c : Bool) :
+    PropForm.eval (valuation a b c) fullAdderSumFormula = fullAdderSumSpec a b c := by
+  cases a <;> cases b <;> cases c <;>
+    rfl
+
+theorem fullAdderCarryFormula_table (a b c : Bool) :
+    PropForm.eval (valuation a b c) fullAdderCarryFormula = fullAdderCarrySpec a b c := by
+  cases a <;> cases b <;> cases c <;>
+    rfl
+
+theorem fullAdderSumDNF_equivalent_formula :
+    PropForm.LogicallyEquivalent (dnfToPropForm fullAdderSumDNF) fullAdderSumFormula := by
+  intro valuation
+  cases hfirst : valuation first <;>
+    cases hsecond : valuation second <;>
+    cases hthird : valuation third <;>
+    simp [dnfToPropForm_eval, DNF.eval, Conjunction.eval, Literal.eval,
+      fullAdderSumDNF, fullAdderSumRows, dnfFromRows, rowClause,
+      fullAdderSumFormula, firstFormula, secondFormula, thirdFormula,
+      PropForm.eval, ThreeInput.valuation, hfirst, hsecond, hthird]
+
+theorem fullAdderCarryDNF_equivalent_formula :
+    PropForm.LogicallyEquivalent (dnfToPropForm fullAdderCarryDNF) fullAdderCarryFormula := by
+  intro valuation
+  cases hfirst : valuation first <;>
+    cases hsecond : valuation second <;>
+    cases hthird : valuation third <;>
+    simp [dnfToPropForm_eval, DNF.eval, Conjunction.eval, Literal.eval,
+      fullAdderCarryDNF, fullAdderCarryRows, dnfFromRows, rowClause,
+      fullAdderCarryFormula, firstFormula, secondFormula, thirdFormula,
+      PropForm.eval, ThreeInput.valuation, hfirst, hsecond, hthird]
+
 end Section03
 end Chapter01
 end Book
