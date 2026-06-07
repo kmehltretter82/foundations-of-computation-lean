@@ -241,7 +241,6 @@ structure DedekindRealGeometricSeriesRemainingLaws : Prop where
   neg_add_cancel : forall a : Real, -a + a = 0
   left_distrib : forall a b c : Real, a * (b + c) = a * b + a * c
   right_distrib : forall a b c : Real, (a + b) * c = a * c + b * c
-  mul_neg : forall a b : Real, a * -b = -(a * b)
 
 theorem dedekind_real_geometric_series_algebra_of_remaining_laws
     (laws : DedekindRealGeometricSeriesRemainingLaws) :
@@ -255,7 +254,7 @@ theorem dedekind_real_geometric_series_algebra_of_remaining_laws
     mul_one := Real.mul_one
     left_distrib := laws.left_distrib
     right_distrib := laws.right_distrib
-    mul_neg := laws.mul_neg
+    mul_neg := Real.mul_neg
   }
 
 theorem arbitrary_real_geometric_series_mul_one_sub_of_algebra
@@ -302,7 +301,7 @@ geometric-series formula, stated against the exact algebra laws needed by the
 calculation. The custom Dedekind-real layer now supplies the additive laws and
 the two multiplicative identity laws used by
 {name}`DedekindRealGeometricSeriesAlgebra`; the remaining algebra assumptions
-are the inverse-addition law, distributivity, and multiplication by negatives.
+are the inverse-addition law and the two distributivity laws.
 
 The division theorem isolates one further boundary: the arbitrary-real division
 form needs an actual nonzero-division operation on custom Dedekind reals and a

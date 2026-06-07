@@ -567,6 +567,10 @@ theorem qreal_neg (r : QRat) :
   · intro h
     exact Exists.intro r (And.intro (QRat.lt_irrefl r) h)
 
+theorem neg_zero : -(0 : Real) = 0 := by
+  change -qreal (0 : QRat) = qreal (0 : QRat)
+  rw [qreal_neg, QRat.neg_zero]
+
 theorem neg_neg (x : Real) : -(-x) = x := by
   apply ext
   intro q
@@ -595,6 +599,31 @@ theorem neg_neg (x : Real) : -(-x) = x := by
         · rw [QRat.neg_neg]
           exact ha.left
 
+theorem eq_zero_of_nonneg_of_neg_nonneg {x : Real}
+    (hx : (0 : Real) ≤ x) (hnx : (0 : Real) ≤ -x) : x = 0 := by
+  apply ext
+  intro q
+  change x.lower q ↔ q < 0
+  constructor
+  · intro hxq
+    cases x.open_upward q hxq with
+    | intro a ha =>
+        by_cases hq0 : q < 0
+        · exact hq0
+        · have ha0 : 0 < a :=
+            QRat.zero_lt_of_not_lt_zero_of_lt hq0 ha.left
+          have hnega0 : -a < 0 := by
+            have h := QRat.neg_lt_neg ha0
+            rwa [QRat.neg_zero] at h
+          have hnegx : (-x).lower (-a) := hnx (-a) hnega0
+          rcases hnegx with ⟨r, hrnot, hlt⟩
+          have hra : r < a := by
+            have h := QRat.neg_lt_neg hlt
+            rwa [QRat.neg_neg, QRat.neg_neg] at h
+          exact False.elim (hrnot (x.downward_closed r a hra ha.right))
+  · intro hq0
+    exact hx q hq0
+
 theorem qreal_sub (r s : QRat) :
     qreal r - qreal s = qreal (r - s) := by
   calc
@@ -618,6 +647,11 @@ theorem nonneg_neg_of_not_nonneg {x : Real}
   | intro r hr =>
       exact Exists.intro r
         (And.intro hr.right (QRat.lt_trans hq0 (QRat.neg_pos_of_neg hr.left)))
+
+theorem nonneg_of_not_nonneg_neg {x : Real}
+    (hx : ¬ (0 : Real) ≤ -x) : (0 : Real) ≤ x := by
+  have h := nonneg_neg_of_not_nonneg hx
+  rwa [neg_neg] at h
 
 theorem exists_pos_not_lower_of_nonneg {x : Real}
     (_hx : (0 : Real) ≤ x) : exists u : QRat, 0 < u ∧ ¬ x.lower u := by
@@ -860,6 +894,40 @@ theorem mulNonneg_one_right (x : Real)
                 simpa [QRat.mul_comm] using hqba
               exact Or.inr ⟨a, b, hapos, hb0, ha.right, hb.right, hqab⟩
 
+theorem mulNonneg_zero_right (x : Real)
+    (hx : (0 : Real) ≤ x) (h0 : (0 : Real) ≤ qreal 0) :
+    mulNonneg x (qreal 0) hx h0 = 0 := by
+  apply ext
+  intro q
+  change (mulNonneg x (qreal 0) hx h0).lower q ↔ q < 0
+  constructor
+  · intro hq
+    cases hq with
+    | inl hq0 =>
+        exact hq0
+    | inr hprod =>
+        rcases hprod with ⟨_a, b, _ha0, hb0, _ha, hbzero, _hqab⟩
+        exact False.elim (QRat.lt_asymm hb0 hbzero)
+  · intro hq0
+    exact Or.inl hq0
+
+theorem mulNonneg_zero_left (x : Real)
+    (h0 : (0 : Real) ≤ qreal 0) (hx : (0 : Real) ≤ x) :
+    mulNonneg (qreal 0) x h0 hx = 0 := by
+  apply ext
+  intro q
+  change (mulNonneg (qreal 0) x h0 hx).lower q ↔ q < 0
+  constructor
+  · intro hq
+    cases hq with
+    | inl hq0 =>
+        exact hq0
+    | inr hprod =>
+        rcases hprod with ⟨a, _b, ha0, _hb0, hazero, _hb, _hqab⟩
+        exact False.elim (QRat.lt_asymm ha0 hazero)
+  · intro hq0
+    exact Or.inl hq0
+
 theorem qreal_mulNonneg_neg_right {a b : QRat}
     (ha : (0 : Real) ≤ qreal a) (hb : (0 : Real) ≤ -qreal b) :
     mulNonneg (qreal a) (-qreal b) ha hb = qreal (a * -b) := by
@@ -945,6 +1013,78 @@ theorem mul_one (x : Real) : x * 1 = x := by
   · simp [h1, hx]
     change -mulNonneg (-x) (qreal 1) (nonneg_neg_of_not_nonneg hx) h1 = x
     rw [mulNonneg_one_right (-x) (nonneg_neg_of_not_nonneg hx) h1, neg_neg]
+
+theorem zero_mul (x : Real) : 0 * x = 0 := by
+  classical
+  change mul 0 x = 0
+  unfold mul
+  have h0 : (0 : Real) ≤ (0 : Real) := by
+    intro q hq0
+    exact hq0
+  by_cases hx : (0 : Real) ≤ x
+  · simp [h0, hx]
+    change mulNonneg (qreal 0) x h0 hx = 0
+    exact mulNonneg_zero_left x h0 hx
+  · simp [h0, hx]
+    change -mulNonneg (qreal 0) (-x) h0 (nonneg_neg_of_not_nonneg hx) = 0
+    rw [mulNonneg_zero_left (-x) h0 (nonneg_neg_of_not_nonneg hx)]
+    apply qreal_neg
+
+theorem mul_zero (x : Real) : x * 0 = 0 := by
+  classical
+  change mul x 0 = 0
+  unfold mul
+  have h0 : (0 : Real) ≤ (0 : Real) := by
+    intro q hq0
+    exact hq0
+  by_cases hx : (0 : Real) ≤ x
+  · simp [hx, h0]
+    change mulNonneg x (qreal 0) hx h0 = 0
+    exact mulNonneg_zero_right x hx h0
+  · simp [hx, h0]
+    change -mulNonneg (-x) (qreal 0) (nonneg_neg_of_not_nonneg hx) h0 = 0
+    rw [mulNonneg_zero_right (-x) (nonneg_neg_of_not_nonneg hx) h0]
+    apply qreal_neg
+
+theorem mul_neg (x y : Real) : x * -y = -(x * y) := by
+  classical
+  by_cases hyzero : y = 0
+  · rw [hyzero, neg_zero, mul_zero]
+    exact neg_zero.symm
+  change mul x (-y) = -(mul x y)
+  unfold mul
+  by_cases hx : (0 : Real) ≤ x
+  · simp [hx]
+    by_cases hny : (0 : Real) ≤ -y
+    · simp [hny]
+      by_cases hy : (0 : Real) ≤ y
+      · exact False.elim (hyzero (eq_zero_of_nonneg_of_neg_nonneg hy hny))
+      · simp [hy]
+        rw [neg_neg]
+    · simp [hny]
+      have hy : (0 : Real) ≤ y := nonneg_of_not_nonneg_neg hny
+      simp [hy]
+      change
+        -mulNonneg x (-(-y)) hx (nonneg_neg_of_not_nonneg hny) =
+          -mulNonneg x y hx hy
+      rw [mulNonneg_congr rfl (neg_neg y) hx
+        (nonneg_neg_of_not_nonneg hny) hx hy]
+  · simp [hx]
+    by_cases hny : (0 : Real) ≤ -y
+    · simp [hny]
+      by_cases hy : (0 : Real) ≤ y
+      · exact False.elim (hyzero (eq_zero_of_nonneg_of_neg_nonneg hy hny))
+      · simp [hy]
+    · simp [hny]
+      have hy : (0 : Real) ≤ y := nonneg_of_not_nonneg_neg hny
+      simp [hy]
+      change
+        mulNonneg (-x) (-(-y)) (nonneg_neg_of_not_nonneg hx)
+            (nonneg_neg_of_not_nonneg hny) =
+          -(-mulNonneg (-x) y (nonneg_neg_of_not_nonneg hx) hy)
+      rw [mulNonneg_congr rfl (neg_neg y) (nonneg_neg_of_not_nonneg hx)
+        (nonneg_neg_of_not_nonneg hny) (nonneg_neg_of_not_nonneg hx) hy,
+        neg_neg]
 
 theorem qreal_mul (a b : QRat) :
     qreal a * qreal b = qreal (a * b) := by

@@ -27,7 +27,7 @@ foundation:
 completed:
   - coordinate: "Chapter 1"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 176
+    theorem_declarations: 184
     modules:
       - "FoC.Book.Chapter01.Section01"
       - "FoC.Book.Chapter01.Section02"
@@ -68,7 +68,7 @@ completed:
       - "Product-of-primes representation for every natural number greater than one"
       - "Reduced positive-rational-representative contradiction cores for sqrt(2) and sqrt(3)"
       - "Quotient-rational no-square-root theorems for 2 and 3, with explicit natural-fraction square-root approximants, concrete Dedekind-cut square equalities, real square-characterization, and direct square-equality irrationality bridges"
-      - "Dedekind-cut real density, rational embedding arithmetic for addition/subtraction/multiplication, unconditional addition associativity and zero laws, multiplication identity laws, powers, embedded-rational division, rational-real product closure, rational scaling wrappers, and the precise remaining-law boundary for arbitrary-real geometric-series division"
+      - "Dedekind-cut real density, rational embedding arithmetic for addition/subtraction/multiplication, unconditional addition associativity and zero laws, zero and identity multiplication laws, multiplication by negatives, powers, embedded-rational division, rational-real product closure, rational scaling wrappers, and the precise remaining-law boundary for arbitrary-real geometric-series division"
       - "Concrete Dedekind-cut candidates for sqrt(2) and sqrt(3), with nonnegativity, square-equality, and irrationality wrappers"
       - "Direct Dedekind-cut example showing that a product of irrational quantities can be rational"
       - "Proof-by-contradiction schema"
