@@ -360,6 +360,72 @@ theorem sententialCountNonterminal_terminal_absurd
     exact sententialCountNonterminal_terminalWord A w
   omega
 
+theorem sentential_no_nonterminal_occurrence_absurd
+    [DecidableEq nonterminal]
+    {A : nonterminal} {sf u v : SententialForm terminal nonterminal}
+    (hcount : SententialCountNonterminal A sf = 0)
+    (h : sf = u ++ [ggNonterminal A] ++ v) : False := by
+  have hc := congrArg (SententialCountNonterminal A) h
+  rw [hcount, sententialCountNonterminal_append,
+    sententialCountNonterminal_append] at hc
+  simp [SententialCountNonterminal, ggNonterminal] at hc
+  omega
+
+theorem sentential_unique_nonterminal_occurrence
+    [DecidableEq nonterminal]
+    {A : nonterminal}
+    {pref tail u v : SententialForm terminal nonterminal}
+    (hpref : SententialCountNonterminal A pref = 0)
+    (htail : SententialCountNonterminal A tail = 0)
+    (h : pref ++ [ggNonterminal A] ++ tail =
+      u ++ [ggNonterminal A] ++ v) :
+    u = pref ∧ v = tail := by
+  induction pref generalizing u v with
+  | nil =>
+      simp at h
+      cases u with
+      | nil =>
+          simp at h
+          exact ⟨rfl, h.symm⟩
+      | cons _ rest =>
+          simp at h
+          have htailEq : tail = rest ++ [ggNonterminal A] ++ v := by
+            simpa using h.right
+          exact False.elim
+            (sentential_no_nonterminal_occurrence_absurd htail htailEq)
+  | cons head rest ih =>
+      cases u with
+      | nil =>
+          simp at h
+          cases head with
+          | terminal _ =>
+              simp [ggNonterminal] at h
+          | nonterminal B =>
+              simp [ggNonterminal] at h
+              have hBA : B = A := h.left
+              subst B
+              simp [SententialCountNonterminal] at hpref
+      | cons uhead urest =>
+          simp at h
+          have hhead : uhead = head := h.left.symm
+          subst uhead
+          have hrestCount :
+              SententialCountNonterminal A rest = 0 := by
+            cases head with
+            | terminal _ =>
+                simpa [SententialCountNonterminal] using hpref
+            | nonterminal B =>
+                simp [SententialCountNonterminal] at hpref
+                exact hpref.right
+          have htailEq : rest ++ [ggNonterminal A] ++ tail =
+              urest ++ [ggNonterminal A] ++ v := by
+            simpa using h.right
+          cases ih hrestCount htailEq with
+          | intro hrestEq hv =>
+              constructor
+              · rw [hrestEq]
+              · exact hv
+
 theorem sententialCountNonterminal_repeat_nonterminal_of_ne
     [DecidableEq nonterminal]
     {A B : nonterminal} (hne : B ≠ A) (n : Nat) :
@@ -5109,6 +5175,122 @@ theorem squareGrowForm_count_d (n : Nat) :
     squareBForm_count_d, squareMarkerAForm_count_d, squareN,
     ggNonterminal, SententialCountNonterminal]
 
+theorem square_no_t_occurrence_absurd
+    {sf u v : SententialForm SquareTerminal SquareNT}
+    (hcount : SententialCountNonterminal SquareNT.t sf = 0)
+    (h : sf = u ++ [squareN SquareNT.t] ++ v) : False := by
+  have hc := congrArg (SententialCountNonterminal SquareNT.t) h
+  rw [hcount, sententialCountNonterminal_append,
+    sententialCountNonterminal_append] at hc
+  simp [SententialCountNonterminal, squareN, ggNonterminal] at hc
+  omega
+
+theorem squareBForm_count_t (n : Nat) :
+    SententialCountNonterminal SquareNT.t (squareBForm n) = 0 := by
+  simpa [squareBForm] using
+    (sententialCountNonterminal_repeat_nonterminal_of_ne
+      (terminal := SquareTerminal) (A := SquareNT.t) (B := SquareNT.b)
+      (by intro h; cases h) n)
+
+theorem squareMarkerAForm_count_t (n : Nat) :
+    SententialCountNonterminal SquareNT.t (squareMarkerAForm n) = 0 := by
+  simpa [squareMarkerAForm] using
+    (sententialCountNonterminal_repeat_nonterminal_of_ne
+      (terminal := SquareTerminal) (A := SquareNT.t)
+      (B := SquareNT.markA) (by intro h; cases h) n)
+
+theorem squareGrowForm_tail_count_t (n : Nat) :
+    SententialCountNonterminal SquareNT.t
+      (squareMarkerAForm n ++ [squareN SquareNT.e]) = 0 := by
+  simp [sententialCountNonterminal_append, squareMarkerAForm_count_t,
+    SententialCountNonterminal, squareN, ggNonterminal]
+
+theorem squareBForm_t_occurrence
+    {tail u v : SententialForm SquareTerminal SquareNT} (n : Nat)
+    (htail : SententialCountNonterminal SquareNT.t tail = 0)
+    (h : squareBForm n ++ [squareN SquareNT.t] ++ tail =
+      u ++ [squareN SquareNT.t] ++ v) :
+    u = squareBForm n ∧ v = tail := by
+  induction n generalizing u v with
+  | zero =>
+      simp [squareBForm, Word.RepeatSymbol] at h
+      cases u with
+      | nil =>
+          simp at h
+          exact ⟨rfl, h.symm⟩
+      | cons _ rest =>
+          simp at h
+          have htailEq : tail = rest ++ [squareN SquareNT.t] ++ v := by
+            simpa using h.right
+          exact False.elim (square_no_t_occurrence_absurd htail htailEq)
+  | succ n ih =>
+      change squareN SquareNT.b ::
+          (squareBForm n ++ [squareN SquareNT.t] ++ tail) =
+        u ++ [squareN SquareNT.t] ++ v at h
+      cases u with
+      | nil =>
+          simp [squareN, ggNonterminal] at h
+      | cons head rest =>
+          simp at h
+          have hhead : head = squareN SquareNT.b := h.left.symm
+          subst head
+          have hrest : squareBForm n ++ [squareN SquareNT.t] ++ tail =
+              rest ++ [squareN SquareNT.t] ++ v := by
+            simpa using h.right
+          cases ih hrest with
+          | intro hrestEq hv =>
+              constructor
+              · rw [hrestEq]
+                rfl
+              · exact hv
+
+theorem squareGrowForm_t_occurrence
+    {u v : SententialForm SquareTerminal SquareNT} (n : Nat)
+    (h : squareGrowForm n = u ++ [squareN SquareNT.t] ++ v) :
+    u = [squareN SquareNT.d] ++ squareBForm n ∧
+      v = squareMarkerAForm n ++ [squareN SquareNT.e] := by
+  simp [squareGrowForm, List.append_assoc] at h
+  cases u with
+  | nil =>
+      simp [squareN, ggNonterminal] at h
+  | cons head rest =>
+      simp at h
+      have hhead : head = squareN SquareNT.d := h.left.symm
+      subst head
+      have htail : squareBForm n ++ [squareN SquareNT.t] ++
+          (squareMarkerAForm n ++ [squareN SquareNT.e]) =
+        rest ++ [squareN SquareNT.t] ++ v := by
+        simpa [List.append_assoc] using h.right
+      have hocc := squareBForm_t_occurrence n
+        (squareGrowForm_tail_count_t n) htail
+      constructor
+      · rw [hocc.left]
+        rfl
+      · exact hocc.right
+
+theorem squareGrowForm_grow_shape
+    {u v : SententialForm SquareTerminal SquareNT} (n : Nat)
+    (h : squareGrowForm n = u ++ [squareN SquareNT.t] ++ v) :
+    SquareDerivationShape
+      (u ++ [squareN SquareNT.b, squareN SquareNT.t,
+        squareN SquareNT.markA] ++ v) := by
+  have hocc := squareGrowForm_t_occurrence n h
+  rw [hocc.left, hocc.right]
+  simpa [squareGrowForm, squareBForm_succ_eq_append, squareMarkerAForm,
+    Word.RepeatSymbol, List.append_assoc] using
+    SquareDerivationShape.grow (n + 1)
+
+theorem squareGrowForm_stop_shape
+    {u v : SententialForm SquareTerminal SquareNT} (n : Nat)
+    (h : squareGrowForm n = u ++ [squareN SquareNT.t] ++ v) :
+    SquareDerivationShape (u ++ v) := by
+  have hocc := squareGrowForm_t_occurrence n h
+  rw [hocc.left, hocc.right]
+  have hbalance : 0 + n = n := by omega
+  simpa [squareProcessForm, squareRows_zero_eq_markerAForm,
+    List.append_assoc] using
+    SquareDerivationShape.process n n 0 hbalance
+
 theorem squareProcessForm_count_d
     (remaining rowWidth rows : Nat) :
     SententialCountNonterminal SquareNT.d
@@ -5470,6 +5652,271 @@ theorem squareMiddlePotential_initial_stopped (n : Nat) :
     squareBForm_count_terminal_a, squareMarkerAForm_count_terminal_a,
     squareMiddleInversionsFrom_bForm_append_markerAForm]
   simp
+
+def SquareMiddleClean :
+    SententialForm SquareTerminal SquareNT -> Prop
+  | [] => True
+  | Symbol.nonterminal SquareNT.b :: rest => SquareMiddleClean rest
+  | Symbol.nonterminal SquareNT.markA :: rest => SquareMiddleClean rest
+  | Symbol.terminal SquareTerminal.a :: rest => SquareMiddleClean rest
+  | _ :: _ => False
+
+theorem squareMiddleClean_append
+    {left right : SententialForm SquareTerminal SquareNT}
+    (hleft : SquareMiddleClean left)
+    (hright : SquareMiddleClean right) :
+    SquareMiddleClean (left ++ right) := by
+  induction left with
+  | nil =>
+      exact hright
+  | cons head tail ih =>
+      cases head with
+      | terminal tok =>
+          cases tok
+          exact ih hleft
+      | nonterminal A =>
+          cases A <;> try cases hleft
+          · exact ih hleft
+          · exact ih hleft
+
+theorem squareMiddleClean_single_b :
+    SquareMiddleClean [squareN SquareNT.b] := by
+  simp [SquareMiddleClean, squareN, ggNonterminal]
+
+theorem squareMiddleClean_single_markA :
+    SquareMiddleClean [squareN SquareNT.markA] := by
+  simp [SquareMiddleClean, squareN, ggNonterminal]
+
+theorem squareMiddleClean_single_terminal_a :
+    SquareMiddleClean [squareT SquareTerminal.a] := by
+  simp [SquareMiddleClean, squareT, ggTerminal]
+
+theorem squareBForm_clean (n : Nat) :
+    SquareMiddleClean (squareBForm n) := by
+  induction n with
+  | zero =>
+      trivial
+  | succ n ih =>
+      change SquareMiddleClean (squareN SquareNT.b :: squareBForm n)
+      exact ih
+
+theorem squareMarkerAForm_clean (n : Nat) :
+    SquareMiddleClean (squareMarkerAForm n) := by
+  induction n with
+  | zero =>
+      trivial
+  | succ n ih =>
+      change SquareMiddleClean (squareN SquareNT.markA ::
+        squareMarkerAForm n)
+      exact ih
+
+theorem squareTerminalAForm_clean (n : Nat) :
+    SquareMiddleClean (squareTerminalAForm n) := by
+  induction n with
+  | zero =>
+      trivial
+  | succ n ih =>
+      change SquareMiddleClean (squareT SquareTerminal.a ::
+        squareTerminalAForm n)
+      exact ih
+
+def squarePostStopForm
+    (emitted : Nat) (middle : SententialForm SquareTerminal SquareNT) :
+    SententialForm SquareTerminal SquareNT :=
+  squareTerminalAForm emitted ++ [squareN SquareNT.d] ++ middle ++
+    [squareN SquareNT.e]
+
+def SquarePostStopState (n : Nat)
+    (sf : SententialForm SquareTerminal SquareNT) : Prop :=
+  exists emitted middle,
+    sf = squarePostStopForm emitted middle ∧
+      SquareMiddleClean middle ∧
+        emitted + squareMiddlePotential middle = n * n
+
+theorem squarePostStop_initial (n : Nat) :
+    SquarePostStopState n
+      ([squareN SquareNT.d] ++ squareBForm n ++
+        squareMarkerAForm n ++ [squareN SquareNT.e]) := by
+  exists 0
+  exists squareBForm n ++ squareMarkerAForm n
+  constructor
+  · simp [squarePostStopForm, squareTerminalAForm,
+      SententialForm.terminalWord, Word.RepeatSymbol, List.append_assoc]
+  constructor
+  · exact squareMiddleClean_append (squareBForm_clean n)
+      (squareMarkerAForm_clean n)
+  · rw [squareMiddlePotential_initial_stopped]
+    omega
+
+theorem squareGrowForm_stop_post_state
+    {u v : SententialForm SquareTerminal SquareNT} (n : Nat)
+    (h : squareGrowForm n = u ++ [squareN SquareNT.t] ++ v) :
+    SquarePostStopState n (u ++ v) := by
+  have hocc := squareGrowForm_t_occurrence n h
+  rw [hocc.left, hocc.right]
+  simpa [List.append_assoc] using squarePostStop_initial n
+
+theorem squareMiddleClean_moveBA
+    (left right : SententialForm SquareTerminal SquareNT)
+    (hleft : SquareMiddleClean left)
+    (hright : SquareMiddleClean right) :
+    SquareMiddleClean
+      (left ++ [squareN SquareNT.markA, squareT SquareTerminal.a,
+        squareN SquareNT.b] ++ right) := by
+  have hlocal :
+      SquareMiddleClean
+        ([squareN SquareNT.markA, squareT SquareTerminal.a,
+          squareN SquareNT.b] ++ right) := by
+    apply squareMiddleClean_append
+    · exact squareMiddleClean_append squareMiddleClean_single_markA
+        (squareMiddleClean_append squareMiddleClean_single_terminal_a
+          squareMiddleClean_single_b)
+    · exact hright
+  simpa [List.append_assoc] using
+    squareMiddleClean_append hleft hlocal
+
+theorem squareMiddleClean_moveBa
+    (left right : SententialForm SquareTerminal SquareNT)
+    (hleft : SquareMiddleClean left)
+    (hright : SquareMiddleClean right) :
+    SquareMiddleClean
+      (left ++ [squareT SquareTerminal.a, squareN SquareNT.b] ++ right) := by
+  have hlocal :
+      SquareMiddleClean
+        ([squareT SquareTerminal.a, squareN SquareNT.b] ++ right) := by
+    apply squareMiddleClean_append
+    · exact squareMiddleClean_append squareMiddleClean_single_terminal_a
+        squareMiddleClean_single_b
+    · exact hright
+  simpa [List.append_assoc] using
+    squareMiddleClean_append hleft hlocal
+
+theorem squareMiddleClean_trailing_b_iff
+    (middle : SententialForm SquareTerminal SquareNT) :
+    SquareMiddleClean (middle ++ [squareN SquareNT.b]) <->
+      SquareMiddleClean middle := by
+  constructor
+  · induction middle with
+    | nil =>
+        intro _
+        trivial
+    | cons head tail ih =>
+        intro h
+        cases head with
+        | terminal tok =>
+            cases tok
+            exact ih h
+        | nonterminal A =>
+            cases A <;> try cases h
+            · exact ih h
+            · exact ih h
+  · intro h
+    exact squareMiddleClean_append h squareMiddleClean_single_b
+
+theorem squarePostStop_moveBA
+    {n emitted : Nat}
+    {left right : SententialForm SquareTerminal SquareNT}
+    (hleft : SquareMiddleClean left)
+    (hright : SquareMiddleClean right)
+    (hbalance :
+      emitted + squareMiddlePotential
+        (left ++ [squareN SquareNT.b, squareN SquareNT.markA] ++ right) =
+        n * n) :
+    SquarePostStopState n
+      (squarePostStopForm emitted
+        (left ++ [squareN SquareNT.markA, squareT SquareTerminal.a,
+          squareN SquareNT.b] ++ right)) := by
+  exists emitted
+  exists left ++ [squareN SquareNT.markA, squareT SquareTerminal.a,
+    squareN SquareNT.b] ++ right
+  constructor
+  · rfl
+  constructor
+  · exact squareMiddleClean_moveBA left right hleft hright
+  · rw [← squareMiddlePotential_moveBA]
+    exact hbalance
+
+theorem squarePostStop_moveBa
+    {n emitted : Nat}
+    {left right : SententialForm SquareTerminal SquareNT}
+    (hleft : SquareMiddleClean left)
+    (hright : SquareMiddleClean right)
+    (hbalance :
+      emitted + squareMiddlePotential
+        (left ++ [squareN SquareNT.b, squareT SquareTerminal.a] ++ right) =
+        n * n) :
+    SquarePostStopState n
+      (squarePostStopForm emitted
+        (left ++ [squareT SquareTerminal.a, squareN SquareNT.b] ++ right)) := by
+  exists emitted
+  exists left ++ [squareT SquareTerminal.a, squareN SquareNT.b] ++ right
+  constructor
+  · rfl
+  constructor
+  · exact squareMiddleClean_moveBa left right hleft hright
+  · rw [← squareMiddlePotential_moveBa]
+    exact hbalance
+
+theorem squarePostStop_removeBE
+    {n emitted : Nat}
+    {middle : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean (middle ++ [squareN SquareNT.b]))
+    (hbalance :
+      emitted + squareMiddlePotential (middle ++ [squareN SquareNT.b]) =
+        n * n) :
+    SquarePostStopState n (squarePostStopForm emitted middle) := by
+  exists emitted
+  exists middle
+  constructor
+  · rfl
+  constructor
+  · exact (squareMiddleClean_trailing_b_iff middle).mp hclean
+  · rw [squareMiddlePotential_trailing_b] at hbalance
+    exact hbalance
+
+theorem squarePostStop_removeDA
+    {n emitted : Nat}
+    {middle : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean ([squareN SquareNT.markA] ++ middle))
+    (hbalance :
+      emitted + squareMiddlePotential ([squareN SquareNT.markA] ++ middle) =
+        n * n) :
+    SquarePostStopState n (squarePostStopForm emitted middle) := by
+  exists emitted
+  exists middle
+  constructor
+  · rfl
+  constructor
+  · exact hclean
+  · rw [squareMiddlePotential_leading_markA] at hbalance
+    exact hbalance
+
+theorem squarePostStop_moveDa
+    {n emitted : Nat}
+    {middle : SententialForm SquareTerminal SquareNT}
+    (hclean : SquareMiddleClean ([squareT SquareTerminal.a] ++ middle))
+    (hbalance :
+      emitted + squareMiddlePotential ([squareT SquareTerminal.a] ++ middle) =
+        n * n) :
+    SquarePostStopState n (squarePostStopForm (emitted + 1) middle) := by
+  exists emitted + 1
+  exists middle
+  constructor
+  · rfl
+  constructor
+  · exact hclean
+  · rw [squareMiddlePotential_leading_terminal_a] at hbalance
+    omega
+
+theorem squarePostStop_finish_word
+    {n emitted : Nat}
+    (hbalance : emitted + squareMiddlePotential [] = n * n) :
+    Word.RepeatSymbol SquareTerminal.a emitted ∈ squareLanguage := by
+  simp [squareMiddlePotential, squareMiddleInversions,
+    squareMiddleInversionsFrom, SententialCountTerminal] at hbalance
+  have hemitted : emitted = n * n := by omega
+  exists n
+  simp [squareWord, hemitted]
 
 def fourAsWord : Word SquareTerminal :=
   [SquareTerminal.a, SquareTerminal.a, SquareTerminal.a, SquareTerminal.a]

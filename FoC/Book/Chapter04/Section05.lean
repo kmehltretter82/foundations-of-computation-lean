@@ -2072,6 +2072,19 @@ theorem not_finite_production_context_free_of_bad_word_family
   exact not_pumping_property_of_bad_word_family hbad
     (finite_production_pumping_property hcf)
 
+theorem cfl_pumped_two_count_symbol [DecidableEq terminal]
+    (s : terminal) (u x y z v : Word terminal) :
+    Word.Count s (CFL.Pumped u x y z v 2) =
+      Word.Count s (CFL.Concat5 u x y z v) +
+        Word.Count s (Word.Concat x z) := by
+  unfold CFL.Pumped CFL.Concat5
+  rw [show Word.RepeatWord x 2 = Word.Concat x x by
+    simp [Word.RepeatWord, Word.Concat]]
+  rw [show Word.RepeatWord z 2 = Word.Concat z z by
+    simp [Word.RepeatWord, Word.Concat]]
+  repeat rw [Word.count_concat]
+  omega
+
 /-!
 # Pumping {lit}`a^n b^n c^n`
 
@@ -2279,11 +2292,7 @@ theorem cfl_pumped_two_count (s : ABC) (u x y z v : Word ABC) :
     Word.Count s (CFL.Pumped u x y z v 2) =
       Word.Count s (CFL.Concat5 u x y z v) +
         Word.Count s (Word.Concat x z) := by
-  unfold CFL.Pumped CFL.Concat5
-  rw [show Word.RepeatWord x 2 = Word.Concat x x by simp [Word.RepeatWord, Word.Concat]]
-  rw [show Word.RepeatWord z 2 = Word.Concat z z by simp [Word.RepeatWord, Word.Concat]]
-  repeat rw [Word.count_concat]
-  omega
+  exact cfl_pumped_two_count_symbol s u x y z v
 
 /-!
 Pumping with count {lit}`2` adds one extra copy of {lit}`x` and one extra copy
@@ -2405,6 +2414,122 @@ theorem anbncn_not_finite_production_context_free :
 theorem anbncn_not_context_free :
     ¬ CFL.ContextFreeLanguage anbncnLanguage :=
   not_context_free_of_no_pumping_property anbncn_no_pumping_property
+
+/-!
+# The Duplicate-Word Language
+
+The book's second pumping example is `{ w w | w in {a,b}* }`. The full
+context-free pumping contradiction needs a careful position argument, but the
+basic vocabulary and count facts are reusable: every duplicate word has an even
+number of any fixed symbol.
+-/
+
+def duplicateWordLanguage : Language Section01.AB :=
+  fun w => exists u : Word Section01.AB, w = Word.Concat u u
+
+def duplicateSeedWord (n : Nat) : Word Section01.AB :=
+  Word.Concat (Word.RepeatSymbol Section01.AB.a n)
+    (Word.Concat (Word.Symbol Section01.AB.b)
+      (Word.Concat (Word.RepeatSymbol Section01.AB.a n)
+        (Word.Symbol Section01.AB.b)))
+
+def duplicateBadWord (n : Nat) : Word Section01.AB :=
+  Word.Concat (duplicateSeedWord n) (duplicateSeedWord n)
+
+theorem duplicate_word_membership (w : Word Section01.AB) :
+    w ∈ duplicateWordLanguage <->
+      exists u : Word Section01.AB, w = Word.Concat u u :=
+  Iff.rfl
+
+theorem duplicateBadWord_mem (n : Nat) :
+    duplicateBadWord n ∈ duplicateWordLanguage := by
+  exists duplicateSeedWord n
+
+theorem duplicateSeedWord_count_b (n : Nat) :
+    Word.Count Section01.AB.b (duplicateSeedWord n) = 2 := by
+  unfold duplicateSeedWord
+  rw [Word.count_concat]
+  rw [Word.count_repeatSymbol_different
+    (a := Section01.AB.b) (b := Section01.AB.a)]
+  rw [Word.count_concat]
+  rw [Word.count_concat]
+  rw [Word.count_repeatSymbol_different
+    (a := Section01.AB.b) (b := Section01.AB.a)]
+  · simp [Word.Count, Word.Symbol]
+  · intro h
+    cases h
+  · intro h
+    cases h
+
+theorem duplicateBadWord_count_b (n : Nat) :
+    Word.Count Section01.AB.b (duplicateBadWord n) = 4 := by
+  unfold duplicateBadWord
+  rw [Word.count_concat, duplicateSeedWord_count_b]
+
+theorem duplicateSeedWord_length (n : Nat) :
+    Word.Length (duplicateSeedWord n) = 2 * n + 2 := by
+  unfold duplicateSeedWord
+  simp [Word.Length, Word.Concat, Word.RepeatSymbol, Word.Symbol]
+  omega
+
+theorem duplicateBadWord_length (n : Nat) :
+    Word.Length (duplicateBadWord n) = 4 * n + 4 := by
+  unfold duplicateBadWord
+  rw [Word.length_concat, duplicateSeedWord_length]
+  omega
+
+theorem duplicate_word_count_even
+    (sym : Section01.AB) {w : Word Section01.AB}
+    (hw : w ∈ duplicateWordLanguage) :
+    exists n : Nat, Word.Count sym w = 2 * n := by
+  rcases hw with ⟨u, hu⟩
+  exists Word.Count sym u
+  rw [hu, Word.count_concat]
+  omega
+
+theorem duplicate_word_not_count_b_five {w : Word Section01.AB}
+    (hcount : Word.Count Section01.AB.b w = 5) :
+    ¬ w ∈ duplicateWordLanguage := by
+  intro hw
+  rcases duplicate_word_count_even Section01.AB.b hw with ⟨n, hn⟩
+  rw [hcount] at hn
+  omega
+
+theorem duplicate_pump_two_not_mem_of_xz_count_b_one
+    {u x y z v : Word Section01.AB} {K : Nat}
+    (hword : duplicateBadWord K = CFL.Concat5 u x y z v)
+    (hcount : Word.Count Section01.AB.b (Word.Concat x z) = 1) :
+    ¬ CFL.Pumped u x y z v 2 ∈ duplicateWordLanguage := by
+  apply duplicate_word_not_count_b_five
+  rw [cfl_pumped_two_count_symbol, ← hword, duplicateBadWord_count_b, hcount]
+
+theorem duplicate_xz_count_b_le_middle_count_b
+    (x y z : Word Section01.AB) :
+    Word.Count Section01.AB.b (Word.Concat x z) <=
+      Word.Count Section01.AB.b (CFL.Concat3 x y z) := by
+  unfold CFL.Concat3
+  repeat rw [Word.count_concat]
+  omega
+
+theorem duplicate_pump_two_not_mem_of_xz_count_b_pos_le_one
+    {u x y z v : Word Section01.AB} {K : Nat}
+    (hword : duplicateBadWord K = CFL.Concat5 u x y z v)
+    (hpos : 0 < Word.Count Section01.AB.b (Word.Concat x z))
+    (hle : Word.Count Section01.AB.b (Word.Concat x z) <= 1) :
+    ¬ CFL.Pumped u x y z v 2 ∈ duplicateWordLanguage := by
+  have hcount : Word.Count Section01.AB.b (Word.Concat x z) = 1 := by
+    omega
+  exact duplicate_pump_two_not_mem_of_xz_count_b_one hword hcount
+
+theorem duplicate_pump_two_not_mem_of_middle_count_b_le_one
+    {u x y z v : Word Section01.AB} {K : Nat}
+    (hword : duplicateBadWord K = CFL.Concat5 u x y z v)
+    (hpos : 0 < Word.Count Section01.AB.b (Word.Concat x z))
+    (hmiddle :
+      Word.Count Section01.AB.b (CFL.Concat3 x y z) <= 1) :
+    ¬ CFL.Pumped u x y z v 2 ∈ duplicateWordLanguage := by
+  exact duplicate_pump_two_not_mem_of_xz_count_b_pos_le_one hword hpos
+    (Nat.le_trans (duplicate_xz_count_b_le_middle_count_b x y z) hmiddle)
 
 /-!
 # Nonclosure Consequences
