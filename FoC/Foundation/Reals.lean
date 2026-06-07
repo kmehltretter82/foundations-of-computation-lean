@@ -17,7 +17,7 @@ rational/irrational predicates.
 
 Used by:
 - Chapter 1 real-number wrappers for density and irrational examples
-- Future square-root cuts and irrationality transport
+- Square-root cuts and square-equality irrationality transport
 - Chapter 2 real-number uncountability bridge
 -/
 
@@ -1068,7 +1068,9 @@ theorem rational_divByQ {x : Real} {q : QRat}
 
 Square-root cuts are specified by rational square inequalities. The bridge
 theorems turn quotient-rational no-square-root facts into real irrationality
-statements.
+statements.  The concrete cut equalities are intentionally separate from this
+transport layer: once a real square has value {lit}`2` or {lit}`3`, the
+irrationality proof no longer depends on the details of the cut presentation.
 -/
 
 def sqrtNatLower (c : Nat) (q : QRat) : Prop :=
@@ -1229,6 +1231,19 @@ theorem irrational_qreal_add {x : Real} {q : QRat}
 def qrealSquareCharacterization (x : Real) (c : Nat) : Prop :=
   forall q : QRat, x = qreal q -> q * q = QRat.ofNat c
 
+theorem qrealSquareCharacterization_of_square_eq_qreal
+    {x : Real} {c : Nat}
+    (hsquare : x * x = qreal (QRat.ofNat c)) :
+    qrealSquareCharacterization x c := by
+  intro q hx
+  apply qreal_injective
+  calc
+    qreal (q * q) = qreal q * qreal q := by
+      rw [qreal_mul]
+    _ = x * x := by
+      rw [← hx]
+    _ = qreal (QRat.ofNat c) := hsquare
+
 theorem irrational_of_qreal_square_characterization
     {x : Real} {c : Nat}
     (hno : forall q : QRat, q * q ≠ QRat.ofNat c)
@@ -1245,6 +1260,31 @@ theorem irrational_of_qreal_square_eq_two {x : Real}
 theorem irrational_of_qreal_square_eq_three {x : Real}
     (hsquare : qrealSquareCharacterization x 3) : Irrational x :=
   irrational_of_qreal_square_characterization QRat.no_square_root_three hsquare
+
+theorem irrational_of_square_eq_qreal
+    {x : Real} {c : Nat}
+    (hno : forall q : QRat, q * q ≠ QRat.ofNat c)
+    (hsquare : x * x = qreal (QRat.ofNat c)) : Irrational x :=
+  irrational_of_qreal_square_characterization hno
+    (qrealSquareCharacterization_of_square_eq_qreal hsquare)
+
+theorem irrational_of_square_eq_two {x : Real}
+    (hsquare : x * x = (2 : Real)) : Irrational x :=
+  irrational_of_square_eq_qreal QRat.no_square_root_two hsquare
+
+theorem irrational_of_square_eq_three {x : Real}
+    (hsquare : x * x = (3 : Real)) : Irrational x :=
+  irrational_of_square_eq_qreal QRat.no_square_root_three hsquare
+
+theorem rational_not_square_eq_two {x : Real}
+    (hx : Rational x) : x * x ≠ (2 : Real) := by
+  intro hsquare
+  exact irrational_of_square_eq_two hsquare hx
+
+theorem rational_not_square_eq_three {x : Real}
+    (hx : Rational x) : x * x ≠ (3 : Real) := by
+  intro hsquare
+  exact irrational_of_square_eq_three hsquare hx
 
 /-!
 # Density

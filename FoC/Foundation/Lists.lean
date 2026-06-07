@@ -86,6 +86,32 @@ theorem list_nodup_length_le_of_subset {α : Type u} [DecidableEq α]
       simp
       omega
 
+theorem list_nodup_map_of_injective_on_list {α : Type u} {β : Type v}
+    {xs : List α} {f : α -> β}
+    (hnd : xs.Nodup)
+    (hinj : forall a b, a ∈ xs -> b ∈ xs -> f a = f b -> a = b) :
+    (xs.map f).Nodup := by
+  induction xs with
+  | nil =>
+      simp
+  | cons x xs ih =>
+      rw [List.nodup_cons] at hnd
+      change (f x :: xs.map f).Nodup
+      rw [List.nodup_cons]
+      constructor
+      · intro hmem
+        have hwitness := (List.mem_map).mp hmem
+        cases hwitness with
+        | intro a ha =>
+            have hxa : x = a :=
+              hinj x a (List.Mem.head xs) (List.Mem.tail x ha.left) ha.right.symm
+            exact hnd.left (by
+              rw [hxa]
+              exact ha.left)
+      · apply ih hnd.right
+        intro a b ha hb hfab
+        exact hinj a b (List.Mem.tail x ha) (List.Mem.tail x hb) hfab
+
 /-!
 # Duplicate witnesses
 

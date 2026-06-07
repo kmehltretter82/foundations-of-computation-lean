@@ -1,4 +1,5 @@
 import FoC.Foundation.Finite
+import FoC.Foundation.Functions
 
 set_option doc.verso true
 
@@ -11,6 +12,9 @@ The book's finite-cardinality laws are represented by explicit list models:
 products are nested lists of pairs, powersets are lists of sublists, and
 function spaces are lists of finite tuples. Duplicate-free enumeration remains
 the bridge from these list models back to finite sets.
+
+The finite pigeonhole principle uses the same bridge: map the duplicate-free
+enumeration of the larger set into the smaller one, then compare list lengths.
 
 ## Book coordinates
 
@@ -86,6 +90,84 @@ theorem singleton_has_cardinality_one (a : alpha) :
         | head => rfl
         | tail _ htail => cases htail
   · rfl
+
+/-!
+# Finite pigeonhole principle
+
+If a function maps every member of a finite set {lit}`A` into a finite set
+{lit}`B` and is injective on {lit}`A`, then {lit}`A` cannot have larger
+cardinality than {lit}`B`.  The contrapositive gives the book-facing
+pigeonhole theorem: a map from more listed objects into fewer listed boxes must
+identify two distinct inputs.
+-/
+
+theorem cardinality_le_of_injective_maps_to {A : FSet alpha} {B : FSet beta}
+    {m n : Nat} [DecidableEq beta]
+    (hA : HasCardinality A m) (hB : HasCardinality B n)
+    (f : alpha -> beta)
+    (hinj : forall {x y}, x ∈ A -> y ∈ A -> f x = f y -> x = y)
+    (hmap : forall x, x ∈ A -> f x ∈ B) : m <= n := by
+  cases hA with
+  | intro xs hxs =>
+      cases hB with
+      | intro ys hys =>
+          have hndImage : (xs.map f).Nodup :=
+            list_nodup_map_of_injective_on_list hxs.left.left (by
+              intro a b ha hb hfab
+              exact hinj
+                ((hxs.left.right a).mpr ha)
+                ((hxs.left.right b).mpr hb)
+                hfab)
+          have hsub : forall y, y ∈ xs.map f -> y ∈ ys := by
+            intro y hy
+            cases (List.mem_map).mp hy with
+            | intro x hx =>
+                have hxA : x ∈ A := (hxs.left.right x).mpr hx.left
+                have hfyB : f x ∈ B := hmap x hxA
+                exact (hys.left.right y).mp (by
+                  rw [← hx.right]
+                  exact hfyB)
+          have hle := list_nodup_length_le_of_subset hndImage hsub
+          simpa [List.length_map, hxs.right, hys.right] using hle
+
+theorem not_injective_of_cardinality_lt_maps_to {A : FSet alpha} {B : FSet beta}
+    {m n : Nat} [DecidableEq beta]
+    (hA : HasCardinality A m) (hB : HasCardinality B n)
+    (hlt : n < m) (f : alpha -> beta)
+    (hmap : forall x, x ∈ A -> f x ∈ B) :
+    ¬ Fn.Injective f := by
+  intro hf
+  have hle : m <= n :=
+    cardinality_le_of_injective_maps_to hA hB f
+      (by
+        intro x y _hx _hy hxy
+        exact hf hxy)
+      hmap
+  omega
+
+theorem pigeonhole_collision_of_cardinality_lt {A : FSet alpha} {B : FSet beta}
+    {m n : Nat} [DecidableEq beta]
+    (hA : HasCardinality A m) (hB : HasCardinality B n)
+    (hlt : n < m) (f : alpha -> beta)
+    (hmap : forall x, x ∈ A -> f x ∈ B) :
+    exists x y, x ∈ A ∧ y ∈ A ∧ x ≠ y ∧ f x = f y := by
+  classical
+  apply Classical.byContradiction
+  intro hno
+  have hinjOn : forall {x y}, x ∈ A -> y ∈ A -> f x = f y -> x = y := by
+    intro x y hx hy hxy
+    by_cases hEq : x = y
+    · exact hEq
+    · exfalso
+      apply hno
+      exact Exists.intro x
+        (Exists.intro y
+          (And.intro hx
+            (And.intro hy
+              (And.intro hEq hxy))))
+  have hle : m <= n :=
+    cardinality_le_of_injective_maps_to hA hB f hinjOn hmap
+  omega
 
 end FSet
 

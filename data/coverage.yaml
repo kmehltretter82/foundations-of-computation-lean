@@ -28,7 +28,7 @@ foundation:
 completed:
   - coordinate: "Chapter 1"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 148
+    theorem_declarations: 159
     modules:
       - "FoC.Book.Chapter01.Section01"
       - "FoC.Book.Chapter01.Section02"
@@ -65,10 +65,10 @@ completed:
       - "Prime and composite definitions over natural numbers"
       - "Prime divisor existence for every natural number greater than one"
       - "Euclid-style prime-list theorem: every finite list of primes omits another prime"
-      - "Pigeonhole collision schema: non-injective functions have two distinct inputs with the same output"
+      - "Pigeonhole collision schema and full finite-cardinality pigeonhole theorem"
       - "Product-of-primes representation for every natural number greater than one"
       - "Reduced positive-rational-representative contradiction cores for sqrt(2) and sqrt(3)"
-      - "Quotient-rational no-square-root theorems for 2 and 3, with real square-characterization irrationality bridges"
+      - "Quotient-rational no-square-root theorems for 2 and 3, with real square-characterization and direct square-equality irrationality bridges"
       - "Dedekind-cut real density, rational embedding arithmetic for addition/subtraction/multiplication, powers, embedded-rational division, rational-real product closure, and rational scaling wrappers"
       - "Concrete Dedekind-cut candidates for sqrt(2) and sqrt(3), with nonnegativity wrappers"
       - "Quadratic-surd surrogate for sqrt(2) and the counterexample that a product of irrational-like quantities can be rational-like"
@@ -135,7 +135,7 @@ completed:
           - artifact: "FoC.Foundation.Rationals"
             reason: "Rational representatives and rational closure under addition and multiplication."
           - artifact: "FoC.Foundation.Reals"
-            reason: "Dedekind-cut real density, rational embedding arithmetic, rational real operations, scaling, division by embedded rationals, and concrete square-root cut candidates."
+            reason: "Dedekind-cut real density, rational embedding arithmetic, rational real operations, scaling, division by embedded rationals, concrete square-root cut candidates, and square-equality irrationality bridges."
           - artifact: "FoC.Book.Chapter01.Section06"
             reason: "Book-facing wrappers for proof examples, correctly coordinated Section 1.6 exercise parity/divisibility/rational-closure statements, real density, embedded-rational arithmetic, and irrational-product surrogate examples."
         missing:
@@ -145,10 +145,12 @@ completed:
             blocker: "Currently represented by the quadratic-surd surrogate pending concrete square-root equalities."
         deferred: []
       - coordinate: "Chapter 1, Section 1.7"
-        status: "partial_large_cardinality_and_real_bridges_deferred"
+        status: "partial_concrete_sqrt_cut_equalities_deferred"
         formalized:
           - artifact: "FoC.Book.Chapter01.Section07"
-            reason: "Proof by contradiction, contradiction elimination, odd-square contradiction core, prime divisor existence, Euclid prime-list theorem, pigeonhole collision schema, sqrt(2)/sqrt(3) rational contradiction cores, quotient-rational no-square-root theorems, irrationality preservation wrappers, and concrete square-root-cut nonnegativity."
+            reason: "Proof by contradiction, contradiction elimination, odd-square contradiction core, prime divisor existence, Euclid prime-list theorem, pigeonhole collision schema, full finite-cardinality pigeonhole theorem, sqrt(2)/sqrt(3) rational contradiction cores, quotient-rational no-square-root theorems, direct real square-equality irrationality wrappers, irrationality preservation wrappers, and concrete square-root-cut nonnegativity."
+          - artifact: "FoC.Foundation.Cardinality"
+            reason: "Finite-cardinality pigeonhole theorem via duplicate-free list enumerations and length comparison."
           - artifact: "FoC.Foundation.Primes"
             reason: "Prime divisor, Euclid-style prime-list, and product-of-primes infrastructure."
           - artifact: "FoC.Foundation.RationalCore"
@@ -156,9 +158,7 @@ completed:
           - artifact: "FoC.Foundation.QuadraticSurd"
             reason: "Temporary sqrt(2)-like surrogate model for irrational-product examples."
         missing:
-          - item: "Full finite-cardinality pigeonhole theorem"
-            blocker: "Only the reusable non-injective collision schema is formalized here."
-          - item: "Square-root square equalities for direct real irrationality examples"
+          - item: "Square-root square equalities for concrete Dedekind cuts"
             blocker: "Same concrete Dedekind-cut square-characterization gap as Section 1.6."
         deferred: []
       - coordinate: "Chapter 1, Section 1.8"
@@ -190,9 +190,9 @@ completed:
       - coordinate: "Chapter 1, Section 1.3"
         reason: "Circuit drawings and design exercises are application artifacts; the DNF semantic core is formalized."
       - coordinate: "Chapter 1, Section 1.6"
-        reason: "Dedekind-cut real infrastructure with rational embedding/order/density, cut addition/subtraction/multiplication, powers, embedded-rational division, rational-real arithmetic wrappers, positive rational scaling, concrete square-root cut candidates, and quotient-rational square-root contradiction bridges are formalized. Square-root square equalities and the direct real irrational-product counterexample remain deferred; integer square parity, rational closure examples, and a sqrt(2) quadratic-surd counterexample surrogate are formalized."
+        reason: "Dedekind-cut real infrastructure with rational embedding/order/density, cut addition/subtraction/multiplication, powers, embedded-rational division, rational-real arithmetic wrappers, positive rational scaling, concrete square-root cut candidates, quotient-rational square-root contradiction bridges, and direct square-equality-to-irrationality bridges are formalized. Square-root square equalities for the concrete cuts and the direct real irrational-product counterexample remain deferred; integer square parity, rational closure examples, and a sqrt(2) quadratic-surd counterexample surrogate are formalized."
       - coordinate: "Chapter 1, Section 1.7"
-        reason: "The reduced-rational and quotient-rational contradiction cores for sqrt(2) and sqrt(3), concrete square-root cut candidates, real square-characterization irrationality bridges, Euclid prime-list theorem, pigeonhole collision schema, Dedekind-cut real order/rational embedding/multiplication, rational-plus-irrational wrappers, and nonzero rational scaling of irrational reals are formalized; full finite-cardinality pigeonhole and square-root square equalities remain deferred."
+        reason: "The reduced-rational and quotient-rational contradiction cores for sqrt(2) and sqrt(3), concrete square-root cut candidates, real square-characterization and direct square-equality irrationality bridges, Euclid prime-list theorem, pigeonhole collision schema, full finite-cardinality pigeonhole theorem, Dedekind-cut real order/rational embedding/multiplication, rational-plus-irrational wrappers, and nonzero rational scaling of irrational reals are formalized; square-root square equalities for the concrete cuts remain deferred."
       - coordinate: "Chapter 1, Section 1.8"
         reason: "Natural-number geometric identities, quotient-rational geometric-series identities, and embedded quotient-rational real geometric-series wrappers with division by a nonzero embedded rational are formalized; this is intentionally not yet the arbitrary-real division statement from the printed exercise."
       - coordinate: "Chapter 1, Section 1.9"
@@ -201,7 +201,7 @@ completed:
         reason: "A scaled natural-number form, quotient-rational form, embedded-real form, and real power-wrapper form of the Fibonacci lower bound are formalized."
   - coordinate: "Chapter 2"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 90
+    theorem_declarations: 92
     definition_declarations: 18
     modules:
       - "FoC.Book.Chapter02.Section01"
@@ -229,13 +229,13 @@ completed:
       - "Natural-number and integer encodings, diagonal stages for Nat x Nat, and injective staged rational-representative codes"
       - "Quotient-rational representatives with arithmetic, strict order, trichotomy, density, lower/upper rational witnesses, sign/square/inverse algebra, countability, and no-square-root theorems for 2 and 3"
       - "Dedekind-cut real numbers over quotient rationals, including rational embedding, order, density, and rational/irrational predicates"
-      - "Countable unions of countable sets and countably infinite unions by explicit interleaved enumerations"
+      - "Countable unions of countable sets, countability of subsets of countable sets, and countably infinite unions by explicit interleaved enumerations"
       - "Uncountable set minus a countable subset is uncountable"
       - "Generic uncountable-outside-countable-cover principle"
       - "Cantor diagonal theorem: no surjective map, hence no bijection, from a type to its powerset"
       - "Binary digit-stream diagonalization core, Cantor-style digit-stream injection into Dedekind-cut reals, real uncountability, countable embedded rational reals, and irrational-real uncountability"
       - "Relation properties: reflexive, symmetric, antisymmetric, transitive, equivalence, partial order, total order"
-      - "Equivalence classes contain representatives, related representatives have equal classes, and equivalence classes form a partition"
+      - "Equivalence classes contain representatives, equal-class iff related-representative characterization, and equivalence classes form a partition"
       - "Function fibers form equivalence relations"
       - "Transitive closure is transitive; transitive closure of a reflexive symmetric relation is an equivalence relation"
       - "Relational-database table model with insert, select, delete, update, primary keys, and primary-key preservation"
@@ -293,11 +293,11 @@ completed:
         status: "complete_formal_core"
         formalized:
           - artifact: "FoC.Book.Chapter02.Section06"
-            reason: "Finite examples, countability of naturals/integers/rationals, diagonal staging for Nat x Nat, finite-cardinality witnesses, product/disjoint-union/inclusion-exclusion/powerset/function-space cardinality, Cantor theorem, digit-stream diagonalization, quotient-rational countability, real uncountability, irrational-real uncountability, and Theorem 2.9."
+            reason: "Finite examples, countability of naturals/integers/rationals, subset countability, diagonal staging for Nat x Nat, finite-cardinality witnesses, product/disjoint-union/inclusion-exclusion/powerset/function-space cardinality, Cantor theorem, digit-stream diagonalization, quotient-rational countability, real uncountability, irrational-real uncountability, and Theorem 2.9."
           - artifact: "FoC.Foundation.Finite"
             reason: "Finite sets by explicit enumeration, finite subsets, and finite product/sum witnesses."
           - artifact: "FoC.Foundation.Countable"
-            reason: "Countability, countable unions, and uncountable-difference arguments."
+            reason: "Countability, subset countability, countable unions, and uncountable-difference arguments."
           - artifact: "FoC.Foundation.Cardinality"
             reason: "Finite-cardinality laws and tuple/function-space witnesses."
           - artifact: "FoC.Foundation.DigitStreams"
@@ -310,9 +310,9 @@ completed:
         status: "complete_formal_core"
         formalized:
           - artifact: "FoC.Book.Chapter02.Section07"
-            reason: "Relation properties, equivalence relations, equivalence classes, partitions, function fibers, and transitive-closure examples."
+            reason: "Relation properties, equivalence relations, equivalence classes, equal-class iff related-representative characterization, partitions, function fibers, and transitive-closure examples."
           - artifact: "FoC.Foundation.Relations"
-            reason: "Reusable relation predicates, equivalence-class/partition infrastructure, and transitive closure."
+            reason: "Reusable relation predicates, equivalence-class iff/partition infrastructure, and transitive closure."
         missing: []
         deferred: []
       - coordinate: "Chapter 2, Section 2.8"
@@ -337,7 +337,7 @@ completed:
         reason: "SQL syntax and DBMS behavior are application material; the table-as-relation model with core update operations is formalized."
   - coordinate: "Chapter 3"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 123
+    theorem_declarations: 125
     definition_declarations: 19
     modules:
       - "FoC.Book.Chapter03.Section01"
@@ -377,7 +377,7 @@ completed:
       - "State-elimination regex for a DFA over a finite symbol list, with soundness, completeness, and DFA/NFA-recognizable-to-regular bridge theorems"
       - "Finite-alphabet complement and intersection regularity for regular languages"
       - "Pumping-lemma quantified vocabulary, finite-state repetition proof for DFA languages, and transport to regular languages"
-      - "Pumping-property extensionality, monotonicity, and generic counterexample schemas for rejecting proposed pumping lengths"
+      - "Pumping-property extensionality, monotonicity, generic counterexample schemas for rejecting proposed pumping lengths, and direct no-pumping-property-to-non-regular bridges"
       - "Word repetition/count lemmas and equal-count groundwork for the a^n b^n pumping example"
       - "Section 3.3 backreference exercise target language a^n b a^n, with a no-pumping-property contradiction and unconditional non-regularity theorem"
       - "Concrete no-pumping-length contradiction and unconditional non-regularity theorem for a^n b^n"
@@ -451,9 +451,9 @@ completed:
         status: "complete_formal_core"
         formalized:
           - artifact: "FoC.Book.Chapter03.Section07"
-            reason: "Pumping Lemma vocabulary and theorem, pumping-property extensionality/monotonicity, generic counterexample schemas, no-pumping contradictions for a^n b^n and backreference language, plus selected exercise non-regularity results for equal-count words, xx, xx^R, and n < m block words."
+            reason: "Pumping Lemma vocabulary and theorem, pumping-property extensionality/monotonicity, direct no-pumping-property-to-non-regular bridge, generic counterexample schemas, no-pumping contradictions for a^n b^n and backreference language, plus selected exercise non-regularity results for equal-count words, xx, xx^R, and n < m block words."
           - artifact: "FoC.Languages.Pumping"
-            reason: "Finite-state repetition proof for DFA languages, transport to regular languages, and pumping-property infrastructure."
+            reason: "Finite-state repetition proof for DFA languages, transport to regular languages, foundation-backed duplicate-list infrastructure, and pumping-property/non-regularity bridges."
         missing: []
         deferred: []
     classified_not_formalized_yet:

@@ -54,7 +54,9 @@ The comparison between regular expressions and machines is factored through
 {module}`FoC.Languages.Thompson`, which builds NFAs from regular expressions,
 and {module}`FoC.Languages.Regular`, which collects the regular-language
 vocabulary and closure theorems.  Finally, {module}`FoC.Languages.Pumping`
-records the quantified pumping property used in Section 3.7.
+records the quantified pumping property used in Section 3.7, reuses the
+Foundation duplicate-list lemmas for the finite-state repetition argument, and
+packages the common bridge from no pumping property to non-regularity.
 
 The library therefore supports both directions of Chapter 3. To prove that a
 language is regular, use expression constructors, automata constructors, or the

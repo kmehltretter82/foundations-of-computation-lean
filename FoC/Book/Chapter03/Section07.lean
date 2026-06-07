@@ -123,6 +123,11 @@ theorem not_regular_if_no_pumping_property {L : Language alpha}
     ¬ RegularLanguage.Regular L :=
   Pumping.not_regular_of_no_pumping_property pumpingLemma hNoPump
 
+theorem not_regular_if_no_pumping_property_regular {L : Language alpha}
+    (hNoPump : ¬ Pumping.HasPumpingProperty L) :
+    ¬ RegularLanguage.Regular L :=
+  Pumping.not_regular_of_no_pumping_property_regular hNoPump
+
 theorem regular_languages_have_pumping_property {L : Language alpha}
     (hL : RegularLanguage.Regular L) :
     Pumping.HasPumpingProperty L :=
@@ -325,9 +330,7 @@ theorem anban_not_regular_from_pumping_lemma
 
 theorem anban_not_regular :
     ¬ RegularLanguage.Regular Section03.anbanLanguage :=
-  Pumping.not_regular_of_no_pumping_property
-    (Pumping.regular_pumpingLemmaConclusion Section03.anbanLanguage)
-    anban_no_pumping_property
+  Pumping.not_regular_of_no_pumping_property_regular anban_no_pumping_property
 
 /-!
 # The {lit}`a^n b^n` Example
@@ -623,9 +626,7 @@ theorem equal_count_not_regular_from_pumping_lemma
 
 theorem equal_count_not_regular :
     ¬ RegularLanguage.Regular equalCountLanguage :=
-  Pumping.not_regular_of_no_pumping_property
-    (Pumping.regular_pumpingLemmaConclusion equalCountLanguage)
-    equal_count_no_pumping_property
+  Pumping.not_regular_of_no_pumping_property_regular equal_count_no_pumping_property
 
 /-!
 # The {lit}`x x` Language
@@ -958,9 +959,7 @@ theorem square_not_regular_from_pumping_lemma
 
 theorem square_not_regular :
     ¬ RegularLanguage.Regular squareLanguage :=
-  Pumping.not_regular_of_no_pumping_property
-    (Pumping.regular_pumpingLemmaConclusion squareLanguage)
-    square_no_pumping_property
+  Pumping.not_regular_of_no_pumping_property_regular square_no_pumping_property
 
 /-!
 # The {lit}`x x^R` Language
@@ -1234,9 +1233,7 @@ theorem reverse_square_not_regular_from_pumping_lemma
 
 theorem reverse_square_not_regular :
     ¬ RegularLanguage.Regular reverseSquareLanguage :=
-  Pumping.not_regular_of_no_pumping_property
-    (Pumping.regular_pumpingLemmaConclusion reverseSquareLanguage)
-    reverse_square_no_pumping_property
+  Pumping.not_regular_of_no_pumping_property_regular reverse_square_no_pumping_property
 
 /-!
 # More {lit}`b`s Than {lit}`a`s in Blocks
@@ -1340,9 +1337,7 @@ theorem more_bs_block_not_regular_from_pumping_lemma
 
 theorem more_bs_block_not_regular :
     ¬ RegularLanguage.Regular moreBsBlockLanguage :=
-  Pumping.not_regular_of_no_pumping_property
-    (Pumping.regular_pumpingLemmaConclusion moreBsBlockLanguage)
-    more_bs_block_no_pumping_property
+  Pumping.not_regular_of_no_pumping_property_regular more_bs_block_no_pumping_property
 
 /-!
 The final two declarations return to the textbook's standard
@@ -1357,9 +1352,7 @@ theorem anbn_not_regular_from_pumping_lemma
 
 theorem anbn_not_regular :
     ¬ RegularLanguage.Regular anbnLanguage :=
-  Pumping.not_regular_of_no_pumping_property
-    (Pumping.regular_pumpingLemmaConclusion anbnLanguage)
-    anbn_no_pumping_property
+  Pumping.not_regular_of_no_pumping_property_regular anbn_no_pumping_property
 
 /-!
 The concrete contradiction for `{ a^n b^n | n >= 0 }` is now formalized:

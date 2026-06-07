@@ -7,21 +7,21 @@ definitions or lemmas.
 | Module | Why it exists |
 | --- | --- |
 | `Logic.lean` | Chapter 1 propositional logic, Boolean algebra, deduction, and substitution laws. |
-| `Lists.lean` | Chapter 2 finite enumeration infrastructure and later finite alphabets/states. |
+| `Lists.lean` | Chapter 2 finite enumeration infrastructure, the Chapter 1 finite pigeonhole proof, and later finite alphabets/states. |
 | `Sets.lean` | Chapter 2 set operations, Boolean algebra of sets, powersets, and Cantor diagonalization. |
-| `Functions.lean` | Chapter 2 functions, graphs, image/preimage, composition, partial functions, evaluation, and the Chapter 1 pigeonhole collision schema. |
+| `Functions.lean` | Chapter 2 functions, graphs, image/preimage, composition, partial functions, evaluation, and the Chapter 1 generic pigeonhole collision schema. |
 | `Finite.lean` | Chapter 2 finite sets by list enumeration, including finite-subset closure; later finite automata state sets. |
-| `Countable.lean` | Chapter 2 countability by explicit natural-number enumeration, countable unions, and uncountable-difference arguments; Chapter 4 finite grammar presentation encodings via option/sum/product/list codes. |
-| `Relations.lean` | Chapter 2 binary relations, equivalence classes, partitions, and transitive closure. |
+| `Countable.lean` | Chapter 2 countability by explicit natural-number enumeration, subset closure, countable unions, and uncountable-difference arguments; Chapter 4 finite grammar presentation encodings via option/sum/product/list codes. |
+| `Relations.lean` | Chapter 2 binary relations, equivalence classes, equal-class iff related-representative characterization, partitions, and transitive closure. |
 | `Arithmetic.lean` | Chapter 1 proof examples using divisibility and parity. |
 | `Summation.lean` | Chapter 1 induction examples with finite sums and geometric-series cores; later Chapter 2 finite-cardinality arithmetic. |
 | `Integers.lean` | Chapter 1 integer parity and divisibility examples; later Chapter 2 integer countability. |
 | `Rationals.lean` | Chapter 1 rational-number closure examples; later Chapter 2 rational countability. |
 | `RationalCore.lean` | Chapter 1 reduced rational-square-root contradiction proofs; bridge material for quotient-rational and real wrappers. |
 | `QuotientRationals.lean` | Quotient rational numbers over positive-denominator integer fractions, with arithmetic, order, density, countability, embeddings for Dedekind-cut reals, and no-square-root theorems for 2 and 3. |
-| `Reals.lean` | Dedekind-cut real numbers over quotient rationals, with rational embedding, order, density, cut addition/subtraction/multiplication, powers, rational scaling, embedded-rational division, concrete square-root cut candidates, and rational/irrational predicates plus square-characterization irrationality bridges for book wrappers. |
+| `Reals.lean` | Dedekind-cut real numbers over quotient rationals, with rational embedding, order, density, cut addition/subtraction/multiplication, powers, rational scaling, embedded-rational division, concrete square-root cut candidates, and rational/irrational predicates plus square-characterization and square-equation irrationality bridges for book wrappers. |
 | `QuadraticSurd.lean` | Historical Chapter 1 surrogate model for `sqrt(2)` examples until square-root square equalities replace it in book-facing wrappers. |
 | `DigitStreams.lean` | Chapter 2 binary digit-stream diagonalization core used by the real-uncountability bridge. |
 | `RealUncountability.lean` | Chapter 2 Cantor-style injection of digit streams into Dedekind-cut reals, real uncountability, countable embedded rational reals, and irrational-real uncountability. |
 | `Primes.lean` | Chapter 1 prime divisor, Euclid prime-list, and product-of-primes induction examples. |
-| `Cardinality.lean` | Chapter 2 finite-cardinality laws via explicit list products, sublists, tuples, and cardinality witnesses. |
+| `Cardinality.lean` | Chapter 2 finite-cardinality laws via explicit list products, sublists, tuples, and cardinality witnesses; Chapter 1 finite pigeonhole theorem. |

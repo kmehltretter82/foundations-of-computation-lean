@@ -108,6 +108,13 @@ theorem class_equal_of_related {R : Rel alpha} (h : Equivalence R)
   · intro hbx
     exact h.right.right hab hbx
 
+theorem class_equal_iff_related {R : Rel alpha} (h : Equivalence R)
+    {a b : alpha} : FSet.Equal (Class R a) (Class R b) <-> R a b := by
+  constructor
+  · intro hClass
+    exact (hClass b).mpr (class_self h b)
+  · exact class_equal_of_related h
+
 def classes_partition {R : Rel alpha} (h : Equivalence R) : Partition alpha where
   block := Classes R
   covers := by

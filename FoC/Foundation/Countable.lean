@@ -121,6 +121,40 @@ theorem countable_of_equal {A B : FSet alpha}
       · intro hx
         exact (hAB x).mp ((hf x).mpr hx)
 
+theorem countable_subset {A B : FSet alpha}
+    (hAB : Subset A B) (hB : Countable B) : Countable A := by
+  classical
+  cases hB with
+  | intro f hf =>
+      let filtered : Nat -> Option alpha := fun n =>
+        match f n with
+        | none => none
+        | some x => if x ∈ A then some x else none
+      exists filtered
+      intro x
+      constructor
+      · intro hxA
+        have hxB : x ∈ B := hAB x hxA
+        cases (hf x).mp hxB with
+        | intro n hn =>
+            exists n
+            dsimp [filtered]
+            rw [hn]
+            simp [hxA]
+      · intro hx
+        cases hx with
+        | intro n hn =>
+            dsimp [filtered] at hn
+            cases hfn : f n with
+            | none =>
+                simp [hfn] at hn
+            | some y =>
+                by_cases hyA : y ∈ A
+                · simp [hfn, hyA] at hn
+                  rw [← hn]
+                  exact hyA
+                · simp [hfn, hyA] at hn
+
 /-!
 # Countable unions
 

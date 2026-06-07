@@ -63,6 +63,11 @@ theorem union_of_countable_sets_countable {A B : FSet alpha}
     FSet.Countable (FSet.Union A B) :=
   FSet.countable_union hA hB
 
+theorem subset_of_countable_set_countable {A B : FSet alpha}
+    (hAB : FSet.Subset A B) (hB : FSet.Countable B) :
+    FSet.Countable A :=
+  FSet.countable_subset hAB hB
+
 theorem union_of_countably_infinite_sets_countably_infinite {A B : FSet alpha}
     (hA : FSet.CountablyInfinite A) (hB : FSet.CountablyInfinite B) :
     FSet.CountablyInfinite (FSet.Union A B) :=

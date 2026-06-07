@@ -46,6 +46,11 @@ theorem related_representatives_have_equal_classes {R : Rel alpha}
     FSet.Equal (Rel.Class R a) (Rel.Class R b) :=
   Rel.class_equal_of_related h hab
 
+theorem equal_classes_iff_related_representatives {R : Rel alpha}
+    (h : Rel.Equivalence R) {a b : alpha} :
+    FSet.Equal (Rel.Class R a) (Rel.Class R b) <-> R a b :=
+  Rel.class_equal_iff_related h
+
 /-!
 ## Partitions and Fibers
 

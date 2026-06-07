@@ -1,5 +1,6 @@
 import FoC.Foundation.Integers
 import FoC.Foundation.Functions
+import FoC.Foundation.Cardinality
 import FoC.Foundation.Primes
 import FoC.Foundation.RationalCore
 import FoC.Foundation.QuadraticSurd
@@ -17,13 +18,13 @@ namespace Section07
 
 Concrete square-root cuts now exist as Dedekind-cut candidates, but their
 square-equality proofs are still deferred.  The reduced-rational and
-quotient-rational square-root contradiction cores, real square-characterization
+quotient-rational square-root contradiction cores, direct real square-equality
 irrationality bridges, prime-factor existence, Dedekind-cut real order layer,
 and real multiplication are formalized in the foundation.
 
 The section begins with proof-by-contradiction vocabulary, then formalizes the
 number-theoretic examples: odd-square contradiction, prime-divisor existence,
-Euclid's finite-list theorem for primes, pigeonhole collision vocabulary, and
+Euclid's finite-list theorem for primes, finite pigeonhole vocabulary, and
 square-root irrationality cores.
 
 The common pattern is to assume the opposite of the target statement and
@@ -61,17 +62,35 @@ theorem pigeonhole_collision_schema {alpha : Type u} {beta : Type v}
     exists x y, x ≠ y ∧ f x = f y :=
   Fn.collision_of_not_injective h
 
+theorem finite_cardinality_pigeonhole_collision
+    {alpha : Type u} {beta : Type v} [DecidableEq beta]
+    {A : FSet alpha} {B : FSet beta} {m n : Nat}
+    (hA : FSet.HasCardinality A m) (hB : FSet.HasCardinality B n)
+    (hlt : n < m) (f : alpha -> beta)
+    (hmap : forall x, x ∈ A -> f x ∈ B) :
+    exists x y, x ∈ A ∧ y ∈ A ∧ x ≠ y ∧ f x = f y :=
+  FSet.pigeonhole_collision_of_cardinality_lt hA hB hlt f hmap
+
+theorem finite_cardinality_pigeonhole_not_injective
+    {alpha : Type u} {beta : Type v} [DecidableEq beta]
+    {A : FSet alpha} {B : FSet beta} {m n : Nat}
+    (hA : FSet.HasCardinality A m) (hB : FSet.HasCardinality B n)
+    (hlt : n < m) (f : alpha -> beta)
+    (hmap : forall x, x ∈ A -> f x ∈ B) :
+    ¬ Fn.Injective f :=
+  FSet.not_injective_of_cardinality_lt_maps_to hA hB hlt f hmap
+
 /-!
 # Square-Root Irrationality Cores
 
 The reduced-rational and quotient-rational theorems are the formal core of the
 sqrt(2) and sqrt(3) irrationality arguments. The later real bridges say that
-any nonnegative real whose square has the relevant value would be irrational.
+any real whose square has the relevant value is irrational.
 
 The formalization separates the textbook proof into layers. First, no reduced
 rational representative can square to 2 or 3. Second, the quotient-rational
 version removes dependence on a chosen representative. Third, real-number
-bridge theorems turn square characterizations into irrationality statements.
+bridge theorems turn ordinary square equations into irrationality statements.
 -/
 
 theorem no_reduced_rational_square_root_two (q : PositiveRatRep)
@@ -138,6 +157,24 @@ theorem real_with_square_three_characterization_is_irrational {x : Real}
     (hsquare : Real.qrealSquareCharacterization x 3) :
     Real.Irrational x :=
   Real.irrational_of_qreal_square_eq_three hsquare
+
+theorem real_with_square_two_is_irrational {x : Real}
+    (hsquare : x * x = (2 : Real)) :
+    Real.Irrational x :=
+  Real.irrational_of_square_eq_two hsquare
+
+theorem real_with_square_three_is_irrational {x : Real}
+    (hsquare : x * x = (3 : Real)) :
+    Real.Irrational x :=
+  Real.irrational_of_square_eq_three hsquare
+
+theorem rational_real_cannot_square_to_two {x : Real}
+    (hx : Real.Rational x) : x * x ≠ (2 : Real) :=
+  Real.rational_not_square_eq_two hx
+
+theorem rational_real_cannot_square_to_three {x : Real}
+    (hx : Real.Rational x) : x * x ≠ (3 : Real) :=
+  Real.rational_not_square_eq_three hx
 
 end Section07
 end Chapter01
