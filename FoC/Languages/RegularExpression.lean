@@ -332,10 +332,31 @@ theorem optional_denote (r : RegExp alpha) :
       (Language.Union (Denote r) (Language.Singleton Word.Empty)) :=
   Language.equal_refl _
 
+theorem optional_membership (r : RegExp alpha) (w : Word alpha) :
+    w ∈ Denote (Optional r) <-> w ∈ Denote r ∨ w = Word.Empty :=
+  Iff.rfl
+
 theorem plus_denote (r : RegExp alpha) :
     Language.Equal (Denote (Plus r))
       (Language.Concat (Denote r) (Language.Star (Denote r))) :=
   Language.equal_refl _
+
+theorem plus_membership (r : RegExp alpha) (w : Word alpha) :
+    w ∈ Denote (Plus r) <->
+      exists x y, x ∈ Denote r ∧ y ∈ Language.Star (Denote r) ∧
+        w = Word.Concat x y :=
+  Iff.rfl
+
+theorem plus_of_mem (r : RegExp alpha) {w : Word alpha}
+    (hw : w ∈ Denote r) : w ∈ Denote (Plus r) := by
+  exact ⟨w, Word.Empty, hw, Language.star_empty_word _, by rw [Word.concat_empty_right]⟩
+
+theorem plus_subset_star (r : RegExp alpha) :
+    Language.Subset (Denote (Plus r)) (Denote (star r)) := by
+  intro w hw
+  rcases hw with ⟨x, y, hx, hy, hwEq⟩
+  rw [hwEq]
+  exact Language.star_concat (Language.star_of_mem _ hx) hy
 
 theorem charClass_denote (chars : List alpha) (w : Word alpha) :
     w ∈ Denote (CharClass chars) <->
@@ -440,6 +461,11 @@ theorem denote_ofWord (w x : Word alpha) :
         · exact (ih rest).mpr rfl
         · rfl
 
+theorem ofWord_generates_singleton (w : Word alpha) :
+    Generates (OfWord w) (Language.Singleton w) := by
+  intro x
+  exact denote_ofWord w x
+
 theorem denote_ofFiniteLanguage (ws : List (Word alpha)) (w : Word alpha) :
     w ∈ Denote (OfFiniteLanguage ws) <-> w ∈ ws := by
   induction ws with
@@ -469,6 +495,11 @@ theorem denote_ofFiniteLanguage (ws : List (Word alpha)) (w : Word alpha) :
 theorem finite_language_regular (ws : List (Word alpha)) :
     Regular (fun w => w ∈ ws) := by
   exists OfFiniteLanguage ws
+  intro w
+  exact denote_ofFiniteLanguage ws w
+
+theorem ofFiniteLanguage_generates (ws : List (Word alpha)) :
+    Generates (OfFiniteLanguage ws) (fun w => w ∈ ws) := by
   intro w
   exact denote_ofFiniteLanguage ws w
 

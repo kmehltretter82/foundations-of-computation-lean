@@ -950,6 +950,26 @@ theorem context_free_diff_dfa_recognizable_context_free
   rcases hR with ⟨dstate, D, hD⟩
   exact context_free_diff_dfa_context_free inputFinite hL D hD
 
+theorem context_free_inter_regular_context_free
+    {input : Type}
+    (inputFinite : Foundation.FiniteType input)
+    {L R : Language input}
+    (hL : CFL.ContextFreeLanguage L)
+    (hR : RegularLanguage.Regular R) :
+    CFL.ContextFreeLanguage (Language.Inter L R) :=
+  context_free_inter_dfa_recognizable_context_free inputFinite hL
+    (RegularLanguage.regular_is_dfa_recognizable hR)
+
+theorem context_free_diff_regular_context_free
+    {input : Type}
+    (inputFinite : Foundation.FiniteType input)
+    {L R : Language input}
+    (hL : CFL.ContextFreeLanguage L)
+    (hR : RegularLanguage.Regular R) :
+    CFL.ContextFreeLanguage (Language.Diff L R) :=
+  context_free_diff_dfa_recognizable_context_free inputFinite hL
+    (RegularLanguage.regular_is_dfa_recognizable hR)
+
 theorem context_free_diff_finite_list_context_free
     {input : Type}
     (inputFinite : Foundation.FiniteType input)

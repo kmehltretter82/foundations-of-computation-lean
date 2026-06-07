@@ -54,6 +54,11 @@ theorem bnf_expands_alternative_left {e f : BNF.Expr terminal nonterminal} {rhs}
     BNF.Expr.Expands (BNF.Expr.alt e f) rhs :=
   (BNF.Expr.alt_expands).mpr (Or.inl h)
 
+theorem bnf_expands_alternative_right {e f : BNF.Expr terminal nonterminal} {rhs}
+    (h : BNF.Expr.Expands f rhs) :
+    BNF.Expr.Expands (BNF.Expr.alt e f) rhs :=
+  (BNF.Expr.alt_expands).mpr (Or.inr h)
+
 theorem bnf_optional_empty (e : BNF.Expr terminal nonterminal) :
     BNF.Expr.Expands (BNF.Expr.optional e) [] :=
   BNF.Expr.optional_empty e
@@ -72,6 +77,12 @@ theorem bnf_repeat_cons {e : BNF.Expr terminal nonterminal} {first rest}
     (hrest : BNF.Expr.Expands (BNF.Expr.many e) rest) :
     BNF.Expr.Expands (BNF.Expr.many e) (first ++ rest) :=
   BNF.Expr.repeat_cons hfirst hrest
+
+theorem bnf_repeat_one {e : BNF.Expr terminal nonterminal} {rhs}
+    (h : BNF.Expr.Expands e rhs) :
+    BNF.Expr.Expands (BNF.Expr.many e) rhs := by
+  simpa [List.append_nil] using
+    BNF.Expr.repeat_cons h (BNF.Expr.repeat_empty e)
 
 theorem bnf_repeat_two {e : BNF.Expr terminal nonterminal} {first second}
     (hfirst : BNF.Expr.Expands e first)

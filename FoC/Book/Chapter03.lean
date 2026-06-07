@@ -47,8 +47,19 @@ infrastructure lives in {module}`FoC.Languages.Pumping` and is used by
 
 ## Status Notes
 
-The formal core is covered, including selected non-regularity exercises.
-Editor-specific regular-expression syntax and search/replace behavior are
-classified as application material; the semantic operators and the mathematical
-non-regularity results are formalized.
+The formal core is covered, including selected non-regularity exercises. The
+language layer now exposes the ordinary Boolean algebra of languages,
+concatenation with the empty and epsilon languages, reversal twice, and
+difference as intersection with complement. The regular-expression layer
+records exact finite-word and finite-language expressions, plus the semantic
+shape of optional and one-or-more abbreviations.
+
+The automata equivalence layer includes regular-expression-to-NFA,
+NFA-to-DFA, DFA/NFA-to-regular-expression, and DFA-backed closure under
+complement, intersection, and difference. Pumping arguments cover the book's
+main nonregular examples and several exercise families.
+
+Editor-specific regular-expression syntax and search/replace behavior remain
+application material; their mathematical language operators are represented by
+checked semantic theorems.
 -/

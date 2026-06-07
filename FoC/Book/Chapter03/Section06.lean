@@ -61,6 +61,11 @@ theorem finite_alphabet_universal_language_regular
     RegularLanguage.Regular (Language.Universal : Language alpha) :=
   RegularLanguage.finite_alphabet_universal_regular alphabet halphabet
 
+theorem regular_languages_closed_under_reversal {L : Language alpha}
+    (hL : RegularLanguage.Regular L) :
+    RegularLanguage.Regular (Language.Reverse L) :=
+  RegularLanguage.reverse_regular hL
+
 /-!
 ## From Expressions to Automata
 
@@ -117,6 +122,11 @@ theorem dfa_recognizable_closed_under_intersection {L M : Language alpha}
     (hL : RegularLanguage.DFARecognizable L) (hM : RegularLanguage.DFARecognizable M) :
     RegularLanguage.DFARecognizable (Language.Inter L M) :=
   RegularLanguage.dfa_recognizable_intersection hL hM
+
+theorem dfa_recognizable_closed_under_difference {L M : Language alpha}
+    (hL : RegularLanguage.DFARecognizable L) (hM : RegularLanguage.DFARecognizable M) :
+    RegularLanguage.DFARecognizable (Language.Diff L M) :=
+  RegularLanguage.dfa_recognizable_difference hL hM
 
 theorem dfa_recognizable_is_nfa_recognizable {L : Language alpha}
     (hL : RegularLanguage.DFARecognizable L) :
@@ -227,6 +237,13 @@ theorem dfa_backed_regular_languages_closed_under_intersection
     RegularLanguage.Regular (Language.Inter L M) :=
   RegularLanguage.dfa_recognizable_intersection_regular alphabet halphabet hL hM
 
+theorem dfa_backed_regular_languages_closed_under_difference
+    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    {L M : Language alpha}
+    (hL : RegularLanguage.DFARecognizable L) (hM : RegularLanguage.DFARecognizable M) :
+    RegularLanguage.Regular (Language.Diff L M) :=
+  RegularLanguage.dfa_recognizable_difference_regular alphabet halphabet hL hM
+
 theorem regular_languages_closed_under_complement
     (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
     {L : Language alpha} (hL : RegularLanguage.Regular L) :
@@ -239,6 +256,13 @@ theorem regular_languages_closed_under_intersection
     (hL : RegularLanguage.Regular L) (hM : RegularLanguage.Regular M) :
     RegularLanguage.Regular (Language.Inter L M) :=
   RegularLanguage.intersection_regular alphabet halphabet hL hM
+
+theorem regular_languages_closed_under_difference
+    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    {L M : Language alpha}
+    (hL : RegularLanguage.Regular L) (hM : RegularLanguage.Regular M) :
+    RegularLanguage.Regular (Language.Diff L M) :=
+  RegularLanguage.difference_regular alphabet halphabet hL hM
 
 end Section06
 end Chapter03

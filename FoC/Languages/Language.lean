@@ -142,6 +142,10 @@ theorem mem_compl (w : Word alpha) (L : Language alpha) :
     w ∈ Compl L <-> ¬ w ∈ L :=
   Iff.rfl
 
+theorem mem_diff (w : Word alpha) (L M : Language alpha) :
+    w ∈ Diff L M <-> w ∈ L ∧ ¬ w ∈ M :=
+  Iff.rfl
+
 theorem mem_concat (w : Word alpha) (L M : Language alpha) :
     w ∈ Concat L M <->
       exists x y, x ∈ L ∧ y ∈ M ∧ w = Word.Concat x y :=
@@ -197,12 +201,146 @@ theorem inter_assoc (L M N : Language alpha) :
     Equal (Inter L (Inter M N)) (Inter (Inter L M) N) :=
   FSet.inter_assoc L M N
 
+theorem union_idempotent (L : Language alpha) : Equal (Union L L) L :=
+  FSet.union_idempotent L
+
+theorem inter_idempotent (L : Language alpha) : Equal (Inter L L) L :=
+  FSet.inter_idempotent L
+
+theorem union_empty (L : Language alpha) : Equal (Union L Empty) L :=
+  FSet.union_empty L
+
+theorem empty_union (L : Language alpha) : Equal (Union Empty L) L :=
+  FSet.empty_union L
+
+theorem inter_empty (L : Language alpha) : Equal (Inter L Empty) Empty :=
+  FSet.inter_empty L
+
+theorem empty_inter (L : Language alpha) : Equal (Inter Empty L) Empty :=
+  FSet.empty_inter L
+
+theorem union_universal (L : Language alpha) : Equal (Union L Universal) Universal :=
+  FSet.union_univ L
+
+theorem inter_universal (L : Language alpha) : Equal (Inter L Universal) L :=
+  FSet.inter_univ L
+
+theorem union_absorption (L M : Language alpha) :
+    Equal (Union L (Inter L M)) L :=
+  FSet.union_absorption L M
+
+theorem inter_absorption (L M : Language alpha) :
+    Equal (Inter L (Union L M)) L :=
+  FSet.inter_absorption L M
+
+theorem diff_self (L : Language alpha) : Equal (Diff L L) Empty :=
+  FSet.diff_self L
+
+theorem diff_empty (L : Language alpha) : Equal (Diff L Empty) L :=
+  FSet.diff_empty L
+
+theorem empty_diff (L : Language alpha) : Equal (Diff Empty L) Empty :=
+  FSet.empty_diff L
+
+theorem diff_universal (L : Language alpha) : Equal (Diff L Universal) Empty :=
+  FSet.diff_univ L
+
+theorem diff_as_inter_compl (L M : Language alpha) :
+    Equal (Diff L M) (Inter L (Compl M)) :=
+  FSet.equal_refl _
+
+theorem reverse_congr {L M : Language alpha} (h : Equal L M) :
+    Equal (Reverse L) (Reverse M) := by
+  intro w
+  exact h (Word.Reverse w)
+
+theorem reverse_reverse (L : Language alpha) : Equal (Reverse (Reverse L)) L := by
+  intro w
+  constructor <;> intro hw
+  · change Word.Reverse (Word.Reverse w) ∈ L at hw
+    rw [show Word.Reverse (Word.Reverse w) = w by simp [Word.Reverse]] at hw
+    exact hw
+  · change Word.Reverse (Word.Reverse w) ∈ L
+    rw [show Word.Reverse (Word.Reverse w) = w by simp [Word.Reverse]]
+    exact hw
+
+theorem concat_congr {L L' M M' : Language alpha}
+    (hL : Equal L L') (hM : Equal M M') :
+    Equal (Concat L M) (Concat L' M') := by
+  intro w
+  constructor
+  · intro hw
+    rcases hw with ⟨x, y, hx, hy, hwEq⟩
+    exact ⟨x, y, (hL x).mp hx, (hM y).mp hy, hwEq⟩
+  · intro hw
+    rcases hw with ⟨x, y, hx, hy, hwEq⟩
+    exact ⟨x, y, (hL x).mpr hx, (hM y).mpr hy, hwEq⟩
+
+theorem star_congr {L M : Language alpha} (h : Equal L M) :
+    Equal (Star L) (Star M) := by
+  intro w
+  constructor
+  · intro hw
+    rcases hw with ⟨pieces, hpieces, hwEq⟩
+    exact ⟨pieces, (by
+      intro p hp
+      exact (h p).mp (hpieces p hp)), hwEq⟩
+  · intro hw
+    rcases hw with ⟨pieces, hpieces, hwEq⟩
+    exact ⟨pieces, (by
+      intro p hp
+      exact (h p).mpr (hpieces p hp)), hwEq⟩
+
 theorem concat_empty_word_left (w : Word alpha) :
     w ∈ Singleton Word.Empty -> forall L : Language alpha,
       forall y, y ∈ L -> Word.Concat w y = y := by
   intro hw L y _hy
   rw [hw]
   exact Word.concat_empty_left y
+
+theorem concat_empty_language_left (L : Language alpha) :
+    Equal (Concat Empty L) Empty := by
+  intro w
+  constructor
+  · intro hw
+    rcases hw with ⟨x, _y, hx, _hy, _hwEq⟩
+    exact hx
+  · intro hw
+    cases hw
+
+theorem concat_empty_language_right (L : Language alpha) :
+    Equal (Concat L Empty) Empty := by
+  intro w
+  constructor
+  · intro hw
+    rcases hw with ⟨_x, y, _hx, hy, _hwEq⟩
+    exact hy
+  · intro hw
+    cases hw
+
+theorem concat_epsilon_left (L : Language alpha) :
+    Equal (Concat (Singleton Word.Empty) L) L := by
+  intro w
+  constructor
+  · intro hw
+    rcases hw with ⟨x, y, hx, hy, hwEq⟩
+    rw [hx, Word.concat_empty_left] at hwEq
+    rw [hwEq]
+    exact hy
+  · intro hw
+    exact ⟨Word.Empty, w, rfl, hw, by rw [Word.concat_empty_left]⟩
+
+theorem concat_epsilon_right (L : Language alpha) :
+    Equal (Concat L (Singleton Word.Empty)) L := by
+  intro w
+  constructor
+  · intro hw
+    rcases hw with ⟨x, y, hx, hy, hwEq⟩
+    rw [hy, Word.concat_empty_right] at hwEq
+    rw [hwEq]
+    exact hx
+  · intro hw
+    exact ⟨w, Word.Empty, hw, rfl, by rw [Word.concat_empty_right]⟩
 
 theorem concat_assoc (L M N : Language alpha) :
     Equal (Concat (Concat L M) N) (Concat L (Concat M N)) := by

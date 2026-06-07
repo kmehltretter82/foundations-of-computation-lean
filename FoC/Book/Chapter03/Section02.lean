@@ -49,6 +49,19 @@ expressions, their union, concatenation, and star also have regular
 expressions.
 -/
 
+theorem regular_expression_of_word_generates_singleton (w : Word alpha) :
+    RegExp.Generates (RegExp.OfWord w) (Language.Singleton w) :=
+  RegExp.ofWord_generates_singleton w
+
+theorem regular_expression_of_finite_language_generates
+    (ws : List (Word alpha)) :
+    RegExp.Generates (RegExp.OfFiniteLanguage ws) (fun w => w ∈ ws) :=
+  RegExp.ofFiniteLanguage_generates ws
+
+theorem finite_language_is_regular (ws : List (Word alpha)) :
+    RegularLanguage.Regular (fun w => w ∈ ws) :=
+  RegularLanguage.finite_list_regular ws
+
 /-!
 ## Example 3.7
 
@@ -154,6 +167,10 @@ theorem oneToThreeAsThenEvenBs_accepts_a :
   constructor
   · exact Language.star_empty_word _
   · rfl
+
+theorem oneToThreeAsThenEvenBs_regular :
+    RegularLanguage.Regular (RegExp.Denote oneToThreeAsThenEvenBs) := by
+  exact ⟨oneToThreeAsThenEvenBs, Language.equal_refl _⟩
 
 end Section02
 end Chapter03

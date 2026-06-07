@@ -111,10 +111,55 @@ theorem language_complement_membership (L : Language alpha) (w : Word alpha) :
     w ∈ Language.Compl L <-> ¬ w ∈ L :=
   Language.mem_compl w L
 
+theorem language_difference_membership (L M : Language alpha) (w : Word alpha) :
+    w ∈ Language.Diff L M <-> w ∈ L ∧ ¬ w ∈ M :=
+  Language.mem_diff w L M
+
 theorem language_concatenation_membership (L M : Language alpha) (w : Word alpha) :
     w ∈ Language.Concat L M <->
       exists x y, x ∈ L ∧ y ∈ M ∧ w = Word.Concat x y :=
   Language.mem_concat w L M
+
+theorem language_union_idempotent (L : Language alpha) :
+    Language.Equal (Language.Union L L) L :=
+  Language.union_idempotent L
+
+theorem language_intersection_idempotent (L : Language alpha) :
+    Language.Equal (Language.Inter L L) L :=
+  Language.inter_idempotent L
+
+theorem language_union_absorption (L M : Language alpha) :
+    Language.Equal (Language.Union L (Language.Inter L M)) L :=
+  Language.union_absorption L M
+
+theorem language_intersection_absorption (L M : Language alpha) :
+    Language.Equal (Language.Inter L (Language.Union L M)) L :=
+  Language.inter_absorption L M
+
+theorem language_difference_as_intersection_with_complement
+    (L M : Language alpha) :
+    Language.Equal (Language.Diff L M) (Language.Inter L (Language.Compl M)) :=
+  Language.diff_as_inter_compl L M
+
+theorem language_concat_with_empty_language_left (L : Language alpha) :
+    Language.Equal (Language.Concat Language.Empty L) Language.Empty :=
+  Language.concat_empty_language_left L
+
+theorem language_concat_with_empty_language_right (L : Language alpha) :
+    Language.Equal (Language.Concat L Language.Empty) Language.Empty :=
+  Language.concat_empty_language_right L
+
+theorem language_concat_with_epsilon_left (L : Language alpha) :
+    Language.Equal (Language.Concat (Language.Singleton Word.Empty) L) L :=
+  Language.concat_epsilon_left L
+
+theorem language_concat_with_epsilon_right (L : Language alpha) :
+    Language.Equal (Language.Concat L (Language.Singleton Word.Empty)) L :=
+  Language.concat_epsilon_right L
+
+theorem language_reverse_twice (L : Language alpha) :
+    Language.Equal (Language.Reverse (Language.Reverse L)) L :=
+  Language.reverse_reverse L
 
 theorem kleene_star_contains_empty (L : Language alpha) :
     Word.Empty ∈ Language.Star L :=

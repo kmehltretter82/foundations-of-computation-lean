@@ -609,6 +609,12 @@ theorem dfa_recognizable_intersection {L M : Language alpha}
     DFARecognizable (Language.Inter L M) :=
   DFA.recognizable_intersection hL hM
 
+theorem dfa_recognizable_difference {L M : Language alpha}
+    (hL : DFARecognizable L) (hM : DFARecognizable M) :
+    DFARecognizable (Language.Diff L M) := by
+  change DFARecognizable (Language.Inter L (Language.Compl M))
+  exact dfa_recognizable_intersection hL (dfa_recognizable_complement hM)
+
 theorem nfa_subset_construction {state : Type} (M : NFA alpha state)
     (subsetsFinite : Foundation.FiniteType (Foundation.FSet state)) :
     DFARecognizable (NFA.AcceptedLanguage M) :=
@@ -675,6 +681,13 @@ theorem dfa_recognizable_intersection_regular (alphabet : List alpha)
   dfa_recognizable_regular alphabet halphabet
     (dfa_recognizable_intersection hL hM)
 
+theorem dfa_recognizable_difference_regular (alphabet : List alpha)
+    (halphabet : forall a, a ∈ alphabet) {L M : Language alpha}
+    (hL : DFARecognizable L) (hM : DFARecognizable M) :
+    Regular (Language.Diff L M) :=
+  dfa_recognizable_regular alphabet halphabet
+    (dfa_recognizable_difference hL hM)
+
 theorem complement_regular (alphabet : List alpha)
     (halphabet : forall a, a ∈ alphabet) {L : Language alpha}
     (hL : Regular L) :
@@ -687,6 +700,13 @@ theorem intersection_regular (alphabet : List alpha)
     (hL : Regular L) (hM : Regular M) :
     Regular (Language.Inter L M) :=
   dfa_recognizable_intersection_regular alphabet halphabet
+    (regular_is_dfa_recognizable hL) (regular_is_dfa_recognizable hM)
+
+theorem difference_regular (alphabet : List alpha)
+    (halphabet : forall a, a ∈ alphabet) {L M : Language alpha}
+    (hL : Regular L) (hM : Regular M) :
+    Regular (Language.Diff L M) :=
+  dfa_recognizable_difference_regular alphabet halphabet
     (regular_is_dfa_recognizable hL) (regular_is_dfa_recognizable hM)
 
 /-!

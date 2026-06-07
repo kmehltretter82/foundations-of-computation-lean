@@ -258,6 +258,26 @@ theorem cfg_to_pda_has_finite_presentation
     FinitePresentationPDA (CFGToPDA G) :=
   CFG.toPDA_hasFinitePresentation G terminalFinite hG
 
+theorem cfg_generated_language_finite_presentation_pda_recognizable
+    {terminal nonterminal : Type}
+    (G : CFG terminal nonterminal)
+    (terminalFinite : Foundation.FiniteType terminal)
+    (hG : CFG.HasFiniteProductions G) :
+    PDA.FinitePresentationRecognizable (CFG.GeneratedLanguage G) := by
+  exact ⟨Symbol terminal nonterminal, CFG.ToPDAState, CFGToPDA G,
+    cfg_to_pda_finite_presentation G terminalFinite hG,
+    cfg_to_pda_language_exact G⟩
+
+theorem finite_production_context_free_language_finite_presentation_pda_recognizable
+    {terminal : Type} {L : Language terminal}
+    (terminalFinite : Foundation.FiniteType terminal)
+    (hL : Section01.ContextFreeLanguage L) :
+    PDA.FinitePresentationRecognizable L := by
+  rcases hL with ⟨nonterminal, G, hGfinite, hGexact⟩
+  exact ⟨Symbol terminal nonterminal, CFG.ToPDAState, CFGToPDA G,
+    cfg_to_pda_finite_presentation G terminalFinite hGfinite,
+    Language.equal_trans (cfg_to_pda_language_exact G) hGexact⟩
+
 /-!
 These are the same language-equality theorem split into the two directions used
 in proofs: generated words are accepted by the constructed PDA, and accepted

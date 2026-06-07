@@ -99,6 +99,13 @@ theorem cfg_generated_word_is_general_generated (G : CFG terminal nonterminal)
     w ∈ GeneralGrammar.GeneratedLanguage (GeneralGrammar.FromCFG G) :=
   GeneralGrammar.cfg_generated_language_embeds G h
 
+theorem cfg_generated_language_subset_general_generated
+    (G : CFG terminal nonterminal) :
+    Language.Subset (CFG.GeneratedLanguage G)
+      (GeneralGrammar.GeneratedLanguage (GeneralGrammar.FromCFG G)) := by
+  intro w hw
+  exact cfg_generated_word_is_general_generated G hw
+
 /-!
 # Finite Presentations and Countability
 

@@ -44,6 +44,19 @@ def LL1Parses (G : CFG terminal nonterminal) (_parser : LL1Parser G)
     (w : Word terminal) : Prop :=
   w ∈ CFG.GeneratedLanguage G
 
+theorem ll1_table_entry_is_production {G : CFG terminal nonterminal}
+    (parser : LL1Parser G) {A : nonterminal} {lookahead : Option terminal}
+    {rhs : SententialForm terminal nonterminal}
+    (h : parser.table A lookahead = some rhs) :
+    G.produces A rhs :=
+  parser.tableSound A lookahead rhs h
+
+theorem ll1_parse_sound {G : CFG terminal nonterminal}
+    (parser : LL1Parser G) {w : Word terminal}
+    (h : LL1Parses G parser w) :
+    w ∈ CFG.GeneratedLanguage G :=
+  h
+
 structure LR1Item (G : CFG terminal nonterminal) where
   lhs : nonterminal
   beforeDot : SententialForm terminal nonterminal
@@ -54,6 +67,11 @@ structure LR1Item (G : CFG terminal nonterminal) where
 
 def LR1ItemComplete {G : CFG terminal nonterminal} (item : LR1Item G) : Prop :=
   item.afterDot = []
+
+theorem lr1_item_complete_iff_after_dot_empty {G : CFG terminal nonterminal}
+    (item : LR1Item G) :
+    LR1ItemComplete item <-> item.afterDot = [] :=
+  Iff.rfl
 
 inductive ShiftReduceAction (terminal : Type u) (state : Type v)
     (nonterminal : Type w) where
@@ -76,6 +94,16 @@ structure LR1Parser (G : CFG terminal nonterminal) (state : Type v) where
     forall q lookahead A rhs,
       action q lookahead = some (ShiftReduceAction.reduce A rhs) ->
         G.produces A rhs
+
+theorem lr1_reduce_action_is_production {G : CFG terminal nonterminal}
+    {state : Type v} (parser : LR1Parser G state)
+    {q : state} {lookahead : Option terminal} {A : nonterminal}
+    {rhs : SententialForm terminal nonterminal}
+    (h :
+      parser.action q lookahead =
+        some (ShiftReduceAction.reduce A rhs)) :
+    G.produces A rhs :=
+  parser.reduceSound q lookahead A rhs h
 
 /-!
 ## Parse Trees and Frontiers
@@ -283,6 +311,18 @@ theorem parse_tree_of_generated_language {G : CFG terminal nonterminal}
       CFG.ParseTree.frontier tree = w :=
   CFG.ParseTree.of_generates_language h
 
+theorem generated_language_iff_parse_tree_exists
+    {G : CFG terminal nonterminal} {w : Word terminal} :
+    w ∈ CFG.GeneratedLanguage G <->
+      exists tree : CFG.ParseTree G (Symbol.nonterminal G.start),
+        CFG.ParseTree.frontier tree = w := by
+  constructor
+  · exact parse_tree_of_generated_language
+  · intro h
+    rcases h with ⟨tree, hfrontier⟩
+    apply parse_tree_generates_language
+    exact ⟨tree, hfrontier⟩
+
 /-!
 ## Height and Repeated Nonterminals
 
@@ -349,6 +389,15 @@ theorem parse_tree_left_derivation_trace_correspondence
       (CFG.LeftDerivationTrace G [Symbol.nonterminal G.start]
         (SententialForm.terminalWord w)) :=
   CFG.parseTree_leftDerivationTrace_correspondence
+
+theorem generated_language_iff_left_derivation_trace
+    {G : CFG terminal nonterminal} {w : Word terminal} :
+    w ∈ CFG.GeneratedLanguage G <->
+      Nonempty
+        (CFG.LeftDerivationTrace G [Symbol.nonterminal G.start]
+          (SententialForm.terminalWord w)) := by
+  exact Iff.trans generated_language_iff_parse_tree_exists
+    parse_tree_left_derivation_trace_correspondence
 
 def AmbiguousGrammar (G : CFG terminal nonterminal) : Prop :=
   CFG.AmbiguousByParseTrees G

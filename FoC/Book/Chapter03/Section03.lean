@@ -47,6 +47,11 @@ theorem digit_class_accepts_7 :
 def optionalA : RegExp Section01.AB :=
   RegExp.Optional (RegExp.sym Section01.AB.a)
 
+theorem optionalA_membership (w : Word Section01.AB) :
+    w ∈ RegExp.Denote optionalA <->
+      w = [Section01.AB.a] ∨ w = Word.Empty :=
+  RegExp.optional_membership (RegExp.sym Section01.AB.a) w
+
 theorem optionalA_accepts_empty :
     Word.Empty ∈ RegExp.Denote optionalA := by
   exact Or.inr rfl
@@ -57,6 +62,19 @@ theorem optionalA_accepts_a :
 
 def oneOrMoreBs : RegExp Section01.AB :=
   RegExp.Plus (RegExp.sym Section01.AB.b)
+
+theorem oneOrMoreBs_membership (w : Word Section01.AB) :
+    w ∈ RegExp.Denote oneOrMoreBs <->
+      exists x y,
+        x = [Section01.AB.b] ∧
+        y ∈ Language.Star (RegExp.Denote (RegExp.sym Section01.AB.b)) ∧
+        w = Word.Concat x y :=
+  RegExp.plus_membership (RegExp.sym Section01.AB.b) w
+
+theorem oneOrMoreBs_subset_bStar :
+    Language.Subset (RegExp.Denote oneOrMoreBs)
+      (RegExp.Denote (RegExp.star (RegExp.sym Section01.AB.b))) :=
+  RegExp.plus_subset_star (RegExp.sym Section01.AB.b)
 
 theorem oneOrMoreBs_accepts_bb :
     [Section01.AB.b, Section01.AB.b] ∈ RegExp.Denote oneOrMoreBs := by

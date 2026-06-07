@@ -46,8 +46,22 @@ the unrestricted grammar vocabulary used at the computability boundary.
 
 ## Status Notes
 
-The formal core is covered. Some parser algorithms, larger BNF language
-enumerations, and selected later exercise examples are deferred as application
-or optional infrastructure. The central grammar, parse-tree, PDA, conversion,
-closure, pumping, and representative example results are checked.
+The formal core is covered. The CFG sections include derivation/context laws,
+closure under union, concatenation, star, and reversal, exact generated-language
+theorems for representative grammars, and the right/left-regular boundary.
+The BNF page records the notation semantics and many concrete expansion
+examples; small helper rules now cover both sides of alternatives and
+single-use repetition directly.
+
+The parse-tree section connects generated-language membership, parse trees,
+and leftmost derivation traces in both directions. The PDA sections include
+computation APIs, CFG-to-PDA and PDA-to-CFG conversion boundaries, exact PDA
+examples, intersection/difference with DFA and regular languages, CFL pumping,
+and nonclosure proofs. General grammars include finite-presentation
+countability, CFG embedding, and substantial counting/order examples.
+
+Remaining deferrals are parser-generator algorithms, large purely
+application-oriented BNF enumerations, and optional exercise families whose
+mathematical pattern is already represented by the general closure, pumping,
+or exact-language theorem schemas.
 -/
