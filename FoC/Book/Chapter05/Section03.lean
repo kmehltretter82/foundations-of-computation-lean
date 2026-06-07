@@ -266,9 +266,25 @@ def UniversalTuringMachineSpec
     (decodeAccepts : Word symbol -> Word symbol -> Prop) : Prop :=
   UniversalMachineSpec universal decodeAccepts
 
+def UniversalMachineRowLanguage
+    (universal : TuringMachine symbol state)
+    (machine : Word symbol) : Language symbol :=
+  fun input => TuringMachine.HaltsOnInput universal
+    (Languages.Word.Concat machine input)
+
+def UniversalMachineRowsCoverAcceptableLanguages
+    (universal : TuringMachine symbol state) : Prop :=
+  forall L : Language symbol, TuringAcceptable L ->
+    exists machine : Word symbol,
+      Language.Equal (UniversalMachineRowLanguage universal machine) L
+
 def ConcreteUniversalMachineSpec
     (universal : TuringMachine ConcreteMachineCodeSymbol state) : Prop :=
   UniversalTuringMachineSpec universal ConcreteMachineCodeAccepts
+
+def ConcreteUniversalMachineRowsCoverAcceptableLanguages
+    (universal : TuringMachine ConcreteMachineCodeSymbol state) : Prop :=
+  UniversalMachineRowsCoverAcceptableLanguages universal
 
 /-!
 **Reductions and Closure.**
@@ -686,6 +702,24 @@ theorem concrete_universal_machine_halts_on_encoded_description_iff
     (concrete_universal_machine_spec_accepts_iff
       hspec (ConcreteMachineEncode D) input)
     (concrete_machine_code_accepts_encode_description_iff D input)
+
+theorem concrete_universal_machine_row_language_equal_code_accepted_language
+    {universal : TuringMachine ConcreteMachineCodeSymbol state}
+    (hspec : ConcreteUniversalMachineSpec universal)
+    (machine : Word ConcreteMachineCodeSymbol) :
+    Language.Equal
+      (UniversalMachineRowLanguage universal machine)
+      (ConcreteMachineCodeAcceptedLanguage machine) :=
+  concrete_universal_machine_spec_accepts_iff hspec machine
+
+theorem concrete_universal_machine_row_language_equal_encoded_input_language
+    {universal : TuringMachine ConcreteMachineCodeSymbol state}
+    (hspec : ConcreteUniversalMachineSpec universal)
+    (D : ConcreteMachineDescription) :
+    Language.Equal
+      (UniversalMachineRowLanguage universal (ConcreteMachineEncode D))
+      (ConcreteMachineEncodedInputLanguage D) :=
+  concrete_universal_machine_halts_on_encoded_description_iff hspec D
 
 theorem concrete_machine_compiled_transition_of_lookup
     {D : ConcreteMachineDescription}
@@ -1189,6 +1223,73 @@ theorem universal_machine_spec_pair_decode
       (Languages.Word.Concat machine input)) :
     decodeAccepts machine input :=
   Computability.universalMachineSpec_pair_decode hspec hhalts
+
+theorem universal_machine_spec_decoder_recognizes_row_language
+    {universal : TuringMachine symbol state}
+    {decodeAccepts : Word symbol -> Word symbol -> Prop}
+    (hspec : UniversalTuringMachineSpec universal decodeAccepts)
+    (machine : Word symbol) :
+    TuringDecoderRecognizes decodeAccepts machine
+      (UniversalMachineRowLanguage universal machine) := by
+  intro input
+  exact (hspec machine input).symm
+
+theorem universal_machine_rows_cover_of_decoder_universal
+    {universal : TuringMachine symbol state}
+    {decodeAccepts : Word symbol -> Word symbol -> Prop}
+    (hspec : UniversalTuringMachineSpec universal decodeAccepts)
+    (huniv : TuringDecoderUniversalForAcceptableLanguages decodeAccepts) :
+    UniversalMachineRowsCoverAcceptableLanguages universal := by
+  intro L hL
+  cases huniv L hL with
+  | intro machine hmachine =>
+      exists machine
+      intro input
+      exact Iff.trans (hspec machine input) (hmachine input)
+
+theorem decoder_universal_of_universal_machine_rows_cover
+    {universal : TuringMachine symbol state}
+    {decodeAccepts : Word symbol -> Word symbol -> Prop}
+    (hspec : UniversalTuringMachineSpec universal decodeAccepts)
+    (hrows : UniversalMachineRowsCoverAcceptableLanguages universal) :
+    TuringDecoderUniversalForAcceptableLanguages decodeAccepts := by
+  intro L hL
+  cases hrows L hL with
+  | intro machine hmachine =>
+      exists machine
+      intro input
+      exact Iff.trans (hspec machine input).symm (hmachine input)
+
+theorem universal_machine_rows_cover_iff_decoder_universal
+    {universal : TuringMachine symbol state}
+    {decodeAccepts : Word symbol -> Word symbol -> Prop}
+    (hspec : UniversalTuringMachineSpec universal decodeAccepts) :
+    UniversalMachineRowsCoverAcceptableLanguages universal <->
+      TuringDecoderUniversalForAcceptableLanguages decodeAccepts := by
+  constructor
+  · exact decoder_universal_of_universal_machine_rows_cover hspec
+  · exact universal_machine_rows_cover_of_decoder_universal hspec
+
+theorem concrete_universal_machine_rows_cover_of_decoder_universal
+    {universal : TuringMachine ConcreteMachineCodeSymbol state}
+    (hspec : ConcreteUniversalMachineSpec universal)
+    (huniv : ConcreteMachineDecoderUniversalForAcceptableLanguages) :
+    ConcreteUniversalMachineRowsCoverAcceptableLanguages universal :=
+  universal_machine_rows_cover_of_decoder_universal hspec huniv
+
+theorem concrete_decoder_universal_of_universal_machine_rows_cover
+    {universal : TuringMachine ConcreteMachineCodeSymbol state}
+    (hspec : ConcreteUniversalMachineSpec universal)
+    (hrows : ConcreteUniversalMachineRowsCoverAcceptableLanguages universal) :
+    ConcreteMachineDecoderUniversalForAcceptableLanguages :=
+  decoder_universal_of_universal_machine_rows_cover hspec hrows
+
+theorem concrete_universal_machine_rows_cover_iff_decoder_universal
+    {universal : TuringMachine ConcreteMachineCodeSymbol state}
+    (hspec : ConcreteUniversalMachineSpec universal) :
+    ConcreteUniversalMachineRowsCoverAcceptableLanguages universal <->
+      ConcreteMachineDecoderUniversalForAcceptableLanguages :=
+  universal_machine_rows_cover_iff_decoder_universal hspec
 
 /-!
 The section's universal-machine and diagonalization theorems require a concrete
