@@ -429,6 +429,9 @@ instance : Neg Real where
 instance : Sub Real where
   sub := sub
 
+theorem sub_eq_add_neg (x y : Real) : x - y = x + -y :=
+  rfl
+
 theorem add_comm (x y : Real) : x + y = y + x := by
   apply ext
   intro q
@@ -453,6 +456,43 @@ theorem add_comm (x y : Real) : x + y = y + x := by
             exact Exists.intro a (Exists.intro b
               (And.intro hbounds.right.left
                 (And.intro hbounds.left hqab)))
+
+theorem add_assoc (x y z : Real) : (x + y) + z = x + (y + z) := by
+  apply ext
+  intro q
+  constructor
+  · intro h
+    rcases h with ⟨s, c, hxy, hc, hq⟩
+    rcases hxy with ⟨a, b, ha, hb, hs⟩
+    rcases x.open_upward a ha with ⟨a', haa', ha'⟩
+    rcases y.open_upward b hb with ⟨b', hbb', hb'⟩
+    rcases z.open_upward c hc with ⟨c', hcc', hc'⟩
+    refine ⟨a', b + c, ha', ?_, ?_⟩
+    · exact ⟨b', c', hb', hc', QRat.add_lt_add hbb' hcc'⟩
+    · have hsc : s + c < (a + b) + c :=
+        QRat.add_lt_add_right c hs
+      have hqabc : q < (a + b) + c := QRat.lt_trans hq hsc
+      have hq_assoc : q < a + (b + c) := by
+        simpa [QRat.add_assoc] using hqabc
+      have ha_upper : a + (b + c) < a' + (b + c) :=
+        QRat.add_lt_add_right (b + c) haa'
+      exact QRat.lt_trans hq_assoc ha_upper
+  · intro h
+    rcases h with ⟨a, s, ha, hyz, hq⟩
+    rcases hyz with ⟨b, c, hb, hc, hs⟩
+    rcases x.open_upward a ha with ⟨a', haa', ha'⟩
+    rcases y.open_upward b hb with ⟨b', hbb', hb'⟩
+    rcases z.open_upward c hc with ⟨c', hcc', hc'⟩
+    refine ⟨a + b, c', ?_, hc', ?_⟩
+    · exact ⟨a', b', ha', hb', QRat.add_lt_add haa' hbb'⟩
+    · have has : a + s < a + (b + c) :=
+        QRat.add_lt_add_left a hs
+      have hqabc : q < a + (b + c) := QRat.lt_trans hq has
+      have hq_assoc : q < (a + b) + c := by
+        simpa [QRat.add_assoc] using hqabc
+      have hc_upper : (a + b) + c < (a + b) + c' :=
+        QRat.add_lt_add_left (a + b) hcc'
+      exact QRat.lt_trans hq_assoc hc_upper
 
 theorem add_qreal_lower_iff (x : Real) (q p : QRat) :
     (x + qreal q).lower p <-> x.lower (p - q) := by
@@ -489,6 +529,22 @@ theorem qreal_add (r s : QRat) :
   intro p
   rw [add_qreal_lower_iff, qreal_lower_iff, qreal_lower_iff]
   exact QRat.sub_lt_iff
+
+theorem add_zero (x : Real) : x + 0 = x := by
+  change x + qreal (0 : QRat) = x
+  apply ext
+  intro p
+  rw [add_qreal_lower_iff]
+  constructor
+  · intro h
+    simpa [QRat.sub_eq_add_neg, QRat.neg_zero, QRat.add_zero] using h
+  · intro h
+    simpa [QRat.sub_eq_add_neg, QRat.neg_zero, QRat.add_zero] using h
+
+theorem zero_add (x : Real) : 0 + x = x := by
+  calc
+    (0 : Real) + x = x + 0 := add_comm 0 x
+    _ = x := add_zero x
 
 theorem qreal_neg (r : QRat) :
     -qreal r = qreal (-r) := by
@@ -732,6 +788,78 @@ theorem qreal_mulNonneg {a b : QRat}
                     (And.intro hc.right
                       (And.intro hd.right hqcd))))))
 
+theorem mulNonneg_one_left (x : Real)
+    (h1 : (0 : Real) ≤ qreal 1) (hx : (0 : Real) ≤ x) :
+    mulNonneg (qreal 1) x h1 hx = x := by
+  apply ext
+  intro q
+  constructor
+  · intro hq
+    cases hq with
+    | inl hq0 =>
+        exact hx q hq0
+    | inr hprod =>
+        rcases hprod with ⟨a, b, ha0, hb0, ha1, hb, hqab⟩
+        have hab_lt_b : a * b < b := by
+          have h := QRat.mul_lt_mul_of_pos_right ha1 hb0
+          simpa [QRat.one_mul] using h
+        exact x.downward_closed q b (QRat.lt_trans hqab hab_lt_b) hb
+  · intro hxq
+    by_cases hq0 : q < 0
+    · exact Or.inl hq0
+    · cases x.open_upward q hxq with
+      | intro b hb =>
+          have hbpos : 0 < b :=
+            QRat.zero_lt_of_not_lt_zero_of_lt hq0 hb.left
+          have hqdiv : q / b < 1 := by
+            apply (QRat.div_lt_iff (x := q) (y := b) (c := 1) hbpos).mpr
+            simpa [QRat.one_mul] using hb.left
+          cases QRat.density hqdiv with
+          | intro a ha =>
+              have ha0 : 0 < a :=
+                QRat.zero_lt_of_not_lt_zero_of_lt
+                  (QRat.div_nonneg hq0 hbpos) ha.left
+              have hqab : q < a * b :=
+                (QRat.div_lt_iff (x := q) (y := b) (c := a) hbpos).mp ha.left
+              exact Or.inr ⟨a, b, ha0, hbpos, ha.right, hb.right, hqab⟩
+
+theorem mulNonneg_one_right (x : Real)
+    (hx : (0 : Real) ≤ x) (h1 : (0 : Real) ≤ qreal 1) :
+    mulNonneg x (qreal 1) hx h1 = x := by
+  apply ext
+  intro q
+  constructor
+  · intro hq
+    cases hq with
+    | inl hq0 =>
+        exact hx q hq0
+    | inr hprod =>
+        rcases hprod with ⟨a, b, ha0, hb0, ha, hb1, hqab⟩
+        have hab_lt_a : a * b < a := by
+          have h := QRat.mul_lt_mul_of_pos_left hb1 ha0
+          simpa [QRat.mul_one] using h
+        exact x.downward_closed q a (QRat.lt_trans hqab hab_lt_a) ha
+  · intro hxq
+    by_cases hq0 : q < 0
+    · exact Or.inl hq0
+    · cases x.open_upward q hxq with
+      | intro a ha =>
+          have hapos : 0 < a :=
+            QRat.zero_lt_of_not_lt_zero_of_lt hq0 ha.left
+          have hqdiv : q / a < 1 := by
+            apply (QRat.div_lt_iff (x := q) (y := a) (c := 1) hapos).mpr
+            simpa [QRat.one_mul] using ha.left
+          cases QRat.density hqdiv with
+          | intro b hb =>
+              have hb0 : 0 < b :=
+                QRat.zero_lt_of_not_lt_zero_of_lt
+                  (QRat.div_nonneg hq0 hapos) hb.left
+              have hqab : q < a * b := by
+                have hqba : q < b * a :=
+                  (QRat.div_lt_iff (x := q) (y := a) (c := b) hapos).mp hb.left
+                simpa [QRat.mul_comm] using hqba
+              exact Or.inr ⟨a, b, hapos, hb0, ha.right, hb.right, hqab⟩
+
 theorem qreal_mulNonneg_neg_right {a b : QRat}
     (ha : (0 : Real) ≤ qreal a) (hb : (0 : Real) ≤ -qreal b) :
     mulNonneg (qreal a) (-qreal b) ha hb = qreal (a * -b) := by
@@ -787,6 +915,36 @@ noncomputable def mul (x y : Real) : Real := by
 
 noncomputable instance : Mul Real where
   mul := mul
+
+theorem one_mul (x : Real) : 1 * x = x := by
+  classical
+  change mul 1 x = x
+  unfold mul
+  have h1 : (0 : Real) ≤ (1 : Real) := by
+    change (0 : Real) ≤ qreal 1
+    exact (qreal_nonneg_iff 1).mpr (QRat.lt_asymm QRat.zero_lt_one)
+  by_cases hx : (0 : Real) ≤ x
+  · simp [h1, hx]
+    change mulNonneg (qreal 1) x h1 hx = x
+    exact mulNonneg_one_left x h1 hx
+  · simp [h1, hx]
+    change -mulNonneg (qreal 1) (-x) h1 (nonneg_neg_of_not_nonneg hx) = x
+    rw [mulNonneg_one_left (-x) h1 (nonneg_neg_of_not_nonneg hx), neg_neg]
+
+theorem mul_one (x : Real) : x * 1 = x := by
+  classical
+  change mul x 1 = x
+  unfold mul
+  have h1 : (0 : Real) ≤ (1 : Real) := by
+    change (0 : Real) ≤ qreal 1
+    exact (qreal_nonneg_iff 1).mpr (QRat.lt_asymm QRat.zero_lt_one)
+  by_cases hx : (0 : Real) ≤ x
+  · simp [h1, hx]
+    change mulNonneg x (qreal 1) hx h1 = x
+    exact mulNonneg_one_right x hx h1
+  · simp [h1, hx]
+    change -mulNonneg (-x) (qreal 1) (nonneg_neg_of_not_nonneg hx) h1 = x
+    rw [mulNonneg_one_right (-x) (nonneg_neg_of_not_nonneg hx) h1, neg_neg]
 
 theorem qreal_mul (a b : QRat) :
     qreal a * qreal b = qreal (a * b) := by

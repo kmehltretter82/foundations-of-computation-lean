@@ -237,6 +237,27 @@ theorem real_geometric_sum_eq_algebraic_sum (x : Real) (n : Nat) :
 def DedekindRealGeometricSeriesAlgebra : Prop :=
   NatSum.GeometricSeries.Algebra Real
 
+structure DedekindRealGeometricSeriesRemainingLaws : Prop where
+  neg_add_cancel : forall a : Real, -a + a = 0
+  left_distrib : forall a b c : Real, a * (b + c) = a * b + a * c
+  right_distrib : forall a b c : Real, (a + b) * c = a * c + b * c
+  mul_neg : forall a b : Real, a * -b = -(a * b)
+
+theorem dedekind_real_geometric_series_algebra_of_remaining_laws
+    (laws : DedekindRealGeometricSeriesRemainingLaws) :
+    DedekindRealGeometricSeriesAlgebra := by
+  exact {
+    add_assoc := Real.add_assoc
+    zero_add := Real.zero_add
+    neg_add_cancel := laws.neg_add_cancel
+    sub_eq_add_neg := Real.sub_eq_add_neg
+    one_mul := Real.one_mul
+    mul_one := Real.mul_one
+    left_distrib := laws.left_distrib
+    right_distrib := laws.right_distrib
+    mul_neg := laws.mul_neg
+  }
+
 theorem arbitrary_real_geometric_series_mul_one_sub_of_algebra
     (laws : DedekindRealGeometricSeriesAlgebra)
     (x : Real) (n : Nat) :
@@ -247,13 +268,47 @@ theorem arbitrary_real_geometric_series_mul_one_sub_of_algebra
     real_powNat_eq_algebraic_pow]
   exact h
 
+theorem arbitrary_real_geometric_series_mul_one_sub_of_remaining_laws
+    (laws : DedekindRealGeometricSeriesRemainingLaws)
+    (x : Real) (n : Nat) :
+    realGeometricSum x n * (1 - x) =
+      1 - Real.powNat x (n + 1) := by
+  exact arbitrary_real_geometric_series_mul_one_sub_of_algebra
+    (dedekind_real_geometric_series_algebra_of_remaining_laws laws) x n
+
+structure DedekindRealGeometricSeriesDivisionLaws where
+  remaining : DedekindRealGeometricSeriesRemainingLaws
+  divByNonzero : Real -> (d : Real) -> d ≠ 0 -> Real
+  mul_div_cancel :
+    forall (a d : Real) (hd : d ≠ 0), divByNonzero (a * d) d hd = a
+
+theorem arbitrary_real_geometric_series_division_formula_of_laws
+    (laws : DedekindRealGeometricSeriesDivisionLaws)
+    (x : Real) (n : Nat) (hden : 1 - x ≠ 0) :
+    realGeometricSum x n =
+      laws.divByNonzero (1 - Real.powNat x (n + 1)) (1 - x) hden := by
+  have hmul := arbitrary_real_geometric_series_mul_one_sub_of_remaining_laws
+    laws.remaining x n
+  calc
+    realGeometricSum x n =
+        laws.divByNonzero (realGeometricSum x n * (1 - x)) (1 - x) hden := by
+      exact (laws.mul_div_cancel (realGeometricSum x n) (1 - x) hden).symm
+    _ = laws.divByNonzero (1 - Real.powNat x (n + 1)) (1 - x) hden := by
+      rw [hmul]
+
 /-!
 The theorem above is the arbitrary-real induction core for the book's
 geometric-series formula, stated against the exact algebra laws needed by the
-calculation. The custom Dedekind-real layer has not yet proved the full
-ring-law package in {name}`DedekindRealGeometricSeriesAlgebra`, so the
-unconditional custom-real division statement remains separate from the
-quotient-rational and embedded-rational specializations below.
+calculation. The custom Dedekind-real layer now supplies the additive laws and
+the two multiplicative identity laws used by
+{name}`DedekindRealGeometricSeriesAlgebra`; the remaining algebra assumptions
+are the inverse-addition law, distributivity, and multiplication by negatives.
+
+The division theorem isolates one further boundary: the arbitrary-real division
+form needs an actual nonzero-division operation on custom Dedekind reals and a
+matching cancellation theorem. The quotient-rational and embedded-rational
+specializations below remain unconditional because their denominator is a
+quotient rational and can use {name}`Real.divByQ`.
 -/
 
 theorem real_geometric_sum_qreal (r : QRat) (n : Nat) :
