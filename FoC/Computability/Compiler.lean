@@ -471,6 +471,75 @@ theorem reCoReToDecidablePrinciple_of_dovetailDescriptionCompiler
   exact reCoRe_turingDecidable_of_dovetailDescriptionCompiler hcompile h
 
 /-!
+## Encoded input languages and universal runners
+
+Section 5.3 encodes machine descriptions and their inputs over the common
+{name}`MachineCodeSymbol` alphabet, while concrete descriptions still execute
+on Boolean tapes. The next predicates isolate the exact compiler and runner
+obligations needed for a concrete universal machine.
+-/
+
+def MachineDescriptionAcceptsEncodedInputLanguage
+    (D : MachineDescription)
+    (L : Language MachineCodeSymbol) : Prop :=
+  D.WellFormed ∧ Language.Equal (MachineDescription.EncodedInputLanguage D) L
+
+def EncodedInputProgramCompiledByDescription
+    (P : StagedProgram MachineCodeSymbol Unit)
+    (D : MachineDescription) : Prop :=
+  D.WellFormed ∧
+    forall w : Word MachineCodeSymbol,
+      D.HaltsOnInput (MachineDescription.encodeCodeWordAsInput w) <->
+        ProgramHaltsWithOutput P w []
+
+def EncodedInputProgramAcceptorCompilationPrinciple : Prop :=
+  forall P : StagedProgram MachineCodeSymbol Unit,
+    exists D : MachineDescription,
+      EncodedInputProgramCompiledByDescription P D
+
+def EncodedInputDescriptionCompilerPrinciple : Prop :=
+  forall L : Language MachineCodeSymbol,
+    RecursivelyEnumerable L ->
+      exists D : MachineDescription,
+        MachineDescriptionAcceptsEncodedInputLanguage D L
+
+def CodeUniversalMachineSpec
+    (universal : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall machine input : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput universal
+      (Languages.Word.Concat machine input) <->
+        MachineDescription.CodeAccepts machine input
+
+def CodeUniversalRunnerConstruction : Prop :=
+  exists state : Type,
+    exists universal : TuringMachine MachineCodeSymbol state,
+      CodeUniversalMachineSpec universal
+
+theorem encodedInputProgramCompiledByDescription_acceptsLanguage
+    {P : StagedProgram MachineCodeSymbol Unit}
+    {D : MachineDescription}
+    {L : Language MachineCodeSymbol}
+    (hP : ProgramAcceptsLanguage P L)
+    (hcompile : EncodedInputProgramCompiledByDescription P D) :
+    MachineDescriptionAcceptsEncodedInputLanguage D L := by
+  constructor
+  · exact hcompile.left
+  · intro w
+    exact Iff.trans (hcompile.right w) (hP w)
+
+theorem encodedInputDescriptionCompilerPrinciple_of_programCompiler
+    (hcompile : EncodedInputProgramAcceptorCompilationPrinciple) :
+    EncodedInputDescriptionCompilerPrinciple := by
+  intro L hL
+  cases recursivelyEnumerable_has_acceptanceTrace hL with
+  | intro trace htrace =>
+      cases hcompile (TraceRecognizerProgram trace) with
+      | intro D hD =>
+          exists D
+          exact encodedInputProgramCompiledByDescription_acceptsLanguage
+            (traceRecognizerProgram_acceptsLanguage htrace) hD
+
+/-!
 ## Compiled partial-function ranges
 -/
 

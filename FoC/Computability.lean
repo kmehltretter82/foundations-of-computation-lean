@@ -73,9 +73,9 @@ and interpreter layer needed to discharge the remaining compiler and universal
 machine theorem shapes, including a description-backed code-word decoder
 relation for Section 5.3 diagonalization.
 {module}`FoC.Computability.DiagonalPairMachine` contains the extracted finite
-machine witness for the concrete diagonal pair map under the current
-non-injective compatibility interface, and records the faithful copy-machine
-target separately.
+machine witnesses for the concrete diagonal pair map: the legacy compatibility
+machine for older non-injective statements and the faithful copy-machine theorem
+used by the Chapter 5 reductions that require injective encodings.
 {module}`FoC.Computability.Compiler` proves simulation equivalences between
 well-formed descriptions and their compiled one-tape machines, using normalized
 output for output comparisons, then exposes description-backed compiler bridges

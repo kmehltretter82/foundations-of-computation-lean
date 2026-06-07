@@ -37,9 +37,21 @@ surfaces.
 
 Section 5.3 states the diagonal, reduction, self-halting, pair-halting,
 machine-encoding, and universal-machine vocabulary. The concrete encoding,
-interpreter, and non-injective diagonal-pair machine witness are present, while
-the faithful copy-machine theorem and final finite universal-runner theorem are
-still explicit construction targets.
+interpreter, compiled-machine simulation, and faithful diagonal-pair
+copy-machine witness are present. The remaining implementation boundary is the
+uniform compiler and universal-runner machinery needed to turn the interpreter
+layer into one finite universal machine theorem without extra hypotheses.
+
+## Source Audit
+
+The Chapter 5 formalization has been checked against the textbook source file
+{lit}`turing.tex`. The current Lean pages cover the book's main theorem shapes:
+Turing-machine semantics, decidability and recognizability, RE/listing/range
+equivalences, grammar-recognizer traces, diagonalization, self-halting and
+pair-halting reductions, concrete machine descriptions, and universal-machine
+row coverage. The places where the textbook says to construct a machine are now
+represented either by concrete descriptions/proofs or by named compiler
+principles in the reusable computability layer.
 
 ## What to Inspect
 
@@ -52,15 +64,16 @@ recognizers, see {module}`FoC.Computability.Program` and
 {module}`FoC.Computability.Grammar`. For encodings, compiler bridges, and
 undecidability, inspect {module}`FoC.Computability.Encoding`,
 {module}`FoC.Computability.Compiler`, {module}`FoC.Computability.FiniteProgram`,
-{module}`FoC.Computability.Coding`, and
+{module}`FoC.Computability.Coding`,
+{module}`FoC.Computability.DiagonalPairMachine`, and
 {module}`FoC.Computability.Undecidable`.
 
 ## Status Notes
 
 The chapter's formal core is covered. The remaining work is not hidden: the
-coverage file identifies concrete finite compiler constructions and the
-universal-machine construction as explicit deferred surfaces. The surrounding
-theorems are therefore stated with named construction hypotheses where a
-textbook proof says "build the machine" but the formal repository has not yet
-completed that finite machine description.
+book pages and reusable APIs identify concrete finite compiler constructions
+and the universal-machine construction as explicit deferred surfaces. The
+surrounding theorems are therefore stated with named construction hypotheses
+where a textbook proof says "build the machine" but the formal repository has
+not yet completed that finite machine description.
 -/

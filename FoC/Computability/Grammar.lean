@@ -1,4 +1,4 @@
-import FoC.Computability.Program
+import FoC.Computability.Compiler
 import FoC.Grammars.GeneralGrammar
 
 set_option doc.verso true
@@ -144,6 +144,55 @@ theorem finiteProductionGenerated_recursivelyEnumerable_of_programCompiler
     RecursivelyEnumerable L :=
   recursivelyEnumerable_of_programCompiler hcompile
     (finiteProductionGenerated_programAcceptable h)
+
+/-!
+# Chapter 5 grammar construction boundaries
+
+The textbook equivalence between unrestricted grammars and recursively
+enumerable languages contains two construction-heavy directions. The recognizer
+direction is proved at the staged-program layer above. The definitions below
+name the remaining concrete compiler surfaces for Boolean machine descriptions
+and the reverse construction from recognizers back to grammars.
+-/
+
+def BooleanGeneralGrammarRecognizerCompilerPrinciple : Prop :=
+  forall {nonterminal : Type}, forall G : GeneralGrammar Bool nonterminal,
+    exists D : MachineDescription,
+      ProgramCompiledByDescription (GeneralGrammarRecognizerProgram G) D
+
+def FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple : Prop :=
+  forall {nonterminal : Type}, forall G : GeneralGrammar Bool nonterminal,
+    GeneralGrammar.HasFiniteProductions G ->
+      exists D : MachineDescription,
+        ProgramCompiledByDescription (GeneralGrammarRecognizerProgram G) D
+
+def GeneralGrammarAcceptabilityEquivalence (L : Language terminal) : Prop :=
+  GeneralGrammar.Generated L <-> RecursivelyEnumerable L
+
+def GeneralGrammarToRecursivelyEnumerablePrinciple
+    (terminal : Type u) : Prop :=
+  forall L : Language terminal,
+    GeneralGrammar.Generated L -> RecursivelyEnumerable L
+
+def RecursivelyEnumerableToGeneralGrammarPrinciple
+    (terminal : Type u) : Prop :=
+  forall L : Language terminal,
+    RecursivelyEnumerable L -> GeneralGrammar.Generated L
+
+def GeneralGrammarREEquivalencePrinciple
+    (terminal : Type u) : Prop :=
+  forall L : Language terminal,
+    GeneralGrammarAcceptabilityEquivalence L
+
+structure BooleanSection52CompilerCloseout where
+  decidableToAcceptable : DecidableToAcceptablePrinciple Bool
+  dovetailDescription : DovetailDescriptionCompilerPrinciple
+  partialUnaryRangeDescription :
+    PartialUnaryRangeDescriptionCompilerPrinciple
+  grammarRecognizerDescription :
+    BooleanGeneralGrammarRecognizerCompilerPrinciple
+  recursivelyEnumerableToGrammar :
+    RecursivelyEnumerableToGeneralGrammarPrinciple Bool
 
 end Computability
 end FoC

@@ -9,10 +9,11 @@ set_option doc.verso true
 This module contains the explicit finite-machine witness for the concrete
 diagonal pair map used in Chapter 5, Section 5.3.
 
-The witness is intentionally classified as non-injective: it works for the
-legacy {name}`FoC.Computability.TuringComputable` interface, whose output
-encoder may collapse different output symbols. A later faithful copy-machine
-proof should target {name}`FoC.Computability.FaithfulTuringComputable`.
+The file keeps two witnesses visible. The legacy marker machine proves the old
+compatibility-level {name}`FoC.Computability.TuringComputable` statement, whose
+output encoder may collapse different output symbols. The faithful copy machine
+proves {name}`FoC.Computability.FaithfulTuringComputable` by preserving the
+concrete pair-code alphabet through injective encodings.
 -/
 
 namespace FoC
@@ -1952,6 +1953,11 @@ theorem faithful_concrete_diagonal_pair_map_computable :
               faithfulDiagonalPairMap_process_computes
                 ([] : Word ConcreteMachineCodeSymbol) (code :: rest)
       · exact faithfulDiagonalPairMap_haltTape_normalized (code :: rest)
+
+theorem concrete_diagonal_pair_map_computable_of_faithful :
+    ConcreteDiagonalPairMapComputable :=
+  faithfulTuringComputable_to_turingComputable
+    faithful_concrete_diagonal_pair_map_computable
 
 end Computability
 end FoC

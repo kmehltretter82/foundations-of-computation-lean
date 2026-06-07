@@ -1596,43 +1596,28 @@ noncomputable def GeneralGrammarStagedRecognizer
   GeneralGrammarRecognizerProgram G
 
 def ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
-  forall {nonterminal : Type}, forall G : GeneralGrammar Bool nonterminal,
-    exists D : MachineDescription,
-      ConcreteProgramCompiledByDescription (GeneralGrammarStagedRecognizer G) D
+  BooleanGeneralGrammarRecognizerCompilerPrinciple
 
 def ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
-  forall {nonterminal : Type}, forall G : GeneralGrammar Bool nonterminal,
-    GeneralGrammar.HasFiniteProductions G ->
-      exists D : MachineDescription,
-        ConcreteProgramCompiledByDescription (GeneralGrammarStagedRecognizer G) D
+  FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple
 
 def GeneralGrammarAcceptabilityEquivalence (L : Language terminal) : Prop :=
-  GeneralGrammar.Generated L <-> RecursivelyEnumerable L
+  Computability.GeneralGrammarAcceptabilityEquivalence L
 
 def GeneralGrammarToRecursivelyEnumerableConstruction
     (terminal : Type u) : Prop :=
-  forall L : Language terminal,
-    GeneralGrammar.Generated L -> RecursivelyEnumerableLanguage L
+  GeneralGrammarToRecursivelyEnumerablePrinciple terminal
 
 def RecursivelyEnumerableToGeneralGrammarConstruction
     (terminal : Type u) : Prop :=
-  forall L : Language terminal,
-    RecursivelyEnumerableLanguage L -> GeneralGrammar.Generated L
+  RecursivelyEnumerableToGeneralGrammarPrinciple terminal
 
-structure ConcreteBooleanSection52CompilerCloseout where
-  decidableToAcceptable : DecidableToAcceptableConstruction Bool
-  dovetailDescription : ConcreteDovetailDescriptionCompilerConstruction
-  partialUnaryRangeDescription :
-    ConcretePartialUnaryRangeDescriptionCompilerConstruction
-  grammarRecognizerDescription :
-    ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction
-  recursivelyEnumerableToGrammar :
-    RecursivelyEnumerableToGeneralGrammarConstruction Bool
+abbrev ConcreteBooleanSection52CompilerCloseout :=
+  BooleanSection52CompilerCloseout
 
 def GeneralGrammarREEquivalenceConstruction
     (terminal : Type u) : Prop :=
-  forall L : Language terminal,
-    GeneralGrammarAcceptabilityEquivalence L
+  GeneralGrammarREEquivalencePrinciple terminal
 
 def FiniteGeneralGrammarGenerated (L : Language terminal) : Prop :=
   GeneralGrammar.FiniteProductionGenerated L

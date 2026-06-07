@@ -1,4 +1,5 @@
 import FoC.Computability.Coding
+import FoC.Computability.Compiler
 import FoC.Computability.DiagonalPairMachine
 import FoC.Computability.Encoding
 
@@ -315,14 +316,13 @@ def ConcreteMachineDecoderUniversalForAcceptableLanguages : Prop :=
 def ConcreteMachineDescriptionAcceptsEncodedInputLanguage
     (D : ConcreteMachineDescription)
     (L : Language ConcreteMachineCodeSymbol) : Prop :=
-  D.WellFormed ∧
-    Language.Equal (ConcreteMachineEncodedInputLanguage D) L
+  Computability.MachineDescriptionAcceptsEncodedInputLanguage D L
+
+def ConcreteEncodedInputProgramAcceptorCompilationConstruction : Prop :=
+  EncodedInputProgramAcceptorCompilationPrinciple
 
 def ConcreteEncodedInputDescriptionCompilerConstruction : Prop :=
-  forall L : Language ConcreteMachineCodeSymbol,
-    RecursivelyEnumerableTuringLanguage L ->
-      exists D : ConcreteMachineDescription,
-        ConcreteMachineDescriptionAcceptsEncodedInputLanguage D L
+  EncodedInputDescriptionCompilerPrinciple
 
 def ConcreteMachineToTuringMachine (D : ConcreteMachineDescription) :
     TuringMachine Bool (Fin (D.stateCount + 1)) :=
@@ -350,9 +350,7 @@ def ConcreteUniversalMachineSpec
   UniversalTuringMachineSpec universal ConcreteMachineCodeAccepts
 
 def ConcreteUniversalRunnerConstruction : Prop :=
-  exists state : Type,
-    exists universal : TuringMachine ConcreteMachineCodeSymbol state,
-      ConcreteUniversalMachineSpec universal
+  CodeUniversalRunnerConstruction
 
 def ConcreteUniversalMachineRowsCoverAcceptableLanguages
     (universal : TuringMachine ConcreteMachineCodeSymbol state) : Prop :=
@@ -751,6 +749,12 @@ theorem concrete_machine_encoded_description_recognizes_input_language
       (ConcreteMachineEncodedInputLanguage D) := by
   intro input
   exact concrete_machine_code_accepts_encode_description_iff D input
+
+theorem concrete_encoded_input_description_compiler_of_program_compiler
+    (hcompile : ConcreteEncodedInputProgramAcceptorCompilationConstruction) :
+    ConcreteEncodedInputDescriptionCompilerConstruction :=
+  Computability.encodedInputDescriptionCompilerPrinciple_of_programCompiler
+    hcompile
 
 theorem concrete_encoded_input_description_compiler_decoder_universal
     (hcompile : ConcreteEncodedInputDescriptionCompilerConstruction) :
@@ -1559,12 +1563,15 @@ theorem exists_concrete_universal_machine_rows_cover_of_constructions
   | intro state hstate =>
       cases hstate with
       | intro universal hspec =>
+          have hspec' : ConcreteUniversalMachineSpec universal := by
+            intro machine input
+            exact hspec machine input
           exact
             Exists.intro state
               (Exists.intro universal
-                (And.intro hspec
+                (And.intro hspec'
                   (concrete_universal_machine_rows_cover_of_encoded_input_description_compiler
-                    hspec hcompile)))
+                    hspec' hcompile)))
 
 /-!
 The section's universal-machine and diagonalization theorems require a concrete
