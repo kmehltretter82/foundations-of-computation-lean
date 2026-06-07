@@ -769,6 +769,52 @@ theorem concrete_finite_dovetail_program_turing_decidable_of_compiler_constructi
       Computability.FiniteDovetailProgram.turingDecidable_of_compilerConstruction
         hcompile htraces
 
+theorem concrete_finite_dovetail_program_exists_of_compiler_construction
+    (hcompile : ConcreteFiniteDovetailCompilerConstruction)
+    (accept reject : ConcreteFiniteAcceptorProgram) :
+    exists P : ConcreteFiniteDovetailProgram,
+      P.accept = accept ∧ P.reject = reject ∧
+        ConcreteFiniteDovetailCompiled P := by
+  cases hcompile accept reject with
+  | intro decider hcompiled =>
+      exact Exists.intro
+        ({ accept := accept, reject := reject, decider := decider } :
+          ConcreteFiniteDovetailProgram)
+        (And.intro rfl (And.intro rfl hcompiled))
+
+theorem concrete_finite_dovetail_program_bool_decidable_by_description_of_compiler_construction
+    (hcompile : ConcreteFiniteDovetailCompilerConstruction)
+    {accept reject : ConcreteFiniteAcceptorProgram}
+    {L : Language Bool}
+    (htraces : LanguageComplementaryAcceptanceTraces
+      (ConcreteFiniteAcceptorTrace accept)
+      (ConcreteFiniteAcceptorTrace reject) L) :
+    ConcreteProgramBoolDecidableByDescription L := by
+  cases hcompile accept reject with
+  | intro decider hcompiled =>
+      simpa [ConcreteFiniteAcceptorTrace]
+        using
+          concrete_finite_dovetail_program_bool_decidable_by_description
+            ({ accept := accept, reject := reject, decider := decider } :
+              ConcreteFiniteDovetailProgram)
+            htraces hcompiled
+
+theorem finite_complementary_traces_recursive_language_of_finite_dovetail_compiler
+    (hcompile : ConcreteFiniteDovetailCompilerConstruction)
+    {L : Language Bool}
+    (h : exists accept reject : ConcreteFiniteAcceptorProgram,
+      LanguageComplementaryAcceptanceTraces
+        (ConcreteFiniteAcceptorTrace accept)
+        (ConcreteFiniteAcceptorTrace reject) L) :
+    RecursiveLanguage L := by
+  cases h with
+  | intro accept haccept =>
+      cases haccept with
+      | intro reject htraces =>
+          exact
+            concrete_finite_dovetail_program_turing_decidable_of_compiler_construction
+              hcompile htraces
+
 /-!
 Stopped deciders supply a concrete source of complementary traces: one trace
 looks for a halted accepting output, while the other looks for a halted
@@ -1185,6 +1231,48 @@ theorem partially_listable_language_iff_partial_unary_function_program_range
       LanguagePartialUnaryFunctionProgramRange L :=
   Computability.partiallyListable_iff_partialUnaryFunctionProgramRange L
 
+theorem partially_listable_language_has_listing_program
+    {L : Language output}
+    (h : LanguagePartiallyListable L) :
+    exists stream : LanguageListingProgram output,
+      LanguageListingProgramLists stream L :=
+  (listing_program_iff_partially_listable_language L).mpr h
+
+theorem listing_program_language_is_partially_listable
+    {stream : LanguageListingProgram output} {L : Language output}
+    (h : LanguageListingProgramLists stream L) :
+    LanguagePartiallyListable L :=
+  (listing_program_iff_partially_listable_language L).mp
+    (Exists.intro stream h)
+
+theorem partially_listable_language_has_partial_unary_range_program
+    {L : Language output}
+    (h : LanguagePartiallyListable L) :
+    exists f : LanguagePartialUnaryRangeProgram output,
+      LanguagePartialUnaryRangeProgramGenerates f L :=
+  (partial_unary_range_program_iff_partial_range_of_unary_function L).mpr
+    (partially_listable_language_range_of_partial_unary_string_function h)
+
+theorem partial_unary_range_program_language_is_partially_listable
+    {f : LanguagePartialUnaryRangeProgram output} {L : Language output}
+    (h : LanguagePartialUnaryRangeProgramGenerates f L) :
+    LanguagePartiallyListable L :=
+  (partially_listable_language_iff_partial_range_of_unary_string_function L).mpr
+    ((partial_unary_range_program_iff_partial_range_of_unary_function L).mp
+      (Exists.intro f h))
+
+theorem partially_listable_language_has_partial_unary_function_program_range
+    {L : Language output}
+    (h : LanguagePartiallyListable L) :
+    LanguagePartialUnaryFunctionProgramRange L :=
+  (partially_listable_language_iff_partial_unary_function_program_range L).mp h
+
+theorem partial_unary_function_program_range_language_is_partially_listable
+    {L : Language output}
+    (h : LanguagePartialUnaryFunctionProgramRange L) :
+    LanguagePartiallyListable L :=
+  (partially_listable_language_iff_partial_unary_function_program_range L).mpr h
+
 /-!
 The compiled-range theorems state what a concrete description must provide to
 serve as an enumerator. The semantic range is already a partial unary range; the
@@ -1224,6 +1312,30 @@ theorem concrete_compiled_partial_unary_function_program_range_has_turing_comput
     ConcretePartialUnaryTuringComputableRange L :=
   Computability.compiledPartialUnaryFunctionProgramRange_turingComputableRange h
 
+theorem concrete_partial_unary_turing_computable_range_is_partially_listable
+    {L : Language Bool}
+    (h : ConcretePartialUnaryTuringComputableRange L) :
+    LanguagePartiallyListable L := by
+  cases h with
+  | intro f hf =>
+      exact partial_unary_string_function_range_is_partially_listable
+        (Exists.intro f hf.right)
+
+theorem concrete_compiled_partial_unary_range_is_partially_listable
+    {L : Language Bool}
+    (h : ConcreteCompiledPartialUnaryRange L) :
+    LanguagePartiallyListable L :=
+  concrete_partial_unary_turing_computable_range_is_partially_listable
+    (concrete_compiled_partial_unary_range_has_turing_computable_range h)
+
+theorem concrete_compiled_partial_unary_function_program_range_is_partially_listable
+    {L : Language Bool}
+    (h : ConcreteCompiledPartialUnaryFunctionProgramRange L) :
+    LanguagePartiallyListable L :=
+  concrete_partial_unary_turing_computable_range_is_partially_listable
+    (concrete_compiled_partial_unary_function_program_range_has_turing_computable_range
+      h)
+
 theorem partial_unary_string_function_range_has_concrete_compiled_range_of_concrete_compiler
     (hcompile : ConcretePartialUnaryRangeDescriptionCompilerConstruction)
     {L : Language Bool}
@@ -1254,6 +1366,29 @@ theorem partially_listable_language_has_concrete_compiled_partial_unary_program_
     ConcreteCompiledPartialUnaryFunctionProgramRange L :=
   Computability.compiledPartialUnaryFunctionProgramRange_of_partiallyListable
     hcompile h
+
+theorem partially_listable_language_iff_concrete_compiled_partial_unary_range_of_concrete_compiler
+    (hcompile : ConcretePartialUnaryRangeDescriptionCompilerConstruction)
+    (L : Language Bool) :
+    LanguagePartiallyListable L <-> ConcreteCompiledPartialUnaryRange L := by
+  constructor
+  · intro h
+    exact
+      partially_listable_language_has_concrete_compiled_partial_unary_range_of_concrete_compiler
+        hcompile h
+  · exact concrete_compiled_partial_unary_range_is_partially_listable
+
+theorem partially_listable_language_iff_concrete_compiled_partial_unary_program_range_of_concrete_compiler
+    (hcompile : ConcretePartialUnaryRangeDescriptionCompilerConstruction)
+    (L : Language Bool) :
+    LanguagePartiallyListable L <->
+      ConcreteCompiledPartialUnaryFunctionProgramRange L := by
+  constructor
+  · intro h
+    exact
+      partially_listable_language_has_concrete_compiled_partial_unary_program_range_of_concrete_compiler
+        hcompile h
+  · exact concrete_compiled_partial_unary_function_program_range_is_partially_listable
 
 /-!
 Finite partial-unary programs make the range story executable. Output
@@ -1335,6 +1470,28 @@ theorem concrete_finite_partial_unary_description_output_range_turing_computable
       (ConcreteFinitePartialUnaryDescriptionOutputRange P) :=
   concrete_compiled_partial_unary_range_has_turing_computable_range
     (concrete_finite_partial_unary_description_output_range_compiled
+      P hD hcomplete hfunctional)
+
+theorem concrete_finite_partial_unary_description_output_range_partially_listable
+    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (hD : P.description.WellFormed)
+    (hcomplete : ConcreteFinitePartialUnaryOutputComplete P)
+    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
+    LanguagePartiallyListable
+      (ConcreteFinitePartialUnaryDescriptionOutputRange P) :=
+  concrete_compiled_partial_unary_range_is_partially_listable
+    (concrete_finite_partial_unary_description_output_range_compiled
+      P hD hcomplete hfunctional)
+
+theorem concrete_finite_partial_unary_description_output_range_has_program_range
+    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (hD : P.description.WellFormed)
+    (hcomplete : ConcreteFinitePartialUnaryOutputComplete P)
+    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
+    LanguagePartialUnaryFunctionProgramRange
+      (ConcreteFinitePartialUnaryDescriptionOutputRange P) :=
+  partially_listable_language_has_partial_unary_function_program_range
+    (concrete_finite_partial_unary_description_output_range_partially_listable
       P hD hcomplete hfunctional)
 
 theorem function_value_in_range (f : Word input -> Word output) (x : Word input) :
@@ -1423,8 +1580,28 @@ def ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
 def GeneralGrammarAcceptabilityEquivalence (L : Language terminal) : Prop :=
   GeneralGrammar.Generated L <-> RecursivelyEnumerable L
 
+def GeneralGrammarToRecursivelyEnumerableConstruction
+    (terminal : Type u) : Prop :=
+  forall L : Language terminal,
+    GeneralGrammar.Generated L -> RecursivelyEnumerableLanguage L
+
+def RecursivelyEnumerableToGeneralGrammarConstruction
+    (terminal : Type u) : Prop :=
+  forall L : Language terminal,
+    RecursivelyEnumerableLanguage L -> GeneralGrammar.Generated L
+
+def GeneralGrammarREEquivalenceConstruction
+    (terminal : Type u) : Prop :=
+  forall L : Language terminal,
+    GeneralGrammarAcceptabilityEquivalence L
+
 def FiniteGeneralGrammarGenerated (L : Language terminal) : Prop :=
   GeneralGrammar.FiniteProductionGenerated L
+
+def FiniteGeneralGrammarToRecursivelyEnumerableConstruction
+    (terminal : Type u) : Prop :=
+  forall L : Language terminal,
+    FiniteGeneralGrammarGenerated L -> RecursivelyEnumerableLanguage L
 
 def GeneralGrammarPairGenerated (L : Language terminal) : Prop :=
   GeneralGrammar.Generated L ∧ GeneralGrammar.Generated (Language.Compl L)
@@ -1504,6 +1681,18 @@ theorem boolean_general_grammar_generated_is_recursively_enumerable_of_concrete_
       hcompile G)
     hEq
 
+theorem boolean_general_grammar_to_recursively_enumerable_construction_of_concrete_grammar_compiler
+    (hcompile : ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction) :
+    GeneralGrammarToRecursivelyEnumerableConstruction Bool := by
+  intro L hgenerated
+  cases hgenerated with
+  | intro nonterminal hnonterminal =>
+      cases hnonterminal with
+      | intro G hEq =>
+          exact
+            boolean_general_grammar_generated_is_recursively_enumerable_of_concrete_grammar_compiler
+              hcompile (nonterminal := nonterminal) G hEq
+
 theorem boolean_finite_general_grammar_generated_is_recursively_enumerable_of_concrete_grammar_compiler
     (hcompile : ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction)
     {L : Language Bool}
@@ -1532,6 +1721,22 @@ theorem boolean_finite_general_grammar_generated_is_recursively_enumerable_of_co
                 boolean_general_grammar_generated_is_recursively_enumerable_of_concrete_description
                   G hD hG.right
 
+theorem boolean_finite_general_grammar_to_recursively_enumerable_construction_of_concrete_grammar_compiler
+    (hcompile : ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction) :
+    FiniteGeneralGrammarToRecursivelyEnumerableConstruction Bool := by
+  intro L hgenerated
+  exact
+    boolean_finite_general_grammar_generated_is_recursively_enumerable_of_concrete_grammar_compiler
+      hcompile hgenerated
+
+theorem boolean_finite_general_grammar_to_recursively_enumerable_construction_of_concrete_finite_grammar_compiler
+    (hcompile : ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction) :
+    FiniteGeneralGrammarToRecursivelyEnumerableConstruction Bool := by
+  intro L hgenerated
+  exact
+    boolean_finite_general_grammar_generated_is_recursively_enumerable_of_concrete_finite_grammar_compiler
+      hcompile hgenerated
+
 theorem finite_general_grammar_generated_language_is_program_acceptable
     {L : Language terminal}
     (h : FiniteGeneralGrammarGenerated L) :
@@ -1553,6 +1758,14 @@ theorem general_grammar_generated_is_recursively_enumerable_of_staged_program_co
   Computability.generalGrammar_generated_recursivelyEnumerable_of_programCompiler
     hcompile h
 
+theorem general_grammar_to_recursively_enumerable_construction_of_staged_program_compiler
+    (hcompile : StagedAcceptorCompilationConstruction terminal) :
+    GeneralGrammarToRecursivelyEnumerableConstruction terminal := by
+  intro L hgenerated
+  exact
+    general_grammar_generated_is_recursively_enumerable_of_staged_program_compiler
+      hcompile hgenerated
+
 theorem finite_general_grammar_generated_language_is_recursively_enumerable_of_staged_program_compiler
     (hcompile : StagedAcceptorCompilationConstruction terminal)
     {L : Language terminal}
@@ -1560,6 +1773,31 @@ theorem finite_general_grammar_generated_language_is_recursively_enumerable_of_s
     RecursivelyEnumerableLanguage L :=
   Computability.finiteProductionGenerated_recursivelyEnumerable_of_programCompiler
     hcompile h
+
+theorem finite_general_grammar_to_recursively_enumerable_construction_of_staged_program_compiler
+    (hcompile : StagedAcceptorCompilationConstruction terminal) :
+    FiniteGeneralGrammarToRecursivelyEnumerableConstruction terminal := by
+  intro L hgenerated
+  exact
+    finite_general_grammar_generated_language_is_recursively_enumerable_of_staged_program_compiler
+      hcompile hgenerated
+
+theorem general_grammar_acceptability_equivalence_of_constructions
+    (hto : GeneralGrammarToRecursivelyEnumerableConstruction terminal)
+    (hfrom : RecursivelyEnumerableToGeneralGrammarConstruction terminal)
+    (L : Language terminal) :
+    GeneralGrammarAcceptabilityEquivalence L := by
+  constructor
+  · exact hto L
+  · exact hfrom L
+
+theorem general_grammar_re_equivalence_construction_of_constructions
+    (hto : GeneralGrammarToRecursivelyEnumerableConstruction terminal)
+    (hfrom : RecursivelyEnumerableToGeneralGrammarConstruction terminal) :
+    GeneralGrammarREEquivalenceConstruction terminal := by
+  intro L
+  exact general_grammar_acceptability_equivalence_of_constructions
+    hto hfrom L
 
 /-!
 The last equivalence is stated in terms of a grammar for the language and a
@@ -1598,6 +1836,45 @@ theorem recursive_language_iff_general_grammar_pair_of_constructions
     (recursive_iff_re_co_re_construction_of_principles haccept hdovetail)
     (hgrammar L)
     (hgrammar (Language.Compl L))
+
+theorem recursive_language_iff_general_grammar_pair_of_grammar_constructions
+    (haccept : DecidableToAcceptableConstruction terminal)
+    (hdovetail : DovetailingDecidableConstruction terminal)
+    (hto : GeneralGrammarToRecursivelyEnumerableConstruction terminal)
+    (hfrom : RecursivelyEnumerableToGeneralGrammarConstruction terminal)
+    (L : Language terminal) :
+    RecursiveLanguage L <-> GeneralGrammarPairGenerated L :=
+  recursive_language_iff_general_grammar_pair_of_constructions
+    haccept hdovetail
+    (general_grammar_re_equivalence_construction_of_constructions
+      hto hfrom)
+    L
+
+theorem recursive_language_iff_general_grammar_pair_of_staged_program_compiler
+    (haccept : DecidableToAcceptableConstruction terminal)
+    (hdovetail : DovetailingDecidableConstruction terminal)
+    (hcompile : StagedAcceptorCompilationConstruction terminal)
+    (hfrom : RecursivelyEnumerableToGeneralGrammarConstruction terminal)
+    (L : Language terminal) :
+    RecursiveLanguage L <-> GeneralGrammarPairGenerated L :=
+  recursive_language_iff_general_grammar_pair_of_grammar_constructions
+    haccept hdovetail
+    (general_grammar_to_recursively_enumerable_construction_of_staged_program_compiler
+      hcompile)
+    hfrom L
+
+theorem boolean_recursive_language_iff_general_grammar_pair_of_concrete_grammar_compiler
+    (haccept : DecidableToAcceptableConstruction Bool)
+    (hdovetail : DovetailingDecidableConstruction Bool)
+    (hcompile : ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction)
+    (hfrom : RecursivelyEnumerableToGeneralGrammarConstruction Bool)
+    (L : Language Bool) :
+    RecursiveLanguage L <-> GeneralGrammarPairGenerated L :=
+  recursive_language_iff_general_grammar_pair_of_grammar_constructions
+    haccept hdovetail
+    (boolean_general_grammar_to_recursively_enumerable_construction_of_concrete_grammar_compiler
+      hcompile)
+    hfrom L
 
 /-!
 The theorem equating general grammars with recursively enumerable languages is

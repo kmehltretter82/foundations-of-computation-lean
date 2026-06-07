@@ -746,6 +746,72 @@ theorem concrete_machine_diagonal_pair_preimage_pair_halting_equal_self_halting 
   concrete_diagonal_pair_preimage_pair_halting_equal_self_halting
     (haltsOnCodeInput := ConcreteMachineCodeAccepts)
 
+theorem diagonal_pair_map_mem_pair_halting_iff_self_halting
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    (hinj : TuringPairEncodingInjective encodePair)
+    {haltsOnCodeInput : Word code -> Word code -> Prop}
+    (machine : Word code) :
+    (TuringDiagonalPairMap encodePair machine) ∈
+        TuringPairHaltingProblem encodePair haltsOnCodeInput <->
+      machine ∈ TuringSelfHaltingLanguage haltsOnCodeInput := by
+  change machine ∈
+      TuringWordPreimageLanguage
+        (TuringDiagonalPairMap encodePair)
+        (TuringPairHaltingProblem encodePair haltsOnCodeInput) <->
+    machine ∈ TuringSelfHaltingLanguage haltsOnCodeInput
+  exact diagonal_pair_preimage_pair_halting_equal_self_halting
+    (encodePair := encodePair)
+    (haltsOnCodeInput := haltsOnCodeInput)
+    hinj
+    machine
+
+theorem concrete_diagonal_pair_map_mem_pair_halting_iff_self_halting
+    (machine : Word ConcreteMachineCodeSymbol) :
+    (ConcreteDiagonalPairMap machine) ∈ ConcreteMachinePairHaltingProblem <->
+      machine ∈ ConcreteMachineSelfHaltingLanguage := by
+  change machine ∈ ConcreteMachineDiagonalPairPreimageLanguage <->
+    machine ∈ ConcreteMachineSelfHaltingLanguage
+  exact
+    concrete_machine_diagonal_pair_preimage_pair_halting_equal_self_halting
+      machine
+
+theorem diagonal_pair_preimage_recursive_iff_self_halting_recursive
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    (hinj : TuringPairEncodingInjective encodePair)
+    {haltsOnCodeInput : Word code -> Word code -> Prop} :
+    RecursiveTuringLanguage
+        (TuringWordPreimageLanguage
+          (TuringDiagonalPairMap encodePair)
+          (TuringPairHaltingProblem encodePair haltsOnCodeInput)) <->
+      RecursiveTuringLanguage
+        (TuringSelfHaltingLanguage haltsOnCodeInput) := by
+  constructor
+  · intro h
+    exact Computability.turing_decidable_of_equal h
+      (diagonal_pair_preimage_pair_halting_equal_self_halting
+        (encodePair := encodePair)
+        (haltsOnCodeInput := haltsOnCodeInput)
+        hinj)
+  · intro h
+    exact Computability.turing_decidable_of_equal h
+      (Language.equal_symm
+        (diagonal_pair_preimage_pair_halting_equal_self_halting
+          (encodePair := encodePair)
+          (haltsOnCodeInput := haltsOnCodeInput)
+          hinj))
+
+theorem concrete_machine_diagonal_pair_preimage_recursive_iff_self_halting_recursive :
+    RecursiveTuringLanguage ConcreteMachineDiagonalPairPreimageLanguage <->
+      RecursiveTuringLanguage ConcreteMachineSelfHaltingLanguage := by
+  constructor
+  · intro h
+    exact Computability.turing_decidable_of_equal h
+      concrete_machine_diagonal_pair_preimage_pair_halting_equal_self_halting
+  · intro h
+    exact Computability.turing_decidable_of_equal h
+      (Language.equal_symm
+        concrete_machine_diagonal_pair_preimage_pair_halting_equal_self_halting)
+
 theorem diagonal_pair_decidable_preimage_construction_of_preimage
     {encodePair : Word code -> Word code -> Word pairSymbol}
     (hinj : TuringPairEncodingInjective encodePair)
@@ -783,6 +849,41 @@ theorem diagonal_pair_decidable_preimage_construction_of_computable_map
   Computability.diagonalPairDecidablePreimagePrinciple_of_computableMapPrinciple
     hinj hpreimage hcomputable
 
+theorem diagonal_pair_decidable_reduction_self_halting_to_pair_halting
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    {haltsOnCodeInput : Word code -> Word code -> Prop}
+    (hdiag : DiagonalPairDecidablePreimageConstruction encodePair) :
+    TuringDecidableReduction
+      (TuringSelfHaltingLanguage haltsOnCodeInput)
+      (TuringPairHaltingProblem encodePair haltsOnCodeInput) :=
+  hdiag haltsOnCodeInput
+
+theorem diagonal_pair_decidable_reduction_self_halting_to_pair_halting_of_preimage
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    (hinj : TuringPairEncodingInjective encodePair)
+    (hpreimage :
+      TuringDecidablePreimageConstruction (TuringDiagonalPairMap encodePair))
+    {haltsOnCodeInput : Word code -> Word code -> Prop} :
+    TuringDecidableReduction
+      (TuringSelfHaltingLanguage haltsOnCodeInput)
+      (TuringPairHaltingProblem encodePair haltsOnCodeInput) :=
+  diagonal_pair_decidable_reduction_self_halting_to_pair_halting
+    (diagonal_pair_decidable_preimage_construction_of_preimage
+      hinj hpreimage)
+
+theorem diagonal_pair_decidable_reduction_self_halting_to_pair_halting_of_computable_map
+    {encodePair : Word code -> Word code -> Word pairSymbol}
+    (hinj : TuringPairEncodingInjective encodePair)
+    (hpreimage : ComputableMapDecidablePreimageConstruction code pairSymbol)
+    (hcomputable : TuringComputableWordMap (TuringDiagonalPairMap encodePair))
+    {haltsOnCodeInput : Word code -> Word code -> Prop} :
+    TuringDecidableReduction
+      (TuringSelfHaltingLanguage haltsOnCodeInput)
+      (TuringPairHaltingProblem encodePair haltsOnCodeInput) :=
+  diagonal_pair_decidable_reduction_self_halting_to_pair_halting
+    (diagonal_pair_decidable_preimage_construction_of_computable_map
+      hinj hpreimage hcomputable)
+
 theorem concrete_diagonal_pair_decidable_preimage_construction_of_computable_map
     (hpreimage :
       ComputableMapDecidablePreimageConstruction
@@ -801,6 +902,48 @@ theorem concrete_diagonal_pair_decidable_preimage_construction_of_computable_map
     using
       PairCodeSymbol.diagonalPairDecidablePreimagePrinciple_of_concrete_computable_map
         (code := ConcreteMachineCodeSymbol) hpreimage hcomputable
+
+theorem concrete_machine_self_halting_reduces_to_pair_halting_of_preimage
+    (hpreimage :
+      TuringDecidablePreimageConstruction
+        (ConcreteDiagonalPairMap :
+          Word ConcreteMachineCodeSymbol ->
+            Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol))) :
+    TuringDecidableReduction
+      ConcreteMachineSelfHaltingLanguage
+      ConcreteMachinePairHaltingProblem := by
+  simpa [ConcreteMachineSelfHaltingLanguage, ConcreteMachinePairHaltingProblem]
+    using
+      diagonal_pair_decidable_reduction_self_halting_to_pair_halting
+        (encodePair :=
+          (ConcretePairEncoding :
+            Word ConcreteMachineCodeSymbol ->
+              Word ConcreteMachineCodeSymbol ->
+                Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol)))
+        (haltsOnCodeInput := ConcreteMachineCodeAccepts)
+        (concrete_diagonal_pair_decidable_preimage_construction_of_preimage
+          (code := ConcreteMachineCodeSymbol) hpreimage)
+
+theorem concrete_machine_self_halting_reduces_to_pair_halting_of_computable_map
+    (hpreimage :
+      ComputableMapDecidablePreimageConstruction
+        ConcreteMachineCodeSymbol
+        (ConcretePairCodeSymbol ConcreteMachineCodeSymbol))
+    (hcomputable : ConcreteDiagonalPairMapComputable) :
+    TuringDecidableReduction
+      ConcreteMachineSelfHaltingLanguage
+      ConcreteMachinePairHaltingProblem := by
+  simpa [ConcreteMachineSelfHaltingLanguage, ConcreteMachinePairHaltingProblem]
+    using
+      diagonal_pair_decidable_reduction_self_halting_to_pair_halting
+        (encodePair :=
+          (ConcretePairEncoding :
+            Word ConcreteMachineCodeSymbol ->
+              Word ConcreteMachineCodeSymbol ->
+                Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol)))
+        (haltsOnCodeInput := ConcreteMachineCodeAccepts)
+        (concrete_diagonal_pair_decidable_preimage_construction_of_computable_map
+          hpreimage hcomputable)
 
 theorem halting_problem_of_pointwise_iff
     {halts1 halts2 : Word code -> Word code -> Prop}
@@ -971,6 +1114,20 @@ theorem concrete_machine_pair_halting_undecidable_if_self_halting_undecidable_of
         concrete_pair_encoding_injective
         hpreimage
         hself
+
+theorem concrete_machine_pair_halting_undecidable_if_self_halting_undecidable_of_computable_map
+    (hpreimage :
+      ComputableMapDecidablePreimageConstruction
+        ConcreteMachineCodeSymbol
+        (ConcretePairCodeSymbol ConcreteMachineCodeSymbol))
+    (hcomputable : ConcreteDiagonalPairMapComputable)
+    (hself :
+      UndecidableTuringLanguage ConcreteMachineSelfHaltingLanguage) :
+    UndecidableTuringLanguage ConcreteMachinePairHaltingProblem :=
+  undecidable_of_decidable_reduction
+    (concrete_machine_self_halting_reduces_to_pair_halting_of_computable_map
+      hpreimage hcomputable)
+    hself
 
 theorem concrete_machine_pair_halting_undecidable_if_decoder_universal_of_preimage
     (haccept :

@@ -465,6 +465,38 @@ theorem stopped_decider_reject_output_sound
   Computability.decider_reject_output_sound_of_stopped
     hstop hzeroOne h hout
 
+theorem stopped_decider_accept_output_iff
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (hstop : MachineHaltingTransitionsDisabled M)
+    (hzeroOne : zero ≠ one)
+    (h : DecidesLanguage M encodeInput zero one L)
+    (w : Word input) :
+    TuringMachine.HaltsWithOutput M (EncodeWord encodeInput w) [one] <->
+      w ∈ L := by
+  constructor
+  · intro hout
+    exact stopped_decider_accept_output_sound hstop hzeroOne h hout
+  · intro hw
+    exact (h w).left hw
+
+theorem stopped_decider_reject_output_iff
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (hstop : MachineHaltingTransitionsDisabled M)
+    (hzeroOne : zero ≠ one)
+    (h : DecidesLanguage M encodeInput zero one L)
+    (w : Word input) :
+    TuringMachine.HaltsWithOutput M (EncodeWord encodeInput w) [zero] <->
+      ¬ w ∈ L := by
+  constructor
+  · intro hout
+    exact stopped_decider_reject_output_sound hstop hzeroOne h hout
+  · intro hw
+    exact (h w).right hw
+
 theorem stopped_decider_accepts_by_one_output
     {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
@@ -480,6 +512,17 @@ theorem stopped_decider_rejects_by_zero_output
     (h : StoppedDecidesLanguage M encodeInput zero one L) :
     MachineRejectsByZeroOutput M encodeInput zero L :=
   Computability.stoppedDecidesLanguage_rejectsByZeroOutput h
+
+theorem stopped_turing_decidable_language_has_output_classifiers
+    {input : Type} {L : Language input}
+    (h : StoppedTuringDecidable L) :
+    exists symbol : Type, exists state : Type,
+      exists M : TuringMachine symbol state,
+        exists encodeInput : input -> symbol,
+          exists zero : symbol, exists one : symbol,
+            MachineAcceptsByOneOutput M encodeInput one L ∧
+              MachineRejectsByZeroOutput M encodeInput zero L :=
+  Computability.stoppedTuringDecidable_has_output_classifiers h
 
 /-!
 The next theorem is the concrete transition-level construction behind the
