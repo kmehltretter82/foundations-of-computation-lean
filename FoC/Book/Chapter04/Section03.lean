@@ -30,10 +30,11 @@ The LL(1), LR(1), and shift-reduce structures record the table shapes used in
 the book. They are lightweight formal objects here: enough to state soundness
 of table entries and to connect parsing vocabulary to grammar generation.
 
-The formalization does not implement a full parser generator. It records the
-objects and soundness obligations needed to state the book's parsing concepts
-precisely, together with a fuel-bounded executable LL(1) runner whose
-successful runs return parse trees.
+The formalization does not yet implement the full FIRST/FOLLOW parser-generator
+pipeline. It records the objects and soundness obligations needed to state the
+book's parsing concepts precisely, together with a fuel-bounded executable
+LL(1) runner whose successful runs return parse trees and a certified finite
+table generator from computed lookahead cells.
 -/
 
 structure LL1Parser (G : CFG terminal nonterminal) where
@@ -64,9 +65,10 @@ semantic: it records the productions licensed by a table entry.  The following
 fuel-bounded runner is operational.  It consumes a word from left to right and,
 on success, returns a parse tree whose frontier is exactly the consumed input.
 
-This is the first layer of a parser-generator formalization.  Later table
-generation can compute the table from FIRST/FOLLOW data; the runner below is
-already executable once a table is supplied.
+This is the first layer of a parser-generator formalization.  The finite table
+generator below can compute executable parser code once lookahead cells are
+supplied; the remaining parser-generator work is the FIRST/FOLLOW computation
+and completeness proof that supplies those cells automatically.
 -/
 
 def LL1Lookahead : Word terminal -> Option terminal
@@ -321,6 +323,269 @@ theorem run_sound [DecidableEq terminal] [DecidableEq nonterminal]
     (h : code.run hSound fuel w = some tree) :
     w ∈ CFG.GeneratedLanguage G :=
   LL1Parser.run_sound (code.toParser hSound) fuel w tree h
+
+end LL1ParserCode
+
+/-!
+## Certified Finite Table Generation
+
+A full textbook parser generator has two
+parts: compute lookahead cells from FIRST/FOLLOW data, then turn those cells
+into an executable table.  The next definitions formalize the second part.
+Given a finite list of productions, each carrying its grammar-production proof,
+and a computable lookahead list for each production, the generator builds
+ordinary {name}`LL1ParserCode`.  The lookup theorem below is the key safety
+property: every generated table hit is still a real grammar production.
+-/
+
+structure LL1ProductionEntry (G : CFG terminal nonterminal) where
+  lhs : nonterminal
+  rhs : SententialForm terminal nonterminal
+  production : G.produces lhs rhs
+
+namespace LL1ProductionEntry
+
+def toTableEntry {G : CFG terminal nonterminal}
+    (entry : LL1ProductionEntry G) (lookahead : Option terminal) :
+    LL1TableEntry terminal nonterminal where
+  lhs := entry.lhs
+  lookahead := lookahead
+  rhs := entry.rhs
+
+def tableEntriesFor {G : CFG terminal nonterminal}
+    (entry : LL1ProductionEntry G) :
+    List (Option terminal) -> List (LL1TableEntry terminal nonterminal)
+  | [] => []
+  | lookahead :: rest =>
+      entry.toTableEntry lookahead :: tableEntriesFor entry rest
+
+theorem tableEntriesFor_sound {G : CFG terminal nonterminal}
+    (entry : LL1ProductionEntry G)
+    (lookaheads : List (Option terminal))
+    {tableEntry : LL1TableEntry terminal nonterminal}
+    (hmem : tableEntry ∈ tableEntriesFor entry lookaheads) :
+    G.produces tableEntry.lhs tableEntry.rhs := by
+  induction lookaheads with
+  | nil =>
+      simp [tableEntriesFor] at hmem
+  | cons lookahead rest ih =>
+      simp [tableEntriesFor] at hmem
+      cases hmem with
+      | inl hhead =>
+          cases hhead
+          exact entry.production
+      | inr htail =>
+          exact ih htail
+
+end LL1ProductionEntry
+
+namespace LL1TableEntry
+
+def conflictsWith [DecidableEq terminal] [DecidableEq nonterminal]
+    (left right : LL1TableEntry terminal nonterminal) : Bool :=
+  if left.lhs = right.lhs then
+    if left.lookahead = right.lookahead then
+      if left.rhs = right.rhs then false else true
+    else false
+  else false
+
+theorem conflictsWith_sound [DecidableEq terminal] [DecidableEq nonterminal]
+    {left right : LL1TableEntry terminal nonterminal}
+    (h : conflictsWith left right = true) :
+    left.lhs = right.lhs ∧
+      left.lookahead = right.lookahead ∧
+      left.rhs ≠ right.rhs := by
+  unfold conflictsWith at h
+  by_cases hlhs : left.lhs = right.lhs
+  · simp [hlhs] at h
+    by_cases hlook : left.lookahead = right.lookahead
+    · simp [hlook] at h
+      by_cases hrhs : left.rhs = right.rhs
+      · simp [hrhs] at h
+      · simp [hrhs] at h
+        exact ⟨hlhs, hlook, hrhs⟩
+    · simp [hlook] at h
+  · simp [hlhs] at h
+
+end LL1TableEntry
+
+namespace LL1ParserCode
+
+def generateEntries {G : CFG terminal nonterminal}
+    (lookaheads : LL1ProductionEntry G -> List (Option terminal)) :
+    List (LL1ProductionEntry G) -> List (LL1TableEntry terminal nonterminal)
+  | [] => []
+  | production :: rest =>
+      LL1ProductionEntry.tableEntriesFor production (lookaheads production) ++
+        generateEntries lookaheads rest
+
+def generated {G : CFG terminal nonterminal}
+    (productions : List (LL1ProductionEntry G))
+    (lookaheads : LL1ProductionEntry G -> List (Option terminal)) :
+    LL1ParserCode terminal nonterminal where
+  entries := generateEntries lookaheads productions
+
+theorem generateEntries_sound {G : CFG terminal nonterminal}
+    (lookaheads : LL1ProductionEntry G -> List (Option terminal))
+    (productions : List (LL1ProductionEntry G))
+    {entry : LL1TableEntry terminal nonterminal}
+    (hmem : entry ∈ generateEntries lookaheads productions) :
+    G.produces entry.lhs entry.rhs := by
+  induction productions with
+  | nil =>
+      simp [generateEntries] at hmem
+  | cons production rest ih =>
+      simp [generateEntries] at hmem
+      cases hmem with
+      | inl hhead =>
+          exact LL1ProductionEntry.tableEntriesFor_sound production
+            (lookaheads production) hhead
+      | inr htail =>
+          exact ih htail
+
+theorem lookupFrom_mem [DecidableEq terminal] [DecidableEq nonterminal]
+    {entries : List (LL1TableEntry terminal nonterminal)}
+    {A : nonterminal} {lookahead : Option terminal}
+    {rhs : SententialForm terminal nonterminal}
+    (hlookup : lookupFrom entries A lookahead = some rhs) :
+    exists entry,
+      entry ∈ entries ∧
+      entry.lhs = A ∧
+      entry.lookahead = lookahead ∧
+      entry.rhs = rhs := by
+  induction entries with
+  | nil =>
+      simp [lookupFrom] at hlookup
+  | cons entry rest ih =>
+      by_cases hlhs : entry.lhs = A
+      · by_cases hlook : entry.lookahead = lookahead
+        · simp [lookupFrom, hlhs, hlook] at hlookup
+          cases hlookup
+          exact ⟨entry, by simp, hlhs, hlook, rfl⟩
+        · simp [lookupFrom, hlhs, hlook] at hlookup
+          rcases ih hlookup with ⟨found, hmem, hfoundLhs, hfoundLook, hfoundRhs⟩
+          exact ⟨found, by simp [hmem], hfoundLhs, hfoundLook, hfoundRhs⟩
+      · simp [lookupFrom, hlhs] at hlookup
+        rcases ih hlookup with ⟨found, hmem, hfoundLhs, hfoundLook, hfoundRhs⟩
+        exact ⟨found, by simp [hmem], hfoundLhs, hfoundLook, hfoundRhs⟩
+
+theorem generated_lookup_sound [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    (productions : List (LL1ProductionEntry G))
+    (lookaheads : LL1ProductionEntry G -> List (Option terminal)) :
+    forall A lookahead rhs,
+      (generated productions lookaheads).lookup A lookahead = some rhs ->
+        G.produces A rhs := by
+  intro A lookahead rhs hlookup
+  rcases lookupFrom_mem hlookup with
+    ⟨entry, hmem, hlhs, _hlook, hrhs⟩
+  have hprod := generateEntries_sound lookaheads productions hmem
+  cases hlhs
+  cases hrhs
+  exact hprod
+
+def generatedParser [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    (productions : List (LL1ProductionEntry G))
+    (lookaheads : LL1ProductionEntry G -> List (Option terminal)) :
+    LL1Parser G :=
+  (generated productions lookaheads).toParser
+    (generated_lookup_sound productions lookaheads)
+
+def generatedRun [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    (productions : List (LL1ProductionEntry G))
+    (lookaheads : LL1ProductionEntry G -> List (Option terminal))
+    (fuel : Nat) (w : Word terminal) :
+    Option (CFG.ParseTree G (Symbol.nonterminal G.start)) :=
+  LL1Parser.run (generatedParser productions lookaheads) fuel w
+
+theorem generatedRun_sound [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    (productions : List (LL1ProductionEntry G))
+    (lookaheads : LL1ProductionEntry G -> List (Option terminal))
+    (fuel : Nat) (w : Word terminal)
+    (tree : CFG.ParseTree G (Symbol.nonterminal G.start))
+    (h : generatedRun productions lookaheads fuel w = some tree) :
+    w ∈ CFG.GeneratedLanguage G :=
+  LL1Parser.run_sound (generatedParser productions lookaheads) fuel w tree h
+
+def entryConflictsWithAny [DecidableEq terminal] [DecidableEq nonterminal]
+    (entry : LL1TableEntry terminal nonterminal) :
+    List (LL1TableEntry terminal nonterminal) -> Bool
+  | [] => false
+  | other :: rest =>
+      LL1TableEntry.conflictsWith entry other ||
+        entryConflictsWithAny entry rest
+
+def hasConflictFrom [DecidableEq terminal] [DecidableEq nonterminal] :
+    List (LL1TableEntry terminal nonterminal) -> Bool
+  | [] => false
+  | entry :: rest =>
+      entryConflictsWithAny entry rest || hasConflictFrom rest
+
+def hasConflict [DecidableEq terminal] [DecidableEq nonterminal]
+    (code : LL1ParserCode terminal nonterminal) : Bool :=
+  hasConflictFrom code.entries
+
+def ConflictFree (code : LL1ParserCode terminal nonterminal) : Prop :=
+  forall left right,
+    left ∈ code.entries -> right ∈ code.entries ->
+      left.lhs = right.lhs -> left.lookahead = right.lookahead ->
+        left.rhs = right.rhs
+
+theorem entryConflictsWithAny_sound
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    (entry : LL1TableEntry terminal nonterminal)
+    (entries : List (LL1TableEntry terminal nonterminal))
+    (h : entryConflictsWithAny entry entries = true) :
+    exists other,
+      other ∈ entries ∧ LL1TableEntry.conflictsWith entry other = true := by
+  induction entries with
+  | nil =>
+      simp [entryConflictsWithAny] at h
+  | cons other rest ih =>
+      simp [entryConflictsWithAny] at h
+      cases h with
+      | inl hhead =>
+          exact ⟨other, by simp, hhead⟩
+      | inr htail =>
+          rcases ih htail with ⟨found, hmem, hconflict⟩
+          exact ⟨found, by simp [hmem], hconflict⟩
+
+theorem hasConflictFrom_sound
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    (entries : List (LL1TableEntry terminal nonterminal))
+    (h : hasConflictFrom entries = true) :
+    exists left right,
+      left ∈ entries ∧ right ∈ entries ∧
+        LL1TableEntry.conflictsWith left right = true := by
+  induction entries with
+  | nil =>
+      simp [hasConflictFrom] at h
+  | cons entry rest ih =>
+      simp [hasConflictFrom] at h
+      cases h with
+      | inl hhead =>
+          rcases entryConflictsWithAny_sound entry rest hhead with
+            ⟨right, hright, hconflict⟩
+          exact ⟨entry, right, by simp, by simp [hright], hconflict⟩
+      | inr htail =>
+          rcases ih htail with ⟨left, right, hleft, hright, hconflict⟩
+          exact ⟨left, right, by simp [hleft], by simp [hright], hconflict⟩
+
+theorem hasConflict_sound [DecidableEq terminal] [DecidableEq nonterminal]
+    (code : LL1ParserCode terminal nonterminal)
+    (h : hasConflict code = true) :
+    exists left right,
+      left ∈ code.entries ∧ right ∈ code.entries ∧
+        left.lhs = right.lhs ∧
+        left.lookahead = right.lookahead ∧
+        left.rhs ≠ right.rhs := by
+  rcases hasConflictFrom_sound code.entries h with
+    ⟨left, right, hleft, hright, hconflict⟩
+  have hdata := LL1TableEntry.conflictsWith_sound hconflict
+  exact ⟨left, right, hleft, hright, hdata⟩
 
 end LL1ParserCode
 
