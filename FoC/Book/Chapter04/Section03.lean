@@ -30,11 +30,11 @@ The LL(1), LR(1), and shift-reduce structures record the table shapes used in
 the book. They are lightweight formal objects here: enough to state soundness
 of table entries and to connect parsing vocabulary to grammar generation.
 
-The formalization does not yet implement the full FIRST/FOLLOW parser-generator
-pipeline. It records the objects and soundness obligations needed to state the
-book's parsing concepts precisely, together with a fuel-bounded executable
-LL(1) runner whose successful runs return parse trees and a certified finite
-table generator from computed lookahead cells.
+The formalization records the objects and soundness obligations needed to state
+the book's parsing concepts precisely, together with a fuel-bounded executable
+LL(1) runner whose successful runs return parse trees, a certified finite table
+generator, executable conflict detection, and a fixed-point {lit}`FIRST`/
+{lit}`FOLLOW` generator that automatically supplies lookahead cells.
 -/
 
 structure LL1Parser (G : CFG terminal nonterminal) where
@@ -65,10 +65,10 @@ semantic: it records the productions licensed by a table entry.  The following
 fuel-bounded runner is operational.  It consumes a word from left to right and,
 on success, returns a parse tree whose frontier is exactly the consumed input.
 
-This is the first layer of a parser-generator formalization.  The finite table
-generator below can compute executable parser code once lookahead cells are
-supplied; the remaining parser-generator work is the FIRST/FOLLOW computation
-and completeness proof that supplies those cells automatically.
+This is the operational parser layer.  The finite table generator below turns
+lookahead cells into executable parser code, and the fixed-point
+{lit}`FIRST`/{lit}`FOLLOW` generator later in the file supplies those cells
+automatically.
 -/
 
 def LL1Lookahead : Word terminal -> Option terminal
@@ -587,7 +587,459 @@ theorem hasConflict_sound [DecidableEq terminal] [DecidableEq nonterminal]
   have hdata := LL1TableEntry.conflictsWith_sound hconflict
   exact ⟨left, right, hleft, hright, hdata⟩
 
+theorem conflictsWith_false_same_keys
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {left right : LL1TableEntry terminal nonterminal}
+    (h : LL1TableEntry.conflictsWith left right = false)
+    (hlhs : left.lhs = right.lhs)
+    (hlook : left.lookahead = right.lookahead) :
+    left.rhs = right.rhs := by
+  unfold LL1TableEntry.conflictsWith at h
+  simp [hlhs, hlook] at h
+  by_cases hrhs : left.rhs = right.rhs
+  · exact hrhs
+  · simp [hrhs] at h
+
+theorem entryConflictsWithAny_false_same_keys
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    (entry : LL1TableEntry terminal nonterminal)
+    (entries : List (LL1TableEntry terminal nonterminal))
+    (h : entryConflictsWithAny entry entries = false)
+    {other : LL1TableEntry terminal nonterminal}
+    (hmem : other ∈ entries)
+    (hlhs : entry.lhs = other.lhs)
+    (hlook : entry.lookahead = other.lookahead) :
+    entry.rhs = other.rhs := by
+  induction entries with
+  | nil =>
+      cases hmem
+  | cons head rest ih =>
+      simp [entryConflictsWithAny] at h
+      rcases h with ⟨hhead, hrest⟩
+      cases hmem with
+      | head =>
+          exact conflictsWith_false_same_keys hhead hlhs hlook
+      | tail _ htail =>
+          exact ih hrest htail
+
+theorem hasConflictFrom_false_conflictFree
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    (entries : List (LL1TableEntry terminal nonterminal))
+    (h : hasConflictFrom entries = false) :
+    forall left right,
+      left ∈ entries -> right ∈ entries ->
+        left.lhs = right.lhs -> left.lookahead = right.lookahead ->
+          left.rhs = right.rhs := by
+  induction entries with
+  | nil =>
+      intro left right hleft
+      cases hleft
+  | cons head rest ih =>
+      simp [hasConflictFrom] at h
+      rcases h with ⟨hhead, htail⟩
+      intro left right hleft hright hlhs hlook
+      cases hleft with
+      | head =>
+          cases hright with
+          | head =>
+              rfl
+          | tail _ hrightTail =>
+              exact entryConflictsWithAny_false_same_keys
+                head rest hhead hrightTail hlhs hlook
+      | tail _ hleftTail =>
+          cases hright with
+          | head =>
+              exact (entryConflictsWithAny_false_same_keys
+                head rest hhead hleftTail hlhs.symm hlook.symm).symm
+          | tail _ hrightTail =>
+              exact ih htail left right hleftTail hrightTail hlhs hlook
+
+theorem hasConflict_false_conflictFree
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    (code : LL1ParserCode terminal nonterminal)
+    (h : hasConflict code = false) :
+    ConflictFree code :=
+  hasConflictFrom_false_conflictFree code.entries h
+
+theorem tableEntriesFor_mem {G : CFG terminal nonterminal}
+    (entry : LL1ProductionEntry G)
+    {lookahead : Option terminal}
+    {lookaheads : List (Option terminal)}
+    (hlook : lookahead ∈ lookaheads) :
+    entry.toTableEntry lookahead ∈
+      LL1ProductionEntry.tableEntriesFor entry lookaheads := by
+  induction lookaheads with
+  | nil =>
+      cases hlook
+  | cons head rest ih =>
+      cases hlook with
+      | head =>
+          simp [LL1ProductionEntry.tableEntriesFor]
+      | tail _ htail =>
+          simp [LL1ProductionEntry.tableEntriesFor, ih htail]
+
+theorem generateEntries_mem {G : CFG terminal nonterminal}
+    (lookaheads : LL1ProductionEntry G -> List (Option terminal))
+    {production : LL1ProductionEntry G}
+    {productions : List (LL1ProductionEntry G)}
+    {lookahead : Option terminal}
+    (hprod : production ∈ productions)
+    (hlook : lookahead ∈ lookaheads production) :
+    production.toTableEntry lookahead ∈
+      generateEntries lookaheads productions := by
+  induction productions with
+  | nil =>
+      cases hprod
+  | cons productionHead rest ih =>
+      cases hprod with
+      | head =>
+          simp [generateEntries]
+          exact Or.inl (tableEntriesFor_mem production hlook)
+      | tail _ htail =>
+          simp [generateEntries]
+          exact Or.inr (ih htail)
+
+theorem lookupFrom_complete_of_conflictFree
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {entries : List (LL1TableEntry terminal nonterminal)}
+    (hfree :
+      forall left right,
+        left ∈ entries -> right ∈ entries ->
+          left.lhs = right.lhs -> left.lookahead = right.lookahead ->
+            left.rhs = right.rhs)
+    {entry : LL1TableEntry terminal nonterminal}
+    (hmem : entry ∈ entries) :
+    lookupFrom entries entry.lhs entry.lookahead = some entry.rhs := by
+  induction entries with
+  | nil =>
+      cases hmem
+  | cons head rest ih =>
+      cases hmem with
+      | head =>
+          simp [lookupFrom]
+      | tail _ htail =>
+          by_cases hlhs : head.lhs = entry.lhs
+          · by_cases hlook : head.lookahead = entry.lookahead
+            · have hrhs : head.rhs = entry.rhs :=
+                hfree head entry (List.Mem.head rest)
+                  (List.Mem.tail head htail) hlhs hlook
+              simp [lookupFrom, hlhs, hlook, hrhs]
+            · simp [lookupFrom, hlhs, hlook]
+              apply ih
+              · intro left right hleft hright
+                exact hfree left right (by simp [hleft]) (by simp [hright])
+              · exact htail
+          · simp [lookupFrom, hlhs]
+            apply ih
+            · intro left right hleft hright
+              exact hfree left right (by simp [hleft]) (by simp [hright])
+            · exact htail
+
+theorem generated_lookup_complete_of_conflictFree
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    (productions : List (LL1ProductionEntry G))
+    (lookaheads : LL1ProductionEntry G -> List (Option terminal))
+    (hfree : ConflictFree (generated productions lookaheads))
+    {production : LL1ProductionEntry G} {lookahead : Option terminal}
+    (hprod : production ∈ productions)
+    (hlook : lookahead ∈ lookaheads production) :
+    (generated productions lookaheads).lookup production.lhs lookahead =
+      some production.rhs := by
+  change lookupFrom (generateEntries lookaheads productions)
+      production.lhs lookahead = some production.rhs
+  exact lookupFrom_complete_of_conflictFree
+    (entries := generateEntries lookaheads productions)
+    (entry := production.toTableEntry lookahead)
+    hfree (generateEntries_mem lookaheads hprod hlook)
+
 end LL1ParserCode
+
+/-!
+## Executable FIRST/FOLLOW Generation
+
+The generator below fills the missing parser-generator side of the LL(1)
+pipeline. It computes finite approximants for nullable nonterminals,
+{lit}`FIRST` cells, and {lit}`FOLLOW` cells by iterating the usual data-flow
+rules over a finite production list. The certified entry point checks that the
+iteration has reached a fixed point and that the generated LL(1) table has no
+conflicting cells before returning an executable parser.
+-/
+
+namespace LL1FirstFollow
+
+structure State (terminal : Type u) (nonterminal : Type v) where
+  nullable : List nonterminal
+  first : List (nonterminal × terminal)
+  follow : List (nonterminal × Option terminal)
+deriving DecidableEq
+
+def insertIfMissing [DecidableEq alpha] (x : alpha) (xs : List alpha) :
+    List alpha :=
+  if x ∈ xs then xs else x :: xs
+
+def insertAll [DecidableEq beta] (f : alpha -> beta) :
+    List alpha -> List beta -> List beta
+  | [], acc => acc
+  | x :: xs, acc => insertAll f xs (insertIfMissing (f x) acc)
+
+namespace State
+
+def nullableNT [DecidableEq nonterminal]
+    (state : State terminal nonterminal) (A : nonterminal) : Bool :=
+  decide (A ∈ state.nullable)
+
+def firstForFrom [DecidableEq nonterminal] :
+    List (nonterminal × terminal) -> nonterminal -> List terminal
+  | [], _ => []
+  | (B, a) :: rest, A =>
+      if B = A then a :: firstForFrom rest A else firstForFrom rest A
+
+def firstFor [DecidableEq nonterminal]
+    (state : State terminal nonterminal) (A : nonterminal) : List terminal :=
+  firstForFrom state.first A
+
+def followForFrom [DecidableEq nonterminal] :
+    List (nonterminal × Option terminal) -> nonterminal -> List (Option terminal)
+  | [], _ => []
+  | (B, lookahead) :: rest, A =>
+      if B = A then lookahead :: followForFrom rest A else followForFrom rest A
+
+def followFor [DecidableEq nonterminal]
+    (state : State terminal nonterminal) (A : nonterminal) :
+    List (Option terminal) :=
+  followForFrom state.follow A
+
+def addNullable [DecidableEq nonterminal]
+    (state : State terminal nonterminal) (A : nonterminal) :
+    State terminal nonterminal :=
+  { state with nullable := insertIfMissing A state.nullable }
+
+def addFirst [DecidableEq terminal] [DecidableEq nonterminal]
+    (state : State terminal nonterminal) (A : nonterminal) (a : terminal) :
+    State terminal nonterminal :=
+  { state with first := insertIfMissing (A, a) state.first }
+
+def addFollow [DecidableEq terminal] [DecidableEq nonterminal]
+    (state : State terminal nonterminal) (A : nonterminal)
+    (lookahead : Option terminal) : State terminal nonterminal :=
+  { state with follow := insertIfMissing (A, lookahead) state.follow }
+
+def addFirstList [DecidableEq terminal] [DecidableEq nonterminal]
+    (A : nonterminal) : List terminal -> State terminal nonterminal ->
+      State terminal nonterminal
+  | [], state => state
+  | a :: rest, state => addFirstList A rest (state.addFirst A a)
+
+def addFollowList [DecidableEq terminal] [DecidableEq nonterminal]
+    (A : nonterminal) : List (Option terminal) -> State terminal nonterminal ->
+      State terminal nonterminal
+  | [], state => state
+  | lookahead :: rest, state =>
+      addFollowList A rest (state.addFollow A lookahead)
+
+end State
+
+def nullableSymbol [DecidableEq nonterminal]
+    (state : State terminal nonterminal) :
+    Symbol terminal nonterminal -> Bool
+  | Symbol.terminal _ => false
+  | Symbol.nonterminal A => state.nullableNT A
+
+def nullableSententialForm [DecidableEq nonterminal]
+    (state : State terminal nonterminal) :
+    SententialForm terminal nonterminal -> Bool
+  | [] => true
+  | symbol :: rest =>
+      nullableSymbol state symbol && nullableSententialForm state rest
+
+def firstSententialForm [DecidableEq nonterminal]
+    (state : State terminal nonterminal) :
+    SententialForm terminal nonterminal -> List terminal
+  | [] => []
+  | Symbol.terminal a :: _ => [a]
+  | Symbol.nonterminal A :: rest =>
+      state.firstFor A ++
+        if state.nullableNT A then firstSententialForm state rest else []
+
+def firstLookaheads [DecidableEq nonterminal]
+    (state : State terminal nonterminal)
+    (sent : SententialForm terminal nonterminal) : List (Option terminal) :=
+  (firstSententialForm state sent).map some
+
+def productionLookaheads [DecidableEq nonterminal]
+    (state : State terminal nonterminal)
+    (entry : LL1ProductionEntry (terminal := terminal) (nonterminal := nonterminal) G) :
+    List (Option terminal) :=
+  firstLookaheads state entry.rhs ++
+    if nullableSententialForm state entry.rhs then
+      state.followFor entry.lhs
+    else
+      []
+
+def addFollowFromRhs [DecidableEq terminal] [DecidableEq nonterminal]
+    (base : State terminal nonterminal) (lhs : nonterminal) :
+    SententialForm terminal nonterminal -> State terminal nonterminal ->
+      State terminal nonterminal
+  | [], state => state
+  | Symbol.terminal _ :: rest, state => addFollowFromRhs base lhs rest state
+  | Symbol.nonterminal B :: rest, state =>
+      let withFirst :=
+        State.addFollowList B (firstLookaheads base rest) state
+      let withNullable :=
+        if nullableSententialForm base rest then
+          State.addFollowList B (base.followFor lhs) withFirst
+        else
+          withFirst
+      addFollowFromRhs base lhs rest withNullable
+
+def stepProduction [DecidableEq terminal] [DecidableEq nonterminal]
+    (entry : LL1ProductionEntry (terminal := terminal) (nonterminal := nonterminal) G)
+    (state : State terminal nonterminal) :
+    State terminal nonterminal :=
+  let withNullable :=
+    if nullableSententialForm state entry.rhs then
+      state.addNullable entry.lhs
+    else
+      state
+  let withFirst :=
+    State.addFirstList entry.lhs (firstSententialForm state entry.rhs)
+      withNullable
+  addFollowFromRhs state entry.lhs entry.rhs withFirst
+
+def step [DecidableEq terminal] [DecidableEq nonterminal]
+    (productions :
+      List (LL1ProductionEntry (terminal := terminal) (nonterminal := nonterminal) G))
+    (state : State terminal nonterminal) :
+    State terminal nonterminal :=
+  productions.foldl (fun state entry => stepProduction entry state) state
+
+def iterate (f : alpha -> alpha) : Nat -> alpha -> alpha
+  | 0, x => x
+  | n + 1, x => iterate f n (f x)
+
+def initial (G : CFG terminal nonterminal) : State terminal nonterminal where
+  nullable := []
+  first := []
+  follow := [(G.start, none)]
+
+def compute [DecidableEq terminal] [DecidableEq nonterminal]
+    (G : CFG terminal nonterminal)
+    (productions : List (LL1ProductionEntry G)) (fuel : Nat) :
+    State terminal nonterminal :=
+  iterate (step productions) fuel (initial G)
+
+def fixedPoint? [DecidableEq terminal] [DecidableEq nonterminal]
+    (G : CFG terminal nonterminal)
+    (productions : List (LL1ProductionEntry G)) (fuel : Nat) :
+    Option (State terminal nonterminal) :=
+  let state := compute G productions fuel
+  if step productions state = state then some state else none
+
+theorem fixedPoint?_stable [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    {productions : List (LL1ProductionEntry G)} {fuel : Nat}
+    {state : State terminal nonterminal}
+    (h : fixedPoint? G productions fuel = some state) :
+    step productions state = state := by
+  unfold fixedPoint? at h
+  by_cases hstable : step productions (compute G productions fuel) =
+      compute G productions fuel
+  · simp [hstable] at h
+    cases h
+    exact hstable
+  · simp [hstable] at h
+
+def generatedCode [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    (state : State terminal nonterminal)
+    (productions : List (LL1ProductionEntry G)) :
+    LL1ParserCode terminal nonterminal :=
+  LL1ParserCode.generated productions (productionLookaheads state)
+
+def computedCode [DecidableEq terminal] [DecidableEq nonterminal]
+    (G : CFG terminal nonterminal)
+    (productions : List (LL1ProductionEntry G)) (fuel : Nat) :
+    LL1ParserCode terminal nonterminal :=
+  generatedCode (compute G productions fuel) productions
+
+theorem computedCode_lookup_sound
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    (productions : List (LL1ProductionEntry G)) (fuel : Nat) :
+    forall A lookahead rhs,
+      (computedCode G productions fuel).lookup A lookahead = some rhs ->
+        G.produces A rhs := by
+  exact LL1ParserCode.generated_lookup_sound productions
+    (productionLookaheads (compute G productions fuel))
+
+theorem computedCode_conflictFree_of_noConflict
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    (productions : List (LL1ProductionEntry G)) (fuel : Nat)
+    (h : LL1ParserCode.hasConflict
+      (computedCode G productions fuel) = false) :
+    LL1ParserCode.ConflictFree (computedCode G productions fuel) :=
+  LL1ParserCode.hasConflict_false_conflictFree
+    (computedCode G productions fuel) h
+
+theorem computedCode_lookup_complete_of_noConflict
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    (productions : List (LL1ProductionEntry G)) (fuel : Nat)
+    (hfree : LL1ParserCode.hasConflict
+      (computedCode G productions fuel) = false)
+    {production : LL1ProductionEntry G} {lookahead : Option terminal}
+    (hprod : production ∈ productions)
+    (hlook : lookahead ∈
+      productionLookaheads (compute G productions fuel) production) :
+    (computedCode G productions fuel).lookup production.lhs lookahead =
+      some production.rhs :=
+  LL1ParserCode.generated_lookup_complete_of_conflictFree
+    productions (productionLookaheads (compute G productions fuel))
+    (computedCode_conflictFree_of_noConflict productions fuel hfree)
+    hprod hlook
+
+def certifiedParser? [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    (productions : List (LL1ProductionEntry G)) (fuel : Nat) :
+    Option (LL1Parser G) :=
+  match fixedPoint? G productions fuel with
+  | none => none
+  | some state =>
+      let code := generatedCode state productions
+      if LL1ParserCode.hasConflict code then
+        none
+      else
+        some (LL1ParserCode.generatedParser productions
+          (productionLookaheads state))
+
+def certifiedRun? [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    (productions : List (LL1ProductionEntry G))
+    (generatorFuel parserFuel : Nat) (w : Word terminal) :
+    Option (CFG.ParseTree G (Symbol.nonterminal G.start)) :=
+  match certifiedParser? productions generatorFuel with
+  | none => none
+  | some parser => LL1Parser.run parser parserFuel w
+
+theorem certifiedRun?_sound
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : CFG terminal nonterminal}
+    (productions : List (LL1ProductionEntry G))
+    (generatorFuel parserFuel : Nat) (w : Word terminal)
+    (tree : CFG.ParseTree G (Symbol.nonterminal G.start))
+    (h : certifiedRun? productions generatorFuel parserFuel w = some tree) :
+    w ∈ CFG.GeneratedLanguage G := by
+  unfold certifiedRun? at h
+  cases hparser : certifiedParser? productions generatorFuel with
+  | none =>
+      simp [hparser] at h
+  | some parser =>
+      simp [hparser] at h
+      exact LL1Parser.run_sound parser parserFuel w tree h
+
+end LL1FirstFollow
 
 structure LR1Item (G : CFG terminal nonterminal) where
   lhs : nonterminal
