@@ -198,6 +198,11 @@ def HaltsWithExactOutputIn (D : MachineDescription)
   let final := D.runConfig n (D.initial w)
   final.state = D.halt ∧ final.tape = Tape.output out
 
+def HaltsWithTapeIn (D : MachineDescription)
+    (n : Nat) (w : Word Bool) (T : Tape Bool) : Prop :=
+  let final := D.runConfig n (D.initial w)
+  final.state = D.halt ∧ final.tape = T
+
 def HaltsWithOutput (D : MachineDescription)
     (w out : Word Bool) : Prop :=
   exists n : Nat, D.HaltsWithOutputIn n w out
@@ -205,6 +210,94 @@ def HaltsWithOutput (D : MachineDescription)
 def HaltsWithExactOutput (D : MachineDescription)
     (w out : Word Bool) : Prop :=
   exists n : Nat, D.HaltsWithExactOutputIn n w out
+
+def HaltsWithTape (D : MachineDescription)
+    (w : Word Bool) (T : Tape Bool) : Prop :=
+  exists n : Nat, D.HaltsWithTapeIn n w T
+
+theorem haltsWithExactOutputIn_iff_haltsWithTapeIn_output
+    {D : MachineDescription} {n : Nat} {w out : Word Bool} :
+    D.HaltsWithExactOutputIn n w out <->
+      D.HaltsWithTapeIn n w (Tape.output out) := by
+  rfl
+
+theorem haltsWithExactOutput_iff_haltsWithTape_output
+    {D : MachineDescription} {w out : Word Bool} :
+    D.HaltsWithExactOutput w out <->
+      D.HaltsWithTape w (Tape.output out) := by
+  rfl
+
+theorem haltsWithOutputIn_of_haltsWithExactOutputIn
+    {D : MachineDescription} {n : Nat} {w out : Word Bool}
+    (h : D.HaltsWithExactOutputIn n w out) :
+    D.HaltsWithOutputIn n w out := by
+  rcases h with ⟨hhalt, htape⟩
+  exact ⟨hhalt, Tape.normalizedOutput_of_eq_output htape⟩
+
+theorem haltsWithOutput_of_haltsWithExactOutput
+    {D : MachineDescription} {w out : Word Bool}
+    (h : D.HaltsWithExactOutput w out) :
+    D.HaltsWithOutput w out := by
+  rcases h with ⟨n, hn⟩
+  exact ⟨n, haltsWithOutputIn_of_haltsWithExactOutputIn hn⟩
+
+def ExactOutputRealizes
+    (D : MachineDescription) (f : Word Bool -> Word Bool) : Prop :=
+  D.WellFormed ∧ forall w : Word Bool, D.HaltsWithExactOutput w (f w)
+
+def ExactOutputComposable
+    (A B C : MachineDescription) : Prop :=
+  C.WellFormed ∧
+    forall w mid out : Word Bool,
+      A.HaltsWithExactOutput w mid ->
+      B.HaltsWithExactOutput mid out ->
+        C.HaltsWithExactOutput w out
+
+theorem ExactOutputRealizes.toOutputRealizes
+    {D : MachineDescription} {f : Word Bool -> Word Bool}
+    (h : D.ExactOutputRealizes f) :
+    D.WellFormed ∧ forall w : Word Bool, D.HaltsWithOutput w (f w) := by
+  constructor
+  · exact h.left
+  · intro w
+    exact haltsWithOutput_of_haltsWithExactOutput (h.right w)
+
+theorem ExactOutputComposable.realizes_comp
+    {A B C : MachineDescription}
+    {f g : Word Bool -> Word Bool}
+    (hcomp : ExactOutputComposable A B C)
+    (hA : A.ExactOutputRealizes f)
+    (hB : B.ExactOutputRealizes g) :
+    C.ExactOutputRealizes (fun w => g (f w)) := by
+  constructor
+  · exact hcomp.left
+  · intro w
+    exact hcomp.right w (f w) (g (f w)) (hA.right w)
+      (hB.right (f w))
+
+def ExactIdentityDescription : MachineDescription where
+  stateCount := 1
+  start := 0
+  halt := 0
+  transitions := []
+
+theorem exactIdentityDescription_wellFormed :
+    ExactIdentityDescription.WellFormed := by
+  simp [ExactIdentityDescription, WellFormed, Deterministic]
+
+theorem exactIdentityDescription_haltsWithExactOutputIn
+    (w : Word Bool) :
+    ExactIdentityDescription.HaltsWithExactOutputIn 0 w w := by
+  constructor
+  · rfl
+  · rfl
+
+theorem exactIdentityDescription_exactOutputRealizes :
+    ExactIdentityDescription.ExactOutputRealizes id := by
+  constructor
+  · exact exactIdentityDescription_wellFormed
+  · intro w
+    exact ⟨0, exactIdentityDescription_haltsWithExactOutputIn w⟩
 
 theorem toTuringMachine_haltsOnInput_iff {D : MachineDescription}
     (hD : D.WellFormed) (w : Word Bool) :
@@ -495,6 +588,45 @@ theorem fixedDescriptionBoundedSimulatorOutput_run_hit
           (D.runConfig n L.config).state = D.halt :=
   MachineDescription.SimulatorLayout.run_hit_eq_true_iff D L.stage L
 
+def FixedDescriptionBoundedSimulatorCode
+    (D : MachineDescription) : MachineDescription.TapeCodePrimitive :=
+  MachineDescription.SimulatorLayout.runCodePrimitive D
+
+def FixedDescriptionBoundedSimulatorCodeRealizes
+    (D : MachineDescription)
+    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+  forall L : MachineDescription.SimulatorLayout,
+    P.transform (MachineDescription.SimulatorLayout.encode L) =
+      some
+        (MachineDescription.SimulatorLayout.encode
+          (MachineDescription.SimulatorLayout.run D L.stage L))
+
+theorem fixedDescriptionBoundedSimulatorCode_encode
+    (D : MachineDescription) (L : MachineDescription.SimulatorLayout) :
+    (FixedDescriptionBoundedSimulatorCode D).transform
+        (MachineDescription.SimulatorLayout.encode L) =
+      some
+        (MachineDescription.SimulatorLayout.encode
+          (MachineDescription.SimulatorLayout.run D L.stage L)) :=
+  MachineDescription.SimulatorLayout.runCodePrimitive_encode D L
+
+theorem fixedDescriptionBoundedSimulatorCode_realizes
+    (D : MachineDescription) :
+    FixedDescriptionBoundedSimulatorCodeRealizes
+      D (FixedDescriptionBoundedSimulatorCode D) := by
+  intro L
+  exact fixedDescriptionBoundedSimulatorCode_encode D L
+
+theorem fixedDescriptionBoundedSimulatorCode_boolOutput
+    (D : MachineDescription) (L : MachineDescription.SimulatorLayout) :
+    Option.map MachineDescription.encodeCodeWordAsInput
+        ((FixedDescriptionBoundedSimulatorCode D).transform
+          (MachineDescription.SimulatorLayout.encode L)) =
+      some (FixedDescriptionBoundedSimulatorOutput D L) := by
+  simp [fixedDescriptionBoundedSimulatorCode_encode,
+    FixedDescriptionBoundedSimulatorOutput,
+    MachineDescription.SimulatorLayout.asBoolInput]
+
 structure FixedDescriptionBoundedSimulatorPhaseTargets
     (D : MachineDescription) where
   decodeLayout :
@@ -544,9 +676,26 @@ def FixedDescriptionBoundedSimulatorPhaseRealizes
     (fragment : MachineDescription.Fragment) : Prop :=
   fragment.WellFormed ∧
     forall L : MachineDescription.SimulatorLayout,
-      fragment.toDescription.HaltsWithOutput
+      fragment.toDescription.HaltsWithExactOutput
         (FixedDescriptionBoundedSimulatorInput L)
         (FixedDescriptionBoundedSimulatorInput (phase L))
+
+theorem fixedDescriptionBoundedSimulatorPhaseRealizes_output
+    {phase :
+      MachineDescription.SimulatorLayout ->
+        MachineDescription.SimulatorLayout}
+    {fragment : MachineDescription.Fragment}
+    (h : FixedDescriptionBoundedSimulatorPhaseRealizes phase fragment) :
+    fragment.WellFormed ∧
+      forall L : MachineDescription.SimulatorLayout,
+        fragment.toDescription.HaltsWithOutput
+          (FixedDescriptionBoundedSimulatorInput L)
+          (FixedDescriptionBoundedSimulatorInput (phase L)) := by
+  constructor
+  · exact h.left
+  · intro L
+    exact MachineDescription.haltsWithOutput_of_haltsWithExactOutput
+      (h.right L)
 
 structure FixedDescriptionBoundedSimulatorSkeletonPhaseRealizes
     (D : MachineDescription)
@@ -574,6 +723,26 @@ def FixedDescriptionBoundedSimulatorSkeletonRealizes
     (S.toDescription handoffMove).HaltsWithOutput
       (FixedDescriptionBoundedSimulatorInput L)
       (FixedDescriptionBoundedSimulatorOutput D L)
+
+def FixedDescriptionBoundedSimulatorSkeletonRealizesExact
+    (D : MachineDescription)
+    (S : MachineDescription.FixedSimulatorTableSkeleton)
+    (handoffMove : Direction) : Prop :=
+  forall L : MachineDescription.SimulatorLayout,
+    (S.toDescription handoffMove).HaltsWithExactOutput
+      (FixedDescriptionBoundedSimulatorInput L)
+      (FixedDescriptionBoundedSimulatorOutput D L)
+
+theorem fixedDescriptionBoundedSimulatorSkeletonRealizes_of_exact
+    {D : MachineDescription}
+    {S : MachineDescription.FixedSimulatorTableSkeleton}
+    {handoffMove : Direction}
+    (h : FixedDescriptionBoundedSimulatorSkeletonRealizesExact
+      D S handoffMove) :
+    FixedDescriptionBoundedSimulatorSkeletonRealizes D S handoffMove := by
+  intro L
+  exact MachineDescription.haltsWithOutput_of_haltsWithExactOutput
+    (h L)
 
 theorem fixedDescriptionBoundedSimulatorTableRealizes_of_skeletonRealizes
     {D : MachineDescription}

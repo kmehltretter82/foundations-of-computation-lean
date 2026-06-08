@@ -998,6 +998,77 @@ theorem decodeBoolWord_encodeBoolWordAppend
   simp [decodeBoolWord, encodeBoolWordAppend,
     decodeCellList_encodeCellListAppend, cellsToWord?_map_some]
 
+/-!
+## Executable tape-code primitives
+
+These primitives are executable transformations on the finite
+{name}`MachineCodeSymbol` words that represent work-tape layouts.  They are
+not transition tables yet; they are the precise code-level behavior that later
+finite fragments must realize.
+-/
+
+structure TapeCodePrimitive where
+  transform :
+    Word MachineCodeSymbol -> Option (Word MachineCodeSymbol)
+
+namespace TapeCodePrimitive
+
+def Realizes (P : TapeCodePrimitive)
+    (f : Word MachineCodeSymbol -> Option (Word MachineCodeSymbol)) :
+    Prop :=
+  forall w : Word MachineCodeSymbol, P.transform w = f w
+
+def identity : TapeCodePrimitive where
+  transform := fun w => some w
+
+theorem identity_transform (w : Word MachineCodeSymbol) :
+    identity.transform w = some w :=
+  rfl
+
+theorem identity_realizes :
+    identity.Realizes (fun w => some w) := by
+  intro w
+  rfl
+
+def erase : TapeCodePrimitive where
+  transform := fun _ => some []
+
+theorem erase_transform (w : Word MachineCodeSymbol) :
+    erase.transform w = some [] :=
+  rfl
+
+def prepend (pre : Word MachineCodeSymbol) : TapeCodePrimitive where
+  transform := fun w => some (List.append pre w)
+
+theorem prepend_transform
+    (pre w : Word MachineCodeSymbol) :
+    (prepend pre).transform w = some (List.append pre w) :=
+  rfl
+
+def append (suffix : Word MachineCodeSymbol) : TapeCodePrimitive where
+  transform := fun w => some (List.append w suffix)
+
+theorem append_transform
+    (suffix w : Word MachineCodeSymbol) :
+    (append suffix).transform w = some (List.append w suffix) :=
+  rfl
+
+def compose (P Q : TapeCodePrimitive) : TapeCodePrimitive where
+  transform := fun w =>
+    match P.transform w with
+    | none => none
+    | some mid => Q.transform mid
+
+theorem compose_transform_some
+    {P Q : TapeCodePrimitive}
+    {w mid out : Word MachineCodeSymbol}
+    (hP : P.transform w = some mid)
+    (hQ : Q.transform mid = some out) :
+    (compose P Q).transform w = some out := by
+  simp [compose, hP, hQ]
+
+end TapeCodePrimitive
+
 structure SimulatorLayout where
   input : Word Bool
   stage : Nat
@@ -1050,6 +1121,34 @@ theorem decode_encodeAppend
 theorem decode_encode (L : SimulatorLayout) :
     decode (encode L) = some (L, []) :=
   decode_encodeAppend L []
+
+def decodeComplete (tokens : Word MachineCodeSymbol) :
+    Option SimulatorLayout :=
+  match decode tokens with
+  | some (L, []) => some L
+  | _ => none
+
+theorem decodeComplete_encode (L : SimulatorLayout) :
+    decodeComplete (encode L) = some L := by
+  simp [decodeComplete, decode_encode]
+
+def normalizeCode (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match decodeComplete tokens with
+  | none => none
+  | some L => some (encode L)
+
+theorem normalizeCode_encode (L : SimulatorLayout) :
+    normalizeCode (encode L) = some (encode L) := by
+  simp [normalizeCode, decodeComplete_encode]
+
+def normalizeCodePrimitive : TapeCodePrimitive where
+  transform := normalizeCode
+
+theorem normalizeCodePrimitive_encode (L : SimulatorLayout) :
+    normalizeCodePrimitive.transform (encode L) =
+      some (encode L) :=
+  normalizeCode_encode L
 
 def asBoolInput (L : SimulatorLayout) : Word Bool :=
   encodeCodeWordAsInput (encode L)
@@ -1214,6 +1313,27 @@ theorem run_initial_hit_eq_true_iff
     (run D steps (initial D w steps)).hit = true <->
       exists n : Nat, n ≤ steps ∧ D.HaltsIn n w := by
   simp [run_hit_eq_true_iff, initial, HaltsIn]
+
+def runCode (D : MachineDescription)
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match decodeComplete tokens with
+  | none => none
+  | some L => some (encode (run D L.stage L))
+
+theorem runCode_encode
+    (D : MachineDescription) (L : SimulatorLayout) :
+    runCode D (encode L) = some (encode (run D L.stage L)) := by
+  simp [runCode, decodeComplete_encode]
+
+def runCodePrimitive (D : MachineDescription) : TapeCodePrimitive where
+  transform := runCode D
+
+theorem runCodePrimitive_encode
+    (D : MachineDescription) (L : SimulatorLayout) :
+    (runCodePrimitive D).transform (encode L) =
+      some (encode (run D L.stage L)) :=
+  runCode_encode D L
 
 def afterRun (D : MachineDescription)
     (L : SimulatorLayout) (steps : Nat) : SimulatorLayout :=
