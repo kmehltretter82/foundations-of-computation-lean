@@ -105,6 +105,9 @@ def ConcreteDescriptionBoolDeciderCompilationConstruction : Prop :=
 def ConcreteDovetailDescriptionCompilerConstruction : Prop :=
   DovetailDescriptionCompilerPrinciple
 
+def ConcretePairedRecognizerDovetailCompilerConstruction : Prop :=
+  PairedRecognizerDovetailDescriptionCompilerPrinciple
+
 def ConcreteFiniteDovetailCompilerConstruction : Prop :=
   FiniteDovetailProgram.CompilerConstruction
 
@@ -580,6 +583,12 @@ This is the compiler handoff. The trace-level dovetailer already decides the
 language as a staged program; the following theorems explain how different
 compiler hypotheses turn that staged decider into an ordinary recursive-language
 statement.
+
+The paired-recognizer compiler construction is the concrete transition-level
+version of the dovetailing handoff: its inputs are two finite
+{name}`MachineDescription`s, and its output is a finite Boolean description for
+the staged dovetailer over their halting traces.  The finite dovetail program
+record is proved equivalent to this exact construction target.
 -/
 
 theorem dovetailing_decidable_construction_of_staged_program_compiler
@@ -606,10 +615,57 @@ theorem dovetailing_decidable_construction_of_concrete_description_compiler
     (staged_bool_decider_compilation_construction_of_concrete_descriptions
       hcompile)
 
+theorem concrete_dovetail_description_compiler_of_concrete_bool_description_compiler
+    (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
+    ConcreteDovetailDescriptionCompilerConstruction :=
+  Computability.dovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
+    hcompile
+
+theorem paired_recognizer_dovetail_compiler_of_concrete_bool_description_compiler
+    (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
+    ConcretePairedRecognizerDovetailCompilerConstruction :=
+  Computability.pairedRecognizerDovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
+    hcompile
+
 theorem dovetailing_decidable_construction_of_concrete_dovetail_description_compiler
     (hcompile : ConcreteDovetailDescriptionCompilerConstruction) :
     DovetailingDecidableConstruction Bool :=
   Computability.reCoReToDecidablePrinciple_of_dovetailDescriptionCompiler
+    hcompile
+
+theorem paired_recognizer_dovetail_compiler_of_concrete_dovetail_description_compiler
+    (hcompile : ConcreteDovetailDescriptionCompilerConstruction) :
+    ConcretePairedRecognizerDovetailCompilerConstruction :=
+  Computability.pairedRecognizerDovetailDescriptionCompiler_of_dovetailDescriptionCompiler
+    hcompile
+
+theorem finite_dovetail_compiler_construction_of_paired_recognizer_dovetail_compiler
+    (hcompile : ConcretePairedRecognizerDovetailCompilerConstruction) :
+    ConcreteFiniteDovetailCompilerConstruction :=
+  Computability.FiniteDovetailProgram.compilerConstruction_of_pairedRecognizerDescriptionCompiler
+    hcompile
+
+theorem paired_recognizer_dovetail_compiler_of_finite_dovetail_compiler
+    (hcompile : ConcreteFiniteDovetailCompilerConstruction) :
+    ConcretePairedRecognizerDovetailCompilerConstruction :=
+  Computability.FiniteDovetailProgram.pairedRecognizerDescriptionCompiler_of_compilerConstruction
+    hcompile
+
+theorem finite_dovetail_compiler_construction_iff_paired_recognizer_dovetail_compiler :
+    ConcreteFiniteDovetailCompilerConstruction <->
+      ConcretePairedRecognizerDovetailCompilerConstruction :=
+  Computability.FiniteDovetailProgram.compilerConstruction_iff_pairedRecognizerDescriptionCompiler
+
+theorem finite_dovetail_compiler_construction_of_concrete_dovetail_description_compiler
+    (hcompile : ConcreteDovetailDescriptionCompilerConstruction) :
+    ConcreteFiniteDovetailCompilerConstruction :=
+  Computability.FiniteDovetailProgram.compilerConstruction_of_dovetailDescriptionCompiler
+    hcompile
+
+theorem finite_dovetail_compiler_construction_of_concrete_bool_description_compiler
+    (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
+    ConcreteFiniteDovetailCompilerConstruction :=
+  Computability.FiniteDovetailProgram.compilerConstruction_of_descriptionBoolDeciderCompiler
     hcompile
 
 theorem complementary_traces_recursive_language_of_concrete_dovetail_description_compiler
@@ -844,6 +900,19 @@ theorem concrete_finite_dovetail_program_turing_decidable_of_compiler_constructi
     using
       Computability.FiniteDovetailProgram.turingDecidable_of_compilerConstruction
         hcompile htraces
+
+theorem concrete_finite_dovetail_program_turing_decidable_of_paired_recognizer_compiler
+    (hcompile : ConcretePairedRecognizerDovetailCompilerConstruction)
+    {accept reject : ConcreteFiniteAcceptorProgram}
+    {L : Language Bool}
+    (htraces : LanguageComplementaryAcceptanceTraces
+      (ConcreteFiniteAcceptorTrace accept)
+      (ConcreteFiniteAcceptorTrace reject) L) :
+    RecursiveLanguage L :=
+  concrete_finite_dovetail_program_turing_decidable_of_compiler_construction
+    (finite_dovetail_compiler_construction_of_paired_recognizer_dovetail_compiler
+      hcompile)
+    htraces
 
 theorem concrete_finite_dovetail_program_exists_of_compiler_construction
     (hcompile : ConcreteFiniteDovetailCompilerConstruction)

@@ -408,6 +408,12 @@ A finite dovetail program records the two finite trace recognizers and the
 finite Boolean machine description that realizes the dovetailing staged
 program.  The construction of that Boolean description is separate machine
 engineering; once supplied, the bridge to recursive languages is concrete.
+
+The equivalence theorems below identify this wrapper-level construction with
+the paired {name}`MachineDescription` compiler target from
+{module}`FoC.Computability.Compiler`.  Thus the finite program record does not
+add another assumption; it packages exactly the transition-level dovetailing
+compiler for two concrete recognizer descriptions.
 -/
 
 structure FiniteDovetailProgram where
@@ -429,6 +435,45 @@ def CompilerConstruction : Prop :=
     exists decider : FiniteBoolProgram,
       ({ accept := accept, reject := reject, decider := decider } :
         FiniteDovetailProgram).Compiled
+
+theorem compilerConstruction_of_pairedRecognizerDescriptionCompiler
+    (hcompile : PairedRecognizerDovetailDescriptionCompilerPrinciple) :
+    CompilerConstruction := by
+  intro accept reject
+  cases hcompile accept.description reject.description with
+  | intro D hD =>
+      exact Exists.intro ({ description := D } : FiniteBoolProgram) hD
+
+theorem pairedRecognizerDescriptionCompiler_of_compilerConstruction
+    (hcompile : CompilerConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple := by
+  intro accept reject
+  cases hcompile
+      ({ description := accept } : FiniteAcceptorProgram)
+      ({ description := reject } : FiniteAcceptorProgram) with
+  | intro decider hcompiled =>
+      exact Exists.intro decider.description hcompiled
+
+theorem compilerConstruction_iff_pairedRecognizerDescriptionCompiler :
+    CompilerConstruction <->
+      PairedRecognizerDovetailDescriptionCompilerPrinciple := by
+  constructor
+  · exact pairedRecognizerDescriptionCompiler_of_compilerConstruction
+  · exact compilerConstruction_of_pairedRecognizerDescriptionCompiler
+
+theorem compilerConstruction_of_dovetailDescriptionCompiler
+    (hcompile : DovetailDescriptionCompilerPrinciple) :
+    CompilerConstruction :=
+  compilerConstruction_of_pairedRecognizerDescriptionCompiler
+    (pairedRecognizerDovetailDescriptionCompiler_of_dovetailDescriptionCompiler
+      hcompile)
+
+theorem compilerConstruction_of_descriptionBoolDeciderCompiler
+    (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
+    CompilerConstruction :=
+  compilerConstruction_of_pairedRecognizerDescriptionCompiler
+    (pairedRecognizerDovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
+      hcompile)
 
 theorem programBoolDecidableByDescription
     (P : FiniteDovetailProgram)

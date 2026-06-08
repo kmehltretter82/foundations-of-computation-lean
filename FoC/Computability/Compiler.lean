@@ -418,6 +418,42 @@ def DovetailDescriptionCompilerPrinciple : Prop :=
     exists D : MachineDescription,
       BoolProgramCompiledByDescription (DovetailProgram accept reject) D
 
+/-
+The broad dovetail compiler above talks about arbitrary Lean traces.  The
+paired-recognizer version below is the concrete Section 5.2 transition-level
+handoff: both traces come from finite `MachineDescription` interpreters.
+It is still a construction principle, but it names the exact uniform machine
+description that a real dovetailing compiler must build.
+-/
+
+def PairedRecognizerDovetailDescriptionCompilerPrinciple : Prop :=
+  forall accept reject : MachineDescription,
+    exists D : MachineDescription,
+      BoolProgramCompiledByDescription
+        (DovetailProgram
+          (fun w n => accept.HaltsIn n w)
+          (fun w n => reject.HaltsIn n w)) D
+
+theorem pairedRecognizerDovetailDescriptionCompiler_of_dovetailDescriptionCompiler
+    (hcompile : DovetailDescriptionCompilerPrinciple) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple := by
+  intro accept reject
+  exact hcompile
+    (fun w n => accept.HaltsIn n w)
+    (fun w n => reject.HaltsIn n w)
+
+theorem dovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
+    (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
+    DovetailDescriptionCompilerPrinciple := by
+  intro accept reject
+  exact hcompile (DovetailProgram accept reject)
+
+theorem pairedRecognizerDovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
+    (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
+  pairedRecognizerDovetailDescriptionCompiler_of_dovetailDescriptionCompiler
+    (dovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler hcompile)
+
 theorem programAcceptorCompilationPrinciple_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
     ProgramAcceptorCompilationPrinciple Bool := by
