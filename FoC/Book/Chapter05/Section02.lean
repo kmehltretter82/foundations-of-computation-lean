@@ -114,11 +114,22 @@ def ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction : Prop :=
 def ConcreteFixedDescriptionBoundedSimulatorCodeCompilerConstruction : Prop :=
   FixedDescriptionBoundedSimulatorCodeCompilerConstruction
 
+def ConcreteFixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction :
+    Prop :=
+  FixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction
+
 def ConcreteFixedDescriptionStepCodeCompilerConstruction : Prop :=
   FixedDescriptionStepCodeCompilerConstruction
 
+def ConcreteFixedDescriptionStepCodeOutputRealizerConstruction : Prop :=
+  FixedDescriptionStepCodeOutputRealizerConstruction
+
 def ConcretePairedRecognizerDovetailLayoutCodeCompilerConstruction : Prop :=
   PairedRecognizerDovetailLayoutCodeCompilerConstruction
+
+def ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction :
+    Prop :=
+  PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction
 
 def ConcreteFiniteDovetailCompilerConstruction : Prop :=
   FiniteDovetailProgram.CompilerConstruction
@@ -1168,11 +1179,30 @@ theorem concrete_fixed_description_bounded_simulator_table_compiler_of_code_comp
   Computability.fixedDescriptionBoundedSimulatorTableCompiler_of_codeCompiler
     hcompile
 
+theorem concrete_fixed_description_bounded_simulator_table_compiler_of_code_output_realizer
+    (hcompile :
+      ConcreteFixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction) :
+    FixedDescriptionBoundedSimulatorTableCompilerConstruction :=
+  Computability.fixedDescriptionBoundedSimulatorTableCompiler_of_codeOutputRealizer
+    hcompile
+
 theorem concrete_tape_code_identity_compiled_by_description :
     TapeCodePrimitiveCompiledByDescription
       MachineDescription.TapeCodePrimitive.identity
       MachineDescription.ExactIdentityDescription :=
   Computability.tapeCodePrimitiveCompiledByDescription_identity
+
+theorem concrete_tape_code_identity_output_realized_by_description :
+    TapeCodePrimitiveOutputRealizedByDescription
+      MachineDescription.TapeCodePrimitive.identity
+      MachineDescription.ExactIdentityDescription :=
+  Computability.tapeCodePrimitiveOutputRealizedByDescription_identity
+
+theorem concrete_tape_code_erase_not_exact_compiled_by_description :
+    ¬ exists D : MachineDescription,
+      TapeCodePrimitiveCompiledByDescription
+        MachineDescription.TapeCodePrimitive.erase D :=
+  Computability.not_tapeCodePrimitiveCompiledByDescription_erase
 
 theorem concrete_fixed_description_step_code_realizes
     (D : MachineDescription) :

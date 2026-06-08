@@ -1086,6 +1086,11 @@ theorem erase_transform (w : Word MachineCodeSymbol) :
     erase.transform w = some [] :=
   rfl
 
+theorem erase_realizes :
+    erase.Realizes (fun _ => some []) := by
+  intro w
+  rfl
+
 def prepend (pre : Word MachineCodeSymbol) : TapeCodePrimitive where
   transform := fun w => some (List.append pre w)
 
@@ -1094,12 +1099,22 @@ theorem prepend_transform
     (prepend pre).transform w = some (List.append pre w) :=
   rfl
 
+theorem prepend_realizes (pre : Word MachineCodeSymbol) :
+    (prepend pre).Realizes (fun w => some (List.append pre w)) := by
+  intro w
+  rfl
+
 def append (suffix : Word MachineCodeSymbol) : TapeCodePrimitive where
   transform := fun w => some (List.append w suffix)
 
 theorem append_transform
     (suffix w : Word MachineCodeSymbol) :
     (append suffix).transform w = some (List.append w suffix) :=
+  rfl
+
+theorem append_realizes (suffix : Word MachineCodeSymbol) :
+    (append suffix).Realizes (fun w => some (List.append w suffix)) := by
+  intro w
   rfl
 
 def compose (P Q : TapeCodePrimitive) : TapeCodePrimitive where
@@ -1115,6 +1130,27 @@ theorem compose_transform_some
     (hQ : Q.transform mid = some out) :
     (compose P Q).transform w = some out := by
   simp [compose, hP, hQ]
+
+theorem compose_realizes
+    {P Q : TapeCodePrimitive}
+    {f g : Word MachineCodeSymbol -> Option (Word MachineCodeSymbol)}
+    (hP : P.Realizes f)
+    (hQ : Q.Realizes g) :
+    (compose P Q).Realizes
+      (fun w =>
+        match f w with
+        | none => none
+        | some mid => g mid) := by
+  intro w
+  simp [Realizes] at hP hQ
+  unfold compose
+  simp
+  rw [hP w]
+  cases hfw : f w with
+  | none =>
+      simp
+  | some mid =>
+      simp [hQ mid]
 
 end TapeCodePrimitive
 

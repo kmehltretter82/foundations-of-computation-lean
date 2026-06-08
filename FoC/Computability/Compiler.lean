@@ -128,6 +128,41 @@ theorem runConfig_state_bound {D : MachineDescription}
       | some _ =>
           exact ih (stepConfig_state_bound hD hstep)
 
+theorem stepConfig_contextLength_mono {D : MachineDescription}
+    {c d : Configuration}
+    (hstep : D.stepConfig c = some d) :
+    Tape.contextLength c.tape ≤ Tape.contextLength d.tape := by
+  unfold stepConfig at hstep
+  cases hlookup : D.lookupTransition c.state (Tape.read c.tape) with
+  | none =>
+      rw [hlookup] at hstep
+      cases hstep
+  | some t =>
+      rw [hlookup] at hstep
+      cases hstep
+      exact Tape.contextLength_move_write_ge t.move t.write c.tape
+
+theorem runConfig_contextLength_mono
+    (D : MachineDescription) (n : Nat) (c : Configuration) :
+    Tape.contextLength c.tape ≤
+      Tape.contextLength (D.runConfig n c).tape := by
+  induction n generalizing c with
+  | zero =>
+      exact Nat.le_refl _
+  | succ n ih =>
+      change
+        Tape.contextLength c.tape ≤
+          Tape.contextLength
+            (match D.stepConfig c with
+            | none => c
+            | some next => D.runConfig n next).tape
+      cases hstep : D.stepConfig c with
+      | none =>
+          exact Nat.le_refl _
+      | some next =>
+          exact Nat.le_trans (stepConfig_contextLength_mono hstep)
+            (ih next)
+
 theorem runConfig_toTuringMachine_computes {D : MachineDescription}
     (hD : D.WellFormed) {n : Nat} {c : Configuration}
     (hc : c.state < D.stateCount) :
@@ -253,6 +288,26 @@ theorem haltsWithExactOutput_iff_haltsWithTape_output
     D.HaltsWithExactOutput w out <->
       D.HaltsWithTape w (Tape.output out) := by
   rfl
+
+theorem not_haltsWithExactOutput_empty_of_input_contextLength_pos
+    {D : MachineDescription} {w : Word Bool}
+    (hctx : 0 < Tape.contextLength (Tape.input w)) :
+    ¬ D.HaltsWithExactOutput w [] := by
+  intro hhalt
+  rcases hhalt with ⟨n, hn⟩
+  have hmono :=
+    runConfig_contextLength_mono D n (D.initial w)
+  have hfinalCtx :
+      Tape.contextLength
+          (D.runConfig n (D.initial w)).tape =
+        0 := by
+    simpa [HaltsWithExactOutputIn, Tape.output_empty,
+      Tape.contextLength_blank] using congrArg
+        (fun T : Tape Bool => Tape.contextLength T) hn.right
+  have hinputCtx :
+      Tape.contextLength (D.initial w).tape =
+        Tape.contextLength (Tape.input w) := rfl
+  omega
 
 theorem haltsWithOutputIn_of_haltsWithExactOutputIn
     {D : MachineDescription} {n : Nat} {w out : Word Bool}
@@ -759,6 +814,27 @@ def TapeCodePrimitiveCompiledByDescription
         (MachineDescription.encodeCodeWordAsInput out) <->
           P.transform code = some out
 
+def TapeCodePrimitiveOutputRealizedByDescription
+    (P : MachineDescription.TapeCodePrimitive)
+    (D : MachineDescription) : Prop :=
+  D.WellFormed ∧
+    forall code out : Word MachineCodeSymbol,
+      P.transform code = some out ->
+        D.HaltsWithOutput
+          (MachineDescription.encodeCodeWordAsInput code)
+          (MachineDescription.encodeCodeWordAsInput out)
+
+theorem tapeCodePrimitiveOutputRealizedByDescription_of_exact
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : TapeCodePrimitiveCompiledByDescription P D) :
+    TapeCodePrimitiveOutputRealizedByDescription P D := by
+  constructor
+  · exact h.left
+  · intro code out hp
+    exact MachineDescription.haltsWithOutput_of_haltsWithExactOutput
+      ((h.right code out).mpr hp)
+
 theorem tapeCodePrimitiveCompiledByDescription_identity :
     TapeCodePrimitiveCompiledByDescription
       MachineDescription.TapeCodePrimitive.identity
@@ -784,6 +860,41 @@ theorem tapeCodePrimitiveCompiledByDescription_identity :
         (MachineDescription.exactIdentityDescription_haltsWithExactOutput_iff
           (MachineDescription.encodeCodeWordAsInput code)
           (MachineDescription.encodeCodeWordAsInput code)).mpr rfl
+
+theorem tapeCodePrimitiveOutputRealizedByDescription_identity :
+    TapeCodePrimitiveOutputRealizedByDescription
+      MachineDescription.TapeCodePrimitive.identity
+      MachineDescription.ExactIdentityDescription :=
+  tapeCodePrimitiveOutputRealizedByDescription_of_exact
+    tapeCodePrimitiveCompiledByDescription_identity
+
+theorem not_tapeCodePrimitiveCompiledByDescription_erase :
+    ¬ exists D : MachineDescription,
+      TapeCodePrimitiveCompiledByDescription
+        MachineDescription.TapeCodePrimitive.erase D := by
+  intro h
+  rcases h with ⟨D, hD⟩
+  have herase :
+      D.HaltsWithExactOutput
+        (MachineDescription.encodeCodeWordAsInput
+          [MachineCodeSymbol.header])
+        (MachineDescription.encodeCodeWordAsInput []) := by
+    exact (hD.right [MachineCodeSymbol.header] []).mpr rfl
+  have hctx :
+      0 <
+        Tape.contextLength
+          (Tape.input
+            (MachineDescription.encodeCodeWordAsInput
+              [MachineCodeSymbol.header])) := by
+    simp [MachineDescription.encodeCodeWordAsInput,
+      MachineDescription.encodeCodeSymbolAsInput, Tape.input,
+      Tape.contextLength]
+  simpa [MachineDescription.encodeCodeWordAsInput] using
+    MachineDescription.not_haltsWithExactOutput_empty_of_input_contextLength_pos
+      (D := D)
+      (w := MachineDescription.encodeCodeWordAsInput
+        [MachineCodeSymbol.header])
+      hctx herase
 
 def TapeCodePrimitiveCodeComposition
     (A B C : MachineDescription) : Prop :=
@@ -842,10 +953,22 @@ def FixedDescriptionBoundedSimulatorCodeCompilerConstruction : Prop :=
       TapeCodePrimitiveCompiledByDescription
         (FixedDescriptionBoundedSimulatorCode D) simulator
 
+def FixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction : Prop :=
+  forall D : MachineDescription,
+    exists simulator : MachineDescription,
+      TapeCodePrimitiveOutputRealizedByDescription
+        (FixedDescriptionBoundedSimulatorCode D) simulator
+
 def FixedDescriptionStepCodeCompilerConstruction : Prop :=
   forall D : MachineDescription,
     exists stepper : MachineDescription,
       TapeCodePrimitiveCompiledByDescription
+        (FixedDescriptionStepCode D) stepper
+
+def FixedDescriptionStepCodeOutputRealizerConstruction : Prop :=
+  forall D : MachineDescription,
+    exists stepper : MachineDescription,
+      TapeCodePrimitiveOutputRealizedByDescription
         (FixedDescriptionStepCode D) stepper
 
 def PairedRecognizerDovetailLayoutCodeCompilerConstruction : Prop :=
@@ -853,6 +976,38 @@ def PairedRecognizerDovetailLayoutCodeCompilerConstruction : Prop :=
     exists runner : MachineDescription,
       TapeCodePrimitiveCompiledByDescription
         (PairedRecognizerDovetailLayoutCode accept reject) runner
+
+def PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction : Prop :=
+  forall accept reject : MachineDescription,
+    exists runner : MachineDescription,
+      TapeCodePrimitiveOutputRealizedByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject) runner
+
+theorem fixedDescriptionBoundedSimulatorCodeOutputRealizer_of_codeCompiler
+    (hcompile :
+      FixedDescriptionBoundedSimulatorCodeCompilerConstruction) :
+    FixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction := by
+  intro D
+  rcases hcompile D with ⟨simulator, hsimulator⟩
+  exact ⟨simulator,
+    tapeCodePrimitiveOutputRealizedByDescription_of_exact hsimulator⟩
+
+theorem fixedDescriptionStepCodeOutputRealizer_of_codeCompiler
+    (hcompile : FixedDescriptionStepCodeCompilerConstruction) :
+    FixedDescriptionStepCodeOutputRealizerConstruction := by
+  intro D
+  rcases hcompile D with ⟨stepper, hstepper⟩
+  exact ⟨stepper,
+    tapeCodePrimitiveOutputRealizedByDescription_of_exact hstepper⟩
+
+theorem pairedRecognizerDovetailLayoutCodeOutputRealizer_of_codeCompiler
+    (hcompile :
+      PairedRecognizerDovetailLayoutCodeCompilerConstruction) :
+    PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction := by
+  intro accept reject
+  rcases hcompile accept reject with ⟨runner, hrunner⟩
+  exact ⟨runner,
+    tapeCodePrimitiveOutputRealizedByDescription_of_exact hrunner⟩
 
 theorem fixedDescriptionBoundedSimulatorTableRealizes_of_codeCompiler
     {D simulator : MachineDescription}
@@ -884,6 +1039,30 @@ theorem fixedDescriptionBoundedSimulatorTableCompiler_of_codeCompiler
   rcases hcompile D with ⟨simulator, hsimulator⟩
   exact ⟨simulator,
     fixedDescriptionBoundedSimulatorTableRealizes_of_codeCompiler
+      hsimulator⟩
+
+theorem fixedDescriptionBoundedSimulatorTableRealizes_of_codeOutputRealizer
+    {D simulator : MachineDescription}
+    (hcompile : TapeCodePrimitiveOutputRealizedByDescription
+      (FixedDescriptionBoundedSimulatorCode D) simulator) :
+    FixedDescriptionBoundedSimulatorTableRealizes D simulator := by
+  constructor
+  · exact hcompile.left
+  · intro L
+    exact hcompile.right
+      (MachineDescription.SimulatorLayout.encode L)
+      (MachineDescription.SimulatorLayout.encode
+        (MachineDescription.SimulatorLayout.run D L.stage L))
+      (fixedDescriptionBoundedSimulatorCode_encode D L)
+
+theorem fixedDescriptionBoundedSimulatorTableCompiler_of_codeOutputRealizer
+    (hcompile :
+      FixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction) :
+    FixedDescriptionBoundedSimulatorTableCompilerConstruction := by
+  intro D
+  rcases hcompile D with ⟨simulator, hsimulator⟩
+  exact ⟨simulator,
+    fixedDescriptionBoundedSimulatorTableRealizes_of_codeOutputRealizer
       hsimulator⟩
 
 structure FixedDescriptionBoundedSimulatorPhaseTargets
