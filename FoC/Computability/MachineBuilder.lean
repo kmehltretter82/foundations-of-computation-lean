@@ -389,6 +389,10 @@ def singleAction (read write : Option Bool) (move : Direction) :
   exit := 1
   transitions := [transition 0 read write move 1]
 
+def writeThenMove (read write : Option Bool) (move : Direction) :
+    Fragment :=
+  singleAction read write move
+
 theorem singleAction_wellFormed
     (read write : Option Bool) (move : Direction) :
     (singleAction read write move).WellFormed := by
@@ -423,11 +427,19 @@ theorem singleAction_wellFormed
     change 0 ≠ 1
     omega
 
+theorem writeThenMove_wellFormed
+    (read write : Option Bool) (move : Direction) :
+    (writeThenMove read write move).WellFormed :=
+  singleAction_wellFormed read write move
+
 def handoff (move : Direction) : Fragment where
   stateCount := 2
   entry := 0
   exit := 1
   transitions := handoffTransitions 0 1 move
+
+def preserveMove (move : Direction) : Fragment :=
+  handoff move
 
 theorem handoff_wellFormed (move : Direction) :
     (handoff move).WellFormed := by
@@ -451,6 +463,10 @@ theorem handoff_wellFormed (move : Direction) :
     exact branchOnCell_no_source (source := 0) (state := 1)
       (blankTarget := 1) (falseTarget := 1) (trueTarget := 1)
       (move := move) (by omega) t ht
+
+theorem preserveMove_wellFormed (move : Direction) :
+    (preserveMove move).WellFormed :=
+  handoff_wellFormed move
 
 def offsetStates (offset : Nat) (F : Fragment) : Fragment where
   stateCount := offset + F.stateCount
@@ -568,7 +584,207 @@ theorem disjointUnion_wellFormed
             using hsource
         omega
 
+def seq (A B : Fragment) (handoffMove : Direction) : Fragment where
+  stateCount := A.stateCount + B.stateCount
+  entry := A.entry
+  exit := A.stateCount + B.exit
+  transitions :=
+    A.transitions ++
+      handoffTransitions A.exit (A.stateCount + B.entry) handoffMove ++
+        B.transitions.map
+          (TransitionDescription.offsetStates A.stateCount)
+
+theorem seq_wellFormed
+    {A B : Fragment} {handoffMove : Direction}
+    (hA : A.WellFormed) (hB : B.WellFormed) :
+    (seq A B handoffMove).WellFormed := by
+  rcases hA with
+    ⟨hApos, hAentry, hAexit, hAtrans, hAdet, hAexitStops⟩
+  rcases hB with
+    ⟨hBpos, hBentry, hBexit, hBtrans, hBdet, hBexitStops⟩
+  constructor
+  · change 0 < A.stateCount + B.stateCount
+    omega
+  constructor
+  · exact Nat.lt_add_right B.stateCount hAentry
+  constructor
+  · exact Nat.add_lt_add_left hBexit A.stateCount
+  constructor
+  · intro t ht
+    simp [seq] at ht
+    rcases ht with htA | htH | htB
+    · have htFormed := hAtrans t htA
+      constructor
+      · exact Nat.lt_add_right B.stateCount htFormed.left
+      · exact Nat.lt_add_right B.stateCount htFormed.right
+    · exact handoffTransitions_wellFormed
+        (stateCount := A.stateCount + B.stateCount)
+        (source := A.exit)
+        (target := A.stateCount + B.entry)
+        (move := handoffMove)
+        (by omega) (by omega) t htH
+    · rcases htB with ⟨base, hbase, rfl⟩
+      exact TransitionDescription.wellFormed_offsetStates
+        (offset := A.stateCount) (hBtrans base hbase)
+  constructor
+  · intro t u ht hu hkey
+    simp [seq] at ht hu
+    rcases ht with htA | htH | htB
+    · rcases hu with huA | huH | huB
+      · exact hAdet t u htA huA hkey
+      · simp [handoffTransitions, branchOnCell, preserveTransition,
+          transition] at huH
+        rcases huH with rfl | rfl | rfl
+        · exfalso
+          exact hAexitStops t htA hkey.left
+        · exfalso
+          exact hAexitStops t htA hkey.left
+        · exfalso
+          exact hAexitStops t htA hkey.left
+      · rcases huB with ⟨baseU, hbaseU, rfl⟩
+        have htBound := (hAtrans t htA).left
+        have hsource :
+            t.source = A.stateCount + baseU.source := hkey.left
+        omega
+    · rcases hu with huA | huH | huB
+      · simp [handoffTransitions, branchOnCell, preserveTransition,
+          transition] at htH
+        rcases htH with rfl | rfl | rfl
+        · exfalso
+          exact hAexitStops u huA hkey.left.symm
+        · exfalso
+          exact hAexitStops u huA hkey.left.symm
+        · exfalso
+          exact hAexitStops u huA hkey.left.symm
+      · exact handoffTransitions_deterministic
+          A.exit (A.stateCount + B.entry) handoffMove
+          t u htH huH hkey
+      · rcases huB with ⟨baseU, hbaseU, rfl⟩
+        simp [handoffTransitions, branchOnCell, preserveTransition,
+          transition] at htH
+        rcases htH with rfl | rfl | rfl
+        · have hsource :
+              A.exit = A.stateCount + baseU.source := hkey.left
+          omega
+        · have hsource :
+              A.exit = A.stateCount + baseU.source := hkey.left
+          omega
+        · have hsource :
+              A.exit = A.stateCount + baseU.source := hkey.left
+          omega
+    · rcases htB with ⟨baseT, hbaseT, rfl⟩
+      rcases hu with huA | huH | huB
+      · have huBound := (hAtrans u huA).left
+        have hsource :
+            A.stateCount + baseT.source = u.source := hkey.left
+        omega
+      · simp [handoffTransitions, branchOnCell, preserveTransition,
+          transition] at huH
+        rcases huH with rfl | rfl | rfl
+        · have hsource :
+              A.stateCount + baseT.source = A.exit := hkey.left
+          omega
+        · have hsource :
+              A.stateCount + baseT.source = A.exit := hkey.left
+          omega
+        · have hsource :
+              A.stateCount + baseT.source = A.exit := hkey.left
+          omega
+      · rcases huB with ⟨baseU, hbaseU, rfl⟩
+        exact TransitionDescription.offsetStates_sameAction
+          A.stateCount baseT baseU
+          (hBdet baseT baseU hbaseT hbaseU
+            (TransitionDescription.sameKey_of_offsetStates_sameKey hkey))
+  · intro t ht
+    simp [seq] at ht
+    rcases ht with htA | htH | htB
+    · intro hsource
+      have htBound := (hAtrans t htA).left
+      have hsource' : t.source = A.stateCount + B.exit := by
+        simpa [seq] using hsource
+      omega
+    · exact branchOnCell_no_source (source := A.exit)
+        (state := A.stateCount + B.exit)
+        (blankTarget := A.stateCount + B.entry)
+        (falseTarget := A.stateCount + B.entry)
+        (trueTarget := A.stateCount + B.entry)
+        (move := handoffMove) (by omega) t htH
+    · rcases htB with ⟨base, hbase, rfl⟩
+      intro hsource
+      have hbaseSource : base.source = B.exit :=
+        Nat.add_left_cancel hsource
+      exact hBexitStops base hbase hbaseSource
+
 end Fragment
+
+/-!
+## Fixed-simulator table skeletons
+
+The bounded simulator realizer is ultimately a single finite transition table.
+At this layer we name the reusable phase structure for such a table without
+claiming that the phases already implement decoding, table lookup, or encoded
+layout rewriting.  Each phase is a checked fragment, and the skeleton
+composition is a checked finite description.
+-/
+
+structure FixedSimulatorTableSkeleton where
+  decodeLayout : Fragment
+  simulateStep : Fragment
+  repeatControl : Fragment
+  emitLayout : Fragment
+  decodeLayout_wellFormed : decodeLayout.WellFormed
+  simulateStep_wellFormed : simulateStep.WellFormed
+  repeatControl_wellFormed : repeatControl.WellFormed
+  emitLayout_wellFormed : emitLayout.WellFormed
+
+namespace FixedSimulatorTableSkeleton
+
+def toFragment (S : FixedSimulatorTableSkeleton)
+    (handoffMove : Direction) : Fragment :=
+  Fragment.seq
+    (Fragment.seq
+      (Fragment.seq S.decodeLayout S.simulateStep handoffMove)
+      S.repeatControl handoffMove)
+    S.emitLayout handoffMove
+
+theorem toFragment_wellFormed
+    (S : FixedSimulatorTableSkeleton) (handoffMove : Direction) :
+    (S.toFragment handoffMove).WellFormed := by
+  unfold toFragment
+  apply Fragment.seq_wellFormed
+  · apply Fragment.seq_wellFormed
+    · apply Fragment.seq_wellFormed
+      · exact S.decodeLayout_wellFormed
+      · exact S.simulateStep_wellFormed
+    · exact S.repeatControl_wellFormed
+  · exact S.emitLayout_wellFormed
+
+def toDescription (S : FixedSimulatorTableSkeleton)
+    (handoffMove : Direction) : MachineDescription :=
+  (S.toFragment handoffMove).toDescription
+
+theorem toDescription_wellFormed
+    (S : FixedSimulatorTableSkeleton) (handoffMove : Direction) :
+    (S.toDescription handoffMove).WellFormed :=
+  Fragment.toDescription_wellFormed
+    (S.toFragment_wellFormed handoffMove)
+
+def linearPass (move : Direction) : FixedSimulatorTableSkeleton where
+  decodeLayout := Fragment.preserveMove move
+  simulateStep := Fragment.preserveMove move
+  repeatControl := Fragment.preserveMove move
+  emitLayout := Fragment.preserveMove move
+  decodeLayout_wellFormed := Fragment.preserveMove_wellFormed move
+  simulateStep_wellFormed := Fragment.preserveMove_wellFormed move
+  repeatControl_wellFormed := Fragment.preserveMove_wellFormed move
+  emitLayout_wellFormed := Fragment.preserveMove_wellFormed move
+
+theorem linearPass_description_wellFormed
+    (move handoffMove : Direction) :
+    ((linearPass move).toDescription handoffMove).WellFormed :=
+  toDescription_wellFormed (linearPass move) handoffMove
+
+end FixedSimulatorTableSkeleton
 
 /-!
 ## Tape and configuration codes
@@ -852,6 +1068,152 @@ def initial (D : MachineDescription) (w : Word Bool)
   stage := stage
   config := D.initial w
   hit := false
+
+def nextConfig (D : MachineDescription)
+    (c : Configuration) : Configuration :=
+  match D.stepConfig c with
+  | none => c
+  | some next => next
+
+theorem nextConfig_eq_runConfig_one
+    (D : MachineDescription) (c : Configuration) :
+    nextConfig D c = D.runConfig 1 c := by
+  cases hstep : D.stepConfig c <;>
+    simp [nextConfig, runConfig, hstep]
+
+def haltedConfigBool (D : MachineDescription)
+    (c : Configuration) : Bool :=
+  c.state == D.halt
+
+theorem haltedConfigBool_eq_true_iff
+    (D : MachineDescription) (c : Configuration) :
+    haltedConfigBool D c = true <-> c.state = D.halt := by
+  simp [haltedConfigBool]
+
+def step (D : MachineDescription)
+    (L : SimulatorLayout) : SimulatorLayout :=
+  let next := nextConfig D L.config
+  { L with
+    config := next
+    hit := L.hit || haltedConfigBool D next }
+
+theorem step_config
+    (D : MachineDescription) (L : SimulatorLayout) :
+    (step D L).config = D.runConfig 1 L.config := by
+  simp [step, nextConfig_eq_runConfig_one]
+
+theorem step_input
+    (D : MachineDescription) (L : SimulatorLayout) :
+    (step D L).input = L.input :=
+  rfl
+
+theorem step_stage
+    (D : MachineDescription) (L : SimulatorLayout) :
+    (step D L).stage = L.stage :=
+  rfl
+
+theorem step_hit_eq_true_iff
+    (D : MachineDescription) (L : SimulatorLayout) :
+    (step D L).hit = true <->
+      L.hit = true ∨ (D.runConfig 1 L.config).state = D.halt := by
+  simp [step, nextConfig_eq_runConfig_one, haltedConfigBool_eq_true_iff]
+
+def haltedFromConfigInBool (D : MachineDescription)
+    (c : Configuration) (n : Nat) : Bool :=
+  (D.runConfig n c).state == D.halt
+
+theorem haltedFromConfigInBool_eq_true_iff
+    (D : MachineDescription) (c : Configuration) (n : Nat) :
+    haltedFromConfigInBool D c n = true <->
+      (D.runConfig n c).state = D.halt := by
+  simp [haltedFromConfigInBool]
+
+def hitsFromConfigByBool (D : MachineDescription)
+    (c : Configuration) : Nat -> Bool
+  | 0 => haltedFromConfigInBool D c 0
+  | limit + 1 =>
+      hitsFromConfigByBool D c limit ||
+        haltedFromConfigInBool D c (limit + 1)
+
+theorem hitsFromConfigByBool_eq_true_iff
+    (D : MachineDescription) (c : Configuration) (limit : Nat) :
+    hitsFromConfigByBool D c limit = true <->
+      exists n : Nat, n ≤ limit ∧
+        (D.runConfig n c).state = D.halt := by
+  induction limit with
+  | zero =>
+      constructor
+      · intro h
+        exact ⟨0, Nat.le_refl 0,
+          (haltedFromConfigInBool_eq_true_iff D c 0).mp h⟩
+      · intro h
+        rcases h with ⟨n, hnle, hhalt⟩
+        have hn : n = 0 := by omega
+        cases hn
+        exact (haltedFromConfigInBool_eq_true_iff D c 0).mpr hhalt
+  | succ limit ih =>
+      constructor
+      · intro h
+        have hcases :
+            hitsFromConfigByBool D c limit = true ∨
+              haltedFromConfigInBool D c (limit + 1) = true := by
+          simpa [hitsFromConfigByBool] using h
+        cases hcases with
+        | inl hprev =>
+            rcases ih.mp hprev with ⟨n, hnle, hhalt⟩
+            exact ⟨n, Nat.le_trans hnle (Nat.le_succ limit), hhalt⟩
+        | inr hnow =>
+            exact ⟨limit + 1, Nat.le_refl (limit + 1),
+              (haltedFromConfigInBool_eq_true_iff
+                D c (limit + 1)).mp hnow⟩
+      · intro h
+        rcases h with ⟨n, hnle, hhalt⟩
+        by_cases hn : n ≤ limit
+        · have hprev : hitsFromConfigByBool D c limit = true :=
+            ih.mpr ⟨n, hn, hhalt⟩
+          simp [hitsFromConfigByBool, hprev]
+        · have hnEq : n = limit + 1 := by omega
+          cases hnEq
+          have hnow :
+              haltedFromConfigInBool D c (limit + 1) = true :=
+            (haltedFromConfigInBool_eq_true_iff
+              D c (limit + 1)).mpr hhalt
+          simp [hitsFromConfigByBool, hnow]
+
+def run (D : MachineDescription)
+    (steps : Nat) (L : SimulatorLayout) : SimulatorLayout :=
+  { L with
+    config := D.runConfig steps L.config
+    hit := L.hit || hitsFromConfigByBool D L.config steps }
+
+theorem run_config
+    (D : MachineDescription) (steps : Nat) (L : SimulatorLayout) :
+    (run D steps L).config = D.runConfig steps L.config :=
+  rfl
+
+theorem run_input
+    (D : MachineDescription) (steps : Nat) (L : SimulatorLayout) :
+    (run D steps L).input = L.input :=
+  rfl
+
+theorem run_stage
+    (D : MachineDescription) (steps : Nat) (L : SimulatorLayout) :
+    (run D steps L).stage = L.stage :=
+  rfl
+
+theorem run_hit_eq_true_iff
+    (D : MachineDescription) (steps : Nat) (L : SimulatorLayout) :
+    (run D steps L).hit = true <->
+      L.hit = true ∨
+        exists n : Nat, n ≤ steps ∧
+          (D.runConfig n L.config).state = D.halt := by
+  simp [run, hitsFromConfigByBool_eq_true_iff]
+
+theorem run_initial_hit_eq_true_iff
+    (D : MachineDescription) (w : Word Bool) (steps : Nat) :
+    (run D steps (initial D w steps)).hit = true <->
+      exists n : Nat, n ≤ steps ∧ D.HaltsIn n w := by
+  simp [run_hit_eq_true_iff, initial, HaltsIn]
 
 def afterRun (D : MachineDescription)
     (L : SimulatorLayout) (steps : Nat) : SimulatorLayout :=

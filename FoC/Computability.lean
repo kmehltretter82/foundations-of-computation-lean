@@ -81,13 +81,15 @@ machine for older non-injective statements and the faithful copy-machine theorem
 used by the Chapter 5 reductions that require injective encodings.
 {module}`FoC.Computability.MachineBuilder` adds the reusable transition-fragment
 DSL, state-offset, canonical simulator/dovetail tape layouts, finite
-tape/configuration-code, encoded-runner, and executable bounded-search tools
-needed for the remaining finite compiler constructions.
+tape/configuration-code, one-step and bounded simulator layout semantics,
+encoded-runner, and executable bounded-search tools needed for the remaining
+finite compiler constructions.
 {module}`FoC.Computability.Compiler` proves simulation equivalences between
 well-formed descriptions and their compiled one-tape machines, using normalized
 output for output comparisons, then exposes description-backed compiler bridges
-for staged acceptors, Boolean deciders, paired-trace dovetailing, partial unary
-range programs, encoded-input recognizers, and universal row coverage.
+for staged acceptors, Boolean deciders, fixed-description bounded simulators,
+paired-trace dovetailing, partial unary range programs, encoded-input
+recognizers, and universal row coverage.
 {module}`FoC.Computability.FiniteProgram` packages finite executable
 program-description syntax and proves concrete bridges for trace recognizers,
 Boolean deciders, dovetailing deciders, and partial unary range outputs when

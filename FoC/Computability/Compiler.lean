@@ -449,6 +449,52 @@ def PairedRecognizerBoundedDovetailTableCompilerConstruction : Prop :=
     exists decider : MachineDescription,
       PairedRecognizerBoundedDovetailTableRealizes accept reject decider
 
+def FixedDescriptionBoundedSimulatorInput
+    (L : MachineDescription.SimulatorLayout) : Word Bool :=
+  MachineDescription.SimulatorLayout.asBoolInput L
+
+def FixedDescriptionBoundedSimulatorOutput
+    (D : MachineDescription)
+    (L : MachineDescription.SimulatorLayout) : Word Bool :=
+  MachineDescription.SimulatorLayout.asBoolInput
+    (MachineDescription.SimulatorLayout.run D L.stage L)
+
+def FixedDescriptionBoundedSimulatorTableRealizes
+    (D simulator : MachineDescription) : Prop :=
+  simulator.WellFormed ∧
+    forall L : MachineDescription.SimulatorLayout,
+      simulator.HaltsWithOutput
+        (FixedDescriptionBoundedSimulatorInput L)
+        (FixedDescriptionBoundedSimulatorOutput D L)
+
+def FixedDescriptionBoundedSimulatorTableCompilerConstruction : Prop :=
+  forall D : MachineDescription,
+    exists simulator : MachineDescription,
+      FixedDescriptionBoundedSimulatorTableRealizes D simulator
+
+theorem fixedDescriptionBoundedSimulatorTableRealizes_wellFormed
+    {D simulator : MachineDescription}
+    (h : FixedDescriptionBoundedSimulatorTableRealizes D simulator) :
+    simulator.WellFormed :=
+  h.left
+
+theorem fixedDescriptionBoundedSimulatorTableRealizes_output
+    {D simulator : MachineDescription}
+    (h : FixedDescriptionBoundedSimulatorTableRealizes D simulator)
+    (L : MachineDescription.SimulatorLayout) :
+    simulator.HaltsWithOutput
+      (FixedDescriptionBoundedSimulatorInput L)
+      (FixedDescriptionBoundedSimulatorOutput D L) :=
+  h.right L
+
+theorem fixedDescriptionBoundedSimulatorOutput_run_hit
+    (D : MachineDescription) (L : MachineDescription.SimulatorLayout) :
+    (MachineDescription.SimulatorLayout.run D L.stage L).hit = true <->
+      L.hit = true ∨
+        exists n : Nat, n ≤ L.stage ∧
+          (D.runConfig n L.config).state = D.halt :=
+  MachineDescription.SimulatorLayout.run_hit_eq_true_iff D L.stage L
+
 theorem pairedRecognizerDovetailDescriptionCompiler_of_dovetailDescriptionCompiler
     (hcompile : DovetailDescriptionCompilerPrinciple) :
     PairedRecognizerDovetailDescriptionCompilerPrinciple := by
