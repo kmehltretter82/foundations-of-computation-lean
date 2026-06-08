@@ -1335,6 +1335,65 @@ theorem not_tapeCodePrimitiveCompiledByDescription_erase :
         [MachineCodeSymbol.header])
       hctx herase
 
+structure MachineDescriptionPrimitiveCompilerCore where
+  identityCompiled :
+    TapeCodePrimitiveCompiledByDescription
+      MachineDescription.TapeCodePrimitive.identity
+      MachineDescription.ExactIdentityDescription
+  identityOutputRealized :
+    TapeCodePrimitiveOutputRealizedByDescription
+      MachineDescription.TapeCodePrimitive.identity
+      MachineDescription.ExactIdentityDescription
+  eraseOutputRealized :
+    TapeCodePrimitiveOutputRealizedByDescription
+      MachineDescription.TapeCodePrimitive.erase
+      MachineDescription.EraseRightDescription
+  eraseNotExactlyCompiled :
+    ¬ exists D : MachineDescription,
+      TapeCodePrimitiveCompiledByDescription
+        MachineDescription.TapeCodePrimitive.erase D
+  appendSingletonOutputRealized :
+    forall symbol : MachineCodeSymbol,
+      TapeCodePrimitiveOutputRealizedByDescription
+        (MachineDescription.TapeCodePrimitive.append [symbol])
+        (MachineDescription.AppendCodeSymbolRightDescription symbol)
+
+def machineDescriptionPrimitiveCompilerCore :
+    MachineDescriptionPrimitiveCompilerCore where
+  identityCompiled := tapeCodePrimitiveCompiledByDescription_identity
+  identityOutputRealized :=
+    tapeCodePrimitiveOutputRealizedByDescription_identity
+  eraseOutputRealized :=
+    tapeCodePrimitiveOutputRealizedByDescription_erase
+  eraseNotExactlyCompiled :=
+    not_tapeCodePrimitiveCompiledByDescription_erase
+  appendSingletonOutputRealized :=
+    tapeCodePrimitiveOutputRealizedByDescription_append_singleton
+
+def MachineDescriptionTapeCodeExactCompilerConstruction : Prop :=
+  forall P : MachineDescription.TapeCodePrimitive,
+    exists D : MachineDescription,
+      TapeCodePrimitiveCompiledByDescription P D
+
+def MachineDescriptionTapeCodeOutputCompilerConstruction : Prop :=
+  forall P : MachineDescription.TapeCodePrimitive,
+    exists D : MachineDescription,
+      TapeCodePrimitiveOutputRealizedByDescription P D
+
+theorem not_machineDescriptionTapeCodeExactCompilerConstruction :
+    ¬ MachineDescriptionTapeCodeExactCompilerConstruction := by
+  intro hcompile
+  rcases hcompile MachineDescription.TapeCodePrimitive.erase with
+    ⟨D, hD⟩
+  exact not_tapeCodePrimitiveCompiledByDescription_erase ⟨D, hD⟩
+
+theorem machineDescriptionTapeCodeOutputCompiler_realizes
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction)
+    (P : MachineDescription.TapeCodePrimitive) :
+    exists D : MachineDescription,
+      TapeCodePrimitiveOutputRealizedByDescription P D :=
+  hcompile P
+
 def TapeCodePrimitiveCodeComposition
     (A B C : MachineDescription) : Prop :=
   C.WellFormed ∧
@@ -1648,6 +1707,59 @@ theorem fixedDescriptionBoundedSimulatorTableCompiler_of_codeOutputRealizer
   exact ⟨simulator,
     fixedDescriptionBoundedSimulatorTableRealizes_of_codeOutputRealizer
       hsimulator⟩
+
+structure MachineDescriptionCompilerCloseout where
+  stepCodeOutput :
+    FixedDescriptionStepCodeOutputRealizerConstruction
+  stepConfiguration :
+    FixedDescriptionStepCodeConfigurationRealizerConstruction
+  boundedSimulatorCodeOutput :
+    FixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction
+  boundedSimulatorTable :
+    FixedDescriptionBoundedSimulatorTableCompilerConstruction
+  dovetailLayoutCodeOutput :
+    PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction
+
+def machineDescriptionCompilerCloseout_of_tapeCodeOutputCompiler
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
+    MachineDescriptionCompilerCloseout where
+  stepCodeOutput := by
+    intro D
+    exact hcompile (FixedDescriptionStepCode D)
+  stepConfiguration :=
+    fixedDescriptionStepCodeConfigurationRealizerConstruction_of_outputRealizerConstruction
+      (by
+        intro D
+        exact hcompile (FixedDescriptionStepCode D))
+  boundedSimulatorCodeOutput := by
+    intro D
+    exact hcompile (FixedDescriptionBoundedSimulatorCode D)
+  boundedSimulatorTable :=
+    fixedDescriptionBoundedSimulatorTableCompiler_of_codeOutputRealizer
+      (by
+        intro D
+        exact hcompile (FixedDescriptionBoundedSimulatorCode D))
+  dovetailLayoutCodeOutput := by
+    intro accept reject
+    exact hcompile (PairedRecognizerDovetailLayoutCode accept reject)
+
+theorem fixedDescriptionStepCodeConfigurationRealizerConstruction_of_tapeCodeOutputCompiler
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
+    FixedDescriptionStepCodeConfigurationRealizerConstruction :=
+  (machineDescriptionCompilerCloseout_of_tapeCodeOutputCompiler
+    hcompile).stepConfiguration
+
+theorem fixedDescriptionBoundedSimulatorTableCompiler_of_tapeCodeOutputCompiler
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
+    FixedDescriptionBoundedSimulatorTableCompilerConstruction :=
+  (machineDescriptionCompilerCloseout_of_tapeCodeOutputCompiler
+    hcompile).boundedSimulatorTable
+
+theorem pairedRecognizerDovetailLayoutCodeOutputRealizer_of_tapeCodeOutputCompiler
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
+    PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction :=
+  (machineDescriptionCompilerCloseout_of_tapeCodeOutputCompiler
+    hcompile).dovetailLayoutCodeOutput
 
 structure FixedDescriptionBoundedSimulatorPhaseTargets
     (D : MachineDescription) where

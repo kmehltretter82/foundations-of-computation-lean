@@ -108,6 +108,12 @@ def ConcreteDovetailDescriptionCompilerConstruction : Prop :=
 def ConcretePairedRecognizerDovetailCompilerConstruction : Prop :=
   PairedRecognizerDovetailDescriptionCompilerPrinciple
 
+def ConcreteTapeCodeExactCompilerConstruction : Prop :=
+  MachineDescriptionTapeCodeExactCompilerConstruction
+
+def ConcreteTapeCodeOutputCompilerConstruction : Prop :=
+  MachineDescriptionTapeCodeOutputCompilerConstruction
+
 def ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction : Prop :=
   PairedRecognizerBoundedDovetailTableCompilerConstruction
 
@@ -1193,12 +1199,15 @@ construction is a single finite transducer problem: build the concrete Boolean
 transition table that parses a canonical configuration, performs one fixed
 description-table lookup, and emits the re-encoded successor configuration.
 
-The first concrete transducer pieces are now exposed here.  A finite table
+The concrete transducer pieces are retained as a small compiler core. A finite table
 appends one fixed encoded code symbol to the normalized Boolean output, while
 the code-primitive layer provides fixed unary comparisons and one-step tape
-write/move actions with canonical encode/decode theorems.  These are the
-components needed by the eventual full stepper construction; the arbitrary
-phase scheduler that assembles them into one table remains the hard part.
+write/move actions with canonical encode/decode theorems. Exact compilation
+of every code primitive is proved impossible because erasure cannot produce an
+exact empty tape window from nonempty input. The viable remaining boundary is
+therefore a normalized-output tape-code compiler: if that one generic compiler
+principle is supplied, the fixed stepper, bounded simulator, and dovetail-layout
+machine-description obligations all follow.
 -/
 
 theorem concrete_fixed_description_bounded_simulator_table_compiler_of_code_compiler
@@ -1213,6 +1222,38 @@ theorem concrete_fixed_description_bounded_simulator_table_compiler_of_code_outp
       ConcreteFixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction) :
     FixedDescriptionBoundedSimulatorTableCompilerConstruction :=
   Computability.fixedDescriptionBoundedSimulatorTableCompiler_of_codeOutputRealizer
+    hcompile
+
+def concrete_machine_description_primitive_compiler_core :
+    MachineDescriptionPrimitiveCompilerCore :=
+  Computability.machineDescriptionPrimitiveCompilerCore
+
+theorem concrete_tape_code_exact_compiler_construction_impossible :
+    ¬ ConcreteTapeCodeExactCompilerConstruction :=
+  Computability.not_machineDescriptionTapeCodeExactCompilerConstruction
+
+def concrete_machine_description_compiler_closeout_of_tape_code_output_compiler
+    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
+    MachineDescriptionCompilerCloseout :=
+  Computability.machineDescriptionCompilerCloseout_of_tapeCodeOutputCompiler
+    hcompile
+
+theorem concrete_fixed_description_step_code_configuration_realizer_construction_of_tape_code_output_compiler
+    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
+    ConcreteFixedDescriptionStepCodeConfigurationRealizerConstruction :=
+  Computability.fixedDescriptionStepCodeConfigurationRealizerConstruction_of_tapeCodeOutputCompiler
+    hcompile
+
+theorem concrete_fixed_description_bounded_simulator_table_compiler_of_tape_code_output_compiler
+    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
+    FixedDescriptionBoundedSimulatorTableCompilerConstruction :=
+  Computability.fixedDescriptionBoundedSimulatorTableCompiler_of_tapeCodeOutputCompiler
+    hcompile
+
+theorem concrete_paired_recognizer_dovetail_layout_code_output_realizer_of_tape_code_output_compiler
+    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
+    ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction :=
+  Computability.pairedRecognizerDovetailLayoutCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
 theorem concrete_fixed_description_step_code_output_realizer_of_configuration_realizer
