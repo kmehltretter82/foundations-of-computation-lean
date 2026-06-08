@@ -861,6 +861,49 @@ theorem decodeCells_encodeCellsAppend
   | cons cell rest ih =>
       simp [encodeCellsAppend, decodeCells, decodeCell_encodeCellAppend, ih]
 
+theorem decodeCells_eq_some_encodeCellsAppend
+    {len : Nat} {tokens : Word MachineCodeSymbol}
+    {cells : List (Option Bool)} {suffix : Word MachineCodeSymbol}
+    (h : decodeCells len tokens = some (cells, suffix)) :
+    len = cells.length ∧ tokens = encodeCellsAppend cells suffix := by
+  induction len generalizing tokens cells suffix with
+  | zero =>
+      simp [decodeCells] at h
+      cases h
+      subst cells
+      subst tokens
+      constructor <;> rfl
+  | succ len ih =>
+      simp [decodeCells] at h
+      cases hcell : decodeCell tokens with
+      | none =>
+          simp [hcell] at h
+      | some parsedCell =>
+          cases parsedCell with
+          | mk cell rest =>
+              simp [hcell] at h
+              cases hrest : decodeCells len rest with
+              | none =>
+                  simp [hrest] at h
+              | some parsedRest =>
+                  cases parsedRest with
+                  | mk tail parsedSuffix =>
+                      simp [hrest] at h
+                      cases h
+                      subst cells
+                      subst suffix
+                      have hcellTokens :
+                          tokens = encodeCellAppend cell rest :=
+                        decodeCell_eq_some_encodeCellAppend hcell
+                      have htail :
+                          len = tail.length ∧
+                            rest = encodeCellsAppend tail parsedSuffix :=
+                        ih hrest
+                      constructor
+                      · simp [htail.left]
+                      · simp [encodeCellsAppend, hcellTokens,
+                          htail.right]
+
 def encodeCellListAppend (cells : List (Option Bool))
     (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
   encodeNatAppend cells.length (encodeCellsAppend cells suffix)
@@ -877,6 +920,40 @@ theorem decodeCellList_encodeCellListAppend
       some (cells, suffix) := by
   simp [decodeCellList, encodeCellListAppend, decodeNat_encodeNatAppend,
     decodeCells_encodeCellsAppend]
+
+theorem decodeCellList_eq_some_encodeCellListAppend
+    {tokens : Word MachineCodeSymbol}
+    {cells : List (Option Bool)} {suffix : Word MachineCodeSymbol}
+    (h : decodeCellList tokens = some (cells, suffix)) :
+    tokens = encodeCellListAppend cells suffix := by
+  unfold decodeCellList at h
+  cases hlen : decodeNat tokens with
+  | none =>
+      simp [hlen] at h
+  | some parsedLen =>
+      cases parsedLen with
+      | mk len rest =>
+          simp [hlen] at h
+          cases hcells : decodeCells len rest with
+          | none =>
+              simp [hcells] at h
+          | some parsedCells =>
+              cases parsedCells with
+              | mk decodedCells decodedSuffix =>
+                  simp [hcells] at h
+                  cases h
+                  subst cells
+                  subst suffix
+                  have htokens :
+                      tokens = encodeNatAppend len rest :=
+                    decodeNat_eq_some_encodeNatAppend hlen
+                  have hrest :
+                      len = decodedCells.length ∧
+                        rest =
+                          encodeCellsAppend decodedCells decodedSuffix :=
+                    decodeCells_eq_some_encodeCellsAppend hcells
+                  rw [htokens, hrest.left, hrest.right]
+                  rfl
 
 def encodeTapeAppend (T : Tape Bool)
     (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
@@ -911,6 +988,54 @@ theorem decodeTape_encodeTape (T : Tape Bool) :
     decodeTape (encodeTape T) = some (T, []) :=
   decodeTape_encodeTapeAppend T []
 
+theorem decodeTape_eq_some_encodeTapeAppend
+    {tokens : Word MachineCodeSymbol} {T : Tape Bool}
+    {suffix : Word MachineCodeSymbol}
+    (h : decodeTape tokens = some (T, suffix)) :
+    tokens = encodeTapeAppend T suffix := by
+  unfold decodeTape at h
+  cases hleft : decodeCellList tokens with
+  | none =>
+      simp [hleft] at h
+  | some parsedLeft =>
+      cases parsedLeft with
+      | mk left restAfterLeft =>
+          simp [hleft] at h
+          cases hhead : decodeCell restAfterLeft with
+          | none =>
+              simp [hhead] at h
+          | some parsedHead =>
+              cases parsedHead with
+              | mk head restAfterHead =>
+                  simp [hhead] at h
+                  cases hright : decodeCellList restAfterHead with
+                  | none =>
+                      simp [hright] at h
+                  | some parsedRight =>
+                      cases parsedRight with
+                      | mk right parsedSuffix =>
+                          simp [hright] at h
+                          cases h
+                          subst T
+                          subst suffix
+                          have htokens :
+                              tokens =
+                                encodeCellListAppend left
+                                  restAfterLeft :=
+                            decodeCellList_eq_some_encodeCellListAppend
+                              hleft
+                          have hrestAfterLeft :
+                              restAfterLeft =
+                                encodeCellAppend head restAfterHead :=
+                            decodeCell_eq_some_encodeCellAppend hhead
+                          have hrestAfterHead :
+                              restAfterHead =
+                                encodeCellListAppend right parsedSuffix :=
+                            decodeCellList_eq_some_encodeCellListAppend
+                              hright
+                          simp [encodeTapeAppend, htokens,
+                            hrestAfterLeft, hrestAfterHead]
+
 def encodeConfigurationAppend (c : Configuration)
     (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
   encodeNatAppend c.state (encodeTapeAppend c.tape suffix)
@@ -940,6 +1065,45 @@ theorem decodeConfiguration_encodeConfigurationAppend
 theorem decodeConfiguration_encodeConfiguration (c : Configuration) :
     decodeConfiguration (encodeConfiguration c) = some (c, []) :=
   decodeConfiguration_encodeConfigurationAppend c []
+
+theorem decodeConfiguration_eq_some_encodeConfigurationAppend
+    {tokens : Word MachineCodeSymbol} {c : Configuration}
+    {suffix : Word MachineCodeSymbol}
+    (h : decodeConfiguration tokens = some (c, suffix)) :
+    tokens = encodeConfigurationAppend c suffix := by
+  unfold decodeConfiguration at h
+  cases hstate : decodeNat tokens with
+  | none =>
+      simp [hstate] at h
+  | some parsedState =>
+      cases parsedState with
+      | mk state restAfterState =>
+          simp [hstate] at h
+          cases htape : decodeTape restAfterState with
+          | none =>
+              simp [htape] at h
+          | some parsedTape =>
+              cases parsedTape with
+              | mk tape parsedSuffix =>
+                  simp [htape] at h
+                  cases h
+                  subst c
+                  subst suffix
+                  have htokens :
+                      tokens = encodeNatAppend state restAfterState :=
+                    decodeNat_eq_some_encodeNatAppend hstate
+                  have hrest :
+                      restAfterState =
+                        encodeTapeAppend tape parsedSuffix :=
+                    decodeTape_eq_some_encodeTapeAppend htape
+                  simp [encodeConfigurationAppend, htokens, hrest]
+
+theorem decodeConfiguration_eq_some_encodeConfiguration
+    {tokens : Word MachineCodeSymbol} {c : Configuration}
+    (h : decodeConfiguration tokens = some (c, [])) :
+    tokens = encodeConfiguration c := by
+  simpa [encodeConfiguration] using
+    decodeConfiguration_eq_some_encodeConfigurationAppend h
 
 def runEncodedConfiguration
     (D : MachineDescription) (steps : Nat)

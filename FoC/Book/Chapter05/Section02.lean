@@ -124,6 +124,10 @@ def ConcreteFixedDescriptionStepCodeCompilerConstruction : Prop :=
 def ConcreteFixedDescriptionStepCodeOutputRealizerConstruction : Prop :=
   FixedDescriptionStepCodeOutputRealizerConstruction
 
+def ConcreteFixedDescriptionStepCodeConfigurationRealizerConstruction :
+    Prop :=
+  FixedDescriptionStepCodeConfigurationRealizerConstruction
+
 def ConcretePairedRecognizerDovetailLayoutCodeCompilerConstruction : Prop :=
   PairedRecognizerDovetailLayoutCodeCompilerConstruction
 
@@ -1172,6 +1176,19 @@ theorem recursive_iff_re_co_re_construction_of_principles
   Computability.recursiveIffReCoRePrinciple_of_principles
     haccept hdovetail
 
+/-!
+**Code-output boundary.**  Exact tape output is intentionally separated from
+normalized code output here.  The identity primitive satisfies both contracts,
+while erasure is impossible for the exact tape-window contract but is realized
+by a concrete finite normalized-output machine.
+
+For the fixed one-step primitive, the new bridge says that it is enough to
+build a finite stepper on canonical encoded configurations.  Parser
+canonicalization lemmas then promote that theorem to the full
+{name}`TapeCodePrimitiveOutputRealizedByDescription` interface, covering any
+code word whose configuration decoder succeeds completely.
+-/
+
 theorem concrete_fixed_description_bounded_simulator_table_compiler_of_code_compiler
     (hcompile :
       ConcreteFixedDescriptionBoundedSimulatorCodeCompilerConstruction) :
@@ -1186,6 +1203,28 @@ theorem concrete_fixed_description_bounded_simulator_table_compiler_of_code_outp
   Computability.fixedDescriptionBoundedSimulatorTableCompiler_of_codeOutputRealizer
     hcompile
 
+theorem concrete_fixed_description_step_code_output_realizer_of_configuration_realizer
+    {D stepper : MachineDescription}
+    (hstepper :
+      FixedDescriptionStepCodeConfigurationRealizes D stepper) :
+    TapeCodePrimitiveOutputRealizedByDescription
+      (FixedDescriptionStepCode D) stepper :=
+  Computability.fixedDescriptionStepCodeOutputRealizer_of_configurationRealizer
+    hstepper
+
+theorem concrete_fixed_description_step_code_output_realizer_construction_of_configuration_realizer_construction
+    (hcompile :
+      ConcreteFixedDescriptionStepCodeConfigurationRealizerConstruction) :
+    ConcreteFixedDescriptionStepCodeOutputRealizerConstruction :=
+  Computability.fixedDescriptionStepCodeOutputRealizerConstruction_of_configurationRealizerConstruction
+    hcompile
+
+theorem concrete_fixed_description_step_code_configuration_realizes_exact_identity :
+    FixedDescriptionStepCodeConfigurationRealizes
+      MachineDescription.ExactIdentityDescription
+      MachineDescription.ExactIdentityDescription :=
+  Computability.fixedDescriptionStepCodeConfigurationRealizes_exactIdentityDescription
+
 theorem concrete_tape_code_identity_compiled_by_description :
     TapeCodePrimitiveCompiledByDescription
       MachineDescription.TapeCodePrimitive.identity
@@ -1197,6 +1236,12 @@ theorem concrete_tape_code_identity_output_realized_by_description :
       MachineDescription.TapeCodePrimitive.identity
       MachineDescription.ExactIdentityDescription :=
   Computability.tapeCodePrimitiveOutputRealizedByDescription_identity
+
+theorem concrete_tape_code_erase_output_realized_by_description :
+    TapeCodePrimitiveOutputRealizedByDescription
+      MachineDescription.TapeCodePrimitive.erase
+      MachineDescription.EraseRightDescription :=
+  Computability.tapeCodePrimitiveOutputRealizedByDescription_erase
 
 theorem concrete_tape_code_erase_not_exact_compiled_by_description :
     ¬ exists D : MachineDescription,

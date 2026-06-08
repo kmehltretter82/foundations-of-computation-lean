@@ -295,16 +295,98 @@ theorem decodeNat_encodeNatAppend
     decodeNat (encodeNatAppend n suffix) = some (n, suffix) :=
   decodeNat_encodeNat_append n suffix
 
+theorem decodeNat_eq_some_encodeNatAppend
+    {tokens : Word MachineCodeSymbol} {n : Nat}
+    {suffix : Word MachineCodeSymbol}
+    (h : decodeNat tokens = some (n, suffix)) :
+    tokens = encodeNatAppend n suffix := by
+  induction tokens generalizing n suffix with
+  | nil =>
+      cases h
+  | cons symbol rest ih =>
+      cases symbol with
+      | header => cases h
+      | transition => cases h
+      | tick =>
+          simp [decodeNat] at h
+          cases hrest : decodeNat rest with
+          | none =>
+              simp [hrest] at h
+          | some parsed =>
+              cases parsed with
+              | mk parsedN parsedSuffix =>
+                  simp [hrest] at h
+                  have hcanonical :
+                      rest = encodeNatAppend parsedN parsedSuffix :=
+                    ih hrest
+                  cases h
+                  subst n
+                  subst suffix
+                  simp [encodeNatAppend, encodeNat, hcanonical]
+      | done =>
+          simp [decodeNat] at h
+          cases h
+          subst n
+          subst suffix
+          rfl
+      | blank => cases h
+      | zero => cases h
+      | one => cases h
+      | moveLeft => cases h
+      | moveRight => cases h
+
 theorem decodeCell_encodeCellAppend
     (cell : Option Bool) (suffix : Word MachineCodeSymbol) :
     decodeCell (encodeCellAppend cell suffix) = some (cell, suffix) :=
   decodeCell_encodeCell_append cell suffix
+
+theorem decodeCell_eq_some_encodeCellAppend
+    {tokens : Word MachineCodeSymbol} {cell : Option Bool}
+    {suffix : Word MachineCodeSymbol}
+    (h : decodeCell tokens = some (cell, suffix)) :
+    tokens = encodeCellAppend cell suffix := by
+  cases tokens with
+  | nil =>
+      cases h
+  | cons symbol rest =>
+      cases symbol <;> simp [decodeCell] at h
+      · cases h
+        subst cell
+        subst suffix
+        rfl
+      · cases h
+        subst cell
+        subst suffix
+        rfl
+      · cases h
+        subst cell
+        subst suffix
+        rfl
 
 theorem decodeDirection_encodeDirectionAppend
     (dir : Direction) (suffix : Word MachineCodeSymbol) :
     decodeDirection (encodeDirectionAppend dir suffix) =
       some (dir, suffix) :=
   decodeDirection_encodeDirection_append dir suffix
+
+theorem decodeDirection_eq_some_encodeDirectionAppend
+    {tokens : Word MachineCodeSymbol} {dir : Direction}
+    {suffix : Word MachineCodeSymbol}
+    (h : decodeDirection tokens = some (dir, suffix)) :
+    tokens = encodeDirectionAppend dir suffix := by
+  cases tokens with
+  | nil =>
+      cases h
+  | cons symbol rest =>
+      cases symbol <;> simp [decodeDirection] at h
+      · cases h
+        subst dir
+        subst suffix
+        rfl
+      · cases h
+        subst dir
+        subst suffix
+        rfl
 
 def encodeTransitionAppend (t : TransitionDescription)
     (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=

@@ -406,6 +406,149 @@ theorem exactIdentityDescription_haltsWithExactOutput_iff
     rw [h]
     exact ⟨0, exactIdentityDescription_haltsWithExactOutputIn w⟩
 
+/-!
+## Normalized-output transducers
+
+Exact tape-output compilation is too strict for destructive code-word
+operations because the tape window remembers blank context.  The finite
+transducers below target normalized output: they may leave blank context on the
+tape, but the visible code word is exactly the desired output.
+-/
+
+def EraseRightDescription : MachineDescription where
+  stateCount := 2
+  start := 0
+  halt := 1
+  transitions :=
+    [ transition 0 none none Direction.right 1
+    , transition 0 (some false) none Direction.right 0
+    , transition 0 (some true) none Direction.right 0 ]
+
+def eraseRightTape (erased : Nat) : Word Bool -> Tape Bool
+  | [] =>
+      { left := List.replicate erased none
+        head := none
+        right := [] }
+  | b :: rest =>
+      { left := List.replicate erased none
+        head := some b
+        right := rest.map some }
+
+theorem eraseRightDescription_wellFormed :
+    EraseRightDescription.WellFormed := by
+  constructor
+  · simp [EraseRightDescription]
+  constructor
+  · simp [EraseRightDescription]
+  constructor
+  · simp [EraseRightDescription]
+  constructor
+  · intro t ht
+    simp [EraseRightDescription, transition,
+      TransitionDescription.WellFormed] at ht ⊢
+    rcases ht with rfl | rfl | rfl <;> simp
+  · intro t u ht hu hkey
+    simp [EraseRightDescription, transition] at ht hu
+    rcases ht with rfl | rfl | rfl <;>
+      rcases hu with rfl | rfl | rfl <;>
+        simp [TransitionDescription.SameKey,
+          TransitionDescription.SameAction] at hkey ⊢
+
+theorem eraseRightTape_move_nonempty
+    (erased : Nat) (b : Bool) (rest : Word Bool) :
+    Tape.move Direction.right
+        (Tape.write none (eraseRightTape erased (b :: rest))) =
+      eraseRightTape (erased + 1) rest := by
+  cases rest with
+  | nil =>
+      simp [eraseRightTape, Tape.move, Tape.moveRight, Tape.write,
+        List.replicate_succ]
+  | cons c tail =>
+      simp [eraseRightTape, Tape.move, Tape.moveRight, Tape.write,
+        List.replicate_succ]
+
+theorem eraseRightTape_move_empty (erased : Nat) :
+    Tape.move Direction.right
+        (Tape.write none (eraseRightTape erased [])) =
+      eraseRightTape (erased + 1) [] := by
+  simp [eraseRightTape, Tape.move, Tape.moveRight, Tape.write,
+    List.replicate_succ]
+
+theorem eraseRightTape_zero_eq_input (w : Word Bool) :
+    eraseRightTape 0 w = Tape.input w := by
+  cases w <;> rfl
+
+theorem eraseRightDescription_step_nonempty
+    (erased : Nat) (b : Bool) (rest : Word Bool) :
+    EraseRightDescription.stepConfig
+        { state := 0, tape := eraseRightTape erased (b :: rest) } =
+      some { state := 0, tape := eraseRightTape (erased + 1) rest } := by
+  cases b <;>
+    cases rest <;>
+      simp [EraseRightDescription, stepConfig, lookupTransition,
+        Matches, transition, Tape.read, eraseRightTape,
+        Tape.write, Tape.move, Tape.moveRight, List.replicate_succ]
+
+theorem eraseRightDescription_step_empty
+    (erased : Nat) :
+    EraseRightDescription.stepConfig
+        { state := 0, tape := eraseRightTape erased [] } =
+      some { state := 1, tape := eraseRightTape (erased + 1) [] } := by
+  simp [EraseRightDescription, stepConfig, lookupTransition,
+    Matches, transition, Tape.read, eraseRightTape,
+    Tape.write, Tape.move, Tape.moveRight, List.replicate_succ]
+
+theorem eraseRightDescription_run_scan
+    (erased : Nat) (w : Word Bool) :
+    EraseRightDescription.runConfig w.length
+        { state := 0, tape := eraseRightTape erased w } =
+      { state := 0, tape := eraseRightTape (erased + w.length) [] } := by
+  induction w generalizing erased with
+  | nil =>
+      simp [runConfig]
+  | cons b rest ih =>
+      simp [runConfig, eraseRightDescription_step_nonempty, ih,
+        List.length_cons]
+      have hlen :
+          erased + 1 + rest.length =
+            erased + (rest.length + 1) := by
+        omega
+      rw [hlen]
+
+theorem eraseRightDescription_run_halt (w : Word Bool) :
+    EraseRightDescription.runConfig (w.length + 1)
+        (EraseRightDescription.initial w) =
+      { state := 1, tape := eraseRightTape (w.length + 1) [] } := by
+  rw [runConfig_add]
+  have hscan :
+      EraseRightDescription.runConfig w.length
+          (EraseRightDescription.initial w) =
+        { state := 0, tape := eraseRightTape w.length [] } := by
+    simpa [initial, EraseRightDescription, eraseRightTape_zero_eq_input,
+      Nat.zero_add] using
+      eraseRightDescription_run_scan 0 w
+  rw [hscan]
+  simp [runConfig, eraseRightDescription_step_empty]
+
+theorem eraseRightTape_normalizedOutput_empty (erased : Nat) :
+    Tape.normalizedOutput (eraseRightTape erased []) = [] := by
+  induction erased with
+  | zero =>
+      rfl
+  | succ erased ih =>
+    simp [eraseRightTape, Tape.normalizedOutput, Tape.cells,
+        List.replicate_succ]
+
+theorem eraseRightDescription_haltsWithOutput_empty
+    (w : Word Bool) :
+    EraseRightDescription.HaltsWithOutput w [] := by
+  exists w.length + 1
+  constructor
+  · rw [eraseRightDescription_run_halt]
+    simp [EraseRightDescription]
+  · rw [eraseRightDescription_run_halt]
+    exact eraseRightTape_normalizedOutput_empty (w.length + 1)
+
 theorem toTuringMachine_haltsOnInput_iff {D : MachineDescription}
     (hD : D.WellFormed) (w : Word Bool) :
     TuringMachine.HaltsOnInput D.toTuringMachine w <-> D.HaltsOnInput w := by
@@ -868,6 +1011,18 @@ theorem tapeCodePrimitiveOutputRealizedByDescription_identity :
   tapeCodePrimitiveOutputRealizedByDescription_of_exact
     tapeCodePrimitiveCompiledByDescription_identity
 
+theorem tapeCodePrimitiveOutputRealizedByDescription_erase :
+    TapeCodePrimitiveOutputRealizedByDescription
+      MachineDescription.TapeCodePrimitive.erase
+      MachineDescription.EraseRightDescription := by
+  constructor
+  · exact MachineDescription.eraseRightDescription_wellFormed
+  · intro code out h
+    simp [MachineDescription.TapeCodePrimitive.erase] at h
+    rw [← h]
+    exact MachineDescription.eraseRightDescription_haltsWithOutput_empty
+      (MachineDescription.encodeCodeWordAsInput code)
+
 theorem not_tapeCodePrimitiveCompiledByDescription_erase :
     ¬ exists D : MachineDescription,
       TapeCodePrimitiveCompiledByDescription
@@ -971,6 +1126,21 @@ def FixedDescriptionStepCodeOutputRealizerConstruction : Prop :=
       TapeCodePrimitiveOutputRealizedByDescription
         (FixedDescriptionStepCode D) stepper
 
+def FixedDescriptionStepCodeConfigurationRealizes
+    (D stepper : MachineDescription) : Prop :=
+  stepper.WellFormed ∧
+    forall c : MachineDescription.Configuration,
+      stepper.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeConfiguration c))
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeConfiguration (D.runConfig 1 c)))
+
+def FixedDescriptionStepCodeConfigurationRealizerConstruction : Prop :=
+  forall D : MachineDescription,
+    exists stepper : MachineDescription,
+      FixedDescriptionStepCodeConfigurationRealizes D stepper
+
 def PairedRecognizerDovetailLayoutCodeCompilerConstruction : Prop :=
   forall accept reject : MachineDescription,
     exists runner : MachineDescription,
@@ -999,6 +1169,68 @@ theorem fixedDescriptionStepCodeOutputRealizer_of_codeCompiler
   rcases hcompile D with ⟨stepper, hstepper⟩
   exact ⟨stepper,
     tapeCodePrimitiveOutputRealizedByDescription_of_exact hstepper⟩
+
+theorem fixedDescriptionStepCodeOutputRealizer_of_configurationRealizer
+    {D stepper : MachineDescription}
+    (hstepper :
+      FixedDescriptionStepCodeConfigurationRealizes D stepper) :
+    TapeCodePrimitiveOutputRealizedByDescription
+      (FixedDescriptionStepCode D) stepper := by
+  constructor
+  · exact hstepper.left
+  · intro code out hcode
+    unfold FixedDescriptionStepCode at hcode
+    simp [MachineDescription.stepConfigurationCodePrimitive,
+      MachineDescription.stepConfigurationCode] at hcode
+    cases hdecode : MachineDescription.decodeConfiguration code with
+    | none =>
+        simp [hdecode] at hcode
+    | some parsed =>
+        cases parsed with
+        | mk c suffix =>
+            cases suffix with
+            | nil =>
+                simp [hdecode] at hcode
+                have hcanonical :
+                    code = MachineDescription.encodeConfiguration c :=
+                  MachineDescription.decodeConfiguration_eq_some_encodeConfiguration
+                    hdecode
+                rw [hcanonical, ← hcode]
+                exact hstepper.right c
+            | cons _ _ =>
+                simp [hdecode] at hcode
+
+theorem fixedDescriptionStepCodeOutputRealizerConstruction_of_configurationRealizerConstruction
+    (hcompile :
+      FixedDescriptionStepCodeConfigurationRealizerConstruction) :
+    FixedDescriptionStepCodeOutputRealizerConstruction := by
+  intro D
+  rcases hcompile D with ⟨stepper, hstepper⟩
+  exact ⟨stepper,
+    fixedDescriptionStepCodeOutputRealizer_of_configurationRealizer
+      hstepper⟩
+
+theorem fixedDescriptionStepCodeConfigurationRealizes_exactIdentityDescription :
+    FixedDescriptionStepCodeConfigurationRealizes
+      MachineDescription.ExactIdentityDescription
+      MachineDescription.ExactIdentityDescription := by
+  constructor
+  · exact MachineDescription.exactIdentityDescription_wellFormed
+  · intro c
+    have hrun :
+        MachineDescription.ExactIdentityDescription.runConfig 1 c = c := by
+      cases c
+      simp [MachineDescription.runConfig,
+        MachineDescription.stepConfig,
+        MachineDescription.lookupTransition,
+        MachineDescription.ExactIdentityDescription]
+    rw [hrun]
+    exact MachineDescription.haltsWithOutput_of_haltsWithExactOutput
+      ((MachineDescription.exactIdentityDescription_haltsWithExactOutput_iff
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeConfiguration c))
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeConfiguration c))).mpr rfl)
 
 theorem pairedRecognizerDovetailLayoutCodeOutputRealizer_of_codeCompiler
     (hcompile :
