@@ -299,6 +299,31 @@ theorem exactIdentityDescription_exactOutputRealizes :
   · intro w
     exact ⟨0, exactIdentityDescription_haltsWithExactOutputIn w⟩
 
+theorem exactIdentityDescription_runConfig_initial
+    (n : Nat) (w : Word Bool) :
+    ExactIdentityDescription.runConfig n
+        (ExactIdentityDescription.initial w) =
+      ExactIdentityDescription.initial w := by
+  cases n <;>
+    simp [runConfig, stepConfig, lookupTransition,
+      ExactIdentityDescription]
+
+theorem exactIdentityDescription_haltsWithExactOutput_iff
+    (w out : Word Bool) :
+    ExactIdentityDescription.HaltsWithExactOutput w out <-> out = w := by
+  constructor
+  · intro h
+    rcases h with ⟨n, hn⟩
+    have htape : Tape.input w = Tape.output out := by
+      simpa [HaltsWithExactOutputIn,
+        exactIdentityDescription_runConfig_initial] using hn.right
+    have hw : w = out := Tape.input_injective
+      (by simpa [Tape.output] using htape)
+    exact hw.symm
+  · intro h
+    rw [h]
+    exact ⟨0, exactIdentityDescription_haltsWithExactOutputIn w⟩
+
 theorem toTuringMachine_haltsOnInput_iff {D : MachineDescription}
     (hD : D.WellFormed) (w : Word Bool) :
     TuringMachine.HaltsOnInput D.toTuringMachine w <-> D.HaltsOnInput w := by
@@ -626,6 +651,131 @@ theorem fixedDescriptionBoundedSimulatorCode_boolOutput
   simp [fixedDescriptionBoundedSimulatorCode_encode,
     FixedDescriptionBoundedSimulatorOutput,
     MachineDescription.SimulatorLayout.asBoolInput]
+
+def TapeCodePrimitiveCompiledByDescription
+    (P : MachineDescription.TapeCodePrimitive)
+    (D : MachineDescription) : Prop :=
+  D.WellFormed ∧
+    forall code out : Word MachineCodeSymbol,
+      D.HaltsWithExactOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out) <->
+          P.transform code = some out
+
+theorem tapeCodePrimitiveCompiledByDescription_identity :
+    TapeCodePrimitiveCompiledByDescription
+      MachineDescription.TapeCodePrimitive.identity
+      MachineDescription.ExactIdentityDescription := by
+  constructor
+  · exact MachineDescription.exactIdentityDescription_wellFormed
+  · intro code out
+    constructor
+    · intro h
+      have hbool :
+          MachineDescription.encodeCodeWordAsInput out =
+            MachineDescription.encodeCodeWordAsInput code :=
+        (MachineDescription.exactIdentityDescription_haltsWithExactOutput_iff
+          (MachineDescription.encodeCodeWordAsInput code)
+          (MachineDescription.encodeCodeWordAsInput out)).mp h
+      have hout : out = code :=
+        MachineDescription.encodeCodeWordAsInput_injective hbool
+      simp [MachineDescription.TapeCodePrimitive.identity, hout]
+    · intro h
+      simp [MachineDescription.TapeCodePrimitive.identity] at h
+      rw [← h]
+      exact
+        (MachineDescription.exactIdentityDescription_haltsWithExactOutput_iff
+          (MachineDescription.encodeCodeWordAsInput code)
+          (MachineDescription.encodeCodeWordAsInput code)).mpr rfl
+
+def TapeCodePrimitiveCodeComposition
+    (A B C : MachineDescription) : Prop :=
+  C.WellFormed ∧
+    forall code out : Word MachineCodeSymbol,
+      C.HaltsWithExactOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out) <->
+        exists mid : Word MachineCodeSymbol,
+          A.HaltsWithExactOutput
+              (MachineDescription.encodeCodeWordAsInput code)
+              (MachineDescription.encodeCodeWordAsInput mid) ∧
+            B.HaltsWithExactOutput
+              (MachineDescription.encodeCodeWordAsInput mid)
+              (MachineDescription.encodeCodeWordAsInput out)
+
+theorem tapeCodePrimitiveCompiledByDescription_compose
+    {P Q : MachineDescription.TapeCodePrimitive}
+    {A B C : MachineDescription}
+    (hcomp : TapeCodePrimitiveCodeComposition A B C)
+    (hP : TapeCodePrimitiveCompiledByDescription P A)
+    (hQ : TapeCodePrimitiveCompiledByDescription Q B) :
+    TapeCodePrimitiveCompiledByDescription
+      (MachineDescription.TapeCodePrimitive.compose P Q) C := by
+  constructor
+  · exact hcomp.left
+  · intro code out
+    constructor
+    · intro h
+      rcases (hcomp.right code out).mp h with
+        ⟨mid, hA, hB⟩
+      have hPmid : P.transform code = some mid :=
+        (hP.right code mid).mp hA
+      have hQout : Q.transform mid = some out :=
+        (hQ.right mid out).mp hB
+      exact
+        MachineDescription.TapeCodePrimitive.compose_transform_some
+          hPmid hQout
+    · intro h
+      unfold MachineDescription.TapeCodePrimitive.compose at h
+      cases hPcode : P.transform code with
+      | none =>
+          simp [hPcode] at h
+      | some mid =>
+          have hQout : Q.transform mid = some out := by
+            simpa [hPcode] using h
+          apply (hcomp.right code out).mpr
+          exists mid
+          constructor
+          · exact (hP.right code mid).mpr hPcode
+          · exact (hQ.right mid out).mpr hQout
+
+def FixedDescriptionBoundedSimulatorCodeCompilerConstruction : Prop :=
+  forall D : MachineDescription,
+    exists simulator : MachineDescription,
+      TapeCodePrimitiveCompiledByDescription
+        (FixedDescriptionBoundedSimulatorCode D) simulator
+
+theorem fixedDescriptionBoundedSimulatorTableRealizes_of_codeCompiler
+    {D simulator : MachineDescription}
+    (hcompile : TapeCodePrimitiveCompiledByDescription
+      (FixedDescriptionBoundedSimulatorCode D) simulator) :
+    FixedDescriptionBoundedSimulatorTableRealizes D simulator := by
+  constructor
+  · exact hcompile.left
+  · intro L
+    have hExact :
+        simulator.HaltsWithExactOutput
+          (FixedDescriptionBoundedSimulatorInput L)
+          (FixedDescriptionBoundedSimulatorOutput D L) := by
+      have hcode := (hcompile.right
+        (MachineDescription.SimulatorLayout.encode L)
+        (MachineDescription.SimulatorLayout.encode
+          (MachineDescription.SimulatorLayout.run D L.stage L))).mpr
+          (fixedDescriptionBoundedSimulatorCode_encode D L)
+      simpa [FixedDescriptionBoundedSimulatorInput,
+        FixedDescriptionBoundedSimulatorOutput,
+        MachineDescription.SimulatorLayout.asBoolInput] using hcode
+    exact MachineDescription.haltsWithOutput_of_haltsWithExactOutput hExact
+
+theorem fixedDescriptionBoundedSimulatorTableCompiler_of_codeCompiler
+    (hcompile :
+      FixedDescriptionBoundedSimulatorCodeCompilerConstruction) :
+    FixedDescriptionBoundedSimulatorTableCompilerConstruction := by
+  intro D
+  rcases hcompile D with ⟨simulator, hsimulator⟩
+  exact ⟨simulator,
+    fixedDescriptionBoundedSimulatorTableRealizes_of_codeCompiler
+      hsimulator⟩
 
 structure FixedDescriptionBoundedSimulatorPhaseTargets
     (D : MachineDescription) where
@@ -1371,6 +1521,20 @@ theorem compiledPartialUnaryFunctionProgramRange_of_partiallyListable
     CompiledPartialUnaryFunctionProgramRange L :=
   compiledPartialUnaryFunctionProgramRange_of_partialRangeOfUnaryFunction
     hcompile (partiallyListable_partialRangeOfUnaryFunction h)
+
+theorem compiledPartialUnaryRange_of_unaryProgramRange
+    (hcompile : PartialUnaryRangeDescriptionCompilerPrinciple)
+    (P : StagedProgram Unit Bool) :
+    CompiledPartialUnaryRange (ProgramRangeLanguage P) :=
+  compiledPartialUnaryRange_of_partialRangeOfUnaryFunction
+    hcompile (programRange_partialRangeOfUnaryFunction P)
+
+theorem compiledPartialUnaryFunctionProgramRange_of_unaryProgramRange
+    (hcompile : PartialUnaryRangeDescriptionCompilerPrinciple)
+    (P : StagedProgram Unit Bool) :
+    CompiledPartialUnaryFunctionProgramRange (ProgramRangeLanguage P) :=
+  compiledPartialUnaryFunctionProgramRange_of_partialRangeOfUnaryFunction
+    hcompile (programRange_partialRangeOfUnaryFunction P)
 
 end Computability
 end FoC

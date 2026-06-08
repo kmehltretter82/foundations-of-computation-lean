@@ -574,6 +574,10 @@ noncomputable def outputFunction (P : FinitePartialUnaryRangeProgram) :
       else
         none
 
+noncomputable def outputListing (P : FinitePartialUnaryRangeProgram) :
+    Nat -> Option (Word Bool) :=
+  fun n => P.outputFunction (UnaryInputWord n)
+
 theorem outputRange_equal_descriptionOutputRange
     (P : FinitePartialUnaryRangeProgram) :
     Language.Equal P.outputRange P.descriptionOutputRange := by
@@ -659,6 +663,21 @@ theorem partialRange_outputFunction_equal_descriptionOutputRange
         exact hfunctional w (Classical.choose hex) out
           (Classical.choose_spec hex) hout
 
+theorem outputListing_partiallyListedBy_descriptionOutputRange
+    (P : FinitePartialUnaryRangeProgram)
+    (hfunctional : P.OutputFunctional) :
+    PartiallyListedBy P.outputListing P.descriptionOutputRange :=
+  partiallyListedBy_of_equal
+    (partialUnaryFunctionRange_partiallyListedBy P.outputFunction)
+    (partialRange_outputFunction_equal_descriptionOutputRange P hfunctional)
+
+theorem partiallyListable_descriptionOutputRange
+    (P : FinitePartialUnaryRangeProgram)
+    (hfunctional : P.OutputFunctional) :
+    PartiallyListable P.descriptionOutputRange :=
+  ⟨P.outputListing,
+    outputListing_partiallyListedBy_descriptionOutputRange P hfunctional⟩
+
 theorem compiledPartialUnaryRange_descriptionOutputRange
     (P : FinitePartialUnaryRangeProgram)
     (hD : P.description.WellFormed)
@@ -671,6 +690,37 @@ theorem compiledPartialUnaryRange_descriptionOutputRange
         (outputFunction_compiledByDescription P hD hcomplete)
         (partialRange_outputFunction_equal_descriptionOutputRange
           P hfunctional)))
+
+theorem compiledPartialUnaryFunctionProgramRange_descriptionOutputRange
+    (P : FinitePartialUnaryRangeProgram)
+    (hD : P.description.WellFormed)
+    (hcomplete : P.OutputComplete)
+    (hfunctional : P.OutputFunctional) :
+    CompiledPartialUnaryFunctionProgramRange P.descriptionOutputRange :=
+  Exists.intro P.outputFunction
+    (Exists.intro P.description
+      (And.intro
+        (outputFunction_compiledByDescription P hD hcomplete)
+        (Language.equal_trans
+          (partialFunctionProgram_range P.outputFunction)
+          (partialRange_outputFunction_equal_descriptionOutputRange
+            P hfunctional))))
+
+theorem descriptionOutputRange_closeout
+    (P : FinitePartialUnaryRangeProgram)
+    (hD : P.description.WellFormed)
+    (hcomplete : P.OutputComplete)
+    (hfunctional : P.OutputFunctional) :
+    CompiledPartialUnaryRange P.descriptionOutputRange ∧
+      CompiledPartialUnaryFunctionProgramRange P.descriptionOutputRange ∧
+      PartiallyListable P.descriptionOutputRange := by
+  constructor
+  · exact compiledPartialUnaryRange_descriptionOutputRange
+      P hD hcomplete hfunctional
+  · constructor
+    · exact compiledPartialUnaryFunctionProgramRange_descriptionOutputRange
+        P hD hcomplete hfunctional
+    · exact partiallyListable_descriptionOutputRange P hfunctional
 
 end FinitePartialUnaryRangeProgram
 

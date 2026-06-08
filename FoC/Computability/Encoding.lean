@@ -536,6 +536,56 @@ def encodeCodeWordAsInput : Word MachineCodeSymbol -> Word Bool
       List.append (encodeCodeSymbolAsInput symbol)
         (encodeCodeWordAsInput rest)
 
+def decodeCodeWordAsInput : Word Bool -> Option (Word MachineCodeSymbol)
+  | [] => some []
+  | false :: false :: false :: false :: rest =>
+      Option.map (fun decoded => MachineCodeSymbol.header :: decoded)
+        (decodeCodeWordAsInput rest)
+  | false :: false :: false :: true :: rest =>
+      Option.map (fun decoded => MachineCodeSymbol.transition :: decoded)
+        (decodeCodeWordAsInput rest)
+  | false :: false :: true :: false :: rest =>
+      Option.map (fun decoded => MachineCodeSymbol.tick :: decoded)
+        (decodeCodeWordAsInput rest)
+  | false :: false :: true :: true :: rest =>
+      Option.map (fun decoded => MachineCodeSymbol.done :: decoded)
+        (decodeCodeWordAsInput rest)
+  | false :: true :: false :: false :: rest =>
+      Option.map (fun decoded => MachineCodeSymbol.blank :: decoded)
+        (decodeCodeWordAsInput rest)
+  | false :: true :: false :: true :: rest =>
+      Option.map (fun decoded => MachineCodeSymbol.zero :: decoded)
+        (decodeCodeWordAsInput rest)
+  | false :: true :: true :: false :: rest =>
+      Option.map (fun decoded => MachineCodeSymbol.one :: decoded)
+        (decodeCodeWordAsInput rest)
+  | false :: true :: true :: true :: rest =>
+      Option.map (fun decoded => MachineCodeSymbol.moveLeft :: decoded)
+        (decodeCodeWordAsInput rest)
+  | true :: false :: false :: false :: rest =>
+      Option.map (fun decoded => MachineCodeSymbol.moveRight :: decoded)
+        (decodeCodeWordAsInput rest)
+  | _ => none
+
+theorem decodeCodeWordAsInput_encodeCodeWordAsInput
+    (w : Word MachineCodeSymbol) :
+    decodeCodeWordAsInput (encodeCodeWordAsInput w) = some w := by
+  induction w with
+  | nil =>
+      rfl
+  | cons symbol rest ih =>
+      cases symbol <;>
+        simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+          decodeCodeWordAsInput, Option.map, ih]
+
+theorem encodeCodeWordAsInput_injective :
+    Function.Injective encodeCodeWordAsInput := by
+  intro x y h
+  have hdecode := congrArg decodeCodeWordAsInput h
+  rw [decodeCodeWordAsInput_encodeCodeWordAsInput,
+    decodeCodeWordAsInput_encodeCodeWordAsInput] at hdecode
+  exact Option.some.inj hdecode
+
 def CodeAccepts
     (machine input : Word MachineCodeSymbol) : Prop :=
   exists D : MachineDescription,

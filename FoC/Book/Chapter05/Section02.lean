@@ -111,6 +111,9 @@ def ConcretePairedRecognizerDovetailCompilerConstruction : Prop :=
 def ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction : Prop :=
   PairedRecognizerBoundedDovetailTableCompilerConstruction
 
+def ConcreteFixedDescriptionBoundedSimulatorCodeCompilerConstruction : Prop :=
+  FixedDescriptionBoundedSimulatorCodeCompilerConstruction
+
 def ConcreteFiniteDovetailCompilerConstruction : Prop :=
   FiniteDovetailProgram.CompilerConstruction
 
@@ -254,6 +257,11 @@ noncomputable def ConcreteFinitePartialUnaryOutputFunction
     (P : ConcreteFinitePartialUnaryRangeProgram) :
     Word Unit -> Option (Word Bool) :=
   P.outputFunction
+
+noncomputable def ConcreteFinitePartialUnaryOutputListing
+    (P : ConcreteFinitePartialUnaryRangeProgram) :
+    Nat -> Option (Word Bool) :=
+  P.outputListing
 
 def ConcreteFinitePartialUnaryRangeStagedProgram
     (P : ConcreteFinitePartialUnaryRangeProgram) :
@@ -1147,6 +1155,19 @@ theorem recursive_iff_re_co_re_construction_of_principles
   Computability.recursiveIffReCoRePrinciple_of_principles
     haccept hdovetail
 
+theorem concrete_fixed_description_bounded_simulator_table_compiler_of_code_compiler
+    (hcompile :
+      ConcreteFixedDescriptionBoundedSimulatorCodeCompilerConstruction) :
+    FixedDescriptionBoundedSimulatorTableCompilerConstruction :=
+  Computability.fixedDescriptionBoundedSimulatorTableCompiler_of_codeCompiler
+    hcompile
+
+theorem concrete_tape_code_identity_compiled_by_description :
+    TapeCodePrimitiveCompiledByDescription
+      MachineDescription.TapeCodePrimitive.identity
+      MachineDescription.ExactIdentityDescription :=
+  Computability.tapeCodePrimitiveCompiledByDescription_identity
+
 /-!
 **Listings and Ranges.**
 
@@ -1476,6 +1497,11 @@ theorem partial_unary_function_program_range_language_is_partially_listable
     LanguagePartiallyListable L :=
   (partially_listable_language_iff_partial_unary_function_program_range L).mpr h
 
+theorem staged_unary_program_range_is_partial_unary_range
+    (P : StagedProgram Unit output) :
+    PartialRangeOfUnaryStringFunction (LanguageProgramRange P) :=
+  Computability.programRange_partialRangeOfUnaryFunction P
+
 /-!
 The compiled-range theorems state what a concrete description must provide to
 serve as an enumerator. The semantic range is already a partial unary range; the
@@ -1590,6 +1616,19 @@ theorem partial_unary_string_function_range_has_concrete_compiled_program_range_
   Computability.compiledPartialUnaryFunctionProgramRange_of_partialRangeOfUnaryFunction
     hcompile h
 
+theorem staged_unary_program_range_has_concrete_compiled_range_of_concrete_compiler
+    (hcompile : ConcretePartialUnaryRangeDescriptionCompilerConstruction)
+    (P : StagedProgram Unit Bool) :
+    ConcreteCompiledPartialUnaryRange (LanguageProgramRange P) :=
+  Computability.compiledPartialUnaryRange_of_unaryProgramRange hcompile P
+
+theorem staged_unary_program_range_has_concrete_compiled_program_range_of_concrete_compiler
+    (hcompile : ConcretePartialUnaryRangeDescriptionCompilerConstruction)
+    (P : StagedProgram Unit Bool) :
+    ConcreteCompiledPartialUnaryFunctionProgramRange (LanguageProgramRange P) :=
+  Computability.compiledPartialUnaryFunctionProgramRange_of_unaryProgramRange
+    hcompile P
+
 theorem partially_listable_language_has_concrete_compiled_partial_unary_program_range_of_concrete_compiler
     (hcompile : ConcretePartialUnaryRangeDescriptionCompilerConstruction)
     {L : Language Bool}
@@ -1677,6 +1716,19 @@ theorem concrete_finite_partial_unary_output_function_range_equal_description_ou
       Computability.FinitePartialUnaryRangeProgram.partialRange_outputFunction_equal_descriptionOutputRange
         P hfunctional
 
+theorem concrete_finite_partial_unary_output_listing_partially_lists_description_outputs
+    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
+    LanguagePartiallyListedBy
+      (ConcreteFinitePartialUnaryOutputListing P)
+      (ConcreteFinitePartialUnaryDescriptionOutputRange P) := by
+  simpa [ConcreteFinitePartialUnaryOutputListing,
+    ConcreteFinitePartialUnaryDescriptionOutputRange,
+    ConcreteFinitePartialUnaryOutputFunctional]
+    using
+      Computability.FinitePartialUnaryRangeProgram.outputListing_partiallyListedBy_descriptionOutputRange
+        P hfunctional
+
 theorem concrete_finite_partial_unary_description_output_range_compiled
     (P : ConcreteFinitePartialUnaryRangeProgram)
     (hD : P.description.WellFormed)
@@ -1761,18 +1813,13 @@ theorem concrete_finite_partial_unary_description_output_range_compiled_program_
     (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
     ConcreteCompiledPartialUnaryFunctionProgramRange
       (ConcreteFinitePartialUnaryDescriptionOutputRange P) := by
-  exists ConcreteFinitePartialUnaryOutputFunction P
-  exists P.description
-  constructor
-  · exact
-      concrete_finite_partial_unary_output_function_compiled_by_description
-        P hD hcomplete
-  · exact
-      Language.equal_trans
-        (partial_function_program_range_language
-          (ConcreteFinitePartialUnaryOutputFunction P))
-        (concrete_finite_partial_unary_output_function_range_equal_description_outputs
-          P hfunctional)
+  simpa [ConcreteCompiledPartialUnaryFunctionProgramRange,
+    ConcreteFinitePartialUnaryDescriptionOutputRange,
+    ConcreteFinitePartialUnaryOutputComplete,
+    ConcreteFinitePartialUnaryOutputFunctional]
+    using
+      Computability.FinitePartialUnaryRangeProgram.compiledPartialUnaryFunctionProgramRange_descriptionOutputRange
+        P hD hcomplete hfunctional
 
 theorem concrete_finite_partial_unary_range_presentation_compiled_range
     (P : ConcreteFinitePartialUnaryRangeProgram)

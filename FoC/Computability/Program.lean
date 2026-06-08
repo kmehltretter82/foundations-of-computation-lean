@@ -1,3 +1,4 @@
+import FoC.Foundation.Countable
 import FoC.Computability.Enumerable
 
 set_option doc.verso true
@@ -446,6 +447,92 @@ theorem partiallyListable_iff_partialUnaryFunctionProgramRange
     (partiallyListable_iff_partialRangeOfUnaryFunction L)
     (Iff.symm
       (partialUnaryFunctionProgramRange_iff_partialRangeOfUnaryFunction L))
+
+/-!
+## Two-parameter staged ranges
+
+A staged unary program has two finite parameters: the unary input length and the
+stage bound.  The pairing code from {module}`FoC.Foundation.Countable` folds
+those two parameters into one unary input, turning the program range into an
+ordinary partial unary range.
+-/
+
+noncomputable def StagedUnaryProgramPairRange
+    (P : StagedProgram Unit output) :
+    Word Unit -> Option (Word output) :=
+  fun w => by
+    classical
+    let k := Word.Length w
+    exact
+      if h : exists inputLen : Nat, exists stage : Nat,
+          FoC.Foundation.Countability.PairCode inputLen stage = k then
+        let inputLen := Classical.choose h
+        let hstage := Classical.choose_spec h
+        let stage := Classical.choose hstage
+        P.run (UnaryInputWord inputLen) stage
+      else
+        none
+
+theorem stagedUnaryProgramPairRange_pairCode
+    (P : StagedProgram Unit output) (inputLen stage : Nat) :
+    StagedUnaryProgramPairRange P
+        (UnaryInputWord
+          (FoC.Foundation.Countability.PairCode inputLen stage)) =
+      P.run (UnaryInputWord inputLen) stage := by
+  classical
+  unfold StagedUnaryProgramPairRange
+  simp [unaryInputWord_length]
+  have hExists : exists i : Nat, exists n : Nat,
+      FoC.Foundation.Countability.PairCode i n =
+        FoC.Foundation.Countability.PairCode inputLen stage :=
+    ⟨inputLen, stage, rfl⟩
+  rw [dif_pos hExists]
+  let i := Classical.choose hExists
+  let hstage := Classical.choose_spec hExists
+  let n := Classical.choose hstage
+  have hp : FoC.Foundation.Countability.PairCode i n =
+      FoC.Foundation.Countability.PairCode inputLen stage := by
+    simpa [i, n, hstage] using Classical.choose_spec hstage
+  rcases FoC.Foundation.Countability.pairCode_injective_left hp with
+    ⟨hi, hn⟩
+  change P.run (UnaryInputWord i) n =
+    P.run (UnaryInputWord inputLen) stage
+  rw [hi, hn]
+
+theorem stagedUnaryProgramPairRange_equal_programRange
+    (P : StagedProgram Unit output) :
+    Language.Equal
+      (PartialRangeLanguage (StagedUnaryProgramPairRange P))
+      (ProgramRangeLanguage P) := by
+  intro out
+  constructor
+  · intro h
+    rcases h with ⟨w, hw⟩
+    classical
+    unfold StagedUnaryProgramPairRange at hw
+    by_cases hpair : exists inputLen : Nat, exists stage : Nat,
+        FoC.Foundation.Countability.PairCode inputLen stage =
+          Word.Length w
+    · simp [hpair] at hw
+      let inputLen := Classical.choose hpair
+      let hstage := Classical.choose_spec hpair
+      let stage := Classical.choose hstage
+      exact ⟨UnaryInputWord inputLen, ⟨stage, hw⟩⟩
+    · simp [hpair] at hw
+  · intro h
+    rcases h with ⟨input, stage, hstage⟩
+    exists UnaryInputWord
+      (FoC.Foundation.Countability.PairCode (Word.Length input) stage)
+    have hinput : input = UnaryInputWord (Word.Length input) :=
+      unit_word_eq_unaryInputWord_length input
+    rw [stagedUnaryProgramPairRange_pairCode]
+    rwa [hinput] at hstage
+
+theorem programRange_partialRangeOfUnaryFunction
+    (P : StagedProgram Unit output) :
+    PartialRangeOfUnaryFunction (ProgramRangeLanguage P) :=
+  ⟨StagedUnaryProgramPairRange P,
+    stagedUnaryProgramPairRange_equal_programRange P⟩
 
 end Computability
 end FoC
