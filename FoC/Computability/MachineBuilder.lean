@@ -1143,6 +1143,25 @@ theorem stepConfigurationCode_encodeConfiguration
       some (encodeConfiguration (D.runConfig 1 c)) := by
   simp [stepConfigurationCode, decodeConfiguration_encodeConfiguration]
 
+theorem runConfig_one_of_lookupTransition_none
+    {D : MachineDescription} {c : Configuration}
+    (hlookup :
+      D.lookupTransition c.state (Tape.read c.tape) = none) :
+    D.runConfig 1 c = c := by
+  cases c
+  simp [runConfig, stepConfig, hlookup]
+
+theorem runConfig_one_of_lookupTransition_some
+    {D : MachineDescription} {c : Configuration}
+    {t : TransitionDescription}
+    (hlookup :
+      D.lookupTransition c.state (Tape.read c.tape) = some t) :
+    D.runConfig 1 c =
+      { state := t.target
+        tape := Tape.move t.move (Tape.write t.write c.tape) } := by
+  cases c
+  simp [runConfig, stepConfig, hlookup]
+
 /-!
 ## Canonical simulator layouts
 
@@ -1280,6 +1299,100 @@ theorem append_realizes (suffix : Word MachineCodeSymbol) :
     (append suffix).Realizes (fun w => some (List.append w suffix)) := by
   intro w
   rfl
+
+def compareNatEq (target : Nat) : TapeCodePrimitive where
+  transform := fun tokens =>
+    match decodeNat tokens with
+    | none => none
+    | some (n, suffix) => some (encodeBoolAppend (n == target) suffix)
+
+theorem compareNatEq_transform_encodeNatAppend
+    (target n : Nat) (suffix : Word MachineCodeSymbol) :
+    (compareNatEq target).transform (encodeNatAppend n suffix) =
+      some (encodeBoolAppend (n == target) suffix) := by
+  simp [compareNatEq, decodeNat_encodeNatAppend]
+
+theorem compareNatEq_result_true_iff
+    (target n : Nat) :
+    (n == target) = true <-> n = target := by
+  simp
+
+def compareNatLt (bound : Nat) : TapeCodePrimitive where
+  transform := fun tokens =>
+    match decodeNat tokens with
+    | none => none
+    | some (n, suffix) =>
+        some (encodeBoolAppend (decide (n < bound)) suffix)
+
+theorem compareNatLt_transform_encodeNatAppend
+    (bound n : Nat) (suffix : Word MachineCodeSymbol) :
+    (compareNatLt bound).transform (encodeNatAppend n suffix) =
+      some (encodeBoolAppend (decide (n < bound)) suffix) := by
+  simp [compareNatLt, decodeNat_encodeNatAppend]
+
+theorem compareNatLt_result_true_iff
+    (bound n : Nat) :
+    decide (n < bound) = true <-> n < bound := by
+  simp
+
+def writeHead (cell : Option Bool) : TapeCodePrimitive where
+  transform := fun tokens =>
+    match decodeTape tokens with
+    | some (T, []) => some (encodeTape (Tape.write cell T))
+    | _ => none
+
+theorem writeHead_transform_encodeTape
+    (cell : Option Bool) (T : Tape Bool) :
+    (writeHead cell).transform (encodeTape T) =
+      some (encodeTape (Tape.write cell T)) := by
+  simp [writeHead, decodeTape_encodeTape]
+
+def moveHead (dir : Direction) : TapeCodePrimitive where
+  transform := fun tokens =>
+    match decodeTape tokens with
+    | some (T, []) => some (encodeTape (Tape.move dir T))
+    | _ => none
+
+theorem moveHead_transform_encodeTape
+    (dir : Direction) (T : Tape Bool) :
+    (moveHead dir).transform (encodeTape T) =
+      some (encodeTape (Tape.move dir T)) := by
+  simp [moveHead, decodeTape_encodeTape]
+
+def writeMove (cell : Option Bool) (dir : Direction) :
+    TapeCodePrimitive where
+  transform := fun tokens =>
+    match decodeTape tokens with
+    | some (T, []) =>
+        some (encodeTape (Tape.move dir (Tape.write cell T)))
+    | _ => none
+
+theorem writeMove_transform_encodeTape
+    (cell : Option Bool) (dir : Direction) (T : Tape Bool) :
+    (writeMove cell dir).transform (encodeTape T) =
+      some (encodeTape (Tape.move dir (Tape.write cell T))) := by
+  simp [writeMove, decodeTape_encodeTape]
+
+def transitionTapeAction
+    (t : TransitionDescription) : TapeCodePrimitive :=
+  writeMove t.write t.move
+
+theorem transitionTapeAction_transform_encodeTape
+    (t : TransitionDescription) (T : Tape Bool) :
+    (transitionTapeAction t).transform (encodeTape T) =
+      some (encodeTape
+        (Tape.move t.move (Tape.write t.write T))) := by
+  simp [transitionTapeAction, writeMove_transform_encodeTape]
+
+theorem transitionTapeAction_transform_encodeTape_of_lookupTransition
+    {D : MachineDescription} {c : Configuration}
+    {t : TransitionDescription}
+    (hlookup :
+      D.lookupTransition c.state (Tape.read c.tape) = some t) :
+    (transitionTapeAction t).transform (encodeTape c.tape) =
+      some (encodeTape (D.runConfig 1 c).tape) := by
+  rw [transitionTapeAction_transform_encodeTape,
+    runConfig_one_of_lookupTransition_some hlookup]
 
 def compose (P Q : TapeCodePrimitive) : TapeCodePrimitive where
   transform := fun w =>

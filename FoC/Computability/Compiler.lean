@@ -549,6 +549,262 @@ theorem eraseRightDescription_haltsWithOutput_empty
   · rw [eraseRightDescription_run_halt]
     exact eraseRightTape_normalizedOutput_empty (w.length + 1)
 
+/-!
+## Code-symbol append transducers
+
+The next finite machine is a first transition-level emitter for encoded
+{lit}`MachineCodeSymbol` words. It scans to the first blank on the right of the
+Boolean input, writes four fixed bits, and halts with the normalized output
+extended by those bits.  Instantiating the four bits with
+{name}`encodeCodeSymbolAsInput` realizes the one-symbol
+{name}`MachineDescription.TapeCodePrimitive.append` primitive for one fixed
+code symbol.
+-/
+
+def appendRightScanTape
+    (leftRev remaining : Word Bool) : Tape Bool :=
+  match remaining with
+  | [] =>
+      { left := leftRev.map some
+        head := none
+        right := [] }
+  | b :: rest =>
+      { left := leftRev.map some
+        head := some b
+        right := rest.map some }
+
+def appendRightWriteTape
+    (leftRev written : Word Bool) : Tape Bool :=
+  { left := (List.append written.reverse leftRev).map some
+    head := none
+    right := [] }
+
+def AppendFixedFourBitsRightDescription
+    (b0 b1 b2 b3 : Bool) : MachineDescription where
+  stateCount := 5
+  start := 0
+  halt := 4
+  transitions :=
+    [ transition 0 none (some b0) Direction.right 1
+    , transition 0 (some false) (some false) Direction.right 0
+    , transition 0 (some true) (some true) Direction.right 0
+    , transition 1 none (some b1) Direction.right 2
+    , transition 2 none (some b2) Direction.right 3
+    , transition 3 none (some b3) Direction.right 4 ]
+
+def AppendCodeSymbolRightDescription
+    (symbol : MachineCodeSymbol) : MachineDescription :=
+  match MachineDescription.encodeCodeSymbolAsInput symbol with
+  | [b0, b1, b2, b3] =>
+      AppendFixedFourBitsRightDescription b0 b1 b2 b3
+  | _ => ExactIdentityDescription
+
+theorem appendFixedFourBitsRightDescription_wellFormed
+    (b0 b1 b2 b3 : Bool) :
+    (AppendFixedFourBitsRightDescription b0 b1 b2 b3).WellFormed := by
+  constructor
+  · simp [AppendFixedFourBitsRightDescription]
+  constructor
+  · simp [AppendFixedFourBitsRightDescription]
+  constructor
+  · simp [AppendFixedFourBitsRightDescription]
+  constructor
+  · intro t ht
+    simp [AppendFixedFourBitsRightDescription, transition,
+      TransitionDescription.WellFormed] at ht ⊢
+    rcases ht with rfl | rfl | rfl | rfl | rfl | rfl <;> simp
+  · intro t u ht hu hkey
+    simp [AppendFixedFourBitsRightDescription, transition] at ht hu
+    rcases ht with rfl | rfl | rfl | rfl | rfl | rfl <;>
+      rcases hu with rfl | rfl | rfl | rfl | rfl | rfl <;>
+        simp [TransitionDescription.SameKey,
+          TransitionDescription.SameAction] at hkey ⊢
+
+theorem appendCodeSymbolRightDescription_wellFormed
+    (symbol : MachineCodeSymbol) :
+    (AppendCodeSymbolRightDescription symbol).WellFormed := by
+  cases symbol <;>
+    exact appendFixedFourBitsRightDescription_wellFormed _ _ _ _
+
+theorem appendRightScanTape_nil_eq_input
+    (w : Word Bool) :
+    appendRightScanTape [] w = Tape.input w := by
+  cases w <;> rfl
+
+theorem appendFixedFourBitsRightDescription_step_scan_nonempty
+    (b0 b1 b2 b3 : Bool)
+    (leftRev : Word Bool) (b : Bool) (rest : Word Bool) :
+    (AppendFixedFourBitsRightDescription b0 b1 b2 b3).stepConfig
+        { state := 0, tape := appendRightScanTape leftRev (b :: rest) } =
+      some { state := 0, tape := appendRightScanTape (b :: leftRev) rest } := by
+  cases b <;>
+    cases rest <;>
+      simp [AppendFixedFourBitsRightDescription, stepConfig,
+        lookupTransition, Matches, transition, Tape.read,
+        appendRightScanTape, Tape.write, Tape.move, Tape.moveRight]
+
+theorem appendFixedFourBitsRightDescription_step_scan_empty
+    (b0 b1 b2 b3 : Bool) (leftRev : Word Bool) :
+    (AppendFixedFourBitsRightDescription b0 b1 b2 b3).stepConfig
+        { state := 0, tape := appendRightScanTape leftRev [] } =
+      some { state := 1, tape := appendRightWriteTape leftRev [b0] } := by
+  simp [AppendFixedFourBitsRightDescription, stepConfig,
+    lookupTransition, Matches, transition, Tape.read,
+    appendRightScanTape, appendRightWriteTape, Tape.write, Tape.move,
+    Tape.moveRight]
+
+theorem appendFixedFourBitsRightDescription_step_write_one
+    (b0 b1 b2 b3 : Bool) (leftRev : Word Bool) :
+    (AppendFixedFourBitsRightDescription b0 b1 b2 b3).stepConfig
+        { state := 1, tape := appendRightWriteTape leftRev [b0] } =
+      some { state := 2, tape := appendRightWriteTape leftRev [b0, b1] } := by
+  simp [AppendFixedFourBitsRightDescription, stepConfig,
+    lookupTransition, Matches, transition, Tape.read,
+    appendRightWriteTape, Tape.write, Tape.move, Tape.moveRight]
+
+theorem appendFixedFourBitsRightDescription_step_write_two
+    (b0 b1 b2 b3 : Bool) (leftRev : Word Bool) :
+    (AppendFixedFourBitsRightDescription b0 b1 b2 b3).stepConfig
+        { state := 2, tape := appendRightWriteTape leftRev [b0, b1] } =
+      some { state := 3, tape := appendRightWriteTape leftRev [b0, b1, b2] } := by
+  simp [AppendFixedFourBitsRightDescription, stepConfig,
+    lookupTransition, Matches, transition, Tape.read,
+    appendRightWriteTape, Tape.write, Tape.move, Tape.moveRight]
+
+theorem appendFixedFourBitsRightDescription_step_write_three
+    (b0 b1 b2 b3 : Bool) (leftRev : Word Bool) :
+    (AppendFixedFourBitsRightDescription b0 b1 b2 b3).stepConfig
+        { state := 3, tape := appendRightWriteTape leftRev [b0, b1, b2] } =
+      some
+        { state := 4
+          tape := appendRightWriteTape leftRev [b0, b1, b2, b3] } := by
+  simp [AppendFixedFourBitsRightDescription, stepConfig,
+    lookupTransition, Matches, transition, Tape.read,
+    appendRightWriteTape, Tape.write, Tape.move, Tape.moveRight]
+
+theorem appendFixedFourBitsRightDescription_run_scan
+    (b0 b1 b2 b3 : Bool)
+    (leftRev remaining : Word Bool) :
+    (AppendFixedFourBitsRightDescription b0 b1 b2 b3).runConfig
+        remaining.length
+        { state := 0, tape := appendRightScanTape leftRev remaining } =
+      { state := 0
+        tape :=
+          appendRightScanTape (List.append remaining.reverse leftRev) [] } := by
+  induction remaining generalizing leftRev with
+  | nil =>
+      simp [runConfig]
+  | cons b rest ih =>
+    simp [runConfig,
+      appendFixedFourBitsRightDescription_step_scan_nonempty, ih,
+      List.append_assoc]
+
+theorem appendFixedFourBitsRightDescription_run_write
+    (b0 b1 b2 b3 : Bool) (leftRev : Word Bool) :
+    (AppendFixedFourBitsRightDescription b0 b1 b2 b3).runConfig 4
+        { state := 0, tape := appendRightScanTape leftRev [] } =
+      { state := 4
+        tape := appendRightWriteTape leftRev [b0, b1, b2, b3] } := by
+  simp [runConfig,
+    appendFixedFourBitsRightDescription_step_scan_empty,
+    appendFixedFourBitsRightDescription_step_write_one,
+    appendFixedFourBitsRightDescription_step_write_two,
+    appendFixedFourBitsRightDescription_step_write_three]
+
+theorem appendFixedFourBitsRightDescription_run_halt
+    (b0 b1 b2 b3 : Bool) (w : Word Bool) :
+    (AppendFixedFourBitsRightDescription b0 b1 b2 b3).runConfig
+        (w.length + 4)
+        ((AppendFixedFourBitsRightDescription b0 b1 b2 b3).initial w) =
+      { state := 4
+        tape := appendRightWriteTape w.reverse [b0, b1, b2, b3] } := by
+  rw [runConfig_add]
+  have hscan :
+      (AppendFixedFourBitsRightDescription b0 b1 b2 b3).runConfig
+          w.length
+          ((AppendFixedFourBitsRightDescription b0 b1 b2 b3).initial w) =
+        { state := 0, tape := appendRightScanTape w.reverse [] } := by
+    simpa [initial, AppendFixedFourBitsRightDescription,
+      appendRightScanTape_nil_eq_input] using
+      appendFixedFourBitsRightDescription_run_scan
+        b0 b1 b2 b3 [] w
+  rw [hscan]
+  exact appendFixedFourBitsRightDescription_run_write b0 b1 b2 b3 w.reverse
+
+theorem appendRightWriteTape_normalizedOutput
+    (leftRev written : Word Bool) :
+    Tape.normalizedOutput (appendRightWriteTape leftRev written) =
+      List.append leftRev.reverse written := by
+  have hfilter :
+      forall xs : Word Bool,
+        List.filterMap
+            ((fun cell : Option Bool => cell) ∘
+              (fun b : Bool => some b)) xs = xs := by
+    intro xs
+    induction xs with
+    | nil =>
+        rfl
+    | cons b rest ih =>
+        simp [Function.comp, ih]
+  simp [appendRightWriteTape, Tape.normalizedOutput, Tape.cells,
+    List.filterMap_append, List.reverse_append, hfilter]
+
+theorem appendFixedFourBitsRightDescription_haltsWithOutput_append
+    (b0 b1 b2 b3 : Bool) (w : Word Bool) :
+    (AppendFixedFourBitsRightDescription b0 b1 b2 b3).HaltsWithOutput
+        w (List.append w [b0, b1, b2, b3]) := by
+  exists w.length + 4
+  constructor
+  · rw [appendFixedFourBitsRightDescription_run_halt]
+    simp [AppendFixedFourBitsRightDescription]
+  · rw [appendFixedFourBitsRightDescription_run_halt,
+      appendRightWriteTape_normalizedOutput]
+    simp
+
+theorem appendCodeSymbolRightDescription_haltsWithOutput_append
+    (symbol : MachineCodeSymbol) (w : Word Bool) :
+    (AppendCodeSymbolRightDescription symbol).HaltsWithOutput
+        w
+        (List.append w
+          (MachineDescription.encodeCodeSymbolAsInput symbol)) := by
+  cases symbol
+  · simpa [AppendCodeSymbolRightDescription,
+      MachineDescription.encodeCodeSymbolAsInput] using
+      appendFixedFourBitsRightDescription_haltsWithOutput_append
+        (b0 := false) (b1 := false) (b2 := false) (b3 := false) w
+  · simpa [AppendCodeSymbolRightDescription,
+      MachineDescription.encodeCodeSymbolAsInput] using
+      appendFixedFourBitsRightDescription_haltsWithOutput_append
+        (b0 := false) (b1 := false) (b2 := false) (b3 := true) w
+  · simpa [AppendCodeSymbolRightDescription,
+      MachineDescription.encodeCodeSymbolAsInput] using
+      appendFixedFourBitsRightDescription_haltsWithOutput_append
+        (b0 := false) (b1 := false) (b2 := true) (b3 := false) w
+  · simpa [AppendCodeSymbolRightDescription,
+      MachineDescription.encodeCodeSymbolAsInput] using
+      appendFixedFourBitsRightDescription_haltsWithOutput_append
+        (b0 := false) (b1 := false) (b2 := true) (b3 := true) w
+  · simpa [AppendCodeSymbolRightDescription,
+      MachineDescription.encodeCodeSymbolAsInput] using
+      appendFixedFourBitsRightDescription_haltsWithOutput_append
+        (b0 := false) (b1 := true) (b2 := false) (b3 := false) w
+  · simpa [AppendCodeSymbolRightDescription,
+      MachineDescription.encodeCodeSymbolAsInput] using
+      appendFixedFourBitsRightDescription_haltsWithOutput_append
+        (b0 := false) (b1 := true) (b2 := false) (b3 := true) w
+  · simpa [AppendCodeSymbolRightDescription,
+      MachineDescription.encodeCodeSymbolAsInput] using
+      appendFixedFourBitsRightDescription_haltsWithOutput_append
+        (b0 := false) (b1 := true) (b2 := true) (b3 := false) w
+  · simpa [AppendCodeSymbolRightDescription,
+      MachineDescription.encodeCodeSymbolAsInput] using
+      appendFixedFourBitsRightDescription_haltsWithOutput_append
+        (b0 := false) (b1 := true) (b2 := true) (b3 := true) w
+  · simpa [AppendCodeSymbolRightDescription,
+      MachineDescription.encodeCodeSymbolAsInput] using
+      appendFixedFourBitsRightDescription_haltsWithOutput_append
+        (b0 := true) (b1 := false) (b2 := false) (b3 := false) w
+
 theorem toTuringMachine_haltsOnInput_iff {D : MachineDescription}
     (hD : D.WellFormed) (w : Word Bool) :
     TuringMachine.HaltsOnInput D.toTuringMachine w <-> D.HaltsOnInput w := by
@@ -1022,6 +1278,34 @@ theorem tapeCodePrimitiveOutputRealizedByDescription_erase :
     rw [← h]
     exact MachineDescription.eraseRightDescription_haltsWithOutput_empty
       (MachineDescription.encodeCodeWordAsInput code)
+
+theorem tapeCodePrimitiveOutputRealizedByDescription_append_singleton
+    (symbol : MachineCodeSymbol) :
+    TapeCodePrimitiveOutputRealizedByDescription
+      (MachineDescription.TapeCodePrimitive.append [symbol])
+      (MachineDescription.AppendCodeSymbolRightDescription symbol) := by
+  constructor
+  · exact MachineDescription.appendCodeSymbolRightDescription_wellFormed
+      symbol
+  · intro code out h
+    simp [MachineDescription.TapeCodePrimitive.append] at h
+    rw [← h]
+    have hencoded :
+        MachineDescription.encodeCodeWordAsInput
+            (List.append code [symbol]) =
+          List.append (MachineDescription.encodeCodeWordAsInput code)
+            (MachineDescription.encodeCodeSymbolAsInput symbol) := by
+      rw [MachineDescription.encodeCodeWordAsInput_append,
+        MachineDescription.encodeCodeWordAsInput_singleton]
+    change
+      (MachineDescription.AppendCodeSymbolRightDescription symbol).HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput
+          (List.append code [symbol]))
+    rw [hencoded]
+    exact
+      MachineDescription.appendCodeSymbolRightDescription_haltsWithOutput_append
+        symbol (MachineDescription.encodeCodeWordAsInput code)
 
 theorem not_tapeCodePrimitiveCompiledByDescription_erase :
     ¬ exists D : MachineDescription,

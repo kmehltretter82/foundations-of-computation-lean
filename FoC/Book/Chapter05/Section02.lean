@@ -1192,6 +1192,13 @@ The two formulations are now proved equivalent.  This means the remaining
 construction is a single finite transducer problem: build the concrete Boolean
 transition table that parses a canonical configuration, performs one fixed
 description-table lookup, and emits the re-encoded successor configuration.
+
+The first concrete transducer pieces are now exposed here.  A finite table
+appends one fixed encoded code symbol to the normalized Boolean output, while
+the code-primitive layer provides fixed unary comparisons and one-step tape
+write/move actions with canonical encode/decode theorems.  These are the
+components needed by the eventual full stepper construction; the arbitrary
+phase scheduler that assembles them into one table remains the hard part.
 -/
 
 theorem concrete_fixed_description_bounded_simulator_table_compiler_of_code_compiler
@@ -1273,6 +1280,53 @@ theorem concrete_tape_code_erase_not_exact_compiled_by_description :
       TapeCodePrimitiveCompiledByDescription
         MachineDescription.TapeCodePrimitive.erase D :=
   Computability.not_tapeCodePrimitiveCompiledByDescription_erase
+
+theorem concrete_tape_code_append_singleton_output_realized_by_description
+    (symbol : MachineCodeSymbol) :
+    TapeCodePrimitiveOutputRealizedByDescription
+      (MachineDescription.TapeCodePrimitive.append [symbol])
+      (MachineDescription.AppendCodeSymbolRightDescription symbol) :=
+  Computability.tapeCodePrimitiveOutputRealizedByDescription_append_singleton
+    symbol
+
+theorem concrete_tape_code_compare_nat_eq_on_encoded_nat
+    (target n : Nat) (suffix : Word MachineCodeSymbol) :
+    (MachineDescription.TapeCodePrimitive.compareNatEq target).transform
+        (MachineDescription.encodeNatAppend n suffix) =
+      some (MachineDescription.encodeBoolAppend (n == target) suffix) :=
+  MachineDescription.TapeCodePrimitive.compareNatEq_transform_encodeNatAppend
+    target n suffix
+
+theorem concrete_tape_code_compare_nat_lt_on_encoded_nat
+    (bound n : Nat) (suffix : Word MachineCodeSymbol) :
+    (MachineDescription.TapeCodePrimitive.compareNatLt bound).transform
+        (MachineDescription.encodeNatAppend n suffix) =
+      some
+        (MachineDescription.encodeBoolAppend (decide (n < bound)) suffix) :=
+  MachineDescription.TapeCodePrimitive.compareNatLt_transform_encodeNatAppend
+    bound n suffix
+
+theorem concrete_tape_code_write_move_on_encoded_tape
+    (cell : Option Bool) (dir : Direction) (T : Tape Bool) :
+    (MachineDescription.TapeCodePrimitive.writeMove cell dir).transform
+        (MachineDescription.encodeTape T) =
+      some
+        (MachineDescription.encodeTape
+          (Tape.move dir (Tape.write cell T))) :=
+  MachineDescription.TapeCodePrimitive.writeMove_transform_encodeTape
+    cell dir T
+
+theorem concrete_tape_code_transition_action_on_lookup
+    {D : MachineDescription} {c : MachineDescription.Configuration}
+    {t : TransitionDescription}
+    (hlookup :
+      D.lookupTransition c.state (Tape.read c.tape) = some t) :
+    (MachineDescription.TapeCodePrimitive.transitionTapeAction t).transform
+        (MachineDescription.encodeTape c.tape) =
+      some
+        (MachineDescription.encodeTape (D.runConfig 1 c).tape) :=
+  MachineDescription.TapeCodePrimitive.transitionTapeAction_transform_encodeTape_of_lookupTransition
+    hlookup
 
 theorem concrete_fixed_description_step_code_realizes
     (D : MachineDescription) :

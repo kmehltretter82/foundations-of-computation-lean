@@ -618,6 +618,26 @@ def encodeCodeWordAsInput : Word MachineCodeSymbol -> Word Bool
       List.append (encodeCodeSymbolAsInput symbol)
         (encodeCodeWordAsInput rest)
 
+theorem encodeCodeWordAsInput_append
+    (pre suffix : Word MachineCodeSymbol) :
+    encodeCodeWordAsInput (List.append pre suffix) =
+      List.append (encodeCodeWordAsInput pre)
+        (encodeCodeWordAsInput suffix) := by
+  induction pre with
+  | nil =>
+      rfl
+  | cons symbol rest ih =>
+      simp [encodeCodeWordAsInput]
+      exact congrArg
+        (fun tail : Word Bool =>
+          List.append (encodeCodeSymbolAsInput symbol) tail) ih
+
+theorem encodeCodeWordAsInput_singleton
+    (symbol : MachineCodeSymbol) :
+    encodeCodeWordAsInput [symbol] =
+      encodeCodeSymbolAsInput symbol := by
+  cases symbol <;> rfl
+
 def decodeCodeWordAsInput : Word Bool -> Option (Word MachineCodeSymbol)
   | [] => some []
   | false :: false :: false :: false :: rest =>
