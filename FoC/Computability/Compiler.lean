@@ -495,6 +495,162 @@ theorem fixedDescriptionBoundedSimulatorOutput_run_hit
           (D.runConfig n L.config).state = D.halt :=
   MachineDescription.SimulatorLayout.run_hit_eq_true_iff D L.stage L
 
+structure FixedDescriptionBoundedSimulatorPhaseTargets
+    (D : MachineDescription) where
+  decodeLayout :
+    MachineDescription.SimulatorLayout ->
+      MachineDescription.SimulatorLayout
+  simulateStep :
+    MachineDescription.SimulatorLayout ->
+      MachineDescription.SimulatorLayout
+  repeatControl :
+    MachineDescription.SimulatorLayout ->
+      MachineDescription.SimulatorLayout
+  emitLayout :
+    MachineDescription.SimulatorLayout ->
+      MachineDescription.SimulatorLayout
+  pipeline_correct :
+    forall L : MachineDescription.SimulatorLayout,
+      emitLayout (repeatControl (simulateStep (decodeLayout L))) =
+        MachineDescription.SimulatorLayout.run D L.stage L
+
+namespace FixedDescriptionBoundedSimulatorPhaseTargets
+
+def canonical (D : MachineDescription) :
+    FixedDescriptionBoundedSimulatorPhaseTargets D where
+  decodeLayout := id
+  simulateStep := fun L =>
+    MachineDescription.SimulatorLayout.run D L.stage L
+  repeatControl := id
+  emitLayout := id
+  pipeline_correct := by
+    intro L
+    rfl
+
+theorem canonical_pipeline_correct
+    (D : MachineDescription) (L : MachineDescription.SimulatorLayout) :
+    (canonical D).emitLayout
+        ((canonical D).repeatControl
+          ((canonical D).simulateStep ((canonical D).decodeLayout L))) =
+      MachineDescription.SimulatorLayout.run D L.stage L :=
+  (canonical D).pipeline_correct L
+
+end FixedDescriptionBoundedSimulatorPhaseTargets
+
+def FixedDescriptionBoundedSimulatorPhaseRealizes
+    (phase :
+      MachineDescription.SimulatorLayout ->
+        MachineDescription.SimulatorLayout)
+    (fragment : MachineDescription.Fragment) : Prop :=
+  fragment.WellFormed ∧
+    forall L : MachineDescription.SimulatorLayout,
+      fragment.toDescription.HaltsWithOutput
+        (FixedDescriptionBoundedSimulatorInput L)
+        (FixedDescriptionBoundedSimulatorInput (phase L))
+
+structure FixedDescriptionBoundedSimulatorSkeletonPhaseRealizes
+    (D : MachineDescription)
+    (S : MachineDescription.FixedSimulatorTableSkeleton)
+    (targets : FixedDescriptionBoundedSimulatorPhaseTargets D) :
+    Prop where
+  decodeLayout :
+    FixedDescriptionBoundedSimulatorPhaseRealizes
+      targets.decodeLayout S.decodeLayout
+  simulateStep :
+    FixedDescriptionBoundedSimulatorPhaseRealizes
+      targets.simulateStep S.simulateStep
+  repeatControl :
+    FixedDescriptionBoundedSimulatorPhaseRealizes
+      targets.repeatControl S.repeatControl
+  emitLayout :
+    FixedDescriptionBoundedSimulatorPhaseRealizes
+      targets.emitLayout S.emitLayout
+
+def FixedDescriptionBoundedSimulatorSkeletonRealizes
+    (D : MachineDescription)
+    (S : MachineDescription.FixedSimulatorTableSkeleton)
+    (handoffMove : Direction) : Prop :=
+  forall L : MachineDescription.SimulatorLayout,
+    (S.toDescription handoffMove).HaltsWithOutput
+      (FixedDescriptionBoundedSimulatorInput L)
+      (FixedDescriptionBoundedSimulatorOutput D L)
+
+theorem fixedDescriptionBoundedSimulatorTableRealizes_of_skeletonRealizes
+    {D : MachineDescription}
+    {S : MachineDescription.FixedSimulatorTableSkeleton}
+    {handoffMove : Direction}
+    (h : FixedDescriptionBoundedSimulatorSkeletonRealizes
+      D S handoffMove) :
+    FixedDescriptionBoundedSimulatorTableRealizes
+      D (S.toDescription handoffMove) := by
+  constructor
+  · exact
+      MachineDescription.FixedSimulatorTableSkeleton.toDescription_wellFormed
+        S handoffMove
+  · exact h
+
+theorem fixedDescriptionBoundedSimulatorSkeletonRealizes_output
+    {D : MachineDescription}
+    {S : MachineDescription.FixedSimulatorTableSkeleton}
+    {handoffMove : Direction}
+    (h : FixedDescriptionBoundedSimulatorSkeletonRealizes
+      D S handoffMove)
+    (L : MachineDescription.SimulatorLayout) :
+    (S.toDescription handoffMove).HaltsWithOutput
+      (FixedDescriptionBoundedSimulatorInput L)
+      (FixedDescriptionBoundedSimulatorOutput D L) :=
+  h L
+
+def FixedDescriptionBoundedSimulatorSkeletonCompilerConstruction : Prop :=
+  forall D : MachineDescription,
+    exists S : MachineDescription.FixedSimulatorTableSkeleton,
+      exists handoffMove : Direction,
+        FixedDescriptionBoundedSimulatorSkeletonRealizes D S handoffMove
+
+theorem fixedDescriptionBoundedSimulatorTableCompiler_of_skeletonCompiler
+    (hcompile :
+      FixedDescriptionBoundedSimulatorSkeletonCompilerConstruction) :
+    FixedDescriptionBoundedSimulatorTableCompilerConstruction := by
+  intro D
+  rcases hcompile D with ⟨S, handoffMove, hS⟩
+  exact ⟨S.toDescription handoffMove,
+    fixedDescriptionBoundedSimulatorTableRealizes_of_skeletonRealizes hS⟩
+
+def FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction : Prop :=
+  forall D : MachineDescription,
+    exists S : MachineDescription.FixedSimulatorTableSkeleton,
+      exists targets : FixedDescriptionBoundedSimulatorPhaseTargets D,
+        FixedDescriptionBoundedSimulatorSkeletonPhaseRealizes
+          D S targets
+
+def FixedDescriptionBoundedSimulatorSkeletonPhaseSoundness : Prop :=
+  forall D : MachineDescription,
+    forall S : MachineDescription.FixedSimulatorTableSkeleton,
+    forall handoffMove : Direction,
+    forall targets : FixedDescriptionBoundedSimulatorPhaseTargets D,
+      FixedDescriptionBoundedSimulatorSkeletonPhaseRealizes
+        D S targets ->
+      FixedDescriptionBoundedSimulatorSkeletonRealizes D S handoffMove
+
+theorem fixedDescriptionBoundedSimulatorSkeletonCompiler_of_phaseCompiler
+    (hsound : FixedDescriptionBoundedSimulatorSkeletonPhaseSoundness)
+    (hcompile :
+      FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction) :
+      FixedDescriptionBoundedSimulatorSkeletonCompilerConstruction := by
+  intro D
+  rcases hcompile D with ⟨S, targets, htargets⟩
+  exact ⟨S, Direction.right,
+    hsound D S Direction.right targets htargets⟩
+
+theorem fixedDescriptionBoundedSimulatorTableCompiler_of_phaseCompiler
+    (hsound : FixedDescriptionBoundedSimulatorSkeletonPhaseSoundness)
+    (hcompile :
+      FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction) :
+    FixedDescriptionBoundedSimulatorTableCompilerConstruction :=
+  fixedDescriptionBoundedSimulatorTableCompiler_of_skeletonCompiler
+    (fixedDescriptionBoundedSimulatorSkeletonCompiler_of_phaseCompiler
+      hsound hcompile)
+
 theorem pairedRecognizerDovetailDescriptionCompiler_of_dovetailDescriptionCompiler
     (hcompile : DovetailDescriptionCompilerPrinciple) :
     PairedRecognizerDovetailDescriptionCompilerPrinciple := by
