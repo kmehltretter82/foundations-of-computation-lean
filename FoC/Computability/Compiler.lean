@@ -1,4 +1,5 @@
 import FoC.Computability.Encoding
+import FoC.Computability.MachineBuilder
 import FoC.Computability.Program
 
 set_option doc.verso true
@@ -434,6 +435,20 @@ def PairedRecognizerDovetailDescriptionCompilerPrinciple : Prop :=
           (fun w n => accept.HaltsIn n w)
           (fun w n => reject.HaltsIn n w)) D
 
+def PairedRecognizerBoundedDovetailTableRealizes
+    (accept reject decider : MachineDescription) : Prop :=
+  decider.WellFormed ∧
+    forall w : Word Bool, forall b : Bool,
+      decider.HaltsWithOutput w [b] <->
+        exists limit : Nat,
+          MachineDescription.boundedDovetailOutput
+            accept reject w limit = some [b]
+
+def PairedRecognizerBoundedDovetailTableCompilerConstruction : Prop :=
+  forall accept reject : MachineDescription,
+    exists decider : MachineDescription,
+      PairedRecognizerBoundedDovetailTableRealizes accept reject decider
+
 theorem pairedRecognizerDovetailDescriptionCompiler_of_dovetailDescriptionCompiler
     (hcompile : DovetailDescriptionCompilerPrinciple) :
     PairedRecognizerDovetailDescriptionCompilerPrinciple := by
@@ -441,6 +456,31 @@ theorem pairedRecognizerDovetailDescriptionCompiler_of_dovetailDescriptionCompil
   exact hcompile
     (fun w n => accept.HaltsIn n w)
     (fun w n => reject.HaltsIn n w)
+
+theorem pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
+    (hcompile :
+      PairedRecognizerBoundedDovetailTableCompilerConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple := by
+  intro accept reject
+  cases hcompile accept reject with
+  | intro decider hdecider =>
+      exists decider
+      constructor
+      · exact hdecider.left
+      · intro w b
+        constructor
+        · intro hhalt
+          cases (hdecider.right w b).mp hhalt with
+          | intro limit hlimit =>
+              exists limit
+              rwa [MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run]
+                at hlimit
+        · intro hprog
+          cases hprog with
+          | intro limit hlimit =>
+              apply (hdecider.right w b).mpr
+              exists limit
+              rwa [MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run]
 
 theorem dovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
     (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :

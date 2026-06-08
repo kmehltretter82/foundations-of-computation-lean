@@ -475,6 +475,14 @@ theorem compilerConstruction_of_descriptionBoolDeciderCompiler
     (pairedRecognizerDovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
       hcompile)
 
+theorem compilerConstruction_of_boundedDovetailTableCompiler
+    (hcompile :
+      PairedRecognizerBoundedDovetailTableCompilerConstruction) :
+    CompilerConstruction :=
+  compilerConstruction_of_pairedRecognizerDescriptionCompiler
+    (pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
+      hcompile)
+
 theorem programBoolDecidableByDescription
     (P : FiniteDovetailProgram)
     {L : Language Bool}

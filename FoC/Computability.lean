@@ -10,6 +10,7 @@ import FoC.Computability.Undecidable
 import FoC.Computability.Coding
 import FoC.Computability.Encoding
 import FoC.Computability.DiagonalPairMachine
+import FoC.Computability.MachineBuilder
 import FoC.Computability.Compiler
 import FoC.Computability.FiniteProgram
 
@@ -78,6 +79,9 @@ relation for Section 5.3 diagonalization.
 machine witnesses for the concrete diagonal pair map: the legacy compatibility
 machine for older non-injective statements and the faithful copy-machine theorem
 used by the Chapter 5 reductions that require injective encodings.
+{module}`FoC.Computability.MachineBuilder` adds the reusable state-offset,
+finite tape/configuration-code, encoded-runner, and executable bounded-search
+tools needed for the remaining finite compiler constructions.
 {module}`FoC.Computability.Compiler` proves simulation equivalences between
 well-formed descriptions and their compiled one-tape machines, using normalized
 output for output comparisons, then exposes description-backed compiler bridges
