@@ -114,6 +114,12 @@ def ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction : Prop :=
 def ConcreteFixedDescriptionBoundedSimulatorCodeCompilerConstruction : Prop :=
   FixedDescriptionBoundedSimulatorCodeCompilerConstruction
 
+def ConcreteFixedDescriptionStepCodeCompilerConstruction : Prop :=
+  FixedDescriptionStepCodeCompilerConstruction
+
+def ConcretePairedRecognizerDovetailLayoutCodeCompilerConstruction : Prop :=
+  PairedRecognizerDovetailLayoutCodeCompilerConstruction
+
 def ConcreteFiniteDovetailCompilerConstruction : Prop :=
   FiniteDovetailProgram.CompilerConstruction
 
@@ -1168,6 +1174,29 @@ theorem concrete_tape_code_identity_compiled_by_description :
       MachineDescription.ExactIdentityDescription :=
   Computability.tapeCodePrimitiveCompiledByDescription_identity
 
+theorem concrete_fixed_description_step_code_realizes
+    (D : MachineDescription) :
+    FixedDescriptionStepCodeRealizes D (FixedDescriptionStepCode D) :=
+  Computability.fixedDescriptionStepCode_realizes D
+
+theorem concrete_paired_recognizer_dovetail_layout_code_realizes
+    (accept reject : MachineDescription) :
+    PairedRecognizerDovetailLayoutCodeRealizes
+      accept reject
+      (PairedRecognizerDovetailLayoutCode accept reject) :=
+  Computability.pairedRecognizerDovetailLayoutCode_realizes accept reject
+
+theorem concrete_paired_recognizer_dovetail_layout_initial_output
+    (accept reject : MachineDescription)
+    (w : Word Bool) (limit : Nat) :
+    MachineDescription.DovetailLayout.outputFromHits
+        (MachineDescription.DovetailLayout.run accept reject limit
+          (MachineDescription.DovetailLayout.initial
+            accept reject w limit)) =
+      MachineDescription.boundedDovetailOutput accept reject w limit :=
+  Computability.pairedRecognizerDovetailLayout_initial_output
+    accept reject w limit
+
 /-!
 **Listings and Ranges.**
 
@@ -1938,10 +1967,22 @@ def GeneralGrammarDerivationTraceLanguage
     (w : Word terminal) (n : Nat) : Prop :=
   GeneralGrammarDerivationTrace G w n
 
+def GeneralGrammarFiniteProductionListTraceLanguage
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal))
+    (w : Word terminal) (n : Nat) : Prop :=
+  FiniteProductionListDerivationTrace G rules w n
+
 noncomputable def GeneralGrammarStagedRecognizer
     (G : GeneralGrammar terminal nonterminal) :
     StagedProgram terminal Unit :=
   GeneralGrammarRecognizerProgram G
+
+noncomputable def GeneralGrammarFiniteProductionListStagedRecognizer
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal)) :
+    StagedProgram terminal Unit :=
+  FiniteProductionListRecognizerProgram G rules
 
 def ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
   BooleanGeneralGrammarRecognizerCompilerPrinciple
@@ -2049,12 +2090,57 @@ theorem general_grammar_derivation_trace_accepts_generated_language
       (GeneralGrammarGeneratedLanguage G) :=
   Computability.generalGrammar_derivationTrace_acceptance G
 
+theorem finite_production_list_trace_iff_general_derivation_trace
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs)
+    {w : Word terminal} {n : Nat} :
+    GeneralGrammarFiniteProductionListTraceLanguage G rules w n <->
+      GeneralGrammarDerivationTraceLanguage G w n :=
+  Computability.finiteProductionListDerivationTrace_iff_derivationTrace
+    hrules
+
+theorem finite_production_list_trace_accepts_generated_language
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    LanguageAcceptanceTrace
+      (GeneralGrammarFiniteProductionListTraceLanguage G rules)
+      (GeneralGrammarGeneratedLanguage G) :=
+  Computability.finiteProductionListDerivationTrace_acceptance hrules
+
 theorem general_grammar_staged_recognizer_accepts_generated_language
     (G : GeneralGrammar terminal nonterminal) :
     ProgramAcceptsLanguage
       (GeneralGrammarStagedRecognizer G)
       (GeneralGrammarGeneratedLanguage G) :=
   Computability.generalGrammarRecognizerProgram_acceptsLanguage G
+
+theorem finite_production_list_staged_recognizer_accepts_generated_language
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    ProgramAcceptsLanguage
+      (GeneralGrammarFiniteProductionListStagedRecognizer G rules)
+      (GeneralGrammarGeneratedLanguage G) :=
+  Computability.finiteProductionListRecognizerProgram_acceptsLanguage
+    hrules
+
+theorem finite_general_grammar_has_finite_list_staged_recognizer
+    {G : GeneralGrammar terminal nonterminal}
+    (hfinite : GeneralGrammar.HasFiniteProductions G) :
+    exists rules : List (GeneralGrammar.Production terminal nonterminal),
+      ProgramAcceptsLanguage
+        (GeneralGrammarFiniteProductionListStagedRecognizer G rules)
+        (GeneralGrammarGeneratedLanguage G) :=
+  Computability.finiteProductionListRecognizerProgram_acceptsLanguage_of_hasFiniteProductions
+    hfinite
 
 theorem general_grammar_generated_language_is_program_acceptable
     (G : GeneralGrammar terminal nonterminal) :

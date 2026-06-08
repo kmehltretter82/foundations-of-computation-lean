@@ -167,6 +167,24 @@ def HasFiniteProductions (G : GeneralGrammar terminal nonterminal) : Prop :=
       G.produces lhs rhs <->
         exists rule, rule ∈ rules ∧ rule.lhs = lhs ∧ rule.rhs = rhs
 
+def ProductionListProduces
+    (rules : List (Production terminal nonterminal))
+    (lhs rhs : SententialForm terminal nonterminal) : Prop :=
+  exists rule, rule ∈ rules ∧ rule.lhs = lhs ∧ rule.rhs = rhs
+
+theorem hasFiniteProductions_productionListProduces
+    {G : GeneralGrammar terminal nonterminal}
+    (h : HasFiniteProductions G) :
+    exists rules : List (Production terminal nonterminal),
+      forall lhs rhs,
+        G.produces lhs rhs <->
+          ProductionListProduces rules lhs rhs := by
+  rcases h with ⟨rules, hrules⟩
+  exact
+    ⟨rules, by
+      intro lhs rhs
+      simpa [ProductionListProduces] using hrules lhs rhs⟩
+
 /-!
 # Derivations and generated languages
 
@@ -181,6 +199,12 @@ def Yields (G : GeneralGrammar terminal nonterminal)
   exists u, exists v, exists lhs, exists rhs,
     G.produces lhs rhs ∧ x = u ++ lhs ++ v ∧ y = u ++ rhs ++ v
 
+def ProductionListYields
+    (rules : List (Production terminal nonterminal))
+    (x y : SententialForm terminal nonterminal) : Prop :=
+  exists u, exists v, exists rule,
+    rule ∈ rules ∧ x = u ++ rule.lhs ++ v ∧ y = u ++ rule.rhs ++ v
+
 inductive Derives (G : GeneralGrammar terminal nonterminal) :
     SententialForm terminal nonterminal -> SententialForm terminal nonterminal -> Prop where
   | refl (x : SententialForm terminal nonterminal) : Derives G x x
@@ -193,6 +217,17 @@ inductive DerivesIn (G : GeneralGrammar terminal nonterminal) :
   | zero (x : SententialForm terminal nonterminal) : DerivesIn G 0 x x
   | step {n : Nat} {x y z : SententialForm terminal nonterminal} :
       Yields G x y -> DerivesIn G n y z -> DerivesIn G (n + 1) x z
+
+inductive ProductionListDerivesIn
+    (rules : List (Production terminal nonterminal)) :
+    Nat -> SententialForm terminal nonterminal ->
+      SententialForm terminal nonterminal -> Prop where
+  | zero (x : SententialForm terminal nonterminal) :
+      ProductionListDerivesIn rules 0 x x
+  | step {n : Nat} {x y z : SententialForm terminal nonterminal} :
+      ProductionListYields rules x y ->
+      ProductionListDerivesIn rules n y z ->
+      ProductionListDerivesIn rules (n + 1) x z
 
 def GeneratedLanguage (G : GeneralGrammar terminal nonterminal) : Language terminal :=
   fun w => Derives G [Symbol.nonterminal G.start] (SententialForm.terminalWord w)
@@ -211,6 +246,51 @@ def FiniteProductionGenerated (L : Language terminal) : Prop :=
 The basic proof API mirrors the context-free grammar layer: every single yield
 is a derivation, and derivations compose transitively.
 -/
+
+theorem productionListYields_iff_yields_of_produces
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <-> ProductionListProduces rules lhs rhs)
+    {x y : SententialForm terminal nonterminal} :
+    ProductionListYields rules x y <-> Yields G x y := by
+  constructor
+  · intro h
+    rcases h with ⟨u, v, rule, hrule, hx, hy⟩
+    exact
+      ⟨u, v, rule.lhs, rule.rhs,
+        (hrules rule.lhs rule.rhs).mpr ⟨rule, hrule, rfl, rfl⟩,
+        hx, hy⟩
+  · intro h
+    rcases h with ⟨u, v, lhs, rhs, hprod, hx, hy⟩
+    rcases (hrules lhs rhs).mp hprod with ⟨rule, hrule, hlhs, hrhs⟩
+    exact ⟨u, v, rule, hrule, by simpa [hlhs] using hx,
+      by simpa [hrhs] using hy⟩
+
+theorem productionListDerivesIn_iff_derivesIn_of_produces
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <-> ProductionListProduces rules lhs rhs)
+    {n : Nat} {x y : SententialForm terminal nonterminal} :
+    ProductionListDerivesIn rules n x y <-> DerivesIn G n x y := by
+  constructor
+  · intro h
+    induction h with
+    | zero x =>
+        exact DerivesIn.zero x
+    | step hstep _ ih =>
+        exact DerivesIn.step
+          ((productionListYields_iff_yields_of_produces hrules).mp hstep)
+          ih
+  · intro h
+    induction h with
+    | zero x =>
+        exact ProductionListDerivesIn.zero x
+    | step hstep _ ih =>
+        exact ProductionListDerivesIn.step
+          ((productionListYields_iff_yields_of_produces hrules).mpr hstep)
+          ih
 
 theorem yields_derives {G : GeneralGrammar terminal nonterminal}
     {x y : SententialForm terminal nonterminal} (h : Yields G x y) :

@@ -930,6 +930,20 @@ theorem runEncodedConfiguration_encodeConfiguration
       some (D.runConfig steps c, []) :=
   runEncodedConfiguration_encodeConfigurationAppend D steps c []
 
+def stepConfigurationCode
+    (D : MachineDescription)
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match decodeConfiguration tokens with
+  | some (c, []) => some (encodeConfiguration (D.runConfig 1 c))
+  | _ => none
+
+theorem stepConfigurationCode_encodeConfiguration
+    (D : MachineDescription) (c : Configuration) :
+    stepConfigurationCode D (encodeConfiguration c) =
+      some (encodeConfiguration (D.runConfig 1 c)) := by
+  simp [stepConfigurationCode, decodeConfiguration_encodeConfiguration]
+
 /-!
 ## Canonical simulator layouts
 
@@ -1068,6 +1082,17 @@ theorem compose_transform_some
   simp [compose, hP, hQ]
 
 end TapeCodePrimitive
+
+def stepConfigurationCodePrimitive
+    (D : MachineDescription) : TapeCodePrimitive where
+  transform := stepConfigurationCode D
+
+theorem stepConfigurationCodePrimitive_encodeConfiguration
+    (D : MachineDescription) (c : Configuration) :
+    (stepConfigurationCodePrimitive D).transform
+        (encodeConfiguration c) =
+      some (encodeConfiguration (D.runConfig 1 c)) :=
+  stepConfigurationCode_encodeConfiguration D c
 
 structure SimulatorLayout where
   input : Word Bool
@@ -1414,6 +1439,16 @@ theorem decode_encode (L : DovetailLayout) :
     decode (encode L) = some (L, []) :=
   decode_encodeAppend L []
 
+def decodeComplete (tokens : Word MachineCodeSymbol) :
+    Option DovetailLayout :=
+  match decode tokens with
+  | some (L, []) => some L
+  | _ => none
+
+theorem decodeComplete_encode (L : DovetailLayout) :
+    decodeComplete (encode L) = some L := by
+  simp [decodeComplete, decode_encode]
+
 def asBoolInput (L : DovetailLayout) : Word Bool :=
   encodeCodeWordAsInput (encode L)
 
@@ -1457,6 +1492,67 @@ theorem advance_rejectConfig
     (advance accept reject L steps).rejectConfig =
       reject.runConfig steps L.rejectConfig := by
   simp [advance]
+
+def run (accept reject : MachineDescription)
+    (steps : Nat) (L : DovetailLayout) : DovetailLayout :=
+  let acceptConfig := accept.runConfig steps L.acceptConfig
+  let rejectConfig := reject.runConfig steps L.rejectConfig
+  { L with
+    acceptConfig := acceptConfig
+    rejectConfig := rejectConfig
+    acceptHit :=
+      L.acceptHit ||
+        SimulatorLayout.hitsFromConfigByBool
+          accept L.acceptConfig steps
+    rejectHit :=
+      L.rejectHit ||
+        SimulatorLayout.hitsFromConfigByBool
+          reject L.rejectConfig steps }
+
+theorem run_acceptConfig
+    (accept reject : MachineDescription)
+    (L : DovetailLayout) (steps : Nat) :
+    (run accept reject steps L).acceptConfig =
+      accept.runConfig steps L.acceptConfig := by
+  simp [run]
+
+theorem run_rejectConfig
+    (accept reject : MachineDescription)
+    (L : DovetailLayout) (steps : Nat) :
+    (run accept reject steps L).rejectConfig =
+      reject.runConfig steps L.rejectConfig := by
+  simp [run]
+
+def outputFromHits (L : DovetailLayout) : Option (Word Bool) :=
+  if L.acceptHit = true then
+    some [true]
+  else if L.rejectHit = true then
+    some [false]
+  else
+    none
+
+def runCode (accept reject : MachineDescription)
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match decodeComplete tokens with
+  | none => none
+  | some L => some (encode (run accept reject L.stage L))
+
+theorem runCode_encode
+    (accept reject : MachineDescription) (L : DovetailLayout) :
+    runCode accept reject (encode L) =
+      some (encode (run accept reject L.stage L)) := by
+  simp [runCode, decodeComplete_encode]
+
+def runCodePrimitive
+    (accept reject : MachineDescription) : TapeCodePrimitive where
+  transform := runCode accept reject
+
+theorem runCodePrimitive_encode
+    (accept reject : MachineDescription) (L : DovetailLayout) :
+    (runCodePrimitive accept reject).transform (encode L) =
+      some (encode (run accept reject L.stage L)) :=
+  runCode_encode accept reject L
 
 end DovetailLayout
 
@@ -1533,6 +1629,48 @@ def boundedDovetailOutput
     some [false]
   else
     none
+
+namespace DovetailLayout
+
+theorem simulator_hitsFromInitial_eq_hitsByBool
+    (D : MachineDescription) (w : Word Bool) (limit : Nat) :
+    SimulatorLayout.hitsFromConfigByBool D (D.initial w) limit =
+      hitsByBool D w limit := by
+  induction limit with
+  | zero =>
+      simp [SimulatorLayout.hitsFromConfigByBool, hitsByBool,
+        SimulatorLayout.haltedFromConfigInBool, haltsInBool]
+  | succ limit ih =>
+      simp [SimulatorLayout.hitsFromConfigByBool, hitsByBool,
+        SimulatorLayout.haltedFromConfigInBool, haltsInBool, ih]
+
+theorem run_initial_acceptHit
+    (accept reject : MachineDescription)
+    (w : Word Bool) (limit : Nat) :
+    (run accept reject limit
+      (initial accept reject w limit)).acceptHit =
+      hitsByBool accept w limit := by
+  simp [run, initial, simulator_hitsFromInitial_eq_hitsByBool]
+
+theorem run_initial_rejectHit
+    (accept reject : MachineDescription)
+    (w : Word Bool) (limit : Nat) :
+    (run accept reject limit
+      (initial accept reject w limit)).rejectHit =
+      hitsByBool reject w limit := by
+  simp [run, initial, simulator_hitsFromInitial_eq_hitsByBool]
+
+theorem outputFromHits_run_initial_eq_boundedDovetailOutput
+    (accept reject : MachineDescription)
+    (w : Word Bool) (limit : Nat) :
+    outputFromHits
+        (run accept reject limit
+          (initial accept reject w limit)) =
+      boundedDovetailOutput accept reject w limit := by
+  simp [outputFromHits, boundedDovetailOutput,
+    run_initial_acceptHit, run_initial_rejectHit]
+
+end DovetailLayout
 
 theorem boundedDovetailOutput_eq_dovetailProgram_run
     (accept reject : MachineDescription)

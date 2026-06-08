@@ -652,6 +652,76 @@ theorem fixedDescriptionBoundedSimulatorCode_boolOutput
     FixedDescriptionBoundedSimulatorOutput,
     MachineDescription.SimulatorLayout.asBoolInput]
 
+def FixedDescriptionStepCode
+    (D : MachineDescription) : MachineDescription.TapeCodePrimitive :=
+  MachineDescription.stepConfigurationCodePrimitive D
+
+def FixedDescriptionStepCodeRealizes
+    (D : MachineDescription)
+    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+  forall c : MachineDescription.Configuration,
+    P.transform (MachineDescription.encodeConfiguration c) =
+      some (MachineDescription.encodeConfiguration (D.runConfig 1 c))
+
+theorem fixedDescriptionStepCode_encode
+    (D : MachineDescription) (c : MachineDescription.Configuration) :
+    (FixedDescriptionStepCode D).transform
+        (MachineDescription.encodeConfiguration c) =
+      some (MachineDescription.encodeConfiguration (D.runConfig 1 c)) :=
+  MachineDescription.stepConfigurationCodePrimitive_encodeConfiguration D c
+
+theorem fixedDescriptionStepCode_realizes
+    (D : MachineDescription) :
+    FixedDescriptionStepCodeRealizes D (FixedDescriptionStepCode D) := by
+  intro c
+  exact fixedDescriptionStepCode_encode D c
+
+def PairedRecognizerDovetailLayoutCode
+    (accept reject : MachineDescription) :
+    MachineDescription.TapeCodePrimitive :=
+  MachineDescription.DovetailLayout.runCodePrimitive accept reject
+
+def PairedRecognizerDovetailLayoutCodeRealizes
+    (accept reject : MachineDescription)
+    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+  forall L : MachineDescription.DovetailLayout,
+    P.transform (MachineDescription.DovetailLayout.encode L) =
+      some
+        (MachineDescription.DovetailLayout.encode
+          (MachineDescription.DovetailLayout.run
+            accept reject L.stage L))
+
+theorem pairedRecognizerDovetailLayoutCode_encode
+    (accept reject : MachineDescription)
+    (L : MachineDescription.DovetailLayout) :
+    (PairedRecognizerDovetailLayoutCode accept reject).transform
+        (MachineDescription.DovetailLayout.encode L) =
+      some
+        (MachineDescription.DovetailLayout.encode
+          (MachineDescription.DovetailLayout.run
+            accept reject L.stage L)) :=
+  MachineDescription.DovetailLayout.runCodePrimitive_encode
+    accept reject L
+
+theorem pairedRecognizerDovetailLayoutCode_realizes
+    (accept reject : MachineDescription) :
+    PairedRecognizerDovetailLayoutCodeRealizes
+      accept reject
+      (PairedRecognizerDovetailLayoutCode accept reject) := by
+  intro L
+  exact pairedRecognizerDovetailLayoutCode_encode accept reject L
+
+theorem pairedRecognizerDovetailLayout_initial_output
+    (accept reject : MachineDescription)
+    (w : Word Bool) (limit : Nat) :
+    MachineDescription.DovetailLayout.outputFromHits
+        (MachineDescription.DovetailLayout.run accept reject limit
+          (MachineDescription.DovetailLayout.initial
+            accept reject w limit)) =
+      MachineDescription.boundedDovetailOutput accept reject w limit :=
+  MachineDescription.DovetailLayout.outputFromHits_run_initial_eq_boundedDovetailOutput
+    accept reject w limit
+
 def TapeCodePrimitiveCompiledByDescription
     (P : MachineDescription.TapeCodePrimitive)
     (D : MachineDescription) : Prop :=
@@ -744,6 +814,18 @@ def FixedDescriptionBoundedSimulatorCodeCompilerConstruction : Prop :=
     exists simulator : MachineDescription,
       TapeCodePrimitiveCompiledByDescription
         (FixedDescriptionBoundedSimulatorCode D) simulator
+
+def FixedDescriptionStepCodeCompilerConstruction : Prop :=
+  forall D : MachineDescription,
+    exists stepper : MachineDescription,
+      TapeCodePrimitiveCompiledByDescription
+        (FixedDescriptionStepCode D) stepper
+
+def PairedRecognizerDovetailLayoutCodeCompilerConstruction : Prop :=
+  forall accept reject : MachineDescription,
+    exists runner : MachineDescription,
+      TapeCodePrimitiveCompiledByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject) runner
 
 theorem fixedDescriptionBoundedSimulatorTableRealizes_of_codeCompiler
     {D simulator : MachineDescription}

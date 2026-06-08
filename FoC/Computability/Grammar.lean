@@ -41,6 +41,26 @@ def GeneralGrammarDerivationTrace
     [Symbol.nonterminal G.start]
     (SententialForm.terminalWord w)
 
+def FiniteProductionListDerivationTrace
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal))
+    (w : Word terminal) (n : Nat) : Prop :=
+  GeneralGrammar.ProductionListDerivesIn rules n
+    [Symbol.nonterminal G.start]
+    (SententialForm.terminalWord w)
+
+theorem finiteProductionListDerivationTrace_iff_derivationTrace
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs)
+    {w : Word terminal} {n : Nat} :
+    FiniteProductionListDerivationTrace G rules w n <->
+      GeneralGrammarDerivationTrace G w n :=
+  GeneralGrammar.productionListDerivesIn_iff_derivesIn_of_produces
+    hrules
+
 theorem generalGrammar_derivationTrace_acceptance
     (G : GeneralGrammar terminal nonterminal) :
     AcceptanceTrace
@@ -54,6 +74,42 @@ theorem generalGrammar_derivationTrace_acceptance
         exact GeneralGrammar.derivesIn_derives hn
   · intro h
     exact GeneralGrammar.derives_derivesIn h
+
+theorem finiteProductionListDerivationTrace_acceptance
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    AcceptanceTrace
+      (FiniteProductionListDerivationTrace G rules)
+      (GeneralGrammar.GeneratedLanguage G) := by
+  intro w
+  constructor
+  · intro h
+    rcases h with ⟨n, hn⟩
+    exact (generalGrammar_derivationTrace_acceptance G w).mp
+      ⟨n,
+        (finiteProductionListDerivationTrace_iff_derivationTrace
+          hrules).mp hn⟩
+  · intro h
+    rcases (generalGrammar_derivationTrace_acceptance G w).mpr h with
+      ⟨n, hn⟩
+    exact
+      ⟨n,
+        (finiteProductionListDerivationTrace_iff_derivationTrace
+          hrules).mpr hn⟩
+
+theorem finiteProductionListDerivationTrace_acceptance_of_hasFiniteProductions
+    {G : GeneralGrammar terminal nonterminal}
+    (hfinite : GeneralGrammar.HasFiniteProductions G) :
+    exists rules : List (GeneralGrammar.Production terminal nonterminal),
+      AcceptanceTrace
+        (FiniteProductionListDerivationTrace G rules)
+        (GeneralGrammar.GeneratedLanguage G) := by
+  rcases GeneralGrammar.hasFiniteProductions_productionListProduces
+    hfinite with ⟨rules, hrules⟩
+  exact ⟨rules, finiteProductionListDerivationTrace_acceptance hrules⟩
 
 noncomputable def GeneralGrammarRecognizerProgram
     (G : GeneralGrammar terminal nonterminal) :
@@ -71,6 +127,29 @@ theorem generalGrammarRecognizerProgram_run_of_trace
     (GeneralGrammarRecognizerProgram G).run w n = some [] := by
   classical
   simp [GeneralGrammarRecognizerProgram, h]
+  rfl
+
+noncomputable def FiniteProductionListRecognizerProgram
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal)) :
+    StagedProgram terminal Unit :=
+  by
+    classical
+    exact
+      { run := fun w n =>
+          if FiniteProductionListDerivationTrace G rules w n then
+            some []
+          else
+            none }
+
+theorem finiteProductionListRecognizerProgram_run_of_trace
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    {w : Word terminal} {n : Nat}
+    (h : FiniteProductionListDerivationTrace G rules w n) :
+    (FiniteProductionListRecognizerProgram G rules).run w n = some [] := by
+  classical
+  simp [FiniteProductionListRecognizerProgram, h]
   rfl
 
 theorem generalGrammarRecognizerProgram_acceptsLanguage
@@ -92,6 +171,39 @@ theorem generalGrammarRecognizerProgram_acceptsLanguage
     | intro n hn =>
         exact Exists.intro n
           (generalGrammarRecognizerProgram_run_of_trace hn)
+
+theorem finiteProductionListRecognizerProgram_acceptsLanguage
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    ProgramAcceptsLanguage
+      (FiniteProductionListRecognizerProgram G rules)
+      (GeneralGrammar.GeneratedLanguage G) := by
+  intro w
+  constructor
+  · intro h
+    rcases h with ⟨n, hn⟩
+    by_cases htrace : FiniteProductionListDerivationTrace G rules w n
+    · exact (finiteProductionListDerivationTrace_acceptance hrules w).mp
+        ⟨n, htrace⟩
+    · simp [FiniteProductionListRecognizerProgram, htrace] at hn
+  · intro h
+    rcases (finiteProductionListDerivationTrace_acceptance hrules w).mpr h with
+      ⟨n, hn⟩
+    exact ⟨n, finiteProductionListRecognizerProgram_run_of_trace hn⟩
+
+theorem finiteProductionListRecognizerProgram_acceptsLanguage_of_hasFiniteProductions
+    {G : GeneralGrammar terminal nonterminal}
+    (hfinite : GeneralGrammar.HasFiniteProductions G) :
+    exists rules : List (GeneralGrammar.Production terminal nonterminal),
+      ProgramAcceptsLanguage
+        (FiniteProductionListRecognizerProgram G rules)
+        (GeneralGrammar.GeneratedLanguage G) := by
+  rcases GeneralGrammar.hasFiniteProductions_productionListProduces
+    hfinite with ⟨rules, hrules⟩
+  exact ⟨rules, finiteProductionListRecognizerProgram_acceptsLanguage hrules⟩
 
 theorem generalGrammar_generatedLanguage_programAcceptable
     (G : GeneralGrammar terminal nonterminal) :
