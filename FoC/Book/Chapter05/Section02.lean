@@ -1187,6 +1187,11 @@ build a finite stepper on canonical encoded configurations.  Parser
 canonicalization lemmas then promote that theorem to the full
 {name}`TapeCodePrimitiveOutputRealizedByDescription` interface, covering any
 code word whose configuration decoder succeeds completely.
+
+The two formulations are now proved equivalent.  This means the remaining
+construction is a single finite transducer problem: build the concrete Boolean
+transition table that parses a canonical configuration, performs one fixed
+description-table lookup, and emits the re-encoded successor configuration.
 -/
 
 theorem concrete_fixed_description_bounded_simulator_table_compiler_of_code_compiler
@@ -1218,6 +1223,26 @@ theorem concrete_fixed_description_step_code_output_realizer_construction_of_con
     ConcreteFixedDescriptionStepCodeOutputRealizerConstruction :=
   Computability.fixedDescriptionStepCodeOutputRealizerConstruction_of_configurationRealizerConstruction
     hcompile
+
+theorem concrete_fixed_description_step_code_configuration_realizer_construction_of_output_realizer_construction
+    (hcompile :
+      ConcreteFixedDescriptionStepCodeOutputRealizerConstruction) :
+    ConcreteFixedDescriptionStepCodeConfigurationRealizerConstruction :=
+  Computability.fixedDescriptionStepCodeConfigurationRealizerConstruction_of_outputRealizerConstruction
+    hcompile
+
+theorem concrete_fixed_description_step_code_configuration_realizer_construction_iff_output_realizer_construction :
+    ConcreteFixedDescriptionStepCodeConfigurationRealizerConstruction <->
+      ConcreteFixedDescriptionStepCodeOutputRealizerConstruction :=
+  Computability.fixedDescriptionStepCodeConfigurationRealizerConstruction_iff_outputRealizerConstruction
+
+theorem concrete_fixed_description_step_code_configuration_realizes_transitionless
+    {D : MachineDescription}
+    (hD : D.transitions = []) :
+    FixedDescriptionStepCodeConfigurationRealizes
+      D MachineDescription.ExactIdentityDescription :=
+  Computability.fixedDescriptionStepCodeConfigurationRealizes_transitionless
+    hD
 
 theorem concrete_fixed_description_step_code_configuration_realizes_exact_identity :
     FixedDescriptionStepCodeConfigurationRealizes

@@ -1210,6 +1210,74 @@ theorem fixedDescriptionStepCodeOutputRealizerConstruction_of_configurationReali
     fixedDescriptionStepCodeOutputRealizer_of_configurationRealizer
       hstepper⟩
 
+theorem fixedDescriptionStepCodeConfigurationRealizer_of_outputRealizer
+    {D stepper : MachineDescription}
+    (hstepper :
+      TapeCodePrimitiveOutputRealizedByDescription
+        (FixedDescriptionStepCode D) stepper) :
+    FixedDescriptionStepCodeConfigurationRealizes D stepper := by
+  constructor
+  · exact hstepper.left
+  · intro c
+    exact hstepper.right
+      (MachineDescription.encodeConfiguration c)
+      (MachineDescription.encodeConfiguration (D.runConfig 1 c))
+      (fixedDescriptionStepCode_encode D c)
+
+theorem fixedDescriptionStepCodeConfigurationRealizerConstruction_of_outputRealizerConstruction
+    (hcompile :
+      FixedDescriptionStepCodeOutputRealizerConstruction) :
+    FixedDescriptionStepCodeConfigurationRealizerConstruction := by
+  intro D
+  rcases hcompile D with ⟨stepper, hstepper⟩
+  exact ⟨stepper,
+    fixedDescriptionStepCodeConfigurationRealizer_of_outputRealizer
+      hstepper⟩
+
+theorem fixedDescriptionStepCodeConfigurationRealizerConstruction_iff_outputRealizerConstruction :
+    FixedDescriptionStepCodeConfigurationRealizerConstruction <->
+      FixedDescriptionStepCodeOutputRealizerConstruction := by
+  constructor
+  · exact
+      fixedDescriptionStepCodeOutputRealizerConstruction_of_configurationRealizerConstruction
+  · exact
+      fixedDescriptionStepCodeConfigurationRealizerConstruction_of_outputRealizerConstruction
+
+theorem fixedDescriptionStepCodeConfigurationRealizes_of_runConfig_one_eq_id
+    {D stepper : MachineDescription}
+    (hstepper :
+      TapeCodePrimitiveOutputRealizedByDescription
+        MachineDescription.TapeCodePrimitive.identity stepper)
+    (hD : forall c : MachineDescription.Configuration,
+      D.runConfig 1 c = c) :
+    FixedDescriptionStepCodeConfigurationRealizes D stepper := by
+  constructor
+  · exact hstepper.left
+  · intro c
+    rw [hD c]
+    exact hstepper.right
+      (MachineDescription.encodeConfiguration c)
+      (MachineDescription.encodeConfiguration c)
+      rfl
+
+theorem runConfig_one_eq_id_of_transitions_nil
+    {D : MachineDescription}
+    (hD : D.transitions = []) :
+    forall c : MachineDescription.Configuration, D.runConfig 1 c = c := by
+  intro c
+  cases c
+  simp [MachineDescription.runConfig, MachineDescription.stepConfig,
+    MachineDescription.lookupTransition, hD]
+
+theorem fixedDescriptionStepCodeConfigurationRealizes_transitionless
+    {D : MachineDescription}
+    (hD : D.transitions = []) :
+    FixedDescriptionStepCodeConfigurationRealizes
+      D MachineDescription.ExactIdentityDescription :=
+  fixedDescriptionStepCodeConfigurationRealizes_of_runConfig_one_eq_id
+    tapeCodePrimitiveOutputRealizedByDescription_identity
+    (runConfig_one_eq_id_of_transitions_nil hD)
+
 theorem fixedDescriptionStepCodeConfigurationRealizes_exactIdentityDescription :
     FixedDescriptionStepCodeConfigurationRealizes
       MachineDescription.ExactIdentityDescription
