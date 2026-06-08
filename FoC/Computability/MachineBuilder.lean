@@ -468,6 +468,41 @@ theorem preserveMove_wellFormed (move : Direction) :
     (preserveMove move).WellFormed :=
   handoff_wellFormed move
 
+theorem handoff_runConfig_one
+    (move : Direction) (T : Tape Bool) :
+    (handoff move).toDescription.runConfig 1
+        { state := (handoff move).entry, tape := T } =
+      { state := (handoff move).exit, tape := Tape.move move T } := by
+  cases T with
+  | mk left head right =>
+      cases head with
+      | none =>
+          cases move <;>
+            rfl
+      | some b =>
+          cases b <;> cases move <;>
+            rfl
+
+theorem handoff_firstReaches
+    (move : Direction) (T : Tape Bool) :
+    exists n : Nat,
+      (handoff move).toDescription.runConfig n
+          { state := (handoff move).entry, tape := T } =
+        { state := (handoff move).exit, tape := Tape.move move T } ∧
+        forall k : Nat,
+          k < n ->
+            ((handoff move).toDescription.runConfig k
+              { state := (handoff move).entry, tape := T }).state ≠
+              (handoff move).exit := by
+  exists 1
+  constructor
+  · exact handoff_runConfig_one move T
+  · intro k hk
+    have hk0 : k = 0 := by omega
+    cases hk0
+    change (handoff move).entry ≠ (handoff move).exit
+    cases move <;> decide
+
 def offsetStates (offset : Nat) (F : Fragment) : Fragment where
   stateCount := offset + F.stateCount
   entry := offset + F.entry
