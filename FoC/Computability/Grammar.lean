@@ -719,6 +719,28 @@ theorem finiteProductionGenerated_of_presents
 
 end FiniteAcceptanceTraceTable
 
+def FiniteTraceTableRecognizable (L : Language terminal) : Prop :=
+  exists T : FiniteAcceptanceTraceTable terminal, T.PresentsLanguage L
+
+def FiniteTraceTableToFiniteGeneralGrammarConstruction
+    (terminal : Type u) : Prop :=
+  forall L : Language terminal,
+    FiniteTraceTableRecognizable L ->
+      GeneralGrammar.FiniteProductionGenerated L
+
+theorem finiteTraceTableRecognizable_finiteProductionGenerated
+    {L : Language terminal}
+    (h : FiniteTraceTableRecognizable L) :
+    GeneralGrammar.FiniteProductionGenerated L := by
+  rcases h with ⟨T, hT⟩
+  exact T.finiteProductionGenerated_of_presents hT
+
+theorem finiteTraceTableToFiniteGeneralGrammarConstruction
+    (terminal : Type u) :
+    FiniteTraceTableToFiniteGeneralGrammarConstruction terminal := by
+  intro L hL
+  exact finiteTraceTableRecognizable_finiteProductionGenerated hL
+
 def MachineFiniteAcceptanceTraceTable (_D : MachineDescription) :
     Type :=
   FiniteAcceptanceTraceTable Bool
@@ -758,10 +780,24 @@ def MachineDescriptionAcceptsToFiniteGeneralGrammarConstruction : Prop :=
     MachineDescriptionAcceptsLanguage D L ->
       GeneralGrammar.FiniteProductionGenerated L
 
-def TuringAcceptableToFiniteGeneralGrammarConstruction
-    (terminal : Type u) : Prop :=
-  forall L : Language terminal,
-    TuringAcceptable L -> GeneralGrammar.FiniteProductionGenerated L
+def DescriptionRecognizerToFiniteGeneralGrammarConstruction : Prop :=
+  MachineDescriptionAcceptsToFiniteGeneralGrammarConstruction
+
+def BooleanRecognizerToFiniteGeneralGrammarConstruction : Prop :=
+  DescriptionRecognizerToFiniteGeneralGrammarConstruction
+
+def ProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction : Prop :=
+  forall L : Language Bool,
+    ProgramAcceptableByDescription L ->
+      GeneralGrammar.FiniteProductionGenerated L
+
+theorem programAcceptableByDescriptionToFiniteGeneralGrammarConstruction_of_descriptionRecognizer
+    (hconstruct : DescriptionRecognizerToFiniteGeneralGrammarConstruction) :
+    ProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction := by
+  intro L hL
+  rcases hL with ⟨P, D, hP, hD⟩
+  exact hconstruct
+    (programCompiledByDescription_acceptsLanguage hP hD)
 
 theorem machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
     (hconstruct : MachineDescriptionToFiniteGeneralGrammarConstruction) :
@@ -778,7 +814,7 @@ theorem machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineCo
 The textbook equivalence between unrestricted grammars and recursively
 enumerable languages contains two construction-heavy directions. The recognizer
 direction is proved at the staged-program layer above. The definitions below
-name the remaining concrete compiler surfaces for Boolean machine descriptions.
+name the concrete compiler interfaces for Boolean machine descriptions.
 The semantic reverse direction is no longer a construction boundary: with
 arbitrary production predicates, every language has a one-nonterminal grammar.
 -/
@@ -853,14 +889,14 @@ structure BooleanFiniteDataSection52CompilerCloseout where
     PairedRecognizerDovetailDescriptionCompilerPrinciple
   finiteGrammarRecognizerDescription :
     FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple
-  recognizerToFiniteGrammar :
-    TuringAcceptableToFiniteGeneralGrammarConstruction Bool
+  descriptionRecognizerToFiniteGrammar :
+    DescriptionRecognizerToFiniteGeneralGrammarConstruction
 
-theorem booleanFiniteDataSection52CompilerCloseout_recursivelyEnumerableToFiniteGrammar
+theorem booleanFiniteDataSection52CompilerCloseout_programAcceptableByDescriptionToFiniteGrammar
     (hclose : BooleanFiniteDataSection52CompilerCloseout) :
-    RecursivelyEnumerableToFiniteGeneralGrammarPrinciple Bool := by
-  intro L hL
-  exact hclose.recognizerToFiniteGrammar L hL
+    ProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction :=
+  programAcceptableByDescriptionToFiniteGeneralGrammarConstruction_of_descriptionRecognizer
+    hclose.descriptionRecognizerToFiniteGrammar
 
 end Computability
 end FoC

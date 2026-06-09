@@ -35,13 +35,13 @@ The formal page separates three levels of argument.
 * At the compiler-principle level, staged programs and bounded trace checkers
   are connected to Turing machines by named construction hypotheses.
 * At the finite-description level, concrete supplied descriptions and finite
-  program records expose the exact construction surfaces still needed for fully
-  executable machine descriptions.
+  program records expose the construction interfaces used for executable
+  machine descriptions.
 
 This makes the theorem statements honest about implementation work. When a
 textbook proof says to dovetail two recognizers or check a finite derivation,
-this page proves the bounded trace core and names the remaining finite compiler
-construction instead of treating it as implicit.
+this page proves the bounded trace core and names the finite compiler
+interfaces instead of treating them as implicit.
 -/
 
 open Languages
@@ -202,7 +202,8 @@ def ProgramAcceptableLanguage (L : Language alpha) : Prop :=
 The next group changes representation level. The preceding staged-program
 predicates are semantic; the description predicates say that a supplied finite
 machine description realizes the same staged computation. Later theorems use
-these bridges to state exactly which compiler facts are still assumptions.
+these bridges to state exactly which compiler facts are supplied by closeout
+records.
 -/
 
 def ConcreteMachineDescriptionAccepts
@@ -228,6 +229,13 @@ def ConcreteProgramAcceptableByDescription
 def ConcreteProgramBoolDecidableByDescription
     (L : Language Bool) : Prop :=
   ProgramBoolDecidableByDescription L
+
+theorem concrete_machine_description_acceptance_trace
+    {D : MachineDescription} {L : Language Bool}
+    (h : ConcreteMachineDescriptionAccepts D L) :
+    LanguageAcceptanceTrace (fun w n => D.HaltsIn n w) L := by
+  intro w
+  exact h.right w
 
 /-!
 Finite program wrappers give concrete handles for the examples and compiler
@@ -433,8 +441,8 @@ trace in increasing bounds until one side hits.
 
 This is the didactic center of the page. The trace-level dovetailer is a
 concrete staged program: it is not merely a postulated language theorem. The
-remaining compiler hypotheses say exactly what is still needed to turn that
-staged program into a concrete Turing-machine description in every intended
+compiler closeouts specify the description-level interfaces that turn that
+staged program into a concrete Turing-machine description in each intended
 setting.
 -/
 
@@ -657,9 +665,9 @@ version of the dovetailing handoff: its inputs are two finite
 {name}`MachineDescription`s, and its output is a finite Boolean description for
 the staged dovetailer over their halting traces.  The finite dovetail program
 record is proved equivalent to this exact construction target.  The bounded
-table-realizer target narrows the remaining machine-engineering proof further:
-it asks for a finite transition table that realizes the executable bounded
-dovetail output from {module}`FoC.Computability.MachineBuilder`.
+table-realizer target gives the corresponding transition-table interface: it
+asks for a finite transition table that realizes the executable bounded dovetail
+output from {module}`FoC.Computability.MachineBuilder`.
 -/
 
 theorem bounded_trace_search_construction :
@@ -1306,19 +1314,20 @@ canonicalization lemmas then promote that theorem to the full
 {name}`TapeCodePrimitiveOutputRealizedByDescription` interface, covering any
 code word whose configuration decoder succeeds completely.
 
-The two formulations are now proved equivalent.  This means the remaining
-construction is a single finite transducer problem: build the concrete Boolean
-transition table that parses a canonical configuration, performs one fixed
-description-table lookup, and emits the re-encoded successor configuration.
+The two formulations are now proved equivalent.  This concentrates the
+construction interface into one finite transducer problem: build the concrete
+Boolean transition table that parses a canonical configuration, performs one
+fixed description-table lookup, and emits the re-encoded successor
+configuration.
 
 The concrete transducer pieces are retained as a small compiler core. A finite table
 appends one fixed encoded code symbol to the normalized Boolean output, while
 the code-primitive layer provides fixed unary comparisons and one-step tape
 write/move actions with canonical encode/decode theorems. Exact compilation
 of every code primitive is proved impossible because erasure cannot produce an
-exact empty tape window from nonempty input. The viable remaining boundary is
-therefore a normalized-output tape-code compiler: if that one generic compiler
-principle is supplied, the fixed stepper, bounded simulator, and dovetail-layout
+exact empty tape window from nonempty input. The viable boundary is therefore a
+normalized-output tape-code compiler: if that one generic compiler principle is
+supplied, the fixed stepper, bounded simulator, and dovetail-layout
 machine-description obligations all follow.
 -/
 
@@ -2375,6 +2384,20 @@ def AcceptableListingEquivalenceStatement (L : Language alpha) : Prop :=
 def AcceptableRangeEquivalenceStatement (L : Language alpha) : Prop :=
   AcceptableRangeEquivalence L
 
+def ConcreteFiniteTraceTableRecognizable
+    (L : Language terminal) : Prop :=
+  FiniteTraceTableRecognizable L
+
+def ConcreteDescriptionRecognizerToFiniteGeneralGrammarConstruction : Prop :=
+  DescriptionRecognizerToFiniteGeneralGrammarConstruction
+
+def ConcreteBooleanRecognizerToFiniteGeneralGrammarConstruction : Prop :=
+  BooleanRecognizerToFiniteGeneralGrammarConstruction
+
+def ConcreteProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction :
+    Prop :=
+  ProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction
+
 /-!
 **General Grammars and RE Languages.**
 
@@ -2388,19 +2411,22 @@ and a staged recognizer program. In the reverse direction, a recognizer trace
 is represented as a trace-simulation grammar: each finite accepting
 configuration trace becomes a one-step semantic derivation. For concrete finite
 evidence, finite trace tables now produce an explicit finite list of
-start-to-word productions. The full finite grammar equivalence remains a theorem
-shape until the formalization has the effective construction that turns
-arbitrary recognizer computations into finite production lists.
+start-to-word productions, and {name}`ConcreteFiniteTraceTableRecognizable`
+is proved to imply finite-production generation. The finite-data closeout keeps
+the concrete recognizer route description-backed: finite grammars are compiled
+to recognizer descriptions, paired recognizers are dovetailed directly, and
+description-backed recognizers use a dedicated finite-grammar construction
+interface.
 
 For finite-production general grammars, the page already contains the
 program-acceptability bridge and the supplied-description consequences. For
 semantic unrestricted grammars, the reverse direction is now closed by the
 one-nonterminal trace-simulation construction in
-{module}`FoC.Computability.Grammar`. What remains open is the effective
-textbook direction: a concrete finite-description compiler that uniformly
-builds the recognizer machine description, plus the reverse construction from
-recognizers to finite-production unrestricted grammars. The latter target is
-now named separately from the older broad compiler assumptions.
+{module}`FoC.Computability.Grammar`. The effective textbook target used here is
+the description-backed construction named
+{name}`ConcreteDescriptionRecognizerToFiniteGeneralGrammarConstruction`. The
+concrete finite-description compiler for finite grammar recognizers is a
+separate named field of the finite-data closeout.
 -/
 
 def GeneralGrammarGeneratedLanguage (G : GeneralGrammar terminal nonterminal) :
@@ -2468,6 +2494,10 @@ def ConcreteFiniteAcceptanceTraceTableLanguage
     Language terminal :=
   T.language
 
+def ConcreteFiniteTraceTableToFiniteGeneralGrammarConstruction
+    (terminal : Type u) : Prop :=
+  FiniteTraceTableToFiniteGeneralGrammarConstruction terminal
+
 def ConcreteFiniteAcceptanceTraceTableGrammar
     (T : ConcreteFiniteAcceptanceTraceTable terminal) :
     GeneralGrammar terminal Unit :=
@@ -2487,10 +2517,6 @@ def ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction : Prop :=
 
 def ConcreteMachineDescriptionAcceptsToFiniteGeneralGrammarConstruction : Prop :=
   MachineDescriptionAcceptsToFiniteGeneralGrammarConstruction
-
-def ConcreteTuringAcceptableToFiniteGeneralGrammarConstruction
-    (terminal : Type u) : Prop :=
-  TuringAcceptableToFiniteGeneralGrammarConstruction terminal
 
 def ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
   BooleanGeneralGrammarRecognizerCompilerPrinciple
@@ -2761,7 +2787,7 @@ theorem concrete_machine_description_accepts_generated_by_configuration_trace_gr
 **Finite trace tables.**  A finite table of accepting traces gives a genuine
 finite-production grammar: the production list contains one rule from the start
 nonterminal to each table word. This is the finite-data bridge used to state the
-remaining recognizer-to-finite-grammar target precisely.
+description-backed recognizer-to-finite-grammar interface precisely.
 -/
 
 def ConcreteFiniteAcceptanceTraceTableProductions
@@ -2788,6 +2814,17 @@ theorem concrete_finite_acceptance_trace_table_finite_production_generated
     FiniteGeneralGrammarGenerated
       (ConcreteFiniteAcceptanceTraceTableLanguage T) :=
   Computability.FiniteAcceptanceTraceTable.finiteProductionGenerated_language T
+
+theorem concrete_finite_trace_table_recognizable_finite_production_generated
+    {L : Language terminal}
+    (h : ConcreteFiniteTraceTableRecognizable L) :
+    FiniteGeneralGrammarGenerated L :=
+  Computability.finiteTraceTableRecognizable_finiteProductionGenerated h
+
+theorem concrete_finite_trace_table_to_finite_general_grammar_construction
+    (terminal : Type u) :
+    ConcreteFiniteTraceTableToFiniteGeneralGrammarConstruction terminal :=
+  Computability.finiteTraceTableToFiniteGeneralGrammarConstruction terminal
 
 theorem concrete_machine_finite_acceptance_trace_table_generated
     {D : MachineDescription}
@@ -3293,20 +3330,78 @@ theorem finite_general_grammar_to_recursively_enumerable_construction_of_finite_
   boolean_finite_general_grammar_to_recursively_enumerable_construction_of_concrete_finite_grammar_compiler
     hclose.finiteGrammarRecognizerDescription
 
-theorem recursively_enumerable_to_finite_general_grammar_construction_of_finite_data_closeout
+theorem program_acceptable_by_description_to_finite_general_grammar_construction_of_finite_data_closeout
     (hclose : ConcreteBooleanFiniteDataSection52CompilerCloseout) :
-    RecursivelyEnumerableToFiniteGeneralGrammarConstruction Bool :=
-  Computability.booleanFiniteDataSection52CompilerCloseout_recursivelyEnumerableToFiniteGrammar
+    ConcreteProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction :=
+  Computability.booleanFiniteDataSection52CompilerCloseout_programAcceptableByDescriptionToFiniteGrammar
     hclose
 
-theorem boolean_finite_general_grammar_re_equivalence_construction_of_finite_data_closeout
-    (hclose : ConcreteBooleanFiniteDataSection52CompilerCloseout) :
-    FiniteGeneralGrammarREEquivalenceConstruction Bool :=
-  finite_general_grammar_re_equivalence_construction_of_constructions
-    (boolean_finite_general_grammar_to_recursively_enumerable_construction_of_concrete_finite_grammar_compiler
-      hclose.finiteGrammarRecognizerDescription)
-    (recursively_enumerable_to_finite_general_grammar_construction_of_finite_data_closeout
-      hclose)
+theorem program_acceptable_by_description_finite_general_grammar_of_finite_data_closeout
+    (hclose : ConcreteBooleanFiniteDataSection52CompilerCloseout)
+    {L : Language Bool}
+    (hL : ConcreteProgramAcceptableByDescription L) :
+    FiniteGeneralGrammarGenerated L :=
+  (program_acceptable_by_description_to_finite_general_grammar_construction_of_finite_data_closeout
+    hclose) L hL
+
+theorem finite_general_grammar_pair_recursive_of_finite_data_closeout
+    (hclose : ConcreteBooleanFiniteDataSection52CompilerCloseout)
+    {L : Language Bool}
+    (hpair : FiniteGeneralGrammarPairGenerated L) :
+    RecursiveLanguage L := by
+  rcases hpair.left with ⟨acceptNonterminal, acceptG,
+    acceptFinite, acceptEq⟩
+  rcases hpair.right with ⟨rejectNonterminal, rejectG,
+    rejectFinite, rejectEq⟩
+  rcases hclose.finiteGrammarRecognizerDescription
+      (nonterminal := acceptNonterminal) acceptG acceptFinite with
+    ⟨acceptD, acceptCompiled⟩
+  rcases hclose.finiteGrammarRecognizerDescription
+      (nonterminal := rejectNonterminal) rejectG rejectFinite with
+    ⟨rejectD, rejectCompiled⟩
+  let acceptProgram : ConcreteFiniteAcceptorProgram :=
+    { description := acceptD }
+  let rejectProgram : ConcreteFiniteAcceptorProgram :=
+    { description := rejectD }
+  have acceptGenerated :
+      ConcreteMachineDescriptionAccepts acceptD
+        (GeneralGrammarGeneratedLanguage acceptG) :=
+    Computability.programCompiledByDescription_acceptsLanguage
+      (Computability.generalGrammarRecognizerProgram_acceptsLanguage acceptG)
+      acceptCompiled
+  have rejectGenerated :
+      ConcreteMachineDescriptionAccepts rejectD
+        (GeneralGrammarGeneratedLanguage rejectG) :=
+    Computability.programCompiledByDescription_acceptsLanguage
+      (Computability.generalGrammarRecognizerProgram_acceptsLanguage rejectG)
+      rejectCompiled
+  have acceptLanguage :
+      ConcreteMachineDescriptionAccepts acceptD L := by
+    constructor
+    · exact acceptGenerated.left
+    · intro w
+      exact Iff.trans (acceptGenerated.right w) (acceptEq w)
+  have rejectLanguage :
+      ConcreteMachineDescriptionAccepts rejectD (Language.Compl L) := by
+    constructor
+    · exact rejectGenerated.left
+    · intro w
+      exact Iff.trans (rejectGenerated.right w) (rejectEq w)
+  have htraces :
+      LanguageComplementaryAcceptanceTraces
+        (ConcreteFiniteAcceptorTrace acceptProgram)
+        (ConcreteFiniteAcceptorTrace rejectProgram) L := by
+    constructor
+    · simpa [acceptProgram, ConcreteFiniteAcceptorTrace,
+        Computability.FiniteAcceptorProgram.trace] using
+        concrete_machine_description_acceptance_trace acceptLanguage
+    · simpa [rejectProgram, ConcreteFiniteAcceptorTrace,
+        Computability.FiniteAcceptorProgram.trace] using
+        concrete_machine_description_acceptance_trace rejectLanguage
+  exact
+    concrete_finite_dovetail_program_turing_decidable_of_paired_recognizer_compiler
+      hclose.pairedDovetailDescription
+      (accept := acceptProgram) (reject := rejectProgram) htraces
 
 theorem boolean_finite_general_grammar_re_equivalence_construction_of_finite_section52_closeout
     (hclose : ConcreteBooleanFiniteGrammarSection52Closeout) :
@@ -3351,23 +3446,26 @@ theorem boolean_recursive_language_iff_finite_general_grammar_pair_of_semantic_s
 The theorem equating general grammars with recursively enumerable languages is
 now split into two statements. For semantic unrestricted grammars, the reverse
 direction is proved by {name}`SemanticLanguageGrammar`: arbitrary production
-predicates can generate any language with one nonterminal. The real textbook
-content is therefore the finite/effective theorem shape, where the reverse
-direction still asks for an explicit construction of a finite grammar from a
-recognizer.
+predicates can generate any language with one nonterminal. The finite/effective
+content is factored through {name}`ConcreteBooleanFiniteGrammarSection52Closeout`.
+Under that closeout,
+{name}`boolean_recursive_language_iff_finite_general_grammar_pair_of_finite_section52_closeout`
+proves the finite grammar pair characterization. The narrower
+{name}`ConcreteBooleanFiniteDataSection52CompilerCloseout` records concrete
+finite-data ingredients: the paired-recognizer dovetail compiler, the finite
+grammar recognizer compiler, and the description-backed recognizer-to-finite
+grammar construction.
 
 The declarations above now pin that infrastructure down as
 {name}`ConcreteBooleanSection52CompilerCloseout` for the semantic grammar page
 and {name}`ConcreteBooleanFiniteGrammarSection52Closeout` for the finite grammar
-page. Both closeouts now carry {name}`BoundedTraceSearchConstruction` as the
-primary finite-trace handoff. The semantic closeout no longer assumes the
-reverse grammar construction. The finite closeout keeps the exact remaining
-finite assumptions, but it is now compositional:
-{name}`concrete_finite_section52_closeout_of_semantic_closeout` shows that the
-semantic recognizer compiler supplies the finite recognizer compiler
-automatically. What remains for the finite textbook theorem is the reverse
-construction from recursively enumerable languages to finite-production general
-grammars, together with the already named concrete compiler fields.
+page, while {name}`ConcreteBooleanFiniteDataSection52CompilerCloseout` records
+the narrowed finite/effective route. These closeouts carry
+{name}`BoundedTraceSearchConstruction` as the primary finite-trace handoff. The
+semantic closeout uses the semantic reverse grammar construction. The
+finite-data closeout replaces the older broad dovetail compiler by a paired
+recognizer dovetail compiler and uses the description-backed construction
+{name}`ConcreteDescriptionRecognizerToFiniteGeneralGrammarConstruction`.
 -/
 
 end Section02
