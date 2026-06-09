@@ -111,6 +111,100 @@ theorem finiteProductionListDerivationTrace_acceptance_of_hasFiniteProductions
     hfinite with ⟨rules, hrules⟩
   exact ⟨rules, finiteProductionListDerivationTrace_acceptance hrules⟩
 
+def GeneralGrammarBoundedDerivationSearch
+    (G : GeneralGrammar terminal nonterminal)
+    (w : Word terminal) (limit : Nat) : Prop :=
+  TraceHitsBy (GeneralGrammarDerivationTrace G) w limit
+
+def FiniteProductionListBoundedDerivationSearch
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal))
+    (w : Word terminal) (limit : Nat) : Prop :=
+  TraceHitsBy (FiniteProductionListDerivationTrace G rules) w limit
+
+theorem generalGrammarBoundedDerivationSearch_sound
+    {G : GeneralGrammar terminal nonterminal}
+    {w : Word terminal} {limit : Nat}
+    (hit : GeneralGrammarBoundedDerivationSearch G w limit) :
+    w ∈ GeneralGrammar.GeneratedLanguage G :=
+  traceHitsBy_sound (generalGrammar_derivationTrace_acceptance G) hit
+
+theorem generalGrammarBoundedDerivationSearch_complete
+    {G : GeneralGrammar terminal nonterminal}
+    {w : Word terminal}
+    (hw : w ∈ GeneralGrammar.GeneratedLanguage G) :
+    exists limit : Nat, GeneralGrammarBoundedDerivationSearch G w limit :=
+  traceHitsBy_complete (generalGrammar_derivationTrace_acceptance G) hw
+
+theorem finiteProductionListBoundedDerivationSearch_sound
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs)
+    {w : Word terminal} {limit : Nat}
+    (hit : FiniteProductionListBoundedDerivationSearch G rules w limit) :
+    w ∈ GeneralGrammar.GeneratedLanguage G :=
+  traceHitsBy_sound
+    (finiteProductionListDerivationTrace_acceptance hrules) hit
+
+theorem finiteProductionListBoundedDerivationSearch_complete
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs)
+    {w : Word terminal}
+    (hw : w ∈ GeneralGrammar.GeneratedLanguage G) :
+    exists limit : Nat,
+      FiniteProductionListBoundedDerivationSearch G rules w limit :=
+  traceHitsBy_complete
+    (finiteProductionListDerivationTrace_acceptance hrules) hw
+
+noncomputable def GeneralGrammarBoundedRecognizerProgram
+    (G : GeneralGrammar terminal nonterminal) :
+    StagedProgram terminal Unit :=
+  TraceRecognizerProgram (GeneralGrammarBoundedDerivationSearch G)
+
+noncomputable def FiniteProductionListBoundedRecognizerProgram
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal)) :
+    StagedProgram terminal Unit :=
+  TraceRecognizerProgram
+    (FiniteProductionListBoundedDerivationSearch G rules)
+
+theorem generalGrammarBoundedRecognizerProgram_acceptsLanguage
+    (G : GeneralGrammar terminal nonterminal) :
+    ProgramAcceptsLanguage
+      (GeneralGrammarBoundedRecognizerProgram G)
+      (GeneralGrammar.GeneratedLanguage G) := by
+  apply traceRecognizerProgram_acceptsLanguage
+  intro w
+  constructor
+  · intro h
+    rcases h with ⟨limit, hit⟩
+    exact generalGrammarBoundedDerivationSearch_sound hit
+  · intro hw
+    exact generalGrammarBoundedDerivationSearch_complete hw
+
+theorem finiteProductionListBoundedRecognizerProgram_acceptsLanguage
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    ProgramAcceptsLanguage
+      (FiniteProductionListBoundedRecognizerProgram G rules)
+      (GeneralGrammar.GeneratedLanguage G) := by
+  apply traceRecognizerProgram_acceptsLanguage
+  intro w
+  constructor
+  · intro h
+    rcases h with ⟨limit, hit⟩
+    exact finiteProductionListBoundedDerivationSearch_sound hrules hit
+  · intro hw
+    exact finiteProductionListBoundedDerivationSearch_complete hrules hw
+
 noncomputable def GeneralGrammarRecognizerProgram
     (G : GeneralGrammar terminal nonterminal) :
     StagedProgram terminal Unit :=
@@ -425,6 +519,92 @@ theorem recursivelyEnumerableToGeneralGrammarPrinciple_semantic
       RecursivelyEnumerable L -> GeneralGrammar.Generated L := by
   intro L _hL
   exact semanticLanguageGrammar_generated L
+
+def AcceptanceTraceLanguage
+    (trace : Word terminal -> Nat -> Prop) : Language terminal :=
+  fun w => exists n : Nat, trace w n
+
+def TraceSimulationGrammar
+    (trace : Word terminal -> Nat -> Prop) :
+    GeneralGrammar terminal Unit :=
+  SemanticLanguageGrammar (AcceptanceTraceLanguage trace)
+
+theorem traceSimulationGrammar_derivesIn_one_of_trace
+    {trace : Word terminal -> Nat -> Prop}
+    {w : Word terminal} {n : Nat}
+    (h : trace w n) :
+    GeneralGrammar.DerivesIn (TraceSimulationGrammar trace) 1
+      [Symbol.nonterminal ()]
+      (SententialForm.terminalWord w) := by
+  have hyield :
+      GeneralGrammar.Yields (TraceSimulationGrammar trace)
+        [Symbol.nonterminal ()]
+        (SententialForm.terminalWord w) := by
+    exists ([] : SententialForm terminal Unit)
+    exists ([] : SententialForm terminal Unit)
+    exists ([Symbol.nonterminal ()] : SententialForm terminal Unit)
+    exists SententialForm.terminalWord (nt := Unit) w
+    constructor
+    · constructor
+      · rfl
+      · exact ⟨w, ⟨n, h⟩, rfl⟩
+    · constructor <;> simp
+  exact GeneralGrammar.DerivesIn.step hyield
+    (GeneralGrammar.DerivesIn.zero
+      (SententialForm.terminalWord w))
+
+theorem traceSimulationGrammar_generated_of_acceptanceTrace
+    {trace : Word terminal -> Nat -> Prop}
+    {L : Language terminal}
+    (htrace : AcceptanceTrace trace L) :
+    Language.Equal
+      (GeneralGrammar.GeneratedLanguage
+        (TraceSimulationGrammar trace)) L :=
+  Language.equal_trans
+    (semanticLanguageGrammar_generates (AcceptanceTraceLanguage trace))
+    htrace
+
+theorem acceptanceTrace_generated_by_traceSimulationGrammar
+    {trace : Word terminal -> Nat -> Prop}
+    {L : Language terminal}
+    (htrace : AcceptanceTrace trace L) :
+    GeneralGrammar.Generated L := by
+  exists Unit
+  exists TraceSimulationGrammar trace
+  exact traceSimulationGrammar_generated_of_acceptanceTrace htrace
+
+def MachineHaltingTraceSimulationGrammar
+    (D : MachineDescription) : GeneralGrammar Bool Unit :=
+  TraceSimulationGrammar (fun w n => D.HaltsIn n w)
+
+theorem machineHaltingTraceSimulationGrammar_derivesIn_one_of_haltsIn
+    {D : MachineDescription} {w : Word Bool} {n : Nat}
+    (h : D.HaltsIn n w) :
+    GeneralGrammar.DerivesIn
+      (MachineHaltingTraceSimulationGrammar D) 1
+      [Symbol.nonterminal ()]
+      (SententialForm.terminalWord w) :=
+  traceSimulationGrammar_derivesIn_one_of_trace h
+
+theorem machineHaltingTraceSimulationGrammar_generated
+    (D : MachineDescription) :
+    Language.Equal
+      (GeneralGrammar.GeneratedLanguage
+        (MachineHaltingTraceSimulationGrammar D))
+      (fun w => D.HaltsOnInput w) :=
+  traceSimulationGrammar_generated_of_acceptanceTrace (by
+    intro w
+    rfl)
+
+theorem machineDescription_accepts_generated_by_traceSimulationGrammar
+    {D : MachineDescription} {L : Language Bool}
+    (h : MachineDescriptionAcceptsLanguage D L) :
+    Language.Equal
+      (GeneralGrammar.GeneratedLanguage
+        (MachineHaltingTraceSimulationGrammar D)) L :=
+  Language.equal_trans
+    (machineHaltingTraceSimulationGrammar_generated D)
+    h.right
 
 /-!
 # Chapter 5 grammar construction boundaries

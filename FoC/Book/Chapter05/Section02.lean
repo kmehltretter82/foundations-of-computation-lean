@@ -29,16 +29,19 @@ The formal page separates three levels of argument.
 
 * At the semantic level, traces, listings, ranges, partial functions, and staged
   programs are related directly.
-* At the compiler-principle level, those staged programs are connected to
-  Turing machines by named construction hypotheses.
+* At the bounded-trace level, finite machine runs, encoded configurations,
+  finite derivation searches, and recognizer-to-grammar trace simulations are
+  checked without requiring a generic transition-table compiler.
+* At the compiler-principle level, staged programs and bounded trace checkers
+  are connected to Turing machines by named construction hypotheses.
 * At the finite-description level, concrete supplied descriptions and finite
   program records expose the exact construction surfaces still needed for fully
   executable machine descriptions.
 
 This makes the theorem statements honest about implementation work. When a
-textbook proof says to dovetail two recognizers, this page proves the trace-level
-dovetailing core and names the remaining finite compiler construction instead
-of treating it as implicit.
+textbook proof says to dovetail two recognizers or check a finite derivation,
+this page proves the bounded trace core and names the remaining finite compiler
+construction instead of treating it as implicit.
 -/
 
 open Languages
@@ -2380,19 +2383,22 @@ enumerability, then state the recursive-language equivalence for a language
 and its complement under those construction principles.
 
 Finite derivations are also finite-stage evidence: the reusable grammar bridge
-turns derivation length into an acceptance trace and a staged recognizer
-program.  The full Turing-machine equivalence remains a theorem shape until
-the formalization has the universal/interpreter infrastructure needed to
-compile that staged recognizer.
+turns derivation length into an acceptance trace, a bounded derivation search,
+and a staged recognizer program. In the reverse direction, a recognizer trace
+is represented as a trace-simulation grammar: each finite accepting
+configuration trace becomes a one-step semantic derivation. The full finite
+grammar equivalence remains a theorem shape until the formalization has the
+effective construction that turns those trace schemas into finite production
+lists.
 
 For finite-production general grammars, the page already contains the
 program-acceptability bridge and the supplied-description consequences. For
 semantic unrestricted grammars, the reverse direction is now closed by the
-one-nonterminal grammar construction in {module}`FoC.Computability.Grammar`.
-What remains open is the effective textbook direction: a concrete
-finite-description compiler that uniformly builds the recognizer machine
-description, plus the reverse construction from recognizers to
-finite-production unrestricted grammars.
+one-nonterminal trace-simulation construction in
+{module}`FoC.Computability.Grammar`. What remains open is the effective
+textbook direction: a concrete finite-description compiler that uniformly
+builds the recognizer machine description, plus the reverse construction from
+recognizers to finite-production unrestricted grammars.
 -/
 
 def GeneralGrammarGeneratedLanguage (G : GeneralGrammar terminal nonterminal) :
@@ -2410,6 +2416,17 @@ def GeneralGrammarFiniteProductionListTraceLanguage
     (w : Word terminal) (n : Nat) : Prop :=
   FiniteProductionListDerivationTrace G rules w n
 
+def GeneralGrammarBoundedDerivationSearchLanguage
+    (G : GeneralGrammar terminal nonterminal)
+    (w : Word terminal) (limit : Nat) : Prop :=
+  GeneralGrammarBoundedDerivationSearch G w limit
+
+def GeneralGrammarFiniteProductionListBoundedSearchLanguage
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal))
+    (w : Word terminal) (limit : Nat) : Prop :=
+  FiniteProductionListBoundedDerivationSearch G rules w limit
+
 noncomputable def GeneralGrammarStagedRecognizer
     (G : GeneralGrammar terminal nonterminal) :
     StagedProgram terminal Unit :=
@@ -2420,6 +2437,26 @@ noncomputable def GeneralGrammarFiniteProductionListStagedRecognizer
     (rules : List (GeneralGrammar.Production terminal nonterminal)) :
     StagedProgram terminal Unit :=
   FiniteProductionListRecognizerProgram G rules
+
+noncomputable def GeneralGrammarBoundedStagedRecognizer
+    (G : GeneralGrammar terminal nonterminal) :
+    StagedProgram terminal Unit :=
+  GeneralGrammarBoundedRecognizerProgram G
+
+noncomputable def GeneralGrammarFiniteProductionListBoundedStagedRecognizer
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal)) :
+    StagedProgram terminal Unit :=
+  FiniteProductionListBoundedRecognizerProgram G rules
+
+def AcceptanceTraceSimulationGrammar
+    (trace : Word terminal -> Nat -> Prop) :
+    GeneralGrammar terminal Unit :=
+  TraceSimulationGrammar trace
+
+def MachineConfigurationTraceSimulationGrammar
+    (D : MachineDescription) : GeneralGrammar Bool Unit :=
+  MachineHaltingTraceSimulationGrammar D
 
 def ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
   BooleanGeneralGrammarRecognizerCompilerPrinciple
@@ -2551,6 +2588,49 @@ theorem finite_production_list_trace_accepts_generated_language
       (GeneralGrammarGeneratedLanguage G) :=
   Computability.finiteProductionListDerivationTrace_acceptance hrules
 
+theorem general_grammar_bounded_derivation_search_sound
+    {G : GeneralGrammar terminal nonterminal}
+    {w : Word terminal} {limit : Nat}
+    (hit : GeneralGrammarBoundedDerivationSearchLanguage G w limit) :
+    w ∈ GeneralGrammarGeneratedLanguage G :=
+  Computability.generalGrammarBoundedDerivationSearch_sound hit
+
+theorem general_grammar_bounded_derivation_search_complete
+    {G : GeneralGrammar terminal nonterminal}
+    {w : Word terminal}
+    (hw : w ∈ GeneralGrammarGeneratedLanguage G) :
+    exists limit : Nat,
+      GeneralGrammarBoundedDerivationSearchLanguage G w limit :=
+  Computability.generalGrammarBoundedDerivationSearch_complete hw
+
+theorem finite_production_list_bounded_derivation_search_sound
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs)
+    {w : Word terminal} {limit : Nat}
+    (hit :
+      GeneralGrammarFiniteProductionListBoundedSearchLanguage
+        G rules w limit) :
+    w ∈ GeneralGrammarGeneratedLanguage G :=
+  Computability.finiteProductionListBoundedDerivationSearch_sound
+    hrules hit
+
+theorem finite_production_list_bounded_derivation_search_complete
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs)
+    {w : Word terminal}
+    (hw : w ∈ GeneralGrammarGeneratedLanguage G) :
+    exists limit : Nat,
+      GeneralGrammarFiniteProductionListBoundedSearchLanguage
+        G rules w limit :=
+  Computability.finiteProductionListBoundedDerivationSearch_complete
+    hrules hw
+
 theorem general_grammar_staged_recognizer_accepts_generated_language
     (G : GeneralGrammar terminal nonterminal) :
     ProgramAcceptsLanguage
@@ -2569,6 +2649,76 @@ theorem finite_production_list_staged_recognizer_accepts_generated_language
       (GeneralGrammarGeneratedLanguage G) :=
   Computability.finiteProductionListRecognizerProgram_acceptsLanguage
     hrules
+
+theorem general_grammar_bounded_staged_recognizer_accepts_generated_language
+    (G : GeneralGrammar terminal nonterminal) :
+    ProgramAcceptsLanguage
+      (GeneralGrammarBoundedStagedRecognizer G)
+      (GeneralGrammarGeneratedLanguage G) :=
+  Computability.generalGrammarBoundedRecognizerProgram_acceptsLanguage G
+
+theorem finite_production_list_bounded_staged_recognizer_accepts_generated_language
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    ProgramAcceptsLanguage
+      (GeneralGrammarFiniteProductionListBoundedStagedRecognizer G rules)
+      (GeneralGrammarGeneratedLanguage G) :=
+  Computability.finiteProductionListBoundedRecognizerProgram_acceptsLanguage
+    hrules
+
+theorem acceptance_trace_simulation_grammar_derivesIn_one_of_trace
+    {trace : Word terminal -> Nat -> Prop}
+    {w : Word terminal} {n : Nat}
+    (h : trace w n) :
+    GeneralGrammar.DerivesIn
+      (AcceptanceTraceSimulationGrammar trace) 1
+      [Symbol.nonterminal ()]
+      (SententialForm.terminalWord w) :=
+  Computability.traceSimulationGrammar_derivesIn_one_of_trace h
+
+theorem acceptance_trace_simulation_grammar_generated
+    {trace : Word terminal -> Nat -> Prop}
+    {L : Language terminal}
+    (htrace : LanguageAcceptanceTrace trace L) :
+    Language.Equal
+      (GeneralGrammarGeneratedLanguage
+        (AcceptanceTraceSimulationGrammar trace)) L :=
+  Computability.traceSimulationGrammar_generated_of_acceptanceTrace htrace
+
+theorem acceptance_trace_generated_by_simulation_grammar
+    {trace : Word terminal -> Nat -> Prop}
+    {L : Language terminal}
+    (htrace : LanguageAcceptanceTrace trace L) :
+    GeneralGrammar.Generated L :=
+  Computability.acceptanceTrace_generated_by_traceSimulationGrammar htrace
+
+theorem machine_configuration_trace_simulation_grammar_derivesIn_one_of_haltsIn
+    {D : MachineDescription} {w : Word Bool} {n : Nat}
+    (h : D.HaltsIn n w) :
+    GeneralGrammar.DerivesIn
+      (MachineConfigurationTraceSimulationGrammar D) 1
+      [Symbol.nonterminal ()]
+      (SententialForm.terminalWord w) :=
+  Computability.machineHaltingTraceSimulationGrammar_derivesIn_one_of_haltsIn h
+
+theorem machine_configuration_trace_simulation_grammar_generated
+    (D : MachineDescription) :
+    Language.Equal
+      (GeneralGrammarGeneratedLanguage
+        (MachineConfigurationTraceSimulationGrammar D))
+      (fun w => D.HaltsOnInput w) :=
+  Computability.machineHaltingTraceSimulationGrammar_generated D
+
+theorem concrete_machine_description_accepts_generated_by_configuration_trace_grammar
+    {D : MachineDescription} {L : Language Bool}
+    (h : ConcreteMachineDescriptionAccepts D L) :
+    Language.Equal
+      (GeneralGrammarGeneratedLanguage
+        (MachineConfigurationTraceSimulationGrammar D)) L :=
+  Computability.machineDescription_accepts_generated_by_traceSimulationGrammar h
 
 theorem finite_general_grammar_has_finite_list_staged_recognizer
     {G : GeneralGrammar terminal nonterminal}
