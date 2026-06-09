@@ -2447,7 +2447,7 @@ program-acceptability bridge and the supplied-description consequences. For
 semantic unrestricted grammars, the reverse direction is now closed by the
 one-nonterminal trace-simulation construction in
 {module}`FoC.Computability.Grammar`. The effective textbook target used here is
-the description-backed construction named
+the well-formed description-backed construction named
 {name}`ConcreteDescriptionRecognizerToFiniteGeneralGrammarConstruction`. The
 concrete finite-description compiler for finite grammar recognizers is a
 separate named field of the finite-data closeout.
@@ -2847,6 +2847,13 @@ theorem concrete_machine_history_grammar_has_finite_productions
     GeneralGrammar.HasFiniteProductions
       (ConcreteMachineHistoryGrammar D) :=
   Computability.MachineDescriptionHistoryGrammar.hasFiniteProductions D
+
+theorem concrete_machine_history_grammar_complete
+    {D : MachineDescription} {w : Word Bool}
+    (h : D.HaltsOnInput w) :
+    w ∈ GeneralGrammarGeneratedLanguage
+      (ConcreteMachineHistoryGrammar D) :=
+  Computability.MachineDescriptionHistoryGrammar.complete h
 
 /-!
 **Finite trace tables.**  A finite table of accepting traces gives a genuine

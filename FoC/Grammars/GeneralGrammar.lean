@@ -297,6 +297,29 @@ theorem yields_derives {G : GeneralGrammar terminal nonterminal}
     Derives G x y :=
   Derives.step h (Derives.refl y)
 
+theorem yields_context {G : GeneralGrammar terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (pre suf : SententialForm terminal nonterminal)
+    (h : Yields G x y) :
+    Yields G (pre ++ x ++ suf) (pre ++ y ++ suf) := by
+  rcases h with ⟨u, v, lhs, rhs, hprod, hx, hy⟩
+  subst x
+  subst y
+  refine ⟨pre ++ u, v ++ suf, lhs, rhs, hprod, ?_, ?_⟩
+  · simp [List.append_assoc]
+  · simp [List.append_assoc]
+
+theorem derives_context {G : GeneralGrammar terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (pre suf : SententialForm terminal nonterminal)
+    (h : Derives G x y) :
+    Derives G (pre ++ x ++ suf) (pre ++ y ++ suf) := by
+  induction h with
+  | refl _ =>
+      exact Derives.refl _
+  | step hstep _ ih =>
+      exact Derives.step (yields_context pre suf hstep) ih
+
 theorem derivesIn_derives {G : GeneralGrammar terminal nonterminal}
     {n : Nat} {x y : SententialForm terminal nonterminal}
     (h : DerivesIn G n x y) :
