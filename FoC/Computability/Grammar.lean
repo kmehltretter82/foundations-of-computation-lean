@@ -481,6 +481,7 @@ def FiniteGeneralGrammarREEquivalencePrinciple
     FiniteGeneralGrammarAcceptabilityEquivalence L
 
 structure BooleanSection52CompilerCloseout where
+  boundedTraceSearch : BoundedTraceSearchConstruction
   decidableToAcceptable : DecidableToAcceptablePrinciple Bool
   dovetailDescription : DovetailDescriptionCompilerPrinciple
   partialUnaryRangeDescription :
@@ -489,6 +490,7 @@ structure BooleanSection52CompilerCloseout where
     BooleanGeneralGrammarRecognizerCompilerPrinciple
 
 structure BooleanFiniteGrammarSection52Closeout where
+  boundedTraceSearch : BoundedTraceSearchConstruction
   decidableToAcceptable : DecidableToAcceptablePrinciple Bool
   dovetailDescription : DovetailDescriptionCompilerPrinciple
   partialUnaryRangeDescription :

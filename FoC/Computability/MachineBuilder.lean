@@ -1113,6 +1113,16 @@ def runEncodedConfiguration
   | none => none
   | some (c, suffix) => some (D.runConfig steps c, suffix)
 
+def checksEncodedRun
+    (D : MachineDescription)
+    (start : Word MachineCodeSymbol)
+    (steps : Nat)
+    (finish : Word MachineCodeSymbol) : Bool :=
+  match decodeConfiguration start, decodeConfiguration finish with
+  | some (c, []), some (finished, []) =>
+      D.runConfig steps c == finished
+  | _, _ => false
+
 theorem runEncodedConfiguration_encodeConfigurationAppend
     (D : MachineDescription) (steps : Nat)
     (c : Configuration) (suffix : Word MachineCodeSymbol) :
@@ -1128,6 +1138,15 @@ theorem runEncodedConfiguration_encodeConfiguration
     runEncodedConfiguration D steps (encodeConfiguration c) =
       some (D.runConfig steps c, []) :=
   runEncodedConfiguration_encodeConfigurationAppend D steps c []
+
+theorem checksEncodedRun_encodeConfiguration
+    (D : MachineDescription) (steps : Nat)
+    (c : Configuration) :
+    checksEncodedRun D
+        (encodeConfiguration c)
+        steps
+        (encodeConfiguration (D.runConfig steps c)) = true := by
+  simp [checksEncodedRun, decodeConfiguration_encodeConfiguration]
 
 def stepConfigurationCode
     (D : MachineDescription)
@@ -2049,6 +2068,92 @@ theorem boundedDovetailOutput_eq_dovetailProgram_run
           exact hreject ((hitsByBool_eq_true_iff reject w limit).mpr h)
       simp [boundedDovetailOutput, DovetailProgram, haccept, hacceptTrace,
         hreject, hrejectTrace]
+
+theorem boundedDovetailOutput_true_iff_of_complementaryTraces
+    {accept reject : MachineDescription}
+    {L : Language Bool}
+    (htraces :
+      ComplementaryAcceptanceTraces
+        (fun w n => accept.HaltsIn n w)
+        (fun w n => reject.HaltsIn n w) L)
+    (w : Word Bool) :
+    (exists limit : Nat,
+      boundedDovetailOutput accept reject w limit = some [true]) <->
+        w ∈ L := by
+  constructor
+  · intro h
+    rcases h with ⟨limit, hlimit⟩
+    have hrun :
+        (DovetailProgram
+          (fun w n => accept.HaltsIn n w)
+          (fun w n => reject.HaltsIn n w)).run w limit =
+          some [true] := by
+      simpa [boundedDovetailOutput_eq_dovetailProgram_run]
+        using hlimit
+    exact (dovetailProgram_decides htraces).left w |>.mp
+      ⟨limit, hrun⟩
+  · intro hw
+    rcases ((dovetailProgram_decides htraces).left w).mpr hw with
+      ⟨limit, hrun⟩
+    exists limit
+    simpa [boundedDovetailOutput_eq_dovetailProgram_run]
+      using hrun
+
+theorem boundedDovetailOutput_false_iff_of_complementaryTraces
+    {accept reject : MachineDescription}
+    {L : Language Bool}
+    (htraces :
+      ComplementaryAcceptanceTraces
+        (fun w n => accept.HaltsIn n w)
+        (fun w n => reject.HaltsIn n w) L)
+    (w : Word Bool) :
+    (exists limit : Nat,
+      boundedDovetailOutput accept reject w limit = some [false]) <->
+        ¬ w ∈ L := by
+  constructor
+  · intro h
+    rcases h with ⟨limit, hlimit⟩
+    have hrun :
+        (DovetailProgram
+          (fun w n => accept.HaltsIn n w)
+          (fun w n => reject.HaltsIn n w)).run w limit =
+          some [false] := by
+      simpa [boundedDovetailOutput_eq_dovetailProgram_run]
+        using hlimit
+    exact (dovetailProgram_decides htraces).right w |>.mp
+      ⟨limit, hrun⟩
+  · intro hw
+    rcases ((dovetailProgram_decides htraces).right w).mpr hw with
+      ⟨limit, hrun⟩
+    exists limit
+    simpa [boundedDovetailOutput_eq_dovetailProgram_run]
+      using hrun
+
+theorem boundedDovetailOutput_eventually_classifies_of_complementaryTraces
+    {accept reject : MachineDescription}
+    {L : Language Bool}
+    (htraces :
+      ComplementaryAcceptanceTraces
+        (fun w n => accept.HaltsIn n w)
+        (fun w n => reject.HaltsIn n w) L)
+    (w : Word Bool) :
+    exists limit : Nat,
+      (boundedDovetailOutput accept reject w limit = some [true] ∧
+          w ∈ L) ∨
+        (boundedDovetailOutput accept reject w limit = some [false] ∧
+          ¬ w ∈ L) := by
+  classical
+  by_cases hw : w ∈ L
+  · rcases
+      (boundedDovetailOutput_true_iff_of_complementaryTraces
+        htraces w).mpr hw with
+      ⟨limit, hlimit⟩
+    exact ⟨limit, Or.inl ⟨hlimit, hw⟩⟩
+  · rcases
+      (boundedDovetailOutput_false_iff_of_complementaryTraces
+        htraces w).mpr hw with
+      ⟨limit, hlimit⟩
+    exact ⟨limit, Or.inr ⟨hlimit, hw⟩⟩
 
 end MachineDescription
 

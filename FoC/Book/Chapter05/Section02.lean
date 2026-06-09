@@ -134,6 +134,15 @@ def ConcreteFixedDescriptionStepCodeConfigurationRealizerConstruction :
     Prop :=
   FixedDescriptionStepCodeConfigurationRealizerConstruction
 
+def ConcreteMachineBoundedTraceSearchConstruction : Prop :=
+  MachineBoundedTraceSearchConstruction
+
+def ConcreteEncodedConfigurationTraceSearchConstruction : Prop :=
+  EncodedConfigurationTraceSearchConstruction
+
+def BoundedTraceSearchConstruction : Prop :=
+  Computability.BoundedTraceSearchConstruction
+
 def ConcretePairedRecognizerDovetailLayoutCodeCompilerConstruction : Prop :=
   PairedRecognizerDovetailLayoutCodeCompilerConstruction
 
@@ -610,17 +619,35 @@ theorem re_and_co_re_have_dovetailing_program
           (TraceDovetailProgram accept reject) L :=
   Computability.reCoRe_has_dovetailProgram h
 
+theorem re_and_co_re_have_paired_bounded_search_decider
+    {L : Language alpha}
+    (h : RecursivelyEnumerableLanguageWithComplement L) :
+    exists accept reject : Word alpha -> Nat -> Prop,
+      LanguageComplementaryAcceptanceTraces accept reject L ∧
+        ProgramBoolDecidesLanguage
+          (TraceDovetailProgram accept reject) L :=
+  re_and_co_re_have_dovetailing_program h
+
 theorem re_and_co_re_have_program_bool_decider
     {L : Language alpha}
     (h : RecursivelyEnumerableLanguageWithComplement L) :
     ProgramBoolDecidableLanguage L :=
   Computability.reCoRe_programBoolDecidable h
 
+theorem re_and_co_re_have_program_bool_decider_by_paired_bounded_search
+    {L : Language alpha}
+    (h : RecursivelyEnumerableLanguageWithComplement L) :
+    ProgramBoolDecidableLanguage L :=
+  re_and_co_re_have_program_bool_decider h
+
 /-!
 This is the compiler handoff. The trace-level dovetailer already decides the
-language as a staged program; the following theorems explain how different
-compiler hypotheses turn that staged decider into an ordinary recursive-language
-statement.
+language as a staged program.  The named bounded-trace construction below is
+the main Section 5.2 proof boundary for concrete finite traces: machine
+halting, bounded hits, dovetail output, and canonical encoded configuration
+runs are checked by executable predicates.  The following compiler theorems
+explain how optional lower-level description compilers turn that bounded trace
+route into ordinary recursive-language statements.
 
 The paired-recognizer compiler construction is the concrete transition-level
 version of the dovetailing handoff: its inputs are two finite
@@ -631,6 +658,88 @@ table-realizer target narrows the remaining machine-engineering proof further:
 it asks for a finite transition table that realizes the executable bounded
 dovetail output from {module}`FoC.Computability.MachineBuilder`.
 -/
+
+theorem bounded_trace_search_construction :
+    BoundedTraceSearchConstruction :=
+  Computability.boundedTraceSearchConstruction
+
+theorem concrete_machine_halts_in_bool_correct
+    (D : MachineDescription) (n : Nat) (w : Word Bool) :
+    MachineDescription.haltsInBool D n w = true <-> D.HaltsIn n w :=
+  MachineDescription.haltsInBool_eq_true_iff D n w
+
+theorem concrete_machine_hits_by_bool_correct
+    (D : MachineDescription) (w : Word Bool) (limit : Nat) :
+    MachineDescription.hitsByBool D w limit = true <->
+      exists n : Nat, n ≤ limit ∧ D.HaltsIn n w :=
+  MachineDescription.hitsByBool_eq_true_iff D w limit
+
+theorem concrete_bounded_dovetail_output_correct
+    (accept reject : MachineDescription)
+    (w : Word Bool) (limit : Nat) :
+    MachineDescription.boundedDovetailOutput accept reject w limit =
+      (TraceDovetailProgram
+        (fun w n => accept.HaltsIn n w)
+        (fun w n => reject.HaltsIn n w)).run w limit :=
+  MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run
+    accept reject w limit
+
+theorem concrete_machine_bounded_dovetail_true_iff_of_complementary_traces
+    {accept reject : MachineDescription}
+    {L : Language Bool}
+    (htraces :
+      LanguageComplementaryAcceptanceTraces
+        (fun w n => accept.HaltsIn n w)
+        (fun w n => reject.HaltsIn n w) L)
+    (w : Word Bool) :
+    (exists limit : Nat,
+      MachineDescription.boundedDovetailOutput
+        accept reject w limit = some [true]) <->
+        w ∈ L :=
+  MachineDescription.boundedDovetailOutput_true_iff_of_complementaryTraces
+    htraces w
+
+theorem concrete_machine_bounded_dovetail_false_iff_of_complementary_traces
+    {accept reject : MachineDescription}
+    {L : Language Bool}
+    (htraces :
+      LanguageComplementaryAcceptanceTraces
+        (fun w n => accept.HaltsIn n w)
+        (fun w n => reject.HaltsIn n w) L)
+    (w : Word Bool) :
+    (exists limit : Nat,
+      MachineDescription.boundedDovetailOutput
+        accept reject w limit = some [false]) <->
+        ¬ w ∈ L :=
+  MachineDescription.boundedDovetailOutput_false_iff_of_complementaryTraces
+    htraces w
+
+theorem concrete_machine_bounded_dovetail_eventually_classifies
+    {accept reject : MachineDescription}
+    {L : Language Bool}
+    (htraces :
+      LanguageComplementaryAcceptanceTraces
+        (fun w n => accept.HaltsIn n w)
+        (fun w n => reject.HaltsIn n w) L)
+    (w : Word Bool) :
+    exists limit : Nat,
+      (MachineDescription.boundedDovetailOutput
+          accept reject w limit = some [true] ∧ w ∈ L) ∨
+        (MachineDescription.boundedDovetailOutput
+          accept reject w limit = some [false] ∧ ¬ w ∈ L) :=
+  MachineDescription.boundedDovetailOutput_eventually_classifies_of_complementaryTraces
+    htraces w
+
+theorem concrete_checks_encoded_run_canonical
+    (D : MachineDescription)
+    (c : MachineDescription.Configuration)
+    (steps : Nat) :
+    MachineDescription.checksEncodedRun D
+      (MachineDescription.encodeConfiguration c)
+      steps
+      (MachineDescription.encodeConfiguration
+        (D.runConfig steps c)) = true :=
+  MachineDescription.checksEncodedRun_encodeConfiguration D steps c
 
 theorem dovetailing_decidable_construction_of_staged_program_compiler
     (hcompile : StagedBoolDeciderCompilationConstruction alpha) :
@@ -1452,6 +1561,37 @@ def LanguagePartiallyListable (L : Language alpha) : Prop :=
 def UnaryInputString (n : Nat) : Word Unit :=
   UnaryInputWord n
 
+def LanguageWordStreamCovers
+    (stream : Nat -> Option (Word alpha)) : Prop :=
+  WordStreamCovers stream
+
+noncomputable def CodeCandidateStream
+    (code : alpha -> Nat) : Nat -> Option alpha :=
+  CodeCandidates code
+
+noncomputable def BoundedAcceptanceTraceListing
+    (candidates : Nat -> Option (Word alpha))
+    (trace : Word alpha -> Nat -> Prop) :
+    Nat -> Option (Word alpha) :=
+  BoundedTraceListing candidates trace
+
+theorem code_candidate_stream_covers
+    {code : alpha -> Nat}
+    (hcode : FoC.Foundation.Fn.Injective code) :
+    forall x : alpha, exists n : Nat,
+      CodeCandidateStream code n = some x :=
+  codeCandidates_covers hcode
+
+theorem bounded_acceptance_trace_listing_partially_lists
+    {candidates : Nat -> Option (Word alpha)}
+    {trace : Word alpha -> Nat -> Prop}
+    {L : Language alpha}
+    (hcovers : LanguageWordStreamCovers candidates)
+    (htrace : LanguageAcceptanceTrace trace L) :
+    LanguagePartiallyListedBy
+      (BoundedAcceptanceTraceListing candidates trace) L :=
+  acceptanceTrace_boundedTraceListing_partiallyListedBy hcovers htrace
+
 theorem listable_language_of_equal {L K : Language alpha}
     (h : LanguageListable L) (hEq : Language.Equal L K) :
     LanguageListable K :=
@@ -1465,6 +1605,65 @@ theorem partially_listable_language_of_equal {L K : Language alpha}
 theorem empty_language_is_partially_listable :
     LanguagePartiallyListable (Language.Empty : Language alpha) :=
   Computability.empty_partiallyListable
+
+theorem acceptance_trace_partially_listable_by_bounded_search
+    {candidates : Nat -> Option (Word alpha)}
+    {trace : Word alpha -> Nat -> Prop}
+    {L : Language alpha}
+    (hcovers : LanguageWordStreamCovers candidates)
+    (htrace : LanguageAcceptanceTrace trace L) :
+    LanguagePartiallyListable L :=
+  acceptanceTrace_partiallyListable_of_word_stream hcovers htrace
+
+theorem acceptance_trace_partially_listable_by_code_bounded_search
+    {code : Word alpha -> Nat}
+    (hcode : FoC.Foundation.Fn.Injective code)
+    {trace : Word alpha -> Nat -> Prop}
+    {L : Language alpha}
+    (htrace : LanguageAcceptanceTrace trace L) :
+    LanguagePartiallyListable L :=
+  acceptanceTrace_partiallyListable_of_word_code hcode htrace
+
+theorem recursively_enumerable_language_partially_listable_by_code_bounded_search
+    {code : Word alpha -> Nat}
+    (hcode : FoC.Foundation.Fn.Injective code)
+    {L : Language alpha}
+    (h : RecursivelyEnumerableLanguage L) :
+    LanguagePartiallyListable L := by
+  rcases recursively_enumerable_language_has_acceptance_trace h with
+    ⟨trace, htrace⟩
+  exact acceptance_trace_partially_listable_by_code_bounded_search
+    hcode htrace
+
+theorem listed_language_has_acceptance_trace
+    {stream : Nat -> Word alpha} {L : Language alpha}
+    (h : LanguageListedBy stream L) :
+    LanguageAcceptanceTrace (fun w n => stream n = w) L :=
+  listedBy_acceptanceTrace h
+
+theorem partially_listed_language_has_acceptance_trace
+    {stream : Nat -> Option (Word alpha)} {L : Language alpha}
+    (h : LanguagePartiallyListedBy stream L) :
+    LanguageAcceptanceTrace (fun w n => stream n = some w) L :=
+  partiallyListedBy_acceptanceTrace h
+
+theorem partially_listable_language_has_acceptance_trace_by_bounded_search
+    {L : Language alpha}
+    (h : LanguagePartiallyListable L) :
+    exists trace : Word alpha -> Nat -> Prop,
+      LanguageAcceptanceTrace trace L := by
+  rcases h with ⟨stream, hstream⟩
+  exact ⟨fun w n => stream n = some w,
+    partially_listed_language_has_acceptance_trace hstream⟩
+
+theorem partially_listable_language_program_acceptable_by_bounded_search
+    {L : Language alpha}
+    (h : LanguagePartiallyListable L) :
+    ProgramAcceptableLanguage L := by
+  rcases partially_listable_language_has_acceptance_trace_by_bounded_search
+      h with
+    ⟨trace, htrace⟩
+  exact acceptance_trace_has_program_acceptable_language htrace
 
 def FunctionRangeLanguage (f : Word input -> Word output) : Language output :=
   RangeLanguage f
@@ -1571,6 +1770,34 @@ theorem partially_listable_language_range_of_partial_unary_string_function
     PartialRangeOfUnaryStringFunction L :=
   Computability.partiallyListable_partialRangeOfUnaryFunction h
 
+theorem acceptance_trace_partial_range_by_bounded_search
+    {candidates : Nat -> Option (Word output)}
+    {trace : Word output -> Nat -> Prop}
+    {L : Language output}
+    (hcovers : LanguageWordStreamCovers candidates)
+    (htrace : LanguageAcceptanceTrace trace L) :
+    PartialRangeOfUnaryStringFunction L :=
+  acceptanceTrace_partialRangeOfUnaryFunction_of_word_stream hcovers htrace
+
+theorem acceptance_trace_partial_range_by_code_bounded_search
+    {code : Word output -> Nat}
+    (hcode : FoC.Foundation.Fn.Injective code)
+    {trace : Word output -> Nat -> Prop}
+    {L : Language output}
+    (htrace : LanguageAcceptanceTrace trace L) :
+    PartialRangeOfUnaryStringFunction L :=
+  acceptanceTrace_partialRangeOfUnaryFunction_of_word_code hcode htrace
+
+theorem recursively_enumerable_language_partial_range_by_code_bounded_search
+    {code : Word output -> Nat}
+    (hcode : FoC.Foundation.Fn.Injective code)
+    {L : Language output}
+    (h : RecursivelyEnumerableLanguage L) :
+    PartialRangeOfUnaryStringFunction L := by
+  rcases recursively_enumerable_language_has_acceptance_trace h with
+    ⟨trace, htrace⟩
+  exact acceptance_trace_partial_range_by_code_bounded_search hcode htrace
+
 theorem unary_string_function_range_is_listable
     {L : Language output}
     (h : RangeOfUnaryStringFunction L) :
@@ -1582,6 +1809,21 @@ theorem partial_unary_string_function_range_is_partially_listable
     (h : PartialRangeOfUnaryStringFunction L) :
     LanguagePartiallyListable L :=
   Computability.partialRangeOfUnaryFunction_partiallyListable h
+
+theorem partial_unary_string_function_range_has_acceptance_trace
+    {L : Language output}
+    (h : PartialRangeOfUnaryStringFunction L) :
+    exists trace : Word output -> Nat -> Prop,
+      LanguageAcceptanceTrace trace L :=
+  partialRangeOfUnaryFunction_acceptanceTrace h
+
+theorem partial_unary_string_function_range_program_acceptable_by_bounded_search
+    {L : Language output}
+    (h : PartialRangeOfUnaryStringFunction L) :
+    ProgramAcceptableLanguage L := by
+  rcases partial_unary_string_function_range_has_acceptance_trace h with
+    ⟨trace, htrace⟩
+  exact acceptance_trace_has_program_acceptable_language htrace
 
 theorem listable_language_iff_range_of_unary_string_function
     (L : Language output) :
@@ -2217,6 +2459,7 @@ theorem concrete_finite_section52_closeout_of_semantic_closeout
     (hfinite :
       RecursivelyEnumerableToFiniteGeneralGrammarConstruction Bool) :
     ConcreteBooleanFiniteGrammarSection52Closeout where
+  boundedTraceSearch := hclose.boundedTraceSearch
   decidableToAcceptable := hclose.decidableToAcceptable
   dovetailDescription := hclose.dovetailDescription
   partialUnaryRangeDescription := hclose.partialUnaryRangeDescription
@@ -2740,6 +2983,11 @@ theorem dovetailing_decidable_construction_of_section52_closeout
   dovetailing_decidable_construction_of_concrete_dovetail_description_compiler
     hclose.dovetailDescription
 
+theorem bounded_trace_search_construction_of_section52_closeout
+    (hclose : ConcreteBooleanSection52CompilerCloseout) :
+    BoundedTraceSearchConstruction :=
+  hclose.boundedTraceSearch
+
 theorem recursive_language_iff_re_and_co_re_of_section52_closeout
     (hclose : ConcreteBooleanSection52CompilerCloseout)
     (L : Language Bool) :
@@ -2852,13 +3100,15 @@ recognizer.
 The declarations above now pin that infrastructure down as
 {name}`ConcreteBooleanSection52CompilerCloseout` for the semantic grammar page
 and {name}`ConcreteBooleanFiniteGrammarSection52Closeout` for the finite grammar
-page. The semantic closeout no longer assumes the reverse grammar construction.
-The finite closeout keeps the exact remaining finite assumptions, but it is now
-compositional: {name}`concrete_finite_section52_closeout_of_semantic_closeout`
-shows that the semantic recognizer compiler supplies the finite recognizer
-compiler automatically. What remains for the finite textbook theorem is the
-reverse construction from recursively enumerable languages to finite-production
-general grammars, together with the already named concrete compiler fields.
+page. Both closeouts now carry {name}`BoundedTraceSearchConstruction` as the
+primary finite-trace handoff. The semantic closeout no longer assumes the
+reverse grammar construction. The finite closeout keeps the exact remaining
+finite assumptions, but it is now compositional:
+{name}`concrete_finite_section52_closeout_of_semantic_closeout` shows that the
+semantic recognizer compiler supplies the finite recognizer compiler
+automatically. What remains for the finite textbook theorem is the reverse
+construction from recursively enumerable languages to finite-production general
+grammars, together with the already named concrete compiler fields.
 -/
 
 end Section02

@@ -1071,6 +1071,55 @@ def FixedDescriptionBoundedSimulatorTableCompilerConstruction : Prop :=
     exists simulator : MachineDescription,
       FixedDescriptionBoundedSimulatorTableRealizes D simulator
 
+structure MachineBoundedTraceSearchConstruction : Prop where
+  haltsInBool_correct :
+    forall D : MachineDescription, forall n : Nat, forall w : Word Bool,
+      MachineDescription.haltsInBool D n w = true <-> D.HaltsIn n w
+  hitsByBool_correct :
+    forall D : MachineDescription, forall w : Word Bool, forall limit : Nat,
+      MachineDescription.hitsByBool D w limit = true <->
+        exists n : Nat, n ≤ limit ∧ D.HaltsIn n w
+  boundedDovetailOutput_correct :
+    forall accept reject : MachineDescription,
+      forall w : Word Bool, forall limit : Nat,
+        MachineDescription.boundedDovetailOutput accept reject w limit =
+          (DovetailProgram
+            (fun w n => accept.HaltsIn n w)
+            (fun w n => reject.HaltsIn n w)).run w limit
+
+structure EncodedConfigurationTraceSearchConstruction : Prop where
+  checksEncodedRun_canonical :
+    forall D : MachineDescription,
+      forall c : MachineDescription.Configuration,
+      forall steps : Nat,
+        MachineDescription.checksEncodedRun D
+          (MachineDescription.encodeConfiguration c)
+          steps
+          (MachineDescription.encodeConfiguration
+            (D.runConfig steps c)) = true
+
+structure BoundedTraceSearchConstruction : Prop where
+  machine : MachineBoundedTraceSearchConstruction
+  encodedConfiguration : EncodedConfigurationTraceSearchConstruction
+
+theorem machineBoundedTraceSearchConstruction :
+    MachineBoundedTraceSearchConstruction where
+  haltsInBool_correct := MachineDescription.haltsInBool_eq_true_iff
+  hitsByBool_correct := MachineDescription.hitsByBool_eq_true_iff
+  boundedDovetailOutput_correct :=
+    MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run
+
+theorem encodedConfigurationTraceSearchConstruction :
+    EncodedConfigurationTraceSearchConstruction where
+  checksEncodedRun_canonical := by
+    intro D c steps
+    exact MachineDescription.checksEncodedRun_encodeConfiguration D steps c
+
+theorem boundedTraceSearchConstruction :
+    BoundedTraceSearchConstruction where
+  machine := machineBoundedTraceSearchConstruction
+  encodedConfiguration := encodedConfigurationTraceSearchConstruction
+
 theorem fixedDescriptionBoundedSimulatorTableRealizes_wellFormed
     {D simulator : MachineDescription}
     (h : FixedDescriptionBoundedSimulatorTableRealizes D simulator) :

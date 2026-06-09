@@ -1,3 +1,4 @@
+import FoC.Foundation.Countable
 import FoC.Computability.Recognizable
 
 set_option doc.verso true
@@ -80,6 +81,170 @@ def PartialListingAsUnaryFunction (stream : Nat -> Option (Word output)) :
     Word Unit -> Option (Word output) :=
   fun w => stream (Word.Length w)
 
+def WordStreamCovers (stream : Nat -> Option (Word alpha)) : Prop :=
+  forall w : Word alpha, exists n : Nat, stream n = some w
+
+noncomputable def CodeCandidates (code : alpha -> Nat) :
+    Nat -> Option alpha :=
+  by
+    classical
+    exact fun n =>
+      if h : exists x : alpha, code x = n then
+        some (Classical.choose h)
+      else
+        none
+
+theorem codeCandidates_of_code
+    {code : alpha -> Nat}
+    (hcode : Foundation.Fn.Injective code)
+    (x : alpha) :
+    CodeCandidates code (code x) = some x := by
+  classical
+  unfold CodeCandidates
+  have hExists : exists y : alpha, code y = code x := ⟨x, rfl⟩
+  rw [dif_pos hExists]
+  have hchosen : code (Classical.choose hExists) = code x :=
+    Classical.choose_spec hExists
+  have hchoice : Classical.choose hExists = x := hcode hchosen
+  rw [hchoice]
+
+theorem codeCandidates_covers
+    {code : alpha -> Nat}
+    (hcode : Foundation.Fn.Injective code) :
+    forall x : alpha, exists n : Nat, CodeCandidates code n = some x := by
+  intro x
+  exact ⟨code x, codeCandidates_of_code hcode x⟩
+
+noncomputable def PairCodeDecode (n : Nat) :
+    Option (Nat × Nat) :=
+  by
+    classical
+    exact
+      if h : exists left : Nat, exists right : Nat,
+          Foundation.Countability.PairCode left right = n then
+        let left := Classical.choose h
+        let hright := Classical.choose_spec h
+        let right := Classical.choose hright
+        some (left, right)
+      else
+        none
+
+theorem pairCodeDecode_pairCode (left right : Nat) :
+    PairCodeDecode
+        (Foundation.Countability.PairCode left right) =
+      some (left, right) := by
+  classical
+  unfold PairCodeDecode
+  have hExists : exists left' : Nat, exists right' : Nat,
+      Foundation.Countability.PairCode left' right' =
+        Foundation.Countability.PairCode left right :=
+    ⟨left, right, rfl⟩
+  rw [dif_pos hExists]
+  let left' := Classical.choose hExists
+  let hright := Classical.choose_spec hExists
+  let right' := Classical.choose hright
+  have hpair :
+      Foundation.Countability.PairCode left' right' =
+        Foundation.Countability.PairCode left right := by
+    simpa [left', right', hright] using Classical.choose_spec hright
+  rcases Foundation.Countability.pairCode_injective_left hpair with
+    ⟨hleft, hright'⟩
+  change some (left', right') = some (left, right)
+  rw [hleft, hright']
+
+noncomputable def BoundedTraceListing
+    (candidates : Nat -> Option (Word alpha))
+    (trace : Word alpha -> Nat -> Prop) :
+    Nat -> Option (Word alpha) :=
+  by
+    classical
+    exact fun n =>
+      match PairCodeDecode n with
+      | none => none
+      | some (candidateIndex, stage) =>
+          match candidates candidateIndex with
+          | none => none
+          | some w => if trace w stage then some w else none
+
+theorem boundedTraceListing_pairCode_of_trace
+    (candidates : Nat -> Option (Word alpha))
+    (trace : Word alpha -> Nat -> Prop)
+    {candidateIndex stage : Nat} {w : Word alpha}
+    (hcandidate : candidates candidateIndex = some w)
+    (htrace : trace w stage) :
+    BoundedTraceListing candidates trace
+        (Foundation.Countability.PairCode candidateIndex stage) =
+      some w := by
+  classical
+  simp [BoundedTraceListing, pairCodeDecode_pairCode,
+    hcandidate, htrace]
+
+theorem boundedTraceListing_trace_of_some
+    {candidates : Nat -> Option (Word alpha)}
+    {trace : Word alpha -> Nat -> Prop}
+    {n : Nat} {w : Word alpha}
+    (h : BoundedTraceListing candidates trace n = some w) :
+    exists stage : Nat, trace w stage := by
+  classical
+  unfold BoundedTraceListing at h
+  cases hpair : PairCodeDecode n with
+  | none =>
+      simp [hpair] at h
+  | some pair =>
+      cases pair with
+      | mk candidateIndex stage =>
+          cases hcandidate : candidates candidateIndex with
+          | none =>
+              simp [hpair, hcandidate] at h
+          | some listed =>
+              by_cases htrace : trace listed stage
+              · simp [hpair, hcandidate, htrace] at h
+                cases h
+                exact ⟨stage, htrace⟩
+              · simp [hpair, hcandidate, htrace] at h
+
+theorem acceptanceTrace_boundedTraceListing_partiallyListedBy
+    {candidates : Nat -> Option (Word alpha)}
+    {trace : Word alpha -> Nat -> Prop}
+    {L : Language alpha}
+    (hcovers : WordStreamCovers candidates)
+    (htrace : AcceptanceTrace trace L) :
+    PartiallyListedBy (BoundedTraceListing candidates trace) L := by
+  intro w
+  constructor
+  · intro hlisted
+    rcases hlisted with ⟨n, hn⟩
+    rcases boundedTraceListing_trace_of_some hn with ⟨stage, hstage⟩
+    exact acceptanceTrace_sound htrace hstage
+  · intro hw
+    rcases hcovers w with ⟨candidateIndex, hcandidate⟩
+    rcases acceptanceTrace_complete htrace hw with ⟨stage, hstage⟩
+    exists Foundation.Countability.PairCode candidateIndex stage
+    exact boundedTraceListing_pairCode_of_trace
+      candidates trace hcandidate hstage
+
+theorem acceptanceTrace_partiallyListable_of_word_stream
+    {candidates : Nat -> Option (Word alpha)}
+    {trace : Word alpha -> Nat -> Prop}
+    {L : Language alpha}
+    (hcovers : WordStreamCovers candidates)
+    (htrace : AcceptanceTrace trace L) :
+    PartiallyListable L :=
+  ⟨BoundedTraceListing candidates trace,
+    acceptanceTrace_boundedTraceListing_partiallyListedBy hcovers htrace⟩
+
+theorem acceptanceTrace_partiallyListable_of_word_code
+    {code : Word alpha -> Nat}
+    (hcode : Foundation.Fn.Injective code)
+    {trace : Word alpha -> Nat -> Prop}
+    {L : Language alpha}
+    (htrace : AcceptanceTrace trace L) :
+    PartiallyListable L :=
+  acceptanceTrace_partiallyListable_of_word_stream
+    (candidates := CodeCandidates code)
+    (codeCandidates_covers hcode)
+    htrace
+
 /-!
 # Equivalence predicates
 
@@ -110,6 +275,18 @@ theorem partiallyListedBy_mem
     (h : PartiallyListedBy stream L) (w : Word alpha) :
     (exists n : Nat, stream n = some w) <-> w ∈ L :=
   h w
+
+theorem listedBy_acceptanceTrace
+    {stream : Nat -> Word alpha} {L : Language alpha}
+    (h : ListedBy stream L) :
+    AcceptanceTrace (fun w n => stream n = w) L :=
+  h
+
+theorem partiallyListedBy_acceptanceTrace
+    {stream : Nat -> Option (Word alpha)} {L : Language alpha}
+    (h : PartiallyListedBy stream L) :
+    AcceptanceTrace (fun w n => stream n = some w) L :=
+  h
 
 theorem listedBy_of_equal {stream : Nat -> Word alpha} {L K : Language alpha}
     (h : ListedBy stream L) (hEq : Language.Equal L K) :
@@ -314,6 +491,28 @@ theorem partiallyListable_partialRangeOfUnaryFunction
     PartialRangeOfUnaryFunction L :=
   partiallyListable_has_partial_unary_range_function h
 
+theorem acceptanceTrace_partialRangeOfUnaryFunction_of_word_stream
+    {candidates : Nat -> Option (Word output)}
+    {trace : Word output -> Nat -> Prop}
+    {L : Language output}
+    (hcovers : WordStreamCovers candidates)
+    (htrace : AcceptanceTrace trace L) :
+    PartialRangeOfUnaryFunction L :=
+  partiallyListable_partialRangeOfUnaryFunction
+    (acceptanceTrace_partiallyListable_of_word_stream hcovers htrace)
+
+theorem acceptanceTrace_partialRangeOfUnaryFunction_of_word_code
+    {code : Word output -> Nat}
+    (hcode : Foundation.Fn.Injective code)
+    {trace : Word output -> Nat -> Prop}
+    {L : Language output}
+    (htrace : AcceptanceTrace trace L) :
+    PartialRangeOfUnaryFunction L :=
+  acceptanceTrace_partialRangeOfUnaryFunction_of_word_stream
+    (candidates := CodeCandidates code)
+    (codeCandidates_covers hcode)
+    htrace
+
 theorem rangeOfUnaryFunction_listable {L : Language output}
     (h : RangeOfUnaryFunction L) :
     Listable L := by
@@ -336,6 +535,16 @@ theorem partialRangeOfUnaryFunction_partiallyListable
   | intro f hf =>
       exact partiallyListable_of_equal
         (partialUnaryFunctionRange_partiallyListable f) hf
+
+theorem partialRangeOfUnaryFunction_acceptanceTrace
+    {L : Language output}
+    (h : PartialRangeOfUnaryFunction L) :
+    exists trace : Word output -> Nat -> Prop,
+      AcceptanceTrace trace L := by
+  rcases partialRangeOfUnaryFunction_partiallyListable h with
+    ⟨stream, hstream⟩
+  exact ⟨fun w n => stream n = some w,
+    partiallyListedBy_acceptanceTrace hstream⟩
 
 theorem partiallyListable_iff_partialRangeOfUnaryFunction
     (L : Language output) :
