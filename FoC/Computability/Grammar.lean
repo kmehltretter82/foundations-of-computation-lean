@@ -787,6 +787,7 @@ inductive MachineHistoryNonterminal (D : MachineDescription) where
   | leftBoundary : MachineHistoryNonterminal D
   | rightBoundary : MachineHistoryNonterminal D
   | cell : Option Bool -> MachineHistoryNonterminal D
+  | lockedState : Fin (D.stateCount + 1) -> MachineHistoryNonterminal D
   | state : Fin (D.stateCount + 1) -> MachineHistoryNonterminal D
 deriving DecidableEq
 
@@ -801,6 +802,7 @@ def finite (D : MachineDescription) :
     [ start, genLeft, genHead, genRight, cleanup,
       leftBoundary, rightBoundary ] ++
       optionBoolValues.map cell ++
+      (List.finRange (D.stateCount + 1)).map lockedState ++
       (List.finRange (D.stateCount + 1)).map state
   complete := by
     intro x
@@ -817,6 +819,8 @@ def finite (D : MachineDescription) :
         | none => simp [optionBoolValues]
         | some b =>
             cases b <;> simp [optionBoolValues]
+    | lockedState q =>
+        simp [optionBoolValues, List.mem_finRange]
     | state q =>
         simp [optionBoolValues, List.mem_finRange]
 
@@ -842,6 +846,10 @@ def state {D : MachineDescription} (q : Fin (D.stateCount + 1)) :
     Symbol Bool (NT D) :=
   nt (MachineHistoryNonterminal.state q)
 
+def lockedState {D : MachineDescription} (q : Fin (D.stateCount + 1)) :
+    Symbol Bool (NT D) :=
+  nt (MachineHistoryNonterminal.lockedState q)
+
 def leftBoundary {D : MachineDescription} : Symbol Bool (NT D) :=
   nt MachineHistoryNonterminal.leftBoundary
 
@@ -860,15 +868,12 @@ def startProduction (D : MachineDescription) :
     [nt MachineHistoryNonterminal.start]
     [leftBoundary,
       nt MachineHistoryNonterminal.genLeft,
-      state (D.stateOfNat D.halt),
-      nt MachineHistoryNonterminal.genHead,
-      nt MachineHistoryNonterminal.genRight,
+      lockedState (D.stateOfNat D.halt),
       rightBoundary]
 
 def leftGeneratorProductions (D : MachineDescription) :
     List (GeneralGrammar.Production Bool (NT D)) :=
-  prod [nt MachineHistoryNonterminal.genLeft] [] ::
-    MachineHistoryNonterminal.optionBoolValues.map
+  MachineHistoryNonterminal.optionBoolValues.map
       (fun c =>
         prod
           [nt MachineHistoryNonterminal.genLeft]
@@ -880,14 +885,33 @@ def headGeneratorProductions (D : MachineDescription) :
     (fun c =>
       prod [nt MachineHistoryNonterminal.genHead] [cell c])
 
+def headSelectionProductions (D : MachineDescription) :
+    List (GeneralGrammar.Production Bool (NT D)) :=
+  (List.finRange (D.stateCount + 1)).flatMap
+    (fun q =>
+      MachineHistoryNonterminal.optionBoolValues.map
+        (fun h =>
+          prod
+            [nt MachineHistoryNonterminal.genLeft, lockedState q]
+            [lockedState q, cell h, nt MachineHistoryNonterminal.genRight]))
+
 def rightGeneratorProductions (D : MachineDescription) :
     List (GeneralGrammar.Production Bool (NT D)) :=
-  prod [nt MachineHistoryNonterminal.genRight] [] ::
-    MachineHistoryNonterminal.optionBoolValues.map
+  MachineHistoryNonterminal.optionBoolValues.map
       (fun c =>
         prod
           [nt MachineHistoryNonterminal.genRight]
-          [cell c, nt MachineHistoryNonterminal.genRight])
+          [nt MachineHistoryNonterminal.genRight, cell c])
+
+def activationProductions (D : MachineDescription) :
+    List (GeneralGrammar.Production Bool (NT D)) :=
+  (List.finRange (D.stateCount + 1)).flatMap
+    (fun q =>
+      MachineHistoryNonterminal.optionBoolValues.map
+        (fun h =>
+          prod
+            [lockedState q, cell h, nt MachineHistoryNonterminal.genRight]
+            [state q, cell h]))
 
 def reverseRightMoveProductions (D : MachineDescription)
     (t : TransitionDescription) :
@@ -949,8 +973,9 @@ def productions (D : MachineDescription) :
     List (GeneralGrammar.Production Bool (NT D)) :=
     [startProduction D] ++
     leftGeneratorProductions D ++
-    headGeneratorProductions D ++
+    headSelectionProductions D ++
     rightGeneratorProductions D ++
+    activationProductions D ++
     D.transitions.flatMap (reverseStepProductions D) ++
     cleanupProductions D
 
@@ -963,12 +988,13 @@ def grammar (D : MachineDescription) :
     rcases h with ⟨rule, hrule, hlhs, _hrhs⟩
     rw [← hlhs]
     simp [productions, startProduction, leftGeneratorProductions,
-      headGeneratorProductions, rightGeneratorProductions,
+      headSelectionProductions, rightGeneratorProductions,
+      activationProductions,
       reverseStepProductions, reverseRightMoveProductions,
       reverseLeftMoveProductions, cleanupProductions, prod,
       MachineHistoryNonterminal.optionBoolValues] at hrule ⊢
-    rcases hrule with h | h | h | h | h | h | h | h | h | h | h | h |
-      htrans | h | h | h | h | h | h
+    rcases hrule with h | h | h | h | hselection | h | h | h |
+      hactivation | htrans | h | h | h | h | h | h
     · cases h
       exact trivial
     · cases h
@@ -977,22 +1003,28 @@ def grammar (D : MachineDescription) :
       exact trivial
     · cases h
       exact trivial
+    · rcases hselection with ⟨q, hmem⟩
+      rcases hmem with h | h | h
+      · cases h
+        exact trivial
+      · cases h
+        exact trivial
+      · cases h
+        exact trivial
     · cases h
       exact trivial
     · cases h
       exact trivial
     · cases h
       exact trivial
-    · cases h
-      exact trivial
-    · cases h
-      exact trivial
-    · cases h
-      exact trivial
-    · cases h
-      exact trivial
-    · cases h
-      exact trivial
+    · rcases hactivation with ⟨q, hmem⟩
+      rcases hmem with h | h | h
+      · cases h
+        exact trivial
+      · cases h
+        exact trivial
+      · cases h
+        exact trivial
     · rcases htrans with ⟨t, _ht, hmem⟩
       cases hmove : t.move <;> simp [hmove] at hmem
       · rcases hmem with h | h | h | h
@@ -1061,10 +1093,6 @@ theorem startProduction_mem (D : MachineDescription) :
     startProduction D ∈ productions D := by
   simp [productions]
 
-theorem leftGeneratorNil_mem (D : MachineDescription) :
-    prod [nt MachineHistoryNonterminal.genLeft] [] ∈ productions D := by
-  simp [productions, leftGeneratorProductions]
-
 theorem leftGeneratorCell_mem (D : MachineDescription)
     (c : Option Bool) :
     prod
@@ -1080,28 +1108,29 @@ theorem leftGeneratorCell_mem (D : MachineDescription)
         simp [productions, leftGeneratorProductions,
           MachineHistoryNonterminal.optionBoolValues]
 
-theorem headGeneratorCell_mem (D : MachineDescription)
-    (c : Option Bool) :
-    prod [nt MachineHistoryNonterminal.genHead] [cell c] ∈
+theorem headSelection_mem (D : MachineDescription)
+    (q : Fin (D.stateCount + 1)) (c : Option Bool) :
+    prod
+      [nt MachineHistoryNonterminal.genLeft, lockedState q]
+      [lockedState q, cell c, nt MachineHistoryNonterminal.genRight] ∈
         productions D := by
+  simp [productions]
+  refine Or.inr (Or.inr (Or.inl ?_))
+  unfold headSelectionProductions
+  apply List.mem_flatMap.mpr
+  refine ⟨q, List.mem_finRange q, ?_⟩
   cases c with
   | none =>
-      simp [productions, headGeneratorProductions,
-        MachineHistoryNonterminal.optionBoolValues]
+      simp [MachineHistoryNonterminal.optionBoolValues]
   | some b =>
       cases b <;>
-        simp [productions, headGeneratorProductions,
-          MachineHistoryNonterminal.optionBoolValues]
-
-theorem rightGeneratorNil_mem (D : MachineDescription) :
-    prod [nt MachineHistoryNonterminal.genRight] [] ∈ productions D := by
-  simp [productions, rightGeneratorProductions]
+        simp [MachineHistoryNonterminal.optionBoolValues]
 
 theorem rightGeneratorCell_mem (D : MachineDescription)
     (c : Option Bool) :
     prod
       [nt MachineHistoryNonterminal.genRight]
-      [cell c, nt MachineHistoryNonterminal.genRight] ∈
+      [nt MachineHistoryNonterminal.genRight, cell c] ∈
         productions D := by
   cases c with
   | none =>
@@ -1112,6 +1141,23 @@ theorem rightGeneratorCell_mem (D : MachineDescription)
         simp [productions, rightGeneratorProductions,
           MachineHistoryNonterminal.optionBoolValues]
 
+theorem activation_mem (D : MachineDescription)
+    (q : Fin (D.stateCount + 1)) (h : Option Bool) :
+    prod
+      [lockedState q, cell h, nt MachineHistoryNonterminal.genRight]
+      [state q, cell h] ∈ productions D := by
+  simp [productions]
+  refine Or.inr (Or.inr (Or.inr (Or.inr (Or.inl ?_))))
+  unfold activationProductions
+  apply List.mem_flatMap.mpr
+  refine ⟨q, List.mem_finRange q, ?_⟩
+  cases h with
+  | none =>
+      simp [MachineHistoryNonterminal.optionBoolValues]
+  | some b =>
+      cases b <;>
+        simp [MachineHistoryNonterminal.optionBoolValues]
+
 theorem reverseRightMoveCell_mem {D : MachineDescription}
     {t : TransitionDescription}
     (ht : t ∈ D.transitions) (hmove : t.move = Direction.right)
@@ -1121,7 +1167,7 @@ theorem reverseRightMoveCell_mem {D : MachineDescription}
       [state (D.stateOfNat t.source), cell t.read, cell d] ∈
         productions D := by
   simp [productions]
-  refine Or.inr (Or.inr (Or.inr (Or.inr (Or.inl ?_))))
+  refine Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl ?_)))))
   refine ⟨t, ht, ?_⟩
   cases d with
   | none =>
@@ -1141,7 +1187,7 @@ theorem reverseRightMoveBoundary_mem {D : MachineDescription}
       [state (D.stateOfNat t.source), cell t.read, rightBoundary] ∈
         productions D := by
   simp [productions]
-  refine Or.inr (Or.inr (Or.inr (Or.inr (Or.inl ?_))))
+  refine Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl ?_)))))
   refine ⟨t, ht, ?_⟩
   simp [reverseStepProductions, reverseRightMoveProductions, hmove,
     MachineHistoryNonterminal.optionBoolValues]
@@ -1155,7 +1201,7 @@ theorem reverseLeftMoveCell_mem {D : MachineDescription}
       [cell l, state (D.stateOfNat t.source), cell t.read] ∈
         productions D := by
   simp [productions]
-  refine Or.inr (Or.inr (Or.inr (Or.inr (Or.inl ?_))))
+  refine Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl ?_)))))
   refine ⟨t, ht, ?_⟩
   cases l with
   | none =>
@@ -1175,7 +1221,7 @@ theorem reverseLeftMoveBoundary_mem {D : MachineDescription}
       [leftBoundary, state (D.stateOfNat t.source), cell t.read] ∈
         productions D := by
   simp [productions]
-  refine Or.inr (Or.inr (Or.inr (Or.inr (Or.inl ?_))))
+  refine Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl ?_)))))
   refine ⟨t, ht, ?_⟩
   simp [reverseStepProductions, reverseLeftMoveProductions, hmove,
     MachineHistoryNonterminal.optionBoolValues]
@@ -1235,18 +1281,174 @@ theorem lookupTransition_matches {D : MachineDescription}
   simp [MachineDescription.Matches] at ht
   exact ⟨ht.left, ht.right⟩
 
+theorem lookupTransition_exists_of_mem_matches
+    {D : MachineDescription} {source : Nat} {read : Option Bool}
+    {t : TransitionDescription}
+    (ht : t ∈ D.transitions)
+    (hsource : t.source = source) (hread : t.read = read) :
+    exists u : TransitionDescription,
+      D.lookupTransition source read = some u ∧
+        u ∈ D.transitions ∧ u.source = source ∧ u.read = read := by
+  unfold MachineDescription.lookupTransition
+  let p := MachineDescription.Matches source read
+  have hmatch : p t = true := by
+    simp [p, MachineDescription.Matches, hsource, hread]
+  have hfind :
+      forall l : List TransitionDescription,
+        t ∈ l ->
+          exists u : TransitionDescription,
+            l.find? p = some u ∧ u ∈ l ∧ p u = true := by
+    intro l
+    induction l with
+    | nil =>
+        intro hnil
+        simp at hnil
+    | cons a rest ih =>
+        intro hmem
+        rw [List.find?_cons]
+        cases hp : p a
+        · simp at hmem ⊢
+          rcases hmem with hhead | htail
+          · subst a
+            simp [hmatch] at hp
+          · rcases ih htail with ⟨u, hfind, humem, humatch⟩
+            exact ⟨u, hfind, Or.inr humem, humatch⟩
+        · simp [hp]
+  rcases hfind D.transitions ht with ⟨u, hlookup, humem, humatch⟩
+  have hkeys : u.source = source ∧ u.read = read := by
+    simp [p, MachineDescription.Matches] at humatch
+    exact ⟨humatch.left, humatch.right⟩
+  exact ⟨u, hlookup, humem, hkeys.left, hkeys.right⟩
+
+theorem lookupTransition_action_of_mem_matches
+    {D : MachineDescription} (hD : D.WellFormed)
+    {source : Nat} {read : Option Bool} {t : TransitionDescription}
+    (ht : t ∈ D.transitions)
+    (hsource : t.source = source) (hread : t.read = read) :
+    exists u : TransitionDescription,
+      D.lookupTransition source read = some u ∧
+        u.write = t.write ∧ u.move = t.move ∧ u.target = t.target := by
+  rcases lookupTransition_exists_of_mem_matches
+    (D := D) (source := source) (read := read)
+    ht hsource hread with
+    ⟨u, hlookup, humem, husource, huread⟩
+  have hsameKey : TransitionDescription.SameKey u t := by
+    constructor
+    · exact husource.trans hsource.symm
+    · exact huread.trans hread.symm
+  have haction :=
+    hD.right.right.right.right u t humem ht hsameKey
+  exact ⟨u, hlookup, haction.left, haction.right.left,
+    haction.right.right⟩
+
+theorem stateOfNat_injective_of_lt {D : MachineDescription}
+    {a b : Nat}
+    (ha : a < D.stateCount + 1) (hb : b < D.stateCount + 1)
+    (h : D.stateOfNat a = D.stateOfNat b) :
+    a = b := by
+  have hval := congrArg Fin.val h
+  simpa [MachineDescription.stateOfNat_val_of_lt ha,
+    MachineDescription.stateOfNat_val_of_lt hb] using hval
+
+theorem stateOfNat_injective_of_state_bound
+    {D : MachineDescription}
+    {a b : Nat}
+    (ha : a < D.stateCount) (hb : b < D.stateCount)
+    (h : D.stateOfNat a = D.stateOfNat b) :
+    a = b :=
+  stateOfNat_injective_of_lt
+    (D := D)
+    (Nat.lt_trans ha (Nat.lt_succ_self D.stateCount))
+    (Nat.lt_trans hb (Nat.lt_succ_self D.stateCount))
+    h
+
+def ReachesHalt (D : MachineDescription)
+    (c : MachineDescription.Configuration) : Prop :=
+  exists n : Nat, (D.runConfig n c).state = D.halt
+
+theorem reachesHalt_of_state_halt {D : MachineDescription}
+    {c : MachineDescription.Configuration}
+    (h : c.state = D.halt) :
+    ReachesHalt D c :=
+  ⟨0, h⟩
+
+theorem reachesHalt_step {D : MachineDescription}
+    {c d : MachineDescription.Configuration}
+    (hstep : D.stepConfig c = some d)
+    (hd : ReachesHalt D d) :
+    ReachesHalt D c := by
+  rcases hd with ⟨n, hn⟩
+  exact ⟨n + 1, by simpa [MachineDescription.runConfig, hstep] using hn⟩
+
+theorem haltsOnInput_of_initial_reachesHalt
+    {D : MachineDescription} {w : Word Bool}
+    (h : ReachesHalt D (D.initial w)) :
+    D.HaltsOnInput w :=
+  h
+
+def lockedLeftForm (D : MachineDescription)
+    (left : List (Option Bool)) :
+    SententialForm Bool (NT D) :=
+  [leftBoundary] ++ cellForm left ++
+    [nt MachineHistoryNonterminal.genLeft,
+      lockedState (D.stateOfNat D.halt), rightBoundary]
+
+def lockedRightForm (D : MachineDescription)
+    (left : List (Option Bool)) (head : Option Bool)
+    (right : List (Option Bool)) :
+    SententialForm Bool (NT D) :=
+  [leftBoundary] ++ cellForm left ++
+    [lockedState (D.stateOfNat D.halt), cell head,
+      nt MachineHistoryNonterminal.genRight] ++
+    cellForm right ++ [rightBoundary]
+
+def inputCellForm {D : MachineDescription} (w : Word Bool) :
+    SententialForm Bool (NT D) :=
+  w.map (fun b => cell (some b))
+
+def cleanupForm {D : MachineDescription}
+    (pref : Word Bool) (rest : List (Option Bool)) :
+    SententialForm Bool (NT D) :=
+  SententialForm.terminalWord pref ++
+    [nt MachineHistoryNonterminal.cleanup] ++
+    cellForm rest ++ [rightBoundary]
+
+inductive HistorySoundForm (D : MachineDescription) :
+    SententialForm Bool (NT D) -> Prop where
+  | start :
+      HistorySoundForm D [nt MachineHistoryNonterminal.start]
+  | lockedLeft (left : List (Option Bool)) :
+      HistorySoundForm D (lockedLeftForm D left)
+  | lockedRight
+      (left : List (Option Bool)) (head : Option Bool)
+      (right : List (Option Bool)) :
+      HistorySoundForm D (lockedRightForm D left head right)
+  | active (c : MachineDescription.Configuration)
+      (hstate : c.state < D.stateCount)
+      (hc : ReachesHalt D c) :
+      HistorySoundForm D (configForm D c)
+  | cleanup (pref : Word Bool) (rest : List (Option Bool))
+      (h : forall suffix : Word Bool,
+        rest = suffix.map some ->
+          D.HaltsOnInput (Word.Concat pref suffix)) :
+      HistorySoundForm D (cleanupForm (D := D) pref rest)
+  | terminal (w : Word Bool)
+      (h : D.HaltsOnInput w) :
+      HistorySoundForm D (SententialForm.terminalWord w)
+
 theorem leftGenerator_derives (D : MachineDescription)
     (xs : List (Option Bool)) :
     GeneralGrammar.Derives (grammar D)
       [nt MachineHistoryNonterminal.genLeft]
-      (cellForm xs) := by
+      (cellForm xs ++ [nt MachineHistoryNonterminal.genLeft]) := by
   induction xs with
   | nil =>
       simpa [cellForm] using
-        production_derives_context
-          (D := D) (rule :=
-            prod [nt MachineHistoryNonterminal.genLeft] [])
-          (leftGeneratorNil_mem D) [] []
+        (GeneralGrammar.Derives.refl
+          [nt MachineHistoryNonterminal.genLeft] :
+          GeneralGrammar.Derives (grammar D)
+            [nt MachineHistoryNonterminal.genLeft]
+            [nt MachineHistoryNonterminal.genLeft])
   | cons x xs ih =>
       have hhead :
           GeneralGrammar.Derives (grammar D)
@@ -1262,57 +1464,47 @@ theorem leftGenerator_derives (D : MachineDescription)
       have htail :
           GeneralGrammar.Derives (grammar D)
             [cell x, nt MachineHistoryNonterminal.genLeft]
-            (cell x :: cellForm xs) := by
-        simpa [cellForm] using
+            (cell x :: (cellForm xs ++
+              [nt MachineHistoryNonterminal.genLeft])) := by
+        simpa [cellForm, List.append_assoc] using
           GeneralGrammar.derives_context
             (G := grammar D)
             [cell x] [] ih
       exact GeneralGrammar.derives_trans hhead htail
-
-theorem headGenerator_derives (D : MachineDescription)
-    (c : Option Bool) :
-    GeneralGrammar.Derives (grammar D)
-      [nt MachineHistoryNonterminal.genHead]
-      [cell c] := by
-  simpa using
-    production_derives_context
-      (D := D) (rule :=
-        prod [nt MachineHistoryNonterminal.genHead] [cell c])
-      (headGeneratorCell_mem D c) [] []
 
 theorem rightGenerator_derives (D : MachineDescription)
     (xs : List (Option Bool)) :
     GeneralGrammar.Derives (grammar D)
       [nt MachineHistoryNonterminal.genRight]
-      (cellForm xs) := by
+      ([nt MachineHistoryNonterminal.genRight] ++ cellForm xs) := by
   induction xs with
   | nil =>
       simpa [cellForm] using
-        production_derives_context
-          (D := D) (rule :=
-            prod [nt MachineHistoryNonterminal.genRight] [])
-          (rightGeneratorNil_mem D) [] []
-  | cons x xs ih =>
-      have hhead :
+        (GeneralGrammar.Derives.refl
+          [nt MachineHistoryNonterminal.genRight] :
           GeneralGrammar.Derives (grammar D)
             [nt MachineHistoryNonterminal.genRight]
-            [cell x, nt MachineHistoryNonterminal.genRight] := by
+            [nt MachineHistoryNonterminal.genRight])
+  | cons x xs ih =>
+      have htail :
+          GeneralGrammar.Derives (grammar D)
+            [nt MachineHistoryNonterminal.genRight]
+            ([nt MachineHistoryNonterminal.genRight] ++ cellForm xs) :=
+        ih
+      have hadd :
+          GeneralGrammar.Derives (grammar D)
+            ([nt MachineHistoryNonterminal.genRight] ++ cellForm xs)
+            ([nt MachineHistoryNonterminal.genRight, cell x] ++
+              cellForm xs) := by
         simpa using
           production_derives_context
             (D := D) (rule :=
               prod
                 [nt MachineHistoryNonterminal.genRight]
-                [cell x, nt MachineHistoryNonterminal.genRight])
-            (rightGeneratorCell_mem D x) [] []
-      have htail :
-          GeneralGrammar.Derives (grammar D)
-            [cell x, nt MachineHistoryNonterminal.genRight]
-            (cell x :: cellForm xs) := by
-        simpa [cellForm] using
-          GeneralGrammar.derives_context
-            (G := grammar D)
-            [cell x] [] ih
-      exact GeneralGrammar.derives_trans hhead htail
+                [nt MachineHistoryNonterminal.genRight, cell x])
+            (rightGeneratorCell_mem D x) [] (cellForm xs)
+      simpa [cellForm, List.append_assoc] using
+        GeneralGrammar.derives_trans htail hadd
 
 theorem start_derives_halting_config
     (D : MachineDescription)
@@ -1326,9 +1518,7 @@ theorem start_derives_halting_config
         [nt MachineHistoryNonterminal.start]
         [leftBoundary,
           nt MachineHistoryNonterminal.genLeft,
-          state (D.stateOfNat D.halt),
-          nt MachineHistoryNonterminal.genHead,
-          nt MachineHistoryNonterminal.genRight,
+          lockedState (D.stateOfNat D.halt),
           rightBoundary] := by
     simpa [startProduction] using
       production_derives_context
@@ -1338,99 +1528,125 @@ theorem start_derives_halting_config
       GeneralGrammar.Derives (grammar D)
         [leftBoundary,
           nt MachineHistoryNonterminal.genLeft,
-          state (D.stateOfNat D.halt),
-          nt MachineHistoryNonterminal.genHead,
-          nt MachineHistoryNonterminal.genRight,
+          lockedState (D.stateOfNat D.halt),
           rightBoundary]
         ([leftBoundary] ++ cellForm c.tape.left.reverse ++
-          [state (D.stateOfNat D.halt),
-            nt MachineHistoryNonterminal.genHead,
-            nt MachineHistoryNonterminal.genRight,
+          [nt MachineHistoryNonterminal.genLeft,
+            lockedState (D.stateOfNat D.halt),
             rightBoundary]) := by
     simpa [cellForm, List.append_assoc] using
       GeneralGrammar.derives_context
         (G := grammar D)
         [leftBoundary]
-        [state (D.stateOfNat D.halt),
-          nt MachineHistoryNonterminal.genHead,
-          nt MachineHistoryNonterminal.genRight,
+        [lockedState (D.stateOfNat D.halt),
           rightBoundary]
         (leftGenerator_derives D c.tape.left.reverse)
   have hhead :
       GeneralGrammar.Derives (grammar D)
         ([leftBoundary] ++ cellForm c.tape.left.reverse ++
-          [state (D.stateOfNat D.halt),
-            nt MachineHistoryNonterminal.genHead,
-            nt MachineHistoryNonterminal.genRight,
+          [nt MachineHistoryNonterminal.genLeft,
+            lockedState (D.stateOfNat D.halt),
             rightBoundary])
         ([leftBoundary] ++ cellForm c.tape.left.reverse ++
-          [state (D.stateOfNat D.halt), cell c.tape.head,
+          [lockedState (D.stateOfNat D.halt), cell c.tape.head,
             nt MachineHistoryNonterminal.genRight,
             rightBoundary]) := by
     have hraw :=
-      GeneralGrammar.derives_context
-        (G := grammar D)
+      production_derives_context
+        (D := D)
+        (rule :=
+          prod
+            [nt MachineHistoryNonterminal.genLeft,
+              lockedState (D.stateOfNat D.halt)]
+            [lockedState (D.stateOfNat D.halt), cell c.tape.head,
+              nt MachineHistoryNonterminal.genRight])
+        (headSelection_mem D (D.stateOfNat D.halt) c.tape.head)
         ([leftBoundary] ++ cellForm c.tape.left.reverse ++
-          [state (D.stateOfNat D.halt)])
-        [nt MachineHistoryNonterminal.genRight, rightBoundary]
-        (headGenerator_derives D c.tape.head)
+          [])
+        [rightBoundary]
     have hsrc :
         ([leftBoundary] ++ cellForm c.tape.left.reverse ++
-          [state (D.stateOfNat D.halt),
-            nt MachineHistoryNonterminal.genHead,
-            nt MachineHistoryNonterminal.genRight,
+          [nt MachineHistoryNonterminal.genLeft,
+            lockedState (D.stateOfNat D.halt),
             rightBoundary]) =
-          (([leftBoundary] ++ cellForm c.tape.left.reverse ++
-            [state (D.stateOfNat D.halt)]) ++
-            [nt MachineHistoryNonterminal.genHead] ++
-            [nt MachineHistoryNonterminal.genRight, rightBoundary]) := by
+          (([leftBoundary] ++ cellForm c.tape.left.reverse ++ []) ++
+            [nt MachineHistoryNonterminal.genLeft,
+              lockedState (D.stateOfNat D.halt)] ++
+            [rightBoundary]) := by
       simp [List.append_assoc]
     have htgt :
         ([leftBoundary] ++ cellForm c.tape.left.reverse ++
-          [state (D.stateOfNat D.halt), cell c.tape.head,
+          [lockedState (D.stateOfNat D.halt), cell c.tape.head,
             nt MachineHistoryNonterminal.genRight,
             rightBoundary]) =
-          (([leftBoundary] ++ cellForm c.tape.left.reverse ++
-            [state (D.stateOfNat D.halt)]) ++
-            [cell c.tape.head] ++
-            [nt MachineHistoryNonterminal.genRight, rightBoundary]) := by
+          (([leftBoundary] ++ cellForm c.tape.left.reverse ++ []) ++
+            [lockedState (D.stateOfNat D.halt), cell c.tape.head,
+              nt MachineHistoryNonterminal.genRight] ++
+            [rightBoundary]) := by
       simp [List.append_assoc]
     rw [hsrc, htgt]
-    exact hraw
+    simpa [List.append_assoc] using hraw
   have hright :
       GeneralGrammar.Derives (grammar D)
         ([leftBoundary] ++ cellForm c.tape.left.reverse ++
-          [state (D.stateOfNat D.halt), cell c.tape.head,
+          [lockedState (D.stateOfNat D.halt), cell c.tape.head,
             nt MachineHistoryNonterminal.genRight,
             rightBoundary])
-        (configForm D c) := by
+        ([leftBoundary] ++ cellForm c.tape.left.reverse ++
+          [lockedState (D.stateOfNat D.halt), cell c.tape.head,
+            nt MachineHistoryNonterminal.genRight] ++
+          cellForm c.tape.right ++ [rightBoundary]) := by
     have hraw :=
       GeneralGrammar.derives_context
         (G := grammar D)
         ([leftBoundary] ++ cellForm c.tape.left.reverse ++
-          [state (D.stateOfNat D.halt), cell c.tape.head])
+          [lockedState (D.stateOfNat D.halt), cell c.tape.head])
         [rightBoundary]
         (rightGenerator_derives D c.tape.right)
     have hsrc :
         ([leftBoundary] ++ cellForm c.tape.left.reverse ++
-          [state (D.stateOfNat D.halt), cell c.tape.head,
+          [lockedState (D.stateOfNat D.halt), cell c.tape.head,
             nt MachineHistoryNonterminal.genRight,
             rightBoundary]) =
           (([leftBoundary] ++ cellForm c.tape.left.reverse ++
-            [state (D.stateOfNat D.halt), cell c.tape.head]) ++
+            [lockedState (D.stateOfNat D.halt), cell c.tape.head]) ++
             [nt MachineHistoryNonterminal.genRight] ++ [rightBoundary]) := by
       simp [List.append_assoc]
     have htgt :
-        configForm D c =
+        ([leftBoundary] ++ cellForm c.tape.left.reverse ++
+          [lockedState (D.stateOfNat D.halt), cell c.tape.head,
+            nt MachineHistoryNonterminal.genRight] ++
+          cellForm c.tape.right ++ [rightBoundary]) =
           (([leftBoundary] ++ cellForm c.tape.left.reverse ++
-            [state (D.stateOfNat D.halt), cell c.tape.head]) ++
+            [lockedState (D.stateOfNat D.halt), cell c.tape.head]) ++
+            [nt MachineHistoryNonterminal.genRight] ++
             cellForm c.tape.right ++ [rightBoundary]) := by
-      simp [configForm, cellForm, hstate, List.append_assoc]
+      simp [List.append_assoc]
     rw [hsrc, htgt]
-    exact hraw
+    simpa [List.append_assoc] using hraw
+  have hactivate :
+      GeneralGrammar.Derives (grammar D)
+        ([leftBoundary] ++ cellForm c.tape.left.reverse ++
+          [lockedState (D.stateOfNat D.halt), cell c.tape.head,
+            nt MachineHistoryNonterminal.genRight] ++
+          cellForm c.tape.right ++ [rightBoundary])
+        (configForm D c) := by
+    have hraw :=
+      production_derives_context
+        (D := D)
+        (rule :=
+          prod
+            [lockedState (D.stateOfNat D.halt), cell c.tape.head,
+              nt MachineHistoryNonterminal.genRight]
+            [state (D.stateOfNat D.halt), cell c.tape.head])
+        (activation_mem D (D.stateOfNat D.halt) c.tape.head)
+        ([leftBoundary] ++ cellForm c.tape.left.reverse)
+        (cellForm c.tape.right ++ [rightBoundary])
+    simpa [configForm, cellForm, hstate, List.append_assoc] using hraw
   exact GeneralGrammar.derives_trans hstart
     (GeneralGrammar.derives_trans hleft
-      (GeneralGrammar.derives_trans hhead hright))
+      (GeneralGrammar.derives_trans hhead
+        (GeneralGrammar.derives_trans hright hactivate)))
 
 theorem reverse_step_derives {D : MachineDescription}
     {c d : MachineDescription.Configuration}
@@ -1539,10 +1755,6 @@ theorem reverse_run_derives (D : MachineDescription)
           exact GeneralGrammar.derives_trans
             (ih next)
             (reverse_step_derives hstep)
-
-def inputCellForm {D : MachineDescription} (w : Word Bool) :
-    SententialForm Bool (NT D) :=
-  w.map (fun b => cell (some b))
 
 theorem cleanup_tail_derives (D : MachineDescription)
     (w : Word Bool) :
