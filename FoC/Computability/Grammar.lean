@@ -607,6 +607,172 @@ theorem machineDescription_accepts_generated_by_traceSimulationGrammar
     h.right
 
 /-!
+# Finite trace-table grammars
+
+The semantic trace grammar above is intentionally liberal: an arbitrary trace
+predicate becomes an arbitrary production predicate.  The finite/effective
+target needs a different interface.  A finite trace table is concrete data: a
+finite list of accepted words with their witnessing stages.  Its grammar is the
+same one-step language grammar, but now the production relation is witnessed by
+an explicit finite list of start-to-word productions.
+-/
+
+structure FiniteAcceptanceTraceTable (terminal : Type u) where
+  entries : List (Word terminal × Nat)
+
+namespace FiniteAcceptanceTraceTable
+
+def language (T : FiniteAcceptanceTraceTable terminal) :
+    Language terminal :=
+  fun w => exists n : Nat, (w, n) ∈ T.entries
+
+def words (T : FiniteAcceptanceTraceTable terminal) :
+    List (Word terminal) :=
+  T.entries.map Prod.fst
+
+def grammar (T : FiniteAcceptanceTraceTable terminal) :
+    GeneralGrammar terminal Unit :=
+  SemanticLanguageGrammar T.language
+
+def productions (T : FiniteAcceptanceTraceTable terminal) :
+    List (GeneralGrammar.Production terminal Unit) :=
+  T.words.map
+    (fun w =>
+      { lhs := ([Symbol.nonterminal ()] : SententialForm terminal Unit)
+        rhs := SententialForm.terminalWord w })
+
+theorem mem_words_iff
+    (T : FiniteAcceptanceTraceTable terminal) (w : Word terminal) :
+    w ∈ T.words <-> exists n : Nat, (w, n) ∈ T.entries := by
+  constructor
+  · intro h
+    rcases List.mem_map.mp h with ⟨entry, hentry, hfst⟩
+    rcases entry with ⟨w₀, n⟩
+    simp at hfst
+    cases hfst
+    exact ⟨n, hentry⟩
+  · intro h
+    rcases h with ⟨n, hentry⟩
+    exact List.mem_map.mpr ⟨(w, n), hentry, rfl⟩
+
+theorem productionListProduces_iff_produces
+    (T : FiniteAcceptanceTraceTable terminal)
+    (lhs rhs : SententialForm terminal Unit) :
+    GeneralGrammar.ProductionListProduces T.productions lhs rhs <->
+      (T.grammar).produces lhs rhs := by
+  constructor
+  · intro h
+    rcases h with ⟨rule, hrule, hlhs, hrhs⟩
+    rcases List.mem_map.mp hrule with ⟨w, hw, hruleEq⟩
+    have hmem : w ∈ T.language :=
+      (T.mem_words_iff w).mp hw
+    rw [← hruleEq] at hlhs hrhs
+    constructor
+    · simpa [productions] using hlhs.symm
+    · exact ⟨w, hmem, by simpa [productions] using hrhs.symm⟩
+  · intro h
+    rcases h with ⟨hlhs, w, hw, hrhs⟩
+    have hwWords : w ∈ T.words :=
+      (T.mem_words_iff w).mpr hw
+    refine ⟨
+      { lhs := ([Symbol.nonterminal ()] : SententialForm terminal Unit)
+        rhs := SententialForm.terminalWord w },
+      ?_, ?_, ?_⟩
+    · exact List.mem_map.mpr ⟨w, hwWords, rfl⟩
+    · simp [hlhs]
+    · simp [hrhs]
+
+theorem hasFiniteProductions
+    (T : FiniteAcceptanceTraceTable terminal) :
+    GeneralGrammar.HasFiniteProductions T.grammar := by
+  exists T.productions
+  intro lhs rhs
+  exact (T.productionListProduces_iff_produces lhs rhs).symm
+
+theorem generated_language
+    (T : FiniteAcceptanceTraceTable terminal) :
+    Language.Equal
+      (GeneralGrammar.GeneratedLanguage T.grammar) T.language :=
+  semanticLanguageGrammar_generates T.language
+
+theorem finiteProductionGenerated_language
+    (T : FiniteAcceptanceTraceTable terminal) :
+    GeneralGrammar.FiniteProductionGenerated T.language := by
+  exists Unit
+  exists T.grammar
+  exact ⟨T.hasFiniteProductions, T.generated_language⟩
+
+def PresentsLanguage
+    (T : FiniteAcceptanceTraceTable terminal)
+    (L : Language terminal) : Prop :=
+  Language.Equal T.language L
+
+theorem finiteProductionGenerated_of_presents
+    {T : FiniteAcceptanceTraceTable terminal}
+    {L : Language terminal}
+    (h : T.PresentsLanguage L) :
+    GeneralGrammar.FiniteProductionGenerated L := by
+  rcases T.finiteProductionGenerated_language with ⟨nonterminal, G, hG⟩
+  exists nonterminal
+  exists G
+  exact ⟨hG.left, Language.equal_trans hG.right h⟩
+
+end FiniteAcceptanceTraceTable
+
+def MachineFiniteAcceptanceTraceTable (_D : MachineDescription) :
+    Type :=
+  FiniteAcceptanceTraceTable Bool
+
+def MachineFiniteAcceptanceTraceTable.Presents
+    (D : MachineDescription)
+    (T : MachineFiniteAcceptanceTraceTable D) : Prop :=
+  T.PresentsLanguage (fun w : Word Bool => D.HaltsOnInput w)
+
+theorem machineFiniteAcceptanceTraceTable_generated
+    {D : MachineDescription}
+    {T : MachineFiniteAcceptanceTraceTable D}
+    (hT : MachineFiniteAcceptanceTraceTable.Presents D T) :
+    Language.Equal
+      (GeneralGrammar.GeneratedLanguage T.grammar)
+      (fun w : Word Bool => D.HaltsOnInput w) :=
+  Language.equal_trans T.generated_language hT
+
+theorem machineFiniteAcceptanceTraceTable_finiteProductionGenerated
+    {D : MachineDescription}
+    {T : MachineFiniteAcceptanceTraceTable D}
+    (hT : MachineFiniteAcceptanceTraceTable.Presents D T) :
+    GeneralGrammar.FiniteProductionGenerated
+      (fun w : Word Bool => D.HaltsOnInput w) :=
+  T.finiteProductionGenerated_of_presents hT
+
+def MachineDescriptionToFiniteGeneralGrammarConstruction : Prop :=
+  forall D : MachineDescription,
+    exists nonterminal : Type, exists G : GeneralGrammar Bool nonterminal,
+      GeneralGrammar.HasFiniteProductions G ∧
+        Language.Equal
+          (GeneralGrammar.GeneratedLanguage G)
+          (fun w : Word Bool => D.HaltsOnInput w)
+
+def MachineDescriptionAcceptsToFiniteGeneralGrammarConstruction : Prop :=
+  forall {D : MachineDescription}, forall {L : Language Bool},
+    MachineDescriptionAcceptsLanguage D L ->
+      GeneralGrammar.FiniteProductionGenerated L
+
+def TuringAcceptableToFiniteGeneralGrammarConstruction
+    (terminal : Type u) : Prop :=
+  forall L : Language terminal,
+    TuringAcceptable L -> GeneralGrammar.FiniteProductionGenerated L
+
+theorem machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
+    (hconstruct : MachineDescriptionToFiniteGeneralGrammarConstruction) :
+    MachineDescriptionAcceptsToFiniteGeneralGrammarConstruction := by
+  intro D L hD
+  rcases hconstruct D with ⟨nonterminal, G, hG⟩
+  exists nonterminal
+  exists G
+  exact ⟨hG.left, Language.equal_trans hG.right hD.right⟩
+
+/-!
 # Chapter 5 grammar construction boundaries
 
 The textbook equivalence between unrestricted grammars and recursively
@@ -679,6 +845,22 @@ structure BooleanFiniteGrammarSection52Closeout where
     FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple
   recursivelyEnumerableToFiniteGrammar :
     RecursivelyEnumerableToFiniteGeneralGrammarPrinciple Bool
+
+structure BooleanFiniteDataSection52CompilerCloseout where
+  boundedTraceSearch : BoundedTraceSearchConstruction
+  decidableToAcceptable : DecidableToAcceptablePrinciple Bool
+  pairedDovetailDescription :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple
+  finiteGrammarRecognizerDescription :
+    FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple
+  recognizerToFiniteGrammar :
+    TuringAcceptableToFiniteGeneralGrammarConstruction Bool
+
+theorem booleanFiniteDataSection52CompilerCloseout_recursivelyEnumerableToFiniteGrammar
+    (hclose : BooleanFiniteDataSection52CompilerCloseout) :
+    RecursivelyEnumerableToFiniteGeneralGrammarPrinciple Bool := by
+  intro L hL
+  exact hclose.recognizerToFiniteGrammar L hL
 
 end Computability
 end FoC

@@ -2386,10 +2386,11 @@ Finite derivations are also finite-stage evidence: the reusable grammar bridge
 turns derivation length into an acceptance trace, a bounded derivation search,
 and a staged recognizer program. In the reverse direction, a recognizer trace
 is represented as a trace-simulation grammar: each finite accepting
-configuration trace becomes a one-step semantic derivation. The full finite
-grammar equivalence remains a theorem shape until the formalization has the
-effective construction that turns those trace schemas into finite production
-lists.
+configuration trace becomes a one-step semantic derivation. For concrete finite
+evidence, finite trace tables now produce an explicit finite list of
+start-to-word productions. The full finite grammar equivalence remains a theorem
+shape until the formalization has the effective construction that turns
+arbitrary recognizer computations into finite production lists.
 
 For finite-production general grammars, the page already contains the
 program-acceptability bridge and the supplied-description consequences. For
@@ -2398,7 +2399,8 @@ one-nonterminal trace-simulation construction in
 {module}`FoC.Computability.Grammar`. What remains open is the effective
 textbook direction: a concrete finite-description compiler that uniformly
 builds the recognizer machine description, plus the reverse construction from
-recognizers to finite-production unrestricted grammars.
+recognizers to finite-production unrestricted grammars. The latter target is
+now named separately from the older broad compiler assumptions.
 -/
 
 def GeneralGrammarGeneratedLanguage (G : GeneralGrammar terminal nonterminal) :
@@ -2458,6 +2460,38 @@ def MachineConfigurationTraceSimulationGrammar
     (D : MachineDescription) : GeneralGrammar Bool Unit :=
   MachineHaltingTraceSimulationGrammar D
 
+abbrev ConcreteFiniteAcceptanceTraceTable (terminal : Type u) :=
+  FiniteAcceptanceTraceTable terminal
+
+def ConcreteFiniteAcceptanceTraceTableLanguage
+    (T : ConcreteFiniteAcceptanceTraceTable terminal) :
+    Language terminal :=
+  T.language
+
+def ConcreteFiniteAcceptanceTraceTableGrammar
+    (T : ConcreteFiniteAcceptanceTraceTable terminal) :
+    GeneralGrammar terminal Unit :=
+  T.grammar
+
+def ConcreteMachineFiniteAcceptanceTraceTable
+    (D : MachineDescription) : Type :=
+  MachineFiniteAcceptanceTraceTable D
+
+def ConcreteMachineFiniteAcceptanceTraceTablePresents
+    (D : MachineDescription)
+    (T : ConcreteMachineFiniteAcceptanceTraceTable D) : Prop :=
+  MachineFiniteAcceptanceTraceTable.Presents D T
+
+def ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction : Prop :=
+  MachineDescriptionToFiniteGeneralGrammarConstruction
+
+def ConcreteMachineDescriptionAcceptsToFiniteGeneralGrammarConstruction : Prop :=
+  MachineDescriptionAcceptsToFiniteGeneralGrammarConstruction
+
+def ConcreteTuringAcceptableToFiniteGeneralGrammarConstruction
+    (terminal : Type u) : Prop :=
+  TuringAcceptableToFiniteGeneralGrammarConstruction terminal
+
 def ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
   BooleanGeneralGrammarRecognizerCompilerPrinciple
 
@@ -2484,6 +2518,9 @@ abbrev ConcreteBooleanSection52CompilerCloseout :=
 
 abbrev ConcreteBooleanFiniteGrammarSection52Closeout :=
   BooleanFiniteGrammarSection52Closeout
+
+abbrev ConcreteBooleanFiniteDataSection52CompilerCloseout :=
+  BooleanFiniteDataSection52CompilerCloseout
 
 theorem concrete_finite_grammar_recognizer_compiler_of_general_compiler
     (hcompile : ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction) :
@@ -2719,6 +2756,63 @@ theorem concrete_machine_description_accepts_generated_by_configuration_trace_gr
       (GeneralGrammarGeneratedLanguage
         (MachineConfigurationTraceSimulationGrammar D)) L :=
   Computability.machineDescription_accepts_generated_by_traceSimulationGrammar h
+
+/-!
+**Finite trace tables.**  A finite table of accepting traces gives a genuine
+finite-production grammar: the production list contains one rule from the start
+nonterminal to each table word. This is the finite-data bridge used to state the
+remaining recognizer-to-finite-grammar target precisely.
+-/
+
+def ConcreteFiniteAcceptanceTraceTableProductions
+    (T : ConcreteFiniteAcceptanceTraceTable terminal) :
+    List (GeneralGrammar.Production terminal Unit) :=
+  T.productions
+
+theorem concrete_finite_acceptance_trace_table_has_finite_productions
+    (T : ConcreteFiniteAcceptanceTraceTable terminal) :
+    GeneralGrammar.HasFiniteProductions
+      (ConcreteFiniteAcceptanceTraceTableGrammar T) :=
+  Computability.FiniteAcceptanceTraceTable.hasFiniteProductions T
+
+theorem concrete_finite_acceptance_trace_table_generated_language
+    (T : ConcreteFiniteAcceptanceTraceTable terminal) :
+    Language.Equal
+      (GeneralGrammarGeneratedLanguage
+        (ConcreteFiniteAcceptanceTraceTableGrammar T))
+      (ConcreteFiniteAcceptanceTraceTableLanguage T) :=
+  Computability.FiniteAcceptanceTraceTable.generated_language T
+
+theorem concrete_finite_acceptance_trace_table_finite_production_generated
+    (T : ConcreteFiniteAcceptanceTraceTable terminal) :
+    FiniteGeneralGrammarGenerated
+      (ConcreteFiniteAcceptanceTraceTableLanguage T) :=
+  Computability.FiniteAcceptanceTraceTable.finiteProductionGenerated_language T
+
+theorem concrete_machine_finite_acceptance_trace_table_generated
+    {D : MachineDescription}
+    {T : ConcreteMachineFiniteAcceptanceTraceTable D}
+    (hT : ConcreteMachineFiniteAcceptanceTraceTablePresents D T) :
+    Language.Equal
+      (GeneralGrammarGeneratedLanguage
+        (ConcreteFiniteAcceptanceTraceTableGrammar T))
+      (fun w : Word Bool => D.HaltsOnInput w) :=
+  Computability.machineFiniteAcceptanceTraceTable_generated hT
+
+theorem concrete_machine_finite_acceptance_trace_table_finite_production_generated
+    {D : MachineDescription}
+    {T : ConcreteMachineFiniteAcceptanceTraceTable D}
+    (hT : ConcreteMachineFiniteAcceptanceTraceTablePresents D T) :
+    FiniteGeneralGrammarGenerated
+      (fun w : Word Bool => D.HaltsOnInput w) :=
+  Computability.machineFiniteAcceptanceTraceTable_finiteProductionGenerated hT
+
+theorem concrete_machine_description_accepts_to_finite_general_grammar_of_machine_construction
+    (hconstruct :
+      ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction) :
+    ConcreteMachineDescriptionAcceptsToFiniteGeneralGrammarConstruction :=
+  Computability.machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
+    hconstruct
 
 theorem finite_general_grammar_has_finite_list_staged_recognizer
     {G : GeneralGrammar terminal nonterminal}
@@ -3198,6 +3292,21 @@ theorem finite_general_grammar_to_recursively_enumerable_construction_of_finite_
     FiniteGeneralGrammarToRecursivelyEnumerableConstruction Bool :=
   boolean_finite_general_grammar_to_recursively_enumerable_construction_of_concrete_finite_grammar_compiler
     hclose.finiteGrammarRecognizerDescription
+
+theorem recursively_enumerable_to_finite_general_grammar_construction_of_finite_data_closeout
+    (hclose : ConcreteBooleanFiniteDataSection52CompilerCloseout) :
+    RecursivelyEnumerableToFiniteGeneralGrammarConstruction Bool :=
+  Computability.booleanFiniteDataSection52CompilerCloseout_recursivelyEnumerableToFiniteGrammar
+    hclose
+
+theorem boolean_finite_general_grammar_re_equivalence_construction_of_finite_data_closeout
+    (hclose : ConcreteBooleanFiniteDataSection52CompilerCloseout) :
+    FiniteGeneralGrammarREEquivalenceConstruction Bool :=
+  finite_general_grammar_re_equivalence_construction_of_constructions
+    (boolean_finite_general_grammar_to_recursively_enumerable_construction_of_concrete_finite_grammar_compiler
+      hclose.finiteGrammarRecognizerDescription)
+    (recursively_enumerable_to_finite_general_grammar_construction_of_finite_data_closeout
+      hclose)
 
 theorem boolean_finite_general_grammar_re_equivalence_construction_of_finite_section52_closeout
     (hclose : ConcreteBooleanFiniteGrammarSection52Closeout) :
