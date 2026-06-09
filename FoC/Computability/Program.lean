@@ -147,6 +147,17 @@ theorem programAcceptable_iff_has_acceptanceTrace
     | intro trace htrace =>
         exact acceptanceTrace_programAcceptable htrace
 
+theorem turingAcceptable_programAcceptable
+    {L : Language input} (h : TuringAcceptable L) :
+    ProgramAcceptable L := by
+  rcases turing_acceptable_has_acceptanceTrace h with ⟨trace, htrace⟩
+  exact acceptanceTrace_programAcceptable htrace
+
+theorem recursivelyEnumerable_programAcceptable
+    {L : Language input} (h : RecursivelyEnumerable L) :
+    ProgramAcceptable L :=
+  turingAcceptable_programAcceptable h
+
 /-!
 # Dovetailing complementary traces
 

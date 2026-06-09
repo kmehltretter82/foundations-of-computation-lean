@@ -2398,6 +2398,27 @@ def ConcreteProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction :
     Prop :=
   ProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction
 
+abbrev ConcreteMachineHistoryNonterminal
+    (D : MachineDescription) :=
+  MachineHistoryNonterminal D
+
+def ConcreteMachineHistoryGrammar
+    (D : MachineDescription) :
+    GeneralGrammar Bool (ConcreteMachineHistoryNonterminal D) :=
+  MachineDescriptionHistoryGrammar.grammar D
+
+def ConcreteMachineHistoryGrammarProductions
+    (D : MachineDescription) :
+    List (GeneralGrammar.Production Bool
+      (ConcreteMachineHistoryNonterminal D)) :=
+  MachineDescriptionHistoryGrammar.productions D
+
+def ConcreteMachineHistoryConfigurationForm
+    (D : MachineDescription)
+    (c : MachineDescription.Configuration) :
+    SententialForm Bool (ConcreteMachineHistoryNonterminal D) :=
+  MachineDescriptionHistoryGrammar.configForm D c
+
 /-!
 **General Grammars and RE Languages.**
 
@@ -2412,11 +2433,14 @@ is represented as a trace-simulation grammar: each finite accepting
 configuration trace becomes a one-step semantic derivation. For concrete finite
 evidence, finite trace tables now produce an explicit finite list of
 start-to-word productions, and {name}`ConcreteFiniteTraceTableRecognizable`
-is proved to imply finite-production generation. The finite-data closeout keeps
-the concrete recognizer route description-backed: finite grammars are compiled
-to recognizer descriptions, paired recognizers are dovetailed directly, and
-description-backed recognizers use a dedicated finite-grammar construction
-interface.
+is proved to imply finite-production generation. For arbitrary machine
+descriptions, {name}`ConcreteMachineHistoryGrammar` supplies the finite
+semi-Thue presentation: it generates halting configurations, runs the finite
+transition table backward, and cleans initial configurations to input words.
+The finite-data closeout keeps the concrete recognizer route
+description-backed: finite grammars are compiled to recognizer descriptions,
+paired recognizers are dovetailed directly, and description-backed recognizers
+use a dedicated finite-grammar construction interface.
 
 For finite-production general grammars, the page already contains the
 program-acceptability bridge and the supplied-description consequences. For
@@ -2567,6 +2591,41 @@ theorem concrete_finite_section52_closeout_of_semantic_closeout
     concrete_finite_grammar_recognizer_compiler_of_general_compiler
       hclose.grammarRecognizerDescription
   recursivelyEnumerableToFiniteGrammar := hfinite
+
+theorem recursively_enumerable_to_finite_general_grammar_construction_of_description_compiler
+    (hcompile : ConcreteDescriptionAcceptorCompilationConstruction)
+    (hconstruct :
+      ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction) :
+    RecursivelyEnumerableToFiniteGeneralGrammarConstruction Bool :=
+  Computability.recursivelyEnumerableToFiniteGeneralGrammarPrinciple_bool_of_descriptionCompiler
+    hcompile hconstruct
+
+theorem concrete_finite_section52_closeout_of_semantic_closeout_and_machine_construction
+    (hclose : ConcreteBooleanSection52CompilerCloseout)
+    (hcompile : ConcreteDescriptionAcceptorCompilationConstruction)
+    (hconstruct :
+      ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction) :
+    ConcreteBooleanFiniteGrammarSection52Closeout :=
+  concrete_finite_section52_closeout_of_semantic_closeout hclose
+    (recursively_enumerable_to_finite_general_grammar_construction_of_description_compiler
+      hcompile hconstruct)
+
+theorem concrete_finite_data_section52_closeout_of_semantic_closeout_and_machine_construction
+    (hclose : ConcreteBooleanSection52CompilerCloseout)
+    (hconstruct :
+      ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction) :
+    ConcreteBooleanFiniteDataSection52CompilerCloseout where
+  boundedTraceSearch := hclose.boundedTraceSearch
+  decidableToAcceptable := hclose.decidableToAcceptable
+  pairedDovetailDescription :=
+    paired_recognizer_dovetail_compiler_of_concrete_dovetail_description_compiler
+      hclose.dovetailDescription
+  finiteGrammarRecognizerDescription :=
+    concrete_finite_grammar_recognizer_compiler_of_general_compiler
+      hclose.grammarRecognizerDescription
+  descriptionRecognizerToFiniteGrammar :=
+    Computability.machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
+      hconstruct
 
 def GeneralGrammarREEquivalenceConstruction
     (terminal : Type u) : Prop :=
@@ -2782,6 +2841,12 @@ theorem concrete_machine_description_accepts_generated_by_configuration_trace_gr
       (GeneralGrammarGeneratedLanguage
         (MachineConfigurationTraceSimulationGrammar D)) L :=
   Computability.machineDescription_accepts_generated_by_traceSimulationGrammar h
+
+theorem concrete_machine_history_grammar_has_finite_productions
+    (D : MachineDescription) :
+    GeneralGrammar.HasFiniteProductions
+      (ConcreteMachineHistoryGrammar D) :=
+  Computability.MachineDescriptionHistoryGrammar.hasFiniteProductions D
 
 /-!
 **Finite trace tables.**  A finite table of accepting traces gives a genuine

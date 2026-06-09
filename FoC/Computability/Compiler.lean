@@ -1009,6 +1009,23 @@ def DescriptionProgramAcceptorCompilationPrinciple : Prop :=
   forall P : StagedProgram Bool Unit,
     exists D : MachineDescription, ProgramCompiledByDescription P D
 
+theorem programAcceptableByDescription_of_descriptionCompiler
+    (hcompile : DescriptionProgramAcceptorCompilationPrinciple)
+    {L : Language Bool}
+    (h : ProgramAcceptable L) :
+    ProgramAcceptableByDescription L := by
+  rcases h with ⟨P, hP⟩
+  rcases hcompile P with ⟨D, hD⟩
+  exact ⟨P, D, hP, hD⟩
+
+theorem recursivelyEnumerable_programAcceptableByDescription_of_descriptionCompiler
+    (hcompile : DescriptionProgramAcceptorCompilationPrinciple)
+    {L : Language Bool}
+    (h : RecursivelyEnumerable L) :
+    ProgramAcceptableByDescription L :=
+  programAcceptableByDescription_of_descriptionCompiler hcompile
+    (recursivelyEnumerable_programAcceptable h)
+
 def DescriptionProgramBoolDeciderCompilationPrinciple : Prop :=
   forall P : StagedProgram Bool Bool,
     exists D : MachineDescription, BoolProgramCompiledByDescription P D

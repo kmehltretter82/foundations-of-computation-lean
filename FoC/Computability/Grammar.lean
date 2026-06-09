@@ -767,6 +767,283 @@ theorem machineFiniteAcceptanceTraceTable_finiteProductionGenerated
       (fun w : Word Bool => D.HaltsOnInput w) :=
   T.finiteProductionGenerated_of_presents hT
 
+/-!
+# Finite machine-history grammars
+
+The finite trace-table grammar handles finite evidence.  The textbook
+recognizer-to-grammar construction needs finite productions that can simulate
+arbitrarily long computations.  The following grammar data is the concrete
+semi-Thue system used for that construction: it generates halting
+configurations, runs machine transitions backward, and cleans an initial
+configuration to the input word.
+-/
+
+inductive MachineHistoryNonterminal (D : MachineDescription) where
+  | start : MachineHistoryNonterminal D
+  | genLeft : MachineHistoryNonterminal D
+  | genHead : MachineHistoryNonterminal D
+  | genRight : MachineHistoryNonterminal D
+  | cleanup : MachineHistoryNonterminal D
+  | leftBoundary : MachineHistoryNonterminal D
+  | rightBoundary : MachineHistoryNonterminal D
+  | cell : Option Bool -> MachineHistoryNonterminal D
+  | state : Fin (D.stateCount + 1) -> MachineHistoryNonterminal D
+deriving DecidableEq
+
+namespace MachineHistoryNonterminal
+
+def optionBoolValues : List (Option Bool) :=
+  [none, some false, some true]
+
+def finite (D : MachineDescription) :
+    Foundation.FiniteType (MachineHistoryNonterminal D) where
+  elems :=
+    [ start, genLeft, genHead, genRight, cleanup,
+      leftBoundary, rightBoundary ] ++
+      optionBoolValues.map cell ++
+      (List.finRange (D.stateCount + 1)).map state
+  complete := by
+    intro x
+    cases x with
+    | start => simp [optionBoolValues]
+    | genLeft => simp [optionBoolValues]
+    | genHead => simp [optionBoolValues]
+    | genRight => simp [optionBoolValues]
+    | cleanup => simp [optionBoolValues]
+    | leftBoundary => simp [optionBoolValues]
+    | rightBoundary => simp [optionBoolValues]
+    | cell c =>
+        cases c with
+        | none => simp [optionBoolValues]
+        | some b =>
+            cases b <;> simp [optionBoolValues]
+    | state q =>
+        simp [optionBoolValues, List.mem_finRange]
+
+end MachineHistoryNonterminal
+
+namespace MachineDescriptionHistoryGrammar
+
+abbrev NT (D : MachineDescription) := MachineHistoryNonterminal D
+
+def nt {D : MachineDescription} (A : NT D) :
+    Symbol Bool (NT D) :=
+  Symbol.nonterminal A
+
+def tm {D : MachineDescription} (b : Bool) :
+    Symbol Bool (NT D) :=
+  Symbol.terminal b
+
+def cell {D : MachineDescription} (c : Option Bool) :
+    Symbol Bool (NT D) :=
+  nt (MachineHistoryNonterminal.cell c)
+
+def state {D : MachineDescription} (q : Fin (D.stateCount + 1)) :
+    Symbol Bool (NT D) :=
+  nt (MachineHistoryNonterminal.state q)
+
+def leftBoundary {D : MachineDescription} : Symbol Bool (NT D) :=
+  nt MachineHistoryNonterminal.leftBoundary
+
+def rightBoundary {D : MachineDescription} : Symbol Bool (NT D) :=
+  nt MachineHistoryNonterminal.rightBoundary
+
+def prod {D : MachineDescription}
+    (lhs rhs : SententialForm Bool (NT D)) :
+    GeneralGrammar.Production Bool (NT D) where
+  lhs := lhs
+  rhs := rhs
+
+def startProduction (D : MachineDescription) :
+    GeneralGrammar.Production Bool (NT D) :=
+  prod
+    [nt MachineHistoryNonterminal.start]
+    [leftBoundary,
+      nt MachineHistoryNonterminal.genLeft,
+      state (D.stateOfNat D.halt),
+      nt MachineHistoryNonterminal.genHead,
+      nt MachineHistoryNonterminal.genRight,
+      rightBoundary]
+
+def leftGeneratorProductions (D : MachineDescription) :
+    List (GeneralGrammar.Production Bool (NT D)) :=
+  prod [nt MachineHistoryNonterminal.genLeft] [] ::
+    MachineHistoryNonterminal.optionBoolValues.map
+      (fun c =>
+        prod
+          [nt MachineHistoryNonterminal.genLeft]
+          [cell c, nt MachineHistoryNonterminal.genLeft])
+
+def headGeneratorProductions (D : MachineDescription) :
+    List (GeneralGrammar.Production Bool (NT D)) :=
+  MachineHistoryNonterminal.optionBoolValues.map
+    (fun c =>
+      prod [nt MachineHistoryNonterminal.genHead] [cell c])
+
+def rightGeneratorProductions (D : MachineDescription) :
+    List (GeneralGrammar.Production Bool (NT D)) :=
+  prod [nt MachineHistoryNonterminal.genRight] [] ::
+    MachineHistoryNonterminal.optionBoolValues.map
+      (fun c =>
+        prod
+          [nt MachineHistoryNonterminal.genRight]
+          [cell c, nt MachineHistoryNonterminal.genRight])
+
+def reverseRightMoveProductions (D : MachineDescription)
+    (t : TransitionDescription) :
+    List (GeneralGrammar.Production Bool (NT D)) :=
+  MachineHistoryNonterminal.optionBoolValues.map
+      (fun d =>
+        prod
+          [cell t.write, state (D.stateOfNat t.target), cell d]
+          [state (D.stateOfNat t.source), cell t.read, cell d]) ++
+    [prod
+      [cell t.write, state (D.stateOfNat t.target), cell none,
+        rightBoundary]
+      [state (D.stateOfNat t.source), cell t.read, rightBoundary]]
+
+def reverseLeftMoveProductions (D : MachineDescription)
+    (t : TransitionDescription) :
+    List (GeneralGrammar.Production Bool (NT D)) :=
+  MachineHistoryNonterminal.optionBoolValues.map
+      (fun l =>
+        prod
+          [state (D.stateOfNat t.target), cell l, cell t.write]
+          [cell l, state (D.stateOfNat t.source), cell t.read]) ++
+    [prod
+      [leftBoundary, state (D.stateOfNat t.target), cell none,
+        cell t.write]
+      [leftBoundary, state (D.stateOfNat t.source), cell t.read]]
+
+def reverseStepProductions (D : MachineDescription)
+    (t : TransitionDescription) :
+    List (GeneralGrammar.Production Bool (NT D)) :=
+  match t.move with
+  | Direction.right => reverseRightMoveProductions D t
+  | Direction.left => reverseLeftMoveProductions D t
+
+def cleanupProductions (D : MachineDescription) :
+    List (GeneralGrammar.Production Bool (NT D)) :=
+  [ prod
+      [leftBoundary, state (D.stateOfNat D.start), cell none,
+        rightBoundary]
+      []
+  , prod
+      [leftBoundary, state (D.stateOfNat D.start), cell (some false)]
+      [tm false, nt MachineHistoryNonterminal.cleanup]
+  , prod
+      [leftBoundary, state (D.stateOfNat D.start), cell (some true)]
+      [tm true, nt MachineHistoryNonterminal.cleanup]
+  , prod
+      [nt MachineHistoryNonterminal.cleanup, cell (some false)]
+      [tm false, nt MachineHistoryNonterminal.cleanup]
+  , prod
+      [nt MachineHistoryNonterminal.cleanup, cell (some true)]
+      [tm true, nt MachineHistoryNonterminal.cleanup]
+  , prod
+      [nt MachineHistoryNonterminal.cleanup, rightBoundary]
+      []
+  ]
+
+def productions (D : MachineDescription) :
+    List (GeneralGrammar.Production Bool (NT D)) :=
+    [startProduction D] ++
+    leftGeneratorProductions D ++
+    headGeneratorProductions D ++
+    rightGeneratorProductions D ++
+    D.transitions.flatMap (reverseStepProductions D) ++
+    cleanupProductions D
+
+def grammar (D : MachineDescription) :
+    GeneralGrammar Bool (NT D) where
+  start := MachineHistoryNonterminal.start
+  produces := GeneralGrammar.ProductionListProduces (productions D)
+  lhsContainsNonterminal := by
+    intro lhs rhs h
+    rcases h with ⟨rule, hrule, hlhs, _hrhs⟩
+    rw [← hlhs]
+    simp [productions, startProduction, leftGeneratorProductions,
+      headGeneratorProductions, rightGeneratorProductions,
+      reverseStepProductions, reverseRightMoveProductions,
+      reverseLeftMoveProductions, cleanupProductions, prod,
+      MachineHistoryNonterminal.optionBoolValues] at hrule ⊢
+    rcases hrule with h | h | h | h | h | h | h | h | h | h | h | h |
+      htrans | h | h | h | h | h | h
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+    · rcases htrans with ⟨t, _ht, hmem⟩
+      cases hmove : t.move <;> simp [hmove] at hmem
+      · rcases hmem with h | h | h | h
+        · cases h
+          exact trivial
+        · cases h
+          exact trivial
+        · cases h
+          exact trivial
+        · cases h
+          exact trivial
+      · rcases hmem with h | h | h | h
+        · cases h
+          exact trivial
+        · cases h
+          exact trivial
+        · cases h
+          exact trivial
+        · cases h
+          exact trivial
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+    · cases h
+      exact trivial
+  nonterminalsFinite := MachineHistoryNonterminal.finite D
+
+theorem hasFiniteProductions (D : MachineDescription) :
+    GeneralGrammar.HasFiniteProductions (grammar D) := by
+  exists productions D
+  intro lhs rhs
+  rfl
+
+def configForm (D : MachineDescription)
+    (c : MachineDescription.Configuration) :
+    SententialForm Bool (NT D) :=
+  [leftBoundary] ++
+    c.tape.left.reverse.map cell ++
+    [state (D.stateOfNat c.state), cell c.tape.head] ++
+    c.tape.right.map cell ++
+    [rightBoundary]
+
+end MachineDescriptionHistoryGrammar
+
 def MachineDescriptionToFiniteGeneralGrammarConstruction : Prop :=
   forall D : MachineDescription,
     exists nonterminal : Type, exists G : GeneralGrammar Bool nonterminal,
@@ -847,6 +1124,19 @@ def RecursivelyEnumerableToFiniteGeneralGrammarPrinciple
     (terminal : Type u) : Prop :=
   forall L : Language terminal,
     RecursivelyEnumerable L -> GeneralGrammar.FiniteProductionGenerated L
+
+theorem recursivelyEnumerableToFiniteGeneralGrammarPrinciple_bool_of_descriptionCompiler
+    (hcompile : DescriptionProgramAcceptorCompilationPrinciple)
+    (hconstruct : MachineDescriptionToFiniteGeneralGrammarConstruction) :
+    RecursivelyEnumerableToFiniteGeneralGrammarPrinciple Bool := by
+  intro L hL
+  exact
+    (programAcceptableByDescriptionToFiniteGeneralGrammarConstruction_of_descriptionRecognizer
+      (machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
+        hconstruct))
+      L
+      (recursivelyEnumerable_programAcceptableByDescription_of_descriptionCompiler
+        hcompile hL)
 
 def GeneralGrammarREEquivalencePrinciple
     (terminal : Type u) : Prop :=
