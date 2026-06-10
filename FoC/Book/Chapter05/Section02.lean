@@ -2450,7 +2450,10 @@ one-nonterminal trace-simulation construction in
 the well-formed description-backed construction named
 {name}`ConcreteDescriptionRecognizerToFiniteGeneralGrammarConstruction`. The
 concrete finite-description compiler for finite grammar recognizers is a
-separate named field of the finite-data closeout.
+separate named field of the finite-data closeout, and also follows from the
+general description acceptor compiler by compiling the staged grammar
+recognizer.  The paired-recognizer dovetail field is supplied either by a
+dedicated dovetail compiler or by the Boolean description decider compiler.
 -/
 
 def GeneralGrammarGeneratedLanguage (G : GeneralGrammar terminal nonterminal) :
@@ -2542,6 +2545,10 @@ def ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction : Prop :=
 def ConcreteMachineDescriptionAcceptsToFiniteGeneralGrammarConstruction : Prop :=
   MachineDescriptionAcceptsToFiniteGeneralGrammarConstruction
 
+theorem concrete_machine_description_to_finite_general_grammar_construction :
+    ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction :=
+  Computability.machineDescriptionToFiniteGeneralGrammarConstruction
+
 def ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
   BooleanGeneralGrammarRecognizerCompilerPrinciple
 
@@ -2574,9 +2581,21 @@ abbrev ConcreteBooleanFiniteDataSection52CompilerCloseout :=
 
 theorem concrete_finite_grammar_recognizer_compiler_of_general_compiler
     (hcompile : ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction) :
-    ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction := by
-  intro nonterminal G _hfinite
-  exact hcompile G
+    ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction :=
+  Computability.finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_generalCompiler
+    hcompile
+
+theorem concrete_general_grammar_recognizer_compiler_of_description_compiler
+    (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
+    ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction :=
+  Computability.booleanGeneralGrammarRecognizerCompilerPrinciple_of_descriptionCompiler
+    hcompile
+
+theorem concrete_finite_grammar_recognizer_compiler_of_description_compiler
+    (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
+    ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction :=
+  Computability.finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_descriptionCompiler
+    hcompile
 
 theorem concrete_finite_section52_closeout_of_semantic_closeout
     (hclose : ConcreteBooleanSection52CompilerCloseout)
@@ -2593,27 +2612,21 @@ theorem concrete_finite_section52_closeout_of_semantic_closeout
   recursivelyEnumerableToFiniteGrammar := hfinite
 
 theorem recursively_enumerable_to_finite_general_grammar_construction_of_description_compiler
-    (hcompile : ConcreteDescriptionAcceptorCompilationConstruction)
-    (hconstruct :
-      ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction) :
+    (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
     RecursivelyEnumerableToFiniteGeneralGrammarConstruction Bool :=
   Computability.recursivelyEnumerableToFiniteGeneralGrammarPrinciple_bool_of_descriptionCompiler
-    hcompile hconstruct
+    hcompile
 
-theorem concrete_finite_section52_closeout_of_semantic_closeout_and_machine_construction
+theorem concrete_finite_section52_closeout_of_semantic_closeout_and_description_compiler
     (hclose : ConcreteBooleanSection52CompilerCloseout)
-    (hcompile : ConcreteDescriptionAcceptorCompilationConstruction)
-    (hconstruct :
-      ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction) :
+    (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
     ConcreteBooleanFiniteGrammarSection52Closeout :=
   concrete_finite_section52_closeout_of_semantic_closeout hclose
     (recursively_enumerable_to_finite_general_grammar_construction_of_description_compiler
-      hcompile hconstruct)
+      hcompile)
 
-theorem concrete_finite_data_section52_closeout_of_semantic_closeout_and_machine_construction
-    (hclose : ConcreteBooleanSection52CompilerCloseout)
-    (hconstruct :
-      ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction) :
+theorem concrete_finite_data_section52_closeout_of_semantic_closeout
+    (hclose : ConcreteBooleanSection52CompilerCloseout) :
     ConcreteBooleanFiniteDataSection52CompilerCloseout where
   boundedTraceSearch := hclose.boundedTraceSearch
   decidableToAcceptable := hclose.decidableToAcceptable
@@ -2625,7 +2638,24 @@ theorem concrete_finite_data_section52_closeout_of_semantic_closeout_and_machine
       hclose.grammarRecognizerDescription
   descriptionRecognizerToFiniteGrammar :=
     Computability.machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
-      hconstruct
+      concrete_machine_description_to_finite_general_grammar_construction
+
+theorem concrete_finite_data_section52_closeout_of_semantic_closeout_and_description_compilers
+    (hclose : ConcreteBooleanSection52CompilerCloseout)
+    (haccept : ConcreteDescriptionAcceptorCompilationConstruction)
+    (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
+    ConcreteBooleanFiniteDataSection52CompilerCloseout where
+  boundedTraceSearch := hclose.boundedTraceSearch
+  decidableToAcceptable := hclose.decidableToAcceptable
+  pairedDovetailDescription :=
+    paired_recognizer_dovetail_compiler_of_concrete_bool_description_compiler
+      hbool
+  finiteGrammarRecognizerDescription :=
+    concrete_finite_grammar_recognizer_compiler_of_description_compiler
+      haccept
+  descriptionRecognizerToFiniteGrammar :=
+    Computability.machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
+      concrete_machine_description_to_finite_general_grammar_construction
 
 def GeneralGrammarREEquivalenceConstruction
     (terminal : Type u) : Prop :=
@@ -2931,12 +2961,10 @@ theorem concrete_machine_finite_acceptance_trace_table_finite_production_generat
       (fun w : Word Bool => D.HaltsOnInput w) :=
   Computability.machineFiniteAcceptanceTraceTable_finiteProductionGenerated hT
 
-theorem concrete_machine_description_accepts_to_finite_general_grammar_of_machine_construction
-    (hconstruct :
-      ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction) :
+theorem concrete_machine_description_accepts_to_finite_general_grammar :
     ConcreteMachineDescriptionAcceptsToFiniteGeneralGrammarConstruction :=
   Computability.machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
-    hconstruct
+    concrete_machine_description_to_finite_general_grammar_construction
 
 theorem finite_general_grammar_has_finite_list_staged_recognizer
     {G : GeneralGrammar terminal nonterminal}

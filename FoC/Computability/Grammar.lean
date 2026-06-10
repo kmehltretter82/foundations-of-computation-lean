@@ -3737,6 +3737,25 @@ def FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple : Prop :=
       exists D : MachineDescription,
         ProgramCompiledByDescription (GeneralGrammarRecognizerProgram G) D
 
+theorem booleanGeneralGrammarRecognizerCompilerPrinciple_of_descriptionCompiler
+    (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
+    BooleanGeneralGrammarRecognizerCompilerPrinciple := by
+  intro _ G
+  exact hcompile (GeneralGrammarRecognizerProgram G)
+
+theorem finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_generalCompiler
+    (hcompile : BooleanGeneralGrammarRecognizerCompilerPrinciple) :
+    FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple := by
+  intro _ G _hfinite
+  exact hcompile G
+
+theorem finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_descriptionCompiler
+    (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
+    FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple :=
+  finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_generalCompiler
+    (booleanGeneralGrammarRecognizerCompilerPrinciple_of_descriptionCompiler
+      hcompile)
+
 def GeneralGrammarAcceptabilityEquivalence (L : Language terminal) : Prop :=
   GeneralGrammar.Generated L <-> RecursivelyEnumerable L
 
@@ -3756,14 +3775,13 @@ def RecursivelyEnumerableToFiniteGeneralGrammarPrinciple
     RecursivelyEnumerable L -> GeneralGrammar.FiniteProductionGenerated L
 
 theorem recursivelyEnumerableToFiniteGeneralGrammarPrinciple_bool_of_descriptionCompiler
-    (hcompile : DescriptionProgramAcceptorCompilationPrinciple)
-    (hconstruct : MachineDescriptionToFiniteGeneralGrammarConstruction) :
+    (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
     RecursivelyEnumerableToFiniteGeneralGrammarPrinciple Bool := by
   intro L hL
   exact
     (programAcceptableByDescriptionToFiniteGeneralGrammarConstruction_of_descriptionRecognizer
       (machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
-        hconstruct))
+        machineDescriptionToFiniteGeneralGrammarConstruction))
       L
       (recursivelyEnumerable_programAcceptableByDescription_of_descriptionCompiler
         hcompile hL)
