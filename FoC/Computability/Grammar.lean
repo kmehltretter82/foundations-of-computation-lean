@@ -1436,6 +1436,1798 @@ inductive HistorySoundForm (D : MachineDescription) :
       (h : D.HaltsOnInput w) :
       HistorySoundForm D (SententialForm.terminalWord w)
 
+theorem nonterminal_not_mem_terminalWord {D : MachineDescription}
+    (A : NT D) (w : Word Bool) :
+    Symbol.nonterminal A ∉ SententialForm.terminalWord w := by
+  induction w with
+  | nil =>
+      simp [SententialForm.terminalWord]
+  | cons _ _ ih =>
+      simp [SententialForm.terminalWord]
+
+theorem containsNonterminal_ne_nil {D : MachineDescription}
+    {xs : SententialForm Bool (NT D)}
+    (h : SententialForm.containsNonterminal xs) :
+    xs ≠ [] := by
+  cases xs with
+  | nil =>
+      simp [SententialForm.containsNonterminal] at h
+  | cons _ _ =>
+      simp
+
+theorem singleton_context_eq_of_containsNonterminal
+    {D : MachineDescription} {s : Symbol Bool (NT D)}
+    {u lhs v : SententialForm Bool (NT D)}
+    (hcontains : SententialForm.containsNonterminal lhs)
+    (hx : [s] = u ++ lhs ++ v) :
+    u = [] ∧ v = [] ∧ lhs = [s] := by
+  have hne : lhs ≠ [] := containsNonterminal_ne_nil hcontains
+  cases lhs with
+  | nil =>
+      exact False.elim (hne rfl)
+  | cons a rest =>
+      have hlen := congrArg List.length hx
+      simp at hlen
+      have huLen : u.length = 0 := by omega
+      have hvLen : v.length = 0 := by omega
+      have hrestLen : rest.length = 0 := by omega
+      have hu : u = [] := List.eq_nil_of_length_eq_zero huLen
+      have hv : v = [] := List.eq_nil_of_length_eq_zero hvLen
+      have hrest : rest = [] := List.eq_nil_of_length_eq_zero hrestLen
+      subst u
+      subst v
+      subst rest
+      simp at hx
+      cases hx
+      exact ⟨rfl, rfl, rfl⟩
+
+theorem containsNonterminal_exists_mem {D : MachineDescription}
+    {xs : SententialForm Bool (NT D)}
+    (h : SententialForm.containsNonterminal xs) :
+    exists A : NT D, Symbol.nonterminal A ∈ xs := by
+  induction xs with
+  | nil =>
+      simp [SententialForm.containsNonterminal] at h
+  | cons s rest ih =>
+      cases s with
+      | terminal b =>
+          simp [SententialForm.containsNonterminal] at h
+          rcases ih h with ⟨A, hA⟩
+          exact ⟨A, by simp [hA]⟩
+      | nonterminal A =>
+          exact ⟨A, by simp⟩
+
+theorem historySoundForm_terminal {D : MachineDescription}
+    {sf : SententialForm Bool (NT D)} {w : Word Bool}
+    (hshape : HistorySoundForm D sf)
+    (hsf : sf = SententialForm.terminalWord w) :
+    D.HaltsOnInput w := by
+  induction hshape with
+  | start =>
+      have hmem :
+          Symbol.nonterminal MachineHistoryNonterminal.start ∈
+            SententialForm.terminalWord (nt := NT D) w := by
+        rw [← hsf]
+        simp [nt]
+      exact False.elim (nonterminal_not_mem_terminalWord _ w hmem)
+  | lockedLeft left =>
+      have hmem :
+          Symbol.nonterminal MachineHistoryNonterminal.leftBoundary ∈
+            SententialForm.terminalWord (nt := NT D) w := by
+        rw [← hsf]
+        simp [lockedLeftForm, leftBoundary, nt]
+      exact False.elim (nonterminal_not_mem_terminalWord _ w hmem)
+  | lockedRight left head right =>
+      have hmem :
+          Symbol.nonterminal MachineHistoryNonterminal.leftBoundary ∈
+            SententialForm.terminalWord (nt := NT D) w := by
+        rw [← hsf]
+        simp [lockedRightForm, leftBoundary, nt]
+      exact False.elim (nonterminal_not_mem_terminalWord _ w hmem)
+  | active c hstate hc =>
+      have hmem :
+          Symbol.nonterminal MachineHistoryNonterminal.leftBoundary ∈
+            SententialForm.terminalWord (nt := NT D) w := by
+        rw [← hsf]
+        simp [configForm, leftBoundary, nt]
+      exact False.elim (nonterminal_not_mem_terminalWord _ w hmem)
+  | cleanup pref rest hclean =>
+      have hmem :
+          Symbol.nonterminal MachineHistoryNonterminal.cleanup ∈
+            SententialForm.terminalWord (nt := NT D) w := by
+        rw [← hsf]
+        simp [cleanupForm, nt]
+      exact False.elim (nonterminal_not_mem_terminalWord _ w hmem)
+  | terminal w0 h =>
+      have hword := congrArg SententialForm.toWord? hsf
+      simp [SententialForm.terminalWord_toWord] at hword
+      cases hword
+      exact h
+
+theorem historySoundForm_start_yields {D : MachineDescription}
+    {y : SententialForm Bool (NT D)}
+    (h : GeneralGrammar.Yields (grammar D)
+      [nt MachineHistoryNonterminal.start] y) :
+    HistorySoundForm D y := by
+  rcases h with ⟨u, v, lhs, rhs, hprod, hx, hy⟩
+  have hcontains := (grammar D).lhsContainsNonterminal lhs rhs hprod
+  rcases singleton_context_eq_of_containsNonterminal hcontains hx with
+    ⟨hu, hv, hlhs⟩
+  subst u
+  subst v
+  subst lhs
+  rcases hprod with ⟨rule, hrule, hlhsRule, hrhsRule⟩
+  simp at hy
+  subst y
+  rw [← hrhsRule]
+  simp [productions, startProduction, leftGeneratorProductions,
+    headSelectionProductions, rightGeneratorProductions,
+    activationProductions, reverseStepProductions,
+    reverseRightMoveProductions, reverseLeftMoveProductions,
+    cleanupProductions, prod,
+    MachineHistoryNonterminal.optionBoolValues] at hrule
+  rcases hrule with h | h | h | h | hselection | h | h | h |
+    hactivation | htrans | h | h | h | h | h | h
+  · subst rule
+    simp
+    exact HistorySoundForm.lockedLeft []
+  · subst rule
+    simp at hlhsRule
+    cases hlhsRule
+  · subst rule
+    simp at hlhsRule
+    cases hlhsRule
+  · subst rule
+    simp at hlhsRule
+    cases hlhsRule
+  · rcases hselection with ⟨q, hq | hq | hq⟩ <;>
+      subst rule <;> simp at hlhsRule
+  · subst rule
+    simp at hlhsRule
+    cases hlhsRule
+  · subst rule
+    simp at hlhsRule
+    cases hlhsRule
+  · subst rule
+    simp at hlhsRule
+    cases hlhsRule
+  · rcases hactivation with ⟨q, hq | hq | hq⟩ <;>
+      subst rule <;> simp at hlhsRule
+  · rcases htrans with ⟨t, ht, hmem⟩
+    cases hmove : t.move <;> simp [hmove] at hmem
+    all_goals
+      rcases hmem with hmem | hmem | hmem | hmem <;>
+        subst rule <;> simp at hlhsRule
+  · subst rule
+    simp at hlhsRule
+  · subst rule
+    simp at hlhsRule
+  · subst rule
+    simp at hlhsRule
+  · subst rule
+    simp at hlhsRule
+  · subst rule
+    simp at hlhsRule
+  · subst rule
+    simp at hlhsRule
+
+theorem genLeft_not_mem_cellForm {D : MachineDescription}
+    (xs : List (Option Bool)) :
+    nt MachineHistoryNonterminal.genLeft ∉ cellForm (D := D) xs := by
+  induction xs with
+  | nil =>
+      simp [cellForm]
+  | cons x xs ih =>
+      cases x <;> simp [cellForm, cell, nt]
+
+theorem genLeft_not_mem_tail {D : MachineDescription} :
+    nt MachineHistoryNonterminal.genLeft ∉
+      ([lockedState (D.stateOfNat D.halt), rightBoundary] :
+        SententialForm Bool (NT D)) := by
+  simp [nt, lockedState, rightBoundary]
+
+theorem genLeft_cellForm_context {D : MachineDescription}
+    (left : List (Option Bool))
+    {u v : SententialForm Bool (NT D)}
+    (hx : cellForm (D := D) left ++
+        [nt MachineHistoryNonterminal.genLeft,
+          lockedState (D.stateOfNat D.halt), rightBoundary] =
+      u ++ [nt MachineHistoryNonterminal.genLeft] ++ v) :
+    u = cellForm (D := D) left ∧
+      v = [lockedState (D.stateOfNat D.halt), rightBoundary] := by
+  induction left generalizing u with
+  | nil =>
+      simp [cellForm] at hx ⊢
+      cases u with
+      | nil =>
+          simp at hx
+          exact ⟨rfl, hx.symm⟩
+      | cons a us =>
+          simp at hx
+          rcases hx with ⟨ha, htail⟩
+          subst a
+          have hmem : nt MachineHistoryNonterminal.genLeft ∈
+              ([lockedState (D.stateOfNat D.halt), rightBoundary] :
+                SententialForm Bool (NT D)) := by
+            rw [htail]
+            simp
+          exact False.elim (genLeft_not_mem_tail hmem)
+  | cons x xs ih =>
+      simp [cellForm] at hx ⊢
+      cases u with
+      | nil =>
+          simp at hx
+          rcases hx with ⟨hbad, _⟩
+          cases x <;> simp [cell, nt] at hbad
+      | cons a us =>
+          simp at hx
+          rcases hx with ⟨ha, htail⟩
+          subst a
+          have htailForm :
+              cellForm (D := D) xs ++
+                  [nt MachineHistoryNonterminal.genLeft,
+                    lockedState (D.stateOfNat D.halt), rightBoundary] =
+                us ++ [nt MachineHistoryNonterminal.genLeft] ++ v := by
+            simpa [cellForm] using htail
+          rcases ih htailForm with ⟨hus, hv⟩
+          rw [hus, hv]
+          exact ⟨rfl, rfl⟩
+
+theorem genLeft_lockedLeft_context {D : MachineDescription}
+    (left : List (Option Bool))
+    {u v : SententialForm Bool (NT D)}
+    (hx : lockedLeftForm D left =
+      u ++ [nt MachineHistoryNonterminal.genLeft] ++ v) :
+    u = [leftBoundary] ++ cellForm (D := D) left ∧
+      v = [lockedState (D.stateOfNat D.halt), rightBoundary] := by
+  cases u with
+  | nil =>
+      simp [lockedLeftForm, leftBoundary, nt] at hx
+  | cons a us =>
+      simp [lockedLeftForm] at hx
+      rcases hx with ⟨ha, htail⟩
+      subst a
+      have htailForm :
+          cellForm (D := D) left ++
+              [nt MachineHistoryNonterminal.genLeft,
+                lockedState (D.stateOfNat D.halt), rightBoundary] =
+            us ++ [nt MachineHistoryNonterminal.genLeft] ++ v := by
+        simpa [lockedLeftForm] using htail
+      rcases genLeft_cellForm_context left htailForm with ⟨hus, hv⟩
+      subst us
+      subst v
+      simp
+
+theorem genLeft_lockedLeft_pair_context {D : MachineDescription}
+    (left : List (Option Bool)) (q : Fin (D.stateCount + 1))
+    {u v : SententialForm Bool (NT D)}
+    (hx : lockedLeftForm D left =
+      u ++ [nt MachineHistoryNonterminal.genLeft, lockedState q] ++ v) :
+    u = [leftBoundary] ++ cellForm (D := D) left ∧
+      q = D.stateOfNat D.halt ∧ v = [rightBoundary] := by
+  have hxSingle :
+      lockedLeftForm D left =
+        u ++ [nt MachineHistoryNonterminal.genLeft] ++
+          (lockedState q :: v) := by
+    simpa [List.append_assoc] using hx
+  rcases genLeft_lockedLeft_context left hxSingle with ⟨hu, hv⟩
+  subst u
+  simp at hv
+  rcases hv with ⟨hq, hv⟩
+  cases hq
+  exact ⟨rfl, rfl, hv⟩
+
+theorem genRight_not_mem_cellForm {D : MachineDescription}
+    (xs : List (Option Bool)) :
+    nt MachineHistoryNonterminal.genRight ∉ cellForm (D := D) xs := by
+  induction xs with
+  | nil =>
+      simp [cellForm]
+  | cons x xs ih =>
+      cases x <;> simp [cellForm, cell, nt]
+
+theorem genRight_not_mem_tail {D : MachineDescription} :
+    nt MachineHistoryNonterminal.genRight ∉
+      ([rightBoundary] : SententialForm Bool (NT D)) := by
+  simp [nt, rightBoundary]
+
+theorem genRight_cellForm_context {D : MachineDescription}
+    (right : List (Option Bool))
+    {u v : SententialForm Bool (NT D)}
+    (hx : cellForm (D := D) right ++ [rightBoundary] =
+      u ++ [nt MachineHistoryNonterminal.genRight] ++ v) :
+    False := by
+  induction right generalizing u with
+  | nil =>
+      simp [cellForm] at hx
+      cases u with
+      | nil =>
+          simp [rightBoundary, nt] at hx
+      | cons a us =>
+          simp at hx
+  | cons x xs ih =>
+      simp [cellForm] at hx
+      cases u with
+      | nil =>
+          simp at hx
+          rcases hx with ⟨hbad, _⟩
+          cases x <;> simp [cell, nt] at hbad
+      | cons a us =>
+          simp at hx
+          rcases hx with ⟨ha, htail⟩
+          subst a
+          have htailForm :
+              cellForm (D := D) xs ++ [rightBoundary] =
+                us ++ [nt MachineHistoryNonterminal.genRight] ++ v := by
+            simpa [cellForm] using htail
+          exact ih htailForm
+
+theorem genRight_cellForm_locked_context {D : MachineDescription}
+    (left : List (Option Bool)) (head : Option Bool)
+    (right : List (Option Bool))
+    {u v : SententialForm Bool (NT D)}
+    (hx : cellForm (D := D) left ++
+        [lockedState (D.stateOfNat D.halt), cell head,
+          nt MachineHistoryNonterminal.genRight] ++
+        cellForm right ++ [rightBoundary] =
+      u ++ [nt MachineHistoryNonterminal.genRight] ++ v) :
+    u = cellForm (D := D) left ++
+        [lockedState (D.stateOfNat D.halt), cell head] ∧
+      v = cellForm (D := D) right ++ [rightBoundary] := by
+  induction left generalizing u with
+  | nil =>
+      simp [cellForm] at hx ⊢
+      cases u with
+      | nil =>
+          simp [lockedState, nt] at hx
+      | cons a us =>
+          simp at hx
+          rcases hx with ⟨ha, htail⟩
+          subst a
+          cases us with
+          | nil =>
+              simp [cell, nt] at htail
+          | cons b us =>
+              simp at htail
+              rcases htail with ⟨hb, htail⟩
+              subst b
+              cases us with
+              | nil =>
+                  simp at htail
+                  exact ⟨rfl, htail.symm⟩
+              | cons c us =>
+                  simp at htail
+                  rcases htail with ⟨hc, htail⟩
+                  subst c
+                  exact False.elim
+                    (genRight_cellForm_context right
+                      (by simpa [cellForm] using htail))
+  | cons x xs ih =>
+      simp [cellForm] at hx ⊢
+      cases u with
+      | nil =>
+          simp at hx
+          rcases hx with ⟨hbad, _⟩
+          cases x <;> simp [cell, nt] at hbad
+      | cons a us =>
+          simp at hx
+          rcases hx with ⟨ha, htail⟩
+          subst a
+          have htailForm :
+              cellForm (D := D) xs ++
+                  [lockedState (D.stateOfNat D.halt), cell head,
+                    nt MachineHistoryNonterminal.genRight] ++
+                  cellForm right ++ [rightBoundary] =
+                us ++ [nt MachineHistoryNonterminal.genRight] ++ v := by
+            simpa [cellForm, List.append_assoc] using htail
+          rcases ih htailForm with ⟨hus, hv⟩
+          subst us
+          subst v
+          simp [cellForm]
+
+theorem genRight_lockedRight_context {D : MachineDescription}
+    (left : List (Option Bool)) (head : Option Bool)
+    (right : List (Option Bool))
+    {u v : SententialForm Bool (NT D)}
+    (hx : lockedRightForm D left head right =
+      u ++ [nt MachineHistoryNonterminal.genRight] ++ v) :
+    u = [leftBoundary] ++ cellForm (D := D) left ++
+        [lockedState (D.stateOfNat D.halt), cell head] ∧
+      v = cellForm (D := D) right ++ [rightBoundary] := by
+  cases u with
+  | nil =>
+      simp [lockedRightForm, leftBoundary, nt] at hx
+  | cons a us =>
+      simp [lockedRightForm] at hx
+      rcases hx with ⟨ha, htail⟩
+      subst a
+      have htailForm :
+          cellForm (D := D) left ++
+              [lockedState (D.stateOfNat D.halt), cell head,
+                nt MachineHistoryNonterminal.genRight] ++
+              cellForm right ++ [rightBoundary] =
+            us ++ [nt MachineHistoryNonterminal.genRight] ++ v := by
+        simpa [lockedRightForm, List.append_assoc] using htail
+      rcases genRight_cellForm_locked_context left head right htailForm with
+        ⟨hus, hv⟩
+      subst us
+      subst v
+      simp [cellForm]
+
+theorem genRight_lockedRight_triple_context {D : MachineDescription}
+    (left : List (Option Bool)) (head : Option Bool)
+    (right : List (Option Bool)) (q : Fin (D.stateCount + 1))
+    (h : Option Bool)
+    {u v : SententialForm Bool (NT D)}
+    (hx : lockedRightForm D left head right =
+      u ++ [lockedState q, cell h, nt MachineHistoryNonterminal.genRight] ++
+        v) :
+    u = [leftBoundary] ++ cellForm (D := D) left ∧
+      q = D.stateOfNat D.halt ∧ h = head ∧
+      v = cellForm (D := D) right ++ [rightBoundary] := by
+  have hxSingle :
+      lockedRightForm D left head right =
+        (u ++ [lockedState q, cell h]) ++
+          [nt MachineHistoryNonterminal.genRight] ++ v := by
+    simpa using hx
+  rcases genRight_lockedRight_context left head right hxSingle with
+    ⟨hu, hv⟩
+  have hprefix :
+      u ++ [lockedState q, cell h] =
+        [leftBoundary] ++ cellForm (D := D) left ++
+          [lockedState (D.stateOfNat D.halt), cell head] := hu
+  have hlen := congrArg List.length hprefix
+  simp at hlen
+  have huLen : u.length =
+      ([leftBoundary] ++ cellForm (D := D) left).length := by
+    simpa using hlen
+  have hu :
+      u = [leftBoundary] ++ cellForm (D := D) left := by
+    have htakeLeft :
+        (u ++ [lockedState q, cell h]).take
+            ([leftBoundary] ++ cellForm (D := D) left).length = u := by
+      rw [← huLen]
+      simp
+    have htakeRight :
+        (([leftBoundary] ++ cellForm (D := D) left) ++
+            [lockedState (D.stateOfNat D.halt), cell head]).take
+            ([leftBoundary] ++ cellForm (D := D) left).length =
+          [leftBoundary] ++ cellForm (D := D) left := by
+      simp
+    have htaken := congrArg
+      (fun xs => xs.take
+        ([leftBoundary] ++ cellForm (D := D) left).length) hprefix
+    have htaken' :
+        (u ++ [lockedState q, cell h]).take
+            ([leftBoundary] ++ cellForm (D := D) left).length =
+          (([leftBoundary] ++ cellForm (D := D) left) ++
+              [lockedState (D.stateOfNat D.halt), cell head]).take
+            ([leftBoundary] ++ cellForm (D := D) left).length := by
+      simpa using htaken
+    rw [← htakeLeft]
+    exact htaken'.trans htakeRight
+  subst u
+  simp at hprefix
+  rcases hprefix with ⟨hq, hh⟩
+  cases hq
+  cases hh
+  exact ⟨rfl, rfl, rfl, hv⟩
+
+theorem append_singleton_eq_append_singleton {α : Type}
+    {u p : List α} {x y : α}
+    (h : u ++ [x] = p ++ [y]) :
+    u = p ∧ x = y := by
+  have hlen := congrArg List.length h
+  simp at hlen
+  have huLen : u.length = p.length := by omega
+  have hu : u = p := by
+    have htakeLeft : (u ++ [x]).take p.length = u := by
+      rw [← huLen]
+      simp
+    have htakeRight : (p ++ [y]).take p.length = p := by
+      simp
+    have htaken := congrArg (fun xs => xs.take p.length) h
+    have htaken' : (u ++ [x]).take p.length =
+        (p ++ [y]).take p.length := by
+      simpa using htaken
+    rw [← htakeLeft]
+    exact htaken'.trans htakeRight
+  subst u
+  simp at h
+  exact ⟨rfl, h⟩
+
+theorem state_cellForm_context {D : MachineDescription}
+    (left : List (Option Bool)) (q0 : Fin (D.stateCount + 1))
+    (head : Option Bool) (right : List (Option Bool))
+    {u v : SententialForm Bool (NT D)} (q : Fin (D.stateCount + 1))
+    (hx : cellForm (D := D) left ++ [state q0, cell head] ++
+        cellForm right ++ [rightBoundary] =
+      u ++ [state q] ++ v) :
+    u = cellForm (D := D) left ∧ q = q0 ∧
+      v = [cell head] ++ cellForm (D := D) right ++ [rightBoundary] := by
+  induction left generalizing u with
+  | nil =>
+      simp [cellForm] at hx ⊢
+      cases u with
+      | nil =>
+          simp at hx
+          rcases hx with ⟨hq, hv⟩
+          cases hq
+          exact ⟨rfl, rfl, hv.symm⟩
+      | cons a us =>
+          simp at hx
+          rcases hx with ⟨ha, htail⟩
+          subst a
+          have hmem :
+              state q ∈
+                cell head :: (List.map cell right ++ [rightBoundary]) := by
+            rw [htail]
+            simp
+          simp [cell, state, nt, rightBoundary] at hmem
+  | cons x xs ih =>
+      simp [cellForm] at hx ⊢
+      cases u with
+      | nil =>
+          simp at hx
+          rcases hx with ⟨hbad, _⟩
+          cases x <;> simp [cell, state, nt] at hbad
+      | cons a us =>
+          simp at hx
+          rcases hx with ⟨ha, htail⟩
+          subst a
+          have htailForm :
+              cellForm (D := D) xs ++ [state q0, cell head] ++
+                  cellForm right ++ [rightBoundary] =
+                us ++ [state q] ++ v := by
+            simpa [cellForm, List.append_assoc] using htail
+          rcases ih htailForm with ⟨hus, hq, hv⟩
+          subst us
+          subst q
+          subst v
+          simp [cellForm]
+
+theorem state_config_context {D : MachineDescription}
+    (c : MachineDescription.Configuration)
+    {u v : SententialForm Bool (NT D)} (q : Fin (D.stateCount + 1))
+    (hx : configForm D c = u ++ [state q] ++ v) :
+    u = [leftBoundary] ++ cellForm (D := D) c.tape.left.reverse ∧
+      q = D.stateOfNat c.state ∧
+      v = [cell c.tape.head] ++ cellForm (D := D) c.tape.right ++
+        [rightBoundary] := by
+  cases u with
+  | nil =>
+      simp [configForm, leftBoundary, state, nt] at hx
+  | cons a us =>
+      simp [configForm] at hx
+      rcases hx with ⟨ha, htail⟩
+      subst a
+      have htailForm :
+          cellForm (D := D) c.tape.left.reverse ++
+              [state (D.stateOfNat c.state), cell c.tape.head] ++
+              cellForm c.tape.right ++ [rightBoundary] =
+            us ++ [state q] ++ v := by
+        simpa [configForm, cellForm, List.append_assoc] using htail
+      rcases state_cellForm_context c.tape.left.reverse
+          (D.stateOfNat c.state) c.tape.head c.tape.right q htailForm with
+        ⟨hus, hq, hv⟩
+      subst us
+      subst q
+      subst v
+      simp [cellForm]
+
+theorem leftBoundary_config_context {D : MachineDescription}
+    (c : MachineDescription.Configuration)
+    {u v : SententialForm Bool (NT D)}
+    (hx : configForm D c = u ++ [leftBoundary] ++ v) :
+    u = [] ∧
+      v = cellForm (D := D) c.tape.left.reverse ++
+        [state (D.stateOfNat c.state), cell c.tape.head] ++
+        cellForm c.tape.right ++ [rightBoundary] := by
+  cases u with
+  | nil =>
+      simp [configForm, cellForm] at hx ⊢
+      exact hx.symm
+  | cons a us =>
+      simp [configForm] at hx
+      rcases hx with ⟨ha, htail⟩
+      subst a
+      have hmem :
+          leftBoundary ∈
+            (List.map cell c.tape.left).reverse ++
+              state (D.stateOfNat c.state) ::
+              cell c.tape.head ::
+              (List.map cell c.tape.right ++ [rightBoundary]) := by
+        rw [htail]
+        simp
+      simp [cell, state, nt, leftBoundary, rightBoundary] at hmem
+
+theorem lockedLeft_leftGenerator_yields {D : MachineDescription}
+    (left : List (Option Bool)) (c : Option Bool)
+    {u v y : SententialForm Bool (NT D)}
+    (hx : lockedLeftForm D left =
+      u ++ [nt MachineHistoryNonterminal.genLeft] ++ v)
+    (hy : y = u ++ [cell c, nt MachineHistoryNonterminal.genLeft] ++ v) :
+    HistorySoundForm D y := by
+  rcases genLeft_lockedLeft_context left hx with ⟨hu, hv⟩
+  subst u
+  subst v
+  subst y
+  simpa [lockedLeftForm, cellForm, List.map_append, List.append_assoc] using
+    (HistorySoundForm.lockedLeft (D := D) (left ++ [c]))
+
+theorem lockedLeft_headSelection_yields {D : MachineDescription}
+    (left : List (Option Bool)) (q : Fin (D.stateCount + 1))
+    (h : Option Bool)
+    {u v y : SententialForm Bool (NT D)}
+    (hx : lockedLeftForm D left =
+      u ++ [nt MachineHistoryNonterminal.genLeft, lockedState q] ++ v)
+    (hy : y = u ++
+      [lockedState q, cell h, nt MachineHistoryNonterminal.genRight] ++ v) :
+    HistorySoundForm D y := by
+  rcases genLeft_lockedLeft_pair_context left q hx with ⟨hu, hq, hv⟩
+  subst u
+  subst q
+  subst v
+  subst y
+  simpa [lockedRightForm, cellForm, List.append_assoc] using
+    (HistorySoundForm.lockedRight (D := D) left h [])
+
+theorem lockedRight_rightGenerator_yields {D : MachineDescription}
+    (left : List (Option Bool)) (head c : Option Bool)
+    (right : List (Option Bool))
+    {u v y : SententialForm Bool (NT D)}
+    (hx : lockedRightForm D left head right =
+      u ++ [nt MachineHistoryNonterminal.genRight] ++ v)
+    (hy : y = u ++ [nt MachineHistoryNonterminal.genRight, cell c] ++ v) :
+    HistorySoundForm D y := by
+  rcases genRight_lockedRight_context left head right hx with ⟨hu, hv⟩
+  subst u
+  subst v
+  subst y
+  simpa [lockedRightForm, cellForm, List.append_assoc] using
+    (HistorySoundForm.lockedRight (D := D) left head (c :: right))
+
+theorem lockedRight_activation_yields {D : MachineDescription}
+    (hD : D.WellFormed)
+    (left : List (Option Bool)) (head : Option Bool)
+    (right : List (Option Bool)) (q : Fin (D.stateCount + 1))
+    (h : Option Bool)
+    {u v y : SententialForm Bool (NT D)}
+    (hx : lockedRightForm D left head right =
+      u ++ [lockedState q, cell h, nt MachineHistoryNonterminal.genRight] ++ v)
+    (hy : y = u ++ [state q, cell h] ++ v) :
+    HistorySoundForm D y := by
+  rcases genRight_lockedRight_triple_context left head right q h hx with
+    ⟨hu, hq, hh, hv⟩
+  subst u
+  subst q
+  subst h
+  subst v
+  subst y
+  let c : MachineDescription.Configuration :=
+    { state := D.halt
+      tape := { left := left.reverse, head := head, right := right } }
+  have hstate : c.state < D.stateCount := hD.right.right.left
+  have hc : ReachesHalt D c := reachesHalt_of_state_halt (D := D) rfl
+  simpa [configForm, lockedRightForm, cellForm, c, List.map_reverse,
+    List.reverse_reverse, List.append_assoc] using
+    (HistorySoundForm.active (D := D) c hstate hc)
+
+theorem historySoundForm_lockedLeft_yields {D : MachineDescription}
+    (left : List (Option Bool))
+    {y : SententialForm Bool (NT D)}
+    (h : GeneralGrammar.Yields (grammar D) (lockedLeftForm D left) y) :
+    HistorySoundForm D y := by
+  rcases h with ⟨u, v, lhs, rhs, hprod, hx, hy⟩
+  rcases hprod with ⟨rule, hrule, hlhsRule, hrhsRule⟩
+  simp at hy
+  subst y
+  rw [← hrhsRule]
+  rw [← hlhsRule] at hx
+  simp [productions, startProduction, leftGeneratorProductions,
+    headSelectionProductions, rightGeneratorProductions,
+    activationProductions, reverseStepProductions,
+    reverseRightMoveProductions, reverseLeftMoveProductions,
+    cleanupProductions, prod,
+    MachineHistoryNonterminal.optionBoolValues] at hrule
+  rcases hrule with h | h | h | h | hselection | h | h | h |
+    hactivation | htrans | h | h | h | h | h | h
+  · subst rule
+    have hmem : nt MachineHistoryNonterminal.start ∈ lockedLeftForm D left := by
+      rw [hx]
+      simp [nt]
+    simp [lockedLeftForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+      lockedState] at hmem
+  · subst rule
+    simpa [prod] using
+      lockedLeft_leftGenerator_yields (D := D) left none hx rfl
+  · subst rule
+    simpa [prod] using
+      lockedLeft_leftGenerator_yields (D := D) left (some false) hx rfl
+  · subst rule
+    simpa [prod] using
+      lockedLeft_leftGenerator_yields (D := D) left (some true) hx rfl
+  · rcases hselection with ⟨q, hq | hq | hq⟩
+    · subst rule
+      simpa [prod] using
+        lockedLeft_headSelection_yields (D := D) left q none hx rfl
+    · subst rule
+      simpa [prod] using
+        lockedLeft_headSelection_yields (D := D) left q (some false) hx rfl
+    · subst rule
+      simpa [prod] using
+        lockedLeft_headSelection_yields (D := D) left q (some true) hx rfl
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.genRight ∈ lockedLeftForm D left := by
+      rw [hx]
+      simp [nt]
+    simp [lockedLeftForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+      lockedState] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.genRight ∈ lockedLeftForm D left := by
+      rw [hx]
+      simp [nt]
+    simp [lockedLeftForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+      lockedState] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.genRight ∈ lockedLeftForm D left := by
+      rw [hx]
+      simp [nt]
+    simp [lockedLeftForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+      lockedState] at hmem
+  · rcases hactivation with ⟨q, hq | hq | hq⟩ <;> subst rule
+    all_goals
+      have hmem :
+          nt MachineHistoryNonterminal.genRight ∈
+            lockedLeftForm D left := by
+        rw [hx]
+        simp [nt]
+      simp [lockedLeftForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+        lockedState] at hmem
+  · rcases htrans with ⟨t, ht, hmemRule⟩
+    cases hmove : t.move <;> simp [hmove] at hmemRule
+    all_goals
+      rcases hmemRule with hmemRule | hmemRule | hmemRule | hmemRule <;>
+        subst rule
+      all_goals
+        have hmem :
+            state (D.stateOfNat t.target) ∈ lockedLeftForm D left := by
+          rw [hx]
+          simp [state, nt]
+        simp [lockedLeftForm, cellForm, cell, state, nt, leftBoundary,
+          rightBoundary, lockedState] at hmem
+  · subst rule
+    have hmem :
+        state (D.stateOfNat D.start) ∈ lockedLeftForm D left := by
+      rw [hx]
+      simp [state, nt]
+    simp [lockedLeftForm, cellForm, cell, state, nt, leftBoundary,
+      rightBoundary, lockedState] at hmem
+  · subst rule
+    have hmem :
+        state (D.stateOfNat D.start) ∈ lockedLeftForm D left := by
+      rw [hx]
+      simp [state, nt]
+    simp [lockedLeftForm, cellForm, cell, state, nt, leftBoundary,
+      rightBoundary, lockedState] at hmem
+  · subst rule
+    have hmem :
+        state (D.stateOfNat D.start) ∈ lockedLeftForm D left := by
+      rw [hx]
+      simp [state, nt]
+    simp [lockedLeftForm, cellForm, cell, state, nt, leftBoundary,
+      rightBoundary, lockedState] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.cleanup ∈ lockedLeftForm D left := by
+      rw [hx]
+      simp [nt]
+    simp [lockedLeftForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+      lockedState] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.cleanup ∈ lockedLeftForm D left := by
+      rw [hx]
+      simp [nt]
+    simp [lockedLeftForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+      lockedState] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.cleanup ∈ lockedLeftForm D left := by
+      rw [hx]
+      simp [nt]
+    simp [lockedLeftForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+      lockedState] at hmem
+
+theorem historySoundForm_lockedRight_yields {D : MachineDescription}
+    (hD : D.WellFormed)
+    (left : List (Option Bool)) (head : Option Bool)
+    (right : List (Option Bool))
+    {y : SententialForm Bool (NT D)}
+    (h : GeneralGrammar.Yields (grammar D)
+      (lockedRightForm D left head right) y) :
+    HistorySoundForm D y := by
+  rcases h with ⟨u, v, lhs, rhs, hprod, hx, hy⟩
+  rcases hprod with ⟨rule, hrule, hlhsRule, hrhsRule⟩
+  simp at hy
+  subst y
+  rw [← hrhsRule]
+  rw [← hlhsRule] at hx
+  simp [productions, startProduction, leftGeneratorProductions,
+    headSelectionProductions, rightGeneratorProductions,
+    activationProductions, reverseStepProductions,
+    reverseRightMoveProductions, reverseLeftMoveProductions,
+    cleanupProductions, prod,
+    MachineHistoryNonterminal.optionBoolValues] at hrule
+  rcases hrule with h | h | h | h | hselection | h | h | h |
+    hactivation | htrans | h | h | h | h | h | h
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.start ∈
+          lockedRightForm D left head right := by
+      rw [hx]
+      simp [nt]
+    simp [lockedRightForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+      lockedState] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.genLeft ∈
+          lockedRightForm D left head right := by
+      rw [hx]
+      simp [nt]
+    simp [lockedRightForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+      lockedState] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.genLeft ∈
+          lockedRightForm D left head right := by
+      rw [hx]
+      simp [nt]
+    simp [lockedRightForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+      lockedState] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.genLeft ∈
+          lockedRightForm D left head right := by
+      rw [hx]
+      simp [nt]
+    simp [lockedRightForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+      lockedState] at hmem
+  · rcases hselection with ⟨q, hq | hq | hq⟩ <;> subst rule
+    all_goals
+      have hmem :
+          nt MachineHistoryNonterminal.genLeft ∈
+            lockedRightForm D left head right := by
+        rw [hx]
+        simp [nt]
+      simp [lockedRightForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+        lockedState] at hmem
+  · subst rule
+    simpa [prod] using
+      lockedRight_rightGenerator_yields
+        (D := D) left head none right hx rfl
+  · subst rule
+    simpa [prod] using
+      lockedRight_rightGenerator_yields
+        (D := D) left head (some false) right hx rfl
+  · subst rule
+    simpa [prod] using
+      lockedRight_rightGenerator_yields
+        (D := D) left head (some true) right hx rfl
+  · rcases hactivation with ⟨q, hq | hq | hq⟩
+    · subst rule
+      simpa [prod] using
+        lockedRight_activation_yields
+          (D := D) hD left head right q none hx rfl
+    · subst rule
+      simpa [prod] using
+        lockedRight_activation_yields
+          (D := D) hD left head right q (some false) hx rfl
+    · subst rule
+      simpa [prod] using
+        lockedRight_activation_yields
+          (D := D) hD left head right q (some true) hx rfl
+  · rcases htrans with ⟨t, ht, hmemRule⟩
+    cases hmove : t.move <;> simp [hmove] at hmemRule
+    all_goals
+      rcases hmemRule with hmemRule | hmemRule | hmemRule | hmemRule <;>
+        subst rule
+      all_goals
+        have hmem :
+            state (D.stateOfNat t.target) ∈
+              lockedRightForm D left head right := by
+          rw [hx]
+          simp [state, nt]
+        simp [lockedRightForm, cellForm, cell, state, nt, leftBoundary,
+          rightBoundary, lockedState] at hmem
+  · subst rule
+    have hmem :
+        state (D.stateOfNat D.start) ∈
+          lockedRightForm D left head right := by
+      rw [hx]
+      simp [state, nt]
+    simp [lockedRightForm, cellForm, cell, state, nt, leftBoundary,
+      rightBoundary, lockedState] at hmem
+  · subst rule
+    have hmem :
+        state (D.stateOfNat D.start) ∈
+          lockedRightForm D left head right := by
+      rw [hx]
+      simp [state, nt]
+    simp [lockedRightForm, cellForm, cell, state, nt, leftBoundary,
+      rightBoundary, lockedState] at hmem
+  · subst rule
+    have hmem :
+        state (D.stateOfNat D.start) ∈
+          lockedRightForm D left head right := by
+      rw [hx]
+      simp [state, nt]
+    simp [lockedRightForm, cellForm, cell, state, nt, leftBoundary,
+      rightBoundary, lockedState] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.cleanup ∈
+          lockedRightForm D left head right := by
+      rw [hx]
+      simp [nt]
+    simp [lockedRightForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+      lockedState] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.cleanup ∈
+          lockedRightForm D left head right := by
+      rw [hx]
+      simp [nt]
+    simp [lockedRightForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+      lockedState] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.cleanup ∈
+          lockedRightForm D left head right := by
+      rw [hx]
+      simp [nt]
+    simp [lockedRightForm, cellForm, cell, nt, leftBoundary, rightBoundary,
+      lockedState] at hmem
+
+theorem reverseRightMoveCell_active_yields {D : MachineDescription}
+    (hD : D.WellFormed)
+    (c : MachineDescription.Configuration)
+    (hstate : c.state < D.stateCount) (hc : ReachesHalt D c)
+    (t : TransitionDescription) (ht : t ∈ D.transitions)
+    (hmove : t.move = Direction.right) (d : Option Bool)
+    {u v y : SententialForm Bool (NT D)}
+    (hx : configForm D c =
+      u ++ [cell t.write, state (D.stateOfNat t.target), cell d] ++ v)
+    (hy : y =
+      u ++ [state (D.stateOfNat t.source), cell t.read, cell d] ++ v) :
+    HistorySoundForm D y := by
+  subst y
+  rcases c with ⟨qcur, T⟩
+  rcases T with ⟨leftTape, headCur, rightTape⟩
+  let cur : MachineDescription.Configuration :=
+    { state := qcur,
+      tape := { left := leftTape, head := headCur, right := rightTape } }
+  have hxState :
+      configForm D cur =
+        (u ++ [cell t.write]) ++ [state (D.stateOfNat t.target)] ++
+          (cell d :: v) := by
+    simpa [cur, List.append_assoc] using hx
+  rcases state_config_context cur (D.stateOfNat t.target) hxState with
+    ⟨hprefix, hq, hsuffix⟩
+  simp [cur] at hprefix hq hsuffix
+  have hqnat : t.target = qcur := by
+    have htTarget : t.target < D.stateCount :=
+      (hD.right.right.right.left t ht).right
+    exact stateOfNat_injective_of_state_bound
+      (D := D) htTarget hstate hq
+  subst qcur
+  simp [cellForm] at hsuffix
+  rcases hsuffix with ⟨hhead, hv⟩
+  cases hhead
+  subst v
+  cases leftTape with
+  | nil =>
+      cases u <;> simp [cellForm, leftBoundary, cell, nt] at hprefix
+  | cons l restLeft =>
+      have hprefix' :
+          u ++ [cell t.write] =
+            ([leftBoundary] ++ cellForm (D := D) restLeft.reverse) ++
+              [cell l] := by
+        simpa [cellForm, List.map_append, List.append_assoc] using hprefix
+      rcases append_singleton_eq_append_singleton hprefix' with ⟨hu, hcell⟩
+      cases hcell
+      subst u
+      rcases lookupTransition_action_of_mem_matches
+          (D := D) hD (source := t.source) (read := t.read) ht rfl rfl with
+        ⟨actual, hlookup, hwrite, hmoveActual, htarget⟩
+      let pred : MachineDescription.Configuration :=
+        { state := t.source
+          tape := { left := restLeft, head := t.read, right := d :: rightTape } }
+      let current : MachineDescription.Configuration :=
+        { state := t.target
+          tape := { left := t.write :: restLeft, head := d, right := rightTape } }
+      have hstep : D.stepConfig pred = some current := by
+        simp [MachineDescription.stepConfig, pred, current, Tape.read, hlookup,
+          Tape.write, Tape.move, Tape.moveRight, hwrite, hmoveActual, htarget,
+          hmove]
+      have hsourceState : pred.state < D.stateCount :=
+        (hD.right.right.right.left t ht).left
+      have hpredReach : ReachesHalt D pred := reachesHalt_step hstep hc
+      simpa [configForm, pred, current, cellForm, List.map_reverse,
+        List.reverse_cons, List.map_append, List.append_assoc] using
+        (HistorySoundForm.active (D := D) pred hsourceState hpredReach)
+
+theorem reverseRightMoveBoundary_active_yields {D : MachineDescription}
+    (hD : D.WellFormed)
+    (c : MachineDescription.Configuration)
+    (hstate : c.state < D.stateCount) (hc : ReachesHalt D c)
+    (t : TransitionDescription) (ht : t ∈ D.transitions)
+    (hmove : t.move = Direction.right)
+    {u v y : SententialForm Bool (NT D)}
+    (hx : configForm D c =
+      u ++ [cell t.write, state (D.stateOfNat t.target), cell none,
+        rightBoundary] ++ v)
+    (hy : y =
+      u ++ [state (D.stateOfNat t.source), cell t.read,
+        rightBoundary] ++ v) :
+    HistorySoundForm D y := by
+  subst y
+  rcases c with ⟨qcur, T⟩
+  rcases T with ⟨leftTape, headCur, rightTape⟩
+  let cur : MachineDescription.Configuration :=
+    { state := qcur,
+      tape := { left := leftTape, head := headCur, right := rightTape } }
+  have hxState :
+      configForm D cur =
+        (u ++ [cell t.write]) ++ [state (D.stateOfNat t.target)] ++
+          ([cell none, rightBoundary] ++ v) := by
+    simpa [cur, List.append_assoc] using hx
+  rcases state_config_context cur (D.stateOfNat t.target) hxState with
+    ⟨hprefix, hq, hsuffix⟩
+  simp [cur] at hprefix hq hsuffix
+  have hqnat : t.target = qcur := by
+    have htTarget : t.target < D.stateCount :=
+      (hD.right.right.right.left t ht).right
+    exact stateOfNat_injective_of_state_bound
+      (D := D) htTarget hstate hq
+  subst qcur
+  simp [cellForm] at hsuffix
+  rcases hsuffix with ⟨hhead, htail⟩
+  cases hhead
+  cases rightTape with
+  | nil =>
+      simp at htail
+      subst v
+      cases leftTape with
+      | nil =>
+          cases u <;> simp [cellForm, leftBoundary, cell, nt] at hprefix
+      | cons l restLeft =>
+          have hprefix' :
+              u ++ [cell t.write] =
+                ([leftBoundary] ++ cellForm (D := D) restLeft.reverse) ++
+                  [cell l] := by
+            simpa [cellForm, List.map_append, List.append_assoc] using hprefix
+          rcases append_singleton_eq_append_singleton hprefix' with
+            ⟨hu, hcell⟩
+          cases hcell
+          subst u
+          rcases lookupTransition_action_of_mem_matches
+              (D := D) hD (source := t.source) (read := t.read) ht
+              rfl rfl with
+            ⟨actual, hlookup, hwrite, hmoveActual, htarget⟩
+          let pred : MachineDescription.Configuration :=
+            { state := t.source
+              tape := { left := restLeft, head := t.read, right := [] } }
+          let current : MachineDescription.Configuration :=
+            { state := t.target
+              tape := { left := t.write :: restLeft, head := none, right := [] } }
+          have hstep : D.stepConfig pred = some current := by
+            simp [MachineDescription.stepConfig, pred, current, Tape.read,
+              hlookup, Tape.write, Tape.move, Tape.moveRight, hwrite,
+              hmoveActual, htarget, hmove]
+          have hsourceState : pred.state < D.stateCount :=
+            (hD.right.right.right.left t ht).left
+          have hpredReach : ReachesHalt D pred := reachesHalt_step hstep hc
+          simpa [configForm, pred, current, cellForm, List.map_reverse,
+            List.reverse_cons, List.map_append, List.append_assoc] using
+            (HistorySoundForm.active (D := D) pred hsourceState hpredReach)
+  | cons r restRight =>
+      cases r <;> simp [cell, rightBoundary, nt] at htail
+
+theorem reverseLeftMoveCell_active_yields {D : MachineDescription}
+    (hD : D.WellFormed)
+    (c : MachineDescription.Configuration)
+    (hstate : c.state < D.stateCount) (hc : ReachesHalt D c)
+    (t : TransitionDescription) (ht : t ∈ D.transitions)
+    (hmove : t.move = Direction.left) (l : Option Bool)
+    {u v y : SententialForm Bool (NT D)}
+    (hx : configForm D c =
+      u ++ [state (D.stateOfNat t.target), cell l, cell t.write] ++ v)
+    (hy : y =
+      u ++ [cell l, state (D.stateOfNat t.source), cell t.read] ++ v) :
+    HistorySoundForm D y := by
+  subst y
+  rcases c with ⟨qcur, T⟩
+  rcases T with ⟨leftTape, headCur, rightTape⟩
+  let cur : MachineDescription.Configuration :=
+    { state := qcur,
+      tape := { left := leftTape, head := headCur, right := rightTape } }
+  have hxState :
+      configForm D cur =
+        u ++ [state (D.stateOfNat t.target)] ++
+          (cell l :: cell t.write :: v) := by
+    simpa [cur, List.append_assoc] using hx
+  rcases state_config_context cur (D.stateOfNat t.target) hxState with
+    ⟨hu, hq, hsuffix⟩
+  simp [cur] at hu hq hsuffix
+  have hqnat : t.target = qcur := by
+    have htTarget : t.target < D.stateCount :=
+      (hD.right.right.right.left t ht).right
+    exact stateOfNat_injective_of_state_bound
+      (D := D) htTarget hstate hq
+  subst qcur
+  subst u
+  simp [cellForm] at hsuffix
+  rcases hsuffix with ⟨hhead, htail⟩
+  cases hhead
+  cases rightTape with
+  | nil =>
+      cases v <;> simp [cell, nt, rightBoundary] at htail
+  | cons r restRight =>
+      simp at htail
+      rcases htail with ⟨hcell, hv⟩
+      cases hcell
+      subst v
+      rcases lookupTransition_action_of_mem_matches
+          (D := D) hD (source := t.source) (read := t.read) ht rfl rfl with
+        ⟨actual, hlookup, hwrite, hmoveActual, htarget⟩
+      let pred : MachineDescription.Configuration :=
+        { state := t.source
+          tape := { left := l :: leftTape, head := t.read, right := restRight } }
+      let current : MachineDescription.Configuration :=
+        { state := t.target
+          tape := { left := leftTape, head := l, right := t.write :: restRight } }
+      have hstep : D.stepConfig pred = some current := by
+        simp [MachineDescription.stepConfig, pred, current, Tape.read, hlookup,
+          Tape.write, Tape.move, Tape.moveLeft, hwrite, hmoveActual, htarget,
+          hmove]
+      have hsourceState : pred.state < D.stateCount :=
+        (hD.right.right.right.left t ht).left
+      have hpredReach : ReachesHalt D pred := reachesHalt_step hstep hc
+      simpa [configForm, pred, current, cellForm, List.map_reverse,
+        List.reverse_cons, List.map_append, List.append_assoc] using
+        (HistorySoundForm.active (D := D) pred hsourceState hpredReach)
+
+theorem reverseLeftMoveBoundary_active_yields {D : MachineDescription}
+    (hD : D.WellFormed)
+    (c : MachineDescription.Configuration)
+    (hstate : c.state < D.stateCount) (hc : ReachesHalt D c)
+    (t : TransitionDescription) (ht : t ∈ D.transitions)
+    (hmove : t.move = Direction.left)
+    {u v y : SententialForm Bool (NT D)}
+    (hx : configForm D c =
+      u ++ [leftBoundary, state (D.stateOfNat t.target), cell none,
+        cell t.write] ++ v)
+    (hy : y =
+      u ++ [leftBoundary, state (D.stateOfNat t.source),
+        cell t.read] ++ v) :
+    HistorySoundForm D y := by
+  subst y
+  rcases c with ⟨qcur, T⟩
+  rcases T with ⟨leftTape, headCur, rightTape⟩
+  let cur : MachineDescription.Configuration :=
+    { state := qcur,
+      tape := { left := leftTape, head := headCur, right := rightTape } }
+  have hxLB :
+      configForm D cur =
+        u ++ [leftBoundary] ++
+          ([state (D.stateOfNat t.target), cell none, cell t.write] ++ v) := by
+    simpa [cur, List.append_assoc] using hx
+  rcases leftBoundary_config_context cur hxLB with ⟨hu, htail⟩
+  simp [cur] at hu htail
+  subst u
+  have hxState :
+      cellForm (D := D) leftTape.reverse ++
+          [state (D.stateOfNat qcur), cell headCur] ++
+          cellForm rightTape ++ [rightBoundary] =
+        [] ++ [state (D.stateOfNat t.target)] ++
+          (cell none :: cell t.write :: v) := by
+    simpa [List.append_assoc] using htail.symm
+  rcases state_cellForm_context leftTape.reverse (D.stateOfNat qcur)
+      headCur rightTape (D.stateOfNat t.target) hxState with
+    ⟨hleft, hq, hsuffix⟩
+  have hqnat : t.target = qcur := by
+    have htTarget : t.target < D.stateCount :=
+      (hD.right.right.right.left t ht).right
+    exact stateOfNat_injective_of_state_bound
+      (D := D) htTarget hstate hq
+  subst qcur
+  cases leftTape with
+  | nil =>
+      simp [cellForm] at hsuffix
+      rcases hsuffix with ⟨hhead, htail2⟩
+      cases hhead
+      cases rightTape with
+      | nil =>
+          cases v <;> simp [cell, nt, rightBoundary] at htail2
+      | cons r restRight =>
+          simp at htail2
+          rcases htail2 with ⟨hcell, hv⟩
+          cases hcell
+          subst v
+          rcases lookupTransition_action_of_mem_matches
+              (D := D) hD (source := t.source) (read := t.read) ht
+              rfl rfl with
+            ⟨actual, hlookup, hwrite, hmoveActual, htarget⟩
+          let pred : MachineDescription.Configuration :=
+            { state := t.source
+              tape := { left := [], head := t.read, right := restRight } }
+          let current : MachineDescription.Configuration :=
+            { state := t.target
+              tape := { left := [], head := none, right := t.write :: restRight } }
+          have hstep : D.stepConfig pred = some current := by
+            simp [MachineDescription.stepConfig, pred, current, Tape.read,
+              hlookup, Tape.write, Tape.move, Tape.moveLeft, hwrite,
+              hmoveActual, htarget, hmove]
+          have hsourceState : pred.state < D.stateCount :=
+            (hD.right.right.right.left t ht).left
+          have hpredReach : ReachesHalt D pred := reachesHalt_step hstep hc
+          simpa [configForm, pred, current, cellForm, List.map_reverse,
+            List.reverse_cons, List.map_append, List.append_assoc] using
+            (HistorySoundForm.active (D := D) pred hsourceState hpredReach)
+  | cons l restLeft =>
+      simp [cellForm, List.map_append] at hleft
+
+theorem cleanupEmpty_active_yields {D : MachineDescription}
+    (hD : D.WellFormed)
+    (c : MachineDescription.Configuration)
+    (hstate : c.state < D.stateCount) (hc : ReachesHalt D c)
+    {u v y : SententialForm Bool (NT D)}
+    (hx : configForm D c =
+      u ++ [leftBoundary, state (D.stateOfNat D.start), cell none,
+        rightBoundary] ++ v)
+    (hy : y = u ++ ([] : SententialForm Bool (NT D)) ++ v) :
+    HistorySoundForm D y := by
+  subst y
+  rcases c with ⟨qcur, T⟩
+  rcases T with ⟨leftTape, headCur, rightTape⟩
+  let cur : MachineDescription.Configuration :=
+    { state := qcur,
+      tape := { left := leftTape, head := headCur, right := rightTape } }
+  have hxLB :
+      configForm D cur = u ++ [leftBoundary] ++
+        ([state (D.stateOfNat D.start), cell none, rightBoundary] ++ v) := by
+    simpa [cur, List.append_assoc] using hx
+  rcases leftBoundary_config_context cur hxLB with ⟨hu, htail⟩
+  simp [cur] at hu htail
+  subst u
+  have hxState :
+      cellForm (D := D) leftTape.reverse ++
+          [state (D.stateOfNat qcur), cell headCur] ++
+          cellForm rightTape ++ [rightBoundary] =
+        [] ++ [state (D.stateOfNat D.start)] ++
+          (cell none :: rightBoundary :: v) := by
+    simpa [List.append_assoc] using htail.symm
+  rcases state_cellForm_context leftTape.reverse (D.stateOfNat qcur)
+      headCur rightTape (D.stateOfNat D.start) hxState with
+    ⟨hleft, hq, hsuffix⟩
+  have hqnat : D.start = qcur :=
+    stateOfNat_injective_of_state_bound
+      (D := D) hD.right.left hstate hq
+  subst qcur
+  cases leftTape with
+  | nil =>
+      simp [cellForm] at hsuffix
+      rcases hsuffix with ⟨hhead, htail2⟩
+      cases hhead
+      cases rightTape with
+      | nil =>
+          simp at htail2
+          subst v
+          have hinitReach : ReachesHalt D (D.initial []) := by
+            simpa [MachineDescription.initial, Tape.input, Tape.blank] using hc
+          simpa [SententialForm.terminalWord] using
+            (HistorySoundForm.terminal (D := D) []
+              (haltsOnInput_of_initial_reachesHalt hinitReach))
+      | cons r restRight =>
+          cases r <;> simp [cell, nt, rightBoundary] at htail2
+  | cons l restLeft =>
+      simp [cellForm, List.map_append] at hleft
+
+theorem cleanupStart_active_yields {D : MachineDescription}
+    (hD : D.WellFormed)
+    (c : MachineDescription.Configuration)
+    (hstate : c.state < D.stateCount) (hc : ReachesHalt D c)
+    (b : Bool)
+    {u v y : SententialForm Bool (NT D)}
+    (hx : configForm D c =
+      u ++ [leftBoundary, state (D.stateOfNat D.start), cell (some b)] ++ v)
+    (hy : y = u ++ [tm b, nt MachineHistoryNonterminal.cleanup] ++ v) :
+    HistorySoundForm D y := by
+  subst y
+  rcases c with ⟨qcur, T⟩
+  rcases T with ⟨leftTape, headCur, rightTape⟩
+  let cur : MachineDescription.Configuration :=
+    { state := qcur,
+      tape := { left := leftTape, head := headCur, right := rightTape } }
+  have hxLB :
+      configForm D cur = u ++ [leftBoundary] ++
+        ([state (D.stateOfNat D.start), cell (some b)] ++ v) := by
+    simpa [cur, List.append_assoc] using hx
+  rcases leftBoundary_config_context cur hxLB with ⟨hu, htail⟩
+  simp [cur] at hu htail
+  subst u
+  have hxState :
+      cellForm (D := D) leftTape.reverse ++
+          [state (D.stateOfNat qcur), cell headCur] ++
+          cellForm rightTape ++ [rightBoundary] =
+        [] ++ [state (D.stateOfNat D.start)] ++
+          (cell (some b) :: v) := by
+    simpa [List.append_assoc] using htail.symm
+  rcases state_cellForm_context leftTape.reverse (D.stateOfNat qcur)
+      headCur rightTape (D.stateOfNat D.start) hxState with
+    ⟨hleft, hq, hsuffix⟩
+  have hqnat : D.start = qcur :=
+    stateOfNat_injective_of_state_bound
+      (D := D) hD.right.left hstate hq
+  subst qcur
+  cases leftTape with
+  | nil =>
+      simp [cellForm] at hsuffix
+      rcases hsuffix with ⟨hhead, hv⟩
+      cases hhead
+      subst v
+      refine HistorySoundForm.cleanup (D := D) [b] rightTape ?_
+      intro suffix hrest
+      have hinitReach : ReachesHalt D (D.initial (b :: suffix)) := by
+        simpa [MachineDescription.initial, Tape.input, hrest] using hc
+      simpa [Word.Concat] using
+        haltsOnInput_of_initial_reachesHalt hinitReach
+  | cons l restLeft =>
+      simp [cellForm, List.map_append] at hleft
+
+theorem cleanup_context {D : MachineDescription}
+    (pref : Word Bool) (rest : List (Option Bool))
+    {u v : SententialForm Bool (NT D)}
+    (hx : cleanupForm (D := D) pref rest =
+      u ++ [nt MachineHistoryNonterminal.cleanup] ++ v) :
+    u = SententialForm.terminalWord pref ∧
+      v = cellForm (D := D) rest ++ [rightBoundary] := by
+  induction pref generalizing u with
+  | nil =>
+      simp [cleanupForm, SententialForm.terminalWord] at hx ⊢
+      cases u with
+      | nil =>
+          simp at hx
+          exact ⟨rfl, hx.symm⟩
+      | cons a us =>
+          simp at hx
+          rcases hx with ⟨ha, htail⟩
+          subst a
+          have hmem :
+              nt MachineHistoryNonterminal.cleanup ∈
+                cellForm (D := D) rest ++ [rightBoundary] := by
+            rw [htail]
+            simp
+          simp [cellForm, cell, nt, rightBoundary] at hmem
+  | cons b pref ih =>
+      simp [cleanupForm, SententialForm.terminalWord] at hx ⊢
+      cases u with
+      | nil =>
+          simp [nt] at hx
+      | cons a us =>
+          simp at hx
+          rcases hx with ⟨ha, htail⟩
+          subst a
+          have htailForm :
+              SententialForm.terminalWord pref ++
+                  [nt MachineHistoryNonterminal.cleanup] ++
+                  cellForm rest ++ [rightBoundary] =
+                us ++ [nt MachineHistoryNonterminal.cleanup] ++ v := by
+            simpa [cleanupForm, SententialForm.terminalWord,
+              List.append_assoc] using htail
+          rcases ih htailForm with ⟨hus, hv⟩
+          subst us
+          subst v
+          simp [SententialForm.terminalWord]
+
+theorem cleanupCell_yields {D : MachineDescription}
+    (pref : Word Bool) (rest : List (Option Bool))
+    (hclean : forall suffix : Word Bool,
+      rest = suffix.map some ->
+        D.HaltsOnInput (Word.Concat pref suffix))
+    (b : Bool)
+    {u v y : SententialForm Bool (NT D)}
+    (hx : cleanupForm (D := D) pref rest =
+      u ++ [nt MachineHistoryNonterminal.cleanup, cell (some b)] ++ v)
+    (hy : y = u ++ [tm b, nt MachineHistoryNonterminal.cleanup] ++ v) :
+    HistorySoundForm D y := by
+  subst y
+  have hxCleanup :
+      cleanupForm (D := D) pref rest =
+        u ++ [nt MachineHistoryNonterminal.cleanup] ++
+          (cell (some b) :: v) := by
+    simpa [List.append_assoc] using hx
+  rcases cleanup_context pref rest hxCleanup with ⟨hu, hv⟩
+  subst u
+  cases rest with
+  | nil =>
+      simp [cellForm, cell, nt, rightBoundary] at hv
+  | cons r restTail =>
+      simp [cellForm] at hv
+      rcases hv with ⟨hcell, hv⟩
+      cases r with
+      | none =>
+          simp [cell, nt] at hcell
+      | some rb =>
+          cases hcell
+          subst v
+          have hnext : HistorySoundForm D
+              (cleanupForm (D := D) (Word.Concat pref [b]) restTail) := by
+            refine
+              HistorySoundForm.cleanup
+                (D := D) (Word.Concat pref [b]) restTail ?_
+            intro suffix hrest
+            have horig : some b :: restTail = (b :: suffix).map some := by
+              simp [hrest]
+            have hh := hclean (b :: suffix) horig
+            simpa [Word.Concat, List.append_assoc] using hh
+          simpa [cleanupForm, SententialForm.terminalWord, Word.Concat,
+            List.append_assoc] using hnext
+
+theorem cleanupEnd_yields {D : MachineDescription}
+    (pref : Word Bool) (rest : List (Option Bool))
+    (hclean : forall suffix : Word Bool,
+      rest = suffix.map some ->
+        D.HaltsOnInput (Word.Concat pref suffix))
+    {u v y : SententialForm Bool (NT D)}
+    (hx : cleanupForm (D := D) pref rest =
+      u ++ [nt MachineHistoryNonterminal.cleanup, rightBoundary] ++ v)
+    (hy : y = u ++ ([] : SententialForm Bool (NT D)) ++ v) :
+    HistorySoundForm D y := by
+  subst y
+  have hxCleanup :
+      cleanupForm (D := D) pref rest =
+        u ++ [nt MachineHistoryNonterminal.cleanup] ++
+          (rightBoundary :: v) := by
+    simpa [List.append_assoc] using hx
+  rcases cleanup_context pref rest hxCleanup with ⟨hu, hv⟩
+  subst u
+  cases rest with
+  | nil =>
+      simp [cellForm] at hv
+      subst v
+      have hh := hclean [] rfl
+      simpa using
+        (HistorySoundForm.terminal (D := D) pref
+          (by simpa [Word.Concat] using hh))
+  | cons r restTail =>
+      cases r <;> simp [cellForm, cell, nt, rightBoundary] at hv
+
+theorem historySoundForm_active_yields {D : MachineDescription}
+    (hD : D.WellFormed)
+    (c : MachineDescription.Configuration)
+    (hstate : c.state < D.stateCount) (hc : ReachesHalt D c)
+    {y : SententialForm Bool (NT D)}
+    (h : GeneralGrammar.Yields (grammar D) (configForm D c) y) :
+    HistorySoundForm D y := by
+  rcases h with ⟨u, v, lhs, rhs, hprod, hx, hy⟩
+  rcases hprod with ⟨rule, hrule, hlhsRule, hrhsRule⟩
+  simp at hy
+  subst y
+  rw [← hrhsRule]
+  rw [← hlhsRule] at hx
+  simp [productions, startProduction, leftGeneratorProductions,
+    headSelectionProductions, rightGeneratorProductions,
+    activationProductions, reverseStepProductions,
+    reverseRightMoveProductions, reverseLeftMoveProductions,
+    cleanupProductions, prod,
+    MachineHistoryNonterminal.optionBoolValues] at hrule
+  rcases hrule with h | h | h | h | hselection | h | h | h |
+    hactivation | htrans | h | h | h | h | h | h
+  · subst rule
+    have hmem : nt MachineHistoryNonterminal.start ∈ configForm D c := by
+      rw [hx]
+      simp [nt]
+    simp [configForm, cell, state, nt, leftBoundary, rightBoundary] at hmem
+  · subst rule
+    have hmem : nt MachineHistoryNonterminal.genLeft ∈ configForm D c := by
+      rw [hx]
+      simp [nt]
+    simp [configForm, cell, state, nt, leftBoundary, rightBoundary] at hmem
+  · subst rule
+    have hmem : nt MachineHistoryNonterminal.genLeft ∈ configForm D c := by
+      rw [hx]
+      simp [nt]
+    simp [configForm, cell, state, nt, leftBoundary, rightBoundary] at hmem
+  · subst rule
+    have hmem : nt MachineHistoryNonterminal.genLeft ∈ configForm D c := by
+      rw [hx]
+      simp [nt]
+    simp [configForm, cell, state, nt, leftBoundary, rightBoundary] at hmem
+  · rcases hselection with ⟨q, hq | hq | hq⟩ <;> subst rule
+    all_goals
+      have hmem : nt MachineHistoryNonterminal.genLeft ∈ configForm D c := by
+        rw [hx]
+        simp [nt]
+      simp [configForm, cell, state, nt, leftBoundary, rightBoundary] at hmem
+  · subst rule
+    have hmem : nt MachineHistoryNonterminal.genRight ∈ configForm D c := by
+      rw [hx]
+      simp [nt]
+    simp [configForm, cell, state, nt, leftBoundary, rightBoundary] at hmem
+  · subst rule
+    have hmem : nt MachineHistoryNonterminal.genRight ∈ configForm D c := by
+      rw [hx]
+      simp [nt]
+    simp [configForm, cell, state, nt, leftBoundary, rightBoundary] at hmem
+  · subst rule
+    have hmem : nt MachineHistoryNonterminal.genRight ∈ configForm D c := by
+      rw [hx]
+      simp [nt]
+    simp [configForm, cell, state, nt, leftBoundary, rightBoundary] at hmem
+  · rcases hactivation with ⟨q, hq | hq | hq⟩ <;> subst rule
+    all_goals
+      have hmem : lockedState q ∈ configForm D c := by
+        rw [hx]
+        simp [lockedState, nt]
+      simp [configForm, cell, state, lockedState, nt, leftBoundary,
+        rightBoundary] at hmem
+  · rcases htrans with ⟨t, ht, hmemRule⟩
+    cases hmove : t.move <;> simp [hmove] at hmemRule
+    · rcases hmemRule with hnone | hfalse | htrue | hboundary
+      · subst rule
+        simpa [prod] using
+          reverseLeftMoveCell_active_yields
+            (D := D) hD c hstate hc t ht hmove none hx rfl
+      · subst rule
+        simpa [prod] using
+          reverseLeftMoveCell_active_yields
+            (D := D) hD c hstate hc t ht hmove (some false) hx rfl
+      · subst rule
+        simpa [prod] using
+          reverseLeftMoveCell_active_yields
+            (D := D) hD c hstate hc t ht hmove (some true) hx rfl
+      · subst rule
+        simpa [prod] using
+          reverseLeftMoveBoundary_active_yields
+            (D := D) hD c hstate hc t ht hmove hx rfl
+    · rcases hmemRule with hnone | hfalse | htrue | hboundary
+      · subst rule
+        simpa [prod] using
+          reverseRightMoveCell_active_yields
+            (D := D) hD c hstate hc t ht hmove none hx rfl
+      · subst rule
+        simpa [prod] using
+          reverseRightMoveCell_active_yields
+            (D := D) hD c hstate hc t ht hmove (some false) hx rfl
+      · subst rule
+        simpa [prod] using
+          reverseRightMoveCell_active_yields
+            (D := D) hD c hstate hc t ht hmove (some true) hx rfl
+      · subst rule
+        simpa [prod] using
+          reverseRightMoveBoundary_active_yields
+            (D := D) hD c hstate hc t ht hmove hx rfl
+  · subst rule
+    simpa [prod] using
+      cleanupEmpty_active_yields (D := D) hD c hstate hc hx rfl
+  · subst rule
+    simpa [prod] using
+      cleanupStart_active_yields (D := D) hD c hstate hc false hx rfl
+  · subst rule
+    simpa [prod] using
+      cleanupStart_active_yields (D := D) hD c hstate hc true hx rfl
+  · subst rule
+    have hmem : nt MachineHistoryNonterminal.cleanup ∈ configForm D c := by
+      rw [hx]
+      simp [nt]
+    simp [configForm, cell, state, nt, leftBoundary, rightBoundary] at hmem
+  · subst rule
+    have hmem : nt MachineHistoryNonterminal.cleanup ∈ configForm D c := by
+      rw [hx]
+      simp [nt]
+    simp [configForm, cell, state, nt, leftBoundary, rightBoundary] at hmem
+  · subst rule
+    have hmem : nt MachineHistoryNonterminal.cleanup ∈ configForm D c := by
+      rw [hx]
+      simp [nt]
+    simp [configForm, cell, state, nt, leftBoundary, rightBoundary] at hmem
+
+theorem historySoundForm_cleanup_yields {D : MachineDescription}
+    (pref : Word Bool) (rest : List (Option Bool))
+    (hclean : forall suffix : Word Bool,
+      rest = suffix.map some ->
+        D.HaltsOnInput (Word.Concat pref suffix))
+    {y : SententialForm Bool (NT D)}
+    (h : GeneralGrammar.Yields (grammar D)
+      (cleanupForm (D := D) pref rest) y) :
+    HistorySoundForm D y := by
+  rcases h with ⟨u, v, lhs, rhs, hprod, hx, hy⟩
+  rcases hprod with ⟨rule, hrule, hlhsRule, hrhsRule⟩
+  simp at hy
+  subst y
+  rw [← hrhsRule]
+  rw [← hlhsRule] at hx
+  simp [productions, startProduction, leftGeneratorProductions,
+    headSelectionProductions, rightGeneratorProductions,
+    activationProductions, reverseStepProductions,
+    reverseRightMoveProductions, reverseLeftMoveProductions,
+    cleanupProductions, prod,
+    MachineHistoryNonterminal.optionBoolValues] at hrule
+  rcases hrule with h | h | h | h | hselection | h | h | h |
+    hactivation | htrans | h | h | h | h | h | h
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.start ∈
+          cleanupForm (D := D) pref rest := by
+      rw [hx]
+      simp [nt]
+    simp [cleanupForm, cellForm, cell, nt, rightBoundary,
+      nonterminal_not_mem_terminalWord] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.genLeft ∈
+          cleanupForm (D := D) pref rest := by
+      rw [hx]
+      simp [nt]
+    simp [cleanupForm, cellForm, cell, nt, rightBoundary,
+      nonterminal_not_mem_terminalWord] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.genLeft ∈
+          cleanupForm (D := D) pref rest := by
+      rw [hx]
+      simp [nt]
+    simp [cleanupForm, cellForm, cell, nt, rightBoundary,
+      nonterminal_not_mem_terminalWord] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.genLeft ∈
+          cleanupForm (D := D) pref rest := by
+      rw [hx]
+      simp [nt]
+    simp [cleanupForm, cellForm, cell, nt, rightBoundary,
+      nonterminal_not_mem_terminalWord] at hmem
+  · rcases hselection with ⟨q, hq | hq | hq⟩ <;> subst rule
+    all_goals
+      have hmem :
+          nt MachineHistoryNonterminal.genLeft ∈
+            cleanupForm (D := D) pref rest := by
+        rw [hx]
+        simp [nt]
+      simp [cleanupForm, cellForm, cell, nt, rightBoundary,
+        nonterminal_not_mem_terminalWord] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.genRight ∈
+          cleanupForm (D := D) pref rest := by
+      rw [hx]
+      simp [nt]
+    simp [cleanupForm, cellForm, cell, nt, rightBoundary,
+      nonterminal_not_mem_terminalWord] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.genRight ∈
+          cleanupForm (D := D) pref rest := by
+      rw [hx]
+      simp [nt]
+    simp [cleanupForm, cellForm, cell, nt, rightBoundary,
+      nonterminal_not_mem_terminalWord] at hmem
+  · subst rule
+    have hmem :
+        nt MachineHistoryNonterminal.genRight ∈
+          cleanupForm (D := D) pref rest := by
+      rw [hx]
+      simp [nt]
+    simp [cleanupForm, cellForm, cell, nt, rightBoundary,
+      nonterminal_not_mem_terminalWord] at hmem
+  · rcases hactivation with ⟨q, hq | hq | hq⟩ <;> subst rule
+    all_goals
+      have hmem :
+          lockedState q ∈ cleanupForm (D := D) pref rest := by
+        rw [hx]
+        simp [lockedState, nt]
+      simp [cleanupForm, cellForm, cell, lockedState, nt, rightBoundary,
+        nonterminal_not_mem_terminalWord] at hmem
+  · rcases htrans with ⟨t, ht, hmemRule⟩
+    cases hmove : t.move <;> simp [hmove] at hmemRule
+    all_goals
+      rcases hmemRule with hmemRule | hmemRule | hmemRule | hmemRule <;>
+        subst rule
+      all_goals
+        have hmem :
+            state (D.stateOfNat t.target) ∈
+              cleanupForm (D := D) pref rest := by
+          rw [hx]
+          simp [state, nt]
+        simp [cleanupForm, cellForm, cell, state, nt, rightBoundary,
+          nonterminal_not_mem_terminalWord] at hmem
+  · subst rule
+    have hmem : leftBoundary ∈ cleanupForm (D := D) pref rest := by
+      rw [hx]
+      simp [leftBoundary, nt]
+    simp [cleanupForm, cellForm, cell, leftBoundary, nt, rightBoundary,
+      nonterminal_not_mem_terminalWord] at hmem
+  · subst rule
+    have hmem : leftBoundary ∈ cleanupForm (D := D) pref rest := by
+      rw [hx]
+      simp [leftBoundary, nt]
+    simp [cleanupForm, cellForm, cell, leftBoundary, nt, rightBoundary,
+      nonterminal_not_mem_terminalWord] at hmem
+  · subst rule
+    have hmem : leftBoundary ∈ cleanupForm (D := D) pref rest := by
+      rw [hx]
+      simp [leftBoundary, nt]
+    simp [cleanupForm, cellForm, cell, leftBoundary, nt, rightBoundary,
+      nonterminal_not_mem_terminalWord] at hmem
+  · subst rule
+    simpa [prod] using
+      cleanupCell_yields (D := D) pref rest hclean false hx rfl
+  · subst rule
+    simpa [prod] using
+      cleanupCell_yields (D := D) pref rest hclean true hx rfl
+  · subst rule
+    simpa [prod] using
+      cleanupEnd_yields (D := D) pref rest hclean hx rfl
+
+theorem terminalWord_no_yields {D : MachineDescription}
+    (w : Word Bool) {y : SententialForm Bool (NT D)}
+    (h : GeneralGrammar.Yields (grammar D) (SententialForm.terminalWord w) y) :
+    False := by
+  rcases h with ⟨u, v, lhs, rhs, hprod, hx, hy⟩
+  have hcontains := (grammar D).lhsContainsNonterminal lhs rhs hprod
+  rcases containsNonterminal_exists_mem (D := D) hcontains with ⟨A, hA⟩
+  have hmem : Symbol.nonterminal A ∈ SententialForm.terminalWord w := by
+    rw [hx]
+    simp [hA]
+  exact nonterminal_not_mem_terminalWord A w hmem
+
+theorem historySoundForm_yields {D : MachineDescription}
+    (hD : D.WellFormed)
+    {x y : SententialForm Bool (NT D)}
+    (hshape : HistorySoundForm D x)
+    (h : GeneralGrammar.Yields (grammar D) x y) :
+    HistorySoundForm D y := by
+  cases hshape with
+  | start =>
+      exact historySoundForm_start_yields h
+  | lockedLeft left =>
+      exact historySoundForm_lockedLeft_yields left h
+  | lockedRight left head right =>
+      exact historySoundForm_lockedRight_yields hD left head right h
+  | active c hstate hc =>
+      exact historySoundForm_active_yields hD c hstate hc h
+  | cleanup pref rest hclean =>
+      exact historySoundForm_cleanup_yields pref rest hclean h
+  | terminal w hw =>
+      exact False.elim (terminalWord_no_yields w h)
+
+theorem historySoundForm_derives {D : MachineDescription}
+    (hD : D.WellFormed)
+    {x y : SententialForm Bool (NT D)}
+    (hshape : HistorySoundForm D x)
+    (h : GeneralGrammar.Derives (grammar D) x y) :
+    HistorySoundForm D y := by
+  induction h with
+  | refl x =>
+      exact hshape
+  | step hstep hrest ih =>
+      exact ih (historySoundForm_yields hD hshape hstep)
+
+theorem sound {D : MachineDescription} {w : Word Bool}
+    (hD : D.WellFormed)
+    (h : w ∈ GeneralGrammar.GeneratedLanguage (grammar D)) :
+    D.HaltsOnInput w := by
+  have hshape :
+      HistorySoundForm D (SententialForm.terminalWord w) :=
+    historySoundForm_derives (D := D) hD
+      (HistorySoundForm.start (D := D)) h
+  exact historySoundForm_terminal hshape rfl
+
 theorem leftGenerator_derives (D : MachineDescription)
     (xs : List (Option Bool)) :
     GeneralGrammar.Derives (grammar D)
@@ -1861,6 +3653,16 @@ theorem complete {D : MachineDescription} {w : Word Bool}
     (GeneralGrammar.derives_trans hrun
       (cleanup_initial_derives D w))
 
+theorem generated_language {D : MachineDescription}
+    (hD : D.WellFormed) :
+    Language.Equal
+      (GeneralGrammar.GeneratedLanguage (grammar D))
+      (fun w : Word Bool => D.HaltsOnInput w) := by
+  intro w
+  constructor
+  · exact sound hD
+  · exact complete
+
 end MachineDescriptionHistoryGrammar
 
 def MachineDescriptionToFiniteGeneralGrammarConstruction : Prop :=
@@ -1871,6 +3673,14 @@ def MachineDescriptionToFiniteGeneralGrammarConstruction : Prop :=
         Language.Equal
           (GeneralGrammar.GeneratedLanguage G)
           (fun w : Word Bool => D.HaltsOnInput w)
+
+theorem machineDescriptionToFiniteGeneralGrammarConstruction :
+    MachineDescriptionToFiniteGeneralGrammarConstruction := by
+  intro D hD
+  exact ⟨MachineDescriptionHistoryGrammar.NT D,
+    MachineDescriptionHistoryGrammar.grammar D,
+    MachineDescriptionHistoryGrammar.hasFiniteProductions D,
+    MachineDescriptionHistoryGrammar.generated_language hD⟩
 
 def MachineDescriptionAcceptsToFiniteGeneralGrammarConstruction : Prop :=
   forall {D : MachineDescription}, forall {L : Language Bool},

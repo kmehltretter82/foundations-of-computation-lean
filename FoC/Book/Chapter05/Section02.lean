@@ -2855,6 +2855,21 @@ theorem concrete_machine_history_grammar_complete
       (ConcreteMachineHistoryGrammar D) :=
   Computability.MachineDescriptionHistoryGrammar.complete h
 
+theorem concrete_machine_history_grammar_sound
+    {D : MachineDescription} (hD : D.WellFormed) {w : Word Bool}
+    (h : w ∈ GeneralGrammarGeneratedLanguage
+      (ConcreteMachineHistoryGrammar D)) :
+    D.HaltsOnInput w :=
+  Computability.MachineDescriptionHistoryGrammar.sound hD h
+
+theorem concrete_machine_history_grammar_generated
+    {D : MachineDescription} (hD : D.WellFormed) :
+    Language.Equal
+      (GeneralGrammarGeneratedLanguage
+        (ConcreteMachineHistoryGrammar D))
+      (fun w : Word Bool => D.HaltsOnInput w) :=
+  Computability.MachineDescriptionHistoryGrammar.generated_language hD
+
 /-!
 **Finite trace tables.**  A finite table of accepting traces gives a genuine
 finite-production grammar: the production list contains one rule from the start
