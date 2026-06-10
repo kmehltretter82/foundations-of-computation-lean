@@ -1409,6 +1409,23 @@ theorem decodeBoolWord_encodeBoolWordAppend
   simp [decodeBoolWord, encodeBoolWordAppend,
     decodeCellList_encodeCellListAppend, cellsToWord?_map_some]
 
+theorem decodeBoolWord_encodeBoolWord (w : Word Bool) :
+    decodeBoolWord (encodeBoolWord w) = some (w, []) := by
+  simpa [encodeBoolWord] using
+    decodeBoolWord_encodeBoolWordAppend w []
+
+theorem encodeBoolWord_injective :
+    Function.Injective encodeBoolWord := by
+  intro w v h
+  have hdecode :
+      decodeBoolWord (encodeBoolWord w) =
+        decodeBoolWord (encodeBoolWord v) := by
+    rw [h]
+  rw [decodeBoolWord_encodeBoolWord w,
+    decodeBoolWord_encodeBoolWord v] at hdecode
+  cases hdecode
+  rfl
+
 /-!
 ## Executable tape-code primitives
 
@@ -2417,6 +2434,133 @@ theorem totalStageAttemptCodePrimitive_stageInputCode
   totalStageAttemptCode_stageInputCode accept reject w stage
 
 end DovetailLayout
+
+structure DovetailControllerLayout where
+  input : Word Bool
+  stage : Nat
+  result : Word Bool
+
+namespace DovetailControllerLayout
+
+def encodeAppend (C : DovetailControllerLayout)
+    (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
+  MachineCodeSymbol.header ::
+    DovetailLayout.stageInputCodeAppend C.input C.stage
+      (encodeBoolWordAppend C.result suffix)
+
+def encode (C : DovetailControllerLayout) :
+    Word MachineCodeSymbol :=
+  encodeAppend C []
+
+def decode (tokens : Word MachineCodeSymbol) :
+    Option (DovetailControllerLayout × Word MachineCodeSymbol) :=
+  match tokens with
+  | MachineCodeSymbol.header :: rest =>
+      match DovetailLayout.decodeStageInput rest with
+      | none => none
+      | some ((input, stage), rest) =>
+          match decodeBoolWord rest with
+          | none => none
+          | some (result, suffix) =>
+              some ({ input := input, stage := stage, result := result },
+                suffix)
+  | _ => none
+
+theorem decode_encodeAppend
+    (C : DovetailControllerLayout)
+    (suffix : Word MachineCodeSymbol) :
+    decode (encodeAppend C suffix) = some (C, suffix) := by
+  cases C
+  simp [encodeAppend, decode,
+    DovetailLayout.decodeStageInput_stageInputCodeAppend,
+    decodeBoolWord_encodeBoolWordAppend]
+
+theorem decode_encode (C : DovetailControllerLayout) :
+    decode (encode C) = some (C, []) :=
+  decode_encodeAppend C []
+
+def decodeComplete (tokens : Word MachineCodeSymbol) :
+    Option DovetailControllerLayout :=
+  match decode tokens with
+  | some (C, []) => some C
+  | _ => none
+
+theorem decodeComplete_encode (C : DovetailControllerLayout) :
+    decodeComplete (encode C) = some C := by
+  simp [decodeComplete, decode_encode]
+
+def initial (w : Word Bool) : DovetailControllerLayout where
+  input := w
+  stage := 0
+  result := []
+
+def stageInputCode (C : DovetailControllerLayout) :
+    Word MachineCodeSymbol :=
+  DovetailLayout.stageInputCode C.input C.stage
+
+def withResult (C : DovetailControllerLayout)
+    (result : Word Bool) : DovetailControllerLayout :=
+  { C with result := result }
+
+def nextStage (C : DovetailControllerLayout) :
+    DovetailControllerLayout :=
+  { C with stage := C.stage + 1, result := [] }
+
+def decodeAttemptResultCode
+    (tokens : Word MachineCodeSymbol) : Option (Word Bool) :=
+  match decodeBoolWord tokens with
+  | some (result, []) => some result
+  | _ => none
+
+theorem decodeAttemptResultCode_encodeBoolWord
+    (result : Word Bool) :
+    decodeAttemptResultCode (encodeBoolWord result) = some result := by
+  simp [decodeAttemptResultCode, encodeBoolWord,
+    decodeBoolWord_encodeBoolWordAppend]
+
+def rawOutput? : Word Bool -> Option (Word Bool)
+  | b :: [] => some [b]
+  | _ => none
+
+theorem rawOutput_nil :
+    rawOutput? [] = none :=
+  rfl
+
+theorem rawOutput_singleton (b : Bool) :
+    rawOutput? [b] = some [b] :=
+  rfl
+
+def totalAttemptResult
+    (accept reject : MachineDescription)
+    (C : DovetailControllerLayout) : Word Bool :=
+  DovetailLayout.outputWordFromOption
+    (boundedDovetailOutput accept reject C.input C.stage)
+
+theorem rawOutput_outputWordFromOption_boundedDovetailOutput
+    (accept reject : MachineDescription)
+    (w : Word Bool) (stage : Nat) :
+    rawOutput?
+        (DovetailLayout.outputWordFromOption
+          (boundedDovetailOutput accept reject w stage)) =
+      boundedDovetailOutput accept reject w stage := by
+  by_cases haccept : hitsByBool accept w stage = true
+  · simp [boundedDovetailOutput, haccept, DovetailLayout.outputWordFromOption,
+      rawOutput?]
+  · by_cases hreject : hitsByBool reject w stage = true
+    · simp [boundedDovetailOutput, haccept, hreject,
+        DovetailLayout.outputWordFromOption, rawOutput?]
+    · simp [boundedDovetailOutput, haccept, hreject,
+        DovetailLayout.outputWordFromOption, rawOutput?]
+
+theorem rawOutput_totalAttemptResult
+    (accept reject : MachineDescription)
+    (C : DovetailControllerLayout) :
+    rawOutput? (totalAttemptResult accept reject C) =
+      boundedDovetailOutput accept reject C.input C.stage :=
+  rawOutput_outputWordFromOption_boundedDovetailOutput
+    accept reject C.input C.stage
+
+end DovetailControllerLayout
 
 theorem boundedDovetailOutput_eq_dovetailProgram_run
     (accept reject : MachineDescription)

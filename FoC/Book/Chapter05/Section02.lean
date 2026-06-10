@@ -168,6 +168,20 @@ def ConcretePairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstru
     Prop :=
   PairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction
 
+def ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :
+    Prop :=
+  PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction
+
+def ConcretePairedRecognizerDovetailTotalStageAttemptControllerResultRealizes
+    (accept reject : MachineDescription)
+    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+  PairedRecognizerDovetailTotalStageAttemptControllerResultRealizes
+    accept reject P
+
+def ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :
+    Prop :=
+  PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction
+
 def ConcreteFixedDescriptionBoundedSimulatorCodeCompilerConstruction : Prop :=
   FixedDescriptionBoundedSimulatorCodeCompilerConstruction
 
@@ -936,6 +950,15 @@ theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_subro
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputSubroutineRealizer_and_totalStageAttemptSearchDriver
     hattempt hdriver
 
+theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_controller_search_driver
+    (hattempt :
+      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
+    (hdriver :
+      ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputCompiledSubroutine_and_controllerSearchDriver
+    hattempt hdriver
+
 theorem paired_recognizer_dovetail_layout_code_output_realizer_of_subroutine_realizer
     (hrunner :
       ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction) :
@@ -985,6 +1008,16 @@ theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_s
     ConcretePairedRecognizerDovetailCompilerConstruction :=
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_totalStageAttemptCodeOutputSubroutineRealizer_and_totalStageAttemptSearchDriver
     hattempt hdriver
+
+theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_controller_search_driver
+    (hattempt :
+      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
+    (hdriver :
+      ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerDovetailCompilerConstruction :=
+  paired_recognizer_dovetail_compiler_of_bounded_dovetail_table_compiler
+    (bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_controller_search_driver
+      hattempt hdriver)
 
 theorem paired_recognizer_dovetail_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_search_driver
     (hrunner :
@@ -1602,14 +1635,20 @@ attempt primitive whose canonical-input theorem returns exactly the encoded
 bounded-dovetail result for that stage. The direct-controller interface uses
 a total variant of this primitive: no hit is encoded as the empty Boolean word,
 while accepting and rejecting hits are encoded as singleton Boolean words.
-That total result is the contract a reusable finite loop needs in order to
-continue past no-hit stages. A matching search-driver boundary now derives the
-paired-recognizer dovetail compiler from a subroutine-ready total attempt
-machine. The semantic fallback search driver is still closed by an explicit
-staged Boolean search program under the existing description-backed Boolean
-compiler principle; the only lower-level work left, if one wants to avoid that
-semantic compiler principle, is the handwritten transition table for the outer
-loop and raw-output handoff.
+That total result now has its own controller layout and branch view: decoding
+the total attempt output and taking the singleton raw-output branch is proved
+equivalent to the bounded dovetail result for the current stage. The
+controller path also records the stronger normalized-output compiler contract
+needed for sound branching on a subroutine's observed output: the old
+output-realizer contract is one-way, so it cannot rule out spurious halting
+outputs from an arbitrary subroutine. Under the stronger contract, a
+controller-search driver again yields the paired-recognizer dovetail compiler.
+The semantic fallback search driver is still closed by an explicit staged
+Boolean search program under the existing description-backed Boolean compiler
+principle; the lower-level work left, if one wants to avoid that semantic
+compiler principle, is the handwritten transition table that iterates the
+controller state, calls the total-attempt subroutine, and hands off singleton
+results to the raw Boolean output branches.
 Exact compilation of every code primitive is proved
 impossible because erasure cannot produce an exact empty tape window from
 nonempty input. The viable boundary is therefore a normalized-output tape-code
@@ -1752,6 +1791,14 @@ theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_output_real
     ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailTotalStageAttemptCodeOutputRealizer_of_subroutineRealizer
     hcompile
+
+theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_controller_result_realizes
+    (accept reject : MachineDescription) :
+    ConcretePairedRecognizerDovetailTotalStageAttemptControllerResultRealizes
+      accept reject
+      (PairedRecognizerDovetailTotalStageAttemptCode accept reject) :=
+  Computability.pairedRecognizerDovetailTotalStageAttemptCode_controllerResultRealizes
+    accept reject
 
 theorem concrete_fixed_description_step_code_output_realizer_of_configuration_realizer
     {D stepper : MachineDescription}
