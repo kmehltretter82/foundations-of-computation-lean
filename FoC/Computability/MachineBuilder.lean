@@ -2058,6 +2058,115 @@ def outputFromHits (L : DovetailLayout) : Option (Word Bool) :=
   else
     none
 
+def stageInputCodeAppend (w : Word Bool) (stage : Nat)
+    (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
+  encodeBoolWordAppend w (encodeNatAppend stage suffix)
+
+def stageInputCode (w : Word Bool) (stage : Nat) :
+    Word MachineCodeSymbol :=
+  stageInputCodeAppend w stage []
+
+def decodeStageInput (tokens : Word MachineCodeSymbol) :
+    Option ((Word Bool × Nat) × Word MachineCodeSymbol) :=
+  match decodeBoolWord tokens with
+  | none => none
+  | some (w, rest) =>
+      match decodeNat rest with
+      | none => none
+      | some (stage, suffix) => some ((w, stage), suffix)
+
+theorem decodeStageInput_stageInputCodeAppend
+    (w : Word Bool) (stage : Nat)
+    (suffix : Word MachineCodeSymbol) :
+    decodeStageInput (stageInputCodeAppend w stage suffix) =
+      some ((w, stage), suffix) := by
+  simp [decodeStageInput, stageInputCodeAppend,
+    decodeBoolWord_encodeBoolWordAppend, decodeNat_encodeNatAppend]
+
+theorem decodeStageInput_stageInputCode
+    (w : Word Bool) (stage : Nat) :
+    decodeStageInput (stageInputCode w stage) =
+      some ((w, stage), []) :=
+  decodeStageInput_stageInputCodeAppend w stage []
+
+def decodeStageInputComplete (tokens : Word MachineCodeSymbol) :
+    Option (Word Bool × Nat) :=
+  match decodeStageInput tokens with
+  | some (parsed, []) => some parsed
+  | _ => none
+
+theorem decodeStageInputComplete_stageInputCode
+    (w : Word Bool) (stage : Nat) :
+    decodeStageInputComplete (stageInputCode w stage) =
+      some (w, stage) := by
+  simp [decodeStageInputComplete, decodeStageInput_stageInputCode]
+
+def initialCode (accept reject : MachineDescription)
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match decodeStageInputComplete tokens with
+  | none => none
+  | some (w, stage) => some (encode (initial accept reject w stage))
+
+theorem initialCode_stageInputCode
+    (accept reject : MachineDescription)
+    (w : Word Bool) (stage : Nat) :
+    initialCode accept reject (stageInputCode w stage) =
+      some (encode (initial accept reject w stage)) := by
+  simp [initialCode, decodeStageInputComplete_stageInputCode]
+
+def initialCodePrimitive
+    (accept reject : MachineDescription) : TapeCodePrimitive where
+  transform := initialCode accept reject
+
+theorem initialCodePrimitive_stageInputCode
+    (accept reject : MachineDescription)
+    (w : Word Bool) (stage : Nat) :
+    (initialCodePrimitive accept reject).transform
+        (stageInputCode w stage) =
+      some (encode (initial accept reject w stage)) :=
+  initialCode_stageInputCode accept reject w stage
+
+def outputCode (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match decodeComplete tokens with
+  | none => none
+  | some L =>
+      match outputFromHits L with
+      | none => none
+      | some out => some (encodeBoolWord out)
+
+theorem outputCode_encode_of_outputFromHits_eq_some
+    {L : DovetailLayout} {out : Word Bool}
+    (h : outputFromHits L = some out) :
+    outputCode (encode L) = some (encodeBoolWord out) := by
+  simp [outputCode, decodeComplete_encode, h]
+
+theorem outputCode_encode_of_outputFromHits_eq_none
+    {L : DovetailLayout}
+    (h : outputFromHits L = none) :
+    outputCode (encode L) = none := by
+  simp [outputCode, decodeComplete_encode, h]
+
+def outputCodePrimitive : TapeCodePrimitive where
+  transform := outputCode
+
+def stageAttemptCode (accept reject : MachineDescription)
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match decodeStageInputComplete tokens with
+  | none => none
+  | some (w, stage) =>
+      match outputFromHits
+          (run accept reject stage
+            (initial accept reject w stage)) with
+      | none => none
+      | some out => some (encodeBoolWord out)
+
+def stageAttemptCodePrimitive
+    (accept reject : MachineDescription) : TapeCodePrimitive where
+  transform := stageAttemptCode accept reject
+
 def runCode (accept reject : MachineDescription)
     (tokens : Word MachineCodeSymbol) :
     Option (Word MachineCodeSymbol) :=
@@ -2196,6 +2305,46 @@ theorem outputFromHits_run_initial_eq_boundedDovetailOutput
       boundedDovetailOutput accept reject w limit := by
   simp [outputFromHits, boundedDovetailOutput,
     run_initial_acceptHit, run_initial_rejectHit]
+
+theorem stageAttemptCode_stageInputCode
+    (accept reject : MachineDescription)
+    (w : Word Bool) (stage : Nat) :
+    stageAttemptCode accept reject (stageInputCode w stage) =
+      Option.map encodeBoolWord
+        (boundedDovetailOutput accept reject w stage) := by
+  rw [← outputFromHits_run_initial_eq_boundedDovetailOutput]
+  cases h :
+      outputFromHits
+        (run accept reject stage (initial accept reject w stage)) <;>
+    simp [stageAttemptCode, decodeStageInputComplete_stageInputCode, h]
+
+theorem stageAttemptCode_stageInputCode_of_boundedDovetailOutput_eq_some
+    {accept reject : MachineDescription}
+    {w : Word Bool} {stage : Nat} {out : Word Bool}
+    (h :
+      boundedDovetailOutput accept reject w stage = some out) :
+    stageAttemptCode accept reject (stageInputCode w stage) =
+      some (encodeBoolWord out) := by
+  rw [stageAttemptCode_stageInputCode, h]
+  rfl
+
+theorem stageAttemptCode_stageInputCode_of_boundedDovetailOutput_eq_none
+    {accept reject : MachineDescription}
+    {w : Word Bool} {stage : Nat}
+    (h :
+      boundedDovetailOutput accept reject w stage = none) :
+    stageAttemptCode accept reject (stageInputCode w stage) = none := by
+  rw [stageAttemptCode_stageInputCode, h]
+  rfl
+
+theorem stageAttemptCodePrimitive_stageInputCode
+    (accept reject : MachineDescription)
+    (w : Word Bool) (stage : Nat) :
+    (stageAttemptCodePrimitive accept reject).transform
+        (stageInputCode w stage) =
+      Option.map encodeBoolWord
+        (boundedDovetailOutput accept reject w stage) :=
+  stageAttemptCode_stageInputCode accept reject w stage
 
 end DovetailLayout
 

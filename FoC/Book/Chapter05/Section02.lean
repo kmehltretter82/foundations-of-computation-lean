@@ -160,6 +160,10 @@ def ConcretePairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruc
     Prop :=
   PairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction
 
+def ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction :
+    Prop :=
+  PairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction
+
 def ConcreteFixedDescriptionBoundedSimulatorCodeCompilerConstruction : Prop :=
   FixedDescriptionBoundedSimulatorCodeCompilerConstruction
 
@@ -189,9 +193,21 @@ def BoundedTraceSearchConstruction : Prop :=
 def ConcretePairedRecognizerDovetailLayoutCodeCompilerConstruction : Prop :=
   PairedRecognizerDovetailLayoutCodeCompilerConstruction
 
+def ConcretePairedRecognizerDovetailInitialLayoutCodeOutputRealizerConstruction :
+    Prop :=
+  PairedRecognizerDovetailInitialLayoutCodeOutputRealizerConstruction
+
 def ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction :
     Prop :=
   PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction
+
+def ConcretePairedRecognizerDovetailOutputCodeOutputRealizerConstruction :
+    Prop :=
+  PairedRecognizerDovetailOutputCodeOutputRealizerConstruction
+
+def ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :
+    Prop :=
+  PairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction
 
 def ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction :
     Prop :=
@@ -868,6 +884,15 @@ theorem bounded_dovetail_table_compiler_of_layout_code_output_realizer_and_searc
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputRealizer_and_searchDriver
     hrunner hdriver
 
+theorem bounded_dovetail_table_compiler_of_stage_attempt_code_output_realizer_and_stage_attempt_search_driver
+    (hattempt :
+      ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction)
+    (hdriver :
+      ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_stageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
+    hattempt hdriver
+
 theorem paired_recognizer_dovetail_layout_code_output_realizer_of_subroutine_realizer
     (hrunner :
       ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction) :
@@ -892,6 +917,15 @@ theorem paired_recognizer_dovetail_compiler_of_layout_code_output_realizer_and_s
     ConcretePairedRecognizerDovetailCompilerConstruction :=
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_layoutCodeOutputRealizer_and_searchDriver
     hrunner hdriver
+
+theorem paired_recognizer_dovetail_compiler_of_stage_attempt_code_output_realizer_and_stage_attempt_search_driver
+    (hattempt :
+      ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction)
+    (hdriver :
+      ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerDovetailCompilerConstruction :=
+  Computability.pairedRecognizerDovetailDescriptionCompiler_of_stageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
+    hattempt hdriver
 
 theorem paired_recognizer_dovetail_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_search_driver
     (hrunner :
@@ -1501,6 +1535,16 @@ fragment semantics. For the paired-recognizer dovetailer, the layout runner
 now has a halt-free output-realizer contract and the search-driver interface
 has a subroutine-ready variant, isolating the exact contract needed by the
 future finite transition table that loops around a compiled layout subroutine.
+The controller boundary is now split further into canonical machine-code
+operations: build the initial dovetail layout from the input word and stage
+limit, run the paired layout subroutine, and inspect the resulting hit flags
+as a Boolean output code. These operations are also packaged as a single-stage
+attempt primitive whose canonical-input theorem returns exactly the encoded
+bounded-dovetail result for that stage. A matching search-driver boundary now
+derives the paired-recognizer dovetail compiler from that stage-attempt
+machine. The remaining table work is the outer loop and raw-output control
+that repeatedly calls this attempt primitive and turns the first encoded hit
+into the decider's raw Boolean output.
 Exact compilation of every code primitive is proved
 impossible because erasure cannot produce an exact empty tape window from
 nonempty input. The viable boundary is therefore a normalized-output tape-code
@@ -1611,6 +1655,24 @@ theorem concrete_paired_recognizer_dovetail_layout_code_output_realizer_of_tape_
     (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
     ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailLayoutCodeOutputRealizer_of_tapeCodeOutputCompiler
+    hcompile
+
+theorem concrete_paired_recognizer_dovetail_initial_layout_code_output_realizer_of_tape_code_output_compiler
+    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
+    ConcretePairedRecognizerDovetailInitialLayoutCodeOutputRealizerConstruction :=
+  Computability.pairedRecognizerDovetailInitialLayoutCodeOutputRealizer_of_tapeCodeOutputCompiler
+    hcompile
+
+theorem concrete_paired_recognizer_dovetail_output_code_output_realizer_of_tape_code_output_compiler
+    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
+    ConcretePairedRecognizerDovetailOutputCodeOutputRealizerConstruction :=
+  Computability.pairedRecognizerDovetailOutputCodeOutputRealizer_of_tapeCodeOutputCompiler
+    hcompile
+
+theorem concrete_paired_recognizer_dovetail_stage_attempt_code_output_realizer_of_tape_code_output_compiler
+    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
+    ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :=
+  Computability.pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
 theorem concrete_fixed_description_step_code_output_realizer_of_configuration_realizer
