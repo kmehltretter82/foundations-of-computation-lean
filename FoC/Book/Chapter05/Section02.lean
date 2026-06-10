@@ -40,8 +40,10 @@ The formal page separates three levels of argument.
 
 The finite compiler boundaries are now first-order where possible. Boolean
 finite grammar presentations use explicit {lit}`Fin n` nonterminals and a
-production list, while paired-recognizer dovetailing is split into a bounded
-layout runner and an unbounded stage-search driver.
+production list, with the remaining recognizer compiler factored through a
+bounded derivation-search recognizer. Paired-recognizer dovetailing is split
+into a bounded layout runner and a runner-search driver that performs the
+unbounded stage search.
 
 This makes the theorem statements honest about implementation work. When a
 textbook proof says to dovetail two recognizers or check a finite derivation,
@@ -137,11 +139,18 @@ def ConcreteTapeCodeExactCompilerConstruction : Prop :=
 def ConcreteTapeCodeOutputCompilerConstruction : Prop :=
   MachineDescriptionTapeCodeOutputCompilerConstruction
 
+def ConcreteBoolOutputDescription (b : Bool) : MachineDescription :=
+  MachineDescription.BoolOutputDescription b
+
 def ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction : Prop :=
   FiniteSourcePairedRecognizerBoundedDovetailTableCompilerConstruction
 
 def ConcretePairedRecognizerDovetailSearchDriverCompilerConstruction : Prop :=
   PairedRecognizerDovetailSearchDriverCompilerConstruction
+
+def ConcretePairedRecognizerDovetailRunnerSearchDriverCompilerConstruction :
+    Prop :=
+  PairedRecognizerDovetailRunnerSearchDriverCompilerConstruction
 
 def ConcreteFixedDescriptionBoundedSimulatorCodeCompilerConstruction : Prop :=
   FixedDescriptionBoundedSimulatorCodeCompilerConstruction
@@ -856,6 +865,35 @@ theorem paired_recognizer_dovetail_compiler_of_layout_code_output_realizer_and_s
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_layoutCodeOutputRealizer_and_searchDriver
     hrunner hdriver
 
+theorem paired_recognizer_dovetail_search_driver_of_runner_search_driver
+    (hdriver :
+      ConcretePairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerDovetailSearchDriverCompilerConstruction :=
+  Computability.pairedRecognizerDovetailSearchDriverCompiler_of_runnerSearchDriverCompiler
+    hdriver
+
+theorem bounded_dovetail_table_compiler_of_layout_code_output_realizer_and_runner_search_driver
+    (hrunner :
+      ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
+    (hdriver :
+      ConcretePairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  bounded_dovetail_table_compiler_of_layout_code_output_realizer_and_search_driver
+    hrunner
+    (paired_recognizer_dovetail_search_driver_of_runner_search_driver
+      hdriver)
+
+theorem paired_recognizer_dovetail_compiler_of_layout_code_output_realizer_and_runner_search_driver
+    (hrunner :
+      ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
+    (hdriver :
+      ConcretePairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerDovetailCompilerConstruction :=
+  paired_recognizer_dovetail_compiler_of_layout_code_output_realizer_and_search_driver
+    hrunner
+    (paired_recognizer_dovetail_search_driver_of_runner_search_driver
+      hdriver)
+
 theorem dovetailing_decidable_construction_of_concrete_dovetail_description_compiler
     (hcompile : ConcreteDovetailDescriptionCompilerConstruction) :
     DovetailingDecidableConstruction Bool :=
@@ -1384,12 +1422,14 @@ configuration.
 The concrete transducer pieces are retained as a small compiler core. A finite table
 appends one fixed encoded code symbol to the normalized Boolean output, while
 the code-primitive layer provides fixed unary comparisons and one-step tape
-write/move actions with canonical encode/decode theorems. Exact compilation
-of every code primitive is proved impossible because erasure cannot produce an
-exact empty tape window from nonempty input. The viable boundary is therefore a
-normalized-output tape-code compiler: if that one generic compiler principle is
-supplied, the fixed stepper, bounded simulator, and dovetail-layout
-machine-description obligations all follow.
+write/move actions with canonical encode/decode theorems. A concrete
+Boolean-output table erases its input and emits either {lit}`true` or
+{lit}`false`, giving the eventual dovetail driver finite halt branches. Exact
+compilation of every code primitive is proved impossible because erasure cannot
+produce an exact empty tape window from nonempty input. The viable boundary is
+therefore a normalized-output tape-code compiler: if that one generic compiler
+principle is supplied, the fixed stepper, bounded simulator, and
+dovetail-layout machine-description obligations all follow.
 -/
 
 theorem concrete_fixed_description_bounded_simulator_table_compiler_of_code_compiler
@@ -1409,6 +1449,15 @@ theorem concrete_fixed_description_bounded_simulator_table_compiler_of_code_outp
 def concrete_machine_description_primitive_compiler_core :
     MachineDescriptionPrimitiveCompilerCore :=
   Computability.machineDescriptionPrimitiveCompilerCore
+
+theorem concrete_bool_output_description_wellFormed (b : Bool) :
+    (ConcreteBoolOutputDescription b).WellFormed :=
+  MachineDescription.boolOutputDescription_wellFormed b
+
+theorem concrete_bool_output_description_haltsWithOutput
+    (b : Bool) (w : Word Bool) :
+    (ConcreteBoolOutputDescription b).HaltsWithOutput w [b] :=
+  MachineDescription.boolOutputDescription_haltsWithOutput b w
 
 theorem concrete_tape_code_exact_compiler_construction_impossible :
     ¬ ConcreteTapeCodeExactCompilerConstruction :=
@@ -2670,6 +2719,10 @@ def ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :
     Prop :=
   FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction
 
+def ConcreteFiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :
+    Prop :=
+  FiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction
+
 def ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
   ConcreteFiniteSourceFiniteGeneralGrammarRecognizerCompilerConstruction
 
@@ -2730,6 +2783,13 @@ theorem concrete_finite_grammar_recognizer_compiler_of_finite_presentation_compi
   concrete_finite_grammar_recognizer_compiler_of_production_list_compiler
     (concrete_finite_production_list_grammar_recognizer_compiler_of_finite_presentation_compiler
       hcompile)
+
+theorem concrete_finite_bool_general_grammar_presentation_compiler_of_bounded_recognizer_compiler
+    (hcompile :
+      ConcreteFiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction) :
+    ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
+  Computability.finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_boundedRecognizerCompiler
+    hcompile
 
 theorem concrete_finite_bool_general_grammar_presentation_has_finite_productions
     (P : ConcreteFiniteBoolGeneralGrammarPresentation) :
@@ -3754,7 +3814,9 @@ recognizer-to-finite grammar construction. The ordinary finite-grammar compiler
 is now a derived bridge: a finite grammar is converted to an explicit
 {lit}`Fin n` production-list presentation, and the compiled presentation
 recognizer is transferred to the abstract recognizer by accepted-language
-extensionality.
+extensionality. The presentation compiler itself is factored through a bounded
+derivation-search recognizer compiler, isolating the remaining finite grammar
+table construction.
 
 The declarations above now pin that infrastructure down as
 {name}`ConcreteBooleanSection52CompilerCloseout` for the semantic grammar page
@@ -3769,9 +3831,9 @@ equivalent to that paired-recognizer target. It also uses the first-order finite
 grammar-presentation compiler as its finite grammar-recognizer input, and uses the
 description-backed construction
 {name}`ConcreteDescriptionRecognizerToFiniteGeneralGrammarConstruction`.
-The first-order presentation and search-driver boundaries identify the
-remaining transition-table construction work without changing these book-facing
-equivalence statements.
+The first-order presentation, bounded-recognizer, and runner-search boundaries
+identify the remaining transition-table construction work without changing
+these book-facing equivalence statements.
 -/
 
 end Section02

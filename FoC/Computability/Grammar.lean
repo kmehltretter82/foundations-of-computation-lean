@@ -431,11 +431,30 @@ def CompilerConstruction : Prop :=
     exists D : MachineDescription,
       ProgramCompiledByDescription P.recognizerProgram D
 
+def BoundedRecognizerCompilerConstruction : Prop :=
+  forall P : FiniteBoolGeneralGrammarPresentation,
+    exists D : MachineDescription,
+      ProgramCompiledByDescription
+        (FiniteProductionListBoundedRecognizerProgram P.toGrammar P.rules) D
+
 theorem compilerConstruction_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
     CompilerConstruction := by
   intro P
   exact hcompile P.recognizerProgram
+
+theorem compilerConstruction_of_boundedRecognizerCompiler
+    (hcompile : BoundedRecognizerCompilerConstruction) :
+    CompilerConstruction := by
+  intro P
+  rcases hcompile P with ⟨D, hD⟩
+  exact
+    ⟨D,
+      programCompiledByDescription_of_same_accepted_language
+        (finiteProductionListBoundedRecognizerProgram_acceptsLanguage
+          (P.toGrammar_produces_iff))
+        P.recognizerProgram_acceptsLanguage
+        hD⟩
 
 noncomputable def ofGrammarRules
     (G : GeneralGrammar Bool nonterminal)
@@ -629,10 +648,21 @@ def FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :
     Prop :=
   FiniteBoolGeneralGrammarPresentation.CompilerConstruction
 
+def FiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :
+    Prop :=
+  FiniteBoolGeneralGrammarPresentation.BoundedRecognizerCompilerConstruction
+
 theorem finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
     FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
   FiniteBoolGeneralGrammarPresentation.compilerConstruction_of_descriptionCompiler
+    hcompile
+
+theorem finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_boundedRecognizerCompiler
+    (hcompile :
+      FiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction) :
+    FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
+  FiniteBoolGeneralGrammarPresentation.compilerConstruction_of_boundedRecognizerCompiler
     hcompile
 
 theorem generalGrammar_generatedLanguage_programAcceptable

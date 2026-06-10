@@ -552,6 +552,113 @@ theorem eraseRightDescription_haltsWithOutput_empty
   · rw [eraseRightDescription_run_halt]
     exact eraseRightTape_normalizedOutput_empty (w.length + 1)
 
+def BoolOutputDescription (b : Bool) : MachineDescription where
+  stateCount := 2
+  start := 0
+  halt := 1
+  transitions :=
+    [ transition 0 none (some b) Direction.right 1
+    , transition 0 (some false) none Direction.right 0
+    , transition 0 (some true) none Direction.right 0 ]
+
+theorem boolOutputDescription_wellFormed (b : Bool) :
+    (BoolOutputDescription b).WellFormed := by
+  constructor
+  · simp [BoolOutputDescription]
+  constructor
+  · simp [BoolOutputDescription]
+  constructor
+  · simp [BoolOutputDescription]
+  constructor
+  · intro t ht
+    simp [BoolOutputDescription, transition,
+      TransitionDescription.WellFormed] at ht ⊢
+    rcases ht with rfl | rfl | rfl <;> simp
+  · intro t u ht hu hkey
+    simp [BoolOutputDescription, transition] at ht hu
+    rcases ht with rfl | rfl | rfl <;>
+      rcases hu with rfl | rfl | rfl <;>
+        simp [TransitionDescription.SameKey,
+          TransitionDescription.SameAction] at hkey ⊢
+
+theorem boolOutputDescription_step_nonempty
+    (out : Bool) (erased : Nat) (b : Bool) (rest : Word Bool) :
+    (BoolOutputDescription out).stepConfig
+        { state := 0, tape := eraseRightTape erased (b :: rest) } =
+      some { state := 0, tape := eraseRightTape (erased + 1) rest } := by
+  cases b <;>
+    cases rest <;>
+      simp [BoolOutputDescription, stepConfig, lookupTransition,
+        Matches, transition, Tape.read, eraseRightTape,
+        Tape.write, Tape.move, Tape.moveRight, List.replicate_succ]
+
+def boolOutputTape (erased : Nat) (b : Bool) : Tape Bool :=
+  { left := some b :: List.replicate erased none
+    head := none
+    right := [] }
+
+theorem boolOutputDescription_step_empty
+    (out : Bool) (erased : Nat) :
+    (BoolOutputDescription out).stepConfig
+        { state := 0, tape := eraseRightTape erased [] } =
+      some { state := 1, tape := boolOutputTape erased out } := by
+  simp [BoolOutputDescription, stepConfig, lookupTransition,
+    Matches, transition, Tape.read, eraseRightTape, boolOutputTape,
+    Tape.write, Tape.move, Tape.moveRight]
+
+theorem boolOutputDescription_run_scan
+    (out : Bool) (erased : Nat) (w : Word Bool) :
+    (BoolOutputDescription out).runConfig w.length
+        { state := 0, tape := eraseRightTape erased w } =
+      { state := 0, tape := eraseRightTape (erased + w.length) [] } := by
+  induction w generalizing erased with
+  | nil =>
+      simp [runConfig]
+  | cons b rest ih =>
+    simp [runConfig, boolOutputDescription_step_nonempty, ih,
+      List.length_cons]
+    have hlen :
+        erased + 1 + rest.length =
+          erased + (rest.length + 1) := by
+      omega
+    rw [hlen]
+
+theorem boolOutputDescription_run_halt
+    (out : Bool) (w : Word Bool) :
+    (BoolOutputDescription out).runConfig (w.length + 1)
+        ((BoolOutputDescription out).initial w) =
+      { state := 1, tape := boolOutputTape w.length out } := by
+  rw [runConfig_add]
+  have hscan :
+      (BoolOutputDescription out).runConfig w.length
+          ((BoolOutputDescription out).initial w) =
+        { state := 0, tape := eraseRightTape w.length [] } := by
+    simpa [initial, BoolOutputDescription, eraseRightTape_zero_eq_input,
+      Nat.zero_add] using
+      boolOutputDescription_run_scan out 0 w
+  rw [hscan]
+  simp [runConfig, boolOutputDescription_step_empty]
+
+theorem boolOutputTape_normalizedOutput
+    (erased : Nat) (b : Bool) :
+    Tape.normalizedOutput (boolOutputTape erased b) = [b] := by
+  induction erased with
+  | zero =>
+      rfl
+  | succ erased ih =>
+      simp [boolOutputTape, Tape.normalizedOutput, Tape.cells,
+        List.replicate_succ]
+
+theorem boolOutputDescription_haltsWithOutput
+    (b : Bool) (w : Word Bool) :
+    (BoolOutputDescription b).HaltsWithOutput w [b] := by
+  exists w.length + 1
+  constructor
+  · rw [boolOutputDescription_run_halt]
+    simp [BoolOutputDescription]
+  · rw [boolOutputDescription_run_halt]
+    exact boolOutputTape_normalizedOutput w.length b
+
 /-!
 ## Code-symbol append transducers
 
@@ -1608,6 +1715,32 @@ def PairedRecognizerDovetailSearchDriverCompilerConstruction : Prop :=
       exists decider : MachineDescription,
         PairedRecognizerBoundedDovetailTableRealizes accept reject decider
 
+def PairedRecognizerDovetailRunnerSearchDriverRealizes
+    (accept reject runner decider : MachineDescription) : Prop :=
+  decider.WellFormed ∧
+    forall w : Word Bool, forall b : Bool,
+      decider.HaltsWithOutput w [b] <->
+        exists limit : Nat,
+          runner.HaltsWithOutput
+            (MachineDescription.DovetailLayout.asBoolInput
+              (MachineDescription.DovetailLayout.initial
+                accept reject w limit))
+            (MachineDescription.DovetailLayout.asBoolInput
+              (MachineDescription.DovetailLayout.run accept reject limit
+                (MachineDescription.DovetailLayout.initial
+                  accept reject w limit))) ∧
+          MachineDescription.DovetailLayout.outputFromHits
+              (MachineDescription.DovetailLayout.run accept reject limit
+                (MachineDescription.DovetailLayout.initial
+                  accept reject w limit)) =
+            some [b]
+
+def PairedRecognizerDovetailRunnerSearchDriverCompilerConstruction : Prop :=
+  forall accept reject runner : MachineDescription,
+    exists decider : MachineDescription,
+      PairedRecognizerDovetailRunnerSearchDriverRealizes
+        accept reject runner decider
+
 theorem fixedDescriptionBoundedSimulatorCodeOutputRealizer_of_codeCompiler
     (hcompile :
       FixedDescriptionBoundedSimulatorCodeCompilerConstruction) :
@@ -1773,6 +1906,41 @@ theorem pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputRealizer
   intro accept reject
   rcases hrunner accept reject with ⟨runner, hrunnerRealizes⟩
   exact hdriver accept reject runner hrunnerRealizes
+
+theorem pairedRecognizerDovetailSearchDriverCompiler_of_runnerSearchDriverCompiler
+    (hcompile :
+      PairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailSearchDriverCompilerConstruction := by
+  intro accept reject runner hrunner
+  rcases hcompile accept reject runner with ⟨decider, hdecider⟩
+  refine ⟨decider, ?_⟩
+  constructor
+  · exact hdecider.left
+  · intro w b
+    constructor
+    · intro hhalt
+      rcases (hdecider.right w b).mp hhalt with
+        ⟨limit, _hrunnerHalts, hout⟩
+      exact ⟨limit, by
+        simpa [pairedRecognizerDovetailLayout_initial_output] using hout⟩
+    · intro hbounded
+      rcases hbounded with ⟨limit, hout⟩
+      apply (hdecider.right w b).mpr
+      refine ⟨limit, ?_, ?_⟩
+      · exact
+          hrunner.right
+            (MachineDescription.DovetailLayout.encode
+              (MachineDescription.DovetailLayout.initial
+                accept reject w limit))
+            (MachineDescription.DovetailLayout.encode
+              (MachineDescription.DovetailLayout.run accept reject limit
+                (MachineDescription.DovetailLayout.initial
+                  accept reject w limit)))
+            (pairedRecognizerDovetailLayoutCode_encode
+              accept reject
+              (MachineDescription.DovetailLayout.initial
+                accept reject w limit))
+      · simpa [pairedRecognizerDovetailLayout_initial_output] using hout
 
 theorem fixedDescriptionBoundedSimulatorTableRealizes_of_codeCompiler
     {D simulator : MachineDescription}
