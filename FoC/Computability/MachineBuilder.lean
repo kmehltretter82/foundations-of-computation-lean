@@ -857,6 +857,62 @@ theorem seq_wellFormed
 end Fragment
 
 /-!
+## Description subroutines
+
+A halt-transition-free description can be viewed as a fragment whose entry is
+the start state and whose exit is the halt state.  This adapter lets later
+finite-table constructions reuse the proved fragment sequencing semantics for
+ordinary machine descriptions.
+-/
+
+def asFragment (D : MachineDescription) : Fragment where
+  stateCount := D.stateCount
+  entry := D.start
+  exit := D.halt
+  transitions := D.transitions
+
+theorem asFragment_wellFormed
+    {D : MachineDescription} (hD : D.SubroutineReady) :
+    D.asFragment.WellFormed := by
+  rcases hD with ⟨hWF, hhaltFree⟩
+  rcases hWF with ⟨hpos, hstart, hhalt, htrans, hdet⟩
+  exact ⟨hpos, hstart, hhalt, htrans, hdet, hhaltFree⟩
+
+theorem asFragment_toDescription
+    (D : MachineDescription) :
+    D.asFragment.toDescription = D := by
+  cases D
+  rfl
+
+def seqSubroutine
+    (A B : MachineDescription) (handoffMove : Direction) :
+    MachineDescription :=
+  (Fragment.seq A.asFragment B.asFragment handoffMove).toDescription
+
+theorem seqSubroutine_wellFormed
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady) :
+    (seqSubroutine A B handoffMove).WellFormed :=
+  Fragment.toDescription_wellFormed
+    (Fragment.seq_wellFormed
+      (asFragment_wellFormed hA) (asFragment_wellFormed hB))
+
+theorem seqSubroutine_haltTransitionFree
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady) :
+    (seqSubroutine A B handoffMove).HaltTransitionFree :=
+  Fragment.toDescription_haltTransitionFree
+    (Fragment.seq_wellFormed
+      (asFragment_wellFormed hA) (asFragment_wellFormed hB))
+
+theorem seqSubroutine_subroutineReady
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady) :
+    (seqSubroutine A B handoffMove).SubroutineReady :=
+  ⟨seqSubroutine_wellFormed hA hB,
+    seqSubroutine_haltTransitionFree hA hB⟩
+
+/-!
 ## Fixed-simulator table skeletons
 
 The bounded simulator realizer is ultimately a single finite transition table.

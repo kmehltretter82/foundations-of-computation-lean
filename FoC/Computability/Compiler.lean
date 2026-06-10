@@ -113,6 +113,70 @@ theorem runConfig_add (D : MachineDescription)
       | some next =>
           simp [ih next]
 
+theorem firstReaches_halt_of_runConfig_eq
+    {D : MachineDescription}
+    (hD : D.HaltTransitionFree)
+    {n : Nat} {c : Configuration} {T : Tape Bool}
+    (hrun : D.runConfig n c = { state := D.halt, tape := T }) :
+    exists m : Nat,
+      m ≤ n ∧
+        D.runConfig m c = { state := D.halt, tape := T } ∧
+        forall k : Nat,
+          k < m -> (D.runConfig k c).state ≠ D.halt := by
+  induction n generalizing c with
+  | zero =>
+      exists 0
+      simp [hrun]
+  | succ n ih =>
+      by_cases hcHalt : c.state = D.halt
+      · have hc :
+            c = { state := D.halt, tape := c.tape } := by
+          cases c with
+          | mk state tape =>
+              simp at hcHalt ⊢
+              exact hcHalt
+        have hstable :
+            D.runConfig (n + 1) c = c := by
+          rw [hc]
+          exact runConfig_halt hD c.tape (n + 1)
+        have hcFinal : c = { state := D.halt, tape := T } := by
+          rw [← hstable]
+          exact hrun
+        exists 0
+        constructor
+        · omega
+        constructor
+        · simp [hcFinal, runConfig]
+        · intro k hk
+          omega
+      · cases hstep : D.stepConfig c with
+        | none =>
+            have hsame : D.runConfig (n + 1) c = c := by
+              simp [runConfig, hstep]
+            have hstate : c.state = D.halt := by
+              have hfinal : c = { state := D.halt, tape := T } := by
+                rw [← hsame]
+                exact hrun
+              simpa using congrArg (fun d : Configuration => d.state) hfinal
+            exact False.elim (hcHalt hstate)
+        | some next =>
+            have hnext :
+                D.runConfig n next = { state := D.halt, tape := T } := by
+              simpa [runConfig, hstep] using hrun
+            rcases ih hnext with ⟨m, hmle, hmrun, hmfirst⟩
+            exists m + 1
+            constructor
+            · omega
+            constructor
+            · simp [runConfig, hstep, hmrun]
+            · intro k hk
+              cases k with
+              | zero =>
+                  simpa [runConfig] using hcHalt
+              | succ j =>
+                  have hj : j < m := by omega
+                  simpa [runConfig, hstep] using hmfirst j hj
+
 theorem runConfig_state_bound {D : MachineDescription}
     (hD : D.WellFormed) {n : Nat} {c : Configuration}
     (hc : c.state < D.stateCount) :
@@ -2897,6 +2961,62 @@ theorem seq_firstReaches
           exact hBnoExit j hj_bound hBexit
 
 end Fragment
+
+theorem seqSubroutine_reaches
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tmid Tout : Tape Bool}
+    (hAReach :
+      exists nA : Nat,
+        A.runConfig nA { state := A.start, tape := Tin } =
+          { state := A.halt, tape := Tmid } ∧
+        forall k : Nat,
+          k < nA ->
+            (A.runConfig k
+              { state := A.start, tape := Tin }).state ≠ A.halt)
+    (hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start,
+              tape := Tape.move handoffMove Tmid } =
+          { state := B.halt, tape := Tout }) :
+    exists n : Nat,
+      (seqSubroutine A B handoffMove).runConfig n
+          { state := (seqSubroutine A B handoffMove).start,
+            tape := Tin } =
+        { state := (seqSubroutine A B handoffMove).halt,
+          tape := Tout } := by
+  simpa [seqSubroutine, asFragment] using
+    Fragment.seq_reaches
+      (A := A.asFragment) (B := B.asFragment)
+      (handoffMove := handoffMove)
+      (asFragment_wellFormed hA) (asFragment_wellFormed hB)
+      hAReach hBReach
+
+theorem seqSubroutine_reaches_of_runConfig_eq
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {nA : Nat} {Tin Tmid Tout : Tape Bool}
+    (hArun :
+      A.runConfig nA { state := A.start, tape := Tin } =
+        { state := A.halt, tape := Tmid })
+    (hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start,
+              tape := Tape.move handoffMove Tmid } =
+          { state := B.halt, tape := Tout }) :
+    exists n : Nat,
+      (seqSubroutine A B handoffMove).runConfig n
+          { state := (seqSubroutine A B handoffMove).start,
+            tape := Tin } =
+        { state := (seqSubroutine A B handoffMove).halt,
+          tape := Tout } := by
+  rcases firstReaches_halt_of_runConfig_eq hA.right hArun with
+    ⟨m, _hmle, hmrun, hmfirst⟩
+  exact seqSubroutine_reaches hA hB
+    ⟨m, hmrun, hmfirst⟩ hBReach
+
 end MachineDescription
 
 theorem fixedDescriptionBoundedSimulatorPhaseRealizes_seq

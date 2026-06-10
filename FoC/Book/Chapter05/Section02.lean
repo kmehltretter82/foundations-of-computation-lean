@@ -1427,7 +1427,10 @@ Boolean-output table erases its input and emits either {lit}`true` or
 {lit}`false`, giving the eventual dovetail driver finite halt branches. The
 same tables are also packaged as halt-transition-free subroutines, so later
 control-flow tables can call them without adding outgoing transitions from
-their halting states. Exact compilation of every code primitive is proved
+their halting states. The subroutine layer also provides a description-level
+sequencer: a subroutine-ready table can be viewed as a fragment, composed with
+another such table, and reasoned about using the existing first-arrival
+fragment semantics. Exact compilation of every code primitive is proved
 impossible because erasure cannot produce an exact empty tape window from
 nonempty input. The viable boundary is therefore a normalized-output tape-code
 compiler: if that one generic compiler principle is supplied, the fixed
@@ -1456,6 +1459,47 @@ def concrete_machine_description_primitive_compiler_core :
 def concrete_machine_description_primitive_subroutine_core :
     MachineDescriptionPrimitiveSubroutineCore :=
   Computability.machineDescriptionPrimitiveSubroutineCore
+
+theorem concrete_description_first_reaches_halt_of_runConfig_eq
+    {D : MachineDescription}
+    (hD : D.HaltTransitionFree)
+    {n : Nat} {c : MachineDescription.Configuration} {T : Tape Bool}
+    (hrun : D.runConfig n c = { state := D.halt, tape := T }) :
+    exists m : Nat,
+      m ≤ n ∧
+        D.runConfig m c = { state := D.halt, tape := T } ∧
+        forall k : Nat,
+          k < m -> (D.runConfig k c).state ≠ D.halt :=
+  MachineDescription.firstReaches_halt_of_runConfig_eq hD hrun
+
+theorem concrete_seq_subroutine_ready
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady) :
+    (MachineDescription.seqSubroutine A B handoffMove).SubroutineReady :=
+  MachineDescription.seqSubroutine_subroutineReady hA hB
+
+theorem concrete_seq_subroutine_reaches_of_runConfig_eq
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {nA : Nat} {Tin Tmid Tout : Tape Bool}
+    (hArun :
+      A.runConfig nA { state := A.start, tape := Tin } =
+        { state := A.halt, tape := Tmid })
+    (hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start,
+              tape := Tape.move handoffMove Tmid } =
+          { state := B.halt, tape := Tout }) :
+    exists n : Nat,
+      (MachineDescription.seqSubroutine A B handoffMove).runConfig n
+          { state :=
+              (MachineDescription.seqSubroutine A B handoffMove).start,
+            tape := Tin } =
+        { state := (MachineDescription.seqSubroutine A B handoffMove).halt,
+          tape := Tout } :=
+  MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+    hA hB hArun hBReach
 
 theorem concrete_bool_output_description_wellFormed (b : Bool) :
     (ConcreteBoolOutputDescription b).WellFormed :=
