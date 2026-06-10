@@ -66,7 +66,10 @@ The many definitions at the start of the file are mostly vocabulary adapters:
 they give book-facing names to reusable predicates, staged-program compiler
 principles, finite program descriptions, and concrete machine-description
 relations. The theorem groups later in the page explain how those names fit
-together.
+together.  The compiler vocabulary is split explicitly: names containing
+{lit}`Semantic` are assumptions over arbitrary Lean-level programs, traces, or
+partial functions; names containing {lit}`FiniteSource` are the finite-data
+construction targets that can become concrete transition-table compilers.
 -/
 
 def RecursivelyEnumerableLanguage (L : Language alpha) : Prop :=
@@ -99,17 +102,29 @@ def StagedAcceptorCompilationConstruction (alpha : Type u) : Prop :=
 def StagedBoolDeciderCompilationConstruction (alpha : Type u) : Prop :=
   ProgramBoolDeciderCompilationPrinciple alpha
 
+def SemanticDescriptionAcceptorCompilationAssumption : Prop :=
+  SemanticDescriptionAcceptorCompilerAssumption
+
+def SemanticDescriptionBoolDeciderCompilationAssumption : Prop :=
+  SemanticDescriptionBoolDeciderCompilerAssumption
+
+def SemanticDovetailDescriptionCompilerAssumption : Prop :=
+  Computability.SemanticDovetailDescriptionCompilerAssumption
+
 def ConcreteDescriptionAcceptorCompilationConstruction : Prop :=
-  DescriptionProgramAcceptorCompilationPrinciple
+  SemanticDescriptionAcceptorCompilationAssumption
 
 def ConcreteDescriptionBoolDeciderCompilationConstruction : Prop :=
-  DescriptionProgramBoolDeciderCompilationPrinciple
+  SemanticDescriptionBoolDeciderCompilationAssumption
 
 def ConcreteDovetailDescriptionCompilerConstruction : Prop :=
-  DovetailDescriptionCompilerPrinciple
+  SemanticDovetailDescriptionCompilerAssumption
+
+def ConcreteFiniteSourcePairedRecognizerDovetailCompilerConstruction : Prop :=
+  FiniteSourcePairedRecognizerDovetailCompilerConstruction
 
 def ConcretePairedRecognizerDovetailCompilerConstruction : Prop :=
-  PairedRecognizerDovetailDescriptionCompilerPrinciple
+  ConcreteFiniteSourcePairedRecognizerDovetailCompilerConstruction
 
 def ConcreteTapeCodeExactCompilerConstruction : Prop :=
   MachineDescriptionTapeCodeExactCompilerConstruction
@@ -118,7 +133,7 @@ def ConcreteTapeCodeOutputCompilerConstruction : Prop :=
   MachineDescriptionTapeCodeOutputCompilerConstruction
 
 def ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction : Prop :=
-  PairedRecognizerBoundedDovetailTableCompilerConstruction
+  FiniteSourcePairedRecognizerBoundedDovetailTableCompilerConstruction
 
 def ConcreteFixedDescriptionBoundedSimulatorCodeCompilerConstruction : Prop :=
   FixedDescriptionBoundedSimulatorCodeCompilerConstruction
@@ -156,8 +171,17 @@ def ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction :
 def ConcreteFiniteDovetailCompilerConstruction : Prop :=
   FiniteDovetailProgram.CompilerConstruction
 
+def SemanticPartialUnaryRangeCompilerAssumption : Prop :=
+  Computability.SemanticPartialUnaryRangeCompilerAssumption
+
 def ConcretePartialUnaryRangeDescriptionCompilerConstruction : Prop :=
-  PartialUnaryRangeDescriptionCompilerPrinciple
+  SemanticPartialUnaryRangeCompilerAssumption
+
+def ConcreteFinitePartialUnaryRangeProgramCompilerConstruction : Prop :=
+  FinitePartialUnaryRangeProgram.CompilerConstruction
+
+def ConcreteFinitePartialUnaryRangeProgramCloseoutConstruction : Prop :=
+  FinitePartialUnaryRangeProgram.RangeCloseoutConstruction
 
 def PartialFunctionDomainLanguage
     (f : Word input -> Option (Word output)) : Language input :=
@@ -2574,11 +2598,21 @@ theorem concrete_machine_description_to_finite_general_grammar_construction :
     ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction :=
   Computability.machineDescriptionToFiniteGeneralGrammarConstruction
 
+def SemanticBooleanGeneralGrammarRecognizerCompilerAssumption : Prop :=
+  Computability.SemanticBooleanGeneralGrammarRecognizerCompilerAssumption
+
 def ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
-  BooleanGeneralGrammarRecognizerCompilerPrinciple
+  SemanticBooleanGeneralGrammarRecognizerCompilerAssumption
+
+def ConcreteFiniteSourceFiniteGeneralGrammarRecognizerCompilerConstruction :
+    Prop :=
+  FiniteSourceFiniteGeneralGrammarRecognizerCompilerConstruction
+
+def ConcreteFiniteProductionListGrammarRecognizerCompilerConstruction : Prop :=
+  FiniteProductionListGrammarRecognizerCompilerConstruction
 
 def ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
-  FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple
+  ConcreteFiniteSourceFiniteGeneralGrammarRecognizerCompilerConstruction
 
 def GeneralGrammarAcceptabilityEquivalence (L : Language terminal) : Prop :=
   Computability.GeneralGrammarAcceptabilityEquivalence L

@@ -3724,6 +3724,9 @@ direction is proved at the staged-program layer above. The definitions below
 name the concrete compiler interfaces for Boolean machine descriptions.
 The semantic reverse direction is no longer a construction boundary: with
 arbitrary production predicates, every language has a one-nonterminal grammar.
+The closeout records below now distinguish semantic assumptions over arbitrary
+Lean-level recognizers from finite-source construction targets over concrete
+description or production-list data.
 -/
 
 def BooleanGeneralGrammarRecognizerCompilerPrinciple : Prop :=
@@ -3736,6 +3739,23 @@ def FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple : Prop :=
     GeneralGrammar.HasFiniteProductions G ->
       exists D : MachineDescription,
         ProgramCompiledByDescription (GeneralGrammarRecognizerProgram G) D
+
+def SemanticBooleanGeneralGrammarRecognizerCompilerAssumption : Prop :=
+  BooleanGeneralGrammarRecognizerCompilerPrinciple
+
+def FiniteSourceFiniteGeneralGrammarRecognizerCompilerConstruction : Prop :=
+  FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple
+
+def FiniteProductionListGrammarRecognizerCompilerConstruction : Prop :=
+  forall {nonterminal : Type},
+    forall G : GeneralGrammar Bool nonterminal,
+    forall rules : List (GeneralGrammar.Production Bool nonterminal),
+      (forall lhs rhs,
+        G.produces lhs rhs <->
+          GeneralGrammar.ProductionListProduces rules lhs rhs) ->
+        exists D : MachineDescription,
+          ProgramCompiledByDescription
+            (FiniteProductionListRecognizerProgram G rules) D
 
 theorem booleanGeneralGrammarRecognizerCompilerPrinciple_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
@@ -3803,20 +3823,20 @@ def FiniteGeneralGrammarREEquivalencePrinciple
 structure BooleanSection52CompilerCloseout where
   boundedTraceSearch : BoundedTraceSearchConstruction
   decidableToAcceptable : DecidableToAcceptablePrinciple Bool
-  dovetailDescription : DovetailDescriptionCompilerPrinciple
+  dovetailDescription : SemanticDovetailDescriptionCompilerAssumption
   partialUnaryRangeDescription :
-    PartialUnaryRangeDescriptionCompilerPrinciple
+    SemanticPartialUnaryRangeCompilerAssumption
   grammarRecognizerDescription :
-    BooleanGeneralGrammarRecognizerCompilerPrinciple
+    SemanticBooleanGeneralGrammarRecognizerCompilerAssumption
 
 structure BooleanFiniteGrammarSection52Closeout where
   boundedTraceSearch : BoundedTraceSearchConstruction
   decidableToAcceptable : DecidableToAcceptablePrinciple Bool
-  dovetailDescription : DovetailDescriptionCompilerPrinciple
+  dovetailDescription : SemanticDovetailDescriptionCompilerAssumption
   partialUnaryRangeDescription :
-    PartialUnaryRangeDescriptionCompilerPrinciple
+    SemanticPartialUnaryRangeCompilerAssumption
   finiteGrammarRecognizerDescription :
-    FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple
+    FiniteSourceFiniteGeneralGrammarRecognizerCompilerConstruction
   recursivelyEnumerableToFiniteGrammar :
     RecursivelyEnumerableToFiniteGeneralGrammarPrinciple Bool
 
@@ -3824,9 +3844,9 @@ structure BooleanFiniteDataSection52CompilerCloseout where
   boundedTraceSearch : BoundedTraceSearchConstruction
   decidableToAcceptable : DecidableToAcceptablePrinciple Bool
   pairedDovetailDescription :
-    PairedRecognizerDovetailDescriptionCompilerPrinciple
+    FiniteSourcePairedRecognizerDovetailCompilerConstruction
   finiteGrammarRecognizerDescription :
-    FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple
+    FiniteSourceFiniteGeneralGrammarRecognizerCompilerConstruction
   descriptionRecognizerToFiniteGrammar :
     DescriptionRecognizerToFiniteGeneralGrammarConstruction
 

@@ -12,7 +12,8 @@ and its staged semantics reads the corresponding finite-step interpreter.
 
 The module does not assert that every semantic Lean staged program has finite
 syntax.  Instead, it proves compiler bridges for the finite programs whose
-machine descriptions are explicitly supplied.
+machine descriptions are explicitly supplied.  The local construction
+predicates provide finite-source targets for the Chapter 5.2 closeout refactor.
 
 ## Book coordinates
 
@@ -196,6 +197,14 @@ theorem compiledByDescription
           exists n
           exact (toStagedProgram_run_iff P w n).mp hn
 
+def CompilerConstruction : Prop :=
+  forall P : FiniteAcceptorProgram,
+    P.description.WellFormed ->
+      ProgramCompiledByDescription P.toStagedProgram P.compile
+
+theorem compilerConstruction : CompilerConstruction :=
+  compiledByDescription
+
 theorem traceRecognizer_compiledByDescription
     (P : FiniteAcceptorProgram)
     (hD : P.description.WellFormed) :
@@ -219,6 +228,16 @@ theorem traceRecognizer_compiledByDescription
           by_cases ht : P.trace w n
           · exact Exists.intro n (by simpa [compile, trace] using ht)
           · simp [TraceRecognizerProgram, ht] at hn
+
+def TraceRecognizerCompilerConstruction : Prop :=
+  forall P : FiniteAcceptorProgram,
+    P.description.WellFormed ->
+      ProgramCompiledByDescription
+        (TraceRecognizerProgram P.trace) P.compile
+
+theorem traceRecognizerCompilerConstruction :
+    TraceRecognizerCompilerConstruction :=
+  traceRecognizer_compiledByDescription
 
 theorem traceRecognizer_programAcceptableByDescription
     (P : FiniteAcceptorProgram)
@@ -379,6 +398,14 @@ theorem compiledByDescription
                 have hEq := hn hne
                 cases hEq
               · simp [toStagedProgram, htrue, hfalse] at hn
+
+def CompilerConstruction : Prop :=
+  forall P : FiniteBoolProgram,
+    P.description.WellFormed ->
+      BoolProgramCompiledByDescription P.toStagedProgram P.compile
+
+theorem compilerConstruction : CompilerConstruction :=
+  compiledByDescription
 
 theorem programBoolDecidableByDescription
     (P : FiniteBoolProgram)
@@ -630,6 +657,16 @@ theorem outputFunction_compiledByDescription
       intro hhalt
       exact h (hcomplete w hhalt)
 
+def CompilerConstruction : Prop :=
+  forall P : FinitePartialUnaryRangeProgram,
+    P.description.WellFormed ->
+      P.OutputComplete ->
+        PartialFunctionCompiledByDescription
+          P.outputFunction (fun _ : Unit => true) P.description
+
+theorem compilerConstruction : CompilerConstruction :=
+  outputFunction_compiledByDescription
+
 theorem partialRange_outputFunction_equal_descriptionOutputRange
     (P : FinitePartialUnaryRangeProgram)
     (hfunctional : P.OutputFunctional) :
@@ -721,6 +758,18 @@ theorem descriptionOutputRange_closeout
     · exact compiledPartialUnaryFunctionProgramRange_descriptionOutputRange
         P hD hcomplete hfunctional
     · exact partiallyListable_descriptionOutputRange P hfunctional
+
+def RangeCloseoutConstruction : Prop :=
+  forall P : FinitePartialUnaryRangeProgram,
+    P.description.WellFormed ->
+      P.OutputComplete ->
+        P.OutputFunctional ->
+          CompiledPartialUnaryRange P.descriptionOutputRange ∧
+            CompiledPartialUnaryFunctionProgramRange P.descriptionOutputRange ∧
+            PartiallyListable P.descriptionOutputRange
+
+theorem rangeCloseoutConstruction : RangeCloseoutConstruction :=
+  descriptionOutputRange_closeout
 
 end FinitePartialUnaryRangeProgram
 

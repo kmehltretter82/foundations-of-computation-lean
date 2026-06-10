@@ -14,7 +14,10 @@ This module connects the concrete machine descriptions from
 The compiler predicates here are deliberately explicit.  A staged program is
 compiled only when a finite {lit}`MachineDescription` is supplied and proved
 to realize the same halting or output behavior.  This avoids treating arbitrary
-Lean functions as finitely encodable programs.
+Lean functions as finitely encodable programs.  Names with
+{lit}`Semantic...Assumption` mark theorem-shape assumptions over arbitrary
+Lean objects; names with {lit}`FiniteSource...Construction` mark compiler
+targets whose inputs are concrete finite data.
 
 ## Book coordinates
 
@@ -1009,6 +1012,16 @@ def DescriptionProgramAcceptorCompilationPrinciple : Prop :=
   forall P : StagedProgram Bool Unit,
     exists D : MachineDescription, ProgramCompiledByDescription P D
 
+/-
+The next aliases separate semantic compiler assumptions from finite-source
+compiler targets.  A semantic assumption quantifies over arbitrary Lean staged
+programs or traces.  A finite-source construction has concrete finite data as
+input, such as a supplied {name}`MachineDescription`.
+-/
+
+def SemanticDescriptionAcceptorCompilerAssumption : Prop :=
+  DescriptionProgramAcceptorCompilationPrinciple
+
 theorem programAcceptableByDescription_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple)
     {L : Language Bool}
@@ -1030,10 +1043,16 @@ def DescriptionProgramBoolDeciderCompilationPrinciple : Prop :=
   forall P : StagedProgram Bool Bool,
     exists D : MachineDescription, BoolProgramCompiledByDescription P D
 
+def SemanticDescriptionBoolDeciderCompilerAssumption : Prop :=
+  DescriptionProgramBoolDeciderCompilationPrinciple
+
 def DovetailDescriptionCompilerPrinciple : Prop :=
   forall accept reject : Word Bool -> Nat -> Prop,
     exists D : MachineDescription,
       BoolProgramCompiledByDescription (DovetailProgram accept reject) D
+
+def SemanticDovetailDescriptionCompilerAssumption : Prop :=
+  DovetailDescriptionCompilerPrinciple
 
 /-
 The broad dovetail compiler above talks about arbitrary Lean traces.  The
@@ -1051,6 +1070,9 @@ def PairedRecognizerDovetailDescriptionCompilerPrinciple : Prop :=
           (fun w n => accept.HaltsIn n w)
           (fun w n => reject.HaltsIn n w)) D
 
+def FiniteSourcePairedRecognizerDovetailCompilerConstruction : Prop :=
+  PairedRecognizerDovetailDescriptionCompilerPrinciple
+
 def PairedRecognizerBoundedDovetailTableRealizes
     (accept reject decider : MachineDescription) : Prop :=
   decider.WellFormed ∧
@@ -1064,6 +1086,10 @@ def PairedRecognizerBoundedDovetailTableCompilerConstruction : Prop :=
   forall accept reject : MachineDescription,
     exists decider : MachineDescription,
       PairedRecognizerBoundedDovetailTableRealizes accept reject decider
+
+def FiniteSourcePairedRecognizerBoundedDovetailTableCompilerConstruction :
+    Prop :=
+  PairedRecognizerBoundedDovetailTableCompilerConstruction
 
 def FixedDescriptionBoundedSimulatorInput
     (L : MachineDescription.SimulatorLayout) : Word Bool :=
@@ -3310,6 +3336,9 @@ def PartialUnaryRangeDescriptionCompilerPrinciple : Prop :=
   forall f : Word Unit -> Option (Word Bool),
     exists D : MachineDescription,
       PartialFunctionCompiledByDescription f (fun _ : Unit => true) D
+
+def SemanticPartialUnaryRangeCompilerAssumption : Prop :=
+  PartialUnaryRangeDescriptionCompilerPrinciple
 
 /-!
 The partial-unary compiler principle is intentionally strong: its source is an
