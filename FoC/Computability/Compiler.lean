@@ -1601,6 +1601,13 @@ def PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction : Prop :=
       TapeCodePrimitiveOutputRealizedByDescription
         (PairedRecognizerDovetailLayoutCode accept reject) runner
 
+def PairedRecognizerDovetailSearchDriverCompilerConstruction : Prop :=
+  forall accept reject runner : MachineDescription,
+    TapeCodePrimitiveOutputRealizedByDescription
+      (PairedRecognizerDovetailLayoutCode accept reject) runner ->
+      exists decider : MachineDescription,
+        PairedRecognizerBoundedDovetailTableRealizes accept reject decider
+
 theorem fixedDescriptionBoundedSimulatorCodeOutputRealizer_of_codeCompiler
     (hcompile :
       FixedDescriptionBoundedSimulatorCodeCompilerConstruction) :
@@ -1756,6 +1763,16 @@ theorem pairedRecognizerDovetailLayoutCodeOutputRealizer_of_codeCompiler
   rcases hcompile accept reject with ⟨runner, hrunner⟩
   exact ⟨runner,
     tapeCodePrimitiveOutputRealizedByDescription_of_exact hrunner⟩
+
+theorem pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputRealizer_and_searchDriver
+    (hrunner :
+      PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
+    (hdriver :
+      PairedRecognizerDovetailSearchDriverCompilerConstruction) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction := by
+  intro accept reject
+  rcases hrunner accept reject with ⟨runner, hrunnerRealizes⟩
+  exact hdriver accept reject runner hrunnerRealizes
 
 theorem fixedDescriptionBoundedSimulatorTableRealizes_of_codeCompiler
     {D simulator : MachineDescription}
@@ -2956,6 +2973,16 @@ theorem pairedRecognizerBoundedDovetailTableCompiler_iff_pairedRecognizerDovetai
       PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   ⟨pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler,
     pairedRecognizerBoundedDovetailTableCompiler_of_pairedRecognizerDovetailDescriptionCompiler⟩
+
+theorem pairedRecognizerDovetailDescriptionCompiler_of_layoutCodeOutputRealizer_and_searchDriver
+    (hrunner :
+      PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
+    (hdriver :
+      PairedRecognizerDovetailSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
+  pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
+    (pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputRealizer_and_searchDriver
+      hrunner hdriver)
 
 theorem dovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
     (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
