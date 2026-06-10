@@ -164,6 +164,10 @@ def ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction
     Prop :=
   PairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction
 
+def ConcretePairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction :
+    Prop :=
+  PairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction
+
 def ConcreteFixedDescriptionBoundedSimulatorCodeCompilerConstruction : Prop :=
   FixedDescriptionBoundedSimulatorCodeCompilerConstruction
 
@@ -208,6 +212,14 @@ def ConcretePairedRecognizerDovetailOutputCodeOutputRealizerConstruction :
 def ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :
     Prop :=
   PairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction
+
+def ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction :
+    Prop :=
+  PairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction
+
+def ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction :
+    Prop :=
+  PairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction
 
 def ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction :
     Prop :=
@@ -893,6 +905,37 @@ theorem bounded_dovetail_table_compiler_of_stage_attempt_code_output_realizer_an
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_stageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
     hattempt hdriver
 
+theorem paired_recognizer_dovetail_stage_attempt_search_driver_of_description_bool_decider_compiler
+    (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
+    ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction :=
+  Computability.pairedRecognizerDovetailStageAttemptSearchDriverCompiler_of_descriptionBoolDeciderCompiler
+    hcompile
+
+theorem paired_recognizer_dovetail_total_stage_attempt_search_driver_of_description_bool_decider_compiler
+    (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
+    ConcretePairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction :=
+  Computability.pairedRecognizerDovetailTotalStageAttemptSearchDriverCompiler_of_descriptionBoolDeciderCompiler
+    hcompile
+
+theorem bounded_dovetail_table_compiler_of_tape_code_output_compiler_and_description_bool_decider_compiler
+    (htape : ConcreteTapeCodeOutputCompilerConstruction)
+    (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  bounded_dovetail_table_compiler_of_stage_attempt_code_output_realizer_and_stage_attempt_search_driver
+    (Computability.pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_tapeCodeOutputCompiler
+      htape)
+    (paired_recognizer_dovetail_stage_attempt_search_driver_of_description_bool_decider_compiler
+      hbool)
+
+theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_subroutine_realizer_and_total_stage_attempt_search_driver
+    (hattempt :
+      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction)
+    (hdriver :
+      ConcretePairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputSubroutineRealizer_and_totalStageAttemptSearchDriver
+    hattempt hdriver
+
 theorem paired_recognizer_dovetail_layout_code_output_realizer_of_subroutine_realizer
     (hrunner :
       ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction) :
@@ -925,6 +968,22 @@ theorem paired_recognizer_dovetail_compiler_of_stage_attempt_code_output_realize
       ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_stageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
+    hattempt hdriver
+
+theorem paired_recognizer_dovetail_compiler_of_tape_code_output_compiler_and_description_bool_decider_compiler
+    (htape : ConcreteTapeCodeOutputCompilerConstruction)
+    (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
+    ConcretePairedRecognizerDovetailCompilerConstruction :=
+  Computability.pairedRecognizerDovetailDescriptionCompiler_of_tapeCodeOutputCompiler_and_descriptionBoolDeciderCompiler
+    htape hbool
+
+theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_subroutine_realizer_and_total_stage_attempt_search_driver
+    (hattempt :
+      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction)
+    (hdriver :
+      ConcretePairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerDovetailCompilerConstruction :=
+  Computability.pairedRecognizerDovetailDescriptionCompiler_of_totalStageAttemptCodeOutputSubroutineRealizer_and_totalStageAttemptSearchDriver
     hattempt hdriver
 
 theorem paired_recognizer_dovetail_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_search_driver
@@ -1540,11 +1599,17 @@ operations: build the initial dovetail layout from the input word and stage
 limit, run the paired layout subroutine, and inspect the resulting hit flags
 as a Boolean output code. These operations are also packaged as a single-stage
 attempt primitive whose canonical-input theorem returns exactly the encoded
-bounded-dovetail result for that stage. A matching search-driver boundary now
-derives the paired-recognizer dovetail compiler from that stage-attempt
-machine. The remaining table work is the outer loop and raw-output control
-that repeatedly calls this attempt primitive and turns the first encoded hit
-into the decider's raw Boolean output.
+bounded-dovetail result for that stage. The direct-controller interface uses
+a total variant of this primitive: no hit is encoded as the empty Boolean word,
+while accepting and rejecting hits are encoded as singleton Boolean words.
+That total result is the contract a reusable finite loop needs in order to
+continue past no-hit stages. A matching search-driver boundary now derives the
+paired-recognizer dovetail compiler from a subroutine-ready total attempt
+machine. The semantic fallback search driver is still closed by an explicit
+staged Boolean search program under the existing description-backed Boolean
+compiler principle; the only lower-level work left, if one wants to avoid that
+semantic compiler principle, is the handwritten transition table for the outer
+loop and raw-output handoff.
 Exact compilation of every code primitive is proved
 impossible because erasure cannot produce an exact empty tape window from
 nonempty input. The viable boundary is therefore a normalized-output tape-code
@@ -1673,6 +1738,19 @@ theorem concrete_paired_recognizer_dovetail_stage_attempt_code_output_realizer_o
     (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
     ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_tapeCodeOutputCompiler
+    hcompile
+
+theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_output_realizer_of_tape_code_output_compiler
+    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
+    ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction :=
+  Computability.pairedRecognizerDovetailTotalStageAttemptCodeOutputRealizer_of_tapeCodeOutputCompiler
+    hcompile
+
+theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_output_realizer_of_subroutine_realizer
+    (hcompile :
+      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction) :
+    ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction :=
+  Computability.pairedRecognizerDovetailTotalStageAttemptCodeOutputRealizer_of_subroutineRealizer
     hcompile
 
 theorem concrete_fixed_description_step_code_output_realizer_of_configuration_realizer

@@ -2058,6 +2058,14 @@ def outputFromHits (L : DovetailLayout) : Option (Word Bool) :=
   else
     none
 
+def outputWordFromOption :
+    Option (Word Bool) -> Word Bool
+  | none => []
+  | some out => out
+
+def outputWordFromHits (L : DovetailLayout) : Word Bool :=
+  outputWordFromOption (outputFromHits L)
+
 def stageInputCodeAppend (w : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
   encodeBoolWordAppend w (encodeNatAppend stage suffix)
@@ -2166,6 +2174,22 @@ def stageAttemptCode (accept reject : MachineDescription)
 def stageAttemptCodePrimitive
     (accept reject : MachineDescription) : TapeCodePrimitive where
   transform := stageAttemptCode accept reject
+
+def totalStageAttemptCode (accept reject : MachineDescription)
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match decodeStageInputComplete tokens with
+  | none => none
+  | some (w, stage) =>
+      some
+        (encodeBoolWord
+          (outputWordFromHits
+            (run accept reject stage
+              (initial accept reject w stage))))
+
+def totalStageAttemptCodePrimitive
+    (accept reject : MachineDescription) : TapeCodePrimitive where
+  transform := totalStageAttemptCode accept reject
 
 def runCode (accept reject : MachineDescription)
     (tokens : Word MachineCodeSymbol) :
@@ -2345,6 +2369,52 @@ theorem stageAttemptCodePrimitive_stageInputCode
       Option.map encodeBoolWord
         (boundedDovetailOutput accept reject w stage) :=
   stageAttemptCode_stageInputCode accept reject w stage
+
+theorem totalStageAttemptCode_stageInputCode
+    (accept reject : MachineDescription)
+    (w : Word Bool) (stage : Nat) :
+    totalStageAttemptCode accept reject (stageInputCode w stage) =
+      some
+        (encodeBoolWord
+          (outputWordFromOption
+            (boundedDovetailOutput accept reject w stage))) := by
+  rw [← outputFromHits_run_initial_eq_boundedDovetailOutput]
+  cases h :
+      outputFromHits
+        (run accept reject stage (initial accept reject w stage)) <;>
+    simp [totalStageAttemptCode, outputWordFromHits,
+      outputWordFromOption, decodeStageInputComplete_stageInputCode, h]
+
+theorem totalStageAttemptCode_stageInputCode_of_boundedDovetailOutput_eq_some
+    {accept reject : MachineDescription}
+    {w : Word Bool} {stage : Nat} {out : Word Bool}
+    (h :
+      boundedDovetailOutput accept reject w stage = some out) :
+    totalStageAttemptCode accept reject (stageInputCode w stage) =
+      some (encodeBoolWord out) := by
+  rw [totalStageAttemptCode_stageInputCode, h]
+  rfl
+
+theorem totalStageAttemptCode_stageInputCode_of_boundedDovetailOutput_eq_none
+    {accept reject : MachineDescription}
+    {w : Word Bool} {stage : Nat}
+    (h :
+      boundedDovetailOutput accept reject w stage = none) :
+    totalStageAttemptCode accept reject (stageInputCode w stage) =
+      some (encodeBoolWord []) := by
+  rw [totalStageAttemptCode_stageInputCode, h]
+  rfl
+
+theorem totalStageAttemptCodePrimitive_stageInputCode
+    (accept reject : MachineDescription)
+    (w : Word Bool) (stage : Nat) :
+    (totalStageAttemptCodePrimitive accept reject).transform
+        (stageInputCode w stage) =
+      some
+        (encodeBoolWord
+          (outputWordFromOption
+            (boundedDovetailOutput accept reject w stage))) :=
+  totalStageAttemptCode_stageInputCode accept reject w stage
 
 end DovetailLayout
 
