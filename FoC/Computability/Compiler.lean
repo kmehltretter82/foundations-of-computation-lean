@@ -1567,6 +1567,17 @@ def PairedRecognizerDovetailControllerRawOutput
     (result : Word Bool) : Option (Word Bool) :=
   MachineDescription.DovetailControllerLayout.rawOutput? result
 
+def PairedRecognizerDovetailControllerRawOutputCode :
+    MachineDescription.TapeCodePrimitive :=
+  MachineDescription.DovetailControllerLayout.rawOutputCodePrimitive
+
+def PairedRecognizerDovetailControllerRawOutputCodeRealizes
+    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+  forall result : Word Bool,
+    P.transform (MachineDescription.encodeBoolWord result) =
+      Option.map MachineDescription.encodeBoolWord
+        (PairedRecognizerDovetailControllerRawOutput result)
+
 def PairedRecognizerDovetailInitialLayoutCodeRealizes
     (accept reject : MachineDescription)
     (P : MachineDescription.TapeCodePrimitive) : Prop :=
@@ -1748,6 +1759,14 @@ theorem pairedRecognizerDovetailTotalStageAttemptCode_controllerResultRealizes
       (PairedRecognizerDovetailTotalStageAttemptCode accept reject) :=
   pairedRecognizerDovetailTotalStageAttemptCodeRealizes_controllerResult
     (pairedRecognizerDovetailTotalStageAttemptCode_realizes accept reject)
+
+theorem pairedRecognizerDovetailControllerRawOutputCode_realizes :
+    PairedRecognizerDovetailControllerRawOutputCodeRealizes
+      PairedRecognizerDovetailControllerRawOutputCode := by
+  intro result
+  exact
+    MachineDescription.DovetailControllerLayout.rawOutputCodePrimitive_encodeBoolWord
+      result
 
 theorem pairedRecognizerDovetailLayout_initial_output
     (accept reject : MachineDescription)

@@ -350,6 +350,21 @@ def loopTransitions (state : Nat)
     (move : Direction) : List TransitionDescription :=
   branchOnCell state state state state move
 
+def cellBranchTarget (cell : Option Bool)
+    (blankTarget falseTarget trueTarget : Nat) : Nat :=
+  match cell with
+  | none => blankTarget
+  | some false => falseTarget
+  | some true => trueTarget
+
+def cellBranchDescription
+    (stateCount source halt blankTarget falseTarget trueTarget : Nat)
+    (move : Direction) : MachineDescription where
+  stateCount := stateCount
+  start := source
+  halt := halt
+  transitions := branchOnCell source blankTarget falseTarget trueTarget move
+
 theorem branchOnCell_wellFormed
     {stateCount source blankTarget falseTarget trueTarget : Nat}
     {move : Direction}
@@ -428,6 +443,101 @@ theorem loopTransitions_deterministic
       TransitionDescription.SameKey t u ->
         TransitionDescription.SameAction t u :=
   branchOnCell_deterministic state state state state move
+
+theorem cellBranchDescription_wellFormed
+    {stateCount source halt blankTarget falseTarget trueTarget : Nat}
+    {move : Direction}
+    (hpos : 0 < stateCount)
+    (hsource : source < stateCount)
+    (hhalt : halt < stateCount)
+    (hblank : blankTarget < stateCount)
+    (hfalse : falseTarget < stateCount)
+    (htrue : trueTarget < stateCount) :
+    (cellBranchDescription stateCount source halt
+      blankTarget falseTarget trueTarget move).WellFormed := by
+  constructor
+  · exact hpos
+  constructor
+  · exact hsource
+  constructor
+  · exact hhalt
+  constructor
+  · exact branchOnCell_wellFormed
+      hsource hblank hfalse htrue
+  · exact branchOnCell_deterministic
+      source blankTarget falseTarget trueTarget move
+
+theorem cellBranchDescription_haltTransitionFree
+    {stateCount source halt blankTarget falseTarget trueTarget : Nat}
+    {move : Direction}
+    (hsource : source ≠ halt) :
+    (cellBranchDescription stateCount source halt
+      blankTarget falseTarget trueTarget move).HaltTransitionFree := by
+  intro t ht
+  exact branchOnCell_no_source
+    (state := halt) (source := source)
+    (blankTarget := blankTarget) (falseTarget := falseTarget)
+    (trueTarget := trueTarget) (move := move) hsource t ht
+
+theorem cellBranchDescription_subroutineReady
+    {stateCount source halt blankTarget falseTarget trueTarget : Nat}
+    {move : Direction}
+    (hpos : 0 < stateCount)
+    (hsource : source < stateCount)
+    (hhalt : halt < stateCount)
+    (hblank : blankTarget < stateCount)
+    (hfalse : falseTarget < stateCount)
+    (htrue : trueTarget < stateCount)
+    (hsourceNe : source ≠ halt) :
+    (cellBranchDescription stateCount source halt
+      blankTarget falseTarget trueTarget move).SubroutineReady :=
+  ⟨cellBranchDescription_wellFormed
+      hpos hsource hhalt hblank hfalse htrue,
+    cellBranchDescription_haltTransitionFree hsourceNe⟩
+
+theorem cellBranchDescription_stepConfig_start
+    (stateCount source halt blankTarget falseTarget trueTarget : Nat)
+    (move : Direction) (T : Tape Bool) :
+    (cellBranchDescription stateCount source halt
+      blankTarget falseTarget trueTarget move).stepConfig
+        { state := source, tape := T } =
+      some
+        { state :=
+            cellBranchTarget (Tape.read T)
+              blankTarget falseTarget trueTarget,
+          tape := Tape.move move T } := by
+  cases T with
+  | mk left head right =>
+      cases head with
+      | none =>
+          cases move <;>
+            simp [cellBranchDescription, cellBranchTarget,
+              MachineDescription.stepConfig,
+              MachineDescription.lookupTransition,
+              MachineDescription.Matches, branchOnCell,
+              preserveTransition, transition, preserveCell,
+              Tape.read, Tape.write]
+      | some b =>
+          cases b <;> cases move <;>
+            simp [cellBranchDescription, cellBranchTarget,
+              MachineDescription.stepConfig,
+              MachineDescription.lookupTransition,
+              MachineDescription.Matches, branchOnCell,
+              preserveTransition, transition, preserveCell,
+              Tape.read, Tape.write]
+
+theorem cellBranchDescription_runConfig_one_start
+    (stateCount source halt blankTarget falseTarget trueTarget : Nat)
+    (move : Direction) (T : Tape Bool) :
+    (cellBranchDescription stateCount source halt
+      blankTarget falseTarget trueTarget move).runConfig 1
+        { state := source, tape := T } =
+      { state :=
+          cellBranchTarget (Tape.read T)
+            blankTarget falseTarget trueTarget,
+        tape := Tape.move move T } := by
+  simp [MachineDescription.runConfig,
+    cellBranchDescription_stepConfig_start]
 
 structure Fragment where
   stateCount : Nat
@@ -2522,12 +2632,47 @@ def rawOutput? : Word Bool -> Option (Word Bool)
   | b :: [] => some [b]
   | _ => none
 
+def rawOutputCode
+    (tokens : Word MachineCodeSymbol) : Option (Word MachineCodeSymbol) :=
+  match decodeAttemptResultCode tokens with
+  | none => none
+  | some result =>
+      match rawOutput? result with
+      | none => none
+      | some out => some (encodeBoolWord out)
+
+def rawOutputCodePrimitive : TapeCodePrimitive where
+  transform := rawOutputCode
+
 theorem rawOutput_nil :
     rawOutput? [] = none :=
   rfl
 
 theorem rawOutput_singleton (b : Bool) :
     rawOutput? [b] = some [b] :=
+  rfl
+
+theorem rawOutputCode_encodeBoolWord
+    (result : Word Bool) :
+    rawOutputCode (encodeBoolWord result) =
+      Option.map encodeBoolWord (rawOutput? result) := by
+  cases h : rawOutput? result <;>
+    simp [rawOutputCode, decodeAttemptResultCode_encodeBoolWord, h]
+
+theorem rawOutputCodePrimitive_encodeBoolWord
+    (result : Word Bool) :
+    rawOutputCodePrimitive.transform (encodeBoolWord result) =
+      Option.map encodeBoolWord (rawOutput? result) :=
+  rawOutputCode_encodeBoolWord result
+
+theorem rawOutputCode_encodeBoolWord_nil :
+    rawOutputCode (encodeBoolWord []) = none := by
+  simp [rawOutputCode_encodeBoolWord, rawOutput_nil]
+
+theorem rawOutputCode_encodeBoolWord_singleton (b : Bool) :
+    rawOutputCode (encodeBoolWord [b]) =
+      some (encodeBoolWord [b]) := by
+  rw [rawOutputCode_encodeBoolWord, rawOutput_singleton]
   rfl
 
 theorem rawOutput_eq_some_singleton_iff
@@ -2547,6 +2692,56 @@ theorem rawOutput_eq_some_singleton_iff
   · intro h
     rw [h]
     exact rawOutput_singleton b
+
+theorem cellBranchTarget_output_nil
+    (blankTarget falseTarget trueTarget : Nat) :
+    cellBranchTarget (Tape.read (Tape.output ([] : Word Bool)))
+      blankTarget falseTarget trueTarget =
+        blankTarget :=
+  rfl
+
+theorem cellBranchTarget_output_singleton
+    (b : Bool) (blankTarget falseTarget trueTarget : Nat) :
+    cellBranchTarget (Tape.read (Tape.output [b]))
+      blankTarget falseTarget trueTarget =
+        if b then trueTarget else falseTarget := by
+  cases b <;> rfl
+
+theorem cellBranchTarget_output_of_rawOutput_eq_some
+    {result : Word Bool} {b : Bool}
+    (blankTarget falseTarget trueTarget : Nat)
+    (hraw : rawOutput? result = some [b]) :
+    cellBranchTarget (Tape.read (Tape.output result))
+      blankTarget falseTarget trueTarget =
+        if b then trueTarget else falseTarget := by
+  have hresult := (rawOutput_eq_some_singleton_iff result b).mp hraw
+  rw [hresult]
+  exact cellBranchTarget_output_singleton b
+    blankTarget falseTarget trueTarget
+
+theorem cellBranchDescription_runConfig_one_output_nil
+    (stateCount source halt blankTarget falseTarget trueTarget : Nat)
+    (move : Direction) :
+    (cellBranchDescription stateCount source halt
+      blankTarget falseTarget trueTarget move).runConfig 1
+        { state := source, tape := Tape.output ([] : Word Bool) } =
+      { state := blankTarget,
+        tape := Tape.move move (Tape.output ([] : Word Bool)) } := by
+  rw [cellBranchDescription_runConfig_one_start]
+  rfl
+
+theorem cellBranchDescription_runConfig_one_output_of_rawOutput_eq_some
+    (stateCount source halt blankTarget falseTarget trueTarget : Nat)
+    (move : Direction) {result : Word Bool} {b : Bool}
+    (hraw : rawOutput? result = some [b]) :
+    (cellBranchDescription stateCount source halt
+      blankTarget falseTarget trueTarget move).runConfig 1
+        { state := source, tape := Tape.output result } =
+      { state := if b then trueTarget else falseTarget,
+        tape := Tape.move move (Tape.output result) } := by
+  rw [cellBranchDescription_runConfig_one_start]
+  rw [cellBranchTarget_output_of_rawOutput_eq_some
+    blankTarget falseTarget trueTarget hraw]
 
 def totalAttemptResult
     (accept reject : MachineDescription)

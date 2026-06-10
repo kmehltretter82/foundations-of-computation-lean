@@ -178,6 +178,14 @@ def ConcretePairedRecognizerDovetailTotalStageAttemptControllerResultRealizes
   PairedRecognizerDovetailTotalStageAttemptControllerResultRealizes
     accept reject P
 
+def ConcretePairedRecognizerDovetailControllerRawOutputCode :
+    MachineDescription.TapeCodePrimitive :=
+  PairedRecognizerDovetailControllerRawOutputCode
+
+def ConcretePairedRecognizerDovetailControllerRawOutputCodeRealizes
+    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+  PairedRecognizerDovetailControllerRawOutputCodeRealizes P
+
 def ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :
     Prop :=
   PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction
@@ -1645,7 +1653,13 @@ control-flow tables can call them without adding outgoing transitions from
 their halting states. The subroutine layer also provides a description-level
 sequencer: a subroutine-ready table can be viewed as a fragment, composed with
 another such table, and reasoned about using the existing first-arrival
-fragment semantics. For the paired-recognizer dovetailer, the layout runner
+fragment semantics. A finite cell-branch table is now separated out as the
+basic one-step controller primitive: it reads the current tape cell, preserves
+it while moving, and jumps to the blank, false, or true target state with
+proved well-formedness and halt-free packaging. The controller raw-output
+branch also has a code primitive that maps encoded singleton Boolean results
+to encoded raw outputs and rejects the empty no-hit result. For the
+paired-recognizer dovetailer, the layout runner
 now has a halt-free output-realizer contract and the search-driver interface
 has a subroutine-ready variant, isolating the exact contract needed by the
 future finite transition table that loops around a compiled layout subroutine.
@@ -1822,6 +1836,63 @@ theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_controller_
       (PairedRecognizerDovetailTotalStageAttemptCode accept reject) :=
   Computability.pairedRecognizerDovetailTotalStageAttemptCode_controllerResultRealizes
     accept reject
+
+theorem concrete_paired_recognizer_dovetail_controller_raw_output_code_realizes :
+    ConcretePairedRecognizerDovetailControllerRawOutputCodeRealizes
+      ConcretePairedRecognizerDovetailControllerRawOutputCode :=
+  Computability.pairedRecognizerDovetailControllerRawOutputCode_realizes
+
+theorem concrete_cell_branch_description_subroutine_ready
+    {stateCount source halt blankTarget falseTarget trueTarget : Nat}
+    {move : Direction}
+    (hpos : 0 < stateCount)
+    (hsource : source < stateCount)
+    (hhalt : halt < stateCount)
+    (hblank : blankTarget < stateCount)
+    (hfalse : falseTarget < stateCount)
+    (htrue : trueTarget < stateCount)
+    (hsourceNe : source ≠ halt) :
+    (MachineDescription.cellBranchDescription stateCount source halt
+      blankTarget falseTarget trueTarget move).SubroutineReady :=
+  MachineDescription.cellBranchDescription_subroutineReady
+    hpos hsource hhalt hblank hfalse htrue hsourceNe
+
+theorem concrete_cell_branch_description_run_config_one_start
+    (stateCount source halt blankTarget falseTarget trueTarget : Nat)
+    (move : Direction) (T : Tape Bool) :
+    (MachineDescription.cellBranchDescription stateCount source halt
+      blankTarget falseTarget trueTarget move).runConfig 1
+        { state := source, tape := T } =
+      { state :=
+          MachineDescription.cellBranchTarget (Tape.read T)
+            blankTarget falseTarget trueTarget,
+        tape := Tape.move move T } :=
+  MachineDescription.cellBranchDescription_runConfig_one_start
+    stateCount source halt blankTarget falseTarget trueTarget move T
+
+theorem concrete_cell_branch_description_run_config_one_output_nil
+    (stateCount source halt blankTarget falseTarget trueTarget : Nat)
+    (move : Direction) :
+    (MachineDescription.cellBranchDescription stateCount source halt
+      blankTarget falseTarget trueTarget move).runConfig 1
+        { state := source, tape := Tape.output ([] : Word Bool) } =
+      { state := blankTarget,
+        tape := Tape.move move (Tape.output ([] : Word Bool)) } :=
+  MachineDescription.DovetailControllerLayout.cellBranchDescription_runConfig_one_output_nil
+    stateCount source halt blankTarget falseTarget trueTarget move
+
+theorem concrete_cell_branch_description_run_config_one_output_of_raw_output_eq_some
+    (stateCount source halt blankTarget falseTarget trueTarget : Nat)
+    (move : Direction) {result : Word Bool} {b : Bool}
+    (hraw :
+      PairedRecognizerDovetailControllerRawOutput result = some [b]) :
+    (MachineDescription.cellBranchDescription stateCount source halt
+      blankTarget falseTarget trueTarget move).runConfig 1
+        { state := source, tape := Tape.output result } =
+      { state := if b then trueTarget else falseTarget,
+        tape := Tape.move move (Tape.output result) } :=
+  MachineDescription.DovetailControllerLayout.cellBranchDescription_runConfig_one_output_of_rawOutput_eq_some
+    stateCount source halt blankTarget falseTarget trueTarget move hraw
 
 theorem concrete_fixed_description_step_code_output_realizer_of_configuration_realizer
     {D stepper : MachineDescription}
