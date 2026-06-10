@@ -2530,6 +2530,24 @@ theorem rawOutput_singleton (b : Bool) :
     rawOutput? [b] = some [b] :=
   rfl
 
+theorem rawOutput_eq_some_singleton_iff
+    (result : Word Bool) (b : Bool) :
+    rawOutput? result = some [b] <-> result = [b] := by
+  constructor
+  · intro h
+    cases result with
+    | nil =>
+        simp [rawOutput?] at h
+    | cons head tail =>
+        cases tail with
+        | nil =>
+            exact Option.some.inj h
+        | cons next rest =>
+            simp [rawOutput?] at h
+  · intro h
+    rw [h]
+    exact rawOutput_singleton b
+
 def totalAttemptResult
     (accept reject : MachineDescription)
     (C : DovetailControllerLayout) : Word Bool :=

@@ -931,6 +931,12 @@ theorem paired_recognizer_dovetail_total_stage_attempt_search_driver_of_descript
   Computability.pairedRecognizerDovetailTotalStageAttemptSearchDriverCompiler_of_descriptionBoolDeciderCompiler
     hcompile
 
+theorem paired_recognizer_dovetail_total_stage_attempt_controller_search_driver_of_description_bool_decider_compiler
+    (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
+    ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :=
+  Computability.pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_descriptionBoolDeciderCompiler
+    hcompile
+
 theorem bounded_dovetail_table_compiler_of_tape_code_output_compiler_and_description_bool_decider_compiler
     (htape : ConcreteTapeCodeOutputCompilerConstruction)
     (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
@@ -958,6 +964,14 @@ theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compi
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputCompiledSubroutine_and_controllerSearchDriver
     hattempt hdriver
+
+theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_description_bool_decider_compiler
+    (hattempt :
+      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
+    (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputCompiledSubroutine_and_descriptionBoolDeciderCompiler
+    hattempt hbool
 
 theorem paired_recognizer_dovetail_layout_code_output_realizer_of_subroutine_realizer
     (hrunner :
@@ -1018,6 +1032,14 @@ theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_c
   paired_recognizer_dovetail_compiler_of_bounded_dovetail_table_compiler
     (bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_controller_search_driver
       hattempt hdriver)
+
+theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_description_bool_decider_compiler
+    (hattempt :
+      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
+    (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
+    ConcretePairedRecognizerDovetailCompilerConstruction :=
+  Computability.pairedRecognizerDovetailDescriptionCompiler_of_totalStageAttemptCodeOutputCompiledSubroutine_and_descriptionBoolDeciderCompiler
+    hattempt hbool
 
 theorem paired_recognizer_dovetail_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_search_driver
     (hrunner :
@@ -1642,13 +1664,14 @@ controller path also records the stronger normalized-output compiler contract
 needed for sound branching on a subroutine's observed output: the old
 output-realizer contract is one-way, so it cannot rule out spurious halting
 outputs from an arbitrary subroutine. Under the stronger contract, a
-controller-search driver again yields the paired-recognizer dovetail compiler.
-The semantic fallback search driver is still closed by an explicit staged
-Boolean search program under the existing description-backed Boolean compiler
-principle; the lower-level work left, if one wants to avoid that semantic
-compiler principle, is the handwritten transition table that iterates the
-controller state, calls the total-attempt subroutine, and hands off singleton
-results to the raw Boolean output branches.
+controller-search driver again yields the paired-recognizer dovetail compiler,
+and the controller-search driver is itself closed by a staged program that
+tries the total-attempt subroutine at each stage and branches only on singleton
+raw outputs. The lower-level work left, if one wants to avoid the
+description-backed Boolean compiler principle for this driver, is the
+handwritten transition table that iterates the controller state, calls the
+total-attempt subroutine, and hands off singleton results to the raw Boolean
+output branches.
 Exact compilation of every code primitive is proved
 impossible because erasure cannot produce an exact empty tape window from
 nonempty input. The viable boundary is therefore a normalized-output tape-code
