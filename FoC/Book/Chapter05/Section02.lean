@@ -819,6 +819,17 @@ theorem paired_recognizer_dovetail_compiler_of_bounded_dovetail_table_compiler
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
     hcompile
 
+theorem bounded_dovetail_table_compiler_of_paired_recognizer_dovetail_compiler
+    (hcompile : ConcretePairedRecognizerDovetailCompilerConstruction) :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_pairedRecognizerDovetailDescriptionCompiler
+    hcompile
+
+theorem bounded_dovetail_table_compiler_iff_paired_recognizer_dovetail_compiler :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction <->
+      ConcretePairedRecognizerDovetailCompilerConstruction :=
+  Computability.pairedRecognizerBoundedDovetailTableCompiler_iff_pairedRecognizerDovetailDescriptionCompiler
+
 theorem dovetailing_decidable_construction_of_concrete_dovetail_description_compiler
     (hcompile : ConcreteDovetailDescriptionCompilerConstruction) :
     DovetailingDecidableConstruction Bool :=
@@ -2644,6 +2655,19 @@ theorem concrete_finite_grammar_recognizer_compiler_of_general_compiler
   Computability.finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_generalCompiler
     hcompile
 
+theorem concrete_finite_production_list_grammar_recognizer_compiler_of_description_compiler
+    (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
+    ConcreteFiniteProductionListGrammarRecognizerCompilerConstruction :=
+  Computability.finiteProductionListGrammarRecognizerCompilerConstruction_of_descriptionCompiler
+    hcompile
+
+theorem concrete_finite_grammar_recognizer_compiler_of_production_list_compiler
+    (hcompile :
+      ConcreteFiniteProductionListGrammarRecognizerCompilerConstruction) :
+    ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction :=
+  Computability.finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_productionListCompiler
+    hcompile
+
 theorem concrete_general_grammar_recognizer_compiler_of_description_compiler
     (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
     ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction :=
@@ -2658,6 +2682,8 @@ theorem concrete_finite_grammar_recognizer_compiler_of_description_compiler
 
 theorem concrete_finite_section52_closeout_of_semantic_closeout
     (hclose : ConcreteBooleanSection52CompilerCloseout)
+    (hlist :
+      ConcreteFiniteProductionListGrammarRecognizerCompilerConstruction)
     (hfinite :
       RecursivelyEnumerableToFiniteGeneralGrammarConstruction Bool) :
     ConcreteBooleanFiniteGrammarSection52Closeout where
@@ -2665,9 +2691,7 @@ theorem concrete_finite_section52_closeout_of_semantic_closeout
   decidableToAcceptable := hclose.decidableToAcceptable
   dovetailDescription := hclose.dovetailDescription
   partialUnaryRangeDescription := hclose.partialUnaryRangeDescription
-  finiteGrammarRecognizerDescription :=
-    concrete_finite_grammar_recognizer_compiler_of_general_compiler
-      hclose.grammarRecognizerDescription
+  finiteGrammarRecognizerDescription := hlist
   recursivelyEnumerableToFiniteGrammar := hfinite
 
 theorem recursively_enumerable_to_finite_general_grammar_construction_of_description_compiler
@@ -2681,20 +2705,22 @@ theorem concrete_finite_section52_closeout_of_semantic_closeout_and_description_
     (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
     ConcreteBooleanFiniteGrammarSection52Closeout :=
   concrete_finite_section52_closeout_of_semantic_closeout hclose
+    (concrete_finite_production_list_grammar_recognizer_compiler_of_description_compiler
+      hcompile)
     (recursively_enumerable_to_finite_general_grammar_construction_of_description_compiler
       hcompile)
 
 theorem concrete_finite_data_section52_closeout_of_semantic_closeout
-    (hclose : ConcreteBooleanSection52CompilerCloseout) :
+    (hclose : ConcreteBooleanSection52CompilerCloseout)
+    (hlist :
+      ConcreteFiniteProductionListGrammarRecognizerCompilerConstruction) :
     ConcreteBooleanFiniteDataSection52CompilerCloseout where
   boundedTraceSearch := hclose.boundedTraceSearch
   decidableToAcceptable := hclose.decidableToAcceptable
   pairedDovetailDescription :=
     paired_recognizer_dovetail_compiler_of_concrete_dovetail_description_compiler
       hclose.dovetailDescription
-  finiteGrammarRecognizerDescription :=
-    concrete_finite_grammar_recognizer_compiler_of_general_compiler
-      hclose.grammarRecognizerDescription
+  finiteGrammarRecognizerDescription := hlist
   descriptionRecognizerToFiniteGrammar :=
     Computability.machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
       concrete_machine_description_to_finite_general_grammar_construction
@@ -2710,7 +2736,7 @@ theorem concrete_finite_data_section52_closeout_of_semantic_closeout_and_descrip
     paired_recognizer_dovetail_compiler_of_concrete_bool_description_compiler
       hbool
   finiteGrammarRecognizerDescription :=
-    concrete_finite_grammar_recognizer_compiler_of_description_compiler
+    concrete_finite_production_list_grammar_recognizer_compiler_of_description_compiler
       haccept
   descriptionRecognizerToFiniteGrammar :=
     Computability.machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
@@ -3502,7 +3528,8 @@ theorem finite_general_grammar_to_recursively_enumerable_construction_of_finite_
     (hclose : ConcreteBooleanFiniteGrammarSection52Closeout) :
     FiniteGeneralGrammarToRecursivelyEnumerableConstruction Bool :=
   boolean_finite_general_grammar_to_recursively_enumerable_construction_of_concrete_finite_grammar_compiler
-    hclose.finiteGrammarRecognizerDescription
+    (concrete_finite_grammar_recognizer_compiler_of_production_list_compiler
+      hclose.finiteGrammarRecognizerDescription)
 
 theorem program_acceptable_by_description_to_finite_general_grammar_construction_of_finite_data_closeout
     (hclose : ConcreteBooleanFiniteDataSection52CompilerCloseout) :
@@ -3527,10 +3554,15 @@ theorem finite_general_grammar_pair_recursive_of_finite_data_closeout
     acceptFinite, acceptEq⟩
   rcases hpair.right with ⟨rejectNonterminal, rejectG,
     rejectFinite, rejectEq⟩
-  rcases hclose.finiteGrammarRecognizerDescription
+  let hlist : ConcreteFiniteProductionListGrammarRecognizerCompilerConstruction :=
+    hclose.finiteGrammarRecognizerDescription
+  let hgrammar : ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction :=
+    concrete_finite_grammar_recognizer_compiler_of_production_list_compiler
+      hlist
+  rcases hgrammar
       (nonterminal := acceptNonterminal) acceptG acceptFinite with
     ⟨acceptD, acceptCompiled⟩
-  rcases hclose.finiteGrammarRecognizerDescription
+  rcases hgrammar
       (nonterminal := rejectNonterminal) rejectG rejectFinite with
     ⟨rejectD, rejectCompiled⟩
   let acceptProgram : ConcreteFiniteAcceptorProgram :=
@@ -3600,20 +3632,26 @@ theorem boolean_recursive_language_iff_finite_general_grammar_pair_of_finite_sec
 
 theorem boolean_finite_general_grammar_re_equivalence_construction_of_semantic_section52_closeout
     (hclose : ConcreteBooleanSection52CompilerCloseout)
+    (hlist :
+      ConcreteFiniteProductionListGrammarRecognizerCompilerConstruction)
     (hfinite :
       RecursivelyEnumerableToFiniteGeneralGrammarConstruction Bool) :
     FiniteGeneralGrammarREEquivalenceConstruction Bool :=
   boolean_finite_general_grammar_re_equivalence_construction_of_finite_section52_closeout
-    (concrete_finite_section52_closeout_of_semantic_closeout hclose hfinite)
+    (concrete_finite_section52_closeout_of_semantic_closeout
+      hclose hlist hfinite)
 
 theorem boolean_recursive_language_iff_finite_general_grammar_pair_of_semantic_section52_closeout
     (hclose : ConcreteBooleanSection52CompilerCloseout)
+    (hlist :
+      ConcreteFiniteProductionListGrammarRecognizerCompilerConstruction)
     (hfinite :
       RecursivelyEnumerableToFiniteGeneralGrammarConstruction Bool)
     (L : Language Bool) :
     RecursiveLanguage L <-> FiniteGeneralGrammarPairGenerated L :=
   boolean_recursive_language_iff_finite_general_grammar_pair_of_finite_section52_closeout
-    (concrete_finite_section52_closeout_of_semantic_closeout hclose hfinite)
+    (concrete_finite_section52_closeout_of_semantic_closeout
+      hclose hlist hfinite)
     L
 
 /-!
@@ -3627,8 +3665,11 @@ Under that closeout,
 proves the finite grammar pair characterization. The narrower
 {name}`ConcreteBooleanFiniteDataSection52CompilerCloseout` records concrete
 finite-data ingredients: the paired-recognizer dovetail compiler, the finite
-grammar recognizer compiler, and the description-backed recognizer-to-finite
-grammar construction.
+production-list grammar recognizer compiler, and the description-backed
+recognizer-to-finite grammar construction. The ordinary finite-grammar compiler
+is now a derived bridge: a finite grammar supplies a production list, and the
+compiled finite-list recognizer is transferred to the abstract recognizer by
+accepted-language extensionality.
 
 The declarations above now pin that infrastructure down as
 {name}`ConcreteBooleanSection52CompilerCloseout` for the semantic grammar page
@@ -3638,7 +3679,10 @@ the narrowed finite/effective route. These closeouts carry
 {name}`BoundedTraceSearchConstruction` as the primary finite-trace handoff. The
 semantic closeout uses the semantic reverse grammar construction. The
 finite-data closeout replaces the older broad dovetail compiler by a paired
-recognizer dovetail compiler and uses the description-backed construction
+recognizer dovetail compiler; the bounded-dovetail table target is proved
+equivalent to that paired-recognizer target. It also uses the production-list
+grammar compiler as its finite grammar-recognizer input, and uses the
+description-backed construction
 {name}`ConcreteDescriptionRecognizerToFiniteGeneralGrammarConstruction`.
 -/
 

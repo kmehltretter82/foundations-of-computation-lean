@@ -946,6 +946,19 @@ def ProgramCompiledByDescription
     forall w : Word Bool,
       D.HaltsOnInput w <-> ProgramHaltsWithOutput P w []
 
+theorem programCompiledByDescription_of_same_accepted_language
+    {P Q : StagedProgram Bool Unit} {D : MachineDescription}
+    {L : Language Bool}
+    (hP : ProgramAcceptsLanguage P L)
+    (hQ : ProgramAcceptsLanguage Q L)
+    (hcompile : ProgramCompiledByDescription P D) :
+    ProgramCompiledByDescription Q D := by
+  constructor
+  · exact hcompile.left
+  · intro w
+    exact Iff.trans (hcompile.right w)
+      (Iff.trans (hP w) (Iff.symm (hQ w)))
+
 def BoolProgramCompiledByDescription
     (P : StagedProgram Bool Bool) (D : MachineDescription) : Prop :=
   D.WellFormed ∧
@@ -2913,6 +2926,36 @@ theorem pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompi
               apply (hdecider.right w b).mpr
               exists limit
               rwa [MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run]
+
+theorem pairedRecognizerBoundedDovetailTableCompiler_of_pairedRecognizerDovetailDescriptionCompiler
+    (hcompile : PairedRecognizerDovetailDescriptionCompilerPrinciple) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction := by
+  intro accept reject
+  rcases hcompile accept reject with ⟨decider, hdecider⟩
+  refine ⟨decider, ?_⟩
+  constructor
+  · exact hdecider.left
+  · intro w b
+    constructor
+    · intro hhalt
+      rcases (hdecider.right w b).mp hhalt with ⟨limit, hlimit⟩
+      exact
+        ⟨limit, by
+          simpa [MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run]
+            using hlimit⟩
+    · intro hlimit
+      rcases hlimit with ⟨limit, hlimit⟩
+      apply (hdecider.right w b).mpr
+      exact
+        ⟨limit, by
+          simpa [MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run]
+            using hlimit⟩
+
+theorem pairedRecognizerBoundedDovetailTableCompiler_iff_pairedRecognizerDovetailDescriptionCompiler :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction <->
+      PairedRecognizerDovetailDescriptionCompilerPrinciple :=
+  ⟨pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler,
+    pairedRecognizerBoundedDovetailTableCompiler_of_pairedRecognizerDovetailDescriptionCompiler⟩
 
 theorem dovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
     (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :

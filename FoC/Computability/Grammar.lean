@@ -3769,11 +3769,31 @@ theorem finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_generalCompile
   intro _ G _hfinite
   exact hcompile G
 
+theorem finiteProductionListGrammarRecognizerCompilerConstruction_of_descriptionCompiler
+    (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
+    FiniteProductionListGrammarRecognizerCompilerConstruction := by
+  intro _ G rules _hrules
+  exact hcompile (FiniteProductionListRecognizerProgram G rules)
+
+theorem finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_productionListCompiler
+    (hcompile : FiniteProductionListGrammarRecognizerCompilerConstruction) :
+    FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple := by
+  intro _ G hfinite
+  rcases GeneralGrammar.hasFiniteProductions_productionListProduces
+    hfinite with ⟨rules, hrules⟩
+  rcases hcompile G rules hrules with ⟨D, hD⟩
+  exact
+    ⟨D,
+      programCompiledByDescription_of_same_accepted_language
+        (finiteProductionListRecognizerProgram_acceptsLanguage hrules)
+        (generalGrammarRecognizerProgram_acceptsLanguage G)
+        hD⟩
+
 theorem finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
     FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple :=
-  finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_generalCompiler
-    (booleanGeneralGrammarRecognizerCompilerPrinciple_of_descriptionCompiler
+  finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_productionListCompiler
+    (finiteProductionListGrammarRecognizerCompilerConstruction_of_descriptionCompiler
       hcompile)
 
 def GeneralGrammarAcceptabilityEquivalence (L : Language terminal) : Prop :=
@@ -3836,7 +3856,7 @@ structure BooleanFiniteGrammarSection52Closeout where
   partialUnaryRangeDescription :
     SemanticPartialUnaryRangeCompilerAssumption
   finiteGrammarRecognizerDescription :
-    FiniteSourceFiniteGeneralGrammarRecognizerCompilerConstruction
+    FiniteProductionListGrammarRecognizerCompilerConstruction
   recursivelyEnumerableToFiniteGrammar :
     RecursivelyEnumerableToFiniteGeneralGrammarPrinciple Bool
 
@@ -3846,7 +3866,7 @@ structure BooleanFiniteDataSection52CompilerCloseout where
   pairedDovetailDescription :
     FiniteSourcePairedRecognizerDovetailCompilerConstruction
   finiteGrammarRecognizerDescription :
-    FiniteSourceFiniteGeneralGrammarRecognizerCompilerConstruction
+    FiniteProductionListGrammarRecognizerCompilerConstruction
   descriptionRecognizerToFiniteGrammar :
     DescriptionRecognizerToFiniteGeneralGrammarConstruction
 
