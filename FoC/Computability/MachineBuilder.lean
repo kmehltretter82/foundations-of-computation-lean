@@ -83,6 +83,12 @@ def extendStates (extra : Nat) (D : MachineDescription) :
   halt := D.halt
   transitions := D.transitions
 
+def HaltTransitionFree (D : MachineDescription) : Prop :=
+  forall t : TransitionDescription, t ∈ D.transitions -> t.source ≠ D.halt
+
+def SubroutineReady (D : MachineDescription) : Prop :=
+  D.WellFormed ∧ D.HaltTransitionFree
+
 theorem extendStates_wellFormed
     {extra : Nat} {D : MachineDescription}
     (hD : D.WellFormed) :
@@ -103,6 +109,48 @@ theorem extendStates_wellFormed
     · exact Nat.lt_add_right extra htD.right
   · intro t u ht hu hkey
     exact hD.right.right.right.right t u ht hu hkey
+
+theorem extendStates_haltTransitionFree
+    {extra : Nat} {D : MachineDescription}
+    (hD : D.HaltTransitionFree) :
+    (extendStates extra D).HaltTransitionFree := by
+  intro t ht
+  exact hD t ht
+
+theorem extendStates_subroutineReady
+    {extra : Nat} {D : MachineDescription}
+    (hD : D.SubroutineReady) :
+    (extendStates extra D).SubroutineReady :=
+  ⟨extendStates_wellFormed hD.left,
+    extendStates_haltTransitionFree hD.right⟩
+
+theorem lookupTransition_halt_none
+    {D : MachineDescription}
+    (hD : D.HaltTransitionFree) (cell : Option Bool) :
+    D.lookupTransition D.halt cell = none := by
+  unfold lookupTransition
+  apply (List.find?_eq_none).mpr
+  intro t ht
+  have hsource : t.source ≠ D.halt := hD t ht
+  by_cases hs : t.source = D.halt
+  · exact False.elim (hsource hs)
+  · simp [Matches, hs]
+
+theorem stepConfig_halt_none
+    {D : MachineDescription}
+    (hD : D.HaltTransitionFree) (T : Tape Bool) :
+    D.stepConfig { state := D.halt, tape := T } = none := by
+  simp [stepConfig, lookupTransition_halt_none hD]
+
+theorem runConfig_halt
+    {D : MachineDescription}
+    (hD : D.HaltTransitionFree) (T : Tape Bool) :
+    forall n : Nat,
+      D.runConfig n { state := D.halt, tape := T } =
+        { state := D.halt, tape := T }
+  | 0 => rfl
+  | n + 1 => by
+      simp [runConfig, stepConfig_halt_none hD T]
 
 /-!
 ## State-block offsets
@@ -145,6 +193,23 @@ theorem offsetStates_wellFormed
     exact TransitionDescription.offsetStates_sameAction offset baseT baseU
       (hD.right.right.right.right baseT baseU hbaseT hbaseU
         (TransitionDescription.sameKey_of_offsetStates_sameKey hkey))
+
+theorem offsetStates_haltTransitionFree
+    {offset : Nat} {D : MachineDescription}
+    (hD : D.HaltTransitionFree) :
+    (offsetStates offset D).HaltTransitionFree := by
+  intro t ht
+  simp [offsetStates] at ht
+  rcases ht with ⟨base, hbase, rfl⟩
+  intro hsource
+  exact hD base hbase (Nat.add_left_cancel hsource)
+
+theorem offsetStates_subroutineReady
+    {offset : Nat} {D : MachineDescription}
+    (hD : D.SubroutineReady) :
+    (offsetStates offset D).SubroutineReady :=
+  ⟨offsetStates_wellFormed hD.left,
+    offsetStates_haltTransitionFree hD.right⟩
 
 /-!
 ## Disjoint table unions
@@ -220,6 +285,32 @@ theorem disjointUnion_wellFormed
                   hbaseT hbaseU
                   (TransitionDescription.sameKey_of_offsetStates_sameKey
                     hkey))
+
+theorem disjointUnion_haltTransitionFree
+    {A B : MachineDescription}
+    (hAFormed : A.WellFormed)
+    (hA : A.HaltTransitionFree) :
+    (disjointUnion A B).HaltTransitionFree := by
+  intro t ht
+  simp [disjointUnion] at ht
+  cases ht with
+  | inl htA =>
+      exact hA t htA
+  | inr htB =>
+      rcases htB with ⟨base, _hbase, rfl⟩
+      intro hsource
+      have hhalt : A.halt < A.stateCount := hAFormed.right.right.left
+      have hsourceEq : A.stateCount + base.source = A.halt := by
+        simpa [TransitionDescription.offsetStates, disjointUnion] using
+          hsource
+      omega
+
+theorem disjointUnion_subroutineReady
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.WellFormed) :
+    (disjointUnion A B).SubroutineReady :=
+  ⟨disjointUnion_wellFormed hA.left hB,
+    disjointUnion_haltTransitionFree hA.left hA.right⟩
 
 /-!
 ## Transition-fragment DSL
@@ -372,6 +463,19 @@ theorem toDescription_wellFormed
     F.toDescription.WellFormed := by
   rcases hF with ⟨hpos, hentry, hexit, htrans, hdet, _hexitStops⟩
   exact ⟨hpos, hentry, hexit, htrans, hdet⟩
+
+theorem toDescription_haltTransitionFree
+    {F : Fragment} (hF : F.WellFormed) :
+    F.toDescription.HaltTransitionFree := by
+  rcases hF with
+    ⟨_hpos, _hentry, _hexit, _htrans, _hdet, hexitStops⟩
+  exact hexitStops
+
+theorem toDescription_subroutineReady
+    {F : Fragment} (hF : F.WellFormed) :
+    F.toDescription.SubroutineReady :=
+  ⟨toDescription_wellFormed hF,
+    toDescription_haltTransitionFree hF⟩
 
 def halt : Fragment where
   stateCount := 1

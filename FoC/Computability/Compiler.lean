@@ -370,6 +370,11 @@ theorem exactIdentityDescription_wellFormed :
     ExactIdentityDescription.WellFormed := by
   simp [ExactIdentityDescription, WellFormed, Deterministic]
 
+theorem exactIdentityDescription_haltTransitionFree :
+    ExactIdentityDescription.HaltTransitionFree := by
+  intro t ht
+  simp [ExactIdentityDescription] at ht
+
 theorem exactIdentityDescription_haltsWithExactOutputIn
     (w : Word Bool) :
     ExactIdentityDescription.HaltsWithExactOutputIn 0 w w := by
@@ -456,6 +461,13 @@ theorem eraseRightDescription_wellFormed :
       rcases hu with rfl | rfl | rfl <;>
         simp [TransitionDescription.SameKey,
           TransitionDescription.SameAction] at hkey ⊢
+
+theorem eraseRightDescription_haltTransitionFree :
+    EraseRightDescription.HaltTransitionFree := by
+  intro t ht
+  simp [EraseRightDescription, transition] at ht
+  rcases ht with rfl | rfl | rfl <;>
+    simp [EraseRightDescription]
 
 theorem eraseRightTape_move_nonempty
     (erased : Nat) (b : Bool) (rest : Word Bool) :
@@ -580,6 +592,13 @@ theorem boolOutputDescription_wellFormed (b : Bool) :
       rcases hu with rfl | rfl | rfl <;>
         simp [TransitionDescription.SameKey,
           TransitionDescription.SameAction] at hkey ⊢
+
+theorem boolOutputDescription_haltTransitionFree (b : Bool) :
+    (BoolOutputDescription b).HaltTransitionFree := by
+  intro t ht
+  simp [BoolOutputDescription, transition] at ht
+  rcases ht with rfl | rfl | rfl <;>
+    simp [BoolOutputDescription]
 
 theorem boolOutputDescription_step_nonempty
     (out : Bool) (erased : Nat) (b : Bool) (rest : Word Bool) :
@@ -730,11 +749,25 @@ theorem appendFixedFourBitsRightDescription_wellFormed
         simp [TransitionDescription.SameKey,
           TransitionDescription.SameAction] at hkey ⊢
 
+theorem appendFixedFourBitsRightDescription_haltTransitionFree
+    (b0 b1 b2 b3 : Bool) :
+    (AppendFixedFourBitsRightDescription b0 b1 b2 b3).HaltTransitionFree := by
+  intro t ht
+  simp [AppendFixedFourBitsRightDescription, transition] at ht
+  rcases ht with rfl | rfl | rfl | rfl | rfl | rfl <;>
+    simp [AppendFixedFourBitsRightDescription]
+
 theorem appendCodeSymbolRightDescription_wellFormed
     (symbol : MachineCodeSymbol) :
     (AppendCodeSymbolRightDescription symbol).WellFormed := by
   cases symbol <;>
     exact appendFixedFourBitsRightDescription_wellFormed _ _ _ _
+
+theorem appendCodeSymbolRightDescription_haltTransitionFree
+    (symbol : MachineCodeSymbol) :
+    (AppendCodeSymbolRightDescription symbol).HaltTransitionFree := by
+  cases symbol <;>
+    exact appendFixedFourBitsRightDescription_haltTransitionFree _ _ _ _
 
 theorem appendRightScanTape_nil_eq_input
     (w : Word Bool) :
@@ -1581,6 +1614,42 @@ def machineDescriptionPrimitiveCompilerCore :
     not_tapeCodePrimitiveCompiledByDescription_erase
   appendSingletonOutputRealized :=
     tapeCodePrimitiveOutputRealizedByDescription_append_singleton
+
+structure MachineDescriptionPrimitiveSubroutineCore where
+  identityReady :
+    MachineDescription.SubroutineReady
+      MachineDescription.ExactIdentityDescription
+  eraseReady :
+    MachineDescription.SubroutineReady
+      MachineDescription.EraseRightDescription
+  boolOutputReady :
+    forall b : Bool,
+      MachineDescription.SubroutineReady
+        (MachineDescription.BoolOutputDescription b)
+  appendSingletonReady :
+    forall symbol : MachineCodeSymbol,
+      MachineDescription.SubroutineReady
+        (MachineDescription.AppendCodeSymbolRightDescription symbol)
+
+def machineDescriptionPrimitiveSubroutineCore :
+    MachineDescriptionPrimitiveSubroutineCore where
+  identityReady :=
+    ⟨MachineDescription.exactIdentityDescription_wellFormed,
+      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+  eraseReady :=
+    ⟨MachineDescription.eraseRightDescription_wellFormed,
+      MachineDescription.eraseRightDescription_haltTransitionFree⟩
+  boolOutputReady := by
+    intro b
+    exact
+      ⟨MachineDescription.boolOutputDescription_wellFormed b,
+        MachineDescription.boolOutputDescription_haltTransitionFree b⟩
+  appendSingletonReady := by
+    intro symbol
+    exact
+      ⟨MachineDescription.appendCodeSymbolRightDescription_wellFormed symbol,
+        MachineDescription.appendCodeSymbolRightDescription_haltTransitionFree
+          symbol⟩
 
 def MachineDescriptionTapeCodeExactCompilerConstruction : Prop :=
   forall P : MachineDescription.TapeCodePrimitive,

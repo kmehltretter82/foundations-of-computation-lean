@@ -1419,17 +1419,20 @@ Boolean transition table that parses a canonical configuration, performs one
 fixed description-table lookup, and emits the re-encoded successor
 configuration.
 
-The concrete transducer pieces are retained as a small compiler core. A finite table
-appends one fixed encoded code symbol to the normalized Boolean output, while
-the code-primitive layer provides fixed unary comparisons and one-step tape
-write/move actions with canonical encode/decode theorems. A concrete
+The concrete transducer pieces are retained as a small compiler core. A finite
+table appends one fixed encoded code symbol to the normalized Boolean output,
+while the code-primitive layer provides fixed unary comparisons and one-step
+tape write/move actions with canonical encode/decode theorems. A concrete
 Boolean-output table erases its input and emits either {lit}`true` or
-{lit}`false`, giving the eventual dovetail driver finite halt branches. Exact
-compilation of every code primitive is proved impossible because erasure cannot
-produce an exact empty tape window from nonempty input. The viable boundary is
-therefore a normalized-output tape-code compiler: if that one generic compiler
-principle is supplied, the fixed stepper, bounded simulator, and
-dovetail-layout machine-description obligations all follow.
+{lit}`false`, giving the eventual dovetail driver finite halt branches. The
+same tables are also packaged as halt-transition-free subroutines, so later
+control-flow tables can call them without adding outgoing transitions from
+their halting states. Exact compilation of every code primitive is proved
+impossible because erasure cannot produce an exact empty tape window from
+nonempty input. The viable boundary is therefore a normalized-output tape-code
+compiler: if that one generic compiler principle is supplied, the fixed
+stepper, bounded simulator, and dovetail-layout machine-description obligations
+all follow.
 -/
 
 theorem concrete_fixed_description_bounded_simulator_table_compiler_of_code_compiler
@@ -1450,9 +1453,17 @@ def concrete_machine_description_primitive_compiler_core :
     MachineDescriptionPrimitiveCompilerCore :=
   Computability.machineDescriptionPrimitiveCompilerCore
 
+def concrete_machine_description_primitive_subroutine_core :
+    MachineDescriptionPrimitiveSubroutineCore :=
+  Computability.machineDescriptionPrimitiveSubroutineCore
+
 theorem concrete_bool_output_description_wellFormed (b : Bool) :
     (ConcreteBoolOutputDescription b).WellFormed :=
   MachineDescription.boolOutputDescription_wellFormed b
+
+theorem concrete_bool_output_description_haltTransitionFree (b : Bool) :
+    (ConcreteBoolOutputDescription b).HaltTransitionFree :=
+  MachineDescription.boolOutputDescription_haltTransitionFree b
 
 theorem concrete_bool_output_description_haltsWithOutput
     (b : Bool) (w : Word Bool) :
@@ -2639,6 +2650,26 @@ noncomputable def GeneralGrammarFiniteProductionListBoundedStagedRecognizer
     StagedProgram terminal Unit :=
   FiniteProductionListBoundedRecognizerProgram G rules
 
+def ConcreteFiniteProductionListDerivationCertificateTrace
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal))
+    (w : Word terminal) (n : Nat) : Prop :=
+  FiniteProductionListDerivationCertificateTrace G rules w n
+
+noncomputable def GeneralGrammarFiniteProductionListCertificateStagedRecognizer
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal)) :
+    StagedProgram terminal Unit :=
+  FiniteProductionListCertificateRecognizerProgram G rules
+
+theorem finite_production_list_derivation_certificate_trace_iff_trace
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    {w : Word terminal} {n : Nat} :
+    ConcreteFiniteProductionListDerivationCertificateTrace G rules w n <->
+      FiniteProductionListDerivationTrace G rules w n :=
+  Computability.finiteProductionListDerivationCertificateTrace_iff_trace
+
 abbrev ConcreteFiniteBoolGeneralGrammarPresentation :=
   FiniteBoolGeneralGrammarPresentation
 
@@ -2723,6 +2754,10 @@ def ConcreteFiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstru
     Prop :=
   FiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction
 
+def ConcreteFiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction :
+    Prop :=
+  FiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction
+
 def ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
   ConcreteFiniteSourceFiniteGeneralGrammarRecognizerCompilerConstruction
 
@@ -2790,6 +2825,21 @@ theorem concrete_finite_bool_general_grammar_presentation_compiler_of_bounded_re
     ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
   Computability.finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_boundedRecognizerCompiler
     hcompile
+
+theorem concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_certificate_recognizer_compiler
+    (hcompile :
+      ConcreteFiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction) :
+    ConcreteFiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :=
+  Computability.finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_certificateRecognizerCompiler
+    hcompile
+
+theorem concrete_finite_bool_general_grammar_presentation_compiler_of_certificate_recognizer_compiler
+    (hcompile :
+      ConcreteFiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction) :
+    ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
+  concrete_finite_bool_general_grammar_presentation_compiler_of_bounded_recognizer_compiler
+    (concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_certificate_recognizer_compiler
+      hcompile)
 
 theorem concrete_finite_bool_general_grammar_presentation_has_finite_productions
     (P : ConcreteFiniteBoolGeneralGrammarPresentation) :
@@ -3047,6 +3097,34 @@ theorem finite_production_list_bounded_staged_recognizer_accepts_generated_langu
       (GeneralGrammarFiniteProductionListBoundedStagedRecognizer G rules)
       (GeneralGrammarGeneratedLanguage G) :=
   Computability.finiteProductionListBoundedRecognizerProgram_acceptsLanguage
+    hrules
+
+theorem finite_production_list_certificate_staged_recognizer_accepts_generated_language
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    ProgramAcceptsLanguage
+      (GeneralGrammarFiniteProductionListCertificateStagedRecognizer G rules)
+      (GeneralGrammarGeneratedLanguage G) :=
+  Computability.finiteProductionListCertificateRecognizerProgram_acceptsLanguage
+    hrules
+
+theorem finite_production_list_certificate_staged_recognizer_same_language_as_bounded
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    forall w : Word terminal,
+      ProgramHaltsWithOutput
+          (GeneralGrammarFiniteProductionListCertificateStagedRecognizer
+            G rules) w [] <->
+        ProgramHaltsWithOutput
+          (GeneralGrammarFiniteProductionListBoundedStagedRecognizer
+            G rules) w [] :=
+  Computability.finiteProductionListCertificateRecognizerProgram_same_language
     hrules
 
 theorem acceptance_trace_simulation_grammar_derivesIn_one_of_trace
@@ -3815,8 +3893,13 @@ is now a derived bridge: a finite grammar is converted to an explicit
 {lit}`Fin n` production-list presentation, and the compiled presentation
 recognizer is transferred to the abstract recognizer by accepted-language
 extensionality. The presentation compiler itself is factored through a bounded
-derivation-search recognizer compiler, isolating the remaining finite grammar
-table construction.
+derivation-search recognizer compiler. That bounded recognizer is now mirrored
+by an explicit finite production-list certificate recognizer, so the remaining
+finite grammar table construction is a certificate-checking compiler problem:
+verify a bounded list of sentential-form rewrites and emit acceptance exactly
+when such a certificate exists. The corresponding certificate-recognizer
+compiler target now implies the bounded-recognizer target, which in turn
+implies the first-order finite grammar-presentation compiler.
 
 The declarations above now pin that infrastructure down as
 {name}`ConcreteBooleanSection52CompilerCloseout` for the semantic grammar page
