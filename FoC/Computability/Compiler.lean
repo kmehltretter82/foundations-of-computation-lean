@@ -1532,6 +1532,12 @@ def TapeCodePrimitiveOutputRealizedByDescription
           (MachineDescription.encodeCodeWordAsInput code)
           (MachineDescription.encodeCodeWordAsInput out)
 
+def TapeCodePrimitiveOutputSubroutineRealizedByDescription
+    (P : MachineDescription.TapeCodePrimitive)
+    (D : MachineDescription) : Prop :=
+  TapeCodePrimitiveOutputRealizedByDescription P D ∧
+    D.HaltTransitionFree
+
 theorem tapeCodePrimitiveOutputRealizedByDescription_of_exact
     {P : MachineDescription.TapeCodePrimitive}
     {D : MachineDescription}
@@ -1542,6 +1548,20 @@ theorem tapeCodePrimitiveOutputRealizedByDescription_of_exact
   · intro code out hp
     exact MachineDescription.haltsWithOutput_of_haltsWithExactOutput
       ((h.right code out).mpr hp)
+
+theorem tapeCodePrimitiveOutputRealizedByDescription_of_subroutine
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : TapeCodePrimitiveOutputSubroutineRealizedByDescription P D) :
+    TapeCodePrimitiveOutputRealizedByDescription P D :=
+  h.left
+
+theorem tapeCodePrimitiveOutputSubroutineRealizedByDescription_subroutineReady
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : TapeCodePrimitiveOutputSubroutineRealizedByDescription P D) :
+    D.SubroutineReady :=
+  ⟨h.left.left, h.right⟩
 
 theorem tapeCodePrimitiveCompiledByDescription_identity :
     TapeCodePrimitiveCompiledByDescription
@@ -1576,6 +1596,13 @@ theorem tapeCodePrimitiveOutputRealizedByDescription_identity :
   tapeCodePrimitiveOutputRealizedByDescription_of_exact
     tapeCodePrimitiveCompiledByDescription_identity
 
+theorem tapeCodePrimitiveOutputSubroutineRealizedByDescription_identity :
+    TapeCodePrimitiveOutputSubroutineRealizedByDescription
+      MachineDescription.TapeCodePrimitive.identity
+      MachineDescription.ExactIdentityDescription :=
+  ⟨tapeCodePrimitiveOutputRealizedByDescription_identity,
+    MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+
 theorem tapeCodePrimitiveOutputRealizedByDescription_erase :
     TapeCodePrimitiveOutputRealizedByDescription
       MachineDescription.TapeCodePrimitive.erase
@@ -1587,6 +1614,13 @@ theorem tapeCodePrimitiveOutputRealizedByDescription_erase :
     rw [← h]
     exact MachineDescription.eraseRightDescription_haltsWithOutput_empty
       (MachineDescription.encodeCodeWordAsInput code)
+
+theorem tapeCodePrimitiveOutputSubroutineRealizedByDescription_erase :
+    TapeCodePrimitiveOutputSubroutineRealizedByDescription
+      MachineDescription.TapeCodePrimitive.erase
+      MachineDescription.EraseRightDescription :=
+  ⟨tapeCodePrimitiveOutputRealizedByDescription_erase,
+    MachineDescription.eraseRightDescription_haltTransitionFree⟩
 
 theorem tapeCodePrimitiveOutputRealizedByDescription_append_singleton
     (symbol : MachineCodeSymbol) :
@@ -1615,6 +1649,15 @@ theorem tapeCodePrimitiveOutputRealizedByDescription_append_singleton
     exact
       MachineDescription.appendCodeSymbolRightDescription_haltsWithOutput_append
         symbol (MachineDescription.encodeCodeWordAsInput code)
+
+theorem tapeCodePrimitiveOutputSubroutineRealizedByDescription_append_singleton
+    (symbol : MachineCodeSymbol) :
+    TapeCodePrimitiveOutputSubroutineRealizedByDescription
+      (MachineDescription.TapeCodePrimitive.append [symbol])
+      (MachineDescription.AppendCodeSymbolRightDescription symbol) :=
+  ⟨tapeCodePrimitiveOutputRealizedByDescription_append_singleton symbol,
+    MachineDescription.appendCodeSymbolRightDescription_haltTransitionFree
+      symbol⟩
 
 theorem not_tapeCodePrimitiveCompiledByDescription_erase :
     ¬ exists D : MachineDescription,
@@ -1841,9 +1884,24 @@ def PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction : Prop :=
       TapeCodePrimitiveOutputRealizedByDescription
         (PairedRecognizerDovetailLayoutCode accept reject) runner
 
+def PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction :
+    Prop :=
+  forall accept reject : MachineDescription,
+    exists runner : MachineDescription,
+      TapeCodePrimitiveOutputSubroutineRealizedByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject) runner
+
 def PairedRecognizerDovetailSearchDriverCompilerConstruction : Prop :=
   forall accept reject runner : MachineDescription,
     TapeCodePrimitiveOutputRealizedByDescription
+      (PairedRecognizerDovetailLayoutCode accept reject) runner ->
+      exists decider : MachineDescription,
+        PairedRecognizerBoundedDovetailTableRealizes accept reject decider
+
+def PairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction :
+    Prop :=
+  forall accept reject runner : MachineDescription,
+    TapeCodePrimitiveOutputSubroutineRealizedByDescription
       (PairedRecognizerDovetailLayoutCode accept reject) runner ->
       exists decider : MachineDescription,
         PairedRecognizerBoundedDovetailTableRealizes accept reject decider
@@ -1873,6 +1931,14 @@ def PairedRecognizerDovetailRunnerSearchDriverCompilerConstruction : Prop :=
     exists decider : MachineDescription,
       PairedRecognizerDovetailRunnerSearchDriverRealizes
         accept reject runner decider
+
+def PairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction :
+    Prop :=
+  forall accept reject runner : MachineDescription,
+    runner.SubroutineReady ->
+      exists decider : MachineDescription,
+        PairedRecognizerDovetailRunnerSearchDriverRealizes
+          accept reject runner decider
 
 theorem fixedDescriptionBoundedSimulatorCodeOutputRealizer_of_codeCompiler
     (hcompile :
@@ -2030,6 +2096,15 @@ theorem pairedRecognizerDovetailLayoutCodeOutputRealizer_of_codeCompiler
   exact ⟨runner,
     tapeCodePrimitiveOutputRealizedByDescription_of_exact hrunner⟩
 
+theorem pairedRecognizerDovetailLayoutCodeOutputRealizer_of_subroutineRealizer
+    (hcompile :
+      PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction) :
+    PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction := by
+  intro accept reject
+  rcases hcompile accept reject with ⟨runner, hrunner⟩
+  exact ⟨runner,
+    tapeCodePrimitiveOutputRealizedByDescription_of_subroutine hrunner⟩
+
 theorem pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputRealizer_and_searchDriver
     (hrunner :
       PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
@@ -2040,13 +2115,25 @@ theorem pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputRealizer
   rcases hrunner accept reject with ⟨runner, hrunnerRealizes⟩
   exact hdriver accept reject runner hrunnerRealizes
 
-theorem pairedRecognizerDovetailSearchDriverCompiler_of_runnerSearchDriverCompiler
-    (hcompile :
-      PairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
-    PairedRecognizerDovetailSearchDriverCompilerConstruction := by
-  intro accept reject runner hrunner
-  rcases hcompile accept reject runner with ⟨decider, hdecider⟩
-  refine ⟨decider, ?_⟩
+theorem pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineSearchDriver
+    (hrunner :
+      PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
+    (hdriver :
+      PairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction := by
+  intro accept reject
+  rcases hrunner accept reject with ⟨runner, hrunnerRealizes⟩
+  exact hdriver accept reject runner hrunnerRealizes
+
+theorem pairedRecognizerBoundedDovetailTableRealizes_of_runnerSearchDriverRealizes
+    {accept reject runner decider : MachineDescription}
+    (hrunner :
+      TapeCodePrimitiveOutputRealizedByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject) runner)
+    (hdecider :
+      PairedRecognizerDovetailRunnerSearchDriverRealizes
+        accept reject runner decider) :
+    PairedRecognizerBoundedDovetailTableRealizes accept reject decider := by
   constructor
   · exact hdecider.left
   · intro w b
@@ -2074,6 +2161,41 @@ theorem pairedRecognizerDovetailSearchDriverCompiler_of_runnerSearchDriverCompil
               (MachineDescription.DovetailLayout.initial
                 accept reject w limit))
       · simpa [pairedRecognizerDovetailLayout_initial_output] using hout
+
+theorem pairedRecognizerDovetailSearchDriverCompiler_of_runnerSearchDriverCompiler
+    (hcompile :
+      PairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailSearchDriverCompilerConstruction := by
+  intro accept reject runner hrunner
+  rcases hcompile accept reject runner with ⟨decider, hdecider⟩
+  exact ⟨decider,
+    pairedRecognizerBoundedDovetailTableRealizes_of_runnerSearchDriverRealizes
+      hrunner hdecider⟩
+
+theorem pairedRecognizerDovetailSubroutineSearchDriverCompiler_of_subroutineRunnerSearchDriverCompiler
+    (hcompile :
+      PairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction := by
+  intro accept reject runner hrunner
+  rcases hcompile accept reject runner
+      (tapeCodePrimitiveOutputSubroutineRealizedByDescription_subroutineReady
+        hrunner) with
+    ⟨decider, hdecider⟩
+  exact ⟨decider,
+    pairedRecognizerBoundedDovetailTableRealizes_of_runnerSearchDriverRealizes
+      (tapeCodePrimitiveOutputRealizedByDescription_of_subroutine hrunner)
+      hdecider⟩
+
+theorem pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineRunnerSearchDriver
+    (hrunner :
+      PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
+    (hdriver :
+      PairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineSearchDriver
+    hrunner
+    (pairedRecognizerDovetailSubroutineSearchDriverCompiler_of_subroutineRunnerSearchDriverCompiler
+      hdriver)
 
 theorem fixedDescriptionBoundedSimulatorTableRealizes_of_codeCompiler
     {D simulator : MachineDescription}
@@ -3339,6 +3461,26 @@ theorem pairedRecognizerDovetailDescriptionCompiler_of_layoutCodeOutputRealizer_
     PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
     (pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputRealizer_and_searchDriver
+      hrunner hdriver)
+
+theorem pairedRecognizerDovetailDescriptionCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineSearchDriver
+    (hrunner :
+      PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
+    (hdriver :
+      PairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
+  pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
+    (pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineSearchDriver
+      hrunner hdriver)
+
+theorem pairedRecognizerDovetailDescriptionCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineRunnerSearchDriver
+    (hrunner :
+      PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
+    (hdriver :
+      PairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
+  pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
+    (pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineRunnerSearchDriver
       hrunner hdriver)
 
 theorem dovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler

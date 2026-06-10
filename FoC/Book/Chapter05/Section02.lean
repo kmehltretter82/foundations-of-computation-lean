@@ -41,9 +41,9 @@ The formal page separates three levels of argument.
 The finite compiler boundaries are now first-order where possible. Boolean
 finite grammar presentations use explicit {lit}`Fin n` nonterminals and a
 production list, with the remaining recognizer compiler factored through a
-bounded derivation-search recognizer. Paired-recognizer dovetailing is split
-into a bounded layout runner and a runner-search driver that performs the
-unbounded stage search.
+bounded indexed-certificate recognizer. Paired-recognizer dovetailing is split
+into a halt-free bounded layout runner and a subroutine-ready runner-search
+driver that performs the unbounded stage search.
 
 This makes the theorem statements honest about implementation work. When a
 textbook proof says to dovetail two recognizers or check a finite derivation,
@@ -148,9 +148,17 @@ def ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction : Prop :=
 def ConcretePairedRecognizerDovetailSearchDriverCompilerConstruction : Prop :=
   PairedRecognizerDovetailSearchDriverCompilerConstruction
 
+def ConcretePairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction :
+    Prop :=
+  PairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction
+
 def ConcretePairedRecognizerDovetailRunnerSearchDriverCompilerConstruction :
     Prop :=
   PairedRecognizerDovetailRunnerSearchDriverCompilerConstruction
+
+def ConcretePairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction :
+    Prop :=
+  PairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction
 
 def ConcreteFixedDescriptionBoundedSimulatorCodeCompilerConstruction : Prop :=
   FixedDescriptionBoundedSimulatorCodeCompilerConstruction
@@ -184,6 +192,10 @@ def ConcretePairedRecognizerDovetailLayoutCodeCompilerConstruction : Prop :=
 def ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction :
     Prop :=
   PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction
+
+def ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction :
+    Prop :=
+  PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction
 
 def ConcreteFiniteDovetailCompilerConstruction : Prop :=
   FiniteDovetailProgram.CompilerConstruction
@@ -856,6 +868,22 @@ theorem bounded_dovetail_table_compiler_of_layout_code_output_realizer_and_searc
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputRealizer_and_searchDriver
     hrunner hdriver
 
+theorem paired_recognizer_dovetail_layout_code_output_realizer_of_subroutine_realizer
+    (hrunner :
+      ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction) :
+    ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction :=
+  Computability.pairedRecognizerDovetailLayoutCodeOutputRealizer_of_subroutineRealizer
+    hrunner
+
+theorem bounded_dovetail_table_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_search_driver
+    (hrunner :
+      ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
+    (hdriver :
+      ConcretePairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineSearchDriver
+    hrunner hdriver
+
 theorem paired_recognizer_dovetail_compiler_of_layout_code_output_realizer_and_search_driver
     (hrunner :
       ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
@@ -865,11 +893,28 @@ theorem paired_recognizer_dovetail_compiler_of_layout_code_output_realizer_and_s
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_layoutCodeOutputRealizer_and_searchDriver
     hrunner hdriver
 
+theorem paired_recognizer_dovetail_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_search_driver
+    (hrunner :
+      ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
+    (hdriver :
+      ConcretePairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerDovetailCompilerConstruction :=
+  paired_recognizer_dovetail_compiler_of_bounded_dovetail_table_compiler
+    (bounded_dovetail_table_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_search_driver
+      hrunner hdriver)
+
 theorem paired_recognizer_dovetail_search_driver_of_runner_search_driver
     (hdriver :
       ConcretePairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerDovetailSearchDriverCompilerConstruction :=
   Computability.pairedRecognizerDovetailSearchDriverCompiler_of_runnerSearchDriverCompiler
+    hdriver
+
+theorem paired_recognizer_dovetail_subroutine_search_driver_of_subroutine_runner_search_driver
+    (hdriver :
+      ConcretePairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction :=
+  Computability.pairedRecognizerDovetailSubroutineSearchDriverCompiler_of_subroutineRunnerSearchDriverCompiler
     hdriver
 
 theorem bounded_dovetail_table_compiler_of_layout_code_output_realizer_and_runner_search_driver
@@ -883,6 +928,17 @@ theorem bounded_dovetail_table_compiler_of_layout_code_output_realizer_and_runne
     (paired_recognizer_dovetail_search_driver_of_runner_search_driver
       hdriver)
 
+theorem bounded_dovetail_table_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_runner_search_driver
+    (hrunner :
+      ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
+    (hdriver :
+      ConcretePairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  bounded_dovetail_table_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_search_driver
+    hrunner
+    (paired_recognizer_dovetail_subroutine_search_driver_of_subroutine_runner_search_driver
+      hdriver)
+
 theorem paired_recognizer_dovetail_compiler_of_layout_code_output_realizer_and_runner_search_driver
     (hrunner :
       ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
@@ -892,6 +948,17 @@ theorem paired_recognizer_dovetail_compiler_of_layout_code_output_realizer_and_r
   paired_recognizer_dovetail_compiler_of_layout_code_output_realizer_and_search_driver
     hrunner
     (paired_recognizer_dovetail_search_driver_of_runner_search_driver
+      hdriver)
+
+theorem paired_recognizer_dovetail_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_runner_search_driver
+    (hrunner :
+      ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
+    (hdriver :
+      ConcretePairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerDovetailCompilerConstruction :=
+  paired_recognizer_dovetail_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_search_driver
+    hrunner
+    (paired_recognizer_dovetail_subroutine_search_driver_of_subroutine_runner_search_driver
       hdriver)
 
 theorem dovetailing_decidable_construction_of_concrete_dovetail_description_compiler
@@ -1430,7 +1497,11 @@ control-flow tables can call them without adding outgoing transitions from
 their halting states. The subroutine layer also provides a description-level
 sequencer: a subroutine-ready table can be viewed as a fragment, composed with
 another such table, and reasoned about using the existing first-arrival
-fragment semantics. Exact compilation of every code primitive is proved
+fragment semantics. For the paired-recognizer dovetailer, the layout runner
+now has a halt-free output-realizer contract and the search-driver interface
+has a subroutine-ready variant, isolating the exact contract needed by the
+future finite transition table that loops around a compiled layout subroutine.
+Exact compilation of every code primitive is proved
 impossible because erasure cannot produce an exact empty tape window from
 nonempty input. The viable boundary is therefore a normalized-output tape-code
 compiler: if that one generic compiler principle is supplied, the fixed
@@ -2700,11 +2771,29 @@ def ConcreteFiniteProductionListDerivationCertificateTrace
     (w : Word terminal) (n : Nat) : Prop :=
   FiniteProductionListDerivationCertificateTrace G rules w n
 
+def ConcreteFiniteProductionListIndexedDerivationCertificateTrace
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal))
+    (w : Word terminal) (n : Nat) : Prop :=
+  FiniteProductionListIndexedDerivationCertificateTrace G rules w n
+
+abbrev ConcreteFiniteProductionListIndexedDerivationCertificateData
+    (rules : List (GeneralGrammar.Production terminal nonterminal))
+    (n : Nat)
+    (x y : SententialForm terminal nonterminal) :=
+  FiniteProductionListIndexedDerivationCertificateData rules n x y
+
 noncomputable def GeneralGrammarFiniteProductionListCertificateStagedRecognizer
     (G : GeneralGrammar terminal nonterminal)
     (rules : List (GeneralGrammar.Production terminal nonterminal)) :
     StagedProgram terminal Unit :=
   FiniteProductionListCertificateRecognizerProgram G rules
+
+noncomputable def GeneralGrammarFiniteProductionListIndexedCertificateStagedRecognizer
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal)) :
+    StagedProgram terminal Unit :=
+  FiniteProductionListIndexedCertificateRecognizerProgram G rules
 
 theorem finite_production_list_derivation_certificate_trace_iff_trace
     {G : GeneralGrammar terminal nonterminal}
@@ -2713,6 +2802,39 @@ theorem finite_production_list_derivation_certificate_trace_iff_trace
     ConcreteFiniteProductionListDerivationCertificateTrace G rules w n <->
       FiniteProductionListDerivationTrace G rules w n :=
   Computability.finiteProductionListDerivationCertificateTrace_iff_trace
+
+theorem finite_production_list_indexed_derivation_certificate_trace_iff_trace
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    {w : Word terminal} {n : Nat} :
+    ConcreteFiniteProductionListIndexedDerivationCertificateTrace
+        G rules w n <->
+      FiniteProductionListDerivationTrace G rules w n :=
+  Computability.finiteProductionListIndexedDerivationCertificateTrace_iff_trace
+
+theorem finite_production_list_indexed_derivation_certificate_of_checked_data
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    {n : Nat} {x y : SententialForm terminal nonterminal}
+    {cert :
+      ConcreteFiniteProductionListIndexedDerivationCertificateData
+        rules n x y}
+    (h : cert.check = true) :
+    FiniteProductionListIndexedDerivationCertificate rules n x y :=
+  Computability.FiniteProductionListIndexedDerivationCertificateData.to_indexedCertificate_of_check_eq_true
+    h
+
+theorem finite_production_list_indexed_derivation_certificate_has_checked_data
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    {n : Nat} {x y : SententialForm terminal nonterminal}
+    (cert : FiniteProductionListIndexedDerivationCertificate rules n x y) :
+    exists data :
+      ConcreteFiniteProductionListIndexedDerivationCertificateData
+        rules n x y,
+      data.check = true :=
+  Computability.FiniteProductionListIndexedDerivationCertificateData.exists_check_eq_true_of_indexedCertificate
+    cert
 
 abbrev ConcreteFiniteBoolGeneralGrammarPresentation :=
   FiniteBoolGeneralGrammarPresentation
@@ -2802,6 +2924,10 @@ def ConcreteFiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerCon
     Prop :=
   FiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction
 
+def ConcreteFiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction :
+    Prop :=
+  FiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction
+
 def ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
   ConcreteFiniteSourceFiniteGeneralGrammarRecognizerCompilerConstruction
 
@@ -2877,12 +3003,27 @@ theorem concrete_finite_bool_general_grammar_presentation_bounded_recognizer_com
   Computability.finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_certificateRecognizerCompiler
     hcompile
 
+theorem concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_indexed_certificate_recognizer_compiler
+    (hcompile :
+      ConcreteFiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction) :
+    ConcreteFiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :=
+  Computability.finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_indexedCertificateRecognizerCompiler
+    hcompile
+
 theorem concrete_finite_bool_general_grammar_presentation_compiler_of_certificate_recognizer_compiler
     (hcompile :
       ConcreteFiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction) :
     ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
   concrete_finite_bool_general_grammar_presentation_compiler_of_bounded_recognizer_compiler
     (concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_certificate_recognizer_compiler
+      hcompile)
+
+theorem concrete_finite_bool_general_grammar_presentation_compiler_of_indexed_certificate_recognizer_compiler
+    (hcompile :
+      ConcreteFiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction) :
+    ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
+  concrete_finite_bool_general_grammar_presentation_compiler_of_bounded_recognizer_compiler
+    (concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_indexed_certificate_recognizer_compiler
       hcompile)
 
 theorem concrete_finite_bool_general_grammar_presentation_has_finite_productions
@@ -3155,6 +3296,19 @@ theorem finite_production_list_certificate_staged_recognizer_accepts_generated_l
   Computability.finiteProductionListCertificateRecognizerProgram_acceptsLanguage
     hrules
 
+theorem finite_production_list_indexed_certificate_staged_recognizer_accepts_generated_language
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    ProgramAcceptsLanguage
+      (GeneralGrammarFiniteProductionListIndexedCertificateStagedRecognizer
+        G rules)
+      (GeneralGrammarGeneratedLanguage G) :=
+  Computability.finiteProductionListIndexedCertificateRecognizerProgram_acceptsLanguage
+    hrules
+
 theorem finite_production_list_certificate_staged_recognizer_same_language_as_bounded
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
@@ -3169,6 +3323,22 @@ theorem finite_production_list_certificate_staged_recognizer_same_language_as_bo
           (GeneralGrammarFiniteProductionListBoundedStagedRecognizer
             G rules) w [] :=
   Computability.finiteProductionListCertificateRecognizerProgram_same_language
+    hrules
+
+theorem finite_production_list_indexed_certificate_staged_recognizer_same_language_as_bounded
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    forall w : Word terminal,
+      ProgramHaltsWithOutput
+          (GeneralGrammarFiniteProductionListIndexedCertificateStagedRecognizer
+            G rules) w [] <->
+        ProgramHaltsWithOutput
+          (GeneralGrammarFiniteProductionListBoundedStagedRecognizer
+            G rules) w [] :=
+  Computability.finiteProductionListIndexedCertificateRecognizerProgram_same_language
     hrules
 
 theorem acceptance_trace_simulation_grammar_derivesIn_one_of_trace
@@ -3938,12 +4108,15 @@ is now a derived bridge: a finite grammar is converted to an explicit
 recognizer is transferred to the abstract recognizer by accepted-language
 extensionality. The presentation compiler itself is factored through a bounded
 derivation-search recognizer compiler. That bounded recognizer is now mirrored
-by an explicit finite production-list certificate recognizer, so the remaining
-finite grammar table construction is a certificate-checking compiler problem:
-verify a bounded list of sentential-form rewrites and emit acceptance exactly
-when such a certificate exists. The corresponding certificate-recognizer
-compiler target now implies the bounded-recognizer target, which in turn
-implies the first-order finite grammar-presentation compiler.
+by explicit finite production-list certificate recognizers. The indexed
+certificate form names each rewrite rule by a finite index into the production
+list, and its recursive checked-data form is proved sound and complete for the
+indexed proof certificate. The remaining finite grammar table construction is
+therefore a first-order certificate-checking compiler problem: verify a bounded
+list of indexed sentential-form rewrites and emit acceptance exactly when such
+a certificate exists. The corresponding certificate-recognizer compiler targets
+now imply the bounded-recognizer target, which in turn implies the first-order
+finite grammar-presentation compiler.
 
 The declarations above now pin that infrastructure down as
 {name}`ConcreteBooleanSection52CompilerCloseout` for the semantic grammar page
