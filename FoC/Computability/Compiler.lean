@@ -3311,6 +3311,38 @@ def PartialUnaryRangeDescriptionCompilerPrinciple : Prop :=
     exists D : MachineDescription,
       PartialFunctionCompiledByDescription f (fun _ : Unit => true) D
 
+/-!
+The partial-unary compiler principle is intentionally strong: its source is an
+arbitrary semantic Lean partial function, not a finite program syntax.  The
+following consequences make that strength explicit.  Concrete closeouts should
+therefore keep this principle as a named construction boundary unless a finite
+source syntax is supplied.
+-/
+
+theorem partialUnaryRangeDescriptionCompilerPrinciple_turingComputablePartial
+    (hcompile : PartialUnaryRangeDescriptionCompilerPrinciple)
+    (f : Word Unit -> Option (Word Bool)) :
+    TuringComputablePartial f := by
+  rcases hcompile f with ⟨D, hD⟩
+  exact partialFunctionCompiledByDescription_turingComputablePartial hD
+
+theorem partialUnaryRangeDescriptionCompilerPrinciple_compiledRange
+    (hcompile : PartialUnaryRangeDescriptionCompilerPrinciple)
+    (f : Word Unit -> Option (Word Bool)) :
+    CompiledPartialUnaryRange (PartialRangeLanguage f) := by
+  rcases hcompile f with ⟨D, hD⟩
+  exact ⟨f, D, hD, Language.equal_refl (PartialRangeLanguage f)⟩
+
+theorem partialUnaryRangeDescriptionCompilerPrinciple_compiledProgramRange
+    (hcompile : PartialUnaryRangeDescriptionCompilerPrinciple)
+    (f : Word Unit -> Option (Word Bool)) :
+    CompiledPartialUnaryFunctionProgramRange
+      (ProgramRangeLanguage (PartialFunctionProgram f)) := by
+  rcases hcompile f with ⟨D, hD⟩
+  exact ⟨f, D, hD,
+    Language.equal_refl
+      (ProgramRangeLanguage (PartialFunctionProgram f))⟩
+
 theorem compiledPartialUnaryRange_partialRangeOfUnaryFunction
     {L : Language Bool}
     (h : CompiledPartialUnaryRange L) :

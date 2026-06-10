@@ -1984,7 +1984,10 @@ theorem staged_unary_program_range_is_partial_unary_range
 The compiled-range theorems state what a concrete description must provide to
 serve as an enumerator. The semantic range is already a partial unary range; the
 compiler hypothesis upgrades it to a machine-description-backed range over the
-Boolean alphabet.
+Boolean alphabet. Because the source of
+{name}`ConcretePartialUnaryRangeDescriptionCompilerConstruction` is an arbitrary
+Lean partial function, not a finite source syntax, the construction remains a
+named boundary. The wrappers below record the consequences of supplying it.
 -/
 
 theorem concrete_partial_function_compiled_turing_computable_partial
@@ -1994,6 +1997,28 @@ theorem concrete_partial_function_compiled_turing_computable_partial
     (h : ConcretePartialFunctionCompiledByDescription f encodeInput D) :
     TuringComputablePartial f :=
   Computability.partialFunctionCompiledByDescription_turingComputablePartial h
+
+theorem concrete_partial_unary_range_description_compiler_computes_partial_function
+    (hcompile : ConcretePartialUnaryRangeDescriptionCompilerConstruction)
+    (f : Word Unit -> Option (Word Bool)) :
+    TuringComputablePartial f :=
+  Computability.partialUnaryRangeDescriptionCompilerPrinciple_turingComputablePartial
+    hcompile f
+
+theorem concrete_partial_unary_range_description_compiler_compiles_range
+    (hcompile : ConcretePartialUnaryRangeDescriptionCompilerConstruction)
+    (f : Word Unit -> Option (Word Bool)) :
+    ConcreteCompiledPartialUnaryRange (PartialFunctionRangeLanguage f) :=
+  Computability.partialUnaryRangeDescriptionCompilerPrinciple_compiledRange
+    hcompile f
+
+theorem concrete_partial_unary_range_description_compiler_compiles_program_range
+    (hcompile : ConcretePartialUnaryRangeDescriptionCompilerConstruction)
+    (f : Word Unit -> Option (Word Bool)) :
+    ConcreteCompiledPartialUnaryFunctionProgramRange
+      (LanguageProgramRange (LanguagePartialFunctionProgram f)) :=
+  Computability.partialUnaryRangeDescriptionCompilerPrinciple_compiledProgramRange
+    hcompile f
 
 theorem concrete_compiled_partial_unary_range_is_partial_range
     {L : Language Bool}
