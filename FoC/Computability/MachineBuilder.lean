@@ -2675,6 +2675,17 @@ theorem rawOutputCode_encodeBoolWord_singleton (b : Bool) :
   rw [rawOutputCode_encodeBoolWord, rawOutput_singleton]
   rfl
 
+theorem rawOutputCode_encodeBoolWord_outputWordFromHits
+    (L : DovetailLayout) :
+    rawOutputCode (encodeBoolWord (DovetailLayout.outputWordFromHits L)) =
+      Option.map encodeBoolWord (DovetailLayout.outputFromHits L) := by
+  cases haccept : L.acceptHit <;> cases hreject : L.rejectHit <;>
+    simp [DovetailLayout.outputWordFromHits,
+      DovetailLayout.outputWordFromOption,
+      DovetailLayout.outputFromHits, haccept, hreject,
+      rawOutputCode_encodeBoolWord_nil,
+      rawOutputCode_encodeBoolWord_singleton]
+
 theorem rawOutput_eq_some_singleton_iff
     (result : Word Bool) (b : Bool) :
     rawOutput? result = some [b] <-> result = [b] := by
@@ -2772,6 +2783,56 @@ theorem rawOutput_totalAttemptResult
       boundedDovetailOutput accept reject C.input C.stage :=
   rawOutput_outputWordFromOption_boundedDovetailOutput
     accept reject C.input C.stage
+
+theorem rawOutputCode_after_totalStageAttemptCode
+    (accept reject : MachineDescription)
+    (tokens : Word MachineCodeSymbol) :
+    (TapeCodePrimitive.compose
+      (DovetailLayout.totalStageAttemptCodePrimitive accept reject)
+      rawOutputCodePrimitive).transform tokens =
+      (DovetailLayout.stageAttemptCodePrimitive accept reject).transform
+        tokens := by
+  unfold TapeCodePrimitive.compose
+  change
+    (match
+      (DovetailLayout.totalStageAttemptCodePrimitive accept reject).transform
+        tokens with
+    | none => none
+    | some mid => rawOutputCodePrimitive.transform mid) =
+      (DovetailLayout.stageAttemptCodePrimitive accept reject).transform
+        tokens
+  unfold DovetailLayout.totalStageAttemptCodePrimitive
+    DovetailLayout.stageAttemptCodePrimitive
+  change
+    (match DovetailLayout.totalStageAttemptCode accept reject tokens with
+    | none => none
+    | some mid => rawOutputCodePrimitive.transform mid) =
+      DovetailLayout.stageAttemptCode accept reject tokens
+  unfold DovetailLayout.totalStageAttemptCode DovetailLayout.stageAttemptCode
+  cases hdecode : DovetailLayout.decodeStageInputComplete tokens with
+  | none =>
+      simp
+  | some parsed =>
+      cases parsed with
+      | mk w stage =>
+          cases houtput :
+              DovetailLayout.outputFromHits
+                (DovetailLayout.run accept reject stage
+                  (DovetailLayout.initial accept reject w stage)) <;>
+          simp [rawOutputCodePrimitive,
+            rawOutputCode_encodeBoolWord_outputWordFromHits, houtput]
+
+theorem rawOutputCode_after_totalStageAttemptCode_stageInputCode
+    (accept reject : MachineDescription)
+    (w : Word Bool) (stage : Nat) :
+    (TapeCodePrimitive.compose
+      (DovetailLayout.totalStageAttemptCodePrimitive accept reject)
+      rawOutputCodePrimitive).transform
+        (DovetailLayout.stageInputCode w stage) =
+      Option.map encodeBoolWord
+        (boundedDovetailOutput accept reject w stage) := by
+  rw [rawOutputCode_after_totalStageAttemptCode,
+    DovetailLayout.stageAttemptCodePrimitive_stageInputCode]
 
 end DovetailControllerLayout
 

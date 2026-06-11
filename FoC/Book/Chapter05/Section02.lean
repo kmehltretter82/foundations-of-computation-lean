@@ -186,6 +186,11 @@ def ConcretePairedRecognizerDovetailControllerRawOutputCodeRealizes
     (P : MachineDescription.TapeCodePrimitive) : Prop :=
   PairedRecognizerDovetailControllerRawOutputCodeRealizes P
 
+def ConcretePairedRecognizerDovetailTotalThenRawOutputCode
+    (accept reject : MachineDescription) :
+    MachineDescription.TapeCodePrimitive :=
+  PairedRecognizerDovetailTotalThenRawOutputCode accept reject
+
 def ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :
     Prop :=
   PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction
@@ -238,6 +243,10 @@ def ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :
 def ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction :
     Prop :=
   PairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction
+
+def ConcretePairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction :
+    Prop :=
+  PairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction
 
 def ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction :
     Prop :=
@@ -925,6 +934,15 @@ theorem bounded_dovetail_table_compiler_of_stage_attempt_code_output_realizer_an
       ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_stageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
+    hattempt hdriver
+
+theorem bounded_dovetail_table_compiler_of_total_then_raw_output_code_output_realizer_and_stage_attempt_search_driver
+    (hattempt :
+      ConcretePairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction)
+    (hdriver :
+      ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_totalThenRawOutputCodeOutputRealizer_and_stageAttemptSearchDriver
     hattempt hdriver
 
 theorem paired_recognizer_dovetail_stage_attempt_search_driver_of_description_bool_decider_compiler
@@ -1658,8 +1676,10 @@ basic one-step controller primitive: it reads the current tape cell, preserves
 it while moving, and jumps to the blank, false, or true target state with
 proved well-formedness and halt-free packaging. The controller raw-output
 branch also has a code primitive that maps encoded singleton Boolean results
-to encoded raw outputs and rejects the empty no-hit result. For the
-paired-recognizer dovetailer, the layout runner
+to encoded raw outputs and rejects the empty no-hit result. Composing that
+branch after the total-attempt code recovers the older partial stage-attempt
+code contract, which is the executable no-hit/singleton split the controller
+loop has to implement. For the paired-recognizer dovetailer, the layout runner
 now has a halt-free output-realizer contract and the search-driver interface
 has a subroutine-ready variant, isolating the exact contract needed by the
 future finite transition table that loops around a compiled layout subroutine.
@@ -1822,11 +1842,24 @@ theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_output_real
   Computability.pairedRecognizerDovetailTotalStageAttemptCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
+theorem concrete_paired_recognizer_dovetail_total_then_raw_output_code_output_realizer_of_tape_code_output_compiler
+    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
+    ConcretePairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction :=
+  Computability.pairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizer_of_tapeCodeOutputCompiler
+    hcompile
+
 theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_output_realizer_of_subroutine_realizer
     (hcompile :
       ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction) :
     ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailTotalStageAttemptCodeOutputRealizer_of_subroutineRealizer
+    hcompile
+
+theorem concrete_paired_recognizer_dovetail_stage_attempt_code_output_realizer_of_total_then_raw_output_code_output_realizer
+    (hcompile :
+      ConcretePairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction) :
+    ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :=
+  Computability.pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalThenRawOutputCodeOutputRealizerConstruction
     hcompile
 
 theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_controller_result_realizes
@@ -1841,6 +1874,25 @@ theorem concrete_paired_recognizer_dovetail_controller_raw_output_code_realizes 
     ConcretePairedRecognizerDovetailControllerRawOutputCodeRealizes
       ConcretePairedRecognizerDovetailControllerRawOutputCode :=
   Computability.pairedRecognizerDovetailControllerRawOutputCode_realizes
+
+theorem concrete_paired_recognizer_dovetail_total_then_raw_output_code_realizes
+    (accept reject : MachineDescription) :
+    PairedRecognizerDovetailStageAttemptCodeRealizes
+      accept reject
+      (ConcretePairedRecognizerDovetailTotalThenRawOutputCode
+        accept reject) :=
+  Computability.pairedRecognizerDovetailTotalThenRawOutputCode_realizes
+    accept reject
+
+theorem concrete_paired_recognizer_dovetail_total_then_raw_output_code_eq_stage_attempt_code
+    (accept reject : MachineDescription)
+    (tokens : Word MachineCodeSymbol) :
+    (ConcretePairedRecognizerDovetailTotalThenRawOutputCode
+      accept reject).transform tokens =
+      (PairedRecognizerDovetailStageAttemptCode
+        accept reject).transform tokens :=
+  Computability.pairedRecognizerDovetailTotalThenRawOutputCode_eq_stageAttemptCode
+    accept reject tokens
 
 theorem concrete_cell_branch_description_subroutine_ready
     {stateCount source halt blankTarget falseTarget trueTarget : Nat}
