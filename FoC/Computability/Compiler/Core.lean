@@ -1701,6 +1701,29 @@ def pairedRecognizerDovetailControllerCompilerCloseout_of_finiteControllerCloseo
     hclose.totalStageAttemptSubroutine
     hclose.finiteStageLoopController
 
+/-!
+**Finite-source scaffold.**  These two declarations are the remaining concrete
+machine-construction leaves for the paired-recognizer dovetail controller route.
+They are intentionally narrow: the source programs and controller layout are
+the fixed finite targets above, not arbitrary staged programs or arbitrary
+tape-code primitives.
+-/
+
+theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction := by
+  sorry
+
+theorem pairedRecognizerDovetailFiniteStageLoopControllerConstruction_scaffold :
+    PairedRecognizerDovetailFiniteStageLoopControllerConstruction := by
+  sorry
+
+def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold :
+    PairedRecognizerDovetailFiniteControllerCompilerCloseout where
+  totalStageAttemptSubroutine :=
+    pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold
+  finiteStageLoopController :=
+    pairedRecognizerDovetailFiniteStageLoopControllerConstruction_scaffold
+
 noncomputable def PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
     (attempt : MachineDescription) :
     StagedProgram Bool Bool :=

@@ -290,6 +290,47 @@ theorem finite_general_grammar_pair_recursive_of_finite_data_closeout
       hclose.pairedDovetailDescription
       (accept := acceptProgram) (reject := rejectProgram) htraces
 
+/-!
+**Section 5.2 finite-data scaffold.**  This is the explicit dependency graph
+for the remaining finite/effective route.  The only non-finite leaf below is
+the usual decider-to-acceptor construction, which the Section 5.2 closeout
+already records as a separate principle.  The paired-dovetail and finite
+grammar-recognizer fields are supplied by the finite-source scaffolds in the
+compiler and grammar layers.
+-/
+
+theorem decidable_to_acceptable_construction_bool_scaffold :
+    DecidableToAcceptableConstruction Bool := by
+  sorry
+
+theorem concrete_boolean_finite_data_section52_compiler_closeout_scaffold :
+    ConcreteBooleanFiniteDataSection52CompilerCloseout where
+  boundedTraceSearch := bounded_trace_search_construction
+  decidableToAcceptable :=
+    decidable_to_acceptable_construction_bool_scaffold
+  pairedDovetailDescription :=
+    paired_recognizer_dovetail_compiler_scaffold
+  finiteGrammarRecognizerDescription :=
+    concrete_finite_bool_general_grammar_presentation_compiler_scaffold
+  descriptionRecognizerToFiniteGrammar :=
+    concrete_machine_description_accepts_to_finite_general_grammar
+
+theorem program_acceptable_by_description_finite_general_grammar_scaffold
+    {L : Language Bool}
+    (hL : ConcreteProgramAcceptableByDescription L) :
+    FiniteGeneralGrammarGenerated L :=
+  program_acceptable_by_description_finite_general_grammar_of_finite_data_closeout
+    concrete_boolean_finite_data_section52_compiler_closeout_scaffold
+    hL
+
+theorem finite_general_grammar_pair_recursive_scaffold
+    {L : Language Bool}
+    (hpair : FiniteGeneralGrammarPairGenerated L) :
+    RecursiveLanguage L :=
+  finite_general_grammar_pair_recursive_of_finite_data_closeout
+    concrete_boolean_finite_data_section52_compiler_closeout_scaffold
+    hpair
+
 theorem boolean_finite_general_grammar_re_equivalence_construction_of_finite_section52_closeout
     (hclose : ConcreteBooleanFiniteGrammarSection52Closeout) :
     FiniteGeneralGrammarREEquivalenceConstruction Bool :=

@@ -497,6 +497,17 @@ theorem finiteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerC
   FiniteBoolGeneralGrammarPresentation.checkedIndexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
     hcompile
 
+/-!
+**Finite-source scaffold.**  The remaining finite grammar compiler target is a
+first-order certificate checker for an explicit finite production-list
+presentation.  Once this checked compiler is built, the existing equivalence
+bridges below derive the indexed, bounded, and full presentation recognizers.
+-/
+
+theorem finiteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction_scaffold :
+    FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction := by
+  sorry
+
 theorem finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_certificateRecognizerCompiler
     (hcompile :
       FiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction) :
@@ -531,6 +542,12 @@ theorem finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_bo
     FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
   FiniteBoolGeneralGrammarPresentation.compilerConstruction_of_boundedRecognizerCompiler
     hcompile
+
+theorem finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_scaffold :
+    FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
+  finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_boundedRecognizerCompiler
+    (finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
+      finiteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction_scaffold)
 
 theorem generalGrammar_generatedLanguage_programAcceptable
     (G : GeneralGrammar terminal nonterminal) :
