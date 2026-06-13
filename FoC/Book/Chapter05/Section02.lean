@@ -41,9 +41,9 @@ The formal page separates three levels of argument.
 The finite compiler boundaries are now first-order where possible. Boolean
 finite grammar presentations use explicit {lit}`Fin n` nonterminals and a
 production list, with the remaining recognizer compiler factored through a
-bounded indexed-certificate recognizer. Paired-recognizer dovetailing is split
-into a halt-free bounded layout runner and a subroutine-ready runner-search
-driver that performs the unbounded stage search.
+bounded checked-indexed-certificate recognizer. Paired-recognizer dovetailing
+is split into a halt-free bounded layout runner and a subroutine-ready
+runner-search driver that performs the unbounded stage search.
 
 This makes the theorem statements honest about implementation work. When a
 textbook proof says to dovetail two recognizers or check a finite derivation,
@@ -186,6 +186,28 @@ def ConcretePairedRecognizerDovetailControllerRawOutputCodeRealizes
     (P : MachineDescription.TapeCodePrimitive) : Prop :=
   PairedRecognizerDovetailControllerRawOutputCodeRealizes P
 
+def ConcretePairedRecognizerDovetailControllerContinueCode
+    (accept reject : MachineDescription) :
+    MachineDescription.TapeCodePrimitive :=
+  PairedRecognizerDovetailControllerContinueCode accept reject
+
+def ConcretePairedRecognizerDovetailControllerEmitCode
+    (accept reject : MachineDescription) :
+    MachineDescription.TapeCodePrimitive :=
+  PairedRecognizerDovetailControllerEmitCode accept reject
+
+def ConcretePairedRecognizerDovetailControllerContinueCodeRealizes
+    (accept reject : MachineDescription)
+    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+  PairedRecognizerDovetailControllerContinueCodeRealizes
+    accept reject P
+
+def ConcretePairedRecognizerDovetailControllerEmitCodeRealizes
+    (accept reject : MachineDescription)
+    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+  PairedRecognizerDovetailControllerEmitCodeRealizes
+    accept reject P
+
 def ConcretePairedRecognizerDovetailTotalThenRawOutputCode
     (accept reject : MachineDescription) :
     MachineDescription.TapeCodePrimitive :=
@@ -247,6 +269,14 @@ def ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruct
 def ConcretePairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction :
     Prop :=
   PairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction
+
+def ConcretePairedRecognizerDovetailControllerContinueCodeOutputRealizerConstruction :
+    Prop :=
+  PairedRecognizerDovetailControllerContinueCodeOutputRealizerConstruction
+
+def ConcretePairedRecognizerDovetailControllerEmitCodeOutputRealizerConstruction :
+    Prop :=
+  PairedRecognizerDovetailControllerEmitCodeOutputRealizerConstruction
 
 def ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction :
     Prop :=
@@ -1679,7 +1709,13 @@ branch also has a code primitive that maps encoded singleton Boolean results
 to encoded raw outputs and rejects the empty no-hit result. Composing that
 branch after the total-attempt code recovers the older partial stage-attempt
 code contract, which is the executable no-hit/singleton split the controller
-loop has to implement. For the paired-recognizer dovetailer, the layout runner
+loop has to implement. The no-hit branch now has its own controller-layout
+code primitive that rewrites an encoded controller layout to the next stage,
+while the hit branch has a matching emit primitive for the raw Boolean output.
+Their canonical-input theorems prove the exact disjunction: a no-hit stage
+enables only the continue branch, while a hit stage enables only the matching
+encoded Boolean emit branch.
+For the paired-recognizer dovetailer, the layout runner
 now has a halt-free output-realizer contract and the search-driver interface
 has a subroutine-ready variant, isolating the exact contract needed by the
 future finite transition table that loops around a compiled layout subroutine.
@@ -1848,6 +1884,18 @@ theorem concrete_paired_recognizer_dovetail_total_then_raw_output_code_output_re
   Computability.pairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
+theorem concrete_paired_recognizer_dovetail_controller_continue_code_output_realizer_of_tape_code_output_compiler
+    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
+    ConcretePairedRecognizerDovetailControllerContinueCodeOutputRealizerConstruction :=
+  Computability.pairedRecognizerDovetailControllerContinueCodeOutputRealizer_of_tapeCodeOutputCompiler
+    hcompile
+
+theorem concrete_paired_recognizer_dovetail_controller_emit_code_output_realizer_of_tape_code_output_compiler
+    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
+    ConcretePairedRecognizerDovetailControllerEmitCodeOutputRealizerConstruction :=
+  Computability.pairedRecognizerDovetailControllerEmitCodeOutputRealizer_of_tapeCodeOutputCompiler
+    hcompile
+
 theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_output_realizer_of_subroutine_realizer
     (hcompile :
       ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction) :
@@ -1874,6 +1922,108 @@ theorem concrete_paired_recognizer_dovetail_controller_raw_output_code_realizes 
     ConcretePairedRecognizerDovetailControllerRawOutputCodeRealizes
       ConcretePairedRecognizerDovetailControllerRawOutputCode :=
   Computability.pairedRecognizerDovetailControllerRawOutputCode_realizes
+
+theorem concrete_paired_recognizer_dovetail_controller_continue_code_realizes
+    (accept reject : MachineDescription) :
+    ConcretePairedRecognizerDovetailControllerContinueCodeRealizes
+      accept reject
+      (ConcretePairedRecognizerDovetailControllerContinueCode
+        accept reject) :=
+  Computability.pairedRecognizerDovetailControllerContinueCode_realizes
+    accept reject
+
+theorem concrete_paired_recognizer_dovetail_controller_emit_code_realizes
+    (accept reject : MachineDescription) :
+    ConcretePairedRecognizerDovetailControllerEmitCodeRealizes
+      accept reject
+      (ConcretePairedRecognizerDovetailControllerEmitCode
+        accept reject) :=
+  Computability.pairedRecognizerDovetailControllerEmitCode_realizes
+    accept reject
+
+theorem concrete_paired_recognizer_dovetail_controller_continue_code_encode_eq_some_iff
+    {accept reject : MachineDescription}
+    {C : MachineDescription.DovetailControllerLayout}
+    {out : Word MachineCodeSymbol} :
+    (ConcretePairedRecognizerDovetailControllerContinueCode
+      accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+        some out <->
+      MachineDescription.boundedDovetailOutput
+          accept reject C.input C.stage = none ∧
+        out =
+          MachineDescription.DovetailControllerLayout.encode
+            (MachineDescription.DovetailControllerLayout.nextStage C) :=
+  Computability.pairedRecognizerDovetailControllerContinueCode_encode_eq_some_iff
+
+theorem concrete_paired_recognizer_dovetail_controller_emit_code_encode_eq_some_iff
+    {accept reject : MachineDescription}
+    {C : MachineDescription.DovetailControllerLayout}
+    {outCode : Word MachineCodeSymbol} :
+    (ConcretePairedRecognizerDovetailControllerEmitCode
+      accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+        some outCode <->
+      exists out : Word Bool,
+        MachineDescription.boundedDovetailOutput
+          accept reject C.input C.stage = some out ∧
+          outCode = MachineDescription.encodeBoolWord out :=
+  Computability.pairedRecognizerDovetailControllerEmitCode_encode_eq_some_iff
+
+theorem concrete_paired_recognizer_dovetail_controller_emit_code_encode_eq_encode_bool_word_iff
+    {accept reject : MachineDescription}
+    {C : MachineDescription.DovetailControllerLayout}
+    {out : Word Bool} :
+    (ConcretePairedRecognizerDovetailControllerEmitCode
+      accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+        some (MachineDescription.encodeBoolWord out) <->
+      MachineDescription.boundedDovetailOutput
+        accept reject C.input C.stage = some out :=
+  Computability.pairedRecognizerDovetailControllerEmitCode_encode_eq_encodeBoolWord_iff
+
+theorem concrete_paired_recognizer_dovetail_controller_continue_emit_code_exclusive
+    {accept reject : MachineDescription}
+    {C : MachineDescription.DovetailControllerLayout}
+    {next out : Word MachineCodeSymbol}
+    (hcontinue :
+      (ConcretePairedRecognizerDovetailControllerContinueCode
+        accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+          some next)
+    (hemit :
+      (ConcretePairedRecognizerDovetailControllerEmitCode
+        accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+          some out) :
+    False :=
+  Computability.pairedRecognizerDovetailControllerContinueEmitCode_exclusive
+    hcontinue hemit
+
+theorem concrete_paired_recognizer_dovetail_controller_continue_emit_code_branch
+    (accept reject : MachineDescription)
+    (C : MachineDescription.DovetailControllerLayout) :
+    ((ConcretePairedRecognizerDovetailControllerContinueCode
+        accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+        some
+          (MachineDescription.DovetailControllerLayout.encode
+            (MachineDescription.DovetailControllerLayout.nextStage C)) ∧
+      (ConcretePairedRecognizerDovetailControllerEmitCode
+        accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) = none) ∨
+      ((ConcretePairedRecognizerDovetailControllerContinueCode
+          accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) = none ∧
+        exists out : Word Bool,
+          MachineDescription.boundedDovetailOutput
+            accept reject C.input C.stage = some out ∧
+            (ConcretePairedRecognizerDovetailControllerEmitCode
+              accept reject).transform
+              (MachineDescription.DovetailControllerLayout.encode C) =
+                some (MachineDescription.encodeBoolWord out)) :=
+  Computability.pairedRecognizerDovetailControllerContinueEmitCode_branch
+    accept reject C
 
 theorem concrete_paired_recognizer_dovetail_total_then_raw_output_code_realizes
     (accept reject : MachineDescription) :
@@ -3046,7 +3196,10 @@ the well-formed description-backed construction named
 concrete finite-description compiler for finite grammar recognizers is a
 separate named field of the finite-data closeout, and also follows from the
 general description acceptor compiler by compiling the staged grammar
-recognizer.  The paired-recognizer dovetail field is supplied either by a
+recognizer. The same description compiler now also supplies the certificate,
+indexed-certificate, and checked-indexed-certificate recognizer targets used
+to factor the finite presentation compiler. The paired-recognizer dovetail
+field is supplied either by a
 dedicated dovetail compiler or by the Boolean description decider compiler.
 -/
 
@@ -3110,6 +3263,13 @@ def ConcreteFiniteProductionListIndexedDerivationCertificateTrace
     (w : Word terminal) (n : Nat) : Prop :=
   FiniteProductionListIndexedDerivationCertificateTrace G rules w n
 
+def ConcreteFiniteProductionListCheckedIndexedDerivationCertificateTrace
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal))
+    (w : Word terminal) (n : Nat) : Prop :=
+  FiniteProductionListCheckedIndexedDerivationCertificateTrace G rules w n
+
 abbrev ConcreteFiniteProductionListIndexedDerivationCertificateData
     (rules : List (GeneralGrammar.Production terminal nonterminal))
     (n : Nat)
@@ -3128,6 +3288,13 @@ noncomputable def GeneralGrammarFiniteProductionListIndexedCertificateStagedReco
     StagedProgram terminal Unit :=
   FiniteProductionListIndexedCertificateRecognizerProgram G rules
 
+noncomputable def GeneralGrammarFiniteProductionListCheckedIndexedCertificateStagedRecognizer
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal)) :
+    StagedProgram terminal Unit :=
+  FiniteProductionListCheckedIndexedCertificateRecognizerProgram G rules
+
 theorem finite_production_list_derivation_certificate_trace_iff_trace
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
@@ -3144,6 +3311,16 @@ theorem finite_production_list_indexed_derivation_certificate_trace_iff_trace
         G rules w n <->
       FiniteProductionListDerivationTrace G rules w n :=
   Computability.finiteProductionListIndexedDerivationCertificateTrace_iff_trace
+
+theorem finite_production_list_checked_indexed_derivation_certificate_trace_iff_trace
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    {w : Word terminal} {n : Nat} :
+    ConcreteFiniteProductionListCheckedIndexedDerivationCertificateTrace
+        G rules w n <->
+      FiniteProductionListDerivationTrace G rules w n :=
+  Computability.finiteProductionListCheckedIndexedDerivationCertificateTrace_iff_trace
 
 theorem finite_production_list_indexed_derivation_certificate_of_checked_data
     [DecidableEq terminal] [DecidableEq nonterminal]
@@ -3261,6 +3438,10 @@ def ConcreteFiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerComp
     Prop :=
   FiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction
 
+def ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction :
+    Prop :=
+  FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction
+
 def ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
   ConcreteFiniteSourceFiniteGeneralGrammarRecognizerCompilerConstruction
 
@@ -3343,6 +3524,20 @@ theorem concrete_finite_bool_general_grammar_presentation_bounded_recognizer_com
   Computability.finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_indexedCertificateRecognizerCompiler
     hcompile
 
+theorem concrete_finite_bool_general_grammar_presentation_indexed_certificate_recognizer_compiler_of_checked_indexed_certificate_recognizer_compiler
+    (hcompile :
+      ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
+    ConcreteFiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction :=
+  Computability.finiteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
+    hcompile
+
+theorem concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_checked_indexed_certificate_recognizer_compiler
+    (hcompile :
+      ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
+    ConcreteFiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :=
+  Computability.finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
+    hcompile
+
 theorem concrete_finite_bool_general_grammar_presentation_compiler_of_certificate_recognizer_compiler
     (hcompile :
       ConcreteFiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction) :
@@ -3357,6 +3552,14 @@ theorem concrete_finite_bool_general_grammar_presentation_compiler_of_indexed_ce
     ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
   concrete_finite_bool_general_grammar_presentation_compiler_of_bounded_recognizer_compiler
     (concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_indexed_certificate_recognizer_compiler
+      hcompile)
+
+theorem concrete_finite_bool_general_grammar_presentation_compiler_of_checked_indexed_certificate_recognizer_compiler
+    (hcompile :
+      ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
+    ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
+  concrete_finite_bool_general_grammar_presentation_compiler_of_bounded_recognizer_compiler
+    (concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_checked_indexed_certificate_recognizer_compiler
       hcompile)
 
 theorem concrete_finite_bool_general_grammar_presentation_has_finite_productions
@@ -3378,6 +3581,31 @@ theorem concrete_finite_bool_general_grammar_presentation_compiler_of_descriptio
     ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
   Computability.finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_descriptionCompiler
     hcompile
+
+theorem concrete_finite_bool_general_grammar_presentation_certificate_recognizer_compiler_of_description_compiler
+    (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
+    ConcreteFiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction :=
+  Computability.finiteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction_of_descriptionCompiler
+    hcompile
+
+theorem concrete_finite_bool_general_grammar_presentation_indexed_certificate_recognizer_compiler_of_description_compiler
+    (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
+    ConcreteFiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction :=
+  Computability.finiteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
+    hcompile
+
+theorem concrete_finite_bool_general_grammar_presentation_checked_indexed_certificate_recognizer_compiler_of_description_compiler
+    (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
+    ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction :=
+  Computability.finiteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
+    hcompile
+
+theorem concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_description_compiler
+    (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
+    ConcreteFiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :=
+  concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_checked_indexed_certificate_recognizer_compiler
+    (concrete_finite_bool_general_grammar_presentation_checked_indexed_certificate_recognizer_compiler_of_description_compiler
+      hcompile)
 
 theorem concrete_general_grammar_recognizer_compiler_of_description_compiler
     (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
@@ -3401,7 +3629,6 @@ theorem concrete_finite_section52_closeout_of_semantic_closeout
   boundedTraceSearch := hclose.boundedTraceSearch
   decidableToAcceptable := hclose.decidableToAcceptable
   dovetailDescription := hclose.dovetailDescription
-  partialUnaryRangeDescription := hclose.partialUnaryRangeDescription
   finiteGrammarRecognizerDescription := hpresentation
   recursivelyEnumerableToFiniteGrammar := hfinite
 
@@ -3642,6 +3869,20 @@ theorem finite_production_list_indexed_certificate_staged_recognizer_accepts_gen
   Computability.finiteProductionListIndexedCertificateRecognizerProgram_acceptsLanguage
     hrules
 
+theorem finite_production_list_checked_indexed_certificate_staged_recognizer_accepts_generated_language
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    ProgramAcceptsLanguage
+      (GeneralGrammarFiniteProductionListCheckedIndexedCertificateStagedRecognizer
+        G rules)
+      (GeneralGrammarGeneratedLanguage G) :=
+  Computability.finiteProductionListCheckedIndexedCertificateRecognizerProgram_acceptsLanguage
+    hrules
+
 theorem finite_production_list_certificate_staged_recognizer_same_language_as_bounded
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
@@ -3672,6 +3913,23 @@ theorem finite_production_list_indexed_certificate_staged_recognizer_same_langua
           (GeneralGrammarFiniteProductionListBoundedStagedRecognizer
             G rules) w [] :=
   Computability.finiteProductionListIndexedCertificateRecognizerProgram_same_language
+    hrules
+
+theorem finite_production_list_checked_indexed_certificate_staged_recognizer_same_language_as_bounded
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    forall w : Word terminal,
+      ProgramHaltsWithOutput
+          (GeneralGrammarFiniteProductionListCheckedIndexedCertificateStagedRecognizer
+            G rules) w [] <->
+        ProgramHaltsWithOutput
+          (GeneralGrammarFiniteProductionListBoundedStagedRecognizer
+            G rules) w [] :=
+  Computability.finiteProductionListCheckedIndexedCertificateRecognizerProgram_same_language
     hrules
 
 theorem acceptance_trace_simulation_grammar_derivesIn_one_of_trace
@@ -4444,12 +4702,13 @@ derivation-search recognizer compiler. That bounded recognizer is now mirrored
 by explicit finite production-list certificate recognizers. The indexed
 certificate form names each rewrite rule by a finite index into the production
 list, and its recursive checked-data form is proved sound and complete for the
-indexed proof certificate. The remaining finite grammar table construction is
-therefore a first-order certificate-checking compiler problem: verify a bounded
-list of indexed sentential-form rewrites and emit acceptance exactly when such
-a certificate exists. The corresponding certificate-recognizer compiler targets
-now imply the bounded-recognizer target, which in turn implies the first-order
-finite grammar-presentation compiler.
+indexed proof certificate. The checked-data trace and bounded search are proved
+equivalent to the derivation search, so the remaining finite grammar table
+construction is a first-order certificate-checking compiler problem: verify a
+bounded list of indexed sentential-form rewrites and emit acceptance exactly
+when such a certificate exists. The corresponding checked certificate-recognizer
+compiler target now implies the indexed, bounded, and first-order presentation
+compiler targets.
 
 The declarations above now pin that infrastructure down as
 {name}`ConcreteBooleanSection52CompilerCloseout` for the semantic grammar page
@@ -4464,9 +4723,9 @@ equivalent to that paired-recognizer target. It also uses the first-order finite
 grammar-presentation compiler as its finite grammar-recognizer input, and uses the
 description-backed construction
 {name}`ConcreteDescriptionRecognizerToFiniteGeneralGrammarConstruction`.
-The first-order presentation, bounded-recognizer, and runner-search boundaries
-identify the remaining transition-table construction work without changing
-these book-facing equivalence statements.
+The first-order presentation, checked-certificate, and runner-search
+boundaries identify the remaining transition-table construction work without
+changing these book-facing equivalence statements.
 -/
 
 end Section02

@@ -2784,6 +2784,267 @@ theorem rawOutput_totalAttemptResult
   rawOutput_outputWordFromOption_boundedDovetailOutput
     accept reject C.input C.stage
 
+def continueCode
+    (accept reject : MachineDescription)
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match decodeComplete tokens with
+  | none => none
+  | some C =>
+      match rawOutput? (totalAttemptResult accept reject C) with
+      | none => some (encode (nextStage C))
+      | some _ => none
+
+def continueCodePrimitive
+    (accept reject : MachineDescription) : TapeCodePrimitive where
+  transform := continueCode accept reject
+
+def emitCode
+    (accept reject : MachineDescription)
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match decodeComplete tokens with
+  | none => none
+  | some C =>
+      match rawOutput? (totalAttemptResult accept reject C) with
+      | none => none
+      | some out => some (encodeBoolWord out)
+
+def emitCodePrimitive
+    (accept reject : MachineDescription) : TapeCodePrimitive where
+  transform := emitCode accept reject
+
+theorem continueCode_encode
+    (accept reject : MachineDescription)
+    (C : DovetailControllerLayout) :
+    continueCode accept reject (encode C) =
+      if boundedDovetailOutput accept reject C.input C.stage = none then
+        some (encode (nextStage C))
+      else
+        none := by
+  simp [continueCode, decodeComplete_encode]
+  cases hraw : rawOutput? (totalAttemptResult accept reject C) with
+  | none =>
+      have hbounded :
+          boundedDovetailOutput accept reject C.input C.stage = none := by
+        simpa [rawOutput_totalAttemptResult] using hraw
+      simp [hbounded]
+  | some out =>
+      have hbounded :
+          boundedDovetailOutput accept reject C.input C.stage =
+            some out := by
+        simpa [rawOutput_totalAttemptResult] using hraw
+      simp [hbounded]
+
+theorem continueCodePrimitive_encode
+    (accept reject : MachineDescription)
+    (C : DovetailControllerLayout) :
+    (continueCodePrimitive accept reject).transform (encode C) =
+      if boundedDovetailOutput accept reject C.input C.stage = none then
+        some (encode (nextStage C))
+      else
+        none :=
+  continueCode_encode accept reject C
+
+theorem continueCode_encode_of_boundedDovetailOutput_eq_none
+    {accept reject : MachineDescription}
+    {C : DovetailControllerLayout}
+    (h :
+      boundedDovetailOutput accept reject C.input C.stage = none) :
+    continueCode accept reject (encode C) =
+      some (encode (nextStage C)) := by
+  rw [continueCode_encode, if_pos h]
+
+theorem continueCode_encode_of_boundedDovetailOutput_eq_some
+    {accept reject : MachineDescription}
+    {C : DovetailControllerLayout} {out : Word Bool}
+    (h :
+      boundedDovetailOutput accept reject C.input C.stage = some out) :
+    continueCode accept reject (encode C) = none := by
+  rw [continueCode_encode, if_neg]
+  intro hnone
+  rw [h] at hnone
+  cases hnone
+
+theorem emitCode_encode
+    (accept reject : MachineDescription)
+    (C : DovetailControllerLayout) :
+    emitCode accept reject (encode C) =
+      Option.map encodeBoolWord
+        (boundedDovetailOutput accept reject C.input C.stage) := by
+  simp [emitCode, decodeComplete_encode]
+  rw [rawOutput_totalAttemptResult]
+  cases boundedDovetailOutput accept reject C.input C.stage <;> rfl
+
+theorem emitCodePrimitive_encode
+    (accept reject : MachineDescription)
+    (C : DovetailControllerLayout) :
+    (emitCodePrimitive accept reject).transform (encode C) =
+      Option.map encodeBoolWord
+        (boundedDovetailOutput accept reject C.input C.stage) :=
+  emitCode_encode accept reject C
+
+theorem emitCode_encode_of_boundedDovetailOutput_eq_some
+    {accept reject : MachineDescription}
+    {C : DovetailControllerLayout} {out : Word Bool}
+    (h :
+      boundedDovetailOutput accept reject C.input C.stage = some out) :
+    emitCode accept reject (encode C) =
+      some (encodeBoolWord out) := by
+  rw [emitCode_encode, h]
+  rfl
+
+theorem emitCode_encode_of_boundedDovetailOutput_eq_none
+    {accept reject : MachineDescription}
+    {C : DovetailControllerLayout}
+    (h :
+      boundedDovetailOutput accept reject C.input C.stage = none) :
+    emitCode accept reject (encode C) = none := by
+  rw [emitCode_encode, h]
+  rfl
+
+theorem continueCode_encode_eq_some_iff
+    {accept reject : MachineDescription}
+    {C : DovetailControllerLayout}
+    {out : Word MachineCodeSymbol} :
+    continueCode accept reject (encode C) = some out <->
+      boundedDovetailOutput accept reject C.input C.stage = none ∧
+        out = encode (nextStage C) := by
+  by_cases hnone :
+      boundedDovetailOutput accept reject C.input C.stage = none
+  · rw [continueCode_encode_of_boundedDovetailOutput_eq_none hnone]
+    constructor
+    · intro hout
+      exact ⟨hnone, (Option.some.inj hout).symm⟩
+    · intro hout
+      rw [hout.right]
+  · rw [continueCode_encode, if_neg hnone]
+    simp [hnone]
+
+theorem continueCodePrimitive_encode_eq_some_iff
+    {accept reject : MachineDescription}
+    {C : DovetailControllerLayout}
+    {out : Word MachineCodeSymbol} :
+    (continueCodePrimitive accept reject).transform (encode C) =
+        some out <->
+      boundedDovetailOutput accept reject C.input C.stage = none ∧
+        out = encode (nextStage C) :=
+  continueCode_encode_eq_some_iff
+
+theorem emitCode_encode_eq_some_iff
+    {accept reject : MachineDescription}
+    {C : DovetailControllerLayout}
+    {outCode : Word MachineCodeSymbol} :
+    emitCode accept reject (encode C) = some outCode <->
+      exists out : Word Bool,
+        boundedDovetailOutput accept reject C.input C.stage = some out ∧
+          outCode = encodeBoolWord out := by
+  constructor
+  · intro houtCode
+    rw [emitCode_encode] at houtCode
+    let result :=
+      boundedDovetailOutput accept reject C.input C.stage
+    cases hresult : result with
+    | none =>
+        have hnone :
+            boundedDovetailOutput accept reject C.input C.stage = none := by
+          simpa [result] using hresult
+        simp [hnone] at houtCode
+    | some out =>
+        have hsome :
+            boundedDovetailOutput accept reject C.input C.stage =
+              some out := by
+          simpa [result] using hresult
+        refine ⟨out, hsome, ?_⟩
+        rw [hsome] at houtCode
+        exact (Option.some.inj houtCode).symm
+  · intro houtCode
+    rcases houtCode with ⟨out, hbounded, rfl⟩
+    exact emitCode_encode_of_boundedDovetailOutput_eq_some hbounded
+
+theorem emitCodePrimitive_encode_eq_some_iff
+    {accept reject : MachineDescription}
+    {C : DovetailControllerLayout}
+    {outCode : Word MachineCodeSymbol} :
+    (emitCodePrimitive accept reject).transform (encode C) = some outCode <->
+      exists out : Word Bool,
+        boundedDovetailOutput accept reject C.input C.stage = some out ∧
+          outCode = encodeBoolWord out :=
+  emitCode_encode_eq_some_iff
+
+theorem emitCode_encode_eq_encodeBoolWord_iff
+    {accept reject : MachineDescription}
+    {C : DovetailControllerLayout}
+    {out : Word Bool} :
+    emitCode accept reject (encode C) = some (encodeBoolWord out) <->
+      boundedDovetailOutput accept reject C.input C.stage = some out := by
+  constructor
+  · intro h
+    rcases emitCode_encode_eq_some_iff.mp h with
+      ⟨actual, hactual, hcode⟩
+    have hsame : out = actual :=
+      encodeBoolWord_injective hcode
+    rwa [hsame]
+  · intro h
+    exact emitCode_encode_of_boundedDovetailOutput_eq_some h
+
+theorem emitCodePrimitive_encode_eq_encodeBoolWord_iff
+    {accept reject : MachineDescription}
+    {C : DovetailControllerLayout}
+    {out : Word Bool} :
+    (emitCodePrimitive accept reject).transform (encode C) =
+        some (encodeBoolWord out) <->
+      boundedDovetailOutput accept reject C.input C.stage = some out :=
+  emitCode_encode_eq_encodeBoolWord_iff
+
+theorem continueCode_emitCode_encode_exclusive
+    {accept reject : MachineDescription}
+    {C : DovetailControllerLayout}
+    {next out : Word MachineCodeSymbol}
+    (hcontinue :
+      continueCode accept reject (encode C) = some next)
+    (hemit :
+      emitCode accept reject (encode C) = some out) :
+    False := by
+  rcases continueCode_encode_eq_some_iff.mp hcontinue with
+    ⟨hnone, _⟩
+  rcases emitCode_encode_eq_some_iff.mp hemit with
+    ⟨actual, hsome, _⟩
+  rw [hnone] at hsome
+  cases hsome
+
+theorem continue_emit_branch_encode
+    (accept reject : MachineDescription)
+    (C : DovetailControllerLayout) :
+    (continueCode accept reject (encode C) =
+        some (encode (nextStage C)) ∧
+      emitCode accept reject (encode C) = none) ∨
+      (continueCode accept reject (encode C) = none ∧
+        exists out : Word Bool,
+          boundedDovetailOutput accept reject C.input C.stage = some out ∧
+            emitCode accept reject (encode C) =
+              some (encodeBoolWord out)) := by
+  let result := boundedDovetailOutput accept reject C.input C.stage
+  cases hresult : result with
+  | none =>
+      left
+      have hnone :
+          boundedDovetailOutput accept reject C.input C.stage = none := by
+        simpa [result] using hresult
+      exact
+        ⟨continueCode_encode_of_boundedDovetailOutput_eq_none hnone,
+          emitCode_encode_of_boundedDovetailOutput_eq_none hnone⟩
+  | some out =>
+      right
+      have hsome :
+          boundedDovetailOutput accept reject C.input C.stage =
+            some out := by
+        simpa [result] using hresult
+      exact
+        ⟨continueCode_encode_of_boundedDovetailOutput_eq_some hsome,
+          ⟨out, hsome,
+            emitCode_encode_of_boundedDovetailOutput_eq_some hsome⟩⟩
+
 theorem rawOutputCode_after_totalStageAttemptCode
     (accept reject : MachineDescription)
     (tokens : Word MachineCodeSymbol) :

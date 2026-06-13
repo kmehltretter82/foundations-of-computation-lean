@@ -1571,6 +1571,18 @@ def PairedRecognizerDovetailControllerRawOutputCode :
     MachineDescription.TapeCodePrimitive :=
   MachineDescription.DovetailControllerLayout.rawOutputCodePrimitive
 
+def PairedRecognizerDovetailControllerContinueCode
+    (accept reject : MachineDescription) :
+    MachineDescription.TapeCodePrimitive :=
+  MachineDescription.DovetailControllerLayout.continueCodePrimitive
+    accept reject
+
+def PairedRecognizerDovetailControllerEmitCode
+    (accept reject : MachineDescription) :
+    MachineDescription.TapeCodePrimitive :=
+  MachineDescription.DovetailControllerLayout.emitCodePrimitive
+    accept reject
+
 def PairedRecognizerDovetailTotalThenRawOutputCode
     (accept reject : MachineDescription) :
     MachineDescription.TapeCodePrimitive :=
@@ -1584,6 +1596,28 @@ def PairedRecognizerDovetailControllerRawOutputCodeRealizes
     P.transform (MachineDescription.encodeBoolWord result) =
       Option.map MachineDescription.encodeBoolWord
         (PairedRecognizerDovetailControllerRawOutput result)
+
+def PairedRecognizerDovetailControllerContinueCodeRealizes
+    (accept reject : MachineDescription)
+    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+  forall C : MachineDescription.DovetailControllerLayout,
+    P.transform (MachineDescription.DovetailControllerLayout.encode C) =
+      if MachineDescription.boundedDovetailOutput
+          accept reject C.input C.stage = none then
+        some
+          (MachineDescription.DovetailControllerLayout.encode
+            (MachineDescription.DovetailControllerLayout.nextStage C))
+      else
+        none
+
+def PairedRecognizerDovetailControllerEmitCodeRealizes
+    (accept reject : MachineDescription)
+    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+  forall C : MachineDescription.DovetailControllerLayout,
+    P.transform (MachineDescription.DovetailControllerLayout.encode C) =
+      Option.map MachineDescription.encodeBoolWord
+        (MachineDescription.boundedDovetailOutput
+          accept reject C.input C.stage)
 
 def PairedRecognizerDovetailInitialLayoutCodeRealizes
     (accept reject : MachineDescription)
@@ -1774,6 +1808,103 @@ theorem pairedRecognizerDovetailControllerRawOutputCode_realizes :
   exact
     MachineDescription.DovetailControllerLayout.rawOutputCodePrimitive_encodeBoolWord
       result
+
+theorem pairedRecognizerDovetailControllerContinueCode_realizes
+    (accept reject : MachineDescription) :
+    PairedRecognizerDovetailControllerContinueCodeRealizes
+      accept reject
+      (PairedRecognizerDovetailControllerContinueCode accept reject) := by
+  intro C
+  exact
+    MachineDescription.DovetailControllerLayout.continueCodePrimitive_encode
+      accept reject C
+
+theorem pairedRecognizerDovetailControllerEmitCode_realizes
+    (accept reject : MachineDescription) :
+    PairedRecognizerDovetailControllerEmitCodeRealizes
+      accept reject
+      (PairedRecognizerDovetailControllerEmitCode accept reject) := by
+  intro C
+  exact
+    MachineDescription.DovetailControllerLayout.emitCodePrimitive_encode
+      accept reject C
+
+theorem pairedRecognizerDovetailControllerContinueCode_encode_eq_some_iff
+    {accept reject : MachineDescription}
+    {C : MachineDescription.DovetailControllerLayout}
+    {out : Word MachineCodeSymbol} :
+    (PairedRecognizerDovetailControllerContinueCode accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+        some out <->
+      MachineDescription.boundedDovetailOutput
+          accept reject C.input C.stage = none ∧
+        out =
+          MachineDescription.DovetailControllerLayout.encode
+            (MachineDescription.DovetailControllerLayout.nextStage C) :=
+  MachineDescription.DovetailControllerLayout.continueCodePrimitive_encode_eq_some_iff
+
+theorem pairedRecognizerDovetailControllerEmitCode_encode_eq_some_iff
+    {accept reject : MachineDescription}
+    {C : MachineDescription.DovetailControllerLayout}
+    {outCode : Word MachineCodeSymbol} :
+    (PairedRecognizerDovetailControllerEmitCode accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+        some outCode <->
+      exists out : Word Bool,
+        MachineDescription.boundedDovetailOutput
+          accept reject C.input C.stage = some out ∧
+          outCode = MachineDescription.encodeBoolWord out :=
+  MachineDescription.DovetailControllerLayout.emitCodePrimitive_encode_eq_some_iff
+
+theorem pairedRecognizerDovetailControllerEmitCode_encode_eq_encodeBoolWord_iff
+    {accept reject : MachineDescription}
+    {C : MachineDescription.DovetailControllerLayout}
+    {out : Word Bool} :
+    (PairedRecognizerDovetailControllerEmitCode accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+        some (MachineDescription.encodeBoolWord out) <->
+      MachineDescription.boundedDovetailOutput
+        accept reject C.input C.stage = some out :=
+  MachineDescription.DovetailControllerLayout.emitCodePrimitive_encode_eq_encodeBoolWord_iff
+
+theorem pairedRecognizerDovetailControllerContinueEmitCode_exclusive
+    {accept reject : MachineDescription}
+    {C : MachineDescription.DovetailControllerLayout}
+    {next out : Word MachineCodeSymbol}
+    (hcontinue :
+      (PairedRecognizerDovetailControllerContinueCode accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+          some next)
+    (hemit :
+      (PairedRecognizerDovetailControllerEmitCode accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+          some out) :
+    False :=
+  MachineDescription.DovetailControllerLayout.continueCode_emitCode_encode_exclusive
+    hcontinue hemit
+
+theorem pairedRecognizerDovetailControllerContinueEmitCode_branch
+    (accept reject : MachineDescription)
+    (C : MachineDescription.DovetailControllerLayout) :
+    ((PairedRecognizerDovetailControllerContinueCode accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+        some
+          (MachineDescription.DovetailControllerLayout.encode
+            (MachineDescription.DovetailControllerLayout.nextStage C)) ∧
+      (PairedRecognizerDovetailControllerEmitCode accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) = none) ∨
+      ((PairedRecognizerDovetailControllerContinueCode
+          accept reject).transform
+        (MachineDescription.DovetailControllerLayout.encode C) = none ∧
+        exists out : Word Bool,
+          MachineDescription.boundedDovetailOutput
+            accept reject C.input C.stage = some out ∧
+            (PairedRecognizerDovetailControllerEmitCode
+              accept reject).transform
+              (MachineDescription.DovetailControllerLayout.encode C) =
+                some (MachineDescription.encodeBoolWord out)) :=
+  MachineDescription.DovetailControllerLayout.continue_emit_branch_encode
+    accept reject C
 
 theorem pairedRecognizerDovetailTotalThenRawOutputCode_encode
     (accept reject : MachineDescription)
@@ -2254,6 +2385,22 @@ def PairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction :
       TapeCodePrimitiveOutputRealizedByDescription
         (PairedRecognizerDovetailTotalThenRawOutputCode accept reject)
         attempt
+
+def PairedRecognizerDovetailControllerContinueCodeOutputRealizerConstruction :
+    Prop :=
+  forall accept reject : MachineDescription,
+    exists branch : MachineDescription,
+      TapeCodePrimitiveOutputRealizedByDescription
+        (PairedRecognizerDovetailControllerContinueCode accept reject)
+        branch
+
+def PairedRecognizerDovetailControllerEmitCodeOutputRealizerConstruction :
+    Prop :=
+  forall accept reject : MachineDescription,
+    exists branch : MachineDescription,
+      TapeCodePrimitiveOutputRealizedByDescription
+        (PairedRecognizerDovetailControllerEmitCode accept reject)
+        branch
 
 def PairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction :
     Prop :=
@@ -2975,6 +3122,20 @@ theorem pairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizer_of_tapeCode
   exact hcompile
     (PairedRecognizerDovetailTotalThenRawOutputCode accept reject)
 
+theorem pairedRecognizerDovetailControllerContinueCodeOutputRealizer_of_tapeCodeOutputCompiler
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
+    PairedRecognizerDovetailControllerContinueCodeOutputRealizerConstruction := by
+  intro accept reject
+  exact hcompile
+    (PairedRecognizerDovetailControllerContinueCode accept reject)
+
+theorem pairedRecognizerDovetailControllerEmitCodeOutputRealizer_of_tapeCodeOutputCompiler
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
+    PairedRecognizerDovetailControllerEmitCodeOutputRealizerConstruction := by
+  intro accept reject
+  exact hcompile
+    (PairedRecognizerDovetailControllerEmitCode accept reject)
+
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputRealizer_of_subroutineRealizer
     (hcompile :
       PairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction) :
@@ -3318,6 +3479,10 @@ structure MachineDescriptionCompilerCloseout where
     PairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction
   dovetailTotalStageAttemptCodeOutput :
     PairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction
+  dovetailControllerContinueCodeOutput :
+    PairedRecognizerDovetailControllerContinueCodeOutputRealizerConstruction
+  dovetailControllerEmitCodeOutput :
+    PairedRecognizerDovetailControllerEmitCodeOutputRealizerConstruction
 
 def machineDescriptionCompilerCloseout_of_tapeCodeOutputCompiler
     (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
@@ -3355,6 +3520,14 @@ def machineDescriptionCompilerCloseout_of_tapeCodeOutputCompiler
     intro accept reject
     exact hcompile
       (PairedRecognizerDovetailTotalStageAttemptCode accept reject)
+  dovetailControllerContinueCodeOutput := by
+    intro accept reject
+    exact hcompile
+      (PairedRecognizerDovetailControllerContinueCode accept reject)
+  dovetailControllerEmitCodeOutput := by
+    intro accept reject
+    exact hcompile
+      (PairedRecognizerDovetailControllerEmitCode accept reject)
 
 theorem fixedDescriptionStepCodeConfigurationRealizerConstruction_of_tapeCodeOutputCompiler
     (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :

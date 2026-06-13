@@ -326,6 +326,17 @@ def FiniteProductionListIndexedDerivationCertificateTrace
     [Symbol.nonterminal G.start]
     (SententialForm.terminalWord w)
 
+def FiniteProductionListCheckedIndexedDerivationCertificateTrace
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal))
+    (w : Word terminal) (n : Nat) : Prop :=
+  exists data :
+    FiniteProductionListIndexedDerivationCertificateData rules n
+      [Symbol.nonterminal G.start]
+      (SententialForm.terminalWord w),
+    data.check = true
+
 theorem finiteProductionListDerivationCertificateTrace_iff_trace
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
@@ -341,6 +352,38 @@ theorem finiteProductionListIndexedDerivationCertificateTrace_iff_trace
     FiniteProductionListIndexedDerivationCertificateTrace G rules w n <->
       FiniteProductionListDerivationTrace G rules w n :=
   finiteProductionListIndexedDerivationCertificate_iff_derivesIn
+
+theorem finiteProductionListCheckedIndexedDerivationCertificateTrace_iff_indexedTrace
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    {w : Word terminal} {n : Nat} :
+    FiniteProductionListCheckedIndexedDerivationCertificateTrace
+        G rules w n <->
+      FiniteProductionListIndexedDerivationCertificateTrace G rules w
+        n := by
+  constructor
+  · intro h
+    rcases h with ⟨data, hdata⟩
+    exact
+      FiniteProductionListIndexedDerivationCertificateData.to_indexedCertificate_of_check_eq_true
+        hdata
+  · intro h
+    exact
+      FiniteProductionListIndexedDerivationCertificateData.exists_check_eq_true_of_indexedCertificate
+        h
+
+theorem finiteProductionListCheckedIndexedDerivationCertificateTrace_iff_trace
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    {w : Word terminal} {n : Nat} :
+    FiniteProductionListCheckedIndexedDerivationCertificateTrace
+        G rules w n <->
+      FiniteProductionListDerivationTrace G rules w n :=
+  Iff.trans
+    finiteProductionListCheckedIndexedDerivationCertificateTrace_iff_indexedTrace
+    finiteProductionListIndexedDerivationCertificateTrace_iff_trace
 
 theorem finiteProductionListDerivationTrace_iff_derivationTrace
     {G : GeneralGrammar terminal nonterminal}
@@ -430,6 +473,15 @@ def FiniteProductionListBoundedIndexedCertificateSearch
     (FiniteProductionListIndexedDerivationCertificateTrace G rules)
     w limit
 
+def FiniteProductionListBoundedCheckedIndexedCertificateSearch
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal))
+    (w : Word terminal) (limit : Nat) : Prop :=
+  TraceHitsBy
+    (FiniteProductionListCheckedIndexedDerivationCertificateTrace G rules)
+    w limit
+
 theorem finiteProductionListBoundedCertificateSearch_iff_derivationSearch
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
@@ -468,6 +520,28 @@ theorem finiteProductionListBoundedIndexedCertificateSearch_iff_derivationSearch
     exact
       ⟨n, hn,
         (finiteProductionListIndexedDerivationCertificateTrace_iff_trace).mpr
+          htrace⟩
+
+theorem finiteProductionListBoundedCheckedIndexedCertificateSearch_iff_derivationSearch
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    {w : Word terminal} {limit : Nat} :
+    FiniteProductionListBoundedCheckedIndexedCertificateSearch G rules
+        w limit <->
+      FiniteProductionListBoundedDerivationSearch G rules w limit := by
+  constructor
+  · intro h
+    rcases h with ⟨n, hn, hcert⟩
+    exact
+      ⟨n, hn,
+        (finiteProductionListCheckedIndexedDerivationCertificateTrace_iff_trace).mp
+          hcert⟩
+  · intro h
+    rcases h with ⟨n, hn, htrace⟩
+    exact
+      ⟨n, hn,
+        (finiteProductionListCheckedIndexedDerivationCertificateTrace_iff_trace).mpr
           htrace⟩
 
 theorem generalGrammarBoundedDerivationSearch_sound
@@ -537,6 +611,22 @@ theorem finiteProductionListBoundedIndexedCertificateSearch_sound
     ((finiteProductionListBoundedIndexedCertificateSearch_iff_derivationSearch).mp
       hit)
 
+theorem finiteProductionListBoundedCheckedIndexedCertificateSearch_sound
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs)
+    {w : Word terminal} {limit : Nat}
+    (hit :
+      FiniteProductionListBoundedCheckedIndexedCertificateSearch G rules w
+        limit) :
+    w ∈ GeneralGrammar.GeneratedLanguage G :=
+  finiteProductionListBoundedDerivationSearch_sound hrules
+    ((finiteProductionListBoundedCheckedIndexedCertificateSearch_iff_derivationSearch).mp
+      hit)
+
 theorem finiteProductionListBoundedCertificateSearch_complete
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
@@ -572,6 +662,25 @@ theorem finiteProductionListBoundedIndexedCertificateSearch_complete
       (finiteProductionListBoundedIndexedCertificateSearch_iff_derivationSearch).mpr
         hit⟩
 
+theorem finiteProductionListBoundedCheckedIndexedCertificateSearch_complete
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs)
+    {w : Word terminal}
+    (hw : w ∈ GeneralGrammar.GeneratedLanguage G) :
+    exists limit : Nat,
+      FiniteProductionListBoundedCheckedIndexedCertificateSearch G rules w
+        limit := by
+  rcases finiteProductionListBoundedDerivationSearch_complete hrules hw with
+    ⟨limit, hit⟩
+  exact
+    ⟨limit,
+      (finiteProductionListBoundedCheckedIndexedCertificateSearch_iff_derivationSearch).mpr
+        hit⟩
+
 noncomputable def GeneralGrammarBoundedRecognizerProgram
     (G : GeneralGrammar terminal nonterminal) :
     StagedProgram terminal Unit :=
@@ -590,6 +699,14 @@ noncomputable def FiniteProductionListIndexedCertificateRecognizerProgram
     StagedProgram terminal Unit :=
   TraceRecognizerProgram
     (FiniteProductionListBoundedIndexedCertificateSearch G rules)
+
+noncomputable def FiniteProductionListCheckedIndexedCertificateRecognizerProgram
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal)) :
+    StagedProgram terminal Unit :=
+  TraceRecognizerProgram
+    (FiniteProductionListBoundedCheckedIndexedCertificateSearch G rules)
 
 noncomputable def FiniteProductionListBoundedRecognizerProgram
     (G : GeneralGrammar terminal nonterminal)
@@ -668,6 +785,28 @@ theorem finiteProductionListIndexedCertificateRecognizerProgram_acceptsLanguage
     exact finiteProductionListBoundedIndexedCertificateSearch_complete
       hrules hw
 
+theorem finiteProductionListCheckedIndexedCertificateRecognizerProgram_acceptsLanguage
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    ProgramAcceptsLanguage
+      (FiniteProductionListCheckedIndexedCertificateRecognizerProgram G
+        rules)
+      (GeneralGrammar.GeneratedLanguage G) := by
+  apply traceRecognizerProgram_acceptsLanguage
+  intro w
+  constructor
+  · intro h
+    rcases h with ⟨limit, hit⟩
+    exact finiteProductionListBoundedCheckedIndexedCertificateSearch_sound
+      hrules hit
+  · intro hw
+    exact finiteProductionListBoundedCheckedIndexedCertificateSearch_complete
+      hrules hw
+
 theorem finiteProductionListCertificateRecognizerProgram_same_language
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
@@ -701,6 +840,27 @@ theorem finiteProductionListIndexedCertificateRecognizerProgram_same_language
   intro w
   exact Iff.trans
     ((finiteProductionListIndexedCertificateRecognizerProgram_acceptsLanguage
+      hrules w))
+    ((finiteProductionListBoundedRecognizerProgram_acceptsLanguage
+      hrules w).symm)
+
+theorem finiteProductionListCheckedIndexedCertificateRecognizerProgram_same_language
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    forall w : Word terminal,
+      ProgramHaltsWithOutput
+          (FiniteProductionListCheckedIndexedCertificateRecognizerProgram G
+            rules)
+          w [] <->
+        ProgramHaltsWithOutput
+          (FiniteProductionListBoundedRecognizerProgram G rules) w [] := by
+  intro w
+  exact Iff.trans
+    ((finiteProductionListCheckedIndexedCertificateRecognizerProgram_acceptsLanguage
       hrules w))
     ((finiteProductionListBoundedRecognizerProgram_acceptsLanguage
       hrules w).symm)
@@ -951,11 +1111,44 @@ def IndexedCertificateRecognizerCompilerConstruction : Prop :=
         (FiniteProductionListIndexedCertificateRecognizerProgram
           P.toGrammar P.rules) D
 
+def CheckedIndexedCertificateRecognizerCompilerConstruction : Prop :=
+  forall P : FiniteBoolGeneralGrammarPresentation,
+    exists D : MachineDescription,
+      ProgramCompiledByDescription
+        (FiniteProductionListCheckedIndexedCertificateRecognizerProgram
+          P.toGrammar P.rules) D
+
 theorem compilerConstruction_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
     CompilerConstruction := by
   intro P
   exact hcompile P.recognizerProgram
+
+theorem certificateRecognizerCompilerConstruction_of_descriptionCompiler
+    (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
+    CertificateRecognizerCompilerConstruction := by
+  intro P
+  exact
+    hcompile
+      (FiniteProductionListCertificateRecognizerProgram P.toGrammar P.rules)
+
+theorem indexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
+    (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
+    IndexedCertificateRecognizerCompilerConstruction := by
+  intro P
+  exact
+    hcompile
+      (FiniteProductionListIndexedCertificateRecognizerProgram
+        P.toGrammar P.rules)
+
+theorem checkedIndexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
+    (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
+    CheckedIndexedCertificateRecognizerCompilerConstruction := by
+  intro P
+  exact
+    hcompile
+      (FiniteProductionListCheckedIndexedCertificateRecognizerProgram
+        P.toGrammar P.rules)
 
 theorem boundedRecognizerCompilerConstruction_of_certificateRecognizerCompiler
     (hcompile : CertificateRecognizerCompilerConstruction) :
@@ -984,6 +1177,27 @@ theorem boundedRecognizerCompilerConstruction_of_indexedCertificateRecognizerCom
         (finiteProductionListBoundedRecognizerProgram_acceptsLanguage
           (P.toGrammar_produces_iff))
         hD⟩
+
+theorem indexedCertificateRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
+    (hcompile : CheckedIndexedCertificateRecognizerCompilerConstruction) :
+    IndexedCertificateRecognizerCompilerConstruction := by
+  intro P
+  rcases hcompile P with ⟨D, hD⟩
+  exact
+    ⟨D,
+      programCompiledByDescription_of_same_accepted_language
+        (finiteProductionListCheckedIndexedCertificateRecognizerProgram_acceptsLanguage
+          (P.toGrammar_produces_iff))
+        (finiteProductionListIndexedCertificateRecognizerProgram_acceptsLanguage
+          (P.toGrammar_produces_iff))
+        hD⟩
+
+theorem boundedRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
+    (hcompile : CheckedIndexedCertificateRecognizerCompilerConstruction) :
+    BoundedRecognizerCompilerConstruction :=
+  boundedRecognizerCompilerConstruction_of_indexedCertificateRecognizerCompiler
+    (indexedCertificateRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
+      hcompile)
 
 theorem compilerConstruction_of_boundedRecognizerCompiler
     (hcompile : BoundedRecognizerCompilerConstruction) :
@@ -1202,10 +1416,32 @@ def FiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerCons
     Prop :=
   FiniteBoolGeneralGrammarPresentation.IndexedCertificateRecognizerCompilerConstruction
 
+def FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction :
+    Prop :=
+  FiniteBoolGeneralGrammarPresentation.CheckedIndexedCertificateRecognizerCompilerConstruction
+
 theorem finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
     FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
   FiniteBoolGeneralGrammarPresentation.compilerConstruction_of_descriptionCompiler
+    hcompile
+
+theorem finiteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction_of_descriptionCompiler
+    (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
+    FiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction :=
+  FiniteBoolGeneralGrammarPresentation.certificateRecognizerCompilerConstruction_of_descriptionCompiler
+    hcompile
+
+theorem finiteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
+    (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
+    FiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction :=
+  FiniteBoolGeneralGrammarPresentation.indexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
+    hcompile
+
+theorem finiteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
+    (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
+    FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction :=
+  FiniteBoolGeneralGrammarPresentation.checkedIndexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
     hcompile
 
 theorem finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_certificateRecognizerCompiler
@@ -1220,6 +1456,20 @@ theorem finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstructio
       FiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction) :
     FiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :=
   FiniteBoolGeneralGrammarPresentation.boundedRecognizerCompilerConstruction_of_indexedCertificateRecognizerCompiler
+    hcompile
+
+theorem finiteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
+    (hcompile :
+      FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
+    FiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction :=
+  FiniteBoolGeneralGrammarPresentation.indexedCertificateRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
+    hcompile
+
+theorem finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
+    (hcompile :
+      FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
+    FiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :=
+  FiniteBoolGeneralGrammarPresentation.boundedRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
     hcompile
 
 theorem finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_boundedRecognizerCompiler
@@ -4799,8 +5049,6 @@ structure BooleanFiniteGrammarSection52Closeout where
   boundedTraceSearch : BoundedTraceSearchConstruction
   decidableToAcceptable : DecidableToAcceptablePrinciple Bool
   dovetailDescription : SemanticDovetailDescriptionCompilerAssumption
-  partialUnaryRangeDescription :
-    SemanticPartialUnaryRangeCompilerAssumption
   finiteGrammarRecognizerDescription :
     FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction
   recursivelyEnumerableToFiniteGrammar :
