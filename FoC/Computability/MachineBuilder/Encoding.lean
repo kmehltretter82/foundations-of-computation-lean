@@ -418,6 +418,35 @@ theorem cellsToWord?_map_some (w : Word Bool) :
   | cons b rest ih =>
       simp [cellsToWord?, ih]
 
+theorem cellsToWord?_eq_some_iff
+    {cells : List (Option Bool)} {w : Word Bool} :
+    cellsToWord? cells = some w <-> cells = w.map some := by
+  constructor
+  · intro h
+    induction cells generalizing w with
+    | nil =>
+        cases w with
+        | nil =>
+            rfl
+        | cons b rest =>
+            simp [cellsToWord?] at h
+    | cons cell rest ih =>
+        cases cell with
+        | none =>
+            simp [cellsToWord?] at h
+        | some b =>
+            cases hrest : cellsToWord? rest with
+            | none =>
+                simp [cellsToWord?, hrest] at h
+            | some tail =>
+                simp [cellsToWord?, hrest] at h
+                cases h
+                have htail : rest = tail.map some := ih hrest
+                simp [htail]
+  · intro h
+    rw [h]
+    exact cellsToWord?_map_some w
+
 def encodeBoolWordAppend (w : Word Bool)
     (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
   encodeCellListAppend (w.map some) suffix
@@ -445,6 +474,33 @@ theorem decodeBoolWord_encodeBoolWord (w : Word Bool) :
     decodeBoolWord (encodeBoolWord w) = some (w, []) := by
   simpa [encodeBoolWord] using
     decodeBoolWord_encodeBoolWordAppend w []
+
+theorem decodeBoolWord_eq_some_encodeBoolWordAppend
+    {tokens : Word MachineCodeSymbol}
+    {w : Word Bool} {suffix : Word MachineCodeSymbol}
+    (h : decodeBoolWord tokens = some (w, suffix)) :
+    tokens = encodeBoolWordAppend w suffix := by
+  unfold decodeBoolWord at h
+  cases hcells : decodeCellList tokens with
+  | none =>
+      simp [hcells] at h
+  | some parsed =>
+      cases parsed with
+      | mk cells parsedSuffix =>
+          simp [hcells] at h
+          cases hword : cellsToWord? cells with
+          | none =>
+              simp [hword] at h
+          | some decoded =>
+              simp [hword] at h
+              cases h
+              subst decoded
+              subst parsedSuffix
+              have htokens : tokens = encodeCellListAppend cells suffix :=
+                decodeCellList_eq_some_encodeCellListAppend hcells
+              have hcellsEq : cells = w.map some :=
+                cellsToWord?_eq_some_iff.mp hword
+              simp [encodeBoolWordAppend, htokens, hcellsEq]
 
 theorem encodeBoolWord_injective :
     Function.Injective encodeBoolWord := by

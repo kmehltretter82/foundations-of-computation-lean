@@ -494,6 +494,15 @@ theorem bounded_dovetail_table_compiler_of_total_then_raw_output_code_output_rea
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_totalThenRawOutputCodeOutputRealizer_and_stageAttemptSearchDriver
     hattempt hdriver
 
+theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_realizer_and_stage_attempt_search_driver
+    (hattempt :
+      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction)
+    (hdriver :
+      ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
+    hattempt hdriver
+
 theorem paired_recognizer_dovetail_stage_attempt_search_driver_of_description_bool_decider_compiler
     (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
     ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction :=

@@ -96,6 +96,26 @@ theorem decodeAttemptResultCode_encodeBoolWord
   simp [decodeAttemptResultCode, encodeBoolWord,
     decodeBoolWord_encodeBoolWordAppend]
 
+theorem decodeAttemptResultCode_eq_some_encodeBoolWord
+    {tokens : Word MachineCodeSymbol} {result : Word Bool}
+    (h : decodeAttemptResultCode tokens = some result) :
+    tokens = encodeBoolWord result := by
+  unfold decodeAttemptResultCode at h
+  cases hdecode : decodeBoolWord tokens with
+  | none =>
+      simp [hdecode] at h
+  | some parsed =>
+      cases parsed with
+      | mk decoded suffix =>
+          cases suffix with
+          | nil =>
+              simp [hdecode] at h
+              cases h
+              simpa [encodeBoolWord] using
+                decodeBoolWord_eq_some_encodeBoolWordAppend hdecode
+          | cons sym rest =>
+              simp [hdecode] at h
+
 def rawOutput? : Word Bool -> Option (Word Bool)
   | b :: [] => some [b]
   | _ => none

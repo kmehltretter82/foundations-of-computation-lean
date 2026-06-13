@@ -271,6 +271,13 @@ theorem concrete_paired_recognizer_dovetail_stage_attempt_code_output_realizer_o
   Computability.pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalThenRawOutputCodeOutputRealizerConstruction
     hcompile
 
+theorem concrete_paired_recognizer_dovetail_stage_attempt_code_output_realizer_of_total_stage_attempt_code_output_realizer
+    (hcompile :
+      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction) :
+    ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :=
+  Computability.pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalStageAttemptCodeOutputRealizerConstruction
+    hcompile
+
 theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_controller_result_realizes
     (accept reject : MachineDescription) :
     ConcretePairedRecognizerDovetailTotalStageAttemptControllerResultRealizes
@@ -311,6 +318,20 @@ theorem concrete_paired_recognizer_dovetail_controller_raw_output_code_eq_some_e
       MachineDescription.DovetailControllerLayout.decodeAttemptResultCode
         tokens = some [b] :=
   Computability.pairedRecognizerDovetailControllerRawOutputCode_eq_some_encodeBoolWord_singleton_iff
+
+theorem concrete_paired_recognizer_dovetail_controller_raw_output_code_eq_some_self
+    {code out : Word MachineCodeSymbol}
+    (h :
+      ConcretePairedRecognizerDovetailControllerRawOutputCode.transform
+        code = some out) :
+    out = code :=
+  Computability.pairedRecognizerDovetailControllerRawOutputCode_eq_some_self h
+
+theorem concrete_paired_recognizer_dovetail_controller_raw_output_code_output_realized_by_exact_identity :
+    TapeCodePrimitiveOutputRealizedByDescription
+      ConcretePairedRecognizerDovetailControllerRawOutputCode
+      MachineDescription.ExactIdentityDescription :=
+  Computability.pairedRecognizerDovetailControllerRawOutputCodeOutputRealizedByDescription
 
 theorem concrete_paired_recognizer_dovetail_controller_continue_code_realizes
     (accept reject : MachineDescription) :

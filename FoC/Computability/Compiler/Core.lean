@@ -685,6 +685,31 @@ theorem pairedRecognizerDovetailControllerRawOutputCode_eq_some_encodeBoolWord_s
         tokens = some [b] :=
   MachineDescription.DovetailControllerLayout.rawOutputCode_eq_some_encodeBoolWord_singleton_iff
 
+theorem pairedRecognizerDovetailControllerRawOutputCode_eq_some_self
+    {code out : Word MachineCodeSymbol}
+    (h :
+      PairedRecognizerDovetailControllerRawOutputCode.transform code =
+        some out) :
+    out = code := by
+  rcases MachineDescription.DovetailControllerLayout.rawOutputCode_eq_some_iff.mp
+      h with
+    ⟨result, raw, hdecode, hraw, hout⟩
+  cases result with
+  | nil =>
+      simp [MachineDescription.DovetailControllerLayout.rawOutput?] at hraw
+  | cons b tail =>
+      cases tail with
+      | nil =>
+          simp [MachineDescription.DovetailControllerLayout.rawOutput?] at hraw
+          cases hraw
+          have hcode : code = MachineDescription.encodeBoolWord [b] := by
+            apply
+              MachineDescription.DovetailControllerLayout.decodeAttemptResultCode_eq_some_encodeBoolWord
+            exact hdecode
+          rw [hout, hcode]
+      | cons c rest =>
+          simp [MachineDescription.DovetailControllerLayout.rawOutput?] at hraw
+
 theorem pairedRecognizerDovetailControllerContinueCode_realizes
     (accept reject : MachineDescription) :
     PairedRecognizerDovetailControllerContinueCodeRealizes
@@ -988,6 +1013,21 @@ theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_identity :
   ⟨tapeCodePrimitiveOutputCompiledByDescription_identity,
     MachineDescription.exactIdentityDescription_haltTransitionFree⟩
 
+theorem pairedRecognizerDovetailControllerRawOutputCodeOutputRealizedByDescription :
+    TapeCodePrimitiveOutputRealizedByDescription
+      PairedRecognizerDovetailControllerRawOutputCode
+      MachineDescription.ExactIdentityDescription := by
+  constructor
+  · exact MachineDescription.exactIdentityDescription_wellFormed
+  · intro code out h
+    have hout : out = code :=
+      pairedRecognizerDovetailControllerRawOutputCode_eq_some_self h
+    rw [hout]
+    exact
+      (MachineDescription.exactIdentityDescription_haltsWithOutput_iff
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput code)).mpr rfl
+
 theorem tapeCodePrimitiveOutputRealizedByDescription_erase :
     TapeCodePrimitiveOutputRealizedByDescription
       MachineDescription.TapeCodePrimitive.erase
@@ -1209,6 +1249,10 @@ structure MachineDescriptionPrimitiveCompilerCore where
       TapeCodePrimitiveOutputCompiledSubroutineByDescription
         (MachineDescription.TapeCodePrimitive.append [symbol])
         (MachineDescription.AppendCodeSymbolRightDescription symbol)
+  controllerRawOutputOutputRealized :
+    TapeCodePrimitiveOutputRealizedByDescription
+      PairedRecognizerDovetailControllerRawOutputCode
+      MachineDescription.ExactIdentityDescription
 
 def machineDescriptionPrimitiveCompilerCore :
     MachineDescriptionPrimitiveCompilerCore where
@@ -1233,6 +1277,8 @@ def machineDescriptionPrimitiveCompilerCore :
     tapeCodePrimitiveOutputCompiledByDescription_append_singleton
   appendSingletonOutputCompiledSubroutine :=
     tapeCodePrimitiveOutputCompiledSubroutineByDescription_append_singleton
+  controllerRawOutputOutputRealized :=
+    pairedRecognizerDovetailControllerRawOutputCodeOutputRealizedByDescription
 
 structure MachineDescriptionPrimitiveSubroutineCore where
   identityReady :
@@ -2310,6 +2356,61 @@ theorem pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalThenRawOu
     pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalThenRawOutputCodeOutputRealizer
       hattempt⟩
 
+theorem pairedRecognizerDovetailTotalStageAttemptCode_transform_eq_of_stageAttemptCode_eq_some
+    {accept reject : MachineDescription}
+    {code out : Word MachineCodeSymbol}
+    (hstage :
+      (PairedRecognizerDovetailStageAttemptCode accept reject).transform
+        code = some out) :
+    (PairedRecognizerDovetailTotalStageAttemptCode accept reject).transform
+      code = some out := by
+  have hcompose :
+      (PairedRecognizerDovetailTotalThenRawOutputCode accept reject).transform
+        code = some out := by
+    simpa [pairedRecognizerDovetailTotalThenRawOutputCode_eq_stageAttemptCode]
+      using hstage
+  unfold PairedRecognizerDovetailTotalThenRawOutputCode at hcompose
+  unfold MachineDescription.TapeCodePrimitive.compose at hcompose
+  cases htotal :
+      (PairedRecognizerDovetailTotalStageAttemptCode accept reject).transform
+        code with
+  | none =>
+      simp [htotal] at hcompose
+  | some mid =>
+      have hraw :
+          PairedRecognizerDovetailControllerRawOutputCode.transform mid =
+            some out := by
+        simpa [htotal] using hcompose
+      have hout : out = mid :=
+        pairedRecognizerDovetailControllerRawOutputCode_eq_some_self hraw
+      rw [hout]
+
+theorem pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalStageAttemptCodeOutputRealizer
+    {accept reject attempt : MachineDescription}
+    (hattempt :
+      TapeCodePrimitiveOutputRealizedByDescription
+        (PairedRecognizerDovetailTotalStageAttemptCode accept reject)
+        attempt) :
+    TapeCodePrimitiveOutputRealizedByDescription
+      (PairedRecognizerDovetailStageAttemptCode accept reject)
+      attempt := by
+  constructor
+  · exact hattempt.left
+  · intro code out hstage
+    exact hattempt.right code out
+      (pairedRecognizerDovetailTotalStageAttemptCode_transform_eq_of_stageAttemptCode_eq_some
+        hstage)
+
+theorem pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalStageAttemptCodeOutputRealizerConstruction
+    (hcompile :
+      PairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction) :
+    PairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction := by
+  intro accept reject
+  rcases hcompile accept reject with ⟨attempt, hattempt⟩
+  exact ⟨attempt,
+    pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalStageAttemptCodeOutputRealizer
+      hattempt⟩
+
 theorem pairedRecognizerDovetailLayoutCodeOutputRealizer_of_subroutineRealizer
     (hcompile :
       PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction) :
@@ -2483,6 +2584,17 @@ theorem pairedRecognizerBoundedDovetailTableCompiler_of_totalThenRawOutputCodeOu
     PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   pairedRecognizerBoundedDovetailTableCompiler_of_stageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
     (pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalThenRawOutputCodeOutputRealizerConstruction
+      hattempt)
+    hdriver
+
+theorem pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
+    (hattempt :
+      PairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction)
+    (hdriver :
+      PairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  pairedRecognizerBoundedDovetailTableCompiler_of_stageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
+    (pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalStageAttemptCodeOutputRealizerConstruction
       hattempt)
     hdriver
 
