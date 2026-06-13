@@ -1593,6 +1593,21 @@ def PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConst
         PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
           attempt decider
 
+def PairedRecognizerDovetailFiniteStageLoopControllerConstruction :
+    Prop :=
+  forall attempt : MachineDescription,
+    attempt.SubroutineReady ->
+      exists decider : MachineDescription,
+        PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
+          attempt decider
+
+theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_finiteStageLoopController
+    (hloop :
+      PairedRecognizerDovetailFiniteStageLoopControllerConstruction) :
+    PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction := by
+  intro _accept _reject attempt hattemptReady
+  exact hloop attempt hattemptReady
+
 /-!
 The finite controller route for paired-recognizer dovetailing has two
 machine-construction pieces: a total stage-attempt subroutine and a controller
@@ -1615,6 +1630,30 @@ def pairedRecognizerDovetailControllerCompilerCloseout_of_constructions
     PairedRecognizerDovetailControllerCompilerCloseout where
   totalStageAttemptSubroutine := hattempt
   controllerSearchDriver := hdriver
+
+structure PairedRecognizerDovetailFiniteControllerCompilerCloseout where
+  totalStageAttemptSubroutine :
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction
+  finiteStageLoopController :
+    PairedRecognizerDovetailFiniteStageLoopControllerConstruction
+
+def pairedRecognizerDovetailControllerCompilerCloseout_of_finiteStageLoopController
+    (hattempt :
+      PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
+    (hloop :
+      PairedRecognizerDovetailFiniteStageLoopControllerConstruction) :
+    PairedRecognizerDovetailControllerCompilerCloseout :=
+  pairedRecognizerDovetailControllerCompilerCloseout_of_constructions
+    hattempt
+    (pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_finiteStageLoopController
+      hloop)
+
+def pairedRecognizerDovetailControllerCompilerCloseout_of_finiteControllerCloseout
+    (hclose : PairedRecognizerDovetailFiniteControllerCompilerCloseout) :
+    PairedRecognizerDovetailControllerCompilerCloseout :=
+  pairedRecognizerDovetailControllerCompilerCloseout_of_finiteStageLoopController
+    hclose.totalStageAttemptSubroutine
+    hclose.finiteStageLoopController
 
 noncomputable def PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
     (attempt : MachineDescription) :
@@ -1918,6 +1957,82 @@ theorem pairedRecognizerDovetailTotalStageAttemptSearchDriverCompiler_of_descrip
       (pairedRecognizerDovetailStageAttemptSearchProgram_haltsWithOutput_iff
         accept reject attempt w b)
 
+theorem pairedRecognizerDovetailTotalStageAttemptControllerRawOutput_iff_of_outputCompiled
+    {accept reject attempt : MachineDescription}
+    (hattempt :
+      TapeCodePrimitiveOutputCompiledByDescription
+        (PairedRecognizerDovetailTotalStageAttemptCode accept reject)
+        attempt)
+    (w : Word Bool) (limit : Nat) (b : Bool) :
+    (exists result : Word Bool,
+      attempt.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput
+          (PairedRecognizerDovetailStageInputCode w limit))
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeBoolWord result)) ∧
+      PairedRecognizerDovetailControllerRawOutput result = some [b]) <->
+    MachineDescription.boundedDovetailOutput accept reject w limit =
+      some [b] := by
+  constructor
+  · intro h
+    rcases h with ⟨result, hattemptHalt, hraw⟩
+    have htransform :
+        (PairedRecognizerDovetailTotalStageAttemptCode
+          accept reject).transform
+            (PairedRecognizerDovetailStageInputCode w limit) =
+          some (MachineDescription.encodeBoolWord result) :=
+      (hattempt.right
+        (PairedRecognizerDovetailStageInputCode w limit)
+        (MachineDescription.encodeBoolWord result)).mp hattemptHalt
+    have hcanonical :
+        (PairedRecognizerDovetailTotalStageAttemptCode
+          accept reject).transform
+            (PairedRecognizerDovetailStageInputCode w limit) =
+          some
+            (MachineDescription.encodeBoolWord
+              (MachineDescription.DovetailLayout.outputWordFromOption
+                (MachineDescription.boundedDovetailOutput
+                  accept reject w limit))) :=
+      pairedRecognizerDovetailTotalStageAttemptCode_encode
+        accept reject w limit
+    have hencoded :
+        MachineDescription.encodeBoolWord result =
+          MachineDescription.encodeBoolWord
+            (MachineDescription.DovetailLayout.outputWordFromOption
+              (MachineDescription.boundedDovetailOutput
+                accept reject w limit)) := by
+      have hsome :
+          some (MachineDescription.encodeBoolWord result) =
+            some
+              (MachineDescription.encodeBoolWord
+                (MachineDescription.DovetailLayout.outputWordFromOption
+                  (MachineDescription.boundedDovetailOutput
+                    accept reject w limit))) := by
+        rw [← htransform, hcanonical]
+      exact Option.some.inj hsome
+    have hresult :
+        result =
+          MachineDescription.DovetailLayout.outputWordFromOption
+            (MachineDescription.boundedDovetailOutput
+              accept reject w limit) :=
+      MachineDescription.encodeBoolWord_injective hencoded
+    rw [PairedRecognizerDovetailControllerRawOutput, hresult,
+      MachineDescription.DovetailControllerLayout.rawOutput_outputWordFromOption_boundedDovetailOutput]
+      at hraw
+    exact hraw
+  · intro hbounded
+    refine ⟨[b], ?_, ?_⟩
+    · exact
+        (hattempt.right
+          (PairedRecognizerDovetailStageInputCode w limit)
+          (MachineDescription.encodeBoolWord [b])).mpr
+          (by
+            rw [pairedRecognizerDovetailTotalStageAttemptCode_encode,
+              hbounded]
+            rfl)
+    · simp [PairedRecognizerDovetailControllerRawOutput,
+        MachineDescription.DovetailControllerLayout.rawOutput_singleton]
+
 theorem pairedRecognizerDovetailTotalStageAttemptSearchDriverRealizes_of_controllerSearchDriverRealizes
     {accept reject attempt decider : MachineDescription}
     (hattempt :
@@ -1936,53 +2051,13 @@ theorem pairedRecognizerDovetailTotalStageAttemptSearchDriverRealizes_of_control
     · intro hhalt
       rcases (hdriver.right w b).mp hhalt with
         ⟨limit, result, hattemptHalt, hraw⟩
-      have htransform :
-          (PairedRecognizerDovetailTotalStageAttemptCode
-            accept reject).transform
-              (PairedRecognizerDovetailStageInputCode w limit) =
-            some (MachineDescription.encodeBoolWord result) :=
-        (hattempt.right
-          (PairedRecognizerDovetailStageInputCode w limit)
-          (MachineDescription.encodeBoolWord result)).mp hattemptHalt
-      have hcanonical :
-          (PairedRecognizerDovetailTotalStageAttemptCode
-            accept reject).transform
-              (PairedRecognizerDovetailStageInputCode w limit) =
-            some
-              (MachineDescription.encodeBoolWord
-                (MachineDescription.DovetailLayout.outputWordFromOption
-                  (MachineDescription.boundedDovetailOutput
-                    accept reject w limit))) :=
-        pairedRecognizerDovetailTotalStageAttemptCode_encode
-          accept reject w limit
-      have hencoded :
-          MachineDescription.encodeBoolWord result =
-            MachineDescription.encodeBoolWord
-              (MachineDescription.DovetailLayout.outputWordFromOption
-                (MachineDescription.boundedDovetailOutput
-                  accept reject w limit)) := by
-        have hsome :
-            some (MachineDescription.encodeBoolWord result) =
-              some
-                (MachineDescription.encodeBoolWord
-                  (MachineDescription.DovetailLayout.outputWordFromOption
-                    (MachineDescription.boundedDovetailOutput
-                      accept reject w limit))) := by
-          rw [← htransform, hcanonical]
-        exact Option.some.inj hsome
-      have hresult :
-          result =
-            MachineDescription.DovetailLayout.outputWordFromOption
-              (MachineDescription.boundedDovetailOutput
-                accept reject w limit) :=
-        MachineDescription.encodeBoolWord_injective hencoded
       have hbounded :
           MachineDescription.boundedDovetailOutput
             accept reject w limit = some [b] := by
-        rw [PairedRecognizerDovetailControllerRawOutput, hresult,
-          MachineDescription.DovetailControllerLayout.rawOutput_outputWordFromOption_boundedDovetailOutput]
-          at hraw
-        exact hraw
+        exact
+          (pairedRecognizerDovetailTotalStageAttemptControllerRawOutput_iff_of_outputCompiled
+            hattempt w limit b).mp
+            ⟨result, hattemptHalt, hraw⟩
       refine ⟨limit, ?_, hbounded⟩
       exact
         (hattempt.right
@@ -2464,6 +2539,13 @@ theorem pairedRecognizerBoundedDovetailTableCompiler_of_controllerCompilerCloseo
   pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputCompiledSubroutine_and_controllerSearchDriver
     hclose.totalStageAttemptSubroutine
     hclose.controllerSearchDriver
+
+theorem pairedRecognizerBoundedDovetailTableCompiler_of_finiteControllerCompilerCloseout
+    (hclose : PairedRecognizerDovetailFiniteControllerCompilerCloseout) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  pairedRecognizerBoundedDovetailTableCompiler_of_controllerCompilerCloseout
+    (pairedRecognizerDovetailControllerCompilerCloseout_of_finiteControllerCloseout
+      hclose)
 
 theorem pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineRunnerSearchDriver
     (hrunner :

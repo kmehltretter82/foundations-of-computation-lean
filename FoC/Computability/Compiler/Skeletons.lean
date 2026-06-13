@@ -1215,6 +1215,13 @@ theorem pairedRecognizerDovetailDescriptionCompiler_of_controllerCompilerCloseou
     (pairedRecognizerBoundedDovetailTableCompiler_of_controllerCompilerCloseout
       hclose)
 
+theorem pairedRecognizerDovetailDescriptionCompiler_of_finiteControllerCompilerCloseout
+    (hclose : PairedRecognizerDovetailFiniteControllerCompilerCloseout) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
+  pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
+    (pairedRecognizerBoundedDovetailTableCompiler_of_finiteControllerCompilerCloseout
+      hclose)
+
 theorem pairedRecognizerDovetailDescriptionCompiler_of_totalStageAttemptCodeOutputCompiledSubroutine_and_descriptionBoolDeciderCompiler
     (hattempt :
       PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)

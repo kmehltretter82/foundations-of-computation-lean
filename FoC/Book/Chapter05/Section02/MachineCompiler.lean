@@ -90,13 +90,14 @@ needed for sound branching on a subroutine's observed output: the old
 output-realizer contract is one-way, so it cannot rule out spurious halting
 outputs from an arbitrary subroutine. Under the stronger contract, a
 controller-search driver again yields the paired-recognizer dovetail compiler,
-and the controller-search driver is itself closed by a staged program that
-tries the total-attempt subroutine at each stage and branches only on singleton
-raw outputs. The lower-level work left, if one wants to avoid the
-description-backed Boolean compiler principle for this driver, is the
-handwritten transition table that iterates the controller state, calls the
-total-attempt subroutine, and hands off singleton results to the raw Boolean
-output branches.
+and the finite-source construction target is now the stage-loop controller
+itself: one machine that iterates stage bounds, calls the total-attempt
+subroutine on the canonical stage input, and branches only on singleton raw
+outputs. The semantic staged-program driver remains as a bridge theorem, but
+the closeout route can now be stated using the finite stage-loop controller
+construction directly. The transition table still to build is the controller
+that preserves the input/register layout across attempts and hands singleton
+results to the raw Boolean output branches.
 Exact compilation of every code primitive is proved
 impossible because erasure cannot produce an exact empty tape window from
 nonempty input. The viable boundary is therefore a normalized-output tape-code
@@ -277,6 +278,25 @@ theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_controller_
       (PairedRecognizerDovetailTotalStageAttemptCode accept reject) :=
   Computability.pairedRecognizerDovetailTotalStageAttemptCode_controllerResultRealizes
     accept reject
+
+theorem concrete_paired_recognizer_dovetail_total_stage_attempt_controller_raw_output_iff_of_output_compiled
+    {accept reject attempt : MachineDescription}
+    (hattempt :
+      TapeCodePrimitiveOutputCompiledByDescription
+        (PairedRecognizerDovetailTotalStageAttemptCode accept reject)
+        attempt)
+    (w : Word Bool) (limit : Nat) (b : Bool) :
+    (exists result : Word Bool,
+      attempt.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput
+          (PairedRecognizerDovetailStageInputCode w limit))
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeBoolWord result)) ∧
+      PairedRecognizerDovetailControllerRawOutput result = some [b]) <->
+    MachineDescription.boundedDovetailOutput accept reject w limit =
+      some [b] :=
+  Computability.pairedRecognizerDovetailTotalStageAttemptControllerRawOutput_iff_of_outputCompiled
+    hattempt w limit b
 
 theorem concrete_paired_recognizer_dovetail_controller_raw_output_code_realizes :
     ConcretePairedRecognizerDovetailControllerRawOutputCodeRealizes

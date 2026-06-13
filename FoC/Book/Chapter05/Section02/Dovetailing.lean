@@ -512,6 +512,13 @@ theorem paired_recognizer_dovetail_total_stage_attempt_controller_search_driver_
   Computability.pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_descriptionBoolDeciderCompiler
     hcompile
 
+theorem paired_recognizer_dovetail_total_stage_attempt_controller_search_driver_of_finite_stage_loop_controller
+    (hloop :
+      ConcretePairedRecognizerDovetailFiniteStageLoopControllerConstruction) :
+    ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :=
+  Computability.pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_finiteStageLoopController
+    hloop
+
 theorem bounded_dovetail_table_compiler_of_tape_code_output_compiler_and_description_bool_decider_compiler
     (htape : ConcreteTapeCodeOutputCompilerConstruction)
     (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
@@ -544,6 +551,13 @@ theorem bounded_dovetail_table_compiler_of_controller_closeout
     (hclose : ConcretePairedRecognizerDovetailControllerCompilerCloseout) :
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_controllerCompilerCloseout
+    hclose
+
+theorem bounded_dovetail_table_compiler_of_finite_controller_closeout
+    (hclose :
+      ConcretePairedRecognizerDovetailFiniteControllerCompilerCloseout) :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_finiteControllerCompilerCloseout
     hclose
 
 theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_description_bool_decider_compiler
@@ -618,6 +632,13 @@ theorem paired_recognizer_dovetail_compiler_of_controller_closeout
     (hclose : ConcretePairedRecognizerDovetailControllerCompilerCloseout) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_controllerCompilerCloseout
+    hclose
+
+theorem paired_recognizer_dovetail_compiler_of_finite_controller_closeout
+    (hclose :
+      ConcretePairedRecognizerDovetailFiniteControllerCompilerCloseout) :
+    ConcretePairedRecognizerDovetailCompilerConstruction :=
+  Computability.pairedRecognizerDovetailDescriptionCompiler_of_finiteControllerCompilerCloseout
     hclose
 
 theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_description_bool_decider_compiler
