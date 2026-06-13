@@ -109,55 +109,6 @@ theorem encodedInputBoolProgram_halts_encodeCodeWordAsInput_iff
           MachineDescription.decodeCodeWordAsInput_encodeCodeWordAsInput w,
           h⟩
 
-def CodeUniversalMachineSpec
-    (universal : TuringMachine MachineCodeSymbol state) : Prop :=
-  forall machine input : Word MachineCodeSymbol,
-    TuringMachine.HaltsOnInput universal
-      (Languages.Word.Concat machine input) <->
-        MachineDescription.CodeAccepts machine input
-
-def ImmediateHaltingDescription : MachineDescription where
-  stateCount := 1
-  start := 0
-  halt := 0
-  transitions := []
-
-theorem immediateHaltingDescription_haltsOnInput
-    (input : Word Bool) :
-    ImmediateHaltingDescription.HaltsOnInput input := by
-  exact ⟨0, rfl⟩
-
-theorem codeAccepts_empty_false
-    (input : Word MachineCodeSymbol) :
-    ¬ MachineDescription.CodeAccepts [] input := by
-  intro h
-  rcases h with ⟨D, hdecode, _⟩
-  simp [MachineDescription.decodeDescription] at hdecode
-
-theorem codeUniversalMachineSpec_rawConcat_inconsistent
-    (universal : TuringMachine MachineCodeSymbol state) :
-    ¬ CodeUniversalMachineSpec universal := by
-  intro hspec
-  let D := ImmediateHaltingDescription
-  have haccept :
-      MachineDescription.CodeAccepts
-        (MachineDescription.encodeDescription D) [] :=
-    MachineDescription.codeAccepts_of_encodeDescription
-      (immediateHaltingDescription_haltsOnInput [])
-  have hhalts :
-      TuringMachine.HaltsOnInput universal
-        (Languages.Word.Concat (MachineDescription.encodeDescription D) []) :=
-    (hspec (MachineDescription.encodeDescription D) []).mpr haccept
-  have hhaltsEmpty :
-      TuringMachine.HaltsOnInput universal
-        (Languages.Word.Concat [] (MachineDescription.encodeDescription D)) := by
-    simpa [Languages.Word.Concat] using hhalts
-  have hfalse :
-      MachineDescription.CodeAccepts []
-        (MachineDescription.encodeDescription D) :=
-    (hspec [] (MachineDescription.encodeDescription D)).mp hhaltsEmpty
-  exact codeAccepts_empty_false (MachineDescription.encodeDescription D) hfalse
-
 def CodeUniversalPrefixMachineSpec
     (universal : TuringMachine MachineCodeSymbol state) : Prop :=
   forall encoded : Word MachineCodeSymbol,
@@ -424,44 +375,33 @@ theorem codeUniversalPrefixRowsCoverConstruction_of_finiteSourceCloseout
     (codeUniversalPrefixRunnerConstruction_of_codePrefixRecognizerMachine
       hclose.prefixRecognizerMachine)
 
-def CodeUniversalMachineRowLanguage
-    (universal : TuringMachine MachineCodeSymbol state)
-    (machine : Word MachineCodeSymbol) : Language MachineCodeSymbol :=
-  fun input => TuringMachine.HaltsOnInput universal
-    (Languages.Word.Concat machine input)
+/-!
+**Section 5.3 finite-source scaffold.**  The universal-machine construction
+target is the prefix version.  These declarations isolate the two finite-source
+leaves: compile encoded-input recognizers to descriptions, and build the
+fixed-alphabet prefix recognizer machine.  Row coverage is then a real
+consequence of the finite-source closeout above.
+-/
 
-def CodeUniversalRowsCoverAcceptableLanguages
-    (universal : TuringMachine MachineCodeSymbol state) : Prop :=
-  forall L : Language MachineCodeSymbol, RecursivelyEnumerable L ->
-    exists machine : Word MachineCodeSymbol,
-      Language.Equal (CodeUniversalMachineRowLanguage universal machine) L
+theorem encodedInputDescriptionCompilerPrinciple_scaffold :
+    EncodedInputDescriptionCompilerPrinciple := by
+  sorry
 
-def CodeUniversalRunnerConstruction : Prop :=
-  exists state : Type,
-    exists universal : TuringMachine MachineCodeSymbol state,
-      CodeUniversalMachineSpec universal
+theorem codePrefixRecognizerMachineConstruction_scaffold :
+    CodePrefixRecognizerMachineConstruction := by
+  sorry
 
-theorem not_codeUniversalRunnerConstruction :
-    ¬ CodeUniversalRunnerConstruction := by
-  intro h
-  unfold CodeUniversalRunnerConstruction at h
-  rcases h with ⟨state, universal, hspec⟩
-  exact codeUniversalMachineSpec_rawConcat_inconsistent universal hspec
+def codeUniversalPrefixFiniteSourceCloseout_scaffold :
+    CodeUniversalPrefixFiniteSourceCloseout where
+  encodedInputDescriptionCompiler :=
+    encodedInputDescriptionCompilerPrinciple_scaffold
+  prefixRecognizerMachine :=
+    codePrefixRecognizerMachineConstruction_scaffold
 
-def CodeUniversalRowsCoverConstruction : Prop :=
-  exists state : Type,
-    exists universal : TuringMachine MachineCodeSymbol state,
-      CodeUniversalMachineSpec universal ∧
-        CodeUniversalRowsCoverAcceptableLanguages universal
-
-structure CodeUniversalSection53Closeout where
-  encodedInputProgramCompiler : EncodedInputProgramAcceptorCompilationPrinciple
-  universalRunner : CodeUniversalRunnerConstruction
-
-theorem not_codeUniversalSection53Closeout :
-    ¬ CodeUniversalSection53Closeout := by
-  intro hclose
-  exact not_codeUniversalRunnerConstruction hclose.universalRunner
+theorem codeUniversalPrefixRowsCoverConstruction_scaffold :
+    CodeUniversalPrefixRowsCoverConstruction :=
+  codeUniversalPrefixRowsCoverConstruction_of_finiteSourceCloseout
+    codeUniversalPrefixFiniteSourceCloseout_scaffold
 
 theorem encodedInputProgramCompiledByDescription_acceptsLanguage
     {P : StagedProgram MachineCodeSymbol Unit}
@@ -507,76 +447,12 @@ theorem encodedInputDescriptionCompilerPrinciple_of_descriptionProgramCompiler
     (encodedInputProgramAcceptorCompilationPrinciple_of_descriptionProgramCompiler
       hcompile)
 
-theorem codeUniversalMachineRowLanguage_equal_codeAcceptedLanguage
-    {universal : TuringMachine MachineCodeSymbol state}
-    (hspec : CodeUniversalMachineSpec universal)
-    (machine : Word MachineCodeSymbol) :
-    Language.Equal
-      (CodeUniversalMachineRowLanguage universal machine)
-      (MachineDescription.CodeAcceptedLanguage machine) :=
-  hspec machine
-
-theorem codeUniversalMachineRowLanguage_equal_encodedInputLanguage
-    {universal : TuringMachine MachineCodeSymbol state}
-    (hspec : CodeUniversalMachineSpec universal)
-    (D : MachineDescription) :
-    Language.Equal
-      (CodeUniversalMachineRowLanguage universal
-        (MachineDescription.encodeDescription D))
-      (MachineDescription.EncodedInputLanguage D) := by
-  intro input
-  exact Iff.trans
-    (codeUniversalMachineRowLanguage_equal_codeAcceptedLanguage
-      hspec (MachineDescription.encodeDescription D) input)
-    (MachineDescription.codeAccepts_encodeDescription_iff D input)
-
-theorem codeUniversalRowsCoverAcceptableLanguages_of_encodedInputDescriptionCompiler
-    {universal : TuringMachine MachineCodeSymbol state}
-    (hspec : CodeUniversalMachineSpec universal)
-    (hcompile : EncodedInputDescriptionCompilerPrinciple) :
-    CodeUniversalRowsCoverAcceptableLanguages universal := by
-  intro L hL
-  cases hcompile L hL with
-  | intro D hD =>
-      exists MachineDescription.encodeDescription D
-      exact Language.equal_trans
-        (codeUniversalMachineRowLanguage_equal_encodedInputLanguage hspec D)
-        hD.right
-
-theorem codeUniversalRowsCoverConstruction_of_constructions
-    (hcompile : EncodedInputDescriptionCompilerPrinciple)
-    (hrunner : CodeUniversalRunnerConstruction) :
-    CodeUniversalRowsCoverConstruction := by
-  cases hrunner with
-  | intro state hstate =>
-      cases hstate with
-      | intro universal hspec =>
-          exact
-            Exists.intro state
-              (Exists.intro universal
-                (And.intro hspec
-                  (codeUniversalRowsCoverAcceptableLanguages_of_encodedInputDescriptionCompiler
-                    hspec hcompile)))
-
-theorem encodedInputDescriptionCompilerPrinciple_of_section53Closeout
-    (hclose : CodeUniversalSection53Closeout) :
-    EncodedInputDescriptionCompilerPrinciple :=
-  encodedInputDescriptionCompilerPrinciple_of_programCompiler
-    hclose.encodedInputProgramCompiler
-
 theorem codeUniversalPrefixRowsCoverConstruction_of_section53Closeout
     (hclose : CodeUniversalPrefixSection53Closeout) :
     CodeUniversalPrefixRowsCoverConstruction :=
   codeUniversalPrefixRowsCoverConstruction_of_constructions
     (encodedInputDescriptionCompilerPrinciple_of_programCompiler
       hclose.encodedInputProgramCompiler)
-    hclose.universalRunner
-
-theorem codeUniversalRowsCoverConstruction_of_section53Closeout
-    (hclose : CodeUniversalSection53Closeout) :
-    CodeUniversalRowsCoverConstruction :=
-  codeUniversalRowsCoverConstruction_of_constructions
-    (encodedInputDescriptionCompilerPrinciple_of_section53Closeout hclose)
     hclose.universalRunner
 
 /-!

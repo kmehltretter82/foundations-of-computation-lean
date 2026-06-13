@@ -451,13 +451,6 @@ def UniversalMachineRowsCoverAcceptableLanguages
     exists machine : Word symbol,
       Language.Equal (UniversalMachineRowLanguage universal machine) L
 
-def ConcreteUniversalMachineSpec
-    (universal : TuringMachine ConcreteMachineCodeSymbol state) : Prop :=
-  UniversalTuringMachineSpec universal ConcreteMachineCodeAccepts
-
-def ConcreteUniversalRunnerConstruction : Prop :=
-  CodeUniversalRunnerConstruction
-
 def ConcreteUniversalPrefixMachineSpec
     (universal : TuringMachine ConcreteMachineCodeSymbol state) : Prop :=
   CodeUniversalPrefixMachineSpec universal
@@ -475,9 +468,6 @@ def ConcreteCodePrefixRecognizerMachineConstruction : Prop :=
 def ConcreteUniversalPrefixRowsCoverConstruction : Prop :=
   CodeUniversalPrefixRowsCoverConstruction
 
-abbrev ConcreteSection53UniversalCloseout :=
-  CodeUniversalSection53Closeout
-
 abbrev ConcreteSection53UniversalPrefixCloseout :=
   CodeUniversalPrefixSection53Closeout
 
@@ -492,13 +482,6 @@ theorem concrete_section53_universal_prefix_finite_source_closeout_of_boolean_de
     concrete_encoded_input_description_compiler_of_boolean_description_compiler
       hcompiler
   prefixRecognizerMachine := hrunner
-
-theorem concrete_section53_universal_closeout_of_constructions
-    (hcompiler : ConcreteEncodedInputProgramAcceptorCompilationConstruction)
-    (hrunner : ConcreteUniversalRunnerConstruction) :
-    ConcreteSection53UniversalCloseout where
-  encodedInputProgramCompiler := hcompiler
-  universalRunner := hrunner
 
 theorem concrete_section53_universal_prefix_closeout_of_constructions
     (hcompiler : ConcreteEncodedInputProgramAcceptorCompilationConstruction)
@@ -523,15 +506,6 @@ theorem concrete_code_prefix_recognizer_machine_iff_universal_prefix_runner :
     ConcreteCodePrefixRecognizerMachineConstruction <->
       ConcreteUniversalPrefixRunnerConstruction :=
   Computability.codePrefixRecognizerMachineConstruction_iff_universalPrefixRunner
-
-theorem concrete_encoded_input_program_compiler_of_section53_closeout
-    (hclose : ConcreteSection53UniversalCloseout) :
-    ConcreteEncodedInputProgramAcceptorCompilationConstruction :=
-  hclose.encodedInputProgramCompiler
-
-def ConcreteUniversalMachineRowsCoverAcceptableLanguages
-    (universal : TuringMachine ConcreteMachineCodeSymbol state) : Prop :=
-  UniversalMachineRowsCoverAcceptableLanguages universal
 
 def ConcreteUniversalPrefixMachineRowsCoverAcceptableLanguages
     (universal : TuringMachine ConcreteMachineCodeSymbol state) : Prop :=
@@ -966,12 +940,6 @@ theorem concrete_encoded_input_description_compiler_of_program_compiler
   Computability.encodedInputDescriptionCompilerPrinciple_of_programCompiler
     hcompile
 
-theorem concrete_encoded_input_description_compiler_of_section53_closeout
-    (hclose : ConcreteSection53UniversalCloseout) :
-    ConcreteEncodedInputDescriptionCompilerConstruction :=
-  Computability.encodedInputDescriptionCompilerPrinciple_of_section53Closeout
-    hclose
-
 theorem concrete_encoded_input_description_compiler_decoder_universal
     (hcompile : ConcreteEncodedInputDescriptionCompilerConstruction) :
     ConcreteMachineDecoderUniversalForAcceptableLanguages := by
@@ -984,60 +952,6 @@ theorem concrete_encoded_input_description_compiler_decoder_universal
         (concrete_machine_encoded_description_recognizes_input_language
           D input)
         (hD.right input)
-
-theorem concrete_universal_machine_spec_accepts_iff
-    {universal : TuringMachine ConcreteMachineCodeSymbol state}
-    (hspec : ConcreteUniversalMachineSpec universal)
-    (machine input : Word ConcreteMachineCodeSymbol) :
-    TuringMachine.HaltsOnInput universal
-      (Languages.Word.Concat machine input) <->
-        ConcreteMachineCodeAccepts machine input :=
-  hspec machine input
-
-theorem concrete_universal_machine_halts_on_encoded_description_iff
-    {universal : TuringMachine ConcreteMachineCodeSymbol state}
-    (hspec : ConcreteUniversalMachineSpec universal)
-    (D : ConcreteMachineDescription)
-    (input : Word ConcreteMachineCodeSymbol) :
-    TuringMachine.HaltsOnInput universal
-      (Languages.Word.Concat (ConcreteMachineEncode D) input) <->
-        ConcreteMachineHaltsOnInput D
-          (ConcreteMachineEncodeCodeInput input) :=
-  Iff.trans
-    (concrete_universal_machine_spec_accepts_iff
-      hspec (ConcreteMachineEncode D) input)
-    (concrete_machine_code_accepts_encode_description_iff D input)
-
-theorem concrete_universal_machine_row_language_equal_code_accepted_language
-    {universal : TuringMachine ConcreteMachineCodeSymbol state}
-    (hspec : ConcreteUniversalMachineSpec universal)
-    (machine : Word ConcreteMachineCodeSymbol) :
-    Language.Equal
-      (UniversalMachineRowLanguage universal machine)
-      (ConcreteMachineCodeAcceptedLanguage machine) :=
-  concrete_universal_machine_spec_accepts_iff hspec machine
-
-theorem concrete_universal_machine_row_language_equal_encoded_input_language
-    {universal : TuringMachine ConcreteMachineCodeSymbol state}
-    (hspec : ConcreteUniversalMachineSpec universal)
-    (D : ConcreteMachineDescription) :
-    Language.Equal
-      (UniversalMachineRowLanguage universal (ConcreteMachineEncode D))
-      (ConcreteMachineEncodedInputLanguage D) :=
-  concrete_universal_machine_halts_on_encoded_description_iff hspec D
-
-theorem concrete_universal_machine_row_language_equal_compiled_encoded_input_language
-    {universal : TuringMachine ConcreteMachineCodeSymbol state}
-    (hspec : ConcreteUniversalMachineSpec universal)
-    {D : ConcreteMachineDescription}
-    {L : Language ConcreteMachineCodeSymbol}
-    (hD : ConcreteMachineDescriptionAcceptsEncodedInputLanguage D L) :
-    Language.Equal
-      (UniversalMachineRowLanguage universal (ConcreteMachineEncode D)) L :=
-  Language.equal_trans
-    (concrete_universal_machine_row_language_equal_encoded_input_language
-      hspec D)
-    hD.right
 
 theorem concrete_machine_compiled_transition_of_lookup
     {D : ConcreteMachineDescription}
@@ -1726,23 +1640,12 @@ theorem concrete_machine_pair_halting_undecidable_if_encoded_input_compiler_of_f
     (concrete_encoded_input_description_compiler_decoder_universal hcompile)
 
 /-!
-The legacy universal-machine specification records two directions between
-universal-machine halting on raw concatenations and the decoder acceptance
-predicate. The prefix-code analysis below shows why that target is too strong:
-without a separator, the same tape word can be decomposed in incompatible ways.
-
-The constructive target is the prefix specification, where the universal runner
+The abstract row-coverage lemmas below are parameterized by an arbitrary
+decoder relation.  The concrete construction that follows instantiates the
+universal-machine target with the prefix specification, where the runner
 decodes one self-delimiting machine description from the front of the tape and
 uses the remaining symbols as the simulated input.
 -/
-
-theorem concrete_universal_runner_construction_raw_concat_inconsistent :
-    ¬ ConcreteUniversalRunnerConstruction :=
-  Computability.not_codeUniversalRunnerConstruction
-
-theorem concrete_section53_universal_closeout_raw_concat_inconsistent :
-    ¬ ConcreteSection53UniversalCloseout :=
-  Computability.not_codeUniversalSection53Closeout
 
 theorem universal_machine_spec_pair_halts
     {universal : TuringMachine symbol state}
@@ -1810,36 +1713,6 @@ theorem universal_machine_rows_cover_iff_decoder_universal
   · exact decoder_universal_of_universal_machine_rows_cover hspec
   · exact universal_machine_rows_cover_of_decoder_universal hspec
 
-theorem concrete_universal_machine_rows_cover_of_decoder_universal
-    {universal : TuringMachine ConcreteMachineCodeSymbol state}
-    (hspec : ConcreteUniversalMachineSpec universal)
-    (huniv : ConcreteMachineDecoderUniversalForAcceptableLanguages) :
-    ConcreteUniversalMachineRowsCoverAcceptableLanguages universal :=
-  universal_machine_rows_cover_of_decoder_universal hspec huniv
-
-theorem concrete_universal_machine_rows_cover_of_encoded_input_description_compiler
-    {universal : TuringMachine ConcreteMachineCodeSymbol state}
-    (hspec : ConcreteUniversalMachineSpec universal)
-    (hcompile : ConcreteEncodedInputDescriptionCompilerConstruction) :
-    ConcreteUniversalMachineRowsCoverAcceptableLanguages universal :=
-  concrete_universal_machine_rows_cover_of_decoder_universal
-    hspec
-    (concrete_encoded_input_description_compiler_decoder_universal hcompile)
-
-theorem concrete_decoder_universal_of_universal_machine_rows_cover
-    {universal : TuringMachine ConcreteMachineCodeSymbol state}
-    (hspec : ConcreteUniversalMachineSpec universal)
-    (hrows : ConcreteUniversalMachineRowsCoverAcceptableLanguages universal) :
-    ConcreteMachineDecoderUniversalForAcceptableLanguages :=
-  decoder_universal_of_universal_machine_rows_cover hspec hrows
-
-theorem concrete_universal_machine_rows_cover_iff_decoder_universal
-    {universal : TuringMachine ConcreteMachineCodeSymbol state}
-    (hspec : ConcreteUniversalMachineSpec universal) :
-    ConcreteUniversalMachineRowsCoverAcceptableLanguages universal <->
-      ConcreteMachineDecoderUniversalForAcceptableLanguages :=
-  universal_machine_rows_cover_iff_decoder_universal hspec
-
 theorem concrete_universal_prefix_machine_halts_on_encoded_description_iff
     {universal : TuringMachine ConcreteMachineCodeSymbol state}
     (hspec : ConcreteUniversalPrefixMachineSpec universal)
@@ -1898,6 +1771,32 @@ theorem exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_clo
   Computability.codeUniversalPrefixRowsCoverConstruction_of_finiteSourceCloseout
     hclose
 
+/-!
+**Section 5.3 scaffold.**  The universal-machine target is the prefix runner
+route.  These wrappers expose the reusable finite-source scaffold at the
+book-facing layer.
+-/
+
+theorem concrete_encoded_input_description_compiler_scaffold :
+    ConcreteEncodedInputDescriptionCompilerConstruction :=
+  Computability.encodedInputDescriptionCompilerPrinciple_scaffold
+
+theorem concrete_code_prefix_recognizer_machine_scaffold :
+    ConcreteCodePrefixRecognizerMachineConstruction :=
+  Computability.codePrefixRecognizerMachineConstruction_scaffold
+
+def concrete_section53_universal_prefix_finite_source_closeout_scaffold :
+    ConcreteSection53UniversalPrefixFiniteSourceCloseout :=
+  Computability.codeUniversalPrefixFiniteSourceCloseout_scaffold
+
+theorem exists_concrete_universal_prefix_machine_rows_cover_scaffold :
+    exists state : Type,
+      exists universal : TuringMachine ConcreteMachineCodeSymbol state,
+        ConcreteUniversalPrefixMachineSpec universal ∧
+          ConcreteUniversalPrefixMachineRowsCoverAcceptableLanguages universal :=
+  exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_closeout
+    concrete_section53_universal_prefix_finite_source_closeout_scaffold
+
 theorem exists_concrete_universal_prefix_machine_rows_cover_of_boolean_description_compiler
     (hcompiler : ConcreteBooleanDescriptionAcceptorCompilationConstruction)
     (hrunner : ConcreteCodePrefixRecognizerMachineConstruction) :
@@ -1918,49 +1817,6 @@ theorem exists_concrete_universal_prefix_machine_rows_cover_of_program_compiler_
           ConcreteUniversalPrefixMachineRowsCoverAcceptableLanguages universal :=
   exists_concrete_universal_prefix_machine_rows_cover_of_section53_closeout
     (concrete_section53_universal_prefix_closeout_of_constructions
-      hcompiler hrunner)
-
-theorem exists_concrete_universal_machine_rows_cover_of_constructions
-    (hcompile : ConcreteEncodedInputDescriptionCompilerConstruction)
-    (hrunner : ConcreteUniversalRunnerConstruction) :
-    exists state : Type,
-      exists universal : TuringMachine ConcreteMachineCodeSymbol state,
-        ConcreteUniversalMachineSpec universal ∧
-          ConcreteUniversalMachineRowsCoverAcceptableLanguages universal := by
-  cases hrunner with
-  | intro state hstate =>
-      cases hstate with
-      | intro universal hspec =>
-          have hspec' : ConcreteUniversalMachineSpec universal := by
-            intro machine input
-            exact hspec machine input
-          exact
-            Exists.intro state
-              (Exists.intro universal
-                (And.intro hspec'
-                  (concrete_universal_machine_rows_cover_of_encoded_input_description_compiler
-                    hspec' hcompile)))
-
-theorem exists_concrete_universal_machine_rows_cover_of_section53_closeout
-    (hclose : ConcreteSection53UniversalCloseout) :
-    exists state : Type,
-      exists universal : TuringMachine ConcreteMachineCodeSymbol state,
-        ConcreteUniversalMachineSpec universal ∧
-          ConcreteUniversalMachineRowsCoverAcceptableLanguages universal :=
-  exists_concrete_universal_machine_rows_cover_of_constructions
-    (concrete_encoded_input_description_compiler_of_section53_closeout
-      hclose)
-    hclose.universalRunner
-
-theorem exists_concrete_universal_machine_rows_cover_of_program_compiler_and_runner
-    (hcompiler : ConcreteEncodedInputProgramAcceptorCompilationConstruction)
-    (hrunner : ConcreteUniversalRunnerConstruction) :
-    exists state : Type,
-      exists universal : TuringMachine ConcreteMachineCodeSymbol state,
-        ConcreteUniversalMachineSpec universal ∧
-          ConcreteUniversalMachineRowsCoverAcceptableLanguages universal :=
-  exists_concrete_universal_machine_rows_cover_of_section53_closeout
-    (concrete_section53_universal_closeout_of_constructions
       hcompiler hrunner)
 
 /-!
