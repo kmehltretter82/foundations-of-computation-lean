@@ -319,6 +319,9 @@ structure CodeUniversalPrefixFiniteSourceCloseout where
   encodedInputDescriptionCompiler : EncodedInputDescriptionCompilerPrinciple
   prefixRecognizerMachine : CodePrefixRecognizerMachineConstruction
 
+structure CodeUniversalPrefixRunnerFiniteSourceCloseout where
+  prefixRecognizerMachine : CodePrefixRecognizerMachineConstruction
+
 theorem codeUniversalPrefixMachine_halts_on_encoded_description_iff
     {universal : TuringMachine MachineCodeSymbol state}
     (hspec : CodeUniversalPrefixMachineSpec universal)
@@ -375,33 +378,34 @@ theorem codeUniversalPrefixRowsCoverConstruction_of_finiteSourceCloseout
     (codeUniversalPrefixRunnerConstruction_of_codePrefixRecognizerMachine
       hclose.prefixRecognizerMachine)
 
+theorem codeUniversalPrefixRunnerConstruction_of_runnerFiniteSourceCloseout
+    (hclose : CodeUniversalPrefixRunnerFiniteSourceCloseout) :
+    CodeUniversalPrefixRunnerConstruction :=
+  codeUniversalPrefixRunnerConstruction_of_codePrefixRecognizerMachine
+    hclose.prefixRecognizerMachine
+
 /-!
 **Section 5.3 finite-source scaffold.**  The universal-machine construction
-target is the prefix version.  These declarations isolate the two finite-source
-leaves: compile encoded-input recognizers to descriptions, and build the
-fixed-alphabet prefix recognizer machine.  Row coverage is then a real
-consequence of the finite-source closeout above.
+target is the prefix version.  The finite-source scaffold below intentionally
+supplies only the fixed-alphabet prefix recognizer machine.  Row coverage over
+all recursively enumerable code-symbol languages still requires an explicit
+encoded-input description compiler, as in
+{name}`codeUniversalPrefixRowsCoverConstruction_of_finiteSourceCloseout`.
 -/
-
-theorem encodedInputDescriptionCompilerPrinciple_scaffold :
-    EncodedInputDescriptionCompilerPrinciple := by
-  sorry
 
 theorem codePrefixRecognizerMachineConstruction_scaffold :
     CodePrefixRecognizerMachineConstruction := by
   sorry
 
-def codeUniversalPrefixFiniteSourceCloseout_scaffold :
-    CodeUniversalPrefixFiniteSourceCloseout where
-  encodedInputDescriptionCompiler :=
-    encodedInputDescriptionCompilerPrinciple_scaffold
+def codeUniversalPrefixRunnerFiniteSourceCloseout_scaffold :
+    CodeUniversalPrefixRunnerFiniteSourceCloseout where
   prefixRecognizerMachine :=
     codePrefixRecognizerMachineConstruction_scaffold
 
-theorem codeUniversalPrefixRowsCoverConstruction_scaffold :
-    CodeUniversalPrefixRowsCoverConstruction :=
-  codeUniversalPrefixRowsCoverConstruction_of_finiteSourceCloseout
-    codeUniversalPrefixFiniteSourceCloseout_scaffold
+theorem codeUniversalPrefixRunnerConstruction_scaffold :
+    CodeUniversalPrefixRunnerConstruction :=
+  codeUniversalPrefixRunnerConstruction_of_runnerFiniteSourceCloseout
+    codeUniversalPrefixRunnerFiniteSourceCloseout_scaffold
 
 theorem encodedInputProgramCompiledByDescription_acceptsLanguage
     {P : StagedProgram MachineCodeSymbol Unit}

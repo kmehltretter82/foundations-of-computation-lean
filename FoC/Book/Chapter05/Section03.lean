@@ -474,6 +474,9 @@ abbrev ConcreteSection53UniversalPrefixCloseout :=
 abbrev ConcreteSection53UniversalPrefixFiniteSourceCloseout :=
   CodeUniversalPrefixFiniteSourceCloseout
 
+abbrev ConcreteSection53UniversalPrefixRunnerFiniteSourceCloseout :=
+  CodeUniversalPrefixRunnerFiniteSourceCloseout
+
 theorem concrete_section53_universal_prefix_finite_source_closeout_of_boolean_description_compiler
     (hcompiler : ConcreteBooleanDescriptionAcceptorCompilationConstruction)
     (hrunner : ConcreteCodePrefixRecognizerMachineConstruction) :
@@ -1773,29 +1776,28 @@ theorem exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_clo
 
 /-!
 **Section 5.3 scaffold.**  The universal-machine target is the prefix runner
-route.  These wrappers expose the reusable finite-source scaffold at the
-book-facing layer.
+route.  These wrappers expose the reusable finite-source runner scaffold at the
+book-facing layer.  Row coverage remains available through the closeout theorem
+above when an explicit encoded-input description compiler is supplied.
 -/
-
-theorem concrete_encoded_input_description_compiler_scaffold :
-    ConcreteEncodedInputDescriptionCompilerConstruction :=
-  Computability.encodedInputDescriptionCompilerPrinciple_scaffold
 
 theorem concrete_code_prefix_recognizer_machine_scaffold :
     ConcreteCodePrefixRecognizerMachineConstruction :=
   Computability.codePrefixRecognizerMachineConstruction_scaffold
 
-def concrete_section53_universal_prefix_finite_source_closeout_scaffold :
-    ConcreteSection53UniversalPrefixFiniteSourceCloseout :=
-  Computability.codeUniversalPrefixFiniteSourceCloseout_scaffold
+def concrete_section53_universal_prefix_runner_finite_source_closeout_scaffold :
+    ConcreteSection53UniversalPrefixRunnerFiniteSourceCloseout :=
+  Computability.codeUniversalPrefixRunnerFiniteSourceCloseout_scaffold
 
-theorem exists_concrete_universal_prefix_machine_rows_cover_scaffold :
+theorem concrete_universal_prefix_runner_scaffold :
+    ConcreteUniversalPrefixRunnerConstruction :=
+  Computability.codeUniversalPrefixRunnerConstruction_scaffold
+
+theorem exists_concrete_universal_prefix_machine_scaffold :
     exists state : Type,
       exists universal : TuringMachine ConcreteMachineCodeSymbol state,
-        ConcreteUniversalPrefixMachineSpec universal ∧
-          ConcreteUniversalPrefixMachineRowsCoverAcceptableLanguages universal :=
-  exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_closeout
-    concrete_section53_universal_prefix_finite_source_closeout_scaffold
+        ConcreteUniversalPrefixMachineSpec universal :=
+  concrete_universal_prefix_runner_scaffold
 
 theorem exists_concrete_universal_prefix_machine_rows_cover_of_boolean_description_compiler
     (hcompiler : ConcreteBooleanDescriptionAcceptorCompilationConstruction)
@@ -1842,26 +1844,27 @@ handoff now factors through
 {name}`ConcreteBooleanDescriptionAcceptorCompilationConstruction`: Boolean
 inputs are decoded by {name}`MachineDescription.decodeCodeWordAsInput`, and
 canonical inputs produced by {name}`MachineDescription.encodeCodeWordAsInput`
-recover the original code-symbol recognizer. Thus the finite-source closeout
-can reuse the existing Boolean description compiler instead of carrying a
-separate encoded-input program compiler. The remaining fixed-alphabet runner
-work is now isolated as
+recover the original code-symbol recognizer. Thus row-coverage closeouts can
+reuse an explicit Boolean description compiler instead of carrying a separate
+encoded-input program compiler. The remaining fixed-alphabet runner work is
+now isolated as
 {name}`ConcreteCodePrefixRecognizerMachineConstruction`; this target is
 equivalent to {name}`ConcreteUniversalPrefixRunnerConstruction`, because the
 prefix recognizer's language is exactly the decoder relation needed by the
 universal machine. The prefix parser layer is now formalized as
 {name}`ConcreteCodePrefixParserCodeConstruction`: a normalizing code primitive
 succeeds exactly on one-description prefixes, and a total branch primitive
-emits the success or failure code used by the later recognizer controller. For
-row coverage, the narrower
+emits the success or failure code used by the later recognizer controller. The
+no-argument scaffold supplies only this runner target. For row coverage, the
+explicit
 {name}`ConcreteSection53UniversalPrefixFiniteSourceCloseout` pairs that runner
 target with an encoded-input description compiler and routes directly to
 {name}`exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_closeout`.
 This is the same finite-source layer used by Section 5.2: canonical
 {name}`MachineCodeSymbol` parsers, normalized-output emitters,
 subroutine-ready sequencing, and cell or parse branch controllers. Together
-the closeout fields imply row coverage by
-the finite-source closeout theorem, while the older program-compiler route
+with the explicit compiler assumption, the closeout fields imply row coverage
+by the finite-source closeout theorem, while the older program-compiler route
 remains as a compatibility wrapper.
 -/
 

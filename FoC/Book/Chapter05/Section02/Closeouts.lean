@@ -1,4 +1,5 @@
 import FoC.Book.Chapter05.Section02.Grammars
+import FoC.Computability.Transform
 
 set_option doc.verso true
 
@@ -225,8 +226,10 @@ theorem program_acceptable_by_description_finite_general_grammar_of_finite_data_
   (program_acceptable_by_description_to_finite_general_grammar_construction_of_finite_data_closeout
     hclose) L hL
 
-theorem finite_general_grammar_pair_recursive_of_finite_data_closeout
-    (hclose : ConcreteBooleanFiniteDataSection52CompilerCloseout)
+theorem finite_general_grammar_pair_recursive_of_finite_data_constructions
+    (hpaired : ConcretePairedRecognizerDovetailCompilerConstruction)
+    (hfinite :
+      ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction)
     {L : Language Bool}
     (hpair : FiniteGeneralGrammarPairGenerated L) :
     RecursiveLanguage L := by
@@ -236,7 +239,7 @@ theorem finite_general_grammar_pair_recursive_of_finite_data_closeout
     rejectFinite, rejectEq⟩
   let hlist : ConcreteFiniteProductionListGrammarRecognizerCompilerConstruction :=
     concrete_finite_production_list_grammar_recognizer_compiler_of_finite_presentation_compiler
-      hclose.finiteGrammarRecognizerDescription
+      hfinite
   let hgrammar : ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction :=
     concrete_finite_grammar_recognizer_compiler_of_production_list_compiler
       hlist
@@ -287,48 +290,53 @@ theorem finite_general_grammar_pair_recursive_of_finite_data_closeout
         concrete_machine_description_acceptance_trace rejectLanguage
   exact
     concrete_finite_dovetail_program_turing_decidable_of_paired_recognizer_compiler
-      hclose.pairedDovetailDescription
+      hpaired
       (accept := acceptProgram) (reject := rejectProgram) htraces
+
+theorem finite_general_grammar_pair_recursive_of_finite_data_closeout
+    (hclose : ConcreteBooleanFiniteDataSection52CompilerCloseout)
+    {L : Language Bool}
+    (hpair : FiniteGeneralGrammarPairGenerated L) :
+    RecursiveLanguage L :=
+  finite_general_grammar_pair_recursive_of_finite_data_constructions
+    hclose.pairedDovetailDescription
+    hclose.finiteGrammarRecognizerDescription
+    hpair
 
 /-!
 **Section 5.2 finite-data scaffold.**  This is the explicit dependency graph
-for the remaining finite/effective route.  The only non-finite leaf below is
-the usual decider-to-acceptor construction, which the Section 5.2 closeout
-already records as a separate principle.  The paired-dovetail and finite
-grammar-recognizer fields are supplied by the finite-source scaffolds in the
-compiler and grammar layers.
+for the remaining finite/effective route.  It deliberately does not manufacture
+the broad {name}`DecidableToAcceptableConstruction` field of the semantic
+closeout.  The safe stopped-decider variant is recorded separately, while the
+finite consequences below use only the paired-dovetail and finite
+grammar-recognizer scaffolds plus the machine-history construction.
 -/
 
-theorem decidable_to_acceptable_construction_bool_scaffold :
-    DecidableToAcceptableConstruction Bool := by
-  sorry
+theorem stopped_decidable_to_acceptable_construction_bool :
+  forall L : Language Bool,
+      StoppedTuringDecidableLanguage L -> RecursivelyEnumerableLanguage L := by
+  intro _L h
+  exact TuringMachine.stoppedTuringDecidable_to_turingAcceptable h
 
-theorem concrete_boolean_finite_data_section52_compiler_closeout_scaffold :
-    ConcreteBooleanFiniteDataSection52CompilerCloseout where
-  boundedTraceSearch := bounded_trace_search_construction
-  decidableToAcceptable :=
-    decidable_to_acceptable_construction_bool_scaffold
-  pairedDovetailDescription :=
-    paired_recognizer_dovetail_compiler_scaffold
-  finiteGrammarRecognizerDescription :=
-    concrete_finite_bool_general_grammar_presentation_compiler_scaffold
-  descriptionRecognizerToFiniteGrammar :=
-    concrete_machine_description_accepts_to_finite_general_grammar
+theorem program_acceptable_by_description_to_finite_general_grammar_scaffold :
+    ConcreteProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction :=
+  Computability.programAcceptableByDescriptionToFiniteGeneralGrammarConstruction_of_descriptionRecognizer
+    (Computability.machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
+      concrete_machine_description_to_finite_general_grammar_construction)
 
 theorem program_acceptable_by_description_finite_general_grammar_scaffold
     {L : Language Bool}
     (hL : ConcreteProgramAcceptableByDescription L) :
     FiniteGeneralGrammarGenerated L :=
-  program_acceptable_by_description_finite_general_grammar_of_finite_data_closeout
-    concrete_boolean_finite_data_section52_compiler_closeout_scaffold
-    hL
+  program_acceptable_by_description_to_finite_general_grammar_scaffold L hL
 
 theorem finite_general_grammar_pair_recursive_scaffold
     {L : Language Bool}
     (hpair : FiniteGeneralGrammarPairGenerated L) :
     RecursiveLanguage L :=
-  finite_general_grammar_pair_recursive_of_finite_data_closeout
-    concrete_boolean_finite_data_section52_compiler_closeout_scaffold
+  finite_general_grammar_pair_recursive_of_finite_data_constructions
+    paired_recognizer_dovetail_compiler_scaffold
+    concrete_finite_bool_general_grammar_presentation_compiler_scaffold
     hpair
 
 theorem boolean_finite_general_grammar_re_equivalence_construction_of_finite_section52_closeout
