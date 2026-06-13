@@ -320,6 +320,49 @@ theorem concrete_code_prefix_accepted_language_program_acceptable :
   ⟨ConcreteCodePrefixRecognizerProgram,
     concrete_code_prefix_recognizer_program_accepts_language⟩
 
+def ConcreteCodePrefixParserCodeConstruction : Prop :=
+  CodePrefixParserCodeConstruction
+
+theorem concrete_code_prefix_parser_code_construction :
+    ConcreteCodePrefixParserCodeConstruction :=
+  Computability.codePrefixParserCodeConstruction
+
+theorem concrete_code_prefix_parser_normalize_success_iff
+    (tokens : Word ConcreteMachineCodeSymbol) :
+    MachineDescription.PrefixParser.normalizeCode tokens = some tokens <->
+      exists D : ConcreteMachineDescription,
+        exists input : Word ConcreteMachineCodeSymbol,
+          ConcreteMachineDecodePrefix tokens = some (D, input) := by
+  simpa [ConcreteMachineDecodePrefix, ConcreteMachineDescription,
+    ConcreteMachineCodeSymbol]
+    using Computability.codePrefixParser_normalize_success_iff tokens
+
+theorem concrete_code_prefix_parser_branch_success
+    {tokens : Word ConcreteMachineCodeSymbol}
+    {D : ConcreteMachineDescription}
+    {input : Word ConcreteMachineCodeSymbol}
+    (h : ConcreteMachineDecodePrefix tokens = some (D, input)) :
+    MachineDescription.PrefixParser.branchCode tokens =
+      some (MachineDescription.encodeBoolWordAppend [true] tokens) :=
+  Computability.codePrefixParser_branch_success
+    (by
+      simpa [ConcreteMachineDecodePrefix] using h)
+
+theorem concrete_code_prefix_parser_branch_failure
+    {tokens : Word ConcreteMachineCodeSymbol}
+    (h : ConcreteMachineDecodePrefix tokens = none) :
+    MachineDescription.PrefixParser.branchCode tokens =
+      some (MachineDescription.encodeBoolWord [false]) :=
+  Computability.codePrefixParser_branch_failure
+    (by
+      simpa [ConcreteMachineDecodePrefix] using h)
+
+theorem concrete_code_prefix_parser_branch_total
+    (tokens : Word ConcreteMachineCodeSymbol) :
+    exists out : Word ConcreteMachineCodeSymbol,
+      MachineDescription.PrefixParser.branchCode tokens = some out :=
+  Computability.codePrefixParser_branch_total tokens
+
 def ConcreteMachineEncodedInputLanguage
     (D : ConcreteMachineDescription) :
     Language ConcreteMachineCodeSymbol :=
@@ -359,6 +402,21 @@ def ConcreteEncodedInputProgramAcceptorCompilationConstruction : Prop :=
 
 def ConcreteEncodedInputDescriptionCompilerConstruction : Prop :=
   EncodedInputDescriptionCompilerPrinciple
+
+def ConcreteBooleanDescriptionAcceptorCompilationConstruction : Prop :=
+  DescriptionProgramAcceptorCompilationPrinciple
+
+theorem concrete_encoded_input_program_compiler_of_boolean_description_compiler
+    (hcompile : ConcreteBooleanDescriptionAcceptorCompilationConstruction) :
+    ConcreteEncodedInputProgramAcceptorCompilationConstruction :=
+  Computability.encodedInputProgramAcceptorCompilationPrinciple_of_descriptionProgramCompiler
+    hcompile
+
+theorem concrete_encoded_input_description_compiler_of_boolean_description_compiler
+    (hcompile : ConcreteBooleanDescriptionAcceptorCompilationConstruction) :
+    ConcreteEncodedInputDescriptionCompilerConstruction :=
+  Computability.encodedInputDescriptionCompilerPrinciple_of_descriptionProgramCompiler
+    hcompile
 
 theorem concrete_code_prefix_accepted_language_compiled_by_description_of_program_compiler
     (hcompile : ConcreteEncodedInputProgramAcceptorCompilationConstruction) :
@@ -425,6 +483,15 @@ abbrev ConcreteSection53UniversalPrefixCloseout :=
 
 abbrev ConcreteSection53UniversalPrefixFiniteSourceCloseout :=
   CodeUniversalPrefixFiniteSourceCloseout
+
+theorem concrete_section53_universal_prefix_finite_source_closeout_of_boolean_description_compiler
+    (hcompiler : ConcreteBooleanDescriptionAcceptorCompilationConstruction)
+    (hrunner : ConcreteCodePrefixRecognizerMachineConstruction) :
+    ConcreteSection53UniversalPrefixFiniteSourceCloseout where
+  encodedInputDescriptionCompiler :=
+    concrete_encoded_input_description_compiler_of_boolean_description_compiler
+      hcompiler
+  prefixRecognizerMachine := hrunner
 
 theorem concrete_section53_universal_closeout_of_constructions
     (hcompiler : ConcreteEncodedInputProgramAcceptorCompilationConstruction)
@@ -1831,6 +1898,17 @@ theorem exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_clo
   Computability.codeUniversalPrefixRowsCoverConstruction_of_finiteSourceCloseout
     hclose
 
+theorem exists_concrete_universal_prefix_machine_rows_cover_of_boolean_description_compiler
+    (hcompiler : ConcreteBooleanDescriptionAcceptorCompilationConstruction)
+    (hrunner : ConcreteCodePrefixRecognizerMachineConstruction) :
+    exists state : Type,
+      exists universal : TuringMachine ConcreteMachineCodeSymbol state,
+        ConcreteUniversalPrefixMachineSpec universal ∧
+          ConcreteUniversalPrefixMachineRowsCoverAcceptableLanguages universal :=
+  exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_closeout
+    (concrete_section53_universal_prefix_finite_source_closeout_of_boolean_description_compiler
+      hcompiler hrunner)
+
 theorem exists_concrete_universal_prefix_machine_rows_cover_of_program_compiler_and_runner
     (hcompiler : ConcreteEncodedInputProgramAcceptorCompilationConstruction)
     (hrunner : ConcreteUniversalPrefixRunnerConstruction) :
@@ -1903,13 +1981,23 @@ without asking callers to pass it again.
 
 The viable universal-machine target is the prefix version. The semantic staged
 recognizer {name}`ConcreteCodePrefixRecognizerProgram` accepts exactly
-{name}`ConcreteMachineCodePrefixAcceptedLanguage`; an encoded-input program
-compiler therefore supplies a description-level recognizer for that prefix
-language. The remaining fixed-alphabet runner work is now isolated as
+{name}`ConcreteMachineCodePrefixAcceptedLanguage`. The encoded-input compiler
+handoff now factors through
+{name}`ConcreteBooleanDescriptionAcceptorCompilationConstruction`: Boolean
+inputs are decoded by {name}`MachineDescription.decodeCodeWordAsInput`, and
+canonical inputs produced by {name}`MachineDescription.encodeCodeWordAsInput`
+recover the original code-symbol recognizer. Thus the finite-source closeout
+can reuse the existing Boolean description compiler instead of carrying a
+separate encoded-input program compiler. The remaining fixed-alphabet runner
+work is now isolated as
 {name}`ConcreteCodePrefixRecognizerMachineConstruction`; this target is
 equivalent to {name}`ConcreteUniversalPrefixRunnerConstruction`, because the
 prefix recognizer's language is exactly the decoder relation needed by the
-universal machine. For row coverage, the narrower
+universal machine. The prefix parser layer is now formalized as
+{name}`ConcreteCodePrefixParserCodeConstruction`: a normalizing code primitive
+succeeds exactly on one-description prefixes, and a total branch primitive
+emits the success or failure code used by the later recognizer controller. For
+row coverage, the narrower
 {name}`ConcreteSection53UniversalPrefixFiniteSourceCloseout` pairs that runner
 target with an encoded-input description compiler and routes directly to
 {name}`exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_closeout`.

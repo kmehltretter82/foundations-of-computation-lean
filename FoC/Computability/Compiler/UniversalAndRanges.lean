@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Skeletons
+import FoC.Computability.MachineBuilder.PrefixParser
 
 set_option doc.verso true
 
@@ -43,6 +44,70 @@ def EncodedInputDescriptionCompilerPrinciple : Prop :=
     RecursivelyEnumerable L ->
       exists D : MachineDescription,
         MachineDescriptionAcceptsEncodedInputLanguage D L
+
+/-!
+The encoded-input compiler handoff reduces code-symbol recognizers to ordinary
+Boolean-input recognizers.  The Boolean program first parses its input using
+{name}`MachineDescription.decodeCodeWordAsInput`; on canonical encoded inputs
+this parser is inverse to {name}`MachineDescription.encodeCodeWordAsInput`.
+-/
+
+noncomputable def EncodedInputBoolProgram
+    (P : StagedProgram MachineCodeSymbol Unit) :
+    StagedProgram Bool Unit :=
+  by
+    exact
+      { run := fun bits stage =>
+          match MachineDescription.decodeCodeWordAsInput bits with
+          | none => none
+          | some w => P.run w stage }
+
+theorem encodedInputBoolProgram_halts_iff_decode
+    (P : StagedProgram MachineCodeSymbol Unit)
+    (bits : Word Bool) :
+    ProgramHaltsWithOutput (EncodedInputBoolProgram P) bits [] <->
+      exists w : Word MachineCodeSymbol,
+        MachineDescription.decodeCodeWordAsInput bits = some w ∧
+          ProgramHaltsWithOutput P w [] := by
+  constructor
+  · intro h
+    rcases h with ⟨stage, hstage⟩
+    unfold EncodedInputBoolProgram at hstage
+    cases hdecode : MachineDescription.decodeCodeWordAsInput bits with
+    | none =>
+        simp [hdecode] at hstage
+    | some w =>
+        exact ⟨w, rfl, ⟨stage, by simpa [hdecode] using hstage⟩⟩
+  · intro h
+    rcases h with ⟨w, hdecode, stage, hstage⟩
+    exact ⟨stage, by
+      unfold EncodedInputBoolProgram
+      simp [hdecode, hstage]⟩
+
+theorem encodedInputBoolProgram_halts_encodeCodeWordAsInput_iff
+    (P : StagedProgram MachineCodeSymbol Unit)
+    (w : Word MachineCodeSymbol) :
+    ProgramHaltsWithOutput (EncodedInputBoolProgram P)
+      (MachineDescription.encodeCodeWordAsInput w) [] <->
+        ProgramHaltsWithOutput P w [] := by
+  constructor
+  · intro h
+    rcases (encodedInputBoolProgram_halts_iff_decode P
+        (MachineDescription.encodeCodeWordAsInput w)).mp h with
+      ⟨decoded, hdecode, hhalts⟩
+    have hcanonical :
+        decoded = w := by
+      have hdecode' := MachineDescription.decodeCodeWordAsInput_encodeCodeWordAsInput w
+      rw [hdecode'] at hdecode
+      exact Option.some.inj hdecode.symm
+    simpa [hcanonical] using hhalts
+  · intro h
+    exact
+      (encodedInputBoolProgram_halts_iff_decode P
+        (MachineDescription.encodeCodeWordAsInput w)).mpr
+        ⟨w,
+          MachineDescription.decodeCodeWordAsInput_encodeCodeWordAsInput w,
+          h⟩
 
 def CodeUniversalMachineSpec
     (universal : TuringMachine MachineCodeSymbol state) : Prop :=
@@ -176,6 +241,52 @@ theorem codePrefixAcceptedLanguage_programAcceptable :
     ProgramAcceptable MachineDescription.CodePrefixAcceptedLanguage :=
   ⟨CodePrefixRecognizerProgram,
     codePrefixRecognizerProgram_acceptsLanguage⟩
+
+/-!
+The finite prefix recognizer starts with a parser over
+{name}`MachineCodeSymbol` tapes.  At this layer the parser is represented as
+checked {name}`MachineDescription.TapeCodePrimitive` data: a partial normalizer
+that succeeds exactly on one-description prefixes, and a total branch primitive
+that emits a success/failure bit.
+-/
+
+def CodePrefixParserCodeConstruction : Prop :=
+  Nonempty MachineDescription.PrefixParser.CodeConstruction
+
+theorem codePrefixParserCodeConstruction :
+    CodePrefixParserCodeConstruction :=
+  ⟨MachineDescription.PrefixParser.codeConstruction⟩
+
+theorem codePrefixParser_normalize_success_iff
+    (tokens : Word MachineCodeSymbol) :
+    MachineDescription.PrefixParser.normalizeCode tokens = some tokens <->
+      exists D : MachineDescription,
+        exists input : Word MachineCodeSymbol,
+          MachineDescription.decodeDescriptionPrefix tokens =
+            some (D, input) :=
+  MachineDescription.PrefixParser.normalizeCode_eq_some_self_iff tokens
+
+theorem codePrefixParser_branch_success
+    {tokens : Word MachineCodeSymbol} {D : MachineDescription}
+    {input : Word MachineCodeSymbol}
+    (h : MachineDescription.decodeDescriptionPrefix tokens =
+      some (D, input)) :
+    MachineDescription.PrefixParser.branchCode tokens =
+      some (MachineDescription.encodeBoolWordAppend [true] tokens) :=
+  MachineDescription.PrefixParser.branchCode_of_decodeDescriptionPrefix h
+
+theorem codePrefixParser_branch_failure
+    {tokens : Word MachineCodeSymbol}
+    (h : MachineDescription.decodeDescriptionPrefix tokens = none) :
+    MachineDescription.PrefixParser.branchCode tokens =
+      some (MachineDescription.encodeBoolWord [false]) :=
+  MachineDescription.PrefixParser.branchCode_of_decodeDescriptionPrefix_none h
+
+theorem codePrefixParser_branch_total
+    (tokens : Word MachineCodeSymbol) :
+    exists out : Word MachineCodeSymbol,
+      MachineDescription.PrefixParser.branchCode tokens = some out :=
+  MachineDescription.PrefixParser.branchCode_total tokens
 
 /-!
 The finite universal-prefix runner can be built by recognizing exactly the
@@ -364,6 +475,19 @@ theorem encodedInputProgramCompiledByDescription_acceptsLanguage
   · intro w
     exact Iff.trans (hcompile.right w) (hP w)
 
+theorem encodedInputProgramAcceptorCompilationPrinciple_of_descriptionProgramCompiler
+    (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
+    EncodedInputProgramAcceptorCompilationPrinciple := by
+  intro P
+  rcases hcompile (EncodedInputBoolProgram P) with ⟨D, hD⟩
+  refine ⟨D, ?_⟩
+  constructor
+  · exact hD.left
+  · intro w
+    exact Iff.trans
+      (hD.right (MachineDescription.encodeCodeWordAsInput w))
+      (encodedInputBoolProgram_halts_encodeCodeWordAsInput_iff P w)
+
 theorem encodedInputDescriptionCompilerPrinciple_of_programCompiler
     (hcompile : EncodedInputProgramAcceptorCompilationPrinciple) :
     EncodedInputDescriptionCompilerPrinciple := by
@@ -375,6 +499,13 @@ theorem encodedInputDescriptionCompilerPrinciple_of_programCompiler
           exists D
           exact encodedInputProgramCompiledByDescription_acceptsLanguage
             (traceRecognizerProgram_acceptsLanguage htrace) hD
+
+theorem encodedInputDescriptionCompilerPrinciple_of_descriptionProgramCompiler
+    (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
+    EncodedInputDescriptionCompilerPrinciple :=
+  encodedInputDescriptionCompilerPrinciple_of_programCompiler
+    (encodedInputProgramAcceptorCompilationPrinciple_of_descriptionProgramCompiler
+      hcompile)
 
 theorem codeUniversalMachineRowLanguage_equal_codeAcceptedLanguage
     {universal : TuringMachine MachineCodeSymbol state}
