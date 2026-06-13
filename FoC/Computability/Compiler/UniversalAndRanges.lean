@@ -123,6 +123,72 @@ def CodeUniversalPrefixRowsCoverConstruction : Prop :=
       CodeUniversalPrefixMachineSpec universal ∧
         CodeUniversalPrefixRowsCoverAcceptableLanguages universal
 
+/-!
+The prefix accepted language is semidecidable by a direct staged search:
+decode one description from the front of the input, then run the decoded
+description for the current stage bound on the encoded suffix.
+-/
+
+noncomputable def CodePrefixRecognizerProgram :
+    StagedProgram MachineCodeSymbol Unit :=
+  by
+    classical
+    exact
+      { run := fun encoded stage =>
+          match MachineDescription.decodeDescriptionPrefix encoded with
+          | none => none
+          | some (D, input) =>
+              if D.HaltsIn stage
+                  (MachineDescription.encodeCodeWordAsInput input) then
+                some []
+              else
+                none }
+
+theorem codePrefixRecognizerProgram_acceptsLanguage :
+    ProgramAcceptsLanguage CodePrefixRecognizerProgram
+      MachineDescription.CodePrefixAcceptedLanguage := by
+  intro encoded
+  constructor
+  · intro h
+    rcases h with ⟨stage, hstage⟩
+    unfold CodePrefixRecognizerProgram at hstage
+    cases hdecode :
+        MachineDescription.decodeDescriptionPrefix encoded with
+    | none =>
+        simp [hdecode] at hstage
+    | some decoded =>
+        rcases decoded with ⟨D, input⟩
+        by_cases hhalts :
+            D.HaltsIn stage
+              (MachineDescription.encodeCodeWordAsInput input)
+        · exact
+            ⟨D, input, hdecode, ⟨stage, hhalts⟩⟩
+        · simp [hdecode, hhalts] at hstage
+  · intro h
+    rcases h with ⟨D, input, hdecode, hhalts⟩
+    rcases hhalts with ⟨stage, hstage⟩
+    exact ⟨stage, by
+      unfold CodePrefixRecognizerProgram
+      simp [hdecode, hstage]⟩
+
+theorem codePrefixAcceptedLanguage_programAcceptable :
+    ProgramAcceptable MachineDescription.CodePrefixAcceptedLanguage :=
+  ⟨CodePrefixRecognizerProgram,
+    codePrefixRecognizerProgram_acceptsLanguage⟩
+
+theorem codePrefixAcceptedLanguage_compiledByDescription_of_programCompiler
+    (hcompile : EncodedInputProgramAcceptorCompilationPrinciple) :
+    exists D : MachineDescription,
+      MachineDescriptionAcceptsEncodedInputLanguage D
+        MachineDescription.CodePrefixAcceptedLanguage := by
+  rcases hcompile CodePrefixRecognizerProgram with ⟨D, hD⟩
+  refine ⟨D, ?_⟩
+  constructor
+  · exact hD.left
+  · intro w
+    exact Iff.trans (hD.right w)
+      (codePrefixRecognizerProgram_acceptsLanguage w)
+
 structure CodeUniversalPrefixSection53Closeout where
   encodedInputProgramCompiler : EncodedInputProgramAcceptorCompilationPrinciple
   universalRunner : CodeUniversalPrefixRunnerConstruction
@@ -311,7 +377,7 @@ theorem codeUniversalRowsCoverConstruction_of_section53Closeout
     hclose.universalRunner
 
 /-!
-## Compiled partial-function ranges
+**Compiled partial-function ranges.**
 -/
 
 def PartialFunctionCompiledByDescription

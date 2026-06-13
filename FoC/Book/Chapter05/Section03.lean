@@ -297,6 +297,29 @@ def ConcreteMachineCodePrefixAcceptedLanguage :
     Language ConcreteMachineCodeSymbol :=
   MachineDescription.CodePrefixAcceptedLanguage
 
+/-!
+The prefix decoder relation is semidecidable by a direct staged search: parse
+one description prefix, then run the decoded description for the current stage
+bound on the encoded suffix. This is the executable semantic target for the
+remaining finite universal-runner construction.
+-/
+
+noncomputable def ConcreteCodePrefixRecognizerProgram :
+    StagedProgram ConcreteMachineCodeSymbol Unit :=
+  Computability.CodePrefixRecognizerProgram
+
+theorem concrete_code_prefix_recognizer_program_accepts_language :
+    ProgramAcceptsLanguage ConcreteCodePrefixRecognizerProgram
+      ConcreteMachineCodePrefixAcceptedLanguage := by
+  simpa [ConcreteCodePrefixRecognizerProgram,
+    ConcreteMachineCodePrefixAcceptedLanguage]
+    using Computability.codePrefixRecognizerProgram_acceptsLanguage
+
+theorem concrete_code_prefix_accepted_language_program_acceptable :
+    ProgramAcceptable ConcreteMachineCodePrefixAcceptedLanguage :=
+  ⟨ConcreteCodePrefixRecognizerProgram,
+    concrete_code_prefix_recognizer_program_accepts_language⟩
+
 def ConcreteMachineEncodedInputLanguage
     (D : ConcreteMachineDescription) :
     Language ConcreteMachineCodeSymbol :=
@@ -336,6 +359,18 @@ def ConcreteEncodedInputProgramAcceptorCompilationConstruction : Prop :=
 
 def ConcreteEncodedInputDescriptionCompilerConstruction : Prop :=
   EncodedInputDescriptionCompilerPrinciple
+
+theorem concrete_code_prefix_accepted_language_compiled_by_description_of_program_compiler
+    (hcompile : ConcreteEncodedInputProgramAcceptorCompilationConstruction) :
+    exists D : ConcreteMachineDescription,
+      ConcreteMachineDescriptionAcceptsEncodedInputLanguage D
+        ConcreteMachineCodePrefixAcceptedLanguage := by
+  simpa [ConcreteMachineDescriptionAcceptsEncodedInputLanguage,
+    ConcreteMachineCodePrefixAcceptedLanguage,
+    ConcreteEncodedInputProgramAcceptorCompilationConstruction]
+    using
+      Computability.codePrefixAcceptedLanguage_compiledByDescription_of_programCompiler
+        hcompile
 
 def ConcreteMachineToTuringMachine (D : ConcreteMachineDescription) :
     TuringMachine Bool (Fin (D.stateCount + 1)) :=
@@ -1175,6 +1210,19 @@ theorem concrete_diagonal_pair_decidable_preimage_construction_of_faithful_compu
       PairCodeSymbol.diagonalPairDecidablePreimagePrinciple_of_concrete_faithful_computable_map
         (code := ConcreteMachineCodeSymbol) hpreimage hcomputable
 
+theorem concrete_diagonal_pair_decidable_preimage_construction_of_faithful_preimage
+    (hpreimage :
+      FaithfulComputableMapDecidablePreimageConstruction
+        ConcreteMachineCodeSymbol
+        (ConcretePairCodeSymbol ConcreteMachineCodeSymbol)) :
+    DiagonalPairDecidablePreimageConstruction
+      (ConcretePairEncoding :
+        Word ConcreteMachineCodeSymbol ->
+          Word ConcreteMachineCodeSymbol ->
+            Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol)) :=
+  concrete_diagonal_pair_decidable_preimage_construction_of_faithful_computable_map
+    hpreimage faithful_concrete_diagonal_pair_map_computable
+
 theorem concrete_machine_self_halting_reduces_to_pair_halting_of_preimage
     (hpreimage :
       TuringDecidablePreimageConstruction
@@ -1237,6 +1285,17 @@ theorem concrete_machine_self_halting_reduces_to_pair_halting_of_faithful_comput
         (haltsOnCodeInput := ConcreteMachineCodeAccepts)
         (concrete_diagonal_pair_decidable_preimage_construction_of_faithful_computable_map
           hpreimage hcomputable)
+
+theorem concrete_machine_self_halting_reduces_to_pair_halting_of_faithful_preimage
+    (hpreimage :
+      FaithfulComputableMapDecidablePreimageConstruction
+        ConcreteMachineCodeSymbol
+        (ConcretePairCodeSymbol ConcreteMachineCodeSymbol)) :
+    TuringDecidableReduction
+      ConcreteMachineSelfHaltingLanguage
+      ConcreteMachinePairHaltingProblem :=
+  concrete_machine_self_halting_reduces_to_pair_halting_of_faithful_computable_map
+    hpreimage faithful_concrete_diagonal_pair_map_computable
 
 theorem halting_problem_of_pointwise_iff
     {halts1 halts2 : Word code -> Word code -> Prop}
@@ -1473,6 +1532,17 @@ theorem concrete_machine_pair_halting_undecidable_if_self_halting_undecidable_of
       hpreimage hcomputable)
     hself
 
+theorem concrete_machine_pair_halting_undecidable_if_self_halting_undecidable_of_faithful_preimage
+    (hpreimage :
+      FaithfulComputableMapDecidablePreimageConstruction
+        ConcreteMachineCodeSymbol
+        (ConcretePairCodeSymbol ConcreteMachineCodeSymbol))
+    (hself :
+      UndecidableTuringLanguage ConcreteMachineSelfHaltingLanguage) :
+    UndecidableTuringLanguage ConcreteMachinePairHaltingProblem :=
+  concrete_machine_pair_halting_undecidable_if_self_halting_undecidable_of_faithful_computable_map
+    hpreimage faithful_concrete_diagonal_pair_map_computable hself
+
 theorem concrete_machine_pair_halting_undecidable_if_decoder_universal_of_preimage
     (haccept :
       DecidableToAcceptableConstruction ConcreteMachineCodeSymbol)
@@ -1523,6 +1593,31 @@ theorem concrete_machine_pair_halting_undecidable_if_decoder_universal_of_faithf
         (code := ConcreteMachineCodeSymbol)
         (decodeAccepts := ConcreteMachineCodeAccepts)
         haccept hpreimage hcomputable huniv
+
+theorem concrete_machine_pair_halting_undecidable_if_decoder_universal_of_faithful_preimage
+    (haccept :
+      DecidableToAcceptableConstruction ConcreteMachineCodeSymbol)
+    (hpreimage :
+      FaithfulComputableMapDecidablePreimageConstruction
+        ConcreteMachineCodeSymbol
+        (ConcretePairCodeSymbol ConcreteMachineCodeSymbol))
+    (huniv : ConcreteMachineDecoderUniversalForAcceptableLanguages) :
+    UndecidableTuringLanguage ConcreteMachinePairHaltingProblem :=
+  concrete_machine_pair_halting_undecidable_if_decoder_universal_of_faithful_computable_map
+    haccept hpreimage faithful_concrete_diagonal_pair_map_computable huniv
+
+theorem concrete_machine_pair_halting_undecidable_if_encoded_input_compiler_of_faithful_preimage
+    (haccept :
+      DecidableToAcceptableConstruction ConcreteMachineCodeSymbol)
+    (hpreimage :
+      FaithfulComputableMapDecidablePreimageConstruction
+        ConcreteMachineCodeSymbol
+        (ConcretePairCodeSymbol ConcreteMachineCodeSymbol))
+    (hcompile : ConcreteEncodedInputDescriptionCompilerConstruction) :
+    UndecidableTuringLanguage ConcreteMachinePairHaltingProblem :=
+  concrete_machine_pair_halting_undecidable_if_decoder_universal_of_faithful_preimage
+    haccept hpreimage
+    (concrete_encoded_input_description_compiler_decoder_universal hcompile)
 
 /-!
 The legacy universal-machine specification records two directions between
@@ -1755,17 +1850,20 @@ compiled-machine simulation, decoder-row wrappers, and pair-code reductions are
 formalized. Machine output is now read through normalized tape contents, so
 singleton outputs from empty input and Boolean deciders are no longer blocked by
 finite tape-window artifacts. The concrete diagonal pair map now has a faithful
-finite-machine witness.
+finite-machine witness, and the concrete theorem wrappers reuse that witness
+without asking callers to pass it again.
 
-The remaining concrete work is packaged by
-{name}`ConcreteSection53UniversalCloseout`. Its first field compiles encoded
-input staged recognizers into Boolean machine descriptions, which derives
-{name}`ConcreteEncodedInputDescriptionCompilerConstruction`; its second field is
-{name}`ConcreteUniversalRunnerConstruction`, one finite machine implementing
-{name}`ConcreteMachineCodeAccepts` on concatenated code words. The constructor
-{name}`concrete_section53_universal_closeout_of_constructions` records that
-these are exactly the remaining fields. Together they imply row coverage by
-{name}`exists_concrete_universal_machine_rows_cover_of_program_compiler_and_runner`.
+The viable universal-machine target is the prefix version. The semantic staged
+recognizer {name}`ConcreteCodePrefixRecognizerProgram` accepts exactly
+{name}`ConcreteMachineCodePrefixAcceptedLanguage`; an encoded-input program
+compiler therefore supplies a description-level recognizer for that prefix
+language. The remaining finite-machine work is packaged by
+{name}`ConcreteSection53UniversalPrefixCloseout`: its first field compiles
+encoded-input staged recognizers into Boolean machine descriptions, and its
+second field is {name}`ConcreteUniversalPrefixRunnerConstruction`, one finite
+machine implementing the prefix decoder relation on code-symbol tapes. Together
+they imply row coverage by
+{name}`exists_concrete_universal_prefix_machine_rows_cover_of_program_compiler_and_runner`.
 -/
 
 end Section03
