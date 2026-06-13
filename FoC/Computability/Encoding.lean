@@ -442,6 +442,103 @@ theorem decodeTransition_encodeTransition :
     decodeTransition (encodeTransition t) = some (t, []) := by
   exact decodeTransition_encodeTransition_append t []
 
+theorem decodeTransition_eq_some_encodeTransitionAppend
+    {tokens : Word MachineCodeSymbol} {t : TransitionDescription}
+    {suffix : Word MachineCodeSymbol}
+    (h : decodeTransition tokens = some (t, suffix)) :
+    tokens = encodeTransitionAppend t suffix := by
+  cases tokens with
+  | nil =>
+      cases h
+  | cons symbol rest =>
+      cases symbol with
+      | header => cases h
+      | transition =>
+          simp [decodeTransition] at h
+          cases hsource : decodeNat rest with
+          | none =>
+              simp [hsource] at h
+          | some parsedSource =>
+              cases parsedSource with
+              | mk source restAfterSource =>
+                  simp [hsource] at h
+                  cases hread : decodeCell restAfterSource with
+                  | none =>
+                      simp [hread] at h
+                  | some parsedRead =>
+                      cases parsedRead with
+                      | mk read restAfterRead =>
+                          simp [hread] at h
+                          cases hwrite : decodeCell restAfterRead with
+                          | none =>
+                              simp [hwrite] at h
+                          | some parsedWrite =>
+                              cases parsedWrite with
+                              | mk write restAfterWrite =>
+                                  simp [hwrite] at h
+                                  cases hmove :
+                                      decodeDirection restAfterWrite with
+                                  | none =>
+                                      simp [hmove] at h
+                                  | some parsedMove =>
+                                      cases parsedMove with
+                                      | mk move restAfterMove =>
+                                          simp [hmove] at h
+                                          cases htarget :
+                                              decodeNat restAfterMove with
+                                          | none =>
+                                              simp [htarget] at h
+                                          | some parsedTarget =>
+                                              cases parsedTarget with
+                                              | mk target parsedSuffix =>
+                                                  simp [htarget] at h
+                                                  cases h
+                                                  subst t
+                                                  subst suffix
+                                                  have hsourceTokens :
+                                                      rest =
+                                                        encodeNatAppend source
+                                                          restAfterSource :=
+                                                    decodeNat_eq_some_encodeNatAppend
+                                                      hsource
+                                                  have hreadTokens :
+                                                      restAfterSource =
+                                                        encodeCellAppend read
+                                                          restAfterRead :=
+                                                    decodeCell_eq_some_encodeCellAppend
+                                                      hread
+                                                  have hwriteTokens :
+                                                      restAfterRead =
+                                                        encodeCellAppend write
+                                                          restAfterWrite :=
+                                                    decodeCell_eq_some_encodeCellAppend
+                                                      hwrite
+                                                  have hmoveTokens :
+                                                      restAfterWrite =
+                                                        encodeDirectionAppend
+                                                          move restAfterMove :=
+                                                    decodeDirection_eq_some_encodeDirectionAppend
+                                                      hmove
+                                                  have htargetTokens :
+                                                      restAfterMove =
+                                                        encodeNatAppend target
+                                                          parsedSuffix :=
+                                                    decodeNat_eq_some_encodeNatAppend
+                                                      htarget
+                                                  simp [encodeTransitionAppend,
+                                                    hsourceTokens,
+                                                    hreadTokens,
+                                                    hwriteTokens,
+                                                    hmoveTokens,
+                                                    htargetTokens]
+      | tick => cases h
+      | done => cases h
+      | blank => cases h
+      | zero => cases h
+      | one => cases h
+      | moveLeft => cases h
+      | moveRight => cases h
+
 def encodeTransitionsAppend : List TransitionDescription ->
     Word MachineCodeSymbol -> Word MachineCodeSymbol
   | [], suffix => suffix
@@ -495,6 +592,54 @@ theorem decodeTransitions_encodeTransitions
       some (transitions, []) :=
   decodeTransitions_encodeTransitions_append transitions []
 
+theorem decodeTransitions_eq_some_encodeTransitionsAppend
+    {count : Nat} {tokens : Word MachineCodeSymbol}
+    {transitions : List TransitionDescription}
+    {suffix : Word MachineCodeSymbol}
+    (h : decodeTransitions count tokens = some (transitions, suffix)) :
+    count = transitions.length ∧
+      tokens = encodeTransitionsAppend transitions suffix := by
+  induction count generalizing tokens transitions suffix with
+  | zero =>
+      simp [decodeTransitions] at h
+      cases h
+      subst transitions
+      subst tokens
+      constructor <;> rfl
+  | succ count ih =>
+      simp [decodeTransitions] at h
+      cases htransition : decodeTransition tokens with
+      | none =>
+          simp [htransition] at h
+      | some parsedTransition =>
+          cases parsedTransition with
+          | mk transition rest =>
+              simp [htransition] at h
+              cases htail : decodeTransitions count rest with
+              | none =>
+                  simp [htail] at h
+              | some parsedTail =>
+                  cases parsedTail with
+                  | mk tail parsedSuffix =>
+                      simp [htail] at h
+                      cases h
+                      subst transitions
+                      subst suffix
+                      have htokens :
+                          tokens =
+                            encodeTransitionAppend transition rest :=
+                        decodeTransition_eq_some_encodeTransitionAppend
+                          htransition
+                      have hrest :
+                          count = tail.length ∧
+                            rest =
+                              encodeTransitionsAppend tail parsedSuffix :=
+                        ih htail
+                      constructor
+                      · simp [hrest.left]
+                      · simp [encodeTransitionsAppend, htokens,
+                          hrest.right]
+
 def encodeDescriptionAppend (D : MachineDescription)
     (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
   MachineCodeSymbol.header ::
@@ -507,6 +652,21 @@ def encodeDescriptionAppend (D : MachineDescription)
 def encodeDescription (D : MachineDescription) :
     Word MachineCodeSymbol :=
   encodeDescriptionAppend D []
+
+theorem encodeDescriptionAppend_eq_encodeDescription_append
+    (D : MachineDescription) (suffix : Word MachineCodeSymbol) :
+    encodeDescriptionAppend D suffix =
+      List.append (encodeDescription D) suffix := by
+  cases D with
+  | mk stateCount start halt transitions =>
+      simp [encodeDescription, encodeDescriptionAppend, encodeNatAppend,
+        List.append_assoc]
+      have htrans :
+          List.append (encodeTransitionsAppend transitions []) suffix =
+            encodeTransitionsAppend transitions suffix := by
+        simpa using encodeTransitionsAppend_append transitions [] suffix
+      rw [← htrans]
+      rfl
 
 def decodeDescription (tokens : Word MachineCodeSymbol) :
     Option MachineDescription :=
@@ -577,6 +737,121 @@ theorem decodeDescriptionPrefix_encodeDescriptionAppend
   simp [encodeDescriptionAppend, decodeDescriptionPrefix,
     decodeNat_encodeNatAppend,
     decodeTransitions_encodeTransitions_append]
+
+theorem decodeDescriptionPrefix_eq_some_encodeDescriptionAppend
+    {tokens : Word MachineCodeSymbol} {D : MachineDescription}
+    {suffix : Word MachineCodeSymbol}
+    (h : decodeDescriptionPrefix tokens = some (D, suffix)) :
+    tokens = encodeDescriptionAppend D suffix := by
+  cases tokens with
+  | nil =>
+      cases h
+  | cons symbol rest =>
+      cases symbol with
+      | header =>
+          simp [decodeDescriptionPrefix] at h
+          cases hstateCount : decodeNat rest with
+          | none =>
+              simp [hstateCount] at h
+          | some parsedStateCount =>
+              cases parsedStateCount with
+              | mk stateCount restAfterStateCount =>
+                  simp [hstateCount] at h
+                  cases hstart : decodeNat restAfterStateCount with
+                  | none =>
+                      simp [hstart] at h
+                  | some parsedStart =>
+                      cases parsedStart with
+                      | mk start restAfterStart =>
+                          simp [hstart] at h
+                          cases hhalt : decodeNat restAfterStart with
+                          | none =>
+                              simp [hhalt] at h
+                          | some parsedHalt =>
+                              cases parsedHalt with
+                              | mk halt restAfterHalt =>
+                                  simp [hhalt] at h
+                                  cases hcount :
+                                      decodeNat restAfterHalt with
+                                  | none =>
+                                      simp [hcount] at h
+                                  | some parsedCount =>
+                                      cases parsedCount with
+                                      | mk transitionCount
+                                          restAfterCount =>
+                                          simp [hcount] at h
+                                          cases htransitions :
+                                              decodeTransitions
+                                                transitionCount
+                                                restAfterCount with
+                                          | none =>
+                                              simp [htransitions] at h
+                                          | some parsedTransitions =>
+                                              cases parsedTransitions with
+                                              | mk transitions
+                                                  parsedSuffix =>
+                                                  simp [htransitions] at h
+                                                  cases h
+                                                  subst D
+                                                  subst suffix
+                                                  have hstateCountTokens :
+                                                      rest =
+                                                        encodeNatAppend
+                                                          stateCount
+                                                          restAfterStateCount :=
+                                                    decodeNat_eq_some_encodeNatAppend
+                                                      hstateCount
+                                                  have hstartTokens :
+                                                      restAfterStateCount =
+                                                        encodeNatAppend start
+                                                          restAfterStart :=
+                                                    decodeNat_eq_some_encodeNatAppend
+                                                      hstart
+                                                  have hhaltTokens :
+                                                      restAfterStart =
+                                                        encodeNatAppend halt
+                                                          restAfterHalt :=
+                                                    decodeNat_eq_some_encodeNatAppend
+                                                      hhalt
+                                                  have hcountTokens :
+                                                      restAfterHalt =
+                                                        encodeNatAppend
+                                                          transitionCount
+                                                          restAfterCount :=
+                                                    decodeNat_eq_some_encodeNatAppend
+                                                      hcount
+                                                  have htransitionTokens :
+                                                      transitionCount =
+                                                          transitions.length ∧
+                                                        restAfterCount =
+                                                          encodeTransitionsAppend
+                                                            transitions
+                                                            parsedSuffix :=
+                                                    decodeTransitions_eq_some_encodeTransitionsAppend
+                                                      htransitions
+                                                  simp [encodeDescriptionAppend,
+                                                    hstateCountTokens,
+                                                    hstartTokens,
+                                                    hhaltTokens,
+                                                    hcountTokens,
+                                                    htransitionTokens.left,
+                                                    htransitionTokens.right]
+      | transition => cases h
+      | tick => cases h
+      | done => cases h
+      | blank => cases h
+      | zero => cases h
+      | one => cases h
+      | moveLeft => cases h
+      | moveRight => cases h
+
+theorem decodeDescriptionPrefix_eq_some_encodeDescription_append
+    {tokens : Word MachineCodeSymbol} {D : MachineDescription}
+    {suffix : Word MachineCodeSymbol}
+    (h : decodeDescriptionPrefix tokens = some (D, suffix)) :
+    tokens = List.append (encodeDescription D) suffix := by
+  rw [decodeDescriptionPrefix_eq_some_encodeDescriptionAppend h,
+    encodeDescriptionAppend_eq_encodeDescription_append]
 
 theorem decodeDescriptionPrefix_encodeDescription_append
     (D : MachineDescription) (suffix : Word MachineCodeSymbol) :

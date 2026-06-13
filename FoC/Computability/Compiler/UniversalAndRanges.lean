@@ -147,6 +147,7 @@ noncomputable def CodePrefixRecognizerProgram :
 theorem codePrefixRecognizerProgram_acceptsLanguage :
     ProgramAcceptsLanguage CodePrefixRecognizerProgram
       MachineDescription.CodePrefixAcceptedLanguage := by
+  classical
   intro encoded
   constructor
   · intro h
@@ -176,6 +177,65 @@ theorem codePrefixAcceptedLanguage_programAcceptable :
   ⟨CodePrefixRecognizerProgram,
     codePrefixRecognizerProgram_acceptsLanguage⟩
 
+/-!
+The finite universal-prefix runner can be built by recognizing exactly the
+single prefix language above on the concrete code alphabet.  This target avoids
+an arbitrary staged-program compiler: a machine satisfying the fixed-alphabet
+recognizer specification is already a universal prefix runner.
+-/
+
+def CodePrefixRecognizerMachineSpec
+    (universal : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall encoded : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput universal encoded <->
+      ProgramHaltsWithOutput CodePrefixRecognizerProgram encoded []
+
+def CodePrefixRecognizerMachineConstruction : Prop :=
+  exists state : Type,
+    exists universal : TuringMachine MachineCodeSymbol state,
+      CodePrefixRecognizerMachineSpec universal
+
+theorem codeUniversalPrefixMachineSpec_of_codePrefixRecognizerMachineSpec
+    {universal : TuringMachine MachineCodeSymbol state}
+    (hspec : CodePrefixRecognizerMachineSpec universal) :
+    CodeUniversalPrefixMachineSpec universal := by
+  intro encoded
+  exact Iff.trans (hspec encoded)
+    (codePrefixRecognizerProgram_acceptsLanguage encoded)
+
+theorem codePrefixRecognizerMachineSpec_of_codeUniversalPrefixMachineSpec
+    {universal : TuringMachine MachineCodeSymbol state}
+    (hspec : CodeUniversalPrefixMachineSpec universal) :
+    CodePrefixRecognizerMachineSpec universal := by
+  intro encoded
+  exact Iff.trans (hspec encoded)
+    (Iff.symm (codePrefixRecognizerProgram_acceptsLanguage encoded))
+
+theorem codeUniversalPrefixRunnerConstruction_of_codePrefixRecognizerMachine
+    (hrunner : CodePrefixRecognizerMachineConstruction) :
+    CodeUniversalPrefixRunnerConstruction := by
+  rcases hrunner with ⟨state, universal, hspec⟩
+  exact
+    ⟨state, universal,
+      codeUniversalPrefixMachineSpec_of_codePrefixRecognizerMachineSpec
+        hspec⟩
+
+theorem codePrefixRecognizerMachine_of_codeUniversalPrefixRunnerConstruction
+    (hrunner : CodeUniversalPrefixRunnerConstruction) :
+    CodePrefixRecognizerMachineConstruction := by
+  rcases hrunner with ⟨state, universal, hspec⟩
+  exact
+    ⟨state, universal,
+      codePrefixRecognizerMachineSpec_of_codeUniversalPrefixMachineSpec
+        hspec⟩
+
+theorem codePrefixRecognizerMachineConstruction_iff_universalPrefixRunner :
+    CodePrefixRecognizerMachineConstruction <->
+      CodeUniversalPrefixRunnerConstruction := by
+  constructor
+  · exact codeUniversalPrefixRunnerConstruction_of_codePrefixRecognizerMachine
+  · exact codePrefixRecognizerMachine_of_codeUniversalPrefixRunnerConstruction
+
 theorem codePrefixAcceptedLanguage_compiledByDescription_of_programCompiler
     (hcompile : EncodedInputProgramAcceptorCompilationPrinciple) :
     exists D : MachineDescription,
@@ -192,6 +252,10 @@ theorem codePrefixAcceptedLanguage_compiledByDescription_of_programCompiler
 structure CodeUniversalPrefixSection53Closeout where
   encodedInputProgramCompiler : EncodedInputProgramAcceptorCompilationPrinciple
   universalRunner : CodeUniversalPrefixRunnerConstruction
+
+structure CodeUniversalPrefixFiniteSourceCloseout where
+  encodedInputDescriptionCompiler : EncodedInputDescriptionCompilerPrinciple
+  prefixRecognizerMachine : CodePrefixRecognizerMachineConstruction
 
 theorem codeUniversalPrefixMachine_halts_on_encoded_description_iff
     {universal : TuringMachine MachineCodeSymbol state}
@@ -240,6 +304,14 @@ theorem codeUniversalPrefixRowsCoverConstruction_of_constructions
       hspec,
       codeUniversalPrefixRowsCoverAcceptableLanguages_of_encodedInputDescriptionCompiler
         hspec hcompile⟩
+
+theorem codeUniversalPrefixRowsCoverConstruction_of_finiteSourceCloseout
+    (hclose : CodeUniversalPrefixFiniteSourceCloseout) :
+    CodeUniversalPrefixRowsCoverConstruction :=
+  codeUniversalPrefixRowsCoverConstruction_of_constructions
+    hclose.encodedInputDescriptionCompiler
+    (codeUniversalPrefixRunnerConstruction_of_codePrefixRecognizerMachine
+      hclose.prefixRecognizerMachine)
 
 def CodeUniversalMachineRowLanguage
     (universal : TuringMachine MachineCodeSymbol state)

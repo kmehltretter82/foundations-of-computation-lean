@@ -404,8 +404,15 @@ def ConcreteUniversalPrefixMachineSpec
     (universal : TuringMachine ConcreteMachineCodeSymbol state) : Prop :=
   CodeUniversalPrefixMachineSpec universal
 
+def ConcreteCodePrefixRecognizerMachineSpec
+    (universal : TuringMachine ConcreteMachineCodeSymbol state) : Prop :=
+  CodePrefixRecognizerMachineSpec universal
+
 def ConcreteUniversalPrefixRunnerConstruction : Prop :=
   CodeUniversalPrefixRunnerConstruction
+
+def ConcreteCodePrefixRecognizerMachineConstruction : Prop :=
+  CodePrefixRecognizerMachineConstruction
 
 def ConcreteUniversalPrefixRowsCoverConstruction : Prop :=
   CodeUniversalPrefixRowsCoverConstruction
@@ -415,6 +422,9 @@ abbrev ConcreteSection53UniversalCloseout :=
 
 abbrev ConcreteSection53UniversalPrefixCloseout :=
   CodeUniversalPrefixSection53Closeout
+
+abbrev ConcreteSection53UniversalPrefixFiniteSourceCloseout :=
+  CodeUniversalPrefixFiniteSourceCloseout
 
 theorem concrete_section53_universal_closeout_of_constructions
     (hcompiler : ConcreteEncodedInputProgramAcceptorCompilationConstruction)
@@ -429,6 +439,23 @@ theorem concrete_section53_universal_prefix_closeout_of_constructions
     ConcreteSection53UniversalPrefixCloseout where
   encodedInputProgramCompiler := hcompiler
   universalRunner := hrunner
+
+theorem concrete_universal_prefix_runner_of_code_prefix_recognizer_machine
+    (hrunner : ConcreteCodePrefixRecognizerMachineConstruction) :
+    ConcreteUniversalPrefixRunnerConstruction :=
+  Computability.codeUniversalPrefixRunnerConstruction_of_codePrefixRecognizerMachine
+    hrunner
+
+theorem concrete_code_prefix_recognizer_machine_of_universal_prefix_runner
+    (hrunner : ConcreteUniversalPrefixRunnerConstruction) :
+    ConcreteCodePrefixRecognizerMachineConstruction :=
+  Computability.codePrefixRecognizerMachine_of_codeUniversalPrefixRunnerConstruction
+    hrunner
+
+theorem concrete_code_prefix_recognizer_machine_iff_universal_prefix_runner :
+    ConcreteCodePrefixRecognizerMachineConstruction <->
+      ConcreteUniversalPrefixRunnerConstruction :=
+  Computability.codePrefixRecognizerMachineConstruction_iff_universalPrefixRunner
 
 theorem concrete_encoded_input_program_compiler_of_section53_closeout
     (hclose : ConcreteSection53UniversalCloseout) :
@@ -812,6 +839,18 @@ theorem concrete_machine_decode_prefix_encode_append
       (Languages.Word.Concat (ConcreteMachineEncode D) input) =
         some (D, input) :=
   MachineDescription.decodeDescriptionPrefix_encodeDescription_append D input
+
+theorem concrete_machine_decode_prefix_eq_some_encode_append
+    {encoded : Word ConcreteMachineCodeSymbol}
+    {D : ConcreteMachineDescription}
+    {input : Word ConcreteMachineCodeSymbol}
+    (h : ConcreteMachineDecodePrefix encoded = some (D, input)) :
+    encoded = Languages.Word.Concat (ConcreteMachineEncode D) input := by
+  simpa [ConcreteMachineDecodePrefix, ConcreteMachineEncode,
+    Languages.Word.Concat]
+    using
+      MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+        h
 
 theorem concrete_machine_code_accepts_encode_description_iff
     (D : ConcreteMachineDescription)
@@ -1783,6 +1822,15 @@ theorem exists_concrete_universal_prefix_machine_rows_cover_of_section53_closeou
   Computability.codeUniversalPrefixRowsCoverConstruction_of_section53Closeout
     hclose
 
+theorem exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_closeout
+    (hclose : ConcreteSection53UniversalPrefixFiniteSourceCloseout) :
+    exists state : Type,
+      exists universal : TuringMachine ConcreteMachineCodeSymbol state,
+        ConcreteUniversalPrefixMachineSpec universal ∧
+          ConcreteUniversalPrefixMachineRowsCoverAcceptableLanguages universal :=
+  Computability.codeUniversalPrefixRowsCoverConstruction_of_finiteSourceCloseout
+    hclose
+
 theorem exists_concrete_universal_prefix_machine_rows_cover_of_program_compiler_and_runner
     (hcompiler : ConcreteEncodedInputProgramAcceptorCompilationConstruction)
     (hrunner : ConcreteUniversalPrefixRunnerConstruction) :
@@ -1857,16 +1905,20 @@ The viable universal-machine target is the prefix version. The semantic staged
 recognizer {name}`ConcreteCodePrefixRecognizerProgram` accepts exactly
 {name}`ConcreteMachineCodePrefixAcceptedLanguage`; an encoded-input program
 compiler therefore supplies a description-level recognizer for that prefix
-language. The remaining finite-machine work is packaged by
-{name}`ConcreteSection53UniversalPrefixCloseout`: its first field compiles
-encoded-input staged recognizers into Boolean machine descriptions, and its
-second field is {name}`ConcreteUniversalPrefixRunnerConstruction`, one finite
-machine implementing the prefix decoder relation on code-symbol tapes. This is
-the same finite-source layer used by Section 5.2: canonical
+language. The remaining fixed-alphabet runner work is now isolated as
+{name}`ConcreteCodePrefixRecognizerMachineConstruction`; this target is
+equivalent to {name}`ConcreteUniversalPrefixRunnerConstruction`, because the
+prefix recognizer's language is exactly the decoder relation needed by the
+universal machine. For row coverage, the narrower
+{name}`ConcreteSection53UniversalPrefixFiniteSourceCloseout` pairs that runner
+target with an encoded-input description compiler and routes directly to
+{name}`exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_closeout`.
+This is the same finite-source layer used by Section 5.2: canonical
 {name}`MachineCodeSymbol` parsers, normalized-output emitters,
 subroutine-ready sequencing, and cell or parse branch controllers. Together
 the closeout fields imply row coverage by
-{name}`exists_concrete_universal_prefix_machine_rows_cover_of_program_compiler_and_runner`.
+the finite-source closeout theorem, while the older program-compiler route
+remains as a compatibility wrapper.
 -/
 
 end Section03
