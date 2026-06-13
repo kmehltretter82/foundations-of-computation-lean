@@ -129,6 +129,64 @@ description = "Reader-oriented Verso companion for the standalone Lean formaliza
   "FoC.Book.Chapter05.Section02",
   "FoC.Book.Chapter05.Section03"
 ]
+"FoC.Grammars.CFG" = [
+  "FoC.Grammars.CFG.Basic",
+  "FoC.Grammars.CFG.Derivations",
+  "FoC.Grammars.CFG.Mapping",
+  "FoC.Grammars.CFG.Union",
+  "FoC.Grammars.CFG.Concat",
+  "FoC.Grammars.CFG.Star"
+]
+"FoC.Grammars.PDANormalize" = [
+  "FoC.Grammars.PDANormalize.Construction",
+  "FoC.Grammars.PDANormalize.Forward",
+  "FoC.Grammars.PDANormalize.Reverse"
+]
+"FoC.Computability.Grammar" = [
+  "FoC.Computability.Grammar.DerivationTraces",
+  "FoC.Computability.Grammar.FinitePresentation",
+  "FoC.Computability.Grammar.SemanticAndTraceTables",
+  "FoC.Computability.Grammar.MachineHistory",
+  "FoC.Computability.Grammar.Closeouts"
+]
+"FoC.Computability.Grammar.MachineHistory" = [
+  "FoC.Computability.Grammar.MachineHistory.Syntax",
+  "FoC.Computability.Grammar.MachineHistory.SoundForms",
+  "FoC.Computability.Grammar.MachineHistory.Contexts",
+  "FoC.Computability.Grammar.MachineHistory.Locked",
+  "FoC.Computability.Grammar.MachineHistory.ReverseMoves",
+  "FoC.Computability.Grammar.MachineHistory.Cleanup",
+  "FoC.Computability.Grammar.MachineHistory.Soundness",
+  "FoC.Computability.Grammar.MachineHistory.Completeness",
+  "FoC.Computability.Grammar.MachineHistory.Construction"
+]
+"FoC.Book.Chapter04.Section04" = [
+  "FoC.Book.Chapter04.Section04.Basic",
+  "FoC.Book.Chapter04.Section04.Conversions",
+  "FoC.Book.Chapter04.Section04.AnBn",
+  "FoC.Book.Chapter04.Section04.Range12",
+  "FoC.Book.Chapter04.Section04.HalfRange",
+  "FoC.Book.Chapter04.Section04.DeterministicAnBn",
+  "FoC.Book.Chapter04.Section04.Copy"
+]
+"FoC.Book.Chapter04.Section06" = [
+  "FoC.Book.Chapter04.Section06.Basics",
+  "FoC.Book.Chapter04.Section06.EqualCounts",
+  "FoC.Book.Chapter04.Section06.FourCounts",
+  "FoC.Book.Chapter04.Section06.OrderedABC",
+  "FoC.Book.Chapter04.Section06.OrderedABCD",
+  "FoC.Book.Chapter04.Section06.StrictInequalities",
+  "FoC.Book.Chapter04.Section06.UnarySquares",
+  "FoC.Book.Chapter04.Section06.PowersOfTwo"
+]
+"FoC.Book.Chapter04.Section06.UnarySquares" = [
+  "FoC.Book.Chapter04.Section06.UnarySquares.Basic",
+  "FoC.Book.Chapter04.Section06.UnarySquares.Shape",
+  "FoC.Book.Chapter04.Section06.UnarySquares.Potential",
+  "FoC.Book.Chapter04.Section06.UnarySquares.PostStop",
+  "FoC.Book.Chapter04.Section06.UnarySquares.Reachability",
+  "FoC.Book.Chapter04.Section06.UnarySquares.FourAs"
+]
 
 [modules."FoC"]
 title = "Companion Overview"
@@ -232,6 +290,24 @@ title = "BNF"
 [modules."FoC.Grammars.CFG"]
 title = "Context-Free Grammars"
 
+[modules."FoC.Grammars.CFG.Basic"]
+title = "CFG Syntax"
+
+[modules."FoC.Grammars.CFG.Derivations"]
+title = "CFG Derivations"
+
+[modules."FoC.Grammars.CFG.Mapping"]
+title = "CFG Nonterminal Mapping"
+
+[modules."FoC.Grammars.CFG.Union"]
+title = "CFG Union"
+
+[modules."FoC.Grammars.CFG.Concat"]
+title = "CFG Concatenation"
+
+[modules."FoC.Grammars.CFG.Star"]
+title = "CFG Star"
+
 [modules."FoC.Grammars.CFGToPDA"]
 title = "CFG to PDA"
 
@@ -246,6 +322,15 @@ title = "Pushdown Automata"
 
 [modules."FoC.Grammars.PDANormalize"]
 title = "PDA Normalization"
+
+[modules."FoC.Grammars.PDANormalize.Construction"]
+title = "PDA Normalization Construction"
+
+[modules."FoC.Grammars.PDANormalize.Forward"]
+title = "PDA Normalization Forward Simulation"
+
+[modules."FoC.Grammars.PDANormalize.Reverse"]
+title = "PDA Normalization Reverse Compression"
 
 [modules."FoC.Grammars.PDAToCFG"]
 title = "PDA to CFG"
@@ -279,6 +364,36 @@ title = "Finite Program Descriptions"
 
 [modules."FoC.Computability.Grammar"]
 title = "Grammar Recognizers"
+
+[modules."FoC.Computability.Grammar.MachineHistory"]
+title = "Machine-History Grammars"
+
+[modules."FoC.Computability.Grammar.MachineHistory.Syntax"]
+title = "Machine-History Grammar Syntax"
+
+[modules."FoC.Computability.Grammar.MachineHistory.SoundForms"]
+title = "Machine-History Sound Forms"
+
+[modules."FoC.Computability.Grammar.MachineHistory.Contexts"]
+title = "Machine-History Context Lemmas"
+
+[modules."FoC.Computability.Grammar.MachineHistory.Locked"]
+title = "Machine-History Locked Forms"
+
+[modules."FoC.Computability.Grammar.MachineHistory.ReverseMoves"]
+title = "Machine-History Reverse Moves"
+
+[modules."FoC.Computability.Grammar.MachineHistory.Cleanup"]
+title = "Machine-History Cleanup"
+
+[modules."FoC.Computability.Grammar.MachineHistory.Soundness"]
+title = "Machine-History Soundness"
+
+[modules."FoC.Computability.Grammar.MachineHistory.Completeness"]
+title = "Machine-History Completeness"
+
+[modules."FoC.Computability.Grammar.MachineHistory.Construction"]
+title = "Machine-History Construction Theorem"
 
 [modules."FoC.Computability.Program"]
 title = "Staged Programs"
@@ -398,11 +513,53 @@ title = "Section 4.3: Parsing and Parse Trees"
 [modules."FoC.Book.Chapter04.Section04"]
 title = "Section 4.4: Pushdown Automata"
 
+[modules."FoC.Book.Chapter04.Section04.Basic"]
+title = "Section 4.4: PDA Basics"
+
+[modules."FoC.Book.Chapter04.Section04.Conversions"]
+title = "Section 4.4: PDA/CFG Conversions"
+
+[modules."FoC.Book.Chapter04.Section04.AnBn"]
+title = "Section 4.4: a^n b^n PDA"
+
+[modules."FoC.Book.Chapter04.Section04.Range12"]
+title = "Section 4.4: Range n <= m <= 2n"
+
+[modules."FoC.Book.Chapter04.Section04.HalfRange"]
+title = "Section 4.4: Half-Range PDA"
+
+[modules."FoC.Book.Chapter04.Section04.DeterministicAnBn"]
+title = "Section 4.4: Deterministic a^n b^n"
+
+[modules."FoC.Book.Chapter04.Section04.Copy"]
+title = "Section 4.4: Copy Across a Marker"
+
 [modules."FoC.Book.Chapter04.Section05"]
 title = "Section 4.5: Non-Context-Free Languages"
 
 [modules."FoC.Book.Chapter04.Section06"]
 title = "Section 4.6: General Grammars"
+
+[modules."FoC.Book.Chapter04.Section06.UnarySquares"]
+title = "Section 4.6: Unary Squares"
+
+[modules."FoC.Book.Chapter04.Section06.UnarySquares.Basic"]
+title = "Unary Squares: Grammar"
+
+[modules."FoC.Book.Chapter04.Section06.UnarySquares.Shape"]
+title = "Unary Squares: Shape Lemmas"
+
+[modules."FoC.Book.Chapter04.Section06.UnarySquares.Potential"]
+title = "Unary Squares: Middle Potential"
+
+[modules."FoC.Book.Chapter04.Section06.UnarySquares.PostStop"]
+title = "Unary Squares: Post-Stop Invariant"
+
+[modules."FoC.Book.Chapter04.Section06.UnarySquares.Reachability"]
+title = "Unary Squares: Reachability"
+
+[modules."FoC.Book.Chapter04.Section06.UnarySquares.FourAs"]
+title = "Unary Squares: Four a Derivation"
 
 [modules."FoC.Book.Chapter05"]
 title = "Chapter 5: Turing Machines and Computability"
