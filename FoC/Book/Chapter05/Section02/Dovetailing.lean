@@ -540,6 +540,12 @@ theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compi
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputCompiledSubroutine_and_controllerSearchDriver
     hattempt hdriver
 
+theorem bounded_dovetail_table_compiler_of_controller_closeout
+    (hclose : ConcretePairedRecognizerDovetailControllerCompilerCloseout) :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_controllerCompilerCloseout
+    hclose
+
 theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_description_bool_decider_compiler
     (hattempt :
       ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
@@ -607,6 +613,12 @@ theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_c
   paired_recognizer_dovetail_compiler_of_bounded_dovetail_table_compiler
     (bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_controller_search_driver
       hattempt hdriver)
+
+theorem paired_recognizer_dovetail_compiler_of_controller_closeout
+    (hclose : ConcretePairedRecognizerDovetailControllerCompilerCloseout) :
+    ConcretePairedRecognizerDovetailCompilerConstruction :=
+  Computability.pairedRecognizerDovetailDescriptionCompiler_of_controllerCompilerCloseout
+    hclose
 
 theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_description_bool_decider_compiler
     (hattempt :

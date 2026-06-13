@@ -1861,8 +1861,11 @@ language. The remaining finite-machine work is packaged by
 {name}`ConcreteSection53UniversalPrefixCloseout`: its first field compiles
 encoded-input staged recognizers into Boolean machine descriptions, and its
 second field is {name}`ConcreteUniversalPrefixRunnerConstruction`, one finite
-machine implementing the prefix decoder relation on code-symbol tapes. Together
-they imply row coverage by
+machine implementing the prefix decoder relation on code-symbol tapes. This is
+the same finite-source layer used by Section 5.2: canonical
+{name}`MachineCodeSymbol` parsers, normalized-output emitters,
+subroutine-ready sequencing, and cell or parse branch controllers. Together
+the closeout fields imply row coverage by
 {name}`exists_concrete_universal_prefix_machine_rows_cover_of_program_compiler_and_runner`.
 -/
 

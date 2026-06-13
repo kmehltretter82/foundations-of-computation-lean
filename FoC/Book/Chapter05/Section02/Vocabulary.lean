@@ -172,6 +172,9 @@ def ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompi
     Prop :=
   PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction
 
+abbrev ConcretePairedRecognizerDovetailControllerCompilerCloseout :=
+  PairedRecognizerDovetailControllerCompilerCloseout
+
 def ConcretePairedRecognizerDovetailTotalStageAttemptControllerResultRealizes
     (accept reject : MachineDescription)
     (P : MachineDescription.TapeCodePrimitive) : Prop :=

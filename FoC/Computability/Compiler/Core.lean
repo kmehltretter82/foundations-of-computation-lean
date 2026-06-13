@@ -677,6 +677,14 @@ theorem pairedRecognizerDovetailControllerRawOutputCode_realizes :
     MachineDescription.DovetailControllerLayout.rawOutputCodePrimitive_encodeBoolWord
       result
 
+theorem pairedRecognizerDovetailControllerRawOutputCode_eq_some_encodeBoolWord_singleton_iff
+    {tokens : Word MachineCodeSymbol} {b : Bool} :
+    PairedRecognizerDovetailControllerRawOutputCode.transform tokens =
+        some (MachineDescription.encodeBoolWord [b]) <->
+      MachineDescription.DovetailControllerLayout.decodeAttemptResultCode
+        tokens = some [b] :=
+  MachineDescription.DovetailControllerLayout.rawOutputCode_eq_some_encodeBoolWord_singleton_iff
+
 theorem pairedRecognizerDovetailControllerContinueCode_realizes
     (accept reject : MachineDescription) :
     PairedRecognizerDovetailControllerContinueCodeRealizes
@@ -941,11 +949,43 @@ theorem tapeCodePrimitiveOutputRealizedByDescription_identity :
   tapeCodePrimitiveOutputRealizedByDescription_of_exact
     tapeCodePrimitiveCompiledByDescription_identity
 
+theorem tapeCodePrimitiveOutputCompiledByDescription_identity :
+    TapeCodePrimitiveOutputCompiledByDescription
+      MachineDescription.TapeCodePrimitive.identity
+      MachineDescription.ExactIdentityDescription := by
+  constructor
+  · exact MachineDescription.exactIdentityDescription_wellFormed
+  · intro code out
+    constructor
+    · intro h
+      have hbool :
+          MachineDescription.encodeCodeWordAsInput out =
+            MachineDescription.encodeCodeWordAsInput code :=
+        (MachineDescription.exactIdentityDescription_haltsWithOutput_iff
+          (MachineDescription.encodeCodeWordAsInput code)
+          (MachineDescription.encodeCodeWordAsInput out)).mp h
+      have hout : out = code :=
+        MachineDescription.encodeCodeWordAsInput_injective hbool
+      simp [MachineDescription.TapeCodePrimitive.identity, hout]
+    · intro h
+      simp [MachineDescription.TapeCodePrimitive.identity] at h
+      rw [← h]
+      exact (MachineDescription.exactIdentityDescription_haltsWithOutput_iff
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput code)).mpr rfl
+
 theorem tapeCodePrimitiveOutputSubroutineRealizedByDescription_identity :
     TapeCodePrimitiveOutputSubroutineRealizedByDescription
       MachineDescription.TapeCodePrimitive.identity
       MachineDescription.ExactIdentityDescription :=
   ⟨tapeCodePrimitiveOutputRealizedByDescription_identity,
+    MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+
+theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_identity :
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      MachineDescription.TapeCodePrimitive.identity
+      MachineDescription.ExactIdentityDescription :=
+  ⟨tapeCodePrimitiveOutputCompiledByDescription_identity,
     MachineDescription.exactIdentityDescription_haltTransitionFree⟩
 
 theorem tapeCodePrimitiveOutputRealizedByDescription_erase :
@@ -960,11 +1000,48 @@ theorem tapeCodePrimitiveOutputRealizedByDescription_erase :
     exact MachineDescription.eraseRightDescription_haltsWithOutput_empty
       (MachineDescription.encodeCodeWordAsInput code)
 
+theorem tapeCodePrimitiveOutputCompiledByDescription_erase :
+    TapeCodePrimitiveOutputCompiledByDescription
+      MachineDescription.TapeCodePrimitive.erase
+      MachineDescription.EraseRightDescription := by
+  constructor
+  · exact MachineDescription.eraseRightDescription_wellFormed
+  · intro code out
+    constructor
+    · intro h
+      have hnil :
+          MachineDescription.EraseRightDescription.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput code)
+            (MachineDescription.encodeCodeWordAsInput
+              ([] : Word MachineCodeSymbol)) := by
+        simpa [MachineDescription.encodeCodeWordAsInput] using
+          MachineDescription.eraseRightDescription_haltsWithOutput_empty
+            (MachineDescription.encodeCodeWordAsInput code)
+      have hbool :
+          MachineDescription.encodeCodeWordAsInput out =
+            MachineDescription.encodeCodeWordAsInput
+              ([] : Word MachineCodeSymbol) :=
+        MachineDescription.haltsWithOutput_functional_of_haltTransitionFree
+          MachineDescription.eraseRightDescription_haltTransitionFree h hnil
+      have hout : out = [] :=
+        MachineDescription.encodeCodeWordAsInput_injective hbool
+      simp [MachineDescription.TapeCodePrimitive.erase, hout]
+    · intro h
+      exact (tapeCodePrimitiveOutputRealizedByDescription_erase.right
+        code out) h
+
 theorem tapeCodePrimitiveOutputSubroutineRealizedByDescription_erase :
     TapeCodePrimitiveOutputSubroutineRealizedByDescription
       MachineDescription.TapeCodePrimitive.erase
       MachineDescription.EraseRightDescription :=
   ⟨tapeCodePrimitiveOutputRealizedByDescription_erase,
+    MachineDescription.eraseRightDescription_haltTransitionFree⟩
+
+theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_erase :
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      MachineDescription.TapeCodePrimitive.erase
+      MachineDescription.EraseRightDescription :=
+  ⟨tapeCodePrimitiveOutputCompiledByDescription_erase,
     MachineDescription.eraseRightDescription_haltTransitionFree⟩
 
 theorem tapeCodePrimitiveOutputRealizedByDescription_append_singleton
@@ -995,12 +1072,64 @@ theorem tapeCodePrimitiveOutputRealizedByDescription_append_singleton
       MachineDescription.appendCodeSymbolRightDescription_haltsWithOutput_append
         symbol (MachineDescription.encodeCodeWordAsInput code)
 
+theorem tapeCodePrimitiveOutputCompiledByDescription_append_singleton
+    (symbol : MachineCodeSymbol) :
+    TapeCodePrimitiveOutputCompiledByDescription
+      (MachineDescription.TapeCodePrimitive.append [symbol])
+      (MachineDescription.AppendCodeSymbolRightDescription symbol) := by
+  constructor
+  · exact MachineDescription.appendCodeSymbolRightDescription_wellFormed
+      symbol
+  · intro code out
+    constructor
+    · intro h
+      have hencoded :
+          MachineDescription.encodeCodeWordAsInput
+              (List.append code [symbol]) =
+            List.append (MachineDescription.encodeCodeWordAsInput code)
+              (MachineDescription.encodeCodeSymbolAsInput symbol) := by
+        rw [MachineDescription.encodeCodeWordAsInput_append,
+          MachineDescription.encodeCodeWordAsInput_singleton]
+      have htarget :
+          (MachineDescription.AppendCodeSymbolRightDescription
+            symbol).HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput code)
+            (MachineDescription.encodeCodeWordAsInput
+              (List.append code [symbol])) := by
+        rw [hencoded]
+        exact
+          MachineDescription.appendCodeSymbolRightDescription_haltsWithOutput_append
+            symbol (MachineDescription.encodeCodeWordAsInput code)
+      have hbool :
+          MachineDescription.encodeCodeWordAsInput out =
+            MachineDescription.encodeCodeWordAsInput
+              (List.append code [symbol]) :=
+        MachineDescription.haltsWithOutput_functional_of_haltTransitionFree
+          (MachineDescription.appendCodeSymbolRightDescription_haltTransitionFree
+            symbol) h htarget
+      have hout : out = List.append code [symbol] :=
+        MachineDescription.encodeCodeWordAsInput_injective hbool
+      simp [MachineDescription.TapeCodePrimitive.append, hout]
+    · intro h
+      exact
+        (tapeCodePrimitiveOutputRealizedByDescription_append_singleton
+          symbol).right code out h
+
 theorem tapeCodePrimitiveOutputSubroutineRealizedByDescription_append_singleton
     (symbol : MachineCodeSymbol) :
     TapeCodePrimitiveOutputSubroutineRealizedByDescription
       (MachineDescription.TapeCodePrimitive.append [symbol])
       (MachineDescription.AppendCodeSymbolRightDescription symbol) :=
   ⟨tapeCodePrimitiveOutputRealizedByDescription_append_singleton symbol,
+    MachineDescription.appendCodeSymbolRightDescription_haltTransitionFree
+      symbol⟩
+
+theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_append_singleton
+    (symbol : MachineCodeSymbol) :
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      (MachineDescription.TapeCodePrimitive.append [symbol])
+      (MachineDescription.AppendCodeSymbolRightDescription symbol) :=
+  ⟨tapeCodePrimitiveOutputCompiledByDescription_append_singleton symbol,
     MachineDescription.appendCodeSymbolRightDescription_haltTransitionFree
       symbol⟩
 
@@ -1041,8 +1170,24 @@ structure MachineDescriptionPrimitiveCompilerCore where
     TapeCodePrimitiveOutputRealizedByDescription
       MachineDescription.TapeCodePrimitive.identity
       MachineDescription.ExactIdentityDescription
+  identityOutputCompiled :
+    TapeCodePrimitiveOutputCompiledByDescription
+      MachineDescription.TapeCodePrimitive.identity
+      MachineDescription.ExactIdentityDescription
+  identityOutputCompiledSubroutine :
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      MachineDescription.TapeCodePrimitive.identity
+      MachineDescription.ExactIdentityDescription
   eraseOutputRealized :
     TapeCodePrimitiveOutputRealizedByDescription
+      MachineDescription.TapeCodePrimitive.erase
+      MachineDescription.EraseRightDescription
+  eraseOutputCompiled :
+    TapeCodePrimitiveOutputCompiledByDescription
+      MachineDescription.TapeCodePrimitive.erase
+      MachineDescription.EraseRightDescription
+  eraseOutputCompiledSubroutine :
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
       MachineDescription.TapeCodePrimitive.erase
       MachineDescription.EraseRightDescription
   eraseNotExactlyCompiled :
@@ -1054,18 +1199,40 @@ structure MachineDescriptionPrimitiveCompilerCore where
       TapeCodePrimitiveOutputRealizedByDescription
         (MachineDescription.TapeCodePrimitive.append [symbol])
         (MachineDescription.AppendCodeSymbolRightDescription symbol)
+  appendSingletonOutputCompiled :
+    forall symbol : MachineCodeSymbol,
+      TapeCodePrimitiveOutputCompiledByDescription
+        (MachineDescription.TapeCodePrimitive.append [symbol])
+        (MachineDescription.AppendCodeSymbolRightDescription symbol)
+  appendSingletonOutputCompiledSubroutine :
+    forall symbol : MachineCodeSymbol,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (MachineDescription.TapeCodePrimitive.append [symbol])
+        (MachineDescription.AppendCodeSymbolRightDescription symbol)
 
 def machineDescriptionPrimitiveCompilerCore :
     MachineDescriptionPrimitiveCompilerCore where
   identityCompiled := tapeCodePrimitiveCompiledByDescription_identity
   identityOutputRealized :=
     tapeCodePrimitiveOutputRealizedByDescription_identity
+  identityOutputCompiled :=
+    tapeCodePrimitiveOutputCompiledByDescription_identity
+  identityOutputCompiledSubroutine :=
+    tapeCodePrimitiveOutputCompiledSubroutineByDescription_identity
   eraseOutputRealized :=
     tapeCodePrimitiveOutputRealizedByDescription_erase
+  eraseOutputCompiled :=
+    tapeCodePrimitiveOutputCompiledByDescription_erase
+  eraseOutputCompiledSubroutine :=
+    tapeCodePrimitiveOutputCompiledSubroutineByDescription_erase
   eraseNotExactlyCompiled :=
     not_tapeCodePrimitiveCompiledByDescription_erase
   appendSingletonOutputRealized :=
     tapeCodePrimitiveOutputRealizedByDescription_append_singleton
+  appendSingletonOutputCompiled :=
+    tapeCodePrimitiveOutputCompiledByDescription_append_singleton
+  appendSingletonOutputCompiledSubroutine :=
+    tapeCodePrimitiveOutputCompiledSubroutineByDescription_append_singleton
 
 structure MachineDescriptionPrimitiveSubroutineCore where
   identityReady :
@@ -1078,6 +1245,11 @@ structure MachineDescriptionPrimitiveSubroutineCore where
     forall b : Bool,
       MachineDescription.SubroutineReady
         (MachineDescription.BoolOutputDescription b)
+  boolOutputOnly :
+    forall b : Bool,
+      forall w out : Word Bool,
+        (MachineDescription.BoolOutputDescription b).HaltsWithOutput w out <->
+          out = [b]
   appendSingletonReady :
     forall symbol : MachineCodeSymbol,
       MachineDescription.SubroutineReady
@@ -1096,6 +1268,8 @@ def machineDescriptionPrimitiveSubroutineCore :
     exact
       ⟨MachineDescription.boolOutputDescription_wellFormed b,
         MachineDescription.boolOutputDescription_haltTransitionFree b⟩
+  boolOutputOnly :=
+    MachineDescription.boolOutputDescription_haltsWithOutput_iff
   appendSingletonReady := by
     intro symbol
     exact
@@ -1418,6 +1592,29 @@ def PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConst
       exists decider : MachineDescription,
         PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
           attempt decider
+
+/-!
+The finite controller route for paired-recognizer dovetailing has two
+machine-construction pieces: a total stage-attempt subroutine and a controller
+that loops over stage bounds, inspecting the subroutine's normalized output.
+Packaging them together gives downstream closeouts a finite-source target
+without appealing to an arbitrary staged-program compiler.
+-/
+
+structure PairedRecognizerDovetailControllerCompilerCloseout where
+  totalStageAttemptSubroutine :
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction
+  controllerSearchDriver :
+    PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction
+
+def pairedRecognizerDovetailControllerCompilerCloseout_of_constructions
+    (hattempt :
+      PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
+    (hdriver :
+      PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailControllerCompilerCloseout where
+  totalStageAttemptSubroutine := hattempt
+  controllerSearchDriver := hdriver
 
 noncomputable def PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
     (attempt : MachineDescription) :
@@ -2260,6 +2457,13 @@ theorem pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOut
     hattempt
     (pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_descriptionBoolDeciderCompiler
       hcompile)
+
+theorem pairedRecognizerBoundedDovetailTableCompiler_of_controllerCompilerCloseout
+    (hclose : PairedRecognizerDovetailControllerCompilerCloseout) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputCompiledSubroutine_and_controllerSearchDriver
+    hclose.totalStageAttemptSubroutine
+    hclose.controllerSearchDriver
 
 theorem pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineRunnerSearchDriver
     (hrunner :

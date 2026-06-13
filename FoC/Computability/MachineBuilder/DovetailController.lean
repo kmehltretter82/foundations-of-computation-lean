@@ -112,6 +112,29 @@ def rawOutputCode
 def rawOutputCodePrimitive : TapeCodePrimitive where
   transform := rawOutputCode
 
+theorem rawOutputCode_eq_some_iff
+    {tokens outCode : Word MachineCodeSymbol} :
+    rawOutputCode tokens = some outCode <->
+      exists result out : Word Bool,
+        decodeAttemptResultCode tokens = some result ∧
+          rawOutput? result = some out ∧
+            outCode = encodeBoolWord out := by
+  unfold rawOutputCode
+  cases hdecode : decodeAttemptResultCode tokens with
+  | none =>
+      simp
+  | some result =>
+      cases hraw : rawOutput? result with
+      | none =>
+          simp [hraw]
+      | some out =>
+          simp [hraw]
+          constructor
+          · intro h
+            exact h.symm
+          · intro h
+            exact h.symm
+
 theorem rawOutput_nil :
     rawOutput? [] = none :=
   rfl
@@ -171,6 +194,23 @@ theorem rawOutput_eq_some_singleton_iff
   · intro h
     rw [h]
     exact rawOutput_singleton b
+
+theorem rawOutputCode_eq_some_encodeBoolWord_singleton_iff
+    {tokens : Word MachineCodeSymbol} {b : Bool} :
+    rawOutputCode tokens = some (encodeBoolWord [b]) <->
+      decodeAttemptResultCode tokens = some [b] := by
+  constructor
+  · intro h
+    rcases rawOutputCode_eq_some_iff.mp h with
+      ⟨result, out, hdecode, hraw, hcode⟩
+    have hout : [b] = out := encodeBoolWord_injective hcode
+    rw [← hout] at hraw
+    have hresult : result = [b] :=
+      (rawOutput_eq_some_singleton_iff result b).mp hraw
+    rwa [hresult] at hdecode
+  · intro h
+    exact rawOutputCode_eq_some_iff.mpr
+      ⟨[b], [b], h, rawOutput_singleton b, rfl⟩
 
 theorem cellBranchTarget_output_nil
     (blankTarget falseTarget trueTarget : Nat) :

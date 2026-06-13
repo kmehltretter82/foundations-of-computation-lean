@@ -530,6 +530,23 @@ theorem exactIdentityDescription_haltsWithExactOutput_iff
     rw [h]
     exact ⟨0, exactIdentityDescription_haltsWithExactOutputIn w⟩
 
+theorem exactIdentityDescription_haltsWithOutput_iff
+    (w out : Word Bool) :
+    ExactIdentityDescription.HaltsWithOutput w out <-> out = w := by
+  constructor
+  · intro h
+    rcases h with ⟨n, hn⟩
+    have hout : Tape.normalizedOutput (Tape.input w) = out := by
+      simpa [HaltsWithOutputIn,
+        exactIdentityDescription_runConfig_initial] using hn.right
+    have hw : Tape.normalizedOutput (Tape.input w) = w := by
+      simpa [Tape.output] using (Tape.normalizedOutput_output w)
+    exact hout.symm.trans hw
+  · intro h
+    rw [h]
+    exact haltsWithOutput_of_haltsWithExactOutput
+      ((exactIdentityDescription_haltsWithExactOutput_iff w w).mpr rfl)
+
 /-!
 ## Normalized-output transducers
 
@@ -793,6 +810,18 @@ theorem boolOutputDescription_haltsWithOutput
     simp [BoolOutputDescription]
   · rw [boolOutputDescription_run_halt]
     exact boolOutputTape_normalizedOutput w.length b
+
+theorem boolOutputDescription_haltsWithOutput_iff
+    (b : Bool) (w out : Word Bool) :
+    (BoolOutputDescription b).HaltsWithOutput w out <-> out = [b] := by
+  constructor
+  · intro h
+    exact haltsWithOutput_functional_of_haltTransitionFree
+      (boolOutputDescription_haltTransitionFree b) h
+      (boolOutputDescription_haltsWithOutput b w)
+  · intro h
+    rw [h]
+    exact boolOutputDescription_haltsWithOutput b w
 
 /-!
 ## Code-symbol append transducers

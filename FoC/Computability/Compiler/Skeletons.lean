@@ -1208,6 +1208,13 @@ theorem pairedRecognizerDovetailDescriptionCompiler_of_totalStageAttemptCodeOutp
     (pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputCompiledSubroutine_and_controllerSearchDriver
       hattempt hdriver)
 
+theorem pairedRecognizerDovetailDescriptionCompiler_of_controllerCompilerCloseout
+    (hclose : PairedRecognizerDovetailControllerCompilerCloseout) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
+  pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
+    (pairedRecognizerBoundedDovetailTableCompiler_of_controllerCompilerCloseout
+      hclose)
+
 theorem pairedRecognizerDovetailDescriptionCompiler_of_totalStageAttemptCodeOutputCompiledSubroutine_and_descriptionBoolDeciderCompiler
     (hattempt :
       PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)

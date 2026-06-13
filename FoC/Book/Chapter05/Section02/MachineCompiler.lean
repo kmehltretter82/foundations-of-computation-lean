@@ -23,6 +23,13 @@ normalized code output here.  The identity primitive satisfies both contracts,
 while erasure is impossible for the exact tape-window contract but is realized
 by a concrete finite normalized-output machine.
 
+**Finite-source finish criteria.**  The remaining compiler work is deliberately
+tracked through named finite construction targets.  The goal is not to prove a
+compiler theorem for arbitrary staged programs or arbitrary
+{name}`MachineDescription.TapeCodePrimitive`s in one step; it is to close the
+finite parser, emitter, sequencer, branch, and stage-controller descriptions
+that the book-facing theorems already route through.
+
 For the fixed one-step primitive, the new bridge says that it is enough to
 build a finite stepper on canonical encoded configurations.  Parser
 canonicalization lemmas then promote that theorem to the full
@@ -41,6 +48,9 @@ while the code-primitive layer provides fixed unary comparisons and one-step
 tape write/move actions with canonical encode/decode theorems. A concrete
 Boolean-output table erases its input and emits either {lit}`true` or
 {lit}`false`, giving the eventual dovetail driver finite halt branches. The
+identity, erase, and one-symbol append tables are now recorded with the
+stronger normalized-output compiled-subroutine contract, and the Boolean-output
+table has an iff theorem ruling out non-singleton spurious outputs. The
 same tables are also packaged as halt-transition-free subroutines, so later
 control-flow tables can call them without adding outgoing transitions from
 their halting states. The subroutine layer also provides a description-level
@@ -171,6 +181,11 @@ theorem concrete_bool_output_description_haltsWithOutput
     (ConcreteBoolOutputDescription b).HaltsWithOutput w [b] :=
   MachineDescription.boolOutputDescription_haltsWithOutput b w
 
+theorem concrete_bool_output_description_haltsWithOutput_iff
+    (b : Bool) (w out : Word Bool) :
+    (ConcreteBoolOutputDescription b).HaltsWithOutput w out <-> out = [b] :=
+  MachineDescription.boolOutputDescription_haltsWithOutput_iff b w out
+
 theorem concrete_tape_code_exact_compiler_construction_impossible :
     ¬ ConcreteTapeCodeExactCompilerConstruction :=
   Computability.not_machineDescriptionTapeCodeExactCompilerConstruction
@@ -267,6 +282,15 @@ theorem concrete_paired_recognizer_dovetail_controller_raw_output_code_realizes 
     ConcretePairedRecognizerDovetailControllerRawOutputCodeRealizes
       ConcretePairedRecognizerDovetailControllerRawOutputCode :=
   Computability.pairedRecognizerDovetailControllerRawOutputCode_realizes
+
+theorem concrete_paired_recognizer_dovetail_controller_raw_output_code_eq_some_encodeBoolWord_singleton_iff
+    {tokens : Word MachineCodeSymbol} {b : Bool} :
+    ConcretePairedRecognizerDovetailControllerRawOutputCode.transform
+        tokens =
+        some (MachineDescription.encodeBoolWord [b]) <->
+      MachineDescription.DovetailControllerLayout.decodeAttemptResultCode
+        tokens = some [b] :=
+  Computability.pairedRecognizerDovetailControllerRawOutputCode_eq_some_encodeBoolWord_singleton_iff
 
 theorem concrete_paired_recognizer_dovetail_controller_continue_code_realizes
     (accept reject : MachineDescription) :
