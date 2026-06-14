@@ -134,6 +134,53 @@ private def projectionTickCodeCellsRev : List (Option Bool) :=
 private def projectionDoneCodeCells : List (Option Bool) :=
   (MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.done).map some
 
+private def projectionMarkedTickCodeCells : List (Option Bool) :=
+  [some false, some false, some true, none]
+
+private def projectionBoolCellCodeCells (b : Bool) : List (Option Bool) :=
+  (MachineDescription.encodeCodeSymbolAsInput
+    (if b then MachineCodeSymbol.one else MachineCodeSymbol.zero)).map some
+
+private def projectionMarkedBoolCellCodeCells : Bool -> List (Option Bool)
+  | false => [some false, none, some false, some true]
+  | true => [some false, none, some true, some false]
+
+private def projectionRepeatedCells
+    (chunk : List (Option Bool)) : Nat -> List (Option Bool)
+  | 0 => []
+  | n + 1 => List.append chunk (projectionRepeatedCells chunk n)
+
+private def projectionBoolPayloadCells : Word Bool -> List (Option Bool)
+  | [] => []
+  | b :: rest =>
+      List.append (projectionBoolCellCodeCells b)
+        (projectionBoolPayloadCells rest)
+
+private def projectionMarkedBoolPayloadCells : Word Bool -> List (Option Bool)
+  | [] => []
+  | b :: rest =>
+      List.append (projectionMarkedBoolCellCodeCells b)
+        (projectionMarkedBoolPayloadCells rest)
+
+private def projectionBoolWordWorkCells
+    (marked rest : Word Bool) (suffix : Word MachineCodeSymbol) :
+    List (Option Bool) :=
+  List.append
+    (projectionRepeatedCells projectionMarkedTickCodeCells marked.length)
+    (List.append
+      (projectionCodeCells (List.replicate rest.length MachineCodeSymbol.tick))
+      (List.append projectionDoneCodeCells
+        (List.append (projectionMarkedBoolPayloadCells marked)
+          (List.append (projectionBoolPayloadCells rest)
+            (projectionCodeCells suffix)))))
+
+private def projectionAllMarkedBoolWordCells (w : Word Bool) :
+    List (Option Bool) :=
+  List.append
+    (projectionRepeatedCells projectionMarkedTickCodeCells w.length)
+    (List.append projectionDoneCodeCells
+      (projectionMarkedBoolPayloadCells w))
+
 private def projectionStageTickCellsRev (stage : Nat) : List (Option Bool) :=
   (projectionCodeCells (List.replicate stage MachineCodeSymbol.tick)).reverse
 
@@ -144,6 +191,114 @@ private theorem projectionCodeCells_append
   unfold projectionCodeCells
   rw [MachineDescription.encodeCodeWordAsInput_append]
   simp [List.map_append]
+
+private theorem projectionCodeCells_replicate_tick
+    (n : Nat) :
+    projectionCodeCells (List.replicate n MachineCodeSymbol.tick) =
+      projectionRepeatedCells projectionTickCodeCells n := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      have htail :
+          List.map some
+              (MachineDescription.encodeCodeWordAsInput
+                (List.replicate n MachineCodeSymbol.tick)) =
+            projectionRepeatedCells
+              (List.map some
+                (MachineDescription.encodeCodeSymbolAsInput
+                  MachineCodeSymbol.tick)) n := by
+        simpa [projectionCodeCells, projectionTickCodeCells] using ih
+      have hrep :
+          List.replicate (n + 1) MachineCodeSymbol.tick =
+            MachineCodeSymbol.tick ::
+              List.replicate n MachineCodeSymbol.tick := by
+        rw [show n + 1 = Nat.succ n by omega]
+        rfl
+      rw [hrep]
+      simp [projectionCodeCells, projectionRepeatedCells,
+        projectionTickCodeCells, MachineDescription.encodeCodeWordAsInput,
+        htail]
+
+private theorem projectionBoolPayloadCells_eq
+    (w : Word Bool) :
+    projectionBoolPayloadCells w =
+      projectionCodeCells ((w.map fun b =>
+        if b then MachineCodeSymbol.one else MachineCodeSymbol.zero)) := by
+  induction w with
+  | nil =>
+      rfl
+  | cons b rest ih =>
+      cases b <;>
+        simp [projectionBoolPayloadCells, projectionBoolCellCodeCells,
+          projectionCodeCells, MachineDescription.encodeCodeWordAsInput, ih]
+
+private theorem projectionCodeCells_encodeNatAppend
+    (n : Nat) (suffix : Word MachineCodeSymbol) :
+    projectionCodeCells (MachineDescription.encodeNatAppend n suffix) =
+      List.append (projectionCodeCells
+        (List.replicate n MachineCodeSymbol.tick))
+        (List.append projectionDoneCodeCells (projectionCodeCells suffix)) := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      have hrep :
+          projectionCodeCells (List.replicate (n + 1) MachineCodeSymbol.tick) =
+            List.append projectionTickCodeCells
+              (projectionCodeCells (List.replicate n MachineCodeSymbol.tick)) := by
+        have hrep' :
+            List.replicate (n + 1) MachineCodeSymbol.tick =
+              MachineCodeSymbol.tick ::
+                List.replicate n MachineCodeSymbol.tick := by
+          rw [show n + 1 = Nat.succ n by omega]
+          rfl
+        rw [hrep']
+        rfl
+      rw [hrep]
+      change
+        List.append projectionTickCodeCells
+            (projectionCodeCells
+              (MachineDescription.encodeNatAppend n suffix)) =
+          List.append
+            (List.append projectionTickCodeCells
+              (projectionCodeCells
+                (List.replicate n MachineCodeSymbol.tick)))
+            (List.append projectionDoneCodeCells
+              (projectionCodeCells suffix))
+      rw [ih]
+      simp [List.append_assoc]
+
+private theorem projectionBoolPayloadCells_append_eq_encodeCellsAppend
+    (w : Word Bool) (suffix : Word MachineCodeSymbol) :
+    List.append (projectionBoolPayloadCells w) (projectionCodeCells suffix) =
+      projectionCodeCells
+        (MachineDescription.encodeCellsAppend (w.map some) suffix) := by
+  induction w with
+  | nil =>
+      rfl
+  | cons b rest ih =>
+      cases b
+      · simp [projectionBoolPayloadCells, projectionBoolCellCodeCells,
+          projectionCodeCells, MachineDescription.encodeCellsAppend,
+          MachineDescription.encodeCellAppend, MachineDescription.encodeCell,
+          MachineDescription.encodeCodeWordAsInput, List.append_assoc]
+        simpa [projectionCodeCells] using ih
+      · simp [projectionBoolPayloadCells, projectionBoolCellCodeCells,
+          projectionCodeCells, MachineDescription.encodeCellsAppend,
+          MachineDescription.encodeCellAppend, MachineDescription.encodeCell,
+          MachineDescription.encodeCodeWordAsInput, List.append_assoc]
+        simpa [projectionCodeCells] using ih
+
+private theorem projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend
+    (w : Word Bool) (suffix : Word MachineCodeSymbol) :
+    projectionBoolWordWorkCells [] w suffix =
+      projectionCodeCells (MachineDescription.encodeBoolWordAppend w suffix) := by
+  simp [projectionBoolWordWorkCells, projectionRepeatedCells,
+    projectionMarkedBoolPayloadCells, MachineDescription.encodeBoolWordAppend,
+    MachineDescription.encodeCellListAppend,
+    projectionCodeCells_encodeNatAppend]
+  exact projectionBoolPayloadCells_append_eq_encodeCellsAppend w suffix
 
 def DovetailControllerStageInputProjectionDescription :
     MachineDescription where
@@ -440,6 +595,195 @@ private theorem dovetailControllerStageInputProjectionDescription_run_stage_nat
       rw [projectionStageTickCellsRev_succ]
       simp [projectionConfig, projectionTapeAtCells, List.append_assoc]
 
+private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_marked_tick
+    (leftRev tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig 4
+        (projectionConfig 367 leftRev
+          (List.append projectionMarkedTickCodeCells tail)) =
+      projectionConfig 367
+        (List.append [none, none, none, none] leftRev) tail := by
+  cases tail with
+  | nil =>
+      rfl
+  | cons cell rest =>
+      cases cell with
+      | none =>
+          rfl
+      | some b =>
+          cases b <;> rfl
+
+private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_marked_ticks
+    (count : Nat) (leftRev tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig (4 * count)
+        (projectionConfig 367 leftRev
+          (List.append
+            (projectionRepeatedCells projectionMarkedTickCodeCells count)
+            tail)) =
+      projectionConfig 367
+        (List.append (List.replicate (4 * count) none) leftRev) tail := by
+  induction count generalizing leftRev with
+  | zero =>
+      rfl
+  | succ count ih =>
+      have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
+      rw [hsteps, MachineDescription.runConfig_add]
+      change DovetailControllerStageInputProjectionDescription.runConfig
+          (4 * count)
+          (DovetailControllerStageInputProjectionDescription.runConfig 4
+            (projectionConfig 367 leftRev
+              (List.append
+                (projectionRepeatedCells projectionMarkedTickCodeCells
+                  (count + 1)) tail))) = _
+      rw [show projectionRepeatedCells projectionMarkedTickCodeCells
+          (count + 1) =
+          List.append projectionMarkedTickCodeCells
+            (projectionRepeatedCells projectionMarkedTickCodeCells count) by
+        rfl]
+      change DovetailControllerStageInputProjectionDescription.runConfig
+          (4 * count)
+          (DovetailControllerStageInputProjectionDescription.runConfig 4
+            (projectionConfig 367 leftRev
+              (List.append projectionMarkedTickCodeCells
+                (List.append
+                  (projectionRepeatedCells projectionMarkedTickCodeCells count)
+                  tail)))) = _
+      rw [dovetailControllerStageInputProjectionDescription_run_cleanup_marked_tick]
+      rw [ih]
+      rw [show 4 + 4 * count = 4 * count + 4 by omega]
+      have hrep :
+          List.replicate (4 * count + 4) (none : Option Bool) =
+            List.append (List.replicate (4 * count) (none : Option Bool))
+              ([none, none, none, none] : List (Option Bool)) := by
+        simp [List.replicate_succ', List.append_assoc]
+      rw [hrep]
+      simp [List.append_assoc]
+
+private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_done
+    (leftRev tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig 4
+        (projectionConfig 367 leftRev
+          (List.append projectionDoneCodeCells tail)) =
+      projectionConfig 380
+        (List.append [none, none, none, none] leftRev) tail := by
+  cases tail with
+  | nil =>
+      rfl
+  | cons cell rest =>
+      cases cell with
+      | none =>
+          rfl
+      | some b =>
+          cases b <;> rfl
+
+private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_marked_payload_cell
+    (b : Bool) (leftRev tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig 4
+        (projectionConfig 380 leftRev
+          (List.append (projectionMarkedBoolCellCodeCells b) tail)) =
+      projectionConfig 380
+        (List.append [none, none, none, none] leftRev) tail := by
+  cases b <;>
+    cases tail with
+    | nil =>
+        rfl
+    | cons cell rest =>
+        cases cell with
+        | none =>
+            rfl
+        | some b =>
+            cases b <;> rfl
+
+private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_marked_payload
+    (w : Word Bool) (leftRev : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig
+        (4 * w.length + 1)
+        (projectionConfig 380 leftRev
+          (projectionMarkedBoolPayloadCells w)) =
+      projectionConfig 999
+        (List.append (List.replicate (4 * w.length + 1) none)
+          leftRev) [] := by
+  induction w generalizing leftRev with
+  | nil =>
+      rfl
+  | cons b rest ih =>
+      have hsteps :
+          4 * (b :: rest).length + 1 = 4 + (4 * rest.length + 1) := by
+        simp
+        omega
+      rw [hsteps, MachineDescription.runConfig_add]
+      change DovetailControllerStageInputProjectionDescription.runConfig
+          (4 * rest.length + 1)
+          (DovetailControllerStageInputProjectionDescription.runConfig 4
+            (projectionConfig 380 leftRev
+              (projectionMarkedBoolPayloadCells (b :: rest)))) = _
+      rw [show projectionMarkedBoolPayloadCells (b :: rest) =
+          List.append (projectionMarkedBoolCellCodeCells b)
+            (projectionMarkedBoolPayloadCells rest) by
+        rfl]
+      rw [dovetailControllerStageInputProjectionDescription_run_cleanup_marked_payload_cell]
+      rw [ih]
+      rw [show 4 + (4 * rest.length + 1) =
+          (4 * rest.length + 1) + 4 by omega]
+      have hrep :
+          List.replicate (4 * rest.length + 1 + 4)
+              (none : Option Bool) =
+            List.append
+              (List.replicate (4 * rest.length + 1)
+                (none : Option Bool))
+              ([none, none, none, none] : List (Option Bool)) := by
+        simp [List.replicate_succ', List.append_assoc]
+      rw [hrep]
+      simp [List.append_assoc]
+
+private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_all_marked
+    (w : Word Bool) (leftRev : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig
+        (8 * w.length + 5)
+        (projectionConfig 367 leftRev
+          (projectionAllMarkedBoolWordCells w)) =
+      projectionConfig 999
+        (List.append (List.replicate (4 * w.length + 1) none)
+          (List.append [none, none, none, none]
+            (List.append (List.replicate (4 * w.length) none)
+              leftRev))) [] := by
+  have hsteps :
+      8 * w.length + 5 =
+        4 * w.length + (4 + (4 * w.length + 1)) := by
+    omega
+  rw [hsteps, MachineDescription.runConfig_add]
+  change DovetailControllerStageInputProjectionDescription.runConfig
+      (4 + (4 * w.length + 1))
+      (DovetailControllerStageInputProjectionDescription.runConfig
+        (4 * w.length)
+        (projectionConfig 367 leftRev
+          (projectionAllMarkedBoolWordCells w))) = _
+  simp [projectionAllMarkedBoolWordCells]
+  change DovetailControllerStageInputProjectionDescription.runConfig
+      (4 + (4 * w.length + 1))
+      (DovetailControllerStageInputProjectionDescription.runConfig
+        (4 * w.length)
+        (projectionConfig 367 leftRev
+          (List.append
+            (projectionRepeatedCells projectionMarkedTickCodeCells w.length)
+            (List.append projectionDoneCodeCells
+              (projectionMarkedBoolPayloadCells w))))) = _
+  rw [dovetailControllerStageInputProjectionDescription_run_cleanup_marked_ticks
+    (count := w.length) (leftRev := leftRev)
+    (tail := List.append projectionDoneCodeCells
+      (projectionMarkedBoolPayloadCells w))]
+  rw [show 4 + (4 * w.length + 1) = 4 + (4 * w.length + 1) by rfl,
+    MachineDescription.runConfig_add]
+  change DovetailControllerStageInputProjectionDescription.runConfig
+      (4 * w.length + 1)
+      (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (projectionConfig 367
+          (List.append (List.replicate (4 * w.length) none) leftRev)
+          (List.append projectionDoneCodeCells
+            (projectionMarkedBoolPayloadCells w)))) = _
+  rw [dovetailControllerStageInputProjectionDescription_run_cleanup_done]
+  rw [dovetailControllerStageInputProjectionDescription_run_cleanup_marked_payload]
+  simp
+
 theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode
     (C : MachineDescription.DovetailControllerLayout) :
     DovetailControllerStageInputProjectionDescription.HaltsWithOutput
@@ -448,6 +792,49 @@ theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode
       (MachineDescription.encodeCodeWordAsInput
         (MachineDescription.DovetailControllerLayout.stageInputCode C)) := by
   sorry
+
+theorem dovetailControllerStageInputProjectionDescription_decodeComplete_of_haltsWithOutput
+    {code out : Word MachineCodeSymbol}
+    (h :
+      DovetailControllerStageInputProjectionDescription.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out)) :
+    exists C : MachineDescription.DovetailControllerLayout,
+      MachineDescription.DovetailControllerLayout.decodeComplete code =
+        some C := by
+  sorry
+
+theorem dovetailControllerStageInputProjectionDescription_exists_layout_of_haltsWithOutput
+    {code out : Word MachineCodeSymbol}
+    (h :
+      DovetailControllerStageInputProjectionDescription.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out)) :
+    exists C : MachineDescription.DovetailControllerLayout,
+      code = MachineDescription.DovetailControllerLayout.encode C ∧
+        out = MachineDescription.DovetailControllerLayout.stageInputCode C := by
+  rcases
+    dovetailControllerStageInputProjectionDescription_decodeComplete_of_haltsWithOutput
+      h with
+    ⟨C, hdecode⟩
+  have hcode :
+      code = MachineDescription.DovetailControllerLayout.encode C :=
+    MachineDescription.DovetailControllerLayout.decodeComplete_eq_some_encode
+      hdecode
+  subst code
+  have hsuccess :=
+    dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode C
+  have hbits :
+      MachineDescription.encodeCodeWordAsInput out =
+        MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.DovetailControllerLayout.stageInputCode C) :=
+    MachineDescription.haltsWithOutput_functional_of_haltTransitionFree
+      dovetailControllerStageInputProjectionDescription_haltTransitionFree
+      h hsuccess
+  have hout :
+      out = MachineDescription.DovetailControllerLayout.stageInputCode C :=
+    MachineDescription.encodeCodeWordAsInput_injective hbits
+  exact ⟨C, rfl, hout⟩
 
 theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_iff_exists_layout
     (code out : Word MachineCodeSymbol) :
@@ -459,7 +846,9 @@ theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_iff_ex
           out = MachineDescription.DovetailControllerLayout.stageInputCode C := by
   constructor
   · intro h
-    sorry
+    exact
+      dovetailControllerStageInputProjectionDescription_exists_layout_of_haltsWithOutput
+        h
   · intro h
     rcases h with ⟨C, rfl, rfl⟩
     exact
