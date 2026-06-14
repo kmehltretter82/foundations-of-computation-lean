@@ -1361,16 +1361,18 @@ theorem pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstructio
   intro accept reject initializer runner emitter
     hinitializer hrunner hemitter
   let initRunner :=
-    MachineDescription.seqSubroutine initializer runner Direction.right
+    MachineDescription.seqSubroutine initializer runner
+      tapeCodePrimitiveCodeWordHandoffMove
   let attempt :=
-    MachineDescription.seqSubroutine initRunner emitter Direction.right
+    MachineDescription.seqSubroutine initRunner emitter
+      tapeCodePrimitiveCodeWordHandoffMove
   refine ⟨attempt, ?_⟩
   have hfirst :
       TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
         (MachineDescription.TapeCodePrimitive.compose
           (PairedRecognizerDovetailInitialLayoutCode accept reject)
           (PairedRecognizerDovetailLayoutCode accept reject))
-        initRunner Direction.right :=
+        initRunner tapeCodePrimitiveCodeWordHandoffMove :=
     tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
       hinitializer hrunner
   have hsecond :
@@ -1380,7 +1382,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstructio
             (PairedRecognizerDovetailInitialLayoutCode accept reject)
             (PairedRecognizerDovetailLayoutCode accept reject))
           PairedRecognizerDovetailTotalOutputCode)
-        attempt Direction.right :=
+        attempt tapeCodePrimitiveCodeWordHandoffMove :=
     tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
       hfirst hemitter
   have houtput :
@@ -1416,26 +1418,28 @@ theorem pairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequen
   intro accept reject initializer runner emitter
     hinitializer hrunner hemitter
   let initRunner :=
-    MachineDescription.seqSubroutine initializer runner Direction.right
+    MachineDescription.seqSubroutine initializer runner
+      tapeCodePrimitiveCodeWordHandoffMove
   let attempt :=
-    MachineDescription.seqSubroutine initRunner emitter Direction.right
+    MachineDescription.seqSubroutine initRunner emitter
+      tapeCodePrimitiveCodeWordHandoffMove
   refine ⟨attempt, ?_⟩
   have hinitRealized :
       TapeCodePrimitiveHandoffSubroutineRealizedByDescription
         (PairedRecognizerDovetailInitialLayoutCode accept reject)
-        initializer Direction.right :=
+        initializer tapeCodePrimitiveCodeWordHandoffMove :=
     tapeCodePrimitiveHandoffSubroutineRealizedByDescription_of_handoffCompiled
       hinitializer
   have hrunnerRealized :
       TapeCodePrimitiveHandoffSubroutineRealizedByDescription
         (PairedRecognizerDovetailLayoutCode accept reject)
-        runner Direction.right :=
+        runner tapeCodePrimitiveCodeWordHandoffMove :=
     tapeCodePrimitiveHandoffSubroutineRealizedByDescription_of_handoffCompiled
       hrunner
   have hemitterRealized :
       TapeCodePrimitiveHandoffSubroutineRealizedByDescription
         PairedRecognizerDovetailTotalOutputCode
-        emitter Direction.right :=
+        emitter tapeCodePrimitiveCodeWordHandoffMove :=
     tapeCodePrimitiveHandoffSubroutineRealizedByDescription_of_handoffCompiled
       hemitter
   have hfirst :
@@ -1443,7 +1447,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequen
         (MachineDescription.TapeCodePrimitive.compose
           (PairedRecognizerDovetailInitialLayoutCode accept reject)
           (PairedRecognizerDovetailLayoutCode accept reject))
-        initRunner Direction.right :=
+        initRunner tapeCodePrimitiveCodeWordHandoffMove :=
     tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose
       hinitRealized hrunnerRealized
   have hsecond :
@@ -1453,7 +1457,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequen
             (PairedRecognizerDovetailInitialLayoutCode accept reject)
             (PairedRecognizerDovetailLayoutCode accept reject))
           PairedRecognizerDovetailTotalOutputCode)
-        attempt Direction.right :=
+        attempt tapeCodePrimitiveCodeWordHandoffMove :=
     tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose
       hfirst hemitterRealized
   simpa [PairedRecognizerDovetailTotalStageAttemptSourceCode,

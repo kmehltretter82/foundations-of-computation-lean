@@ -223,7 +223,7 @@ def PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstr
     exists initializer : MachineDescription,
       TapeCodePrimitiveHandoffCompiledSubroutineByDescription
         (PairedRecognizerDovetailInitialLayoutCode accept reject)
-        initializer Direction.right
+        initializer tapeCodePrimitiveCodeWordHandoffMove
 
 def PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction :
     Prop :=
@@ -231,14 +231,14 @@ def PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruc
     exists runner : MachineDescription,
       TapeCodePrimitiveHandoffCompiledSubroutineByDescription
         (PairedRecognizerDovetailLayoutCode accept reject)
-        runner Direction.right
+        runner tapeCodePrimitiveCodeWordHandoffMove
 
 def PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction :
     Prop :=
   exists emitter : MachineDescription,
     TapeCodePrimitiveHandoffCompiledSubroutineByDescription
       PairedRecognizerDovetailTotalOutputCode
-      emitter Direction.right
+      emitter tapeCodePrimitiveCodeWordHandoffMove
 
 def PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction :
     Prop :=
@@ -246,7 +246,7 @@ def PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutine
     exists initializer : MachineDescription,
       TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
         (PairedRecognizerDovetailInitialLayoutCode accept reject)
-        initializer Direction.right
+        initializer tapeCodePrimitiveCodeWordHandoffMove
 
 def PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction :
     Prop :=
@@ -254,27 +254,27 @@ def PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineCo
     exists runner : MachineDescription,
       TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
         (PairedRecognizerDovetailLayoutCode accept reject)
-        runner Direction.right
+        runner tapeCodePrimitiveCodeWordHandoffMove
 
 def PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction :
     Prop :=
   exists emitter : MachineDescription,
     TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       PairedRecognizerDovetailTotalOutputCode
-      emitter Direction.right
+      emitter tapeCodePrimitiveCodeWordHandoffMove
 
 def PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction :
     Prop :=
   forall accept reject initializer runner emitter : MachineDescription,
     TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       (PairedRecognizerDovetailInitialLayoutCode accept reject)
-      initializer Direction.right ->
+      initializer tapeCodePrimitiveCodeWordHandoffMove ->
     TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       (PairedRecognizerDovetailLayoutCode accept reject)
-      runner Direction.right ->
+      runner tapeCodePrimitiveCodeWordHandoffMove ->
     TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       PairedRecognizerDovetailTotalOutputCode
-      emitter Direction.right ->
+      emitter tapeCodePrimitiveCodeWordHandoffMove ->
     exists attempt : MachineDescription,
       TapeCodePrimitiveOutputCompiledSubroutineByDescription
         (PairedRecognizerDovetailTotalStageAttemptSourceCode accept reject)
@@ -285,17 +285,17 @@ def PairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequencing
   forall accept reject initializer runner emitter : MachineDescription,
     TapeCodePrimitiveHandoffCompiledSubroutineByDescription
       (PairedRecognizerDovetailInitialLayoutCode accept reject)
-      initializer Direction.right ->
+      initializer tapeCodePrimitiveCodeWordHandoffMove ->
     TapeCodePrimitiveHandoffCompiledSubroutineByDescription
       (PairedRecognizerDovetailLayoutCode accept reject)
-      runner Direction.right ->
+      runner tapeCodePrimitiveCodeWordHandoffMove ->
     TapeCodePrimitiveHandoffCompiledSubroutineByDescription
       PairedRecognizerDovetailTotalOutputCode
-      emitter Direction.right ->
+      emitter tapeCodePrimitiveCodeWordHandoffMove ->
     exists attempt : MachineDescription,
       TapeCodePrimitiveHandoffSubroutineRealizedByDescription
         (PairedRecognizerDovetailTotalStageAttemptSourceCode accept reject)
-        attempt Direction.right
+        attempt tapeCodePrimitiveCodeWordHandoffMove
 
 def PairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction :
     Prop :=
@@ -303,7 +303,7 @@ def PairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstr
     exists attempt : MachineDescription,
       TapeCodePrimitiveHandoffSubroutineRealizedByDescription
         (PairedRecognizerDovetailTotalStageAttemptCode accept reject)
-        attempt Direction.right
+        attempt tapeCodePrimitiveCodeWordHandoffMove
 
 def PairedRecognizerDovetailLayoutCodeCompilerConstruction : Prop :=
   forall accept reject : MachineDescription,

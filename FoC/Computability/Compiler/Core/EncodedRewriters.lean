@@ -227,9 +227,29 @@ theorem encodedControllerContinueRewriterConstruction_of_resultContinueCodeWordS
           (MachineDescription.DovetailControllerLayout.nextStage C)))
       pairedRecognizerDovetailControllerResultContinueCode_encode_nextStage_iff
 
+/-!
+**Initial-layout initializer.**  The first closed-handoff leaf is a concrete
+finite transducer for {name}`PairedRecognizerDovetailInitialLayoutCode`.  It
+must parse a canonical stage-input code word, preserve the encoded input and
+stage fields, insert the fixed initial configurations for the supplied accept
+and reject descriptions, emit the complete dovetail-layout encoding, and halt
+with the head positioned for the canonical code-word handoff move.
+-/
+
+theorem pairedRecognizerDovetailInitialLayoutCode_closedHandoffCompiledSubroutine
+    (accept reject : MachineDescription) :
+    exists initializer : MachineDescription,
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (PairedRecognizerDovetailInitialLayoutCode accept reject)
+        initializer tapeCodePrimitiveCodeWordHandoffMove := by
+  sorry
+
 theorem encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold :
     EncodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction := by
-  sorry
+  intro accept reject
+  exact
+    pairedRecognizerDovetailInitialLayoutCode_closedHandoffCompiledSubroutine
+      accept reject
 
 theorem encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold :
     EncodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction := by

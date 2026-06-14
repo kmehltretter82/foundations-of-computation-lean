@@ -11,6 +11,27 @@ namespace Computability
 
 open Languages
 
+/-!
+The compiled dovetail subroutines hand their output to the next subroutine by
+halting with the head just to the right of the emitted canonical Boolean word.
+One left move then puts the next subroutine at the same canonical
+{name}`Tape.input` layout.
+-/
+
+def tapeCodePrimitiveCodeWordHandoffMove : Direction :=
+  Direction.left
+
+theorem tape_move_right_ne_input {symbol : Type} (T : Tape symbol)
+    (w : Word symbol) :
+    Tape.move Direction.right T ≠ Tape.input w := by
+  cases T with
+  | mk left head right =>
+      cases right with
+      | nil =>
+          cases w <;> simp [Tape.move, Tape.moveRight, Tape.input, Tape.blank]
+      | cons cell rest =>
+          cases w <;> simp [Tape.move, Tape.moveRight, Tape.input, Tape.blank]
+
 def TapeCodePrimitiveCompiledByDescription
     (P : MachineDescription.TapeCodePrimitive)
     (D : MachineDescription) : Prop :=
@@ -91,6 +112,42 @@ def TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
               MachineDescription.encodeCodeWordAsInput out ∧
             Tape.move handoffMove T =
               Tape.input (MachineDescription.encodeCodeWordAsInput out)
+
+theorem not_tapeCodePrimitiveHandoffCompiledSubroutineByDescription_right_of_transform_eq_some
+    {P : MachineDescription.TapeCodePrimitive} {D : MachineDescription}
+    {code out : Word MachineCodeSymbol}
+    (hp : P.transform code = some out) :
+    ¬ TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+        P D Direction.right := by
+  intro hD
+  rcases hD.right code out hp with ⟨T, _hhalt, hmove⟩
+  exact tape_move_right_ne_input T
+    (MachineDescription.encodeCodeWordAsInput out) hmove
+
+theorem not_tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_right_of_transform_eq_some
+    {P : MachineDescription.TapeCodePrimitive} {D : MachineDescription}
+    {code out : Word MachineCodeSymbol}
+    (hp : P.transform code = some out) :
+    ¬ TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        P D Direction.right := by
+  intro hD
+  have hOut :
+      D.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out) :=
+    (hD.left.left.right code out).mpr hp
+  rcases hOut with ⟨n, hn⟩
+  let T : Tape Bool :=
+    (D.runConfig n
+      (D.initial (MachineDescription.encodeCodeWordAsInput code))).tape
+  have hTape :
+      D.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T := by
+    refine ⟨n, ?_⟩
+    exact ⟨hn.left, rfl⟩
+  rcases hD.right code T hTape with ⟨out', _hp', _hnorm, hmove⟩
+  exact tape_move_right_ne_input T
+    (MachineDescription.encodeCodeWordAsInput out') hmove
 
 theorem tapeCodePrimitiveOutputCompiledByDescription_wellFormed
     {P : MachineDescription.TapeCodePrimitive}
