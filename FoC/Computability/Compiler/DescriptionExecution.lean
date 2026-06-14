@@ -824,6 +824,74 @@ theorem boolOutputDescription_haltsWithOutput_iff
     exact boolOutputDescription_haltsWithOutput b w
 
 /-!
+## Code-word chunk recognizer
+
+The shared parser base for the remaining finite transducers is a table that
+checks the fixed-width Boolean expansion of {name}`MachineCodeSymbol` words.
+At a chunk boundary it accepts blank input, scans all chunks whose first bit is
+{lit}`0`, and permits the only {lit}`1`-headed code word, namely {lit}`1000`.
+The table preserves cells while scanning; invalid or incomplete chunks stop in
+a non-halt state.
+-/
+
+def EncodedCodeWordRecognizerDescription : MachineDescription where
+  stateCount := 8
+  start := 0
+  halt := 7
+  transitions :=
+    [ transition 0 none none Direction.right 7
+    , transition 0 (some false) (some false) Direction.right 1
+    , transition 0 (some true) (some true) Direction.right 4
+    , transition 1 (some false) (some false) Direction.right 2
+    , transition 1 (some true) (some true) Direction.right 2
+    , transition 2 (some false) (some false) Direction.right 3
+    , transition 2 (some true) (some true) Direction.right 3
+    , transition 3 (some false) (some false) Direction.right 0
+    , transition 3 (some true) (some true) Direction.right 0
+    , transition 4 (some false) (some false) Direction.right 5
+    , transition 5 (some false) (some false) Direction.right 6
+    , transition 6 (some false) (some false) Direction.right 0 ]
+
+theorem encodedCodeWordRecognizerDescription_wellFormed :
+    EncodedCodeWordRecognizerDescription.WellFormed := by
+  constructor
+  · simp [EncodedCodeWordRecognizerDescription]
+  constructor
+  · simp [EncodedCodeWordRecognizerDescription]
+  constructor
+  · simp [EncodedCodeWordRecognizerDescription]
+  constructor
+  · intro t ht
+    simp [EncodedCodeWordRecognizerDescription, transition,
+      TransitionDescription.WellFormed] at ht ⊢
+    rcases ht with
+      rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+    all_goals simp
+  · intro t u ht hu hkey
+    simp [EncodedCodeWordRecognizerDescription, transition] at ht hu
+    rcases ht with
+      rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+    all_goals
+      rcases hu with
+        rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+      all_goals
+        simp [TransitionDescription.SameKey,
+          TransitionDescription.SameAction] at hkey ⊢
+
+theorem encodedCodeWordRecognizerDescription_haltTransitionFree :
+    EncodedCodeWordRecognizerDescription.HaltTransitionFree := by
+  intro t ht
+  simp [EncodedCodeWordRecognizerDescription, transition] at ht
+  rcases ht with
+    rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+  all_goals simp [EncodedCodeWordRecognizerDescription]
+
+theorem encodedCodeWordRecognizerDescription_subroutineReady :
+    EncodedCodeWordRecognizerDescription.SubroutineReady :=
+  ⟨encodedCodeWordRecognizerDescription_wellFormed,
+    encodedCodeWordRecognizerDescription_haltTransitionFree⟩
+
+/-!
 ## Code-symbol append transducers
 
 The next finite machine is a first transition-level emitter for encoded

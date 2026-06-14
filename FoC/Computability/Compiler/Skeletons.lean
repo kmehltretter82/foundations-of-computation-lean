@@ -844,6 +844,41 @@ theorem seqSubroutine_reaches_of_runConfig_eq
   exact seqSubroutine_reaches hA hB
     ⟨m, hmrun, hmfirst⟩ hBReach
 
+theorem seqSubroutine_haltsWithOutput_of_haltsWithTape
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {input : Word Bool} {Tmid Tout : Tape Bool}
+    (hAhalt : A.HaltsWithTape input Tmid)
+    (hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start,
+              tape := Tape.move handoffMove Tmid } =
+          { state := B.halt, tape := Tout }) :
+    (seqSubroutine A B handoffMove).HaltsWithOutput input
+      (Tape.normalizedOutput Tout) := by
+  rcases hAhalt with ⟨nA, hAhalt⟩
+  have hArun :
+      A.runConfig nA { state := A.start, tape := Tape.input input } =
+        { state := A.halt, tape := Tmid } := by
+    cases hfinal : A.runConfig nA (A.initial input) with
+    | mk state tape =>
+        rcases hAhalt with ⟨hstate, htape⟩
+        simp [hfinal] at hstate htape
+        change A.runConfig nA (A.initial input) =
+          { state := A.halt, tape := Tmid }
+        rw [hfinal, hstate, htape]
+  rcases seqSubroutine_reaches_of_runConfig_eq
+      (A := A) (B := B) (handoffMove := handoffMove)
+      hA hB hArun hBReach with
+    ⟨n, hn⟩
+  exact ⟨n, by
+    constructor
+    · simpa [MachineDescription.HaltsWithOutputIn] using
+        congrArg MachineDescription.Configuration.state hn
+    · simpa [MachineDescription.HaltsWithOutputIn] using
+        congrArg (fun c => Tape.normalizedOutput c.tape) hn⟩
+
 end MachineDescription
 
 theorem fixedDescriptionBoundedSimulatorPhaseRealizes_seq

@@ -989,6 +989,125 @@ def TapeCodePrimitiveOutputCompiledSubroutineByDescription
   TapeCodePrimitiveOutputCompiledByDescription P D ∧
     D.HaltTransitionFree
 
+theorem tapeCodePrimitiveOutputCompiledByDescription_wellFormed
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : TapeCodePrimitiveOutputCompiledByDescription P D) :
+    D.WellFormed :=
+  h.left
+
+theorem tapeCodePrimitiveOutputCompiledByDescription_haltsWithOutput_iff
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : TapeCodePrimitiveOutputCompiledByDescription P D)
+    (code out : Word MachineCodeSymbol) :
+    D.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out) <->
+      P.transform code = some out :=
+  h.right code out
+
+theorem tapeCodePrimitiveOutputCompiledByDescription_haltsWithOutput_of_transform_eq_some
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : TapeCodePrimitiveOutputCompiledByDescription P D)
+    {code out : Word MachineCodeSymbol}
+    (hp : P.transform code = some out) :
+    D.HaltsWithOutput
+      (MachineDescription.encodeCodeWordAsInput code)
+      (MachineDescription.encodeCodeWordAsInput out) :=
+  (h.right code out).mpr hp
+
+theorem tapeCodePrimitiveOutputCompiledByDescription_transform_eq_some_of_haltsWithOutput
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : TapeCodePrimitiveOutputCompiledByDescription P D)
+    {code out : Word MachineCodeSymbol}
+    (hD :
+      D.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out)) :
+    P.transform code = some out :=
+  (h.right code out).mp hD
+
+theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_wellFormed
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : TapeCodePrimitiveOutputCompiledSubroutineByDescription P D) :
+    D.WellFormed :=
+  h.left.left
+
+theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_haltTransitionFree
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : TapeCodePrimitiveOutputCompiledSubroutineByDescription P D) :
+    D.HaltTransitionFree :=
+  h.right
+
+theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_haltsWithOutput_iff
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : TapeCodePrimitiveOutputCompiledSubroutineByDescription P D)
+    (code out : Word MachineCodeSymbol) :
+    D.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out) <->
+      P.transform code = some out :=
+  h.left.right code out
+
+theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_haltsWithOutput_of_transform_eq_some
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : TapeCodePrimitiveOutputCompiledSubroutineByDescription P D)
+    {code out : Word MachineCodeSymbol}
+    (hp : P.transform code = some out) :
+    D.HaltsWithOutput
+      (MachineDescription.encodeCodeWordAsInput code)
+      (MachineDescription.encodeCodeWordAsInput out) :=
+  (h.left.right code out).mpr hp
+
+theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_transform_eq_some_of_haltsWithOutput
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : TapeCodePrimitiveOutputCompiledSubroutineByDescription P D)
+    {code out : Word MachineCodeSymbol}
+    (hD :
+      D.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out)) :
+    P.transform code = some out :=
+  (h.left.right code out).mp hD
+
+theorem haltsWithEncodedCodeOutput_functional_of_haltTransitionFree
+    {D : MachineDescription}
+    {w : Word Bool}
+    {out₁ out₂ : Word MachineCodeSymbol}
+    (hD : D.HaltTransitionFree)
+    (h₁ :
+      D.HaltsWithOutput w
+        (MachineDescription.encodeCodeWordAsInput out₁))
+    (h₂ :
+      D.HaltsWithOutput w
+        (MachineDescription.encodeCodeWordAsInput out₂)) :
+    out₁ = out₂ :=
+  MachineDescription.encodeCodeWordAsInput_injective
+    (MachineDescription.haltsWithOutput_functional_of_haltTransitionFree
+      hD h₁ h₂)
+
+theorem tapeCodePrimitiveOutputSubroutineRealizedByDescription_output_eq_of_haltsWithOutput
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : TapeCodePrimitiveOutputSubroutineRealizedByDescription P D)
+    {code expected actual : Word MachineCodeSymbol}
+    (hp : P.transform code = some expected)
+    (hD :
+      D.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput actual)) :
+    expected = actual :=
+  haltsWithEncodedCodeOutput_functional_of_haltTransitionFree h.right
+    (h.left.right code expected hp) hD
+
 theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_congr
     {P Q : MachineDescription.TapeCodePrimitive}
     {D : MachineDescription}
@@ -2010,6 +2129,188 @@ theorem pairedRecognizerDovetailFiniteStageLoopControllerConstruction_of_compone
     hattempt hinitializer hencoder hinvoker hemitter hcontinuer
 
 /-!
+**Milestone 2 parser/rewriter leaves.**  The remaining finite-source work is
+not a generic compiler for arbitrary {name}`MachineDescription.TapeCodePrimitive`
+values.  It is a fixed family of code-word parsers and rewriters for the
+canonical encodings used by the dovetail controller.  The declarations below
+name those finite transition-table obligations explicitly.  Each one is a
+single concrete machine family over the existing encodings, and the older
+scaffold names are derived from them rather than carrying anonymous broad
+holes.
+-/
+
+def EncodedCodeWordCanonicalRecognizerConstruction : Prop :=
+  exists recognizer : MachineDescription,
+    recognizer.SubroutineReady ∧
+      forall bits : Word Bool,
+      forall code : Word MachineCodeSymbol,
+        recognizer.HaltsWithOutput bits
+            (MachineDescription.encodeCodeWordAsInput code) <->
+          MachineDescription.decodeCodeWordAsInput bits = some code
+
+theorem encodedCodeWordCanonicalRecognizerConstruction_scaffold :
+    EncodedCodeWordCanonicalRecognizerConstruction := by
+  refine
+    ⟨MachineDescription.EncodedCodeWordRecognizerDescription,
+      MachineDescription.encodedCodeWordRecognizerDescription_subroutineReady,
+      ?_⟩
+  sorry
+
+def EncodedDovetailStageInputToInitialLayoutRewriterConstruction :
+    Prop :=
+  forall accept reject : MachineDescription,
+    exists initializer : MachineDescription,
+      initializer.SubroutineReady ∧
+        forall code out : Word MachineCodeSymbol,
+          initializer.HaltsWithOutput
+              (MachineDescription.encodeCodeWordAsInput code)
+              (MachineDescription.encodeCodeWordAsInput out) <->
+            (PairedRecognizerDovetailInitialLayoutCode
+              accept reject).transform code = some out
+
+def EncodedDovetailLayoutBoundedRunnerRewriterConstruction :
+    Prop :=
+  forall accept reject : MachineDescription,
+    exists runner : MachineDescription,
+      runner.SubroutineReady ∧
+        forall code out : Word MachineCodeSymbol,
+          runner.HaltsWithOutput
+              (MachineDescription.encodeCodeWordAsInput code)
+              (MachineDescription.encodeCodeWordAsInput out) <->
+            (PairedRecognizerDovetailLayoutCode
+              accept reject).transform code = some out
+
+def EncodedDovetailTotalOutputEmitterRewriterConstruction :
+    Prop :=
+  exists emitter : MachineDescription,
+    emitter.SubroutineReady ∧
+      forall code out : Word MachineCodeSymbol,
+        emitter.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput code)
+            (MachineDescription.encodeCodeWordAsInput out) <->
+          PairedRecognizerDovetailTotalOutputCode.transform code = some out
+
+def EncodedControllerInputInitializerRewriterConstruction :
+    Prop :=
+  exists initializer : MachineDescription,
+    initializer.SubroutineReady ∧
+      forall w : Word Bool,
+        initializer.HaltsWithOutput w
+          (MachineDescription.encodeCodeWordAsInput
+            (PairedRecognizerDovetailControllerInitialCode w))
+
+def EncodedControllerStageInputProjectionRewriterConstruction :
+    Prop :=
+  exists encoder : MachineDescription,
+    encoder.SubroutineReady ∧
+      forall code out : Word MachineCodeSymbol,
+        encoder.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput code)
+            (MachineDescription.encodeCodeWordAsInput out) <->
+          PairedRecognizerDovetailControllerStageInputCodePrimitive.transform
+            code = some out
+
+def EncodedControllerResultEmitterRewriterConstruction :
+    Prop :=
+  exists emitter : MachineDescription,
+    emitter.SubroutineReady ∧
+      forall C : MachineDescription.DovetailControllerLayout,
+      forall b : Bool,
+        emitter.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailControllerLayout.encode C))
+            [b] <->
+          PairedRecognizerDovetailControllerRawOutput C.result = some [b]
+
+def EncodedControllerContinueRewriterConstruction :
+    Prop :=
+  exists continuer : MachineDescription,
+    continuer.SubroutineReady ∧
+      forall C : MachineDescription.DovetailControllerLayout,
+        continuer.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailControllerLayout.encode C))
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailControllerLayout.encode
+                (MachineDescription.DovetailControllerLayout.nextStage C))) <->
+          PairedRecognizerDovetailControllerRawOutput C.result = none
+
+theorem encodedDovetailStageInputToInitialLayoutRewriterConstruction_scaffold :
+    EncodedDovetailStageInputToInitialLayoutRewriterConstruction := by
+  sorry
+
+theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
+    EncodedDovetailLayoutBoundedRunnerRewriterConstruction := by
+  sorry
+
+theorem encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold :
+    EncodedDovetailTotalOutputEmitterRewriterConstruction := by
+  sorry
+
+theorem encodedControllerInputInitializerRewriterConstruction_scaffold :
+    EncodedControllerInputInitializerRewriterConstruction := by
+  sorry
+
+theorem encodedControllerStageInputProjectionRewriterConstruction_scaffold :
+    EncodedControllerStageInputProjectionRewriterConstruction := by
+  sorry
+
+theorem encodedControllerResultEmitterRewriterConstruction_scaffold :
+    EncodedControllerResultEmitterRewriterConstruction := by
+  sorry
+
+theorem encodedControllerContinueRewriterConstruction_scaffold :
+    EncodedControllerContinueRewriterConstruction := by
+  sorry
+
+theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailStageInputToInitialLayoutRewriterConstruction) :
+    PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction := by
+  intro accept reject
+  rcases h accept reject with ⟨initializer, hready, hspec⟩
+  exact ⟨initializer, ⟨⟨hready.left, hspec⟩, hready.right⟩⟩
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailLayoutBoundedRunnerRewriterConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction := by
+  intro accept reject
+  rcases h accept reject with ⟨runner, hready, hspec⟩
+  exact ⟨runner, ⟨⟨hready.left, hspec⟩, hready.right⟩⟩
+
+theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailTotalOutputEmitterRewriterConstruction) :
+    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction := by
+  rcases h with ⟨emitter, hready, hspec⟩
+  exact ⟨emitter, ⟨⟨hready.left, hspec⟩, hready.right⟩⟩
+
+theorem pairedRecognizerDovetailControllerInputInitializerConstruction_of_encodedRewriter
+    (h : EncodedControllerInputInitializerRewriterConstruction) :
+    PairedRecognizerDovetailControllerInputInitializerConstruction := by
+  rcases h with ⟨initializer, hready, hspec⟩
+  exact ⟨initializer, hready, hspec⟩
+
+theorem pairedRecognizerDovetailControllerStageInputEncoderConstruction_of_encodedRewriter
+    (h : EncodedControllerStageInputProjectionRewriterConstruction) :
+    PairedRecognizerDovetailControllerStageInputEncoderConstruction := by
+  rcases h with ⟨encoder, hready, hspec⟩
+  exact ⟨encoder, ⟨⟨hready.left, hspec⟩, hready.right⟩⟩
+
+theorem pairedRecognizerDovetailControllerResultEmitterConstruction_of_encodedRewriter
+    (h : EncodedControllerResultEmitterRewriterConstruction) :
+    PairedRecognizerDovetailControllerResultEmitterConstruction := by
+  rcases h with ⟨emitter, hready, hspec⟩
+  exact ⟨emitter, hready, hspec⟩
+
+theorem pairedRecognizerDovetailControllerContinueConstruction_of_encodedRewriter
+    (h : EncodedControllerContinueRewriterConstruction) :
+    PairedRecognizerDovetailControllerContinueConstruction := by
+  rcases h with ⟨continuer, hready, hspec⟩
+  exact ⟨continuer, hready, hspec⟩
+
+/-!
 **Finite-source scaffold.**  These declarations are the remaining concrete
 machine-construction leaves for the paired-recognizer dovetail controller
 route. They are intentionally narrow: the source programs and controller layout
@@ -2018,16 +2319,19 @@ tape-code primitives.
 -/
 
 theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_scaffold :
-    PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction := by
-  sorry
+    PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_of_encodedRewriter
+    encodedDovetailStageInputToInitialLayoutRewriterConstruction_scaffold
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold :
-    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction := by
-  sorry
+    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_encodedRewriter
+    encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold
 
 theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_scaffold :
-    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction := by
-  sorry
+    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_of_encodedRewriter
+    encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold
 
 theorem pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction_scaffold :
     PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction := by
@@ -2042,24 +2346,28 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineCon
     pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction_scaffold
 
 theorem pairedRecognizerDovetailControllerInputInitializerConstruction_scaffold :
-    PairedRecognizerDovetailControllerInputInitializerConstruction := by
-  sorry
+    PairedRecognizerDovetailControllerInputInitializerConstruction :=
+  pairedRecognizerDovetailControllerInputInitializerConstruction_of_encodedRewriter
+    encodedControllerInputInitializerRewriterConstruction_scaffold
 
 theorem pairedRecognizerDovetailControllerStageInputEncoderConstruction_scaffold :
-    PairedRecognizerDovetailControllerStageInputEncoderConstruction := by
-  sorry
+    PairedRecognizerDovetailControllerStageInputEncoderConstruction :=
+  pairedRecognizerDovetailControllerStageInputEncoderConstruction_of_encodedRewriter
+    encodedControllerStageInputProjectionRewriterConstruction_scaffold
 
 theorem pairedRecognizerDovetailStageAttemptInvocationConstruction_scaffold :
     PairedRecognizerDovetailStageAttemptInvocationConstruction := by
   sorry
 
 theorem pairedRecognizerDovetailControllerResultEmitterConstruction_scaffold :
-    PairedRecognizerDovetailControllerResultEmitterConstruction := by
-  sorry
+    PairedRecognizerDovetailControllerResultEmitterConstruction :=
+  pairedRecognizerDovetailControllerResultEmitterConstruction_of_encodedRewriter
+    encodedControllerResultEmitterRewriterConstruction_scaffold
 
 theorem pairedRecognizerDovetailControllerContinueConstruction_scaffold :
-    PairedRecognizerDovetailControllerContinueConstruction := by
-  sorry
+    PairedRecognizerDovetailControllerContinueConstruction :=
+  pairedRecognizerDovetailControllerContinueConstruction_of_encodedRewriter
+    encodedControllerContinueRewriterConstruction_scaffold
 
 theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_scaffold :
     PairedRecognizerDovetailFiniteStageLoopSequencingConstruction := by
