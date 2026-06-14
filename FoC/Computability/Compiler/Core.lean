@@ -2958,6 +2958,41 @@ def EncodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction :
     Prop :=
   PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction
 
+/-!
+**Encoded rewriter handoff.**  Several controller components are ordinary
+code-word transducers: they consume a canonical encoded
+{name}`MachineCodeSymbol` word and produce another one.  For those components,
+an output-compiled subroutine already gives the exact encoded rewriter
+interface, so the remaining leaves can target subroutine construction instead
+of restating the encoded input/output behavior.
+-/
+
+def EncodedTapeCodePrimitiveRewriterConstruction
+    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+  exists rewriter : MachineDescription,
+    rewriter.SubroutineReady ∧
+      forall code out : Word MachineCodeSymbol,
+        rewriter.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput code)
+            (MachineDescription.encodeCodeWordAsInput out) <->
+          P.transform code = some out
+
+def EncodedTapeCodePrimitiveOutputCompiledSubroutineConstruction
+    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+  exists rewriter : MachineDescription,
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription P rewriter
+
+theorem encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine
+    {P : MachineDescription.TapeCodePrimitive}
+    (h : EncodedTapeCodePrimitiveOutputCompiledSubroutineConstruction P) :
+    EncodedTapeCodePrimitiveRewriterConstruction P := by
+  rcases h with ⟨rewriter, hrewriter⟩
+  exact
+    ⟨rewriter,
+      tapeCodePrimitiveOutputCompiledSubroutineByDescription_subroutineReady
+        hrewriter,
+      hrewriter.left.right⟩
+
 def EncodedControllerInputInitializerRewriterConstruction :
     Prop :=
   exists initializer : MachineDescription,
@@ -3002,6 +3037,37 @@ def EncodedControllerContinueRewriterConstruction :
               (MachineDescription.DovetailControllerLayout.encode
                 (MachineDescription.DovetailControllerLayout.nextStage C))) <->
           PairedRecognizerDovetailControllerRawOutput C.result = none
+
+def EncodedControllerStageInputProjectionCodeWordSubroutineConstruction :
+    Prop :=
+  EncodedTapeCodePrimitiveOutputCompiledSubroutineConstruction
+    PairedRecognizerDovetailControllerStageInputCodePrimitive
+
+def EncodedControllerResultContinueCodeWordSubroutineConstruction :
+    Prop :=
+  EncodedTapeCodePrimitiveOutputCompiledSubroutineConstruction
+    PairedRecognizerDovetailControllerResultContinueCode
+
+theorem encodedControllerStageInputProjectionRewriterConstruction_of_codeWordSubroutine
+    (h :
+      EncodedControllerStageInputProjectionCodeWordSubroutineConstruction) :
+    EncodedControllerStageInputProjectionRewriterConstruction :=
+  encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine h
+
+theorem encodedControllerContinueRewriterConstruction_of_resultContinueCodeWordSubroutine
+    (h : EncodedControllerResultContinueCodeWordSubroutineConstruction) :
+    EncodedControllerContinueRewriterConstruction := by
+  rcases
+      encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine h with
+    ⟨continuer, hready, hspec⟩
+  refine ⟨continuer, hready, ?_⟩
+  intro C
+  exact
+    Iff.trans
+      (hspec (MachineDescription.DovetailControllerLayout.encode C)
+        (MachineDescription.DovetailControllerLayout.encode
+          (MachineDescription.DovetailControllerLayout.nextStage C)))
+      pairedRecognizerDovetailControllerResultContinueCode_encode_nextStage_iff
 
 theorem encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold :
     EncodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction := by
@@ -3071,17 +3137,27 @@ theorem encodedControllerInputInitializerRewriterConstruction_scaffold :
     EncodedControllerInputInitializerRewriterConstruction := by
   sorry
 
-theorem encodedControllerStageInputProjectionRewriterConstruction_scaffold :
-    EncodedControllerStageInputProjectionRewriterConstruction := by
+theorem encodedControllerStageInputProjectionCodeWordSubroutineConstruction_scaffold :
+    EncodedControllerStageInputProjectionCodeWordSubroutineConstruction := by
   sorry
+
+theorem encodedControllerStageInputProjectionRewriterConstruction_scaffold :
+    EncodedControllerStageInputProjectionRewriterConstruction :=
+  encodedControllerStageInputProjectionRewriterConstruction_of_codeWordSubroutine
+    encodedControllerStageInputProjectionCodeWordSubroutineConstruction_scaffold
 
 theorem encodedControllerResultEmitterRewriterConstruction_scaffold :
     EncodedControllerResultEmitterRewriterConstruction := by
   sorry
 
-theorem encodedControllerContinueRewriterConstruction_scaffold :
-    EncodedControllerContinueRewriterConstruction := by
+theorem encodedControllerResultContinueCodeWordSubroutineConstruction_scaffold :
+    EncodedControllerResultContinueCodeWordSubroutineConstruction := by
   sorry
+
+theorem encodedControllerContinueRewriterConstruction_scaffold :
+    EncodedControllerContinueRewriterConstruction :=
+  encodedControllerContinueRewriterConstruction_of_resultContinueCodeWordSubroutine
+    encodedControllerResultContinueCodeWordSubroutineConstruction_scaffold
 
 theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_of_encodedRewriter
     (h :
