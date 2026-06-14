@@ -78,6 +78,132 @@ theorem decode_encode (L : DovetailLayout) :
     decode (encode L) = some (L, []) :=
   decode_encodeAppend L []
 
+theorem decode_eq_some_encodeAppend
+    {tokens : Word MachineCodeSymbol} {L : DovetailLayout}
+    {suffix : Word MachineCodeSymbol}
+    (h : decode tokens = some (L, suffix)) :
+    tokens = encodeAppend L suffix := by
+  unfold decode at h
+  cases tokens with
+  | nil =>
+      simp at h
+  | cons marker rest =>
+      cases marker with
+      | transition =>
+          simp at h
+          cases hinput : decodeBoolWord rest with
+          | none =>
+              simp [hinput] at h
+          | some parsedInput =>
+              cases parsedInput with
+              | mk input restAfterInput =>
+                  simp [hinput] at h
+                  cases hstage : decodeNat restAfterInput with
+                  | none =>
+                      simp [hstage] at h
+                  | some parsedStage =>
+                      cases parsedStage with
+                      | mk stage restAfterStage =>
+                          simp [hstage] at h
+                          cases hacceptConfig :
+                              decodeConfiguration restAfterStage with
+                          | none =>
+                              simp [hacceptConfig] at h
+                          | some parsedAcceptConfig =>
+                              cases parsedAcceptConfig with
+                              | mk acceptConfig restAfterAcceptConfig =>
+                                  simp [hacceptConfig] at h
+                                  cases hrejectConfig :
+                                      decodeConfiguration
+                                        restAfterAcceptConfig with
+                                  | none =>
+                                      simp [hrejectConfig] at h
+                                  | some parsedRejectConfig =>
+                                      cases parsedRejectConfig with
+                                      | mk rejectConfig restAfterRejectConfig =>
+                                          simp [hrejectConfig] at h
+                                          cases hacceptHit :
+                                              decodeBool
+                                                restAfterRejectConfig with
+                                          | none =>
+                                              simp [hacceptHit] at h
+                                          | some parsedAcceptHit =>
+                                              cases parsedAcceptHit with
+                                              | mk acceptHit
+                                                  restAfterAcceptHit =>
+                                                  simp [hacceptHit] at h
+                                                  cases hrejectHit :
+                                                      decodeBool
+                                                        restAfterAcceptHit with
+                                                  | none =>
+                                                      simp [hrejectHit] at h
+                                                  | some parsedRejectHit =>
+                                                      cases parsedRejectHit with
+                                                      | mk rejectHit
+                                                          parsedSuffix =>
+                                                          simp [hrejectHit]
+                                                            at h
+                                                          cases h
+                                                          subst L
+                                                          subst suffix
+                                                          have hinputTokens :
+                                                              rest =
+                                                                encodeBoolWordAppend
+                                                                  input
+                                                                  restAfterInput :=
+                                                            decodeBoolWord_eq_some_encodeBoolWordAppend
+                                                              hinput
+                                                          have hstageTokens :
+                                                              restAfterInput =
+                                                                encodeNatAppend
+                                                                  stage
+                                                                  restAfterStage :=
+                                                            decodeNat_eq_some_encodeNatAppend
+                                                              hstage
+                                                          have hacceptConfigTokens :
+                                                              restAfterStage =
+                                                                encodeConfigurationAppend
+                                                                  acceptConfig
+                                                                  restAfterAcceptConfig :=
+                                                            decodeConfiguration_eq_some_encodeConfigurationAppend
+                                                              hacceptConfig
+                                                          have hrejectConfigTokens :
+                                                              restAfterAcceptConfig =
+                                                                encodeConfigurationAppend
+                                                                  rejectConfig
+                                                                  restAfterRejectConfig :=
+                                                            decodeConfiguration_eq_some_encodeConfigurationAppend
+                                                              hrejectConfig
+                                                          have hacceptHitTokens :
+                                                              restAfterRejectConfig =
+                                                                encodeBoolAppend
+                                                                  acceptHit
+                                                                  restAfterAcceptHit :=
+                                                            decodeBool_eq_some_encodeBoolAppend
+                                                              hacceptHit
+                                                          have hrejectHitTokens :
+                                                              restAfterAcceptHit =
+                                                                encodeBoolAppend
+                                                                  rejectHit
+                                                                  parsedSuffix :=
+                                                            decodeBool_eq_some_encodeBoolAppend
+                                                              hrejectHit
+                                                          simp [encodeAppend,
+                                                            hinputTokens,
+                                                            hstageTokens,
+                                                            hacceptConfigTokens,
+                                                            hrejectConfigTokens,
+                                                            hacceptHitTokens,
+                                                            hrejectHitTokens]
+      | header => simp at h
+      | tick => simp at h
+      | done => simp at h
+      | blank => simp at h
+      | zero => simp at h
+      | one => simp at h
+      | moveLeft => simp at h
+      | moveRight => simp at h
+
 def decodeComplete (tokens : Word MachineCodeSymbol) :
     Option DovetailLayout :=
   match decode tokens with
@@ -87,6 +213,25 @@ def decodeComplete (tokens : Word MachineCodeSymbol) :
 theorem decodeComplete_encode (L : DovetailLayout) :
     decodeComplete (encode L) = some L := by
   simp [decodeComplete, decode_encode]
+
+theorem decodeComplete_eq_some_encode
+    {tokens : Word MachineCodeSymbol} {L : DovetailLayout}
+    (h : decodeComplete tokens = some L) :
+    tokens = encode L := by
+  unfold decodeComplete at h
+  cases hdecode : decode tokens with
+  | none =>
+      simp [hdecode] at h
+  | some parsed =>
+      cases parsed with
+      | mk decoded suffix =>
+          cases suffix with
+          | nil =>
+              simp [hdecode] at h
+              cases h
+              simpa [encode] using decode_eq_some_encodeAppend hdecode
+          | cons _ _ =>
+              simp [hdecode] at h
 
 def asBoolInput (L : DovetailLayout) : Word Bool :=
   encodeCodeWordAsInput (encode L)
@@ -209,6 +354,38 @@ theorem decodeStageInput_stageInputCode
       some ((w, stage), []) :=
   decodeStageInput_stageInputCodeAppend w stage []
 
+theorem decodeStageInput_eq_some_stageInputCodeAppend
+    {tokens : Word MachineCodeSymbol} {w : Word Bool} {stage : Nat}
+    {suffix : Word MachineCodeSymbol}
+    (h : decodeStageInput tokens = some ((w, stage), suffix)) :
+    tokens = stageInputCodeAppend w stage suffix := by
+  unfold decodeStageInput at h
+  cases hinput : decodeBoolWord tokens with
+  | none =>
+      simp [hinput] at h
+  | some parsedInput =>
+      cases parsedInput with
+      | mk decodedInput restAfterInput =>
+          simp [hinput] at h
+          cases hstage : decodeNat restAfterInput with
+          | none =>
+              simp [hstage] at h
+          | some parsedStage =>
+              cases parsedStage with
+              | mk decodedStage parsedSuffix =>
+                  simp [hstage] at h
+                  rcases h with ⟨hpair, hsuffix⟩
+                  have hinputTokens :
+                      tokens =
+                        encodeBoolWordAppend decodedInput restAfterInput :=
+                    decodeBoolWord_eq_some_encodeBoolWordAppend hinput
+                  have hstageTokens :
+                      restAfterInput =
+                        encodeNatAppend decodedStage parsedSuffix :=
+                    decodeNat_eq_some_encodeNatAppend hstage
+                  simp [stageInputCodeAppend, hinputTokens, hstageTokens,
+                    hpair.1, hpair.2, hsuffix]
+
 def decodeStageInputComplete (tokens : Word MachineCodeSymbol) :
     Option (Word Bool × Nat) :=
   match decodeStageInput tokens with
@@ -220,6 +397,26 @@ theorem decodeStageInputComplete_stageInputCode
     decodeStageInputComplete (stageInputCode w stage) =
       some (w, stage) := by
   simp [decodeStageInputComplete, decodeStageInput_stageInputCode]
+
+theorem decodeStageInputComplete_eq_some_stageInputCode
+    {tokens : Word MachineCodeSymbol} {w : Word Bool} {stage : Nat}
+    (h : decodeStageInputComplete tokens = some (w, stage)) :
+    tokens = stageInputCode w stage := by
+  unfold decodeStageInputComplete at h
+  cases hdecode : decodeStageInput tokens with
+  | none =>
+      simp [hdecode] at h
+  | some parsed =>
+      cases parsed with
+      | mk pair suffix =>
+          cases suffix with
+          | nil =>
+              simp [hdecode] at h
+              cases h
+              simpa [stageInputCode] using
+                decodeStageInput_eq_some_stageInputCodeAppend hdecode
+          | cons _ _ =>
+              simp [hdecode] at h
 
 def initialCode (accept reject : MachineDescription)
     (tokens : Word MachineCodeSymbol) :

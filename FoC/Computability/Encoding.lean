@@ -955,6 +955,211 @@ theorem decodeCodeWordAsInput_encodeCodeWordAsInput
         simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput,
           decodeCodeWordAsInput, Option.map, ih]
 
+theorem decodeCodeWordAsInput_eq_some_encodeCodeWordAsInput :
+    forall {bits : Word Bool} {code : Word MachineCodeSymbol},
+      decodeCodeWordAsInput bits = some code ->
+        bits = encodeCodeWordAsInput code
+  | [], code, h => by
+      simp [decodeCodeWordAsInput] at h
+      cases h
+      rfl
+  | false :: false :: false :: false :: rest, code, h => by
+      cases htail : decodeCodeWordAsInput rest with
+      | none =>
+          simp [decodeCodeWordAsInput, htail] at h
+      | some tail =>
+          cases code with
+          | nil =>
+              simp [decodeCodeWordAsInput, htail] at h
+          | cons sym syms =>
+              simp [decodeCodeWordAsInput, htail] at h
+              rcases h with ⟨decoded, hopt, hcode⟩
+              cases hopt
+              cases hcode
+              have hrest :=
+                decodeCodeWordAsInput_eq_some_encodeCodeWordAsInput htail
+              simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput, hrest]
+  | false :: false :: false :: true :: rest, code, h => by
+      cases htail : decodeCodeWordAsInput rest with
+      | none =>
+          simp [decodeCodeWordAsInput, htail] at h
+      | some tail =>
+          cases code with
+          | nil =>
+              simp [decodeCodeWordAsInput, htail] at h
+          | cons sym syms =>
+              simp [decodeCodeWordAsInput, htail] at h
+              rcases h with ⟨decoded, hopt, hcode⟩
+              cases hopt
+              cases hcode
+              have hrest :=
+                decodeCodeWordAsInput_eq_some_encodeCodeWordAsInput htail
+              simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput, hrest]
+  | false :: false :: true :: false :: rest, code, h => by
+      cases htail : decodeCodeWordAsInput rest with
+      | none =>
+          simp [decodeCodeWordAsInput, htail] at h
+      | some tail =>
+          cases code with
+          | nil =>
+              simp [decodeCodeWordAsInput, htail] at h
+          | cons sym syms =>
+              simp [decodeCodeWordAsInput, htail] at h
+              rcases h with ⟨decoded, hopt, hcode⟩
+              cases hopt
+              cases hcode
+              have hrest :=
+                decodeCodeWordAsInput_eq_some_encodeCodeWordAsInput htail
+              simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput, hrest]
+  | false :: false :: true :: true :: rest, code, h => by
+      cases htail : decodeCodeWordAsInput rest with
+      | none =>
+          simp [decodeCodeWordAsInput, htail] at h
+      | some tail =>
+          cases code with
+          | nil =>
+              simp [decodeCodeWordAsInput, htail] at h
+          | cons sym syms =>
+              simp [decodeCodeWordAsInput, htail] at h
+              rcases h with ⟨decoded, hopt, hcode⟩
+              cases hopt
+              cases hcode
+              have hrest :=
+                decodeCodeWordAsInput_eq_some_encodeCodeWordAsInput htail
+              simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput, hrest]
+  | false :: true :: false :: false :: rest, code, h => by
+      cases htail : decodeCodeWordAsInput rest with
+      | none =>
+          simp [decodeCodeWordAsInput, htail] at h
+      | some tail =>
+          cases code with
+          | nil =>
+              simp [decodeCodeWordAsInput, htail] at h
+          | cons sym syms =>
+              simp [decodeCodeWordAsInput, htail] at h
+              rcases h with ⟨decoded, hopt, hcode⟩
+              cases hopt
+              cases hcode
+              have hrest :=
+                decodeCodeWordAsInput_eq_some_encodeCodeWordAsInput htail
+              simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput, hrest]
+  | false :: true :: false :: true :: rest, code, h => by
+      cases htail : decodeCodeWordAsInput rest with
+      | none =>
+          simp [decodeCodeWordAsInput, htail] at h
+      | some tail =>
+          cases code with
+          | nil =>
+              simp [decodeCodeWordAsInput, htail] at h
+          | cons sym syms =>
+              simp [decodeCodeWordAsInput, htail] at h
+              rcases h with ⟨decoded, hopt, hcode⟩
+              cases hopt
+              cases hcode
+              have hrest :=
+                decodeCodeWordAsInput_eq_some_encodeCodeWordAsInput htail
+              simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput, hrest]
+  | false :: true :: true :: false :: rest, code, h => by
+      cases htail : decodeCodeWordAsInput rest with
+      | none =>
+          simp [decodeCodeWordAsInput, htail] at h
+      | some tail =>
+          cases code with
+          | nil =>
+              simp [decodeCodeWordAsInput, htail] at h
+          | cons sym syms =>
+              simp [decodeCodeWordAsInput, htail] at h
+              rcases h with ⟨decoded, hopt, hcode⟩
+              cases hopt
+              cases hcode
+              have hrest :=
+                decodeCodeWordAsInput_eq_some_encodeCodeWordAsInput htail
+              simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput, hrest]
+  | false :: true :: true :: true :: rest, code, h => by
+      cases htail : decodeCodeWordAsInput rest with
+      | none =>
+          simp [decodeCodeWordAsInput, htail] at h
+      | some tail =>
+          cases code with
+          | nil =>
+              simp [decodeCodeWordAsInput, htail] at h
+          | cons sym syms =>
+              simp [decodeCodeWordAsInput, htail] at h
+              rcases h with ⟨decoded, hopt, hcode⟩
+              cases hopt
+              cases hcode
+              have hrest :=
+                decodeCodeWordAsInput_eq_some_encodeCodeWordAsInput htail
+              simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput, hrest]
+  | true :: false :: false :: false :: rest, code, h => by
+      cases htail : decodeCodeWordAsInput rest with
+      | none =>
+          simp [decodeCodeWordAsInput, htail] at h
+      | some tail =>
+          cases code with
+          | nil =>
+              simp [decodeCodeWordAsInput, htail] at h
+          | cons sym syms =>
+              simp [decodeCodeWordAsInput, htail] at h
+              rcases h with ⟨decoded, hopt, hcode⟩
+              cases hopt
+              cases hcode
+              have hrest :=
+                decodeCodeWordAsInput_eq_some_encodeCodeWordAsInput htail
+              simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput, hrest]
+  | true :: false :: false :: true :: rest, code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | true :: false :: true :: false :: rest, code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | true :: false :: true :: true :: rest, code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | true :: true :: false :: false :: rest, code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | true :: true :: false :: true :: rest, code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | true :: true :: true :: false :: rest, code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | true :: true :: true :: true :: rest, code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | false :: [], code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | true :: [], code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | false :: false :: [], code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | false :: true :: [], code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | true :: false :: [], code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | true :: true :: [], code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | false :: false :: false :: [], code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | false :: false :: true :: [], code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | false :: true :: false :: [], code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | false :: true :: true :: [], code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | true :: false :: false :: [], code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | true :: false :: true :: [], code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | true :: true :: false :: [], code, h => by
+      simp [decodeCodeWordAsInput] at h
+  | true :: true :: true :: [], code, h => by
+      simp [decodeCodeWordAsInput] at h
+
+theorem decodeCodeWordAsInput_eq_some_iff
+    (bits : Word Bool) (code : Word MachineCodeSymbol) :
+    decodeCodeWordAsInput bits = some code <->
+      bits = encodeCodeWordAsInput code := by
+  constructor
+  · exact decodeCodeWordAsInput_eq_some_encodeCodeWordAsInput
+  · intro h
+    rw [h]
+    exact decodeCodeWordAsInput_encodeCodeWordAsInput code
+
 theorem encodeCodeWordAsInput_injective :
     Function.Injective encodeCodeWordAsInput := by
   intro x y h

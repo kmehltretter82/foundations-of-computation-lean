@@ -596,6 +596,42 @@ theorem pairedRecognizerDovetailInitialLayoutCode_encode
   MachineDescription.DovetailLayout.initialCodePrimitive_stageInputCode
     accept reject w stage
 
+theorem pairedRecognizerDovetailInitialLayoutCode_transform_eq_some_iff
+    (accept reject : MachineDescription)
+    (code out : Word MachineCodeSymbol) :
+    (PairedRecognizerDovetailInitialLayoutCode accept reject).transform
+        code = some out <->
+      exists w : Word Bool,
+      exists stage : Nat,
+        code = PairedRecognizerDovetailStageInputCode w stage ∧
+          out =
+            MachineDescription.DovetailLayout.encode
+              (MachineDescription.DovetailLayout.initial
+                accept reject w stage) := by
+  constructor
+  · intro h
+    unfold PairedRecognizerDovetailInitialLayoutCode at h
+    unfold MachineDescription.DovetailLayout.initialCodePrimitive at h
+    unfold MachineDescription.DovetailLayout.initialCode at h
+    cases hdecode :
+        MachineDescription.DovetailLayout.decodeStageInputComplete code with
+    | none =>
+        simp [hdecode] at h
+    | some parsed =>
+        cases parsed with
+        | mk w stage =>
+            simp [hdecode] at h
+            cases h
+            exact
+              ⟨w, stage,
+                MachineDescription.DovetailLayout.decodeStageInputComplete_eq_some_stageInputCode
+                  hdecode,
+                rfl⟩
+  · intro h
+    rcases h with ⟨w, stage, rfl, rfl⟩
+    exact pairedRecognizerDovetailInitialLayoutCode_encode
+      accept reject w stage
+
 theorem pairedRecognizerDovetailInitialLayoutCode_realizes
     (accept reject : MachineDescription) :
     PairedRecognizerDovetailInitialLayoutCodeRealizes
@@ -616,6 +652,38 @@ theorem pairedRecognizerDovetailLayoutCode_encode
             accept reject L.stage L)) :=
   MachineDescription.DovetailLayout.runCodePrimitive_encode
     accept reject L
+
+theorem pairedRecognizerDovetailLayoutCode_transform_eq_some_iff
+    (accept reject : MachineDescription)
+    (code out : Word MachineCodeSymbol) :
+    (PairedRecognizerDovetailLayoutCode accept reject).transform code =
+        some out <->
+      exists L : MachineDescription.DovetailLayout,
+        code = MachineDescription.DovetailLayout.encode L ∧
+          out =
+            MachineDescription.DovetailLayout.encode
+              (MachineDescription.DovetailLayout.run
+                accept reject L.stage L) := by
+  constructor
+  · intro h
+    unfold PairedRecognizerDovetailLayoutCode at h
+    unfold MachineDescription.DovetailLayout.runCodePrimitive at h
+    unfold MachineDescription.DovetailLayout.runCode at h
+    cases hdecode :
+        MachineDescription.DovetailLayout.decodeComplete code with
+    | none =>
+        simp [hdecode] at h
+    | some L =>
+        simp [hdecode] at h
+        cases h
+        exact
+          ⟨L,
+            MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
+              hdecode,
+            rfl⟩
+  · intro h
+    rcases h with ⟨L, rfl, rfl⟩
+    exact pairedRecognizerDovetailLayoutCode_encode accept reject L
 
 theorem pairedRecognizerDovetailLayoutCode_realizes
     (accept reject : MachineDescription) :
@@ -651,6 +719,33 @@ theorem pairedRecognizerDovetailTotalOutputCode_encode
   simp [PairedRecognizerDovetailTotalOutputCode,
     MachineDescription.DovetailLayout.decodeComplete_encode]
 
+theorem pairedRecognizerDovetailTotalOutputCode_transform_eq_some_iff
+    (code out : Word MachineCodeSymbol) :
+    PairedRecognizerDovetailTotalOutputCode.transform code = some out <->
+      exists L : MachineDescription.DovetailLayout,
+        code = MachineDescription.DovetailLayout.encode L ∧
+          out =
+            MachineDescription.encodeBoolWord
+              (MachineDescription.DovetailLayout.outputWordFromHits L) := by
+  constructor
+  · intro h
+    unfold PairedRecognizerDovetailTotalOutputCode at h
+    cases hdecode :
+        MachineDescription.DovetailLayout.decodeComplete code with
+    | none =>
+        simp [hdecode] at h
+    | some L =>
+        simp [hdecode] at h
+        cases h
+        exact
+          ⟨L,
+            MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
+              hdecode,
+            rfl⟩
+  · intro h
+    rcases h with ⟨L, rfl, rfl⟩
+    exact pairedRecognizerDovetailTotalOutputCode_encode L
+
 theorem pairedRecognizerDovetailTotalOutputCode_realizes :
     PairedRecognizerDovetailTotalOutputCodeRealizes
       PairedRecognizerDovetailTotalOutputCode := by
@@ -664,6 +759,32 @@ theorem pairedRecognizerDovetailControllerStageInputCode_encode
       some (PairedRecognizerDovetailControllerStageInputCode C) := by
   simp [PairedRecognizerDovetailControllerStageInputCodePrimitive,
     MachineDescription.DovetailControllerLayout.decodeComplete_encode]
+
+theorem pairedRecognizerDovetailControllerStageInputCode_transform_eq_some_iff
+    (code out : Word MachineCodeSymbol) :
+    PairedRecognizerDovetailControllerStageInputCodePrimitive.transform code =
+        some out <->
+      exists C : MachineDescription.DovetailControllerLayout,
+        code = MachineDescription.DovetailControllerLayout.encode C ∧
+          out = PairedRecognizerDovetailControllerStageInputCode C := by
+  constructor
+  · intro h
+    unfold PairedRecognizerDovetailControllerStageInputCodePrimitive at h
+    cases hdecode :
+        MachineDescription.DovetailControllerLayout.decodeComplete code with
+    | none =>
+        simp [hdecode] at h
+    | some C =>
+        simp [hdecode] at h
+        cases h
+        exact
+          ⟨C,
+            MachineDescription.DovetailControllerLayout.decodeComplete_eq_some_encode
+              hdecode,
+            rfl⟩
+  · intro h
+    rcases h with ⟨C, rfl, rfl⟩
+    exact pairedRecognizerDovetailControllerStageInputCode_encode C
 
 theorem pairedRecognizerDovetailControllerStageInputCode_realizes :
     PairedRecognizerDovetailControllerStageInputCodeRealizes
@@ -703,6 +824,45 @@ theorem pairedRecognizerDovetailTotalStageAttemptCode_encode
               accept reject w stage))) :=
   MachineDescription.DovetailLayout.totalStageAttemptCodePrimitive_stageInputCode
     accept reject w stage
+
+theorem pairedRecognizerDovetailTotalStageAttemptCode_transform_eq_some_iff
+    (accept reject : MachineDescription)
+    (code out : Word MachineCodeSymbol) :
+    (PairedRecognizerDovetailTotalStageAttemptCode accept reject).transform
+        code = some out <->
+      exists w : Word Bool,
+      exists stage : Nat,
+        code = PairedRecognizerDovetailStageInputCode w stage ∧
+          out =
+            MachineDescription.encodeBoolWord
+              (MachineDescription.DovetailLayout.outputWordFromOption
+                (MachineDescription.boundedDovetailOutput
+                  accept reject w stage)) := by
+  constructor
+  · intro h
+    unfold PairedRecognizerDovetailTotalStageAttemptCode at h
+    unfold MachineDescription.DovetailLayout.totalStageAttemptCodePrimitive at h
+    unfold MachineDescription.DovetailLayout.totalStageAttemptCode at h
+    cases hdecode :
+        MachineDescription.DovetailLayout.decodeStageInputComplete code with
+    | none =>
+        simp [hdecode] at h
+    | some parsed =>
+        cases parsed with
+        | mk w stage =>
+            simp [hdecode] at h
+            cases h
+            exact
+              ⟨w, stage,
+                MachineDescription.DovetailLayout.decodeStageInputComplete_eq_some_stageInputCode
+                  hdecode,
+                by
+                  simp [MachineDescription.DovetailLayout.outputWordFromHits,
+                    MachineDescription.DovetailLayout.outputFromHits_run_initial_eq_boundedDovetailOutput]⟩
+  · intro h
+    rcases h with ⟨w, stage, rfl, rfl⟩
+    exact pairedRecognizerDovetailTotalStageAttemptCode_encode
+      accept reject w stage
 
 theorem pairedRecognizerDovetailTotalStageAttemptCode_realizes
     (accept reject : MachineDescription) :
@@ -2151,10 +2311,29 @@ def EncodedCodeWordCanonicalRecognizerConstruction : Prop :=
 theorem encodedCodeWordCanonicalRecognizerConstruction_scaffold :
     EncodedCodeWordCanonicalRecognizerConstruction := by
   refine
-    ⟨MachineDescription.EncodedCodeWordRecognizerDescription,
-      MachineDescription.encodedCodeWordRecognizerDescription_subroutineReady,
+    ⟨MachineDescription.ExactIdentityDescription,
+      ⟨MachineDescription.exactIdentityDescription_wellFormed,
+        MachineDescription.exactIdentityDescription_haltTransitionFree⟩,
       ?_⟩
-  sorry
+  intro bits code
+  constructor
+  · intro h
+    have hbits :
+        MachineDescription.encodeCodeWordAsInput code = bits :=
+      (MachineDescription.exactIdentityDescription_haltsWithOutput_iff
+        bits (MachineDescription.encodeCodeWordAsInput code)).mp h
+    rw [← hbits]
+    exact
+      MachineDescription.decodeCodeWordAsInput_encodeCodeWordAsInput code
+  · intro h
+    have hbits :
+        bits = MachineDescription.encodeCodeWordAsInput code :=
+      MachineDescription.decodeCodeWordAsInput_eq_some_encodeCodeWordAsInput h
+    rw [hbits]
+    exact
+      (MachineDescription.exactIdentityDescription_haltsWithOutput_iff
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput code)).mpr rfl
 
 def EncodedDovetailStageInputToInitialLayoutRewriterConstruction :
     Prop :=

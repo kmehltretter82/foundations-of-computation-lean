@@ -57,6 +57,61 @@ theorem decode_encode (C : DovetailControllerLayout) :
     decode (encode C) = some (C, []) :=
   decode_encodeAppend C []
 
+theorem decode_eq_some_encodeAppend
+    {tokens : Word MachineCodeSymbol} {C : DovetailControllerLayout}
+    {suffix : Word MachineCodeSymbol}
+    (h : decode tokens = some (C, suffix)) :
+    tokens = encodeAppend C suffix := by
+  unfold decode at h
+  cases tokens with
+  | nil =>
+      simp at h
+  | cons marker rest =>
+      cases marker with
+      | header =>
+          simp at h
+          cases hstageInput : DovetailLayout.decodeStageInput rest with
+          | none =>
+              simp [hstageInput] at h
+          | some parsedStageInput =>
+              cases parsedStageInput with
+              | mk parsed restAfterStageInput =>
+                  cases parsed with
+                  | mk input stage =>
+                      simp [hstageInput] at h
+                      cases hresult : decodeBoolWord restAfterStageInput with
+                      | none =>
+                          simp [hresult] at h
+                      | some parsedResult =>
+                          cases parsedResult with
+                          | mk result parsedSuffix =>
+                              simp [hresult] at h
+                              cases h
+                              subst C
+                              subst suffix
+                              have hstageInputTokens :
+                                  rest =
+                                    DovetailLayout.stageInputCodeAppend
+                                      input stage restAfterStageInput :=
+                                DovetailLayout.decodeStageInput_eq_some_stageInputCodeAppend
+                                  hstageInput
+                              have hresultTokens :
+                                  restAfterStageInput =
+                                    encodeBoolWordAppend result
+                                      parsedSuffix :=
+                                decodeBoolWord_eq_some_encodeBoolWordAppend
+                                  hresult
+                              simp [encodeAppend, hstageInputTokens,
+                                hresultTokens]
+      | transition => simp at h
+      | tick => simp at h
+      | done => simp at h
+      | blank => simp at h
+      | zero => simp at h
+      | one => simp at h
+      | moveLeft => simp at h
+      | moveRight => simp at h
+
 def decodeComplete (tokens : Word MachineCodeSymbol) :
     Option DovetailControllerLayout :=
   match decode tokens with
@@ -66,6 +121,25 @@ def decodeComplete (tokens : Word MachineCodeSymbol) :
 theorem decodeComplete_encode (C : DovetailControllerLayout) :
     decodeComplete (encode C) = some C := by
   simp [decodeComplete, decode_encode]
+
+theorem decodeComplete_eq_some_encode
+    {tokens : Word MachineCodeSymbol} {C : DovetailControllerLayout}
+    (h : decodeComplete tokens = some C) :
+    tokens = encode C := by
+  unfold decodeComplete at h
+  cases hdecode : decode tokens with
+  | none =>
+      simp [hdecode] at h
+  | some parsed =>
+      cases parsed with
+      | mk decoded suffix =>
+          cases suffix with
+          | nil =>
+              simp [hdecode] at h
+              cases h
+              simpa [encode] using decode_eq_some_encodeAppend hdecode
+          | cons _ _ =>
+              simp [hdecode] at h
 
 def initial (w : Word Bool) : DovetailControllerLayout where
   input := w

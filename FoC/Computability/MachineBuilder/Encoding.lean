@@ -402,6 +402,28 @@ theorem decodeBool_encodeBoolAppend
     decodeBool (encodeBoolAppend b suffix) = some (b, suffix) := by
   cases b <;> rfl
 
+theorem decodeBool_eq_some_encodeBoolAppend
+    {tokens : Word MachineCodeSymbol} {b : Bool}
+    {suffix : Word MachineCodeSymbol}
+    (h : decodeBool tokens = some (b, suffix)) :
+    tokens = encodeBoolAppend b suffix := by
+  unfold decodeBool at h
+  cases hcell : decodeCell tokens with
+  | none =>
+      simp [hcell] at h
+  | some parsed =>
+      cases parsed with
+      | mk cell parsedSuffix =>
+          cases cell with
+          | none =>
+              simp [hcell] at h
+          | some decoded =>
+              simp [hcell] at h
+              cases h
+              subst decoded
+              subst parsedSuffix
+              exact decodeCell_eq_some_encodeCellAppend hcell
+
 def cellsToWord? : List (Option Bool) -> Option (Word Bool)
   | [] => some []
   | none :: _ => none
