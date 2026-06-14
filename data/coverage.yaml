@@ -1,4 +1,10 @@
 status: in_progress
+counting_policy:
+  last_audited: "2026-06-14"
+  declaration_scope: "Book-facing chapter files only: FoC/Book/ChapterXX.lean plus FoC/Book/ChapterXX/**/*.lean. Reusable infrastructure modules are tracked below but are not included in declaration counts."
+  theorem_declarations: "Lines beginning with `theorem`."
+  definition_declarations: "Lines beginning with `def`, `structure`, `inductive`, or `abbrev`."
+  sorry_scope: "Current open proof debt was checked with `rg '^\\s*sorry\\b' formal/FoC -g'*.lean'`."
 foundation:
   status: chapter_1_2_real_bridges_current
   modules:
@@ -27,7 +33,8 @@ foundation:
 completed:
   - coordinate: "Chapter 1"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 184
+    theorem_declarations: 241
+    definition_declarations: 91
     modules:
       - "FoC.Book.Chapter01.Section01"
       - "FoC.Book.Chapter01.Section02"
@@ -190,7 +197,7 @@ completed:
         reason: "Java subroutine correctness prose is represented by recursive mathematical kernels, not a Java semantics."
   - coordinate: "Chapter 2"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 94
+    theorem_declarations: 126
     definition_declarations: 18
     modules:
       - "FoC.Book.Chapter02.Section01"
@@ -323,8 +330,8 @@ completed:
         reason: "SQL syntax and DBMS behavior are application material; the table-as-relation model with core update operations is formalized."
   - coordinate: "Chapter 3"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 125
-    definition_declarations: 19
+    theorem_declarations: 177
+    definition_declarations: 34
     modules:
       - "FoC.Book.Chapter03.Section01"
       - "FoC.Book.Chapter03.Section02"
@@ -447,7 +454,7 @@ completed:
         reason: "Editor-specific search/replace syntax, anchors, word boundaries, and escaping conventions are application material; optional, plus, character-class sugar, and the backreference exercise's non-regular target language are formalized."
   - coordinate: "Chapter 4"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 766
+    theorem_declarations: 797
     definition_declarations: 444
     modules:
       - "FoC.Book.Chapter04.Section01"
@@ -574,8 +581,20 @@ completed:
         reason: "General grammar definitions, finite-production presentation vocabulary, finite-presentation code types and countability wrappers for CFG and unrestricted grammar production-list descriptions, unrestricted derivation context closure, form-language soundness lemmas for unrestricted productions and derivations, CFG embedding with finite-production preservation, finite production-list witnesses and finite-production generated-language wrappers for the three sample grammars, the equal-count and ordered a^n b^n c^n grammar invariants, exact generated-language theorem and exact finite-production generated-language wrapper for equal-count words over {a,b,c}, exact generated-language theorem and exact finite-production generated-language wrapper for equal-count words over {a,b,c,d}, parametric generated-language inclusion for every ordered a^n b^n c^n block word, exact generated-language theorem and exact finite-production generated-language wrapper for the ordered a^n b^n c^n block language, parametric generated-language inclusion for every unary-square target word a^(n^2), global unary-square reachability invariant, exact generated-language theorem and exact finite-production generated-language wrapper for the unary-square language a^(n^2), post-stop inversion/terminal potential payloads, selected ordered a^n b^n c^n d^n, ordered strict-count, boundary-guarded powers-of-two, and strict n_a > n_b > n_c exercise grammars with invariants or soundness where applicable and concrete derivations, exact generated-language theorem for ordered strict-count words, constructive generation for every boundary-guarded powers-of-two target word, and representative derivations for the book's equal-count, ordered a^n b^n c^n, and a^(n^2) grammars are formalized; equivalence between general grammars and recursively enumerable languages remains a larger Chapter 5 computability development."
   - coordinate: "Chapter 5"
     status: "coverage_complete_formal_core"
-    theorem_declarations: 390
-    definition_declarations: 188
+    theorem_declarations: 601
+    definition_declarations: 275
+    open_sorries:
+      total: 15
+      by_file:
+        - file: "FoC/Computability/Compiler/UniversalAndRanges.lean"
+          count: 8
+          topic: "Prefix parser normalizer/branch emitters, decoded bounded simulator sequencing, and stage-search controller scaffolds."
+        - file: "FoC/Computability/Compiler/Core/FiniteScaffolds.lean"
+          count: 4
+          topic: "Finite-source paired-recognizer dovetail controller leaves."
+        - file: "FoC/Computability/Compiler/Core/EncodedRewriters.lean"
+          count: 3
+          topic: "Closed-handoff rewriter leaves for initial layout, bounded runner, and total-output emitter."
     modules:
       - "FoC.Book.Chapter05.Section01"
       - "FoC.Book.Chapter05.Section02"
