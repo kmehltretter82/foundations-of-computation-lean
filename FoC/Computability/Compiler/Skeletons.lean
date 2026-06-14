@@ -787,6 +787,181 @@ theorem seq_firstReaches
             simpa [offsetConfiguration, Fragment.seq] using hstateEq
           exact hBnoExit j hj_bound hBexit
 
+theorem seq_reaches_inv
+    {A B : Fragment} {handoffMove : Direction}
+    (hA : A.WellFormed) (hB : B.WellFormed)
+    {Tin Tout : Tape Bool}
+    (hseq :
+      exists n : Nat,
+        (seq A B handoffMove).toDescription.runConfig n
+            { state := (seq A B handoffMove).entry, tape := Tin } =
+          { state := (seq A B handoffMove).exit, tape := Tout }) :
+    exists Tmid : Tape Bool,
+      (exists nA : Nat,
+        A.toDescription.runConfig nA
+            { state := A.entry, tape := Tin } =
+          { state := A.exit, tape := Tmid } ∧
+        forall k : Nat,
+          k < nA ->
+            (A.toDescription.runConfig k
+              { state := A.entry, tape := Tin }).state ≠ A.exit) ∧
+        exists nB : Nat,
+          B.toDescription.runConfig nB
+              { state := B.entry,
+                tape := Tape.move handoffMove Tmid } =
+            { state := B.exit, tape := Tout } := by
+  rcases hseq with ⟨n, hnrun⟩
+  let startSeq : MachineDescription.Configuration :=
+    { state := (seq A B handoffMove).entry, tape := Tin }
+  let startA : MachineDescription.Configuration :=
+    { state := A.entry, tape := Tin }
+  have hhit :
+      exists k : Nat,
+        k < n ∧
+          (A.toDescription.runConfig k startA).state = A.exit := by
+    by_cases hsome :
+        exists k : Nat,
+          k < n ∧
+            (A.toDescription.runConfig k startA).state = A.exit
+    · exact hsome
+    · exfalso
+      have hnoExit : forall k : Nat,
+          k < n ->
+            (A.toDescription.runConfig k startA).state ≠ A.exit := by
+        intro k hk hstate
+        exact hsome ⟨k, hk, hstate⟩
+      have hleft :
+          (seq A B handoffMove).toDescription.runConfig n startSeq =
+            A.toDescription.runConfig n startA := by
+        simpa [startSeq, startA, Fragment.seq] using
+          runConfig_seq_left_of_no_exit
+            (A := A) (B := B) (handoffMove := handoffMove)
+            hA hB (n := n)
+            (c := { state := A.entry, tape := Tin })
+            hA.right.left hnoExit
+      have hstateBound :
+          ((seq A B handoffMove).toDescription.runConfig n
+            startSeq).state < A.stateCount := by
+        rw [hleft]
+        exact MachineDescription.runConfig_state_bound
+          (MachineDescription.Fragment.toDescription_wellFormed hA)
+          hA.right.left
+      have hexitBound :
+          (seq A B handoffMove).exit < A.stateCount := by
+        rw [hnrun] at hstateBound
+        exact hstateBound
+      have hbad : A.stateCount + B.exit < A.stateCount := by
+        simpa [Fragment.seq] using hexitBound
+      omega
+  rcases hhit with ⟨k, hklt, hkstate⟩
+  let Tmid : Tape Bool :=
+    (A.toDescription.runConfig k startA).tape
+  have hArunK :
+      A.toDescription.runConfig k startA =
+        { state := A.exit, tape := Tmid } := by
+    cases hfinal : A.toDescription.runConfig k startA with
+    | mk state tape =>
+        simp [hfinal] at hkstate
+        simp [hfinal, hkstate, Tmid]
+  rcases MachineDescription.firstReaches_halt_of_runConfig_eq
+      (D := A.toDescription)
+      (MachineDescription.Fragment.toDescription_haltTransitionFree hA)
+      hArunK with
+    ⟨nA, hnA_le_k, hArunA, hAfirst⟩
+  have hnA_lt_n : nA < n := Nat.lt_of_le_of_lt hnA_le_k hklt
+  let nB : Nat := n - (nA + 1)
+  have hn_eq : n = nA + (1 + nB) := by
+    omega
+  have hseqA :
+      (seq A B handoffMove).toDescription.runConfig nA startSeq =
+        { state := A.exit, tape := Tmid } := by
+    calc
+      (seq A B handoffMove).toDescription.runConfig nA startSeq =
+          A.toDescription.runConfig nA startA := by
+            simpa [startSeq, startA, Fragment.seq] using
+              runConfig_seq_left_of_no_exit
+                (A := A) (B := B) (handoffMove := handoffMove)
+                hA hB (n := nA)
+                (c := { state := A.entry, tape := Tin })
+                hA.right.left hAfirst
+      _ = { state := A.exit, tape := Tmid } := hArunA
+  let startB : MachineDescription.Configuration :=
+    { state := B.entry, tape := Tape.move handoffMove Tmid }
+  have hrightOffset :
+      offsetConfiguration A.stateCount
+          (B.toDescription.runConfig nB startB) =
+        { state := (seq A B handoffMove).exit, tape := Tout } := by
+    calc
+      offsetConfiguration A.stateCount
+          (B.toDescription.runConfig nB startB) =
+          (seq A B handoffMove).toDescription.runConfig nB
+            { state := A.stateCount + B.entry,
+              tape := Tape.move handoffMove Tmid } := by
+            symm
+            simpa [startB] using
+              runConfig_seq_right
+                (A := A) (B := B) (handoffMove := handoffMove)
+                hA nB
+                { state := B.entry,
+                  tape := Tape.move handoffMove Tmid }
+      _ =
+          (seq A B handoffMove).toDescription.runConfig (1 + nB)
+            { state := A.exit, tape := Tmid } := by
+            rw [Nat.add_comm 1 nB]
+            change
+              (seq A B handoffMove).toDescription.runConfig nB
+                { state := A.stateCount + B.entry,
+                  tape := Tape.move handoffMove Tmid } =
+              (match
+                (seq A B handoffMove).toDescription.stepConfig
+                  { state := A.exit, tape := Tmid } with
+              | none => { state := A.exit, tape := Tmid }
+              | some next =>
+                  (seq A B handoffMove).toDescription.runConfig nB next)
+            rw [stepConfig_seq_handoff
+              (A := A) (B := B) (handoffMove := handoffMove)
+              hA Tmid]
+      _ =
+          (seq A B handoffMove).toDescription.runConfig
+            (nA + (1 + nB)) startSeq := by
+            symm
+            calc
+              (seq A B handoffMove).toDescription.runConfig
+                  (nA + (1 + nB)) startSeq =
+                  (seq A B handoffMove).toDescription.runConfig
+                    (1 + nB)
+                    ((seq A B handoffMove).toDescription.runConfig nA
+                      startSeq) := by
+                    rw [MachineDescription.runConfig_add]
+              _ =
+                  (seq A B handoffMove).toDescription.runConfig
+                    (1 + nB)
+                    { state := A.exit, tape := Tmid } := by
+                    rw [hseqA]
+      _ =
+          (seq A B handoffMove).toDescription.runConfig n startSeq := by
+            rw [hn_eq]
+      _ = { state := (seq A B handoffMove).exit, tape := Tout } :=
+            hnrun
+  have hBrun :
+      B.toDescription.runConfig nB startB =
+        { state := B.exit, tape := Tout } := by
+    cases hBfinal : B.toDescription.runConfig nB startB with
+    | mk state tape =>
+        have hstateEq :
+            A.stateCount + state =
+              (seq A B handoffMove).exit := by
+          simpa [offsetConfiguration, hBfinal] using
+            congrArg MachineDescription.Configuration.state hrightOffset
+        have hstate : state = B.exit := by
+          apply Nat.add_left_cancel (n := A.stateCount)
+          simpa [Fragment.seq] using hstateEq
+        have htape : tape = Tout := by
+          simpa [offsetConfiguration, hBfinal] using
+            congrArg MachineDescription.Configuration.tape hrightOffset
+        simp [hstate, htape]
+  exact ⟨Tmid, ⟨nA, hArunA, hAfirst⟩, ⟨nB, hBrun⟩⟩
+
 end Fragment
 
 theorem seqSubroutine_reaches
@@ -882,7 +1057,33 @@ theorem seqSubroutine_haltsWithTape_inv
               { state := B.start,
                 tape := Tape.move handoffMove Tmid } =
             { state := B.halt, tape := Tout } := by
-  sorry
+  rcases runConfig_eq_halt_of_haltsWithTape hseq with ⟨n, hn⟩
+  have hseqFrag :
+      exists n : Nat,
+        (Fragment.seq A.asFragment B.asFragment handoffMove).toDescription.runConfig n
+            { state := (Fragment.seq A.asFragment B.asFragment handoffMove).entry,
+              tape := Tape.input input } =
+          { state := (Fragment.seq A.asFragment B.asFragment handoffMove).exit,
+            tape := Tout } := by
+    exact ⟨n, by
+      simpa [seqSubroutine, asFragment, Fragment.seq] using hn⟩
+  rcases Fragment.seq_reaches_inv
+      (A := A.asFragment) (B := B.asFragment)
+      (handoffMove := handoffMove)
+      (asFragment_wellFormed hA)
+      (asFragment_wellFormed hB)
+      hseqFrag with
+    ⟨Tmid, hAReach, hBReach⟩
+  rcases hAReach with ⟨nA, hArunA, _hAfirst⟩
+  rcases hBReach with ⟨nB, hBrunB⟩
+  exact ⟨Tmid,
+    ⟨⟨nA, by
+        constructor
+        · simpa [HaltsWithTapeIn, asFragment] using
+            congrArg Configuration.state hArunA
+        · simpa [HaltsWithTapeIn, asFragment] using
+            congrArg Configuration.tape hArunA⟩,
+      ⟨nB, by simpa [asFragment] using hBrunB⟩⟩⟩
 
 theorem seqSubroutine_haltsWithOutput_of_haltsWithTape
     {A B : MachineDescription} {handoffMove : Direction}
