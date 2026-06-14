@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.ControllerStageInputProjection
+import FoC.Computability.Compiler.Core.ControllerResultEmitter
 
 set_option doc.verso true
 
@@ -21,8 +21,8 @@ theorem encodedControllerStageInputProjectionRewriterConstruction_scaffold :
     encodedControllerStageInputProjectionCodeWordSubroutineConstruction_scaffold
 
 theorem encodedControllerResultEmitterRewriterConstruction_scaffold :
-    EncodedControllerResultEmitterRewriterConstruction := by
-  sorry
+    EncodedControllerResultEmitterRewriterConstruction :=
+  encodedControllerResultEmitterRewriterConstruction_of_description
 
 theorem encodedControllerResultContinueCodeWordSubroutineConstruction_scaffold :
     EncodedControllerResultContinueCodeWordSubroutineConstruction := by

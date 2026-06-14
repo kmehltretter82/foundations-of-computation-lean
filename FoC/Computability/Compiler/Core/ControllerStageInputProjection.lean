@@ -47,28 +47,28 @@ def dovetailControllerProjectionScanLeftToBoundary
   , dovetailControllerProjectionKeepMove three (some false) Direction.left scan
   , dovetailControllerProjectionKeepMove three (some true) Direction.left scan ]
 
-private def transitionWellFormedBool
+def transitionWellFormedBool
     (stateCount : Nat) (t : TransitionDescription) : Bool :=
   decide (t.source < stateCount) && decide (t.target < stateCount)
 
-private def transitionSameKeyBool
+def transitionSameKeyBool
     (t u : TransitionDescription) : Bool :=
   decide (t.source = u.source) && decide (t.read = u.read)
 
-private def transitionSameActionBool
+def transitionSameActionBool
     (t u : TransitionDescription) : Bool :=
   decide (t.write = u.write) && decide (t.move = u.move) &&
     decide (t.target = u.target)
 
-private def transitionDeterministicPairBool
+def transitionDeterministicPairBool
     (t u : TransitionDescription) : Bool :=
   !transitionSameKeyBool t u || transitionSameActionBool t u
 
-private def transitionNotFromBool
+def transitionNotFromBool
     (state : Nat) (t : TransitionDescription) : Bool :=
   decide (t.source ≠ state)
 
-private theorem transition_wellFormed_of_all
+theorem transition_wellFormed_of_all
     {stateCount : Nat} {l : List TransitionDescription}
     (h : l.all (transitionWellFormedBool stateCount) = true) :
     forall t : TransitionDescription,
@@ -78,7 +78,7 @@ private theorem transition_wellFormed_of_all
   simpa [transitionWellFormedBool, TransitionDescription.WellFormed] using
     htbool
 
-private theorem transition_deterministic_of_all
+theorem transition_deterministic_of_all
     {l : List TransitionDescription}
     (h :
       l.all (fun t =>
@@ -99,7 +99,7 @@ private theorem transition_deterministic_of_all
   rcases hubool with ⟨⟨hwrite, hmove⟩, htarget⟩
   exact ⟨hwrite, hmove, htarget⟩
 
-private theorem transition_notFrom_of_all
+theorem transition_notFrom_of_all
     {state : Nat} {l : List TransitionDescription}
     (h : l.all (transitionNotFromBool state) = true) :
     forall t : TransitionDescription, t ∈ l -> t.source ≠ state := by
@@ -215,13 +215,13 @@ private theorem projectionCodeCells_filterMap
     Tape.filterMap_id_map_some
       (MachineDescription.encodeCodeWordAsInput code)
 
-private theorem encodeNatAppend_append
+theorem encodeNatAppend_append
     (n : Nat) (suffix tail : Word MachineCodeSymbol) :
     MachineDescription.encodeNatAppend n (List.append suffix tail) =
       List.append (MachineDescription.encodeNatAppend n suffix) tail := by
   simp [MachineDescription.encodeNatAppend, List.append_assoc]
 
-private theorem encodeCellsAppend_append
+theorem encodeCellsAppend_append
     (cells : List (Option Bool)) (suffix tail : Word MachineCodeSymbol) :
     MachineDescription.encodeCellsAppend cells (List.append suffix tail) =
       List.append (MachineDescription.encodeCellsAppend cells suffix)
@@ -241,7 +241,7 @@ private theorem encodeCellsAppend_append
             tail)
       rw [ih]
 
-private theorem encodeCellListAppend_append
+theorem encodeCellListAppend_append
     (cells : List (Option Bool)) (suffix tail : Word MachineCodeSymbol) :
     MachineDescription.encodeCellListAppend cells (List.append suffix tail) =
       List.append (MachineDescription.encodeCellListAppend cells suffix)
@@ -258,7 +258,7 @@ private theorem encodeCellListAppend_append
   rw [encodeCellsAppend_append]
   rw [encodeNatAppend_append]
 
-private theorem encodeBoolWordAppend_append
+theorem encodeBoolWordAppend_append
     (w : Word Bool) (suffix tail : Word MachineCodeSymbol) :
     MachineDescription.encodeBoolWordAppend w (List.append suffix tail) =
       List.append (MachineDescription.encodeBoolWordAppend w suffix)
