@@ -456,6 +456,14 @@ def PairedRecognizerDovetailControllerRawOutputCode :
     MachineDescription.TapeCodePrimitive :=
   MachineDescription.DovetailControllerLayout.rawOutputCodePrimitive
 
+def PairedRecognizerDovetailControllerResultEmitterCode :
+    MachineDescription.TapeCodePrimitive :=
+  MachineDescription.DovetailControllerLayout.emitResultCodePrimitive
+
+def PairedRecognizerDovetailControllerResultContinueCode :
+    MachineDescription.TapeCodePrimitive :=
+  MachineDescription.DovetailControllerLayout.continueResultCodePrimitive
+
 def PairedRecognizerDovetailControllerContinueCode
     (accept reject : MachineDescription) :
     MachineDescription.TapeCodePrimitive :=
@@ -803,6 +811,52 @@ theorem pairedRecognizerDovetailStageAttemptCode_encode
   MachineDescription.DovetailLayout.stageAttemptCodePrimitive_stageInputCode
     accept reject w stage
 
+theorem pairedRecognizerDovetailStageAttemptCode_transform_eq_some_iff
+    (accept reject : MachineDescription)
+    (code out : Word MachineCodeSymbol) :
+    (PairedRecognizerDovetailStageAttemptCode accept reject).transform code =
+        some out <->
+      exists w : Word Bool,
+      exists stage : Nat,
+      exists result : Word Bool,
+        code = PairedRecognizerDovetailStageInputCode w stage ∧
+          MachineDescription.boundedDovetailOutput accept reject w stage =
+            some result ∧
+          out = MachineDescription.encodeBoolWord result := by
+  constructor
+  · intro h
+    unfold PairedRecognizerDovetailStageAttemptCode at h
+    unfold MachineDescription.DovetailLayout.stageAttemptCodePrimitive at h
+    unfold MachineDescription.DovetailLayout.stageAttemptCode at h
+    cases hdecode :
+        MachineDescription.DovetailLayout.decodeStageInputComplete code with
+    | none =>
+        simp [hdecode] at h
+    | some parsed =>
+        cases parsed with
+        | mk w stage =>
+            simp [hdecode] at h
+            rw [MachineDescription.DovetailLayout.outputFromHits_run_initial_eq_boundedDovetailOutput]
+              at h
+            cases hbounded :
+                MachineDescription.boundedDovetailOutput
+                  accept reject w stage with
+            | none =>
+                simp [hbounded] at h
+            | some result =>
+                simp [hbounded] at h
+                cases h
+                exact
+                  ⟨w, stage, result,
+                    MachineDescription.DovetailLayout.decodeStageInputComplete_eq_some_stageInputCode
+                      hdecode,
+                    hbounded,
+                    rfl⟩
+  · intro h
+    rcases h with ⟨w, stage, result, rfl, hbounded, rfl⟩
+    rw [pairedRecognizerDovetailStageAttemptCode_encode, hbounded]
+    rfl
+
 theorem pairedRecognizerDovetailStageAttemptCode_realizes
     (accept reject : MachineDescription) :
     PairedRecognizerDovetailStageAttemptCodeRealizes
@@ -937,11 +991,41 @@ theorem pairedRecognizerDovetailControllerRawOutputCode_realizes :
 
 theorem pairedRecognizerDovetailControllerRawOutputCode_eq_some_encodeBoolWord_singleton_iff
     {tokens : Word MachineCodeSymbol} {b : Bool} :
-    PairedRecognizerDovetailControllerRawOutputCode.transform tokens =
+      PairedRecognizerDovetailControllerRawOutputCode.transform tokens =
         some (MachineDescription.encodeBoolWord [b]) <->
       MachineDescription.DovetailControllerLayout.decodeAttemptResultCode
         tokens = some [b] :=
   MachineDescription.DovetailControllerLayout.rawOutputCode_eq_some_encodeBoolWord_singleton_iff
+
+theorem pairedRecognizerDovetailControllerRawOutputCode_transform_eq_some_iff
+    (code outCode : Word MachineCodeSymbol) :
+    PairedRecognizerDovetailControllerRawOutputCode.transform code =
+        some outCode <->
+      exists result out : Word Bool,
+        code = MachineDescription.encodeBoolWord result ∧
+          PairedRecognizerDovetailControllerRawOutput result = some out ∧
+          outCode = MachineDescription.encodeBoolWord out := by
+  constructor
+  · intro h
+    rcases
+        MachineDescription.DovetailControllerLayout.rawOutputCode_eq_some_iff.mp
+          h with
+      ⟨result, out, hdecode, hraw, hout⟩
+    exact
+      ⟨result, out,
+        MachineDescription.DovetailControllerLayout.decodeAttemptResultCode_eq_some_encodeBoolWord
+          hdecode,
+        hraw,
+        hout⟩
+  · intro h
+    rcases h with ⟨result, out, rfl, hraw, rfl⟩
+    exact
+      MachineDescription.DovetailControllerLayout.rawOutputCode_eq_some_iff.mpr
+        ⟨result, out,
+          MachineDescription.DovetailControllerLayout.decodeAttemptResultCode_encodeBoolWord
+            result,
+          hraw,
+          rfl⟩
 
 theorem pairedRecognizerDovetailControllerRawOutputCode_eq_some_self
     {code out : Word MachineCodeSymbol}
@@ -1064,6 +1148,56 @@ theorem pairedRecognizerDovetailControllerContinueEmitCode_branch
                 some (MachineDescription.encodeBoolWord out)) :=
   MachineDescription.DovetailControllerLayout.continue_emit_branch_encode
     accept reject C
+
+theorem pairedRecognizerDovetailControllerResultEmitterCode_encode_eq_some_iff
+    {C : MachineDescription.DovetailControllerLayout}
+    {outCode : Word MachineCodeSymbol} :
+    PairedRecognizerDovetailControllerResultEmitterCode.transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+        some outCode <->
+      exists out : Word Bool,
+        PairedRecognizerDovetailControllerRawOutput C.result = some out ∧
+          outCode = MachineDescription.encodeBoolWord out :=
+  MachineDescription.DovetailControllerLayout.emitResultCodePrimitive_encode_eq_some_iff
+
+theorem pairedRecognizerDovetailControllerResultEmitterCode_encode_eq_encodeBoolWord_iff
+    {C : MachineDescription.DovetailControllerLayout}
+    {out : Word Bool} :
+    PairedRecognizerDovetailControllerResultEmitterCode.transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+        some (MachineDescription.encodeBoolWord out) <->
+      PairedRecognizerDovetailControllerRawOutput C.result = some out :=
+  MachineDescription.DovetailControllerLayout.emitResultCodePrimitive_encode_eq_encodeBoolWord_iff
+
+theorem pairedRecognizerDovetailControllerResultContinueCode_encode_eq_some_iff
+    {C : MachineDescription.DovetailControllerLayout}
+    {outCode : Word MachineCodeSymbol} :
+    PairedRecognizerDovetailControllerResultContinueCode.transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+        some outCode <->
+      PairedRecognizerDovetailControllerRawOutput C.result = none ∧
+        outCode =
+          MachineDescription.DovetailControllerLayout.encode
+            (MachineDescription.DovetailControllerLayout.nextStage C) :=
+  MachineDescription.DovetailControllerLayout.continueResultCodePrimitive_encode_eq_some_iff
+
+theorem pairedRecognizerDovetailControllerResultContinueCode_encode_nextStage_iff
+    {C : MachineDescription.DovetailControllerLayout} :
+    PairedRecognizerDovetailControllerResultContinueCode.transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+        some
+          (MachineDescription.DovetailControllerLayout.encode
+            (MachineDescription.DovetailControllerLayout.nextStage C)) <->
+      PairedRecognizerDovetailControllerRawOutput C.result = none := by
+  constructor
+  · intro h
+    exact
+      (pairedRecognizerDovetailControllerResultContinueCode_encode_eq_some_iff.mp
+        h).left
+  · intro h
+    exact
+      pairedRecognizerDovetailControllerResultContinueCode_encode_eq_some_iff.mpr
+        ⟨h, rfl⟩
 
 theorem pairedRecognizerDovetailTotalThenRawOutputCode_encode
     (accept reject : MachineDescription)

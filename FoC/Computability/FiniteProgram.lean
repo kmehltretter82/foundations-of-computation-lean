@@ -336,6 +336,7 @@ theorem compiledByDescription
     (P : FiniteBoolProgram)
     (hD : P.description.WellFormed) :
     BoolProgramCompiledByDescription P.toStagedProgram P.compile := by
+  classical
   constructor
   · exact hD
   · intro w b

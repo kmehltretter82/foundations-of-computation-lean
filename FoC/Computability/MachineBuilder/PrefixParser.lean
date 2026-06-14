@@ -146,6 +146,39 @@ theorem branchCode_total (tokens : Word MachineCodeSymbol) :
       exact ⟨encodeBoolWordAppend [true] tokens,
         branchCode_of_decodeDescriptionPrefix hdecode⟩
 
+theorem branchCode_eq_some_iff
+    (tokens out : Word MachineCodeSymbol) :
+    branchCode tokens = some out <->
+      (decodeDescriptionPrefix tokens = none ∧
+        out = encodeBoolWord [false]) ∨
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        decodeDescriptionPrefix tokens = some (D, input) ∧
+          out =
+            encodeBoolWordAppend [true]
+              (List.append (encodeDescription D) input) := by
+  constructor
+  · intro h
+    unfold branchCode at h
+    cases hdecode : decodeDescriptionPrefix tokens with
+    | none =>
+        simp [hdecode] at h
+        cases h
+        exact Or.inl ⟨rfl, rfl⟩
+    | some parsed =>
+        cases parsed with
+        | mk D input =>
+            simp [hdecode] at h
+            cases h
+            exact Or.inr ⟨D, input, rfl, rfl⟩
+  · intro h
+    rcases h with hfailure | hsuccess
+    · rcases hfailure with ⟨hdecode, rfl⟩
+      exact branchCode_of_decodeDescriptionPrefix_none hdecode
+    · rcases hsuccess with ⟨D, input, hdecode, rfl⟩
+      unfold branchCode
+      rw [hdecode]
+
 def branchCodePrimitive : TapeCodePrimitive where
   transform := branchCode
 

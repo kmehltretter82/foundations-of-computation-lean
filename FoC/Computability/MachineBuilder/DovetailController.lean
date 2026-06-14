@@ -206,6 +206,30 @@ def rawOutputCode
 def rawOutputCodePrimitive : TapeCodePrimitive where
   transform := rawOutputCode
 
+def emitResultCode
+    (tokens : Word MachineCodeSymbol) : Option (Word MachineCodeSymbol) :=
+  match decodeComplete tokens with
+  | none => none
+  | some C =>
+      match rawOutput? C.result with
+      | none => none
+      | some out => some (encodeBoolWord out)
+
+def emitResultCodePrimitive : TapeCodePrimitive where
+  transform := emitResultCode
+
+def continueResultCode
+    (tokens : Word MachineCodeSymbol) : Option (Word MachineCodeSymbol) :=
+  match decodeComplete tokens with
+  | none => none
+  | some C =>
+      match rawOutput? C.result with
+      | none => some (encode (nextStage C))
+      | some _ => none
+
+def continueResultCodePrimitive : TapeCodePrimitive where
+  transform := continueResultCode
+
 theorem rawOutputCode_eq_some_iff
     {tokens outCode : Word MachineCodeSymbol} :
     rawOutputCode tokens = some outCode <->
@@ -249,6 +273,150 @@ theorem rawOutputCodePrimitive_encodeBoolWord
     rawOutputCodePrimitive.transform (encodeBoolWord result) =
       Option.map encodeBoolWord (rawOutput? result) :=
   rawOutputCode_encodeBoolWord result
+
+theorem emitResultCode_encode
+    (C : DovetailControllerLayout) :
+    emitResultCode (encode C) =
+      Option.map encodeBoolWord (rawOutput? C.result) := by
+  cases hraw : rawOutput? C.result <;>
+    simp [emitResultCode, decodeComplete_encode, hraw]
+
+theorem emitResultCodePrimitive_encode
+    (C : DovetailControllerLayout) :
+    emitResultCodePrimitive.transform (encode C) =
+      Option.map encodeBoolWord (rawOutput? C.result) :=
+  emitResultCode_encode C
+
+theorem emitResultCode_encode_eq_some_iff
+    {C : DovetailControllerLayout}
+    {outCode : Word MachineCodeSymbol} :
+    emitResultCode (encode C) = some outCode <->
+      exists out : Word Bool,
+        rawOutput? C.result = some out ∧
+          outCode = encodeBoolWord out := by
+  constructor
+  · intro h
+    rw [emitResultCode_encode] at h
+    cases hraw : rawOutput? C.result with
+    | none =>
+        simp [hraw] at h
+    | some out =>
+        simp [hraw] at h
+        cases h
+        exact ⟨out, rfl, rfl⟩
+  · intro h
+    rcases h with ⟨out, hraw, rfl⟩
+    rw [emitResultCode_encode, hraw]
+    rfl
+
+theorem emitResultCodePrimitive_encode_eq_some_iff
+    {C : DovetailControllerLayout}
+    {outCode : Word MachineCodeSymbol} :
+    emitResultCodePrimitive.transform (encode C) = some outCode <->
+      exists out : Word Bool,
+        rawOutput? C.result = some out ∧
+          outCode = encodeBoolWord out :=
+  emitResultCode_encode_eq_some_iff
+
+theorem emitResultCode_encode_eq_encodeBoolWord_iff
+    {C : DovetailControllerLayout} {out : Word Bool} :
+    emitResultCode (encode C) = some (encodeBoolWord out) <->
+      rawOutput? C.result = some out := by
+  constructor
+  · intro h
+    rcases emitResultCode_encode_eq_some_iff.mp h with
+      ⟨actual, hactual, hcode⟩
+    have hout : out = actual := encodeBoolWord_injective hcode
+    rwa [hout]
+  · intro h
+    exact emitResultCode_encode_eq_some_iff.mpr ⟨out, h, rfl⟩
+
+theorem emitResultCodePrimitive_encode_eq_encodeBoolWord_iff
+    {C : DovetailControllerLayout} {out : Word Bool} :
+    emitResultCodePrimitive.transform (encode C) =
+        some (encodeBoolWord out) <->
+      rawOutput? C.result = some out :=
+  emitResultCode_encode_eq_encodeBoolWord_iff
+
+theorem continueResultCode_encode
+    (C : DovetailControllerLayout) :
+    continueResultCode (encode C) =
+      if rawOutput? C.result = none then
+        some (encode (nextStage C))
+      else
+        none := by
+  cases hraw : rawOutput? C.result <;>
+    simp [continueResultCode, decodeComplete_encode, hraw]
+
+theorem continueResultCodePrimitive_encode
+    (C : DovetailControllerLayout) :
+    continueResultCodePrimitive.transform (encode C) =
+      if rawOutput? C.result = none then
+        some (encode (nextStage C))
+      else
+        none :=
+  continueResultCode_encode C
+
+theorem continueResultCode_encode_of_rawOutput_eq_none
+    {C : DovetailControllerLayout}
+    (h : rawOutput? C.result = none) :
+    continueResultCode (encode C) = some (encode (nextStage C)) := by
+  rw [continueResultCode_encode, if_pos h]
+
+theorem continueResultCode_encode_of_rawOutput_eq_some
+    {C : DovetailControllerLayout} {out : Word Bool}
+    (h : rawOutput? C.result = some out) :
+    continueResultCode (encode C) = none := by
+  rw [continueResultCode_encode, if_neg]
+  intro hnone
+  rw [h] at hnone
+  cases hnone
+
+theorem continueResultCode_encode_eq_some_iff
+    {C : DovetailControllerLayout}
+    {outCode : Word MachineCodeSymbol} :
+    continueResultCode (encode C) = some outCode <->
+      rawOutput? C.result = none ∧
+        outCode = encode (nextStage C) := by
+  by_cases hnone : rawOutput? C.result = none
+  · rw [continueResultCode_encode_of_rawOutput_eq_none hnone]
+    constructor
+    · intro h
+      exact ⟨hnone, (Option.some.inj h).symm⟩
+    · intro h
+      rw [h.right]
+  · rw [continueResultCode_encode, if_neg hnone]
+    simp [hnone]
+
+theorem continueResultCodePrimitive_encode_eq_some_iff
+    {C : DovetailControllerLayout}
+    {outCode : Word MachineCodeSymbol} :
+    continueResultCodePrimitive.transform (encode C) = some outCode <->
+      rawOutput? C.result = none ∧
+        outCode = encode (nextStage C) :=
+  continueResultCode_encode_eq_some_iff
+
+theorem continue_emitResult_branch_encode
+    (C : DovetailControllerLayout) :
+    (continueResultCode (encode C) = some (encode (nextStage C)) ∧
+      emitResultCode (encode C) = none) ∨
+      (continueResultCode (encode C) = none ∧
+        exists out : Word Bool,
+          rawOutput? C.result = some out ∧
+            emitResultCode (encode C) = some (encodeBoolWord out)) := by
+  cases hraw : rawOutput? C.result with
+  | none =>
+      left
+      exact
+        ⟨continueResultCode_encode_of_rawOutput_eq_none hraw,
+          by simp [emitResultCode_encode, hraw]⟩
+  | some out =>
+      right
+      exact
+        ⟨continueResultCode_encode_of_rawOutput_eq_some hraw,
+          ⟨out, rfl, by
+            rw [emitResultCode_encode, hraw]
+            rfl⟩⟩
 
 theorem rawOutputCode_encodeBoolWord_nil :
     rawOutputCode (encodeBoolWord []) = none := by
