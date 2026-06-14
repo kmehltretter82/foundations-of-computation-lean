@@ -3,6 +3,7 @@ import FoC.Computability.Compiler.Core.BoundedTrace
 import FoC.Computability.Compiler.Core.DovetailCode
 import FoC.Computability.Compiler.Core.TransitionTableChecks
 import FoC.Computability.Compiler.Core.TapeCodePrimitives
+import FoC.Computability.Compiler.Core.TapeCodePrimitiveSequencing
 import FoC.Computability.Compiler.Core.EncodingLemmas
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer
 import FoC.Computability.Compiler.Core.ConstructionTargets
