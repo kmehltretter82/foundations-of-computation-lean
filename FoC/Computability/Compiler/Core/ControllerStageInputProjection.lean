@@ -107,6 +107,44 @@ private theorem transition_notFrom_of_all
   have htbool := (List.all_eq_true.mp h) t ht
   exact of_decide_eq_true htbool
 
+private def projectionTapeAtCells
+    (leftRev : List (Option Bool)) : List (Option Bool) -> Tape Bool
+  | [] => { left := leftRev, head := none, right := [] }
+  | cell :: rest => { left := leftRev, head := cell, right := rest }
+
+private def projectionTapeAt
+    (leftRev : List (Option Bool)) (bits : Word Bool) : Tape Bool :=
+  projectionTapeAtCells leftRev (bits.map some)
+
+private def projectionConfig
+    (state : Nat) (leftRev cells : List (Option Bool)) :
+    MachineDescription.Configuration :=
+  { state := state, tape := projectionTapeAtCells leftRev cells }
+
+private def projectionCodeCells
+    (code : Word MachineCodeSymbol) : List (Option Bool) :=
+  (MachineDescription.encodeCodeWordAsInput code).map some
+
+private def projectionTickCodeCells : List (Option Bool) :=
+  (MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.tick).map some
+
+private def projectionTickCodeCellsRev : List (Option Bool) :=
+  projectionTickCodeCells.reverse
+
+private def projectionDoneCodeCells : List (Option Bool) :=
+  (MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.done).map some
+
+private def projectionStageTickCellsRev (stage : Nat) : List (Option Bool) :=
+  (projectionCodeCells (List.replicate stage MachineCodeSymbol.tick)).reverse
+
+private theorem projectionCodeCells_append
+    (pre suffix : Word MachineCodeSymbol) :
+    projectionCodeCells (List.append pre suffix) =
+      List.append (projectionCodeCells pre) (projectionCodeCells suffix) := by
+  unfold projectionCodeCells
+  rw [MachineDescription.encodeCodeWordAsInput_append]
+  simp [List.map_append]
+
 def DovetailControllerStageInputProjectionDescription :
     MachineDescription where
   stateCount := 1000
@@ -303,6 +341,130 @@ theorem dovetailControllerStageInputProjectionDescription_haltTransitionFree :
     (by
       native_decide) t ht
 
+private theorem dovetailControllerStageInputProjectionDescription_run_header
+    (suffix : Word Bool) :
+    DovetailControllerStageInputProjectionDescription.runConfig 4
+        (DovetailControllerStageInputProjectionDescription.initial
+          (List.append [false, false, false, false] suffix)) =
+      { state := 100
+        tape := projectionTapeAt [none, none, none, none] suffix } := by
+  cases suffix with
+  | nil =>
+      rfl
+  | cons b _ =>
+      cases b <;> rfl
+
+private theorem dovetailControllerStageInputProjectionDescription_run_stage_tick
+    (leftRev tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig 4
+        (projectionConfig 200 leftRev
+          (List.append projectionTickCodeCells tail)) =
+      projectionConfig 200
+        (List.append projectionTickCodeCellsRev leftRev) tail := by
+  cases tail with
+  | nil =>
+      rfl
+  | cons cell _ =>
+      cases cell with
+      | none =>
+          rfl
+      | some b =>
+          cases b <;> rfl
+
+private theorem dovetailControllerStageInputProjectionDescription_run_stage_done
+    (leftRev rest : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig 12
+        (projectionConfig 200 leftRev
+          (List.append projectionDoneCodeCells (some false :: rest))) =
+      projectionConfig 300
+        (List.append [none, none, none, none] leftRev)
+        (some false :: rest) := by
+  rfl
+
+private theorem projectionStageTickCellsRev_succ
+    (stage : Nat) :
+    projectionStageTickCellsRev (stage + 1) =
+      List.append (projectionStageTickCellsRev stage)
+        projectionTickCodeCellsRev := by
+  have hsucc : stage + 1 = Nat.succ stage := by omega
+  rw [hsucc]
+  simp [List.replicate_succ, projectionStageTickCellsRev,
+    projectionCodeCells, projectionTickCodeCells,
+    projectionTickCodeCellsRev, MachineDescription.encodeCodeWordAsInput,
+    List.reverse_append]
+
+private theorem dovetailControllerStageInputProjectionDescription_run_stage_nat
+    (stage : Nat) (leftRev : List (Option Bool)) (result : Word Bool) :
+    DovetailControllerStageInputProjectionDescription.runConfig
+        (4 * stage + 12)
+        (projectionConfig 200 leftRev
+          (projectionCodeCells
+            (MachineDescription.encodeNatAppend stage
+              (MachineDescription.encodeBoolWord result)))) =
+      projectionConfig 300
+        (List.append [none, none, none, none]
+          (List.append (projectionStageTickCellsRev stage) leftRev))
+        (projectionCodeCells (MachineDescription.encodeBoolWord result)) := by
+  induction stage generalizing leftRev with
+  | zero =>
+      cases result with
+      | nil =>
+          rfl
+      | cons b _ =>
+          cases b <;> rfl
+  | succ stage ih =>
+      have hsteps : 4 * (stage + 1) + 12 = 4 + (4 * stage + 12) := by
+        omega
+      rw [hsteps, MachineDescription.runConfig_add]
+      change DovetailControllerStageInputProjectionDescription.runConfig
+          (4 * stage + 12)
+          (DovetailControllerStageInputProjectionDescription.runConfig 4
+            (projectionConfig 200 leftRev
+              (projectionCodeCells
+                (MachineDescription.encodeNatAppend (stage + 1)
+                  (MachineDescription.encodeBoolWord result))))) = _
+      have hsucc : stage + 1 = Nat.succ stage := by omega
+      have hcells :
+          projectionCodeCells
+              (MachineDescription.encodeNatAppend (stage + 1)
+                (MachineDescription.encodeBoolWord result)) =
+            List.append projectionTickCodeCells
+              (projectionCodeCells
+                (MachineDescription.encodeNatAppend stage
+                  (MachineDescription.encodeBoolWord result))) := by
+        rw [hsucc]
+        rfl
+      rw [hcells]
+      rw [dovetailControllerStageInputProjectionDescription_run_stage_tick]
+      rw [ih]
+      rw [projectionStageTickCellsRev_succ]
+      simp [projectionConfig, projectionTapeAtCells, List.append_assoc]
+
+theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode
+    (C : MachineDescription.DovetailControllerLayout) :
+    DovetailControllerStageInputProjectionDescription.HaltsWithOutput
+      (MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.DovetailControllerLayout.encode C))
+      (MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.DovetailControllerLayout.stageInputCode C)) := by
+  sorry
+
+theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_iff_exists_layout
+    (code out : Word MachineCodeSymbol) :
+    DovetailControllerStageInputProjectionDescription.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out) <->
+      exists C : MachineDescription.DovetailControllerLayout,
+        code = MachineDescription.DovetailControllerLayout.encode C ∧
+          out = MachineDescription.DovetailControllerLayout.stageInputCode C := by
+  constructor
+  · intro h
+    sorry
+  · intro h
+    rcases h with ⟨C, rfl, rfl⟩
+    exact
+      dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode C
+
 theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_of_transform_eq_some
     {code out : Word MachineCodeSymbol}
     (h :
@@ -311,7 +473,12 @@ theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_of_tra
     DovetailControllerStageInputProjectionDescription.HaltsWithOutput
       (MachineDescription.encodeCodeWordAsInput code)
       (MachineDescription.encodeCodeWordAsInput out) := by
-  sorry
+  have hparsed :=
+    (pairedRecognizerDovetailControllerStageInputCode_transform_eq_some_iff
+      code out).mp h
+  exact
+    (dovetailControllerStageInputProjectionDescription_haltsWithOutput_iff_exists_layout
+      code out).mpr hparsed
 
 theorem dovetailControllerStageInputProjectionDescription_transform_eq_some_of_haltsWithOutput
     {code out : Word MachineCodeSymbol}
@@ -321,7 +488,12 @@ theorem dovetailControllerStageInputProjectionDescription_transform_eq_some_of_h
         (MachineDescription.encodeCodeWordAsInput out)) :
     PairedRecognizerDovetailControllerStageInputCodePrimitive.transform
         code = some out := by
-  sorry
+  have hparsed :=
+    (dovetailControllerStageInputProjectionDescription_haltsWithOutput_iff_exists_layout
+      code out).mp h
+  exact
+    (pairedRecognizerDovetailControllerStageInputCode_transform_eq_some_iff
+      code out).mpr hparsed
 
 theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_iff
     (code out : Word MachineCodeSymbol) :
