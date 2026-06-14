@@ -1,0 +1,214 @@
+import FoC.Computability.Compiler.Core.ControllerStageInputProjection
+
+set_option doc.verso true
+
+/-!
+# Finite-source dovetail scaffolds
+-/
+
+namespace FoC
+namespace Computability
+
+open Languages
+
+theorem encodedControllerInputInitializerRewriterConstruction_scaffold :
+    EncodedControllerInputInitializerRewriterConstruction := by
+  sorry
+
+theorem encodedControllerStageInputProjectionRewriterConstruction_scaffold :
+    EncodedControllerStageInputProjectionRewriterConstruction :=
+  encodedControllerStageInputProjectionRewriterConstruction_of_codeWordSubroutine
+    encodedControllerStageInputProjectionCodeWordSubroutineConstruction_scaffold
+
+theorem encodedControllerResultEmitterRewriterConstruction_scaffold :
+    EncodedControllerResultEmitterRewriterConstruction := by
+  sorry
+
+theorem encodedControllerResultContinueCodeWordSubroutineConstruction_scaffold :
+    EncodedControllerResultContinueCodeWordSubroutineConstruction := by
+  sorry
+
+theorem encodedControllerContinueRewriterConstruction_scaffold :
+    EncodedControllerContinueRewriterConstruction :=
+  encodedControllerContinueRewriterConstruction_of_resultContinueCodeWordSubroutine
+    encodedControllerResultContinueCodeWordSubroutineConstruction_scaffold
+
+theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailStageInputToInitialLayoutRewriterConstruction) :
+    PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction := by
+  intro accept reject
+  rcases h accept reject with ⟨initializer, hready, hspec⟩
+  exact ⟨initializer, ⟨⟨hready.left, hspec⟩, hready.right⟩⟩
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailLayoutBoundedRunnerRewriterConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction := by
+  intro accept reject
+  rcases h accept reject with ⟨runner, hready, hspec⟩
+  exact ⟨runner, ⟨⟨hready.left, hspec⟩, hready.right⟩⟩
+
+theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailTotalOutputEmitterRewriterConstruction) :
+    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction := by
+  rcases h with ⟨emitter, hready, hspec⟩
+  exact ⟨emitter, ⟨⟨hready.left, hspec⟩, hready.right⟩⟩
+
+theorem pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction) :
+    PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction :=
+  h
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailLayoutBoundedRunnerHandoffRewriterConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction :=
+  h
+
+theorem pairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailTotalOutputEmitterHandoffRewriterConstruction) :
+    PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction :=
+  h
+
+theorem pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction) :
+    PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction :=
+  h
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction :=
+  h
+
+theorem pairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction) :
+    PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction :=
+  h
+
+theorem pairedRecognizerDovetailControllerInputInitializerConstruction_of_encodedRewriter
+    (h : EncodedControllerInputInitializerRewriterConstruction) :
+    PairedRecognizerDovetailControllerInputInitializerConstruction := by
+  rcases h with ⟨initializer, hready, hspec⟩
+  exact ⟨initializer, hready, hspec⟩
+
+theorem pairedRecognizerDovetailControllerStageInputEncoderConstruction_of_encodedRewriter
+    (h : EncodedControllerStageInputProjectionRewriterConstruction) :
+    PairedRecognizerDovetailControllerStageInputEncoderConstruction := by
+  rcases h with ⟨encoder, hready, hspec⟩
+  exact ⟨encoder, ⟨⟨hready.left, hspec⟩, hready.right⟩⟩
+
+theorem pairedRecognizerDovetailControllerResultEmitterConstruction_of_encodedRewriter
+    (h : EncodedControllerResultEmitterRewriterConstruction) :
+    PairedRecognizerDovetailControllerResultEmitterConstruction := by
+  rcases h with ⟨emitter, hready, hspec⟩
+  exact ⟨emitter, hready, hspec⟩
+
+theorem pairedRecognizerDovetailControllerContinueConstruction_of_encodedRewriter
+    (h : EncodedControllerContinueRewriterConstruction) :
+    PairedRecognizerDovetailControllerContinueConstruction := by
+  rcases h with ⟨continuer, hready, hspec⟩
+  exact ⟨continuer, hready, hspec⟩
+
+/-!
+**Finite-source scaffold.**  These declarations are the remaining concrete
+machine-construction leaves for the paired-recognizer dovetail controller
+route. They are intentionally narrow: the source programs and controller layout
+are the fixed finite targets above, not arbitrary staged programs or arbitrary
+tape-code primitives.
+-/
+
+theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_of_closedHandoff
+    (pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+      encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold)
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_closedHandoff
+    (pairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+      encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold)
+
+theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_of_closedHandoff
+    (pairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+      encodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction_scaffold)
+
+theorem pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    encodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction_scaffold
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    encodedDovetailLayoutBoundedRunnerHandoffRewriterConstruction_scaffold
+
+theorem pairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    encodedDovetailTotalOutputEmitterHandoffRewriterConstruction_scaffold
+
+theorem pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold
+
+theorem pairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    encodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction_scaffold
+
+theorem pairedRecognizerDovetailControllerInputInitializerConstruction_scaffold :
+    PairedRecognizerDovetailControllerInputInitializerConstruction :=
+  pairedRecognizerDovetailControllerInputInitializerConstruction_of_encodedRewriter
+    encodedControllerInputInitializerRewriterConstruction_scaffold
+
+theorem pairedRecognizerDovetailControllerStageInputEncoderConstruction_scaffold :
+    PairedRecognizerDovetailControllerStageInputEncoderConstruction :=
+  pairedRecognizerDovetailControllerStageInputEncoderConstruction_of_encodedRewriter
+    encodedControllerStageInputProjectionRewriterConstruction_scaffold
+
+theorem pairedRecognizerDovetailStageAttemptInvocationConstruction_scaffold :
+    PairedRecognizerDovetailStageAttemptInvocationConstruction := by
+  sorry
+
+theorem pairedRecognizerDovetailControllerResultEmitterConstruction_scaffold :
+    PairedRecognizerDovetailControllerResultEmitterConstruction :=
+  pairedRecognizerDovetailControllerResultEmitterConstruction_of_encodedRewriter
+    encodedControllerResultEmitterRewriterConstruction_scaffold
+
+theorem pairedRecognizerDovetailControllerContinueConstruction_scaffold :
+    PairedRecognizerDovetailControllerContinueConstruction :=
+  pairedRecognizerDovetailControllerContinueConstruction_of_encodedRewriter
+    encodedControllerContinueRewriterConstruction_scaffold
+
+theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_scaffold :
+    PairedRecognizerDovetailFiniteStageLoopSequencingConstruction := by
+  sorry
+
+theorem pairedRecognizerDovetailFiniteStageLoopControllerConstruction_scaffold :
+    PairedRecognizerDovetailFiniteStageLoopControllerConstruction :=
+  pairedRecognizerDovetailFiniteStageLoopControllerConstruction_of_components
+    pairedRecognizerDovetailControllerInputInitializerConstruction_scaffold
+    pairedRecognizerDovetailControllerStageInputEncoderConstruction_scaffold
+    pairedRecognizerDovetailStageAttemptInvocationConstruction_scaffold
+    pairedRecognizerDovetailControllerResultEmitterConstruction_scaffold
+    pairedRecognizerDovetailControllerContinueConstruction_scaffold
+    pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_scaffold
+
+end Computability
+end FoC
