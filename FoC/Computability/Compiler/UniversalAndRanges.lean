@@ -862,36 +862,308 @@ encoded-input description compiler, as in
 {name}`codeUniversalPrefixRowsCoverConstruction_of_finiteSourceCloseout`.
 -/
 
-theorem codePrefixParserNormalizerCodeMachineConstruction_scaffold :
+def CodePrefixDescriptionHeaderFieldsParserConstruction : Prop :=
+  exists state : Type,
+  exists parser : TuringMachine MachineCodeSymbol state,
+    forall tokens : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput parser tokens <->
+        exists stateCount start halt transitionCount : Nat,
+        exists rest : Word MachineCodeSymbol,
+          tokens =
+            MachineCodeSymbol.header ::
+              MachineDescription.encodeNatAppend stateCount
+                (MachineDescription.encodeNatAppend start
+                  (MachineDescription.encodeNatAppend halt
+                    (MachineDescription.encodeNatAppend transitionCount
+                      rest)))
+
+def CodePrefixDescriptionTransitionListParserConstruction : Prop :=
+  exists state : Type,
+  exists parser : TuringMachine MachineCodeSymbol state,
+    forall count : Nat,
+    forall tokens : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput parser
+          (MachineDescription.encodeNatAppend count tokens) <->
+        exists transitions : List TransitionDescription,
+        exists suffix : Word MachineCodeSymbol,
+          MachineDescription.decodeTransitions count tokens =
+            some (transitions, suffix)
+
+def CodePrefixParserNormalizerIdentityMachineSpec
+    (normalizer : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall tokens out : Word MachineCodeSymbol,
+    TuringMachine.HaltsWithOutput normalizer tokens out <->
+      out = tokens ∧
+        exists D : MachineDescription,
+        exists input : Word MachineCodeSymbol,
+          MachineDescription.decodeDescriptionPrefix tokens =
+            some (D, input)
+
+def CodePrefixParserNormalizerIdentityMachineConstruction : Prop :=
+  exists state : Type,
+  exists normalizer : TuringMachine MachineCodeSymbol state,
+    CodePrefixParserNormalizerIdentityMachineSpec normalizer
+
+theorem codePrefixParserNormalizerCodeMachineConstruction_of_identityMachine
+    (hidentity : CodePrefixParserNormalizerIdentityMachineConstruction) :
     CodePrefixParserNormalizerCodeMachineConstruction := by
+  rcases hidentity with ⟨state, normalizer, hnormalizer⟩
+  refine ⟨state, normalizer, ?_⟩
+  intro tokens out
+  rw [hnormalizer tokens out]
+  constructor
+  · intro h
+    rcases h with ⟨hout, D, input, hdecode⟩
+    exact
+      (codePrefixParserNormalizerCode_transform_eq_some_iff
+        tokens out).mpr
+        ⟨D, input, hdecode,
+          by
+            rw [hout]
+            exact
+              MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+                hdecode⟩
+  · intro h
+    rcases
+        (codePrefixParserNormalizerCode_transform_eq_some_iff
+          tokens out).mp h with
+      ⟨D, input, hdecode, hout⟩
+    have htokens :
+        tokens = List.append (MachineDescription.encodeDescription D) input :=
+      MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+        hdecode
+    exact ⟨by rw [htokens, hout], D, input, hdecode⟩
+
+def CodePrefixParserBranchFailureEmitterConstruction : Prop :=
+  exists state : Type,
+  exists emitter : TuringMachine MachineCodeSymbol state,
+    forall tokens out : Word MachineCodeSymbol,
+      TuringMachine.HaltsWithOutput emitter tokens out <->
+        MachineDescription.decodeDescriptionPrefix tokens = none ∧
+          out = MachineDescription.encodeBoolWord [false]
+
+def CodePrefixParserBranchSuccessEmitterConstruction : Prop :=
+  exists state : Type,
+  exists emitter : TuringMachine MachineCodeSymbol state,
+    forall tokens out : Word MachineCodeSymbol,
+      TuringMachine.HaltsWithOutput emitter tokens out <->
+        exists D : MachineDescription,
+        exists input : Word MachineCodeSymbol,
+          MachineDescription.decodeDescriptionPrefix tokens =
+              some (D, input) ∧
+            out =
+              MachineDescription.encodeBoolWordAppend [true] tokens
+
+def CodePrefixParserBranchTaggedMachineSpec
+    (branch : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall tokens out : Word MachineCodeSymbol,
+    TuringMachine.HaltsWithOutput branch tokens out <->
+      (MachineDescription.decodeDescriptionPrefix tokens = none ∧
+        out = MachineDescription.encodeBoolWord [false]) ∨
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeDescriptionPrefix tokens =
+            some (D, input) ∧
+          out =
+            MachineDescription.encodeBoolWordAppend [true] tokens
+
+def CodePrefixParserBranchTaggedMachineConstruction : Prop :=
+  exists state : Type,
+  exists branch : TuringMachine MachineCodeSymbol state,
+    CodePrefixParserBranchTaggedMachineSpec branch
+
+theorem codePrefixParserBranchCodeMachineConstruction_of_taggedMachine
+    (htagged : CodePrefixParserBranchTaggedMachineConstruction) :
+    CodePrefixParserBranchCodeMachineConstruction := by
+  rcases htagged with ⟨state, branch, hbranch⟩
+  refine ⟨state, branch, ?_⟩
+  intro tokens out
+  rw [hbranch tokens out]
+  constructor
+  · intro h
+    rcases h with hfailure | hsuccess
+    · exact
+        (codePrefixParserBranchCode_transform_eq_some_iff
+          tokens out).mpr (Or.inl hfailure)
+    · rcases hsuccess with ⟨D, input, hdecode, hout⟩
+      have htokens :
+          tokens = List.append (MachineDescription.encodeDescription D)
+            input :=
+        MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+          hdecode
+      exact
+        (codePrefixParserBranchCode_transform_eq_some_iff
+          tokens out).mpr
+          (Or.inr
+            ⟨D, input, hdecode, by simpa [htokens] using hout⟩)
+  · intro h
+    rcases
+        (codePrefixParserBranchCode_transform_eq_some_iff
+          tokens out).mp h with
+      hfailure | hsuccess
+    · exact Or.inl hfailure
+    · rcases hsuccess with ⟨D, input, hdecode, hout⟩
+      have htokens :
+          tokens = List.append (MachineDescription.encodeDescription D)
+            input :=
+        MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+          hdecode
+      exact Or.inr
+        ⟨D, input, hdecode, by simpa [htokens] using hout⟩
+
+def CodePrefixStageCodeDecoderConstruction : Prop :=
+  exists state : Type,
+  exists decoder : TuringMachine MachineCodeSymbol state,
+    forall tokens : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput decoder tokens <->
+        exists stage : Nat,
+        exists encoded : Word MachineCodeSymbol,
+          tokens = CodePrefixRecognizerStageCode encoded stage
+
+def CodePrefixStageDescriptionPrefixDecoderConstruction : Prop :=
+  exists state : Type,
+  exists decoder : TuringMachine MachineCodeSymbol state,
+    forall encoded : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput decoder encoded <->
+        exists D : MachineDescription,
+        exists input : Word MachineCodeSymbol,
+          MachineDescription.decodeDescriptionPrefix encoded =
+            some (D, input)
+
+def CodePrefixDecodedBoundedSimulatorSemanticMachineSpec
+    (simulator : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall tokens : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput simulator tokens <->
+      exists stage : Nat,
+      exists encoded : Word MachineCodeSymbol,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        tokens = CodePrefixRecognizerStageCode encoded stage ∧
+          MachineDescription.decodeDescriptionPrefix encoded =
+            some (D, input) ∧
+          D.HaltsIn stage
+            (MachineDescription.encodeCodeWordAsInput input)
+
+def CodePrefixDecodedBoundedSimulatorSemanticMachineConstruction : Prop :=
+  exists state : Type,
+  exists simulator : TuringMachine MachineCodeSymbol state,
+    CodePrefixDecodedBoundedSimulatorSemanticMachineSpec simulator
+
+theorem codePrefixDecodedBoundedSimulatorCodeMachineConstruction_of_semanticMachine
+    (hsemantic :
+      CodePrefixDecodedBoundedSimulatorSemanticMachineConstruction) :
+    CodePrefixDecodedBoundedSimulatorCodeMachineConstruction := by
+  rcases hsemantic with ⟨state, simulator, hsimulator⟩
+  refine ⟨state, simulator, ?_⟩
+  intro tokens
+  rw [hsimulator tokens]
+  constructor
+  · intro h
+    exact
+      (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_iff
+        tokens ([] : Word MachineCodeSymbol)).mpr
+        ⟨rfl, h⟩
+  · intro h
+    exact
+      ((codePrefixDecodedBoundedSimulatorCode_transform_eq_some_iff
+        tokens ([] : Word MachineCodeSymbol)).mp h).right
+
+def CodePrefixStageSearchControllerCoreConstruction : Prop :=
+  forall {simulatorState : Type}
+    (simulator : TuringMachine MachineCodeSymbol simulatorState),
+    CodePrefixDecodedBoundedSimulatorSpec simulator ->
+      exists searcherState : Type,
+      exists searcher : TuringMachine MachineCodeSymbol searcherState,
+        CodePrefixStageSearchControllerSpec simulator searcher
+
+theorem codePrefixDescriptionHeaderFieldsParserConstruction_scaffold :
+    CodePrefixDescriptionHeaderFieldsParserConstruction := by
   sorry
+
+theorem codePrefixDescriptionTransitionListParserConstruction_scaffold :
+    CodePrefixDescriptionTransitionListParserConstruction := by
+  sorry
+
+theorem codePrefixParserNormalizerIdentityMachineConstruction_of_parserComponents
+    (hheader : CodePrefixDescriptionHeaderFieldsParserConstruction)
+    (htransitions : CodePrefixDescriptionTransitionListParserConstruction) :
+    CodePrefixParserNormalizerIdentityMachineConstruction := by
+  sorry
+
+theorem codePrefixParserNormalizerCodeMachineConstruction_scaffold :
+    CodePrefixParserNormalizerCodeMachineConstruction :=
+  codePrefixParserNormalizerCodeMachineConstruction_of_identityMachine
+    (codePrefixParserNormalizerIdentityMachineConstruction_of_parserComponents
+      codePrefixDescriptionHeaderFieldsParserConstruction_scaffold
+      codePrefixDescriptionTransitionListParserConstruction_scaffold)
 
 theorem codePrefixParserNormalizerMachineConstruction_scaffold :
     CodePrefixParserNormalizerMachineConstruction :=
   codePrefixParserNormalizerMachineConstruction_of_codeMachine
     codePrefixParserNormalizerCodeMachineConstruction_scaffold
 
-theorem codePrefixParserBranchCodeMachineConstruction_scaffold :
-    CodePrefixParserBranchCodeMachineConstruction := by
+theorem codePrefixParserBranchFailureEmitterConstruction_scaffold :
+    CodePrefixParserBranchFailureEmitterConstruction := by
   sorry
+
+theorem codePrefixParserBranchSuccessEmitterConstruction_scaffold :
+    CodePrefixParserBranchSuccessEmitterConstruction := by
+  sorry
+
+theorem codePrefixParserBranchTaggedMachineConstruction_of_emitters
+    (hfailure : CodePrefixParserBranchFailureEmitterConstruction)
+    (hsuccess : CodePrefixParserBranchSuccessEmitterConstruction) :
+    CodePrefixParserBranchTaggedMachineConstruction := by
+  sorry
+
+theorem codePrefixParserBranchCodeMachineConstruction_scaffold :
+    CodePrefixParserBranchCodeMachineConstruction :=
+  codePrefixParserBranchCodeMachineConstruction_of_taggedMachine
+    (codePrefixParserBranchTaggedMachineConstruction_of_emitters
+      codePrefixParserBranchFailureEmitterConstruction_scaffold
+      codePrefixParserBranchSuccessEmitterConstruction_scaffold)
 
 theorem codePrefixParserBranchMachineConstruction_scaffold :
     CodePrefixParserBranchMachineConstruction :=
   codePrefixParserBranchMachineConstruction_of_codeMachine
     codePrefixParserBranchCodeMachineConstruction_scaffold
 
-theorem codePrefixDecodedBoundedSimulatorCodeMachineConstruction_scaffold :
-    CodePrefixDecodedBoundedSimulatorCodeMachineConstruction := by
+theorem codePrefixStageCodeDecoderConstruction_scaffold :
+    CodePrefixStageCodeDecoderConstruction := by
   sorry
+
+theorem codePrefixStageDescriptionPrefixDecoderConstruction_scaffold :
+    CodePrefixStageDescriptionPrefixDecoderConstruction := by
+  sorry
+
+theorem codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_of_decoders
+    (hstage : CodePrefixStageCodeDecoderConstruction)
+    (hdescription : CodePrefixStageDescriptionPrefixDecoderConstruction) :
+    CodePrefixDecodedBoundedSimulatorSemanticMachineConstruction := by
+  sorry
+
+theorem codePrefixDecodedBoundedSimulatorCodeMachineConstruction_scaffold :
+    CodePrefixDecodedBoundedSimulatorCodeMachineConstruction :=
+  codePrefixDecodedBoundedSimulatorCodeMachineConstruction_of_semanticMachine
+    (codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_of_decoders
+      codePrefixStageCodeDecoderConstruction_scaffold
+      codePrefixStageDescriptionPrefixDecoderConstruction_scaffold)
 
 theorem codePrefixDecodedBoundedSimulatorConstruction_scaffold :
     CodePrefixDecodedBoundedSimulatorConstruction :=
   codePrefixDecodedBoundedSimulatorConstruction_of_codeMachine
     codePrefixDecodedBoundedSimulatorCodeMachineConstruction_scaffold
 
+theorem codePrefixStageSearchControllerCoreConstruction_scaffold :
+    CodePrefixStageSearchControllerCoreConstruction := by
+  sorry
+
 theorem codePrefixStageSearchControllerConstruction_scaffold :
     CodePrefixStageSearchControllerConstruction := by
-  sorry
+  intro normalizerState branchState simulatorState
+    normalizer branch simulator hnormalizer hbranch hsimulator
+  exact codePrefixStageSearchControllerCoreConstruction_scaffold
+    simulator hsimulator
 
 theorem codePrefixRecognizerMachineConstruction_scaffold :
     CodePrefixRecognizerMachineConstruction :=
