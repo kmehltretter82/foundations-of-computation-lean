@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters
+import FoC.Computability.Compiler.Core.EncodingLemmas
 import FoC.Computability.Compiler.Core.TransitionTableChecks
 
 set_option doc.verso true
@@ -267,57 +268,6 @@ private theorem projectionCodeCells_filterMap
     Tape.filterMap_id_map_some
       (MachineDescription.encodeCodeWordAsInput code)
 
-theorem encodeNatAppend_append
-    (n : Nat) (suffix tail : Word MachineCodeSymbol) :
-    MachineDescription.encodeNatAppend n (List.append suffix tail) =
-      List.append (MachineDescription.encodeNatAppend n suffix) tail := by
-  simp [MachineDescription.encodeNatAppend, List.append_assoc]
-
-theorem encodeCellsAppend_append
-    (cells : List (Option Bool)) (suffix tail : Word MachineCodeSymbol) :
-    MachineDescription.encodeCellsAppend cells (List.append suffix tail) =
-      List.append (MachineDescription.encodeCellsAppend cells suffix)
-        tail := by
-  induction cells with
-  | nil =>
-      rfl
-  | cons cell rest ih =>
-      simp [MachineDescription.encodeCellsAppend,
-        MachineDescription.encodeCellAppend]
-      change
-        List.append (MachineDescription.encodeCell cell)
-          (MachineDescription.encodeCellsAppend rest
-            (List.append suffix tail)) =
-        List.append (MachineDescription.encodeCell cell)
-          (List.append (MachineDescription.encodeCellsAppend rest suffix)
-            tail)
-      rw [ih]
-
-theorem encodeCellListAppend_append
-    (cells : List (Option Bool)) (suffix tail : Word MachineCodeSymbol) :
-    MachineDescription.encodeCellListAppend cells (List.append suffix tail) =
-      List.append (MachineDescription.encodeCellListAppend cells suffix)
-        tail := by
-  simp [MachineDescription.encodeCellListAppend]
-  change
-    MachineDescription.encodeNatAppend cells.length
-        (MachineDescription.encodeCellsAppend cells
-          (List.append suffix tail)) =
-      List.append
-        (MachineDescription.encodeNatAppend cells.length
-          (MachineDescription.encodeCellsAppend cells suffix))
-        tail
-  rw [encodeCellsAppend_append]
-  rw [encodeNatAppend_append]
-
-theorem encodeBoolWordAppend_append
-    (w : Word Bool) (suffix tail : Word MachineCodeSymbol) :
-    MachineDescription.encodeBoolWordAppend w (List.append suffix tail) =
-      List.append (MachineDescription.encodeBoolWordAppend w suffix)
-        tail := by
-  simpa [MachineDescription.encodeBoolWordAppend] using
-    encodeCellListAppend_append (w.map some) suffix tail
-
 private theorem encodeNat_eq_replicate_tick_done
     (n : Nat) :
     MachineDescription.encodeNat n =
@@ -328,28 +278,6 @@ private theorem encodeNat_eq_replicate_tick_done
       rfl
   | succ n ih =>
       simp [MachineDescription.encodeNat, ih, List.replicate_succ]
-
-private theorem encodeCodeWordAsInput_encodeBoolWordAppend
-    (w : Word Bool) (suffix : Word MachineCodeSymbol) :
-    MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeBoolWordAppend w suffix) =
-      List.append
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeBoolWord w))
-        (MachineDescription.encodeCodeWordAsInput suffix) := by
-  have h :=
-    encodeBoolWordAppend_append w ([] : Word MachineCodeSymbol) suffix
-  simp at h
-  rw [h]
-  change
-    MachineDescription.encodeCodeWordAsInput
-        (List.append (MachineDescription.encodeBoolWordAppend w []) suffix) =
-      List.append
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeBoolWord w))
-        (MachineDescription.encodeCodeWordAsInput suffix)
-  rw [MachineDescription.encodeCodeWordAsInput_append]
-  rfl
 
 private theorem encodeCodeWordAsInput_encodeNat
     (n : Nat) :

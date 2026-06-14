@@ -1,4 +1,5 @@
-import FoC.Computability.Compiler.Core.TapeCodePrimitives
+import FoC.Computability.Compiler.Core.EncodingLemmas
+import FoC.Computability.Compiler.Core.TransitionTableChecks
 
 set_option doc.verso true
 
@@ -205,6 +206,16 @@ def DovetailInitialLayoutInitializerOutputCode
   MachineDescription.DovetailLayout.encode
     (MachineDescription.DovetailLayout.initial accept reject w stage)
 
+def DovetailInitialLayoutInitializerSuffixCode
+    (accept reject : MachineDescription)
+    (w : Word Bool) : Word MachineCodeSymbol :=
+  MachineDescription.encodeNatAppend accept.start
+    (MachineDescription.encodeTapeAppend (Tape.input w)
+      (MachineDescription.encodeNatAppend reject.start
+        (MachineDescription.encodeTapeAppend (Tape.input w)
+          (MachineDescription.encodeBoolAppend false
+            (MachineDescription.encodeBoolAppend false [])))))
+
 def DovetailInitialLayoutInitializerOutputTape
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) : Tape Bool :=
@@ -265,6 +276,187 @@ def PairedRecognizerDovetailInitialLayoutCodeRightShiftedSpecConstruction :
     exists initializer : MachineDescription,
       DovetailInitialLayoutInitializerRightShiftedSpec
         accept reject initializer
+
+def DovetailInitialLayoutInitializerConcreteMachineConstruction :
+    Prop :=
+  forall accept reject : MachineDescription,
+    exists initializer : MachineDescription,
+      DovetailInitialLayoutInitializerReadySpec initializer ∧
+        DovetailInitialLayoutInitializerForwardSpec
+          accept reject initializer ∧
+          DovetailInitialLayoutInitializerClosedSpec
+            accept reject initializer
+
+def DovetailInitialLayoutInitializerRightShiftedOutputCompiledConstruction :
+    Prop :=
+  forall accept reject : MachineDescription,
+    exists initializer : MachineDescription,
+      TapeCodePrimitiveRightShiftedOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailInitialLayoutCode accept reject)
+        initializer
+
+theorem dovetailInitialLayoutInitializerOutputCode_eq_expanded
+    (accept reject : MachineDescription)
+    (w : Word Bool) (stage : Nat) :
+    DovetailInitialLayoutInitializerOutputCode accept reject w stage =
+      MachineCodeSymbol.transition ::
+        MachineDescription.encodeBoolWordAppend w
+          (MachineDescription.encodeNatAppend stage
+            (MachineDescription.encodeNatAppend accept.start
+              (MachineDescription.encodeTapeAppend (Tape.input w)
+                (MachineDescription.encodeNatAppend reject.start
+                  (MachineDescription.encodeTapeAppend (Tape.input w)
+                    (MachineDescription.encodeBoolAppend false
+                      (MachineDescription.encodeBoolAppend false []))))))) := by
+  exact dovetailInitialLayoutCode_output_eq_expanded accept reject w stage
+
+theorem dovetailInitialLayoutInitializerOutputTape_eq_expanded
+    (accept reject : MachineDescription)
+    (w : Word Bool) (stage : Nat) :
+    DovetailInitialLayoutInitializerOutputTape accept reject w stage =
+      Tape.move Direction.right
+        (Tape.input
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineCodeSymbol.transition ::
+              MachineDescription.encodeBoolWordAppend w
+                (MachineDescription.encodeNatAppend stage
+                  (MachineDescription.encodeNatAppend accept.start
+                    (MachineDescription.encodeTapeAppend (Tape.input w)
+                      (MachineDescription.encodeNatAppend reject.start
+                        (MachineDescription.encodeTapeAppend (Tape.input w)
+                          (MachineDescription.encodeBoolAppend false
+                            (MachineDescription.encodeBoolAppend false [])))))))))) := by
+  rw [DovetailInitialLayoutInitializerOutputTape,
+    dovetailInitialLayoutInitializerOutputCode_eq_expanded]
+
+theorem dovetailInitialLayoutInitializerSuffixCode_eq_configurations
+    (accept reject : MachineDescription)
+    (w : Word Bool) :
+    DovetailInitialLayoutInitializerSuffixCode accept reject w =
+      MachineDescription.encodeConfigurationAppend
+        (accept.initial w)
+        (MachineDescription.encodeConfigurationAppend
+          (reject.initial w)
+          (MachineDescription.encodeBoolAppend false
+            (MachineDescription.encodeBoolAppend false []))) := by
+  rw [DovetailInitialLayoutInitializerSuffixCode,
+    encodeConfigurationAppend_initial,
+    encodeConfigurationAppend_initial]
+
+theorem dovetailInitialLayoutInitializerOutputCode_eq_stageInput_append_suffix
+    (accept reject : MachineDescription)
+    (w : Word Bool) (stage : Nat) :
+    DovetailInitialLayoutInitializerOutputCode accept reject w stage =
+      MachineCodeSymbol.transition ::
+        List.append
+          (MachineDescription.DovetailLayout.stageInputCode w stage)
+          (DovetailInitialLayoutInitializerSuffixCode accept reject w) := by
+  rw [dovetailInitialLayoutInitializerOutputCode_eq_expanded]
+  change
+    MachineCodeSymbol.transition ::
+        MachineDescription.encodeBoolWordAppend w
+          (MachineDescription.encodeNatAppend stage
+            (DovetailInitialLayoutInitializerSuffixCode accept reject w)) =
+      MachineCodeSymbol.transition ::
+        List.append
+          (MachineDescription.DovetailLayout.stageInputCode w stage)
+          (DovetailInitialLayoutInitializerSuffixCode accept reject w)
+  congr 1
+  have hnat :
+      MachineDescription.encodeNatAppend stage
+          (DovetailInitialLayoutInitializerSuffixCode accept reject w) =
+        List.append (MachineDescription.encodeNatAppend stage [])
+          (DovetailInitialLayoutInitializerSuffixCode accept reject w) := by
+    simpa using
+      encodeNatAppend_append stage ([] : Word MachineCodeSymbol)
+        (DovetailInitialLayoutInitializerSuffixCode accept reject w)
+  have hbool :=
+    encodeBoolWordAppend_append w
+      (MachineDescription.encodeNatAppend stage [])
+      (DovetailInitialLayoutInitializerSuffixCode accept reject w)
+  rw [← hnat] at hbool
+  simpa [MachineDescription.DovetailLayout.stageInputCode,
+    MachineDescription.DovetailLayout.stageInputCodeAppend] using hbool
+
+theorem dovetailInitialLayoutInitializerRightShiftedSpec_of_rightShiftedOutputCompiled
+    {accept reject initializer : MachineDescription}
+    (hinit :
+      TapeCodePrimitiveRightShiftedOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailInitialLayoutCode accept reject)
+        initializer) :
+    DovetailInitialLayoutInitializerRightShiftedSpec
+      accept reject initializer := by
+  constructor
+  · exact ⟨hinit.left, hinit.right.left⟩
+  constructor
+  · intro w stage
+    let code := PairedRecognizerDovetailStageInputCode w stage
+    let out := DovetailInitialLayoutInitializerOutputCode
+      accept reject w stage
+    have htransform :
+        (PairedRecognizerDovetailInitialLayoutCode accept reject).transform
+            code = some out := by
+      simpa [code, out, DovetailInitialLayoutInitializerOutputCode] using
+        pairedRecognizerDovetailInitialLayoutCode_encode
+          accept reject w stage
+    have houtput :
+        initializer.HaltsWithOutput
+          (MachineDescription.encodeCodeWordAsInput code)
+          (MachineDescription.encodeCodeWordAsInput out) :=
+      (hinit.right.right.left code out).mpr htransform
+    rcases houtput with ⟨n, hn⟩
+    let T :=
+      (initializer.runConfig n
+        (initializer.initial
+          (MachineDescription.encodeCodeWordAsInput code))).tape
+    have hTape :
+        initializer.HaltsWithTape
+          (MachineDescription.encodeCodeWordAsInput code) T := by
+      exact ⟨n, ⟨hn.left, rfl⟩⟩
+    rcases hinit.right.right.right code T hTape with
+      ⟨actualOut, hactual, hT⟩
+    have hactualEq : actualOut = out := by
+      rw [htransform] at hactual
+      cases hactual
+      rfl
+    subst actualOut
+    refine ⟨n, ?_⟩
+    constructor
+    · exact hn.left
+    · change T =
+        DovetailInitialLayoutInitializerOutputTape accept reject w stage
+      rw [hT]
+      simp [out, DovetailInitialLayoutInitializerOutputTape]
+  · intro code T hhalt
+    rcases hinit.right.right.right code T hhalt with
+      ⟨out, htransform, hT⟩
+    rcases
+        (pairedRecognizerDovetailInitialLayoutCode_transform_eq_some_iff
+          accept reject code out).mp htransform with
+      ⟨w, stage, hcode, hout⟩
+    refine ⟨w, stage, hcode, ?_⟩
+    rw [hT, hout]
+    rfl
+
+theorem dovetailInitialLayoutInitializerConcreteMachineConstruction_of_rightShiftedOutputCompiled
+    (hcompile :
+      DovetailInitialLayoutInitializerRightShiftedOutputCompiledConstruction) :
+    DovetailInitialLayoutInitializerConcreteMachineConstruction := by
+  intro accept reject
+  rcases hcompile accept reject with ⟨initializer, hinit⟩
+  exact
+    ⟨initializer,
+      dovetailInitialLayoutInitializerRightShiftedSpec_of_rightShiftedOutputCompiled
+        hinit⟩
+
+theorem dovetailInitialLayoutInitializerRightShiftedOutputCompiledConstruction :
+    DovetailInitialLayoutInitializerRightShiftedOutputCompiledConstruction := by
+  sorry
+
+theorem dovetailInitialLayoutInitializerConcreteMachineConstruction :
+    DovetailInitialLayoutInitializerConcreteMachineConstruction :=
+  dovetailInitialLayoutInitializerConcreteMachineConstruction_of_rightShiftedOutputCompiled
+    dovetailInitialLayoutInitializerRightShiftedOutputCompiledConstruction
 
 private theorem dovetailInitialLayoutInitializerRightShiftedSpec_haltsWithOutput_iff
     {accept reject initializer : MachineDescription}
@@ -380,7 +572,9 @@ theorem tapeCodePrimitiveClosedHandoffCompiled_of_rightShiftedOutputCompiled
 theorem dovetailInitialLayoutInitializerMachineConstruction :
     DovetailInitialLayoutInitializerMachineConstruction := by
   intro accept reject
-  sorry
+  exact
+    dovetailInitialLayoutInitializerConcreteMachineConstruction
+      accept reject
 
 theorem pairedRecognizerDovetailInitialLayoutCode_rightShiftedSpecConstruction :
     PairedRecognizerDovetailInitialLayoutCodeRightShiftedSpecConstruction := by
@@ -395,15 +589,9 @@ theorem pairedRecognizerDovetailInitialLayoutCode_rightShiftedOutputCompiledSubr
     exists initializer : MachineDescription,
       TapeCodePrimitiveRightShiftedOutputCompiledSubroutineByDescription
         (PairedRecognizerDovetailInitialLayoutCode accept reject)
-        initializer := by
-  rcases
-      pairedRecognizerDovetailInitialLayoutCode_rightShiftedSpecConstruction
-        accept reject with
-    ⟨initializer, hinit⟩
-  exact
-    ⟨initializer,
-      tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLayoutSpec
-        hinit⟩
+        initializer :=
+  dovetailInitialLayoutInitializerRightShiftedOutputCompiledConstruction
+    accept reject
 
 theorem pairedRecognizerDovetailInitialLayoutCode_closedHandoffCompiledSubroutine
     (accept reject : MachineDescription) :
