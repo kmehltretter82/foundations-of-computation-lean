@@ -466,6 +466,47 @@ def PairedRecognizerDovetailControllerStageInputEncoderConstruction :
       PairedRecognizerDovetailControllerStageInputCodePrimitive
       encoder
 
+def PairedRecognizerDovetailControllerStageInputEncoderHandoffConstruction :
+    Prop :=
+  exists encoder : MachineDescription,
+    TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+      PairedRecognizerDovetailControllerStageInputCodePrimitive
+      encoder tapeCodePrimitiveCodeWordHandoffMove
+
+def PairedRecognizerDovetailControllerStageInputEncoderClosedHandoffConstruction :
+    Prop :=
+  exists encoder : MachineDescription,
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      PairedRecognizerDovetailControllerStageInputCodePrimitive
+      encoder tapeCodePrimitiveCodeWordHandoffMove
+
+theorem pairedRecognizerDovetailControllerStageInputEncoderConstruction_of_handoff
+    (h : PairedRecognizerDovetailControllerStageInputEncoderHandoffConstruction) :
+    PairedRecognizerDovetailControllerStageInputEncoderConstruction := by
+  rcases h with ⟨encoder, hencoder⟩
+  exact
+    ⟨encoder,
+      tapeCodePrimitiveHandoffCompiledSubroutineByDescription_outputCompiled
+        hencoder⟩
+
+theorem pairedRecognizerDovetailControllerStageInputEncoderHandoffConstruction_of_closedHandoff
+    (h :
+      PairedRecognizerDovetailControllerStageInputEncoderClosedHandoffConstruction) :
+    PairedRecognizerDovetailControllerStageInputEncoderHandoffConstruction := by
+  rcases h with ⟨encoder, hencoder⟩
+  exact
+    ⟨encoder,
+      tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
+        hencoder⟩
+
+theorem pairedRecognizerDovetailControllerStageInputEncoderConstruction_of_closedHandoff
+    (h :
+      PairedRecognizerDovetailControllerStageInputEncoderClosedHandoffConstruction) :
+    PairedRecognizerDovetailControllerStageInputEncoderConstruction :=
+  pairedRecognizerDovetailControllerStageInputEncoderConstruction_of_handoff
+    (pairedRecognizerDovetailControllerStageInputEncoderHandoffConstruction_of_closedHandoff
+      h)
+
 def PairedRecognizerDovetailStageAttemptInvocationRealizes
     (attempt encoder invoker : MachineDescription) : Prop :=
   invoker.SubroutineReady ∧
@@ -499,6 +540,45 @@ def PairedRecognizerDovetailStageAttemptInvocationConstruction :
     exists invoker : MachineDescription,
       PairedRecognizerDovetailStageAttemptInvocationRealizes
         attempt encoder invoker
+
+def PairedRecognizerDovetailStageAttemptInvocationHandoffConstruction :
+    Prop :=
+  forall attempt encoder : MachineDescription,
+    attempt.SubroutineReady ->
+    TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+      PairedRecognizerDovetailControllerStageInputCodePrimitive
+      encoder tapeCodePrimitiveCodeWordHandoffMove ->
+    exists invoker : MachineDescription,
+      PairedRecognizerDovetailStageAttemptInvocationRealizes
+        attempt encoder invoker
+
+def PairedRecognizerDovetailStageAttemptInvocationClosedHandoffConstruction :
+    Prop :=
+  forall attempt encoder : MachineDescription,
+    attempt.SubroutineReady ->
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      PairedRecognizerDovetailControllerStageInputCodePrimitive
+      encoder tapeCodePrimitiveCodeWordHandoffMove ->
+    exists invoker : MachineDescription,
+      PairedRecognizerDovetailStageAttemptInvocationRealizes
+        attempt encoder invoker
+
+theorem pairedRecognizerDovetailStageAttemptInvocationHandoffConstruction_of_output
+    (h : PairedRecognizerDovetailStageAttemptInvocationConstruction) :
+    PairedRecognizerDovetailStageAttemptInvocationHandoffConstruction := by
+  intro attempt encoder hattempt hencoder
+  exact h attempt encoder hattempt
+    (tapeCodePrimitiveHandoffCompiledSubroutineByDescription_outputCompiled
+      hencoder)
+
+theorem pairedRecognizerDovetailStageAttemptInvocationClosedHandoffConstruction_of_handoff
+    (h :
+      PairedRecognizerDovetailStageAttemptInvocationHandoffConstruction) :
+    PairedRecognizerDovetailStageAttemptInvocationClosedHandoffConstruction := by
+  intro attempt encoder hattempt hencoder
+  exact h attempt encoder hattempt
+    (tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
+      hencoder)
 
 def PairedRecognizerDovetailControllerResultEmitterRealizes
     (emitter : MachineDescription) : Prop :=
@@ -552,6 +632,37 @@ def PairedRecognizerDovetailFiniteStageLoopSequencingConstruction :
     exists decider : MachineDescription,
       PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
         attempt decider
+
+def PairedRecognizerDovetailFiniteStageLoopSequencingHandoffConstruction :
+    Prop :=
+  forall attempt initializer encoder invoker emitter continuer :
+      MachineDescription,
+    attempt.SubroutineReady ->
+    PairedRecognizerDovetailControllerInputInitializerRealizes
+      initializer ->
+    TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+      PairedRecognizerDovetailControllerStageInputCodePrimitive
+      encoder tapeCodePrimitiveCodeWordHandoffMove ->
+    PairedRecognizerDovetailStageAttemptInvocationRealizes
+      attempt encoder invoker ->
+    PairedRecognizerDovetailControllerResultEmitterRealizes
+      emitter ->
+    PairedRecognizerDovetailControllerContinueRealizes
+      continuer ->
+    exists decider : MachineDescription,
+      PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
+        attempt decider
+
+theorem pairedRecognizerDovetailFiniteStageLoopSequencingHandoffConstruction_of_output
+    (h : PairedRecognizerDovetailFiniteStageLoopSequencingConstruction) :
+    PairedRecognizerDovetailFiniteStageLoopSequencingHandoffConstruction := by
+  intro attempt initializer encoder invoker emitter continuer
+    hattempt hinitializer hencoder hinvoker hemitter hcontinuer
+  exact h attempt initializer encoder invoker emitter continuer
+    hattempt hinitializer
+    (tapeCodePrimitiveHandoffCompiledSubroutineByDescription_outputCompiled
+      hencoder)
+    hinvoker hemitter hcontinuer
 
 end Computability
 end FoC

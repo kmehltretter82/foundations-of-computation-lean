@@ -1592,16 +1592,35 @@ theorem codePrefixDecodedBoundedSimulatorConstruction_scaffold :
   codePrefixDecodedBoundedSimulatorConstruction_of_codeMachine
     codePrefixDecodedBoundedSimulatorCodeMachineConstruction_scaffold
 
-theorem codePrefixStageSearchControllerCoreConstruction_scaffold :
-    CodePrefixStageSearchControllerCoreConstruction := by
+theorem codePrefixStageSearchControllerConstruction_scaffold :
+    CodePrefixStageSearchControllerConstruction := by
   sorry
 
-theorem codePrefixStageSearchControllerConstruction_scaffold :
+theorem codePrefixStageSearchControllerCoreConstruction_of_finiteSource
+    (hsearch : CodePrefixStageSearchControllerConstruction)
+    (hnormalizer : CodePrefixParserNormalizerMachineConstruction)
+    (hbranch : CodePrefixParserBranchMachineConstruction) :
+    CodePrefixStageSearchControllerCoreConstruction := by
+  intro simulatorState simulator hsimulator
+  rcases hnormalizer with
+    ⟨normalizerState, normalizer, hnormalizer⟩
+  rcases hbranch with ⟨branchState, branch, hbranch⟩
+  exact hsearch normalizer branch simulator
+    hnormalizer hbranch hsimulator
+
+theorem codePrefixStageSearchControllerCoreConstruction_scaffold :
+    CodePrefixStageSearchControllerCoreConstruction :=
+  codePrefixStageSearchControllerCoreConstruction_of_finiteSource
+    codePrefixStageSearchControllerConstruction_scaffold
+    codePrefixParserNormalizerMachineConstruction_scaffold
+    codePrefixParserBranchMachineConstruction_scaffold
+
+theorem codePrefixStageSearchControllerConstruction_of_core
+    (hcore : CodePrefixStageSearchControllerCoreConstruction) :
     CodePrefixStageSearchControllerConstruction := by
   intro normalizerState branchState simulatorState
     normalizer branch simulator hnormalizer hbranch hsimulator
-  exact codePrefixStageSearchControllerCoreConstruction_scaffold
-    simulator hsimulator
+  exact hcore simulator hsimulator
 
 theorem codePrefixRecognizerMachineConstruction_scaffold :
     CodePrefixRecognizerMachineConstruction :=

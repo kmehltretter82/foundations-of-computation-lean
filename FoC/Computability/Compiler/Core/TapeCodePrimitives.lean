@@ -453,6 +453,57 @@ theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_congr
       simpa [hPQ code] using hD.left.right code out
   · exact hD.right
 
+theorem tapeCodePrimitiveHandoffCompiledSubroutineByDescription_congr
+    {P Q : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (hPQ : forall code : Word MachineCodeSymbol,
+      P.transform code = Q.transform code)
+    (hD : TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+      P D handoffMove) :
+    TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+      Q D handoffMove := by
+  constructor
+  · exact tapeCodePrimitiveOutputCompiledSubroutineByDescription_congr hPQ hD.left
+  · intro code out hQ
+    have hP : P.transform code = some out := by
+      simpa [hPQ code] using hQ
+    exact hD.right code out hP
+
+theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_congr
+    {P Q : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (hPQ : forall code : Word MachineCodeSymbol,
+      P.transform code = Q.transform code)
+    (hD : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      P D handoffMove) :
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      Q D handoffMove := by
+  constructor
+  · exact tapeCodePrimitiveOutputCompiledSubroutineByDescription_congr hPQ hD.left
+  · intro code T hhalt
+    rcases hD.right code T hhalt with ⟨out, hP, hnorm, hmove⟩
+    exact ⟨out, by simpa [← hPQ code] using hP, hnorm, hmove⟩
+
+theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      P D handoffMove) :
+    D.SubroutineReady :=
+  ⟨h.left.left.left, h.left.right⟩
+
+theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_haltsWithOutput_iff
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      P D handoffMove)
+    (code out : Word MachineCodeSymbol) :
+    D.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out) <->
+      P.transform code = some out :=
+  h.left.left.right code out
+
 theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_congr
     {P Q : MachineDescription.TapeCodePrimitive}
     {D : MachineDescription} {handoffMove : Direction}

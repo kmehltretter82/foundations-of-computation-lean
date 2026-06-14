@@ -186,6 +186,11 @@ theorem pairedRecognizerDovetailStageAttemptInvocationConstruction_scaffold :
     PairedRecognizerDovetailStageAttemptInvocationConstruction := by
   sorry
 
+theorem pairedRecognizerDovetailStageAttemptInvocationHandoffConstruction_scaffold :
+    PairedRecognizerDovetailStageAttemptInvocationHandoffConstruction :=
+  pairedRecognizerDovetailStageAttemptInvocationHandoffConstruction_of_output
+    pairedRecognizerDovetailStageAttemptInvocationConstruction_scaffold
+
 theorem pairedRecognizerDovetailControllerResultEmitterConstruction_scaffold :
     PairedRecognizerDovetailControllerResultEmitterConstruction :=
   pairedRecognizerDovetailControllerResultEmitterConstruction_of_encodedRewriter
@@ -199,6 +204,11 @@ theorem pairedRecognizerDovetailControllerContinueConstruction_scaffold :
 theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_scaffold :
     PairedRecognizerDovetailFiniteStageLoopSequencingConstruction := by
   sorry
+
+theorem pairedRecognizerDovetailFiniteStageLoopSequencingHandoffConstruction_scaffold :
+    PairedRecognizerDovetailFiniteStageLoopSequencingHandoffConstruction :=
+  pairedRecognizerDovetailFiniteStageLoopSequencingHandoffConstruction_of_output
+    pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_scaffold
 
 theorem pairedRecognizerDovetailFiniteStageLoopControllerConstruction_scaffold :
     PairedRecognizerDovetailFiniteStageLoopControllerConstruction :=
