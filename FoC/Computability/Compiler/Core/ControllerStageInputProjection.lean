@@ -1165,21 +1165,118 @@ private def projectionInputBoolWordCost (w : Word Bool) : Nat :=
 private def projectionResultBoolWordCost (w : Word Bool) : Nat :=
   12 * w.length * w.length + 34 * w.length + 16
 
+private def projectionInputMarkStepCost
+    (marked rest : Word Bool) : Nat :=
+  16 * marked.length + 8 * rest.length + 30
+
+private def projectionInputRemainingCost
+    (marked rest : Word Bool) : Nat :=
+  12 * rest.length * rest.length +
+    16 * marked.length * rest.length +
+    42 * rest.length + 24 * marked.length + 24
+
+private theorem dovetailControllerStageInputProjectionDescription_run_input_mark_one
+    (marked rest : Word Bool) (b : Bool)
+    (suffix : Word MachineCodeSymbol)
+    (baseLeftRev : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig
+        (projectionInputMarkStepCost marked rest)
+        (projectionConfig 100
+          (List.append [none, none, none, none] baseLeftRev)
+          (projectionBoolWordWorkCells marked (b :: rest) suffix)) =
+      projectionConfig 100
+        (List.append [none, none, none, none] baseLeftRev)
+        (projectionBoolWordWorkCells (List.append marked [b]) rest suffix) := by
+  sorry
+
+private theorem dovetailControllerStageInputProjectionDescription_run_input_finish_marked
+    (marked : Word Bool) (stage : Nat) (result : Word Bool)
+    (baseLeftRev : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig
+        (24 * marked.length + 24)
+        (projectionConfig 100
+          (List.append [none, none, none, none] baseLeftRev)
+          (projectionBoolWordWorkCells marked []
+            (MachineDescription.encodeNatAppend stage
+              (MachineDescription.encodeBoolWord result)))) =
+      projectionConfig 200
+        (List.append
+          (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
+          (List.append [none, none, none, none] baseLeftRev))
+        (projectionCodeCells
+          (MachineDescription.encodeNatAppend stage
+            (MachineDescription.encodeBoolWord result))) := by
+  induction marked generalizing baseLeftRev with
+  | nil =>
+      cases stage <;> rfl
+  | cons b rest ih =>
+      sorry
+
+private theorem dovetailControllerStageInputProjectionDescription_run_input_bool_word_acc
+    (marked rest : Word Bool) (stage : Nat) (result : Word Bool)
+    (baseLeftRev : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig
+        (projectionInputRemainingCost marked rest)
+        (projectionConfig 100
+          (List.append [none, none, none, none] baseLeftRev)
+          (projectionBoolWordWorkCells marked rest
+            (MachineDescription.encodeNatAppend stage
+              (MachineDescription.encodeBoolWord result)))) =
+      projectionConfig 200
+        (List.append
+          (projectionCodeCells
+            (MachineDescription.encodeBoolWord
+              (List.append marked rest))).reverse
+          (List.append [none, none, none, none] baseLeftRev))
+        (projectionCodeCells
+          (MachineDescription.encodeNatAppend stage
+            (MachineDescription.encodeBoolWord result))) := by
+  induction rest generalizing marked baseLeftRev with
+  | nil =>
+      simp [projectionInputRemainingCost]
+      exact
+        dovetailControllerStageInputProjectionDescription_run_input_finish_marked
+          marked stage result baseLeftRev
+  | cons b rest ih =>
+      have hcost :
+          projectionInputRemainingCost marked (b :: rest) =
+            projectionInputMarkStepCost marked rest +
+              projectionInputRemainingCost (List.append marked [b]) rest := by
+        simp [projectionInputRemainingCost, projectionInputMarkStepCost,
+          Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
+        omega
+      rw [hcost, MachineDescription.runConfig_add]
+      rw [dovetailControllerStageInputProjectionDescription_run_input_mark_one]
+      rw [ih]
+      have hword :
+          List.append (List.append marked [b]) rest =
+            List.append marked (b :: rest) := by
+        simp [List.append_assoc]
+      rw [hword]
+
 private theorem dovetailControllerStageInputProjectionDescription_run_input_bool_word
-    (w : Word Bool) (suffix : Word MachineCodeSymbol)
+    (w : Word Bool) (stage : Nat) (result : Word Bool)
     (baseLeftRev : List (Option Bool)) :
     DovetailControllerStageInputProjectionDescription.runConfig
         (projectionInputBoolWordCost w)
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
           (projectionCodeCells
-            (MachineDescription.encodeBoolWordAppend w suffix))) =
+            (MachineDescription.encodeBoolWordAppend w
+              (MachineDescription.encodeNatAppend stage
+                (MachineDescription.encodeBoolWord result))))) =
       projectionConfig 200
         (List.append
           (projectionCodeCells (MachineDescription.encodeBoolWord w)).reverse
           (List.append [none, none, none, none] baseLeftRev))
-        (projectionCodeCells suffix) := by
-  sorry
+        (projectionCodeCells
+          (MachineDescription.encodeNatAppend stage
+            (MachineDescription.encodeBoolWord result))) := by
+  have h :=
+    dovetailControllerStageInputProjectionDescription_run_input_bool_word_acc
+      ([] : Word Bool) w stage result baseLeftRev
+  simpa [projectionInputRemainingCost, projectionInputBoolWordCost,
+    projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend] using h
 
 private theorem dovetailControllerStageInputProjectionDescription_run_result_bool_word
     (w : Word Bool) (baseLeftRev : List (Option Bool)) :
@@ -1317,7 +1414,7 @@ theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode
                   (MachineDescription.encodeBoolWord result)))))) =
         projectionConfig 999 finalLeftRev []
     rw [dovetailControllerStageInputProjectionDescription_run_input_bool_word
-      (baseLeftRev := [])]
+      (stage := stage) (result := result) (baseLeftRev := [])]
     rw [MachineDescription.runConfig_add]
     change
       DovetailControllerStageInputProjectionDescription.runConfig
