@@ -150,6 +150,21 @@ private def projectionRepeatedCells
   | 0 => []
   | n + 1 => List.append chunk (projectionRepeatedCells chunk n)
 
+private theorem projectionRepeatedCells_succ_right
+    (chunk : List (Option Bool)) (n : Nat) :
+    projectionRepeatedCells chunk (n + 1) =
+      List.append (projectionRepeatedCells chunk n) chunk := by
+  induction n with
+  | zero =>
+      simp [projectionRepeatedCells]
+  | succ n ih =>
+      change
+        List.append chunk (projectionRepeatedCells chunk (n + 1)) =
+          List.append (List.append chunk (projectionRepeatedCells chunk n))
+            chunk
+      rw [ih]
+      simp [List.append_assoc]
+
 private def projectionBoolPayloadCells : Word Bool -> List (Option Bool)
   | [] => []
   | b :: rest =>
@@ -1158,6 +1173,519 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_al
     simp [projectionCodeCells, MachineDescription.encodeCodeWordAsInput]
     rw [dovetailControllerStageInputProjectionDescription_run_cleanup_all_marked]
     rfl
+
+private def projectionScanState140 : Nat -> Nat
+  | 0 => 140
+  | 1 => 141
+  | 2 => 142
+  | _ => 143
+
+private def projectionScanCountStep (count : Nat) :
+    Option Bool -> Nat
+  | some _ => 0
+  | none =>
+      match count with
+      | 0 => 1
+      | 1 => 2
+      | _ => 3
+
+private def projectionScanCountFold : Nat -> List (Option Bool) -> Nat
+  | count, [] => count
+  | count, cell :: rest =>
+      projectionScanCountFold (projectionScanCountStep count cell) rest
+
+private def projectionScanSafe : Nat -> List (Option Bool) -> Prop
+  | _, [] => True
+  | count, cell :: rest =>
+      (count ≠ 3 ∨ cell ≠ none) ∧
+        projectionScanSafe (projectionScanCountStep count cell) rest
+
+private def projectionScanLeftConfig
+    (state : Nat) (leftOfBoundary : List (Option Bool))
+    (boundaryHead : Option Bool) :
+    List (Option Bool) -> List (Option Bool) ->
+      MachineDescription.Configuration
+  | [], tail =>
+      projectionConfig state leftOfBoundary (boundaryHead :: tail)
+  | cell :: rest, tail =>
+      projectionConfig state
+        (List.append rest (boundaryHead :: leftOfBoundary)) (cell :: tail)
+
+private theorem projectionScanCountStep_le_three
+    {count : Nat} (hcount : count ≤ 3) (cell : Option Bool) :
+    projectionScanCountStep count cell ≤ 3 := by
+  cases cell with
+  | none =>
+      cases count with
+      | zero =>
+          simp [projectionScanCountStep]
+      | succ count =>
+          cases count with
+          | zero =>
+              simp [projectionScanCountStep]
+          | succ count =>
+              simp [projectionScanCountStep]
+  | some b =>
+      cases b <;> simp [projectionScanCountStep]
+
+private theorem dovetailControllerStageInputProjectionDescription_run_scan140_step
+    (count : Nat) (hcount : count ≤ 3)
+    (cell : Option Bool) (rest leftOfBoundary tail : List (Option Bool))
+    (boundaryHead : Option Bool)
+    (hsafe : count ≠ 3 ∨ cell ≠ none) :
+    DovetailControllerStageInputProjectionDescription.runConfig 1
+        (projectionScanLeftConfig (projectionScanState140 count)
+          leftOfBoundary boundaryHead (cell :: rest) tail) =
+      projectionScanLeftConfig
+        (projectionScanState140 (projectionScanCountStep count cell))
+        leftOfBoundary boundaryHead rest (cell :: tail) := by
+  cases rest with
+  | nil =>
+      cases count with
+      | zero =>
+          cases cell with
+          | none =>
+              rfl
+          | some b =>
+              cases b <;> rfl
+      | succ count =>
+          cases count with
+          | zero =>
+              cases cell with
+              | none =>
+                  rfl
+              | some b =>
+                  cases b <;> rfl
+          | succ count =>
+              cases count with
+              | zero =>
+                  cases cell with
+                  | none =>
+                      rfl
+                  | some b =>
+                      cases b <;> rfl
+              | succ count =>
+                  cases count with
+                  | zero =>
+                      cases cell with
+                      | none =>
+                          exact False.elim
+                            (hsafe.elim (fun h => h rfl) (fun h => h rfl))
+                      | some b =>
+                          cases b <;> rfl
+                  | succ count =>
+                      have hfalse : False := by omega
+                      exact False.elim hfalse
+  | cons next more =>
+      cases count with
+      | zero =>
+          cases cell with
+          | none =>
+              rfl
+          | some b =>
+              cases b <;> rfl
+      | succ count =>
+          cases count with
+          | zero =>
+              cases cell with
+              | none =>
+                  rfl
+              | some b =>
+                  cases b <;> rfl
+          | succ count =>
+              cases count with
+              | zero =>
+                  cases cell with
+                  | none =>
+                      rfl
+                  | some b =>
+                      cases b <;> rfl
+              | succ count =>
+                  cases count with
+                  | zero =>
+                      cases cell with
+                      | none =>
+                          exact False.elim
+                            (hsafe.elim (fun h => h rfl) (fun h => h rfl))
+                      | some b =>
+                          cases b <;> rfl
+                  | succ count =>
+                      have hfalse : False := by omega
+                      exact False.elim hfalse
+
+private theorem dovetailControllerStageInputProjectionDescription_run_scan140_cells
+    (cellsRev : List (Option Bool)) (count : Nat) (hcount : count ≤ 3)
+    (hsafe : projectionScanSafe count cellsRev)
+    (leftOfBoundary : List (Option Bool)) (boundaryHead : Option Bool)
+    (tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig cellsRev.length
+        (projectionScanLeftConfig (projectionScanState140 count)
+          leftOfBoundary boundaryHead cellsRev tail) =
+      projectionConfig
+        (projectionScanState140
+          (projectionScanCountFold count cellsRev))
+        leftOfBoundary
+        (boundaryHead :: List.append cellsRev.reverse tail) := by
+  induction cellsRev generalizing count tail with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      rcases hsafe with ⟨hcell, hrest⟩
+      have hnext :
+          projectionScanCountStep count cell ≤ 3 :=
+        projectionScanCountStep_le_three hcount cell
+      rw [show (cell :: rest).length = 1 + rest.length by
+        simp
+        omega,
+        MachineDescription.runConfig_add]
+      change
+        DovetailControllerStageInputProjectionDescription.runConfig
+            rest.length
+            (DovetailControllerStageInputProjectionDescription.runConfig 1
+              (projectionScanLeftConfig (projectionScanState140 count)
+                leftOfBoundary boundaryHead (cell :: rest) tail)) =
+          projectionConfig
+            (projectionScanState140
+              (projectionScanCountFold count (cell :: rest)))
+            leftOfBoundary
+            (boundaryHead :: List.append (cell :: rest).reverse tail)
+      rw [dovetailControllerStageInputProjectionDescription_run_scan140_step
+        count hcount cell rest leftOfBoundary tail boundaryHead hcell]
+      rw [ih (projectionScanCountStep count cell) hnext hrest
+        (cell :: tail)]
+      simp [projectionScanCountFold, List.append_assoc]
+
+private theorem dovetailControllerStageInputProjectionDescription_run_scan140_boundary
+    (base tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig 7
+        (projectionConfig 140 (none :: none :: none :: base) (none :: tail)) =
+      projectionConfig 100
+        (List.append [none, none, none, none] base) tail := by
+  cases tail with
+  | nil =>
+      rfl
+  | cons cell rest =>
+      cases cell with
+      | none =>
+          rfl
+      | some b =>
+          cases b <;> rfl
+
+private theorem dovetailControllerStageInputProjectionDescription_run_scan140_cells_to_boundary
+    (cellsRev : List (Option Bool))
+    (hsafe : projectionScanSafe 0 cellsRev)
+    (hcount : projectionScanCountFold 0 cellsRev = 0)
+    (base tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig
+        (cellsRev.length + 7)
+        (projectionScanLeftConfig 140
+          (List.append ([none, none, none] : List (Option Bool)) base) none
+          cellsRev tail) =
+      projectionConfig 100
+        (List.append [none, none, none, none] base)
+        (List.append cellsRev.reverse tail) := by
+  rw [MachineDescription.runConfig_add]
+  change
+    DovetailControllerStageInputProjectionDescription.runConfig 7
+        (DovetailControllerStageInputProjectionDescription.runConfig
+        cellsRev.length
+        (projectionScanLeftConfig (projectionScanState140 0)
+          (List.append ([none, none, none] : List (Option Bool)) base) none
+          cellsRev tail)) =
+      projectionConfig 100
+        (List.append [none, none, none, none] base)
+        (List.append cellsRev.reverse tail)
+  rw [dovetailControllerStageInputProjectionDescription_run_scan140_cells
+    cellsRev 0 (by omega) hsafe
+    (List.append ([none, none, none] : List (Option Bool)) base) none tail]
+  rw [hcount]
+  simpa [List.append_assoc] using
+    dovetailControllerStageInputProjectionDescription_run_scan140_boundary
+      base (List.append cellsRev.reverse tail)
+
+private theorem dovetailControllerStageInputProjectionDescription_run_state100_marked_tick
+    (leftRev tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig 4
+        (projectionConfig 100 leftRev
+          (List.append projectionMarkedTickCodeCells tail)) =
+      projectionConfig 100
+        (List.append projectionMarkedTickCodeCells.reverse leftRev) tail := by
+  cases tail with
+  | nil =>
+      rfl
+  | cons cell rest =>
+      cases cell with
+      | none =>
+          rfl
+      | some b =>
+          cases b <;> rfl
+
+private theorem dovetailControllerStageInputProjectionDescription_run_state100_marked_ticks
+    (count : Nat) (leftRev tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig (4 * count)
+        (projectionConfig 100 leftRev
+          (List.append
+            (projectionRepeatedCells projectionMarkedTickCodeCells count)
+            tail)) =
+      projectionConfig 100
+        (List.append
+          (projectionRepeatedCells projectionMarkedTickCodeCells count).reverse
+          leftRev)
+        tail := by
+  induction count generalizing leftRev with
+  | zero =>
+      rfl
+  | succ count ih =>
+      have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
+      rw [hsteps, MachineDescription.runConfig_add]
+      change DovetailControllerStageInputProjectionDescription.runConfig
+          (4 * count)
+          (DovetailControllerStageInputProjectionDescription.runConfig 4
+            (projectionConfig 100 leftRev
+              (List.append
+                (projectionRepeatedCells projectionMarkedTickCodeCells
+                  (count + 1)) tail))) = _
+      rw [show projectionRepeatedCells projectionMarkedTickCodeCells
+          (count + 1) =
+          List.append projectionMarkedTickCodeCells
+            (projectionRepeatedCells projectionMarkedTickCodeCells count) by
+        rfl]
+      change DovetailControllerStageInputProjectionDescription.runConfig
+          (4 * count)
+          (DovetailControllerStageInputProjectionDescription.runConfig 4
+            (projectionConfig 100 leftRev
+              (List.append projectionMarkedTickCodeCells
+                (List.append
+                  (projectionRepeatedCells projectionMarkedTickCodeCells count)
+                  tail)))) = _
+      rw [dovetailControllerStageInputProjectionDescription_run_state100_marked_tick]
+      rw [ih]
+      simp [List.reverse_append, List.append_assoc]
+
+private theorem dovetailControllerStageInputProjectionDescription_run_state100_mark_tick
+    (leftRev tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig 4
+        (projectionConfig 100 leftRev
+          (List.append projectionTickCodeCells tail)) =
+      projectionConfig 120
+        (List.append projectionMarkedTickCodeCells.reverse leftRev) tail := by
+  cases tail with
+  | nil =>
+      rfl
+  | cons cell rest =>
+      cases cell with
+      | none =>
+          rfl
+      | some b =>
+          cases b <;> rfl
+
+private theorem dovetailControllerStageInputProjectionDescription_run_state120_tick
+    (leftRev tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig 4
+        (projectionConfig 120 leftRev
+          (List.append projectionTickCodeCells tail)) =
+      projectionConfig 120
+        (List.append projectionTickCodeCells.reverse leftRev) tail := by
+  cases tail with
+  | nil =>
+      rfl
+  | cons cell rest =>
+      cases cell with
+      | none =>
+          rfl
+      | some b =>
+          cases b <;> rfl
+
+private theorem dovetailControllerStageInputProjectionDescription_run_state120_ticks
+    (count : Nat) (leftRev tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig (4 * count)
+        (projectionConfig 120 leftRev
+          (List.append
+            (projectionRepeatedCells projectionTickCodeCells count)
+            tail)) =
+      projectionConfig 120
+        (List.append
+          (projectionRepeatedCells projectionTickCodeCells count).reverse
+          leftRev)
+        tail := by
+  induction count generalizing leftRev with
+  | zero =>
+      rfl
+  | succ count ih =>
+      have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
+      rw [hsteps, MachineDescription.runConfig_add]
+      change DovetailControllerStageInputProjectionDescription.runConfig
+          (4 * count)
+          (DovetailControllerStageInputProjectionDescription.runConfig 4
+            (projectionConfig 120 leftRev
+              (List.append
+                (projectionRepeatedCells projectionTickCodeCells
+                  (count + 1)) tail))) = _
+      rw [show projectionRepeatedCells projectionTickCodeCells
+          (count + 1) =
+          List.append projectionTickCodeCells
+            (projectionRepeatedCells projectionTickCodeCells count) by
+        rfl]
+      change DovetailControllerStageInputProjectionDescription.runConfig
+          (4 * count)
+          (DovetailControllerStageInputProjectionDescription.runConfig 4
+            (projectionConfig 120 leftRev
+              (List.append projectionTickCodeCells
+                (List.append
+                  (projectionRepeatedCells projectionTickCodeCells count)
+                  tail)))) = _
+      rw [dovetailControllerStageInputProjectionDescription_run_state120_tick]
+      rw [ih]
+      simp [List.reverse_append, List.append_assoc]
+
+private theorem dovetailControllerStageInputProjectionDescription_run_state120_done
+    (leftRev tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig 4
+        (projectionConfig 120 leftRev
+          (List.append projectionDoneCodeCells tail)) =
+      projectionConfig 130
+        (List.append projectionDoneCodeCells.reverse leftRev) tail := by
+  cases tail with
+  | nil =>
+      rfl
+  | cons cell rest =>
+      cases cell with
+      | none =>
+          rfl
+      | some b =>
+          cases b <;> rfl
+
+private theorem dovetailControllerStageInputProjectionDescription_run_state130_marked_payload_cell
+    (b : Bool) (leftRev tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig 4
+        (projectionConfig 130 leftRev
+          (List.append (projectionMarkedBoolCellCodeCells b) tail)) =
+      projectionConfig 130
+        (List.append (projectionMarkedBoolCellCodeCells b).reverse leftRev)
+        tail := by
+  cases b <;>
+    cases tail with
+    | nil =>
+        rfl
+    | cons cell rest =>
+        cases cell with
+        | none =>
+            rfl
+        | some b =>
+            cases b <;> rfl
+
+private theorem dovetailControllerStageInputProjectionDescription_run_state130_marked_payload_cell_append
+    (b : Bool) (leftRev middle tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig 4
+        (projectionConfig 130 leftRev
+          (List.append (projectionMarkedBoolCellCodeCells b) middle ++
+            tail)) =
+      projectionConfig 130
+        (List.append (projectionMarkedBoolCellCodeCells b).reverse leftRev)
+        (List.append middle tail) := by
+  cases b <;>
+    cases middle with
+    | nil =>
+        cases tail with
+        | nil =>
+            rfl
+        | cons cell rest =>
+            cases cell with
+            | none =>
+                rfl
+            | some b =>
+                cases b <;> rfl
+    | cons cell rest =>
+        cases cell with
+        | none =>
+            rfl
+        | some b =>
+            cases b <;> rfl
+
+private theorem dovetailControllerStageInputProjectionDescription_run_state130_marked_payload
+    (w : Word Bool) (leftRev tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig (4 * w.length)
+        (projectionConfig 130 leftRev
+          (List.append (projectionMarkedBoolPayloadCells w) tail)) =
+      projectionConfig 130
+        (List.append (projectionMarkedBoolPayloadCells w).reverse leftRev)
+        tail := by
+  induction w generalizing leftRev with
+  | nil =>
+      rfl
+  | cons b rest ih =>
+      have hsteps : 4 * (b :: rest).length = 4 + 4 * rest.length := by
+        simp
+        omega
+      rw [hsteps, MachineDescription.runConfig_add]
+      change DovetailControllerStageInputProjectionDescription.runConfig
+          (4 * rest.length)
+          (DovetailControllerStageInputProjectionDescription.runConfig 4
+            (projectionConfig 130 leftRev
+              (projectionMarkedBoolPayloadCells (b :: rest) ++ tail))) = _
+      rw [show projectionMarkedBoolPayloadCells (b :: rest) =
+          List.append (projectionMarkedBoolCellCodeCells b)
+            (projectionMarkedBoolPayloadCells rest) by
+        rfl]
+      rw [dovetailControllerStageInputProjectionDescription_run_state130_marked_payload_cell_append]
+      rw [ih]
+      simp [List.reverse_append, List.append_assoc]
+
+private def projectionMarkedBoolCellScanPrefixRev (b : Bool) :
+    List (Option Bool) :=
+  match b with
+  | false => [some false, none, some false]
+  | true => [some true, none, some false]
+
+private def projectionMarkedBoolCellScanTailHead (b : Bool) :
+    Option Bool :=
+  match b with
+  | false => some true
+  | true => some false
+
+private theorem dovetailControllerStageInputProjectionDescription_run_state130_mark_payload_cell
+    (b : Bool) (leftRev tail : List (Option Bool)) :
+    DovetailControllerStageInputProjectionDescription.runConfig 4
+        (projectionConfig 130 leftRev
+          (List.append (projectionBoolCellCodeCells b) tail)) =
+      projectionConfig 140 (none :: some false :: leftRev)
+        (List.append
+          (match b with
+          | false => [some false, some true]
+          | true => [some true, some false])
+          tail) := by
+  cases b <;>
+    cases tail with
+    | nil =>
+        rfl
+    | cons cell rest =>
+        cases cell with
+        | none =>
+            rfl
+        | some b =>
+            cases b <;> rfl
+
+private def projectionInputMarkPreviousCells
+    (marked rest : Word Bool) : List (Option Bool) :=
+  List.append
+    (projectionRepeatedCells projectionMarkedTickCodeCells
+      (marked.length + 1))
+    (List.append
+      (projectionCodeCells (List.replicate rest.length
+        MachineCodeSymbol.tick))
+      (List.append projectionDoneCodeCells
+        (projectionMarkedBoolPayloadCells marked)))
+
+private def projectionInputMarkScanBackCellsRev
+    (marked rest : Word Bool) (b : Bool) : List (Option Bool) :=
+  List.append (projectionMarkedBoolCellScanPrefixRev b)
+    (projectionInputMarkPreviousCells marked rest).reverse
+
+private def projectionInputMarkScanTail
+    (rest : Word Bool) (b : Bool) (suffix : Word MachineCodeSymbol) :
+    List (Option Bool) :=
+  projectionMarkedBoolCellScanTailHead b ::
+    List.append (projectionBoolPayloadCells rest) (projectionCodeCells suffix)
 
 private def projectionInputBoolWordCost (w : Word Bool) : Nat :=
   12 * w.length * w.length + 42 * w.length + 24
