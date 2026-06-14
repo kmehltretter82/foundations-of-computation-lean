@@ -1,6 +1,7 @@
 import FoC.Computability.Compiler.Core.Language
 import FoC.Computability.Compiler.Core.BoundedTrace
 import FoC.Computability.Compiler.Core.DovetailCode
+import FoC.Computability.Compiler.Core.TransitionTableChecks
 import FoC.Computability.Compiler.Core.TapeCodePrimitives
 import FoC.Computability.Compiler.Core.ConstructionTargets
 import FoC.Computability.Compiler.Core.ControllerCloseout

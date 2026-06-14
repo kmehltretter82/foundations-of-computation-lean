@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.TransitionTableChecks
 import FoC.Computability.Compiler.Core.ControllerCloseout
 
 set_option doc.verso true
