@@ -871,11 +871,1056 @@ def CodePrefixDescriptionHeaderFieldsParserConstruction : Prop :=
         exists rest : Word MachineCodeSymbol,
           tokens =
             MachineCodeSymbol.header ::
-              MachineDescription.encodeNatAppend stateCount
-                (MachineDescription.encodeNatAppend start
-                  (MachineDescription.encodeNatAppend halt
-                    (MachineDescription.encodeNatAppend transitionCount
-                      rest)))
+            MachineDescription.encodeNatAppend stateCount
+              (MachineDescription.encodeNatAppend start
+                (MachineDescription.encodeNatAppend halt
+                  (MachineDescription.encodeNatAppend transitionCount
+                    rest)))
+
+inductive CodePrefixDescriptionHeaderFieldsParserState where
+  | needHeader : CodePrefixDescriptionHeaderFieldsParserState
+  | stateCount : CodePrefixDescriptionHeaderFieldsParserState
+  | startField : CodePrefixDescriptionHeaderFieldsParserState
+  | haltField : CodePrefixDescriptionHeaderFieldsParserState
+  | transitionCount : CodePrefixDescriptionHeaderFieldsParserState
+  | done : CodePrefixDescriptionHeaderFieldsParserState
+deriving DecidableEq
+
+namespace CodePrefixDescriptionHeaderFieldsParserState
+
+def finite : Foundation.FiniteType
+    CodePrefixDescriptionHeaderFieldsParserState where
+  elems :=
+    [needHeader, stateCount, startField, haltField, transitionCount, done]
+  complete := by
+    intro state
+    cases state <;> simp
+
+end CodePrefixDescriptionHeaderFieldsParserState
+
+def codePrefixDescriptionHeaderFieldsParserTape
+    (leftRev rest : Word MachineCodeSymbol) :
+    Tape MachineCodeSymbol :=
+  match rest with
+  | [] =>
+      { left := leftRev.map some
+        head := none
+        right := [] }
+  | symbol :: suffix =>
+      { left := leftRev.map some
+        head := some symbol
+        right := suffix.map some }
+
+theorem codePrefixDescriptionHeaderFieldsParserTape_move_right
+    (leftRev : Word MachineCodeSymbol)
+    (symbol : MachineCodeSymbol)
+    (suffix : Word MachineCodeSymbol) :
+    Tape.move Direction.right
+        (Tape.write (some symbol)
+          (codePrefixDescriptionHeaderFieldsParserTape leftRev
+            (symbol :: suffix))) =
+      codePrefixDescriptionHeaderFieldsParserTape
+        (symbol :: leftRev) suffix := by
+  cases suffix <;>
+    simp [codePrefixDescriptionHeaderFieldsParserTape, Tape.move,
+      Tape.moveRight, Tape.write]
+
+theorem codePrefixDescriptionHeaderFieldsParserTape_nil_eq_input
+    (tokens : Word MachineCodeSymbol) :
+    codePrefixDescriptionHeaderFieldsParserTape [] tokens =
+      Tape.input tokens := by
+  cases tokens <;> rfl
+
+def codePrefixDescriptionHeaderFieldsParserMachine :
+    TuringMachine MachineCodeSymbol
+      CodePrefixDescriptionHeaderFieldsParserState where
+  start := CodePrefixDescriptionHeaderFieldsParserState.needHeader
+  halt := CodePrefixDescriptionHeaderFieldsParserState.done
+  transition := fun state cell =>
+    match state, cell with
+    | CodePrefixDescriptionHeaderFieldsParserState.needHeader,
+        some MachineCodeSymbol.header =>
+        some
+          (some MachineCodeSymbol.header, Direction.right,
+            CodePrefixDescriptionHeaderFieldsParserState.stateCount)
+    | CodePrefixDescriptionHeaderFieldsParserState.stateCount,
+        some MachineCodeSymbol.tick =>
+        some
+          (some MachineCodeSymbol.tick, Direction.right,
+            CodePrefixDescriptionHeaderFieldsParserState.stateCount)
+    | CodePrefixDescriptionHeaderFieldsParserState.stateCount,
+        some MachineCodeSymbol.done =>
+        some
+          (some MachineCodeSymbol.done, Direction.right,
+            CodePrefixDescriptionHeaderFieldsParserState.startField)
+    | CodePrefixDescriptionHeaderFieldsParserState.startField,
+        some MachineCodeSymbol.tick =>
+        some
+          (some MachineCodeSymbol.tick, Direction.right,
+            CodePrefixDescriptionHeaderFieldsParserState.startField)
+    | CodePrefixDescriptionHeaderFieldsParserState.startField,
+        some MachineCodeSymbol.done =>
+        some
+          (some MachineCodeSymbol.done, Direction.right,
+            CodePrefixDescriptionHeaderFieldsParserState.haltField)
+    | CodePrefixDescriptionHeaderFieldsParserState.haltField,
+        some MachineCodeSymbol.tick =>
+        some
+          (some MachineCodeSymbol.tick, Direction.right,
+            CodePrefixDescriptionHeaderFieldsParserState.haltField)
+    | CodePrefixDescriptionHeaderFieldsParserState.haltField,
+        some MachineCodeSymbol.done =>
+        some
+          (some MachineCodeSymbol.done, Direction.right,
+            CodePrefixDescriptionHeaderFieldsParserState.transitionCount)
+    | CodePrefixDescriptionHeaderFieldsParserState.transitionCount,
+        some MachineCodeSymbol.tick =>
+        some
+          (some MachineCodeSymbol.tick, Direction.right,
+            CodePrefixDescriptionHeaderFieldsParserState.transitionCount)
+    | CodePrefixDescriptionHeaderFieldsParserState.transitionCount,
+        some MachineCodeSymbol.done =>
+        some
+          (some MachineCodeSymbol.done, Direction.right,
+            CodePrefixDescriptionHeaderFieldsParserState.done)
+    | _, _ => none
+  statesFinite := CodePrefixDescriptionHeaderFieldsParserState.finite
+
+theorem codePrefixDescriptionHeaderFieldsParserMachine_step_header
+    (leftRev suffix : Word MachineCodeSymbol) :
+    TuringMachine.Step codePrefixDescriptionHeaderFieldsParserMachine
+      { state := CodePrefixDescriptionHeaderFieldsParserState.needHeader
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape leftRev
+            (MachineCodeSymbol.header :: suffix) }
+      { state := CodePrefixDescriptionHeaderFieldsParserState.stateCount
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape
+            (MachineCodeSymbol.header :: leftRev) suffix } := by
+  rw [← codePrefixDescriptionHeaderFieldsParserTape_move_right leftRev
+    MachineCodeSymbol.header suffix]
+  exact TuringMachine.Step.mk (by
+    simp [codePrefixDescriptionHeaderFieldsParserMachine,
+      codePrefixDescriptionHeaderFieldsParserTape, Tape.read])
+
+theorem codePrefixDescriptionHeaderFieldsParserMachine_step_tick_stateCount
+    (leftRev suffix : Word MachineCodeSymbol) :
+    TuringMachine.Step codePrefixDescriptionHeaderFieldsParserMachine
+      { state := CodePrefixDescriptionHeaderFieldsParserState.stateCount
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape leftRev
+            (MachineCodeSymbol.tick :: suffix) }
+      { state := CodePrefixDescriptionHeaderFieldsParserState.stateCount
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape
+            (MachineCodeSymbol.tick :: leftRev) suffix } := by
+  rw [← codePrefixDescriptionHeaderFieldsParserTape_move_right leftRev
+    MachineCodeSymbol.tick suffix]
+  exact TuringMachine.Step.mk (by
+    simp [codePrefixDescriptionHeaderFieldsParserMachine,
+      codePrefixDescriptionHeaderFieldsParserTape, Tape.read])
+
+theorem codePrefixDescriptionHeaderFieldsParserMachine_step_done_stateCount
+    (leftRev suffix : Word MachineCodeSymbol) :
+    TuringMachine.Step codePrefixDescriptionHeaderFieldsParserMachine
+      { state := CodePrefixDescriptionHeaderFieldsParserState.stateCount
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape leftRev
+            (MachineCodeSymbol.done :: suffix) }
+      { state := CodePrefixDescriptionHeaderFieldsParserState.startField
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape
+            (MachineCodeSymbol.done :: leftRev) suffix } := by
+  rw [← codePrefixDescriptionHeaderFieldsParserTape_move_right leftRev
+    MachineCodeSymbol.done suffix]
+  exact TuringMachine.Step.mk (by
+    simp [codePrefixDescriptionHeaderFieldsParserMachine,
+      codePrefixDescriptionHeaderFieldsParserTape, Tape.read])
+
+theorem codePrefixDescriptionHeaderFieldsParserMachine_step_tick_startField
+    (leftRev suffix : Word MachineCodeSymbol) :
+    TuringMachine.Step codePrefixDescriptionHeaderFieldsParserMachine
+      { state := CodePrefixDescriptionHeaderFieldsParserState.startField
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape leftRev
+            (MachineCodeSymbol.tick :: suffix) }
+      { state := CodePrefixDescriptionHeaderFieldsParserState.startField
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape
+            (MachineCodeSymbol.tick :: leftRev) suffix } := by
+  rw [← codePrefixDescriptionHeaderFieldsParserTape_move_right leftRev
+    MachineCodeSymbol.tick suffix]
+  exact TuringMachine.Step.mk (by
+    simp [codePrefixDescriptionHeaderFieldsParserMachine,
+      codePrefixDescriptionHeaderFieldsParserTape, Tape.read])
+
+theorem codePrefixDescriptionHeaderFieldsParserMachine_step_done_startField
+    (leftRev suffix : Word MachineCodeSymbol) :
+    TuringMachine.Step codePrefixDescriptionHeaderFieldsParserMachine
+      { state := CodePrefixDescriptionHeaderFieldsParserState.startField
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape leftRev
+            (MachineCodeSymbol.done :: suffix) }
+      { state := CodePrefixDescriptionHeaderFieldsParserState.haltField
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape
+            (MachineCodeSymbol.done :: leftRev) suffix } := by
+  rw [← codePrefixDescriptionHeaderFieldsParserTape_move_right leftRev
+    MachineCodeSymbol.done suffix]
+  exact TuringMachine.Step.mk (by
+    simp [codePrefixDescriptionHeaderFieldsParserMachine,
+      codePrefixDescriptionHeaderFieldsParserTape, Tape.read])
+
+theorem codePrefixDescriptionHeaderFieldsParserMachine_step_tick_haltField
+    (leftRev suffix : Word MachineCodeSymbol) :
+    TuringMachine.Step codePrefixDescriptionHeaderFieldsParserMachine
+      { state := CodePrefixDescriptionHeaderFieldsParserState.haltField
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape leftRev
+            (MachineCodeSymbol.tick :: suffix) }
+      { state := CodePrefixDescriptionHeaderFieldsParserState.haltField
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape
+            (MachineCodeSymbol.tick :: leftRev) suffix } := by
+  rw [← codePrefixDescriptionHeaderFieldsParserTape_move_right leftRev
+    MachineCodeSymbol.tick suffix]
+  exact TuringMachine.Step.mk (by
+    simp [codePrefixDescriptionHeaderFieldsParserMachine,
+      codePrefixDescriptionHeaderFieldsParserTape, Tape.read])
+
+theorem codePrefixDescriptionHeaderFieldsParserMachine_step_done_haltField
+    (leftRev suffix : Word MachineCodeSymbol) :
+    TuringMachine.Step codePrefixDescriptionHeaderFieldsParserMachine
+      { state := CodePrefixDescriptionHeaderFieldsParserState.haltField
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape leftRev
+            (MachineCodeSymbol.done :: suffix) }
+      { state := CodePrefixDescriptionHeaderFieldsParserState.transitionCount
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape
+            (MachineCodeSymbol.done :: leftRev) suffix } := by
+  rw [← codePrefixDescriptionHeaderFieldsParserTape_move_right leftRev
+    MachineCodeSymbol.done suffix]
+  exact TuringMachine.Step.mk (by
+    simp [codePrefixDescriptionHeaderFieldsParserMachine,
+      codePrefixDescriptionHeaderFieldsParserTape, Tape.read])
+
+theorem codePrefixDescriptionHeaderFieldsParserMachine_step_tick_transitionCount
+    (leftRev suffix : Word MachineCodeSymbol) :
+    TuringMachine.Step codePrefixDescriptionHeaderFieldsParserMachine
+      { state := CodePrefixDescriptionHeaderFieldsParserState.transitionCount
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape leftRev
+            (MachineCodeSymbol.tick :: suffix) }
+      { state := CodePrefixDescriptionHeaderFieldsParserState.transitionCount
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape
+            (MachineCodeSymbol.tick :: leftRev) suffix } := by
+  rw [← codePrefixDescriptionHeaderFieldsParserTape_move_right leftRev
+    MachineCodeSymbol.tick suffix]
+  exact TuringMachine.Step.mk (by
+    simp [codePrefixDescriptionHeaderFieldsParserMachine,
+      codePrefixDescriptionHeaderFieldsParserTape, Tape.read])
+
+theorem codePrefixDescriptionHeaderFieldsParserMachine_step_done_transitionCount
+    (leftRev suffix : Word MachineCodeSymbol) :
+    TuringMachine.Step codePrefixDescriptionHeaderFieldsParserMachine
+      { state := CodePrefixDescriptionHeaderFieldsParserState.transitionCount
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape leftRev
+            (MachineCodeSymbol.done :: suffix) }
+      { state := CodePrefixDescriptionHeaderFieldsParserState.done
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape
+            (MachineCodeSymbol.done :: leftRev) suffix } := by
+  rw [← codePrefixDescriptionHeaderFieldsParserTape_move_right leftRev
+    MachineCodeSymbol.done suffix]
+  exact TuringMachine.Step.mk (by
+    simp [codePrefixDescriptionHeaderFieldsParserMachine,
+      codePrefixDescriptionHeaderFieldsParserTape, Tape.read])
+
+theorem codePrefixDescriptionHeaderFieldsParserMachine_computesIn_nat
+    {current next : CodePrefixDescriptionHeaderFieldsParserState}
+    (htick :
+      forall leftRev suffix : Word MachineCodeSymbol,
+        TuringMachine.Step codePrefixDescriptionHeaderFieldsParserMachine
+          { state := current
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape leftRev
+                (MachineCodeSymbol.tick :: suffix) }
+          { state := current
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                (MachineCodeSymbol.tick :: leftRev) suffix })
+    (hdone :
+      forall leftRev suffix : Word MachineCodeSymbol,
+        TuringMachine.Step codePrefixDescriptionHeaderFieldsParserMachine
+          { state := current
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape leftRev
+                (MachineCodeSymbol.done :: suffix) }
+          { state := next
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                (MachineCodeSymbol.done :: leftRev) suffix })
+    (leftRev : Word MachineCodeSymbol) (n : Nat)
+    (suffix : Word MachineCodeSymbol) :
+    TuringMachine.ComputesIn codePrefixDescriptionHeaderFieldsParserMachine
+      (n + 1)
+      { state := current
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape leftRev
+            (MachineDescription.encodeNatAppend n suffix) }
+      { state := next
+        tape :=
+          codePrefixDescriptionHeaderFieldsParserTape
+            (List.append (MachineDescription.encodeNat n).reverse leftRev)
+            suffix } := by
+  induction n generalizing leftRev with
+  | zero =>
+      simpa [MachineDescription.encodeNatAppend,
+        MachineDescription.encodeNat] using
+        TuringMachine.ComputesIn.succ
+          (hdone leftRev suffix)
+          (TuringMachine.ComputesIn.zero _)
+  | succ n ih =>
+      have htail := ih (MachineCodeSymbol.tick :: leftRev)
+      have hcomp :
+          TuringMachine.ComputesIn
+            codePrefixDescriptionHeaderFieldsParserMachine
+            (n + 1 + 1)
+            { state := current
+              tape :=
+                codePrefixDescriptionHeaderFieldsParserTape leftRev
+                  (MachineCodeSymbol.tick ::
+                    MachineDescription.encodeNatAppend n suffix) }
+            { state := next
+              tape :=
+                codePrefixDescriptionHeaderFieldsParserTape
+                  (List.append (MachineDescription.encodeNat n).reverse
+                    (MachineCodeSymbol.tick :: leftRev))
+                  suffix } :=
+        TuringMachine.ComputesIn.succ
+          (htick leftRev (MachineDescription.encodeNatAppend n suffix))
+          htail
+      simpa [MachineDescription.encodeNatAppend,
+        MachineDescription.encodeNat, List.append_assoc] using hcomp
+
+theorem codePrefixDescriptionHeaderFieldsParserMachine_haltsFromIn_only_transitionCount
+    {steps : Nat}
+    {leftRev rest : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsFromIn
+        codePrefixDescriptionHeaderFieldsParserMachine steps
+        { state :=
+            CodePrefixDescriptionHeaderFieldsParserState.transitionCount
+          tape :=
+            codePrefixDescriptionHeaderFieldsParserTape leftRev rest }) :
+    exists transitionCount : Nat,
+    exists suffix : Word MachineCodeSymbol,
+      rest = MachineDescription.encodeNatAppend transitionCount suffix := by
+  induction steps generalizing leftRev rest with
+  | zero =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp
+      cases hhalt
+  | succ steps ih =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp with
+      | succ hstep hrest =>
+          cases rest with
+          | nil =>
+              cases hstep with
+              | mk haction =>
+                  simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                    codePrefixDescriptionHeaderFieldsParserTape, Tape.read]
+                    at haction
+          | cons symbol suffix =>
+              cases symbol with
+              | header =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | transition =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | tick =>
+                  cases hstep with
+                  | mk haction =>
+                      rename_i write dir nextState
+                      cases write with
+                      | none =>
+                          simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                            codePrefixDescriptionHeaderFieldsParserTape,
+                            Tape.read] at haction
+                      | some writeSymbol =>
+                          cases writeSymbol <;>
+                            cases dir <;>
+                            cases nextState <;>
+                              simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                Tape.read] at haction
+                          have htail :
+                              TuringMachine.HaltsFromIn
+                                codePrefixDescriptionHeaderFieldsParserMachine
+                                steps
+                                { state :=
+                                    CodePrefixDescriptionHeaderFieldsParserState.transitionCount
+                                  tape :=
+                                    codePrefixDescriptionHeaderFieldsParserTape
+                                      (MachineCodeSymbol.tick :: leftRev)
+                                      suffix } := by
+                            refine ⟨final, ?_, hhalt⟩
+                            cases suffix <;>
+                              simpa [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                codePrefixDescriptionHeaderFieldsParserTape_move_right,
+                                Tape.write, Tape.move, Tape.moveRight]
+                                using hrest
+                          rcases ih htail with
+                            ⟨transitionCount, parsedSuffix, hsuffix⟩
+                          exact ⟨transitionCount + 1, parsedSuffix, by
+                            simp [MachineDescription.encodeNatAppend,
+                              MachineDescription.encodeNat, hsuffix]⟩
+              | done =>
+                  exact ⟨0, suffix, by
+                    simp [MachineDescription.encodeNatAppend,
+                      MachineDescription.encodeNat]⟩
+              | blank =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | zero =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | one =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | moveLeft =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | moveRight =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+
+theorem codePrefixDescriptionHeaderFieldsParserMachine_haltsFromIn_only_haltField
+    {steps : Nat}
+    {leftRev rest : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsFromIn
+        codePrefixDescriptionHeaderFieldsParserMachine steps
+        { state := CodePrefixDescriptionHeaderFieldsParserState.haltField
+          tape :=
+            codePrefixDescriptionHeaderFieldsParserTape leftRev rest }) :
+    exists halt transitionCount : Nat,
+    exists suffix : Word MachineCodeSymbol,
+      rest =
+        MachineDescription.encodeNatAppend halt
+          (MachineDescription.encodeNatAppend transitionCount suffix) := by
+  induction steps generalizing leftRev rest with
+  | zero =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp
+      cases hhalt
+  | succ steps ih =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp with
+      | succ hstep hrest =>
+          cases rest with
+          | nil =>
+              cases hstep with
+              | mk haction =>
+                  simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                    codePrefixDescriptionHeaderFieldsParserTape, Tape.read]
+                    at haction
+          | cons symbol suffix =>
+              cases symbol with
+              | header =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | transition =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | tick =>
+                  cases hstep with
+                  | mk haction =>
+                      rename_i write dir nextState
+                      cases write with
+                      | none =>
+                          simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                            codePrefixDescriptionHeaderFieldsParserTape,
+                            Tape.read] at haction
+                      | some writeSymbol =>
+                          cases writeSymbol <;>
+                            cases dir <;>
+                            cases nextState <;>
+                              simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                Tape.read] at haction
+                          have htail :
+                              TuringMachine.HaltsFromIn
+                                codePrefixDescriptionHeaderFieldsParserMachine
+                                steps
+                                { state :=
+                                    CodePrefixDescriptionHeaderFieldsParserState.haltField
+                                  tape :=
+                                    codePrefixDescriptionHeaderFieldsParserTape
+                                      (MachineCodeSymbol.tick :: leftRev)
+                                      suffix } := by
+                            refine ⟨final, ?_, hhalt⟩
+                            cases suffix <;>
+                              simpa [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                codePrefixDescriptionHeaderFieldsParserTape_move_right,
+                                Tape.write, Tape.move, Tape.moveRight]
+                                using hrest
+                          rcases ih htail with
+                            ⟨halt, transitionCount, parsedSuffix,
+                              hsuffix⟩
+                          exact
+                            ⟨halt + 1, transitionCount, parsedSuffix, by
+                              simp [MachineDescription.encodeNatAppend,
+                                MachineDescription.encodeNat, hsuffix]⟩
+              | done =>
+                  cases hstep with
+                  | mk haction =>
+                      rename_i write dir nextState
+                      cases write with
+                      | none =>
+                          simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                            codePrefixDescriptionHeaderFieldsParserTape,
+                            Tape.read] at haction
+                      | some writeSymbol =>
+                          cases writeSymbol <;>
+                            cases dir <;>
+                            cases nextState <;>
+                              simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                Tape.read] at haction
+                          have htail :
+                              TuringMachine.HaltsFromIn
+                                codePrefixDescriptionHeaderFieldsParserMachine
+                                steps
+                                { state :=
+                                    CodePrefixDescriptionHeaderFieldsParserState.transitionCount
+                                  tape :=
+                                    codePrefixDescriptionHeaderFieldsParserTape
+                                      (MachineCodeSymbol.done :: leftRev)
+                                      suffix } := by
+                            refine ⟨final, ?_, hhalt⟩
+                            cases suffix <;>
+                              simpa [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                codePrefixDescriptionHeaderFieldsParserTape_move_right,
+                                Tape.write, Tape.move, Tape.moveRight]
+                                using hrest
+                          rcases
+                            codePrefixDescriptionHeaderFieldsParserMachine_haltsFromIn_only_transitionCount
+                              htail with
+                            ⟨transitionCount, parsedSuffix, hsuffix⟩
+                          exact ⟨0, transitionCount, parsedSuffix, by
+                            simp [MachineDescription.encodeNatAppend,
+                              MachineDescription.encodeNat, hsuffix]⟩
+              | blank =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | zero =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | one =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | moveLeft =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | moveRight =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+
+theorem codePrefixDescriptionHeaderFieldsParserMachine_haltsFromIn_only_startField
+    {steps : Nat}
+    {leftRev rest : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsFromIn
+        codePrefixDescriptionHeaderFieldsParserMachine steps
+        { state := CodePrefixDescriptionHeaderFieldsParserState.startField
+          tape :=
+            codePrefixDescriptionHeaderFieldsParserTape leftRev rest }) :
+    exists start halt transitionCount : Nat,
+    exists suffix : Word MachineCodeSymbol,
+      rest =
+        MachineDescription.encodeNatAppend start
+          (MachineDescription.encodeNatAppend halt
+            (MachineDescription.encodeNatAppend transitionCount suffix)) := by
+  induction steps generalizing leftRev rest with
+  | zero =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp
+      cases hhalt
+  | succ steps ih =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp with
+      | succ hstep hrest =>
+          cases rest with
+          | nil =>
+              cases hstep with
+              | mk haction =>
+                  simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                    codePrefixDescriptionHeaderFieldsParserTape, Tape.read]
+                    at haction
+          | cons symbol suffix =>
+              cases symbol with
+              | header =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | transition =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | tick =>
+                  cases hstep with
+                  | mk haction =>
+                      rename_i write dir nextState
+                      cases write with
+                      | none =>
+                          simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                            codePrefixDescriptionHeaderFieldsParserTape,
+                            Tape.read] at haction
+                      | some writeSymbol =>
+                          cases writeSymbol <;>
+                            cases dir <;>
+                            cases nextState <;>
+                              simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                Tape.read] at haction
+                          have htail :
+                              TuringMachine.HaltsFromIn
+                                codePrefixDescriptionHeaderFieldsParserMachine
+                                steps
+                                { state :=
+                                    CodePrefixDescriptionHeaderFieldsParserState.startField
+                                  tape :=
+                                    codePrefixDescriptionHeaderFieldsParserTape
+                                      (MachineCodeSymbol.tick :: leftRev)
+                                      suffix } := by
+                            refine ⟨final, ?_, hhalt⟩
+                            cases suffix <;>
+                              simpa [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                codePrefixDescriptionHeaderFieldsParserTape_move_right,
+                                Tape.write, Tape.move, Tape.moveRight]
+                                using hrest
+                          rcases ih htail with
+                            ⟨start, halt, transitionCount, parsedSuffix,
+                              hsuffix⟩
+                          exact
+                            ⟨start + 1, halt, transitionCount,
+                              parsedSuffix, by
+                              simp [MachineDescription.encodeNatAppend,
+                                MachineDescription.encodeNat, hsuffix]⟩
+              | done =>
+                  cases hstep with
+                  | mk haction =>
+                      rename_i write dir nextState
+                      cases write with
+                      | none =>
+                          simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                            codePrefixDescriptionHeaderFieldsParserTape,
+                            Tape.read] at haction
+                      | some writeSymbol =>
+                          cases writeSymbol <;>
+                            cases dir <;>
+                            cases nextState <;>
+                              simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                Tape.read] at haction
+                          have htail :
+                              TuringMachine.HaltsFromIn
+                                codePrefixDescriptionHeaderFieldsParserMachine
+                                steps
+                                { state :=
+                                    CodePrefixDescriptionHeaderFieldsParserState.haltField
+                                  tape :=
+                                    codePrefixDescriptionHeaderFieldsParserTape
+                                      (MachineCodeSymbol.done :: leftRev)
+                                      suffix } := by
+                            refine ⟨final, ?_, hhalt⟩
+                            cases suffix <;>
+                              simpa [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                codePrefixDescriptionHeaderFieldsParserTape_move_right,
+                                Tape.write, Tape.move, Tape.moveRight]
+                                using hrest
+                          rcases
+                            codePrefixDescriptionHeaderFieldsParserMachine_haltsFromIn_only_haltField
+                              htail with
+                            ⟨halt, transitionCount, parsedSuffix,
+                              hsuffix⟩
+                          exact ⟨0, halt, transitionCount, parsedSuffix, by
+                            simp [MachineDescription.encodeNatAppend,
+                              MachineDescription.encodeNat, hsuffix]⟩
+              | blank =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | zero =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | one =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | moveLeft =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | moveRight =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+
+theorem codePrefixDescriptionHeaderFieldsParserMachine_haltsFromIn_only_stateCount
+    {steps : Nat}
+    {leftRev rest : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsFromIn
+        codePrefixDescriptionHeaderFieldsParserMachine steps
+        { state := CodePrefixDescriptionHeaderFieldsParserState.stateCount
+          tape :=
+            codePrefixDescriptionHeaderFieldsParserTape leftRev rest }) :
+    exists stateCount start halt transitionCount : Nat,
+    exists suffix : Word MachineCodeSymbol,
+      rest =
+        MachineDescription.encodeNatAppend stateCount
+          (MachineDescription.encodeNatAppend start
+            (MachineDescription.encodeNatAppend halt
+              (MachineDescription.encodeNatAppend transitionCount suffix))) := by
+  induction steps generalizing leftRev rest with
+  | zero =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp
+      cases hhalt
+  | succ steps ih =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp with
+      | succ hstep hrest =>
+          cases rest with
+          | nil =>
+              cases hstep with
+              | mk haction =>
+                  simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                    codePrefixDescriptionHeaderFieldsParserTape, Tape.read]
+                    at haction
+          | cons symbol suffix =>
+              cases symbol with
+              | header =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | transition =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | tick =>
+                  cases hstep with
+                  | mk haction =>
+                      rename_i write dir nextState
+                      cases write with
+                      | none =>
+                          simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                            codePrefixDescriptionHeaderFieldsParserTape,
+                            Tape.read] at haction
+                      | some writeSymbol =>
+                          cases writeSymbol <;>
+                            cases dir <;>
+                            cases nextState <;>
+                              simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                Tape.read] at haction
+                          have htail :
+                              TuringMachine.HaltsFromIn
+                                codePrefixDescriptionHeaderFieldsParserMachine
+                                steps
+                                { state :=
+                                    CodePrefixDescriptionHeaderFieldsParserState.stateCount
+                                  tape :=
+                                    codePrefixDescriptionHeaderFieldsParserTape
+                                      (MachineCodeSymbol.tick :: leftRev)
+                                      suffix } := by
+                            refine ⟨final, ?_, hhalt⟩
+                            cases suffix <;>
+                              simpa [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                codePrefixDescriptionHeaderFieldsParserTape_move_right,
+                                Tape.write, Tape.move, Tape.moveRight]
+                                using hrest
+                          rcases ih htail with
+                            ⟨stateCount, start, halt, transitionCount,
+                              parsedSuffix, hsuffix⟩
+                          exact
+                            ⟨stateCount + 1, start, halt, transitionCount,
+                              parsedSuffix, by
+                              simp [MachineDescription.encodeNatAppend,
+                                MachineDescription.encodeNat, hsuffix]⟩
+              | done =>
+                  cases hstep with
+                  | mk haction =>
+                      rename_i write dir nextState
+                      cases write with
+                      | none =>
+                          simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                            codePrefixDescriptionHeaderFieldsParserTape,
+                            Tape.read] at haction
+                      | some writeSymbol =>
+                          cases writeSymbol <;>
+                            cases dir <;>
+                            cases nextState <;>
+                              simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                Tape.read] at haction
+                          have htail :
+                              TuringMachine.HaltsFromIn
+                                codePrefixDescriptionHeaderFieldsParserMachine
+                                steps
+                                { state :=
+                                    CodePrefixDescriptionHeaderFieldsParserState.startField
+                                  tape :=
+                                    codePrefixDescriptionHeaderFieldsParserTape
+                                      (MachineCodeSymbol.done :: leftRev)
+                                      suffix } := by
+                            refine ⟨final, ?_, hhalt⟩
+                            cases suffix <;>
+                              simpa [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                codePrefixDescriptionHeaderFieldsParserTape_move_right,
+                                Tape.write, Tape.move, Tape.moveRight]
+                                using hrest
+                          rcases
+                            codePrefixDescriptionHeaderFieldsParserMachine_haltsFromIn_only_startField
+                              htail with
+                            ⟨start, halt, transitionCount, parsedSuffix,
+                              hsuffix⟩
+                          exact
+                            ⟨0, start, halt, transitionCount,
+                              parsedSuffix, by
+                              simp [MachineDescription.encodeNatAppend,
+                                MachineDescription.encodeNat, hsuffix]⟩
+              | blank =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | zero =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | one =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | moveLeft =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | moveRight =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+
+theorem codePrefixDescriptionHeaderFieldsParserMachine_haltsFromIn_only_header
+    {steps : Nat}
+    {leftRev rest : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsFromIn
+        codePrefixDescriptionHeaderFieldsParserMachine steps
+        { state := CodePrefixDescriptionHeaderFieldsParserState.needHeader
+          tape :=
+            codePrefixDescriptionHeaderFieldsParserTape leftRev rest }) :
+    exists stateCount start halt transitionCount : Nat,
+    exists suffix : Word MachineCodeSymbol,
+      rest =
+        MachineCodeSymbol.header ::
+          MachineDescription.encodeNatAppend stateCount
+            (MachineDescription.encodeNatAppend start
+              (MachineDescription.encodeNatAppend halt
+                (MachineDescription.encodeNatAppend transitionCount
+                  suffix))) := by
+  cases steps with
+  | zero =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp
+      cases hhalt
+  | succ steps =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp with
+      | succ hstep hrest =>
+          cases rest with
+          | nil =>
+              cases hstep with
+              | mk haction =>
+                  simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                    codePrefixDescriptionHeaderFieldsParserTape, Tape.read]
+                    at haction
+          | cons symbol suffix =>
+              cases symbol with
+              | header =>
+                  cases hstep with
+                  | mk haction =>
+                      rename_i write dir nextState
+                      cases write with
+                      | none =>
+                          simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                            codePrefixDescriptionHeaderFieldsParserTape,
+                            Tape.read] at haction
+                      | some writeSymbol =>
+                          cases writeSymbol <;>
+                            cases dir <;>
+                            cases nextState <;>
+                              simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                Tape.read] at haction
+                          have htail :
+                              TuringMachine.HaltsFromIn
+                                codePrefixDescriptionHeaderFieldsParserMachine
+                                steps
+                                { state :=
+                                    CodePrefixDescriptionHeaderFieldsParserState.stateCount
+                                  tape :=
+                                    codePrefixDescriptionHeaderFieldsParserTape
+                                      (MachineCodeSymbol.header :: leftRev)
+                                      suffix } := by
+                            refine ⟨final, ?_, hhalt⟩
+                            cases suffix <;>
+                              simpa [codePrefixDescriptionHeaderFieldsParserMachine,
+                                codePrefixDescriptionHeaderFieldsParserTape,
+                                codePrefixDescriptionHeaderFieldsParserTape_move_right,
+                                Tape.write, Tape.move, Tape.moveRight]
+                                using hrest
+                          rcases
+                            codePrefixDescriptionHeaderFieldsParserMachine_haltsFromIn_only_stateCount
+                              htail with
+                            ⟨stateCount, start, halt, transitionCount,
+                              parsedSuffix, hsuffix⟩
+                          exact
+                            ⟨stateCount, start, halt, transitionCount,
+                              parsedSuffix, by simp [hsuffix]⟩
+              | transition =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | tick =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | done =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | blank =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | zero =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | one =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | moveLeft =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
+              | moveRight =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixDescriptionHeaderFieldsParserMachine,
+                        codePrefixDescriptionHeaderFieldsParserTape,
+                        Tape.read] at haction
 
 def CodePrefixDescriptionTransitionListParserConstruction : Prop :=
   exists state : Type,
@@ -1485,7 +2530,252 @@ theorem codePrefixParserNormalizerSequencingConstruction_scaffold :
 
 theorem codePrefixDescriptionHeaderFieldsParserConstruction_scaffold :
     CodePrefixDescriptionHeaderFieldsParserConstruction := by
-  sorry
+  refine
+    ⟨CodePrefixDescriptionHeaderFieldsParserState,
+      codePrefixDescriptionHeaderFieldsParserMachine, ?_⟩
+  intro tokens
+  constructor
+  · intro h
+    rcases
+        (TuringMachine.halts_on_input_to_halts_on_input_in h) with
+      ⟨steps, hsteps⟩
+    have hfrom :
+        TuringMachine.HaltsFromIn
+          codePrefixDescriptionHeaderFieldsParserMachine steps
+          { state := CodePrefixDescriptionHeaderFieldsParserState.needHeader
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape [] tokens } := by
+      simpa [TuringMachine.HaltsOnInputIn, TuringMachine.initial,
+        codePrefixDescriptionHeaderFieldsParserMachine,
+        codePrefixDescriptionHeaderFieldsParserTape_nil_eq_input] using hsteps
+    exact
+      codePrefixDescriptionHeaderFieldsParserMachine_haltsFromIn_only_header
+        hfrom
+  · intro h
+    rcases h with
+      ⟨stateCount, start, halt, transitionCount, rest, rfl⟩
+    let suffixState :=
+      MachineDescription.encodeNatAppend start
+        (MachineDescription.encodeNatAppend halt
+          (MachineDescription.encodeNatAppend transitionCount rest))
+    let suffixStart :=
+      MachineDescription.encodeNatAppend halt
+        (MachineDescription.encodeNatAppend transitionCount rest)
+    let suffixHalt :=
+      MachineDescription.encodeNatAppend transitionCount rest
+    let leftAfterHeader : Word MachineCodeSymbol :=
+      [MachineCodeSymbol.header]
+    let leftAfterState : Word MachineCodeSymbol :=
+      List.append (MachineDescription.encodeNat stateCount).reverse
+        leftAfterHeader
+    let leftAfterStart : Word MachineCodeSymbol :=
+      List.append (MachineDescription.encodeNat start).reverse
+        leftAfterState
+    let leftAfterHalt : Word MachineCodeSymbol :=
+      List.append (MachineDescription.encodeNat halt).reverse
+        leftAfterStart
+    have hheader :
+        TuringMachine.Step codePrefixDescriptionHeaderFieldsParserMachine
+          { state := CodePrefixDescriptionHeaderFieldsParserState.needHeader
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape []
+                (MachineCodeSymbol.header ::
+                  MachineDescription.encodeNatAppend stateCount
+                    suffixState) }
+          { state := CodePrefixDescriptionHeaderFieldsParserState.stateCount
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterHeader
+                (MachineDescription.encodeNatAppend stateCount
+                  suffixState) } := by
+      simpa [leftAfterHeader] using
+        codePrefixDescriptionHeaderFieldsParserMachine_step_header
+          ([] : Word MachineCodeSymbol)
+          (MachineDescription.encodeNatAppend stateCount suffixState)
+    have hstateIn :
+        TuringMachine.ComputesIn
+          codePrefixDescriptionHeaderFieldsParserMachine
+          (stateCount + 1)
+          { state := CodePrefixDescriptionHeaderFieldsParserState.stateCount
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterHeader
+                (MachineDescription.encodeNatAppend stateCount
+                  suffixState) }
+          { state := CodePrefixDescriptionHeaderFieldsParserState.startField
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterState suffixState } := by
+      simpa [leftAfterState] using
+        codePrefixDescriptionHeaderFieldsParserMachine_computesIn_nat
+          codePrefixDescriptionHeaderFieldsParserMachine_step_tick_stateCount
+          codePrefixDescriptionHeaderFieldsParserMachine_step_done_stateCount
+          leftAfterHeader stateCount suffixState
+    have hstartIn :
+        TuringMachine.ComputesIn
+          codePrefixDescriptionHeaderFieldsParserMachine
+          (start + 1)
+          { state := CodePrefixDescriptionHeaderFieldsParserState.startField
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterState
+                (MachineDescription.encodeNatAppend start suffixStart) }
+          { state := CodePrefixDescriptionHeaderFieldsParserState.haltField
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterStart suffixStart } := by
+      simpa [leftAfterStart] using
+        codePrefixDescriptionHeaderFieldsParserMachine_computesIn_nat
+          codePrefixDescriptionHeaderFieldsParserMachine_step_tick_startField
+          codePrefixDescriptionHeaderFieldsParserMachine_step_done_startField
+          leftAfterState start suffixStart
+    have hhaltIn :
+        TuringMachine.ComputesIn
+          codePrefixDescriptionHeaderFieldsParserMachine
+          (halt + 1)
+          { state := CodePrefixDescriptionHeaderFieldsParserState.haltField
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterStart
+                (MachineDescription.encodeNatAppend halt suffixHalt) }
+          { state :=
+              CodePrefixDescriptionHeaderFieldsParserState.transitionCount
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterHalt suffixHalt } := by
+      simpa [leftAfterHalt] using
+        codePrefixDescriptionHeaderFieldsParserMachine_computesIn_nat
+          codePrefixDescriptionHeaderFieldsParserMachine_step_tick_haltField
+          codePrefixDescriptionHeaderFieldsParserMachine_step_done_haltField
+          leftAfterStart halt suffixHalt
+    have htransitionIn :
+        TuringMachine.ComputesIn
+          codePrefixDescriptionHeaderFieldsParserMachine
+          (transitionCount + 1)
+          { state :=
+              CodePrefixDescriptionHeaderFieldsParserState.transitionCount
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterHalt
+                (MachineDescription.encodeNatAppend transitionCount rest) }
+          { state := CodePrefixDescriptionHeaderFieldsParserState.done
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                (List.append
+                  (MachineDescription.encodeNat transitionCount).reverse
+                  leftAfterHalt)
+                rest } := by
+      exact
+        codePrefixDescriptionHeaderFieldsParserMachine_computesIn_nat
+          codePrefixDescriptionHeaderFieldsParserMachine_step_tick_transitionCount
+          codePrefixDescriptionHeaderFieldsParserMachine_step_done_transitionCount
+          leftAfterHalt transitionCount rest
+    have hstate :
+        TuringMachine.Computes codePrefixDescriptionHeaderFieldsParserMachine
+          { state := CodePrefixDescriptionHeaderFieldsParserState.stateCount
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterHeader
+                (MachineDescription.encodeNatAppend stateCount
+                  suffixState) }
+          { state := CodePrefixDescriptionHeaderFieldsParserState.startField
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterState suffixState } :=
+      TuringMachine.computesIn_to_computes hstateIn
+    have hstart :
+        TuringMachine.Computes codePrefixDescriptionHeaderFieldsParserMachine
+          { state := CodePrefixDescriptionHeaderFieldsParserState.startField
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterState
+                (MachineDescription.encodeNatAppend start suffixStart) }
+          { state := CodePrefixDescriptionHeaderFieldsParserState.haltField
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterStart suffixStart } :=
+      TuringMachine.computesIn_to_computes hstartIn
+    have hhalt :
+        TuringMachine.Computes codePrefixDescriptionHeaderFieldsParserMachine
+          { state := CodePrefixDescriptionHeaderFieldsParserState.haltField
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterStart
+                (MachineDescription.encodeNatAppend halt suffixHalt) }
+          { state :=
+              CodePrefixDescriptionHeaderFieldsParserState.transitionCount
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterHalt suffixHalt } :=
+      TuringMachine.computesIn_to_computes hhaltIn
+    have htransition :
+        TuringMachine.Computes codePrefixDescriptionHeaderFieldsParserMachine
+          { state :=
+              CodePrefixDescriptionHeaderFieldsParserState.transitionCount
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterHalt
+                (MachineDescription.encodeNatAppend transitionCount rest) }
+          { state := CodePrefixDescriptionHeaderFieldsParserState.done
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                (List.append
+                  (MachineDescription.encodeNat transitionCount).reverse
+                  leftAfterHalt)
+                rest } :=
+      TuringMachine.computesIn_to_computes htransitionIn
+    have hcompTail :
+        TuringMachine.Computes codePrefixDescriptionHeaderFieldsParserMachine
+          { state := CodePrefixDescriptionHeaderFieldsParserState.stateCount
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                leftAfterHeader
+                (MachineDescription.encodeNatAppend stateCount
+                  suffixState) }
+          { state := CodePrefixDescriptionHeaderFieldsParserState.done
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                (List.append
+                  (MachineDescription.encodeNat transitionCount).reverse
+                  leftAfterHalt)
+                rest } := by
+      exact
+        TuringMachine.computes_trans hstate
+          (TuringMachine.computes_trans
+            (by simpa [suffixState] using hstart)
+            (TuringMachine.computes_trans
+              (by simpa [suffixStart] using hhalt)
+              (by simpa [suffixHalt] using htransition)))
+    have hcomp :
+        TuringMachine.Computes codePrefixDescriptionHeaderFieldsParserMachine
+          { state := CodePrefixDescriptionHeaderFieldsParserState.needHeader
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape []
+                (MachineCodeSymbol.header ::
+                  MachineDescription.encodeNatAppend stateCount
+                    suffixState) }
+          { state := CodePrefixDescriptionHeaderFieldsParserState.done
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape
+                (List.append
+                  (MachineDescription.encodeNat transitionCount).reverse
+                  leftAfterHalt)
+                rest } :=
+      TuringMachine.Computes.step hheader hcompTail
+    have hhalts :
+        TuringMachine.HaltsFrom
+          codePrefixDescriptionHeaderFieldsParserMachine
+          { state := CodePrefixDescriptionHeaderFieldsParserState.needHeader
+            tape :=
+              codePrefixDescriptionHeaderFieldsParserTape []
+                (MachineCodeSymbol.header ::
+                  MachineDescription.encodeNatAppend stateCount
+                    suffixState) } :=
+      TuringMachine.halts_from_of_computes hcomp rfl
+    simpa [TuringMachine.HaltsOnInput, TuringMachine.initial,
+      codePrefixDescriptionHeaderFieldsParserMachine,
+      codePrefixDescriptionHeaderFieldsParserTape_nil_eq_input,
+      suffixState] using hhalts
 
 theorem codePrefixDescriptionTransitionListParserConstruction_scaffold :
     CodePrefixDescriptionTransitionListParserConstruction := by
