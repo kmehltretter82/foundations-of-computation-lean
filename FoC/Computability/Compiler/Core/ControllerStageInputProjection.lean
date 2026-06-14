@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters
+import FoC.Computability.Compiler.Core.TransitionTableChecks
 
 set_option doc.verso true
 
