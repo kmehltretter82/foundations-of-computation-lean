@@ -237,13 +237,271 @@ and reject descriptions, emit the complete dovetail-layout encoding, and halt
 with the head positioned for the canonical code-word handoff move.
 -/
 
+private theorem tape_normalizedOutput_move_right_input
+    (w : Word Bool) :
+    Tape.normalizedOutput
+        (Tape.move Direction.right (Tape.input w)) = w := by
+  cases w with
+  | nil =>
+      rfl
+  | cons b rest =>
+      cases rest with
+      | nil =>
+          cases b <;> rfl
+      | cons c tail =>
+          have htail :
+              List.filterMap ((fun cell : Option Bool => cell) ∘ some)
+                  tail = tail := by
+            simpa [Function.comp] using Tape.filterMap_id_map_some tail
+          cases b <;> cases c <;>
+            simp [Tape.input, Tape.move, Tape.moveRight,
+              Tape.normalizedOutput, Tape.cells, htail]
+
+private theorem tape_move_left_move_right_input_two
+    (b0 b1 : Bool) (rest : Word Bool) :
+    Tape.move Direction.left
+        (Tape.move Direction.right (Tape.input (b0 :: b1 :: rest))) =
+      Tape.input (b0 :: b1 :: rest) := by
+  rfl
+
+private theorem tape_move_left_move_right_input_encodeCodeWordAsInput_cons
+    (symbol : MachineCodeSymbol) (code : Word MachineCodeSymbol) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (Tape.input
+            (MachineDescription.encodeCodeWordAsInput (symbol :: code)))) =
+      Tape.input
+        (MachineDescription.encodeCodeWordAsInput (symbol :: code)) := by
+  cases symbol <;> rfl
+
+private theorem tapeCodePrimitiveCodeWord_handoff_tape
+    (symbol : MachineCodeSymbol) (code : Word MachineCodeSymbol) :
+    Tape.normalizedOutput
+        (Tape.move Direction.right
+          (Tape.input
+            (MachineDescription.encodeCodeWordAsInput (symbol :: code)))) =
+        MachineDescription.encodeCodeWordAsInput (symbol :: code) ∧
+      Tape.move tapeCodePrimitiveCodeWordHandoffMove
+        (Tape.move Direction.right
+          (Tape.input
+            (MachineDescription.encodeCodeWordAsInput (symbol :: code)))) =
+        Tape.input
+          (MachineDescription.encodeCodeWordAsInput (symbol :: code)) := by
+  constructor
+  · exact
+      tape_normalizedOutput_move_right_input
+        (MachineDescription.encodeCodeWordAsInput (symbol :: code))
+  · simpa [tapeCodePrimitiveCodeWordHandoffMove] using
+      tape_move_left_move_right_input_encodeCodeWordAsInput_cons
+        symbol code
+
+private theorem pairedRecognizerDovetailStageInputCode_eq
+    (w : Word Bool) (stage : Nat) :
+    PairedRecognizerDovetailStageInputCode w stage =
+      MachineDescription.encodeBoolWordAppend w
+        (MachineDescription.encodeNatAppend stage []) := by
+  rfl
+
+private theorem encodeConfigurationAppend_initial
+    (D : MachineDescription) (w : Word Bool)
+    (suffix : Word MachineCodeSymbol) :
+    MachineDescription.encodeConfigurationAppend (D.initial w) suffix =
+      MachineDescription.encodeNatAppend D.start
+        (MachineDescription.encodeTapeAppend (Tape.input w) suffix) := by
+  rfl
+
+private theorem encodeTapeAppend_input_nil
+    (suffix : Word MachineCodeSymbol) :
+    MachineDescription.encodeTapeAppend (Tape.input ([] : Word Bool))
+        suffix =
+      MachineDescription.encodeCellListAppend []
+        (MachineDescription.encodeCellAppend none
+          (MachineDescription.encodeCellListAppend [] suffix)) := by
+  rfl
+
+private theorem encodeTapeAppend_input_cons
+    (b : Bool) (rest : Word Bool)
+    (suffix : Word MachineCodeSymbol) :
+    MachineDescription.encodeTapeAppend (Tape.input (b :: rest)) suffix =
+      MachineDescription.encodeCellListAppend []
+        (MachineDescription.encodeCellAppend (some b)
+          (MachineDescription.encodeCellListAppend (rest.map some)
+            suffix)) := by
+  rfl
+
+private theorem dovetailInitialLayoutCode_output_eq_transition_cons
+    (accept reject : MachineDescription)
+    (w : Word Bool) (stage : Nat) :
+    MachineDescription.DovetailLayout.encode
+        (MachineDescription.DovetailLayout.initial
+          accept reject w stage) =
+      MachineCodeSymbol.transition ::
+        MachineDescription.encodeBoolWordAppend w
+          (MachineDescription.encodeNatAppend stage
+            (MachineDescription.encodeConfigurationAppend
+              (accept.initial w)
+              (MachineDescription.encodeConfigurationAppend
+                (reject.initial w)
+                (MachineDescription.encodeBoolAppend false
+                  (MachineDescription.encodeBoolAppend false []))))) := by
+  rfl
+
+private theorem dovetailInitialLayoutCode_output_eq_expanded
+    (accept reject : MachineDescription)
+    (w : Word Bool) (stage : Nat) :
+    MachineDescription.DovetailLayout.encode
+        (MachineDescription.DovetailLayout.initial
+          accept reject w stage) =
+      MachineCodeSymbol.transition ::
+        MachineDescription.encodeBoolWordAppend w
+          (MachineDescription.encodeNatAppend stage
+            (MachineDescription.encodeNatAppend accept.start
+              (MachineDescription.encodeTapeAppend (Tape.input w)
+                (MachineDescription.encodeNatAppend reject.start
+                  (MachineDescription.encodeTapeAppend (Tape.input w)
+                    (MachineDescription.encodeBoolAppend false
+                      (MachineDescription.encodeBoolAppend false []))))))) := by
+  rw [dovetailInitialLayoutCode_output_eq_transition_cons,
+    encodeConfigurationAppend_initial,
+    encodeConfigurationAppend_initial]
+
+private theorem pairedRecognizerDovetailInitialLayoutCode_transform_eq_some_cons
+    {accept reject : MachineDescription}
+    {code out : Word MachineCodeSymbol}
+    (h :
+      (PairedRecognizerDovetailInitialLayoutCode accept reject).transform
+          code = some out) :
+    exists tail : Word MachineCodeSymbol,
+      out = MachineCodeSymbol.transition :: tail := by
+  rcases
+      (pairedRecognizerDovetailInitialLayoutCode_transform_eq_some_iff
+        accept reject code out).mp h with
+    ⟨w, stage, _hcode, hout⟩
+  refine
+    ⟨MachineDescription.encodeBoolWordAppend w
+      (MachineDescription.encodeNatAppend stage
+        (MachineDescription.encodeConfigurationAppend
+          (accept.initial w)
+          (MachineDescription.encodeConfigurationAppend
+            (reject.initial w)
+            (MachineDescription.encodeBoolAppend false
+              (MachineDescription.encodeBoolAppend false []))))), ?_⟩
+  rw [hout, dovetailInitialLayoutCode_output_eq_transition_cons]
+
+private theorem tapeCodePrimitiveClosedHandoffCompiled_of_halt_tape_move_right
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (hwell : D.WellFormed)
+    (hhaltFree : D.HaltTransitionFree)
+    (houtput :
+      forall code out : Word MachineCodeSymbol,
+        D.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput code)
+            (MachineDescription.encodeCodeWordAsInput out) <->
+          P.transform code = some out)
+    (houtCons :
+      forall {code out : Word MachineCodeSymbol},
+        P.transform code = some out ->
+          exists symbol : MachineCodeSymbol,
+          exists tail : Word MachineCodeSymbol,
+            out = symbol :: tail)
+    (htape :
+      forall code : Word MachineCodeSymbol,
+      forall T : Tape Bool,
+        D.HaltsWithTape
+            (MachineDescription.encodeCodeWordAsInput code) T ->
+          exists out : Word MachineCodeSymbol,
+            P.transform code = some out ∧
+              T =
+                Tape.move Direction.right
+                  (Tape.input
+                    (MachineDescription.encodeCodeWordAsInput out))) :
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      P D tapeCodePrimitiveCodeWordHandoffMove := by
+  constructor
+  · exact ⟨⟨hwell, houtput⟩, hhaltFree⟩
+  · intro code T hD
+    rcases htape code T hD with ⟨out, hp, hT⟩
+    rcases houtCons hp with ⟨symbol, tail, hout⟩
+    subst out
+    subst T
+    rcases tapeCodePrimitiveCodeWord_handoff_tape symbol tail with
+      ⟨hnorm, hmove⟩
+    exact ⟨symbol :: tail, hp, hnorm, hmove⟩
+
+private def TapeCodePrimitiveRightShiftedOutputCompiledSubroutineByDescription
+    (P : MachineDescription.TapeCodePrimitive)
+    (D : MachineDescription) : Prop :=
+  D.WellFormed ∧
+    D.HaltTransitionFree ∧
+      (forall code out : Word MachineCodeSymbol,
+        D.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput code)
+            (MachineDescription.encodeCodeWordAsInput out) <->
+          P.transform code = some out) ∧
+        forall code : Word MachineCodeSymbol,
+        forall T : Tape Bool,
+          D.HaltsWithTape
+              (MachineDescription.encodeCodeWordAsInput code) T ->
+            exists out : Word MachineCodeSymbol,
+              P.transform code = some out ∧
+                T =
+                  Tape.move Direction.right
+                    (Tape.input
+                      (MachineDescription.encodeCodeWordAsInput out))
+
+private theorem tapeCodePrimitiveClosedHandoffCompiled_of_rightShiftedOutputCompiled
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (hD :
+      TapeCodePrimitiveRightShiftedOutputCompiledSubroutineByDescription
+        P D)
+    (houtCons :
+      forall {code out : Word MachineCodeSymbol},
+        P.transform code = some out ->
+          exists symbol : MachineCodeSymbol,
+          exists tail : Word MachineCodeSymbol,
+            out = symbol :: tail) :
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      P D tapeCodePrimitiveCodeWordHandoffMove :=
+  tapeCodePrimitiveClosedHandoffCompiled_of_halt_tape_move_right
+    hD.left hD.right.left hD.right.right.left houtCons
+    hD.right.right.right
+
+private theorem pairedRecognizerDovetailInitialLayoutCode_rightShiftedOutputCompiledSubroutine
+    (accept reject : MachineDescription) :
+    exists initializer : MachineDescription,
+      TapeCodePrimitiveRightShiftedOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailInitialLayoutCode accept reject)
+        initializer := by
+  sorry
+
 theorem pairedRecognizerDovetailInitialLayoutCode_closedHandoffCompiledSubroutine
     (accept reject : MachineDescription) :
     exists initializer : MachineDescription,
       TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
         (PairedRecognizerDovetailInitialLayoutCode accept reject)
         initializer tapeCodePrimitiveCodeWordHandoffMove := by
-  sorry
+  rcases
+      pairedRecognizerDovetailInitialLayoutCode_rightShiftedOutputCompiledSubroutine
+        accept reject with
+    ⟨initializer, hinitializer⟩
+  refine ⟨initializer, ?_⟩
+  have houtCons :
+      forall {code out : Word MachineCodeSymbol},
+        (PairedRecognizerDovetailInitialLayoutCode accept reject).transform
+            code = some out ->
+          exists symbol : MachineCodeSymbol,
+          exists tail : Word MachineCodeSymbol,
+            out = symbol :: tail := by
+    intro code out hp
+    rcases
+        pairedRecognizerDovetailInitialLayoutCode_transform_eq_some_cons hp with
+      ⟨tail, hout⟩
+    exact ⟨MachineCodeSymbol.transition, tail, hout⟩
+  exact
+    tapeCodePrimitiveClosedHandoffCompiled_of_rightShiftedOutputCompiled
+      hinitializer houtCons
 
 theorem encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold :
     EncodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction := by
