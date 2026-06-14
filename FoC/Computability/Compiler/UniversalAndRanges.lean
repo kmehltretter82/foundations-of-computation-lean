@@ -257,6 +257,148 @@ def CodePrefixRecognizerMachineConstruction : Prop :=
     exists universal : TuringMachine MachineCodeSymbol state,
       CodePrefixRecognizerMachineSpec universal
 
+def CodePrefixParserNormalizerMachineSpec
+    (normalizer : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall tokens out : Word MachineCodeSymbol,
+    TuringMachine.HaltsWithOutput normalizer tokens out <->
+      MachineDescription.PrefixParser.normalizeCode tokens = some out
+
+def CodePrefixParserNormalizerMachineConstruction : Prop :=
+  exists state : Type,
+    exists normalizer : TuringMachine MachineCodeSymbol state,
+      CodePrefixParserNormalizerMachineSpec normalizer
+
+def CodePrefixParserBranchMachineSpec
+    (branch : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall tokens out : Word MachineCodeSymbol,
+    TuringMachine.HaltsWithOutput branch tokens out <->
+      MachineDescription.PrefixParser.branchCode tokens = some out
+
+def CodePrefixParserBranchMachineConstruction : Prop :=
+  exists state : Type,
+    exists branch : TuringMachine MachineCodeSymbol state,
+      CodePrefixParserBranchMachineSpec branch
+
+def CodePrefixRecognizerStageCode
+    (encoded : Word MachineCodeSymbol) (stage : Nat) :
+    Word MachineCodeSymbol :=
+  MachineDescription.encodeNatAppend stage encoded
+
+def CodePrefixDecodedBoundedSimulatorSpec
+    (simulator : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall encoded : Word MachineCodeSymbol,
+  forall D : MachineDescription,
+  forall input : Word MachineCodeSymbol,
+  forall stage : Nat,
+    MachineDescription.decodeDescriptionPrefix encoded = some (D, input) ->
+      (TuringMachine.HaltsOnInput simulator
+            (CodePrefixRecognizerStageCode encoded stage) <->
+          D.HaltsIn stage
+            (MachineDescription.encodeCodeWordAsInput input))
+
+def CodePrefixDecodedBoundedSimulatorConstruction : Prop :=
+  exists state : Type,
+    exists simulator : TuringMachine MachineCodeSymbol state,
+      CodePrefixDecodedBoundedSimulatorSpec simulator
+
+def CodePrefixDecodedStageSearchAccepts
+    (encoded : Word MachineCodeSymbol) : Prop :=
+  exists D : MachineDescription,
+  exists input : Word MachineCodeSymbol,
+  exists stage : Nat,
+    MachineDescription.decodeDescriptionPrefix encoded = some (D, input) ∧
+      D.HaltsIn stage
+        (MachineDescription.encodeCodeWordAsInput input)
+
+theorem codePrefixDecodedStageSearchAccepts_iff_programHalts
+    (encoded : Word MachineCodeSymbol) :
+    CodePrefixDecodedStageSearchAccepts encoded <->
+      ProgramHaltsWithOutput CodePrefixRecognizerProgram encoded [] := by
+  constructor
+  · intro h
+    rcases h with ⟨D, input, stage, hdecode, hhalts⟩
+    exact
+      (codePrefixRecognizerProgram_acceptsLanguage encoded).mpr
+        ⟨D, input, hdecode, ⟨stage, hhalts⟩⟩
+  · intro h
+    rcases (codePrefixRecognizerProgram_acceptsLanguage encoded).mp h with
+      ⟨D, input, hdecode, stage, hhalts⟩
+    exact ⟨D, input, stage, hdecode, hhalts⟩
+
+def CodePrefixStageSearchControllerSpec
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (searcher : TuringMachine MachineCodeSymbol searcherState) :
+    Prop :=
+  forall encoded : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput searcher encoded <->
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+      exists stage : Nat,
+        MachineDescription.decodeDescriptionPrefix encoded =
+            some (D, input) ∧
+          TuringMachine.HaltsOnInput simulator
+            (CodePrefixRecognizerStageCode encoded stage)
+
+def CodePrefixStageSearchControllerConstruction : Prop :=
+  forall {normalizerState branchState simulatorState : Type}
+    (normalizer : TuringMachine MachineCodeSymbol normalizerState)
+    (branch : TuringMachine MachineCodeSymbol branchState)
+    (simulator : TuringMachine MachineCodeSymbol simulatorState),
+    CodePrefixParserNormalizerMachineSpec normalizer ->
+    CodePrefixParserBranchMachineSpec branch ->
+    CodePrefixDecodedBoundedSimulatorSpec simulator ->
+      exists searcherState : Type,
+      exists searcher : TuringMachine MachineCodeSymbol searcherState,
+        CodePrefixStageSearchControllerSpec simulator searcher
+
+theorem codePrefixRecognizerMachineSpec_of_stageSearchController
+    {simulator : TuringMachine MachineCodeSymbol simulatorState}
+    {searcher : TuringMachine MachineCodeSymbol searcherState}
+    (hsimulator : CodePrefixDecodedBoundedSimulatorSpec simulator)
+    (hsearch :
+      CodePrefixStageSearchControllerSpec simulator searcher) :
+    CodePrefixRecognizerMachineSpec searcher := by
+  intro encoded
+  constructor
+  · intro h
+    rcases (hsearch encoded).mp h with
+      ⟨D, input, stage, hdecode, hsimHalts⟩
+    have hiff :=
+      (hsimulator encoded D input stage) hdecode
+    exact
+      (codePrefixDecodedStageSearchAccepts_iff_programHalts
+        encoded).mp
+        ⟨D, input, stage, hdecode, hiff.mp hsimHalts⟩
+  · intro h
+    rcases
+        (codePrefixDecodedStageSearchAccepts_iff_programHalts
+          encoded).mpr h with
+      ⟨D, input, stage, hdecode, hhalts⟩
+    have hiff :=
+      (hsimulator encoded D input stage) hdecode
+    exact
+      (hsearch encoded).mpr
+        ⟨D, input, stage, hdecode, hiff.mpr hhalts⟩
+
+theorem codePrefixRecognizerMachineConstruction_of_finiteSourceComponents
+    (hnormalizer : CodePrefixParserNormalizerMachineConstruction)
+    (hbranch : CodePrefixParserBranchMachineConstruction)
+    (hsimulator : CodePrefixDecodedBoundedSimulatorConstruction)
+    (hsearch : CodePrefixStageSearchControllerConstruction) :
+    CodePrefixRecognizerMachineConstruction := by
+  rcases hnormalizer with
+    ⟨normalizerState, normalizer, hnormalizer⟩
+  rcases hbranch with ⟨branchState, branch, hbranch⟩
+  rcases hsimulator with
+    ⟨simulatorState, simulator, hsimulator⟩
+  rcases hsearch normalizer branch simulator
+      hnormalizer hbranch hsimulator with
+    ⟨searcherState, searcher, hsearcher⟩
+  exact
+    ⟨searcherState, searcher,
+      codePrefixRecognizerMachineSpec_of_stageSearchController
+        hsimulator hsearcher⟩
+
 theorem codeUniversalPrefixMachineSpec_of_codePrefixRecognizerMachineSpec
     {universal : TuringMachine MachineCodeSymbol state}
     (hspec : CodePrefixRecognizerMachineSpec universal) :
@@ -386,16 +528,36 @@ theorem codeUniversalPrefixRunnerConstruction_of_runnerFiniteSourceCloseout
 
 /-!
 **Section 5.3 finite-source scaffold.**  The universal-machine construction
-target is the prefix version.  The finite-source scaffold below intentionally
-supplies only the fixed-alphabet prefix recognizer machine.  Row coverage over
-all recursively enumerable code-symbol languages still requires an explicit
+target is the prefix version.  The finite-source scaffold below is the active
+deferred fixed-alphabet prefix recognizer machine target.  Row coverage over all
+recursively enumerable code-symbol languages still requires an explicit
 encoded-input description compiler, as in
 {name}`codeUniversalPrefixRowsCoverConstruction_of_finiteSourceCloseout`.
 -/
 
-theorem codePrefixRecognizerMachineConstruction_scaffold :
-    CodePrefixRecognizerMachineConstruction := by
+theorem codePrefixParserNormalizerMachineConstruction_scaffold :
+    CodePrefixParserNormalizerMachineConstruction := by
   sorry
+
+theorem codePrefixParserBranchMachineConstruction_scaffold :
+    CodePrefixParserBranchMachineConstruction := by
+  sorry
+
+theorem codePrefixDecodedBoundedSimulatorConstruction_scaffold :
+    CodePrefixDecodedBoundedSimulatorConstruction := by
+  sorry
+
+theorem codePrefixStageSearchControllerConstruction_scaffold :
+    CodePrefixStageSearchControllerConstruction := by
+  sorry
+
+theorem codePrefixRecognizerMachineConstruction_scaffold :
+    CodePrefixRecognizerMachineConstruction :=
+  codePrefixRecognizerMachineConstruction_of_finiteSourceComponents
+    codePrefixParserNormalizerMachineConstruction_scaffold
+    codePrefixParserBranchMachineConstruction_scaffold
+    codePrefixDecodedBoundedSimulatorConstruction_scaffold
+    codePrefixStageSearchControllerConstruction_scaffold
 
 def codeUniversalPrefixRunnerFiniteSourceCloseout_scaffold :
     CodeUniversalPrefixRunnerFiniteSourceCloseout where

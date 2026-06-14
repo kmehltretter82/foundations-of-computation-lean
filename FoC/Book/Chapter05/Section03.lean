@@ -1855,8 +1855,8 @@ universal machine. The prefix parser layer is now formalized as
 {name}`ConcreteCodePrefixParserCodeConstruction`: a normalizing code primitive
 succeeds exactly on one-description prefixes, and a total branch primitive
 emits the success or failure code used by the later recognizer controller. The
-no-argument scaffold supplies only this runner target. For row coverage, the
-explicit
+no-argument scaffold records this runner target as the active deferred
+construction. For row coverage, the explicit
 {name}`ConcreteSection53UniversalPrefixFiniteSourceCloseout` pairs that runner
 target with an encoded-input description compiler and routes directly to
 {name}`exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_closeout`.

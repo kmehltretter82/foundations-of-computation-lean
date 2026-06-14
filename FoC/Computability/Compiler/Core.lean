@@ -404,6 +404,16 @@ def PairedRecognizerDovetailOutputCode :
     MachineDescription.TapeCodePrimitive :=
   MachineDescription.DovetailLayout.outputCodePrimitive
 
+def PairedRecognizerDovetailTotalOutputCode :
+    MachineDescription.TapeCodePrimitive where
+  transform := fun tokens =>
+    match MachineDescription.DovetailLayout.decodeComplete tokens with
+    | none => none
+    | some L =>
+        some
+          (MachineDescription.encodeBoolWord
+            (MachineDescription.DovetailLayout.outputWordFromHits L))
+
 def PairedRecognizerDovetailStageAttemptCode
     (accept reject : MachineDescription) :
     MachineDescription.TapeCodePrimitive :=
@@ -431,6 +441,13 @@ def PairedRecognizerDovetailControllerStageInputCode
     Word MachineCodeSymbol :=
   MachineDescription.DovetailControllerLayout.stageInputCode C
 
+def PairedRecognizerDovetailControllerStageInputCodePrimitive :
+    MachineDescription.TapeCodePrimitive where
+  transform := fun tokens =>
+    match MachineDescription.DovetailControllerLayout.decodeComplete tokens with
+    | none => none
+    | some C => some (PairedRecognizerDovetailControllerStageInputCode C)
+
 def PairedRecognizerDovetailControllerRawOutput
     (result : Word Bool) : Option (Word Bool) :=
   MachineDescription.DovetailControllerLayout.rawOutput? result
@@ -457,6 +474,15 @@ def PairedRecognizerDovetailTotalThenRawOutputCode
   MachineDescription.TapeCodePrimitive.compose
     (PairedRecognizerDovetailTotalStageAttemptCode accept reject)
     PairedRecognizerDovetailControllerRawOutputCode
+
+def PairedRecognizerDovetailTotalStageAttemptSourceCode
+    (accept reject : MachineDescription) :
+    MachineDescription.TapeCodePrimitive :=
+  MachineDescription.TapeCodePrimitive.compose
+    (MachineDescription.TapeCodePrimitive.compose
+      (PairedRecognizerDovetailInitialLayoutCode accept reject)
+      (PairedRecognizerDovetailLayoutCode accept reject))
+    PairedRecognizerDovetailTotalOutputCode
 
 def PairedRecognizerDovetailControllerRawOutputCodeRealizes
     (P : MachineDescription.TapeCodePrimitive) : Prop :=
@@ -513,6 +539,20 @@ def PairedRecognizerDovetailOutputCodeRealizes
     MachineDescription.DovetailLayout.outputFromHits L = some out ->
       P.transform (MachineDescription.DovetailLayout.encode L) =
         some (MachineDescription.encodeBoolWord out)
+
+def PairedRecognizerDovetailTotalOutputCodeRealizes
+    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+  forall L : MachineDescription.DovetailLayout,
+    P.transform (MachineDescription.DovetailLayout.encode L) =
+      some
+        (MachineDescription.encodeBoolWord
+          (MachineDescription.DovetailLayout.outputWordFromHits L))
+
+def PairedRecognizerDovetailControllerStageInputCodeRealizes
+    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+  forall C : MachineDescription.DovetailControllerLayout,
+    P.transform (MachineDescription.DovetailControllerLayout.encode C) =
+      some (PairedRecognizerDovetailControllerStageInputCode C)
 
 def PairedRecognizerDovetailStageAttemptCodeRealizes
     (accept reject : MachineDescription)
@@ -601,6 +641,36 @@ theorem pairedRecognizerDovetailOutputCode_realizes :
   intro L out h
   exact pairedRecognizerDovetailOutputCode_encode h
 
+theorem pairedRecognizerDovetailTotalOutputCode_encode
+    (L : MachineDescription.DovetailLayout) :
+    PairedRecognizerDovetailTotalOutputCode.transform
+        (MachineDescription.DovetailLayout.encode L) =
+      some
+        (MachineDescription.encodeBoolWord
+          (MachineDescription.DovetailLayout.outputWordFromHits L)) := by
+  simp [PairedRecognizerDovetailTotalOutputCode,
+    MachineDescription.DovetailLayout.decodeComplete_encode]
+
+theorem pairedRecognizerDovetailTotalOutputCode_realizes :
+    PairedRecognizerDovetailTotalOutputCodeRealizes
+      PairedRecognizerDovetailTotalOutputCode := by
+  intro L
+  exact pairedRecognizerDovetailTotalOutputCode_encode L
+
+theorem pairedRecognizerDovetailControllerStageInputCode_encode
+    (C : MachineDescription.DovetailControllerLayout) :
+    PairedRecognizerDovetailControllerStageInputCodePrimitive.transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+      some (PairedRecognizerDovetailControllerStageInputCode C) := by
+  simp [PairedRecognizerDovetailControllerStageInputCodePrimitive,
+    MachineDescription.DovetailControllerLayout.decodeComplete_encode]
+
+theorem pairedRecognizerDovetailControllerStageInputCode_realizes :
+    PairedRecognizerDovetailControllerStageInputCodeRealizes
+      PairedRecognizerDovetailControllerStageInputCodePrimitive := by
+  intro C
+  exact pairedRecognizerDovetailControllerStageInputCode_encode C
+
 theorem pairedRecognizerDovetailStageAttemptCode_encode
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) :
@@ -642,6 +712,34 @@ theorem pairedRecognizerDovetailTotalStageAttemptCode_realizes
   intro w stage
   exact pairedRecognizerDovetailTotalStageAttemptCode_encode
     accept reject w stage
+
+theorem pairedRecognizerDovetailTotalStageAttemptSourceCode_transform_eq
+    (accept reject : MachineDescription)
+    (tokens : Word MachineCodeSymbol) :
+    (PairedRecognizerDovetailTotalStageAttemptSourceCode
+        accept reject).transform tokens =
+      (PairedRecognizerDovetailTotalStageAttemptCode
+        accept reject).transform tokens := by
+  unfold PairedRecognizerDovetailTotalStageAttemptSourceCode
+  unfold PairedRecognizerDovetailInitialLayoutCode
+  unfold PairedRecognizerDovetailLayoutCode
+  unfold PairedRecognizerDovetailTotalOutputCode
+  unfold PairedRecognizerDovetailTotalStageAttemptCode
+  unfold MachineDescription.TapeCodePrimitive.compose
+  unfold MachineDescription.DovetailLayout.initialCodePrimitive
+  unfold MachineDescription.DovetailLayout.runCodePrimitive
+  unfold MachineDescription.DovetailLayout.totalStageAttemptCodePrimitive
+  unfold MachineDescription.DovetailLayout.initialCode
+  unfold MachineDescription.DovetailLayout.runCode
+  unfold MachineDescription.DovetailLayout.totalStageAttemptCode
+  cases h : MachineDescription.DovetailLayout.decodeStageInputComplete
+      tokens with
+  | none =>
+      simp [h]
+  | some parsed =>
+      rcases parsed with ⟨w, stage⟩
+      simp [h, MachineDescription.DovetailLayout.decodeComplete_encode,
+        MachineDescription.DovetailLayout.initial]
 
 theorem pairedRecognizerDovetailTotalStageAttemptCodeRealizes_controllerResult
     {accept reject : MachineDescription}
@@ -890,6 +988,20 @@ def TapeCodePrimitiveOutputCompiledSubroutineByDescription
     (D : MachineDescription) : Prop :=
   TapeCodePrimitiveOutputCompiledByDescription P D ∧
     D.HaltTransitionFree
+
+theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_congr
+    {P Q : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (hPQ : forall code : Word MachineCodeSymbol,
+      P.transform code = Q.transform code)
+    (hD : TapeCodePrimitiveOutputCompiledSubroutineByDescription P D) :
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription Q D := by
+  constructor
+  · constructor
+    · exact hD.left.left
+    · intro code out
+      simpa [hPQ code] using hD.left.right code out
+  · exact hD.right
 
 theorem tapeCodePrimitiveOutputRealizedByDescription_of_outputCompiled
     {P : MachineDescription.TapeCodePrimitive}
@@ -1506,6 +1618,46 @@ def PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstru
         (PairedRecognizerDovetailTotalStageAttemptCode accept reject)
         attempt
 
+def PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction :
+    Prop :=
+  forall accept reject : MachineDescription,
+    exists initializer : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailInitialLayoutCode accept reject)
+        initializer
+
+def PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :
+    Prop :=
+  forall accept reject : MachineDescription,
+    exists runner : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject)
+        runner
+
+def PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction :
+    Prop :=
+  exists emitter : MachineDescription,
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      PairedRecognizerDovetailTotalOutputCode
+      emitter
+
+def PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction :
+    Prop :=
+  forall accept reject initializer runner emitter : MachineDescription,
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      (PairedRecognizerDovetailInitialLayoutCode accept reject)
+      initializer ->
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      (PairedRecognizerDovetailLayoutCode accept reject)
+      runner ->
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      PairedRecognizerDovetailTotalOutputCode
+      emitter ->
+    exists attempt : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailTotalStageAttemptSourceCode accept reject)
+        attempt
+
 def PairedRecognizerDovetailLayoutCodeCompilerConstruction : Prop :=
   forall accept reject : MachineDescription,
     exists runner : MachineDescription,
@@ -1647,6 +1799,113 @@ def PairedRecognizerDovetailFiniteStageLoopControllerConstruction :
         PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
           attempt decider
 
+def PairedRecognizerDovetailControllerInputInitializerRealizes
+    (initializer : MachineDescription) : Prop :=
+  initializer.SubroutineReady ∧
+    forall w : Word Bool,
+      initializer.HaltsWithOutput w
+        (MachineDescription.encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerInitialCode w))
+
+def PairedRecognizerDovetailControllerInputInitializerConstruction :
+    Prop :=
+  exists initializer : MachineDescription,
+    PairedRecognizerDovetailControllerInputInitializerRealizes initializer
+
+def PairedRecognizerDovetailControllerStageInputEncoderConstruction :
+    Prop :=
+  exists encoder : MachineDescription,
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      PairedRecognizerDovetailControllerStageInputCodePrimitive
+      encoder
+
+def PairedRecognizerDovetailStageAttemptInvocationRealizes
+    (attempt encoder invoker : MachineDescription) : Prop :=
+  invoker.SubroutineReady ∧
+    forall C : MachineDescription.DovetailControllerLayout,
+    forall result : Word Bool,
+      invoker.HaltsWithOutput
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.DovetailControllerLayout.encode C))
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.DovetailControllerLayout.encode
+              (MachineDescription.DovetailControllerLayout.withResult
+                C result))) <->
+        encoder.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailControllerLayout.encode C))
+            (MachineDescription.encodeCodeWordAsInput
+              (PairedRecognizerDovetailControllerStageInputCode C)) ∧
+          attempt.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput
+              (PairedRecognizerDovetailControllerStageInputCode C))
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeBoolWord result))
+
+def PairedRecognizerDovetailStageAttemptInvocationConstruction :
+    Prop :=
+  forall attempt encoder : MachineDescription,
+    attempt.SubroutineReady ->
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      PairedRecognizerDovetailControllerStageInputCodePrimitive
+      encoder ->
+    exists invoker : MachineDescription,
+      PairedRecognizerDovetailStageAttemptInvocationRealizes
+        attempt encoder invoker
+
+def PairedRecognizerDovetailControllerResultEmitterRealizes
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall C : MachineDescription.DovetailControllerLayout,
+    forall b : Bool,
+      emitter.HaltsWithOutput
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.DovetailControllerLayout.encode C))
+          [b] <->
+        PairedRecognizerDovetailControllerRawOutput C.result = some [b]
+
+def PairedRecognizerDovetailControllerResultEmitterConstruction :
+    Prop :=
+  exists emitter : MachineDescription,
+    PairedRecognizerDovetailControllerResultEmitterRealizes emitter
+
+def PairedRecognizerDovetailControllerContinueRealizes
+    (continuer : MachineDescription) : Prop :=
+  continuer.SubroutineReady ∧
+    forall C : MachineDescription.DovetailControllerLayout,
+      continuer.HaltsWithOutput
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.DovetailControllerLayout.encode C))
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.DovetailControllerLayout.encode
+              (MachineDescription.DovetailControllerLayout.nextStage C))) <->
+        PairedRecognizerDovetailControllerRawOutput C.result = none
+
+def PairedRecognizerDovetailControllerContinueConstruction :
+    Prop :=
+  exists continuer : MachineDescription,
+    PairedRecognizerDovetailControllerContinueRealizes continuer
+
+def PairedRecognizerDovetailFiniteStageLoopSequencingConstruction :
+    Prop :=
+  forall attempt initializer encoder invoker emitter continuer :
+      MachineDescription,
+    attempt.SubroutineReady ->
+    PairedRecognizerDovetailControllerInputInitializerRealizes
+      initializer ->
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      PairedRecognizerDovetailControllerStageInputCodePrimitive
+      encoder ->
+    PairedRecognizerDovetailStageAttemptInvocationRealizes
+      attempt encoder invoker ->
+    PairedRecognizerDovetailControllerResultEmitterRealizes
+      emitter ->
+    PairedRecognizerDovetailControllerContinueRealizes
+      continuer ->
+    exists decider : MachineDescription,
+      PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
+        attempt decider
+
 theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_finiteStageLoopController
     (hloop :
       PairedRecognizerDovetailFiniteStageLoopControllerConstruction) :
@@ -1701,21 +1960,120 @@ def pairedRecognizerDovetailControllerCompilerCloseout_of_finiteControllerCloseo
     hclose.totalStageAttemptSubroutine
     hclose.finiteStageLoopController
 
+theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_of_finiteSourceComponents
+    (hinitializer :
+      PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction)
+    (hrunner :
+      PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction)
+    (hemitter :
+      PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction)
+    (hseq :
+      PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction) :
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction := by
+  intro accept reject
+  rcases hinitializer accept reject with
+    ⟨initializer, hinitializer⟩
+  rcases hrunner accept reject with ⟨runner, hrunner⟩
+  rcases hemitter with ⟨emitter, hemitter⟩
+  rcases hseq accept reject initializer runner emitter
+      hinitializer hrunner hemitter with
+    ⟨attempt, hattempt⟩
+  exact
+    ⟨attempt,
+      tapeCodePrimitiveOutputCompiledSubroutineByDescription_congr
+        (pairedRecognizerDovetailTotalStageAttemptSourceCode_transform_eq
+          accept reject)
+        hattempt⟩
+
+theorem pairedRecognizerDovetailFiniteStageLoopControllerConstruction_of_components
+    (hinit :
+      PairedRecognizerDovetailControllerInputInitializerConstruction)
+    (hencoder :
+      PairedRecognizerDovetailControllerStageInputEncoderConstruction)
+    (hinvoke :
+      PairedRecognizerDovetailStageAttemptInvocationConstruction)
+    (hemit :
+      PairedRecognizerDovetailControllerResultEmitterConstruction)
+    (hcontinue :
+      PairedRecognizerDovetailControllerContinueConstruction)
+    (hseq :
+      PairedRecognizerDovetailFiniteStageLoopSequencingConstruction) :
+    PairedRecognizerDovetailFiniteStageLoopControllerConstruction := by
+  intro attempt hattempt
+  rcases hinit with ⟨initializer, hinitializer⟩
+  rcases hencoder with ⟨encoder, hencoder⟩
+  rcases hinvoke attempt encoder hattempt hencoder with
+    ⟨invoker, hinvoker⟩
+  rcases hemit with ⟨emitter, hemitter⟩
+  rcases hcontinue with ⟨continuer, hcontinuer⟩
+  exact hseq attempt initializer encoder invoker emitter continuer
+    hattempt hinitializer hencoder hinvoker hemitter hcontinuer
+
 /-!
-**Finite-source scaffold.**  These two declarations are the remaining concrete
-machine-construction leaves for the paired-recognizer dovetail controller route.
-They are intentionally narrow: the source programs and controller layout are
-the fixed finite targets above, not arbitrary staged programs or arbitrary
+**Finite-source scaffold.**  These declarations are the remaining concrete
+machine-construction leaves for the paired-recognizer dovetail controller
+route. They are intentionally narrow: the source programs and controller layout
+are the fixed finite targets above, not arbitrary staged programs or arbitrary
 tape-code primitives.
 -/
 
+theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction := by
+  sorry
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction := by
+  sorry
+
+theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction := by
+  sorry
+
+theorem pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction_scaffold :
+    PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction := by
+  sorry
+
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold :
-    PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction := by
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_of_finiteSourceComponents
+    pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_scaffold
+    pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold
+    pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_scaffold
+    pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction_scaffold
+
+theorem pairedRecognizerDovetailControllerInputInitializerConstruction_scaffold :
+    PairedRecognizerDovetailControllerInputInitializerConstruction := by
+  sorry
+
+theorem pairedRecognizerDovetailControllerStageInputEncoderConstruction_scaffold :
+    PairedRecognizerDovetailControllerStageInputEncoderConstruction := by
+  sorry
+
+theorem pairedRecognizerDovetailStageAttemptInvocationConstruction_scaffold :
+    PairedRecognizerDovetailStageAttemptInvocationConstruction := by
+  sorry
+
+theorem pairedRecognizerDovetailControllerResultEmitterConstruction_scaffold :
+    PairedRecognizerDovetailControllerResultEmitterConstruction := by
+  sorry
+
+theorem pairedRecognizerDovetailControllerContinueConstruction_scaffold :
+    PairedRecognizerDovetailControllerContinueConstruction := by
+  sorry
+
+theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_scaffold :
+    PairedRecognizerDovetailFiniteStageLoopSequencingConstruction := by
   sorry
 
 theorem pairedRecognizerDovetailFiniteStageLoopControllerConstruction_scaffold :
-    PairedRecognizerDovetailFiniteStageLoopControllerConstruction := by
-  sorry
+    PairedRecognizerDovetailFiniteStageLoopControllerConstruction :=
+  pairedRecognizerDovetailFiniteStageLoopControllerConstruction_of_components
+    pairedRecognizerDovetailControllerInputInitializerConstruction_scaffold
+    pairedRecognizerDovetailControllerStageInputEncoderConstruction_scaffold
+    pairedRecognizerDovetailStageAttemptInvocationConstruction_scaffold
+    pairedRecognizerDovetailControllerResultEmitterConstruction_scaffold
+    pairedRecognizerDovetailControllerContinueConstruction_scaffold
+    pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_scaffold
 
 def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold :
     PairedRecognizerDovetailFiniteControllerCompilerCloseout where
