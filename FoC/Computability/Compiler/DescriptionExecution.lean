@@ -344,6 +344,29 @@ def HaltsWithTape (D : MachineDescription)
     (w : Word Bool) (T : Tape Bool) : Prop :=
   exists n : Nat, D.HaltsWithTapeIn n w T
 
+theorem haltsWithOutput_of_haltsWithTape
+    {D : MachineDescription} {w : Word Bool} {T : Tape Bool}
+    (h : D.HaltsWithTape w T) :
+    D.HaltsWithOutput w (Tape.normalizedOutput T) := by
+  rcases h with ⟨n, hn⟩
+  rcases hn with ⟨hstate, htape⟩
+  exact ⟨n, ⟨hstate, by rw [htape]⟩⟩
+
+theorem runConfig_eq_halt_of_haltsWithTape
+    {D : MachineDescription} {w : Word Bool} {T : Tape Bool}
+    (h : D.HaltsWithTape w T) :
+    exists n : Nat,
+      D.runConfig n { state := D.start, tape := Tape.input w } =
+        { state := D.halt, tape := T } := by
+  rcases h with ⟨n, hn⟩
+  refine ⟨n, ?_⟩
+  change D.runConfig n (D.initial w) = { state := D.halt, tape := T }
+  cases hfinal : D.runConfig n (D.initial w) with
+  | mk state tape =>
+      rcases hn with ⟨hstate, htape⟩
+      simp [hfinal] at hstate htape
+      simp [hstate, htape]
+
 theorem haltsWithExactOutputIn_iff_haltsWithTapeIn_output
     {D : MachineDescription} {n : Nat} {w out : Word Bool} :
     D.HaltsWithExactOutputIn n w out <->

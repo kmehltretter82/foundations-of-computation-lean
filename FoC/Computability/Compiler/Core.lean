@@ -1283,6 +1283,45 @@ def TapeCodePrimitiveOutputCompiledSubroutineByDescription
   TapeCodePrimitiveOutputCompiledByDescription P D ∧
     D.HaltTransitionFree
 
+def TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+    (P : MachineDescription.TapeCodePrimitive)
+    (D : MachineDescription) (handoffMove : Direction) : Prop :=
+  TapeCodePrimitiveOutputSubroutineRealizedByDescription P D ∧
+    forall code out : Word MachineCodeSymbol,
+      P.transform code = some out ->
+        exists T : Tape Bool,
+          D.HaltsWithTape
+            (MachineDescription.encodeCodeWordAsInput code) T ∧
+          Tape.move handoffMove T =
+            Tape.input (MachineDescription.encodeCodeWordAsInput out)
+
+def TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+    (P : MachineDescription.TapeCodePrimitive)
+    (D : MachineDescription) (handoffMove : Direction) : Prop :=
+  TapeCodePrimitiveOutputCompiledSubroutineByDescription P D ∧
+    forall code out : Word MachineCodeSymbol,
+      P.transform code = some out ->
+        exists T : Tape Bool,
+          D.HaltsWithTape
+            (MachineDescription.encodeCodeWordAsInput code) T ∧
+          Tape.move handoffMove T =
+            Tape.input (MachineDescription.encodeCodeWordAsInput out)
+
+def TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+    (P : MachineDescription.TapeCodePrimitive)
+    (D : MachineDescription) (handoffMove : Direction) : Prop :=
+  TapeCodePrimitiveOutputCompiledSubroutineByDescription P D ∧
+    forall code : Word MachineCodeSymbol,
+    forall T : Tape Bool,
+      D.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T ->
+        exists out : Word MachineCodeSymbol,
+          P.transform code = some out ∧
+            Tape.normalizedOutput T =
+              MachineDescription.encodeCodeWordAsInput out ∧
+            Tape.move handoffMove T =
+              Tape.input (MachineDescription.encodeCodeWordAsInput out)
+
 theorem tapeCodePrimitiveOutputCompiledByDescription_wellFormed
     {P : MachineDescription.TapeCodePrimitive}
     {D : MachineDescription}
@@ -1372,6 +1411,177 @@ theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_transform_eq_some
     P.transform code = some out :=
   (h.left.right code out).mp hD
 
+theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_outputRealized
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+      P D handoffMove) :
+    TapeCodePrimitiveOutputSubroutineRealizedByDescription P D :=
+  h.left
+
+theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_haltTransitionFree
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+      P D handoffMove) :
+    D.HaltTransitionFree :=
+  h.left.right
+
+theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_subroutineReady
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+      P D handoffMove) :
+    D.SubroutineReady :=
+  ⟨h.left.left.left, h.left.right⟩
+
+theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_haltsWithOutput_of_transform_eq_some
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+      P D handoffMove)
+    {code out : Word MachineCodeSymbol}
+    (hp : P.transform code = some out) :
+    D.HaltsWithOutput
+      (MachineDescription.encodeCodeWordAsInput code)
+      (MachineDescription.encodeCodeWordAsInput out) :=
+  h.left.left.right code out hp
+
+theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_haltsWithTape_of_transform_eq_some
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+      P D handoffMove)
+    {code out : Word MachineCodeSymbol}
+    (hp : P.transform code = some out) :
+    exists T : Tape Bool,
+      D.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T ∧
+      Tape.move handoffMove T =
+        Tape.input (MachineDescription.encodeCodeWordAsInput out) :=
+  h.right code out hp
+
+theorem tapeCodePrimitiveHandoffCompiledSubroutineByDescription_outputCompiled
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+      P D handoffMove) :
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription P D :=
+  h.left
+
+theorem tapeCodePrimitiveHandoffCompiledSubroutineByDescription_subroutineReady
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+      P D handoffMove) :
+    D.SubroutineReady :=
+  ⟨h.left.left.left, h.left.right⟩
+
+theorem tapeCodePrimitiveHandoffCompiledSubroutineByDescription_haltsWithOutput_of_transform_eq_some
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+      P D handoffMove)
+    {code out : Word MachineCodeSymbol}
+    (hp : P.transform code = some out) :
+    D.HaltsWithOutput
+      (MachineDescription.encodeCodeWordAsInput code)
+      (MachineDescription.encodeCodeWordAsInput out) :=
+  tapeCodePrimitiveOutputCompiledSubroutineByDescription_haltsWithOutput_of_transform_eq_some
+    h.left hp
+
+theorem tapeCodePrimitiveHandoffCompiledSubroutineByDescription_haltsWithTape_of_transform_eq_some
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+      P D handoffMove)
+    {code out : Word MachineCodeSymbol}
+    (hp : P.transform code = some out) :
+    exists T : Tape Bool,
+      D.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T ∧
+      Tape.move handoffMove T =
+        Tape.input (MachineDescription.encodeCodeWordAsInput out) :=
+  h.right code out hp
+
+theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_of_handoffCompiled
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+      P D handoffMove) :
+    TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+      P D handoffMove :=
+  ⟨⟨⟨h.left.left.left,
+        fun code out hp => (h.left.left.right code out).mpr hp⟩,
+      h.left.right⟩,
+    h.right⟩
+
+theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_outputCompiled
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      P D handoffMove) :
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription P D :=
+  h.left
+
+theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_haltsWithTape_output
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      P D handoffMove)
+    {code : Word MachineCodeSymbol} {T : Tape Bool}
+    (hhalt :
+      D.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T) :
+    exists out : Word MachineCodeSymbol,
+      P.transform code = some out ∧
+        Tape.normalizedOutput T =
+          MachineDescription.encodeCodeWordAsInput out ∧
+        Tape.move handoffMove T =
+          Tape.input (MachineDescription.encodeCodeWordAsInput out) :=
+  h.right code T hhalt
+
+theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      P D handoffMove) :
+    TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+      P D handoffMove := by
+  constructor
+  · exact h.left
+  · intro code out hp
+    rcases
+        tapeCodePrimitiveOutputCompiledSubroutineByDescription_haltsWithOutput_of_transform_eq_some
+          h.left hp with
+      ⟨n, hn⟩
+    let T : Tape Bool :=
+      (D.runConfig n
+        (D.initial (MachineDescription.encodeCodeWordAsInput code))).tape
+    have hTape :
+        D.HaltsWithTape
+          (MachineDescription.encodeCodeWordAsInput code) T := by
+      refine ⟨n, ?_⟩
+      exact ⟨hn.left, rfl⟩
+    rcases h.right code T hTape with
+      ⟨out', hp', _hnorm, hmove⟩
+    have hout' : out' = out := by
+      rw [hp] at hp'
+      cases hp'
+      rfl
+    exact ⟨T, hTape, by simpa [hout'] using hmove⟩
+
+theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffRealized
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      P D handoffMove) :
+    TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+      P D handoffMove :=
+  tapeCodePrimitiveHandoffSubroutineRealizedByDescription_of_handoffCompiled
+    (tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
+      h)
+
 theorem haltsWithEncodedCodeOutput_functional_of_haltTransitionFree
     {D : MachineDescription}
     {w : Word Bool}
@@ -1415,6 +1625,27 @@ theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_congr
     · intro code out
       simpa [hPQ code] using hD.left.right code out
   · exact hD.right
+
+theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_congr
+    {P Q : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (hPQ : forall code : Word MachineCodeSymbol,
+      P.transform code = Q.transform code)
+    (hD : TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+      P D handoffMove) :
+    TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+      Q D handoffMove := by
+  constructor
+  · constructor
+    · constructor
+      · exact hD.left.left.left
+      · intro code out hQ
+        exact hD.left.left.right code out
+          (by simpa [hPQ code] using hQ)
+    · exact hD.left.right
+  · intro code out hQ
+    exact hD.right code out
+      (by simpa [hPQ code] using hQ)
 
 theorem tapeCodePrimitiveOutputRealizedByDescription_of_outputCompiled
     {P : MachineDescription.TapeCodePrimitive}
@@ -2054,22 +2285,93 @@ def PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction :
       PairedRecognizerDovetailTotalOutputCode
       emitter
 
+def PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction :
+    Prop :=
+  forall accept reject : MachineDescription,
+    exists initializer : MachineDescription,
+      TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+        (PairedRecognizerDovetailInitialLayoutCode accept reject)
+        initializer Direction.right
+
+def PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction :
+    Prop :=
+  forall accept reject : MachineDescription,
+    exists runner : MachineDescription,
+      TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject)
+        runner Direction.right
+
+def PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction :
+    Prop :=
+  exists emitter : MachineDescription,
+    TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+      PairedRecognizerDovetailTotalOutputCode
+      emitter Direction.right
+
+def PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction :
+    Prop :=
+  forall accept reject : MachineDescription,
+    exists initializer : MachineDescription,
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (PairedRecognizerDovetailInitialLayoutCode accept reject)
+        initializer Direction.right
+
+def PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction :
+    Prop :=
+  forall accept reject : MachineDescription,
+    exists runner : MachineDescription,
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject)
+        runner Direction.right
+
+def PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction :
+    Prop :=
+  exists emitter : MachineDescription,
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      PairedRecognizerDovetailTotalOutputCode
+      emitter Direction.right
+
 def PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction :
     Prop :=
   forall accept reject initializer runner emitter : MachineDescription,
-    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       (PairedRecognizerDovetailInitialLayoutCode accept reject)
-      initializer ->
-    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      initializer Direction.right ->
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       (PairedRecognizerDovetailLayoutCode accept reject)
-      runner ->
-    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      runner Direction.right ->
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       PairedRecognizerDovetailTotalOutputCode
-      emitter ->
+      emitter Direction.right ->
     exists attempt : MachineDescription,
       TapeCodePrimitiveOutputCompiledSubroutineByDescription
         (PairedRecognizerDovetailTotalStageAttemptSourceCode accept reject)
         attempt
+
+def PairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequencingConstruction :
+    Prop :=
+  forall accept reject initializer runner emitter : MachineDescription,
+    TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+      (PairedRecognizerDovetailInitialLayoutCode accept reject)
+      initializer Direction.right ->
+    TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+      (PairedRecognizerDovetailLayoutCode accept reject)
+      runner Direction.right ->
+    TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+      PairedRecognizerDovetailTotalOutputCode
+      emitter Direction.right ->
+    exists attempt : MachineDescription,
+      TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+        (PairedRecognizerDovetailTotalStageAttemptSourceCode accept reject)
+        attempt Direction.right
+
+def PairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction :
+    Prop :=
+  forall accept reject : MachineDescription,
+    exists attempt : MachineDescription,
+      TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+        (PairedRecognizerDovetailTotalStageAttemptCode accept reject)
+        attempt Direction.right
 
 def PairedRecognizerDovetailLayoutCodeCompilerConstruction : Prop :=
   forall accept reject : MachineDescription,
@@ -2375,11 +2677,11 @@ def pairedRecognizerDovetailControllerCompilerCloseout_of_finiteControllerCloseo
 
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_of_finiteSourceComponents
     (hinitializer :
-      PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction)
+      PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction)
     (hrunner :
-      PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction)
+      PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction)
     (hemitter :
-      PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction)
+      PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction)
     (hseq :
       PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction) :
     PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction := by
@@ -2397,6 +2699,135 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineCon
         (pairedRecognizerDovetailTotalStageAttemptSourceCode_transform_eq
           accept reject)
         hattempt⟩
+
+theorem pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_of_closedHandoff
+    (h :
+      PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction) :
+    PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction := by
+  intro accept reject
+  rcases h accept reject with ⟨initializer, hinitializer⟩
+  exact
+    ⟨initializer,
+      tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
+        hinitializer⟩
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction_of_closedHandoff
+    (h :
+      PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction := by
+  intro accept reject
+  rcases h accept reject with ⟨runner, hrunner⟩
+  exact
+    ⟨runner,
+      tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
+        hrunner⟩
+
+theorem pairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction_of_closedHandoff
+    (h :
+      PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction) :
+    PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction := by
+  rcases h with ⟨emitter, hemitter⟩
+  exact
+    ⟨emitter,
+      tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
+        hemitter⟩
+
+theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_of_closedHandoff
+    (h :
+      PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction) :
+    PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction := by
+  intro accept reject
+  rcases h accept reject with ⟨initializer, hinitializer⟩
+  exact
+    ⟨initializer,
+      tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_outputCompiled
+        hinitializer⟩
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_closedHandoff
+    (h :
+      PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction := by
+  intro accept reject
+  rcases h accept reject with ⟨runner, hrunner⟩
+  exact
+    ⟨runner,
+      tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_outputCompiled
+        hrunner⟩
+
+theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_of_closedHandoff
+    (h :
+      PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction) :
+    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction := by
+  rcases h with ⟨emitter, hemitter⟩
+  exact
+    ⟨emitter,
+      tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_outputCompiled
+        hemitter⟩
+
+theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_of_handoff
+    (h :
+      PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction) :
+    PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction := by
+  intro accept reject
+  rcases h accept reject with ⟨initializer, hinitializer⟩
+  exact
+    ⟨initializer,
+      tapeCodePrimitiveHandoffCompiledSubroutineByDescription_outputCompiled
+        hinitializer⟩
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_handoff
+    (h :
+      PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction := by
+  intro accept reject
+  rcases h accept reject with ⟨runner, hrunner⟩
+  exact
+    ⟨runner,
+      tapeCodePrimitiveHandoffCompiledSubroutineByDescription_outputCompiled
+        hrunner⟩
+
+theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_of_handoff
+    (h :
+      PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction) :
+    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction := by
+  rcases h with ⟨emitter, hemitter⟩
+  exact
+    ⟨emitter,
+      tapeCodePrimitiveHandoffCompiledSubroutineByDescription_outputCompiled
+        hemitter⟩
+
+theorem pairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction_of_finiteSourceHandoffComponents
+    (hinitializer :
+      PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction)
+    (hrunner :
+      PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction)
+    (hemitter :
+      PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction)
+    (hseq :
+      PairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequencingConstruction) :
+    PairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction := by
+  intro accept reject
+  rcases hinitializer accept reject with
+    ⟨initializer, hinitializer⟩
+  rcases hrunner accept reject with ⟨runner, hrunner⟩
+  rcases hemitter with ⟨emitter, hemitter⟩
+  rcases hseq accept reject initializer runner emitter
+      hinitializer hrunner hemitter with
+    ⟨attempt, hattempt⟩
+  exact
+    ⟨attempt,
+      tapeCodePrimitiveHandoffSubroutineRealizedByDescription_congr
+        (pairedRecognizerDovetailTotalStageAttemptSourceCode_transform_eq
+          accept reject)
+        hattempt⟩
+
+theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction_of_handoff
+    (h :
+      PairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction) :
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction := by
+  intro accept reject
+  rcases h accept reject with ⟨attempt, hattempt⟩
+  exact ⟨attempt, hattempt.left⟩
 
 theorem pairedRecognizerDovetailFiniteStageLoopControllerConstruction_of_components
     (hinit :
@@ -2503,6 +2934,30 @@ def EncodedDovetailTotalOutputEmitterRewriterConstruction :
             (MachineDescription.encodeCodeWordAsInput out) <->
           PairedRecognizerDovetailTotalOutputCode.transform code = some out
 
+def EncodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction :
+    Prop :=
+  PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction
+
+def EncodedDovetailLayoutBoundedRunnerHandoffRewriterConstruction :
+    Prop :=
+  PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction
+
+def EncodedDovetailTotalOutputEmitterHandoffRewriterConstruction :
+    Prop :=
+  PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction
+
+def EncodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction :
+    Prop :=
+  PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction
+
+def EncodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction :
+    Prop :=
+  PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction
+
+def EncodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction :
+    Prop :=
+  PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction
+
 def EncodedControllerInputInitializerRewriterConstruction :
     Prop :=
   exists initializer : MachineDescription,
@@ -2548,17 +3003,69 @@ def EncodedControllerContinueRewriterConstruction :
                 (MachineDescription.DovetailControllerLayout.nextStage C))) <->
           PairedRecognizerDovetailControllerRawOutput C.result = none
 
+theorem encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold :
+    EncodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction := by
+  sorry
+
+theorem encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold :
+    EncodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction := by
+  sorry
+
+theorem encodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction_scaffold :
+    EncodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction := by
+  sorry
+
 theorem encodedDovetailStageInputToInitialLayoutRewriterConstruction_scaffold :
     EncodedDovetailStageInputToInitialLayoutRewriterConstruction := by
-  sorry
+  intro accept reject
+  rcases
+      encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold
+        accept reject with
+    ⟨initializer, hinitializer⟩
+  exact
+    ⟨initializer,
+      tapeCodePrimitiveOutputCompiledSubroutineByDescription_subroutineReady
+        hinitializer.left,
+      hinitializer.left.left.right⟩
 
 theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
     EncodedDovetailLayoutBoundedRunnerRewriterConstruction := by
-  sorry
+  intro accept reject
+  rcases
+      encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold
+        accept reject with
+    ⟨runner, hrunner⟩
+  exact
+    ⟨runner,
+      tapeCodePrimitiveOutputCompiledSubroutineByDescription_subroutineReady
+        hrunner.left,
+      hrunner.left.left.right⟩
 
 theorem encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold :
     EncodedDovetailTotalOutputEmitterRewriterConstruction := by
-  sorry
+  rcases
+      encodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction_scaffold with
+    ⟨emitter, hemitter⟩
+  exact
+    ⟨emitter,
+      tapeCodePrimitiveOutputCompiledSubroutineByDescription_subroutineReady
+        hemitter.left,
+      hemitter.left.left.right⟩
+
+theorem encodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction_scaffold :
+    EncodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction :=
+  pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_of_closedHandoff
+    encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold
+
+theorem encodedDovetailLayoutBoundedRunnerHandoffRewriterConstruction_scaffold :
+    EncodedDovetailLayoutBoundedRunnerHandoffRewriterConstruction :=
+  pairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction_of_closedHandoff
+    encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold
+
+theorem encodedDovetailTotalOutputEmitterHandoffRewriterConstruction_scaffold :
+    EncodedDovetailTotalOutputEmitterHandoffRewriterConstruction :=
+  pairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction_of_closedHandoff
+    encodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction_scaffold
 
 theorem encodedControllerInputInitializerRewriterConstruction_scaffold :
     EncodedControllerInputInitializerRewriterConstruction := by
@@ -2599,6 +3106,42 @@ theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction
   rcases h with ⟨emitter, hready, hspec⟩
   exact ⟨emitter, ⟨⟨hready.left, hspec⟩, hready.right⟩⟩
 
+theorem pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction) :
+    PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction :=
+  h
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailLayoutBoundedRunnerHandoffRewriterConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction :=
+  h
+
+theorem pairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailTotalOutputEmitterHandoffRewriterConstruction) :
+    PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction :=
+  h
+
+theorem pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction) :
+    PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction :=
+  h
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction :=
+  h
+
+theorem pairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    (h :
+      EncodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction) :
+    PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction :=
+  h
+
 theorem pairedRecognizerDovetailControllerInputInitializerConstruction_of_encodedRewriter
     (h : EncodedControllerInputInitializerRewriterConstruction) :
     PairedRecognizerDovetailControllerInputInitializerConstruction := by
@@ -2633,30 +3176,51 @@ tape-code primitives.
 
 theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_scaffold :
     PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction :=
-  pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_of_encodedRewriter
-    encodedDovetailStageInputToInitialLayoutRewriterConstruction_scaffold
+  pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_of_closedHandoff
+    (pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+      encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold)
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold :
     PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :=
-  pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_encodedRewriter
-    encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold
+  pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_closedHandoff
+    (pairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+      encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold)
 
 theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_scaffold :
     PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction :=
-  pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_of_encodedRewriter
-    encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold
+  pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_of_closedHandoff
+    (pairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+      encodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction_scaffold)
 
-theorem pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction_scaffold :
-    PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction := by
-  sorry
+theorem pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    encodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction_scaffold
 
-theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold :
-    PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :=
-  pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_of_finiteSourceComponents
-    pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_scaffold
-    pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold
-    pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_scaffold
-    pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction_scaffold
+theorem pairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    encodedDovetailLayoutBoundedRunnerHandoffRewriterConstruction_scaffold
+
+theorem pairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    encodedDovetailTotalOutputEmitterHandoffRewriterConstruction_scaffold
+
+theorem pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold
+
+theorem pairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
+    encodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction_scaffold
 
 theorem pairedRecognizerDovetailControllerInputInitializerConstruction_scaffold :
     PairedRecognizerDovetailControllerInputInitializerConstruction :=
@@ -2695,13 +3259,6 @@ theorem pairedRecognizerDovetailFiniteStageLoopControllerConstruction_scaffold :
     pairedRecognizerDovetailControllerResultEmitterConstruction_scaffold
     pairedRecognizerDovetailControllerContinueConstruction_scaffold
     pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_scaffold
-
-def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold :
-    PairedRecognizerDovetailFiniteControllerCompilerCloseout where
-  totalStageAttemptSubroutine :=
-    pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold
-  finiteStageLoopController :=
-    pairedRecognizerDovetailFiniteStageLoopControllerConstruction_scaffold
 
 noncomputable def PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
     (attempt : MachineDescription) :

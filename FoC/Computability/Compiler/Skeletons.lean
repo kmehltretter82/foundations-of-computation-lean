@@ -844,6 +844,46 @@ theorem seqSubroutine_reaches_of_runConfig_eq
   exact seqSubroutine_reaches hA hB
     ⟨m, hmrun, hmfirst⟩ hBReach
 
+theorem seqSubroutine_haltsWithTape_of_haltsWithTape
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {input : Word Bool} {Tmid Tout : Tape Bool}
+    (hAhalt : A.HaltsWithTape input Tmid)
+    (hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start,
+              tape := Tape.move handoffMove Tmid } =
+          { state := B.halt, tape := Tout }) :
+    (seqSubroutine A B handoffMove).HaltsWithTape input Tout := by
+  rcases MachineDescription.runConfig_eq_halt_of_haltsWithTape hAhalt with
+    ⟨nA, hArun⟩
+  rcases seqSubroutine_reaches_of_runConfig_eq
+      (A := A) (B := B) (handoffMove := handoffMove)
+      hA hB hArun hBReach with
+    ⟨n, hn⟩
+  exact ⟨n, by
+    constructor
+    · simpa [MachineDescription.HaltsWithTapeIn] using
+        congrArg MachineDescription.Configuration.state hn
+    · simpa [MachineDescription.HaltsWithTapeIn] using
+        congrArg MachineDescription.Configuration.tape hn⟩
+
+theorem seqSubroutine_haltsWithTape_inv
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {input : Word Bool} {Tout : Tape Bool}
+    (hseq :
+      (seqSubroutine A B handoffMove).HaltsWithTape input Tout) :
+    exists Tmid : Tape Bool,
+      A.HaltsWithTape input Tmid ∧
+        exists nB : Nat,
+          B.runConfig nB
+              { state := B.start,
+                tape := Tape.move handoffMove Tmid } =
+            { state := B.halt, tape := Tout } := by
+  sorry
+
 theorem seqSubroutine_haltsWithOutput_of_haltsWithTape
     {A B : MachineDescription} {handoffMove : Direction}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)
@@ -880,6 +920,356 @@ theorem seqSubroutine_haltsWithOutput_of_haltsWithTape
         congrArg (fun c => Tape.normalizedOutput c.tape) hn⟩
 
 end MachineDescription
+
+theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose
+    {P Q : MachineDescription.TapeCodePrimitive}
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hP : TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+      P A handoffMove)
+    (hQ : TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+      Q B handoffMove) :
+    TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+      (MachineDescription.TapeCodePrimitive.compose P Q)
+      (MachineDescription.seqSubroutine A B handoffMove)
+      handoffMove := by
+  have hAready : A.SubroutineReady :=
+    tapeCodePrimitiveHandoffSubroutineRealizedByDescription_subroutineReady
+      hP
+  have hBready : B.SubroutineReady :=
+    tapeCodePrimitiveHandoffSubroutineRealizedByDescription_subroutineReady
+      hQ
+  have hseqTape :
+      forall {code out : Word MachineCodeSymbol},
+        (MachineDescription.TapeCodePrimitive.compose P Q).transform code =
+            some out ->
+          exists Tout : Tape Bool,
+            (MachineDescription.seqSubroutine A B handoffMove).HaltsWithTape
+              (MachineDescription.encodeCodeWordAsInput code) Tout ∧
+            Tape.move handoffMove Tout =
+              Tape.input (MachineDescription.encodeCodeWordAsInput out) ∧
+            Tape.normalizedOutput Tout =
+              MachineDescription.encodeCodeWordAsInput out := by
+    intro code out hcompose
+    unfold MachineDescription.TapeCodePrimitive.compose at hcompose
+    cases hPcode : P.transform code with
+    | none =>
+        simp [hPcode] at hcompose
+    | some mid =>
+        have hQout : Q.transform mid = some out := by
+          simpa [hPcode] using hcompose
+        rcases
+            tapeCodePrimitiveHandoffSubroutineRealizedByDescription_haltsWithTape_of_transform_eq_some
+              hP hPcode with
+          ⟨Tmid, hAhalt, hPmove⟩
+        rcases
+            tapeCodePrimitiveHandoffSubroutineRealizedByDescription_haltsWithTape_of_transform_eq_some
+              hQ hQout with
+          ⟨Tout, hBhalt, hQmove⟩
+        rcases MachineDescription.runConfig_eq_halt_of_haltsWithTape
+            hBhalt with
+          ⟨nB, hBRunInput⟩
+        have hBReach :
+            exists nB : Nat,
+              B.runConfig nB
+                  { state := B.start,
+                    tape := Tape.move handoffMove Tmid } =
+                { state := B.halt, tape := Tout } := by
+          exact ⟨nB, by simpa [hPmove] using hBRunInput⟩
+        have hSeqTape :
+            (MachineDescription.seqSubroutine A B handoffMove).HaltsWithTape
+              (MachineDescription.encodeCodeWordAsInput code) Tout :=
+          MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+            hAready hBready hAhalt hBReach
+        have hQOutCanonical :
+            B.HaltsWithOutput
+              (MachineDescription.encodeCodeWordAsInput mid)
+              (MachineDescription.encodeCodeWordAsInput out) :=
+          tapeCodePrimitiveHandoffSubroutineRealizedByDescription_haltsWithOutput_of_transform_eq_some
+            hQ hQout
+        have hQOutTape :
+            B.HaltsWithOutput
+              (MachineDescription.encodeCodeWordAsInput mid)
+              (Tape.normalizedOutput Tout) :=
+          MachineDescription.haltsWithOutput_of_haltsWithTape hBhalt
+        have hToutNorm :
+            Tape.normalizedOutput Tout =
+              MachineDescription.encodeCodeWordAsInput out :=
+          MachineDescription.haltsWithOutput_functional_of_haltTransitionFree
+            (tapeCodePrimitiveHandoffSubroutineRealizedByDescription_haltTransitionFree
+              hQ)
+            hQOutTape hQOutCanonical
+        exact ⟨Tout, hSeqTape, hQmove, hToutNorm⟩
+  constructor
+  · constructor
+    · constructor
+      · exact MachineDescription.seqSubroutine_wellFormed hAready hBready
+      · intro code out hcompose
+        rcases hseqTape hcompose with
+          ⟨Tout, hSeqTape, _hmove, hToutNorm⟩
+        simpa [hToutNorm] using
+          MachineDescription.haltsWithOutput_of_haltsWithTape hSeqTape
+    · exact MachineDescription.seqSubroutine_haltTransitionFree
+        hAready hBready
+  · intro code out hcompose
+    rcases hseqTape hcompose with
+      ⟨Tout, hSeqTape, hmove, _hToutNorm⟩
+    exact ⟨Tout, hSeqTape, hmove⟩
+
+theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
+    {P Q : MachineDescription.TapeCodePrimitive}
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hP : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      P A handoffMove)
+    (hQ : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      Q B handoffMove) :
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      (MachineDescription.TapeCodePrimitive.compose P Q)
+      (MachineDescription.seqSubroutine A B handoffMove)
+      handoffMove := by
+  have hAready : A.SubroutineReady :=
+    tapeCodePrimitiveOutputCompiledSubroutineByDescription_subroutineReady
+      hP.left
+  have hBready : B.SubroutineReady :=
+    tapeCodePrimitiveOutputCompiledSubroutineByDescription_subroutineReady
+      hQ.left
+  have hrealized :
+      TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+        (MachineDescription.TapeCodePrimitive.compose P Q)
+        (MachineDescription.seqSubroutine A B handoffMove)
+        handoffMove :=
+    tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose
+      (tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffRealized
+        hP)
+      (tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffRealized
+        hQ)
+  constructor
+  · constructor
+    · constructor
+      · exact MachineDescription.seqSubroutine_wellFormed hAready hBready
+      · intro code out
+        constructor
+        · intro hseqOut
+          rcases hseqOut with ⟨n, hn⟩
+          let seq :=
+            MachineDescription.seqSubroutine A B handoffMove
+          let Tout : Tape Bool :=
+            (seq.runConfig n
+              (seq.initial
+                (MachineDescription.encodeCodeWordAsInput code))).tape
+          have hSeqTape :
+              seq.HaltsWithTape
+                (MachineDescription.encodeCodeWordAsInput code) Tout := by
+            refine ⟨n, ?_⟩
+            exact ⟨hn.left, rfl⟩
+          have hToutNorm :
+              Tape.normalizedOutput Tout =
+                MachineDescription.encodeCodeWordAsInput out :=
+            hn.right
+          rcases MachineDescription.seqSubroutine_haltsWithTape_inv
+              hAready hBready hSeqTape with
+            ⟨Tmid, hAhalt, hBReach⟩
+          rcases hP.right code Tmid hAhalt with
+            ⟨mid, hPmid, _hTmidNorm, hTmidMove⟩
+          rcases hBReach with ⟨nB, hBRun⟩
+          have hBRunInput :
+              B.runConfig nB
+                  (B.initial
+                    (MachineDescription.encodeCodeWordAsInput mid)) =
+                { state := B.halt, tape := Tout } := by
+            change
+              B.runConfig nB
+                  { state := B.start,
+                    tape := Tape.input
+                      (MachineDescription.encodeCodeWordAsInput mid) } =
+                { state := B.halt, tape := Tout }
+            simpa [hTmidMove] using hBRun
+          have hBhalt :
+              B.HaltsWithTape
+                (MachineDescription.encodeCodeWordAsInput mid) Tout := by
+            refine ⟨nB, ?_⟩
+            constructor
+            · exact congrArg MachineDescription.Configuration.state
+                  hBRunInput
+            · exact
+                (congrArg MachineDescription.Configuration.tape
+                  hBRunInput).trans (show
+                    Tout =
+                      (seq.runConfig n
+                        (seq.initial
+                          (MachineDescription.encodeCodeWordAsInput code))).tape
+                    from rfl)
+          have hBout :
+              B.HaltsWithOutput
+                (MachineDescription.encodeCodeWordAsInput mid)
+                (MachineDescription.encodeCodeWordAsInput out) := by
+            simpa [hToutNorm] using
+              MachineDescription.haltsWithOutput_of_haltsWithTape hBhalt
+          have hQout : Q.transform mid = some out :=
+            (hQ.left.left.right mid out).mp hBout
+          exact
+            MachineDescription.TapeCodePrimitive.compose_transform_some
+              hPmid hQout
+        · intro hcompose
+          exact hrealized.left.left.right code out hcompose
+    · exact MachineDescription.seqSubroutine_haltTransitionFree
+        hAready hBready
+  · intro code Tout hSeqTape
+    rcases MachineDescription.seqSubroutine_haltsWithTape_inv
+        hAready hBready hSeqTape with
+      ⟨Tmid, hAhalt, hBReach⟩
+    rcases hP.right code Tmid hAhalt with
+      ⟨mid, hPmid, _hTmidNorm, hTmidMove⟩
+    rcases hBReach with ⟨nB, hBRun⟩
+    have hBRunInput :
+        B.runConfig nB
+            (B.initial
+              (MachineDescription.encodeCodeWordAsInput mid)) =
+          { state := B.halt, tape := Tout } := by
+      change
+        B.runConfig nB
+            { state := B.start,
+              tape := Tape.input
+                (MachineDescription.encodeCodeWordAsInput mid) } =
+          { state := B.halt, tape := Tout }
+      simpa [hTmidMove] using hBRun
+    have hBhalt :
+        B.HaltsWithTape
+          (MachineDescription.encodeCodeWordAsInput mid) Tout := by
+      refine ⟨nB, ?_⟩
+      constructor
+      · exact congrArg MachineDescription.Configuration.state
+          hBRunInput
+      · change
+          (B.runConfig nB
+            (B.initial
+              (MachineDescription.encodeCodeWordAsInput mid))).tape =
+              Tout
+        exact congrArg MachineDescription.Configuration.tape
+          hBRunInput
+    rcases hQ.right mid Tout hBhalt with
+      ⟨out, hQout, hToutNorm, hToutMove⟩
+    exact
+      ⟨out,
+        MachineDescription.TapeCodePrimitive.compose_transform_some
+          hPmid hQout,
+        hToutNorm,
+        hToutMove⟩
+
+theorem pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction_scaffold :
+    PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction := by
+  intro accept reject initializer runner emitter
+    hinitializer hrunner hemitter
+  let initRunner :=
+    MachineDescription.seqSubroutine initializer runner Direction.right
+  let attempt :=
+    MachineDescription.seqSubroutine initRunner emitter Direction.right
+  refine ⟨attempt, ?_⟩
+  have hfirst :
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (MachineDescription.TapeCodePrimitive.compose
+          (PairedRecognizerDovetailInitialLayoutCode accept reject)
+          (PairedRecognizerDovetailLayoutCode accept reject))
+        initRunner Direction.right :=
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
+      hinitializer hrunner
+  have hsecond :
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (MachineDescription.TapeCodePrimitive.compose
+          (MachineDescription.TapeCodePrimitive.compose
+            (PairedRecognizerDovetailInitialLayoutCode accept reject)
+            (PairedRecognizerDovetailLayoutCode accept reject))
+          PairedRecognizerDovetailTotalOutputCode)
+        attempt Direction.right :=
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
+      hfirst hemitter
+  have houtput :
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (MachineDescription.TapeCodePrimitive.compose
+          (MachineDescription.TapeCodePrimitive.compose
+            (PairedRecognizerDovetailInitialLayoutCode accept reject)
+            (PairedRecognizerDovetailLayoutCode accept reject))
+          PairedRecognizerDovetailTotalOutputCode)
+        attempt :=
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_outputCompiled
+      hsecond
+  simpa [PairedRecognizerDovetailTotalStageAttemptSourceCode,
+    initRunner, attempt] using houtput
+
+theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_of_finiteSourceComponents
+    pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold
+    pairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction_scaffold
+    pairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction_scaffold
+    pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction_scaffold
+
+def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold :
+    PairedRecognizerDovetailFiniteControllerCompilerCloseout where
+  totalStageAttemptSubroutine :=
+    pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold
+  finiteStageLoopController :=
+    pairedRecognizerDovetailFiniteStageLoopControllerConstruction_scaffold
+
+theorem pairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequencingConstruction_scaffold :
+    PairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequencingConstruction := by
+  intro accept reject initializer runner emitter
+    hinitializer hrunner hemitter
+  let initRunner :=
+    MachineDescription.seqSubroutine initializer runner Direction.right
+  let attempt :=
+    MachineDescription.seqSubroutine initRunner emitter Direction.right
+  refine ⟨attempt, ?_⟩
+  have hinitRealized :
+      TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+        (PairedRecognizerDovetailInitialLayoutCode accept reject)
+        initializer Direction.right :=
+    tapeCodePrimitiveHandoffSubroutineRealizedByDescription_of_handoffCompiled
+      hinitializer
+  have hrunnerRealized :
+      TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject)
+        runner Direction.right :=
+    tapeCodePrimitiveHandoffSubroutineRealizedByDescription_of_handoffCompiled
+      hrunner
+  have hemitterRealized :
+      TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+        PairedRecognizerDovetailTotalOutputCode
+        emitter Direction.right :=
+    tapeCodePrimitiveHandoffSubroutineRealizedByDescription_of_handoffCompiled
+      hemitter
+  have hfirst :
+      TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+        (MachineDescription.TapeCodePrimitive.compose
+          (PairedRecognizerDovetailInitialLayoutCode accept reject)
+          (PairedRecognizerDovetailLayoutCode accept reject))
+        initRunner Direction.right :=
+    tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose
+      hinitRealized hrunnerRealized
+  have hsecond :
+      TapeCodePrimitiveHandoffSubroutineRealizedByDescription
+        (MachineDescription.TapeCodePrimitive.compose
+          (MachineDescription.TapeCodePrimitive.compose
+            (PairedRecognizerDovetailInitialLayoutCode accept reject)
+            (PairedRecognizerDovetailLayoutCode accept reject))
+          PairedRecognizerDovetailTotalOutputCode)
+        attempt Direction.right :=
+    tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose
+      hfirst hemitterRealized
+  simpa [PairedRecognizerDovetailTotalStageAttemptSourceCode,
+    initRunner, attempt] using hsecond
+
+theorem pairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction_scaffold :
+    PairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction :=
+  pairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction_of_finiteSourceHandoffComponents
+    pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_scaffold
+    pairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction_scaffold
+    pairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction_scaffold
+    pairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequencingConstruction_scaffold
+
+theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction_scaffold :
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction :=
+  pairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction_of_handoff
+    pairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction_scaffold
 
 theorem fixedDescriptionBoundedSimulatorPhaseRealizes_seq
     {entryTape midTape exitTape :
