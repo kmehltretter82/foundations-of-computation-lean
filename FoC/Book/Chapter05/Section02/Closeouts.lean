@@ -331,12 +331,15 @@ theorem program_acceptable_by_description_finite_general_grammar_scaffold
   program_acceptable_by_description_to_finite_general_grammar_scaffold L hL
 
 theorem finite_general_grammar_pair_recursive_scaffold
+    (hcompile :
+      ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction)
     {L : Language Bool}
     (hpair : FiniteGeneralGrammarPairGenerated L) :
     RecursiveLanguage L :=
   finite_general_grammar_pair_recursive_of_finite_data_constructions
     paired_recognizer_dovetail_compiler_scaffold
-    concrete_finite_bool_general_grammar_presentation_compiler_scaffold
+    (concrete_finite_bool_general_grammar_presentation_compiler_scaffold
+      hcompile)
     hpair
 
 theorem boolean_finite_general_grammar_re_equivalence_construction_of_finite_section52_closeout
@@ -427,8 +430,9 @@ grammar-presentation compiler as its finite grammar-recognizer input, and uses t
 description-backed construction
 {name}`ConcreteDescriptionRecognizerToFiniteGeneralGrammarConstruction`.
 The first-order presentation, checked-certificate, and runner-search
-boundaries identify the remaining transition-table construction work without
-changing these book-facing equivalence statements.
+boundaries identify the remaining transition-table construction work. The
+scaffold wrapper above therefore takes the checked-certificate presentation
+compiler explicitly instead of manufacturing it.
 -/
 
 

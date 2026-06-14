@@ -498,15 +498,19 @@ theorem finiteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerC
     hcompile
 
 /-!
-**Finite-source scaffold.**  The remaining finite grammar compiler target is a
+**Finite-source handoff.**  The remaining finite grammar compiler target is a
 first-order certificate checker for an explicit finite production-list
-presentation.  Once this checked compiler is built, the existing equivalence
-bridges below derive the indexed, bounded, and full presentation recognizers.
+presentation.  The scaffold declarations below no longer manufacture that
+compiler.  They expose the finite dependency graph: once a checked-indexed
+certificate compiler is supplied, the existing equivalence bridges derive the
+indexed, bounded, and full presentation recognizers.
 -/
 
-theorem finiteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction_scaffold :
-    FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction := by
-  sorry
+theorem finiteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction_scaffold
+    (hcompile :
+      FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
+    FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction :=
+  hcompile
 
 theorem finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_certificateRecognizerCompiler
     (hcompile :
@@ -543,11 +547,14 @@ theorem finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_bo
   FiniteBoolGeneralGrammarPresentation.compilerConstruction_of_boundedRecognizerCompiler
     hcompile
 
-theorem finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_scaffold :
+theorem finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_scaffold
+    (hcompile :
+      FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
     FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
   finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_boundedRecognizerCompiler
     (finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
-      finiteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction_scaffold)
+      (finiteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction_scaffold
+        hcompile))
 
 theorem generalGrammar_generatedLanguage_programAcceptable
     (G : GeneralGrammar terminal nonterminal) :
