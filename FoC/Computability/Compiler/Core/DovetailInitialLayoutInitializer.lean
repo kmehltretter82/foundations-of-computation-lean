@@ -3365,39 +3365,215 @@ private theorem initializerAppendSingletonInputTapeReturnDescription_run
   simpa [InitializerAppendSingletonInputTapeReturnDescription,
     A, B] using hn
 
-private def InitializerAppendInputTapeReturnForwardSpec
-    (copier : MachineDescription) : Prop :=
-    forall w : Word Bool,
-    forall stage : Nat,
-    forall suffixBits : Word Bool,
+private def initializerAppendInputTapeHeadRouterTaggedTape
+    (tag : Option Bool) (w : Word Bool) (stage : Nat)
+    (suffixBits : Word Bool) : Tape Bool :=
+  initializerTapeAtCells [tag]
+    (some false ::
+      ((List.append [false, true]
+        (List.append (initializerStageInputBits w stage)
+          suffixBits)).map some))
+
+private def InitializerAppendInputTapeHeadRouterDescription :
+    MachineDescription where
+  stateCount := 32
+  start := 0
+  halt := 31
+  transitions :=
+    [ MachineDescription.transition
+        0 (some false) (some false) Direction.right 1
+    , MachineDescription.transition
+        1 (some false) (some false) Direction.right 2
+    , MachineDescription.transition
+        2 (some false) (some false) Direction.right 3
+    , MachineDescription.transition
+        3 (some true) (some true) Direction.right 4
+    , MachineDescription.transition
+        4 (some false) (some false) Direction.right 5
+    , MachineDescription.transition
+        5 (some false) (some false) Direction.right 6
+    , MachineDescription.transition
+        6 (some true) (some true) Direction.right 7
+    , MachineDescription.transition
+        7 (some true) (some true) Direction.left 20
+    , MachineDescription.transition
+        7 (some false) (some false) Direction.right 8
+    , MachineDescription.transition
+        8 (some false) (some false) Direction.right 9
+    , MachineDescription.transition
+        9 (some false) (some false) Direction.right 10
+    , MachineDescription.transition
+        10 (some true) (some true) Direction.right 11
+    , MachineDescription.transition
+        11 (some false) (some false) Direction.right 8
+    , MachineDescription.transition
+        11 (some true) (some true) Direction.right 12
+    , MachineDescription.transition
+        12 (some false) (some false) Direction.right 13
+    , MachineDescription.transition
+        13 (some true) (some true) Direction.right 14
+    , MachineDescription.transition
+        14 (some false) (some false) Direction.left 21
+    , MachineDescription.transition
+        14 (some true) (some true) Direction.left 22
+    , MachineDescription.transition
+        20 (some false) (some false) Direction.left 20
+    , MachineDescription.transition
+        20 (some true) (some true) Direction.left 20
+    , MachineDescription.transition
+        20 none none Direction.right 23
+    , MachineDescription.transition
+        21 (some false) (some false) Direction.left 21
+    , MachineDescription.transition
+        21 (some true) (some true) Direction.left 21
+    , MachineDescription.transition
+        21 none none Direction.right 24
+    , MachineDescription.transition
+        22 (some false) (some false) Direction.left 22
+    , MachineDescription.transition
+        22 (some true) (some true) Direction.left 22
+    , MachineDescription.transition
+        22 none none Direction.right 25
+    , MachineDescription.transition
+        23 (some false) none Direction.right 31
+    , MachineDescription.transition
+        24 (some false) (some false) Direction.right 31
+    , MachineDescription.transition
+        25 (some false) (some true) Direction.right 31
+    ]
+
+private theorem initializerAppendInputTapeHeadRouterDescription_wellFormed :
+    InitializerAppendInputTapeHeadRouterDescription.WellFormed := by
+  constructor
+  · native_decide
+  constructor
+  · native_decide
+  constructor
+  · native_decide
+  constructor
+  · intro t ht
+    exact transition_wellFormed_of_all
+      (l := InitializerAppendInputTapeHeadRouterDescription.transitions)
+      (stateCount :=
+        InitializerAppendInputTapeHeadRouterDescription.stateCount)
+      (by
+        native_decide) t ht
+  · intro t u ht hu hkey
+    exact transition_deterministic_of_all
+      (l := InitializerAppendInputTapeHeadRouterDescription.transitions)
+      (by
+        native_decide) t u ht hu hkey
+
+private theorem
+    initializerAppendInputTapeHeadRouterDescription_haltTransitionFree :
+    InitializerAppendInputTapeHeadRouterDescription.HaltTransitionFree := by
+  intro t ht
+  exact transition_notFrom_of_all
+    (l := InitializerAppendInputTapeHeadRouterDescription.transitions)
+    (state := InitializerAppendInputTapeHeadRouterDescription.halt)
+    (by
+      native_decide) t ht
+
+private theorem initializerAppendInputTapeHeadRouterDescription_subroutineReady :
+    InitializerAppendInputTapeHeadRouterDescription.SubroutineReady :=
+  ⟨initializerAppendInputTapeHeadRouterDescription_wellFormed,
+    initializerAppendInputTapeHeadRouterDescription_haltTransitionFree⟩
+
+private def InitializerAppendInputTapeHeadRouterSpec
+    (router : MachineDescription) : Prop :=
+  router.SubroutineReady ∧
+    (forall stage : Nat,
+     forall suffixBits : Word Bool,
       exists steps : Nat,
-        copier.runConfig steps
-            { state := copier.start
+        router.runConfig steps
+            { state := router.start
               tape :=
                 initializerTapeAtCells []
                   (some false :: some false ::
                     ((List.append [false, true]
                       (List.append
-                        (initializerStageInputBits w stage)
+                        (initializerStageInputBits ([] : Word Bool) stage)
                         suffixBits)).map some)) } =
-          { state := copier.halt
+          { state := router.halt
+            tape :=
+              initializerAppendInputTapeHeadRouterTaggedTape
+                none ([] : Word Bool) stage suffixBits }) ∧
+    (forall b : Bool,
+     forall rest : Word Bool,
+     forall stage : Nat,
+     forall suffixBits : Word Bool,
+      exists steps : Nat,
+        router.runConfig steps
+            { state := router.start
+              tape :=
+                initializerTapeAtCells []
+                  (some false :: some false ::
+                    ((List.append [false, true]
+                      (List.append
+                        (initializerStageInputBits (b :: rest) stage)
+                        suffixBits)).map some)) } =
+          { state := router.halt
+            tape :=
+              initializerAppendInputTapeHeadRouterTaggedTape
+                (some b) (b :: rest) stage suffixBits })
+
+private theorem initializerAppendInputTapeHeadRouterDescription_spec :
+    InitializerAppendInputTapeHeadRouterSpec
+      InitializerAppendInputTapeHeadRouterDescription := by
+  constructor
+  · exact initializerAppendInputTapeHeadRouterDescription_subroutineReady
+  · sorry
+
+private def InitializerAppendInputTapeHeadTaggedBrancherSpec
+    (brancher : MachineDescription) : Prop :=
+  brancher.SubroutineReady ∧
+    (forall stage : Nat,
+     forall suffixBits : Word Bool,
+      exists steps : Nat,
+        brancher.runConfig steps
+            { state := brancher.start
+              tape :=
+                Tape.move Direction.left
+                  (initializerAppendInputTapeHeadRouterTaggedTape
+                    none ([] : Word Bool) stage suffixBits) } =
+          { state := brancher.halt
             tape :=
               initializerTapeAtCells [some false]
                 (some false ::
                   ((List.append [false, true]
-                      (List.append
-                        (initializerStageInputBits w stage)
-                        (List.append suffixBits
-                          (initializerInputTapeBits w)))).map some)) }
+                    (List.append
+                      (initializerStageInputBits ([] : Word Bool) stage)
+                      (List.append suffixBits
+                        (initializerInputTapeBits ([] : Word Bool))))).map
+                    some)) }) ∧
+    (forall b : Bool,
+     forall rest : Word Bool,
+     forall stage : Nat,
+     forall suffixBits : Word Bool,
+      exists steps : Nat,
+        brancher.runConfig steps
+            { state := brancher.start
+              tape :=
+                Tape.move Direction.left
+                  (initializerAppendInputTapeHeadRouterTaggedTape
+                    (some b) (b :: rest) stage suffixBits) } =
+          { state := brancher.halt
+            tape :=
+              initializerTapeAtCells [some false]
+                (some false ::
+                  ((List.append [false, true]
+                    (List.append
+                      (initializerStageInputBits (b :: rest) stage)
+                      (List.append suffixBits
+                        (initializerInputTapeBits (b :: rest))))).map
+                    some)) })
 
-private def InitializerAppendInputTapeReturnSpec
-    (copier : MachineDescription) : Prop :=
-  copier.SubroutineReady ∧
-    InitializerAppendInputTapeReturnForwardSpec copier
-
-private def InitializerAppendInputTapeRightCellsReturnConstruction : Prop :=
-  exists rightCopier : MachineDescription,
-    InitializerAppendInputTapeRightCellsReturnSpec rightCopier
+private def InitializerAppendInputTapeHeadTaggedBrancherConstruction :
+    Prop :=
+  forall rightCopier : MachineDescription,
+    InitializerAppendInputTapeRightCellsReturnSpec rightCopier ->
+      exists brancher : MachineDescription,
+        InitializerAppendInputTapeHeadTaggedBrancherSpec brancher
 
 private def InitializerAppendInputTapeHeadDispatcherSpec
     (dispatcher : MachineDescription) : Prop :=
@@ -3455,6 +3631,149 @@ private def InitializerAppendInputTapeHeadDispatcherConstruction :
     InitializerAppendInputTapeRightCellsReturnSpec rightCopier ->
       exists dispatcher : MachineDescription,
         InitializerAppendInputTapeHeadDispatcherSpec dispatcher
+
+private def InitializerAppendInputTapeHeadDispatcherDescription
+    (router brancher : MachineDescription) : MachineDescription :=
+  MachineDescription.seqSubroutine router brancher Direction.left
+
+private theorem initializerAppendInputTapeHeadDispatcherSpec_of_router_brancher
+    {router brancher : MachineDescription}
+    (hrouter : InitializerAppendInputTapeHeadRouterSpec router)
+    (hbrancher :
+      InitializerAppendInputTapeHeadTaggedBrancherSpec brancher) :
+    InitializerAppendInputTapeHeadDispatcherSpec
+      (InitializerAppendInputTapeHeadDispatcherDescription
+        router brancher) := by
+  constructor
+  · exact MachineDescription.seqSubroutine_subroutineReady
+      hrouter.left hbrancher.left
+  constructor
+  · intro stage suffixBits
+    let A := router
+    let B := brancher
+    let Tmid :=
+      initializerAppendInputTapeHeadRouterTaggedTape
+        none ([] : Word Bool) stage suffixBits
+    have hAready : A.SubroutineReady := hrouter.left
+    have hBready : B.SubroutineReady := hbrancher.left
+    rcases hrouter.right.left stage suffixBits with ⟨nA, hA⟩
+    have hArun :
+        A.runConfig nA
+            { state := A.start
+              tape :=
+                initializerTapeAtCells []
+                  (some false :: some false ::
+                    ((List.append [false, true]
+                      (List.append
+                        (initializerStageInputBits ([] : Word Bool) stage)
+                        suffixBits)).map some)) } =
+          { state := A.halt, tape := Tmid } := by
+      simpa [A, Tmid] using hA
+    have hBReach :
+        exists nB : Nat,
+          B.runConfig nB
+              { state := B.start
+                tape := Tape.move Direction.left Tmid } =
+            { state := B.halt
+              tape :=
+                initializerTapeAtCells [some false]
+                  (some false ::
+                    ((List.append [false, true]
+                      (List.append
+                        (initializerStageInputBits ([] : Word Bool) stage)
+                        (List.append suffixBits
+                          (initializerInputTapeBits ([] : Word Bool))))).map
+                      some)) } := by
+      rcases hbrancher.right.left stage suffixBits with ⟨nB, hB⟩
+      exact ⟨nB, by simpa [B, Tmid] using hB⟩
+    rcases
+        MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+          (A := A) (B := B) (handoffMove := Direction.left)
+          hAready hBready hArun hBReach with
+      ⟨n, hn⟩
+    refine ⟨n, ?_⟩
+    simpa [InitializerAppendInputTapeHeadDispatcherDescription,
+      A, B] using hn
+  · intro b rest stage suffixBits
+    let A := router
+    let B := brancher
+    let Tmid :=
+      initializerAppendInputTapeHeadRouterTaggedTape
+        (some b) (b :: rest) stage suffixBits
+    have hAready : A.SubroutineReady := hrouter.left
+    have hBready : B.SubroutineReady := hbrancher.left
+    rcases hrouter.right.right b rest stage suffixBits with ⟨nA, hA⟩
+    have hArun :
+        A.runConfig nA
+            { state := A.start
+              tape :=
+                initializerTapeAtCells []
+                  (some false :: some false ::
+                    ((List.append [false, true]
+                      (List.append
+                        (initializerStageInputBits (b :: rest) stage)
+                        suffixBits)).map some)) } =
+          { state := A.halt, tape := Tmid } := by
+      simpa [A, Tmid] using hA
+    have hBReach :
+        exists nB : Nat,
+          B.runConfig nB
+              { state := B.start
+                tape := Tape.move Direction.left Tmid } =
+            { state := B.halt
+              tape :=
+                initializerTapeAtCells [some false]
+                  (some false ::
+                    ((List.append [false, true]
+                      (List.append
+                        (initializerStageInputBits (b :: rest) stage)
+                        (List.append suffixBits
+                          (initializerInputTapeBits (b :: rest))))).map
+                      some)) } := by
+      rcases hbrancher.right.right b rest stage suffixBits with ⟨nB, hB⟩
+      exact ⟨nB, by simpa [B, Tmid] using hB⟩
+    rcases
+        MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+          (A := A) (B := B) (handoffMove := Direction.left)
+          hAready hBready hArun hBReach with
+      ⟨n, hn⟩
+    refine ⟨n, ?_⟩
+    simpa [InitializerAppendInputTapeHeadDispatcherDescription,
+      A, B] using hn
+
+private def InitializerAppendInputTapeReturnForwardSpec
+    (copier : MachineDescription) : Prop :=
+    forall w : Word Bool,
+    forall stage : Nat,
+    forall suffixBits : Word Bool,
+      exists steps : Nat,
+        copier.runConfig steps
+            { state := copier.start
+              tape :=
+                initializerTapeAtCells []
+                  (some false :: some false ::
+                    ((List.append [false, true]
+                      (List.append
+                        (initializerStageInputBits w stage)
+                        suffixBits)).map some)) } =
+          { state := copier.halt
+            tape :=
+              initializerTapeAtCells [some false]
+                (some false ::
+                  ((List.append [false, true]
+                      (List.append
+                        (initializerStageInputBits w stage)
+                        (List.append suffixBits
+                          (initializerInputTapeBits w)))).map some)) }
+
+private def InitializerAppendInputTapeReturnSpec
+    (copier : MachineDescription) : Prop :=
+  copier.SubroutineReady ∧
+    InitializerAppendInputTapeReturnForwardSpec copier
+
+private def InitializerAppendInputTapeRightCellsReturnConstruction : Prop :=
+  exists rightCopier : MachineDescription,
+    InitializerAppendInputTapeRightCellsReturnSpec rightCopier
 
 private theorem initializerAppendInputTapeReturnSpec_of_headDispatcher
     {dispatcher : MachineDescription}
@@ -5417,9 +5736,22 @@ private theorem initializerAppendInputTapeRightCellsReturnSpec_realizer :
     InitializerAppendInputTapeRightCellsReturnConstruction := by
   sorry
 
+private theorem initializerAppendInputTapeHeadTaggedBrancher_realizer :
+    InitializerAppendInputTapeHeadTaggedBrancherConstruction := by
+  sorry
+
 private theorem initializerAppendInputTapeHeadDispatcher_realizer :
     InitializerAppendInputTapeHeadDispatcherConstruction := by
-  sorry
+  intro rightCopier hrightCopier
+  rcases
+      initializerAppendInputTapeHeadTaggedBrancher_realizer
+        rightCopier hrightCopier with
+    ⟨brancher, hbrancher⟩
+  exact
+    ⟨InitializerAppendInputTapeHeadDispatcherDescription
+        InitializerAppendInputTapeHeadRouterDescription brancher,
+      initializerAppendInputTapeHeadDispatcherSpec_of_router_brancher
+        initializerAppendInputTapeHeadRouterDescription_spec hbrancher⟩
 
 private theorem initializerAppendInputTapeReturnSpec_realizer :
     exists copier : MachineDescription,
