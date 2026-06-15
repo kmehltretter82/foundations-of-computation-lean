@@ -72,6 +72,57 @@ private theorem tapeCodePrimitiveCodeWord_handoff_tape
       tape_move_left_move_right_input_encodeCodeWordAsInput_cons
         symbol code
 
+private theorem haltsWithTape_functional_of_haltTransitionFree
+    {D : MachineDescription} {w : Word Bool} {T₁ T₂ : Tape Bool}
+    (hD : D.HaltTransitionFree)
+    (h₁ : D.HaltsWithTape w T₁)
+    (h₂ : D.HaltsWithTape w T₂) :
+    T₁ = T₂ := by
+  rcases h₁ with ⟨n₁, h₁⟩
+  rcases h₂ with ⟨n₂, h₂⟩
+  let c₀ := D.initial w
+  have hordered :
+      forall {n m : Nat} {Tn Tm : Tape Bool},
+        n ≤ m ->
+        D.HaltsWithTapeIn n w Tn ->
+        D.HaltsWithTapeIn m w Tm ->
+          Tn = Tm := by
+    intro n m Tn Tm hle hn hm
+    let d := m - n
+    have hm_eq : m = n + d := by
+      omega
+    have hconfig_n :
+        D.runConfig n c₀ =
+          { state := D.halt, tape := Tn } := by
+      cases hfinal : D.runConfig n c₀ with
+      | mk state tape =>
+          have hstate : state = D.halt := by
+            simpa [MachineDescription.HaltsWithTapeIn, c₀, hfinal] using
+              hn.left
+          have htape : tape = Tn := by
+            simpa [MachineDescription.HaltsWithTapeIn, c₀, hfinal] using
+              hn.right
+          simp [hstate, htape]
+    have hrunm :
+        D.runConfig m c₀ = D.runConfig d (D.runConfig n c₀) := by
+      rw [hm_eq, MachineDescription.runConfig_add]
+    have hstay :
+        D.runConfig d (D.runConfig n c₀) =
+          D.runConfig n c₀ := by
+      rw [hconfig_n]
+      exact MachineDescription.runConfig_halt hD Tn d
+    have htape_m :
+        (D.runConfig m c₀).tape = Tn := by
+      rw [hrunm, hstay, hconfig_n]
+    have htm : (D.runConfig m c₀).tape = Tm := by
+      simpa [MachineDescription.HaltsWithTapeIn, c₀] using hm.right
+    rw [htm] at htape_m
+    exact htape_m.symm
+  by_cases hle : n₁ ≤ n₂
+  · exact hordered hle h₁ h₂
+  · have hle' : n₂ ≤ n₁ := by omega
+    exact (hordered hle' h₂ h₁).symm
+
 private theorem encodeConfigurationAppend_initial
     (D : MachineDescription) (w : Word Bool)
     (suffix : Word MachineCodeSymbol) :
@@ -588,6 +639,47 @@ private theorem initializerRepeatedCells_append
             (List.append (initializerRepeatedCells chunk k) tail) := by
   cases n <;> simp [initializerRepeatedCells, List.append_assoc]
 
+private theorem initializerRepeatedCells_succ_right
+    (chunk : List (Option Bool)) (n : Nat) :
+    initializerRepeatedCells chunk (n + 1) =
+      List.append (initializerRepeatedCells chunk n) chunk := by
+  induction n with
+  | zero =>
+      simp [initializerRepeatedCells]
+  | succ n ih =>
+      change
+        List.append chunk (initializerRepeatedCells chunk (n + 1)) =
+          List.append (List.append chunk (initializerRepeatedCells chunk n))
+            chunk
+      rw [ih]
+      simp [List.append_assoc]
+
+private theorem initializerRepeatedCells_length
+    (chunk : List (Option Bool)) (n : Nat) :
+    (initializerRepeatedCells chunk n).length = chunk.length * n := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change (List.append chunk (initializerRepeatedCells chunk n)).length =
+        chunk.length * (n + 1)
+      simp [List.length_append, ih]
+      rw [Nat.mul_succ]
+      omega
+
+private theorem initializerRepeatedCells_reverse
+    (chunk : List (Option Bool)) (n : Nat) :
+    (initializerRepeatedCells chunk n).reverse =
+      initializerRepeatedCells chunk.reverse n := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change
+        (List.append chunk (initializerRepeatedCells chunk n)).reverse =
+          initializerRepeatedCells chunk.reverse (n + 1)
+      simp [List.reverse_append, ih, initializerRepeatedCells_succ_right]
+
 private theorem initializerNatCodeCells_eq_tick_prefix_done
     (n : Nat) :
     initializerNatCodeCells n =
@@ -623,6 +715,107 @@ private theorem initializerMarkedCellCodeCells_restore
       rfl
   | some b =>
       cases b <;> rfl
+
+private theorem initializerCodeCells_replicate_tick
+    (n : Nat) :
+    initializerCodeCells (List.replicate n MachineCodeSymbol.tick) =
+      initializerRepeatedCells
+        (initializerCodeSymbolCells MachineCodeSymbol.tick) n := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change
+        List.append (initializerCodeSymbolCells MachineCodeSymbol.tick)
+            (initializerCodeCells (List.replicate n MachineCodeSymbol.tick)) =
+          List.append (initializerCodeSymbolCells MachineCodeSymbol.tick)
+            (initializerRepeatedCells
+              (initializerCodeSymbolCells MachineCodeSymbol.tick) n)
+      rw [ih]
+
+private theorem initializerCellsCodeCells_append
+    (left right : List (Option Bool)) :
+    initializerCellsCodeCells (List.append left right) =
+      List.append (initializerCellsCodeCells left)
+        (initializerCellsCodeCells right) := by
+  induction left with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      change
+        List.append (initializerCellCodeCells cell)
+            (initializerCellsCodeCells (List.append rest right)) =
+          List.append
+            (List.append (initializerCellCodeCells cell)
+              (initializerCellsCodeCells rest))
+            (initializerCellsCodeCells right)
+      rw [ih]
+      simp [List.append_assoc]
+
+@[simp] private theorem initializerBoolPayloadCells_append
+    (left right : Word Bool) :
+    initializerBoolPayloadCells (List.append left right) =
+      List.append (initializerBoolPayloadCells left)
+        (initializerBoolPayloadCells right) := by
+  unfold initializerBoolPayloadCells
+  have hmap :
+      List.map some (List.append left right) =
+        List.append (List.map some left) (List.map some right) := by
+    simp
+  rw [hmap]
+  exact initializerCellsCodeCells_append (left.map some) (right.map some)
+
+private theorem initializerMarkedCellsCodeCells_append
+    (left right : List (Option Bool)) :
+    initializerMarkedCellsCodeCells (List.append left right) =
+      List.append (initializerMarkedCellsCodeCells left)
+        (initializerMarkedCellsCodeCells right) := by
+  induction left with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      change
+        List.append (initializerMarkedCellCodeCells cell)
+            (initializerMarkedCellsCodeCells (List.append rest right)) =
+          List.append
+            (List.append (initializerMarkedCellCodeCells cell)
+              (initializerMarkedCellsCodeCells rest))
+            (initializerMarkedCellsCodeCells right)
+      rw [ih]
+      simp [List.append_assoc]
+
+@[simp] private theorem initializerMarkedBoolPayloadCells_append
+    (left right : Word Bool) :
+    initializerMarkedBoolPayloadCells (List.append left right) =
+      List.append (initializerMarkedBoolPayloadCells left)
+        (initializerMarkedBoolPayloadCells right) := by
+  unfold initializerMarkedBoolPayloadCells
+  have hmap :
+      List.map some (List.append left right) =
+        List.append (List.map some left) (List.map some right) := by
+    simp
+  rw [hmap]
+  exact
+    initializerMarkedCellsCodeCells_append
+      (left.map some) (right.map some)
+
+@[simp] private theorem initializerMarkedBoolPayloadCells_append_false
+    (marked : Word Bool) :
+    initializerMarkedBoolPayloadCells (List.append marked [false]) =
+      List.append (initializerMarkedBoolPayloadCells marked)
+        (initializerMarkedCellCodeCells (some false)) := by
+  simpa [initializerMarkedBoolPayloadCells,
+    initializerMarkedCellsCodeCells] using
+    initializerMarkedBoolPayloadCells_append marked ([false] : Word Bool)
+
+@[simp] private theorem initializerMarkedBoolPayloadCells_append_true
+    (marked : Word Bool) :
+    initializerMarkedBoolPayloadCells (List.append marked [true]) =
+      List.append (initializerMarkedBoolPayloadCells marked)
+        (initializerMarkedCellCodeCells (some true)) := by
+  simpa [initializerMarkedBoolPayloadCells,
+    initializerMarkedCellsCodeCells] using
+    initializerMarkedBoolPayloadCells_append marked ([true] : Word Bool)
 
 private def InitializerWriteTransitionPrefixDescription :
     MachineDescription where
@@ -2569,6 +2762,42 @@ private def initializerStageInputBits
   MachineDescription.encodeCodeWordAsInput
     (PairedRecognizerDovetailStageInputCode w stage)
 
+private theorem initializerStageInputBits_move_left_move_right_input
+    (w : Word Bool) (stage : Nat) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (Tape.input (initializerStageInputBits w stage))) =
+      Tape.input (initializerStageInputBits w stage) := by
+  cases w with
+  | nil =>
+      cases stage <;>
+        simp [initializerStageInputBits,
+          PairedRecognizerDovetailStageInputCode,
+          MachineDescription.DovetailLayout.stageInputCode,
+          MachineDescription.DovetailLayout.stageInputCodeAppend,
+          MachineDescription.encodeBoolWordAppend,
+          MachineDescription.encodeCellListAppend,
+          MachineDescription.encodeNatAppend,
+          MachineDescription.encodeNat,
+          MachineDescription.encodeCellsAppend,
+          MachineDescription.encodeCodeWordAsInput,
+          MachineDescription.encodeCodeSymbolAsInput,
+          Tape.input, Tape.move, Tape.moveLeft, Tape.moveRight]
+  | cons b rest =>
+      cases b <;> cases stage <;>
+        simp [initializerStageInputBits,
+          PairedRecognizerDovetailStageInputCode,
+          MachineDescription.DovetailLayout.stageInputCode,
+          MachineDescription.DovetailLayout.stageInputCodeAppend,
+          MachineDescription.encodeBoolWordAppend,
+          MachineDescription.encodeCellListAppend,
+          MachineDescription.encodeNatAppend,
+          MachineDescription.encodeNat,
+          MachineDescription.encodeCellsAppend,
+          MachineDescription.encodeCodeWordAsInput,
+          MachineDescription.encodeCodeSymbolAsInput,
+          Tape.input, Tape.move, Tape.moveLeft, Tape.moveRight]
+
 private def initializerInputTapeBits
     (w : Word Bool) : Word Bool :=
   MachineDescription.encodeCodeWordAsInput
@@ -2578,9 +2807,515 @@ private def initializerNatBits (n : Nat) : Word Bool :=
   MachineDescription.encodeCodeWordAsInput
     (MachineDescription.encodeNat n)
 
-private def InitializerAppendInputTapeReturnSpec
+private def initializerEmptyInputTapeCode :
+    Word MachineCodeSymbol :=
+  MachineDescription.encodeTapeAppend
+    (Tape.input ([] : Word Bool)) []
+
+private theorem initializerEmptyInputTapeCode_ne_nil :
+    initializerEmptyInputTapeCode ≠ [] := by
+  simp [initializerEmptyInputTapeCode, encodeTapeAppend_input_nil,
+    MachineDescription.encodeCellListAppend,
+    MachineDescription.encodeNatAppend,
+    MachineDescription.encodeNat]
+
+private def InitializerAppendEmptyInputTapeReturnDescription :
+    MachineDescription :=
+  InitializerTransitionPrefixedFirstBitAppendCodeWordReturnDescription
+    initializerEmptyInputTapeCode
+
+private theorem
+    initializerAppendEmptyInputTapeReturnDescription_subroutineReady :
+    InitializerAppendEmptyInputTapeReturnDescription.SubroutineReady :=
+  initializerTransitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
+    initializerEmptyInputTapeCode
+    initializerEmptyInputTapeCode_ne_nil
+
+private theorem initializerInputTapeBits_nil :
+    initializerInputTapeBits ([] : Word Bool) =
+      MachineDescription.encodeCodeWordAsInput
+        initializerEmptyInputTapeCode := by
+  rfl
+
+private theorem initializerAppendEmptyInputTapeReturnDescription_run
+    (stage : Nat) (suffixBits : Word Bool) :
+    exists steps : Nat,
+      InitializerAppendEmptyInputTapeReturnDescription.runConfig steps
+          { state := InitializerAppendEmptyInputTapeReturnDescription.start
+            tape :=
+              initializerTapeAtCells []
+                (some false :: some false ::
+                  ((List.append [false, true]
+                    (List.append
+                      (initializerStageInputBits ([] : Word Bool) stage)
+                      suffixBits)).map some)) } =
+        { state := InitializerAppendEmptyInputTapeReturnDescription.halt
+          tape :=
+            initializerTapeAtCells [some false]
+              (some false ::
+                ((List.append [false, true]
+                  (List.append
+                    (initializerStageInputBits ([] : Word Bool) stage)
+                    (List.append suffixBits
+                      (initializerInputTapeBits ([] : Word Bool))))).map
+                    some)) } := by
+  rcases
+      initializerTransitionPrefixedFirstBitAppendCodeWordReturnDescription_run
+        initializerEmptyInputTapeCode
+        initializerEmptyInputTapeCode_ne_nil
+        (List.append
+          (initializerStageInputBits ([] : Word Bool) stage)
+          suffixBits) with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [InitializerAppendEmptyInputTapeReturnDescription,
+    initializerInputTapeBits_nil, List.append_assoc] using hsteps
+
+private def initializerInputTapeHeadPrefixCode
+    (b : Bool) : Word MachineCodeSymbol :=
+  MachineDescription.encodeCellListAppend []
+    (MachineDescription.encodeCellAppend (some b) [])
+
+private def initializerInputTapeRightCellsCode
+    (rest : Word Bool) : Word MachineCodeSymbol :=
+  MachineDescription.encodeCellListAppend (rest.map some) []
+
+private theorem initializerInputTapeRightCellsCode_eq_nat_cells
+    (rest : Word Bool) :
+    initializerInputTapeRightCellsCode rest =
+      MachineDescription.encodeNatAppend rest.length
+        (MachineDescription.encodeCellsAppend (rest.map some) []) := by
+  simp [initializerInputTapeRightCellsCode,
+    MachineDescription.encodeCellListAppend]
+
+private theorem initializerInputTapeRightCellsCode_cons_eq_tick_nat_cell_cells
+    (b : Bool) (rest : Word Bool) :
+    initializerInputTapeRightCellsCode (b :: rest) =
+      MachineCodeSymbol.tick ::
+        MachineDescription.encodeNatAppend rest.length
+          (MachineDescription.encodeCellAppend (some b)
+            (MachineDescription.encodeCellsAppend (rest.map some) [])) := by
+  cases b <;>
+    simp [initializerInputTapeRightCellsCode,
+      MachineDescription.encodeCellListAppend,
+      MachineDescription.encodeNatAppend,
+      MachineDescription.encodeNat,
+      MachineDescription.encodeCellsAppend,
+      MachineDescription.encodeCellAppend,
+      MachineDescription.encodeCell]
+
+private theorem initializerInputTapeRightCellsBits_eq_nat_cells
+    (rest : Word Bool) :
+    MachineDescription.encodeCodeWordAsInput
+        (initializerInputTapeRightCellsCode rest) =
+      List.append (initializerNatBits rest.length)
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeCellsAppend (rest.map some) [])) := by
+  rw [initializerInputTapeRightCellsCode_eq_nat_cells,
+    MachineDescription.encodeNatAppend,
+    MachineDescription.encodeCodeWordAsInput_append]
+  rfl
+
+private theorem initializerInputTapeRightCellsBits_cons_eq_tick_nat_cell_cells
+    (b : Bool) (rest : Word Bool) :
+    MachineDescription.encodeCodeWordAsInput
+        (initializerInputTapeRightCellsCode (b :: rest)) =
+      List.append
+        (MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.tick)
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeNatAppend rest.length
+            (MachineDescription.encodeCellAppend (some b)
+              (MachineDescription.encodeCellsAppend (rest.map some) [])))) := by
+  rw [initializerInputTapeRightCellsCode_cons_eq_tick_nat_cell_cells]
+  rfl
+
+private theorem initializerInputTapeHeadPrefixCode_ne_nil
+    (b : Bool) :
+    initializerInputTapeHeadPrefixCode b ≠ [] := by
+  cases b <;>
+    simp [initializerInputTapeHeadPrefixCode,
+      MachineDescription.encodeCellListAppend,
+      MachineDescription.encodeNatAppend,
+      MachineDescription.encodeNat,
+      MachineDescription.encodeCellAppend,
+      MachineDescription.encodeCell]
+
+private theorem initializerInputTapeBits_cons_eq_headPrefix_append
+    (b : Bool) (rest : Word Bool) :
+    initializerInputTapeBits (b :: rest) =
+      List.append
+        (MachineDescription.encodeCodeWordAsInput
+          (initializerInputTapeHeadPrefixCode b))
+        (MachineDescription.encodeCodeWordAsInput
+          (initializerInputTapeRightCellsCode rest)) := by
+  rw [initializerInputTapeBits, encodeTapeAppend_input_cons]
+  change
+    MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.encodeCellListAppend []
+          (MachineDescription.encodeCellAppend (some b)
+            (MachineDescription.encodeCellListAppend (rest.map some) []))) =
+      List.append
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeCellListAppend []
+            (MachineDescription.encodeCellAppend (some b) [])))
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeCellListAppend (rest.map some) []))
+  rw [← MachineDescription.encodeCodeWordAsInput_append]
+  simp [MachineDescription.encodeCellListAppend,
+    MachineDescription.encodeCellsAppend,
+    MachineDescription.encodeNatAppend,
+    MachineDescription.encodeNat,
+    MachineDescription.encodeCellAppend]
+
+private def InitializerAppendInputTapeHeadPrefixReturnDescription
+    (b : Bool) : MachineDescription :=
+  InitializerTransitionPrefixedFirstBitAppendCodeWordReturnDescription
+    (initializerInputTapeHeadPrefixCode b)
+
+private theorem
+    initializerAppendInputTapeHeadPrefixReturnDescription_subroutineReady
+    (b : Bool) :
+    (InitializerAppendInputTapeHeadPrefixReturnDescription b).SubroutineReady :=
+  initializerTransitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
+    (initializerInputTapeHeadPrefixCode b)
+    (initializerInputTapeHeadPrefixCode_ne_nil b)
+
+private theorem initializerAppendInputTapeHeadPrefixReturnDescription_run
+    (b : Bool) (payload suffixBits : Word Bool) :
+    exists steps : Nat,
+      (InitializerAppendInputTapeHeadPrefixReturnDescription b).runConfig steps
+          { state := (InitializerAppendInputTapeHeadPrefixReturnDescription b).start
+            tape :=
+              initializerTapeAtCells []
+                (some false :: some false ::
+                  ((List.append [false, true]
+                    (List.append payload suffixBits)).map some)) } =
+        { state := (InitializerAppendInputTapeHeadPrefixReturnDescription b).halt
+          tape :=
+            initializerTapeAtCells [some false]
+              (some false ::
+                ((List.append [false, true]
+                  (List.append payload
+                    (List.append suffixBits
+                      (MachineDescription.encodeCodeWordAsInput
+                        (initializerInputTapeHeadPrefixCode b))))).map
+                    some)) } := by
+  rcases
+      initializerTransitionPrefixedFirstBitAppendCodeWordReturnDescription_run
+        (initializerInputTapeHeadPrefixCode b)
+        (initializerInputTapeHeadPrefixCode_ne_nil b)
+        (List.append payload suffixBits) with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [InitializerAppendInputTapeHeadPrefixReturnDescription,
+    List.append_assoc] using hsteps
+
+private def InitializerAppendInputTapeRightCellsReturnSpec
+    (rightCopier : MachineDescription) : Prop :=
+  rightCopier.SubroutineReady ∧
+    forall b : Bool,
+    forall rest : Word Bool,
+    forall stage : Nat,
+    forall suffixBits : Word Bool,
+      exists steps : Nat,
+        rightCopier.runConfig steps
+            { state := rightCopier.start
+              tape :=
+                initializerTapeAtCells []
+                  (some false :: some false ::
+                    ((List.append [false, true]
+                      (List.append
+                        (initializerStageInputBits (b :: rest) stage)
+                        suffixBits)).map some)) } =
+          { state := rightCopier.halt
+            tape :=
+              initializerTapeAtCells [some false]
+                (some false ::
+                  ((List.append [false, true]
+                    (List.append
+                      (initializerStageInputBits (b :: rest) stage)
+                      (List.append suffixBits
+                        (MachineDescription.encodeCodeWordAsInput
+                          (initializerInputTapeRightCellsCode rest))))).map
+                    some)) }
+
+private def InitializerAppendKnownHeadInputTapeReturnDescription
+    (b : Bool) (rightCopier : MachineDescription) :
+    MachineDescription :=
+  MachineDescription.seqSubroutine
+    (InitializerAppendInputTapeHeadPrefixReturnDescription b)
+    rightCopier
+    Direction.left
+
+private theorem
+    initializerAppendKnownHeadInputTapeReturnDescription_subroutineReady
+    {rightCopier : MachineDescription}
+    (hright : InitializerAppendInputTapeRightCellsReturnSpec rightCopier)
+    (b : Bool) :
+    (InitializerAppendKnownHeadInputTapeReturnDescription
+      b rightCopier).SubroutineReady :=
+  MachineDescription.seqSubroutine_subroutineReady
+    (initializerAppendInputTapeHeadPrefixReturnDescription_subroutineReady b)
+    hright.left
+
+private theorem initializerAppendKnownHeadInputTapeReturnDescription_run
+    {rightCopier : MachineDescription}
+    (hright : InitializerAppendInputTapeRightCellsReturnSpec rightCopier)
+    (b : Bool) (rest : Word Bool) (stage : Nat)
+    (suffixBits : Word Bool) :
+    exists steps : Nat,
+      (InitializerAppendKnownHeadInputTapeReturnDescription
+        b rightCopier).runConfig steps
+          { state :=
+              (InitializerAppendKnownHeadInputTapeReturnDescription
+                b rightCopier).start
+            tape :=
+              initializerTapeAtCells []
+                (some false :: some false ::
+                  ((List.append [false, true]
+                    (List.append
+                      (initializerStageInputBits (b :: rest) stage)
+                      suffixBits)).map some)) } =
+        { state :=
+            (InitializerAppendKnownHeadInputTapeReturnDescription
+              b rightCopier).halt
+          tape :=
+            initializerTapeAtCells [some false]
+              (some false ::
+                ((List.append [false, true]
+                  (List.append
+                    (initializerStageInputBits (b :: rest) stage)
+                    (List.append suffixBits
+                      (initializerInputTapeBits (b :: rest))))).map some)) } := by
+  let A := InitializerAppendInputTapeHeadPrefixReturnDescription b
+  let B := rightCopier
+  let headBits :=
+    MachineDescription.encodeCodeWordAsInput
+      (initializerInputTapeHeadPrefixCode b)
+  let rightBits :=
+    MachineDescription.encodeCodeWordAsInput
+      (initializerInputTapeRightCellsCode rest)
+  let Tmid :=
+    initializerTapeAtCells [some false]
+      (some false ::
+        ((List.append [false, true]
+          (List.append
+            (initializerStageInputBits (b :: rest) stage)
+            (List.append suffixBits headBits))).map some))
+  have hAready : A.SubroutineReady :=
+    initializerAppendInputTapeHeadPrefixReturnDescription_subroutineReady b
+  have hBready : B.SubroutineReady := hright.left
+  rcases
+      initializerAppendInputTapeHeadPrefixReturnDescription_run
+        b (initializerStageInputBits (b :: rest) stage) suffixBits with
+    ⟨nA, hA⟩
+  have hArun :
+      A.runConfig nA
+          { state := A.start
+            tape :=
+              initializerTapeAtCells []
+                (some false :: some false ::
+                  ((List.append [false, true]
+                    (List.append
+                      (initializerStageInputBits (b :: rest) stage)
+                      suffixBits)).map some)) } =
+        { state := A.halt, tape := Tmid } := by
+    simpa [A, Tmid, headBits, List.append_assoc] using hA
+  have hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start
+              tape := Tape.move Direction.left Tmid } =
+          { state := B.halt
+            tape :=
+              initializerTapeAtCells [some false]
+                (some false ::
+                  ((List.append [false, true]
+                    (List.append
+                      (initializerStageInputBits (b :: rest) stage)
+                      (List.append suffixBits
+                        (initializerInputTapeBits (b :: rest))))).map some)) } := by
+    rcases
+        hright.right b rest stage (List.append suffixBits headBits) with
+      ⟨nB, hB⟩
+    refine ⟨nB, ?_⟩
+    simpa [B, Tmid, headBits, rightBits, initializerTapeAtCells,
+      Tape.move, Tape.moveLeft,
+      initializerInputTapeBits_cons_eq_headPrefix_append,
+      List.map_append, List.append_assoc] using hB
+  rcases
+      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+        (A := A) (B := B) (handoffMove := Direction.left)
+        hAready hBready hArun hBReach with
+    ⟨n, hn⟩
+  refine ⟨n, ?_⟩
+  simpa [InitializerAppendKnownHeadInputTapeReturnDescription,
+    A, B] using hn
+
+private def InitializerAppendEmptyRightCellsReturnDescription :
+    MachineDescription :=
+  InitializerTransitionPrefixedFirstBitAppendCodeWordReturnDescription
+    (initializerInputTapeRightCellsCode ([] : Word Bool))
+
+private theorem initializerInputTapeRightCellsCode_nil_ne_nil :
+    initializerInputTapeRightCellsCode ([] : Word Bool) ≠ [] := by
+  simp [initializerInputTapeRightCellsCode,
+    MachineDescription.encodeCellListAppend,
+    MachineDescription.encodeNatAppend,
+    MachineDescription.encodeNat]
+
+private theorem
+    initializerAppendEmptyRightCellsReturnDescription_subroutineReady :
+    InitializerAppendEmptyRightCellsReturnDescription.SubroutineReady :=
+  initializerTransitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
+    (initializerInputTapeRightCellsCode ([] : Word Bool))
+    initializerInputTapeRightCellsCode_nil_ne_nil
+
+private theorem initializerAppendEmptyRightCellsReturnDescription_run
+    (b : Bool) (stage : Nat) (suffixBits : Word Bool) :
+    exists steps : Nat,
+      InitializerAppendEmptyRightCellsReturnDescription.runConfig steps
+          { state := InitializerAppendEmptyRightCellsReturnDescription.start
+            tape :=
+              initializerTapeAtCells []
+                (some false :: some false ::
+                  ((List.append [false, true]
+                    (List.append
+                      (initializerStageInputBits ([b] : Word Bool) stage)
+                      suffixBits)).map some)) } =
+        { state := InitializerAppendEmptyRightCellsReturnDescription.halt
+          tape :=
+            initializerTapeAtCells [some false]
+              (some false ::
+                ((List.append [false, true]
+                  (List.append
+                    (initializerStageInputBits ([b] : Word Bool) stage)
+                    (List.append suffixBits
+                      (MachineDescription.encodeCodeWordAsInput
+                        (initializerInputTapeRightCellsCode
+                          ([] : Word Bool)))))).map some)) } := by
+  rcases
+      initializerTransitionPrefixedFirstBitAppendCodeWordReturnDescription_run
+        (initializerInputTapeRightCellsCode ([] : Word Bool))
+        initializerInputTapeRightCellsCode_nil_ne_nil
+        (List.append
+          (initializerStageInputBits ([b] : Word Bool) stage)
+          suffixBits) with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [InitializerAppendEmptyRightCellsReturnDescription,
+    List.append_assoc] using hsteps
+
+private def InitializerAppendSingletonInputTapeReturnDescription
+    (b : Bool) : MachineDescription :=
+  MachineDescription.seqSubroutine
+    (InitializerAppendInputTapeHeadPrefixReturnDescription b)
+    InitializerAppendEmptyRightCellsReturnDescription
+    Direction.left
+
+private theorem
+    initializerAppendSingletonInputTapeReturnDescription_subroutineReady
+    (b : Bool) :
+    (InitializerAppendSingletonInputTapeReturnDescription
+      b).SubroutineReady :=
+  MachineDescription.seqSubroutine_subroutineReady
+    (initializerAppendInputTapeHeadPrefixReturnDescription_subroutineReady b)
+    initializerAppendEmptyRightCellsReturnDescription_subroutineReady
+
+private theorem initializerAppendSingletonInputTapeReturnDescription_run
+    (b : Bool) (stage : Nat) (suffixBits : Word Bool) :
+    exists steps : Nat,
+      (InitializerAppendSingletonInputTapeReturnDescription b).runConfig steps
+          { state :=
+              (InitializerAppendSingletonInputTapeReturnDescription b).start
+            tape :=
+              initializerTapeAtCells []
+                (some false :: some false ::
+                  ((List.append [false, true]
+                    (List.append
+                      (initializerStageInputBits ([b] : Word Bool) stage)
+                      suffixBits)).map some)) } =
+        { state :=
+            (InitializerAppendSingletonInputTapeReturnDescription b).halt
+          tape :=
+            initializerTapeAtCells [some false]
+              (some false ::
+                ((List.append [false, true]
+                  (List.append
+                    (initializerStageInputBits ([b] : Word Bool) stage)
+                    (List.append suffixBits
+                      (initializerInputTapeBits ([b] : Word Bool))))).map
+                    some)) } := by
+  let A := InitializerAppendInputTapeHeadPrefixReturnDescription b
+  let B := InitializerAppendEmptyRightCellsReturnDescription
+  let headBits :=
+    MachineDescription.encodeCodeWordAsInput
+      (initializerInputTapeHeadPrefixCode b)
+  let rightBits :=
+    MachineDescription.encodeCodeWordAsInput
+      (initializerInputTapeRightCellsCode ([] : Word Bool))
+  let Tmid :=
+    initializerTapeAtCells [some false]
+      (some false ::
+        ((List.append [false, true]
+          (List.append
+            (initializerStageInputBits ([b] : Word Bool) stage)
+            (List.append suffixBits headBits))).map some))
+  have hAready : A.SubroutineReady :=
+    initializerAppendInputTapeHeadPrefixReturnDescription_subroutineReady b
+  have hBready : B.SubroutineReady :=
+    initializerAppendEmptyRightCellsReturnDescription_subroutineReady
+  rcases
+      initializerAppendInputTapeHeadPrefixReturnDescription_run
+        b (initializerStageInputBits ([b] : Word Bool) stage) suffixBits with
+    ⟨nA, hA⟩
+  have hArun :
+      A.runConfig nA
+          { state := A.start
+            tape :=
+              initializerTapeAtCells []
+                (some false :: some false ::
+                  ((List.append [false, true]
+                    (List.append
+                      (initializerStageInputBits ([b] : Word Bool) stage)
+                      suffixBits)).map some)) } =
+        { state := A.halt, tape := Tmid } := by
+    simpa [A, Tmid, headBits, List.append_assoc] using hA
+  have hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start
+              tape := Tape.move Direction.left Tmid } =
+          { state := B.halt
+            tape :=
+              initializerTapeAtCells [some false]
+                (some false ::
+                  ((List.append [false, true]
+                    (List.append
+                      (initializerStageInputBits ([b] : Word Bool) stage)
+                      (List.append suffixBits
+                        (initializerInputTapeBits ([b] : Word Bool))))).map
+                      some)) } := by
+    rcases
+        initializerAppendEmptyRightCellsReturnDescription_run
+          b stage (List.append suffixBits headBits) with
+      ⟨nB, hB⟩
+    refine ⟨nB, ?_⟩
+    simpa [B, Tmid, headBits, rightBits, initializerTapeAtCells,
+      Tape.move, Tape.moveLeft,
+      initializerInputTapeBits_cons_eq_headPrefix_append,
+      List.map_append, List.append_assoc] using hB
+  rcases
+      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+        (A := A) (B := B) (handoffMove := Direction.left)
+        hAready hBready hArun hBReach with
+    ⟨n, hn⟩
+  refine ⟨n, ?_⟩
+  simpa [InitializerAppendSingletonInputTapeReturnDescription,
+    A, B] using hn
+
+private def InitializerAppendInputTapeReturnForwardSpec
     (copier : MachineDescription) : Prop :=
-  copier.SubroutineReady ∧
     forall w : Word Bool,
     forall stage : Nat,
     forall suffixBits : Word Bool,
@@ -2599,10 +3334,45 @@ private def InitializerAppendInputTapeReturnSpec
               initializerTapeAtCells [some false]
                 (some false ::
                   ((List.append [false, true]
-                    (List.append
-                      (initializerStageInputBits w stage)
-                      (List.append suffixBits
-                        (initializerInputTapeBits w)))).map some)) }
+                      (List.append
+                        (initializerStageInputBits w stage)
+                        (List.append suffixBits
+                          (initializerInputTapeBits w)))).map some)) }
+
+private def InitializerAppendInputTapeReturnSpec
+    (copier : MachineDescription) : Prop :=
+  copier.SubroutineReady ∧
+    InitializerAppendInputTapeReturnForwardSpec copier
+
+private def InitializerStageInputValidatorForwardSpec
+    (validator : MachineDescription) : Prop :=
+  forall w : Word Bool,
+  forall stage : Nat,
+    exists steps : Nat,
+      validator.runConfig steps
+          (validator.initial (initializerStageInputBits w stage)) =
+        { state := validator.halt
+          tape :=
+            Tape.move Direction.right
+              (Tape.input (initializerStageInputBits w stage)) }
+
+private def InitializerStageInputValidatorClosedSpec
+    (validator : MachineDescription) : Prop :=
+  forall code : Word MachineCodeSymbol,
+  forall T : Tape Bool,
+    validator.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T ->
+      exists w : Word Bool,
+      exists stage : Nat,
+        code = PairedRecognizerDovetailStageInputCode w stage ∧
+          Tape.move Direction.left T =
+            Tape.input (initializerStageInputBits w stage)
+
+private def InitializerStageInputValidatorSpec
+    (validator : MachineDescription) : Prop :=
+  validator.SubroutineReady ∧
+    InitializerStageInputValidatorForwardSpec validator ∧
+      InitializerStageInputValidatorClosedSpec validator
 
 private def initializerFinalBoolFlagsCode :
     Word MachineCodeSymbol :=
@@ -3442,15 +4212,204 @@ private theorem initializerAppendInputTapeReturnSpec_realizer :
       InitializerAppendInputTapeReturnSpec copier := by
   sorry
 
+private theorem initializerStageInputValidatorSpec_realizer :
+    exists validator : MachineDescription,
+      InitializerStageInputValidatorSpec validator := by
+  sorry
+
+private def DovetailInitialLayoutInitializerDescriptionWithValidatorCopier
+    (accept reject validator copier : MachineDescription) :
+    MachineDescription :=
+  MachineDescription.seqSubroutine
+    validator
+    (DovetailInitialLayoutInitializerDescriptionWithCopier
+      accept reject copier)
+    Direction.left
+
 private theorem
-    dovetailInitialLayoutInitializerDescriptionWithCopier_closed
-    {accept reject copier : MachineDescription}
+    dovetailInitialLayoutInitializerDescriptionWithValidatorCopier_subroutineReady
+    {accept reject validator copier : MachineDescription}
+    (hvalidator : InitializerStageInputValidatorSpec validator)
+    (hcopier : InitializerAppendInputTapeReturnSpec copier) :
+    (DovetailInitialLayoutInitializerDescriptionWithValidatorCopier
+      accept reject validator copier).SubroutineReady :=
+  MachineDescription.seqSubroutine_subroutineReady
+    hvalidator.left
+    (dovetailInitialLayoutInitializerDescriptionWithCopier_subroutineReady
+      hcopier)
+
+private theorem
+    dovetailInitialLayoutInitializerDescriptionWithValidatorCopier_run_bits
+    {accept reject validator copier : MachineDescription}
+    (hvalidator : InitializerStageInputValidatorSpec validator)
+    (hcopier : InitializerAppendInputTapeReturnSpec copier)
+    (w : Word Bool) (stage : Nat) :
+    exists steps : Nat,
+      (DovetailInitialLayoutInitializerDescriptionWithValidatorCopier
+        accept reject validator copier).runConfig steps
+          ((DovetailInitialLayoutInitializerDescriptionWithValidatorCopier
+            accept reject validator copier).initial
+            (MachineDescription.encodeCodeWordAsInput
+              (PairedRecognizerDovetailStageInputCode w stage))) =
+        { state :=
+            (DovetailInitialLayoutInitializerDescriptionWithValidatorCopier
+              accept reject validator copier).halt
+          tape :=
+            DovetailInitialLayoutInitializerOutputTape
+              accept reject w stage } := by
+  let A := validator
+  let B :=
+    DovetailInitialLayoutInitializerDescriptionWithCopier
+      accept reject copier
+  let Tmid :=
+    Tape.move Direction.right
+      (Tape.input (initializerStageInputBits w stage))
+  have hAready : A.SubroutineReady := hvalidator.left
+  have hBready : B.SubroutineReady :=
+    dovetailInitialLayoutInitializerDescriptionWithCopier_subroutineReady
+      hcopier
+  rcases hvalidator.right.left w stage with ⟨nA, hA⟩
+  have hArun :
+      A.runConfig nA
+          { state := A.start
+            tape :=
+              Tape.input
+                (MachineDescription.encodeCodeWordAsInput
+                  (PairedRecognizerDovetailStageInputCode w stage)) } =
+        { state := A.halt, tape := Tmid } := by
+    simpa [A, Tmid, initializerStageInputBits,
+      MachineDescription.initial] using hA
+  have hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start
+              tape := Tape.move Direction.left Tmid } =
+          { state := B.halt
+            tape :=
+              DovetailInitialLayoutInitializerOutputTape
+                accept reject w stage } := by
+    rcases
+        dovetailInitialLayoutInitializerDescriptionWithCopier_run_bits
+          (accept := accept) (reject := reject) hcopier w stage with
+      ⟨nB, hB⟩
+    refine ⟨nB, ?_⟩
+    have hmove :=
+      initializerStageInputBits_move_left_move_right_input w stage
+    have hinput :
+        Tape.move Direction.left
+            (Tape.move Direction.right
+              (Tape.input
+                (MachineDescription.encodeCodeWordAsInput
+                  (PairedRecognizerDovetailStageInputCode w stage)))) =
+          Tape.input
+            (MachineDescription.encodeCodeWordAsInput
+              (PairedRecognizerDovetailStageInputCode w stage)) := by
+      simpa [initializerStageInputBits] using hmove
+    have hBout :
+        B.runConfig nB
+            (B.initial
+              (MachineDescription.encodeCodeWordAsInput
+                (PairedRecognizerDovetailStageInputCode w stage))) =
+          { state := B.halt
+            tape :=
+              DovetailInitialLayoutInitializerOutputTape
+                accept reject w stage } := by
+      exact hB.trans (by
+        simp [B, dovetailInitialLayoutInitializerOutputTape_eq_bits])
+    have hstart :
+        { state := B.start
+          tape := Tape.move Direction.left Tmid } =
+        B.initial
+          (MachineDescription.encodeCodeWordAsInput
+            (PairedRecognizerDovetailStageInputCode w stage)) := by
+      simp [B, Tmid, hinput, initializerStageInputBits,
+        MachineDescription.initial]
+    rw [hstart]
+    exact hBout
+  rcases
+      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+        (A := A) (B := B) (handoffMove := Direction.left)
+        hAready hBready hArun hBReach with
+    ⟨n, hn⟩
+  refine ⟨n, ?_⟩
+  simpa [DovetailInitialLayoutInitializerDescriptionWithValidatorCopier,
+    A, B, MachineDescription.initial, initializerStageInputBits] using hn
+
+private theorem
+    dovetailInitialLayoutInitializerDescriptionWithValidatorCopier_forward
+    {accept reject validator copier : MachineDescription}
+    (hvalidator : InitializerStageInputValidatorSpec validator)
+    (hcopier : InitializerAppendInputTapeReturnSpec copier) :
+    DovetailInitialLayoutInitializerForwardSpec
+      accept reject
+      (DovetailInitialLayoutInitializerDescriptionWithValidatorCopier
+        accept reject validator copier) := by
+  intro w stage
+  rcases
+      dovetailInitialLayoutInitializerDescriptionWithValidatorCopier_run_bits
+        (accept := accept) (reject := reject)
+        hvalidator hcopier w stage with
+    ⟨n, hn⟩
+  exact ⟨n, by
+    constructor
+    · simpa [MachineDescription.HaltsWithTapeIn] using
+        congrArg MachineDescription.Configuration.state hn
+    · simpa [MachineDescription.HaltsWithTapeIn] using
+        congrArg MachineDescription.Configuration.tape hn⟩
+
+private theorem
+    dovetailInitialLayoutInitializerDescriptionWithValidatorCopier_closed
+    {accept reject validator copier : MachineDescription}
+    (hvalidator : InitializerStageInputValidatorSpec validator)
     (hcopier : InitializerAppendInputTapeReturnSpec copier) :
     DovetailInitialLayoutInitializerClosedSpec
       accept reject
-      (DovetailInitialLayoutInitializerDescriptionWithCopier
-        accept reject copier) := by
-  sorry
+      (DovetailInitialLayoutInitializerDescriptionWithValidatorCopier
+        accept reject validator copier) := by
+  intro code T hhalt
+  let A := validator
+  let B :=
+    DovetailInitialLayoutInitializerDescriptionWithCopier
+      accept reject copier
+  have hAready : A.SubroutineReady := hvalidator.left
+  have hBready : B.SubroutineReady :=
+    dovetailInitialLayoutInitializerDescriptionWithCopier_subroutineReady
+      hcopier
+  rcases
+      MachineDescription.seqSubroutine_haltsWithTape_inv
+        (A := A) (B := B) (handoffMove := Direction.left)
+        hAready hBready hhalt with
+    ⟨Tmid, hAhalt, nB, hBrun⟩
+  rcases hvalidator.right.right code Tmid hAhalt with
+    ⟨w, stage, hcode, hhandoff⟩
+  subst code
+  have hBhalt :
+      B.HaltsWithTape (initializerStageInputBits w stage) T := by
+    refine ⟨nB, ?_⟩
+    have hBrun' :
+        B.runConfig nB
+            (B.initial (initializerStageInputBits w stage)) =
+          { state := B.halt, tape := T } := by
+      simpa [MachineDescription.initial, hhandoff] using hBrun
+    constructor
+    · simpa [MachineDescription.HaltsWithTapeIn] using
+        congrArg MachineDescription.Configuration.state hBrun'
+    · simpa [MachineDescription.HaltsWithTapeIn] using
+        congrArg MachineDescription.Configuration.tape hBrun'
+  have hBexpected :
+      B.HaltsWithTape
+        (initializerStageInputBits w stage)
+        (DovetailInitialLayoutInitializerOutputTape
+          accept reject w stage) := by
+    simpa [B, initializerStageInputBits] using
+      dovetailInitialLayoutInitializerDescriptionWithCopier_forward
+        (accept := accept) (reject := reject) hcopier w stage
+  have hT :
+      T =
+        DovetailInitialLayoutInitializerOutputTape accept reject w stage :=
+    haltsWithTape_functional_of_haltTransitionFree
+      hBready.right hBhalt hBexpected
+  exact ⟨w, stage, rfl, hT⟩
 
 theorem dovetailInitialLayoutInitializerRightShiftedSpec_of_rightShiftedOutputCompiled
     {accept reject initializer : MachineDescription}
@@ -3639,22 +4598,24 @@ private theorem dovetailInitialLayoutInitializerFiniteDescription_realizer
     exists initializer : MachineDescription,
       DovetailInitialLayoutInitializerRightShiftedSpec
         accept reject initializer := by
+  rcases initializerStageInputValidatorSpec_realizer with
+    ⟨validator, hvalidator⟩
   rcases initializerAppendInputTapeReturnSpec_realizer with
     ⟨copier, hcopier⟩
   refine
-    ⟨DovetailInitialLayoutInitializerDescriptionWithCopier
-      accept reject copier, ?_⟩
+    ⟨DovetailInitialLayoutInitializerDescriptionWithValidatorCopier
+      accept reject validator copier, ?_⟩
   constructor
   · exact
-      dovetailInitialLayoutInitializerDescriptionWithCopier_subroutineReady
-        hcopier
+      dovetailInitialLayoutInitializerDescriptionWithValidatorCopier_subroutineReady
+        hvalidator hcopier
   constructor
   · exact
-      dovetailInitialLayoutInitializerDescriptionWithCopier_forward
-        hcopier
+      dovetailInitialLayoutInitializerDescriptionWithValidatorCopier_forward
+        hvalidator hcopier
   · exact
-      dovetailInitialLayoutInitializerDescriptionWithCopier_closed
-        hcopier
+      dovetailInitialLayoutInitializerDescriptionWithValidatorCopier_closed
+        hvalidator hcopier
 
 theorem dovetailInitialLayoutInitializerFiniteDescriptionConstruction_scaffold :
     DovetailInitialLayoutInitializerFiniteDescriptionConstruction := by
