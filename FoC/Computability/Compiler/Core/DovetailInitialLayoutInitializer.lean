@@ -2858,6 +2858,79 @@ private def initializerNatBits (n : Nat) : Word Bool :=
   MachineDescription.encodeCodeWordAsInput
     (MachineDescription.encodeNat n)
 
+@[simp] private theorem initializerNatBits_zero :
+    initializerNatBits 0 = [false, false, true, true] := by
+  rfl
+
+@[simp] private theorem initializerNatBits_succ (n : Nat) :
+    initializerNatBits (n + 1) =
+      false :: false :: true :: false :: initializerNatBits n := by
+  rfl
+
+@[simp] private theorem initializerNatBits_append_cell_false
+    (n : Nat) (tokens : Word MachineCodeSymbol) :
+    MachineDescription.encodeCodeWordAsInput
+        (List.append (MachineDescription.encodeNat n)
+          (MachineCodeSymbol.zero :: tokens)) =
+      List.append (initializerNatBits n)
+        (false :: true :: false :: true ::
+          MachineDescription.encodeCodeWordAsInput tokens) := by
+  rw [MachineDescription.encodeCodeWordAsInput_append]
+  rfl
+
+@[simp] private theorem initializerNatBits_append_cell_true
+    (n : Nat) (tokens : Word MachineCodeSymbol) :
+    MachineDescription.encodeCodeWordAsInput
+        (List.append (MachineDescription.encodeNat n)
+          (MachineCodeSymbol.one :: tokens)) =
+      List.append (initializerNatBits n)
+        (false :: true :: true :: false ::
+          MachineDescription.encodeCodeWordAsInput tokens) := by
+  rw [MachineDescription.encodeCodeWordAsInput_append]
+  rfl
+
+@[simp] private theorem initializerEncodeCodeWordAsInput_tick_cons
+    (tokens : Word MachineCodeSymbol) :
+    MachineDescription.encodeCodeWordAsInput
+        (MachineCodeSymbol.tick :: tokens) =
+      false :: false :: true :: false ::
+        MachineDescription.encodeCodeWordAsInput tokens := by
+  rfl
+
+@[simp] private theorem initializerNatBits_map_append_cell_false
+    (n : Nat) (tokens : Word MachineCodeSymbol) (suffixBits : Word Bool) :
+    List.append
+        (List.map some
+          (MachineDescription.encodeCodeWordAsInput
+            (List.append (MachineDescription.encodeNat n)
+              (MachineCodeSymbol.zero :: tokens))))
+        (List.map some suffixBits) =
+      List.append (List.map some (initializerNatBits n))
+        (some false :: some true :: some false :: some true ::
+          List.append
+            (List.map some
+              (MachineDescription.encodeCodeWordAsInput tokens))
+            (List.map some suffixBits)) := by
+  rw [initializerNatBits_append_cell_false]
+  simp [List.map_append, List.append_assoc]
+
+@[simp] private theorem initializerNatBits_map_append_cell_true
+    (n : Nat) (tokens : Word MachineCodeSymbol) (suffixBits : Word Bool) :
+    List.append
+        (List.map some
+          (MachineDescription.encodeCodeWordAsInput
+            (List.append (MachineDescription.encodeNat n)
+              (MachineCodeSymbol.one :: tokens))))
+        (List.map some suffixBits) =
+      List.append (List.map some (initializerNatBits n))
+        (some false :: some true :: some true :: some false ::
+          List.append
+            (List.map some
+              (MachineDescription.encodeCodeWordAsInput tokens))
+            (List.map some suffixBits)) := by
+  rw [initializerNatBits_append_cell_true]
+  simp [List.map_append, List.append_assoc]
+
 private def initializerEmptyInputTapeCode :
     Word MachineCodeSymbol :=
   MachineDescription.encodeTapeAppend
@@ -3381,7 +3454,7 @@ private def InitializerAppendInputTapeHeadRouterDescription :
   halt := 31
   transitions :=
     [ MachineDescription.transition
-        0 (some false) (some false) Direction.right 1
+        0 (some false) none Direction.right 1
     , MachineDescription.transition
         1 (some false) (some false) Direction.right 2
     , MachineDescription.transition
@@ -3421,19 +3494,19 @@ private def InitializerAppendInputTapeHeadRouterDescription :
     , MachineDescription.transition
         20 (some true) (some true) Direction.left 20
     , MachineDescription.transition
-        20 none none Direction.right 23
+        20 none none Direction.right 31
     , MachineDescription.transition
         21 (some false) (some false) Direction.left 21
     , MachineDescription.transition
         21 (some true) (some true) Direction.left 21
     , MachineDescription.transition
-        21 none none Direction.right 24
+        21 none (some false) Direction.right 31
     , MachineDescription.transition
         22 (some false) (some false) Direction.left 22
     , MachineDescription.transition
         22 (some true) (some true) Direction.left 22
     , MachineDescription.transition
-        22 none none Direction.right 25
+        22 none (some true) Direction.right 31
     , MachineDescription.transition
         23 (some false) none Direction.right 31
     , MachineDescription.transition
@@ -3479,6 +3552,297 @@ private theorem initializerAppendInputTapeHeadRouterDescription_subroutineReady 
   ⟨initializerAppendInputTapeHeadRouterDescription_wellFormed,
     initializerAppendInputTapeHeadRouterDescription_haltTransitionFree⟩
 
+private theorem initializerAppendInputTapeHeadRouterDescription_run_return20
+    (beforeRevBits : Word Bool) (current : Bool)
+    (right : List (Option Bool)) :
+    InitializerAppendInputTapeHeadRouterDescription.runConfig
+        (beforeRevBits.length + 3)
+        (initializerConfig 20
+          (List.append (beforeRevBits.map some)
+            [some false, none])
+          (some current :: right)) =
+      initializerConfig 31 [none]
+        (some false ::
+          List.append (beforeRevBits.reverse.map some)
+            (some current :: right)) := by
+  induction beforeRevBits generalizing current right with
+  | nil =>
+      cases current <;>
+        simp [InitializerAppendInputTapeHeadRouterDescription,
+          initializerConfig, initializerTapeAtCells,
+          MachineDescription.runConfig, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft, Tape.moveRight]
+  | cons bit rest ih =>
+      cases current
+      · simpa [MachineDescription.runConfig, initializerConfig,
+          initializerTapeAtCells,
+          InitializerAppendInputTapeHeadRouterDescription,
+          MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft, List.append_assoc] using
+          ih bit (some false :: right)
+      · simpa [MachineDescription.runConfig, initializerConfig,
+          initializerTapeAtCells,
+          InitializerAppendInputTapeHeadRouterDescription,
+          MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft, List.append_assoc] using
+          ih bit (some true :: right)
+
+private theorem initializerAppendInputTapeHeadRouterDescription_run_return21
+    (beforeRevBits : Word Bool) (current : Bool)
+    (right : List (Option Bool)) :
+    InitializerAppendInputTapeHeadRouterDescription.runConfig
+        (beforeRevBits.length + 3)
+        (initializerConfig 21
+          (List.append (beforeRevBits.map some)
+            [some false, none])
+          (some current :: right)) =
+      initializerConfig 31 [some false]
+        (some false ::
+          List.append (beforeRevBits.reverse.map some)
+            (some current :: right)) := by
+  induction beforeRevBits generalizing current right with
+  | nil =>
+      cases current <;>
+        simp [InitializerAppendInputTapeHeadRouterDescription,
+          initializerConfig, initializerTapeAtCells,
+          MachineDescription.runConfig, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft, Tape.moveRight]
+  | cons bit rest ih =>
+      cases current
+      · simpa [MachineDescription.runConfig, initializerConfig,
+          initializerTapeAtCells,
+          InitializerAppendInputTapeHeadRouterDescription,
+          MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft, List.append_assoc] using
+          ih bit (some false :: right)
+      · simpa [MachineDescription.runConfig, initializerConfig,
+          initializerTapeAtCells,
+          InitializerAppendInputTapeHeadRouterDescription,
+          MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft, List.append_assoc] using
+          ih bit (some true :: right)
+
+private theorem initializerAppendInputTapeHeadRouterDescription_run_return22
+    (beforeRevBits : Word Bool) (current : Bool)
+    (right : List (Option Bool)) :
+    InitializerAppendInputTapeHeadRouterDescription.runConfig
+        (beforeRevBits.length + 3)
+        (initializerConfig 22
+          (List.append (beforeRevBits.map some)
+            [some false, none])
+          (some current :: right)) =
+      initializerConfig 31 [some true]
+        (some false ::
+          List.append (beforeRevBits.reverse.map some)
+            (some current :: right)) := by
+  induction beforeRevBits generalizing current right with
+  | nil =>
+      cases current <;>
+        simp [InitializerAppendInputTapeHeadRouterDescription,
+          initializerConfig, initializerTapeAtCells,
+          MachineDescription.runConfig, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft, Tape.moveRight]
+  | cons bit rest ih =>
+      cases current
+      · simpa [MachineDescription.runConfig, initializerConfig,
+          initializerTapeAtCells,
+          InitializerAppendInputTapeHeadRouterDescription,
+          MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft, List.append_assoc] using
+          ih bit (some false :: right)
+      · simpa [MachineDescription.runConfig, initializerConfig,
+          initializerTapeAtCells,
+          InitializerAppendInputTapeHeadRouterDescription,
+          MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft, List.append_assoc] using
+          ih bit (some true :: right)
+
+private theorem
+    initializerAppendInputTapeHeadRouterDescription_run_state8_false
+    (n : Nat) (beforeRevBits tailBits : Word Bool) :
+    InitializerAppendInputTapeHeadRouterDescription.runConfig
+        (beforeRevBits.length + 8 * n + 15)
+        (initializerConfig 8
+          (List.append (beforeRevBits.map some)
+            [some false, none])
+          ((List.append (initializerNatBits n)
+            (false :: true :: false :: true :: tailBits)).map some)) =
+      initializerConfig 31 [some false]
+        (some false ::
+          (List.append beforeRevBits.reverse
+            (List.append (initializerNatBits n)
+              (false :: true :: false :: true :: tailBits))).map some) := by
+  induction n generalizing beforeRevBits with
+  | zero =>
+      let nextBefore : Word Bool :=
+        List.append [false, true, true, false, false] beforeRevBits
+      have hprefix :
+          InitializerAppendInputTapeHeadRouterDescription.runConfig 7
+              (initializerConfig 8
+                (List.append (beforeRevBits.map some)
+                  [some false, none])
+                ((List.append (initializerNatBits 0)
+                  (false :: true :: false :: true :: tailBits)).map some)) =
+            initializerConfig 21
+              (List.append (nextBefore.map some) [some false, none])
+              (some true :: some false :: some true ::
+                tailBits.map some) := by
+        simp [nextBefore,
+          InitializerAppendInputTapeHeadRouterDescription,
+          initializerConfig, initializerTapeAtCells,
+          MachineDescription.runConfig, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft, Tape.moveRight]
+      rw [show beforeRevBits.length + 8 * 0 + 15 =
+        7 + (nextBefore.length + 3) by
+          simp [nextBefore]
+          omega]
+      rw [MachineDescription.runConfig_add]
+      rw [hprefix]
+      simpa [nextBefore,
+        List.map_append, List.reverse_append, List.append_assoc] using
+        initializerAppendInputTapeHeadRouterDescription_run_return21
+          nextBefore true (some false :: some true :: tailBits.map some)
+  | succ n ih =>
+      let nextBefore : Word Bool :=
+        List.append [false, true, false, false] beforeRevBits
+      have hprefix :
+          InitializerAppendInputTapeHeadRouterDescription.runConfig 4
+              (initializerConfig 8
+                (List.append (beforeRevBits.map some)
+                  [some false, none])
+                ((List.append (initializerNatBits (n + 1))
+                  (false :: true :: false :: true :: tailBits)).map some)) =
+            initializerConfig 8
+              (List.append (nextBefore.map some) [some false, none])
+              ((List.append (initializerNatBits n)
+                (false :: true :: false :: true :: tailBits)).map some) := by
+        simp [nextBefore,
+          InitializerAppendInputTapeHeadRouterDescription,
+          initializerConfig, initializerTapeAtCells,
+          MachineDescription.runConfig, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveRight, List.map_append]
+        cases
+          List.map some (initializerNatBits n) ++
+            some false :: some true :: some false :: some true ::
+              List.map some tailBits <;>
+          rfl
+      rw [show beforeRevBits.length + 8 * (n + 1) + 15 =
+        4 + (nextBefore.length + 8 * n + 15) by
+          simp [nextBefore]
+          omega]
+      rw [MachineDescription.runConfig_add]
+      rw [hprefix]
+      simpa [nextBefore,
+        List.map_append, List.reverse_append, List.append_assoc,
+        Nat.mul_succ] using
+        ih nextBefore
+
+private theorem
+    initializerAppendInputTapeHeadRouterDescription_run_state8_true
+    (n : Nat) (beforeRevBits tailBits : Word Bool) :
+    InitializerAppendInputTapeHeadRouterDescription.runConfig
+        (beforeRevBits.length + 8 * n + 15)
+        (initializerConfig 8
+          (List.append (beforeRevBits.map some)
+            [some false, none])
+          ((List.append (initializerNatBits n)
+            (false :: true :: true :: false :: tailBits)).map some)) =
+      initializerConfig 31 [some true]
+        (some false ::
+          (List.append beforeRevBits.reverse
+            (List.append (initializerNatBits n)
+              (false :: true :: true :: false :: tailBits))).map some) := by
+  induction n generalizing beforeRevBits with
+  | zero =>
+      let nextBefore : Word Bool :=
+        List.append [false, true, true, false, false] beforeRevBits
+      have hprefix :
+          InitializerAppendInputTapeHeadRouterDescription.runConfig 7
+              (initializerConfig 8
+                (List.append (beforeRevBits.map some)
+                  [some false, none])
+                ((List.append (initializerNatBits 0)
+                  (false :: true :: true :: false :: tailBits)).map some)) =
+            initializerConfig 22
+              (List.append (nextBefore.map some) [some false, none])
+              (some true :: some true :: some false ::
+                tailBits.map some) := by
+        simp [nextBefore,
+          InitializerAppendInputTapeHeadRouterDescription,
+          initializerConfig, initializerTapeAtCells,
+          MachineDescription.runConfig, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft, Tape.moveRight]
+      rw [show beforeRevBits.length + 8 * 0 + 15 =
+        7 + (nextBefore.length + 3) by
+          simp [nextBefore]
+          omega]
+      rw [MachineDescription.runConfig_add]
+      rw [hprefix]
+      simpa [nextBefore,
+        List.map_append, List.reverse_append, List.append_assoc] using
+        initializerAppendInputTapeHeadRouterDescription_run_return22
+          nextBefore true (some true :: some false :: tailBits.map some)
+  | succ n ih =>
+      let nextBefore : Word Bool :=
+        List.append [false, true, false, false] beforeRevBits
+      have hprefix :
+          InitializerAppendInputTapeHeadRouterDescription.runConfig 4
+              (initializerConfig 8
+                (List.append (beforeRevBits.map some)
+                  [some false, none])
+                ((List.append (initializerNatBits (n + 1))
+                  (false :: true :: true :: false :: tailBits)).map some)) =
+            initializerConfig 8
+              (List.append (nextBefore.map some) [some false, none])
+              ((List.append (initializerNatBits n)
+                (false :: true :: true :: false :: tailBits)).map some) := by
+        simp [nextBefore,
+          InitializerAppendInputTapeHeadRouterDescription,
+          initializerConfig, initializerTapeAtCells,
+          MachineDescription.runConfig, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveRight, List.map_append]
+        cases
+          List.map some (initializerNatBits n) ++
+            some false :: some true :: some true :: some false ::
+              List.map some tailBits <;>
+          rfl
+      rw [show beforeRevBits.length + 8 * (n + 1) + 15 =
+        4 + (nextBefore.length + 8 * n + 15) by
+          simp [nextBefore]
+          omega]
+      rw [MachineDescription.runConfig_add]
+      rw [hprefix]
+      simpa [nextBefore,
+        List.map_append, List.reverse_append, List.append_assoc,
+        Nat.mul_succ] using
+        ih nextBefore
+
 private def InitializerAppendInputTapeHeadRouterSpec
     (router : MachineDescription) : Prop :=
   router.SubroutineReady ∧
@@ -3522,7 +3886,222 @@ private theorem initializerAppendInputTapeHeadRouterDescription_spec :
       InitializerAppendInputTapeHeadRouterDescription := by
   constructor
   · exact initializerAppendInputTapeHeadRouterDescription_subroutineReady
-  · sorry
+  constructor
+  · intro stage suffixBits
+    refine ⟨15, ?_⟩
+    simp [initializerAppendInputTapeHeadRouterTaggedTape,
+      initializerStageInputBits, PairedRecognizerDovetailStageInputCode,
+      MachineDescription.DovetailLayout.stageInputCode,
+      MachineDescription.DovetailLayout.stageInputCodeAppend,
+      MachineDescription.encodeBoolWordAppend,
+      MachineDescription.encodeCellListAppend,
+      MachineDescription.encodeNatAppend,
+      MachineDescription.encodeNat,
+      MachineDescription.encodeCellsAppend,
+      MachineDescription.encodeCodeWordAsInput,
+      MachineDescription.encodeCodeSymbolAsInput,
+      InitializerAppendInputTapeHeadRouterDescription,
+      initializerTapeAtCells,
+      MachineDescription.runConfig, MachineDescription.stepConfig,
+      MachineDescription.lookupTransition, MachineDescription.Matches,
+      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      Tape.moveLeft, Tape.moveRight]
+  · intro b rest stage suffixBits
+    cases b
+    · let beforeRevBits : Word Bool :=
+        [false, true, false, false, true, false]
+      let tailBits : Word Bool :=
+        List.append
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.encodeCellsAppend (rest.map some)
+              (MachineDescription.encodeNatAppend stage [])))
+          suffixBits
+      let rawCells : List (Option Bool) :=
+        List.append
+          (List.map some
+            (MachineDescription.encodeCodeWordAsInput
+              (List.append (MachineDescription.encodeNat rest.length)
+                (MachineCodeSymbol.zero ::
+                  MachineDescription.encodeCellsAppend (rest.map some)
+                    (MachineDescription.encodeNat stage)))))
+          (List.map some suffixBits)
+      refine ⟨8 * rest.length + 29, ?_⟩
+      have hprefix :
+          InitializerAppendInputTapeHeadRouterDescription.runConfig 8
+              { state := InitializerAppendInputTapeHeadRouterDescription.start
+                tape :=
+                  initializerTapeAtCells []
+                    (some false :: some false ::
+                      ((List.append [false, true]
+                        (List.append
+                          (initializerStageInputBits (false :: rest) stage)
+                          suffixBits)).map some)) } =
+            initializerConfig 8
+              (List.append (beforeRevBits.map some) [some false, none])
+              rawCells := by
+        simp [beforeRevBits, rawCells,
+          initializerStageInputBits, PairedRecognizerDovetailStageInputCode,
+          MachineDescription.DovetailLayout.stageInputCode,
+          MachineDescription.DovetailLayout.stageInputCodeAppend,
+          MachineDescription.encodeBoolWordAppend,
+          MachineDescription.encodeCellListAppend,
+          MachineDescription.encodeNatAppend,
+          MachineDescription.encodeNat,
+          MachineDescription.encodeCellsAppend,
+          MachineDescription.encodeCellAppend,
+          MachineDescription.encodeCell,
+          InitializerAppendInputTapeHeadRouterDescription,
+          initializerConfig, initializerTapeAtCells,
+          MachineDescription.runConfig, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveRight, List.map_append]
+        cases
+          (List.map some
+            (MachineDescription.encodeCodeWordAsInput
+              (List.append (MachineDescription.encodeNat rest.length)
+                (MachineCodeSymbol.zero ::
+                  MachineDescription.encodeCellsAppend (rest.map some)
+                    (MachineDescription.encodeNat stage)))) ++
+            List.map some suffixBits) <;>
+          rfl
+      have hcells :
+          rawCells =
+            ((List.append (initializerNatBits rest.length)
+              (false :: true :: false :: true :: tailBits)).map some) := by
+        simpa [rawCells, tailBits, MachineDescription.encodeNatAppend,
+          List.map_append, List.append_assoc] using
+          initializerNatBits_map_append_cell_false rest.length
+            (MachineDescription.encodeCellsAppend (rest.map some)
+              (MachineDescription.encodeNat stage))
+            suffixBits
+      rw [show 8 * rest.length + 29 =
+        8 + (beforeRevBits.length + 8 * rest.length + 15) by
+          simp [beforeRevBits]
+          omega]
+      rw [MachineDescription.runConfig_add]
+      rw [hprefix]
+      have hscan :=
+        initializerAppendInputTapeHeadRouterDescription_run_state8_false
+          rest.length beforeRevBits tailBits
+      rw [← hcells] at hscan
+      have htailRaw :
+          List.map some (initializerNatBits rest.length) ++
+              some false :: some true :: some false :: some true ::
+                List.map some tailBits =
+            rawCells := by
+        simpa [List.map_append, List.append_assoc] using hcells.symm
+      simpa [beforeRevBits, rawCells, htailRaw,
+        initializerAppendInputTapeHeadRouterTaggedTape,
+        initializerStageInputBits, PairedRecognizerDovetailStageInputCode,
+        MachineDescription.DovetailLayout.stageInputCode,
+        MachineDescription.DovetailLayout.stageInputCodeAppend,
+        MachineDescription.encodeBoolWordAppend,
+        MachineDescription.encodeCellListAppend,
+        MachineDescription.encodeNatAppend,
+        MachineDescription.encodeNat,
+        MachineDescription.encodeCellsAppend,
+        MachineDescription.encodeCellAppend,
+        MachineDescription.encodeCell,
+        List.map_append, List.reverse_append, List.append_assoc] using
+        hscan
+    · let beforeRevBits : Word Bool :=
+        [false, true, false, false, true, false]
+      let tailBits : Word Bool :=
+        List.append
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.encodeCellsAppend (rest.map some)
+              (MachineDescription.encodeNatAppend stage [])))
+          suffixBits
+      let rawCells : List (Option Bool) :=
+        List.append
+          (List.map some
+            (MachineDescription.encodeCodeWordAsInput
+              (List.append (MachineDescription.encodeNat rest.length)
+                (MachineCodeSymbol.one ::
+                  MachineDescription.encodeCellsAppend (rest.map some)
+                    (MachineDescription.encodeNat stage)))))
+          (List.map some suffixBits)
+      refine ⟨8 * rest.length + 29, ?_⟩
+      have hprefix :
+          InitializerAppendInputTapeHeadRouterDescription.runConfig 8
+              { state := InitializerAppendInputTapeHeadRouterDescription.start
+                tape :=
+                  initializerTapeAtCells []
+                    (some false :: some false ::
+                      ((List.append [false, true]
+                        (List.append
+                          (initializerStageInputBits (true :: rest) stage)
+                          suffixBits)).map some)) } =
+            initializerConfig 8
+              (List.append (beforeRevBits.map some) [some false, none])
+              rawCells := by
+        simp [beforeRevBits, rawCells,
+          initializerStageInputBits, PairedRecognizerDovetailStageInputCode,
+          MachineDescription.DovetailLayout.stageInputCode,
+          MachineDescription.DovetailLayout.stageInputCodeAppend,
+          MachineDescription.encodeBoolWordAppend,
+          MachineDescription.encodeCellListAppend,
+          MachineDescription.encodeNatAppend,
+          MachineDescription.encodeNat,
+          MachineDescription.encodeCellsAppend,
+          MachineDescription.encodeCellAppend,
+          MachineDescription.encodeCell,
+          InitializerAppendInputTapeHeadRouterDescription,
+          initializerConfig, initializerTapeAtCells,
+          MachineDescription.runConfig, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveRight, List.map_append]
+        cases
+          (List.map some
+            (MachineDescription.encodeCodeWordAsInput
+              (List.append (MachineDescription.encodeNat rest.length)
+                (MachineCodeSymbol.one ::
+                  MachineDescription.encodeCellsAppend (rest.map some)
+                    (MachineDescription.encodeNat stage)))) ++
+            List.map some suffixBits) <;>
+          rfl
+      have hcells :
+          rawCells =
+            ((List.append (initializerNatBits rest.length)
+              (false :: true :: true :: false :: tailBits)).map some) := by
+        simpa [rawCells, tailBits, MachineDescription.encodeNatAppend,
+          List.map_append, List.append_assoc] using
+          initializerNatBits_map_append_cell_true rest.length
+            (MachineDescription.encodeCellsAppend (rest.map some)
+              (MachineDescription.encodeNat stage))
+            suffixBits
+      rw [show 8 * rest.length + 29 =
+        8 + (beforeRevBits.length + 8 * rest.length + 15) by
+          simp [beforeRevBits]
+          omega]
+      rw [MachineDescription.runConfig_add]
+      rw [hprefix]
+      have hscan :=
+        initializerAppendInputTapeHeadRouterDescription_run_state8_true
+          rest.length beforeRevBits tailBits
+      rw [← hcells] at hscan
+      have htailRaw :
+          List.map some (initializerNatBits rest.length) ++
+              some false :: some true :: some true :: some false ::
+                List.map some tailBits =
+            rawCells := by
+        simpa [List.map_append, List.append_assoc] using hcells.symm
+      simpa [beforeRevBits, rawCells, htailRaw,
+        initializerAppendInputTapeHeadRouterTaggedTape,
+        initializerStageInputBits, PairedRecognizerDovetailStageInputCode,
+        MachineDescription.DovetailLayout.stageInputCode,
+        MachineDescription.DovetailLayout.stageInputCodeAppend,
+        MachineDescription.encodeBoolWordAppend,
+        MachineDescription.encodeCellListAppend,
+        MachineDescription.encodeNatAppend,
+        MachineDescription.encodeNat,
+        MachineDescription.encodeCellsAppend,
+        MachineDescription.encodeCellAppend,
+        MachineDescription.encodeCell,
+        List.map_append, List.reverse_append, List.append_assoc] using
+        hscan
 
 private def InitializerAppendInputTapeHeadTaggedBrancherSpec
     (brancher : MachineDescription) : Prop :=
