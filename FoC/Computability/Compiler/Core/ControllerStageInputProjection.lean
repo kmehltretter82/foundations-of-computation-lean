@@ -13,41 +13,43 @@ namespace Computability
 
 open Languages
 
-def dovetailControllerProjectionKeep
+namespace ControllerStageInputProjection
+
+def keep
     (source : Nat) (cell : Bool) (target : Nat) :
     TransitionDescription :=
   MachineDescription.transition source (some cell) (some cell)
     Direction.right target
 
-def dovetailControllerProjectionErase
+def erase
     (source : Nat) (cell : Option Bool) (target : Nat) :
     TransitionDescription :=
   MachineDescription.transition source cell none Direction.right target
 
-def dovetailControllerProjectionKeepMove
+def keepMove
     (source : Nat) (cell : Option Bool) (move : Direction) (target : Nat) :
     TransitionDescription :=
   MachineDescription.transition source cell cell move target
 
-def dovetailControllerProjectionWriteMove
+def writeMove
     (source : Nat) (read write : Option Bool) (move : Direction)
     (target : Nat) : TransitionDescription :=
   MachineDescription.transition source read write move target
 
-def dovetailControllerProjectionScanLeftToBoundary
+def scanLeftToBoundary
     (scan one two three found : Nat) : List TransitionDescription :=
-  [ dovetailControllerProjectionKeepMove scan none Direction.left one
-  , dovetailControllerProjectionKeepMove scan (some false) Direction.left scan
-  , dovetailControllerProjectionKeepMove scan (some true) Direction.left scan
-  , dovetailControllerProjectionKeepMove one none Direction.left two
-  , dovetailControllerProjectionKeepMove one (some false) Direction.left scan
-  , dovetailControllerProjectionKeepMove one (some true) Direction.left scan
-  , dovetailControllerProjectionKeepMove two none Direction.left three
-  , dovetailControllerProjectionKeepMove two (some false) Direction.left scan
-  , dovetailControllerProjectionKeepMove two (some true) Direction.left scan
-  , dovetailControllerProjectionKeepMove three none Direction.right found
-  , dovetailControllerProjectionKeepMove three (some false) Direction.left scan
-  , dovetailControllerProjectionKeepMove three (some true) Direction.left scan ]
+  [ keepMove scan none Direction.left one
+  , keepMove scan (some false) Direction.left scan
+  , keepMove scan (some true) Direction.left scan
+  , keepMove one none Direction.left two
+  , keepMove one (some false) Direction.left scan
+  , keepMove one (some true) Direction.left scan
+  , keepMove two none Direction.left three
+  , keepMove two (some false) Direction.left scan
+  , keepMove two (some true) Direction.left scan
+  , keepMove three none Direction.right found
+  , keepMove three (some false) Direction.left scan
+  , keepMove three (some true) Direction.left scan ]
 
 private def projectionTapeAtCells
     (leftRev : List (Option Bool)) : List (Option Bool) -> Tape Bool
@@ -427,206 +429,206 @@ private theorem projectionCodeCells_encodeBoolWord
     projectionMarkedBoolPayloadCells, projectionCodeCells_replicate_tick,
     hnil]
 
-def DovetailControllerStageInputProjectionDescription :
+def Description :
     MachineDescription where
   stateCount := 1000
   start := 0
   halt := 999
   transitions :=
-    [ dovetailControllerProjectionErase 0 (some false) 1
-    , dovetailControllerProjectionErase 1 (some false) 2
-    , dovetailControllerProjectionErase 2 (some false) 3
-    , dovetailControllerProjectionErase 3 (some false) 100
+    [ erase 0 (some false) 1
+    , erase 1 (some false) 2
+    , erase 2 (some false) 3
+    , erase 3 (some false) 100
 
     -- Validate the input bool-word length prefix, marking ticks and cells.
-    , dovetailControllerProjectionKeep 100 false 101
-    , dovetailControllerProjectionKeep 101 false 102
-    , dovetailControllerProjectionKeep 102 true 103
-    , dovetailControllerProjectionWriteMove 103 (some false) none Direction.right 120
-    , dovetailControllerProjectionKeep 103 true 150
-    , dovetailControllerProjectionKeepMove 103 none Direction.right 100
+    , keep 100 false 101
+    , keep 101 false 102
+    , keep 102 true 103
+    , writeMove 103 (some false) none Direction.right 120
+    , keep 103 true 150
+    , keepMove 103 none Direction.right 100
 
     -- Skip the remaining input length prefix to find the matching cell.
-    , dovetailControllerProjectionKeep 120 false 121
-    , dovetailControllerProjectionKeep 121 false 122
-    , dovetailControllerProjectionKeep 122 true 123
-    , dovetailControllerProjectionKeep 123 false 120
-    , dovetailControllerProjectionKeep 123 true 130
-    , dovetailControllerProjectionKeepMove 123 none Direction.right 120
+    , keep 120 false 121
+    , keep 121 false 122
+    , keep 122 true 123
+    , keep 123 false 120
+    , keep 123 true 130
+    , keepMove 123 none Direction.right 120
 
     -- Mark one unprocessed input cell for the tick just marked.
-    , dovetailControllerProjectionKeep 130 false 131
-    , dovetailControllerProjectionWriteMove 131 (some true) none Direction.right 132
-    , dovetailControllerProjectionKeepMove 131 none Direction.right 135
-    , dovetailControllerProjectionKeep 132 false 133
-    , dovetailControllerProjectionKeep 132 true 134
-    , dovetailControllerProjectionKeepMove 133 (some true) Direction.left 140
-    , dovetailControllerProjectionKeepMove 134 (some false) Direction.left 140
-    , dovetailControllerProjectionKeep 135 false 136
-    , dovetailControllerProjectionKeep 135 true 137
-    , dovetailControllerProjectionKeep 136 true 130
-    , dovetailControllerProjectionKeep 137 false 130
+    , keep 130 false 131
+    , writeMove 131 (some true) none Direction.right 132
+    , keepMove 131 none Direction.right 135
+    , keep 132 false 133
+    , keep 132 true 134
+    , keepMove 133 (some true) Direction.left 140
+    , keepMove 134 (some false) Direction.left 140
+    , keep 135 false 136
+    , keep 135 true 137
+    , keep 136 true 130
+    , keep 137 false 130
 
     -- No unmarked ticks remain: ensure all input cells were processed.
-    , dovetailControllerProjectionKeep 150 false 151
-    , dovetailControllerProjectionKeepMove 151 none Direction.right 152
-    , dovetailControllerProjectionKeepMove 151 (some false) Direction.left 160
-    , dovetailControllerProjectionKeep 152 false 153
-    , dovetailControllerProjectionKeep 152 true 154
-    , dovetailControllerProjectionKeep 153 true 150
-    , dovetailControllerProjectionKeep 154 false 150
+    , keep 150 false 151
+    , keepMove 151 none Direction.right 152
+    , keepMove 151 (some false) Direction.left 160
+    , keep 152 false 153
+    , keep 152 true 154
+    , keep 153 true 150
+    , keep 154 false 150
 
     -- Restore the marked input prefix, then continue at the stage nat.
-    , dovetailControllerProjectionKeepMove 164 none Direction.right 165
-    , dovetailControllerProjectionKeepMove 165 none Direction.right 166
-    , dovetailControllerProjectionKeepMove 166 none Direction.right 170
-    , dovetailControllerProjectionKeep 170 false 171
-    , dovetailControllerProjectionKeep 171 false 172
-    , dovetailControllerProjectionKeep 172 true 173
-    , dovetailControllerProjectionKeep 173 false 170
-    , dovetailControllerProjectionWriteMove 173 none (some false) Direction.right 170
-    , dovetailControllerProjectionKeep 173 true 180
-    , dovetailControllerProjectionKeep 180 false 181
-    , dovetailControllerProjectionWriteMove 181 none (some true) Direction.right 182
-    , dovetailControllerProjectionKeepMove 181 (some false) Direction.left 200
-    , dovetailControllerProjectionKeep 182 false 183
-    , dovetailControllerProjectionKeep 182 true 184
-    , dovetailControllerProjectionKeep 183 true 180
-    , dovetailControllerProjectionKeep 184 false 180
+    , keepMove 164 none Direction.right 165
+    , keepMove 165 none Direction.right 166
+    , keepMove 166 none Direction.right 170
+    , keep 170 false 171
+    , keep 171 false 172
+    , keep 172 true 173
+    , keep 173 false 170
+    , writeMove 173 none (some false) Direction.right 170
+    , keep 173 true 180
+    , keep 180 false 181
+    , writeMove 181 none (some true) Direction.right 182
+    , keepMove 181 (some false) Direction.left 200
+    , keep 182 false 183
+    , keep 182 true 184
+    , keep 183 true 180
+    , keep 184 false 180
 
     -- Preserve and validate the stage nat prefix.
-    , dovetailControllerProjectionKeep 200 false 201
-    , dovetailControllerProjectionKeep 201 false 202
-    , dovetailControllerProjectionKeep 202 true 203
-    , dovetailControllerProjectionKeep 203 false 200
-    , dovetailControllerProjectionKeep 203 true 210
+    , keep 200 false 201
+    , keep 201 false 202
+    , keep 202 true 203
+    , keep 203 false 200
+    , keep 203 true 210
 
     -- Mark the stage-nat terminator as a four-blank boundary.
-    , dovetailControllerProjectionKeepMove 210 (some false) Direction.left 211
-    , dovetailControllerProjectionWriteMove 211 (some true) none Direction.left 212
-    , dovetailControllerProjectionWriteMove 212 (some true) none Direction.left 213
-    , dovetailControllerProjectionWriteMove 213 (some false) none Direction.left 214
-    , dovetailControllerProjectionWriteMove 214 (some false) none Direction.right 215
-    , dovetailControllerProjectionKeepMove 215 none Direction.right 216
-    , dovetailControllerProjectionKeepMove 216 none Direction.right 217
-    , dovetailControllerProjectionKeepMove 217 none Direction.right 300
+    , keepMove 210 (some false) Direction.left 211
+    , writeMove 211 (some true) none Direction.left 212
+    , writeMove 212 (some true) none Direction.left 213
+    , writeMove 213 (some false) none Direction.left 214
+    , writeMove 214 (some false) none Direction.right 215
+    , keepMove 215 none Direction.right 216
+    , keepMove 216 none Direction.right 217
+    , keepMove 217 none Direction.right 300
 
     -- Validate the result bool-word length prefix, marking ticks and cells.
-    , dovetailControllerProjectionKeep 300 false 301
-    , dovetailControllerProjectionKeep 301 false 302
-    , dovetailControllerProjectionKeep 302 true 303
-    , dovetailControllerProjectionWriteMove 303 (some false) none Direction.right 320
-    , dovetailControllerProjectionKeep 303 true 350
-    , dovetailControllerProjectionKeepMove 303 none Direction.right 300
+    , keep 300 false 301
+    , keep 301 false 302
+    , keep 302 true 303
+    , writeMove 303 (some false) none Direction.right 320
+    , keep 303 true 350
+    , keepMove 303 none Direction.right 300
 
     -- Skip the remaining result length prefix to find the matching cell.
-    , dovetailControllerProjectionKeep 320 false 321
-    , dovetailControllerProjectionKeep 321 false 322
-    , dovetailControllerProjectionKeep 322 true 323
-    , dovetailControllerProjectionKeep 323 false 320
-    , dovetailControllerProjectionKeep 323 true 330
-    , dovetailControllerProjectionKeepMove 323 none Direction.right 320
+    , keep 320 false 321
+    , keep 321 false 322
+    , keep 322 true 323
+    , keep 323 false 320
+    , keep 323 true 330
+    , keepMove 323 none Direction.right 320
 
     -- Mark one unprocessed result cell for the tick just marked.
-    , dovetailControllerProjectionKeep 330 false 331
-    , dovetailControllerProjectionWriteMove 331 (some true) none Direction.right 332
-    , dovetailControllerProjectionKeepMove 331 none Direction.right 335
-    , dovetailControllerProjectionKeep 332 false 333
-    , dovetailControllerProjectionKeep 332 true 334
-    , dovetailControllerProjectionKeepMove 333 (some true) Direction.left 340
-    , dovetailControllerProjectionKeepMove 334 (some false) Direction.left 340
-    , dovetailControllerProjectionKeep 335 false 336
-    , dovetailControllerProjectionKeep 335 true 337
-    , dovetailControllerProjectionKeep 336 true 330
-    , dovetailControllerProjectionKeep 337 false 330
+    , keep 330 false 331
+    , writeMove 331 (some true) none Direction.right 332
+    , keepMove 331 none Direction.right 335
+    , keep 332 false 333
+    , keep 332 true 334
+    , keepMove 333 (some true) Direction.left 340
+    , keepMove 334 (some false) Direction.left 340
+    , keep 335 false 336
+    , keep 335 true 337
+    , keep 336 true 330
+    , keep 337 false 330
 
     -- No unmarked ticks remain: ensure all result cells were processed.
-    , dovetailControllerProjectionKeep 350 false 351
-    , dovetailControllerProjectionKeepMove 350 none Direction.left 360
-    , dovetailControllerProjectionKeepMove 351 none Direction.right 352
-    , dovetailControllerProjectionKeep 352 false 353
-    , dovetailControllerProjectionKeep 352 true 354
-    , dovetailControllerProjectionKeep 353 true 350
-    , dovetailControllerProjectionKeep 354 false 350
+    , keep 350 false 351
+    , keepMove 350 none Direction.left 360
+    , keepMove 351 none Direction.right 352
+    , keep 352 false 353
+    , keep 352 true 354
+    , keep 353 true 350
+    , keep 354 false 350
 
     -- Restore the stage-nat terminator boundary.
-    , dovetailControllerProjectionWriteMove 363 none (some false) Direction.right 364
-    , dovetailControllerProjectionWriteMove 364 none (some false) Direction.right 365
-    , dovetailControllerProjectionWriteMove 365 none (some true) Direction.right 366
-    , dovetailControllerProjectionWriteMove 366 none (some true) Direction.right 367
+    , writeMove 363 none (some false) Direction.right 364
+    , writeMove 364 none (some false) Direction.right 365
+    , writeMove 365 none (some true) Direction.right 366
+    , writeMove 366 none (some true) Direction.right 367
 
     -- Blank the validated result length prefix and cell payload.
-    , dovetailControllerProjectionErase 367 (some false) 368
-    , dovetailControllerProjectionErase 368 (some false) 369
-    , dovetailControllerProjectionErase 369 (some true) 370
-    , dovetailControllerProjectionErase 370 (some false) 367
-    , dovetailControllerProjectionErase 370 none 367
-    , dovetailControllerProjectionErase 370 (some true) 380
-    , dovetailControllerProjectionErase 380 (some false) 381
-    , dovetailControllerProjectionErase 380 none 999
-    , dovetailControllerProjectionErase 381 none 382
-    , dovetailControllerProjectionErase 382 (some false) 383
-    , dovetailControllerProjectionErase 382 (some true) 384
-    , dovetailControllerProjectionErase 383 (some true) 380
-    , dovetailControllerProjectionErase 384 (some false) 380 ]
-      ++ dovetailControllerProjectionScanLeftToBoundary 140 141 142 143 144
+    , erase 367 (some false) 368
+    , erase 368 (some false) 369
+    , erase 369 (some true) 370
+    , erase 370 (some false) 367
+    , erase 370 none 367
+    , erase 370 (some true) 380
+    , erase 380 (some false) 381
+    , erase 380 none 999
+    , erase 381 none 382
+    , erase 382 (some false) 383
+    , erase 382 (some true) 384
+    , erase 383 (some true) 380
+    , erase 384 (some false) 380 ]
+      ++ scanLeftToBoundary 140 141 142 143 144
       ++
-    [ dovetailControllerProjectionKeepMove 144 none Direction.right 145
-    , dovetailControllerProjectionKeepMove 145 none Direction.right 146
-    , dovetailControllerProjectionKeepMove 146 none Direction.right 100 ]
-      ++ dovetailControllerProjectionScanLeftToBoundary 160 161 162 163 164
-      ++ dovetailControllerProjectionScanLeftToBoundary 340 341 342 343 344
+    [ keepMove 144 none Direction.right 145
+    , keepMove 145 none Direction.right 146
+    , keepMove 146 none Direction.right 100 ]
+      ++ scanLeftToBoundary 160 161 162 163 164
+      ++ scanLeftToBoundary 340 341 342 343 344
       ++
-    [ dovetailControllerProjectionKeepMove 344 none Direction.right 345
-    , dovetailControllerProjectionKeepMove 345 none Direction.right 346
-    , dovetailControllerProjectionKeepMove 346 none Direction.right 300 ]
+    [ keepMove 344 none Direction.right 345
+    , keepMove 345 none Direction.right 346
+    , keepMove 346 none Direction.right 300 ]
       ++
-    [ dovetailControllerProjectionKeepMove 360 none Direction.left 361
-    , dovetailControllerProjectionKeepMove 360 (some false) Direction.left 360
-    , dovetailControllerProjectionKeepMove 360 (some true) Direction.left 360
-    , dovetailControllerProjectionKeepMove 361 none Direction.left 362
-    , dovetailControllerProjectionKeepMove 361 (some false) Direction.left 360
-    , dovetailControllerProjectionKeepMove 361 (some true) Direction.left 360
-    , dovetailControllerProjectionKeepMove 362 none Direction.left 363
-    , dovetailControllerProjectionKeepMove 362 (some false) Direction.left 360
-    , dovetailControllerProjectionKeepMove 362 (some true) Direction.left 360
-    , dovetailControllerProjectionKeepMove 363 (some false) Direction.left 360
-    , dovetailControllerProjectionKeepMove 363 (some true) Direction.left 360 ]
+    [ keepMove 360 none Direction.left 361
+    , keepMove 360 (some false) Direction.left 360
+    , keepMove 360 (some true) Direction.left 360
+    , keepMove 361 none Direction.left 362
+    , keepMove 361 (some false) Direction.left 360
+    , keepMove 361 (some true) Direction.left 360
+    , keepMove 362 none Direction.left 363
+    , keepMove 362 (some false) Direction.left 360
+    , keepMove 362 (some true) Direction.left 360
+    , keepMove 363 (some false) Direction.left 360
+    , keepMove 363 (some true) Direction.left 360 ]
 
-theorem dovetailControllerStageInputProjectionDescription_wellFormed :
-    DovetailControllerStageInputProjectionDescription.WellFormed := by
+theorem wellFormed :
+    Description.WellFormed := by
   constructor
-  · simp [DovetailControllerStageInputProjectionDescription]
+  · simp [Description]
   constructor
-  · simp [DovetailControllerStageInputProjectionDescription]
+  · simp [Description]
   constructor
-  · simp [DovetailControllerStageInputProjectionDescription]
+  · simp [Description]
   constructor
   · intro t ht
     exact transition_wellFormed_of_all
-      (l := DovetailControllerStageInputProjectionDescription.transitions)
-      (stateCount := DovetailControllerStageInputProjectionDescription.stateCount)
+      (l := Description.transitions)
+      (stateCount := Description.stateCount)
       (by
         native_decide) t ht
   · intro t u ht hu hkey
     exact transition_deterministic_of_all
-      (l := DovetailControllerStageInputProjectionDescription.transitions)
+      (l := Description.transitions)
       (by
         native_decide) t u ht hu hkey
 
-theorem dovetailControllerStageInputProjectionDescription_haltTransitionFree :
-    DovetailControllerStageInputProjectionDescription.HaltTransitionFree := by
+theorem haltTransitionFree :
+    Description.HaltTransitionFree := by
   intro t ht
   exact transition_notFrom_of_all
-    (l := DovetailControllerStageInputProjectionDescription.transitions)
-    (state := DovetailControllerStageInputProjectionDescription.halt)
+    (l := Description.transitions)
+    (state := Description.halt)
     (by
       native_decide) t ht
 
-private theorem dovetailControllerStageInputProjectionDescription_run_header
+private theorem run_header
     (suffix : Word Bool) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
-        (DovetailControllerStageInputProjectionDescription.initial
+    Description.runConfig 4
+        (Description.initial
           (List.append [false, false, false, false] suffix)) =
       { state := 100
         tape := projectionTapeAt [none, none, none, none] suffix } := by
@@ -636,9 +638,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_header
   | cons b _ =>
       cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_stage_tick
+private theorem run_stage_tick
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 200 leftRev
           (List.append projectionTickCodeCells tail)) =
       projectionConfig 200
@@ -653,9 +655,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_stage_tick
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_stage_done
+private theorem run_stage_done
     (leftRev rest : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 12
+    Description.runConfig 12
         (projectionConfig 200 leftRev
           (List.append projectionDoneCodeCells (some false :: rest))) =
       projectionConfig 300
@@ -672,12 +674,11 @@ private theorem projectionStageTickCellsRev_succ
   rw [hsucc]
   simp [List.replicate_succ, projectionStageTickCellsRev,
     projectionCodeCells, projectionTickCodeCells,
-    projectionTickCodeCellsRev, MachineDescription.encodeCodeWordAsInput,
-    List.reverse_append]
+    projectionTickCodeCellsRev, MachineDescription.encodeCodeSymbolAsInput]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_stage_nat
+private theorem run_stage_nat
     (stage : Nat) (leftRev : List (Option Bool)) (result : Word Bool) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * stage + 12)
         (projectionConfig 200 leftRev
           (projectionCodeCells
@@ -698,9 +699,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_stage_nat
       have hsteps : 4 * (stage + 1) + 12 = 4 + (4 * stage + 12) := by
         omega
       rw [hsteps, MachineDescription.runConfig_add]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * stage + 12)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 200 leftRev
               (projectionCodeCells
                 (MachineDescription.encodeNatAppend (stage + 1)
@@ -717,15 +718,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_stage_nat
         rw [hsucc]
         rfl
       rw [hcells]
-      rw [dovetailControllerStageInputProjectionDescription_run_stage_tick]
+      rw [run_stage_tick]
       rw [ih]
       rw [projectionStageTickCellsRev_succ]
       simp [projectionConfig, projectionTapeAtCells, List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_stage_nat_bool_word_suffix
+private theorem run_stage_nat_bool_word_suffix
     (stage : Nat) (leftRev : List (Option Bool)) (result : Word Bool)
     (suffix : Word MachineCodeSymbol) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * stage + 12)
         (projectionConfig 200 leftRev
           (projectionCodeCells
@@ -747,9 +748,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_stage_nat_
       have hsteps : 4 * (stage + 1) + 12 = 4 + (4 * stage + 12) := by
         omega
       rw [hsteps, MachineDescription.runConfig_add]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * stage + 12)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 200 leftRev
               (projectionCodeCells
                 (MachineDescription.encodeNatAppend (stage + 1)
@@ -767,14 +768,14 @@ private theorem dovetailControllerStageInputProjectionDescription_run_stage_nat_
         rw [hsucc]
         rfl
       rw [hcells]
-      rw [dovetailControllerStageInputProjectionDescription_run_stage_tick]
+      rw [run_stage_tick]
       rw [ih]
       rw [projectionStageTickCellsRev_succ]
       simp [projectionConfig, projectionTapeAtCells, List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_marked_tick
+private theorem run_cleanup_marked_tick
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 367 leftRev
           (List.append projectionMarkedTickCodeCells tail)) =
       projectionConfig 367
@@ -789,9 +790,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_ma
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_marked_ticks
+private theorem run_cleanup_marked_ticks
     (count : Nat) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig (4 * count)
+    Description.runConfig (4 * count)
         (projectionConfig 367 leftRev
           (List.append
             (projectionRepeatedCells projectionMarkedTickCodeCells count)
@@ -804,9 +805,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_ma
   | succ count ih =>
       have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
       rw [hsteps, MachineDescription.runConfig_add]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * count)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 367 leftRev
               (List.append
                 (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -816,15 +817,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_ma
           List.append projectionMarkedTickCodeCells
             (projectionRepeatedCells projectionMarkedTickCodeCells count) by
         rfl]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * count)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 367 leftRev
               (List.append projectionMarkedTickCodeCells
                 (List.append
                   (projectionRepeatedCells projectionMarkedTickCodeCells count)
                   tail)))) = _
-      rw [dovetailControllerStageInputProjectionDescription_run_cleanup_marked_tick]
+      rw [run_cleanup_marked_tick]
       rw [ih]
       rw [show 4 + 4 * count = 4 * count + 4 by omega]
       have hrep :
@@ -835,9 +836,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_ma
       rw [hrep]
       simp [List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_done
+private theorem run_cleanup_done
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 367 leftRev
           (List.append projectionDoneCodeCells tail)) =
       projectionConfig 380
@@ -852,9 +853,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_do
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_marked_payload_cell
+private theorem run_cleanup_marked_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 380 leftRev
           (List.append (projectionMarkedBoolCellCodeCells b) tail)) =
       projectionConfig 380
@@ -870,9 +871,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_ma
         | some b =>
             cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_marked_payload
+private theorem run_cleanup_marked_payload
     (w : Word Bool) (leftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * w.length + 1)
         (projectionConfig 380 leftRev
           (projectionMarkedBoolPayloadCells w)) =
@@ -888,16 +889,16 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_ma
         simp
         omega
       rw [hsteps, MachineDescription.runConfig_add]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * rest.length + 1)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 380 leftRev
               (projectionMarkedBoolPayloadCells (b :: rest)))) = _
       rw [show projectionMarkedBoolPayloadCells (b :: rest) =
           List.append (projectionMarkedBoolCellCodeCells b)
             (projectionMarkedBoolPayloadCells rest) by
         rfl]
-      rw [dovetailControllerStageInputProjectionDescription_run_cleanup_marked_payload_cell]
+      rw [run_cleanup_marked_payload_cell]
       rw [ih]
       rw [show 4 + (4 * rest.length + 1) =
           (4 * rest.length + 1) + 4 by omega]
@@ -912,9 +913,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_ma
       rw [hrep]
       simp [List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_marked_payload_to_tail
+private theorem run_cleanup_marked_payload_to_tail
     (w : Word Bool) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * w.length)
         (projectionConfig 380 leftRev
           (List.append (projectionMarkedBoolPayloadCells w) tail)) =
@@ -930,9 +931,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_ma
         simp
         omega
       rw [hsteps, MachineDescription.runConfig_add]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * rest.length)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 380 leftRev
               (List.append (projectionMarkedBoolPayloadCells (b :: rest))
                 tail))) = _
@@ -948,7 +949,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_ma
               (List.append (projectionMarkedBoolPayloadCells rest) tail) := by
         simp [List.append_assoc]
       rw [hcells]
-      rw [dovetailControllerStageInputProjectionDescription_run_cleanup_marked_payload_cell
+      rw [run_cleanup_marked_payload_cell
         (tail := List.append (projectionMarkedBoolPayloadCells rest) tail)]
       rw [ih]
       rw [show 4 + 4 * rest.length =
@@ -964,9 +965,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_ma
       rw [hrep]
       simp [List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_all_marked_to_tail
+private theorem run_cleanup_all_marked_to_tail
     (w : Word Bool) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (8 * w.length + 4)
         (projectionConfig 367 leftRev
           (List.append (projectionAllMarkedBoolWordCells w) tail)) =
@@ -980,16 +981,16 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_al
         4 * w.length + (4 + 4 * w.length) := by
     omega
   rw [hsteps, MachineDescription.runConfig_add]
-  change DovetailControllerStageInputProjectionDescription.runConfig
+  change Description.runConfig
       (4 + 4 * w.length)
-      (DovetailControllerStageInputProjectionDescription.runConfig
+      (Description.runConfig
         (4 * w.length)
         (projectionConfig 367 leftRev
           (List.append (projectionAllMarkedBoolWordCells w) tail))) = _
   simp [projectionAllMarkedBoolWordCells, List.append_assoc]
-  change DovetailControllerStageInputProjectionDescription.runConfig
+  change Description.runConfig
       (4 + 4 * w.length)
-      (DovetailControllerStageInputProjectionDescription.runConfig
+      (Description.runConfig
         (4 * w.length)
         (projectionConfig 367 leftRev
           (List.append
@@ -997,78 +998,78 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_al
             (List.append projectionDoneCodeCells
               (List.append (projectionMarkedBoolPayloadCells w) tail))))) = _
   have hticks :=
-    dovetailControllerStageInputProjectionDescription_run_cleanup_marked_ticks
+    run_cleanup_marked_ticks
       (count := w.length) (leftRev := leftRev)
       (tail := List.append projectionDoneCodeCells
         (List.append (projectionMarkedBoolPayloadCells w) tail))
   rw [hticks]
   rw [show 4 + 4 * w.length = 4 + 4 * w.length by rfl,
     MachineDescription.runConfig_add]
-  change DovetailControllerStageInputProjectionDescription.runConfig
+  change Description.runConfig
       (4 * w.length)
-      (DovetailControllerStageInputProjectionDescription.runConfig 4
+      (Description.runConfig 4
         (projectionConfig 367
           (List.append (List.replicate (4 * w.length) none) leftRev)
           (List.append projectionDoneCodeCells
             (List.append (projectionMarkedBoolPayloadCells w) tail)))) = _
-  rw [dovetailControllerStageInputProjectionDescription_run_cleanup_done]
-  rw [dovetailControllerStageInputProjectionDescription_run_cleanup_marked_payload_to_tail]
+  rw [run_cleanup_done]
+  rw [run_cleanup_marked_payload_to_tail]
   simp
 
-private theorem dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+private theorem state_ne_halt_of_stepConfig_none
     {c : MachineDescription.Configuration} {n : Nat}
     (hstep :
-      DovetailControllerStageInputProjectionDescription.stepConfig c = none)
-    (hstate : c.state ≠ DovetailControllerStageInputProjectionDescription.halt) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n c).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.stepConfig c = none)
+    (hstate : c.state ≠ Description.halt) :
+    (Description.runConfig n c).state ≠
+      Description.halt := by
   have hrun :=
     MachineDescription.runConfig_of_stepConfig_none
-      (D := DovetailControllerStageInputProjectionDescription)
+      (D := Description)
       hstep n
   rw [hrun]
   exact hstate
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state380_true_ne_halt
+private theorem run_state380_true_ne_halt
     (leftRev tail : List (Option Bool)) (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 380 leftRev (some true :: tail))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   apply
-    dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+    state_ne_halt_of_stepConfig_none
   · rfl
-  · simp [projectionConfig, DovetailControllerStageInputProjectionDescription]
+  · simp [projectionConfig, Description]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state381_nonblank_ne_halt
+private theorem run_state381_nonblank_ne_halt
     (b : Bool) (leftRev tail : List (Option Bool)) (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 381 leftRev (some b :: tail))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   apply
-    dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+    state_ne_halt_of_stepConfig_none
   · cases b <;> rfl
-  · simp [projectionConfig, DovetailControllerStageInputProjectionDescription]
+  · simp [projectionConfig, Description]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state380_false_nonblank_next_ne_halt
+private theorem run_state380_false_nonblank_next_ne_halt
     (b : Bool) (leftRev tail : List (Option Bool)) (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig (n + 1)
+    (Description.runConfig (n + 1)
       (projectionConfig 380 leftRev (some false :: some b :: tail))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   change
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 381 (none :: leftRev) (some b :: tail))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt
+      Description.halt
   exact
-    dovetailControllerStageInputProjectionDescription_run_state381_nonblank_ne_halt
+    run_state381_nonblank_ne_halt
       b (none :: leftRev) tail n
 
-private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_code_suffix_ne_halt
+private theorem run_cleanup_code_suffix_ne_halt
     (symbol : MachineCodeSymbol) (suffix : Word MachineCodeSymbol)
     (leftRev : List (Option Bool)) (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 380 leftRev
         (projectionCodeCells (symbol :: suffix)))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   cases n with
   | zero =>
       change (380 : Nat) ≠ 999
@@ -1078,84 +1079,84 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_co
         simp [projectionCodeCells, MachineDescription.encodeCodeWordAsInput,
           MachineDescription.encodeCodeSymbolAsInput]
       · exact
-          dovetailControllerStageInputProjectionDescription_run_state380_false_nonblank_next_ne_halt
+          run_state380_false_nonblank_next_ne_halt
             false leftRev
             (some false :: some false ::
               List.map some (MachineDescription.encodeCodeWordAsInput suffix))
             n
       · exact
-          dovetailControllerStageInputProjectionDescription_run_state380_false_nonblank_next_ne_halt
+          run_state380_false_nonblank_next_ne_halt
             false leftRev
             (some false :: some true ::
               List.map some (MachineDescription.encodeCodeWordAsInput suffix))
             n
       · exact
-          dovetailControllerStageInputProjectionDescription_run_state380_false_nonblank_next_ne_halt
+          run_state380_false_nonblank_next_ne_halt
             false leftRev
             (some true :: some false ::
               List.map some (MachineDescription.encodeCodeWordAsInput suffix))
             n
       · exact
-          dovetailControllerStageInputProjectionDescription_run_state380_false_nonblank_next_ne_halt
+          run_state380_false_nonblank_next_ne_halt
             false leftRev
             (some true :: some true ::
               List.map some (MachineDescription.encodeCodeWordAsInput suffix))
             n
       · exact
-          dovetailControllerStageInputProjectionDescription_run_state380_false_nonblank_next_ne_halt
+          run_state380_false_nonblank_next_ne_halt
             true leftRev
             (some false :: some false ::
               List.map some (MachineDescription.encodeCodeWordAsInput suffix))
             n
       · exact
-          dovetailControllerStageInputProjectionDescription_run_state380_false_nonblank_next_ne_halt
+          run_state380_false_nonblank_next_ne_halt
             true leftRev
             (some false :: some true ::
               List.map some (MachineDescription.encodeCodeWordAsInput suffix))
             n
       · exact
-          dovetailControllerStageInputProjectionDescription_run_state380_false_nonblank_next_ne_halt
+          run_state380_false_nonblank_next_ne_halt
             true leftRev
             (some true :: some false ::
               List.map some (MachineDescription.encodeCodeWordAsInput suffix))
             n
       · exact
-          dovetailControllerStageInputProjectionDescription_run_state380_false_nonblank_next_ne_halt
+          run_state380_false_nonblank_next_ne_halt
             true leftRev
             (some true :: some true ::
               List.map some (MachineDescription.encodeCodeWordAsInput suffix))
             n
       · exact
-          dovetailControllerStageInputProjectionDescription_run_state380_true_ne_halt
+          run_state380_true_ne_halt
             leftRev
             (some false :: some false :: some false ::
               List.map some (MachineDescription.encodeCodeWordAsInput suffix))
             (n + 1)
 
-private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_all_marked_code_suffix_after_prefix_ne_halt
+private theorem run_cleanup_all_marked_code_suffix_after_prefix_ne_halt
     (w : Word Bool) (symbol : MachineCodeSymbol)
     (suffix : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig
+    (Description.runConfig
       (8 * w.length + 4 + n)
       (projectionConfig 367 leftRev
         (List.append (projectionAllMarkedBoolWordCells w)
           (projectionCodeCells (symbol :: suffix))))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   rw [show 8 * w.length + 4 + n = (8 * w.length + 4) + n by omega,
     MachineDescription.runConfig_add]
-  rw [dovetailControllerStageInputProjectionDescription_run_cleanup_all_marked_to_tail]
+  rw [run_cleanup_all_marked_to_tail]
   exact
-    dovetailControllerStageInputProjectionDescription_run_cleanup_code_suffix_ne_halt
+    run_cleanup_code_suffix_ne_halt
       symbol suffix
       (List.append (List.replicate (4 * w.length) none)
         (List.append [none, none, none, none]
           (List.append (List.replicate (4 * w.length) none) leftRev)))
       n
 
-private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_all_marked
+private theorem run_cleanup_all_marked
     (w : Word Bool) (leftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (8 * w.length + 5)
         (projectionConfig 367 leftRev
           (projectionAllMarkedBoolWordCells w)) =
@@ -1169,48 +1170,48 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_al
         4 * w.length + (4 + (4 * w.length + 1)) := by
     omega
   rw [hsteps, MachineDescription.runConfig_add]
-  change DovetailControllerStageInputProjectionDescription.runConfig
+  change Description.runConfig
       (4 + (4 * w.length + 1))
-      (DovetailControllerStageInputProjectionDescription.runConfig
+      (Description.runConfig
         (4 * w.length)
         (projectionConfig 367 leftRev
           (projectionAllMarkedBoolWordCells w))) = _
   simp [projectionAllMarkedBoolWordCells]
-  change DovetailControllerStageInputProjectionDescription.runConfig
+  change Description.runConfig
       (4 + (4 * w.length + 1))
-      (DovetailControllerStageInputProjectionDescription.runConfig
+      (Description.runConfig
         (4 * w.length)
         (projectionConfig 367 leftRev
           (List.append
             (projectionRepeatedCells projectionMarkedTickCodeCells w.length)
             (List.append projectionDoneCodeCells
               (projectionMarkedBoolPayloadCells w))))) = _
-  rw [dovetailControllerStageInputProjectionDescription_run_cleanup_marked_ticks
+  rw [run_cleanup_marked_ticks
     (count := w.length) (leftRev := leftRev)
     (tail := List.append projectionDoneCodeCells
       (projectionMarkedBoolPayloadCells w))]
   rw [show 4 + (4 * w.length + 1) = 4 + (4 * w.length + 1) by rfl,
     MachineDescription.runConfig_add]
-  change DovetailControllerStageInputProjectionDescription.runConfig
+  change Description.runConfig
       (4 * w.length + 1)
-      (DovetailControllerStageInputProjectionDescription.runConfig 4
+      (Description.runConfig 4
         (projectionConfig 367
           (List.append (List.replicate (4 * w.length) none) leftRev)
           (List.append projectionDoneCodeCells
             (projectionMarkedBoolPayloadCells w)))) = _
-  rw [dovetailControllerStageInputProjectionDescription_run_cleanup_done]
-  rw [dovetailControllerStageInputProjectionDescription_run_cleanup_marked_payload]
+  rw [run_cleanup_done]
+  rw [run_cleanup_marked_payload]
   simp
 
-private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_all_marked_code_suffix_fixed_halt_iff
+private theorem run_cleanup_all_marked_code_suffix_fixed_halt_iff
     (w : Word Bool) (suffix : Word MachineCodeSymbol)
     (leftRev : List (Option Bool)) :
-    (DovetailControllerStageInputProjectionDescription.runConfig
+    (Description.runConfig
       (8 * w.length + 5)
       (projectionConfig 367 leftRev
         (List.append (projectionAllMarkedBoolWordCells w)
           (projectionCodeCells suffix)))).state =
-        DovetailControllerStageInputProjectionDescription.halt <->
+        Description.halt <->
       suffix = [] := by
   constructor
   · intro h
@@ -1219,12 +1220,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_cleanup_al
         rfl
     | cons symbol rest =>
         exact False.elim
-          (dovetailControllerStageInputProjectionDescription_run_cleanup_all_marked_code_suffix_after_prefix_ne_halt
+          (run_cleanup_all_marked_code_suffix_after_prefix_ne_halt
             w symbol rest leftRev 1 h)
   · intro h
     subst suffix
     simp [projectionCodeCells, MachineDescription.encodeCodeWordAsInput]
-    rw [dovetailControllerStageInputProjectionDescription_run_cleanup_all_marked]
+    rw [run_cleanup_all_marked]
     rfl
 
 private def projectionScanState140 : Nat -> Nat
@@ -1421,12 +1422,12 @@ private theorem projectionMarkedBoolPayloadCells_scanSafe_reverse
       · rw [projectionMarkedBoolPayloadCells_scanCountFold_reverse rest]
         exact projectionMarkedBoolCellCodeCells_scanSafe_reverse b
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan140_step
+private theorem run_scan140_step
     (count : Nat) (hcount : count ≤ 3)
     (cell : Option Bool) (rest leftOfBoundary tail : List (Option Bool))
     (boundaryHead : Option Bool)
     (hsafe : count ≠ 3 ∨ cell ≠ none) :
-    DovetailControllerStageInputProjectionDescription.runConfig 1
+    Description.runConfig 1
         (projectionScanLeftConfig (projectionScanState140 count)
           leftOfBoundary boundaryHead (cell :: rest) tail) =
       projectionScanLeftConfig
@@ -1506,12 +1507,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan140_st
                       have hfalse : False := by omega
                       exact False.elim hfalse
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan140_cells
+private theorem run_scan140_cells
     (cellsRev : List (Option Bool)) (count : Nat) (hcount : count ≤ 3)
     (hsafe : projectionScanSafe count cellsRev)
     (leftOfBoundary : List (Option Bool)) (boundaryHead : Option Bool)
     (tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig cellsRev.length
+    Description.runConfig cellsRev.length
         (projectionScanLeftConfig (projectionScanState140 count)
           leftOfBoundary boundaryHead cellsRev tail) =
       projectionConfig
@@ -1532,9 +1533,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan140_ce
         omega,
         MachineDescription.runConfig_add]
       change
-        DovetailControllerStageInputProjectionDescription.runConfig
+        Description.runConfig
             rest.length
-            (DovetailControllerStageInputProjectionDescription.runConfig 1
+            (Description.runConfig 1
               (projectionScanLeftConfig (projectionScanState140 count)
                 leftOfBoundary boundaryHead (cell :: rest) tail)) =
           projectionConfig
@@ -1542,15 +1543,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan140_ce
               (projectionScanCountFold count (cell :: rest)))
             leftOfBoundary
             (boundaryHead :: List.append (cell :: rest).reverse tail)
-      rw [dovetailControllerStageInputProjectionDescription_run_scan140_step
+      rw [run_scan140_step
         count hcount cell rest leftOfBoundary tail boundaryHead hcell]
       rw [ih (projectionScanCountStep count cell) hnext hrest
         (cell :: tail)]
       simp [projectionScanCountFold, List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan140_boundary
+private theorem run_scan140_boundary
     (base tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 7
+    Description.runConfig 7
         (projectionConfig 140 (none :: none :: none :: base) (none :: tail)) =
       projectionConfig 100
         (List.append [none, none, none, none] base) tail := by
@@ -1564,12 +1565,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan140_bo
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan140_cells_to_boundary
+private theorem run_scan140_cells_to_boundary
     (cellsRev : List (Option Bool))
     (hsafe : projectionScanSafe 0 cellsRev)
     (hcount : projectionScanCountFold 0 cellsRev = 0)
     (base tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (cellsRev.length + 7)
         (projectionScanLeftConfig 140
           (List.append ([none, none, none] : List (Option Bool)) base) none
@@ -1579,8 +1580,8 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan140_ce
         (List.append cellsRev.reverse tail) := by
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig 7
-        (DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig 7
+        (Description.runConfig
         cellsRev.length
         (projectionScanLeftConfig (projectionScanState140 0)
           (List.append ([none, none, none] : List (Option Bool)) base) none
@@ -1588,12 +1589,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan140_ce
       projectionConfig 100
         (List.append [none, none, none, none] base)
         (List.append cellsRev.reverse tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_scan140_cells
+  rw [run_scan140_cells
     cellsRev 0 (by omega) hsafe
     (List.append ([none, none, none] : List (Option Bool)) base) none tail]
   rw [hcount]
   simpa [List.append_assoc] using
-    dovetailControllerStageInputProjectionDescription_run_scan140_boundary
+    run_scan140_boundary
       base (List.append cellsRev.reverse tail)
 
 private def projectionScanState160 : Nat -> Nat
@@ -1602,12 +1603,12 @@ private def projectionScanState160 : Nat -> Nat
   | 2 => 162
   | _ => 163
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan160_step
+private theorem run_scan160_step
     (count : Nat) (hcount : count ≤ 3)
     (cell : Option Bool) (rest leftOfBoundary tail : List (Option Bool))
     (boundaryHead : Option Bool)
     (hsafe : count ≠ 3 ∨ cell ≠ none) :
-    DovetailControllerStageInputProjectionDescription.runConfig 1
+    Description.runConfig 1
         (projectionScanLeftConfig (projectionScanState160 count)
           leftOfBoundary boundaryHead (cell :: rest) tail) =
       projectionScanLeftConfig
@@ -1687,12 +1688,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan160_st
                       have hfalse : False := by omega
                       exact False.elim hfalse
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan160_cells
+private theorem run_scan160_cells
     (cellsRev : List (Option Bool)) (count : Nat) (hcount : count ≤ 3)
     (hsafe : projectionScanSafe count cellsRev)
     (leftOfBoundary : List (Option Bool)) (boundaryHead : Option Bool)
     (tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig cellsRev.length
+    Description.runConfig cellsRev.length
         (projectionScanLeftConfig (projectionScanState160 count)
           leftOfBoundary boundaryHead cellsRev tail) =
       projectionConfig
@@ -1713,9 +1714,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan160_ce
         omega,
         MachineDescription.runConfig_add]
       change
-        DovetailControllerStageInputProjectionDescription.runConfig
+        Description.runConfig
             rest.length
-            (DovetailControllerStageInputProjectionDescription.runConfig 1
+            (Description.runConfig 1
               (projectionScanLeftConfig (projectionScanState160 count)
                 leftOfBoundary boundaryHead (cell :: rest) tail)) =
           projectionConfig
@@ -1723,15 +1724,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan160_ce
               (projectionScanCountFold count (cell :: rest)))
             leftOfBoundary
             (boundaryHead :: List.append (cell :: rest).reverse tail)
-      rw [dovetailControllerStageInputProjectionDescription_run_scan160_step
+      rw [run_scan160_step
         count hcount cell rest leftOfBoundary tail boundaryHead hcell]
       rw [ih (projectionScanCountStep count cell) hnext hrest
         (cell :: tail)]
       simp [projectionScanCountFold, List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan160_boundary
+private theorem run_scan160_boundary
     (base tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 7
+    Description.runConfig 7
         (projectionConfig 160 (none :: none :: none :: base) (none :: tail)) =
       projectionConfig 170
         (List.append [none, none, none, none] base) tail := by
@@ -1745,12 +1746,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan160_bo
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan160_cells_to_boundary
+private theorem run_scan160_cells_to_boundary
     (cellsRev : List (Option Bool))
     (hsafe : projectionScanSafe 0 cellsRev)
     (hcount : projectionScanCountFold 0 cellsRev = 0)
     (base tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (cellsRev.length + 7)
         (projectionScanLeftConfig 160
           (List.append ([none, none, none] : List (Option Bool)) base) none
@@ -1760,8 +1761,8 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan160_ce
         (List.append cellsRev.reverse tail) := by
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig 7
-        (DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig 7
+        (Description.runConfig
         cellsRev.length
         (projectionScanLeftConfig (projectionScanState160 0)
           (List.append ([none, none, none] : List (Option Bool)) base) none
@@ -1769,17 +1770,17 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan160_ce
       projectionConfig 170
         (List.append [none, none, none, none] base)
         (List.append cellsRev.reverse tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_scan160_cells
+  rw [run_scan160_cells
     cellsRev 0 (by omega) hsafe
     (List.append ([none, none, none] : List (Option Bool)) base) none tail]
   rw [hcount]
   simpa [List.append_assoc] using
-    dovetailControllerStageInputProjectionDescription_run_scan160_boundary
+    run_scan160_boundary
       base (List.append cellsRev.reverse tail)
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state100_marked_tick
+private theorem run_state100_marked_tick
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 100 leftRev
           (List.append projectionMarkedTickCodeCells tail)) =
       projectionConfig 100
@@ -1794,9 +1795,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state100_m
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state100_marked_ticks
+private theorem run_state100_marked_ticks
     (count : Nat) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig (4 * count)
+    Description.runConfig (4 * count)
         (projectionConfig 100 leftRev
           (List.append
             (projectionRepeatedCells projectionMarkedTickCodeCells count)
@@ -1812,9 +1813,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state100_m
   | succ count ih =>
       have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
       rw [hsteps, MachineDescription.runConfig_add]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * count)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 100 leftRev
               (List.append
                 (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -1824,21 +1825,21 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state100_m
           List.append projectionMarkedTickCodeCells
             (projectionRepeatedCells projectionMarkedTickCodeCells count) by
         rfl]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * count)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 100 leftRev
               (List.append projectionMarkedTickCodeCells
                 (List.append
                   (projectionRepeatedCells projectionMarkedTickCodeCells count)
                   tail)))) = _
-      rw [dovetailControllerStageInputProjectionDescription_run_state100_marked_tick]
+      rw [run_state100_marked_tick]
       rw [ih]
       simp [List.reverse_append, List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state100_mark_tick
+private theorem run_state100_mark_tick
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 100 leftRev
           (List.append projectionTickCodeCells tail)) =
       projectionConfig 120
@@ -1853,9 +1854,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state100_m
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state120_tick
+private theorem run_state120_tick
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 120 leftRev
           (List.append projectionTickCodeCells tail)) =
       projectionConfig 120
@@ -1870,9 +1871,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state120_t
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state120_ticks
+private theorem run_state120_ticks
     (count : Nat) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig (4 * count)
+    Description.runConfig (4 * count)
         (projectionConfig 120 leftRev
           (List.append
             (projectionRepeatedCells projectionTickCodeCells count)
@@ -1888,9 +1889,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state120_t
   | succ count ih =>
       have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
       rw [hsteps, MachineDescription.runConfig_add]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * count)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 120 leftRev
               (List.append
                 (projectionRepeatedCells projectionTickCodeCells
@@ -1900,21 +1901,21 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state120_t
           List.append projectionTickCodeCells
             (projectionRepeatedCells projectionTickCodeCells count) by
         rfl]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * count)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 120 leftRev
               (List.append projectionTickCodeCells
                 (List.append
                   (projectionRepeatedCells projectionTickCodeCells count)
                   tail)))) = _
-      rw [dovetailControllerStageInputProjectionDescription_run_state120_tick]
+      rw [run_state120_tick]
       rw [ih]
       simp [List.reverse_append, List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state120_done
+private theorem run_state120_done
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 120 leftRev
           (List.append projectionDoneCodeCells tail)) =
       projectionConfig 130
@@ -1929,9 +1930,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state120_d
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state130_marked_payload_cell
+private theorem run_state130_marked_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 130 leftRev
           (List.append (projectionMarkedBoolCellCodeCells b) tail)) =
       projectionConfig 130
@@ -1948,9 +1949,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state130_m
         | some b =>
             cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state130_marked_payload_cell_append
+private theorem run_state130_marked_payload_cell_append
     (b : Bool) (leftRev middle tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 130 leftRev
           (List.append (projectionMarkedBoolCellCodeCells b) middle ++
             tail)) =
@@ -1976,9 +1977,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state130_m
         | some b =>
             cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state130_marked_payload
+private theorem run_state130_marked_payload
     (w : Word Bool) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig (4 * w.length)
+    Description.runConfig (4 * w.length)
         (projectionConfig 130 leftRev
           (List.append (projectionMarkedBoolPayloadCells w) tail)) =
       projectionConfig 130
@@ -1992,22 +1993,22 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state130_m
         simp
         omega
       rw [hsteps, MachineDescription.runConfig_add]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * rest.length)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 130 leftRev
               (projectionMarkedBoolPayloadCells (b :: rest) ++ tail))) = _
       rw [show projectionMarkedBoolPayloadCells (b :: rest) =
           List.append (projectionMarkedBoolCellCodeCells b)
             (projectionMarkedBoolPayloadCells rest) by
         rfl]
-      rw [dovetailControllerStageInputProjectionDescription_run_state130_marked_payload_cell_append]
+      rw [run_state130_marked_payload_cell_append]
       rw [ih]
       simp [List.reverse_append, List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state100_done
+private theorem run_state100_done
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 100 leftRev
           (List.append projectionDoneCodeCells tail)) =
       projectionConfig 150
@@ -2022,9 +2023,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state100_d
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state150_marked_payload_cell
+private theorem run_state150_marked_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 150 leftRev
           (List.append (projectionMarkedBoolCellCodeCells b) tail)) =
       projectionConfig 150
@@ -2041,9 +2042,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state150_m
         | some b =>
             cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state150_marked_payload_cell_append
+private theorem run_state150_marked_payload_cell_append
     (b : Bool) (leftRev middle tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 150 leftRev
           (List.append (projectionMarkedBoolCellCodeCells b) middle ++
             tail)) =
@@ -2069,9 +2070,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state150_m
         | some b =>
             cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state150_marked_payload
+private theorem run_state150_marked_payload
     (w : Word Bool) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig (4 * w.length)
+    Description.runConfig (4 * w.length)
         (projectionConfig 150 leftRev
           (List.append (projectionMarkedBoolPayloadCells w) tail)) =
       projectionConfig 150
@@ -2085,31 +2086,31 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state150_m
         simp
         omega
       rw [hsteps, MachineDescription.runConfig_add]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * rest.length)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 150 leftRev
               (projectionMarkedBoolPayloadCells (b :: rest) ++ tail))) = _
       rw [show projectionMarkedBoolPayloadCells (b :: rest) =
           List.append (projectionMarkedBoolCellCodeCells b)
             (projectionMarkedBoolPayloadCells rest) by
         rfl]
-      rw [dovetailControllerStageInputProjectionDescription_run_state150_marked_payload_cell_append]
+      rw [run_state150_marked_payload_cell_append]
       rw [ih]
       simp [List.reverse_append, List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state150_to_scan160
+private theorem run_state150_to_scan160
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 2
+    Description.runConfig 2
         (projectionConfig 150 leftRev
           (some false :: some false :: tail)) =
       projectionConfig 160 leftRev
         (some false :: some false :: tail) := by
   rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state170_marked_tick
+private theorem run_state170_marked_tick
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 170 leftRev
           (List.append projectionMarkedTickCodeCells tail)) =
       projectionConfig 170
@@ -2124,9 +2125,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state170_m
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state170_marked_ticks
+private theorem run_state170_marked_ticks
     (count : Nat) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig (4 * count)
+    Description.runConfig (4 * count)
         (projectionConfig 170 leftRev
           (List.append
             (projectionRepeatedCells projectionMarkedTickCodeCells count)
@@ -2142,9 +2143,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state170_m
   | succ count ih =>
       have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
       rw [hsteps, MachineDescription.runConfig_add]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * count)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 170 leftRev
               (List.append
                 (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -2154,15 +2155,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state170_m
           List.append projectionMarkedTickCodeCells
             (projectionRepeatedCells projectionMarkedTickCodeCells count) by
         rfl]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * count)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 170 leftRev
               (List.append projectionMarkedTickCodeCells
                 (List.append
                   (projectionRepeatedCells projectionMarkedTickCodeCells count)
                   tail)))) = _
-      rw [dovetailControllerStageInputProjectionDescription_run_state170_marked_tick]
+      rw [run_state170_marked_tick]
       rw [ih]
       rw [projectionRepeatedCells_reverse]
       rw [projectionRepeatedCells_reverse
@@ -2170,9 +2171,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state170_m
       rw [projectionRepeatedCells_succ_right]
       simp [List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state170_done
+private theorem run_state170_done
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 170 leftRev
           (List.append projectionDoneCodeCells tail)) =
       projectionConfig 180
@@ -2187,9 +2188,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state170_d
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state180_marked_payload_cell
+private theorem run_state180_marked_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 180 leftRev
           (List.append (projectionMarkedBoolCellCodeCells b) tail)) =
       projectionConfig 180
@@ -2206,9 +2207,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state180_m
         | some b =>
             cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state180_marked_payload_cell_append
+private theorem run_state180_marked_payload_cell_append
     (b : Bool) (leftRev middle tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 180 leftRev
           (List.append (projectionMarkedBoolCellCodeCells b) middle ++
             tail)) =
@@ -2234,9 +2235,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state180_m
         | some b =>
             cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state180_marked_payload
+private theorem run_state180_marked_payload
     (w : Word Bool) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig (4 * w.length)
+    Description.runConfig (4 * w.length)
         (projectionConfig 180 leftRev
           (List.append (projectionMarkedBoolPayloadCells w) tail)) =
       projectionConfig 180
@@ -2250,23 +2251,23 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state180_m
         simp
         omega
       rw [hsteps, MachineDescription.runConfig_add]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * rest.length)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 180 leftRev
               (projectionMarkedBoolPayloadCells (b :: rest) ++ tail))) = _
       rw [show projectionMarkedBoolPayloadCells (b :: rest) =
           List.append (projectionMarkedBoolCellCodeCells b)
             (projectionMarkedBoolPayloadCells rest) by
         rfl]
-      rw [dovetailControllerStageInputProjectionDescription_run_state180_marked_payload_cell_append]
+      rw [run_state180_marked_payload_cell_append]
       rw [ih]
       simp [projectionBoolPayloadCells, List.reverse_append,
         List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state180_to_200
+private theorem run_state180_to_200
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 2
+    Description.runConfig 2
         (projectionConfig 180 leftRev
           (some false :: some false :: tail)) =
       projectionConfig 200 leftRev
@@ -2285,9 +2286,9 @@ private def projectionMarkedBoolCellScanTailHead (b : Bool) :
   | false => some true
   | true => some false
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state130_mark_payload_cell
+private theorem run_state130_mark_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 130 leftRev
           (List.append (projectionBoolCellCodeCells b) tail)) =
       projectionConfig 140 (none :: some false :: leftRev)
@@ -2582,11 +2583,11 @@ private def projectionInputRemainingCost
     16 * marked.length * rest.length +
     42 * rest.length + 24 * marked.length + 24
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_mark_one
+private theorem run_input_mark_one
     (marked rest : Word Bool) (b : Bool)
     (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (projectionInputMarkStepCost marked rest)
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
@@ -2606,12 +2607,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
     omega
   rw [hcost, MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 + (4 * rest.length +
           (4 + (4 * marked.length +
             (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
               7))))))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * marked.length)
           (projectionConfig 100
             (List.append [none, none, none, none] baseLeftRev)
@@ -2620,7 +2621,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
   simp only [projectionBoolWordWorkCells]
-  rw [dovetailControllerStageInputProjectionDescription_run_state100_marked_ticks]
+  rw [run_state100_marked_ticks]
   have htickCells :
       projectionCodeCells
           (List.replicate (b :: rest).length MachineCodeSymbol.tick) =
@@ -2638,12 +2639,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
   rw [MachineDescription.runConfig_add]
   rw [htickCells]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * rest.length +
           (4 + (4 * marked.length +
             (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
               7)))))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 100
             (List.append
               (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -2660,15 +2661,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
       projectionConfig 100
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
-  rw [dovetailControllerStageInputProjectionDescription_run_state100_mark_tick]
+  rw [run_state100_mark_tick]
   rw [MachineDescription.runConfig_add]
   rw [projectionCodeCells_replicate_tick]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 + (4 * marked.length +
           (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
             7))))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * rest.length)
           (projectionConfig 120
             (List.append projectionMarkedTickCodeCells.reverse
@@ -2685,14 +2686,14 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
       projectionConfig 100
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
-  rw [dovetailControllerStageInputProjectionDescription_run_state120_ticks]
+  rw [run_state120_ticks]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * marked.length +
           (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
             7)))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 120
             (List.append
               (projectionRepeatedCells projectionTickCodeCells
@@ -2709,12 +2710,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
       projectionConfig 100
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
-  rw [dovetailControllerStageInputProjectionDescription_run_state120_done]
+  rw [run_state120_done]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length + 7))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * marked.length)
           (projectionConfig 130
             (List.append projectionDoneCodeCells.reverse
@@ -2732,12 +2733,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
       projectionConfig 100
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
-  rw [dovetailControllerStageInputProjectionDescription_run_state130_marked_payload]
+  rw [run_state130_marked_payload]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         ((projectionInputMarkScanBackCellsRev marked rest b).length + 7)
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 130
             (List.append (projectionMarkedBoolPayloadCells marked).reverse
               (List.append projectionDoneCodeCells.reverse
@@ -2767,7 +2768,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
           (List.append (projectionBoolPayloadCells rest)
             (projectionCodeCells suffix)) by
     simp [List.append_assoc]]
-  rw [dovetailControllerStageInputProjectionDescription_run_state130_mark_payload_cell]
+  rw [run_state130_mark_payload_cell]
   cases b
   · simp only [projectionBoolWordWorkCells,
       projectionMarkedBoolPayloadCells_append_false,
@@ -2780,7 +2781,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
       List.reverse_append, List.append_assoc] using
-        (dovetailControllerStageInputProjectionDescription_run_scan140_cells_to_boundary
+        (run_scan140_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest false)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest false)
           (hcount := projectionInputMarkScanBackCellsRev_scanCountFold marked rest false)
@@ -2797,7 +2798,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
       List.reverse_append, List.append_assoc] using
-        (dovetailControllerStageInputProjectionDescription_run_scan140_cells_to_boundary
+        (run_scan140_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest true)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest true)
           (hcount := projectionInputMarkScanBackCellsRev_scanCountFold marked rest true)
@@ -2832,11 +2833,11 @@ private def projectionResultTailPayloadLeftRev
               marked.length).reverse
             (List.append [none, none, none, none] baseLeftRev)))))
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_finish_marked_suffix
+private theorem run_input_finish_marked_suffix
     (marked : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (24 * marked.length + 24)
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
@@ -2861,15 +2862,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
   rw [hcost, MachineDescription.runConfig_add]
   simp only [projectionBoolWordWorkCells]
   rw [projectionCodeCells_encodeNatAppend_cons_cons_suffix]
-  rw [dovetailControllerStageInputProjectionDescription_run_state100_marked_ticks]
+  rw [run_state100_marked_ticks]
   simp [List.length_nil, hnil, projectionBoolPayloadCells]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * marked.length +
           (2 + ((projectionInputFinishScanBackCellsRev marked).length + 7 +
             (4 * marked.length + (4 + (4 * marked.length + 2))))))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 100
             (List.append
               (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -2885,15 +2886,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false ::
           projectionInputFinishSuffixTailFor stage suffix)
-  rw [dovetailControllerStageInputProjectionDescription_run_state100_done]
+  rw [run_state100_done]
   rw [MachineDescription.runConfig_add]
-  rw [dovetailControllerStageInputProjectionDescription_run_state150_marked_payload]
+  rw [run_state150_marked_payload]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         ((projectionInputFinishScanBackCellsRev marked).length + 7 +
           (4 * marked.length + (4 + (4 * marked.length + 2))))
-        (DovetailControllerStageInputProjectionDescription.runConfig 2
+        (Description.runConfig 2
           (projectionConfig 150
             (List.append (projectionMarkedBoolPayloadCells marked).reverse
               (List.append projectionDoneCodeCells.reverse
@@ -2909,7 +2910,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false ::
           projectionInputFinishSuffixTailFor stage suffix)
-  rw [dovetailControllerStageInputProjectionDescription_run_state150_to_scan160]
+  rw [run_state150_to_scan160]
   rw [show
       (projectionInputFinishScanBackCellsRev marked).length + 7 +
           (4 * marked.length + (4 + (4 * marked.length + 2))) =
@@ -2933,16 +2934,16 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
           (some false :: projectionInputFinishSuffixTailFor stage suffix) by
     simp [projectionScanLeftConfig, projectionInputFinishScanBackCellsRev,
       List.append_assoc]]
-  rw [dovetailControllerStageInputProjectionDescription_run_scan160_cells_to_boundary
+  rw [run_scan160_cells_to_boundary
     (hsafe := projectionInputFinishScanBackCellsRev_scanSafe marked)
     (hcount := projectionInputFinishScanBackCellsRev_scanCountFold marked)]
   simp [projectionInputFinishScanBackCellsRev, List.reverse_append,
     List.append_assoc]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 + (4 * marked.length + 2))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * marked.length)
           (projectionConfig 170
             (List.append [none, none, none, none] baseLeftRev)
@@ -2959,19 +2960,19 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false ::
           projectionInputFinishSuffixTailFor stage suffix)
-  rw [dovetailControllerStageInputProjectionDescription_run_state170_marked_ticks]
+  rw [run_state170_marked_ticks]
   rw [MachineDescription.runConfig_add]
-  rw [dovetailControllerStageInputProjectionDescription_run_state170_done]
+  rw [run_state170_done]
   rw [MachineDescription.runConfig_add]
-  rw [dovetailControllerStageInputProjectionDescription_run_state180_marked_payload]
-  rw [dovetailControllerStageInputProjectionDescription_run_state180_to_200]
+  rw [run_state180_marked_payload]
+  rw [run_state180_to_200]
   simp [projectionCodeCells_encodeBoolWord, List.reverse_append,
     List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_finish_marked
+private theorem run_input_finish_marked
     (marked : Word Bool) (stage : Nat) (result : Word Bool)
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (24 * marked.length + 24)
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
@@ -2998,15 +2999,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
   rw [hcost, MachineDescription.runConfig_add]
   simp only [projectionBoolWordWorkCells]
   rw [projectionCodeCells_encodeNatAppend_cons_cons]
-  rw [dovetailControllerStageInputProjectionDescription_run_state100_marked_ticks]
+  rw [run_state100_marked_ticks]
   simp [List.length_nil, hnil, projectionBoolPayloadCells]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * marked.length +
           (2 + ((projectionInputFinishScanBackCellsRev marked).length + 7 +
             (4 * marked.length + (4 + (4 * marked.length + 2))))))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 100
             (List.append
               (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -3022,15 +3023,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false ::
           projectionInputFinishSuffixTail stage result)
-  rw [dovetailControllerStageInputProjectionDescription_run_state100_done]
+  rw [run_state100_done]
   rw [MachineDescription.runConfig_add]
-  rw [dovetailControllerStageInputProjectionDescription_run_state150_marked_payload]
+  rw [run_state150_marked_payload]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         ((projectionInputFinishScanBackCellsRev marked).length + 7 +
           (4 * marked.length + (4 + (4 * marked.length + 2))))
-        (DovetailControllerStageInputProjectionDescription.runConfig 2
+        (Description.runConfig 2
           (projectionConfig 150
             (List.append (projectionMarkedBoolPayloadCells marked).reverse
               (List.append projectionDoneCodeCells.reverse
@@ -3046,7 +3047,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false ::
           projectionInputFinishSuffixTail stage result)
-  rw [dovetailControllerStageInputProjectionDescription_run_state150_to_scan160]
+  rw [run_state150_to_scan160]
   rw [show
       (projectionInputFinishScanBackCellsRev marked).length + 7 +
           (4 * marked.length + (4 + (4 * marked.length + 2))) =
@@ -3070,16 +3071,16 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
           (some false :: projectionInputFinishSuffixTail stage result) by
     simp [projectionScanLeftConfig, projectionInputFinishScanBackCellsRev,
       List.append_assoc]]
-  rw [dovetailControllerStageInputProjectionDescription_run_scan160_cells_to_boundary
+  rw [run_scan160_cells_to_boundary
     (hsafe := projectionInputFinishScanBackCellsRev_scanSafe marked)
     (hcount := projectionInputFinishScanBackCellsRev_scanCountFold marked)]
   simp [projectionInputFinishScanBackCellsRev, List.reverse_append,
     List.append_assoc]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 + (4 * marked.length + 2))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * marked.length)
           (projectionConfig 170
             (List.append [none, none, none, none] baseLeftRev)
@@ -3096,19 +3097,19 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false ::
           projectionInputFinishSuffixTail stage result)
-  rw [dovetailControllerStageInputProjectionDescription_run_state170_marked_ticks]
+  rw [run_state170_marked_ticks]
   rw [MachineDescription.runConfig_add]
-  rw [dovetailControllerStageInputProjectionDescription_run_state170_done]
+  rw [run_state170_done]
   rw [MachineDescription.runConfig_add]
-  rw [dovetailControllerStageInputProjectionDescription_run_state180_marked_payload]
-  rw [dovetailControllerStageInputProjectionDescription_run_state180_to_200]
+  rw [run_state180_marked_payload]
+  rw [run_state180_to_200]
   simp [projectionCodeCells_encodeBoolWord, List.reverse_append,
     List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_finish_marked_false_false_tail
+private theorem run_input_finish_marked_false_false_tail
     (marked : Word Bool) (tail : List (Option Bool))
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (24 * marked.length + 24)
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
@@ -3129,15 +3130,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
     omega
   rw [hcost, MachineDescription.runConfig_add]
   simp only [projectionResultTailWorkCells]
-  rw [dovetailControllerStageInputProjectionDescription_run_state100_marked_ticks]
+  rw [run_state100_marked_ticks]
   simp
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * marked.length +
           (2 + ((projectionInputFinishScanBackCellsRev marked).length + 7 +
             (4 * marked.length + (4 + (4 * marked.length + 2))))))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 100
             (List.append
               (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -3151,15 +3152,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
           (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false :: tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_state100_done]
+  rw [run_state100_done]
   rw [MachineDescription.runConfig_add]
-  rw [dovetailControllerStageInputProjectionDescription_run_state150_marked_payload]
+  rw [run_state150_marked_payload]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         ((projectionInputFinishScanBackCellsRev marked).length + 7 +
           (4 * marked.length + (4 + (4 * marked.length + 2))))
-        (DovetailControllerStageInputProjectionDescription.runConfig 2
+        (Description.runConfig 2
           (projectionConfig 150
             (List.append (projectionMarkedBoolPayloadCells marked).reverse
               (List.append projectionDoneCodeCells.reverse
@@ -3173,7 +3174,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
           (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false :: tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_state150_to_scan160]
+  rw [run_state150_to_scan160]
   rw [show
       (projectionInputFinishScanBackCellsRev marked).length + 7 +
           (4 * marked.length + (4 + (4 * marked.length + 2))) =
@@ -3196,16 +3197,16 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
           (some false :: tail) by
     simp [projectionScanLeftConfig, projectionInputFinishScanBackCellsRev,
       List.append_assoc]]
-  rw [dovetailControllerStageInputProjectionDescription_run_scan160_cells_to_boundary
+  rw [run_scan160_cells_to_boundary
     (hsafe := projectionInputFinishScanBackCellsRev_scanSafe marked)
     (hcount := projectionInputFinishScanBackCellsRev_scanCountFold marked)]
   simp [projectionInputFinishScanBackCellsRev, List.reverse_append,
     List.append_assoc]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 + (4 * marked.length + 2))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * marked.length)
           (projectionConfig 170
             (List.append [none, none, none, none] baseLeftRev)
@@ -3220,19 +3221,19 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
           (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false :: tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_state170_marked_ticks]
+  rw [run_state170_marked_ticks]
   rw [MachineDescription.runConfig_add]
-  rw [dovetailControllerStageInputProjectionDescription_run_state170_done]
+  rw [run_state170_done]
   rw [MachineDescription.runConfig_add]
-  rw [dovetailControllerStageInputProjectionDescription_run_state180_marked_payload]
-  rw [dovetailControllerStageInputProjectionDescription_run_state180_to_200]
+  rw [run_state180_marked_payload]
+  rw [run_state180_to_200]
   simp [projectionCodeCells_encodeBoolWord, List.reverse_append,
     List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_finish_marked_to_state150_tail
+private theorem run_input_finish_marked_to_state150_tail
     (marked : Word Bool) (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (8 * marked.length + 4)
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
@@ -3250,13 +3251,13 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
     omega,
     MachineDescription.runConfig_add]
   simp only [projectionBoolWordWorkCells]
-  rw [dovetailControllerStageInputProjectionDescription_run_state100_marked_ticks]
+  rw [run_state100_marked_ticks]
   simp [List.length_nil, projectionBoolPayloadCells]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * marked.length)
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 100
             (List.append
               (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -3273,13 +3274,13 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_fini
                 marked.length).reverse
               (List.append [none, none, none, none] baseLeftRev))))
         (projectionCodeCells suffix)
-  rw [dovetailControllerStageInputProjectionDescription_run_state100_done]
-  rw [dovetailControllerStageInputProjectionDescription_run_state150_marked_payload]
+  rw [run_state100_done]
+  rw [run_state150_marked_payload]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_bool_word_acc
+private theorem run_input_bool_word_acc
     (marked rest : Word Bool) (stage : Nat) (result : Word Bool)
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (projectionInputRemainingCost marked rest)
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
@@ -3299,7 +3300,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
   | nil =>
       simp [projectionInputRemainingCost]
       exact
-        dovetailControllerStageInputProjectionDescription_run_input_finish_marked
+        run_input_finish_marked
           marked stage result baseLeftRev
   | cons b rest ih =>
       have hcost :
@@ -3310,7 +3311,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
           Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
         omega
       rw [hcost, MachineDescription.runConfig_add]
-      rw [dovetailControllerStageInputProjectionDescription_run_input_mark_one]
+      rw [run_input_mark_one]
       rw [ih]
       have hword :
           List.append (List.append marked [b]) rest =
@@ -3318,10 +3319,10 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
         simp [List.append_assoc]
       rw [hword]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_bool_word
+private theorem run_input_bool_word
     (w : Word Bool) (stage : Nat) (result : Word Bool)
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (projectionInputBoolWordCost w)
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
@@ -3337,16 +3338,16 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
           (MachineDescription.encodeNatAppend stage
             (MachineDescription.encodeBoolWord result))) := by
   have h :=
-    dovetailControllerStageInputProjectionDescription_run_input_bool_word_acc
+    run_input_bool_word_acc
       ([] : Word Bool) w stage result baseLeftRev
   simpa [projectionInputRemainingCost, projectionInputBoolWordCost,
     projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend] using h
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_bool_word_acc_suffix
+private theorem run_input_bool_word_acc_suffix
     (marked rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (projectionInputRemainingCost marked rest)
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
@@ -3364,7 +3365,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
   | nil =>
       simp [projectionInputRemainingCost]
       exact
-        dovetailControllerStageInputProjectionDescription_run_input_finish_marked_suffix
+        run_input_finish_marked_suffix
           marked stage suffix baseLeftRev
   | cons b rest ih =>
       have hcost :
@@ -3375,7 +3376,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
           Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
         omega
       rw [hcost, MachineDescription.runConfig_add]
-      rw [dovetailControllerStageInputProjectionDescription_run_input_mark_one]
+      rw [run_input_mark_one]
       rw [ih]
       have hword :
           List.append (List.append marked [b]) rest =
@@ -3383,11 +3384,11 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
         simp [List.append_assoc]
       rw [hword]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_bool_word_suffix
+private theorem run_input_bool_word_suffix
     (w : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (projectionInputBoolWordCost w)
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
@@ -3401,18 +3402,18 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
         (projectionCodeCells
           (MachineDescription.encodeNatAppend stage suffix)) := by
   have h :=
-    dovetailControllerStageInputProjectionDescription_run_input_bool_word_acc_suffix
+    run_input_bool_word_acc_suffix
       ([] : Word Bool) w stage suffix baseLeftRev
   simpa [projectionInputRemainingCost, projectionInputBoolWordCost,
     projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend] using h
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_bool_word_acc_false_false_suffix
+private theorem run_input_bool_word_acc_false_false_suffix
     (marked rest : Word Bool) (suffix : Word MachineCodeSymbol)
     (tail : List (Option Bool))
     (baseLeftRev : List (Option Bool))
     (hsuffix :
       projectionCodeCells suffix = some false :: some false :: tail) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (projectionInputRemainingCost marked rest)
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
@@ -3428,7 +3429,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
   | nil =>
       simpa [projectionInputRemainingCost, projectionBoolWordWorkCells,
         projectionResultTailWorkCells, projectionRepeatedCells, hsuffix] using
-        dovetailControllerStageInputProjectionDescription_run_input_finish_marked_false_false_tail
+        run_input_finish_marked_false_false_tail
           marked tail baseLeftRev
   | cons b rest ih =>
       have hcost :
@@ -3439,7 +3440,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
           Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
         omega
       rw [hcost, MachineDescription.runConfig_add]
-      rw [dovetailControllerStageInputProjectionDescription_run_input_mark_one]
+      rw [run_input_mark_one]
       rw [ih (List.append marked [b]) baseLeftRev]
       have hword :
           List.append (List.append marked [b]) rest =
@@ -3447,13 +3448,13 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
         simp [List.append_assoc]
       rw [hword]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_bool_word_false_false_suffix
+private theorem run_input_bool_word_false_false_suffix
     (w : Word Bool) (suffix : Word MachineCodeSymbol)
     (tail : List (Option Bool))
     (baseLeftRev : List (Option Bool))
     (hsuffix :
       projectionCodeCells suffix = some false :: some false :: tail) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (projectionInputBoolWordCost w)
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
@@ -3465,7 +3466,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
           (List.append [none, none, none, none] baseLeftRev))
         (projectionCodeCells suffix) := by
   have h :=
-    dovetailControllerStageInputProjectionDescription_run_input_bool_word_acc_false_false_suffix
+    run_input_bool_word_acc_false_false_suffix
       ([] : Word Bool) w suffix tail baseLeftRev hsuffix
   simpa [projectionInputRemainingCost, projectionInputBoolWordCost,
     projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend] using h
@@ -3476,12 +3477,12 @@ private def projectionScanState340 : Nat -> Nat
   | 2 => 342
   | _ => 343
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan340_step
+private theorem run_scan340_step
     (count : Nat) (hcount : count ≤ 3)
     (cell : Option Bool) (rest leftOfBoundary tail : List (Option Bool))
     (boundaryHead : Option Bool)
     (hsafe : count ≠ 3 ∨ cell ≠ none) :
-    DovetailControllerStageInputProjectionDescription.runConfig 1
+    Description.runConfig 1
         (projectionScanLeftConfig (projectionScanState340 count)
           leftOfBoundary boundaryHead (cell :: rest) tail) =
       projectionScanLeftConfig
@@ -3561,12 +3562,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan340_st
                       have hfalse : False := by omega
                       exact False.elim hfalse
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan340_cells
+private theorem run_scan340_cells
     (cellsRev : List (Option Bool)) (count : Nat) (hcount : count ≤ 3)
     (hsafe : projectionScanSafe count cellsRev)
     (leftOfBoundary : List (Option Bool)) (boundaryHead : Option Bool)
     (tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig cellsRev.length
+    Description.runConfig cellsRev.length
         (projectionScanLeftConfig (projectionScanState340 count)
           leftOfBoundary boundaryHead cellsRev tail) =
       projectionConfig
@@ -3587,9 +3588,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan340_ce
         omega,
         MachineDescription.runConfig_add]
       change
-        DovetailControllerStageInputProjectionDescription.runConfig
+        Description.runConfig
             rest.length
-            (DovetailControllerStageInputProjectionDescription.runConfig 1
+            (Description.runConfig 1
               (projectionScanLeftConfig (projectionScanState340 count)
                 leftOfBoundary boundaryHead (cell :: rest) tail)) =
           projectionConfig
@@ -3597,15 +3598,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan340_ce
               (projectionScanCountFold count (cell :: rest)))
             leftOfBoundary
             (boundaryHead :: List.append (cell :: rest).reverse tail)
-      rw [dovetailControllerStageInputProjectionDescription_run_scan340_step
+      rw [run_scan340_step
         count hcount cell rest leftOfBoundary tail boundaryHead hcell]
       rw [ih (projectionScanCountStep count cell) hnext hrest
         (cell :: tail)]
       simp [projectionScanCountFold, List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan340_boundary
+private theorem run_scan340_boundary
     (base tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 7
+    Description.runConfig 7
         (projectionConfig 340 (none :: none :: none :: base) (none :: tail)) =
       projectionConfig 300
         (List.append [none, none, none, none] base) tail := by
@@ -3619,12 +3620,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan340_bo
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan340_cells_to_boundary
+private theorem run_scan340_cells_to_boundary
     (cellsRev : List (Option Bool))
     (hsafe : projectionScanSafe 0 cellsRev)
     (hcount : projectionScanCountFold 0 cellsRev = 0)
     (base tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (cellsRev.length + 7)
         (projectionScanLeftConfig 340
           (List.append ([none, none, none] : List (Option Bool)) base) none
@@ -3634,8 +3635,8 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan340_ce
         (List.append cellsRev.reverse tail) := by
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig 7
-        (DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig 7
+        (Description.runConfig
         cellsRev.length
         (projectionScanLeftConfig (projectionScanState340 0)
           (List.append ([none, none, none] : List (Option Bool)) base) none
@@ -3643,17 +3644,17 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan340_ce
       projectionConfig 300
         (List.append [none, none, none, none] base)
         (List.append cellsRev.reverse tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_scan340_cells
+  rw [run_scan340_cells
     cellsRev 0 (by omega) hsafe
     (List.append ([none, none, none] : List (Option Bool)) base) none tail]
   rw [hcount]
   simpa [List.append_assoc] using
-    dovetailControllerStageInputProjectionDescription_run_scan340_boundary
+    run_scan340_boundary
       base (List.append cellsRev.reverse tail)
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state300_marked_tick
+private theorem run_state300_marked_tick
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 300 leftRev
           (List.append projectionMarkedTickCodeCells tail)) =
       projectionConfig 300
@@ -3668,9 +3669,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state300_m
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state300_marked_ticks
+private theorem run_state300_marked_ticks
     (count : Nat) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig (4 * count)
+    Description.runConfig (4 * count)
         (projectionConfig 300 leftRev
           (List.append
             (projectionRepeatedCells projectionMarkedTickCodeCells count)
@@ -3686,9 +3687,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state300_m
   | succ count ih =>
       have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
       rw [hsteps, MachineDescription.runConfig_add]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * count)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 300 leftRev
               (List.append
                 (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -3698,21 +3699,21 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state300_m
           List.append projectionMarkedTickCodeCells
             (projectionRepeatedCells projectionMarkedTickCodeCells count) by
         rfl]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * count)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 300 leftRev
               (List.append projectionMarkedTickCodeCells
                 (List.append
                   (projectionRepeatedCells projectionMarkedTickCodeCells count)
                   tail)))) = _
-      rw [dovetailControllerStageInputProjectionDescription_run_state300_marked_tick]
+      rw [run_state300_marked_tick]
       rw [ih]
       simp [List.reverse_append, List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state300_mark_tick
+private theorem run_state300_mark_tick
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 300 leftRev
           (List.append projectionTickCodeCells tail)) =
       projectionConfig 320
@@ -3727,9 +3728,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state300_m
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state320_tick
+private theorem run_state320_tick
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 320 leftRev
           (List.append projectionTickCodeCells tail)) =
       projectionConfig 320
@@ -3744,9 +3745,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state320_t
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state320_ticks
+private theorem run_state320_ticks
     (count : Nat) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig (4 * count)
+    Description.runConfig (4 * count)
         (projectionConfig 320 leftRev
           (List.append
             (projectionRepeatedCells projectionTickCodeCells count)
@@ -3762,9 +3763,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state320_t
   | succ count ih =>
       have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
       rw [hsteps, MachineDescription.runConfig_add]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * count)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 320 leftRev
               (List.append
                 (projectionRepeatedCells projectionTickCodeCells
@@ -3774,21 +3775,21 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state320_t
           List.append projectionTickCodeCells
             (projectionRepeatedCells projectionTickCodeCells count) by
         rfl]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * count)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 320 leftRev
               (List.append projectionTickCodeCells
                 (List.append
                   (projectionRepeatedCells projectionTickCodeCells count)
                   tail)))) = _
-      rw [dovetailControllerStageInputProjectionDescription_run_state320_tick]
+      rw [run_state320_tick]
       rw [ih]
       simp [List.reverse_append, List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state320_done
+private theorem run_state320_done
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 320 leftRev
           (List.append projectionDoneCodeCells tail)) =
       projectionConfig 330
@@ -3803,9 +3804,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state320_d
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state300_done
+private theorem run_state300_done
     (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 300 leftRev
           (List.append projectionDoneCodeCells tail)) =
       projectionConfig 350
@@ -3820,9 +3821,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state300_d
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state330_marked_payload_cell
+private theorem run_state330_marked_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 330 leftRev
           (List.append (projectionMarkedBoolCellCodeCells b) tail)) =
       projectionConfig 330
@@ -3839,9 +3840,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state330_m
         | some b =>
             cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state330_marked_payload_cell_append
+private theorem run_state330_marked_payload_cell_append
     (b : Bool) (leftRev middle tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 330 leftRev
           (List.append (projectionMarkedBoolCellCodeCells b) middle ++
             tail)) =
@@ -3867,9 +3868,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state330_m
         | some b =>
             cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state330_marked_payload
+private theorem run_state330_marked_payload
     (w : Word Bool) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig (4 * w.length)
+    Description.runConfig (4 * w.length)
         (projectionConfig 330 leftRev
           (List.append (projectionMarkedBoolPayloadCells w) tail)) =
       projectionConfig 330
@@ -3883,22 +3884,22 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state330_m
         simp
         omega
       rw [hsteps, MachineDescription.runConfig_add]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * rest.length)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 330 leftRev
               (projectionMarkedBoolPayloadCells (b :: rest) ++ tail))) = _
       rw [show projectionMarkedBoolPayloadCells (b :: rest) =
           List.append (projectionMarkedBoolCellCodeCells b)
             (projectionMarkedBoolPayloadCells rest) by
         rfl]
-      rw [dovetailControllerStageInputProjectionDescription_run_state330_marked_payload_cell_append]
+      rw [run_state330_marked_payload_cell_append]
       rw [ih]
       simp [List.reverse_append, List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state330_mark_payload_cell
+private theorem run_state330_mark_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 330 leftRev
           (List.append (projectionBoolCellCodeCells b) tail)) =
       projectionConfig 340 (none :: some false :: leftRev)
@@ -3918,9 +3919,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state330_m
         | some b =>
             cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state350_marked_payload_cell
+private theorem run_state350_marked_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 350 leftRev
           (List.append (projectionMarkedBoolCellCodeCells b) tail)) =
       projectionConfig 350
@@ -3937,9 +3938,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state350_m
         | some b =>
             cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state350_marked_payload_cell_append
+private theorem run_state350_marked_payload_cell_append
     (b : Bool) (leftRev middle tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 4
+    Description.runConfig 4
         (projectionConfig 350 leftRev
           (List.append (projectionMarkedBoolCellCodeCells b) middle ++
             tail)) =
@@ -3965,9 +3966,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state350_m
         | some b =>
             cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state350_marked_payload
+private theorem run_state350_marked_payload
     (w : Word Bool) (leftRev tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig (4 * w.length)
+    Description.runConfig (4 * w.length)
         (projectionConfig 350 leftRev
           (List.append (projectionMarkedBoolPayloadCells w) tail)) =
       projectionConfig 350
@@ -3981,16 +3982,16 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state350_m
         simp
         omega
       rw [hsteps, MachineDescription.runConfig_add]
-      change DovetailControllerStageInputProjectionDescription.runConfig
+      change Description.runConfig
           (4 * rest.length)
-          (DovetailControllerStageInputProjectionDescription.runConfig 4
+          (Description.runConfig 4
             (projectionConfig 350 leftRev
               (projectionMarkedBoolPayloadCells (b :: rest) ++ tail))) = _
       rw [show projectionMarkedBoolPayloadCells (b :: rest) =
           List.append (projectionMarkedBoolCellCodeCells b)
             (projectionMarkedBoolPayloadCells rest) by
         rfl]
-      rw [dovetailControllerStageInputProjectionDescription_run_state350_marked_payload_cell_append]
+      rw [run_state350_marked_payload_cell_append]
       rw [ih]
       simp [List.reverse_append, List.append_assoc]
 
@@ -4000,12 +4001,12 @@ private def projectionScanState360 : Nat -> Nat
   | 2 => 362
   | _ => 363
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan360_step
+private theorem run_scan360_step
     (count : Nat) (hcount : count ≤ 3)
     (cell : Option Bool) (rest leftOfBoundary tail : List (Option Bool))
     (boundaryHead : Option Bool)
     (hsafe : count ≠ 3 ∨ cell ≠ none) :
-    DovetailControllerStageInputProjectionDescription.runConfig 1
+    Description.runConfig 1
         (projectionScanLeftConfig (projectionScanState360 count)
           leftOfBoundary boundaryHead (cell :: rest) tail) =
       projectionScanLeftConfig
@@ -4085,12 +4086,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan360_st
                       have hfalse : False := by omega
                       exact False.elim hfalse
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan360_cells
+private theorem run_scan360_cells
     (cellsRev : List (Option Bool)) (count : Nat) (hcount : count ≤ 3)
     (hsafe : projectionScanSafe count cellsRev)
     (leftOfBoundary : List (Option Bool)) (boundaryHead : Option Bool)
     (tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig cellsRev.length
+    Description.runConfig cellsRev.length
         (projectionScanLeftConfig (projectionScanState360 count)
           leftOfBoundary boundaryHead cellsRev tail) =
       projectionConfig
@@ -4111,9 +4112,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan360_ce
         omega,
         MachineDescription.runConfig_add]
       change
-        DovetailControllerStageInputProjectionDescription.runConfig
+        Description.runConfig
             rest.length
-            (DovetailControllerStageInputProjectionDescription.runConfig 1
+            (Description.runConfig 1
               (projectionScanLeftConfig (projectionScanState360 count)
                 leftOfBoundary boundaryHead (cell :: rest) tail)) =
           projectionConfig
@@ -4121,15 +4122,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan360_ce
               (projectionScanCountFold count (cell :: rest)))
             leftOfBoundary
             (boundaryHead :: List.append (cell :: rest).reverse tail)
-      rw [dovetailControllerStageInputProjectionDescription_run_scan360_step
+      rw [run_scan360_step
         count hcount cell rest leftOfBoundary tail boundaryHead hcell]
       rw [ih (projectionScanCountStep count cell) hnext hrest
         (cell :: tail)]
       simp [projectionScanCountFold, List.append_assoc]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan360_boundary
+private theorem run_scan360_boundary
     (base tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 7
+    Description.runConfig 7
         (projectionConfig 360
           (List.append ([none, none, none] : List (Option Bool)) base)
           (none :: tail)) =
@@ -4145,12 +4146,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan360_bo
       | some b =>
           cases b <;> rfl
 
-private theorem dovetailControllerStageInputProjectionDescription_run_scan360_cells_to_boundary
+private theorem run_scan360_cells_to_boundary
     (cellsRev : List (Option Bool))
     (hsafe : projectionScanSafe 0 cellsRev)
     (hcount : projectionScanCountFold 0 cellsRev = 0)
     (base tail : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (cellsRev.length + 7)
         (projectionScanLeftConfig 360
           (List.append ([none, none, none] : List (Option Bool)) base) none
@@ -4160,8 +4161,8 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan360_ce
         (List.append cellsRev.reverse tail) := by
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig 7
-        (DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig 7
+        (Description.runConfig
         cellsRev.length
         (projectionScanLeftConfig (projectionScanState360 0)
           (List.append ([none, none, none] : List (Option Bool)) base) none
@@ -4169,17 +4170,17 @@ private theorem dovetailControllerStageInputProjectionDescription_run_scan360_ce
       projectionConfig 367
         (List.append projectionDoneCodeCells.reverse base)
         (List.append cellsRev.reverse tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_scan360_cells
+  rw [run_scan360_cells
     cellsRev 0 (by omega) hsafe
     (List.append ([none, none, none] : List (Option Bool)) base) none tail]
   rw [hcount]
   simpa [List.append_assoc] using
-    dovetailControllerStageInputProjectionDescription_run_scan360_boundary
+    run_scan360_boundary
       base (List.append cellsRev.reverse tail)
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state350_blank_to_scan360
+private theorem run_state350_blank_to_scan360
     (cellsRev base : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig 1
+    Description.runConfig 1
         (projectionConfig 350
           (List.append cellsRev
             (List.append ([none, none, none, none] : List (Option Bool))
@@ -4239,11 +4240,11 @@ private theorem projectionResultFinishScanBackCellsRev_length
     projectionDoneCodeCells, MachineDescription.encodeCodeSymbolAsInput]
   omega
 
-private theorem dovetailControllerStageInputProjectionDescription_run_result_tail_to_first_payload
+private theorem run_result_tail_to_first_payload
     (marked : Word Bool) (restCount : Nat)
     (payload : List (Option Bool))
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (8 * marked.length + 4 * restCount + 8)
         (projectionConfig 300
           (List.append [none, none, none, none] baseLeftRev)
@@ -4259,7 +4260,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
     omega,
     MachineDescription.runConfig_add]
   simp only [projectionResultTailWorkCells]
-  rw [dovetailControllerStageInputProjectionDescription_run_state300_marked_ticks]
+  rw [run_state300_marked_ticks]
   have htickCells :
       projectionCodeCells
           (List.replicate (restCount + 1) MachineCodeSymbol.tick) =
@@ -4271,9 +4272,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
   rw [MachineDescription.runConfig_add]
   rw [htickCells]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * restCount + (4 + 4 * marked.length))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 300
             (List.append
               (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -4289,20 +4290,20 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
       projectionConfig 330
         (projectionResultTailPayloadLeftRev marked restCount baseLeftRev)
         payload
-  rw [dovetailControllerStageInputProjectionDescription_run_state300_mark_tick]
+  rw [run_state300_mark_tick]
   rw [MachineDescription.runConfig_add]
   rw [projectionCodeCells_replicate_tick]
-  rw [dovetailControllerStageInputProjectionDescription_run_state320_ticks]
+  rw [run_state320_ticks]
   rw [MachineDescription.runConfig_add]
-  rw [dovetailControllerStageInputProjectionDescription_run_state320_done]
-  rw [dovetailControllerStageInputProjectionDescription_run_state330_marked_payload]
+  rw [run_state320_done]
+  rw [run_state330_marked_payload]
   simp [projectionResultTailPayloadLeftRev]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_result_mark_one_tail
+private theorem run_result_mark_one_tail
     (marked : Word Bool) (restCount : Nat) (b : Bool)
     (tail : List (Option Bool))
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (projectionResultMarkTailStepCost marked restCount)
         (projectionConfig 300
           (List.append [none, none, none, none] baseLeftRev)
@@ -4327,12 +4328,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
     omega
   rw [hcost, MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 + (4 * rest.length +
           (4 + (4 * marked.length +
             (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
               7))))))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * marked.length)
           (projectionConfig 300
             (List.append [none, none, none, none] baseLeftRev)
@@ -4343,7 +4344,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
   simp only [projectionResultTailWorkCells]
-  rw [dovetailControllerStageInputProjectionDescription_run_state300_marked_ticks]
+  rw [run_state300_marked_ticks]
   have htickCells :
       projectionCodeCells
           (List.replicate (restCount + 1) MachineCodeSymbol.tick) =
@@ -4356,12 +4357,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
   rw [htickCells]
   rw [show rest.length = restCount by exact hrestLen]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * restCount +
           (4 + (4 * marked.length +
             (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
               7)))))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 300
             (List.append
               (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -4378,15 +4379,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
         (List.append [none, none, none, none] baseLeftRev)
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_state300_mark_tick]
+  rw [run_state300_mark_tick]
   rw [MachineDescription.runConfig_add]
   rw [projectionCodeCells_replicate_tick]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 + (4 * marked.length +
           (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
             7))))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * restCount)
           (projectionConfig 320
             (List.append projectionMarkedTickCodeCells.reverse
@@ -4403,14 +4404,14 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
         (List.append [none, none, none, none] baseLeftRev)
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_state320_ticks]
+  rw [run_state320_ticks]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * marked.length +
           (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
             7)))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 320
             (List.append
               (projectionRepeatedCells projectionTickCodeCells
@@ -4427,12 +4428,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
         (List.append [none, none, none, none] baseLeftRev)
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_state320_done]
+  rw [run_state320_done]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length + 7))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * marked.length)
           (projectionConfig 330
             (List.append projectionDoneCodeCells.reverse
@@ -4450,12 +4451,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
         (List.append [none, none, none, none] baseLeftRev)
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_state330_marked_payload]
+  rw [run_state330_marked_payload]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         ((projectionInputMarkScanBackCellsRev marked rest b).length + 7)
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 330
             (List.append (projectionMarkedBoolPayloadCells marked).reverse
               (List.append projectionDoneCodeCells.reverse
@@ -4472,7 +4473,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
         (List.append [none, none, none, none] baseLeftRev)
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_state330_mark_payload_cell]
+  rw [run_state330_mark_payload_cell]
   cases b
   · simp only [projectionResultTailWorkCells,
       projectionMarkedBoolPayloadCells_append_false,
@@ -4485,7 +4486,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
       List.reverse_append, List.append_assoc, rest, hrestLen] using
-        (dovetailControllerStageInputProjectionDescription_run_scan340_cells_to_boundary
+        (run_scan340_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest false)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest false)
           (hcount := projectionInputMarkScanBackCellsRev_scanCountFold marked rest false)
@@ -4502,18 +4503,18 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
       List.reverse_append, List.append_assoc, rest, hrestLen] using
-        (dovetailControllerStageInputProjectionDescription_run_scan340_cells_to_boundary
+        (run_scan340_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest true)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest true)
           (hcount := projectionInputMarkScanBackCellsRev_scanCountFold marked rest true)
           (base := baseLeftRev)
           (tail := projectionMarkedBoolCellScanTailHead true :: tail))
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_tail_to_first_payload
+private theorem run_input_tail_to_first_payload
     (marked : Word Bool) (restCount : Nat)
     (payload : List (Option Bool))
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (8 * marked.length + 4 * restCount + 8)
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
@@ -4529,7 +4530,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
     omega,
     MachineDescription.runConfig_add]
   simp only [projectionResultTailWorkCells]
-  rw [dovetailControllerStageInputProjectionDescription_run_state100_marked_ticks]
+  rw [run_state100_marked_ticks]
   have htickCells :
       projectionCodeCells
           (List.replicate (restCount + 1) MachineCodeSymbol.tick) =
@@ -4541,9 +4542,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
   rw [MachineDescription.runConfig_add]
   rw [htickCells]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * restCount + (4 + 4 * marked.length))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 100
             (List.append
               (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -4559,20 +4560,20 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
       projectionConfig 130
         (projectionResultTailPayloadLeftRev marked restCount baseLeftRev)
         payload
-  rw [dovetailControllerStageInputProjectionDescription_run_state100_mark_tick]
+  rw [run_state100_mark_tick]
   rw [MachineDescription.runConfig_add]
   rw [projectionCodeCells_replicate_tick]
-  rw [dovetailControllerStageInputProjectionDescription_run_state120_ticks]
+  rw [run_state120_ticks]
   rw [MachineDescription.runConfig_add]
-  rw [dovetailControllerStageInputProjectionDescription_run_state120_done]
-  rw [dovetailControllerStageInputProjectionDescription_run_state130_marked_payload]
+  rw [run_state120_done]
+  rw [run_state130_marked_payload]
   simp [projectionResultTailPayloadLeftRev]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_mark_one_tail
+private theorem run_input_mark_one_tail
     (marked : Word Bool) (restCount : Nat) (b : Bool)
     (tail : List (Option Bool))
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (projectionResultMarkTailStepCost marked restCount)
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
@@ -4597,12 +4598,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
     omega
   rw [hcost, MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 + (4 * rest.length +
           (4 + (4 * marked.length +
             (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
               7))))))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * marked.length)
           (projectionConfig 100
             (List.append [none, none, none, none] baseLeftRev)
@@ -4613,7 +4614,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
   simp only [projectionResultTailWorkCells]
-  rw [dovetailControllerStageInputProjectionDescription_run_state100_marked_ticks]
+  rw [run_state100_marked_ticks]
   have htickCells :
       projectionCodeCells
           (List.replicate (restCount + 1) MachineCodeSymbol.tick) =
@@ -4626,12 +4627,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
   rw [htickCells]
   rw [show rest.length = restCount by exact hrestLen]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * restCount +
           (4 + (4 * marked.length +
             (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
               7)))))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 100
             (List.append
               (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -4648,15 +4649,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
         (List.append [none, none, none, none] baseLeftRev)
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_state100_mark_tick]
+  rw [run_state100_mark_tick]
   rw [MachineDescription.runConfig_add]
   rw [projectionCodeCells_replicate_tick]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 + (4 * marked.length +
           (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
             7))))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * restCount)
           (projectionConfig 120
             (List.append projectionMarkedTickCodeCells.reverse
@@ -4673,14 +4674,14 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
         (List.append [none, none, none, none] baseLeftRev)
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_state120_ticks]
+  rw [run_state120_ticks]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * marked.length +
           (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
             7)))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 120
             (List.append
               (projectionRepeatedCells projectionTickCodeCells
@@ -4697,12 +4698,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
         (List.append [none, none, none, none] baseLeftRev)
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_state120_done]
+  rw [run_state120_done]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length + 7))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * marked.length)
           (projectionConfig 130
             (List.append projectionDoneCodeCells.reverse
@@ -4720,12 +4721,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
         (List.append [none, none, none, none] baseLeftRev)
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_state130_marked_payload]
+  rw [run_state130_marked_payload]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         ((projectionInputMarkScanBackCellsRev marked rest b).length + 7)
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 130
             (List.append (projectionMarkedBoolPayloadCells marked).reverse
               (List.append projectionDoneCodeCells.reverse
@@ -4742,7 +4743,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
         (List.append [none, none, none, none] baseLeftRev)
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
-  rw [dovetailControllerStageInputProjectionDescription_run_state130_mark_payload_cell]
+  rw [run_state130_mark_payload_cell]
   cases b
   · simp only [projectionResultTailWorkCells,
       projectionMarkedBoolPayloadCells_append_false,
@@ -4755,7 +4756,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
       List.reverse_append, List.append_assoc, rest, hrestLen] using
-        (dovetailControllerStageInputProjectionDescription_run_scan140_cells_to_boundary
+        (run_scan140_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest false)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest false)
           (hcount := projectionInputMarkScanBackCellsRev_scanCountFold marked rest false)
@@ -4772,18 +4773,18 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_mark
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
       List.reverse_append, List.append_assoc, rest, hrestLen] using
-        (dovetailControllerStageInputProjectionDescription_run_scan140_cells_to_boundary
+        (run_scan140_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest true)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest true)
           (hcount := projectionInputMarkScanBackCellsRev_scanCountFold marked rest true)
           (base := baseLeftRev)
           (tail := projectionMarkedBoolCellScanTailHead true :: tail))
 
-private theorem dovetailControllerStageInputProjectionDescription_run_result_mark_one
+private theorem run_result_mark_one
     (marked rest : Word Bool) (b : Bool)
     (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (projectionInputMarkStepCost marked rest)
         (projectionConfig 300
           (List.append [none, none, none, none] baseLeftRev)
@@ -4803,12 +4804,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
     omega
   rw [hcost, MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 + (4 * rest.length +
           (4 + (4 * marked.length +
             (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
               7))))))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * marked.length)
           (projectionConfig 300
             (List.append [none, none, none, none] baseLeftRev)
@@ -4817,7 +4818,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
   simp only [projectionBoolWordWorkCells]
-  rw [dovetailControllerStageInputProjectionDescription_run_state300_marked_ticks]
+  rw [run_state300_marked_ticks]
   have htickCells :
       projectionCodeCells
           (List.replicate (b :: rest).length MachineCodeSymbol.tick) =
@@ -4835,12 +4836,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
   rw [MachineDescription.runConfig_add]
   rw [htickCells]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * rest.length +
           (4 + (4 * marked.length +
             (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
               7)))))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 300
             (List.append
               (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -4857,15 +4858,15 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
       projectionConfig 300
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
-  rw [dovetailControllerStageInputProjectionDescription_run_state300_mark_tick]
+  rw [run_state300_mark_tick]
   rw [MachineDescription.runConfig_add]
   rw [projectionCodeCells_replicate_tick]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 + (4 * marked.length +
           (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
             7))))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * rest.length)
           (projectionConfig 320
             (List.append projectionMarkedTickCodeCells.reverse
@@ -4882,14 +4883,14 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
       projectionConfig 300
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
-  rw [dovetailControllerStageInputProjectionDescription_run_state320_ticks]
+  rw [run_state320_ticks]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * marked.length +
           (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length +
             7)))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 320
             (List.append
               (projectionRepeatedCells projectionTickCodeCells
@@ -4906,12 +4907,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
       projectionConfig 300
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
-  rw [dovetailControllerStageInputProjectionDescription_run_state320_done]
+  rw [run_state320_done]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length + 7))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * marked.length)
           (projectionConfig 330
             (List.append projectionDoneCodeCells.reverse
@@ -4929,12 +4930,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
       projectionConfig 300
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
-  rw [dovetailControllerStageInputProjectionDescription_run_state330_marked_payload]
+  rw [run_state330_marked_payload]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         ((projectionInputMarkScanBackCellsRev marked rest b).length + 7)
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 330
             (List.append (projectionMarkedBoolPayloadCells marked).reverse
               (List.append projectionDoneCodeCells.reverse
@@ -4964,7 +4965,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
           (List.append (projectionBoolPayloadCells rest)
             (projectionCodeCells suffix)) by
     simp [List.append_assoc]]
-  rw [dovetailControllerStageInputProjectionDescription_run_state330_mark_payload_cell]
+  rw [run_state330_mark_payload_cell]
   cases b
   · simp only [projectionBoolWordWorkCells,
       projectionMarkedBoolPayloadCells_append_false,
@@ -4977,7 +4978,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
       List.reverse_append, List.append_assoc] using
-        (dovetailControllerStageInputProjectionDescription_run_scan340_cells_to_boundary
+        (run_scan340_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest false)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest false)
           (hcount := projectionInputMarkScanBackCellsRev_scanCountFold marked rest false)
@@ -4994,16 +4995,16 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
       List.reverse_append, List.append_assoc] using
-        (dovetailControllerStageInputProjectionDescription_run_scan340_cells_to_boundary
+        (run_scan340_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest true)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest true)
           (hcount := projectionInputMarkScanBackCellsRev_scanCountFold marked rest true)
           (base := baseLeftRev)
           (tail := projectionInputMarkScanTail rest true suffix))
 
-private theorem dovetailControllerStageInputProjectionDescription_run_result_finish_marked
+private theorem run_result_finish_marked
     (marked : Word Bool) (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (16 * marked.length + 16)
         (projectionConfig 300
           (List.append [none, none, none, none] baseLeftRev)
@@ -5023,14 +5024,14 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_fin
       projectionCodeCells ([] : Word MachineCodeSymbol) = [] := rfl
   rw [hcost, MachineDescription.runConfig_add]
   simp only [projectionBoolWordWorkCells]
-  rw [dovetailControllerStageInputProjectionDescription_run_state300_marked_ticks]
+  rw [run_state300_marked_ticks]
   simp [List.length_nil, hnil, projectionBoolPayloadCells]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * marked.length +
           (1 + ((projectionResultFinishScanBackCellsRev marked).length + 7)))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 300
             (List.append
               (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -5041,12 +5042,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_fin
       projectionConfig 367
         (List.append projectionDoneCodeCells.reverse baseLeftRev)
         (List.append (projectionAllMarkedBoolWordCells marked) [none])
-  rw [dovetailControllerStageInputProjectionDescription_run_state300_done]
+  rw [run_state300_done]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (1 + ((projectionResultFinishScanBackCellsRev marked).length + 7))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * marked.length)
           (projectionConfig 350
             (List.append projectionDoneCodeCells.reverse
@@ -5062,16 +5063,16 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_fin
       List.append (projectionMarkedBoolPayloadCells marked)
         ([] : List (Option Bool)) by
     simp]
-  rw [dovetailControllerStageInputProjectionDescription_run_state350_marked_payload]
+  rw [run_state350_marked_payload]
   rw [show
       1 + ((projectionResultFinishScanBackCellsRev marked).length + 7) =
         1 + ((projectionResultFinishScanBackCellsRev marked).length + 7) by
     rfl,
     MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         ((projectionResultFinishScanBackCellsRev marked).length + 7)
-        (DovetailControllerStageInputProjectionDescription.runConfig 1
+        (Description.runConfig 1
           (projectionConfig 350
             (List.append (projectionMarkedBoolPayloadCells marked).reverse
               (List.append projectionDoneCodeCells.reverse
@@ -5084,7 +5085,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_fin
         (List.append projectionDoneCodeCells.reverse baseLeftRev)
         (List.append (projectionAllMarkedBoolWordCells marked) [none])
   have hscanStart :
-      DovetailControllerStageInputProjectionDescription.runConfig 1
+      Description.runConfig 1
           (projectionConfig 350
             (List.append (projectionMarkedBoolPayloadCells marked).reverse
               (List.append projectionDoneCodeCells.reverse
@@ -5097,11 +5098,11 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_fin
           (List.append ([none, none, none] : List (Option Bool)) baseLeftRev)
           none (projectionResultFinishScanBackCellsRev marked) [none] := by
     simpa [projectionResultFinishScanBackCellsRev, List.append_assoc] using
-      (dovetailControllerStageInputProjectionDescription_run_state350_blank_to_scan360
+      (run_state350_blank_to_scan360
         (cellsRev := projectionResultFinishScanBackCellsRev marked)
         (base := baseLeftRev))
   rw [hscanStart]
-  rw [dovetailControllerStageInputProjectionDescription_run_scan360_cells_to_boundary
+  rw [run_scan360_cells_to_boundary
     (hsafe := projectionResultFinishScanBackCellsRev_scanSafe marked)
     (hcount := projectionResultFinishScanBackCellsRev_scanCountFold marked)]
   simp [projectionResultFinishScanBackCellsRev, projectionAllMarkedBoolWordCells,
@@ -5113,9 +5114,9 @@ private def projectionResultRemainingCost
     16 * marked.length * rest.length +
     34 * rest.length + 16 * marked.length + 16
 
-private theorem dovetailControllerStageInputProjectionDescription_run_result_bool_word_acc
+private theorem run_result_bool_word_acc
     (marked rest : Word Bool) (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (projectionResultRemainingCost marked rest)
         (projectionConfig 300
           (List.append [none, none, none, none] baseLeftRev)
@@ -5129,7 +5130,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_boo
   | nil =>
       simp [projectionResultRemainingCost]
       exact
-        dovetailControllerStageInputProjectionDescription_run_result_finish_marked
+        run_result_finish_marked
           marked baseLeftRev
   | cons b rest ih =>
       have hcost :
@@ -5140,7 +5141,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_boo
           Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
         omega
       rw [hcost, MachineDescription.runConfig_add]
-      rw [dovetailControllerStageInputProjectionDescription_run_result_mark_one]
+      rw [run_result_mark_one]
       rw [ih]
       have hword :
           List.append (List.append marked [b]) rest =
@@ -5148,9 +5149,9 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_boo
         simp [List.append_assoc]
       rw [hword]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_result_bool_word
+private theorem run_result_bool_word
     (w : Word Bool) (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (projectionResultBoolWordCost w)
         (projectionConfig 300
           (List.append [none, none, none, none] baseLeftRev)
@@ -5159,12 +5160,12 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_boo
         (List.append projectionDoneCodeCells.reverse baseLeftRev)
         (List.append (projectionAllMarkedBoolWordCells w) [none]) := by
   have h :=
-    dovetailControllerStageInputProjectionDescription_run_result_bool_word_acc
+    run_result_bool_word_acc
       ([] : Word Bool) w baseLeftRev
   simpa [projectionResultRemainingCost, projectionResultBoolWordCost,
     projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend] using h
 
-private theorem dovetailControllerStageInputProjectionDescription_final_normalizedOutput
+private theorem final_normalizedOutput
     (input result : Word Bool) (stage : Nat) :
     Tape.normalizedOutput
         (projectionTapeAtCells
@@ -5189,9 +5190,9 @@ private theorem dovetailControllerStageInputProjectionDescription_final_normaliz
   rw [encodeCodeWordAsInput_encodeNat]
   simp
 
-theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode
+theorem haltsWithOutput_encode
     (C : MachineDescription.DovetailControllerLayout) :
-    DovetailControllerStageInputProjectionDescription.HaltsWithOutput
+    Description.HaltsWithOutput
       (MachineDescription.encodeCodeWordAsInput
         (MachineDescription.DovetailControllerLayout.encode C))
       (MachineDescription.encodeCodeWordAsInput
@@ -5211,10 +5212,10 @@ theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode
           (List.append projectionDoneCodeCells.reverse
             (List.append (projectionStageTickCellsRev stage) inputLeftRev))))
   have hrun :
-      DovetailControllerStageInputProjectionDescription.runConfig
+      Description.runConfig
           (4 + projectionInputBoolWordCost input + (4 * stage + 12) +
             projectionResultBoolWordCost result + (8 * result.length + 5))
-          (DovetailControllerStageInputProjectionDescription.initial
+          (Description.initial
             (MachineDescription.encodeCodeWordAsInput
               (MachineDescription.DovetailControllerLayout.encode
                 { input := input, stage := stage, result := result }))) =
@@ -5231,13 +5232,13 @@ theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode
         omega]
     rw [MachineDescription.runConfig_add]
     change
-      DovetailControllerStageInputProjectionDescription.runConfig
+      Description.runConfig
         (projectionInputBoolWordCost input +
           ((4 * stage + 12) +
             (projectionResultBoolWordCost result +
               (8 * result.length + 5))))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
-          (DovetailControllerStageInputProjectionDescription.initial
+        (Description.runConfig 4
+          (Description.initial
             (MachineDescription.encodeCodeWordAsInput
               (MachineDescription.DovetailControllerLayout.encode
                 { input := input, stage := stage, result := result })))) =
@@ -5247,21 +5248,21 @@ theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode
       MachineDescription.encodeCodeWordAsInput,
       MachineDescription.encodeCodeSymbolAsInput]
     change
-      DovetailControllerStageInputProjectionDescription.runConfig
+      Description.runConfig
         (projectionInputBoolWordCost input +
           ((4 * stage + 12) +
             (projectionResultBoolWordCost result +
               (8 * result.length + 5))))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
-          (DovetailControllerStageInputProjectionDescription.initial
+        (Description.runConfig 4
+          (Description.initial
             (List.append [false, false, false, false]
               (MachineDescription.encodeCodeWordAsInput
                 (MachineDescription.DovetailLayout.stageInputCodeAppend input
                   stage (MachineDescription.encodeBoolWordAppend result [])))))) =
         projectionConfig 999 finalLeftRev []
-    rw [dovetailControllerStageInputProjectionDescription_run_header]
+    rw [run_header]
     change
-      DovetailControllerStageInputProjectionDescription.runConfig
+      Description.runConfig
         (projectionInputBoolWordCost input +
           ((4 * stage + 12) +
             (projectionResultBoolWordCost result +
@@ -5274,10 +5275,10 @@ theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode
     simp [MachineDescription.DovetailLayout.stageInputCodeAppend]
     rw [MachineDescription.runConfig_add]
     change
-      DovetailControllerStageInputProjectionDescription.runConfig
+      Description.runConfig
         ((4 * stage + 12) +
           (projectionResultBoolWordCost result + (8 * result.length + 5)))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (projectionInputBoolWordCost input)
           (projectionConfig 100
             (List.append [none, none, none, none]
@@ -5287,31 +5288,31 @@ theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode
                 (MachineDescription.encodeNatAppend stage
                   (MachineDescription.encodeBoolWord result)))))) =
         projectionConfig 999 finalLeftRev []
-    rw [dovetailControllerStageInputProjectionDescription_run_input_bool_word
+    rw [run_input_bool_word
       (stage := stage) (result := result) (baseLeftRev := [])]
     rw [MachineDescription.runConfig_add]
     change
-      DovetailControllerStageInputProjectionDescription.runConfig
+      Description.runConfig
         (projectionResultBoolWordCost result + (8 * result.length + 5))
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (4 * stage + 12)
           (projectionConfig 200 inputLeftRev
             (projectionCodeCells
               (MachineDescription.encodeNatAppend stage
                 (MachineDescription.encodeBoolWord result))))) =
         projectionConfig 999 finalLeftRev []
-    rw [dovetailControllerStageInputProjectionDescription_run_stage_nat]
+    rw [run_stage_nat]
     change
-      DovetailControllerStageInputProjectionDescription.runConfig
+      Description.runConfig
         (projectionResultBoolWordCost result + (8 * result.length + 5))
         (projectionConfig 300 stageLeftRev
           (projectionCodeCells (MachineDescription.encodeBoolWord result))) =
         projectionConfig 999 finalLeftRev []
     rw [MachineDescription.runConfig_add]
     change
-      DovetailControllerStageInputProjectionDescription.runConfig
+      Description.runConfig
         (8 * result.length + 5)
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (projectionResultBoolWordCost result)
           (projectionConfig 300
             (List.append [none, none, none, none]
@@ -5319,9 +5320,9 @@ theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode
             (projectionCodeCells
               (MachineDescription.encodeBoolWord result)))) =
         projectionConfig 999 finalLeftRev []
-    rw [dovetailControllerStageInputProjectionDescription_run_result_bool_word]
+    rw [run_result_bool_word]
     change
-      DovetailControllerStageInputProjectionDescription.runConfig
+      Description.runConfig
         (8 * result.length + 5)
         (projectionConfig 367
           (List.append projectionDoneCodeCells.reverse
@@ -5331,7 +5332,7 @@ theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode
     rw [show 8 * result.length + 5 = (8 * result.length + 4) + 1 by
       omega,
       MachineDescription.runConfig_add]
-    rw [dovetailControllerStageInputProjectionDescription_run_cleanup_all_marked_to_tail]
+    rw [run_cleanup_all_marked_to_tail]
     rfl
   refine
     ⟨4 + projectionInputBoolWordCost input + (4 * stage + 12) +
@@ -5348,51 +5349,51 @@ theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode
             { input := input, stage := stage, result := result })
     simpa [finalLeftRev, inputLeftRev,
       MachineDescription.DovetailControllerLayout.stageInputCode] using
-        dovetailControllerStageInputProjectionDescription_final_normalizedOutput
+        final_normalizedOutput
           input result stage
 
-private theorem dovetailControllerStageInputProjectionDescription_state_ne_halt_of_later_ne_halt
+private theorem state_ne_halt_of_later_ne_halt
     {c : MachineDescription.Configuration} {n k : Nat}
     (hle : n ≤ k)
     (hlater :
-      (DovetailControllerStageInputProjectionDescription.runConfig k c).state ≠
-        DovetailControllerStageInputProjectionDescription.halt) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n c).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      (Description.runConfig k c).state ≠
+        Description.halt) :
+    (Description.runConfig n c).state ≠
+      Description.halt := by
   intro hhalt
   have hk : k = n + (k - n) := by omega
   have hcfg :
-      DovetailControllerStageInputProjectionDescription.runConfig n c =
-        { state := DovetailControllerStageInputProjectionDescription.halt
+      Description.runConfig n c =
+        { state := Description.halt
           tape :=
-            (DovetailControllerStageInputProjectionDescription.runConfig n c).tape } := by
+            (Description.runConfig n c).tape } := by
     cases hrunN :
-        DovetailControllerStageInputProjectionDescription.runConfig n c with
+        Description.runConfig n c with
     | mk state tape =>
         simp [hrunN] at hhalt
         simp [hhalt]
   have hfinal :
-      (DovetailControllerStageInputProjectionDescription.runConfig k c).state =
-        DovetailControllerStageInputProjectionDescription.halt := by
+      (Description.runConfig k c).state =
+        Description.halt := by
     rw [hk, MachineDescription.runConfig_add, hcfg,
       MachineDescription.runConfig_halt
-        dovetailControllerStageInputProjectionDescription_haltTransitionFree]
+        haltTransitionFree]
   exact hlater hfinal
 
-private theorem dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stuck
+private theorem ne_halt_of_reaches_stuck
     {c stuck : MachineDescription.Configuration} {k n : Nat}
     (hrun :
-      DovetailControllerStageInputProjectionDescription.runConfig k c = stuck)
+      Description.runConfig k c = stuck)
     (hstep :
-      DovetailControllerStageInputProjectionDescription.stepConfig stuck =
+      Description.stepConfig stuck =
         none)
     (hstuck :
-      stuck.state ≠ DovetailControllerStageInputProjectionDescription.halt) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n c).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      stuck.state ≠ Description.halt) :
+    (Description.runConfig n c).state ≠
+      Description.halt := by
   by_cases hle : n ≤ k
   · apply
-      dovetailControllerStageInputProjectionDescription_state_ne_halt_of_later_ne_halt
+      state_ne_halt_of_later_ne_halt
         hle
     rw [hrun]
     exact hstuck
@@ -5402,36 +5403,36 @@ private theorem dovetailControllerStageInputProjectionDescription_ne_halt_of_rea
       MachineDescription.runConfig_of_stepConfig_none hstep]
     exact hstuck
 
-private theorem dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+private theorem ne_halt_of_reaches_stepConfig_none
     {c : MachineDescription.Configuration} {k n : Nat}
     (hstep :
-      DovetailControllerStageInputProjectionDescription.stepConfig
-        (DovetailControllerStageInputProjectionDescription.runConfig k c) =
+      Description.stepConfig
+        (Description.runConfig k c) =
         none)
     (hstate :
-      (DovetailControllerStageInputProjectionDescription.runConfig k c).state ≠
-        DovetailControllerStageInputProjectionDescription.halt) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n c).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      (Description.runConfig k c).state ≠
+        Description.halt) :
+    (Description.runConfig n c).state ≠
+      Description.halt := by
   exact
-    dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stuck
-      (k := k) (stuck := DovetailControllerStageInputProjectionDescription.runConfig k c)
+    ne_halt_of_reaches_stuck
+      (k := k) (stuck := Description.runConfig k c)
       rfl hstep hstate
 
-private theorem dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+private theorem ne_halt_of_reaches_ne_halt_region
     {c mid : MachineDescription.Configuration} {k n : Nat}
     (hrun :
-      DovetailControllerStageInputProjectionDescription.runConfig k c = mid)
+      Description.runConfig k c = mid)
     (hmid :
       forall m : Nat,
-        (DovetailControllerStageInputProjectionDescription.runConfig m
+        (Description.runConfig m
           mid).state ≠
-          DovetailControllerStageInputProjectionDescription.halt) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n c).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+          Description.halt) :
+    (Description.runConfig n c).state ≠
+      Description.halt := by
   by_cases hle : n ≤ k
   · apply
-      dovetailControllerStageInputProjectionDescription_state_ne_halt_of_later_ne_halt
+      state_ne_halt_of_later_ne_halt
         hle
     rw [hrun]
     exact hmid 0
@@ -5440,16 +5441,16 @@ private theorem dovetailControllerStageInputProjectionDescription_ne_halt_of_rea
     rw [hn, MachineDescription.runConfig_add, hrun]
     exact hmid (n - k)
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state200_decodeNat_none_ne_halt
+private theorem run_state200_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeNat tokens = none) (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 200 leftRev (projectionCodeCells tokens))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   induction tokens generalizing leftRev n with
   | nil =>
       exact
-        dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+        ne_halt_of_reaches_stepConfig_none
           (k := 0) (by rfl) (by
             change (200 : Nat) ≠ 999
             omega)
@@ -5457,13 +5458,13 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state200_d
       cases symbol with
       | header =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 2) (by rfl) (by
                 change (202 : Nat) ≠ 999
                 omega)
       | transition =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 2) (by rfl) (by
                 change (202 : Nat) ≠ 999
                 omega)
@@ -5471,21 +5472,21 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state200_d
           cases hrest : MachineDescription.decodeNat rest with
           | none =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 4)
                   (mid :=
                     projectionConfig 200
                       (List.append projectionTickCodeCellsRev leftRev)
                       (projectionCodeCells rest))
               · change
-                  DovetailControllerStageInputProjectionDescription.runConfig 4
+                  Description.runConfig 4
                     (projectionConfig 200 leftRev
                       (List.append projectionTickCodeCells
                         (projectionCodeCells rest))) =
                     projectionConfig 200
                       (List.append projectionTickCodeCellsRev leftRev)
                       (projectionCodeCells rest)
-                rw [dovetailControllerStageInputProjectionDescription_run_stage_tick]
+                rw [run_stage_tick]
               · intro m
                 exact ih (List.append projectionTickCodeCellsRev leftRev)
                   hrest m
@@ -5495,45 +5496,45 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state200_d
           simp [MachineDescription.decodeNat] at hdecode
       | blank =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (201 : Nat) ≠ 999
                 omega)
       | zero =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (201 : Nat) ≠ 999
                 omega)
       | one =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (201 : Nat) ≠ 999
                 omega)
       | moveLeft =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (201 : Nat) ≠ 999
                 omega)
       | moveRight =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 0) (by rfl) (by
                 change (200 : Nat) ≠ 999
                 omega)
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state120_decodeNat_none_ne_halt
+private theorem run_state120_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeNat tokens = none) (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 120 leftRev (projectionCodeCells tokens))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   induction tokens generalizing leftRev n with
   | nil =>
       exact
-        dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+        ne_halt_of_reaches_stepConfig_none
           (k := 0) (by rfl) (by
             change (120 : Nat) ≠ 999
             omega)
@@ -5541,13 +5542,13 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state120_d
       cases symbol with
       | header =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 2) (by rfl) (by
                 change (122 : Nat) ≠ 999
                 omega)
       | transition =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 2) (by rfl) (by
                 change (122 : Nat) ≠ 999
                 omega)
@@ -5555,21 +5556,21 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state120_d
           cases hrest : MachineDescription.decodeNat rest with
           | none =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 4)
                   (mid :=
                     projectionConfig 120
                       (List.append projectionTickCodeCellsRev leftRev)
                       (projectionCodeCells rest))
               · change
-                  DovetailControllerStageInputProjectionDescription.runConfig 4
+                  Description.runConfig 4
                     (projectionConfig 120 leftRev
                       (List.append projectionTickCodeCells
                         (projectionCodeCells rest))) =
                     projectionConfig 120
                       (List.append projectionTickCodeCellsRev leftRev)
                       (projectionCodeCells rest)
-                rw [dovetailControllerStageInputProjectionDescription_run_state120_tick]
+                rw [run_state120_tick]
                 rfl
               · intro m
                 exact ih (List.append projectionTickCodeCellsRev leftRev)
@@ -5580,45 +5581,45 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state120_d
           simp [MachineDescription.decodeNat] at hdecode
       | blank =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (121 : Nat) ≠ 999
                 omega)
       | zero =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (121 : Nat) ≠ 999
                 omega)
       | one =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (121 : Nat) ≠ 999
                 omega)
       | moveLeft =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (121 : Nat) ≠ 999
                 omega)
       | moveRight =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 0) (by rfl) (by
                 change (120 : Nat) ≠ 999
                 omega)
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state100_decodeNat_none_ne_halt
+private theorem run_state100_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeNat tokens = none) (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 100 leftRev (projectionCodeCells tokens))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   induction tokens generalizing leftRev n with
   | nil =>
       exact
-        dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+        ne_halt_of_reaches_stepConfig_none
           (k := 0) (by rfl) (by
             change (100 : Nat) ≠ 999
             omega)
@@ -5626,13 +5627,13 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state100_d
       cases symbol with
       | header =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 2) (by rfl) (by
                 change (102 : Nat) ≠ 999
                 omega)
       | transition =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 2) (by rfl) (by
                 change (102 : Nat) ≠ 999
                 omega)
@@ -5640,7 +5641,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state100_d
           cases hrest : MachineDescription.decodeNat rest with
           | none =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 4)
                   (mid :=
                     projectionConfig 120
@@ -5648,7 +5649,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state100_d
                         leftRev)
                       (projectionCodeCells rest))
               · change
-                  DovetailControllerStageInputProjectionDescription.runConfig 4
+                  Description.runConfig 4
                     (projectionConfig 100 leftRev
                       (List.append projectionTickCodeCells
                         (projectionCodeCells rest))) =
@@ -5656,10 +5657,10 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state100_d
                       (List.append projectionMarkedTickCodeCells.reverse
                         leftRev)
                       (projectionCodeCells rest)
-                rw [dovetailControllerStageInputProjectionDescription_run_state100_mark_tick]
+                rw [run_state100_mark_tick]
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_state120_decodeNat_none_ne_halt
+                  run_state120_decodeNat_none_ne_halt
                     rest
                     (List.append projectionMarkedTickCodeCells.reverse leftRev)
                     hrest m
@@ -5669,45 +5670,45 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state100_d
           simp [MachineDescription.decodeNat] at hdecode
       | blank =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (101 : Nat) ≠ 999
                 omega)
       | zero =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (101 : Nat) ≠ 999
                 omega)
       | one =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (101 : Nat) ≠ 999
                 omega)
       | moveLeft =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (101 : Nat) ≠ 999
                 omega)
       | moveRight =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 0) (by rfl) (by
                 change (100 : Nat) ≠ 999
                 omega)
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state320_decodeNat_none_ne_halt
+private theorem run_state320_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeNat tokens = none) (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 320 leftRev (projectionCodeCells tokens))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   induction tokens generalizing leftRev n with
   | nil =>
       exact
-        dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+        ne_halt_of_reaches_stepConfig_none
           (k := 0) (by rfl) (by
             change (320 : Nat) ≠ 999
             omega)
@@ -5715,13 +5716,13 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state320_d
       cases symbol with
       | header =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 2) (by rfl) (by
                 change (322 : Nat) ≠ 999
                 omega)
       | transition =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 2) (by rfl) (by
                 change (322 : Nat) ≠ 999
                 omega)
@@ -5729,21 +5730,21 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state320_d
           cases hrest : MachineDescription.decodeNat rest with
           | none =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 4)
                   (mid :=
                     projectionConfig 320
                       (List.append projectionTickCodeCellsRev leftRev)
                       (projectionCodeCells rest))
               · change
-                  DovetailControllerStageInputProjectionDescription.runConfig 4
+                  Description.runConfig 4
                     (projectionConfig 320 leftRev
                       (List.append projectionTickCodeCells
                         (projectionCodeCells rest))) =
                     projectionConfig 320
                       (List.append projectionTickCodeCellsRev leftRev)
                       (projectionCodeCells rest)
-                rw [dovetailControllerStageInputProjectionDescription_run_state320_tick]
+                rw [run_state320_tick]
                 rfl
               · intro m
                 exact ih (List.append projectionTickCodeCellsRev leftRev)
@@ -5754,45 +5755,45 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state320_d
           simp [MachineDescription.decodeNat] at hdecode
       | blank =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (321 : Nat) ≠ 999
                 omega)
       | zero =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (321 : Nat) ≠ 999
                 omega)
       | one =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (321 : Nat) ≠ 999
                 omega)
       | moveLeft =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (321 : Nat) ≠ 999
                 omega)
       | moveRight =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 0) (by rfl) (by
                 change (320 : Nat) ≠ 999
                 omega)
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state300_decodeNat_none_ne_halt
+private theorem run_state300_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeNat tokens = none) (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 300 leftRev (projectionCodeCells tokens))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   induction tokens generalizing leftRev n with
   | nil =>
       exact
-        dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+        ne_halt_of_reaches_stepConfig_none
           (k := 0) (by rfl) (by
             change (300 : Nat) ≠ 999
             omega)
@@ -5800,13 +5801,13 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state300_d
       cases symbol with
       | header =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 2) (by rfl) (by
                 change (302 : Nat) ≠ 999
                 omega)
       | transition =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 2) (by rfl) (by
                 change (302 : Nat) ≠ 999
                 omega)
@@ -5814,24 +5815,24 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state300_d
           cases hrest : MachineDescription.decodeNat rest with
           | none =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 4)
                   (mid :=
                     projectionConfig 320
                       (List.append projectionMarkedTickCodeCells.reverse leftRev)
                       (projectionCodeCells rest))
               · change
-                  DovetailControllerStageInputProjectionDescription.runConfig 4
+                  Description.runConfig 4
                     (projectionConfig 300 leftRev
                       (List.append projectionTickCodeCells
                         (projectionCodeCells rest))) =
                     projectionConfig 320
                       (List.append projectionMarkedTickCodeCells.reverse leftRev)
                       (projectionCodeCells rest)
-                rw [dovetailControllerStageInputProjectionDescription_run_state300_mark_tick]
+                rw [run_state300_mark_tick]
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_state320_decodeNat_none_ne_halt
+                  run_state320_decodeNat_none_ne_halt
                     rest
                     (List.append projectionMarkedTickCodeCells.reverse leftRev)
                     hrest m
@@ -5841,45 +5842,45 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state300_d
           simp [MachineDescription.decodeNat] at hdecode
       | blank =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (301 : Nat) ≠ 999
                 omega)
       | zero =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (301 : Nat) ≠ 999
                 omega)
       | one =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (301 : Nat) ≠ 999
                 omega)
       | moveLeft =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (301 : Nat) ≠ 999
                 omega)
       | moveRight =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 0) (by rfl) (by
                 change (300 : Nat) ≠ 999
                 omega)
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state330_decodeCell_none_ne_halt
+private theorem run_state330_decodeCell_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeCell tokens = none) (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 330 leftRev (projectionCodeCells tokens))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   cases tokens with
   | nil =>
       exact
-        dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+        ne_halt_of_reaches_stepConfig_none
           (k := 0) (by rfl) (by
             change (330 : Nat) ≠ 999
             omega)
@@ -5887,25 +5888,25 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state330_d
       cases symbol with
       | header =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (331 : Nat) ≠ 999
                 omega)
       | transition =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (331 : Nat) ≠ 999
                 omega)
       | tick =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (331 : Nat) ≠ 999
                 omega)
       | done =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (331 : Nat) ≠ 999
                 omega)
@@ -5917,42 +5918,42 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state330_d
           simp [MachineDescription.decodeCell] at hdecode
       | moveLeft =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 3) (by rfl) (by
                 change (334 : Nat) ≠ 999
                 omega)
       | moveRight =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 0) (by rfl) (by
                 change (330 : Nat) ≠ 999
                 omega)
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state330_blank_cell_ne_halt
+private theorem run_state330_blank_cell_ne_halt
     (suffix : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 330 leftRev
         (projectionCodeCells
           (MachineDescription.encodeCellAppend none suffix)))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   exact
-    dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+    ne_halt_of_reaches_stepConfig_none
       (k := 3) (by
         cases suffix <;> rfl) (by
         change (333 : Nat) ≠ 999
         omega)
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state130_decodeCell_none_ne_halt
+private theorem run_state130_decodeCell_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeCell tokens = none) (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 130 leftRev (projectionCodeCells tokens))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   cases tokens with
   | nil =>
       exact
-        dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+        ne_halt_of_reaches_stepConfig_none
           (k := 0) (by rfl) (by
             change (130 : Nat) ≠ 999
             omega)
@@ -5960,25 +5961,25 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state130_d
       cases symbol with
       | header =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (131 : Nat) ≠ 999
                 omega)
       | transition =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (131 : Nat) ≠ 999
                 omega)
       | tick =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (131 : Nat) ≠ 999
                 omega)
       | done =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (131 : Nat) ≠ 999
                 omega)
@@ -5990,44 +5991,44 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state130_d
           simp [MachineDescription.decodeCell] at hdecode
       | moveLeft =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 3) (by rfl) (by
                 change (134 : Nat) ≠ 999
                 omega)
       | moveRight =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 0) (by rfl) (by
                 change (130 : Nat) ≠ 999
                 omega)
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state130_blank_cell_ne_halt
+private theorem run_state130_blank_cell_ne_halt
     (suffix : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 130 leftRev
         (projectionCodeCells
           (MachineDescription.encodeCellAppend none suffix)))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   exact
-    dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+    ne_halt_of_reaches_stepConfig_none
       (k := 3) (by
         cases suffix <;> rfl) (by
         change (133 : Nat) ≠ 999
         omega)
 
-private theorem dovetailControllerStageInputProjectionDescription_run_result_tail_decodeCells_none_ne_halt
+private theorem run_result_tail_decodeCells_none_ne_halt
     (marked : Word Bool) (len : Nat)
     (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeCells len tokens = none)
     (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 300
         (List.append [none, none, none, none] baseLeftRev)
         (projectionResultTailWorkCells marked len
           (projectionCodeCells tokens)))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   induction len generalizing marked tokens baseLeftRev n with
   | zero =>
       simp [MachineDescription.decodeCells] at hdecode
@@ -6035,18 +6036,18 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
       cases hcell : MachineDescription.decodeCell tokens with
       | none =>
           apply
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+            ne_halt_of_reaches_ne_halt_region
               (k := 8 * marked.length + 4 * len + 8)
               (mid :=
                 projectionConfig 330
                   (projectionResultTailPayloadLeftRev marked len baseLeftRev)
                   (projectionCodeCells tokens))
           · exact
-              dovetailControllerStageInputProjectionDescription_run_result_tail_to_first_payload
+              run_result_tail_to_first_payload
                 marked len (projectionCodeCells tokens) baseLeftRev
           · intro m
             exact
-              dovetailControllerStageInputProjectionDescription_run_state330_decodeCell_none_ne_halt
+              run_state330_decodeCell_none_ne_halt
                 tokens
                 (projectionResultTailPayloadLeftRev marked len baseLeftRev)
                 hcell m
@@ -6059,7 +6060,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
           cases cell with
           | none =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 8 * marked.length + 4 * len + 8)
                   (mid :=
                     projectionConfig 330
@@ -6070,7 +6071,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
                           restAfterCell)))
               · rw [htokens]
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_result_tail_to_first_payload
+                  run_result_tail_to_first_payload
                     marked len
                     (projectionCodeCells
                       (MachineDescription.encodeCellAppend none
@@ -6078,7 +6079,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
                     baseLeftRev
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_state330_blank_cell_ne_halt
+                  run_state330_blank_cell_ne_halt
                     restAfterCell
                     (projectionResultTailPayloadLeftRev marked len
                       baseLeftRev)
@@ -6088,7 +6089,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
                   MachineDescription.decodeCells len restAfterCell with
               | none =>
                   apply
-                    dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                    ne_halt_of_reaches_ne_halt_region
                       (k := projectionResultMarkTailStepCost marked len)
                       (mid :=
                         projectionConfig 300
@@ -6101,7 +6102,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
                     cases b with
                     | false =>
                         change
-                          DovetailControllerStageInputProjectionDescription.runConfig
+                          Description.runConfig
                             (projectionResultMarkTailStepCost marked len)
                             (projectionConfig 300
                               (List.append [none, none, none, none]
@@ -6117,10 +6118,10 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
                               (projectionResultTailWorkCells
                                 (List.append marked [false]) len
                                 (projectionCodeCells restAfterCell))
-                        rw [dovetailControllerStageInputProjectionDescription_run_result_mark_one_tail]
+                        rw [run_result_mark_one_tail]
                     | true =>
                         change
-                        DovetailControllerStageInputProjectionDescription.runConfig
+                        Description.runConfig
                           (projectionResultMarkTailStepCost marked len)
                           (projectionConfig 300
                             (List.append [none, none, none, none]
@@ -6136,7 +6137,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
                             (projectionResultTailWorkCells
                               (List.append marked [true]) len
                               (projectionCodeCells restAfterCell))
-                        rw [dovetailControllerStageInputProjectionDescription_run_result_mark_one_tail]
+                        rw [run_result_mark_one_tail]
                   · intro m
                     exact
                       ih (List.append marked [b]) restAfterCell
@@ -6144,19 +6145,19 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
               | some parsedRest =>
                   simp [MachineDescription.decodeCells, hcell, hrest] at hdecode
 
-private theorem dovetailControllerStageInputProjectionDescription_run_result_tail_cellsToWord_none_ne_halt
+private theorem run_result_tail_cellsToWord_none_ne_halt
     (marked : Word Bool) (cells : List (Option Bool))
     (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
     (hword : MachineDescription.cellsToWord? cells = none)
     (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 300
         (List.append [none, none, none, none] baseLeftRev)
         (projectionResultTailWorkCells marked cells.length
           (projectionCodeCells
             (MachineDescription.encodeCellsAppend cells suffix))))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   induction cells generalizing marked suffix baseLeftRev n with
   | nil =>
       simp [MachineDescription.cellsToWord?] at hword
@@ -6164,7 +6165,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
       cases cell with
       | none =>
           apply
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+            ne_halt_of_reaches_ne_halt_region
               (k := 8 * marked.length + 4 * rest.length + 8)
               (mid :=
                 projectionConfig 330
@@ -6174,7 +6175,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
                     (MachineDescription.encodeCellAppend none
                       (MachineDescription.encodeCellsAppend rest suffix))))
           · change
-              DovetailControllerStageInputProjectionDescription.runConfig
+              Description.runConfig
                   (8 * marked.length + 4 * rest.length + 8)
                   (projectionConfig 300
                     (List.append [none, none, none, none] baseLeftRev)
@@ -6189,10 +6190,10 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
                   (projectionCodeCells
                     (MachineDescription.encodeCellAppend none
                       (MachineDescription.encodeCellsAppend rest suffix)))
-            rw [dovetailControllerStageInputProjectionDescription_run_result_tail_to_first_payload]
+            rw [run_result_tail_to_first_payload]
           · intro m
             exact
-              dovetailControllerStageInputProjectionDescription_run_state330_blank_cell_ne_halt
+              run_state330_blank_cell_ne_halt
                 (MachineDescription.encodeCellsAppend rest suffix)
                 (projectionResultTailPayloadLeftRev marked rest.length
                   baseLeftRev)
@@ -6201,7 +6202,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
           cases hrest : MachineDescription.cellsToWord? rest with
           | none =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := projectionResultMarkTailStepCost marked rest.length)
                   (mid :=
                     projectionConfig 300
@@ -6214,7 +6215,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
               · cases b with
                 | false =>
                     change
-                      DovetailControllerStageInputProjectionDescription.runConfig
+                      Description.runConfig
                         (projectionResultMarkTailStepCost marked rest.length)
                         (projectionConfig 300
                           (List.append [none, none, none, none] baseLeftRev)
@@ -6231,10 +6232,10 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
                             (projectionCodeCells
                               (MachineDescription.encodeCellsAppend rest
                                 suffix)))
-                    rw [dovetailControllerStageInputProjectionDescription_run_result_mark_one_tail]
+                    rw [run_result_mark_one_tail]
                 | true =>
                     change
-                      DovetailControllerStageInputProjectionDescription.runConfig
+                      Description.runConfig
                         (projectionResultMarkTailStepCost marked rest.length)
                         (projectionConfig 300
                           (List.append [none, none, none, none] baseLeftRev)
@@ -6251,23 +6252,23 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_tai
                             (projectionCodeCells
                               (MachineDescription.encodeCellsAppend rest
                                 suffix)))
-                    rw [dovetailControllerStageInputProjectionDescription_run_result_mark_one_tail]
+                    rw [run_result_mark_one_tail]
               · intro m
                 exact
                   ih (List.append marked [b]) suffix baseLeftRev hrest m
           | some decoded =>
               simp [MachineDescription.cellsToWord?, hrest] at hword
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state300_decodeBoolWord_none_ne_halt
+private theorem run_state300_decodeBoolWord_none_ne_halt
     (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeBoolWord tokens = none)
     (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 300
         (List.append [none, none, none, none] baseLeftRev)
         (projectionCodeCells tokens))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   unfold MachineDescription.decodeBoolWord at hdecode
   cases hcells : MachineDescription.decodeCellList tokens with
   | none =>
@@ -6275,7 +6276,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state300_d
       cases hnat : MachineDescription.decodeNat tokens with
       | none =>
           exact
-            dovetailControllerStageInputProjectionDescription_run_state300_decodeNat_none_ne_halt
+            run_state300_decodeNat_none_ne_halt
               tokens (List.append [none, none, none, none] baseLeftRev)
               hnat n
       | some parsedNat =>
@@ -6288,14 +6289,14 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state300_d
           rw [htokens]
           rw [projectionCodeCells_encodeNatAppend]
           change
-            (DovetailControllerStageInputProjectionDescription.runConfig n
+            (Description.runConfig n
               (projectionConfig 300
                 (List.append [none, none, none, none] baseLeftRev)
                 (projectionResultTailWorkCells ([] : Word Bool) len
                   (projectionCodeCells restAfterLen)))).state ≠
-              DovetailControllerStageInputProjectionDescription.halt
+              Description.halt
           exact
-            dovetailControllerStageInputProjectionDescription_run_result_tail_decodeCells_none_ne_halt
+            run_result_tail_decodeCells_none_ne_halt
               ([] : Word Bool) len restAfterLen baseLeftRev hcells n
   | some parsedCells =>
       rcases parsedCells with ⟨cells, suffix⟩
@@ -6310,32 +6311,32 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state300_d
           rw [MachineDescription.encodeCellListAppend,
             projectionCodeCells_encodeNatAppend]
           change
-            (DovetailControllerStageInputProjectionDescription.runConfig n
+            (Description.runConfig n
               (projectionConfig 300
                 (List.append [none, none, none, none] baseLeftRev)
                 (projectionResultTailWorkCells ([] : Word Bool) cells.length
                   (projectionCodeCells
                     (MachineDescription.encodeCellsAppend cells
                       suffix))))).state ≠
-              DovetailControllerStageInputProjectionDescription.halt
+              Description.halt
           exact
-            dovetailControllerStageInputProjectionDescription_run_result_tail_cellsToWord_none_ne_halt
+            run_result_tail_cellsToWord_none_ne_halt
               ([] : Word Bool) cells suffix baseLeftRev hword n
       | some decoded =>
           simp [hcells, hword] at hdecode
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_tail_decodeCells_none_ne_halt
+private theorem run_input_tail_decodeCells_none_ne_halt
     (marked : Word Bool) (len : Nat)
     (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeCells len tokens = none)
     (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 100
         (List.append [none, none, none, none] baseLeftRev)
         (projectionResultTailWorkCells marked len
           (projectionCodeCells tokens)))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   induction len generalizing marked tokens baseLeftRev n with
   | zero =>
       simp [MachineDescription.decodeCells] at hdecode
@@ -6343,18 +6344,18 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
       cases hcell : MachineDescription.decodeCell tokens with
       | none =>
           apply
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+            ne_halt_of_reaches_ne_halt_region
               (k := 8 * marked.length + 4 * len + 8)
               (mid :=
                 projectionConfig 130
                   (projectionResultTailPayloadLeftRev marked len baseLeftRev)
                   (projectionCodeCells tokens))
           · exact
-              dovetailControllerStageInputProjectionDescription_run_input_tail_to_first_payload
+              run_input_tail_to_first_payload
                 marked len (projectionCodeCells tokens) baseLeftRev
           · intro m
             exact
-              dovetailControllerStageInputProjectionDescription_run_state130_decodeCell_none_ne_halt
+              run_state130_decodeCell_none_ne_halt
                 tokens
                 (projectionResultTailPayloadLeftRev marked len baseLeftRev)
                 hcell m
@@ -6367,7 +6368,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
           cases cell with
           | none =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 8 * marked.length + 4 * len + 8)
                   (mid :=
                     projectionConfig 130
@@ -6378,7 +6379,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
                           restAfterCell)))
               · rw [htokens]
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_input_tail_to_first_payload
+                  run_input_tail_to_first_payload
                     marked len
                     (projectionCodeCells
                       (MachineDescription.encodeCellAppend none
@@ -6386,7 +6387,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
                     baseLeftRev
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_state130_blank_cell_ne_halt
+                  run_state130_blank_cell_ne_halt
                     restAfterCell
                     (projectionResultTailPayloadLeftRev marked len
                       baseLeftRev)
@@ -6396,7 +6397,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
                   MachineDescription.decodeCells len restAfterCell with
               | none =>
                   apply
-                    dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                    ne_halt_of_reaches_ne_halt_region
                       (k := projectionResultMarkTailStepCost marked len)
                       (mid :=
                         projectionConfig 100
@@ -6409,7 +6410,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
                     cases b with
                     | false =>
                         change
-                          DovetailControllerStageInputProjectionDescription.runConfig
+                          Description.runConfig
                             (projectionResultMarkTailStepCost marked len)
                             (projectionConfig 100
                               (List.append [none, none, none, none]
@@ -6425,10 +6426,10 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
                               (projectionResultTailWorkCells
                                 (List.append marked [false]) len
                                 (projectionCodeCells restAfterCell))
-                        rw [dovetailControllerStageInputProjectionDescription_run_input_mark_one_tail]
+                        rw [run_input_mark_one_tail]
                     | true =>
                         change
-                          DovetailControllerStageInputProjectionDescription.runConfig
+                          Description.runConfig
                             (projectionResultMarkTailStepCost marked len)
                             (projectionConfig 100
                               (List.append [none, none, none, none]
@@ -6444,7 +6445,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
                               (projectionResultTailWorkCells
                                 (List.append marked [true]) len
                                 (projectionCodeCells restAfterCell))
-                        rw [dovetailControllerStageInputProjectionDescription_run_input_mark_one_tail]
+                        rw [run_input_mark_one_tail]
                   · intro m
                     exact
                       ih (List.append marked [b]) restAfterCell
@@ -6452,19 +6453,19 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
               | some parsedRest =>
                   simp [MachineDescription.decodeCells, hcell, hrest] at hdecode
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_tail_cellsToWord_none_ne_halt
+private theorem run_input_tail_cellsToWord_none_ne_halt
     (marked : Word Bool) (cells : List (Option Bool))
     (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
     (hword : MachineDescription.cellsToWord? cells = none)
     (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 100
         (List.append [none, none, none, none] baseLeftRev)
         (projectionResultTailWorkCells marked cells.length
           (projectionCodeCells
             (MachineDescription.encodeCellsAppend cells suffix))))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   induction cells generalizing marked suffix baseLeftRev n with
   | nil =>
       simp [MachineDescription.cellsToWord?] at hword
@@ -6472,7 +6473,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
       cases cell with
       | none =>
           apply
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+            ne_halt_of_reaches_ne_halt_region
               (k := 8 * marked.length + 4 * rest.length + 8)
               (mid :=
                 projectionConfig 130
@@ -6482,7 +6483,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
                     (MachineDescription.encodeCellAppend none
                       (MachineDescription.encodeCellsAppend rest suffix))))
           · change
-              DovetailControllerStageInputProjectionDescription.runConfig
+              Description.runConfig
                   (8 * marked.length + 4 * rest.length + 8)
                   (projectionConfig 100
                     (List.append [none, none, none, none] baseLeftRev)
@@ -6497,10 +6498,10 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
                   (projectionCodeCells
                     (MachineDescription.encodeCellAppend none
                       (MachineDescription.encodeCellsAppend rest suffix)))
-            rw [dovetailControllerStageInputProjectionDescription_run_input_tail_to_first_payload]
+            rw [run_input_tail_to_first_payload]
           · intro m
             exact
-              dovetailControllerStageInputProjectionDescription_run_state130_blank_cell_ne_halt
+              run_state130_blank_cell_ne_halt
                 (MachineDescription.encodeCellsAppend rest suffix)
                 (projectionResultTailPayloadLeftRev marked rest.length
                   baseLeftRev)
@@ -6509,7 +6510,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
           cases hrest : MachineDescription.cellsToWord? rest with
           | none =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := projectionResultMarkTailStepCost marked rest.length)
                   (mid :=
                     projectionConfig 100
@@ -6522,7 +6523,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
               · cases b with
                 | false =>
                     change
-                      DovetailControllerStageInputProjectionDescription.runConfig
+                      Description.runConfig
                         (projectionResultMarkTailStepCost marked rest.length)
                         (projectionConfig 100
                           (List.append [none, none, none, none] baseLeftRev)
@@ -6539,10 +6540,10 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
                             (projectionCodeCells
                               (MachineDescription.encodeCellsAppend rest
                                 suffix)))
-                    rw [dovetailControllerStageInputProjectionDescription_run_input_mark_one_tail]
+                    rw [run_input_mark_one_tail]
                 | true =>
                     change
-                      DovetailControllerStageInputProjectionDescription.runConfig
+                      Description.runConfig
                         (projectionResultMarkTailStepCost marked rest.length)
                         (projectionConfig 100
                           (List.append [none, none, none, none] baseLeftRev)
@@ -6559,23 +6560,23 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_tail
                             (projectionCodeCells
                               (MachineDescription.encodeCellsAppend rest
                                 suffix)))
-                    rw [dovetailControllerStageInputProjectionDescription_run_input_mark_one_tail]
+                    rw [run_input_mark_one_tail]
               · intro m
                 exact
                   ih (List.append marked [b]) suffix baseLeftRev hrest m
           | some decoded =>
               simp [MachineDescription.cellsToWord?, hrest] at hword
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state100_decodeBoolWord_none_ne_halt
+private theorem run_state100_decodeBoolWord_none_ne_halt
     (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeBoolWord tokens = none)
     (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 100
         (List.append [none, none, none, none] baseLeftRev)
         (projectionCodeCells tokens))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   unfold MachineDescription.decodeBoolWord at hdecode
   cases hcells : MachineDescription.decodeCellList tokens with
   | none =>
@@ -6583,7 +6584,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state100_d
       cases hnat : MachineDescription.decodeNat tokens with
       | none =>
           exact
-            dovetailControllerStageInputProjectionDescription_run_state100_decodeNat_none_ne_halt
+            run_state100_decodeNat_none_ne_halt
               tokens (List.append [none, none, none, none] baseLeftRev)
               hnat n
       | some parsedNat =>
@@ -6596,14 +6597,14 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state100_d
           rw [htokens]
           rw [projectionCodeCells_encodeNatAppend]
           change
-            (DovetailControllerStageInputProjectionDescription.runConfig n
+            (Description.runConfig n
               (projectionConfig 100
                 (List.append [none, none, none, none] baseLeftRev)
                 (projectionResultTailWorkCells ([] : Word Bool) len
                   (projectionCodeCells restAfterLen)))).state ≠
-              DovetailControllerStageInputProjectionDescription.halt
+              Description.halt
           exact
-            dovetailControllerStageInputProjectionDescription_run_input_tail_decodeCells_none_ne_halt
+            run_input_tail_decodeCells_none_ne_halt
               ([] : Word Bool) len restAfterLen baseLeftRev hcells n
   | some parsedCells =>
       rcases parsedCells with ⟨cells, suffix⟩
@@ -6618,36 +6619,36 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state100_d
           rw [MachineDescription.encodeCellListAppend,
             projectionCodeCells_encodeNatAppend]
           change
-            (DovetailControllerStageInputProjectionDescription.runConfig n
+            (Description.runConfig n
               (projectionConfig 100
                 (List.append [none, none, none, none] baseLeftRev)
                 (projectionResultTailWorkCells ([] : Word Bool) cells.length
                   (projectionCodeCells
                     (MachineDescription.encodeCellsAppend cells
                       suffix))))).state ≠
-              DovetailControllerStageInputProjectionDescription.halt
+              Description.halt
           exact
-            dovetailControllerStageInputProjectionDescription_run_input_tail_cellsToWord_none_ne_halt
+            run_input_tail_cellsToWord_none_ne_halt
               ([] : Word Bool) cells suffix baseLeftRev hword n
       | some decoded =>
           simp [hcells, hword] at hdecode
 
-private theorem dovetailControllerStageInputProjectionDescription_run_input_bool_word_acc_stage_decodeNat_none_ne_halt
+private theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
     (marked restInput : Word Bool) (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeNat tokens = none)
     (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 100
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells marked restInput tokens))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   induction restInput generalizing marked baseLeftRev n with
   | nil =>
       cases tokens with
       | nil =>
           apply
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+            ne_halt_of_reaches_ne_halt_region
               (k := 8 * marked.length + 4)
               (mid :=
                 projectionConfig 150
@@ -6659,11 +6660,11 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
                         (List.append [none, none, none, none] baseLeftRev))))
                   (projectionCodeCells ([] : Word MachineCodeSymbol)))
           · exact
-              dovetailControllerStageInputProjectionDescription_run_input_finish_marked_to_state150_tail
+              run_input_finish_marked_to_state150_tail
                 marked ([] : Word MachineCodeSymbol) baseLeftRev
           · intro m
             exact
-              dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+              state_ne_halt_of_stepConfig_none
                 (n := m) (by rfl) (by
                   change (150 : Nat) ≠ 999
                   omega)
@@ -6671,7 +6672,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
           cases symbol with
           | header =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := projectionInputRemainingCost marked ([] : Word Bool))
                   (mid :=
                     projectionConfig 200
@@ -6682,7 +6683,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
                       (projectionCodeCells
                         (MachineCodeSymbol.header :: suffix)))
               · simpa using
-                  dovetailControllerStageInputProjectionDescription_run_input_bool_word_acc_false_false_suffix
+                  run_input_bool_word_acc_false_false_suffix
                     marked ([] : Word Bool)
                     (MachineCodeSymbol.header :: suffix)
                     (some false :: some false ::
@@ -6690,7 +6691,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
                     baseLeftRev (by rfl)
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_state200_decodeNat_none_ne_halt
+                  run_state200_decodeNat_none_ne_halt
                     (MachineCodeSymbol.header :: suffix)
                     (List.append
                       (projectionCodeCells
@@ -6699,7 +6700,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
                     hdecode m
           | transition =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := projectionInputRemainingCost marked ([] : Word Bool))
                   (mid :=
                     projectionConfig 200
@@ -6710,7 +6711,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
                       (projectionCodeCells
                         (MachineCodeSymbol.transition :: suffix)))
               · simpa using
-                  dovetailControllerStageInputProjectionDescription_run_input_bool_word_acc_false_false_suffix
+                  run_input_bool_word_acc_false_false_suffix
                     marked ([] : Word Bool)
                     (MachineCodeSymbol.transition :: suffix)
                     (some false :: some true ::
@@ -6718,7 +6719,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
                     baseLeftRev (by rfl)
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_state200_decodeNat_none_ne_halt
+                  run_state200_decodeNat_none_ne_halt
                     (MachineCodeSymbol.transition :: suffix)
                     (List.append
                       (projectionCodeCells
@@ -6727,7 +6728,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
                     hdecode m
           | tick =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := projectionInputRemainingCost marked ([] : Word Bool))
                   (mid :=
                     projectionConfig 200
@@ -6737,7 +6738,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
                         (List.append [none, none, none, none] baseLeftRev))
                       (projectionCodeCells (MachineCodeSymbol.tick :: suffix)))
               · simpa using
-                  dovetailControllerStageInputProjectionDescription_run_input_bool_word_acc_false_false_suffix
+                  run_input_bool_word_acc_false_false_suffix
                     marked ([] : Word Bool)
                     (MachineCodeSymbol.tick :: suffix)
                     (some true :: some false ::
@@ -6745,7 +6746,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
                     baseLeftRev (by rfl)
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_state200_decodeNat_none_ne_halt
+                  run_state200_decodeNat_none_ne_halt
                     (MachineCodeSymbol.tick :: suffix)
                     (List.append
                       (projectionCodeCells
@@ -6756,7 +6757,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
               simp [MachineDescription.decodeNat] at hdecode
           | blank =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 8 * marked.length + 4)
                   (mid :=
                     projectionConfig 150
@@ -6770,17 +6771,17 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
                       (projectionCodeCells
                         (MachineCodeSymbol.blank :: suffix)))
               · exact
-                  dovetailControllerStageInputProjectionDescription_run_input_finish_marked_to_state150_tail
+                  run_input_finish_marked_to_state150_tail
                     marked (MachineCodeSymbol.blank :: suffix) baseLeftRev
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+                  ne_halt_of_reaches_stepConfig_none
                     (k := 1) (by rfl) (by
                       change (151 : Nat) ≠ 999
                       omega)
           | zero =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 8 * marked.length + 4)
                   (mid :=
                     projectionConfig 150
@@ -6794,17 +6795,17 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
                       (projectionCodeCells
                         (MachineCodeSymbol.zero :: suffix)))
               · exact
-                  dovetailControllerStageInputProjectionDescription_run_input_finish_marked_to_state150_tail
+                  run_input_finish_marked_to_state150_tail
                     marked (MachineCodeSymbol.zero :: suffix) baseLeftRev
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+                  ne_halt_of_reaches_stepConfig_none
                     (k := 1) (by rfl) (by
                       change (151 : Nat) ≠ 999
                       omega)
           | one =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 8 * marked.length + 4)
                   (mid :=
                     projectionConfig 150
@@ -6818,17 +6819,17 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
                       (projectionCodeCells
                         (MachineCodeSymbol.one :: suffix)))
               · exact
-                  dovetailControllerStageInputProjectionDescription_run_input_finish_marked_to_state150_tail
+                  run_input_finish_marked_to_state150_tail
                     marked (MachineCodeSymbol.one :: suffix) baseLeftRev
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+                  ne_halt_of_reaches_stepConfig_none
                     (k := 1) (by rfl) (by
                       change (151 : Nat) ≠ 999
                       omega)
           | moveLeft =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 8 * marked.length + 4)
                   (mid :=
                     projectionConfig 150
@@ -6842,17 +6843,17 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
                       (projectionCodeCells
                         (MachineCodeSymbol.moveLeft :: suffix)))
               · exact
-                  dovetailControllerStageInputProjectionDescription_run_input_finish_marked_to_state150_tail
+                  run_input_finish_marked_to_state150_tail
                     marked (MachineCodeSymbol.moveLeft :: suffix) baseLeftRev
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+                  ne_halt_of_reaches_stepConfig_none
                     (k := 1) (by rfl) (by
                       change (151 : Nat) ≠ 999
                       omega)
           | moveRight =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 8 * marked.length + 4)
                   (mid :=
                     projectionConfig 150
@@ -6866,17 +6867,17 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
                       (projectionCodeCells
                         (MachineCodeSymbol.moveRight :: suffix)))
               · exact
-                  dovetailControllerStageInputProjectionDescription_run_input_finish_marked_to_state150_tail
+                  run_input_finish_marked_to_state150_tail
                     marked (MachineCodeSymbol.moveRight :: suffix) baseLeftRev
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+                  state_ne_halt_of_stepConfig_none
                     (n := m) (by rfl) (by
                       change (150 : Nat) ≠ 999
                       omega)
   | cons b restInput ih =>
       apply
-        dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+        ne_halt_of_reaches_ne_halt_region
           (k := projectionInputMarkStepCost marked restInput)
           (mid :=
             projectionConfig 100
@@ -6884,43 +6885,43 @@ private theorem dovetailControllerStageInputProjectionDescription_run_input_bool
               (projectionBoolWordWorkCells (List.append marked [b])
                 restInput tokens))
       · exact
-          dovetailControllerStageInputProjectionDescription_run_input_mark_one
+          run_input_mark_one
             marked restInput b tokens baseLeftRev
       · intro m
         exact ih (List.append marked [b]) baseLeftRev m
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state100_input_bool_word_stage_decodeNat_none_ne_halt
+private theorem run_state100_input_bool_word_stage_decodeNat_none_ne_halt
     (w : Word Bool) (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeNat tokens = none)
     (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 100
         (List.append [none, none, none, none] baseLeftRev)
         (projectionCodeCells
           (MachineDescription.encodeBoolWordAppend w tokens)))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   have h :=
-    dovetailControllerStageInputProjectionDescription_run_input_bool_word_acc_stage_decodeNat_none_ne_halt
+    run_input_bool_word_acc_stage_decodeNat_none_ne_halt
       ([] : Word Bool) w tokens baseLeftRev hdecode n
   simpa [projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend] using h
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state200_stage_nat_result_decodeBoolWord_none_ne_halt
+private theorem run_state200_stage_nat_result_decodeBoolWord_none_ne_halt
     (stage : Nat) (tokens : Word MachineCodeSymbol)
     (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeBoolWord tokens = none)
     (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 200 leftRev
         (projectionCodeCells
           (MachineDescription.encodeNatAppend stage tokens)))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   induction stage generalizing leftRev n with
   | zero =>
       cases tokens with
       | nil =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 4) (by rfl) (by
                 change (210 : Nat) ≠ 999
                 omega)
@@ -6928,13 +6929,13 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state200_s
           cases symbol with
           | moveRight =>
               exact
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+                ne_halt_of_reaches_stepConfig_none
                   (k := 4) (by rfl) (by
                     change (210 : Nat) ≠ 999
                     omega)
           | header =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 12)
                   (mid :=
                     projectionConfig 300
@@ -6944,11 +6945,11 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state200_s
               · rfl
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_state300_decodeBoolWord_none_ne_halt
+                  run_state300_decodeBoolWord_none_ne_halt
                     (MachineCodeSymbol.header :: rest) leftRev hdecode m
           | transition =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 12)
                   (mid :=
                     projectionConfig 300
@@ -6958,11 +6959,11 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state200_s
               · rfl
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_state300_decodeBoolWord_none_ne_halt
+                  run_state300_decodeBoolWord_none_ne_halt
                     (MachineCodeSymbol.transition :: rest) leftRev hdecode m
           | tick =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 12)
                   (mid :=
                     projectionConfig 300
@@ -6971,11 +6972,11 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state200_s
               · rfl
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_state300_decodeBoolWord_none_ne_halt
+                  run_state300_decodeBoolWord_none_ne_halt
                     (MachineCodeSymbol.tick :: rest) leftRev hdecode m
           | done =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 12)
                   (mid :=
                     projectionConfig 300
@@ -6984,11 +6985,11 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state200_s
               · rfl
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_state300_decodeBoolWord_none_ne_halt
+                  run_state300_decodeBoolWord_none_ne_halt
                     (MachineCodeSymbol.done :: rest) leftRev hdecode m
           | blank =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 12)
                   (mid :=
                     projectionConfig 300
@@ -6997,11 +6998,11 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state200_s
               · rfl
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_state300_decodeBoolWord_none_ne_halt
+                  run_state300_decodeBoolWord_none_ne_halt
                     (MachineCodeSymbol.blank :: rest) leftRev hdecode m
           | zero =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 12)
                   (mid :=
                     projectionConfig 300
@@ -7010,11 +7011,11 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state200_s
               · rfl
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_state300_decodeBoolWord_none_ne_halt
+                  run_state300_decodeBoolWord_none_ne_halt
                     (MachineCodeSymbol.zero :: rest) leftRev hdecode m
           | one =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 12)
                   (mid :=
                     projectionConfig 300
@@ -7023,11 +7024,11 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state200_s
               · rfl
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_state300_decodeBoolWord_none_ne_halt
+                  run_state300_decodeBoolWord_none_ne_halt
                     (MachineCodeSymbol.one :: rest) leftRev hdecode m
           | moveLeft =>
               apply
-                dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                ne_halt_of_reaches_ne_halt_region
                   (k := 12)
                   (mid :=
                     projectionConfig 300
@@ -7037,11 +7038,11 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state200_s
               · rfl
               · intro m
                 exact
-                  dovetailControllerStageInputProjectionDescription_run_state300_decodeBoolWord_none_ne_halt
+                  run_state300_decodeBoolWord_none_ne_halt
                     (MachineCodeSymbol.moveLeft :: rest) leftRev hdecode m
   | succ stage ih =>
       apply
-        dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+        ne_halt_of_reaches_ne_halt_region
           (k := 4)
           (mid :=
             projectionConfig 200
@@ -7049,7 +7050,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state200_s
               (projectionCodeCells
                 (MachineDescription.encodeNatAppend stage tokens)))
       · change
-          DovetailControllerStageInputProjectionDescription.runConfig 4
+          Description.runConfig 4
             (projectionConfig 200 leftRev
               (List.append projectionTickCodeCells
                 (projectionCodeCells
@@ -7058,17 +7059,17 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state200_s
               (List.append projectionTickCodeCellsRev leftRev)
               (projectionCodeCells
                 (MachineDescription.encodeNatAppend stage tokens))
-        rw [dovetailControllerStageInputProjectionDescription_run_stage_tick]
+        rw [run_stage_tick]
       · intro m
         exact ih (List.append projectionTickCodeCellsRev leftRev) m
 
-private theorem dovetailControllerStageInputProjectionDescription_run_state350_code_symbol_ne_halt
+private theorem run_state350_code_symbol_ne_halt
     (symbol : MachineCodeSymbol) (suffix : Word MachineCodeSymbol)
     (leftRev : List (Option Bool)) (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 350 leftRev
         (projectionCodeCells (symbol :: suffix)))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   cases n with
   | zero =>
       change (350 : Nat) ≠ 999
@@ -7078,121 +7079,121 @@ private theorem dovetailControllerStageInputProjectionDescription_run_state350_c
         simp [projectionCodeCells, MachineDescription.encodeCodeWordAsInput,
           MachineDescription.encodeCodeSymbolAsInput]
       · change
-          (DovetailControllerStageInputProjectionDescription.runConfig n
+          (Description.runConfig n
             (projectionConfig 351 (some false :: leftRev)
               (some false :: some false :: some false ::
                 List.map some
                   (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
-            DovetailControllerStageInputProjectionDescription.halt
+            Description.halt
         exact
-          dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+          state_ne_halt_of_stepConfig_none
             (by rfl)
             (by
               simp [projectionConfig,
-                DovetailControllerStageInputProjectionDescription])
+                Description])
       · change
-          (DovetailControllerStageInputProjectionDescription.runConfig n
+          (Description.runConfig n
             (projectionConfig 351 (some false :: leftRev)
               (some false :: some false :: some true ::
                 List.map some
                   (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
-            DovetailControllerStageInputProjectionDescription.halt
+            Description.halt
         exact
-          dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+          state_ne_halt_of_stepConfig_none
             (by rfl)
             (by
               simp [projectionConfig,
-                DovetailControllerStageInputProjectionDescription])
+                Description])
       · change
-          (DovetailControllerStageInputProjectionDescription.runConfig n
+          (Description.runConfig n
             (projectionConfig 351 (some false :: leftRev)
               (some false :: some true :: some false ::
                 List.map some
                   (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
-            DovetailControllerStageInputProjectionDescription.halt
+            Description.halt
         exact
-          dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+          state_ne_halt_of_stepConfig_none
             (by rfl)
             (by
               simp [projectionConfig,
-                DovetailControllerStageInputProjectionDescription])
+                Description])
       · change
-          (DovetailControllerStageInputProjectionDescription.runConfig n
+          (Description.runConfig n
             (projectionConfig 351 (some false :: leftRev)
               (some false :: some true :: some true ::
                 List.map some
                   (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
-            DovetailControllerStageInputProjectionDescription.halt
+            Description.halt
         exact
-          dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+          state_ne_halt_of_stepConfig_none
             (by rfl)
             (by
               simp [projectionConfig,
-                DovetailControllerStageInputProjectionDescription])
+                Description])
       · change
-          (DovetailControllerStageInputProjectionDescription.runConfig n
+          (Description.runConfig n
             (projectionConfig 351 (some false :: leftRev)
               (some true :: some false :: some false ::
                 List.map some
                   (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
-            DovetailControllerStageInputProjectionDescription.halt
+            Description.halt
         exact
-          dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+          state_ne_halt_of_stepConfig_none
             (by rfl)
             (by
               simp [projectionConfig,
-                DovetailControllerStageInputProjectionDescription])
+                Description])
       · change
-          (DovetailControllerStageInputProjectionDescription.runConfig n
+          (Description.runConfig n
             (projectionConfig 351 (some false :: leftRev)
               (some true :: some false :: some true ::
                 List.map some
                   (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
-            DovetailControllerStageInputProjectionDescription.halt
+            Description.halt
         exact
-          dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+          state_ne_halt_of_stepConfig_none
             (by rfl)
             (by
               simp [projectionConfig,
-                DovetailControllerStageInputProjectionDescription])
+                Description])
       · change
-          (DovetailControllerStageInputProjectionDescription.runConfig n
+          (Description.runConfig n
             (projectionConfig 351 (some false :: leftRev)
               (some true :: some true :: some false ::
                 List.map some
                   (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
-            DovetailControllerStageInputProjectionDescription.halt
+            Description.halt
         exact
-          dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+          state_ne_halt_of_stepConfig_none
             (by rfl)
             (by
               simp [projectionConfig,
-                DovetailControllerStageInputProjectionDescription])
+                Description])
       · change
-          (DovetailControllerStageInputProjectionDescription.runConfig n
+          (Description.runConfig n
             (projectionConfig 351 (some false :: leftRev)
               (some true :: some true :: some true ::
                 List.map some
                   (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
-            DovetailControllerStageInputProjectionDescription.halt
+            Description.halt
         exact
-          dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+          state_ne_halt_of_stepConfig_none
             (by rfl)
             (by
               simp [projectionConfig,
-                DovetailControllerStageInputProjectionDescription])
+                Description])
       · exact
-          dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+          state_ne_halt_of_stepConfig_none
             (by rfl)
             (by
               simp [projectionConfig,
-                DovetailControllerStageInputProjectionDescription])
+                Description])
 
-private theorem dovetailControllerStageInputProjectionDescription_run_result_marked_suffix_to_state350
+private theorem run_result_marked_suffix_to_state350
     (marked : Word Bool) (symbol : MachineCodeSymbol)
     (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (8 * marked.length + 4)
         (projectionConfig 300
           (List.append [none, none, none, none] baseLeftRev)
@@ -7211,13 +7212,13 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
     omega
   rw [hsteps, MachineDescription.runConfig_add]
   simp only [projectionBoolWordWorkCells]
-  rw [dovetailControllerStageInputProjectionDescription_run_state300_marked_ticks]
+  rw [run_state300_marked_ticks]
   simp [List.length_nil, projectionBoolPayloadCells]
   rw [MachineDescription.runConfig_add]
   change
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (4 * marked.length)
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
+        (Description.runConfig 4
           (projectionConfig 300
             (List.append
               (projectionRepeatedCells projectionMarkedTickCodeCells
@@ -7226,8 +7227,8 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_mar
             (List.append projectionDoneCodeCells
               (List.append (projectionMarkedBoolPayloadCells marked)
                 (projectionCodeCells (symbol :: suffix)))))) = _
-  rw [dovetailControllerStageInputProjectionDescription_run_state300_done]
-  rw [dovetailControllerStageInputProjectionDescription_run_state350_marked_payload]
+  rw [run_state300_done]
+  rw [run_state350_marked_payload]
   simp
 
 private def projectionResultSuffixRejectCost
@@ -7236,11 +7237,11 @@ private def projectionResultSuffixRejectCost
     16 * marked.length * rest.length +
     26 * rest.length + 8 * marked.length + 4
 
-private theorem dovetailControllerStageInputProjectionDescription_run_result_suffix_to_state350_acc
+private theorem run_result_suffix_to_state350_acc
     (marked rest : Word Bool) (symbol : MachineCodeSymbol)
     (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool)) :
-    DovetailControllerStageInputProjectionDescription.runConfig
+    Description.runConfig
         (projectionResultSuffixRejectCost marked rest)
         (projectionConfig 300
           (List.append [none, none, none, none] baseLeftRev)
@@ -7259,7 +7260,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_suf
   | nil =>
       simp [projectionResultSuffixRejectCost]
       exact
-        dovetailControllerStageInputProjectionDescription_run_result_marked_suffix_to_state350
+        run_result_marked_suffix_to_state350
           marked symbol suffix baseLeftRev
   | cons b rest ih =>
       have hcost :
@@ -7271,7 +7272,7 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_suf
           Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
         omega
       rw [hcost, MachineDescription.runConfig_add]
-      rw [dovetailControllerStageInputProjectionDescription_run_result_mark_one]
+      rw [run_result_mark_one]
       rw [ih]
       have hword :
           List.append (List.append marked [b]) rest =
@@ -7279,19 +7280,19 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_suf
         simp [List.append_assoc]
       rw [hword]
 
-private theorem dovetailControllerStageInputProjectionDescription_run_result_suffix_ne_halt
+private theorem run_result_suffix_ne_halt
     (w : Word Bool) (symbol : MachineCodeSymbol)
     (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool)) (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
+    (Description.runConfig n
       (projectionConfig 300
         (List.append [none, none, none, none] baseLeftRev)
         (projectionCodeCells
           (MachineDescription.encodeBoolWordAppend w
             (symbol :: suffix))))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   apply
-    dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+    ne_halt_of_reaches_ne_halt_region
       (k := projectionResultSuffixRejectCost ([] : Word Bool) w)
       (mid :=
         projectionConfig 350
@@ -7303,13 +7304,13 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_suf
                 (List.append [none, none, none, none] baseLeftRev))))
           (projectionCodeCells (symbol :: suffix)))
   · have h :=
-      dovetailControllerStageInputProjectionDescription_run_result_suffix_to_state350_acc
+      run_result_suffix_to_state350_acc
         ([] : Word Bool) w symbol suffix baseLeftRev
     simpa [projectionResultSuffixRejectCost,
       projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend] using h
   · intro m
     exact
-      dovetailControllerStageInputProjectionDescription_run_state350_code_symbol_ne_halt
+      run_state350_code_symbol_ne_halt
         symbol suffix
         (List.append (projectionMarkedBoolPayloadCells w).reverse
           (List.append projectionDoneCodeCells.reverse
@@ -7319,16 +7320,16 @@ private theorem dovetailControllerStageInputProjectionDescription_run_result_suf
               (List.append [none, none, none, none] baseLeftRev))))
         m
 
-private theorem dovetailControllerStageInputProjectionDescription_encodeAppend_nonempty_suffix_ne_halt
+private theorem encodeAppend_nonempty_suffix_ne_halt
     (C : MachineDescription.DovetailControllerLayout)
     (symbol : MachineCodeSymbol) (suffix : Word MachineCodeSymbol)
     (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
-      (DovetailControllerStageInputProjectionDescription.initial
+    (Description.runConfig n
+      (Description.initial
         (MachineDescription.encodeCodeWordAsInput
           (MachineDescription.DovetailControllerLayout.encodeAppend C
             (symbol :: suffix))))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   rcases C with ⟨input, stage, result⟩
   let inputLeftRev :=
     List.append
@@ -7338,7 +7339,7 @@ private theorem dovetailControllerStageInputProjectionDescription_encodeAppend_n
     List.append [none, none, none, none]
       (List.append (projectionStageTickCellsRev stage) inputLeftRev)
   apply
-    dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+    ne_halt_of_reaches_ne_halt_region
       (k := 4 + projectionInputBoolWordCost input + (4 * stage + 12))
       (mid :=
         projectionConfig 300 stageLeftRev
@@ -7351,10 +7352,10 @@ private theorem dovetailControllerStageInputProjectionDescription_encodeAppend_n
         omega]
     rw [MachineDescription.runConfig_add]
     change
-      DovetailControllerStageInputProjectionDescription.runConfig
+      Description.runConfig
         (projectionInputBoolWordCost input + (4 * stage + 12))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
-          (DovetailControllerStageInputProjectionDescription.initial
+        (Description.runConfig 4
+          (Description.initial
             (MachineDescription.encodeCodeWordAsInput
               (MachineDescription.DovetailControllerLayout.encodeAppend
                 { input := input, stage := stage, result := result }
@@ -7367,10 +7368,10 @@ private theorem dovetailControllerStageInputProjectionDescription_encodeAppend_n
       MachineDescription.encodeCodeWordAsInput,
       MachineDescription.encodeCodeSymbolAsInput]
     change
-      DovetailControllerStageInputProjectionDescription.runConfig
+      Description.runConfig
         (projectionInputBoolWordCost input + (4 * stage + 12))
-        (DovetailControllerStageInputProjectionDescription.runConfig 4
-          (DovetailControllerStageInputProjectionDescription.initial
+        (Description.runConfig 4
+          (Description.initial
             (List.append [false, false, false, false]
               (MachineDescription.encodeCodeWordAsInput
                 (MachineDescription.DovetailLayout.stageInputCodeAppend input
@@ -7381,9 +7382,9 @@ private theorem dovetailControllerStageInputProjectionDescription_encodeAppend_n
           (projectionCodeCells
             (MachineDescription.encodeBoolWordAppend result
               (symbol :: suffix)))
-    rw [dovetailControllerStageInputProjectionDescription_run_header]
+    rw [run_header]
     change
-      DovetailControllerStageInputProjectionDescription.runConfig
+      Description.runConfig
         (projectionInputBoolWordCost input + (4 * stage + 12))
         (projectionConfig 100 [none, none, none, none]
           (projectionCodeCells
@@ -7397,9 +7398,9 @@ private theorem dovetailControllerStageInputProjectionDescription_encodeAppend_n
     simp [MachineDescription.DovetailLayout.stageInputCodeAppend]
     rw [MachineDescription.runConfig_add]
     change
-      DovetailControllerStageInputProjectionDescription.runConfig
+      Description.runConfig
         (4 * stage + 12)
-        (DovetailControllerStageInputProjectionDescription.runConfig
+        (Description.runConfig
           (projectionInputBoolWordCost input)
           (projectionConfig 100
             (List.append [none, none, none, none]
@@ -7413,13 +7414,13 @@ private theorem dovetailControllerStageInputProjectionDescription_encodeAppend_n
           (projectionCodeCells
             (MachineDescription.encodeBoolWordAppend result
               (symbol :: suffix)))
-    rw [dovetailControllerStageInputProjectionDescription_run_input_bool_word_suffix
+    rw [run_input_bool_word_suffix
       (stage := stage)
       (suffix := MachineDescription.encodeBoolWordAppend result
         (symbol :: suffix))
       (baseLeftRev := [])]
     change
-      DovetailControllerStageInputProjectionDescription.runConfig
+      Description.runConfig
         (4 * stage + 12)
         (projectionConfig 200 inputLeftRev
           (projectionCodeCells
@@ -7430,26 +7431,26 @@ private theorem dovetailControllerStageInputProjectionDescription_encodeAppend_n
           (projectionCodeCells
             (MachineDescription.encodeBoolWordAppend result
               (symbol :: suffix)))
-    rw [dovetailControllerStageInputProjectionDescription_run_stage_nat_bool_word_suffix]
+    rw [run_stage_nat_bool_word_suffix]
   · intro m
     exact
-      dovetailControllerStageInputProjectionDescription_run_result_suffix_ne_halt
+      run_result_suffix_ne_halt
         result symbol suffix
         (List.append (projectionStageTickCellsRev stage) inputLeftRev) m
 
-private theorem dovetailControllerStageInputProjectionDescription_decode_none_ne_halt
+private theorem decode_none_ne_halt
     {code : Word MachineCodeSymbol}
     (hdecode :
       MachineDescription.DovetailControllerLayout.decode code = none)
     (n : Nat) :
-    (DovetailControllerStageInputProjectionDescription.runConfig n
-      (DovetailControllerStageInputProjectionDescription.initial
+    (Description.runConfig n
+      (Description.initial
         (MachineDescription.encodeCodeWordAsInput code))).state ≠
-      DovetailControllerStageInputProjectionDescription.halt := by
+      Description.halt := by
   cases code with
   | nil =>
       exact
-        dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+        state_ne_halt_of_stepConfig_none
           (n := n) (by rfl) (by
             change (0 : Nat) ≠ 999
             omega)
@@ -7458,10 +7459,10 @@ private theorem dovetailControllerStageInputProjectionDescription_decode_none_ne
       | header =>
           have hmid :
               forall m : Nat,
-                (DovetailControllerStageInputProjectionDescription.runConfig m
+                (Description.runConfig m
                   (projectionConfig 100 [none, none, none, none]
                     (projectionCodeCells rest))).state ≠
-                  DovetailControllerStageInputProjectionDescription.halt := by
+                  Description.halt := by
             unfold MachineDescription.DovetailControllerLayout.decode at hdecode
             cases hstage :
                 MachineDescription.DovetailLayout.decodeStageInput rest with
@@ -7471,7 +7472,7 @@ private theorem dovetailControllerStageInputProjectionDescription_decode_none_ne
                 | none =>
                     intro m
                     exact
-                      dovetailControllerStageInputProjectionDescription_run_state100_decodeBoolWord_none_ne_halt
+                      run_state100_decodeBoolWord_none_ne_halt
                         rest ([] : List (Option Bool)) hinput m
                 | some parsedInput =>
                     rcases parsedInput with ⟨input, restAfterInput⟩
@@ -7487,7 +7488,7 @@ private theorem dovetailControllerStageInputProjectionDescription_decode_none_ne
                         intro m
                         rw [hrest]
                         exact
-                          dovetailControllerStageInputProjectionDescription_run_state100_input_bool_word_stage_decodeNat_none_ne_halt
+                          run_state100_input_bool_word_stage_decodeNat_none_ne_halt
                             input restAfterInput ([] : List (Option Bool))
                             hnat m
                     | some parsedNat =>
@@ -7507,7 +7508,7 @@ private theorem dovetailControllerStageInputProjectionDescription_decode_none_ne
                     intro m
                     rw [hrest]
                     apply
-                      dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+                      ne_halt_of_reaches_ne_halt_region
                         (k := projectionInputBoolWordCost input)
                         (mid :=
                           projectionConfig 200
@@ -7521,12 +7522,12 @@ private theorem dovetailControllerStageInputProjectionDescription_decode_none_ne
                                 restAfterStage)))
                     · simp [MachineDescription.DovetailLayout.stageInputCodeAppend]
                       exact
-                        dovetailControllerStageInputProjectionDescription_run_input_bool_word_suffix
+                        run_input_bool_word_suffix
                           input stage restAfterStage
                           ([] : List (Option Bool))
                     · intro t
                       exact
-                        dovetailControllerStageInputProjectionDescription_run_state200_stage_nat_result_decodeBoolWord_none_ne_halt
+                        run_state200_stage_nat_result_decodeBoolWord_none_ne_halt
                           stage restAfterStage
                           (List.append
                             (projectionCodeCells
@@ -7537,7 +7538,7 @@ private theorem dovetailControllerStageInputProjectionDescription_decode_none_ne
                 | some parsedResult =>
                     simp [hstage, hresult] at hdecode
           apply
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_ne_halt_region
+            ne_halt_of_reaches_ne_halt_region
               (k := 4)
               (mid :=
                 projectionConfig 100 [none, none, none, none]
@@ -7545,71 +7546,71 @@ private theorem dovetailControllerStageInputProjectionDescription_decode_none_ne
           · simp [MachineDescription.encodeCodeWordAsInput,
               MachineDescription.encodeCodeSymbolAsInput]
             change
-              DovetailControllerStageInputProjectionDescription.runConfig 4
-                (DovetailControllerStageInputProjectionDescription.initial
+              Description.runConfig 4
+                (Description.initial
                   (List.append [false, false, false, false]
                     (MachineDescription.encodeCodeWordAsInput rest))) =
                 projectionConfig 100 [none, none, none, none]
                   (projectionCodeCells rest)
-            rw [dovetailControllerStageInputProjectionDescription_run_header]
+            rw [run_header]
             rfl
           · exact hmid
       | transition =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 3) (by rfl) (by
                 change (3 : Nat) ≠ 999
                 omega)
       | tick =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 2) (by rfl) (by
                 change (2 : Nat) ≠ 999
                 omega)
       | done =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 2) (by rfl) (by
                 change (2 : Nat) ≠ 999
                 omega)
       | blank =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (1 : Nat) ≠ 999
                 omega)
       | zero =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (1 : Nat) ≠ 999
                 omega)
       | one =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (1 : Nat) ≠ 999
                 omega)
       | moveLeft =>
           exact
-            dovetailControllerStageInputProjectionDescription_ne_halt_of_reaches_stepConfig_none
+            ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (1 : Nat) ≠ 999
                 omega)
       | moveRight =>
           exact
-            dovetailControllerStageInputProjectionDescription_state_ne_halt_of_stepConfig_none
+            state_ne_halt_of_stepConfig_none
               (n := n) (by rfl) (by
                 change (0 : Nat) ≠ 999
                 omega)
 
-private theorem dovetailControllerStageInputProjectionDescription_decodeComplete_of_halting_run
+private theorem decodeComplete_of_halting_run
     {code : Word MachineCodeSymbol} {n : Nat}
     (hstate :
-      (DovetailControllerStageInputProjectionDescription.runConfig n
-        (DovetailControllerStageInputProjectionDescription.initial
+      (Description.runConfig n
+        (Description.initial
           (MachineDescription.encodeCodeWordAsInput code))).state =
-        DovetailControllerStageInputProjectionDescription.halt) :
+        Description.halt) :
     exists C : MachineDescription.DovetailControllerLayout,
       MachineDescription.DovetailControllerLayout.decodeComplete code =
         some C := by
@@ -7618,7 +7619,7 @@ private theorem dovetailControllerStageInputProjectionDescription_decodeComplete
   | none =>
       exfalso
       exact
-        dovetailControllerStageInputProjectionDescription_decode_none_ne_halt
+        decode_none_ne_halt
           hdecode n hstate
   | some parsed =>
       rcases parsed with ⟨C, suffix⟩
@@ -7635,8 +7636,143 @@ private theorem dovetailControllerStageInputProjectionDescription_decodeComplete
               hdecode
           subst code
           exact
-            dovetailControllerStageInputProjectionDescription_encodeAppend_nonempty_suffix_ne_halt
+            encodeAppend_nonempty_suffix_ne_halt
               C symbol rest n hstate
+
+theorem decodeComplete_of_haltsWithOutput
+    {code out : Word MachineCodeSymbol}
+    (h :
+      Description.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out)) :
+    exists C : MachineDescription.DovetailControllerLayout,
+      MachineDescription.DovetailControllerLayout.decodeComplete code =
+        some C := by
+  rcases h with ⟨n, hn⟩
+  exact
+    decodeComplete_of_halting_run
+      (code := code) (n := n) hn.left
+
+theorem exists_layout_of_haltsWithOutput
+    {code out : Word MachineCodeSymbol}
+    (h :
+      Description.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out)) :
+    exists C : MachineDescription.DovetailControllerLayout,
+      code = MachineDescription.DovetailControllerLayout.encode C ∧
+        out = MachineDescription.DovetailControllerLayout.stageInputCode C := by
+  rcases
+    decodeComplete_of_haltsWithOutput
+      h with
+    ⟨C, hdecode⟩
+  have hcode :
+      code = MachineDescription.DovetailControllerLayout.encode C :=
+    MachineDescription.DovetailControllerLayout.decodeComplete_eq_some_encode
+      hdecode
+  subst code
+  have hsuccess :=
+    haltsWithOutput_encode C
+  have hbits :
+      MachineDescription.encodeCodeWordAsInput out =
+        MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.DovetailControllerLayout.stageInputCode C) :=
+    MachineDescription.haltsWithOutput_functional_of_haltTransitionFree
+      haltTransitionFree
+      h hsuccess
+  have hout :
+      out = MachineDescription.DovetailControllerLayout.stageInputCode C :=
+    MachineDescription.encodeCodeWordAsInput_injective hbits
+  exact ⟨C, rfl, hout⟩
+
+theorem haltsWithOutput_iff_exists_layout
+    (code out : Word MachineCodeSymbol) :
+    Description.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out) <->
+      exists C : MachineDescription.DovetailControllerLayout,
+        code = MachineDescription.DovetailControllerLayout.encode C ∧
+          out = MachineDescription.DovetailControllerLayout.stageInputCode C := by
+  constructor
+  · intro h
+    exact
+      exists_layout_of_haltsWithOutput
+        h
+  · intro h
+    rcases h with ⟨C, rfl, rfl⟩
+    exact
+      haltsWithOutput_encode C
+
+theorem haltsWithOutput_of_transform_eq_some
+    {code out : Word MachineCodeSymbol}
+    (h :
+      PairedRecognizerDovetailControllerStageInputCodePrimitive.transform
+          code = some out) :
+    Description.HaltsWithOutput
+      (MachineDescription.encodeCodeWordAsInput code)
+      (MachineDescription.encodeCodeWordAsInput out) := by
+  have hparsed :=
+    (pairedRecognizerDovetailControllerStageInputCode_transform_eq_some_iff
+      code out).mp h
+  exact
+    (haltsWithOutput_iff_exists_layout
+      code out).mpr hparsed
+
+theorem transform_eq_some_of_haltsWithOutput
+    {code out : Word MachineCodeSymbol}
+    (h :
+      Description.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out)) :
+    PairedRecognizerDovetailControllerStageInputCodePrimitive.transform
+        code = some out := by
+  have hparsed :=
+    (haltsWithOutput_iff_exists_layout
+      code out).mp h
+  exact
+    (pairedRecognizerDovetailControllerStageInputCode_transform_eq_some_iff
+      code out).mpr hparsed
+
+theorem haltsWithOutput_iff
+    (code out : Word MachineCodeSymbol) :
+    Description.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out) <->
+      PairedRecognizerDovetailControllerStageInputCodePrimitive.transform
+        code = some out := by
+  constructor
+  · exact
+      transform_eq_some_of_haltsWithOutput
+  · exact
+      haltsWithOutput_of_transform_eq_some
+
+theorem outputCompiledSubroutine :
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      PairedRecognizerDovetailControllerStageInputCodePrimitive
+      Description :=
+  ⟨⟨wellFormed,
+      haltsWithOutput_iff⟩,
+    haltTransitionFree⟩
+
+theorem encodedControllerStageInputProjectionCodeWordSubroutineConstruction_scaffold :
+    EncodedControllerStageInputProjectionCodeWordSubroutineConstruction := by
+  exact
+    ⟨Description,
+      outputCompiledSubroutine⟩
+
+end ControllerStageInputProjection
+
+abbrev DovetailControllerStageInputProjectionDescription :
+    MachineDescription :=
+  ControllerStageInputProjection.Description
+
+theorem dovetailControllerStageInputProjectionDescription_wellFormed :
+    DovetailControllerStageInputProjectionDescription.WellFormed :=
+  ControllerStageInputProjection.wellFormed
+
+theorem dovetailControllerStageInputProjectionDescription_haltTransitionFree :
+    DovetailControllerStageInputProjectionDescription.HaltTransitionFree :=
+  ControllerStageInputProjection.haltTransitionFree
 
 theorem dovetailControllerStageInputProjectionDescription_decodeComplete_of_haltsWithOutput
     {code out : Word MachineCodeSymbol}
@@ -7646,11 +7782,8 @@ theorem dovetailControllerStageInputProjectionDescription_decodeComplete_of_halt
         (MachineDescription.encodeCodeWordAsInput out)) :
     exists C : MachineDescription.DovetailControllerLayout,
       MachineDescription.DovetailControllerLayout.decodeComplete code =
-        some C := by
-  rcases h with ⟨n, hn⟩
-  exact
-    dovetailControllerStageInputProjectionDescription_decodeComplete_of_halting_run
-      (code := code) (n := n) hn.left
+        some C :=
+  ControllerStageInputProjection.decodeComplete_of_haltsWithOutput h
 
 theorem dovetailControllerStageInputProjectionDescription_exists_layout_of_haltsWithOutput
     {code out : Word MachineCodeSymbol}
@@ -7660,29 +7793,8 @@ theorem dovetailControllerStageInputProjectionDescription_exists_layout_of_halts
         (MachineDescription.encodeCodeWordAsInput out)) :
     exists C : MachineDescription.DovetailControllerLayout,
       code = MachineDescription.DovetailControllerLayout.encode C ∧
-        out = MachineDescription.DovetailControllerLayout.stageInputCode C := by
-  rcases
-    dovetailControllerStageInputProjectionDescription_decodeComplete_of_haltsWithOutput
-      h with
-    ⟨C, hdecode⟩
-  have hcode :
-      code = MachineDescription.DovetailControllerLayout.encode C :=
-    MachineDescription.DovetailControllerLayout.decodeComplete_eq_some_encode
-      hdecode
-  subst code
-  have hsuccess :=
-    dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode C
-  have hbits :
-      MachineDescription.encodeCodeWordAsInput out =
-        MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.stageInputCode C) :=
-    MachineDescription.haltsWithOutput_functional_of_haltTransitionFree
-      dovetailControllerStageInputProjectionDescription_haltTransitionFree
-      h hsuccess
-  have hout :
-      out = MachineDescription.DovetailControllerLayout.stageInputCode C :=
-    MachineDescription.encodeCodeWordAsInput_injective hbits
-  exact ⟨C, rfl, hout⟩
+        out = MachineDescription.DovetailControllerLayout.stageInputCode C :=
+  ControllerStageInputProjection.exists_layout_of_haltsWithOutput h
 
 theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_iff_exists_layout
     (code out : Word MachineCodeSymbol) :
@@ -7691,16 +7803,8 @@ theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_iff_ex
         (MachineDescription.encodeCodeWordAsInput out) <->
       exists C : MachineDescription.DovetailControllerLayout,
         code = MachineDescription.DovetailControllerLayout.encode C ∧
-          out = MachineDescription.DovetailControllerLayout.stageInputCode C := by
-  constructor
-  · intro h
-    exact
-      dovetailControllerStageInputProjectionDescription_exists_layout_of_haltsWithOutput
-        h
-  · intro h
-    rcases h with ⟨C, rfl, rfl⟩
-    exact
-      dovetailControllerStageInputProjectionDescription_haltsWithOutput_encode C
+          out = MachineDescription.DovetailControllerLayout.stageInputCode C :=
+  ControllerStageInputProjection.haltsWithOutput_iff_exists_layout code out
 
 theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_of_transform_eq_some
     {code out : Word MachineCodeSymbol}
@@ -7709,13 +7813,8 @@ theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_of_tra
           code = some out) :
     DovetailControllerStageInputProjectionDescription.HaltsWithOutput
       (MachineDescription.encodeCodeWordAsInput code)
-      (MachineDescription.encodeCodeWordAsInput out) := by
-  have hparsed :=
-    (pairedRecognizerDovetailControllerStageInputCode_transform_eq_some_iff
-      code out).mp h
-  exact
-    (dovetailControllerStageInputProjectionDescription_haltsWithOutput_iff_exists_layout
-      code out).mpr hparsed
+      (MachineDescription.encodeCodeWordAsInput out) :=
+  ControllerStageInputProjection.haltsWithOutput_of_transform_eq_some h
 
 theorem dovetailControllerStageInputProjectionDescription_transform_eq_some_of_haltsWithOutput
     {code out : Word MachineCodeSymbol}
@@ -7724,13 +7823,8 @@ theorem dovetailControllerStageInputProjectionDescription_transform_eq_some_of_h
         (MachineDescription.encodeCodeWordAsInput code)
         (MachineDescription.encodeCodeWordAsInput out)) :
     PairedRecognizerDovetailControllerStageInputCodePrimitive.transform
-        code = some out := by
-  have hparsed :=
-    (dovetailControllerStageInputProjectionDescription_haltsWithOutput_iff_exists_layout
-      code out).mp h
-  exact
-    (pairedRecognizerDovetailControllerStageInputCode_transform_eq_some_iff
-      code out).mpr hparsed
+        code = some out :=
+  ControllerStageInputProjection.transform_eq_some_of_haltsWithOutput h
 
 theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_iff
     (code out : Word MachineCodeSymbol) :
@@ -7738,26 +7832,18 @@ theorem dovetailControllerStageInputProjectionDescription_haltsWithOutput_iff
         (MachineDescription.encodeCodeWordAsInput code)
         (MachineDescription.encodeCodeWordAsInput out) <->
       PairedRecognizerDovetailControllerStageInputCodePrimitive.transform
-        code = some out := by
-  constructor
-  · exact
-      dovetailControllerStageInputProjectionDescription_transform_eq_some_of_haltsWithOutput
-  · exact
-      dovetailControllerStageInputProjectionDescription_haltsWithOutput_of_transform_eq_some
+        code = some out :=
+  ControllerStageInputProjection.haltsWithOutput_iff code out
 
 theorem dovetailControllerStageInputProjectionDescription_outputCompiledSubroutine :
     TapeCodePrimitiveOutputCompiledSubroutineByDescription
       PairedRecognizerDovetailControllerStageInputCodePrimitive
       DovetailControllerStageInputProjectionDescription :=
-  ⟨⟨dovetailControllerStageInputProjectionDescription_wellFormed,
-      dovetailControllerStageInputProjectionDescription_haltsWithOutput_iff⟩,
-    dovetailControllerStageInputProjectionDescription_haltTransitionFree⟩
+  ControllerStageInputProjection.outputCompiledSubroutine
 
 theorem encodedControllerStageInputProjectionCodeWordSubroutineConstruction_scaffold :
-    EncodedControllerStageInputProjectionCodeWordSubroutineConstruction := by
-  exact
-    ⟨DovetailControllerStageInputProjectionDescription,
-      dovetailControllerStageInputProjectionDescription_outputCompiledSubroutine⟩
+    EncodedControllerStageInputProjectionCodeWordSubroutineConstruction :=
+  ControllerStageInputProjection.encodedControllerStageInputProjectionCodeWordSubroutineConstruction_scaffold
 
 end Computability
 end FoC
