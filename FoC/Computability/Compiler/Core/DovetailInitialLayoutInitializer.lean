@@ -1978,6 +1978,437 @@ private theorem
   simpa [InitializerTransitionPrefixedThenAppendCodeWordLastDescription,
     A, B] using hn
 
+private def InitializerReturnToCurrentMarkerDescription :
+    MachineDescription where
+  stateCount := 2
+  start := 0
+  halt := 1
+  transitions :=
+    [ MachineDescription.transition
+        0 (some false) (some false) Direction.left 0
+    , MachineDescription.transition
+        0 (some true) (some true) Direction.left 0
+    , MachineDescription.transition
+        0 none (some false) Direction.right 1
+    ]
+
+private theorem initializerReturnToCurrentMarkerDescription_wellFormed :
+    InitializerReturnToCurrentMarkerDescription.WellFormed := by
+  constructor
+  · native_decide
+  constructor
+  · native_decide
+  constructor
+  · native_decide
+  constructor
+  · intro t ht
+    exact transition_wellFormed_of_all
+      (l := InitializerReturnToCurrentMarkerDescription.transitions)
+      (stateCount :=
+        InitializerReturnToCurrentMarkerDescription.stateCount)
+      (by
+        native_decide) t ht
+  · intro t u ht hu hkey
+    exact transition_deterministic_of_all
+      (l := InitializerReturnToCurrentMarkerDescription.transitions)
+      (by
+        native_decide) t u ht hu hkey
+
+private theorem
+    initializerReturnToCurrentMarkerDescription_haltTransitionFree :
+    InitializerReturnToCurrentMarkerDescription.HaltTransitionFree := by
+  intro t ht
+  exact transition_notFrom_of_all
+    (l := InitializerReturnToCurrentMarkerDescription.transitions)
+    (state := InitializerReturnToCurrentMarkerDescription.halt)
+    (by
+      native_decide) t ht
+
+private theorem
+    initializerReturnToCurrentMarkerDescription_subroutineReady :
+    InitializerReturnToCurrentMarkerDescription.SubroutineReady :=
+  ⟨initializerReturnToCurrentMarkerDescription_wellFormed,
+    initializerReturnToCurrentMarkerDescription_haltTransitionFree⟩
+
+private theorem initializerReturnToCurrentMarkerDescription_step_scan
+    (preRev : Word Bool) (leftBit current : Bool)
+    (leftOfMarker right : List (Option Bool)) :
+    InitializerReturnToCurrentMarkerDescription.stepConfig
+        (initializerConfig 0
+          (List.append
+            (some leftBit :: preRev.map some)
+            (none :: leftOfMarker))
+          (some current :: right)) =
+      some
+        (initializerConfig 0
+          (List.append
+            (preRev.map some)
+            (none :: leftOfMarker))
+          (some leftBit :: some current :: right)) := by
+  cases leftBit <;> cases current <;>
+    simp [InitializerReturnToCurrentMarkerDescription,
+      initializerConfig, initializerTapeAtCells,
+      MachineDescription.stepConfig,
+      MachineDescription.lookupTransition, MachineDescription.Matches,
+      MachineDescription.transition, Tape.read, Tape.write,
+      Tape.move, Tape.moveLeft]
+
+private theorem initializerReturnToCurrentMarkerDescription_run
+    (preRev : Word Bool) (current : Bool)
+    (leftOfMarker right : List (Option Bool)) :
+    InitializerReturnToCurrentMarkerDescription.runConfig
+        (preRev.length + 2)
+        (initializerConfig 0
+          (List.append (preRev.map some) (none :: leftOfMarker))
+          (some current :: right)) =
+      initializerConfig 1
+        (some false :: leftOfMarker)
+        (List.append (preRev.reverse.map some)
+          (some current :: right)) := by
+  induction preRev generalizing current right with
+  | nil =>
+      cases current <;>
+        simp [InitializerReturnToCurrentMarkerDescription,
+          initializerConfig, initializerTapeAtCells,
+          MachineDescription.runConfig, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write,
+          Tape.move, Tape.moveLeft, Tape.moveRight]
+  | cons b rest ih =>
+      simp only [List.map_cons, List.length_cons, List.reverse_cons]
+      rw [show Nat.succ rest.length + 2 = (rest.length + 2) + 1 by omega]
+      rw [MachineDescription.runConfig]
+      rw [initializerReturnToCurrentMarkerDescription_step_scan]
+      simpa [List.append_assoc] using ih b (some current :: right)
+
+private theorem
+    initializerReturnToCurrentMarkerDescription_run_after_append_four_atCells
+    (pre : Word Bool) (leftOfMarker : List (Option Bool))
+    (b0 b1 b2 b3 : Bool) :
+    InitializerReturnToCurrentMarkerDescription.runConfig
+        (pre.length + 4)
+        { state := InitializerReturnToCurrentMarkerDescription.start
+          tape :=
+            Tape.move Direction.left
+              (initializerAppendRightLastTapeAtCells
+                (List.append (pre.reverse.map some)
+                  (none :: leftOfMarker)) b0 b1 b2 b3) } =
+      initializerConfig
+        InitializerReturnToCurrentMarkerDescription.halt
+        (some false :: leftOfMarker)
+        ((List.append pre [b0, b1, b2, b3]).map some) := by
+  simpa [initializerAppendRightLastTapeAtCells, initializerConfig,
+    Tape.move, Tape.moveLeft, List.append_assoc] using
+    initializerReturnToCurrentMarkerDescription_run
+      (List.append [b1, b0] pre.reverse) b2
+      leftOfMarker [some b3]
+
+private theorem
+    initializerReturnToCurrentMarkerDescription_run_after_append_atCells :
+    forall code : Word MachineCodeSymbol,
+      code ≠ [] ->
+        forall pre : Word Bool,
+        forall leftOfMarker : List (Option Bool),
+          exists steps : Nat,
+            InitializerReturnToCurrentMarkerDescription.runConfig steps
+                { state := InitializerReturnToCurrentMarkerDescription.start
+                  tape :=
+                    Tape.move Direction.left
+                      (initializerAppendCodeWordLastTapeAtCells
+                        (List.append (pre.reverse.map some)
+                          (none :: leftOfMarker))
+                        code) } =
+              initializerConfig
+                InitializerReturnToCurrentMarkerDescription.halt
+                (some false :: leftOfMarker)
+                ((List.append pre
+                  (MachineDescription.encodeCodeWordAsInput code)).map some)
+  | [], h => False.elim (h rfl)
+  | symbol :: [], _ => by
+      intro pre leftOfMarker
+      cases symbol <;>
+        refine ⟨pre.length + 4, ?_⟩ <;>
+        simpa [initializerAppendCodeWordLastTapeAtCells,
+          initializerAppendCodeSymbolLastTapeAtCells,
+          initializerAppendRightLastTapeAtCells,
+          MachineDescription.encodeCodeSymbolAsInput,
+          MachineDescription.encodeCodeWordAsInput,
+          Tape.move, Tape.moveLeft, List.append_assoc] using
+          initializerReturnToCurrentMarkerDescription_run_after_append_four_atCells
+            pre leftOfMarker _ _ _ _
+  | symbol :: next :: rest, _ => by
+      intro pre leftOfMarker
+      let symbolBits := MachineDescription.encodeCodeSymbolAsInput symbol
+      rcases
+          initializerReturnToCurrentMarkerDescription_run_after_append_atCells
+            (next :: rest) (by intro h; cases h)
+            (List.append pre symbolBits) leftOfMarker with
+        ⟨steps, hsteps⟩
+      refine ⟨steps, ?_⟩
+      have hleft :
+          List.append (symbolBits.reverse.map some)
+              (List.append (pre.reverse.map some)
+                (none :: leftOfMarker)) =
+            List.append
+              ((List.append pre symbolBits).reverse.map some)
+              (none :: leftOfMarker) := by
+        simp [List.reverse_append, List.map_append, List.append_assoc]
+      have hbits :
+          List.append (List.append pre symbolBits)
+              (MachineDescription.encodeCodeWordAsInput (next :: rest)) =
+            List.append pre
+              (MachineDescription.encodeCodeWordAsInput
+                (symbol :: next :: rest)) := by
+        simp [symbolBits,
+          MachineDescription.encodeCodeWordAsInput, List.append_assoc]
+      simpa [initializerAppendCodeWordLastTapeAtCells, symbolBits,
+        hleft, hbits, MachineDescription.encodeCodeWordAsInput,
+        List.map_append, List.append_assoc] using hsteps
+
+private def InitializerAppendCodeWordReturnToCurrentMarkerDescription
+    (code : Word MachineCodeSymbol) : MachineDescription :=
+  MachineDescription.seqSubroutine
+    (InitializerAppendCodeWordLastDescription code)
+    InitializerReturnToCurrentMarkerDescription
+    Direction.left
+
+private theorem
+    initializerAppendCodeWordReturnToCurrentMarkerDescription_subroutineReady
+    (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
+    (InitializerAppendCodeWordReturnToCurrentMarkerDescription
+      code).SubroutineReady :=
+  MachineDescription.seqSubroutine_subroutineReady
+    (initializerAppendCodeWordLastDescription_subroutineReady code hcode)
+    initializerReturnToCurrentMarkerDescription_subroutineReady
+
+private theorem
+    initializerAppendCodeWordReturnToCurrentMarkerDescription_run_from_scan
+    (code : Word MachineCodeSymbol) (hcode : code ≠ [])
+    (pre remaining : Word Bool)
+    (leftOfMarker : List (Option Bool)) :
+    exists steps : Nat,
+      (InitializerAppendCodeWordReturnToCurrentMarkerDescription
+        code).runConfig steps
+          { state :=
+              (InitializerAppendCodeWordReturnToCurrentMarkerDescription
+                code).start
+            tape :=
+              initializerAppendScanTapeAtCells
+                (List.append (pre.reverse.map some)
+                  (none :: leftOfMarker))
+                remaining } =
+        initializerConfig
+          (InitializerAppendCodeWordReturnToCurrentMarkerDescription
+            code).halt
+          (some false :: leftOfMarker)
+          ((List.append (List.append pre remaining)
+            (MachineDescription.encodeCodeWordAsInput code)).map some) := by
+  let A := InitializerAppendCodeWordLastDescription code
+  let B := InitializerReturnToCurrentMarkerDescription
+  let preAll := List.append pre remaining
+  let Tmid :=
+    initializerAppendCodeWordLastTapeAtCells
+      (List.append (remaining.reverse.map some)
+        (List.append (pre.reverse.map some)
+          (none :: leftOfMarker)))
+      code
+  have hAready : A.SubroutineReady := by
+    exact initializerAppendCodeWordLastDescription_subroutineReady code hcode
+  have hBready : B.SubroutineReady := by
+    exact initializerReturnToCurrentMarkerDescription_subroutineReady
+  rcases
+      initializerAppendCodeWordLastDescription_run_from_scan_atCells
+        code hcode
+        (List.append (pre.reverse.map some) (none :: leftOfMarker))
+        remaining with
+    ⟨nA, hA⟩
+  have hArun :
+      A.runConfig nA
+          { state := A.start
+            tape :=
+              initializerAppendScanTapeAtCells
+                (List.append (pre.reverse.map some)
+                  (none :: leftOfMarker))
+                remaining } =
+        { state := A.halt, tape := Tmid } := by
+    simpa [A, Tmid] using hA
+  have hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start
+              tape := Tape.move Direction.left Tmid } =
+          initializerConfig B.halt
+            (some false :: leftOfMarker)
+            ((List.append preAll
+              (MachineDescription.encodeCodeWordAsInput code)).map some) := by
+    have hleft :
+        List.append ((List.map some remaining).reverse)
+            (List.append ((List.map some pre).reverse)
+              (none :: leftOfMarker)) =
+          List.append ((List.map some preAll).reverse)
+            (none :: leftOfMarker) := by
+      simp [preAll, List.reverse_append, List.map_append,
+        List.append_assoc]
+    rcases
+        initializerReturnToCurrentMarkerDescription_run_after_append_atCells
+          code hcode preAll leftOfMarker with
+      ⟨nB, hB⟩
+    refine ⟨nB, ?_⟩
+    have hstart :
+        ({ state := B.start
+           tape := Tape.move Direction.left Tmid } :
+            MachineDescription.Configuration) =
+          { state := B.start
+            tape :=
+              Tape.move Direction.left
+                (initializerAppendCodeWordLastTapeAtCells
+                  (List.append ((List.map some preAll).reverse)
+                    (none :: leftOfMarker))
+                  code) } := by
+      simp [B, Tmid]
+      exact
+        congrArg
+          (fun left =>
+            Tape.move Direction.left
+              (initializerAppendCodeWordLastTapeAtCells left code))
+          hleft
+    rw [hstart]
+    simpa [B] using hB
+  rcases
+      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+        (A := A) (B := B) (handoffMove := Direction.left)
+        hAready hBready hArun hBReach with
+    ⟨n, hn⟩
+  refine ⟨n, ?_⟩
+  simpa [InitializerAppendCodeWordReturnToCurrentMarkerDescription,
+    A, B, preAll] using hn
+
+private def InitializerRightCellsCopierStartDescription :
+    MachineDescription where
+  stateCount := 9
+  start := 0
+  halt := 8
+  transitions :=
+    [ MachineDescription.transition
+        0 (some false) (some false) Direction.right 1
+    , MachineDescription.transition
+        1 (some false) none Direction.right 2
+    , MachineDescription.transition
+        2 (some false) (some false) Direction.right 3
+    , MachineDescription.transition
+        3 (some true) (some true) Direction.right 4
+    , MachineDescription.transition
+        4 (some false) (some false) Direction.right 5
+    , MachineDescription.transition
+        5 (some false) (some false) Direction.right 6
+    , MachineDescription.transition
+        6 (some true) (some true) Direction.right 7
+    , MachineDescription.transition
+        7 (some false) (some false) Direction.right 8
+    ]
+
+private theorem initializerRightCellsCopierStartDescription_wellFormed :
+    InitializerRightCellsCopierStartDescription.WellFormed := by
+  constructor
+  · native_decide
+  constructor
+  · native_decide
+  constructor
+  · native_decide
+  constructor
+  · intro t ht
+    exact transition_wellFormed_of_all
+      (l := InitializerRightCellsCopierStartDescription.transitions)
+      (stateCount :=
+        InitializerRightCellsCopierStartDescription.stateCount)
+      (by
+        native_decide) t ht
+  · intro t u ht hu hkey
+    exact transition_deterministic_of_all
+      (l := InitializerRightCellsCopierStartDescription.transitions)
+      (by
+        native_decide) t u ht hu hkey
+
+private theorem
+    initializerRightCellsCopierStartDescription_haltTransitionFree :
+    InitializerRightCellsCopierStartDescription.HaltTransitionFree := by
+  intro t ht
+  exact transition_notFrom_of_all
+    (l := InitializerRightCellsCopierStartDescription.transitions)
+    (state := InitializerRightCellsCopierStartDescription.halt)
+    (by
+      native_decide) t ht
+
+private theorem
+    initializerRightCellsCopierStartDescription_subroutineReady :
+    InitializerRightCellsCopierStartDescription.SubroutineReady :=
+  ⟨initializerRightCellsCopierStartDescription_wellFormed,
+    initializerRightCellsCopierStartDescription_haltTransitionFree⟩
+
+private theorem initializerRightCellsCopierStartDescription_run
+    (tail : List (Option Bool)) :
+    InitializerRightCellsCopierStartDescription.runConfig 8
+        (initializerConfig 0 []
+          (List.append
+            [some false, some false, some false, some true,
+              some false, some false, some true, some false]
+            tail)) =
+      initializerConfig 8
+        [some false, some true, some false, some false,
+          some true, some false, none, some false]
+        tail := by
+  cases tail <;>
+    simp [InitializerRightCellsCopierStartDescription,
+      initializerConfig, initializerTapeAtCells,
+      MachineDescription.runConfig, MachineDescription.stepConfig,
+      MachineDescription.lookupTransition, MachineDescription.Matches,
+      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      Tape.moveRight]
+
+private def InitializerAppendCodeSymbolReturnToCurrentMarkerDescription
+    (symbol : MachineCodeSymbol) : MachineDescription :=
+  InitializerAppendCodeWordReturnToCurrentMarkerDescription [symbol]
+
+private theorem
+    initializerAppendCodeSymbolReturnToCurrentMarkerDescription_subroutineReady
+    (symbol : MachineCodeSymbol) :
+    (InitializerAppendCodeSymbolReturnToCurrentMarkerDescription
+      symbol).SubroutineReady :=
+  initializerAppendCodeWordReturnToCurrentMarkerDescription_subroutineReady
+    [symbol] (by intro h; cases h)
+
+private theorem
+    initializerAppendCodeSymbolReturnToCurrentMarkerDescription_run_from_scan
+    (symbol : MachineCodeSymbol)
+    (pre remaining : Word Bool)
+    (leftOfMarker : List (Option Bool)) :
+    exists steps : Nat,
+      (InitializerAppendCodeSymbolReturnToCurrentMarkerDescription
+        symbol).runConfig steps
+          { state :=
+              (InitializerAppendCodeSymbolReturnToCurrentMarkerDescription
+                symbol).start
+            tape :=
+              initializerAppendScanTapeAtCells
+                (List.append (pre.reverse.map some)
+                  (none :: leftOfMarker))
+                remaining } =
+        initializerConfig
+          (InitializerAppendCodeSymbolReturnToCurrentMarkerDescription
+            symbol).halt
+          (some false :: leftOfMarker)
+          ((List.append (List.append pre remaining)
+            (MachineDescription.encodeCodeSymbolAsInput symbol)).map
+            some) := by
+  rcases
+      initializerAppendCodeWordReturnToCurrentMarkerDescription_run_from_scan
+        [symbol] (by intro h; cases h)
+        pre remaining leftOfMarker with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [InitializerAppendCodeSymbolReturnToCurrentMarkerDescription,
+    MachineDescription.encodeCodeWordAsInput] using hsteps
+
 private def InitializerReturnToTransitionMarkerDescription :
     MachineDescription where
   stateCount := 3
