@@ -506,19 +506,19 @@ theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_reali
 theorem paired_recognizer_dovetail_stage_attempt_search_driver_of_description_bool_decider_compiler
     (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
     ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction :=
-  Computability.pairedRecognizerDovetailStageAttemptSearchDriverCompiler_of_descriptionBoolDeciderCompiler
+  Computability.Search.stageCompilerOfDecider
     hcompile
 
 theorem paired_recognizer_dovetail_total_stage_attempt_search_driver_of_description_bool_decider_compiler
     (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
     ConcretePairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction :=
-  Computability.pairedRecognizerDovetailTotalStageAttemptSearchDriverCompiler_of_descriptionBoolDeciderCompiler
+  Computability.Search.totalStageCompilerOfDecider
     hcompile
 
 theorem paired_recognizer_dovetail_total_stage_attempt_controller_search_driver_of_description_bool_decider_compiler
     (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
     ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :=
-  Computability.pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_descriptionBoolDeciderCompiler
+  Computability.Search.controllerCompilerOfDecider
     hcompile
 
 theorem paired_recognizer_dovetail_total_stage_attempt_controller_search_driver_of_finite_stage_loop_controller
@@ -544,7 +544,7 @@ theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_subro
     (hdriver :
       ConcretePairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
-  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputSubroutineRealizer_and_totalStageAttemptSearchDriver
+  Computability.Search.boundedCompilerOfSubroutineAndTotalSearch
     hattempt hdriver
 
 theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_controller_search_driver
@@ -553,7 +553,7 @@ theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compi
     (hdriver :
       ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
-  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputCompiledSubroutine_and_controllerSearchDriver
+  Computability.Search.boundedCompilerOfCompiledSubroutineAndController
     hattempt hdriver
 
 theorem bounded_dovetail_table_compiler_of_controller_closeout
@@ -583,7 +583,7 @@ theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compi
       ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
     (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
-  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputCompiledSubroutine_and_descriptionBoolDeciderCompiler
+  Computability.Search.boundedCompilerOfCompiledSubroutineAndDecider
     hattempt hbool
 
 theorem paired_recognizer_dovetail_layout_code_output_realizer_of_subroutine_realizer
@@ -608,7 +608,7 @@ theorem paired_recognizer_dovetail_compiler_of_layout_code_output_realizer_and_s
     (hdriver :
       ConcretePairedRecognizerDovetailSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
-  Computability.pairedRecognizerDovetailDescriptionCompiler_of_layoutCodeOutputRealizer_and_searchDriver
+  Computability.DescriptionCompiler.ofLayoutAndSearch
     hrunner hdriver
 
 theorem paired_recognizer_dovetail_compiler_of_stage_attempt_code_output_realizer_and_stage_attempt_search_driver
@@ -617,14 +617,14 @@ theorem paired_recognizer_dovetail_compiler_of_stage_attempt_code_output_realize
     (hdriver :
       ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
-  Computability.pairedRecognizerDovetailDescriptionCompiler_of_stageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
+  Computability.DescriptionCompiler.ofStageAttemptAndSearch
     hattempt hdriver
 
 theorem paired_recognizer_dovetail_compiler_of_tape_code_output_compiler_and_description_bool_decider_compiler
     (htape : ConcreteTapeCodeOutputCompilerConstruction)
     (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
-  Computability.pairedRecognizerDovetailDescriptionCompiler_of_tapeCodeOutputCompiler_and_descriptionBoolDeciderCompiler
+  Computability.DescriptionCompiler.ofTapeCodeAndDecider
     htape hbool
 
 theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_subroutine_realizer_and_total_stage_attempt_search_driver
@@ -633,7 +633,7 @@ theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_s
     (hdriver :
       ConcretePairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
-  Computability.pairedRecognizerDovetailDescriptionCompiler_of_totalStageAttemptCodeOutputSubroutineRealizer_and_totalStageAttemptSearchDriver
+  Computability.DescriptionCompiler.ofTotalStageSubroutineAndSearch
     hattempt hdriver
 
 theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_controller_search_driver
@@ -668,7 +668,7 @@ theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_c
       ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
     (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
-  Computability.pairedRecognizerDovetailDescriptionCompiler_of_totalStageAttemptCodeOutputCompiledSubroutine_and_descriptionBoolDeciderCompiler
+  Computability.DescriptionCompiler.ofCompiledSubroutineAndDecider
     hattempt hbool
 
 theorem paired_recognizer_dovetail_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_search_driver

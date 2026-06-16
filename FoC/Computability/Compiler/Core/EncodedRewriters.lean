@@ -232,7 +232,7 @@ theorem encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstructio
     EncodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction := by
   intro accept reject
   exact
-    pairedRecognizerDovetailInitialLayoutCode_closedHandoffCompiledSubroutine
+    DovetailInitialLayoutInitializer.pairedRecognizerDovetailInitialLayoutCode_closedHandoffCompiledSubroutine
       accept reject
 
 theorem encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold :

@@ -275,7 +275,7 @@ theorem concrete_paired_recognizer_dovetail_stage_attempt_code_output_realizer_o
     (hcompile :
       ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction) :
     ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :=
-  Computability.pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalStageAttemptCodeOutputRealizerConstruction
+  Computability.Search.stageOutputConstructionOfTotal
     hcompile
 
 theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_controller_result_realizes
