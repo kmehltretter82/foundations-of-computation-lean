@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputValidator
+import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.ReturnAppendDirect
 
 set_option doc.verso true
@@ -1190,7 +1190,9 @@ theorem appendInputTapeReturnSpec_realizer :
 
 theorem stageInputMarkedScanner_realizer :
     StageInputMarkedScannerConstruction := by
-  sorry
+  exact
+    ⟨StageInputMarkedScannerDescription,
+      stageInputMarkedScannerDescription_spec⟩
 
 theorem stageInputMarkedCore_realizer :
     StageInputMarkedCoreConstruction := by
@@ -1213,9 +1215,8 @@ theorem stageInputIdentityClosedHandoff_realizer :
   rcases stageInputRecognizer_realizer with
     ⟨recognizer, hrecognizer⟩
   exact
-    ⟨StageInputIdentityDescription recognizer,
-      stageInputIdentityClosedHandoffConstruction_of_recognizer
-        hrecognizer⟩
+    stageInputIdentityClosedHandoffConstruction_of_recognizer
+      hrecognizer
 
 theorem stageInputValidatorSpec_realizer :
     exists validator : MachineDescription,
