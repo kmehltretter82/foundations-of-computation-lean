@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputValidator
+import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.ReturnAppendDirect
 
 set_option doc.verso true
 
@@ -819,6 +820,158 @@ theorem outputTape_eq_bits
   simp [stageInputCells, stageInputBits,
     codeCells, List.map_append]
 
+theorem inputTapeRightCellsDirectCopierNatBits_eq_ticks_done
+    (n : Nat) :
+    inputTapeRightCellsDirectCopierNatBits n =
+      List.append (inputTapeRightCellsDirectCopierTickBits n)
+        inputTapeRightCellsDirectCopierDoneBits := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change false :: false :: true :: false ::
+          inputTapeRightCellsDirectCopierNatBits n =
+        false :: false :: true :: false ::
+          List.append (inputTapeRightCellsDirectCopierTickBits n)
+            inputTapeRightCellsDirectCopierDoneBits
+      rw [ih]
+
+theorem inputTapeRightCellsDirectCopierCellBits_append_natBits
+    (rest : Word Bool) (stage : Nat) :
+    MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.encodeCellsAppend (rest.map some)
+          (MachineDescription.encodeNat stage)) =
+      List.append (inputTapeRightCellsDirectCopierCellBits rest)
+        (inputTapeRightCellsDirectCopierNatBits stage) := by
+  rw [show
+      MachineDescription.encodeCellsAppend (rest.map some)
+          (MachineDescription.encodeNat stage) =
+        List.append
+          (MachineDescription.encodeCellsAppend (rest.map some) [])
+          (MachineDescription.encodeNat stage) by
+      simpa using
+        (encodeCellsAppend_append (rest.map some) []
+          (MachineDescription.encodeNat stage))]
+  rw [MachineDescription.encodeCodeWordAsInput_append]
+  rfl
+
+theorem inputTapeRightCellsDirectCopierRightCellsCodeBits_eq
+    (rest : Word Bool) :
+    MachineDescription.encodeCodeWordAsInput
+        (inputTapeRightCellsCode rest) =
+      List.append (inputTapeRightCellsDirectCopierTickBits rest.length)
+        (List.append inputTapeRightCellsDirectCopierDoneBits
+          (inputTapeRightCellsDirectCopierCellBits rest)) := by
+  rw [inputTapeRightCellsBits_eq_nat_cells]
+  change
+    List.append (inputTapeRightCellsDirectCopierNatBits rest.length)
+        (inputTapeRightCellsDirectCopierCellBits rest) =
+      List.append (inputTapeRightCellsDirectCopierTickBits rest.length)
+        (List.append inputTapeRightCellsDirectCopierDoneBits
+          (inputTapeRightCellsDirectCopierCellBits rest))
+  rw [inputTapeRightCellsDirectCopierNatBits_eq_ticks_done]
+  exact
+    List.append_assoc
+      (inputTapeRightCellsDirectCopierTickBits rest.length)
+      inputTapeRightCellsDirectCopierDoneBits
+      (inputTapeRightCellsDirectCopierCellBits rest)
+
+theorem inputTapeRightCellsDirectCopierStageInputTailBits_eq
+    (b : Bool) (rest : Word Bool) (stage : Nat) :
+    MachineDescription.encodeCodeWordAsInput
+        (List.append (MachineDescription.encodeNat rest.length)
+          ((if b then MachineCodeSymbol.one else MachineCodeSymbol.zero) ::
+            MachineDescription.encodeCellsAppend (rest.map some)
+              (MachineDescription.encodeNat stage))) =
+      List.append (inputTapeRightCellsDirectCopierTickBits rest.length)
+        (List.append inputTapeRightCellsDirectCopierDoneBits
+          (List.append (inputTapeRightCellsDirectCopierHeadBits b)
+            (List.append (inputTapeRightCellsDirectCopierCellBits rest)
+              (inputTapeRightCellsDirectCopierNatBits stage)))) := by
+  rw [MachineDescription.encodeCodeWordAsInput_append]
+  rw [show
+      MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeNat rest.length) =
+        inputTapeRightCellsDirectCopierNatBits rest.length by
+      rfl]
+  rw [inputTapeRightCellsDirectCopierNatBits_eq_ticks_done]
+  cases b <;>
+    simp [MachineDescription.encodeCodeWordAsInput,
+      MachineDescription.encodeCodeSymbolAsInput,
+      inputTapeRightCellsDirectCopierHeadBits,
+      inputTapeRightCellsDirectCopierCellBits_append_natBits,
+      List.append_assoc]
+
+theorem stageInputBits_cons_eq_directCopierBits
+    (b : Bool) (rest : Word Bool) (stage : Nat) :
+    stageInputBits (b :: rest) stage =
+      List.append
+        (MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.tick)
+        (List.append (inputTapeRightCellsDirectCopierTickBits rest.length)
+          (List.append inputTapeRightCellsDirectCopierDoneBits
+            (List.append (inputTapeRightCellsDirectCopierHeadBits b)
+              (List.append (inputTapeRightCellsDirectCopierCellBits rest)
+                (inputTapeRightCellsDirectCopierNatBits stage))))) := by
+  cases b
+  · simp [stageInputBits, PairedRecognizerDovetailStageInputCode,
+      MachineDescription.DovetailLayout.stageInputCode,
+      MachineDescription.DovetailLayout.stageInputCodeAppend,
+      MachineDescription.encodeBoolWordAppend,
+      MachineDescription.encodeCellListAppend,
+      MachineDescription.encodeNatAppend,
+      MachineDescription.encodeNat,
+      MachineDescription.encodeCellsAppend,
+      MachineDescription.encodeCellAppend,
+      MachineDescription.encodeCell,
+      MachineDescription.encodeCodeSymbolAsInput]
+    exact congrArg
+      (fun bits => false :: false :: true :: false :: bits)
+      (inputTapeRightCellsDirectCopierStageInputTailBits_eq
+        false rest stage)
+  · simp [stageInputBits, PairedRecognizerDovetailStageInputCode,
+      MachineDescription.DovetailLayout.stageInputCode,
+      MachineDescription.DovetailLayout.stageInputCodeAppend,
+      MachineDescription.encodeBoolWordAppend,
+      MachineDescription.encodeCellListAppend,
+      MachineDescription.encodeNatAppend,
+      MachineDescription.encodeNat,
+      MachineDescription.encodeCellsAppend,
+      MachineDescription.encodeCellAppend,
+      MachineDescription.encodeCell,
+      MachineDescription.encodeCodeSymbolAsInput]
+    exact congrArg
+      (fun bits => false :: false :: true :: false :: bits)
+      (inputTapeRightCellsDirectCopierStageInputTailBits_eq
+        true rest stage)
+
+theorem inputTapeRightCellsDirectCopierCoreSourceBits_eq
+    (b : Bool) (rest : Word Bool) (stage : Nat)
+    (suffixBits : Word Bool) :
+    List.append
+        (MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.tick)
+        (inputTapeRightCellsDirectCopierCoreSourceBits
+          b rest stage suffixBits) =
+      List.append (stageInputBits (b :: rest) stage) suffixBits := by
+  rw [stageInputBits_cons_eq_directCopierBits]
+  simp [inputTapeRightCellsDirectCopierCoreSourceBits,
+    List.append_assoc]
+
+theorem inputTapeRightCellsDirectCopierCoreOutputBits_eq
+    (b : Bool) (rest : Word Bool) (stage : Nat)
+    (suffixBits : Word Bool) :
+    inputTapeRightCellsDirectCopierCoreOutputBits b rest stage suffixBits =
+      List.append [false, true]
+        (List.append (stageInputBits (b :: rest) stage)
+          (List.append suffixBits
+            (MachineDescription.encodeCodeWordAsInput
+              (inputTapeRightCellsCode rest)))) := by
+  rw [stageInputBits_cons_eq_directCopierBits]
+  rw [inputTapeRightCellsDirectCopierRightCellsCodeBits_eq]
+  simp [inputTapeRightCellsDirectCopierCoreOutputBits,
+    inputTapeRightCellsDirectCopierPreludeBits,
+    MachineDescription.encodeCodeSymbolAsInput,
+    List.append_assoc]
+
 theorem
     descriptionWithCopier_forward
     {accept reject copier : MachineDescription}
@@ -844,7 +997,24 @@ theorem
 
 theorem appendInputTapeRightCellsReturnSpec_realizer :
     AppendInputTapeRightCellsReturnConstruction := by
-  sorry
+  refine ⟨InputTapeRightCellsDirectReturnDescription, ?_⟩
+  constructor
+  · exact inputTapeRightCellsDirectReturnDescription_subroutineReady
+  · intro b rest stage suffixBits
+    rcases
+        inputTapeRightCellsDirectReturnDescription_run_core
+          b rest stage suffixBits with
+      ⟨steps, hsteps⟩
+    refine ⟨steps, ?_⟩
+    have hsource :=
+      inputTapeRightCellsDirectCopierCoreSourceBits_eq
+        b rest stage suffixBits
+    have houtput :=
+      inputTapeRightCellsDirectCopierCoreOutputBits_eq
+        b rest stage suffixBits
+    rw [hsource] at hsteps
+    simpa [houtput, List.map_append,
+      List.append_assoc] using hsteps
 
 theorem appendInputTapeHeadTaggedBrancher_realizer :
     AppendInputTapeHeadTaggedBrancherConstruction := by
