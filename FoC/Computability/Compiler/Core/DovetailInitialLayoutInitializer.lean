@@ -2365,6 +2365,475 @@ private theorem initializerRightCellsCopierStartDescription_run
       MachineDescription.transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
+private def InitializerInputTapeRightCellsDirectCopierDescription :
+    MachineDescription where
+  stateCount := 100
+  start := 0
+  halt := 99
+  transitions :=
+    [ -- Copy the residual unary length prefix.
+      MachineDescription.transition
+        0 (some false) none Direction.right 1
+    , MachineDescription.transition
+        1 (some false) (some false) Direction.right 2
+    , MachineDescription.transition
+        2 (some true) (some true) Direction.right 3
+    , MachineDescription.transition
+        3 (some false) (some false) Direction.right 20
+    , MachineDescription.transition
+        3 (some true) (some true) Direction.right 30
+
+      -- In cell mode, stop when the next source symbol is a nat symbol.
+    , MachineDescription.transition
+        10 (some false) (some false) Direction.right 11
+    , MachineDescription.transition
+        11 (some false) (some false) Direction.left 80
+    , MachineDescription.transition
+        11 (some true) (some true) Direction.left 12
+    , MachineDescription.transition
+        12 (some false) none Direction.right 13
+    , MachineDescription.transition
+        13 (some true) (some true) Direction.right 14
+    , MachineDescription.transition
+        14 (some false) (some false) Direction.right 15
+    , MachineDescription.transition
+        14 (some true) (some true) Direction.right 18
+    , MachineDescription.transition
+        15 (some false) (some false) Direction.right 50
+    , MachineDescription.transition
+        15 (some true) (some true) Direction.right 60
+    , MachineDescription.transition
+        18 (some false) (some false) Direction.right 70
+
+      -- Append a tick symbol, return to its temporary marker, and advance.
+    , MachineDescription.transition
+        20 (some false) (some false) Direction.right 20
+    , MachineDescription.transition
+        20 (some true) (some true) Direction.right 20
+    , MachineDescription.transition
+        20 none (some false) Direction.right 21
+    , MachineDescription.transition
+        21 none (some false) Direction.right 22
+    , MachineDescription.transition
+        22 none (some true) Direction.right 23
+    , MachineDescription.transition
+        23 none (some false) Direction.left 24
+    , MachineDescription.transition
+        24 (some false) (some false) Direction.left 24
+    , MachineDescription.transition
+        24 (some true) (some true) Direction.left 24
+    , MachineDescription.transition
+        24 none (some false) Direction.right 25
+    , MachineDescription.transition
+        25 (some false) (some false) Direction.right 26
+    , MachineDescription.transition
+        25 (some true) (some true) Direction.right 26
+    , MachineDescription.transition
+        26 (some false) (some false) Direction.right 27
+    , MachineDescription.transition
+        26 (some true) (some true) Direction.right 27
+    , MachineDescription.transition
+        27 (some false) (some false) Direction.right 0
+    , MachineDescription.transition
+        27 (some true) (some true) Direction.right 0
+
+      -- Append the done symbol, return, then skip done plus the head cell.
+    , MachineDescription.transition
+        30 (some false) (some false) Direction.right 30
+    , MachineDescription.transition
+        30 (some true) (some true) Direction.right 30
+    , MachineDescription.transition
+        30 none (some false) Direction.right 31
+    , MachineDescription.transition
+        31 none (some false) Direction.right 32
+    , MachineDescription.transition
+        32 none (some true) Direction.right 33
+    , MachineDescription.transition
+        33 none (some true) Direction.left 34
+    , MachineDescription.transition
+        34 (some false) (some false) Direction.left 34
+    , MachineDescription.transition
+        34 (some true) (some true) Direction.left 34
+    , MachineDescription.transition
+        34 none (some false) Direction.right 35
+    , MachineDescription.transition
+        35 (some false) (some false) Direction.right 36
+    , MachineDescription.transition
+        35 (some true) (some true) Direction.right 36
+    , MachineDescription.transition
+        36 (some false) (some false) Direction.right 37
+    , MachineDescription.transition
+        36 (some true) (some true) Direction.right 37
+    , MachineDescription.transition
+        37 (some false) (some false) Direction.right 38
+    , MachineDescription.transition
+        37 (some true) (some true) Direction.right 38
+    , MachineDescription.transition
+        38 (some false) (some false) Direction.right 39
+    , MachineDescription.transition
+        38 (some true) (some true) Direction.right 39
+    , MachineDescription.transition
+        39 (some false) (some false) Direction.right 40
+    , MachineDescription.transition
+        39 (some true) (some true) Direction.right 40
+    , MachineDescription.transition
+        40 (some false) (some false) Direction.right 41
+    , MachineDescription.transition
+        40 (some true) (some true) Direction.right 41
+    , MachineDescription.transition
+        41 (some false) (some false) Direction.right 10
+    , MachineDescription.transition
+        41 (some true) (some true) Direction.right 10
+
+      -- Append blank, zero, and one cell symbols from the remaining cells.
+    , MachineDescription.transition
+        50 (some false) (some false) Direction.right 50
+    , MachineDescription.transition
+        50 (some true) (some true) Direction.right 50
+    , MachineDescription.transition
+        50 none (some false) Direction.right 51
+    , MachineDescription.transition
+        51 none (some true) Direction.right 52
+    , MachineDescription.transition
+        52 none (some false) Direction.right 53
+    , MachineDescription.transition
+        53 none (some false) Direction.left 54
+    , MachineDescription.transition
+        54 (some false) (some false) Direction.left 54
+    , MachineDescription.transition
+        54 (some true) (some true) Direction.left 54
+    , MachineDescription.transition
+        54 none (some false) Direction.right 55
+    , MachineDescription.transition
+        55 (some false) (some false) Direction.right 56
+    , MachineDescription.transition
+        55 (some true) (some true) Direction.right 56
+    , MachineDescription.transition
+        56 (some false) (some false) Direction.right 57
+    , MachineDescription.transition
+        56 (some true) (some true) Direction.right 57
+    , MachineDescription.transition
+        57 (some false) (some false) Direction.right 10
+    , MachineDescription.transition
+        57 (some true) (some true) Direction.right 10
+
+    , MachineDescription.transition
+        60 (some false) (some false) Direction.right 60
+    , MachineDescription.transition
+        60 (some true) (some true) Direction.right 60
+    , MachineDescription.transition
+        60 none (some false) Direction.right 61
+    , MachineDescription.transition
+        61 none (some true) Direction.right 62
+    , MachineDescription.transition
+        62 none (some false) Direction.right 63
+    , MachineDescription.transition
+        63 none (some true) Direction.left 64
+    , MachineDescription.transition
+        64 (some false) (some false) Direction.left 64
+    , MachineDescription.transition
+        64 (some true) (some true) Direction.left 64
+    , MachineDescription.transition
+        64 none (some false) Direction.right 65
+    , MachineDescription.transition
+        65 (some false) (some false) Direction.right 66
+    , MachineDescription.transition
+        65 (some true) (some true) Direction.right 66
+    , MachineDescription.transition
+        66 (some false) (some false) Direction.right 67
+    , MachineDescription.transition
+        66 (some true) (some true) Direction.right 67
+    , MachineDescription.transition
+        67 (some false) (some false) Direction.right 10
+    , MachineDescription.transition
+        67 (some true) (some true) Direction.right 10
+
+    , MachineDescription.transition
+        70 (some false) (some false) Direction.right 70
+    , MachineDescription.transition
+        70 (some true) (some true) Direction.right 70
+    , MachineDescription.transition
+        70 none (some false) Direction.right 71
+    , MachineDescription.transition
+        71 none (some true) Direction.right 72
+    , MachineDescription.transition
+        72 none (some true) Direction.right 73
+    , MachineDescription.transition
+        73 none (some false) Direction.left 74
+    , MachineDescription.transition
+        74 (some false) (some false) Direction.left 74
+    , MachineDescription.transition
+        74 (some true) (some true) Direction.left 74
+    , MachineDescription.transition
+        74 none (some false) Direction.right 75
+    , MachineDescription.transition
+        75 (some false) (some false) Direction.right 76
+    , MachineDescription.transition
+        75 (some true) (some true) Direction.right 76
+    , MachineDescription.transition
+        76 (some false) (some false) Direction.right 77
+    , MachineDescription.transition
+        76 (some true) (some true) Direction.right 77
+    , MachineDescription.transition
+        77 (some false) (some false) Direction.right 10
+    , MachineDescription.transition
+        77 (some true) (some true) Direction.right 10
+
+      -- Return to the transition marker and halt on the restored marker.
+    , MachineDescription.transition
+        80 (some false) (some false) Direction.left 80
+    , MachineDescription.transition
+        80 (some true) (some true) Direction.left 80
+    , MachineDescription.transition
+        80 none (some false) Direction.left 81
+    , MachineDescription.transition
+        81 (some false) (some false) Direction.right 99
+    , MachineDescription.transition
+        81 (some true) (some true) Direction.right 99
+    ]
+
+private theorem initializerInputTapeRightCellsDirectCopierDescription_wellFormed :
+    InitializerInputTapeRightCellsDirectCopierDescription.WellFormed := by
+  constructor
+  · native_decide
+  constructor
+  · native_decide
+  constructor
+  · native_decide
+  constructor
+  · intro t ht
+    exact transition_wellFormed_of_all
+      (l := InitializerInputTapeRightCellsDirectCopierDescription.transitions)
+      (stateCount :=
+        InitializerInputTapeRightCellsDirectCopierDescription.stateCount)
+      (by
+        native_decide) t ht
+  · intro t u ht hu hkey
+    exact transition_deterministic_of_all
+      (l := InitializerInputTapeRightCellsDirectCopierDescription.transitions)
+      (by
+        native_decide) t u ht hu hkey
+
+private theorem
+    initializerInputTapeRightCellsDirectCopierDescription_haltTransitionFree :
+    InitializerInputTapeRightCellsDirectCopierDescription.HaltTransitionFree := by
+  intro t ht
+  exact transition_notFrom_of_all
+    (l := InitializerInputTapeRightCellsDirectCopierDescription.transitions)
+    (state := InitializerInputTapeRightCellsDirectCopierDescription.halt)
+    (by
+      native_decide) t ht
+
+private theorem
+    initializerInputTapeRightCellsDirectCopierDescription_subroutineReady :
+    InitializerInputTapeRightCellsDirectCopierDescription.SubroutineReady :=
+  ⟨initializerInputTapeRightCellsDirectCopierDescription_wellFormed,
+    initializerInputTapeRightCellsDirectCopierDescription_haltTransitionFree⟩
+
+private theorem
+    initializerInputTapeRightCellsDirectCopierDescription_step_scan20
+    (leftRev : List (Option Bool)) (bit : Bool) (rest : Word Bool) :
+    InitializerInputTapeRightCellsDirectCopierDescription.stepConfig
+        (initializerConfig 20 leftRev (some bit :: rest.map some)) =
+      some (initializerConfig 20 (some bit :: leftRev)
+        (rest.map some)) := by
+  cases bit <;> cases rest <;>
+    simp [InitializerInputTapeRightCellsDirectCopierDescription,
+      initializerConfig, initializerTapeAtCells,
+      MachineDescription.stepConfig,
+      MachineDescription.lookupTransition, MachineDescription.Matches,
+      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      Tape.moveRight]
+
+private theorem
+    initializerInputTapeRightCellsDirectCopierDescription_run_scan20
+    (leftRev : List (Option Bool)) (remaining : Word Bool) :
+    InitializerInputTapeRightCellsDirectCopierDescription.runConfig
+        remaining.length
+        (initializerConfig 20 leftRev (remaining.map some)) =
+      initializerConfig 20
+        (List.append (remaining.reverse.map some) leftRev) [] := by
+  induction remaining generalizing leftRev with
+  | nil =>
+      simp [MachineDescription.runConfig, initializerConfig,
+        initializerTapeAtCells]
+  | cons bit rest ih =>
+      simp [MachineDescription.runConfig,
+        initializerInputTapeRightCellsDirectCopierDescription_step_scan20,
+        ih, List.append_assoc]
+
+private theorem
+    initializerInputTapeRightCellsDirectCopierDescription_run_write_tick
+    (leftRev : List (Option Bool)) :
+    InitializerInputTapeRightCellsDirectCopierDescription.runConfig 4
+        (initializerConfig 20 leftRev []) =
+      initializerConfig 24
+        (List.append [some false, some false] leftRev)
+        [some true, some false] := by
+  simp [InitializerInputTapeRightCellsDirectCopierDescription,
+    initializerConfig, initializerTapeAtCells,
+    MachineDescription.runConfig, MachineDescription.stepConfig,
+    MachineDescription.lookupTransition, MachineDescription.Matches,
+    MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+    Tape.moveLeft, Tape.moveRight]
+
+private theorem
+    initializerInputTapeRightCellsDirectCopierDescription_step_return24
+    (preRev : Word Bool) (leftOfMarker : List (Option Bool))
+    (leftBit current : Bool) (right : List (Option Bool)) :
+    InitializerInputTapeRightCellsDirectCopierDescription.stepConfig
+        (initializerConfig 24
+          (List.append (some leftBit :: preRev.map some)
+            (none :: leftOfMarker))
+          (some current :: right)) =
+      some (initializerConfig 24
+        (List.append (preRev.map some) (none :: leftOfMarker))
+        (some leftBit :: some current :: right)) := by
+  cases leftBit <;> cases current <;> cases right <;>
+    simp [InitializerInputTapeRightCellsDirectCopierDescription,
+      initializerConfig, initializerTapeAtCells,
+      MachineDescription.stepConfig, MachineDescription.lookupTransition,
+      MachineDescription.Matches, MachineDescription.transition, Tape.read,
+      Tape.write, Tape.move, Tape.moveLeft]
+
+private theorem
+    initializerInputTapeRightCellsDirectCopierDescription_run_return24
+    (preRev : Word Bool) (leftOfMarker : List (Option Bool))
+    (current : Bool) (right : List (Option Bool)) :
+    InitializerInputTapeRightCellsDirectCopierDescription.runConfig
+        (preRev.length + 2)
+        (initializerConfig 24
+          (List.append (preRev.map some) (none :: leftOfMarker))
+          (some current :: right)) =
+      initializerConfig 25 (some false :: leftOfMarker)
+        (List.append (preRev.reverse.map some)
+          (some current :: right)) := by
+  induction preRev generalizing current right with
+  | nil =>
+      cases current <;> cases right <;>
+        simp [InitializerInputTapeRightCellsDirectCopierDescription,
+          initializerConfig, initializerTapeAtCells,
+          MachineDescription.runConfig, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft, Tape.moveRight]
+  | cons bit rest ih =>
+      simp only [List.map_cons, List.length_cons, List.reverse_cons]
+      rw [show rest.length + 1 + 2 = (rest.length + 2) + 1 by
+        omega]
+      rw [MachineDescription.runConfig]
+      rw [initializerInputTapeRightCellsDirectCopierDescription_step_return24]
+      simpa [List.append_assoc] using ih bit (some current :: right)
+
+private theorem
+    initializerInputTapeRightCellsDirectCopierDescription_run_advance25_to0
+    (leftRev : List (Option Bool)) (b1 b2 b3 : Bool)
+    (right : List (Option Bool)) :
+    InitializerInputTapeRightCellsDirectCopierDescription.runConfig 3
+        (initializerConfig 25 leftRev
+          (some b1 :: some b2 :: some b3 :: right)) =
+      initializerConfig 0
+        (some b3 :: some b2 :: some b1 :: leftRev) right := by
+  cases b1 <;> cases b2 <;> cases b3 <;> cases right <;>
+    simp [InitializerInputTapeRightCellsDirectCopierDescription,
+      initializerConfig, initializerTapeAtCells,
+      MachineDescription.runConfig, MachineDescription.stepConfig,
+      MachineDescription.lookupTransition, MachineDescription.Matches,
+      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      Tape.moveRight]
+
+private theorem
+    initializerInputTapeRightCellsDirectCopierDescription_run_copy_tick
+    (leftOfMarker : List (Option Bool))
+    (pre remaining : Word Bool) :
+    exists steps : Nat,
+      InitializerInputTapeRightCellsDirectCopierDescription.runConfig steps
+          (initializerConfig 0
+            (List.append (pre.reverse.map some)
+              (none :: leftOfMarker))
+            ((List.append
+              (MachineDescription.encodeCodeSymbolAsInput
+                MachineCodeSymbol.tick)
+              remaining).map some)) =
+        initializerConfig 0
+          (List.append
+            ((MachineDescription.encodeCodeSymbolAsInput
+              MachineCodeSymbol.tick).reverse.map some)
+            (List.append (pre.reverse.map some)
+              (none :: leftOfMarker)))
+          ((List.append remaining
+            (MachineDescription.encodeCodeSymbolAsInput
+              MachineCodeSymbol.tick)).map some) := by
+  let afterPrefixLeft : List (Option Bool) :=
+    List.append [some false, some true, some false, none]
+      (List.append (pre.reverse.map some) (none :: leftOfMarker))
+  let returnPre : Word Bool :=
+    List.append [false, false]
+      (List.append remaining.reverse [false, true, false])
+  let returnLeft : List (Option Bool) :=
+    List.append (pre.reverse.map some) (none :: leftOfMarker)
+  have hprefix :
+      InitializerInputTapeRightCellsDirectCopierDescription.runConfig 4
+          (initializerConfig 0
+            (List.append (pre.reverse.map some)
+              (none :: leftOfMarker))
+            ((List.append
+              (MachineDescription.encodeCodeSymbolAsInput
+                MachineCodeSymbol.tick)
+              remaining).map some)) =
+        initializerConfig 20 afterPrefixLeft (remaining.map some) := by
+    simp [afterPrefixLeft,
+      InitializerInputTapeRightCellsDirectCopierDescription,
+      MachineDescription.encodeCodeSymbolAsInput,
+      initializerConfig, initializerTapeAtCells,
+      MachineDescription.runConfig, MachineDescription.stepConfig,
+      MachineDescription.lookupTransition, MachineDescription.Matches,
+      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      Tape.moveRight, List.map_reverse]
+    cases List.map some remaining <;> rfl
+  refine
+    ⟨4 + (remaining.length + (4 + ((returnPre.length + 2) + 3))), ?_⟩
+  rw [MachineDescription.runConfig_add]
+  rw [hprefix]
+  rw [MachineDescription.runConfig_add]
+  rw [initializerInputTapeRightCellsDirectCopierDescription_run_scan20]
+  rw [MachineDescription.runConfig_add]
+  rw [initializerInputTapeRightCellsDirectCopierDescription_run_write_tick]
+  rw [MachineDescription.runConfig_add]
+  have hleft :
+      List.append [some false, some false]
+          (List.append (remaining.reverse.map some) afterPrefixLeft) =
+        List.append (returnPre.map some) (none :: returnLeft) := by
+    simp [afterPrefixLeft, returnPre, returnLeft,
+      List.map_append, List.append_assoc]
+  rw [show
+      initializerConfig 24
+        (List.append [some false, some false]
+          (List.append (remaining.reverse.map some) afterPrefixLeft))
+        [some true, some false] =
+      initializerConfig 24
+        (List.append (returnPre.map some) (none :: returnLeft))
+        (some true :: [some false]) by
+        simpa [List.map_reverse] using
+          congrArg
+            (fun left =>
+              initializerConfig 24 left [some true, some false])
+            hleft]
+  rw [initializerInputTapeRightCellsDirectCopierDescription_run_return24]
+  rw [show
+      initializerConfig 25 (some false :: returnLeft)
+        (List.append (returnPre.reverse.map some) [some true, some false]) =
+      initializerConfig 25 (some false :: returnLeft)
+        (some false :: some true :: some false ::
+          ((List.append remaining
+            (MachineDescription.encodeCodeSymbolAsInput
+              MachineCodeSymbol.tick)).map some)) by
+        simp [returnPre, MachineDescription.encodeCodeSymbolAsInput,
+          List.map_append, List.reverse_append, List.append_assoc]]
+  rw [initializerInputTapeRightCellsDirectCopierDescription_run_advance25_to0]
+  simp [returnLeft, MachineDescription.encodeCodeSymbolAsInput,
+    List.map_append]
+
 private def InitializerAppendCodeSymbolReturnToCurrentMarkerDescription
     (symbol : MachineCodeSymbol) : MachineDescription :=
   InitializerAppendCodeWordReturnToCurrentMarkerDescription [symbol]
