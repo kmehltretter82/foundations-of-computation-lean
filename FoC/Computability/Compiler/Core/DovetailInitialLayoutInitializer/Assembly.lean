@@ -480,6 +480,121 @@ theorem
   simpa [DescriptionWithCopier,
     MachineDescription.initial, A, B] using hn
 
+theorem markedPrefixAppendNatReturnDescription_run_checked_stageInput
+    (n : Nat) (w : Word Bool) (stage : Nat) :
+    exists steps : Nat,
+      (MarkedPrefixAppendNatReturnDescription n).runConfig steps
+          { state :=
+              (MarkedPrefixAppendNatReturnDescription n).start
+            tape := stageInputCheckedInputTape w stage } =
+        { state :=
+            (MarkedPrefixAppendNatReturnDescription n).halt
+          tape :=
+            tapeAtCells [some false]
+              (some false ::
+                ((List.append [false, true]
+                  (List.append (stageInputBits w stage)
+                    (natBits n))).map some)) } := by
+  rcases stageInputBits_exists_cons w stage with
+    ⟨b, rest, hbits⟩
+  rcases
+      markedPrefixAppendNatReturnDescription_run_checked
+        n b rest with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [stageInputCheckedInputTape, stageInputBits,
+    hbits, appendScanTapeAtCellsChecked, natBits,
+    List.append_assoc] using hsteps
+
+theorem
+    descriptionWithCopier_run_checkedInput
+    {accept reject copier : MachineDescription}
+    (hcopier : AppendInputTapeReturnSpec copier)
+    (w : Word Bool) (stage : Nat) :
+    exists steps : Nat,
+      (DescriptionWithCopier
+        accept reject copier).runConfig steps
+          { state :=
+              (DescriptionWithCopier
+                accept reject copier).start
+            tape := stageInputCheckedInputTape w stage } =
+        { state :=
+            (DescriptionWithCopier
+              accept reject copier).halt
+          tape :=
+            tapeAtCells [some false]
+              (some false ::
+                ((List.append [false, true]
+                  (List.append (stageInputBits w stage)
+                    (List.append (natBits accept.start)
+                      (List.append (inputTapeBits w)
+                        (List.append (natBits reject.start)
+                          (List.append (inputTapeBits w)
+                            (MachineDescription.encodeCodeWordAsInput
+                              finalBoolFlagsCode))))))).map some)) } := by
+  let A := MarkedPrefixAppendNatReturnDescription accept.start
+  let B := AppendFirstInputTapeThenRejectDescription
+    reject copier
+  let acceptSuffix :=
+    List.append (stageInputBits w stage)
+      (natBits accept.start)
+  let Tmid :=
+    tapeAtCells [some false]
+      (some false ::
+        ((List.append [false, true] acceptSuffix).map some))
+  have hAready : A.SubroutineReady := by
+    exact
+      markedPrefixAppendNatReturnDescription_subroutineReady
+        accept.start
+  have hBready : B.SubroutineReady := by
+    exact
+      appendFirstInputTapeThenRejectDescription_subroutineReady
+        hcopier
+  rcases
+      markedPrefixAppendNatReturnDescription_run_checked_stageInput
+        accept.start w stage with
+    ⟨nA, hA⟩
+  have hArun :
+      A.runConfig nA
+          { state := A.start
+            tape := stageInputCheckedInputTape w stage } =
+        { state := A.halt, tape := Tmid } := by
+    simpa [A, Tmid, acceptSuffix, natBits,
+      List.append_assoc] using hA
+  have hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start
+              tape := Tape.move Direction.left Tmid } =
+          { state := B.halt
+            tape :=
+              tapeAtCells [some false]
+                (some false ::
+                  ((List.append [false, true]
+                    (List.append (stageInputBits w stage)
+                      (List.append (natBits accept.start)
+                        (List.append (inputTapeBits w)
+                          (List.append (natBits reject.start)
+                            (List.append (inputTapeBits w)
+                              (MachineDescription.encodeCodeWordAsInput
+                                finalBoolFlagsCode))))))).map some)) } := by
+    rcases
+        appendFirstInputTapeThenRejectDescription_run
+          (reject := reject) hcopier w stage
+          (natBits accept.start) with
+      ⟨nB, hB⟩
+    refine ⟨nB, ?_⟩
+    simpa [B, Tmid, acceptSuffix, tapeAtCells,
+      Tape.move, Tape.moveLeft, List.append_assoc] using hB
+  rcases
+      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+        (A := A) (B := B) (handoffMove := Direction.left)
+        hAready hBready hArun hBReach with
+    ⟨n, hn⟩
+  refine ⟨n, ?_⟩
+  simpa [DescriptionWithCopier,
+    A, B] using hn
+
 theorem codeCells_encodeNat
     (n : Nat) :
     codeCells (MachineDescription.encodeNat n) =

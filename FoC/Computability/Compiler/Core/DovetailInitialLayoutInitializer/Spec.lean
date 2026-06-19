@@ -125,6 +125,43 @@ theorem haltsWithTape_functional_of_haltTransitionFree
   · have hle' : n₂ ≤ n₁ := by omega
     exact (hordered hle' h₂ h₁).symm
 
+theorem runConfig_halt_tape_functional_of_haltTransitionFree
+    {D : MachineDescription} {c : MachineDescription.Configuration}
+    {n₁ n₂ : Nat} {T₁ T₂ : Tape Bool}
+    (hD : D.HaltTransitionFree)
+    (h₁ : D.runConfig n₁ c = { state := D.halt, tape := T₁ })
+    (h₂ : D.runConfig n₂ c = { state := D.halt, tape := T₂ }) :
+    T₁ = T₂ := by
+  have hordered :
+      forall {n m : Nat} {Tn Tm : Tape Bool},
+        n ≤ m ->
+        D.runConfig n c = { state := D.halt, tape := Tn } ->
+        D.runConfig m c = { state := D.halt, tape := Tm } ->
+          Tn = Tm := by
+    intro n m Tn Tm hle hn hm
+    let d := m - n
+    have hm_eq : m = n + d := by
+      omega
+    have hrunm :
+        D.runConfig m c = D.runConfig d (D.runConfig n c) := by
+      rw [hm_eq, MachineDescription.runConfig_add]
+    have hstay :
+        D.runConfig d (D.runConfig n c) =
+          D.runConfig n c := by
+      rw [hn]
+      exact MachineDescription.runConfig_halt hD Tn d
+    have htape_m :
+        (D.runConfig m c).tape = Tn := by
+      rw [hrunm, hstay, hn]
+    have htm : (D.runConfig m c).tape = Tm := by
+      rw [hm]
+    rw [htm] at htape_m
+    exact htape_m.symm
+  by_cases hle : n₁ ≤ n₂
+  · exact hordered hle h₁ h₂
+  · have hle' : n₂ ≤ n₁ := by omega
+    exact (hordered hle' h₂ h₁).symm
+
 theorem encodeConfigurationAppend_initial
     (D : MachineDescription) (w : Word Bool)
     (suffix : Word MachineCodeSymbol) :
