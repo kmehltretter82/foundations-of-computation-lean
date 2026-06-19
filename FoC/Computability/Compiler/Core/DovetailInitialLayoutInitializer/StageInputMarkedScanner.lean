@@ -1893,14 +1893,17 @@ theorem runConfig_halt_tape_functional_from_config
     exact (hordered hle' h₂ h₁).symm
 
 /-!
-**Closed-tail inversion.**  The scanner closed proof now separates the two
-facts extracted from a halting run: first the accepted erased-tail shape, then
-the final checked handoff tape.  This keeps decoding concerns out of the
-finite-machine inversion.
+**Closed-tail inversion.**  The scanner accepts some arbitrary bit tails that
+cannot arise from an encoded code word.  The shape inversion is therefore stated
+with the code-level origin of the marked tail, while the tape inversion remains
+separate and only needs the recovered canonical tail equality.
 -/
 
-theorem scanner_marked_tail_shape_inv
-    {tail : Word Bool} {T : Tape Bool}
+theorem scanner_marked_code_tail_shape_inv
+    {code : Word MachineCodeSymbol} {tail : Word Bool} {T : Tape Bool}
+    (hbits :
+      MachineDescription.encodeCodeWordAsInput code =
+        false :: false :: tail)
     (hscanner :
       exists steps : Nat,
         StageInputMarkedScannerDescription.runConfig steps
@@ -1909,7 +1912,8 @@ theorem scanner_marked_tail_shape_inv
             tape := T }) :
     exists w : Word Bool,
     exists stage : Nat,
-      tail = stageInputSecondBitTail w stage := by
+      code = PairedRecognizerDovetailStageInputCode w stage ∧
+        tail = stageInputSecondBitTail w stage := by
   sorry
 
 theorem scanner_marked_tail_tape_inv
@@ -1934,8 +1938,11 @@ theorem scanner_marked_tail_tape_inv
         simpa [markedTailStartConfig, markedStartConfig] using
           hforward)
 
-theorem scanner_marked_tail_inv
-    {tail : Word Bool} {T : Tape Bool}
+theorem scanner_marked_code_tail_inv
+    {code : Word MachineCodeSymbol} {tail : Word Bool} {T : Tape Bool}
+    (hbits :
+      MachineDescription.encodeCodeWordAsInput code =
+        false :: false :: tail)
     (hscanner :
       exists steps : Nat,
         StageInputMarkedScannerDescription.runConfig steps
@@ -1944,12 +1951,13 @@ theorem scanner_marked_tail_inv
             tape := T }) :
     exists w : Word Bool,
     exists stage : Nat,
-      tail = stageInputSecondBitTail w stage ∧
+      code = PairedRecognizerDovetailStageInputCode w stage ∧
+        tail = stageInputSecondBitTail w stage ∧
         T = stageInputSecondBitMarkedCheckedHandoffTape w stage := by
-  rcases scanner_marked_tail_shape_inv hscanner with
-    ⟨w, stage, htail⟩
+  rcases scanner_marked_code_tail_shape_inv hbits hscanner with
+    ⟨w, stage, hcode, htail⟩
   exact
-    ⟨w, stage, htail,
+    ⟨w, stage, hcode, htail,
       scanner_marked_tail_tape_inv hscanner htail⟩
 
 /-!
@@ -2012,12 +2020,9 @@ theorem stageInputMarkedScannerDescription_closed
     rcases hscanner with ⟨steps, hsteps⟩
     refine ⟨steps, ?_⟩
     simpa [markedTailStartConfig, hTmark] using hsteps
-  rcases scanner_marked_tail_inv hscannerTail with
-    ⟨w, stage, htail, hT⟩
-  refine ⟨w, stage, ?_, hT⟩
-  apply stageInputBits_code_inv
-  rw [stageInputBits_eq_false_false_tail w stage]
-  rw [hbits, htail]
+  rcases scanner_marked_code_tail_inv hbits hscannerTail with
+    ⟨w, stage, hcode, _htail, hT⟩
+  exact ⟨w, stage, hcode, hT⟩
 
 /-!
 The exported construction theorem packages the subroutine readiness, forward
