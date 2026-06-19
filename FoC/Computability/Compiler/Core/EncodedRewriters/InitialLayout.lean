@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.TapeCodePrimitives
+import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.Compiled
 
 set_option doc.verso true
 
@@ -25,7 +25,9 @@ theorem closedHandoffCompiledSubroutine
       TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
         (PairedRecognizerDovetailInitialLayoutCode accept reject)
         initializer tapeCodePrimitiveCodeWordHandoffMove := by
-  sorry
+  exact
+    DovetailInitialLayoutInitializer.pairedRecognizerDovetailInitialLayoutCode_closedHandoffCompiledSubroutine
+      accept reject
 
 end InitialLayout
 end EncodedRewriters
