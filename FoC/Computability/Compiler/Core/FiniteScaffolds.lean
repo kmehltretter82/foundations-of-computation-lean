@@ -4,12 +4,26 @@ set_option doc.verso true
 
 /-!
 # Finite-source dovetail scaffolds
+
+This file is the finite-source manifest for the dovetail controller route.  It
+does not define new encodings; it connects the concrete encoded rewriter leaves
+to the paired-recognizer construction targets used by the closeout theorems.
 -/
 
 namespace FoC
 namespace Computability
 
 open Languages
+
+/-!
+**Controller encoded leaves.**  These are the finite transition-table
+obligations that are specific to the controller loop rather than to the
+dovetail layout subroutines.  The projection and result-emitter machines are
+already available from their concrete descriptions; the initializer and
+continue-result code-word subroutine remain as concrete leaves.
+-/
+
+section EncodedControllerLeaves
 
 theorem encodedControllerInputInitializerRewriterConstruction_scaffold :
     EncodedControllerInputInitializerRewriterConstruction := by
@@ -33,28 +47,51 @@ theorem encodedControllerContinueRewriterConstruction_scaffold :
   encodedControllerContinueRewriterConstruction_of_resultContinueCodeWordSubroutine
     encodedControllerResultContinueCodeWordSubroutineConstruction_scaffold
 
+end EncodedControllerLeaves
+
+/-!
+**Contract bridges.**  The encoded rewriter contracts are stated in terms of
+canonical code-word input and output.  The paired-recognizer construction
+targets use the same machines packaged as output-compiled subroutines or as
+controller component realizers.  These lemmas keep that repackaging explicit,
+so the final scaffold section can name only construction dependencies.
+-/
+
+section ContractBridges
+
+private theorem encodedTapeCodePrimitiveOutputCompiledSubroutineConstruction_of_rewriter
+    {P : MachineDescription.TapeCodePrimitive}
+    (h : EncodedTapeCodePrimitiveRewriterConstruction P) :
+    EncodedTapeCodePrimitiveOutputCompiledSubroutineConstruction P := by
+  rcases h with ⟨rewriter, hready, hspec⟩
+  exact ⟨rewriter, ⟨⟨hready.left, hspec⟩, hready.right⟩⟩
+
 theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_of_encodedRewriter
     (h :
       EncodedDovetailStageInputToInitialLayoutRewriterConstruction) :
     PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction := by
   intro accept reject
-  rcases h accept reject with ⟨initializer, hready, hspec⟩
-  exact ⟨initializer, ⟨⟨hready.left, hspec⟩, hready.right⟩⟩
+  exact
+    encodedTapeCodePrimitiveOutputCompiledSubroutineConstruction_of_rewriter
+      (P := PairedRecognizerDovetailInitialLayoutCode accept reject)
+      (h accept reject)
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_encodedRewriter
     (h :
       EncodedDovetailLayoutBoundedRunnerRewriterConstruction) :
     PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction := by
   intro accept reject
-  rcases h accept reject with ⟨runner, hready, hspec⟩
-  exact ⟨runner, ⟨⟨hready.left, hspec⟩, hready.right⟩⟩
+  exact
+    encodedTapeCodePrimitiveOutputCompiledSubroutineConstruction_of_rewriter
+      (P := PairedRecognizerDovetailLayoutCode accept reject)
+      (h accept reject)
 
 theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_of_encodedRewriter
     (h :
       EncodedDovetailTotalOutputEmitterRewriterConstruction) :
-    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction := by
-  rcases h with ⟨emitter, hready, hspec⟩
-  exact ⟨emitter, ⟨⟨hready.left, hspec⟩, hready.right⟩⟩
+    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction :=
+  encodedTapeCodePrimitiveOutputCompiledSubroutineConstruction_of_rewriter
+    (P := PairedRecognizerDovetailTotalOutputCode) h
 
 theorem pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_of_encodedRewriter
     (h :
@@ -94,35 +131,36 @@ theorem pairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutin
 
 theorem pairedRecognizerDovetailControllerInputInitializerConstruction_of_encodedRewriter
     (h : EncodedControllerInputInitializerRewriterConstruction) :
-    PairedRecognizerDovetailControllerInputInitializerConstruction := by
-  rcases h with ⟨initializer, hready, hspec⟩
-  exact ⟨initializer, hready, hspec⟩
+    PairedRecognizerDovetailControllerInputInitializerConstruction :=
+  h
 
 theorem pairedRecognizerDovetailControllerStageInputEncoderConstruction_of_encodedRewriter
     (h : EncodedControllerStageInputProjectionRewriterConstruction) :
-    PairedRecognizerDovetailControllerStageInputEncoderConstruction := by
-  rcases h with ⟨encoder, hready, hspec⟩
-  exact ⟨encoder, ⟨⟨hready.left, hspec⟩, hready.right⟩⟩
+    PairedRecognizerDovetailControllerStageInputEncoderConstruction :=
+  encodedTapeCodePrimitiveOutputCompiledSubroutineConstruction_of_rewriter
+    (P := PairedRecognizerDovetailControllerStageInputCodePrimitive) h
 
 theorem pairedRecognizerDovetailControllerResultEmitterConstruction_of_encodedRewriter
     (h : EncodedControllerResultEmitterRewriterConstruction) :
-    PairedRecognizerDovetailControllerResultEmitterConstruction := by
-  rcases h with ⟨emitter, hready, hspec⟩
-  exact ⟨emitter, hready, hspec⟩
+    PairedRecognizerDovetailControllerResultEmitterConstruction :=
+  h
 
 theorem pairedRecognizerDovetailControllerContinueConstruction_of_encodedRewriter
     (h : EncodedControllerContinueRewriterConstruction) :
-    PairedRecognizerDovetailControllerContinueConstruction := by
-  rcases h with ⟨continuer, hready, hspec⟩
-  exact ⟨continuer, hready, hspec⟩
+    PairedRecognizerDovetailControllerContinueConstruction :=
+  h
+
+end ContractBridges
 
 /-!
-**Finite-source scaffold.**  These declarations are the remaining concrete
+**Finite-source scaffold exports.**  These declarations are the remaining concrete
 machine-construction leaves for the paired-recognizer dovetail controller
 route. They are intentionally narrow: the source programs and controller layout
 are the fixed finite targets above, not arbitrary staged programs or arbitrary
 tape-code primitives.
 -/
+
+section FiniteSourceScaffoldExports
 
 theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_scaffold :
     PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction :=
@@ -182,6 +220,13 @@ theorem pairedRecognizerDovetailControllerStageInputEncoderConstruction_scaffold
   pairedRecognizerDovetailControllerStageInputEncoderConstruction_of_encodedRewriter
     encodedControllerStageInputProjectionRewriterConstruction_scaffold
 
+/-!
+The last controller-loop leaves are composition machines rather than
+single-primitive encoded rewriters: one invokes the total stage-attempt
+subroutine after projecting a stage input, and one sequences initializer,
+invoker, result emitter, and continuer into the finite search driver.
+-/
+
 theorem pairedRecognizerDovetailStageAttemptInvocationConstruction_scaffold :
     PairedRecognizerDovetailStageAttemptInvocationConstruction := by
   sorry
@@ -219,6 +264,8 @@ theorem pairedRecognizerDovetailFiniteStageLoopControllerConstruction_scaffold :
     pairedRecognizerDovetailControllerResultEmitterConstruction_scaffold
     pairedRecognizerDovetailControllerContinueConstruction_scaffold
     pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_scaffold
+
+end FiniteSourceScaffoldExports
 
 end Computability
 end FoC
