@@ -97,22 +97,6 @@ theorem prefixStatesFrom_get?_runFrom (M : DFA alpha state)
             simpa [Word.Length] using hi
           simpa [PrefixStatesFrom, DFA.RunFrom] using ih (M.step q a) hiRest
 
-theorem nodup_length_le_of_subset {α : Type u} [DecidableEq α]
-    {ys xs : List α}
-    (hnd : ys.Nodup) (hsub : forall a, a ∈ ys -> a ∈ xs) :
-    ys.length <= xs.length :=
-  Foundation.list_nodup_length_le_of_subset hnd hsub
-
-theorem not_nodup_exists_duplicate_split {α : Type u} [DecidableEq α]
-    {xs : List α} (h : ¬ xs.Nodup) :
-    exists pre a mid post, xs = pre ++ [a] ++ mid ++ [a] ++ post :=
-  Foundation.list_not_nodup_exists_duplicate_split h
-
-theorem duplicate_indices_of_split {α : Type u} {xs pre mid post : List α} {a : α}
-    (h : xs = pre ++ [a] ++ mid ++ [a] ++ post) :
-    exists i j, i < j ∧ j < xs.length ∧ xs[i]? = some a ∧ xs[j]? = some a :=
-  Foundation.list_duplicate_indices_of_split h
-
 theorem duplicate_indices_of_length_gt {α : Type u} [DecidableEq α]
     {xs elems : List α}
     (hlen : elems.length < xs.length)
@@ -505,22 +489,6 @@ theorem not_regular_of_no_pumping_property_regular {L : Language alpha}
     (hNoPump : ¬ HasPumpingProperty L) :
     ¬ RegularLanguage.Regular L :=
   not_regular_of_no_pumping_property (regular_pumpingLemmaConclusion L) hNoPump
-
-theorem not_regular_of_counterexamples {L : Language alpha}
-    (hbad :
-      forall n : Nat, n > 0 ->
-        exists w : Word alpha,
-          w ∈ L ∧
-          n <= Word.Length w ∧
-          forall x y z : Word alpha,
-            w = Word.Concat x (Word.Concat y z) ->
-            Word.Length (Word.Concat x y) <= n ->
-            Word.Length y > 0 ->
-            exists k : Nat,
-              ¬ Word.Concat x (Word.Concat (Word.RepeatWord y k) z) ∈ L) :
-    ¬ RegularLanguage.Regular L :=
-  not_regular_of_no_pumping_property_regular
-    (not_hasPumpingProperty_of_counterexamples hbad)
 
 end Pumping
 end Languages

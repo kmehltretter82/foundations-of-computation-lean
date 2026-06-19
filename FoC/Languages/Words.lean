@@ -98,29 +98,6 @@ theorem length_concat (x y : Word alpha) :
     Length (Concat x y) = Length x + Length y := by
   simp [Length, Concat]
 
-theorem length_repeatWord (w : Word alpha) (n : Nat) :
-    Length (RepeatWord w n) = n * Length w := by
-  induction n with
-  | zero =>
-      simp [RepeatWord, Length]
-  | succ n ih =>
-      calc
-        Length (RepeatWord w (n + 1))
-            = Length w + Length (RepeatWord w n) := by
-                simp [RepeatWord, Length, List.length_append]
-        _ = Length w + n * Length w := by
-                rw [ih]
-        _ = (n + 1) * Length w := by
-                rw [Nat.succ_mul]
-                omega
-
-theorem reverse_concat (x y : Word alpha) :
-    Reverse (Concat x y) = Concat (Reverse y) (Reverse x) := by
-  simp [Reverse, Concat]
-
-theorem repeatWord_zero (w : Word alpha) : RepeatWord w 0 = Empty :=
-  rfl
-
 theorem repeatWord_succ (w : Word alpha) (n : Nat) :
     RepeatWord w (n + 1) = Concat w (RepeatWord w n) :=
   rfl
@@ -140,28 +117,9 @@ theorem repeatWord_concat_self (w : Word alpha) (n : Nat) :
               rw [ih]
         _ = Concat w (RepeatWord w (n + 1)) := rfl
 
-theorem repeatWord_succ_right (w : Word alpha) (n : Nat) :
-    Concat (RepeatWord w n) w = RepeatWord w (n + 1) := by
-  rw [repeatWord_concat_self, repeatWord_succ]
-
-theorem repeatSymbol_zero (a : alpha) : RepeatSymbol a 0 = Empty :=
-  rfl
-
 theorem length_repeatSymbol (a : alpha) (n : Nat) :
     Length (RepeatSymbol a n) = n := by
   simp [Length, RepeatSymbol]
-
-theorem count_empty [DecidableEq alpha] (a : alpha) :
-    Count a (Empty : Word alpha) = 0 :=
-  rfl
-
-theorem count_cons_same [DecidableEq alpha] (a : alpha) (w : Word alpha) :
-    Count a (a :: w) = Count a w + 1 := by
-  simp [Count, Nat.add_comm]
-
-theorem count_cons_different [DecidableEq alpha] {a b : alpha} (h : b ≠ a)
-    (w : Word alpha) : Count a (b :: w) = Count a w := by
-  simp [Count, h]
 
 theorem count_concat [DecidableEq alpha] (a : alpha) (x y : Word alpha) :
     Count a (Concat x y) = Count a x + Count a y := by

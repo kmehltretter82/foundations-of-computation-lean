@@ -63,10 +63,6 @@ theorem path_epsilonReach_prefix {M : NFA alpha state} {q r s : state}
   | refl _ => exact hpath
   | step hstep _ ih => exact Path.eps hstep (ih hpath)
 
-theorem path_of_epsilonReach {M : NFA alpha state} {q r : state}
-    (hqr : EpsilonReach M q r) : Path M q Word.Empty r :=
-  path_epsilonReach_prefix hqr (Path.nil r)
-
 theorem epsilonReach_of_path_empty_aux {M : NFA alpha state} {q r : state}
     {v : Word alpha} (hpath : Path M q v r) :
     v = Word.Empty -> EpsilonReach M q r := by

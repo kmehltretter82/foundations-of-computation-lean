@@ -27,11 +27,10 @@ open Languages
 /-!
 ## Expression Denotation
 
-Definition 3.2 is formalized by {lit}`RegExp.Denote`. Its constructor equations
-are the reusable theorems {lit}`RegExp.denote_empty`,
-{lit}`RegExp.denote_eps`, {lit}`RegExp.denote_sym`,
-{lit}`RegExp.denote_alt`, {lit}`RegExp.denote_seq`, and
-{lit}`RegExp.denote_star`.
+Definition 3.2 is formalized by {lit}`RegExp.Denote`. Its primitive constructor
+equations are definitional: unfolding {lit}`RegExp.Denote` reduces empty,
+epsilon, symbol, alternative, sequence, and star expressions to the corresponding
+language operations.
 -/
 
 /-!

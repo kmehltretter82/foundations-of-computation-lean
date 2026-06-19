@@ -175,19 +175,6 @@ theorem allSymbolsIn_concatWords {alphabet : List alpha}
       | tail _ htail =>
           exact ih (allSymbolsIn_concat_right h) htail
 
-theorem pathVia_run (M : DFA alpha state) (allowed : List state)
-    {q r : state} {w : Word alpha}
-    (h : PathVia M allowed q w r) :
-    DFA.RunFrom M q w = r := by
-  induction h with
-  | empty q =>
-      rfl
-  | symbol q a =>
-      rfl
-  | cons _ _ hstep _ ih =>
-      rw [DFA.runFrom_cons, hstep]
-      exact ih
-
 theorem pathVia_prepend (M : DFA alpha state) (allowed : List state)
     {q mid r : state} {a : alpha} {tail : Word alpha}
     (hmid : mid ∈ allowed)
@@ -507,15 +494,6 @@ theorem dfaRegex_complete (alphabet : List alpha) (M : DFA alpha state)
 These theorems expose the regular-expression closure facts as language-level
 regularity statements.
 -/
-
-theorem empty_regular : Regular (Language.Empty : Language alpha) :=
-  RegExp.regular_empty
-
-theorem epsilon_regular : Regular (Language.Singleton (Word.Empty : Word alpha)) :=
-  RegExp.regular_epsilon
-
-theorem symbol_regular (a : alpha) : Regular (Language.Singleton (Word.Symbol a)) :=
-  RegExp.regular_symbol a
 
 theorem union_regular {L M : Language alpha}
     (hL : Regular L) (hM : Regular M) : Regular (Language.Union L M) :=

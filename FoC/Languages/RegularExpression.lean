@@ -105,40 +105,6 @@ These theorems expose the membership rules for each expression constructor and
 register the base regular languages.
 -/
 
-theorem denote_empty (w : Word alpha) : w ∈ Denote (empty : RegExp alpha) <-> False :=
-  Iff.rfl
-
-theorem denote_eps (w : Word alpha) : w ∈ Denote (eps : RegExp alpha) <-> w = Word.Empty :=
-  Iff.rfl
-
-theorem denote_sym (a : alpha) (w : Word alpha) : w ∈ Denote (sym a) <-> w = [a] :=
-  Iff.rfl
-
-theorem denote_alt (r s : RegExp alpha) (w : Word alpha) :
-    w ∈ Denote (alt r s) <-> w ∈ Denote r ∨ w ∈ Denote s :=
-  Iff.rfl
-
-theorem denote_seq (r s : RegExp alpha) (w : Word alpha) :
-    w ∈ Denote (seq r s) <->
-      exists x y, x ∈ Denote r ∧ y ∈ Denote s ∧ w = Word.Concat x y :=
-  Iff.rfl
-
-theorem denote_star (r : RegExp alpha) (w : Word alpha) :
-    w ∈ Denote (star r) <-> w ∈ Language.Star (Denote r) :=
-  Iff.rfl
-
-theorem regular_empty : Regular (Language.Empty : Language alpha) := by
-  exists empty
-  exact Language.equal_refl _
-
-theorem regular_epsilon : Regular (Language.Singleton (Word.Empty : Word alpha)) := by
-  exists eps
-  exact Language.equal_refl _
-
-theorem regular_symbol (a : alpha) : Regular (Language.Singleton (Word.Symbol a)) := by
-  exists sym a
-  exact Language.equal_refl _
-
 /-!
 # Closure constructions
 
@@ -327,29 +293,15 @@ theorem regular_star {L : Language alpha} (hL : Regular L) :
               exact (hr p).mpr (hpieces.left p hp)
             · exact hpieces.right
 
-theorem optional_denote (r : RegExp alpha) :
-    Language.Equal (Denote (Optional r))
-      (Language.Union (Denote r) (Language.Singleton Word.Empty)) :=
-  Language.equal_refl _
-
 theorem optional_membership (r : RegExp alpha) (w : Word alpha) :
     w ∈ Denote (Optional r) <-> w ∈ Denote r ∨ w = Word.Empty :=
   Iff.rfl
-
-theorem plus_denote (r : RegExp alpha) :
-    Language.Equal (Denote (Plus r))
-      (Language.Concat (Denote r) (Language.Star (Denote r))) :=
-  Language.equal_refl _
 
 theorem plus_membership (r : RegExp alpha) (w : Word alpha) :
     w ∈ Denote (Plus r) <->
       exists x y, x ∈ Denote r ∧ y ∈ Language.Star (Denote r) ∧
         w = Word.Concat x y :=
   Iff.rfl
-
-theorem plus_of_mem (r : RegExp alpha) {w : Word alpha}
-    (hw : w ∈ Denote r) : w ∈ Denote (Plus r) := by
-  exact ⟨w, Word.Empty, hw, Language.star_empty_word _, by rw [Word.concat_empty_right]⟩
 
 theorem plus_subset_star (r : RegExp alpha) :
     Language.Subset (Denote (Plus r)) (Denote (star r)) := by

@@ -98,15 +98,6 @@ theorem epsilonClosure_contains {M : NFA alpha state} {S : FSet state} {q : stat
   exists q
   exact And.intro hq (EpsilonReach.refl q)
 
-theorem reachFromSet_empty (M : NFA alpha state) (S : FSet state) :
-    ReachFromSet M S Word.Empty = S :=
-  rfl
-
-theorem reachFromSet_cons (M : NFA alpha state) (S : FSet state)
-    (a : alpha) (w : Word alpha) :
-    ReachFromSet M S (a :: w) = ReachFromSet M (Next M S a) w :=
-  rfl
-
 theorem subsetDFA_runFrom (M : NFA alpha state)
     (subsetsFinite : FiniteType (FSet state)) (S : FSet state) (w : Word alpha) :
     DFA.RunFrom (SubsetDFA M subsetsFinite) S w = ReachFromSet M S w := by

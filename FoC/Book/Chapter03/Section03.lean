@@ -26,8 +26,8 @@ open Languages
 ## Derived Operators
 
 Optional, plus, and character classes expand to union, concatenation, star,
-and finite alternatives. Their canonical semantic theorems are
-{lit}`RegExp.optional_denote`, {lit}`RegExp.plus_denote`, and
+and finite alternatives. Their canonical membership theorems are
+{lit}`RegExp.optional_membership`, {lit}`RegExp.plus_membership`, and
 {lit}`RegExp.charClass_denote`. The sample digit class demonstrates
 character-class membership for a concrete one-symbol word.
 

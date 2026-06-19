@@ -119,17 +119,6 @@ These lemmas expose the membership rules for the language constructors and
 finite examples.
 -/
 
-theorem mem_empty (w : Word alpha) : w ∈ (Empty : Language alpha) <-> False :=
-  Iff.rfl
-
-theorem mem_universal (w : Word alpha) :
-    w ∈ (Universal : Language alpha) <-> True :=
-  Iff.rfl
-
-theorem mem_singleton (w x : Word alpha) :
-    w ∈ Singleton x <-> w = x :=
-  Iff.rfl
-
 theorem mem_union (w : Word alpha) (L M : Language alpha) :
     w ∈ Union L M <-> w ∈ L ∨ w ∈ M :=
   Iff.rfl
@@ -151,9 +140,6 @@ theorem mem_concat (w : Word alpha) (L M : Language alpha) :
       exists x y, x ∈ L ∧ y ∈ M ∧ w = Word.Concat x y :=
   Iff.rfl
 
-theorem empty_finite : Finite (Empty : Language alpha) :=
-  FSet.empty_finite
-
 theorem singleton_finite (w : Word alpha) : Finite (Singleton w) :=
   FSet.singleton_finite w
 
@@ -171,59 +157,18 @@ theorem equal_symm {L M : Language alpha} (h : Equal L M) : Equal M L :=
   FSet.equal_symm h
 
 theorem equal_trans {L M N : Language alpha} (hLM : Equal L M) (hMN : Equal M N) :
-    Equal L N :=
+  Equal L N :=
   FSet.equal_trans hLM hMN
 
-theorem compl_congr {L M : Language alpha} (h : Equal L M) :
-    Equal (Compl L) (Compl M) := by
-  intro w
-  constructor
-  · intro hw hM
-    exact hw ((h w).mpr hM)
-  · intro hw hL
-    exact hw ((h w).mp hL)
-
 theorem double_compl (L : Language alpha) :
-    Equal (Compl (Compl L)) L :=
+  Equal (Compl (Compl L)) L :=
   FSet.double_compl L
-
-theorem union_comm (L M : Language alpha) : Equal (Union L M) (Union M L) :=
-  FSet.union_comm L M
-
-theorem union_assoc (L M N : Language alpha) :
-    Equal (Union L (Union M N)) (Union (Union L M) N) :=
-  FSet.union_assoc L M N
-
-theorem inter_comm (L M : Language alpha) : Equal (Inter L M) (Inter M L) :=
-  FSet.inter_comm L M
-
-theorem inter_assoc (L M N : Language alpha) :
-    Equal (Inter L (Inter M N)) (Inter (Inter L M) N) :=
-  FSet.inter_assoc L M N
 
 theorem union_idempotent (L : Language alpha) : Equal (Union L L) L :=
   FSet.union_idempotent L
 
 theorem inter_idempotent (L : Language alpha) : Equal (Inter L L) L :=
   FSet.inter_idempotent L
-
-theorem union_empty (L : Language alpha) : Equal (Union L Empty) L :=
-  FSet.union_empty L
-
-theorem empty_union (L : Language alpha) : Equal (Union Empty L) L :=
-  FSet.empty_union L
-
-theorem inter_empty (L : Language alpha) : Equal (Inter L Empty) Empty :=
-  FSet.inter_empty L
-
-theorem empty_inter (L : Language alpha) : Equal (Inter Empty L) Empty :=
-  FSet.empty_inter L
-
-theorem union_universal (L : Language alpha) : Equal (Union L Universal) Universal :=
-  FSet.union_univ L
-
-theorem inter_universal (L : Language alpha) : Equal (Inter L Universal) L :=
-  FSet.inter_univ L
 
 theorem union_absorption (L M : Language alpha) :
     Equal (Union L (Inter L M)) L :=
@@ -233,26 +178,9 @@ theorem inter_absorption (L M : Language alpha) :
     Equal (Inter L (Union L M)) L :=
   FSet.inter_absorption L M
 
-theorem diff_self (L : Language alpha) : Equal (Diff L L) Empty :=
-  FSet.diff_self L
-
-theorem diff_empty (L : Language alpha) : Equal (Diff L Empty) L :=
-  FSet.diff_empty L
-
-theorem empty_diff (L : Language alpha) : Equal (Diff Empty L) Empty :=
-  FSet.empty_diff L
-
-theorem diff_universal (L : Language alpha) : Equal (Diff L Universal) Empty :=
-  FSet.diff_univ L
-
 theorem diff_as_inter_compl (L M : Language alpha) :
     Equal (Diff L M) (Inter L (Compl M)) :=
   FSet.equal_refl _
-
-theorem reverse_congr {L M : Language alpha} (h : Equal L M) :
-    Equal (Reverse L) (Reverse M) := by
-  intro w
-  exact h (Word.Reverse w)
 
 theorem reverse_reverse (L : Language alpha) : Equal (Reverse (Reverse L)) L := by
   intro w
@@ -264,42 +192,8 @@ theorem reverse_reverse (L : Language alpha) : Equal (Reverse (Reverse L)) L := 
     rw [show Word.Reverse (Word.Reverse w) = w by simp [Word.Reverse]]
     exact hw
 
-theorem concat_congr {L L' M M' : Language alpha}
-    (hL : Equal L L') (hM : Equal M M') :
-    Equal (Concat L M) (Concat L' M') := by
-  intro w
-  constructor
-  · intro hw
-    rcases hw with ⟨x, y, hx, hy, hwEq⟩
-    exact ⟨x, y, (hL x).mp hx, (hM y).mp hy, hwEq⟩
-  · intro hw
-    rcases hw with ⟨x, y, hx, hy, hwEq⟩
-    exact ⟨x, y, (hL x).mpr hx, (hM y).mpr hy, hwEq⟩
-
-theorem star_congr {L M : Language alpha} (h : Equal L M) :
-    Equal (Star L) (Star M) := by
-  intro w
-  constructor
-  · intro hw
-    rcases hw with ⟨pieces, hpieces, hwEq⟩
-    exact ⟨pieces, (by
-      intro p hp
-      exact (h p).mp (hpieces p hp)), hwEq⟩
-  · intro hw
-    rcases hw with ⟨pieces, hpieces, hwEq⟩
-    exact ⟨pieces, (by
-      intro p hp
-      exact (h p).mpr (hpieces p hp)), hwEq⟩
-
-theorem concat_empty_word_left (w : Word alpha) :
-    w ∈ Singleton Word.Empty -> forall L : Language alpha,
-      forall y, y ∈ L -> Word.Concat w y = y := by
-  intro hw L y _hy
-  rw [hw]
-  exact Word.concat_empty_left y
-
 theorem concat_empty_language_left (L : Language alpha) :
-    Equal (Concat Empty L) Empty := by
+  Equal (Concat Empty L) Empty := by
   intro w
   constructor
   · intro hw
@@ -342,61 +236,6 @@ theorem concat_epsilon_right (L : Language alpha) :
   · intro hw
     exact ⟨w, Word.Empty, hw, rfl, by rw [Word.concat_empty_right]⟩
 
-theorem concat_assoc (L M N : Language alpha) :
-    Equal (Concat (Concat L M) N) (Concat L (Concat M N)) := by
-  intro w
-  constructor
-  · intro hw
-    cases hw with
-    | intro xy hxy =>
-        cases hxy with
-        | intro z hz =>
-            cases hz with
-            | intro hxyMem hrest =>
-                cases hxyMem with
-                | intro x hx =>
-                    cases hx with
-                    | intro y hy =>
-                        cases hy with
-                        | intro hxL hyrest =>
-                            cases hyrest with
-                            | intro hyM hxyEq =>
-                                cases hrest with
-                                | intro hzN hwEq =>
-                                    exists x
-                                    exists Word.Concat y z
-                                    constructor
-                                    · exact hxL
-                                    constructor
-                                    · exact Exists.intro y
-                                        (Exists.intro z (And.intro hyM (And.intro hzN rfl)))
-                                    · rw [hwEq, hxyEq, Word.concat_assoc]
-  · intro hw
-    cases hw with
-    | intro x hx =>
-        cases hx with
-        | intro yz hyz =>
-            cases hyz with
-            | intro hxL hrest =>
-                cases hrest with
-                | intro hyzMem hwEq =>
-                    cases hyzMem with
-                    | intro y hy =>
-                        cases hy with
-                        | intro z hz =>
-                            cases hz with
-                            | intro hyM hzrest =>
-                                cases hzrest with
-                                | intro hzN hyzEq =>
-                                    exists Word.Concat x y
-                                    exists z
-                                    constructor
-                                    · exact Exists.intro x
-                                        (Exists.intro y (And.intro hxL (And.intro hyM rfl)))
-                                    constructor
-                                    · exact hzN
-                                    · rw [hwEq, hyzEq, Word.concat_assoc]
-
 theorem reverse_concat (L M : Language alpha) :
     Equal (Reverse (Concat L M)) (Concat (Reverse M) (Reverse L)) := by
   intro w
@@ -415,7 +254,7 @@ theorem reverse_concat (L M : Language alpha) :
             · change Word.Reverse (Word.Reverse x) ∈ L
               simpa [Word.Reverse] using hy.left
             · have hwEq := congrArg Word.Reverse hy.right.right
-              simpa [Word.reverse_concat, Word.Reverse, Word.Concat] using hwEq
+              simpa [Word.Reverse, Word.Concat, List.reverse_append] using hwEq
   · intro hw
     cases hw with
     | intro yrev hyrev =>
@@ -428,10 +267,10 @@ theorem reverse_concat (L M : Language alpha) :
             constructor
             · exact hxrev.left
             · have hwEq := congrArg Word.Reverse hxrev.right.right
-              simpa [Word.reverse_concat, Word.Reverse, Word.Concat] using hwEq
+              simpa [Word.Reverse, Word.Concat, List.reverse_append] using hwEq
 
 theorem concatWords_append (xs ys : List (Word alpha)) :
-    ConcatWords (xs ++ ys) = Word.Concat (ConcatWords xs) (ConcatWords ys) := by
+  ConcatWords (xs ++ ys) = Word.Concat (ConcatWords xs) (ConcatWords ys) := by
   induction xs with
   | nil => rfl
   | cons x xs ih =>
@@ -519,14 +358,6 @@ theorem star_concat {L : Language alpha} {x y : Word alpha}
             | inl hpx => exact hxs.left p hpx
             | inr hpy => exact hys.left p hpy
           · rw [concatWords_append, hxs.right, hys.right]
-
-theorem power_zero (L : Language alpha) :
-    Equal (Power L 0) (Singleton Word.Empty) :=
-  equal_refl _
-
-theorem power_succ (L : Language alpha) (n : Nat) :
-    Equal (Power L (n + 1)) (Concat L (Power L n)) :=
-  equal_refl _
 
 end Language
 end Languages
