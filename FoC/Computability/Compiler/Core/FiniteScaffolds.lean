@@ -15,6 +15,54 @@ namespace Computability
 
 open Languages
 
+def TapeCodePrimitiveOutputCompiledForwardSpec
+    (P : MachineDescription.TapeCodePrimitive)
+    (D : MachineDescription) : Prop :=
+  forall code out : Word MachineCodeSymbol,
+    P.transform code = some out ->
+      D.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out)
+
+def TapeCodePrimitiveOutputCompiledClosedSpec
+    (P : MachineDescription.TapeCodePrimitive)
+    (D : MachineDescription) : Prop :=
+  forall code out : Word MachineCodeSymbol,
+    D.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out) ->
+      P.transform code = some out
+
+theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_of_forward_closed
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (hready : D.SubroutineReady)
+    (hforward : TapeCodePrimitiveOutputCompiledForwardSpec P D)
+    (hclosed : TapeCodePrimitiveOutputCompiledClosedSpec P D) :
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription P D := by
+  constructor
+  · constructor
+    · exact hready.left
+    · intro code out
+      constructor
+      · exact hclosed code out
+      · exact hforward code out
+  · exact hready.right
+
+theorem encodedTapeCodePrimitiveOutputCompiledSubroutineConstruction_of_forward_closed
+    {P : MachineDescription.TapeCodePrimitive}
+    (h :
+      exists D : MachineDescription,
+        D.SubroutineReady ∧
+          TapeCodePrimitiveOutputCompiledForwardSpec P D ∧
+          TapeCodePrimitiveOutputCompiledClosedSpec P D) :
+    EncodedTapeCodePrimitiveOutputCompiledSubroutineConstruction P := by
+  rcases h with ⟨D, hready, hforward, hclosed⟩
+  exact
+    ⟨D,
+      tapeCodePrimitiveOutputCompiledSubroutineByDescription_of_forward_closed
+        hready hforward hclosed⟩
+
 /-!
 **Controller encoded leaves.**  These are the finite transition-table
 obligations that are specific to the controller loop rather than to the
@@ -25,9 +73,25 @@ continue-result code-word subroutine remain as concrete leaves.
 
 section EncodedControllerLeaves
 
-theorem encodedControllerInputInitializerRewriterConstruction_scaffold :
+def EncodedControllerInputInitializerConstructionData :
+    Prop :=
+  exists initializer : MachineDescription,
+    PairedRecognizerDovetailControllerInputInitializerRealizes initializer
+
+theorem encodedControllerInputInitializerRewriterConstruction_of_data
+    (h : EncodedControllerInputInitializerConstructionData) :
     EncodedControllerInputInitializerRewriterConstruction := by
+  rcases h with ⟨initializer, hinitializer⟩
+  exact ⟨initializer, hinitializer.left, hinitializer.right⟩
+
+theorem encodedControllerInputInitializerConstructionData_scaffold :
+    EncodedControllerInputInitializerConstructionData := by
   sorry
+
+theorem encodedControllerInputInitializerRewriterConstruction_scaffold :
+    EncodedControllerInputInitializerRewriterConstruction :=
+  encodedControllerInputInitializerRewriterConstruction_of_data
+    encodedControllerInputInitializerConstructionData_scaffold
 
 theorem encodedControllerStageInputProjectionRewriterConstruction_scaffold :
     EncodedControllerStageInputProjectionRewriterConstruction :=
@@ -38,9 +102,31 @@ theorem encodedControllerResultEmitterRewriterConstruction_scaffold :
     EncodedControllerResultEmitterRewriterConstruction :=
   encodedControllerResultEmitterRewriterConstruction_of_description
 
-theorem encodedControllerResultContinueCodeWordSubroutineConstruction_scaffold :
-    EncodedControllerResultContinueCodeWordSubroutineConstruction := by
+def EncodedControllerResultContinueConstructionData :
+    Prop :=
+  exists continuer : MachineDescription,
+    continuer.SubroutineReady ∧
+      TapeCodePrimitiveOutputCompiledForwardSpec
+        PairedRecognizerDovetailControllerResultContinueCode
+        continuer ∧
+      TapeCodePrimitiveOutputCompiledClosedSpec
+        PairedRecognizerDovetailControllerResultContinueCode
+        continuer
+
+theorem encodedControllerResultContinueCodeWordSubroutineConstruction_of_data
+    (h : EncodedControllerResultContinueConstructionData) :
+    EncodedControllerResultContinueCodeWordSubroutineConstruction :=
+  encodedTapeCodePrimitiveOutputCompiledSubroutineConstruction_of_forward_closed
+    h
+
+theorem encodedControllerResultContinueConstructionData_scaffold :
+    EncodedControllerResultContinueConstructionData := by
   sorry
+
+theorem encodedControllerResultContinueCodeWordSubroutineConstruction_scaffold :
+    EncodedControllerResultContinueCodeWordSubroutineConstruction :=
+  encodedControllerResultContinueCodeWordSubroutineConstruction_of_data
+    encodedControllerResultContinueConstructionData_scaffold
 
 theorem encodedControllerContinueRewriterConstruction_scaffold :
     EncodedControllerContinueRewriterConstruction :=
@@ -215,9 +301,102 @@ subroutine after projecting a stage input, and one sequences initializer,
 invoker, result emitter, and continuer into the finite search driver.
 -/
 
-theorem pairedRecognizerDovetailStageAttemptInvocationConstruction_scaffold :
+def PairedRecognizerDovetailStageAttemptInvocationForwardSpec
+    (attempt encoder invoker : MachineDescription) : Prop :=
+  forall C : MachineDescription.DovetailControllerLayout,
+  forall result : Word Bool,
+    encoder.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.DovetailControllerLayout.encode C))
+        (MachineDescription.encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C)) ∧
+      attempt.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeBoolWord result)) ->
+    invoker.HaltsWithOutput
+      (MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.DovetailControllerLayout.encode C))
+      (MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.DovetailControllerLayout.encode
+          (MachineDescription.DovetailControllerLayout.withResult
+            C result)))
+
+def PairedRecognizerDovetailStageAttemptInvocationClosedSpec
+    (attempt encoder invoker : MachineDescription) : Prop :=
+  forall C : MachineDescription.DovetailControllerLayout,
+  forall result : Word Bool,
+    invoker.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.DovetailControllerLayout.encode C))
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.DovetailControllerLayout.encode
+            (MachineDescription.DovetailControllerLayout.withResult
+              C result))) ->
+      encoder.HaltsWithOutput
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.DovetailControllerLayout.encode C))
+          (MachineDescription.encodeCodeWordAsInput
+            (PairedRecognizerDovetailControllerStageInputCode C)) ∧
+        attempt.HaltsWithOutput
+          (MachineDescription.encodeCodeWordAsInput
+            (PairedRecognizerDovetailControllerStageInputCode C))
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.encodeBoolWord result))
+
+theorem pairedRecognizerDovetailStageAttemptInvocationRealizes_of_forward_closed
+    {attempt encoder invoker : MachineDescription}
+    (hready : invoker.SubroutineReady)
+    (hforward :
+      PairedRecognizerDovetailStageAttemptInvocationForwardSpec
+        attempt encoder invoker)
+    (hclosed :
+      PairedRecognizerDovetailStageAttemptInvocationClosedSpec
+        attempt encoder invoker) :
+    PairedRecognizerDovetailStageAttemptInvocationRealizes
+      attempt encoder invoker := by
+  constructor
+  · exact hready
+  · intro C result
+    constructor
+    · exact hclosed C result
+    · exact hforward C result
+
+def PairedRecognizerDovetailStageAttemptInvocationConstructionData :
+    Prop :=
+  forall attempt encoder : MachineDescription,
+    attempt.SubroutineReady ->
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      PairedRecognizerDovetailControllerStageInputCodePrimitive
+      encoder ->
+    exists invoker : MachineDescription,
+      invoker.SubroutineReady ∧
+        PairedRecognizerDovetailStageAttemptInvocationForwardSpec
+          attempt encoder invoker ∧
+        PairedRecognizerDovetailStageAttemptInvocationClosedSpec
+          attempt encoder invoker
+
+theorem pairedRecognizerDovetailStageAttemptInvocationConstruction_of_data
+    (h :
+      PairedRecognizerDovetailStageAttemptInvocationConstructionData) :
     PairedRecognizerDovetailStageAttemptInvocationConstruction := by
+  intro attempt encoder hattempt hencoder
+  rcases h attempt encoder hattempt hencoder with
+    ⟨invoker, hready, hforward, hclosed⟩
+  exact
+    ⟨invoker,
+      pairedRecognizerDovetailStageAttemptInvocationRealizes_of_forward_closed
+        hready hforward hclosed⟩
+
+theorem pairedRecognizerDovetailStageAttemptInvocationConstructionData_scaffold :
+    PairedRecognizerDovetailStageAttemptInvocationConstructionData := by
   sorry
+
+theorem pairedRecognizerDovetailStageAttemptInvocationConstruction_scaffold :
+    PairedRecognizerDovetailStageAttemptInvocationConstruction :=
+  pairedRecognizerDovetailStageAttemptInvocationConstruction_of_data
+    pairedRecognizerDovetailStageAttemptInvocationConstructionData_scaffold
 
 theorem pairedRecognizerDovetailStageAttemptInvocationHandoffConstruction_scaffold :
     PairedRecognizerDovetailStageAttemptInvocationHandoffConstruction :=
@@ -234,9 +413,97 @@ theorem pairedRecognizerDovetailControllerContinueConstruction_scaffold :
   pairedRecognizerDovetailControllerContinueConstruction_of_encodedRewriter
     encodedControllerContinueRewriterConstruction_scaffold
 
-theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_scaffold :
+def PairedRecognizerDovetailFiniteStageLoopForwardSpec
+    (attempt decider : MachineDescription) : Prop :=
+  forall w : Word Bool,
+  forall b : Bool,
+    (exists limit : Nat,
+      exists result : Word Bool,
+        attempt.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput
+              (PairedRecognizerDovetailStageInputCode w limit))
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeBoolWord result)) ∧
+          PairedRecognizerDovetailControllerRawOutput result = some [b]) ->
+      decider.HaltsWithOutput w [b]
+
+def PairedRecognizerDovetailFiniteStageLoopClosedSpec
+    (attempt decider : MachineDescription) : Prop :=
+  forall w : Word Bool,
+  forall b : Bool,
+    decider.HaltsWithOutput w [b] ->
+      exists limit : Nat,
+      exists result : Word Bool,
+        attempt.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput
+              (PairedRecognizerDovetailStageInputCode w limit))
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeBoolWord result)) ∧
+          PairedRecognizerDovetailControllerRawOutput result = some [b]
+
+theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes_of_forward_closed
+    {attempt decider : MachineDescription}
+    (hwell : decider.WellFormed)
+    (hforward :
+      PairedRecognizerDovetailFiniteStageLoopForwardSpec
+        attempt decider)
+    (hclosed :
+      PairedRecognizerDovetailFiniteStageLoopClosedSpec
+        attempt decider) :
+    PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
+      attempt decider := by
+  constructor
+  · exact hwell
+  · intro w b
+    constructor
+    · exact hclosed w b
+    · exact hforward w b
+
+def PairedRecognizerDovetailFiniteStageLoopSequencingConstructionData :
+    Prop :=
+  forall attempt initializer encoder invoker emitter continuer :
+      MachineDescription,
+    attempt.SubroutineReady ->
+    PairedRecognizerDovetailControllerInputInitializerRealizes
+      initializer ->
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      PairedRecognizerDovetailControllerStageInputCodePrimitive
+      encoder ->
+    PairedRecognizerDovetailStageAttemptInvocationRealizes
+      attempt encoder invoker ->
+    PairedRecognizerDovetailControllerResultEmitterRealizes
+      emitter ->
+    PairedRecognizerDovetailControllerContinueRealizes
+      continuer ->
+    exists decider : MachineDescription,
+      decider.WellFormed ∧
+        PairedRecognizerDovetailFiniteStageLoopForwardSpec
+          attempt decider ∧
+        PairedRecognizerDovetailFiniteStageLoopClosedSpec
+          attempt decider
+
+theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_of_data
+    (h :
+      PairedRecognizerDovetailFiniteStageLoopSequencingConstructionData) :
     PairedRecognizerDovetailFiniteStageLoopSequencingConstruction := by
+  intro attempt initializer encoder invoker emitter continuer
+    hattempt hinitializer hencoder hinvoker hemitter hcontinuer
+  rcases h attempt initializer encoder invoker emitter continuer
+      hattempt hinitializer hencoder hinvoker hemitter hcontinuer with
+    ⟨decider, hwell, hforward, hclosed⟩
+  exact
+    ⟨decider,
+      pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes_of_forward_closed
+        hwell hforward hclosed⟩
+
+theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstructionData_scaffold :
+    PairedRecognizerDovetailFiniteStageLoopSequencingConstructionData := by
   sorry
+
+theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_scaffold :
+    PairedRecognizerDovetailFiniteStageLoopSequencingConstruction :=
+  pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_of_data
+    pairedRecognizerDovetailFiniteStageLoopSequencingConstructionData_scaffold
 
 theorem pairedRecognizerDovetailFiniteStageLoopSequencingHandoffConstruction_scaffold :
     PairedRecognizerDovetailFiniteStageLoopSequencingHandoffConstruction :=
