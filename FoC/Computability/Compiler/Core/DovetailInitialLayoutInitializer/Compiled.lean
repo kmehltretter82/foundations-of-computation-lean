@@ -30,6 +30,44 @@ theorem
     (descriptionWithCopier_subroutineReady
       hcopier)
 
+private theorem runConfig_halt_tape_functional_of_haltTransitionFree
+    {D : MachineDescription} {c : MachineDescription.Configuration}
+    {n₁ n₂ : Nat} {T₁ T₂ : Tape Bool}
+    (hD : D.HaltTransitionFree)
+    (h₁ : D.runConfig n₁ c = { state := D.halt, tape := T₁ })
+    (h₂ : D.runConfig n₂ c = { state := D.halt, tape := T₂ }) :
+    T₁ = T₂ := by
+  have hordered :
+      forall {n m : Nat} {Tn Tm : Tape Bool},
+        n ≤ m ->
+        D.runConfig n c = { state := D.halt, tape := Tn } ->
+        D.runConfig m c = { state := D.halt, tape := Tm } ->
+          Tn = Tm := by
+    intro n m Tn Tm hle hn hm
+    let d := m - n
+    have hm_eq : m = n + d := by
+      omega
+    have hrunm :
+        D.runConfig m c = D.runConfig d (D.runConfig n c) := by
+      rw [hm_eq, MachineDescription.runConfig_add]
+    have hstay :
+        D.runConfig d (D.runConfig n c) =
+          D.runConfig n c := by
+      rw [hn]
+      exact MachineDescription.runConfig_halt hD Tn d
+    have htape_m :
+        (D.runConfig m c).tape = Tn := by
+      rw [hrunm, hstay, hn]
+    have htm : (D.runConfig m c).tape = Tm := by
+      rw [hm]
+    rw [htm] at htape_m
+    exact htape_m.symm
+  by_cases hle : n₁ ≤ n₂
+  · exact hordered hle h₁ h₂
+  · have hle' : n₂ ≤ n₁ := by
+      omega
+    exact (hordered hle' h₂ h₁).symm
+
 theorem
     descriptionWithValidatorCopier_run_bits
     {accept reject validator copier : MachineDescription}
@@ -54,8 +92,7 @@ theorem
     DescriptionWithCopier
       accept reject copier
   let Tmid :=
-    Tape.move Direction.right
-      (Tape.input (stageInputBits w stage))
+    stageInputCheckedValidatorTape w stage
   have hAready : A.SubroutineReady := hvalidator.left
   have hBready : B.SubroutineReady :=
     descriptionWithCopier_subroutineReady
@@ -81,27 +118,14 @@ theorem
               OutputTape
                 accept reject w stage } := by
     rcases
-        descriptionWithCopier_run_bits
+        descriptionWithCopier_run_bits_checked
           (accept := accept) (reject := reject) hcopier w stage with
       ⟨nB, hB⟩
     refine ⟨nB, ?_⟩
-    have hmove :=
-      stageInputBits_move_left_move_right_input w stage
-    have hinput :
-        Tape.move Direction.left
-            (Tape.move Direction.right
-              (Tape.input
-                (MachineDescription.encodeCodeWordAsInput
-                  (PairedRecognizerDovetailStageInputCode w stage)))) =
-          Tape.input
-            (MachineDescription.encodeCodeWordAsInput
-              (PairedRecognizerDovetailStageInputCode w stage)) := by
-      simpa [stageInputBits] using hmove
     have hBout :
         B.runConfig nB
-            (B.initial
-              (MachineDescription.encodeCodeWordAsInput
-                (PairedRecognizerDovetailStageInputCode w stage))) =
+            { state := B.start
+              tape := stageInputCheckedInputTape w stage } =
           { state := B.halt
             tape :=
               OutputTape
@@ -109,13 +133,12 @@ theorem
       exact hB.trans (by
         simp [B, outputTape_eq_bits])
     have hstart :
-        { state := B.start
-          tape := Tape.move Direction.left Tmid } =
-        B.initial
-          (MachineDescription.encodeCodeWordAsInput
-            (PairedRecognizerDovetailStageInputCode w stage)) := by
-      simp [B, Tmid, hinput, stageInputBits,
-        MachineDescription.initial]
+        MachineDescription.Configuration.mk
+            B.start (Tape.move Direction.left Tmid) =
+          MachineDescription.Configuration.mk
+            B.start (stageInputCheckedInputTape w stage) := by
+      simp [Tmid, stageInputCheckedValidatorTape,
+        stageInputCheckedInputTape_move_left_move_right]
     rw [hstart]
     exact hBout
   rcases
@@ -175,32 +198,32 @@ theorem
   rcases hvalidator.right.right code Tmid hAhalt with
     ⟨w, stage, hcode, hhandoff⟩
   subst code
-  have hBhalt :
-      B.HaltsWithTape (stageInputBits w stage) T := by
-    refine ⟨nB, ?_⟩
-    have hBrun' :
-        B.runConfig nB
-            (B.initial (stageInputBits w stage)) =
-          { state := B.halt, tape := T } := by
-      simpa [MachineDescription.initial, hhandoff] using hBrun
-    constructor
-    · simpa [MachineDescription.HaltsWithTapeIn] using
-        congrArg MachineDescription.Configuration.state hBrun'
-    · simpa [MachineDescription.HaltsWithTapeIn] using
-        congrArg MachineDescription.Configuration.tape hBrun'
+  have hBrun' :
+      B.runConfig nB
+          { state := B.start
+            tape := stageInputCheckedInputTape w stage } =
+        { state := B.halt, tape := T } := by
+    simpa [hhandoff] using hBrun
+  rcases
+      descriptionWithCopier_run_bits_checked
+        (accept := accept) (reject := reject)
+        hcopier w stage with
+    ⟨nExpected, hExpectedRaw⟩
   have hBexpected :
-      B.HaltsWithTape
-        (stageInputBits w stage)
-        (OutputTape
-          accept reject w stage) := by
-    simpa [B, stageInputBits] using
-      descriptionWithCopier_forward
-        (accept := accept) (reject := reject) hcopier w stage
+      B.runConfig nExpected
+          { state := B.start
+            tape := stageInputCheckedInputTape w stage } =
+        { state := B.halt
+          tape :=
+            OutputTape
+              accept reject w stage } := by
+    exact hExpectedRaw.trans (by
+      simp [B, outputTape_eq_bits])
   have hT :
       T =
         OutputTape accept reject w stage :=
-    haltsWithTape_functional_of_haltTransitionFree
-      hBready.right hBhalt hBexpected
+    runConfig_halt_tape_functional_of_haltTransitionFree
+      hBready.right hBrun' hBexpected
   exact ⟨w, stage, rfl, hT⟩
 
 theorem rightShiftedSpec_of_rightShiftedOutputCompiled

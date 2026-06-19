@@ -316,6 +316,15 @@ def appendScanTapeAtCells
   | [] => { left := leftRev, head := none, right := [] }
   | b :: rest => { left := leftRev, head := some b, right := rest.map some }
 
+def appendScanTapeAtCellsChecked
+    (leftRev : List (Option Bool)) (remaining : Word Bool) :
+    Tape Bool :=
+  match remaining with
+  | [] => { left := leftRev, head := none, right := [] }
+  | b :: rest =>
+      { left := leftRev, head := some b,
+        right := List.append (rest.map some) [none] }
+
 def appendRightLastTapeAtCells
     (leftRev : List (Option Bool)) (b0 b1 b2 b3 : Bool) :
     Tape Bool :=
@@ -357,6 +366,25 @@ theorem appendFixedFourBitsLastDescription_step_scan_nonempty_atCells
         MachineDescription.transition, Tape.read, Tape.write,
         Tape.move, Tape.moveRight]
 
+theorem appendFixedFourBitsLastDescription_step_scan_nonempty_atCellsChecked
+    (b0 b1 b2 b3 : Bool)
+    (leftRev : List (Option Bool)) (b : Bool) (rest : Word Bool) :
+    (AppendFixedFourBitsLastDescription b0 b1 b2 b3).stepConfig
+        { state := 0
+          tape := appendScanTapeAtCellsChecked leftRev (b :: rest) } =
+      some
+        { state := 0
+          tape := appendScanTapeAtCellsChecked
+            (some b :: leftRev) rest } := by
+  cases b <;>
+    cases rest <;>
+      simp [AppendFixedFourBitsLastDescription,
+        appendScanTapeAtCellsChecked,
+        MachineDescription.stepConfig,
+        MachineDescription.lookupTransition, MachineDescription.Matches,
+        MachineDescription.transition, Tape.read, Tape.write,
+        Tape.move, Tape.moveRight]
+
 theorem appendFixedFourBitsLastDescription_run_scan_atCells
     (b0 b1 b2 b3 : Bool)
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
@@ -374,6 +402,26 @@ theorem appendFixedFourBitsLastDescription_run_scan_atCells
   | cons b rest ih =>
       simp [MachineDescription.runConfig,
         appendFixedFourBitsLastDescription_step_scan_nonempty_atCells,
+        ih, List.append_assoc]
+
+theorem appendFixedFourBitsLastDescription_run_scan_atCellsChecked
+    (b0 b1 b2 b3 : Bool)
+    (leftRev : List (Option Bool)) (remaining : Word Bool) :
+    (AppendFixedFourBitsLastDescription b0 b1 b2 b3).runConfig
+        remaining.length
+        { state := 0
+          tape := appendScanTapeAtCellsChecked leftRev remaining } =
+      { state := 0
+        tape :=
+          appendScanTapeAtCells
+            (List.append (remaining.reverse.map some) leftRev) [] } := by
+  induction remaining generalizing leftRev with
+  | nil =>
+      simp [MachineDescription.runConfig, appendScanTapeAtCellsChecked,
+        appendScanTapeAtCells]
+  | cons b rest ih =>
+      simp [MachineDescription.runConfig,
+        appendFixedFourBitsLastDescription_step_scan_nonempty_atCellsChecked,
         ih, List.append_assoc]
 
 theorem appendFixedFourBitsLastDescription_run_write_atCells
@@ -411,6 +459,23 @@ theorem appendFixedFourBitsLastDescription_run_from_scan_atCells
   exact appendFixedFourBitsLastDescription_run_write_atCells
     b0 b1 b2 b3 _
 
+theorem appendFixedFourBitsLastDescription_run_from_scan_atCellsChecked
+    (b0 b1 b2 b3 : Bool)
+    (leftRev : List (Option Bool)) (remaining : Word Bool) :
+    (AppendFixedFourBitsLastDescription b0 b1 b2 b3).runConfig
+        (remaining.length + 5)
+        { state := 0
+          tape := appendScanTapeAtCellsChecked leftRev remaining } =
+      { state := 5
+        tape :=
+          appendRightLastTapeAtCells
+            (List.append (remaining.reverse.map some) leftRev)
+            b0 b1 b2 b3 } := by
+  rw [MachineDescription.runConfig_add]
+  rw [appendFixedFourBitsLastDescription_run_scan_atCellsChecked]
+  exact appendFixedFourBitsLastDescription_run_write_atCells
+    b0 b1 b2 b3 _
+
 theorem writeMarkedTransitionPrefixDescription_handoff_to_append
     (b : Bool) (rest : Word Bool) :
     Tape.move Direction.right
@@ -422,6 +487,19 @@ theorem writeMarkedTransitionPrefixDescription_handoff_to_append
   cases b <;>
     cases rest <;>
       simp [tapeAtCells, appendScanTapeAtCells,
+        Tape.move, Tape.moveRight]
+
+theorem writeMarkedTransitionPrefixDescription_handoff_to_append_checked
+    (b : Bool) (rest : Word Bool) :
+    Tape.move Direction.right
+        (tapeAtCells [some false]
+          (List.append [none, some false, some true]
+            (List.append (some b :: rest.map some) [none]))) =
+      appendScanTapeAtCellsChecked
+        [none, some false] (false :: true :: b :: rest) := by
+  cases b <;>
+    cases rest <;>
+      simp [tapeAtCells, appendScanTapeAtCellsChecked,
         Tape.move, Tape.moveRight]
 
 def AppendCodeSymbolLastDescription
@@ -707,6 +785,24 @@ theorem appendCodeSymbolLastDescription_run_from_scan_atCells
       appendFixedFourBitsLastDescription_run_from_scan_atCells
         _ _ _ _ leftRev remaining
 
+theorem appendCodeSymbolLastDescription_run_from_scan_atCellsChecked
+    (symbol : MachineCodeSymbol)
+    (leftRev : List (Option Bool)) (remaining : Word Bool) :
+    (AppendCodeSymbolLastDescription symbol).runConfig
+        (remaining.length + 5)
+        { state := 0
+          tape := appendScanTapeAtCellsChecked leftRev remaining } =
+      { state := 5
+        tape :=
+          appendCodeSymbolLastTapeAtCells
+            (List.append (remaining.reverse.map some) leftRev) symbol } := by
+  cases symbol <;>
+    simpa [AppendCodeSymbolLastDescription,
+      appendCodeSymbolLastTapeAtCells,
+      MachineDescription.encodeCodeSymbolAsInput] using
+      appendFixedFourBitsLastDescription_run_from_scan_atCellsChecked
+        _ _ _ _ leftRev remaining
+
 theorem appendCodeSymbolLastTapeAtCells_move_right
     (leftRev : List (Option Bool)) (symbol : MachineCodeSymbol) :
     Tape.move Direction.right
@@ -856,6 +952,86 @@ theorem appendCodeWordLastDescription_run_from_scan_atCells :
         appendCodeWordLastTapeAtCells, A, B, Tmid,
         leftAfterSymbol] using hn
 
+theorem appendCodeWordLastDescription_run_from_scan_atCellsChecked :
+    forall code : Word MachineCodeSymbol,
+      code ≠ [] ->
+        forall leftRev : List (Option Bool),
+        forall remaining : Word Bool,
+          exists n : Nat,
+            (AppendCodeWordLastDescription code).runConfig n
+                { state := (AppendCodeWordLastDescription code).start
+                  tape :=
+                    appendScanTapeAtCellsChecked
+                      leftRev remaining } =
+              { state := (AppendCodeWordLastDescription code).halt
+                tape :=
+                  appendCodeWordLastTapeAtCells
+                    (List.append (remaining.reverse.map some) leftRev) code }
+  | [], h => False.elim (h rfl)
+  | symbol :: [], _ => by
+      intro leftRev remaining
+      refine ⟨remaining.length + 5, ?_⟩
+      simpa [AppendCodeWordLastDescription,
+        appendCodeWordLastTapeAtCells,
+        appendCodeSymbolLastDescription_start,
+        appendCodeSymbolLastDescription_halt] using
+        appendCodeSymbolLastDescription_run_from_scan_atCellsChecked
+          symbol leftRev remaining
+  | symbol :: next :: rest, _ => by
+      intro leftRev remaining
+      let A := AppendCodeSymbolLastDescription symbol
+      let B := AppendCodeWordLastDescription (next :: rest)
+      let Tmid :=
+        appendCodeSymbolLastTapeAtCells
+          (List.append (remaining.reverse.map some) leftRev) symbol
+      let leftAfterSymbol :=
+        List.append
+          ((MachineDescription.encodeCodeSymbolAsInput symbol).reverse.map some)
+          (List.append (remaining.reverse.map some) leftRev)
+      have hAready : A.SubroutineReady := by
+        exact appendCodeSymbolLastDescription_subroutineReady symbol
+      have hBready : B.SubroutineReady := by
+        exact
+          appendCodeWordLastDescription_subroutineReady
+            (next :: rest) (by intro h; cases h)
+      have hArun :
+          A.runConfig (remaining.length + 5)
+              { state := A.start
+                tape :=
+                  appendScanTapeAtCellsChecked leftRev remaining } =
+            { state := A.halt, tape := Tmid } := by
+        simpa [A, Tmid,
+          appendCodeSymbolLastDescription_start,
+          appendCodeSymbolLastDescription_halt] using
+          appendCodeSymbolLastDescription_run_from_scan_atCellsChecked
+            symbol leftRev remaining
+      have hBReach :
+          exists nB : Nat,
+            B.runConfig nB
+                { state := B.start
+                  tape := Tape.move Direction.right Tmid } =
+              { state := B.halt
+                tape :=
+                  appendCodeWordLastTapeAtCells
+                    leftAfterSymbol (next :: rest) } := by
+        rcases
+            appendCodeWordLastDescription_run_from_scan_atCells
+              (next :: rest) (by intro h; cases h)
+              leftAfterSymbol ([] : Word Bool) with
+          ⟨nB, hB⟩
+        refine ⟨nB, ?_⟩
+        simpa [B, Tmid, leftAfterSymbol,
+          appendCodeSymbolLastTapeAtCells_move_right] using hB
+      rcases
+          MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+            (A := A) (B := B) (handoffMove := Direction.right)
+            hAready hBready hArun hBReach with
+        ⟨n, hn⟩
+      refine ⟨n, ?_⟩
+      simpa [AppendCodeWordLastDescription,
+        appendCodeWordLastTapeAtCells, A, B, Tmid,
+        leftAfterSymbol] using hn
+
 def MarkedPrefixThenAppendCodeWordLastDescription
     (code : Word MachineCodeSymbol) : MachineDescription :=
   MachineDescription.seqSubroutine
@@ -933,6 +1109,71 @@ theorem markedPrefixThenAppendCodeWordLastDescription_run
   refine ⟨n, ?_⟩
   simpa [MarkedPrefixThenAppendCodeWordLastDescription,
     MachineDescription.initial, A, B] using hn
+
+theorem markedPrefixThenAppendCodeWordLastDescription_run_checked
+    (code : Word MachineCodeSymbol) (hcode : code ≠ [])
+    (b : Bool) (rest : Word Bool) :
+    exists n : Nat,
+      (MarkedPrefixThenAppendCodeWordLastDescription code).runConfig n
+          { state := (MarkedPrefixThenAppendCodeWordLastDescription code).start
+            tape :=
+              tapeAtCells []
+                (List.append (some b :: rest.map some) [none]) } =
+        { state :=
+            (MarkedPrefixThenAppendCodeWordLastDescription code).halt
+          tape :=
+            appendCodeWordLastTapeAtCells
+              (List.append
+                ((false :: true :: b :: rest).reverse.map some)
+                [none, some false])
+              code } := by
+  let A := WriteMarkedTransitionPrefixDescription
+  let B := AppendCodeWordLastDescription code
+  let Tmid :=
+    tapeAtCells [some false]
+      (List.append [none, some false, some true]
+        (List.append (some b :: rest.map some) [none]))
+  have hAready : A.SubroutineReady := by
+    exact writeMarkedTransitionPrefixDescription_subroutineReady
+  have hBready : B.SubroutineReady := by
+    exact appendCodeWordLastDescription_subroutineReady code hcode
+  have hArun :
+      A.runConfig 5
+          { state := A.start
+            tape :=
+              tapeAtCells []
+                (List.append (some b :: rest.map some) [none]) } =
+        { state := A.halt, tape := Tmid } := by
+    simpa [A, Tmid, config, tapeAtCells] using
+      writeMarkedTransitionPrefixDescription_run
+        b (List.append (rest.map some) [none])
+  have hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start
+              tape := Tape.move Direction.right Tmid } =
+          { state := B.halt
+            tape :=
+              appendCodeWordLastTapeAtCells
+                (List.append
+                  ((false :: true :: b :: rest).reverse.map some)
+                  [none, some false])
+                code } := by
+    rcases
+        appendCodeWordLastDescription_run_from_scan_atCellsChecked
+          code hcode [none, some false] (false :: true :: b :: rest) with
+      ⟨nB, hB⟩
+    refine ⟨nB, ?_⟩
+    simpa [B, Tmid,
+      writeMarkedTransitionPrefixDescription_handoff_to_append_checked] using hB
+  rcases
+      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+        (A := A) (B := B) (handoffMove := Direction.right)
+        hAready hBready hArun hBReach with
+    ⟨n, hn⟩
+  refine ⟨n, ?_⟩
+  simpa [MarkedPrefixThenAppendCodeWordLastDescription,
+    A, B] using hn
 
 theorem encodeNat_ne_nil (n : Nat) :
     MachineDescription.encodeNat n ≠ [] := by
