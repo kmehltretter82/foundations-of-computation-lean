@@ -146,6 +146,21 @@ theorem markedCellsBits_append
       exact congrArg (fun bits =>
         List.append (markedCellBits b) bits) ih
 
+theorem markedCellsBits_append_single
+    (w : Word Bool) (b : Bool) :
+    markedCellsBits (List.append w [b]) =
+      List.append (markedCellsBits w) (markedCellBits b) := by
+  simpa [markedCellsBits] using
+    markedCellsBits_append w [b]
+
+theorem markedCellsBits_append_single_map
+    (w : Word Bool) (b : Bool) :
+    (markedCellsBits (List.append w [b])).map some =
+      List.append ((markedCellsBits w).map some)
+        ((markedCellBits b).map some) := by
+  simpa [List.map_append] using
+    congrArg (List.map some) (markedCellsBits_append_single w b)
+
 theorem cellBits_length (b : Bool) :
     (cellBits b).length = 4 := by
   cases b <;> rfl
@@ -1155,12 +1170,165 @@ def finishStartConfig (w : Word Bool) (stage : Nat) :
     (List.append ((markedCellsBits w).map some)
       ((stageNatBits stage).map some))
 
-def state160AfterRestoreConfig (w : Word Bool) (stage : Nat) :
-    MachineDescription.Configuration :=
-  config 160
-    (List.append ((cellsBits w).reverse.map some)
-      (finishStartLeft w))
-    (some false :: none :: ((stageNatBits stage).drop 2).map some)
+def activeLengthPrefixTail : Nat -> List (Option Bool)
+  | 0 => [none, some false]
+  | n + 1 =>
+      List.append [some false, some false]
+        (finishLengthPrefixRev n)
+
+def activeLengthPrefixRev (n : Nat) : List (Option Bool) :=
+  none :: some true :: activeLengthPrefixTail n
+
+theorem activeLengthPrefixRev_zero :
+    activeLengthPrefixRev 0 =
+      [none, some true, none, some false] := by
+  rfl
+
+theorem activeLengthPrefixRev_succ (n : Nat) :
+    activeLengthPrefixRev (n + 1) =
+      List.append markedTickRev (finishLengthPrefixRev n) := by
+  rfl
+
+theorem activeLengthPrefixRestored (n : Nat) :
+    some false :: some true :: activeLengthPrefixTail n =
+      finishLengthPrefixRev n := by
+  cases n with
+  | zero =>
+      rfl
+  | succ n =>
+      rfl
+
+def markingState120
+    (processed : Word Bool) (b : Bool) (rest : Word Bool)
+    (stage : Nat) : MachineDescription.Configuration :=
+  config 120 (activeLengthPrefixRev processed.length)
+    (List.append ((stageNatBits rest.length).map some)
+      (List.append ((markedCellsBits processed).map some)
+        (List.append ((cellBits b).map some)
+          (List.append ((cellsBits rest).map some)
+            ((stageNatBits stage).map some)))))
+
+def state100AfterMarked
+    (processed : Word Bool) (b : Bool) (rest : Word Bool)
+    (stage : Nat) : MachineDescription.Configuration :=
+  config 100 (finishLengthPrefixRev processed.length)
+    (List.append ((stageNatBits rest.length).map some)
+      (List.append ((markedCellsBits processed).map some)
+        (List.append ((markedCellBits b).map some)
+          (List.append ((cellsBits rest).map some)
+            ((stageNatBits stage).map some)))))
+
+def markingReturnScanRev
+    (processed : Word Bool) (rest : Word Bool) : Word Bool :=
+  List.append [true, true]
+    (List.append (markedCellsBits processed).reverse
+      (stageNatBits rest.length).reverse)
+
+theorem run_mark_current_to_state100
+    (processed : Word Bool) (b : Bool) (rest : Word Bool)
+    (stage : Nat) :
+    exists steps : Nat,
+      StageInputMarkedScannerDescription.runConfig steps
+          (markingState120 processed b rest stage) =
+        state100AfterMarked processed b rest stage := by
+  let scanRev := markingReturnScanRev processed rest
+  refine
+    ⟨(4 * rest.length + 4) +
+        (4 * processed.length + (6 + (scanRev.length + 4))), ?_⟩
+  rw [MachineDescription.runConfig_add]
+  unfold markingState120
+  rw [run_state120_stageNat]
+  rw [MachineDescription.runConfig_add]
+  rw [run_state130_markedCells]
+  rw [MachineDescription.runConfig_add]
+  rw [run_state130_currentCell]
+  have hreturn :=
+    run_state140_returnToLengthMarker scanRev b
+      (activeLengthPrefixTail processed.length)
+      (some (!b) ::
+        List.append ((cellsBits rest).map some)
+          ((stageNatBits stage).map some))
+  cases b <;>
+  simpa [state100AfterMarked, scanRev, markingReturnScanRev,
+    activeLengthPrefixRev, activeLengthPrefixRestored,
+    markedCellBits, List.map_append, List.reverse_append,
+    List.append_assoc] using hreturn
+
+theorem run_marking_loop_from_state120
+    (processed : Word Bool) (b : Bool) (rest : Word Bool)
+    (stage : Nat) :
+    exists steps : Nat,
+      StageInputMarkedScannerDescription.runConfig steps
+          (markingState120 processed b rest stage) =
+        finishStartConfig (List.append processed (b :: rest)) stage := by
+  induction rest generalizing processed b with
+  | nil =>
+      rcases run_mark_current_to_state100 processed b [] stage with
+        ⟨markSteps, hmark⟩
+      refine ⟨markSteps + 4, ?_⟩
+      rw [MachineDescription.runConfig_add]
+      rw [hmark]
+      unfold state100AfterMarked
+      change
+        StageInputMarkedScannerDescription.runConfig 4
+            (config 100 (finishLengthPrefixRev processed.length)
+              (List.append (doneBits.map some)
+                (List.append ((markedCellsBits processed).map some)
+                  (List.append ((markedCellBits b).map some)
+                    ((stageNatBits stage).map some))))) =
+          finishStartConfig (List.append processed [b]) stage
+      rw [run_state100_done]
+      unfold finishStartConfig finishStartLeft
+      rw [markedCellsBits_append_single_map]
+      simp [List.length_append, List.append_assoc]
+  | cons next rest ih =>
+      rcases run_mark_current_to_state100 processed b
+          (next :: rest) stage with
+        ⟨markSteps, hmark⟩
+      rcases ih (List.append processed [b]) next with
+        ⟨recSteps, hrec⟩
+      refine ⟨markSteps + 4 + recSteps, ?_⟩
+      rw [show markSteps + 4 + recSteps =
+          markSteps + (4 + recSteps) by omega]
+      rw [MachineDescription.runConfig_add]
+      rw [hmark]
+      rw [MachineDescription.runConfig_add]
+      unfold state100AfterMarked
+      rw [show
+          (stageNatBits (next :: rest).length).map some =
+            List.append (tickBits.map some)
+              ((stageNatBits rest.length).map some) by
+        simp [stageNatBits_succ, tickBits,
+          MachineDescription.encodeCodeSymbolAsInput]]
+      change
+        StageInputMarkedScannerDescription.runConfig recSteps
+            (StageInputMarkedScannerDescription.runConfig 4
+              (config 100 (finishLengthPrefixRev processed.length)
+                (List.append (tickBits.map some)
+                  (List.append ((stageNatBits rest.length).map some)
+                    (List.append ((markedCellsBits processed).map some)
+                      (List.append ((markedCellBits b).map some)
+                        (List.append
+                          ((cellsBits (next :: rest)).map some)
+                          ((stageNatBits stage).map some)))))))) =
+          finishStartConfig
+            (List.append processed (b :: next :: rest)) stage
+      rw [run_state100_tick]
+      unfold markingState120 at hrec
+      rw [markedCellsBits_append_single_map] at hrec
+      simpa [activeLengthPrefixRev_succ, cellsBits_cons,
+        List.length_append, List.map_append, List.append_assoc] using hrec
+
+def finishLengthPrefixScanBits : Nat -> Word Bool
+  | 0 => [false, true]
+  | n + 1 =>
+      List.append tickBits.reverse
+        (finishLengthPrefixScanBits n)
+
+def finishScanBits (w : Word Bool) : Word Bool :=
+  false :: List.append (cellsBits w).reverse
+    (List.append doneBits.reverse
+      (finishLengthPrefixScanBits (w.length - 1)))
 
 def stageInputSecondBitTailPrefix : Word Bool -> Word Bool
   | [] => [true, true]
@@ -1168,6 +1336,241 @@ def stageInputSecondBitTailPrefix : Word Bool -> Word Bool
       true :: false ::
         List.append (stageNatBits rest.length)
           (List.append (cellBits b) (cellsBits rest))
+
+theorem finishLengthPrefixRev_eq_scanBits (n : Nat) :
+    finishLengthPrefixRev n =
+      List.append ((finishLengthPrefixScanBits n).map some)
+        [none, some false] := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      simp [finishLengthPrefixRev, finishLengthPrefixScanBits, ih,
+        List.map_append, List.append_assoc]
+
+def repeatedTickBits : Nat -> Word Bool
+  | 0 => []
+  | n + 1 => List.append (repeatedTickBits n) tickBits
+
+theorem repeatedTickBits_append_tick_comm (n : Nat) :
+    List.append (repeatedTickBits n) tickBits =
+      List.append tickBits (repeatedTickBits n) := by
+  induction n with
+  | zero =>
+      simp [repeatedTickBits]
+  | succ n ih =>
+      simp [repeatedTickBits, List.append_assoc]
+      calc
+        List.append (repeatedTickBits n)
+            (List.append tickBits tickBits) =
+          List.append (List.append (repeatedTickBits n) tickBits)
+            tickBits := by
+              simp [List.append_assoc]
+        _ =
+          List.append (List.append tickBits (repeatedTickBits n))
+            tickBits := by
+              rw [ih]
+        _ =
+          List.append tickBits
+            (List.append (repeatedTickBits n) tickBits) := by
+              simp [List.append_assoc]
+
+theorem stageNatBits_eq_repeatedTickBits_doneBits (n : Nat) :
+    stageNatBits n =
+      List.append (repeatedTickBits n) doneBits := by
+  induction n with
+  | zero =>
+      simp [repeatedTickBits, doneBits, stageNatBits_zero,
+        MachineDescription.encodeCodeSymbolAsInput]
+  | succ n ih =>
+      rw [stageNatBits_succ, ih]
+      change
+        List.append tickBits
+            (List.append (repeatedTickBits n) doneBits) =
+          List.append (repeatedTickBits (n + 1)) doneBits
+      simp [repeatedTickBits, List.append_assoc]
+      calc
+        List.append tickBits
+            (List.append (repeatedTickBits n) doneBits) =
+          List.append (List.append tickBits (repeatedTickBits n))
+            doneBits := by
+              simp [List.append_assoc]
+        _ =
+          List.append (List.append (repeatedTickBits n) tickBits)
+            doneBits := by
+              rw [← repeatedTickBits_append_tick_comm n]
+        _ =
+          List.append (repeatedTickBits n)
+            (List.append tickBits doneBits) := by
+              simp [List.append_assoc]
+
+theorem finishLengthPrefixScanBits_reverse_repeatedTickBits
+    (n : Nat) :
+    (finishLengthPrefixScanBits n).reverse =
+      List.append [true, false] (repeatedTickBits n) := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      simp [finishLengthPrefixScanBits, repeatedTickBits,
+        tickBits, MachineDescription.encodeCodeSymbolAsInput,
+        ih, List.append_assoc]
+
+theorem finishLengthPrefixScanBits_reverse_doneBits (n : Nat) :
+    List.append (finishLengthPrefixScanBits n).reverse doneBits =
+      List.append [true, false] (stageNatBits n) := by
+  rw [finishLengthPrefixScanBits_reverse_repeatedTickBits]
+  rw [stageNatBits_eq_repeatedTickBits_doneBits]
+  rfl
+
+theorem finishScanBits_reverse_nonempty
+    (b : Bool) (rest : Word Bool) :
+    (finishScanBits (b :: rest)).reverse =
+      List.append (stageInputSecondBitTailPrefix (b :: rest))
+        [false] := by
+  cases b
+  · simpa [finishScanBits, stageInputSecondBitTailPrefix,
+      cellsBits_cons, cellBits, List.reverse_append,
+      List.append_assoc] using
+      congrArg
+        (fun bits =>
+          List.append bits
+            (List.append
+              (MachineDescription.encodeCodeSymbolAsInput
+                MachineCodeSymbol.zero)
+              (List.append (cellsBits rest) [false])))
+        (finishLengthPrefixScanBits_reverse_doneBits rest.length)
+  · simpa [finishScanBits, stageInputSecondBitTailPrefix,
+      cellsBits_cons, cellBits, List.reverse_append,
+      List.append_assoc] using
+      congrArg
+        (fun bits =>
+          List.append bits
+            (List.append
+              (MachineDescription.encodeCodeSymbolAsInput
+                MachineCodeSymbol.one)
+              (List.append (cellsBits rest) [false])))
+        (finishLengthPrefixScanBits_reverse_doneBits rest.length)
+
+def state160ScanConfig
+    (bitsToRight : Word Bool) (boundary : Option Bool)
+    (leftTail right : List (Option Bool)) :
+    MachineDescription.Configuration :=
+  match bitsToRight with
+  | [] => config 160 leftTail (boundary :: right)
+  | b :: rest =>
+      config 160 (List.append (rest.map some) (boundary :: leftTail))
+        (some b :: right)
+
+theorem run_state160_some_cons
+    (b : Bool) (cell : Option Bool)
+    (left right : List (Option Bool)) :
+    StageInputMarkedScannerDescription.runConfig 1
+        (config 160 (cell :: left) (some b :: right)) =
+      config 160 left (cell :: some b :: right) := by
+  cases b <;> cases cell <;> cases right <;>
+  simp [StageInputMarkedScannerDescription, config, tapeAtCells,
+    keep, keepMove, writeMove, scanLeftToSentinelRestart,
+    scanLeftToSentinelHalt,
+    MachineDescription.runConfig, MachineDescription.stepConfig,
+    MachineDescription.lookupTransition, MachineDescription.Matches,
+    MachineDescription.transition, Tape.read, Tape.write,
+    Tape.move, Tape.moveLeft]
+
+theorem run_state160_bits_to_boundary
+    (bitsToRight : Word Bool) (boundary : Option Bool)
+    (leftTail right : List (Option Bool)) :
+    StageInputMarkedScannerDescription.runConfig bitsToRight.length
+        (state160ScanConfig bitsToRight boundary leftTail right) =
+      config 160 leftTail
+        (boundary ::
+          List.append (bitsToRight.reverse.map some) right) := by
+  induction bitsToRight generalizing boundary leftTail right with
+  | nil =>
+      rfl
+  | cons b rest ih =>
+      rw [show (b :: rest).length = 1 + rest.length by
+        simp
+        omega]
+      rw [MachineDescription.runConfig_add]
+      cases rest with
+      | nil =>
+          change
+            StageInputMarkedScannerDescription.runConfig 0
+                (StageInputMarkedScannerDescription.runConfig 1
+                  (config 160 (boundary :: leftTail)
+                    (some b :: right))) =
+              config 160 leftTail (boundary :: some b :: right)
+          rw [run_state160_some_cons]
+          rfl
+      | cons b' rest =>
+          change
+            StageInputMarkedScannerDescription.runConfig
+                (b' :: rest).length
+                (StageInputMarkedScannerDescription.runConfig 1
+                  (config 160
+                    (some b' ::
+                      List.append (rest.map some)
+                        (boundary :: leftTail))
+                    (some b :: right))) =
+              config 160 leftTail
+                (boundary ::
+                  List.append
+                    ((b :: b' :: rest).reverse.map some)
+                    right)
+          rw [run_state160_some_cons]
+          have h := ih boundary leftTail (some b :: right)
+          simp [state160ScanConfig] at h
+          simpa [List.map_append, List.append_assoc] using h
+
+theorem run_state160_none_to_state161
+    (cell : Option Bool) (left right : List (Option Bool)) :
+    StageInputMarkedScannerDescription.runConfig 1
+        (config 160 (cell :: left) (none :: right)) =
+      config 161 left (cell :: none :: right) := by
+  cases cell <;> cases right <;>
+  simp [StageInputMarkedScannerDescription, config, tapeAtCells,
+    keep, keepMove, writeMove, scanLeftToSentinelRestart,
+    scanLeftToSentinelHalt,
+    MachineDescription.runConfig, MachineDescription.stepConfig,
+    MachineDescription.lookupTransition, MachineDescription.Matches,
+    MachineDescription.transition, Tape.read, Tape.write,
+    Tape.move, Tape.moveLeft]
+
+theorem run_state161_false_to_state170
+    (right : List (Option Bool)) :
+    StageInputMarkedScannerDescription.runConfig 1
+        (config 161 [] (some false :: right)) =
+      config 170 [some false] right := by
+  cases right <;>
+  simp [StageInputMarkedScannerDescription, config, tapeAtCells,
+    keep, keepMove, writeMove, scanLeftToSentinelRestart,
+    scanLeftToSentinelHalt,
+    MachineDescription.runConfig, MachineDescription.stepConfig,
+    MachineDescription.lookupTransition, MachineDescription.Matches,
+    MachineDescription.transition, Tape.read, Tape.write,
+    Tape.move, Tape.moveRight]
+
+theorem run_state170_none_to_state180
+    (right : List (Option Bool)) :
+    StageInputMarkedScannerDescription.runConfig 1
+        (config 170 [some false] (none :: right)) =
+      config 180 [none, some false] right := by
+  cases right <;>
+  simp [StageInputMarkedScannerDescription, config, tapeAtCells,
+    keep, keepMove, writeMove, scanLeftToSentinelRestart,
+    scanLeftToSentinelHalt,
+    MachineDescription.runConfig, MachineDescription.stepConfig,
+    MachineDescription.lookupTransition, MachineDescription.Matches,
+    MachineDescription.transition, Tape.read, Tape.write,
+    Tape.move, Tape.moveRight]
+
+def state160AfterRestoreConfig (w : Word Bool) (stage : Nat) :
+    MachineDescription.Configuration :=
+  config 160
+    (List.append ((cellsBits w).reverse.map some)
+      (finishStartLeft w))
+    (some false :: none :: ((stageNatBits stage).drop 2).map some)
 
 theorem stageInputSecondBitTail_eq_prefix_stageNat
     (w : Word Bool) (stage : Nat) :
@@ -1213,7 +1616,12 @@ theorem run_state120_marking_loop
       StageInputMarkedScannerDescription.runConfig steps
           (state120AfterStartConfig b rest stage) =
         finishStartConfig (b :: rest) stage := by
-  sorry
+  rcases run_marking_loop_from_state120
+      ([] : Word Bool) b rest stage with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [state120AfterStartConfig, markingState120,
+    activeLengthPrefixRev_zero] using hsteps
 
 theorem run_start_cons_marking_loop
     (b : Bool) (rest : Word Bool) (stage : Nat) :
@@ -1247,13 +1655,38 @@ theorem run_finish_restore_cells
     run_state150_markedCells_to_state160 w stage (finishStartLeft w)
 
 theorem run_finish_scan_left_to_append
-    (w : Word Bool) (stage : Nat) :
+    (b : Bool) (rest : Word Bool) (stage : Nat) :
     exists steps : Nat,
     exists cfg : MachineDescription.Configuration,
       StageInputMarkedScannerDescription.runConfig steps
-          (state160AfterRestoreConfig w stage) = cfg ∧
-        AppendBlankStart w stage cfg := by
-  sorry
+          (state160AfterRestoreConfig (b :: rest) stage) = cfg ∧
+        AppendBlankStart (b :: rest) stage cfg := by
+  let bits := finishScanBits (b :: rest)
+  let scanRight :=
+    none :: ((stageNatBits stage).drop 2).map some
+  have hstart :
+      state160AfterRestoreConfig (b :: rest) stage =
+        state160ScanConfig bits none [some false] scanRight := by
+    cases b <;>
+    simp [bits, scanRight, finishScanBits, state160AfterRestoreConfig,
+      finishStartLeft, finishLengthPrefixRev_eq_scanBits,
+      state160ScanConfig, cellsBits_cons,
+      cellBits, List.map_append,
+      List.reverse_append, List.append_assoc]
+  refine ⟨bits.length + 3, appendBlankStartConfig (b :: rest) stage,
+    ?_, rfl⟩
+  rw [show bits.length + 3 = bits.length + (1 + (1 + 1)) by
+    omega]
+  rw [MachineDescription.runConfig_add]
+  rw [hstart]
+  rw [run_state160_bits_to_boundary]
+  rw [MachineDescription.runConfig_add]
+  rw [run_state160_none_to_state161]
+  rw [MachineDescription.runConfig_add]
+  rw [run_state161_false_to_state170]
+  rw [run_state170_none_to_state180]
+  simp [appendBlankStartConfig, markedStageNatBits, bits, scanRight,
+    finishScanBits_reverse_nonempty, List.map_append, List.append_assoc]
 
 theorem run_finish_append_blank
     {w : Word Bool} {stage : Nat}
@@ -1346,14 +1779,14 @@ theorem run_finish_boundary_to_halt
   cases cells <;> rfl
 
 theorem run_forward_finish
-    (w : Word Bool) (stage : Nat) :
+    (b : Bool) (rest : Word Bool) (stage : Nat) :
     exists steps : Nat,
       StageInputMarkedScannerDescription.runConfig steps
-          (finishStartConfig w stage) =
-        checkedHaltConfig w stage := by
-  rcases run_finish_restore_cells w stage with
+          (finishStartConfig (b :: rest) stage) =
+        checkedHaltConfig (b :: rest) stage := by
+  rcases run_finish_restore_cells (b :: rest) stage with
     ⟨restoreSteps, hrestore⟩
-  rcases run_finish_scan_left_to_append w stage with
+  rcases run_finish_scan_left_to_append b rest stage with
     ⟨scanSteps, appendCfg, hscan, happend⟩
   rcases run_finish_append_blank happend with
     ⟨appendSteps, boundaryCfg, hblank, hboundary⟩
@@ -1381,7 +1814,7 @@ theorem run_start_forward_cons
         checkedHaltConfig (b :: rest) stage := by
   rcases run_start_cons_marking_loop b rest stage with
     ⟨markSteps, hmark⟩
-  rcases run_forward_finish (b :: rest) stage with
+  rcases run_forward_finish b rest stage with
     ⟨finishSteps, hfinish⟩
   refine ⟨markSteps + finishSteps, ?_⟩
   rw [MachineDescription.runConfig_add]
@@ -1417,6 +1850,48 @@ def markedTailStartConfig (tail : Word Bool) :
       Tape.move Direction.right
         (tapeAtCells [some false] (none :: tail.map some)) }
 
+theorem runConfig_halt_tape_functional_from_config
+    {D : MachineDescription} {c : MachineDescription.Configuration}
+    {T₁ T₂ : Tape Bool} {n₁ n₂ : Nat}
+    (hD : D.HaltTransitionFree)
+    (h₁ :
+      D.runConfig n₁ c =
+        { state := D.halt, tape := T₁ })
+    (h₂ :
+      D.runConfig n₂ c =
+        { state := D.halt, tape := T₂ }) :
+    T₁ = T₂ := by
+  have hordered :
+      forall {n m : Nat} {Tn Tm : Tape Bool},
+        n ≤ m ->
+        D.runConfig n c = { state := D.halt, tape := Tn } ->
+        D.runConfig m c = { state := D.halt, tape := Tm } ->
+          Tn = Tm := by
+    intro n m Tn Tm hle hn hm
+    let d := m - n
+    have hm_eq : m = n + d := by
+      omega
+    have hrunm :
+        D.runConfig m c =
+          D.runConfig d (D.runConfig n c) := by
+      rw [hm_eq, MachineDescription.runConfig_add]
+    have hstay :
+        D.runConfig d (D.runConfig n c) =
+          D.runConfig n c := by
+      rw [hn]
+      exact MachineDescription.runConfig_halt hD Tn d
+    have htape_m :
+        (D.runConfig m c).tape = Tn := by
+      rw [hrunm, hstay, hn]
+    have htm : (D.runConfig m c).tape = Tm := by
+      rw [hm]
+    rw [htm] at htape_m
+    exact htape_m.symm
+  by_cases hle : n₁ ≤ n₂
+  · exact hordered hle h₁ h₂
+  · have hle' : n₂ ≤ n₁ := by omega
+    exact (hordered hle' h₂ h₁).symm
+
 /-!
 **Closed-tail inversion.**  The scanner closed proof now separates the two
 facts extracted from a halting run: first the accepted erased-tail shape, then
@@ -1448,7 +1923,16 @@ theorem scanner_marked_tail_tape_inv
             tape := T })
     (htail : tail = stageInputSecondBitTail w stage) :
     T = stageInputSecondBitMarkedCheckedHandoffTape w stage := by
-  sorry
+  subst tail
+  rcases hscanner with ⟨scannerSteps, hscanner⟩
+  rcases run_start_forward w stage with ⟨forwardSteps, hforward⟩
+  exact
+    runConfig_halt_tape_functional_from_config
+      stageInputMarkedScannerDescription_haltTransitionFree
+      hscanner
+      (by
+        simpa [markedTailStartConfig, markedStartConfig] using
+          hforward)
 
 theorem scanner_marked_tail_inv
     {tail : Word Bool} {T : Tape Bool}
