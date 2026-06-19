@@ -264,6 +264,144 @@ theorem ne_halt_of_reaches_stepConfig_none
       (k := k) (stuck := Description.runConfig k c)
       rfl hstep hstate
 
+private theorem stepConfig_projectionConfig_nil_none
+    {state : Nat}
+    (hlookup : Description.lookupTransition state none = none)
+    (leftRev : List (Option Bool)) :
+    Description.stepConfig (projectionConfig state leftRev []) = none := by
+  simp [MachineDescription.stepConfig, projectionConfig,
+    projectionTapeAtCells, Tape.read, hlookup]
+
+private theorem stepConfig_projectionConfig_cons_none
+    {state : Nat} {cell : Option Bool}
+    (hlookup : Description.lookupTransition state cell = none)
+    (leftRev tail : List (Option Bool)) :
+    Description.stepConfig
+        (projectionConfig state leftRev (cell :: tail)) =
+      none := by
+  simp [MachineDescription.stepConfig, projectionConfig,
+    projectionTapeAtCells, Tape.read, hlookup]
+
+private theorem lookupTransition_100_none :
+    Description.lookupTransition 100 none = none := by
+  native_decide
+
+private theorem lookupTransition_100_true :
+    Description.lookupTransition 100 (some true) = none := by
+  native_decide
+
+private theorem lookupTransition_101_true :
+    Description.lookupTransition 101 (some true) = none := by
+  native_decide
+
+private theorem lookupTransition_102_false :
+    Description.lookupTransition 102 (some false) = none := by
+  native_decide
+
+private theorem lookupTransition_120_none :
+    Description.lookupTransition 120 none = none := by
+  native_decide
+
+private theorem lookupTransition_120_true :
+    Description.lookupTransition 120 (some true) = none := by
+  native_decide
+
+private theorem lookupTransition_121_true :
+    Description.lookupTransition 121 (some true) = none := by
+  native_decide
+
+private theorem lookupTransition_122_false :
+    Description.lookupTransition 122 (some false) = none := by
+  native_decide
+
+private theorem lookupTransition_130_none :
+    Description.lookupTransition 130 none = none := by
+  native_decide
+
+private theorem lookupTransition_130_true :
+    Description.lookupTransition 130 (some true) = none := by
+  native_decide
+
+private theorem lookupTransition_131_false :
+    Description.lookupTransition 131 (some false) = none := by
+  native_decide
+
+private theorem lookupTransition_133_false :
+    Description.lookupTransition 133 (some false) = none := by
+  native_decide
+
+private theorem lookupTransition_134_true :
+    Description.lookupTransition 134 (some true) = none := by
+  native_decide
+
+private theorem lookupTransition_200_none :
+    Description.lookupTransition 200 none = none := by
+  native_decide
+
+private theorem lookupTransition_200_true :
+    Description.lookupTransition 200 (some true) = none := by
+  native_decide
+
+private theorem lookupTransition_201_true :
+    Description.lookupTransition 201 (some true) = none := by
+  native_decide
+
+private theorem lookupTransition_202_false :
+    Description.lookupTransition 202 (some false) = none := by
+  native_decide
+
+private theorem lookupTransition_300_none :
+    Description.lookupTransition 300 none = none := by
+  native_decide
+
+private theorem lookupTransition_300_true :
+    Description.lookupTransition 300 (some true) = none := by
+  native_decide
+
+private theorem lookupTransition_301_true :
+    Description.lookupTransition 301 (some true) = none := by
+  native_decide
+
+private theorem lookupTransition_302_false :
+    Description.lookupTransition 302 (some false) = none := by
+  native_decide
+
+private theorem lookupTransition_320_none :
+    Description.lookupTransition 320 none = none := by
+  native_decide
+
+private theorem lookupTransition_320_true :
+    Description.lookupTransition 320 (some true) = none := by
+  native_decide
+
+private theorem lookupTransition_321_true :
+    Description.lookupTransition 321 (some true) = none := by
+  native_decide
+
+private theorem lookupTransition_322_false :
+    Description.lookupTransition 322 (some false) = none := by
+  native_decide
+
+private theorem lookupTransition_330_none :
+    Description.lookupTransition 330 none = none := by
+  native_decide
+
+private theorem lookupTransition_330_true :
+    Description.lookupTransition 330 (some true) = none := by
+  native_decide
+
+private theorem lookupTransition_331_false :
+    Description.lookupTransition 331 (some false) = none := by
+  native_decide
+
+private theorem lookupTransition_333_false :
+    Description.lookupTransition 333 (some false) = none := by
+  native_decide
+
+private theorem lookupTransition_334_true :
+    Description.lookupTransition 334 (some true) = none := by
+  native_decide
+
 theorem ne_halt_of_reaches_ne_halt_region
     {c mid : MachineDescription.Configuration} {k n : Nat}
     (hrun :
@@ -296,7 +434,10 @@ theorem run_state200_decodeNat_none_ne_halt
   | nil =>
       exact
         ne_halt_of_reaches_stepConfig_none
-          (k := 0) (by rfl) (by
+          (k := 0) (by
+            change Description.stepConfig (projectionConfig 200 _ []) = none
+            exact stepConfig_projectionConfig_nil_none
+              lookupTransition_200_none _) (by
             change (200 : Nat) ≠ 999
             omega)
   | cons symbol rest ih =>
@@ -304,13 +445,21 @@ theorem run_state200_decodeNat_none_ne_halt
       | header =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 2) (by rfl) (by
+              (k := 2) (by
+                change Description.stepConfig
+                  (projectionConfig 202 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_202_false _ _) (by
                 change (202 : Nat) ≠ 999
                 omega)
       | transition =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 2) (by rfl) (by
+              (k := 2) (by
+                change Description.stepConfig
+                  (projectionConfig 202 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_202_false _ _) (by
                 change (202 : Nat) ≠ 999
                 omega)
       | tick =>
@@ -342,31 +491,51 @@ theorem run_state200_decodeNat_none_ne_halt
       | blank =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 201 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_201_true _ _) (by
                 change (201 : Nat) ≠ 999
                 omega)
       | zero =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 201 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_201_true _ _) (by
                 change (201 : Nat) ≠ 999
                 omega)
       | one =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 201 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_201_true _ _) (by
                 change (201 : Nat) ≠ 999
                 omega)
       | moveLeft =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 201 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_201_true _ _) (by
                 change (201 : Nat) ≠ 999
                 omega)
       | moveRight =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 0) (by rfl) (by
+              (k := 0) (by
+                change Description.stepConfig
+                  (projectionConfig 200 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_200_true _ _) (by
                 change (200 : Nat) ≠ 999
                 omega)
 
@@ -380,7 +549,10 @@ theorem run_state120_decodeNat_none_ne_halt
   | nil =>
       exact
         ne_halt_of_reaches_stepConfig_none
-          (k := 0) (by rfl) (by
+          (k := 0) (by
+            change Description.stepConfig (projectionConfig 120 _ []) = none
+            exact stepConfig_projectionConfig_nil_none
+              lookupTransition_120_none _) (by
             change (120 : Nat) ≠ 999
             omega)
   | cons symbol rest ih =>
@@ -388,13 +560,21 @@ theorem run_state120_decodeNat_none_ne_halt
       | header =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 2) (by rfl) (by
+              (k := 2) (by
+                change Description.stepConfig
+                  (projectionConfig 122 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_122_false _ _) (by
                 change (122 : Nat) ≠ 999
                 omega)
       | transition =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 2) (by rfl) (by
+              (k := 2) (by
+                change Description.stepConfig
+                  (projectionConfig 122 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_122_false _ _) (by
                 change (122 : Nat) ≠ 999
                 omega)
       | tick =>
@@ -427,31 +607,51 @@ theorem run_state120_decodeNat_none_ne_halt
       | blank =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 121 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_121_true _ _) (by
                 change (121 : Nat) ≠ 999
                 omega)
       | zero =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 121 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_121_true _ _) (by
                 change (121 : Nat) ≠ 999
                 omega)
       | one =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 121 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_121_true _ _) (by
                 change (121 : Nat) ≠ 999
                 omega)
       | moveLeft =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 121 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_121_true _ _) (by
                 change (121 : Nat) ≠ 999
                 omega)
       | moveRight =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 0) (by rfl) (by
+              (k := 0) (by
+                change Description.stepConfig
+                  (projectionConfig 120 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_120_true _ _) (by
                 change (120 : Nat) ≠ 999
                 omega)
 
@@ -465,7 +665,10 @@ theorem run_state100_decodeNat_none_ne_halt
   | nil =>
       exact
         ne_halt_of_reaches_stepConfig_none
-          (k := 0) (by rfl) (by
+          (k := 0) (by
+            change Description.stepConfig (projectionConfig 100 _ []) = none
+            exact stepConfig_projectionConfig_nil_none
+              lookupTransition_100_none _) (by
             change (100 : Nat) ≠ 999
             omega)
   | cons symbol rest ih =>
@@ -473,13 +676,21 @@ theorem run_state100_decodeNat_none_ne_halt
       | header =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 2) (by rfl) (by
+              (k := 2) (by
+                change Description.stepConfig
+                  (projectionConfig 102 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_102_false _ _) (by
                 change (102 : Nat) ≠ 999
                 omega)
       | transition =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 2) (by rfl) (by
+              (k := 2) (by
+                change Description.stepConfig
+                  (projectionConfig 102 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_102_false _ _) (by
                 change (102 : Nat) ≠ 999
                 omega)
       | tick =>
@@ -516,31 +727,51 @@ theorem run_state100_decodeNat_none_ne_halt
       | blank =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 101 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_101_true _ _) (by
                 change (101 : Nat) ≠ 999
                 omega)
       | zero =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 101 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_101_true _ _) (by
                 change (101 : Nat) ≠ 999
                 omega)
       | one =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 101 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_101_true _ _) (by
                 change (101 : Nat) ≠ 999
                 omega)
       | moveLeft =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 101 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_101_true _ _) (by
                 change (101 : Nat) ≠ 999
                 omega)
       | moveRight =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 0) (by rfl) (by
+              (k := 0) (by
+                change Description.stepConfig
+                  (projectionConfig 100 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_100_true _ _) (by
                 change (100 : Nat) ≠ 999
                 omega)
 
@@ -554,7 +785,10 @@ theorem run_state320_decodeNat_none_ne_halt
   | nil =>
       exact
         ne_halt_of_reaches_stepConfig_none
-          (k := 0) (by rfl) (by
+          (k := 0) (by
+            change Description.stepConfig (projectionConfig 320 _ []) = none
+            exact stepConfig_projectionConfig_nil_none
+              lookupTransition_320_none _) (by
             change (320 : Nat) ≠ 999
             omega)
   | cons symbol rest ih =>
@@ -562,13 +796,21 @@ theorem run_state320_decodeNat_none_ne_halt
       | header =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 2) (by rfl) (by
+              (k := 2) (by
+                change Description.stepConfig
+                  (projectionConfig 322 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_322_false _ _) (by
                 change (322 : Nat) ≠ 999
                 omega)
       | transition =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 2) (by rfl) (by
+              (k := 2) (by
+                change Description.stepConfig
+                  (projectionConfig 322 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_322_false _ _) (by
                 change (322 : Nat) ≠ 999
                 omega)
       | tick =>
@@ -601,31 +843,51 @@ theorem run_state320_decodeNat_none_ne_halt
       | blank =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 321 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_321_true _ _) (by
                 change (321 : Nat) ≠ 999
                 omega)
       | zero =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 321 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_321_true _ _) (by
                 change (321 : Nat) ≠ 999
                 omega)
       | one =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 321 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_321_true _ _) (by
                 change (321 : Nat) ≠ 999
                 omega)
       | moveLeft =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 321 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_321_true _ _) (by
                 change (321 : Nat) ≠ 999
                 omega)
       | moveRight =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 0) (by rfl) (by
+              (k := 0) (by
+                change Description.stepConfig
+                  (projectionConfig 320 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_320_true _ _) (by
                 change (320 : Nat) ≠ 999
                 omega)
 
@@ -639,7 +901,10 @@ theorem run_state300_decodeNat_none_ne_halt
   | nil =>
       exact
         ne_halt_of_reaches_stepConfig_none
-          (k := 0) (by rfl) (by
+          (k := 0) (by
+            change Description.stepConfig (projectionConfig 300 _ []) = none
+            exact stepConfig_projectionConfig_nil_none
+              lookupTransition_300_none _) (by
             change (300 : Nat) ≠ 999
             omega)
   | cons symbol rest ih =>
@@ -647,13 +912,21 @@ theorem run_state300_decodeNat_none_ne_halt
       | header =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 2) (by rfl) (by
+              (k := 2) (by
+                change Description.stepConfig
+                  (projectionConfig 302 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_302_false _ _) (by
                 change (302 : Nat) ≠ 999
                 omega)
       | transition =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 2) (by rfl) (by
+              (k := 2) (by
+                change Description.stepConfig
+                  (projectionConfig 302 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_302_false _ _) (by
                 change (302 : Nat) ≠ 999
                 omega)
       | tick =>
@@ -688,31 +961,51 @@ theorem run_state300_decodeNat_none_ne_halt
       | blank =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 301 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_301_true _ _) (by
                 change (301 : Nat) ≠ 999
                 omega)
       | zero =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 301 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_301_true _ _) (by
                 change (301 : Nat) ≠ 999
                 omega)
       | one =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 301 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_301_true _ _) (by
                 change (301 : Nat) ≠ 999
                 omega)
       | moveLeft =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 301 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_301_true _ _) (by
                 change (301 : Nat) ≠ 999
                 omega)
       | moveRight =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 0) (by rfl) (by
+              (k := 0) (by
+                change Description.stepConfig
+                  (projectionConfig 300 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_300_true _ _) (by
                 change (300 : Nat) ≠ 999
                 omega)
 
@@ -726,7 +1019,10 @@ theorem run_state330_decodeCell_none_ne_halt
   | nil =>
       exact
         ne_halt_of_reaches_stepConfig_none
-          (k := 0) (by rfl) (by
+          (k := 0) (by
+            change Description.stepConfig (projectionConfig 330 _ []) = none
+            exact stepConfig_projectionConfig_nil_none
+              lookupTransition_330_none _) (by
             change (330 : Nat) ≠ 999
             omega)
   | cons symbol rest =>
@@ -734,25 +1030,41 @@ theorem run_state330_decodeCell_none_ne_halt
       | header =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 331 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_331_false _ _) (by
                 change (331 : Nat) ≠ 999
                 omega)
       | transition =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 331 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_331_false _ _) (by
                 change (331 : Nat) ≠ 999
                 omega)
       | tick =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 331 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_331_false _ _) (by
                 change (331 : Nat) ≠ 999
                 omega)
       | done =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 331 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_331_false _ _) (by
                 change (331 : Nat) ≠ 999
                 omega)
       | blank =>
@@ -764,13 +1076,21 @@ theorem run_state330_decodeCell_none_ne_halt
       | moveLeft =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 3) (by rfl) (by
+              (k := 3) (by
+                change Description.stepConfig
+                  (projectionConfig 334 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_334_true _ _) (by
                 change (334 : Nat) ≠ 999
                 omega)
       | moveRight =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 0) (by rfl) (by
+              (k := 0) (by
+                change Description.stepConfig
+                  (projectionConfig 330 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_330_true _ _) (by
                 change (330 : Nat) ≠ 999
                 omega)
 
@@ -785,7 +1105,10 @@ theorem run_state330_blank_cell_ne_halt
   exact
     ne_halt_of_reaches_stepConfig_none
       (k := 3) (by
-        cases suffix <;> rfl) (by
+        change Description.stepConfig
+          (projectionConfig 333 _ (some false :: _)) = none
+        exact stepConfig_projectionConfig_cons_none
+          lookupTransition_333_false _ _) (by
         change (333 : Nat) ≠ 999
         omega)
 
@@ -799,7 +1122,10 @@ theorem run_state130_decodeCell_none_ne_halt
   | nil =>
       exact
         ne_halt_of_reaches_stepConfig_none
-          (k := 0) (by rfl) (by
+          (k := 0) (by
+            change Description.stepConfig (projectionConfig 130 _ []) = none
+            exact stepConfig_projectionConfig_nil_none
+              lookupTransition_130_none _) (by
             change (130 : Nat) ≠ 999
             omega)
   | cons symbol rest =>
@@ -807,25 +1133,41 @@ theorem run_state130_decodeCell_none_ne_halt
       | header =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 131 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_131_false _ _) (by
                 change (131 : Nat) ≠ 999
                 omega)
       | transition =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 131 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_131_false _ _) (by
                 change (131 : Nat) ≠ 999
                 omega)
       | tick =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 131 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_131_false _ _) (by
                 change (131 : Nat) ≠ 999
                 omega)
       | done =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 1) (by rfl) (by
+              (k := 1) (by
+                change Description.stepConfig
+                  (projectionConfig 131 _ (some false :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_131_false _ _) (by
                 change (131 : Nat) ≠ 999
                 omega)
       | blank =>
@@ -837,13 +1179,21 @@ theorem run_state130_decodeCell_none_ne_halt
       | moveLeft =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 3) (by rfl) (by
+              (k := 3) (by
+                change Description.stepConfig
+                  (projectionConfig 134 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_134_true _ _) (by
                 change (134 : Nat) ≠ 999
                 omega)
       | moveRight =>
           exact
             ne_halt_of_reaches_stepConfig_none
-              (k := 0) (by rfl) (by
+              (k := 0) (by
+                change Description.stepConfig
+                  (projectionConfig 130 _ (some true :: _)) = none
+                exact stepConfig_projectionConfig_cons_none
+                  lookupTransition_130_true _ _) (by
                 change (130 : Nat) ≠ 999
                 omega)
 
@@ -858,7 +1208,10 @@ theorem run_state130_blank_cell_ne_halt
   exact
     ne_halt_of_reaches_stepConfig_none
       (k := 3) (by
-        cases suffix <;> rfl) (by
+        change Description.stepConfig
+          (projectionConfig 133 _ (some false :: _)) = none
+        exact stepConfig_projectionConfig_cons_none
+          lookupTransition_133_false _ _) (by
         change (133 : Nat) ≠ 999
         omega)
 
