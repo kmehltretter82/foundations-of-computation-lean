@@ -1850,6 +1850,79 @@ def markedTailStartConfig (tail : Word Bool) :
       Tape.move Direction.right
         (tapeAtCells [some false] (none :: tail.map some)) }
 
+theorem no_halt_of_stepConfig_none
+    {D : MachineDescription} {c : MachineDescription.Configuration}
+    {T : Tape Bool}
+    (hstep : D.stepConfig c = none)
+    (hstate : c.state ≠ D.halt)
+    (hhalt :
+      exists steps : Nat,
+        D.runConfig steps c = { state := D.halt, tape := T }) :
+    False := by
+  rcases hhalt with ⟨steps, hsteps⟩
+  have hstay := MachineDescription.runConfig_of_stepConfig_none hstep steps
+  rw [hstay] at hsteps
+  have hstate' : c.state = D.halt := by
+    simpa using congrArg MachineDescription.Configuration.state hsteps
+  exact hstate hstate'
+
+theorem scanner_marked_tail_false_no_halt
+    {rest : Word Bool} {T : Tape Bool}
+    (hscanner :
+      exists steps : Nat,
+        StageInputMarkedScannerDescription.runConfig steps
+            (markedTailStartConfig (false :: rest)) =
+          { state := StageInputMarkedScannerDescription.halt
+            tape := T }) :
+    False := by
+  have hstep :
+      StageInputMarkedScannerDescription.stepConfig
+          (markedTailStartConfig (false :: rest)) = none := by
+    cases rest <;>
+    simp [markedTailStartConfig, StageInputMarkedScannerDescription,
+      tapeAtCells, keep, keepMove, writeMove,
+      scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+      MachineDescription.stepConfig, MachineDescription.lookupTransition,
+      MachineDescription.Matches, MachineDescription.transition,
+      Tape.move, Tape.moveRight, Tape.read]
+  have hstate :
+      (markedTailStartConfig (false :: rest)).state ≠
+        StageInputMarkedScannerDescription.halt := by
+    simp [markedTailStartConfig, StageInputMarkedScannerDescription]
+  exact no_halt_of_stepConfig_none hstep hstate hscanner
+
+theorem runConfig_halt_after_prefix
+    {D : MachineDescription} {c mid : MachineDescription.Configuration}
+    {T : Tape Bool} {pref : Nat}
+    (hD : D.HaltTransitionFree)
+    (hprefix : D.runConfig pref c = mid)
+    (hmid : mid.state ≠ D.halt)
+    (hhalt :
+      exists steps : Nat,
+        D.runConfig steps c = { state := D.halt, tape := T }) :
+    exists rem : Nat,
+      D.runConfig rem mid = { state := D.halt, tape := T } := by
+  rcases hhalt with ⟨steps, hsteps⟩
+  by_cases hle : pref ≤ steps
+  · refine ⟨steps - pref, ?_⟩
+    have hsteps_eq : steps = pref + (steps - pref) := by
+      omega
+    rw [hsteps_eq, MachineDescription.runConfig_add] at hsteps
+    rw [hprefix] at hsteps
+    exact hsteps
+  · let rem := pref - steps
+    have hprefix_eq : pref = steps + rem := by
+      omega
+    have hprefix_halt :
+        D.runConfig pref c = { state := D.halt, tape := T } := by
+      rw [hprefix_eq, MachineDescription.runConfig_add, hsteps]
+      exact MachineDescription.runConfig_halt hD T rem
+    rw [hprefix] at hprefix_halt
+    have hstate : mid.state = D.halt := by
+      simpa using
+        congrArg MachineDescription.Configuration.state hprefix_halt
+    exact False.elim (hmid hstate)
+
 theorem runConfig_halt_tape_functional_from_config
     {D : MachineDescription} {c : MachineDescription.Configuration}
     {T₁ T₂ : Tape Bool} {n₁ n₂ : Nat}
@@ -1899,6 +1972,225 @@ with the code-level origin of the marked tail, while the tape inversion remains
 separate and only needs the recovered canonical tail equality.
 -/
 
+theorem scanner_marked_code_tail_first_symbol_inv
+    {code : Word MachineCodeSymbol} {tail : Word Bool} {T : Tape Bool}
+    (hbits :
+      MachineDescription.encodeCodeWordAsInput code =
+        false :: false :: tail)
+    (hscanner :
+      exists steps : Nat,
+        StageInputMarkedScannerDescription.runConfig steps
+            (markedTailStartConfig tail) =
+          { state := StageInputMarkedScannerDescription.halt
+            tape := T }) :
+    (exists rest : Word MachineCodeSymbol,
+      code = MachineCodeSymbol.tick :: rest ∧
+        tail = true :: false ::
+          MachineDescription.encodeCodeWordAsInput rest) ∨
+    (exists rest : Word MachineCodeSymbol,
+      code = MachineCodeSymbol.done :: rest ∧
+        tail = true :: true ::
+          MachineDescription.encodeCodeWordAsInput rest) := by
+  cases code with
+  | nil =>
+      simp [MachineDescription.encodeCodeWordAsInput] at hbits
+  | cons symbol rest =>
+      cases symbol
+      · simp [MachineDescription.encodeCodeWordAsInput,
+          MachineDescription.encodeCodeSymbolAsInput] at hbits
+        have htail :
+            tail = false :: false ::
+              MachineDescription.encodeCodeWordAsInput rest := by
+          injection hbits with _ h1
+          injection h1 with _ h2
+          exact h2.symm
+        subst tail
+        exact False.elim (scanner_marked_tail_false_no_halt hscanner)
+      · simp [MachineDescription.encodeCodeWordAsInput,
+          MachineDescription.encodeCodeSymbolAsInput] at hbits
+        have htail :
+            tail = false :: true ::
+              MachineDescription.encodeCodeWordAsInput rest := by
+          injection hbits with _ h1
+          injection h1 with _ h2
+          exact h2.symm
+        subst tail
+        exact False.elim (scanner_marked_tail_false_no_halt hscanner)
+      · simp [MachineDescription.encodeCodeWordAsInput,
+          MachineDescription.encodeCodeSymbolAsInput] at hbits
+        have htail :
+            tail = true :: false ::
+              MachineDescription.encodeCodeWordAsInput rest := by
+          injection hbits with _ h1
+          injection h1 with _ h2
+          exact h2.symm
+        exact Or.inl ⟨rest, rfl, htail⟩
+      · simp [MachineDescription.encodeCodeWordAsInput,
+          MachineDescription.encodeCodeSymbolAsInput] at hbits
+        have htail :
+            tail = true :: true ::
+              MachineDescription.encodeCodeWordAsInput rest := by
+          injection hbits with _ h1
+          injection h1 with _ h2
+          exact h2.symm
+        exact Or.inr ⟨rest, rfl, htail⟩
+      · simp [MachineDescription.encodeCodeWordAsInput,
+          MachineDescription.encodeCodeSymbolAsInput] at hbits
+        injection hbits with _ htail
+        injection htail with hbad
+        cases hbad
+      · simp [MachineDescription.encodeCodeWordAsInput,
+          MachineDescription.encodeCodeSymbolAsInput] at hbits
+        injection hbits with _ htail
+        injection htail with hbad
+        cases hbad
+      · simp [MachineDescription.encodeCodeWordAsInput,
+          MachineDescription.encodeCodeSymbolAsInput] at hbits
+        injection hbits with _ htail
+        injection htail with hbad
+        cases hbad
+      · simp [MachineDescription.encodeCodeWordAsInput,
+          MachineDescription.encodeCodeSymbolAsInput] at hbits
+        injection hbits with _ htail
+        injection htail with hbad
+        cases hbad
+      · simp [MachineDescription.encodeCodeWordAsInput,
+          MachineDescription.encodeCodeSymbolAsInput] at hbits
+        injection hbits with hhead
+        cases hhead
+
+theorem stageInputBits_tick_code_eq
+    {rest : Word MachineCodeSymbol} {w : Word Bool}
+    {stage : Nat}
+    (hcode :
+      MachineCodeSymbol.tick :: rest =
+        PairedRecognizerDovetailStageInputCode w stage) :
+    stageInputBits w stage =
+      false :: false :: true :: false ::
+        MachineDescription.encodeCodeWordAsInput rest := by
+  rw [stageInputBits, ← hcode]
+  rfl
+
+theorem scanner_marked_tick_tail_code_inv
+    {rest : Word MachineCodeSymbol} {T : Tape Bool}
+    (hscanner :
+      exists steps : Nat,
+        StageInputMarkedScannerDescription.runConfig steps
+            (markedTailStartConfig
+              (true :: false ::
+                MachineDescription.encodeCodeWordAsInput rest)) =
+          { state := StageInputMarkedScannerDescription.halt
+            tape := T }) :
+    exists w : Word Bool,
+    exists stage : Nat,
+      MachineCodeSymbol.tick :: rest =
+        PairedRecognizerDovetailStageInputCode w stage := by
+  sorry
+
+theorem scanner_marked_tick_tail_bits_shape_inv
+    {rest : Word MachineCodeSymbol} {T : Tape Bool}
+    (hscanner :
+      exists steps : Nat,
+        StageInputMarkedScannerDescription.runConfig steps
+            (markedTailStartConfig
+              (true :: false ::
+                MachineDescription.encodeCodeWordAsInput rest)) =
+          { state := StageInputMarkedScannerDescription.halt
+            tape := T }) :
+    exists w : Word Bool,
+    exists stage : Nat,
+      stageInputBits w stage =
+        false :: false :: true :: false ::
+          MachineDescription.encodeCodeWordAsInput rest := by
+  rcases scanner_marked_tick_tail_code_inv hscanner with
+    ⟨w, stage, hcode⟩
+  exact ⟨w, stage, stageInputBits_tick_code_eq hcode⟩
+
+theorem stageInputBits_nil_eq_done_nat
+    (stage : Nat) :
+    stageInputBits ([] : Word Bool) stage =
+      false :: false :: true :: true ::
+        MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeNat stage) := by
+  rw [stageInputBits_eq_false_false_tail]
+  rw [stageInputSecondBitTail_nil]
+  rfl
+
+theorem scanner_marked_done_tail_nat_inv
+    {rest : Word MachineCodeSymbol} {T : Tape Bool}
+    (hscanner :
+      exists steps : Nat,
+        StageInputMarkedScannerDescription.runConfig steps
+            (markedTailStartConfig
+              (true :: true ::
+                MachineDescription.encodeCodeWordAsInput rest)) =
+          { state := StageInputMarkedScannerDescription.halt
+            tape := T }) :
+    exists stage : Nat,
+      rest = MachineDescription.encodeNat stage := by
+  sorry
+
+theorem scanner_marked_done_tail_bits_shape_inv
+    {rest : Word MachineCodeSymbol} {T : Tape Bool}
+    (hscanner :
+      exists steps : Nat,
+        StageInputMarkedScannerDescription.runConfig steps
+            (markedTailStartConfig
+              (true :: true ::
+                MachineDescription.encodeCodeWordAsInput rest)) =
+          { state := StageInputMarkedScannerDescription.halt
+            tape := T }) :
+    exists stage : Nat,
+      stageInputBits ([] : Word Bool) stage =
+        false :: false :: true :: true ::
+          MachineDescription.encodeCodeWordAsInput rest := by
+  rcases scanner_marked_done_tail_nat_inv hscanner with
+    ⟨stage, hrest⟩
+  subst rest
+  exact ⟨stage, stageInputBits_nil_eq_done_nat stage⟩
+
+theorem scanner_marked_code_tail_bits_shape_inv
+    {code : Word MachineCodeSymbol} {tail : Word Bool} {T : Tape Bool}
+    (hbits :
+      MachineDescription.encodeCodeWordAsInput code =
+        false :: false :: tail)
+    (hscanner :
+      exists steps : Nat,
+        StageInputMarkedScannerDescription.runConfig steps
+            (markedTailStartConfig tail) =
+          { state := StageInputMarkedScannerDescription.halt
+            tape := T }) :
+    exists w : Word Bool,
+    exists stage : Nat,
+      stageInputBits w stage = false :: false :: tail := by
+  rcases scanner_marked_code_tail_first_symbol_inv hbits hscanner with
+    ⟨rest, _hcode, htail⟩ | ⟨rest, _hcode, htail⟩
+  · subst tail
+    exact scanner_marked_tick_tail_bits_shape_inv hscanner
+  · subst tail
+    rcases scanner_marked_done_tail_bits_shape_inv hscanner with
+      ⟨stage, hshape⟩
+    exact ⟨([] : Word Bool), stage, hshape⟩
+
+theorem stageInputBits_false_false_tail_bridge
+    {code : Word MachineCodeSymbol} {tail w : Word Bool}
+    {stage : Nat}
+    (hbits :
+      MachineDescription.encodeCodeWordAsInput code =
+        false :: false :: tail)
+    (hshape :
+      stageInputBits w stage = false :: false :: tail) :
+    code = PairedRecognizerDovetailStageInputCode w stage ∧
+      tail = stageInputSecondBitTail w stage := by
+  constructor
+  · apply MachineDescription.encodeCodeWordAsInput_injective
+    rw [hbits, ← hshape]
+    rfl
+  · have hcanon := stageInputBits_eq_false_false_tail w stage
+    rw [hshape] at hcanon
+    injection hcanon with _ htailWithPrefix
+    injection htailWithPrefix
+
 theorem scanner_marked_code_tail_shape_inv
     {code : Word MachineCodeSymbol} {tail : Word Bool} {T : Tape Bool}
     (hbits :
@@ -1914,7 +2206,11 @@ theorem scanner_marked_code_tail_shape_inv
     exists stage : Nat,
       code = PairedRecognizerDovetailStageInputCode w stage ∧
         tail = stageInputSecondBitTail w stage := by
-  sorry
+  rcases scanner_marked_code_tail_bits_shape_inv hbits hscanner with
+    ⟨w, stage, hshape⟩
+  rcases stageInputBits_false_false_tail_bridge hbits hshape with
+    ⟨hcode, htail⟩
+  exact ⟨w, stage, hcode, htail⟩
 
 theorem scanner_marked_tail_tape_inv
     {tail : Word Bool} {T : Tape Bool}
