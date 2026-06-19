@@ -102,6 +102,45 @@ def RejectMergePrimitive :
         Option.map MachineDescription.DovetailLayout.encode
           (MergeRejectSimulatorResult S)
 
+def SelectedProjectionSimulatorLayout
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    MachineDescription.SimulatorLayout :=
+  if useAccept then
+    AcceptSimulatorLayout L
+  else
+    RejectSimulatorLayout L
+
+def SelectedProjectionPrimitive
+    (useAccept : Bool) :
+    MachineDescription.TapeCodePrimitive where
+  transform := fun code =>
+    match MachineDescription.DovetailLayout.decodeComplete code with
+    | none => none
+    | some L =>
+        some
+          (MachineDescription.SimulatorLayout.encode
+            (SelectedProjectionSimulatorLayout useAccept L))
+
+def SelectedMergeSimulatorResult
+    (useAccept : Bool)
+    (S : MachineDescription.SimulatorLayout) :
+    Option MachineDescription.DovetailLayout :=
+  if useAccept then
+    MergeAcceptSimulatorResult S
+  else
+    MergeRejectSimulatorResult S
+
+def SelectedMergePrimitive
+    (useAccept : Bool) :
+    MachineDescription.TapeCodePrimitive where
+  transform := fun code =>
+    match MachineDescription.SimulatorLayout.decodeComplete code with
+    | none => none
+    | some S =>
+        Option.map MachineDescription.DovetailLayout.encode
+          (SelectedMergeSimulatorResult useAccept S)
+
 def ConfigRunnerAfterAccept
     (accept : MachineDescription)
     (L : MachineDescription.DovetailLayout) :
@@ -557,6 +596,122 @@ def ConfigRunnerPrimitiveClosedHandoffConstruction : Prop :=
       RejectMergePrimitive
       rejectMerge tapeCodePrimitiveCodeWordHandoffMove
 
+def AcceptProjectionPrimitiveClosedHandoffConstruction : Prop :=
+  exists closed : MachineDescription,
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      AcceptProjectionPrimitive
+      closed tapeCodePrimitiveCodeWordHandoffMove
+
+def AcceptMergePrimitiveClosedHandoffConstruction : Prop :=
+  exists closed : MachineDescription,
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      AcceptMergePrimitive
+      closed tapeCodePrimitiveCodeWordHandoffMove
+
+def RejectProjectionPrimitiveClosedHandoffConstruction : Prop :=
+  exists closed : MachineDescription,
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      RejectProjectionPrimitive
+      closed tapeCodePrimitiveCodeWordHandoffMove
+
+def RejectMergePrimitiveClosedHandoffConstruction : Prop :=
+  exists closed : MachineDescription,
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      RejectMergePrimitive
+      closed tapeCodePrimitiveCodeWordHandoffMove
+
+def SelectedProjectionPrimitiveClosedHandoffConstruction : Prop :=
+  forall useAccept : Bool,
+    exists closed : MachineDescription,
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (SelectedProjectionPrimitive useAccept)
+        closed tapeCodePrimitiveCodeWordHandoffMove
+
+def SelectedMergePrimitiveClosedHandoffConstruction : Prop :=
+  forall useAccept : Bool,
+    exists closed : MachineDescription,
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (SelectedMergePrimitive useAccept)
+        closed tapeCodePrimitiveCodeWordHandoffMove
+
+theorem acceptProjectionPrimitiveClosedHandoffConstruction_of_selected
+    (h : SelectedProjectionPrimitiveClosedHandoffConstruction) :
+    AcceptProjectionPrimitiveClosedHandoffConstruction := by
+  rcases h true with ⟨closed, hclosed⟩
+  refine ⟨closed, ?_⟩
+  exact
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_congr
+      (P := SelectedProjectionPrimitive true)
+      (Q := AcceptProjectionPrimitive)
+      (D := closed)
+      (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
+      (by
+        intro code
+        rfl)
+      hclosed
+
+theorem rejectProjectionPrimitiveClosedHandoffConstruction_of_selected
+    (h : SelectedProjectionPrimitiveClosedHandoffConstruction) :
+    RejectProjectionPrimitiveClosedHandoffConstruction := by
+  rcases h false with ⟨closed, hclosed⟩
+  refine ⟨closed, ?_⟩
+  exact
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_congr
+      (P := SelectedProjectionPrimitive false)
+      (Q := RejectProjectionPrimitive)
+      (D := closed)
+      (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
+      (by
+        intro code
+        rfl)
+      hclosed
+
+theorem acceptMergePrimitiveClosedHandoffConstruction_of_selected
+    (h : SelectedMergePrimitiveClosedHandoffConstruction) :
+    AcceptMergePrimitiveClosedHandoffConstruction := by
+  rcases h true with ⟨closed, hclosed⟩
+  refine ⟨closed, ?_⟩
+  exact
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_congr
+      (P := SelectedMergePrimitive true)
+      (Q := AcceptMergePrimitive)
+      (D := closed)
+      (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
+      (by
+        intro code
+        rfl)
+      hclosed
+
+theorem rejectMergePrimitiveClosedHandoffConstruction_of_selected
+    (h : SelectedMergePrimitiveClosedHandoffConstruction) :
+    RejectMergePrimitiveClosedHandoffConstruction := by
+  rcases h false with ⟨closed, hclosed⟩
+  refine ⟨closed, ?_⟩
+  exact
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_congr
+      (P := SelectedMergePrimitive false)
+      (Q := RejectMergePrimitive)
+      (D := closed)
+      (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
+      (by
+        intro code
+        rfl)
+      hclosed
+
+theorem configRunnerPrimitiveClosedHandoffConstruction_of_parts
+    (hacceptProject : AcceptProjectionPrimitiveClosedHandoffConstruction)
+    (hacceptMerge : AcceptMergePrimitiveClosedHandoffConstruction)
+    (hrejectProject : RejectProjectionPrimitiveClosedHandoffConstruction)
+    (hrejectMerge : RejectMergePrimitiveClosedHandoffConstruction) :
+    ConfigRunnerPrimitiveClosedHandoffConstruction := by
+  rcases hacceptProject with ⟨acceptProject, hacceptProject⟩
+  rcases hacceptMerge with ⟨acceptMerge, hacceptMerge⟩
+  rcases hrejectProject with ⟨rejectProject, hrejectProject⟩
+  rcases hrejectMerge with ⟨rejectMerge, hrejectMerge⟩
+  exact
+    ⟨acceptProject, acceptMerge, rejectProject, rejectMerge,
+      hacceptProject, hacceptMerge, hrejectProject, hrejectMerge⟩
+
 theorem AcceptProjectionSpec_of_closedHandoff
     {closed : MachineDescription}
     (hclosed :
@@ -951,9 +1106,80 @@ theorem fixedDescriptionBoundedSimulatorCanonicalConstruction_scaffold_configRun
     FixedDescriptionBoundedSimulatorCanonicalConstruction := by
   sorry
 
+theorem selectedProjectionRejectPrimitiveClosedHandoffConstruction_scaffold :
+    exists closed : MachineDescription,
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (SelectedProjectionPrimitive false)
+        closed tapeCodePrimitiveCodeWordHandoffMove := by
+  sorry
+
+theorem selectedProjectionAcceptPrimitiveClosedHandoffConstruction_scaffold :
+    exists closed : MachineDescription,
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (SelectedProjectionPrimitive true)
+        closed tapeCodePrimitiveCodeWordHandoffMove := by
+  sorry
+
+theorem selectedProjectionPrimitiveClosedHandoffConstruction_scaffold :
+    SelectedProjectionPrimitiveClosedHandoffConstruction := by
+  intro useAccept
+  cases useAccept
+  · exact selectedProjectionRejectPrimitiveClosedHandoffConstruction_scaffold
+  · exact selectedProjectionAcceptPrimitiveClosedHandoffConstruction_scaffold
+
+theorem selectedMergeRejectPrimitiveClosedHandoffConstruction_scaffold :
+    exists closed : MachineDescription,
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (SelectedMergePrimitive false)
+        closed tapeCodePrimitiveCodeWordHandoffMove := by
+  sorry
+
+theorem selectedMergeAcceptPrimitiveClosedHandoffConstruction_scaffold :
+    exists closed : MachineDescription,
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (SelectedMergePrimitive true)
+        closed tapeCodePrimitiveCodeWordHandoffMove := by
+  sorry
+
+theorem selectedMergePrimitiveClosedHandoffConstruction_scaffold :
+    SelectedMergePrimitiveClosedHandoffConstruction := by
+  intro useAccept
+  cases useAccept
+  · exact selectedMergeRejectPrimitiveClosedHandoffConstruction_scaffold
+  · exact selectedMergeAcceptPrimitiveClosedHandoffConstruction_scaffold
+
+theorem acceptProjectionPrimitiveClosedHandoffConstruction_scaffold :
+    AcceptProjectionPrimitiveClosedHandoffConstruction := by
+  exact
+    acceptProjectionPrimitiveClosedHandoffConstruction_of_selected
+      selectedProjectionPrimitiveClosedHandoffConstruction_scaffold
+
+theorem acceptMergePrimitiveClosedHandoffConstruction_scaffold :
+    AcceptMergePrimitiveClosedHandoffConstruction := by
+  exact
+    acceptMergePrimitiveClosedHandoffConstruction_of_selected
+      selectedMergePrimitiveClosedHandoffConstruction_scaffold
+
+theorem rejectProjectionPrimitiveClosedHandoffConstruction_scaffold :
+    RejectProjectionPrimitiveClosedHandoffConstruction := by
+  exact
+    rejectProjectionPrimitiveClosedHandoffConstruction_of_selected
+      selectedProjectionPrimitiveClosedHandoffConstruction_scaffold
+
+theorem rejectMergePrimitiveClosedHandoffConstruction_scaffold :
+    RejectMergePrimitiveClosedHandoffConstruction := by
+  exact
+    rejectMergePrimitiveClosedHandoffConstruction_of_selected
+      selectedMergePrimitiveClosedHandoffConstruction_scaffold
+
 theorem configRunnerPrimitiveClosedHandoffConstruction_scaffold :
     ConfigRunnerPrimitiveClosedHandoffConstruction := by
-  sorry
+  exact
+    configRunnerPrimitiveClosedHandoffConstruction_of_parts
+      acceptProjectionPrimitiveClosedHandoffConstruction_scaffold
+      acceptMergePrimitiveClosedHandoffConstruction_scaffold
+      rejectProjectionPrimitiveClosedHandoffConstruction_scaffold
+      rejectMergePrimitiveClosedHandoffConstruction_scaffold
 
 theorem configRunnerPhaseConstruction_scaffold :
     ConfigRunnerPhaseConstruction :=
