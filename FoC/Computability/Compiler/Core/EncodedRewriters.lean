@@ -150,7 +150,19 @@ theorem encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine
     ⟨rewriter,
       tapeCodePrimitiveOutputCompiledSubroutineByDescription_subroutineReady
         hrewriter,
-      hrewriter.left.right⟩
+      tapeCodePrimitiveOutputCompiledSubroutineByDescription_haltsWithOutput_iff
+        hrewriter⟩
+
+theorem encodedTapeCodePrimitiveRewriterConstruction_of_closedHandoffCompiledSubroutine
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription} {handoffMove : Direction}
+    (h : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      P D handoffMove) :
+    EncodedTapeCodePrimitiveRewriterConstruction P :=
+  ⟨D,
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady h,
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_haltsWithOutput_iff
+      h⟩
 
 def EncodedControllerInputInitializerRewriterConstruction :
     Prop :=
@@ -228,6 +240,14 @@ theorem encodedControllerContinueRewriterConstruction_of_resultContinueCodeWordS
           (MachineDescription.DovetailControllerLayout.nextStage C)))
       pairedRecognizerDovetailControllerResultContinueCode_encode_nextStage_iff
 
+/-!
+The stage-attempt components are routed through closed handoff subroutines.
+That contract is stronger than the encoded rewriter interface, so the ordinary
+rewriter and handoff scaffolds below are just projections from the closed
+handoff witnesses.  The remaining construction work in this file is therefore
+limited to the bounded layout runner and total-output emitter closed handoffs.
+-/
+
 theorem encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold :
     EncodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction := by
   intro accept reject
@@ -251,10 +271,8 @@ theorem encodedDovetailStageInputToInitialLayoutRewriterConstruction_scaffold :
         accept reject with
     ⟨initializer, hinitializer⟩
   exact
-    ⟨initializer,
-      tapeCodePrimitiveOutputCompiledSubroutineByDescription_subroutineReady
-        hinitializer.left,
-      hinitializer.left.left.right⟩
+    encodedTapeCodePrimitiveRewriterConstruction_of_closedHandoffCompiledSubroutine
+      hinitializer
 
 theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
     EncodedDovetailLayoutBoundedRunnerRewriterConstruction := by
@@ -264,10 +282,8 @@ theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
         accept reject with
     ⟨runner, hrunner⟩
   exact
-    ⟨runner,
-      tapeCodePrimitiveOutputCompiledSubroutineByDescription_subroutineReady
-        hrunner.left,
-      hrunner.left.left.right⟩
+    encodedTapeCodePrimitiveRewriterConstruction_of_closedHandoffCompiledSubroutine
+      hrunner
 
 theorem encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold :
     EncodedDovetailTotalOutputEmitterRewriterConstruction := by
@@ -275,10 +291,8 @@ theorem encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold :
       encodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction_scaffold with
     ⟨emitter, hemitter⟩
   exact
-    ⟨emitter,
-      tapeCodePrimitiveOutputCompiledSubroutineByDescription_subroutineReady
-        hemitter.left,
-      hemitter.left.left.right⟩
+    encodedTapeCodePrimitiveRewriterConstruction_of_closedHandoffCompiledSubroutine
+      hemitter
 
 theorem encodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction_scaffold :
     EncodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction :=
