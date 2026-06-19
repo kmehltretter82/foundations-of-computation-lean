@@ -28,9 +28,9 @@ def TransitionPrefixedFirstBitAppendCodeWordReturnDescription
     MachineDescription.ExactIdentityDescription
     (TransitionPrefixedAppendCodeWordReturnDescription code)
     Direction.right
+     /-- `transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (TransitionPrefixedFirstBitAppendCodeWordReturnDescription
@@ -39,9 +39,9 @@ theorem
     exactIdentityDescription_subroutineReady
     (transitionPrefixedAppendCodeWordReturnDescription_subroutineReady
       code hcode)
+     /-- `transitionPrefixedFirstBitAppendCodeWordReturnDescription_run` captures the core lemma for this local construction. -/
 
 theorem
-     /-- `transitionPrefixedFirstBitAppendCodeWordReturnDescription_run` captures the core lemma for this local construction. -/
     transitionPrefixedFirstBitAppendCodeWordReturnDescription_run
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (payload : Word Bool) :
@@ -113,9 +113,9 @@ def TransitionPrefixedFirstBitAppendNatReturnDescription
     (n : Nat) : MachineDescription :=
   TransitionPrefixedFirstBitAppendCodeWordReturnDescription
     (MachineDescription.encodeNat n)
+     /-- `transitionPrefixedFirstBitAppendNatReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `transitionPrefixedFirstBitAppendNatReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     transitionPrefixedFirstBitAppendNatReturnDescription_subroutineReady
     (n : Nat) :
     (TransitionPrefixedFirstBitAppendNatReturnDescription
@@ -123,9 +123,9 @@ theorem
   transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
     (MachineDescription.encodeNat n)
     (encodeNat_ne_nil n)
+     /-- `transitionPrefixedFirstBitAppendNatReturnDescription_run` captures the core lemma for this local construction. -/
 
 theorem
-     /-- `transitionPrefixedFirstBitAppendNatReturnDescription_run` captures the core lemma for this local construction. -/
     transitionPrefixedFirstBitAppendNatReturnDescription_run
     (n : Nat) (payload : Word Bool) :
     exists steps : Nat,
@@ -479,9 +479,9 @@ def AppendEmptyInputTapeReturnDescription :
     MachineDescription :=
   TransitionPrefixedFirstBitAppendCodeWordReturnDescription
     emptyInputTapeCode
+     /-- `appendEmptyInputTapeReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `appendEmptyInputTapeReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     appendEmptyInputTapeReturnDescription_subroutineReady :
     AppendEmptyInputTapeReturnDescription.SubroutineReady :=
   transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
@@ -636,9 +636,9 @@ def AppendInputTapeHeadPrefixReturnDescription
     (b : Bool) : MachineDescription :=
   TransitionPrefixedFirstBitAppendCodeWordReturnDescription
     (inputTapeHeadPrefixCode b)
+     /-- `appendInputTapeHeadPrefixReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `appendInputTapeHeadPrefixReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     appendInputTapeHeadPrefixReturnDescription_subroutineReady
     (b : Bool) :
     (AppendInputTapeHeadPrefixReturnDescription b).SubroutineReady :=
@@ -713,9 +713,9 @@ def AppendKnownHeadInputTapeReturnDescription
     (AppendInputTapeHeadPrefixReturnDescription b)
     rightCopier
     Direction.left
+     /-- `appendKnownHeadInputTapeReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `appendKnownHeadInputTapeReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     appendKnownHeadInputTapeReturnDescription_subroutineReady
     {rightCopier : MachineDescription}
     (hright : AppendInputTapeRightCellsReturnSpec rightCopier)
@@ -833,9 +833,9 @@ theorem inputTapeRightCellsCode_nil_ne_nil :
     MachineDescription.encodeCellListAppend,
     MachineDescription.encodeNatAppend,
     MachineDescription.encodeNat]
+     /-- `appendEmptyRightCellsReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `appendEmptyRightCellsReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     appendEmptyRightCellsReturnDescription_subroutineReady :
     AppendEmptyRightCellsReturnDescription.SubroutineReady :=
   transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
@@ -884,9 +884,9 @@ def AppendSingletonInputTapeReturnDescription
     (AppendInputTapeHeadPrefixReturnDescription b)
     AppendEmptyRightCellsReturnDescription
     Direction.left
+     /-- `appendSingletonInputTapeReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `appendSingletonInputTapeReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     appendSingletonInputTapeReturnDescription_subroutineReady
     (b : Bool) :
     (AppendSingletonInputTapeReturnDescription
@@ -992,9 +992,9 @@ def AppendEmptyInputTapeSecondBitReturnDescription :
     MachineDescription :=
   TransitionPrefixedAppendCodeWordReturnDescription
     emptyInputTapeCode
+     /-- `appendEmptyInputTapeSecondBitReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `appendEmptyInputTapeSecondBitReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     appendEmptyInputTapeSecondBitReturnDescription_subroutineReady :
     AppendEmptyInputTapeSecondBitReturnDescription.SubroutineReady :=
   transitionPrefixedAppendCodeWordReturnDescription_subroutineReady
@@ -1042,9 +1042,9 @@ def AppendInputTapeSecondBitHeadPrefixReturnDescription
     (b : Bool) : MachineDescription :=
   TransitionPrefixedAppendCodeWordReturnDescription
     (inputTapeHeadPrefixCode b)
+     /-- `appendInputTapeSecondBitHeadPrefixReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `appendInputTapeSecondBitHeadPrefixReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     appendInputTapeSecondBitHeadPrefixReturnDescription_subroutineReady
     (b : Bool) :
     (AppendInputTapeSecondBitHeadPrefixReturnDescription
@@ -1052,9 +1052,9 @@ theorem
   transitionPrefixedAppendCodeWordReturnDescription_subroutineReady
     (inputTapeHeadPrefixCode b)
     (inputTapeHeadPrefixCode_ne_nil b)
+     /-- `appendInputTapeSecondBitHeadPrefixReturnDescription_run` describes append/fold behavior used by later composition. -/
 
 theorem
-     /-- `appendInputTapeSecondBitHeadPrefixReturnDescription_run` describes append/fold behavior used by later composition. -/
     appendInputTapeSecondBitHeadPrefixReturnDescription_run
     (b : Bool) (payload suffixBits : Word Bool) :
     exists steps : Nat,
@@ -1097,9 +1097,9 @@ def AppendKnownHeadInputTapeSecondBitReturnDescription
     (AppendInputTapeSecondBitHeadPrefixReturnDescription b)
     rightCopier
     Direction.left
+     /-- `appendKnownHeadInputTapeSecondBitReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `appendKnownHeadInputTapeSecondBitReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     appendKnownHeadInputTapeSecondBitReturnDescription_subroutineReady
     {rightCopier : MachineDescription}
     (hright : AppendInputTapeRightCellsReturnSpec rightCopier)
@@ -1110,9 +1110,9 @@ theorem
     (appendInputTapeSecondBitHeadPrefixReturnDescription_subroutineReady
       b)
     hright.left
+     /-- `appendKnownHeadInputTapeSecondBitReturnDescription_run` describes append/fold behavior used by later composition. -/
 
 theorem
-     /-- `appendKnownHeadInputTapeSecondBitReturnDescription_run` describes append/fold behavior used by later composition. -/
     appendKnownHeadInputTapeSecondBitReturnDescription_run
     {rightCopier : MachineDescription}
     (hright : AppendInputTapeRightCellsReturnSpec rightCopier)

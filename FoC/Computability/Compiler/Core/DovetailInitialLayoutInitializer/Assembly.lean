@@ -34,9 +34,9 @@ def AppendFinalBoolFlagsReturnDescription :
     MachineDescription :=
   TransitionPrefixedFirstBitAppendCodeWordReturnDescription
     finalBoolFlagsCode
+     /-- `appendFinalBoolFlagsReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `appendFinalBoolFlagsReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     appendFinalBoolFlagsReturnDescription_subroutineReady :
     AppendFinalBoolFlagsReturnDescription.SubroutineReady := by
   exact
@@ -50,9 +50,9 @@ def AppendSecondInputTapeAndFlagsDescription
     copier
     AppendFinalBoolFlagsReturnDescription
     Direction.left
+     /-- `appendSecondInputTapeAndFlagsDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `appendSecondInputTapeAndFlagsDescription_subroutineReady` packages a subroutine-ready composition step. -/
     appendSecondInputTapeAndFlagsDescription_subroutineReady
     {copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier) :
@@ -69,9 +69,9 @@ def AppendRejectThenInputTapeAndFlagsDescription
       reject.start)
     (AppendSecondInputTapeAndFlagsDescription copier)
     Direction.left
+     /-- `appendRejectThenInputTapeAndFlagsDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `appendRejectThenInputTapeAndFlagsDescription_subroutineReady` packages a subroutine-ready composition step. -/
     appendRejectThenInputTapeAndFlagsDescription_subroutineReady
     {reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier) :
@@ -89,9 +89,9 @@ def AppendFirstInputTapeThenRejectDescription
     copier
     (AppendRejectThenInputTapeAndFlagsDescription reject copier)
     Direction.left
+     /-- `appendFirstInputTapeThenRejectDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `appendFirstInputTapeThenRejectDescription_subroutineReady` packages a subroutine-ready composition step. -/
     appendFirstInputTapeThenRejectDescription_subroutineReady
     {reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier) :
@@ -108,9 +108,9 @@ def DescriptionWithCopier
     (MarkedPrefixAppendNatReturnDescription accept.start)
     (AppendFirstInputTapeThenRejectDescription reject copier)
     Direction.left
+     /-- `descriptionWithCopier_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `descriptionWithCopier_subroutineReady` packages a subroutine-ready composition step. -/
     descriptionWithCopier_subroutineReady
     {accept reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier) :
@@ -121,9 +121,9 @@ theorem
       accept.start)
     (appendFirstInputTapeThenRejectDescription_subroutineReady
       hcopier)
+     /-- `appendSecondInputTapeAndFlagsDescription_run` describes append/fold behavior used by later composition. -/
 
 theorem
-     /-- `appendSecondInputTapeAndFlagsDescription_run` describes append/fold behavior used by later composition. -/
     appendSecondInputTapeAndFlagsDescription_run
     {copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier)
@@ -209,9 +209,9 @@ theorem
   refine ⟨n, ?_⟩
   simpa [AppendSecondInputTapeAndFlagsDescription,
     A, B] using hn
+     /-- `appendRejectThenInputTapeAndFlagsDescription_run` describes append/fold behavior used by later composition. -/
 
 theorem
-     /-- `appendRejectThenInputTapeAndFlagsDescription_run` describes append/fold behavior used by later composition. -/
     appendRejectThenInputTapeAndFlagsDescription_run
     {reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier)
@@ -309,9 +309,9 @@ theorem
   refine ⟨n, ?_⟩
   simpa [AppendRejectThenInputTapeAndFlagsDescription,
     A, B] using hn
+     /-- `appendFirstInputTapeThenRejectDescription_run` describes append/fold behavior used by later composition. -/
 
 theorem
-     /-- `appendFirstInputTapeThenRejectDescription_run` describes append/fold behavior used by later composition. -/
     appendFirstInputTapeThenRejectDescription_run
     {reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier)
@@ -402,9 +402,9 @@ theorem
   refine ⟨n, ?_⟩
   simpa [AppendFirstInputTapeThenRejectDescription,
     A, B] using hn
+     /-- `descriptionWithCopier_run_bits` states the corresponding theorem run form. -/
 
 theorem
-     /-- `descriptionWithCopier_run_bits` states the corresponding theorem run form. -/
     descriptionWithCopier_run_bits
     {accept reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier)
@@ -496,9 +496,9 @@ theorem
   refine ⟨n, ?_⟩
   simpa [DescriptionWithCopier,
     MachineDescription.initial, A, B] using hn
+     /-- `descriptionWithCopier_run_bits_checked` states the corresponding theorem run form. -/
 
 theorem
-     /-- `descriptionWithCopier_run_bits_checked` states the corresponding theorem run form. -/
     descriptionWithCopier_run_bits_checked
     {accept reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier)
@@ -1107,9 +1107,9 @@ theorem inputTapeRightCellsDirectCopierCoreOutputBits_eq
     inputTapeRightCellsDirectCopierPreludeBits,
     MachineDescription.encodeCodeSymbolAsInput,
     List.append_assoc]
+     /-- `descriptionWithCopier_forward` captures the core lemma for this local construction. -/
 
 theorem
-     /-- `descriptionWithCopier_forward` captures the core lemma for this local construction. -/
     descriptionWithCopier_forward
     {accept reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier) :

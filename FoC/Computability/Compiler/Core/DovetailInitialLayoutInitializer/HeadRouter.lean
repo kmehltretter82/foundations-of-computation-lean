@@ -115,9 +115,9 @@ theorem appendInputTapeHeadRouterDescription_wellFormed :
       (l := AppendInputTapeHeadRouterDescription.transitions)
       (by
         native_decide) t u ht hu hkey
+     /-- `appendInputTapeHeadRouterDescription_haltTransitionFree` describes append/fold behavior used by later composition. -/
 
 theorem
-     /-- `appendInputTapeHeadRouterDescription_haltTransitionFree` describes append/fold behavior used by later composition. -/
     appendInputTapeHeadRouterDescription_haltTransitionFree :
     AppendInputTapeHeadRouterDescription.HaltTransitionFree := by
   intro t ht
@@ -258,9 +258,9 @@ theorem appendInputTapeHeadRouterDescription_run_return22
           MachineDescription.transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, List.append_assoc] using
           ih bit (some true :: right)
+     /-- `appendInputTapeHeadRouterDescription_run_state8_false` states the corresponding theorem run form. -/
 
 theorem
-     /-- `appendInputTapeHeadRouterDescription_run_state8_false` states the corresponding theorem run form. -/
     appendInputTapeHeadRouterDescription_run_state8_false
     (n : Nat) (beforeRevBits tailBits : Word Bool) :
     AppendInputTapeHeadRouterDescription.runConfig
@@ -343,9 +343,9 @@ theorem
         List.map_append, List.reverse_append, List.append_assoc,
         Nat.mul_succ] using
         ih nextBefore
+     /-- `appendInputTapeHeadRouterDescription_run_state8_true` states the corresponding theorem run form. -/
 
 theorem
-     /-- `appendInputTapeHeadRouterDescription_run_state8_true` states the corresponding theorem run form. -/
     appendInputTapeHeadRouterDescription_run_state8_true
     (n : Nat) (beforeRevBits tailBits : Word Bool) :
     AppendInputTapeHeadRouterDescription.runConfig

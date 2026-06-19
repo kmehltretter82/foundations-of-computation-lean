@@ -1091,9 +1091,8 @@ def MarkedPrefixThenAppendCodeWordLastDescription
     (AppendCodeWordLastDescription code)
     Direction.right
 
-theorem
-     /-- `markedPrefixThenAppendCodeWordLastDescription_subroutineReady` packages a subroutine-ready composition step. -/
-    markedPrefixThenAppendCodeWordLastDescription_subroutineReady
+ /-- `markedPrefixThenAppendCodeWordLastDescription_subroutineReady` packages a subroutine-ready composition step. -/
+theorem markedPrefixThenAppendCodeWordLastDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (MarkedPrefixThenAppendCodeWordLastDescription
       code).SubroutineReady :=
@@ -1288,9 +1287,8 @@ def MarkedPrefixThenAppendNatLastDescription
   MarkedPrefixThenAppendCodeWordLastDescription
     (MachineDescription.encodeNat n)
 
-theorem
-     /-- `markedPrefixThenAppendNatLastDescription_subroutineReady` packages a subroutine-ready composition step. -/
-    markedPrefixThenAppendNatLastDescription_subroutineReady
+ /-- `markedPrefixThenAppendNatLastDescription_subroutineReady` packages a subroutine-ready composition step. -/
+theorem markedPrefixThenAppendNatLastDescription_subroutineReady
     (n : Nat) :
     (MarkedPrefixThenAppendNatLastDescription
       n).SubroutineReady :=

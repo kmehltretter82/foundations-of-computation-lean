@@ -175,9 +175,9 @@ def StageInputRecognizerSpec
 def StageInputRecognizerConstruction : Prop :=
   exists recognizer : MachineDescription,
     StageInputRecognizerSpec recognizer
+     /-- `stageInputSecondBitMarkedHandoffTape_move_left` captures the core lemma for this local construction. -/
 
 theorem
-     /-- `stageInputSecondBitMarkedHandoffTape_move_left` captures the core lemma for this local construction. -/
     stageInputSecondBitMarkedHandoffTape_move_left
     (w : Word Bool) (stage : Nat) :
     Tape.move Direction.left
@@ -210,9 +210,9 @@ theorem
         MachineDescription.encodeNatAppend,
         MachineDescription.encodeNat,
         tapeAtCells, Tape.move, Tape.moveRight, Tape.moveLeft]
+     /-- `stageInputSecondBitMarkedCheckedHandoffTape_move_left` captures the core lemma for this local construction. -/
 
 theorem
-     /-- `stageInputSecondBitMarkedCheckedHandoffTape_move_left` captures the core lemma for this local construction. -/
     stageInputSecondBitMarkedCheckedHandoffTape_move_left
     (w : Word Bool) (stage : Nat) :
     Tape.move Direction.left
@@ -266,9 +266,9 @@ def RestoreStageInputSecondBitDescription :
   transitions :=
     [ MachineDescription.transition
         0 none (some false) Direction.left 1 ]
+     /-- `restoreStageInputSecondBitDescription_wellFormed` captures the core lemma for this local construction. -/
 
 theorem
-     /-- `restoreStageInputSecondBitDescription_wellFormed` captures the core lemma for this local construction. -/
     restoreStageInputSecondBitDescription_wellFormed :
     RestoreStageInputSecondBitDescription.WellFormed := by
   constructor
@@ -290,9 +290,9 @@ theorem
       (l := RestoreStageInputSecondBitDescription.transitions)
       (by
         native_decide) t u ht hu hkey
+     /-- `restoreStageInputSecondBitDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 
 theorem
-     /-- `restoreStageInputSecondBitDescription_haltTransitionFree` establishes the halting condition in this construction. -/
     restoreStageInputSecondBitDescription_haltTransitionFree :
     RestoreStageInputSecondBitDescription.HaltTransitionFree := by
   intro t ht
@@ -301,9 +301,9 @@ theorem
     (state := RestoreStageInputSecondBitDescription.halt)
     (by
       native_decide) t ht
+     /-- `restoreStageInputSecondBitDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `restoreStageInputSecondBitDescription_subroutineReady` packages a subroutine-ready composition step. -/
     restoreStageInputSecondBitDescription_subroutineReady :
     RestoreStageInputSecondBitDescription.SubroutineReady :=
   ⟨restoreStageInputSecondBitDescription_wellFormed,
@@ -413,9 +413,9 @@ theorem markStageInputSecondBitDescription_wellFormed :
       (l := MarkStageInputSecondBitDescription.transitions)
       (by
         native_decide) t u ht hu hkey
+     /-- `markStageInputSecondBitDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 
 theorem
-     /-- `markStageInputSecondBitDescription_haltTransitionFree` establishes the halting condition in this construction. -/
     markStageInputSecondBitDescription_haltTransitionFree :
     MarkStageInputSecondBitDescription.HaltTransitionFree := by
   intro t ht
@@ -424,9 +424,9 @@ theorem
     (state := MarkStageInputSecondBitDescription.halt)
     (by
       native_decide) t ht
+     /-- `markStageInputSecondBitDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `markStageInputSecondBitDescription_subroutineReady` packages a subroutine-ready composition step. -/
     markStageInputSecondBitDescription_subroutineReady :
     MarkStageInputSecondBitDescription.SubroutineReady :=
   ⟨markStageInputSecondBitDescription_wellFormed,
@@ -1047,9 +1047,9 @@ theorem stageInputIdentityDescription_spec_of_recognizer
     refine ⟨w, stage, hcode, ?_⟩
     rw [hT, hTmid]
     exact stageInputCheckedInputTape_move_left_move_right w stage
+     /-- `stageInputIdentityClosedHandoffConstruction_of_recognizer` captures the core lemma for this local construction. -/
 
 theorem
-     /-- `stageInputIdentityClosedHandoffConstruction_of_recognizer` captures the core lemma for this local construction. -/
     stageInputIdentityClosedHandoffConstruction_of_recognizer
     {recognizer : MachineDescription}
     (hrecognizer : StageInputRecognizerSpec recognizer) :

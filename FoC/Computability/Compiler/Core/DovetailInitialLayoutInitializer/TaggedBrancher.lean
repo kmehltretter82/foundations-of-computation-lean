@@ -110,9 +110,9 @@ theorem sharedExitRetargetTransition_sameKey_source
   constructor
   · exact Nat.add_left_cancel h.left
   · exact h.right
+     /-- `restoreFirstBitTaggedBrancherDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `restoreFirstBitTaggedBrancherDescription_subroutineReady` packages a subroutine-ready composition step. -/
     restoreFirstBitTaggedBrancherDescription_subroutineReady
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
@@ -389,9 +389,9 @@ theorem
         ⟨base, _hbase, rfl⟩ |
         ⟨base, _hbase, rfl⟩ |
         ⟨base, _hbase, rfl⟩ <;> simp <;> omega
+     /-- `restoreFirstBitTaggedBrancherDescription_lookup_blank` captures the core lemma for this local construction. -/
 
 theorem
-     /-- `restoreFirstBitTaggedBrancherDescription_lookup_blank` captures the core lemma for this local construction. -/
     restoreFirstBitTaggedBrancherDescription_lookup_blank
     {blankBranch falseBranch trueBranch : MachineDescription}
     (_hblank : blankBranch.SubroutineReady)
@@ -631,9 +631,9 @@ theorem
       List.find? (MachineDescription.Matches state cell)
         blankBranch.transitions <;>
     simp
+     /-- `restoreFirstBitTaggedBrancherDescription_step_blank` captures the core lemma for this local construction. -/
 
 theorem
-     /-- `restoreFirstBitTaggedBrancherDescription_step_blank` captures the core lemma for this local construction. -/
     restoreFirstBitTaggedBrancherDescription_step_blank
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
@@ -774,9 +774,9 @@ theorem restoreFirstBitTaggedBrancherDescription_run_none
   rw [hn]
   simp [RestoreFirstBitTaggedBrancherDescription,
     sharedExitBranchConfiguration]
+     /-- `restoreFirstBitTaggedBrancherDescription_lookup_false` captures the core lemma for this local construction. -/
 
 theorem
-     /-- `restoreFirstBitTaggedBrancherDescription_lookup_false` captures the core lemma for this local construction. -/
     restoreFirstBitTaggedBrancherDescription_lookup_false
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
@@ -1028,9 +1028,9 @@ theorem
       List.find? (MachineDescription.Matches state cell)
         falseBranch.transitions <;>
     simp
+     /-- `restoreFirstBitTaggedBrancherDescription_step_false` captures the core lemma for this local construction. -/
 
 theorem
-     /-- `restoreFirstBitTaggedBrancherDescription_step_false` captures the core lemma for this local construction. -/
     restoreFirstBitTaggedBrancherDescription_step_false
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
@@ -1110,9 +1110,9 @@ theorem restoreFirstBitTaggedBrancherDescription_run_false_branch
           have hnextState : next.state < falseBranch.stateCount :=
             MachineDescription.stepConfig_state_bound hfalse.left hstep
           simp [MachineDescription.runConfig, hstep, ih next hnextState]
+     /-- `restoreFirstBitTaggedBrancherDescription_run_false` states the corresponding theorem run form. -/
 
 theorem
-     /-- `restoreFirstBitTaggedBrancherDescription_run_false` states the corresponding theorem run form. -/
     restoreFirstBitTaggedBrancherDescription_run_false
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
@@ -1180,9 +1180,9 @@ theorem
   rw [hn]
   simp [RestoreFirstBitTaggedBrancherDescription,
     sharedExitBranchConfiguration]
+     /-- `restoreFirstBitTaggedBrancherDescription_lookup_true` captures the core lemma for this local construction. -/
 
 theorem
-     /-- `restoreFirstBitTaggedBrancherDescription_lookup_true` captures the core lemma for this local construction. -/
     restoreFirstBitTaggedBrancherDescription_lookup_true
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
@@ -1459,9 +1459,9 @@ theorem
       List.find? (MachineDescription.Matches state cell)
         trueBranch.transitions <;>
     simp
+     /-- `restoreFirstBitTaggedBrancherDescription_step_true` captures the core lemma for this local construction. -/
 
 theorem
-     /-- `restoreFirstBitTaggedBrancherDescription_step_true` captures the core lemma for this local construction. -/
     restoreFirstBitTaggedBrancherDescription_step_true
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)

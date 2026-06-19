@@ -24,9 +24,9 @@ def DescriptionWithValidatorCopier
     (DescriptionWithCopier
       accept reject copier)
     Direction.left
+     /-- `descriptionWithValidatorCopier_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
-     /-- `descriptionWithValidatorCopier_subroutineReady` packages a subroutine-ready composition step. -/
     descriptionWithValidatorCopier_subroutineReady
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
@@ -37,9 +37,9 @@ theorem
     hvalidator.left
     (descriptionWithCopier_subroutineReady
       hcopier)
+     /-- `descriptionWithValidatorCopier_run_bits` states the corresponding theorem run form. -/
 
 theorem
-     /-- `descriptionWithValidatorCopier_run_bits` states the corresponding theorem run form. -/
     descriptionWithValidatorCopier_run_bits
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
@@ -120,9 +120,9 @@ theorem
   refine ⟨n, ?_⟩
   simpa [DescriptionWithValidatorCopier,
     A, B, MachineDescription.initial, stageInputBits] using hn
+     /-- `descriptionWithValidatorCopier_forward` captures the core lemma for this local construction. -/
 
 theorem
-     /-- `descriptionWithValidatorCopier_forward` captures the core lemma for this local construction. -/
     descriptionWithValidatorCopier_forward
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
@@ -143,9 +143,9 @@ theorem
         congrArg MachineDescription.Configuration.state hn
     · simpa [MachineDescription.HaltsWithTapeIn] using
         congrArg MachineDescription.Configuration.tape hn⟩
+     /-- `descriptionWithValidatorCopier_closed` captures the core lemma for this local construction. -/
 
 theorem
-     /-- `descriptionWithValidatorCopier_closed` captures the core lemma for this local construction. -/
     descriptionWithValidatorCopier_closed
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
