@@ -88,12 +88,8 @@ def EncodedDovetailLayoutBoundedRunnerRewriterConstruction :
 def EncodedDovetailTotalOutputEmitterRewriterConstruction :
     Prop :=
   exists emitter : MachineDescription,
-    emitter.SubroutineReady ∧
-      forall code out : Word MachineCodeSymbol,
-        emitter.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput code)
-            (MachineDescription.encodeCodeWordAsInput out) <->
-          PairedRecognizerDovetailTotalOutputCode.transform code = some out
+    TapeCodePrimitiveOutputSubroutineRealizedByDescription
+      PairedRecognizerDovetailTotalOutputCode emitter
 
 def EncodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction :
     Prop :=
@@ -286,9 +282,7 @@ theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
 
 theorem encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold :
     EncodedDovetailTotalOutputEmitterRewriterConstruction := by
-  exact
-    encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine
-      EncodedRewriters.TotalOutputEmitter.outputCompiledSubroutine
+  exact EncodedRewriters.TotalOutputEmitter.outputRealizedSubroutine
 
 theorem encodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction_scaffold :
     EncodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction :=

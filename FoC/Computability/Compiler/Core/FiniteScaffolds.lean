@@ -86,12 +86,11 @@ theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstructio
       (P := PairedRecognizerDovetailLayoutCode accept reject)
       (h accept reject)
 
-theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_of_encodedRewriter
+theorem pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_of_encodedRewriter
     (h :
       EncodedDovetailTotalOutputEmitterRewriterConstruction) :
-    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction :=
-  encodedTapeCodePrimitiveOutputCompiledSubroutineConstruction_of_rewriter
-    (P := PairedRecognizerDovetailTotalOutputCode) h
+    PairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction :=
+  h
 
 theorem pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_of_encodedRewriter
     (h :
@@ -174,9 +173,9 @@ theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstructio
     (pairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
       encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold)
 
-theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_scaffold :
-    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction :=
-  pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_of_encodedRewriter
+theorem pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_scaffold :
+    PairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction :=
+  pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_of_encodedRewriter
     encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold
 
 theorem pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_scaffold :

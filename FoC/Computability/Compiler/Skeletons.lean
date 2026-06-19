@@ -196,8 +196,134 @@ theorem pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstructio
             (PairedRecognizerDovetailLayoutCode accept reject))
           PairedRecognizerDovetailTotalOutputCode)
         attempt :=
-    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose_outputCompiled
-      hfirst hemitter
+    by
+      let firstCode :=
+        MachineDescription.TapeCodePrimitive.compose
+          (PairedRecognizerDovetailInitialLayoutCode accept reject)
+          (PairedRecognizerDovetailLayoutCode accept reject)
+      let totalCode :=
+        MachineDescription.TapeCodePrimitive.compose firstCode
+          PairedRecognizerDovetailTotalOutputCode
+      have hrealized :
+          TapeCodePrimitiveOutputSubroutineRealizedByDescription
+            totalCode attempt :=
+        tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose_output
+          (tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffRealized
+            hfirst)
+          hemitter
+      have hAready : initRunner.SubroutineReady :=
+        tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady
+          hfirst
+      have hBready : emitter.SubroutineReady :=
+        tapeCodePrimitiveOutputSubroutineRealizedByDescription_subroutineReady
+          hemitter
+      constructor
+      · constructor
+        · exact hrealized.left.left
+        · intro code out
+          constructor
+          · intro hhalt
+            rcases hhalt with ⟨n, hn⟩
+            let Tout : Tape Bool :=
+              (attempt.runConfig n
+                (attempt.initial
+                  (MachineDescription.encodeCodeWordAsInput code))).tape
+            have hSeqTape :
+                attempt.HaltsWithTape
+                  (MachineDescription.encodeCodeWordAsInput code) Tout := by
+              refine ⟨n, ?_⟩
+              exact ⟨hn.left, rfl⟩
+            have hToutNorm :
+                Tape.normalizedOutput Tout =
+                  MachineDescription.encodeCodeWordAsInput out :=
+              hn.right
+            rcases MachineDescription.seqSubroutine_haltsWithTape_inv
+                hAready hBready hSeqTape with
+              ⟨Tmid, hFirstTape, hEmitterReach⟩
+            rcases hfirst.right code Tmid hFirstTape with
+              ⟨mid, hFirstCode, _hmidNorm, hTmidMove⟩
+            have hmidLayout :
+                exists L : MachineDescription.DovetailLayout,
+                  mid = MachineDescription.DovetailLayout.encode L := by
+              unfold MachineDescription.TapeCodePrimitive.compose at hFirstCode
+              cases hinit :
+                  (PairedRecognizerDovetailInitialLayoutCode accept reject).transform
+                    code with
+              | none =>
+                  simp [hinit] at hFirstCode
+              | some initOut =>
+                  have hrunnerMid :
+                      (PairedRecognizerDovetailLayoutCode accept reject).transform
+                          initOut =
+                        some mid := by
+                    simpa [hinit] using hFirstCode
+                  rcases
+                      (pairedRecognizerDovetailLayoutCode_transform_eq_some_iff
+                        accept reject initOut mid).mp hrunnerMid with
+                    ⟨L, _hinitOut, hmid⟩
+                  exact ⟨MachineDescription.DovetailLayout.run
+                    accept reject L.stage L, hmid⟩
+            rcases hmidLayout with ⟨Lmid, hmid⟩
+            subst mid
+            let expected : Word MachineCodeSymbol :=
+              MachineDescription.encodeBoolWord
+                (MachineDescription.DovetailLayout.outputWordFromHits Lmid)
+            have hExpected :
+                PairedRecognizerDovetailTotalOutputCode.transform
+                    (MachineDescription.DovetailLayout.encode Lmid) =
+                  some expected := by
+              exact pairedRecognizerDovetailTotalOutputCode_encode Lmid
+            rcases hEmitterReach with ⟨nB, hBRun⟩
+            have hBRunInput :
+                emitter.runConfig nB
+                    (emitter.initial
+                      (MachineDescription.encodeCodeWordAsInput
+                        (MachineDescription.DovetailLayout.encode Lmid))) =
+                  { state := emitter.halt, tape := Tout } := by
+              change
+                emitter.runConfig nB
+                    { state := emitter.start,
+                      tape := Tape.input
+                        (MachineDescription.encodeCodeWordAsInput
+                          (MachineDescription.DovetailLayout.encode Lmid)) } =
+                  { state := emitter.halt, tape := Tout }
+              simpa [hTmidMove] using hBRun
+            have hBOut :
+                emitter.HaltsWithOutput
+                  (MachineDescription.encodeCodeWordAsInput
+                    (MachineDescription.DovetailLayout.encode Lmid))
+                  (MachineDescription.encodeCodeWordAsInput out) := by
+              refine ⟨nB, ?_⟩
+              constructor
+              · exact congrArg MachineDescription.Configuration.state
+                  hBRunInput
+              · change
+                  Tape.normalizedOutput
+                      (emitter.runConfig nB
+                        (emitter.initial
+                          (MachineDescription.encodeCodeWordAsInput
+                            (MachineDescription.DovetailLayout.encode Lmid)))).tape =
+                    MachineDescription.encodeCodeWordAsInput out
+                rw [hBRunInput]
+                exact hToutNorm
+            have hBExpected :
+                emitter.HaltsWithOutput
+                  (MachineDescription.encodeCodeWordAsInput
+                    (MachineDescription.DovetailLayout.encode Lmid))
+                  (MachineDescription.encodeCodeWordAsInput expected) :=
+              hemitter.left.right
+                (MachineDescription.DovetailLayout.encode Lmid)
+                expected hExpected
+            have hout : out = expected :=
+              haltsWithEncodedCodeOutput_functional_of_haltTransitionFree
+                hemitter.right hBOut hBExpected
+            exact
+              MachineDescription.TapeCodePrimitive.compose_transform_some
+                hFirstCode
+                (by simpa [hout] using hExpected)
+          · intro htransform
+            exact hrealized.left.right code out htransform
+      · exact hrealized.right
   simpa [PairedRecognizerDovetailTotalStageAttemptSourceCode,
     initRunner, attempt] using hsecond
 
@@ -206,7 +332,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineCon
   pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_of_finiteSourceComponents
     pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold
     pairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction_scaffold
-    pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_scaffold
+    pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_scaffold
     pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction_scaffold
 
 def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold :
@@ -265,11 +391,6 @@ theorem pairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequen
       hfirst hemitterRealized
   simpa [PairedRecognizerDovetailTotalStageAttemptSourceCode,
     initRunner, attempt] using hsecond
-
-theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction_scaffold :
-    PairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction :=
-  pairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction_of_outputCompiled
-    pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold
 
 theorem fixedDescriptionBoundedSimulatorPhaseRealizes_seq
     {entryTape midTape exitTape :

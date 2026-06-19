@@ -71,7 +71,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineCon
     (hrunner :
       PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction)
     (hemitter :
-      PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction)
+      PairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction)
     (hseq :
       PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction) :
     PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction := by
@@ -79,6 +79,10 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineCon
   rcases hinitializer accept reject with
     ⟨initializer, hinitializer⟩
   rcases hrunner accept reject with ⟨runner, hrunner⟩
+  change
+    exists emitter : MachineDescription,
+      TapeCodePrimitiveOutputSubroutineRealizedByDescription
+        PairedRecognizerDovetailTotalOutputCode emitter at hemitter
   rcases hemitter with ⟨emitter, hemitter⟩
   rcases hseq accept reject initializer runner emitter
       hinitializer hrunner hemitter with

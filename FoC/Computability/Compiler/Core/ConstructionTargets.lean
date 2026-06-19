@@ -217,6 +217,13 @@ def PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction :
       PairedRecognizerDovetailTotalOutputCode
       emitter
 
+def PairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction :
+    Prop :=
+  exists emitter : MachineDescription,
+    TapeCodePrimitiveOutputSubroutineRealizedByDescription
+      PairedRecognizerDovetailTotalOutputCode
+      emitter
+
 def PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction :
     Prop :=
   forall accept reject : MachineDescription,
@@ -272,7 +279,7 @@ def PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction :
     TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       (PairedRecognizerDovetailLayoutCode accept reject)
       runner tapeCodePrimitiveCodeWordHandoffMove ->
-    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+    TapeCodePrimitiveOutputSubroutineRealizedByDescription
       PairedRecognizerDovetailTotalOutputCode
       emitter ->
     exists attempt : MachineDescription,
