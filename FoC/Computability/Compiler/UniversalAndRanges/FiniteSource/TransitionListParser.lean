@@ -678,6 +678,24 @@ theorem transitionListParserMachine_step_returnLeft_none_boundary
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
+theorem transitionListParserMachine_step_returnLeft_none
+    (saved : Option MachineCodeSymbol)
+    (leftRev suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Step transitionListParserMachine
+      { state := TransitionListParserState.returnLeft saved
+        tape :=
+          transitionListParserOptionTape leftRev
+            (none :: suffix) }
+      { state :=
+          TransitionListParserState.findCount
+            (TransitionListParserMarker.saved saved)
+        tape :=
+          transitionListParserOptionTape
+            (none :: leftRev) suffix } := by
+  exact transitionListParserMachine_step_keep_right
+    (by simp [transitionListParserMachine,
+      transitionListParserKeep])
+
 theorem transitionListParserMachine_step_findCount_done
     (marker : TransitionListParserMarker)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
@@ -1423,6 +1441,51 @@ theorem transitionListParserMachine_returnLeft_withBoundary
             saved
             (List.append (leftTail.map some) [none])
             suffix (some leftHead) current)
+        (by
+          simpa [List.append_assoc] using htail)
+
+theorem transitionListParserMachine_returnLeft_toBoundary
+    (saved : Option MachineCodeSymbol)
+    (leftSymbols : Word MachineCodeSymbol)
+    (prefixLeft suffix : List (Option MachineCodeSymbol))
+    (current : MachineCodeSymbol) :
+    TuringMachine.Computes transitionListParserMachine
+      { state := TransitionListParserState.returnLeft saved
+        tape :=
+          transitionListParserOptionTape
+            (List.append (leftSymbols.map some)
+              (none :: prefixLeft))
+            (some current :: suffix) }
+      { state :=
+          TransitionListParserState.findCount
+            (TransitionListParserMarker.saved saved)
+        tape :=
+          transitionListParserOptionTape
+            (none :: prefixLeft)
+            (List.append (leftSymbols.reverse.map some)
+              (some current :: suffix)) } := by
+  induction leftSymbols generalizing current suffix with
+  | nil =>
+      exact
+        TuringMachine.Computes.step
+          (transitionListParserMachine_step_returnLeft_some_nonempty
+            saved prefixLeft suffix none current)
+          (by
+            simpa using
+              TuringMachine.Computes.step
+                (transitionListParserMachine_step_returnLeft_none
+                  saved prefixLeft (some current :: suffix))
+                (TuringMachine.Computes.refl _))
+  | cons leftHead leftTail ih =>
+      have htail := ih (some current :: suffix) leftHead
+      exact
+        TuringMachine.Computes.step
+          (transitionListParserMachine_step_returnLeft_some_nonempty
+            saved
+            (List.append (leftTail.map some) (none :: prefixLeft))
+            suffix
+            (some leftHead)
+            current)
           (by
             simpa [List.append_assoc] using htail)
 
@@ -1452,6 +1515,38 @@ theorem transitionListParserMachine_markPosition_returnLeft_noBoundary
       (transitionListParserMachine_returnLeft_noBoundary
         saved leftSymbols current
         (some MachineCodeSymbol.header :: suffix))
+
+theorem transitionListParserMachine_markPosition_returnLeft_toBoundary
+    (saved : Option MachineCodeSymbol)
+    (leftSymbols : Word MachineCodeSymbol)
+    (prefixLeft : List (Option MachineCodeSymbol))
+    (current : MachineCodeSymbol)
+    (suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Computes transitionListParserMachine
+      { state := TransitionListParserState.markPosition
+        tape :=
+          transitionListParserOptionTape
+            (some current ::
+              List.append (leftSymbols.map some) (none :: prefixLeft))
+            (saved :: suffix) }
+      { state :=
+          TransitionListParserState.findCount
+            (TransitionListParserMarker.saved saved)
+        tape :=
+          transitionListParserOptionTape (none :: prefixLeft)
+            (List.append (leftSymbols.reverse.map some)
+              (some current ::
+                some MachineCodeSymbol.header :: suffix)) } := by
+  exact
+    TuringMachine.Computes.step
+      (transitionListParserMachine_step_markPosition
+        saved
+        (List.append (leftSymbols.map some) (none :: prefixLeft))
+        suffix (some current))
+      (transitionListParserMachine_returnLeft_toBoundary
+        saved leftSymbols prefixLeft
+        (some MachineCodeSymbol.header :: suffix)
+        current)
 
 theorem transitionListParserMachine_markPosition_empty_returnLeft_noBoundary
     (leftSymbols : Word MachineCodeSymbol)
