@@ -87,10 +87,6 @@ theorem qreal_lower_iff (r q : QRat) :
     (qreal r).lower q <-> q < r :=
   Iff.rfl
 
-theorem qreal_lower {r q : QRat} (h : q < r) :
-    (qreal r).lower q :=
-  h
-
 instance : Zero Real where
   zero := qreal 0
 
@@ -122,22 +118,6 @@ instance : LE Real where
 instance : LT Real where
   lt := lt
 
-theorem le_def (x y : Real) :
-    x ≤ y <-> forall q, x.lower q -> y.lower q :=
-  Iff.rfl
-
-theorem lt_def (x y : Real) :
-    x < y <-> x ≤ y ∧ exists q, y.lower q ∧ ¬ x.lower q :=
-  Iff.rfl
-
-theorem le_refl (x : Real) : x ≤ x := by
-  intro q hq
-  exact hq
-
-theorem le_trans {x y z : Real} (hxy : x ≤ y) (hyz : y ≤ z) : x ≤ z := by
-  intro q hq
-  exact hyz q (hxy q hq)
-
 theorem le_antisymm {x y : Real} (hxy : x ≤ y) (hyx : y ≤ x) : x = y := by
   apply ext
   intro q
@@ -151,39 +131,6 @@ theorem lt_irrefl (x : Real) : ¬ x < x := by
   | intro q hq =>
       exact hq.right hq.left
 
-theorem lt_asymm {x y : Real} (h : x < y) : ¬ y < x := by
-  intro hyx
-  cases h.right with
-  | intro q hq =>
-      exact hq.right (hyx.left q hq.left)
-
-theorem lt_of_lt_of_le {x y z : Real} (hxy : x < y) (hyz : y ≤ z) : x < z := by
-  constructor
-  · exact le_trans hxy.left hyz
-  · cases hxy.right with
-    | intro q hq =>
-        exact Exists.intro q (And.intro (hyz q hq.left) hq.right)
-
-theorem lt_of_le_of_lt {x y z : Real} (hxy : x ≤ y) (hyz : y < z) : x < z := by
-  constructor
-  · exact le_trans hxy hyz.left
-  · cases hyz.right with
-    | intro q hq =>
-        exact Exists.intro q (And.intro hq.left (fun hx => hq.right (hxy q hx)))
-
-theorem lt_trans {x y z : Real} (hxy : x < y) (hyz : y < z) : x < z :=
-  lt_of_lt_of_le hxy hyz.left
-
-theorem qreal_le_of_qrat_lt_or_eq {a b : QRat} (h : a < b ∨ a = b) :
-    qreal a ≤ qreal b := by
-  intro q hqa
-  cases h with
-  | inl hab =>
-      exact QRat.lt_trans hqa hab
-  | inr heq =>
-      rw [heq] at hqa
-      exact hqa
-
 theorem qreal_lt_of_qrat_lt {a b : QRat} (h : a < b) :
     qreal a < qreal b := by
   constructor
@@ -193,30 +140,6 @@ theorem qreal_lt_of_qrat_lt {a b : QRat} (h : a < b) :
     | intro c hc =>
         exact Exists.intro c
           (And.intro hc.right (QRat.lt_asymm hc.left))
-
-theorem qrat_lt_of_qreal_lt {a b : QRat} (h : qreal a < qreal b) :
-    a < b := by
-  cases h.right with
-  | intro c hc =>
-      cases QRat.lt_trichotomy a b with
-      | inl hab =>
-          exact hab
-      | inr hrest =>
-          cases hrest with
-          | inl heq =>
-              have hca : c < a := by
-                rw [← heq] at hc
-                exact hc.left
-              exact False.elim (hc.right hca)
-          | inr hba =>
-              have hca : c < a := QRat.lt_trans hc.left hba
-              exact False.elim (hc.right hca)
-
-theorem qreal_lt_iff (a b : QRat) :
-    qreal a < qreal b <-> a < b := by
-  constructor
-  · exact qrat_lt_of_qreal_lt
-  · exact qreal_lt_of_qrat_lt
 
 theorem qreal_injective : Fn.Injective qreal := by
   intro a b h
@@ -234,13 +157,6 @@ theorem qreal_injective : Fn.Injective qreal := by
           rw [h] at hlt
           exact False.elim (lt_irrefl (qreal b) hlt)
 
-theorem qreal_eq_iff (a b : QRat) :
-    qreal a = qreal b <-> a = b := by
-  constructor
-  · exact qreal_injective
-  · intro h
-    rw [h]
-
 def Rational (x : Real) : Prop :=
   exists q : QRat, x = qreal q
 
@@ -250,23 +166,9 @@ def Irrational (x : Real) : Prop :=
 theorem rational_qreal (q : QRat) : Rational (qreal q) := by
   exact Exists.intro q rfl
 
-theorem rational_zero : Rational 0 := by
-  exact rational_qreal 0
-
-theorem rational_one : Rational 1 := by
-  exact rational_qreal 1
-
-theorem qreal_order_embedding {a b : QRat} :
-    qreal a < qreal b <-> a < b :=
-  qreal_lt_iff a b
-
 theorem qreal_order_preserving {a b : QRat} (h : a < b) :
     qreal a < qreal b :=
   qreal_lt_of_qrat_lt h
-
-theorem qreal_order_reflecting {a b : QRat} (h : qreal a < qreal b) :
-    a < b :=
-  qrat_lt_of_qreal_lt h
 
 theorem qreal_nonneg_iff (r : QRat) :
     (0 : Real) ≤ qreal r <-> ¬ r < 0 := by
@@ -758,22 +660,6 @@ theorem neg_add_cancel (x : Real) : -x + x = 0 := by
   rw [add_comm]
   exact add_neg_cancel x
 
-theorem add_left_cancel {a b c : Real} (h : a + b = a + c) : b = c := by
-  have hcong := congrArg (fun t : Real => -a + t) h
-  calc
-    b = 0 + b := (zero_add b).symm
-    _ = (-a + a) + b := by rw [neg_add_cancel]
-    _ = -a + (a + b) := add_assoc (-a) a b
-    _ = -a + (a + c) := hcong
-    _ = (-a + a) + c := (add_assoc (-a) a c).symm
-    _ = 0 + c := by rw [neg_add_cancel]
-    _ = c := zero_add c
-
-theorem add_right_cancel {a b c : Real} (h : b + a = c + a) : b = c := by
-  apply add_left_cancel (a := a)
-  rw [add_comm a b, add_comm a c]
-  exact h
-
 theorem add_neg_right_cancel (x y : Real) : (x + y) + -y = x := by
   calc
     (x + y) + -y = x + (y + -y) := add_assoc x y (-y)
@@ -821,10 +707,6 @@ theorem neg_add_add_left_cancel (x y : Real) : -(x + y) + x = -y := by
   calc
     (-(x + y) + x) + y = -(x + y) + (x + y) := add_assoc (-(x + y)) x y
     _ = 0 := neg_add_cancel (x + y)
-
-theorem neg_add_add_right_cancel (x y : Real) : -(x + y) + y = -x := by
-  rw [add_comm x y]
-  exact neg_add_add_left_cancel y x
 
 theorem eq_zero_of_nonneg_of_neg_nonneg {x : Real}
     (hx : (0 : Real) ≤ x) (hnx : (0 : Real) ≤ -x) : x = 0 := by

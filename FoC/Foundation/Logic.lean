@@ -202,15 +202,6 @@ theorem logicallyEquivalent_iff_iff_tautology (p q : PropForm Var) :
       cases hq : eval valuation q <;>
       simp [eval, hp, hq] at hv ⊢
 
-theorem logicallyEquivalent_refl (p : PropForm Var) : LogicallyEquivalent p p := by
-  intro valuation
-  rfl
-
-theorem logicallyEquivalent_symm {p q : PropForm Var}
-    (h : LogicallyEquivalent p q) : LogicallyEquivalent q p := by
-  intro valuation
-  exact (h valuation).symm
-
 theorem logicallyEquivalent_trans {p q r : PropForm Var}
     (hpq : LogicallyEquivalent p q) (hqr : LogicallyEquivalent q r) :
     LogicallyEquivalent p r := by
@@ -221,13 +212,6 @@ theorem first_substitution_law {p : PropForm Var} (h : Tautology p)
     (sigma : Var -> PropForm Var') : Tautology (subst sigma p) := by
   intro valuation
   rw [eval_subst sigma valuation p]
-  exact h (fun v => eval valuation (sigma v))
-
-theorem first_substitution_law_equiv {p q : PropForm Var}
-    (h : LogicallyEquivalent p q) (sigma : Var -> PropForm Var') :
-    LogicallyEquivalent (subst sigma p) (subst sigma q) := by
-  intro valuation
-  rw [eval_subst sigma valuation p, eval_subst sigma valuation q]
   exact h (fun v => eval valuation (sigma v))
 
 end PropForm

@@ -42,13 +42,9 @@ def Odd (n : Int) : Prop :=
 /-!
 # Divisibility algebra
 
-These lemmas collect the closure properties of divisibility under transitivity,
-zero, multiplication, addition, subtraction, and squaring.
+These lemmas collect the divisibility facts used by the Chapter 1 proofs:
+transitivity, multiplication on the right, and squaring.
 -/
-
-theorem divides_refl (n : Int) : Divides n n := by
-  exists 1
-  omega
 
 theorem divides_trans {a b c : Int}
     (hab : Divides a b) (hbc : Divides b c) : Divides a c := by
@@ -60,10 +56,6 @@ theorem divides_trans {a b c : Int}
           rw [hl, hk]
           ac_rfl
 
-theorem divides_zero (a : Int) : Divides a 0 := by
-  exists 0
-  omega
-
 theorem divides_mul_right {a b : Int} (h : Divides a b) (c : Int) :
     Divides a (b * c) := by
   cases h with
@@ -71,33 +63,6 @@ theorem divides_mul_right {a b : Int} (h : Divides a b) (c : Int) :
       exists k * c
       rw [hk]
       ac_rfl
-
-theorem divides_mul_left {a b : Int} (h : Divides a b) (c : Int) :
-    Divides a (c * b) := by
-  cases h with
-  | intro k hk =>
-      exists c * k
-      rw [hk]
-      ac_rfl
-
-theorem divides_add {a b c : Int}
-    (hab : Divides a b) (hac : Divides a c) : Divides a (b + c) := by
-  cases hab with
-  | intro k hk =>
-      cases hac with
-      | intro l hl =>
-          exists k + l
-          rw [hk, hl, Int.mul_add]
-
-theorem divides_sub {a b c : Int}
-    (hab : Divides a b) (hac : Divides a c) : Divides a (b - c) := by
-  cases hab with
-  | intro k hk =>
-      cases hac with
-      | intro l hl =>
-          exists k - l
-          rw [hk, hl]
-          rw [show a * (k - l) = a * k - a * l by rw [Int.mul_sub]]
 
 theorem divides_square_of_divides {a n : Int} (h : Divides a n) :
     Divides a (n * n) :=
@@ -113,9 +78,6 @@ the Chapter 1 proof examples.
 theorem even_of_double (k : Int) : Even (2 * k) := by
   exists k
 
-theorem odd_of_double_add_one (k : Int) : Odd (2 * k + 1) := by
-  exists k
-
 theorem three_odd : Odd 3 := by
   exists 1
 
@@ -126,10 +88,6 @@ theorem not_even_of_odd {n : Int} (hodd : Odd n) : ¬ Even n := by
       cases heven with
       | intro l hl =>
           omega
-
-theorem not_odd_of_even {n : Int} (heven : Even n) : ¬ Odd n := by
-  intro hodd
-  exact not_even_of_odd hodd heven
 
 theorem even_add {m n : Int} (hm : Even m) (hn : Even n) : Even (m + n) := by
   cases hm with
@@ -143,13 +101,6 @@ theorem even_mul_left {m n : Int} (hm : Even m) : Even (m * n) := by
   cases hm with
   | intro k hk =>
       exists k * n
-      rw [hk]
-      ac_rfl
-
-theorem even_mul_right {m n : Int} (hn : Even n) : Even (m * n) := by
-  cases hn with
-  | intro k hk =>
-      exists m * k
       rw [hk]
       ac_rfl
 

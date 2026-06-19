@@ -39,12 +39,6 @@ extensional equality and give the empty and singleton cases.
 def HasCardinality (A : FSet alpha) (n : Nat) : Prop :=
   exists xs : List alpha, ListUniquelyEnumerates xs A ∧ xs.length = n
 
-theorem hasCardinality_finite {A : FSet alpha} {n : Nat}
-    (h : HasCardinality A n) : FiniteWithNoDuplicates A := by
-  cases h with
-  | intro xs hxs =>
-      exact Exists.intro xs hxs.left
-
 theorem hasCardinality_of_equal {A B : FSet alpha} {n : Nat}
     (hAB : Equal A B) (hA : HasCardinality A n) : HasCardinality B n := by
   cases hA with
@@ -212,14 +206,6 @@ theorem union_cardinality_by_parts (leftOnly both rightOnly : Nat) :
     leftOnly + both + rightOnly =
       (leftOnly + both) + (both + rightOnly) - both := by
   omega
-
-/-!
-Mapping a finite list along a function preserves its length.  This is the list
-level statement behind finite cardinality transport.
--/
-theorem length_map (f : alpha -> beta) (xs : List alpha) :
-    (xs.map f).length = xs.length := by
-  exact List.length_map f
 
 /-!
 # Powersets

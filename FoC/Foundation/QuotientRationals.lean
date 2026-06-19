@@ -148,31 +148,6 @@ theorem toRat_ofInt (n : Int) :
   rw [← Rat.normalize_eq_mkRat (by decide : (1 : Nat) ≠ 0)]
   simp [Rat.normalize_eq]
 
-theorem toRat_ofNat (n : Nat) :
-    (ofNat n).toRat = (n : Rat) := by
-  rw [ofNat, toRat_ofInt]
-  rfl
-
-theorem toRat_ofPositiveRatRep (q : PositiveRatRep) :
-    (ofPositiveRatRep q).toRat = Rat.divInt q.num (q.den : Int) := by
-  rfl
-
-theorem toRat_ofRational (q : Rational) :
-    (ofRational q).toRat = Rat.divInt q.num q.den := by
-  change Rat.divInt (q.num * q.den.sign) (q.den.natAbs : Int) = Rat.divInt q.num q.den
-  apply (Rat.divInt_eq_divInt_iff
-    (Int.ofNat_ne_zero.mpr
-      (Nat.ne_of_gt (Int.natAbs_pos.mpr q.den_ne_zero)))
-    q.den_ne_zero).mpr
-  generalize hden : q.den = d
-  cases d with
-  | ofNat n =>
-      cases n with
-      | zero => exact False.elim (q.den_ne_zero hden)
-      | succ n => simp [Int.sign, Int.natAbs]
-  | negSucc n =>
-      simp [Int.sign, Int.natAbs, Int.negSucc_eq, Int.neg_mul_neg]
-
 theorem toRat_ofStdRat (q : Rat) :
     (ofStdRat q).toRat = q := by
   exact Rat.num_divInt_den q
@@ -190,10 +165,6 @@ theorem toRat_neg (p : RatPair) :
   unfold toRat neg
   rw [Rat.neg_divInt]
 
-theorem toRat_sub (p q : RatPair) :
-    (sub p q).toRat = p.toRat - q.toRat := by
-  simp [sub, toRat_add, toRat_neg, Rat.sub_eq_add_neg]
-
 theorem toRat_mul (p q : RatPair) :
     (mul p q).toRat = p.toRat * q.toRat := by
   unfold toRat mul
@@ -209,10 +180,6 @@ theorem neg_respects {p p' : RatPair}
     (hp : Rel p p') : Rel (neg p) (neg p') := by
   apply rel_of_toRat_eq
   rw [toRat_neg, toRat_neg, toRat_eq_of_rel hp]
-
-theorem sub_respects {p p' q q' : RatPair}
-    (hp : Rel p p') (hq : Rel q q') : Rel (sub p q) (sub p' q') := by
-  exact add_respects hp (neg_respects hq)
 
 theorem mul_respects {p p' q q' : RatPair}
     (hp : Rel p p') (hq : Rel q q') : Rel (mul p q) (mul p' q') := by
@@ -300,10 +267,6 @@ theorem rawLt_trans {p q r : RatPair}
 theorem rawLt_irrefl (p : RatPair) : ¬ RawLt p p := by
   unfold RawLt
   exact Int.lt_irrefl _
-
-theorem rawLt_asymm {p q : RatPair} (h : RawLt p q) : ¬ RawLt q p := by
-  unfold RawLt at h ⊢
-  exact Int.lt_asymm h
 
 theorem den_rat_pos (p : RatPair) : 0 < ((p.den : Int) : Rat) := by
   simpa [Rat.intCast_natCast] using
@@ -416,10 +379,6 @@ def toRat : QRat -> Rat :=
     intro p q h
     exact RatPair.toRat_eq_of_rel h)
 
-theorem toRat_mk (p : RatPair) :
-    toRat (mk p) = p.toRat :=
-  rfl
-
 theorem ext {x y : QRat} (h : toRat x = toRat y) : x = y := by
   revert h
   refine Quotient.inductionOn₂ x y ?_
@@ -518,14 +477,6 @@ theorem toRat_ofNat (n : Nat) :
   rw [ofNat, toRat_ofInt]
   rfl
 
-theorem toRat_ofPositiveRatRep (q : PositiveRatRep) :
-    toRat (ofPositiveRatRep q) = Rat.divInt q.num (q.den : Int) :=
-  RatPair.toRat_ofPositiveRatRep q
-
-theorem toRat_ofRational (q : Rational) :
-    toRat (ofRational q) = Rat.divInt q.num q.den :=
-  RatPair.toRat_ofRational q
-
 theorem toRat_ofStdRat (q : Rat) :
     toRat (ofStdRat q) = q :=
   RatPair.toRat_ofStdRat q
@@ -573,14 +524,6 @@ theorem toRat_div (x y : QRat) :
   change toRat (x * inv y) = toRat x / toRat y
   rw [show inv y = y⁻¹ by rfl, toRat_mul, toRat_inv, Rat.div_def]
 
-theorem add_eq_of_toRat (x y : QRat) :
-    toRat (x + y) = toRat x + toRat y :=
-  toRat_add x y
-
-theorem mul_eq_of_toRat (x y : QRat) :
-    toRat (x * y) = toRat x * toRat y :=
-  toRat_mul x y
-
 /-!
 # Order and density
 
@@ -598,16 +541,8 @@ def lt (x y : QRat) : Prop :=
 instance : LT QRat where
   lt := lt
 
-theorem lt_mk_iff (p q : RatPair) :
-    mk p < mk q <-> RatPair.RawLt p q :=
-  Iff.rfl
-
 theorem lt_mk_of_rawLt {p q : RatPair} (h : RatPair.RawLt p q) :
     mk p < mk q :=
-  h
-
-theorem rawLt_of_lt_mk {p q : RatPair} (h : mk p < mk q) :
-    RatPair.RawLt p q :=
   h
 
 theorem toRat_lt_of_lt {x y : QRat} (h : x < y) :
@@ -676,29 +611,6 @@ theorem ofNat_ne_zero {n : Nat} (hn : 0 < n) : ofNat n ≠ 0 := by
   rw [h] at hpos
   exact lt_irrefl 0 hpos
 
-theorem lt_iff_toRat_lt (x y : QRat) :
-    x < y <-> toRat x < toRat y := by
-  constructor
-  · exact toRat_lt_of_lt
-  · exact lt_of_toRat_lt
-
-theorem lt_iff_not_ge {x y : QRat} :
-    x < y <-> ¬ y < x ∧ x ≠ y := by
-  constructor
-  · intro h
-    constructor
-    · exact lt_asymm h
-    · intro hxy
-      rw [hxy] at h
-      exact lt_irrefl y h
-  · intro h
-    cases lt_trichotomy x y with
-    | inl hlt => exact hlt
-    | inr hrest =>
-        cases hrest with
-        | inl heq => exact False.elim (h.right heq)
-        | inr hgt => exact False.elim (h.left hgt)
-
 theorem density {x y : QRat} (h : x < y) :
     exists z : QRat, x < z ∧ z < y := by
   revert h
@@ -708,10 +620,6 @@ theorem density {x y : QRat} (h : x < y) :
   exact And.intro
     (RatPair.rawLt_left_midpoint h)
     (RatPair.rawLt_midpoint_right h)
-
-theorem exists_between {x y : QRat} (h : x < y) :
-    exists z : QRat, x < z ∧ z < y :=
-  density h
 
 theorem exists_lower_upper (x : QRat) :
     exists l u : QRat, l < x ∧ x < u := by
@@ -726,37 +634,6 @@ def le (x y : QRat) : Prop :=
 
 instance : LE QRat where
   le := le
-
-theorem le_def (x y : QRat) :
-    x ≤ y <-> ¬ y < x :=
-  Iff.rfl
-
-theorem le_refl (x : QRat) : x ≤ x := by
-  exact lt_irrefl x
-
-theorem le_of_lt {x y : QRat} (h : x < y) : x ≤ y := by
-  exact lt_asymm h
-
-theorem le_trans {x y z : QRat} (hxy : x ≤ y) (hyz : y ≤ z) : x ≤ z := by
-  intro hzx
-  cases lt_trichotomy x y with
-  | inl hxylt =>
-      exact hyz (lt_trans hzx hxylt)
-  | inr hrest =>
-      cases hrest with
-      | inl hxyEq =>
-          rw [hxyEq] at hzx
-          exact hyz hzx
-      | inr hyx =>
-          exact hxy hyx
-
-theorem le_antisymm {x y : QRat} (hxy : x ≤ y) (hyx : y ≤ x) : x = y := by
-  cases lt_trichotomy x y with
-  | inl hlt => exact False.elim (hyx hlt)
-  | inr hrest =>
-      cases hrest with
-      | inl heq => exact heq
-      | inr hgt => exact False.elim (hxy hgt)
 
 theorem eq_of_toRat_eq {x y : QRat} (h : toRat x = toRat y) : x = y :=
   toRat_injective h
@@ -796,9 +673,6 @@ theorem add_neg_cancel (x : QRat) : x + -x = 0 := by
   apply eq_of_toRat_eq
   rw [toRat_add, toRat_neg, toRat_zero, Rat.add_neg_cancel]
 
-theorem neg_add_cancel (x : QRat) : -x + x = 0 := by
-  rw [add_comm, add_neg_cancel]
-
 theorem sub_eq_add_neg (x y : QRat) : x - y = x + -y := rfl
 
 theorem add_lt_add_left {x y : QRat} (z : QRat) (h : x < y) :
@@ -822,12 +696,6 @@ theorem lt_of_add_lt_add_right {x y z : QRat} (h : x + z < y + z) : x < y := by
   have ht := toRat_lt_of_lt h
   rw [toRat_add, toRat_add] at ht
   exact (Rat.add_lt_add_right (c := toRat z)).mp ht
-
-theorem lt_of_add_lt_add_left {x y z : QRat} (h : z + x < z + y) : x < y := by
-  apply lt_of_toRat_lt
-  have ht := toRat_lt_of_lt h
-  rw [toRat_add, toRat_add] at ht
-  exact (Rat.add_lt_add_left (c := toRat z)).mp ht
 
 theorem neg_lt_neg {x y : QRat} (h : x < y) : -y < -x := by
   apply lt_of_toRat_lt
@@ -869,10 +737,6 @@ theorem lt_sub_right_iff_add_lt {a b c : QRat} :
     rw [toRat_add] at ht
     exact Rat.lt_sub_right_iff_add_lt.mpr ht
 
-theorem lt_add_iff_sub_lt {a b c : QRat} :
-    a < b + c <-> a - c < b :=
-  Iff.symm sub_lt_iff
-
 theorem exists_add_split_lt {q a b : QRat} (h : q < a + b) :
     exists u v : QRat, u < a ∧ v < b ∧ q < u + v := by
   have hqa : q - b < a := sub_lt_iff.mpr h
@@ -902,37 +766,18 @@ theorem mul_comm (x y : QRat) : x * y = y * x := by
   apply eq_of_toRat_eq
   rw [toRat_mul, toRat_mul, Rat.mul_comm]
 
-theorem mul_assoc (x y z : QRat) : (x * y) * z = x * (y * z) := by
-  apply eq_of_toRat_eq
-  rw [toRat_mul, toRat_mul, toRat_mul, toRat_mul, Rat.mul_assoc]
-
 theorem ofNat_mul (m n : Nat) :
     ofNat (m * n) = ofNat m * ofNat n := by
   apply eq_of_toRat_eq
   rw [toRat_ofNat, toRat_mul, toRat_ofNat, toRat_ofNat, Rat.natCast_mul]
 
-theorem ofNat_add (m n : Nat) :
-    ofNat (m + n) = ofNat m + ofNat n := by
-  apply eq_of_toRat_eq
-  rw [toRat_ofNat, toRat_add, toRat_ofNat, toRat_ofNat, Rat.natCast_add]
-
 theorem add_mul (x y z : QRat) : (x + y) * z = x * z + y * z := by
   apply eq_of_toRat_eq
   rw [toRat_mul, toRat_add, toRat_add, toRat_mul, toRat_mul, Rat.add_mul]
 
-theorem mul_add (x y z : QRat) : x * (y + z) = x * y + x * z := by
-  apply eq_of_toRat_eq
-  rw [toRat_mul, toRat_add, toRat_add, toRat_mul, toRat_mul, Rat.mul_add]
-
 theorem zero_lt_one : (0 : QRat) < 1 := by
   change RatPair.RawLt (RatPair.ofInt 0) (RatPair.ofInt 1)
   simp [RatPair.RawLt, RatPair.ofInt]
-
-theorem one_ne_zero : (1 : QRat) ≠ 0 := by
-  intro h
-  have hlt : (0 : QRat) < 1 := zero_lt_one
-  rw [h] at hlt
-  exact lt_irrefl 0 hlt
 
 theorem zero_mul (x : QRat) : 0 * x = 0 := by
   apply eq_of_toRat_eq
@@ -973,30 +818,6 @@ theorem mul_pos {x y : QRat} (hx : 0 < x) (hy : 0 < y) :
   apply lt_of_toRat_lt
   rw [toRat_zero, toRat_mul]
   exact Rat.mul_pos (toRat_lt_of_lt hx) (toRat_lt_of_lt hy)
-
-theorem eq_zero_of_not_lt_zero_of_not_zero_lt {x : QRat}
-    (hneg : ¬ x < 0) (hpos : ¬ 0 < x) : x = 0 := by
-  cases lt_trichotomy x 0 with
-  | inl hx0 =>
-      exact False.elim (hneg hx0)
-  | inr hrest =>
-      cases hrest with
-      | inl hx0 =>
-          exact hx0
-      | inr h0x =>
-          exact False.elim (hpos h0x)
-
-theorem pos_of_not_lt_zero_of_ne_zero {x : QRat}
-    (hneg : ¬ x < 0) (hne : x ≠ 0) : 0 < x := by
-  cases lt_trichotomy 0 x with
-  | inl hpos =>
-      exact hpos
-  | inr hrest =>
-      cases hrest with
-      | inl hzero =>
-          exact False.elim (hne hzero.symm)
-      | inr hx0 =>
-          exact False.elim (hneg hx0)
 
 theorem zero_lt_of_not_lt_zero_of_lt {x y : QRat}
     (hx : ¬ x < 0) (hxy : x < y) : 0 < y := by
@@ -1099,49 +920,12 @@ theorem pos_of_nonneg_mul_pos_right {x y : QRat}
   rw [mul_comm] at hxy
   exact pos_of_nonneg_mul_pos_left hy hx hxy
 
-theorem square_nonneg (x : QRat) : ¬ x * x < 0 := by
-  intro hsq
-  cases lt_trichotomy 0 x with
-  | inl hxpos =>
-      exact lt_asymm (mul_pos hxpos hxpos) hsq
-  | inr hrest =>
-      cases hrest with
-      | inl hxzero =>
-          rw [← hxzero, zero_mul] at hsq
-          exact lt_irrefl 0 hsq
-      | inr hxneg =>
-          have hnegpos : 0 < -x := neg_pos_of_neg hxneg
-          have hpos : 0 < (-x) * (-x) := mul_pos hnegpos hnegpos
-          rw [neg_mul_neg] at hpos
-          exact lt_asymm hpos hsq
-
-theorem square_pos_of_ne_zero (x : QRat) (hx : x ≠ 0) : 0 < x * x := by
-  cases lt_trichotomy 0 x with
-  | inl hxpos =>
-      exact mul_pos hxpos hxpos
-  | inr hrest =>
-      cases hrest with
-      | inl hxzero =>
-          exact False.elim (hx hxzero.symm)
-      | inr hxneg =>
-          have hnegpos : 0 < -x := neg_pos_of_neg hxneg
-          have hpos : 0 < (-x) * (-x) := mul_pos hnegpos hnegpos
-          rwa [neg_mul_neg] at hpos
-
 theorem lt_of_mul_lt_mul_left {x y c : QRat}
     (hxy : c * x < c * y) (hc : 0 < c) : x < y := by
   apply lt_of_toRat_lt
   have ht := toRat_lt_of_lt hxy
   rw [toRat_mul, toRat_mul] at ht
   exact Rat.lt_of_mul_lt_mul_left ht
-    (Rat.le_of_lt (toRat_lt_of_lt hc))
-
-theorem lt_of_mul_lt_mul_right {x y c : QRat}
-    (hxy : x * c < y * c) (hc : 0 < c) : x < y := by
-  apply lt_of_toRat_lt
-  have ht := toRat_lt_of_lt hxy
-  rw [toRat_mul, toRat_mul] at ht
-  exact Rat.lt_of_mul_lt_mul_right ht
     (Rat.le_of_lt (toRat_lt_of_lt hc))
 
 theorem div_lt_iff {x y c : QRat} (hy : 0 < y) :
@@ -1200,37 +984,11 @@ theorem lt_div_iff {x y c : QRat} (hc : 0 < c) :
     rw [toRat_mul] at ht
     exact Rat.lt_div_iff (toRat_lt_of_lt hc) |>.mpr ht
 
-theorem div_mul_cancel (x : QRat) {y : QRat} (hy : y ≠ 0) :
-    x / y * y = x := by
-  apply eq_of_toRat_eq
-  rw [toRat_mul, toRat_div]
-  exact Rat.div_mul_cancel (toRat_ne_zero_of_ne_zero hy)
-
 theorem mul_div_cancel (x : QRat) {y : QRat} (hy : y ≠ 0) :
     x * y / y = x := by
   apply eq_of_toRat_eq
   rw [toRat_div, toRat_mul]
   exact Rat.mul_div_cancel (toRat_ne_zero_of_ne_zero hy)
-
-theorem inv_mul_cancel {x : QRat} (hx : x ≠ 0) : x⁻¹ * x = 1 := by
-  calc
-    x⁻¹ * x = (1 * x⁻¹) * x := by rw [one_mul]
-    _ = 1 / x * x := rfl
-    _ = 1 := div_mul_cancel 1 hx
-
-theorem mul_inv_cancel {x : QRat} (hx : x ≠ 0) : x * x⁻¹ = 1 := by
-  rw [mul_comm]
-  exact inv_mul_cancel hx
-
-theorem div_self {x : QRat} (hx : x ≠ 0) : x / x = 1 := by
-  exact mul_inv_cancel hx
-
-theorem inv_ne_zero {x : QRat} (hx : x ≠ 0) : x⁻¹ ≠ 0 := by
-  intro hinv
-  have hmul := congrArg (fun t : QRat => t * x) hinv
-  change x⁻¹ * x = 0 * x at hmul
-  rw [inv_mul_cancel hx, zero_mul] at hmul
-  exact one_ne_zero hmul
 
 theorem exists_nat_mul_pos_gt (z : QRat) {c : QRat} (hc : 0 < c) :
     exists n : Nat, z < ofNat n * c := by
@@ -1468,11 +1226,6 @@ theorem sqrtTwoApproxDen_gt_self (n : Nat) : n < sqrtTwoApproxDen n := by
   have h := sqrtTwoApproxDen_linear_growth n
   omega
 
-theorem exists_sqrtTwoApproxDen_gt (bound : Nat) :
-    exists n : Nat, bound < sqrtTwoApproxDen n := by
-  exists bound
-  exact sqrtTwoApproxDen_gt_self bound
-
 def sqrtTwoApprox (n : Nat) : QRat :=
   natFrac (sqrtTwoApproxNum n) (sqrtTwoApproxDen n) (sqrtTwoApproxDen_pos n)
 
@@ -1578,11 +1331,6 @@ theorem sqrtThreeApproxDen_gt_self (n : Nat) : n < sqrtThreeApproxDen n := by
   have h := sqrtThreeApproxDen_linear_growth n
   omega
 
-theorem exists_sqrtThreeApproxDen_gt (bound : Nat) :
-    exists n : Nat, bound < sqrtThreeApproxDen n := by
-  exists bound
-  exact sqrtThreeApproxDen_gt_self bound
-
 def sqrtThreeApprox (n : Nat) : QRat :=
   natFrac (sqrtThreeApproxNum n) (sqrtThreeApproxDen n) (sqrtThreeApproxDen_pos n)
 
@@ -1652,9 +1400,6 @@ rationals back to the irrationality cores for square roots of two and three.
 def powNat (x : QRat) : Nat -> QRat
   | 0 => 1
   | n + 1 => powNat x n * x
-
-theorem powNat_zero (x : QRat) : powNat x 0 = 1 :=
-  rfl
 
 theorem powNat_succ (x : QRat) (n : Nat) :
     powNat x (n + 1) = powNat x n * x :=

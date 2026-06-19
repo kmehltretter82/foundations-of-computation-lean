@@ -76,15 +76,6 @@ Equivalence relations determine classes, and those classes form a partition of
 the underlying type.
 -/
 
-theorem equivalence_reflexive {R : Rel alpha} (h : Equivalence R) : Reflexive R :=
-  h.left
-
-theorem equivalence_symmetric {R : Rel alpha} (h : Equivalence R) : Symmetric R :=
-  h.right.left
-
-theorem equivalence_transitive {R : Rel alpha} (h : Equivalence R) : Transitive R :=
-  h.right.right
-
 theorem equality_equivalence : Equivalence (fun x y : alpha => x = y) := by
   constructor
   · intro x

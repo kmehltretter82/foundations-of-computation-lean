@@ -92,23 +92,6 @@ theorem mulNonneg_zero_right (x : Real)
   · intro hq0
     exact Or.inl hq0
 
-theorem mulNonneg_zero_left (x : Real)
-    (h0 : (0 : Real) ≤ qreal 0) (hx : (0 : Real) ≤ x) :
-    mulNonneg (qreal 0) x h0 hx = 0 := by
-  apply ext
-  intro q
-  change (mulNonneg (qreal 0) x h0 hx).lower q ↔ q < 0
-  constructor
-  · intro hq
-    cases hq with
-    | inl hq0 =>
-        exact hq0
-    | inr hprod =>
-        rcases hprod with ⟨a, _b, ha0, _hb0, hazero, _hb, _hqab⟩
-        exact False.elim (QRat.lt_asymm ha0 hazero)
-  · intro hq0
-    exact Or.inl hq0
-
 theorem qreal_mulNonneg_neg_right {a b : QRat}
     (ha : (0 : Real) ≤ qreal a) (hb : (0 : Real) ≤ -qreal b) :
     mulNonneg (qreal a) (-qreal b) ha hb = qreal (a * -b) := by
@@ -254,22 +237,6 @@ theorem mul_one (x : Real) : x * 1 = x := by
   · simp [h1, hx]
     change -mulNonneg (-x) (qreal 1) (nonneg_neg_of_not_nonneg hx) h1 = x
     rw [mulNonneg_one_right (-x) (nonneg_neg_of_not_nonneg hx) h1, neg_neg]
-
-theorem zero_mul (x : Real) : 0 * x = 0 := by
-  classical
-  change mul 0 x = 0
-  unfold mul
-  have h0 : (0 : Real) ≤ (0 : Real) := by
-    intro q hq0
-    exact hq0
-  by_cases hx : (0 : Real) ≤ x
-  · simp [h0, hx]
-    change mulNonneg (qreal 0) x h0 hx = 0
-    exact mulNonneg_zero_left x h0 hx
-  · simp [h0, hx]
-    change -mulNonneg (qreal 0) (-x) h0 (nonneg_neg_of_not_nonneg hx) = 0
-    rw [mulNonneg_zero_left (-x) h0 (nonneg_neg_of_not_nonneg hx)]
-    apply qreal_neg
 
 theorem mul_zero (x : Real) : x * 0 = 0 := by
   classical
@@ -506,13 +473,6 @@ noncomputable def powNat (x : Real) : Nat -> Real
   | 0 => 1
   | n + 1 => powNat x n * x
 
-theorem powNat_zero (x : Real) : powNat x 0 = 1 :=
-  rfl
-
-theorem powNat_succ (x : Real) (n : Nat) :
-    powNat x (n + 1) = powNat x n * x :=
-  rfl
-
 theorem qreal_powNat (q : QRat) (n : Nat) :
     powNat (qreal q) n = qreal (QRat.powNat q n) := by
   induction n with
@@ -524,13 +484,6 @@ theorem qreal_powNat (q : QRat) (n : Nat) :
         _ = qreal (QRat.powNat q n) * qreal q := by rw [ih]
         _ = qreal (QRat.powNat q n * q) := qreal_mul (QRat.powNat q n) q
         _ = qreal (QRat.powNat q (n + 1)) := rfl
-
-theorem rational_powNat {x : Real} (n : Nat)
-    (hx : Rational x) : Rational (powNat x n) := by
-  cases hx with
-  | intro q hxq =>
-      exists QRat.powNat q n
-      rw [hxq, qreal_powNat]
 
 def scalePos (c : QRat) (hc : 0 < c) (x : Real) : Real where
   lower := fun q => exists a, x.lower a ∧ q < c * a
@@ -723,13 +676,6 @@ theorem qreal_divByQ (r q : QRat) (hq : q ≠ 0) :
     _ = qreal (r / q) := by
         change qreal (q⁻¹ * r) = qreal (r * q⁻¹)
         rw [QRat.mul_comm]
-
-theorem rational_divByQ {x : Real} {q : QRat}
-    (hq : q ≠ 0) (hx : Rational x) : Rational (divByQ x q hq) := by
-  cases hx with
-  | intro r hxr =>
-      exists r / q
-      rw [hxr, qreal_divByQ]
 
 /-!
 # Square-root cuts and irrationality bridges

@@ -398,6 +398,7 @@ theorem pathRegex_sound (alphabet : List alpha) (M : DFA alpha state)
     (states : List state) {q r : state} {w : Word alpha}
     (hw : w ∈ RegExp.Denote (PathRegex alphabet M states q r)) :
     DFA.RunFrom M q w = r := by
+  classical
   induction states generalizing q r w with
   | nil =>
       unfold PathRegex at hw

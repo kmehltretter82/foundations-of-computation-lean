@@ -43,19 +43,11 @@ def WeightedPowerTerm (i : Nat) : Nat :=
 /-!
 # Unfolding laws
 
-These equations expose the base and successor cases used in induction proofs.
+These equations expose the successor cases used in induction proofs.
 -/
-
-theorem SumUpTo.zero (f : Nat -> Nat) :
-    SumUpTo f 0 = 0 :=
-  rfl
 
 theorem SumUpTo.succ (f : Nat -> Nat) (n : Nat) :
     SumUpTo f (n + 1) = SumUpTo f n + f (n + 1) :=
-  rfl
-
-theorem SumZeroTo.zero (f : Nat -> Nat) :
-    SumZeroTo f 0 = f 0 :=
   rfl
 
 theorem SumZeroTo.succ (f : Nat -> Nat) (n : Nat) :

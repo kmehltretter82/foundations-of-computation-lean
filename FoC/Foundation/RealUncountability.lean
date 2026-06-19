@@ -221,10 +221,6 @@ def streamToReal (s : DigitStream) : Real where
             exists r
             exact And.intro hr.left (Exists.intro n hr.right)
 
-theorem streamToReal_lower_iff (s : DigitStream) (q : QRat) :
-    (streamToReal s).lower q <-> exists n : Nat, q < streamPartial s n :=
-  Iff.rfl
-
 theorem not_streamToReal_lower_probe_of_false {s : DigitStream} {m : Nat}
     (hfalse : s m = false) :
     ¬ (streamToReal s).lower (streamProbe (cantorNumerator s m) m) := by

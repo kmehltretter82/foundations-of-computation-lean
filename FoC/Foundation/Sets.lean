@@ -89,52 +89,10 @@ def ListInter : List (FSet alpha) -> FSet alpha
   | A :: As => Inter A (ListInter As)
 
 /-!
-# Membership laws
-
-The first theorems unfold membership for the primitive set constructors.
--/
-
-theorem mem_empty (x : alpha) : x ∈ (Empty : FSet alpha) <-> False :=
-  Iff.rfl
-
-theorem mem_univ (x : alpha) : x ∈ (Univ : FSet alpha) <-> True :=
-  Iff.rfl
-
-theorem mem_singleton (x a : alpha) : x ∈ Singleton a <-> x = a :=
-  Iff.rfl
-
-theorem mem_pair (x a b : alpha) : x ∈ Pair a b <-> x = a ∨ x = b :=
-  Iff.rfl
-
-theorem mem_union (x : alpha) (A B : FSet alpha) :
-    x ∈ Union A B <-> x ∈ A ∨ x ∈ B :=
-  Iff.rfl
-
-theorem mem_inter (x : alpha) (A B : FSet alpha) :
-    x ∈ Inter A B <-> x ∈ A ∧ x ∈ B :=
-  Iff.rfl
-
-theorem mem_compl (x : alpha) (A : FSet alpha) :
-    x ∈ Compl A <-> ¬ x ∈ A :=
-  Iff.rfl
-
-theorem mem_diff (x : alpha) (A B : FSet alpha) :
-    x ∈ Diff A B <-> x ∈ A ∧ ¬ x ∈ B :=
-  Iff.rfl
-
-theorem mem_powerset (B A : FSet alpha) :
-    B ∈ Powerset A <-> Subset B A :=
-  Iff.rfl
-
-/-!
 # Subsets and extensional equality
 
 Subset and equality lemmas provide the basic rewriting API for predicate sets.
 -/
-
-theorem subset_refl (A : FSet alpha) : Subset A A := by
-  intro x hx
-  exact hx
 
 theorem subset_trans {A B C : FSet alpha}
     (hAB : Subset A B) (hBC : Subset B C) : Subset A C := by
@@ -171,25 +129,6 @@ theorem equal_of_subsets {A B : FSet alpha}
   · intro hx
     exact hBA x hx
 
-theorem subset_of_equal_left {A B C : FSet alpha}
-    (hAB : Equal A B) (hBC : Subset B C) : Subset A C := by
-  intro x hx
-  exact hBC x ((hAB x).mp hx)
-
-theorem subset_of_equal_right {A B C : FSet alpha}
-    (hAB : Subset A B) (hBC : Equal B C) : Subset A C := by
-  intro x hx
-  exact (hBC x).mp (hAB x hx)
-
-theorem proper_subset_subset {A B : FSet alpha}
-    (h : ProperSubset A B) : Subset A B :=
-  h.left
-
-theorem not_equal_of_mem_not_mem {A B : FSet alpha} {x : alpha}
-    (hA : x ∈ A) (hB : ¬ x ∈ B) : ¬ Equal A B := by
-  intro h
-  exact hB ((h x).mp hA)
-
 /-!
 # Boolean algebra of sets
 
@@ -201,24 +140,9 @@ theorem union_left_subset (A B : FSet alpha) : Subset A (Union A B) := by
   intro x hx
   exact Or.inl hx
 
-theorem union_right_subset (A B : FSet alpha) : Subset B (Union A B) := by
-  intro x hx
-  exact Or.inr hx
-
-theorem inter_subset_left (A B : FSet alpha) : Subset (Inter A B) A := by
-  intro x hx
-  exact hx.left
-
-theorem inter_subset_right (A B : FSet alpha) : Subset (Inter A B) B := by
-  intro x hx
-  exact hx.right
-
 theorem empty_subset (A : FSet alpha) : Subset Empty A := by
   intro x hx
   cases hx
-
-theorem subset_powerset_self (A : FSet alpha) : A ∈ Powerset A :=
-  subset_refl A
 
 theorem union_comm (A B : FSet alpha) : Equal (Union A B) (Union B A) := by
   intro x
@@ -281,9 +205,6 @@ theorem union_univ (A : FSet alpha) : Equal (Union A Univ) Univ := by
     exact True.intro
   · intro _
     exact Or.inr True.intro
-
-theorem univ_union (A : FSet alpha) : Equal (Union Univ A) Univ := by
-  exact equal_trans (union_comm Univ A) (union_univ A)
 
 theorem inter_comm (A B : FSet alpha) : Equal (Inter A B) (Inter B A) := by
   intro x
@@ -366,14 +287,6 @@ theorem diff_empty (A : FSet alpha) : Equal (Diff A Empty) A := by
   · intro hx
     exact And.intro hx (fun hEmpty => hEmpty)
 
-theorem empty_diff (A : FSet alpha) : Equal (Diff Empty A) Empty := by
-  intro x
-  constructor
-  · intro hx
-    exact hx.left
-  · intro hx
-    cases hx
-
 theorem diff_univ (A : FSet alpha) : Equal (Diff A Univ) Empty := by
   intro x
   constructor
@@ -381,32 +294,6 @@ theorem diff_univ (A : FSet alpha) : Equal (Diff A Univ) Empty := by
     exact hx.right True.intro
   · intro hx
     cases hx
-
-theorem union_subset_iff {A B C : FSet alpha} :
-    Subset (Union A B) C <-> Subset A C ∧ Subset B C := by
-  constructor
-  · intro h
-    constructor
-    · intro x hx
-      exact h x (Or.inl hx)
-    · intro x hx
-      exact h x (Or.inr hx)
-  · intro h x hx
-    cases hx with
-    | inl hA => exact h.left x hA
-    | inr hB => exact h.right x hB
-
-theorem subset_inter_iff {A B C : FSet alpha} :
-    Subset A (Inter B C) <-> Subset A B ∧ Subset A C := by
-  constructor
-  · intro h
-    constructor
-    · intro x hx
-      exact (h x hx).left
-    · intro x hx
-      exact (h x hx).right
-  · intro h x hx
-    exact And.intro (h.left x hx) (h.right x hx)
 
 theorem union_distrib_inter (A B C : FSet alpha) :
     Equal (Union A (Inter B C)) (Inter (Union A B) (Union A C)) := by
@@ -498,18 +385,6 @@ theorem demorgan_inter (A B : FSet alpha) :
     cases hx with
     | inl hnotA => exact hnotA hAB.left
     | inr hnotB => exact hnotB hAB.right
-
-theorem disjoint_iff_inter_empty (A B : FSet alpha) :
-    Disjoint A B <-> Equal (Inter A B) Empty := by
-  constructor
-  · intro h x
-    constructor
-    · intro hx
-      exact h x hx
-    · intro hx
-      cases hx
-  · intro h x hx
-    exact (h x).mp hx
 
 theorem compl_listUnion (sets : List (FSet alpha)) :
     Equal (Compl (ListUnion sets)) (ListInter (sets.map Compl)) := by

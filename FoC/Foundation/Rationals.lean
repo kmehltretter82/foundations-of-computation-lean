@@ -82,49 +82,13 @@ theorem representation_of_den_ne_zero {num den : Int}
     (hden : den ≠ 0) : IsRepresentation num den :=
   hden
 
-theorem add_num (x y : Rational) :
-    (add x y).num = x.num * y.den + y.num * x.den :=
-  rfl
-
-theorem add_den (x y : Rational) :
-    (add x y).den = x.den * y.den :=
-  rfl
-
 theorem add_den_ne_zero (x y : Rational) :
     (add x y).den ≠ 0 :=
   (add x y).den_ne_zero
 
-theorem neg_den (x : Rational) :
-    (neg x).den = x.den :=
-  rfl
-
-theorem neg_den_ne_zero (x : Rational) :
-    (neg x).den ≠ 0 :=
-  (neg x).den_ne_zero
-
-theorem sub_den_ne_zero (x y : Rational) :
-    (sub x y).den ≠ 0 :=
-  (sub x y).den_ne_zero
-
-theorem mul_num (x y : Rational) :
-    (mul x y).num = x.num * y.num :=
-  rfl
-
-theorem mul_den (x y : Rational) :
-    (mul x y).den = x.den * y.den :=
-  rfl
-
 theorem mul_den_ne_zero (x y : Rational) :
     (mul x y).den ≠ 0 :=
   (mul x y).den_ne_zero
-
-theorem inv_den_ne_zero (x : Rational) (h : x.num ≠ 0) :
-    (inv x h).den ≠ 0 :=
-  (inv x h).den_ne_zero
-
-theorem div_den_ne_zero (x y : Rational) (h : y.num ≠ 0) :
-    (div x y h).den ≠ 0 :=
-  (div x y h).den_ne_zero
 
 /-!
 # Representability checks
@@ -145,20 +109,6 @@ theorem mul_representation {a b c d : Int}
     (hb : b ≠ 0) (hd : d ≠ 0) :
     IsRepresentation (a * c) (b * d) :=
   Int.mul_ne_zero hb hd
-
-theorem add_representable {a b c d : Int}
-    (hb : b ≠ 0) (hd : d ≠ 0) :
-    exists r : Rational, r.num = a * d + c * b ∧ r.den = b * d := by
-  exact Exists.intro
-    { num := a * d + c * b, den := b * d, den_ne_zero := Int.mul_ne_zero hb hd }
-    (And.intro rfl rfl)
-
-theorem mul_representable {a b c d : Int}
-    (hb : b ≠ 0) (hd : d ≠ 0) :
-    exists r : Rational, r.num = a * c ∧ r.den = b * d := by
-  exact Exists.intro
-    { num := a * c, den := b * d, den_ne_zero := Int.mul_ne_zero hb hd }
-    (And.intro rfl rfl)
 
 end Rational
 

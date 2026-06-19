@@ -46,20 +46,9 @@ def ProductOfPrimes (n : Nat) : Prop :=
 theorem prime_gt_one {p : Nat} (hp : Prime p) : 1 < p :=
   hp.left
 
-theorem not_composite_of_prime {n : Nat} (hp : Prime n) : ¬ Composite n := by
-  intro hc
-  exact hc.right hp
-
 theorem divides_self (n : Nat) : NatPred.Divides n n := by
   exists 1
   rw [Nat.mul_one]
-
-theorem divides_mul_right {a b : Nat} (h : NatPred.Divides a b) (c : Nat) :
-    NatPred.Divides a (b * c) := by
-  cases h with
-  | intro k hk =>
-      exists k * c
-      rw [hk, Nat.mul_assoc]
 
 theorem divides_mul_left {a b : Nat} (h : NatPred.Divides a b) (c : Nat) :
     NatPred.Divides a (c * b) := by

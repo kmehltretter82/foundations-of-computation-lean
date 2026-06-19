@@ -15,9 +15,8 @@ enumeration.  This representation fits the book's "list the elements in a
 sequence" intuition while allowing enumerations to skip positions with
 {lean}`Option.none`.
 
-The module contains reusable constructions for empty sets, natural numbers,
-even naturals, finite sets, products, unions, integers, and selected diagonal
-arguments.
+The module contains reusable constructions for natural numbers, even naturals,
+finite sets, unions, integers, encodable lists, and selected diagonal arguments.
 
 ## Book coordinates
 
@@ -59,8 +58,7 @@ def InterleaveEnumerations (f g : Nat -> Option alpha) (n : Nat) : Option alpha 
 /-!
 # Basic enumerations
 
-The first examples enumerate the empty set, all natural numbers, and the even
-natural numbers.
+The first examples enumerate all natural numbers and the even natural numbers.
 -/
 
 theorem interleave_even (f g : Nat -> Option alpha) (n : Nat) :
@@ -73,17 +71,6 @@ theorem interleave_odd (f g : Nat -> Option alpha) (n : Nat) :
     rw [Nat.mul_add_div (by decide : 2 > 0)]
     simp
   simp [InterleaveEnumerations, hdiv]
-
-theorem empty_countable : Countable (Empty : FSet alpha) := by
-  exists fun _ => none
-  intro x
-  constructor
-  · intro hx
-    cases hx
-  · intro hx
-    cases hx with
-    | intro n hn =>
-        cases hn
 
 theorem nat_univ_countable : Countable (Univ : FSet Nat) := by
   exists fun n => some n
@@ -237,21 +224,6 @@ theorem uncountable_diff_countable_subset {X K : FSet alpha}
       · exact Or.inr (And.intro hxX hxK)
   · exact countable_union hK hdiff
 
-theorem exists_outside_of_uncountable_and_countable_cover {A B : FSet alpha}
-    (hA : Uncountable A)
-    (hsub_countable : forall C : FSet alpha, Subset C B -> Countable C) :
-    exists x, x ∈ A ∧ ¬ x ∈ B := by
-  classical
-  by_cases hex : exists x, x ∈ A ∧ ¬ x ∈ B
-  · exact hex
-  · exfalso
-    apply hA
-    apply hsub_countable A
-    intro x hxA
-    by_cases hxB : x ∈ B
-    · exact hxB
-    · exact False.elim (hex (Exists.intro x (And.intro hxA hxB)))
-
 end FSet
 
 namespace Countability
@@ -312,8 +284,8 @@ theorem int_encodable : EncodableByNat Int := by
 # Compound encodings
 
 Pairs, options, sums, products, and lists are encoded by combining natural
-number codes.  These are the reusable countability constructions used by later
-grammar and computability representations.
+number codes.  The list encoding is the reusable countability construction used
+by later grammar and computability representations.
 -/
 
 def PairCode : Nat -> Nat -> Nat
@@ -359,62 +331,14 @@ def OptionCode (code : alpha -> Nat) : Option alpha -> Nat
   | none => 0
   | some x => code x + 1
 
-theorem optionCode_injective {code : alpha -> Nat}
-    (hcode : Fn.Injective code) :
-    Fn.Injective (OptionCode code) := by
-  intro x y h
-  cases x <;> cases y <;> simp [OptionCode] at h ⊢
-  exact hcode h
-
-theorem option_encodable {alpha : Type u}
-    (hα : EncodableByNat alpha) :
-    EncodableByNat (Option alpha) := by
-  rcases hα with ⟨code, hcode⟩
-  exact ⟨OptionCode code, optionCode_injective hcode⟩
-
 def SumCode (leftCode : alpha -> Nat) (rightCode : beta -> Nat) :
     Sum alpha beta -> Nat
   | Sum.inl x => 2 * leftCode x
   | Sum.inr y => 2 * rightCode y + 1
 
-theorem sumCode_injective {leftCode : alpha -> Nat} {rightCode : beta -> Nat}
-    (hleft : Fn.Injective leftCode) (hright : Fn.Injective rightCode) :
-    Fn.Injective (SumCode leftCode rightCode) := by
-  intro x y h
-  cases x <;> cases y <;> simp [SumCode] at h ⊢
-  · exact hleft (by omega)
-  · omega
-  · omega
-  · exact hright (by omega)
-
-theorem sum_encodable {alpha : Type u} {beta : Type v}
-    (hα : EncodableByNat alpha) (hβ : EncodableByNat beta) :
-    EncodableByNat (Sum alpha beta) := by
-  rcases hα with ⟨leftCode, hleft⟩
-  rcases hβ with ⟨rightCode, hright⟩
-  exact ⟨SumCode leftCode rightCode,
-    sumCode_injective hleft hright⟩
-
 def ProdCode (leftCode : alpha -> Nat) (rightCode : beta -> Nat)
     (p : alpha × beta) : Nat :=
   PairCode (leftCode p.1) (rightCode p.2)
-
-theorem prodCode_injective {leftCode : alpha -> Nat} {rightCode : beta -> Nat}
-    (hleft : Fn.Injective leftCode) (hright : Fn.Injective rightCode) :
-    Fn.Injective (ProdCode leftCode rightCode) := by
-  intro x y h
-  rcases x with ⟨x₁, x₂⟩
-  rcases y with ⟨y₁, y₂⟩
-  rcases pairCode_injective_left h with ⟨h₁, h₂⟩
-  exact Prod.ext (hleft h₁) (hright h₂)
-
-theorem prod_encodable {alpha : Type u} {beta : Type v}
-    (hα : EncodableByNat alpha) (hβ : EncodableByNat beta) :
-    EncodableByNat (alpha × beta) := by
-  rcases hα with ⟨leftCode, hleft⟩
-  rcases hβ with ⟨rightCode, hright⟩
-  exact ⟨ProdCode leftCode rightCode,
-    prodCode_injective hleft hright⟩
 
 def ListCode (code : alpha -> Nat) : List alpha -> Nat
   | [] => 0
@@ -448,10 +372,11 @@ theorem listCode_injective {code : alpha -> Nat}
           rfl
 
 theorem list_encodable {alpha : Type u}
-    (hα : EncodableByNat alpha) :
-    EncodableByNat (List alpha) := by
-  rcases hα with ⟨code, hcode⟩
-  exact ⟨ListCode code, listCode_injective hcode⟩
+    (h : EncodableByNat alpha) : EncodableByNat (List alpha) := by
+  cases h with
+  | intro code hcode =>
+      exists ListCode code
+      exact listCode_injective hcode
 
 /-!
 # Diagonal pair enumeration
