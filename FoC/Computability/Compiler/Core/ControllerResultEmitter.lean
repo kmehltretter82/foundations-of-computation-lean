@@ -432,7 +432,7 @@ private theorem dovetailControllerResultEmitterDescription_run_bits
             (controllerResultEmitterUpdateCode boundary.toNat
               (controllerResultEmitterCodeOfBits bit0 bit1 bit2 bit3)) 0 0
         tape := MachineDescription.eraseRightTape (erased + 4) suffix } := by
-  rw [show 4 = 1 + 3 by omega, MachineDescription.runConfig_add]
+  rw [show 4 = 1 + 3 by decide, MachineDescription.runConfig_add]
   change
     DovetailControllerResultEmitterDescription.runConfig 3
         (DovetailControllerResultEmitterDescription.runConfig 1
@@ -446,7 +446,7 @@ private theorem dovetailControllerResultEmitterDescription_run_bits
               (controllerResultEmitterCodeOfBits bit0 bit1 bit2 bit3)) 0 0
         tape := MachineDescription.eraseRightTape (erased + 4) suffix }
   rw [dovetailControllerResultEmitterDescription_run_first_bit]
-  rw [show 3 = 1 + 2 by omega, MachineDescription.runConfig_add]
+  rw [show 3 = 1 + 2 by decide, MachineDescription.runConfig_add]
   change
     DovetailControllerResultEmitterDescription.runConfig 2
         (DovetailControllerResultEmitterDescription.runConfig 1
@@ -462,7 +462,7 @@ private theorem dovetailControllerResultEmitterDescription_run_bits
               (controllerResultEmitterCodeOfBits bit0 bit1 bit2 bit3)) 0 0
         tape := MachineDescription.eraseRightTape (erased + 4) suffix }
   rw [dovetailControllerResultEmitterDescription_run_second_bit]
-  rw [show 2 = 1 + 1 by omega, MachineDescription.runConfig_add]
+  rw [show 2 = 1 + 1 by decide, MachineDescription.runConfig_add]
   change
     DovetailControllerResultEmitterDescription.runConfig 1
         (DovetailControllerResultEmitterDescription.runConfig 1
