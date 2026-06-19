@@ -1131,34 +1131,99 @@ def state120AfterStartConfig
         (List.append ((cellsBits rest).map some)
           ((stageNatBits stage).map some))))
 
-def ForwardFinishStart
+/-!
+**Finish boundary views.**  The marking loop ends at state {lit}`150` with the
+payload rewritten as marked cells and with the already-scanned length/delimiter
+prefix on the left.  The exact left prefix is part of
+{lit}`finishStartConfig`, so later phase lemmas no longer hide the handoff
+behind an arbitrary existential configuration.
+-/
+
+def finishLengthPrefixRev : Nat -> List (Option Bool)
+  | 0 => [some false, some true, none, some false]
+  | n + 1 =>
+      List.append (tickBits.reverse.map some)
+        (finishLengthPrefixRev n)
+
+def finishStartLeft (w : Word Bool) : List (Option Bool) :=
+  List.append (doneBits.reverse.map some)
+    (finishLengthPrefixRev (w.length - 1))
+
+def finishStartConfig (w : Word Bool) (stage : Nat) :
+    MachineDescription.Configuration :=
+  config 150 (finishStartLeft w)
+    (List.append ((markedCellsBits w).map some)
+      ((stageNatBits stage).map some))
+
+def state160AfterRestoreConfig (w : Word Bool) (stage : Nat) :
+    MachineDescription.Configuration :=
+  config 160
+    (List.append ((cellsBits w).reverse.map some)
+      (finishStartLeft w))
+    (some false :: none :: ((stageNatBits stage).drop 2).map some)
+
+def stageInputSecondBitTailPrefix : Word Bool -> Word Bool
+  | [] => [true, true]
+  | b :: rest =>
+      true :: false ::
+        List.append (stageNatBits rest.length)
+          (List.append (cellBits b) (cellsBits rest))
+
+theorem stageInputSecondBitTail_eq_prefix_stageNat
+    (w : Word Bool) (stage : Nat) :
+    stageInputSecondBitTail w stage =
+      List.append (stageInputSecondBitTailPrefix w)
+        (stageNatBits stage) := by
+  cases w with
+  | nil =>
+      simp [stageInputSecondBitTailPrefix,
+        stageInputSecondBitTail_nil]
+  | cons b rest =>
+      simp [stageInputSecondBitTailPrefix,
+        stageInputSecondBitTail_cons, List.append_assoc]
+
+def markedStageNatBits (stage : Nat) : List (Option Bool) :=
+  some false :: none :: ((stageNatBits stage).drop 2).map some
+
+def appendBlankStartConfig (w : Word Bool) (stage : Nat) :
+    MachineDescription.Configuration :=
+  config 180 [none, some false]
+    (List.append ((stageInputSecondBitTailPrefix w).map some)
+      (markedStageNatBits stage))
+
+def AppendBlankStart
     (w : Word Bool) (stage : Nat)
     (cfg : MachineDescription.Configuration) : Prop :=
-  exists left : List (Option Bool),
-    cfg =
-      config 150 left
-        (List.append ((markedCellsBits w).map some)
-          ((stageNatBits stage).map some))
+  cfg = appendBlankStartConfig w stage
+
+def checkedBoundaryScanConfig (w : Word Bool) (stage : Nat) :
+    MachineDescription.Configuration :=
+  state220ScanConfig
+    (stageInputSecondBitTail w stage).reverse
+    none [some false] [none]
+
+def CheckedBoundaryScanStart
+    (w : Word Bool) (stage : Nat)
+    (cfg : MachineDescription.Configuration) : Prop :=
+  cfg = checkedBoundaryScanConfig w stage
 
 theorem run_state120_marking_loop
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     exists steps : Nat,
-    exists cfg : MachineDescription.Configuration,
       StageInputMarkedScannerDescription.runConfig steps
-          (state120AfterStartConfig b rest stage) = cfg ∧
-        ForwardFinishStart (b :: rest) stage cfg := by
+          (state120AfterStartConfig b rest stage) =
+        finishStartConfig (b :: rest) stage := by
   sorry
 
 theorem run_start_cons_marking_loop
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     exists steps : Nat,
-    exists cfg : MachineDescription.Configuration,
       StageInputMarkedScannerDescription.runConfig steps
-          (markedStartConfig (b :: rest) stage) = cfg ∧
-        ForwardFinishStart (b :: rest) stage cfg := by
+          (markedStartConfig (b :: rest) stage) =
+        finishStartConfig (b :: rest) stage := by
   rcases run_state120_marking_loop b rest stage with
-    ⟨steps, cfg, hloop, hfinishStart⟩
-  refine ⟨6 + steps, cfg, ?_, hfinishStart⟩
+    ⟨steps, hloop⟩
+  refine ⟨6 + steps, ?_⟩
   rw [MachineDescription.runConfig_add]
   change
     StageInputMarkedScannerDescription.runConfig steps
@@ -1166,18 +1231,147 @@ theorem run_start_cons_marking_loop
           { state := StageInputMarkedScannerDescription.start
             tape :=
               stageInputSecondBitMarkedHandoffTape
-                (b :: rest) stage }) = cfg
+                (b :: rest) stage }) =
+      finishStartConfig (b :: rest) stage
   rw [run_start_cons_to_state120]
   exact hloop
 
-theorem run_forward_finish
+theorem run_finish_restore_cells
+    (w : Word Bool) (stage : Nat) :
+    exists steps : Nat,
+      StageInputMarkedScannerDescription.runConfig steps
+          (finishStartConfig w stage) =
+        state160AfterRestoreConfig w stage := by
+  refine ⟨4 * w.length + 2, ?_⟩
+  simpa [finishStartConfig, state160AfterRestoreConfig] using
+    run_state150_markedCells_to_state160 w stage (finishStartLeft w)
+
+theorem run_finish_scan_left_to_append
+    (w : Word Bool) (stage : Nat) :
+    exists steps : Nat,
+    exists cfg : MachineDescription.Configuration,
+      StageInputMarkedScannerDescription.runConfig steps
+          (state160AfterRestoreConfig w stage) = cfg ∧
+        AppendBlankStart w stage cfg := by
+  sorry
+
+theorem run_finish_append_blank
     {w : Word Bool} {stage : Nat}
     {cfg : MachineDescription.Configuration}
-    (hfinishStart : ForwardFinishStart w stage cfg) :
+    (hcfg : AppendBlankStart w stage cfg) :
+    exists steps : Nat,
+    exists cfg' : MachineDescription.Configuration,
+      StageInputMarkedScannerDescription.runConfig steps cfg = cfg' ∧
+        CheckedBoundaryScanStart w stage cfg' := by
+  let tailPrefix := stageInputSecondBitTailPrefix w
+  refine ⟨tailPrefix.length + 2 + (4 * stage + 5),
+    checkedBoundaryScanConfig w stage, ?_, rfl⟩
+  rw [hcfg]
+  rw [show
+      tailPrefix.length + 2 + (4 * stage + 5) =
+        tailPrefix.length + (1 + (1 + (4 * stage + 5))) by
+    omega]
+  rw [MachineDescription.runConfig_add]
+  change
+    StageInputMarkedScannerDescription.runConfig
+        (1 + (1 + (4 * stage + 5)))
+        (StageInputMarkedScannerDescription.runConfig tailPrefix.length
+          (appendBlankStartConfig w stage)) =
+      checkedBoundaryScanConfig w stage
+  unfold appendBlankStartConfig markedStageNatBits
+  change
+    StageInputMarkedScannerDescription.runConfig
+        (1 + (1 + (4 * stage + 5)))
+        (StageInputMarkedScannerDescription.runConfig tailPrefix.length
+          (config 180 [none, some false]
+            (List.append (tailPrefix.map some)
+              (some false :: none ::
+                ((stageNatBits stage).drop 2).map some)))) =
+      checkedBoundaryScanConfig w stage
+  rw [run_state180_bits]
+  rw [MachineDescription.runConfig_add]
+  rw [run_state180_some]
+  rw [MachineDescription.runConfig_add]
+  rw [run_state180_none_cons]
+  have hstageBits :
+      some false :: some false ::
+          ((stageNatBits stage).drop 2).map some =
+        (stageNatBits stage).map some := by
+    rcases stageNatBits_false_false_tail stage with ⟨tail, htail⟩
+    rw [htail]
+    rfl
+  rw [hstageBits]
+  change
+    StageInputMarkedScannerDescription.runConfig (4 * stage + 5)
+        (config 200
+          (List.append (tailPrefix.reverse.map some)
+            (none :: [some false]))
+          ((stageNatBits stage).map some)) =
+      checkedBoundaryScanConfig w stage
+  rw [run_state200_stageNat_end]
+  simp [checkedBoundaryScanConfig,
+    stageInputSecondBitTail_eq_prefix_stageNat, tailPrefix]
+
+theorem run_finish_boundary_to_halt
+    {w : Word Bool} {stage : Nat}
+    {cfg : MachineDescription.Configuration}
+    (hcfg : CheckedBoundaryScanStart w stage cfg) :
     exists steps : Nat,
       StageInputMarkedScannerDescription.runConfig steps cfg =
         checkedHaltConfig w stage := by
-  sorry
+  refine ⟨(stageInputSecondBitTail w stage).length + 1, ?_⟩
+  rw [hcfg]
+  rw [show
+      (stageInputSecondBitTail w stage).length + 1 =
+        (stageInputSecondBitTail w stage).reverse.length + 1 by
+    simp]
+  rw [MachineDescription.runConfig_add]
+  change
+    StageInputMarkedScannerDescription.runConfig 1
+        (StageInputMarkedScannerDescription.runConfig
+          (stageInputSecondBitTail w stage).reverse.length
+          (state220ScanConfig
+            (stageInputSecondBitTail w stage).reverse
+            none [some false] [none])) =
+      checkedHaltConfig w stage
+  rw [run_state220_bits_to_boundary]
+  rw [run_state220_none]
+  simp [StageInputMarkedScannerDescription, checkedHaltConfig,
+    stageInputSecondBitMarkedCheckedHandoffTape,
+    stageInputSecondBitMarkedCheckedTape, config, tapeAtCells,
+    Tape.move, Tape.moveRight]
+  generalize
+      List.map some (stageInputSecondBitTail w stage) ++ [none] =
+    cells
+  cases cells <;> rfl
+
+theorem run_forward_finish
+    (w : Word Bool) (stage : Nat) :
+    exists steps : Nat,
+      StageInputMarkedScannerDescription.runConfig steps
+          (finishStartConfig w stage) =
+        checkedHaltConfig w stage := by
+  rcases run_finish_restore_cells w stage with
+    ⟨restoreSteps, hrestore⟩
+  rcases run_finish_scan_left_to_append w stage with
+    ⟨scanSteps, appendCfg, hscan, happend⟩
+  rcases run_finish_append_blank happend with
+    ⟨appendSteps, boundaryCfg, hblank, hboundary⟩
+  rcases run_finish_boundary_to_halt hboundary with
+    ⟨boundarySteps, hhalt⟩
+  refine
+    ⟨restoreSteps + scanSteps + appendSteps + boundarySteps, ?_⟩
+  rw [show
+      restoreSteps + scanSteps + appendSteps + boundarySteps =
+        restoreSteps + (scanSteps + (appendSteps + boundarySteps)) by
+    omega]
+  rw [MachineDescription.runConfig_add]
+  rw [hrestore]
+  rw [MachineDescription.runConfig_add]
+  rw [hscan]
+  rw [MachineDescription.runConfig_add]
+  rw [hblank]
+  exact hhalt
 
 theorem run_start_forward_cons
     (b : Bool) (rest : Word Bool) (stage : Nat) :
@@ -1186,8 +1380,8 @@ theorem run_start_forward_cons
           (markedStartConfig (b :: rest) stage) =
         checkedHaltConfig (b :: rest) stage := by
   rcases run_start_cons_marking_loop b rest stage with
-    ⟨markSteps, cfg, hmark, hfinishStart⟩
-  rcases run_forward_finish hfinishStart with
+    ⟨markSteps, hmark⟩
+  rcases run_forward_finish (b :: rest) stage with
     ⟨finishSteps, hfinish⟩
   refine ⟨markSteps + finishSteps, ?_⟩
   rw [MachineDescription.runConfig_add]
@@ -1223,6 +1417,39 @@ def markedTailStartConfig (tail : Word Bool) :
       Tape.move Direction.right
         (tapeAtCells [some false] (none :: tail.map some)) }
 
+/-!
+**Closed-tail inversion.**  The scanner closed proof now separates the two
+facts extracted from a halting run: first the accepted erased-tail shape, then
+the final checked handoff tape.  This keeps decoding concerns out of the
+finite-machine inversion.
+-/
+
+theorem scanner_marked_tail_shape_inv
+    {tail : Word Bool} {T : Tape Bool}
+    (hscanner :
+      exists steps : Nat,
+        StageInputMarkedScannerDescription.runConfig steps
+            (markedTailStartConfig tail) =
+          { state := StageInputMarkedScannerDescription.halt
+            tape := T }) :
+    exists w : Word Bool,
+    exists stage : Nat,
+      tail = stageInputSecondBitTail w stage := by
+  sorry
+
+theorem scanner_marked_tail_tape_inv
+    {tail : Word Bool} {T : Tape Bool}
+    {w : Word Bool} {stage : Nat}
+    (hscanner :
+      exists steps : Nat,
+        StageInputMarkedScannerDescription.runConfig steps
+            (markedTailStartConfig tail) =
+          { state := StageInputMarkedScannerDescription.halt
+            tape := T })
+    (htail : tail = stageInputSecondBitTail w stage) :
+    T = stageInputSecondBitMarkedCheckedHandoffTape w stage := by
+  sorry
+
 theorem scanner_marked_tail_inv
     {tail : Word Bool} {T : Tape Bool}
     (hscanner :
@@ -1235,7 +1462,33 @@ theorem scanner_marked_tail_inv
     exists stage : Nat,
       tail = stageInputSecondBitTail w stage ∧
         T = stageInputSecondBitMarkedCheckedHandoffTape w stage := by
-  sorry
+  rcases scanner_marked_tail_shape_inv hscanner with
+    ⟨w, stage, htail⟩
+  exact
+    ⟨w, stage, htail,
+      scanner_marked_tail_tape_inv hscanner htail⟩
+
+/-!
+**Encoding inversion bridge.**  Once the finite scanner has recovered a
+canonical {lean}`stageInputBits` suffix, the code-level conclusion is delegated
+to {name}`MachineDescription.DovetailLayout.decodeStageInputComplete`.
+-/
+
+theorem stageInputBits_code_decode
+    {code : Word MachineCodeSymbol} {w : Word Bool}
+    {stage : Nat}
+    (hbits :
+      MachineDescription.encodeCodeWordAsInput code =
+        stageInputBits w stage) :
+    MachineDescription.DovetailLayout.decodeStageInputComplete code =
+      some (w, stage) := by
+  have hcode :
+      code = PairedRecognizerDovetailStageInputCode w stage :=
+    MachineDescription.encodeCodeWordAsInput_injective
+      (by simpa [stageInputBits] using hbits)
+  rw [hcode]
+  simp [PairedRecognizerDovetailStageInputCode,
+    MachineDescription.DovetailLayout.decodeStageInputComplete_stageInputCode]
 
 theorem stageInputBits_code_inv
     {code : Word MachineCodeSymbol} {w : Word Bool}
@@ -1244,7 +1497,9 @@ theorem stageInputBits_code_inv
       MachineDescription.encodeCodeWordAsInput code =
         stageInputBits w stage) :
     code = PairedRecognizerDovetailStageInputCode w stage := by
-  sorry
+  exact
+    MachineDescription.DovetailLayout.decodeStageInputComplete_eq_some_stageInputCode
+      (stageInputBits_code_decode hbits)
 
 theorem stageInputMarkedScannerDescription_closed
     (code : Word MachineCodeSymbol) (Tmark T : Tape Bool)
