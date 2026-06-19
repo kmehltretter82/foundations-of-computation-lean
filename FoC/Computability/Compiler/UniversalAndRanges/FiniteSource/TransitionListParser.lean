@@ -378,6 +378,128 @@ theorem transitionListParserOptionTape_nil_eq_input
       Tape.input tokens := by
   cases tokens <;> rfl
 
+def transitionListParserNoHeader
+    (symbols : List MachineCodeSymbol) : Prop :=
+  forall symbol : MachineCodeSymbol,
+    symbol ∈ symbols -> symbol ≠ MachineCodeSymbol.header
+
+theorem transitionListParserNoHeader_append
+    {left right : List MachineCodeSymbol}
+    (hleft : transitionListParserNoHeader left)
+    (hright : transitionListParserNoHeader right) :
+    transitionListParserNoHeader (List.append left right) := by
+  intro symbol hmem
+  rcases List.mem_append.mp hmem with hmem | hmem
+  · exact hleft symbol hmem
+  · exact hright symbol hmem
+
+theorem transitionListParserNoHeader_cons
+    {head : MachineCodeSymbol} {tail : List MachineCodeSymbol}
+    (hhead : head ≠ MachineCodeSymbol.header)
+    (htail : transitionListParserNoHeader tail) :
+    transitionListParserNoHeader (head :: tail) := by
+  intro symbol hmem
+  rcases List.mem_cons.mp hmem with h | hmem
+  · rw [h]
+    exact hhead
+  · exact htail symbol hmem
+
+theorem transitionListParser_encodeNat_noHeader
+    (n : Nat) :
+    transitionListParserNoHeader (MachineDescription.encodeNat n) := by
+  induction n with
+  | zero =>
+      intro symbol hmem
+      simp [MachineDescription.encodeNat] at hmem
+      subst symbol
+      simp
+  | succ n ih =>
+      exact
+        transitionListParserNoHeader_cons
+          (by simp) ih
+
+theorem transitionListParser_encodeCell_noHeader
+    (cell : Option Bool) :
+    transitionListParserNoHeader
+      (MachineDescription.encodeCell cell) := by
+  cases cell with
+  | none =>
+      intro symbol hmem
+      simp [MachineDescription.encodeCell] at hmem
+      subst symbol
+      simp
+  | some b =>
+      cases b <;>
+        intro symbol hmem <;>
+        simp [MachineDescription.encodeCell] at hmem <;>
+        subst symbol <;>
+        simp
+
+theorem transitionListParser_encodeDirection_noHeader
+    (dir : Direction) :
+    transitionListParserNoHeader
+      (MachineDescription.encodeDirection dir) := by
+  cases dir <;>
+    intro symbol hmem <;>
+    simp [MachineDescription.encodeDirection] at hmem <;>
+    subst symbol <;>
+    simp
+
+theorem transitionListParser_encodeNatAppend_noHeader
+    (n : Nat) {suffix : List MachineCodeSymbol}
+    (hsuffix : transitionListParserNoHeader suffix) :
+    transitionListParserNoHeader
+      (MachineDescription.encodeNatAppend n suffix) := by
+  simpa [MachineDescription.encodeNatAppend] using
+    transitionListParserNoHeader_append
+      (transitionListParser_encodeNat_noHeader n) hsuffix
+
+theorem transitionListParser_encodeCellAppend_noHeader
+    (cell : Option Bool) {suffix : List MachineCodeSymbol}
+    (hsuffix : transitionListParserNoHeader suffix) :
+    transitionListParserNoHeader
+      (MachineDescription.encodeCellAppend cell suffix) := by
+  simpa [MachineDescription.encodeCellAppend] using
+    transitionListParserNoHeader_append
+      (transitionListParser_encodeCell_noHeader cell) hsuffix
+
+theorem transitionListParser_encodeDirectionAppend_noHeader
+    (dir : Direction) {suffix : List MachineCodeSymbol}
+    (hsuffix : transitionListParserNoHeader suffix) :
+    transitionListParserNoHeader
+      (MachineDescription.encodeDirectionAppend dir suffix) := by
+  simpa [MachineDescription.encodeDirectionAppend] using
+    transitionListParserNoHeader_append
+      (transitionListParser_encodeDirection_noHeader dir) hsuffix
+
+theorem transitionListParser_encodeTransitionAppend_noHeader
+    (t : TransitionDescription) {suffix : List MachineCodeSymbol}
+    (hsuffix : transitionListParserNoHeader suffix) :
+    transitionListParserNoHeader
+      (MachineDescription.encodeTransitionAppend t suffix) := by
+  unfold MachineDescription.encodeTransitionAppend
+  exact
+    transitionListParserNoHeader_cons
+      (by simp)
+      (transitionListParser_encodeNatAppend_noHeader t.source
+        (transitionListParser_encodeCellAppend_noHeader t.read
+          (transitionListParser_encodeCellAppend_noHeader t.write
+            (transitionListParser_encodeDirectionAppend_noHeader t.move
+              (transitionListParser_encodeNatAppend_noHeader t.target
+                hsuffix)))))
+
+theorem transitionListParser_encodeTransitionsAppend_noHeader
+    (transitions : List TransitionDescription)
+    {suffix : List MachineCodeSymbol}
+    (hsuffix : transitionListParserNoHeader suffix) :
+    transitionListParserNoHeader
+      (MachineDescription.encodeTransitionsAppend transitions suffix) := by
+  induction transitions with
+  | nil =>
+      exact hsuffix
+  | cons t rest ih =>
+      exact transitionListParser_encodeTransitionAppend_noHeader t ih
+
 theorem transitionListParserMachine_step_keep_right
     {state next : TransitionListParserState}
     {leftRev suffix : List (Option MachineCodeSymbol)}
@@ -438,6 +560,48 @@ theorem transitionListParserMachine_step_keep_left_nonempty
             (leftHead :: cell :: suffix) } := by
   rw [← transitionListParserOptionTape_move_left
     leftTail suffix leftHead cell cell]
+  exact TuringMachine.Step.mk (by
+    simpa [transitionListParserOptionTape, Tape.read] using htransition)
+
+theorem transitionListParserMachine_step_write_left_nonempty
+    {state next : TransitionListParserState}
+    {leftTail suffix : List (Option MachineCodeSymbol)}
+    {leftHead cell write : Option MachineCodeSymbol}
+    (htransition :
+      transitionListParserMachine.transition state cell =
+        some (write, Direction.left, next)) :
+    TuringMachine.Step transitionListParserMachine
+      { state := state
+        tape :=
+          transitionListParserOptionTape
+            (leftHead :: leftTail) (cell :: suffix) }
+      { state := next
+        tape :=
+          transitionListParserOptionTape leftTail
+            (leftHead :: write :: suffix) } := by
+  rw [← transitionListParserOptionTape_move_left
+    leftTail suffix leftHead cell write]
+  exact TuringMachine.Step.mk (by
+    simpa [transitionListParserOptionTape, Tape.read] using htransition)
+
+theorem transitionListParserMachine_step_write_left_empty
+    {state next : TransitionListParserState}
+    {leftTail : List (Option MachineCodeSymbol)}
+    {leftHead write : Option MachineCodeSymbol}
+    (htransition :
+      transitionListParserMachine.transition state none =
+        some (write, Direction.left, next)) :
+    TuringMachine.Step transitionListParserMachine
+      { state := state
+        tape :=
+          transitionListParserOptionTape
+            (leftHead :: leftTail) [] }
+      { state := next
+        tape :=
+          transitionListParserOptionTape leftTail
+            (leftHead :: write :: []) } := by
+  rw [← transitionListParserOptionTape_move_left_empty
+    leftTail leftHead write]
   exact TuringMachine.Step.mk (by
     simpa [transitionListParserOptionTape, Tape.read] using htransition)
 
@@ -568,6 +732,164 @@ theorem transitionListParserMachine_step_findCount_tick
         simp [transitionListParserMachine,
           transitionListParserKeep])
 
+theorem transitionListParserMachine_step_seekCountDone_tick
+    (marker : TransitionListParserMarker)
+    (leftRev suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Step transitionListParserMachine
+      { state := TransitionListParserState.seekCountDone marker
+        tape :=
+          transitionListParserOptionTape leftRev
+            (some MachineCodeSymbol.tick :: suffix) }
+      { state := TransitionListParserState.seekCountDone marker
+        tape :=
+          transitionListParserOptionTape
+            (some MachineCodeSymbol.tick :: leftRev) suffix } := by
+  exact transitionListParserMachine_step_keep_right
+    (by
+      cases marker <;>
+        simp [transitionListParserMachine,
+          transitionListParserKeep])
+
+theorem transitionListParserMachine_step_seekCountDone_done_initial
+    (leftRev suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Step transitionListParserMachine
+      { state :=
+          TransitionListParserState.seekCountDone
+            TransitionListParserMarker.initial
+        tape :=
+          transitionListParserOptionTape leftRev
+            (some MachineCodeSymbol.done :: suffix) }
+      { state := TransitionListParserState.needTransition
+        tape :=
+          transitionListParserOptionTape
+            (some MachineCodeSymbol.done :: leftRev) suffix } := by
+  exact transitionListParserMachine_step_keep_right
+    (by simp [transitionListParserMachine,
+      transitionListParserKeep])
+
+theorem transitionListParserMachine_step_seekCountDone_done_saved
+    (saved : Option MachineCodeSymbol)
+    (leftRev suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Step transitionListParserMachine
+      { state :=
+          TransitionListParserState.seekCountDone
+            (TransitionListParserMarker.saved saved)
+        tape :=
+          transitionListParserOptionTape leftRev
+            (some MachineCodeSymbol.done :: suffix) }
+      { state := TransitionListParserState.seekMarker saved
+        tape :=
+          transitionListParserOptionTape
+            (some MachineCodeSymbol.done :: leftRev) suffix } := by
+  exact transitionListParserMachine_step_keep_right
+    (by simp [transitionListParserMachine,
+      transitionListParserKeep])
+
+theorem transitionListParserMachine_step_seekMarker_nonHeader
+    (saved : Option MachineCodeSymbol)
+    {symbol : MachineCodeSymbol}
+    (hsymbol : symbol ≠ MachineCodeSymbol.header)
+    (leftRev suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Step transitionListParserMachine
+      { state := TransitionListParserState.seekMarker saved
+        tape :=
+          transitionListParserOptionTape leftRev
+            (some symbol :: suffix) }
+      { state := TransitionListParserState.seekMarker saved
+        tape :=
+          transitionListParserOptionTape
+            (some symbol :: leftRev) suffix } := by
+  exact transitionListParserMachine_step_keep_right
+    (by
+      cases symbol <;>
+        simp [transitionListParserMachine,
+          transitionListParserKeep] at hsymbol ⊢)
+
+theorem transitionListParserMachine_step_seekMarker_header
+    (saved : Option MachineCodeSymbol)
+    (leftTail suffix : List (Option MachineCodeSymbol))
+    (leftHead : Option MachineCodeSymbol) :
+    TuringMachine.Step transitionListParserMachine
+      { state := TransitionListParserState.seekMarker saved
+        tape :=
+          transitionListParserOptionTape
+            (leftHead :: leftTail)
+            (some MachineCodeSymbol.header :: suffix) }
+      { state := TransitionListParserState.enterMarkedPosition
+        tape :=
+          transitionListParserOptionTape leftTail
+            (leftHead :: saved :: suffix) } := by
+  exact transitionListParserMachine_step_write_left_nonempty
+    (by simp [transitionListParserMachine,
+      transitionListParserKeep])
+
+theorem transitionListParserMachine_step_enterMarkedPosition
+    (leftRev suffix : List (Option MachineCodeSymbol))
+    (cell : Option MachineCodeSymbol) :
+    TuringMachine.Step transitionListParserMachine
+      { state := TransitionListParserState.enterMarkedPosition
+        tape :=
+          transitionListParserOptionTape leftRev
+            (cell :: suffix) }
+      { state := TransitionListParserState.needTransition
+        tape :=
+          transitionListParserOptionTape
+            (cell :: leftRev) suffix } := by
+  exact transitionListParserMachine_step_keep_right
+    (by
+      cases cell <;>
+        simp [transitionListParserMachine,
+          transitionListParserKeep])
+
+theorem transitionListParserMachine_step_enterMarkedPosition_empty
+    (leftRev : List (Option MachineCodeSymbol)) :
+    TuringMachine.Step transitionListParserMachine
+      { state := TransitionListParserState.enterMarkedPosition
+        tape :=
+          transitionListParserOptionTape leftRev [] }
+      { state := TransitionListParserState.needTransition
+        tape :=
+          transitionListParserOptionTape
+            (none :: leftRev) [] } := by
+  rw [← transitionListParserOptionTape_move_right_empty leftRev none]
+  exact TuringMachine.Step.mk (by
+    simp [transitionListParserMachine,
+      transitionListParserOptionTape, Tape.read,
+      transitionListParserKeep])
+
+theorem transitionListParserMachine_step_markPosition
+    (saved : Option MachineCodeSymbol)
+    (leftTail suffix : List (Option MachineCodeSymbol))
+    (leftHead : Option MachineCodeSymbol) :
+    TuringMachine.Step transitionListParserMachine
+      { state := TransitionListParserState.markPosition
+        tape :=
+          transitionListParserOptionTape
+            (leftHead :: leftTail) (saved :: suffix) }
+      { state := TransitionListParserState.returnLeft saved
+        tape :=
+          transitionListParserOptionTape leftTail
+            (leftHead :: some MachineCodeSymbol.header :: suffix) } := by
+  exact transitionListParserMachine_step_write_left_nonempty
+    (by simp [transitionListParserMachine,
+      transitionListParserKeep])
+
+theorem transitionListParserMachine_step_markPosition_empty
+    (leftTail : List (Option MachineCodeSymbol))
+    (leftHead : Option MachineCodeSymbol) :
+    TuringMachine.Step transitionListParserMachine
+      { state := TransitionListParserState.markPosition
+        tape :=
+          transitionListParserOptionTape
+            (leftHead :: leftTail) [] }
+      { state := TransitionListParserState.returnLeft none
+        tape :=
+          transitionListParserOptionTape leftTail
+            (leftHead :: some MachineCodeSymbol.header :: []) } := by
+  exact transitionListParserMachine_step_write_left_empty
+    (by simp [transitionListParserMachine,
+      transitionListParserKeep])
+
 theorem transitionListParserMachine_step_sourceNat_tick
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step transitionListParserMachine
@@ -695,6 +1017,53 @@ theorem transitionListParserMachine_computes_nat
           htail
       simpa [MachineDescription.encodeNatAppend,
         MachineDescription.encodeNat, List.append_assoc] using hcomp
+
+theorem transitionListParserMachine_computes_seekCountDone_initial
+    (leftRev : List (Option MachineCodeSymbol)) (count : Nat)
+    (tokens : Word MachineCodeSymbol) :
+    TuringMachine.Computes transitionListParserMachine
+      { state :=
+          TransitionListParserState.seekCountDone
+            TransitionListParserMarker.initial
+        tape :=
+          transitionListParserOptionTape leftRev
+            ((MachineDescription.encodeNatAppend count tokens).map some) }
+      { state := TransitionListParserState.needTransition
+        tape :=
+          transitionListParserOptionTape
+            (List.append
+              ((MachineDescription.encodeNat count).reverse.map some)
+              leftRev)
+            (tokens.map some) } :=
+  transitionListParserMachine_computes_nat
+    (transitionListParserMachine_step_seekCountDone_tick
+      TransitionListParserMarker.initial)
+    transitionListParserMachine_step_seekCountDone_done_initial
+    leftRev count tokens
+
+theorem transitionListParserMachine_computes_seekCountDone_saved
+    (saved : Option MachineCodeSymbol)
+    (leftRev : List (Option MachineCodeSymbol)) (count : Nat)
+    (tokens : Word MachineCodeSymbol) :
+    TuringMachine.Computes transitionListParserMachine
+      { state :=
+          TransitionListParserState.seekCountDone
+            (TransitionListParserMarker.saved saved)
+        tape :=
+          transitionListParserOptionTape leftRev
+            ((MachineDescription.encodeNatAppend count tokens).map some) }
+      { state := TransitionListParserState.seekMarker saved
+        tape :=
+          transitionListParserOptionTape
+            (List.append
+              ((MachineDescription.encodeNat count).reverse.map some)
+              leftRev)
+            (tokens.map some) } :=
+  transitionListParserMachine_computes_nat
+    (transitionListParserMachine_step_seekCountDone_tick
+      (TransitionListParserMarker.saved saved))
+    (transitionListParserMachine_step_seekCountDone_done_saved saved)
+    leftRev count tokens
 
 theorem transitionListParserMachine_computes_needTransition
     (leftRev : List (Option MachineCodeSymbol))
@@ -1057,6 +1426,382 @@ theorem transitionListParserMachine_returnLeft_withBoundary
           (by
             simpa [List.append_assoc] using htail)
 
+theorem transitionListParserMachine_markPosition_returnLeft_noBoundary
+    (saved : Option MachineCodeSymbol)
+    (leftSymbols : Word MachineCodeSymbol)
+    (current : MachineCodeSymbol)
+    (suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Computes transitionListParserMachine
+      { state := TransitionListParserState.markPosition
+        tape :=
+          transitionListParserOptionTape
+            (some current :: leftSymbols.map some)
+            (saved :: suffix) }
+      { state :=
+          TransitionListParserState.findCount
+            (TransitionListParserMarker.saved saved)
+        tape :=
+          transitionListParserOptionTape [none]
+            (List.append (leftSymbols.reverse.map some)
+              (some current ::
+                some MachineCodeSymbol.header :: suffix)) } := by
+  exact
+    TuringMachine.Computes.step
+      (transitionListParserMachine_step_markPosition
+        saved (leftSymbols.map some) suffix (some current))
+      (transitionListParserMachine_returnLeft_noBoundary
+        saved leftSymbols current
+        (some MachineCodeSymbol.header :: suffix))
+
+theorem transitionListParserMachine_markPosition_empty_returnLeft_noBoundary
+    (leftSymbols : Word MachineCodeSymbol)
+    (current : MachineCodeSymbol) :
+    TuringMachine.Computes transitionListParserMachine
+      { state := TransitionListParserState.markPosition
+        tape :=
+          transitionListParserOptionTape
+            (some current :: leftSymbols.map some) [] }
+      { state :=
+          TransitionListParserState.findCount
+            (TransitionListParserMarker.saved none)
+        tape :=
+          transitionListParserOptionTape [none]
+            (List.append (leftSymbols.reverse.map some)
+              (some current ::
+                some MachineCodeSymbol.header :: [])) } := by
+  exact
+    TuringMachine.Computes.step
+      (transitionListParserMachine_step_markPosition_empty
+        (leftSymbols.map some) (some current))
+      (transitionListParserMachine_returnLeft_noBoundary
+        none leftSymbols current
+        [some MachineCodeSymbol.header])
+
+theorem transitionListParserMachine_haltsFrom_findCount_blank_done
+    (marker : TransitionListParserMarker)
+    (leftRev suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.HaltsFrom transitionListParserMachine
+      { state := TransitionListParserState.findCount marker
+        tape :=
+          transitionListParserOptionTape leftRev
+            (some MachineCodeSymbol.blank ::
+              some MachineCodeSymbol.done :: suffix) } := by
+  have hblank :=
+    transitionListParserMachine_step_findCount_blank
+      marker leftRev (some MachineCodeSymbol.done :: suffix)
+  have hdone :=
+    transitionListParserMachine_step_findCount_done
+      marker (some MachineCodeSymbol.blank :: leftRev) suffix
+  have hcomp :
+      TuringMachine.Computes transitionListParserMachine
+        { state := TransitionListParserState.findCount marker
+          tape :=
+            transitionListParserOptionTape leftRev
+              (some MachineCodeSymbol.blank ::
+                some MachineCodeSymbol.done :: suffix) }
+        { state := TransitionListParserState.halt
+          tape :=
+            transitionListParserOptionTape
+              (some MachineCodeSymbol.done ::
+                some MachineCodeSymbol.blank :: leftRev)
+              suffix } :=
+    TuringMachine.Computes.step hblank
+      (TuringMachine.Computes.step hdone
+        (TuringMachine.Computes.refl _))
+  exact TuringMachine.halts_from_of_computes hcomp rfl
+
+theorem transitionListParserMachine_haltsFrom_markPosition_after_oneCount
+    (tail suffix : Word MachineCodeSymbol) :
+    TuringMachine.HaltsFrom transitionListParserMachine
+      { state := TransitionListParserState.markPosition
+        tape :=
+          transitionListParserOptionTape
+            ((List.append
+              [MachineCodeSymbol.blank, MachineCodeSymbol.done]
+              tail).reverse.map some)
+            (suffix.map some) } := by
+  let leftNormal : Word MachineCodeSymbol :=
+    List.append [MachineCodeSymbol.blank, MachineCodeSymbol.done] tail
+  have hrevNonempty : leftNormal.reverse ≠ [] := by
+    simp [leftNormal]
+  cases hrev : leftNormal.reverse with
+  | nil =>
+      exact False.elim (hrevNonempty hrev)
+  | cons current leftSymbols =>
+      have hleft :
+          leftNormal = List.append leftSymbols.reverse [current] := by
+        have h := congrArg List.reverse hrev
+        simpa using h
+      cases suffix with
+      | nil =>
+          have hreturn :=
+            transitionListParserMachine_markPosition_empty_returnLeft_noBoundary
+              leftSymbols current
+          have hprefix :
+              List.append (List.map some leftSymbols).reverse
+                  [some current] =
+                some MachineCodeSymbol.blank ::
+                  some MachineCodeSymbol.done :: tail.map some := by
+            have hmap :=
+              congrArg (fun xs : List MachineCodeSymbol => xs.map some)
+                hleft
+            simpa [leftNormal, List.map_append, List.map_reverse,
+              List.append_assoc] using hmap.symm
+          have hhalt :=
+            transitionListParserMachine_haltsFrom_findCount_blank_done
+              (TransitionListParserMarker.saved none)
+              [none]
+              (List.append (tail.map some)
+                [some MachineCodeSymbol.header])
+          have htargetRest :
+              List.append (List.map some leftSymbols).reverse
+                  [some current, some MachineCodeSymbol.header] =
+                some MachineCodeSymbol.blank ::
+                  some MachineCodeSymbol.done ::
+                    (List.append (tail.map some)
+                      [some MachineCodeSymbol.header]) := by
+            calc
+              List.append (List.map some leftSymbols).reverse
+                  [some current, some MachineCodeSymbol.header]
+                  =
+                List.append
+                  (List.append (List.map some leftSymbols).reverse
+                    [some current])
+                  [some MachineCodeSymbol.header] := by
+                    simp [List.append_assoc]
+              _ =
+                List.append
+                  (some MachineCodeSymbol.blank ::
+                    some MachineCodeSymbol.done :: tail.map some)
+                  [some MachineCodeSymbol.header] := by
+                    rw [hprefix]
+              _ =
+                some MachineCodeSymbol.blank ::
+                  some MachineCodeSymbol.done ::
+                    (List.append (tail.map some)
+                      [some MachineCodeSymbol.header]) := by
+                    rfl
+          exact
+            TuringMachine.halts_from_of_computes_prefix
+              (by
+                simpa [leftNormal, hrev] using hreturn)
+              (by
+                change
+                  TuringMachine.HaltsFrom transitionListParserMachine
+                    { state :=
+                        TransitionListParserState.findCount
+                          (TransitionListParserMarker.saved none)
+                      tape :=
+                        transitionListParserOptionTape [none]
+                          (List.append
+                            (List.map some leftSymbols).reverse
+                            [some current,
+                              some MachineCodeSymbol.header]) }
+                rw [htargetRest]
+                exact hhalt)
+      | cons first rest =>
+          have hreturn :=
+            transitionListParserMachine_markPosition_returnLeft_noBoundary
+              (some first) leftSymbols current (rest.map some)
+          have hprefix :
+              List.append (List.map some leftSymbols).reverse
+                  [some current] =
+                some MachineCodeSymbol.blank ::
+                  some MachineCodeSymbol.done :: tail.map some := by
+            have hmap :=
+              congrArg (fun xs : List MachineCodeSymbol => xs.map some)
+                hleft
+            simpa [leftNormal, List.map_append, List.map_reverse,
+              List.append_assoc] using hmap.symm
+          have hhalt :=
+            transitionListParserMachine_haltsFrom_findCount_blank_done
+              (TransitionListParserMarker.saved (some first))
+              [none]
+              (List.append (tail.map some)
+                (some MachineCodeSymbol.header :: rest.map some))
+          have htargetRest :
+              List.append (List.map some leftSymbols).reverse
+                  (some current ::
+                    some MachineCodeSymbol.header :: rest.map some) =
+                some MachineCodeSymbol.blank ::
+                  some MachineCodeSymbol.done ::
+                    (List.append (tail.map some)
+                      (some MachineCodeSymbol.header ::
+                        rest.map some)) := by
+            calc
+              List.append (List.map some leftSymbols).reverse
+                  (some current ::
+                    some MachineCodeSymbol.header :: rest.map some)
+                  =
+                List.append
+                  (List.append (List.map some leftSymbols).reverse
+                    [some current])
+                  (some MachineCodeSymbol.header :: rest.map some) := by
+                    simp [List.append_assoc]
+              _ =
+                List.append
+                  (some MachineCodeSymbol.blank ::
+                    some MachineCodeSymbol.done :: tail.map some)
+                  (some MachineCodeSymbol.header :: rest.map some) := by
+                    rw [hprefix]
+              _ =
+                some MachineCodeSymbol.blank ::
+                  some MachineCodeSymbol.done ::
+                    (List.append (tail.map some)
+                      (some MachineCodeSymbol.header ::
+                        rest.map some)) := by
+                    rfl
+          exact
+            TuringMachine.halts_from_of_computes_prefix
+              (by
+                simpa [leftNormal, hrev] using hreturn)
+              (by
+                change
+                  TuringMachine.HaltsFrom transitionListParserMachine
+                    { state :=
+                        TransitionListParserState.findCount
+                          (TransitionListParserMarker.saved
+                            (some first))
+                      tape :=
+                        transitionListParserOptionTape [none]
+                          (List.append
+                            (List.map some leftSymbols).reverse
+                            (some current ::
+                              some MachineCodeSymbol.header ::
+                                rest.map some)) }
+                rw [htargetRest]
+                exact hhalt)
+
+theorem transitionListParserMachine_computes_seekMarker_prefix
+    (saved : Option MachineCodeSymbol)
+    (pre rest : List MachineCodeSymbol)
+    (hpre :
+      forall symbol : MachineCodeSymbol,
+        symbol ∈ pre -> symbol ≠ MachineCodeSymbol.header)
+    (leftRev : List (Option MachineCodeSymbol)) :
+    TuringMachine.Computes transitionListParserMachine
+      { state := TransitionListParserState.seekMarker saved
+        tape :=
+          transitionListParserOptionTape leftRev
+            ((List.append pre rest).map some) }
+      { state := TransitionListParserState.seekMarker saved
+        tape :=
+          transitionListParserOptionTape
+            (List.append (pre.reverse.map some) leftRev)
+            (rest.map some) } := by
+  induction pre generalizing leftRev with
+  | nil =>
+      exact TuringMachine.Computes.refl _
+  | cons symbol tail ih =>
+      have hsymbol : symbol ≠ MachineCodeSymbol.header :=
+        hpre symbol (by simp)
+      have htail :
+          forall symbol' : MachineCodeSymbol,
+            symbol' ∈ tail ->
+              symbol' ≠ MachineCodeSymbol.header := by
+        intro symbol' hmem
+        exact hpre symbol' (by simp [hmem])
+      have hcomp :=
+        ih htail (some symbol :: leftRev)
+      exact
+        TuringMachine.Computes.step
+          (transitionListParserMachine_step_seekMarker_nonHeader
+            saved hsymbol leftRev
+            ((List.append tail rest).map some))
+          (by
+            simpa [List.append_assoc] using hcomp)
+
+theorem transitionListParserMachine_computes_oneTransition_to_markPosition
+    (t : TransitionDescription) (suffix : Word MachineCodeSymbol) :
+    TuringMachine.Computes transitionListParserMachine
+      { state :=
+          TransitionListParserState.findCount
+            TransitionListParserMarker.initial
+        tape :=
+          transitionListParserOptionTape []
+            ((MachineDescription.encodeNatAppend 1
+              (MachineDescription.encodeTransitionAppend t suffix)).map
+              some) }
+      { state := TransitionListParserState.markPosition
+        tape :=
+          transitionListParserOptionTape
+            ((List.append
+              [MachineCodeSymbol.blank, MachineCodeSymbol.done]
+              (MachineDescription.encodeTransition t)).reverse.map some)
+            (suffix.map some) } := by
+  have htick :
+      TuringMachine.Step transitionListParserMachine
+        { state :=
+            TransitionListParserState.findCount
+              TransitionListParserMarker.initial
+          tape :=
+            transitionListParserOptionTape []
+              ((MachineDescription.encodeNatAppend 1
+                (MachineDescription.encodeTransitionAppend t suffix)).map
+                some) }
+        { state :=
+            TransitionListParserState.seekCountDone
+              TransitionListParserMarker.initial
+          tape :=
+            transitionListParserOptionTape
+              [some MachineCodeSymbol.blank]
+              ((MachineDescription.encodeNatAppend 0
+                (MachineDescription.encodeTransitionAppend t suffix)).map
+                some) } := by
+    simpa [MachineDescription.encodeNatAppend,
+      MachineDescription.encodeNat] using
+      transitionListParserMachine_step_findCount_tick
+        TransitionListParserMarker.initial []
+        ((MachineDescription.encodeNatAppend 0
+          (MachineDescription.encodeTransitionAppend t suffix)).map some)
+  have hseek :=
+    transitionListParserMachine_computes_seekCountDone_initial
+      [some MachineCodeSymbol.blank] 0
+      (MachineDescription.encodeTransitionAppend t suffix)
+  have hparse :=
+    transitionListParserMachine_computes_transition t
+      [some MachineCodeSymbol.done, some MachineCodeSymbol.blank]
+      suffix
+  exact
+    TuringMachine.Computes.step htick
+      (TuringMachine.computes_trans
+        (by
+          simpa [MachineDescription.encodeNatAppend,
+            MachineDescription.encodeNat] using hseek)
+        (by
+          simpa [MachineDescription.encodeTransition,
+            MachineDescription.encodeTransitionAppend,
+            MachineDescription.encodeNatAppend,
+            MachineDescription.encodeCellAppend,
+            MachineDescription.encodeDirectionAppend,
+            List.reverse_append, List.map_append,
+            List.append_assoc] using hparse))
+
+theorem transitionListParserMachine_halts_oneTransition
+    (t : TransitionDescription) (suffix : Word MachineCodeSymbol) :
+    TuringMachine.HaltsOnInput transitionListParserMachine
+      (MachineDescription.encodeNatAppend 1
+        (MachineDescription.encodeTransitionAppend t suffix)) := by
+  have hcomp :=
+    transitionListParserMachine_computes_oneTransition_to_markPosition
+      t suffix
+  have hmark :
+      TuringMachine.HaltsFrom transitionListParserMachine
+        { state := TransitionListParserState.markPosition
+          tape :=
+            transitionListParserOptionTape
+              ((List.append
+                [MachineCodeSymbol.blank, MachineCodeSymbol.done]
+                (MachineDescription.encodeTransition t)).reverse.map some)
+              (suffix.map some) } :=
+    transitionListParserMachine_haltsFrom_markPosition_after_oneCount
+      (MachineDescription.encodeTransition t) suffix
+  have hfrom :=
+    TuringMachine.halts_from_of_computes_prefix hcomp hmark
+  simpa [TuringMachine.HaltsOnInput, TuringMachine.initial,
+    transitionListParserMachine,
+    transitionListParserOptionTape_nil_eq_input] using hfrom
+
 theorem transitionListParserMachine_halts_count_zero
     (tokens : Word MachineCodeSymbol) :
     TuringMachine.HaltsOnInput transitionListParserMachine
@@ -1114,6 +1859,40 @@ theorem transitionListParserMachine_count_zero_spec
   exact
     ⟨transitionListParserMachine_halts_count_zero tokens,
       ⟨[], tokens, rfl⟩⟩
+
+theorem transitionListParserMachine_halts_encodeTransitionsAppend
+    (transitions : List TransitionDescription)
+    (suffix : Word MachineCodeSymbol) :
+    TuringMachine.HaltsOnInput transitionListParserMachine
+      (MachineDescription.encodeNatAppend transitions.length
+        (MachineDescription.encodeTransitionsAppend transitions suffix)) := by
+  cases transitions with
+  | nil =>
+      simpa [MachineDescription.encodeTransitionsAppend] using
+        transitionListParserMachine_halts_count_zero suffix
+  | cons t rest =>
+      cases rest with
+      | nil =>
+          simpa [MachineDescription.encodeTransitionsAppend] using
+            transitionListParserMachine_halts_oneTransition t suffix
+      | cons u more =>
+          sorry
+
+theorem transitionListParserMachine_halts_encodeNatAppend_only_encodeTransitionsAppend
+    {count : Nat} {tokens : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsOnInput transitionListParserMachine
+        (MachineDescription.encodeNatAppend count tokens)) :
+    exists transitions : List TransitionDescription,
+    exists suffix : Word MachineCodeSymbol,
+      count = transitions.length ∧
+        tokens =
+          MachineDescription.encodeTransitionsAppend transitions suffix := by
+  cases count with
+  | zero =>
+      exact ⟨[], tokens, rfl, rfl⟩
+  | succ count =>
+      sorry
 
 end Computability
 end FoC
