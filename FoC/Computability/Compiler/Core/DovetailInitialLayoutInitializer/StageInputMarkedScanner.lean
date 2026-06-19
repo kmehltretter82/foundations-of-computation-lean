@@ -1104,10 +1104,187 @@ theorem run_start_nil
     Tape.move, Tape.moveRight]
 
 /-!
+**Forward proof split.**  The exported specification only needs an existential
+run length, so the nonempty case is split around named phase contracts instead
+of carrying one large arithmetic expression.  The first remaining obligation is
+the marking loop from state {lit}`120` to the beginning of the finish pass; the
+second is the finish pass from that intermediate configuration to the checked
+handoff tape.
+-/
+
+def markedStartConfig (w : Word Bool) (stage : Nat) :
+    MachineDescription.Configuration :=
+  { state := StageInputMarkedScannerDescription.start
+    tape := stageInputSecondBitMarkedHandoffTape w stage }
+
+def checkedHaltConfig (w : Word Bool) (stage : Nat) :
+    MachineDescription.Configuration :=
+  { state := StageInputMarkedScannerDescription.halt
+    tape := stageInputSecondBitMarkedCheckedHandoffTape w stage }
+
+def state120AfterStartConfig
+    (b : Bool) (rest : Word Bool) (stage : Nat) :
+    MachineDescription.Configuration :=
+  config 120 [none, some true, none, some false]
+    (List.append ((stageNatBits rest.length).map some)
+      (List.append ((cellBits b).map some)
+        (List.append ((cellsBits rest).map some)
+          ((stageNatBits stage).map some))))
+
+def ForwardFinishStart
+    (w : Word Bool) (stage : Nat)
+    (cfg : MachineDescription.Configuration) : Prop :=
+  exists left : List (Option Bool),
+    cfg =
+      config 150 left
+        (List.append ((markedCellsBits w).map some)
+          ((stageNatBits stage).map some))
+
+theorem run_state120_marking_loop
+    (b : Bool) (rest : Word Bool) (stage : Nat) :
+    exists steps : Nat,
+    exists cfg : MachineDescription.Configuration,
+      StageInputMarkedScannerDescription.runConfig steps
+          (state120AfterStartConfig b rest stage) = cfg ∧
+        ForwardFinishStart (b :: rest) stage cfg := by
+  sorry
+
+theorem run_start_cons_marking_loop
+    (b : Bool) (rest : Word Bool) (stage : Nat) :
+    exists steps : Nat,
+    exists cfg : MachineDescription.Configuration,
+      StageInputMarkedScannerDescription.runConfig steps
+          (markedStartConfig (b :: rest) stage) = cfg ∧
+        ForwardFinishStart (b :: rest) stage cfg := by
+  rcases run_state120_marking_loop b rest stage with
+    ⟨steps, cfg, hloop, hfinishStart⟩
+  refine ⟨6 + steps, cfg, ?_, hfinishStart⟩
+  rw [MachineDescription.runConfig_add]
+  change
+    StageInputMarkedScannerDescription.runConfig steps
+        (StageInputMarkedScannerDescription.runConfig 6
+          { state := StageInputMarkedScannerDescription.start
+            tape :=
+              stageInputSecondBitMarkedHandoffTape
+                (b :: rest) stage }) = cfg
+  rw [run_start_cons_to_state120]
+  exact hloop
+
+theorem run_forward_finish
+    {w : Word Bool} {stage : Nat}
+    {cfg : MachineDescription.Configuration}
+    (hfinishStart : ForwardFinishStart w stage cfg) :
+    exists steps : Nat,
+      StageInputMarkedScannerDescription.runConfig steps cfg =
+        checkedHaltConfig w stage := by
+  sorry
+
+theorem run_start_forward_cons
+    (b : Bool) (rest : Word Bool) (stage : Nat) :
+    exists steps : Nat,
+      StageInputMarkedScannerDescription.runConfig steps
+          (markedStartConfig (b :: rest) stage) =
+        checkedHaltConfig (b :: rest) stage := by
+  rcases run_start_cons_marking_loop b rest stage with
+    ⟨markSteps, cfg, hmark, hfinishStart⟩
+  rcases run_forward_finish hfinishStart with
+    ⟨finishSteps, hfinish⟩
+  refine ⟨markSteps + finishSteps, ?_⟩
+  rw [MachineDescription.runConfig_add]
+  rw [hmark]
+  exact hfinish
+
+theorem run_start_forward
+    (w : Word Bool) (stage : Nat) :
+    exists steps : Nat,
+      StageInputMarkedScannerDescription.runConfig steps
+          (markedStartConfig w stage) =
+        checkedHaltConfig w stage := by
+  cases w with
+  | nil =>
+      exact ⟨30 + 8 * stage, by
+        simpa [markedStartConfig, checkedHaltConfig] using
+          run_start_nil stage⟩
+  | cons b rest =>
+      exact run_start_forward_cons b rest stage
+
+/-!
+**Closed proof split.**  The closed direction begins with the separate marker
+subroutine, whose inversion theorem exposes an arbitrary second-bit tail.  The
+scanner-specific closed obligation is therefore stated against such a tail; a
+separate encoding lemma turns the accepted tail back into the canonical
+stage-input code.
+-/
+
+def markedTailStartConfig (tail : Word Bool) :
+    MachineDescription.Configuration :=
+  { state := StageInputMarkedScannerDescription.start
+    tape :=
+      Tape.move Direction.right
+        (tapeAtCells [some false] (none :: tail.map some)) }
+
+theorem scanner_marked_tail_inv
+    {tail : Word Bool} {T : Tape Bool}
+    (hscanner :
+      exists steps : Nat,
+        StageInputMarkedScannerDescription.runConfig steps
+            (markedTailStartConfig tail) =
+          { state := StageInputMarkedScannerDescription.halt
+            tape := T }) :
+    exists w : Word Bool,
+    exists stage : Nat,
+      tail = stageInputSecondBitTail w stage ∧
+        T = stageInputSecondBitMarkedCheckedHandoffTape w stage := by
+  sorry
+
+theorem stageInputBits_code_inv
+    {code : Word MachineCodeSymbol} {w : Word Bool}
+    {stage : Nat}
+    (hbits :
+      MachineDescription.encodeCodeWordAsInput code =
+        stageInputBits w stage) :
+    code = PairedRecognizerDovetailStageInputCode w stage := by
+  sorry
+
+theorem stageInputMarkedScannerDescription_closed
+    (code : Word MachineCodeSymbol) (Tmark T : Tape Bool)
+    (hmark :
+      MarkStageInputSecondBitDescription.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) Tmark)
+    (hscanner :
+      exists steps : Nat,
+        StageInputMarkedScannerDescription.runConfig steps
+            { state := StageInputMarkedScannerDescription.start
+              tape := Tape.move Direction.right Tmark } =
+          { state := StageInputMarkedScannerDescription.halt
+            tape := T }) :
+    exists w : Word Bool,
+    exists stage : Nat,
+      code = PairedRecognizerDovetailStageInputCode w stage ∧
+        T = stageInputSecondBitMarkedCheckedHandoffTape w stage := by
+  rcases markStageInputSecondBitDescription_haltsWithTape_inv hmark with
+    ⟨tail, hbits, hTmark⟩
+  have hscannerTail :
+      exists steps : Nat,
+        StageInputMarkedScannerDescription.runConfig steps
+            (markedTailStartConfig tail) =
+          { state := StageInputMarkedScannerDescription.halt
+            tape := T } := by
+    rcases hscanner with ⟨steps, hsteps⟩
+    refine ⟨steps, ?_⟩
+    simpa [markedTailStartConfig, hTmark] using hsteps
+  rcases scanner_marked_tail_inv hscannerTail with
+    ⟨w, stage, htail, hT⟩
+  refine ⟨w, stage, ?_, hT⟩
+  apply stageInputBits_code_inv
+  rw [stageInputBits_eq_false_false_tail w stage]
+  rw [hbits, htail]
+
+/-!
 The exported construction theorem packages the subroutine readiness, forward
 run, and closed-run inversion required by {name}`StageInputMarkedScannerSpec`.
-The remaining placeholders in this file are exactly the positive nonempty run
-and the closed soundness direction.
+At this point the theorem itself is only glue; every remaining proof obligation
+has a phase-specific name.
 -/
 
 theorem stageInputMarkedScannerDescription_spec :
@@ -1116,16 +1293,12 @@ theorem stageInputMarkedScannerDescription_spec :
   · exact stageInputMarkedScannerDescription_subroutineReady
   constructor
   · intro w stage
-    refine
-      ⟨30 + 36 * w.length + 8 * w.length * (w.length + 1) +
-        8 * stage, ?_⟩
-    induction w generalizing stage with
-    | nil =>
-        simpa using run_start_nil stage
-    | cons b rest ih =>
-        sorry
+    simpa [markedStartConfig, checkedHaltConfig] using
+      run_start_forward w stage
   · intro code Tmark T hmark hscanner
-    sorry
+    exact
+      stageInputMarkedScannerDescription_closed
+        code Tmark T hmark hscanner
 
 end StageInputMarkedScanner
 
