@@ -344,20 +344,11 @@ theorem closedHandoffCompiledSubroutine
       TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
         (PairedRecognizerDovetailLayoutCode accept reject)
         runner tapeCodePrimitiveCodeWordHandoffMove := by
-  rcases
-      rightShiftedOutputCompiledConstruction_scaffold accept reject with
+  rcases finiteDescriptionConstruction_scaffold accept reject with
     ⟨runner, hrunner⟩
   refine ⟨runner, ?_⟩
   exact
-    closedHandoffCompiled_of_rightShiftedOutputCompiled
-      hrunner
-      (by
-        intro code out htransform
-        rcases
-            pairedRecognizerDovetailLayoutCode_transform_eq_some_cons
-              htransform with
-          ⟨tail, hout⟩
-        exact ⟨MachineCodeSymbol.transition, tail, hout⟩)
+    closedHandoffCompiledSubroutineByDescription_of_spec hrunner
 
 end BoundedLayoutRunner
 end EncodedRewriters

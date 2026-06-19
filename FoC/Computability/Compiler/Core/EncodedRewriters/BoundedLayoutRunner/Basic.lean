@@ -144,6 +144,22 @@ theorem rightShiftedOutputCompiled_of_spec
             accept reject code (OutputCode accept reject L)).mpr
             ⟨L, hcode, rfl⟩
 
+theorem closedHandoffCompiledSubroutineByDescription_of_spec
+    {accept reject runner : MachineDescription}
+    (hrunner : Spec accept reject runner) :
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      (PairedRecognizerDovetailLayoutCode accept reject)
+      runner tapeCodePrimitiveCodeWordHandoffMove :=
+  closedHandoffCompiled_of_rightShiftedOutputCompiled
+    (rightShiftedOutputCompiled_of_spec hrunner)
+    (by
+      intro code out htransform
+      rcases
+          pairedRecognizerDovetailLayoutCode_transform_eq_some_cons
+            htransform with
+        ⟨tail, hout⟩
+      exact ⟨MachineCodeSymbol.transition, tail, hout⟩)
+
 end BoundedLayoutRunner
 end EncodedRewriters
 
