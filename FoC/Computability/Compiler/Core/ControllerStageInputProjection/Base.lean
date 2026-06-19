@@ -670,7 +670,14 @@ theorem projectionStageTickCellsRev_succ
     projectionStageTickCellsRev (stage + 1) =
       List.append (projectionStageTickCellsRev stage)
         projectionTickCodeCellsRev := by
-  sorry
+  unfold projectionStageTickCellsRev projectionTickCodeCellsRev
+  rw [projectionCodeCells_replicate_tick]
+  rw [projectionCodeCells_replicate_tick]
+  rw [show projectionRepeatedCells projectionTickCodeCells (stage + 1) =
+      List.append projectionTickCodeCells
+        (projectionRepeatedCells projectionTickCodeCells stage) by
+    rfl]
+  simp [List.reverse_append]
 
 theorem run_stage_nat
     (stage : Nat) (leftRev : List (Option Bool)) (result : Word Bool) :
