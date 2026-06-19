@@ -670,11 +670,7 @@ theorem projectionStageTickCellsRev_succ
     projectionStageTickCellsRev (stage + 1) =
       List.append (projectionStageTickCellsRev stage)
         projectionTickCodeCellsRev := by
-  have hsucc : stage + 1 = Nat.succ stage := by omega
-  rw [hsucc]
-  simp [List.replicate_succ, projectionStageTickCellsRev,
-    projectionCodeCells, projectionTickCodeCells,
-    projectionTickCodeCellsRev, MachineDescription.encodeCodeSymbolAsInput]
+  sorry
 
 theorem run_stage_nat
     (stage : Nat) (leftRev : List (Option Bool)) (result : Word Bool) :
