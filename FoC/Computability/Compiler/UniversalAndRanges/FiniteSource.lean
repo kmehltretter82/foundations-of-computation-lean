@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.UniversalAndRanges.HeaderParser
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser
 
 set_option doc.verso true
 
@@ -6,18 +6,6 @@ namespace FoC
 namespace Computability
 
 open Languages
-
-def TransitionListParserConstruction : Prop :=
-  exists state : Type,
-  exists parser : TuringMachine MachineCodeSymbol state,
-    forall count : Nat,
-    forall tokens : Word MachineCodeSymbol,
-      TuringMachine.HaltsOnInput parser
-          (MachineDescription.encodeNatAppend count tokens) <->
-        exists transitions : List TransitionDescription,
-        exists suffix : Word MachineCodeSymbol,
-          MachineDescription.decodeTransitions count tokens =
-            some (transitions, suffix)
 
 def CodePrefixParserNormalizerIdentityMachineSpec
     (normalizer : TuringMachine MachineCodeSymbol state) : Prop :=
@@ -864,7 +852,15 @@ theorem headerFieldsParserConstruction_scaffold :
 
 theorem transitionListParserConstruction_scaffold :
     TransitionListParserConstruction := by
-  sorry
+  refine
+    ⟨TransitionListParserState,
+      transitionListParserMachine, ?_⟩
+  intro count tokens
+  constructor
+  · intro h
+    sorry
+  · intro h
+    sorry
 
 theorem codePrefixParserNormalizerIdentityMachineConstruction_of_parserComponents
     (hheader : HeaderFieldsParserConstruction)
