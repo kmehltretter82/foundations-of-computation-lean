@@ -567,6 +567,745 @@ theorem codePrefixParserNormalizer_computes_nat
       simpa [MachineDescription.encodeNatAppend,
         MachineDescription.encodeNat, List.append_assoc] using hcomp
 
+theorem codePrefixParserNormalizerMachine_haltsFromIn_needHeader_head
+    {steps : Nat}
+    {leftRev rest : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsFromIn
+        codePrefixParserNormalizerMachine steps
+        { state := CodePrefixParserNormalizerState.needHeader
+          tape := codePrefixParserNormalizerTape leftRev rest }) :
+    exists suffix : Word MachineCodeSymbol,
+      rest = MachineCodeSymbol.header :: suffix := by
+  cases steps with
+  | zero =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp
+      simp [TuringMachine.Halted,
+        codePrefixParserNormalizerMachine] at hhalt
+  | succ steps =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp with
+      | succ hstep hrest =>
+          cases rest with
+          | nil =>
+              cases hstep with
+              | mk haction =>
+                  simp [codePrefixParserNormalizerMachine,
+                    codePrefixParserNormalizerTape,
+                    transitionListParserTape, Tape.read] at haction
+          | cons symbol suffix =>
+              cases symbol with
+              | header =>
+                  exact ⟨suffix, rfl⟩
+              | transition =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | tick =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | done =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | blank =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | zero =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | one =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | moveLeft =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | moveRight =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+
+theorem codePrefixParserNormalizerMachine_haltsFromIn_stateCount_nat
+    {steps : Nat}
+    {leftRev rest : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsFromIn
+        codePrefixParserNormalizerMachine steps
+        { state := CodePrefixParserNormalizerState.stateCount
+          tape := codePrefixParserNormalizerTape leftRev rest }) :
+    exists n : Nat,
+    exists suffix : Word MachineCodeSymbol,
+      rest = MachineDescription.encodeNatAppend n suffix := by
+  induction steps generalizing leftRev rest with
+  | zero =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp
+      simp [TuringMachine.Halted,
+        codePrefixParserNormalizerMachine] at hhalt
+  | succ steps ih =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp with
+      | succ hstep hrest =>
+          cases rest with
+          | nil =>
+              cases hstep with
+              | mk haction =>
+                  simp [codePrefixParserNormalizerMachine,
+                    codePrefixParserNormalizerTape,
+                    transitionListParserTape, Tape.read] at haction
+          | cons symbol suffix =>
+              cases symbol with
+              | tick =>
+                  have hnext :=
+                    TuringMachine.step_deterministic hstep
+                      (codePrefixParserNormalizer_step_tick_stateCount
+                        leftRev suffix)
+                  cases hnext
+                  have htail :
+                      TuringMachine.HaltsFromIn
+                        codePrefixParserNormalizerMachine steps
+                        { state :=
+                            CodePrefixParserNormalizerState.stateCount
+                          tape :=
+                            codePrefixParserNormalizerTape
+                              (MachineCodeSymbol.tick :: leftRev)
+                              suffix } :=
+                    ⟨final, hrest, hhalt⟩
+                  rcases ih htail with
+                    ⟨n, parsedSuffix, hsuffix⟩
+                  exact
+                    ⟨n + 1, parsedSuffix,
+                      by
+                        simp [MachineDescription.encodeNatAppend,
+                          MachineDescription.encodeNat, hsuffix]⟩
+              | done =>
+                  exact
+                    ⟨0, suffix,
+                      by
+                        simp [MachineDescription.encodeNatAppend,
+                          MachineDescription.encodeNat]⟩
+              | header =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | transition =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | blank =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | zero =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | one =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | moveLeft =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | moveRight =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+
+theorem codePrefixParserNormalizerMachine_haltsFromIn_startField_nat
+    {steps : Nat}
+    {leftRev rest : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsFromIn
+        codePrefixParserNormalizerMachine steps
+        { state := CodePrefixParserNormalizerState.startField
+          tape := codePrefixParserNormalizerTape leftRev rest }) :
+    exists n : Nat,
+    exists suffix : Word MachineCodeSymbol,
+      rest = MachineDescription.encodeNatAppend n suffix := by
+  induction steps generalizing leftRev rest with
+  | zero =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp
+      simp [TuringMachine.Halted,
+        codePrefixParserNormalizerMachine] at hhalt
+  | succ steps ih =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp with
+      | succ hstep hrest =>
+          cases rest with
+          | nil =>
+              cases hstep with
+              | mk haction =>
+                  simp [codePrefixParserNormalizerMachine,
+                    codePrefixParserNormalizerTape,
+                    transitionListParserTape, Tape.read] at haction
+          | cons symbol suffix =>
+              cases symbol with
+              | tick =>
+                  have hnext :=
+                    TuringMachine.step_deterministic hstep
+                      (codePrefixParserNormalizer_step_tick_startField
+                        leftRev suffix)
+                  cases hnext
+                  have htail :
+                      TuringMachine.HaltsFromIn
+                        codePrefixParserNormalizerMachine steps
+                        { state :=
+                            CodePrefixParserNormalizerState.startField
+                          tape :=
+                            codePrefixParserNormalizerTape
+                              (MachineCodeSymbol.tick :: leftRev)
+                              suffix } :=
+                    ⟨final, hrest, hhalt⟩
+                  rcases ih htail with
+                    ⟨n, parsedSuffix, hsuffix⟩
+                  exact
+                    ⟨n + 1, parsedSuffix,
+                      by
+                        simp [MachineDescription.encodeNatAppend,
+                          MachineDescription.encodeNat, hsuffix]⟩
+              | done =>
+                  exact
+                    ⟨0, suffix,
+                      by
+                        simp [MachineDescription.encodeNatAppend,
+                          MachineDescription.encodeNat]⟩
+              | header =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | transition =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | blank =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | zero =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | one =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | moveLeft =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | moveRight =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+
+theorem codePrefixParserNormalizerMachine_haltsFromIn_haltField_nat
+    {steps : Nat}
+    {leftRev rest : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsFromIn
+        codePrefixParserNormalizerMachine steps
+        { state := CodePrefixParserNormalizerState.haltField
+          tape := codePrefixParserNormalizerTape leftRev rest }) :
+    exists n : Nat,
+    exists suffix : Word MachineCodeSymbol,
+      rest = MachineDescription.encodeNatAppend n suffix := by
+  induction steps generalizing leftRev rest with
+  | zero =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp
+      simp [TuringMachine.Halted,
+        codePrefixParserNormalizerMachine] at hhalt
+  | succ steps ih =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp with
+      | succ hstep hrest =>
+          cases rest with
+          | nil =>
+              cases hstep with
+              | mk haction =>
+                  simp [codePrefixParserNormalizerMachine,
+                    codePrefixParserNormalizerTape,
+                    transitionListParserTape, Tape.read] at haction
+          | cons symbol suffix =>
+              cases symbol with
+              | tick =>
+                  have hnext :=
+                    TuringMachine.step_deterministic hstep
+                      (codePrefixParserNormalizer_step_tick_haltField
+                        leftRev suffix)
+                  cases hnext
+                  have htail :
+                      TuringMachine.HaltsFromIn
+                        codePrefixParserNormalizerMachine steps
+                        { state :=
+                            CodePrefixParserNormalizerState.haltField
+                          tape :=
+                            codePrefixParserNormalizerTape
+                              (MachineCodeSymbol.tick :: leftRev)
+                              suffix } :=
+                    ⟨final, hrest, hhalt⟩
+                  rcases ih htail with
+                    ⟨n, parsedSuffix, hsuffix⟩
+                  exact
+                    ⟨n + 1, parsedSuffix,
+                      by
+                        simp [MachineDescription.encodeNatAppend,
+                          MachineDescription.encodeNat, hsuffix]⟩
+              | done =>
+                  exact
+                    ⟨0, suffix,
+                      by
+                        simp [MachineDescription.encodeNatAppend,
+                          MachineDescription.encodeNat]⟩
+              | header =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | transition =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | blank =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | zero =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | one =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | moveLeft =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | moveRight =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+
+theorem codePrefixParserNormalizerMachine_haltsFromIn_startField_fields
+    {steps : Nat}
+    {leftRev rest : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsFromIn
+        codePrefixParserNormalizerMachine steps
+        { state := CodePrefixParserNormalizerState.startField
+          tape := codePrefixParserNormalizerTape leftRev rest }) :
+    exists start halt : Nat,
+    exists suffix : Word MachineCodeSymbol,
+      rest =
+        MachineDescription.encodeNatAppend start
+          (MachineDescription.encodeNatAppend halt suffix) := by
+  induction steps generalizing leftRev rest with
+  | zero =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp
+      simp [TuringMachine.Halted,
+        codePrefixParserNormalizerMachine] at hhalt
+  | succ steps ih =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp with
+      | succ hstep hrest =>
+          cases rest with
+          | nil =>
+              cases hstep with
+              | mk haction =>
+                  simp [codePrefixParserNormalizerMachine,
+                    codePrefixParserNormalizerTape,
+                    transitionListParserTape, Tape.read] at haction
+          | cons symbol suffix =>
+              cases symbol with
+              | tick =>
+                  have hnext :=
+                    TuringMachine.step_deterministic hstep
+                      (codePrefixParserNormalizer_step_tick_startField
+                        leftRev suffix)
+                  cases hnext
+                  have htail :
+                      TuringMachine.HaltsFromIn
+                        codePrefixParserNormalizerMachine steps
+                        { state :=
+                            CodePrefixParserNormalizerState.startField
+                          tape :=
+                            codePrefixParserNormalizerTape
+                              (MachineCodeSymbol.tick :: leftRev)
+                              suffix } :=
+                    ⟨final, hrest, hhalt⟩
+                  rcases ih htail with
+                    ⟨start, halt, parsedSuffix, hsuffix⟩
+                  exact
+                    ⟨start + 1, halt, parsedSuffix,
+                      by
+                        simp [MachineDescription.encodeNatAppend,
+                          MachineDescription.encodeNat, hsuffix]⟩
+              | done =>
+                  have hnext :=
+                    TuringMachine.step_deterministic hstep
+                      (codePrefixParserNormalizer_step_done_startField
+                        leftRev suffix)
+                  cases hnext
+                  have htail :
+                      TuringMachine.HaltsFromIn
+                        codePrefixParserNormalizerMachine steps
+                        { state :=
+                            CodePrefixParserNormalizerState.haltField
+                          tape :=
+                            codePrefixParserNormalizerTape
+                              (MachineCodeSymbol.done :: leftRev)
+                              suffix } :=
+                    ⟨final, hrest, hhalt⟩
+                  rcases
+                    codePrefixParserNormalizerMachine_haltsFromIn_haltField_nat
+                      htail with
+                    ⟨halt, parsedSuffix, hsuffix⟩
+                  exact
+                    ⟨0, halt, parsedSuffix,
+                      by
+                        simp [MachineDescription.encodeNatAppend,
+                          MachineDescription.encodeNat, hsuffix]⟩
+              | header =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | transition =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | blank =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | zero =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | one =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | moveLeft =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | moveRight =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+
+theorem codePrefixParserNormalizerMachine_haltsFromIn_stateCount_fields
+    {steps : Nat}
+    {leftRev rest : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsFromIn
+        codePrefixParserNormalizerMachine steps
+        { state := CodePrefixParserNormalizerState.stateCount
+          tape := codePrefixParserNormalizerTape leftRev rest }) :
+    exists stateCount start halt : Nat,
+    exists suffix : Word MachineCodeSymbol,
+      rest =
+        MachineDescription.encodeNatAppend stateCount
+          (MachineDescription.encodeNatAppend start
+            (MachineDescription.encodeNatAppend halt suffix)) := by
+  induction steps generalizing leftRev rest with
+  | zero =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp
+      simp [TuringMachine.Halted,
+        codePrefixParserNormalizerMachine] at hhalt
+  | succ steps ih =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp with
+      | succ hstep hrest =>
+          cases rest with
+          | nil =>
+              cases hstep with
+              | mk haction =>
+                  simp [codePrefixParserNormalizerMachine,
+                    codePrefixParserNormalizerTape,
+                    transitionListParserTape, Tape.read] at haction
+          | cons symbol suffix =>
+              cases symbol with
+              | tick =>
+                  have hnext :=
+                    TuringMachine.step_deterministic hstep
+                      (codePrefixParserNormalizer_step_tick_stateCount
+                        leftRev suffix)
+                  cases hnext
+                  have htail :
+                      TuringMachine.HaltsFromIn
+                        codePrefixParserNormalizerMachine steps
+                        { state :=
+                            CodePrefixParserNormalizerState.stateCount
+                          tape :=
+                            codePrefixParserNormalizerTape
+                              (MachineCodeSymbol.tick :: leftRev)
+                              suffix } :=
+                    ⟨final, hrest, hhalt⟩
+                  rcases ih htail with
+                    ⟨stateCount, start, halt, parsedSuffix, hsuffix⟩
+                  exact
+                    ⟨stateCount + 1, start, halt, parsedSuffix,
+                      by
+                        simp [MachineDescription.encodeNatAppend,
+                          MachineDescription.encodeNat, hsuffix]⟩
+              | done =>
+                  have hnext :=
+                    TuringMachine.step_deterministic hstep
+                      (codePrefixParserNormalizer_step_done_stateCount
+                        leftRev suffix)
+                  cases hnext
+                  have htail :
+                      TuringMachine.HaltsFromIn
+                        codePrefixParserNormalizerMachine steps
+                        { state :=
+                            CodePrefixParserNormalizerState.startField
+                          tape :=
+                            codePrefixParserNormalizerTape
+                              (MachineCodeSymbol.done :: leftRev)
+                              suffix } :=
+                    ⟨final, hrest, hhalt⟩
+                  rcases
+                    codePrefixParserNormalizerMachine_haltsFromIn_startField_fields
+                      htail with
+                    ⟨start, halt, parsedSuffix, hsuffix⟩
+                  exact
+                    ⟨0, start, halt, parsedSuffix,
+                      by
+                        simp [MachineDescription.encodeNatAppend,
+                          MachineDescription.encodeNat, hsuffix]⟩
+              | header =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | transition =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | blank =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | zero =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | one =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | moveLeft =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | moveRight =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+
+theorem codePrefixParserNormalizerMachine_haltsFromIn_needHeader_fields
+    {steps : Nat}
+    {leftRev rest : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsFromIn
+        codePrefixParserNormalizerMachine steps
+        { state := CodePrefixParserNormalizerState.needHeader
+          tape := codePrefixParserNormalizerTape leftRev rest }) :
+    exists stateCount start halt : Nat,
+    exists suffix : Word MachineCodeSymbol,
+      rest =
+        MachineCodeSymbol.header ::
+          MachineDescription.encodeNatAppend stateCount
+            (MachineDescription.encodeNatAppend start
+              (MachineDescription.encodeNatAppend halt suffix)) := by
+  cases steps with
+  | zero =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp
+      simp [TuringMachine.Halted,
+        codePrefixParserNormalizerMachine] at hhalt
+  | succ steps =>
+      rcases h with ⟨final, hcomp, hhalt⟩
+      cases hcomp with
+      | succ hstep hrest =>
+          cases rest with
+          | nil =>
+              cases hstep with
+              | mk haction =>
+                  simp [codePrefixParserNormalizerMachine,
+                    codePrefixParserNormalizerTape,
+                    transitionListParserTape, Tape.read] at haction
+          | cons symbol suffix =>
+              cases symbol with
+              | header =>
+                  have hnext :=
+                    TuringMachine.step_deterministic hstep
+                      (codePrefixParserNormalizer_step_header
+                        leftRev suffix)
+                  cases hnext
+                  have htail :
+                      TuringMachine.HaltsFromIn
+                        codePrefixParserNormalizerMachine steps
+                        { state :=
+                            CodePrefixParserNormalizerState.stateCount
+                          tape :=
+                            codePrefixParserNormalizerTape
+                              (MachineCodeSymbol.header :: leftRev)
+                              suffix } :=
+                    ⟨final, hrest, hhalt⟩
+                  rcases
+                    codePrefixParserNormalizerMachine_haltsFromIn_stateCount_fields
+                      htail with
+                    ⟨stateCount, start, halt, parsedSuffix, hsuffix⟩
+                  exact
+                    ⟨stateCount, start, halt, parsedSuffix,
+                      by simp [hsuffix]⟩
+              | transition =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | tick =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | done =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | blank =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | zero =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | one =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | moveLeft =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+              | moveRight =>
+                  cases hstep with
+                  | mk haction =>
+                      simp [codePrefixParserNormalizerMachine,
+                        codePrefixParserNormalizerTape,
+                        transitionListParserTape, Tape.read] at haction
+
 /-!
 **Normalizer code-spec frontier.**  The concrete
 {name}`codePrefixParserNormalizerMachine` is the finite-state witness used by
@@ -575,13 +1314,37 @@ into soundness and completeness directions; the packaged spec below keeps
 downstream construction code independent of that split.
 -/
 
+theorem codePrefixParserNormalizerMachine_haltsWithOutput_only_decode
+    (tokens out : Word MachineCodeSymbol)
+    (h :
+      TuringMachine.HaltsWithOutput
+        codePrefixParserNormalizerMachine tokens out) :
+    out = tokens ∧
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeDescriptionPrefix tokens =
+          some (D, input) := by
+  sorry
+
 theorem codePrefixParserNormalizerMachine_code_sound
     (tokens out : Word MachineCodeSymbol)
     (h :
       TuringMachine.HaltsWithOutput
         codePrefixParserNormalizerMachine tokens out) :
     CodePrefixParserNormalizerCode.transform tokens = some out := by
-  sorry
+  rcases
+      codePrefixParserNormalizerMachine_haltsWithOutput_only_decode
+        tokens out h with
+    ⟨hout, D, input, hdecode⟩
+  exact
+    (codePrefixParserNormalizerCode_transform_eq_some_iff
+      tokens out).mpr
+      ⟨D, input, hdecode,
+        by
+          rw [hout]
+          exact
+            MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+              hdecode⟩
 
 theorem codePrefixParserNormalizerMachine_code_complete
     (tokens out : Word MachineCodeSymbol)
