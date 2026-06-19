@@ -59,6 +59,24 @@ private def controllerResultEmitterBitValue : Bool -> Nat
   | false => 0
   | true => 1
 
+private def controllerResultEmitterCodeOfBits
+    (bit0 bit1 bit2 bit3 : Bool) : Nat :=
+  (((controllerResultEmitterBitValue bit0) * 2 +
+      controllerResultEmitterBitValue bit1) * 2 +
+      controllerResultEmitterBitValue bit2) * 2 +
+    controllerResultEmitterBitValue bit3
+
+private def controllerResultEmitterSymbolCode : MachineCodeSymbol -> Nat
+  | MachineCodeSymbol.header => 0
+  | MachineCodeSymbol.transition => 1
+  | MachineCodeSymbol.tick => 2
+  | MachineCodeSymbol.done => 3
+  | MachineCodeSymbol.blank => 4
+  | MachineCodeSymbol.zero => 5
+  | MachineCodeSymbol.one => 6
+  | MachineCodeSymbol.moveLeft => 7
+  | MachineCodeSymbol.moveRight => 8
+
 private def controllerResultEmitterBoundaryOfNat
     (n : Nat) : ControllerResultEmitterBoundary :=
   match n with
@@ -337,7 +355,193 @@ theorem dovetailControllerResultEmitterDescription_subroutineReady :
   ⟨dovetailControllerResultEmitterDescription_wellFormed,
     dovetailControllerResultEmitterDescription_haltTransitionFree⟩
 
-set_option maxHeartbeats 1000000 in
+private theorem dovetailControllerResultEmitterDescription_run_first_bit
+    (boundary : ControllerResultEmitterBoundary)
+    (bit : Bool) (erased : Nat) (suffix : Word Bool) :
+    DovetailControllerResultEmitterDescription.runConfig 1
+        { state := controllerResultEmitterState boundary.toNat 0 0
+          tape := MachineDescription.eraseRightTape erased (bit :: suffix) } =
+      { state :=
+          controllerResultEmitterState boundary.toNat 1
+            (controllerResultEmitterBitValue bit)
+        tape := MachineDescription.eraseRightTape (erased + 1) suffix } := by
+  cases boundary <;> cases bit <;> cases suffix <;> rfl
+
+private theorem dovetailControllerResultEmitterDescription_run_second_bit
+    (boundary : ControllerResultEmitterBoundary)
+    (bit0 bit1 : Bool) (erased : Nat) (suffix : Word Bool) :
+    DovetailControllerResultEmitterDescription.runConfig 1
+        { state :=
+            controllerResultEmitterState boundary.toNat 1
+              (controllerResultEmitterBitValue bit0)
+          tape := MachineDescription.eraseRightTape erased (bit1 :: suffix) } =
+      { state :=
+          controllerResultEmitterState boundary.toNat 2
+            (controllerResultEmitterBitValue bit0 * 2 +
+              controllerResultEmitterBitValue bit1)
+        tape := MachineDescription.eraseRightTape (erased + 1) suffix } := by
+  cases boundary <;> cases bit0 <;> cases bit1 <;> cases suffix <;> rfl
+
+private theorem dovetailControllerResultEmitterDescription_run_third_bit
+    (boundary : ControllerResultEmitterBoundary)
+    (bit0 bit1 bit2 : Bool) (erased : Nat) (suffix : Word Bool) :
+    DovetailControllerResultEmitterDescription.runConfig 1
+        { state :=
+            controllerResultEmitterState boundary.toNat 2
+              (controllerResultEmitterBitValue bit0 * 2 +
+                controllerResultEmitterBitValue bit1)
+          tape := MachineDescription.eraseRightTape erased (bit2 :: suffix) } =
+      { state :=
+          controllerResultEmitterState boundary.toNat 3
+            ((controllerResultEmitterBitValue bit0 * 2 +
+                controllerResultEmitterBitValue bit1) * 2 +
+              controllerResultEmitterBitValue bit2)
+        tape := MachineDescription.eraseRightTape (erased + 1) suffix } := by
+  cases boundary <;> cases bit0 <;> cases bit1 <;> cases bit2 <;>
+    cases suffix <;> rfl
+
+private theorem dovetailControllerResultEmitterDescription_run_fourth_bit
+    (boundary : ControllerResultEmitterBoundary)
+    (bit0 bit1 bit2 bit3 : Bool) (erased : Nat) (suffix : Word Bool) :
+    DovetailControllerResultEmitterDescription.runConfig 1
+        { state :=
+            controllerResultEmitterState boundary.toNat 3
+              ((controllerResultEmitterBitValue bit0 * 2 +
+                  controllerResultEmitterBitValue bit1) * 2 +
+                controllerResultEmitterBitValue bit2)
+          tape := MachineDescription.eraseRightTape erased (bit3 :: suffix) } =
+      { state :=
+          controllerResultEmitterState
+            (controllerResultEmitterUpdateCode boundary.toNat
+              (controllerResultEmitterCodeOfBits bit0 bit1 bit2 bit3)) 0 0
+        tape := MachineDescription.eraseRightTape (erased + 1) suffix } := by
+  cases boundary <;> cases bit0 <;> cases bit1 <;> cases bit2 <;>
+    cases bit3 <;> cases suffix <;> rfl
+
+private theorem dovetailControllerResultEmitterDescription_run_bits
+    (boundary : ControllerResultEmitterBoundary)
+    (bit0 bit1 bit2 bit3 : Bool)
+    (erased : Nat) (suffix : Word Bool) :
+    DovetailControllerResultEmitterDescription.runConfig 4
+        { state := controllerResultEmitterState boundary.toNat 0 0
+          tape :=
+            MachineDescription.eraseRightTape erased
+              (List.append [bit0, bit1, bit2, bit3] suffix) } =
+      { state :=
+          controllerResultEmitterState
+            (controllerResultEmitterUpdateCode boundary.toNat
+              (controllerResultEmitterCodeOfBits bit0 bit1 bit2 bit3)) 0 0
+        tape := MachineDescription.eraseRightTape (erased + 4) suffix } := by
+  rw [show 4 = 1 + 3 by omega, MachineDescription.runConfig_add]
+  change
+    DovetailControllerResultEmitterDescription.runConfig 3
+        (DovetailControllerResultEmitterDescription.runConfig 1
+          { state := controllerResultEmitterState boundary.toNat 0 0
+            tape :=
+              MachineDescription.eraseRightTape erased
+                (bit0 :: bit1 :: bit2 :: bit3 :: suffix) }) =
+      { state :=
+          controllerResultEmitterState
+            (controllerResultEmitterUpdateCode boundary.toNat
+              (controllerResultEmitterCodeOfBits bit0 bit1 bit2 bit3)) 0 0
+        tape := MachineDescription.eraseRightTape (erased + 4) suffix }
+  rw [dovetailControllerResultEmitterDescription_run_first_bit]
+  rw [show 3 = 1 + 2 by omega, MachineDescription.runConfig_add]
+  change
+    DovetailControllerResultEmitterDescription.runConfig 2
+        (DovetailControllerResultEmitterDescription.runConfig 1
+          { state :=
+              controllerResultEmitterState boundary.toNat 1
+                (controllerResultEmitterBitValue bit0)
+            tape :=
+              MachineDescription.eraseRightTape (erased + 1)
+                (bit1 :: bit2 :: bit3 :: suffix) }) =
+      { state :=
+          controllerResultEmitterState
+            (controllerResultEmitterUpdateCode boundary.toNat
+              (controllerResultEmitterCodeOfBits bit0 bit1 bit2 bit3)) 0 0
+        tape := MachineDescription.eraseRightTape (erased + 4) suffix }
+  rw [dovetailControllerResultEmitterDescription_run_second_bit]
+  rw [show 2 = 1 + 1 by omega, MachineDescription.runConfig_add]
+  change
+    DovetailControllerResultEmitterDescription.runConfig 1
+        (DovetailControllerResultEmitterDescription.runConfig 1
+          { state :=
+              controllerResultEmitterState boundary.toNat 2
+                (controllerResultEmitterBitValue bit0 * 2 +
+                  controllerResultEmitterBitValue bit1)
+            tape :=
+              MachineDescription.eraseRightTape ((erased + 1) + 1)
+                (bit2 :: bit3 :: suffix) }) =
+      { state :=
+          controllerResultEmitterState
+            (controllerResultEmitterUpdateCode boundary.toNat
+              (controllerResultEmitterCodeOfBits bit0 bit1 bit2 bit3)) 0 0
+        tape := MachineDescription.eraseRightTape (erased + 4) suffix }
+  rw [dovetailControllerResultEmitterDescription_run_third_bit]
+  rw [dovetailControllerResultEmitterDescription_run_fourth_bit]
+
+private theorem controllerResultEmitterUpdateCode_symbol
+    (boundary : ControllerResultEmitterBoundary)
+    (symbol : MachineCodeSymbol) :
+    controllerResultEmitterUpdateCode boundary.toNat
+        (controllerResultEmitterSymbolCode symbol) =
+      (boundary.update symbol).toNat := by
+  cases boundary <;> cases symbol <;> rfl
+
+private theorem dovetailControllerResultEmitterDescription_run_encoded_symbol
+    (boundary : ControllerResultEmitterBoundary)
+    (symbol : MachineCodeSymbol)
+    (erased : Nat) (suffix : Word Bool) :
+    DovetailControllerResultEmitterDescription.runConfig 4
+        { state := controllerResultEmitterState boundary.toNat 0 0
+          tape :=
+            MachineDescription.eraseRightTape erased
+              (List.append
+                (MachineDescription.encodeCodeSymbolAsInput symbol) suffix) } =
+      { state :=
+          controllerResultEmitterState
+            (controllerResultEmitterUpdateCode boundary.toNat
+              (controllerResultEmitterSymbolCode symbol)) 0 0
+        tape := MachineDescription.eraseRightTape (erased + 4) suffix } := by
+  cases symbol
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      (dovetailControllerResultEmitterDescription_run_bits boundary
+        false false false false erased suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      (dovetailControllerResultEmitterDescription_run_bits boundary
+        false false false true erased suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      (dovetailControllerResultEmitterDescription_run_bits boundary
+        false false true false erased suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      (dovetailControllerResultEmitterDescription_run_bits boundary
+        false false true true erased suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      (dovetailControllerResultEmitterDescription_run_bits boundary
+        false true false false erased suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      (dovetailControllerResultEmitterDescription_run_bits boundary
+        false true false true erased suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      (dovetailControllerResultEmitterDescription_run_bits boundary
+        false true true false erased suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      (dovetailControllerResultEmitterDescription_run_bits boundary
+        false true true true erased suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      (dovetailControllerResultEmitterDescription_run_bits boundary
+        true false false false erased suffix)
+
 private theorem dovetailControllerResultEmitterDescription_run_symbol
     (boundary : ControllerResultEmitterBoundary)
     (symbol : MachineCodeSymbol)
@@ -353,25 +557,8 @@ private theorem dovetailControllerResultEmitterDescription_run_symbol
           controllerResultEmitterState
             (boundary.update symbol).toNat 0 0
         tape := MachineDescription.eraseRightTape (erased + 4) suffix } := by
-  cases boundary <;> cases symbol <;>
-    simp [DovetailControllerResultEmitterDescription,
-      controllerResultEmitterBitTransitions,
-      controllerResultEmitterPrefixTransitions,
-      controllerResultEmitterBlankTransitions,
-      controllerResultEmitterState,
-      controllerResultEmitterUpdateCode, controllerResultEmitterBoundaryOfNat,
-      ControllerResultEmitterBoundary.toNat,
-      ControllerResultEmitterBoundary.update,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition,
-      MachineDescription.encodeCodeSymbolAsInput,
-      MachineDescription.eraseRightTape,
-      Tape.read, Tape.write, Tape.move, Tape.moveRight,
-      List.replicate_succ]
-  all_goals
-    cases suffix <;>
-      simp
+  rw [dovetailControllerResultEmitterDescription_run_encoded_symbol]
+  rw [controllerResultEmitterUpdateCode_symbol]
 
 private def controllerResultEmitterScanBoundaryFrom
     (boundary : ControllerResultEmitterBoundary) :
