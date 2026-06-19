@@ -2,6 +2,21 @@ import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInp
 
 set_option doc.verso true
 
+/-!
+# Stage-input marked scanner
+
+This module builds the middle scanner used by the stage-input recognizer.  The
+preceding marker subroutine has erased the second input bit; the scanner checks
+the remaining stage-input payload, restores any marked cells to the ordinary
+encoded form, appends the trailing blank used by the checked handoff, and halts
+with the head still in the handoff position.
+
+The proof is intentionally organized around machine phases.  The finite
+transition table is concrete, but the exported facts are stated in terms of the
+encoded payload views, so later initializer modules can avoid expanding the
+table.
+-/
+
 namespace FoC
 namespace Computability
 
@@ -9,6 +24,13 @@ open Languages
 
 namespace DovetailInitialLayoutInitializer
 namespace StageInputMarkedScanner
+
+/-!
+**Transition combinators.**  These small constructors keep the concrete table
+for {lit}`StageInputMarkedScannerDescription` readable.  The scanner has two
+left-scan patterns: one returns to the current length marker and restarts at
+state {lit}`100`, while the final one halts after finding the checked boundary.
+-/
 
 def keep (source : Nat) (read : Bool) (target : Nat) :
     TransitionDescription :=
@@ -41,6 +63,14 @@ def scanLeftToSentinelHalt (scan : Nat) :
   , keepMove scan (some true) Direction.left scan
   , keepMove scan none Direction.right 999
   ]
+
+/-!
+**Encoding views.**  The scanner works over the second-bit-marked suffix of a
+stage input.  The definitions below name the pieces that appear repeatedly in
+the tape shape: encoded ticks, the {name}`MachineCodeSymbol.done` delimiter,
+encoded stage numbers, ordinary payload cells, and the temporary marked payload
+cells used while scanning.
+-/
 
 def tickBits : Word Bool :=
   MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.tick
@@ -115,6 +145,24 @@ theorem markedCellsBits_append
       simp [markedCellsBits]
       exact congrArg (fun bits =>
         List.append (markedCellBits b) bits) ih
+
+theorem cellBits_length (b : Bool) :
+    (cellBits b).length = 4 := by
+  cases b <;> rfl
+
+theorem markedCellBits_length (b : Bool) :
+    (markedCellBits b).length = 4 := by
+  cases b <;> rfl
+
+theorem markedCellsBits_length
+    (w : Word Bool) :
+    (markedCellsBits w).length = 4 * w.length := by
+  induction w with
+  | nil =>
+      rfl
+  | cons _ rest ih =>
+      simp [markedCellsBits, markedCellBits_length, ih]
+      omega
 
 theorem stageInputSecondBitTail_nil
     (stage : Nat) :
@@ -222,6 +270,33 @@ theorem stageNatBits_length (stage : Nat) :
       simp [stageNatBits_succ, ih]
       omega
 
+/-!
+The final stage-number scan starts by consuming the two leading false bits of
+the encoded natural.  Naming that shape keeps the state {lit}`150` finishing
+lemmas independent of the recursive definition of {name}`stageNatBits`.
+-/
+
+theorem stageNatBits_false_false_tail
+    (stage : Nat) :
+    exists tail : Word Bool,
+      stageNatBits stage = false :: false :: tail := by
+  cases stage with
+  | zero =>
+      exact ⟨[true, true], rfl⟩
+  | succ stage =>
+      exact ⟨true :: false :: stageNatBits stage, by
+        simp [stageNatBits_succ]⟩
+
+/-!
+**Concrete scanner table.**  The states are grouped by phase:
+state {lit}`100` scans the length prefix and marks the next tick, state
+{lit}`120` skips the remaining length prefix, state {lit}`130` marks the
+current payload cell, state {lit}`140` scans back to the marked length
+sentinel, state {lit}`150` restores marked payload cells during the finish
+pass, and states {lit}`180`, {lit}`200`, and {lit}`220` append and verify the
+final checked blank.
+-/
+
 def StageInputMarkedScannerDescription :
     MachineDescription where
   stateCount := 1000
@@ -325,6 +400,150 @@ theorem stageInputMarkedScannerDescription_subroutineReady :
     StageInputMarkedScannerDescription.SubroutineReady :=
   ⟨stageInputMarkedScannerDescription_wellFormed,
     stageInputMarkedScannerDescription_haltTransitionFree⟩
+
+/-!
+**Length-marker and finish helpers.**  These are the phase-local facts that
+keep the remaining forward proof manageable.  State {lit}`100` either consumes
+an unmarked tick and moves to state {lit}`120`, or recognizes the
+{name}`MachineCodeSymbol.done` delimiter and enters the finish pass.  State
+{lit}`150` restores marked payload cells to the ordinary
+{name}`cellBits` encoding before crossing the first two bits of the stage
+number and handing control to the left scan.
+-/
+
+def markedTickRev : List (Option Bool) :=
+  [none, some true, some false, some false]
+
+theorem run_state100_tick
+    (left tail : List (Option Bool)) :
+    StageInputMarkedScannerDescription.runConfig 4
+        (config 100 left
+          (List.append (tickBits.map some) tail)) =
+      config 120 (List.append markedTickRev left) tail := by
+  cases tail with
+  | nil =>
+      rfl
+  | cons cell rest =>
+      cases cell with
+      | none =>
+          rfl
+      | some b =>
+          cases b <;> rfl
+
+theorem run_state100_done
+    (left tail : List (Option Bool)) :
+    StageInputMarkedScannerDescription.runConfig 4
+        (config 100 left
+          (List.append (doneBits.map some) tail)) =
+      config 150
+        (List.append (doneBits.reverse.map some) left) tail := by
+  cases tail with
+  | nil =>
+      rfl
+  | cons cell rest =>
+      cases cell with
+      | none =>
+          rfl
+      | some b =>
+          cases b <;> rfl
+
+theorem run_state150_markedCell
+    (b : Bool) (left right : List (Option Bool)) :
+    StageInputMarkedScannerDescription.runConfig 4
+        (config 150 left
+          (List.append ((markedCellBits b).map some) right)) =
+      config 150
+        (List.append ((cellBits b).reverse.map some) left)
+        right := by
+  cases b <;> cases right <;>
+  simp [StageInputMarkedScannerDescription, markedCellBits,
+    cellBits,
+    config, tapeAtCells, keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    MachineDescription.runConfig, MachineDescription.stepConfig,
+    MachineDescription.lookupTransition, MachineDescription.Matches,
+    MachineDescription.transition,
+    MachineDescription.encodeCodeSymbolAsInput,
+    Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+theorem run_state150_markedCells
+    (processed : Word Bool)
+    (left right : List (Option Bool)) :
+    StageInputMarkedScannerDescription.runConfig
+        (4 * processed.length)
+        (config 150 left
+          (List.append ((markedCellsBits processed).map some)
+            right)) =
+      config 150
+        (List.append ((cellsBits processed).reverse.map some)
+          left)
+        right := by
+  induction processed generalizing left with
+  | nil =>
+      rfl
+  | cons b rest ih =>
+      rw [show 4 * (b :: rest).length =
+          4 + 4 * rest.length by simp; omega]
+      rw [MachineDescription.runConfig_add]
+      rw [show
+          List.append ((markedCellsBits (b :: rest)).map some)
+              right =
+            List.append ((markedCellBits b).map some)
+              (List.append ((markedCellsBits rest).map some)
+                right) by
+          simp [markedCellsBits, List.map_append, List.append_assoc]]
+      rw [run_state150_markedCell]
+      rw [ih]
+      simp [List.reverse_append, List.map_append,
+        List.append_assoc]
+
+theorem run_state150_to_state160
+    (left tail : List (Option Bool)) :
+    StageInputMarkedScannerDescription.runConfig 2
+        (config 150 left (some false :: some false :: tail)) =
+      config 160 left (some false :: none :: tail) := by
+  cases tail <;>
+  simp [StageInputMarkedScannerDescription,
+    config, tapeAtCells, keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    MachineDescription.runConfig, MachineDescription.stepConfig,
+    MachineDescription.lookupTransition, MachineDescription.Matches,
+    MachineDescription.transition,
+    Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem run_state150_stageNat_to_state160
+    (stage : Nat) (left : List (Option Bool)) :
+    StageInputMarkedScannerDescription.runConfig 2
+        (config 150 left ((stageNatBits stage).map some)) =
+      config 160 left
+        (some false :: none ::
+          ((stageNatBits stage).drop 2).map some) := by
+  rcases stageNatBits_false_false_tail stage with ⟨tail, htail⟩
+  rw [htail]
+  simpa using run_state150_to_state160 left (tail.map some)
+
+theorem run_state150_markedCells_to_state160
+    (processed : Word Bool) (stage : Nat)
+    (left : List (Option Bool)) :
+    StageInputMarkedScannerDescription.runConfig
+        (4 * processed.length + 2)
+        (config 150 left
+          (List.append ((markedCellsBits processed).map some)
+            ((stageNatBits stage).map some))) =
+      config 160
+        (List.append ((cellsBits processed).reverse.map some) left)
+        (some false :: none ::
+          ((stageNatBits stage).drop 2).map some) := by
+  rw [MachineDescription.runConfig_add]
+  rw [run_state150_markedCells]
+  rw [run_state150_stageNat_to_state160]
+
+/-!
+**Append and boundary scans.**  After the finish pass has restored the payload,
+state {lit}`180` moves right to the blank where the checked separator is
+written.  States {lit}`200` and {lit}`220` then rescan the final stage number
+and move left to the boundary that should become the halted head position.
+-/
 
 theorem run_state180_some
     (b : Bool) (left right : List (Option Bool)) :
@@ -746,6 +965,76 @@ theorem run_state200_stageNat_end
         MachineDescription.encodeCodeSymbolAsInput,
         List.reverse_append, List.map_append, List.append_assoc] using h
 
+/-!
+**Entry configurations.**  The two public forward runners split on the payload
+length.  The empty payload reaches the final append phase directly, while a
+nonempty payload first enters state {lit}`120` after marking the current length
+tick.
+-/
+
+theorem run_start_cons_to_state120
+    (b : Bool) (rest : Word Bool) (stage : Nat) :
+    StageInputMarkedScannerDescription.runConfig 6
+        { state := StageInputMarkedScannerDescription.start
+          tape :=
+            stageInputSecondBitMarkedHandoffTape
+              (b :: rest) stage } =
+      config 120 [none, some true, none, some false]
+        (List.append ((stageNatBits rest.length).map some)
+          (List.append ((cellBits b).map some)
+            (List.append ((cellsBits rest).map some)
+              ((stageNatBits stage).map some)))) := by
+  unfold stageInputSecondBitMarkedHandoffTape
+  unfold stageInputSecondBitMarkedTape
+  rw [stageInputSecondBitTail_cons]
+  change
+    StageInputMarkedScannerDescription.runConfig 6
+        { state := StageInputMarkedScannerDescription.start
+          tape :=
+            Tape.move Direction.right
+              (tapeAtCells [some false]
+                (none ::
+                  List.map some
+                    (true :: false ::
+                      List.append (stageNatBits rest.length)
+                        (List.append (cellBits b)
+                          (List.append (cellsBits rest)
+                            (stageNatBits stage)))))) } =
+      config 120 [none, some true, none, some false]
+        (List.append ((stageNatBits rest.length).map some)
+          (List.append ((cellBits b).map some)
+            (List.append ((cellsBits rest).map some)
+              ((stageNatBits stage).map some))))
+  cases b
+  · simp [StageInputMarkedScannerDescription,
+      config, tapeAtCells,
+      keep, keepMove, writeMove, scanLeftToSentinelRestart,
+      scanLeftToSentinelHalt,
+      MachineDescription.runConfig, MachineDescription.stepConfig,
+      MachineDescription.lookupTransition, MachineDescription.Matches,
+      MachineDescription.transition, Tape.read, Tape.write,
+      Tape.move, Tape.moveLeft, Tape.moveRight]
+    generalize
+        List.map some (stageNatBits rest.length) ++
+          (List.map some (cellBits false) ++
+            (List.map some (cellsBits rest) ++
+              List.map some (stageNatBits stage))) = cells
+    cases cells <;> rfl
+  · simp [StageInputMarkedScannerDescription,
+      config, tapeAtCells,
+      keep, keepMove, writeMove, scanLeftToSentinelRestart,
+      scanLeftToSentinelHalt,
+      MachineDescription.runConfig, MachineDescription.stepConfig,
+      MachineDescription.lookupTransition, MachineDescription.Matches,
+      MachineDescription.transition, Tape.read, Tape.write,
+      Tape.move, Tape.moveLeft, Tape.moveRight]
+    generalize
+        List.map some (stageNatBits rest.length) ++
+          (List.map some (cellBits true) ++
+            (List.map some (cellsBits rest) ++
+              List.map some (stageNatBits stage))) = cells
+    cases cells <;> rfl
+
 theorem run_start_nil_to_state200
     (stage : Nat) :
     StageInputMarkedScannerDescription.runConfig 18
@@ -813,6 +1102,13 @@ theorem run_start_nil
   rw [stageInputSecondBitTail_nil]
   simp [StageInputMarkedScannerDescription, config, tapeAtCells,
     Tape.move, Tape.moveRight]
+
+/-!
+The exported construction theorem packages the subroutine readiness, forward
+run, and closed-run inversion required by {name}`StageInputMarkedScannerSpec`.
+The remaining placeholders in this file are exactly the positive nonempty run
+and the closed soundness direction.
+-/
 
 theorem stageInputMarkedScannerDescription_spec :
     StageInputMarkedScannerSpec StageInputMarkedScannerDescription := by
