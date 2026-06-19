@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer
 
 set_option doc.verso true
 
@@ -592,14 +592,47 @@ def CodePrefixStageSearchControllerCoreConstruction : Prop :=
 now separate finite parser machines from controller sequencing.  The
 description-prefix decoder is no longer an independent leaf: it is derived from
 the same {name}`CodePrefixParserNormalizerIdentityMachineConstruction` used by
-the normalizer path.  The bounded simulator leaf is the finite sequencing that
-connects the stage decoder, the shared description decoder, and the pure
+the normalizer path.  The first sequencing scaffold is now backed by the
+concrete {name}`codePrefixParserNormalizerMachine_code_spec`; the bounded
+simulator leaf is the finite sequencing that connects the stage decoder, the
+shared description decoder, and the pure
 {name}`CodePrefixDecodedBoundedSimulatorCode` primitive.
 -/
 
 theorem codePrefixParserNormalizerSequencingConstruction_scaffold :
     CodePrefixParserNormalizerSequencingConstruction := by
-  sorry
+  intro headerState transitionState header transitionParser
+    hheader htransitions
+  refine
+    ⟨CodePrefixParserNormalizerState,
+      codePrefixParserNormalizerMachine, ?_⟩
+  intro tokens out
+  rw [codePrefixParserNormalizerMachine_code_spec tokens out]
+  constructor
+  · intro h
+    rcases
+        (codePrefixParserNormalizerCode_transform_eq_some_iff
+          tokens out).mp h with
+      ⟨D, input, hdecode, hout⟩
+    have htokens :
+        tokens = List.append (MachineDescription.encodeDescription D) input :=
+      MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+        hdecode
+    exact ⟨by rw [htokens, hout], D, input, hdecode⟩
+  · intro h
+    rcases h with ⟨hout, D, input, hdecode⟩
+    exact
+      (codePrefixParserNormalizerCode_transform_eq_some_iff
+        tokens out).mpr
+        ⟨D, input, hdecode,
+          by
+            have htokens :
+                tokens =
+                  List.append (MachineDescription.encodeDescription D)
+                    input :=
+              MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+                hdecode
+            rw [hout, htokens]⟩
 
 theorem headerFieldsParserConstruction_scaffold :
     HeaderFieldsParserConstruction := by

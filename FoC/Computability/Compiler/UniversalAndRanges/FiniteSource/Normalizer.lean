@@ -567,5 +567,36 @@ theorem codePrefixParserNormalizer_computes_nat
       simpa [MachineDescription.encodeNatAppend,
         MachineDescription.encodeNat, List.append_assoc] using hcomp
 
+/-!
+**Normalizer code-spec frontier.**  The concrete
+{name}`codePrefixParserNormalizerMachine` is the finite-state witness used by
+the first universal-prefix scaffold.  Its remaining correctness proof is split
+into soundness and completeness directions; the packaged spec below keeps
+downstream construction code independent of that split.
+-/
+
+theorem codePrefixParserNormalizerMachine_code_sound
+    (tokens out : Word MachineCodeSymbol)
+    (h :
+      TuringMachine.HaltsWithOutput
+        codePrefixParserNormalizerMachine tokens out) :
+    CodePrefixParserNormalizerCode.transform tokens = some out := by
+  sorry
+
+theorem codePrefixParserNormalizerMachine_code_complete
+    (tokens out : Word MachineCodeSymbol)
+    (h : CodePrefixParserNormalizerCode.transform tokens = some out) :
+    TuringMachine.HaltsWithOutput
+      codePrefixParserNormalizerMachine tokens out := by
+  sorry
+
+theorem codePrefixParserNormalizerMachine_code_spec :
+    CodePrefixParserNormalizerCodeMachineSpec
+      codePrefixParserNormalizerMachine := by
+  intro tokens out
+  constructor
+  · exact codePrefixParserNormalizerMachine_code_sound tokens out
+  · exact codePrefixParserNormalizerMachine_code_complete tokens out
+
 end Computability
 end FoC
