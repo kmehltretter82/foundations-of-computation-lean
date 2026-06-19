@@ -1331,6 +1331,76 @@ theorem markedPrefixAppendCodeWordReturnDescription_run
   simpa [MarkedPrefixAppendCodeWordReturnDescription,
     MachineDescription.initial, A, B] using hn
 
+theorem markedPrefixAppendCodeWordReturnDescription_run_checked
+    (code : Word MachineCodeSymbol) (hcode : code ≠ [])
+    (b : Bool) (rest : Word Bool) :
+    exists steps : Nat,
+      (MarkedPrefixAppendCodeWordReturnDescription code).runConfig steps
+          { state := (MarkedPrefixAppendCodeWordReturnDescription code).start
+            tape :=
+              tapeAtCells []
+                (List.append (some b :: rest.map some) [none]) } =
+        { state :=
+            (MarkedPrefixAppendCodeWordReturnDescription code).halt
+          tape :=
+            tapeAtCells [some false]
+              (some false ::
+                ((List.append (false :: true :: b :: rest)
+                  (MachineDescription.encodeCodeWordAsInput code)).map
+                  some)) } := by
+  let A := MarkedPrefixThenAppendCodeWordLastDescription code
+  let B := ReturnToTransitionMarkerDescription
+  let Tmid :=
+    appendCodeWordLastTapeAtCells
+      (List.append
+        ((false :: true :: b :: rest).reverse.map some)
+        [none, some false])
+      code
+  have hAready : A.SubroutineReady := by
+    exact
+      markedPrefixThenAppendCodeWordLastDescription_subroutineReady
+        code hcode
+  have hBready : B.SubroutineReady := by
+    exact returnToTransitionMarkerDescription_subroutineReady
+  rcases
+      markedPrefixThenAppendCodeWordLastDescription_run_checked
+        code hcode b rest with
+    ⟨nA, hArunBase⟩
+  have hArun :
+      A.runConfig nA
+          { state := A.start
+            tape :=
+              tapeAtCells []
+                (List.append (some b :: rest.map some) [none]) } =
+        { state := A.halt, tape := Tmid } := by
+    simpa [A, Tmid] using hArunBase
+  have hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start
+              tape := Tape.move Direction.left Tmid } =
+          { state := B.halt
+            tape :=
+              tapeAtCells [some false]
+                (some false ::
+                  ((List.append (false :: true :: b :: rest)
+                    (MachineDescription.encodeCodeWordAsInput code)).map
+                    some)) } := by
+    rcases
+        returnToTransitionMarkerDescription_run_after_append_atCells
+          code hcode (false :: true :: b :: rest) with
+      ⟨nB, hB⟩
+    refine ⟨nB, ?_⟩
+    simpa [B, Tmid] using hB
+  rcases
+      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+        (A := A) (B := B) (handoffMove := Direction.left)
+        hAready hBready hArun hBReach with
+    ⟨n, hn⟩
+  refine ⟨n, ?_⟩
+  simpa [MarkedPrefixAppendCodeWordReturnDescription,
+    A, B] using hn
+
 def MarkedPrefixAppendNatReturnDescription
     (n : Nat) : MachineDescription :=
   MarkedPrefixAppendCodeWordReturnDescription
@@ -1361,6 +1431,29 @@ theorem markedPrefixAppendNatReturnDescription_run
                     (MachineDescription.encodeNat n))).map some)) } := by
   simpa [MarkedPrefixAppendNatReturnDescription] using
     markedPrefixAppendCodeWordReturnDescription_run
+      (MachineDescription.encodeNat n)
+      (encodeNat_ne_nil n)
+      b rest
+
+theorem markedPrefixAppendNatReturnDescription_run_checked
+    (n : Nat) (b : Bool) (rest : Word Bool) :
+    exists steps : Nat,
+      (MarkedPrefixAppendNatReturnDescription n).runConfig steps
+          { state :=
+              (MarkedPrefixAppendNatReturnDescription n).start
+            tape :=
+              tapeAtCells []
+                (List.append (some b :: rest.map some) [none]) } =
+        { state :=
+            (MarkedPrefixAppendNatReturnDescription n).halt
+          tape :=
+            tapeAtCells [some false]
+              (some false ::
+                ((List.append (false :: true :: b :: rest)
+                  (MachineDescription.encodeCodeWordAsInput
+                    (MachineDescription.encodeNat n))).map some)) } := by
+  simpa [MarkedPrefixAppendNatReturnDescription] using
+    markedPrefixAppendCodeWordReturnDescription_run_checked
       (MachineDescription.encodeNat n)
       (encodeNat_ne_nil n)
       b rest
@@ -1447,6 +1540,39 @@ theorem markedPrefixAppendNatReturnDescription_run_stageInput
       (MachineDescription.encodeNat n)
       (encodeNat_ne_nil n)
       w stage
+
+theorem markedPrefixAppendNatReturnDescription_run_stageInput_checked
+    (n : Nat) (w : Word Bool) (stage : Nat) :
+    exists steps : Nat,
+      (MarkedPrefixAppendNatReturnDescription n).runConfig steps
+          { state :=
+              (MarkedPrefixAppendNatReturnDescription n).start
+            tape :=
+              tapeAtCells []
+                (List.append
+                  ((MachineDescription.encodeCodeWordAsInput
+                    (PairedRecognizerDovetailStageInputCode w stage)).map
+                    some)
+                  [none]) } =
+        { state :=
+            (MarkedPrefixAppendNatReturnDescription n).halt
+          tape :=
+            tapeAtCells [some false]
+              (some false ::
+                ((List.append [false, true]
+                  (List.append
+                    (MachineDescription.encodeCodeWordAsInput
+                      (PairedRecognizerDovetailStageInputCode w stage))
+                    (MachineDescription.encodeCodeWordAsInput
+                      (MachineDescription.encodeNat n)))).map some)) } := by
+  rcases stageInputBits_exists_cons w stage with
+    ⟨b, rest, hbits⟩
+  rcases
+      markedPrefixAppendNatReturnDescription_run_checked
+        n b rest with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [hbits, List.append_assoc] using hsteps
 
 def TransitionPrefixedAppendCodeWordReturnDescription
     (code : Word MachineCodeSymbol) : MachineDescription :=
