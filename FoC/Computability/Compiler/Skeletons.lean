@@ -189,16 +189,6 @@ theorem pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstructio
     tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
       hinitializer hrunner
   have hsecond :
-      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-        (MachineDescription.TapeCodePrimitive.compose
-          (MachineDescription.TapeCodePrimitive.compose
-            (PairedRecognizerDovetailInitialLayoutCode accept reject)
-            (PairedRecognizerDovetailLayoutCode accept reject))
-          PairedRecognizerDovetailTotalOutputCode)
-        attempt tapeCodePrimitiveCodeWordHandoffMove :=
-    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
-      hfirst hemitter
-  have houtput :
       TapeCodePrimitiveOutputCompiledSubroutineByDescription
         (MachineDescription.TapeCodePrimitive.compose
           (MachineDescription.TapeCodePrimitive.compose
@@ -206,17 +196,17 @@ theorem pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstructio
             (PairedRecognizerDovetailLayoutCode accept reject))
           PairedRecognizerDovetailTotalOutputCode)
         attempt :=
-    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_outputCompiled
-      hsecond
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose_outputCompiled
+      hfirst hemitter
   simpa [PairedRecognizerDovetailTotalStageAttemptSourceCode,
-    initRunner, attempt] using houtput
+    initRunner, attempt] using hsecond
 
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold :
     PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :=
   pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_of_finiteSourceComponents
     pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold
     pairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction_scaffold
-    pairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction_scaffold
+    pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_scaffold
     pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction_scaffold
 
 def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold :
@@ -276,18 +266,10 @@ theorem pairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequen
   simpa [PairedRecognizerDovetailTotalStageAttemptSourceCode,
     initRunner, attempt] using hsecond
 
-theorem pairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction_scaffold :
-    PairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction :=
-  pairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction_of_finiteSourceHandoffComponents
-    pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_scaffold
-    pairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction_scaffold
-    pairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction_scaffold
-    pairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequencingConstruction_scaffold
-
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction_scaffold :
     PairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction :=
-  pairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction_of_handoff
-    pairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction_scaffold
+  pairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction_of_outputCompiled
+    pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold
 
 theorem fixedDescriptionBoundedSimulatorPhaseRealizes_seq
     {entryTape midTape exitTape :

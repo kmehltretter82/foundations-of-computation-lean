@@ -272,9 +272,9 @@ def PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction :
     TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       (PairedRecognizerDovetailLayoutCode accept reject)
       runner tapeCodePrimitiveCodeWordHandoffMove ->
-    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
       PairedRecognizerDovetailTotalOutputCode
-      emitter tapeCodePrimitiveCodeWordHandoffMove ->
+      emitter ->
     exists attempt : MachineDescription,
       TapeCodePrimitiveOutputCompiledSubroutineByDescription
         (PairedRecognizerDovetailTotalStageAttemptSourceCode accept reject)

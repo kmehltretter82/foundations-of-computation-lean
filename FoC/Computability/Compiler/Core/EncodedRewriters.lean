@@ -243,11 +243,9 @@ theorem encodedControllerContinueRewriterConstruction_of_resultContinueCodeWordS
       pairedRecognizerDovetailControllerResultContinueCode_encode_nextStage_iff
 
 /-!
-The stage-attempt components are routed through closed handoff subroutines.
-That contract is stronger than the encoded rewriter interface, so the ordinary
-rewriter and handoff scaffolds below are just projections from the closed
-handoff witnesses.  The remaining construction work in this file is therefore
-limited to the bounded layout runner and total-output emitter closed handoffs.
+The first two stage-attempt components are routed through closed handoff
+subroutines.  The total-output emitter is the final shrinking phase, so it only
+uses the normalized output-compiled contract.
 -/
 
 theorem encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold :
@@ -263,11 +261,6 @@ theorem encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaf
   exact
     EncodedRewriters.BoundedLayoutRunner.closedHandoffCompiledSubroutine
       accept reject
-
-theorem encodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction_scaffold :
-    EncodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction := by
-  exact
-    EncodedRewriters.TotalOutputEmitter.closedHandoffCompiledSubroutine
 
 theorem encodedDovetailStageInputToInitialLayoutRewriterConstruction_scaffold :
     EncodedDovetailStageInputToInitialLayoutRewriterConstruction := by
@@ -293,12 +286,9 @@ theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
 
 theorem encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold :
     EncodedDovetailTotalOutputEmitterRewriterConstruction := by
-  rcases
-      encodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction_scaffold with
-    ⟨emitter, hemitter⟩
   exact
-    encodedTapeCodePrimitiveRewriterConstruction_of_closedHandoffCompiledSubroutine
-      hemitter
+    encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine
+      EncodedRewriters.TotalOutputEmitter.outputCompiledSubroutine
 
 theorem encodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction_scaffold :
     EncodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction :=
@@ -309,11 +299,6 @@ theorem encodedDovetailLayoutBoundedRunnerHandoffRewriterConstruction_scaffold :
     EncodedDovetailLayoutBoundedRunnerHandoffRewriterConstruction :=
   pairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction_of_closedHandoff
     encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold
-
-theorem encodedDovetailTotalOutputEmitterHandoffRewriterConstruction_scaffold :
-    EncodedDovetailTotalOutputEmitterHandoffRewriterConstruction :=
-  pairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction_of_closedHandoff
-    encodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction_scaffold
 
 end Computability
 end FoC
