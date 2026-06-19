@@ -2325,6 +2325,135 @@ into soundness and completeness directions; the packaged spec below keeps
 downstream construction code independent of that split.
 -/
 
+theorem codePrefixParserNormalizerMachine_haltsWithOutputIn_needHeader_fields
+    {steps : Nat} {tokens out : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsWithOutputIn
+        codePrefixParserNormalizerMachine steps tokens out) :
+    exists stateCount start halt : Nat,
+    exists suffix : Word MachineCodeSymbol,
+      tokens =
+        MachineCodeSymbol.header ::
+          MachineDescription.encodeNatAppend stateCount
+            (MachineDescription.encodeNatAppend start
+              (MachineDescription.encodeNatAppend halt suffix)) := by
+  have hhalts :
+      TuringMachine.HaltsOnInputIn
+        codePrefixParserNormalizerMachine steps tokens :=
+    TuringMachine.halts_with_output_in_implies_halts_in h
+  exact
+    codePrefixParserNormalizerMachine_haltsFromIn_needHeader_fields
+      (steps := steps) (leftRev := []) (rest := tokens)
+      (by
+        simpa [TuringMachine.HaltsOnInputIn, TuringMachine.initial,
+          codePrefixParserNormalizerMachine,
+          codePrefixParserNormalizerTape_nil_eq_input] using hhalts)
+
+theorem codePrefixParserNormalizerMachine_haltsWithOutput_needHeader_fields
+    {tokens out : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsWithOutput
+        codePrefixParserNormalizerMachine tokens out) :
+    exists stateCount start halt : Nat,
+    exists suffix : Word MachineCodeSymbol,
+      tokens =
+        MachineCodeSymbol.header ::
+          MachineDescription.encodeNatAppend stateCount
+            (MachineDescription.encodeNatAppend start
+              (MachineDescription.encodeNatAppend halt suffix)) := by
+  rcases
+      TuringMachine.halts_with_output_to_halts_with_output_in h with
+    ⟨steps, hsteps⟩
+  exact
+    codePrefixParserNormalizerMachine_haltsWithOutputIn_needHeader_fields
+      hsteps
+
+theorem decodeDescriptionPrefix_of_header_and_decodeTransitions
+    {tokens rest : Word MachineCodeSymbol}
+    {stateCount start halt transitionCount : Nat}
+    {transitions : List TransitionDescription}
+    {input : Word MachineCodeSymbol}
+    (htokens :
+      tokens =
+        MachineCodeSymbol.header ::
+          MachineDescription.encodeNatAppend stateCount
+            (MachineDescription.encodeNatAppend start
+              (MachineDescription.encodeNatAppend halt
+                (MachineDescription.encodeNatAppend transitionCount rest))))
+    (htrans :
+      MachineDescription.decodeTransitions transitionCount rest =
+        some (transitions, input)) :
+    MachineDescription.decodeDescriptionPrefix tokens =
+      some
+        (({ stateCount := stateCount
+            start := start
+            halt := halt
+            transitions := transitions } : MachineDescription),
+          input) := by
+  subst tokens
+  simp [MachineDescription.decodeDescriptionPrefix,
+    MachineDescription.decodeNat_encodeNatAppend, htrans]
+
+theorem codePrefixParserNormalizerMachine_haltsWithOutput_decodeTransitions
+    {tokens out transitionBlock : Word MachineCodeSymbol}
+    {stateCount start halt : Nat}
+    (h :
+      TuringMachine.HaltsWithOutput
+        codePrefixParserNormalizerMachine tokens out)
+    (htokens :
+      tokens =
+        MachineCodeSymbol.header ::
+          MachineDescription.encodeNatAppend stateCount
+            (MachineDescription.encodeNatAppend start
+              (MachineDescription.encodeNatAppend halt transitionBlock))) :
+    exists transitionCount : Nat,
+    exists rest : Word MachineCodeSymbol,
+    exists transitions : List TransitionDescription,
+    exists input : Word MachineCodeSymbol,
+      transitionBlock =
+          MachineDescription.encodeNatAppend transitionCount rest ∧
+        MachineDescription.decodeTransitions transitionCount rest =
+          some (transitions, input) := by
+  sorry
+
+theorem codePrefixParserNormalizerMachine_haltsWithOutput_decodePrefix
+    (tokens out : Word MachineCodeSymbol)
+    (h :
+      TuringMachine.HaltsWithOutput
+        codePrefixParserNormalizerMachine tokens out) :
+    exists D : MachineDescription,
+    exists input : Word MachineCodeSymbol,
+      MachineDescription.decodeDescriptionPrefix tokens =
+        some (D, input) := by
+  rcases
+      codePrefixParserNormalizerMachine_haltsWithOutput_needHeader_fields
+        h with
+    ⟨stateCount, start, halt, transitionBlock, htokens⟩
+  rcases
+      codePrefixParserNormalizerMachine_haltsWithOutput_decodeTransitions
+        h htokens with
+    ⟨transitionCount, rest, transitions, input, hblock, htrans⟩
+  refine
+    ⟨{ stateCount := stateCount
+       start := start
+       halt := halt
+       transitions := transitions }, input, ?_⟩
+  exact
+    decodeDescriptionPrefix_of_header_and_decodeTransitions
+      (stateCount := stateCount) (start := start) (halt := halt)
+      (transitionCount := transitionCount) (rest := rest)
+      (transitions := transitions) (input := input)
+      (by simpa [hblock] using htokens)
+      htrans
+
+theorem codePrefixParserNormalizerMachine_haltsWithOutput_output_eq_input
+    (tokens out : Word MachineCodeSymbol)
+    (h :
+      TuringMachine.HaltsWithOutput
+        codePrefixParserNormalizerMachine tokens out) :
+    out = tokens := by
+  sorry
+
 theorem codePrefixParserNormalizerMachine_haltsWithOutput_only_decode
     (tokens out : Word MachineCodeSymbol)
     (h :
@@ -2335,6 +2464,18 @@ theorem codePrefixParserNormalizerMachine_haltsWithOutput_only_decode
       exists input : Word MachineCodeSymbol,
         MachineDescription.decodeDescriptionPrefix tokens =
           some (D, input) := by
+  exact
+    ⟨codePrefixParserNormalizerMachine_haltsWithOutput_output_eq_input
+        tokens out h,
+      codePrefixParserNormalizerMachine_haltsWithOutput_decodePrefix
+        tokens out h⟩
+
+theorem codePrefixParserNormalizerMachine_haltsWithOutput_encodeDescriptionAppend
+    (D : MachineDescription) (input : Word MachineCodeSymbol) :
+    TuringMachine.HaltsWithOutput
+      codePrefixParserNormalizerMachine
+      (MachineDescription.encodeDescriptionAppend D input)
+      (MachineDescription.encodeDescriptionAppend D input) := by
   sorry
 
 theorem codePrefixParserNormalizerMachine_haltsWithOutput_encodeDescription_append
@@ -2343,7 +2484,11 @@ theorem codePrefixParserNormalizerMachine_haltsWithOutput_encodeDescription_appe
       codePrefixParserNormalizerMachine
       (List.append (MachineDescription.encodeDescription D) input)
       (List.append (MachineDescription.encodeDescription D) input) := by
-  sorry
+  rw [← MachineDescription.encodeDescriptionAppend_eq_encodeDescription_append
+    D input]
+  exact
+    codePrefixParserNormalizerMachine_haltsWithOutput_encodeDescriptionAppend
+      D input
 
 theorem codePrefixParserNormalizerMachine_code_sound
     (tokens out : Word MachineCodeSymbol)
