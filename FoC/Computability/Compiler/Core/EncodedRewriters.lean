@@ -1,5 +1,7 @@
-import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer
 import FoC.Computability.Compiler.Core.ControllerCloseout
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner
+import FoC.Computability.Compiler.Core.EncodedRewriters.InitialLayout
+import FoC.Computability.Compiler.Core.EncodedRewriters.TotalOutputEmitter
 
 set_option doc.verso true
 
@@ -252,16 +254,20 @@ theorem encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstructio
     EncodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction := by
   intro accept reject
   exact
-    DovetailInitialLayoutInitializer.pairedRecognizerDovetailInitialLayoutCode_closedHandoffCompiledSubroutine
+    EncodedRewriters.InitialLayout.closedHandoffCompiledSubroutine
       accept reject
 
 theorem encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold :
     EncodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction := by
-  sorry
+  intro accept reject
+  exact
+    EncodedRewriters.BoundedLayoutRunner.closedHandoffCompiledSubroutine
+      accept reject
 
 theorem encodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction_scaffold :
     EncodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction := by
-  sorry
+  exact
+    EncodedRewriters.TotalOutputEmitter.closedHandoffCompiledSubroutine
 
 theorem encodedDovetailStageInputToInitialLayoutRewriterConstruction_scaffold :
     EncodedDovetailStageInputToInitialLayoutRewriterConstruction := by
