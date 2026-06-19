@@ -67,6 +67,87 @@ theorem decode_encode (L : SimulatorLayout) :
     decode (encode L) = some (L, []) :=
   decode_encodeAppend L []
 
+theorem decode_eq_some_encodeAppend
+    {tokens : Word MachineCodeSymbol} {L : SimulatorLayout}
+    {suffix : Word MachineCodeSymbol}
+    (h : decode tokens = some (L, suffix)) :
+    tokens = encodeAppend L suffix := by
+  unfold decode at h
+  cases tokens with
+  | nil =>
+      simp at h
+  | cons marker rest =>
+      cases marker with
+      | header =>
+          simp at h
+          cases hinput : decodeBoolWord rest with
+          | none =>
+              simp [hinput] at h
+          | some parsedInput =>
+              cases parsedInput with
+              | mk input restAfterInput =>
+                  simp [hinput] at h
+                  cases hstage : decodeNat restAfterInput with
+                  | none =>
+                      simp [hstage] at h
+                  | some parsedStage =>
+                      cases parsedStage with
+                      | mk stage restAfterStage =>
+                          simp [hstage] at h
+                          cases hconfig :
+                              decodeConfiguration restAfterStage with
+                          | none =>
+                              simp [hconfig] at h
+                          | some parsedConfig =>
+                              cases parsedConfig with
+                              | mk config restAfterConfig =>
+                                  simp [hconfig] at h
+                                  cases hhit : decodeBool restAfterConfig with
+                                  | none =>
+                                      simp [hhit] at h
+                                  | some parsedHit =>
+                                      cases parsedHit with
+                                      | mk hit parsedSuffix =>
+                                          simp [hhit] at h
+                                          cases h
+                                          subst L
+                                          subst suffix
+                                          have hinputTokens :
+                                              rest =
+                                                encodeBoolWordAppend
+                                                  input restAfterInput :=
+                                            decodeBoolWord_eq_some_encodeBoolWordAppend
+                                              hinput
+                                          have hstageTokens :
+                                              restAfterInput =
+                                                encodeNatAppend
+                                                  stage restAfterStage :=
+                                            decodeNat_eq_some_encodeNatAppend
+                                              hstage
+                                          have hconfigTokens :
+                                              restAfterStage =
+                                                encodeConfigurationAppend
+                                                  config restAfterConfig :=
+                                            decodeConfiguration_eq_some_encodeConfigurationAppend
+                                              hconfig
+                                          have hhitTokens :
+                                              restAfterConfig =
+                                                encodeBoolAppend
+                                                  hit parsedSuffix :=
+                                            decodeBool_eq_some_encodeBoolAppend
+                                              hhit
+                                          simp [encodeAppend, hinputTokens,
+                                            hstageTokens, hconfigTokens,
+                                            hhitTokens]
+      | transition => simp at h
+      | tick => simp at h
+      | done => simp at h
+      | blank => simp at h
+      | zero => simp at h
+      | one => simp at h
+      | moveLeft => simp at h
+      | moveRight => simp at h
+
 def decodeComplete (tokens : Word MachineCodeSymbol) :
     Option SimulatorLayout :=
   match decode tokens with
@@ -76,6 +157,25 @@ def decodeComplete (tokens : Word MachineCodeSymbol) :
 theorem decodeComplete_encode (L : SimulatorLayout) :
     decodeComplete (encode L) = some L := by
   simp [decodeComplete, decode_encode]
+
+theorem decodeComplete_eq_some_encode
+    {tokens : Word MachineCodeSymbol} {L : SimulatorLayout}
+    (h : decodeComplete tokens = some L) :
+    tokens = encode L := by
+  unfold decodeComplete at h
+  cases hdecode : decode tokens with
+  | none =>
+      simp [hdecode] at h
+  | some parsed =>
+      cases parsed with
+      | mk decoded suffix =>
+          cases suffix with
+          | nil =>
+              simp [hdecode] at h
+              cases h
+              simpa [encode] using decode_eq_some_encodeAppend hdecode
+          | cons _ _ =>
+              simp [hdecode] at h
 
 def normalizeCode (tokens : Word MachineCodeSymbol) :
     Option (Word MachineCodeSymbol) :=

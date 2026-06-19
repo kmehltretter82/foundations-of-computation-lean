@@ -245,6 +245,70 @@ theorem RejectMergePrimitive_encode_run
     MachineDescription.SimulatorLayout.decodeComplete_encode,
     MergeRejectSimulatorResult_run]
 
+theorem AcceptMergePrimitive_transform_eq_some_iff
+    (code out : Word MachineCodeSymbol) :
+    AcceptMergePrimitive.transform code = some out ↔
+      exists S : MachineDescription.SimulatorLayout,
+        exists L : MachineDescription.DovetailLayout,
+          code = MachineDescription.SimulatorLayout.encode S ∧
+          MachineDescription.decodeCodeWordAsInput S.input =
+            some (MachineDescription.DovetailLayout.encode L) ∧
+          out =
+            MachineDescription.DovetailLayout.encode
+              { L with
+                acceptConfig := S.config
+                acceptHit := S.hit } := by
+  constructor
+  · intro h
+    unfold AcceptMergePrimitive at h
+    cases hS : MachineDescription.SimulatorLayout.decodeComplete code with
+    | none =>
+        simp [hS] at h
+    | some S =>
+        simp [hS] at h
+        unfold MergeAcceptSimulatorResult at h
+        cases hinput : MachineDescription.decodeCodeWordAsInput S.input with
+        | none =>
+            simp [hinput] at h
+        | some innerCode =>
+            cases hL :
+                MachineDescription.DovetailLayout.decodeComplete innerCode with
+            | none =>
+                simp [hinput, hL] at h
+            | some L =>
+                simp [hinput, hL] at h
+                cases h
+                refine ⟨S, L, ?_, ?_, rfl⟩
+                · exact
+                    MachineDescription.SimulatorLayout.decodeComplete_eq_some_encode
+                      hS
+                · rw [
+                    MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
+                      hL] at hinput
+                  exact hinput
+  · intro h
+    rcases h with ⟨S, L, rfl, hinput, rfl⟩
+    simp [AcceptMergePrimitive,
+      MachineDescription.SimulatorLayout.decodeComplete_encode,
+      MergeAcceptSimulatorResult, hinput,
+      MachineDescription.DovetailLayout.decodeComplete_encode]
+
+theorem AcceptMergePrimitive_transform_eq_some_cons
+    {code out : Word MachineCodeSymbol}
+    (h : AcceptMergePrimitive.transform code = some out) :
+    exists tail : Word MachineCodeSymbol,
+      out = MachineCodeSymbol.transition :: tail := by
+  rcases
+      (AcceptMergePrimitive_transform_eq_some_iff code out).mp h with
+    ⟨S, L, _hcode, _hinput, hout⟩
+  rcases
+      EncodedRewriters.dovetailLayout_encode_cons
+        { L with
+          acceptConfig := S.config
+          acceptHit := S.hit } with
+    ⟨tail, htail⟩
+  exact ⟨tail, by rw [hout, htail]⟩
+
 theorem ConfigRunnerAfterReject_afterAccept
     (accept reject : MachineDescription)
     (L : MachineDescription.DovetailLayout) :
@@ -1127,19 +1191,69 @@ theorem selectedProjectionPrimitiveClosedHandoffConstruction_scaffold :
   · exact selectedProjectionRejectPrimitiveClosedHandoffConstruction_scaffold
   · exact selectedProjectionAcceptPrimitiveClosedHandoffConstruction_scaffold
 
+theorem rejectMergePrimitiveClosedHandoffConstruction_finite_scaffold :
+    RejectMergePrimitiveClosedHandoffConstruction := by
+  sorry
+
+def AcceptMergePrimitiveClosedHandoffFiniteMachineConstruction : Prop :=
+  exists closed : MachineDescription,
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      AcceptMergePrimitive
+      closed tapeCodePrimitiveCodeWordHandoffMove
+
+theorem acceptMergePrimitiveClosedHandoffConstruction_of_finiteMachine
+    (h : AcceptMergePrimitiveClosedHandoffFiniteMachineConstruction) :
+    AcceptMergePrimitiveClosedHandoffConstruction :=
+  h
+
+-- Actual finite parser/emitter table for the accept-side merge rewriter.
+theorem acceptMergePrimitiveClosedHandoffFiniteMachineConstruction_scaffold :
+    AcceptMergePrimitiveClosedHandoffFiniteMachineConstruction := by
+  sorry
+
+theorem acceptMergePrimitiveClosedHandoffConstruction_finite_scaffold :
+    AcceptMergePrimitiveClosedHandoffConstruction := by
+  exact
+    acceptMergePrimitiveClosedHandoffConstruction_of_finiteMachine
+      acceptMergePrimitiveClosedHandoffFiniteMachineConstruction_scaffold
+
 theorem selectedMergeRejectPrimitiveClosedHandoffConstruction_scaffold :
     exists closed : MachineDescription,
       TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
         (SelectedMergePrimitive false)
         closed tapeCodePrimitiveCodeWordHandoffMove := by
-  sorry
+  rcases rejectMergePrimitiveClosedHandoffConstruction_finite_scaffold with
+    ⟨closed, hclosed⟩
+  refine ⟨closed, ?_⟩
+  exact
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_congr
+      (P := RejectMergePrimitive)
+      (Q := SelectedMergePrimitive false)
+      (D := closed)
+      (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
+      (by
+        intro code
+        rfl)
+      hclosed
 
 theorem selectedMergeAcceptPrimitiveClosedHandoffConstruction_scaffold :
     exists closed : MachineDescription,
       TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
         (SelectedMergePrimitive true)
         closed tapeCodePrimitiveCodeWordHandoffMove := by
-  sorry
+  rcases acceptMergePrimitiveClosedHandoffConstruction_finite_scaffold with
+    ⟨closed, hclosed⟩
+  refine ⟨closed, ?_⟩
+  exact
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_congr
+      (P := AcceptMergePrimitive)
+      (Q := SelectedMergePrimitive true)
+      (D := closed)
+      (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
+      (by
+        intro code
+        rfl)
+      hclosed
 
 theorem selectedMergePrimitiveClosedHandoffConstruction_scaffold :
     SelectedMergePrimitiveClosedHandoffConstruction := by
@@ -1156,9 +1270,7 @@ theorem acceptProjectionPrimitiveClosedHandoffConstruction_scaffold :
 
 theorem acceptMergePrimitiveClosedHandoffConstruction_scaffold :
     AcceptMergePrimitiveClosedHandoffConstruction := by
-  exact
-    acceptMergePrimitiveClosedHandoffConstruction_of_selected
-      selectedMergePrimitiveClosedHandoffConstruction_scaffold
+  exact acceptMergePrimitiveClosedHandoffConstruction_finite_scaffold
 
 theorem rejectProjectionPrimitiveClosedHandoffConstruction_scaffold :
     RejectProjectionPrimitiveClosedHandoffConstruction := by
@@ -1168,9 +1280,7 @@ theorem rejectProjectionPrimitiveClosedHandoffConstruction_scaffold :
 
 theorem rejectMergePrimitiveClosedHandoffConstruction_scaffold :
     RejectMergePrimitiveClosedHandoffConstruction := by
-  exact
-    rejectMergePrimitiveClosedHandoffConstruction_of_selected
-      selectedMergePrimitiveClosedHandoffConstruction_scaffold
+  exact rejectMergePrimitiveClosedHandoffConstruction_finite_scaffold
 
 theorem configRunnerPrimitiveClosedHandoffConstruction_scaffold :
     ConfigRunnerPrimitiveClosedHandoffConstruction := by
