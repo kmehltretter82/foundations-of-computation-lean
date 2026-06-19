@@ -480,34 +480,8 @@ theorem
   simpa [DescriptionWithCopier,
     MachineDescription.initial, A, B] using hn
 
-theorem markedPrefixAppendNatReturnDescription_run_checked_stageInput
-    (n : Nat) (w : Word Bool) (stage : Nat) :
-    exists steps : Nat,
-      (MarkedPrefixAppendNatReturnDescription n).runConfig steps
-          { state :=
-              (MarkedPrefixAppendNatReturnDescription n).start
-            tape := stageInputCheckedInputTape w stage } =
-        { state :=
-            (MarkedPrefixAppendNatReturnDescription n).halt
-          tape :=
-            tapeAtCells [some false]
-              (some false ::
-                ((List.append [false, true]
-                  (List.append (stageInputBits w stage)
-                    (natBits n))).map some)) } := by
-  rcases stageInputBits_exists_cons w stage with
-    ⟨b, rest, hbits⟩
-  rcases
-      markedPrefixAppendNatReturnDescription_run_checked
-        n b rest with
-    ⟨steps, hsteps⟩
-  refine ⟨steps, ?_⟩
-  simpa [stageInputCheckedInputTape, stageInputBits,
-    hbits, appendScanTapeAtCellsChecked, natBits,
-    List.append_assoc] using hsteps
-
 theorem
-    descriptionWithCopier_run_checkedInput
+    descriptionWithCopier_run_bits_checked
     {accept reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier)
     (w : Word Bool) (stage : Nat) :
@@ -551,7 +525,7 @@ theorem
       appendFirstInputTapeThenRejectDescription_subroutineReady
         hcopier
   rcases
-      markedPrefixAppendNatReturnDescription_run_checked_stageInput
+      markedPrefixAppendNatReturnDescription_run_stageInput_checked
         accept.start w stage with
     ⟨nA, hA⟩
   have hArun :
@@ -559,8 +533,9 @@ theorem
           { state := A.start
             tape := stageInputCheckedInputTape w stage } =
         { state := A.halt, tape := Tmid } := by
-    simpa [A, Tmid, acceptSuffix, natBits,
-      List.append_assoc] using hA
+    simpa [A, Tmid, acceptSuffix, stageInputCheckedInputTape,
+      stageInputBits, natBits, List.append_assoc]
+      using hA
   have hBReach :
       exists nB : Nat,
         B.runConfig nB

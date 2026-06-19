@@ -80,16 +80,10 @@ theorem
               OutputTape
                 accept reject w stage } := by
     rcases
-        descriptionWithCopier_run_checkedInput
+        descriptionWithCopier_run_bits_checked
           (accept := accept) (reject := reject) hcopier w stage with
       ⟨nB, hB⟩
     refine ⟨nB, ?_⟩
-    have hinput :
-        Tape.move Direction.left
-            Tmid =
-          stageInputCheckedInputTape w stage := by
-      simpa [Tmid, stageInputCheckedValidatorTape] using
-        stageInputCheckedInputTape_move_left_move_right w stage
     have hBout :
         B.runConfig nB
             { state := B.start
@@ -101,13 +95,12 @@ theorem
       exact hB.trans (by
         simp [B, outputTape_eq_bits])
     have hstart :
-        ({ state := B.start
-           tape := Tape.move Direction.left Tmid } :
-          MachineDescription.Configuration) =
-        ({ state := B.start
-           tape := stageInputCheckedInputTape w stage } :
-          MachineDescription.Configuration) := by
-      simp [hinput]
+        MachineDescription.Configuration.mk
+            B.start (Tape.move Direction.left Tmid) =
+          MachineDescription.Configuration.mk
+            B.start (stageInputCheckedInputTape w stage) := by
+      simp [Tmid, stageInputCheckedValidatorTape,
+        stageInputCheckedInputTape_move_left_move_right]
     rw [hstart]
     exact hBout
   rcases
@@ -174,16 +167,19 @@ theorem
         { state := B.halt, tape := T } := by
     simpa [hhandoff] using hBrun
   rcases
-      descriptionWithCopier_run_checkedInput
-        (accept := accept) (reject := reject) hcopier w stage with
-    ⟨nExpected, hExpected⟩
+      descriptionWithCopier_run_bits_checked
+        (accept := accept) (reject := reject)
+        hcopier w stage with
+    ⟨nExpected, hExpectedRaw⟩
   have hBexpected :
       B.runConfig nExpected
           { state := B.start
             tape := stageInputCheckedInputTape w stage } =
         { state := B.halt
-          tape := OutputTape accept reject w stage } := by
-    exact hExpected.trans (by
+          tape :=
+            OutputTape
+              accept reject w stage } := by
+    exact hExpectedRaw.trans (by
       simp [B, outputTape_eq_bits])
   have hT :
       T =
