@@ -2,6 +2,13 @@ import FoC.Computability.Grammar.MachineHistory.Locked
 
 set_option doc.verso true
 
+/-!
+# ReverseMoves
+
+Supporting declarations and helper lemmas for Computability Grammar MachineHistory ReverseMoves.
+-/
+
+
 namespace FoC
 namespace Computability
 
@@ -10,6 +17,7 @@ open Grammars
 
 namespace MachineDescriptionHistoryGrammar
 
+ /-- `reverseRightMoveCell_active_yields` captures the core lemma for this local construction. -/
 theorem reverseRightMoveCell_active_yields {D : MachineDescription}
     (hD : D.WellFormed)
     (c : MachineDescription.Configuration)
@@ -78,6 +86,7 @@ theorem reverseRightMoveCell_active_yields {D : MachineDescription}
         List.reverse_cons, List.map_append, List.append_assoc] using
         (HistorySoundForm.active (D := D) pred hsourceState hpredReach)
 
+ /-- `reverseRightMoveBoundary_active_yields` captures the core lemma for this local construction. -/
 theorem reverseRightMoveBoundary_active_yields {D : MachineDescription}
     (hD : D.WellFormed)
     (c : MachineDescription.Configuration)
@@ -155,6 +164,7 @@ theorem reverseRightMoveBoundary_active_yields {D : MachineDescription}
   | cons r restRight =>
       cases r <;> simp [cell, rightBoundary, nt] at htail
 
+ /-- `reverseLeftMoveCell_active_yields` captures the core lemma for this local construction. -/
 theorem reverseLeftMoveCell_active_yields {D : MachineDescription}
     (hD : D.WellFormed)
     (c : MachineDescription.Configuration)
@@ -219,6 +229,7 @@ theorem reverseLeftMoveCell_active_yields {D : MachineDescription}
         List.reverse_cons, List.map_append, List.append_assoc] using
         (HistorySoundForm.active (D := D) pred hsourceState hpredReach)
 
+ /-- `reverseLeftMoveBoundary_active_yields` captures the core lemma for this local construction. -/
 theorem reverseLeftMoveBoundary_active_yields {D : MachineDescription}
     (hD : D.WellFormed)
     (c : MachineDescription.Configuration)

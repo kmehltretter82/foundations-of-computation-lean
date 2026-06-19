@@ -1,4 +1,11 @@
 import Lake
+
+/-!
+# lakefile
+
+Supporting declarations and helper lemmas for lakefile.
+-/
+
 open Lake DSL
 
 package «foc» where

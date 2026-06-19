@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.ReturnAp
 
 set_option doc.verso true
 
+/-!
+# ReturnAppendDirect
+
+Supporting declarations and helper lemmas for Computability Compiler Core DovetailInitialLayoutInitializer ReturnAppendDirect.
+-/
+
+
 namespace FoC
 namespace Computability
 
@@ -31,6 +38,7 @@ def RightCellsCopierStartHandoffDescription :
         6 (some true) (some true) Direction.right 7
     ]
 
+ /-- `rightCellsCopierStartHandoffDescription_wellFormed` captures the core lemma for this local construction. -/
 theorem rightCellsCopierStartHandoffDescription_wellFormed :
     RightCellsCopierStartHandoffDescription.WellFormed := by
   constructor
@@ -54,6 +62,7 @@ theorem rightCellsCopierStartHandoffDescription_wellFormed :
         native_decide) t u ht hu hkey
 
 theorem
+     /-- `rightCellsCopierStartHandoffDescription_haltTransitionFree` establishes the halting condition in this construction. -/
     rightCellsCopierStartHandoffDescription_haltTransitionFree :
     RightCellsCopierStartHandoffDescription.HaltTransitionFree := by
   intro t ht
@@ -64,11 +73,13 @@ theorem
       native_decide) t ht
 
 theorem
+     /-- `rightCellsCopierStartHandoffDescription_subroutineReady` packages a subroutine-ready composition step. -/
     rightCellsCopierStartHandoffDescription_subroutineReady :
     RightCellsCopierStartHandoffDescription.SubroutineReady :=
   ⟨rightCellsCopierStartHandoffDescription_wellFormed,
     rightCellsCopierStartHandoffDescription_haltTransitionFree⟩
 
+ /-- `rightCellsCopierStartHandoffDescription_run` captures the core lemma for this local construction. -/
 theorem rightCellsCopierStartHandoffDescription_run
     (tail : List (Option Bool)) :
     RightCellsCopierStartHandoffDescription.runConfig 7
@@ -110,6 +121,7 @@ def inputTapeRightCellsDirectCopierTickBits (n : Nat) :
     MachineDescription.encodeCodeWordAsInput, List.replicate_succ]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_copy_ticks` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_copy_ticks
     (n : Nat) (leftOfMarker : List (Option Bool))
     (pre sourceTail output : Word Bool) :
@@ -213,6 +225,7 @@ theorem
       exact hrest.trans hstart
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_scan30` characterizes a scan safety phase. -/
     inputTapeRightCellsDirectCopierDescription_step_scan30
     (leftRev : List (Option Bool)) (bit : Bool) (rest : Word Bool) :
     InputTapeRightCellsDirectCopierDescription.stepConfig
@@ -228,6 +241,7 @@ theorem
       Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_scan30` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_scan30
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
     InputTapeRightCellsDirectCopierDescription.runConfig
@@ -245,6 +259,7 @@ theorem
         ih, List.append_assoc]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_write_done` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_write_done
     (leftRev : List (Option Bool)) :
     InputTapeRightCellsDirectCopierDescription.runConfig 4
@@ -260,6 +275,7 @@ theorem
     Tape.moveLeft, Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_return34` captures the core lemma for this local construction. -/
     inputTapeRightCellsDirectCopierDescription_step_return34
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (leftBit current : Bool) (right : List (Option Bool)) :
@@ -279,6 +295,7 @@ theorem
       Tape.write, Tape.move, Tape.moveLeft]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_return34` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_return34
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (current : Bool) (right : List (Option Bool)) :
@@ -308,6 +325,7 @@ theorem
       simpa [List.append_assoc] using ih bit (some current :: right)
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_advance35` captures the core lemma for this local construction. -/
     inputTapeRightCellsDirectCopierDescription_step_advance35
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
@@ -322,6 +340,7 @@ theorem
       Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_advance36` captures the core lemma for this local construction. -/
     inputTapeRightCellsDirectCopierDescription_step_advance36
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
@@ -336,6 +355,7 @@ theorem
       Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_advance37` captures the core lemma for this local construction. -/
     inputTapeRightCellsDirectCopierDescription_step_advance37
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
@@ -350,6 +370,7 @@ theorem
       Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_advance38` captures the core lemma for this local construction. -/
     inputTapeRightCellsDirectCopierDescription_step_advance38
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
@@ -364,6 +385,7 @@ theorem
       Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_advance39` captures the core lemma for this local construction. -/
     inputTapeRightCellsDirectCopierDescription_step_advance39
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
@@ -378,6 +400,7 @@ theorem
       Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_advance40` captures the core lemma for this local construction. -/
     inputTapeRightCellsDirectCopierDescription_step_advance40
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
@@ -392,6 +415,7 @@ theorem
       Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_advance41` captures the core lemma for this local construction. -/
     inputTapeRightCellsDirectCopierDescription_step_advance41
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
@@ -406,6 +430,7 @@ theorem
       Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_advance35_to10` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_advance35_to10
     (leftRev : List (Option Bool)) (b1 b2 b3 b4 b5 b6 b7 : Bool)
     (right : List (Option Bool)) :
@@ -433,6 +458,7 @@ theorem
   rw [inputTapeRightCellsDirectCopierDescription_step_advance41]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_copy_done_skip_four` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_copy_done_skip_four
     (leftOfMarker : List (Option Bool))
     (pre sourceTail output : Word Bool)
@@ -546,6 +572,7 @@ theorem
     List.reverse_append]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_scan60` characterizes a scan safety phase. -/
     inputTapeRightCellsDirectCopierDescription_step_scan60
     (leftRev : List (Option Bool)) (bit : Bool) (rest : Word Bool) :
     InputTapeRightCellsDirectCopierDescription.stepConfig
@@ -561,6 +588,7 @@ theorem
       Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_scan60` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_scan60
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
     InputTapeRightCellsDirectCopierDescription.runConfig
@@ -578,6 +606,7 @@ theorem
         ih, List.append_assoc]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_write_zero` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_write_zero
     (leftRev : List (Option Bool)) :
     InputTapeRightCellsDirectCopierDescription.runConfig 4
@@ -593,6 +622,7 @@ theorem
     Tape.moveLeft, Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_return64` captures the core lemma for this local construction. -/
     inputTapeRightCellsDirectCopierDescription_step_return64
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (leftBit current : Bool) (right : List (Option Bool)) :
@@ -612,6 +642,7 @@ theorem
       Tape.write, Tape.move, Tape.moveLeft]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_return64` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_return64
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (current : Bool) (right : List (Option Bool)) :
@@ -641,6 +672,7 @@ theorem
       simpa [List.append_assoc] using ih bit (some current :: right)
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_advance65_to10` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_advance65_to10
     (leftRev : List (Option Bool)) (b1 b2 b3 : Bool)
     (right : List (Option Bool)) :
@@ -658,6 +690,7 @@ theorem
       Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_copy_zero_cell` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_copy_zero_cell
     (leftOfMarker : List (Option Bool))
     (pre sourceTail output : Word Bool) :
@@ -763,6 +796,7 @@ theorem
     List.reverse_append]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_scan70` characterizes a scan safety phase. -/
     inputTapeRightCellsDirectCopierDescription_step_scan70
     (leftRev : List (Option Bool)) (bit : Bool) (rest : Word Bool) :
     InputTapeRightCellsDirectCopierDescription.stepConfig
@@ -778,6 +812,7 @@ theorem
       Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_scan70` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_scan70
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
     InputTapeRightCellsDirectCopierDescription.runConfig
@@ -795,6 +830,7 @@ theorem
         ih, List.append_assoc]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_write_one` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_write_one
     (leftRev : List (Option Bool)) :
     InputTapeRightCellsDirectCopierDescription.runConfig 4
@@ -810,6 +846,7 @@ theorem
     Tape.moveLeft, Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_return74` captures the core lemma for this local construction. -/
     inputTapeRightCellsDirectCopierDescription_step_return74
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (leftBit current : Bool) (right : List (Option Bool)) :
@@ -829,6 +866,7 @@ theorem
       Tape.write, Tape.move, Tape.moveLeft]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_return74` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_return74
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (current : Bool) (right : List (Option Bool)) :
@@ -858,6 +896,7 @@ theorem
       simpa [List.append_assoc] using ih bit (some current :: right)
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_advance75_to10` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_advance75_to10
     (leftRev : List (Option Bool)) (b1 b2 b3 : Bool)
     (right : List (Option Bool)) :
@@ -875,6 +914,7 @@ theorem
       Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_copy_one_cell` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_copy_one_cell
     (leftOfMarker : List (Option Bool))
     (pre sourceTail output : Word Bool) :
@@ -980,6 +1020,7 @@ theorem
     List.reverse_append]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_return80` captures the core lemma for this local construction. -/
     inputTapeRightCellsDirectCopierDescription_step_return80
     (preRev : Word Bool) (leftBit current : Bool)
     (right : List (Option Bool)) :
@@ -999,6 +1040,7 @@ theorem
       Tape.write, Tape.move, Tape.moveLeft]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_return80_to99` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_return80_to99
     (preRev : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
@@ -1029,6 +1071,7 @@ theorem
       simpa [List.append_assoc] using ih bit (some current :: right)
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_stop_at_nat_prefix` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_stop_at_nat_prefix
     (pre tail : Word Bool) :
     InputTapeRightCellsDirectCopierDescription.runConfig
@@ -1113,6 +1156,7 @@ def inputTapeRightCellsDirectCopierCellBits
   rfl
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_copy_cells` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_copy_cells
     (cells : Word Bool) (pre sourceTail output : Word Bool) :
     exists steps : Nat,
@@ -1303,6 +1347,7 @@ def inputTapeRightCellsDirectCopierNatBits (n : Nat) :
   rfl
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_stop_at_natBits` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_stop_at_natBits
     (pre : Word Bool) (stage : Nat) (tail : Word Bool) :
     InputTapeRightCellsDirectCopierDescription.runConfig
@@ -1373,6 +1418,7 @@ def inputTapeRightCellsDirectCopierCoreOutputBits
                     (inputTapeRightCellsDirectCopierCellBits rest)))))))))
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_core` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_core
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffixBits : Word Bool) :
@@ -1542,6 +1588,7 @@ def InputTapeRightCellsDirectReturnDescription : MachineDescription :=
     Direction.right
 
 theorem
+     /-- `inputTapeRightCellsDirectReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     inputTapeRightCellsDirectReturnDescription_subroutineReady :
     InputTapeRightCellsDirectReturnDescription.SubroutineReady :=
   MachineDescription.seqSubroutine_subroutineReady
@@ -1549,6 +1596,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_subroutineReady
 
 theorem
+     /-- `inputTapeRightCellsDirectReturnDescription_run_core` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectReturnDescription_run_core
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffixBits : Word Bool) :

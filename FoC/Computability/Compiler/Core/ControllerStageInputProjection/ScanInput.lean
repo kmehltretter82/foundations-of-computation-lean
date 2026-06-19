@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.ControllerStageInputProjection.Base
 
 set_option doc.verso true
 
+/-!
+# ScanInput
+
+Supporting declarations and helper lemmas for Computability Compiler Core ControllerStageInputProjection ScanInput.
+-/
+
+
 namespace FoC
 namespace Computability
 
@@ -47,6 +54,7 @@ def projectionScanLeftConfig
       projectionConfig state
         (List.append rest (boundaryHead :: leftOfBoundary)) (cell :: tail)
 
+ /-- `projectionScanCountStep_le_three` characterizes a scan safety phase. -/
 theorem projectionScanCountStep_le_three
     {count : Nat} (hcount : count ≤ 3) (cell : Option Bool) :
     projectionScanCountStep count cell ≤ 3 := by
@@ -64,6 +72,7 @@ theorem projectionScanCountStep_le_three
   | some b =>
       cases b <;> simp [projectionScanCountStep]
 
+ /-- `projectionScanCountFold_append` characterizes a scan safety phase. -/
 theorem projectionScanCountFold_append
     (count : Nat) (left right : List (Option Bool)) :
     projectionScanCountFold count (List.append left right) =
@@ -81,6 +90,7 @@ theorem projectionScanCountFold_append
               rest) right
       rw [ih]
 
+ /-- `projectionScanSafe_append` characterizes a scan safety phase. -/
 theorem projectionScanSafe_append
     {count : Nat} {left right : List (Option Bool)}
     (hleft : projectionScanSafe count left)
@@ -94,6 +104,7 @@ theorem projectionScanSafe_append
       rcases hleft with ⟨hcell, hrest⟩
       exact ⟨hcell, ih hrest hright⟩
 
+ /-- `projectionScanCountFold_repeated_zero` characterizes a scan safety phase. -/
 theorem projectionScanCountFold_repeated_zero
     (chunk : List (Option Bool))
     (hchunk : projectionScanCountFold 0 chunk = 0)
@@ -108,6 +119,7 @@ theorem projectionScanCountFold_repeated_zero
             (List.append chunk (projectionRepeatedCells chunk count)) = 0
       rw [projectionScanCountFold_append, hchunk, ih]
 
+ /-- `projectionScanSafe_repeated_zero` characterizes a scan safety phase. -/
 theorem projectionScanSafe_repeated_zero
     (chunk : List (Option Bool))
     (hsafe : projectionScanSafe 0 chunk)
@@ -126,36 +138,43 @@ theorem projectionScanSafe_repeated_zero
       · rw [hchunk]
         exact ih
 
+ /-- `projectionMarkedTickCodeCells_scanSafe_reverse` characterizes a scan safety phase. -/
 theorem projectionMarkedTickCodeCells_scanSafe_reverse :
     projectionScanSafe 0 projectionMarkedTickCodeCells.reverse := by
   simp [projectionMarkedTickCodeCells, projectionScanSafe,
     projectionScanCountStep]
 
+ /-- `projectionMarkedTickCodeCells_scanCountFold_reverse` characterizes a scan safety phase. -/
 theorem projectionMarkedTickCodeCells_scanCountFold_reverse :
     projectionScanCountFold 0 projectionMarkedTickCodeCells.reverse = 0 := by
   simp [projectionMarkedTickCodeCells, projectionScanCountFold,
     projectionScanCountStep]
 
+ /-- `projectionTickCodeCells_scanSafe_reverse` characterizes a scan safety phase. -/
 theorem projectionTickCodeCells_scanSafe_reverse :
     projectionScanSafe 0 projectionTickCodeCells.reverse := by
   simp [projectionTickCodeCells, MachineDescription.encodeCodeSymbolAsInput,
     projectionScanSafe, projectionScanCountStep]
 
+ /-- `projectionTickCodeCells_scanCountFold_reverse` characterizes a scan safety phase. -/
 theorem projectionTickCodeCells_scanCountFold_reverse :
     projectionScanCountFold 0 projectionTickCodeCells.reverse = 0 := by
   simp [projectionTickCodeCells, MachineDescription.encodeCodeSymbolAsInput,
     projectionScanCountFold, projectionScanCountStep]
 
+ /-- `projectionDoneCodeCells_scanSafe_reverse` characterizes a scan safety phase. -/
 theorem projectionDoneCodeCells_scanSafe_reverse :
     projectionScanSafe 0 projectionDoneCodeCells.reverse := by
   simp [projectionDoneCodeCells, MachineDescription.encodeCodeSymbolAsInput,
     projectionScanSafe, projectionScanCountStep]
 
+ /-- `projectionDoneCodeCells_scanCountFold_reverse` characterizes a scan safety phase. -/
 theorem projectionDoneCodeCells_scanCountFold_reverse :
     projectionScanCountFold 0 projectionDoneCodeCells.reverse = 0 := by
   simp [projectionDoneCodeCells, MachineDescription.encodeCodeSymbolAsInput,
     projectionScanCountFold, projectionScanCountStep]
 
+ /-- `projectionMarkedBoolCellCodeCells_scanSafe_reverse` characterizes a scan safety phase. -/
 theorem projectionMarkedBoolCellCodeCells_scanSafe_reverse
     (b : Bool) :
     projectionScanSafe 0 (projectionMarkedBoolCellCodeCells b).reverse := by
@@ -163,6 +182,7 @@ theorem projectionMarkedBoolCellCodeCells_scanSafe_reverse
     simp [projectionMarkedBoolCellCodeCells, projectionScanSafe,
       projectionScanCountStep]
 
+ /-- `projectionMarkedBoolCellCodeCells_scanCountFold_reverse` characterizes a scan safety phase. -/
 theorem projectionMarkedBoolCellCodeCells_scanCountFold_reverse
     (b : Bool) :
     projectionScanCountFold 0 (projectionMarkedBoolCellCodeCells b).reverse =
@@ -171,6 +191,7 @@ theorem projectionMarkedBoolCellCodeCells_scanCountFold_reverse
     simp [projectionMarkedBoolCellCodeCells, projectionScanCountFold,
       projectionScanCountStep]
 
+ /-- `projectionMarkedBoolPayloadCells_scanCountFold_reverse` characterizes a scan safety phase. -/
 theorem projectionMarkedBoolPayloadCells_scanCountFold_reverse
     (w : Word Bool) :
     projectionScanCountFold 0
@@ -187,6 +208,7 @@ theorem projectionMarkedBoolPayloadCells_scanCountFold_reverse
       rw [projectionScanCountFold_append, ih,
         projectionMarkedBoolCellCodeCells_scanCountFold_reverse]
 
+ /-- `projectionMarkedBoolPayloadCells_scanSafe_reverse` characterizes a scan safety phase. -/
 theorem projectionMarkedBoolPayloadCells_scanSafe_reverse
     (w : Word Bool) :
     projectionScanSafe 0 (projectionMarkedBoolPayloadCells w).reverse := by
@@ -204,6 +226,7 @@ theorem projectionMarkedBoolPayloadCells_scanSafe_reverse
       · rw [projectionMarkedBoolPayloadCells_scanCountFold_reverse rest]
         exact projectionMarkedBoolCellCodeCells_scanSafe_reverse b
 
+ /-- `run_scan140_step` states the corresponding theorem run form. -/
 theorem run_scan140_step
     (count : Nat) (hcount : count ≤ 3)
     (cell : Option Bool) (rest leftOfBoundary tail : List (Option Bool))
@@ -289,6 +312,7 @@ theorem run_scan140_step
                       have hfalse : False := by omega
                       exact False.elim hfalse
 
+ /-- `run_scan140_cells` states the corresponding theorem run form. -/
 theorem run_scan140_cells
     (cellsRev : List (Option Bool)) (count : Nat) (hcount : count ≤ 3)
     (hsafe : projectionScanSafe count cellsRev)
@@ -331,6 +355,7 @@ theorem run_scan140_cells
         (cell :: tail)]
       simp [projectionScanCountFold, List.append_assoc]
 
+ /-- `run_scan140_boundary` states the corresponding theorem run form. -/
 theorem run_scan140_boundary
     (base tail : List (Option Bool)) :
     Description.runConfig 7
@@ -347,6 +372,7 @@ theorem run_scan140_boundary
       | some b =>
           cases b <;> rfl
 
+ /-- `run_scan140_cells_to_boundary` states the corresponding theorem run form. -/
 theorem run_scan140_cells_to_boundary
     (cellsRev : List (Option Bool))
     (hsafe : projectionScanSafe 0 cellsRev)
@@ -385,6 +411,7 @@ def projectionScanState160 : Nat -> Nat
   | 2 => 162
   | _ => 163
 
+ /-- `run_scan160_step` states the corresponding theorem run form. -/
 theorem run_scan160_step
     (count : Nat) (hcount : count ≤ 3)
     (cell : Option Bool) (rest leftOfBoundary tail : List (Option Bool))
@@ -470,6 +497,7 @@ theorem run_scan160_step
                       have hfalse : False := by omega
                       exact False.elim hfalse
 
+ /-- `run_scan160_cells` states the corresponding theorem run form. -/
 theorem run_scan160_cells
     (cellsRev : List (Option Bool)) (count : Nat) (hcount : count ≤ 3)
     (hsafe : projectionScanSafe count cellsRev)
@@ -512,6 +540,7 @@ theorem run_scan160_cells
         (cell :: tail)]
       simp [projectionScanCountFold, List.append_assoc]
 
+ /-- `run_scan160_boundary` states the corresponding theorem run form. -/
 theorem run_scan160_boundary
     (base tail : List (Option Bool)) :
     Description.runConfig 7
@@ -528,6 +557,7 @@ theorem run_scan160_boundary
       | some b =>
           cases b <;> rfl
 
+ /-- `run_scan160_cells_to_boundary` states the corresponding theorem run form. -/
 theorem run_scan160_cells_to_boundary
     (cellsRev : List (Option Bool))
     (hsafe : projectionScanSafe 0 cellsRev)
@@ -560,6 +590,7 @@ theorem run_scan160_cells_to_boundary
     run_scan160_boundary
       base (List.append cellsRev.reverse tail)
 
+ /-- `run_state100_marked_tick` states the corresponding theorem run form. -/
 theorem run_state100_marked_tick
     (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
@@ -577,6 +608,7 @@ theorem run_state100_marked_tick
       | some b =>
           cases b <;> rfl
 
+ /-- `run_state100_marked_ticks` states the corresponding theorem run form. -/
 theorem run_state100_marked_ticks
     (count : Nat) (leftRev tail : List (Option Bool)) :
     Description.runConfig (4 * count)
@@ -619,6 +651,7 @@ theorem run_state100_marked_ticks
       rw [ih]
       simp [List.reverse_append, List.append_assoc]
 
+ /-- `run_state100_mark_tick` states the corresponding theorem run form. -/
 theorem run_state100_mark_tick
     (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
@@ -636,6 +669,7 @@ theorem run_state100_mark_tick
       | some b =>
           cases b <;> rfl
 
+ /-- `run_state120_tick` states the corresponding theorem run form. -/
 theorem run_state120_tick
     (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
@@ -653,6 +687,7 @@ theorem run_state120_tick
       | some b =>
           cases b <;> rfl
 
+ /-- `run_state120_ticks` states the corresponding theorem run form. -/
 theorem run_state120_ticks
     (count : Nat) (leftRev tail : List (Option Bool)) :
     Description.runConfig (4 * count)
@@ -695,6 +730,7 @@ theorem run_state120_ticks
       rw [ih]
       simp [List.reverse_append, List.append_assoc]
 
+ /-- `run_state120_done` states the corresponding theorem run form. -/
 theorem run_state120_done
     (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
@@ -712,6 +748,7 @@ theorem run_state120_done
       | some b =>
           cases b <;> rfl
 
+ /-- `run_state130_marked_payload_cell` states the corresponding theorem run form. -/
 theorem run_state130_marked_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
@@ -731,6 +768,7 @@ theorem run_state130_marked_payload_cell
         | some b =>
             cases b <;> rfl
 
+ /-- `run_state130_marked_payload_cell_append` states the corresponding theorem run form. -/
 theorem run_state130_marked_payload_cell_append
     (b : Bool) (leftRev middle tail : List (Option Bool)) :
     Description.runConfig 4
@@ -759,6 +797,7 @@ theorem run_state130_marked_payload_cell_append
         | some b =>
             cases b <;> rfl
 
+ /-- `run_state130_marked_payload` states the corresponding theorem run form. -/
 theorem run_state130_marked_payload
     (w : Word Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig (4 * w.length)
@@ -788,6 +827,7 @@ theorem run_state130_marked_payload
       rw [ih]
       simp [List.reverse_append, List.append_assoc]
 
+ /-- `run_state100_done` states the corresponding theorem run form. -/
 theorem run_state100_done
     (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
@@ -805,6 +845,7 @@ theorem run_state100_done
       | some b =>
           cases b <;> rfl
 
+ /-- `run_state150_marked_payload_cell` states the corresponding theorem run form. -/
 theorem run_state150_marked_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
@@ -824,6 +865,7 @@ theorem run_state150_marked_payload_cell
         | some b =>
             cases b <;> rfl
 
+ /-- `run_state150_marked_payload_cell_append` states the corresponding theorem run form. -/
 theorem run_state150_marked_payload_cell_append
     (b : Bool) (leftRev middle tail : List (Option Bool)) :
     Description.runConfig 4
@@ -852,6 +894,7 @@ theorem run_state150_marked_payload_cell_append
         | some b =>
             cases b <;> rfl
 
+ /-- `run_state150_marked_payload` states the corresponding theorem run form. -/
 theorem run_state150_marked_payload
     (w : Word Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig (4 * w.length)
@@ -881,6 +924,7 @@ theorem run_state150_marked_payload
       rw [ih]
       simp [List.reverse_append, List.append_assoc]
 
+ /-- `run_state150_to_scan160` states the corresponding theorem run form. -/
 theorem run_state150_to_scan160
     (leftRev tail : List (Option Bool)) :
     Description.runConfig 2
@@ -890,6 +934,7 @@ theorem run_state150_to_scan160
         (some false :: some false :: tail) := by
   rfl
 
+ /-- `run_state170_marked_tick` states the corresponding theorem run form. -/
 theorem run_state170_marked_tick
     (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
@@ -907,6 +952,7 @@ theorem run_state170_marked_tick
       | some b =>
           cases b <;> rfl
 
+ /-- `run_state170_marked_ticks` states the corresponding theorem run form. -/
 theorem run_state170_marked_ticks
     (count : Nat) (leftRev tail : List (Option Bool)) :
     Description.runConfig (4 * count)
@@ -953,6 +999,7 @@ theorem run_state170_marked_ticks
       rw [projectionRepeatedCells_succ_right]
       simp [List.append_assoc]
 
+ /-- `run_state170_done` states the corresponding theorem run form. -/
 theorem run_state170_done
     (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
@@ -970,6 +1017,7 @@ theorem run_state170_done
       | some b =>
           cases b <;> rfl
 
+ /-- `run_state180_marked_payload_cell` states the corresponding theorem run form. -/
 theorem run_state180_marked_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
@@ -989,6 +1037,7 @@ theorem run_state180_marked_payload_cell
         | some b =>
             cases b <;> rfl
 
+ /-- `run_state180_marked_payload_cell_append` states the corresponding theorem run form. -/
 theorem run_state180_marked_payload_cell_append
     (b : Bool) (leftRev middle tail : List (Option Bool)) :
     Description.runConfig 4
@@ -1017,6 +1066,7 @@ theorem run_state180_marked_payload_cell_append
         | some b =>
             cases b <;> rfl
 
+ /-- `run_state180_marked_payload` states the corresponding theorem run form. -/
 theorem run_state180_marked_payload
     (w : Word Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig (4 * w.length)
@@ -1047,6 +1097,7 @@ theorem run_state180_marked_payload
       simp [projectionBoolPayloadCells, List.reverse_append,
         List.append_assoc]
 
+ /-- `run_state180_to_200` states the corresponding theorem run form. -/
 theorem run_state180_to_200
     (leftRev tail : List (Option Bool)) :
     Description.runConfig 2
@@ -1068,6 +1119,7 @@ def projectionMarkedBoolCellScanTailHead (b : Bool) :
   | false => some true
   | true => some false
 
+ /-- `run_state130_mark_payload_cell` states the corresponding theorem run form. -/
 theorem run_state130_mark_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
@@ -1112,6 +1164,7 @@ def projectionInputMarkScanTail
   projectionMarkedBoolCellScanTailHead b ::
     List.append (projectionBoolPayloadCells rest) (projectionCodeCells suffix)
 
+ /-- `projectionMarkedBoolCellScanPrefixRev_scanSafe` characterizes a scan safety phase. -/
 theorem projectionMarkedBoolCellScanPrefixRev_scanSafe
     (b : Bool) :
     projectionScanSafe 0 (projectionMarkedBoolCellScanPrefixRev b) := by
@@ -1119,6 +1172,7 @@ theorem projectionMarkedBoolCellScanPrefixRev_scanSafe
     simp [projectionMarkedBoolCellScanPrefixRev, projectionScanSafe,
       projectionScanCountStep]
 
+ /-- `projectionMarkedBoolCellScanPrefixRev_scanCountFold` characterizes a scan safety phase. -/
 theorem projectionMarkedBoolCellScanPrefixRev_scanCountFold
     (b : Bool) :
     projectionScanCountFold 0 (projectionMarkedBoolCellScanPrefixRev b) =
@@ -1127,6 +1181,7 @@ theorem projectionMarkedBoolCellScanPrefixRev_scanCountFold
     simp [projectionMarkedBoolCellScanPrefixRev, projectionScanCountFold,
       projectionScanCountStep]
 
+ /-- `projectionCodeCells_replicate_tick_length` tracks the relevant length or shape invariant. -/
 theorem projectionCodeCells_replicate_tick_length
     (n : Nat) :
     (projectionCodeCells
@@ -1134,6 +1189,7 @@ theorem projectionCodeCells_replicate_tick_length
   rw [projectionCodeCells_replicate_tick, projectionRepeatedCells_length]
   simp [projectionTickCodeCells, MachineDescription.encodeCodeSymbolAsInput]
 
+ /-- `projectionCodeCells_replicate_tick_scanCountFold_reverse` characterizes a scan safety phase. -/
 theorem projectionCodeCells_replicate_tick_scanCountFold_reverse
     (n : Nat) :
     projectionScanCountFold 0
@@ -1144,6 +1200,7 @@ theorem projectionCodeCells_replicate_tick_scanCountFold_reverse
     projectionScanCountFold_repeated_zero projectionTickCodeCells.reverse
       projectionTickCodeCells_scanCountFold_reverse n
 
+ /-- `projectionCodeCells_replicate_tick_scanSafe_reverse` characterizes a scan safety phase. -/
 theorem projectionCodeCells_replicate_tick_scanSafe_reverse
     (n : Nat) :
     projectionScanSafe 0
@@ -1155,6 +1212,7 @@ theorem projectionCodeCells_replicate_tick_scanSafe_reverse
       projectionTickCodeCells_scanSafe_reverse
       projectionTickCodeCells_scanCountFold_reverse n
 
+ /-- `projectionMarkedTickRepeated_scanCountFold_reverse` characterizes a scan safety phase. -/
 theorem projectionMarkedTickRepeated_scanCountFold_reverse
     (count : Nat) :
     projectionScanCountFold 0
@@ -1166,6 +1224,7 @@ theorem projectionMarkedTickRepeated_scanCountFold_reverse
       projectionMarkedTickCodeCells.reverse
       projectionMarkedTickCodeCells_scanCountFold_reverse count
 
+ /-- `projectionMarkedTickRepeated_scanSafe_reverse` characterizes a scan safety phase. -/
 theorem projectionMarkedTickRepeated_scanSafe_reverse
     (count : Nat) :
     projectionScanSafe 0
@@ -1177,6 +1236,7 @@ theorem projectionMarkedTickRepeated_scanSafe_reverse
       projectionMarkedTickCodeCells_scanSafe_reverse
       projectionMarkedTickCodeCells_scanCountFold_reverse count
 
+ /-- `projectionInputMarkPreviousCells_scanCountFold_reverse` characterizes a scan safety phase. -/
 theorem projectionInputMarkPreviousCells_scanCountFold_reverse
     (marked rest : Word Bool) :
     projectionScanCountFold 0
@@ -1201,6 +1261,7 @@ theorem projectionInputMarkPreviousCells_scanCountFold_reverse
     projectionCodeCells_replicate_tick_scanCountFold_reverse,
     projectionMarkedTickRepeated_scanCountFold_reverse]
 
+ /-- `projectionInputMarkPreviousCells_scanSafe_reverse` characterizes a scan safety phase. -/
 theorem projectionInputMarkPreviousCells_scanSafe_reverse
     (marked rest : Word Bool) :
     projectionScanSafe 0
@@ -1229,6 +1290,7 @@ theorem projectionInputMarkPreviousCells_scanSafe_reverse
         exact
           projectionMarkedTickRepeated_scanSafe_reverse (marked.length + 1)
 
+ /-- `projectionInputMarkScanBackCellsRev_scanCountFold` characterizes a scan safety phase. -/
 theorem projectionInputMarkScanBackCellsRev_scanCountFold
     (marked rest : Word Bool) (b : Bool) :
     projectionScanCountFold 0
@@ -1238,6 +1300,7 @@ theorem projectionInputMarkScanBackCellsRev_scanCountFold
     projectionMarkedBoolCellScanPrefixRev_scanCountFold,
     projectionInputMarkPreviousCells_scanCountFold_reverse]
 
+ /-- `projectionInputMarkScanBackCellsRev_scanSafe` characterizes a scan safety phase. -/
 theorem projectionInputMarkScanBackCellsRev_scanSafe
     (marked rest : Word Bool) (b : Bool) :
     projectionScanSafe 0
@@ -1248,6 +1311,7 @@ theorem projectionInputMarkScanBackCellsRev_scanSafe
   · rw [projectionMarkedBoolCellScanPrefixRev_scanCountFold]
     exact projectionInputMarkPreviousCells_scanSafe_reverse marked rest
 
+ /-- `projectionInputMarkScanBackCellsRev_length` characterizes a scan safety phase. -/
 theorem projectionInputMarkScanBackCellsRev_length
     (marked rest : Word Bool) (b : Bool) :
     (projectionInputMarkScanBackCellsRev marked rest b).length =
@@ -1270,6 +1334,7 @@ def projectionInputFinishScanBackCellsRev
         (projectionRepeatedCells projectionMarkedTickCodeCells
           marked.length).reverse)
 
+ /-- `projectionInputFinishScanBackCellsRev_scanCountFold` characterizes a scan safety phase. -/
 theorem projectionInputFinishScanBackCellsRev_scanCountFold
     (marked : Word Bool) :
     projectionScanCountFold 0
@@ -1288,6 +1353,7 @@ theorem projectionInputFinishScanBackCellsRev_scanCountFold
     projectionDoneCodeCells_scanCountFold_reverse,
     projectionMarkedTickRepeated_scanCountFold_reverse]
 
+ /-- `projectionInputFinishScanBackCellsRev_scanSafe` characterizes a scan safety phase. -/
 theorem projectionInputFinishScanBackCellsRev_scanSafe
     (marked : Word Bool) :
     projectionScanSafe 0
@@ -1302,6 +1368,7 @@ theorem projectionInputFinishScanBackCellsRev_scanSafe
     · rw [projectionDoneCodeCells_scanCountFold_reverse]
       exact projectionMarkedTickRepeated_scanSafe_reverse marked.length
 
+ /-- `projectionInputFinishScanBackCellsRev_length` characterizes a scan safety phase. -/
 theorem projectionInputFinishScanBackCellsRev_length
     (marked : Word Bool) :
     (projectionInputFinishScanBackCellsRev marked).length =
@@ -1324,6 +1391,7 @@ def projectionInputFinishSuffixTail
           (MachineDescription.encodeNatAppend n
             (MachineDescription.encodeBoolWord result))
 
+ /-- `projectionCodeCells_encodeNatAppend_cons_cons` captures the core lemma for this local construction. -/
 theorem projectionCodeCells_encodeNatAppend_cons_cons
     (stage : Nat) (result : Word Bool) :
     projectionCodeCells
@@ -1342,6 +1410,7 @@ def projectionInputFinishSuffixTailFor
       [some true, some false] ++
         projectionCodeCells (MachineDescription.encodeNatAppend n suffix)
 
+ /-- `projectionCodeCells_encodeNatAppend_cons_cons_suffix` captures the core lemma for this local construction. -/
 theorem projectionCodeCells_encodeNatAppend_cons_cons_suffix
     (stage : Nat) (suffix : Word MachineCodeSymbol) :
     projectionCodeCells (MachineDescription.encodeNatAppend stage suffix) =

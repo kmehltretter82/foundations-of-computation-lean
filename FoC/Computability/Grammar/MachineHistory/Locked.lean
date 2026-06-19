@@ -2,6 +2,13 @@ import FoC.Computability.Grammar.MachineHistory.Contexts
 
 set_option doc.verso true
 
+/-!
+# Locked
+
+Supporting declarations and helper lemmas for Computability Grammar MachineHistory Locked.
+-/
+
+
 namespace FoC
 namespace Computability
 
@@ -10,6 +17,7 @@ open Grammars
 
 namespace MachineDescriptionHistoryGrammar
 
+ /-- `lockedLeft_leftGenerator_yields` captures the core lemma for this local construction. -/
 theorem lockedLeft_leftGenerator_yields {D : MachineDescription}
     (left : List (Option Bool)) (c : Option Bool)
     {u v y : SententialForm Bool (NT D)}
@@ -24,6 +32,7 @@ theorem lockedLeft_leftGenerator_yields {D : MachineDescription}
   simpa [lockedLeftForm, cellForm, List.map_append, List.append_assoc] using
     (HistorySoundForm.lockedLeft (D := D) (left ++ [c]))
 
+ /-- `lockedLeft_headSelection_yields` captures the core lemma for this local construction. -/
 theorem lockedLeft_headSelection_yields {D : MachineDescription}
     (left : List (Option Bool)) (q : Fin (D.stateCount + 1))
     (h : Option Bool)
@@ -41,6 +50,7 @@ theorem lockedLeft_headSelection_yields {D : MachineDescription}
   simpa [lockedRightForm, cellForm, List.append_assoc] using
     (HistorySoundForm.lockedRight (D := D) left h [])
 
+ /-- `lockedRight_rightGenerator_yields` captures the core lemma for this local construction. -/
 theorem lockedRight_rightGenerator_yields {D : MachineDescription}
     (left : List (Option Bool)) (head c : Option Bool)
     (right : List (Option Bool))
@@ -56,6 +66,7 @@ theorem lockedRight_rightGenerator_yields {D : MachineDescription}
   simpa [lockedRightForm, cellForm, List.append_assoc] using
     (HistorySoundForm.lockedRight (D := D) left head (c :: right))
 
+ /-- `lockedRight_activation_yields` captures the core lemma for this local construction. -/
 theorem lockedRight_activation_yields {D : MachineDescription}
     (hD : D.WellFormed)
     (left : List (Option Bool)) (head : Option Bool)
@@ -82,6 +93,7 @@ theorem lockedRight_activation_yields {D : MachineDescription}
     List.reverse_reverse, List.append_assoc] using
     (HistorySoundForm.active (D := D) c hstate hc)
 
+ /-- `historySoundForm_lockedLeft_yields` captures the core lemma for this local construction. -/
 theorem historySoundForm_lockedLeft_yields {D : MachineDescription}
     (left : List (Option Bool))
     {y : SententialForm Bool (NT D)}
@@ -211,6 +223,7 @@ theorem historySoundForm_lockedLeft_yields {D : MachineDescription}
     simp [lockedLeftForm, cellForm, cell, nt, leftBoundary, rightBoundary,
       lockedState] at hmem
 
+ /-- `historySoundForm_lockedRight_yields` captures the core lemma for this local construction. -/
 theorem historySoundForm_lockedRight_yields {D : MachineDescription}
     (hD : D.WellFormed)
     (left : List (Option Bool)) (head : Option Bool)

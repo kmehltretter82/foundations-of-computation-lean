@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.AppendLa
 
 set_option doc.verso true
 
+/-!
+# ReturnAppend
+
+Supporting declarations and helper lemmas for Computability Compiler Core DovetailInitialLayoutInitializer ReturnAppend.
+-/
+
+
 namespace FoC
 namespace Computability
 
@@ -21,6 +28,7 @@ def MarkTransitionSecondBitDescription :
         1 (some false) (some false) Direction.right 2
     ]
 
+ /-- `markTransitionSecondBitDescription_wellFormed` captures the core lemma for this local construction. -/
 theorem markTransitionSecondBitDescription_wellFormed :
     MarkTransitionSecondBitDescription.WellFormed := by
   constructor
@@ -43,6 +51,7 @@ theorem markTransitionSecondBitDescription_wellFormed :
       (by
         native_decide) t u ht hu hkey
 
+ /-- `markTransitionSecondBitDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 theorem markTransitionSecondBitDescription_haltTransitionFree :
     MarkTransitionSecondBitDescription.HaltTransitionFree := by
   intro t ht
@@ -52,11 +61,13 @@ theorem markTransitionSecondBitDescription_haltTransitionFree :
     (by
       native_decide) t ht
 
+ /-- `markTransitionSecondBitDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem markTransitionSecondBitDescription_subroutineReady :
     MarkTransitionSecondBitDescription.SubroutineReady :=
   ⟨markTransitionSecondBitDescription_wellFormed,
     markTransitionSecondBitDescription_haltTransitionFree⟩
 
+ /-- `markTransitionSecondBitDescription_run` captures the core lemma for this local construction. -/
 theorem markTransitionSecondBitDescription_run
     (payload : Word Bool) :
     MarkTransitionSecondBitDescription.runConfig 2
@@ -84,6 +95,7 @@ def TransitionPrefixedThenAppendCodeWordLastDescription
     Direction.right
 
 theorem
+     /-- `transitionPrefixedThenAppendCodeWordLastDescription_subroutineReady` packages a subroutine-ready composition step. -/
     transitionPrefixedThenAppendCodeWordLastDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (TransitionPrefixedThenAppendCodeWordLastDescription
@@ -93,6 +105,7 @@ theorem
     (appendCodeWordLastDescription_subroutineReady code hcode)
 
 theorem
+     /-- `transitionPrefixedThenAppendCodeWordLastDescription_run` captures the core lemma for this local construction. -/
     transitionPrefixedThenAppendCodeWordLastDescription_run
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (payload : Word Bool) :
@@ -177,6 +190,7 @@ def ReturnToCurrentMarkerDescription :
         0 none (some false) Direction.right 1
     ]
 
+ /-- `returnToCurrentMarkerDescription_wellFormed` captures the core lemma for this local construction. -/
 theorem returnToCurrentMarkerDescription_wellFormed :
     ReturnToCurrentMarkerDescription.WellFormed := by
   constructor
@@ -200,6 +214,7 @@ theorem returnToCurrentMarkerDescription_wellFormed :
         native_decide) t u ht hu hkey
 
 theorem
+     /-- `returnToCurrentMarkerDescription_haltTransitionFree` establishes the halting condition in this construction. -/
     returnToCurrentMarkerDescription_haltTransitionFree :
     ReturnToCurrentMarkerDescription.HaltTransitionFree := by
   intro t ht
@@ -210,11 +225,13 @@ theorem
       native_decide) t ht
 
 theorem
+     /-- `returnToCurrentMarkerDescription_subroutineReady` packages a subroutine-ready composition step. -/
     returnToCurrentMarkerDescription_subroutineReady :
     ReturnToCurrentMarkerDescription.SubroutineReady :=
   ⟨returnToCurrentMarkerDescription_wellFormed,
     returnToCurrentMarkerDescription_haltTransitionFree⟩
 
+ /-- `returnToCurrentMarkerDescription_step_scan` characterizes a scan safety phase. -/
 theorem returnToCurrentMarkerDescription_step_scan
     (preRev : Word Bool) (leftBit current : Bool)
     (leftOfMarker right : List (Option Bool)) :
@@ -238,6 +255,7 @@ theorem returnToCurrentMarkerDescription_step_scan
       MachineDescription.transition, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft]
 
+ /-- `returnToCurrentMarkerDescription_run` captures the core lemma for this local construction. -/
 theorem returnToCurrentMarkerDescription_run
     (preRev : Word Bool) (current : Bool)
     (leftOfMarker right : List (Option Bool)) :
@@ -267,6 +285,7 @@ theorem returnToCurrentMarkerDescription_run
       simpa [List.append_assoc] using ih b (some current :: right)
 
 theorem
+     /-- `returnToCurrentMarkerDescription_run_after_append_four_atCells` states the corresponding theorem run form. -/
     returnToCurrentMarkerDescription_run_after_append_four_atCells
     (pre : Word Bool) (leftOfMarker : List (Option Bool))
     (b0 b1 b2 b3 : Bool) :
@@ -289,6 +308,7 @@ theorem
       leftOfMarker [some b3]
 
 theorem
+     /-- `returnToCurrentMarkerDescription_run_after_append_atCells` states the corresponding theorem run form. -/
     returnToCurrentMarkerDescription_run_after_append_atCells :
     forall code : Word MachineCodeSymbol,
       code ≠ [] ->
@@ -358,6 +378,7 @@ def AppendCodeWordReturnToCurrentMarkerDescription
     Direction.left
 
 theorem
+     /-- `appendCodeWordReturnToCurrentMarkerDescription_subroutineReady` packages a subroutine-ready composition step. -/
     appendCodeWordReturnToCurrentMarkerDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (AppendCodeWordReturnToCurrentMarkerDescription
@@ -367,6 +388,7 @@ theorem
     returnToCurrentMarkerDescription_subroutineReady
 
 theorem
+     /-- `appendCodeWordReturnToCurrentMarkerDescription_run_from_scan` states the corresponding theorem run form. -/
     appendCodeWordReturnToCurrentMarkerDescription_run_from_scan
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (pre remaining : Word Bool)
@@ -492,6 +514,7 @@ def RightCellsCopierStartDescription :
         7 (some false) (some false) Direction.right 8
     ]
 
+ /-- `rightCellsCopierStartDescription_wellFormed` captures the core lemma for this local construction. -/
 theorem rightCellsCopierStartDescription_wellFormed :
     RightCellsCopierStartDescription.WellFormed := by
   constructor
@@ -515,6 +538,7 @@ theorem rightCellsCopierStartDescription_wellFormed :
         native_decide) t u ht hu hkey
 
 theorem
+     /-- `rightCellsCopierStartDescription_haltTransitionFree` establishes the halting condition in this construction. -/
     rightCellsCopierStartDescription_haltTransitionFree :
     RightCellsCopierStartDescription.HaltTransitionFree := by
   intro t ht
@@ -525,11 +549,13 @@ theorem
       native_decide) t ht
 
 theorem
+     /-- `rightCellsCopierStartDescription_subroutineReady` packages a subroutine-ready composition step. -/
     rightCellsCopierStartDescription_subroutineReady :
     RightCellsCopierStartDescription.SubroutineReady :=
   ⟨rightCellsCopierStartDescription_wellFormed,
     rightCellsCopierStartDescription_haltTransitionFree⟩
 
+ /-- `rightCellsCopierStartDescription_run` captures the core lemma for this local construction. -/
 theorem rightCellsCopierStartDescription_run
     (tail : List (Option Bool)) :
     RightCellsCopierStartDescription.runConfig 8
@@ -777,6 +803,7 @@ def InputTapeRightCellsDirectCopierDescription :
         81 (some true) (some true) Direction.right 99
     ]
 
+ /-- `inputTapeRightCellsDirectCopierDescription_wellFormed` captures the core lemma for this local construction. -/
 theorem inputTapeRightCellsDirectCopierDescription_wellFormed :
     InputTapeRightCellsDirectCopierDescription.WellFormed := by
   constructor
@@ -800,6 +827,7 @@ theorem inputTapeRightCellsDirectCopierDescription_wellFormed :
         native_decide) t u ht hu hkey
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_haltTransitionFree` establishes the halting condition in this construction. -/
     inputTapeRightCellsDirectCopierDescription_haltTransitionFree :
     InputTapeRightCellsDirectCopierDescription.HaltTransitionFree := by
   intro t ht
@@ -810,12 +838,14 @@ theorem
       native_decide) t ht
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_subroutineReady` packages a subroutine-ready composition step. -/
     inputTapeRightCellsDirectCopierDescription_subroutineReady :
     InputTapeRightCellsDirectCopierDescription.SubroutineReady :=
   ⟨inputTapeRightCellsDirectCopierDescription_wellFormed,
     inputTapeRightCellsDirectCopierDescription_haltTransitionFree⟩
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_scan20` characterizes a scan safety phase. -/
     inputTapeRightCellsDirectCopierDescription_step_scan20
     (leftRev : List (Option Bool)) (bit : Bool) (rest : Word Bool) :
     InputTapeRightCellsDirectCopierDescription.stepConfig
@@ -831,6 +861,7 @@ theorem
       Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_scan20` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_scan20
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
     InputTapeRightCellsDirectCopierDescription.runConfig
@@ -848,6 +879,7 @@ theorem
         ih, List.append_assoc]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_write_tick` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_write_tick
     (leftRev : List (Option Bool)) :
     InputTapeRightCellsDirectCopierDescription.runConfig 4
@@ -863,6 +895,7 @@ theorem
     Tape.moveLeft, Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_step_return24` captures the core lemma for this local construction. -/
     inputTapeRightCellsDirectCopierDescription_step_return24
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (leftBit current : Bool) (right : List (Option Bool)) :
@@ -882,6 +915,7 @@ theorem
       Tape.write, Tape.move, Tape.moveLeft]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_return24` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_return24
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (current : Bool) (right : List (Option Bool)) :
@@ -911,6 +945,7 @@ theorem
       simpa [List.append_assoc] using ih bit (some current :: right)
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_advance25_to0` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_advance25_to0
     (leftRev : List (Option Bool)) (b1 b2 b3 : Bool)
     (right : List (Option Bool)) :
@@ -928,6 +963,7 @@ theorem
       Tape.moveRight]
 
 theorem
+     /-- `inputTapeRightCellsDirectCopierDescription_run_copy_tick` states the corresponding theorem run form. -/
     inputTapeRightCellsDirectCopierDescription_run_copy_tick
     (leftOfMarker : List (Option Bool))
     (pre remaining : Word Bool) :
@@ -1024,6 +1060,7 @@ def AppendCodeSymbolReturnToCurrentMarkerDescription
   AppendCodeWordReturnToCurrentMarkerDescription [symbol]
 
 theorem
+     /-- `appendCodeSymbolReturnToCurrentMarkerDescription_subroutineReady` packages a subroutine-ready composition step. -/
     appendCodeSymbolReturnToCurrentMarkerDescription_subroutineReady
     (symbol : MachineCodeSymbol) :
     (AppendCodeSymbolReturnToCurrentMarkerDescription
@@ -1032,6 +1069,7 @@ theorem
     [symbol] (by intro h; cases h)
 
 theorem
+     /-- `appendCodeSymbolReturnToCurrentMarkerDescription_run_from_scan` states the corresponding theorem run form. -/
     appendCodeSymbolReturnToCurrentMarkerDescription_run_from_scan
     (symbol : MachineCodeSymbol)
     (pre remaining : Word Bool)
@@ -1081,6 +1119,7 @@ def ReturnToTransitionMarkerDescription :
         1 (some true) (some true) Direction.right 2
     ]
 
+ /-- `returnToTransitionMarkerDescription_wellFormed` captures the core lemma for this local construction. -/
 theorem returnToTransitionMarkerDescription_wellFormed :
     ReturnToTransitionMarkerDescription.WellFormed := by
   constructor
@@ -1103,6 +1142,7 @@ theorem returnToTransitionMarkerDescription_wellFormed :
       (by
         native_decide) t u ht hu hkey
 
+ /-- `returnToTransitionMarkerDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 theorem returnToTransitionMarkerDescription_haltTransitionFree :
     ReturnToTransitionMarkerDescription.HaltTransitionFree := by
   intro t ht
@@ -1112,11 +1152,13 @@ theorem returnToTransitionMarkerDescription_haltTransitionFree :
     (by
       native_decide) t ht
 
+ /-- `returnToTransitionMarkerDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem returnToTransitionMarkerDescription_subroutineReady :
     ReturnToTransitionMarkerDescription.SubroutineReady :=
   ⟨returnToTransitionMarkerDescription_wellFormed,
     returnToTransitionMarkerDescription_haltTransitionFree⟩
 
+ /-- `returnToTransitionMarkerDescription_step_scan` characterizes a scan safety phase. -/
 theorem returnToTransitionMarkerDescription_step_scan
     (preRev : Word Bool) (leftBit current : Bool)
     (right : List (Option Bool)) :
@@ -1137,6 +1179,7 @@ theorem returnToTransitionMarkerDescription_step_scan
       MachineDescription.transition, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft]
 
+ /-- `returnToTransitionMarkerDescription_run` captures the core lemma for this local construction. -/
 theorem returnToTransitionMarkerDescription_run
     (preRev : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
@@ -1166,6 +1209,7 @@ theorem returnToTransitionMarkerDescription_run
       simpa [List.append_assoc] using ih b (some current :: right)
 
 theorem
+     /-- `returnToTransitionMarkerDescription_run_after_append_four_atCells` states the corresponding theorem run form. -/
     returnToTransitionMarkerDescription_run_after_append_four_atCells
     (pre : Word Bool) (b0 b1 b2 b3 : Bool) :
     ReturnToTransitionMarkerDescription.runConfig
@@ -1187,6 +1231,7 @@ theorem
       (List.append [b1, b0] pre.reverse) b2 [some b3]
 
 theorem
+     /-- `returnToTransitionMarkerDescription_run_after_append_atCells` states the corresponding theorem run form. -/
     returnToTransitionMarkerDescription_run_after_append_atCells :
     forall code : Word MachineCodeSymbol,
       code ≠ [] ->
@@ -1256,6 +1301,7 @@ def MarkedPrefixAppendCodeWordReturnDescription
     Direction.left
 
 theorem
+     /-- `markedPrefixAppendCodeWordReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     markedPrefixAppendCodeWordReturnDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (MarkedPrefixAppendCodeWordReturnDescription
@@ -1265,6 +1311,7 @@ theorem
       code hcode)
     returnToTransitionMarkerDescription_subroutineReady
 
+ /-- `markedPrefixAppendCodeWordReturnDescription_run` captures the core lemma for this local construction. -/
 theorem markedPrefixAppendCodeWordReturnDescription_run
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (b : Bool) (rest : Word Bool) :
@@ -1331,6 +1378,7 @@ theorem markedPrefixAppendCodeWordReturnDescription_run
   simpa [MarkedPrefixAppendCodeWordReturnDescription,
     MachineDescription.initial, A, B] using hn
 
+ /-- `markedPrefixAppendCodeWordReturnDescription_run_checked` states the corresponding theorem run form. -/
 theorem markedPrefixAppendCodeWordReturnDescription_run_checked
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (b : Bool) (rest : Word Bool) :
@@ -1407,6 +1455,7 @@ def MarkedPrefixAppendNatReturnDescription
     (MachineDescription.encodeNat n)
 
 theorem
+     /-- `markedPrefixAppendNatReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     markedPrefixAppendNatReturnDescription_subroutineReady
     (n : Nat) :
     (MarkedPrefixAppendNatReturnDescription
@@ -1415,6 +1464,7 @@ theorem
     (MachineDescription.encodeNat n)
     (encodeNat_ne_nil n)
 
+ /-- `markedPrefixAppendNatReturnDescription_run` captures the core lemma for this local construction. -/
 theorem markedPrefixAppendNatReturnDescription_run
     (n : Nat) (b : Bool) (rest : Word Bool) :
     exists steps : Nat,
@@ -1435,6 +1485,7 @@ theorem markedPrefixAppendNatReturnDescription_run
       (encodeNat_ne_nil n)
       b rest
 
+ /-- `markedPrefixAppendNatReturnDescription_run_checked` states the corresponding theorem run form. -/
 theorem markedPrefixAppendNatReturnDescription_run_checked
     (n : Nat) (b : Bool) (rest : Word Bool) :
     exists steps : Nat,
@@ -1458,6 +1509,7 @@ theorem markedPrefixAppendNatReturnDescription_run_checked
       (encodeNat_ne_nil n)
       b rest
 
+ /-- `stageInputBits_exists_cons` provides the witness needed for existential progress. -/
 theorem stageInputBits_exists_cons
     (w : Word Bool) (stage : Nat) :
     exists b : Bool,
@@ -1487,6 +1539,7 @@ theorem stageInputBits_exists_cons
       exact ⟨b, rest, rfl⟩
 
 theorem
+     /-- `markedPrefixAppendCodeWordReturnDescription_run_stageInput` states the corresponding theorem run form. -/
     markedPrefixAppendCodeWordReturnDescription_run_stageInput
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (w : Word Bool) (stage : Nat) :
@@ -1516,6 +1569,7 @@ theorem
   refine ⟨steps, ?_⟩
   simpa [hbits, MachineDescription.initial, List.append_assoc] using hsteps
 
+ /-- `markedPrefixAppendNatReturnDescription_run_stageInput` states the corresponding theorem run form. -/
 theorem markedPrefixAppendNatReturnDescription_run_stageInput
     (n : Nat) (w : Word Bool) (stage : Nat) :
     exists steps : Nat,
@@ -1541,6 +1595,7 @@ theorem markedPrefixAppendNatReturnDescription_run_stageInput
       (encodeNat_ne_nil n)
       w stage
 
+ /-- `markedPrefixAppendNatReturnDescription_run_stageInput_checked` states the corresponding theorem run form. -/
 theorem markedPrefixAppendNatReturnDescription_run_stageInput_checked
     (n : Nat) (w : Word Bool) (stage : Nat) :
     exists steps : Nat,
@@ -1582,6 +1637,7 @@ def TransitionPrefixedAppendCodeWordReturnDescription
     Direction.left
 
 theorem
+     /-- `transitionPrefixedAppendCodeWordReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     transitionPrefixedAppendCodeWordReturnDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (TransitionPrefixedAppendCodeWordReturnDescription
@@ -1591,6 +1647,7 @@ theorem
       code hcode)
     returnToTransitionMarkerDescription_subroutineReady
 
+ /-- `transitionPrefixedAppendCodeWordReturnDescription_run` captures the core lemma for this local construction. -/
 theorem transitionPrefixedAppendCodeWordReturnDescription_run
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (payload : Word Bool) :
@@ -1673,6 +1730,7 @@ def TransitionPrefixedAppendNatReturnDescription
     (MachineDescription.encodeNat n)
 
 theorem
+     /-- `transitionPrefixedAppendNatReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
     transitionPrefixedAppendNatReturnDescription_subroutineReady
     (n : Nat) :
     (TransitionPrefixedAppendNatReturnDescription
@@ -1681,6 +1739,7 @@ theorem
     (MachineDescription.encodeNat n)
     (encodeNat_ne_nil n)
 
+ /-- `transitionPrefixedAppendNatReturnDescription_run` captures the core lemma for this local construction. -/
 theorem transitionPrefixedAppendNatReturnDescription_run
     (n : Nat) (payload : Word Bool) :
     exists steps : Nat,

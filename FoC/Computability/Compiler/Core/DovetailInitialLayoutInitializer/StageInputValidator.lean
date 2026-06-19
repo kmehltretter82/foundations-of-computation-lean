@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.HeadRout
 
 set_option doc.verso true
 
+/-!
+# StageInputValidator
+
+Supporting declarations and helper lemmas for Computability Compiler Core DovetailInitialLayoutInitializer StageInputValidator.
+-/
+
+
 namespace FoC
 namespace Computability
 
@@ -16,6 +23,7 @@ def StageInputIdentityPrimitive :
     | some _ => some code
     | none => none
 
+ /-- `stageInputIdentityPrimitive_transform_eq_some_iff` provides an important equivalence or equality lemma. -/
 theorem stageInputIdentityPrimitive_transform_eq_some_iff
     (code out : Word MachineCodeSymbol) :
     StageInputIdentityPrimitive.transform code = some out <->
@@ -53,6 +61,7 @@ def stageInputSecondBitTail
   | _ :: _ :: tail => tail
   | _ => []
 
+ /-- `stageInputBits_eq_false_false_tail` provides an important equivalence or equality lemma. -/
 theorem stageInputBits_eq_false_false_tail
     (w : Word Bool) (stage : Nat) :
     stageInputBits w stage =
@@ -168,6 +177,7 @@ def StageInputRecognizerConstruction : Prop :=
     StageInputRecognizerSpec recognizer
 
 theorem
+     /-- `stageInputSecondBitMarkedHandoffTape_move_left` captures the core lemma for this local construction. -/
     stageInputSecondBitMarkedHandoffTape_move_left
     (w : Word Bool) (stage : Nat) :
     Tape.move Direction.left
@@ -202,6 +212,7 @@ theorem
         tapeAtCells, Tape.move, Tape.moveRight, Tape.moveLeft]
 
 theorem
+     /-- `stageInputSecondBitMarkedCheckedHandoffTape_move_left` captures the core lemma for this local construction. -/
     stageInputSecondBitMarkedCheckedHandoffTape_move_left
     (w : Word Bool) (stage : Nat) :
     Tape.move Direction.left
@@ -235,6 +246,7 @@ theorem
         MachineDescription.encodeNat,
         tapeAtCells, Tape.move, Tape.moveRight, Tape.moveLeft]
 
+ /-- `stageInputCheckedInputTape_move_left_move_right` captures the core lemma for this local construction. -/
 theorem stageInputCheckedInputTape_move_left_move_right
     (w : Word Bool) (stage : Nat) :
     Tape.move Direction.left
@@ -256,6 +268,7 @@ def RestoreStageInputSecondBitDescription :
         0 none (some false) Direction.left 1 ]
 
 theorem
+     /-- `restoreStageInputSecondBitDescription_wellFormed` captures the core lemma for this local construction. -/
     restoreStageInputSecondBitDescription_wellFormed :
     RestoreStageInputSecondBitDescription.WellFormed := by
   constructor
@@ -279,6 +292,7 @@ theorem
         native_decide) t u ht hu hkey
 
 theorem
+     /-- `restoreStageInputSecondBitDescription_haltTransitionFree` establishes the halting condition in this construction. -/
     restoreStageInputSecondBitDescription_haltTransitionFree :
     RestoreStageInputSecondBitDescription.HaltTransitionFree := by
   intro t ht
@@ -289,11 +303,13 @@ theorem
       native_decide) t ht
 
 theorem
+     /-- `restoreStageInputSecondBitDescription_subroutineReady` packages a subroutine-ready composition step. -/
     restoreStageInputSecondBitDescription_subroutineReady :
     RestoreStageInputSecondBitDescription.SubroutineReady :=
   ⟨restoreStageInputSecondBitDescription_wellFormed,
     restoreStageInputSecondBitDescription_haltTransitionFree⟩
 
+ /-- `restoreStageInputSecondBitDescription_run` captures the core lemma for this local construction. -/
 theorem restoreStageInputSecondBitDescription_run
     (w : Word Bool) (stage : Nat) :
     RestoreStageInputSecondBitDescription.runConfig 1
@@ -311,6 +327,7 @@ theorem restoreStageInputSecondBitDescription_run
     Tape.read, Tape.write, Tape.move, Tape.moveLeft]
   simp [Tape.input]
 
+ /-- `restoreStageInputSecondBitDescription_run_checked` states the corresponding theorem run form. -/
 theorem restoreStageInputSecondBitDescription_run_checked
     (w : Word Bool) (stage : Nat) :
     RestoreStageInputSecondBitDescription.runConfig 1
@@ -328,6 +345,7 @@ theorem restoreStageInputSecondBitDescription_run_checked
     MachineDescription.Matches, MachineDescription.transition,
     Tape.read, Tape.write, Tape.move, Tape.moveLeft]
 
+ /-- `restoreStageInputSecondBitDescription_run_succ` states the corresponding theorem run form. -/
 theorem restoreStageInputSecondBitDescription_run_succ
     (n : Nat) (w : Word Bool) (stage : Nat) :
     RestoreStageInputSecondBitDescription.runConfig (n + 1)
@@ -343,6 +361,7 @@ theorem restoreStageInputSecondBitDescription_run_succ
       restoreStageInputSecondBitDescription_haltTransitionFree
       (Tape.input (stageInputBits w stage)) n
 
+ /-- `restoreStageInputSecondBitDescription_run_checked_succ` states the corresponding theorem run form. -/
 theorem restoreStageInputSecondBitDescription_run_checked_succ
     (n : Nat) (w : Word Bool) (stage : Nat) :
     RestoreStageInputSecondBitDescription.runConfig (n + 1)
@@ -372,6 +391,7 @@ def MarkStageInputSecondBitDescription :
         2 (some false) (some false) Direction.right 3
     ]
 
+ /-- `markStageInputSecondBitDescription_wellFormed` captures the core lemma for this local construction. -/
 theorem markStageInputSecondBitDescription_wellFormed :
     MarkStageInputSecondBitDescription.WellFormed := by
   constructor
@@ -395,6 +415,7 @@ theorem markStageInputSecondBitDescription_wellFormed :
         native_decide) t u ht hu hkey
 
 theorem
+     /-- `markStageInputSecondBitDescription_haltTransitionFree` establishes the halting condition in this construction. -/
     markStageInputSecondBitDescription_haltTransitionFree :
     MarkStageInputSecondBitDescription.HaltTransitionFree := by
   intro t ht
@@ -405,11 +426,13 @@ theorem
       native_decide) t ht
 
 theorem
+     /-- `markStageInputSecondBitDescription_subroutineReady` packages a subroutine-ready composition step. -/
     markStageInputSecondBitDescription_subroutineReady :
     MarkStageInputSecondBitDescription.SubroutineReady :=
   ⟨markStageInputSecondBitDescription_wellFormed,
     markStageInputSecondBitDescription_haltTransitionFree⟩
 
+ /-- `markStageInputSecondBitDescription_run` captures the core lemma for this local construction. -/
 theorem markStageInputSecondBitDescription_run
     (w : Word Bool) (stage : Nat) :
     MarkStageInputSecondBitDescription.runConfig 3
@@ -427,6 +450,7 @@ theorem markStageInputSecondBitDescription_run
     MachineDescription.transition, Tape.input, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
+ /-- `markStageInputSecondBitDescription_run_bits` states the corresponding theorem run form. -/
 theorem markStageInputSecondBitDescription_run_bits
     (tail : Word Bool) :
     MarkStageInputSecondBitDescription.runConfig 3
@@ -442,6 +466,7 @@ theorem markStageInputSecondBitDescription_run_bits
     MachineDescription.transition, Tape.input, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
+ /-- `markStageInputSecondBitDescription_haltsWithTape_inv` establishes the halting condition in this construction. -/
 theorem markStageInputSecondBitDescription_haltsWithTape_inv
     {bits : Word Bool} {T : Tape Bool}
     (h :
@@ -735,6 +760,7 @@ def StageInputMarkedCoreDescription
   MachineDescription.seqSubroutine
     MarkStageInputSecondBitDescription scanner Direction.right
 
+ /-- `stageInputMarkedCoreDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem stageInputMarkedCoreDescription_subroutineReady
     {scanner : MachineDescription}
     (hscanner : StageInputMarkedScannerSpec scanner) :
@@ -743,6 +769,7 @@ theorem stageInputMarkedCoreDescription_subroutineReady
     markStageInputSecondBitDescription_subroutineReady
     hscanner.left
 
+ /-- `stageInputMarkedCoreSpec_of_markedScanner` characterizes a scan safety phase. -/
 theorem stageInputMarkedCoreSpec_of_markedScanner
     {scanner : MachineDescription}
     (hscanner : StageInputMarkedScannerSpec scanner) :
@@ -805,6 +832,7 @@ def StageInputRecognizerDescription
   MachineDescription.seqSubroutine markedCore
     RestoreStageInputSecondBitDescription Direction.left
 
+ /-- `stageInputRecognizerDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem stageInputRecognizerDescription_subroutineReady
     {markedCore : MachineDescription}
     (hmarkedCore : StageInputMarkedCoreSpec markedCore) :
@@ -813,6 +841,7 @@ theorem stageInputRecognizerDescription_subroutineReady
     hmarkedCore.left
     restoreStageInputSecondBitDescription_subroutineReady
 
+ /-- `stageInputRecognizerSpec_of_markedCore` states the finite-machine specification. -/
 theorem stageInputRecognizerSpec_of_markedCore
     {markedCore : MachineDescription}
     (hmarkedCore : StageInputMarkedCoreSpec markedCore) :
@@ -913,6 +942,7 @@ theorem stageInputRecognizerSpec_of_markedCore
           exact congrArg MachineDescription.Configuration.tape hcfg
     exact ⟨w, stage, hcode, hT⟩
 
+ /-- `exactIdentityDescription_runConfig_from_start` states the corresponding theorem run form. -/
 theorem exactIdentityDescription_runConfig_from_start
     (n : Nat) (T : Tape Bool) :
     MachineDescription.ExactIdentityDescription.runConfig n
@@ -930,6 +960,7 @@ def StageInputIdentityDescription
   MachineDescription.seqSubroutine recognizer
     MachineDescription.ExactIdentityDescription Direction.right
 
+ /-- `stageInputIdentityDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem stageInputIdentityDescription_subroutineReady
     {recognizer : MachineDescription}
     (hrecognizer : StageInputRecognizerSpec recognizer) :
@@ -939,6 +970,7 @@ theorem stageInputIdentityDescription_subroutineReady
     ⟨MachineDescription.exactIdentityDescription_wellFormed,
       MachineDescription.exactIdentityDescription_haltTransitionFree⟩
 
+ /-- `stageInputIdentityDescription_spec_of_recognizer` states the finite-machine specification. -/
 theorem stageInputIdentityDescription_spec_of_recognizer
     {recognizer : MachineDescription}
     (hrecognizer : StageInputRecognizerSpec recognizer) :
@@ -1017,6 +1049,7 @@ theorem stageInputIdentityDescription_spec_of_recognizer
     exact stageInputCheckedInputTape_move_left_move_right w stage
 
 theorem
+     /-- `stageInputIdentityClosedHandoffConstruction_of_recognizer` captures the core lemma for this local construction. -/
     stageInputIdentityClosedHandoffConstruction_of_recognizer
     {recognizer : MachineDescription}
     (hrecognizer : StageInputRecognizerSpec recognizer) :
@@ -1024,6 +1057,7 @@ theorem
   ⟨StageInputIdentityDescription recognizer,
     stageInputIdentityDescription_spec_of_recognizer hrecognizer⟩
 
+ /-- `stageInputValidatorSpec_of_identityClosedHandoff` states the finite-machine specification. -/
 theorem stageInputValidatorSpec_of_identityClosedHandoff
     {validator : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator) :

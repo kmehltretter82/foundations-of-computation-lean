@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.ControllerStageInputProjection.ResultRun
 
 set_option doc.verso true
 
+/-!
+# BasicPart1
+
+Supporting declarations and helper lemmas for Computability Compiler Core ControllerStageInputProjection Soundness BasicPart1.
+-/
+
+
 namespace FoC
 namespace Computability
 
@@ -10,6 +17,7 @@ open Languages
 namespace ControllerStageInputProjection
 
 
+ /-- `final_normalizedOutput` captures the core lemma for this local construction. -/
 theorem final_normalizedOutput
     (input result : Word Bool) (stage : Nat) :
     Tape.normalizedOutput
@@ -35,6 +43,7 @@ theorem final_normalizedOutput
   rw [encodeCodeWordAsInput_encodeNat]
   simp
 
+ /-- `haltsWithOutput_encode` establishes the halting condition in this construction. -/
 theorem haltsWithOutput_encode
     (C : MachineDescription.DovetailControllerLayout) :
     Description.HaltsWithOutput
@@ -197,6 +206,7 @@ theorem haltsWithOutput_encode
         final_normalizedOutput
           input result stage
 
+ /-- `state_ne_halt_of_later_ne_halt` establishes the halting condition in this construction. -/
 theorem state_ne_halt_of_later_ne_halt
     {c : MachineDescription.Configuration} {n k : Nat}
     (hle : n ≤ k)
@@ -225,6 +235,7 @@ theorem state_ne_halt_of_later_ne_halt
         haltTransitionFree]
   exact hlater hfinal
 
+ /-- `ne_halt_of_reaches_stuck` establishes the halting condition in this construction. -/
 theorem ne_halt_of_reaches_stuck
     {c stuck : MachineDescription.Configuration} {k n : Nat}
     (hrun :
@@ -248,6 +259,7 @@ theorem ne_halt_of_reaches_stuck
       MachineDescription.runConfig_of_stepConfig_none hstep]
     exact hstuck
 
+ /-- `ne_halt_of_reaches_stepConfig_none` establishes the halting condition in this construction. -/
 theorem ne_halt_of_reaches_stepConfig_none
     {c : MachineDescription.Configuration} {k n : Nat}
     (hstep :
@@ -264,6 +276,7 @@ theorem ne_halt_of_reaches_stepConfig_none
       (k := k) (stuck := Description.runConfig k c)
       rfl hstep hstate
 
+ /-- `stepConfig_projectionConfig_nil_none` captures the core lemma for this local construction. -/
 private theorem stepConfig_projectionConfig_nil_none
     {state : Nat}
     (hlookup : Description.lookupTransition state none = none)
@@ -272,6 +285,7 @@ private theorem stepConfig_projectionConfig_nil_none
   simp [MachineDescription.stepConfig, projectionConfig,
     projectionTapeAtCells, Tape.read, hlookup]
 
+ /-- `stepConfig_projectionConfig_cons_none` captures the core lemma for this local construction. -/
 private theorem stepConfig_projectionConfig_cons_none
     {state : Nat} {cell : Option Bool}
     (hlookup : Description.lookupTransition state cell = none)
@@ -282,126 +296,157 @@ private theorem stepConfig_projectionConfig_cons_none
   simp [MachineDescription.stepConfig, projectionConfig,
     projectionTapeAtCells, Tape.read, hlookup]
 
+ /-- `lookupTransition_100_none` captures the core lemma for this local construction. -/
 private theorem lookupTransition_100_none :
     Description.lookupTransition 100 none = none := by
   native_decide
 
+ /-- `lookupTransition_100_true` captures the core lemma for this local construction. -/
 private theorem lookupTransition_100_true :
     Description.lookupTransition 100 (some true) = none := by
   native_decide
 
+ /-- `lookupTransition_101_true` captures the core lemma for this local construction. -/
 private theorem lookupTransition_101_true :
     Description.lookupTransition 101 (some true) = none := by
   native_decide
 
+ /-- `lookupTransition_102_false` captures the core lemma for this local construction. -/
 private theorem lookupTransition_102_false :
     Description.lookupTransition 102 (some false) = none := by
   native_decide
 
+ /-- `lookupTransition_120_none` captures the core lemma for this local construction. -/
 private theorem lookupTransition_120_none :
     Description.lookupTransition 120 none = none := by
   native_decide
 
+ /-- `lookupTransition_120_true` captures the core lemma for this local construction. -/
 private theorem lookupTransition_120_true :
     Description.lookupTransition 120 (some true) = none := by
   native_decide
 
+ /-- `lookupTransition_121_true` captures the core lemma for this local construction. -/
 private theorem lookupTransition_121_true :
     Description.lookupTransition 121 (some true) = none := by
   native_decide
 
+ /-- `lookupTransition_122_false` captures the core lemma for this local construction. -/
 private theorem lookupTransition_122_false :
     Description.lookupTransition 122 (some false) = none := by
   native_decide
 
+ /-- `lookupTransition_130_none` captures the core lemma for this local construction. -/
 private theorem lookupTransition_130_none :
     Description.lookupTransition 130 none = none := by
   native_decide
 
+ /-- `lookupTransition_130_true` captures the core lemma for this local construction. -/
 private theorem lookupTransition_130_true :
     Description.lookupTransition 130 (some true) = none := by
   native_decide
 
+ /-- `lookupTransition_131_false` captures the core lemma for this local construction. -/
 private theorem lookupTransition_131_false :
     Description.lookupTransition 131 (some false) = none := by
   native_decide
 
+ /-- `lookupTransition_133_false` captures the core lemma for this local construction. -/
 private theorem lookupTransition_133_false :
     Description.lookupTransition 133 (some false) = none := by
   native_decide
 
+ /-- `lookupTransition_134_true` captures the core lemma for this local construction. -/
 private theorem lookupTransition_134_true :
     Description.lookupTransition 134 (some true) = none := by
   native_decide
 
+ /-- `lookupTransition_200_none` captures the core lemma for this local construction. -/
 private theorem lookupTransition_200_none :
     Description.lookupTransition 200 none = none := by
   native_decide
 
+ /-- `lookupTransition_200_true` captures the core lemma for this local construction. -/
 private theorem lookupTransition_200_true :
     Description.lookupTransition 200 (some true) = none := by
   native_decide
 
+ /-- `lookupTransition_201_true` captures the core lemma for this local construction. -/
 private theorem lookupTransition_201_true :
     Description.lookupTransition 201 (some true) = none := by
   native_decide
 
+ /-- `lookupTransition_202_false` captures the core lemma for this local construction. -/
 private theorem lookupTransition_202_false :
     Description.lookupTransition 202 (some false) = none := by
   native_decide
 
+ /-- `lookupTransition_300_none` captures the core lemma for this local construction. -/
 private theorem lookupTransition_300_none :
     Description.lookupTransition 300 none = none := by
   native_decide
 
+ /-- `lookupTransition_300_true` captures the core lemma for this local construction. -/
 private theorem lookupTransition_300_true :
     Description.lookupTransition 300 (some true) = none := by
   native_decide
 
+ /-- `lookupTransition_301_true` captures the core lemma for this local construction. -/
 private theorem lookupTransition_301_true :
     Description.lookupTransition 301 (some true) = none := by
   native_decide
 
+ /-- `lookupTransition_302_false` captures the core lemma for this local construction. -/
 private theorem lookupTransition_302_false :
     Description.lookupTransition 302 (some false) = none := by
   native_decide
 
+ /-- `lookupTransition_320_none` captures the core lemma for this local construction. -/
 private theorem lookupTransition_320_none :
     Description.lookupTransition 320 none = none := by
   native_decide
 
+ /-- `lookupTransition_320_true` captures the core lemma for this local construction. -/
 private theorem lookupTransition_320_true :
     Description.lookupTransition 320 (some true) = none := by
   native_decide
 
+ /-- `lookupTransition_321_true` captures the core lemma for this local construction. -/
 private theorem lookupTransition_321_true :
     Description.lookupTransition 321 (some true) = none := by
   native_decide
 
+ /-- `lookupTransition_322_false` captures the core lemma for this local construction. -/
 private theorem lookupTransition_322_false :
     Description.lookupTransition 322 (some false) = none := by
   native_decide
 
+ /-- `lookupTransition_330_none` captures the core lemma for this local construction. -/
 private theorem lookupTransition_330_none :
     Description.lookupTransition 330 none = none := by
   native_decide
 
+ /-- `lookupTransition_330_true` captures the core lemma for this local construction. -/
 private theorem lookupTransition_330_true :
     Description.lookupTransition 330 (some true) = none := by
   native_decide
 
+ /-- `lookupTransition_331_false` captures the core lemma for this local construction. -/
 private theorem lookupTransition_331_false :
     Description.lookupTransition 331 (some false) = none := by
   native_decide
 
+ /-- `lookupTransition_333_false` captures the core lemma for this local construction. -/
 private theorem lookupTransition_333_false :
     Description.lookupTransition 333 (some false) = none := by
   native_decide
 
+ /-- `lookupTransition_334_true` captures the core lemma for this local construction. -/
 private theorem lookupTransition_334_true :
     Description.lookupTransition 334 (some true) = none := by
   native_decide
 
+ /-- `ne_halt_of_reaches_ne_halt_region` establishes the halting condition in this construction. -/
 theorem ne_halt_of_reaches_ne_halt_region
     {c mid : MachineDescription.Configuration} {k n : Nat}
     (hrun :
@@ -424,6 +469,7 @@ theorem ne_halt_of_reaches_ne_halt_region
     rw [hn, MachineDescription.runConfig_add, hrun]
     exact hmid (n - k)
 
+ /-- `run_state200_decodeNat_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_state200_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeNat tokens = none) (n : Nat) :
@@ -539,6 +585,7 @@ theorem run_state200_decodeNat_none_ne_halt
                 change (200 : Nat) ≠ 999
                 omega)
 
+ /-- `run_state120_decodeNat_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_state120_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeNat tokens = none) (n : Nat) :
@@ -655,6 +702,7 @@ theorem run_state120_decodeNat_none_ne_halt
                 change (120 : Nat) ≠ 999
                 omega)
 
+ /-- `run_state100_decodeNat_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_state100_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeNat tokens = none) (n : Nat) :
@@ -775,6 +823,7 @@ theorem run_state100_decodeNat_none_ne_halt
                 change (100 : Nat) ≠ 999
                 omega)
 
+ /-- `run_state320_decodeNat_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_state320_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeNat tokens = none) (n : Nat) :
@@ -891,6 +940,7 @@ theorem run_state320_decodeNat_none_ne_halt
                 change (320 : Nat) ≠ 999
                 omega)
 
+ /-- `run_state300_decodeNat_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_state300_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeNat tokens = none) (n : Nat) :
@@ -1009,6 +1059,7 @@ theorem run_state300_decodeNat_none_ne_halt
                 change (300 : Nat) ≠ 999
                 omega)
 
+ /-- `run_state330_decodeCell_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_state330_decodeCell_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeCell tokens = none) (n : Nat) :
@@ -1094,6 +1145,7 @@ theorem run_state330_decodeCell_none_ne_halt
                 change (330 : Nat) ≠ 999
                 omega)
 
+ /-- `run_state330_blank_cell_ne_halt` states the corresponding theorem run form. -/
 theorem run_state330_blank_cell_ne_halt
     (suffix : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (n : Nat) :
@@ -1112,6 +1164,7 @@ theorem run_state330_blank_cell_ne_halt
         change (333 : Nat) ≠ 999
         omega)
 
+ /-- `run_state130_decodeCell_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_state130_decodeCell_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeCell tokens = none) (n : Nat) :
@@ -1197,6 +1250,7 @@ theorem run_state130_decodeCell_none_ne_halt
                 change (130 : Nat) ≠ 999
                 omega)
 
+ /-- `run_state130_blank_cell_ne_halt` states the corresponding theorem run form. -/
 theorem run_state130_blank_cell_ne_halt
     (suffix : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (n : Nat) :
@@ -1215,6 +1269,7 @@ theorem run_state130_blank_cell_ne_halt
         change (133 : Nat) ≠ 999
         omega)
 
+ /-- `run_result_tail_decodeCells_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_result_tail_decodeCells_none_ne_halt
     (marked : Word Bool) (len : Nat)
     (tokens : Word MachineCodeSymbol)
@@ -1343,6 +1398,7 @@ theorem run_result_tail_decodeCells_none_ne_halt
               | some parsedRest =>
                   simp [MachineDescription.decodeCells, hcell, hrest] at hdecode
 
+ /-- `run_result_tail_cellsToWord_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_result_tail_cellsToWord_none_ne_halt
     (marked : Word Bool) (cells : List (Option Bool))
     (suffix : Word MachineCodeSymbol)

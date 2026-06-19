@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.Assembly
 
 set_option doc.verso true
 
+/-!
+# Compiled
+
+Supporting declarations and helper lemmas for Computability Compiler Core DovetailInitialLayoutInitializer Compiled.
+-/
+
+
 namespace FoC
 namespace Computability
 
@@ -19,6 +26,7 @@ def DescriptionWithValidatorCopier
     Direction.left
 
 theorem
+     /-- `descriptionWithValidatorCopier_subroutineReady` packages a subroutine-ready composition step. -/
     descriptionWithValidatorCopier_subroutineReady
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
@@ -31,6 +39,7 @@ theorem
       hcopier)
 
 theorem
+     /-- `descriptionWithValidatorCopier_run_bits` states the corresponding theorem run form. -/
     descriptionWithValidatorCopier_run_bits
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
@@ -113,6 +122,7 @@ theorem
     A, B, MachineDescription.initial, stageInputBits] using hn
 
 theorem
+     /-- `descriptionWithValidatorCopier_forward` captures the core lemma for this local construction. -/
     descriptionWithValidatorCopier_forward
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
@@ -135,6 +145,7 @@ theorem
         congrArg MachineDescription.Configuration.tape hn⟩
 
 theorem
+     /-- `descriptionWithValidatorCopier_closed` captures the core lemma for this local construction. -/
     descriptionWithValidatorCopier_closed
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
@@ -188,6 +199,7 @@ theorem
       hBready.right hBrun' hBexpected
   exact ⟨w, stage, rfl, hT⟩
 
+ /-- `rightShiftedSpec_of_rightShiftedOutputCompiled` states the finite-machine specification. -/
 theorem rightShiftedSpec_of_rightShiftedOutputCompiled
     {accept reject initializer : MachineDescription}
     (hinit :
@@ -248,6 +260,7 @@ theorem rightShiftedSpec_of_rightShiftedOutputCompiled
     rw [hT, hout]
     rfl
 
+ /-- `concreteMachineConstruction_of_rightShiftedOutputCompiled` captures the core lemma for this local construction. -/
 theorem concreteMachineConstruction_of_rightShiftedOutputCompiled
     (hcompile :
       RightShiftedOutputCompiledConstruction) :
@@ -259,6 +272,7 @@ theorem concreteMachineConstruction_of_rightShiftedOutputCompiled
       rightShiftedSpec_of_rightShiftedOutputCompiled
         hinit⟩
 
+ /-- `rightShiftedSpec_haltsWithOutput_iff` states the finite-machine specification. -/
 theorem rightShiftedSpec_haltsWithOutput_iff
     {accept reject initializer : MachineDescription}
     (hinit :
@@ -321,6 +335,7 @@ theorem rightShiftedSpec_haltsWithOutput_iff
       MachineDescription.haltsWithOutput_of_haltsWithTape
         (hinit.right.left w stage)
 
+ /-- `tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLayoutSpec` states the finite-machine specification. -/
 theorem tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLayoutSpec
     {accept reject initializer : MachineDescription}
     (hinit :
@@ -352,6 +367,7 @@ theorem tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLayoutSpec
                   accept reject w stage))).mpr
             ⟨w, stage, hcode, rfl⟩
 
+ /-- `tapeCodePrimitiveClosedHandoffCompiled_of_rightShiftedOutputCompiled` captures the core lemma for this local construction. -/
 theorem tapeCodePrimitiveClosedHandoffCompiled_of_rightShiftedOutputCompiled
     {P : MachineDescription.TapeCodePrimitive}
     {D : MachineDescription}
@@ -370,6 +386,7 @@ theorem tapeCodePrimitiveClosedHandoffCompiled_of_rightShiftedOutputCompiled
     hD.left hD.right.left hD.right.right.left houtCons
     hD.right.right.right
 
+ /-- `finiteDescription_realizer` captures the core lemma for this local construction. -/
 theorem finiteDescription_realizer
     (accept reject : MachineDescription) :
     exists initializer : MachineDescription,
@@ -394,6 +411,7 @@ theorem finiteDescription_realizer
       descriptionWithValidatorCopier_closed
         hvalidator hcopier
 
+ /-- `finiteDescriptionConstruction_scaffold` describes append/fold behavior used by later composition. -/
 theorem finiteDescriptionConstruction_scaffold :
     FiniteDescriptionConstruction := by
   intro accept reject
@@ -401,6 +419,7 @@ theorem finiteDescriptionConstruction_scaffold :
     finiteDescription_realizer
       accept reject
 
+ /-- `rightShiftedOutputCompiledConstruction` captures the core lemma for this local construction. -/
 theorem rightShiftedOutputCompiledConstruction :
     RightShiftedOutputCompiledConstruction := by
   intro accept reject
@@ -413,11 +432,13 @@ theorem rightShiftedOutputCompiledConstruction :
       tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLayoutSpec
         hinit⟩
 
+ /-- `concreteMachineConstruction` captures the core lemma for this local construction. -/
 theorem concreteMachineConstruction :
     ConcreteMachineConstruction :=
   concreteMachineConstruction_of_rightShiftedOutputCompiled
     rightShiftedOutputCompiledConstruction
 
+ /-- `machineConstruction` captures the core lemma for this local construction. -/
 theorem machineConstruction :
     MachineConstruction := by
   intro accept reject
@@ -425,6 +446,7 @@ theorem machineConstruction :
     concreteMachineConstruction
       accept reject
 
+ /-- `pairedRecognizerDovetailInitialLayoutCode_rightShiftedSpecConstruction` states the finite-machine specification. -/
 theorem pairedRecognizerDovetailInitialLayoutCode_rightShiftedSpecConstruction :
     PairedRecognizerDovetailInitialLayoutCodeRightShiftedSpecConstruction := by
   intro accept reject
@@ -432,6 +454,7 @@ theorem pairedRecognizerDovetailInitialLayoutCode_rightShiftedSpecConstruction :
     finiteDescriptionConstruction_scaffold
       accept reject
 
+ /-- `pairedRecognizerDovetailInitialLayoutCode_rightShiftedOutputCompiledSubroutine` captures the core lemma for this local construction. -/
 theorem pairedRecognizerDovetailInitialLayoutCode_rightShiftedOutputCompiledSubroutine
     (accept reject : MachineDescription) :
     exists initializer : MachineDescription,
@@ -441,6 +464,7 @@ theorem pairedRecognizerDovetailInitialLayoutCode_rightShiftedOutputCompiledSubr
   rightShiftedOutputCompiledConstruction
     accept reject
 
+ /-- `pairedRecognizerDovetailInitialLayoutCode_closedHandoffCompiledSubroutine` captures the core lemma for this local construction. -/
 theorem pairedRecognizerDovetailInitialLayoutCode_closedHandoffCompiledSubroutine
     (accept reject : MachineDescription) :
     exists initializer : MachineDescription,

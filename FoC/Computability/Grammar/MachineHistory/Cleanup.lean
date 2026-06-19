@@ -2,6 +2,13 @@ import FoC.Computability.Grammar.MachineHistory.ReverseMoves
 
 set_option doc.verso true
 
+/-!
+# Cleanup
+
+Supporting declarations and helper lemmas for Computability Grammar MachineHistory Cleanup.
+-/
+
+
 namespace FoC
 namespace Computability
 
@@ -10,6 +17,7 @@ open Grammars
 
 namespace MachineDescriptionHistoryGrammar
 
+ /-- `cleanupEmpty_active_yields` captures the core lemma for this local construction. -/
 theorem cleanupEmpty_active_yields {D : MachineDescription}
     (hD : D.WellFormed)
     (c : MachineDescription.Configuration)
@@ -66,6 +74,7 @@ theorem cleanupEmpty_active_yields {D : MachineDescription}
   | cons l restLeft =>
       simp [cellForm, List.map_append] at hleft
 
+ /-- `cleanupStart_active_yields` captures the core lemma for this local construction. -/
 theorem cleanupStart_active_yields {D : MachineDescription}
     (hD : D.WellFormed)
     (c : MachineDescription.Configuration)
@@ -118,6 +127,7 @@ theorem cleanupStart_active_yields {D : MachineDescription}
   | cons l restLeft =>
       simp [cellForm, List.map_append] at hleft
 
+ /-- `cleanup_context` captures the core lemma for this local construction. -/
 theorem cleanup_context {D : MachineDescription}
     (pref : Word Bool) (rest : List (Option Bool))
     {u v : SententialForm Bool (NT D)}
@@ -163,6 +173,7 @@ theorem cleanup_context {D : MachineDescription}
           subst v
           simp [SententialForm.terminalWord]
 
+ /-- `cleanupCell_yields` captures the core lemma for this local construction. -/
 theorem cleanupCell_yields {D : MachineDescription}
     (pref : Word Bool) (rest : List (Option Bool))
     (hclean : forall suffix : Word Bool,
@@ -207,6 +218,7 @@ theorem cleanupCell_yields {D : MachineDescription}
           simpa [cleanupForm, SententialForm.terminalWord, Word.Concat,
             List.append_assoc] using hnext
 
+ /-- `cleanupEnd_yields` captures the core lemma for this local construction. -/
 theorem cleanupEnd_yields {D : MachineDescription}
     (pref : Word Bool) (rest : List (Option Bool))
     (hclean : forall suffix : Word Bool,
@@ -236,6 +248,7 @@ theorem cleanupEnd_yields {D : MachineDescription}
   | cons r restTail =>
       cases r <;> simp [cellForm, cell, nt, rightBoundary] at hv
 
+ /-- `historySoundForm_active_yields` captures the core lemma for this local construction. -/
 theorem historySoundForm_active_yields {D : MachineDescription}
     (hD : D.WellFormed)
     (c : MachineDescription.Configuration)
@@ -366,6 +379,7 @@ theorem historySoundForm_active_yields {D : MachineDescription}
       simp [nt]
     simp [configForm, cell, state, nt, leftBoundary, rightBoundary] at hmem
 
+ /-- `historySoundForm_cleanup_yields` captures the core lemma for this local construction. -/
 theorem historySoundForm_cleanup_yields {D : MachineDescription}
     (pref : Word Bool) (rest : List (Option Bool))
     (hclean : forall suffix : Word Bool,

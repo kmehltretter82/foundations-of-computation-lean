@@ -3,3 +3,10 @@ import FoC.Computability.Grammar.FinitePresentation
 import FoC.Computability.Grammar.SemanticAndTraceTables
 import FoC.Computability.Grammar.MachineHistory
 import FoC.Computability.Grammar.Closeouts
+
+/-!
+# Grammar
+
+Supporting declarations and helper lemmas for Computability Grammar.
+-/
+

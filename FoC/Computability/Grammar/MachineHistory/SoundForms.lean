@@ -2,6 +2,13 @@ import FoC.Computability.Grammar.MachineHistory.Syntax
 
 set_option doc.verso true
 
+/-!
+# SoundForms
+
+Supporting declarations and helper lemmas for Computability Grammar MachineHistory SoundForms.
+-/
+
+
 namespace FoC
 namespace Computability
 
@@ -60,6 +67,7 @@ inductive HistorySoundForm (D : MachineDescription) :
       (h : D.HaltsOnInput w) :
       HistorySoundForm D (SententialForm.terminalWord w)
 
+ /-- `nonterminal_not_mem_terminalWord` captures the core lemma for this local construction. -/
 theorem nonterminal_not_mem_terminalWord {D : MachineDescription}
     (A : NT D) (w : Word Bool) :
     Symbol.nonterminal A ∉ SententialForm.terminalWord w := by
@@ -69,6 +77,7 @@ theorem nonterminal_not_mem_terminalWord {D : MachineDescription}
   | cons _ _ ih =>
       simp [SententialForm.terminalWord]
 
+ /-- `containsNonterminal_ne_nil` captures the core lemma for this local construction. -/
 theorem containsNonterminal_ne_nil {D : MachineDescription}
     {xs : SententialForm Bool (NT D)}
     (h : SententialForm.containsNonterminal xs) :
@@ -79,6 +88,7 @@ theorem containsNonterminal_ne_nil {D : MachineDescription}
   | cons _ _ =>
       simp
 
+ /-- `singleton_context_eq_of_containsNonterminal` provides an important equivalence or equality lemma. -/
 theorem singleton_context_eq_of_containsNonterminal
     {D : MachineDescription} {s : Symbol Bool (NT D)}
     {u lhs v : SententialForm Bool (NT D)}
@@ -105,6 +115,7 @@ theorem singleton_context_eq_of_containsNonterminal
       cases hx
       exact ⟨rfl, rfl, rfl⟩
 
+ /-- `containsNonterminal_exists_mem` provides the witness needed for existential progress. -/
 theorem containsNonterminal_exists_mem {D : MachineDescription}
     {xs : SententialForm Bool (NT D)}
     (h : SententialForm.containsNonterminal xs) :
@@ -121,6 +132,7 @@ theorem containsNonterminal_exists_mem {D : MachineDescription}
       | nonterminal A =>
           exact ⟨A, by simp⟩
 
+ /-- `historySoundForm_terminal` captures the core lemma for this local construction. -/
 theorem historySoundForm_terminal {D : MachineDescription}
     {sf : SententialForm Bool (NT D)} {w : Word Bool}
     (hshape : HistorySoundForm D sf)
@@ -168,6 +180,7 @@ theorem historySoundForm_terminal {D : MachineDescription}
       cases hword
       exact h
 
+ /-- `historySoundForm_start_yields` captures the core lemma for this local construction. -/
 theorem historySoundForm_start_yields {D : MachineDescription}
     {y : SententialForm Bool (NT D)}
     (h : GeneralGrammar.Yields (grammar D)

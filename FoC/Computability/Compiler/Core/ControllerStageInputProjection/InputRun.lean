@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.ControllerStageInputProjection.ScanInput
 
 set_option doc.verso true
 
+/-!
+# InputRun
+
+Supporting declarations and helper lemmas for Computability Compiler Core ControllerStageInputProjection InputRun.
+-/
+
+
 namespace FoC
 namespace Computability
 
@@ -26,6 +33,7 @@ def projectionInputRemainingCost
     16 * marked.length * rest.length +
     42 * rest.length + 24 * marked.length + 24
 
+ /-- `run_input_mark_one` states the corresponding theorem run form. -/
 theorem run_input_mark_one
     (marked rest : Word Bool) (b : Bool)
     (suffix : Word MachineCodeSymbol)
@@ -276,6 +284,7 @@ def projectionResultTailPayloadLeftRev
               marked.length).reverse
             (List.append [none, none, none, none] baseLeftRev)))))
 
+ /-- `run_input_finish_marked_suffix` states the corresponding theorem run form. -/
 theorem run_input_finish_marked_suffix
     (marked : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol)
@@ -412,6 +421,7 @@ theorem run_input_finish_marked_suffix
   simp [projectionCodeCells_encodeBoolWord, List.reverse_append,
     List.append_assoc]
 
+ /-- `run_input_finish_marked` states the corresponding theorem run form. -/
 theorem run_input_finish_marked
     (marked : Word Bool) (stage : Nat) (result : Word Bool)
     (baseLeftRev : List (Option Bool)) :
@@ -549,6 +559,7 @@ theorem run_input_finish_marked
   simp [projectionCodeCells_encodeBoolWord, List.reverse_append,
     List.append_assoc]
 
+ /-- `run_input_finish_marked_false_false_tail` states the corresponding theorem run form. -/
 theorem run_input_finish_marked_false_false_tail
     (marked : Word Bool) (tail : List (Option Bool))
     (baseLeftRev : List (Option Bool)) :
@@ -673,6 +684,7 @@ theorem run_input_finish_marked_false_false_tail
   simp [projectionCodeCells_encodeBoolWord, List.reverse_append,
     List.append_assoc]
 
+ /-- `run_input_finish_marked_to_state150_tail` states the corresponding theorem run form. -/
 theorem run_input_finish_marked_to_state150_tail
     (marked : Word Bool) (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool)) :
@@ -720,6 +732,7 @@ theorem run_input_finish_marked_to_state150_tail
   rw [run_state100_done]
   rw [run_state150_marked_payload]
 
+ /-- `run_input_bool_word_acc` states the corresponding theorem run form. -/
 theorem run_input_bool_word_acc
     (marked rest : Word Bool) (stage : Nat) (result : Word Bool)
     (baseLeftRev : List (Option Bool)) :
@@ -762,6 +775,7 @@ theorem run_input_bool_word_acc
         simp [List.append_assoc]
       rw [hword]
 
+ /-- `run_input_bool_word` states the corresponding theorem run form. -/
 theorem run_input_bool_word
     (w : Word Bool) (stage : Nat) (result : Word Bool)
     (baseLeftRev : List (Option Bool)) :
@@ -786,6 +800,7 @@ theorem run_input_bool_word
   simpa [projectionInputRemainingCost, projectionInputBoolWordCost,
     projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend] using h
 
+ /-- `run_input_bool_word_acc_suffix` states the corresponding theorem run form. -/
 theorem run_input_bool_word_acc_suffix
     (marked rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol)
@@ -827,6 +842,7 @@ theorem run_input_bool_word_acc_suffix
         simp [List.append_assoc]
       rw [hword]
 
+ /-- `run_input_bool_word_suffix` states the corresponding theorem run form. -/
 theorem run_input_bool_word_suffix
     (w : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol)
@@ -850,6 +866,7 @@ theorem run_input_bool_word_suffix
   simpa [projectionInputRemainingCost, projectionInputBoolWordCost,
     projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend] using h
 
+ /-- `run_input_bool_word_acc_false_false_suffix` states the corresponding theorem run form. -/
 theorem run_input_bool_word_acc_false_false_suffix
     (marked rest : Word Bool) (suffix : Word MachineCodeSymbol)
     (tail : List (Option Bool))
@@ -891,6 +908,7 @@ theorem run_input_bool_word_acc_false_false_suffix
         simp [List.append_assoc]
       rw [hword]
 
+ /-- `run_input_bool_word_false_false_suffix` states the corresponding theorem run form. -/
 theorem run_input_bool_word_false_false_suffix
     (w : Word Bool) (suffix : Word MachineCodeSymbol)
     (tail : List (Option Bool))

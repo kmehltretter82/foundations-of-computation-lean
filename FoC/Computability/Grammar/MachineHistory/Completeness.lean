@@ -2,6 +2,13 @@ import FoC.Computability.Grammar.MachineHistory.Soundness
 
 set_option doc.verso true
 
+/-!
+# Completeness
+
+Supporting declarations and helper lemmas for Computability Grammar MachineHistory Completeness.
+-/
+
+
 namespace FoC
 namespace Computability
 
@@ -10,6 +17,7 @@ open Grammars
 
 namespace MachineDescriptionHistoryGrammar
 
+ /-- `leftGenerator_derives` captures the core lemma for this local construction. -/
 theorem leftGenerator_derives (D : MachineDescription)
     (xs : List (Option Bool)) :
     GeneralGrammar.Derives (grammar D)
@@ -46,6 +54,7 @@ theorem leftGenerator_derives (D : MachineDescription)
             [cell x] [] ih
       exact GeneralGrammar.derives_trans hhead htail
 
+ /-- `rightGenerator_derives` captures the core lemma for this local construction. -/
 theorem rightGenerator_derives (D : MachineDescription)
     (xs : List (Option Bool)) :
     GeneralGrammar.Derives (grammar D)
@@ -80,6 +89,7 @@ theorem rightGenerator_derives (D : MachineDescription)
       simpa [cellForm, List.append_assoc] using
         GeneralGrammar.derives_trans htail hadd
 
+ /-- `start_derives_halting_config` establishes the halting condition in this construction. -/
 theorem start_derives_halting_config
     (D : MachineDescription)
     (c : MachineDescription.Configuration)
@@ -222,6 +232,7 @@ theorem start_derives_halting_config
       (GeneralGrammar.derives_trans hhead
         (GeneralGrammar.derives_trans hright hactivate)))
 
+ /-- `reverse_step_derives` captures the core lemma for this local construction. -/
 theorem reverse_step_derives {D : MachineDescription}
     {c d : MachineDescription.Configuration}
     (hstep : D.stepConfig c = some d) :
@@ -307,6 +318,7 @@ theorem reverse_step_derives {D : MachineDescription}
                 hmatches.left, hmatches.right, List.map_append,
                 List.append_assoc] using hprod
 
+ /-- `reverse_run_derives` states the corresponding theorem run form. -/
 theorem reverse_run_derives (D : MachineDescription)
     (n : Nat) (c : MachineDescription.Configuration) :
     GeneralGrammar.Derives (grammar D)
@@ -330,6 +342,7 @@ theorem reverse_run_derives (D : MachineDescription)
             (ih next)
             (reverse_step_derives hstep)
 
+ /-- `cleanup_tail_derives` captures the core lemma for this local construction. -/
 theorem cleanup_tail_derives (D : MachineDescription)
     (w : Word Bool) :
     GeneralGrammar.Derives (grammar D)
@@ -371,6 +384,7 @@ theorem cleanup_tail_derives (D : MachineDescription)
             [tm b] [] ih
       exact GeneralGrammar.derives_trans hfirst hrest
 
+ /-- `cleanup_initial_derives` captures the core lemma for this local construction. -/
 theorem cleanup_initial_derives (D : MachineDescription)
     (w : Word Bool) :
     GeneralGrammar.Derives (grammar D)
@@ -416,6 +430,7 @@ theorem cleanup_initial_derives (D : MachineDescription)
             (cleanup_tail_derives D rest)
       exact GeneralGrammar.derives_trans hfirst hrest
 
+ /-- `complete` captures the core lemma for this local construction. -/
 theorem complete {D : MachineDescription} {w : Word Bool}
     (h : D.HaltsOnInput w) :
     w ∈ GeneralGrammar.GeneratedLanguage (grammar D) := by
@@ -435,6 +450,7 @@ theorem complete {D : MachineDescription} {w : Word Bool}
     (GeneralGrammar.derives_trans hrun
       (cleanup_initial_derives D w))
 
+ /-- `generated_language` captures the core lemma for this local construction. -/
 theorem generated_language {D : MachineDescription}
     (hD : D.WellFormed) :
     Language.Equal

@@ -1,5 +1,12 @@
 import FoC.Computability.DiagonalPairMachinePart1
 
+
+/-!
+# DiagonalPairMachinePart2
+
+Supporting declarations and helper lemmas for Computability DiagonalPairMachinePart2.
+-/
+
 namespace FoC
 namespace Computability
 open Foundation
@@ -179,6 +186,7 @@ def FaithfulConcreteDiagonalPairMapMachine :
   transition := faithfulDiagonalPairMapTransition
   statesFinite := FaithfulDiagonalPairMapMachineState.finite
 
+ /-- `faithfulDiagonalPairMapScanTapeCells_append` characterizes a scan safety phase. -/
 theorem faithfulDiagonalPairMapScanTapeCells_append
     (x y : List FaithfulDiagonalPairMapScanCell) :
     faithfulDiagonalPairMapScanTapeCells (x ++ y) =
@@ -186,6 +194,7 @@ theorem faithfulDiagonalPairMapScanTapeCells_append
         faithfulDiagonalPairMapScanTapeCells y := by
   simp [faithfulDiagonalPairMapScanTapeCells]
 
+ /-- `faithfulDiagonalPairMapLeftContext_append_single` describes append/fold behavior used by later composition. -/
 theorem faithfulDiagonalPairMapLeftContext_append_single
     (processed : Word ConcreteMachineCodeSymbol)
     (code : ConcreteMachineCodeSymbol) :
@@ -196,6 +205,7 @@ theorem faithfulDiagonalPairMapLeftContext_append_single
   simp [faithfulDiagonalPairMapLeftContext,
     faithfulDiagonalPairMapLeftCells, List.map_append]
 
+ /-- `faithfulDiagonalPairMapScanCells_append_processed` characterizes a scan safety phase. -/
 theorem faithfulDiagonalPairMapScanCells_append_processed
     (remaining processed : Word ConcreteMachineCodeSymbol)
     (code : ConcreteMachineCodeSymbol) :
@@ -205,6 +215,7 @@ theorem faithfulDiagonalPairMapScanCells_append_processed
   simp [faithfulDiagonalPairMapScanCells, List.map_append,
     List.append_assoc]
 
+ /-- `faithfulDiagonalPairMap_filterMap_some_map` captures the core lemma for this local construction. -/
 theorem faithfulDiagonalPairMap_filterMap_some_map
     {alpha beta : Type} (f : alpha -> beta) (w : List alpha) :
     List.filterMap (fun a => some (f a)) w = w.map f := by
@@ -214,6 +225,7 @@ theorem faithfulDiagonalPairMap_filterMap_some_map
   | cons a rest ih =>
       simp [ih]
 
+ /-- `faithfulDiagonalPairMap_output_left_map` captures the core lemma for this local construction. -/
 theorem faithfulDiagonalPairMap_output_left_map
     (w : Word ConcreteMachineCodeSymbol) :
     List.map
@@ -241,6 +253,7 @@ theorem faithfulDiagonalPairMap_output_left_map
             (List.map PairCodeSymbol.left rest)
       rw [ih]
 
+ /-- `faithfulDiagonalPairMap_output_right_map` captures the core lemma for this local construction. -/
 theorem faithfulDiagonalPairMap_output_right_map
     (w : Word ConcreteMachineCodeSymbol) :
     List.map
@@ -268,6 +281,7 @@ theorem faithfulDiagonalPairMap_output_right_map
             (List.map PairCodeSymbol.right rest)
       rw [ih]
 
+ /-- `faithfulDiagonalPairMap_initScan_computes` characterizes a scan safety phase. -/
 theorem faithfulDiagonalPairMap_initScan_computes
     (seenRev rest : Word ConcreteMachineCodeSymbol) :
     TuringMachine.Computes FaithfulConcreteDiagonalPairMapMachine
@@ -332,6 +346,7 @@ theorem faithfulDiagonalPairMap_initScan_computes
               Tape.write, List.reverse_cons, List.append_assoc]
               using ih (code :: seenRev)
 
+ /-- `faithfulDiagonalPairMap_rewind_computes` captures the core lemma for this local construction. -/
 theorem faithfulDiagonalPairMap_rewind_computes
     (leftRev crossed : Word ConcreteMachineCodeSymbol) :
     TuringMachine.Computes FaithfulConcreteDiagonalPairMapMachine
@@ -434,6 +449,7 @@ theorem faithfulDiagonalPairMap_rewind_computes
               Tape.write, List.reverse_cons, List.append_assoc]
               using ih (code :: crossed)
 
+ /-- `faithfulDiagonalPairMap_appendScan_computes` characterizes a scan safety phase. -/
 theorem faithfulDiagonalPairMap_appendScan_computes
     (processed : Word ConcreteMachineCodeSymbol)
     (code : ConcreteMachineCodeSymbol)
@@ -509,6 +525,7 @@ theorem faithfulDiagonalPairMap_appendScan_computes
               Tape.write, List.reverse_cons, List.append_assoc]
               using ih (cell :: scannedRev)
 
+ /-- `faithfulDiagonalPairMap_seek_computes` captures the core lemma for this local construction. -/
 theorem faithfulDiagonalPairMap_seek_computes
     (processed : Word ConcreteMachineCodeSymbol)
     (code : ConcreteMachineCodeSymbol)
@@ -607,6 +624,7 @@ theorem faithfulDiagonalPairMap_seek_computes
               Tape.write, List.reverse_cons, List.append_assoc]
               using ih (cell :: crossed)
 
+ /-- `faithfulDiagonalPairMap_process_computes` captures the core lemma for this local construction. -/
 theorem faithfulDiagonalPairMap_process_computes
     (processed remaining : Word ConcreteMachineCodeSymbol) :
     TuringMachine.Computes FaithfulConcreteDiagonalPairMapMachine
@@ -707,6 +725,7 @@ theorem faithfulDiagonalPairMap_process_computes
           List.append_assoc]
           using ih (List.append processed [code])
 
+ /-- `faithfulDiagonalPairMap_haltTape_normalized` establishes the halting condition in this construction. -/
 theorem faithfulDiagonalPairMap_haltTape_normalized
     (w : Word ConcreteMachineCodeSymbol) :
     Tape.normalizedOutput (faithfulDiagonalPairMapHaltTape w) =
@@ -822,6 +841,7 @@ theorem faithfulDiagonalPairMap_haltTape_normalized
               PairCodeSymbol.right code ::
                 List.map PairCodeSymbol.right rest)).symm
 
+ /-- `faithfulDiagonalPairMap_startRaw_moveRight` captures the core lemma for this local construction. -/
 theorem faithfulDiagonalPairMap_startRaw_moveRight
     (code : ConcreteMachineCodeSymbol)
     (rest : Word ConcreteMachineCodeSymbol) :
@@ -840,6 +860,7 @@ theorem faithfulDiagonalPairMap_startRaw_moveRight
         faithfulDiagonalPairMapInitScanTape, Tape.input,
         Tape.move, Tape.moveRight, Tape.write]
 
+ /-- `faithful_concrete_diagonal_pair_map_computable` captures the core lemma for this local construction. -/
 theorem faithful_concrete_diagonal_pair_map_computable :
     FaithfulConcreteDiagonalPairMapComputable := by
   unfold FaithfulConcreteDiagonalPairMapComputable
@@ -947,6 +968,7 @@ theorem faithful_concrete_diagonal_pair_map_computable :
                 ([] : Word ConcreteMachineCodeSymbol) (code :: rest)
       · exact faithfulDiagonalPairMap_haltTape_normalized (code :: rest)
 
+ /-- `concrete_diagonal_pair_map_computable_of_faithful` captures the core lemma for this local construction. -/
 theorem concrete_diagonal_pair_map_computable_of_faithful :
     ConcreteDiagonalPairMapComputable :=
   faithfulTuringComputable_to_turingComputable

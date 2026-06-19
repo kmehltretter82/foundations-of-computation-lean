@@ -2,6 +2,13 @@ import FoC.Book.Chapter04.Section06.UnarySquares.Reachability
 
 set_option doc.verso true
 
+/-!
+# FourAs
+
+Supporting declarations and helper lemmas for Book Chapter04 Section06 UnarySquares FourAs.
+-/
+
+
 namespace FoC
 namespace Book
 namespace Chapter04
@@ -13,6 +20,7 @@ open Grammars
 def fourAsWord : Word SquareTerminal :=
   [SquareTerminal.a, SquareTerminal.a, SquareTerminal.a, SquareTerminal.a]
 
+ /-- `squareGrammar_generates_four_as` captures the core lemma for this local construction. -/
 theorem squareGrammar_generates_four_as :
     fourAsWord ∈ GeneralGrammar.GeneratedLanguage SquareGrammar := by
   let S := squareN SquareNT.start
