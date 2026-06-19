@@ -71,7 +71,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineCon
     (hrunner :
       PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction)
     (hemitter :
-      PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction)
+      PairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction)
     (hseq :
       PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction) :
     PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction := by
@@ -79,6 +79,10 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineCon
   rcases hinitializer accept reject with
     ⟨initializer, hinitializer⟩
   rcases hrunner accept reject with ⟨runner, hrunner⟩
+  change
+    exists emitter : MachineDescription,
+      TapeCodePrimitiveOutputSubroutineRealizedByDescription
+        PairedRecognizerDovetailTotalOutputCode emitter at hemitter
   rcases hemitter with ⟨emitter, hemitter⟩
   rcases hseq accept reject initializer runner emitter
       hinitializer hrunner hemitter with
@@ -218,6 +222,17 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerCon
   intro accept reject
   rcases h accept reject with ⟨attempt, hattempt⟩
   exact ⟨attempt, hattempt.left⟩
+
+theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction_of_outputCompiled
+    (h :
+      PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction) :
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction := by
+  intro accept reject
+  rcases h accept reject with ⟨attempt, hattempt⟩
+  exact
+    ⟨attempt,
+      tapeCodePrimitiveOutputSubroutineRealizedByDescription_of_outputCompiled
+        hattempt⟩
 
 theorem pairedRecognizerDovetailFiniteStageLoopControllerConstruction_of_components
     (hinit :

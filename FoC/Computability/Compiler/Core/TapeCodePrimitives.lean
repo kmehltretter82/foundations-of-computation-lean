@@ -439,6 +439,21 @@ theorem tapeCodePrimitiveOutputSubroutineRealizedByDescription_output_eq_of_halt
   haltsWithEncodedCodeOutput_functional_of_haltTransitionFree h.right
     (h.left.right code expected hp) hD
 
+theorem tapeCodePrimitiveOutputSubroutineRealizedByDescription_congr
+    {P Q : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (hPQ : forall code : Word MachineCodeSymbol,
+      P.transform code = Q.transform code)
+    (hD : TapeCodePrimitiveOutputSubroutineRealizedByDescription P D) :
+    TapeCodePrimitiveOutputSubroutineRealizedByDescription Q D := by
+  constructor
+  · constructor
+    · exact hD.left.left
+    · intro code out hQ
+      exact hD.left.right code out
+        (by simpa [hPQ code] using hQ)
+  · exact hD.right
+
 theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_congr
     {P Q : MachineDescription.TapeCodePrimitive}
     {D : MachineDescription}
