@@ -66,9 +66,8 @@ theorem stageInputBits_eq_false_false_tail
         MachineDescription.encodeBoolWordAppend,
         MachineDescription.encodeCellListAppend,
         MachineDescription.encodeNatAppend,
-        MachineDescription.encodeNat,
-        MachineDescription.encodeCodeWordAsInput,
-        MachineDescription.encodeCodeSymbolAsInput]
+        MachineDescription.encodeNat]
+      simp [MachineDescription.encodeCodeWordAsInput, MachineDescription.encodeCodeSymbolAsInput]
   | cons b rest =>
       simp [stageInputSecondBitTail, stageInputBits,
         PairedRecognizerDovetailStageInputCode,
@@ -77,9 +76,7 @@ theorem stageInputBits_eq_false_false_tail
         MachineDescription.encodeBoolWordAppend,
         MachineDescription.encodeCellListAppend,
         MachineDescription.encodeNatAppend,
-        MachineDescription.encodeNat,
-        MachineDescription.encodeCodeWordAsInput,
-        MachineDescription.encodeCodeSymbolAsInput]
+        MachineDescription.encodeNat]
 
 def stageInputSecondBitMarkedTape
     (w : Word Bool) (stage : Nat) : Tape Bool :=
@@ -188,9 +185,9 @@ theorem
         MachineDescription.encodeCellListAppend,
         MachineDescription.encodeNatAppend,
         MachineDescription.encodeNat,
-        MachineDescription.encodeCodeWordAsInput,
-        MachineDescription.encodeCodeSymbolAsInput,
         tapeAtCells, Tape.move, Tape.moveRight, Tape.moveLeft]
+      simp [MachineDescription.encodeCodeWordAsInput,
+        MachineDescription.encodeCodeSymbolAsInput]
   | cons b rest =>
       simp [stageInputSecondBitMarkedHandoffTape,
         stageInputSecondBitMarkedTape,
@@ -202,8 +199,6 @@ theorem
         MachineDescription.encodeCellListAppend,
         MachineDescription.encodeNatAppend,
         MachineDescription.encodeNat,
-        MachineDescription.encodeCodeWordAsInput,
-        MachineDescription.encodeCodeSymbolAsInput,
         tapeAtCells, Tape.move, Tape.moveRight, Tape.moveLeft]
 
 theorem
@@ -224,9 +219,9 @@ theorem
         MachineDescription.encodeCellListAppend,
         MachineDescription.encodeNatAppend,
         MachineDescription.encodeNat,
-        MachineDescription.encodeCodeWordAsInput,
-        MachineDescription.encodeCodeSymbolAsInput,
         tapeAtCells, Tape.move, Tape.moveRight, Tape.moveLeft]
+      simp [MachineDescription.encodeCodeWordAsInput,
+        MachineDescription.encodeCodeSymbolAsInput]
   | cons b rest =>
       simp [stageInputSecondBitMarkedCheckedHandoffTape,
         stageInputSecondBitMarkedCheckedTape,
@@ -238,8 +233,6 @@ theorem
         MachineDescription.encodeCellListAppend,
         MachineDescription.encodeNatAppend,
         MachineDescription.encodeNat,
-        MachineDescription.encodeCodeWordAsInput,
-        MachineDescription.encodeCodeSymbolAsInput,
         tapeAtCells, Tape.move, Tape.moveRight, Tape.moveLeft]
 
 theorem stageInputCheckedInputTape_move_left_move_right
@@ -315,7 +308,8 @@ theorem restoreStageInputSecondBitDescription_run
     tapeAtCells, MachineDescription.runConfig,
     MachineDescription.stepConfig, MachineDescription.lookupTransition,
     MachineDescription.Matches, MachineDescription.transition,
-    Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.input]
+    Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+  simp [Tape.input]
 
 theorem restoreStageInputSecondBitDescription_run_checked
     (w : Word Bool) (stage : Nat) :
@@ -332,7 +326,7 @@ theorem restoreStageInputSecondBitDescription_run_checked
     tapeAtCells, MachineDescription.runConfig,
     MachineDescription.stepConfig, MachineDescription.lookupTransition,
     MachineDescription.Matches, MachineDescription.transition,
-    Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.input]
+    Tape.read, Tape.write, Tape.move, Tape.moveLeft]
 
 theorem restoreStageInputSecondBitDescription_run_succ
     (n : Nat) (w : Word Bool) (stage : Nat) :

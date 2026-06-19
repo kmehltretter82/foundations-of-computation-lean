@@ -50,7 +50,7 @@ def ofInt (n : Int) : Rational where
   num := n
   den := 1
   den_ne_zero := by
-    omega
+    decide
 
 def add (x y : Rational) : Rational where
   num := x.num * y.den + y.num * x.den
