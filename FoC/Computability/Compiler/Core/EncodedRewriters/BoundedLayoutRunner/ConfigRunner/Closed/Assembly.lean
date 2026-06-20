@@ -17,20 +17,6 @@ open Languages
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
 
-def SelectedProjectionPrimitiveRightShiftedConstruction : Prop :=
-  forall useAccept : Bool,
-    exists runner : MachineDescription,
-      RightShiftedOutputCompiledSubroutineByDescription
-        (SelectedProjectionPrimitive useAccept)
-        runner
-
-def SelectedMergePrimitiveRightShiftedConstruction : Prop :=
-  forall useAccept : Bool,
-    exists runner : MachineDescription,
-      RightShiftedOutputCompiledSubroutineByDescription
-        (SelectedMergePrimitive useAccept)
-        runner
-
 theorem selectedProjectionPrimitiveClosedHandoffConstruction_of_rightShifted
     (h : SelectedProjectionPrimitiveRightShiftedConstruction) :
     SelectedProjectionPrimitiveClosedHandoffConstruction := by
@@ -65,18 +51,6 @@ theorem selectedMergePrimitiveClosedHandoffConstruction_of_rightShifted
           ⟨tail, hout⟩
         exact ⟨MachineCodeSymbol.transition, tail, hout⟩)
 
-theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
-    SelectedProjectionFiniteDescriptionConstruction :=
-  selectedProjectionFiniteDescriptionConstruction_of_emitter
-    selectedProjectionEmitterConstruction_scaffold
-
-theorem selectedProjectionPrimitiveRightShiftedConstruction_scaffold :
-    SelectedProjectionPrimitiveRightShiftedConstruction := by
-  intro useAccept
-  rcases selectedProjectionFiniteDescriptionConstruction_scaffold useAccept with
-    ⟨runner, hrunner⟩
-  exact ⟨runner, selectedProjectionRightShifted_of_spec hrunner⟩
-
 theorem selectedProjectionPrimitiveClosedHandoffConstruction_scaffold :
     SelectedProjectionPrimitiveClosedHandoffConstruction :=
   selectedProjectionPrimitiveClosedHandoffConstruction_of_rightShifted
@@ -95,19 +69,6 @@ theorem selectedProjectionAcceptPrimitiveClosedHandoffConstruction_scaffold :
         (SelectedProjectionPrimitive true)
         closed tapeCodePrimitiveCodeWordHandoffMove :=
   selectedProjectionPrimitiveClosedHandoffConstruction_scaffold true
-
-theorem selectedMergeFiniteDescriptionConstruction_scaffold :
-    SelectedMergeFiniteDescriptionConstruction :=
-  selectedMergeFiniteDescriptionConstruction_of_parser_emitter
-    selectedMergeParserConstruction_scaffold
-    selectedMergeEmitterConstruction_scaffold
-
-theorem selectedMergePrimitiveRightShiftedConstruction_scaffold :
-    SelectedMergePrimitiveRightShiftedConstruction := by
-  intro useAccept
-  rcases selectedMergeFiniteDescriptionConstruction_scaffold useAccept with
-    ⟨runner, hrunner⟩
-  exact ⟨runner, selectedMergeRightShifted_of_spec hrunner⟩
 
 theorem selectedMergePrimitiveClosedHandoffConstruction_finite_scaffold :
     SelectedMergePrimitiveClosedHandoffConstruction :=

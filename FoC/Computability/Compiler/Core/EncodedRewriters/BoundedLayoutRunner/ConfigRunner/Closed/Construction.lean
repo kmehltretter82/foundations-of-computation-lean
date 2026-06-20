@@ -80,6 +80,40 @@ theorem SeqViaCanonical_haltsWithTape_of_haltsWithTape
       (MachineDescription.seqSubroutine_subroutineReady hA hid)
       hB hAid hBReach
 
+theorem rightShiftedOutputCompiled_haltsWithTape_of_transform
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (hD : RightShiftedOutputCompiledSubroutineByDescription P D)
+    {code out : Word MachineCodeSymbol}
+    (htransform : P.transform code = some out) :
+    D.HaltsWithTape
+      (MachineDescription.encodeCodeWordAsInput code)
+      (Tape.move Direction.right
+        (Tape.input
+          (MachineDescription.encodeCodeWordAsInput out))) := by
+  have houtput :
+      D.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out) :=
+    (hD.right.right.left code out).mpr htransform
+  rcases houtput with ⟨n, hn⟩
+  let T : Tape Bool :=
+    (D.runConfig n
+      (D.initial
+        (MachineDescription.encodeCodeWordAsInput code))).tape
+  have hhalt :
+      D.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T := by
+    exact ⟨n, ⟨hn.left, rfl⟩⟩
+  rcases hD.right.right.right code T hhalt with
+    ⟨actual, hactual, hT⟩
+  have hactualOut : actual = out := by
+    rw [htransform] at hactual
+    cases hactual
+    rfl
+  rw [hT] at hhalt
+  simpa [hactualOut] using hhalt
+
 def TapeCodeExactPhaseFromClosedHandoff
     (closed : MachineDescription) : MachineDescription :=
   MachineDescription.seqSubroutine closed
@@ -801,6 +835,104 @@ theorem acceptRejectConfigRunnerConstruction_of_phaseConstruction
         hacceptProject hacceptSim hacceptMerge
         hrejectProject hrejectSim hrejectMerge⟩
 
+def SelectedProjectionPrimitiveRightShiftedConstruction : Prop :=
+  forall useAccept : Bool,
+    exists runner : MachineDescription,
+      RightShiftedOutputCompiledSubroutineByDescription
+        (SelectedProjectionPrimitive useAccept)
+        runner
+
+def SelectedMergePrimitiveRightShiftedConstruction : Prop :=
+  forall useAccept : Bool,
+    exists runner : MachineDescription,
+      RightShiftedOutputCompiledSubroutineByDescription
+        (SelectedMergePrimitive useAccept)
+        runner
+
+theorem selectedProjectionFiniteDescriptionConstruction_of_rightShifted
+    (h : SelectedProjectionPrimitiveRightShiftedConstruction) :
+    SelectedProjectionFiniteDescriptionConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  constructor
+  · exact ⟨hrunner.left, hrunner.right.left⟩
+  constructor
+  · intro L
+    have htransform :
+        (SelectedProjectionPrimitive useAccept).transform
+            (MachineDescription.DovetailLayout.encode L) =
+          some (SelectedProjectionOutputCode useAccept L) :=
+      (SelectedProjectionPrimitive_transform_eq_some_iff
+        useAccept
+        (MachineDescription.DovetailLayout.encode L)
+        (SelectedProjectionOutputCode useAccept L)).mpr
+        ⟨L, rfl, by simp [SelectedProjectionOutputCode]⟩
+    simpa [ParsedLayoutBits, SelectedProjectionOutputTape] using
+      rightShiftedOutputCompiled_haltsWithTape_of_transform
+        hrunner htransform
+  · intro code T hhalt
+    rcases hrunner.right.right.right code T hhalt with
+      ⟨out, htransform, hT⟩
+    rcases
+        (SelectedProjectionPrimitive_transform_eq_some_iff
+          useAccept code out).mp htransform with
+      ⟨L, hcode, hout⟩
+    refine ⟨L, hcode, ?_⟩
+    simpa [SelectedProjectionOutputTape, SelectedProjectionOutputCode,
+      hout] using hT
+
+theorem selectedMergeFiniteDescriptionConstruction_of_rightShifted
+    (h : SelectedMergePrimitiveRightShiftedConstruction) :
+    SelectedMergeFiniteDescriptionConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  constructor
+  · exact ⟨hrunner.left, hrunner.right.left⟩
+  constructor
+  · intro S L hinput
+    have htransform :
+        (SelectedMergePrimitive useAccept).transform
+            (MachineDescription.SimulatorLayout.encode S) =
+          some (SelectedMergeOutputCode useAccept S L) :=
+      (SelectedMergePrimitive_transform_eq_some_iff
+        useAccept
+        (MachineDescription.SimulatorLayout.encode S)
+        (SelectedMergeOutputCode useAccept S L)).mpr
+        ⟨S, L, rfl, hinput, rfl⟩
+    simpa [MachineDescription.SimulatorLayout.asBoolInput,
+      SelectedMergeOutputTape] using
+      rightShiftedOutputCompiled_haltsWithTape_of_transform
+        hrunner htransform
+  · intro code T hhalt
+    rcases hrunner.right.right.right code T hhalt with
+      ⟨out, htransform, hT⟩
+    rcases
+        (SelectedMergePrimitive_transform_eq_some_iff
+          useAccept code out).mp htransform with
+      ⟨S, L, hcode, hinput, hout⟩
+    refine ⟨S, L, hcode, hinput, ?_⟩
+    simpa [SelectedMergeOutputTape, hout] using hT
+
+theorem selectedProjectionPrimitiveRightShiftedConstruction_scaffold :
+    SelectedProjectionPrimitiveRightShiftedConstruction := by
+  sorry
+
+theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
+    SelectedProjectionFiniteDescriptionConstruction :=
+  selectedProjectionFiniteDescriptionConstruction_of_rightShifted
+    selectedProjectionPrimitiveRightShiftedConstruction_scaffold
+
+theorem selectedMergePrimitiveRightShiftedConstruction_scaffold :
+    SelectedMergePrimitiveRightShiftedConstruction := by
+  sorry
+
+theorem selectedMergeFiniteDescriptionConstruction_scaffold :
+    SelectedMergeFiniteDescriptionConstruction :=
+  selectedMergeFiniteDescriptionConstruction_of_rightShifted
+    selectedMergePrimitiveRightShiftedConstruction_scaffold
+
 def SelectedProjectionEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
@@ -894,10 +1026,6 @@ theorem selectedProjectionFiniteDescriptionConstruction_of_emitter
   exact
     ⟨SeqViaCanonical parser emitter,
       selectedProjectionSpec_of_parser_emitter hparser hemits⟩
-
-theorem selectedProjectionEmitterConstruction_scaffold :
-    SelectedProjectionEmitterConstruction := by
-  sorry
 
 def SelectedMergeParserSpec
     (parser : MachineDescription) : Prop :=
@@ -1022,14 +1150,6 @@ theorem selectedMergeFiniteDescriptionConstruction_of_parser_emitter
   exact
     ⟨SeqViaCanonical parser emitter,
       selectedMergeSpec_of_parser_emitter hparser hemits⟩
-
-theorem selectedMergeParserConstruction_scaffold :
-    SelectedMergeParserConstruction := by
-  sorry
-
-theorem selectedMergeEmitterConstruction_scaffold :
-    SelectedMergeEmitterConstruction := by
-  sorry
 
 def FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner :
     Prop :=
