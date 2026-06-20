@@ -1,0 +1,381 @@
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction
+
+set_option doc.verso true
+
+/-!
+# Bounded recognizer-configuration runner closed-handoff assembly
+
+This module assembles the selected primitive constructions into the public
+closed-handoff and bounded-runner construction scaffolds.
+-/
+
+namespace FoC
+namespace Computability
+
+open Languages
+
+namespace EncodedRewriters
+namespace BoundedLayoutRunner
+
+def SelectedProjectionPrimitiveRightShiftedConstruction : Prop :=
+  forall useAccept : Bool,
+    exists runner : MachineDescription,
+      RightShiftedOutputCompiledSubroutineByDescription
+        (SelectedProjectionPrimitive useAccept)
+        runner
+
+def SelectedMergePrimitiveRightShiftedConstruction : Prop :=
+  forall useAccept : Bool,
+    exists runner : MachineDescription,
+      RightShiftedOutputCompiledSubroutineByDescription
+        (SelectedMergePrimitive useAccept)
+        runner
+
+theorem selectedProjectionPrimitiveClosedHandoffConstruction_of_rightShifted
+    (h : SelectedProjectionPrimitiveRightShiftedConstruction) :
+    SelectedProjectionPrimitiveClosedHandoffConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  exact
+    EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
+      hrunner
+      (by
+        intro code out htransform
+        rcases
+            SelectedProjectionPrimitive_transform_eq_some_cons
+              htransform with
+          ⟨tail, hout⟩
+        exact ⟨MachineCodeSymbol.header, tail, hout⟩)
+
+theorem selectedMergePrimitiveClosedHandoffConstruction_of_rightShifted
+    (h : SelectedMergePrimitiveRightShiftedConstruction) :
+    SelectedMergePrimitiveClosedHandoffConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  exact
+    EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
+      hrunner
+      (by
+        intro code out htransform
+        rcases
+            SelectedMergePrimitive_transform_eq_some_cons
+              htransform with
+          ⟨tail, hout⟩
+        exact ⟨MachineCodeSymbol.transition, tail, hout⟩)
+
+theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
+    SelectedProjectionFiniteDescriptionConstruction :=
+  selectedProjectionFiniteDescriptionConstruction_of_emitter
+    selectedProjectionEmitterConstruction_scaffold
+
+theorem selectedProjectionPrimitiveRightShiftedConstruction_scaffold :
+    SelectedProjectionPrimitiveRightShiftedConstruction := by
+  intro useAccept
+  rcases selectedProjectionFiniteDescriptionConstruction_scaffold useAccept with
+    ⟨runner, hrunner⟩
+  exact ⟨runner, selectedProjectionRightShifted_of_spec hrunner⟩
+
+theorem selectedProjectionPrimitiveClosedHandoffConstruction_scaffold :
+    SelectedProjectionPrimitiveClosedHandoffConstruction :=
+  selectedProjectionPrimitiveClosedHandoffConstruction_of_rightShifted
+    selectedProjectionPrimitiveRightShiftedConstruction_scaffold
+
+theorem selectedProjectionRejectPrimitiveClosedHandoffConstruction_scaffold :
+    exists closed : MachineDescription,
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (SelectedProjectionPrimitive false)
+        closed tapeCodePrimitiveCodeWordHandoffMove :=
+  selectedProjectionPrimitiveClosedHandoffConstruction_scaffold false
+
+theorem selectedProjectionAcceptPrimitiveClosedHandoffConstruction_scaffold :
+    exists closed : MachineDescription,
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (SelectedProjectionPrimitive true)
+        closed tapeCodePrimitiveCodeWordHandoffMove :=
+  selectedProjectionPrimitiveClosedHandoffConstruction_scaffold true
+
+theorem selectedMergeFiniteDescriptionConstruction_scaffold :
+    SelectedMergeFiniteDescriptionConstruction :=
+  selectedMergeFiniteDescriptionConstruction_of_parser_emitter
+    selectedMergeParserConstruction_scaffold
+    selectedMergeEmitterConstruction_scaffold
+
+theorem selectedMergePrimitiveRightShiftedConstruction_scaffold :
+    SelectedMergePrimitiveRightShiftedConstruction := by
+  intro useAccept
+  rcases selectedMergeFiniteDescriptionConstruction_scaffold useAccept with
+    ⟨runner, hrunner⟩
+  exact ⟨runner, selectedMergeRightShifted_of_spec hrunner⟩
+
+theorem selectedMergePrimitiveClosedHandoffConstruction_finite_scaffold :
+    SelectedMergePrimitiveClosedHandoffConstruction :=
+  selectedMergePrimitiveClosedHandoffConstruction_of_rightShifted
+    selectedMergePrimitiveRightShiftedConstruction_scaffold
+
+theorem rejectMergePrimitiveClosedHandoffConstruction_finite_scaffold :
+    RejectMergePrimitiveClosedHandoffConstruction :=
+  rejectMergePrimitiveClosedHandoffConstruction_of_selected
+    selectedMergePrimitiveClosedHandoffConstruction_finite_scaffold
+
+def AcceptMergePrimitiveClosedHandoffFiniteMachineConstruction : Prop :=
+  exists closed : MachineDescription,
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      AcceptMergePrimitive
+      closed tapeCodePrimitiveCodeWordHandoffMove
+
+theorem acceptMergePrimitiveClosedHandoffConstruction_of_finiteMachine
+    (h : AcceptMergePrimitiveClosedHandoffFiniteMachineConstruction) :
+    AcceptMergePrimitiveClosedHandoffConstruction :=
+  h
+
+-- Actual finite parser/emitter table for the accept-side merge rewriter.
+theorem acceptMergePrimitiveClosedHandoffFiniteMachineConstruction_scaffold :
+    AcceptMergePrimitiveClosedHandoffFiniteMachineConstruction :=
+  acceptMergePrimitiveClosedHandoffConstruction_of_selected
+    selectedMergePrimitiveClosedHandoffConstruction_finite_scaffold
+
+theorem acceptMergePrimitiveClosedHandoffConstruction_finite_scaffold :
+    AcceptMergePrimitiveClosedHandoffConstruction := by
+  exact
+    acceptMergePrimitiveClosedHandoffConstruction_of_finiteMachine
+      acceptMergePrimitiveClosedHandoffFiniteMachineConstruction_scaffold
+
+theorem selectedMergeRejectPrimitiveClosedHandoffConstruction_scaffold :
+    exists closed : MachineDescription,
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (SelectedMergePrimitive false)
+        closed tapeCodePrimitiveCodeWordHandoffMove := by
+  rcases rejectMergePrimitiveClosedHandoffConstruction_finite_scaffold with
+    ⟨closed, hclosed⟩
+  refine ⟨closed, ?_⟩
+  exact
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_congr
+      (P := RejectMergePrimitive)
+      (Q := SelectedMergePrimitive false)
+      (D := closed)
+      (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
+      (by
+        intro code
+        rfl)
+      hclosed
+
+theorem selectedMergeAcceptPrimitiveClosedHandoffConstruction_scaffold :
+    exists closed : MachineDescription,
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (SelectedMergePrimitive true)
+        closed tapeCodePrimitiveCodeWordHandoffMove := by
+  rcases acceptMergePrimitiveClosedHandoffConstruction_finite_scaffold with
+    ⟨closed, hclosed⟩
+  refine ⟨closed, ?_⟩
+  exact
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_congr
+      (P := AcceptMergePrimitive)
+      (Q := SelectedMergePrimitive true)
+      (D := closed)
+      (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
+      (by
+        intro code
+        rfl)
+      hclosed
+
+theorem selectedMergePrimitiveClosedHandoffConstruction_scaffold :
+    SelectedMergePrimitiveClosedHandoffConstruction := by
+  intro useAccept
+  cases useAccept
+  · exact selectedMergeRejectPrimitiveClosedHandoffConstruction_scaffold
+  · exact selectedMergeAcceptPrimitiveClosedHandoffConstruction_scaffold
+
+theorem acceptProjectionPrimitiveClosedHandoffConstruction_scaffold :
+    AcceptProjectionPrimitiveClosedHandoffConstruction := by
+  exact
+    acceptProjectionPrimitiveClosedHandoffConstruction_of_selected
+      selectedProjectionPrimitiveClosedHandoffConstruction_scaffold
+
+theorem acceptMergePrimitiveClosedHandoffConstruction_scaffold :
+    AcceptMergePrimitiveClosedHandoffConstruction := by
+  exact acceptMergePrimitiveClosedHandoffConstruction_finite_scaffold
+
+theorem rejectProjectionPrimitiveClosedHandoffConstruction_scaffold :
+    RejectProjectionPrimitiveClosedHandoffConstruction := by
+  exact
+    rejectProjectionPrimitiveClosedHandoffConstruction_of_selected
+      selectedProjectionPrimitiveClosedHandoffConstruction_scaffold
+
+theorem rejectMergePrimitiveClosedHandoffConstruction_scaffold :
+    RejectMergePrimitiveClosedHandoffConstruction := by
+  exact rejectMergePrimitiveClosedHandoffConstruction_finite_scaffold
+
+theorem configRunnerPrimitiveClosedHandoffConstruction_scaffold :
+    ConfigRunnerPrimitiveClosedHandoffConstruction := by
+  exact
+    configRunnerPrimitiveClosedHandoffConstruction_of_parts
+      acceptProjectionPrimitiveClosedHandoffConstruction_scaffold
+      acceptMergePrimitiveClosedHandoffConstruction_scaffold
+      rejectProjectionPrimitiveClosedHandoffConstruction_scaffold
+      rejectMergePrimitiveClosedHandoffConstruction_scaffold
+
+theorem configRunnerPhaseConstruction_scaffold :
+    ConfigRunnerPhaseConstruction :=
+  configRunnerPhaseConstruction_of_primitiveClosedHandoff
+    fixedDescriptionBoundedSimulatorCanonicalConstruction_scaffold_configRunner
+    configRunnerPrimitiveClosedHandoffConstruction_scaffold
+
+def ConfigRunnerFromClosedHandoff
+    (closed : MachineDescription) : MachineDescription :=
+  MachineDescription.seqSubroutine closed
+    MachineDescription.ExactIdentityDescription
+    tapeCodePrimitiveCodeWordHandoffMove
+
+theorem exactIdentityDescription_reaches_configRunner
+    (T : Tape Bool) :
+    exists n : Nat,
+      MachineDescription.ExactIdentityDescription.runConfig n
+          { state := MachineDescription.ExactIdentityDescription.start
+            tape := T } =
+        { state := MachineDescription.ExactIdentityDescription.halt
+          tape := T } :=
+  ⟨0, rfl⟩
+
+theorem exactIdentityDescription_runConfig_from_start_configRunner
+    (n : Nat) (T : Tape Bool) :
+    MachineDescription.ExactIdentityDescription.runConfig n
+        { state := MachineDescription.ExactIdentityDescription.start
+          tape := T } =
+      { state := MachineDescription.ExactIdentityDescription.halt
+        tape := T } := by
+  cases n <;>
+    simp [MachineDescription.ExactIdentityDescription,
+      MachineDescription.runConfig, MachineDescription.stepConfig,
+      MachineDescription.lookupTransition]
+
+theorem configRunnerFromClosedHandoff_spec
+    {accept reject closed : MachineDescription}
+    (hclosed :
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject)
+        closed tapeCodePrimitiveCodeWordHandoffMove) :
+    AcceptRejectConfigRunnerSpec accept reject
+      (ConfigRunnerFromClosedHandoff closed) := by
+  let identity := MachineDescription.ExactIdentityDescription
+  have hclosedReady : closed.SubroutineReady :=
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady
+      hclosed
+  have hidentityReady : identity.SubroutineReady :=
+    ⟨MachineDescription.exactIdentityDescription_wellFormed,
+      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+  constructor
+  · exact
+      MachineDescription.seqSubroutine_subroutineReady
+        hclosedReady hidentityReady
+  constructor
+  · intro L
+    have htransform :
+        (PairedRecognizerDovetailLayoutCode accept reject).transform
+            (MachineDescription.DovetailLayout.encode L) =
+          some
+            (MachineDescription.DovetailLayout.encode
+              (BoundedRunLayout accept reject L)) := by
+      simpa [PairedRecognizerDovetailLayoutCode,
+        BoundedRunLayout] using
+        MachineDescription.DovetailLayout.runCodePrimitive_encode
+          accept reject L
+    rcases
+        (tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffRealized
+          hclosed).right
+          (MachineDescription.DovetailLayout.encode L)
+          (MachineDescription.DovetailLayout.encode
+            (BoundedRunLayout accept reject L))
+          htransform with
+      ⟨Tmid, hclosedHalt, hhandoff⟩
+    have hidentityReach :
+        exists nB : Nat,
+          identity.runConfig nB
+              { state := identity.start
+                tape := Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid } =
+            { state := identity.halt
+              tape := ConfigRunnerOutputTape accept reject L } := by
+      refine ⟨0, ?_⟩
+      have hinput :
+          Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid =
+            ConfigRunnerOutputTape accept reject L := by
+        simpa [ConfigRunnerOutputTape, ParsedLayoutTape,
+          ParsedLayoutBits, ConfigRunnerOutputBits] using hhandoff
+      rw [hinput]
+      rfl
+    simpa [ConfigRunnerFromClosedHandoff, identity,
+      tapeCodePrimitiveCodeWordHandoffMove] using
+      MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+        (A := closed) (B := identity)
+        (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
+        hclosedReady hidentityReady hclosedHalt hidentityReach
+  · intro L T hhalt
+    rcases
+        MachineDescription.seqSubroutine_haltsWithTape_inv
+          (A := closed) (B := identity)
+          (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
+          hclosedReady hidentityReady
+          (by simpa [ConfigRunnerFromClosedHandoff, identity] using hhalt) with
+      ⟨Tmid, hclosedHalt, hidentityReach⟩
+    rcases
+        hclosed.right
+          (MachineDescription.DovetailLayout.encode L)
+          Tmid hclosedHalt with
+      ⟨out, htransform, _hnormalized, hhandoff⟩
+    have htransformExpected :
+        (PairedRecognizerDovetailLayoutCode accept reject).transform
+            (MachineDescription.DovetailLayout.encode L) =
+          some
+            (MachineDescription.DovetailLayout.encode
+              (BoundedRunLayout accept reject L)) := by
+      simpa [PairedRecognizerDovetailLayoutCode,
+        BoundedRunLayout] using
+        MachineDescription.DovetailLayout.runCodePrimitive_encode
+          accept reject L
+    have hout :
+        out =
+          MachineDescription.DovetailLayout.encode
+            (BoundedRunLayout accept reject L) := by
+      rw [htransformExpected] at htransform
+      cases htransform
+      rfl
+    rcases hidentityReach with ⟨nB, hidentityRun⟩
+    have hT :
+        T = Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid := by
+      have hcfg :
+          ({ state := identity.halt
+             tape := Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid } :
+            MachineDescription.Configuration) =
+          { state := identity.halt, tape := T } := by
+        simpa [identity] using
+          ((exactIdentityDescription_runConfig_from_start_configRunner
+              nB (Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid)).symm.trans
+            hidentityRun)
+      exact (congrArg MachineDescription.Configuration.tape hcfg).symm
+    rw [hT]
+    simpa [hout, ConfigRunnerOutputTape, ParsedLayoutTape,
+      ParsedLayoutBits, ConfigRunnerOutputBits] using hhandoff
+
+theorem acceptRejectConfigRunnerConstruction_of_closedHandoffConstruction
+    (h :
+      PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction) :
+    AcceptRejectConfigRunnerConstruction := by
+  intro accept reject
+  rcases h accept reject with ⟨closed, hclosed⟩
+  exact
+    ⟨ConfigRunnerFromClosedHandoff closed,
+      configRunnerFromClosedHandoff_spec hclosed⟩
+
+theorem acceptRejectConfigRunnerConstruction_scaffold :
+    AcceptRejectConfigRunnerConstruction := by
+  exact
+    acceptRejectConfigRunnerConstruction_of_phaseConstruction
+      configRunnerPhaseConstruction_scaffold
+
+
+end BoundedLayoutRunner
+end EncodedRewriters
+
+end Computability
+end FoC
