@@ -257,7 +257,8 @@ def codePrefixParserNormalizerMachine :
         | TransitionListParserMarker.saved saved =>
             codePrefixParserNormalizerKeep cell Direction.right
               (CodePrefixParserNormalizerState.seekMarker saved)
-    | CodePrefixParserNormalizerState.seekCountDone marker, some _ =>
+    | CodePrefixParserNormalizerState.seekCountDone marker,
+        some MachineCodeSymbol.tick =>
         codePrefixParserNormalizerKeep cell Direction.right
           (CodePrefixParserNormalizerState.seekCountDone marker)
 
