@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.TapeCodePrimitives
+import FoC.Computability.Compiler.Core.EncodedRewriters.RightShifted
 
 set_option doc.verso true
 
@@ -96,6 +96,12 @@ def FixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction : Prop :=
   forall D : MachineDescription,
     exists simulator : MachineDescription,
       TapeCodePrimitiveOutputRealizedByDescription
+        (FixedDescriptionBoundedSimulatorCode D) simulator
+
+def FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction : Prop :=
+  forall D : MachineDescription,
+    exists simulator : MachineDescription,
+      EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription
         (FixedDescriptionBoundedSimulatorCode D) simulator
 
 def FixedDescriptionStepCodeCompilerConstruction : Prop :=

@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Primitives
+import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.CodeRightShifted
 
 set_option doc.verso true
 
@@ -113,6 +114,26 @@ theorem rightShiftedOutputCompiled_haltsWithTape_of_transform
     rfl
   rw [hT] at hhalt
   simpa [hactualOut] using hhalt
+
+theorem rightShiftedOutputCompiledSubroutineByDescription_congr
+    {P Q : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (hPQ : forall code : Word MachineCodeSymbol,
+      P.transform code = Q.transform code)
+    (hD : RightShiftedOutputCompiledSubroutineByDescription P D) :
+    RightShiftedOutputCompiledSubroutineByDescription Q D := by
+  constructor
+  · exact hD.left
+  constructor
+  · exact hD.right.left
+  constructor
+  · intro code out
+    rw [← hPQ code]
+    exact hD.right.right.left code out
+  · intro code T hhalt
+    rcases hD.right.right.right code T hhalt with
+      ⟨out, htransform, hT⟩
+    exact ⟨out, by simpa [hPQ code] using htransform, hT⟩
 
 def TapeCodeExactPhaseFromClosedHandoff
     (closed : MachineDescription) : MachineDescription :=
@@ -842,12 +863,36 @@ def SelectedProjectionPrimitiveRightShiftedConstruction : Prop :=
         (SelectedProjectionPrimitive useAccept)
         runner
 
+def AcceptProjectionPrimitiveRightShiftedConstruction : Prop :=
+  exists runner : MachineDescription,
+    RightShiftedOutputCompiledSubroutineByDescription
+      AcceptProjectionPrimitive
+      runner
+
+def RejectProjectionPrimitiveRightShiftedConstruction : Prop :=
+  exists runner : MachineDescription,
+    RightShiftedOutputCompiledSubroutineByDescription
+      RejectProjectionPrimitive
+      runner
+
 def SelectedMergePrimitiveRightShiftedConstruction : Prop :=
   forall useAccept : Bool,
     exists runner : MachineDescription,
       RightShiftedOutputCompiledSubroutineByDescription
         (SelectedMergePrimitive useAccept)
         runner
+
+def AcceptMergePrimitiveRightShiftedConstruction : Prop :=
+  exists runner : MachineDescription,
+    RightShiftedOutputCompiledSubroutineByDescription
+      AcceptMergePrimitive
+      runner
+
+def RejectMergePrimitiveRightShiftedConstruction : Prop :=
+  exists runner : MachineDescription,
+    RightShiftedOutputCompiledSubroutineByDescription
+      RejectMergePrimitive
+      runner
 
 theorem selectedProjectionFiniteDescriptionConstruction_of_rightShifted
     (h : SelectedProjectionPrimitiveRightShiftedConstruction) :
@@ -915,18 +960,84 @@ theorem selectedMergeFiniteDescriptionConstruction_of_rightShifted
     refine ⟨S, L, hcode, hinput, ?_⟩
     simpa [SelectedMergeOutputTape, hout] using hT
 
+theorem acceptProjectionPrimitiveRightShiftedConstruction_scaffold :
+    AcceptProjectionPrimitiveRightShiftedConstruction := by
+  sorry
+
+theorem rejectProjectionPrimitiveRightShiftedConstruction_scaffold :
+    RejectProjectionPrimitiveRightShiftedConstruction := by
+  sorry
+
 theorem selectedProjectionPrimitiveRightShiftedConstruction_scaffold :
     SelectedProjectionPrimitiveRightShiftedConstruction := by
-  sorry
+  intro useAccept
+  cases useAccept
+  · rcases rejectProjectionPrimitiveRightShiftedConstruction_scaffold with
+      ⟨runner, hrunner⟩
+    refine ⟨runner, ?_⟩
+    exact
+      rightShiftedOutputCompiledSubroutineByDescription_congr
+        (P := RejectProjectionPrimitive)
+        (Q := SelectedProjectionPrimitive false)
+        (D := runner)
+        (by
+          intro code
+          rfl)
+        hrunner
+  · rcases acceptProjectionPrimitiveRightShiftedConstruction_scaffold with
+      ⟨runner, hrunner⟩
+    refine ⟨runner, ?_⟩
+    exact
+      rightShiftedOutputCompiledSubroutineByDescription_congr
+        (P := AcceptProjectionPrimitive)
+        (Q := SelectedProjectionPrimitive true)
+        (D := runner)
+        (by
+          intro code
+          rfl)
+        hrunner
 
 theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
     SelectedProjectionFiniteDescriptionConstruction :=
   selectedProjectionFiniteDescriptionConstruction_of_rightShifted
     selectedProjectionPrimitiveRightShiftedConstruction_scaffold
 
+theorem acceptMergePrimitiveRightShiftedConstruction_scaffold :
+    AcceptMergePrimitiveRightShiftedConstruction := by
+  sorry
+
+theorem rejectMergePrimitiveRightShiftedConstruction_scaffold :
+    RejectMergePrimitiveRightShiftedConstruction := by
+  sorry
+
 theorem selectedMergePrimitiveRightShiftedConstruction_scaffold :
     SelectedMergePrimitiveRightShiftedConstruction := by
-  sorry
+  intro useAccept
+  cases useAccept
+  · rcases rejectMergePrimitiveRightShiftedConstruction_scaffold with
+      ⟨runner, hrunner⟩
+    refine ⟨runner, ?_⟩
+    exact
+      rightShiftedOutputCompiledSubroutineByDescription_congr
+        (P := RejectMergePrimitive)
+        (Q := SelectedMergePrimitive false)
+        (D := runner)
+        (by
+          intro code
+          rfl)
+        hrunner
+  · rcases acceptMergePrimitiveRightShiftedConstruction_scaffold with
+      ⟨runner, hrunner⟩
+    refine ⟨runner, ?_⟩
+    exact
+      rightShiftedOutputCompiledSubroutineByDescription_congr
+        (P := AcceptMergePrimitive)
+        (Q := SelectedMergePrimitive true)
+        (D := runner)
+        (by
+          intro code
+          rfl)
+        hrunner
 
 theorem selectedMergeFiniteDescriptionConstruction_scaffold :
     SelectedMergeFiniteDescriptionConstruction :=
@@ -1178,6 +1289,147 @@ theorem fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_configRunne
     simpa [FixedDescriptionBoundedSimulatorHandoffTape,
       FixedDescriptionBoundedSimulatorLayoutTape] using hn
 
+theorem fixedDescriptionBoundedSimulatorRightShiftedRunCodePhaseRealizes_configRunner
+    {D runner : MachineDescription}
+    (hrunner :
+      RightShiftedOutputCompiledSubroutineByDescription
+        (FixedDescriptionBoundedSimulatorCode D) runner) :
+    FixedDescriptionBoundedSimulatorPhaseRealizes
+      FixedDescriptionBoundedSimulatorLayoutTape
+      (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
+      (fun L => MachineDescription.SimulatorLayout.run D L.stage L)
+      runner.asFragment := by
+  constructor
+  · exact
+      MachineDescription.asFragment_wellFormed
+        ⟨hrunner.left, hrunner.right.left⟩
+  · intro L
+    have hhalt :
+        runner.HaltsWithTape
+          (FixedDescriptionBoundedSimulatorInput L)
+          (FixedDescriptionBoundedSimulatorHandoffTape Direction.right
+            (MachineDescription.SimulatorLayout.run D L.stage L)) := by
+      have htransform :
+          (FixedDescriptionBoundedSimulatorCode D).transform
+              (MachineDescription.SimulatorLayout.encode L) =
+            some
+              (MachineDescription.SimulatorLayout.encode
+                (MachineDescription.SimulatorLayout.run D L.stage L)) :=
+        fixedDescriptionBoundedSimulatorCode_encode D L
+      simpa [FixedDescriptionBoundedSimulatorInput,
+        FixedDescriptionBoundedSimulatorHandoffTape,
+        FixedDescriptionBoundedSimulatorLayoutTape,
+        MachineDescription.SimulatorLayout.tape,
+        MachineDescription.SimulatorLayout.asBoolInput] using
+        rightShiftedOutputCompiled_haltsWithTape_of_transform
+          hrunner htransform
+    rcases MachineDescription.runConfig_eq_halt_of_haltsWithTape hhalt with
+      ⟨n, hn⟩
+    rcases
+        MachineDescription.firstReaches_halt_of_runConfig_eq
+          hrunner.right.left hn with
+      ⟨m, _hmle, hm, hminimal⟩
+    refine ⟨m, ?_, ?_⟩
+    · simpa [MachineDescription.asFragment_toDescription,
+        MachineDescription.asFragment] using hm
+    · intro k hk
+      simpa [MachineDescription.asFragment_toDescription,
+        MachineDescription.asFragment] using hminimal k hk
+
+theorem fixedDescriptionBoundedSimulatorStepPhaseConstruction_of_rightShifted_configRunner
+    (hcode :
+      FoC.Computability.FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction) :
+    FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner := by
+  intro D
+  rcases hcode D with ⟨runner, hrunner⟩
+  let leftReturn : MachineDescription.Fragment :=
+    MachineDescription.Fragment.handoff Direction.left
+  let rightPause : MachineDescription.Fragment :=
+    MachineDescription.Fragment.halt
+  let runCode : MachineDescription.Fragment :=
+    runner.asFragment
+  let finalPause : MachineDescription.Fragment :=
+    MachineDescription.Fragment.halt
+  let enterRun : MachineDescription.Fragment :=
+    MachineDescription.Fragment.seq leftReturn rightPause Direction.right
+  let runAndReturn : MachineDescription.Fragment :=
+    MachineDescription.Fragment.seq runCode finalPause Direction.left
+  let simulateStep : MachineDescription.Fragment :=
+    MachineDescription.Fragment.seq enterRun runAndReturn Direction.left
+  refine ⟨simulateStep, ?_⟩
+  have hEnterRun :
+      FixedDescriptionBoundedSimulatorPhaseRealizes
+        (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
+        (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
+        id enterRun := by
+    have hLeft :=
+      fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_configRunner
+    have hPause :
+        FixedDescriptionBoundedSimulatorPhaseRealizes
+          (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
+          (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
+          id rightPause := by
+      simpa [rightPause] using
+        fixedDescriptionBoundedSimulatorHaltPhaseRealizes
+          (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
+    simpa [enterRun, leftReturn] using
+      fixedDescriptionBoundedSimulatorPhaseRealizes_seq
+        (entryTape := FixedDescriptionBoundedSimulatorHandoffTape
+          Direction.right)
+        (midTape := FixedDescriptionBoundedSimulatorLayoutTape)
+        (exitTape := FixedDescriptionBoundedSimulatorHandoffTape
+          Direction.right)
+        (phaseA := id)
+        (phaseB := id)
+        (A := leftReturn)
+        (B := rightPause)
+        (handoffMove := Direction.right)
+        hLeft hPause
+  have hRunAndReturn :
+      FixedDescriptionBoundedSimulatorPhaseRealizes
+        FixedDescriptionBoundedSimulatorLayoutTape
+        FixedDescriptionBoundedSimulatorLayoutTape
+        (fun L => MachineDescription.SimulatorLayout.run D L.stage L)
+        runAndReturn := by
+    have hRun :=
+      fixedDescriptionBoundedSimulatorRightShiftedRunCodePhaseRealizes_configRunner
+        hrunner
+    have hPause :
+        FixedDescriptionBoundedSimulatorPhaseRealizes
+          FixedDescriptionBoundedSimulatorLayoutTape
+          FixedDescriptionBoundedSimulatorLayoutTape
+          id finalPause := by
+      simpa [finalPause] using
+        fixedDescriptionBoundedSimulatorHaltPhaseRealizes
+          FixedDescriptionBoundedSimulatorLayoutTape
+    simpa [runAndReturn, runCode, finalPause] using
+      fixedDescriptionBoundedSimulatorPhaseRealizes_seq
+        (entryTape := FixedDescriptionBoundedSimulatorLayoutTape)
+        (midTape := FixedDescriptionBoundedSimulatorHandoffTape
+          Direction.right)
+        (exitTape := FixedDescriptionBoundedSimulatorLayoutTape)
+        (phaseA := fun L =>
+          MachineDescription.SimulatorLayout.run D L.stage L)
+        (phaseB := id)
+        (A := runCode)
+        (B := finalPause)
+        (handoffMove := Direction.left)
+        hRun hPause
+  simpa [simulateStep, enterRun, runAndReturn] using
+    fixedDescriptionBoundedSimulatorPhaseRealizes_seq
+      (entryTape := FixedDescriptionBoundedSimulatorHandoffTape
+        Direction.right)
+      (midTape := FixedDescriptionBoundedSimulatorHandoffTape
+        Direction.right)
+      (exitTape := FixedDescriptionBoundedSimulatorLayoutTape)
+      (phaseA := id)
+      (phaseB := fun L =>
+        MachineDescription.SimulatorLayout.run D L.stage L)
+      (A := enterRun)
+      (B := runAndReturn)
+      (handoffMove := Direction.left)
+      hEnterRun hRunAndReturn
+
 theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_stepPhase_configRunner
     (hstep :
       FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner) :
@@ -1214,9 +1466,14 @@ theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_stepPhase_c
   · simpa [S, FixedDescriptionBoundedSimulatorPhaseTargets.canonical] using
       fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_configRunner
 
+theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_scaffold_configRunner :
+    FoC.Computability.FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction :=
+  FoC.Computability.fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_scaffold
+
 theorem fixedDescriptionBoundedSimulatorStepPhaseConstruction_scaffold_configRunner :
-    FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner := by
-  sorry
+    FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorStepPhaseConstruction_of_rightShifted_configRunner
+    fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_scaffold_configRunner
 
 theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_scaffold_configRunner :
     FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction :=
