@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.SeqSubroutineSemantics
 import FoC.Computability.Compiler.Core.ConstructionTargets
-import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.Spec
+import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.Skeleton
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Basic
 
 set_option doc.verso true
@@ -217,6 +217,33 @@ theorem RejectProjectionPrimitive_encode
   simp [RejectProjectionPrimitive,
     MachineDescription.DovetailLayout.decodeComplete_encode]
 
+theorem SelectedProjectionPrimitive_transform_eq_some_iff
+    (useAccept : Bool) (code out : Word MachineCodeSymbol) :
+    (SelectedProjectionPrimitive useAccept).transform code = some out ↔
+      exists L : MachineDescription.DovetailLayout,
+        code = MachineDescription.DovetailLayout.encode L ∧
+          out =
+            MachineDescription.SimulatorLayout.encode
+              (SelectedProjectionSimulatorLayout useAccept L) := by
+  constructor
+  · intro h
+    unfold SelectedProjectionPrimitive at h
+    cases hdecode :
+        MachineDescription.DovetailLayout.decodeComplete code with
+    | none =>
+        simp [hdecode] at h
+    | some L =>
+        simp [hdecode] at h
+        cases h
+        refine ⟨L, ?_, rfl⟩
+        exact
+          MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
+            hdecode
+  · intro h
+    rcases h with ⟨L, rfl, rfl⟩
+    simp [SelectedProjectionPrimitive,
+      MachineDescription.DovetailLayout.decodeComplete_encode]
+
 theorem AcceptMergePrimitive_encode_run
     (accept : MachineDescription)
     (L : MachineDescription.DovetailLayout) :
@@ -293,6 +320,54 @@ theorem AcceptMergePrimitive_transform_eq_some_iff
       MergeAcceptSimulatorResult, hinput,
       MachineDescription.DovetailLayout.decodeComplete_encode]
 
+theorem RejectMergePrimitive_transform_eq_some_iff
+    (code out : Word MachineCodeSymbol) :
+    RejectMergePrimitive.transform code = some out ↔
+      exists S : MachineDescription.SimulatorLayout,
+        exists L : MachineDescription.DovetailLayout,
+          code = MachineDescription.SimulatorLayout.encode S ∧
+          MachineDescription.decodeCodeWordAsInput S.input =
+            some (MachineDescription.DovetailLayout.encode L) ∧
+          out =
+            MachineDescription.DovetailLayout.encode
+              { L with
+                rejectConfig := S.config
+                rejectHit := S.hit } := by
+  constructor
+  · intro h
+    unfold RejectMergePrimitive at h
+    cases hS : MachineDescription.SimulatorLayout.decodeComplete code with
+    | none =>
+        simp [hS] at h
+    | some S =>
+        simp [hS] at h
+        unfold MergeRejectSimulatorResult at h
+        cases hinput : MachineDescription.decodeCodeWordAsInput S.input with
+        | none =>
+            simp [hinput] at h
+        | some innerCode =>
+            cases hL :
+                MachineDescription.DovetailLayout.decodeComplete innerCode with
+            | none =>
+                simp [hinput, hL] at h
+            | some L =>
+                simp [hinput, hL] at h
+                cases h
+                refine ⟨S, L, ?_, ?_, rfl⟩
+                · exact
+                    MachineDescription.SimulatorLayout.decodeComplete_eq_some_encode
+                      hS
+                · rw [
+                    MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
+                      hL] at hinput
+                  exact hinput
+  · intro h
+    rcases h with ⟨S, L, rfl, hinput, rfl⟩
+    simp [RejectMergePrimitive,
+      MachineDescription.SimulatorLayout.decodeComplete_encode,
+      MergeRejectSimulatorResult, hinput,
+      MachineDescription.DovetailLayout.decodeComplete_encode]
+
 theorem AcceptMergePrimitive_transform_eq_some_cons
     {code out : Word MachineCodeSymbol}
     (h : AcceptMergePrimitive.transform code = some out) :
@@ -306,6 +381,22 @@ theorem AcceptMergePrimitive_transform_eq_some_cons
         { L with
           acceptConfig := S.config
           acceptHit := S.hit } with
+    ⟨tail, htail⟩
+  exact ⟨tail, by rw [hout, htail]⟩
+
+theorem RejectMergePrimitive_transform_eq_some_cons
+    {code out : Word MachineCodeSymbol}
+    (h : RejectMergePrimitive.transform code = some out) :
+    exists tail : Word MachineCodeSymbol,
+      out = MachineCodeSymbol.transition :: tail := by
+  rcases
+      (RejectMergePrimitive_transform_eq_some_iff code out).mp h with
+    ⟨S, L, _hcode, _hinput, hout⟩
+  rcases
+      EncodedRewriters.dovetailLayout_encode_cons
+        { L with
+          rejectConfig := S.config
+          rejectHit := S.hit } with
     ⟨tail, htail⟩
   exact ⟨tail, by rw [hout, htail]⟩
 
@@ -354,6 +445,20 @@ theorem simulatorLayout_encode_cons
         MachineCodeSymbol.header :: tail := by
   cases S
   exact ⟨_, rfl⟩
+
+theorem SelectedProjectionPrimitive_transform_eq_some_cons
+    {useAccept : Bool} {code out : Word MachineCodeSymbol}
+    (h : (SelectedProjectionPrimitive useAccept).transform code = some out) :
+    exists tail : Word MachineCodeSymbol,
+      out = MachineCodeSymbol.header :: tail := by
+  rcases
+      (SelectedProjectionPrimitive_transform_eq_some_iff useAccept code out).mp
+        h with
+    ⟨L, _hcode, hout⟩
+  rcases simulatorLayout_encode_cons
+      (SelectedProjectionSimulatorLayout useAccept L) with
+    ⟨tail, htail⟩
+  exact ⟨tail, by rw [hout, htail]⟩
 
 theorem simulatorLayoutTape_move_left_move_right
     (S : MachineDescription.SimulatorLayout) :
