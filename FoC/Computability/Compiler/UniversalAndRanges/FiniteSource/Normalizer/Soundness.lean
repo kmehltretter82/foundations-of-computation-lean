@@ -106,6 +106,32 @@ theorem codePrefixParserNormalizerMachine_haltingTransitionsDisabled :
   cases cell <;>
     simp [codePrefixParserNormalizerMachine]
 
+theorem codePrefixParserNormalizerMachine_halts_from_of_computes_suffix
+    {c d : TuringMachine.Configuration MachineCodeSymbol
+      CodePrefixParserNormalizerState}
+    (hprefix :
+      TuringMachine.Computes codePrefixParserNormalizerMachine c d)
+    (hhalt :
+      TuringMachine.HaltsFrom codePrefixParserNormalizerMachine c) :
+    TuringMachine.HaltsFrom codePrefixParserNormalizerMachine d := by
+  rcases hhalt with ⟨final, hfinalComp, hfinalHalt⟩
+  induction hprefix generalizing final with
+  | refl c =>
+      exact ⟨final, hfinalComp, hfinalHalt⟩
+  | step hstep hrest ih =>
+      cases hfinalComp with
+      | refl =>
+          exact
+            False.elim
+              (TuringMachine.no_step_from_halted
+                codePrefixParserNormalizerMachine_haltingTransitionsDisabled
+                hfinalHalt hstep)
+      | step hstep' hfinalTail =>
+          have hnext :=
+            TuringMachine.step_deterministic hstep hstep'
+          cases hnext
+          exact ih final hfinalTail hfinalHalt
+
 theorem codePrefixParserNormalizerMachine_step_findCount_initial_done
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step codePrefixParserNormalizerMachine
@@ -1214,6 +1240,139 @@ theorem decodeDescriptionPrefix_of_header_and_decodeTransitions
   subst tokens
   simp [MachineDescription.decodeDescriptionPrefix,
     MachineDescription.decodeNat_encodeNatAppend, htrans]
+
+theorem codePrefixParserNormalizerMachine_computes_headerFields_to_findCount
+    (stateCount start halt : Nat)
+    (transitionBlock : Word MachineCodeSymbol) :
+    TuringMachine.Computes codePrefixParserNormalizerMachine
+      { state := CodePrefixParserNormalizerState.needHeader
+        tape :=
+          codePrefixParserNormalizerTape []
+            (MachineCodeSymbol.header ::
+              MachineDescription.encodeNatAppend stateCount
+                (MachineDescription.encodeNatAppend start
+                  (MachineDescription.encodeNatAppend halt
+                    transitionBlock))) }
+      { state :=
+          CodePrefixParserNormalizerState.findCount
+            TransitionListParserMarker.initial
+        tape :=
+          transitionListParserOptionTape
+            (codePrefixParserNormalizerMarkedHeaderLeft
+              { stateCount := stateCount
+                start := start
+                halt := halt
+                transitions := [] })
+            (transitionBlock.map some) } := by
+  let afterHeader : Word MachineCodeSymbol :=
+    [MachineCodeSymbol.header]
+  let afterState : Word MachineCodeSymbol :=
+    List.append (MachineDescription.encodeNat stateCount).reverse
+      afterHeader
+  let afterStart : Word MachineCodeSymbol :=
+    List.append (MachineDescription.encodeNat start).reverse
+      afterState
+  have hheader :
+      TuringMachine.Computes codePrefixParserNormalizerMachine
+        { state := CodePrefixParserNormalizerState.needHeader
+          tape :=
+            codePrefixParserNormalizerTape []
+              (MachineCodeSymbol.header ::
+                MachineDescription.encodeNatAppend stateCount
+                  (MachineDescription.encodeNatAppend start
+                    (MachineDescription.encodeNatAppend halt
+                      transitionBlock))) }
+        { state := CodePrefixParserNormalizerState.stateCount
+          tape :=
+            codePrefixParserNormalizerTape afterHeader
+              (MachineDescription.encodeNatAppend stateCount
+                (MachineDescription.encodeNatAppend start
+                  (MachineDescription.encodeNatAppend halt
+                    transitionBlock))) } :=
+    TuringMachine.computes_of_step
+      (by
+        simpa [afterHeader] using
+          codePrefixParserNormalizer_step_header []
+            (MachineDescription.encodeNatAppend stateCount
+              (MachineDescription.encodeNatAppend start
+                (MachineDescription.encodeNatAppend halt
+                  transitionBlock))))
+  have hstate :
+      TuringMachine.Computes codePrefixParserNormalizerMachine
+        { state := CodePrefixParserNormalizerState.stateCount
+          tape :=
+            codePrefixParserNormalizerTape afterHeader
+              (MachineDescription.encodeNatAppend stateCount
+                (MachineDescription.encodeNatAppend start
+                  (MachineDescription.encodeNatAppend halt
+                    transitionBlock))) }
+        { state := CodePrefixParserNormalizerState.startField
+          tape :=
+            codePrefixParserNormalizerTape afterState
+              (MachineDescription.encodeNatAppend start
+                (MachineDescription.encodeNatAppend halt
+                  transitionBlock)) } := by
+    simpa [afterState] using
+      codePrefixParserNormalizer_computes_nat'
+        CodePrefixParserNormalizerState.stateCount
+        CodePrefixParserNormalizerState.startField
+        codePrefixParserNormalizer_step_tick_stateCount
+        codePrefixParserNormalizer_step_done_stateCount
+        afterHeader stateCount
+        (MachineDescription.encodeNatAppend start
+          (MachineDescription.encodeNatAppend halt transitionBlock))
+  have hstart :
+      TuringMachine.Computes codePrefixParserNormalizerMachine
+        { state := CodePrefixParserNormalizerState.startField
+          tape :=
+            codePrefixParserNormalizerTape afterState
+              (MachineDescription.encodeNatAppend start
+                (MachineDescription.encodeNatAppend halt
+                  transitionBlock)) }
+        { state := CodePrefixParserNormalizerState.haltField
+          tape :=
+            codePrefixParserNormalizerTape afterStart
+              (MachineDescription.encodeNatAppend halt
+                transitionBlock) } := by
+    simpa [afterStart] using
+      codePrefixParserNormalizer_computes_nat'
+        CodePrefixParserNormalizerState.startField
+        CodePrefixParserNormalizerState.haltField
+        codePrefixParserNormalizer_step_tick_startField
+        codePrefixParserNormalizer_step_done_startField
+        afterState start
+        (MachineDescription.encodeNatAppend halt transitionBlock)
+  have hhalt :
+      TuringMachine.Computes codePrefixParserNormalizerMachine
+        { state := CodePrefixParserNormalizerState.haltField
+          tape :=
+            codePrefixParserNormalizerTape afterStart
+              (MachineDescription.encodeNatAppend halt
+                transitionBlock) }
+        { state :=
+            CodePrefixParserNormalizerState.findCount
+              TransitionListParserMarker.initial
+          tape :=
+            transitionListParserOptionTape
+              (codePrefixParserNormalizerMarkedHeaderLeft
+                { stateCount := stateCount
+                  start := start
+                  halt := halt
+                  transitions := [] })
+              (transitionBlock.map some) } := by
+    simpa [afterStart, afterState, afterHeader,
+      codePrefixParserNormalizerMarkedHeaderLeft,
+      List.map_append, List.append_assoc] using
+      codePrefixParserNormalizerMachine_computes_haltField_marked
+        afterStart halt transitionBlock
+  exact
+    TuringMachine.computes_trans hheader
+      (TuringMachine.computes_trans hstate
+        (TuringMachine.computes_trans hstart
+          (by
+            simpa [afterHeader, afterState, afterStart,
+              codePrefixParserNormalizerMarkedHeaderLeft,
+              List.map_append, List.append_assoc] using hhalt)))
 
 theorem codePrefixParserNormalizerMachine_haltsWithOutput_decodeTransitions
     {tokens out transitionBlock : Word MachineCodeSymbol}
