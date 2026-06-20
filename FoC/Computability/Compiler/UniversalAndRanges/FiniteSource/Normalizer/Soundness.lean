@@ -7,6 +7,398 @@ namespace Computability
 
 open Languages
 
+def codePrefixParserNormalizerStateOfParser :
+    TransitionListParserState -> CodePrefixParserNormalizerState
+  | TransitionListParserState.findCount marker =>
+      CodePrefixParserNormalizerState.findCount marker
+  | TransitionListParserState.seekCountDone marker =>
+      CodePrefixParserNormalizerState.seekCountDone marker
+  | TransitionListParserState.seekMarker saved =>
+      CodePrefixParserNormalizerState.seekMarker saved
+  | TransitionListParserState.enterMarkedPosition =>
+      CodePrefixParserNormalizerState.enterMarkedPosition
+  | TransitionListParserState.needTransition =>
+      CodePrefixParserNormalizerState.needTransition
+  | TransitionListParserState.sourceNat =>
+      CodePrefixParserNormalizerState.sourceNat
+  | TransitionListParserState.readCell =>
+      CodePrefixParserNormalizerState.readCell
+  | TransitionListParserState.writeCell =>
+      CodePrefixParserNormalizerState.writeCell
+  | TransitionListParserState.moveField =>
+      CodePrefixParserNormalizerState.moveField
+  | TransitionListParserState.targetNat =>
+      CodePrefixParserNormalizerState.targetNat
+  | TransitionListParserState.markPosition =>
+      CodePrefixParserNormalizerState.markPosition
+  | TransitionListParserState.returnLeft saved =>
+      CodePrefixParserNormalizerState.returnLeft saved
+  | TransitionListParserState.halt =>
+      CodePrefixParserNormalizerState.halt
+
+theorem transitionListParserOptionTape_normalizedOutput
+    (leftRev rest : List (Option MachineCodeSymbol)) :
+    Tape.normalizedOutput
+        (transitionListParserOptionTape leftRev rest) =
+      List.append (leftRev.reverse.filterMap (fun cell => cell))
+        (rest.filterMap (fun cell => cell)) := by
+  cases rest <;>
+    simp [Tape.normalizedOutput, Tape.cells,
+      transitionListParserOptionTape, List.filterMap_append]
+
+theorem codePrefixParserNormalizer_replicate_append_singleton_tick
+    (n : Nat) :
+    List.append
+        (List.replicate n (some MachineCodeSymbol.tick))
+        [some MachineCodeSymbol.tick] =
+      List.replicate (n + 1) (some MachineCodeSymbol.tick) := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change
+        some MachineCodeSymbol.tick ::
+            List.append
+              (List.replicate n (some MachineCodeSymbol.tick))
+              [some MachineCodeSymbol.tick] =
+          some MachineCodeSymbol.tick ::
+            List.replicate (n + 1) (some MachineCodeSymbol.tick)
+      rw [ih]
+
+theorem codePrefixParserNormalizerMarkedNatReverse_eq
+    (n : Nat) :
+    codePrefixParserNormalizerMarkedNatReverse n =
+      none ::
+        List.replicate n (some MachineCodeSymbol.tick) := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      calc
+        codePrefixParserNormalizerMarkedNatReverse (n + 1)
+            =
+          List.append
+            (codePrefixParserNormalizerMarkedNatReverse n)
+            [some MachineCodeSymbol.tick] := by
+              rfl
+        _ =
+          List.append
+            (none ::
+              List.replicate n (some MachineCodeSymbol.tick))
+            [some MachineCodeSymbol.tick] := by
+              rw [ih]
+        _ =
+          none ::
+            List.append
+              (List.replicate n (some MachineCodeSymbol.tick))
+              [some MachineCodeSymbol.tick] := by
+              rfl
+        _ =
+          none ::
+            List.replicate (n + 1)
+              (some MachineCodeSymbol.tick) := by
+              rw [codePrefixParserNormalizer_replicate_append_singleton_tick]
+
+theorem codePrefixParserNormalizerMachine_haltingTransitionsDisabled :
+    TuringMachine.HaltingTransitionsDisabled
+      codePrefixParserNormalizerMachine := by
+  intro cell
+  cases cell <;>
+    simp [codePrefixParserNormalizerMachine]
+
+theorem codePrefixParserNormalizerMachine_step_findCount_initial_done
+    (leftRev suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Step codePrefixParserNormalizerMachine
+      { state :=
+          CodePrefixParserNormalizerState.findCount
+            TransitionListParserMarker.initial
+        tape :=
+          transitionListParserOptionTape leftRev
+            (some MachineCodeSymbol.done :: suffix) }
+      { state := CodePrefixParserNormalizerState.restoreLeft
+        tape :=
+          transitionListParserOptionTape leftRev.tail
+            (leftRev.head?.join ::
+              some MachineCodeSymbol.done :: suffix) } := by
+  cases leftRev with
+  | nil =>
+      simpa using
+        codePrefixParserNormalizerMachine_step_keep_left_boundary
+          (state :=
+            CodePrefixParserNormalizerState.findCount
+              TransitionListParserMarker.initial)
+          (next := CodePrefixParserNormalizerState.restoreLeft)
+          (suffix := suffix)
+          (cell := some MachineCodeSymbol.done)
+          (by
+            simp [codePrefixParserNormalizerMachine,
+              codePrefixParserNormalizerKeep])
+  | cons leftHead leftTail =>
+      simpa using
+        codePrefixParserNormalizerMachine_step_keep_left_nonempty
+          (state :=
+            CodePrefixParserNormalizerState.findCount
+              TransitionListParserMarker.initial)
+          (next := CodePrefixParserNormalizerState.restoreLeft)
+          (leftTail := leftTail)
+          (suffix := suffix)
+          (leftHead := leftHead)
+          (cell := some MachineCodeSymbol.done)
+          (by
+            simp [codePrefixParserNormalizerMachine,
+              codePrefixParserNormalizerKeep])
+
+theorem codePrefixParserNormalizerMachine_step_restoreLeft_blank
+    (leftHead : Option MachineCodeSymbol)
+    (leftTail suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Step codePrefixParserNormalizerMachine
+      { state := CodePrefixParserNormalizerState.restoreLeft
+        tape :=
+          transitionListParserOptionTape
+            (leftHead :: leftTail)
+            (some MachineCodeSymbol.blank :: suffix) }
+      { state := CodePrefixParserNormalizerState.restoreLeft
+        tape := transitionListParserOptionTape leftTail
+          (leftHead ::
+            some MachineCodeSymbol.tick :: suffix) } :=
+  codePrefixParserNormalizerMachine_step_write_left_nonempty
+    (state := CodePrefixParserNormalizerState.restoreLeft)
+    (next := CodePrefixParserNormalizerState.restoreLeft)
+    (leftTail := leftTail)
+    (suffix := suffix)
+    (leftHead := leftHead)
+    (cell := some MachineCodeSymbol.blank)
+    (write := some MachineCodeSymbol.tick)
+    (by
+      simp [codePrefixParserNormalizerMachine,
+        codePrefixParserNormalizerKeep])
+
+theorem codePrefixParserNormalizerMachine_step_restoreLeft_none
+    (leftRev suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Step codePrefixParserNormalizerMachine
+      { state := CodePrefixParserNormalizerState.restoreLeft
+        tape :=
+          transitionListParserOptionTape leftRev
+            (none :: suffix) }
+      { state := CodePrefixParserNormalizerState.restoreForward
+        tape :=
+          transitionListParserOptionTape
+            (some MachineCodeSymbol.done :: leftRev) suffix } :=
+  codePrefixParserNormalizerMachine_step_write_right
+    (state := CodePrefixParserNormalizerState.restoreLeft)
+    (next := CodePrefixParserNormalizerState.restoreForward)
+    (leftRev := leftRev)
+    (suffix := suffix)
+    (cell := none)
+    (write := some MachineCodeSymbol.done)
+    (by
+      simp [codePrefixParserNormalizerMachine])
+
+theorem codePrefixParserNormalizer_replicate_tick_append_tick
+    (n : Nat) (tail : List (Option MachineCodeSymbol)) :
+    List.append (List.replicate n (some MachineCodeSymbol.tick))
+        (some MachineCodeSymbol.tick :: tail) =
+      List.append (List.replicate (n + 1) (some MachineCodeSymbol.tick))
+        tail := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      simpa [List.replicate] using ih
+
+theorem codePrefixParserNormalizerMachine_computes_findCount_done_restoreForward
+    (blanks : Nat)
+    (prefixLeft suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Computes codePrefixParserNormalizerMachine
+      { state :=
+          CodePrefixParserNormalizerState.findCount
+            TransitionListParserMarker.initial
+        tape :=
+          transitionListParserOptionTape
+            (List.append
+              (List.replicate blanks (some MachineCodeSymbol.blank))
+              (none :: prefixLeft))
+            (some MachineCodeSymbol.done :: suffix) }
+      { state := CodePrefixParserNormalizerState.restoreForward
+        tape :=
+          transitionListParserOptionTape
+            (some MachineCodeSymbol.done :: prefixLeft)
+            (List.append
+              (List.replicate blanks (some MachineCodeSymbol.tick))
+              (some MachineCodeSymbol.done :: suffix)) } := by
+  induction blanks generalizing suffix with
+  | zero =>
+      exact
+        TuringMachine.Computes.step
+          (by
+            simpa using
+              codePrefixParserNormalizerMachine_step_findCount_initial_done
+                (none :: prefixLeft) suffix)
+          (by
+            simpa using
+              TuringMachine.Computes.step
+                (codePrefixParserNormalizerMachine_step_restoreLeft_none
+                  prefixLeft (some MachineCodeSymbol.done :: suffix))
+                (TuringMachine.Computes.refl _))
+  | succ blanks ih =>
+      have hrestore :
+          (tail : List (Option MachineCodeSymbol)) ->
+          TuringMachine.Computes codePrefixParserNormalizerMachine
+            { state := CodePrefixParserNormalizerState.restoreLeft
+              tape :=
+                transitionListParserOptionTape
+                  (List.append
+                    (List.replicate blanks
+                      (some MachineCodeSymbol.blank))
+                    (none :: prefixLeft))
+                  (some MachineCodeSymbol.blank :: tail) }
+            { state := CodePrefixParserNormalizerState.restoreForward
+              tape :=
+                transitionListParserOptionTape
+                  (some MachineCodeSymbol.done :: prefixLeft)
+                  (List.append
+                    (List.replicate (blanks + 1)
+                      (some MachineCodeSymbol.tick))
+                    tail) } := by
+        intro tail
+        clear ih
+        induction blanks generalizing tail with
+        | zero =>
+            exact
+              TuringMachine.Computes.step
+                (by
+                  simpa using
+                    codePrefixParserNormalizerMachine_step_restoreLeft_blank
+                      none
+                      prefixLeft
+                      tail)
+                (by
+                  simpa using
+                    TuringMachine.Computes.step
+                      (codePrefixParserNormalizerMachine_step_restoreLeft_none
+                        prefixLeft
+                        (some MachineCodeSymbol.tick :: tail))
+                      (TuringMachine.Computes.refl _))
+        | succ blanks ih =>
+            exact
+              TuringMachine.Computes.step
+                (by
+                  simpa [List.append_assoc] using
+                    codePrefixParserNormalizerMachine_step_restoreLeft_blank
+                      (some MachineCodeSymbol.blank)
+                      (List.append
+                        (List.replicate blanks
+                          (some MachineCodeSymbol.blank))
+                        (none :: prefixLeft))
+                      tail)
+                (by
+                  rw [←
+                    codePrefixParserNormalizer_replicate_tick_append_tick
+                      (blanks + 1) tail]
+                  exact ih (some MachineCodeSymbol.tick :: tail))
+      exact
+        TuringMachine.Computes.step
+          (by
+            simpa [List.append_assoc] using
+              codePrefixParserNormalizerMachine_step_findCount_initial_done
+                (List.append
+                  (List.replicate (blanks + 1)
+                    (some MachineCodeSymbol.blank))
+                  (none :: prefixLeft))
+                suffix)
+          (by
+            simpa [List.append_assoc] using
+              hrestore (some MachineCodeSymbol.done :: suffix))
+
+theorem codePrefixParserNormalizerMachine_step_restoreForward_tick
+    (leftRev suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Step codePrefixParserNormalizerMachine
+      { state := CodePrefixParserNormalizerState.restoreForward
+        tape :=
+          transitionListParserOptionTape leftRev
+            (some MachineCodeSymbol.tick :: suffix) }
+      { state := CodePrefixParserNormalizerState.restoreForward
+        tape :=
+          transitionListParserOptionTape
+            (some MachineCodeSymbol.tick :: leftRev) suffix } :=
+  codePrefixParserNormalizerMachine_step_keep_right
+    (state := CodePrefixParserNormalizerState.restoreForward)
+    (next := CodePrefixParserNormalizerState.restoreForward)
+    (leftRev := leftRev)
+    (suffix := suffix)
+    (cell := some MachineCodeSymbol.tick)
+    (by
+      simp [codePrefixParserNormalizerMachine,
+        codePrefixParserNormalizerKeep])
+
+theorem codePrefixParserNormalizerMachine_step_restoreForward_done
+    (leftRev suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Step codePrefixParserNormalizerMachine
+      { state := CodePrefixParserNormalizerState.restoreForward
+        tape :=
+          transitionListParserOptionTape leftRev
+            (some MachineCodeSymbol.done :: suffix) }
+      { state := CodePrefixParserNormalizerState.halt
+        tape :=
+          transitionListParserOptionTape
+            (some MachineCodeSymbol.done :: leftRev) suffix } :=
+  codePrefixParserNormalizerMachine_step_keep_right
+    (state := CodePrefixParserNormalizerState.restoreForward)
+    (next := CodePrefixParserNormalizerState.halt)
+    (leftRev := leftRev)
+    (suffix := suffix)
+    (cell := some MachineCodeSymbol.done)
+    (by
+      simp [codePrefixParserNormalizerMachine,
+        codePrefixParserNormalizerKeep])
+
+def codePrefixParserNormalizerRestoredTicksLeft :
+    Nat -> List (Option MachineCodeSymbol) ->
+      List (Option MachineCodeSymbol)
+  | 0, leftRev => leftRev
+  | n + 1, leftRev =>
+      codePrefixParserNormalizerRestoredTicksLeft n
+        (some MachineCodeSymbol.tick :: leftRev)
+
+theorem codePrefixParserNormalizerMachine_computes_restoreForward_ticks
+    (ticks : Nat)
+    (leftRev suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Computes codePrefixParserNormalizerMachine
+      { state := CodePrefixParserNormalizerState.restoreForward
+        tape :=
+          transitionListParserOptionTape leftRev
+            (List.append
+              (List.replicate ticks (some MachineCodeSymbol.tick))
+              (some MachineCodeSymbol.done :: suffix)) }
+      { state := CodePrefixParserNormalizerState.halt
+        tape :=
+          transitionListParserOptionTape
+            (some MachineCodeSymbol.done ::
+              codePrefixParserNormalizerRestoredTicksLeft ticks
+                leftRev)
+            suffix } := by
+  induction ticks generalizing leftRev with
+  | zero =>
+      simpa using
+        TuringMachine.Computes.step
+          (codePrefixParserNormalizerMachine_step_restoreForward_done
+            leftRev suffix)
+          (TuringMachine.Computes.refl _)
+  | succ ticks ih =>
+      exact
+        TuringMachine.Computes.step
+          (by
+            simpa [List.append_assoc] using
+              codePrefixParserNormalizerMachine_step_restoreForward_tick
+                leftRev
+                (List.append
+                  (List.replicate ticks
+                    (some MachineCodeSymbol.tick))
+                  (some MachineCodeSymbol.done :: suffix)))
+          (by
+            simpa [codePrefixParserNormalizerRestoredTicksLeft] using
+              ih (some MachineCodeSymbol.tick :: leftRev))
+
 theorem codePrefixParserNormalizerMachine_haltsFromIn_needHeader_head
     {steps : Nat}
     {leftRev rest : Word MachineCodeSymbol}
@@ -875,30 +1267,6 @@ theorem codePrefixParserNormalizerMachine_haltsWithOutput_decodePrefix
       (by simpa [hblock] using htokens)
       htrans
 
-theorem codePrefixParserNormalizerMachine_haltsWithOutput_output_eq_input
-    (tokens out : Word MachineCodeSymbol)
-    (h :
-      TuringMachine.HaltsWithOutput
-        codePrefixParserNormalizerMachine tokens out) :
-    out = tokens := by
-  sorry
-
-theorem codePrefixParserNormalizerMachine_haltsWithOutput_only_decode
-    (tokens out : Word MachineCodeSymbol)
-    (h :
-      TuringMachine.HaltsWithOutput
-        codePrefixParserNormalizerMachine tokens out) :
-    out = tokens ∧
-      exists D : MachineDescription,
-      exists input : Word MachineCodeSymbol,
-        MachineDescription.decodeDescriptionPrefix tokens =
-          some (D, input) := by
-  exact
-    ⟨codePrefixParserNormalizerMachine_haltsWithOutput_output_eq_input
-        tokens out h,
-      codePrefixParserNormalizerMachine_haltsWithOutput_decodePrefix
-        tokens out h⟩
-
 theorem codePrefixParserNormalizerMachine_haltsWithOutput_encodeDescriptionAppend
     (D : MachineDescription) (input : Word MachineCodeSymbol) :
     TuringMachine.HaltsWithOutput
@@ -918,6 +1286,48 @@ theorem codePrefixParserNormalizerMachine_haltsWithOutput_encodeDescription_appe
   exact
     codePrefixParserNormalizerMachine_haltsWithOutput_encodeDescriptionAppend
       D input
+
+theorem codePrefixParserNormalizerMachine_haltsWithOutput_output_eq_input
+    (tokens out : Word MachineCodeSymbol)
+    (h :
+      TuringMachine.HaltsWithOutput
+        codePrefixParserNormalizerMachine tokens out) :
+    out = tokens := by
+  rcases
+      codePrefixParserNormalizerMachine_haltsWithOutput_decodePrefix
+        tokens out h with
+    ⟨D, input, hdecode⟩
+  have htokens :
+      tokens = List.append (MachineDescription.encodeDescription D) input :=
+    MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+      hdecode
+  have hcanonical :
+      TuringMachine.HaltsWithOutput
+        codePrefixParserNormalizerMachine tokens tokens := by
+    rw [htokens]
+    exact
+      codePrefixParserNormalizerMachine_haltsWithOutput_encodeDescription_append
+        D input
+  exact
+    TuringMachine.halts_with_output_unique
+      codePrefixParserNormalizerMachine_haltingTransitionsDisabled
+      h hcanonical
+
+theorem codePrefixParserNormalizerMachine_haltsWithOutput_only_decode
+    (tokens out : Word MachineCodeSymbol)
+    (h :
+      TuringMachine.HaltsWithOutput
+        codePrefixParserNormalizerMachine tokens out) :
+    out = tokens ∧
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeDescriptionPrefix tokens =
+          some (D, input) := by
+  exact
+    ⟨codePrefixParserNormalizerMachine_haltsWithOutput_output_eq_input
+        tokens out h,
+      codePrefixParserNormalizerMachine_haltsWithOutput_decodePrefix
+        tokens out h⟩
 
 theorem codePrefixParserNormalizerMachine_code_sound
     (tokens out : Word MachineCodeSymbol)
