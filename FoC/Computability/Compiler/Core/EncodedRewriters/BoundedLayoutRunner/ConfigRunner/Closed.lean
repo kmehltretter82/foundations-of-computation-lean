@@ -400,6 +400,23 @@ theorem RejectMergePrimitive_transform_eq_some_cons
     ⟨tail, htail⟩
   exact ⟨tail, by rw [hout, htail]⟩
 
+theorem SelectedMergePrimitive_transform_eq_some_cons
+    {useAccept : Bool} {code out : Word MachineCodeSymbol}
+    (h : (SelectedMergePrimitive useAccept).transform code = some out) :
+    exists tail : Word MachineCodeSymbol,
+      out = MachineCodeSymbol.transition :: tail := by
+  cases useAccept
+  · exact
+      RejectMergePrimitive_transform_eq_some_cons
+        (by
+          simpa [SelectedMergePrimitive, SelectedMergeSimulatorResult,
+            RejectMergePrimitive] using h)
+  · exact
+      AcceptMergePrimitive_transform_eq_some_cons
+        (by
+          simpa [SelectedMergePrimitive, SelectedMergeSimulatorResult,
+            AcceptMergePrimitive] using h)
+
 theorem ConfigRunnerAfterReject_afterAccept
     (accept reject : MachineDescription)
     (L : MachineDescription.DovetailLayout) :
@@ -486,6 +503,270 @@ theorem parsedLayoutTape_move_left_move_right_configRunner
   exact
     EncodedRewriters.tape_move_left_move_right_input_encodeCodeWordAsInput_cons
       MachineCodeSymbol.transition tail
+
+def SelectedProjectionOutputCode
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    Word MachineCodeSymbol :=
+  MachineDescription.SimulatorLayout.encode
+    (SelectedProjectionSimulatorLayout useAccept L)
+
+def SelectedProjectionOutputTape
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    Tape Bool :=
+  Tape.move Direction.right
+    (Tape.input
+      (MachineDescription.encodeCodeWordAsInput
+        (SelectedProjectionOutputCode useAccept L)))
+
+def SelectedProjectionForwardSpec
+    (useAccept : Bool)
+    (runner : MachineDescription) : Prop :=
+  forall L : MachineDescription.DovetailLayout,
+    runner.HaltsWithTape
+      (ParsedLayoutBits L)
+      (SelectedProjectionOutputTape useAccept L)
+
+def SelectedProjectionClosedSpec
+    (useAccept : Bool)
+    (runner : MachineDescription) : Prop :=
+  forall code : Word MachineCodeSymbol,
+  forall T : Tape Bool,
+    runner.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T ->
+      exists L : MachineDescription.DovetailLayout,
+        code = MachineDescription.DovetailLayout.encode L ∧
+          T = SelectedProjectionOutputTape useAccept L
+
+def SelectedProjectionSpec
+    (useAccept : Bool)
+    (runner : MachineDescription) : Prop :=
+  ReadySpec runner ∧
+    SelectedProjectionForwardSpec useAccept runner ∧
+      SelectedProjectionClosedSpec useAccept runner
+
+def SelectedProjectionFiniteDescriptionConstruction : Prop :=
+  forall useAccept : Bool,
+    exists runner : MachineDescription,
+      SelectedProjectionSpec useAccept runner
+
+theorem selectedProjectionRightShifted_of_spec
+    {useAccept : Bool} {runner : MachineDescription}
+    (hrunner : SelectedProjectionSpec useAccept runner) :
+    RightShiftedOutputCompiledSubroutineByDescription
+      (SelectedProjectionPrimitive useAccept) runner := by
+  constructor
+  · exact hrunner.left.left
+  constructor
+  · exact hrunner.left.right
+  constructor
+  · intro code out
+    constructor
+    · intro hhalt
+      rcases hhalt with ⟨n, hn⟩
+      let T : Tape Bool :=
+        (runner.runConfig n
+          (runner.initial
+            (MachineDescription.encodeCodeWordAsInput code))).tape
+      have hTape :
+          runner.HaltsWithTape
+              (MachineDescription.encodeCodeWordAsInput code) T := by
+        exact ⟨n, ⟨hn.left, rfl⟩⟩
+      rcases hrunner.right.right code T hTape with
+        ⟨L, hcode, hT⟩
+      have hactual :
+          Tape.normalizedOutput T =
+            MachineDescription.encodeCodeWordAsInput out := by
+        simpa [T] using hn.right
+      have hexpected :
+          Tape.normalizedOutput T =
+            MachineDescription.encodeCodeWordAsInput
+              (SelectedProjectionOutputCode useAccept L) := by
+        rw [hT]
+        exact
+          EncodedRewriters.tape_normalizedOutput_move_right_input
+            (MachineDescription.encodeCodeWordAsInput
+              (SelectedProjectionOutputCode useAccept L))
+      have houtBits :
+          MachineDescription.encodeCodeWordAsInput out =
+            MachineDescription.encodeCodeWordAsInput
+              (SelectedProjectionOutputCode useAccept L) :=
+        hactual.symm.trans hexpected
+      have hout :
+          out = SelectedProjectionOutputCode useAccept L :=
+        MachineDescription.encodeCodeWordAsInput_injective houtBits
+      exact
+        (SelectedProjectionPrimitive_transform_eq_some_iff
+          useAccept code out).mpr
+          ⟨L, hcode, by simpa [SelectedProjectionOutputCode] using hout⟩
+    · intro htransform
+      rcases
+          (SelectedProjectionPrimitive_transform_eq_some_iff
+            useAccept code out).mp htransform with
+        ⟨L, hcode, hout⟩
+      subst code
+      subst out
+      simpa [SelectedProjectionOutputTape, SelectedProjectionOutputCode,
+        EncodedRewriters.tape_normalizedOutput_move_right_input] using
+        MachineDescription.haltsWithOutput_of_haltsWithTape
+          (hrunner.right.left L)
+  · intro code T hhalt
+    rcases hrunner.right.right code T hhalt with
+      ⟨L, hcode, hT⟩
+    refine ⟨SelectedProjectionOutputCode useAccept L, ?_, hT⟩
+    exact
+      (SelectedProjectionPrimitive_transform_eq_some_iff
+        useAccept code (SelectedProjectionOutputCode useAccept L)).mpr
+        ⟨L, hcode, by simp [SelectedProjectionOutputCode]⟩
+
+def SelectedMergeOutputCode
+    (useAccept : Bool)
+    (S : MachineDescription.SimulatorLayout)
+    (L : MachineDescription.DovetailLayout) :
+    Word MachineCodeSymbol :=
+  MachineDescription.DovetailLayout.encode
+    (if useAccept then
+      { L with
+        acceptConfig := S.config
+        acceptHit := S.hit }
+    else
+      { L with
+        rejectConfig := S.config
+        rejectHit := S.hit })
+
+def SelectedMergeOutputTape
+    (useAccept : Bool)
+    (S : MachineDescription.SimulatorLayout)
+    (L : MachineDescription.DovetailLayout) :
+    Tape Bool :=
+  Tape.move Direction.right
+    (Tape.input
+      (MachineDescription.encodeCodeWordAsInput
+        (SelectedMergeOutputCode useAccept S L)))
+
+theorem SelectedMergePrimitive_transform_eq_some_iff
+    (useAccept : Bool) (code out : Word MachineCodeSymbol) :
+    (SelectedMergePrimitive useAccept).transform code = some out ↔
+      exists S : MachineDescription.SimulatorLayout,
+      exists L : MachineDescription.DovetailLayout,
+        code = MachineDescription.SimulatorLayout.encode S ∧
+          MachineDescription.decodeCodeWordAsInput S.input =
+            some (MachineDescription.DovetailLayout.encode L) ∧
+          out = SelectedMergeOutputCode useAccept S L := by
+  cases useAccept
+  · simpa [SelectedMergePrimitive, SelectedMergeSimulatorResult,
+      RejectMergePrimitive, SelectedMergeOutputCode] using
+      RejectMergePrimitive_transform_eq_some_iff code out
+  · simpa [SelectedMergePrimitive, SelectedMergeSimulatorResult,
+      AcceptMergePrimitive, SelectedMergeOutputCode] using
+      AcceptMergePrimitive_transform_eq_some_iff code out
+
+def SelectedMergeForwardSpec
+    (useAccept : Bool)
+    (runner : MachineDescription) : Prop :=
+  forall S : MachineDescription.SimulatorLayout,
+  forall L : MachineDescription.DovetailLayout,
+    MachineDescription.decodeCodeWordAsInput S.input =
+      some (MachineDescription.DovetailLayout.encode L) ->
+    runner.HaltsWithTape
+      (MachineDescription.SimulatorLayout.asBoolInput S)
+      (SelectedMergeOutputTape useAccept S L)
+
+def SelectedMergeClosedSpec
+    (useAccept : Bool)
+    (runner : MachineDescription) : Prop :=
+  forall code : Word MachineCodeSymbol,
+  forall T : Tape Bool,
+    runner.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T ->
+      exists S : MachineDescription.SimulatorLayout,
+      exists L : MachineDescription.DovetailLayout,
+        code = MachineDescription.SimulatorLayout.encode S ∧
+          MachineDescription.decodeCodeWordAsInput S.input =
+            some (MachineDescription.DovetailLayout.encode L) ∧
+          T = SelectedMergeOutputTape useAccept S L
+
+def SelectedMergeSpec
+    (useAccept : Bool)
+    (runner : MachineDescription) : Prop :=
+  ReadySpec runner ∧
+    SelectedMergeForwardSpec useAccept runner ∧
+      SelectedMergeClosedSpec useAccept runner
+
+def SelectedMergeFiniteDescriptionConstruction : Prop :=
+  forall useAccept : Bool,
+    exists runner : MachineDescription,
+      SelectedMergeSpec useAccept runner
+
+theorem selectedMergeRightShifted_of_spec
+    {useAccept : Bool} {runner : MachineDescription}
+    (hrunner : SelectedMergeSpec useAccept runner) :
+    RightShiftedOutputCompiledSubroutineByDescription
+      (SelectedMergePrimitive useAccept) runner := by
+  constructor
+  · exact hrunner.left.left
+  constructor
+  · exact hrunner.left.right
+  constructor
+  · intro code out
+    constructor
+    · intro hhalt
+      rcases hhalt with ⟨n, hn⟩
+      let T : Tape Bool :=
+        (runner.runConfig n
+          (runner.initial
+            (MachineDescription.encodeCodeWordAsInput code))).tape
+      have hTape :
+          runner.HaltsWithTape
+              (MachineDescription.encodeCodeWordAsInput code) T := by
+        exact ⟨n, ⟨hn.left, rfl⟩⟩
+      rcases hrunner.right.right code T hTape with
+        ⟨S, L, hcode, hinput, hT⟩
+      have hactual :
+          Tape.normalizedOutput T =
+            MachineDescription.encodeCodeWordAsInput out := by
+        simpa [T] using hn.right
+      have hexpected :
+          Tape.normalizedOutput T =
+            MachineDescription.encodeCodeWordAsInput
+              (SelectedMergeOutputCode useAccept S L) := by
+        rw [hT]
+        exact
+          EncodedRewriters.tape_normalizedOutput_move_right_input
+            (MachineDescription.encodeCodeWordAsInput
+              (SelectedMergeOutputCode useAccept S L))
+      have houtBits :
+          MachineDescription.encodeCodeWordAsInput out =
+            MachineDescription.encodeCodeWordAsInput
+              (SelectedMergeOutputCode useAccept S L) :=
+        hactual.symm.trans hexpected
+      have hout :
+          out = SelectedMergeOutputCode useAccept S L :=
+        MachineDescription.encodeCodeWordAsInput_injective houtBits
+      exact
+        (SelectedMergePrimitive_transform_eq_some_iff
+          useAccept code out).mpr
+          ⟨S, L, hcode, hinput, hout⟩
+    · intro htransform
+      rcases
+          (SelectedMergePrimitive_transform_eq_some_iff
+            useAccept code out).mp htransform with
+        ⟨S, L, hcode, hinput, hout⟩
+      subst code
+      subst out
+      simpa [SelectedMergeOutputTape,
+        EncodedRewriters.tape_normalizedOutput_move_right_input] using
+        MachineDescription.haltsWithOutput_of_haltsWithTape
+          (hrunner.right.left S L hinput)
+  · intro code T hhalt
+    rcases hrunner.right.right code T hhalt with
+      ⟨S, L, hcode, hinput, hT⟩
+    refine ⟨SelectedMergeOutputCode useAccept S L, ?_, hT⟩
+    exact
+      (SelectedMergePrimitive_transform_eq_some_iff
+        useAccept code (SelectedMergeOutputCode useAccept S L)).mpr
+        ⟨S, L, hcode, hinput, rfl⟩
 
 def SeqViaCanonical
     (A B : MachineDescription) : MachineDescription :=
@@ -1271,34 +1552,113 @@ theorem acceptRejectConfigRunnerConstruction_of_phaseConstruction
         hacceptProject hacceptSim hacceptMerge
         hrejectProject hrejectSim hrejectMerge⟩
 
-theorem fixedDescriptionBoundedSimulatorCanonicalConstruction_scaffold_configRunner :
-    FixedDescriptionBoundedSimulatorCanonicalConstruction := by
+theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_scaffold_configRunner :
+    FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction := by
   sorry
+
+theorem fixedDescriptionBoundedSimulatorCanonicalConstruction_scaffold_configRunner :
+    FixedDescriptionBoundedSimulatorCanonicalConstruction :=
+  fixedDescriptionBoundedSimulatorCanonicalConstruction_of_phaseConstruction
+    fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_scaffold_configRunner
+
+def SelectedProjectionPrimitiveRightShiftedConstruction : Prop :=
+  forall useAccept : Bool,
+    exists runner : MachineDescription,
+      RightShiftedOutputCompiledSubroutineByDescription
+        (SelectedProjectionPrimitive useAccept)
+        runner
+
+def SelectedMergePrimitiveRightShiftedConstruction : Prop :=
+  forall useAccept : Bool,
+    exists runner : MachineDescription,
+      RightShiftedOutputCompiledSubroutineByDescription
+        (SelectedMergePrimitive useAccept)
+        runner
+
+theorem selectedProjectionPrimitiveClosedHandoffConstruction_of_rightShifted
+    (h : SelectedProjectionPrimitiveRightShiftedConstruction) :
+    SelectedProjectionPrimitiveClosedHandoffConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  exact
+    EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
+      hrunner
+      (by
+        intro code out htransform
+        rcases
+            SelectedProjectionPrimitive_transform_eq_some_cons
+              htransform with
+          ⟨tail, hout⟩
+        exact ⟨MachineCodeSymbol.header, tail, hout⟩)
+
+theorem selectedMergePrimitiveClosedHandoffConstruction_of_rightShifted
+    (h : SelectedMergePrimitiveRightShiftedConstruction) :
+    SelectedMergePrimitiveClosedHandoffConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  exact
+    EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
+      hrunner
+      (by
+        intro code out htransform
+        rcases
+            SelectedMergePrimitive_transform_eq_some_cons
+              htransform with
+          ⟨tail, hout⟩
+        exact ⟨MachineCodeSymbol.transition, tail, hout⟩)
+
+theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
+    SelectedProjectionFiniteDescriptionConstruction := by
+  sorry
+
+theorem selectedProjectionPrimitiveRightShiftedConstruction_scaffold :
+    SelectedProjectionPrimitiveRightShiftedConstruction := by
+  intro useAccept
+  rcases selectedProjectionFiniteDescriptionConstruction_scaffold useAccept with
+    ⟨runner, hrunner⟩
+  exact ⟨runner, selectedProjectionRightShifted_of_spec hrunner⟩
+
+theorem selectedProjectionPrimitiveClosedHandoffConstruction_scaffold :
+    SelectedProjectionPrimitiveClosedHandoffConstruction :=
+  selectedProjectionPrimitiveClosedHandoffConstruction_of_rightShifted
+    selectedProjectionPrimitiveRightShiftedConstruction_scaffold
 
 theorem selectedProjectionRejectPrimitiveClosedHandoffConstruction_scaffold :
     exists closed : MachineDescription,
       TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
         (SelectedProjectionPrimitive false)
-        closed tapeCodePrimitiveCodeWordHandoffMove := by
-  sorry
+        closed tapeCodePrimitiveCodeWordHandoffMove :=
+  selectedProjectionPrimitiveClosedHandoffConstruction_scaffold false
 
 theorem selectedProjectionAcceptPrimitiveClosedHandoffConstruction_scaffold :
     exists closed : MachineDescription,
       TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
         (SelectedProjectionPrimitive true)
-        closed tapeCodePrimitiveCodeWordHandoffMove := by
+        closed tapeCodePrimitiveCodeWordHandoffMove :=
+  selectedProjectionPrimitiveClosedHandoffConstruction_scaffold true
+
+theorem selectedMergeFiniteDescriptionConstruction_scaffold :
+    SelectedMergeFiniteDescriptionConstruction := by
   sorry
 
-theorem selectedProjectionPrimitiveClosedHandoffConstruction_scaffold :
-    SelectedProjectionPrimitiveClosedHandoffConstruction := by
+theorem selectedMergePrimitiveRightShiftedConstruction_scaffold :
+    SelectedMergePrimitiveRightShiftedConstruction := by
   intro useAccept
-  cases useAccept
-  · exact selectedProjectionRejectPrimitiveClosedHandoffConstruction_scaffold
-  · exact selectedProjectionAcceptPrimitiveClosedHandoffConstruction_scaffold
+  rcases selectedMergeFiniteDescriptionConstruction_scaffold useAccept with
+    ⟨runner, hrunner⟩
+  exact ⟨runner, selectedMergeRightShifted_of_spec hrunner⟩
+
+theorem selectedMergePrimitiveClosedHandoffConstruction_finite_scaffold :
+    SelectedMergePrimitiveClosedHandoffConstruction :=
+  selectedMergePrimitiveClosedHandoffConstruction_of_rightShifted
+    selectedMergePrimitiveRightShiftedConstruction_scaffold
 
 theorem rejectMergePrimitiveClosedHandoffConstruction_finite_scaffold :
-    RejectMergePrimitiveClosedHandoffConstruction := by
-  sorry
+    RejectMergePrimitiveClosedHandoffConstruction :=
+  rejectMergePrimitiveClosedHandoffConstruction_of_selected
+    selectedMergePrimitiveClosedHandoffConstruction_finite_scaffold
 
 def AcceptMergePrimitiveClosedHandoffFiniteMachineConstruction : Prop :=
   exists closed : MachineDescription,
@@ -1313,8 +1673,9 @@ theorem acceptMergePrimitiveClosedHandoffConstruction_of_finiteMachine
 
 -- Actual finite parser/emitter table for the accept-side merge rewriter.
 theorem acceptMergePrimitiveClosedHandoffFiniteMachineConstruction_scaffold :
-    AcceptMergePrimitiveClosedHandoffFiniteMachineConstruction := by
-  sorry
+    AcceptMergePrimitiveClosedHandoffFiniteMachineConstruction :=
+  acceptMergePrimitiveClosedHandoffConstruction_of_selected
+    selectedMergePrimitiveClosedHandoffConstruction_finite_scaffold
 
 theorem acceptMergePrimitiveClosedHandoffConstruction_finite_scaffold :
     AcceptMergePrimitiveClosedHandoffConstruction := by
