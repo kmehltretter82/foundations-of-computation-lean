@@ -33,6 +33,26 @@ def decodeCodeWordFieldComplete
   | some (bits, []) => MachineDescription.decodeCodeWordAsInput bits
   | _ => none
 
+def decodeCellListComplete
+    (code : Word MachineCodeSymbol) :
+    Option (List (Option Bool)) :=
+  match MachineDescription.decodeCellList code with
+  | some (cells, []) => some cells
+  | _ => none
+
+def decodeTapeComplete
+    (code : Word MachineCodeSymbol) : Option (Tape Bool) :=
+  match MachineDescription.decodeTape code with
+  | some (T, []) => some T
+  | _ => none
+
+def decodeConfigurationComplete
+    (code : Word MachineCodeSymbol) :
+    Option MachineDescription.Configuration :=
+  match MachineDescription.decodeConfiguration code with
+  | some (cfg, []) => some cfg
+  | _ => none
+
 theorem decodeNatComplete_encode (n : Nat) :
     decodeNatComplete (MachineDescription.encodeNat n) = some n := by
   have hdecode :
@@ -123,6 +143,93 @@ theorem decodeCodeWordFieldComplete_eq_some_encode
                   MachineDescription.decodeBoolWord_eq_some_encodeBoolWordAppend
                     hdecode
               rw [hfield, hbits]
+          | cons _ _ =>
+              simp [hdecode] at h
+
+theorem decodeCellListComplete_encode
+    (cells : List (Option Bool)) :
+    decodeCellListComplete
+        (MachineDescription.encodeCellListAppend cells []) =
+      some cells := by
+  rw [decodeCellListComplete,
+    MachineDescription.decodeCellList_encodeCellListAppend]
+
+theorem decodeCellListComplete_eq_some_encode
+    {code : Word MachineCodeSymbol}
+    {cells : List (Option Bool)}
+    (h : decodeCellListComplete code = some cells) :
+    code = MachineDescription.encodeCellListAppend cells [] := by
+  unfold decodeCellListComplete at h
+  cases hdecode : MachineDescription.decodeCellList code with
+  | none =>
+      simp [hdecode] at h
+  | some parsed =>
+      cases parsed with
+      | mk decoded suffix =>
+          cases suffix with
+          | nil =>
+              simp [hdecode] at h
+              cases h
+              exact
+                MachineDescription.decodeCellList_eq_some_encodeCellListAppend
+                  hdecode
+          | cons _ _ =>
+              simp [hdecode] at h
+
+theorem decodeTapeComplete_encode
+    (T : Tape Bool) :
+    decodeTapeComplete (MachineDescription.encodeTape T) = some T := by
+  rw [decodeTapeComplete,
+    MachineDescription.decodeTape_encodeTape]
+
+theorem decodeTapeComplete_eq_some_encode
+    {code : Word MachineCodeSymbol} {T : Tape Bool}
+    (h : decodeTapeComplete code = some T) :
+    code = MachineDescription.encodeTape T := by
+  unfold decodeTapeComplete at h
+  cases hdecode : MachineDescription.decodeTape code with
+  | none =>
+      simp [hdecode] at h
+  | some parsed =>
+      cases parsed with
+      | mk decoded suffix =>
+          cases suffix with
+          | nil =>
+              simp [hdecode] at h
+              cases h
+              simpa [MachineDescription.encodeTape] using
+                MachineDescription.decodeTape_eq_some_encodeTapeAppend
+                  hdecode
+          | cons _ _ =>
+              simp [hdecode] at h
+
+theorem decodeConfigurationComplete_encode
+    (cfg : MachineDescription.Configuration) :
+    decodeConfigurationComplete
+        (MachineDescription.encodeConfiguration cfg) =
+      some cfg := by
+  rw [decodeConfigurationComplete,
+    MachineDescription.decodeConfiguration_encodeConfiguration]
+
+theorem decodeConfigurationComplete_eq_some_encode
+    {code : Word MachineCodeSymbol}
+    {cfg : MachineDescription.Configuration}
+    (h : decodeConfigurationComplete code = some cfg) :
+    code = MachineDescription.encodeConfiguration cfg := by
+  unfold decodeConfigurationComplete at h
+  cases hdecode : MachineDescription.decodeConfiguration code with
+  | none =>
+      simp [hdecode] at h
+  | some parsed =>
+      cases parsed with
+      | mk decoded suffix =>
+          cases suffix with
+          | nil =>
+              simp [hdecode] at h
+              cases h
+              simpa [MachineDescription.encodeConfiguration] using
+                MachineDescription.decodeConfiguration_eq_some_encodeConfigurationAppend
+                  hdecode
           | cons _ _ =>
               simp [hdecode] at h
 

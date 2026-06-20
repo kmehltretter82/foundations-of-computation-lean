@@ -961,84 +961,86 @@ theorem selectedMergeFiniteDescriptionConstruction_of_rightShifted
     refine ⟨S, L, hcode, hinput, ?_⟩
     simpa [SelectedMergeOutputTape, hout] using hT
 
+theorem selectedProjectionPrimitiveRightShiftedConstruction_core :
+    SelectedProjectionPrimitiveRightShiftedConstruction := by
+  sorry
+
 theorem acceptProjectionPrimitiveRightShiftedConstruction_scaffold :
     AcceptProjectionPrimitiveRightShiftedConstruction := by
-  sorry
+  rcases selectedProjectionPrimitiveRightShiftedConstruction_core true with
+    ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  exact
+    rightShiftedOutputCompiledSubroutineByDescription_congr
+      (P := SelectedProjectionPrimitive true)
+      (Q := AcceptProjectionPrimitive)
+      (D := runner)
+      (by
+        intro code
+        rfl)
+      hrunner
 
 theorem rejectProjectionPrimitiveRightShiftedConstruction_scaffold :
     RejectProjectionPrimitiveRightShiftedConstruction := by
-  sorry
+  rcases selectedProjectionPrimitiveRightShiftedConstruction_core false with
+    ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  exact
+    rightShiftedOutputCompiledSubroutineByDescription_congr
+      (P := SelectedProjectionPrimitive false)
+      (Q := RejectProjectionPrimitive)
+      (D := runner)
+      (by
+        intro code
+        rfl)
+      hrunner
 
 theorem selectedProjectionPrimitiveRightShiftedConstruction_scaffold :
     SelectedProjectionPrimitiveRightShiftedConstruction := by
-  intro useAccept
-  cases useAccept
-  · rcases rejectProjectionPrimitiveRightShiftedConstruction_scaffold with
-      ⟨runner, hrunner⟩
-    refine ⟨runner, ?_⟩
-    exact
-      rightShiftedOutputCompiledSubroutineByDescription_congr
-        (P := RejectProjectionPrimitive)
-        (Q := SelectedProjectionPrimitive false)
-        (D := runner)
-        (by
-          intro code
-          rfl)
-        hrunner
-  · rcases acceptProjectionPrimitiveRightShiftedConstruction_scaffold with
-      ⟨runner, hrunner⟩
-    refine ⟨runner, ?_⟩
-    exact
-      rightShiftedOutputCompiledSubroutineByDescription_congr
-        (P := AcceptProjectionPrimitive)
-        (Q := SelectedProjectionPrimitive true)
-        (D := runner)
-        (by
-          intro code
-          rfl)
-        hrunner
+  exact selectedProjectionPrimitiveRightShiftedConstruction_core
 
 theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
     SelectedProjectionFiniteDescriptionConstruction :=
   selectedProjectionFiniteDescriptionConstruction_of_rightShifted
     selectedProjectionPrimitiveRightShiftedConstruction_scaffold
 
+theorem selectedMergePrimitiveRightShiftedConstruction_core :
+    SelectedMergePrimitiveRightShiftedConstruction := by
+  sorry
+
 theorem acceptMergePrimitiveRightShiftedConstruction_scaffold :
     AcceptMergePrimitiveRightShiftedConstruction := by
-  sorry
+  rcases selectedMergePrimitiveRightShiftedConstruction_core true with
+    ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  exact
+    rightShiftedOutputCompiledSubroutineByDescription_congr
+      (P := SelectedMergePrimitive true)
+      (Q := AcceptMergePrimitive)
+      (D := runner)
+      (by
+        intro code
+        rfl)
+      hrunner
 
 theorem rejectMergePrimitiveRightShiftedConstruction_scaffold :
     RejectMergePrimitiveRightShiftedConstruction := by
-  sorry
+  rcases selectedMergePrimitiveRightShiftedConstruction_core false with
+    ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  exact
+    rightShiftedOutputCompiledSubroutineByDescription_congr
+      (P := SelectedMergePrimitive false)
+      (Q := RejectMergePrimitive)
+      (D := runner)
+      (by
+        intro code
+        rfl)
+      hrunner
 
 theorem selectedMergePrimitiveRightShiftedConstruction_scaffold :
     SelectedMergePrimitiveRightShiftedConstruction := by
-  intro useAccept
-  cases useAccept
-  · rcases rejectMergePrimitiveRightShiftedConstruction_scaffold with
-      ⟨runner, hrunner⟩
-    refine ⟨runner, ?_⟩
-    exact
-      rightShiftedOutputCompiledSubroutineByDescription_congr
-        (P := RejectMergePrimitive)
-        (Q := SelectedMergePrimitive false)
-        (D := runner)
-        (by
-          intro code
-          rfl)
-        hrunner
-  · rcases acceptMergePrimitiveRightShiftedConstruction_scaffold with
-      ⟨runner, hrunner⟩
-    refine ⟨runner, ?_⟩
-    exact
-      rightShiftedOutputCompiledSubroutineByDescription_congr
-        (P := AcceptMergePrimitive)
-        (Q := SelectedMergePrimitive true)
-        (D := runner)
-        (by
-          intro code
-          rfl)
-        hrunner
+  exact selectedMergePrimitiveRightShiftedConstruction_core
 
 theorem selectedMergeFiniteDescriptionConstruction_scaffold :
     SelectedMergeFiniteDescriptionConstruction :=

@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.SeqSubroutineSemantics
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Dovetail
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Parser.Basic
 
 set_option doc.verso true
@@ -197,6 +198,83 @@ theorem layoutIdentityClosedHandoffConstruction_of_closedRecognizer
           rfl)
       hclosed
 
+theorem layoutIdentityRightShiftedConstruction_of_closedRecognizer
+    (h : LayoutClosedRecognizerConstruction) :
+    LayoutIdentityRightShiftedConstruction := by
+  rcases h with ⟨recognizer, hrecognizer⟩
+  refine ⟨recognizer, ?_⟩
+  constructor
+  · exact hrecognizer.left.left
+  constructor
+  · exact hrecognizer.left.right
+  constructor
+  · intro code out
+    constructor
+    · intro hhalt
+      rcases hhalt with ⟨n, hn⟩
+      let T : Tape Bool :=
+        (recognizer.runConfig n
+          (recognizer.initial
+            (MachineDescription.encodeCodeWordAsInput code))).tape
+      have hTape :
+          recognizer.HaltsWithTape
+              (MachineDescription.encodeCodeWordAsInput code) T := by
+        refine ⟨n, ?_⟩
+        exact ⟨hn.left, rfl⟩
+      rcases hrecognizer.right.right code T hTape with
+        ⟨L, hdecode, hT⟩
+      have hcode :
+          code = MachineDescription.DovetailLayout.encode L :=
+        MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
+          hdecode
+      have houtBits :
+          MachineDescription.encodeCodeWordAsInput out =
+            MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailLayout.encode L) := by
+        calc
+          MachineDescription.encodeCodeWordAsInput out =
+              Tape.normalizedOutput T := by
+                simpa [T] using hn.right.symm
+          _ =
+              MachineDescription.encodeCodeWordAsInput
+                (MachineDescription.DovetailLayout.encode L) := by
+                rw [hT]
+                simpa [ParsedLayoutHandoffTape, ParsedLayoutBits] using
+                  parsedLayoutHandoffTape_normalizedOutput L
+      have hout :
+          out = MachineDescription.DovetailLayout.encode L :=
+        MachineDescription.encodeCodeWordAsInput_injective houtBits
+      rw [hcode, hout]
+      exact layoutIdentityPrimitive_encode L
+    · intro htransform
+      rcases
+          (layoutIdentityPrimitive_transform_eq_some_iff code out).mp
+            htransform with
+        ⟨L, hcode, hout⟩
+      subst code
+      subst out
+      have hhaltTape :
+          recognizer.HaltsWithTape
+            (ParsedLayoutBits L)
+            (ParsedLayoutHandoffTape L) :=
+        hrecognizer.right.left L
+      have houtput :=
+        MachineDescription.haltsWithOutput_of_haltsWithTape hhaltTape
+      simpa [ParsedLayoutBits,
+        parsedLayoutHandoffTape_normalizedOutput L] using houtput
+  · intro code T hhalt
+    rcases hrecognizer.right.right code T hhalt with
+      ⟨L, hdecode, hT⟩
+    refine ⟨MachineDescription.DovetailLayout.encode L, ?_, ?_⟩
+    · have hcode :
+          code = MachineDescription.DovetailLayout.encode L :=
+        MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
+          hdecode
+      subst code
+      exact layoutIdentityPrimitive_encode L
+    · simpa [hT, ParsedLayoutHandoffTape, ParsedLayoutBits,
+        ParsedLayoutTape]
+
 def LayoutParserFromClosedHandoff
     (closed : MachineDescription) : MachineDescription :=
   MachineDescription.seqSubroutine closed
@@ -321,9 +399,15 @@ theorem layoutParserConstruction_of_rightShifted
   layoutParserConstruction_of_closedHandoffConstruction
     (layoutIdentityClosedHandoffConstruction_of_rightShifted h)
 
+theorem layoutClosedRecognizerConstruction_scaffold :
+    LayoutClosedRecognizerConstruction := by
+  sorry
+
 theorem layoutIdentityRightShiftedConstruction_scaffold :
     LayoutIdentityRightShiftedConstruction := by
-  sorry
+  exact
+    layoutIdentityRightShiftedConstruction_of_closedRecognizer
+      layoutClosedRecognizerConstruction_scaffold
 
 theorem layoutIdentityClosedHandoffConstruction_scaffold :
     LayoutIdentityClosedHandoffConstruction := by

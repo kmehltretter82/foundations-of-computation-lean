@@ -1,6 +1,9 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Basic
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Configuration
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Controller
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Dovetail
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Emitters
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Fields
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Simulator
