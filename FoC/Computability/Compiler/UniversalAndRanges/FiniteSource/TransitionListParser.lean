@@ -1886,6 +1886,22 @@ theorem transitionListParser_replicate_blank_append_cons
   | succ blanks ih =>
       simpa [List.replicate] using ih
 
+theorem transitionListParser_blank_cons_replicate_append_none
+    (blanks : Nat) :
+    some MachineCodeSymbol.blank ::
+        List.append
+          (List.replicate blanks (some MachineCodeSymbol.blank))
+          [none] =
+      List.append
+        (List.replicate blanks (some MachineCodeSymbol.blank))
+        [some MachineCodeSymbol.blank, none] := by
+  induction blanks with
+  | zero =>
+      rfl
+  | succ blanks ih =>
+      simpa [List.replicate, List.append_assoc] using
+        congrArg (fun xs => some MachineCodeSymbol.blank :: xs) ih
+
 theorem transitionListParserMachine_computes_findCount_blanks
     (marker : TransitionListParserMarker)
     (blanks : Nat) (leftRev rest : List (Option MachineCodeSymbol)) :
@@ -2276,7 +2292,391 @@ theorem transitionListParserMachine_computes_markPosition_canonicalContext_step
               [none])
             ((MachineDescription.encodeTransitionsAppend more suffix).map
               some) } := by
-  sorry
+  let leftNormal : Word MachineCodeSymbol :=
+    List.append
+      (List.append
+        (List.replicate blanks MachineCodeSymbol.blank)
+        (MachineDescription.encodeNat (u :: more).length))
+      (List.append pre (MachineDescription.encodeTransition t))
+  let parsedPrefix : Word MachineCodeSymbol :=
+    List.append pre (MachineDescription.encodeTransition t)
+  let afterTransition : Word MachineCodeSymbol :=
+    MachineDescription.encodeNatAppend u.source
+      (MachineDescription.encodeCellAppend u.read
+        (MachineDescription.encodeCellAppend u.write
+          (MachineDescription.encodeDirectionAppend u.move
+            (MachineDescription.encodeNatAppend u.target
+              (MachineDescription.encodeTransitionsAppend more suffix)))))
+  have hrest :
+      MachineDescription.encodeTransitionsAppend (u :: more) suffix =
+        MachineCodeSymbol.transition :: afterTransition := by
+    rfl
+  have hrevNonempty : leftNormal.reverse ≠ [] := by
+    simp [leftNormal, MachineDescription.encodeNat]
+  cases hrev : leftNormal.reverse with
+  | nil =>
+      exact False.elim (hrevNonempty hrev)
+  | cons current leftSymbols =>
+      have hleft :
+          leftNormal = List.append leftSymbols.reverse [current] := by
+        have h := congrArg List.reverse hrev
+        simpa using h
+      have hreturn :=
+        transitionListParserMachine_markPosition_returnLeft_noBoundary
+          (some MachineCodeSymbol.transition) leftSymbols current
+          (afterTransition.map some)
+      have hprefix :
+          List.append (List.map some leftSymbols).reverse
+              [some current] =
+            leftNormal.map some := by
+        have hmap :=
+          congrArg (fun xs : List MachineCodeSymbol => xs.map some)
+            hleft
+        simpa [List.map_append, List.map_reverse,
+          List.append_assoc] using hmap.symm
+      let countTail : Word MachineCodeSymbol :=
+        MachineDescription.encodeNat more.length
+      let markerTail : Word MachineCodeSymbol :=
+        MachineCodeSymbol.header :: afterTransition
+      have htargetRest :
+          List.append (List.map some leftSymbols).reverse
+              (some current :: markerTail.map some) =
+            List.append
+              (List.replicate blanks (some MachineCodeSymbol.blank))
+              (some MachineCodeSymbol.tick ::
+                List.append (countTail.map some)
+                  (List.append (parsedPrefix.map some)
+                    (markerTail.map some))) := by
+        calc
+          List.append (List.map some leftSymbols).reverse
+              (some current :: markerTail.map some)
+              =
+            List.append
+              (List.append (List.map some leftSymbols).reverse
+                [some current])
+              (markerTail.map some) := by
+                simp [List.append_assoc]
+          _ =
+            List.append (leftNormal.map some) (markerTail.map some) := by
+                rw [hprefix]
+          _ =
+            List.append
+              (List.replicate blanks (some MachineCodeSymbol.blank))
+              (some MachineCodeSymbol.tick ::
+                List.append (countTail.map some)
+                  (List.append (parsedPrefix.map some)
+                    (markerTail.map some))) := by
+                simp [leftNormal, parsedPrefix, countTail, markerTail,
+                  MachineDescription.encodeNat, List.map_append,
+                  List.map_replicate, List.append_assoc]
+      have hfind :=
+        transitionListParserMachine_computes_findCount_blanks
+          (TransitionListParserMarker.saved
+            (some MachineCodeSymbol.transition))
+          blanks [none]
+          (some MachineCodeSymbol.tick ::
+            List.append (countTail.map some)
+              (List.append (parsedPrefix.map some)
+                (markerTail.map some)))
+      have htick :
+          TuringMachine.Step transitionListParserMachine
+            { state :=
+                TransitionListParserState.findCount
+                  (TransitionListParserMarker.saved
+                    (some MachineCodeSymbol.transition))
+              tape :=
+                transitionListParserOptionTape
+                  (List.append
+                    (List.replicate blanks
+                      (some MachineCodeSymbol.blank))
+                    [none])
+                  (some MachineCodeSymbol.tick ::
+                    List.append (countTail.map some)
+                      (List.append (parsedPrefix.map some)
+                        (markerTail.map some))) }
+            { state :=
+                TransitionListParserState.seekCountDone
+                  (TransitionListParserMarker.saved
+                    (some MachineCodeSymbol.transition))
+              tape :=
+                transitionListParserOptionTape
+                  (some MachineCodeSymbol.blank ::
+                    List.append
+                      (List.replicate blanks
+                        (some MachineCodeSymbol.blank))
+                      [none])
+                  (List.append (countTail.map some)
+                    (List.append (parsedPrefix.map some)
+                      (markerTail.map some))) } :=
+        transitionListParserMachine_step_findCount_tick
+          (TransitionListParserMarker.saved
+            (some MachineCodeSymbol.transition))
+          (List.append
+            (List.replicate blanks (some MachineCodeSymbol.blank))
+            [none])
+          (List.append (countTail.map some)
+            (List.append (parsedPrefix.map some)
+              (markerTail.map some)))
+      have hseek :=
+        transitionListParserMachine_computes_seekCountDone_saved
+          (some MachineCodeSymbol.transition)
+          (some MachineCodeSymbol.blank ::
+            List.append
+              (List.replicate blanks (some MachineCodeSymbol.blank))
+              [none])
+          more.length
+          (List.append parsedPrefix markerTail)
+      have hpre' : transitionListParserNoHeader parsedPrefix := by
+        exact
+          transitionListParserNoHeader_append hpre
+            (by
+              simpa [MachineDescription.encodeTransition] using
+                transitionListParser_encodeTransitionAppend_noHeader
+                  t (suffix := []) (by
+                    intro symbol hmem
+                    simp at hmem))
+      have hmarker :=
+        transitionListParserMachine_computes_seekMarker_prefix
+          (some MachineCodeSymbol.transition)
+          parsedPrefix markerTail hpre'
+          (List.append (countTail.reverse.map some)
+            (some MachineCodeSymbol.blank ::
+              List.append
+                (List.replicate blanks (some MachineCodeSymbol.blank))
+                [none]))
+      have hprefixNonempty :
+          parsedPrefix.reverse ≠ [] := by
+        intro h
+        have hpempty : parsedPrefix = [] := by
+          have h' := congrArg List.reverse h
+          simpa using h'
+        have htransitionNonempty :
+            MachineDescription.encodeTransition t ≠ [] := by
+          simp [MachineDescription.encodeTransition,
+            MachineDescription.encodeTransitionAppend]
+        have happend :
+            List.append pre (MachineDescription.encodeTransition t) = [] := by
+          change parsedPrefix = []
+          exact hpempty
+        have hparts :
+            pre = [] ∧ MachineDescription.encodeTransition t = [] :=
+          List.eq_nil_of_append_eq_nil happend
+        rcases hparts with
+          ⟨_, htransitionEmpty⟩
+        exact htransitionNonempty htransitionEmpty
+      cases hprefRev : parsedPrefix.reverse with
+      | nil =>
+          exact False.elim (hprefixNonempty hprefRev)
+      | cons prefixCurrent prefixLeft =>
+          have hparsedPrefix :
+              parsedPrefix =
+                List.append prefixLeft.reverse [prefixCurrent] := by
+            have h := congrArg List.reverse hprefRev
+            simpa using h
+          have hheader :
+              TuringMachine.Step transitionListParserMachine
+                { state :=
+                    TransitionListParserState.seekMarker
+                      (some MachineCodeSymbol.transition)
+                  tape :=
+                    transitionListParserOptionTape
+                      (List.append (parsedPrefix.reverse.map some)
+                        (List.append (countTail.reverse.map some)
+                          (some MachineCodeSymbol.blank ::
+                            List.append
+                              (List.replicate blanks
+                                (some MachineCodeSymbol.blank))
+                              [none])))
+                      (markerTail.map some) }
+                { state := TransitionListParserState.enterMarkedPosition
+                  tape :=
+                    transitionListParserOptionTape
+                      (List.append (prefixLeft.map some)
+                        (List.append (countTail.reverse.map some)
+                          (some MachineCodeSymbol.blank ::
+                            List.append
+                              (List.replicate blanks
+                                (some MachineCodeSymbol.blank))
+                              [none])))
+                      (some prefixCurrent ::
+                        some MachineCodeSymbol.transition ::
+                          afterTransition.map some) } := by
+            have hstep :=
+              transitionListParserMachine_step_seekMarker_header
+                (some MachineCodeSymbol.transition)
+                (List.append (prefixLeft.map some)
+                  (List.append (countTail.reverse.map some)
+                    (some MachineCodeSymbol.blank ::
+                      List.append
+                        (List.replicate blanks
+                          (some MachineCodeSymbol.blank))
+                        [none])))
+                (afterTransition.map some)
+                (some prefixCurrent)
+            simpa [markerTail, hparsedPrefix, List.map_append,
+              List.map_reverse, List.append_assoc] using hstep
+          have henter :
+              TuringMachine.Step transitionListParserMachine
+                { state := TransitionListParserState.enterMarkedPosition
+                  tape :=
+                    transitionListParserOptionTape
+                      (List.append (prefixLeft.map some)
+                        (List.append (countTail.reverse.map some)
+                          (some MachineCodeSymbol.blank ::
+                            List.append
+                              (List.replicate blanks
+                                (some MachineCodeSymbol.blank))
+                              [none])))
+                      (some prefixCurrent ::
+                        some MachineCodeSymbol.transition ::
+                          afterTransition.map some) }
+                { state := TransitionListParserState.needTransition
+                  tape :=
+                    transitionListParserOptionTape
+                      (some prefixCurrent ::
+                        List.append (prefixLeft.map some)
+                          (List.append (countTail.reverse.map some)
+                            (some MachineCodeSymbol.blank ::
+                              List.append
+                                (List.replicate blanks
+                                  (some MachineCodeSymbol.blank))
+                                [none])))
+                      (some MachineCodeSymbol.transition ::
+                        afterTransition.map some) } :=
+            transitionListParserMachine_step_enterMarkedPosition
+              (List.append (prefixLeft.map some)
+                (List.append (countTail.reverse.map some)
+                  (some MachineCodeSymbol.blank ::
+                    List.append
+                      (List.replicate blanks
+                        (some MachineCodeSymbol.blank))
+                      [none])))
+              (some MachineCodeSymbol.transition ::
+                afterTransition.map some)
+              (some prefixCurrent)
+          have hparse :=
+            transitionListParserMachine_computes_transition u
+              (some prefixCurrent ::
+                List.append (prefixLeft.map some)
+                  (List.append (countTail.reverse.map some)
+                    (some MachineCodeSymbol.blank ::
+                      List.append
+                        (List.replicate blanks
+                          (some MachineCodeSymbol.blank))
+                        [none])))
+              (MachineDescription.encodeTransitionsAppend more suffix)
+          have hblankTail :=
+            transitionListParser_blank_cons_replicate_append_none blanks
+          have hcomp :=
+            TuringMachine.computes_trans
+              (by
+                simpa [leftNormal, hrev, hrest] using hreturn)
+              (TuringMachine.computes_trans
+                (by
+                  change
+                    TuringMachine.Computes transitionListParserMachine
+                      { state :=
+                          TransitionListParserState.findCount
+                            (TransitionListParserMarker.saved
+                              (some MachineCodeSymbol.transition))
+                        tape :=
+                          transitionListParserOptionTape [none]
+                            (List.append
+                              (List.map some leftSymbols).reverse
+                              (some current :: markerTail.map some)) }
+                      { state :=
+                          TransitionListParserState.findCount
+                            (TransitionListParserMarker.saved
+                              (some MachineCodeSymbol.transition))
+                        tape :=
+                          transitionListParserOptionTape
+                            (List.append
+                              (List.replicate blanks
+                                (some MachineCodeSymbol.blank))
+                              [none])
+                            (some MachineCodeSymbol.tick ::
+                              List.append (countTail.map some)
+                                (List.append (parsedPrefix.map some)
+                                  (markerTail.map some))) }
+                  rw [htargetRest]
+                  exact hfind)
+                (TuringMachine.Computes.step htick
+                  (TuringMachine.computes_trans
+                    (by
+                      simpa [countTail, markerTail,
+                        MachineDescription.encodeNatAppend,
+                        List.map_append, List.append_assoc] using hseek)
+                    (TuringMachine.computes_trans
+                      (by
+                        simpa [List.map_append, List.append_assoc] using
+                          hmarker)
+                      (TuringMachine.Computes.step hheader
+                        (TuringMachine.Computes.step henter
+                          (by
+                            simpa [afterTransition, hparsedPrefix, hrest,
+                              MachineDescription.encodeTransition,
+                              MachineDescription.encodeTransitionAppend,
+                              MachineDescription.encodeNatAppend,
+                              MachineDescription.encodeCellAppend,
+                              MachineDescription.encodeDirectionAppend,
+                              List.map_append, List.reverse_append,
+                              List.append_assoc] using hparse)))))))
+          have hcomp' := by
+            simpa [hblankTail, List.append_assoc] using hcomp
+          have hparsedTail :
+              some prefixCurrent ::
+                  (List.map some prefixLeft ++
+                    ((List.map some countTail).reverse ++
+                      some MachineCodeSymbol.blank ::
+                        (List.replicate blanks
+                          (some MachineCodeSymbol.blank) ++ [none]))) =
+              some prefixCurrent ::
+                  (List.map some prefixLeft ++
+                    ((List.map some countTail).reverse ++
+                      (List.replicate blanks
+                        (some MachineCodeSymbol.blank) ++
+                          [some MachineCodeSymbol.blank, none]))) := by
+            have hcountTail :=
+              congrArg
+                (fun xs =>
+                  (List.map some countTail).reverse ++ xs)
+                hblankTail
+            exact
+              congrArg
+                (fun xs =>
+                  some prefixCurrent ::
+                    (List.map some prefixLeft ++ xs))
+                hcountTail
+          have hcomp'' := hcomp'
+          rw [hparsedTail] at hcomp''
+          have hparsedFull :
+              some prefixCurrent ::
+                  (List.map some prefixLeft ++
+                    ((List.map some countTail).reverse ++
+                      (List.replicate blanks
+                        (some MachineCodeSymbol.blank) ++
+                          [some MachineCodeSymbol.blank, none]))) =
+                (List.map some parsedPrefix).reverse ++
+                  ((List.map some countTail).reverse ++
+                    (List.replicate blanks
+                      (some MachineCodeSymbol.blank) ++
+                        [some MachineCodeSymbol.blank, none])) := by
+            have hmapRev :
+                (List.map some parsedPrefix).reverse =
+                  List.map some (List.reverse parsedPrefix) :=
+              (List.map_reverse (f := some) (l := parsedPrefix)).symm
+            rw [hmapRev, hprefRev]
+            simp
+          have hcomp''' := hcomp''
+          rw [hparsedFull] at hcomp'''
+          simpa [leftNormal, parsedPrefix, countTail, hprefRev,
+            MachineDescription.encodeNat, MachineDescription.encodeTransition,
+            MachineDescription.encodeTransitionAppend,
+            MachineDescription.encodeNatAppend,
+            MachineDescription.encodeCellAppend,
+            MachineDescription.encodeDirectionAppend,
+            List.map_append, List.reverse_append, List.replicate_succ,
+            List.append_assoc, hrest] using hcomp'''
 
 theorem transitionListParserMachine_haltsFrom_markPosition_canonicalBoundary
     (blanks : Nat)
@@ -2486,7 +2886,79 @@ theorem transitionListParserMachine_haltsFrom_markPosition_canonicalBoundary
                     rw [htargetRest]
                     exact hhalt)
   | cons u more ih =>
-      sorry
+      let leftNormal : Word MachineCodeSymbol :=
+        List.append
+          (List.append
+            (List.replicate blanks MachineCodeSymbol.blank)
+            (MachineDescription.encodeNat (u :: more).length))
+          (List.append pre (MachineDescription.encodeTransition t))
+      let afterTransition : Word MachineCodeSymbol :=
+        MachineDescription.encodeNatAppend u.source
+          (MachineDescription.encodeCellAppend u.read
+            (MachineDescription.encodeCellAppend u.write
+              (MachineDescription.encodeDirectionAppend u.move
+                (MachineDescription.encodeNatAppend u.target
+                  (MachineDescription.encodeTransitionsAppend more suffix)))))
+      have hrest :
+          MachineDescription.encodeTransitionsAppend (u :: more) suffix =
+            MachineCodeSymbol.transition :: afterTransition := by
+        rfl
+      have hrevNonempty : leftNormal.reverse ≠ [] := by
+        simp [leftNormal, MachineDescription.encodeNat]
+      cases hrev : leftNormal.reverse with
+      | nil =>
+          exact False.elim (hrevNonempty hrev)
+      | cons current leftSymbols =>
+          have hreturnBoundary :=
+            transitionListParserMachine_markPosition_returnLeft_toBoundary
+              (some MachineCodeSymbol.transition)
+              leftSymbols [] current (afterTransition.map some)
+          have hreturnNoBoundary :=
+            transitionListParserMachine_markPosition_returnLeft_noBoundary
+              (some MachineCodeSymbol.transition)
+              leftSymbols current (afterTransition.map some)
+          have hstep :=
+            transitionListParserMachine_computes_markPosition_canonicalContext_step
+              blanks pre hpre t u more suffix
+          have hpre' :
+              transitionListParserNoHeader
+                (List.append pre (MachineDescription.encodeTransition t)) :=
+            transitionListParserNoHeader_append hpre
+              (by
+                simpa [MachineDescription.encodeTransition] using
+                  transitionListParser_encodeTransitionAppend_noHeader
+                    t (suffix := []) (by
+                      intro symbol hmem
+                      simp at hmem))
+          have htarget :=
+            ih (blanks + 1)
+              (List.append pre (MachineDescription.encodeTransition t))
+              hpre' u
+          have hstartNoBoundary :=
+            TuringMachine.halts_from_of_computes_prefix hstep htarget
+          have hleftStart :
+              leftNormal.reverse.map some =
+                some current :: leftSymbols.map some := by
+            simp [hrev]
+          have hleftStartBoundary :
+              List.append (leftNormal.reverse.map some) [none] =
+                some current ::
+                  List.append (leftSymbols.map some) [none] := by
+            simp [hrev]
+          have hfind :=
+            transitionListParserMachine_halts_from_of_computes_suffix
+              (by
+                have hreturnNoBoundary' := hreturnNoBoundary
+                rw [← hleftStart] at hreturnNoBoundary'
+                simpa [leftNormal, hrest] using
+                  hreturnNoBoundary')
+              hstartNoBoundary
+          exact
+            TuringMachine.halts_from_of_computes_prefix
+              (by
+                simpa [leftNormal, hrev, hrest, List.map_append,
+                  List.append_assoc] using hreturnBoundary)
+              hfind
 
 theorem transitionListParserMachine_haltsFrom_markPosition_canonicalContext
     (blanks : Nat)
