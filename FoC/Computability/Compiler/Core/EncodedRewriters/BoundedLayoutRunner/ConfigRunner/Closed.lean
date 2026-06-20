@@ -1552,9 +1552,307 @@ theorem acceptRejectConfigRunnerConstruction_of_phaseConstruction
         hacceptProject hacceptSim hacceptMerge
         hrejectProject hrejectSim hrejectMerge⟩
 
-theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_scaffold_configRunner :
-    FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction := by
+def SelectedProjectionEmitterSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  ReadySpec emitter ∧
+    (forall L : MachineDescription.DovetailLayout,
+      emitter.HaltsWithTape
+        (ParsedLayoutBits L)
+        (SelectedProjectionOutputTape useAccept L)) ∧
+      forall L : MachineDescription.DovetailLayout,
+      forall T : Tape Bool,
+        emitter.HaltsWithTape (ParsedLayoutBits L) T ->
+          T = SelectedProjectionOutputTape useAccept L
+
+def SelectedProjectionEmitterConstruction : Prop :=
+  forall useAccept : Bool,
+    exists emitter : MachineDescription,
+      SelectedProjectionEmitterSpec useAccept emitter
+
+theorem selectedProjectionSpec_of_parser_emitter
+    {useAccept : Bool} {parser emitter : MachineDescription}
+    (hparser : LayoutParserSpec parser)
+    (hemitter : SelectedProjectionEmitterSpec useAccept emitter) :
+    SelectedProjectionSpec useAccept
+      (SeqViaCanonical parser emitter) := by
+  have hrunnerReady :
+      (SeqViaCanonical parser emitter).SubroutineReady :=
+    SeqViaCanonical_subroutineReady hparser.left hemitter.left
+  constructor
+  · exact hrunnerReady
+  constructor
+  · intro L
+    exact
+      SeqViaCanonical_haltsWithTape_of_haltsWithTape
+        hparser.left hemitter.left
+        (hparser.right.left L)
+        (parsedLayoutTape_move_left_move_right_configRunner L)
+        (hemitter.right.left L)
+  · intro code T hhalt
+    let identity := MachineDescription.ExactIdentityDescription
+    have hid : identity.SubroutineReady :=
+      ⟨MachineDescription.exactIdentityDescription_wellFormed,
+        MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    rcases
+        MachineDescription.seqSubroutine_haltsWithTape_inv
+          (A := MachineDescription.seqSubroutine
+            parser identity Direction.right)
+          (B := emitter)
+          (handoffMove := Direction.left)
+          (MachineDescription.seqSubroutine_subroutineReady
+            hparser.left hid)
+          hemitter.left
+          (by simpa [SeqViaCanonical, identity] using hhalt) with
+      ⟨Tmid, hparserIdHalt, _hemitterReach⟩
+    rcases
+        MachineDescription.seqSubroutine_haltsWithTape_inv
+          (A := parser) (B := identity)
+          (handoffMove := Direction.right)
+          hparser.left hid
+          (by simpa [identity] using hparserIdHalt) with
+      ⟨Tparser, hparserHalt, _hidentityReach⟩
+    rcases hparser.right.right code Tparser hparserHalt with
+      ⟨L, hdecode, _hTparser⟩
+    have hcode :
+        code = MachineDescription.DovetailLayout.encode L :=
+      MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
+        hdecode
+    refine ⟨L, hcode, ?_⟩
+    have hhalt' :
+        (SeqViaCanonical parser emitter).HaltsWithTape
+          (ParsedLayoutBits L) T := by
+      simpa [ParsedLayoutBits, hcode] using hhalt
+    have hforwardL :
+        (SeqViaCanonical parser emitter).HaltsWithTape
+          (ParsedLayoutBits L)
+          (SelectedProjectionOutputTape useAccept L) :=
+      SeqViaCanonical_haltsWithTape_of_haltsWithTape
+        hparser.left hemitter.left
+        (hparser.right.left L)
+        (parsedLayoutTape_move_left_move_right_configRunner L)
+        (hemitter.right.left L)
+    exact
+      MachineDescription.haltsWithTape_functional_of_haltTransitionFree
+        hrunnerReady.right hhalt' hforwardL
+
+theorem selectedProjectionFiniteDescriptionConstruction_of_emitter
+    (hemitter : SelectedProjectionEmitterConstruction) :
+    SelectedProjectionFiniteDescriptionConstruction := by
+  intro useAccept
+  rcases layoutParserConstruction_scaffold with ⟨parser, hparser⟩
+  rcases hemitter useAccept with ⟨emitter, hemits⟩
+  exact
+    ⟨SeqViaCanonical parser emitter,
+      selectedProjectionSpec_of_parser_emitter hparser hemits⟩
+
+theorem selectedProjectionEmitterConstruction_scaffold :
+    SelectedProjectionEmitterConstruction := by
   sorry
+
+def SelectedMergeParserSpec
+    (parser : MachineDescription) : Prop :=
+  ReadySpec parser ∧
+    (forall S : MachineDescription.SimulatorLayout,
+     forall L : MachineDescription.DovetailLayout,
+      MachineDescription.decodeCodeWordAsInput S.input =
+        some (MachineDescription.DovetailLayout.encode L) ->
+      parser.HaltsWithTape
+        (MachineDescription.SimulatorLayout.asBoolInput S)
+        (MachineDescription.SimulatorLayout.tape S)) ∧
+      forall code : Word MachineCodeSymbol,
+      forall T : Tape Bool,
+        parser.HaltsWithTape
+            (MachineDescription.encodeCodeWordAsInput code) T ->
+          exists S : MachineDescription.SimulatorLayout,
+          exists L : MachineDescription.DovetailLayout,
+            code = MachineDescription.SimulatorLayout.encode S ∧
+              MachineDescription.decodeCodeWordAsInput S.input =
+                some (MachineDescription.DovetailLayout.encode L) ∧
+              T = MachineDescription.SimulatorLayout.tape S
+
+def SelectedMergeParserConstruction : Prop :=
+  exists parser : MachineDescription,
+    SelectedMergeParserSpec parser
+
+def SelectedMergeEmitterSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  ReadySpec emitter ∧
+    (forall S : MachineDescription.SimulatorLayout,
+     forall L : MachineDescription.DovetailLayout,
+      MachineDescription.decodeCodeWordAsInput S.input =
+        some (MachineDescription.DovetailLayout.encode L) ->
+      emitter.HaltsWithTape
+        (MachineDescription.SimulatorLayout.asBoolInput S)
+        (SelectedMergeOutputTape useAccept S L)) ∧
+      forall S : MachineDescription.SimulatorLayout,
+      forall L : MachineDescription.DovetailLayout,
+      forall T : Tape Bool,
+        MachineDescription.decodeCodeWordAsInput S.input =
+          some (MachineDescription.DovetailLayout.encode L) ->
+        emitter.HaltsWithTape
+            (MachineDescription.SimulatorLayout.asBoolInput S) T ->
+          T = SelectedMergeOutputTape useAccept S L
+
+def SelectedMergeEmitterConstruction : Prop :=
+  forall useAccept : Bool,
+    exists emitter : MachineDescription,
+      SelectedMergeEmitterSpec useAccept emitter
+
+theorem selectedMergeSpec_of_parser_emitter
+    {useAccept : Bool} {parser emitter : MachineDescription}
+    (hparser : SelectedMergeParserSpec parser)
+    (hemitter : SelectedMergeEmitterSpec useAccept emitter) :
+    SelectedMergeSpec useAccept
+      (SeqViaCanonical parser emitter) := by
+  have hrunnerReady :
+      (SeqViaCanonical parser emitter).SubroutineReady :=
+    SeqViaCanonical_subroutineReady hparser.left hemitter.left
+  constructor
+  · exact hrunnerReady
+  constructor
+  · intro S L hinput
+    exact
+      SeqViaCanonical_haltsWithTape_of_haltsWithTape
+        hparser.left hemitter.left
+        (hparser.right.left S L hinput)
+        (simulatorLayoutTape_move_left_move_right S)
+        (hemitter.right.left S L hinput)
+  · intro code T hhalt
+    let identity := MachineDescription.ExactIdentityDescription
+    have hid : identity.SubroutineReady :=
+      ⟨MachineDescription.exactIdentityDescription_wellFormed,
+        MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    rcases
+        MachineDescription.seqSubroutine_haltsWithTape_inv
+          (A := MachineDescription.seqSubroutine
+            parser identity Direction.right)
+          (B := emitter)
+          (handoffMove := Direction.left)
+          (MachineDescription.seqSubroutine_subroutineReady
+            hparser.left hid)
+          hemitter.left
+          (by simpa [SeqViaCanonical, identity] using hhalt) with
+      ⟨Tmid, hparserIdHalt, _hemitterReach⟩
+    rcases
+        MachineDescription.seqSubroutine_haltsWithTape_inv
+          (A := parser) (B := identity)
+          (handoffMove := Direction.right)
+          hparser.left hid
+          (by simpa [identity] using hparserIdHalt) with
+      ⟨Tparser, hparserHalt, _hidentityReach⟩
+    rcases hparser.right.right code Tparser hparserHalt with
+      ⟨S, L, hcode, hinput, _hTparser⟩
+    refine ⟨S, L, hcode, hinput, ?_⟩
+    have hhalt' :
+        (SeqViaCanonical parser emitter).HaltsWithTape
+          (MachineDescription.SimulatorLayout.asBoolInput S) T := by
+      simpa [MachineDescription.SimulatorLayout.asBoolInput, hcode] using
+        hhalt
+    have hforward :
+        (SeqViaCanonical parser emitter).HaltsWithTape
+          (MachineDescription.SimulatorLayout.asBoolInput S)
+          (SelectedMergeOutputTape useAccept S L) :=
+      SeqViaCanonical_haltsWithTape_of_haltsWithTape
+        hparser.left hemitter.left
+        (hparser.right.left S L hinput)
+        (simulatorLayoutTape_move_left_move_right S)
+        (hemitter.right.left S L hinput)
+    exact
+      MachineDescription.haltsWithTape_functional_of_haltTransitionFree
+        hrunnerReady.right hhalt' hforward
+
+theorem selectedMergeFiniteDescriptionConstruction_of_parser_emitter
+    (hparser : SelectedMergeParserConstruction)
+    (hemitter : SelectedMergeEmitterConstruction) :
+    SelectedMergeFiniteDescriptionConstruction := by
+  intro useAccept
+  rcases hparser with ⟨parser, hparser⟩
+  rcases hemitter useAccept with ⟨emitter, hemits⟩
+  exact
+    ⟨SeqViaCanonical parser emitter,
+      selectedMergeSpec_of_parser_emitter hparser hemits⟩
+
+theorem selectedMergeParserConstruction_scaffold :
+    SelectedMergeParserConstruction := by
+  sorry
+
+theorem selectedMergeEmitterConstruction_scaffold :
+    SelectedMergeEmitterConstruction := by
+  sorry
+
+def FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner :
+    Prop :=
+  forall D : MachineDescription,
+    exists simulateStep : MachineDescription.Fragment,
+      FixedDescriptionBoundedSimulatorPhaseRealizes
+        (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
+        FixedDescriptionBoundedSimulatorLayoutTape
+        (fun L => MachineDescription.SimulatorLayout.run D L.stage L)
+        simulateStep
+
+theorem fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_configRunner :
+    FixedDescriptionBoundedSimulatorPhaseRealizes
+      (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
+      FixedDescriptionBoundedSimulatorLayoutTape
+      id
+      (MachineDescription.Fragment.handoff Direction.left) := by
+  constructor
+  · exact MachineDescription.Fragment.handoff_wellFormed Direction.left
+  · intro L
+    rcases
+        MachineDescription.Fragment.handoff_firstReaches Direction.left
+          (FixedDescriptionBoundedSimulatorHandoffTape Direction.right L) with
+      ⟨n, hn, hminimal⟩
+    refine ⟨n, ?_, hminimal⟩
+    simpa [FixedDescriptionBoundedSimulatorHandoffTape,
+      FixedDescriptionBoundedSimulatorLayoutTape] using hn
+
+theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_stepPhase_configRunner
+    (hstep :
+      FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner) :
+    FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction := by
+  intro D
+  rcases hstep D with ⟨simulateStep, hsimulateStep⟩
+  let S : MachineDescription.FixedSimulatorTableSkeleton :=
+    { decodeLayout := MachineDescription.Fragment.halt
+      simulateStep := simulateStep
+      repeatControl := MachineDescription.Fragment.handoff Direction.left
+      emitLayout := MachineDescription.Fragment.handoff Direction.left
+      decodeLayout_wellFormed :=
+        MachineDescription.Fragment.halt_wellFormed
+      simulateStep_wellFormed := hsimulateStep.left
+      repeatControl_wellFormed :=
+        MachineDescription.Fragment.handoff_wellFormed Direction.left
+      emitLayout_wellFormed :=
+        MachineDescription.Fragment.handoff_wellFormed Direction.left }
+  refine
+    ⟨S, Direction.right,
+      FixedDescriptionBoundedSimulatorPhaseTargets.canonical D, ?_⟩
+  refine
+    { decodeLayout := ?_
+      simulateStep := ?_
+      repeatControl := ?_
+      emitLayout := ?_ }
+  · simpa [S, FixedDescriptionBoundedSimulatorPhaseTargets.canonical] using
+      fixedDescriptionBoundedSimulatorHaltPhaseRealizes
+        FixedDescriptionBoundedSimulatorLayoutTape
+  · simpa [S, FixedDescriptionBoundedSimulatorPhaseTargets.canonical] using
+      hsimulateStep
+  · simpa [S, FixedDescriptionBoundedSimulatorPhaseTargets.canonical] using
+      fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_configRunner
+  · simpa [S, FixedDescriptionBoundedSimulatorPhaseTargets.canonical] using
+      fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_configRunner
+
+theorem fixedDescriptionBoundedSimulatorStepPhaseConstruction_scaffold_configRunner :
+    FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner := by
+  sorry
+
+theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_scaffold_configRunner :
+    FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction :=
+  fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_stepPhase_configRunner
+    fixedDescriptionBoundedSimulatorStepPhaseConstruction_scaffold_configRunner
 
 theorem fixedDescriptionBoundedSimulatorCanonicalConstruction_scaffold_configRunner :
     FixedDescriptionBoundedSimulatorCanonicalConstruction :=
@@ -1610,8 +1908,9 @@ theorem selectedMergePrimitiveClosedHandoffConstruction_of_rightShifted
         exact ⟨MachineCodeSymbol.transition, tail, hout⟩)
 
 theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
-    SelectedProjectionFiniteDescriptionConstruction := by
-  sorry
+    SelectedProjectionFiniteDescriptionConstruction :=
+  selectedProjectionFiniteDescriptionConstruction_of_emitter
+    selectedProjectionEmitterConstruction_scaffold
 
 theorem selectedProjectionPrimitiveRightShiftedConstruction_scaffold :
     SelectedProjectionPrimitiveRightShiftedConstruction := by
@@ -1640,8 +1939,10 @@ theorem selectedProjectionAcceptPrimitiveClosedHandoffConstruction_scaffold :
   selectedProjectionPrimitiveClosedHandoffConstruction_scaffold true
 
 theorem selectedMergeFiniteDescriptionConstruction_scaffold :
-    SelectedMergeFiniteDescriptionConstruction := by
-  sorry
+    SelectedMergeFiniteDescriptionConstruction :=
+  selectedMergeFiniteDescriptionConstruction_of_parser_emitter
+    selectedMergeParserConstruction_scaffold
+    selectedMergeEmitterConstruction_scaffold
 
 theorem selectedMergePrimitiveRightShiftedConstruction_scaffold :
     SelectedMergePrimitiveRightShiftedConstruction := by
