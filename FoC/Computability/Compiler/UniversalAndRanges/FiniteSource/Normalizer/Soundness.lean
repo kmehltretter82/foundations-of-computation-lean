@@ -132,6 +132,67 @@ theorem codePrefixParserNormalizerMachine_halts_from_of_computes_suffix
           cases hnext
           exact ih final hfinalTail hfinalHalt
 
+theorem codePrefixParserNormalizerMachine_step_findInitialCount_tick
+    (leftRev suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Step codePrefixParserNormalizerMachine
+      { state := CodePrefixParserNormalizerState.findInitialCount
+        tape :=
+          transitionListParserOptionTape leftRev
+            (some MachineCodeSymbol.tick :: suffix) }
+      { state :=
+          CodePrefixParserNormalizerState.seekCountDone
+            TransitionListParserMarker.initial
+        tape :=
+          transitionListParserOptionTape
+            (some MachineCodeSymbol.blank :: leftRev) suffix } :=
+  codePrefixParserNormalizerMachine_step_write_right
+    (state := CodePrefixParserNormalizerState.findInitialCount)
+    (next :=
+      CodePrefixParserNormalizerState.seekCountDone
+        TransitionListParserMarker.initial)
+    (leftRev := leftRev)
+    (suffix := suffix)
+    (cell := some MachineCodeSymbol.tick)
+    (write := some MachineCodeSymbol.blank)
+    (by
+      simp [codePrefixParserNormalizerMachine])
+
+theorem codePrefixParserNormalizerMachine_step_findInitialCount_done
+    (leftRev suffix : List (Option MachineCodeSymbol)) :
+    TuringMachine.Step codePrefixParserNormalizerMachine
+      { state := CodePrefixParserNormalizerState.findInitialCount
+        tape :=
+          transitionListParserOptionTape leftRev
+            (some MachineCodeSymbol.done :: suffix) }
+      { state := CodePrefixParserNormalizerState.restoreLeft
+        tape :=
+          transitionListParserOptionTape leftRev.tail
+            (leftRev.head?.join ::
+              some MachineCodeSymbol.done :: suffix) } := by
+  cases leftRev with
+  | nil =>
+      simpa using
+        codePrefixParserNormalizerMachine_step_keep_left_boundary
+          (state := CodePrefixParserNormalizerState.findInitialCount)
+          (next := CodePrefixParserNormalizerState.restoreLeft)
+          (suffix := suffix)
+          (cell := some MachineCodeSymbol.done)
+          (by
+            simp [codePrefixParserNormalizerMachine,
+              codePrefixParserNormalizerKeep])
+  | cons leftHead leftTail =>
+      simpa using
+        codePrefixParserNormalizerMachine_step_keep_left_nonempty
+          (state := CodePrefixParserNormalizerState.findInitialCount)
+          (next := CodePrefixParserNormalizerState.restoreLeft)
+          (leftTail := leftTail)
+          (suffix := suffix)
+          (leftHead := leftHead)
+          (cell := some MachineCodeSymbol.done)
+          (by
+            simp [codePrefixParserNormalizerMachine,
+              codePrefixParserNormalizerKeep])
+
 theorem codePrefixParserNormalizerMachine_step_findCount_initial_done
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step codePrefixParserNormalizerMachine
@@ -1241,7 +1302,7 @@ theorem decodeDescriptionPrefix_of_header_and_decodeTransitions
   simp [MachineDescription.decodeDescriptionPrefix,
     MachineDescription.decodeNat_encodeNatAppend, htrans]
 
-theorem codePrefixParserNormalizerMachine_computes_headerFields_to_findCount
+theorem codePrefixParserNormalizerMachine_computes_headerFields_to_findInitialCount
     (stateCount start halt : Nat)
     (transitionBlock : Word MachineCodeSymbol) :
     TuringMachine.Computes codePrefixParserNormalizerMachine
@@ -1254,8 +1315,7 @@ theorem codePrefixParserNormalizerMachine_computes_headerFields_to_findCount
                   (MachineDescription.encodeNatAppend halt
                     transitionBlock))) }
       { state :=
-          CodePrefixParserNormalizerState.findCount
-            TransitionListParserMarker.initial
+          CodePrefixParserNormalizerState.findInitialCount
         tape :=
           transitionListParserOptionTape
             (codePrefixParserNormalizerMarkedHeaderLeft
@@ -1350,8 +1410,7 @@ theorem codePrefixParserNormalizerMachine_computes_headerFields_to_findCount
               (MachineDescription.encodeNatAppend halt
                 transitionBlock) }
         { state :=
-            CodePrefixParserNormalizerState.findCount
-              TransitionListParserMarker.initial
+            CodePrefixParserNormalizerState.findInitialCount
           tape :=
             transitionListParserOptionTape
               (codePrefixParserNormalizerMarkedHeaderLeft

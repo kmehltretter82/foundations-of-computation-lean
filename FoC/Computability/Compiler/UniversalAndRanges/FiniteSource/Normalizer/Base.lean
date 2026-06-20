@@ -70,6 +70,7 @@ inductive CodePrefixParserNormalizerState where
   | stateCount : CodePrefixParserNormalizerState
   | startField : CodePrefixParserNormalizerState
   | haltField : CodePrefixParserNormalizerState
+  | findInitialCount : CodePrefixParserNormalizerState
   | findCount :
       TransitionListParserMarker -> CodePrefixParserNormalizerState
   | seekCountDone :
@@ -96,7 +97,7 @@ inductive CodePrefixParserNormalizerState where
 namespace CodePrefixParserNormalizerState
 
 def elems : List CodePrefixParserNormalizerState :=
-  [needHeader, stateCount, startField, haltField] ++
+  [needHeader, stateCount, startField, haltField, findInitialCount] ++
   (TransitionListParserState.markers.map
     CodePrefixParserNormalizerState.findCount) ++
   (TransitionListParserState.markers.map
@@ -129,6 +130,8 @@ def finite : Foundation.FiniteType CodePrefixParserNormalizerState where
     | startField =>
         simp [elems]
     | haltField =>
+        simp [elems]
+    | findInitialCount =>
         simp [elems]
     | findCount marker =>
         simp [elems, TransitionListParserState.markers_complete marker]
@@ -212,8 +215,18 @@ def codePrefixParserNormalizerMachine :
         some MachineCodeSymbol.done =>
         some
           (none, Direction.right,
-          (CodePrefixParserNormalizerState.findCount
-            TransitionListParserMarker.initial))
+          CodePrefixParserNormalizerState.findInitialCount)
+
+    | CodePrefixParserNormalizerState.findInitialCount,
+        some MachineCodeSymbol.tick =>
+        some
+          (some MachineCodeSymbol.blank, Direction.right,
+            CodePrefixParserNormalizerState.seekCountDone
+              TransitionListParserMarker.initial)
+    | CodePrefixParserNormalizerState.findInitialCount,
+        some MachineCodeSymbol.done =>
+        codePrefixParserNormalizerKeep cell Direction.left
+          CodePrefixParserNormalizerState.restoreLeft
 
     | CodePrefixParserNormalizerState.findCount marker,
         some MachineCodeSymbol.blank =>
@@ -493,8 +506,7 @@ theorem codePrefixParserNormalizer_step_done_haltField
           codePrefixParserNormalizerTape leftRev
             (MachineCodeSymbol.done :: suffix) }
       { state :=
-          CodePrefixParserNormalizerState.findCount
-            TransitionListParserMarker.initial
+          CodePrefixParserNormalizerState.findInitialCount
         tape :=
           transitionListParserOptionTape
             (none :: leftRev.map some) (suffix.map some) } := by
@@ -639,8 +651,7 @@ theorem codePrefixParserNormalizerMachine_computes_haltField_marked
           codePrefixParserNormalizerTape leftRev
             (MachineDescription.encodeNatAppend n suffix) }
       { state :=
-          CodePrefixParserNormalizerState.findCount
-            TransitionListParserMarker.initial
+          CodePrefixParserNormalizerState.findInitialCount
         tape :=
           transitionListParserOptionTape
             (List.append
@@ -665,8 +676,7 @@ theorem codePrefixParserNormalizerMachine_computes_haltField_marked
                   (MachineCodeSymbol.tick ::
                     MachineDescription.encodeNatAppend n suffix) }
             { state :=
-                CodePrefixParserNormalizerState.findCount
-                  TransitionListParserMarker.initial
+                CodePrefixParserNormalizerState.findInitialCount
               tape :=
                 transitionListParserOptionTape
                   (List.append
@@ -700,8 +710,7 @@ theorem codePrefixParserNormalizerMachine_computes_headerFields_marked
           codePrefixParserNormalizerTape []
             (MachineDescription.encodeDescriptionAppend D input) }
       { state :=
-          CodePrefixParserNormalizerState.findCount
-            TransitionListParserMarker.initial
+          CodePrefixParserNormalizerState.findInitialCount
         tape :=
           transitionListParserOptionTape
             (codePrefixParserNormalizerMarkedHeaderLeft D)
@@ -827,8 +836,7 @@ theorem codePrefixParserNormalizerMachine_computes_headerFields_marked
                       (MachineDescription.encodeTransitionsAppend
                         transitions input))) }
             { state :=
-                CodePrefixParserNormalizerState.findCount
-                  TransitionListParserMarker.initial
+                CodePrefixParserNormalizerState.findInitialCount
               tape :=
                 transitionListParserOptionTape
                   (codePrefixParserNormalizerMarkedHeaderLeft
