@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.ControllerCloseout
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner
 import FoC.Computability.Compiler.Core.EncodedRewriters.InitialLayout
 import FoC.Computability.Compiler.Core.EncodedRewriters.TotalOutputEmitter

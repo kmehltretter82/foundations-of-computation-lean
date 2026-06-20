@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.SeqSubroutineSemantics
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Dovetail
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Parser.Basic
 
 set_option doc.verso true
@@ -155,84 +156,46 @@ theorem layoutIdentityClosedHandoffConstruction_of_closedRecognizer
     (h : LayoutClosedRecognizerConstruction) :
     LayoutIdentityClosedHandoffConstruction := by
   rcases h with ⟨recognizer, hrecognizer⟩
-  refine ⟨recognizer, ?_⟩
-  constructor
-  · constructor
-    · constructor
-      · exact hrecognizer.left.left
-      · intro code out
-        constructor
-        · intro hhalt
-          rcases hhalt with ⟨n, hn⟩
-          let T : Tape Bool :=
-            (recognizer.runConfig n
-              (recognizer.initial
-                (MachineDescription.encodeCodeWordAsInput code))).tape
-          have hTape :
-              recognizer.HaltsWithTape
-                  (MachineDescription.encodeCodeWordAsInput code) T := by
-            refine ⟨n, ?_⟩
-            exact ⟨hn.left, rfl⟩
-          rcases hrecognizer.right.right code T hTape with
-            ⟨L, hdecode, hT⟩
-          have houtBits :
-              MachineDescription.encodeCodeWordAsInput out =
-                MachineDescription.encodeCodeWordAsInput
-                  (MachineDescription.DovetailLayout.encode L) := by
-            calc
-              MachineDescription.encodeCodeWordAsInput out =
-                  Tape.normalizedOutput T := by
-                    simpa [T] using hn.right.symm
-              _ =
-                  MachineDescription.encodeCodeWordAsInput
-                    (MachineDescription.DovetailLayout.encode L) := by
-                    rw [hT]
-                    simp [ParsedLayoutBits,
-                      parsedLayoutHandoffTape_normalizedOutput]
-          have hout :
-              out = MachineDescription.DovetailLayout.encode L :=
-            MachineDescription.encodeCodeWordAsInput_injective houtBits
-          have hcode :
-              code = MachineDescription.DovetailLayout.encode L :=
-            MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
-              hdecode
-          rw [hcode]
-          rw [hout]
-          simp [LayoutIdentityPrimitive,
-            MachineDescription.DovetailLayout.decodeComplete_encode]
-        · intro htransform
-          rcases
-              (layoutIdentityPrimitive_transform_eq_some_iff code out).mp
-                htransform with
-            ⟨L, hcode, hout⟩
-          subst code
-          subst out
-          have hhalt :
-              recognizer.HaltsWithOutput
-                (MachineDescription.encodeCodeWordAsInput
-                  (MachineDescription.DovetailLayout.encode L))
-                (Tape.normalizedOutput (ParsedLayoutHandoffTape L)) :=
-            MachineDescription.haltsWithOutput_of_haltsWithTape
-              (hrecognizer.right.left L)
-          simpa [ParsedLayoutBits,
-            parsedLayoutHandoffTape_normalizedOutput] using hhalt
-    · exact hrecognizer.left.right
-  · intro code T hhalt
-    rcases hrecognizer.right.right code T hhalt with
-      ⟨L, hdecode, hT⟩
-    refine
-      ⟨MachineDescription.DovetailLayout.encode L, ?_, ?_, ?_⟩
-    · have hcode :
-          code = MachineDescription.DovetailLayout.encode L :=
-        MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
-          hdecode
-      subst code
-      exact layoutIdentityPrimitive_encode L
-    · rw [hT]
-      simp [ParsedLayoutBits,
-        parsedLayoutHandoffTape_normalizedOutput]
-    · rw [hT]
-      exact parsedLayoutHandoffTape_handoff L
+  have hcanonical :
+      CanonicalLayouts.Dovetail.ClosedRecognizerConstruction := by
+    refine ⟨recognizer, ?_⟩
+    constructor
+    · exact hrecognizer.left
+    constructor
+    · intro L
+      simpa [CanonicalLayouts.Dovetail.bits,
+        CanonicalLayouts.Dovetail.handoffTape,
+        CanonicalLayouts.Bits, CanonicalLayouts.HandoffTape,
+        CanonicalLayouts.InputTape, ParsedLayoutBits,
+        ParsedLayoutHandoffTape, ParsedLayoutTape] using
+        hrecognizer.right.left L
+    · intro code T hhalt
+      rcases hrecognizer.right.right code T hhalt with
+        ⟨L, hdecode, hT⟩
+      refine ⟨L, hdecode, ?_⟩
+      simpa [CanonicalLayouts.Dovetail.handoffTape,
+        CanonicalLayouts.HandoffTape, CanonicalLayouts.InputTape,
+        CanonicalLayouts.Bits, ParsedLayoutHandoffTape, ParsedLayoutTape,
+        ParsedLayoutBits] using hT
+  rcases
+      CanonicalLayouts.Dovetail.identityClosedHandoffConstruction_of_closedRecognizer
+        hcanonical with
+    ⟨closed, hclosed⟩
+  refine ⟨closed, ?_⟩
+  exact
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_congr
+      (P := CanonicalLayouts.Dovetail.identityPrimitive)
+      (Q := LayoutIdentityPrimitive)
+      (D := closed)
+      (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
+      (by
+        intro code
+        simp [CanonicalLayouts.Dovetail.identityPrimitive,
+          CanonicalLayouts.Dovetail.decode, CanonicalLayouts.IdentityPrimitive,
+          LayoutIdentityPrimitive]
+        cases MachineDescription.DovetailLayout.decodeComplete code <;>
+          rfl)
+      hclosed
 
 def LayoutParserFromClosedHandoff
     (closed : MachineDescription) : MachineDescription :=

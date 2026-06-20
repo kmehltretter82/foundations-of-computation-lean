@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Primitives
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Emitters
 import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.CodeRightShifted
 
 set_option doc.verso true
@@ -1057,6 +1058,20 @@ def SelectedProjectionEmitterSpec
         emitter.HaltsWithTape (ParsedLayoutBits L) T ->
           T = SelectedProjectionOutputTape useAccept L
 
+def SelectedProjectionCanonicalEmitterSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  CanonicalLayouts.EmitterSpec
+    ParsedLayoutBits
+    (SelectedProjectionOutputCode useAccept)
+    emitter
+
+theorem selectedProjectionEmitterSpec_iff_canonical
+    (useAccept : Bool) (emitter : MachineDescription) :
+    SelectedProjectionEmitterSpec useAccept emitter ↔
+      SelectedProjectionCanonicalEmitterSpec useAccept emitter := by
+  rfl
+
 def SelectedProjectionEmitterConstruction : Prop :=
   forall useAccept : Bool,
     exists emitter : MachineDescription,
@@ -1182,6 +1197,62 @@ def SelectedMergeEmitterSpec
         emitter.HaltsWithTape
             (MachineDescription.SimulatorLayout.asBoolInput S) T ->
           T = SelectedMergeOutputTape useAccept S L
+
+structure SelectedMergeEmitterPayload where
+  S : MachineDescription.SimulatorLayout
+  L : MachineDescription.DovetailLayout
+  input :
+    MachineDescription.decodeCodeWordAsInput S.input =
+      some (MachineDescription.DovetailLayout.encode L)
+
+def SelectedMergeEmitterInputBits
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  MachineDescription.SimulatorLayout.asBoolInput p.S
+
+def SelectedMergeEmitterOutputCode
+    (useAccept : Bool)
+    (p : SelectedMergeEmitterPayload) : Word MachineCodeSymbol :=
+  SelectedMergeOutputCode useAccept p.S p.L
+
+def SelectedMergeCanonicalEmitterSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  CanonicalLayouts.EmitterSpec
+    SelectedMergeEmitterInputBits
+    (SelectedMergeEmitterOutputCode useAccept)
+    emitter
+
+theorem selectedMergeEmitterSpec_iff_canonical
+    (useAccept : Bool) (emitter : MachineDescription) :
+    SelectedMergeEmitterSpec useAccept emitter ↔
+      SelectedMergeCanonicalEmitterSpec useAccept emitter := by
+  constructor
+  · intro h
+    constructor
+    · exact h.left
+    constructor
+    · intro p
+      simpa [SelectedMergeCanonicalEmitterSpec,
+        SelectedMergeEmitterInputBits, SelectedMergeEmitterOutputCode,
+        CanonicalLayouts.OutputTape, SelectedMergeOutputTape] using
+        h.right.left p.S p.L p.input
+    · intro p T hhalt
+      simpa [SelectedMergeCanonicalEmitterSpec,
+        SelectedMergeEmitterInputBits, SelectedMergeEmitterOutputCode,
+        CanonicalLayouts.OutputTape, SelectedMergeOutputTape] using
+        h.right.right p.S p.L T p.input hhalt
+  · intro h
+    constructor
+    · exact h.left
+    constructor
+    · intro S L hinput
+      exact
+        h.right.left
+          { S := S, L := L, input := hinput }
+    · intro S L T hinput hhalt
+      exact
+        h.right.right
+          { S := S, L := L, input := hinput } T hhalt
 
 def SelectedMergeEmitterConstruction : Prop :=
   forall useAccept : Bool,
