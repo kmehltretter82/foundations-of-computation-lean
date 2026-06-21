@@ -1,6 +1,7 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.DecodedBoundedSimulator
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchEmitters.Spec
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchSequencing
 
 set_option doc.verso true
 
@@ -94,100 +95,7 @@ theorem codePrefixParserNormalizerCodeMachineConstruction_of_identityMachine
         hdecode
     exact ⟨by rw [htokens, hout], D, input, hdecode⟩
 
-def CodePrefixParserBranchFailureEmitterConstruction : Prop :=
-  exists state : Type,
-  exists emitter : TuringMachine MachineCodeSymbol state,
-    forall tokens out : Word MachineCodeSymbol,
-      TuringMachine.HaltsWithOutput emitter tokens out <->
-        MachineDescription.decodeDescriptionPrefix tokens = none ∧
-          out = MachineDescription.encodeBoolWord [false]
 
-def CodePrefixParserBranchSuccessEmitterConstruction : Prop :=
-  exists state : Type,
-  exists emitter : TuringMachine MachineCodeSymbol state,
-    forall tokens out : Word MachineCodeSymbol,
-      TuringMachine.HaltsWithOutput emitter tokens out <->
-        exists D : MachineDescription,
-        exists input : Word MachineCodeSymbol,
-          MachineDescription.decodeDescriptionPrefix tokens =
-              some (D, input) ∧
-            out =
-              MachineDescription.encodeBoolWordAppend [true] tokens
-
-def CodePrefixParserBranchTaggedMachineSpec
-    (branch : TuringMachine MachineCodeSymbol state) : Prop :=
-  forall tokens out : Word MachineCodeSymbol,
-    TuringMachine.HaltsWithOutput branch tokens out <->
-      (MachineDescription.decodeDescriptionPrefix tokens = none ∧
-        out = MachineDescription.encodeBoolWord [false]) ∨
-      exists D : MachineDescription,
-      exists input : Word MachineCodeSymbol,
-        MachineDescription.decodeDescriptionPrefix tokens =
-            some (D, input) ∧
-          out =
-            MachineDescription.encodeBoolWordAppend [true] tokens
-
-def CodePrefixParserBranchTaggedMachineConstruction : Prop :=
-  exists state : Type,
-  exists branch : TuringMachine MachineCodeSymbol state,
-    CodePrefixParserBranchTaggedMachineSpec branch
-
-def CodePrefixParserBranchSequencingConstruction : Prop :=
-  forall {failureState successState : Type}
-    (failure : TuringMachine MachineCodeSymbol failureState)
-    (success : TuringMachine MachineCodeSymbol successState),
-    (forall tokens out : Word MachineCodeSymbol,
-      TuringMachine.HaltsWithOutput failure tokens out <->
-        MachineDescription.decodeDescriptionPrefix tokens = none ∧
-          out = MachineDescription.encodeBoolWord [false]) ->
-    (forall tokens out : Word MachineCodeSymbol,
-      TuringMachine.HaltsWithOutput success tokens out <->
-        exists D : MachineDescription,
-        exists input : Word MachineCodeSymbol,
-          MachineDescription.decodeDescriptionPrefix tokens =
-              some (D, input) ∧
-            out =
-              MachineDescription.encodeBoolWordAppend [true] tokens) ->
-      CodePrefixParserBranchTaggedMachineConstruction
-
-theorem codePrefixParserBranchCodeMachineConstruction_of_taggedMachine
-    (htagged : CodePrefixParserBranchTaggedMachineConstruction) :
-    CodePrefixParserBranchCodeMachineConstruction := by
-  rcases htagged with ⟨state, branch, hbranch⟩
-  refine ⟨state, branch, ?_⟩
-  intro tokens out
-  rw [hbranch tokens out]
-  constructor
-  · intro h
-    rcases h with hfailure | hsuccess
-    · exact
-        (codePrefixParserBranchCode_transform_eq_some_iff
-          tokens out).mpr (Or.inl hfailure)
-    · rcases hsuccess with ⟨D, input, hdecode, hout⟩
-      have htokens :
-          tokens = List.append (MachineDescription.encodeDescription D)
-            input :=
-        MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
-          hdecode
-      exact
-        (codePrefixParserBranchCode_transform_eq_some_iff
-          tokens out).mpr
-          (Or.inr
-            ⟨D, input, hdecode, by simpa [htokens] using hout⟩)
-  · intro h
-    rcases
-        (codePrefixParserBranchCode_transform_eq_some_iff
-          tokens out).mp h with
-      hfailure | hsuccess
-    · exact Or.inl hfailure
-    · rcases hsuccess with ⟨D, input, hdecode, hout⟩
-      have htokens :
-          tokens = List.append (MachineDescription.encodeDescription D)
-            input :=
-        MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
-          hdecode
-      exact Or.inr
-        ⟨D, input, hdecode, by simpa [htokens] using hout⟩
 
 def StageCodeDecoderConstruction : Prop :=
   exists state : Type,
@@ -922,58 +830,7 @@ theorem codePrefixParserNormalizerMachineConstruction_scaffold :
   codePrefixParserNormalizerMachineConstruction_of_codeMachine
     codePrefixParserNormalizerCodeMachineConstruction_scaffold
 
-theorem codePrefixParserBranchTaggedMachineConstruction_finite :
-    CodePrefixParserBranchTaggedMachineConstruction := by
-  refine ⟨CodePrefixParserBranchState, codePrefixParserBranchMachine, ?_⟩
-  exact codePrefixParserBranchMachine_haltsWithOutput_iff
 
-theorem codePrefixParserBranchTaggedMachineConstruction_of_emitters_finite
-    {failureState successState : Type}
-    (failure : TuringMachine MachineCodeSymbol failureState)
-    (success : TuringMachine MachineCodeSymbol successState)
-    (_hfailure :
-      forall tokens out : Word MachineCodeSymbol,
-        TuringMachine.HaltsWithOutput failure tokens out <->
-          MachineDescription.decodeDescriptionPrefix tokens = none ∧
-            out = MachineDescription.encodeBoolWord [false])
-    (_hsuccess :
-      forall tokens out : Word MachineCodeSymbol,
-        TuringMachine.HaltsWithOutput success tokens out <->
-          exists D : MachineDescription,
-          exists input : Word MachineCodeSymbol,
-            MachineDescription.decodeDescriptionPrefix tokens =
-                some (D, input) ∧
-              out =
-                MachineDescription.encodeBoolWordAppend [true] tokens) :
-    CodePrefixParserBranchTaggedMachineConstruction := by
-  exact codePrefixParserBranchTaggedMachineConstruction_finite
-
-theorem codePrefixParserBranchSequencingConstruction_scaffold :
-    CodePrefixParserBranchSequencingConstruction := by
-  intro failureState successState failure success hfailure hsuccess
-  exact
-    codePrefixParserBranchTaggedMachineConstruction_of_emitters_finite
-      failure success hfailure hsuccess
-
-theorem codePrefixParserBranchTaggedMachineConstruction_of_emitters
-    (hfailure : CodePrefixParserBranchFailureEmitterConstruction)
-    (hsuccess : CodePrefixParserBranchSuccessEmitterConstruction) :
-    CodePrefixParserBranchTaggedMachineConstruction := by
-  rcases hfailure with ⟨failureState, failure, hfailure⟩
-  rcases hsuccess with ⟨successState, success, hsuccess⟩
-  exact
-    codePrefixParserBranchSequencingConstruction_scaffold
-      failure success hfailure hsuccess
-
-theorem codePrefixParserBranchCodeMachineConstruction_scaffold :
-    CodePrefixParserBranchCodeMachineConstruction :=
-  codePrefixParserBranchCodeMachineConstruction_of_taggedMachine
-    codePrefixParserBranchTaggedMachineConstruction_finite
-
-theorem codePrefixParserBranchMachineConstruction_scaffold :
-    CodePrefixParserBranchMachineConstruction :=
-  codePrefixParserBranchMachineConstruction_of_codeMachine
-    codePrefixParserBranchCodeMachineConstruction_scaffold
 
 theorem stageCodeDecoderConstruction_scaffold :
     StageCodeDecoderConstruction :=
