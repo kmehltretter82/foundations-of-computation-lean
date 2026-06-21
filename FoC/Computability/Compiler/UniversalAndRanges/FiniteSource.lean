@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchEmitters.Spec
 
 set_option doc.verso true
 
@@ -1006,32 +1006,21 @@ theorem codePrefixParserNormalizerMachineConstruction_scaffold :
   codePrefixParserNormalizerMachineConstruction_of_codeMachine
     codePrefixParserNormalizerCodeMachineConstruction_scaffold
 
-theorem codePrefixParserBranchFailureEmitterConstruction_finite :
-    CodePrefixParserBranchFailureEmitterConstruction := by
-  sorry
-
-theorem codePrefixParserBranchFailureEmitterConstruction_scaffold :
-    CodePrefixParserBranchFailureEmitterConstruction :=
-  codePrefixParserBranchFailureEmitterConstruction_finite
-
-theorem codePrefixParserBranchSuccessEmitterConstruction_finite :
-    CodePrefixParserBranchSuccessEmitterConstruction := by
-  sorry
-
-theorem codePrefixParserBranchSuccessEmitterConstruction_scaffold :
-    CodePrefixParserBranchSuccessEmitterConstruction :=
-  codePrefixParserBranchSuccessEmitterConstruction_finite
+theorem codePrefixParserBranchTaggedMachineConstruction_finite :
+    CodePrefixParserBranchTaggedMachineConstruction := by
+  refine ⟨CodePrefixParserBranchState, codePrefixParserBranchMachine, ?_⟩
+  exact codePrefixParserBranchMachine_haltsWithOutput_iff
 
 theorem codePrefixParserBranchTaggedMachineConstruction_of_emitters_finite
     {failureState successState : Type}
     (failure : TuringMachine MachineCodeSymbol failureState)
     (success : TuringMachine MachineCodeSymbol successState)
-    (hfailure :
+    (_hfailure :
       forall tokens out : Word MachineCodeSymbol,
         TuringMachine.HaltsWithOutput failure tokens out <->
           MachineDescription.decodeDescriptionPrefix tokens = none ∧
             out = MachineDescription.encodeBoolWord [false])
-    (hsuccess :
+    (_hsuccess :
       forall tokens out : Word MachineCodeSymbol,
         TuringMachine.HaltsWithOutput success tokens out <->
           exists D : MachineDescription,
@@ -1041,7 +1030,7 @@ theorem codePrefixParserBranchTaggedMachineConstruction_of_emitters_finite
               out =
                 MachineDescription.encodeBoolWordAppend [true] tokens) :
     CodePrefixParserBranchTaggedMachineConstruction := by
-  sorry
+  exact codePrefixParserBranchTaggedMachineConstruction_finite
 
 theorem codePrefixParserBranchSequencingConstruction_scaffold :
     CodePrefixParserBranchSequencingConstruction := by
@@ -1063,9 +1052,7 @@ theorem codePrefixParserBranchTaggedMachineConstruction_of_emitters
 theorem codePrefixParserBranchCodeMachineConstruction_scaffold :
     CodePrefixParserBranchCodeMachineConstruction :=
   codePrefixParserBranchCodeMachineConstruction_of_taggedMachine
-    (codePrefixParserBranchTaggedMachineConstruction_of_emitters
-      codePrefixParserBranchFailureEmitterConstruction_scaffold
-      codePrefixParserBranchSuccessEmitterConstruction_scaffold)
+    codePrefixParserBranchTaggedMachineConstruction_finite
 
 theorem codePrefixParserBranchMachineConstruction_scaffold :
     CodePrefixParserBranchMachineConstruction :=
