@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.ControllerResultEmitter
-
+import FoC.Computability.Compiler.Core.ControllerInputInitializer
+import FoC.Computability.Compiler.Core.ControllerResultContinue
 set_option doc.verso true
 
 /-!
@@ -86,7 +87,7 @@ theorem encodedControllerInputInitializerRewriterConstruction_of_data
 
 theorem encodedControllerInputInitializerConstructionData_scaffold :
     EncodedControllerInputInitializerConstructionData := by
-  sorry
+  exact controllerInputInitializerConstruction_scaffold
 
 theorem encodedControllerInputInitializerRewriterConstruction_scaffold :
     EncodedControllerInputInitializerRewriterConstruction :=
@@ -121,7 +122,7 @@ theorem encodedControllerResultContinueCodeWordSubroutineConstruction_of_data
 
 theorem encodedControllerResultContinueConstructionData_scaffold :
     EncodedControllerResultContinueConstructionData := by
-  sorry
+  exact controllerResultContinueConstruction_scaffold
 
 theorem encodedControllerResultContinueCodeWordSubroutineConstruction_scaffold :
     EncodedControllerResultContinueCodeWordSubroutineConstruction :=
