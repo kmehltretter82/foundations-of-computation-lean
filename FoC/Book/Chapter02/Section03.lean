@@ -103,23 +103,23 @@ theorem compl_apply (A : BitSet) (i : Nat) :
 
 theorem union_commutative (A B : BitSet) (i : Nat) :
     union A B i = union B A i := by
-  grind [union]
+  simp [union, Bool.or_comm]
 
 theorem inter_commutative (A B : BitSet) (i : Nat) :
     inter A B i = inter B A i := by
-  grind [inter]
+  simp [inter, Bool.and_comm]
 
 theorem union_absorption (A B : BitSet) (i : Nat) :
     union A (inter A B) i = A i := by
-  grind [union, inter]
+  simp [union, inter]; cases A i <;> simp
 
 theorem inter_absorption (A B : BitSet) (i : Nat) :
     inter A (union A B) i = A i := by
-  grind [union, inter]
+  simp [inter, union]; cases A i <;> simp
 
 theorem double_complement (A : BitSet) (i : Nat) :
     compl (compl A) i = A i := by
-  grind [compl]
+  simp [compl, Bool.not_not]
 
 end BitVectorSet
 
