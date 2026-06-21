@@ -34,7 +34,7 @@ identity laws, idempotence, commutativity, associativity, distributivity, and
 De Morgan's laws.
 
 Each declaration names one familiar Boolean law and states it as
-`PropForm.LogicallyEquivalent ... ...`. The proof scripts are short because
+{lit}`PropForm.LogicallyEquivalent ... ...`. The proof scripts are short because
 the mathematical work is the exhaustive truth-table check.
 -/
 

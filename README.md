@@ -120,7 +120,7 @@ Most user-facing explanation for the HTML site lives in Lean module doc blocks
 with `set_option doc.verso true`. Update those source comments rather than the
 generated files under `.lake/build/literate-html/`.
 
-This formalization was developed with assistance from OpenAI Codex.
+This formalization was developed with assistance from OpenAI Codex and Google Gemini.
 
 ## License
 
