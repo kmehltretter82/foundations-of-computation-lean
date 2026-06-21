@@ -36,7 +36,7 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_inputFirstBit_inv
   have hb :
       b = false := by
     exact
-      cellListSuffixScannerDescription_runConfig_start_bit_inv
+      boolWordSuffixScannerDescription_runConfig_start_bit_inv
         (List.append (transitionRemainderBits.reverse.map some) [none])
         b (suffixTail.map some)
         (Tout := Tinput) (n := nInput)
@@ -60,7 +60,7 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_inputNatPrefix_inv
       _nRejectHit, _nReturn, hbits, hinputRun, _hstageRun, _hacceptRun,
       _hrejectRun, _hacceptHitRun, _hrejectHitRun, _hreturnRun⟩
   rcases
-      cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
+      boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
         (List.append (transitionRemainderBits.reverse.map some) [none])
         (b :: suffixTail)
         (Tout := Tinput) (n := nInput)

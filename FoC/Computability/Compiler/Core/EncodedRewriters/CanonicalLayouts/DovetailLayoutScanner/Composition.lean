@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.SeqSubroutineSemantics
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWord
 
 set_option doc.verso true
 
@@ -420,14 +420,14 @@ theorem stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady :
 def InputStageConfigurationsAndFinalFlagsScannerDescription :
     MachineDescription :=
   MachineDescription.seqSubroutine
-    CellListSuffixScannerDescription
+    BoolWordSuffixScannerDescription
     StageConfigurationsAndFinalFlagsScannerDescription
     Direction.right
 
 theorem inputStageConfigurationsAndFinalFlagsScannerDescription_subroutineReady :
     InputStageConfigurationsAndFinalFlagsScannerDescription.SubroutineReady :=
   MachineDescription.seqSubroutine_subroutineReady
-    cellListSuffixScannerDescription_subroutineReady
+    boolWordSuffixScannerDescription_subroutineReady
     stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
 
 def MarkedDovetailLayoutBodyScannerDescription : MachineDescription :=
@@ -1707,7 +1707,7 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
   rcases stageNatBits_cons_false stage with ⟨stageTail, hstageTail⟩
   let inputSuffixTail : Word Bool :=
     List.append stageTail stageSuffix
-  rcases run_boolWord_raw_to_canonical_handoff_withBase
+  rcases run_boolWordSuffix_raw_to_canonical_handoff_withBase
       input baseLeft inputSuffixTail with
     ⟨inputSteps, hinput⟩
   let TmidTape : Tape Bool :=
@@ -1715,14 +1715,14 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
       (false :: inputSuffixTail)).tape
   let baseAfterInput : List (Option Bool) :=
     cellListCanonicalRestoredLeftWithBase (input.map some) baseLeft
-  have hAready : CellListSuffixScannerDescription.SubroutineReady :=
-    cellListSuffixScannerDescription_subroutineReady
+  have hAready : BoolWordSuffixScannerDescription.SubroutineReady :=
+    boolWordSuffixScannerDescription_subroutineReady
   have hBready :
       StageConfigurationsAndFinalFlagsScannerDescription.SubroutineReady :=
     stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
   have hArun :
-      CellListSuffixScannerDescription.runConfig inputSteps
-          { state := CellListSuffixScannerDescription.start
+      BoolWordSuffixScannerDescription.runConfig inputSteps
+          { state := BoolWordSuffixScannerDescription.start
             tape :=
               tapeAtCells baseLeft
                 ((boolWordFieldBits input
@@ -1731,15 +1731,15 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
                       (configurationFieldBits rejectConfig
                         (boolFieldBits acceptHit
                           (boolFieldBits rejectHit [])))))).map some) } =
-        { state := CellListSuffixScannerDescription.halt
+        { state := BoolWordSuffixScannerDescription.halt
           tape := TmidTape } := by
     change
-      CellListSuffixScannerDescription.runConfig inputSteps
+      BoolWordSuffixScannerDescription.runConfig inputSteps
           (config 100 baseLeft
             ((boolWordFieldBits input
               (List.append (stageNatBits stage)
                 stageSuffix)).map some)) =
-        { state := CellListSuffixScannerDescription.halt
+        { state := BoolWordSuffixScannerDescription.halt
           tape := TmidTape }
     rw [show
         ((boolWordFieldBits input
@@ -1806,7 +1806,7 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
     simpa [baseAfterInput] using hstage
   rcases
       MachineDescription.seqSubroutine_reaches_of_runConfig_eq
-        (A := CellListSuffixScannerDescription)
+        (A := BoolWordSuffixScannerDescription)
         (B := StageConfigurationsAndFinalFlagsScannerDescription)
         (handoffMove := Direction.right)
         hAready hBready hArun hBReach with

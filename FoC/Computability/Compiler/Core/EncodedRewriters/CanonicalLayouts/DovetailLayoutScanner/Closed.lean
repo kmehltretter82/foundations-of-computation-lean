@@ -706,17 +706,17 @@ theorem inputStageConfigurationsAndFinalFlagsScannerDescription_runConfig_inv
           tape := Tout }) :
     exists Tinput : Tape Bool,
       (exists nInput : Nat,
-        CellListSuffixScannerDescription.runConfig nInput
-            { state := CellListSuffixScannerDescription.start
+        BoolWordSuffixScannerDescription.runConfig nInput
+            { state := BoolWordSuffixScannerDescription.start
               tape := Tin } =
-          { state := CellListSuffixScannerDescription.halt
+          { state := BoolWordSuffixScannerDescription.halt
             tape := Tinput } ∧
           forall k : Nat,
             k < nInput ->
-              (CellListSuffixScannerDescription.runConfig k
-                { state := CellListSuffixScannerDescription.start
+              (BoolWordSuffixScannerDescription.runConfig k
+                { state := BoolWordSuffixScannerDescription.start
                   tape := Tin }).state ≠
-                CellListSuffixScannerDescription.halt) ∧
+                BoolWordSuffixScannerDescription.halt) ∧
         exists nStage : Nat,
           StageConfigurationsAndFinalFlagsScannerDescription.runConfig nStage
               { state :=
@@ -726,10 +726,10 @@ theorem inputStageConfigurationsAndFinalFlagsScannerDescription_runConfig_inv
               tape := Tout } := by
   simpa [InputStageConfigurationsAndFinalFlagsScannerDescription] using
     MachineDescription.seqSubroutine_runConfig_inv
-      (A := CellListSuffixScannerDescription)
+      (A := BoolWordSuffixScannerDescription)
       (B := StageConfigurationsAndFinalFlagsScannerDescription)
       (handoffMove := Direction.right)
-      cellListSuffixScannerDescription_subroutineReady
+      boolWordSuffixScannerDescription_subroutineReady
       stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
       (by
         simpa [InputStageConfigurationsAndFinalFlagsScannerDescription] using
@@ -746,14 +746,14 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_inputField_inv
     exists nStage : Nat,
     exists nReturn : Nat,
       bits = false :: false :: false :: true :: b :: suffixTail ∧
-        CellListSuffixScannerDescription.runConfig nInput
-            { state := CellListSuffixScannerDescription.start
+        BoolWordSuffixScannerDescription.runConfig nInput
+            { state := BoolWordSuffixScannerDescription.start
               tape :=
                 tapeAtCells
                   (List.append (transitionRemainderBits.reverse.map some)
                     [none])
                   ((b :: suffixTail).map some) } =
-          { state := CellListSuffixScannerDescription.halt
+          { state := BoolWordSuffixScannerDescription.halt
             tape := Tinput } ∧
         StageConfigurationsAndFinalFlagsScannerDescription.runConfig nStage
             { state :=
@@ -835,14 +835,14 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_stageField_inv
     exists nConfigs : Nat,
     exists nReturn : Nat,
       bits = false :: false :: false :: true :: b :: suffixTail ∧
-        CellListSuffixScannerDescription.runConfig nInput
-            { state := CellListSuffixScannerDescription.start
+        BoolWordSuffixScannerDescription.runConfig nInput
+            { state := BoolWordSuffixScannerDescription.start
               tape :=
                 tapeAtCells
                   (List.append (transitionRemainderBits.reverse.map some)
                     [none])
                   ((b :: suffixTail).map some) } =
-          { state := CellListSuffixScannerDescription.halt
+          { state := BoolWordSuffixScannerDescription.halt
             tape := Tinput } ∧
         DovetailStagePrefix.NatSuffixScannerDescription.runConfig nStage
             { state := DovetailStagePrefix.NatSuffixScannerDescription.start
@@ -927,14 +927,14 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_acceptConfig_inv
     exists nRejectFlags : Nat,
     exists nReturn : Nat,
       bits = false :: false :: false :: true :: b :: suffixTail ∧
-        CellListSuffixScannerDescription.runConfig nInput
-            { state := CellListSuffixScannerDescription.start
+        BoolWordSuffixScannerDescription.runConfig nInput
+            { state := BoolWordSuffixScannerDescription.start
               tape :=
                 tapeAtCells
                   (List.append (transitionRemainderBits.reverse.map some)
                     [none])
                   ((b :: suffixTail).map some) } =
-          { state := CellListSuffixScannerDescription.halt
+          { state := BoolWordSuffixScannerDescription.halt
             tape := Tinput } ∧
         DovetailStagePrefix.NatSuffixScannerDescription.runConfig nStage
             { state := DovetailStagePrefix.NatSuffixScannerDescription.start
@@ -1026,14 +1026,14 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_rejectConfig_inv
     exists nFinalFlags : Nat,
     exists nReturn : Nat,
       bits = false :: false :: false :: true :: b :: suffixTail ∧
-        CellListSuffixScannerDescription.runConfig nInput
-            { state := CellListSuffixScannerDescription.start
+        BoolWordSuffixScannerDescription.runConfig nInput
+            { state := BoolWordSuffixScannerDescription.start
               tape :=
                 tapeAtCells
                   (List.append (transitionRemainderBits.reverse.map some)
                     [none])
                   ((b :: suffixTail).map some) } =
-          { state := CellListSuffixScannerDescription.halt
+          { state := BoolWordSuffixScannerDescription.halt
             tape := Tinput } ∧
         DovetailStagePrefix.NatSuffixScannerDescription.runConfig nStage
             { state := DovetailStagePrefix.NatSuffixScannerDescription.start
@@ -1132,14 +1132,14 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_finalFlags_inv
     exists nRejectHit : Nat,
     exists nReturn : Nat,
       bits = false :: false :: false :: true :: b :: suffixTail ∧
-        CellListSuffixScannerDescription.runConfig nInput
-            { state := CellListSuffixScannerDescription.start
+        BoolWordSuffixScannerDescription.runConfig nInput
+            { state := BoolWordSuffixScannerDescription.start
               tape :=
                 tapeAtCells
                   (List.append (transitionRemainderBits.reverse.map some)
                     [none])
                   ((b :: suffixTail).map some) } =
-          { state := CellListSuffixScannerDescription.halt
+          { state := BoolWordSuffixScannerDescription.halt
             tape := Tinput } ∧
         DovetailStagePrefix.NatSuffixScannerDescription.runConfig nStage
             { state := DovetailStagePrefix.NatSuffixScannerDescription.start
