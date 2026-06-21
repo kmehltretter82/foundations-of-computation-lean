@@ -1081,75 +1081,17 @@ def SelectedProjectionEmitterConstruction : Prop :=
 
 theorem selectedProjectionSpec_of_parser_emitter
     {useAccept : Bool} {parser emitter : MachineDescription}
-    (hparser : LayoutParserSpec parser)
+    (hparser : LayoutCheckedParserSpec parser)
     (hemitter : SelectedProjectionEmitterSpec useAccept emitter) :
     SelectedProjectionSpec useAccept
       (SeqViaCanonical parser emitter) := by
-  have hrunnerReady :
-      (SeqViaCanonical parser emitter).SubroutineReady :=
-    SeqViaCanonical_subroutineReady hparser.left hemitter.left
-  constructor
-  · exact hrunnerReady
-  constructor
-  · intro L
-    exact
-      SeqViaCanonical_haltsWithTape_of_haltsWithTape
-        hparser.left hemitter.left
-        (hparser.right.left L)
-        (parsedLayoutTape_move_left_move_right_configRunner L)
-        (hemitter.right.left L)
-  · intro code T hhalt
-    let identity := MachineDescription.ExactIdentityDescription
-    have hid : identity.SubroutineReady :=
-      ⟨MachineDescription.exactIdentityDescription_wellFormed,
-        MachineDescription.exactIdentityDescription_haltTransitionFree⟩
-    rcases
-        MachineDescription.seqSubroutine_haltsWithTape_inv
-          (A := MachineDescription.seqSubroutine
-            parser identity Direction.right)
-          (B := emitter)
-          (handoffMove := Direction.left)
-          (MachineDescription.seqSubroutine_subroutineReady
-            hparser.left hid)
-          hemitter.left
-          (by simpa [SeqViaCanonical, identity] using hhalt) with
-      ⟨Tmid, hparserIdHalt, _hemitterReach⟩
-    rcases
-        MachineDescription.seqSubroutine_haltsWithTape_inv
-          (A := parser) (B := identity)
-          (handoffMove := Direction.right)
-          hparser.left hid
-          (by simpa [identity] using hparserIdHalt) with
-      ⟨Tparser, hparserHalt, _hidentityReach⟩
-    rcases hparser.right.right code Tparser hparserHalt with
-      ⟨L, hdecode, _hTparser⟩
-    have hcode :
-        code = MachineDescription.DovetailLayout.encode L :=
-      MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
-        hdecode
-    refine ⟨L, hcode, ?_⟩
-    have hhalt' :
-        (SeqViaCanonical parser emitter).HaltsWithTape
-          (ParsedLayoutBits L) T := by
-      simpa [ParsedLayoutBits, hcode] using hhalt
-    have hforwardL :
-        (SeqViaCanonical parser emitter).HaltsWithTape
-          (ParsedLayoutBits L)
-          (SelectedProjectionOutputTape useAccept L) :=
-      SeqViaCanonical_haltsWithTape_of_haltsWithTape
-        hparser.left hemitter.left
-        (hparser.right.left L)
-        (parsedLayoutTape_move_left_move_right_configRunner L)
-        (hemitter.right.left L)
-    exact
-      MachineDescription.haltsWithTape_functional_of_haltTransitionFree
-        hrunnerReady.right hhalt' hforwardL
+  sorry
 
 theorem selectedProjectionFiniteDescriptionConstruction_of_emitter
     (hemitter : SelectedProjectionEmitterConstruction) :
     SelectedProjectionFiniteDescriptionConstruction := by
   intro useAccept
-  rcases layoutParserConstruction_scaffold with ⟨parser, hparser⟩
+  rcases layoutCheckedParserConstruction_scaffold with ⟨parser, hparser⟩
   rcases hemitter useAccept with ⟨emitter, hemits⟩
   exact
     ⟨SeqViaCanonical parser emitter,

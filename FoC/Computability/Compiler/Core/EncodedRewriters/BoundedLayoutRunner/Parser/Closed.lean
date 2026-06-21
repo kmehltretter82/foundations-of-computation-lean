@@ -559,27 +559,35 @@ theorem layoutParserConstruction_of_rightShifted
   layoutParserConstruction_of_closedHandoffConstruction
     (layoutIdentityClosedHandoffConstruction_of_rightShifted h)
 
-theorem layoutClosedRecognizerConstruction_scaffold :
-    LayoutClosedRecognizerConstruction := by
+theorem checkedDovetailLayoutScannerDescription_haltsWithTape_decodeComplete_inv
+    (code : Word MachineCodeSymbol) (T : Tape Bool)
+    (h :
+      CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T) :
+    exists L : MachineDescription.DovetailLayout,
+      MachineDescription.DovetailLayout.decodeComplete code = some L ∧
+      Tape.move tapeCodePrimitiveCodeWordHandoffMove T =
+        ParsedLayoutCheckedTape L := by
   sorry
 
-theorem layoutIdentityRightShiftedConstruction_scaffold :
-    LayoutIdentityRightShiftedConstruction := by
-  exact
-    layoutIdentityRightShiftedConstruction_of_closedRecognizer
-      layoutClosedRecognizerConstruction_scaffold
+theorem layoutCheckedClosedRecognizerConstruction_scaffold :
+    LayoutCheckedClosedRecognizerConstruction := by
+  refine ⟨CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription, ?_⟩
+  constructor
+  · exact CanonicalLayouts.DovetailLayoutScanner.checkedDovetailLayoutScannerDescription_subroutineReady
+  constructor
+  · intro L
+    exact checkedDovetailLayoutScannerDescription_haltsWithTape L
+  · intro code T h
+    exact checkedDovetailLayoutScannerDescription_haltsWithTape_decodeComplete_inv code T h
 
-theorem layoutIdentityClosedHandoffConstruction_scaffold :
-    LayoutIdentityClosedHandoffConstruction := by
+theorem layoutCheckedParserConstruction_scaffold :
+    LayoutCheckedParserConstruction := by
   exact
-    layoutIdentityClosedHandoffConstruction_of_rightShifted
-      layoutIdentityRightShiftedConstruction_scaffold
+    layoutCheckedParserConstruction_of_closedRecognizer
+      layoutCheckedClosedRecognizerConstruction_scaffold
 
-theorem layoutParserConstruction_scaffold :
-    LayoutParserConstruction := by
-  exact
-    layoutParserConstruction_of_closedHandoffConstruction
-      layoutIdentityClosedHandoffConstruction_scaffold
+
 
 end BoundedLayoutRunner
 end EncodedRewriters

@@ -60,6 +60,31 @@ def AcceptRejectConfigRunnerConstruction : Prop :=
     exists runner : MachineDescription,
       AcceptRejectConfigRunnerSpec accept reject runner
 
+def AcceptRejectCheckedConfigRunnerForwardSpec
+    (accept reject runner : MachineDescription) : Prop :=
+  forall L : MachineDescription.DovetailLayout,
+    runner.HaltsWithTape
+      (ParsedLayoutBits L)
+      (ParsedLayoutCheckedHandoffTape (BoundedRunLayout accept reject L))
+
+def AcceptRejectCheckedConfigRunnerClosedSpec
+    (accept reject runner : MachineDescription) : Prop :=
+  forall L : MachineDescription.DovetailLayout,
+  forall T : Tape Bool,
+    runner.HaltsWithTape (ParsedLayoutBits L) T ->
+      T = ParsedLayoutCheckedHandoffTape (BoundedRunLayout accept reject L)
+
+def AcceptRejectCheckedConfigRunnerSpec
+    (accept reject runner : MachineDescription) : Prop :=
+  ReadySpec runner ∧
+    AcceptRejectCheckedConfigRunnerForwardSpec accept reject runner ∧
+      AcceptRejectCheckedConfigRunnerClosedSpec accept reject runner
+
+def AcceptRejectCheckedConfigRunnerConstruction : Prop :=
+  forall accept reject : MachineDescription,
+    exists runner : MachineDescription,
+      AcceptRejectCheckedConfigRunnerSpec accept reject runner
+
 end BoundedLayoutRunner
 end EncodedRewriters
 

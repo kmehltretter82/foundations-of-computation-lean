@@ -757,6 +757,35 @@ theorem natSuffixScannerDescription_runConfig_nonblank_suffix_inv
       (by simpa [c0] using h)
   simpa [Tfinal] using htape.symm
 
+theorem boolWordSuffixScannerDescription_runConfig_canonical_false_suffix_inv
+    (bits : Word Bool) (baseLeft : List (Option Bool)) (suffixTail : Word Bool)
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      BoolWordSuffixScannerDescription.runConfig n
+          (config BoolWordSuffixScannerDescription.start baseLeft
+            (List.append ((stageNatBits bits.length).map some)
+              (List.append ((cellsCodeBits (bits.map some)).map some)
+                (some false :: suffixTail.map some)))) =
+        { state := BoolWordSuffixScannerDescription.halt
+          tape := Tout }) :
+      Tout =
+        (boolWordCanonicalHandoffConfigWithBase bits baseLeft
+          (false :: suffixTail)).tape := by
+  let c0 : MachineDescription.Configuration :=
+    config BoolWordSuffixScannerDescription.start baseLeft
+      (List.append ((stageNatBits bits.length).map some)
+        (List.append ((cellsCodeBits (bits.map some)).map some)
+          (some false :: suffixTail.map some)))
+  rcases run_boolWordSuffix_raw_to_canonical_handoff_withBase
+      bits baseLeft suffixTail with
+    ⟨_forwardSteps, hforward⟩
+  have htape :=
+    runConfig_halt_tape_functional_from_config
+      boolWordSuffixScannerDescription_haltTransitionFree
+      (by simpa [c0] using hforward)
+      (by simpa [c0] using h)
+  exact htape.symm
+
 theorem cellListSuffixScannerDescription_runConfig_canonical_false_suffix_inv
     (cells baseLeft : List (Option Bool)) (suffixTail : Word Bool)
     {Tout : Tape Bool} {n : Nat}
