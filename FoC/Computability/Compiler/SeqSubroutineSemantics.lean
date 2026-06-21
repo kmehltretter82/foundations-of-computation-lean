@@ -864,6 +864,56 @@ theorem seqSubroutine_reaches_of_runConfig_eq
   exact seqSubroutine_reaches hA hB
     ⟨m, hmrun, hmfirst⟩ hBReach
 
+theorem seqSubroutine_runConfig_inv
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tout : Tape Bool} {n : Nat}
+    (hseq :
+      (seqSubroutine A B handoffMove).runConfig n
+          { state := (seqSubroutine A B handoffMove).start
+            tape := Tin } =
+        { state := (seqSubroutine A B handoffMove).halt
+          tape := Tout }) :
+    exists Tmid : Tape Bool,
+      (exists nA : Nat,
+        A.runConfig nA { state := A.start, tape := Tin } =
+          { state := A.halt, tape := Tmid } ∧
+        forall k : Nat,
+          k < nA ->
+            (A.runConfig k
+              { state := A.start, tape := Tin }).state ≠ A.halt) ∧
+        exists nB : Nat,
+          B.runConfig nB
+              { state := B.start,
+                tape := Tape.move handoffMove Tmid } =
+            { state := B.halt, tape := Tout } := by
+  have hseqFrag :
+      exists nSeq : Nat,
+        (Fragment.seq A.asFragment B.asFragment handoffMove).toDescription.runConfig nSeq
+            { state := (Fragment.seq A.asFragment B.asFragment handoffMove).entry,
+              tape := Tin } =
+          { state := (Fragment.seq A.asFragment B.asFragment handoffMove).exit,
+            tape := Tout } := by
+    exact ⟨n, by
+      simpa [seqSubroutine, asFragment, Fragment.seq] using hseq⟩
+  rcases Fragment.seq_reaches_inv
+      (A := A.asFragment) (B := B.asFragment)
+      (handoffMove := handoffMove)
+      (asFragment_wellFormed hA)
+      (asFragment_wellFormed hB)
+      hseqFrag with
+    ⟨Tmid, hAReach, hBReach⟩
+  rcases hAReach with ⟨nA, hArunA, hAfirst⟩
+  rcases hBReach with ⟨nB, hBrunB⟩
+  exact ⟨Tmid,
+    ⟨⟨nA, by
+        simpa [asFragment_toDescription, asFragment] using hArunA,
+      by
+        intro k hk
+        simpa [asFragment_toDescription, asFragment] using hAfirst k hk⟩,
+      ⟨nB, by
+        simpa [asFragment_toDescription, asFragment] using hBrunB⟩⟩⟩
+
 theorem seqSubroutine_haltsWithTape_of_haltsWithTape
     {A B : MachineDescription} {handoffMove : Direction}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)
