@@ -80,6 +80,93 @@ theorem markedPrefixScannerDescription_subroutineReady :
   ⟨markedPrefixScannerDescription_wellFormed,
     markedPrefixScannerDescription_haltTransitionFree⟩
 
+def NatSuffixScannerDescription : MachineDescription where
+  stateCount := MarkedPrefixScannerDescription.stateCount
+  start := 200
+  halt := MarkedPrefixScannerDescription.halt
+  transitions := MarkedPrefixScannerDescription.transitions
+
+theorem natSuffixScannerDescription_wellFormed :
+    NatSuffixScannerDescription.WellFormed := by
+  constructor
+  · native_decide
+  constructor
+  · native_decide
+  constructor
+  · native_decide
+  constructor
+  · intro t ht
+    exact transition_wellFormed_of_all
+      (l := NatSuffixScannerDescription.transitions)
+      (stateCount := NatSuffixScannerDescription.stateCount)
+      (by
+        native_decide) t ht
+  · intro t u ht hu hkey
+    exact transition_deterministic_of_all
+      (l := NatSuffixScannerDescription.transitions)
+      (by
+        native_decide) t u ht hu hkey
+
+theorem natSuffixScannerDescription_haltTransitionFree :
+    NatSuffixScannerDescription.HaltTransitionFree := by
+  intro t ht
+  exact transition_notFrom_of_all
+    (l := NatSuffixScannerDescription.transitions)
+    (state := NatSuffixScannerDescription.halt)
+    (by
+      native_decide) t ht
+
+theorem natSuffixScannerDescription_subroutineReady :
+    NatSuffixScannerDescription.SubroutineReady :=
+  ⟨natSuffixScannerDescription_wellFormed,
+    natSuffixScannerDescription_haltTransitionFree⟩
+
+theorem natBits_eq_encodeNatAppend
+    (n : Nat) (suffix : Word MachineCodeSymbol) :
+    MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.encodeNatAppend n suffix) =
+      List.append (stageNatBits n)
+        (MachineDescription.encodeCodeWordAsInput suffix) := by
+  rw [MachineDescription.encodeNatAppend]
+  rw [MachineDescription.encodeCodeWordAsInput_append]
+  rfl
+
+theorem tapeAtCells_move_right_move_left_cons
+    (cell : Option Bool) (left : List (Option Bool))
+    (head : Option Bool) (right : List (Option Bool)) :
+    Tape.move Direction.right
+        (Tape.move Direction.left
+          (tapeAtCells (cell :: left) (head :: right))) =
+      tapeAtCells (cell :: left) (head :: right) := by
+  rfl
+
+theorem runConfig_eq_of_transitions_eq
+    (D E : MachineDescription)
+    (htrans : D.transitions = E.transitions)
+    (n : Nat) (c : MachineDescription.Configuration) :
+    D.runConfig n c = E.runConfig n c := by
+  induction n generalizing c with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change
+        (match D.stepConfig c with
+        | none => c
+        | some next => D.runConfig n next) =
+          match E.stepConfig c with
+          | none => c
+          | some next => E.runConfig n next
+      have hstep : D.stepConfig c = E.stepConfig c := by
+        unfold MachineDescription.stepConfig
+        unfold MachineDescription.lookupTransition
+        rw [htrans]
+      rw [hstep]
+      cases E.stepConfig c with
+      | none =>
+          rfl
+      | some next =>
+          exact ih next
+
 theorem markedPrefix_lookup_210_false :
     MarkedPrefixScannerDescription.lookupTransition 210 (some false) =
       some
@@ -185,8 +272,8 @@ theorem markedPrefix_run_state200_stageNat_handoff
             (List.append ((stageNatBits stage).map some)
               (some b :: right))) =
         config MarkedPrefixScannerDescription.halt
-          (List.append tail left)
-          (some true :: some b :: right) := by
+      (List.append tail left)
+      (some true :: some b :: right) := by
   rcases stageNatBits_reverse_map_some_cons stage with
     ⟨tail, htail⟩
   refine ⟨tail, ?_⟩
@@ -197,6 +284,80 @@ theorem markedPrefix_run_state200_stageNat_handoff
   simpa [List.append_assoc] using
     markedPrefix_run_state210_handoff b (some true)
       (List.append tail left) right
+
+def natSuffixHandoffConfigWithBase
+    (stage : Nat) (baseLeft : List (Option Bool))
+    (suffixBits : Word Bool) : MachineDescription.Configuration :=
+  { state := NatSuffixScannerDescription.halt
+    tape :=
+      Tape.move Direction.left
+        (tapeAtCells
+          (List.append ((stageNatBits stage).reverse.map some)
+            baseLeft)
+          (suffixBits.map some)) }
+
+theorem natSuffix_run_state200_stageNat_to_state210
+    (stage : Nat) (left right : List (Option Bool)) :
+    NatSuffixScannerDescription.runConfig (4 * stage + 4)
+        (config 200 left
+          (List.append ((stageNatBits stage).map some) right)) =
+      config
+        210
+        (List.append ((stageNatBits stage).reverse.map some) left)
+        right := by
+  rw [runConfig_eq_of_transitions_eq NatSuffixScannerDescription
+    MarkedPrefixScannerDescription (by rfl)]
+  exact markedPrefix_run_state200_stageNat_to_state210 stage left right
+
+theorem natSuffix_run_state210_handoff
+    (b : Bool) (cell : Option Bool)
+    (left right : List (Option Bool)) :
+    NatSuffixScannerDescription.runConfig 1
+        (config 210 (cell :: left) (some b :: right)) =
+      config NatSuffixScannerDescription.halt left
+        (cell :: some b :: right) := by
+  rw [runConfig_eq_of_transitions_eq NatSuffixScannerDescription
+    MarkedPrefixScannerDescription (by rfl)]
+  exact markedPrefix_run_state210_handoff b cell left right
+
+theorem run_natSuffix_raw_to_handoff_withBase
+    (stage : Nat) (baseLeft : List (Option Bool))
+    (b : Bool) (suffixTail : Word Bool) :
+    exists steps : Nat,
+      NatSuffixScannerDescription.runConfig steps
+          (config 200 baseLeft
+            (List.append ((stageNatBits stage).map some)
+              (some b :: suffixTail.map some))) =
+        natSuffixHandoffConfigWithBase stage baseLeft
+          (b :: suffixTail) := by
+  rcases stageNatBits_reverse_map_some_cons stage with
+    ⟨tail, htail⟩
+  refine ⟨4 * stage + 5, ?_⟩
+  rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by omega]
+  rw [MachineDescription.runConfig_add]
+  rw [natSuffix_run_state200_stageNat_to_state210]
+  rw [htail]
+  unfold natSuffixHandoffConfigWithBase
+  simpa [config, tapeAtCells, htail, List.append_assoc] using
+    natSuffix_run_state210_handoff b (some true)
+      (List.append tail baseLeft) (suffixTail.map some)
+
+theorem natSuffixHandoffConfigWithBase_move_right
+    (stage : Nat) (baseLeft : List (Option Bool))
+    (b : Bool) (suffixTail : Word Bool) :
+    Tape.move Direction.right
+        (natSuffixHandoffConfigWithBase stage baseLeft
+          (b :: suffixTail)).tape =
+      tapeAtCells
+        (List.append ((stageNatBits stage).reverse.map some) baseLeft)
+        ((b :: suffixTail).map some) := by
+  rcases stageNatBits_reverse_map_some_cons stage with
+    ⟨tail, htail⟩
+  unfold natSuffixHandoffConfigWithBase
+  rw [htail]
+  simpa [List.append_assoc] using
+    tapeAtCells_move_right_move_left_cons (some true)
+      (List.append tail baseLeft) (some b) (suffixTail.map some)
 
 end DovetailStagePrefix
 end CanonicalLayouts
