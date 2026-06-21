@@ -12,15 +12,18 @@ This is the leaf for the complete-layout parser.  The corrected dependency
 plan keeps this proof local to the parser phase: it should recognize exactly
 complete canonical
 {name (full := FoC.Computability.MachineDescription.DovetailLayout)}`MachineDescription.DovetailLayout`
-encodings and preserve the input tape.
+encodings and preserve the input contents.
 
 This leaf is a genuine finite-parser construction, not a small semantic
 adapter.  It needs to validate the full
 {name (full := FoC.Computability.MachineDescription.DovetailLayout)}`MachineDescription.DovetailLayout`
 grammar, including counted cell lists inside the two encoded
 {name (full := FoC.Computability.MachineDescription.Configuration)}`MachineDescription.Configuration`
-values, and then restore the tape to
-{name (full := FoC.Computability.Tape.input)}`Tape.input`.
+values.  A complete final empty-suffix check reads the physical blank and
+therefore records it in the exact tape window; the checked parser contract uses
+that tape shape instead of pretending the exact
+{name (full := FoC.Computability.Tape.input)}`Tape.input` window can be
+recovered.
 -/
 
 namespace FoC
@@ -116,6 +119,27 @@ def LayoutClosedRecognizerSpec
 def LayoutClosedRecognizerConstruction : Prop :=
   exists recognizer : MachineDescription,
     LayoutClosedRecognizerSpec recognizer
+
+def LayoutCheckedClosedRecognizerSpec
+    (recognizer : MachineDescription) : Prop :=
+  recognizer.SubroutineReady ∧
+    (forall L : MachineDescription.DovetailLayout,
+      recognizer.HaltsWithTape
+        (ParsedLayoutBits L)
+        (ParsedLayoutCheckedHandoffTape L)) ∧
+      forall code : Word MachineCodeSymbol,
+      forall T : Tape Bool,
+        recognizer.HaltsWithTape
+            (MachineDescription.encodeCodeWordAsInput code) T ->
+          exists L : MachineDescription.DovetailLayout,
+            MachineDescription.DovetailLayout.decodeComplete code =
+              some L ∧
+            Tape.move tapeCodePrimitiveCodeWordHandoffMove T =
+              ParsedLayoutCheckedTape L
+
+def LayoutCheckedClosedRecognizerConstruction : Prop :=
+  exists recognizer : MachineDescription,
+    LayoutCheckedClosedRecognizerSpec recognizer
 
 def LayoutIdentityRightShiftedConstruction : Prop :=
   exists runner : MachineDescription,
@@ -272,7 +296,7 @@ theorem layoutIdentityRightShiftedConstruction_of_closedRecognizer
           hdecode
       subst code
       exact layoutIdentityPrimitive_encode L
-    · simpa [hT, ParsedLayoutHandoffTape, ParsedLayoutBits,
+    · simp [hT, ParsedLayoutHandoffTape, ParsedLayoutBits,
         ParsedLayoutTape]
 
 def LayoutParserFromClosedHandoff
@@ -292,6 +316,83 @@ theorem exactIdentityDescription_runConfig_from_start_layoutParser
     simp [MachineDescription.ExactIdentityDescription,
       MachineDescription.runConfig, MachineDescription.stepConfig,
       MachineDescription.lookupTransition]
+
+theorem layoutCheckedParserFromClosedRecognizer_spec
+    {recognizer : MachineDescription}
+    (hrecognizer : LayoutCheckedClosedRecognizerSpec recognizer) :
+    LayoutCheckedParserSpec (LayoutParserFromClosedHandoff recognizer) := by
+  let identity := MachineDescription.ExactIdentityDescription
+  have hrecognizerReady : recognizer.SubroutineReady :=
+    hrecognizer.left
+  have hidentityReady : identity.SubroutineReady :=
+    ⟨MachineDescription.exactIdentityDescription_wellFormed,
+      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+  constructor
+  · exact
+      MachineDescription.seqSubroutine_subroutineReady
+        hrecognizerReady hidentityReady
+  constructor
+  · intro L
+    have hidentityReach :
+        exists nB : Nat,
+          identity.runConfig nB
+              { state := identity.start
+                tape :=
+                  Tape.move tapeCodePrimitiveCodeWordHandoffMove
+                    (ParsedLayoutCheckedHandoffTape L) } =
+            { state := identity.halt
+              tape := ParsedLayoutCheckedTape L } := by
+      refine ⟨0, ?_⟩
+      have hmove :
+          Tape.move tapeCodePrimitiveCodeWordHandoffMove
+              (ParsedLayoutCheckedHandoffTape L) =
+            ParsedLayoutCheckedTape L := by
+        simpa [tapeCodePrimitiveCodeWordHandoffMove] using
+          parsedLayoutCheckedHandoffTape_move_left L
+      rw [hmove]
+      rfl
+    simpa [LayoutParserFromClosedHandoff, identity,
+      ParsedLayoutBits, tapeCodePrimitiveCodeWordHandoffMove] using
+      MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+        (A := recognizer) (B := identity)
+        (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
+        hrecognizerReady hidentityReady
+        (hrecognizer.right.left L) hidentityReach
+  · intro code T hhalt
+    rcases
+        MachineDescription.seqSubroutine_haltsWithTape_inv
+          (A := recognizer) (B := identity)
+          (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
+          hrecognizerReady hidentityReady
+          (by simpa [LayoutParserFromClosedHandoff, identity] using hhalt) with
+      ⟨Tmid, hrecognizerHalt, hidentityReach⟩
+    rcases hrecognizer.right.right code Tmid hrecognizerHalt with
+      ⟨L, hdecode, hhandoff⟩
+    rcases hidentityReach with ⟨nB, hidentityRun⟩
+    have hT :
+        T = Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid := by
+      have hcfg :
+          ({ state := identity.halt
+             tape := Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid } :
+            MachineDescription.Configuration) =
+          { state := identity.halt, tape := T } := by
+        simpa [identity] using
+          ((exactIdentityDescription_runConfig_from_start_layoutParser
+              nB
+              (Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid)).symm.trans
+            hidentityRun)
+      exact (congrArg MachineDescription.Configuration.tape hcfg).symm
+    refine ⟨L, hdecode, ?_⟩
+    rw [hT]
+    exact hhandoff
+
+theorem layoutCheckedParserConstruction_of_closedRecognizer
+    (h : LayoutCheckedClosedRecognizerConstruction) :
+    LayoutCheckedParserConstruction := by
+  rcases h with ⟨recognizer, hrecognizer⟩
+  exact
+    ⟨LayoutParserFromClosedHandoff recognizer,
+      layoutCheckedParserFromClosedRecognizer_spec hrecognizer⟩
 
 theorem layoutParserFromClosedHandoff_spec
     {closed : MachineDescription}

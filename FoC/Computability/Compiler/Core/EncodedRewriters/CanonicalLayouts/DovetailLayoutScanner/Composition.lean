@@ -60,6 +60,117 @@ theorem configurationSuffixScannerDescription_subroutineReady :
     DovetailStagePrefix.natSuffixScannerDescription_subroutineReady
     tapeSuffixScannerDescription_subroutineReady
 
+def FinalHitFlagsScannerDescription : MachineDescription :=
+  MachineDescription.seqSubroutine
+    BoolSuffixScannerDescription
+    BoolFinalScannerDescription
+    Direction.right
+
+theorem finalHitFlagsScannerDescription_subroutineReady :
+    FinalHitFlagsScannerDescription.SubroutineReady :=
+  MachineDescription.seqSubroutine_subroutineReady
+    boolSuffixScannerDescription_subroutineReady
+    boolFinalScannerDescription_subroutineReady
+
+theorem run_finalHitFlags_raw_to_handoff_withBase
+    (acceptHit rejectHit : Bool)
+    (baseLeft : List (Option Bool)) :
+    exists steps : Nat,
+      FinalHitFlagsScannerDescription.runConfig steps
+          { state := FinalHitFlagsScannerDescription.start
+            tape :=
+              tapeAtCells baseLeft
+                ((boolFieldBits acceptHit
+                  (boolFieldBits rejectHit [])).map some) } =
+        { state := FinalHitFlagsScannerDescription.halt
+          tape :=
+            (boolFinalHandoffConfigWithBase rejectHit
+              (List.append
+                ((cellCodeBits (some acceptHit)).reverse.map some)
+                baseLeft)).tape } := by
+  rcases cellCodeBits_cons_false (some rejectHit) with
+    ⟨tail, htail⟩
+  rcases run_boolOnlySuffix_raw_to_handoff_withBase
+      acceptHit baseLeft false tail with
+    ⟨acceptSteps, haccept⟩
+  let baseAfterAccept :=
+    List.append ((cellCodeBits (some acceptHit)).reverse.map some)
+      baseLeft
+  let Tmid :=
+    boolOnlySuffixHandoffConfigWithBase acceptHit baseLeft
+      (false :: tail)
+  have hAready : BoolSuffixScannerDescription.SubroutineReady :=
+    boolSuffixScannerDescription_subroutineReady
+  have hBready : BoolFinalScannerDescription.SubroutineReady :=
+    boolFinalScannerDescription_subroutineReady
+  have hArun :
+      BoolSuffixScannerDescription.runConfig acceptSteps
+          { state := BoolSuffixScannerDescription.start
+            tape :=
+              tapeAtCells baseLeft
+                ((boolFieldBits acceptHit
+                  (boolFieldBits rejectHit [])).map some) } =
+        { state := BoolSuffixScannerDescription.halt
+          tape := Tmid.tape } := by
+    change
+      BoolSuffixScannerDescription.runConfig acceptSteps
+          (config 10 baseLeft
+            ((boolFieldBits acceptHit
+              (boolFieldBits rejectHit [])).map some)) =
+        Tmid
+    rw [show
+        ((boolFieldBits acceptHit
+          (boolFieldBits rejectHit [])).map some) =
+          List.append ((cellCodeBits (some acceptHit)).map some)
+            (some false :: tail.map some) by
+      change
+        (cellFieldBits (some acceptHit)
+          (cellFieldBits (some rejectHit) [])).map some =
+          List.append ((cellCodeBits (some acceptHit)).map some)
+            (some false :: tail.map some)
+      simp [cellFieldBits, htail, List.map_append]]
+    simpa [Tmid] using haccept
+  have hBReach :
+      exists nB : Nat,
+        BoolFinalScannerDescription.runConfig nB
+            { state := BoolFinalScannerDescription.start
+              tape := Tape.move Direction.right Tmid.tape } =
+          { state := BoolFinalScannerDescription.halt
+            tape :=
+              (boolFinalHandoffConfigWithBase rejectHit
+                baseAfterAccept).tape } := by
+    rcases run_boolFinal_raw_to_handoff_withBase
+        rejectHit baseAfterAccept with
+      ⟨finalSteps, hfinal⟩
+    refine ⟨finalSteps, ?_⟩
+    have hmove :
+        Tape.move Direction.right Tmid.tape =
+          tapeAtCells baseAfterAccept
+            ((cellCodeBits (some rejectHit)).map some) := by
+      simpa [Tmid, baseAfterAccept, htail] using
+        boolOnlySuffixHandoffConfigWithBase_move_right
+          acceptHit baseLeft false tail
+    rw [show
+        ({ state := BoolFinalScannerDescription.start
+           tape := Tape.move Direction.right Tmid.tape } :
+            MachineDescription.Configuration) =
+          { state := BoolFinalScannerDescription.start
+            tape :=
+              tapeAtCells baseAfterAccept
+                ((cellCodeBits (some rejectHit)).map some) } by
+        simp [hmove]]
+    simpa [config] using hfinal
+  rcases
+      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+        (A := BoolSuffixScannerDescription)
+        (B := BoolFinalScannerDescription)
+        (handoffMove := Direction.right)
+        hAready hBready hArun hBReach with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [FinalHitFlagsScannerDescription, Tmid, baseAfterAccept]
+    using hsteps
+
 theorem run_cellThenCellList_raw_to_handoff_withBase
     (head : Option Bool) (right baseLeft : List (Option Bool))
     (suffixTail : Word Bool) :

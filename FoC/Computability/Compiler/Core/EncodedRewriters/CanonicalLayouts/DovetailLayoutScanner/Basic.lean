@@ -785,6 +785,101 @@ theorem boolOnlySuffixHandoffConfigWithBase_move_right
         (some true :: some true :: some false :: baseLeft)
         (some b) (suffixTail.map some)
 
+def BoolFinalScannerDescription : MachineDescription where
+  stateCount := 100
+  start := 10
+  halt := 99
+  transitions :=
+    [ keepMove 10 (some false) Direction.right 11
+    , keepMove 11 (some true) Direction.right 12
+    , keepMove 12 (some false) Direction.right 13
+    , keepMove 12 (some true) Direction.right 14
+    , keepMove 13 (some true) Direction.right 20
+    , keepMove 14 (some false) Direction.right 20
+    , keepMove 20 none Direction.left 99
+    ]
+
+theorem boolFinalScannerDescription_wellFormed :
+    BoolFinalScannerDescription.WellFormed := by
+  constructor
+  · native_decide
+  constructor
+  · native_decide
+  constructor
+  · native_decide
+  constructor
+  · intro t ht
+    exact transition_wellFormed_of_all
+      (l := BoolFinalScannerDescription.transitions)
+      (stateCount := BoolFinalScannerDescription.stateCount)
+      (by
+        native_decide) t ht
+  · intro t u ht hu hkey
+    exact transition_deterministic_of_all
+      (l := BoolFinalScannerDescription.transitions)
+      (by
+        native_decide) t u ht hu hkey
+
+theorem boolFinalScannerDescription_haltTransitionFree :
+    BoolFinalScannerDescription.HaltTransitionFree := by
+  intro t ht
+  exact transition_notFrom_of_all
+    (l := BoolFinalScannerDescription.transitions)
+    (state := BoolFinalScannerDescription.halt)
+    (by
+      native_decide) t ht
+
+theorem boolFinalScannerDescription_subroutineReady :
+    BoolFinalScannerDescription.SubroutineReady :=
+  ⟨boolFinalScannerDescription_wellFormed,
+    boolFinalScannerDescription_haltTransitionFree⟩
+
+def boolFinalHandoffConfigWithBase
+    (flag : Bool) (baseLeft : List (Option Bool)) :
+    MachineDescription.Configuration :=
+  { state := BoolFinalScannerDescription.halt
+    tape :=
+      Tape.move Direction.left
+        (tapeAtCells
+          (List.append ((cellCodeBits (some flag)).reverse.map some)
+            baseLeft)
+          []) }
+
+theorem run_boolFinal_raw_to_handoff_withBase
+    (flag : Bool) (baseLeft : List (Option Bool)) :
+    exists steps : Nat,
+      BoolFinalScannerDescription.runConfig steps
+          (config 10 baseLeft
+            ((cellCodeBits (some flag)).map some)) =
+        boolFinalHandoffConfigWithBase flag baseLeft := by
+  refine ⟨5, ?_⟩
+  cases flag <;>
+    simp [BoolFinalScannerDescription,
+      boolFinalHandoffConfigWithBase, cellCodeBits,
+      config, tapeAtCells, keepMove,
+      MachineDescription.runConfig, MachineDescription.stepConfig,
+      MachineDescription.lookupTransition, MachineDescription.Matches,
+      MachineDescription.transition, MachineDescription.encodeCell,
+      MachineDescription.encodeCodeWordAsInput,
+      MachineDescription.encodeCodeSymbolAsInput,
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+      Tape.moveRight]
+
+theorem boolFinalHandoffConfigWithBase_move_right
+    (flag : Bool) (baseLeft : List (Option Bool)) :
+    Tape.move Direction.right
+        (boolFinalHandoffConfigWithBase flag baseLeft).tape =
+      tapeAtCells
+        (List.append ((cellCodeBits (some flag)).reverse.map some)
+          baseLeft)
+        [] := by
+  cases flag <;>
+    simp [boolFinalHandoffConfigWithBase, cellCodeBits,
+      tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight,
+      MachineDescription.encodeCell,
+      MachineDescription.encodeCodeWordAsInput,
+      MachineDescription.encodeCodeSymbolAsInput]
+
 /-!
 ## Leading transition marker scanner
 
