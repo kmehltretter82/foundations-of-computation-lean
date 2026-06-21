@@ -141,6 +141,65 @@ def LayoutCheckedClosedRecognizerConstruction : Prop :=
   exists recognizer : MachineDescription,
     LayoutCheckedClosedRecognizerSpec recognizer
 
+theorem parsedLayoutBits_eq_dovetailLayoutFieldBits_nil
+    (L : MachineDescription.DovetailLayout) :
+    ParsedLayoutBits L =
+      CanonicalLayouts.DovetailLayoutScanner.dovetailLayoutFieldBits L [] := by
+  simpa [ParsedLayoutBits, MachineDescription.DovetailLayout.encode] using
+    CanonicalLayouts.DovetailLayoutScanner.dovetailLayoutFieldBits_eq_encodeAppend
+      L []
+
+theorem parsedLayoutCheckedHandoffTape_eq_scanner_handoff
+    (L : MachineDescription.DovetailLayout) :
+    ParsedLayoutCheckedHandoffTape L =
+      CanonicalLayouts.DovetailLayoutScanner.restoredCheckedHandoffTapeFromTail
+        (CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyRestoredBitsRev
+          L).reverse := by
+  have hbits :
+      ParsedLayoutBits L =
+        false ::
+          CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits
+            L := by
+    calc
+      ParsedLayoutBits L =
+          CanonicalLayouts.DovetailLayoutScanner.dovetailLayoutFieldBits
+            L [] :=
+        parsedLayoutBits_eq_dovetailLayoutFieldBits_nil L
+      _ = false ::
+          CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits
+            L :=
+        CanonicalLayouts.DovetailLayoutScanner.dovetailLayoutFieldBits_nil_eq_first_body
+          L
+  simp [ParsedLayoutCheckedHandoffTape, ParsedLayoutCheckedTape,
+    checkedInputTape, hbits,
+    CanonicalLayouts.DovetailLayoutScanner.restoredCheckedHandoffTapeFromTail,
+    CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyRestoredBitsRev_reverse,
+    Tape.move, Tape.moveRight]
+
+theorem checkedDovetailLayoutScannerDescription_haltsWithTape
+    (L : MachineDescription.DovetailLayout) :
+    CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription.HaltsWithTape
+      (ParsedLayoutBits L) (ParsedLayoutCheckedHandoffTape L) := by
+  rcases
+      CanonicalLayouts.DovetailLayoutScanner.run_checkedDovetailLayoutScanner_raw_to_checkedHandoff
+        L with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  have hrun :
+      CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription.runConfig steps
+          (CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription.initial
+            (ParsedLayoutBits L)) =
+        { state :=
+            CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription.halt
+          tape := ParsedLayoutCheckedHandoffTape L } := by
+    rw [parsedLayoutBits_eq_dovetailLayoutFieldBits_nil L]
+    rw [parsedLayoutCheckedHandoffTape_eq_scanner_handoff L]
+    simpa [MachineDescription.initial,
+      DovetailInitialLayoutInitializer.tapeAtCells] using hsteps
+  constructor
+  · simpa using congrArg MachineDescription.Configuration.state hrun
+  · simpa using congrArg MachineDescription.Configuration.tape hrun
+
 def LayoutIdentityRightShiftedConstruction : Prop :=
   exists runner : MachineDescription,
     RightShiftedOutputCompiledSubroutineByDescription
