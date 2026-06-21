@@ -22,6 +22,368 @@ namespace DovetailLayoutScanner
 open FoC.Computability.DovetailInitialLayoutInitializer
 open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
 
+theorem cellListSuffixScannerDescription_runConfig_start_cell_inv
+    (baseLeft : List (Option Bool)) (first : Option Bool)
+    (suffixTail : List (Option Bool))
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      CellListSuffixScannerDescription.runConfig n
+          (config CellListSuffixScannerDescription.start baseLeft
+            (first :: suffixTail)) =
+        { state := CellListSuffixScannerDescription.halt
+          tape := Tout }) :
+      first = some false := by
+  cases first with
+  | none =>
+      exfalso
+      cases n with
+      | zero =>
+          simp [CellListSuffixScannerDescription, config, tapeAtCells,
+            MachineDescription.runConfig] at h
+      | succ k =>
+          let c0 : MachineDescription.Configuration :=
+            config CellListSuffixScannerDescription.start baseLeft
+              (none :: suffixTail)
+          have hstep :
+              CellListSuffixScannerDescription.stepConfig c0 = none := by
+            cases suffixTail <;>
+              simp [c0, CellListSuffixScannerDescription, config,
+                tapeAtCells, keep, keepMove, writeMove,
+                scanLeftToSentinelRestart,
+                MachineDescription.stepConfig,
+                MachineDescription.lookupTransition,
+                MachineDescription.Matches,
+                MachineDescription.transition, Tape.read]
+          have hstay :
+              CellListSuffixScannerDescription.runConfig (Nat.succ k) c0 =
+                c0 := by
+            exact MachineDescription.runConfig_of_stepConfig_none hstep
+              (Nat.succ k)
+          have hstate :=
+            congrArg MachineDescription.Configuration.state
+              (hstay.symm.trans (by simpa [c0] using h))
+          simp [c0, config, CellListSuffixScannerDescription] at hstate
+  | some bit =>
+      cases bit with
+      | false =>
+          rfl
+      | true =>
+          exfalso
+          cases n with
+          | zero =>
+              simp [CellListSuffixScannerDescription, config, tapeAtCells,
+                MachineDescription.runConfig] at h
+          | succ k =>
+              let c0 : MachineDescription.Configuration :=
+                config CellListSuffixScannerDescription.start baseLeft
+                  (some true :: suffixTail)
+              have hstep :
+                  CellListSuffixScannerDescription.stepConfig c0 = none := by
+                cases suffixTail <;>
+                  simp [c0, CellListSuffixScannerDescription, config,
+                    tapeAtCells, keep, keepMove, writeMove,
+                    scanLeftToSentinelRestart,
+                    MachineDescription.stepConfig,
+                    MachineDescription.lookupTransition,
+                    MachineDescription.Matches,
+                    MachineDescription.transition, Tape.read]
+              have hstay :
+                  CellListSuffixScannerDescription.runConfig (Nat.succ k)
+                      c0 =
+                    c0 := by
+                exact MachineDescription.runConfig_of_stepConfig_none hstep
+                  (Nat.succ k)
+              have hstate :=
+                congrArg MachineDescription.Configuration.state
+                  (hstay.symm.trans (by simpa [c0] using h))
+              simp [c0, config, CellListSuffixScannerDescription] at hstate
+
+theorem cellListSuffixScannerDescription_runConfig_start_bit_inv
+    (baseLeft : List (Option Bool)) (first : Bool)
+    (suffixTail : List (Option Bool))
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      CellListSuffixScannerDescription.runConfig n
+          (config CellListSuffixScannerDescription.start baseLeft
+            (some first :: suffixTail)) =
+        { state := CellListSuffixScannerDescription.halt
+          tape := Tout }) :
+      first = false := by
+  have hcell :=
+    cellListSuffixScannerDescription_runConfig_start_cell_inv
+      baseLeft (some first) suffixTail h
+  cases first <;> simp at hcell ⊢
+
+theorem primitive_runConfig_state_ne_halt_of_reaches_stuck
+    {D : MachineDescription}
+    {c stuck : MachineDescription.Configuration} {k n : Nat}
+    (hD : D.HaltTransitionFree)
+    (hprefix : D.runConfig k c = stuck)
+    (hstep : D.stepConfig stuck = none)
+    (hstuck : stuck.state ≠ D.halt) :
+    (D.runConfig n c).state ≠ D.halt := by
+  by_cases hle : k ≤ n
+  · intro hhalt
+    let rem := n - k
+    have hn : n = k + rem := by omega
+    have hrun :
+        D.runConfig n c = D.runConfig rem stuck := by
+      rw [hn, MachineDescription.runConfig_add, hprefix]
+    have hstay :=
+      MachineDescription.runConfig_of_stepConfig_none hstep rem
+    have hstate : stuck.state = D.halt := by
+      have hstateEq :
+          (D.runConfig n c).state = stuck.state := by
+        rw [hrun, hstay]
+      exact hstateEq ▸ hhalt
+    exact hstuck hstate
+  · intro hhalt
+    let rem := k - n
+    have hk : k = n + rem := by omega
+    have hrunHalt :
+        D.runConfig n c =
+          { state := D.halt, tape := (D.runConfig n c).tape } := by
+      cases hcfg : D.runConfig n c with
+      | mk state tape =>
+          simp [hcfg] at hhalt ⊢
+          exact hhalt
+    have hstay :
+        D.runConfig rem (D.runConfig n c) =
+          D.runConfig n c := by
+      rw [hrunHalt]
+      exact MachineDescription.runConfig_halt hD
+        (D.runConfig n c).tape rem
+    have hstate : stuck.state = D.halt := by
+      have hstuckEq :
+          stuck = D.runConfig n c := by
+        rw [← hprefix, hk, MachineDescription.runConfig_add, hstay]
+      rw [hstuckEq]
+      exact hhalt
+    exact hstuck hstate
+
+theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
+    (baseLeft : List (Option Bool)) (bits : Word Bool)
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      CellListSuffixScannerDescription.runConfig n
+          (config CellListSuffixScannerDescription.start baseLeft
+            (bits.map some)) =
+        { state := CellListSuffixScannerDescription.halt
+          tape := Tout }) :
+    exists doneBit : Bool,
+    exists tail : Word Bool,
+      bits = false :: false :: true :: doneBit :: tail := by
+  let start : MachineDescription.Configuration :=
+    config CellListSuffixScannerDescription.start baseLeft (bits.map some)
+  have hhaltState :
+      (CellListSuffixScannerDescription.runConfig n start).state =
+        CellListSuffixScannerDescription.halt := by
+    simpa [start] using
+      congrArg MachineDescription.Configuration.state h
+  cases bits with
+  | nil =>
+      let stuck : MachineDescription.Configuration := start
+      have hstep :
+          CellListSuffixScannerDescription.stepConfig stuck = none := by
+        simp [stuck, start, CellListSuffixScannerDescription, config,
+          tapeAtCells, keep, keepMove, writeMove,
+          scanLeftToSentinelRestart, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read]
+      have hstuck :
+          stuck.state ≠ CellListSuffixScannerDescription.halt := by
+        simp [stuck, start, CellListSuffixScannerDescription, config]
+      exact False.elim
+        (primitive_runConfig_state_ne_halt_of_reaches_stuck
+          cellListSuffixScannerDescription_haltTransitionFree
+          (D := CellListSuffixScannerDescription)
+          (c := start) (stuck := stuck) (k := 0) (n := n)
+          rfl hstep hstuck hhaltState)
+  | cons first rest =>
+      cases first
+      · cases rest with
+        | nil =>
+            let stuck :=
+              CellListSuffixScannerDescription.runConfig 1 start
+            have hstep :
+                CellListSuffixScannerDescription.stepConfig stuck = none := by
+              simp [stuck, start, CellListSuffixScannerDescription, config,
+                tapeAtCells, keep, keepMove, writeMove,
+                scanLeftToSentinelRestart, MachineDescription.runConfig,
+                MachineDescription.stepConfig,
+                MachineDescription.lookupTransition,
+                MachineDescription.Matches,
+                MachineDescription.transition, Tape.read, Tape.write,
+                Tape.move, Tape.moveRight]
+            have hstuck :
+                stuck.state ≠ CellListSuffixScannerDescription.halt := by
+              simp [stuck, start, CellListSuffixScannerDescription, config,
+                tapeAtCells, keep, keepMove, writeMove,
+                scanLeftToSentinelRestart, MachineDescription.runConfig,
+                MachineDescription.stepConfig,
+                MachineDescription.lookupTransition,
+                MachineDescription.Matches,
+                MachineDescription.transition, Tape.read, Tape.write,
+                Tape.move, Tape.moveRight]
+            exact False.elim
+              (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                cellListSuffixScannerDescription_haltTransitionFree
+                (D := CellListSuffixScannerDescription)
+                (c := start) (stuck := stuck) (k := 1) (n := n)
+                rfl hstep hstuck hhaltState)
+        | cons second restTail =>
+            cases second
+            · cases restTail with
+              | nil =>
+                  let stuck :=
+                    CellListSuffixScannerDescription.runConfig 2 start
+                  have hstep :
+                      CellListSuffixScannerDescription.stepConfig stuck =
+                        none := by
+                    simp [stuck, start, CellListSuffixScannerDescription,
+                      config, tapeAtCells, keep, keepMove, writeMove,
+                      scanLeftToSentinelRestart,
+                      MachineDescription.runConfig,
+                      MachineDescription.stepConfig,
+                      MachineDescription.lookupTransition,
+                      MachineDescription.Matches,
+                      MachineDescription.transition, Tape.read, Tape.write,
+                      Tape.move, Tape.moveRight]
+                  have hstuck :
+                      stuck.state ≠
+                        CellListSuffixScannerDescription.halt := by
+                    simp [stuck, start, CellListSuffixScannerDescription,
+                      config, tapeAtCells, keep, keepMove, writeMove,
+                      scanLeftToSentinelRestart,
+                      MachineDescription.runConfig,
+                      MachineDescription.stepConfig,
+                      MachineDescription.lookupTransition,
+                      MachineDescription.Matches,
+                      MachineDescription.transition, Tape.read, Tape.write,
+                      Tape.move, Tape.moveRight]
+                  exact False.elim
+                    (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                      cellListSuffixScannerDescription_haltTransitionFree
+                      (D := CellListSuffixScannerDescription)
+                      (c := start) (stuck := stuck) (k := 2) (n := n)
+                      rfl hstep hstuck hhaltState)
+              | cons third tail =>
+                  cases third
+                  · let stuck :=
+                      CellListSuffixScannerDescription.runConfig 2 start
+                    have hstep :
+                        CellListSuffixScannerDescription.stepConfig stuck =
+                          none := by
+                      cases tail <;>
+                        simp [stuck, start,
+                          CellListSuffixScannerDescription, config,
+                          tapeAtCells, keep, keepMove, writeMove,
+                          scanLeftToSentinelRestart,
+                          MachineDescription.runConfig,
+                          MachineDescription.stepConfig,
+                          MachineDescription.lookupTransition,
+                          MachineDescription.Matches,
+                          MachineDescription.transition, Tape.read,
+                          Tape.write, Tape.move, Tape.moveRight]
+                    have hstuck :
+                        stuck.state ≠
+                          CellListSuffixScannerDescription.halt := by
+                      cases tail <;>
+                        simp [stuck, start,
+                          CellListSuffixScannerDescription, config,
+                          tapeAtCells, keep, keepMove, writeMove,
+                          scanLeftToSentinelRestart,
+                          MachineDescription.runConfig,
+                          MachineDescription.stepConfig,
+                          MachineDescription.lookupTransition,
+                          MachineDescription.Matches,
+                          MachineDescription.transition, Tape.read,
+                          Tape.write, Tape.move, Tape.moveRight]
+                    exact False.elim
+                      (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                        cellListSuffixScannerDescription_haltTransitionFree
+                        (D := CellListSuffixScannerDescription)
+                        (c := start) (stuck := stuck) (k := 2) (n := n)
+                        rfl hstep hstuck hhaltState)
+                  · cases tail with
+                    | nil =>
+                        let stuck :=
+                          CellListSuffixScannerDescription.runConfig 4 start
+                        have hstep :
+                            CellListSuffixScannerDescription.stepConfig
+                                stuck = none := by
+                          simp [stuck, start,
+                            CellListSuffixScannerDescription, config,
+                            tapeAtCells, keep, keepMove, writeMove,
+                            scanLeftToSentinelRestart,
+                            MachineDescription.runConfig,
+                            MachineDescription.stepConfig,
+                            MachineDescription.lookupTransition,
+                            MachineDescription.Matches,
+                            MachineDescription.transition, Tape.read,
+                            Tape.write, Tape.move, Tape.moveRight]
+                        have hstuck :
+                            stuck.state ≠
+                              CellListSuffixScannerDescription.halt := by
+                          simp [stuck, start,
+                            CellListSuffixScannerDescription, config,
+                            tapeAtCells, keep, keepMove, writeMove,
+                            scanLeftToSentinelRestart,
+                            MachineDescription.runConfig,
+                            MachineDescription.stepConfig,
+                            MachineDescription.lookupTransition,
+                            MachineDescription.Matches,
+                            MachineDescription.transition, Tape.read,
+                            Tape.write, Tape.move, Tape.moveRight]
+                        exact False.elim
+                          (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                            cellListSuffixScannerDescription_haltTransitionFree
+                            (D := CellListSuffixScannerDescription)
+                            (c := start) (stuck := stuck) (k := 4)
+                            (n := n) rfl hstep hstuck hhaltState)
+                    | cons doneBit tailRest =>
+                        exact ⟨doneBit, tailRest, rfl⟩
+            · let stuck :=
+                CellListSuffixScannerDescription.runConfig 1 start
+              have hstep :
+                  CellListSuffixScannerDescription.stepConfig stuck = none := by
+                cases restTail <;>
+                  simp [stuck, start, CellListSuffixScannerDescription,
+                    config, tapeAtCells, keep, keepMove, writeMove,
+                    scanLeftToSentinelRestart,
+                    MachineDescription.runConfig,
+                    MachineDescription.stepConfig,
+                    MachineDescription.lookupTransition,
+                    MachineDescription.Matches,
+                    MachineDescription.transition, Tape.read, Tape.write,
+                    Tape.move, Tape.moveRight]
+              have hstuck :
+                  stuck.state ≠ CellListSuffixScannerDescription.halt := by
+                cases restTail <;>
+                  simp [stuck, start, CellListSuffixScannerDescription,
+                    config, tapeAtCells, keep, keepMove, writeMove,
+                    scanLeftToSentinelRestart,
+                    MachineDescription.runConfig,
+                    MachineDescription.stepConfig,
+                    MachineDescription.lookupTransition,
+                    MachineDescription.Matches,
+                    MachineDescription.transition, Tape.read, Tape.write,
+                    Tape.move, Tape.moveRight]
+              exact False.elim
+                (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                  cellListSuffixScannerDescription_haltTransitionFree
+                  (D := CellListSuffixScannerDescription)
+                  (c := start) (stuck := stuck) (k := 1) (n := n)
+                  rfl hstep hstuck hhaltState)
+      · have hfirstFalse :
+            true = false := by
+          exact
+            cellListSuffixScannerDescription_runConfig_start_bit_inv
+              baseLeft true (rest.map some)
+              (by
+                simpa [start] using h)
+        cases hfirstFalse
+
 theorem natSuffixScannerDescription_runConfig_nonblank_suffix_inv
     (stage : Nat) (baseLeft : List (Option Bool))
     (b : Bool) (suffixTail : List (Option Bool))
