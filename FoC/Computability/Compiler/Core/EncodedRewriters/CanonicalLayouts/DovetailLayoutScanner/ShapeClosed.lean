@@ -70,6 +70,174 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_inputNatPrefix_inv
   cases hfield
   exact ⟨doneBit, inputTail, hbits⟩
 
+theorem encodeCodeWordAsInput_transition_prefix_inv
+    {code : Word MachineCodeSymbol} {tail : Word Bool}
+    (h :
+      MachineDescription.encodeCodeWordAsInput code =
+        false :: false :: false :: true :: tail) :
+    exists rest : Word MachineCodeSymbol,
+      code = MachineCodeSymbol.transition :: rest ∧
+        MachineDescription.encodeCodeWordAsInput rest = tail := by
+  cases code with
+  | nil =>
+      simp [MachineDescription.encodeCodeWordAsInput] at h
+  | cons symbol rest =>
+      cases symbol with
+      | header =>
+          simp [MachineDescription.encodeCodeWordAsInput,
+            MachineDescription.encodeCodeSymbolAsInput] at h
+          cases h
+      | transition =>
+          simp [MachineDescription.encodeCodeWordAsInput,
+            MachineDescription.encodeCodeSymbolAsInput] at h
+          cases h
+          exact ⟨rest, rfl, rfl⟩
+      | tick =>
+          simp [MachineDescription.encodeCodeWordAsInput,
+            MachineDescription.encodeCodeSymbolAsInput] at h
+          cases h
+      | done =>
+          simp [MachineDescription.encodeCodeWordAsInput,
+            MachineDescription.encodeCodeSymbolAsInput] at h
+          cases h
+      | blank =>
+          simp [MachineDescription.encodeCodeWordAsInput,
+            MachineDescription.encodeCodeSymbolAsInput] at h
+          cases h
+      | zero =>
+          simp [MachineDescription.encodeCodeWordAsInput,
+            MachineDescription.encodeCodeSymbolAsInput] at h
+          cases h
+      | one =>
+          simp [MachineDescription.encodeCodeWordAsInput,
+            MachineDescription.encodeCodeSymbolAsInput] at h
+          cases h
+      | moveLeft =>
+          simp [MachineDescription.encodeCodeWordAsInput,
+            MachineDescription.encodeCodeSymbolAsInput] at h
+          cases h
+      | moveRight =>
+          simp [MachineDescription.encodeCodeWordAsInput,
+            MachineDescription.encodeCodeSymbolAsInput] at h
+          cases h
+
+theorem encodeCodeWordAsInput_nat_opener_inv
+    {code : Word MachineCodeSymbol} {doneBit : Bool}
+    {tail : Word Bool}
+    (h :
+      MachineDescription.encodeCodeWordAsInput code =
+        false :: false :: true :: doneBit :: tail) :
+    exists rest : Word MachineCodeSymbol,
+      code =
+        (if doneBit then MachineCodeSymbol.done else MachineCodeSymbol.tick) ::
+          rest ∧
+        MachineDescription.encodeCodeWordAsInput rest = tail := by
+  cases code with
+  | nil =>
+      simp [MachineDescription.encodeCodeWordAsInput] at h
+  | cons symbol rest =>
+      cases doneBit
+      · cases symbol with
+        | header =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+        | transition =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+        | tick =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+            exact ⟨rest, rfl, rfl⟩
+        | done =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+        | blank =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+        | zero =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+        | one =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+        | moveLeft =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+        | moveRight =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+      · cases symbol with
+        | header =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+        | transition =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+        | tick =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+        | done =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+            exact ⟨rest, rfl, rfl⟩
+        | blank =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+        | zero =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+        | one =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+        | moveLeft =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+        | moveRight =>
+            simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput] at h
+            cases h
+
+theorem checkedDovetailLayoutScannerDescription_haltsWithTape_codeInputNatOpener_inv
+    {code : Word MachineCodeSymbol} {Tout : Tape Bool}
+    (h :
+      CheckedDovetailLayoutScannerDescription.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) Tout) :
+    exists doneBit : Bool,
+    exists inputRest : Word MachineCodeSymbol,
+      code =
+        MachineCodeSymbol.transition ::
+          (if doneBit then MachineCodeSymbol.done else MachineCodeSymbol.tick) ::
+            inputRest := by
+  rcases
+      checkedDovetailLayoutScannerDescription_haltsWithTape_inputNatPrefix_inv
+        h with
+    ⟨doneBit, inputTail, hbits⟩
+  rcases encodeCodeWordAsInput_transition_prefix_inv hbits with
+    ⟨inputCode, hcode, hinputBits⟩
+  rcases encodeCodeWordAsInput_nat_opener_inv
+      (doneBit := doneBit) hinputBits with
+    ⟨inputRest, hinputCode, _hinputRestBits⟩
+  subst code
+  subst inputCode
+  exact ⟨doneBit, inputRest, rfl⟩
+
 end DovetailLayoutScanner
 end CanonicalLayouts
 end EncodedRewriters
