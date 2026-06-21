@@ -1,3 +1,5 @@
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.DecodedBoundedSimulator
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchEmitters.Spec
 
 set_option doc.verso true
@@ -501,92 +503,6 @@ theorem codePrefixStageDescriptionPrefixDecoderConstruction_of_normalizerIdentit
         (hnormalizer encoded encoded).mpr
           ⟨rfl, D, input, hdecode⟩⟩
 
-def CodePrefixDecodedBoundedSimulatorSemanticMachineSpec
-    (simulator : TuringMachine MachineCodeSymbol state) : Prop :=
-  forall tokens : Word MachineCodeSymbol,
-    TuringMachine.HaltsOnInput simulator tokens <->
-      exists stage : Nat,
-      exists encoded : Word MachineCodeSymbol,
-      exists D : MachineDescription,
-      exists input : Word MachineCodeSymbol,
-        tokens = CodePrefixRecognizerStageCode encoded stage ∧
-          MachineDescription.decodeDescriptionPrefix encoded =
-            some (D, input) ∧
-          D.HaltsIn stage
-            (MachineDescription.encodeCodeWordAsInput input)
-
-def CodePrefixDecodedBoundedSimulatorSemanticMachineConstruction : Prop :=
-  exists state : Type,
-  exists simulator : TuringMachine MachineCodeSymbol state,
-    CodePrefixDecodedBoundedSimulatorSemanticMachineSpec simulator
-
-def CodePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction :
-    Prop :=
-  forall {stageState descriptionState : Type}
-    (stageDecoder : TuringMachine MachineCodeSymbol stageState)
-    (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState),
-    (forall tokens : Word MachineCodeSymbol,
-      TuringMachine.HaltsOnInput stageDecoder tokens <->
-        exists stage : Nat,
-        exists encoded : Word MachineCodeSymbol,
-          tokens = CodePrefixRecognizerStageCode encoded stage) ->
-    (forall encoded : Word MachineCodeSymbol,
-      TuringMachine.HaltsOnInput descriptionDecoder encoded <->
-        exists D : MachineDescription,
-        exists input : Word MachineCodeSymbol,
-          MachineDescription.decodeDescriptionPrefix encoded =
-            some (D, input)) ->
-      CodePrefixDecodedBoundedSimulatorCodeMachineConstruction
-
-theorem codePrefixDecodedBoundedSimulatorCodeMachineConstruction_of_semanticMachine
-    (hsemantic :
-      CodePrefixDecodedBoundedSimulatorSemanticMachineConstruction) :
-    CodePrefixDecodedBoundedSimulatorCodeMachineConstruction := by
-  rcases hsemantic with ⟨state, simulator, hsimulator⟩
-  refine ⟨state, simulator, ?_⟩
-  intro tokens
-  rw [hsimulator tokens]
-  constructor
-  · intro h
-    exact
-      (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_iff
-        tokens ([] : Word MachineCodeSymbol)).mpr
-        ⟨rfl, h⟩
-  · intro h
-    exact
-      ((codePrefixDecodedBoundedSimulatorCode_transform_eq_some_iff
-        tokens ([] : Word MachineCodeSymbol)).mp h).right
-
-theorem codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_of_codeMachine
-    (hcode : CodePrefixDecodedBoundedSimulatorCodeMachineConstruction) :
-    CodePrefixDecodedBoundedSimulatorSemanticMachineConstruction := by
-  rcases hcode with ⟨state, simulator, hsimulator⟩
-  refine ⟨state, simulator, ?_⟩
-  intro tokens
-  rw [hsimulator tokens]
-  constructor
-  · intro h
-    rcases
-        (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_iff
-          tokens ([] : Word MachineCodeSymbol)).mp h with
-      ⟨_hout, stage, encoded, D, input, htokens, hdecode, hhalts⟩
-    exact ⟨stage, encoded, D, input, htokens, hdecode, hhalts⟩
-  · intro h
-    rcases h with
-      ⟨stage, encoded, D, input, htokens, hdecode, hhalts⟩
-    exact
-      (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_iff
-        tokens ([] : Word MachineCodeSymbol)).mpr
-        ⟨rfl, stage, encoded, D, input, htokens, hdecode, hhalts⟩
-
-def CodePrefixStageSearchControllerCoreConstruction : Prop :=
-  forall {simulatorState : Type}
-    (simulator : TuringMachine MachineCodeSymbol simulatorState),
-    CodePrefixDecodedBoundedSimulatorSpec simulator ->
-      exists searcherState : Type,
-      exists searcher : TuringMachine MachineCodeSymbol searcherState,
-        CodePrefixStageSearchControllerSpec simulator searcher
-
 /-!
 **Prefix-runner proof frontier.**  The remaining universal-prefix placeholders
 now separate finite parser machines from controller sequencing.  The
@@ -1074,15 +990,15 @@ theorem codePrefixStageDescriptionPrefixDecoderConstruction_scaffold :
 
 theorem codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_of_decoders_finite
     {stageState descriptionState : Type}
-    (stageDecoder : TuringMachine MachineCodeSymbol stageState)
-    (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState)
-    (hstage :
+    (_stageDecoder : TuringMachine MachineCodeSymbol stageState)
+    (_descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState)
+    (_hstage :
       forall tokens : Word MachineCodeSymbol,
         TuringMachine.HaltsOnInput stageDecoder tokens <->
           exists stage : Nat,
           exists encoded : Word MachineCodeSymbol,
             tokens = CodePrefixRecognizerStageCode encoded stage)
-    (hdescription :
+    (_hdescription :
       forall encoded : Word MachineCodeSymbol,
         TuringMachine.HaltsOnInput descriptionDecoder encoded <->
           exists D : MachineDescription,
@@ -1090,7 +1006,7 @@ theorem codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_of_decoders
             MachineDescription.decodeDescriptionPrefix encoded =
               some (D, input)) :
     CodePrefixDecodedBoundedSimulatorSemanticMachineConstruction := by
-  sorry
+  exact codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_core
 
 theorem codePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction_scaffold :
     CodePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction := by
@@ -1130,7 +1046,7 @@ theorem codePrefixDecodedBoundedSimulatorConstruction_scaffold :
 
 theorem codePrefixStageSearchControllerCoreConstruction_finite :
     CodePrefixStageSearchControllerCoreConstruction := by
-  sorry
+  exact codePrefixStageSearchControllerCoreConstruction_core
 
 theorem codePrefixStageSearchControllerConstruction_scaffold :
     CodePrefixStageSearchControllerConstruction := by
