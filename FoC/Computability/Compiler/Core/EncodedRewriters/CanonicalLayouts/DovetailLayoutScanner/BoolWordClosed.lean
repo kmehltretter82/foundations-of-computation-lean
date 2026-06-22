@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWordSuffixScanner.Basic
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWord
 
 set_option doc.verso true
 
@@ -6,9 +6,10 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
+open DovetailInitialLayoutInitializer
 
 namespace EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
-namespace BoolWordSuffixScanner
 
 /-!
 **Closed proof split.**  The closed direction begins with the separate marker
@@ -1517,7 +1518,6 @@ theorem boolWordSuffix_state120_tick_tail_decodeBoolWord_inv
       exact ⟨w, suffix, rfl⟩
 
 
-end BoolWordSuffixScanner
 end EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
 end Computability
 end FoC

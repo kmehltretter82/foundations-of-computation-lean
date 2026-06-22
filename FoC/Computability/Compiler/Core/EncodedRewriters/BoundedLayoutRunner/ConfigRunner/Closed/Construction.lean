@@ -82,6 +82,93 @@ theorem SeqViaCanonical_haltsWithTape_of_haltsWithTape
       (MachineDescription.seqSubroutine_subroutineReady hA hid)
       hB hAid hBReach
 
+theorem SeqViaCanonical_haltsFromTape_of_haltsWithTape
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin : Tape Bool} {midInput : Word Bool} {Tmid Tout : Tape Bool}
+    (hAmid : A.HaltsFromTape Tin Tmid)
+    (hbridge :
+      Tape.move Direction.left (Tape.move Direction.right Tmid) =
+        Tape.input midInput)
+    (hBout : B.HaltsWithTape midInput Tout) :
+    (SeqViaCanonical A B).HaltsFromTape Tin Tout := by
+  let identity := MachineDescription.ExactIdentityDescription
+  have hid : identity.SubroutineReady :=
+    ⟨MachineDescription.exactIdentityDescription_wellFormed,
+      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+  have hAid :
+      (MachineDescription.seqSubroutine A identity Direction.right).HaltsFromTape
+        Tin (Tape.move Direction.right Tmid) := by
+    exact
+      MachineDescription.seqSubroutine_haltsFromTape_of_haltsFromTape
+        (A := A) (B := identity) (handoffMove := Direction.right)
+        hA hid hAmid
+        ⟨0, rfl⟩
+  have hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start
+              tape :=
+                Tape.move Direction.left
+                  (Tape.move Direction.right Tmid) } =
+          { state := B.halt
+            tape := Tout } := by
+    rcases
+        MachineDescription.runConfig_eq_halt_of_haltsWithTape
+          hBout with
+      ⟨nB, hBRun⟩
+    refine ⟨nB, ?_⟩
+    simpa [hbridge] using hBRun
+  simpa [SeqViaCanonical, identity] using
+    MachineDescription.seqSubroutine_haltsFromTape_of_haltsFromTape
+      (A := MachineDescription.seqSubroutine A identity Direction.right)
+      (B := B) (handoffMove := Direction.left)
+      (MachineDescription.seqSubroutine_subroutineReady hA hid)
+      hB hAid hBReach
+
+theorem SeqViaCanonical_haltsFromTape_of_haltsFromTape
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin : Tape Bool} {Tin2 Tmid Tout : Tape Bool}
+    (hAmid : A.HaltsFromTape Tin Tmid)
+    (hbridge :
+      Tape.move Direction.left (Tape.move Direction.right Tmid) = Tin2)
+    (hBout : B.HaltsFromTape Tin2 Tout) :
+    (SeqViaCanonical A B).HaltsFromTape Tin Tout := by
+  let identity := MachineDescription.ExactIdentityDescription
+  have hid : identity.SubroutineReady :=
+    ⟨MachineDescription.exactIdentityDescription_wellFormed,
+      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+  have hAid :
+      (MachineDescription.seqSubroutine A identity Direction.right).HaltsFromTape
+        Tin (Tape.move Direction.right Tmid) := by
+    exact
+      MachineDescription.seqSubroutine_haltsFromTape_of_haltsFromTape
+        (A := A) (B := identity) (handoffMove := Direction.right)
+        hA hid hAmid
+        ⟨0, rfl⟩
+  have hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start
+              tape :=
+                Tape.move Direction.left
+                  (Tape.move Direction.right Tmid) } =
+          { state := B.halt
+            tape := Tout } := by
+    rcases
+        MachineDescription.runConfig_eq_halt_of_haltsFromTape
+          hBout with
+      ⟨nB, hBRun⟩
+    refine ⟨nB, ?_⟩
+    simpa [hbridge] using hBRun
+  simpa [SeqViaCanonical, identity] using
+    MachineDescription.seqSubroutine_haltsFromTape_of_haltsFromTape
+      (A := MachineDescription.seqSubroutine A identity Direction.right)
+      (B := B) (handoffMove := Direction.left)
+      (MachineDescription.seqSubroutine_subroutineReady hA hid)
+      hB hAid hBReach
+
 theorem rightShiftedOutputCompiled_haltsWithTape_of_transform
     {P : MachineDescription.TapeCodePrimitive}
     {D : MachineDescription}
@@ -256,17 +343,68 @@ theorem TapeCodeExactPhaseFromClosedHandoff_closed_eq
   rw [hT]
   simpa [hactualOut] using hhandoff
 
+def TapeCodeCheckedPhaseFromClosedHandoff
+    (closed : MachineDescription) : MachineDescription :=
+  MachineDescription.seqSubroutine closed
+    MachineDescription.ExactIdentityDescription
+    tapeCodePrimitiveCodeWordHandoffMove
+
+theorem TapeCodeCheckedPhaseFromClosedHandoff_subroutineReady
+    {P : MachineDescription.TapeCodePrimitive}
+    {closed : MachineDescription}
+    (hclosed :
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        P closed tapeCodePrimitiveCodeWordHandoffMove) :
+    (TapeCodeCheckedPhaseFromClosedHandoff closed).SubroutineReady := by
+  have hclosedReady : closed.SubroutineReady :=
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady
+      hclosed
+  have hid : MachineDescription.ExactIdentityDescription.SubroutineReady :=
+    ⟨MachineDescription.exactIdentityDescription_wellFormed,
+      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+  exact
+    MachineDescription.seqSubroutine_subroutineReady
+      hclosedReady hid
+
+theorem TapeCodeCheckedPhaseFromClosedHandoff_forward
+    {P : MachineDescription.TapeCodePrimitive}
+    {closed : MachineDescription}
+    (hclosed :
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        P closed tapeCodePrimitiveCodeWordHandoffMove)
+    {code out : Word MachineCodeSymbol}
+    (htransform : P.transform code = some out) :
+    (TapeCodeCheckedPhaseFromClosedHandoff closed).HaltsFromTape
+      (checkedInputTape (MachineDescription.encodeCodeWordAsInput code))
+      (Tape.input (MachineDescription.encodeCodeWordAsInput out)) := by
+  sorry
+
+theorem TapeCodeCheckedPhaseFromClosedHandoff_closed_eq
+    {P : MachineDescription.TapeCodePrimitive}
+    {closed : MachineDescription}
+    (hclosed :
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        P closed tapeCodePrimitiveCodeWordHandoffMove)
+    {code out : Word MachineCodeSymbol}
+    (htransform : P.transform code = some out)
+    {T : Tape Bool}
+    (hhalt :
+      (TapeCodeCheckedPhaseFromClosedHandoff closed).HaltsFromTape
+        (checkedInputTape (MachineDescription.encodeCodeWordAsInput code)) T) :
+    T = Tape.input (MachineDescription.encodeCodeWordAsInput out) := by
+  sorry
+
 def AcceptProjectionSpec
     (projector : MachineDescription) : Prop :=
   projector.SubroutineReady ∧
     (forall L : MachineDescription.DovetailLayout,
-      projector.HaltsWithTape
-        (ParsedLayoutBits L)
+      projector.HaltsFromTape
+        (ParsedLayoutCheckedTape L)
         (MachineDescription.SimulatorLayout.tape
           (AcceptSimulatorLayout L))) ∧
     (forall L : MachineDescription.DovetailLayout,
      forall T : Tape Bool,
-      projector.HaltsWithTape (ParsedLayoutBits L) T ->
+      projector.HaltsFromTape (ParsedLayoutCheckedTape L) T ->
         T =
           MachineDescription.SimulatorLayout.tape
             (AcceptSimulatorLayout L))
@@ -474,24 +612,24 @@ theorem AcceptProjectionSpec_of_closedHandoff
         AcceptProjectionPrimitive
         closed tapeCodePrimitiveCodeWordHandoffMove) :
     AcceptProjectionSpec
-      (TapeCodeExactPhaseFromClosedHandoff closed) := by
+      (TapeCodeCheckedPhaseFromClosedHandoff closed) := by
   constructor
-  · exact TapeCodeExactPhaseFromClosedHandoff_subroutineReady hclosed
+  · exact TapeCodeCheckedPhaseFromClosedHandoff_subroutineReady hclosed
   constructor
   · intro L
-    simpa [ParsedLayoutBits,
+    simpa [ParsedLayoutCheckedTape,
       MachineDescription.SimulatorLayout.tape,
       MachineDescription.SimulatorLayout.asBoolInput] using
-      TapeCodeExactPhaseFromClosedHandoff_forward
+      TapeCodeCheckedPhaseFromClosedHandoff_forward
         hclosed (AcceptProjectionPrimitive_encode L)
   · intro L T hhalt
     have hhalt' :
-        (TapeCodeExactPhaseFromClosedHandoff closed).HaltsWithTape
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.DovetailLayout.encode L)) T := by
-      simpa [ParsedLayoutBits] using hhalt
+        (TapeCodeCheckedPhaseFromClosedHandoff closed).HaltsFromTape
+          (checkedInputTape (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.DovetailLayout.encode L))) T := by
+      simpa [ParsedLayoutCheckedTape] using hhalt
     have hT :=
-      TapeCodeExactPhaseFromClosedHandoff_closed_eq
+      TapeCodeCheckedPhaseFromClosedHandoff_closed_eq
         hclosed (AcceptProjectionPrimitive_encode L) hhalt'
     simpa [MachineDescription.SimulatorLayout.tape,
       MachineDescription.SimulatorLayout.asBoolInput] using hT
@@ -675,8 +813,8 @@ theorem configRunnerPhaseRunner_spec
       AcceptRejectConfigRunnerForwardSpec accept reject runner := by
     intro L
     have hAcceptProjectRun :
-        acceptProject.HaltsWithTape
-          (ParsedLayoutBits L)
+        acceptProject.HaltsFromTape
+          (ParsedLayoutCheckedTape L)
           (MachineDescription.SimulatorLayout.tape
             (AcceptSimulatorLayout L)) :=
       hacceptProject.right.left L
@@ -692,13 +830,13 @@ theorem configRunnerPhaseRunner_spec
         AcceptSimulatorLayout] using
         hacceptSim.right.left (AcceptSimulatorLayout L)
     have hAPASRun :
-        APAS.HaltsWithTape
-          (ParsedLayoutBits L)
+        APAS.HaltsFromTape
+          (ParsedLayoutCheckedTape L)
           (MachineDescription.SimulatorLayout.tape
             (MachineDescription.SimulatorLayout.run
               accept L.stage (AcceptSimulatorLayout L))) := by
       exact
-        SeqViaCanonical_haltsWithTape_of_haltsWithTape
+        SeqViaCanonical_haltsFromTape_of_haltsWithTape
           hAcceptProjectReady hAcceptSimReady
           hAcceptProjectRun
           (by
@@ -714,11 +852,11 @@ theorem configRunnerPhaseRunner_spec
           (ParsedLayoutTape (ConfigRunnerAfterAccept accept L)) :=
       hacceptMerge.right.left L
     have hAPASMRun :
-        APASM.HaltsWithTape
-          (ParsedLayoutBits L)
+        APASM.HaltsFromTape
+          (ParsedLayoutCheckedTape L)
           (ParsedLayoutTape (ConfigRunnerAfterAccept accept L)) := by
       exact
-        SeqViaCanonical_haltsWithTape_of_haltsWithTape
+        SeqViaCanonical_haltsFromTape_of_haltsWithTape
           hAPASReady hAcceptMergeReady
           hAPASRun
           (by
@@ -735,13 +873,13 @@ theorem configRunnerPhaseRunner_spec
               (ConfigRunnerAfterAccept accept L))) :=
       hrejectProject.right.left (ConfigRunnerAfterAccept accept L)
     have hAPASMRPRun :
-        APASMRP.HaltsWithTape
-          (ParsedLayoutBits L)
+        APASMRP.HaltsFromTape
+          (ParsedLayoutCheckedTape L)
           (MachineDescription.SimulatorLayout.tape
             (RejectSimulatorLayout
               (ConfigRunnerAfterAccept accept L))) := by
       exact
-        SeqViaCanonical_haltsWithTape_of_haltsWithTape
+        SeqViaCanonical_haltsFromTape_of_haltsWithTape
           hAPASMReady hRejectProjectReady
           hAPASMRun
           (by
@@ -764,15 +902,15 @@ theorem configRunnerPhaseRunner_spec
         hrejectSim.right.left
           (RejectSimulatorLayout (ConfigRunnerAfterAccept accept L))
     have hAPASMRPRSRun :
-        APASMRPRS.HaltsWithTape
-          (ParsedLayoutBits L)
+        APASMRPRS.HaltsFromTape
+          (ParsedLayoutCheckedTape L)
           (MachineDescription.SimulatorLayout.tape
             (MachineDescription.SimulatorLayout.run
               reject (ConfigRunnerAfterAccept accept L).stage
               (RejectSimulatorLayout
                 (ConfigRunnerAfterAccept accept L)))) := by
       exact
-        SeqViaCanonical_haltsWithTape_of_haltsWithTape
+        SeqViaCanonical_haltsFromTape_of_haltsWithTape
           hAPASMRPReady hRejectSimReady
           hAPASMRPRun
           (by
@@ -793,13 +931,13 @@ theorem configRunnerPhaseRunner_spec
               (ConfigRunnerAfterAccept accept L))) :=
       hrejectMerge.right.left (ConfigRunnerAfterAccept accept L)
     have hRunner :
-        runner.HaltsWithTape
-          (ParsedLayoutBits L)
+        runner.HaltsFromTape
+          (ParsedLayoutCheckedTape L)
           (ParsedLayoutTape
             (ConfigRunnerAfterReject reject
               (ConfigRunnerAfterAccept accept L))) := by
       exact
-        SeqViaCanonical_haltsWithTape_of_haltsWithTape
+        SeqViaCanonical_haltsFromTape_of_haltsWithTape
           hAPASMRPRSReady hRejectMergeReady
           hAPASMRPRSRun
           (by
@@ -837,7 +975,7 @@ theorem configRunnerPhaseRunner_spec
   · exact hforward'
   · intro L T hhalt
     exact
-      MachineDescription.haltsWithTape_functional_of_haltTransitionFree
+      MachineDescription.haltsFromTape_functional_of_haltTransitionFree
         hrunnerReady'.right hhalt (hforward' L)
 
 theorem acceptRejectConfigRunnerConstruction_of_phaseConstruction

@@ -939,6 +939,37 @@ theorem seqSubroutine_haltsWithTape_of_haltsWithTape
     · simpa [MachineDescription.HaltsWithTapeIn] using
         congrArg MachineDescription.Configuration.tape hn⟩
 
+theorem seqSubroutine_haltsFromTape_of_haltsFromTape
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tmid Tout : Tape Bool}
+    (hAhalt : A.HaltsFromTape Tin Tmid)
+    (hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start,
+              tape := Tape.move handoffMove Tmid } =
+          { state := B.halt, tape := Tout }) :
+    (seqSubroutine A B handoffMove).HaltsFromTape Tin Tout := by
+  rcases hAhalt with ⟨nA, hnA⟩
+  have hArun : A.runConfig nA { state := A.start, tape := Tin } =
+      { state := A.halt, tape := Tmid } := by
+    cases hfinal : A.runConfig nA { state := A.start, tape := Tin } with
+    | mk state tape =>
+        rcases hnA with ⟨hstate, htape⟩
+        simp [hfinal] at hstate htape
+        simp [hstate, htape]
+  rcases seqSubroutine_reaches_of_runConfig_eq
+      (A := A) (B := B) (handoffMove := handoffMove)
+      hA hB hArun hBReach with
+    ⟨n, hn⟩
+  exact ⟨n, by
+    constructor
+    · simpa [seqSubroutine] using
+        congrArg MachineDescription.Configuration.state hn
+    · simpa [seqSubroutine] using
+        congrArg MachineDescription.Configuration.tape hn⟩
+
 theorem seqSubroutine_haltsWithTape_inv
     {A B : MachineDescription} {handoffMove : Direction}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)

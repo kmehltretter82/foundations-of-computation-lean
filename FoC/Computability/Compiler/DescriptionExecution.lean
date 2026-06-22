@@ -344,6 +344,15 @@ def HaltsWithTape (D : MachineDescription)
     (w : Word Bool) (T : Tape Bool) : Prop :=
   exists n : Nat, D.HaltsWithTapeIn n w T
 
+def HaltsFromTapeIn (D : MachineDescription)
+    (n : Nat) (Tin Tout : Tape Bool) : Prop :=
+  let final := D.runConfig n { state := D.start, tape := Tin }
+  final.state = D.halt ∧ final.tape = Tout
+
+def HaltsFromTape (D : MachineDescription)
+    (Tin Tout : Tape Bool) : Prop :=
+  exists n : Nat, D.HaltsFromTapeIn n Tin Tout
+
 theorem haltsWithOutput_of_haltsWithTape
     {D : MachineDescription} {w : Word Bool} {T : Tape Bool}
     (h : D.HaltsWithTape w T) :
@@ -362,6 +371,21 @@ theorem runConfig_eq_halt_of_haltsWithTape
   refine ⟨n, ?_⟩
   change D.runConfig n (D.initial w) = { state := D.halt, tape := T }
   cases hfinal : D.runConfig n (D.initial w) with
+  | mk state tape =>
+      rcases hn with ⟨hstate, htape⟩
+      simp [hfinal] at hstate htape
+      simp [hstate, htape]
+
+theorem runConfig_eq_halt_of_haltsFromTape
+    {D : MachineDescription} {Tin Tout : Tape Bool}
+    (h : D.HaltsFromTape Tin Tout) :
+    exists n : Nat,
+      D.runConfig n { state := D.start, tape := Tin } =
+        { state := D.halt, tape := Tout } := by
+  rcases h with ⟨n, hn⟩
+  refine ⟨n, ?_⟩
+  change D.runConfig n { state := D.start, tape := Tin } = { state := D.halt, tape := Tout }
+  cases hfinal : D.runConfig n { state := D.start, tape := Tin } with
   | mk state tape =>
       rcases hn with ⟨hstate, htape⟩
       simp [hfinal] at hstate htape
@@ -507,6 +531,55 @@ theorem haltsWithTape_functional_of_haltTransitionFree
       rw [hrunm, hstay, hconfig_n]
     have htm : (D.runConfig m c₀).tape = Tm := by
       simpa [HaltsWithTapeIn, c₀] using hm.right
+    rw [htm] at htape_m
+    exact htape_m.symm
+  by_cases hle : n₁ ≤ n₂
+  · exact hordered hle h₁ h₂
+  · have hle' : n₂ ≤ n₁ := by omega
+    exact (hordered hle' h₂ h₁).symm
+
+theorem haltsFromTape_functional_of_haltTransitionFree
+    {D : MachineDescription} {Tin T₁ T₂ : Tape Bool}
+    (hD : D.HaltTransitionFree)
+    (h₁ : D.HaltsFromTape Tin T₁)
+    (h₂ : D.HaltsFromTape Tin T₂) :
+    T₁ = T₂ := by
+  rcases h₁ with ⟨n₁, h₁⟩
+  rcases h₂ with ⟨n₂, h₂⟩
+  let c₀ := { state := D.start, tape := Tin : MachineDescription.Configuration }
+  have hordered :
+      forall {n m : Nat} {Tn Tm : Tape Bool},
+        n ≤ m ->
+        D.HaltsFromTapeIn n Tin Tn ->
+        D.HaltsFromTapeIn m Tin Tm ->
+          Tn = Tm := by
+    intro n m Tn Tm hle hn hm
+    let d := m - n
+    have hm_eq : m = n + d := by
+      omega
+    have hconfig_n :
+        D.runConfig n c₀ =
+          { state := D.halt, tape := Tn } := by
+      cases hfinal : D.runConfig n c₀ with
+      | mk state tape =>
+          have hstate : state = D.halt := by
+            simpa [HaltsFromTapeIn, c₀, hfinal] using hn.left
+          have htape : tape = Tn := by
+            simpa [HaltsFromTapeIn, c₀, hfinal] using hn.right
+          simp [hstate, htape]
+    have hrunm :
+        D.runConfig m c₀ = D.runConfig d (D.runConfig n c₀) := by
+      rw [hm_eq, runConfig_add]
+    have hstay :
+        D.runConfig d (D.runConfig n c₀) =
+          D.runConfig n c₀ := by
+      rw [hconfig_n]
+      exact MachineDescription.runConfig_halt hD Tn d
+    have htape_m :
+        (D.runConfig m c₀).tape = Tn := by
+      rw [hrunm, hstay, hconfig_n]
+    have htm : (D.runConfig m c₀).tape = Tm := by
+      simpa [HaltsFromTapeIn, c₀] using hm.right
     rw [htm] at htape_m
     exact htape_m.symm
   by_cases hle : n₁ ≤ n₂

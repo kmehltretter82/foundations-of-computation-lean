@@ -238,6 +238,16 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_codeInputNatOpener
   subst inputCode
   exact ⟨doneBit, inputRest, rfl⟩
 
+theorem checkedDovetailLayoutScannerDescription_haltsWithTape_inputBoolWord_inv
+    {code : Word MachineCodeSymbol} {Tout : Tape Bool}
+    (h :
+      CheckedDovetailLayoutScannerDescription.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) Tout) :
+    exists inputWord : Word Bool,
+    exists inputRest : Word MachineCodeSymbol,
+      code = MachineCodeSymbol.transition :: MachineDescription.encodeBoolWordAppend inputWord inputRest := by
+  sorry
+
 end DovetailLayoutScanner
 end CanonicalLayouts
 end EncodedRewriters
