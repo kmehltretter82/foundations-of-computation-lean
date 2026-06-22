@@ -1,4 +1,12 @@
 import FoC.Computability.Compiler.Core.ConstructionTargets
+set_option doc.verso true
+
+/-!
+# Controller Input Initializer
+
+This module defines the machine component that initializes the controller input tape before execution.
+-/
+
 
 set_option doc.verso true
 

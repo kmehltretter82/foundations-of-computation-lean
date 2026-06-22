@@ -17,7 +17,7 @@ open Grammars
 
 namespace MachineDescriptionHistoryGrammar
 
- /-- `reverseRightMoveCell_active_yields` captures the core lemma for this local construction. -/
+ /-- {name}`reverseRightMoveCell_active_yields` captures the core lemma for this local construction. -/
 theorem reverseRightMoveCell_active_yields {D : MachineDescription}
     (hD : D.WellFormed)
     (c : MachineDescription.Configuration)
@@ -86,7 +86,7 @@ theorem reverseRightMoveCell_active_yields {D : MachineDescription}
         List.reverse_cons, List.map_append, List.append_assoc] using
         (HistorySoundForm.active (D := D) pred hsourceState hpredReach)
 
- /-- `reverseRightMoveBoundary_active_yields` captures the core lemma for this local construction. -/
+ /-- {name}`reverseRightMoveBoundary_active_yields` captures the core lemma for this local construction. -/
 theorem reverseRightMoveBoundary_active_yields {D : MachineDescription}
     (hD : D.WellFormed)
     (c : MachineDescription.Configuration)
@@ -164,7 +164,7 @@ theorem reverseRightMoveBoundary_active_yields {D : MachineDescription}
   | cons r restRight =>
       cases r <;> simp [cell, rightBoundary, nt] at htail
 
- /-- `reverseLeftMoveCell_active_yields` captures the core lemma for this local construction. -/
+ /-- {name}`reverseLeftMoveCell_active_yields` captures the core lemma for this local construction. -/
 theorem reverseLeftMoveCell_active_yields {D : MachineDescription}
     (hD : D.WellFormed)
     (c : MachineDescription.Configuration)
@@ -229,7 +229,7 @@ theorem reverseLeftMoveCell_active_yields {D : MachineDescription}
         List.reverse_cons, List.map_append, List.append_assoc] using
         (HistorySoundForm.active (D := D) pred hsourceState hpredReach)
 
- /-- `reverseLeftMoveBoundary_active_yields` captures the core lemma for this local construction. -/
+ /-- {name}`reverseLeftMoveBoundary_active_yields` captures the core lemma for this local construction. -/
 theorem reverseLeftMoveBoundary_active_yields {D : MachineDescription}
     (hD : D.WellFormed)
     (c : MachineDescription.Configuration)

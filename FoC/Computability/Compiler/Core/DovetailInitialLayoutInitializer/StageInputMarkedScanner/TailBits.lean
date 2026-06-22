@@ -43,7 +43,7 @@ def state100AfterMarkedWithTailBits
           (List.append ((cellsBits rest).map some)
             (tailBits.map some)))))
 
- /-- `run_mark_current_to_state100_with_tailBits` states the corresponding theorem run form. -/
+ /-- {name}`run_mark_current_to_state100_with_tailBits` states the corresponding theorem run form. -/
 theorem run_mark_current_to_state100_with_tailBits
     (processed : Word Bool) (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
@@ -74,7 +74,7 @@ theorem run_mark_current_to_state100_with_tailBits
     List.map_append, List.reverse_append, List.append_assoc]
     using hreturn
 
- /-- `run_marking_loop_from_state120_with_tailBits` states the corresponding theorem run form. -/
+ /-- {name}`run_marking_loop_from_state120_with_tailBits` states the corresponding theorem run form. -/
 theorem run_marking_loop_from_state120_with_tailBits
     (processed : Word Bool) (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
@@ -142,7 +142,7 @@ theorem run_marking_loop_from_state120_with_tailBits
       simpa [activeLengthPrefixRev_succ, cellsBits_cons,
         List.length_append, List.map_append, List.append_assoc] using hrec
 
- /-- `run_state120_bool_tail_to_finish` states the corresponding theorem run form. -/
+ /-- {name}`run_state120_bool_tail_to_finish` states the corresponding theorem run form. -/
 theorem run_state120_bool_tail_to_finish
     (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
@@ -173,7 +173,7 @@ def appendBlankStartConfigWithTailBits
     (List.append ((stageInputSecondBitTailPrefix w).map some)
       (some false :: none :: tailBits.map some))
 
- /-- `run_finish_restore_cells_tailBits` states the corresponding theorem run form. -/
+ /-- {name}`run_finish_restore_cells_tailBits` states the corresponding theorem run form. -/
 theorem run_finish_restore_cells_tailBits
     (w tailBits : Word Bool) :
     StageInputMarkedScannerDescription.runConfig (4 * w.length + 2)
@@ -191,7 +191,7 @@ theorem run_finish_restore_cells_tailBits
   rw [run_state150_to_state160]
   simp [state160AfterRestoreWithTailBits]
 
- /-- `run_finish_scan_left_to_append_tailBits` states the corresponding theorem run form. -/
+ /-- {name}`run_finish_scan_left_to_append_tailBits` states the corresponding theorem run form. -/
 theorem run_finish_scan_left_to_append_tailBits
     (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
@@ -223,7 +223,7 @@ theorem run_finish_scan_left_to_append_tailBits
   simp [appendBlankStartConfigWithTailBits, bits, scanRight,
     finishScanBits_reverse_nonempty, List.map_append, List.append_assoc]
 
- /-- `run_append_blank_to_state200_tailBits` states the corresponding theorem run form. -/
+ /-- {name}`run_append_blank_to_state200_tailBits` states the corresponding theorem run form. -/
 theorem run_append_blank_to_state200_tailBits
     (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
@@ -255,7 +255,7 @@ theorem run_append_blank_to_state200_tailBits
   rw [run_state180_some]
   rw [run_state180_none_cons]
 
- /-- `run_finish_tail_false_false_to_state200` states the corresponding theorem run form. -/
+ /-- {name}`run_finish_tail_false_false_to_state200` states the corresponding theorem run form. -/
 theorem run_finish_tail_false_false_to_state200
     (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
@@ -284,7 +284,7 @@ theorem run_finish_tail_false_false_to_state200
   rw [hscan]
   exact happend
 
- /-- `decodeBoolWord_tick_tail_shape` captures the core lemma for this local construction. -/
+ /-- {name}`decodeBoolWord_tick_tail_shape` captures the core lemma for this local construction. -/
 theorem decodeBoolWord_tick_tail_shape
     {rest suffix : Word MachineCodeSymbol} {w : Word Bool}
     (hinput :
@@ -320,7 +320,7 @@ theorem decodeBoolWord_tick_tail_shape
         MachineDescription.encodeCell] at htokens
       exact htokens
 
- /-- `run_finish_tail_blank_ne_halt` states the corresponding theorem run form. -/
+ /-- {name}`run_finish_tail_blank_ne_halt` states the corresponding theorem run form. -/
 theorem run_finish_tail_blank_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
@@ -359,7 +359,7 @@ theorem run_finish_tail_blank_ne_halt
       (by
         simp [stuck, config, StageInputMarkedScannerDescription])
 
- /-- `run_finish_tail_zero_ne_halt` states the corresponding theorem run form. -/
+ /-- {name}`run_finish_tail_zero_ne_halt` states the corresponding theorem run form. -/
 theorem run_finish_tail_zero_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
@@ -398,7 +398,7 @@ theorem run_finish_tail_zero_ne_halt
       (by
         simp [stuck, config, StageInputMarkedScannerDescription])
 
- /-- `run_finish_tail_one_ne_halt` states the corresponding theorem run form. -/
+ /-- {name}`run_finish_tail_one_ne_halt` states the corresponding theorem run form. -/
 theorem run_finish_tail_one_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
@@ -437,7 +437,7 @@ theorem run_finish_tail_one_ne_halt
       (by
         simp [stuck, config, StageInputMarkedScannerDescription])
 
- /-- `run_finish_tail_moveLeft_ne_halt` states the corresponding theorem run form. -/
+ /-- {name}`run_finish_tail_moveLeft_ne_halt` states the corresponding theorem run form. -/
 theorem run_finish_tail_moveLeft_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
@@ -476,7 +476,7 @@ theorem run_finish_tail_moveLeft_ne_halt
       (by
         simp [stuck, config, StageInputMarkedScannerDescription])
 
- /-- `run_finish_tail_moveRight_ne_halt` states the corresponding theorem run form. -/
+ /-- {name}`run_finish_tail_moveRight_ne_halt` states the corresponding theorem run form. -/
 theorem run_finish_tail_moveRight_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
@@ -515,7 +515,7 @@ theorem run_finish_tail_moveRight_ne_halt
       (by
         simp [stuck, config, StageInputMarkedScannerDescription])
 
- /-- `encode_bool_tail_input_bits` captures the core lemma for this local construction. -/
+ /-- {name}`encode_bool_tail_input_bits` captures the core lemma for this local construction. -/
 theorem encode_bool_tail_input_bits
     (b : Bool) (restW : Word Bool)
     (suffix : Word MachineCodeSymbol) :
@@ -595,7 +595,7 @@ theorem encode_bool_tail_input_bits
     rw [MachineDescription.encodeCodeWordAsInput_append]
     simp [List.map_append]
 
- /-- `state120_tick_tail_stage_suffix_inv` captures the core lemma for this local construction. -/
+ /-- {name}`state120_tick_tail_stage_suffix_inv` captures the core lemma for this local construction. -/
 theorem state120_tick_tail_stage_suffix_inv
     {rest suffix : Word MachineCodeSymbol} {w : Word Bool}
     {T : Tape Bool}
@@ -910,7 +910,7 @@ theorem state120_tick_tail_stage_suffix_inv
                 hscannerFinish
           exact False.elim (hno hhalt)
 
- /-- `state120_tick_tail_code_inv` captures the core lemma for this local construction. -/
+ /-- {name}`state120_tick_tail_code_inv` captures the core lemma for this local construction. -/
 theorem state120_tick_tail_code_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :
@@ -940,7 +940,7 @@ theorem state120_tick_tail_code_inv
     simpa [MachineDescription.encodeNatAppend] using
       MachineDescription.decodeNat_encodeNatAppend stage []]
 
- /-- `scanner_marked_tick_tail_code_inv` characterizes a scan safety phase. -/
+ /-- {name}`scanner_marked_tick_tail_code_inv` characterizes a scan safety phase. -/
 theorem scanner_marked_tick_tail_code_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :
@@ -970,7 +970,7 @@ theorem scanner_marked_tick_tail_code_inv
     ⟨rem, hrem⟩
   exact state120_tick_tail_code_inv ⟨rem, hrem⟩
 
- /-- `scanner_marked_tick_tail_bits_shape_inv` characterizes a scan safety phase. -/
+ /-- {name}`scanner_marked_tick_tail_bits_shape_inv` characterizes a scan safety phase. -/
 theorem scanner_marked_tick_tail_bits_shape_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :

@@ -89,6 +89,8 @@ theorem normalizedDeciderToAcceptor_sweepLeft_target_halts
           M hzeroOne markedRight blanksRight blanksLeft tail)
         (ih (markedRight + 2) blanksRight.pred)
 
+set_option doc.verso true
+
 /-!
 **Normalized output to scanner starts.**  A halted tape with normalized output
 {lit}`[one]` has exactly one nonblank contribution to the output list. The

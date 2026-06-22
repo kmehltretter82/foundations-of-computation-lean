@@ -1,4 +1,12 @@
 import FoC.Computability.Compiler.Core.ConstructionTargets
+set_option doc.verso true
+
+/-!
+# Controller Result Continuation
+
+This module provides the machine component that handles continuing execution after a controller result.
+-/
+
 
 set_option doc.verso true
 

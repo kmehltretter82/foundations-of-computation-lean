@@ -1,4 +1,12 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchEmitters.Spec
+set_option doc.verso true
+
+/-!
+# Finite Source Branch Sequencing
+
+This module defines the logic for sequencing branches in finite source programs.
+-/
+
 
 set_option doc.verso true
 

@@ -1,5 +1,14 @@
 import FoC.Book.Chapter05.Section03.BasicPart1
 
+set_option doc.verso true
+
+/-!
+# Section 5.3: Basic Definitions (Part 2)
+
+This module provides the second part of the supporting declarations and
+helper lemmas for Section 5.3. It connects the abstract universal machine
+mechanics with concrete encoded representations and pair-halting arguments.
+-/
 namespace FoC
 namespace Book
 namespace Chapter05
@@ -335,6 +344,8 @@ theorem pair_halting_problem_of_pointwise_iff
     Language.Equal (TuringPairHaltingProblem encodePair halts1)
       (TuringPairHaltingProblem encodePair halts2) :=
   Computability.pairHaltingProblem_of_pointwise_iff encodePair hiff
+
+set_option doc.verso true
 
 /-!
 The pair-halting transfer theorems now apply the diagonal preimage argument.

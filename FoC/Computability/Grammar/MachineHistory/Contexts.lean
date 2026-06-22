@@ -17,7 +17,7 @@ open Grammars
 
 namespace MachineDescriptionHistoryGrammar
 
- /-- `genLeft_not_mem_cellForm` captures the core lemma for this local construction. -/
+ /-- {name}`genLeft_not_mem_cellForm` captures the core lemma for this local construction. -/
 theorem genLeft_not_mem_cellForm {D : MachineDescription}
     (xs : List (Option Bool)) :
     nt MachineHistoryNonterminal.genLeft ∉ cellForm (D := D) xs := by
@@ -27,14 +27,14 @@ theorem genLeft_not_mem_cellForm {D : MachineDescription}
   | cons x xs ih =>
       cases x <;> simp [cellForm, cell, nt]
 
- /-- `genLeft_not_mem_tail` captures the core lemma for this local construction. -/
+ /-- {name}`genLeft_not_mem_tail` captures the core lemma for this local construction. -/
 theorem genLeft_not_mem_tail {D : MachineDescription} :
     nt MachineHistoryNonterminal.genLeft ∉
       ([lockedState (D.stateOfNat D.halt), rightBoundary] :
         SententialForm Bool (NT D)) := by
   simp [nt, lockedState, rightBoundary]
 
- /-- `genLeft_cellForm_context` captures the core lemma for this local construction. -/
+ /-- {name}`genLeft_cellForm_context` captures the core lemma for this local construction. -/
 theorem genLeft_cellForm_context {D : MachineDescription}
     (left : List (Option Bool))
     {u v : SententialForm Bool (NT D)}
@@ -82,7 +82,7 @@ theorem genLeft_cellForm_context {D : MachineDescription}
           rw [hus, hv]
           exact ⟨rfl, rfl⟩
 
- /-- `genLeft_lockedLeft_context` captures the core lemma for this local construction. -/
+ /-- {name}`genLeft_lockedLeft_context` captures the core lemma for this local construction. -/
 theorem genLeft_lockedLeft_context {D : MachineDescription}
     (left : List (Option Bool))
     {u v : SententialForm Bool (NT D)}
@@ -108,7 +108,7 @@ theorem genLeft_lockedLeft_context {D : MachineDescription}
       subst v
       simp
 
- /-- `genLeft_lockedLeft_pair_context` captures the core lemma for this local construction. -/
+ /-- {name}`genLeft_lockedLeft_pair_context` captures the core lemma for this local construction. -/
 theorem genLeft_lockedLeft_pair_context {D : MachineDescription}
     (left : List (Option Bool)) (q : Fin (D.stateCount + 1))
     {u v : SententialForm Bool (NT D)}
@@ -128,7 +128,7 @@ theorem genLeft_lockedLeft_pair_context {D : MachineDescription}
   cases hq
   exact ⟨rfl, rfl, hv⟩
 
- /-- `genRight_not_mem_cellForm` captures the core lemma for this local construction. -/
+ /-- {name}`genRight_not_mem_cellForm` captures the core lemma for this local construction. -/
 theorem genRight_not_mem_cellForm {D : MachineDescription}
     (xs : List (Option Bool)) :
     nt MachineHistoryNonterminal.genRight ∉ cellForm (D := D) xs := by
@@ -138,13 +138,13 @@ theorem genRight_not_mem_cellForm {D : MachineDescription}
   | cons x xs ih =>
       cases x <;> simp [cellForm, cell, nt]
 
- /-- `genRight_not_mem_tail` captures the core lemma for this local construction. -/
+ /-- {name}`genRight_not_mem_tail` captures the core lemma for this local construction. -/
 theorem genRight_not_mem_tail {D : MachineDescription} :
     nt MachineHistoryNonterminal.genRight ∉
       ([rightBoundary] : SententialForm Bool (NT D)) := by
   simp [nt, rightBoundary]
 
- /-- `genRight_cellForm_context` captures the core lemma for this local construction. -/
+ /-- {name}`genRight_cellForm_context` captures the core lemma for this local construction. -/
 theorem genRight_cellForm_context {D : MachineDescription}
     (right : List (Option Bool))
     {u v : SententialForm Bool (NT D)}
@@ -176,7 +176,7 @@ theorem genRight_cellForm_context {D : MachineDescription}
             simpa [cellForm] using htail
           exact ih htailForm
 
- /-- `genRight_cellForm_locked_context` captures the core lemma for this local construction. -/
+ /-- {name}`genRight_cellForm_locked_context` captures the core lemma for this local construction. -/
 theorem genRight_cellForm_locked_context {D : MachineDescription}
     (left : List (Option Bool)) (head : Option Bool)
     (right : List (Option Bool))
@@ -240,7 +240,7 @@ theorem genRight_cellForm_locked_context {D : MachineDescription}
           subst v
           simp [cellForm]
 
- /-- `genRight_lockedRight_context` captures the core lemma for this local construction. -/
+ /-- {name}`genRight_lockedRight_context` captures the core lemma for this local construction. -/
 theorem genRight_lockedRight_context {D : MachineDescription}
     (left : List (Option Bool)) (head : Option Bool)
     (right : List (Option Bool))
@@ -270,7 +270,7 @@ theorem genRight_lockedRight_context {D : MachineDescription}
       subst v
       simp [cellForm]
 
- /-- `genRight_lockedRight_triple_context` captures the core lemma for this local construction. -/
+ /-- {name}`genRight_lockedRight_triple_context` captures the core lemma for this local construction. -/
 theorem genRight_lockedRight_triple_context {D : MachineDescription}
     (left : List (Option Bool)) (head : Option Bool)
     (right : List (Option Bool)) (q : Fin (D.stateCount + 1))
@@ -330,7 +330,7 @@ theorem genRight_lockedRight_triple_context {D : MachineDescription}
   cases hh
   exact ⟨rfl, rfl, rfl, hv⟩
 
- /-- `append_singleton_eq_append_singleton` provides an important equivalence or equality lemma. -/
+ /-- {name}`append_singleton_eq_append_singleton` provides an important equivalence or equality lemma. -/
 theorem append_singleton_eq_append_singleton {α : Type}
     {u p : List α} {x y : α}
     (h : u ++ [x] = p ++ [y]) :
@@ -354,7 +354,7 @@ theorem append_singleton_eq_append_singleton {α : Type}
   simp at h
   exact ⟨rfl, h⟩
 
- /-- `state_cellForm_context` captures the core lemma for this local construction. -/
+ /-- {name}`state_cellForm_context` captures the core lemma for this local construction. -/
 theorem state_cellForm_context {D : MachineDescription}
     (left : List (Option Bool)) (q0 : Fin (D.stateCount + 1))
     (head : Option Bool) (right : List (Option Bool))
@@ -405,7 +405,7 @@ theorem state_cellForm_context {D : MachineDescription}
           subst v
           simp [cellForm]
 
- /-- `state_config_context` captures the core lemma for this local construction. -/
+ /-- {name}`state_config_context` captures the core lemma for this local construction. -/
 theorem state_config_context {D : MachineDescription}
     (c : MachineDescription.Configuration)
     {u v : SententialForm Bool (NT D)} (q : Fin (D.stateCount + 1))
@@ -435,7 +435,7 @@ theorem state_config_context {D : MachineDescription}
       subst v
       simp [cellForm]
 
- /-- `leftBoundary_config_context` captures the core lemma for this local construction. -/
+ /-- {name}`leftBoundary_config_context` captures the core lemma for this local construction. -/
 theorem leftBoundary_config_context {D : MachineDescription}
     (c : MachineDescription.Configuration)
     {u v : SententialForm Bool (NT D)}

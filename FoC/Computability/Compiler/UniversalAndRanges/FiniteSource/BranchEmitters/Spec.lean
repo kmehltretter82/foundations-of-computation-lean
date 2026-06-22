@@ -1,4 +1,12 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchEmitters
+set_option doc.verso true
+
+/-!
+# Branch Emitter Specification
+
+This module defines the formal specification and correctness conditions for the branch emitters.
+-/
+
 
 set_option doc.verso true
 

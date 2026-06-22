@@ -1,8 +1,12 @@
 import FoC.Book.Chapter05.Section03.BasicPart2
 
-/-!
-# Basic
+set_option doc.verso true
 
-Supporting declarations and helper lemmas for Book Chapter05 Section03 Basic.
+/-!
+# Section 5.3: Basic Definitions
+
+This module provides the basic supporting declarations and helper lemmas for
+Section 5.3. It builds the core vocabulary for undecidability and diagonal
+arguments used throughout the chapter.
 -/
 

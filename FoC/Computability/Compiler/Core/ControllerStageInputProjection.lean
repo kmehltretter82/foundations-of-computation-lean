@@ -1,5 +1,7 @@
 import FoC.Computability.Compiler.Core.ControllerStageInputProjection.Compiled
 
+set_option doc.verso true
+
 /-!
 # ControllerStageInputProjection
 

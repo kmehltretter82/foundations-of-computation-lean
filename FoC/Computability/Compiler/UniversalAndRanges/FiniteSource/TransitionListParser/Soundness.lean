@@ -1,4 +1,12 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser.Runs
+set_option doc.verso true
+
+/-!
+# Transition List Parser Soundness
+
+This module contains the soundness proofs for the transition list parser, ensuring it correctly decodes encoded transition tables.
+-/
+
 
 set_option doc.verso true
 

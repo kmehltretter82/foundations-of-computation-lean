@@ -6,6 +6,8 @@ import FoC.Computability.MachineBuilder.DovetailLayout
 import FoC.Computability.MachineBuilder.DovetailController
 import FoC.Computability.MachineBuilder.PrefixParser
 
+set_option doc.verso true
+
 /-!
 # MachineBuilder
 

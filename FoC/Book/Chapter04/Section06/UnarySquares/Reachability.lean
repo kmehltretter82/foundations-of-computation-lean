@@ -30,7 +30,7 @@ inductive SquareReachableState :
       (hword : word ∈ squareLanguage) :
       SquareReachableState (SententialForm.terminalWord word)
 
- /-- `squarePostStopForm_count_start` captures the core lemma for this local construction. -/
+ /-- {name}`squarePostStopForm_count_start` captures the core lemma for this local construction. -/
 theorem squarePostStopForm_count_start
     {emitted : Nat} {middle : SententialForm SquareTerminal SquareNT}
     (hclean : SquareMiddleClean middle) :
@@ -41,7 +41,7 @@ theorem squarePostStopForm_count_start
     squareMiddleClean_count_start hclean, SententialCountNonterminal,
     squareN, ggNonterminal]
 
- /-- `squarePostStopForm_count_t` captures the core lemma for this local construction. -/
+ /-- {name}`squarePostStopForm_count_t` captures the core lemma for this local construction. -/
 theorem squarePostStopForm_count_t
     {emitted : Nat} {middle : SententialForm SquareTerminal SquareNT}
     (hclean : SquareMiddleClean middle) :
@@ -52,7 +52,7 @@ theorem squarePostStopForm_count_t
     squareMiddleClean_count_t hclean, SententialCountNonterminal,
     squareN, ggNonterminal]
 
- /-- `squarePostStopState_yields_reachable` captures the core lemma for this local construction. -/
+ /-- {name}`squarePostStopState_yields_reachable` captures the core lemma for this local construction. -/
 theorem squarePostStopState_yields_reachable
     {x y : SententialForm SquareTerminal SquareNT}
     {n : Nat}
@@ -99,7 +99,7 @@ theorem squarePostStopState_yields_reachable
         exact SquareReachableState.terminal hword
       simpa using hterminal
 
- /-- `squareGrowForm_count_start` captures the core lemma for this local construction. -/
+ /-- {name}`squareGrowForm_count_start` captures the core lemma for this local construction. -/
 theorem squareGrowForm_count_start (n : Nat) :
     SententialCountNonterminal SquareNT.start (squareGrowForm n) = 0 := by
   have hb :
@@ -117,14 +117,14 @@ theorem squareGrowForm_count_start (n : Nat) :
   simp [squareGrowForm, sententialCountNonterminal_append,
     hb, ha, SententialCountNonterminal, squareN, ggNonterminal]
 
- /-- `squareGrowForm_count_terminal_a` captures the core lemma for this local construction. -/
+ /-- {name}`squareGrowForm_count_terminal_a` captures the core lemma for this local construction. -/
 theorem squareGrowForm_count_terminal_a (n : Nat) :
     SententialCountTerminal SquareTerminal.a (squareGrowForm n) = 0 := by
   simp [squareGrowForm, sententialCountTerminal_append,
     squareBForm_count_terminal_a, squareMarkerAForm_count_terminal_a,
     SententialCountTerminal, squareN, ggNonterminal]
 
- /-- `squareGrowForm_yields_reachable` captures the core lemma for this local construction. -/
+ /-- {name}`squareGrowForm_yields_reachable` captures the core lemma for this local construction. -/
 theorem squareGrowForm_yields_reachable
     {y : SententialForm SquareTerminal SquareNT}
     (n : Nat)
@@ -253,7 +253,7 @@ theorem squareGrowForm_yields_reachable
                 squareMarkerAForm (n + 1) ++ [squareN SquareNT.e]) at htail
           simp [squareN, ggNonterminal] at htail
 
- /-- `squareStart_yields_reachable` captures the core lemma for this local construction. -/
+ /-- {name}`squareStart_yields_reachable` captures the core lemma for this local construction. -/
 theorem squareStart_yields_reachable
     {y : SententialForm SquareTerminal SquareNT}
     (hstep : GeneralGrammar.Yields SquareGrammar [squareN SquareNT.start] y) :
@@ -347,7 +347,7 @@ theorem squareStart_yields_reachable
                   ([squareN SquareNT.e] ++ v) by
               simpa [List.append_assoc] using hxstep)))
 
- /-- `squareTerminalState_yields_reachable` captures the core lemma for this local construction. -/
+ /-- {name}`squareTerminalState_yields_reachable` captures the core lemma for this local construction. -/
 theorem squareTerminalState_yields_reachable
     {word : Word SquareTerminal}
     (_hword : word ∈ squareLanguage)
@@ -427,7 +427,7 @@ theorem squareTerminalState_yields_reachable
                   ([squareN SquareNT.e] ++ v) by
               simpa [List.append_assoc] using hxstep)))
 
- /-- `squareReachableState_yields_reachable` captures the core lemma for this local construction. -/
+ /-- {name}`squareReachableState_yields_reachable` captures the core lemma for this local construction. -/
 theorem squareReachableState_yields_reachable
     {x y : SententialForm SquareTerminal SquareNT}
     (hx : SquareReachableState x)
@@ -443,7 +443,7 @@ theorem squareReachableState_yields_reachable
   | terminal hword =>
       exact squareTerminalState_yields_reachable hword hstep
 
- /-- `squareReachableState_derives` captures the core lemma for this local construction. -/
+ /-- {name}`squareReachableState_derives` captures the core lemma for this local construction. -/
 theorem squareReachableState_derives
     {x y : SententialForm SquareTerminal SquareNT}
     (h : GeneralGrammar.Derives SquareGrammar x y)
@@ -455,7 +455,7 @@ theorem squareReachableState_derives
   | step hstep _ ih =>
       exact ih (squareReachableState_yields_reachable hx hstep)
 
- /-- `squarePostStopForm_count_d` captures the core lemma for this local construction. -/
+ /-- {name}`squarePostStopForm_count_d` captures the core lemma for this local construction. -/
 theorem squarePostStopForm_count_d
     {emitted : Nat} {middle : SententialForm SquareTerminal SquareNT}
     (hclean : SquareMiddleClean middle) :
@@ -465,7 +465,7 @@ theorem squarePostStopForm_count_d
     squareTerminalAForm_count_nonterminal, squareMiddleClean_count_d hclean,
     SententialCountNonterminal, squareN, ggNonterminal]
 
- /-- `squareReachableState_terminal_square` captures the core lemma for this local construction. -/
+ /-- {name}`squareReachableState_terminal_square` captures the core lemma for this local construction. -/
 theorem squareReachableState_terminal_square
     {word : Word SquareTerminal}
     (hstate : SquareReachableState (SententialForm.terminalWord word)) :
@@ -497,7 +497,7 @@ theorem squareReachableState_terminal_square
       cases hto
       exact hword
 
- /-- `square_generated_only_language` captures the core lemma for this local construction. -/
+ /-- {name}`square_generated_only_language` captures the core lemma for this local construction. -/
 theorem square_generated_only_language
     {word : Word SquareTerminal}
     (h : word ∈ GeneralGrammar.GeneratedLanguage SquareGrammar) :
@@ -510,7 +510,7 @@ theorem square_generated_only_language
   exact squareReachableState_terminal_square
     (squareReachableState_derives hderives SquareReachableState.start)
 
- /-- `square_generated_language_exact` provides the witness needed for existential progress. -/
+ /-- {name}`square_generated_language_exact` provides the witness needed for existential progress. -/
 theorem square_generated_language_exact :
     Language.Equal (GeneralGrammar.GeneratedLanguage SquareGrammar)
       squareLanguage := by
@@ -519,7 +519,7 @@ theorem square_generated_language_exact :
   · exact square_generated_only_language
   · exact square_language_subset_generated
 
- /-- `squareGrammar_finite_production_squareLanguage` captures the core lemma for this local construction. -/
+ /-- {name}`squareGrammar_finite_production_squareLanguage` captures the core lemma for this local construction. -/
 theorem squareGrammar_finite_production_squareLanguage :
     FiniteProductionGeneralLanguage squareLanguage := by
   exists SquareNT

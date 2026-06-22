@@ -110,7 +110,7 @@ def inRightForm (w : SententialForm terminal right) :
     SententialForm terminal (SumStart left right) :=
   SententialForm.mapNonterminal SumStart.inRight w
 
- /-- `inLeftForm_no_start` captures the core lemma for this local construction. -/
+ /-- {name}`inLeftForm_no_start` captures the core lemma for this local construction. -/
 theorem inLeftForm_no_start (x : SententialForm terminal left) :
     ¬ Symbol.nonterminal (SumStart.start : SumStart left right) ∈
       inLeftForm (right := right) x := by
@@ -128,7 +128,7 @@ theorem inLeftForm_no_start (x : SententialForm terminal left) :
           cases h with
           | tail _ htail => exact ih htail
 
- /-- `inRightForm_no_start` captures the core lemma for this local construction. -/
+ /-- {name}`inRightForm_no_start` captures the core lemma for this local construction. -/
 theorem inRightForm_no_start (y : SententialForm terminal right) :
     ¬ Symbol.nonterminal (SumStart.start : SumStart left right) ∈
       inRightForm (left := left) y := by
@@ -146,7 +146,7 @@ theorem inRightForm_no_start (y : SententialForm terminal right) :
           cases h with
           | tail _ htail => exact ih htail
 
- /-- `inLeftForm_no_inRight` captures the core lemma for this local construction. -/
+ /-- {name}`inLeftForm_no_inRight` captures the core lemma for this local construction. -/
 theorem inLeftForm_no_inRight (A : right) (x : SententialForm terminal left) :
     ¬ Symbol.nonterminal (SumStart.inRight A : SumStart left right) ∈
       inLeftForm x := by
@@ -164,7 +164,7 @@ theorem inLeftForm_no_inRight (A : right) (x : SententialForm terminal left) :
           cases h with
           | tail _ htail => exact ih htail
 
- /-- `inRightForm_no_inLeft` captures the core lemma for this local construction. -/
+ /-- {name}`inRightForm_no_inLeft` captures the core lemma for this local construction. -/
 theorem inRightForm_no_inLeft (A : left) (y : SententialForm terminal right) :
     ¬ Symbol.nonterminal (SumStart.inLeft A : SumStart left right) ∈
       inRightForm y := by

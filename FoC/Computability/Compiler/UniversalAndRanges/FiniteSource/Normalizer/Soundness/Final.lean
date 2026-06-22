@@ -1,4 +1,12 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Soundness.TransitionBlock
+set_option doc.verso true
+
+/-!
+# Normalizer Soundness: Final Assembly
+
+This module assembles the final soundness theorem for the finite source normalizer.
+-/
+
 
 set_option doc.verso true
 

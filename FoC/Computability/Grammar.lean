@@ -4,6 +4,8 @@ import FoC.Computability.Grammar.SemanticAndTraceTables
 import FoC.Computability.Grammar.MachineHistory
 import FoC.Computability.Grammar.Closeouts
 
+set_option doc.verso true
+
 /-!
 # Grammar
 

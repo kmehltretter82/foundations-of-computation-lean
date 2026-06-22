@@ -1,4 +1,12 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Soundness.Inversion
+set_option doc.verso true
+
+/-!
+# Normalizer Soundness: Transition Blocks
+
+This module proves the soundness of individual transition blocks within the normalizer.
+-/
+
 
 set_option doc.verso true
 

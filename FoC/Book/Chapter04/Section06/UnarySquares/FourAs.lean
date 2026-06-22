@@ -20,7 +20,7 @@ open Grammars
 def fourAsWord : Word SquareTerminal :=
   [SquareTerminal.a, SquareTerminal.a, SquareTerminal.a, SquareTerminal.a]
 
- /-- `squareGrammar_generates_four_as` captures the core lemma for this local construction. -/
+ /-- {name}`squareGrammar_generates_four_as` captures the core lemma for this local construction. -/
 theorem squareGrammar_generates_four_as :
     fourAsWord ∈ GeneralGrammar.GeneratedLanguage SquareGrammar := by
   let S := squareN SquareNT.start

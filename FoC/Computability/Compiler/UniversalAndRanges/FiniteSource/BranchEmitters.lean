@@ -1,4 +1,12 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer
+set_option doc.verso true
+
+/-!
+# Finite Source Branch Emitters
+
+This module implements the compiler components responsible for emitting branch instructions in finite source programs.
+-/
+
 
 set_option doc.verso true
 

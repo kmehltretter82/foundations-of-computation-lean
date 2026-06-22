@@ -1,6 +1,8 @@
 import FoC.Computability.Compiler.Core.ControllerStageInputProjection.Soundness.BasicPart1
 
 
+set_option doc.verso true
+
 /-!
 # BasicPart2
 
@@ -12,7 +14,7 @@ namespace Computability
 namespace ControllerStageInputProjection
 open Languages
 
- /-- `run_state300_decodeBoolWord_none_ne_halt` states the corresponding theorem run form. -/
+ /-- {name}`run_state300_decodeBoolWord_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_state300_decodeBoolWord_none_ne_halt
     (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
@@ -79,7 +81,7 @@ theorem run_state300_decodeBoolWord_none_ne_halt
       | some decoded =>
           simp [hcells, hword] at hdecode
 
- /-- `run_input_tail_decodeCells_none_ne_halt` states the corresponding theorem run form. -/
+ /-- {name}`run_input_tail_decodeCells_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_input_tail_decodeCells_none_ne_halt
     (marked : Word Bool) (len : Nat)
     (tokens : Word MachineCodeSymbol)
@@ -208,7 +210,7 @@ theorem run_input_tail_decodeCells_none_ne_halt
               | some parsedRest =>
                   simp [MachineDescription.decodeCells, hcell, hrest] at hdecode
 
- /-- `run_input_tail_cellsToWord_none_ne_halt` states the corresponding theorem run form. -/
+ /-- {name}`run_input_tail_cellsToWord_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_input_tail_cellsToWord_none_ne_halt
     (marked : Word Bool) (cells : List (Option Bool))
     (suffix : Word MachineCodeSymbol)
@@ -323,7 +325,7 @@ theorem run_input_tail_cellsToWord_none_ne_halt
           | some decoded =>
               simp [MachineDescription.cellsToWord?, hrest] at hword
 
- /-- `run_state100_decodeBoolWord_none_ne_halt` states the corresponding theorem run form. -/
+ /-- {name}`run_state100_decodeBoolWord_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_state100_decodeBoolWord_none_ne_halt
     (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
@@ -390,7 +392,7 @@ theorem run_state100_decodeBoolWord_none_ne_halt
       | some decoded =>
           simp [hcells, hword] at hdecode
 
- /-- `run_input_bool_word_acc_stage_decodeNat_none_ne_halt` states the corresponding theorem run form. -/
+ /-- {name}`run_input_bool_word_acc_stage_decodeNat_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
     (marked restInput : Word Bool) (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
@@ -648,7 +650,7 @@ theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
       · intro m
         exact ih (List.append marked [b]) baseLeftRev m
 
- /-- `run_state100_input_bool_word_stage_decodeNat_none_ne_halt` states the corresponding theorem run form. -/
+ /-- {name}`run_state100_input_bool_word_stage_decodeNat_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_state100_input_bool_word_stage_decodeNat_none_ne_halt
     (w : Word Bool) (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
@@ -665,7 +667,7 @@ theorem run_state100_input_bool_word_stage_decodeNat_none_ne_halt
       ([] : Word Bool) w tokens baseLeftRev hdecode n
   simpa [projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend] using h
 
- /-- `run_state200_stage_nat_result_decodeBoolWord_none_ne_halt` states the corresponding theorem run form. -/
+ /-- {name}`run_state200_stage_nat_result_decodeBoolWord_none_ne_halt` states the corresponding theorem run form. -/
 theorem run_state200_stage_nat_result_decodeBoolWord_none_ne_halt
     (stage : Nat) (tokens : Word MachineCodeSymbol)
     (leftRev : List (Option Bool))
@@ -823,7 +825,7 @@ theorem run_state200_stage_nat_result_decodeBoolWord_none_ne_halt
       · intro m
         exact ih (List.append projectionTickCodeCellsRev leftRev) m
 
- /-- `run_state350_code_symbol_ne_halt` states the corresponding theorem run form. -/
+ /-- {name}`run_state350_code_symbol_ne_halt` states the corresponding theorem run form. -/
 theorem run_state350_code_symbol_ne_halt
     (symbol : MachineCodeSymbol) (suffix : Word MachineCodeSymbol)
     (leftRev : List (Option Bool)) (n : Nat) :

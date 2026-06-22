@@ -1,4 +1,12 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser.Basic
+set_option doc.verso true
+
+/-!
+# Transition List Parser Runs
+
+This module provides explicit run lemmas and configuration sequences for the transition list parser.
+-/
+
 
 set_option doc.verso true
 

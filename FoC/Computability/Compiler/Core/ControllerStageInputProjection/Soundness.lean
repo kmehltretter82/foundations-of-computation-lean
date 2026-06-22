@@ -1,5 +1,7 @@
 import FoC.Computability.Compiler.Core.ControllerStageInputProjection.Soundness.Basic
 
+set_option doc.verso true
+
 /-!
 # Soundness
 

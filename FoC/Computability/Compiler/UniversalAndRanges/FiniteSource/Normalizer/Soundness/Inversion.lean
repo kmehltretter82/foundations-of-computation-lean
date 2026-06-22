@@ -1,4 +1,12 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Soundness.Basic
+set_option doc.verso true
+
+/-!
+# Normalizer Soundness: Inversion Lemmas
+
+This module provides the run-inversion lemmas needed to prove normalizer soundness from halting configurations.
+-/
+
 
 set_option doc.verso true
 

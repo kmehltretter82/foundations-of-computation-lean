@@ -16,7 +16,7 @@ open Languages
 
 namespace ControllerStageInputProjection
 
- /-- `run_result_marked_suffix_to_state350` states the corresponding theorem run form. -/
+ /-- {name}`run_result_marked_suffix_to_state350` states the corresponding theorem run form. -/
 theorem run_result_marked_suffix_to_state350
     (marked : Word Bool) (symbol : MachineCodeSymbol)
     (suffix : Word MachineCodeSymbol)
@@ -65,7 +65,7 @@ def projectionResultSuffixRejectCost
     16 * marked.length * rest.length +
     26 * rest.length + 8 * marked.length + 4
 
- /-- `run_result_suffix_to_state350_acc` states the corresponding theorem run form. -/
+ /-- {name}`run_result_suffix_to_state350_acc` states the corresponding theorem run form. -/
 theorem run_result_suffix_to_state350_acc
     (marked rest : Word Bool) (symbol : MachineCodeSymbol)
     (suffix : Word MachineCodeSymbol)
@@ -109,7 +109,7 @@ theorem run_result_suffix_to_state350_acc
         simp [List.append_assoc]
       rw [hword]
 
- /-- `run_result_suffix_ne_halt` states the corresponding theorem run form. -/
+ /-- {name}`run_result_suffix_ne_halt` states the corresponding theorem run form. -/
 theorem run_result_suffix_ne_halt
     (w : Word Bool) (symbol : MachineCodeSymbol)
     (suffix : Word MachineCodeSymbol)
@@ -150,7 +150,7 @@ theorem run_result_suffix_ne_halt
               (List.append [none, none, none, none] baseLeftRev))))
         m
 
- /-- `encodeAppend_nonempty_suffix_ne_halt` establishes the halting condition in this construction. -/
+ /-- {name}`encodeAppend_nonempty_suffix_ne_halt` establishes the halting condition in this construction. -/
 theorem encodeAppend_nonempty_suffix_ne_halt
     (C : MachineDescription.DovetailControllerLayout)
     (symbol : MachineCodeSymbol) (suffix : Word MachineCodeSymbol)
@@ -269,7 +269,7 @@ theorem encodeAppend_nonempty_suffix_ne_halt
         result symbol suffix
         (List.append (projectionStageTickCellsRev stage) inputLeftRev) m
 
- /-- `decode_none_ne_halt` establishes the halting condition in this construction. -/
+ /-- {name}`decode_none_ne_halt` establishes the halting condition in this construction. -/
 theorem decode_none_ne_halt
     {code : Word MachineCodeSymbol}
     (hdecode :
@@ -436,7 +436,7 @@ theorem decode_none_ne_halt
                 change (0 : Nat) ≠ 999
                 omega)
 
- /-- `decodeComplete_of_halting_run` establishes the halting condition in this construction. -/
+ /-- {name}`decodeComplete_of_halting_run` establishes the halting condition in this construction. -/
 theorem decodeComplete_of_halting_run
     {code : Word MachineCodeSymbol} {n : Nat}
     (hstate :
@@ -472,7 +472,7 @@ theorem decodeComplete_of_halting_run
             encodeAppend_nonempty_suffix_ne_halt
               C symbol rest n hstate
 
- /-- `decodeComplete_of_haltsWithOutput` establishes the halting condition in this construction. -/
+ /-- {name}`decodeComplete_of_haltsWithOutput` establishes the halting condition in this construction. -/
 theorem decodeComplete_of_haltsWithOutput
     {code out : Word MachineCodeSymbol}
     (h :
@@ -487,7 +487,7 @@ theorem decodeComplete_of_haltsWithOutput
     decodeComplete_of_halting_run
       (code := code) (n := n) hn.left
 
- /-- `exists_layout_of_haltsWithOutput` establishes the halting condition in this construction. -/
+ /-- {name}`exists_layout_of_haltsWithOutput` establishes the halting condition in this construction. -/
 theorem exists_layout_of_haltsWithOutput
     {code out : Word MachineCodeSymbol}
     (h :
@@ -520,7 +520,7 @@ theorem exists_layout_of_haltsWithOutput
     MachineDescription.encodeCodeWordAsInput_injective hbits
   exact ⟨C, rfl, hout⟩
 
- /-- `haltsWithOutput_iff_exists_layout` provides an important equivalence or equality lemma. -/
+ /-- {name}`haltsWithOutput_iff_exists_layout` provides an important equivalence or equality lemma. -/
 theorem haltsWithOutput_iff_exists_layout
     (code out : Word MachineCodeSymbol) :
     Description.HaltsWithOutput
@@ -539,7 +539,7 @@ theorem haltsWithOutput_iff_exists_layout
     exact
       haltsWithOutput_encode C
 
- /-- `haltsWithOutput_of_transform_eq_some` provides an important equivalence or equality lemma. -/
+ /-- {name}`haltsWithOutput_of_transform_eq_some` provides an important equivalence or equality lemma. -/
 theorem haltsWithOutput_of_transform_eq_some
     {code out : Word MachineCodeSymbol}
     (h :
@@ -555,7 +555,7 @@ theorem haltsWithOutput_of_transform_eq_some
     (haltsWithOutput_iff_exists_layout
       code out).mpr hparsed
 
- /-- `transform_eq_some_of_haltsWithOutput` provides an important equivalence or equality lemma. -/
+ /-- {name}`transform_eq_some_of_haltsWithOutput` provides an important equivalence or equality lemma. -/
 theorem transform_eq_some_of_haltsWithOutput
     {code out : Word MachineCodeSymbol}
     (h :
@@ -571,7 +571,7 @@ theorem transform_eq_some_of_haltsWithOutput
     (pairedRecognizerDovetailControllerStageInputCode_transform_eq_some_iff
       code out).mpr hparsed
 
- /-- `haltsWithOutput_iff` provides an important equivalence or equality lemma. -/
+ /-- {name}`haltsWithOutput_iff` provides an important equivalence or equality lemma. -/
 theorem haltsWithOutput_iff
     (code out : Word MachineCodeSymbol) :
     Description.HaltsWithOutput
@@ -585,7 +585,7 @@ theorem haltsWithOutput_iff
   · exact
       haltsWithOutput_of_transform_eq_some
 
- /-- `outputCompiledSubroutine` captures the core lemma for this local construction. -/
+ /-- {name}`outputCompiledSubroutine` captures the core lemma for this local construction. -/
 theorem outputCompiledSubroutine :
     TapeCodePrimitiveOutputCompiledSubroutineByDescription
       PairedRecognizerDovetailControllerStageInputCodePrimitive
@@ -594,7 +594,7 @@ theorem outputCompiledSubroutine :
       haltsWithOutput_iff⟩,
     haltTransitionFree⟩
 
- /-- `encodedControllerStageInputProjectionCodeWordSubroutineConstruction_scaffold` describes append/fold behavior used by later composition. -/
+ /-- {name}`encodedControllerStageInputProjectionCodeWordSubroutineConstruction_scaffold` describes append/fold behavior used by later composition. -/
 theorem encodedControllerStageInputProjectionCodeWordSubroutineConstruction_scaffold :
     EncodedControllerStageInputProjectionCodeWordSubroutineConstruction := by
   exact

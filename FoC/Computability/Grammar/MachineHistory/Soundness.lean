@@ -17,7 +17,7 @@ open Grammars
 
 namespace MachineDescriptionHistoryGrammar
 
- /-- `terminalWord_no_yields` captures the core lemma for this local construction. -/
+ /-- {name}`terminalWord_no_yields` captures the core lemma for this local construction. -/
 theorem terminalWord_no_yields {D : MachineDescription}
     (w : Word Bool) {y : SententialForm Bool (NT D)}
     (h : GeneralGrammar.Yields (grammar D) (SententialForm.terminalWord w) y) :
@@ -30,7 +30,7 @@ theorem terminalWord_no_yields {D : MachineDescription}
     simp [hA]
   exact nonterminal_not_mem_terminalWord A w hmem
 
- /-- `historySoundForm_yields` captures the core lemma for this local construction. -/
+ /-- {name}`historySoundForm_yields` captures the core lemma for this local construction. -/
 theorem historySoundForm_yields {D : MachineDescription}
     (hD : D.WellFormed)
     {x y : SententialForm Bool (NT D)}
@@ -51,7 +51,7 @@ theorem historySoundForm_yields {D : MachineDescription}
   | terminal w hw =>
       exact False.elim (terminalWord_no_yields w h)
 
- /-- `historySoundForm_derives` captures the core lemma for this local construction. -/
+ /-- {name}`historySoundForm_derives` captures the core lemma for this local construction. -/
 theorem historySoundForm_derives {D : MachineDescription}
     (hD : D.WellFormed)
     {x y : SententialForm Bool (NT D)}
@@ -64,7 +64,7 @@ theorem historySoundForm_derives {D : MachineDescription}
   | step hstep hrest ih =>
       exact ih (historySoundForm_yields hD hshape hstep)
 
- /-- `sound` captures the core lemma for this local construction. -/
+ /-- {name}`sound` captures the core lemma for this local construction. -/
 theorem sound {D : MachineDescription} {w : Word Bool}
     (hD : D.WellFormed)
     (h : w ∈ GeneralGrammar.GeneratedLanguage (grammar D)) :

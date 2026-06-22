@@ -24,7 +24,7 @@ def MachineDescriptionToFiniteGeneralGrammarConstruction : Prop :=
           (GeneralGrammar.GeneratedLanguage G)
           (fun w : Word Bool => D.HaltsOnInput w)
 
- /-- `machineDescriptionToFiniteGeneralGrammarConstruction` captures the core lemma for this local construction. -/
+ /-- {name}`machineDescriptionToFiniteGeneralGrammarConstruction` captures the core lemma for this local construction. -/
 theorem machineDescriptionToFiniteGeneralGrammarConstruction :
     MachineDescriptionToFiniteGeneralGrammarConstruction := by
   intro D hD
@@ -49,7 +49,7 @@ def ProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction : Prop :=
     ProgramAcceptableByDescription L ->
       GeneralGrammar.FiniteProductionGenerated L
 
- /-- `programAcceptableByDescriptionToFiniteGeneralGrammarConstruction_of_descriptionRecognizer` captures the core lemma for this local construction. -/
+ /-- {name}`programAcceptableByDescriptionToFiniteGeneralGrammarConstruction_of_descriptionRecognizer` captures the core lemma for this local construction. -/
 theorem programAcceptableByDescriptionToFiniteGeneralGrammarConstruction_of_descriptionRecognizer
     (hconstruct : DescriptionRecognizerToFiniteGeneralGrammarConstruction) :
     ProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction := by
@@ -58,7 +58,7 @@ theorem programAcceptableByDescriptionToFiniteGeneralGrammarConstruction_of_desc
   exact hconstruct
     (programCompiledByDescription_acceptsLanguage hP hD)
 
- /-- `machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction` captures the core lemma for this local construction. -/
+ /-- {name}`machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction` captures the core lemma for this local construction. -/
 theorem machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
     (hconstruct : MachineDescriptionToFiniteGeneralGrammarConstruction) :
     MachineDescriptionAcceptsToFiniteGeneralGrammarConstruction := by
