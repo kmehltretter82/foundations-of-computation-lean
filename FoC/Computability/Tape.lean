@@ -219,6 +219,235 @@ theorem move_right_after_write (cell : Option symbol) (T : Tape symbol) :
     move Direction.right (write cell T) = moveRight (write cell T) :=
   rfl
 
+/-!
+# Tape Equivalence
+
+We define `Tape.Equiv` to ignore trailing blanks (none) on both ends of the tape.
+-/
+
+def dropTrailingNone {symbol} : List (Option symbol) -> List (Option symbol)
+  | [] => []
+  | x :: xs =>
+      let rest := dropTrailingNone xs
+      if x = none ∧ rest = [] then [] else x :: rest
+
+def Equiv {symbol} [DecidableEq symbol] (T1 T2 : Tape symbol) : Prop :=
+  dropTrailingNone T1.left = dropTrailingNone T2.left ∧
+  T1.head = T2.head ∧
+  dropTrailingNone T1.right = dropTrailingNone T2.right
+
+theorem Equiv.refl {symbol} [DecidableEq symbol] (T : Tape symbol) :
+  Equiv T T :=
+⟨rfl, rfl, rfl⟩
+
+theorem Equiv.symm {symbol} [DecidableEq symbol] {T U : Tape symbol} :
+  Equiv T U -> Equiv U T :=
+fun ⟨hl, hh, hr⟩ => ⟨hl.symm, hh.symm, hr.symm⟩
+
+theorem Equiv.trans {symbol} [DecidableEq symbol] {T U V : Tape symbol} :
+  Equiv T U -> Equiv U V -> Equiv T V :=
+fun ⟨hl1, hh1, hr1⟩ ⟨hl2, hh2, hr2⟩ => ⟨hl1.trans hl2, hh1.trans hh2, hr1.trans hr2⟩
+
+theorem Equiv.read_eq {symbol} [DecidableEq symbol] {T U : Tape symbol} :
+  Equiv T U -> Tape.read T = Tape.read U :=
+fun ⟨_, hh, _⟩ => hh
+
+theorem Equiv.write {symbol} [DecidableEq symbol] {T U : Tape symbol}
+    (h : Equiv T U) (cell : Option symbol) :
+  Equiv (Tape.write cell T) (Tape.write cell U) :=
+⟨h.1, rfl, h.2.2⟩
+
+/-!
+# Equivalence helpers
+-/
+
+theorem dropTrailingNone_cons {symbol} (x : Option symbol) (xs : List (Option symbol)) :
+    dropTrailingNone (x :: xs) = if x = none ∧ dropTrailingNone xs = [] then [] else x :: dropTrailingNone xs := rfl
+
+def getHead {symbol} (xs : List (Option symbol)) : Option symbol :=
+  match xs with | [] => none | x :: _ => x
+
+def getTail {symbol} (xs : List (Option symbol)) : List (Option symbol) :=
+  match xs with | [] => [] | _ :: rest => rest
+
+theorem getHead_dropTrailingNone {symbol} (xs : List (Option symbol)) :
+    getHead (dropTrailingNone xs) = getHead xs := by
+  cases xs with
+  | nil => rfl
+  | cons x xs =>
+    rw [dropTrailingNone_cons]
+    split
+    · next h =>
+      rcases h with ⟨hx, hxs⟩
+      rw [hx]
+      rfl
+    · rfl
+
+theorem dropTrailingNone_idem {symbol} (xs : List (Option symbol)) :
+    dropTrailingNone (dropTrailingNone xs) = dropTrailingNone xs := by
+  induction xs with
+  | nil => rfl
+  | cons x xs ih =>
+    rw [dropTrailingNone_cons]
+    split
+    · next h =>
+      rcases h with ⟨hx, hxs⟩
+      rfl
+    · next h =>
+      rw [dropTrailingNone_cons]
+      rw [ih]
+      split
+      · next h' =>
+        rcases h' with ⟨hx', hxs'⟩
+        exact False.elim (h ⟨hx', hxs'⟩)
+      · rfl
+
+theorem getTail_dropTrailingNone {symbol} (xs : List (Option symbol)) :
+    dropTrailingNone (getTail (dropTrailingNone xs)) = dropTrailingNone (getTail xs) := by
+  cases xs with
+  | nil => rfl
+  | cons x xs =>
+    rw [dropTrailingNone_cons]
+    split
+    · next h =>
+      rcases h with ⟨hx, hxs⟩
+      simp [getTail]
+      rw [hxs]
+      rfl
+    · simp [getTail, dropTrailingNone_idem]
+
+theorem getHead_eq_of_dropTrailingNone_eq {symbol} {xs ys : List (Option symbol)}
+    (h : dropTrailingNone xs = dropTrailingNone ys) : getHead xs = getHead ys := by
+  rw [← getHead_dropTrailingNone xs, h, getHead_dropTrailingNone]
+
+theorem getTail_eq_of_dropTrailingNone_eq {symbol} {xs ys : List (Option symbol)}
+    (h : dropTrailingNone xs = dropTrailingNone ys) :
+    dropTrailingNone (getTail xs) = dropTrailingNone (getTail ys) := by
+  rw [← getTail_dropTrailingNone xs, h, getTail_dropTrailingNone]
+
+theorem dropTrailingNone_cons_eq {symbol} {x y : Option symbol} {xs ys : List (Option symbol)}
+    (hx : x = y) (hxs : dropTrailingNone xs = dropTrailingNone ys) :
+    dropTrailingNone (x :: xs) = dropTrailingNone (y :: ys) := by
+  rw [hx, dropTrailingNone_cons, dropTrailingNone_cons, hxs]
+
+theorem moveLeft_left {symbol} (T : Tape symbol) : (Tape.moveLeft T).left = getTail T.left := by
+  cases T with | mk left head right => cases left <;> rfl
+theorem moveLeft_head {symbol} (T : Tape symbol) : (Tape.moveLeft T).head = getHead T.left := by
+  cases T with | mk left head right => cases left <;> rfl
+theorem moveLeft_right {symbol} (T : Tape symbol) : (Tape.moveLeft T).right = T.head :: T.right := by
+  cases T with | mk left head right => cases left <;> rfl
+
+theorem moveRight_left {symbol} (T : Tape symbol) : (Tape.moveRight T).left = T.head :: T.left := by
+  cases T with | mk left head right => cases right <;> rfl
+theorem moveRight_head {symbol} (T : Tape symbol) : (Tape.moveRight T).head = getHead T.right := by
+  cases T with | mk left head right => cases right <;> rfl
+theorem moveRight_right {symbol} (T : Tape symbol) : (Tape.moveRight T).right = getTail T.right := by
+  cases T with | mk left head right => cases right <;> rfl
+
+/-!
+# Main Equiv Proofs
+-/
+
+theorem Equiv.moveLeft {symbol} [DecidableEq symbol] {T1 T2 : Tape symbol}
+    (h : Equiv T1 T2) : Equiv (Tape.moveLeft T1) (Tape.moveLeft T2) := by
+  have h_left : dropTrailingNone T1.left = dropTrailingNone T2.left := h.1
+  have h_head : T1.head = T2.head := h.2.1
+  have h_right : dropTrailingNone T1.right = dropTrailingNone T2.right := h.2.2
+  
+  constructor
+  · rw [moveLeft_left, moveLeft_left]
+    exact getTail_eq_of_dropTrailingNone_eq h_left
+  · constructor
+    · rw [moveLeft_head, moveLeft_head]
+      exact getHead_eq_of_dropTrailingNone_eq h_left
+    · rw [moveLeft_right, moveLeft_right]
+      exact dropTrailingNone_cons_eq h_head h_right
+
+theorem Equiv.moveRight {symbol} [DecidableEq symbol] {T1 T2 : Tape symbol}
+    (h : Equiv T1 T2) : Equiv (Tape.moveRight T1) (Tape.moveRight T2) := by
+  have h_left : dropTrailingNone T1.left = dropTrailingNone T2.left := h.1
+  have h_head : T1.head = T2.head := h.2.1
+  have h_right : dropTrailingNone T1.right = dropTrailingNone T2.right := h.2.2
+  
+  constructor
+  · rw [moveRight_left, moveRight_left]
+    exact dropTrailingNone_cons_eq h_head h_left
+  · constructor
+    · rw [moveRight_head, moveRight_head]
+      exact getHead_eq_of_dropTrailingNone_eq h_right
+    · rw [moveRight_right, moveRight_right]
+      exact getTail_eq_of_dropTrailingNone_eq h_right
+
+theorem Equiv.move {symbol} [DecidableEq symbol] {T1 T2 : Tape symbol}
+    (h : Equiv T1 T2) (dir : Direction) : Equiv (Tape.move dir T1) (Tape.move dir T2) := by
+  cases dir
+  · exact Equiv.moveLeft h
+  · exact Equiv.moveRight h
+
+/-!
+# Normalized Output helpers
+-/
+
+theorem filterMap_dropTrailingNone {symbol} (xs : List (Option symbol)) :
+    (dropTrailingNone xs).filterMap (fun x => x) = xs.filterMap (fun x => x) := by
+  induction xs with
+  | nil => rfl
+  | cons x xs ih =>
+    rw [dropTrailingNone_cons]
+    split
+    · next h =>
+      rcases h with ⟨hx, hxs⟩
+      have h1 : xs.filterMap (fun x => x) = [] := by
+        rw [← ih, hxs]
+        rfl
+      rw [hx]
+      simp [h1]
+    · cases x
+      · simp [ih]
+      · simp [ih]
+
+theorem filterMap_reverse {symbol} (xs : List (Option symbol)) :
+    xs.reverse.filterMap (fun x => x) = (xs.filterMap (fun x => x)).reverse := by
+  induction xs with
+  | nil => rfl
+  | cons x xs ih =>
+    simp [ih]
+    cases x
+    · simp
+    · simp
+
+theorem filterMap_append_lemma {symbol} (xs ys : List (Option symbol)) :
+    (xs ++ ys).filterMap (fun x => x) = xs.filterMap (fun x => x) ++ ys.filterMap (fun x => x) := by
+  induction xs with
+  | nil => rfl
+  | cons x xs ih =>
+    cases x <;> simp [ih]
+
+theorem filterMap_cons_eq {symbol} (x : Option symbol) (xs ys : List (Option symbol))
+    (h : xs.filterMap (fun c => c) = ys.filterMap (fun c => c)) :
+    (x :: xs).filterMap (fun c => c) = (x :: ys).filterMap (fun c => c) := by
+  cases x <;> simp [h]
+
+theorem Equiv.normalizedOutput_eq {symbol} [DecidableEq symbol] {T1 T2 : Tape symbol}
+    (h : Equiv T1 T2) : normalizedOutput T1 = normalizedOutput T2 := by
+  have h_left : dropTrailingNone T1.left = dropTrailingNone T2.left := h.1
+  have h_head : T1.head = T2.head := h.2.1
+  have h_right : dropTrailingNone T1.right = dropTrailingNone T2.right := h.2.2
+
+  have h_filter_left : T1.left.filterMap (fun cell => cell) = T2.left.filterMap (fun cell => cell) := by
+    rw [← filterMap_dropTrailingNone T1.left, ← filterMap_dropTrailingNone T2.left, h_left]
+  
+  have h_filter_right : T1.right.filterMap (fun cell => cell) = T2.right.filterMap (fun cell => cell) := by
+    rw [← filterMap_dropTrailingNone T1.right, ← filterMap_dropTrailingNone T2.right, h_right]
+
+  unfold normalizedOutput cells
+  rw [filterMap_append_lemma, filterMap_append_lemma]
+  rw [filterMap_reverse, filterMap_reverse, h_filter_left]
+  have h_filter_right_cons : List.filterMap (fun cell => cell) (T1.head :: T1.right) = List.filterMap (fun cell => cell) (T2.head :: T2.right) := by
+    rw [h_head]
+    exact filterMap_cons_eq _ _ _ h_filter_right
+  rw [h_filter_right_cons]
+
 end Tape
 
 end Computability

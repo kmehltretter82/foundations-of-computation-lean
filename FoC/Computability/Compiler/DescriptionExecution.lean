@@ -1420,6 +1420,95 @@ theorem toTuringMachine_haltsWithOutput_iff {D : MachineDescription}
           · change Tape.normalizedOutput final.tape = out
             exact hn.right
 
+theorem stepConfig_equiv
+    {D : MachineDescription} {c d : MachineDescription.Configuration}
+    (htape : Tape.Equiv c.tape d.tape)
+    (hstate : c.state = d.state) :
+  match D.stepConfig c, D.stepConfig d with
+  | none, none => True
+  | some c', some d' =>
+      c'.state = d'.state /\ Tape.Equiv c'.tape d'.tape
+  | _, _ => False := by
+  simp [stepConfig, hstate, Tape.Equiv.read_eq htape]
+  cases D.lookupTransition d.state (Tape.read d.tape)
+  · trivial
+  · next t =>
+    constructor
+    · rfl
+    · exact Tape.Equiv.move (Tape.Equiv.write htape t.write) t.move
+
+theorem runConfig_equiv
+    (D : MachineDescription) (n : Nat)
+    {c d : MachineDescription.Configuration}
+    (hstate : c.state = d.state)
+    (htape : Tape.Equiv c.tape d.tape) :
+  (D.runConfig n c).state = (D.runConfig n d).state /\
+    Tape.Equiv (D.runConfig n c).tape (D.runConfig n d).tape := by
+  induction n generalizing c d with
+  | zero => exact ⟨hstate, htape⟩
+  | succ n ih =>
+    unfold runConfig
+    have hstep := stepConfig_equiv (D := D) htape hstate
+    cases hc : stepConfig D c
+    · cases hd : stepConfig D d
+      · exact ⟨hstate, htape⟩
+      · rw [hc, hd] at hstep; contradiction
+    · next c' =>
+      cases hd : stepConfig D d
+      · rw [hc, hd] at hstep; contradiction
+      · next d' =>
+        rw [hc, hd] at hstep
+        exact ih hstep.1 hstep.2
+
+def HaltsWithTapeEquiv (D : MachineDescription)
+    (w : Languages.Word Bool) (T : Tape Bool) : Prop :=
+  exists Tactual : Tape Bool,
+    D.HaltsWithTape w Tactual /\ Tape.Equiv Tactual T
+
+def HaltsFromTapeEquiv (D : MachineDescription)
+    (Tin Tout : Tape Bool) : Prop :=
+  exists Tactual : Tape Bool,
+    D.HaltsFromTape Tin Tactual /\ Tape.Equiv Tactual Tout
+
+def ClosedFromTapeEquiv (D : MachineDescription)
+    (Tin Tout : Tape Bool) : Prop :=
+  forall T, D.HaltsFromTape Tin T -> Tape.Equiv T Tout
+
+theorem HaltsWithTape.toEquiv {D : MachineDescription} {w : Languages.Word Bool} {T : Tape Bool}
+    (h : D.HaltsWithTape w T) : D.HaltsWithTapeEquiv w T :=
+  ⟨T, h, Tape.Equiv.refl T⟩
+
+theorem HaltsFromTape.toEquiv {D : MachineDescription} {Tin Tout : Tape Bool}
+    (h : D.HaltsFromTape Tin Tout) : D.HaltsFromTapeEquiv Tin Tout :=
+  ⟨Tout, h, Tape.Equiv.refl Tout⟩
+
+theorem HaltsFromTapeEquiv_of_input_equiv {D : MachineDescription} {Tin Tin' Tout : Tape Bool}
+    (hin : Tape.Equiv Tin Tin')
+    (h : D.HaltsFromTape Tin Tout) :
+  D.HaltsFromTapeEquiv Tin' Tout := by
+  rcases h with ⟨n, hn⟩
+  have hrun := runConfig_equiv D n (c := { state := D.start, tape := Tin }) (d := { state := D.start, tape := Tin' }) rfl hin
+  exists (D.runConfig n { state := D.start, tape := Tin' }).tape
+  constructor
+  · exists n
+    change (D.runConfig n { state := D.start, tape := Tin' }).state = D.halt ∧ _ = _
+    change (D.runConfig n { state := D.start, tape := Tin }).state = D.halt ∧ _ = Tout at hn
+    constructor
+    · rw [← hrun.1]
+      exact hn.1
+    · rfl
+  · rw [← hn.2]
+    exact Tape.Equiv.symm hrun.2
+
+theorem haltsWithOutput_of_haltsWithTapeEquiv
+    {D : MachineDescription} {w : Word Bool} {T : Tape Bool}
+    (h : D.HaltsWithTapeEquiv w T) :
+    D.HaltsWithOutput w (Tape.normalizedOutput T) := by
+  rcases h with ⟨Tactual, h_halt, h_equiv⟩
+  have h_output := haltsWithOutput_of_haltsWithTape h_halt
+  rw [Tape.Equiv.normalizedOutput_eq h_equiv] at h_output
+  exact h_output
+
 end MachineDescription
 
 end Computability

@@ -38,16 +38,16 @@ def ConfigRunnerOutputBits
 def AcceptRejectConfigRunnerForwardSpec
     (accept reject runner : MachineDescription) : Prop :=
   forall L : MachineDescription.DovetailLayout,
-    runner.HaltsFromTape
+    runner.HaltsFromTapeEquiv
       (ParsedLayoutCheckedTape L)
       (ConfigRunnerOutputTape accept reject L)
 
 def AcceptRejectConfigRunnerClosedSpec
     (accept reject runner : MachineDescription) : Prop :=
   forall L : MachineDescription.DovetailLayout,
-  forall T : Tape Bool,
-    runner.HaltsFromTape (ParsedLayoutCheckedTape L) T ->
-      T = ConfigRunnerOutputTape accept reject L
+    runner.ClosedFromTapeEquiv
+      (ParsedLayoutCheckedTape L)
+      (ConfigRunnerOutputTape accept reject L)
 
 def AcceptRejectConfigRunnerSpec
     (accept reject runner : MachineDescription) : Prop :=

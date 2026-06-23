@@ -1011,6 +1011,47 @@ theorem seqSubroutine_haltsWithTape_inv
             congrArg Configuration.tape hArunA⟩,
       ⟨nB, by simpa [asFragment] using hBrunB⟩⟩⟩
 
+theorem seqSubroutine_haltsFromTape_inv
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tout : Tape Bool}
+    (hseq :
+      (seqSubroutine A B handoffMove).HaltsFromTape Tin Tout) :
+    exists Tmid : Tape Bool,
+      A.HaltsFromTape Tin Tmid ∧
+        exists nB : Nat,
+          B.runConfig nB
+              { state := B.start,
+                tape := Tape.move handoffMove Tmid } =
+            { state := B.halt, tape := Tout } := by
+  rcases runConfig_eq_halt_of_haltsFromTape hseq with ⟨n, hn⟩
+  have hseqFrag :
+      exists n : Nat,
+        (Fragment.seq A.asFragment B.asFragment handoffMove).toDescription.runConfig n
+            { state := (Fragment.seq A.asFragment B.asFragment handoffMove).entry,
+              tape := Tin } =
+          { state := (Fragment.seq A.asFragment B.asFragment handoffMove).exit,
+            tape := Tout } := by
+    exact ⟨n, by
+      simpa [seqSubroutine, asFragment, Fragment.seq] using hn⟩
+  rcases Fragment.seq_reaches_inv
+      (A := A.asFragment) (B := B.asFragment)
+      (handoffMove := handoffMove)
+      (asFragment_wellFormed hA)
+      (asFragment_wellFormed hB)
+      hseqFrag with
+    ⟨Tmid, hAReach, hBReach⟩
+  rcases hAReach with ⟨nA, hArunA, _hAfirst⟩
+  rcases hBReach with ⟨nB, hBrunB⟩
+  exact ⟨Tmid,
+    ⟨⟨nA, by
+        constructor
+        · simpa [HaltsFromTapeIn, asFragment] using
+            congrArg Configuration.state hArunA
+        · simpa [HaltsFromTapeIn, asFragment] using
+            congrArg Configuration.tape hArunA⟩,
+      ⟨nB, by simpa [asFragment] using hBrunB⟩⟩⟩
+
 theorem seqSubroutine_haltsWithOutput_of_haltsWithTape
     {A B : MachineDescription} {handoffMove : Direction}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)
