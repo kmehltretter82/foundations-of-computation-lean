@@ -524,8 +524,8 @@ def SelectedProjectionForwardSpec
     (useAccept : Bool)
     (runner : MachineDescription) : Prop :=
   forall L : MachineDescription.DovetailLayout,
-    runner.HaltsWithTape
-      (ParsedLayoutBits L)
+    runner.HaltsFromTapeEquiv
+      (Tape.input (ParsedLayoutBits L))
       (SelectedProjectionOutputTape useAccept L)
 
 def SelectedProjectionClosedSpec
@@ -533,11 +533,11 @@ def SelectedProjectionClosedSpec
     (runner : MachineDescription) : Prop :=
   forall code : Word MachineCodeSymbol,
   forall T : Tape Bool,
-    runner.HaltsWithTape
-        (MachineDescription.encodeCodeWordAsInput code) T ->
+    runner.HaltsFromTape
+        (Tape.input (MachineDescription.encodeCodeWordAsInput code)) T ->
       exists L : MachineDescription.DovetailLayout,
         code = MachineDescription.DovetailLayout.encode L ∧
-          T = SelectedProjectionOutputTape useAccept L
+          Tape.Equiv T (SelectedProjectionOutputTape useAccept L)
 
 def SelectedProjectionSpec
     (useAccept : Bool)
@@ -550,75 +550,6 @@ def SelectedProjectionFiniteDescriptionConstruction : Prop :=
   forall useAccept : Bool,
     exists runner : MachineDescription,
       SelectedProjectionSpec useAccept runner
-
-theorem selectedProjectionRightShifted_of_spec
-    {useAccept : Bool} {runner : MachineDescription}
-    (hrunner : SelectedProjectionSpec useAccept runner) :
-    RightShiftedOutputCompiledSubroutineByDescription
-      (SelectedProjectionPrimitive useAccept) runner := by
-  constructor
-  · exact hrunner.left.left
-  constructor
-  · exact hrunner.left.right
-  constructor
-  · intro code out
-    constructor
-    · intro hhalt
-      rcases hhalt with ⟨n, hn⟩
-      let T : Tape Bool :=
-        (runner.runConfig n
-          (runner.initial
-            (MachineDescription.encodeCodeWordAsInput code))).tape
-      have hTape :
-          runner.HaltsWithTape
-              (MachineDescription.encodeCodeWordAsInput code) T := by
-        exact ⟨n, ⟨hn.left, rfl⟩⟩
-      rcases hrunner.right.right code T hTape with
-        ⟨L, hcode, hT⟩
-      have hactual :
-          Tape.normalizedOutput T =
-            MachineDescription.encodeCodeWordAsInput out := by
-        simpa [T] using hn.right
-      have hexpected :
-          Tape.normalizedOutput T =
-            MachineDescription.encodeCodeWordAsInput
-              (SelectedProjectionOutputCode useAccept L) := by
-        rw [hT]
-        exact
-          EncodedRewriters.tape_normalizedOutput_move_right_input
-            (MachineDescription.encodeCodeWordAsInput
-              (SelectedProjectionOutputCode useAccept L))
-      have houtBits :
-          MachineDescription.encodeCodeWordAsInput out =
-            MachineDescription.encodeCodeWordAsInput
-              (SelectedProjectionOutputCode useAccept L) :=
-        hactual.symm.trans hexpected
-      have hout :
-          out = SelectedProjectionOutputCode useAccept L :=
-        MachineDescription.encodeCodeWordAsInput_injective houtBits
-      exact
-        (SelectedProjectionPrimitive_transform_eq_some_iff
-          useAccept code out).mpr
-          ⟨L, hcode, by simpa [SelectedProjectionOutputCode] using hout⟩
-    · intro htransform
-      rcases
-          (SelectedProjectionPrimitive_transform_eq_some_iff
-            useAccept code out).mp htransform with
-        ⟨L, hcode, hout⟩
-      subst code
-      subst out
-      simpa [SelectedProjectionOutputTape, SelectedProjectionOutputCode,
-        EncodedRewriters.tape_normalizedOutput_move_right_input] using
-        MachineDescription.haltsWithOutput_of_haltsWithTape
-          (hrunner.right.left L)
-  · intro code T hhalt
-    rcases hrunner.right.right code T hhalt with
-      ⟨L, hcode, hT⟩
-    refine ⟨SelectedProjectionOutputCode useAccept L, ?_, hT⟩
-    exact
-      (SelectedProjectionPrimitive_transform_eq_some_iff
-        useAccept code (SelectedProjectionOutputCode useAccept L)).mpr
-        ⟨L, hcode, by simp [SelectedProjectionOutputCode]⟩
 
 def SelectedMergeOutputCode
     (useAccept : Bool)
