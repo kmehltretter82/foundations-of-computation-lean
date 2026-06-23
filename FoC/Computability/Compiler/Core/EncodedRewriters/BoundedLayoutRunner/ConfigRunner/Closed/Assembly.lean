@@ -254,7 +254,7 @@ theorem configRunnerFromClosedHandoff_spec
         BoundedRunLayout] using
         MachineDescription.DovetailLayout.runCodePrimitive_encode
           accept reject L
-    exact TapeCodeCheckedPhaseFromClosedHandoff_closed_eq hclosed htransform hhalt
+    exact TapeCodeCheckedPhaseFromClosedHandoff_closed_equiv hclosed htransform hhalt
 
 theorem acceptRejectConfigRunnerConstruction_of_closedHandoffConstruction
     (h :
