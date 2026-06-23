@@ -246,6 +246,16 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_inputBoolWord_inv
     exists inputWord : Word Bool,
     exists inputRest : Word MachineCodeSymbol,
       code = MachineCodeSymbol.transition :: MachineDescription.encodeBoolWordAppend inputWord inputRest := by
+  rcases checkedDovetailLayoutScannerDescription_haltsWithTape_finalFlags_inv h with
+    ⟨b, suffixTail, Tinput, Tstage, Taccept, Treject, TacceptHit,
+      Tbody, nInput, nStage, nAccept, nReject, nAcceptHit,
+      nRejectHit, nReturn, hbits, hinputRun, hstageRun, hacceptRun,
+      hrejectRun, hacceptHitRun, hrejectHitRun, hreturnRun⟩
+  rcases boolWordSuffixScannerDescription_runConfig_inv _ _ hinputRun with
+    ⟨inputWord, suffixTail2, hb_suffix⟩
+  -- We now have the bits corresponding to the boolean word.
+  -- By construction, these bits perfectly match the encoding of `encodeBoolWordAppend inputWord inputRest`.
+  -- Since `encodeCodeWordAsInput` is injective, `code` must exactly equal `transition :: encodeBoolWordAppend inputWord inputRest`.
   sorry
 
 end DovetailLayoutScanner

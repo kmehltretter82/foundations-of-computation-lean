@@ -1356,6 +1356,23 @@ theorem boolFinalScannerDescription_runConfig_terminal_inv
                       tapeAtCells, Tape.read, Tape.write, Tape.move,
                       Tape.moveRight] at h
 
+theorem boolWordSuffixScannerDescription_runConfig_inv
+    (baseLeft : List (Option Bool)) (inputBits : Word Bool)
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      BoolWordSuffixScannerDescription.runConfig n
+          (config BoolWordSuffixScannerDescription.start baseLeft
+            (inputBits.map some)) =
+        { state := BoolWordSuffixScannerDescription.halt
+          tape := Tout }) :
+    exists bits : Word Bool,
+    exists suffixTail : Word Bool,
+      inputBits =
+        List.append (stageNatBits bits.length)
+          (List.append (cellsCodeBits (bits.map some))
+            (false :: suffixTail)) := by
+  sorry
+
 end DovetailLayoutScanner
 end CanonicalLayouts
 end EncodedRewriters
