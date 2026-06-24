@@ -559,6 +559,52 @@ theorem layoutParserConstruction_of_rightShifted
   layoutParserConstruction_of_closedHandoffConstruction
     (layoutIdentityClosedHandoffConstruction_of_rightShifted h)
 
+theorem checkedDovetailLayoutScannerDescription_haltsWithTape_stage_inv
+    {code : Word MachineCodeSymbol} {Tout : Tape Bool}
+    {inputWord : Word Bool} {stageRest : Word MachineCodeSymbol}
+    (h : CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription.HaltsWithTape
+          (MachineDescription.encodeCodeWordAsInput code) Tout)
+    (h_input : code = MachineCodeSymbol.transition :: MachineDescription.encodeBoolWordAppend inputWord stageRest) :
+    exists stage : Nat,
+    exists acceptRest : Word MachineCodeSymbol,
+      stageRest = MachineDescription.encodeNatAppend stage acceptRest := by
+  sorry
+
+theorem checkedDovetailLayoutScannerDescription_haltsWithTape_acceptConfig_inv
+    {code : Word MachineCodeSymbol} {Tout : Tape Bool}
+    {inputWord : Word Bool} {stage : Nat} {acceptRest : Word MachineCodeSymbol}
+    (h : CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription.HaltsWithTape
+          (MachineDescription.encodeCodeWordAsInput code) Tout)
+    (h_input : code = MachineCodeSymbol.transition :: MachineDescription.encodeBoolWordAppend inputWord (MachineDescription.encodeNatAppend stage acceptRest)) :
+    exists acceptConfig : MachineDescription.Configuration,
+    exists rejectRest : Word MachineCodeSymbol,
+      acceptRest = MachineDescription.encodeConfigurationAppend acceptConfig rejectRest := by
+  sorry
+
+theorem checkedDovetailLayoutScannerDescription_haltsWithTape_rejectConfig_inv
+    {code : Word MachineCodeSymbol} {Tout : Tape Bool}
+    {inputWord : Word Bool} {stage : Nat} {acceptConfig : MachineDescription.Configuration} {rejectRest : Word MachineCodeSymbol}
+    (h : CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription.HaltsWithTape
+          (MachineDescription.encodeCodeWordAsInput code) Tout)
+    (h_input : code = MachineCodeSymbol.transition :: MachineDescription.encodeBoolWordAppend inputWord (MachineDescription.encodeNatAppend stage (MachineDescription.encodeConfigurationAppend acceptConfig rejectRest))) :
+    exists rejectConfig : MachineDescription.Configuration,
+    exists flagsRest : Word MachineCodeSymbol,
+      rejectRest = MachineDescription.encodeConfigurationAppend rejectConfig flagsRest := by
+  sorry
+
+theorem checkedDovetailLayoutScannerDescription_haltsWithTape_flags_body_inv
+    {code : Word MachineCodeSymbol} {Tout : Tape Bool}
+    {inputWord : Word Bool} {stage : Nat} {acceptConfig : MachineDescription.Configuration} {rejectConfig : MachineDescription.Configuration} {flagsRest : Word MachineCodeSymbol}
+    (h : CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription.HaltsWithTape
+          (MachineDescription.encodeCodeWordAsInput code) Tout)
+    (h_input : code = MachineCodeSymbol.transition :: MachineDescription.encodeBoolWordAppend inputWord (MachineDescription.encodeNatAppend stage (MachineDescription.encodeConfigurationAppend acceptConfig (MachineDescription.encodeConfigurationAppend rejectConfig flagsRest)))) :
+    exists acceptHit : Bool,
+    exists rejectHit : Bool,
+      flagsRest = MachineDescription.encodeBoolAppend acceptHit (MachineDescription.encodeBoolAppend rejectHit []) ∧
+      Tape.move tapeCodePrimitiveCodeWordHandoffMove Tout =
+        ParsedLayoutCheckedTape { input := inputWord, stage := stage, acceptConfig := acceptConfig, rejectConfig := rejectConfig, acceptHit := acceptHit, rejectHit := rejectHit } := by
+  sorry
+
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_decodeComplete_inv
     (code : Word MachineCodeSymbol) (T : Tape Bool)
     (h :
@@ -568,8 +614,37 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_decodeComplete_inv
       MachineDescription.DovetailLayout.decodeComplete code = some L ∧
       Tape.move tapeCodePrimitiveCodeWordHandoffMove T =
         ParsedLayoutCheckedTape L := by
-  sorry
-
+  rcases CanonicalLayouts.DovetailLayoutScanner.checkedDovetailLayoutScannerDescription_haltsWithTape_inputBoolWord_inv h with
+    ⟨inputWord, inputRest, hcode1⟩
+  rcases checkedDovetailLayoutScannerDescription_haltsWithTape_stage_inv h hcode1 with
+    ⟨stage, stageRest, hcode2⟩
+  have hcode12 : code = MachineCodeSymbol.transition :: MachineDescription.encodeBoolWordAppend inputWord (MachineDescription.encodeNatAppend stage stageRest) := by
+    rw [hcode1, hcode2]
+  rcases checkedDovetailLayoutScannerDescription_haltsWithTape_acceptConfig_inv h hcode12 with
+    ⟨acceptConfig, acceptRest, hcode3⟩
+  have hcode123 : code = MachineCodeSymbol.transition :: MachineDescription.encodeBoolWordAppend inputWord (MachineDescription.encodeNatAppend stage (MachineDescription.encodeConfigurationAppend acceptConfig acceptRest)) := by
+    rw [hcode12, hcode3]
+  rcases checkedDovetailLayoutScannerDescription_haltsWithTape_rejectConfig_inv h hcode123 with
+    ⟨rejectConfig, rejectRest, hcode4⟩
+  have hcode1234 : code = MachineCodeSymbol.transition :: MachineDescription.encodeBoolWordAppend inputWord (MachineDescription.encodeNatAppend stage (MachineDescription.encodeConfigurationAppend acceptConfig (MachineDescription.encodeConfigurationAppend rejectConfig rejectRest))) := by
+    rw [hcode123, hcode4]
+  rcases checkedDovetailLayoutScannerDescription_haltsWithTape_flags_body_inv h hcode1234 with
+    ⟨acceptHit, rejectHit, hcode5, hT⟩
+  have hcode12345 : code = MachineCodeSymbol.transition :: MachineDescription.encodeBoolWordAppend inputWord (MachineDescription.encodeNatAppend stage (MachineDescription.encodeConfigurationAppend acceptConfig (MachineDescription.encodeConfigurationAppend rejectConfig (MachineDescription.encodeBoolAppend acceptHit (MachineDescription.encodeBoolAppend rejectHit []))))) := by
+    rw [hcode1234, hcode5]
+  let L : MachineDescription.DovetailLayout := {
+    input := inputWord
+    stage := stage
+    acceptConfig := acceptConfig
+    rejectConfig := rejectConfig
+    acceptHit := acceptHit
+    rejectHit := rejectHit
+  }
+  refine ⟨L, ?_, hT⟩
+  have henc : code = MachineDescription.DovetailLayout.encode L := by
+    exact hcode12345
+  rw [henc]
+  exact MachineDescription.DovetailLayout.decodeComplete_encode L
 theorem layoutCheckedClosedRecognizerConstruction_scaffold :
     LayoutCheckedClosedRecognizerConstruction := by
   refine ⟨CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription, ?_⟩
