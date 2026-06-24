@@ -1356,6 +1356,64 @@ theorem boolFinalScannerDescription_runConfig_terminal_inv
                       tapeAtCells, Tape.read, Tape.write, Tape.move,
                       Tape.moveRight] at h
 
+theorem runConfig_forward_inv
+    (D : MachineDescription) (c0 c1 : MachineDescription.Configuration)
+    (n k : Nat) {Tout : Tape Bool}
+    (h_halt : D.runConfig n c0 = { state := D.halt, tape := Tout })
+    (h_forward : D.runConfig k c0 = c1)
+    (h_free : D.HaltTransitionFree) :
+    exists m, m ≤ n ∧ D.runConfig m c1 = { state := D.halt, tape := Tout } := by
+  by_cases h_le : k ≤ n
+  · exists n - k
+    constructor
+    · omega
+    · have h_add : n = k + (n - k) := by omega
+      rw [h_add, MachineDescription.runConfig_add] at h_halt
+      rw [h_forward] at h_halt
+      exact h_halt
+  · exists 0
+    constructor
+    · omega
+    · have h_add : k = n + (k - n) := by omega
+      rw [h_add, MachineDescription.runConfig_add] at h_forward
+      rw [h_halt] at h_forward
+      have h_halt2 := MachineDescription.runConfig_halt h_free Tout (k - n)
+      rw [h_halt2] at h_forward
+      rw [← h_forward]
+      rfl
+
+theorem boolWordSuffixScannerDescription_runConfig_inv_helper
+    (n : Nat) (baseLeft : List (Option Bool)) (inputBits : Word Bool)
+    (processed : Word Bool)
+    {Tout : Tape Bool}
+    (h :
+      BoolWordSuffixScannerDescription.runConfig n
+          (config BoolWordSuffixScannerDescription.start baseLeft (inputBits.map some)) =
+        { state := BoolWordSuffixScannerDescription.halt
+          tape := Tout }) :
+    exists remaining : Word Bool,
+    exists suffixTail : Word Bool,
+      inputBits =
+        List.append (stageNatBits remaining.length)
+          (List.append (markedCellsCodeBits (processed.map some))
+            (List.append (cellsCodeBits (remaining.map some))
+              (false :: suffixTail))) := by
+  induction n generalizing baseLeft inputBits processed with
+  | zero =>
+      have hcontra : 100 = 999 :=
+        congrArg MachineDescription.Configuration.state h
+      contradiction
+  | succ n ih =>
+      rcases boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
+        baseLeft inputBits h with ⟨doneBit, tail, h_input⟩
+      cases doneBit
+      · -- doneBit = false
+        trace_state
+        sorry
+      · -- doneBit = true
+        trace_state
+        sorry
+
 theorem boolWordSuffixScannerDescription_runConfig_inv
     (baseLeft : List (Option Bool)) (inputBits : Word Bool)
     {Tout : Tape Bool} {n : Nat}

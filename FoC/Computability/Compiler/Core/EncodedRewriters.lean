@@ -273,6 +273,11 @@ theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
     encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine
       ⟨runner, hrunner⟩
 
+theorem encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold :
+    EncodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction := by
+  intro accept reject
+  sorry
+
 theorem encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold :
     EncodedDovetailTotalOutputEmitterRewriterConstruction := by
   exact EncodedRewriters.TotalOutputEmitter.outputRealizedSubroutine
