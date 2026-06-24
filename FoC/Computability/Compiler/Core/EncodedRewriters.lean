@@ -252,12 +252,7 @@ theorem encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstructio
     EncodedRewriters.InitialLayout.closedHandoffCompiledSubroutine
       accept reject
 
-theorem encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold :
-    EncodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction := by
-  intro accept reject
-  exact
-    EncodedRewriters.BoundedLayoutRunner.closedHandoffCompiledSubroutine
-      accept reject
+
 
 theorem encodedDovetailStageInputToInitialLayoutRewriterConstruction_scaffold :
     EncodedDovetailStageInputToInitialLayoutRewriterConstruction := by
@@ -273,13 +268,10 @@ theorem encodedDovetailStageInputToInitialLayoutRewriterConstruction_scaffold :
 theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
     EncodedDovetailLayoutBoundedRunnerRewriterConstruction := by
   intro accept reject
-  rcases
-      encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold
-        accept reject with
-    ⟨runner, hrunner⟩
+  rcases EncodedRewriters.BoundedLayoutRunner.outputCompiledSubroutine accept reject with ⟨runner, hrunner⟩
   exact
-    encodedTapeCodePrimitiveRewriterConstruction_of_closedHandoffCompiledSubroutine
-      hrunner
+    encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine
+      ⟨runner, hrunner⟩
 
 theorem encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold :
     EncodedDovetailTotalOutputEmitterRewriterConstruction := by

@@ -30,10 +30,9 @@ def OutputCode
 def OutputTape
     (accept reject : MachineDescription)
     (L : MachineDescription.DovetailLayout) : Tape Bool :=
-  Tape.move Direction.right
-    (Tape.input
-      (MachineDescription.encodeCodeWordAsInput
-        (OutputCode accept reject L)))
+  Tape.output
+    (MachineDescription.encodeCodeWordAsInput
+      (OutputCode accept reject L))
 
 def ReadySpec
     (runner : MachineDescription) : Prop :=
@@ -42,7 +41,7 @@ def ReadySpec
 def ForwardSpec
     (accept reject runner : MachineDescription) : Prop :=
   forall L : MachineDescription.DovetailLayout,
-    runner.HaltsWithTape
+    runner.HaltsWithTapeEquiv
       (MachineDescription.encodeCodeWordAsInput
         (MachineDescription.DovetailLayout.encode L))
       (OutputTape accept reject L)
@@ -51,11 +50,11 @@ def ClosedSpec
     (accept reject runner : MachineDescription) : Prop :=
   forall code : Word MachineCodeSymbol,
   forall T : Tape Bool,
-    runner.HaltsWithTape
+    runner.HaltsWithTapeEquiv
         (MachineDescription.encodeCodeWordAsInput code) T ->
       exists L : MachineDescription.DovetailLayout,
         code = MachineDescription.DovetailLayout.encode L ∧
-          T = OutputTape accept reject L
+          Tape.Equiv T (OutputTape accept reject L)
 
 def Spec
     (accept reject runner : MachineDescription) : Prop :=
@@ -68,97 +67,62 @@ def FiniteDescriptionConstruction : Prop :=
     exists runner : MachineDescription,
       Spec accept reject runner
 
-def RightShiftedOutputCompiledConstruction : Prop :=
-  forall accept reject : MachineDescription,
-    exists runner : MachineDescription,
-      RightShiftedOutputCompiledSubroutineByDescription
-        (PairedRecognizerDovetailLayoutCode accept reject)
-        runner
-
-theorem rightShiftedOutputCompiled_of_spec
+theorem outputCompiledSubroutineByDescription_of_spec
     {accept reject runner : MachineDescription}
     (hrunner : Spec accept reject runner) :
-    RightShiftedOutputCompiledSubroutineByDescription
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
       (PairedRecognizerDovetailLayoutCode accept reject)
       runner := by
   constructor
-  · exact hrunner.left.left
   · constructor
-    · exact hrunner.left.right
-    · constructor
-      · intro code out
-        constructor
-        · intro hhalt
-          rcases hhalt with ⟨n, hn⟩
-          let T : Tape Bool :=
-            (runner.runConfig n
-              (runner.initial
-                (MachineDescription.encodeCodeWordAsInput code))).tape
-          have hTape :
-              runner.HaltsWithTape
-                (MachineDescription.encodeCodeWordAsInput code) T := by
-            exact ⟨n, ⟨hn.left, rfl⟩⟩
-          rcases hrunner.right.right code T hTape with
-            ⟨L, hcode, hT⟩
-          have hactual :
-              Tape.normalizedOutput T =
-                MachineDescription.encodeCodeWordAsInput out := by
-            simpa [T] using hn.right
-          have hexpected :
-              Tape.normalizedOutput T =
-                MachineDescription.encodeCodeWordAsInput
-                  (OutputCode accept reject L) := by
-            rw [hT]
-            exact
-              tape_normalizedOutput_move_right_input
-                (MachineDescription.encodeCodeWordAsInput
-                  (OutputCode accept reject L))
-          have houtBits :
-              MachineDescription.encodeCodeWordAsInput out =
-                MachineDescription.encodeCodeWordAsInput
-                  (OutputCode accept reject L) :=
-            hactual.symm.trans hexpected
-          have hout : out = OutputCode accept reject L :=
-            MachineDescription.encodeCodeWordAsInput_injective houtBits
-          exact
-            (pairedRecognizerDovetailLayoutCode_transform_eq_some_iff
-              accept reject code out).mpr
-              ⟨L, hcode, hout⟩
-        · intro htransform
-          rcases
-              (pairedRecognizerDovetailLayoutCode_transform_eq_some_iff
-                accept reject code out).mp htransform with
-            ⟨L, hcode, hout⟩
-          subst code
-          subst out
-          simpa [OutputTape, OutputCode,
-            tape_normalizedOutput_move_right_input] using
-            MachineDescription.haltsWithOutput_of_haltsWithTape
-              (hrunner.right.left L)
-      · intro code T hhalt
-        rcases hrunner.right.right code T hhalt with
+    · exact hrunner.left.left
+    · intro code out
+      constructor
+      · intro houtput
+        rcases houtput with ⟨n, hn⟩
+        let T : Tape Bool :=
+          (runner.runConfig n
+            (runner.initial
+              (MachineDescription.encodeCodeWordAsInput code))).tape
+        have hTapeEquiv :
+            runner.HaltsWithTapeEquiv
+              (MachineDescription.encodeCodeWordAsInput code) T :=
+          ⟨T, ⟨n, ⟨hn.left, rfl⟩⟩, Tape.Equiv.refl T⟩
+        rcases hrunner.right.right code T hTapeEquiv with
           ⟨L, hcode, hT⟩
-        refine ⟨OutputCode accept reject L, ?_, hT⟩
+        have hexpected :
+            Tape.normalizedOutput T =
+              MachineDescription.encodeCodeWordAsInput
+                (OutputCode accept reject L) := by
+          rw [Tape.Equiv.normalizedOutput_eq hT]
+          exact
+            Tape.normalizedOutput_output
+              (MachineDescription.encodeCodeWordAsInput
+                (OutputCode accept reject L))
+        have houtBits :
+            MachineDescription.encodeCodeWordAsInput out =
+              MachineDescription.encodeCodeWordAsInput
+                (OutputCode accept reject L) := by
+          have hactual : Tape.normalizedOutput T = MachineDescription.encodeCodeWordAsInput out := hn.right
+          exact hactual.symm.trans hexpected
+        have hout : out = OutputCode accept reject L :=
+          MachineDescription.encodeCodeWordAsInput_injective houtBits
         exact
           (pairedRecognizerDovetailLayoutCode_transform_eq_some_iff
-            accept reject code (OutputCode accept reject L)).mpr
-            ⟨L, hcode, rfl⟩
-
-theorem closedHandoffCompiledSubroutineByDescription_of_spec
-    {accept reject runner : MachineDescription}
-    (hrunner : Spec accept reject runner) :
-    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-      (PairedRecognizerDovetailLayoutCode accept reject)
-      runner tapeCodePrimitiveCodeWordHandoffMove :=
-  closedHandoffCompiled_of_rightShiftedOutputCompiled
-    (rightShiftedOutputCompiled_of_spec hrunner)
-    (by
-      intro code out htransform
-      rcases
-          pairedRecognizerDovetailLayoutCode_transform_eq_some_cons
-            htransform with
-        ⟨tail, hout⟩
-      exact ⟨MachineCodeSymbol.transition, tail, hout⟩)
+            accept reject code out).mpr
+            ⟨L, hcode, hout⟩
+      · intro htransform
+        rcases
+            (pairedRecognizerDovetailLayoutCode_transform_eq_some_iff
+              accept reject code out).mp htransform with
+          ⟨L, hcode, hout⟩
+        subst code
+        subst out
+        simpa [OutputTape, OutputCode,
+          Tape.normalizedOutput_output] using
+          MachineDescription.haltsWithOutput_of_haltsWithTapeEquiv
+            (hrunner.right.left L)
+  · exact hrunner.left.right
 
 end BoundedLayoutRunner
 end EncodedRewriters

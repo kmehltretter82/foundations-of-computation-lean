@@ -1,12 +1,11 @@
-import FoC.Computability.Compiler.SeqSubroutineSemantics
-import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Emitter
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner
 
 set_option doc.verso true
 
 /-!
 # Bounded-layout runner assembly
 
-The assembly leaf sequences the parser, configuration runner, and emitter
+The assembly leaf sequences the parser and configuration runner
 phases into the public
 {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.Spec)}`Spec`
 for
@@ -48,43 +47,142 @@ theorem exactIdentityDescription_runConfig_from_start
       MachineDescription.runConfig, MachineDescription.stepConfig,
       MachineDescription.lookupTransition]
 
-theorem parsedLayoutTape_move_left_move_right
-    (L : MachineDescription.DovetailLayout) :
-    Tape.move Direction.left
-        (Tape.move Direction.right (ParsedLayoutTape L)) =
-      ParsedLayoutTape L := by
-  rcases EncodedRewriters.dovetailLayout_encode_cons L with
-    ⟨tail, htail⟩
-  unfold ParsedLayoutTape ParsedLayoutBits
-  rw [htail]
-  exact
-    EncodedRewriters.tape_move_left_move_right_input_encodeCodeWordAsInput_cons
-      MachineCodeSymbol.transition tail
-
-theorem configRunnerOutputTape_move_left_move_right
-    (accept reject : MachineDescription)
-    (L : MachineDescription.DovetailLayout) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (ConfigRunnerOutputTape accept reject L)) =
-      ConfigRunnerOutputTape accept reject L := by
-  exact
-    parsedLayoutTape_move_left_move_right
-      (BoundedRunLayout accept reject L)
-
 def PhaseAssemblyConstruction : Prop :=
   forall accept reject : MachineDescription,
     LayoutCheckedParserConstruction ->
       (exists configRunner : MachineDescription,
         AcceptRejectConfigRunnerSpec accept reject configRunner) ->
-        (exists emitter : MachineDescription,
-          OutputEmitterSpec accept reject emitter) ->
           exists runner : MachineDescription,
             Spec accept reject runner
 
 theorem phaseAssemblyConstruction_scaffold :
     PhaseAssemblyConstruction := by
-  sorry
+  intro accept reject hparser hconfig
+  rcases hparser with ⟨parser, hparser⟩
+  rcases hconfig with ⟨configRunner, hconfig⟩
+  let identity := MachineDescription.ExactIdentityDescription
+  let parserId :=
+    MachineDescription.seqSubroutine parser identity Direction.right
+  let runner :=
+    MachineDescription.seqSubroutine parserId configRunner Direction.left
+  refine ⟨runner, ?_⟩
+  have hparserReady : parser.SubroutineReady := hparser.left
+  have hconfigReady : configRunner.SubroutineReady := hconfig.left
+  have hidReady : identity.SubroutineReady :=
+    exactIdentityDescription_subroutineReady
+  have hparserIdReady : parserId.SubroutineReady :=
+    MachineDescription.seqSubroutine_subroutineReady
+      hparserReady hidReady
+  have hrunnerReady : runner.SubroutineReady :=
+    MachineDescription.seqSubroutine_subroutineReady
+      hparserIdReady hconfigReady
+  constructor
+  · exact hrunnerReady
+  constructor
+  · intro L
+    have hparserHalt :
+        parser.HaltsWithTape
+          (ParsedLayoutBits L)
+          (ParsedLayoutCheckedTape L) :=
+      hparser.right.left L
+    have hparserId :
+        parserId.HaltsWithTape
+          (ParsedLayoutBits L)
+          (Tape.move Direction.right (ParsedLayoutCheckedTape L)) := by
+      exact
+        MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+          (A := parser) (B := identity)
+          (handoffMove := Direction.right)
+          hparserReady hidReady
+          hparserHalt
+          (exactIdentityDescription_reaches
+            (Tape.move Direction.right (ParsedLayoutCheckedTape L)))
+    have h_equiv := hconfig.right.left L
+    rcases h_equiv with ⟨Tactual, h_halt, h_eq⟩
+    have hconfigReach :
+        exists nB : Nat,
+          configRunner.runConfig nB
+              { state := configRunner.start
+                tape :=
+                  Tape.move Direction.left
+                    (Tape.move Direction.right (ParsedLayoutCheckedTape L)) } =
+            { state := configRunner.halt
+              tape := Tactual } := by
+      rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape h_halt with ⟨nB, hB⟩
+      refine ⟨nB, ?_⟩
+      simpa [parsedLayoutCheckedTape_move_left_move_right L] using hB
+    have h_runner_halts :
+        runner.HaltsWithTape
+          (ParsedLayoutBits L)
+          Tactual := by
+      exact
+        MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+          (A := parserId) (B := configRunner)
+          (handoffMove := Direction.left)
+          hparserIdReady hconfigReady
+          hparserId hconfigReach
+    exact ⟨Tactual, h_runner_halts, h_eq⟩
+  · intro code T hhalt_equiv
+    rcases hhalt_equiv with ⟨Tactual, hhalt, hT_equiv⟩
+    rcases
+        MachineDescription.seqSubroutine_haltsWithTape_inv
+          (A := parserId) (B := configRunner)
+          (handoffMove := Direction.left)
+          hparserIdReady hconfigReady
+          (by simpa [runner] using hhalt) with
+      ⟨TconfigInLeft, hparserIdHalt, hconfigHalt⟩
+    rcases
+        MachineDescription.seqSubroutine_haltsWithTape_inv
+          (A := parser) (B := identity)
+          (handoffMove := Direction.right)
+          hparserReady hidReady
+          hparserIdHalt with
+      ⟨Tparser, hparserHalt, hidAfterParser⟩
+    rcases hparser.right.right code Tparser hparserHalt with
+      ⟨L, hdecode, hTparser⟩
+    have hcode :
+        code = MachineDescription.DovetailLayout.encode L :=
+      MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
+        hdecode
+    rcases hidAfterParser with ⟨nIdParser, hIdParser⟩
+    have hTconfigInLeft :
+        TconfigInLeft =
+          Tape.move Direction.right (ParsedLayoutCheckedTape L) := by
+      have hcfg :
+          ({ state := identity.halt
+             tape := Tape.move Direction.right Tparser } :
+            MachineDescription.Configuration) =
+          { state := identity.halt
+            tape := TconfigInLeft } := by
+        simpa [identity] using
+          ((exactIdentityDescription_runConfig_from_start
+              nIdParser
+              (Tape.move Direction.right Tparser)).symm.trans
+            hIdParser)
+      simpa [hTparser] using
+        (congrArg MachineDescription.Configuration.tape hcfg).symm
+    have hconfigRunStart :
+        configRunner.HaltsFromTape
+          (Tape.move Direction.left TconfigInLeft)
+          Tactual := by
+      rcases hconfigHalt with ⟨n, hn⟩
+      exact ⟨n, ⟨congrArg MachineDescription.Configuration.state hn, congrArg MachineDescription.Configuration.tape hn⟩⟩
+    have hconfigRunExact :
+        configRunner.HaltsFromTape
+          (ParsedLayoutCheckedTape L)
+          Tactual := by
+      have h_eq : Tape.move Direction.left TconfigInLeft = ParsedLayoutCheckedTape L := by
+        rw [hTconfigInLeft]
+        exact parsedLayoutCheckedTape_move_left_move_right L
+      rw [← h_eq]
+      exact hconfigRunStart
+    have hTactual :
+        Tape.Equiv Tactual (OutputTape accept reject L) :=
+      hconfig.right.right L Tactual hconfigRunExact
+    have hT :
+        Tape.Equiv T (OutputTape accept reject L) :=
+      Tape.Equiv.trans (Tape.Equiv.symm hT_equiv) hTactual
+    exact ⟨L, hcode, hT⟩
 
 theorem finiteDescriptionConstruction_scaffold :
     FiniteDescriptionConstruction := by
@@ -94,28 +192,18 @@ theorem finiteDescriptionConstruction_scaffold :
       accept reject
       layoutCheckedParserConstruction_scaffold
       (acceptRejectConfigRunnerConstruction_scaffold accept reject)
-      (outputEmitterConstruction_scaffold accept reject)
 
-theorem rightShiftedOutputCompiledConstruction_scaffold :
-    RightShiftedOutputCompiledConstruction := by
-  intro accept reject
-  rcases finiteDescriptionConstruction_scaffold accept reject with
-    ⟨runner, hrunner⟩
-  exact
-    ⟨runner,
-      rightShiftedOutputCompiled_of_spec hrunner⟩
-
-theorem closedHandoffCompiledSubroutine
+theorem outputCompiledSubroutine
     (accept reject : MachineDescription) :
     exists runner : MachineDescription,
-      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
         (PairedRecognizerDovetailLayoutCode accept reject)
-        runner tapeCodePrimitiveCodeWordHandoffMove := by
+        runner := by
   rcases finiteDescriptionConstruction_scaffold accept reject with
     ⟨runner, hrunner⟩
   refine ⟨runner, ?_⟩
   exact
-    closedHandoffCompiledSubroutineByDescription_of_spec hrunner
+    outputCompiledSubroutineByDescription_of_spec hrunner
 
 end BoundedLayoutRunner
 end EncodedRewriters
