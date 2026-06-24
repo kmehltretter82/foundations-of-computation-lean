@@ -1382,6 +1382,38 @@ theorem runConfig_forward_inv
       rw [← h_forward]
       rfl
 
+theorem boolWordSuffixScannerDescription_runConfig_120_nat_prefix_inv
+    (baseLeft : List (Option Bool)) (bits : Word Bool)
+    {Tout : Tape Bool} {n : Nat}
+    (h : BoolWordSuffixScannerDescription.runConfig n (config 120 baseLeft (bits.map some)) = { state := BoolWordSuffixScannerDescription.halt, tape := Tout }) :
+    exists doneBit tail, bits = false :: false :: true :: doneBit :: tail := by
+  sorry
+
+theorem boolWordSuffixScannerDescription_runConfig_120_inv
+    (n : Nat) (baseLeft : List (Option Bool)) (tail : Word Bool)
+    {Tout : Tape Bool}
+    (h : BoolWordSuffixScannerDescription.runConfig n (config 120 baseLeft (tail.map some)) = { state := BoolWordSuffixScannerDescription.halt, tape := Tout }) :
+    exists stage : Nat, exists tail' : Word Bool, tail = List.append (stageNatBits stage) tail' ∧
+      BoolWordSuffixScannerDescription.runConfig n (config 130 (List.append ((stageNatBits stage).reverse.map some) baseLeft) (tail'.map some)) = { state := BoolWordSuffixScannerDescription.halt, tape := Tout } := by
+  sorry
+
+theorem boolWordSuffixScannerDescription_runConfig_130_marked_prefix_inv
+    (baseLeft : List (Option Bool)) (bits : Word Bool)
+    {Tout : Tape Bool} {n : Nat}
+    (h : BoolWordSuffixScannerDescription.runConfig n (config 130 baseLeft (bits.map some)) = { state := BoolWordSuffixScannerDescription.halt, tape := Tout }) :
+    (exists tail, bits = false :: tail) ∨
+    (exists cell tailRest, bits = List.append (markedCellCodeBits cell) tailRest) := by
+  sorry
+
+theorem boolWordSuffixScannerDescription_runConfig_130_inv
+    (n : Nat) (baseLeft : List (Option Bool)) (tail : Word Bool)
+    {Tout : Tape Bool}
+    (h : BoolWordSuffixScannerDescription.runConfig n (config 130 baseLeft (tail.map some)) = { state := BoolWordSuffixScannerDescription.halt, tape := Tout }) :
+    exists processed : List (Option Bool), exists tail' : Word Bool, tail = List.append (markedCellsCodeBits processed) tail' ∧
+      (tail' = [] ∨ exists suffixTail, tail' = false :: suffixTail) ∧
+      BoolWordSuffixScannerDescription.runConfig n (config 130 (List.append ((markedCellsCodeBits processed).reverse.map some) baseLeft) (tail'.map some)) = { state := BoolWordSuffixScannerDescription.halt, tape := Tout } := by
+  sorry
+
 theorem boolWordSuffixScannerDescription_runConfig_inv_helper
     (n : Nat) (baseLeft : List (Option Bool)) (inputBits : Word Bool)
     (processed : Word Bool)
@@ -1398,21 +1430,7 @@ theorem boolWordSuffixScannerDescription_runConfig_inv_helper
           (List.append (markedCellsCodeBits (processed.map some))
             (List.append (cellsCodeBits (remaining.map some))
               (false :: suffixTail))) := by
-  induction n generalizing baseLeft inputBits processed with
-  | zero =>
-      have hcontra : 100 = 999 :=
-        congrArg MachineDescription.Configuration.state h
-      contradiction
-  | succ n ih =>
-      rcases boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
-        baseLeft inputBits h with ⟨doneBit, tail, h_input⟩
-      cases doneBit
-      · -- doneBit = false
-        trace_state
-        sorry
-      · -- doneBit = true
-        trace_state
-        sorry
+  sorry
 
 theorem boolWordSuffixScannerDescription_runConfig_inv
     (baseLeft : List (Option Bool)) (inputBits : Word Bool)
