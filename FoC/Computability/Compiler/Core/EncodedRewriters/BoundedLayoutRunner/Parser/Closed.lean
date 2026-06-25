@@ -970,7 +970,7 @@ theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_stage_ha
         { state :=
             CanonicalLayouts.DovetailLayoutScanner.BoolWordSuffixScannerDescription.halt
           tape := Tinput })
-    (hstage :
+    (_hstage :
       CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.runConfig
           nStage
           { state :=

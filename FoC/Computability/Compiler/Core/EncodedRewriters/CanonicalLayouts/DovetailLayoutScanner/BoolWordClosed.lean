@@ -1305,7 +1305,7 @@ theorem boolWordSuffixScannerDescription_runConfig_finish_moveRight_suffix_ne_ha
     simp [config, tapeAtCells,
       MachineDescription.encodeCodeSymbolAsInput,
       MachineDescription.runConfig, MachineDescription.stepConfig,
-      boolWordSuffix_lookup_150_true, boolWordSuffix_lookup_152_false,
+      boolWordSuffix_lookup_150_true,
       MachineDescription.transition, writeMove, Tape.read, Tape.write,
       Tape.move, Tape.moveRight]
     change (152 : Nat) ≠ 999
@@ -1393,7 +1393,7 @@ theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_moveRigh
     rw [boolWordBits_eq_encodeBoolWordAppend]
     simp [MachineDescription.encodeCodeWordAsInput, suffixTail,
       markedCellsCodeBits, cellListCanonicalLengthPrefixRev,
-      List.map_append, List.append_assoc] at hmark ⊢
+      List.map_append] at hmark ⊢
     exact hmark
   exact
     boolWordSuffixScannerDescription_ne_halt_of_reaches_ne_halt_region

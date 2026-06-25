@@ -265,7 +265,7 @@ theorem moveLeft_moveRight_equiv_self (T : Tape Bool) :
     Tape.Equiv (Tape.move Direction.left (Tape.move Direction.right T)) T := by
   cases T with
   | mk left head right =>
-    simp [Tape.Equiv, Tape.move, Tape.moveLeft, Tape.moveRight, Tape.getHead, Tape.getTail]
+    simp [Tape.Equiv, Tape.move, Tape.moveLeft, Tape.moveRight]
     cases right with
     | nil => simp [Tape.dropTrailingNone]
     | cons x xs => simp [Tape.dropTrailingNone]
@@ -498,7 +498,7 @@ This theorem bridges a known topological mismatch between {name}`checkedInputTap
 and {name}`Tape.input` (which does not). The hypothesis {name}`hclosed` asserts that the machine runs correctly on
 {name}`Tape.input`.
 
-Exact canonicalization is impossible because the finite machine cannot erase the trailing `none` back to an infinite
+Exact canonicalization is impossible because the finite machine cannot erase the trailing {lit}`none` back to an infinite
 blank tape. Instead, the theorem intentionally returns {name}`Tape.Equiv` between the actual output tape and
 the canonical expected output tape.
 
