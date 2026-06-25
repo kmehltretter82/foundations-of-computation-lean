@@ -953,6 +953,37 @@ theorem natSuffixScannerDescription_runConfig_code_inv
         ⟨stage, suffix,
           MachineDescription.decodeNat_eq_some_encodeNatAppend hdecode⟩
 
+theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_stage_handoff
+    (baseLeft : List (Option Bool)) (inputWord : Word Bool)
+    (stageRest : Word MachineCodeSymbol)
+    {Tinput Tstage : Tape Bool} {nInput nStage : Nat}
+    (hinput :
+      CanonicalLayouts.DovetailLayoutScanner.BoolWordSuffixScannerDescription.runConfig
+          nInput
+          (config
+            CanonicalLayouts.DovetailLayoutScanner.BoolWordSuffixScannerDescription.start
+            baseLeft
+            ((MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeBoolWordAppend inputWord
+                stageRest)).map some)) =
+        { state :=
+            CanonicalLayouts.DovetailLayoutScanner.BoolWordSuffixScannerDescription.halt
+          tape := Tinput })
+    (hstage :
+      CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.runConfig
+          nStage
+          { state :=
+              CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.start
+            tape := Tape.move Direction.right Tinput } =
+        { state :=
+            CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.halt
+          tape := Tstage }) :
+    exists baseAfterInput : List (Option Bool),
+      Tape.move Direction.right Tinput =
+        tapeAtCells baseAfterInput
+          ((MachineDescription.encodeCodeWordAsInput stageRest).map some) := by
+  sorry
+
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_stage_inv
     {code : Word MachineCodeSymbol} {Tout : Tape Bool}
     {inputWord : Word Bool} {stageRest : Word MachineCodeSymbol}
@@ -962,7 +993,66 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_stage_inv
     exists stage : Nat,
     exists acceptRest : Word MachineCodeSymbol,
       stageRest = MachineDescription.encodeNatAppend stage acceptRest := by
-  sorry
+  rcases
+      CanonicalLayouts.DovetailLayoutScanner.checkedDovetailLayoutScannerDescription_haltsWithTape_stageField_inv
+        h with
+    ⟨b, suffixTail, Tinput, Tstage, _Tbody, nInput, nStage,
+      _nConfigs, _nReturn, hbits, hinputRun, hstageRun, _hconfigsRun,
+      _hreturnRun⟩
+  rcases
+      CanonicalLayouts.DovetailLayoutScanner.encodeCodeWordAsInput_transition_prefix_inv
+        hbits with
+    ⟨inputCode, hcode, hinputBits⟩
+  have hinputCode :
+      inputCode =
+        MachineDescription.encodeBoolWordAppend inputWord stageRest := by
+    have hcons :
+        MachineCodeSymbol.transition :: inputCode =
+          MachineCodeSymbol.transition ::
+            MachineDescription.encodeBoolWordAppend inputWord
+              stageRest :=
+      hcode.symm.trans h_input
+    simpa using congrArg List.tail hcons
+  have hinputRunCode :
+      CanonicalLayouts.DovetailLayoutScanner.BoolWordSuffixScannerDescription.runConfig
+          nInput
+          (config
+            CanonicalLayouts.DovetailLayoutScanner.BoolWordSuffixScannerDescription.start
+            (List.append
+              (CanonicalLayouts.DovetailLayoutScanner.transitionRemainderBits.reverse.map
+                some)
+              [none])
+            ((MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeBoolWordAppend inputWord
+                stageRest)).map some)) =
+        { state :=
+            CanonicalLayouts.DovetailLayoutScanner.BoolWordSuffixScannerDescription.halt
+          tape := Tinput } := by
+    rw [← hinputCode, hinputBits]
+    simpa [config] using hinputRun
+  rcases
+      boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_stage_handoff
+        (List.append
+          (CanonicalLayouts.DovetailLayoutScanner.transitionRemainderBits.reverse.map
+            some)
+          [none])
+        inputWord stageRest hinputRunCode hstageRun with
+    ⟨baseAfterInput, hmove⟩
+  have hstageRunCode :
+      CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.runConfig
+          nStage
+          (config
+            CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.start
+            baseAfterInput
+            ((MachineDescription.encodeCodeWordAsInput stageRest).map
+              some)) =
+        { state :=
+            CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.halt
+          tape := Tstage } := by
+    simpa [config, hmove] using hstageRun
+  exact
+    natSuffixScannerDescription_runConfig_code_inv
+      baseAfterInput stageRest hstageRunCode
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_acceptConfig_inv
     {code : Word MachineCodeSymbol} {Tout : Tape Bool}

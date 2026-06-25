@@ -1156,6 +1156,82 @@ theorem boolWordSuffixScannerDescription_runConfig_code_inv
       · cases hprefix
       · cases hprefix
 
+theorem cellListCanonicalHandoffConfigWithBase_move_right_all
+    (cells baseLeft : List (Option Bool)) (suffixBits : Word Bool) :
+    Tape.move Direction.right
+        (cellListCanonicalHandoffConfigWithBase cells baseLeft
+          suffixBits).tape =
+      tapeAtCells
+        (cellListCanonicalRestoredLeftWithBase cells baseLeft)
+        (suffixBits.map some) := by
+  unfold cellListCanonicalHandoffConfigWithBase
+  cases hleft :
+      cellListCanonicalRestoredLeftWithBase cells baseLeft with
+  | nil =>
+      exfalso
+      exact cellListCanonicalRestoredLeftWithBase_ne_nil cells baseLeft
+        hleft
+  | cons cell left =>
+      cases suffixBits <;>
+        simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem boolWordCanonicalHandoffConfigWithBase_move_right_all
+    (bits : Word Bool) (baseLeft : List (Option Bool))
+    (suffixBits : Word Bool) :
+    Tape.move Direction.right
+        (boolWordCanonicalHandoffConfigWithBase bits baseLeft
+          suffixBits).tape =
+      tapeAtCells
+        (cellListCanonicalRestoredLeftWithBase (bits.map some) baseLeft)
+        (suffixBits.map some) := by
+  simpa [boolWordCanonicalHandoffConfigWithBase] using
+    cellListCanonicalHandoffConfigWithBase_move_right_all
+      (bits.map some) baseLeft suffixBits
+
+theorem boolWordSuffix_lookup_150_none :
+    BoolWordSuffixScannerDescription.lookupTransition 150 none = none := by
+  native_decide
+
+theorem boolWordSuffixScannerDescription_runConfig_finish_empty_suffix_ne_halt
+    (bits : Word Bool) (baseLeft : List (Option Bool))
+    (n : Nat) :
+    (BoolWordSuffixScannerDescription.runConfig n
+      (cellListCanonicalFinishStartConfigWithBase
+        (bits.map some) baseLeft ([] : Word Bool))).state ≠
+      BoolWordSuffixScannerDescription.halt := by
+  let stuck : MachineDescription.Configuration :=
+    config 150
+      (cellListCanonicalRestoredLeftWithBase (bits.map some) baseLeft)
+      (([] : Word Bool).map some)
+  have hreach :
+      BoolWordSuffixScannerDescription.runConfig (4 * bits.length)
+        (cellListCanonicalFinishStartConfigWithBase
+          (bits.map some) baseLeft ([] : Word Bool)) =
+        stuck := by
+    dsimp [stuck]
+    unfold cellListCanonicalFinishStartConfigWithBase
+    unfold cellListCanonicalRestoredLeftWithBase
+    simpa [List.append_assoc] using
+      run_boolWordSuffix_state150_markedBits bits
+        (cellListCanonicalFinishStartLeftWithBase
+          (bits.map some) baseLeft)
+        ((([] : Word Bool).map some))
+  have hstep : BoolWordSuffixScannerDescription.stepConfig stuck = none := by
+    simp [stuck, config, tapeAtCells,
+      MachineDescription.stepConfig, boolWordSuffix_lookup_150_none,
+      Tape.read]
+  have hstuck : stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
+    simp [stuck, config, BoolWordSuffixScannerDescription]
+  exact
+    primitive_runConfig_state_ne_halt_of_reaches_stuck
+      boolWordSuffixScannerDescription_haltTransitionFree
+      (D := BoolWordSuffixScannerDescription)
+      (c :=
+        cellListCanonicalFinishStartConfigWithBase
+          (bits.map some) baseLeft ([] : Word Bool))
+      (stuck := stuck) (k := 4 * bits.length) (n := n)
+      hreach hstep hstuck
+
 end DovetailLayoutScanner
 end CanonicalLayouts
 end EncodedRewriters
