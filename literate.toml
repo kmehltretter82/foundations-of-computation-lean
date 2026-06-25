@@ -572,3 +572,487 @@ title = "Section 5.2: Computability"
 
 [modules."FoC.Book.Chapter05.Section03"]
 title = "Section 5.3: Limits of Computation"
+
+# Additional sidebar labels for rendered helper modules. Without explicit
+# labels, Verso reuses a parent title in the navigation tree, which makes long
+# implementation subtrees appear as repeated generic entries.
+
+[modules."FoC.Foundation.QuadraticSurd"]
+title = "Quadratic Surds"
+
+[modules."FoC.Foundation.Reals.Basic"]
+title = "Real Numbers: Basic API"
+
+[modules."FoC.Foundation.Reals.BasicPart1"]
+title = "Real Numbers: Order and Algebra"
+
+[modules."FoC.Foundation.Reals.BasicPart2"]
+title = "Real Numbers: Completeness"
+
+[modules."FoC.Grammars.ParseTreePart1"]
+title = "Parse Trees: Core Lemmas"
+
+[modules."FoC.Grammars.ParseTreePart2"]
+title = "Parse Trees: Derived Lemmas"
+
+[modules."FoC.Grammars.PDAToCFG.Completeness"]
+title = "PDA to CFG Completeness"
+
+[modules."FoC.Grammars.PDAToCFG.Normalized"]
+title = "PDA to CFG Normalized Runs"
+
+[modules."FoC.Grammars.PDAToCFG.ProductionSoundness"]
+title = "PDA to CFG Production Soundness"
+
+[modules."FoC.Grammars.PDAToCFG.ReverseDerivations"]
+title = "PDA to CFG Reverse Derivations"
+
+[modules."FoC.Grammars.PDAToCFG.SummaryComputations"]
+title = "PDA to CFG Summary Computations"
+
+[modules."FoC.Grammars.PDAToCFG.Syntax"]
+title = "PDA to CFG Syntax"
+
+[modules."FoC.Book.Chapter04.Section05.Basic"]
+title = "Section 4.5: Pumping Setup"
+
+[modules."FoC.Book.Chapter04.Section05.BasicPart1"]
+title = "Section 4.5: CFL Closure Tools"
+
+[modules."FoC.Book.Chapter04.Section05.BasicPart2"]
+title = "Section 4.5: Pumping Applications"
+
+[modules."FoC.Book.Chapter04.Section06.Basics"]
+title = "Section 4.6: General Grammar Basics"
+
+[modules."FoC.Book.Chapter04.Section06.EqualCounts"]
+title = "Section 4.6: Equal Counts Grammar"
+
+[modules."FoC.Book.Chapter04.Section06.FourCounts"]
+title = "Section 4.6: Four Counts Grammar"
+
+[modules."FoC.Book.Chapter04.Section06.OrderedABC"]
+title = "Section 4.6: Ordered ABC Grammar"
+
+[modules."FoC.Book.Chapter04.Section06.OrderedABCD"]
+title = "Section 4.6: Ordered ABCD Grammar"
+
+[modules."FoC.Book.Chapter04.Section06.PowersOfTwo"]
+title = "Section 4.6: Powers of Two Grammar"
+
+[modules."FoC.Book.Chapter04.Section06.StrictInequalities"]
+title = "Section 4.6: Strict Inequalities"
+
+[modules."FoC.Book.Chapter05.Section02.Closeouts"]
+title = "Section 5.2: Closeout Theorems"
+
+[modules."FoC.Book.Chapter05.Section02.Dovetailing"]
+title = "Section 5.2: Dovetailing"
+
+[modules."FoC.Book.Chapter05.Section02.Grammars"]
+title = "Section 5.2: Grammar Recognizers"
+
+[modules."FoC.Book.Chapter05.Section02.MachineCompiler"]
+title = "Section 5.2: Machine Compiler"
+
+[modules."FoC.Book.Chapter05.Section02.Ranges"]
+title = "Section 5.2: Listings and Ranges"
+
+[modules."FoC.Book.Chapter05.Section02.Vocabulary"]
+title = "Section 5.2: Vocabulary"
+
+[modules."FoC.Book.Chapter05.Section03.Basic"]
+title = "Section 5.3: Basic Definitions"
+
+[modules."FoC.Book.Chapter05.Section03.BasicPart1"]
+title = "Section 5.3: Diagonal Machinery"
+
+[modules."FoC.Book.Chapter05.Section03.BasicPart2"]
+title = "Section 5.3: Universal Machine Closeout"
+
+[modules."FoC.Computability.APICrossReference"]
+title = "Computability API Cross Reference"
+
+[modules."FoC.Computability.DiagonalPairMachine"]
+title = "Diagonal Pair Machine"
+
+[modules."FoC.Computability.DiagonalPairMachinePart1"]
+title = "Diagonal Pair Machine: Construction"
+
+[modules."FoC.Computability.DiagonalPairMachinePart2"]
+title = "Diagonal Pair Machine: Correctness"
+
+[modules."FoC.Computability.TransformPart1"]
+title = "Machine Transformations: Acceptors"
+
+[modules."FoC.Computability.TransformPart2"]
+title = "Machine Transformations: Outputs"
+
+[modules."FoC.Computability.MachineBuilder"]
+title = "Machine Builder Tools"
+
+[modules."FoC.Computability.MachineBuilder.DovetailController"]
+title = "Dovetail Controller Layouts"
+
+[modules."FoC.Computability.MachineBuilder.DovetailLayout"]
+title = "Dovetail Layouts"
+
+[modules."FoC.Computability.MachineBuilder.Encoding"]
+title = "Machine-Builder Encodings"
+
+[modules."FoC.Computability.MachineBuilder.PrefixParser"]
+title = "Description Prefix Parser"
+
+[modules."FoC.Computability.MachineBuilder.SimulatorLayout"]
+title = "Simulator Layouts"
+
+[modules."FoC.Computability.MachineBuilder.StateTables"]
+title = "State Table Construction"
+
+[modules."FoC.Computability.MachineBuilder.TapeCode"]
+title = "Tape-Code Primitives"
+
+[modules."FoC.Computability.Grammar.Closeouts"]
+title = "Grammar Closeouts"
+
+[modules."FoC.Computability.Grammar.DerivationTraces"]
+title = "Grammar Derivation Traces"
+
+[modules."FoC.Computability.Grammar.FinitePresentation"]
+title = "Finite Grammar Presentations"
+
+[modules."FoC.Computability.Grammar.SemanticAndTraceTables"]
+title = "Semantic and Trace Grammars"
+
+[modules."FoC.Computability.Compiler.Core"]
+title = "Compiler Core"
+
+[modules."FoC.Computability.Compiler.Core.BoundedTrace"]
+title = "Bounded Trace Targets"
+
+[modules."FoC.Computability.Compiler.Core.Closeout"]
+title = "Compiler Closeout"
+
+[modules."FoC.Computability.Compiler.Core.ConstructionTargets"]
+title = "Construction Targets"
+
+[modules."FoC.Computability.Compiler.Core.ControllerCloseout"]
+title = "Dovetail Controller Closeouts"
+
+[modules."FoC.Computability.Compiler.Core.ControllerInputInitializer"]
+title = "Controller Input Initializer"
+
+[modules."FoC.Computability.Compiler.Core.ControllerResultContinue"]
+title = "Controller Result Continue"
+
+[modules."FoC.Computability.Compiler.Core.ControllerResultEmitter"]
+title = "Controller Result Emitter"
+
+[modules."FoC.Computability.Compiler.Core.ControllerStageInputProjection"]
+title = "Stage-Input Projection"
+
+[modules."FoC.Computability.Compiler.Core.ControllerStageInputProjection.Base"]
+title = "Projection Base Machine"
+
+[modules."FoC.Computability.Compiler.Core.ControllerStageInputProjection.Compiled"]
+title = "Projection Compiled Contract"
+
+[modules."FoC.Computability.Compiler.Core.ControllerStageInputProjection.InputRun"]
+title = "Projection Input Run"
+
+[modules."FoC.Computability.Compiler.Core.ControllerStageInputProjection.ResultRun"]
+title = "Projection Result Run"
+
+[modules."FoC.Computability.Compiler.Core.ControllerStageInputProjection.ScanInput"]
+title = "Projection Scanner"
+
+[modules."FoC.Computability.Compiler.Core.ControllerStageInputProjection.Soundness"]
+title = "Projection Soundness"
+
+[modules."FoC.Computability.Compiler.Core.ControllerStageInputProjection.Soundness.Basic"]
+title = "Projection Soundness Basics"
+
+[modules."FoC.Computability.Compiler.Core.ControllerStageInputProjection.Soundness.BasicPart1"]
+title = "Projection Soundness Part 1"
+
+[modules."FoC.Computability.Compiler.Core.ControllerStageInputProjection.Soundness.BasicPart2"]
+title = "Projection Soundness Part 2"
+
+[modules."FoC.Computability.Compiler.Core.DovetailCode"]
+title = "Dovetail Code Primitives"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer"]
+title = "Initial Layout Initializer"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.AppendLast"]
+title = "Initializer Append-Last"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.Assembly"]
+title = "Initializer Assembly"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.Compiled"]
+title = "Initializer Compiled Contract"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.HeadRouter"]
+title = "Initializer Head Router"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.InputTape"]
+title = "Initializer Input Tape"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.ReturnAppend"]
+title = "Initializer Return Append"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.ReturnAppendDirect"]
+title = "Initializer Direct Return Append"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.Spec"]
+title = "Initializer Specification"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner"]
+title = "Marked Stage-Input Scanner"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner.Basic"]
+title = "Marked Scanner Basics"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner.Closed"]
+title = "Marked Scanner Closed Direction"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner.ClosedBasic"]
+title = "Marked Scanner Closed Basics"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner.TailBits"]
+title = "Marked Scanner Tail Bits"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputValidator"]
+title = "Stage-Input Validator"
+
+[modules."FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.TaggedBrancher"]
+title = "Initializer Tagged Brancher"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters"]
+title = "Encoded Rewriters"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner"]
+title = "Bounded Layout Runner"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Assembly"]
+title = "Bounded Runner Assembly"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Basic"]
+title = "Bounded Runner Contract"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner"]
+title = "Configuration Runner"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Basic"]
+title = "Configuration Runner Contract"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed"]
+title = "Configuration Runner Closed Handoff"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Assembly"]
+title = "Config Runner Closed Assembly"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction"]
+title = "Config Runner Closed Construction"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Primitives"]
+title = "Config Runner Closed Primitives"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Emitter"]
+title = "Bounded Runner Emitter"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Parser"]
+title = "Bounded Runner Parser"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Parser.Basic"]
+title = "Bounded Parser Contract"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Parser.Closed"]
+title = "Bounded Parser Closed Direction"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts"]
+title = "Canonical Encoded Layouts"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Basic"]
+title = "Canonical Layout Basics"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Configuration"]
+title = "Canonical Configurations"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Controller"]
+title = "Canonical Controller Layouts"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Dovetail"]
+title = "Canonical Dovetail Layouts"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner"]
+title = "Dovetail Layout Scanner"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic"]
+title = "Scanner Field Parsers"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWord"]
+title = "Boolean-Word Scanner"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWordClosed"]
+title = "Boolean-Word Scanner Inversion"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Closed"]
+title = "Scanner Closed Direction"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Composition"]
+title = "Composed Layout Scanners"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.PrimitiveClosed"]
+title = "Primitive Scanner Inversions"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.PrimitiveClosed.Basic"]
+title = "Primitive Scanner Basics"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.PrimitiveClosed.BoolSuffix"]
+title = "Primitive Boolean Suffix Scanner"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.ShapeClosed"]
+title = "Scanner Shape Inversions"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix"]
+title = "Dovetail Stage Prefixes"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Emitters"]
+title = "Canonical Layout Emitters"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Fields"]
+title = "Canonical Layout Fields"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Simulator"]
+title = "Canonical Simulator Layouts"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.InitialLayout"]
+title = "Initial Layout Rewriter"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.RightShifted"]
+title = "Right-Shifted Rewriter Contracts"
+
+[modules."FoC.Computability.Compiler.Core.EncodedRewriters.TotalOutputEmitter"]
+title = "Total Output Emitter"
+
+[modules."FoC.Computability.Compiler.Core.EncodingLemmas"]
+title = "Encoding Append Lemmas"
+
+[modules."FoC.Computability.Compiler.Core.FiniteScaffolds"]
+title = "Finite-Source Scaffolds"
+
+[modules."FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator"]
+title = "Fixed-Description Bounded Simulator"
+
+[modules."FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.CodeRightShifted"]
+title = "Right-Shifted Simulator Code"
+
+[modules."FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.Skeleton"]
+title = "Simulator Skeleton Soundness"
+
+[modules."FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.Spec"]
+title = "Simulator Specification"
+
+[modules."FoC.Computability.Compiler.Core.Language"]
+title = "Language Compiler Boundaries"
+
+[modules."FoC.Computability.Compiler.Core.SearchDrivers"]
+title = "Search Driver Bridges"
+
+[modules."FoC.Computability.Compiler.Core.TapeCodePrimitiveSequencing"]
+title = "Tape-Code Sequencing"
+
+[modules."FoC.Computability.Compiler.Core.TapeCodePrimitives"]
+title = "Tape-Code Primitive Contracts"
+
+[modules."FoC.Computability.Compiler.Core.TransitionTableChecks"]
+title = "Transition Table Checks"
+
+[modules."FoC.Computability.Compiler.DescriptionExecution"]
+title = "Description Execution Semantics"
+
+[modules."FoC.Computability.Compiler.FixedSimulatorSkeletons"]
+title = "Fixed Simulator Skeletons"
+
+[modules."FoC.Computability.Compiler.SeqSubroutineSemantics"]
+title = "Sequential Subroutine Semantics"
+
+[modules."FoC.Computability.Compiler.Skeletons"]
+title = "Compiler Skeletons"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges"]
+title = "Universal Runners and Ranges"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.Basic"]
+title = "Universal Runner Basics"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource"]
+title = "Universal Finite-Source Closeout"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchEmitters"]
+title = "Prefix Branch Emitters"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchEmitters.Base"]
+title = "Branch Emitter Base Machine"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchEmitters.Failure"]
+title = "Branch Emitter Failure Cleanup"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchEmitters.Fields"]
+title = "Branch Emitter Field Cases"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchEmitters.Spec"]
+title = "Branch Emitter Specification"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchEmitters.Transitions"]
+title = "Branch Emitter Transition Cases"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchSequencing"]
+title = "Finite-Source Branch Sequencing"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.DecodedBoundedSimulator"]
+title = "Decoded Bounded Simulator"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer"]
+title = "Prefix Normalizer"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Base"]
+title = "Normalizer Base Machine"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Soundness"]
+title = "Normalizer Soundness"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Soundness.Basic"]
+title = "Normalizer Soundness Basics"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Soundness.Final"]
+title = "Normalizer Final Soundness"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Soundness.Inversion"]
+title = "Normalizer Inversion Lemmas"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Soundness.TransitionBlock"]
+title = "Normalizer Transition Blocks"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController"]
+title = "Stage Search Controller"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser"]
+title = "Transition List Parser"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser.Basic"]
+title = "Transition Parser Basics"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser.Runs"]
+title = "Transition Parser Runs"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser.Soundness"]
+title = "Transition Parser Soundness"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.HeaderParser"]
+title = "Header Parser"
+
+[modules."FoC.Computability.Compiler.UniversalAndRanges.Ranges"]
+title = "Compiled Range Theorems"

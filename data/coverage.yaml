@@ -1,6 +1,6 @@
 status: in_progress
 counting_policy:
-  last_audited: "2026-06-20"
+  last_audited: "2026-06-25"
   declaration_scope: "Book-facing chapter files only: FoC/Book/ChapterXX.lean plus FoC/Book/ChapterXX/**/*.lean. Reusable infrastructure modules are tracked below but are not included in declaration counts."
   theorem_declarations: "Lines beginning with `theorem`."
   definition_declarations: "Lines beginning with `def`, `structure`, `inductive`, or `abbrev`."
@@ -584,26 +584,35 @@ completed:
     theorem_declarations: 601
     definition_declarations: 275
     open_sorries:
-      total: 20
+      total: 12
       by_file:
-        - file: "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource.lean"
-          count: 5
-          topic: "Prefix parser branch emitters, decoded bounded simulator sequencing, and stage-search controller scaffolds."
-        - file: "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/Normalizer/Soundness.lean"
-          count: 3
-          topic: "Prefix parser normalizer closed-direction soundness leaves."
-        - file: "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/TransitionListParser.lean"
+        - file: "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController.lean"
           count: 2
-          topic: "Transition-list parser finite-source soundness leaves."
+          topic: "Budget checker and unbounded stage-search sequencing leaves."
+        - file: "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/DecodedBoundedSimulator.lean"
+          count: 1
+          topic: "Decoded bounded simulator code-machine sequencing leaf."
+        - file: "FoC/Computability/Compiler/Core/FiniteScaffolds.lean"
+          count: 2
+          topic: "Stage-attempt invocation and finite stage-loop sequencing controller leaves."
+        - file: "FoC/Computability/Compiler/Core/ControllerInputInitializer.lean"
+          count: 1
+          topic: "Controller input initializer finite-machine leaf."
         - file: "FoC/Computability/Compiler/Core/EncodedRewriters/BoundedLayoutRunner/Parser/Closed.lean"
           count: 1
-          topic: "Full finite DovetailLayout parser closed-handoff leaf."
-        - file: "FoC/Computability/Compiler/Core/EncodedRewriters/BoundedLayoutRunner/ConfigRunner/Closed.lean"
-          count: 5
-          topic: "Fixed bounded simulator, selected projection, reject merge, and accept merge finite closed-handoff leaves."
-        - file: "FoC/Computability/Compiler/Core/FiniteScaffolds.lean"
-          count: 4
-          topic: "Finite-source paired-recognizer dovetail controller leaves."
+          topic: "Checked dovetail-layout parser body-field inversion leaf."
+        - file: "FoC/Computability/Compiler/Core/EncodedRewriters.lean"
+          count: 1
+          topic: "Bounded-layout runner closed-handoff wrapper leaf."
+        - file: "FoC/Computability/Compiler/Core/FixedDescriptionBoundedSimulator/CodeRightShifted.lean"
+          count: 1
+          topic: "Right-shifted fixed-description simulator code construction leaf."
+        - file: "FoC/Computability/Compiler/Core/EncodedRewriters/BoundedLayoutRunner/ConfigRunner/Closed/Construction.lean"
+          count: 2
+          topic: "Selected projection and merge right-shifted construction leaves."
+        - file: "FoC/Computability/Compiler/Core/ControllerResultContinue.lean"
+          count: 1
+          topic: "Controller continue-result finite-machine leaf."
     modules:
       - "FoC.Book.Chapter05.Section01"
       - "FoC.Book.Chapter05.Section02"
