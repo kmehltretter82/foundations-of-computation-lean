@@ -1312,6 +1312,102 @@ def SelectedProjectionPrimitiveExactConstruction : Prop :=
     exists runner : MachineDescription,
       SelectedProjectionPrimitiveExactSpec useAccept runner
 
+def SelectedProjectionEmitterSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  ReadySpec emitter ∧
+    (forall L : MachineDescription.DovetailLayout,
+      emitter.HaltsWithTape
+        (ParsedLayoutBits L)
+        (SelectedProjectionOutputTape useAccept L)) ∧
+      forall L : MachineDescription.DovetailLayout,
+      forall T : Tape Bool,
+        emitter.HaltsWithTape (ParsedLayoutBits L) T ->
+          T = SelectedProjectionOutputTape useAccept L
+
+def SelectedProjectionCanonicalEmitterSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  CanonicalLayouts.EmitterSpec
+    ParsedLayoutBits
+    (SelectedProjectionOutputCode useAccept)
+    emitter
+
+theorem selectedProjectionEmitterSpec_iff_canonical
+    (useAccept : Bool) (emitter : MachineDescription) :
+    SelectedProjectionEmitterSpec useAccept emitter ↔
+      SelectedProjectionCanonicalEmitterSpec useAccept emitter := by
+  rfl
+
+def SelectedProjectionEmitterConstruction : Prop :=
+  forall useAccept : Bool,
+    exists emitter : MachineDescription,
+      SelectedProjectionEmitterSpec useAccept emitter
+
+def SelectedProjectionCheckedEmitterSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  ReadySpec emitter ∧
+    forall L : MachineDescription.DovetailLayout,
+      emitter.HaltsFromTape
+        (ParsedLayoutCheckedTape L)
+        (SelectedProjectionOutputTape useAccept L)
+
+def SelectedProjectionCheckedEmitterConstruction : Prop :=
+  forall useAccept : Bool,
+    exists emitter : MachineDescription,
+      SelectedProjectionCheckedEmitterSpec useAccept emitter
+
+theorem selectedProjectionOutputCode_true
+    (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionOutputCode true L =
+      MachineDescription.SimulatorLayout.encode
+        (AcceptSimulatorLayout L) := by
+  rfl
+
+theorem selectedProjectionOutputCode_false
+    (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionOutputCode false L =
+      MachineDescription.SimulatorLayout.encode
+        (RejectSimulatorLayout L) := by
+  rfl
+
+theorem selectedProjectionOutputTape_true
+    (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionOutputTape true L =
+      Tape.move Direction.right
+        (MachineDescription.SimulatorLayout.tape
+          (AcceptSimulatorLayout L)) := by
+  rfl
+
+theorem selectedProjectionOutputTape_false
+    (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionOutputTape false L =
+      Tape.move Direction.right
+        (MachineDescription.SimulatorLayout.tape
+          (RejectSimulatorLayout L)) := by
+  rfl
+
+def AcceptProjectionCheckedEmitterConstruction : Prop :=
+  exists emitter : MachineDescription,
+    SelectedProjectionCheckedEmitterSpec true emitter
+
+def RejectProjectionCheckedEmitterConstruction : Prop :=
+  exists emitter : MachineDescription,
+    SelectedProjectionCheckedEmitterSpec false emitter
+
+def SelectedProjectionCheckedEmitterSideConstruction : Prop :=
+  AcceptProjectionCheckedEmitterConstruction ∧
+    RejectProjectionCheckedEmitterConstruction
+
+theorem selectedProjectionCheckedEmitterConstruction_of_sides
+    (h : SelectedProjectionCheckedEmitterSideConstruction) :
+    SelectedProjectionCheckedEmitterConstruction := by
+  intro useAccept
+  cases useAccept
+  · exact h.right
+  · exact h.left
+
 theorem selectedProjectionPrimitiveRightShiftedConstruction_of_exact
     (h : SelectedProjectionPrimitiveExactConstruction) :
     SelectedProjectionPrimitiveRightShiftedConstruction := by
@@ -1383,9 +1479,106 @@ theorem selectedProjectionPrimitiveRightShiftedConstruction_of_exact
           ⟨L, hcode, by simp [SelectedProjectionOutputCode]⟩
     · simpa [SelectedProjectionOutputTape] using hT
 
+theorem selectedProjectionPrimitiveExactSpec_of_checkedParser_checkedEmitter
+    {useAccept : Bool} {parser emitter : MachineDescription}
+    (hparser : LayoutCheckedParserSpec parser)
+    (hemitter : SelectedProjectionCheckedEmitterSpec useAccept emitter) :
+    SelectedProjectionPrimitiveExactSpec useAccept
+      (SeqViaCanonical parser emitter) := by
+  have hrunnerReady :
+      (SeqViaCanonical parser emitter).SubroutineReady :=
+    SeqViaCanonical_subroutineReady hparser.left hemitter.left
+  constructor
+  · exact hrunnerReady
+  constructor
+  · intro L
+    have hparserFrom :
+        parser.HaltsFromTape
+          (Tape.input (ParsedLayoutBits L))
+          (ParsedLayoutCheckedTape L) := by
+      simpa [MachineDescription.HaltsWithTape,
+        MachineDescription.HaltsWithTapeIn,
+        MachineDescription.HaltsFromTape,
+        MachineDescription.HaltsFromTapeIn,
+        MachineDescription.initial] using hparser.right.left L
+    have hseq :
+        (SeqViaCanonical parser emitter).HaltsFromTape
+          (Tape.input (ParsedLayoutBits L))
+          (SelectedProjectionOutputTape useAccept L) :=
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        hparser.left hemitter.left
+        hparserFrom
+        (parsedLayoutCheckedTape_move_left_move_right L)
+        (hemitter.right L)
+    simpa [MachineDescription.HaltsWithTape,
+      MachineDescription.HaltsWithTapeIn,
+      MachineDescription.HaltsFromTape,
+      MachineDescription.HaltsFromTapeIn,
+      MachineDescription.initial] using hseq
+  · intro code T hhalt
+    have hhaltFrom :
+        (SeqViaCanonical parser emitter).HaltsFromTape
+          (Tape.input (MachineDescription.encodeCodeWordAsInput code)) T := by
+      simpa [MachineDescription.HaltsWithTape,
+        MachineDescription.HaltsWithTapeIn,
+        MachineDescription.HaltsFromTape,
+        MachineDescription.HaltsFromTapeIn,
+        MachineDescription.initial] using hhalt
+    rcases
+        SeqViaCanonical_haltsFromTape_inv
+          hparser.left hemitter.left hhaltFrom with
+      ⟨Tmid, hparserRun, hemitterRun⟩
+    have hparserWith :
+        parser.HaltsWithTape
+          (MachineDescription.encodeCodeWordAsInput code) Tmid := by
+      simpa [MachineDescription.HaltsWithTape,
+        MachineDescription.HaltsWithTapeIn,
+        MachineDescription.HaltsFromTape,
+        MachineDescription.HaltsFromTapeIn,
+        MachineDescription.initial] using hparserRun
+    rcases hparser.right.right code Tmid hparserWith with
+      ⟨L, hdecode, hTmid⟩
+    have hemitterRun' :
+        emitter.HaltsFromTape
+          (ParsedLayoutCheckedTape L) T := by
+      rw [hTmid] at hemitterRun
+      simpa [parsedLayoutCheckedTape_move_left_move_right L]
+        using hemitterRun
+    have hT :
+        T = SelectedProjectionOutputTape useAccept L :=
+      MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+        hemitter.left.right hemitterRun' (hemitter.right L)
+    refine ⟨L, ?_, hT⟩
+    exact MachineDescription.DovetailLayout.decodeComplete_eq_some_encode hdecode
+
+theorem selectedProjectionPrimitiveExactConstruction_of_checkedParser_checkedEmitter
+    (hparser : LayoutCheckedParserConstruction)
+    (hemitter : SelectedProjectionCheckedEmitterConstruction) :
+    SelectedProjectionPrimitiveExactConstruction := by
+  intro useAccept
+  rcases hparser with ⟨parser, hparser⟩
+  rcases hemitter useAccept with ⟨emitter, hemits⟩
+  exact
+    ⟨SeqViaCanonical parser emitter,
+      selectedProjectionPrimitiveExactSpec_of_checkedParser_checkedEmitter
+        hparser hemits⟩
+
+theorem selectedProjectionCheckedEmitterSideConstruction_scaffold :
+    SelectedProjectionCheckedEmitterSideConstruction := by
+  sorry
+
+theorem selectedProjectionCheckedEmitterConstruction_scaffold :
+    SelectedProjectionCheckedEmitterConstruction := by
+  exact
+    selectedProjectionCheckedEmitterConstruction_of_sides
+      selectedProjectionCheckedEmitterSideConstruction_scaffold
+
 theorem selectedProjectionPrimitiveExactConstruction_scaffold :
     SelectedProjectionPrimitiveExactConstruction := by
-  sorry
+  exact
+    selectedProjectionPrimitiveExactConstruction_of_checkedParser_checkedEmitter
+      layoutCheckedParserConstruction_scaffold
+      selectedProjectionCheckedEmitterConstruction_scaffold
 
 theorem selectedProjectionPrimitiveRightShiftedConstruction_core :
     SelectedProjectionPrimitiveRightShiftedConstruction := by
@@ -1474,38 +1667,6 @@ theorem selectedMergeFiniteDescriptionConstruction_scaffold :
     SelectedMergeFiniteDescriptionConstruction :=
   selectedMergeFiniteDescriptionConstruction_of_rightShifted
     selectedMergePrimitiveRightShiftedConstruction_scaffold
-
-def SelectedProjectionEmitterSpec
-    (useAccept : Bool)
-    (emitter : MachineDescription) : Prop :=
-  ReadySpec emitter ∧
-    (forall L : MachineDescription.DovetailLayout,
-      emitter.HaltsWithTape
-        (ParsedLayoutBits L)
-        (SelectedProjectionOutputTape useAccept L)) ∧
-      forall L : MachineDescription.DovetailLayout,
-      forall T : Tape Bool,
-        emitter.HaltsWithTape (ParsedLayoutBits L) T ->
-          T = SelectedProjectionOutputTape useAccept L
-
-def SelectedProjectionCanonicalEmitterSpec
-    (useAccept : Bool)
-    (emitter : MachineDescription) : Prop :=
-  CanonicalLayouts.EmitterSpec
-    ParsedLayoutBits
-    (SelectedProjectionOutputCode useAccept)
-    emitter
-
-theorem selectedProjectionEmitterSpec_iff_canonical
-    (useAccept : Bool) (emitter : MachineDescription) :
-    SelectedProjectionEmitterSpec useAccept emitter ↔
-      SelectedProjectionCanonicalEmitterSpec useAccept emitter := by
-  rfl
-
-def SelectedProjectionEmitterConstruction : Prop :=
-  forall useAccept : Bool,
-    exists emitter : MachineDescription,
-      SelectedProjectionEmitterSpec useAccept emitter
 
 theorem selectedProjectionSpec_of_parser_emitter
     {useAccept : Bool} {parser emitter : MachineDescription}
