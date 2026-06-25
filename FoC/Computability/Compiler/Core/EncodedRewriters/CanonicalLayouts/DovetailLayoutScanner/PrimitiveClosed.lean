@@ -1387,7 +1387,227 @@ theorem boolWordSuffixScannerDescription_runConfig_120_nat_prefix_inv
     {Tout : Tape Bool} {n : Nat}
     (h : BoolWordSuffixScannerDescription.runConfig n (config 120 baseLeft (bits.map some)) = { state := BoolWordSuffixScannerDescription.halt, tape := Tout }) :
     exists doneBit tail, bits = false :: false :: true :: doneBit :: tail := by
-  sorry
+  let c0 : MachineDescription.Configuration :=
+    config 120 baseLeft (bits.map some)
+  have hhaltState :
+      (BoolWordSuffixScannerDescription.runConfig n c0).state =
+        BoolWordSuffixScannerDescription.halt := by
+    simpa [c0] using congrArg MachineDescription.Configuration.state h
+  cases bits with
+  | nil =>
+      let stuck : MachineDescription.Configuration := c0
+      have hstep :
+          BoolWordSuffixScannerDescription.stepConfig stuck = none := by
+        simp [stuck, c0, BoolWordSuffixScannerDescription, config,
+          tapeAtCells, keep, keepMove, writeMove,
+          scanLeftToSentinelRestart, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          MachineDescription.transition, Tape.read]
+      have hstuck :
+          stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
+        simp [stuck, c0, BoolWordSuffixScannerDescription, config]
+      exact False.elim
+        (primitive_runConfig_state_ne_halt_of_reaches_stuck
+          boolWordSuffixScannerDescription_haltTransitionFree
+          (D := BoolWordSuffixScannerDescription)
+          (c := c0) (stuck := stuck) (k := 0) (n := n)
+          rfl hstep hstuck hhaltState)
+  | cons first rest =>
+      cases first
+      · cases rest with
+        | nil =>
+            let stuck :=
+              BoolWordSuffixScannerDescription.runConfig 1 c0
+            have hstep :
+                BoolWordSuffixScannerDescription.stepConfig stuck = none := by
+              simp [stuck, c0, BoolWordSuffixScannerDescription, config,
+                tapeAtCells, keep, keepMove, writeMove,
+                scanLeftToSentinelRestart, MachineDescription.runConfig,
+                MachineDescription.stepConfig,
+                MachineDescription.lookupTransition,
+                MachineDescription.Matches,
+                MachineDescription.transition, Tape.read, Tape.write,
+                Tape.move, Tape.moveRight]
+            have hstuck :
+                stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
+              simp [stuck, c0, BoolWordSuffixScannerDescription, config,
+                tapeAtCells, keep, keepMove, writeMove,
+                scanLeftToSentinelRestart, MachineDescription.runConfig,
+                MachineDescription.stepConfig,
+                MachineDescription.lookupTransition,
+                MachineDescription.Matches,
+                MachineDescription.transition, Tape.read, Tape.write,
+                Tape.move, Tape.moveRight]
+            exact False.elim
+              (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                boolWordSuffixScannerDescription_haltTransitionFree
+                (D := BoolWordSuffixScannerDescription)
+                (c := c0) (stuck := stuck) (k := 1) (n := n)
+                rfl hstep hstuck hhaltState)
+        | cons second restTail =>
+            cases second
+            · cases restTail with
+              | nil =>
+                  let stuck :=
+                    BoolWordSuffixScannerDescription.runConfig 2 c0
+                  have hstep :
+                      BoolWordSuffixScannerDescription.stepConfig stuck =
+                        none := by
+                    simp [stuck, c0, BoolWordSuffixScannerDescription,
+                      config, tapeAtCells, keep, keepMove, writeMove,
+                      scanLeftToSentinelRestart,
+                      MachineDescription.runConfig,
+                      MachineDescription.stepConfig,
+                      MachineDescription.lookupTransition,
+                      MachineDescription.Matches,
+                      MachineDescription.transition, Tape.read, Tape.write,
+                      Tape.move, Tape.moveRight]
+                  have hstuck :
+                      stuck.state ≠
+                        BoolWordSuffixScannerDescription.halt := by
+                    simp [stuck, c0, BoolWordSuffixScannerDescription,
+                      config, tapeAtCells, keep, keepMove, writeMove,
+                      scanLeftToSentinelRestart,
+                      MachineDescription.runConfig,
+                      MachineDescription.stepConfig,
+                      MachineDescription.lookupTransition,
+                      MachineDescription.Matches,
+                      MachineDescription.transition, Tape.read, Tape.write,
+                      Tape.move, Tape.moveRight]
+                  exact False.elim
+                    (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                      boolWordSuffixScannerDescription_haltTransitionFree
+                      (D := BoolWordSuffixScannerDescription)
+                      (c := c0) (stuck := stuck) (k := 2) (n := n)
+                      rfl hstep hstuck hhaltState)
+              | cons third tail =>
+                  cases third
+                  · let stuck :=
+                        BoolWordSuffixScannerDescription.runConfig 2 c0
+                    have hstep :
+                        BoolWordSuffixScannerDescription.stepConfig stuck =
+                          none := by
+                      cases tail <;>
+                        simp [stuck, c0,
+                          BoolWordSuffixScannerDescription, config,
+                          tapeAtCells, keep, keepMove, writeMove,
+                          scanLeftToSentinelRestart,
+                          MachineDescription.runConfig,
+                          MachineDescription.stepConfig,
+                          MachineDescription.lookupTransition,
+                          MachineDescription.Matches,
+                          MachineDescription.transition, Tape.read,
+                          Tape.write, Tape.move, Tape.moveRight]
+                    have hstuck :
+                        stuck.state ≠
+                          BoolWordSuffixScannerDescription.halt := by
+                      cases tail <;>
+                        simp [stuck, c0,
+                          BoolWordSuffixScannerDescription, config,
+                          tapeAtCells, keep, keepMove, writeMove,
+                          scanLeftToSentinelRestart,
+                          MachineDescription.runConfig,
+                          MachineDescription.stepConfig,
+                          MachineDescription.lookupTransition,
+                          MachineDescription.Matches,
+                          MachineDescription.transition, Tape.read,
+                          Tape.write, Tape.move, Tape.moveRight]
+                    exact False.elim
+                      (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                        boolWordSuffixScannerDescription_haltTransitionFree
+                        (D := BoolWordSuffixScannerDescription)
+                        (c := c0) (stuck := stuck) (k := 2) (n := n)
+                        rfl hstep hstuck hhaltState)
+                  · cases tail with
+                    | nil =>
+                        let stuck :=
+                          BoolWordSuffixScannerDescription.runConfig 4 c0
+                        have hstep :
+                            BoolWordSuffixScannerDescription.stepConfig
+                                stuck = none := by
+                          simp [stuck, c0,
+                            BoolWordSuffixScannerDescription, config,
+                            tapeAtCells, keep, keepMove, writeMove,
+                            scanLeftToSentinelRestart,
+                            MachineDescription.runConfig,
+                            MachineDescription.stepConfig,
+                            MachineDescription.lookupTransition,
+                            MachineDescription.Matches,
+                            MachineDescription.transition, Tape.read,
+                            Tape.write, Tape.move, Tape.moveRight]
+                        have hstuck :
+                            stuck.state ≠
+                              BoolWordSuffixScannerDescription.halt := by
+                          simp [stuck, c0,
+                            BoolWordSuffixScannerDescription, config,
+                            tapeAtCells, keep, keepMove, writeMove,
+                            scanLeftToSentinelRestart,
+                            MachineDescription.runConfig,
+                            MachineDescription.stepConfig,
+                            MachineDescription.lookupTransition,
+                            MachineDescription.Matches,
+                            MachineDescription.transition, Tape.read,
+                            Tape.write, Tape.move, Tape.moveRight]
+                        exact False.elim
+                          (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                            boolWordSuffixScannerDescription_haltTransitionFree
+                            (D := BoolWordSuffixScannerDescription)
+                            (c := c0) (stuck := stuck) (k := 4)
+                            (n := n) rfl hstep hstuck hhaltState)
+                    | cons doneBit tailRest =>
+                        exact ⟨doneBit, tailRest, rfl⟩
+            · let stuck :=
+                BoolWordSuffixScannerDescription.runConfig 1 c0
+              have hstep :
+                  BoolWordSuffixScannerDescription.stepConfig stuck = none := by
+                cases restTail <;>
+                  simp [stuck, c0, BoolWordSuffixScannerDescription, config,
+                    tapeAtCells, keep, keepMove, writeMove,
+                    scanLeftToSentinelRestart,
+                    MachineDescription.runConfig,
+                    MachineDescription.stepConfig,
+                    MachineDescription.lookupTransition,
+                    MachineDescription.Matches,
+                    MachineDescription.transition, Tape.read, Tape.write,
+                    Tape.move, Tape.moveRight]
+              have hstuck :
+                  stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
+                cases restTail <;>
+                  simp [stuck, c0, BoolWordSuffixScannerDescription, config,
+                    tapeAtCells, keep, keepMove, writeMove,
+                    scanLeftToSentinelRestart,
+                    MachineDescription.runConfig,
+                    MachineDescription.stepConfig,
+                    MachineDescription.lookupTransition,
+                    MachineDescription.Matches,
+                    MachineDescription.transition, Tape.read, Tape.write,
+                    Tape.move, Tape.moveRight]
+              exact False.elim
+                (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                  boolWordSuffixScannerDescription_haltTransitionFree
+                  (D := BoolWordSuffixScannerDescription)
+                  (c := c0) (stuck := stuck) (k := 1) (n := n)
+                  rfl hstep hstuck hhaltState)
+      · -- first bit is true: state 120 has no transition for true → stuck at step 0
+        let stuck : MachineDescription.Configuration := c0
+        have hstep :
+            BoolWordSuffixScannerDescription.stepConfig stuck = none := by
+          cases rest <;>
+            simp [stuck, c0, BoolWordSuffixScannerDescription, config,
+              tapeAtCells, keep, keepMove, writeMove,
+              scanLeftToSentinelRestart, MachineDescription.stepConfig,
+              MachineDescription.lookupTransition,
+              MachineDescription.Matches,
+              MachineDescription.transition, Tape.read]
+        have hstuck :
+            stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
+          simp [stuck, c0, BoolWordSuffixScannerDescription, config]
+        exact False.elim
+          (primitive_runConfig_state_ne_halt_of_reaches_stuck
+            boolWordSuffixScannerDescription_haltTransitionFree
+            (D := BoolWordSuffixScannerDescription)
+            (c := c0) (stuck := stuck) (k := 0) (n := n)
+            rfl hstep hstuck hhaltState)
 
 theorem boolWordSuffixScannerDescription_runConfig_120_inv
     (n : Nat) (baseLeft : List (Option Bool)) (tail : Word Bool)
