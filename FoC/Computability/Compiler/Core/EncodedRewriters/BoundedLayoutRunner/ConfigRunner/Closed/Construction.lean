@@ -1291,9 +1291,107 @@ theorem selectedMergeFiniteDescriptionConstruction_of_rightShifted
     refine ⟨S, L, hcode, hinput, ?_⟩
     simpa [SelectedMergeOutputTape, hout] using hT
 
+def SelectedProjectionPrimitiveExactSpec
+    (useAccept : Bool)
+    (runner : MachineDescription) : Prop :=
+  ReadySpec runner ∧
+    (forall L : MachineDescription.DovetailLayout,
+      runner.HaltsWithTape
+        (ParsedLayoutBits L)
+        (SelectedProjectionOutputTape useAccept L)) ∧
+      forall code : Word MachineCodeSymbol,
+      forall T : Tape Bool,
+        runner.HaltsWithTape
+            (MachineDescription.encodeCodeWordAsInput code) T ->
+          exists L : MachineDescription.DovetailLayout,
+            code = MachineDescription.DovetailLayout.encode L ∧
+              T = SelectedProjectionOutputTape useAccept L
+
+def SelectedProjectionPrimitiveExactConstruction : Prop :=
+  forall useAccept : Bool,
+    exists runner : MachineDescription,
+      SelectedProjectionPrimitiveExactSpec useAccept runner
+
+theorem selectedProjectionPrimitiveRightShiftedConstruction_of_exact
+    (h : SelectedProjectionPrimitiveExactConstruction) :
+    SelectedProjectionPrimitiveRightShiftedConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  constructor
+  · exact hrunner.left.left
+  constructor
+  · exact hrunner.left.right
+  constructor
+  · intro code out
+    constructor
+    · intro hhalt
+      rcases hhalt with ⟨n, hn⟩
+      let T : Tape Bool :=
+        (runner.runConfig n
+          (runner.initial
+            (MachineDescription.encodeCodeWordAsInput code))).tape
+      have hTape :
+          runner.HaltsWithTape
+              (MachineDescription.encodeCodeWordAsInput code) T := by
+        exact ⟨n, ⟨hn.left, rfl⟩⟩
+      rcases hrunner.right.right code T hTape with
+        ⟨L, hcode, hT⟩
+      have hactual :
+          Tape.normalizedOutput T =
+            MachineDescription.encodeCodeWordAsInput out := by
+        simpa [T] using hn.right
+      have hexpected :
+          Tape.normalizedOutput T =
+            MachineDescription.encodeCodeWordAsInput
+              (SelectedProjectionOutputCode useAccept L) := by
+        rw [hT]
+        exact
+          EncodedRewriters.tape_normalizedOutput_move_right_input
+            (MachineDescription.encodeCodeWordAsInput
+              (SelectedProjectionOutputCode useAccept L))
+      have houtBits :
+          MachineDescription.encodeCodeWordAsInput out =
+            MachineDescription.encodeCodeWordAsInput
+              (SelectedProjectionOutputCode useAccept L) :=
+        hactual.symm.trans hexpected
+      have hout : out = SelectedProjectionOutputCode useAccept L :=
+        MachineDescription.encodeCodeWordAsInput_injective houtBits
+      exact
+        (SelectedProjectionPrimitive_transform_eq_some_iff
+          useAccept code out).mpr
+          ⟨L, hcode, by simpa [SelectedProjectionOutputCode] using hout⟩
+    · intro htransform
+      rcases
+          (SelectedProjectionPrimitive_transform_eq_some_iff
+            useAccept code out).mp htransform with
+        ⟨L, hcode, hout⟩
+      subst code
+      subst out
+      simpa [ParsedLayoutBits, SelectedProjectionOutputTape,
+        SelectedProjectionOutputCode,
+        EncodedRewriters.tape_normalizedOutput_move_right_input] using
+        MachineDescription.haltsWithOutput_of_haltsWithTape
+          (hrunner.right.left L)
+  · intro code T hhalt
+    rcases hrunner.right.right code T hhalt with
+      ⟨L, hcode, hT⟩
+    refine ⟨SelectedProjectionOutputCode useAccept L, ?_, ?_⟩
+    · exact
+        (SelectedProjectionPrimitive_transform_eq_some_iff
+          useAccept code (SelectedProjectionOutputCode useAccept L)).mpr
+          ⟨L, hcode, by simp [SelectedProjectionOutputCode]⟩
+    · simpa [SelectedProjectionOutputTape] using hT
+
+theorem selectedProjectionPrimitiveExactConstruction_scaffold :
+    SelectedProjectionPrimitiveExactConstruction := by
+  sorry
+
 theorem selectedProjectionPrimitiveRightShiftedConstruction_core :
     SelectedProjectionPrimitiveRightShiftedConstruction := by
-  sorry
+  exact
+    selectedProjectionPrimitiveRightShiftedConstruction_of_exact
+      selectedProjectionPrimitiveExactConstruction_scaffold
 
 theorem acceptProjectionPrimitiveRightShiftedConstruction_scaffold :
     AcceptProjectionPrimitiveRightShiftedConstruction := by
