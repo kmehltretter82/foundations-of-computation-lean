@@ -101,6 +101,13 @@ subroutine readiness, handoff shape, and closed handoff inversion.
   turns that exact tape shape into the closed handoff contract when outputs
   are known to be nonempty.
 
+For proof work, use the short accessors
+{name (full := FoC.Computability.EncodedRewriters.rightShifted_haltsWithTape_inv)}`EncodedRewriters.rightShifted_haltsWithTape_inv`
+and
+{name (full := FoC.Computability.closedHandoffCompiled_haltsWithTape_inv)}`closedHandoffCompiled_haltsWithTape_inv`
+when moving from a halting tape back to the primitive transform and exact tape
+equations.
+
 When a proof only has
 {name (full := FoC.Computability.Tape.Equiv)}`Tape.Equiv` or
 normalized-output theorem, it does

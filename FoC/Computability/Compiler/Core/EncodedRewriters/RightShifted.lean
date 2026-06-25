@@ -85,10 +85,140 @@ def RightShiftedOutputCompiledSubroutineByDescription
               (MachineDescription.encodeCodeWordAsInput code) T ->
             exists out : Word MachineCodeSymbol,
               P.transform code = some out ∧
-                T =
-                  Tape.move Direction.right
-                    (Tape.input
-                      (MachineDescription.encodeCodeWordAsInput out))
+              T =
+                Tape.move Direction.right
+                  (Tape.input
+                    (MachineDescription.encodeCodeWordAsInput out))
+
+/-!
+**Accessor API.**  Right-shifted output is the exact-tape contract used by the
+remaining encoded rewriter leaves.  These accessors keep later proofs from
+depending on the nested conjunction layout of
+{name}`RightShiftedOutputCompiledSubroutineByDescription`.
+-/
+
+theorem rightShiftedOutputCompiledSubroutineByDescription_wellFormed
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : RightShiftedOutputCompiledSubroutineByDescription P D) :
+    D.WellFormed :=
+  h.left
+
+theorem rightShiftedOutputCompiledSubroutineByDescription_haltTransitionFree
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : RightShiftedOutputCompiledSubroutineByDescription P D) :
+    D.HaltTransitionFree :=
+  h.right.left
+
+theorem rightShiftedOutputCompiledSubroutineByDescription_haltsWithOutput_iff
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : RightShiftedOutputCompiledSubroutineByDescription P D)
+    (code out : Word MachineCodeSymbol) :
+    D.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out) <->
+      P.transform code = some out :=
+  h.right.right.left code out
+
+theorem rightShiftedOutputCompiledSubroutineByDescription_haltsWithOutput_of_transform_eq_some
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : RightShiftedOutputCompiledSubroutineByDescription P D)
+    {code out : Word MachineCodeSymbol}
+    (hp : P.transform code = some out) :
+    D.HaltsWithOutput
+      (MachineDescription.encodeCodeWordAsInput code)
+      (MachineDescription.encodeCodeWordAsInput out) :=
+  (rightShiftedOutputCompiledSubroutineByDescription_haltsWithOutput_iff
+    h code out).mpr hp
+
+theorem rightShiftedOutputCompiledSubroutineByDescription_transform_eq_some_of_haltsWithOutput
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : RightShiftedOutputCompiledSubroutineByDescription P D)
+    {code out : Word MachineCodeSymbol}
+    (hD :
+      D.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out)) :
+    P.transform code = some out :=
+  (rightShiftedOutputCompiledSubroutineByDescription_haltsWithOutput_iff
+    h code out).mp hD
+
+theorem rightShiftedOutputCompiledSubroutineByDescription_haltsWithTape_inv
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : RightShiftedOutputCompiledSubroutineByDescription P D)
+    {code : Word MachineCodeSymbol} {T : Tape Bool}
+    (hD :
+      D.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T) :
+    exists out : Word MachineCodeSymbol,
+      P.transform code = some out ∧
+        T =
+          Tape.move Direction.right
+            (Tape.input
+              (MachineDescription.encodeCodeWordAsInput out)) :=
+  h.right.right.right code T hD
+
+theorem rightShiftedOutputCompiledSubroutineByDescription_outputCompiled
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : RightShiftedOutputCompiledSubroutineByDescription P D) :
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription P D :=
+  ⟨⟨h.left, h.right.right.left⟩, h.right.left⟩
+
+theorem rightShiftedOutputCompiledSubroutineByDescription_subroutineReady
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : RightShiftedOutputCompiledSubroutineByDescription P D) :
+    D.SubroutineReady :=
+  ⟨h.left, h.right.left⟩
+
+theorem rightShifted_haltsWithOutput_iff
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : RightShiftedOutputCompiledSubroutineByDescription P D)
+    (code out : Word MachineCodeSymbol) :
+    D.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out) <->
+      P.transform code = some out :=
+  rightShiftedOutputCompiledSubroutineByDescription_haltsWithOutput_iff
+    h code out
+
+theorem rightShifted_haltsWithTape_inv
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : RightShiftedOutputCompiledSubroutineByDescription P D)
+    {code : Word MachineCodeSymbol} {T : Tape Bool}
+    (hD :
+      D.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T) :
+    exists out : Word MachineCodeSymbol,
+      P.transform code = some out ∧
+        T =
+          Tape.move Direction.right
+            (Tape.input
+              (MachineDescription.encodeCodeWordAsInput out)) :=
+  rightShiftedOutputCompiledSubroutineByDescription_haltsWithTape_inv
+    h hD
+
+theorem rightShifted_outputCompiled
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : RightShiftedOutputCompiledSubroutineByDescription P D) :
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription P D :=
+  rightShiftedOutputCompiledSubroutineByDescription_outputCompiled h
+
+theorem rightShifted_subroutineReady
+    {P : MachineDescription.TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : RightShiftedOutputCompiledSubroutineByDescription P D) :
+    D.SubroutineReady :=
+  rightShiftedOutputCompiledSubroutineByDescription_subroutineReady h
 
 theorem closedHandoffCompiled_of_halt_tape_move_right
     {P : MachineDescription.TapeCodePrimitive}
