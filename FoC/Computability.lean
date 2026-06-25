@@ -13,6 +13,7 @@ import FoC.Computability.DiagonalPairMachine
 import FoC.Computability.MachineBuilder
 import FoC.Computability.Compiler
 import FoC.Computability.FiniteProgram
+import FoC.Computability.APICrossReference
 
 set_option doc.verso true
 
@@ -102,6 +103,10 @@ bridges, semantic grammar closure, and finite construction surfaces are present.
 The remaining universal runner and uniform finite compiler constructions are
 packaged as closeout records so downstream theorem statements can be precise
 without pretending those finite machines have already been built.
+
+For a cross-reference organized around the reusable API, compiler contract
+ladder, exact-tape boundary, and remaining construction leaves, see
+{module}`FoC.Computability.APICrossReference`.
 
 ## Reading Route
 

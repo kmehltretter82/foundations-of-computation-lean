@@ -1,6 +1,5 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.DecodedBoundedSimulator
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchSequencing
 
 set_option doc.verso true
