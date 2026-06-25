@@ -1065,6 +1065,43 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_stage_inv
     natSuffixScannerDescription_runConfig_code_inv
       baseAfterInput stageRest hstageRunCode
 
+/-!
+The three field-level inversions below all depend on the same remaining
+closed-body fact: after the input word and stage have been accepted, the
+scanner must consume two encoded configurations and the two final hit flags,
+then return to the checked input tape.  Keeping that as one named obligation
+avoids proving the same handoff chain separately for the accept config, reject
+config, and final flags.
+-/
+theorem checkedDovetailLayoutScannerDescription_haltsWithTape_body_inv
+    {code : Word MachineCodeSymbol} {Tout : Tape Bool}
+    {inputWord : Word Bool} {stage : Nat}
+    {bodyRest : Word MachineCodeSymbol}
+    (h : CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription.HaltsWithTape
+          (MachineDescription.encodeCodeWordAsInput code) Tout)
+    (h_input : code =
+      MachineCodeSymbol.transition ::
+        MachineDescription.encodeBoolWordAppend inputWord
+          (MachineDescription.encodeNatAppend stage bodyRest)) :
+    exists acceptConfig : MachineDescription.Configuration,
+    exists rejectConfig : MachineDescription.Configuration,
+    exists acceptHit : Bool,
+    exists rejectHit : Bool,
+      bodyRest =
+        MachineDescription.encodeConfigurationAppend acceptConfig
+          (MachineDescription.encodeConfigurationAppend rejectConfig
+            (MachineDescription.encodeBoolAppend acceptHit
+              (MachineDescription.encodeBoolAppend rejectHit []))) ∧
+      Tape.move tapeCodePrimitiveCodeWordHandoffMove Tout =
+        ParsedLayoutCheckedTape
+          { input := inputWord
+            stage := stage
+            acceptConfig := acceptConfig
+            rejectConfig := rejectConfig
+            acceptHit := acceptHit
+            rejectHit := rejectHit } := by
+  sorry
+
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_acceptConfig_inv
     {code : Word MachineCodeSymbol} {Tout : Tape Bool}
     {inputWord : Word Bool} {stage : Nat} {acceptRest : Word MachineCodeSymbol}
@@ -1074,7 +1111,16 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_acceptConfig_inv
     exists acceptConfig : MachineDescription.Configuration,
     exists rejectRest : Word MachineCodeSymbol,
       acceptRest = MachineDescription.encodeConfigurationAppend acceptConfig rejectRest := by
-  sorry
+  rcases
+      checkedDovetailLayoutScannerDescription_haltsWithTape_body_inv
+        h h_input with
+    ⟨acceptConfig, rejectConfig, acceptHit, rejectHit, hbody, _hT⟩
+  exact
+    ⟨acceptConfig,
+      MachineDescription.encodeConfigurationAppend rejectConfig
+        (MachineDescription.encodeBoolAppend acceptHit
+          (MachineDescription.encodeBoolAppend rejectHit [])),
+      hbody⟩
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_rejectConfig_inv
     {code : Word MachineCodeSymbol} {Tout : Tape Bool}
@@ -1085,7 +1131,31 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_rejectConfig_inv
     exists rejectConfig : MachineDescription.Configuration,
     exists flagsRest : Word MachineCodeSymbol,
       rejectRest = MachineDescription.encodeConfigurationAppend rejectConfig flagsRest := by
-  sorry
+  rcases
+      checkedDovetailLayoutScannerDescription_haltsWithTape_body_inv
+        h h_input with
+    ⟨acceptConfig', rejectConfig, acceptHit, rejectHit, hbody, _hT⟩
+  let flagsRest :=
+    MachineDescription.encodeBoolAppend acceptHit
+      (MachineDescription.encodeBoolAppend rejectHit [])
+  have hdecode :
+      MachineDescription.decodeConfiguration
+          (MachineDescription.encodeConfigurationAppend acceptConfig rejectRest) =
+        MachineDescription.decodeConfiguration
+          (MachineDescription.encodeConfigurationAppend acceptConfig'
+            (MachineDescription.encodeConfigurationAppend rejectConfig
+              flagsRest)) := by
+    rw [hbody]
+  have hpair :
+      (acceptConfig, rejectRest) =
+        (acceptConfig',
+          MachineDescription.encodeConfigurationAppend rejectConfig
+            flagsRest) := by
+    simpa [MachineDescription.decodeConfiguration_encodeConfigurationAppend]
+      using hdecode
+  exact
+    ⟨rejectConfig, flagsRest,
+      congrArg Prod.snd hpair⟩
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_flags_body_inv
     {code : Word MachineCodeSymbol} {Tout : Tape Bool}
@@ -1098,7 +1168,57 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_flags_body_inv
       flagsRest = MachineDescription.encodeBoolAppend acceptHit (MachineDescription.encodeBoolAppend rejectHit []) ∧
       Tape.move tapeCodePrimitiveCodeWordHandoffMove Tout =
         ParsedLayoutCheckedTape { input := inputWord, stage := stage, acceptConfig := acceptConfig, rejectConfig := rejectConfig, acceptHit := acceptHit, rejectHit := rejectHit } := by
-  sorry
+  rcases
+      checkedDovetailLayoutScannerDescription_haltsWithTape_body_inv
+        h h_input with
+    ⟨acceptConfig', rejectConfig', acceptHit, rejectHit, hbody, hT⟩
+  let flagsRest' :=
+    MachineDescription.encodeBoolAppend acceptHit
+      (MachineDescription.encodeBoolAppend rejectHit [])
+  have hdecodeAccept :
+      MachineDescription.decodeConfiguration
+          (MachineDescription.encodeConfigurationAppend acceptConfig
+            (MachineDescription.encodeConfigurationAppend rejectConfig
+              flagsRest)) =
+        MachineDescription.decodeConfiguration
+          (MachineDescription.encodeConfigurationAppend acceptConfig'
+            (MachineDescription.encodeConfigurationAppend rejectConfig'
+              flagsRest')) := by
+    rw [hbody]
+  have hpairAccept :
+      (acceptConfig,
+          MachineDescription.encodeConfigurationAppend rejectConfig
+            flagsRest) =
+        (acceptConfig',
+          MachineDescription.encodeConfigurationAppend rejectConfig'
+            flagsRest') := by
+    simpa [MachineDescription.decodeConfiguration_encodeConfigurationAppend]
+      using hdecodeAccept
+  have haccept : acceptConfig = acceptConfig' :=
+    congrArg Prod.fst hpairAccept
+  have hrejectCode :
+      MachineDescription.encodeConfigurationAppend rejectConfig flagsRest =
+        MachineDescription.encodeConfigurationAppend rejectConfig'
+          flagsRest' :=
+    congrArg Prod.snd hpairAccept
+  have hdecodeReject :
+      MachineDescription.decodeConfiguration
+          (MachineDescription.encodeConfigurationAppend rejectConfig flagsRest) =
+        MachineDescription.decodeConfiguration
+          (MachineDescription.encodeConfigurationAppend rejectConfig'
+            flagsRest') := by
+    rw [hrejectCode]
+  have hpairReject :
+      (rejectConfig, flagsRest) = (rejectConfig', flagsRest') := by
+    simpa [MachineDescription.decodeConfiguration_encodeConfigurationAppend]
+      using hdecodeReject
+  have hreject : rejectConfig = rejectConfig' :=
+    congrArg Prod.fst hpairReject
+  have hflags : flagsRest = flagsRest' :=
+    congrArg Prod.snd hpairReject
+  subst acceptConfig'
+  subst rejectConfig'
+  exact ⟨acceptHit, rejectHit, hflags, hT⟩
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_decodeComplete_inv
     (code : Word MachineCodeSymbol) (T : Tape Bool)
