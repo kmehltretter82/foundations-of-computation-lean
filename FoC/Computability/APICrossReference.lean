@@ -68,6 +68,12 @@ descriptions and code words.
   {module}`FoC.Computability.Compiler.Core.BoundedTrace`, and
   {module}`FoC.Computability.Compiler.Core.DovetailCode` hold the reusable
   language-level codes and semantic bounded-runner facts.
+* {module}`FoC.Computability.Compiler.Core.EncodingLemmas` contains shared
+  append reassociation and decoder-backed cancellation helpers, including
+  {name (full := FoC.Computability.encodeBoolWordAppend_inj)}`encodeBoolWordAppend_inj`,
+  {name (full := FoC.Computability.encodeConfigurationAppend_inj)}`encodeConfigurationAppend_inj`,
+  and
+  {name (full := FoC.Computability.encodeDescriptionAppend_inj)}`encodeDescriptionAppend_inj`.
 * {module}`FoC.Computability.FiniteProgram` packages finite executable program
   descriptions whose concrete machine descriptions are explicitly supplied.
 
@@ -190,8 +196,9 @@ order.
   is the consolidated closed-parser inversion. It should use the bool-word,
   nat, configuration-suffix, and final-flag closed scanner facts from
   {module}`FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner`
-  and should produce the exact checked handoff equation, not merely a decoded
-  layout.
+  plus the decoder-backed cancellation helpers from
+  {module}`FoC.Computability.Compiler.Core.EncodingLemmas`, and should produce
+  the exact checked handoff equation, not merely a decoded layout.
 * Config-runner exact-tape leaves:
   {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveRightShiftedConstruction_core)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveRightShiftedConstruction_core`
   and

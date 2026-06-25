@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.SeqSubroutineSemantics
+import FoC.Computability.Compiler.Core.EncodingLemmas
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Dovetail
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Parser.Basic
@@ -1138,24 +1139,11 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_rejectConfig_inv
   let flagsRest :=
     MachineDescription.encodeBoolAppend acceptHit
       (MachineDescription.encodeBoolAppend rejectHit [])
-  have hdecode :
-      MachineDescription.decodeConfiguration
-          (MachineDescription.encodeConfigurationAppend acceptConfig rejectRest) =
-        MachineDescription.decodeConfiguration
-          (MachineDescription.encodeConfigurationAppend acceptConfig'
-            (MachineDescription.encodeConfigurationAppend rejectConfig
-              flagsRest)) := by
-    rw [hbody]
-  have hpair :
-      (acceptConfig, rejectRest) =
-        (acceptConfig',
-          MachineDescription.encodeConfigurationAppend rejectConfig
-            flagsRest) := by
-    simpa [MachineDescription.decodeConfiguration_encodeConfigurationAppend]
-      using hdecode
+  rcases encodeConfigurationAppend_inj hbody with
+    ⟨_haccept, hrest⟩
   exact
     ⟨rejectConfig, flagsRest,
-      congrArg Prod.snd hpair⟩
+      hrest⟩
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_flags_body_inv
     {code : Word MachineCodeSymbol} {Tout : Tape Bool}
@@ -1175,47 +1163,10 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_flags_body_inv
   let flagsRest' :=
     MachineDescription.encodeBoolAppend acceptHit
       (MachineDescription.encodeBoolAppend rejectHit [])
-  have hdecodeAccept :
-      MachineDescription.decodeConfiguration
-          (MachineDescription.encodeConfigurationAppend acceptConfig
-            (MachineDescription.encodeConfigurationAppend rejectConfig
-              flagsRest)) =
-        MachineDescription.decodeConfiguration
-          (MachineDescription.encodeConfigurationAppend acceptConfig'
-            (MachineDescription.encodeConfigurationAppend rejectConfig'
-              flagsRest')) := by
-    rw [hbody]
-  have hpairAccept :
-      (acceptConfig,
-          MachineDescription.encodeConfigurationAppend rejectConfig
-            flagsRest) =
-        (acceptConfig',
-          MachineDescription.encodeConfigurationAppend rejectConfig'
-            flagsRest') := by
-    simpa [MachineDescription.decodeConfiguration_encodeConfigurationAppend]
-      using hdecodeAccept
-  have haccept : acceptConfig = acceptConfig' :=
-    congrArg Prod.fst hpairAccept
-  have hrejectCode :
-      MachineDescription.encodeConfigurationAppend rejectConfig flagsRest =
-        MachineDescription.encodeConfigurationAppend rejectConfig'
-          flagsRest' :=
-    congrArg Prod.snd hpairAccept
-  have hdecodeReject :
-      MachineDescription.decodeConfiguration
-          (MachineDescription.encodeConfigurationAppend rejectConfig flagsRest) =
-        MachineDescription.decodeConfiguration
-          (MachineDescription.encodeConfigurationAppend rejectConfig'
-            flagsRest') := by
-    rw [hrejectCode]
-  have hpairReject :
-      (rejectConfig, flagsRest) = (rejectConfig', flagsRest') := by
-    simpa [MachineDescription.decodeConfiguration_encodeConfigurationAppend]
-      using hdecodeReject
-  have hreject : rejectConfig = rejectConfig' :=
-    congrArg Prod.fst hpairReject
-  have hflags : flagsRest = flagsRest' :=
-    congrArg Prod.snd hpairReject
+  rcases encodeConfigurationAppend_inj hbody with
+    ⟨haccept, hrejectCode⟩
+  rcases encodeConfigurationAppend_inj hrejectCode with
+    ⟨hreject, hflags⟩
   subst acceptConfig'
   subst rejectConfig'
   exact ⟨acceptHit, rejectHit, hflags, hT⟩
