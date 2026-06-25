@@ -44,6 +44,39 @@ def CodePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction :
             some (D, input)) ->
       CodePrefixDecodedBoundedSimulatorCodeMachineConstruction
 
+def CodePrefixDecodedBoundedSimulatorStageDecoderConstruction : Prop :=
+  exists state : Type,
+  exists decoder : TuringMachine MachineCodeSymbol state,
+    forall tokens : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput decoder tokens <->
+        exists stage : Nat,
+        exists encoded : Word MachineCodeSymbol,
+          tokens = CodePrefixRecognizerStageCode encoded stage
+
+def CodePrefixDecodedBoundedSimulatorDescriptionDecoderConstruction :
+    Prop :=
+  exists state : Type,
+  exists decoder : TuringMachine MachineCodeSymbol state,
+    forall encoded : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput decoder encoded <->
+        exists D : MachineDescription,
+        exists input : Word MachineCodeSymbol,
+          MachineDescription.decodeDescriptionPrefix encoded =
+            some (D, input)
+
+theorem codePrefixDecodedBoundedSimulatorCodeMachineConstruction_of_components
+    (hstage : CodePrefixDecodedBoundedSimulatorStageDecoderConstruction)
+    (hdescription :
+      CodePrefixDecodedBoundedSimulatorDescriptionDecoderConstruction)
+    (hsequence :
+      CodePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction) :
+    CodePrefixDecodedBoundedSimulatorCodeMachineConstruction := by
+  rcases hstage with ⟨stageState, stageDecoder, hstage⟩
+  rcases hdescription with
+    ⟨descriptionState, descriptionDecoder, hdescription⟩
+  exact
+    hsequence stageDecoder descriptionDecoder hstage hdescription
+
 theorem codePrefixDecodedBoundedSimulatorCodeMachineConstruction_of_semanticMachine
     (hsemantic :
       CodePrefixDecodedBoundedSimulatorSemanticMachineConstruction) :
@@ -93,9 +126,25 @@ decode one description prefix, simulate the decoded machine for the stage
 bound, and halt exactly on hits.
 -/
 
+theorem codePrefixDecodedBoundedSimulatorStageDecoderConstruction_core :
+    CodePrefixDecodedBoundedSimulatorStageDecoderConstruction := by
+  sorry
+
+theorem codePrefixDecodedBoundedSimulatorDescriptionDecoderConstruction_core :
+    CodePrefixDecodedBoundedSimulatorDescriptionDecoderConstruction := by
+  sorry
+
+theorem codePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction_core :
+    CodePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction := by
+  sorry
+
 theorem codePrefixDecodedBoundedSimulatorCodeMachineConstruction_core :
     CodePrefixDecodedBoundedSimulatorCodeMachineConstruction := by
-  sorry
+  exact
+    codePrefixDecodedBoundedSimulatorCodeMachineConstruction_of_components
+      codePrefixDecodedBoundedSimulatorStageDecoderConstruction_core
+      codePrefixDecodedBoundedSimulatorDescriptionDecoderConstruction_core
+      codePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction_core
 
 theorem codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_core :
     CodePrefixDecodedBoundedSimulatorSemanticMachineConstruction :=

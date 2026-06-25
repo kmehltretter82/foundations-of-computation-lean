@@ -1074,6 +1074,55 @@ then return to the checked input tape.  Keeping that as one named obligation
 avoids proving the same handoff chain separately for the accept config, reject
 config, and final flags.
 -/
+theorem checkedDovetailLayoutScannerDescription_haltsWithTape_body_fields_inv
+    {code : Word MachineCodeSymbol} {Tout : Tape Bool}
+    {inputWord : Word Bool} {stage : Nat}
+    {bodyRest : Word MachineCodeSymbol}
+    (h : CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription.HaltsWithTape
+          (MachineDescription.encodeCodeWordAsInput code) Tout)
+    (h_input : code =
+      MachineCodeSymbol.transition ::
+        MachineDescription.encodeBoolWordAppend inputWord
+          (MachineDescription.encodeNatAppend stage bodyRest)) :
+    exists acceptConfig : MachineDescription.Configuration,
+    exists rejectConfig : MachineDescription.Configuration,
+    exists acceptHit : Bool,
+    exists rejectHit : Bool,
+      bodyRest =
+        MachineDescription.encodeConfigurationAppend acceptConfig
+          (MachineDescription.encodeConfigurationAppend rejectConfig
+            (MachineDescription.encodeBoolAppend acceptHit
+              (MachineDescription.encodeBoolAppend rejectHit []))) := by
+  sorry
+
+theorem checkedDovetailLayoutScannerDescription_haltsWithTape_body_tape_inv
+    {code : Word MachineCodeSymbol} {Tout : Tape Bool}
+    {inputWord : Word Bool} {stage : Nat}
+    {bodyRest : Word MachineCodeSymbol}
+    {acceptConfig rejectConfig : MachineDescription.Configuration}
+    {acceptHit rejectHit : Bool}
+    (h : CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription.HaltsWithTape
+          (MachineDescription.encodeCodeWordAsInput code) Tout)
+    (h_input : code =
+      MachineCodeSymbol.transition ::
+        MachineDescription.encodeBoolWordAppend inputWord
+          (MachineDescription.encodeNatAppend stage bodyRest))
+    (h_body :
+      bodyRest =
+        MachineDescription.encodeConfigurationAppend acceptConfig
+          (MachineDescription.encodeConfigurationAppend rejectConfig
+            (MachineDescription.encodeBoolAppend acceptHit
+              (MachineDescription.encodeBoolAppend rejectHit [])))) :
+      Tape.move tapeCodePrimitiveCodeWordHandoffMove Tout =
+        ParsedLayoutCheckedTape
+          { input := inputWord
+            stage := stage
+            acceptConfig := acceptConfig
+            rejectConfig := rejectConfig
+            acceptHit := acceptHit
+            rejectHit := rejectHit } := by
+  sorry
+
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_body_inv
     {code : Word MachineCodeSymbol} {Tout : Tape Bool}
     {inputWord : Word Bool} {stage : Nat}
@@ -1101,7 +1150,14 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_body_inv
             rejectConfig := rejectConfig
             acceptHit := acceptHit
             rejectHit := rejectHit } := by
-  sorry
+  rcases
+      checkedDovetailLayoutScannerDescription_haltsWithTape_body_fields_inv
+        h h_input with
+    ⟨acceptConfig, rejectConfig, acceptHit, rejectHit, h_body⟩
+  exact
+    ⟨acceptConfig, rejectConfig, acceptHit, rejectHit, h_body,
+      checkedDovetailLayoutScannerDescription_haltsWithTape_body_tape_inv
+        h h_input h_body⟩
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_acceptConfig_inv
     {code : Word MachineCodeSymbol} {Tout : Tape Bool}

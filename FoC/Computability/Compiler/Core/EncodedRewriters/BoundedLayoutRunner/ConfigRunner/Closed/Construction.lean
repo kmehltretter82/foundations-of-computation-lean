@@ -1224,6 +1224,58 @@ def RejectMergePrimitiveRightShiftedConstruction : Prop :=
       RejectMergePrimitive
       runner
 
+def SelectedProjectionPrimitiveOutputSubroutineConstruction : Prop :=
+  forall useAccept : Bool,
+    exists runner : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (SelectedProjectionPrimitive useAccept)
+        runner
+
+def SelectedProjectionPrimitiveRightShiftedClosureConstruction : Prop :=
+  forall useAccept : Bool,
+  forall runner : MachineDescription,
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      (SelectedProjectionPrimitive useAccept)
+      runner ->
+      exists shiftedRunner : MachineDescription,
+        RightShiftedOutputCompiledSubroutineByDescription
+          (SelectedProjectionPrimitive useAccept)
+          shiftedRunner
+
+def SelectedMergePrimitiveOutputSubroutineConstruction : Prop :=
+  forall useAccept : Bool,
+    exists runner : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (SelectedMergePrimitive useAccept)
+        runner
+
+def SelectedMergePrimitiveRightShiftedClosureConstruction : Prop :=
+  forall useAccept : Bool,
+  forall runner : MachineDescription,
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      (SelectedMergePrimitive useAccept)
+      runner ->
+      exists shiftedRunner : MachineDescription,
+        RightShiftedOutputCompiledSubroutineByDescription
+          (SelectedMergePrimitive useAccept)
+          shiftedRunner
+
+theorem selectedProjectionPrimitiveRightShiftedConstruction_of_output_closure
+    (houtput : SelectedProjectionPrimitiveOutputSubroutineConstruction)
+    (hclosure : SelectedProjectionPrimitiveRightShiftedClosureConstruction) :
+    SelectedProjectionPrimitiveRightShiftedConstruction := by
+  intro useAccept
+  rcases houtput useAccept with ⟨runner, hrunner⟩
+  exact hclosure useAccept runner hrunner
+
+theorem selectedMergePrimitiveRightShiftedConstruction_of_output_closure
+    (houtput : SelectedMergePrimitiveOutputSubroutineConstruction)
+    (hclosure : SelectedMergePrimitiveRightShiftedClosureConstruction) :
+    SelectedMergePrimitiveRightShiftedConstruction := by
+  intro useAccept
+  rcases houtput useAccept with ⟨runner, hrunner⟩
+  exact hclosure useAccept runner hrunner
+
 theorem selectedProjectionFiniteDescriptionConstruction_of_rightShifted
     (h : SelectedProjectionPrimitiveRightShiftedConstruction) :
     SelectedProjectionFiniteDescriptionConstruction := by
@@ -1291,9 +1343,20 @@ theorem selectedMergeFiniteDescriptionConstruction_of_rightShifted
     refine ⟨S, L, hcode, hinput, ?_⟩
     simpa [SelectedMergeOutputTape, hout] using hT
 
+theorem selectedProjectionPrimitiveOutputSubroutineConstruction_scaffold :
+    SelectedProjectionPrimitiveOutputSubroutineConstruction := by
+  sorry
+
+theorem selectedProjectionPrimitiveRightShiftedClosureConstruction_scaffold :
+    SelectedProjectionPrimitiveRightShiftedClosureConstruction := by
+  sorry
+
 theorem selectedProjectionPrimitiveRightShiftedConstruction_core :
     SelectedProjectionPrimitiveRightShiftedConstruction := by
-  sorry
+  exact
+    selectedProjectionPrimitiveRightShiftedConstruction_of_output_closure
+      selectedProjectionPrimitiveOutputSubroutineConstruction_scaffold
+      selectedProjectionPrimitiveRightShiftedClosureConstruction_scaffold
 
 theorem acceptProjectionPrimitiveRightShiftedConstruction_scaffold :
     AcceptProjectionPrimitiveRightShiftedConstruction := by
@@ -1331,12 +1394,23 @@ theorem selectedProjectionPrimitiveRightShiftedConstruction_scaffold :
 
 theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
     SelectedProjectionFiniteDescriptionConstruction :=
-  selectedProjectionFiniteDescriptionConstruction_of_rightShifted
+    selectedProjectionFiniteDescriptionConstruction_of_rightShifted
     selectedProjectionPrimitiveRightShiftedConstruction_scaffold
+
+theorem selectedMergePrimitiveOutputSubroutineConstruction_scaffold :
+    SelectedMergePrimitiveOutputSubroutineConstruction := by
+  sorry
+
+theorem selectedMergePrimitiveRightShiftedClosureConstruction_scaffold :
+    SelectedMergePrimitiveRightShiftedClosureConstruction := by
+  sorry
 
 theorem selectedMergePrimitiveRightShiftedConstruction_core :
     SelectedMergePrimitiveRightShiftedConstruction := by
-  sorry
+  exact
+    selectedMergePrimitiveRightShiftedConstruction_of_output_closure
+      selectedMergePrimitiveOutputSubroutineConstruction_scaffold
+      selectedMergePrimitiveRightShiftedClosureConstruction_scaffold
 
 theorem acceptMergePrimitiveRightShiftedConstruction_scaffold :
     AcceptMergePrimitiveRightShiftedConstruction := by

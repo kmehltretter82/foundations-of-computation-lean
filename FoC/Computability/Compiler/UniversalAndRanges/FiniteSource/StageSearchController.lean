@@ -113,6 +113,49 @@ def CodePrefixStageSearchControllerProgramCompilerConstruction : Prop :=
             ProgramHaltsWithOutput
               (codePrefixStageSearchControllerProgram simulator) encoded []
 
+def CodePrefixStageSearchControllerBudgetCheckerSpec
+    {simulatorState checkerState : Type}
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (checker : TuringMachine MachineCodeSymbol checkerState) : Prop :=
+  forall encoded : Word MachineCodeSymbol,
+  forall budget : Nat,
+    TuringMachine.HaltsOnInput checker
+        (CodePrefixRecognizerStageCode encoded budget) <->
+      (codePrefixStageSearchControllerProgram simulator).run
+          encoded budget = some []
+
+def CodePrefixStageSearchControllerBudgetCheckerConstruction
+    {simulatorState : Type}
+    (simulator : TuringMachine MachineCodeSymbol simulatorState) : Prop :=
+  exists checkerState : Type,
+  exists checker : TuringMachine MachineCodeSymbol checkerState,
+    CodePrefixStageSearchControllerBudgetCheckerSpec simulator checker
+
+def CodePrefixStageSearchControllerBudgetSearchSequencingConstruction :
+    Prop :=
+  forall {simulatorState checkerState : Type}
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (checker : TuringMachine MachineCodeSymbol checkerState),
+    CodePrefixStageSearchControllerBudgetCheckerSpec simulator checker ->
+      exists searcherState : Type,
+      exists searcher : TuringMachine MachineCodeSymbol searcherState,
+        forall encoded : Word MachineCodeSymbol,
+          TuringMachine.HaltsOnInput searcher encoded <->
+            ProgramHaltsWithOutput
+              (codePrefixStageSearchControllerProgram simulator) encoded []
+
+theorem codePrefixStageSearchControllerProgramCompilerConstruction_of_components
+    (hchecker :
+      forall {simulatorState : Type}
+        (simulator : TuringMachine MachineCodeSymbol simulatorState),
+          CodePrefixStageSearchControllerBudgetCheckerConstruction simulator)
+    (hsequence :
+      CodePrefixStageSearchControllerBudgetSearchSequencingConstruction) :
+    CodePrefixStageSearchControllerProgramCompilerConstruction := by
+  intro simulatorState simulator
+  rcases hchecker simulator with ⟨checkerState, checker, hcheckerSpec⟩
+  exact hsequence simulator checker hcheckerSpec
+
 theorem codePrefixStageSearchControllerCoreConstruction_of_programCompiler
     (hcompile : CodePrefixStageSearchControllerProgramCompilerConstruction) :
     CodePrefixStageSearchControllerCoreConstruction := by
@@ -129,9 +172,22 @@ bounded decoded simulator, build a searcher that enumerates stage bounds for a
 fixed encoded input and halts when the simulator accepts one stage code.
 -/
 
+theorem codePrefixStageSearchControllerBudgetCheckerConstruction_core :
+    forall {simulatorState : Type}
+      (simulator : TuringMachine MachineCodeSymbol simulatorState),
+        CodePrefixStageSearchControllerBudgetCheckerConstruction simulator := by
+  sorry
+
+theorem codePrefixStageSearchControllerBudgetSearchSequencingConstruction_core :
+    CodePrefixStageSearchControllerBudgetSearchSequencingConstruction := by
+  sorry
+
 theorem codePrefixStageSearchControllerProgramCompilerConstruction_core :
     CodePrefixStageSearchControllerProgramCompilerConstruction := by
-  sorry
+  exact
+    codePrefixStageSearchControllerProgramCompilerConstruction_of_components
+      codePrefixStageSearchControllerBudgetCheckerConstruction_core
+      codePrefixStageSearchControllerBudgetSearchSequencingConstruction_core
 
 theorem codePrefixStageSearchControllerCoreConstruction_core :
     CodePrefixStageSearchControllerCoreConstruction :=
