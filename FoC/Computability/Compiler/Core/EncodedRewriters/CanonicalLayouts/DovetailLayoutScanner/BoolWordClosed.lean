@@ -1192,6 +1192,17 @@ theorem boolWordSuffix_lookup_150_none :
     BoolWordSuffixScannerDescription.lookupTransition 150 none = none := by
   native_decide
 
+theorem boolWordSuffix_lookup_150_true :
+    BoolWordSuffixScannerDescription.lookupTransition 150 (some true) =
+      some
+        (writeMove 150 (some true) (some false) Direction.right 152) := by
+  native_decide
+
+theorem boolWordSuffix_lookup_152_false :
+    BoolWordSuffixScannerDescription.lookupTransition 152 (some false) =
+      none := by
+  native_decide
+
 theorem boolWordSuffixScannerDescription_runConfig_finish_empty_suffix_ne_halt
     (bits : Word Bool) (baseLeft : List (Option Bool))
     (n : Nat) :
@@ -1231,6 +1242,338 @@ theorem boolWordSuffixScannerDescription_runConfig_finish_empty_suffix_ne_halt
           (bits.map some) baseLeft ([] : Word Bool))
       (stuck := stuck) (k := 4 * bits.length) (n := n)
       hreach hstep hstuck
+
+theorem boolWordSuffixScannerDescription_runConfig_finish_moveRight_suffix_ne_halt
+    (bits : Word Bool) (baseLeft : List (Option Bool))
+    (suffixTail : Word Bool) (n : Nat) :
+    (BoolWordSuffixScannerDescription.runConfig n
+      (cellListCanonicalFinishStartConfigWithBase
+        (bits.map some) baseLeft
+        (List.append
+          (MachineDescription.encodeCodeSymbolAsInput
+            MachineCodeSymbol.moveRight)
+          suffixTail))).state ≠
+      BoolWordSuffixScannerDescription.halt := by
+  let mid : MachineDescription.Configuration :=
+    config 150
+      (cellListCanonicalRestoredLeftWithBase (bits.map some) baseLeft)
+      ((List.append
+        (MachineDescription.encodeCodeSymbolAsInput
+          MachineCodeSymbol.moveRight)
+        suffixTail).map some)
+  let stuck : MachineDescription.Configuration :=
+    BoolWordSuffixScannerDescription.runConfig 1 mid
+  have hfinish :
+      BoolWordSuffixScannerDescription.runConfig (4 * bits.length)
+        (cellListCanonicalFinishStartConfigWithBase
+          (bits.map some) baseLeft
+          (List.append
+            (MachineDescription.encodeCodeSymbolAsInput
+              MachineCodeSymbol.moveRight)
+            suffixTail)) =
+        mid := by
+    dsimp [mid]
+    unfold cellListCanonicalFinishStartConfigWithBase
+    unfold cellListCanonicalRestoredLeftWithBase
+    simpa [List.append_assoc] using
+      run_boolWordSuffix_state150_markedBits bits
+        (cellListCanonicalFinishStartLeftWithBase
+          (bits.map some) baseLeft)
+        ((List.append
+          (MachineDescription.encodeCodeSymbolAsInput
+            MachineCodeSymbol.moveRight)
+          suffixTail).map some)
+  have hreach :
+      BoolWordSuffixScannerDescription.runConfig (4 * bits.length + 1)
+        (cellListCanonicalFinishStartConfigWithBase
+          (bits.map some) baseLeft
+          (List.append
+            (MachineDescription.encodeCodeSymbolAsInput
+              MachineCodeSymbol.moveRight)
+            suffixTail)) =
+        stuck := by
+    rw [MachineDescription.runConfig_add, hfinish]
+  have hstep : BoolWordSuffixScannerDescription.stepConfig stuck = none := by
+    simp [stuck, mid, config, tapeAtCells,
+      MachineDescription.encodeCodeSymbolAsInput,
+      MachineDescription.runConfig, MachineDescription.stepConfig,
+      boolWordSuffix_lookup_150_true, boolWordSuffix_lookup_152_false,
+      MachineDescription.transition, writeMove, Tape.read, Tape.write,
+      Tape.move, Tape.moveRight]
+  have hstuck : stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
+    dsimp [stuck, mid]
+    simp [config, tapeAtCells,
+      MachineDescription.encodeCodeSymbolAsInput,
+      MachineDescription.runConfig, MachineDescription.stepConfig,
+      boolWordSuffix_lookup_150_true, boolWordSuffix_lookup_152_false,
+      MachineDescription.transition, writeMove, Tape.read, Tape.write,
+      Tape.move, Tape.moveRight]
+    change (152 : Nat) ≠ 999
+    omega
+  exact
+    primitive_runConfig_state_ne_halt_of_reaches_stuck
+      boolWordSuffixScannerDescription_haltTransitionFree
+      (D := BoolWordSuffixScannerDescription)
+      (c :=
+        cellListCanonicalFinishStartConfigWithBase
+          (bits.map some) baseLeft
+          (List.append
+            (MachineDescription.encodeCodeSymbolAsInput
+              MachineCodeSymbol.moveRight)
+            suffixTail))
+      (stuck := stuck) (k := 4 * bits.length + 1) (n := n)
+      hreach hstep hstuck
+
+theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_empty_suffix_ne_halt
+    (baseLeft : List (Option Bool)) (bits : Word Bool) (n : Nat) :
+    (BoolWordSuffixScannerDescription.runConfig n
+      (config BoolWordSuffixScannerDescription.start baseLeft
+        ((MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeBoolWordAppend bits
+            ([] : Word MachineCodeSymbol))).map some))).state ≠
+      BoolWordSuffixScannerDescription.halt := by
+  rcases
+      run_boolWordSuffix_raw_marking_loop_from_state100_withBase
+        baseLeft ([] : Word Bool) bits ([] : Word Bool) with
+    ⟨markSteps, hmark⟩
+  have hreach :
+      BoolWordSuffixScannerDescription.runConfig markSteps
+        (config BoolWordSuffixScannerDescription.start baseLeft
+          ((MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.encodeBoolWordAppend bits
+              ([] : Word MachineCodeSymbol))).map some)) =
+        cellListCanonicalFinishStartConfigWithBase
+          (bits.map some) baseLeft ([] : Word Bool) := by
+    rw [boolWordBits_eq_encodeBoolWordAppend]
+    simpa [MachineDescription.encodeCodeWordAsInput, markedCellsCodeBits,
+      cellListCanonicalLengthPrefixRev, List.map_append,
+      List.append_assoc] using hmark
+  exact
+    boolWordSuffixScannerDescription_ne_halt_of_reaches_ne_halt_region
+      (k := markSteps)
+      (mid :=
+        cellListCanonicalFinishStartConfigWithBase
+          (bits.map some) baseLeft ([] : Word Bool))
+      hreach
+      (fun m =>
+        boolWordSuffixScannerDescription_runConfig_finish_empty_suffix_ne_halt
+          bits baseLeft m)
+
+theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_moveRight_suffix_ne_halt
+    (baseLeft : List (Option Bool)) (bits : Word Bool)
+    (rest : Word MachineCodeSymbol) (n : Nat) :
+    (BoolWordSuffixScannerDescription.runConfig n
+      (config BoolWordSuffixScannerDescription.start baseLeft
+        ((MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeBoolWordAppend bits
+            (MachineCodeSymbol.moveRight :: rest))).map some))).state ≠
+      BoolWordSuffixScannerDescription.halt := by
+  let suffixTail : Word Bool :=
+    MachineDescription.encodeCodeWordAsInput rest
+  rcases
+      run_boolWordSuffix_raw_marking_loop_from_state100_withBase
+        baseLeft ([] : Word Bool) bits
+          (List.append
+            (MachineDescription.encodeCodeSymbolAsInput
+              MachineCodeSymbol.moveRight)
+            suffixTail) with
+    ⟨markSteps, hmark⟩
+  have hreach :
+      BoolWordSuffixScannerDescription.runConfig markSteps
+        (config BoolWordSuffixScannerDescription.start baseLeft
+          ((MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.encodeBoolWordAppend bits
+              (MachineCodeSymbol.moveRight :: rest))).map some)) =
+        cellListCanonicalFinishStartConfigWithBase
+          (bits.map some) baseLeft
+          (List.append
+            (MachineDescription.encodeCodeSymbolAsInput
+              MachineCodeSymbol.moveRight)
+            suffixTail) := by
+    rw [boolWordBits_eq_encodeBoolWordAppend]
+    simp [MachineDescription.encodeCodeWordAsInput, suffixTail,
+      markedCellsCodeBits, cellListCanonicalLengthPrefixRev,
+      List.map_append, List.append_assoc] at hmark ⊢
+    exact hmark
+  exact
+    boolWordSuffixScannerDescription_ne_halt_of_reaches_ne_halt_region
+      (k := markSteps)
+      (mid :=
+        cellListCanonicalFinishStartConfigWithBase
+          (bits.map some) baseLeft
+          (List.append
+            (MachineDescription.encodeCodeSymbolAsInput
+              MachineCodeSymbol.moveRight)
+            suffixTail))
+      hreach
+      (fun m =>
+        boolWordSuffixScannerDescription_runConfig_finish_moveRight_suffix_ne_halt
+          bits baseLeft suffixTail m)
+
+theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_handoff
+    (baseLeft : List (Option Bool)) (bits : Word Bool)
+    (suffix : Word MachineCodeSymbol)
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      BoolWordSuffixScannerDescription.runConfig n
+          (config BoolWordSuffixScannerDescription.start baseLeft
+            ((MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeBoolWordAppend bits
+                suffix)).map some)) =
+        { state := BoolWordSuffixScannerDescription.halt
+          tape := Tout }) :
+    exists suffixTail : Word Bool,
+      MachineDescription.encodeCodeWordAsInput suffix = false :: suffixTail ∧
+        Tout =
+          (boolWordCanonicalHandoffConfigWithBase bits baseLeft
+            (false :: suffixTail)).tape := by
+  cases suffix with
+  | nil =>
+      have hstate :
+          (BoolWordSuffixScannerDescription.runConfig n
+            (config BoolWordSuffixScannerDescription.start baseLeft
+              ((MachineDescription.encodeCodeWordAsInput
+                (MachineDescription.encodeBoolWordAppend bits
+                  ([] : Word MachineCodeSymbol))).map some))).state =
+            BoolWordSuffixScannerDescription.halt := by
+        simpa using congrArg MachineDescription.Configuration.state h
+      exact False.elim
+        (boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_empty_suffix_ne_halt
+          baseLeft bits n hstate)
+  | cons symbol rest =>
+      cases symbol with
+      | moveRight =>
+          have hstate :
+              (BoolWordSuffixScannerDescription.runConfig n
+                (config BoolWordSuffixScannerDescription.start baseLeft
+                  ((MachineDescription.encodeCodeWordAsInput
+                    (MachineDescription.encodeBoolWordAppend bits
+                      (MachineCodeSymbol.moveRight :: rest))).map some))).state =
+                BoolWordSuffixScannerDescription.halt := by
+            simpa using congrArg MachineDescription.Configuration.state h
+          exact False.elim
+            (boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_moveRight_suffix_ne_halt
+              baseLeft bits rest n hstate)
+      | header =>
+          refine ⟨false :: false :: false ::
+            MachineDescription.encodeCodeWordAsInput rest, ?_, ?_⟩
+          · simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput]
+          · exact
+              boolWordSuffixScannerDescription_runConfig_canonical_false_suffix_inv
+                bits baseLeft
+                  (false :: false :: false ::
+                    MachineDescription.encodeCodeWordAsInput rest)
+                (by
+                  simpa [boolWordBits_eq_encodeBoolWordAppend,
+                    MachineDescription.encodeCodeWordAsInput,
+                    MachineDescription.encodeCodeSymbolAsInput,
+                    List.map_append, List.append_assoc] using h)
+      | transition =>
+          refine ⟨false :: false :: true ::
+            MachineDescription.encodeCodeWordAsInput rest, ?_, ?_⟩
+          · simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput]
+          · exact
+              boolWordSuffixScannerDescription_runConfig_canonical_false_suffix_inv
+                bits baseLeft
+                  (false :: false :: true ::
+                    MachineDescription.encodeCodeWordAsInput rest)
+                (by
+                  simpa [boolWordBits_eq_encodeBoolWordAppend,
+                    MachineDescription.encodeCodeWordAsInput,
+                    MachineDescription.encodeCodeSymbolAsInput,
+                    List.map_append, List.append_assoc] using h)
+      | tick =>
+          refine ⟨false :: true :: false ::
+            MachineDescription.encodeCodeWordAsInput rest, ?_, ?_⟩
+          · simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput]
+          · exact
+              boolWordSuffixScannerDescription_runConfig_canonical_false_suffix_inv
+                bits baseLeft
+                  (false :: true :: false ::
+                    MachineDescription.encodeCodeWordAsInput rest)
+                (by
+                  simpa [boolWordBits_eq_encodeBoolWordAppend,
+                    MachineDescription.encodeCodeWordAsInput,
+                    MachineDescription.encodeCodeSymbolAsInput,
+                    List.map_append, List.append_assoc] using h)
+      | done =>
+          refine ⟨false :: true :: true ::
+            MachineDescription.encodeCodeWordAsInput rest, ?_, ?_⟩
+          · simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput]
+          · exact
+              boolWordSuffixScannerDescription_runConfig_canonical_false_suffix_inv
+                bits baseLeft
+                  (false :: true :: true ::
+                    MachineDescription.encodeCodeWordAsInput rest)
+                (by
+                  simpa [boolWordBits_eq_encodeBoolWordAppend,
+                    MachineDescription.encodeCodeWordAsInput,
+                    MachineDescription.encodeCodeSymbolAsInput,
+                    List.map_append, List.append_assoc] using h)
+      | blank =>
+          refine ⟨true :: false :: false ::
+            MachineDescription.encodeCodeWordAsInput rest, ?_, ?_⟩
+          · simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput]
+          · exact
+              boolWordSuffixScannerDescription_runConfig_canonical_false_suffix_inv
+                bits baseLeft
+                  (true :: false :: false ::
+                    MachineDescription.encodeCodeWordAsInput rest)
+                (by
+                  simpa [boolWordBits_eq_encodeBoolWordAppend,
+                    MachineDescription.encodeCodeWordAsInput,
+                    MachineDescription.encodeCodeSymbolAsInput,
+                    List.map_append, List.append_assoc] using h)
+      | zero =>
+          refine ⟨true :: false :: true ::
+            MachineDescription.encodeCodeWordAsInput rest, ?_, ?_⟩
+          · simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput]
+          · exact
+              boolWordSuffixScannerDescription_runConfig_canonical_false_suffix_inv
+                bits baseLeft
+                  (true :: false :: true ::
+                    MachineDescription.encodeCodeWordAsInput rest)
+                (by
+                  simpa [boolWordBits_eq_encodeBoolWordAppend,
+                    MachineDescription.encodeCodeWordAsInput,
+                    MachineDescription.encodeCodeSymbolAsInput,
+                    List.map_append, List.append_assoc] using h)
+      | one =>
+          refine ⟨true :: true :: false ::
+            MachineDescription.encodeCodeWordAsInput rest, ?_, ?_⟩
+          · simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput]
+          · exact
+              boolWordSuffixScannerDescription_runConfig_canonical_false_suffix_inv
+                bits baseLeft
+                  (true :: true :: false ::
+                    MachineDescription.encodeCodeWordAsInput rest)
+                (by
+                  simpa [boolWordBits_eq_encodeBoolWordAppend,
+                    MachineDescription.encodeCodeWordAsInput,
+                    MachineDescription.encodeCodeSymbolAsInput,
+                    List.map_append, List.append_assoc] using h)
+      | moveLeft =>
+          refine ⟨true :: true :: true ::
+            MachineDescription.encodeCodeWordAsInput rest, ?_, ?_⟩
+          · simp [MachineDescription.encodeCodeWordAsInput,
+              MachineDescription.encodeCodeSymbolAsInput]
+          · exact
+              boolWordSuffixScannerDescription_runConfig_canonical_false_suffix_inv
+                bits baseLeft
+                  (true :: true :: true ::
+                    MachineDescription.encodeCodeWordAsInput rest)
+                (by
+                  simpa [boolWordBits_eq_encodeBoolWordAppend,
+                    MachineDescription.encodeCodeWordAsInput,
+                    MachineDescription.encodeCodeSymbolAsInput,
+                    List.map_append, List.append_assoc] using h)
 
 end DovetailLayoutScanner
 end CanonicalLayouts

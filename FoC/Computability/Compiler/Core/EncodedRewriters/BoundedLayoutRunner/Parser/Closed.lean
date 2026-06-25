@@ -982,7 +982,18 @@ theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_stage_ha
       Tape.move Direction.right Tinput =
         tapeAtCells baseAfterInput
           ((MachineDescription.encodeCodeWordAsInput stageRest).map some) := by
-  sorry
+  rcases
+      CanonicalLayouts.DovetailLayoutScanner.boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_handoff
+        baseLeft inputWord stageRest hinput with
+    ⟨suffixTail, hstageRestBits, hTinput⟩
+  refine
+    ⟨CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+      (inputWord.map some) baseLeft, ?_⟩
+  rw [hTinput]
+  have hmove :=
+    CanonicalLayouts.DovetailLayoutScanner.boolWordCanonicalHandoffConfigWithBase_move_right_all
+      inputWord baseLeft (false :: suffixTail)
+  rw [hmove, hstageRestBits]
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_stage_inv
     {code : Word MachineCodeSymbol} {Tout : Tape Bool}
