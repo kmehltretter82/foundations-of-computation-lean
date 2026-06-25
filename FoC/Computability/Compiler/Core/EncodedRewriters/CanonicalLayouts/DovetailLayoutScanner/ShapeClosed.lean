@@ -251,12 +251,24 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_inputBoolWord_inv
       Tbody, nInput, nStage, nAccept, nReject, nAcceptHit,
       nRejectHit, nReturn, hbits, hinputRun, hstageRun, hacceptRun,
       hrejectRun, hacceptHitRun, hrejectHitRun, hreturnRun⟩
-  rcases boolWordSuffixScannerDescription_runConfig_inv _ _ hinputRun with
-    ⟨inputWord, suffixTail2, hb_suffix⟩
-  -- We now have the bits corresponding to the boolean word.
-  -- By construction, these bits perfectly match the encoding of `encodeBoolWordAppend inputWord inputRest`.
-  -- Since `encodeCodeWordAsInput` is injective, `code` must exactly equal `transition :: encodeBoolWordAppend inputWord inputRest`.
-  sorry
+  rcases encodeCodeWordAsInput_transition_prefix_inv hbits with
+    ⟨inputCode, hcode, hinputBits⟩
+  have hinputRunCode :
+      BoolWordSuffixScannerDescription.runConfig nInput
+          (config BoolWordSuffixScannerDescription.start
+            (List.append (transitionRemainderBits.reverse.map some) [none])
+            ((MachineDescription.encodeCodeWordAsInput inputCode).map
+              some)) =
+        { state := BoolWordSuffixScannerDescription.halt
+          tape := Tinput } := by
+    rw [hinputBits]
+    simpa [config] using hinputRun
+  rcases
+      boolWordSuffixScannerDescription_runConfig_code_inv
+        (List.append (transitionRemainderBits.reverse.map some) [none])
+        inputCode hinputRunCode with
+    ⟨inputWord, inputRest, hinputCode⟩
+  exact ⟨inputWord, inputRest, by rw [hcode, hinputCode]⟩
 
 end DovetailLayoutScanner
 end CanonicalLayouts
