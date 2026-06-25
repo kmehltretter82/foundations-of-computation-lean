@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.UniversalAndRanges.Basic
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer
 
 set_option doc.verso true
 
@@ -421,7 +422,44 @@ theorem codePrefixDecodedBoundedSimulatorStageDecoderConstruction_core :
 
 theorem codePrefixDecodedBoundedSimulatorDescriptionDecoderConstruction_core :
     CodePrefixDecodedBoundedSimulatorDescriptionDecoderConstruction := by
-  sorry
+  refine
+    ⟨CodePrefixParserNormalizerState,
+      codePrefixParserNormalizerMachine, ?_⟩
+  intro encoded
+  constructor
+  · intro h
+    rcases h with ⟨final, hcomputes, hhalted⟩
+    let out : Word MachineCodeSymbol :=
+      Tape.normalizedOutput final.tape
+    have hout :
+        TuringMachine.HaltsWithOutput
+          codePrefixParserNormalizerMachine encoded out :=
+      ⟨final, hcomputes, hhalted, rfl⟩
+    have htransform :
+        CodePrefixParserNormalizerCode.transform encoded = some out :=
+      (codePrefixParserNormalizerMachine_code_spec encoded out).mp hout
+    rcases
+        (codePrefixParserNormalizerCode_transform_eq_some_iff
+          encoded out).mp htransform with
+      ⟨D, input, hdecode, _hout⟩
+    exact ⟨D, input, hdecode⟩
+  · intro h
+    rcases h with ⟨D, input, hdecode⟩
+    have hencoded :
+        encoded = List.append (MachineDescription.encodeDescription D)
+          input :=
+      MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+        hdecode
+    have htransform :
+        CodePrefixParserNormalizerCode.transform encoded =
+          some encoded :=
+      (codePrefixParserNormalizerCode_transform_eq_some_iff
+        encoded encoded).mpr
+        ⟨D, input, hdecode, by rw [hencoded]⟩
+    exact
+      TuringMachine.halts_with_output_implies_halts
+        ((codePrefixParserNormalizerMachine_code_spec
+          encoded encoded).mpr htransform)
 
 theorem codePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction_core :
     CodePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction := by

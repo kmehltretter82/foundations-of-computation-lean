@@ -1121,7 +1121,35 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_body_tape_inv
             rejectConfig := rejectConfig
             acceptHit := acceptHit
             rejectHit := rejectHit } := by
-  sorry
+  let L : MachineDescription.DovetailLayout :=
+    { input := inputWord
+      stage := stage
+      acceptConfig := acceptConfig
+      rejectConfig := rejectConfig
+      acceptHit := acceptHit
+      rejectHit := rejectHit }
+  have hcode : code = MachineDescription.DovetailLayout.encode L := by
+    rw [h_input, h_body]
+    rfl
+  have hbits :
+      MachineDescription.encodeCodeWordAsInput code =
+        ParsedLayoutBits L := by
+    rw [hcode]
+    rfl
+  have hforward :
+      CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code)
+        (ParsedLayoutCheckedHandoffTape L) := by
+    rw [hbits]
+    exact checkedDovetailLayoutScannerDescription_haltsWithTape L
+  have hTout :
+      Tout = ParsedLayoutCheckedHandoffTape L :=
+    MachineDescription.haltsWithTape_functional_of_haltTransitionFree
+      CanonicalLayouts.DovetailLayoutScanner.checkedDovetailLayoutScannerDescription_subroutineReady.right
+      h hforward
+  rw [hTout]
+  simpa [L, tapeCodePrimitiveCodeWordHandoffMove] using
+    parsedLayoutCheckedHandoffTape_move_left L
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_body_inv
     {code : Word MachineCodeSymbol} {Tout : Tape Bool}

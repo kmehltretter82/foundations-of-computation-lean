@@ -378,45 +378,6 @@ def PairedRecognizerDovetailStageAttemptInvocationConstructionData :
         PairedRecognizerDovetailStageAttemptInvocationClosedSpec
           attempt encoder invoker
 
-def PairedRecognizerDovetailStageAttemptInvocationForwardConstructionData :
-    Prop :=
-  forall attempt encoder : MachineDescription,
-    attempt.SubroutineReady ->
-    TapeCodePrimitiveOutputCompiledSubroutineByDescription
-      PairedRecognizerDovetailControllerStageInputCodePrimitive
-      encoder ->
-    exists invoker : MachineDescription,
-      invoker.SubroutineReady ∧
-        PairedRecognizerDovetailStageAttemptInvocationForwardSpec
-          attempt encoder invoker
-
-def PairedRecognizerDovetailStageAttemptInvocationClosedConstructionData :
-    Prop :=
-  forall attempt encoder invoker : MachineDescription,
-    attempt.SubroutineReady ->
-    TapeCodePrimitiveOutputCompiledSubroutineByDescription
-      PairedRecognizerDovetailControllerStageInputCodePrimitive
-      encoder ->
-    invoker.SubroutineReady ->
-    PairedRecognizerDovetailStageAttemptInvocationForwardSpec
-      attempt encoder invoker ->
-    PairedRecognizerDovetailStageAttemptInvocationClosedSpec
-      attempt encoder invoker
-
-theorem pairedRecognizerDovetailStageAttemptInvocationConstructionData_of_forward_closed
-    (hforward :
-      PairedRecognizerDovetailStageAttemptInvocationForwardConstructionData)
-    (hclosed :
-      PairedRecognizerDovetailStageAttemptInvocationClosedConstructionData) :
-    PairedRecognizerDovetailStageAttemptInvocationConstructionData := by
-  intro attempt encoder hattempt hencoder
-  rcases hforward attempt encoder hattempt hencoder with
-    ⟨invoker, hready, hforwardSpec⟩
-  exact
-    ⟨invoker, hready, hforwardSpec,
-      hclosed attempt encoder invoker hattempt hencoder hready
-        hforwardSpec⟩
-
 theorem pairedRecognizerDovetailStageAttemptInvocationConstruction_of_data
     (h :
       PairedRecognizerDovetailStageAttemptInvocationConstructionData) :
@@ -429,20 +390,9 @@ theorem pairedRecognizerDovetailStageAttemptInvocationConstruction_of_data
       pairedRecognizerDovetailStageAttemptInvocationRealizes_of_forward_closed
         hready hforward hclosed⟩
 
-theorem pairedRecognizerDovetailStageAttemptInvocationForwardConstructionData_scaffold :
-    PairedRecognizerDovetailStageAttemptInvocationForwardConstructionData := by
-  sorry
-
-theorem pairedRecognizerDovetailStageAttemptInvocationClosedConstructionData_scaffold :
-    PairedRecognizerDovetailStageAttemptInvocationClosedConstructionData := by
-  sorry
-
 theorem pairedRecognizerDovetailStageAttemptInvocationConstructionData_scaffold :
     PairedRecognizerDovetailStageAttemptInvocationConstructionData := by
-  exact
-    pairedRecognizerDovetailStageAttemptInvocationConstructionData_of_forward_closed
-      pairedRecognizerDovetailStageAttemptInvocationForwardConstructionData_scaffold
-      pairedRecognizerDovetailStageAttemptInvocationClosedConstructionData_scaffold
+  sorry
 
 theorem pairedRecognizerDovetailStageAttemptInvocationConstruction_scaffold :
     PairedRecognizerDovetailStageAttemptInvocationConstruction :=
@@ -533,66 +483,6 @@ def PairedRecognizerDovetailFiniteStageLoopSequencingConstructionData :
         PairedRecognizerDovetailFiniteStageLoopClosedSpec
           attempt decider
 
-def PairedRecognizerDovetailFiniteStageLoopForwardConstructionData :
-    Prop :=
-  forall attempt initializer encoder invoker emitter continuer :
-      MachineDescription,
-    attempt.SubroutineReady ->
-    PairedRecognizerDovetailControllerInputInitializerRealizes
-      initializer ->
-    TapeCodePrimitiveOutputCompiledSubroutineByDescription
-      PairedRecognizerDovetailControllerStageInputCodePrimitive
-      encoder ->
-    PairedRecognizerDovetailStageAttemptInvocationRealizes
-      attempt encoder invoker ->
-    PairedRecognizerDovetailControllerResultEmitterRealizes
-      emitter ->
-    PairedRecognizerDovetailControllerContinueRealizes
-      continuer ->
-    exists decider : MachineDescription,
-      decider.WellFormed ∧
-        PairedRecognizerDovetailFiniteStageLoopForwardSpec
-          attempt decider
-
-def PairedRecognizerDovetailFiniteStageLoopClosedConstructionData :
-    Prop :=
-  forall attempt initializer encoder invoker emitter continuer decider :
-      MachineDescription,
-    attempt.SubroutineReady ->
-    PairedRecognizerDovetailControllerInputInitializerRealizes
-      initializer ->
-    TapeCodePrimitiveOutputCompiledSubroutineByDescription
-      PairedRecognizerDovetailControllerStageInputCodePrimitive
-      encoder ->
-    PairedRecognizerDovetailStageAttemptInvocationRealizes
-      attempt encoder invoker ->
-    PairedRecognizerDovetailControllerResultEmitterRealizes
-      emitter ->
-    PairedRecognizerDovetailControllerContinueRealizes
-      continuer ->
-    decider.WellFormed ->
-    PairedRecognizerDovetailFiniteStageLoopForwardSpec
-      attempt decider ->
-    PairedRecognizerDovetailFiniteStageLoopClosedSpec
-      attempt decider
-
-theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstructionData_of_forward_closed
-    (hforward :
-      PairedRecognizerDovetailFiniteStageLoopForwardConstructionData)
-    (hclosed :
-      PairedRecognizerDovetailFiniteStageLoopClosedConstructionData) :
-    PairedRecognizerDovetailFiniteStageLoopSequencingConstructionData := by
-  intro attempt initializer encoder invoker emitter continuer
-    hattempt hinitializer hencoder hinvoker hemitter hcontinuer
-  rcases hforward attempt initializer encoder invoker emitter continuer
-      hattempt hinitializer hencoder hinvoker hemitter hcontinuer with
-    ⟨decider, hwell, hforwardSpec⟩
-  exact
-    ⟨decider, hwell, hforwardSpec,
-      hclosed attempt initializer encoder invoker emitter continuer decider
-        hattempt hinitializer hencoder hinvoker hemitter hcontinuer hwell
-        hforwardSpec⟩
-
 theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_of_data
     (h :
       PairedRecognizerDovetailFiniteStageLoopSequencingConstructionData) :
@@ -607,20 +497,9 @@ theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_of_data
       pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes_of_forward_closed
         hwell hforward hclosed⟩
 
-theorem pairedRecognizerDovetailFiniteStageLoopForwardConstructionData_scaffold :
-    PairedRecognizerDovetailFiniteStageLoopForwardConstructionData := by
-  sorry
-
-theorem pairedRecognizerDovetailFiniteStageLoopClosedConstructionData_scaffold :
-    PairedRecognizerDovetailFiniteStageLoopClosedConstructionData := by
-  sorry
-
 theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstructionData_scaffold :
     PairedRecognizerDovetailFiniteStageLoopSequencingConstructionData := by
-  exact
-    pairedRecognizerDovetailFiniteStageLoopSequencingConstructionData_of_forward_closed
-      pairedRecognizerDovetailFiniteStageLoopForwardConstructionData_scaffold
-      pairedRecognizerDovetailFiniteStageLoopClosedConstructionData_scaffold
+  sorry
 
 theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_scaffold :
     PairedRecognizerDovetailFiniteStageLoopSequencingConstruction :=
