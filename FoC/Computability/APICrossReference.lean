@@ -262,6 +262,73 @@ Before opening a remaining proof hole, classify the goal by contract strength.
   target. It should be discharged by supplying finite descriptions and
   sequencing data, not by weakening the statement to a semantic equivalence.
 
+## Durable Proof Lessons
+
+The cross-reference file has been useful as a guardrail, especially for
+remembering which proof holes are real construction leaves and which facts are
+only adapters. Keep these lessons in mind before splitting another {lit}`sorry`
+into smaller targets.
+
+* A split is only useful when the second theorem genuinely consumes the
+  witness produced by the first theorem. Do not introduce an
+  {lit}`OutputSubroutineConstruction` target followed by a theorem that claims
+  to turn any output-compiled machine into a right-shifted or closed-handoff
+  machine unless that closure proof preserves and uses the supplied machine.
+  That pattern was over-strong for the fixed-description bounded simulator
+  code, the selected projection and merge primitives, and the bounded-layout
+  runner closed-handoff wrapper.
+* The right-shifted contract is stronger than normalized output and stronger
+  than {name (full := FoC.Computability.Tape.Equiv)}`Tape.Equiv`.
+  {name (full := FoC.Computability.EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription)}`EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription`
+  requires the exact final tape
+  {lit}`Tape.move Direction.right (Tape.input (encodeCodeWordAsInput out))`.
+  A proof that identifies only the emitted word or a tape-equivalence class is
+  not an adapter to this contract.
+* The selected projection and selected merge primitives are asymmetric.
+  {lit}`SelectedMergeSpec` has an exact-output theorem usable for
+  {lit}`selectedMergeRightShifted_of_spec`; {lit}`SelectedProjectionSpec`
+  currently exposes only equivalence-style output information. Do not add a
+  projection analogue unless the projection spec is strengthened to exact
+  final-tape output.
+* In the selected-primitive assembly, closed handoff is derived from
+  right-shifted output. Using a selected closed-handoff scaffold to prove a
+  selected right-shifted leaf would be circular.
+* {lit}`controllerResultContinueConstruction_scaffold` is the missing
+  code-word subroutine construction itself, not merely an adapter around an
+  already compiled subroutine.
+* {lit}`controllerInputInitializerConstruction_scaffold` is a raw-Bool-input
+  emitter for {lit}`PairedRecognizerDovetailControllerInitialCode w`. It is
+  separate from the stage-input-to-initial-layout primitive built by
+  {module}`FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer`.
+* The stage-search-controller holes are genuine unbounded-search/compiler
+  leaves: budget-checker sequencing and budget-search sequencing for the
+  code-prefix finite-source path. The Boolean dovetail-controller
+  {module}`FoC.Computability.Compiler.Core.SearchDrivers` machinery is related
+  background, not a direct replacement for those code-prefix machines.
+* The remaining decoded-bounded-simulator code-machine construction should not
+  be proved through the aggregate
+  {module}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource` route.
+  That route imports the leaf construction path and would turn the proof into
+  a cycle.
+* For the checked dovetail-layout parser, keep the dependency direction from
+  smaller scanner inversions to the body inversion. In particular,
+  {lit}`checkedDovetailLayoutScannerDescription_haltsWithTape_body_fields_inv`
+  must not use
+  {lit}`checkedDovetailLayoutScannerDescription_haltsWithTape_decodeComplete_inv`,
+  because the decode-complete theorem is downstream of the body inversion.
+* The current parser inversions recover bool-word and natural-number suffix
+  boundaries, but the remaining hard lower lemma is still a
+  configuration-suffix/final-flag shape inversion: a successful body run must
+  expose two encoded configurations followed by two encoded Boolean flags.
+  The helper
+  {lit}`natSuffixScannerDescription_runConfig_stageNat_handoff` records part
+  of that handoff shape for nonempty stage suffixes; it is not the full body
+  inversion by itself.
+* Do not use a parent aggregate module to prove one of its imported leaf
+  modules. When a construction target lives below an aggregate, solve it using
+  the lower-level parser, simulator, and sequencing modules already available
+  to that leaf.
+
 ## Remaining Sorry Work Map
 
 The remaining proof holes are best approached by contract family, not by file

@@ -273,30 +273,9 @@ theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
     encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine
       ⟨runner, hrunner⟩
 
-def EncodedDovetailLayoutBoundedRunnerClosedHandoffClosureConstruction :
-    Prop :=
-  forall accept reject runner : MachineDescription,
-    TapeCodePrimitiveOutputCompiledSubroutineByDescription
-      (PairedRecognizerDovetailLayoutCode accept reject)
-      runner ->
-      exists closedRunner : MachineDescription,
-        TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-          (PairedRecognizerDovetailLayoutCode accept reject)
-          closedRunner tapeCodePrimitiveCodeWordHandoffMove
-
-theorem encodedDovetailLayoutBoundedRunnerClosedHandoffClosureConstruction_scaffold :
-    EncodedDovetailLayoutBoundedRunnerClosedHandoffClosureConstruction := by
-  sorry
-
 theorem encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold :
     EncodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction := by
-  intro accept reject
-  rcases EncodedRewriters.BoundedLayoutRunner.outputCompiledSubroutine
-      accept reject with
-    ⟨runner, hrunner⟩
-  exact
-    encodedDovetailLayoutBoundedRunnerClosedHandoffClosureConstruction_scaffold
-      accept reject runner hrunner
+  sorry
 
 theorem encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold :
     EncodedDovetailTotalOutputEmitterRewriterConstruction := by

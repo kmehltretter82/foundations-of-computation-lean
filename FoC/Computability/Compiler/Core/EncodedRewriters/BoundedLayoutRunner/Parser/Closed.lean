@@ -954,6 +954,53 @@ theorem natSuffixScannerDescription_runConfig_code_inv
         ⟨stage, suffix,
           MachineDescription.decodeNat_eq_some_encodeNatAppend hdecode⟩
 
+theorem natSuffixScannerDescription_runConfig_stageNat_handoff
+    (baseLeft : List (Option Bool)) (stage : Nat)
+    (b : Bool) (suffixTail : Word Bool)
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.runConfig
+          n
+          (config
+            CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.start
+            baseLeft
+            (List.append
+              ((stageNatBits stage).map some)
+              ((b :: suffixTail).map some))) =
+        { state :=
+            CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.halt
+          tape := Tout }) :
+      Tape.move Direction.right Tout =
+        tapeAtCells
+          (List.append
+            ((stageNatBits stage).reverse.map some)
+            baseLeft)
+          ((b :: suffixTail).map some) := by
+  let c0 : MachineDescription.Configuration :=
+    config
+      CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.start
+      baseLeft
+      (List.append
+        ((stageNatBits stage).map some)
+        ((b :: suffixTail).map some))
+  rcases
+      CanonicalLayouts.DovetailStagePrefix.run_natSuffix_raw_to_handoff_withBase
+        stage baseLeft b suffixTail with
+    ⟨_steps, hforward⟩
+  have hTout :
+      Tout =
+        (CanonicalLayouts.DovetailStagePrefix.natSuffixHandoffConfigWithBase
+          stage baseLeft (b :: suffixTail)).tape := by
+    exact
+      (MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
+        CanonicalLayouts.DovetailStagePrefix.natSuffixScannerDescription_haltTransitionFree
+        (by simpa [c0] using hforward)
+        (by simpa [c0] using h)).symm
+  rw [hTout]
+  exact
+    CanonicalLayouts.DovetailStagePrefix.natSuffixHandoffConfigWithBase_move_right
+      stage baseLeft b suffixTail
+
 theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_stage_handoff
     (baseLeft : List (Option Bool)) (inputWord : Word Bool)
     (stageRest : Word MachineCodeSymbol)
