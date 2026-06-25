@@ -168,6 +168,100 @@ The public theorem statements should generally depend on the contracts exported
 by these wrappers, not on local transition-state names inside the construction
 files.
 
+## Module Audit Snapshot
+
+Use this snapshot as the first lookup table when returning to the remaining
+finite-construction proofs.
+
+* Stable book-facing surface:
+  {module}`FoC.Computability.Tape`,
+  {module}`FoC.Computability.TuringMachine`,
+  {module}`FoC.Computability.Computable`,
+  {module}`FoC.Computability.Recognizable`,
+  {module}`FoC.Computability.Enumerable`,
+  {module}`FoC.Computability.Program`,
+  {module}`FoC.Computability.Grammar`,
+  {module}`FoC.Computability.Undecidable`,
+  {module}`FoC.Computability.Coding`, and
+  {module}`FoC.Computability.FiniteProgram`. These modules should remain
+  readable without knowing the finite transition-table construction details.
+* Stable compiler-facing surface:
+  {module}`FoC.Computability.Encoding`,
+  {module}`FoC.Computability.MachineBuilder`,
+  {module}`FoC.Computability.Compiler`,
+  {module}`FoC.Computability.Compiler.Core.ConstructionTargets`,
+  {module}`FoC.Computability.Compiler.Core.Closeout`,
+  {module}`FoC.Computability.Compiler.Core.TapeCodePrimitives`,
+  {module}`FoC.Computability.Compiler.Core.EncodingLemmas`, and
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.RightShifted`.
+  These are the files to check first for reusable records, wrappers, aliases,
+  append-cancellation facts, and exact-tape handoff contracts.
+* Canonical parser proof internals:
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.PrimitiveClosed`,
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWordClosed`,
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.ShapeClosed`,
+  and
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Composition`.
+  These should be opened when a goal needs code-origin, closedness, suffix, or
+  scanner-composition inversions. They are proof infrastructure, not a public
+  semantic dependency.
+* Bounded-layout runner proof internals:
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Parser`,
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Parser.Closed`,
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner`,
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed`,
+  and
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction`.
+  These are the files to inspect for the checked-layout parser inversion and
+  the selected projection/merge exact-tape constructions.
+* Controller and finite-loop construction internals:
+  {module}`FoC.Computability.Compiler.Core.ControllerInputInitializer`,
+  {module}`FoC.Computability.Compiler.Core.ControllerResultContinue`,
+  {module}`FoC.Computability.Compiler.Core.FiniteScaffolds`, and
+  {module}`FoC.Computability.Compiler.Core.SearchDrivers`. These connect
+  explicit subroutine descriptions into finite-stage controller loops.
+* Universal finite-source construction internals:
+  {module}`FoC.Computability.Compiler.UniversalAndRanges.HeaderParser`,
+  {module}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource`,
+  {module}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser`,
+  and
+  {module}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController`.
+  These are separate from the paired-recognizer dovetail controller and should
+  be solved through description decoding, transition-list parsing, and bounded
+  simulator facts.
+
+At this cleanup checkpoint, the project is expected to build with only the
+intentional {lit}`sorry` warnings. If that changes, update this page together
+with the construction target or helper theorem that changed the proof surface.
+
+## Proof Navigation Rules
+
+Before opening a remaining proof hole, classify the goal by contract strength.
+
+* A semantic theorem about acceptance, output, recognizability, or staged
+  programs belongs at the public semantic layer and should avoid exact
+  transition names.
+* A normalized-output theorem can use
+  {name (full := FoC.Computability.Tape.output)}`Tape.output` and
+  {name (full := FoC.Computability.Tape.Equiv)}`Tape.Equiv`, but it is not
+  enough for a right-shifted or closed-handoff construction.
+* A right-shifted goal must end with an exact
+  {name (full := FoC.Computability.MachineDescription.HaltsWithTape)}`MachineDescription.HaltsWithTape`
+  equation whose head is one cell to the right of the canonical output word.
+  Use the short right-shifted accessors before expanding the record.
+* A closed-handoff goal must prove the inverse direction from every halting
+  tape on canonical input back to the primitive transform. Use
+  {name (full := FoC.Computability.closedHandoffCompiled_haltsWithTape_inv)}`closedHandoffCompiled_haltsWithTape_inv`
+  and related accessors rather than reproving the record projections locally.
+* A parser or scanner inversion that compares encoded prefixes should first
+  try the decoder-backed cancellation helpers in
+  {module}`FoC.Computability.Compiler.Core.EncodingLemmas`. If the goal is
+  still about a canonical layout field, then move into the DovetailLayoutScanner
+  closed modules.
+* A theorem whose name ends in {lit}`_scaffold` is deliberately a construction
+  target. It should be discharged by supplying finite descriptions and
+  sequencing data, not by weakening the statement to a semantic equivalence.
+
 ## Remaining Sorry Work Map
 
 The remaining proof holes are best approached by contract family, not by file
