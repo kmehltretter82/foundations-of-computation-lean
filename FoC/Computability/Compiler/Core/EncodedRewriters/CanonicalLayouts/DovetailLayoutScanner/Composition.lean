@@ -25,10 +25,8 @@ open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
 /-!
 ## Composed tape and configuration field scanners
 
-These descriptions assemble the primitive suffix-aware scanners into the
-grammar-level fields used by complete dovetail layouts.  The run theorems below
-continue to work with explicit base-left contexts so the composed recognizer can
-be chained field by field.
+Run theorems keep explicit base-left contexts so the recognizer can be chained
+field by field.
 -/
 
 def TapeSuffixScannerDescription : MachineDescription :=
@@ -94,30 +92,21 @@ def MarkFirstTransitionBitDescription : MachineDescription where
 
 theorem markFirstTransitionBitDescription_wellFormed :
     MarkFirstTransitionBitDescription.WellFormed := by
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := MarkFirstTransitionBitDescription.transitions)
       (stateCount := MarkFirstTransitionBitDescription.stateCount)
-      (by
-        native_decide)
+      (by native_decide)
   · exact transition_deterministic_of_all
       (l := MarkFirstTransitionBitDescription.transitions)
-      (by
-        native_decide)
+      (by native_decide)
 
 theorem markFirstTransitionBitDescription_haltTransitionFree :
     MarkFirstTransitionBitDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := MarkFirstTransitionBitDescription.transitions)
     (state := MarkFirstTransitionBitDescription.halt)
-    (by
-      native_decide)
+    (by native_decide)
 
 theorem markFirstTransitionBitDescription_subroutineReady :
     MarkFirstTransitionBitDescription.SubroutineReady :=
@@ -153,31 +142,22 @@ def TransitionRemainderPrefixScannerDescription : MachineDescription where
 
 theorem transitionRemainderPrefixScannerDescription_wellFormed :
     TransitionRemainderPrefixScannerDescription.WellFormed := by
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := TransitionRemainderPrefixScannerDescription.transitions)
       (stateCount :=
         TransitionRemainderPrefixScannerDescription.stateCount)
-      (by
-        native_decide)
+      (by native_decide)
   · exact transition_deterministic_of_all
       (l := TransitionRemainderPrefixScannerDescription.transitions)
-      (by
-        native_decide)
+      (by native_decide)
 
 theorem transitionRemainderPrefixScannerDescription_haltTransitionFree :
     TransitionRemainderPrefixScannerDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := TransitionRemainderPrefixScannerDescription.transitions)
     (state := TransitionRemainderPrefixScannerDescription.halt)
-    (by
-      native_decide)
+    (by native_decide)
 
 theorem transitionRemainderPrefixScannerDescription_subroutineReady :
     TransitionRemainderPrefixScannerDescription.SubroutineReady :=
@@ -248,30 +228,21 @@ def ReturnToFirstMarkerDescription : MachineDescription where
 
 theorem returnToFirstMarkerDescription_wellFormed :
     ReturnToFirstMarkerDescription.WellFormed := by
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := ReturnToFirstMarkerDescription.transitions)
       (stateCount := ReturnToFirstMarkerDescription.stateCount)
-      (by
-        native_decide)
+      (by native_decide)
   · exact transition_deterministic_of_all
       (l := ReturnToFirstMarkerDescription.transitions)
-      (by
-        native_decide)
+      (by native_decide)
 
 theorem returnToFirstMarkerDescription_haltTransitionFree :
     ReturnToFirstMarkerDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := ReturnToFirstMarkerDescription.transitions)
     (state := ReturnToFirstMarkerDescription.halt)
-    (by
-      native_decide)
+    (by native_decide)
 
 theorem returnToFirstMarkerDescription_subroutineReady :
     ReturnToFirstMarkerDescription.SubroutineReady :=

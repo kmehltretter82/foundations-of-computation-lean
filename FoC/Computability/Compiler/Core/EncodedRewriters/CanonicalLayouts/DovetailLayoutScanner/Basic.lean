@@ -5,13 +5,10 @@ set_option doc.verso true
 /-!
 # Dovetail-layout scanner components
 
-This module contains concrete field scanners for the complete
+Concrete field scanners for the complete
 {name (full := FoC.Computability.MachineDescription.DovetailLayout)}`MachineDescription.DovetailLayout`
-recognizer.  The first reusable component is a suffix-aware scanner for
-length-prefixed cell lists.  It is adapted from the marked stage-input scanner:
-the length prefix is marked one tick at a time, each payload cell is checked and
-temporarily marked, and the finish pass restores the payload before halting just
-to the left of the next field.
+recognizer. The cell-list scanner marks length ticks and payload cells, then
+restores the payload before halting just left of the next field.
 -/
 
 namespace FoC
@@ -86,30 +83,21 @@ def CellListSuffixScannerDescription : MachineDescription where
 
 theorem cellListSuffixScannerDescription_wellFormed :
     CellListSuffixScannerDescription.WellFormed := by
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := CellListSuffixScannerDescription.transitions)
       (stateCount := CellListSuffixScannerDescription.stateCount)
-      (by
-        native_decide)
+      (by native_decide)
   · exact transition_deterministic_of_all
       (l := CellListSuffixScannerDescription.transitions)
-      (by
-        native_decide)
+      (by native_decide)
 
 theorem cellListSuffixScannerDescription_haltTransitionFree :
     CellListSuffixScannerDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := CellListSuffixScannerDescription.transitions)
     (state := CellListSuffixScannerDescription.halt)
-    (by
-      native_decide)
+    (by native_decide)
 
 theorem cellListSuffixScannerDescription_subroutineReady :
     CellListSuffixScannerDescription.SubroutineReady :=
@@ -511,30 +499,21 @@ def CellSuffixScannerDescription : MachineDescription where
 
 theorem cellSuffixScannerDescription_wellFormed :
     CellSuffixScannerDescription.WellFormed := by
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := CellSuffixScannerDescription.transitions)
       (stateCount := CellSuffixScannerDescription.stateCount)
-      (by
-        native_decide)
+      (by native_decide)
   · exact transition_deterministic_of_all
       (l := CellSuffixScannerDescription.transitions)
-      (by
-        native_decide)
+      (by native_decide)
 
 theorem cellSuffixScannerDescription_haltTransitionFree :
     CellSuffixScannerDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := CellSuffixScannerDescription.transitions)
     (state := CellSuffixScannerDescription.halt)
-    (by
-      native_decide)
+    (by native_decide)
 
 theorem cellSuffixScannerDescription_subroutineReady :
     CellSuffixScannerDescription.SubroutineReady :=
@@ -685,30 +664,21 @@ def BoolSuffixScannerDescription : MachineDescription where
 
 theorem boolSuffixScannerDescription_wellFormed :
     BoolSuffixScannerDescription.WellFormed := by
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := BoolSuffixScannerDescription.transitions)
       (stateCount := BoolSuffixScannerDescription.stateCount)
-      (by
-        native_decide)
+      (by native_decide)
   · exact transition_deterministic_of_all
       (l := BoolSuffixScannerDescription.transitions)
-      (by
-        native_decide)
+      (by native_decide)
 
 theorem boolSuffixScannerDescription_haltTransitionFree :
     BoolSuffixScannerDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := BoolSuffixScannerDescription.transitions)
     (state := BoolSuffixScannerDescription.halt)
-    (by
-      native_decide)
+    (by native_decide)
 
 theorem boolSuffixScannerDescription_subroutineReady :
     BoolSuffixScannerDescription.SubroutineReady :=
@@ -792,30 +762,21 @@ def BoolFinalScannerDescription : MachineDescription where
 
 theorem boolFinalScannerDescription_wellFormed :
     BoolFinalScannerDescription.WellFormed := by
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := BoolFinalScannerDescription.transitions)
       (stateCount := BoolFinalScannerDescription.stateCount)
-      (by
-        native_decide)
+      (by native_decide)
   · exact transition_deterministic_of_all
       (l := BoolFinalScannerDescription.transitions)
-      (by
-        native_decide)
+      (by native_decide)
 
 theorem boolFinalScannerDescription_haltTransitionFree :
     BoolFinalScannerDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := BoolFinalScannerDescription.transitions)
     (state := BoolFinalScannerDescription.halt)
-    (by
-      native_decide)
+    (by native_decide)
 
 theorem boolFinalScannerDescription_subroutineReady :
     BoolFinalScannerDescription.SubroutineReady :=
@@ -892,30 +853,21 @@ def TransitionPrefixScannerDescription : MachineDescription where
 
 theorem transitionPrefixScannerDescription_wellFormed :
     TransitionPrefixScannerDescription.WellFormed := by
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := TransitionPrefixScannerDescription.transitions)
       (stateCount := TransitionPrefixScannerDescription.stateCount)
-      (by
-        native_decide)
+      (by native_decide)
   · exact transition_deterministic_of_all
       (l := TransitionPrefixScannerDescription.transitions)
-      (by
-        native_decide)
+      (by native_decide)
 
 theorem transitionPrefixScannerDescription_haltTransitionFree :
     TransitionPrefixScannerDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := TransitionPrefixScannerDescription.transitions)
     (state := TransitionPrefixScannerDescription.halt)
-    (by
-      native_decide)
+    (by native_decide)
 
 theorem transitionPrefixScannerDescription_subroutineReady :
     TransitionPrefixScannerDescription.SubroutineReady :=
