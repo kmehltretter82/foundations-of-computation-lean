@@ -304,12 +304,13 @@ theorem finite_general_grammar_pair_recursive_of_finite_data_closeout
     hpair
 
 /-!
-**Section 5.2 finite-data scaffold.**  This is the explicit dependency graph
+**Section 5.2 finite-data handoffs.**  This is the explicit dependency graph
 for the remaining finite/effective route.  It deliberately does not manufacture
 the broad {name}`DecidableToAcceptableConstruction` field of the semantic
 closeout.  The safe stopped-decider variant is recorded separately, while the
-finite consequences below use only the paired-dovetail and finite
-grammar-recognizer scaffolds plus the machine-history construction.
+finite consequences below keep the paired-dovetail compiler as an explicit
+hypothesis and use the checked-certificate grammar compiler only as an adapter
+to the first-order presentation compiler.
 -/
 
 theorem stopped_decidable_to_acceptable_construction_bool :
@@ -330,14 +331,15 @@ theorem program_acceptable_by_description_finite_general_grammar_scaffold
     FiniteGeneralGrammarGenerated L :=
   program_acceptable_by_description_to_finite_general_grammar_scaffold L hL
 
-theorem finite_general_grammar_pair_recursive_scaffold
+theorem finite_general_grammar_pair_recursive_of_checked_presentation_compiler
+    (hpaired : ConcretePairedRecognizerDovetailCompilerConstruction)
     (hcompile :
       ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction)
     {L : Language Bool}
     (hpair : FiniteGeneralGrammarPairGenerated L) :
     RecursiveLanguage L :=
   finite_general_grammar_pair_recursive_of_finite_data_constructions
-    paired_recognizer_dovetail_compiler_scaffold
+    hpaired
     (concrete_finite_bool_general_grammar_presentation_compiler_scaffold
       hcompile)
     hpair
@@ -431,8 +433,9 @@ description-backed construction
 {name}`ConcreteDescriptionRecognizerToFiniteGeneralGrammarConstruction`.
 The first-order presentation, checked-certificate, and runner-search
 boundaries identify the remaining transition-table construction work. The
-scaffold wrapper above therefore takes the checked-certificate presentation
-compiler explicitly instead of manufacturing it.
+checked-presentation wrapper above therefore takes both the paired-recognizer
+dovetail compiler and the checked-certificate presentation compiler explicitly
+instead of manufacturing either construction.
 -/
 
 

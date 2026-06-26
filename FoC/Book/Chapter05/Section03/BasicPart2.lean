@@ -785,29 +785,20 @@ theorem exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_clo
     hclose
 
 /-!
-**Section 5.3 scaffold.**  The universal-machine target is the prefix runner
-route.  These wrappers expose the reusable finite-source runner scaffold at the
-book-facing layer.  Row coverage remains available through the closeout theorem
-above when an explicit encoded-input description compiler is supplied.
+**Section 5.3 finite-source handoffs.**  The universal-machine target is the
+prefix runner route.  The runner and finite-source closeout remain explicit
+hypotheses at the book-facing layer, so deferred transition-table work is not
+exported as a completed universal machine theorem.  Row coverage is available
+through the closeout theorem above when an explicit encoded-input description
+compiler is supplied.
 -/
 
-theorem concrete_code_prefix_recognizer_machine_scaffold :
-    ConcreteCodePrefixRecognizerMachineConstruction :=
-  Computability.codePrefixRecognizerMachineConstruction_scaffold
-
-def concrete_section53_universal_prefix_runner_finite_source_closeout_scaffold :
-    ConcreteSection53UniversalPrefixRunnerFiniteSourceCloseout :=
-  Computability.codeUniversalPrefixRunnerFiniteSourceCloseout_scaffold
-
-theorem concrete_universal_prefix_runner_scaffold :
-    ConcreteUniversalPrefixRunnerConstruction :=
-  Computability.codeUniversalPrefixRunnerConstruction_scaffold
-
-theorem exists_concrete_universal_prefix_machine_scaffold :
+theorem exists_concrete_universal_prefix_machine_of_runner
+    (hrunner : ConcreteUniversalPrefixRunnerConstruction) :
     exists state : Type,
       exists universal : TuringMachine ConcreteMachineCodeSymbol state,
         ConcreteUniversalPrefixMachineSpec universal :=
-  concrete_universal_prefix_runner_scaffold
+  hrunner
 
 theorem exists_concrete_universal_prefix_machine_rows_cover_of_boolean_description_compiler
     (hcompiler : ConcreteBooleanDescriptionAcceptorCompilationConstruction)
@@ -864,9 +855,8 @@ prefix recognizer's language is exactly the decoder relation needed by the
 universal machine. The prefix parser layer is now formalized as
 {name}`ConcreteCodePrefixParserCodeConstruction`: a normalizing code primitive
 succeeds exactly on one-description prefixes, and a total branch primitive
-emits the success or failure code used by the later recognizer controller. The
-no-argument scaffold records this runner target as the active deferred
-construction. For row coverage, the explicit
+emits the success or failure code used by the later recognizer controller. For
+row coverage, the explicit
 {name}`ConcreteSection53UniversalPrefixFiniteSourceCloseout` pairs that runner
 target with an encoded-input description compiler and routes directly to
 {name}`exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_closeout`.
