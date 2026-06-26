@@ -232,6 +232,38 @@ theorem identityClosedHandoffConstruction_of_rightShifted
 
 end DovetailLayouts
 
+namespace SimulatorLayouts
+
+export EncodedRewriters.CanonicalLayouts.Simulator
+  ( Layout
+    decode
+    encode
+    bits
+    inputTape
+    handoffTape
+    identityPrimitive
+    ClosedRecognizerSpec
+    ClosedRecognizerConstruction
+    IdentityClosedHandoffConstruction
+    decode_encode
+    decode_eq_some_encode
+    encode_cons
+    identityPrimitive_transform_eq_some_iff
+    identityClosedHandoffConstruction_of_closedRecognizer )
+
+export MachineDescription.SimulatorLayout
+  ( encodeAppend
+    decodeComplete
+    decodeComplete_encode
+    decodeComplete_eq_some_encode
+    asBoolInput
+    run
+    runCode
+    runCodePrimitive
+    normalizeCodePrimitive )
+
+end SimulatorLayouts
+
 namespace ControllerLayouts
 
 export EncodedRewriters.CanonicalLayouts.Controller
