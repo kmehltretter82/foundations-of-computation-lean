@@ -331,6 +331,226 @@ theorem boolFinalScannerDescription_runConfig_terminal_inv
                       tapeAtCells, Tape.read, Tape.write, Tape.move,
                       Tape.moveRight] at h
 
+private theorem encodeCodeWordAsInput_map_some_cons_inv
+    {suffix : Word MachineCodeSymbol} {b : Bool}
+    {suffixCellsTail : List (Option Bool)}
+    (h :
+      (MachineDescription.encodeCodeWordAsInput suffix).map some =
+        some b :: suffixCellsTail) :
+    exists suffixTail : Word Bool,
+      MachineDescription.encodeCodeWordAsInput suffix = b :: suffixTail ∧
+        suffixCellsTail = suffixTail.map some := by
+  cases hbits : MachineDescription.encodeCodeWordAsInput suffix with
+  | nil =>
+      simp [hbits] at h
+  | cons bit suffixTail =>
+      have hcons :
+          some bit :: suffixTail.map some =
+            some b :: suffixCellsTail := by
+        simpa [hbits] using h
+      injection hcons with hbit htail
+      injection hbit with hbit'
+      subst b
+      subst suffixCellsTail
+      exact ⟨suffixTail, rfl, rfl⟩
+
+private theorem encodeCodeWordAsInput_map_some_eq_nil
+    {code : Word MachineCodeSymbol}
+    (h : (MachineDescription.encodeCodeWordAsInput code).map some = []) :
+    code = [] := by
+  cases code with
+  | nil =>
+      rfl
+  | cons symbol rest =>
+      cases symbol <;>
+        simp [MachineDescription.encodeCodeWordAsInput,
+          MachineDescription.encodeCodeSymbolAsInput] at h
+
+private theorem encodeCodeWordAsInput_map_some_ne_none_cons
+    (code : Word MachineCodeSymbol) (rest : List (Option Bool)) :
+    (MachineDescription.encodeCodeWordAsInput code).map some ≠
+      none :: rest := by
+  intro h
+  cases code with
+  | nil =>
+      simp [MachineDescription.encodeCodeWordAsInput] at h
+  | cons symbol suffix =>
+      cases symbol <;>
+        simp [MachineDescription.encodeCodeWordAsInput,
+          MachineDescription.encodeCodeSymbolAsInput] at h
+
+theorem boolSuffixScannerDescription_runConfig_encodeBoolAppend_handoff
+    (baseLeft : List (Option Bool)) (flag : Bool)
+    (suffix : Word MachineCodeSymbol)
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      BoolSuffixScannerDescription.runConfig n
+          (config BoolSuffixScannerDescription.start baseLeft
+            ((MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeBoolAppend flag suffix)).map
+              some)) =
+        { state := BoolSuffixScannerDescription.halt
+          tape := Tout }) :
+    exists b : Bool,
+    exists suffixTail : Word Bool,
+    exists baseAfter : List (Option Bool),
+      MachineDescription.encodeCodeWordAsInput suffix = b :: suffixTail ∧
+        Tape.move Direction.right Tout =
+          tapeAtCells baseAfter
+            ((MachineDescription.encodeCodeWordAsInput suffix).map some) := by
+  have hraw :
+      BoolSuffixScannerDescription.runConfig n
+          { state := BoolSuffixScannerDescription.start
+            tape := tapeAtCells baseLeft
+              (List.append ((cellCodeBits (some flag)).map some)
+                ((MachineDescription.encodeCodeWordAsInput suffix).map
+                  some)) } =
+        { state := BoolSuffixScannerDescription.halt
+          tape := Tout } := by
+    simpa [config, boolBits_eq_encodeBoolAppend, List.map_append] using h
+  rcases
+      boolSuffixScannerDescription_runConfig_suffix_inv
+        flag baseLeft
+        ((MachineDescription.encodeCodeWordAsInput suffix).map some)
+        hraw with
+    ⟨b, suffixCellsTail, hsuffixCells, hTout⟩
+  rcases encodeCodeWordAsInput_map_some_cons_inv hsuffixCells with
+    ⟨suffixTail, hsuffixBits, hsuffixCellsTail⟩
+  refine
+    ⟨b, suffixTail,
+      List.append ((cellCodeBits (some flag)).reverse.map some) baseLeft,
+      hsuffixBits, ?_⟩
+  rw [hTout, hsuffixCellsTail]
+  simpa [boolOnlySuffixHandoffConfigWithBase, hsuffixBits] using
+    boolOnlySuffixHandoffConfigWithBase_move_right
+      flag baseLeft b suffixTail
+
+theorem boolFinalScannerDescription_runConfig_encodeBoolAppend_terminal_inv
+    (baseLeft : List (Option Bool)) (flag : Bool)
+    (suffix : Word MachineCodeSymbol)
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      BoolFinalScannerDescription.runConfig n
+          (config BoolFinalScannerDescription.start baseLeft
+            ((MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeBoolAppend flag suffix)).map
+              some)) =
+        { state := BoolFinalScannerDescription.halt
+          tape := Tout }) :
+    suffix = [] ∧
+      Tape.move Direction.right Tout =
+        tapeAtCells
+          (List.append ((cellCodeBits (some flag)).reverse.map some)
+            baseLeft)
+          [] := by
+  have hraw :
+      BoolFinalScannerDescription.runConfig n
+          { state := BoolFinalScannerDescription.start
+            tape := tapeAtCells baseLeft
+              (List.append ((cellCodeBits (some flag)).map some)
+                ((MachineDescription.encodeCodeWordAsInput suffix).map
+                  some)) } =
+        { state := BoolFinalScannerDescription.halt
+          tape := Tout } := by
+    simpa [config, boolBits_eq_encodeBoolAppend, List.map_append] using h
+  rcases
+      boolFinalScannerDescription_runConfig_terminal_inv
+        flag baseLeft
+        ((MachineDescription.encodeCodeWordAsInput suffix).map some)
+        hraw with
+    ⟨hterminal, hTout⟩
+  have hsuffix : suffix = [] := by
+    cases hterminal with
+    | inl hnil =>
+        exact encodeCodeWordAsInput_map_some_eq_nil hnil
+    | inr hnone =>
+        rcases hnone with ⟨rest, hnone⟩
+        exact False.elim
+          (encodeCodeWordAsInput_map_some_ne_none_cons suffix rest hnone)
+  constructor
+  · exact hsuffix
+  · subst suffix
+    rw [hTout]
+    simpa [boolFinalHandoffConfigWithBase,
+      MachineDescription.encodeCodeWordAsInput] using
+      boolFinalHandoffConfigWithBase_move_right flag baseLeft
+
+theorem finalHitFlagsScannerDescription_runConfig_encodeBoolAppend_terminal_inv
+    (baseLeft : List (Option Bool))
+    (acceptHit rejectHit : Bool)
+    (suffix : Word MachineCodeSymbol)
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      FinalHitFlagsScannerDescription.runConfig n
+          (config FinalHitFlagsScannerDescription.start baseLeft
+            ((MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeBoolAppend acceptHit
+                (MachineDescription.encodeBoolAppend rejectHit
+                  suffix))).map some)) =
+        { state := FinalHitFlagsScannerDescription.halt
+          tape := Tout }) :
+    suffix = [] ∧
+      exists baseAfter : List (Option Bool),
+        Tape.move Direction.right Tout = tapeAtCells baseAfter [] := by
+  have hseq :
+      (MachineDescription.seqSubroutine
+        BoolSuffixScannerDescription
+        BoolFinalScannerDescription
+        Direction.right).runConfig n
+          (config
+            (MachineDescription.seqSubroutine
+              BoolSuffixScannerDescription
+              BoolFinalScannerDescription
+              Direction.right).start
+            baseLeft
+            ((MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeBoolAppend acceptHit
+                (MachineDescription.encodeBoolAppend rejectHit
+                  suffix))).map some)) =
+        { state :=
+            (MachineDescription.seqSubroutine
+              BoolSuffixScannerDescription
+              BoolFinalScannerDescription
+              Direction.right).halt
+          tape := Tout } := by
+    simpa [FinalHitFlagsScannerDescription, config] using h
+  rcases
+      MachineDescription.seqSubroutine_runConfig_inv
+        (A := BoolSuffixScannerDescription)
+        (B := BoolFinalScannerDescription)
+        (handoffMove := Direction.right)
+        boolSuffixScannerDescription_subroutineReady
+        boolFinalScannerDescription_subroutineReady
+        hseq with
+    ⟨TacceptHit, hacceptHit, hrejectHit⟩
+  rcases hacceptHit with ⟨nAcceptHit, hacceptHitRun, _hacceptHitFirst⟩
+  rcases
+      boolSuffixScannerDescription_runConfig_encodeBoolAppend_handoff
+        baseLeft acceptHit
+        (MachineDescription.encodeBoolAppend rejectHit suffix)
+        (by simpa [config] using hacceptHitRun) with
+    ⟨_rejectFirstBit, _rejectSuffixTail, baseAfterAcceptHit,
+      _hrejectBits, hacceptHitMove⟩
+  rcases hrejectHit with ⟨nRejectHit, hrejectHitRun⟩
+  have hrejectHitCodeRun :
+      BoolFinalScannerDescription.runConfig nRejectHit
+          (config BoolFinalScannerDescription.start baseAfterAcceptHit
+            ((MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeBoolAppend rejectHit suffix)).map
+              some)) =
+        { state := BoolFinalScannerDescription.halt
+          tape := Tout } := by
+    simpa [config, hacceptHitMove] using hrejectHitRun
+  rcases
+      boolFinalScannerDescription_runConfig_encodeBoolAppend_terminal_inv
+        baseAfterAcceptHit rejectHit suffix hrejectHitCodeRun with
+    ⟨hsuffix, hmove⟩
+  exact
+    ⟨hsuffix,
+      List.append ((cellCodeBits (some rejectHit)).reverse.map some)
+        baseAfterAcceptHit,
+      hmove⟩
+
 theorem runConfig_forward_inv
     (D : MachineDescription) (c0 c1 : MachineDescription.Configuration)
     (n k : Nat) {Tout : Tape Bool}

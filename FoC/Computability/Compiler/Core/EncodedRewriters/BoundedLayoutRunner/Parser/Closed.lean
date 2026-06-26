@@ -896,53 +896,6 @@ theorem natSuffixScannerDescription_runConfig_code_inv
         ⟨stage, suffix,
           MachineDescription.decodeNat_eq_some_encodeNatAppend hdecode⟩
 
-theorem natSuffixScannerDescription_runConfig_stageNat_handoff
-    (baseLeft : List (Option Bool)) (stage : Nat)
-    (b : Bool) (suffixTail : Word Bool)
-    {Tout : Tape Bool} {n : Nat}
-    (h :
-      CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.runConfig
-          n
-          (config
-            CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.start
-            baseLeft
-            (List.append
-              ((stageNatBits stage).map some)
-              ((b :: suffixTail).map some))) =
-        { state :=
-            CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.halt
-          tape := Tout }) :
-      Tape.move Direction.right Tout =
-        tapeAtCells
-          (List.append
-            ((stageNatBits stage).reverse.map some)
-            baseLeft)
-          ((b :: suffixTail).map some) := by
-  let c0 : MachineDescription.Configuration :=
-    config
-      CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.start
-      baseLeft
-      (List.append
-        ((stageNatBits stage).map some)
-        ((b :: suffixTail).map some))
-  rcases
-      CanonicalLayouts.DovetailStagePrefix.run_natSuffix_raw_to_handoff_withBase
-        stage baseLeft b suffixTail with
-    ⟨_steps, hforward⟩
-  have hTout :
-      Tout =
-        (CanonicalLayouts.DovetailStagePrefix.natSuffixHandoffConfigWithBase
-          stage baseLeft (b :: suffixTail)).tape := by
-    exact
-      (MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
-        CanonicalLayouts.DovetailStagePrefix.natSuffixScannerDescription_haltTransitionFree
-        (by simpa [c0] using hforward)
-        (by simpa [c0] using h)).symm
-  rw [hTout]
-  exact
-    CanonicalLayouts.DovetailStagePrefix.natSuffixHandoffConfigWithBase_move_right
-      stage baseLeft b suffixTail
-
 private theorem cellSuffixScannerDescription_runConfig_nil_ne_halt
     (baseLeft : List (Option Bool)) (n : Nat) :
     (CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.runConfig
@@ -1505,47 +1458,6 @@ theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_handoff
           hforwardCode
           (by simpa [c0] using h)).symm
 
-theorem natSuffixScannerDescription_runConfig_encodeNatAppend_handoff
-    (baseLeft : List (Option Bool)) (stage : Nat)
-    (suffix : Word MachineCodeSymbol) (b : Bool) (suffixTail : Word Bool)
-    {Tout : Tape Bool} {n : Nat}
-    (hsuffix :
-      MachineDescription.encodeCodeWordAsInput suffix = b :: suffixTail)
-    (h :
-      CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.runConfig
-          n
-          (config
-            CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.start
-            baseLeft
-            ((MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeNatAppend stage suffix)).map
-              some)) =
-        { state :=
-            CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.halt
-          tape := Tout }) :
-    exists baseAfter : List (Option Bool),
-      Tape.move Direction.right Tout =
-        tapeAtCells baseAfter
-          ((MachineDescription.encodeCodeWordAsInput suffix).map some) := by
-  refine
-    ⟨List.append ((stageNatBits stage).reverse.map some) baseLeft, ?_⟩
-  have hrun :
-      CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.runConfig
-          n
-          (config
-            CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.start
-            baseLeft
-            (List.append ((stageNatBits stage).map some)
-              ((b :: suffixTail).map some))) =
-        { state :=
-            CanonicalLayouts.DovetailStagePrefix.NatSuffixScannerDescription.halt
-          tape := Tout } := by
-    simpa [CanonicalLayouts.DovetailStagePrefix.natBits_eq_encodeNatAppend,
-      hsuffix, List.map_append] using h
-  simpa [hsuffix] using
-    natSuffixScannerDescription_runConfig_stageNat_handoff
-      baseLeft stage b suffixTail hrun
-
 theorem tapeSuffixScannerDescription_runConfig_code_handoff
     (baseLeft : List (Option Bool)) (code : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}
@@ -1806,7 +1718,7 @@ theorem configurationSuffixScannerDescription_runConfig_code_handoff
       rcases encodeCodeWordAsInput_cons_bits tapeSymbol tapeRest with
         ⟨tapeBit, tapeTail, htapeBits⟩
       rcases
-          natSuffixScannerDescription_runConfig_encodeNatAppend_handoff
+          CommonGround.ScannerInversions.natSuffixScannerDescription_runConfig_encodeNatAppend_handoff
             baseLeft state (tapeSymbol :: tapeRest) tapeBit tapeTail
             htapeBits
             (by simpa [config, hcodeState] using hstageRun) with

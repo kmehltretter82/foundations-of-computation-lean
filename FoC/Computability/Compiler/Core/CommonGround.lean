@@ -62,6 +62,8 @@ export EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
     transitionRemainderBits
     cellListCanonicalRestoredLeftWithBase
     boolWordCanonicalHandoffConfigWithBase_move_right_all
+    boolSuffixScannerDescription_runConfig_encodeBoolAppend_handoff
+    boolFinalScannerDescription_runConfig_encodeBoolAppend_terminal_inv
     boolWordSuffixScannerDescription_runConfig_start_bit_inv
     boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
     boolWordSuffixScannerDescription_runConfig_code_inv
@@ -69,8 +71,11 @@ export EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
     cellListSuffixScannerDescription_runConfig_code_inv
     cellListSuffixScannerDescription_runConfig_encodeCellListAppend_handoff_false
     cellListSuffixScannerDescription_runConfig_encodeCellListAppend_suffix_false
+    natSuffixScannerDescription_runConfig_stageNat_handoff
+    natSuffixScannerDescription_runConfig_encodeNatAppend_handoff
     natSuffixScannerDescription_runConfig_nonblank_suffix_inv
     configurationSuffixScannerDescription_runConfig_canonical_false_suffix_inv
+    finalHitFlagsScannerDescription_runConfig_encodeBoolAppend_terminal_inv
     finalHitFlagsScannerDescription_runConfig_canonical_inv
     finalHitFlagsScannerDescription_runConfig_inv
     encodeCodeWordAsInput_transition_prefix_inv
