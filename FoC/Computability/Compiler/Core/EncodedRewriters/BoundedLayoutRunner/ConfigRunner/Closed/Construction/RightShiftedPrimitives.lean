@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseAdapters
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.SelectedProjectionTailProjector
-import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.BoolWordQuoter
+import FoC.Computability.Compiler.Core.CommonGround
 
 set_option doc.verso true
 
@@ -356,14 +356,14 @@ theorem selectedProjectionOutputBits_eq_quoter_bits
           List.append
             (MachineDescription.encodeCodeSymbolAsInput
               MachineCodeSymbol.header)
-            (_root_.FoC.Computability.DovetailInitialLayoutInitializer.checkedNonemptyBoolWordQuoteDirectSourceBits
+            (FoC.Computability.CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits
                 b rest (SelectedProjectionOutputSuffix useAccept L)) := by
   rcases parsedLayoutBits_eq_false_false_tail L with
     ⟨tail, htail⟩
   refine ⟨false, false :: tail, htail, ?_⟩
   rw [selectedProjectionOutputCode_eq_fields, htail]
   simp [MachineDescription.encodeCodeWordAsInput,
-    _root_.FoC.Computability.DovetailInitialLayoutInitializer.checkedNonemptyBoolWordQuoteDirectSourceBits_eq]
+    FoC.Computability.CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits_eq]
 
 def SelectedProjectionInputQuoterSpec
     (quoter : MachineDescription) : Prop :=
