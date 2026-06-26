@@ -281,7 +281,10 @@ below is only adapter glue over this target.
 -/
 theorem encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold :
     EncodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction := by
-  sorry
+  intro accept reject
+  exact
+    EncodedRewriters.BoundedLayoutRunner.closedHandoffCompiledSubroutine
+      accept reject
 
 theorem encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold :
     EncodedDovetailTotalOutputEmitterRewriterConstruction := by

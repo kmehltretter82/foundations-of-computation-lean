@@ -262,6 +262,26 @@ export MachineDescription.SimulatorLayout
     runCodePrimitive
     normalizeCodePrimitive )
 
+theorem runCodePrimitive_transform_eq_some_cons
+    {D : MachineDescription} {code out : Word MachineCodeSymbol}
+    (h :
+      (MachineDescription.SimulatorLayout.runCodePrimitive D).transform code =
+        some out) :
+    exists symbol : MachineCodeSymbol,
+    exists tail : Word MachineCodeSymbol,
+      out = symbol :: tail := by
+  unfold MachineDescription.SimulatorLayout.runCodePrimitive at h
+  unfold MachineDescription.SimulatorLayout.runCode at h
+  cases hdecode : MachineDescription.SimulatorLayout.decodeComplete code with
+  | none =>
+      simp [hdecode] at h
+  | some L =>
+      simp [hdecode] at h
+      cases h
+      exact
+        EncodedRewriters.CanonicalLayouts.Simulator.encode_cons
+          (MachineDescription.SimulatorLayout.run D L.stage L)
+
 end SimulatorLayouts
 
 namespace ControllerLayouts
