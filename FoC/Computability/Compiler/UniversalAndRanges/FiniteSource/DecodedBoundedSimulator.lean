@@ -3,11 +3,20 @@ import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer
 
 set_option doc.verso true
 
+/-!
+# Decoded Bounded Simulator
+
+This module separates the finite-source decoded simulator into a stage-code
+decoder, a description-prefix decoder, and a sequencing obligation that runs
+the decoded machine for the requested bound.
+-/
+
 namespace FoC
 namespace Computability
 
 open Languages
 
+/-- Semantic spec for a simulator that recognizes accepted stage-coded inputs. -/
 def CodePrefixDecodedBoundedSimulatorSemanticMachineSpec
     (simulator : TuringMachine MachineCodeSymbol state) : Prop :=
   forall tokens : Word MachineCodeSymbol,
@@ -54,6 +63,12 @@ def CodePrefixDecodedBoundedSimulatorStageDecoderConstruction : Prop :=
         exists encoded : Word MachineCodeSymbol,
           tokens = CodePrefixRecognizerStageCode encoded stage
 
+/--
+Local construction target for the stage-code decoder.  This is currently the
+same predicate as
+{name}`CodePrefixDecodedBoundedSimulatorStageDecoderConstruction`, kept for
+the higher-level finite-source assembly API.
+-/
 def StageCodeDecoderConstruction : Prop :=
   exists state : Type,
   exists decoder : TuringMachine MachineCodeSymbol state,
@@ -420,6 +435,7 @@ theorem codePrefixDecodedBoundedSimulatorStageDecoderConstruction_core :
     CodePrefixDecodedBoundedSimulatorStageDecoderConstruction := by
   exact stageCodeDecoderConstruction_scaffold
 
+/-- Description-prefix decoder supplied by the finite-source normalizer. -/
 theorem codePrefixDecodedBoundedSimulatorDescriptionDecoderConstruction_core :
     CodePrefixDecodedBoundedSimulatorDescriptionDecoderConstruction := by
   refine
@@ -461,6 +477,10 @@ theorem codePrefixDecodedBoundedSimulatorDescriptionDecoderConstruction_core :
         ((codePrefixParserNormalizerMachine_code_spec
           encoded encoded).mpr htransform)
 
+/--
+Finite-machine leaf that sequences the stage decoder, description decoder, and
+bounded simulation phase.
+-/
 theorem codePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction_core :
     CodePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction := by
   sorry

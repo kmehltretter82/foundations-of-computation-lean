@@ -252,8 +252,6 @@ theorem encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstructio
     EncodedRewriters.InitialLayout.closedHandoffCompiledSubroutine
       accept reject
 
-
-
 theorem encodedDovetailStageInputToInitialLayoutRewriterConstruction_scaffold :
     EncodedDovetailStageInputToInitialLayoutRewriterConstruction := by
   intro accept reject
@@ -268,11 +266,19 @@ theorem encodedDovetailStageInputToInitialLayoutRewriterConstruction_scaffold :
 theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
     EncodedDovetailLayoutBoundedRunnerRewriterConstruction := by
   intro accept reject
-  rcases EncodedRewriters.BoundedLayoutRunner.outputCompiledSubroutine accept reject with ⟨runner, hrunner⟩
+  rcases
+      EncodedRewriters.BoundedLayoutRunner.outputCompiledSubroutine
+        accept reject with
+    ⟨runner, hrunner⟩
   exact
     encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine
       ⟨runner, hrunner⟩
 
+/--
+Closed-handoff bounded-runner construction.  This is the remaining
+finite-machine leaf for the bounded layout runner; the nearby handoff theorem
+below is only adapter glue over this target.
+-/
 theorem encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold :
     EncodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction := by
   sorry

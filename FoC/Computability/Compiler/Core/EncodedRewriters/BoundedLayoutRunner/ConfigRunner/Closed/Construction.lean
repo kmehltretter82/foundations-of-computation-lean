@@ -1563,6 +1563,11 @@ theorem selectedProjectionPrimitiveExactConstruction_of_checkedParser_checkedEmi
       selectedProjectionPrimitiveExactSpec_of_checkedParser_checkedEmitter
         hparser hemits⟩
 
+/--
+Finite-machine leaf for the accept/reject checked projection emitters.  The
+right-shifted primitive construction below is adapter glue over this target and
+the checked layout parser.
+-/
 theorem selectedProjectionCheckedEmitterSideConstruction_scaffold :
     SelectedProjectionCheckedEmitterSideConstruction := by
   sorry
@@ -1625,6 +1630,10 @@ theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
     selectedProjectionFiniteDescriptionConstruction_of_rightShifted
     selectedProjectionPrimitiveRightShiftedConstruction_scaffold
 
+/--
+Finite-machine leaf for the selected accept/reject merge primitive, packaged
+as a right-shifted output subroutine.
+-/
 theorem selectedMergePrimitiveRightShiftedConstruction_core :
     SelectedMergePrimitiveRightShiftedConstruction := by
   sorry

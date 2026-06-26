@@ -2,11 +2,21 @@ import FoC.Computability.Compiler.UniversalAndRanges.Basic
 
 set_option doc.verso true
 
+/-!
+# Finite-Source Stage Search Controller
+
+This module factors the stage-search controller into a semantic staged program,
+a bounded-budget checker obligation, and an unbounded search sequencing
+obligation.  The final public construction remains a thin adapter from those
+two finite-machine leaves.
+-/
+
 namespace FoC
 namespace Computability
 
 open Languages
 
+/-- Finite-machine construction target for the full stage-search controller. -/
 def CodePrefixStageSearchControllerCoreConstruction : Prop :=
   forall {simulatorState : Type}
     (simulator : TuringMachine MachineCodeSymbol simulatorState),
@@ -15,6 +25,11 @@ def CodePrefixStageSearchControllerCoreConstruction : Prop :=
       exists searcher : TuringMachine MachineCodeSymbol searcherState,
         CodePrefixStageSearchControllerSpec simulator searcher
 
+/--
+Semantic reference program for the stage-search controller.  At stage
+{lit}`stage`, it checks all simulator stage/fuel pairs bounded by
+{lit}`stage`.
+-/
 noncomputable def codePrefixStageSearchControllerProgram
     (simulator : TuringMachine MachineCodeSymbol simulatorState) :
     StagedProgram MachineCodeSymbol Unit :=
@@ -113,6 +128,10 @@ def CodePrefixStageSearchControllerProgramCompilerConstruction : Prop :=
             ProgramHaltsWithOutput
               (codePrefixStageSearchControllerProgram simulator) encoded []
 
+/--
+Specification for the bounded checker: on a stage-coded input, it halts exactly
+when the semantic controller program accepts within that same budget.
+-/
 def CodePrefixStageSearchControllerBudgetCheckerSpec
     {simulatorState checkerState : Type}
     (simulator : TuringMachine MachineCodeSymbol simulatorState)
@@ -131,6 +150,10 @@ def CodePrefixStageSearchControllerBudgetCheckerConstruction
   exists checker : TuringMachine MachineCodeSymbol checkerState,
     CodePrefixStageSearchControllerBudgetCheckerSpec simulator checker
 
+/--
+Sequencing obligation that turns a bounded checker into an unbounded searcher
+over budgets for one encoded input.
+-/
 def CodePrefixStageSearchControllerBudgetSearchSequencingConstruction :
     Prop :=
   forall {simulatorState checkerState : Type}
@@ -172,12 +195,14 @@ bounded decoded simulator, build a searcher that enumerates stage bounds for a
 fixed encoded input and halts when the simulator accepts one stage code.
 -/
 
+/-- Finite-machine leaf for checking one encoded input at one budget. -/
 theorem codePrefixStageSearchControllerBudgetCheckerConstruction_core :
     forall {simulatorState : Type}
       (simulator : TuringMachine MachineCodeSymbol simulatorState),
         CodePrefixStageSearchControllerBudgetCheckerConstruction simulator := by
   sorry
 
+/-- Finite-machine leaf for enumerating budgets using a bounded checker. -/
 theorem codePrefixStageSearchControllerBudgetSearchSequencingConstruction_core :
     CodePrefixStageSearchControllerBudgetSearchSequencingConstruction := by
   sorry

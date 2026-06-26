@@ -1,6 +1,7 @@
 import FoC.Computability.Compiler.Core.ControllerResultEmitter
 import FoC.Computability.Compiler.Core.ControllerInputInitializer
 import FoC.Computability.Compiler.Core.ControllerResultContinue
+
 set_option doc.verso true
 
 /-!
@@ -16,6 +17,7 @@ namespace Computability
 
 open Languages
 
+/-- Forward half of an output-compiled tape-code primitive subroutine. -/
 def TapeCodePrimitiveOutputCompiledForwardSpec
     (P : MachineDescription.TapeCodePrimitive)
     (D : MachineDescription) : Prop :=
@@ -25,6 +27,7 @@ def TapeCodePrimitiveOutputCompiledForwardSpec
         (MachineDescription.encodeCodeWordAsInput code)
         (MachineDescription.encodeCodeWordAsInput out)
 
+/-- Closed half of an output-compiled tape-code primitive subroutine. -/
 def TapeCodePrimitiveOutputCompiledClosedSpec
     (P : MachineDescription.TapeCodePrimitive)
     (D : MachineDescription) : Prop :=
@@ -74,6 +77,7 @@ continue-result code-word subroutine remain as concrete leaves.
 
 section EncodedControllerLeaves
 
+/-- Controller input initializer data, already stated in the public contract. -/
 def EncodedControllerInputInitializerConstructionData :
     Prop :=
   exists initializer : MachineDescription,
@@ -103,6 +107,10 @@ theorem encodedControllerResultEmitterRewriterConstruction_scaffold :
     EncodedControllerResultEmitterRewriterConstruction :=
   encodedControllerResultEmitterRewriterConstruction_of_description
 
+/--
+Controller-result continuation data in the generic forward/closed primitive
+format used by the code-word subroutine adapter.
+-/
 def EncodedControllerResultContinueConstructionData :
     Prop :=
   exists continuer : MachineDescription,
@@ -390,6 +398,10 @@ theorem pairedRecognizerDovetailStageAttemptInvocationConstruction_of_data
       pairedRecognizerDovetailStageAttemptInvocationRealizes_of_forward_closed
         hready hforward hclosed⟩
 
+/--
+Finite-machine leaf for invoking one total stage-attempt subroutine after
+encoding the controller stage input.
+-/
 theorem pairedRecognizerDovetailStageAttemptInvocationConstructionData_scaffold :
     PairedRecognizerDovetailStageAttemptInvocationConstructionData := by
   sorry
@@ -497,6 +509,10 @@ theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_of_data
       pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes_of_forward_closed
         hwell hforward hclosed⟩
 
+/--
+Finite-machine leaf for sequencing initializer, invocation, result emission,
+and continuation into the finite controller loop.
+-/
 theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstructionData_scaffold :
     PairedRecognizerDovetailFiniteStageLoopSequencingConstructionData := by
   sorry
