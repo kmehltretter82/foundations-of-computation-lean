@@ -227,32 +227,33 @@ We define `Tape.Equiv` to ignore trailing blanks (none) on both ends of the tape
 
 def dropTrailingNone {symbol} : List (Option symbol) -> List (Option symbol)
   | [] => []
-  | x :: xs =>
+  | none :: xs =>
       let rest := dropTrailingNone xs
-      if x = none ∧ rest = [] then [] else x :: rest
+      if rest = [] then [] else none :: rest
+  | some x :: xs => some x :: dropTrailingNone xs
 
-def Equiv {symbol} [DecidableEq symbol] (T1 T2 : Tape symbol) : Prop :=
+def Equiv {symbol} (T1 T2 : Tape symbol) : Prop :=
   dropTrailingNone T1.left = dropTrailingNone T2.left ∧
   T1.head = T2.head ∧
   dropTrailingNone T1.right = dropTrailingNone T2.right
 
-theorem Equiv.refl {symbol} [DecidableEq symbol] (T : Tape symbol) :
+theorem Equiv.refl {symbol} (T : Tape symbol) :
   Equiv T T :=
 ⟨rfl, rfl, rfl⟩
 
-theorem Equiv.symm {symbol} [DecidableEq symbol] {T U : Tape symbol} :
+theorem Equiv.symm {symbol} {T U : Tape symbol} :
   Equiv T U -> Equiv U T :=
 fun ⟨hl, hh, hr⟩ => ⟨hl.symm, hh.symm, hr.symm⟩
 
-theorem Equiv.trans {symbol} [DecidableEq symbol] {T U V : Tape symbol} :
+theorem Equiv.trans {symbol} {T U V : Tape symbol} :
   Equiv T U -> Equiv U V -> Equiv T V :=
 fun ⟨hl1, hh1, hr1⟩ ⟨hl2, hh2, hr2⟩ => ⟨hl1.trans hl2, hh1.trans hh2, hr1.trans hr2⟩
 
-theorem Equiv.read_eq {symbol} [DecidableEq symbol] {T U : Tape symbol} :
+theorem Equiv.read_eq {symbol} {T U : Tape symbol} :
   Equiv T U -> Tape.read T = Tape.read U :=
 fun ⟨_, hh, _⟩ => hh
 
-theorem Equiv.write {symbol} [DecidableEq symbol] {T U : Tape symbol}
+theorem Equiv.write {symbol} {T U : Tape symbol}
     (h : Equiv T U) (cell : Option symbol) :
   Equiv (Tape.write cell T) (Tape.write cell U) :=
 ⟨h.1, rfl, h.2.2⟩
@@ -262,7 +263,9 @@ theorem Equiv.write {symbol} [DecidableEq symbol] {T U : Tape symbol}
 -/
 
 theorem dropTrailingNone_cons {symbol} (x : Option symbol) (xs : List (Option symbol)) :
-    dropTrailingNone (x :: xs) = if x = none ∧ dropTrailingNone xs = [] then [] else x :: dropTrailingNone xs := rfl
+    dropTrailingNone (x :: xs) =
+      if x = none ∧ dropTrailingNone xs = [] then [] else x :: dropTrailingNone xs := by
+  cases x <;> simp [dropTrailingNone]
 
 def getHead {symbol} (xs : List (Option symbol)) : Option symbol :=
   match xs with | [] => none | x :: _ => x
@@ -348,7 +351,7 @@ theorem moveRight_right {symbol} (T : Tape symbol) : (Tape.moveRight T).right = 
 # Main Equiv Proofs
 -/
 
-theorem Equiv.moveLeft {symbol} [DecidableEq symbol] {T1 T2 : Tape symbol}
+theorem Equiv.moveLeft {symbol} {T1 T2 : Tape symbol}
     (h : Equiv T1 T2) : Equiv (Tape.moveLeft T1) (Tape.moveLeft T2) := by
   have h_left : dropTrailingNone T1.left = dropTrailingNone T2.left := h.1
   have h_head : T1.head = T2.head := h.2.1
@@ -363,7 +366,7 @@ theorem Equiv.moveLeft {symbol} [DecidableEq symbol] {T1 T2 : Tape symbol}
     · rw [moveLeft_right, moveLeft_right]
       exact dropTrailingNone_cons_eq h_head h_right
 
-theorem Equiv.moveRight {symbol} [DecidableEq symbol] {T1 T2 : Tape symbol}
+theorem Equiv.moveRight {symbol} {T1 T2 : Tape symbol}
     (h : Equiv T1 T2) : Equiv (Tape.moveRight T1) (Tape.moveRight T2) := by
   have h_left : dropTrailingNone T1.left = dropTrailingNone T2.left := h.1
   have h_head : T1.head = T2.head := h.2.1
@@ -378,7 +381,7 @@ theorem Equiv.moveRight {symbol} [DecidableEq symbol] {T1 T2 : Tape symbol}
     · rw [moveRight_right, moveRight_right]
       exact getTail_eq_of_dropTrailingNone_eq h_right
 
-theorem Equiv.move {symbol} [DecidableEq symbol] {T1 T2 : Tape symbol}
+theorem Equiv.move {symbol} {T1 T2 : Tape symbol}
     (h : Equiv T1 T2) (dir : Direction) : Equiv (Tape.move dir T1) (Tape.move dir T2) := by
   cases dir
   · exact Equiv.moveLeft h
@@ -428,7 +431,7 @@ theorem filterMap_cons_eq {symbol} (x : Option symbol) (xs ys : List (Option sym
     (x :: xs).filterMap (fun c => c) = (x :: ys).filterMap (fun c => c) := by
   cases x <;> simp [h]
 
-theorem Equiv.normalizedOutput_eq {symbol} [DecidableEq symbol] {T1 T2 : Tape symbol}
+theorem Equiv.normalizedOutput_eq {symbol} {T1 T2 : Tape symbol}
     (h : Equiv T1 T2) : normalizedOutput T1 = normalizedOutput T2 := by
   have h_left : dropTrailingNone T1.left = dropTrailingNone T2.left := h.1
   have h_head : T1.head = T2.head := h.2.1

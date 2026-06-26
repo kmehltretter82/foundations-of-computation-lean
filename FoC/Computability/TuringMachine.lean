@@ -61,12 +61,6 @@ def initial (M : TuringMachine symbol state) (w : Word symbol) :
   state := M.start
   tape := Tape.input w
 
-def applyAction (T : Tape symbol)
-    (action : Option symbol × Direction × state) :
-    Tape symbol × state :=
-  let written := Tape.write action.1 T
-  (Tape.move action.2.1 written, action.2.2)
-
 inductive Step (M : TuringMachine symbol state) :
     Configuration symbol state -> Configuration symbol state -> Prop where
   | mk {c : Configuration symbol state} {write : Option symbol}

@@ -268,7 +268,7 @@ theorem moveLeft_moveRight_equiv_self (T : Tape Bool) :
     simp [Tape.Equiv, Tape.move, Tape.moveLeft, Tape.moveRight]
     cases right with
     | nil => simp [Tape.dropTrailingNone]
-    | cons x xs => simp [Tape.dropTrailingNone]
+    | cons x xs => simp
 
 theorem SeqViaCanonical_closed_equiv
     {A B : MachineDescription}

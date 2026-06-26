@@ -18,7 +18,7 @@ exercises, and status notes.
 
 The reusable proofs are deliberately not duplicated here. Instead, the book
 pages sit on top of {module}`FoC.Foundation`, {module}`FoC.Languages`,
-{module}`FoC.Grammars`, and {module}`FoC.Computability`. A section page usually
+{module}`FoC.Grammars`, and the {lit}`FoC.Computability` module family. A section page usually
 does one of three things:
 
 * names the textbook concept with a chapter-facing definition;
