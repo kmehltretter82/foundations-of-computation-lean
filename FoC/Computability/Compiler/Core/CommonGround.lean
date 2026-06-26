@@ -56,6 +56,9 @@ export EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
   ( boolWordSuffixScannerDescription_runConfig_start_bit_inv
     boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
     boolWordSuffixScannerDescription_runConfig_code_inv
+    cellListSuffixScannerDescription_runConfig_code_inv
+    cellListSuffixScannerDescription_runConfig_encodeCellListAppend_handoff_false
+    cellListSuffixScannerDescription_runConfig_encodeCellListAppend_suffix_false
     natSuffixScannerDescription_runConfig_nonblank_suffix_inv
     configurationSuffixScannerDescription_runConfig_canonical_false_suffix_inv
     finalHitFlagsScannerDescription_runConfig_canonical_inv
