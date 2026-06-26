@@ -661,7 +661,141 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_body_fields_inv
           (MachineDescription.encodeConfigurationAppend rejectConfig
             (MachineDescription.encodeBoolAppend acceptHit
               (MachineDescription.encodeBoolAppend rejectHit []))) := by
-  sorry
+  rcases
+      CanonicalLayouts.DovetailLayoutScanner.checkedDovetailLayoutScannerDescription_haltsWithTape_rejectConfig_inv
+        h with
+    ⟨b, suffixTail, Tinput, Tstage, Taccept, Treject, Tbody,
+      nInput, nStage, nAccept, nReject, nFinalFlags, _nReturn,
+      hbits, hinputRun, hstageRun, hacceptRun, hrejectRun,
+      hfinalFlagsRun, _hreturnRun⟩
+  rcases
+      CommonGround.ScannerInversions.encodeCodeWordAsInput_transition_prefix_inv
+        hbits with
+    ⟨inputCode, hcode, hinputBits⟩
+  have hinputCode :
+      inputCode =
+        MachineDescription.encodeBoolWordAppend inputWord
+          (MachineDescription.encodeNatAppend stage bodyRest) := by
+    have hcons :
+        MachineCodeSymbol.transition :: inputCode =
+          MachineCodeSymbol.transition ::
+            MachineDescription.encodeBoolWordAppend inputWord
+              (MachineDescription.encodeNatAppend stage bodyRest) :=
+      hcode.symm.trans h_input
+    simpa using congrArg List.tail hcons
+  have hinputRunCode :
+      CommonGround.ScannerInversions.BoolWordSuffixScannerDescription.runConfig
+          nInput
+          (config
+            CommonGround.ScannerInversions.BoolWordSuffixScannerDescription.start
+            (List.append
+              (CommonGround.ScannerInversions.transitionRemainderBits.reverse.map
+                some)
+              [none])
+            ((MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeBoolWordAppend inputWord
+                (MachineDescription.encodeNatAppend stage bodyRest))).map
+              some)) =
+        { state :=
+            CommonGround.ScannerInversions.BoolWordSuffixScannerDescription.halt
+          tape := Tinput } := by
+    rw [← hinputCode, hinputBits]
+    simpa [config] using hinputRun
+  rcases
+      boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_stage_handoff
+        (List.append
+          (CommonGround.ScannerInversions.transitionRemainderBits.reverse.map
+            some)
+          [none])
+        inputWord (MachineDescription.encodeNatAppend stage bodyRest)
+        hinputRunCode hstageRun with
+    ⟨baseAfterInput, hinputMove⟩
+  have hstageRunCode :
+      CommonGround.ScannerInversions.NonemptyNatSuffixScannerDescription.runConfig
+          nStage
+          (config
+            CommonGround.ScannerInversions.NonemptyNatSuffixScannerDescription.start
+            baseAfterInput
+            ((MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeNatAppend stage bodyRest)).map
+              some)) =
+        { state :=
+            CommonGround.ScannerInversions.NonemptyNatSuffixScannerDescription.halt
+          tape := Tstage } := by
+    simpa [config, hinputMove] using hstageRun
+  rcases
+      CommonGround.ScannerInversions.nonemptyNatSuffixScannerDescription_runConfig_code_inv
+        baseAfterInput (MachineDescription.encodeNatAppend stage bodyRest)
+        hstageRunCode with
+    ⟨stage', bodyFirst, bodyTail, hstageCode⟩
+  rcases encodeNatAppend_inj hstageCode with ⟨_hstageEq, hbodyCons⟩
+  rcases
+      CommonGround.ScannerInversions.encodeCodeWordAsInput_cons_bits
+        bodyFirst bodyTail with
+    ⟨bodyBit, bodyBitsTail, hbodyBits⟩
+  have hbodyBits' :
+      MachineDescription.encodeCodeWordAsInput bodyRest =
+        bodyBit :: bodyBitsTail := by
+    rw [hbodyCons]
+    exact hbodyBits
+  rcases
+      CommonGround.ScannerInversions.nonemptyNatSuffixScannerDescription_runConfig_encodeNatAppend_handoff
+        baseAfterInput stage bodyRest bodyBit bodyBitsTail hbodyBits'
+        hstageRunCode with
+    ⟨baseAfterStage, hstageMove⟩
+  have hacceptRunCode :
+      CanonicalLayouts.DovetailLayoutScanner.ConfigurationSuffixScannerDescription.runConfig
+          nAccept
+          (config
+            CanonicalLayouts.DovetailLayoutScanner.ConfigurationSuffixScannerDescription.start
+            baseAfterStage
+            ((MachineDescription.encodeCodeWordAsInput bodyRest).map
+              some)) =
+        { state :=
+            CanonicalLayouts.DovetailLayoutScanner.ConfigurationSuffixScannerDescription.halt
+          tape := Taccept } := by
+    simpa [config, hstageMove] using hacceptRun
+  rcases
+      CommonGround.ScannerInversions.configurationSuffixScannerDescription_runConfig_code_handoff
+        baseAfterStage bodyRest hacceptRunCode with
+    ⟨acceptConfig, rejectRest, baseAfterAccept, hbodyAccept,
+      hacceptMove⟩
+  have hrejectRunCode :
+      CanonicalLayouts.DovetailLayoutScanner.ConfigurationSuffixScannerDescription.runConfig
+          nReject
+          (config
+            CanonicalLayouts.DovetailLayoutScanner.ConfigurationSuffixScannerDescription.start
+            baseAfterAccept
+            ((MachineDescription.encodeCodeWordAsInput rejectRest).map
+              some)) =
+        { state :=
+            CanonicalLayouts.DovetailLayoutScanner.ConfigurationSuffixScannerDescription.halt
+          tape := Treject } := by
+    simpa [config, hacceptMove] using hrejectRun
+  rcases
+      CommonGround.ScannerInversions.configurationSuffixScannerDescription_runConfig_code_handoff
+        baseAfterAccept rejectRest hrejectRunCode with
+    ⟨rejectConfig, flagsRest, baseAfterReject, hrejectRest,
+      hrejectMove⟩
+  have hfinalFlagsRunCode :
+      CanonicalLayouts.DovetailLayoutScanner.FinalHitFlagsScannerDescription.runConfig
+          nFinalFlags
+          (config
+            CanonicalLayouts.DovetailLayoutScanner.FinalHitFlagsScannerDescription.start
+            baseAfterReject
+            ((MachineDescription.encodeCodeWordAsInput flagsRest).map
+              some)) =
+        { state :=
+            CanonicalLayouts.DovetailLayoutScanner.FinalHitFlagsScannerDescription.halt
+          tape := Tbody } := by
+    simpa [config, hrejectMove] using hfinalFlagsRun
+  rcases
+      CommonGround.ScannerInversions.finalHitFlagsScannerDescription_runConfig_code_inv
+        baseAfterReject flagsRest hfinalFlagsRunCode with
+    ⟨acceptHit, rejectHit, _baseAfterFlags, hflags, _hflagsMove⟩
+  exact
+    ⟨acceptConfig, rejectConfig, acceptHit, rejectHit,
+      by rw [hbodyAccept, hrejectRest, hflags]⟩
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_body_tape_inv
     {code : Word MachineCodeSymbol} {Tout : Tape Bool}
