@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Primitives
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Emitters
 
@@ -27,8 +28,7 @@ theorem SeqViaCanonical_subroutineReady
     (hA : A.SubroutineReady) (hB : B.SubroutineReady) :
     (SeqViaCanonical A B).SubroutineReady := by
   have hid : MachineDescription.ExactIdentityDescription.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   exact
     MachineDescription.seqSubroutine_subroutineReady
       (MachineDescription.seqSubroutine_subroutineReady hA hid)
@@ -46,8 +46,7 @@ theorem SeqViaCanonical_haltsWithTape_of_haltsWithTape
     (SeqViaCanonical A B).HaltsWithTape input Tout := by
   let identity := MachineDescription.ExactIdentityDescription
   have hid : identity.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   have hAid :
       (MachineDescription.seqSubroutine A identity Direction.right).HaltsWithTape
         input (Tape.move Direction.right Tmid) := by
@@ -55,7 +54,8 @@ theorem SeqViaCanonical_haltsWithTape_of_haltsWithTape
       MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
         (A := A) (B := identity) (handoffMove := Direction.right)
         hA hid hAmid
-        ⟨0, rfl⟩
+        (CommonGround.Identity.exactIdentityDescription_run_from_start
+          (Tape.move Direction.right Tmid))
   have hBReach :
       exists nB : Nat,
         B.runConfig nB
@@ -90,8 +90,7 @@ theorem SeqViaCanonical_haltsFromTape_of_haltsWithTape
     (SeqViaCanonical A B).HaltsFromTape Tin Tout := by
   let identity := MachineDescription.ExactIdentityDescription
   have hid : identity.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   have hAid :
       (MachineDescription.seqSubroutine A identity Direction.right).HaltsFromTape
         Tin (Tape.move Direction.right Tmid) := by
@@ -99,7 +98,8 @@ theorem SeqViaCanonical_haltsFromTape_of_haltsWithTape
       MachineDescription.seqSubroutine_haltsFromTape_of_haltsFromTape
         (A := A) (B := identity) (handoffMove := Direction.right)
         hA hid hAmid
-        ⟨0, rfl⟩
+        (CommonGround.Identity.exactIdentityDescription_run_from_start
+          (Tape.move Direction.right Tmid))
   have hBReach :
       exists nB : Nat,
         B.runConfig nB
@@ -133,8 +133,7 @@ theorem SeqViaCanonical_haltsFromTape_of_haltsFromTape
     (SeqViaCanonical A B).HaltsFromTape Tin Tout := by
   let identity := MachineDescription.ExactIdentityDescription
   have hid : identity.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   have hAid :
       (MachineDescription.seqSubroutine A identity Direction.right).HaltsFromTape
         Tin (Tape.move Direction.right Tmid) := by
@@ -142,7 +141,8 @@ theorem SeqViaCanonical_haltsFromTape_of_haltsFromTape
       MachineDescription.seqSubroutine_haltsFromTape_of_haltsFromTape
         (A := A) (B := identity) (handoffMove := Direction.right)
         hA hid hAmid
-        ⟨0, rfl⟩
+        (CommonGround.Identity.exactIdentityDescription_run_from_start
+          (Tape.move Direction.right Tmid))
   have hBReach :
       exists nB : Nat,
         B.runConfig nB
@@ -178,8 +178,7 @@ theorem SeqViaCanonical_haltsFromTape_of_haltsWithTape_equiv
     MachineDescription.HaltsFromTapeEquiv (SeqViaCanonical A B) Tin Tout := by
   let identity := MachineDescription.ExactIdentityDescription
   have hid : identity.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   have hAid :
       (MachineDescription.seqSubroutine A identity Direction.right).HaltsFromTape
         Tin (Tape.move Direction.right Tmid) := by
@@ -187,7 +186,8 @@ theorem SeqViaCanonical_haltsFromTape_of_haltsWithTape_equiv
       MachineDescription.seqSubroutine_haltsFromTape_of_haltsFromTape
         (A := A) (B := identity) (handoffMove := Direction.right)
         hA hid hAmid
-        ⟨0, rfl⟩
+        (CommonGround.Identity.exactIdentityDescription_run_from_start
+          (Tape.move Direction.right Tmid))
   rcases hBout with ⟨nB, hnB⟩
   have hB_equiv := MachineDescription.HaltsFromTapeEquiv_of_input_equiv (D := B)
     (Tin := Tape.input midInput)
@@ -203,14 +203,6 @@ theorem SeqViaCanonical_haltsFromTape_of_haltsWithTape_equiv
     (MachineDescription.seqSubroutine_subroutineReady hA hid)
     hB hAid (MachineDescription.runConfig_eq_halt_of_haltsFromTape hB_actual_halt)
   exact ⟨Tactual, by simpa [SeqViaCanonical, identity] using hseq_actual, hB_actual_equiv⟩
-
-theorem exactIdentityDescription_runConfig
-    (n : Nat) (T : Tape Bool) :
-    MachineDescription.ExactIdentityDescription.runConfig n
-        { state := MachineDescription.ExactIdentityDescription.start, tape := T } =
-      { state := MachineDescription.ExactIdentityDescription.halt, tape := T } := by
-  cases n <;>
-    simp [MachineDescription.runConfig, MachineDescription.stepConfig, MachineDescription.lookupTransition, MachineDescription.ExactIdentityDescription]
 
 theorem SeqViaCanonical_haltsFromTapeEquiv_of_haltsWithTape
     {A B : MachineDescription}
@@ -240,15 +232,16 @@ theorem SeqViaCanonical_haltsFromTape_inv
       B.HaltsFromTape (Tape.move Direction.left (Tape.move Direction.right Tmid)) Tout := by
   let identity := MachineDescription.ExactIdentityDescription
   have hid : identity.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   have hseq' : (MachineDescription.seqSubroutine (MachineDescription.seqSubroutine A identity Direction.right) B Direction.left).HaltsFromTape Tin Tout := by
     simpa [SeqViaCanonical, identity] using hseq
   rcases MachineDescription.seqSubroutine_haltsFromTape_inv
     (MachineDescription.seqSubroutine_subroutineReady hA hid) hB hseq' with ⟨Tmid_seq, hA_seq, ⟨nB, hBRun⟩⟩
   rcases MachineDescription.seqSubroutine_haltsFromTape_inv hA hid hA_seq with ⟨Tmid, hA_halt, ⟨nId, hIdRun⟩⟩
   have hTmid_seq_eq : Tmid_seq = Tape.move Direction.right Tmid := by
-    have h_final := exactIdentityDescription_runConfig nId (Tape.move Direction.right Tmid)
+    have h_final :=
+      CommonGround.Identity.exactIdentityDescription_runConfig_from_start
+        nId (Tape.move Direction.right Tmid)
     rw [h_final] at hIdRun
     exact (congrArg MachineDescription.Configuration.tape hIdRun).symm
   subst hTmid_seq_eq
@@ -361,8 +354,7 @@ theorem TapeCodeExactPhaseFromClosedHandoff_subroutineReady
     tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady
       hclosed
   have hid : MachineDescription.ExactIdentityDescription.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   exact
     MachineDescription.seqSubroutine_subroutineReady
       hclosedReady hid
@@ -383,8 +375,7 @@ theorem TapeCodeExactPhaseFromClosedHandoff_forward
     tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady
       hclosed
   have hid : identity.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   rcases
       (tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffRealized
         hclosed).right code out htransform with
@@ -424,8 +415,7 @@ theorem TapeCodeExactPhaseFromClosedHandoff_closed_eq
     tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady
       hclosed
   have hid : identity.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   rcases
       MachineDescription.seqSubroutine_haltsWithTape_inv
         (A := closed) (B := identity)
@@ -449,10 +439,9 @@ theorem TapeCodeExactPhaseFromClosedHandoff_closed_eq
               tape := Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid } =
           { state := identity.halt
             tape := Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid } := by
-      cases nB <;>
-        simp [identity, MachineDescription.ExactIdentityDescription,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition]
+      simpa [identity] using
+        CommonGround.Identity.exactIdentityDescription_runConfig_from_start
+          nB (Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid)
     have hcfg :
         ({ state := identity.halt
            tape := Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid } :
@@ -481,8 +470,7 @@ theorem TapeCodeCheckedPhaseFromClosedHandoff_subroutineReady
     tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady
       hclosed
   have hid : MachineDescription.ExactIdentityDescription.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   exact
     MachineDescription.seqSubroutine_subroutineReady
       hclosedReady hid
@@ -528,8 +516,7 @@ theorem TapeCodeCheckedPhaseFromClosedHandoff_forward
     exact h_eq.symm
   rw [h_out_eq] at h_move
   have hid : MachineDescription.ExactIdentityDescription.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   have hclosedReady : closed.SubroutineReady :=
     tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady hclosed
   have hseq_halts : (TapeCodeCheckedPhaseFromClosedHandoff closed).HaltsFromTape
@@ -540,7 +527,8 @@ theorem TapeCodeCheckedPhaseFromClosedHandoff_forward
         (A := closed) (B := MachineDescription.ExactIdentityDescription)
         (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
         hclosedReady hid h_haltsWithTape
-        ⟨0, rfl⟩
+        (CommonGround.Identity.exactIdentityDescription_run_from_start
+          (Tape.move tapeCodePrimitiveCodeWordHandoffMove T_canonical))
   have hseq_halts' : (TapeCodeCheckedPhaseFromClosedHandoff closed).HaltsFromTape
       (Tape.input (MachineDescription.encodeCodeWordAsInput code))
       (Tape.input (MachineDescription.encodeCodeWordAsInput out)) := by
@@ -564,8 +552,7 @@ theorem TapeCodeCheckedPhaseFromClosedHandoff_closed_equiv
   have h_forward := TapeCodeCheckedPhaseFromClosedHandoff_forward hclosed htransform
   rcases h_forward with ⟨Tactual, h_halt_actual, h_equiv_actual⟩
   have hid : MachineDescription.ExactIdentityDescription.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   have hclosedReady : closed.SubroutineReady :=
     tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady hclosed
   have h_ready := MachineDescription.seqSubroutine_subroutineReady (handoffMove := tapeCodePrimitiveCodeWordHandoffMove) hclosedReady hid

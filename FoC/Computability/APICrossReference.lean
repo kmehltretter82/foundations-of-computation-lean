@@ -12,6 +12,7 @@ import FoC.Computability.Encoding
 import FoC.Computability.DiagonalPairMachine
 import FoC.Computability.MachineBuilder
 import FoC.Computability.Compiler
+import FoC.Computability.Compiler.Core.CommonGround
 import FoC.Computability.FiniteProgram
 
 set_option doc.verso true
@@ -74,6 +75,11 @@ descriptions and code words.
   {name (full := FoC.Computability.encodeConfigurationAppend_inj)}`encodeConfigurationAppend_inj`,
   and
   {name (full := FoC.Computability.encodeDescriptionAppend_inj)}`encodeDescriptionAppend_inj`.
+* {module}`FoC.Computability.Compiler.Core.CommonGround` is the proof-facing
+  facade for recurring compiler construction helpers. It re-exports stable
+  names for field inversions, scanner inversions, code-word emitters,
+  controller-layout facts, controller-invocation contracts, exact identity
+  helpers, Boolean-word quoters, and append/return subroutines.
 * {module}`FoC.Computability.FiniteProgram` packages finite executable program
   descriptions whose concrete machine descriptions are explicitly supplied.
 
@@ -119,6 +125,35 @@ When a proof only has
 normalized-output theorem, it does
 not automatically satisfy a handoff or closed-handoff goal. Those goals require
 the final head position and exact tape window.
+
+## Common Proof Ground
+
+{module}`FoC.Computability.Compiler.Core.CommonGround` is not a replacement for
+this cross-reference page. This page explains the API map; CommonGround is the
+first Lean import to try when a proof needs reusable construction plumbing.
+
+The CommonGround namespaces group the helpers that have already appeared in
+multiple completed proofs.
+
+* {lit}`CommonGround.FieldInversions`
+  collects complete decoder inversions for canonical fields.
+* {lit}`CommonGround.ScannerInversions`
+  collects scanner machines and closed scanner inversions used by parser
+  proofs.
+* {lit}`CommonGround.CodeWordEmitters`
+  contains exact and right-shifted code-word emitter adapters.
+* {lit}`CommonGround.ControllerLayouts`
+  collects controller-layout encoding and primitive-transform facts.
+* {lit}`CommonGround.ControllerInvocation`
+  names the witnessed stage-attempt invocation contracts used by
+  {module}`FoC.Computability.Compiler.Core.FiniteScaffolds`.
+* {lit}`CommonGround.Identity`
+  contains the reusable exact-identity ready and run facts.
+* {lit}`CommonGround.BoolWordQuoters` and {lit}`CommonGround.AppendReturn`
+  expose initializer-derived quoters and append/return machines.
+
+When a proof starts by rebuilding one of those facts locally, prefer extending
+CommonGround or its earlier source lemma and then using the shared name.
 
 ## Canonical Layouts and Closed Parsers
 
@@ -192,7 +227,8 @@ finite-construction proofs.
   {module}`FoC.Computability.Compiler.Core.ConstructionTargets`,
   {module}`FoC.Computability.Compiler.Core.Closeout`,
   {module}`FoC.Computability.Compiler.Core.TapeCodePrimitives`,
-  {module}`FoC.Computability.Compiler.Core.EncodingLemmas`, and
+  {module}`FoC.Computability.Compiler.Core.EncodingLemmas`,
+  {module}`FoC.Computability.Compiler.Core.CommonGround`, and
   {module}`FoC.Computability.Compiler.Core.EncodedRewriters.RightShifted`.
   These are the files to check first for reusable records, wrappers, aliases,
   append-cancellation facts, and exact-tape handoff contracts.
@@ -255,9 +291,10 @@ Before opening a remaining proof hole, classify the goal by contract strength.
   and related accessors rather than reproving the record projections locally.
 * A parser or scanner inversion that compares encoded prefixes should first
   try the decoder-backed cancellation helpers in
-  {module}`FoC.Computability.Compiler.Core.EncodingLemmas`. If the goal is
-  still about a canonical layout field, then move into the DovetailLayoutScanner
-  closed modules.
+  {module}`FoC.Computability.Compiler.Core.EncodingLemmas` and the scanner
+  exports in {module}`FoC.Computability.Compiler.Core.CommonGround`. If the
+  goal is still about a canonical layout field, then move into the
+  DovetailLayoutScanner closed modules.
 * A theorem whose name ends in {lit}`_scaffold` is deliberately a construction
   target. It should be discharged by supplying finite descriptions and
   sequencing data, not by weakening the statement to a semantic equivalence.

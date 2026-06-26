@@ -874,47 +874,16 @@ private theorem controllerResultEmitterScanBoundary_controllerEncode_output_iff
         (MachineDescription.DovetailControllerLayout.encode C)).output =
         [b] <->
       C.result = [b] := by
-  have hnat :
-      MachineDescription.encodeNatAppend C.stage
-          (MachineDescription.encodeBoolWordAppend C.result []) =
-        List.append
-          (MachineDescription.encodeNatAppend C.stage [])
-          (MachineDescription.encodeBoolWordAppend C.result []) := by
-    simpa using
-      encodeNatAppend_append C.stage ([] : Word MachineCodeSymbol)
-        (MachineDescription.encodeBoolWordAppend C.result [])
-  have hinput :
-      MachineDescription.encodeBoolWordAppend C.input
-          (MachineDescription.encodeNatAppend C.stage
-            (MachineDescription.encodeBoolWordAppend C.result [])) =
-        List.append
-          (MachineDescription.encodeBoolWordAppend C.input
-            (MachineDescription.encodeNatAppend C.stage []))
-          (MachineDescription.encodeBoolWordAppend C.result []) := by
-    rw [hnat]
-    exact
-      encodeBoolWordAppend_append C.input
-        (MachineDescription.encodeNatAppend C.stage [])
-        (MachineDescription.encodeBoolWordAppend C.result [])
-  change
-    (controllerResultEmitterScanBoundaryFrom
-        ControllerResultEmitterBoundary.other
-        (MachineCodeSymbol.header ::
-          MachineDescription.encodeBoolWordAppend C.input
-            (MachineDescription.encodeNatAppend C.stage
-              (MachineDescription.encodeBoolWordAppend C.result [])))).output =
-        [b] <->
-      C.result = [b]
+  unfold controllerResultEmitterScanBoundary
+  rw [dovetailControllerLayout_encode_eq_header_stageInput_append_result C]
   simp only [controllerResultEmitterScanBoundaryFrom,
     ControllerResultEmitterBoundary.update]
-  rw [hinput]
   rw [controllerResultEmitterScanBoundaryFrom_append]
   simpa [MachineDescription.encodeBoolWord] using
     controllerResultEmitterScanBoundaryFrom_encodeBoolWord_output_iff
       (controllerResultEmitterScanBoundaryFrom
         ControllerResultEmitterBoundary.other
-        (MachineDescription.encodeBoolWordAppend C.input
-          (MachineDescription.encodeNatAppend C.stage [])))
+        (PairedRecognizerDovetailControllerStageInputCode C))
       C.result b
 
 theorem dovetailControllerResultEmitterDescription_haltsWithOutput_iff

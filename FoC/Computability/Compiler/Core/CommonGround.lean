@@ -357,6 +357,14 @@ theorem stageInputCode_withResult
   cases C
   rfl
 
+theorem encode_eq_header_stageInput_append_result
+    (C : MachineDescription.DovetailControllerLayout) :
+    MachineDescription.DovetailControllerLayout.encode C =
+      MachineCodeSymbol.header ::
+        List.append (PairedRecognizerDovetailControllerStageInputCode C)
+          (MachineDescription.encodeBoolWordAppend C.result []) :=
+  dovetailControllerLayout_encode_eq_header_stageInput_append_result C
+
 theorem withResult_encode_eq_header_stage_result
     (C : MachineDescription.DovetailControllerLayout)
     (result : Word Bool) :
@@ -377,36 +385,9 @@ theorem withResult_encode_eq_stageInput_append_result
       MachineCodeSymbol.header ::
         List.append (PairedRecognizerDovetailControllerStageInputCode C)
           (MachineDescription.encodeBoolWordAppend result []) := by
-  cases C with
-  | mk input stage oldResult =>
-      have hnat :
-          MachineDescription.encodeNatAppend stage
-              (MachineDescription.encodeBoolWordAppend result []) =
-            List.append (MachineDescription.encodeNatAppend stage [])
-              (MachineDescription.encodeBoolWordAppend result []) := by
-        simpa using
-          encodeNatAppend_append stage ([] : Word MachineCodeSymbol)
-            (MachineDescription.encodeBoolWordAppend result [])
-      simp [PairedRecognizerDovetailControllerStageInputCode,
-        MachineDescription.DovetailControllerLayout.withResult,
-        MachineDescription.DovetailControllerLayout.encode,
-        MachineDescription.DovetailControllerLayout.encodeAppend,
-        MachineDescription.DovetailControllerLayout.stageInputCode,
-        MachineDescription.DovetailLayout.stageInputCode,
-        MachineDescription.DovetailLayout.stageInputCodeAppend, hnat]
-      change
-        MachineCodeSymbol.header ::
-            MachineDescription.encodeBoolWordAppend input
-              (List.append (MachineDescription.encodeNatAppend stage [])
-                (MachineDescription.encodeBoolWordAppend result [])) =
-          MachineCodeSymbol.header ::
-            List.append
-              (MachineDescription.encodeBoolWordAppend input
-                (MachineDescription.encodeNatAppend stage []))
-              (MachineDescription.encodeBoolWordAppend result [])
-      rw [encodeBoolWordAppend_append input
-        (MachineDescription.encodeNatAppend stage [])
-        (MachineDescription.encodeBoolWordAppend result [])]
+  simpa [stageInputCode_withResult, withResult_result] using
+    encode_eq_header_stageInput_append_result
+      (MachineDescription.DovetailControllerLayout.withResult C result)
 
 theorem resultContinue_transform_eq_some_iff
     (code out : Word MachineCodeSymbol) :

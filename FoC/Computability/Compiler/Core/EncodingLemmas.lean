@@ -85,6 +85,51 @@ theorem encodeBoolWordAppend_append
   simpa [MachineDescription.encodeBoolWordAppend] using
     encodeCellListAppend_append (w.map some) suffix tail
 
+theorem dovetailControllerLayout_encode_eq_header_stageInput_append_result
+    (C : MachineDescription.DovetailControllerLayout) :
+    MachineDescription.DovetailControllerLayout.encode C =
+      MachineCodeSymbol.header ::
+        List.append (PairedRecognizerDovetailControllerStageInputCode C)
+          (MachineDescription.encodeBoolWordAppend C.result []) := by
+  cases C with
+  | mk input stage result =>
+      have hnat :
+          MachineDescription.encodeNatAppend stage
+              (MachineDescription.encodeBoolWordAppend result []) =
+            List.append (MachineDescription.encodeNatAppend stage [])
+              (MachineDescription.encodeBoolWordAppend result []) := by
+        simpa using
+          encodeNatAppend_append stage ([] : Word MachineCodeSymbol)
+            (MachineDescription.encodeBoolWordAppend result [])
+      have hbool :
+          MachineDescription.encodeBoolWordAppend input
+              (List.append (MachineDescription.encodeNatAppend stage [])
+                (MachineDescription.encodeBoolWordAppend result [])) =
+            List.append
+              (MachineDescription.encodeBoolWordAppend input
+                (MachineDescription.encodeNatAppend stage []))
+              (MachineDescription.encodeBoolWordAppend result []) :=
+        encodeBoolWordAppend_append input
+          (MachineDescription.encodeNatAppend stage [])
+          (MachineDescription.encodeBoolWordAppend result [])
+      simp [PairedRecognizerDovetailControllerStageInputCode,
+        MachineDescription.DovetailControllerLayout.encode,
+        MachineDescription.DovetailControllerLayout.encodeAppend,
+        MachineDescription.DovetailControllerLayout.stageInputCode,
+        MachineDescription.DovetailLayout.stageInputCode,
+        MachineDescription.DovetailLayout.stageInputCodeAppend]
+      change
+        MachineCodeSymbol.header ::
+            MachineDescription.encodeBoolWordAppend input
+              (MachineDescription.encodeNatAppend stage
+                (MachineDescription.encodeBoolWordAppend result [])) =
+          MachineCodeSymbol.header ::
+            List.append
+              (MachineDescription.encodeBoolWordAppend input
+                (MachineDescription.encodeNatAppend stage []))
+              (MachineDescription.encodeBoolWordAppend result [])
+      rw [hnat, hbool]
+
 theorem encodeTapeAppend_append
     (T : Tape Bool) (suffix tail : Word MachineCodeSymbol) :
     MachineDescription.encodeTapeAppend T (List.append suffix tail) =
