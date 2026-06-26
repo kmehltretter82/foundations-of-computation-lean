@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.DovetailCode
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.Assembly
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.BoolWordQuoter
@@ -92,6 +93,84 @@ export EncodedRewriters.CanonicalLayouts
     RightShiftedEmitterConstruction )
 
 end CodeWordEmitters
+
+namespace ControllerLayouts
+
+export EncodedRewriters.CanonicalLayouts.Controller
+  ( Layout
+    decode
+    encode
+    bits
+    inputTape
+    handoffTape
+    identityPrimitive
+    ClosedRecognizerSpec
+    ClosedRecognizerConstruction
+    IdentityClosedHandoffConstruction
+    decode_encode
+    decode_eq_some_encode
+    encode_cons
+    identityPrimitive_transform_eq_some_iff
+    identityClosedHandoffConstruction_of_closedRecognizer )
+
+export MachineDescription.DovetailControllerLayout
+  ( encodeAppend
+    decodeComplete
+    decodeComplete_encode
+    decodeComplete_eq_some_encode
+    initial
+    stageInputCode
+    withResult
+    nextStage
+    rawOutput?
+    rawOutput_nil
+    rawOutput_singleton
+    rawOutput_eq_some_singleton_iff
+    continueResultCode
+    continueResultCodePrimitive
+    continueResultCode_encode
+    continueResultCodePrimitive_encode
+    continueResultCode_encode_of_rawOutput_eq_none
+    continueResultCode_encode_of_rawOutput_eq_some
+    continueResultCode_encode_eq_some_iff
+    continueResultCodePrimitive_encode_eq_some_iff )
+
+theorem resultContinue_transform_eq_some_iff
+    (code out : Word MachineCodeSymbol) :
+    PairedRecognizerDovetailControllerResultContinueCode.transform code =
+        some out <->
+      exists C : MachineDescription.DovetailControllerLayout,
+        code = MachineDescription.DovetailControllerLayout.encode C ∧
+          PairedRecognizerDovetailControllerRawOutput C.result = none ∧
+            out =
+              MachineDescription.DovetailControllerLayout.encode
+                (MachineDescription.DovetailControllerLayout.nextStage C) :=
+  pairedRecognizerDovetailControllerResultContinueCode_transform_eq_some_iff
+    code out
+
+theorem resultContinue_encode_nextStage_iff
+    {C : MachineDescription.DovetailControllerLayout} :
+    PairedRecognizerDovetailControllerResultContinueCode.transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+        some
+          (MachineDescription.DovetailControllerLayout.encode
+            (MachineDescription.DovetailControllerLayout.nextStage C)) <->
+      PairedRecognizerDovetailControllerRawOutput C.result = none :=
+  pairedRecognizerDovetailControllerResultContinueCode_encode_nextStage_iff
+
+theorem resultContinue_encode_eq_some_iff
+    {C : MachineDescription.DovetailControllerLayout}
+    {outCode : Word MachineCodeSymbol} :
+    PairedRecognizerDovetailControllerResultContinueCode.transform
+        (MachineDescription.DovetailControllerLayout.encode C) =
+        some outCode <->
+      PairedRecognizerDovetailControllerRawOutput C.result = none ∧
+        outCode =
+          MachineDescription.DovetailControllerLayout.encode
+            (MachineDescription.DovetailControllerLayout.nextStage C) :=
+  pairedRecognizerDovetailControllerResultContinueCode_encode_eq_some_iff
+
+end ControllerLayouts
 
 namespace BoolWordQuoters
 
@@ -301,6 +380,15 @@ export DovetailInitialLayoutInitializer
     appendCodeWordLastDescription_run_from_scan_atCells
     appendCodeWordLastTape
     appendCodeWordLastTapeAtCells
+    encodeNat_ne_nil
+    AppendNatLastDescription
+    appendNatLastTape
+    appendNatLastDescription_subroutineReady
+    appendNatLastDescription_run_from_scan
+    appendNatLastDescription_haltsWithTape
+    MarkedPrefixThenAppendNatLastDescription
+    markedPrefixThenAppendNatLastDescription_subroutineReady
+    markedPrefixThenAppendNatLastDescription_run
     ReturnToCurrentMarkerDescription
     returnToCurrentMarkerDescription_subroutineReady
     returnToCurrentMarkerDescription_run
@@ -308,12 +396,23 @@ export DovetailInitialLayoutInitializer
     AppendCodeWordReturnToCurrentMarkerDescription
     appendCodeWordReturnToCurrentMarkerDescription_subroutineReady
     appendCodeWordReturnToCurrentMarkerDescription_run_from_scan
+    markedPrefixAppendCodeWordReturnDescription_run_checked
+    markedPrefixAppendCodeWordReturnDescription_run_stageInput
+    MarkedPrefixAppendNatReturnDescription
+    markedPrefixAppendNatReturnDescription_subroutineReady
+    markedPrefixAppendNatReturnDescription_run
+    markedPrefixAppendNatReturnDescription_run_checked
+    markedPrefixAppendNatReturnDescription_run_stageInput
+    markedPrefixAppendNatReturnDescription_run_stageInput_checked
     AppendCodeSymbolReturnToCurrentMarkerDescription
     appendCodeSymbolReturnToCurrentMarkerDescription_subroutineReady
     appendCodeSymbolReturnToCurrentMarkerDescription_run_from_scan
     TransitionPrefixedThenAppendCodeWordLastDescription
     transitionPrefixedThenAppendCodeWordLastDescription_subroutineReady
-    transitionPrefixedThenAppendCodeWordLastDescription_run )
+    transitionPrefixedThenAppendCodeWordLastDescription_run
+    TransitionPrefixedAppendNatReturnDescription
+    transitionPrefixedAppendNatReturnDescription_subroutineReady
+    transitionPrefixedAppendNatReturnDescription_run )
 
 end AppendReturn
 

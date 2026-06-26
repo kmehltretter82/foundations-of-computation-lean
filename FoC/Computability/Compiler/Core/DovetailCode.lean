@@ -814,6 +814,46 @@ theorem pairedRecognizerDovetailControllerResultContinueCode_encode_nextStage_if
       pairedRecognizerDovetailControllerResultContinueCode_encode_eq_some_iff.mpr
         ⟨h, rfl⟩
 
+theorem pairedRecognizerDovetailControllerResultContinueCode_transform_eq_some_iff
+    (code out : Word MachineCodeSymbol) :
+    PairedRecognizerDovetailControllerResultContinueCode.transform code =
+        some out <->
+      exists C : MachineDescription.DovetailControllerLayout,
+        code = MachineDescription.DovetailControllerLayout.encode C ∧
+          PairedRecognizerDovetailControllerRawOutput C.result = none ∧
+            out =
+              MachineDescription.DovetailControllerLayout.encode
+                (MachineDescription.DovetailControllerLayout.nextStage C) := by
+  constructor
+  · intro h
+    unfold PairedRecognizerDovetailControllerResultContinueCode at h
+    unfold MachineDescription.DovetailControllerLayout.continueResultCodePrimitive at h
+    unfold MachineDescription.DovetailControllerLayout.continueResultCode at h
+    cases hdecode :
+        MachineDescription.DovetailControllerLayout.decodeComplete code with
+    | none =>
+        simp [hdecode] at h
+    | some C =>
+        cases hraw :
+            MachineDescription.DovetailControllerLayout.rawOutput? C.result with
+        | none =>
+            simp [hdecode, hraw] at h
+            cases h
+            exact
+              ⟨C,
+                MachineDescription.DovetailControllerLayout.decodeComplete_eq_some_encode
+                  hdecode,
+                by
+                  simpa [PairedRecognizerDovetailControllerRawOutput] using hraw,
+                rfl⟩
+        | some out =>
+            simp [hdecode, hraw] at h
+  · intro h
+    rcases h with ⟨C, rfl, hraw, rfl⟩
+    exact
+      pairedRecognizerDovetailControllerResultContinueCode_encode_eq_some_iff.mpr
+        ⟨hraw, rfl⟩
+
 theorem pairedRecognizerDovetailTotalThenRawOutputCode_encode
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) :
