@@ -316,6 +316,98 @@ theorem initialCode_eq_header_boolWordAppend
         MachineDescription.encodeBoolWordAppend w initialSuffix := by
   rfl
 
+theorem stageInputCode_eq_boolWordNat
+    (C : MachineDescription.DovetailControllerLayout) :
+    PairedRecognizerDovetailControllerStageInputCode C =
+      MachineDescription.encodeBoolWordAppend C.input
+        (MachineDescription.encodeNatAppend C.stage []) := by
+  cases C
+  rfl
+
+theorem withResult_input
+    (C : MachineDescription.DovetailControllerLayout)
+    (result : Word Bool) :
+    (MachineDescription.DovetailControllerLayout.withResult C result).input =
+      C.input := by
+  cases C
+  rfl
+
+theorem withResult_stage
+    (C : MachineDescription.DovetailControllerLayout)
+    (result : Word Bool) :
+    (MachineDescription.DovetailControllerLayout.withResult C result).stage =
+      C.stage := by
+  cases C
+  rfl
+
+theorem withResult_result
+    (C : MachineDescription.DovetailControllerLayout)
+    (result : Word Bool) :
+    (MachineDescription.DovetailControllerLayout.withResult C result).result =
+      result := by
+  cases C
+  rfl
+
+theorem stageInputCode_withResult
+    (C : MachineDescription.DovetailControllerLayout)
+    (result : Word Bool) :
+    PairedRecognizerDovetailControllerStageInputCode
+        (MachineDescription.DovetailControllerLayout.withResult C result) =
+      PairedRecognizerDovetailControllerStageInputCode C := by
+  cases C
+  rfl
+
+theorem withResult_encode_eq_header_stage_result
+    (C : MachineDescription.DovetailControllerLayout)
+    (result : Word Bool) :
+    MachineDescription.DovetailControllerLayout.encode
+        (MachineDescription.DovetailControllerLayout.withResult C result) =
+      MachineCodeSymbol.header ::
+        MachineDescription.encodeBoolWordAppend C.input
+          (MachineDescription.encodeNatAppend C.stage
+            (MachineDescription.encodeBoolWordAppend result [])) := by
+  cases C
+  rfl
+
+theorem withResult_encode_eq_stageInput_append_result
+    (C : MachineDescription.DovetailControllerLayout)
+    (result : Word Bool) :
+    MachineDescription.DovetailControllerLayout.encode
+        (MachineDescription.DovetailControllerLayout.withResult C result) =
+      MachineCodeSymbol.header ::
+        List.append (PairedRecognizerDovetailControllerStageInputCode C)
+          (MachineDescription.encodeBoolWordAppend result []) := by
+  cases C with
+  | mk input stage oldResult =>
+      have hnat :
+          MachineDescription.encodeNatAppend stage
+              (MachineDescription.encodeBoolWordAppend result []) =
+            List.append (MachineDescription.encodeNatAppend stage [])
+              (MachineDescription.encodeBoolWordAppend result []) := by
+        simpa using
+          encodeNatAppend_append stage ([] : Word MachineCodeSymbol)
+            (MachineDescription.encodeBoolWordAppend result [])
+      simp [PairedRecognizerDovetailControllerStageInputCode,
+        MachineDescription.DovetailControllerLayout.withResult,
+        MachineDescription.DovetailControllerLayout.encode,
+        MachineDescription.DovetailControllerLayout.encodeAppend,
+        MachineDescription.DovetailControllerLayout.stageInputCode,
+        MachineDescription.DovetailLayout.stageInputCode,
+        MachineDescription.DovetailLayout.stageInputCodeAppend, hnat]
+      change
+        MachineCodeSymbol.header ::
+            MachineDescription.encodeBoolWordAppend input
+              (List.append (MachineDescription.encodeNatAppend stage [])
+                (MachineDescription.encodeBoolWordAppend result [])) =
+          MachineCodeSymbol.header ::
+            List.append
+              (MachineDescription.encodeBoolWordAppend input
+                (MachineDescription.encodeNatAppend stage []))
+              (MachineDescription.encodeBoolWordAppend result [])
+      rw [encodeBoolWordAppend_append input
+        (MachineDescription.encodeNatAppend stage [])
+        (MachineDescription.encodeBoolWordAppend result [])]
+
 theorem resultContinue_transform_eq_some_iff
     (code out : Word MachineCodeSymbol) :
     PairedRecognizerDovetailControllerResultContinueCode.transform code =
@@ -352,6 +444,58 @@ theorem resultContinue_encode_eq_some_iff
   pairedRecognizerDovetailControllerResultContinueCode_encode_eq_some_iff
 
 end ControllerLayouts
+
+namespace ControllerInvocation
+
+def StageAttemptWitnessedForwardSpec
+    (attempt invoker : MachineDescription) : Prop :=
+  forall C : MachineDescription.DovetailControllerLayout,
+  forall result : Word Bool,
+  forall n : Nat,
+    attempt.HaltsWithOutputIn n
+      (MachineDescription.encodeCodeWordAsInput
+        (PairedRecognizerDovetailControllerStageInputCode C))
+      (MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.encodeBoolWord result)) ->
+    invoker.HaltsWithOutput
+      (MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.DovetailControllerLayout.encode C))
+      (MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.DovetailControllerLayout.encode
+          (MachineDescription.DovetailControllerLayout.withResult
+            C result)))
+
+def StageAttemptFramedClosedSpec
+    (attempt invoker : MachineDescription) : Prop :=
+  forall C : MachineDescription.DovetailControllerLayout,
+  forall result : Word Bool,
+    invoker.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.DovetailControllerLayout.encode C))
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.DovetailControllerLayout.encode
+            (MachineDescription.DovetailControllerLayout.withResult
+              C result))) ->
+      exists n : Nat,
+        attempt.HaltsWithOutputIn n
+          (MachineDescription.encodeCodeWordAsInput
+            (PairedRecognizerDovetailControllerStageInputCode C))
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.encodeBoolWord result))
+
+def StageAttemptWitnessedRealizes
+    (attempt invoker : MachineDescription) : Prop :=
+  invoker.SubroutineReady ∧
+    StageAttemptWitnessedForwardSpec attempt invoker ∧
+      StageAttemptFramedClosedSpec attempt invoker
+
+def StageAttemptWitnessedConstruction : Prop :=
+  forall attempt : MachineDescription,
+    attempt.SubroutineReady ->
+      exists invoker : MachineDescription,
+        StageAttemptWitnessedRealizes attempt invoker
+
+end ControllerInvocation
 
 namespace BoolWordQuoters
 

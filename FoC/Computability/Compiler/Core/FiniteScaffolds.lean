@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround
 import FoC.Computability.Compiler.Core.ControllerResultEmitter
 import FoC.Computability.Compiler.Core.ControllerInputInitializer
 import FoC.Computability.Compiler.Core.ControllerResultContinue
@@ -454,21 +455,8 @@ def PairedRecognizerDovetailStageAttemptFramedRunInvocationForwardSpec
 
 def PairedRecognizerDovetailStageAttemptFramedRunInvocationClosedSpec
     (attempt invoker : MachineDescription) : Prop :=
-  forall C : MachineDescription.DovetailControllerLayout,
-  forall result : Word Bool,
-    invoker.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode C))
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode
-            (MachineDescription.DovetailControllerLayout.withResult
-              C result))) ->
-      exists n : Nat,
-        attempt.HaltsWithOutputIn n
-          (MachineDescription.encodeCodeWordAsInput
-            (PairedRecognizerDovetailControllerStageInputCode C))
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.encodeBoolWord result))
+  CommonGround.ControllerInvocation.StageAttemptFramedClosedSpec
+    attempt invoker
 
 /--
 Framed run contract for the protected stage-attempt wrapper.  This is the
@@ -495,37 +483,17 @@ def PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :
 
 private def PairedRecognizerDovetailStageAttemptWitnessedRunInvocationForwardSpec
     (attempt invoker : MachineDescription) : Prop :=
-  forall C : MachineDescription.DovetailControllerLayout,
-  forall result : Word Bool,
-  forall n : Nat,
-    attempt.HaltsWithOutputIn n
-      (MachineDescription.encodeCodeWordAsInput
-        (PairedRecognizerDovetailControllerStageInputCode C))
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeBoolWord result)) ->
-    invoker.HaltsWithOutput
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.DovetailControllerLayout.encode C))
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.DovetailControllerLayout.encode
-          (MachineDescription.DovetailControllerLayout.withResult
-            C result)))
+  CommonGround.ControllerInvocation.StageAttemptWitnessedForwardSpec
+    attempt invoker
 
 private def PairedRecognizerDovetailStageAttemptWitnessedRunInvocationRealizes
     (attempt invoker : MachineDescription) : Prop :=
-  invoker.SubroutineReady ∧
-    PairedRecognizerDovetailStageAttemptWitnessedRunInvocationForwardSpec
-      attempt invoker ∧
-    PairedRecognizerDovetailStageAttemptFramedRunInvocationClosedSpec
-      attempt invoker
+  CommonGround.ControllerInvocation.StageAttemptWitnessedRealizes
+    attempt invoker
 
 private def PairedRecognizerDovetailStageAttemptWitnessedRunInvocationConstructionData :
     Prop :=
-  forall attempt : MachineDescription,
-    attempt.SubroutineReady ->
-      exists invoker : MachineDescription,
-        PairedRecognizerDovetailStageAttemptWitnessedRunInvocationRealizes
-          attempt invoker
+  CommonGround.ControllerInvocation.StageAttemptWitnessedConstruction
 
 private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_protected
     (h :
@@ -576,15 +544,17 @@ theorem pairedRecognizerDovetailStageAttemptInvocationConstructionData_of_protec
     · exact (hinvoker.right C result).mp hrun
 
 /--
-Narrow finite-machine leaf for the framed protected stage-attempt wrapper.  The
-forward half is stated against a concrete witnessed {lean}`attempt` run, so the
-remaining transition-table obligation is exactly to preserve the controller
-stage input while invoking that run and then emit
-{lean}`MachineDescription.DovetailControllerLayout.withResult`.
+Finite-machine leaf for witnessed controller stage-attempt invocation.  This is
+the concrete transition-table obligation after CommonGround has named the
+controller-layout encodings and the witnessed-run contract.
 -/
-private theorem pairedRecognizerDovetailStageAttemptWitnessedRunInvocationConstructionData_finite_leaf :
-    PairedRecognizerDovetailStageAttemptWitnessedRunInvocationConstructionData := by
+private theorem controllerStageAttemptWitnessedInvocationConstruction_leaf :
+    CommonGround.ControllerInvocation.StageAttemptWitnessedConstruction := by
   sorry
+
+private theorem pairedRecognizerDovetailStageAttemptWitnessedRunInvocationConstructionData_finite_leaf :
+    PairedRecognizerDovetailStageAttemptWitnessedRunInvocationConstructionData :=
+  controllerStageAttemptWitnessedInvocationConstruction_leaf
 
 /--
 Finite-machine leaf for the framed protected stage-attempt wrapper.  This is
