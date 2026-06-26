@@ -369,14 +369,14 @@ theorem configurationsAndFinalFlagsScannerDescription_subroutineReady :
 def StageConfigurationsAndFinalFlagsScannerDescription :
     MachineDescription :=
   MachineDescription.seqSubroutine
-    DovetailStagePrefix.NatSuffixScannerDescription
+    DovetailStagePrefix.NonemptyNatSuffixScannerDescription
     ConfigurationsAndFinalFlagsScannerDescription
     Direction.right
 
 theorem stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady :
     StageConfigurationsAndFinalFlagsScannerDescription.SubroutineReady :=
   MachineDescription.seqSubroutine_subroutineReady
-    DovetailStagePrefix.natSuffixScannerDescription_subroutineReady
+    DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
     configurationsAndFinalFlagsScannerDescription_subroutineReady
 
 def InputStageConfigurationsAndFinalFlagsScannerDescription :
@@ -1453,19 +1453,19 @@ theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
       (configurationFieldBits rejectConfig
         (boolFieldBits acceptHit (boolFieldBits rejectHit []))) with
     ⟨acceptTail, hacceptTail⟩
-  rcases DovetailStagePrefix.run_natSuffix_raw_to_handoff_withBase
+  rcases DovetailStagePrefix.run_nonemptyNatSuffix_raw_to_handoff_withBase
       stage baseLeft false acceptTail with
     ⟨stageSteps, hstage⟩
   let TmidTape : Tape Bool :=
-    (DovetailStagePrefix.natSuffixHandoffConfigWithBase
+    (DovetailStagePrefix.nonemptyNatSuffixHandoffConfigWithBase
       stage baseLeft (false :: acceptTail)).tape
   let baseAfterStage : List (Option Bool) :=
     List.append ((stageNatBits stage).reverse.map some) baseLeft
   have hArun :
-      DovetailStagePrefix.NatSuffixScannerDescription.runConfig
+      DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig
           stageSteps
           { state :=
-              DovetailStagePrefix.NatSuffixScannerDescription.start
+              DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
             tape :=
               tapeAtCells baseLeft
                 ((List.append (stageNatBits stage)
@@ -1473,7 +1473,7 @@ theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
                     (configurationFieldBits rejectConfig
                       (boolFieldBits acceptHit
                         (boolFieldBits rejectHit []))))).map some) } =
-        { state := DovetailStagePrefix.NatSuffixScannerDescription.halt
+        { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt
           tape := TmidTape } := by
     rw [show
         (List.append (stageNatBits stage)
@@ -1513,7 +1513,7 @@ theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
             tapeAtCells baseAfterStage
               ((false :: acceptTail).map some) := by
         simpa [TmidTape, baseAfterStage] using
-          DovetailStagePrefix.natSuffixHandoffConfigWithBase_move_right
+          DovetailStagePrefix.nonemptyNatSuffixHandoffConfigWithBase_move_right
             stage baseLeft false acceptTail
       rw [hraw]
       have hacceptCells :
@@ -1534,10 +1534,10 @@ theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
   simpa [StageConfigurationsAndFinalFlagsScannerDescription, TmidTape,
     baseAfterStage] using
       CommonGround.SeqComposition.seqSubroutine_runConfig_exists
-        (A := DovetailStagePrefix.NatSuffixScannerDescription)
+        (A := DovetailStagePrefix.NonemptyNatSuffixScannerDescription)
         (B := ConfigurationsAndFinalFlagsScannerDescription)
         (handoffMove := Direction.right)
-        DovetailStagePrefix.natSuffixScannerDescription_subroutineReady
+        DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
         configurationsAndFinalFlagsScannerDescription_subroutineReady
         hArun hBReach
 

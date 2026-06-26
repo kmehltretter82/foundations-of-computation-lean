@@ -531,13 +531,13 @@ theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_stage_ha
             CommonGround.ScannerInversions.BoolWordSuffixScannerDescription.halt
           tape := Tinput })
     (_hstage :
-      CommonGround.ScannerInversions.NatSuffixScannerDescription.runConfig
+      CommonGround.ScannerInversions.NonemptyNatSuffixScannerDescription.runConfig
           nStage
           { state :=
-              CommonGround.ScannerInversions.NatSuffixScannerDescription.start
+              CommonGround.ScannerInversions.NonemptyNatSuffixScannerDescription.start
             tape := Tape.move Direction.right Tinput } =
         { state :=
-            CommonGround.ScannerInversions.NatSuffixScannerDescription.halt
+            CommonGround.ScannerInversions.NonemptyNatSuffixScannerDescription.halt
           tape := Tstage }) :
     exists baseAfterInput : List (Option Bool),
       Tape.move Direction.right Tinput =
@@ -611,20 +611,22 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_stage_inv
         inputWord stageRest hinputRunCode hstageRun with
     ⟨baseAfterInput, hmove⟩
   have hstageRunCode :
-      CommonGround.ScannerInversions.NatSuffixScannerDescription.runConfig
+      CommonGround.ScannerInversions.NonemptyNatSuffixScannerDescription.runConfig
           nStage
           (config
-            CommonGround.ScannerInversions.NatSuffixScannerDescription.start
+            CommonGround.ScannerInversions.NonemptyNatSuffixScannerDescription.start
             baseAfterInput
             ((MachineDescription.encodeCodeWordAsInput stageRest).map
               some)) =
         { state :=
-            CommonGround.ScannerInversions.NatSuffixScannerDescription.halt
+            CommonGround.ScannerInversions.NonemptyNatSuffixScannerDescription.halt
           tape := Tstage } := by
     simpa [config, hmove] using hstageRun
-  exact
-    CommonGround.ScannerInversions.natSuffixScannerDescription_runConfig_code_inv
-      baseAfterInput stageRest hstageRunCode
+  rcases
+      CommonGround.ScannerInversions.nonemptyNatSuffixScannerDescription_runConfig_code_inv
+        baseAfterInput stageRest hstageRunCode with
+    ⟨stage, symbol, suffix, hstageRest⟩
+  exact ⟨stage, symbol :: suffix, hstageRest⟩
 
 /-!
 The three field-level inversions below all depend on the same remaining

@@ -793,18 +793,18 @@ theorem stageConfigurationsAndFinalFlagsScannerDescription_runConfig_inv
           tape := Tout }) :
     exists Tstage : Tape Bool,
       (exists nStage : Nat,
-        DovetailStagePrefix.NatSuffixScannerDescription.runConfig nStage
-            { state := DovetailStagePrefix.NatSuffixScannerDescription.start
+        DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig nStage
+            { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
               tape := Tin } =
-          { state := DovetailStagePrefix.NatSuffixScannerDescription.halt
+          { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt
             tape := Tstage } ∧
           forall k : Nat,
             k < nStage ->
-              (DovetailStagePrefix.NatSuffixScannerDescription.runConfig k
+              (DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig k
                 { state :=
-                    DovetailStagePrefix.NatSuffixScannerDescription.start
+                    DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
                   tape := Tin }).state ≠
-                DovetailStagePrefix.NatSuffixScannerDescription.halt) ∧
+                DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt) ∧
         exists nConfigs : Nat,
           ConfigurationsAndFinalFlagsScannerDescription.runConfig nConfigs
               { state :=
@@ -814,10 +814,10 @@ theorem stageConfigurationsAndFinalFlagsScannerDescription_runConfig_inv
               tape := Tout } := by
   simpa [StageConfigurationsAndFinalFlagsScannerDescription] using
     MachineDescription.seqSubroutine_runConfig_inv
-      (A := DovetailStagePrefix.NatSuffixScannerDescription)
+      (A := DovetailStagePrefix.NonemptyNatSuffixScannerDescription)
       (B := ConfigurationsAndFinalFlagsScannerDescription)
       (handoffMove := Direction.right)
-      DovetailStagePrefix.natSuffixScannerDescription_subroutineReady
+      DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
       configurationsAndFinalFlagsScannerDescription_subroutineReady
       (by
         simpa [StageConfigurationsAndFinalFlagsScannerDescription] using h)
@@ -844,10 +844,10 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_stageField_inv
                   ((b :: suffixTail).map some) } =
           { state := BoolWordSuffixScannerDescription.halt
             tape := Tinput } ∧
-        DovetailStagePrefix.NatSuffixScannerDescription.runConfig nStage
-            { state := DovetailStagePrefix.NatSuffixScannerDescription.start
+        DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig nStage
+            { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
               tape := Tape.move Direction.right Tinput } =
-          { state := DovetailStagePrefix.NatSuffixScannerDescription.halt
+          { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt
             tape := Tstage } ∧
         ConfigurationsAndFinalFlagsScannerDescription.runConfig nConfigs
             { state := ConfigurationsAndFinalFlagsScannerDescription.start
@@ -936,10 +936,10 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_acceptConfig_inv
                   ((b :: suffixTail).map some) } =
           { state := BoolWordSuffixScannerDescription.halt
             tape := Tinput } ∧
-        DovetailStagePrefix.NatSuffixScannerDescription.runConfig nStage
-            { state := DovetailStagePrefix.NatSuffixScannerDescription.start
+        DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig nStage
+            { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
               tape := Tape.move Direction.right Tinput } =
-          { state := DovetailStagePrefix.NatSuffixScannerDescription.halt
+          { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt
             tape := Tstage } ∧
         ConfigurationSuffixScannerDescription.runConfig nAccept
             { state := ConfigurationSuffixScannerDescription.start
@@ -1035,10 +1035,10 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_rejectConfig_inv
                   ((b :: suffixTail).map some) } =
           { state := BoolWordSuffixScannerDescription.halt
             tape := Tinput } ∧
-        DovetailStagePrefix.NatSuffixScannerDescription.runConfig nStage
-            { state := DovetailStagePrefix.NatSuffixScannerDescription.start
+        DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig nStage
+            { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
               tape := Tape.move Direction.right Tinput } =
-          { state := DovetailStagePrefix.NatSuffixScannerDescription.halt
+          { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt
             tape := Tstage } ∧
         ConfigurationSuffixScannerDescription.runConfig nAccept
             { state := ConfigurationSuffixScannerDescription.start
@@ -1141,10 +1141,10 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_finalFlags_inv
                   ((b :: suffixTail).map some) } =
           { state := BoolWordSuffixScannerDescription.halt
             tape := Tinput } ∧
-        DovetailStagePrefix.NatSuffixScannerDescription.runConfig nStage
-            { state := DovetailStagePrefix.NatSuffixScannerDescription.start
+        DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig nStage
+            { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
               tape := Tape.move Direction.right Tinput } =
-          { state := DovetailStagePrefix.NatSuffixScannerDescription.halt
+          { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt
             tape := Tstage } ∧
         ConfigurationSuffixScannerDescription.runConfig nAccept
             { state := ConfigurationSuffixScannerDescription.start
