@@ -101,33 +101,7 @@ def finite : Foundation.FiniteType TransitionListParserState where
   elems := elems
   complete := by
     intro state
-    cases state with
-    | findCount marker =>
-        simp [elems, markers_complete marker]
-    | seekCountDone marker =>
-        simp [elems, markers_complete marker]
-    | seekMarker cell =>
-        simp [elems, optionCells_complete cell]
-    | enterMarkedPosition =>
-        simp [elems]
-    | needTransition =>
-        simp [elems]
-    | sourceNat =>
-        simp [elems]
-    | readCell =>
-        simp [elems]
-    | writeCell =>
-        simp [elems]
-    | moveField =>
-        simp [elems]
-    | targetNat =>
-        simp [elems]
-    | markPosition =>
-        simp [elems, optionCells_complete]
-    | returnLeft cell =>
-        simp [elems, optionCells_complete cell]
-    | halt =>
-        simp [elems]
+    cases state <;> simp [elems, markers_complete, optionCells_complete]
 
 end TransitionListParserState
 
@@ -592,6 +566,16 @@ theorem transitionListParser_encodeTransitionAppend_noHeader
               (transitionListParser_encodeNatAppend_noHeader t.target
                 hsuffix)))))
 
+theorem transitionListParser_encodeTransition_noHeader
+    (t : TransitionDescription) :
+    transitionListParserNoHeader
+      (MachineDescription.encodeTransition t) := by
+  simpa [MachineDescription.encodeTransition] using
+    transitionListParser_encodeTransitionAppend_noHeader
+      t (suffix := []) (by
+        intro symbol hmem
+        simp at hmem)
+
 theorem transitionListParser_encodeTransitionsAppend_noHeader
     (transitions : List TransitionDescription)
     {suffix : List MachineCodeSymbol}
@@ -743,8 +727,8 @@ theorem transitionListParserMachine_step_returnLeft_some_nonempty
       { state := TransitionListParserState.returnLeft saved
         tape :=
           transitionListParserOptionTape leftTail
-            (leftHead :: some symbol :: suffix) } := by
-  exact transitionListParserMachine_step_keep_left_nonempty
+            (leftHead :: some symbol :: suffix) } :=
+  transitionListParserMachine_step_keep_left_nonempty
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
@@ -760,8 +744,8 @@ theorem transitionListParserMachine_step_returnLeft_some_boundary
       { state := TransitionListParserState.returnLeft saved
         tape :=
           transitionListParserOptionTape []
-            (none :: some symbol :: suffix) } := by
-  exact transitionListParserMachine_step_keep_left_boundary
+            (none :: some symbol :: suffix) } :=
+  transitionListParserMachine_step_keep_left_boundary
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
@@ -777,8 +761,8 @@ theorem transitionListParserMachine_step_returnLeft_none_boundary
           TransitionListParserState.findCount
             (TransitionListParserMarker.saved saved)
         tape :=
-          transitionListParserOptionTape [none] suffix } := by
-  exact transitionListParserMachine_step_keep_right
+          transitionListParserOptionTape [none] suffix } :=
+  transitionListParserMachine_step_keep_right
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
@@ -795,8 +779,8 @@ theorem transitionListParserMachine_step_returnLeft_none
             (TransitionListParserMarker.saved saved)
         tape :=
           transitionListParserOptionTape
-            (none :: leftRev) suffix } := by
-  exact transitionListParserMachine_step_keep_right
+            (none :: leftRev) suffix } :=
+  transitionListParserMachine_step_keep_right
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
@@ -811,8 +795,8 @@ theorem transitionListParserMachine_step_findCount_done
       { state := TransitionListParserState.halt
         tape :=
           transitionListParserOptionTape
-            (some MachineCodeSymbol.done :: leftRev) suffix } := by
-  exact transitionListParserMachine_step_keep_right
+            (some MachineCodeSymbol.done :: leftRev) suffix } :=
+  transitionListParserMachine_step_keep_right
     (by
       cases marker <;>
         simp [transitionListParserMachine,
@@ -829,8 +813,8 @@ theorem transitionListParserMachine_step_findCount_blank
       { state := TransitionListParserState.findCount marker
         tape :=
           transitionListParserOptionTape
-            (some MachineCodeSymbol.blank :: leftRev) suffix } := by
-  exact transitionListParserMachine_step_keep_right
+            (some MachineCodeSymbol.blank :: leftRev) suffix } :=
+  transitionListParserMachine_step_keep_right
     (by
       cases marker <;>
         simp [transitionListParserMachine,
@@ -847,8 +831,8 @@ theorem transitionListParserMachine_step_findCount_tick
       { state := TransitionListParserState.seekCountDone marker
         tape :=
           transitionListParserOptionTape
-            (some MachineCodeSymbol.blank :: leftRev) suffix } := by
-  exact transitionListParserMachine_step_write_right
+            (some MachineCodeSymbol.blank :: leftRev) suffix } :=
+  transitionListParserMachine_step_write_right
     (by
       cases marker <;>
         simp [transitionListParserMachine,
@@ -865,8 +849,8 @@ theorem transitionListParserMachine_step_seekCountDone_tick
       { state := TransitionListParserState.seekCountDone marker
         tape :=
           transitionListParserOptionTape
-            (some MachineCodeSymbol.tick :: leftRev) suffix } := by
-  exact transitionListParserMachine_step_keep_right
+            (some MachineCodeSymbol.tick :: leftRev) suffix } :=
+  transitionListParserMachine_step_keep_right
     (by
       cases marker <;>
         simp [transitionListParserMachine,
@@ -884,8 +868,8 @@ theorem transitionListParserMachine_step_seekCountDone_done_initial
       { state := TransitionListParserState.needTransition
         tape :=
           transitionListParserOptionTape
-            (some MachineCodeSymbol.done :: leftRev) suffix } := by
-  exact transitionListParserMachine_step_keep_right
+            (some MachineCodeSymbol.done :: leftRev) suffix } :=
+  transitionListParserMachine_step_keep_right
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
@@ -902,8 +886,8 @@ theorem transitionListParserMachine_step_seekCountDone_done_saved
       { state := TransitionListParserState.seekMarker saved
         tape :=
           transitionListParserOptionTape
-            (some MachineCodeSymbol.done :: leftRev) suffix } := by
-  exact transitionListParserMachine_step_keep_right
+            (some MachineCodeSymbol.done :: leftRev) suffix } :=
+  transitionListParserMachine_step_keep_right
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
@@ -920,8 +904,8 @@ theorem transitionListParserMachine_step_seekMarker_nonHeader
       { state := TransitionListParserState.seekMarker saved
         tape :=
           transitionListParserOptionTape
-            (some symbol :: leftRev) suffix } := by
-  exact transitionListParserMachine_step_keep_right
+            (some symbol :: leftRev) suffix } :=
+  transitionListParserMachine_step_keep_right
     (by
       cases symbol <;>
         simp [transitionListParserMachine,
@@ -940,8 +924,8 @@ theorem transitionListParserMachine_step_seekMarker_header
       { state := TransitionListParserState.enterMarkedPosition
         tape :=
           transitionListParserOptionTape leftTail
-            (leftHead :: saved :: suffix) } := by
-  exact transitionListParserMachine_step_write_left_nonempty
+            (leftHead :: saved :: suffix) } :=
+  transitionListParserMachine_step_write_left_nonempty
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
@@ -956,8 +940,8 @@ theorem transitionListParserMachine_step_enterMarkedPosition
       { state := TransitionListParserState.needTransition
         tape :=
           transitionListParserOptionTape
-            (cell :: leftRev) suffix } := by
-  exact transitionListParserMachine_step_keep_right
+            (cell :: leftRev) suffix } :=
+  transitionListParserMachine_step_keep_right
     (by
       cases cell <;>
         simp [transitionListParserMachine,
@@ -991,8 +975,8 @@ theorem transitionListParserMachine_step_markPosition
       { state := TransitionListParserState.returnLeft saved
         tape :=
           transitionListParserOptionTape leftTail
-            (leftHead :: some MachineCodeSymbol.header :: suffix) } := by
-  exact transitionListParserMachine_step_write_left_nonempty
+            (leftHead :: some MachineCodeSymbol.header :: suffix) } :=
+  transitionListParserMachine_step_write_left_nonempty
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
@@ -1007,8 +991,8 @@ theorem transitionListParserMachine_step_markPosition_empty
       { state := TransitionListParserState.returnLeft none
         tape :=
           transitionListParserOptionTape leftTail
-            (leftHead :: some MachineCodeSymbol.header :: []) } := by
-  exact transitionListParserMachine_step_write_left_empty
+            (leftHead :: some MachineCodeSymbol.header :: []) } :=
+  transitionListParserMachine_step_write_left_empty
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
@@ -1022,8 +1006,8 @@ theorem transitionListParserMachine_step_sourceNat_tick
       { state := TransitionListParserState.sourceNat
         tape :=
           transitionListParserOptionTape
-            (some MachineCodeSymbol.tick :: leftRev) suffix } := by
-  exact transitionListParserMachine_step_keep_right
+            (some MachineCodeSymbol.tick :: leftRev) suffix } :=
+  transitionListParserMachine_step_keep_right
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
@@ -1037,8 +1021,8 @@ theorem transitionListParserMachine_step_sourceNat_done
       { state := TransitionListParserState.readCell
         tape :=
           transitionListParserOptionTape
-            (some MachineCodeSymbol.done :: leftRev) suffix } := by
-  exact transitionListParserMachine_step_keep_right
+            (some MachineCodeSymbol.done :: leftRev) suffix } :=
+  transitionListParserMachine_step_keep_right
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
@@ -1052,8 +1036,8 @@ theorem transitionListParserMachine_step_targetNat_tick
       { state := TransitionListParserState.targetNat
         tape :=
           transitionListParserOptionTape
-            (some MachineCodeSymbol.tick :: leftRev) suffix } := by
-  exact transitionListParserMachine_step_keep_right
+            (some MachineCodeSymbol.tick :: leftRev) suffix } :=
+  transitionListParserMachine_step_keep_right
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
@@ -1067,8 +1051,8 @@ theorem transitionListParserMachine_step_targetNat_done
       { state := TransitionListParserState.markPosition
         tape :=
           transitionListParserOptionTape
-            (some MachineCodeSymbol.done :: leftRev) suffix } := by
-  exact transitionListParserMachine_step_keep_right
+            (some MachineCodeSymbol.done :: leftRev) suffix } :=
+  transitionListParserMachine_step_keep_right
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 

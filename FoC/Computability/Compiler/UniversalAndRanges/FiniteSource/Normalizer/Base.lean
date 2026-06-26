@@ -122,51 +122,9 @@ def finite : Foundation.FiniteType CodePrefixParserNormalizerState where
   elems := elems
   complete := by
     intro state
-    cases state with
-    | needHeader =>
-        simp [elems]
-    | stateCount =>
-        simp [elems]
-    | startField =>
-        simp [elems]
-    | haltField =>
-        simp [elems]
-    | findInitialCount =>
-        simp [elems]
-    | findCount marker =>
-        simp [elems, TransitionListParserState.markers_complete marker]
-    | seekCountDone marker =>
-        simp [elems, TransitionListParserState.markers_complete marker]
-    | seekMarker cell =>
-        simp [elems, TransitionListParserState.optionCells_complete cell]
-    | enterMarkedPosition =>
-        simp [elems]
-    | needTransition =>
-        simp [elems]
-    | sourceNat =>
-        simp [elems]
-    | readCell =>
-        simp [elems]
-    | writeCell =>
-        simp [elems]
-    | moveField =>
-        simp [elems]
-    | targetNat =>
-        simp [elems]
-    | markPosition =>
-        simp [elems]
-    | returnLeft cell =>
-        simp [elems, TransitionListParserState.optionCells_complete cell]
-    | restoreSeekMarker cell =>
-        simp [elems, TransitionListParserState.optionCells_complete cell]
-    | restoreReturnLeft =>
-        simp [elems]
-    | restoreLeft =>
-        simp [elems]
-    | restoreForward =>
-        simp [elems]
-    | halt =>
-        simp [elems]
+    cases state <;>
+      simp [elems, TransitionListParserState.markers_complete,
+        TransitionListParserState.optionCells_complete]
 
 end CodePrefixParserNormalizerState
 

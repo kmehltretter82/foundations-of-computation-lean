@@ -759,13 +759,8 @@ def eraseRightTape (erased : Nat) : Word Bool -> Tape Bool
 
 theorem eraseRightDescription_wellFormed :
     EraseRightDescription.WellFormed := by
-  constructor
-  · simp [EraseRightDescription]
-  constructor
-  · simp [EraseRightDescription]
-  constructor
-  · simp [EraseRightDescription]
-  constructor
+  refine ⟨by simp [EraseRightDescription], by simp [EraseRightDescription],
+    by simp [EraseRightDescription], ?_, ?_⟩
   · intro t ht
     simp [EraseRightDescription, transition,
       TransitionDescription.WellFormed] at ht ⊢
@@ -890,13 +885,8 @@ def BoolOutputDescription (b : Bool) : MachineDescription where
 
 theorem boolOutputDescription_wellFormed (b : Bool) :
     (BoolOutputDescription b).WellFormed := by
-  constructor
-  · simp [BoolOutputDescription]
-  constructor
-  · simp [BoolOutputDescription]
-  constructor
-  · simp [BoolOutputDescription]
-  constructor
+  refine ⟨by simp [BoolOutputDescription], by simp [BoolOutputDescription],
+    by simp [BoolOutputDescription], ?_, ?_⟩
   · intro t ht
     simp [BoolOutputDescription, transition,
       TransitionDescription.WellFormed] at ht ⊢
@@ -1036,13 +1026,9 @@ def EncodedCodeWordRecognizerDescription : MachineDescription where
 
 theorem encodedCodeWordRecognizerDescription_wellFormed :
     EncodedCodeWordRecognizerDescription.WellFormed := by
-  constructor
-  · simp [EncodedCodeWordRecognizerDescription]
-  constructor
-  · simp [EncodedCodeWordRecognizerDescription]
-  constructor
-  · simp [EncodedCodeWordRecognizerDescription]
-  constructor
+  refine ⟨by simp [EncodedCodeWordRecognizerDescription],
+    by simp [EncodedCodeWordRecognizerDescription],
+    by simp [EncodedCodeWordRecognizerDescription], ?_, ?_⟩
   · intro t ht
     simp [EncodedCodeWordRecognizerDescription, transition,
       TransitionDescription.WellFormed] at ht ⊢
@@ -1126,13 +1112,9 @@ def AppendCodeSymbolRightDescription
 theorem appendFixedFourBitsRightDescription_wellFormed
     (b0 b1 b2 b3 : Bool) :
     (AppendFixedFourBitsRightDescription b0 b1 b2 b3).WellFormed := by
-  constructor
-  · simp [AppendFixedFourBitsRightDescription]
-  constructor
-  · simp [AppendFixedFourBitsRightDescription]
-  constructor
-  · simp [AppendFixedFourBitsRightDescription]
-  constructor
+  refine ⟨by simp [AppendFixedFourBitsRightDescription],
+    by simp [AppendFixedFourBitsRightDescription],
+    by simp [AppendFixedFourBitsRightDescription], ?_, ?_⟩
   · intro t ht
     simp [AppendFixedFourBitsRightDescription, transition,
       TransitionDescription.WellFormed] at ht ⊢

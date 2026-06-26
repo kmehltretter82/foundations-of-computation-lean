@@ -4,11 +4,9 @@ set_option doc.verso true
 /-!
 # Transition List Parser Soundness
 
-This module contains the soundness proofs for the transition list parser, ensuring it correctly decodes encoded transition tables.
+Soundness proofs showing that accepting parser runs decode exactly the encoded
+transition table on the tape.
 -/
-
-
-set_option doc.verso true
 
 namespace FoC
 namespace Computability
@@ -1453,12 +1451,7 @@ theorem transitionListParserMachine_haltsFrom_markPosition_context_inv
                   (List.append pre
                     (MachineDescription.encodeTransition t)) :=
               transitionListParserNoHeader_append hpre
-                (by
-                  simpa [MachineDescription.encodeTransition] using
-                    transitionListParser_encodeTransitionAppend_noHeader
-                      t (suffix := []) (by
-                        intro symbol hmem
-                        simp at hmem))
+                (transitionListParser_encodeTransition_noHeader t)
             have hmarkContext :
                 TuringMachine.HaltsFrom transitionListParserMachine
                   { state := TransitionListParserState.markPosition
@@ -1564,12 +1557,8 @@ theorem transitionListParserMachine_haltsFrom_needTransition_transition_inv
     | succ count =>
         have hpre :
             transitionListParserNoHeader
-              (MachineDescription.encodeTransition t) := by
-          simpa [MachineDescription.encodeTransition] using
-            transitionListParser_encodeTransitionAppend_noHeader
-              t (suffix := []) (by
-                intro symbol hmem
-                simp at hmem)
+              (MachineDescription.encodeTransition t) :=
+          transitionListParser_encodeTransition_noHeader t
         have hmarkContext :
             TuringMachine.HaltsFrom transitionListParserMachine
               { state := TransitionListParserState.markPosition

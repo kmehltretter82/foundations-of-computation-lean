@@ -383,30 +383,21 @@ def StageInputMarkedScannerDescription :
 
 theorem stageInputMarkedScannerDescription_wellFormed :
     StageInputMarkedScannerDescription.WellFormed := by
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := StageInputMarkedScannerDescription.transitions)
       (stateCount := StageInputMarkedScannerDescription.stateCount)
-      (by
-        native_decide)
+      (by native_decide)
   · exact transition_deterministic_of_all
       (l := StageInputMarkedScannerDescription.transitions)
-      (by
-        native_decide)
+      (by native_decide)
 
 theorem stageInputMarkedScannerDescription_haltTransitionFree :
     StageInputMarkedScannerDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := StageInputMarkedScannerDescription.transitions)
     (state := StageInputMarkedScannerDescription.halt)
-    (by
-      native_decide)
+    (by native_decide)
 
 theorem stageInputMarkedScannerDescription_subroutineReady :
     StageInputMarkedScannerDescription.SubroutineReady :=

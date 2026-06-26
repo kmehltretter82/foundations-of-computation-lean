@@ -584,12 +584,8 @@ theorem codePrefixParserBranch_failure_decodeTransitions_needTransition_boundary
               List.map_replicate, List.append_assoc] using hbranch
           have htransitionNoHeader :
               transitionListParserNoHeader
-                (MachineDescription.encodeTransition transition) := by
-            simpa [MachineDescription.encodeTransition] using
-              transitionListParser_encodeTransitionAppend_noHeader
-                transition (suffix := []) (by
-                  intro symbol hmem
-                  simp at hmem)
+                (MachineDescription.encodeTransition transition) :=
+            transitionListParser_encodeTransition_noHeader transition
           have hpre' : transitionListParserNoHeader pre' :=
             transitionListParserNoHeader_append hpre htransitionNoHeader
           have hmark :

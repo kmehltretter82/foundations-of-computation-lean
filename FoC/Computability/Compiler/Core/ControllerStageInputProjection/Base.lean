@@ -597,30 +597,22 @@ def Description :
 
 theorem wellFormed :
     Description.WellFormed := by
-  constructor
-  · simp [Description]
-  constructor
-  · simp [Description]
-  constructor
-  · simp [Description]
-  constructor
+  refine ⟨by simp [Description], by simp [Description],
+    by simp [Description], ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := Description.transitions)
       (stateCount := Description.stateCount)
-      (by
-        native_decide)
+      (by native_decide)
   · exact transition_deterministic_of_all
       (l := Description.transitions)
-      (by
-        native_decide)
+      (by native_decide)
 
 theorem haltTransitionFree :
     Description.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := Description.transitions)
     (state := Description.halt)
-    (by
-      native_decide)
+    (by native_decide)
 
 theorem run_header
     (suffix : Word Bool) :

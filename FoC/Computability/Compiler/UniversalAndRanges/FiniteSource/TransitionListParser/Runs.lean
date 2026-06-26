@@ -4,11 +4,8 @@ set_option doc.verso true
 /-!
 # Transition List Parser Runs
 
-This module provides explicit run lemmas and configuration sequences for the transition list parser.
+Explicit run lemmas and configuration sequences for the transition-list parser.
 -/
-
-
-set_option doc.verso true
 
 namespace FoC
 namespace Computability
@@ -502,15 +499,9 @@ theorem transitionListParserMachine_computes_markPosition_canonicalContext_step
               [none])
           more.length
           (List.append parsedPrefix markerTail)
-      have hpre' : transitionListParserNoHeader parsedPrefix := by
-        exact
-          transitionListParserNoHeader_append hpre
-            (by
-              simpa [MachineDescription.encodeTransition] using
-                transitionListParser_encodeTransitionAppend_noHeader
-                  t (suffix := []) (by
-                    intro symbol hmem
-                    simp at hmem))
+      have hpre' : transitionListParserNoHeader parsedPrefix :=
+        transitionListParserNoHeader_append hpre
+          (transitionListParser_encodeTransition_noHeader t)
       have hmarker :=
         transitionListParserMachine_computes_seekMarker_prefix
           (some MachineCodeSymbol.transition)
@@ -997,15 +988,10 @@ theorem transitionListParserMachine_haltsFrom_markPosition_canonicalBoundary
             transitionListParserMachine_computes_markPosition_canonicalContext_step
               blanks pre hpre t u more suffix
           have hpre' :
-              transitionListParserNoHeader
+          transitionListParserNoHeader
                 (List.append pre (MachineDescription.encodeTransition t)) :=
             transitionListParserNoHeader_append hpre
-              (by
-                simpa [MachineDescription.encodeTransition] using
-                  transitionListParser_encodeTransitionAppend_noHeader
-                    t (suffix := []) (by
-                      intro symbol hmem
-                      simp at hmem))
+              (transitionListParser_encodeTransition_noHeader t)
           have htarget :=
             ih (blanks + 1)
               (List.append pre (MachineDescription.encodeTransition t))
@@ -1247,12 +1233,7 @@ theorem transitionListParserMachine_haltsFrom_markPosition_canonicalContext
           transitionListParserNoHeader
             (List.append pre (MachineDescription.encodeTransition t)) :=
         transitionListParserNoHeader_append hpre
-          (by
-            simpa [MachineDescription.encodeTransition] using
-              transitionListParser_encodeTransitionAppend_noHeader
-                t (suffix := []) (by
-                  intro symbol hmem
-                  simp at hmem))
+          (transitionListParser_encodeTransition_noHeader t)
       have hhalt :=
         transitionListParserMachine_haltsFrom_markPosition_canonicalBoundary
           (blanks + 1)

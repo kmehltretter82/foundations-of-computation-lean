@@ -5,9 +5,8 @@ set_option doc.verso true
 /-!
 # TaggedBrancher
 
-Supporting declarations and helper lemmas for Computability Compiler Core DovetailInitialLayoutInitializer TaggedBrancher.
+Shared-halt tagged branching for the append-input initializer.
 -/
-
 
 namespace FoC
 namespace Computability
@@ -82,7 +81,6 @@ def sharedExitBranchConfiguration
   state := if c.state = oldHalt then commonHalt else offset + c.state
   tape := c.tape
 
- /-- {name}`sharedExitRetargetTransition_sameAction` captures the core lemma for this local construction. -/
 theorem sharedExitRetargetTransition_sameAction
     (offset oldHalt commonHalt : Nat)
     {t u : TransitionDescription}
@@ -96,7 +94,6 @@ theorem sharedExitRetargetTransition_sameAction
   simp [TransitionDescription.SameAction,
     sharedExitRetargetTransition, hwrite, hmove, htarget]
 
- /-- {name}`sharedExitRetargetTransition_sameKey_source` captures the core lemma for this local construction. -/
 theorem sharedExitRetargetTransition_sameKey_source
     {offset oldHalt commonHalt : Nat}
     {t u : TransitionDescription}
@@ -110,7 +107,6 @@ theorem sharedExitRetargetTransition_sameKey_source
   constructor
   · exact Nat.add_left_cancel h.left
   · exact h.right
-     /-- {name}`restoreFirstBitTaggedBrancherDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     restoreFirstBitTaggedBrancherDescription_subroutineReady
@@ -389,7 +385,6 @@ theorem
         ⟨base, _hbase, rfl⟩ |
         ⟨base, _hbase, rfl⟩ |
         ⟨base, _hbase, rfl⟩ <;> simp <;> omega
-     /-- {name}`restoreFirstBitTaggedBrancherDescription_lookup_blank` captures the core lemma for this local construction. -/
 
 theorem
     restoreFirstBitTaggedBrancherDescription_lookup_blank
@@ -631,7 +626,6 @@ theorem
       List.find? (MachineDescription.Matches state cell)
         blankBranch.transitions <;>
     simp
-     /-- {name}`restoreFirstBitTaggedBrancherDescription_step_blank` captures the core lemma for this local construction. -/
 
 theorem
     restoreFirstBitTaggedBrancherDescription_step_blank
@@ -679,8 +673,6 @@ theorem
         | some t =>
             simp [sharedExitRetargetTransition,
               sharedExitBranchConfiguration]
-
- /-- {name}`restoreFirstBitTaggedBrancherDescription_run_blank` states the corresponding theorem run form. -/
 theorem restoreFirstBitTaggedBrancherDescription_run_blank
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
@@ -709,8 +701,6 @@ theorem restoreFirstBitTaggedBrancherDescription_run_blank
           have hnextState : next.state < blankBranch.stateCount :=
             MachineDescription.stepConfig_state_bound hblank.left hstep
           simp [MachineDescription.runConfig, hstep, ih next hnextState]
-
- /-- {name}`restoreFirstBitTaggedBrancherDescription_run_none` states the corresponding theorem run form. -/
 theorem restoreFirstBitTaggedBrancherDescription_run_none
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
@@ -774,7 +764,6 @@ theorem restoreFirstBitTaggedBrancherDescription_run_none
   rw [hn]
   simp [RestoreFirstBitTaggedBrancherDescription,
     sharedExitBranchConfiguration]
-     /-- {name}`restoreFirstBitTaggedBrancherDescription_lookup_false` captures the core lemma for this local construction. -/
 
 theorem
     restoreFirstBitTaggedBrancherDescription_lookup_false
@@ -1028,7 +1017,6 @@ theorem
       List.find? (MachineDescription.Matches state cell)
         falseBranch.transitions <;>
     simp
-     /-- {name}`restoreFirstBitTaggedBrancherDescription_step_false` captures the core lemma for this local construction. -/
 
 theorem
     restoreFirstBitTaggedBrancherDescription_step_false
@@ -1078,8 +1066,6 @@ theorem
         | some t =>
             simp [sharedExitRetargetTransition,
               sharedExitBranchConfiguration]
-
- /-- {name}`restoreFirstBitTaggedBrancherDescription_run_false_branch` states the corresponding theorem run form. -/
 theorem restoreFirstBitTaggedBrancherDescription_run_false_branch
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
@@ -1110,7 +1096,6 @@ theorem restoreFirstBitTaggedBrancherDescription_run_false_branch
           have hnextState : next.state < falseBranch.stateCount :=
             MachineDescription.stepConfig_state_bound hfalse.left hstep
           simp [MachineDescription.runConfig, hstep, ih next hnextState]
-     /-- {name}`restoreFirstBitTaggedBrancherDescription_run_false` states the corresponding theorem run form. -/
 
 theorem
     restoreFirstBitTaggedBrancherDescription_run_false
@@ -1180,7 +1165,6 @@ theorem
   rw [hn]
   simp [RestoreFirstBitTaggedBrancherDescription,
     sharedExitBranchConfiguration]
-     /-- {name}`restoreFirstBitTaggedBrancherDescription_lookup_true` captures the core lemma for this local construction. -/
 
 theorem
     restoreFirstBitTaggedBrancherDescription_lookup_true
@@ -1459,7 +1443,6 @@ theorem
       List.find? (MachineDescription.Matches state cell)
         trueBranch.transitions <;>
     simp
-     /-- {name}`restoreFirstBitTaggedBrancherDescription_step_true` captures the core lemma for this local construction. -/
 
 theorem
     restoreFirstBitTaggedBrancherDescription_step_true
@@ -1509,8 +1492,6 @@ theorem
         | some t =>
             simp [sharedExitRetargetTransition,
               sharedExitBranchConfiguration]
-
- /-- {name}`restoreFirstBitTaggedBrancherDescription_run_true_branch` states the corresponding theorem run form. -/
 theorem restoreFirstBitTaggedBrancherDescription_run_true_branch
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
@@ -1541,8 +1522,6 @@ theorem restoreFirstBitTaggedBrancherDescription_run_true_branch
           have hnextState : next.state < trueBranch.stateCount :=
             MachineDescription.stepConfig_state_bound htrue.left hstep
           simp [MachineDescription.runConfig, hstep, ih next hnextState]
-
- /-- {name}`restoreFirstBitTaggedBrancherDescription_run_true` states the corresponding theorem run form. -/
 theorem restoreFirstBitTaggedBrancherDescription_run_true
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)

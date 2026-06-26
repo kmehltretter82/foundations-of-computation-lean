@@ -4,11 +4,8 @@ set_option doc.verso true
 /-!
 # Normalizer Soundness: Transition Blocks
 
-This module proves the soundness of individual transition blocks within the normalizer.
+Soundness facts for individual transition blocks within the normalizer.
 -/
-
-
-set_option doc.verso true
 
 namespace FoC
 namespace Computability
@@ -1597,12 +1594,7 @@ theorem codePrefixParserNormalizerMachine_computes_markPosition_context_halt
             (List.append pre
               (MachineDescription.encodeTransition transition)) :=
         transitionListParserNoHeader_append hpre
-          (by
-            simpa [MachineDescription.encodeTransition] using
-              transitionListParser_encodeTransitionAppend_noHeader
-                transition (suffix := []) (by
-                  intro symbol hmem
-                  simp at hmem))
+          (transitionListParser_encodeTransition_noHeader transition)
       have htail :=
         ih (blanks + 1)
           (List.append pre
@@ -1715,12 +1707,7 @@ theorem codePrefixParserNormalizerMachine_haltsFrom_markPosition_context_inv
                 (List.append pre
                   (MachineDescription.encodeTransition t)) :=
             transitionListParserNoHeader_append hpre
-              (by
-                simpa [MachineDescription.encodeTransition] using
-                  transitionListParser_encodeTransitionAppend_noHeader
-                    t (suffix := []) (by
-                      intro symbol hmem
-                      simp at hmem))
+              (transitionListParser_encodeTransition_noHeader t)
           have hmarkContext :
               TuringMachine.HaltsFrom codePrefixParserNormalizerMachine
                 { state := CodePrefixParserNormalizerState.markPosition
@@ -1829,12 +1816,8 @@ theorem codePrefixParserNormalizerMachine_haltsFrom_findInitialCount_decodeTrans
             ⟨t, restTokens, htokens, hmarkFrom⟩
           have hpre :
               transitionListParserNoHeader
-                (MachineDescription.encodeTransition t) := by
-            simpa [MachineDescription.encodeTransition] using
-              transitionListParser_encodeTransitionAppend_noHeader
-                t (suffix := []) (by
-                  intro symbol hmem
-                  simp at hmem)
+                (MachineDescription.encodeTransition t) :=
+            transitionListParser_encodeTransition_noHeader t
           have hmarkContext :
               TuringMachine.HaltsFrom codePrefixParserNormalizerMachine
                 { state := CodePrefixParserNormalizerState.markPosition

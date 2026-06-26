@@ -5,9 +5,8 @@ set_option doc.verso true
 /-!
 # InputTape
 
-Supporting declarations and helper lemmas for Computability Compiler Core DovetailInitialLayoutInitializer InputTape.
+Input-tape append helpers for the stage-input initializer.
 -/
-
 
 namespace FoC
 namespace Computability
@@ -16,7 +15,6 @@ open Languages
 
 namespace DovetailInitialLayoutInitializer
 
- /-- {name}`exactIdentityDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem exactIdentityDescription_subroutineReady :
     MachineDescription.ExactIdentityDescription.SubroutineReady :=
   ⟨MachineDescription.exactIdentityDescription_wellFormed,
@@ -28,7 +26,6 @@ def TransitionPrefixedFirstBitAppendCodeWordReturnDescription
     MachineDescription.ExactIdentityDescription
     (TransitionPrefixedAppendCodeWordReturnDescription code)
     Direction.right
-     /-- {name}`transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
@@ -39,7 +36,6 @@ theorem
     exactIdentityDescription_subroutineReady
     (transitionPrefixedAppendCodeWordReturnDescription_subroutineReady
       code hcode)
-     /-- {name}`transitionPrefixedFirstBitAppendCodeWordReturnDescription_run` captures the core lemma for this local construction. -/
 
 theorem
     transitionPrefixedFirstBitAppendCodeWordReturnDescription_run
@@ -113,7 +109,6 @@ def TransitionPrefixedFirstBitAppendNatReturnDescription
     (n : Nat) : MachineDescription :=
   TransitionPrefixedFirstBitAppendCodeWordReturnDescription
     (MachineDescription.encodeNat n)
-     /-- {name}`transitionPrefixedFirstBitAppendNatReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     transitionPrefixedFirstBitAppendNatReturnDescription_subroutineReady
@@ -123,7 +118,6 @@ theorem
   transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
     (MachineDescription.encodeNat n)
     (encodeNat_ne_nil n)
-     /-- {name}`transitionPrefixedFirstBitAppendNatReturnDescription_run` captures the core lemma for this local construction. -/
 
 theorem
     transitionPrefixedFirstBitAppendNatReturnDescription_run
@@ -162,7 +156,6 @@ def AppendTwoCodeWordsReturnDescription
       second)
     Direction.left
 
- /-- {name}`appendTwoCodeWordsReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem appendTwoCodeWordsReturnDescription_subroutineReady
     (first second : Word MachineCodeSymbol)
     (hfirst : first ≠ []) (hsecond : second ≠ []) :
@@ -174,7 +167,6 @@ theorem appendTwoCodeWordsReturnDescription_subroutineReady
     (transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
       second hsecond)
 
- /-- {name}`appendTwoCodeWordsReturnDescription_run` describes append/fold behavior used by later composition. -/
 theorem appendTwoCodeWordsReturnDescription_run
     (first second : Word MachineCodeSymbol)
     (hfirst : first ≠ []) (hsecond : second ≠ [])
@@ -250,7 +242,6 @@ theorem appendTwoCodeWordsReturnDescription_run
   simpa [AppendTwoCodeWordsReturnDescription,
     MachineDescription.initial, A, B, firstBits, secondBits] using hn
 
- /-- {name}`appendTwoCodeWordsReturnDescription_run_stageInput` states the corresponding theorem run form. -/
 theorem appendTwoCodeWordsReturnDescription_run_stageInput
     (first second : Word MachineCodeSymbol)
     (hfirst : first ≠ []) (hsecond : second ≠ [])
@@ -290,7 +281,6 @@ def stageInputBits
   MachineDescription.encodeCodeWordAsInput
     (PairedRecognizerDovetailStageInputCode w stage)
 
- /-- {name}`stageInputBits_move_left_move_right_input` captures the core lemma for this local construction. -/
 theorem stageInputBits_move_left_move_right_input
     (w : Word Bool) (stage : Nat) :
     Tape.move Direction.left
@@ -327,7 +317,6 @@ theorem stageInputBits_move_left_move_right_input
           MachineDescription.encodeCodeSymbolAsInput,
           Tape.input, Tape.move, Tape.moveLeft, Tape.moveRight]
 
- /-- {name}`tape_eq_move_right_input_of_move_left_eq_input_cons_cons` provides an important equivalence or equality lemma. -/
 theorem tape_eq_move_right_input_of_move_left_eq_input_cons_cons
     {a b : Bool} {rest : Word Bool} {T : Tape Bool}
     (h : Tape.move Direction.left T = Tape.input (a :: b :: rest)) :
@@ -345,7 +334,6 @@ theorem tape_eq_move_right_input_of_move_left_eq_input_cons_cons
           | cons second more =>
               simp [Tape.move, Tape.moveLeft, Tape.input] at h
 
- /-- {name}`stageInputBits_exists_cons_cons` provides the witness needed for existential progress. -/
 theorem stageInputBits_exists_cons_cons
     (w : Word Bool) (stage : Nat) :
     exists a : Bool,
@@ -467,7 +455,6 @@ def emptyInputTapeCode :
   MachineDescription.encodeTapeAppend
     (Tape.input ([] : Word Bool)) []
 
- /-- {name}`emptyInputTapeCode_ne_nil` captures the core lemma for this local construction. -/
 theorem emptyInputTapeCode_ne_nil :
     emptyInputTapeCode ≠ [] := by
   simp [emptyInputTapeCode, encodeTapeAppend_input_nil,
@@ -479,7 +466,6 @@ def AppendEmptyInputTapeReturnDescription :
     MachineDescription :=
   TransitionPrefixedFirstBitAppendCodeWordReturnDescription
     emptyInputTapeCode
-     /-- {name}`appendEmptyInputTapeReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     appendEmptyInputTapeReturnDescription_subroutineReady :
@@ -488,14 +474,12 @@ theorem
     emptyInputTapeCode
     emptyInputTapeCode_ne_nil
 
- /-- {name}`inputTapeBits_nil` captures the core lemma for this local construction. -/
 theorem inputTapeBits_nil :
     inputTapeBits ([] : Word Bool) =
       MachineDescription.encodeCodeWordAsInput
         emptyInputTapeCode := by
   rfl
 
- /-- {name}`appendEmptyInputTapeReturnDescription_run` describes append/fold behavior used by later composition. -/
 theorem appendEmptyInputTapeReturnDescription_run
     (stage : Nat) (suffixBits : Word Bool) :
     exists steps : Nat,
@@ -539,7 +523,6 @@ def inputTapeRightCellsCode
     (rest : Word Bool) : Word MachineCodeSymbol :=
   MachineDescription.encodeCellListAppend (rest.map some) []
 
- /-- {name}`inputTapeRightCellsCode_eq_nat_cells` provides an important equivalence or equality lemma. -/
 theorem inputTapeRightCellsCode_eq_nat_cells
     (rest : Word Bool) :
     inputTapeRightCellsCode rest =
@@ -548,7 +531,6 @@ theorem inputTapeRightCellsCode_eq_nat_cells
   simp [inputTapeRightCellsCode,
     MachineDescription.encodeCellListAppend]
 
- /-- {name}`inputTapeRightCellsCode_cons_eq_tick_nat_cell_cells` provides an important equivalence or equality lemma. -/
 theorem inputTapeRightCellsCode_cons_eq_tick_nat_cell_cells
     (b : Bool) (rest : Word Bool) :
     inputTapeRightCellsCode (b :: rest) =
@@ -565,7 +547,6 @@ theorem inputTapeRightCellsCode_cons_eq_tick_nat_cell_cells
       MachineDescription.encodeCellAppend,
       MachineDescription.encodeCell]
 
- /-- {name}`inputTapeRightCellsBits_eq_nat_cells` provides an important equivalence or equality lemma. -/
 theorem inputTapeRightCellsBits_eq_nat_cells
     (rest : Word Bool) :
     MachineDescription.encodeCodeWordAsInput
@@ -578,7 +559,6 @@ theorem inputTapeRightCellsBits_eq_nat_cells
     MachineDescription.encodeCodeWordAsInput_append]
   rfl
 
- /-- {name}`inputTapeRightCellsBits_cons_eq_tick_nat_cell_cells` provides an important equivalence or equality lemma. -/
 theorem inputTapeRightCellsBits_cons_eq_tick_nat_cell_cells
     (b : Bool) (rest : Word Bool) :
     MachineDescription.encodeCodeWordAsInput
@@ -592,7 +572,6 @@ theorem inputTapeRightCellsBits_cons_eq_tick_nat_cell_cells
   rw [inputTapeRightCellsCode_cons_eq_tick_nat_cell_cells]
   rfl
 
- /-- {name}`inputTapeHeadPrefixCode_ne_nil` captures the core lemma for this local construction. -/
 theorem inputTapeHeadPrefixCode_ne_nil
     (b : Bool) :
     inputTapeHeadPrefixCode b ≠ [] := by
@@ -604,7 +583,6 @@ theorem inputTapeHeadPrefixCode_ne_nil
       MachineDescription.encodeCellAppend,
       MachineDescription.encodeCell]
 
- /-- {name}`inputTapeBits_cons_eq_headPrefix_append` provides an important equivalence or equality lemma. -/
 theorem inputTapeBits_cons_eq_headPrefix_append
     (b : Bool) (rest : Word Bool) :
     inputTapeBits (b :: rest) =
@@ -636,7 +614,6 @@ def AppendInputTapeHeadPrefixReturnDescription
     (b : Bool) : MachineDescription :=
   TransitionPrefixedFirstBitAppendCodeWordReturnDescription
     (inputTapeHeadPrefixCode b)
-     /-- {name}`appendInputTapeHeadPrefixReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     appendInputTapeHeadPrefixReturnDescription_subroutineReady
@@ -646,7 +623,6 @@ theorem
     (inputTapeHeadPrefixCode b)
     (inputTapeHeadPrefixCode_ne_nil b)
 
- /-- {name}`appendInputTapeHeadPrefixReturnDescription_run` describes append/fold behavior used by later composition. -/
 theorem appendInputTapeHeadPrefixReturnDescription_run
     (b : Bool) (payload suffixBits : Word Bool) :
     exists steps : Nat,
@@ -713,7 +689,6 @@ def AppendKnownHeadInputTapeReturnDescription
     (AppendInputTapeHeadPrefixReturnDescription b)
     rightCopier
     Direction.left
-     /-- {name}`appendKnownHeadInputTapeReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     appendKnownHeadInputTapeReturnDescription_subroutineReady
@@ -726,7 +701,6 @@ theorem
     (appendInputTapeHeadPrefixReturnDescription_subroutineReady b)
     hright.left
 
- /-- {name}`appendKnownHeadInputTapeReturnDescription_run` describes append/fold behavior used by later composition. -/
 theorem appendKnownHeadInputTapeReturnDescription_run
     {rightCopier : MachineDescription}
     (hright : AppendInputTapeRightCellsReturnSpec rightCopier)
@@ -826,14 +800,12 @@ def AppendEmptyRightCellsReturnDescription :
   TransitionPrefixedFirstBitAppendCodeWordReturnDescription
     (inputTapeRightCellsCode ([] : Word Bool))
 
- /-- {name}`inputTapeRightCellsCode_nil_ne_nil` captures the core lemma for this local construction. -/
 theorem inputTapeRightCellsCode_nil_ne_nil :
     inputTapeRightCellsCode ([] : Word Bool) ≠ [] := by
   simp [inputTapeRightCellsCode,
     MachineDescription.encodeCellListAppend,
     MachineDescription.encodeNatAppend,
     MachineDescription.encodeNat]
-     /-- {name}`appendEmptyRightCellsReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     appendEmptyRightCellsReturnDescription_subroutineReady :
@@ -842,7 +814,6 @@ theorem
     (inputTapeRightCellsCode ([] : Word Bool))
     inputTapeRightCellsCode_nil_ne_nil
 
- /-- {name}`appendEmptyRightCellsReturnDescription_run` describes append/fold behavior used by later composition. -/
 theorem appendEmptyRightCellsReturnDescription_run
     (b : Bool) (stage : Nat) (suffixBits : Word Bool) :
     exists steps : Nat,
@@ -884,7 +855,6 @@ def AppendSingletonInputTapeReturnDescription
     (AppendInputTapeHeadPrefixReturnDescription b)
     AppendEmptyRightCellsReturnDescription
     Direction.left
-     /-- {name}`appendSingletonInputTapeReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     appendSingletonInputTapeReturnDescription_subroutineReady
@@ -895,7 +865,6 @@ theorem
     (appendInputTapeHeadPrefixReturnDescription_subroutineReady b)
     appendEmptyRightCellsReturnDescription_subroutineReady
 
- /-- {name}`appendSingletonInputTapeReturnDescription_run` describes append/fold behavior used by later composition. -/
 theorem appendSingletonInputTapeReturnDescription_run
     (b : Bool) (stage : Nat) (suffixBits : Word Bool) :
     exists steps : Nat,
@@ -992,7 +961,6 @@ def AppendEmptyInputTapeSecondBitReturnDescription :
     MachineDescription :=
   TransitionPrefixedAppendCodeWordReturnDescription
     emptyInputTapeCode
-     /-- {name}`appendEmptyInputTapeSecondBitReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     appendEmptyInputTapeSecondBitReturnDescription_subroutineReady :
@@ -1001,7 +969,6 @@ theorem
     emptyInputTapeCode
     emptyInputTapeCode_ne_nil
 
- /-- {name}`appendEmptyInputTapeSecondBitReturnDescription_run` describes append/fold behavior used by later composition. -/
 theorem appendEmptyInputTapeSecondBitReturnDescription_run
     (stage : Nat) (suffixBits : Word Bool) :
     exists steps : Nat,
@@ -1042,7 +1009,6 @@ def AppendInputTapeSecondBitHeadPrefixReturnDescription
     (b : Bool) : MachineDescription :=
   TransitionPrefixedAppendCodeWordReturnDescription
     (inputTapeHeadPrefixCode b)
-     /-- {name}`appendInputTapeSecondBitHeadPrefixReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     appendInputTapeSecondBitHeadPrefixReturnDescription_subroutineReady
@@ -1052,7 +1018,6 @@ theorem
   transitionPrefixedAppendCodeWordReturnDescription_subroutineReady
     (inputTapeHeadPrefixCode b)
     (inputTapeHeadPrefixCode_ne_nil b)
-     /-- {name}`appendInputTapeSecondBitHeadPrefixReturnDescription_run` describes append/fold behavior used by later composition. -/
 
 theorem
     appendInputTapeSecondBitHeadPrefixReturnDescription_run
@@ -1097,7 +1062,6 @@ def AppendKnownHeadInputTapeSecondBitReturnDescription
     (AppendInputTapeSecondBitHeadPrefixReturnDescription b)
     rightCopier
     Direction.left
-     /-- {name}`appendKnownHeadInputTapeSecondBitReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     appendKnownHeadInputTapeSecondBitReturnDescription_subroutineReady
@@ -1110,7 +1074,6 @@ theorem
     (appendInputTapeSecondBitHeadPrefixReturnDescription_subroutineReady
       b)
     hright.left
-     /-- {name}`appendKnownHeadInputTapeSecondBitReturnDescription_run` describes append/fold behavior used by later composition. -/
 
 theorem
     appendKnownHeadInputTapeSecondBitReturnDescription_run

@@ -5,9 +5,8 @@ set_option doc.verso true
 /-!
 # AppendLast
 
-Supporting declarations and helper lemmas for Computability Compiler Core DovetailInitialLayoutInitializer AppendLast.
+Append-to-end helpers for transition-prefixed initializer output.
 -/
-
 
 namespace FoC
 namespace Computability
@@ -15,7 +14,6 @@ namespace Computability
 open Languages
 
 namespace DovetailInitialLayoutInitializer
-
 
 def WriteTransitionPrefixDescription :
     MachineDescription where
@@ -37,43 +35,30 @@ def WriteTransitionPrefixDescription :
         4 none (some false) Direction.right 5
     ]
 
- /-- {name}`writeTransitionPrefixDescription_wellFormed` captures the core lemma for this local construction. -/
 theorem writeTransitionPrefixDescription_wellFormed :
     WriteTransitionPrefixDescription.WellFormed := by
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := WriteTransitionPrefixDescription.transitions)
       (stateCount :=
         WriteTransitionPrefixDescription.stateCount)
-      (by
-        native_decide)
+      (by native_decide)
   · exact transition_deterministic_of_all
       (l := WriteTransitionPrefixDescription.transitions)
-      (by
-        native_decide)
+      (by native_decide)
 
- /-- {name}`writeTransitionPrefixDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 theorem writeTransitionPrefixDescription_haltTransitionFree :
     WriteTransitionPrefixDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := WriteTransitionPrefixDescription.transitions)
     (state := WriteTransitionPrefixDescription.halt)
-    (by
-      native_decide)
+    (by native_decide)
 
- /-- {name}`writeTransitionPrefixDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem writeTransitionPrefixDescription_subroutineReady :
     WriteTransitionPrefixDescription.SubroutineReady :=
   ⟨writeTransitionPrefixDescription_wellFormed,
     writeTransitionPrefixDescription_haltTransitionFree⟩
 
- /-- {name}`writeTransitionPrefixDescription_run` captures the core lemma for this local construction. -/
 theorem writeTransitionPrefixDescription_run
     (b : Bool) (rest : List (Option Bool)) :
     WriteTransitionPrefixDescription.runConfig 5
@@ -109,43 +94,30 @@ def WriteMarkedTransitionPrefixDescription :
         4 none (some false) Direction.right 5
     ]
 
- /-- {name}`writeMarkedTransitionPrefixDescription_wellFormed` captures the core lemma for this local construction. -/
 theorem writeMarkedTransitionPrefixDescription_wellFormed :
     WriteMarkedTransitionPrefixDescription.WellFormed := by
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := WriteMarkedTransitionPrefixDescription.transitions)
       (stateCount :=
         WriteMarkedTransitionPrefixDescription.stateCount)
-      (by
-        native_decide)
+      (by native_decide)
   · exact transition_deterministic_of_all
       (l := WriteMarkedTransitionPrefixDescription.transitions)
-      (by
-        native_decide)
+      (by native_decide)
 
- /-- {name}`writeMarkedTransitionPrefixDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 theorem writeMarkedTransitionPrefixDescription_haltTransitionFree :
     WriteMarkedTransitionPrefixDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := WriteMarkedTransitionPrefixDescription.transitions)
     (state := WriteMarkedTransitionPrefixDescription.halt)
-    (by
-      native_decide)
+    (by native_decide)
 
- /-- {name}`writeMarkedTransitionPrefixDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem writeMarkedTransitionPrefixDescription_subroutineReady :
     WriteMarkedTransitionPrefixDescription.SubroutineReady :=
   ⟨writeMarkedTransitionPrefixDescription_wellFormed,
     writeMarkedTransitionPrefixDescription_haltTransitionFree⟩
 
- /-- {name}`writeMarkedTransitionPrefixDescription_run` captures the core lemma for this local construction. -/
 theorem writeMarkedTransitionPrefixDescription_run
     (b : Bool) (rest : List (Option Bool)) :
     WriteMarkedTransitionPrefixDescription.runConfig 5
@@ -191,20 +163,16 @@ def AppendFixedFourBitsLastDescription
         4 (some true) (some true) Direction.right 5
     ]
 
- /-- {name}`appendFixedFourBitsLastDescription_wellFormed` describes append/fold behavior used by later composition. -/
 theorem appendFixedFourBitsLastDescription_wellFormed
     (b0 b1 b2 b3 : Bool) :
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).WellFormed := by
-  constructor
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩
   · cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
       native_decide
-  constructor
   · cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
       native_decide
-  constructor
   · cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
       native_decide
-  constructor
   · exact transition_wellFormed_of_all
       (l :=
         (AppendFixedFourBitsLastDescription
@@ -223,7 +191,6 @@ theorem appendFixedFourBitsLastDescription_wellFormed
         cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
           native_decide)
 
- /-- {name}`appendFixedFourBitsLastDescription_haltTransitionFree` describes append/fold behavior used by later composition. -/
 theorem appendFixedFourBitsLastDescription_haltTransitionFree
     (b0 b1 b2 b3 : Bool) :
     (AppendFixedFourBitsLastDescription
@@ -239,7 +206,6 @@ theorem appendFixedFourBitsLastDescription_haltTransitionFree
       cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
         native_decide)
 
- /-- {name}`appendFixedFourBitsLastDescription_step_scan_nonempty` characterizes a scan safety phase. -/
 theorem appendFixedFourBitsLastDescription_step_scan_nonempty
     (b0 b1 b2 b3 : Bool)
     (leftRev : Word Bool) (b : Bool) (rest : Word Bool) :
@@ -259,7 +225,6 @@ theorem appendFixedFourBitsLastDescription_step_scan_nonempty
         MachineDescription.appendRightScanTape, Tape.read, Tape.write,
         Tape.move, Tape.moveRight]
 
- /-- {name}`appendFixedFourBitsLastDescription_run_scan` states the corresponding theorem run form. -/
 theorem appendFixedFourBitsLastDescription_run_scan
     (b0 b1 b2 b3 : Bool)
     (leftRev remaining : Word Bool) :
@@ -279,7 +244,6 @@ theorem appendFixedFourBitsLastDescription_run_scan
         appendFixedFourBitsLastDescription_step_scan_nonempty,
         ih, List.append_assoc]
 
- /-- {name}`appendFixedFourBitsLastDescription_run_write` states the corresponding theorem run form. -/
 theorem appendFixedFourBitsLastDescription_run_write
     (b0 b1 b2 b3 : Bool) (leftRev : Word Bool) :
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).runConfig 5
@@ -296,7 +260,6 @@ theorem appendFixedFourBitsLastDescription_run_write
       MachineDescription.appendRightScanTape, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft, Tape.moveRight]
 
- /-- {name}`appendFixedFourBitsLastDescription_run_halt` states the corresponding theorem run form. -/
 theorem appendFixedFourBitsLastDescription_run_halt
     (b0 b1 b2 b3 : Bool) (w : Word Bool) :
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).runConfig
@@ -345,14 +308,12 @@ def appendRightLastTapeAtCells
     head := some b3
     right := [] }
 
- /-- {name}`appendScanTapeAtCells_of_bits` characterizes a scan safety phase. -/
 theorem appendScanTapeAtCells_of_bits
     (leftRev remaining : Word Bool) :
     appendScanTapeAtCells (leftRev.map some) remaining =
       MachineDescription.appendRightScanTape leftRev remaining := by
   cases remaining <;> rfl
 
- /-- {name}`appendRightLastTapeAtCells_of_bits` describes append/fold behavior used by later composition. -/
 theorem appendRightLastTapeAtCells_of_bits
     (leftRev : Word Bool) (b0 b1 b2 b3 : Bool) :
     appendRightLastTapeAtCells
@@ -361,7 +322,6 @@ theorem appendRightLastTapeAtCells_of_bits
   simp [appendRightLastTapeAtCells,
     appendRightLastTape]
 
- /-- {name}`appendFixedFourBitsLastDescription_step_scan_nonempty_atCells` characterizes a scan safety phase. -/
 theorem appendFixedFourBitsLastDescription_step_scan_nonempty_atCells
     (b0 b1 b2 b3 : Bool)
     (leftRev : List (Option Bool)) (b : Bool) (rest : Word Bool) :
@@ -381,7 +341,6 @@ theorem appendFixedFourBitsLastDescription_step_scan_nonempty_atCells
         MachineDescription.transition, Tape.read, Tape.write,
         Tape.move, Tape.moveRight]
 
- /-- {name}`appendFixedFourBitsLastDescription_step_scan_nonempty_atCellsChecked` characterizes a scan safety phase. -/
 theorem appendFixedFourBitsLastDescription_step_scan_nonempty_atCellsChecked
     (b0 b1 b2 b3 : Bool)
     (leftRev : List (Option Bool)) (b : Bool) (rest : Word Bool) :
@@ -401,7 +360,6 @@ theorem appendFixedFourBitsLastDescription_step_scan_nonempty_atCellsChecked
         MachineDescription.transition, Tape.read, Tape.write,
         Tape.move, Tape.moveRight]
 
- /-- {name}`appendFixedFourBitsLastDescription_run_scan_atCells` states the corresponding theorem run form. -/
 theorem appendFixedFourBitsLastDescription_run_scan_atCells
     (b0 b1 b2 b3 : Bool)
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
@@ -421,7 +379,6 @@ theorem appendFixedFourBitsLastDescription_run_scan_atCells
         appendFixedFourBitsLastDescription_step_scan_nonempty_atCells,
         ih, List.append_assoc]
 
- /-- {name}`appendFixedFourBitsLastDescription_run_scan_atCellsChecked` states the corresponding theorem run form. -/
 theorem appendFixedFourBitsLastDescription_run_scan_atCellsChecked
     (b0 b1 b2 b3 : Bool)
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
@@ -442,7 +399,6 @@ theorem appendFixedFourBitsLastDescription_run_scan_atCellsChecked
         appendFixedFourBitsLastDescription_step_scan_nonempty_atCellsChecked,
         ih, List.append_assoc]
 
- /-- {name}`appendFixedFourBitsLastDescription_run_write_atCells` states the corresponding theorem run form. -/
 theorem appendFixedFourBitsLastDescription_run_write_atCells
     (b0 b1 b2 b3 : Bool) (leftRev : List (Option Bool)) :
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).runConfig 5
@@ -461,7 +417,6 @@ theorem appendFixedFourBitsLastDescription_run_write_atCells
       MachineDescription.transition, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft, Tape.moveRight]
 
- /-- {name}`appendFixedFourBitsLastDescription_run_from_scan_atCells` states the corresponding theorem run form. -/
 theorem appendFixedFourBitsLastDescription_run_from_scan_atCells
     (b0 b1 b2 b3 : Bool)
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
@@ -479,7 +434,6 @@ theorem appendFixedFourBitsLastDescription_run_from_scan_atCells
   exact appendFixedFourBitsLastDescription_run_write_atCells
     b0 b1 b2 b3 _
 
- /-- {name}`appendFixedFourBitsLastDescription_run_from_scan_atCellsChecked` states the corresponding theorem run form. -/
 theorem appendFixedFourBitsLastDescription_run_from_scan_atCellsChecked
     (b0 b1 b2 b3 : Bool)
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
@@ -497,7 +451,6 @@ theorem appendFixedFourBitsLastDescription_run_from_scan_atCellsChecked
   exact appendFixedFourBitsLastDescription_run_write_atCells
     b0 b1 b2 b3 _
 
- /-- {name}`writeMarkedTransitionPrefixDescription_handoff_to_append` describes append/fold behavior used by later composition. -/
 theorem writeMarkedTransitionPrefixDescription_handoff_to_append
     (b : Bool) (rest : Word Bool) :
     Tape.move Direction.right
@@ -511,7 +464,6 @@ theorem writeMarkedTransitionPrefixDescription_handoff_to_append
       simp [tapeAtCells, appendScanTapeAtCells,
         Tape.move, Tape.moveRight]
 
- /-- {name}`writeMarkedTransitionPrefixDescription_handoff_to_append_checked` describes append/fold behavior used by later composition. -/
 theorem writeMarkedTransitionPrefixDescription_handoff_to_append_checked
     (b : Bool) (rest : Word Bool) :
     Tape.move Direction.right
@@ -539,26 +491,22 @@ def appendCodeSymbolLastTape
       appendRightLastTape leftRev b0 b1 b2 b3
   | _ => Tape.input leftRev.reverse
 
- /-- {name}`appendCodeSymbolLastDescription_start` describes append/fold behavior used by later composition. -/
 theorem appendCodeSymbolLastDescription_start
     (symbol : MachineCodeSymbol) :
     (AppendCodeSymbolLastDescription symbol).start = 0 := by
   cases symbol <;> rfl
 
- /-- {name}`appendCodeSymbolLastDescription_halt` describes append/fold behavior used by later composition. -/
 theorem appendCodeSymbolLastDescription_halt
     (symbol : MachineCodeSymbol) :
     (AppendCodeSymbolLastDescription symbol).halt = 5 := by
   cases symbol <;> rfl
 
- /-- {name}`appendCodeSymbolLastDescription_wellFormed` describes append/fold behavior used by later composition. -/
 theorem appendCodeSymbolLastDescription_wellFormed
     (symbol : MachineCodeSymbol) :
     (AppendCodeSymbolLastDescription symbol).WellFormed := by
   cases symbol <;>
     exact appendFixedFourBitsLastDescription_wellFormed _ _ _ _
 
- /-- {name}`appendCodeSymbolLastDescription_haltTransitionFree` describes append/fold behavior used by later composition. -/
 theorem appendCodeSymbolLastDescription_haltTransitionFree
     (symbol : MachineCodeSymbol) :
     (AppendCodeSymbolLastDescription
@@ -568,7 +516,6 @@ theorem appendCodeSymbolLastDescription_haltTransitionFree
       appendFixedFourBitsLastDescription_haltTransitionFree
         _ _ _ _
 
- /-- {name}`appendCodeSymbolLastDescription_run_from_scan` states the corresponding theorem run form. -/
 theorem appendCodeSymbolLastDescription_run_from_scan
     (symbol : MachineCodeSymbol)
     (leftRev remaining : Word Bool) :
@@ -588,7 +535,6 @@ theorem appendCodeSymbolLastDescription_run_from_scan
       appendFixedFourBitsLastDescription_run_scan,
       appendFixedFourBitsLastDescription_run_write]
 
- /-- {name}`appendCodeSymbolLastDescription_run_halt` states the corresponding theorem run form. -/
 theorem appendCodeSymbolLastDescription_run_halt
     (symbol : MachineCodeSymbol) (w : Word Bool) :
     (AppendCodeSymbolLastDescription symbol).runConfig
@@ -603,7 +549,6 @@ theorem appendCodeSymbolLastDescription_run_halt
       appendFixedFourBitsLastDescription_run_halt
         _ _ _ _ w
 
- /-- {name}`appendCodeSymbolLastTape_move_right` describes append/fold behavior used by later composition. -/
 theorem appendCodeSymbolLastTape_move_right
     (leftRev : Word Bool) (symbol : MachineCodeSymbol) :
     Tape.move Direction.right
@@ -618,7 +563,6 @@ theorem appendCodeSymbolLastTape_move_right
       MachineDescription.encodeCodeSymbolAsInput,
       MachineDescription.appendRightScanTape, Tape.move, Tape.moveRight]
 
- /-- {name}`appendCodeSymbolLastDescription_haltsWithTape` describes append/fold behavior used by later composition. -/
 theorem appendCodeSymbolLastDescription_haltsWithTape
     (symbol : MachineCodeSymbol) (w : Word Bool) :
     (AppendCodeSymbolLastDescription symbol).HaltsWithTape
@@ -651,14 +595,12 @@ def appendCodeWordLastTape
           leftRev)
         (next :: rest)
 
- /-- {name}`appendCodeSymbolLastDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem appendCodeSymbolLastDescription_subroutineReady
     (symbol : MachineCodeSymbol) :
     (AppendCodeSymbolLastDescription symbol).SubroutineReady :=
   ⟨appendCodeSymbolLastDescription_wellFormed symbol,
     appendCodeSymbolLastDescription_haltTransitionFree symbol⟩
 
- /-- {name}`appendCodeWordLastDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem appendCodeWordLastDescription_subroutineReady :
     forall code : Word MachineCodeSymbol,
       code ≠ [] ->
@@ -672,7 +614,6 @@ theorem appendCodeWordLastDescription_subroutineReady :
         (appendCodeWordLastDescription_subroutineReady
           (next :: rest) (by intro h; cases h))
 
- /-- {name}`appendCodeWordLastDescription_run_from_scan` states the corresponding theorem run form. -/
 theorem appendCodeWordLastDescription_run_from_scan :
     forall code : Word MachineCodeSymbol,
       code ≠ [] ->
@@ -751,7 +692,6 @@ theorem appendCodeWordLastDescription_run_from_scan :
       simpa [AppendCodeWordLastDescription,
         appendCodeWordLastTape, A, B, Tmid, leftAfterSymbol] using hn
 
- /-- {name}`appendCodeWordLastDescription_run_halt` states the corresponding theorem run form. -/
 theorem appendCodeWordLastDescription_run_halt
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (w : Word Bool) :
@@ -768,7 +708,6 @@ theorem appendCodeWordLastDescription_run_halt
   simpa [MachineDescription.initial,
     MachineDescription.appendRightScanTape_nil_eq_input] using hn
 
- /-- {name}`appendCodeWordLastDescription_haltsWithTape` describes append/fold behavior used by later composition. -/
 theorem appendCodeWordLastDescription_haltsWithTape
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (w : Word Bool) :
@@ -792,7 +731,6 @@ def appendCodeSymbolLastTapeAtCells
       appendRightLastTapeAtCells leftRev b0 b1 b2 b3
   | _ => appendScanTapeAtCells leftRev []
 
- /-- {name}`appendCodeSymbolLastTapeAtCells_of_bits` describes append/fold behavior used by later composition. -/
 theorem appendCodeSymbolLastTapeAtCells_of_bits
     (leftRev : Word Bool) (symbol : MachineCodeSymbol) :
     appendCodeSymbolLastTapeAtCells
@@ -804,7 +742,6 @@ theorem appendCodeSymbolLastTapeAtCells_of_bits
       appendRightLastTapeAtCells_of_bits,
       MachineDescription.encodeCodeSymbolAsInput]
 
- /-- {name}`appendCodeSymbolLastDescription_run_from_scan_atCells` states the corresponding theorem run form. -/
 theorem appendCodeSymbolLastDescription_run_from_scan_atCells
     (symbol : MachineCodeSymbol)
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
@@ -823,7 +760,6 @@ theorem appendCodeSymbolLastDescription_run_from_scan_atCells
       appendFixedFourBitsLastDescription_run_from_scan_atCells
         _ _ _ _ leftRev remaining
 
- /-- {name}`appendCodeSymbolLastDescription_run_from_scan_atCellsChecked` states the corresponding theorem run form. -/
 theorem appendCodeSymbolLastDescription_run_from_scan_atCellsChecked
     (symbol : MachineCodeSymbol)
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
@@ -842,7 +778,6 @@ theorem appendCodeSymbolLastDescription_run_from_scan_atCellsChecked
       appendFixedFourBitsLastDescription_run_from_scan_atCellsChecked
         _ _ _ _ leftRev remaining
 
- /-- {name}`appendCodeSymbolLastTapeAtCells_move_right` describes append/fold behavior used by later composition. -/
 theorem appendCodeSymbolLastTapeAtCells_move_right
     (leftRev : List (Option Bool)) (symbol : MachineCodeSymbol) :
     Tape.move Direction.right
@@ -870,7 +805,6 @@ def appendCodeWordLastTapeAtCells
           leftRev)
         (next :: rest)
 
- /-- {name}`appendCodeWordLastTapeAtCells_of_bits` describes append/fold behavior used by later composition. -/
 theorem appendCodeWordLastTapeAtCells_of_bits :
     forall code : Word MachineCodeSymbol,
     forall leftRev : Word Bool,
@@ -913,7 +847,6 @@ theorem appendCodeWordLastTapeAtCells_of_bits :
             (MachineDescription.encodeCodeSymbolAsInput symbol).reverse
             leftRev)
 
- /-- {name}`appendCodeWordLastDescription_run_from_scan_atCells` states the corresponding theorem run form. -/
 theorem appendCodeWordLastDescription_run_from_scan_atCells :
     forall code : Word MachineCodeSymbol,
       code ≠ [] ->
@@ -994,7 +927,6 @@ theorem appendCodeWordLastDescription_run_from_scan_atCells :
         appendCodeWordLastTapeAtCells, A, B, Tmid,
         leftAfterSymbol] using hn
 
- /-- {name}`appendCodeWordLastDescription_run_from_scan_atCellsChecked` states the corresponding theorem run form. -/
 theorem appendCodeWordLastDescription_run_from_scan_atCellsChecked :
     forall code : Word MachineCodeSymbol,
       code ≠ [] ->
@@ -1082,7 +1014,6 @@ def MarkedPrefixThenAppendCodeWordLastDescription
     (AppendCodeWordLastDescription code)
     Direction.right
 
- /-- {name}`markedPrefixThenAppendCodeWordLastDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem markedPrefixThenAppendCodeWordLastDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (MarkedPrefixThenAppendCodeWordLastDescription
@@ -1091,7 +1022,6 @@ theorem markedPrefixThenAppendCodeWordLastDescription_subroutineReady
     writeMarkedTransitionPrefixDescription_subroutineReady
     (appendCodeWordLastDescription_subroutineReady code hcode)
 
- /-- {name}`markedPrefixThenAppendCodeWordLastDescription_run` captures the core lemma for this local construction. -/
 theorem markedPrefixThenAppendCodeWordLastDescription_run
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (b : Bool) (rest : Word Bool) :
@@ -1154,7 +1084,6 @@ theorem markedPrefixThenAppendCodeWordLastDescription_run
   simpa [MarkedPrefixThenAppendCodeWordLastDescription,
     MachineDescription.initial, A, B] using hn
 
- /-- {name}`markedPrefixThenAppendCodeWordLastDescription_run_checked` states the corresponding theorem run form. -/
 theorem markedPrefixThenAppendCodeWordLastDescription_run_checked
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (b : Bool) (rest : Word Bool) :
@@ -1220,7 +1149,6 @@ theorem markedPrefixThenAppendCodeWordLastDescription_run_checked
   simpa [MarkedPrefixThenAppendCodeWordLastDescription,
     A, B] using hn
 
- /-- {name}`encodeNat_ne_nil` captures the core lemma for this local construction. -/
 theorem encodeNat_ne_nil (n : Nat) :
     MachineDescription.encodeNat n ≠ [] := by
   cases n <;> simp [MachineDescription.encodeNat]
@@ -1235,7 +1163,6 @@ def appendNatLastTape
   appendCodeWordLastTape leftRev
     (MachineDescription.encodeNat n)
 
- /-- {name}`appendNatLastDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem appendNatLastDescription_subroutineReady
     (n : Nat) :
     (AppendNatLastDescription n).SubroutineReady :=
@@ -1243,7 +1170,6 @@ theorem appendNatLastDescription_subroutineReady
     (MachineDescription.encodeNat n)
     (encodeNat_ne_nil n)
 
- /-- {name}`appendNatLastDescription_run_from_scan` states the corresponding theorem run form. -/
 theorem appendNatLastDescription_run_from_scan
     (n : Nat) (leftRev remaining : Word Bool) :
     exists steps : Nat,
@@ -1261,7 +1187,6 @@ theorem appendNatLastDescription_run_from_scan
       (encodeNat_ne_nil n)
       leftRev remaining
 
- /-- {name}`appendNatLastDescription_haltsWithTape` describes append/fold behavior used by later composition. -/
 theorem appendNatLastDescription_haltsWithTape
     (n : Nat) (w : Word Bool) :
     (AppendNatLastDescription n).HaltsWithTape
@@ -1278,7 +1203,6 @@ def MarkedPrefixThenAppendNatLastDescription
   MarkedPrefixThenAppendCodeWordLastDescription
     (MachineDescription.encodeNat n)
 
- /-- {name}`markedPrefixThenAppendNatLastDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem markedPrefixThenAppendNatLastDescription_subroutineReady
     (n : Nat) :
     (MarkedPrefixThenAppendNatLastDescription
@@ -1287,7 +1211,6 @@ theorem markedPrefixThenAppendNatLastDescription_subroutineReady
     (MachineDescription.encodeNat n)
     (encodeNat_ne_nil n)
 
- /-- {name}`markedPrefixThenAppendNatLastDescription_run` captures the core lemma for this local construction. -/
 theorem markedPrefixThenAppendNatLastDescription_run
     (n : Nat) (b : Bool) (rest : Word Bool) :
     exists steps : Nat,

@@ -6,9 +6,8 @@ set_option doc.verso true
 /-!
 # Assembly
 
-Supporting declarations and helper lemmas for Computability Compiler Core DovetailInitialLayoutInitializer Assembly.
+Assembly of the concrete stage-input initializer components.
 -/
-
 
 namespace FoC
 namespace Computability
@@ -22,7 +21,6 @@ def finalBoolFlagsCode :
   MachineDescription.encodeBoolAppend false
     (MachineDescription.encodeBoolAppend false [])
 
- /-- {name}`finalBoolFlagsCode_ne_nil` captures the core lemma for this local construction. -/
 theorem finalBoolFlagsCode_ne_nil :
     finalBoolFlagsCode ≠ [] := by
   simp [finalBoolFlagsCode,
@@ -34,7 +32,6 @@ def AppendFinalBoolFlagsReturnDescription :
     MachineDescription :=
   TransitionPrefixedFirstBitAppendCodeWordReturnDescription
     finalBoolFlagsCode
-     /-- {name}`appendFinalBoolFlagsReturnDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     appendFinalBoolFlagsReturnDescription_subroutineReady :
@@ -50,7 +47,6 @@ def AppendSecondInputTapeAndFlagsDescription
     copier
     AppendFinalBoolFlagsReturnDescription
     Direction.left
-     /-- {name}`appendSecondInputTapeAndFlagsDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     appendSecondInputTapeAndFlagsDescription_subroutineReady
@@ -69,7 +65,6 @@ def AppendRejectThenInputTapeAndFlagsDescription
       reject.start)
     (AppendSecondInputTapeAndFlagsDescription copier)
     Direction.left
-     /-- {name}`appendRejectThenInputTapeAndFlagsDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     appendRejectThenInputTapeAndFlagsDescription_subroutineReady
@@ -89,7 +84,6 @@ def AppendFirstInputTapeThenRejectDescription
     copier
     (AppendRejectThenInputTapeAndFlagsDescription reject copier)
     Direction.left
-     /-- {name}`appendFirstInputTapeThenRejectDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     appendFirstInputTapeThenRejectDescription_subroutineReady
@@ -108,7 +102,6 @@ def DescriptionWithCopier
     (MarkedPrefixAppendNatReturnDescription accept.start)
     (AppendFirstInputTapeThenRejectDescription reject copier)
     Direction.left
-     /-- {name}`descriptionWithCopier_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
     descriptionWithCopier_subroutineReady
@@ -121,7 +114,6 @@ theorem
       accept.start)
     (appendFirstInputTapeThenRejectDescription_subroutineReady
       hcopier)
-     /-- {name}`appendSecondInputTapeAndFlagsDescription_run` describes append/fold behavior used by later composition. -/
 
 theorem
     appendSecondInputTapeAndFlagsDescription_run
@@ -209,7 +201,6 @@ theorem
   refine ⟨n, ?_⟩
   simpa [AppendSecondInputTapeAndFlagsDescription,
     A, B] using hn
-     /-- {name}`appendRejectThenInputTapeAndFlagsDescription_run` describes append/fold behavior used by later composition. -/
 
 theorem
     appendRejectThenInputTapeAndFlagsDescription_run
@@ -309,7 +300,6 @@ theorem
   refine ⟨n, ?_⟩
   simpa [AppendRejectThenInputTapeAndFlagsDescription,
     A, B] using hn
-     /-- {name}`appendFirstInputTapeThenRejectDescription_run` describes append/fold behavior used by later composition. -/
 
 theorem
     appendFirstInputTapeThenRejectDescription_run
@@ -402,7 +392,6 @@ theorem
   refine ⟨n, ?_⟩
   simpa [AppendFirstInputTapeThenRejectDescription,
     A, B] using hn
-     /-- {name}`descriptionWithCopier_run_bits` states the corresponding theorem run form. -/
 
 theorem
     descriptionWithCopier_run_bits
@@ -496,7 +485,6 @@ theorem
   refine ⟨n, ?_⟩
   simpa [DescriptionWithCopier,
     MachineDescription.initial, A, B] using hn
-     /-- {name}`descriptionWithCopier_run_bits_checked` states the corresponding theorem run form. -/
 
 theorem
     descriptionWithCopier_run_bits_checked
@@ -588,7 +576,6 @@ theorem
   simpa [DescriptionWithCopier,
     A, B] using hn
 
- /-- {name}`codeCells_encodeNat` captures the core lemma for this local construction. -/
 theorem codeCells_encodeNat
     (n : Nat) :
     codeCells (MachineDescription.encodeNat n) =
@@ -606,7 +593,6 @@ theorem codeCells_encodeNat
             (natCodeCells n)
       rw [ih]
 
- /-- {name}`codeCells_encodeNatAppend` captures the core lemma for this local construction. -/
 theorem codeCells_encodeNatAppend
     (n : Nat) (suffix : Word MachineCodeSymbol) :
     codeCells
@@ -616,7 +602,6 @@ theorem codeCells_encodeNatAppend
   rw [MachineDescription.encodeNatAppend, codeCells_append,
     codeCells_encodeNat]
 
- /-- {name}`codeCells_encodeCell` captures the core lemma for this local construction. -/
 theorem codeCells_encodeCell
     (cell : Option Bool) :
     codeCells (MachineDescription.encodeCell cell) =
@@ -627,7 +612,6 @@ theorem codeCells_encodeCell
   | some b =>
       cases b <;> rfl
 
- /-- {name}`codeCells_encodeCellAppend` captures the core lemma for this local construction. -/
 theorem codeCells_encodeCellAppend
     (cell : Option Bool) (suffix : Word MachineCodeSymbol) :
     codeCells
@@ -637,7 +621,6 @@ theorem codeCells_encodeCellAppend
   rw [MachineDescription.encodeCellAppend, codeCells_append,
     codeCells_encodeCell]
 
- /-- {name}`codeCells_encodeCellsAppend` captures the core lemma for this local construction. -/
 theorem codeCells_encodeCellsAppend
     (cells : List (Option Bool)) (suffix : Word MachineCodeSymbol) :
     codeCells
@@ -652,7 +635,6 @@ theorem codeCells_encodeCellsAppend
         codeCells_encodeCellAppend, ih]
       simp [cellsCodeCells, List.append_assoc]
 
- /-- {name}`codeCells_encodeCellListAppend` captures the core lemma for this local construction. -/
 theorem codeCells_encodeCellListAppend
     (cells : List (Option Bool)) (suffix : Word MachineCodeSymbol) :
     codeCells
@@ -676,7 +658,6 @@ def inputTapeCodeCells :
           (List.append (natCodeCells rest.length)
             (cellsCodeCells (rest.map some))))
 
- /-- {name}`codeCells_encodeTapeAppend_input` captures the core lemma for this local construction. -/
 theorem codeCells_encodeTapeAppend_input
     (w : Word Bool) (suffix : Word MachineCodeSymbol) :
     codeCells
@@ -703,7 +684,6 @@ def boolCodeCells (b : Bool) :
     List (Option Bool) :=
   cellCodeCells (some b)
 
- /-- {name}`codeCells_encodeBoolAppend` captures the core lemma for this local construction. -/
 theorem codeCells_encodeBoolAppend
     (b : Bool) (suffix : Word MachineCodeSymbol) :
     codeCells
@@ -714,7 +694,6 @@ theorem codeCells_encodeBoolAppend
     codeCells_encodeCellAppend]
   rfl
 
- /-- {name}`codeCells_encodeBoolWordAppend` captures the core lemma for this local construction. -/
 theorem codeCells_encodeBoolWordAppend
     (w : Word Bool) (suffix : Word MachineCodeSymbol) :
     codeCells
@@ -726,7 +705,6 @@ theorem codeCells_encodeBoolWordAppend
   simp [boolWordCells, boolPayloadCells,
     List.append_assoc]
 
- /-- {name}`stageInputCells_eq_bool_word_nat` provides an important equivalence or equality lemma. -/
 theorem stageInputCells_eq_bool_word_nat
     (w : Word Bool) (stage : Nat) :
     stageInputCells w stage =
@@ -739,7 +717,6 @@ theorem stageInputCells_eq_bool_word_nat
     codeCells_encodeNatAppend]
   simp [codeCells, MachineDescription.encodeCodeWordAsInput]
 
- /-- {name}`suffixCells_eq_field_blocks` provides an important equivalence or equality lemma. -/
 theorem suffixCells_eq_field_blocks
     (accept reject : MachineDescription)
     (w : Word Bool) :
@@ -759,7 +736,6 @@ theorem suffixCells_eq_field_blocks
     codeCells_encodeBoolAppend]
   simp [codeCells, MachineDescription.encodeCodeWordAsInput]
 
- /-- {name}`outputCells_eq_stageInput_append_suffix` provides an important equivalence or equality lemma. -/
 theorem outputCells_eq_stageInput_append_suffix
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) :
@@ -794,7 +770,6 @@ theorem outputCells_eq_stageInput_append_suffix
     (MachineDescription.encodeCodeWordAsInput
       (SuffixCode accept reject w))
 
- /-- {name}`outputCells_eq_phase_blocks` provides an important equivalence or equality lemma. -/
 theorem outputCells_eq_phase_blocks
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) :
@@ -807,7 +782,6 @@ theorem outputCells_eq_phase_blocks
     stageInputCells_eq_bool_word_nat]
   simp [List.append_assoc]
 
- /-- {name}`outputCells_eq_full_field_blocks` provides an important equivalence or equality lemma. -/
 theorem outputCells_eq_full_field_blocks
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) :
@@ -824,7 +798,6 @@ theorem outputCells_eq_full_field_blocks
   rw [outputCells_eq_phase_blocks,
     suffixCells_eq_field_blocks]
 
- /-- {name}`tapeAtCells_eq_input_transition_prefixed` provides an important equivalence or equality lemma. -/
 theorem tapeAtCells_eq_input_transition_prefixed
     (tail : Word Bool) :
     tapeAtCells []
@@ -838,7 +811,6 @@ theorem tapeAtCells_eq_input_transition_prefixed
   simp [tapeAtCells,
     MachineDescription.encodeCodeSymbolAsInput, Tape.input]
 
- /-- {name}`tapeAtCells_right_eq_move_right_input_transition_prefixed` provides an important equivalence or equality lemma. -/
 theorem tapeAtCells_right_eq_move_right_input_transition_prefixed
     (tail : Word Bool) :
     tapeAtCells
@@ -854,7 +826,6 @@ theorem tapeAtCells_right_eq_move_right_input_transition_prefixed
     MachineDescription.encodeCodeSymbolAsInput, Tape.input,
     Tape.move, Tape.moveRight]
 
- /-- {name}`outputTape_eq_cells` provides an important equivalence or equality lemma. -/
 theorem outputTape_eq_cells
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) :
@@ -879,7 +850,6 @@ theorem outputTape_eq_cells
             accept reject w)))]
   rw [map_some_append]
 
- /-- {name}`natCodeCells_eq_bits` provides an important equivalence or equality lemma. -/
 theorem natCodeCells_eq_bits
     (n : Nat) :
     natCodeCells n =
@@ -887,7 +857,6 @@ theorem natCodeCells_eq_bits
   rw [← codeCells_encodeNat n]
   rfl
 
- /-- {name}`inputTapeCodeCells_eq_bits` provides an important equivalence or equality lemma. -/
 theorem inputTapeCodeCells_eq_bits
     (w : Word Bool) :
     inputTapeCodeCells w =
@@ -898,7 +867,6 @@ theorem inputTapeCodeCells_eq_bits
   simpa [inputTapeBits, codeCells,
     MachineDescription.encodeCodeWordAsInput] using h.symm
 
- /-- {name}`finalBoolFlagsCodeCells_eq_bits` provides an important equivalence or equality lemma. -/
 theorem finalBoolFlagsCodeCells_eq_bits :
     List.append (boolCodeCells false)
         (boolCodeCells false) =
@@ -911,7 +879,6 @@ theorem finalBoolFlagsCodeCells_eq_bits :
     MachineDescription.encodeCodeWordAsInput,
     MachineDescription.encodeCodeSymbolAsInput]
 
- /-- {name}`outputTape_eq_bits` provides an important equivalence or equality lemma. -/
 theorem outputTape_eq_bits
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) :
@@ -949,7 +916,6 @@ theorem outputTape_eq_bits
   simp [stageInputCells, stageInputBits,
     codeCells, List.map_append]
 
- /-- {name}`inputTapeRightCellsDirectCopierNatBits_eq_ticks_done` provides an important equivalence or equality lemma. -/
 theorem inputTapeRightCellsDirectCopierNatBits_eq_ticks_done
     (n : Nat) :
     inputTapeRightCellsDirectCopierNatBits n =
@@ -966,7 +932,6 @@ theorem inputTapeRightCellsDirectCopierNatBits_eq_ticks_done
             inputTapeRightCellsDirectCopierDoneBits
       rw [ih]
 
- /-- {name}`inputTapeRightCellsDirectCopierCellBits_append_natBits` describes append/fold behavior used by later composition. -/
 theorem inputTapeRightCellsDirectCopierCellBits_append_natBits
     (rest : Word Bool) (stage : Nat) :
     MachineDescription.encodeCodeWordAsInput
@@ -986,7 +951,6 @@ theorem inputTapeRightCellsDirectCopierCellBits_append_natBits
   rw [MachineDescription.encodeCodeWordAsInput_append]
   rfl
 
- /-- {name}`inputTapeRightCellsDirectCopierRightCellsCodeBits_eq` provides an important equivalence or equality lemma. -/
 theorem inputTapeRightCellsDirectCopierRightCellsCodeBits_eq
     (rest : Word Bool) :
     MachineDescription.encodeCodeWordAsInput
@@ -1008,7 +972,6 @@ theorem inputTapeRightCellsDirectCopierRightCellsCodeBits_eq
       inputTapeRightCellsDirectCopierDoneBits
       (inputTapeRightCellsDirectCopierCellBits rest)
 
- /-- {name}`inputTapeRightCellsDirectCopierStageInputTailBits_eq` provides an important equivalence or equality lemma. -/
 theorem inputTapeRightCellsDirectCopierStageInputTailBits_eq
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     MachineDescription.encodeCodeWordAsInput
@@ -1035,7 +998,6 @@ theorem inputTapeRightCellsDirectCopierStageInputTailBits_eq
       inputTapeRightCellsDirectCopierCellBits_append_natBits,
       List.append_assoc]
 
- /-- {name}`stageInputBits_cons_eq_directCopierBits` provides an important equivalence or equality lemma. -/
 theorem stageInputBits_cons_eq_directCopierBits
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     stageInputBits (b :: rest) stage =
@@ -1078,7 +1040,6 @@ theorem stageInputBits_cons_eq_directCopierBits
       (inputTapeRightCellsDirectCopierStageInputTailBits_eq
         true rest stage)
 
- /-- {name}`inputTapeRightCellsDirectCopierCoreSourceBits_eq` provides an important equivalence or equality lemma. -/
 theorem inputTapeRightCellsDirectCopierCoreSourceBits_eq
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffixBits : Word Bool) :
@@ -1091,7 +1052,6 @@ theorem inputTapeRightCellsDirectCopierCoreSourceBits_eq
   simp [inputTapeRightCellsDirectCopierCoreSourceBits,
     List.append_assoc]
 
- /-- {name}`inputTapeRightCellsDirectCopierCoreOutputBits_eq` provides an important equivalence or equality lemma. -/
 theorem inputTapeRightCellsDirectCopierCoreOutputBits_eq
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffixBits : Word Bool) :
@@ -1107,7 +1067,6 @@ theorem inputTapeRightCellsDirectCopierCoreOutputBits_eq
     inputTapeRightCellsDirectCopierPreludeBits,
     MachineDescription.encodeCodeSymbolAsInput,
     List.append_assoc]
-     /-- {name}`descriptionWithCopier_forward` captures the core lemma for this local construction. -/
 
 theorem
     descriptionWithCopier_forward
@@ -1132,7 +1091,6 @@ theorem
       (outputTape_eq_bits
         accept reject w stage).symm
 
- /-- {name}`appendInputTapeRightCellsReturnSpec_realizer` states the finite-machine specification. -/
 theorem appendInputTapeRightCellsReturnSpec_realizer :
     AppendInputTapeRightCellsReturnConstruction := by
   refine ⟨InputTapeRightCellsDirectReturnDescription, ?_⟩
@@ -1154,7 +1112,6 @@ theorem appendInputTapeRightCellsReturnSpec_realizer :
     simpa [houtput, List.map_append,
       List.append_assoc] using hsteps
 
- /-- {name}`appendInputTapeHeadTaggedBrancher_realizer` describes append/fold behavior used by later composition. -/
 theorem appendInputTapeHeadTaggedBrancher_realizer :
     AppendInputTapeHeadTaggedBrancherConstruction := by
   intro rightCopier hrightCopier
@@ -1301,7 +1258,6 @@ theorem appendInputTapeHeadTaggedBrancher_realizer :
       refine ⟨steps, ?_⟩
       simpa [brancher, T, Tout] using hsteps
 
- /-- {name}`appendInputTapeHeadDispatcher_realizer` describes append/fold behavior used by later composition. -/
 theorem appendInputTapeHeadDispatcher_realizer :
     AppendInputTapeHeadDispatcherConstruction := by
   intro rightCopier hrightCopier
@@ -1315,7 +1271,6 @@ theorem appendInputTapeHeadDispatcher_realizer :
       appendInputTapeHeadDispatcherSpec_of_router_brancher
         appendInputTapeHeadRouterDescription_spec hbrancher⟩
 
- /-- {name}`appendInputTapeReturnSpec_realizer` states the finite-machine specification. -/
 theorem appendInputTapeReturnSpec_realizer :
     exists copier : MachineDescription,
       AppendInputTapeReturnSpec copier := by
@@ -1329,14 +1284,12 @@ theorem appendInputTapeReturnSpec_realizer :
     ⟨copier,
       appendInputTapeReturnSpec_of_headDispatcher hcopier⟩
 
- /-- {name}`stageInputMarkedScanner_realizer` characterizes a scan safety phase. -/
 theorem stageInputMarkedScanner_realizer :
     StageInputMarkedScannerConstruction := by
   exact
     ⟨StageInputMarkedScannerDescription,
       stageInputMarkedScannerDescription_spec⟩
 
- /-- {name}`stageInputMarkedCore_realizer` captures the core lemma for this local construction. -/
 theorem stageInputMarkedCore_realizer :
     StageInputMarkedCoreConstruction := by
   rcases stageInputMarkedScanner_realizer with
@@ -1345,7 +1298,6 @@ theorem stageInputMarkedCore_realizer :
     ⟨StageInputMarkedCoreDescription scanner,
       stageInputMarkedCoreSpec_of_markedScanner hscanner⟩
 
- /-- {name}`stageInputRecognizer_realizer` captures the core lemma for this local construction. -/
 theorem stageInputRecognizer_realizer :
     StageInputRecognizerConstruction := by
   rcases stageInputMarkedCore_realizer with
@@ -1354,7 +1306,6 @@ theorem stageInputRecognizer_realizer :
     ⟨StageInputRecognizerDescription markedCore,
       stageInputRecognizerSpec_of_markedCore hmarkedCore⟩
 
- /-- {name}`stageInputIdentityClosedHandoff_realizer` captures the core lemma for this local construction. -/
 theorem stageInputIdentityClosedHandoff_realizer :
     StageInputIdentityClosedHandoffConstruction := by
   rcases stageInputRecognizer_realizer with
@@ -1363,7 +1314,6 @@ theorem stageInputIdentityClosedHandoff_realizer :
     stageInputIdentityClosedHandoffConstruction_of_recognizer
       hrecognizer
 
- /-- {name}`stageInputValidatorSpec_realizer` states the finite-machine specification. -/
 theorem stageInputValidatorSpec_realizer :
     exists validator : MachineDescription,
       StageInputValidatorSpec validator := by
