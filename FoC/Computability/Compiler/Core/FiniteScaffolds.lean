@@ -493,6 +493,55 @@ def PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :
         PairedRecognizerDovetailStageAttemptFramedRunInvocationRealizes
           attempt invoker
 
+private def PairedRecognizerDovetailStageAttemptWitnessedRunInvocationForwardSpec
+    (attempt invoker : MachineDescription) : Prop :=
+  forall C : MachineDescription.DovetailControllerLayout,
+  forall result : Word Bool,
+  forall n : Nat,
+    attempt.HaltsWithOutputIn n
+      (MachineDescription.encodeCodeWordAsInput
+        (PairedRecognizerDovetailControllerStageInputCode C))
+      (MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.encodeBoolWord result)) ->
+    invoker.HaltsWithOutput
+      (MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.DovetailControllerLayout.encode C))
+      (MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.DovetailControllerLayout.encode
+          (MachineDescription.DovetailControllerLayout.withResult
+            C result)))
+
+private def PairedRecognizerDovetailStageAttemptWitnessedRunInvocationRealizes
+    (attempt invoker : MachineDescription) : Prop :=
+  invoker.SubroutineReady ∧
+    PairedRecognizerDovetailStageAttemptWitnessedRunInvocationForwardSpec
+      attempt invoker ∧
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationClosedSpec
+      attempt invoker
+
+private def PairedRecognizerDovetailStageAttemptWitnessedRunInvocationConstructionData :
+    Prop :=
+  forall attempt : MachineDescription,
+    attempt.SubroutineReady ->
+      exists invoker : MachineDescription,
+        PairedRecognizerDovetailStageAttemptWitnessedRunInvocationRealizes
+          attempt invoker
+
+private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_protected
+    (h :
+      PairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData) :
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData := by
+  intro attempt hattempt
+  rcases h attempt hattempt with ⟨invoker, hinvoker⟩
+  refine ⟨invoker, ?_⟩
+  constructor
+  · exact hinvoker.left
+  · constructor
+    · intro C result hrun
+      exact (hinvoker.right C result).mpr hrun
+    · intro C result hrun
+      exact (hinvoker.right C result).mp hrun
+
 theorem pairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData_of_framedRun
     (h :
       PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData) :
@@ -527,13 +576,46 @@ theorem pairedRecognizerDovetailStageAttemptInvocationConstructionData_of_protec
     · exact (hinvoker.right C result).mp hrun
 
 /--
-Finite-machine leaf for the protected stage-attempt wrapper.  This is the
-remaining concrete transition-table obligation: keep enough of the controller
-stage input while invoking {lean}`attempt`, then emit {lean}`MachineDescription.DovetailControllerLayout.withResult`.
+Narrow finite-machine leaf for the framed protected stage-attempt wrapper.  The
+forward half is stated against a concrete witnessed {lean}`attempt` run, so the
+remaining transition-table obligation is exactly to preserve the controller
+stage input while invoking that run and then emit
+{lean}`MachineDescription.DovetailControllerLayout.withResult`.
+-/
+private theorem pairedRecognizerDovetailStageAttemptWitnessedRunInvocationConstructionData_finite_leaf :
+    PairedRecognizerDovetailStageAttemptWitnessedRunInvocationConstructionData := by
+  sorry
+
+/--
+Finite-machine leaf for the framed protected stage-attempt wrapper.  This is
+packaging around the witnessed-run leaf: the public framed contract uses an
+existential run witness in its forward half.
+-/
+private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf :
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData := by
+  intro attempt hattempt
+  rcases
+      pairedRecognizerDovetailStageAttemptWitnessedRunInvocationConstructionData_finite_leaf
+        attempt hattempt with
+    ⟨invoker, hready, hforward, hclosed⟩
+  refine ⟨invoker, hready, ?_, hclosed⟩
+  intro C result hrun
+  rcases hrun with ⟨n, hn⟩
+  exact hforward C result n hn
+
+/-- Protected packaging of the framed stage-attempt wrapper leaf. -/
+private theorem pairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData_finite_leaf :
+    PairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData :=
+  pairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData_of_framedRun
+    pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf
+
+/--
+Framed-run packaging of the protected stage-attempt wrapper leaf.
 -/
 theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_scaffold :
     PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData := by
-  sorry
+  exact
+    pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf
 
 theorem pairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData_scaffold :
     PairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData :=
@@ -638,6 +720,62 @@ def PairedRecognizerDovetailFiniteStageLoopSequencingConstructionData :
         PairedRecognizerDovetailFiniteStageLoopClosedSpec
           attempt decider
 
+def PairedRecognizerDovetailFiniteStageLoopProtectedSequencingConstructionData :
+    Prop :=
+  forall attempt initializer invoker emitter continuer : MachineDescription,
+    PairedRecognizerDovetailControllerInputInitializerRealizes
+      initializer ->
+    PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+      attempt invoker ->
+    PairedRecognizerDovetailControllerResultEmitterRealizes
+      emitter ->
+    PairedRecognizerDovetailControllerContinueRealizes
+      continuer ->
+    exists decider : MachineDescription,
+      decider.WellFormed ∧
+        PairedRecognizerDovetailFiniteStageLoopForwardSpec
+          attempt decider ∧
+        PairedRecognizerDovetailFiniteStageLoopClosedSpec
+          attempt decider
+
+theorem pairedRecognizerDovetailStageAttemptProtectedInvocationRealizes_of_invocation
+    {attempt encoder invoker : MachineDescription}
+    (hencoder :
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        PairedRecognizerDovetailControllerStageInputCodePrimitive
+        encoder)
+    (hinvoker :
+      PairedRecognizerDovetailStageAttemptInvocationRealizes
+        attempt encoder invoker) :
+    PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+      attempt invoker := by
+  constructor
+  · exact hinvoker.left
+  · intro C result
+    constructor
+    · intro hrun
+      exact ((hinvoker.right C result).mp hrun).right
+    · intro hrun
+      exact
+        (hinvoker.right C result).mpr
+          ⟨tapeCodePrimitiveOutputCompiledSubroutineByDescription_haltsWithOutput_of_transform_eq_some
+              hencoder
+              (pairedRecognizerDovetailControllerStageInputCode_encode C),
+            hrun⟩
+
+theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstructionData_of_protected
+    (h :
+      PairedRecognizerDovetailFiniteStageLoopProtectedSequencingConstructionData) :
+    PairedRecognizerDovetailFiniteStageLoopSequencingConstructionData := by
+  intro attempt initializer encoder invoker emitter continuer
+    _hattempt hinitializer hencoder hinvoker hemitter hcontinuer
+  exact
+    h attempt initializer invoker emitter continuer
+      hinitializer
+      (pairedRecognizerDovetailStageAttemptProtectedInvocationRealizes_of_invocation
+        hencoder hinvoker)
+      hemitter hcontinuer
+
 theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_of_data
     (h :
       PairedRecognizerDovetailFiniteStageLoopSequencingConstructionData) :
@@ -652,13 +790,235 @@ theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_of_data
       pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes_of_forward_closed
         hwell hforward hclosed⟩
 
-/--
-Finite-machine leaf for sequencing initializer, invocation, result emission,
-and continuation into the finite controller loop.
--/
-theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstructionData_scaffold :
-    PairedRecognizerDovetailFiniteStageLoopSequencingConstructionData := by
+private def pairedRecognizerDovetailFiniteStageLoopStageLayout
+    (w : Word Bool) (limit : Nat) :
+    MachineDescription.DovetailControllerLayout :=
+  { input := w, stage := limit, result := [] }
+
+private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerForwardSpec
+    (initializer invoker emitter decider : MachineDescription) : Prop :=
+  forall w : Word Bool,
+  forall b : Bool,
+    (exists limit : Nat,
+      exists result : Word Bool,
+        initializer.HaltsWithOutput w
+            (MachineDescription.encodeCodeWordAsInput
+              (PairedRecognizerDovetailControllerInitialCode w)) ∧
+          invoker.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailControllerLayout.encode
+                (pairedRecognizerDovetailFiniteStageLoopStageLayout
+                  w limit)))
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailControllerLayout.encode
+                (MachineDescription.DovetailControllerLayout.withResult
+                  (pairedRecognizerDovetailFiniteStageLoopStageLayout
+                    w limit)
+                  result))) ∧
+          emitter.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailControllerLayout.encode
+                (MachineDescription.DovetailControllerLayout.withResult
+                  (pairedRecognizerDovetailFiniteStageLoopStageLayout
+                    w limit)
+                  result)))
+            [b]) ->
+      decider.HaltsWithOutput w [b]
+
+private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerClosedSpec
+    (initializer invoker emitter decider : MachineDescription) : Prop :=
+  forall w : Word Bool,
+  forall b : Bool,
+    decider.HaltsWithOutput w [b] ->
+      exists limit : Nat,
+      exists result : Word Bool,
+        initializer.HaltsWithOutput w
+            (MachineDescription.encodeCodeWordAsInput
+              (PairedRecognizerDovetailControllerInitialCode w)) ∧
+          invoker.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailControllerLayout.encode
+                (pairedRecognizerDovetailFiniteStageLoopStageLayout
+                  w limit)))
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailControllerLayout.encode
+                (MachineDescription.DovetailControllerLayout.withResult
+                  (pairedRecognizerDovetailFiniteStageLoopStageLayout
+                    w limit)
+                  result))) ∧
+          emitter.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailControllerLayout.encode
+                (MachineDescription.DovetailControllerLayout.withResult
+                  (pairedRecognizerDovetailFiniteStageLoopStageLayout
+                    w limit)
+                  result)))
+            [b]
+
+private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerContinueSpec
+    (continuer : MachineDescription) : Prop :=
+  forall C : MachineDescription.DovetailControllerLayout,
+    PairedRecognizerDovetailControllerRawOutput C.result = none ->
+      continuer.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.DovetailControllerLayout.encode C))
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.DovetailControllerLayout.encode
+            (MachineDescription.DovetailControllerLayout.nextStage C)))
+
+private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes
+    (initializer invoker emitter continuer decider : MachineDescription) :
+    Prop :=
+  decider.WellFormed ∧
+    PairedRecognizerDovetailFiniteStageLoopProtectedSequencerContinueSpec
+      continuer ∧
+    PairedRecognizerDovetailFiniteStageLoopProtectedSequencerForwardSpec
+      initializer invoker emitter decider ∧
+    PairedRecognizerDovetailFiniteStageLoopProtectedSequencerClosedSpec
+      initializer invoker emitter decider
+
+private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerSearchDriverData :
+    Prop :=
+  forall attempt : MachineDescription,
+    exists decider : MachineDescription,
+      PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
+        attempt decider
+
+private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes_of_searchDriver
+    {attempt initializer invoker emitter continuer decider : MachineDescription}
+    (hdriver :
+      PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
+        attempt decider)
+    (hinitializer :
+      PairedRecognizerDovetailControllerInputInitializerRealizes
+        initializer)
+    (hinvoker :
+      PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+        attempt invoker)
+    (hemitter :
+      PairedRecognizerDovetailControllerResultEmitterRealizes
+        emitter)
+    (hcontinuer :
+      PairedRecognizerDovetailControllerContinueRealizes
+        continuer) :
+    PairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes
+      initializer invoker emitter continuer decider := by
+  rcases hdriver with ⟨hwell, hdriverSpec⟩
+  refine ⟨hwell, ?_, ?_, ?_⟩
+  · intro C hraw
+    exact (hcontinuer.right C).mpr hraw
+  · intro w b hstage
+    rcases hstage with
+      ⟨limit, result, _hinitialized, hinvoked, hemitted⟩
+    apply (hdriverSpec w b).mpr
+    refine ⟨limit, result, ?_, ?_⟩
+    · exact (hinvoker.right
+        (pairedRecognizerDovetailFiniteStageLoopStageLayout w limit)
+        result).mp hinvoked
+    · exact (hemitter.right
+        (MachineDescription.DovetailControllerLayout.withResult
+          (pairedRecognizerDovetailFiniteStageLoopStageLayout w limit)
+          result)
+        b).mp hemitted
+  · intro w b hhalt
+    rcases (hdriverSpec w b).mp hhalt with
+      ⟨limit, result, hattempt, hraw⟩
+    refine ⟨limit, result, hinitializer.right w, ?_, ?_⟩
+    · exact (hinvoker.right
+        (pairedRecognizerDovetailFiniteStageLoopStageLayout w limit)
+        result).mpr hattempt
+    · exact (hemitter.right
+        (MachineDescription.DovetailControllerLayout.withResult
+          (pairedRecognizerDovetailFiniteStageLoopStageLayout w limit)
+          result)
+        b).mpr hraw
+
+private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstructionData_of_searchDriver
+    (hsearch :
+      PairedRecognizerDovetailFiniteStageLoopProtectedSequencerSearchDriverData) :
+    forall attempt initializer invoker emitter continuer : MachineDescription,
+      PairedRecognizerDovetailControllerInputInitializerRealizes
+        initializer ->
+      PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+        attempt invoker ->
+      PairedRecognizerDovetailControllerResultEmitterRealizes
+        emitter ->
+      PairedRecognizerDovetailControllerContinueRealizes
+        continuer ->
+      exists decider : MachineDescription,
+        PairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes
+          initializer invoker emitter continuer decider := by
+  intro attempt initializer invoker emitter continuer
+    hinitializer hinvoker hemitter hcontinuer
+  rcases hsearch attempt with ⟨decider, hdriver⟩
+  exact
+    ⟨decider,
+      pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes_of_searchDriver
+        hdriver hinitializer hinvoker hemitter hcontinuer⟩
+
+private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstructionData_finite_leaf :
+    forall attempt initializer invoker emitter continuer : MachineDescription,
+      PairedRecognizerDovetailControllerInputInitializerRealizes
+        initializer ->
+      PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+        attempt invoker ->
+      PairedRecognizerDovetailControllerResultEmitterRealizes
+        emitter ->
+      PairedRecognizerDovetailControllerContinueRealizes
+        continuer ->
+      exists decider : MachineDescription,
+        PairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes
+          initializer invoker emitter continuer decider := by
+  apply
+    pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstructionData_of_searchDriver
+  intro attempt
+  -- Remaining finite-table obligation: build the unbounded controller search
+  -- driver for the protected stage-attempt machine.
   sorry
+
+/--
+Finite-machine leaf for sequencing initializer, protected invocation, result
+emission, and continuation into the finite controller loop.
+-/
+theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencingConstructionData_scaffold :
+    PairedRecognizerDovetailFiniteStageLoopProtectedSequencingConstructionData := by
+  intro attempt initializer invoker emitter continuer
+    hinitializer hinvoker hemitter hcontinuer
+  rcases
+      pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstructionData_finite_leaf
+        attempt initializer invoker emitter continuer
+        hinitializer hinvoker hemitter hcontinuer with
+    ⟨decider, hwell, _hcontinue, hforward, hclosed⟩
+  refine ⟨decider, hwell, ?_, ?_⟩
+  · intro w b hsearch
+    rcases hsearch with ⟨limit, result, hattempt, hraw⟩
+    let C :=
+      pairedRecognizerDovetailFiniteStageLoopStageLayout w limit
+    apply hforward w b
+    refine ⟨limit, result, hinitializer.right w, ?_, ?_⟩
+    · exact (hinvoker.right C result).mpr hattempt
+    · exact (hemitter.right
+        (MachineDescription.DovetailControllerLayout.withResult C result)
+        b).mpr (by
+          simpa [C, MachineDescription.DovetailControllerLayout.withResult]
+            using hraw)
+  · intro w b hhalt
+    rcases hclosed w b hhalt with
+      ⟨limit, result, _hinitialized, hinvoked, hemitted⟩
+    let C :=
+      pairedRecognizerDovetailFiniteStageLoopStageLayout w limit
+    refine ⟨limit, result, ?_, ?_⟩
+    · exact (hinvoker.right C result).mp (by
+        simpa [C] using hinvoked)
+    · exact (hemitter.right
+        (MachineDescription.DovetailControllerLayout.withResult C result)
+        b).mp (by
+          simpa [C] using hemitted)
+
+theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstructionData_scaffold :
+    PairedRecognizerDovetailFiniteStageLoopSequencingConstructionData :=
+  pairedRecognizerDovetailFiniteStageLoopSequencingConstructionData_of_protected
+    pairedRecognizerDovetailFiniteStageLoopProtectedSequencingConstructionData_scaffold
 
 theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_scaffold :
     PairedRecognizerDovetailFiniteStageLoopSequencingConstruction :=
