@@ -5,7 +5,7 @@ set_option doc.verso true
 /-!
 # HeadRouter
 
-Supporting declarations and helper lemmas for Computability Compiler Core DovetailInitialLayoutInitializer HeadRouter.
+Router for the append-input head position and its dispatcher adapter.
 -/
 
 
@@ -93,44 +93,30 @@ def AppendInputTapeHeadRouterDescription :
         25 (some false) (some true) Direction.right 31
     ]
 
- /-- {name}`appendInputTapeHeadRouterDescription_wellFormed` describes append/fold behavior used by later composition. -/
 theorem appendInputTapeHeadRouterDescription_wellFormed :
     AppendInputTapeHeadRouterDescription.WellFormed := by
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := AppendInputTapeHeadRouterDescription.transitions)
       (stateCount :=
         AppendInputTapeHeadRouterDescription.stateCount)
-      (by
-        native_decide)
+      (by native_decide)
   · exact transition_deterministic_of_all
       (l := AppendInputTapeHeadRouterDescription.transitions)
-      (by
-        native_decide)
-     /-- {name}`appendInputTapeHeadRouterDescription_haltTransitionFree` describes append/fold behavior used by later composition. -/
+      (by native_decide)
 
-theorem
-    appendInputTapeHeadRouterDescription_haltTransitionFree :
+theorem appendInputTapeHeadRouterDescription_haltTransitionFree :
     AppendInputTapeHeadRouterDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := AppendInputTapeHeadRouterDescription.transitions)
     (state := AppendInputTapeHeadRouterDescription.halt)
-    (by
-      native_decide)
+    (by native_decide)
 
- /-- {name}`appendInputTapeHeadRouterDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem appendInputTapeHeadRouterDescription_subroutineReady :
     AppendInputTapeHeadRouterDescription.SubroutineReady :=
   ⟨appendInputTapeHeadRouterDescription_wellFormed,
     appendInputTapeHeadRouterDescription_haltTransitionFree⟩
 
- /-- {name}`appendInputTapeHeadRouterDescription_run_return20` states the corresponding theorem run form. -/
 theorem appendInputTapeHeadRouterDescription_run_return20
     (beforeRevBits : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
@@ -171,8 +157,6 @@ theorem appendInputTapeHeadRouterDescription_run_return20
           MachineDescription.transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, List.append_assoc] using
           ih bit (some true :: right)
-
- /-- {name}`appendInputTapeHeadRouterDescription_run_return21` states the corresponding theorem run form. -/
 theorem appendInputTapeHeadRouterDescription_run_return21
     (beforeRevBits : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
@@ -213,8 +197,6 @@ theorem appendInputTapeHeadRouterDescription_run_return21
           MachineDescription.transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, List.append_assoc] using
           ih bit (some true :: right)
-
- /-- {name}`appendInputTapeHeadRouterDescription_run_return22` states the corresponding theorem run form. -/
 theorem appendInputTapeHeadRouterDescription_run_return22
     (beforeRevBits : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
@@ -255,10 +237,8 @@ theorem appendInputTapeHeadRouterDescription_run_return22
           MachineDescription.transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, List.append_assoc] using
           ih bit (some true :: right)
-     /-- {name}`appendInputTapeHeadRouterDescription_run_state8_false` states the corresponding theorem run form. -/
 
-theorem
-    appendInputTapeHeadRouterDescription_run_state8_false
+theorem appendInputTapeHeadRouterDescription_run_state8_false
     (n : Nat) (beforeRevBits tailBits : Word Bool) :
     AppendInputTapeHeadRouterDescription.runConfig
         (beforeRevBits.length + 8 * n + 15)
@@ -340,10 +320,8 @@ theorem
         List.map_append, List.reverse_append, List.append_assoc,
         Nat.mul_succ] using
         ih nextBefore
-     /-- {name}`appendInputTapeHeadRouterDescription_run_state8_true` states the corresponding theorem run form. -/
 
-theorem
-    appendInputTapeHeadRouterDescription_run_state8_true
+theorem appendInputTapeHeadRouterDescription_run_state8_true
     (n : Nat) (beforeRevBits tailBits : Word Bool) :
     AppendInputTapeHeadRouterDescription.runConfig
         (beforeRevBits.length + 8 * n + 15)
@@ -463,8 +441,6 @@ def AppendInputTapeHeadRouterSpec
             tape :=
               appendInputTapeHeadRouterTaggedTape
                 (some b) (b :: rest) stage suffixBits })
-
- /-- {name}`appendInputTapeHeadRouterDescription_spec` states the finite-machine specification. -/
 theorem appendInputTapeHeadRouterDescription_spec :
     AppendInputTapeHeadRouterSpec
       AppendInputTapeHeadRouterDescription := by
@@ -798,8 +774,6 @@ def AppendInputTapeHeadDispatcherConstruction :
 def AppendInputTapeHeadDispatcherDescription
     (router brancher : MachineDescription) : MachineDescription :=
   MachineDescription.seqSubroutine router brancher Direction.left
-
- /-- {name}`appendInputTapeHeadDispatcherSpec_of_router_brancher` states the finite-machine specification. -/
 theorem appendInputTapeHeadDispatcherSpec_of_router_brancher
     {router brancher : MachineDescription}
     (hrouter : AppendInputTapeHeadRouterSpec router)
@@ -939,7 +913,6 @@ def AppendInputTapeRightCellsReturnConstruction : Prop :=
   exists rightCopier : MachineDescription,
     AppendInputTapeRightCellsReturnSpec rightCopier
 
- /-- {name}`appendInputTapeReturnSpec_of_headDispatcher` states the finite-machine specification. -/
 theorem appendInputTapeReturnSpec_of_headDispatcher
     {dispatcher : MachineDescription}
     (hdispatcher :

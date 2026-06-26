@@ -401,30 +401,21 @@ def Description : MachineDescription where
 
 theorem description_wellFormed :
     Description.WellFormed := by
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
-  · native_decide
-  constructor
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := Description.transitions)
       (stateCount := Description.stateCount)
-      (by
-        native_decide)
+      (by native_decide)
   · exact transition_deterministic_of_all
       (l := Description.transitions)
-      (by
-        native_decide)
+      (by native_decide)
 
 theorem description_haltTransitionFree :
     Description.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := Description.transitions)
     (state := Description.halt)
-    (by
-      native_decide)
+    (by native_decide)
 
 theorem description_ready :
     ReadySpec Description :=

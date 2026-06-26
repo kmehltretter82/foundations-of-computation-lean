@@ -5,7 +5,8 @@ set_option doc.verso true
 /-!
 # InputRun
 
-Supporting declarations and helper lemmas for Computability Compiler Core ControllerStageInputProjection InputRun.
+Run lemmas for marking the encoded input word and handing off to the
+projection result phases.
 -/
 
 
@@ -32,8 +33,6 @@ def projectionInputRemainingCost
   12 * rest.length * rest.length +
     16 * marked.length * rest.length +
     42 * rest.length + 24 * marked.length + 24
-
- /-- {name}`run_input_mark_one` states the corresponding theorem run form. -/
 theorem run_input_mark_one
     (marked rest : Word Bool) (b : Bool)
     (suffix : Word MachineCodeSymbol)
@@ -283,8 +282,6 @@ def projectionResultTailPayloadLeftRev
             (projectionRepeatedCells projectionMarkedTickCodeCells
               marked.length).reverse
             (List.append [none, none, none, none] baseLeftRev)))))
-
- /-- {name}`run_input_finish_marked_suffix` states the corresponding theorem run form. -/
 theorem run_input_finish_marked_suffix
     (marked : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol)
@@ -420,8 +417,6 @@ theorem run_input_finish_marked_suffix
   rw [run_state180_to_200]
   simp [projectionCodeCells_encodeBoolWord, List.reverse_append,
     List.append_assoc]
-
- /-- {name}`run_input_finish_marked` states the corresponding theorem run form. -/
 theorem run_input_finish_marked
     (marked : Word Bool) (stage : Nat) (result : Word Bool)
     (baseLeftRev : List (Option Bool)) :
@@ -558,8 +553,6 @@ theorem run_input_finish_marked
   rw [run_state180_to_200]
   simp [projectionCodeCells_encodeBoolWord, List.reverse_append,
     List.append_assoc]
-
- /-- {name}`run_input_finish_marked_false_false_tail` states the corresponding theorem run form. -/
 theorem run_input_finish_marked_false_false_tail
     (marked : Word Bool) (tail : List (Option Bool))
     (baseLeftRev : List (Option Bool)) :
@@ -683,8 +676,6 @@ theorem run_input_finish_marked_false_false_tail
   rw [run_state180_to_200]
   simp [projectionCodeCells_encodeBoolWord, List.reverse_append,
     List.append_assoc]
-
- /-- {name}`run_input_finish_marked_to_state150_tail` states the corresponding theorem run form. -/
 theorem run_input_finish_marked_to_state150_tail
     (marked : Word Bool) (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool)) :
@@ -731,8 +722,6 @@ theorem run_input_finish_marked_to_state150_tail
         (projectionCodeCells suffix)
   rw [run_state100_done]
   rw [run_state150_marked_payload]
-
- /-- {name}`run_input_bool_word_acc` states the corresponding theorem run form. -/
 theorem run_input_bool_word_acc
     (marked rest : Word Bool) (stage : Nat) (result : Word Bool)
     (baseLeftRev : List (Option Bool)) :
@@ -774,8 +763,6 @@ theorem run_input_bool_word_acc
             List.append marked (b :: rest) := by
         simp [List.append_assoc]
       rw [hword]
-
- /-- {name}`run_input_bool_word` states the corresponding theorem run form. -/
 theorem run_input_bool_word
     (w : Word Bool) (stage : Nat) (result : Word Bool)
     (baseLeftRev : List (Option Bool)) :
@@ -799,8 +786,6 @@ theorem run_input_bool_word
       ([] : Word Bool) w stage result baseLeftRev
   simpa [projectionInputRemainingCost, projectionInputBoolWordCost,
     projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend] using h
-
- /-- {name}`run_input_bool_word_acc_suffix` states the corresponding theorem run form. -/
 theorem run_input_bool_word_acc_suffix
     (marked rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol)
@@ -841,8 +826,6 @@ theorem run_input_bool_word_acc_suffix
             List.append marked (b :: rest) := by
         simp [List.append_assoc]
       rw [hword]
-
- /-- {name}`run_input_bool_word_suffix` states the corresponding theorem run form. -/
 theorem run_input_bool_word_suffix
     (w : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol)
@@ -865,8 +848,6 @@ theorem run_input_bool_word_suffix
       ([] : Word Bool) w stage suffix baseLeftRev
   simpa [projectionInputRemainingCost, projectionInputBoolWordCost,
     projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend] using h
-
- /-- {name}`run_input_bool_word_acc_false_false_suffix` states the corresponding theorem run form. -/
 theorem run_input_bool_word_acc_false_false_suffix
     (marked rest : Word Bool) (suffix : Word MachineCodeSymbol)
     (tail : List (Option Bool))
@@ -907,8 +888,6 @@ theorem run_input_bool_word_acc_false_false_suffix
             List.append marked (b :: rest) := by
         simp [List.append_assoc]
       rw [hword]
-
- /-- {name}`run_input_bool_word_false_false_suffix` states the corresponding theorem run form. -/
 theorem run_input_bool_word_false_false_suffix
     (w : Word Bool) (suffix : Word MachineCodeSymbol)
     (tail : List (Option Bool))
