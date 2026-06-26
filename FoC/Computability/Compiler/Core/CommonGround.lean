@@ -56,9 +56,15 @@ end FieldInversions
 namespace ScannerInversions
 
 export EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
-  ( boolWordSuffixScannerDescription_runConfig_start_bit_inv
+  ( BoolWordSuffixScannerDescription
+    CheckedDovetailLayoutScannerDescription
+    transitionRemainderBits
+    cellListCanonicalRestoredLeftWithBase
+    boolWordCanonicalHandoffConfigWithBase_move_right_all
+    boolWordSuffixScannerDescription_runConfig_start_bit_inv
     boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
     boolWordSuffixScannerDescription_runConfig_code_inv
+    boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_handoff
     cellListSuffixScannerDescription_runConfig_code_inv
     cellListSuffixScannerDescription_runConfig_encodeCellListAppend_handoff_false
     cellListSuffixScannerDescription_runConfig_encodeCellListAppend_suffix_false
@@ -66,11 +72,14 @@ export EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
     configurationSuffixScannerDescription_runConfig_canonical_false_suffix_inv
     finalHitFlagsScannerDescription_runConfig_canonical_inv
     finalHitFlagsScannerDescription_runConfig_inv
+    encodeCodeWordAsInput_transition_prefix_inv
     checkedDovetailLayoutScannerDescription_haltsWithTape_inputBoolWord_inv
+    checkedDovetailLayoutScannerDescription_haltsWithTape_stageField_inv
     checkedDovetailLayoutScannerDescription_haltsWithTape_finalFlags_inv )
 
 export EncodedRewriters.CanonicalLayouts.DovetailStagePrefix
-  ( natBits_eq_encodeNatAppend
+  ( NatSuffixScannerDescription
+    natBits_eq_encodeNatAppend
     markedPrefix_run_state200_stageNat_handoff
     natSuffix_run_state200_stageNat_to_state210 )
 
@@ -93,6 +102,54 @@ export EncodedRewriters.CanonicalLayouts
     RightShiftedEmitterConstruction )
 
 end CodeWordEmitters
+
+namespace DovetailLayouts
+
+export EncodedRewriters.CanonicalLayouts.Dovetail
+  ( Layout
+    decode
+    encode
+    bits
+    inputTape
+    handoffTape
+    identityPrimitive
+    ClosedRecognizerSpec
+    ClosedRecognizerConstruction
+    IdentityClosedHandoffConstruction
+    decode_encode
+    decode_eq_some_encode
+    encode_cons
+    identityPrimitive_transform_eq_some_iff
+    identityPrimitive_encode
+    identityClosedHandoffConstruction_of_closedRecognizer )
+
+abbrev IdentityRightShiftedConstruction : Prop :=
+  exists runner : MachineDescription,
+    EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription
+      identityPrimitive runner
+
+theorem identityPrimitive_transform_eq_some_cons
+    {code out : Word MachineCodeSymbol}
+    (h : identityPrimitive.transform code = some out) :
+    exists symbol : MachineCodeSymbol,
+    exists tail : Word MachineCodeSymbol,
+      out = symbol :: tail :=
+  EncodedRewriters.CanonicalLayouts.identityPrimitive_transform_eq_some_cons
+    decode_encode (fun h => decode_eq_some_encode h) encode_cons h
+
+theorem identityClosedHandoffConstruction_of_rightShifted
+    (h : IdentityRightShiftedConstruction) :
+    IdentityClosedHandoffConstruction := by
+  rcases h with ⟨runner, hrunner⟩
+  exact
+    ⟨runner,
+      EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
+        hrunner
+        (by
+          intro code out htransform
+          exact identityPrimitive_transform_eq_some_cons htransform)⟩
+
+end DovetailLayouts
 
 namespace ControllerLayouts
 
