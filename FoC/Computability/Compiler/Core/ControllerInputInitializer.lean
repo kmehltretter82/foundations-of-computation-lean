@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround
 import FoC.Computability.Compiler.Core.ConstructionTargets
 
 set_option doc.verso true
@@ -30,6 +31,25 @@ def ControllerInputInitializerConstructionData : Prop :=
     initializer.SubroutineReady ∧
       ControllerInputInitializerForwardSpec initializer
 
+def ControllerInputInitializerRawBoolWordHeaderEmitterConstruction :
+    Prop :=
+  CommonGround.BoolWordQuoters.RawBoolWordHeaderEmitterConstruction
+    CommonGround.ControllerLayouts.initialSuffix
+
+/--
+Use the reusable raw Bool-word header emitter contract to package the controller
+input initializer.  The only controller-specific work here is the canonical
+encoding identity for the initial layout.
+-/
+theorem controllerInputInitializerConstructionData_of_rawBoolWordHeaderEmitter
+    (h : ControllerInputInitializerRawBoolWordHeaderEmitterConstruction) :
+    ControllerInputInitializerConstructionData := by
+  rcases h with ⟨initializer, hspec⟩
+  refine ⟨initializer, hspec.left, ?_⟩
+  intro w
+  simpa [CommonGround.ControllerLayouts.initialCode_eq_header_boolWordAppend]
+    using hspec.right w
+
 /-- Package the local forward spec as the public initializer realization. -/
 theorem controllerInputInitializerConstruction_of_data
     (h : ControllerInputInitializerConstructionData) :
@@ -38,9 +58,15 @@ theorem controllerInputInitializerConstruction_of_data
   rcases h with ⟨initializer, hready, hforward⟩
   exact ⟨initializer, hready, hforward⟩
 
+theorem controllerInputInitializerRawBoolWordHeaderEmitterConstruction_scaffold :
+    ControllerInputInitializerRawBoolWordHeaderEmitterConstruction := by
+  sorry
+
 theorem controllerInputInitializerConstructionData_scaffold :
     ControllerInputInitializerConstructionData := by
-  sorry
+  exact
+    controllerInputInitializerConstructionData_of_rawBoolWordHeaderEmitter
+      controllerInputInitializerRawBoolWordHeaderEmitterConstruction_scaffold
 
 /-- Public controller input initializer construction, kept as thin adapter glue. -/
 theorem controllerInputInitializerConstruction_scaffold :

@@ -305,6 +305,17 @@ export MachineDescription.DovetailControllerLayout
     continueResultCode_encode_eq_some_iff
     continueResultCodePrimitive_encode_eq_some_iff )
 
+def initialSuffix : Word MachineCodeSymbol :=
+  MachineDescription.encodeNatAppend 0
+    (MachineDescription.encodeBoolWordAppend [] [])
+
+theorem initialCode_eq_header_boolWordAppend
+    (w : Word Bool) :
+    PairedRecognizerDovetailControllerInitialCode w =
+      MachineCodeSymbol.header ::
+        MachineDescription.encodeBoolWordAppend w initialSuffix := by
+  rfl
+
 theorem resultContinue_transform_eq_some_iff
     (code out : Word MachineCodeSymbol) :
     PairedRecognizerDovetailControllerResultContinueCode.transform code =
@@ -362,6 +373,21 @@ export DovetailInitialLayoutInitializer
     checkedRawBoolWordAppendHeaderReturnDescription_subroutineReady
     checkedRawBoolWordAppendHeaderReturnDescription_run
     checkedRawBoolWordAppendHeaderReturnDescription_haltsFromTape )
+
+def RawBoolWordHeaderEmitterSpec
+    (suffix : Word MachineCodeSymbol)
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall w : Word Bool,
+      emitter.HaltsWithOutput w
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineCodeSymbol.header ::
+            MachineDescription.encodeBoolWordAppend w suffix))
+
+def RawBoolWordHeaderEmitterConstruction
+    (suffix : Word MachineCodeSymbol) : Prop :=
+  exists emitter : MachineDescription,
+    RawBoolWordHeaderEmitterSpec suffix emitter
 
 end BoolWordQuoters
 
