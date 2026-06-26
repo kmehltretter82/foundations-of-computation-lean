@@ -1,6 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Primitives
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Emitters
-import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.CodeRightShifted
 
 set_option doc.verso true
 

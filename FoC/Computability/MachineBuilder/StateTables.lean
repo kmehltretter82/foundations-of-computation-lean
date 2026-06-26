@@ -64,6 +64,81 @@ theorem wellFormed_offsetStates
   · exact Nat.add_lt_add_left h.left offset
   · exact Nat.add_lt_add_left h.right offset
 
+/--
+Offset a transition into a larger state block, but redirect transitions that
+would enter the old local halt/exit state to a shared controller halt.
+-/
+def sharedExitRetargetStates
+    (offset oldHalt commonHalt : Nat)
+    (t : TransitionDescription) : TransitionDescription where
+  source := offset + t.source
+  read := t.read
+  write := t.write
+  move := t.move
+  target := if t.target = oldHalt then commonHalt else offset + t.target
+
+theorem sharedExitRetargetStates_sameAction
+    (offset oldHalt commonHalt : Nat)
+    {t u : TransitionDescription}
+    (h : SameAction t u) :
+    SameAction
+      (sharedExitRetargetStates offset oldHalt commonHalt t)
+      (sharedExitRetargetStates offset oldHalt commonHalt u) := by
+  rcases h with ⟨hwrite, hmove, htarget⟩
+  simp [SameAction, sharedExitRetargetStates, hwrite, hmove, htarget]
+
+theorem sameKey_of_sharedExitRetargetStates_sameKey
+    {offset oldHalt commonHalt : Nat}
+    {t u : TransitionDescription}
+    (h :
+      SameKey
+        (sharedExitRetargetStates offset oldHalt commonHalt t)
+        (sharedExitRetargetStates offset oldHalt commonHalt u)) :
+    SameKey t u := by
+  constructor
+  · exact Nat.add_left_cancel h.left
+  · exact h.right
+
+theorem wellFormed_sharedExitRetargetStates
+    {sourceStateCount targetStateCount offset oldHalt commonHalt : Nat}
+    {t : TransitionDescription}
+    (hmap :
+      forall q : Nat,
+        q < sourceStateCount -> offset + q < targetStateCount)
+    (hcommon : commonHalt < targetStateCount)
+    (h : WellFormed sourceStateCount t) :
+    WellFormed targetStateCount
+      (sharedExitRetargetStates offset oldHalt commonHalt t) := by
+  constructor
+  · exact hmap t.source h.left
+  · by_cases htarget : t.target = oldHalt
+    · simp [sharedExitRetargetStates, htarget, hcommon]
+    · simp [sharedExitRetargetStates, htarget, hmap t.target h.right]
+
+theorem sharedExitRetargetStates_source_ne_of_common_lt_offset
+    {offset oldHalt commonHalt : Nat}
+    (hcommon : commonHalt < offset)
+    (t : TransitionDescription) :
+    (sharedExitRetargetStates offset oldHalt commonHalt t).source ≠
+      commonHalt := by
+  intro hsource
+  have hlt :
+      commonHalt <
+        (sharedExitRetargetStates offset oldHalt commonHalt t).source := by
+    simpa [sharedExitRetargetStates] using
+      Nat.lt_of_lt_of_le hcommon (Nat.le_add_right offset t.source)
+  rw [hsource] at hlt
+  exact Nat.lt_irrefl commonHalt hlt
+
+theorem sharedExitRetargetStates_source_ne_offset_halt
+    {offset oldHalt commonHalt : Nat}
+    {t : TransitionDescription}
+    (hsource : t.source ≠ oldHalt) :
+    (sharedExitRetargetStates offset oldHalt commonHalt t).source ≠
+      offset + oldHalt := by
+  intro h
+  exact hsource (Nat.add_left_cancel h)
+
 end TransitionDescription
 
 namespace MachineDescription
@@ -208,6 +283,129 @@ theorem offsetStates_subroutineReady
     (offsetStates offset D).SubroutineReady :=
   ⟨offsetStates_wellFormed hD.left,
     offsetStates_haltTransitionFree hD.right⟩
+
+/--
+Transition block obtained by offsetting a subroutine table and redirecting its
+local halt transitions to a shared controller halt.
+-/
+def sharedExitRetargetTransitions
+    (offset oldHalt commonHalt : Nat)
+    (D : MachineDescription) : List TransitionDescription :=
+  D.transitions.map
+    (TransitionDescription.sharedExitRetargetStates
+      offset oldHalt commonHalt)
+
+theorem sharedExitRetargetTransitions_wellFormed
+    {targetStateCount offset oldHalt commonHalt : Nat}
+    {D : MachineDescription}
+    (hD : D.WellFormed)
+    (hmap :
+      forall q : Nat,
+        q < D.stateCount -> offset + q < targetStateCount)
+    (hcommon : commonHalt < targetStateCount) :
+    forall t : TransitionDescription,
+      t ∈ sharedExitRetargetTransitions offset oldHalt commonHalt D ->
+        TransitionDescription.WellFormed targetStateCount t := by
+  intro t ht
+  simp [sharedExitRetargetTransitions] at ht
+  rcases ht with ⟨base, hbase, rfl⟩
+  exact
+    TransitionDescription.wellFormed_sharedExitRetargetStates
+      hmap hcommon (hD.right.right.right.left base hbase)
+
+theorem sharedExitRetargetTransitions_deterministic
+    {offset oldHalt commonHalt : Nat}
+    {D : MachineDescription}
+    (hD : D.WellFormed) :
+    forall t u : TransitionDescription,
+      t ∈ sharedExitRetargetTransitions offset oldHalt commonHalt D ->
+      u ∈ sharedExitRetargetTransitions offset oldHalt commonHalt D ->
+      TransitionDescription.SameKey t u ->
+        TransitionDescription.SameAction t u := by
+  intro t u ht hu hkey
+  simp [sharedExitRetargetTransitions] at ht hu
+  rcases ht with ⟨baseT, hbaseT, rfl⟩
+  rcases hu with ⟨baseU, hbaseU, rfl⟩
+  exact
+    TransitionDescription.sharedExitRetargetStates_sameAction
+      offset oldHalt commonHalt
+      (hD.right.right.right.right baseT baseU hbaseT hbaseU
+        (TransitionDescription.sameKey_of_sharedExitRetargetStates_sameKey
+          hkey))
+
+theorem sharedExitRetargetTransitions_no_common_source_of_lt_offset
+    {offset oldHalt commonHalt : Nat}
+    {D : MachineDescription}
+    (hcommon : commonHalt < offset) :
+    forall t : TransitionDescription,
+      t ∈ sharedExitRetargetTransitions offset oldHalt commonHalt D ->
+        t.source ≠ commonHalt := by
+  intro t ht
+  simp [sharedExitRetargetTransitions] at ht
+  rcases ht with ⟨base, _hbase, rfl⟩
+  exact
+    TransitionDescription.sharedExitRetargetStates_source_ne_of_common_lt_offset
+      hcommon base
+
+theorem sharedExitRetargetTransitions_no_offset_halt_source
+    {offset oldHalt commonHalt : Nat}
+    {D : MachineDescription}
+    (hhalt : oldHalt = D.halt)
+    (hD : D.HaltTransitionFree) :
+    forall t : TransitionDescription,
+      t ∈ sharedExitRetargetTransitions offset oldHalt commonHalt D ->
+        t.source ≠ offset + oldHalt := by
+  intro t ht
+  simp [sharedExitRetargetTransitions] at ht
+  rcases ht with ⟨base, hbase, rfl⟩
+  exact
+    TransitionDescription.sharedExitRetargetStates_source_ne_offset_halt
+      (by simpa [hhalt] using hD base hbase)
+
+theorem sharedExitRetargetTransitions_source_eq
+    {offset oldHalt commonHalt : Nat}
+    {D : MachineDescription}
+    {t : TransitionDescription}
+    (ht :
+      t ∈ sharedExitRetargetTransitions offset oldHalt commonHalt D) :
+    exists base : TransitionDescription,
+      base ∈ D.transitions ∧ t.source = offset + base.source := by
+  simp [sharedExitRetargetTransitions] at ht
+  rcases ht with ⟨base, hbase, rfl⟩
+  exact ⟨base, hbase, rfl⟩
+
+theorem sharedExitRetargetTransitions_source_lt
+    {offset oldHalt commonHalt : Nat}
+    {D : MachineDescription}
+    (hD : D.WellFormed)
+    {t : TransitionDescription}
+    (ht :
+      t ∈ sharedExitRetargetTransitions offset oldHalt commonHalt D) :
+    t.source < offset + D.stateCount := by
+  rcases sharedExitRetargetTransitions_source_eq ht with
+    ⟨base, hbase, hsource⟩
+  rw [hsource]
+  have hbaseSource := (hD.right.right.right.left base hbase).left
+  omega
+
+theorem sharedExitRetargetTransitions_offset_le_source
+    {offset oldHalt commonHalt : Nat}
+    {D : MachineDescription}
+    {t : TransitionDescription}
+    (ht :
+      t ∈ sharedExitRetargetTransitions offset oldHalt commonHalt D) :
+    offset ≤ t.source := by
+  rcases sharedExitRetargetTransitions_source_eq ht with
+    ⟨base, _hbase, hsource⟩
+  rw [hsource]
+  omega
+
+def sharedExitRetargetConfiguration
+    (offset oldHalt commonHalt : Nat)
+    (c : MachineDescription.Configuration) :
+    MachineDescription.Configuration where
+  state := if c.state = oldHalt then commonHalt else offset + c.state
+  tape := c.tape
 
 /-!
 ## Disjoint table unions

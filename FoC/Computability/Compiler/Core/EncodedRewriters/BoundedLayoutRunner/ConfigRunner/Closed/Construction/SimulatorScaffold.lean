@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseAdapters
+import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.CodeRightShifted
 
 set_option doc.verso true
 

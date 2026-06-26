@@ -399,12 +399,155 @@ theorem pairedRecognizerDovetailStageAttemptInvocationConstruction_of_data
         hready hforward hclosed⟩
 
 /--
+Protected core needed by the stage-attempt invoker.  The finite table may
+compute the controller stage input itself; the separate encoder contract is
+only needed to expose the public closed/forward specification.
+-/
+def PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+    (attempt invoker : MachineDescription) : Prop :=
+  invoker.SubroutineReady ∧
+    forall C : MachineDescription.DovetailControllerLayout,
+    forall result : Word Bool,
+      invoker.HaltsWithOutput
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.DovetailControllerLayout.encode C))
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.DovetailControllerLayout.encode
+              (MachineDescription.DovetailControllerLayout.withResult
+                C result))) <->
+        attempt.HaltsWithOutput
+          (MachineDescription.encodeCodeWordAsInput
+            (PairedRecognizerDovetailControllerStageInputCode C))
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.encodeBoolWord result))
+
+/--
+Construction target for the protected core: preserve/reconstruct the controller
+stage-input fields while running the attempt on the canonical stage-input word,
+then emit the controller layout with the attempt result installed.
+-/
+def PairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData :
+    Prop :=
+  forall attempt : MachineDescription,
+    attempt.SubroutineReady ->
+      exists invoker : MachineDescription,
+        PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+          attempt invoker
+
+def PairedRecognizerDovetailStageAttemptFramedRunInvocationForwardSpec
+    (attempt invoker : MachineDescription) : Prop :=
+  forall C : MachineDescription.DovetailControllerLayout,
+  forall result : Word Bool,
+    (exists n : Nat,
+      attempt.HaltsWithOutputIn n
+        (MachineDescription.encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeBoolWord result))) ->
+    invoker.HaltsWithOutput
+      (MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.DovetailControllerLayout.encode C))
+      (MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.DovetailControllerLayout.encode
+          (MachineDescription.DovetailControllerLayout.withResult
+            C result)))
+
+def PairedRecognizerDovetailStageAttemptFramedRunInvocationClosedSpec
+    (attempt invoker : MachineDescription) : Prop :=
+  forall C : MachineDescription.DovetailControllerLayout,
+  forall result : Word Bool,
+    invoker.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.DovetailControllerLayout.encode C))
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.DovetailControllerLayout.encode
+            (MachineDescription.DovetailControllerLayout.withResult
+              C result))) ->
+      exists n : Nat,
+        attempt.HaltsWithOutputIn n
+          (MachineDescription.encodeCodeWordAsInput
+            (PairedRecognizerDovetailControllerStageInputCode C))
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.encodeBoolWord result))
+
+/--
+Framed run contract for the protected stage-attempt wrapper.  This is the
+narrow machine leaf left after the public adapter: the wrapper must simulate
+the concrete {lean}`attempt.runConfig` from the canonical controller stage
+input, keep the controller layout outside that simulated work area, and emit
+the controller layout with exactly the simulated boolean-word result installed.
+-/
+def PairedRecognizerDovetailStageAttemptFramedRunInvocationRealizes
+    (attempt invoker : MachineDescription) : Prop :=
+  invoker.SubroutineReady ∧
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationForwardSpec
+      attempt invoker ∧
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationClosedSpec
+      attempt invoker
+
+def PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :
+    Prop :=
+  forall attempt : MachineDescription,
+    attempt.SubroutineReady ->
+      exists invoker : MachineDescription,
+        PairedRecognizerDovetailStageAttemptFramedRunInvocationRealizes
+          attempt invoker
+
+theorem pairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData_of_framedRun
+    (h :
+      PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData) :
+    PairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData := by
+  intro attempt hattempt
+  rcases h attempt hattempt with ⟨invoker, hinvoker⟩
+  refine ⟨invoker, ?_⟩
+  constructor
+  · exact hinvoker.left
+  · intro C result
+    constructor
+    · intro hrun
+      exact hinvoker.right.right C result hrun
+    · intro hrun
+      exact hinvoker.right.left C result hrun
+
+theorem pairedRecognizerDovetailStageAttemptInvocationConstructionData_of_protected
+    (h :
+      PairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData) :
+    PairedRecognizerDovetailStageAttemptInvocationConstructionData := by
+  intro attempt encoder hattempt hencoder
+  rcases h attempt hattempt with ⟨invoker, hinvoker⟩
+  refine ⟨invoker, hinvoker.left, ?_, ?_⟩
+  · intro C result hrun
+    exact (hinvoker.right C result).mpr hrun.right
+  · intro C result hrun
+    constructor
+    · exact
+        tapeCodePrimitiveOutputCompiledSubroutineByDescription_haltsWithOutput_of_transform_eq_some
+          hencoder
+          (pairedRecognizerDovetailControllerStageInputCode_encode C)
+    · exact (hinvoker.right C result).mp hrun
+
+/--
+Finite-machine leaf for the protected stage-attempt wrapper.  This is the
+remaining concrete transition-table obligation: keep enough of the controller
+stage input while invoking {lean}`attempt`, then emit {lean}`MachineDescription.DovetailControllerLayout.withResult`.
+-/
+theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_scaffold :
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData := by
+  sorry
+
+theorem pairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData_scaffold :
+    PairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData :=
+  pairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData_of_framedRun
+    pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_scaffold
+
+/--
 Finite-machine leaf for invoking one total stage-attempt subroutine after
 encoding the controller stage input.
 -/
 theorem pairedRecognizerDovetailStageAttemptInvocationConstructionData_scaffold :
-    PairedRecognizerDovetailStageAttemptInvocationConstructionData := by
-  sorry
+    PairedRecognizerDovetailStageAttemptInvocationConstructionData :=
+  pairedRecognizerDovetailStageAttemptInvocationConstructionData_of_protected
+    pairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData_scaffold
 
 theorem pairedRecognizerDovetailStageAttemptInvocationConstruction_scaffold :
     PairedRecognizerDovetailStageAttemptInvocationConstruction :=
