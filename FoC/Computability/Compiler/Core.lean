@@ -9,6 +9,7 @@ import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer
 import FoC.Computability.Compiler.Core.ConstructionTargets
 import FoC.Computability.Compiler.Core.ControllerCloseout
 import FoC.Computability.Compiler.Core.EncodedRewriters
+import FoC.Computability.Compiler.Core.CommonGround
 import FoC.Computability.Compiler.Core.ControllerStageInputProjection
 import FoC.Computability.Compiler.Core.FiniteScaffolds
 import FoC.Computability.Compiler.Core.SearchDrivers

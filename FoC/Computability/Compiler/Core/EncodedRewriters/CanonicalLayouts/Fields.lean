@@ -26,6 +26,11 @@ def decodeBoolWordComplete
   | some (w, []) => some w
   | _ => none
 
+def decodeBoolComplete (code : Word MachineCodeSymbol) : Option Bool :=
+  match MachineDescription.decodeBool code with
+  | some (b, []) => some b
+  | _ => none
+
 def decodeCodeWordFieldComplete
     (code : Word MachineCodeSymbol) :
     Option (Word MachineCodeSymbol) :=
@@ -104,6 +109,32 @@ theorem decodeBoolWordComplete_eq_some_encode
               cases h
               simpa [MachineDescription.encodeBoolWord] using
                 MachineDescription.decodeBoolWord_eq_some_encodeBoolWordAppend
+                  hdecode
+          | cons _ _ =>
+              simp [hdecode] at h
+
+theorem decodeBoolComplete_encode (b : Bool) :
+    decodeBoolComplete (MachineDescription.encodeBoolAppend b []) =
+      some b := by
+  simp [decodeBoolComplete, MachineDescription.decodeBool_encodeBoolAppend]
+
+theorem decodeBoolComplete_eq_some_encode
+    {code : Word MachineCodeSymbol} {b : Bool}
+    (h : decodeBoolComplete code = some b) :
+    code = MachineDescription.encodeBoolAppend b [] := by
+  unfold decodeBoolComplete at h
+  cases hdecode : MachineDescription.decodeBool code with
+  | none =>
+      simp [hdecode] at h
+  | some parsed =>
+      cases parsed with
+      | mk decoded suffix =>
+          cases suffix with
+          | nil =>
+              simp [hdecode] at h
+              cases h
+              exact
+                MachineDescription.decodeBool_eq_some_encodeBoolAppend
                   hdecode
           | cons _ _ =>
               simp [hdecode] at h
