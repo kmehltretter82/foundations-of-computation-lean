@@ -122,44 +122,8 @@ theorem primitive_runConfig_state_ne_halt_of_reaches_stuck
     (hstep : D.stepConfig stuck = none)
     (hstuck : stuck.state ≠ D.halt) :
     (D.runConfig n c).state ≠ D.halt := by
-  by_cases hle : k ≤ n
-  · intro hhalt
-    let rem := n - k
-    have hn : n = k + rem := by omega
-    have hrun :
-        D.runConfig n c = D.runConfig rem stuck := by
-      rw [hn, MachineDescription.runConfig_add, hprefix]
-    have hstay :=
-      MachineDescription.runConfig_of_stepConfig_none hstep rem
-    have hstate : stuck.state = D.halt := by
-      have hstateEq :
-          (D.runConfig n c).state = stuck.state := by
-        rw [hrun, hstay]
-      exact hstateEq ▸ hhalt
-    exact hstuck hstate
-  · intro hhalt
-    let rem := k - n
-    have hk : k = n + rem := by omega
-    have hrunHalt :
-        D.runConfig n c =
-          { state := D.halt, tape := (D.runConfig n c).tape } := by
-      cases hcfg : D.runConfig n c with
-      | mk state tape =>
-          simp [hcfg] at hhalt ⊢
-          exact hhalt
-    have hstay :
-        D.runConfig rem (D.runConfig n c) =
-          D.runConfig n c := by
-      rw [hrunHalt]
-      exact MachineDescription.runConfig_halt hD
-        (D.runConfig n c).tape rem
-    have hstate : stuck.state = D.halt := by
-      have hstuckEq :
-          stuck = D.runConfig n c := by
-        rw [← hprefix, hk, MachineDescription.runConfig_add, hstay]
-      rw [hstuckEq]
-      exact hhalt
-    exact hstuck hstate
+  exact CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+    hD hprefix hstep hstuck
 
 theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
     (baseLeft : List (Option Bool)) (bits : Word Bool)

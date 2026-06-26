@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner.ClosedBasic
 
 set_option doc.verso true
@@ -352,6 +353,389 @@ theorem natSuffixHandoffConfigWithBase_move_right
   simpa [List.append_assoc] using
     tapeAtCells_move_right_move_left_cons (some true)
       (List.append tail baseLeft) (some b) (suffixTail.map some)
+
+
+theorem natSuffixScannerDescription_ne_halt_of_reaches_ne_halt_region
+    {c mid : MachineDescription.Configuration} {k n : Nat}
+    (hrun :
+      NatSuffixScannerDescription.runConfig
+          k c = mid)
+    (hmid :
+      forall m : Nat,
+        (NatSuffixScannerDescription.runConfig
+          m mid).state ≠
+          NatSuffixScannerDescription.halt) :
+    (NatSuffixScannerDescription.runConfig
+      n c).state ≠
+      NatSuffixScannerDescription.halt := by
+  by_cases hle : n ≤ k
+  · intro hhalt
+    let rem := k - n
+    have hk : k = n + rem := by
+      omega
+    have hcfg :
+        NatSuffixScannerDescription.runConfig
+            n c =
+          { state :=
+              NatSuffixScannerDescription.halt
+            tape :=
+              (NatSuffixScannerDescription.runConfig
+                n c).tape } := by
+      cases hrunN :
+          NatSuffixScannerDescription.runConfig
+            n c with
+      | mk state tape =>
+          simp [hrunN] at hhalt
+          simp [hhalt]
+    have hhaltAtK :
+        (NatSuffixScannerDescription.runConfig
+          k c).state =
+          NatSuffixScannerDescription.halt := by
+      rw [hk, MachineDescription.runConfig_add, hcfg,
+        MachineDescription.runConfig_halt
+          natSuffixScannerDescription_haltTransitionFree]
+    rw [hrun] at hhaltAtK
+    exact hmid 0 hhaltAtK
+  · have hn : n = k + (n - k) := by
+      omega
+    rw [hn, MachineDescription.runConfig_add, hrun]
+    exact hmid (n - k)
+
+theorem natSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
+    (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
+    (hdecode : MachineDescription.decodeNat tokens = none) (n : Nat) :
+    (NatSuffixScannerDescription.runConfig
+      n
+      (config 200 leftRev
+        ((MachineDescription.encodeCodeWordAsInput tokens).map some))).state ≠
+      NatSuffixScannerDescription.halt := by
+  induction tokens generalizing leftRev n with
+  | nil =>
+      exact
+        CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+          natSuffixScannerDescription_haltTransitionFree
+          (D := NatSuffixScannerDescription)
+          (c :=
+            config 200 leftRev
+              ((MachineDescription.encodeCodeWordAsInput
+                ([] : Word MachineCodeSymbol)).map some))
+          (stuck :=
+            config 200 leftRev
+              ((MachineDescription.encodeCodeWordAsInput
+                ([] : Word MachineCodeSymbol)).map some))
+          (k := 0) (n := n)
+          rfl
+          (by rfl)
+          (by
+            change (200 : Nat) ≠ 999
+            omega)
+  | cons symbol rest ih =>
+      cases symbol with
+      | header =>
+          exact
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+              natSuffixScannerDescription_haltTransitionFree
+              (D := NatSuffixScannerDescription)
+              (c :=
+                config 200 leftRev
+                  ((MachineDescription.encodeCodeWordAsInput
+                    (MachineCodeSymbol.header :: rest)).map some))
+              (stuck :=
+                NatSuffixScannerDescription.runConfig
+                  2
+                  (config 200 leftRev
+                    ((MachineDescription.encodeCodeWordAsInput
+                      (MachineCodeSymbol.header :: rest)).map some)))
+              (k := 2) (n := n)
+              rfl
+              (by
+                cases rest <;>
+                simp [NatSuffixScannerDescription,
+                  MarkedPrefixScannerDescription,
+                  StageInputMarkedScannerDescription,
+                  config, tapeAtCells, keep, keepMove, writeMove,
+                  scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+                  MachineDescription.runConfig,
+                  MachineDescription.stepConfig,
+                  MachineDescription.lookupTransition,
+                  MachineDescription.Matches,
+                  MachineDescription.transition,
+                  MachineDescription.encodeCodeWordAsInput,
+                  MachineDescription.encodeCodeSymbolAsInput,
+                  Tape.read, Tape.write, Tape.move, Tape.moveRight])
+              (by
+                change (202 : Nat) ≠ 999
+                omega)
+      | transition =>
+          exact
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+              natSuffixScannerDescription_haltTransitionFree
+              (D := NatSuffixScannerDescription)
+              (c :=
+                config 200 leftRev
+                  ((MachineDescription.encodeCodeWordAsInput
+                    (MachineCodeSymbol.transition :: rest)).map some))
+              (stuck :=
+                NatSuffixScannerDescription.runConfig
+                  2
+                  (config 200 leftRev
+                    ((MachineDescription.encodeCodeWordAsInput
+                      (MachineCodeSymbol.transition :: rest)).map some)))
+              (k := 2) (n := n)
+              rfl
+              (by
+                cases rest <;>
+                simp [NatSuffixScannerDescription,
+                  MarkedPrefixScannerDescription,
+                  StageInputMarkedScannerDescription,
+                  config, tapeAtCells, keep, keepMove, writeMove,
+                  scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+                  MachineDescription.runConfig,
+                  MachineDescription.stepConfig,
+                  MachineDescription.lookupTransition,
+                  MachineDescription.Matches,
+                  MachineDescription.transition,
+                  MachineDescription.encodeCodeWordAsInput,
+                  MachineDescription.encodeCodeSymbolAsInput,
+                  Tape.read, Tape.write, Tape.move, Tape.moveRight])
+              (by
+                change (202 : Nat) ≠ 999
+                omega)
+      | tick =>
+          simp [MachineDescription.decodeNat] at hdecode
+          cases hrest : MachineDescription.decodeNat rest with
+          | none =>
+              simp [hrest] at hdecode
+              apply
+                natSuffixScannerDescription_ne_halt_of_reaches_ne_halt_region
+                  (k := 4)
+                  (mid :=
+                    config 200
+                      (List.append (tickBits.reverse.map some) leftRev)
+                      ((MachineDescription.encodeCodeWordAsInput rest).map
+                        some))
+              · simpa [tickBits, MachineDescription.encodeCodeWordAsInput,
+                  MachineDescription.encodeCodeSymbolAsInput,
+                  NatSuffixScannerDescription] using
+                  run_state200_tick leftRev
+                    ((MachineDescription.encodeCodeWordAsInput rest).map some)
+              · intro m
+                exact ih
+                  (List.append (tickBits.reverse.map some) leftRev)
+                  hrest m
+          | some parsed =>
+              simp [hrest] at hdecode
+      | done =>
+          simp [MachineDescription.decodeNat] at hdecode
+      | blank =>
+          exact
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+              natSuffixScannerDescription_haltTransitionFree
+              (D := NatSuffixScannerDescription)
+              (c :=
+                config 200 leftRev
+                  ((MachineDescription.encodeCodeWordAsInput
+                    (MachineCodeSymbol.blank :: rest)).map some))
+              (stuck :=
+                NatSuffixScannerDescription.runConfig
+                  1
+                  (config 200 leftRev
+                    ((MachineDescription.encodeCodeWordAsInput
+                      (MachineCodeSymbol.blank :: rest)).map some)))
+              (k := 1) (n := n)
+              rfl
+              (by
+                cases rest <;>
+                simp [NatSuffixScannerDescription,
+                  MarkedPrefixScannerDescription,
+                  StageInputMarkedScannerDescription,
+                  config, tapeAtCells, keep, keepMove, writeMove,
+                  scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+                  MachineDescription.runConfig,
+                  MachineDescription.stepConfig,
+                  MachineDescription.lookupTransition,
+                  MachineDescription.Matches,
+                  MachineDescription.transition,
+                  MachineDescription.encodeCodeWordAsInput,
+                  MachineDescription.encodeCodeSymbolAsInput,
+                  Tape.read, Tape.write, Tape.move, Tape.moveRight])
+              (by
+                change (201 : Nat) ≠ 999
+                omega)
+      | zero =>
+          exact
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+              natSuffixScannerDescription_haltTransitionFree
+              (D := NatSuffixScannerDescription)
+              (c :=
+                config 200 leftRev
+                  ((MachineDescription.encodeCodeWordAsInput
+                    (MachineCodeSymbol.zero :: rest)).map some))
+              (stuck :=
+                NatSuffixScannerDescription.runConfig
+                  1
+                  (config 200 leftRev
+                    ((MachineDescription.encodeCodeWordAsInput
+                      (MachineCodeSymbol.zero :: rest)).map some)))
+              (k := 1) (n := n)
+              rfl
+              (by
+                cases rest <;>
+                simp [NatSuffixScannerDescription,
+                  MarkedPrefixScannerDescription,
+                  StageInputMarkedScannerDescription,
+                  config, tapeAtCells, keep, keepMove, writeMove,
+                  scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+                  MachineDescription.runConfig,
+                  MachineDescription.stepConfig,
+                  MachineDescription.lookupTransition,
+                  MachineDescription.Matches,
+                  MachineDescription.transition,
+                  MachineDescription.encodeCodeWordAsInput,
+                  MachineDescription.encodeCodeSymbolAsInput,
+                  Tape.read, Tape.write, Tape.move, Tape.moveRight])
+              (by
+                change (201 : Nat) ≠ 999
+                omega)
+      | one =>
+          exact
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+              natSuffixScannerDescription_haltTransitionFree
+              (D := NatSuffixScannerDescription)
+              (c :=
+                config 200 leftRev
+                  ((MachineDescription.encodeCodeWordAsInput
+                    (MachineCodeSymbol.one :: rest)).map some))
+              (stuck :=
+                NatSuffixScannerDescription.runConfig
+                  1
+                  (config 200 leftRev
+                    ((MachineDescription.encodeCodeWordAsInput
+                      (MachineCodeSymbol.one :: rest)).map some)))
+              (k := 1) (n := n)
+              rfl
+              (by
+                cases rest <;>
+                simp [NatSuffixScannerDescription,
+                  MarkedPrefixScannerDescription,
+                  StageInputMarkedScannerDescription,
+                  config, tapeAtCells, keep, keepMove, writeMove,
+                  scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+                  MachineDescription.runConfig,
+                  MachineDescription.stepConfig,
+                  MachineDescription.lookupTransition,
+                  MachineDescription.Matches,
+                  MachineDescription.transition,
+                  MachineDescription.encodeCodeWordAsInput,
+                  MachineDescription.encodeCodeSymbolAsInput,
+                  Tape.read, Tape.write, Tape.move, Tape.moveRight])
+              (by
+                change (201 : Nat) ≠ 999
+                omega)
+      | moveLeft =>
+          exact
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+              natSuffixScannerDescription_haltTransitionFree
+              (D := NatSuffixScannerDescription)
+              (c :=
+                config 200 leftRev
+                  ((MachineDescription.encodeCodeWordAsInput
+                    (MachineCodeSymbol.moveLeft :: rest)).map some))
+              (stuck :=
+                NatSuffixScannerDescription.runConfig
+                  1
+                  (config 200 leftRev
+                    ((MachineDescription.encodeCodeWordAsInput
+                      (MachineCodeSymbol.moveLeft :: rest)).map some)))
+              (k := 1) (n := n)
+              rfl
+              (by
+                cases rest <;>
+                simp [NatSuffixScannerDescription,
+                  MarkedPrefixScannerDescription,
+                  StageInputMarkedScannerDescription,
+                  config, tapeAtCells, keep, keepMove, writeMove,
+                  scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+                  MachineDescription.runConfig,
+                  MachineDescription.stepConfig,
+                  MachineDescription.lookupTransition,
+                  MachineDescription.Matches,
+                  MachineDescription.transition,
+                  MachineDescription.encodeCodeWordAsInput,
+                  MachineDescription.encodeCodeSymbolAsInput,
+                  Tape.read, Tape.write, Tape.move, Tape.moveRight])
+              (by
+                change (201 : Nat) ≠ 999
+                omega)
+      | moveRight =>
+          exact
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+              natSuffixScannerDescription_haltTransitionFree
+              (D := NatSuffixScannerDescription)
+              (c :=
+                config 200 leftRev
+                  ((MachineDescription.encodeCodeWordAsInput
+                    (MachineCodeSymbol.moveRight :: rest)).map some))
+              (stuck :=
+                config 200 leftRev
+                  ((MachineDescription.encodeCodeWordAsInput
+                    (MachineCodeSymbol.moveRight :: rest)).map some))
+              (k := 0) (n := n)
+              rfl
+              (by
+                cases rest <;>
+                simp [NatSuffixScannerDescription,
+                  MarkedPrefixScannerDescription,
+                  StageInputMarkedScannerDescription,
+                  config, tapeAtCells, keep, keepMove, writeMove,
+                  scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+                  MachineDescription.stepConfig,
+                  MachineDescription.lookupTransition,
+                  MachineDescription.Matches,
+                  MachineDescription.transition,
+                  MachineDescription.encodeCodeWordAsInput,
+                  MachineDescription.encodeCodeSymbolAsInput,
+                  Tape.read])
+              (by
+                change (200 : Nat) ≠ 999
+                omega)
+
+theorem natSuffixScannerDescription_runConfig_code_inv
+    (baseLeft : List (Option Bool)) (code : Word MachineCodeSymbol)
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      NatSuffixScannerDescription.runConfig
+          n
+          (config
+            NatSuffixScannerDescription.start
+            baseLeft
+            ((MachineDescription.encodeCodeWordAsInput code).map some)) =
+        { state :=
+            NatSuffixScannerDescription.halt
+          tape := Tout }) :
+    exists stage : Nat,
+    exists suffix : Word MachineCodeSymbol,
+      code = MachineDescription.encodeNatAppend stage suffix := by
+  cases hdecode : MachineDescription.decodeNat code with
+  | none =>
+      have hne :=
+        natSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
+          code baseLeft hdecode n
+      have hstate :
+          (NatSuffixScannerDescription.runConfig
+            n
+            (config
+              NatSuffixScannerDescription.start
+              baseLeft
+              ((MachineDescription.encodeCodeWordAsInput code).map some))).state =
+            NatSuffixScannerDescription.halt := by
+        simpa using congrArg MachineDescription.Configuration.state h
+      exact False.elim (hne hstate)
+  | some parsed =>
+      rcases parsed with ⟨stage, suffix⟩
+      exact
+        ⟨stage, suffix,
+          MachineDescription.decodeNat_eq_some_encodeNatAppend hdecode⟩
 
 end DovetailStagePrefix
 end CanonicalLayouts

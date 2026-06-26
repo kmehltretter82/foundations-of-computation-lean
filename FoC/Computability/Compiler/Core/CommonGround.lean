@@ -73,12 +73,14 @@ export EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
     cellListSuffixScannerDescription_runConfig_code_inv
     cellListSuffixScannerDescription_runConfig_encodeCellListAppend_handoff_false
     cellListSuffixScannerDescription_runConfig_encodeCellListAppend_suffix_false
+    encodeCodeWordAsInput_cons_bits
     cellSuffixScannerDescription_runConfig_code_inv
     cellSuffixScannerDescription_runConfig_encodeCellAppend_handoff
     tapeSuffixScannerDescription_runConfig_code_handoff
     natSuffixScannerDescription_runConfig_stageNat_handoff
     natSuffixScannerDescription_runConfig_encodeNatAppend_handoff
     natSuffixScannerDescription_runConfig_nonblank_suffix_inv
+    configurationSuffixScannerDescription_runConfig_code_handoff
     configurationSuffixScannerDescription_runConfig_canonical_false_suffix_inv
     finalHitFlagsScannerDescription_runConfig_encodeBoolAppend_terminal_inv
     finalHitFlagsScannerDescription_runConfig_code_inv
@@ -92,6 +94,7 @@ export EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
 export EncodedRewriters.CanonicalLayouts.DovetailStagePrefix
   ( NatSuffixScannerDescription
     natBits_eq_encodeNatAppend
+    natSuffixScannerDescription_runConfig_code_inv
     markedPrefix_run_state200_stageNat_handoff
     natSuffix_run_state200_stageNat_to_state210 )
 

@@ -332,7 +332,7 @@ theorem cellSuffixScannerDescription_runConfig_code_inv
                 (MachineDescription.encodeCodeWordAsInput rest).map some)
               n) hstate)
 
-private theorem encodeCodeWordAsInput_cons_bits
+theorem encodeCodeWordAsInput_cons_bits
     (symbol : MachineCodeSymbol) (rest : Word MachineCodeSymbol) :
     exists b : Bool,
     exists tail : Word Bool,
