@@ -82,9 +82,10 @@ theorem decodeNatComplete_eq_some_encode
               simp [hdecode] at h
 
 theorem decodeBoolWordComplete_encode (w : Word Bool) :
-    decodeBoolWordComplete (MachineDescription.encodeBoolWord w) = some w := by
-  rw [decodeBoolWordComplete,
-    MachineDescription.decodeBoolWord_encodeBoolWord w]
+    decodeBoolWordComplete (MachineDescription.encodeBoolWord w) =
+      some w := by
+  simp [decodeBoolWordComplete,
+    MachineDescription.decodeBoolWord_encodeBoolWord]
 
 theorem decodeBoolWordComplete_eq_some_encode
     {code : Word MachineCodeSymbol} {w : Word Bool}
@@ -151,7 +152,7 @@ theorem decodeCellListComplete_encode
     decodeCellListComplete
         (MachineDescription.encodeCellListAppend cells []) =
       some cells := by
-  rw [decodeCellListComplete,
+  simp [decodeCellListComplete,
     MachineDescription.decodeCellList_encodeCellListAppend]
 
 theorem decodeCellListComplete_eq_some_encode
@@ -179,8 +180,7 @@ theorem decodeCellListComplete_eq_some_encode
 theorem decodeTapeComplete_encode
     (T : Tape Bool) :
     decodeTapeComplete (MachineDescription.encodeTape T) = some T := by
-  rw [decodeTapeComplete,
-    MachineDescription.decodeTape_encodeTape]
+  simp [decodeTapeComplete, MachineDescription.decodeTape_encodeTape]
 
 theorem decodeTapeComplete_eq_some_encode
     {code : Word MachineCodeSymbol} {T : Tape Bool}
@@ -208,7 +208,7 @@ theorem decodeConfigurationComplete_encode
     decodeConfigurationComplete
         (MachineDescription.encodeConfiguration cfg) =
       some cfg := by
-  rw [decodeConfigurationComplete,
+  simp [decodeConfigurationComplete,
     MachineDescription.decodeConfiguration_encodeConfiguration]
 
 theorem decodeConfigurationComplete_eq_some_encode

@@ -240,9 +240,9 @@ theorem pairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequen
 
 theorem pairedRecognizerDovetailDescriptionCompiler_of_dovetailDescriptionCompiler
     (hcompile : DovetailDescriptionCompilerPrinciple) :
-    PairedRecognizerDovetailDescriptionCompilerPrinciple := by
-  intro accept reject
-  exact hcompile
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
+  fun accept reject =>
+    hcompile
     (fun w n => accept.HaltsIn n w)
     (fun w n => reject.HaltsIn n w)
 
@@ -402,9 +402,8 @@ theorem DescriptionCompiler.ofLayoutSubroutineAndRunner
 
 theorem dovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
     (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
-    DovetailDescriptionCompilerPrinciple := by
-  intro accept reject
-  exact hcompile (DovetailProgram accept reject)
+    DovetailDescriptionCompilerPrinciple :=
+  fun accept reject => hcompile (DovetailProgram accept reject)
 
 theorem pairedRecognizerDovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
     (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :

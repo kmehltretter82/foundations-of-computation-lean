@@ -111,9 +111,9 @@ theorem machineBoundedTraceSearchConstruction :
 
 theorem encodedConfigurationTraceSearchConstruction :
     EncodedConfigurationTraceSearchConstruction where
-  checksEncodedRun_canonical := by
-    intro D c steps
-    exact MachineDescription.checksEncodedRun_encodeConfiguration D steps c
+  checksEncodedRun_canonical :=
+    fun D c steps =>
+      MachineDescription.checksEncodedRun_encodeConfiguration D steps c
 
 theorem boundedTraceSearchConstruction :
     BoundedTraceSearchConstruction where
@@ -168,9 +168,8 @@ theorem fixedDescriptionBoundedSimulatorCode_encode
 theorem fixedDescriptionBoundedSimulatorCode_realizes
     (D : MachineDescription) :
     FixedDescriptionBoundedSimulatorCodeRealizes
-      D (FixedDescriptionBoundedSimulatorCode D) := by
-  intro L
-  exact fixedDescriptionBoundedSimulatorCode_encode D L
+      D (FixedDescriptionBoundedSimulatorCode D) :=
+  fixedDescriptionBoundedSimulatorCode_encode D
 
 theorem fixedDescriptionBoundedSimulatorCode_boolOutput
     (D : MachineDescription) (L : MachineDescription.SimulatorLayout) :
@@ -202,9 +201,8 @@ theorem fixedDescriptionStepCode_encode
 
 theorem fixedDescriptionStepCode_realizes
     (D : MachineDescription) :
-    FixedDescriptionStepCodeRealizes D (FixedDescriptionStepCode D) := by
-  intro c
-  exact fixedDescriptionStepCode_encode D c
+    FixedDescriptionStepCodeRealizes D (FixedDescriptionStepCode D) :=
+  fixedDescriptionStepCode_encode D
 
 
 end Computability

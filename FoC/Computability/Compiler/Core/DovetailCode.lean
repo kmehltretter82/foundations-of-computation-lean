@@ -269,10 +269,8 @@ theorem pairedRecognizerDovetailInitialLayoutCode_realizes
     (accept reject : MachineDescription) :
     PairedRecognizerDovetailInitialLayoutCodeRealizes
       accept reject
-      (PairedRecognizerDovetailInitialLayoutCode accept reject) := by
-  intro w stage
-  exact pairedRecognizerDovetailInitialLayoutCode_encode
-    accept reject w stage
+      (PairedRecognizerDovetailInitialLayoutCode accept reject) :=
+  pairedRecognizerDovetailInitialLayoutCode_encode accept reject
 
 theorem pairedRecognizerDovetailLayoutCode_encode
     (accept reject : MachineDescription)
@@ -322,9 +320,8 @@ theorem pairedRecognizerDovetailLayoutCode_realizes
     (accept reject : MachineDescription) :
     PairedRecognizerDovetailLayoutCodeRealizes
       accept reject
-      (PairedRecognizerDovetailLayoutCode accept reject) := by
-  intro L
-  exact pairedRecognizerDovetailLayoutCode_encode accept reject L
+      (PairedRecognizerDovetailLayoutCode accept reject) :=
+  pairedRecognizerDovetailLayoutCode_encode accept reject
 
 theorem pairedRecognizerDovetailOutputCode_encode
     {L : MachineDescription.DovetailLayout} {out : Word Bool}
@@ -338,9 +335,8 @@ theorem pairedRecognizerDovetailOutputCode_encode
 
 theorem pairedRecognizerDovetailOutputCode_realizes :
     PairedRecognizerDovetailOutputCodeRealizes
-      PairedRecognizerDovetailOutputCode := by
-  intro L out h
-  exact pairedRecognizerDovetailOutputCode_encode h
+      PairedRecognizerDovetailOutputCode :=
+  fun _L _out => pairedRecognizerDovetailOutputCode_encode
 
 theorem pairedRecognizerDovetailTotalOutputCode_encode
     (L : MachineDescription.DovetailLayout) :
@@ -381,9 +377,8 @@ theorem pairedRecognizerDovetailTotalOutputCode_transform_eq_some_iff
 
 theorem pairedRecognizerDovetailTotalOutputCode_realizes :
     PairedRecognizerDovetailTotalOutputCodeRealizes
-      PairedRecognizerDovetailTotalOutputCode := by
-  intro L
-  exact pairedRecognizerDovetailTotalOutputCode_encode L
+      PairedRecognizerDovetailTotalOutputCode :=
+  pairedRecognizerDovetailTotalOutputCode_encode
 
 theorem pairedRecognizerDovetailControllerStageInputCode_encode
     (C : MachineDescription.DovetailControllerLayout) :
@@ -421,9 +416,8 @@ theorem pairedRecognizerDovetailControllerStageInputCode_transform_eq_some_iff
 
 theorem pairedRecognizerDovetailControllerStageInputCode_realizes :
     PairedRecognizerDovetailControllerStageInputCodeRealizes
-      PairedRecognizerDovetailControllerStageInputCodePrimitive := by
-  intro C
-  exact pairedRecognizerDovetailControllerStageInputCode_encode C
+      PairedRecognizerDovetailControllerStageInputCodePrimitive :=
+  pairedRecognizerDovetailControllerStageInputCode_encode
 
 theorem pairedRecognizerDovetailStageAttemptCode_encode
     (accept reject : MachineDescription)
@@ -486,10 +480,8 @@ theorem pairedRecognizerDovetailStageAttemptCode_realizes
     (accept reject : MachineDescription) :
     PairedRecognizerDovetailStageAttemptCodeRealizes
       accept reject
-      (PairedRecognizerDovetailStageAttemptCode accept reject) := by
-  intro w stage
-  exact pairedRecognizerDovetailStageAttemptCode_encode
-    accept reject w stage
+      (PairedRecognizerDovetailStageAttemptCode accept reject) :=
+  pairedRecognizerDovetailStageAttemptCode_encode accept reject
 
 theorem pairedRecognizerDovetailTotalStageAttemptCode_encode
     (accept reject : MachineDescription)
@@ -547,10 +539,8 @@ theorem pairedRecognizerDovetailTotalStageAttemptCode_realizes
     (accept reject : MachineDescription) :
     PairedRecognizerDovetailTotalStageAttemptCodeRealizes
       accept reject
-      (PairedRecognizerDovetailTotalStageAttemptCode accept reject) := by
-  intro w stage
-  exact pairedRecognizerDovetailTotalStageAttemptCode_encode
-    accept reject w stage
+      (PairedRecognizerDovetailTotalStageAttemptCode accept reject) :=
+  pairedRecognizerDovetailTotalStageAttemptCode_encode accept reject
 
 theorem pairedRecognizerDovetailTotalStageAttemptSourceCode_transform_eq
     (accept reject : MachineDescription)
@@ -850,10 +840,8 @@ theorem pairedRecognizerDovetailTotalThenRawOutputCode_realizes
     (accept reject : MachineDescription) :
     PairedRecognizerDovetailStageAttemptCodeRealizes
       accept reject
-      (PairedRecognizerDovetailTotalThenRawOutputCode accept reject) := by
-  intro w stage
-  exact pairedRecognizerDovetailTotalThenRawOutputCode_encode
-    accept reject w stage
+      (PairedRecognizerDovetailTotalThenRawOutputCode accept reject) :=
+  pairedRecognizerDovetailTotalThenRawOutputCode_encode accept reject
 
 theorem pairedRecognizerDovetailLayout_initial_output
     (accept reject : MachineDescription)

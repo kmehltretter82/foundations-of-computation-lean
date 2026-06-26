@@ -56,10 +56,8 @@ theorem transition_deterministic_of_all
   have hkeyBool :
       transitionSameKeyBool t u = true := by
     simpa [transitionSameKeyBool, TransitionDescription.SameKey] using hkey
-  simp [transitionDeterministicPairBool, hkeyBool, transitionSameActionBool,
-    TransitionDescription.SameAction] at hubool ⊢
-  rcases hubool with ⟨⟨hwrite, hmove⟩, htarget⟩
-  exact ⟨hwrite, hmove, htarget⟩
+  simpa [transitionDeterministicPairBool, hkeyBool, transitionSameActionBool,
+    TransitionDescription.SameAction, and_assoc] using hubool
 
 theorem transition_notFrom_of_all
     {state : Nat} {l : List TransitionDescription}

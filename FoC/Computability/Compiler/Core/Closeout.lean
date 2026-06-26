@@ -38,47 +38,35 @@ structure MachineDescriptionCompilerCloseout where
 def machineDescriptionCompilerCloseout_of_tapeCodeOutputCompiler
     (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
     MachineDescriptionCompilerCloseout where
-  stepCodeOutput := by
-    intro D
-    exact hcompile (FixedDescriptionStepCode D)
+  stepCodeOutput := fun D => hcompile (FixedDescriptionStepCode D)
   stepConfiguration :=
     fixedDescriptionStepCodeConfigurationRealizerConstruction_of_outputRealizerConstruction
-      (by
-        intro D
-        exact hcompile (FixedDescriptionStepCode D))
-  boundedSimulatorCodeOutput := by
-    intro D
-    exact hcompile (FixedDescriptionBoundedSimulatorCode D)
+      (fun D => hcompile (FixedDescriptionStepCode D))
+  boundedSimulatorCodeOutput :=
+    fun D => hcompile (FixedDescriptionBoundedSimulatorCode D)
   boundedSimulatorTable :=
     fixedDescriptionBoundedSimulatorTableCompiler_of_codeOutputRealizer
-      (by
-        intro D
-        exact hcompile (FixedDescriptionBoundedSimulatorCode D))
-  dovetailLayoutCodeOutput := by
-    intro accept reject
-    exact hcompile (PairedRecognizerDovetailLayoutCode accept reject)
-  dovetailInitialLayoutCodeOutput := by
-    intro accept reject
-    exact hcompile
-      (PairedRecognizerDovetailInitialLayoutCode accept reject)
+      (fun D => hcompile (FixedDescriptionBoundedSimulatorCode D))
+  dovetailLayoutCodeOutput :=
+    fun accept reject =>
+      hcompile (PairedRecognizerDovetailLayoutCode accept reject)
+  dovetailInitialLayoutCodeOutput :=
+    fun accept reject =>
+      hcompile (PairedRecognizerDovetailInitialLayoutCode accept reject)
   dovetailOutputCodeOutput :=
     hcompile PairedRecognizerDovetailOutputCode
-  dovetailStageAttemptCodeOutput := by
-    intro accept reject
-    exact hcompile
-      (PairedRecognizerDovetailStageAttemptCode accept reject)
-  dovetailTotalStageAttemptCodeOutput := by
-    intro accept reject
-    exact hcompile
-      (PairedRecognizerDovetailTotalStageAttemptCode accept reject)
-  dovetailControllerContinueCodeOutput := by
-    intro accept reject
-    exact hcompile
-      (PairedRecognizerDovetailControllerContinueCode accept reject)
-  dovetailControllerEmitCodeOutput := by
-    intro accept reject
-    exact hcompile
-      (PairedRecognizerDovetailControllerEmitCode accept reject)
+  dovetailStageAttemptCodeOutput :=
+    fun accept reject =>
+      hcompile (PairedRecognizerDovetailStageAttemptCode accept reject)
+  dovetailTotalStageAttemptCodeOutput :=
+    fun accept reject =>
+      hcompile (PairedRecognizerDovetailTotalStageAttemptCode accept reject)
+  dovetailControllerContinueCodeOutput :=
+    fun accept reject =>
+      hcompile (PairedRecognizerDovetailControllerContinueCode accept reject)
+  dovetailControllerEmitCodeOutput :=
+    fun accept reject =>
+      hcompile (PairedRecognizerDovetailControllerEmitCode accept reject)
 
 theorem fixedDescriptionStepCodeConfigurationRealizerConstruction_of_tapeCodeOutputCompiler
     (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :

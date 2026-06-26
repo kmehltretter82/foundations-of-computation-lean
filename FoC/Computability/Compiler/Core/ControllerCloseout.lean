@@ -14,9 +14,8 @@ open Languages
 theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_finiteStageLoopController
     (hloop :
       PairedRecognizerDovetailFiniteStageLoopControllerConstruction) :
-    PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction := by
-  intro _accept _reject attempt hattemptReady
-  exact hloop attempt hattemptReady
+    PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :=
+  fun _accept _reject attempt => hloop attempt
 
 /-!
 The finite controller route for paired-recognizer dovetailing has two

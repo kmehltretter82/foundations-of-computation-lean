@@ -578,20 +578,20 @@ def PairedRecognizerDovetailStageAttemptInvocationClosedHandoffConstruction :
 
 theorem pairedRecognizerDovetailStageAttemptInvocationHandoffConstruction_of_output
     (h : PairedRecognizerDovetailStageAttemptInvocationConstruction) :
-    PairedRecognizerDovetailStageAttemptInvocationHandoffConstruction := by
-  intro attempt encoder hattempt hencoder
-  exact h attempt encoder hattempt
-    (tapeCodePrimitiveHandoffCompiledSubroutineByDescription_outputCompiled
-      hencoder)
+    PairedRecognizerDovetailStageAttemptInvocationHandoffConstruction :=
+  fun attempt encoder hattempt hencoder =>
+    h attempt encoder hattempt
+      (tapeCodePrimitiveHandoffCompiledSubroutineByDescription_outputCompiled
+        hencoder)
 
 theorem pairedRecognizerDovetailStageAttemptInvocationClosedHandoffConstruction_of_handoff
     (h :
       PairedRecognizerDovetailStageAttemptInvocationHandoffConstruction) :
-    PairedRecognizerDovetailStageAttemptInvocationClosedHandoffConstruction := by
-  intro attempt encoder hattempt hencoder
-  exact h attempt encoder hattempt
-    (tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
-      hencoder)
+    PairedRecognizerDovetailStageAttemptInvocationClosedHandoffConstruction :=
+  fun attempt encoder hattempt hencoder =>
+    h attempt encoder hattempt
+      (tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
+        hencoder)
 
 def PairedRecognizerDovetailControllerResultEmitterRealizes
     (emitter : MachineDescription) : Prop :=

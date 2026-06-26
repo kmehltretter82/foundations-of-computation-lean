@@ -588,9 +588,9 @@ theorem pairedRecognizerDovetailLayoutCodeOutputRealizer_of_codeCompiler
 
 theorem pairedRecognizerDovetailInitialLayoutCodeOutputRealizer_of_tapeCodeOutputCompiler
     (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
-    PairedRecognizerDovetailInitialLayoutCodeOutputRealizerConstruction := by
-  intro accept reject
-  exact hcompile (PairedRecognizerDovetailInitialLayoutCode accept reject)
+    PairedRecognizerDovetailInitialLayoutCodeOutputRealizerConstruction :=
+  fun accept reject =>
+    hcompile (PairedRecognizerDovetailInitialLayoutCode accept reject)
 
 theorem pairedRecognizerDovetailOutputCodeOutputRealizer_of_tapeCodeOutputCompiler
     (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
@@ -599,38 +599,33 @@ theorem pairedRecognizerDovetailOutputCodeOutputRealizer_of_tapeCodeOutputCompil
 
 theorem pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_tapeCodeOutputCompiler
     (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
-    PairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction := by
-  intro accept reject
-  exact hcompile
-    (PairedRecognizerDovetailStageAttemptCode accept reject)
+    PairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :=
+  fun accept reject =>
+    hcompile (PairedRecognizerDovetailStageAttemptCode accept reject)
 
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputRealizer_of_tapeCodeOutputCompiler
     (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
-    PairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction := by
-  intro accept reject
-  exact hcompile
-    (PairedRecognizerDovetailTotalStageAttemptCode accept reject)
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction :=
+  fun accept reject =>
+    hcompile (PairedRecognizerDovetailTotalStageAttemptCode accept reject)
 
 theorem pairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizer_of_tapeCodeOutputCompiler
     (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
-    PairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction := by
-  intro accept reject
-  exact hcompile
-    (PairedRecognizerDovetailTotalThenRawOutputCode accept reject)
+    PairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction :=
+  fun accept reject =>
+    hcompile (PairedRecognizerDovetailTotalThenRawOutputCode accept reject)
 
 theorem pairedRecognizerDovetailControllerContinueCodeOutputRealizer_of_tapeCodeOutputCompiler
     (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
-    PairedRecognizerDovetailControllerContinueCodeOutputRealizerConstruction := by
-  intro accept reject
-  exact hcompile
-    (PairedRecognizerDovetailControllerContinueCode accept reject)
+    PairedRecognizerDovetailControllerContinueCodeOutputRealizerConstruction :=
+  fun accept reject =>
+    hcompile (PairedRecognizerDovetailControllerContinueCode accept reject)
 
 theorem pairedRecognizerDovetailControllerEmitCodeOutputRealizer_of_tapeCodeOutputCompiler
     (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
-    PairedRecognizerDovetailControllerEmitCodeOutputRealizerConstruction := by
-  intro accept reject
-  exact hcompile
-    (PairedRecognizerDovetailControllerEmitCode accept reject)
+    PairedRecognizerDovetailControllerEmitCodeOutputRealizerConstruction :=
+  fun accept reject =>
+    hcompile (PairedRecognizerDovetailControllerEmitCode accept reject)
 
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputRealizer_of_subroutineRealizer
     (hcompile :

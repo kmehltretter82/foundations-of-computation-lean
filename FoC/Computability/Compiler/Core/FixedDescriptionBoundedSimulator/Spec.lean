@@ -55,17 +55,12 @@ theorem fixedDescriptionBoundedSimulatorTableRealizes_of_canonicalSpec
   constructor
   · exact hsim.left.left
   · intro L
-    have hhalt := hsim.right.left L
-    have houtput :
-        Tape.normalizedOutput
-            (FixedDescriptionBoundedSimulatorCanonicalOutputTape D L) =
-          FixedDescriptionBoundedSimulatorOutput D L := by
-      simp [FixedDescriptionBoundedSimulatorCanonicalOutputTape,
-        FixedDescriptionBoundedSimulatorOutput,
-        MachineDescription.SimulatorLayout.tape_normalizedOutput,
-        MachineDescription.SimulatorLayout.asBoolInput]
-    rw [← houtput]
-    exact MachineDescription.haltsWithOutput_of_haltsWithTape hhalt
+    simpa [FixedDescriptionBoundedSimulatorCanonicalOutputTape,
+      FixedDescriptionBoundedSimulatorOutput,
+      MachineDescription.SimulatorLayout.tape_normalizedOutput,
+      MachineDescription.SimulatorLayout.asBoolInput] using
+      MachineDescription.haltsWithOutput_of_haltsWithTape
+        (hsim.right.left L)
 
 theorem fixedDescriptionBoundedSimulatorTableCompiler_of_canonicalConstruction
     (hcompile :
