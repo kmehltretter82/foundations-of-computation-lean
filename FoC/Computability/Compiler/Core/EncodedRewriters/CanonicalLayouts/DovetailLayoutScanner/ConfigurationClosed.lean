@@ -39,12 +39,12 @@ theorem configurationSuffixScannerDescription_runConfig_code_handoff
               some) := by
   have hseq :
       (MachineDescription.seqSubroutine
-        DovetailStagePrefix.NatSuffixScannerDescription
+        DovetailStagePrefix.NonemptyNatSuffixScannerDescription
         TapeSuffixScannerDescription
         Direction.right).runConfig n
           { state :=
               (MachineDescription.seqSubroutine
-                DovetailStagePrefix.NatSuffixScannerDescription
+                DovetailStagePrefix.NonemptyNatSuffixScannerDescription
                 TapeSuffixScannerDescription
                 Direction.right).start
             tape :=
@@ -53,57 +53,129 @@ theorem configurationSuffixScannerDescription_runConfig_code_handoff
                   some) } =
         { state :=
             (MachineDescription.seqSubroutine
-              DovetailStagePrefix.NatSuffixScannerDescription
+              DovetailStagePrefix.NonemptyNatSuffixScannerDescription
               TapeSuffixScannerDescription
               Direction.right).halt
           tape := Tout } := by
     simpa [ConfigurationSuffixScannerDescription, config] using h
   rcases
       MachineDescription.seqSubroutine_runConfig_inv
-        (A := DovetailStagePrefix.NatSuffixScannerDescription)
+        (A := DovetailStagePrefix.NonemptyNatSuffixScannerDescription)
         (B := TapeSuffixScannerDescription)
         (handoffMove := Direction.right)
-        DovetailStagePrefix.natSuffixScannerDescription_subroutineReady
+        DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
         tapeSuffixScannerDescription_subroutineReady
         hseq with
     ⟨Tstage, hstage, htape⟩
   rcases hstage with ⟨nStage, hstageRun, _hstageFirst⟩
   rcases
-      DovetailStagePrefix.natSuffixScannerDescription_runConfig_code_inv
+      DovetailStagePrefix.nonemptyNatSuffixScannerDescription_runConfig_code_inv
         baseLeft code (by simpa [config] using hstageRun) with
-    ⟨state, tapeCode, hcodeState⟩
-  cases tapeCode with
-  | nil =>
-      -- Remaining finite-machine obligation: the nat scanner can halt on the
-      -- empty suffix by rewinding, so this branch must rule out a following
-      -- tape-suffix halt from that rewound handoff tape.
-      sorry
-  | cons tapeSymbol tapeRest =>
-      rcases encodeCodeWordAsInput_cons_bits tapeSymbol tapeRest with
-        ⟨tapeBit, tapeTail, htapeBits⟩
-      rcases
-          natSuffixScannerDescription_runConfig_encodeNatAppend_handoff
-            baseLeft state (tapeSymbol :: tapeRest) tapeBit tapeTail
-            htapeBits
-            (by simpa [config, hcodeState] using hstageRun) with
-        ⟨baseAfterState, hstageMove⟩
-      rcases htape with ⟨nTape, htapeRun⟩
-      have htapeCodeRun :
-          TapeSuffixScannerDescription.runConfig nTape
-              (config TapeSuffixScannerDescription.start baseAfterState
+    ⟨state, tapeSymbol, tapeRest, hcodeState⟩
+  rcases encodeCodeWordAsInput_cons_bits tapeSymbol tapeRest with
+    ⟨tapeBit, tapeTail, htapeBits⟩
+  rcases
+      DovetailStagePrefix.nonemptyNatSuffixScannerDescription_runConfig_encodeNatAppend_handoff
+        baseLeft state (tapeSymbol :: tapeRest) tapeBit tapeTail
+        htapeBits
+        (by simpa [config, hcodeState] using hstageRun) with
+    ⟨baseAfterState, hstageMove⟩
+  rcases htape with ⟨nTape, htapeRun⟩
+  have htapeCodeRun :
+      TapeSuffixScannerDescription.runConfig nTape
+          (config TapeSuffixScannerDescription.start baseAfterState
+            ((MachineDescription.encodeCodeWordAsInput
+              (tapeSymbol :: tapeRest)).map some)) =
+        { state := TapeSuffixScannerDescription.halt
+          tape := Tout } := by
+    simpa [config, hstageMove] using htapeRun
+  rcases
+      tapeSuffixScannerDescription_runConfig_code_handoff
+        baseAfterState (tapeSymbol :: tapeRest) htapeCodeRun with
+    ⟨tape, suffix, baseAfter, htapeCode, hmove⟩
+  refine
+    ⟨{ state := state, tape := tape }, suffix, baseAfter, ?_, hmove⟩
+  simp [MachineDescription.encodeConfigurationAppend, hcodeState,
+    htapeCode]
+
+theorem configurationSuffixScannerDescription_runConfig_encodeNat_empty_ne_halt
+    (state : Nat) (baseLeft : List (Option Bool)) (n : Nat) :
+    (ConfigurationSuffixScannerDescription.runConfig n
+        (config ConfigurationSuffixScannerDescription.start baseLeft
+          ((MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.encodeNatAppend state [])).map some))).state ≠
+      ConfigurationSuffixScannerDescription.halt := by
+  intro hhalt
+  have hcfg :
+      ConfigurationSuffixScannerDescription.runConfig n
+          (config ConfigurationSuffixScannerDescription.start baseLeft
+            ((MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeNatAppend state [])).map some)) =
+        { state := ConfigurationSuffixScannerDescription.halt
+          tape :=
+            (ConfigurationSuffixScannerDescription.runConfig n
+              (config ConfigurationSuffixScannerDescription.start baseLeft
                 ((MachineDescription.encodeCodeWordAsInput
-                  (tapeSymbol :: tapeRest)).map some)) =
-            { state := TapeSuffixScannerDescription.halt
-              tape := Tout } := by
-        simpa [config, hstageMove] using htapeRun
-      rcases
-          tapeSuffixScannerDescription_runConfig_code_handoff
-            baseAfterState (tapeSymbol :: tapeRest) htapeCodeRun with
-        ⟨tape, suffix, baseAfter, htapeCode, hmove⟩
-      refine
-        ⟨{ state := state, tape := tape }, suffix, baseAfter, ?_, hmove⟩
-      simp [MachineDescription.encodeConfigurationAppend, hcodeState,
-        htapeCode]
+                  (MachineDescription.encodeNatAppend state [])).map
+                  some))).tape } := by
+    cases hrun :
+        ConfigurationSuffixScannerDescription.runConfig n
+          (config ConfigurationSuffixScannerDescription.start baseLeft
+            ((MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeNatAppend state [])).map some)) with
+    | mk q T =>
+        simp [hrun] at hhalt
+        simp [hhalt]
+  have hseq :
+      (MachineDescription.seqSubroutine
+        DovetailStagePrefix.NonemptyNatSuffixScannerDescription
+        TapeSuffixScannerDescription
+        Direction.right).runConfig n
+          { state :=
+              (MachineDescription.seqSubroutine
+                DovetailStagePrefix.NonemptyNatSuffixScannerDescription
+                TapeSuffixScannerDescription
+                Direction.right).start
+            tape :=
+              tapeAtCells baseLeft
+                ((MachineDescription.encodeCodeWordAsInput
+                  (MachineDescription.encodeNatAppend state [])).map
+                  some) } =
+        { state :=
+            (MachineDescription.seqSubroutine
+              DovetailStagePrefix.NonemptyNatSuffixScannerDescription
+              TapeSuffixScannerDescription
+              Direction.right).halt
+          tape :=
+            (ConfigurationSuffixScannerDescription.runConfig n
+              (config ConfigurationSuffixScannerDescription.start baseLeft
+                ((MachineDescription.encodeCodeWordAsInput
+                  (MachineDescription.encodeNatAppend state [])).map
+                  some))).tape } := by
+    simpa [ConfigurationSuffixScannerDescription, config] using hcfg
+  rcases
+      MachineDescription.seqSubroutine_runConfig_inv
+        (A := DovetailStagePrefix.NonemptyNatSuffixScannerDescription)
+        (B := TapeSuffixScannerDescription)
+        (handoffMove := Direction.right)
+        DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
+        tapeSuffixScannerDescription_subroutineReady
+        hseq with
+    ⟨_Tstage, hstage, _htape⟩
+  rcases hstage with ⟨nStage, hstageRun, _hstageFirst⟩
+  have hstageState :
+      (DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig
+        nStage
+        (config DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
+          baseLeft
+          ((MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.encodeNatAppend state [])).map some))).state =
+        DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt := by
+    simpa [config] using
+      congrArg MachineDescription.Configuration.state hstageRun
+  exact
+    DovetailStagePrefix.nonemptyNatSuffixScannerDescription_runConfig_encodeNat_empty_ne_halt
+      state baseLeft nStage hstageState
 
 end DovetailLayoutScanner
 end CanonicalLayouts

@@ -48,14 +48,14 @@ theorem tapeSuffixScannerDescription_subroutineReady :
 
 def ConfigurationSuffixScannerDescription : MachineDescription :=
   MachineDescription.seqSubroutine
-    DovetailStagePrefix.NatSuffixScannerDescription
+    DovetailStagePrefix.NonemptyNatSuffixScannerDescription
     TapeSuffixScannerDescription
     Direction.right
 
 theorem configurationSuffixScannerDescription_subroutineReady :
     ConfigurationSuffixScannerDescription.SubroutineReady :=
   MachineDescription.seqSubroutine_subroutineReady
-    DovetailStagePrefix.natSuffixScannerDescription_subroutineReady
+    DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
     tapeSuffixScannerDescription_subroutineReady
 
 def FinalHitFlagsScannerDescription : MachineDescription :=
@@ -1115,27 +1115,27 @@ theorem run_configurationSuffix_raw_to_handoff_withBase
   rcases tapeFieldBits_cons_false cfg.tape (false :: suffixTail) with
     ⟨tapeTail, htapeTail⟩
   rcases
-      DovetailStagePrefix.run_natSuffix_raw_to_handoff_withBase
+      DovetailStagePrefix.run_nonemptyNatSuffix_raw_to_handoff_withBase
         cfg.state baseLeft false tapeTail with
     ⟨stateSteps, hstate⟩
   let baseAfterState :=
     List.append ((stageNatBits cfg.state).reverse.map some) baseLeft
   let Tmid :=
-    DovetailStagePrefix.natSuffixHandoffConfigWithBase
+    DovetailStagePrefix.nonemptyNatSuffixHandoffConfigWithBase
       cfg.state baseLeft (false :: tapeTail)
   have hArun :
-      DovetailStagePrefix.NatSuffixScannerDescription.runConfig
+      DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig
           stateSteps
           { state :=
-              DovetailStagePrefix.NatSuffixScannerDescription.start
+              DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
             tape :=
               tapeAtCells baseLeft
                 ((configurationFieldBits cfg
                   (false :: suffixTail)).map some) } =
-        { state := DovetailStagePrefix.NatSuffixScannerDescription.halt
+        { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt
           tape := Tmid.tape } := by
     change
-      DovetailStagePrefix.NatSuffixScannerDescription.runConfig
+      DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig
           stateSteps
           (config 200 baseLeft
             ((configurationFieldBits cfg
@@ -1176,7 +1176,7 @@ theorem run_configurationSuffix_raw_to_handoff_withBase
             ((tapeFieldBits cfg.tape
               (false :: suffixTail)).map some) := by
       simpa [Tmid, baseAfterState, htapeTail] using
-        DovetailStagePrefix.natSuffixHandoffConfigWithBase_move_right
+        DovetailStagePrefix.nonemptyNatSuffixHandoffConfigWithBase_move_right
           cfg.state baseLeft false tapeTail
     exact
       CommonGround.SeqComposition.runConfig_reaches_from_move_eq
@@ -1187,10 +1187,10 @@ theorem run_configurationSuffix_raw_to_handoff_withBase
   simpa [ConfigurationSuffixScannerDescription, Tmid, baseAfterState,
     configurationFieldBits, htapeTail, List.map_append] using
       CommonGround.SeqComposition.seqSubroutine_runConfig_exists
-        (A := DovetailStagePrefix.NatSuffixScannerDescription)
+        (A := DovetailStagePrefix.NonemptyNatSuffixScannerDescription)
         (B := TapeSuffixScannerDescription)
         (handoffMove := Direction.right)
-        DovetailStagePrefix.natSuffixScannerDescription_subroutineReady
+        DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
         tapeSuffixScannerDescription_subroutineReady
         hArun hBReach
 

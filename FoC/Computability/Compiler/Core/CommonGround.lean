@@ -81,6 +81,7 @@ export EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
     natSuffixScannerDescription_runConfig_encodeNatAppend_handoff
     natSuffixScannerDescription_runConfig_nonblank_suffix_inv
     configurationSuffixScannerDescription_runConfig_code_handoff
+    configurationSuffixScannerDescription_runConfig_encodeNat_empty_ne_halt
     configurationSuffixScannerDescription_runConfig_canonical_false_suffix_inv
     finalHitFlagsScannerDescription_runConfig_encodeBoolAppend_terminal_inv
     finalHitFlagsScannerDescription_runConfig_code_inv
@@ -93,10 +94,15 @@ export EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
 
 export EncodedRewriters.CanonicalLayouts.DovetailStagePrefix
   ( NatSuffixScannerDescription
+    NonemptyNatSuffixScannerDescription
     natBits_eq_encodeNatAppend
     natSuffixScannerDescription_runConfig_code_inv
+    nonemptyNatSuffixScannerDescription_runConfig_code_inv
+    nonemptyNatSuffixScannerDescription_runConfig_encodeNatAppend_handoff
+    nonemptyNatSuffixScannerDescription_runConfig_encodeNat_empty_ne_halt
     markedPrefix_run_state200_stageNat_handoff
-    natSuffix_run_state200_stageNat_to_state210 )
+    natSuffix_run_state200_stageNat_to_state210
+    nonemptyNatSuffix_run_state200_stageNat_to_state210 )
 
 end ScannerInversions
 
