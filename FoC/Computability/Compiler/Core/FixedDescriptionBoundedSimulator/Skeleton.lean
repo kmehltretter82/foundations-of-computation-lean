@@ -180,11 +180,12 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
 theorem fixedDescriptionBoundedSimulatorCanonicalConstruction_of_phaseConstruction
     (hcompile :
       FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction) :
-    FixedDescriptionBoundedSimulatorCanonicalConstruction := by
-  intro D
-  rcases hcompile D with ⟨S, handoffMove, targets, htargets⟩
-  exact
-    ⟨S.toDescription handoffMove,
+    FixedDescriptionBoundedSimulatorCanonicalConstruction :=
+  fun D =>
+    Exists.elim (hcompile D) fun S hS =>
+      Exists.elim hS fun handoffMove hmove =>
+        Exists.elim hmove fun _targets htargets =>
+          ⟨S.toDescription handoffMove,
       fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
         htargets⟩
 

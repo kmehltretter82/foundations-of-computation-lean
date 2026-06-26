@@ -329,26 +329,23 @@ theorem dovetailControllerResultEmitterDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := DovetailControllerResultEmitterDescription.transitions)
       (stateCount := DovetailControllerResultEmitterDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := DovetailControllerResultEmitterDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
 theorem dovetailControllerResultEmitterDescription_haltTransitionFree :
-    DovetailControllerResultEmitterDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    DovetailControllerResultEmitterDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := DovetailControllerResultEmitterDescription.transitions)
     (state := DovetailControllerResultEmitterDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
 theorem dovetailControllerResultEmitterDescription_subroutineReady :
     DovetailControllerResultEmitterDescription.SubroutineReady :=

@@ -93,26 +93,23 @@ theorem cellListSuffixScannerDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := CellListSuffixScannerDescription.transitions)
       (stateCount := CellListSuffixScannerDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := CellListSuffixScannerDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
 theorem cellListSuffixScannerDescription_haltTransitionFree :
-    CellListSuffixScannerDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    CellListSuffixScannerDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := CellListSuffixScannerDescription.transitions)
     (state := CellListSuffixScannerDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
 theorem cellListSuffixScannerDescription_subroutineReady :
     CellListSuffixScannerDescription.SubroutineReady :=
@@ -521,26 +518,23 @@ theorem cellSuffixScannerDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := CellSuffixScannerDescription.transitions)
       (stateCount := CellSuffixScannerDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := CellSuffixScannerDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
 theorem cellSuffixScannerDescription_haltTransitionFree :
-    CellSuffixScannerDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    CellSuffixScannerDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := CellSuffixScannerDescription.transitions)
     (state := CellSuffixScannerDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
 theorem cellSuffixScannerDescription_subroutineReady :
     CellSuffixScannerDescription.SubroutineReady :=
@@ -698,26 +692,23 @@ theorem boolSuffixScannerDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := BoolSuffixScannerDescription.transitions)
       (stateCount := BoolSuffixScannerDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := BoolSuffixScannerDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
 theorem boolSuffixScannerDescription_haltTransitionFree :
-    BoolSuffixScannerDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    BoolSuffixScannerDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := BoolSuffixScannerDescription.transitions)
     (state := BoolSuffixScannerDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
 theorem boolSuffixScannerDescription_subroutineReady :
     BoolSuffixScannerDescription.SubroutineReady :=
@@ -808,26 +799,23 @@ theorem boolFinalScannerDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := BoolFinalScannerDescription.transitions)
       (stateCount := BoolFinalScannerDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := BoolFinalScannerDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
 theorem boolFinalScannerDescription_haltTransitionFree :
-    BoolFinalScannerDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    BoolFinalScannerDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := BoolFinalScannerDescription.transitions)
     (state := BoolFinalScannerDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
 theorem boolFinalScannerDescription_subroutineReady :
     BoolFinalScannerDescription.SubroutineReady :=
@@ -911,26 +899,23 @@ theorem transitionPrefixScannerDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := TransitionPrefixScannerDescription.transitions)
       (stateCount := TransitionPrefixScannerDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := TransitionPrefixScannerDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
 theorem transitionPrefixScannerDescription_haltTransitionFree :
-    TransitionPrefixScannerDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    TransitionPrefixScannerDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := TransitionPrefixScannerDescription.transitions)
     (state := TransitionPrefixScannerDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
 theorem transitionPrefixScannerDescription_subroutineReady :
     TransitionPrefixScannerDescription.SubroutineReady :=

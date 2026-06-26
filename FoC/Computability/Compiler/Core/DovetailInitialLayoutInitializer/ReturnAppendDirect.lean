@@ -48,29 +48,26 @@ theorem rightCellsCopierStartHandoffDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := RightCellsCopierStartHandoffDescription.transitions)
       (stateCount :=
         RightCellsCopierStartHandoffDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := RightCellsCopierStartHandoffDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
      /-- {name}`rightCellsCopierStartHandoffDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 
 theorem
     rightCellsCopierStartHandoffDescription_haltTransitionFree :
-    RightCellsCopierStartHandoffDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    RightCellsCopierStartHandoffDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := RightCellsCopierStartHandoffDescription.transitions)
     (state := RightCellsCopierStartHandoffDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
      /-- {name}`rightCellsCopierStartHandoffDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem

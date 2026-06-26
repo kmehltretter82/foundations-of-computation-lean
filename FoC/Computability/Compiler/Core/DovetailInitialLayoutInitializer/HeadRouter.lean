@@ -103,29 +103,26 @@ theorem appendInputTapeHeadRouterDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := AppendInputTapeHeadRouterDescription.transitions)
       (stateCount :=
         AppendInputTapeHeadRouterDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := AppendInputTapeHeadRouterDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
      /-- {name}`appendInputTapeHeadRouterDescription_haltTransitionFree` describes append/fold behavior used by later composition. -/
 
 theorem
     appendInputTapeHeadRouterDescription_haltTransitionFree :
-    AppendInputTapeHeadRouterDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    AppendInputTapeHeadRouterDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := AppendInputTapeHeadRouterDescription.transitions)
     (state := AppendInputTapeHeadRouterDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
  /-- {name}`appendInputTapeHeadRouterDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem appendInputTapeHeadRouterDescription_subroutineReady :

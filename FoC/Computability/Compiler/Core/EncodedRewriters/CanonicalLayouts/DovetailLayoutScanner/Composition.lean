@@ -101,26 +101,23 @@ theorem markFirstTransitionBitDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := MarkFirstTransitionBitDescription.transitions)
       (stateCount := MarkFirstTransitionBitDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := MarkFirstTransitionBitDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
 theorem markFirstTransitionBitDescription_haltTransitionFree :
-    MarkFirstTransitionBitDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    MarkFirstTransitionBitDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := MarkFirstTransitionBitDescription.transitions)
     (state := MarkFirstTransitionBitDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
 theorem markFirstTransitionBitDescription_subroutineReady :
     MarkFirstTransitionBitDescription.SubroutineReady :=
@@ -163,27 +160,24 @@ theorem transitionRemainderPrefixScannerDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := TransitionRemainderPrefixScannerDescription.transitions)
       (stateCount :=
         TransitionRemainderPrefixScannerDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := TransitionRemainderPrefixScannerDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
 theorem transitionRemainderPrefixScannerDescription_haltTransitionFree :
-    TransitionRemainderPrefixScannerDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    TransitionRemainderPrefixScannerDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := TransitionRemainderPrefixScannerDescription.transitions)
     (state := TransitionRemainderPrefixScannerDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
 theorem transitionRemainderPrefixScannerDescription_subroutineReady :
     TransitionRemainderPrefixScannerDescription.SubroutineReady :=
@@ -261,26 +255,23 @@ theorem returnToFirstMarkerDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := ReturnToFirstMarkerDescription.transitions)
       (stateCount := ReturnToFirstMarkerDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := ReturnToFirstMarkerDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
 theorem returnToFirstMarkerDescription_haltTransitionFree :
-    ReturnToFirstMarkerDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    ReturnToFirstMarkerDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := ReturnToFirstMarkerDescription.transitions)
     (state := ReturnToFirstMarkerDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
 theorem returnToFirstMarkerDescription_subroutineReady :
     ReturnToFirstMarkerDescription.SubroutineReady :=

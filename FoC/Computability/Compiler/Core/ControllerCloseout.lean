@@ -96,31 +96,28 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineCon
 theorem pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_of_closedHandoff
     (h :
       PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction) :
-    PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction := by
-  intro accept reject
-  rcases h accept reject with ⟨initializer, hinitializer⟩
-  exact
-    ⟨initializer,
+    PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction :=
+  fun accept reject =>
+    Exists.elim (h accept reject) fun initializer hinitializer =>
+      ⟨initializer,
       tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
         hinitializer⟩
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction_of_closedHandoff
     (h :
       PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction) :
-    PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction := by
-  intro accept reject
-  rcases h accept reject with ⟨runner, hrunner⟩
-  exact
-    ⟨runner,
+    PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction :=
+  fun accept reject =>
+    Exists.elim (h accept reject) fun runner hrunner =>
+      ⟨runner,
       tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
         hrunner⟩
 
 theorem pairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction_of_closedHandoff
     (h :
       PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction) :
-    PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction := by
-  rcases h with ⟨emitter, hemitter⟩
-  exact
+    PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction :=
+  Exists.elim h fun emitter hemitter =>
     ⟨emitter,
       tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
         hemitter⟩
@@ -128,31 +125,28 @@ theorem pairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConst
 theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_of_closedHandoff
     (h :
       PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction) :
-    PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction := by
-  intro accept reject
-  rcases h accept reject with ⟨initializer, hinitializer⟩
-  exact
-    ⟨initializer,
+    PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction :=
+  fun accept reject =>
+    Exists.elim (h accept reject) fun initializer hinitializer =>
+      ⟨initializer,
       tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_outputCompiled
         hinitializer⟩
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_closedHandoff
     (h :
       PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction) :
-    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction := by
-  intro accept reject
-  rcases h accept reject with ⟨runner, hrunner⟩
-  exact
-    ⟨runner,
+    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :=
+  fun accept reject =>
+    Exists.elim (h accept reject) fun runner hrunner =>
+      ⟨runner,
       tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_outputCompiled
         hrunner⟩
 
 theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_of_closedHandoff
     (h :
       PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction) :
-    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction := by
-  rcases h with ⟨emitter, hemitter⟩
-  exact
+    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction :=
+  Exists.elim h fun emitter hemitter =>
     ⟨emitter,
       tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_outputCompiled
         hemitter⟩
@@ -160,31 +154,28 @@ theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction
 theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_of_handoff
     (h :
       PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction) :
-    PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction := by
-  intro accept reject
-  rcases h accept reject with ⟨initializer, hinitializer⟩
-  exact
-    ⟨initializer,
+    PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction :=
+  fun accept reject =>
+    Exists.elim (h accept reject) fun initializer hinitializer =>
+      ⟨initializer,
       tapeCodePrimitiveHandoffCompiledSubroutineByDescription_outputCompiled
         hinitializer⟩
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_handoff
     (h :
       PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction) :
-    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction := by
-  intro accept reject
-  rcases h accept reject with ⟨runner, hrunner⟩
-  exact
-    ⟨runner,
+    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :=
+  fun accept reject =>
+    Exists.elim (h accept reject) fun runner hrunner =>
+      ⟨runner,
       tapeCodePrimitiveHandoffCompiledSubroutineByDescription_outputCompiled
         hrunner⟩
 
 theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction_of_handoff
     (h :
       PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction) :
-    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction := by
-  rcases h with ⟨emitter, hemitter⟩
-  exact
+    PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction :=
+  Exists.elim h fun emitter hemitter =>
     ⟨emitter,
       tapeCodePrimitiveHandoffCompiledSubroutineByDescription_outputCompiled
         hemitter⟩
@@ -217,19 +208,18 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerCo
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction_of_handoff
     (h :
       PairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction) :
-    PairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction := by
-  intro accept reject
-  rcases h accept reject with ⟨attempt, hattempt⟩
-  exact ⟨attempt, hattempt.left⟩
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction :=
+  fun accept reject =>
+    Exists.elim (h accept reject) fun attempt hattempt =>
+      ⟨attempt, hattempt.left⟩
 
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction_of_outputCompiled
     (h :
       PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction) :
-    PairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction := by
-  intro accept reject
-  rcases h accept reject with ⟨attempt, hattempt⟩
-  exact
-    ⟨attempt,
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction :=
+  fun accept reject =>
+    Exists.elim (h accept reject) fun attempt hattempt =>
+      ⟨attempt,
       tapeCodePrimitiveOutputSubroutineRealizedByDescription_of_outputCompiled
         hattempt⟩
 

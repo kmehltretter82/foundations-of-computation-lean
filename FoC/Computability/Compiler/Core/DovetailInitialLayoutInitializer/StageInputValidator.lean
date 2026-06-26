@@ -278,29 +278,26 @@ theorem
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := RestoreStageInputSecondBitDescription.transitions)
       (stateCount :=
         RestoreStageInputSecondBitDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := RestoreStageInputSecondBitDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
      /-- {name}`restoreStageInputSecondBitDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 
 theorem
     restoreStageInputSecondBitDescription_haltTransitionFree :
-    RestoreStageInputSecondBitDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    RestoreStageInputSecondBitDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := RestoreStageInputSecondBitDescription.transitions)
     (state := RestoreStageInputSecondBitDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
      /-- {name}`restoreStageInputSecondBitDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
@@ -401,29 +398,26 @@ theorem markStageInputSecondBitDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := MarkStageInputSecondBitDescription.transitions)
       (stateCount :=
         MarkStageInputSecondBitDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := MarkStageInputSecondBitDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
      /-- {name}`markStageInputSecondBitDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 
 theorem
     markStageInputSecondBitDescription_haltTransitionFree :
-    MarkStageInputSecondBitDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    MarkStageInputSecondBitDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := MarkStageInputSecondBitDescription.transitions)
     (state := MarkStageInputSecondBitDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
      /-- {name}`markStageInputSecondBitDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem

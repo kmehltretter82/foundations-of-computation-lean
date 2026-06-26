@@ -54,26 +54,23 @@ theorem markedPrefixScannerDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := MarkedPrefixScannerDescription.transitions)
       (stateCount := MarkedPrefixScannerDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := MarkedPrefixScannerDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
 theorem markedPrefixScannerDescription_haltTransitionFree :
-    MarkedPrefixScannerDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    MarkedPrefixScannerDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := MarkedPrefixScannerDescription.transitions)
     (state := MarkedPrefixScannerDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
 theorem markedPrefixScannerDescription_subroutineReady :
     MarkedPrefixScannerDescription.SubroutineReady :=
@@ -95,26 +92,23 @@ theorem natSuffixScannerDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := NatSuffixScannerDescription.transitions)
       (stateCount := NatSuffixScannerDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := NatSuffixScannerDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
 theorem natSuffixScannerDescription_haltTransitionFree :
-    NatSuffixScannerDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    NatSuffixScannerDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := NatSuffixScannerDescription.transitions)
     (state := NatSuffixScannerDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
 theorem natSuffixScannerDescription_subroutineReady :
     NatSuffixScannerDescription.SubroutineReady :=

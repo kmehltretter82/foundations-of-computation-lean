@@ -65,11 +65,10 @@ theorem fixedDescriptionBoundedSimulatorTableRealizes_of_canonicalSpec
 theorem fixedDescriptionBoundedSimulatorTableCompiler_of_canonicalConstruction
     (hcompile :
       FixedDescriptionBoundedSimulatorCanonicalConstruction) :
-    FixedDescriptionBoundedSimulatorTableCompilerConstruction := by
-  intro D
-  rcases hcompile D with ⟨sim, hsim⟩
-  exact
-    ⟨sim,
+    FixedDescriptionBoundedSimulatorTableCompilerConstruction :=
+  fun D =>
+    Exists.elim (hcompile D) fun sim hsim =>
+      ⟨sim,
       fixedDescriptionBoundedSimulatorTableRealizes_of_canonicalSpec hsim⟩
 
 end Computability

@@ -60,14 +60,13 @@ theorem tapeCodePrimitiveCodeWord_handoff_tape
           (Tape.input
             (MachineDescription.encodeCodeWordAsInput (symbol :: code)))) =
         Tape.input
-          (MachineDescription.encodeCodeWordAsInput (symbol :: code)) := by
-  constructor
-  · exact
-      tape_normalizedOutput_move_right_input
-        (MachineDescription.encodeCodeWordAsInput (symbol :: code))
-  · simpa [tapeCodePrimitiveCodeWordHandoffMove] using
+          (MachineDescription.encodeCodeWordAsInput (symbol :: code)) :=
+  ⟨tape_normalizedOutput_move_right_input
+      (MachineDescription.encodeCodeWordAsInput (symbol :: code)),
+    by
+      simpa [tapeCodePrimitiveCodeWordHandoffMove] using
       tape_move_left_move_right_input_encodeCodeWordAsInput_cons
-        symbol code
+        symbol code⟩
 
 def RightShiftedOutputCompiledSubroutineByDescription
     (P : MachineDescription.TapeCodePrimitive)

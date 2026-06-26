@@ -76,12 +76,10 @@ theorem programCompiledByDescription_of_same_accepted_language
     (hP : ProgramAcceptsLanguage P L)
     (hQ : ProgramAcceptsLanguage Q L)
     (hcompile : ProgramCompiledByDescription P D) :
-    ProgramCompiledByDescription Q D := by
-  constructor
-  · exact hcompile.left
-  · intro w
-    exact Iff.trans (hcompile.right w)
-      (Iff.trans (hP w) (Iff.symm (hQ w)))
+    ProgramCompiledByDescription Q D :=
+  ⟨hcompile.left, fun w =>
+    Iff.trans (hcompile.right w)
+      (Iff.trans (hP w) (Iff.symm (hQ w)))⟩
 
 def BoolProgramCompiledByDescription
     (P : StagedProgram Bool Bool) (D : MachineDescription) : Prop :=
@@ -102,26 +100,21 @@ theorem programCompiledByDescription_acceptsLanguage
     {L : Language Bool}
     (hP : ProgramAcceptsLanguage P L)
     (hcompile : ProgramCompiledByDescription P D) :
-    MachineDescriptionAcceptsLanguage D L := by
-  constructor
-  · exact hcompile.left
-  · intro w
-    exact Iff.trans (hcompile.right w) (hP w)
+    MachineDescriptionAcceptsLanguage D L :=
+  ⟨hcompile.left, fun w => Iff.trans (hcompile.right w) (hP w)⟩
 
 theorem boolProgramCompiledByDescription_decidesLanguage
     {P : StagedProgram Bool Bool} {D : MachineDescription}
     {L : Language Bool}
     (hP : ProgramBoolDecides P L)
     (hcompile : BoolProgramCompiledByDescription P D) :
-    MachineDescriptionDecidesLanguage D L := by
-  constructor
-  · exact hcompile.left
-  · intro w
+    MachineDescriptionDecidesLanguage D L :=
+  ⟨hcompile.left, fun w => by
     constructor
     · intro hw
       exact (hcompile.right w true).mpr ((hP.left w).mpr hw)
     · intro hw
-      exact (hcompile.right w false).mpr ((hP.right w).mpr hw)
+      exact (hcompile.right w false).mpr ((hP.right w).mpr hw)⟩
 
 theorem programAcceptableByDescription_turingAcceptable
     {L : Language Bool}

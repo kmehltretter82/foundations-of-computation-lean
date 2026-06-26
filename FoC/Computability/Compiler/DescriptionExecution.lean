@@ -670,8 +670,8 @@ theorem exactIdentityDescription_wellFormed :
 
 theorem exactIdentityDescription_haltTransitionFree :
     ExactIdentityDescription.HaltTransitionFree := by
-  intro t ht
-  simp [ExactIdentityDescription] at ht
+  intro t
+  simp [ExactIdentityDescription]
 
 theorem exactIdentityDescription_haltsWithExactOutputIn
     (w : Word Bool) :

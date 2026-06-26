@@ -47,28 +47,25 @@ theorem writeTransitionPrefixDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := WriteTransitionPrefixDescription.transitions)
       (stateCount :=
         WriteTransitionPrefixDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := WriteTransitionPrefixDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
  /-- {name}`writeTransitionPrefixDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 theorem writeTransitionPrefixDescription_haltTransitionFree :
-    WriteTransitionPrefixDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    WriteTransitionPrefixDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := WriteTransitionPrefixDescription.transitions)
     (state := WriteTransitionPrefixDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
  /-- {name}`writeTransitionPrefixDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem writeTransitionPrefixDescription_subroutineReady :
@@ -122,28 +119,25 @@ theorem writeMarkedTransitionPrefixDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := WriteMarkedTransitionPrefixDescription.transitions)
       (stateCount :=
         WriteMarkedTransitionPrefixDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := WriteMarkedTransitionPrefixDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
  /-- {name}`writeMarkedTransitionPrefixDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 theorem writeMarkedTransitionPrefixDescription_haltTransitionFree :
-    WriteMarkedTransitionPrefixDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    WriteMarkedTransitionPrefixDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := WriteMarkedTransitionPrefixDescription.transitions)
     (state := WriteMarkedTransitionPrefixDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
  /-- {name}`writeMarkedTransitionPrefixDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem writeMarkedTransitionPrefixDescription_subroutineReady :
@@ -211,8 +205,7 @@ theorem appendFixedFourBitsLastDescription_wellFormed
   · cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
       native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l :=
         (AppendFixedFourBitsLastDescription
           b0 b1 b2 b3).transitions)
@@ -221,23 +214,21 @@ theorem appendFixedFourBitsLastDescription_wellFormed
           b0 b1 b2 b3).stateCount)
       (by
         cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-          native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+          native_decide)
+  · exact transition_deterministic_of_all
       (l :=
         (AppendFixedFourBitsLastDescription
           b0 b1 b2 b3).transitions)
       (by
         cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-          native_decide) t u ht hu hkey
+          native_decide)
 
  /-- {name}`appendFixedFourBitsLastDescription_haltTransitionFree` describes append/fold behavior used by later composition. -/
 theorem appendFixedFourBitsLastDescription_haltTransitionFree
     (b0 b1 b2 b3 : Bool) :
     (AppendFixedFourBitsLastDescription
-      b0 b1 b2 b3).HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+      b0 b1 b2 b3).HaltTransitionFree :=
+  transition_notFrom_of_all
     (l :=
       (AppendFixedFourBitsLastDescription
         b0 b1 b2 b3).transitions)
@@ -246,7 +237,7 @@ theorem appendFixedFourBitsLastDescription_haltTransitionFree
         b0 b1 b2 b3).halt)
     (by
       cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-        native_decide) t ht
+        native_decide)
 
  /-- {name}`appendFixedFourBitsLastDescription_step_scan_nonempty` characterizes a scan safety phase. -/
 theorem appendFixedFourBitsLastDescription_step_scan_nonempty

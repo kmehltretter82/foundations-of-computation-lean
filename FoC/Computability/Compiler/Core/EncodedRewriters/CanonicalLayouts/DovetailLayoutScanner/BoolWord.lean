@@ -81,26 +81,23 @@ theorem boolWordSuffixScannerDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := BoolWordSuffixScannerDescription.transitions)
       (stateCount := BoolWordSuffixScannerDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := BoolWordSuffixScannerDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
 theorem boolWordSuffixScannerDescription_haltTransitionFree :
-    BoolWordSuffixScannerDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    BoolWordSuffixScannerDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := BoolWordSuffixScannerDescription.transitions)
     (state := BoolWordSuffixScannerDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
 theorem boolWordSuffixScannerDescription_subroutineReady :
     BoolWordSuffixScannerDescription.SubroutineReady :=

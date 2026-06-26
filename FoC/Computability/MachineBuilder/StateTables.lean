@@ -113,9 +113,8 @@ theorem extendStates_wellFormed
 theorem extendStates_haltTransitionFree
     {extra : Nat} {D : MachineDescription}
     (hD : D.HaltTransitionFree) :
-    (extendStates extra D).HaltTransitionFree := by
-  intro t ht
-  exact hD t ht
+    (extendStates extra D).HaltTransitionFree :=
+  hD
 
 theorem extendStates_subroutineReady
     {extra : Nat} {D : MachineDescription}
@@ -131,9 +130,8 @@ theorem lookupTransition_halt_none
   unfold lookupTransition
   apply (List.find?_eq_none).mpr
   intro t ht
-  have hsource : t.source ≠ D.halt := hD t ht
   by_cases hs : t.source = D.halt
-  · exact False.elim (hsource hs)
+  · exact False.elim (hD t ht hs)
   · simp [Matches, hs]
 
 theorem stepConfig_halt_none
@@ -472,12 +470,11 @@ theorem cellBranchDescription_haltTransitionFree
     {move : Direction}
     (hsource : source ≠ halt) :
     (cellBranchDescription stateCount source halt
-      blankTarget falseTarget trueTarget move).HaltTransitionFree := by
-  intro t ht
-  exact branchOnCell_no_source
+      blankTarget falseTarget trueTarget move).HaltTransitionFree :=
+  branchOnCell_no_source
     (state := halt) (source := source)
     (blankTarget := blankTarget) (falseTarget := falseTarget)
-    (trueTarget := trueTarget) (move := move) hsource t ht
+    (trueTarget := trueTarget) (move := move) hsource
 
 theorem cellBranchDescription_subroutineReady
     {stateCount source halt blankTarget falseTarget trueTarget : Nat}
@@ -673,10 +670,9 @@ theorem handoff_wellFormed (move : Direction) :
       (move := move) (by omega) (by omega) t ht
   constructor
   · exact handoffTransitions_deterministic 0 1 move
-  · intro t ht
-    exact branchOnCell_no_source (source := 0) (state := 1)
+  · exact branchOnCell_no_source (source := 0) (state := 1)
       (blankTarget := 1) (falseTarget := 1) (trueTarget := 1)
-      (move := move) (by omega) t ht
+      (move := move) (by omega)
 
 theorem preserveMove_wellFormed (move : Direction) :
     (preserveMove move).WellFormed :=

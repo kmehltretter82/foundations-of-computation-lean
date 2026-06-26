@@ -604,26 +604,23 @@ theorem wellFormed :
   constructor
   · simp [Description]
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := Description.transitions)
       (stateCount := Description.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := Description.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
 theorem haltTransitionFree :
-    Description.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    Description.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := Description.transitions)
     (state := Description.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
 theorem run_header
     (suffix : Word Bool) :

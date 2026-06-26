@@ -291,11 +291,13 @@ def FixedDescriptionBoundedSimulatorSkeletonCompilerConstruction : Prop :=
 theorem fixedDescriptionBoundedSimulatorTableCompiler_of_skeletonCompiler
     (hcompile :
       FixedDescriptionBoundedSimulatorSkeletonCompilerConstruction) :
-    FixedDescriptionBoundedSimulatorTableCompilerConstruction := by
-  intro D
-  rcases hcompile D with ⟨S, handoffMove, hS⟩
-  exact ⟨S.toDescription handoffMove,
-    fixedDescriptionBoundedSimulatorTableRealizes_of_skeletonRealizes hS⟩
+    FixedDescriptionBoundedSimulatorTableCompilerConstruction :=
+  fun D =>
+    Exists.elim (hcompile D) fun S hS =>
+      Exists.elim hS fun handoffMove hrealizes =>
+        ⟨S.toDescription handoffMove,
+          fixedDescriptionBoundedSimulatorTableRealizes_of_skeletonRealizes
+            hrealizes⟩
 
 def FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction : Prop :=
   forall D : MachineDescription,
@@ -404,11 +406,12 @@ theorem fixedDescriptionBoundedSimulatorSkeletonCompiler_of_phaseCompiler
     (hsound : FixedDescriptionBoundedSimulatorSkeletonPhaseSoundness)
     (hcompile :
       FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction) :
-      FixedDescriptionBoundedSimulatorSkeletonCompilerConstruction := by
-  intro D
-  rcases hcompile D with ⟨S, handoffMove, targets, htargets⟩
-  exact ⟨S, handoffMove,
-    hsound D S handoffMove targets htargets⟩
+      FixedDescriptionBoundedSimulatorSkeletonCompilerConstruction :=
+  fun D =>
+    Exists.elim (hcompile D) fun S hS =>
+      Exists.elim hS fun handoffMove hmove =>
+        Exists.elim hmove fun targets htargets =>
+          ⟨S, handoffMove, hsound D S handoffMove targets htargets⟩
 
 theorem fixedDescriptionBoundedSimulatorTableCompiler_of_phaseCompiler
     (hsound : FixedDescriptionBoundedSimulatorSkeletonPhaseSoundness)

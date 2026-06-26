@@ -495,9 +495,8 @@ def PairedRecognizerDovetailControllerStageInputEncoderClosedHandoffConstruction
 
 theorem pairedRecognizerDovetailControllerStageInputEncoderConstruction_of_handoff
     (h : PairedRecognizerDovetailControllerStageInputEncoderHandoffConstruction) :
-    PairedRecognizerDovetailControllerStageInputEncoderConstruction := by
-  rcases h with ⟨encoder, hencoder⟩
-  exact
+    PairedRecognizerDovetailControllerStageInputEncoderConstruction :=
+  Exists.elim h fun encoder hencoder =>
     ⟨encoder,
       tapeCodePrimitiveHandoffCompiledSubroutineByDescription_outputCompiled
         hencoder⟩
@@ -505,9 +504,8 @@ theorem pairedRecognizerDovetailControllerStageInputEncoderConstruction_of_hando
 theorem pairedRecognizerDovetailControllerStageInputEncoderHandoffConstruction_of_closedHandoff
     (h :
       PairedRecognizerDovetailControllerStageInputEncoderClosedHandoffConstruction) :
-    PairedRecognizerDovetailControllerStageInputEncoderHandoffConstruction := by
-  rcases h with ⟨encoder, hencoder⟩
-  exact
+    PairedRecognizerDovetailControllerStageInputEncoderHandoffConstruction :=
+  Exists.elim h fun encoder hencoder =>
     ⟨encoder,
       tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
         hencoder⟩

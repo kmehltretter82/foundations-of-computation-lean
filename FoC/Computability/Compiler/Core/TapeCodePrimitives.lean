@@ -498,14 +498,10 @@ theorem tapeCodePrimitiveOutputSubroutineRealizedByDescription_congr
     (hPQ : forall code : Word MachineCodeSymbol,
       P.transform code = Q.transform code)
     (hD : TapeCodePrimitiveOutputSubroutineRealizedByDescription P D) :
-    TapeCodePrimitiveOutputSubroutineRealizedByDescription Q D := by
-  constructor
-  · constructor
-    · exact hD.left.left
-    · intro code out hQ
-      exact hD.left.right code out
-        (by simpa [hPQ code] using hQ)
-  · exact hD.right
+    TapeCodePrimitiveOutputSubroutineRealizedByDescription Q D :=
+  ⟨⟨hD.left.left, fun code out hQ =>
+      hD.left.right code out (by simpa [hPQ code] using hQ)⟩,
+    hD.right⟩
 
 theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_congr
     {P Q : MachineDescription.TapeCodePrimitive}
@@ -513,13 +509,10 @@ theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_congr
     (hPQ : forall code : Word MachineCodeSymbol,
       P.transform code = Q.transform code)
     (hD : TapeCodePrimitiveOutputCompiledSubroutineByDescription P D) :
-    TapeCodePrimitiveOutputCompiledSubroutineByDescription Q D := by
-  constructor
-  · constructor
-    · exact hD.left.left
-    · intro code out
-      simpa [hPQ code] using hD.left.right code out
-  · exact hD.right
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription Q D :=
+  ⟨⟨hD.left.left, fun code out =>
+      by simpa [hPQ code] using hD.left.right code out⟩,
+    hD.right⟩
 
 theorem tapeCodePrimitiveHandoffCompiledSubroutineByDescription_congr
     {P Q : MachineDescription.TapeCodePrimitive}
@@ -529,13 +522,12 @@ theorem tapeCodePrimitiveHandoffCompiledSubroutineByDescription_congr
     (hD : TapeCodePrimitiveHandoffCompiledSubroutineByDescription
       P D handoffMove) :
     TapeCodePrimitiveHandoffCompiledSubroutineByDescription
-      Q D handoffMove := by
-  constructor
-  · exact tapeCodePrimitiveOutputCompiledSubroutineByDescription_congr hPQ hD.left
-  · intro code out hQ
+      Q D handoffMove :=
+  ⟨tapeCodePrimitiveOutputCompiledSubroutineByDescription_congr hPQ hD.left,
+    fun code out hQ => by
     have hP : P.transform code = some out := by
       simpa [hPQ code] using hQ
-    exact hD.right code out hP
+    exact hD.right code out hP⟩
 
 theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_congr
     {P Q : MachineDescription.TapeCodePrimitive}
@@ -545,12 +537,11 @@ theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_congr
     (hD : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       P D handoffMove) :
     TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-      Q D handoffMove := by
-  constructor
-  · exact tapeCodePrimitiveOutputCompiledSubroutineByDescription_congr hPQ hD.left
-  · intro code T hhalt
+      Q D handoffMove :=
+  ⟨tapeCodePrimitiveOutputCompiledSubroutineByDescription_congr hPQ hD.left,
+    fun code T hhalt => by
     rcases hD.right code T hhalt with ⟨out, hP, hnorm, hmove⟩
-    exact ⟨out, by simpa [← hPQ code] using hP, hnorm, hmove⟩
+    exact ⟨out, by simpa [← hPQ code] using hP, hnorm, hmove⟩⟩
 
 theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady
     {P : MachineDescription.TapeCodePrimitive}
@@ -580,28 +571,19 @@ theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_congr
     (hD : TapeCodePrimitiveHandoffSubroutineRealizedByDescription
       P D handoffMove) :
     TapeCodePrimitiveHandoffSubroutineRealizedByDescription
-      Q D handoffMove := by
-  constructor
-  · constructor
-    · constructor
-      · exact hD.left.left.left
-      · intro code out hQ
-        exact hD.left.left.right code out
-          (by simpa [hPQ code] using hQ)
-    · exact hD.left.right
-  · intro code out hQ
-    exact hD.right code out
-      (by simpa [hPQ code] using hQ)
+      Q D handoffMove :=
+  ⟨⟨⟨hD.left.left.left, fun code out hQ =>
+        hD.left.left.right code out (by simpa [hPQ code] using hQ)⟩,
+      hD.left.right⟩,
+    fun code out hQ =>
+      hD.right code out (by simpa [hPQ code] using hQ)⟩
 
 theorem tapeCodePrimitiveOutputRealizedByDescription_of_outputCompiled
     {P : MachineDescription.TapeCodePrimitive}
     {D : MachineDescription}
     (h : TapeCodePrimitiveOutputCompiledByDescription P D) :
-    TapeCodePrimitiveOutputRealizedByDescription P D := by
-  constructor
-  · exact h.left
-  · intro code out hp
-    exact (h.right code out).mpr hp
+    TapeCodePrimitiveOutputRealizedByDescription P D :=
+  ⟨h.left, fun code out hp => (h.right code out).mpr hp⟩
 
 theorem tapeCodePrimitiveOutputSubroutineRealizedByDescription_of_outputCompiled
     {P : MachineDescription.TapeCodePrimitive}
@@ -615,12 +597,10 @@ theorem tapeCodePrimitiveOutputRealizedByDescription_of_exact
     {P : MachineDescription.TapeCodePrimitive}
     {D : MachineDescription}
     (h : TapeCodePrimitiveCompiledByDescription P D) :
-    TapeCodePrimitiveOutputRealizedByDescription P D := by
-  constructor
-  · exact h.left
-  · intro code out hp
-    exact MachineDescription.haltsWithOutput_of_haltsWithExactOutput
-      ((h.right code out).mpr hp)
+    TapeCodePrimitiveOutputRealizedByDescription P D :=
+  ⟨h.left, fun code out hp =>
+    MachineDescription.haltsWithOutput_of_haltsWithExactOutput
+      ((h.right code out).mpr hp)⟩
 
 theorem tapeCodePrimitiveOutputRealizedByDescription_of_subroutine
     {P : MachineDescription.TapeCodePrimitive}

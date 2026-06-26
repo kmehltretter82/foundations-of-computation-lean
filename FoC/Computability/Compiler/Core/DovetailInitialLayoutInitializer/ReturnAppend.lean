@@ -38,28 +38,25 @@ theorem markTransitionSecondBitDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := MarkTransitionSecondBitDescription.transitions)
       (stateCount :=
         MarkTransitionSecondBitDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := MarkTransitionSecondBitDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
  /-- {name}`markTransitionSecondBitDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 theorem markTransitionSecondBitDescription_haltTransitionFree :
-    MarkTransitionSecondBitDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    MarkTransitionSecondBitDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := MarkTransitionSecondBitDescription.transitions)
     (state := MarkTransitionSecondBitDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
  /-- {name}`markTransitionSecondBitDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem markTransitionSecondBitDescription_subroutineReady :
@@ -200,29 +197,26 @@ theorem returnToCurrentMarkerDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := ReturnToCurrentMarkerDescription.transitions)
       (stateCount :=
         ReturnToCurrentMarkerDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := ReturnToCurrentMarkerDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
      /-- {name}`returnToCurrentMarkerDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 
 theorem
     returnToCurrentMarkerDescription_haltTransitionFree :
-    ReturnToCurrentMarkerDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    ReturnToCurrentMarkerDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := ReturnToCurrentMarkerDescription.transitions)
     (state := ReturnToCurrentMarkerDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
      /-- {name}`returnToCurrentMarkerDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
@@ -524,29 +518,26 @@ theorem rightCellsCopierStartDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := RightCellsCopierStartDescription.transitions)
       (stateCount :=
         RightCellsCopierStartDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := RightCellsCopierStartDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
      /-- {name}`rightCellsCopierStartDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 
 theorem
     rightCellsCopierStartDescription_haltTransitionFree :
-    RightCellsCopierStartDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    RightCellsCopierStartDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := RightCellsCopierStartDescription.transitions)
     (state := RightCellsCopierStartDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
      /-- {name}`rightCellsCopierStartDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
@@ -813,29 +804,26 @@ theorem inputTapeRightCellsDirectCopierDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := InputTapeRightCellsDirectCopierDescription.transitions)
       (stateCount :=
         InputTapeRightCellsDirectCopierDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := InputTapeRightCellsDirectCopierDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
      /-- {name}`inputTapeRightCellsDirectCopierDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 
 theorem
     inputTapeRightCellsDirectCopierDescription_haltTransitionFree :
-    InputTapeRightCellsDirectCopierDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    InputTapeRightCellsDirectCopierDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := InputTapeRightCellsDirectCopierDescription.transitions)
     (state := InputTapeRightCellsDirectCopierDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
      /-- {name}`inputTapeRightCellsDirectCopierDescription_subroutineReady` packages a subroutine-ready composition step. -/
 
 theorem
@@ -1129,28 +1117,25 @@ theorem returnToTransitionMarkerDescription_wellFormed :
   constructor
   · native_decide
   constructor
-  · intro t ht
-    exact transition_wellFormed_of_all
+  · exact transition_wellFormed_of_all
       (l := ReturnToTransitionMarkerDescription.transitions)
       (stateCount :=
         ReturnToTransitionMarkerDescription.stateCount)
       (by
-        native_decide) t ht
-  · intro t u ht hu hkey
-    exact transition_deterministic_of_all
+        native_decide)
+  · exact transition_deterministic_of_all
       (l := ReturnToTransitionMarkerDescription.transitions)
       (by
-        native_decide) t u ht hu hkey
+        native_decide)
 
  /-- {name}`returnToTransitionMarkerDescription_haltTransitionFree` establishes the halting condition in this construction. -/
 theorem returnToTransitionMarkerDescription_haltTransitionFree :
-    ReturnToTransitionMarkerDescription.HaltTransitionFree := by
-  intro t ht
-  exact transition_notFrom_of_all
+    ReturnToTransitionMarkerDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
     (l := ReturnToTransitionMarkerDescription.transitions)
     (state := ReturnToTransitionMarkerDescription.halt)
     (by
-      native_decide) t ht
+      native_decide)
 
  /-- {name}`returnToTransitionMarkerDescription_subroutineReady` packages a subroutine-ready composition step. -/
 theorem returnToTransitionMarkerDescription_subroutineReady :
