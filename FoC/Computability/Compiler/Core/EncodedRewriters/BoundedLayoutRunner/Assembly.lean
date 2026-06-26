@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner
 
 set_option doc.verso true
@@ -19,33 +20,6 @@ open Languages
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
-
-theorem exactIdentityDescription_subroutineReady :
-    MachineDescription.ExactIdentityDescription.SubroutineReady :=
-  ⟨MachineDescription.exactIdentityDescription_wellFormed,
-    MachineDescription.exactIdentityDescription_haltTransitionFree⟩
-
-theorem exactIdentityDescription_reaches
-    (T : Tape Bool) :
-    exists n : Nat,
-      MachineDescription.ExactIdentityDescription.runConfig n
-          { state := MachineDescription.ExactIdentityDescription.start
-            tape := T } =
-        { state := MachineDescription.ExactIdentityDescription.halt
-          tape := T } :=
-  ⟨0, rfl⟩
-
-theorem exactIdentityDescription_runConfig_from_start
-    (n : Nat) (T : Tape Bool) :
-    MachineDescription.ExactIdentityDescription.runConfig n
-        { state := MachineDescription.ExactIdentityDescription.start
-          tape := T } =
-      { state := MachineDescription.ExactIdentityDescription.halt
-        tape := T } := by
-  cases n <;>
-    simp [MachineDescription.ExactIdentityDescription,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition]
 
 def PhaseAssemblyConstruction : Prop :=
   forall accept reject : MachineDescription,
@@ -69,7 +43,7 @@ theorem phaseAssemblyConstruction_scaffold :
   have hparserReady : parser.SubroutineReady := hparser.left
   have hconfigReady : configRunner.SubroutineReady := hconfig.left
   have hidReady : identity.SubroutineReady :=
-    exactIdentityDescription_subroutineReady
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   have hparserIdReady : parserId.SubroutineReady :=
     MachineDescription.seqSubroutine_subroutineReady
       hparserReady hidReady
@@ -95,7 +69,7 @@ theorem phaseAssemblyConstruction_scaffold :
           (handoffMove := Direction.right)
           hparserReady hidReady
           hparserHalt
-          (exactIdentityDescription_reaches
+          (CommonGround.Identity.exactIdentityDescription_run_from_start
             (Tape.move Direction.right (ParsedLayoutCheckedTape L)))
     have h_equiv := hconfig.right.left L
     rcases h_equiv with ⟨Tactual, h_halt, h_eq⟩
@@ -155,7 +129,7 @@ theorem phaseAssemblyConstruction_scaffold :
           { state := identity.halt
             tape := TconfigInLeft } := by
         simpa [identity] using
-          ((exactIdentityDescription_runConfig_from_start
+          ((CommonGround.Identity.exactIdentityDescription_runConfig_from_start
               nIdParser
               (Tape.move Direction.right Tparser)).symm.trans
             hIdParser)

@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction
 
 set_option doc.verso true
@@ -189,28 +190,6 @@ def ConfigRunnerFromClosedHandoff
     MachineDescription.ExactIdentityDescription
     tapeCodePrimitiveCodeWordHandoffMove
 
-theorem exactIdentityDescription_reaches_configRunner
-    (T : Tape Bool) :
-    exists n : Nat,
-      MachineDescription.ExactIdentityDescription.runConfig n
-          { state := MachineDescription.ExactIdentityDescription.start
-            tape := T } =
-        { state := MachineDescription.ExactIdentityDescription.halt
-          tape := T } :=
-  ⟨0, rfl⟩
-
-theorem exactIdentityDescription_runConfig_from_start_configRunner
-    (n : Nat) (T : Tape Bool) :
-    MachineDescription.ExactIdentityDescription.runConfig n
-        { state := MachineDescription.ExactIdentityDescription.start
-          tape := T } =
-      { state := MachineDescription.ExactIdentityDescription.halt
-        tape := T } := by
-  cases n <;>
-    simp [MachineDescription.ExactIdentityDescription,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition]
-
 theorem configRunnerFromClosedHandoff_spec
     {accept reject closed : MachineDescription}
     (hclosed :
@@ -224,8 +203,7 @@ theorem configRunnerFromClosedHandoff_spec
     tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady
       hclosed
   have hidentityReady : identity.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   constructor
   · exact
       MachineDescription.seqSubroutine_subroutineReady

@@ -560,6 +560,18 @@ theorem exactIdentityDescription_run_from_start
   simp [MachineDescription.ExactIdentityDescription,
     MachineDescription.runConfig]
 
+theorem exactIdentityDescription_runConfig_from_start
+    (n : Nat) (T : Tape Bool) :
+    MachineDescription.ExactIdentityDescription.runConfig n
+        { state := MachineDescription.ExactIdentityDescription.start
+          tape := T } =
+      { state := MachineDescription.ExactIdentityDescription.halt
+        tape := T } := by
+  cases n <;>
+    simp [MachineDescription.ExactIdentityDescription,
+      MachineDescription.runConfig, MachineDescription.stepConfig,
+      MachineDescription.lookupTransition]
+
 end Identity
 
 namespace LeftBoundaryReturn

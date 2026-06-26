@@ -323,18 +323,6 @@ def LayoutParserFromClosedHandoff
     MachineDescription.ExactIdentityDescription
     tapeCodePrimitiveCodeWordHandoffMove
 
-theorem exactIdentityDescription_runConfig_from_start_layoutParser
-    (n : Nat) (T : Tape Bool) :
-    MachineDescription.ExactIdentityDescription.runConfig n
-        { state := MachineDescription.ExactIdentityDescription.start
-          tape := T } =
-      { state := MachineDescription.ExactIdentityDescription.halt
-        tape := T } := by
-  cases n <;>
-    simp [MachineDescription.ExactIdentityDescription,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition]
-
 theorem layoutCheckedParserFromClosedRecognizer_spec
     {recognizer : MachineDescription}
     (hrecognizer : LayoutCheckedClosedRecognizerSpec recognizer) :
@@ -343,8 +331,7 @@ theorem layoutCheckedParserFromClosedRecognizer_spec
   have hrecognizerReady : recognizer.SubroutineReady :=
     hrecognizer.left
   have hidentityReady : identity.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   constructor
   · exact
       MachineDescription.seqSubroutine_subroutineReady
@@ -395,7 +382,7 @@ theorem layoutCheckedParserFromClosedRecognizer_spec
             MachineDescription.Configuration) =
           { state := identity.halt, tape := T } := by
         simpa [identity] using
-          ((exactIdentityDescription_runConfig_from_start_layoutParser
+          ((CommonGround.Identity.exactIdentityDescription_runConfig_from_start
               nB
               (Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid)).symm.trans
             hidentityRun)
@@ -424,8 +411,7 @@ theorem layoutParserFromClosedHandoff_spec
     tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady
       hclosed
   have hidentityReady : identity.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   constructor
   · exact
       MachineDescription.seqSubroutine_subroutineReady
@@ -488,7 +474,7 @@ theorem layoutParserFromClosedHandoff_spec
             MachineDescription.Configuration) =
           { state := identity.halt, tape := T } := by
         simpa [identity] using
-          ((exactIdentityDescription_runConfig_from_start_layoutParser
+          ((CommonGround.Identity.exactIdentityDescription_runConfig_from_start
               nB (Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid)).symm.trans
             hidentityRun)
       exact (congrArg MachineDescription.Configuration.tape hcfg).symm
