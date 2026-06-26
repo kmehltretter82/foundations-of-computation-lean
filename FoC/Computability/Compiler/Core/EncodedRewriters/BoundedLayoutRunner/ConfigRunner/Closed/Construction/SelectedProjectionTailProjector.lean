@@ -176,6 +176,18 @@ def outputBits
     (L : MachineDescription.DovetailLayout) : Word Bool :=
   MachineDescription.encodeCodeWordAsInput (outputSuffix useAccept L)
 
+def outputPrefixBits
+    (L : MachineDescription.DovetailLayout) : Word Bool :=
+  List.append
+    (MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.header)
+    (MachineDescription.encodeCodeWordAsInput
+      (MachineDescription.encodeBoolWordAppend (ParsedLayoutBits L) []))
+
+def outputAllBits
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) : Word Bool :=
+  List.append (outputPrefixBits L) (outputBits useAccept L)
+
 def outputFieldBits
     (useAccept : Bool)
     (L : MachineDescription.DovetailLayout) : Word Bool :=
@@ -260,6 +272,29 @@ theorem simulatorLayout_asBoolInput_eq_header_input_outputSuffix
   rw [MachineDescription.SimulatorLayout.asBoolInput]
   rw [simulatorLayout_encode_eq_header_input_outputSuffix]
 
+theorem simulatorLayout_asBoolInput_eq_outputAllBits
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    MachineDescription.SimulatorLayout.asBoolInput
+        (SelectedProjectionSimulatorLayout useAccept L) =
+      outputAllBits useAccept L := by
+  rw [simulatorLayout_asBoolInput_eq_header_input_outputSuffix]
+  unfold outputAllBits outputPrefixBits outputBits
+  have happend :
+      MachineDescription.encodeBoolWordAppend
+          (ParsedLayoutBits L) (outputSuffix useAccept L) =
+        List.append
+          (MachineDescription.encodeBoolWordAppend
+            (ParsedLayoutBits L) [])
+          (outputSuffix useAccept L) := by
+    simpa using
+      encodeBoolWordAppend_append (ParsedLayoutBits L)
+        ([] : Word MachineCodeSymbol) (outputSuffix useAccept L)
+  rw [happend]
+  simp only [MachineDescription.encodeCodeWordAsInput]
+  rw [MachineDescription.encodeCodeWordAsInput_append]
+  simp [List.append_assoc]
+
 def outputTape
     (useAccept : Bool)
     (L : MachineDescription.DovetailLayout)
@@ -274,6 +309,43 @@ theorem outputTape_eq_fields
       tapeAtCells baseLeft
         ((outputFieldBits useAccept L).map some) := by
   rw [outputTape, outputBits_eq_fields]
+
+theorem stageNatBits_cons_cons
+    (n : Nat) :
+    exists first : Bool,
+    exists second : Bool,
+    exists rest : Word Bool,
+      stageNatBits n = first :: second :: rest := by
+  cases n with
+  | zero =>
+      exact ⟨false, false, [true, true], by simp [stageNatBits_zero]⟩
+  | succ n =>
+      exact
+        ⟨false, false, true :: false :: stageNatBits n,
+          by simp [stageNatBits_succ]⟩
+
+theorem sourceTape_move_left_move_right
+    (L : MachineDescription.DovetailLayout)
+    (baseLeft : List (Option Bool)) :
+    Tape.move Direction.left (Tape.move Direction.right
+      (sourceTape L baseLeft)) =
+        sourceTape L baseLeft := by
+  rcases stageNatBits_cons_cons L.stage with
+    ⟨first, second, rest, hstage⟩
+  rw [sourceTape, sourceFieldBits, hstage]
+  simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem outputTape_move_left_move_right
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout)
+    (baseLeft : List (Option Bool)) :
+    Tape.move Direction.left (Tape.move Direction.right
+      (outputTape useAccept L baseLeft)) =
+        outputTape useAccept L baseLeft := by
+  rcases stageNatBits_cons_cons L.stage with
+    ⟨first, second, rest, hstage⟩
+  rw [outputTape_eq_fields, outputFieldBits, hstage]
+  simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
 
 def TailProjectorForwardSpec
     (useAccept : Bool)

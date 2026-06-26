@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseAdapters
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.SelectedProjectionTailProjector
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.BoolWordQuoter
 
 set_option doc.verso true
@@ -364,6 +365,132 @@ theorem selectedProjectionOutputBits_eq_quoter_bits
   simp [MachineDescription.encodeCodeWordAsInput,
     _root_.FoC.Computability.DovetailInitialLayoutInitializer.checkedNonemptyBoolWordQuoteDirectSourceBits_eq]
 
+def SelectedProjectionInputQuoterSpec
+    (quoter : MachineDescription) : Prop :=
+  quoter.SubroutineReady ∧
+    forall L : MachineDescription.DovetailLayout,
+      quoter.HaltsFromTape
+        (ParsedLayoutCheckedTape L)
+        (SelectedProjectionTailProjector.sourceTape L
+          ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
+            some))
+
+def SelectedProjectionInputQuoterConstruction : Prop :=
+  exists quoter : MachineDescription,
+    SelectedProjectionInputQuoterSpec quoter
+
+def SelectedProjectionOutputReturnSpec
+    (useAccept : Bool)
+    (returner : MachineDescription) : Prop :=
+  returner.SubroutineReady ∧
+    forall L : MachineDescription.DovetailLayout,
+      returner.HaltsFromTape
+        (SelectedProjectionTailProjector.outputTape useAccept L
+          ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
+            some))
+        (MachineDescription.SimulatorLayout.tape
+          (SelectedProjectionSimulatorLayout useAccept L))
+
+def SelectedProjectionOutputReturnConstruction : Prop :=
+  forall useAccept : Bool,
+    exists returner : MachineDescription,
+      SelectedProjectionOutputReturnSpec useAccept returner
+
+def SelectedProjectionCheckedProjectorComponentConstruction : Prop :=
+  SelectedProjectionInputQuoterConstruction ∧
+    SelectedProjectionTailProjector.TailProjectorExactConstruction ∧
+      SelectedProjectionOutputReturnConstruction
+
+def SelectedProjectionCheckedProjectorFromComponents
+    (quoter tail returner : MachineDescription) : MachineDescription :=
+  SeqViaCanonical (SeqViaCanonical quoter tail) returner
+
+theorem selectedProjectionCheckedProjectorExactSpec_of_components
+    {useAccept : Bool}
+    {quoter tail returner : MachineDescription}
+    (hquoter : SelectedProjectionInputQuoterSpec quoter)
+    (htail :
+      SelectedProjectionTailProjector.TailProjectorExactSpec
+        useAccept tail)
+    (hreturn : SelectedProjectionOutputReturnSpec useAccept returner) :
+    SelectedProjectionCheckedProjectorExactSpec useAccept
+      (SelectedProjectionCheckedProjectorFromComponents
+        quoter tail returner) := by
+  let baseLeft :=
+    fun L : MachineDescription.DovetailLayout =>
+      (SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
+        some
+  have hquoterTailReady : (SeqViaCanonical quoter tail).SubroutineReady :=
+    SeqViaCanonical_subroutineReady hquoter.left htail.left
+  constructor
+  · exact
+      SeqViaCanonical_subroutineReady hquoterTailReady hreturn.left
+  · intro L
+    have hquoterRun :
+        quoter.HaltsFromTape
+          (ParsedLayoutCheckedTape L)
+          (SelectedProjectionTailProjector.sourceTape L
+            (baseLeft L)) :=
+      hquoter.right L
+    have htailRun :
+        tail.HaltsFromTape
+          (SelectedProjectionTailProjector.sourceTape L
+            (baseLeft L))
+          (SelectedProjectionTailProjector.outputTape useAccept L
+            (baseLeft L)) :=
+      htail.right L (baseLeft L)
+    have hbridgeTail :
+        Tape.move Direction.left
+            (Tape.move Direction.right
+              (SelectedProjectionTailProjector.sourceTape L
+                (baseLeft L))) =
+          SelectedProjectionTailProjector.sourceTape L
+            (baseLeft L) :=
+      SelectedProjectionTailProjector.sourceTape_move_left_move_right
+        L (baseLeft L)
+    have hquoterTailRun :
+        (SeqViaCanonical quoter tail).HaltsFromTape
+          (ParsedLayoutCheckedTape L)
+          (SelectedProjectionTailProjector.outputTape useAccept L
+            (baseLeft L)) :=
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        hquoter.left htail.left hquoterRun hbridgeTail htailRun
+    have hreturnRun :
+        returner.HaltsFromTape
+          (SelectedProjectionTailProjector.outputTape useAccept L
+            (baseLeft L))
+          (MachineDescription.SimulatorLayout.tape
+            (SelectedProjectionSimulatorLayout useAccept L)) :=
+      hreturn.right L
+    have hbridgeReturn :
+        Tape.move Direction.left
+            (Tape.move Direction.right
+              (SelectedProjectionTailProjector.outputTape useAccept L
+                (baseLeft L))) =
+          SelectedProjectionTailProjector.outputTape useAccept L
+            (baseLeft L) :=
+      SelectedProjectionTailProjector.outputTape_move_left_move_right
+        useAccept L (baseLeft L)
+    simpa [SelectedProjectionCheckedProjectorFromComponents] using
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        hquoterTailReady hreturn.left
+        hquoterTailRun hbridgeReturn hreturnRun
+
+theorem selectedProjectionCheckedProjectorExactConstruction_of_components
+    (hcomponents :
+      SelectedProjectionCheckedProjectorComponentConstruction) :
+    SelectedProjectionCheckedProjectorExactConstruction := by
+  intro useAccept
+  rcases hcomponents with
+    ⟨⟨quoter, hquoter⟩, htailConstruction, hreturnConstruction⟩
+  rcases htailConstruction useAccept with ⟨tail, htail⟩
+  rcases hreturnConstruction useAccept with ⟨returner, hreturn⟩
+  exact
+    ⟨SelectedProjectionCheckedProjectorFromComponents
+        quoter tail returner,
+      selectedProjectionCheckedProjectorExactSpec_of_components
+        hquoter htail hreturn⟩
+
 def AcceptProjectionCheckedEmitterConstruction : Prop :=
   exists emitter : MachineDescription,
     SelectedProjectionCheckedEmitterSpec true emitter
@@ -540,12 +667,21 @@ theorem selectedProjectionPrimitiveExactConstruction_of_checkedParser_checkedEmi
         hparser hemits⟩
 
 /--
-Finite-machine leaf for the accept/reject checked projection projectors.  The
-emitter construction below only adds the final right handoff.
+Finite-machine leaf for the accept/reject checked projection projectors,
+split into the raw input quoter, selected tail projector, and final returner.
+-/
+theorem selectedProjectionCheckedProjectorComponentConstruction_scaffold :
+    SelectedProjectionCheckedProjectorComponentConstruction := by
+  sorry
+
+/--
+Packages the component-level finite-machine leaves as exact checked
+projectors.  The emitter construction below only adds the final right handoff.
 -/
 theorem selectedProjectionCheckedProjectorExactConstruction_scaffold :
-    SelectedProjectionCheckedProjectorExactConstruction := by
-  sorry
+    SelectedProjectionCheckedProjectorExactConstruction :=
+  selectedProjectionCheckedProjectorExactConstruction_of_components
+    selectedProjectionCheckedProjectorComponentConstruction_scaffold
 
 /--
 Packages the exact checked projectors as accept/reject checked projection
