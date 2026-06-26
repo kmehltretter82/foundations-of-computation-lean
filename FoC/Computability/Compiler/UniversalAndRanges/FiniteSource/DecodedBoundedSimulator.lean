@@ -478,20 +478,24 @@ theorem codePrefixDecodedBoundedSimulatorDescriptionDecoderConstruction_core :
           encoded encoded).mpr htransform)
 
 /--
+Direct finite-machine leaf for the decoded bounded simulator primitive.
+This is the construction that must parse the staged code, decode one machine
+description prefix, and simulate the decoded description for the requested
+bound.
+-/
+theorem codePrefixDecodedBoundedSimulatorCodeMachineConstruction_core :
+    CodePrefixDecodedBoundedSimulatorCodeMachineConstruction := by
+  sorry
+
+/--
 Finite-machine leaf that sequences the stage decoder, description decoder, and
 bounded simulation phase.
 -/
 theorem codePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction_core :
     CodePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction := by
-  sorry
-
-theorem codePrefixDecodedBoundedSimulatorCodeMachineConstruction_core :
-    CodePrefixDecodedBoundedSimulatorCodeMachineConstruction := by
-  exact
-    codePrefixDecodedBoundedSimulatorCodeMachineConstruction_of_components
-      codePrefixDecodedBoundedSimulatorStageDecoderConstruction_core
-      codePrefixDecodedBoundedSimulatorDescriptionDecoderConstruction_core
-      codePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction_core
+  intro stageState descriptionState stageDecoder descriptionDecoder
+    hstage hdescription
+  exact codePrefixDecodedBoundedSimulatorCodeMachineConstruction_core
 
 theorem codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_core :
     CodePrefixDecodedBoundedSimulatorSemanticMachineConstruction :=
