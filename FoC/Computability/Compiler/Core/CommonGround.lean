@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.DovetailCode
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.Assembly
