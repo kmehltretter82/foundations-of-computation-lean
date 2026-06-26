@@ -255,8 +255,7 @@ theorem selectedProjectionCheckedEmitterSpec_of_projector
       (SelectedProjectionCheckedEmitterFromProjector projector) := by
   have hid :
       MachineDescription.ExactIdentityDescription.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   constructor
   · exact
       MachineDescription.seqSubroutine_subroutineReady
@@ -273,10 +272,11 @@ theorem selectedProjectionCheckedEmitterSpec_of_projector
                       (SelectedProjectionSimulatorLayout useAccept L)) } =
             { state := MachineDescription.ExactIdentityDescription.halt
               tape := SelectedProjectionOutputTape useAccept L } := by
-      refine ⟨0, ?_⟩
-      simp [MachineDescription.ExactIdentityDescription,
-        MachineDescription.runConfig,
-        selectedProjectionOutputTape_eq_simulator_tape]
+      simpa [selectedProjectionOutputTape_eq_simulator_tape] using
+        CommonGround.Identity.exactIdentityDescription_run_from_start
+          (Tape.move Direction.right
+            (MachineDescription.SimulatorLayout.tape
+              (SelectedProjectionSimulatorLayout useAccept L)))
     simpa [SelectedProjectionCheckedEmitterFromProjector] using
       MachineDescription.seqSubroutine_haltsFromTape_of_haltsFromTape
         hprojector.left hid hprojectorRun hidentityReach
@@ -517,70 +517,26 @@ theorem selectedProjectionPrimitiveRightShiftedConstruction_of_exact
   intro useAccept
   rcases h useAccept with ⟨runner, hrunner⟩
   refine ⟨runner, ?_⟩
-  constructor
-  · exact hrunner.left.left
-  constructor
-  · exact hrunner.left.right
-  constructor
-  · intro code out
-    constructor
-    · intro hhalt
-      rcases hhalt with ⟨n, hn⟩
-      let T : Tape Bool :=
-        (runner.runConfig n
-          (runner.initial
-            (MachineDescription.encodeCodeWordAsInput code))).tape
-      have hTape :
-          runner.HaltsWithTape
-              (MachineDescription.encodeCodeWordAsInput code) T := by
-        exact ⟨n, ⟨hn.left, rfl⟩⟩
-      rcases hrunner.right.right code T hTape with
-        ⟨L, hcode, hT⟩
-      have hactual :
-          Tape.normalizedOutput T =
-            MachineDescription.encodeCodeWordAsInput out := by
-        simpa [T] using hn.right
-      have hexpected :
-          Tape.normalizedOutput T =
-            MachineDescription.encodeCodeWordAsInput
-              (SelectedProjectionOutputCode useAccept L) := by
-        rw [hT]
-        exact
-          EncodedRewriters.tape_normalizedOutput_move_right_input
-            (MachineDescription.encodeCodeWordAsInput
-              (SelectedProjectionOutputCode useAccept L))
-      have houtBits :
-          MachineDescription.encodeCodeWordAsInput out =
-            MachineDescription.encodeCodeWordAsInput
-              (SelectedProjectionOutputCode useAccept L) :=
-        hactual.symm.trans hexpected
-      have hout : out = SelectedProjectionOutputCode useAccept L :=
-        MachineDescription.encodeCodeWordAsInput_injective houtBits
-      exact
-        (SelectedProjectionPrimitive_transform_eq_some_iff
-          useAccept code out).mpr
-          ⟨L, hcode, by simpa [SelectedProjectionOutputCode] using hout⟩
-    · intro htransform
-      rcases
-          (SelectedProjectionPrimitive_transform_eq_some_iff
-            useAccept code out).mp htransform with
-        ⟨L, hcode, hout⟩
-      subst code
-      subst out
-      simpa [ParsedLayoutBits, SelectedProjectionOutputTape,
-        SelectedProjectionOutputCode,
-        EncodedRewriters.tape_normalizedOutput_move_right_input] using
-        MachineDescription.haltsWithOutput_of_haltsWithTape
-          (hrunner.right.left L)
-  · intro code T hhalt
-    rcases hrunner.right.right code T hhalt with
-      ⟨L, hcode, hT⟩
-    refine ⟨SelectedProjectionOutputCode useAccept L, ?_, ?_⟩
-    · exact
-        (SelectedProjectionPrimitive_transform_eq_some_iff
-          useAccept code (SelectedProjectionOutputCode useAccept L)).mpr
-          ⟨L, hcode, by simp [SelectedProjectionOutputCode]⟩
-    · simpa [SelectedProjectionOutputTape] using hT
+  exact
+    CommonGround.CodeWordEmitters.rightShiftedOutputCompiled_of_indexed_tape_spec
+      hrunner.left.left
+      hrunner.left.right
+      (fun L : MachineDescription.DovetailLayout =>
+        MachineDescription.DovetailLayout.encode L)
+      (fun L : MachineDescription.DovetailLayout =>
+        SelectedProjectionOutputCode useAccept L)
+      (fun L : MachineDescription.DovetailLayout =>
+        SelectedProjectionOutputTape useAccept L)
+      (by
+        intro L
+        simp [SelectedProjectionOutputTape, SelectedProjectionOutputCode])
+      hrunner.right.left
+      hrunner.right.right
+      (by
+        intro code out
+        simpa [SelectedProjectionOutputCode] using
+          SelectedProjectionPrimitive_transform_eq_some_iff
+            useAccept code out)
 
 theorem selectedProjectionPrimitiveExactSpec_of_checkedParser_checkedEmitter
     {useAccept : Bool} {parser emitter : MachineDescription}

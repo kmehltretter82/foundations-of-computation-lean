@@ -101,6 +101,87 @@ export EncodedRewriters.CanonicalLayouts
     RightShiftedEmitterSpec
     RightShiftedEmitterConstruction )
 
+theorem rightShiftedOutputCompiled_of_indexed_tape_spec
+    {ι : Type}
+    {P : MachineDescription.TapeCodePrimitive}
+    {runner : MachineDescription}
+    (hwell : runner.WellFormed)
+    (hhaltFree : runner.HaltTransitionFree)
+    (inputCode outputCode : ι -> Word MachineCodeSymbol)
+    (outputTape : ι -> Tape Bool)
+    (houtputTape :
+      forall i : ι,
+        outputTape i =
+          Tape.move Direction.right
+            (Tape.input
+              (MachineDescription.encodeCodeWordAsInput
+                (outputCode i))))
+    (hforward :
+      forall i : ι,
+        runner.HaltsWithTape
+          (MachineDescription.encodeCodeWordAsInput (inputCode i))
+          (outputTape i))
+    (hclosed :
+      forall code : Word MachineCodeSymbol,
+      forall T : Tape Bool,
+        runner.HaltsWithTape
+          (MachineDescription.encodeCodeWordAsInput code) T ->
+        exists i : ι, code = inputCode i ∧ T = outputTape i)
+    (htransform :
+      forall code out : Word MachineCodeSymbol,
+        P.transform code = some out <->
+          exists i : ι, code = inputCode i ∧ out = outputCode i) :
+    EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription
+      P runner := by
+  constructor
+  · exact hwell
+  constructor
+  · exact hhaltFree
+  constructor
+  · intro code out
+    constructor
+    · intro hhalt
+      rcases hhalt with ⟨n, hn⟩
+      let T : Tape Bool :=
+        (runner.runConfig n
+          (runner.initial
+            (MachineDescription.encodeCodeWordAsInput code))).tape
+      have hTape :
+          runner.HaltsWithTape
+              (MachineDescription.encodeCodeWordAsInput code) T := by
+        exact ⟨n, ⟨hn.left, rfl⟩⟩
+      rcases hclosed code T hTape with ⟨i, hcode, hT⟩
+      have hactual :
+          Tape.normalizedOutput T =
+            MachineDescription.encodeCodeWordAsInput out := by
+        simpa [T] using hn.right
+      have hexpected :
+          Tape.normalizedOutput T =
+            MachineDescription.encodeCodeWordAsInput (outputCode i) := by
+        rw [hT, houtputTape i]
+        exact
+          EncodedRewriters.tape_normalizedOutput_move_right_input
+            (MachineDescription.encodeCodeWordAsInput (outputCode i))
+      have houtBits :
+          MachineDescription.encodeCodeWordAsInput out =
+            MachineDescription.encodeCodeWordAsInput (outputCode i) :=
+        hactual.symm.trans hexpected
+      have hout : out = outputCode i :=
+        MachineDescription.encodeCodeWordAsInput_injective houtBits
+      exact (htransform code out).mpr ⟨i, hcode, hout⟩
+    · intro hP
+      rcases (htransform code out).mp hP with ⟨i, hcode, hout⟩
+      rw [hcode, hout]
+      simpa [houtputTape i,
+        EncodedRewriters.tape_normalizedOutput_move_right_input] using
+        MachineDescription.haltsWithOutput_of_haltsWithTape
+          (hforward i)
+  · intro code T hhalt
+    rcases hclosed code T hhalt with ⟨i, hcode, hT⟩
+    refine ⟨outputCode i, ?_, ?_⟩
+    · exact (htransform code (outputCode i)).mpr ⟨i, hcode, rfl⟩
+    · rw [hT, houtputTape i]
+
 end CodeWordEmitters
 
 namespace DovetailLayouts
@@ -264,6 +345,18 @@ theorem exactIdentityDescription_haltsFromTape
     MachineDescription.ExactIdentityDescription.HaltsFromTape T T := by
   refine ⟨0, ?_⟩
   constructor <;> rfl
+
+theorem exactIdentityDescription_run_from_start
+    (T : Tape Bool) :
+    exists steps : Nat,
+      MachineDescription.ExactIdentityDescription.runConfig steps
+          { state := MachineDescription.ExactIdentityDescription.start
+            tape := T } =
+        { state := MachineDescription.ExactIdentityDescription.halt
+          tape := T } := by
+  refine ⟨0, ?_⟩
+  simp [MachineDescription.ExactIdentityDescription,
+    MachineDescription.runConfig]
 
 end Identity
 

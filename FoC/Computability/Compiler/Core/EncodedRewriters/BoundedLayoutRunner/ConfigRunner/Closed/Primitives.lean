@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.SeqSubroutineSemantics
 import FoC.Computability.Compiler.Core.ConstructionTargets
+import FoC.Computability.Compiler.Core.CommonGround
 import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.Skeleton
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Basic
 
@@ -633,69 +634,48 @@ theorem selectedMergeRightShifted_of_spec
     (hrunner : SelectedMergeSpec useAccept runner) :
     RightShiftedOutputCompiledSubroutineByDescription
       (SelectedMergePrimitive useAccept) runner := by
-  constructor
-  · exact hrunner.left.left
-  constructor
-  · exact hrunner.left.right
-  constructor
-  · intro code out
-    constructor
-    · intro hhalt
-      rcases hhalt with ⟨n, hn⟩
-      let T : Tape Bool :=
-        (runner.runConfig n
-          (runner.initial
-            (MachineDescription.encodeCodeWordAsInput code))).tape
-      have hTape :
-          runner.HaltsWithTape
-              (MachineDescription.encodeCodeWordAsInput code) T := by
-        exact ⟨n, ⟨hn.left, rfl⟩⟩
-      rcases hrunner.right.right code T hTape with
-        ⟨S, L, hcode, hinput, hT⟩
-      have hactual :
-          Tape.normalizedOutput T =
-            MachineDescription.encodeCodeWordAsInput out := by
-        simpa [T] using hn.right
-      have hexpected :
-          Tape.normalizedOutput T =
-            MachineDescription.encodeCodeWordAsInput
-              (SelectedMergeOutputCode useAccept S L) := by
-        rw [hT]
-        exact
-          EncodedRewriters.tape_normalizedOutput_move_right_input
-            (MachineDescription.encodeCodeWordAsInput
-              (SelectedMergeOutputCode useAccept S L))
-      have houtBits :
-          MachineDescription.encodeCodeWordAsInput out =
-            MachineDescription.encodeCodeWordAsInput
-              (SelectedMergeOutputCode useAccept S L) :=
-        hactual.symm.trans hexpected
-      have hout :
-          out = SelectedMergeOutputCode useAccept S L :=
-        MachineDescription.encodeCodeWordAsInput_injective houtBits
-      exact
-        (SelectedMergePrimitive_transform_eq_some_iff
-          useAccept code out).mpr
-          ⟨S, L, hcode, hinput, hout⟩
-    · intro htransform
-      rcases
-          (SelectedMergePrimitive_transform_eq_some_iff
-            useAccept code out).mp htransform with
-        ⟨S, L, hcode, hinput, hout⟩
-      subst code
-      subst out
-      simpa [SelectedMergeOutputTape,
-        EncodedRewriters.tape_normalizedOutput_move_right_input] using
-        MachineDescription.haltsWithOutput_of_haltsWithTape
-          (hrunner.right.left S L hinput)
-  · intro code T hhalt
-    rcases hrunner.right.right code T hhalt with
-      ⟨S, L, hcode, hinput, hT⟩
-    refine ⟨SelectedMergeOutputCode useAccept S L, ?_, hT⟩
-    exact
-      (SelectedMergePrimitive_transform_eq_some_iff
-        useAccept code (SelectedMergeOutputCode useAccept S L)).mpr
-        ⟨S, L, hcode, hinput, rfl⟩
+  let Index : Type :=
+    { pair :
+        MachineDescription.SimulatorLayout ×
+          MachineDescription.DovetailLayout //
+      MachineDescription.decodeCodeWordAsInput pair.1.input =
+        some (MachineDescription.DovetailLayout.encode pair.2) }
+  exact
+    CommonGround.CodeWordEmitters.rightShiftedOutputCompiled_of_indexed_tape_spec
+      (ι := Index)
+      hrunner.left.left
+      hrunner.left.right
+      (fun i => MachineDescription.SimulatorLayout.encode i.1.1)
+      (fun i => SelectedMergeOutputCode useAccept i.1.1 i.1.2)
+      (fun i => SelectedMergeOutputTape useAccept i.1.1 i.1.2)
+      (by
+        intro i
+        simp [SelectedMergeOutputTape])
+      (by
+        intro i
+        rcases i with ⟨⟨S, L⟩, hinput⟩
+        exact hrunner.right.left S L hinput)
+      (by
+        intro code T hhalt
+        rcases hrunner.right.right code T hhalt with
+          ⟨S, L, hcode, hinput, hT⟩
+        exact ⟨⟨⟨S, L⟩, hinput⟩, hcode, hT⟩)
+      (by
+        intro code out
+        constructor
+        · intro htransform
+          rcases
+              (SelectedMergePrimitive_transform_eq_some_iff
+                useAccept code out).mp htransform with
+            ⟨S, L, hcode, hinput, hout⟩
+          exact ⟨⟨⟨S, L⟩, hinput⟩, hcode, hout⟩
+        · intro htransform
+          rcases htransform with
+            ⟨⟨⟨S, L⟩, hinput⟩, hcode, hout⟩
+          exact
+            (SelectedMergePrimitive_transform_eq_some_iff
+              useAccept code out).mpr
+              ⟨S, L, hcode, hinput, hout⟩)
 
 
 end BoundedLayoutRunner
