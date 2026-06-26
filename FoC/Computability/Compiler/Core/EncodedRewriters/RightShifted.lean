@@ -5,10 +5,8 @@ set_option doc.verso true
 /-!
 # Right-shifted encoded-rewriter handoff helpers
 
-Finite code-word rewriters in this directory halt one cell to the right of the
-canonical Boolean encoding they emit.  These local helpers package that
-machine-level shape as the closed handoff contract used by the controller
-sequencing layer.
+Right-shifted rewriters halt one cell to the right of the canonical Boolean
+encoding they emit.
 -/
 
 namespace FoC
@@ -90,9 +88,7 @@ def RightShiftedOutputCompiledSubroutineByDescription
                     (MachineDescription.encodeCodeWordAsInput out))
 
 /-!
-**Accessor API.**  Right-shifted output is the exact-tape contract used by the
-remaining encoded rewriter leaves.  These accessors keep later proofs from
-depending on the nested conjunction layout of
+Accessor lemmas keep later proofs independent of the conjunction layout of
 {name}`RightShiftedOutputCompiledSubroutineByDescription`.
 -/
 

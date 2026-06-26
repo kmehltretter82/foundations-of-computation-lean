@@ -6,12 +6,10 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Conf
 set_option doc.verso true
 
 /-!
-# Bounded recognizer-configuration runner construction
+# Bounded config-runner primitive rewrites
 
-The bridge below remains useful once a closed handoff implementation of
-{name (full := FoC.Computability.PairedRecognizerDovetailLayoutCode)}`PairedRecognizerDovetailLayoutCode`
-is available without importing this bounded-runner assembly.  The finite
-construction leaf is kept here to avoid circular imports.
+Projection extracts one recognizer configuration from a dovetail layout; merge
+writes the simulated result back into that layout.
 -/
 
 namespace FoC
