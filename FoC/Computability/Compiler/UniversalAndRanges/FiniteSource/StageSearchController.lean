@@ -421,25 +421,29 @@ def CodePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoop
               (CodePrefixRecognizerStageCode encoded checkedStage)
 
 /--
-Finite-machine leaf for the bounded simulator loop after the outer unary
-budget has been exposed by {name}`MachineDescription.decodeNat`.  The remaining
-construction work is the concrete bounded enumeration of
-{lit}`(checkedStage, fuel)` pairs, rebuilding each checked stage-code input,
-and running the supplied simulator for the selected fuel.
+Finite-machine leaf for the canonical bounded simulator loop.  The machine
+starts from an already stage-coded budget input, enumerates bounded
+{lit}`(checkedStage, fuel)` pairs, rebuilds each checked stage-code input, and
+runs the supplied simulator for the selected fuel.
+-/
+theorem codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopFiniteLeaf
+    (simulator : TuringMachine MachineCodeSymbol simulatorState) :
+    CodePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopObligation
+      simulator := by
+  sorry
+
+/--
+Adapter from the canonical bounded simulator loop to the
+{name}`MachineDescription.decodeNat` contract.  The transition-table work lives
+in {name}`codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopFiniteLeaf`;
+this theorem only exposes the parsed budget and payload.
 -/
 theorem codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorDecodeNatFiniteLeaf
     (simulator : TuringMachine MachineCodeSymbol simulatorState) :
     CodePrefixStageSearchControllerBudgetCheckerBoundedSimulatorRawLoopDecodeNatObligation
       simulator := by
-  sorry
-
-/-- Adapter from the decodeNat-level loop to the canonical stage-code contract. -/
-theorem codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopObligation_core
-    (simulator : TuringMachine MachineCodeSymbol simulatorState) :
-    CodePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopObligation
-      simulator := by
   rcases
-      codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorDecodeNatFiniteLeaf
+      codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopFiniteLeaf
         simulator with
     ⟨runnerState, runner, hrunner⟩
   refine ⟨runnerState, runner, ?_⟩
@@ -447,22 +451,31 @@ theorem codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRaw
   constructor
   · intro hhalt
     rcases (hrunner tokens).mp hhalt with
-      ⟨budget, encoded, checkedStage, fuel, hdecode,
-        hcheckedStage, hfuel, hsimulator⟩
-    exact
-      ⟨budget, encoded, checkedStage, fuel,
-        codePrefixRecognizerStageCode_eq_of_decodeNat hdecode,
-        hcheckedStage, hfuel, hsimulator⟩
-  · intro htarget
-    rcases htarget with
       ⟨budget, encoded, checkedStage, fuel, htokens,
         hcheckedStage, hfuel, hsimulator⟩
-    exact (hrunner tokens).mpr
+    exact
       ⟨budget, encoded, checkedStage, fuel,
         by
           rw [htokens]
           exact codePrefixRecognizerStageCode_decodeNat encoded budget,
         hcheckedStage, hfuel, hsimulator⟩
+  · intro htarget
+    rcases htarget with
+      ⟨budget, encoded, checkedStage, fuel, hdecode,
+        hcheckedStage, hfuel, hsimulator⟩
+    exact (hrunner tokens).mpr
+      ⟨budget, encoded, checkedStage, fuel,
+        codePrefixRecognizerStageCode_eq_of_decodeNat hdecode,
+        hcheckedStage, hfuel, hsimulator⟩
+
+/-- Canonical bounded-loop construction, exposed under the core name. -/
+theorem codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopObligation_core
+    (simulator : TuringMachine MachineCodeSymbol simulatorState) :
+    CodePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopObligation
+      simulator := by
+  exact
+    codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopFiniteLeaf
+      simulator
 
 /--
 Concrete transition-table obligation for the bounded simulator loop after the
@@ -473,31 +486,9 @@ theorem codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorRawLoopDecod
     (simulator : TuringMachine MachineCodeSymbol simulatorState) :
     CodePrefixStageSearchControllerBudgetCheckerBoundedSimulatorRawLoopDecodeNatObligation
       simulator := by
-  rcases
-      codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopObligation_core
-        simulator with
-    ⟨runnerState, runner, hrunner⟩
-  refine ⟨runnerState, runner, ?_⟩
-  intro tokens
-  constructor
-  · intro hhalt
-    rcases (hrunner tokens).mp hhalt with
-      ⟨budget, encoded, checkedStage, fuel, htokens,
-        hcheckedStage, hfuel, hsimulator⟩
-    exact
-      ⟨budget, encoded, checkedStage, fuel,
-        by
-          rw [htokens]
-          exact codePrefixRecognizerStageCode_decodeNat encoded budget,
-        hcheckedStage, hfuel, hsimulator⟩
-  · intro htarget
-    rcases htarget with
-      ⟨budget, encoded, checkedStage, fuel, hdecode,
-        hcheckedStage, hfuel, hsimulator⟩
-    exact (hrunner tokens).mpr
-      ⟨budget, encoded, checkedStage, fuel,
-        codePrefixRecognizerStageCode_eq_of_decodeNat hdecode,
-        hcheckedStage, hfuel, hsimulator⟩
+  exact
+    codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorDecodeNatFiniteLeaf
+      simulator
 
 /--
 Concrete transition-table obligation for the bounded simulator loop.  It must
