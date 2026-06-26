@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseAdapters
+import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.BoolWordQuoter
 
 set_option doc.verso true
 
@@ -186,6 +187,26 @@ def SelectedProjectionCheckedEmitterConstruction : Prop :=
     exists emitter : MachineDescription,
       SelectedProjectionCheckedEmitterSpec useAccept emitter
 
+def SelectedProjectionCheckedProjectorExactSpec
+    (useAccept : Bool)
+    (projector : MachineDescription) : Prop :=
+  projector.SubroutineReady ∧
+    forall L : MachineDescription.DovetailLayout,
+      projector.HaltsFromTape
+        (ParsedLayoutCheckedTape L)
+        (MachineDescription.SimulatorLayout.tape
+          (SelectedProjectionSimulatorLayout useAccept L))
+
+def SelectedProjectionCheckedProjectorExactConstruction : Prop :=
+  forall useAccept : Bool,
+    exists projector : MachineDescription,
+      SelectedProjectionCheckedProjectorExactSpec useAccept projector
+
+def SelectedProjectionCheckedEmitterFromProjector
+    (projector : MachineDescription) : MachineDescription :=
+  MachineDescription.seqSubroutine projector
+    MachineDescription.ExactIdentityDescription Direction.right
+
 theorem selectedProjectionOutputCode_true
     (L : MachineDescription.DovetailLayout) :
     SelectedProjectionOutputCode true L =
@@ -215,6 +236,133 @@ theorem selectedProjectionOutputTape_false
         (MachineDescription.SimulatorLayout.tape
           (RejectSimulatorLayout L)) := by
   rfl
+
+theorem selectedProjectionOutputTape_eq_simulator_tape
+    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionOutputTape useAccept L =
+      Tape.move Direction.right
+        (MachineDescription.SimulatorLayout.tape
+          (SelectedProjectionSimulatorLayout useAccept L)) := by
+  cases useAccept <;>
+    rfl
+
+theorem selectedProjectionCheckedEmitterSpec_of_projector
+    {useAccept : Bool} {projector : MachineDescription}
+    (hprojector :
+      SelectedProjectionCheckedProjectorExactSpec useAccept projector) :
+    SelectedProjectionCheckedEmitterSpec useAccept
+      (SelectedProjectionCheckedEmitterFromProjector projector) := by
+  have hid :
+      MachineDescription.ExactIdentityDescription.SubroutineReady :=
+    ⟨MachineDescription.exactIdentityDescription_wellFormed,
+      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+  constructor
+  · exact
+      MachineDescription.seqSubroutine_subroutineReady
+        hprojector.left hid
+  · intro L
+    have hprojectorRun := hprojector.right L
+    have hidentityReach :
+        exists nB : Nat,
+          MachineDescription.ExactIdentityDescription.runConfig nB
+              { state := MachineDescription.ExactIdentityDescription.start
+                tape :=
+                  Tape.move Direction.right
+                    (MachineDescription.SimulatorLayout.tape
+                      (SelectedProjectionSimulatorLayout useAccept L)) } =
+            { state := MachineDescription.ExactIdentityDescription.halt
+              tape := SelectedProjectionOutputTape useAccept L } := by
+      refine ⟨0, ?_⟩
+      simp [MachineDescription.ExactIdentityDescription,
+        MachineDescription.runConfig,
+        selectedProjectionOutputTape_eq_simulator_tape]
+    simpa [SelectedProjectionCheckedEmitterFromProjector] using
+      MachineDescription.seqSubroutine_haltsFromTape_of_haltsFromTape
+        hprojector.left hid hprojectorRun hidentityReach
+
+theorem selectedProjectionCheckedEmitterConstruction_of_projector
+    (hprojector :
+      SelectedProjectionCheckedProjectorExactConstruction) :
+    SelectedProjectionCheckedEmitterConstruction := by
+  intro useAccept
+  rcases hprojector useAccept with ⟨projector, hprojectorSpec⟩
+  exact
+    ⟨SelectedProjectionCheckedEmitterFromProjector projector,
+      selectedProjectionCheckedEmitterSpec_of_projector hprojectorSpec⟩
+
+def SelectedProjectionConfig
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    MachineDescription.Configuration :=
+  if useAccept then L.acceptConfig else L.rejectConfig
+
+def SelectedProjectionHit
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) : Bool :=
+  if useAccept then L.acceptHit else L.rejectHit
+
+def SelectedProjectionOutputSuffix
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    Word MachineCodeSymbol :=
+  MachineDescription.encodeNatAppend L.stage
+    (MachineDescription.encodeConfigurationAppend
+      (SelectedProjectionConfig useAccept L)
+      (MachineDescription.encodeBoolAppend
+        (SelectedProjectionHit useAccept L) []))
+
+theorem selectedProjectionSimulatorLayout_eq
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionSimulatorLayout useAccept L =
+      { input := ParsedLayoutBits L
+        stage := L.stage
+        config := SelectedProjectionConfig useAccept L
+        hit := SelectedProjectionHit useAccept L } := by
+  cases useAccept <;>
+    rfl
+
+theorem selectedProjectionOutputCode_eq_fields
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionOutputCode useAccept L =
+      MachineCodeSymbol.header ::
+        MachineDescription.encodeBoolWordAppend (ParsedLayoutBits L)
+          (SelectedProjectionOutputSuffix useAccept L) := by
+  rw [SelectedProjectionOutputCode,
+    selectedProjectionSimulatorLayout_eq]
+  rfl
+
+theorem selectedProjectionOutputSuffix_eq_fields
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionOutputSuffix useAccept L =
+      MachineDescription.encodeNatAppend L.stage
+        (MachineDescription.encodeConfigurationAppend
+          (SelectedProjectionConfig useAccept L)
+          (MachineDescription.encodeBoolAppend
+            (SelectedProjectionHit useAccept L) [])) := by
+  rfl
+
+theorem selectedProjectionOutputBits_eq_quoter_bits
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    exists b : Bool,
+    exists rest : Word Bool,
+      ParsedLayoutBits L = b :: rest ∧
+        MachineDescription.encodeCodeWordAsInput
+            (SelectedProjectionOutputCode useAccept L) =
+          List.append
+            (MachineDescription.encodeCodeSymbolAsInput
+              MachineCodeSymbol.header)
+            (_root_.FoC.Computability.DovetailInitialLayoutInitializer.checkedNonemptyBoolWordQuoteDirectSourceBits
+                b rest (SelectedProjectionOutputSuffix useAccept L)) := by
+  rcases parsedLayoutBits_eq_false_false_tail L with
+    ⟨tail, htail⟩
+  refine ⟨false, false :: tail, htail, ?_⟩
+  rw [selectedProjectionOutputCode_eq_fields, htail]
+  simp [MachineDescription.encodeCodeWordAsInput,
+    _root_.FoC.Computability.DovetailInitialLayoutInitializer.checkedNonemptyBoolWordQuoteDirectSourceBits_eq]
 
 def AcceptProjectionCheckedEmitterConstruction : Prop :=
   exists emitter : MachineDescription,
@@ -392,13 +540,25 @@ theorem selectedProjectionPrimitiveExactConstruction_of_checkedParser_checkedEmi
         hparser hemits⟩
 
 /--
-Finite-machine leaf for the accept/reject checked projection emitters.  The
-right-shifted primitive construction below is adapter glue over this target and
-the checked layout parser.
+Finite-machine leaf for the accept/reject checked projection projectors.  The
+emitter construction below only adds the final right handoff.
+-/
+theorem selectedProjectionCheckedProjectorExactConstruction_scaffold :
+    SelectedProjectionCheckedProjectorExactConstruction := by
+  sorry
+
+/--
+Packages the exact checked projectors as accept/reject checked projection
+emitters.  The right-shifted primitive construction below is adapter glue over
+this target and the checked layout parser.
 -/
 theorem selectedProjectionCheckedEmitterSideConstruction_scaffold :
     SelectedProjectionCheckedEmitterSideConstruction := by
-  sorry
+  have hchecked :
+      SelectedProjectionCheckedEmitterConstruction :=
+    selectedProjectionCheckedEmitterConstruction_of_projector
+      selectedProjectionCheckedProjectorExactConstruction_scaffold
+  exact ⟨hchecked true, hchecked false⟩
 
 theorem selectedProjectionCheckedEmitterConstruction_scaffold :
     SelectedProjectionCheckedEmitterConstruction := by
