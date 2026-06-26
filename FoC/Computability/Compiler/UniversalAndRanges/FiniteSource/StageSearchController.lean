@@ -1841,13 +1841,28 @@ def CodePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchObligation
             (CodePrefixRecognizerStageCode encoded limit)
 
 /--
-Concrete finite-machine construction for raw stage-code/fuel search.  This is
-the remaining transition-table work: the machine must dovetail over generated
-stage prefixes and bounded simulation fuel for the supplied machine.
+Concrete finite-machine leaf for the raw outer-loop fuel search.  The machine
+must preserve the input, dovetail over generated stage prefixes and bounded
+simulation fuel, rebuild each stage-coded input, and simulate the supplied
+machine for the selected fuel.
+-/
+theorem codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchFiniteLeaf
+    {attemptState : Type}
+    (attempt : TuringMachine MachineCodeSymbol attemptState) :
+    CodePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchObligation
+      attempt := by
+  sorry
+
+/--
+Global wrapper for the raw stage-code/fuel search construction.  The concrete
+transition-table obligation is the per-machine outer-loop fuel-search leaf.
 -/
 theorem codePrefixStageSearchControllerBudgetFuelEnumeratorConstruction_core :
     CodePrefixStageSearchControllerBudgetFuelEnumeratorConstruction := by
-  sorry
+  intro checkerState checker
+  exact
+    codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchFiniteLeaf
+      checker
 
 /--
 Concrete finite-machine leaf for the raw outer-loop fuel search.  The concrete
@@ -1858,13 +1873,9 @@ theorem codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchObligation_c
     (attempt : TuringMachine MachineCodeSymbol attemptState) :
     CodePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchObligation
       attempt := by
-  rcases
-      codePrefixStageSearchControllerBudgetFuelEnumeratorConstruction_core
-        attempt with
-    ⟨searcherState, searcher, hsearcher⟩
-  refine ⟨searcherState, searcher, ?_⟩
-  intro encoded
-  exact hsearcher encoded
+  exact
+    codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchFiniteLeaf
+      attempt
 
 /--
 Finite-machine leaf for the bounded attempt phase of the raw budget/fuel
