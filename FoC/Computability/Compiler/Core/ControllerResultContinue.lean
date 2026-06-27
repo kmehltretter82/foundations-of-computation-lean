@@ -1518,6 +1518,56 @@ theorem resultNoneGuardScanRewindDescription_subroutineReady :
   ⟨resultNoneGuardScanRewindDescription_wellFormed,
     resultNoneGuardScanRewindDescription_haltTransitionFree⟩
 
+theorem resultNoneGuardScanRewindDescription_state_ne_halt_of_later_ne_halt
+    {c : MachineDescription.Configuration} {n k : Nat}
+    (hle : n ≤ k)
+    (hlater :
+      (ResultNoneGuardScanRewindDescription.runConfig k c).state ≠
+        ResultNoneGuardScanRewindDescription.halt) :
+    (ResultNoneGuardScanRewindDescription.runConfig n c).state ≠
+      ResultNoneGuardScanRewindDescription.halt := by
+  intro hhalt
+  have hk : k = n + (k - n) := by omega
+  have hcfg :
+      ResultNoneGuardScanRewindDescription.runConfig n c =
+        { state := ResultNoneGuardScanRewindDescription.halt
+          tape :=
+            (ResultNoneGuardScanRewindDescription.runConfig n c).tape } := by
+    cases hrunN :
+        ResultNoneGuardScanRewindDescription.runConfig n c with
+    | mk state tape =>
+        simp [hrunN] at hhalt
+        simp [hhalt]
+  have hfinal :
+      (ResultNoneGuardScanRewindDescription.runConfig k c).state =
+        ResultNoneGuardScanRewindDescription.halt := by
+    rw [hk, MachineDescription.runConfig_add, hcfg,
+      MachineDescription.runConfig_halt
+        resultNoneGuardScanRewindDescription_haltTransitionFree]
+  exact hlater hfinal
+
+theorem resultNoneGuardScanRewindDescription_ne_halt_of_reaches_stepConfig_none
+    {c stuck : MachineDescription.Configuration} {k n : Nat}
+    (hrun :
+      ResultNoneGuardScanRewindDescription.runConfig k c = stuck)
+    (hstep :
+      ResultNoneGuardScanRewindDescription.stepConfig stuck = none)
+    (hstuck :
+      stuck.state ≠ ResultNoneGuardScanRewindDescription.halt) :
+    (ResultNoneGuardScanRewindDescription.runConfig n c).state ≠
+      ResultNoneGuardScanRewindDescription.halt := by
+  by_cases hle : n ≤ k
+  · apply
+      resultNoneGuardScanRewindDescription_state_ne_halt_of_later_ne_halt
+        hle
+    rw [hrun]
+    exact hstuck
+  · have hkn : k ≤ n := by omega
+    have hn : n = k + (n - k) := by omega
+    rw [hn, MachineDescription.runConfig_add, hrun,
+      MachineDescription.runConfig_of_stepConfig_none hstep]
+    exact hstuck
+
 theorem resultNoneGuardScanRewindDescription_run_blank_of_accepts
     (boundary : ResultNoneGuardBoundary)
     (haccept : boundary.accepts)
@@ -1535,6 +1585,33 @@ theorem resultNoneGuardScanRewindDescription_run_blank_of_accepts
   · rfl
   · cases haccept
   · cases haccept
+
+theorem resultNoneGuardScanRewindDescription_reject_blank_stepConfig_none
+    (boundary : ResultNoneGuardBoundary)
+    (hreject : ¬ boundary.accepts)
+    (leftRev : Word Bool) :
+    ResultNoneGuardScanRewindDescription.stepConfig
+        { state := resultNoneGuardState boundary.toNat 0 0
+          tape := MachineDescription.appendRightScanTape leftRev [] } =
+      none := by
+  cases boundary
+  · exact (hreject trivial).elim
+  · exact (hreject trivial).elim
+  · exact (hreject trivial).elim
+  · cases leftRev <;> rfl
+  · cases leftRev <;> rfl
+
+theorem resultNoneGuardScanRewindDescription_reject_blank_state_ne_halt
+    (boundary : ResultNoneGuardBoundary)
+    (hreject : ¬ boundary.accepts) :
+    resultNoneGuardState boundary.toNat 0 0 ≠
+      ResultNoneGuardScanRewindDescription.halt := by
+  cases boundary
+  · exact (hreject trivial).elim
+  · exact (hreject trivial).elim
+  · exact (hreject trivial).elim
+  · native_decide
+  · native_decide
 
 theorem resultNoneGuardScanRewindDescription_run_bits
     (boundary : ResultNoneGuardBoundary)
@@ -1709,6 +1786,70 @@ theorem resultNoneGuardScanRewindDescription_run_code_from
       rw [ih]
       simp [resultNoneGuardScanBoundaryFrom, List.reverse_append,
         List.append_assoc]
+
+theorem resultNoneGuardScanRewindDescription_not_haltsWithTape_code_of_not_accepts
+    (code : Word MachineCodeSymbol)
+    (hreject : ¬ (resultNoneGuardScanBoundary code).accepts)
+    (T : Tape Bool) :
+    ¬ ResultNoneGuardScanRewindDescription.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T := by
+  intro hhalt
+  rcases hhalt with ⟨n, hn⟩
+  let bits := MachineDescription.encodeCodeWordAsInput code
+  let stuck : MachineDescription.Configuration :=
+    { state :=
+        resultNoneGuardState (resultNoneGuardScanBoundary code).toNat 0 0
+      tape := MachineDescription.appendRightScanTape bits.reverse [] }
+  have hinitial :
+      ResultNoneGuardScanRewindDescription.initial bits =
+        { state :=
+            resultNoneGuardState ResultNoneGuardBoundary.other.toNat 0 0
+          tape := MachineDescription.appendRightScanTape []
+            (List.append bits []) } := by
+    simp [bits, ResultNoneGuardScanRewindDescription,
+      ResultNoneGuardScannerDescription, MachineDescription.initial,
+      MachineDescription.appendRightScanTape_nil_eq_input]
+  have hrun :
+      ResultNoneGuardScanRewindDescription.runConfig
+          (4 * code.length)
+          (ResultNoneGuardScanRewindDescription.initial bits) =
+        stuck := by
+    rw [hinitial]
+    simpa [stuck, bits, resultNoneGuardScanBoundary] using
+      resultNoneGuardScanRewindDescription_run_code_from
+        ResultNoneGuardBoundary.other code [] []
+  have hstep :
+      ResultNoneGuardScanRewindDescription.stepConfig stuck = none := by
+    simpa [stuck, bits] using
+      resultNoneGuardScanRewindDescription_reject_blank_stepConfig_none
+        (resultNoneGuardScanBoundary code) hreject bits.reverse
+  have hstuck :
+      stuck.state ≠ ResultNoneGuardScanRewindDescription.halt := by
+    simpa [stuck] using
+      resultNoneGuardScanRewindDescription_reject_blank_state_ne_halt
+        (resultNoneGuardScanBoundary code) hreject
+  have hne :
+      (ResultNoneGuardScanRewindDescription.runConfig n
+          (ResultNoneGuardScanRewindDescription.initial bits)).state ≠
+        ResultNoneGuardScanRewindDescription.halt :=
+    resultNoneGuardScanRewindDescription_ne_halt_of_reaches_stepConfig_none
+      (c := ResultNoneGuardScanRewindDescription.initial bits)
+      (stuck := stuck)
+      (k := 4 * code.length)
+      (n := n) hrun hstep hstuck
+  exact hne hn.left
+
+theorem resultNoneGuardScanRewindDescription_accepts_of_haltsWithTape_code
+    {code : Word MachineCodeSymbol} {T : Tape Bool}
+    (hhalt :
+      ResultNoneGuardScanRewindDescription.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T) :
+    (resultNoneGuardScanBoundary code).accepts := by
+  by_cases haccept : (resultNoneGuardScanBoundary code).accepts
+  · exact haccept
+  · exact False.elim
+      ((resultNoneGuardScanRewindDescription_not_haltsWithTape_code_of_not_accepts
+        code haccept T) hhalt)
 
 theorem resultNoneGuardScanRewindDescription_run_rewind_start
     (leftRev : Word Bool) :
@@ -1947,6 +2088,37 @@ theorem resultNoneGuardRewindFinalTape_moveLeft_input_equiv
         Direction.left)
       (resultNoneGuard_moveLeft_moveRight_input_equiv bits)
 
+theorem resultNoneGuardScanRewindDescription_handoff_equiv_of_haltsWithTape_code
+    {code : Word MachineCodeSymbol} {T : Tape Bool}
+    (hhalt :
+      ResultNoneGuardScanRewindDescription.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T) :
+    Tape.Equiv
+      (Tape.move Direction.left T)
+      (Tape.input (MachineDescription.encodeCodeWordAsInput code)) := by
+  have haccept :
+      (resultNoneGuardScanBoundary code).accepts :=
+    resultNoneGuardScanRewindDescription_accepts_of_haltsWithTape_code
+      hhalt
+  have hknown :
+      ResultNoneGuardScanRewindDescription.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code)
+        (resultNoneGuardRewindFinalTape
+          (MachineDescription.encodeCodeWordAsInput code)) :=
+    resultNoneGuardScanRewindDescription_haltsWithTape_code_of_accepts
+      code haccept
+  have hT :
+      T =
+        resultNoneGuardRewindFinalTape
+          (MachineDescription.encodeCodeWordAsInput code) :=
+    MachineDescription.haltsWithTape_functional_of_haltTransitionFree
+      resultNoneGuardScanRewindDescription_haltTransitionFree
+      hhalt hknown
+  rw [hT]
+  exact
+    resultNoneGuardRewindFinalTape_moveLeft_input_equiv
+      (MachineDescription.encodeCodeWordAsInput code)
+
 theorem resultNoneGuardScanRewindDescription_handoff_equiv_code_of_accepts
     (code : Word MachineCodeSymbol)
     (haccept : (resultNoneGuardScanBoundary code).accepts) :
@@ -2070,6 +2242,125 @@ theorem resultNoneGuardStageInputProjectionDescription_haltsWithOutput_of_transf
   exact
     resultNoneGuardStageInputProjectionDescription_haltsWithOutput_controllerEncode
       C hraw
+
+theorem resultNoneGuardStageInputProjectionDescription_transform_of_haltsWithOutput
+    {code out : Word MachineCodeSymbol}
+    (hhalt :
+      ResultNoneGuardStageInputProjectionDescription.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out)) :
+    GuardProjectionPrimitive.transform code = some out := by
+  rcases hhalt with ⟨n, hn⟩
+  let inputBits := MachineDescription.encodeCodeWordAsInput code
+  let seq := ResultNoneGuardStageInputProjectionDescription
+  let Tout : Tape Bool :=
+    (seq.runConfig n (seq.initial inputBits)).tape
+  have hseqTape :
+      seq.HaltsWithTape inputBits Tout := by
+    refine ⟨n, ?_⟩
+    exact ⟨hn.left, rfl⟩
+  have hToutNorm :
+      Tape.normalizedOutput Tout =
+        MachineDescription.encodeCodeWordAsInput out :=
+    hn.right
+  have hguardReady : ResultNoneGuardScanRewindDescription.SubroutineReady :=
+    resultNoneGuardScanRewindDescription_subroutineReady
+  have hprojReady : ControllerStageInputProjection.Description.SubroutineReady :=
+    ⟨ControllerStageInputProjection.wellFormed,
+      ControllerStageInputProjection.haltTransitionFree⟩
+  rcases
+      MachineDescription.seqSubroutine_haltsWithTape_inv
+        hguardReady hprojReady hseqTape with
+    ⟨Tguard, hguard, hprojReach⟩
+  have hguardEquiv :
+      Tape.Equiv
+        (Tape.move Direction.left Tguard)
+        (Tape.input inputBits) := by
+    simpa [inputBits] using
+      resultNoneGuardScanRewindDescription_handoff_equiv_of_haltsWithTape_code
+        hguard
+  rcases hprojReach with ⟨nProj, hprojRun⟩
+  have hprojActual :
+      ControllerStageInputProjection.Description.HaltsFromTape
+        (Tape.move Direction.left Tguard) Tout := by
+    refine ⟨nProj, ?_⟩
+    change
+      (ControllerStageInputProjection.Description.runConfig nProj
+        { state := ControllerStageInputProjection.Description.start
+          tape := Tape.move Direction.left Tguard }).state =
+          ControllerStageInputProjection.Description.halt ∧
+        (ControllerStageInputProjection.Description.runConfig nProj
+          { state := ControllerStageInputProjection.Description.start
+            tape := Tape.move Direction.left Tguard }).tape =
+          Tout
+    rw [hprojRun]
+    exact ⟨rfl, rfl⟩
+  rcases
+      MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+        hguardEquiv hprojActual with
+    ⟨Tclean, hprojClean, hcleanEquiv⟩
+  have hprojCleanWith :
+      ControllerStageInputProjection.Description.HaltsWithTape
+        inputBits Tclean := by
+    rcases hprojClean with ⟨nClean, hnClean⟩
+    refine ⟨nClean, ?_⟩
+    simpa [MachineDescription.initial] using hnClean
+  have hprojOut :
+      ControllerStageInputProjection.Description.HaltsWithOutput
+        inputBits (MachineDescription.encodeCodeWordAsInput out) := by
+    have hprojEquiv :
+        ControllerStageInputProjection.Description.HaltsWithTapeEquiv
+          inputBits Tout :=
+      ⟨Tclean, hprojCleanWith, hcleanEquiv⟩
+    have hnormOut :
+        ControllerStageInputProjection.Description.HaltsWithOutput
+          inputBits (Tape.normalizedOutput Tout) :=
+      MachineDescription.haltsWithOutput_of_haltsWithTapeEquiv
+        hprojEquiv
+    simpa [hToutNorm] using hnormOut
+  have hstage :
+      PairedRecognizerDovetailControllerStageInputCodePrimitive.transform
+        code = some out := by
+    exact
+      (tapeCodePrimitiveOutputCompiledSubroutineByDescription_haltsWithOutput_iff
+        ControllerStageInputProjection.outputCompiledSubroutine
+        code out).mp
+        (by simpa [inputBits] using hprojOut)
+  rcases
+      (pairedRecognizerDovetailControllerStageInputCode_transform_eq_some_iff
+        code out).mp hstage with
+    ⟨C, hcode, hout⟩
+  have haccept :
+      (resultNoneGuardScanBoundary code).accepts :=
+    resultNoneGuardScanRewindDescription_accepts_of_haltsWithTape_code
+      hguard
+  have hraw :
+      PairedRecognizerDovetailControllerRawOutput C.result = none := by
+    rw [hcode] at haccept
+    exact
+      (resultNoneGuardScanBoundary_controllerEncode_accepts_iff C).mp
+        haccept
+  exact
+    (guardProjectionPrimitive_transform_eq_some_iff code out).mpr
+      ⟨C, hcode, hraw, hout⟩
+
+theorem resultNoneGuardStageInputProjectionDescription_haltsWithOutput_iff
+    (code out : Word MachineCodeSymbol) :
+    ResultNoneGuardStageInputProjectionDescription.HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out) <->
+      GuardProjectionPrimitive.transform code = some out := by
+  constructor
+  · exact resultNoneGuardStageInputProjectionDescription_transform_of_haltsWithOutput
+  · exact resultNoneGuardStageInputProjectionDescription_haltsWithOutput_of_transform
+
+theorem resultNoneGuardStageInputProjectionDescription_outputCompiledSubroutine :
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      GuardProjectionPrimitive
+      ResultNoneGuardStageInputProjectionDescription :=
+  ⟨⟨resultNoneGuardStageInputProjectionDescription_subroutineReady.left,
+      resultNoneGuardStageInputProjectionDescription_haltsWithOutput_iff⟩,
+    resultNoneGuardStageInputProjectionDescription_subroutineReady.right⟩
 
 end ControllerResultContinueConstruction
 
