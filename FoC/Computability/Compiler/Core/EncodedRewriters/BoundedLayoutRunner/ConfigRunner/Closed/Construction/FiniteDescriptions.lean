@@ -1081,6 +1081,16 @@ theorem inputWithTrailingBlankPadding_equiv_input
         · exact dropTrailingNone_append_replicate_none
             (rest.map some) padding
 
+theorem inputWithTrailingBlankPadding_contextLength_ge_input
+    (outputBits inputBits : Word Bool) :
+    Tape.contextLength (Tape.input inputBits) <=
+      Tape.contextLength
+        (inputWithTrailingBlankPadding outputBits inputBits.length) := by
+  cases outputBits <;> cases inputBits <;>
+    simp [inputWithTrailingBlankPadding, Tape.input, Tape.blank,
+      Tape.contextLength] <;>
+    omega
+
 def SelectedMergeEquivEmitterPaddedOutputTape
     (useAccept : Bool)
     (p : SelectedMergeEmitterPayload) : Tape Bool :=
@@ -1100,6 +1110,18 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_equiv
       (MachineDescription.encodeCodeWordAsInput
         (SelectedMergeOutputCode useAccept p.S p.L))
       (MachineDescription.SimulatorLayout.asBoolInput p.S).length
+
+theorem SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_input
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    Tape.contextLength (MachineDescription.SimulatorLayout.tape p.S) <=
+      Tape.contextLength
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p) := by
+  simpa [SelectedMergeEquivEmitterPaddedOutputTape,
+    MachineDescription.SimulatorLayout.tape] using
+    inputWithTrailingBlankPadding_contextLength_ge_input
+      (MachineDescription.encodeCodeWordAsInput
+        (SelectedMergeOutputCode useAccept p.S p.L))
+      (MachineDescription.SimulatorLayout.asBoolInput p.S)
 
 def SelectedMergeEquivPaddedEmitterSpec
     (useAccept : Bool)
@@ -1429,6 +1451,17 @@ theorem exactOutput_contextLength_lt_input :
         (Tape.input
           (MachineDescription.SimulatorLayout.asBoolInput simulator)) := by
   native_decide
+
+theorem paddedOutput_contextLength_not_lt_input :
+    ¬ Tape.contextLength
+        (SelectedMergeEquivEmitterPaddedOutputTape true payload) <
+      Tape.contextLength
+        (Tape.input
+          (MachineDescription.SimulatorLayout.asBoolInput simulator)) := by
+  simpa [MachineDescription.SimulatorLayout.tape, payload] using
+    Nat.not_lt_of_ge
+      (SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_input
+        true payload)
 
 theorem contextLength_eq_of_move_left_eq_input
     {w : Word Bool} {T : Tape Bool}
