@@ -116,11 +116,14 @@ def StageInputContinuePrimitive : MachineDescription.TapeCodePrimitive where
           (MachineDescription.DovetailControllerLayout.encode
             { input := input, stage := stage + 1, result := [] })
 
+def GuardProjectionPrimitive : MachineDescription.TapeCodePrimitive :=
+  MachineDescription.TapeCodePrimitive.compose
+    ResultNoneGuardPrimitive
+    PairedRecognizerDovetailControllerStageInputCodePrimitive
+
 def DecomposedResultContinuePrimitive : MachineDescription.TapeCodePrimitive :=
   MachineDescription.TapeCodePrimitive.compose
-    (MachineDescription.TapeCodePrimitive.compose
-      ResultNoneGuardPrimitive
-      PairedRecognizerDovetailControllerStageInputCodePrimitive)
+    GuardProjectionPrimitive
     StageInputContinuePrimitive
 
 theorem nextStage_encode_eq_header_input_succ_empty
@@ -237,11 +240,71 @@ theorem stageInputContinuePrimitive_stageInputCode
   simp [StageInputContinuePrimitive,
     MachineDescription.DovetailLayout.decodeStageInputComplete_stageInputCode]
 
+theorem guardProjectionPrimitive_transform_eq_some_iff
+    (code out : Word MachineCodeSymbol) :
+    GuardProjectionPrimitive.transform code = some out <->
+      exists C : MachineDescription.DovetailControllerLayout,
+        code = MachineDescription.DovetailControllerLayout.encode C ∧
+          PairedRecognizerDovetailControllerRawOutput C.result = none ∧
+            out = PairedRecognizerDovetailControllerStageInputCode C := by
+  constructor
+  · intro h
+    unfold GuardProjectionPrimitive at h
+    unfold MachineDescription.TapeCodePrimitive.compose at h
+    cases hguard : ResultNoneGuardPrimitive.transform code with
+    | none =>
+        simp [hguard] at h
+    | some mid =>
+        have hstage :
+            PairedRecognizerDovetailControllerStageInputCodePrimitive.transform
+                mid = some out := by
+          simpa [hguard] using h
+        rcases
+            (resultNoneGuardPrimitive_transform_eq_some_iff
+              code mid).mp hguard with
+          ⟨C, hcode, hraw, hmid⟩
+        subst mid
+        subst code
+        have hout :
+            out = PairedRecognizerDovetailControllerStageInputCode C := by
+          rcases
+              (pairedRecognizerDovetailControllerStageInputCode_transform_eq_some_iff
+                (MachineDescription.DovetailControllerLayout.encode C)
+                out).mp hstage with
+            ⟨C', hencode, hout⟩
+          have hC' : C' = C := by
+            have hdecodeC' :
+                MachineDescription.DovetailControllerLayout.decodeComplete
+                    (MachineDescription.DovetailControllerLayout.encode C) =
+                  some C' := by
+              rw [hencode]
+              exact
+                MachineDescription.DovetailControllerLayout.decodeComplete_encode
+                  C'
+            have htmp : C = C' := by
+              simpa [MachineDescription.DovetailControllerLayout.decodeComplete_encode]
+                using hdecodeC'
+            exact htmp.symm
+          subst C'
+          exact hout
+        exact ⟨C, rfl, hraw, hout⟩
+  · intro h
+    rcases h with ⟨C, rfl, hraw, rfl⟩
+    unfold GuardProjectionPrimitive
+    exact
+      MachineDescription.TapeCodePrimitive.compose_transform_some
+        ((resultNoneGuardPrimitive_transform_eq_some_iff
+          (MachineDescription.DovetailControllerLayout.encode C)
+          (MachineDescription.DovetailControllerLayout.encode C)).mpr
+          ⟨C, rfl, hraw, rfl⟩)
+        (pairedRecognizerDovetailControllerStageInputCode_encode C)
+
 theorem decomposedResultContinuePrimitive_transform_eq
     (code : Word MachineCodeSymbol) :
     DecomposedResultContinuePrimitive.transform code =
       PairedRecognizerDovetailControllerResultContinueCode.transform code := by
   unfold DecomposedResultContinuePrimitive
+  unfold GuardProjectionPrimitive
   unfold MachineDescription.TapeCodePrimitive.compose
   unfold ResultNoneGuardPrimitive
   unfold StageInputContinuePrimitive
@@ -1992,6 +2055,21 @@ theorem resultNoneGuardStageInputProjectionDescription_haltsWithOutput_controlle
     (Tape.Equiv.normalizedOutput_eq hactualEquiv).trans hTprojNorm
   simpa [hTactualNorm, code, inputBits, stageBits] using
     MachineDescription.haltsWithOutput_of_haltsWithTape hseqTape
+
+theorem resultNoneGuardStageInputProjectionDescription_haltsWithOutput_of_transform
+    {code out : Word MachineCodeSymbol}
+    (htransform :
+      GuardProjectionPrimitive.transform code = some out) :
+    ResultNoneGuardStageInputProjectionDescription.HaltsWithOutput
+      (MachineDescription.encodeCodeWordAsInput code)
+      (MachineDescription.encodeCodeWordAsInput out) := by
+  rcases
+      (guardProjectionPrimitive_transform_eq_some_iff code out).mp
+        htransform with
+    ⟨C, rfl, hraw, rfl⟩
+  exact
+    resultNoneGuardStageInputProjectionDescription_haltsWithOutput_controllerEncode
+      C hraw
 
 end ControllerResultContinueConstruction
 
