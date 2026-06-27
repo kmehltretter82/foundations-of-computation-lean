@@ -184,6 +184,89 @@ theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_stepPhase_c
   · simpa [S, FixedDescriptionBoundedSimulatorPhaseTargets.canonical] using
       fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_configRunner
 
+def FixedDescriptionBoundedSimulatorPaddedExactShapeSpec_configRunner
+    (D sim : MachineDescription) : Prop :=
+  sim.SubroutineReady ∧
+    forall L : SimulatorLayout,
+      sim.HaltsWithTape
+        (FixedDescriptionBoundedSimulatorInput L)
+        (FixedDescriptionBoundedSimulatorPaddedOutputTape D L)
+
+def FixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_configRunner :
+    Prop :=
+  forall D : MachineDescription,
+    exists sim : MachineDescription,
+      FixedDescriptionBoundedSimulatorPaddedExactShapeSpec_configRunner D sim
+
+theorem fixedDescriptionBoundedSimulatorPaddedSpec_of_exactShape_configRunner
+    {D sim : MachineDescription}
+    (hsim :
+      FixedDescriptionBoundedSimulatorPaddedExactShapeSpec_configRunner D sim) :
+    FixedDescriptionBoundedSimulatorPaddedSpec D sim := by
+  constructor
+  · exact hsim.left
+  constructor
+  · intro L
+    exact hsim.right L
+  · intro L T hhalt
+    exact
+      haltsWithTape_functional_of_haltTransitionFree
+        hsim.left.right hhalt (hsim.right L)
+
+theorem fixedDescriptionBoundedSimulatorPaddedConstruction_of_exactShape_configRunner
+    (hexact :
+      FixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_configRunner) :
+    FixedDescriptionBoundedSimulatorPaddedConstruction := by
+  intro D
+  rcases hexact D with ⟨sim, hsim⟩
+  exact
+    ⟨sim,
+      fixedDescriptionBoundedSimulatorPaddedSpec_of_exactShape_configRunner
+        hsim⟩
+
+theorem fixedDescriptionBoundedSimulatorPaddedPhaseSpec_of_exactShape_configRunner
+    {D sim : MachineDescription}
+    (hsim :
+      FixedDescriptionBoundedSimulatorPaddedExactShapeSpec_configRunner D sim) :
+    FixedDescriptionBoundedSimulatorPaddedPhaseSpec_configRunner D sim := by
+  constructor
+  · exact hsim.left
+  constructor
+  · intro L
+    rcases hsim.right L with ⟨n, hn⟩
+    exact
+      ⟨n, by
+        simpa [FixedDescriptionBoundedSimulatorPaddedPhaseSpec_configRunner,
+          HaltsWithTapeIn,
+          HaltsFromTapeIn,
+          initial] using hn⟩
+  · intro L
+    exact
+      FixedDescriptionBoundedSimulatorPaddedOutputTape_equiv_canonical
+        D L
+
+theorem fixedDescriptionBoundedSimulatorPaddedPhaseConstruction_of_exactShape_configRunner
+    (hexact :
+      FixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_configRunner) :
+    FixedDescriptionBoundedSimulatorPaddedPhaseConstruction_configRunner := by
+  intro D
+  rcases hexact D with ⟨sim, hsim⟩
+  exact
+    ⟨sim,
+      fixedDescriptionBoundedSimulatorPaddedPhaseSpec_of_exactShape_configRunner
+        hsim⟩
+
+/--
+Concrete finite-machine leaf for the config-runner padded fixed-description
+simulator.  The machine must parse a complete simulator layout, run the fixed
+description for the encoded stage bound, emit the updated simulator-layout code
+at the left edge, and leave the old input window as trailing blank padding.
+-/
+theorem fixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_scaffold_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_configRunner := by
+  intro D
+  sorry
+
 /--
 Finite-machine leaf for the config-runner fixed-description simulators.
 
@@ -194,20 +277,14 @@ equivalent to the canonical simulator layout while preserving enough blank
 window to avoid a forced shrink.
 -/
 theorem fixedDescriptionBoundedSimulatorPaddedConstruction_scaffold_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedConstruction := by
-  intro D
-  sorry
+    FixedDescriptionBoundedSimulatorPaddedConstruction :=
+  fixedDescriptionBoundedSimulatorPaddedConstruction_of_exactShape_configRunner
+    fixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_scaffold_configRunner
 
 theorem fixedDescriptionBoundedSimulatorPaddedPhaseConstruction_scaffold_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedPhaseConstruction_configRunner := by
-  intro D
-  rcases fixedDescriptionBoundedSimulatorPaddedConstruction_scaffold_configRunner
-      D with
-    ⟨sim, hsim⟩
-  exact
-    ⟨sim,
-      fixedDescriptionBoundedSimulatorPaddedPhaseSpec_of_paddedSpec_configRunner
-        hsim⟩
+    FixedDescriptionBoundedSimulatorPaddedPhaseConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedPhaseConstruction_of_exactShape_configRunner
+    fixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_scaffold_configRunner
 
 theorem fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner :
     FixedDescriptionBoundedSimulatorEquivConstruction :=
