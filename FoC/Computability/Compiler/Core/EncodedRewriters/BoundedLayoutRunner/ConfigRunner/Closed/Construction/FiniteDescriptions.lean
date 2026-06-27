@@ -128,6 +128,31 @@ theorem selectedProjectionCheckedEquivEmitterConstruction_of_equiv
   exact
     ⟨emitter, selectedProjectionCheckedEquivEmitterSpec_of_equiv hemits⟩
 
+theorem selectedProjectionCheckedEquivEmitterSpec_of_checked
+    {useAccept : Bool} {emitter : MachineDescription}
+    (hemitter : SelectedProjectionCheckedEmitterSpec useAccept emitter) :
+    SelectedProjectionCheckedEquivEmitterSpec useAccept emitter := by
+  constructor
+  · exact hemitter.left
+  constructor
+  · intro L
+    exact MachineDescription.HaltsFromTape.toEquiv (hemitter.right L)
+  · intro L T hhalt
+    have hT :
+        T = SelectedProjectionOutputTape useAccept L :=
+      MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+        hemitter.left.right hhalt (hemitter.right L)
+    rw [hT]
+    exact Tape.Equiv.refl _
+
+theorem selectedProjectionCheckedEquivEmitterConstruction_of_checked
+    (h : SelectedProjectionCheckedEmitterConstruction) :
+    SelectedProjectionCheckedEquivEmitterConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨emitter, hemits⟩
+  exact
+    ⟨emitter, selectedProjectionCheckedEquivEmitterSpec_of_checked hemits⟩
+
 theorem selectedProjectionSpec_of_parser_equivEmitter
     {useAccept : Bool} {parser emitter : MachineDescription}
     (hparser : LayoutCheckedParserSpec parser)
