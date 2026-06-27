@@ -1,5 +1,8 @@
 import FoC.Computability.Compiler.Core.CommonGround.Identity
-import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.FiniteDescriptions
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseAdapters
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseRunner
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.SimulatorScaffold
 
 set_option doc.verso true
 
@@ -18,76 +21,12 @@ open Languages
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
 
-theorem selectedProjectionPrimitiveClosedHandoffConstruction_of_rightShifted
-    (h : SelectedProjectionPrimitiveRightShiftedConstruction) :
-    SelectedProjectionPrimitiveClosedHandoffConstruction := by
-  intro useAccept
-  rcases h useAccept with ⟨runner, hrunner⟩
-  refine ⟨runner, ?_⟩
-  exact
-    EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
-      hrunner
-      (by
-        intro code out htransform
-        rcases
-            SelectedProjectionPrimitive_transform_eq_some_cons
-              htransform with
-          ⟨tail, hout⟩
-        exact ⟨MachineCodeSymbol.header, tail, hout⟩)
-
-theorem selectedMergePrimitiveClosedHandoffConstruction_of_rightShifted
-    (h : SelectedMergePrimitiveRightShiftedConstruction) :
-    SelectedMergePrimitiveClosedHandoffConstruction := by
-  intro useAccept
-  rcases h useAccept with ⟨runner, hrunner⟩
-  refine ⟨runner, ?_⟩
-  exact
-    EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
-      hrunner
-      (by
-        intro code out htransform
-        rcases
-            SelectedMergePrimitive_transform_eq_some_cons
-              htransform with
-          ⟨tail, hout⟩
-        exact ⟨MachineCodeSymbol.transition, tail, hout⟩)
-
-theorem selectedProjectionPrimitiveClosedHandoffConstruction_scaffold :
-    SelectedProjectionPrimitiveClosedHandoffConstruction :=
-  selectedProjectionPrimitiveClosedHandoffConstruction_of_rightShifted
-    selectedProjectionPrimitiveRightShiftedConstruction_scaffold
-
-theorem selectedProjectionRejectPrimitiveClosedHandoffConstruction_scaffold :
-    exists closed : MachineDescription,
-      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-        (SelectedProjectionPrimitive false)
-        closed tapeCodePrimitiveCodeWordHandoffMove :=
-  selectedProjectionPrimitiveClosedHandoffConstruction_scaffold false
-
-theorem selectedProjectionAcceptPrimitiveClosedHandoffConstruction_scaffold :
-    exists closed : MachineDescription,
-      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-        (SelectedProjectionPrimitive true)
-        closed tapeCodePrimitiveCodeWordHandoffMove :=
-  selectedProjectionPrimitiveClosedHandoffConstruction_scaffold true
-
-theorem acceptProjectionPrimitiveClosedHandoffConstruction_scaffold :
-    AcceptProjectionPrimitiveClosedHandoffConstruction := by
-  exact
-    acceptProjectionPrimitiveClosedHandoffConstruction_of_selected
-      selectedProjectionPrimitiveClosedHandoffConstruction_scaffold
-
-theorem rejectProjectionPrimitiveClosedHandoffConstruction_scaffold :
-    RejectProjectionPrimitiveClosedHandoffConstruction := by
-  exact
-    rejectProjectionPrimitiveClosedHandoffConstruction_of_selected
-      selectedProjectionPrimitiveClosedHandoffConstruction_scaffold
-
 /-!
 Selected projection enters phase assembly through the finite-description
-padded/equivalence route.  The exact/right-shifted selected-projection
-constructors remain above as public closed-handoff adapter glue; they are not
-used to build {lit}`configRunnerPhaseEquivConstruction_scaffold`.
+padded/equivalence route.  Exact/right-shifted selected-projection adapters live
+in
+{lit}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.RightShiftedPrimitives`;
+this assembly module does not import that compatibility path.
 
 The exact/right-shifted selected-merge primitive scaffold chain is false: the
 merge phase intentionally preserves simulator-layout scratch structure that is

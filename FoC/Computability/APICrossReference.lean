@@ -279,9 +279,9 @@ finite-construction proofs.
   {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner`,
   {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed`,
   and
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction`.
+  {lit}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction`.
   These are the files to inspect for the checked-layout parser inversion and
-  the selected projection/merge exact-tape constructions.
+  the selected projection/merge padded-equivalence constructions.
 * Controller and finite-loop construction internals:
   {module}`FoC.Computability.Compiler.Core.ControllerInputInitializer`,
   {module}`FoC.Computability.Compiler.Core.ControllerResultContinue`,
@@ -298,9 +298,10 @@ finite-construction proofs.
   be solved through description decoding, transition-list parsing, and bounded
   simulator facts.
 
-At this cleanup checkpoint, the project is expected to build with only the
-intentional {lit}`sorry` warnings. If that changes, update this page together
-with the construction target or helper theorem that changed the proof surface.
+At this cleanup checkpoint, the project is expected to build with twelve
+intentional {lit}`sorry` warnings under {lit}`FoC/Computability`. If that
+changes, update this page together with the construction target or helper
+theorem that changed the proof surface.
 
 ## Proof Navigation Rules
 
@@ -407,79 +408,67 @@ into smaller targets.
 
 ## Remaining Sorry Work Map
 
-The remaining proof holes are best approached by contract family, not by file
-order.
+The remaining proof holes are best approached in the live dependency order
+below, not by file order.
 
-* Universal finite-source leaves:
-  {name (full := FoC.Computability.codePrefixDecodedBoundedSimulatorCodeMachineConstruction_core)}`codePrefixDecodedBoundedSimulatorCodeMachineConstruction_core`
-  and
-  {name (full := FoC.Computability.codePrefixStageSearchControllerProgramCompilerConstruction_core)}`codePrefixStageSearchControllerProgramCompilerConstruction_core`
-  live under {module}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource`.
-  They require real finite machines for decoding a staged machine description
-  and for unbounded stage search. They should use the header parser,
-  transition-list parser, branch sequencing, and bounded simulator semantics
-  nearby rather than the encoded dovetail-controller internals.
-* Controller finite-loop leaves:
-  {name (full := FoC.Computability.controllerInputInitializerConstruction_scaffold)}`controllerInputInitializerConstruction_scaffold`,
-  {name (full := FoC.Computability.controllerResultContinueConstruction_scaffold)}`controllerResultContinueConstruction_scaffold`,
-  {name (full := FoC.Computability.pairedRecognizerDovetailStageAttemptInvocationConstructionData_scaffold)}`pairedRecognizerDovetailStageAttemptInvocationConstructionData_scaffold`,
-  and
-  {name (full := FoC.Computability.pairedRecognizerDovetailFiniteStageLoopSequencingConstructionData_scaffold)}`pairedRecognizerDovetailFiniteStageLoopSequencingConstructionData_scaffold`
-  are sequencing/construction obligations for the controller loop. They should
-  bottom out in explicit initializer, invoker, continue, and finite-loop
-  transition descriptions, not in semantic staged-program shortcuts.
-* Bounded-layout parser leaf:
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.checkedDovetailLayoutScannerDescription_haltsWithTape_body_inv)}`EncodedRewriters.BoundedLayoutRunner.checkedDovetailLayoutScannerDescription_haltsWithTape_body_inv`
-  is the consolidated closed-parser inversion. It should use the bool-word,
-  nat, configuration-suffix, and final-flag closed scanner facts from
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner`
-  plus the decoder-backed cancellation helpers from
-  {module}`FoC.Computability.Compiler.Core.EncodingLemmas`, and should produce
-  the exact checked handoff equation, not merely a decoded layout.
-* Selected-projection padded/equivalence leaves:
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionInputQuoterExactShapeConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionInputQuoterExactShapeConstruction_scaffold`
-  and
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionPaddedTailCleanupConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionPaddedTailCleanupConstruction_scaffold`
-  are the live selected-projection finite-machine obligations. They feed
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold`
-  through the checked-equivalence padded emitter route, which is the active
-  proof path used by bounded-runner phase assembly.
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveExactConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveExactConstruction_scaffold`
-  and
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveRightShiftedConstruction_core)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveRightShiftedConstruction_core`
-  are legacy adapter-level compatibility targets for public exact or
-  right-shifted primitive packaging. They may remain only when needed for that
-  adapter surface, and they should not be used on the route to the known
-  context-length shrink obstruction.
-* Config-runner selected-merge equivalence leaf:
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedMergeEquivPaddedEmitterConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedMergeEquivPaddedEmitterConstruction_scaffold`
-  is the selected-merge finite-machine obligation. The former exact
-  right-shifted merge target has a context-length shrink obstruction; see
-  {lit}`LEAN_COUNTEREXAMPLE_OVERVIEW.md` for the archived proof names.  The
-  merge phase must instead emit the selected output plus blank padding so the
-  exact tape is equivalent to the parsed dovetail-layout tape while preserving
-  simulator-layout scratch structure.
-  The live selected-merge equivalence construction uses the forward-only
-  identity parser adapter
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedMergeForwardParserConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedMergeForwardParserConstruction_scaffold`.
-  The stronger selected-merge input validator uses
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedMergeInputValidatorConstruction_of_parser_checker)}`EncodedRewriters.BoundedLayoutRunner.selectedMergeInputValidatorConstruction_of_parser_checker`;
-  the exact/right-shifted input-validator primitive path is stronger adapter
-  glue, not the phase parser dependency.
-* Fixed-description simulator phase leaf:
-  the old exact canonical phase has a context-length shrink obstruction; see
-  {lit}`LEAN_COUNTEREXAMPLE_OVERVIEW.md` for the archived proof names.
-  The bounded-layout config runner now uses the padded/equivalence simulator
-  boundary instead of that exact phase.  The full right-shifted
-  {name (full := FoC.Computability.FixedDescriptionBoundedSimulatorCode)}`FixedDescriptionBoundedSimulatorCode`
-  package is no longer a live bounded-runner dependency; parser/primitive
-  packaging remains available through adapter theorems rather than public
-  scaffolds.
-* Bounded-layout closed handoff wrapper:
-  {name (full := FoC.Computability.encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold)}`encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold`
-  cannot be closed from an output-compiled runner alone. It needs either the
-  parser and config-runner exact-tape leaves, or a stronger bounded-layout
-  runner theorem that already exposes closed handoff behavior.
+1. Controller input initializer:
+   {name (full := FoC.Computability.DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterDescription_run)}`DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterDescription_run`
+   is the remaining local run proof for the raw Bool-word header emitter.  It
+   feeds the thin public
+   {name (full := FoC.Computability.controllerInputInitializerConstruction_scaffold)}`controllerInputInitializerConstruction_scaffold`
+   adapter; the public wrapper itself is not a construction hole.
+2. Selected-projection padded input quoter:
+   {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionInputQuoterExactShapeConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionInputQuoterExactShapeConstruction_scaffold`
+   is a clean local finite-machine leaf and the first live
+   selected-projection padded/equivalence obligation.
+3. Selected-projection padded tail cleanup:
+   {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionPaddedTailCleanupConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionPaddedTailCleanupConstruction_scaffold`
+   is the second selected-projection padded/equivalence leaf.  Together with
+   the quoter it feeds
+   {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold`,
+   which is the active bounded-runner phase route.
+4. Selected-merge padded emitter:
+   {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedMergeEquivPaddedEmitterConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedMergeEquivPaddedEmitterConstruction_scaffold`
+   is the selected-merge padded/equivalence emitter leaf.  The exact
+   right-shifted merge path remains too strong because it would force a
+   context-length decrease; use the forward parser adapter and padded emitter
+   route.
+5. Fixed-description bounded simulator padded construction:
+   {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedConstruction_scaffold_configRunner)}`EncodedRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedConstruction_scaffold_configRunner`
+   is the config-runner simulator padded/equivalence leaf.  It should not be
+   replaced by the old exact right-handoff skeleton.
+6. Bounded-runner closed handoff:
+   {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.closedHandoffCompiledSubroutine)}`EncodedRewriters.BoundedLayoutRunner.closedHandoffCompiledSubroutine`
+   is a broad compiler-construction leaf for the public closed-handoff
+   rewriter.  It cannot be closed from output compilation alone; it needs a
+   construction that exposes the required closed-handoff behavior.
+7. Controller stage invocation and finite loop:
+   the private {lit}`controllerStageAttemptWitnessedInvocationConstruction_leaf`
+   feeds
+   {name (full := FoC.Computability.pairedRecognizerDovetailStageAttemptInvocationConstructionData_scaffold)}`pairedRecognizerDovetailStageAttemptInvocationConstructionData_scaffold`,
+   and the private
+   {lit}`pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstructionData_finite_leaf`
+   feeds
+   {name (full := FoC.Computability.pairedRecognizerDovetailFiniteStageLoopSequencingConstructionData_scaffold)}`pairedRecognizerDovetailFiniteStageLoopSequencingConstructionData_scaffold`.
+   These are controller-loop construction leaves, not semantic staged-program
+   shortcuts.  The result-continue construction is already adapter-complete.
+8. Universal finite-source leaves:
+   {name (full := FoC.Computability.codePrefixDecodedBoundedSimulatorCodeMachineConstruction_core)}`codePrefixDecodedBoundedSimulatorCodeMachineConstruction_core`,
+   {name (full := FoC.Computability.codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopFiniteLeaf)}`codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopFiniteLeaf`,
+   {name (full := FoC.Computability.codePrefixStageSearchControllerBudgetCheckerIntersectionBoundedPairObligation_core)}`codePrefixStageSearchControllerBudgetCheckerIntersectionBoundedPairObligation_core`,
+   and
+   {name (full := FoC.Computability.codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchFiniteLeaf)}`codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchFiniteLeaf`
+   are the remaining broad finite-source/compiler leaves.  They should use
+   the header parser, transition-list parser, branch sequencing, and bounded
+   simulator semantics nearby, not the encoded dovetail-controller internals.
+
+The legacy selected-projection exact/right-shifted adapter predicates remain
+quarantined in
+{lit}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.RightShiftedPrimitives`.
+There is intentionally no exported scaffold for
+{lit}`SelectedProjectionPrimitiveExactConstruction` or
+{lit}`SelectedProjectionPrimitiveRightShiftedConstruction`: the live route is
+the selected-projection padded/equivalence finite-description construction.
 
 ## Construction Boundaries
 

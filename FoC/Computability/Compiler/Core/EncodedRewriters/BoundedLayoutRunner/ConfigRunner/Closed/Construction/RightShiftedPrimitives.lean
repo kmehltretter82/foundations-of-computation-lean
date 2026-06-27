@@ -133,6 +133,40 @@ theorem selectedMergePrimitiveRightShiftedConstruction_of_finiteDescription
   rcases h useAccept with ⟨runner, hrunner⟩
   exact ⟨runner, selectedMergeRightShifted_of_spec hrunner⟩
 
+theorem selectedProjectionPrimitiveClosedHandoffConstruction_of_rightShifted
+    (h : SelectedProjectionPrimitiveRightShiftedConstruction) :
+    SelectedProjectionPrimitiveClosedHandoffConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  exact
+    EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
+      hrunner
+      (by
+        intro code out htransform
+        rcases
+            SelectedProjectionPrimitive_transform_eq_some_cons
+              htransform with
+          ⟨tail, hout⟩
+        exact ⟨MachineCodeSymbol.header, tail, hout⟩)
+
+theorem selectedMergePrimitiveClosedHandoffConstruction_of_rightShifted
+    (h : SelectedMergePrimitiveRightShiftedConstruction) :
+    SelectedMergePrimitiveClosedHandoffConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  exact
+    EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
+      hrunner
+      (by
+        intro code out htransform
+        rcases
+            SelectedMergePrimitive_transform_eq_some_cons
+              htransform with
+          ⟨tail, hout⟩
+        exact ⟨MachineCodeSymbol.transition, tail, hout⟩)
+
 def SelectedProjectionPrimitiveExactSpec
     (useAccept : Bool)
     (runner : MachineDescription) : Prop :=
@@ -265,57 +299,14 @@ theorem selectedProjectionPrimitiveExactConstruction_of_checkedParser_checkedEmi
       selectedProjectionPrimitiveExactSpec_of_checkedParser_checkedEmitter
         hparser hemits⟩
 
-/--
-Adapter-level finite-machine leaf for the exact selected-projection primitive.
-
-The live config-runner projection path is the padded/equivalence
-finite-description construction.  This exact target is retained only as
-compatibility glue for public right-shifted primitive packaging; it should not
-be used to assemble the bounded-runner phases.
+/-!
+No selected-projection exact or right-shifted construction scaffold is exported
+here.  The active bounded-runner phase path uses the padded/equivalence
+finite-description construction.  If a future API needs exact primitive
+packaging, it should supply a real
+{name}`SelectedProjectionPrimitiveExactConstruction` witness and then use
+{name}`selectedProjectionPrimitiveRightShiftedConstruction_of_exact`.
 -/
-theorem selectedProjectionPrimitiveExactConstruction_scaffold :
-    SelectedProjectionPrimitiveExactConstruction := by
-  sorry
-
-theorem selectedProjectionPrimitiveRightShiftedConstruction_core :
-    SelectedProjectionPrimitiveRightShiftedConstruction := by
-  exact
-    selectedProjectionPrimitiveRightShiftedConstruction_of_exact
-      selectedProjectionPrimitiveExactConstruction_scaffold
-
-theorem acceptProjectionPrimitiveRightShiftedConstruction_scaffold :
-    AcceptProjectionPrimitiveRightShiftedConstruction := by
-  rcases selectedProjectionPrimitiveRightShiftedConstruction_core true with
-    ⟨runner, hrunner⟩
-  refine ⟨runner, ?_⟩
-  exact
-    rightShiftedOutputCompiledSubroutineByDescription_congr
-      (P := SelectedProjectionPrimitive true)
-      (Q := AcceptProjectionPrimitive)
-      (D := runner)
-      (by
-        intro code
-        rfl)
-      hrunner
-
-theorem rejectProjectionPrimitiveRightShiftedConstruction_scaffold :
-    RejectProjectionPrimitiveRightShiftedConstruction := by
-  rcases selectedProjectionPrimitiveRightShiftedConstruction_core false with
-    ⟨runner, hrunner⟩
-  refine ⟨runner, ?_⟩
-  exact
-    rightShiftedOutputCompiledSubroutineByDescription_congr
-      (P := SelectedProjectionPrimitive false)
-      (Q := RejectProjectionPrimitive)
-      (D := runner)
-      (by
-        intro code
-        rfl)
-      hrunner
-
-theorem selectedProjectionPrimitiveRightShiftedConstruction_scaffold :
-    SelectedProjectionPrimitiveRightShiftedConstruction := by
-  exact selectedProjectionPrimitiveRightShiftedConstruction_core
 
 
 end BoundedLayoutRunner
