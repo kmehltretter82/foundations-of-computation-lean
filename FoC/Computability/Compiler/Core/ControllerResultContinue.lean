@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.ControllerResultContinue.StageInputContinue
+import FoC.Computability.Compiler.Core.ControllerResultContinue.Component
 
 set_option doc.verso true
 
@@ -64,7 +64,8 @@ theorem controllerResultContinueConstructionData_of_components
 
 theorem controllerResultContinueComponentConstruction_scaffold :
     ControllerResultContinueComponentConstruction := by
-  sorry
+  exact
+    ControllerResultContinueConstruction.controllerResultContinueComponentConstruction
 
 theorem controllerResultContinueConstruction_scaffold :
     ControllerResultContinueConstructionData := by
