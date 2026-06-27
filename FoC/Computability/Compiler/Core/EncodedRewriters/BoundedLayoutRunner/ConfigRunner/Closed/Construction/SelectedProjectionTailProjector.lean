@@ -335,6 +335,40 @@ theorem outputPrefixBits_eq_header_quote_stageInput_sourceRestFieldBits
   rw [outputPrefixBits,
     parsedLayoutBits_eq_transition_stageInput_sourceRestFieldBits]
 
+def outputPrefixStageInputSourceRestFieldBits
+    (L : MachineDescription.DovetailLayout) : Word Bool :=
+  List.append
+    (MachineDescription.encodeCodeSymbolAsInput
+      MachineCodeSymbol.header)
+    (MachineDescription.encodeCodeWordAsInput
+      (MachineDescription.encodeBoolWordAppend
+        (List.append
+          (MachineDescription.encodeCodeSymbolAsInput
+            MachineCodeSymbol.transition)
+          (List.append (stageInputBits L.input L.stage)
+            (sourceRestFieldBits L))) []))
+
+theorem outputPrefixBits_eq_stageInputSourceRestFieldBits
+    (L : MachineDescription.DovetailLayout) :
+    outputPrefixBits L =
+      outputPrefixStageInputSourceRestFieldBits L := by
+  rw [outputPrefixStageInputSourceRestFieldBits,
+    outputPrefixBits_eq_header_quote_stageInput_sourceRestFieldBits]
+
+theorem sourceScannerRightHandoffTape_outputPrefix_eq_stageInputSourceRestFieldBits
+    (L : MachineDescription.DovetailLayout) :
+    sourceScannerRightHandoffTape L ((outputPrefixBits L).reverse.map some) =
+      tapeAtCells
+        (finalHitFlagsRestoredLeftWithBase L.acceptHit L.rejectHit
+          (configurationRestoredLeftWithBase L.rejectConfig
+            (configurationRestoredLeftWithBase L.acceptConfig
+              (List.append ((stageNatBits L.stage).reverse.map some)
+                ((outputPrefixStageInputSourceRestFieldBits L).reverse.map
+                  some)))))
+        [] := by
+  rw [sourceScannerRightHandoffTape_eq,
+    outputPrefixBits_eq_stageInputSourceRestFieldBits]
+
 def outputAllBits
     (useAccept : Bool)
     (L : MachineDescription.DovetailLayout) : Word Bool :=

@@ -237,6 +237,18 @@ theorem sourceTape_normalizedOutput_outputPrefix
   rw [sourceTape_normalizedOutput]
   simp [Function.comp_def, List.map_reverse]
 
+theorem sourceTape_outputPrefix_eq_stageInputSourceRestFieldBits
+    (L : MachineDescription.DovetailLayout) :
+    sourceTape L ((outputPrefixBits L).reverse.map some) =
+      DovetailInitialLayoutInitializer.tapeAtCells
+        ((outputPrefixStageInputSourceRestFieldBits L).reverse.map some)
+        ((List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            L.stage)
+          (sourceRestFieldBits L)).map some) := by
+  rw [sourceTape, outputPrefixBits_eq_stageInputSourceRestFieldBits,
+    sourceFieldBits_eq_stageNatBits_sourceRestFieldBits]
+
 theorem outputPrefixBits_append_sourceFieldBits
     (L : MachineDescription.DovetailLayout) :
     List.append (outputPrefixBits L) (sourceFieldBits L) =
