@@ -374,6 +374,19 @@ theorem SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_source
         (ParsedLayoutBits L).length
   exact Nat.le_trans hsource htarget
 
+theorem
+    SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_checkedInput
+    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    Tape.contextLength (ParsedLayoutCheckedTape L) <=
+      Tape.contextLength
+        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) := by
+  exact
+    Nat.le_trans
+      (SelectedProjectionTailProjector.sourceTape_contextLength_ge_parsedLayoutCheckedTape
+        L)
+      (SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_source
+        useAccept L)
+
 theorem dovetailScanner_cellListCanonicalRestoredLeftWithBase_length
     (cells baseLeft : List (Option Bool)) :
     (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
