@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.ControllerResultContinue.GuardProjection
-import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputValidator
+import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.Assembly
 
 set_option doc.verso true
 
@@ -661,6 +661,147 @@ theorem stageInputContinueDescription_haltsWithOutput_stageInput
   have houtput :=
     MachineDescription.haltsWithOutput_of_haltsWithTape hhalt
   simpa [Tout, stageInputContinueOutputTape_normalizedOutput] using houtput
+
+theorem stageInputContinueDescription_transform_of_haltsWithOutput
+    {validator : MachineDescription}
+    (hvalidator :
+      DovetailInitialLayoutInitializer.StageInputValidatorSpec validator)
+    (code out : Word MachineCodeSymbol)
+    (hhalt :
+      (StageInputContinueDescription validator).HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out)) :
+    StageInputContinuePrimitive.transform code = some out := by
+  let continuer := StageInputContinueDescription validator
+  rcases hhalt with ⟨n, hn⟩
+  let T : Tape Bool :=
+    (continuer.runConfig n
+      (continuer.initial
+        (MachineDescription.encodeCodeWordAsInput code))).tape
+  have hTape :
+      continuer.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T := by
+    refine ⟨n, ?_⟩
+    exact ⟨hn.left, rfl⟩
+  have hnorm :
+      Tape.normalizedOutput T =
+        MachineDescription.encodeCodeWordAsInput out := by
+    simpa [T] using hn.right
+  let A := validator
+  let B := StageInputContinueCheckedRewriterDescription
+  have hAready : A.SubroutineReady := hvalidator.left
+  have hBready : B.SubroutineReady :=
+    stageInputContinueCheckedRewriterDescription_subroutineReady
+  rcases
+      MachineDescription.seqSubroutine_haltsWithTape_inv
+        (A := A) (B := B) (handoffMove := Direction.left)
+        hAready hBready hTape with
+    ⟨Tmid, hAhalt, hBReach⟩
+  rcases hvalidator.right.right code Tmid hAhalt with
+    ⟨input, stage, hcode, hhandoff⟩
+  have hBFrom :
+      B.HaltsFromTape
+        (DovetailInitialLayoutInitializer.stageInputCheckedInputTape
+          input stage)
+        T := by
+    rcases hBReach with ⟨nB, hBRun⟩
+    refine ⟨nB, ?_⟩
+    change
+      (B.runConfig nB
+        { state := B.start
+          tape :=
+            DovetailInitialLayoutInitializer.stageInputCheckedInputTape
+              input stage }).state = B.halt ∧
+      (B.runConfig nB
+        { state := B.start
+          tape :=
+            DovetailInitialLayoutInitializer.stageInputCheckedInputTape
+              input stage }).tape = T
+    have hBRun' :
+        B.runConfig nB
+            { state := B.start
+              tape :=
+                DovetailInitialLayoutInitializer.stageInputCheckedInputTape
+                  input stage } =
+          { state := B.halt, tape := T } := by
+      simpa [B, hhandoff] using hBRun
+    constructor
+    · simp [hBRun']
+    · simp [hBRun']
+  let targetCode : Word MachineCodeSymbol :=
+    MachineDescription.DovetailControllerLayout.encode
+      { input := input, stage := stage + 1, result := [] }
+  let targetTape : Tape Bool :=
+    stageInputContinueOutputTape
+      (MachineDescription.encodeCodeWordAsInput targetCode)
+  have hBGood :
+      B.HaltsFromTape
+        (DovetailInitialLayoutInitializer.stageInputCheckedInputTape
+          input stage)
+        targetTape := by
+    simpa [B, targetTape, targetCode] using
+      stageInputContinueCheckedRewriterDescription_haltsFromTape_stageInput
+        input stage
+  have hT : T = targetTape :=
+    MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+      stageInputContinueCheckedRewriterDescription_haltTransitionFree
+      hBFrom hBGood
+  have houtBits :
+      MachineDescription.encodeCodeWordAsInput out =
+        MachineDescription.encodeCodeWordAsInput targetCode := by
+    rw [← hnorm, hT]
+    simp [targetTape, stageInputContinueOutputTape_normalizedOutput]
+  have hout : out = targetCode :=
+    MachineDescription.encodeCodeWordAsInput_injective houtBits
+  exact
+    (stageInputContinuePrimitive_transform_eq_some_iff code out).mpr
+      ⟨input, stage, hcode, hout⟩
+
+theorem stageInputContinueDescription_haltsWithOutput_iff
+    {validator : MachineDescription}
+    (hvalidator :
+      DovetailInitialLayoutInitializer.StageInputValidatorSpec validator)
+    (code out : Word MachineCodeSymbol) :
+    (StageInputContinueDescription validator).HaltsWithOutput
+        (MachineDescription.encodeCodeWordAsInput code)
+        (MachineDescription.encodeCodeWordAsInput out) <->
+      StageInputContinuePrimitive.transform code = some out := by
+  constructor
+  · exact
+      stageInputContinueDescription_transform_of_haltsWithOutput
+        hvalidator code out
+  · intro htransform
+    rcases
+        (stageInputContinuePrimitive_transform_eq_some_iff
+          code out).mp htransform with
+      ⟨input, stage, hcode, hout⟩
+    have hforward :=
+      stageInputContinueDescription_haltsWithOutput_stageInput
+        hvalidator input stage
+    simpa [DovetailInitialLayoutInitializer.stageInputBits,
+      PairedRecognizerDovetailStageInputCode, hcode, hout] using hforward
+
+theorem stageInputContinueDescription_outputCompiledSubroutine
+    {validator : MachineDescription}
+    (hvalidator :
+      DovetailInitialLayoutInitializer.StageInputValidatorSpec validator) :
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      StageInputContinuePrimitive
+      (StageInputContinueDescription validator) :=
+  ⟨⟨(stageInputContinueDescription_subroutineReady hvalidator).left,
+      stageInputContinueDescription_haltsWithOutput_iff hvalidator⟩,
+    (stageInputContinueDescription_subroutineReady hvalidator).right⟩
+
+theorem stageInputContinuePrimitive_outputCompiledSubroutineConstruction :
+    exists continuer : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        StageInputContinuePrimitive continuer := by
+  rcases
+      DovetailInitialLayoutInitializer.stageInputValidatorSpec_realizer with
+    ⟨validator, hvalidator⟩
+  exact
+    ⟨StageInputContinueDescription validator,
+      stageInputContinueDescription_outputCompiledSubroutine hvalidator⟩
 
 end ControllerResultContinueConstruction
 
