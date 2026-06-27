@@ -610,6 +610,78 @@ def FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction :
         (fun L => MachineDescription.SimulatorLayout.run D L.stage L)
         simulateStep
 
+namespace FixedDescriptionBoundedSimulatorRightHandoffCounterexample
+
+def shrinkTransition : TransitionDescription :=
+  { source := 100
+    read := none
+    write := none
+    move := Direction.right
+    target := 0 }
+
+def shrinkDescription : MachineDescription :=
+  { stateCount := 101
+    start := 100
+    halt := 0
+    transitions := [shrinkTransition] }
+
+def shrinkConfig : MachineDescription.Configuration :=
+  { state := 100
+    tape := Tape.blank }
+
+def shrinkLayout : MachineDescription.SimulatorLayout :=
+  { input := []
+    stage := 1
+    config := shrinkConfig
+    hit := false }
+
+theorem shrinkTarget_contextLength_lt_source :
+    Tape.contextLength
+        (FixedDescriptionBoundedSimulatorLayoutTape
+          (MachineDescription.SimulatorLayout.run shrinkDescription
+            shrinkLayout.stage shrinkLayout)) <
+      Tape.contextLength
+        (FixedDescriptionBoundedSimulatorHandoffTape Direction.right
+          shrinkLayout) := by
+  native_decide
+
+theorem not_rightHandoffStepPhaseRealizes
+    (fragment : MachineDescription.Fragment) :
+    ¬ FixedDescriptionBoundedSimulatorPhaseRealizes
+        (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
+        FixedDescriptionBoundedSimulatorLayoutTape
+        (fun L =>
+          MachineDescription.SimulatorLayout.run shrinkDescription
+            L.stage L)
+        fragment := by
+  intro h
+  rcases h.right shrinkLayout with ⟨steps, hsteps, _hminimal⟩
+  have hmono :=
+    MachineDescription.runConfig_contextLength_mono
+      fragment.toDescription steps
+      { state := fragment.entry
+        tape :=
+          FixedDescriptionBoundedSimulatorHandoffTape Direction.right
+            shrinkLayout }
+  have hfinal :
+      Tape.contextLength
+          ((fragment.toDescription.runConfig steps
+            { state := fragment.entry
+              tape :=
+                FixedDescriptionBoundedSimulatorHandoffTape Direction.right
+                  shrinkLayout }).tape) =
+        Tape.contextLength
+          (FixedDescriptionBoundedSimulatorLayoutTape
+            (MachineDescription.SimulatorLayout.run shrinkDescription
+              shrinkLayout.stage shrinkLayout)) := by
+    simpa using
+      congrArg (fun c : MachineDescription.Configuration =>
+        Tape.contextLength c.tape) hsteps
+  rw [hfinal] at hmono
+  exact (Nat.not_lt_of_ge hmono) shrinkTarget_contextLength_lt_source
+
+end FixedDescriptionBoundedSimulatorRightHandoffCounterexample
+
 theorem fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_codeRightShifted :
     FixedDescriptionBoundedSimulatorPhaseRealizes
       (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
