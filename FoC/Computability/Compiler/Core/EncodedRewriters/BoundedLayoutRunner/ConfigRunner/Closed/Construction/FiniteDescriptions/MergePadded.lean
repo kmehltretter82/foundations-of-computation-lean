@@ -1469,6 +1469,40 @@ def SelectedMergePaddedEmitterAfterHitSpec
         (SelectedMergePaddedEmitterAfterHitTape p)
         (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
 
+def SelectedMergePaddedEmitterSourceScannerDescription :
+    MachineDescription :=
+  seqSubroutine
+    SelectedMergePaddedEmitterInputScannerDescription
+    (seqSubroutine
+      SelectedMergePaddedEmitterStageScannerDescription
+      (seqSubroutine
+        SelectedMergePaddedEmitterConfigScannerDescription
+        SelectedMergePaddedEmitterHitScannerDescription
+        Direction.right)
+      Direction.right)
+    Direction.right
+
+theorem selectedMergePaddedEmitterSourceScanner_subroutineReady :
+    SelectedMergePaddedEmitterSourceScannerDescription.SubroutineReady := by
+  have hinput :
+      SelectedMergePaddedEmitterInputScannerDescription.SubroutineReady :=
+    selectedMergePaddedEmitterInputScanner_subroutineReady
+  have hstage :
+      SelectedMergePaddedEmitterStageScannerDescription.SubroutineReady :=
+    selectedMergePaddedEmitterStageScanner_subroutineReady
+  have hconfig :
+      SelectedMergePaddedEmitterConfigScannerDescription.SubroutineReady :=
+    selectedMergePaddedEmitterConfigScanner_subroutineReady
+  have hhit :
+      SelectedMergePaddedEmitterHitScannerDescription.SubroutineReady :=
+    selectedMergePaddedEmitterHitScanner_subroutineReady
+  simpa [SelectedMergePaddedEmitterSourceScannerDescription] using
+    seqSubroutine_subroutineReady
+      hinput
+      (seqSubroutine_subroutineReady
+        hstage
+        (seqSubroutine_subroutineReady hconfig hhit))
+
 theorem selectedMergePaddedEmitterStageScanner_haltsFromAfterInputHandoff
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterStageScannerDescription.HaltsFromTape
