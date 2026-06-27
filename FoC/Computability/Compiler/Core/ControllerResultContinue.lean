@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.ControllerResultContinue.GuardProjection
+import FoC.Computability.Compiler.Core.ControllerResultContinue.StageInputContinue
 
 set_option doc.verso true
 
