@@ -66,6 +66,14 @@ def sourceSuffix
         (MachineDescription.encodeBoolAppend L.acceptHit
           (MachineDescription.encodeBoolAppend L.rejectHit []))))
 
+def sourceRestSuffix
+    (L : MachineDescription.DovetailLayout) :
+    Word MachineCodeSymbol :=
+  MachineDescription.encodeConfigurationAppend L.acceptConfig
+    (MachineDescription.encodeConfigurationAppend L.rejectConfig
+      (MachineDescription.encodeBoolAppend L.acceptHit
+        (MachineDescription.encodeBoolAppend L.rejectHit [])))
+
 def sourceFieldBits
     (L : MachineDescription.DovetailLayout) : Word Bool :=
   List.append (stageNatBits L.stage)
@@ -73,6 +81,38 @@ def sourceFieldBits
       (configurationFieldBits L.rejectConfig
         (boolFieldBits L.acceptHit
           (boolFieldBits L.rejectHit []))))
+
+def sourceRestFieldBits
+    (L : MachineDescription.DovetailLayout) : Word Bool :=
+  configurationFieldBits L.acceptConfig
+    (configurationFieldBits L.rejectConfig
+      (boolFieldBits L.acceptHit
+        (boolFieldBits L.rejectHit [])))
+
+theorem sourceSuffix_eq_encodeNatAppend_sourceRestSuffix
+    (L : MachineDescription.DovetailLayout) :
+    sourceSuffix L =
+      MachineDescription.encodeNatAppend L.stage
+        (sourceRestSuffix L) := by
+  rfl
+
+theorem sourceFieldBits_eq_stageNatBits_sourceRestFieldBits
+    (L : MachineDescription.DovetailLayout) :
+    sourceFieldBits L =
+      List.append (stageNatBits L.stage) (sourceRestFieldBits L) := by
+  rfl
+
+theorem sourceRestSuffix_bits_eq_fields
+    (L : MachineDescription.DovetailLayout) :
+    MachineDescription.encodeCodeWordAsInput (sourceRestSuffix L) =
+      sourceRestFieldBits L := by
+  rw [sourceRestSuffix, sourceRestFieldBits]
+  rw [configurationFieldBits_eq_encodeConfigurationAppend]
+  rw [configurationFieldBits_eq_encodeConfigurationAppend]
+  rw [boolBits_eq_encodeBoolAppend]
+  rw [boolBits_eq_encodeBoolAppend]
+  simp [boolFieldBits, cellFieldBits,
+    MachineDescription.encodeCodeWordAsInput]
 
 theorem sourceSuffix_bits_eq_fields
     (L : MachineDescription.DovetailLayout) :
@@ -106,6 +146,40 @@ theorem parsedLayoutBits_eq_transition_input_sourceSuffix
             (sourceSuffix L))) := by
   simp [ParsedLayoutBits, dovetailLayout_encode_eq_transition_input_sourceSuffix,
     MachineDescription.encodeCodeWordAsInput]
+
+theorem stageInputBits_append_sourceRestSuffix_bits
+    (L : MachineDescription.DovetailLayout) :
+    List.append (stageInputBits L.input L.stage)
+        (MachineDescription.encodeCodeWordAsInput
+          (sourceRestSuffix L)) =
+      MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.encodeBoolWordAppend L.input
+          (sourceSuffix L)) := by
+  rw [stageInputBits, PairedRecognizerDovetailStageInputCode,
+    MachineDescription.DovetailLayout.stageInputCode,
+    MachineDescription.DovetailLayout.stageInputCodeAppend,
+    sourceSuffix_eq_encodeNatAppend_sourceRestSuffix]
+  rw [show
+      MachineDescription.encodeNatAppend L.stage (sourceRestSuffix L) =
+        List.append (MachineDescription.encodeNatAppend L.stage [])
+          (sourceRestSuffix L) by
+      simpa using
+        encodeNatAppend_append L.stage ([] : Word MachineCodeSymbol)
+          (sourceRestSuffix L)]
+  rw [encodeBoolWordAppend_append]
+  rw [MachineDescription.encodeCodeWordAsInput_append]
+
+theorem parsedLayoutBits_eq_transition_stageInput_sourceRestSuffix
+    (L : MachineDescription.DovetailLayout) :
+    ParsedLayoutBits L =
+      List.append
+        (MachineDescription.encodeCodeSymbolAsInput
+          MachineCodeSymbol.transition)
+        (List.append (stageInputBits L.input L.stage)
+          (MachineDescription.encodeCodeWordAsInput
+            (sourceRestSuffix L))) := by
+  rw [parsedLayoutBits_eq_transition_input_sourceSuffix]
+  rw [← stageInputBits_append_sourceRestSuffix_bits L]
 
 theorem parsedLayoutBits_eq_transition_input_sourceFieldBits
     (L : MachineDescription.DovetailLayout) :
