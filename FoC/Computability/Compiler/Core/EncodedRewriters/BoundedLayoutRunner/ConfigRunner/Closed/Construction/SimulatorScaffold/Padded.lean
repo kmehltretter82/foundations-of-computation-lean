@@ -1,6 +1,7 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseAdapters
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Composition
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.ConfigurationClosed
 import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.CodeRightShifted
 
 set_option doc.verso true
@@ -601,6 +602,78 @@ theorem run_fixedDescriptionBoundedSimulatorConfigHit_raw_to_handoff_withBase_co
         boolFinalScannerDescription_subroutineReady
         hArun hBReach
 
+theorem fixedDescriptionBoundedSimulatorConfigHitScannerDescription_runConfig_code_inv_configRunner
+    (baseLeft : List (Option Bool)) (code : Word MachineCodeSymbol)
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.runConfig
+          n
+          (DovetailInitialLayoutInitializer.config
+            FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.start
+            baseLeft
+            ((encodeCodeWordAsInput code).map some)) =
+        { state :=
+            FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.halt
+          tape := Tout }) :
+    exists cfg : Configuration,
+    exists hit : Bool,
+    exists baseAfter : List (Option Bool),
+      code = encodeConfigurationAppend cfg (encodeBoolAppend hit []) ∧
+        Tape.move Direction.right Tout =
+          DovetailInitialLayoutInitializer.tapeAtCells baseAfter [] := by
+  have hseq :
+      (seqSubroutine
+        ConfigurationSuffixScannerDescription
+        BoolFinalScannerDescription
+        Direction.right).runConfig n
+          (DovetailInitialLayoutInitializer.config
+            (seqSubroutine
+              ConfigurationSuffixScannerDescription
+              BoolFinalScannerDescription
+              Direction.right).start
+            baseLeft
+            ((encodeCodeWordAsInput code).map some)) =
+        { state :=
+            (seqSubroutine
+              ConfigurationSuffixScannerDescription
+              BoolFinalScannerDescription
+              Direction.right).halt
+          tape := Tout } := by
+    simpa [FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner]
+      using h
+  rcases
+      seqSubroutine_runConfig_inv
+        (A := ConfigurationSuffixScannerDescription)
+        (B := BoolFinalScannerDescription)
+        (handoffMove := Direction.right)
+        configurationSuffixScannerDescription_subroutineReady
+        boolFinalScannerDescription_subroutineReady
+        hseq with
+    ⟨Tcfg, hcfg, hhit⟩
+  rcases hcfg with ⟨nCfg, hcfgRun, _hcfgFirst⟩
+  rcases
+      configurationSuffixScannerDescription_runConfig_code_handoff
+        baseLeft code
+        (by simpa [DovetailInitialLayoutInitializer.config] using
+          hcfgRun) with
+    ⟨cfg, suffix, baseAfterCfg, hcode, hcfgMove⟩
+  rcases hhit with ⟨nHit, hhitRun⟩
+  have hhitCodeRun :
+      BoolFinalScannerDescription.runConfig nHit
+          (DovetailInitialLayoutInitializer.config
+            BoolFinalScannerDescription.start baseAfterCfg
+            ((encodeCodeWordAsInput suffix).map some)) =
+        { state := BoolFinalScannerDescription.halt
+          tape := Tout } := by
+    simpa [DovetailInitialLayoutInitializer.config, hcfgMove] using
+      hhitRun
+  rcases
+      boolFinalScannerDescription_runConfig_code_terminal_inv
+        baseAfterCfg suffix hhitCodeRun with
+    ⟨hit, hsuffix, hmove⟩
+  refine ⟨cfg, hit, _, ?_, hmove⟩
+  rw [hcode, hsuffix]
+
 theorem fixedDescriptionBoundedSimulatorBoolFinalHandoffConfigWithBase_normalizedOutput_configRunner
     (hit : Bool) (baseLeft : List (Option Bool)) :
     Tape.normalizedOutput
@@ -747,6 +820,96 @@ theorem run_fixedDescriptionBoundedSimulatorStageConfigHit_raw_to_handoff_withBa
         nonemptyNatSuffixScannerDescription_subroutineReady
         fixedDescriptionBoundedSimulatorConfigHitScannerDescription_subroutineReady_configRunner
         hArun hBReach
+
+theorem fixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_runConfig_code_inv_configRunner
+    (baseLeft : List (Option Bool)) (code : Word MachineCodeSymbol)
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner.runConfig
+          n
+          (DovetailInitialLayoutInitializer.config
+            FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner.start
+            baseLeft
+            ((encodeCodeWordAsInput code).map some)) =
+        { state :=
+            FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner.halt
+          tape := Tout }) :
+    exists stage : Nat,
+    exists cfg : Configuration,
+    exists hit : Bool,
+    exists baseAfter : List (Option Bool),
+      code =
+        encodeNatAppend stage
+          (encodeConfigurationAppend cfg (encodeBoolAppend hit [])) ∧
+        Tape.move Direction.right Tout =
+          DovetailInitialLayoutInitializer.tapeAtCells baseAfter [] := by
+  have hseq :
+      (seqSubroutine
+        NonemptyNatSuffixScannerDescription
+        FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner
+        Direction.right).runConfig n
+          (DovetailInitialLayoutInitializer.config
+            (seqSubroutine
+              NonemptyNatSuffixScannerDescription
+              FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner
+              Direction.right).start
+            baseLeft
+            ((encodeCodeWordAsInput code).map some)) =
+        { state :=
+            (seqSubroutine
+              NonemptyNatSuffixScannerDescription
+              FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner
+              Direction.right).halt
+          tape := Tout } := by
+    simpa [FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner]
+      using h
+  rcases
+      seqSubroutine_runConfig_inv
+        (A := NonemptyNatSuffixScannerDescription)
+        (B := FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner)
+        (handoffMove := Direction.right)
+        nonemptyNatSuffixScannerDescription_subroutineReady
+        fixedDescriptionBoundedSimulatorConfigHitScannerDescription_subroutineReady_configRunner
+        hseq with
+    ⟨Tstage, hstage, hrest⟩
+  rcases hstage with ⟨nStage, hstageRun, _hstageFirst⟩
+  rcases
+      nonemptyNatSuffixScannerDescription_runConfig_code_inv
+        baseLeft code
+        (by simpa [DovetailInitialLayoutInitializer.config] using
+          hstageRun) with
+    ⟨stage, suffixSymbol, suffixRest, hcodeStage⟩
+  rcases
+      encodeCodeWordAsInput_cons_bits suffixSymbol suffixRest with
+    ⟨suffixBit, suffixTail, hsuffixBits⟩
+  rcases
+      nonemptyNatSuffixScannerDescription_runConfig_encodeNatAppend_handoff
+        baseLeft stage (suffixSymbol :: suffixRest) suffixBit suffixTail
+        hsuffixBits
+        (by
+          simpa [DovetailInitialLayoutInitializer.config, hcodeStage] using
+            hstageRun) with
+    ⟨baseAfterStage, hstageMove⟩
+  rcases hrest with ⟨nRest, hrestRun⟩
+  have hrestCodeRun :
+      FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.runConfig
+          nRest
+          (DovetailInitialLayoutInitializer.config
+            FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.start
+            baseAfterStage
+            ((encodeCodeWordAsInput
+              (suffixSymbol :: suffixRest)).map some)) =
+        { state :=
+            FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.halt
+          tape := Tout } := by
+    simpa [DovetailInitialLayoutInitializer.config, hstageMove] using
+      hrestRun
+  rcases
+      fixedDescriptionBoundedSimulatorConfigHitScannerDescription_runConfig_code_inv_configRunner
+        baseAfterStage (suffixSymbol :: suffixRest) hrestCodeRun with
+    ⟨cfg, hit, baseAfter, hsuffixCode, hmove⟩
+  refine ⟨stage, cfg, hit, baseAfter, ?_, hmove⟩
+  rw [hcodeStage, hsuffixCode]
 
 /--
 Concrete scanner for the simulator-layout payload after the leading header code
@@ -914,6 +1077,112 @@ theorem run_fixedDescriptionBoundedSimulatorLayoutPayload_raw_to_handoff_withBas
         boolWordSuffixScannerDescription_subroutineReady
         fixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_subroutineReady_configRunner
         hArun hBReach
+
+theorem fixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_runConfig_code_inv_configRunner
+    (baseLeft : List (Option Bool)) (code : Word MachineCodeSymbol)
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner.runConfig
+          n
+          (DovetailInitialLayoutInitializer.config
+            FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner.start
+            baseLeft
+            ((encodeCodeWordAsInput code).map some)) =
+        { state :=
+            FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner.halt
+          tape := Tout }) :
+    exists input : Word Bool,
+    exists stage : Nat,
+    exists cfg : Configuration,
+    exists hit : Bool,
+    exists baseAfter : List (Option Bool),
+      code =
+        encodeBoolWordAppend input
+          (encodeNatAppend stage
+            (encodeConfigurationAppend cfg (encodeBoolAppend hit []))) ∧
+        Tape.move Direction.right Tout =
+          DovetailInitialLayoutInitializer.tapeAtCells baseAfter [] := by
+  have hseq :
+      (seqSubroutine
+        BoolWordSuffixScannerDescription
+        FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner
+        Direction.right).runConfig n
+          (DovetailInitialLayoutInitializer.config
+            (seqSubroutine
+              BoolWordSuffixScannerDescription
+              FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner
+              Direction.right).start
+            baseLeft
+            ((encodeCodeWordAsInput code).map some)) =
+        { state :=
+            (seqSubroutine
+              BoolWordSuffixScannerDescription
+              FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner
+              Direction.right).halt
+          tape := Tout } := by
+    simpa [FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner]
+      using h
+  rcases
+      seqSubroutine_runConfig_inv
+        (A := BoolWordSuffixScannerDescription)
+        (B := FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner)
+        (handoffMove := Direction.right)
+        boolWordSuffixScannerDescription_subroutineReady
+        fixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_subroutineReady_configRunner
+        hseq with
+    ⟨Tinput, hinput, hrest⟩
+  rcases hinput with ⟨nInput, hinputRun, _hinputFirst⟩
+  rcases
+      boolWordSuffixScannerDescription_runConfig_code_inv
+        baseLeft code
+        (by simpa [DovetailInitialLayoutInitializer.config] using
+          hinputRun) with
+    ⟨input, suffix, hcodeInput⟩
+  rcases
+      boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_handoff
+        baseLeft input suffix
+        (by
+          simpa [DovetailInitialLayoutInitializer.config, hcodeInput] using
+            hinputRun) with
+    ⟨suffixTail, hsuffixBits, hTinput⟩
+  let baseAfterInput : List (Option Bool) :=
+    cellListCanonicalRestoredLeftWithBase (input.map some) baseLeft
+  have hinputMove :
+      Tape.move Direction.right Tinput =
+        DovetailInitialLayoutInitializer.tapeAtCells baseAfterInput
+          ((encodeCodeWordAsInput suffix).map some) := by
+    rw [hTinput]
+    have hraw :
+        Tape.move Direction.right
+            (boolWordCanonicalHandoffConfigWithBase input baseLeft
+              (false :: suffixTail)).tape =
+          DovetailInitialLayoutInitializer.tapeAtCells baseAfterInput
+            ((false :: suffixTail).map some) := by
+      simpa [boolWordCanonicalHandoffConfigWithBase, baseAfterInput]
+        using
+          cellListCanonicalHandoffConfigWithBase_move_right
+            (input.map some) baseLeft false suffixTail
+    rw [hraw]
+    simp [hsuffixBits]
+  rcases hrest with ⟨nRest, hrestRun⟩
+  have hrestCodeRun :
+      FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner.runConfig
+          nRest
+          (DovetailInitialLayoutInitializer.config
+            FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner.start
+            baseAfterInput
+            ((encodeCodeWordAsInput suffix).map some)) =
+        { state :=
+            FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner.halt
+          tape := Tout } := by
+    simpa [DovetailInitialLayoutInitializer.config, hinputMove] using
+      hrestRun
+  rcases
+      fixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_runConfig_code_inv_configRunner
+        baseAfterInput suffix hrestCodeRun with
+    ⟨stage, cfg, hit, baseAfter, hsuffixCode, hmove⟩
+  refine ⟨input, stage, cfg, hit, baseAfter, ?_, hmove⟩
+  rw [hcodeInput, hsuffixCode]
 
 /--
 Concrete scanner for a complete simulator-layout code word.  This chains the
