@@ -15,10 +15,65 @@ open Languages
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
 
-theorem selectedProjectionSpec_of_parser_emitter
+def SelectedProjectionEquivEmitterSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  ReadySpec emitter ∧
+    (forall L : MachineDescription.DovetailLayout,
+      emitter.HaltsFromTapeEquiv
+        (Tape.input (ParsedLayoutBits L))
+        (SelectedProjectionOutputTape useAccept L)) ∧
+      forall L : MachineDescription.DovetailLayout,
+        emitter.ClosedFromTapeEquiv
+          (Tape.input (ParsedLayoutBits L))
+          (SelectedProjectionOutputTape useAccept L)
+
+def SelectedProjectionEquivEmitterConstruction : Prop :=
+  forall useAccept : Bool,
+    exists emitter : MachineDescription,
+      SelectedProjectionEquivEmitterSpec useAccept emitter
+
+theorem selectedProjectionEquivEmitterSpec_of_exact
+    {useAccept : Bool} {emitter : MachineDescription}
+    (hemitter : SelectedProjectionEmitterSpec useAccept emitter) :
+    SelectedProjectionEquivEmitterSpec useAccept emitter := by
+  constructor
+  · exact hemitter.left
+  constructor
+  · intro L
+    have hfrom :
+        emitter.HaltsFromTape
+          (Tape.input (ParsedLayoutBits L))
+          (SelectedProjectionOutputTape useAccept L) := by
+      simpa [MachineDescription.HaltsWithTape,
+        MachineDescription.HaltsWithTapeIn,
+        MachineDescription.HaltsFromTape,
+        MachineDescription.HaltsFromTapeIn,
+        MachineDescription.initial] using hemitter.right.left L
+    exact MachineDescription.HaltsFromTape.toEquiv hfrom
+  · intro L T hhalt
+    have hwith :
+        emitter.HaltsWithTape (ParsedLayoutBits L) T := by
+      simpa [MachineDescription.HaltsWithTape,
+        MachineDescription.HaltsWithTapeIn,
+        MachineDescription.HaltsFromTape,
+        MachineDescription.HaltsFromTapeIn,
+        MachineDescription.initial] using hhalt
+    rw [hemitter.right.right L T hwith]
+    exact Tape.Equiv.refl _
+
+theorem selectedProjectionEquivEmitterConstruction_of_exact
+    (h : SelectedProjectionEmitterConstruction) :
+    SelectedProjectionEquivEmitterConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨emitter, hemits⟩
+  exact
+    ⟨emitter, selectedProjectionEquivEmitterSpec_of_exact hemits⟩
+
+theorem selectedProjectionSpec_of_parser_equivEmitter
     {useAccept : Bool} {parser emitter : MachineDescription}
     (hparser : LayoutCheckedParserSpec parser)
-    (hemitter : SelectedProjectionEmitterSpec useAccept emitter) :
+    (hemitter : SelectedProjectionEquivEmitterSpec useAccept emitter) :
     SelectedProjectionSpec useAccept
       (SeqViaCanonical parser emitter) := by
   have hrunnerReady :
@@ -28,6 +83,15 @@ theorem selectedProjectionSpec_of_parser_emitter
   · exact hrunnerReady
   constructor
   · intro L
+    have hparserFrom :
+        parser.HaltsFromTape
+          (Tape.input (ParsedLayoutBits L))
+          (ParsedLayoutCheckedTape L) := by
+      simpa [MachineDescription.HaltsWithTape,
+        MachineDescription.HaltsWithTapeIn,
+        MachineDescription.HaltsFromTape,
+        MachineDescription.HaltsFromTapeIn,
+        MachineDescription.initial] using hparser.right.left L
     have hbridge :
         Tape.Equiv
           (Tape.move Direction.left
@@ -36,9 +100,9 @@ theorem selectedProjectionSpec_of_parser_emitter
       rw [parsedLayoutCheckedTape_move_left_move_right L]
       exact checkedInputTape_equiv_input _
     exact
-      SeqViaCanonical_haltsFromTapeEquiv_of_haltsWithTape
+      SeqViaCanonical_haltsFromTapeEquiv_of_equiv
         hparser.left hemitter.left
-        (MachineDescription.HaltsFromTape.toEquiv (hparser.right.left L))
+        (MachineDescription.HaltsFromTape.toEquiv hparserFrom)
         hbridge
         (hemitter.right.left L)
   · intro code T hhalt
@@ -48,21 +112,41 @@ theorem selectedProjectionSpec_of_parser_emitter
     rcases hparser.right.right code Tmid hparser_run with
       ⟨L, hcode, hTmid_equiv⟩
     refine ⟨L, CommonGround.DovetailLayouts.decode_eq_some_encode hcode, ?_⟩
-    have hemitter_exact := hemitter.right.left L
-    have h_in_equiv :
-        Tape.Equiv (Tape.input (ParsedLayoutBits L))
-          (Tape.move Direction.left (Tape.move Direction.right Tmid)) := by
-      rw [hTmid_equiv]
-      rw [parsedLayoutCheckedTape_move_left_move_right L]
-      exact Tape.Equiv.symm (checkedInputTape_equiv_input _)
-    have h_emitter_equiv_out :=
-      MachineDescription.HaltsFromTapeEquiv_of_input_equiv h_in_equiv hemitter_exact
-    rcases h_emitter_equiv_out with ⟨Tactual_equiv, h_actual_equiv, h_equiv_out⟩
-    have h_eq :=
-      MachineDescription.haltsFromTape_functional_of_haltTransitionFree
-        hemitter.left.right hemitter_run h_actual_equiv
-    subst h_eq
-    exact h_equiv_out
+    have hemitterRun' :
+        emitter.HaltsFromTape
+          (ParsedLayoutCheckedTape L) T := by
+      rw [hTmid_equiv] at hemitter_run
+      simpa [parsedLayoutCheckedTape_move_left_move_right L]
+        using hemitter_run
+    have hcheckedEquiv :
+        Tape.Equiv (ParsedLayoutCheckedTape L)
+          (Tape.input (ParsedLayoutBits L)) :=
+      checkedInputTape_equiv_input _
+    rcases
+        MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+          hcheckedEquiv hemitterRun' with
+      ⟨Tactual, hactual, hTactual⟩
+    have hclosed := hemitter.right.right L Tactual hactual
+    exact Tape.Equiv.trans (Tape.Equiv.symm hTactual) hclosed
+
+theorem selectedProjectionSpec_of_parser_emitter
+    {useAccept : Bool} {parser emitter : MachineDescription}
+    (hparser : LayoutCheckedParserSpec parser)
+    (hemitter : SelectedProjectionEmitterSpec useAccept emitter) :
+    SelectedProjectionSpec useAccept
+      (SeqViaCanonical parser emitter) :=
+  selectedProjectionSpec_of_parser_equivEmitter hparser
+    (selectedProjectionEquivEmitterSpec_of_exact hemitter)
+
+theorem selectedProjectionFiniteDescriptionConstruction_of_equivEmitter
+    (hemitter : SelectedProjectionEquivEmitterConstruction) :
+    SelectedProjectionFiniteDescriptionConstruction := by
+  intro useAccept
+  rcases layoutCheckedParserConstruction_scaffold with ⟨parser, hparser⟩
+  rcases hemitter useAccept with ⟨emitter, hemits⟩
+  exact
+    ⟨SeqViaCanonical parser emitter,
+      selectedProjectionSpec_of_parser_equivEmitter hparser hemits⟩
 
 theorem selectedProjectionFiniteDescriptionConstruction_of_emitter
     (hemitter : SelectedProjectionEmitterConstruction) :
@@ -73,24 +157,6 @@ theorem selectedProjectionFiniteDescriptionConstruction_of_emitter
   exact
     ⟨SeqViaCanonical parser emitter,
       selectedProjectionSpec_of_parser_emitter hparser hemits⟩
-
-/--
-Direct finite-machine leaf for selected projection as used by the
-equivalence-based phase graph.
-
-This valid-input emitter leaf is weaker than the public exact/right-shifted
-primitive chain: the existing complete layout parser supplies malformed-input
-closedness, while this machine only has to emit the selected simulator-layout
-code from a canonical parsed layout.
--/
-theorem selectedProjectionEmitterConstruction_scaffold :
-    SelectedProjectionEmitterConstruction := by
-  sorry
-
-theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
-    SelectedProjectionFiniteDescriptionConstruction :=
-  selectedProjectionFiniteDescriptionConstruction_of_emitter
-    selectedProjectionEmitterConstruction_scaffold
 
 def SelectedMergeParserSpec
     (parser : MachineDescription) : Prop :=
@@ -1108,6 +1174,90 @@ theorem inputWithTrailingBlankPadding_contextLength_ge_input
     simp [inputWithTrailingBlankPadding, Tape.input, Tape.blank,
       Tape.contextLength] <;>
     omega
+
+def SelectedProjectionEquivEmitterPaddedOutputTape
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) : Tape Bool :=
+  Tape.move Direction.right
+    (inputWithTrailingBlankPadding
+      (MachineDescription.encodeCodeWordAsInput
+        (SelectedProjectionOutputCode useAccept L))
+      (ParsedLayoutBits L).length)
+
+theorem SelectedProjectionEquivEmitterPaddedOutputTape_equiv
+    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    Tape.Equiv
+      (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
+      (SelectedProjectionOutputTape useAccept L) := by
+  simpa [SelectedProjectionEquivEmitterPaddedOutputTape,
+    SelectedProjectionOutputTape] using
+    Tape.Equiv.move
+      (inputWithTrailingBlankPadding_equiv_input
+        (MachineDescription.encodeCodeWordAsInput
+          (SelectedProjectionOutputCode useAccept L))
+        (ParsedLayoutBits L).length)
+      Direction.right
+
+def SelectedProjectionEquivPaddedEmitterSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  ReadySpec emitter ∧
+    forall L : MachineDescription.DovetailLayout,
+      emitter.HaltsFromTape
+        (Tape.input (ParsedLayoutBits L))
+        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
+
+def SelectedProjectionEquivPaddedEmitterConstruction : Prop :=
+  forall useAccept : Bool,
+    exists emitter : MachineDescription,
+      SelectedProjectionEquivPaddedEmitterSpec useAccept emitter
+
+theorem selectedProjectionEquivEmitterSpec_of_padded
+    {useAccept : Bool} {emitter : MachineDescription}
+    (hemits : SelectedProjectionEquivPaddedEmitterSpec useAccept emitter) :
+    SelectedProjectionEquivEmitterSpec useAccept emitter := by
+  constructor
+  · exact hemits.left
+  constructor
+  · intro L
+    exact
+      ⟨SelectedProjectionEquivEmitterPaddedOutputTape useAccept L,
+        hemits.right L,
+        SelectedProjectionEquivEmitterPaddedOutputTape_equiv useAccept L⟩
+  · intro L T hhalt
+    have hT :
+        T = SelectedProjectionEquivEmitterPaddedOutputTape useAccept L :=
+      MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+        hemits.left.right hhalt (hemits.right L)
+    rw [hT]
+    exact SelectedProjectionEquivEmitterPaddedOutputTape_equiv useAccept L
+
+theorem selectedProjectionEquivEmitterConstruction_of_padded
+    (h : SelectedProjectionEquivPaddedEmitterConstruction) :
+    SelectedProjectionEquivEmitterConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨emitter, hemits⟩
+  exact ⟨emitter, selectedProjectionEquivEmitterSpec_of_padded hemits⟩
+
+/--
+Finite-machine leaf for selected projection under the equivalence-based phase
+contract.  The machine may leave trailing blank padding in the old parsed-layout
+window, but its halting tape must be equivalent to the right-shifted selected
+simulator-layout output.
+-/
+theorem selectedProjectionEquivPaddedEmitterConstruction_scaffold :
+    SelectedProjectionEquivPaddedEmitterConstruction := by
+  sorry
+
+theorem selectedProjectionEquivEmitterConstruction_scaffold :
+    SelectedProjectionEquivEmitterConstruction :=
+  selectedProjectionEquivEmitterConstruction_of_padded
+    selectedProjectionEquivPaddedEmitterConstruction_scaffold
+
+theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
+    SelectedProjectionFiniteDescriptionConstruction :=
+  selectedProjectionFiniteDescriptionConstruction_of_equivEmitter
+    selectedProjectionEquivEmitterConstruction_scaffold
 
 def SelectedMergeEquivEmitterPaddedOutputTape
     (useAccept : Bool)
