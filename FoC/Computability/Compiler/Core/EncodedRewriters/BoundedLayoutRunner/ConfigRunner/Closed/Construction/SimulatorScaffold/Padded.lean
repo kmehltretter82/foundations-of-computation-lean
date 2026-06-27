@@ -198,6 +198,84 @@ def FixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_configRunner :
     exists sim : MachineDescription,
       FixedDescriptionBoundedSimulatorPaddedExactShapeSpec_configRunner D sim
 
+def FixedDescriptionBoundedSimulatorPaddedEmitterExactShapeSpec_configRunner
+    (D emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall L : SimulatorLayout,
+      emitter.HaltsWithTape
+        (SimulatorLayout.asBoolInput L)
+        (FixedDescriptionBoundedSimulatorPaddedOutputTape D L)
+
+def FixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_configRunner :
+    Prop :=
+  forall D : MachineDescription,
+    exists emitter : MachineDescription,
+      FixedDescriptionBoundedSimulatorPaddedEmitterExactShapeSpec_configRunner
+        D emitter
+
+def FixedDescriptionBoundedSimulatorPaddedParserEmitterConstruction_configRunner :
+    Prop :=
+  CommonGround.SimulatorLayouts.ClosedRecognizerConstruction ∧
+    FixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_configRunner
+
+def FixedDescriptionBoundedSimulatorPaddedParserEmitterRunner
+    (parser emitter : MachineDescription) : MachineDescription :=
+  seqSubroutine parser emitter Direction.left
+
+theorem fixedDescriptionBoundedSimulatorPaddedExactShapeSpec_of_parser_emitter_configRunner
+    {D parser emitter : MachineDescription}
+    (hparser :
+      CommonGround.SimulatorLayouts.ClosedRecognizerSpec parser)
+    (hemitter :
+      FixedDescriptionBoundedSimulatorPaddedEmitterExactShapeSpec_configRunner
+        D emitter) :
+    FixedDescriptionBoundedSimulatorPaddedExactShapeSpec_configRunner D
+      (FixedDescriptionBoundedSimulatorPaddedParserEmitterRunner
+        parser emitter) := by
+  have hrunnerReady :
+      (FixedDescriptionBoundedSimulatorPaddedParserEmitterRunner
+        parser emitter).SubroutineReady :=
+    seqSubroutine_subroutineReady hparser.left hemitter.left
+  constructor
+  · exact hrunnerReady
+  · intro L
+    have hparserRun :
+        parser.HaltsWithTape
+          (FixedDescriptionBoundedSimulatorInput L)
+          (CommonGround.SimulatorLayouts.handoffTape L) := by
+      simpa [FixedDescriptionBoundedSimulatorInput,
+        CommonGround.SimulatorLayouts.bits,
+        CommonGround.LayoutTapes.Bits,
+        CommonGround.SimulatorLayouts.encode] using
+        hparser.right.left L
+    have hemitterRun :
+        emitter.HaltsWithTape
+          (SimulatorLayout.asBoolInput L)
+          (FixedDescriptionBoundedSimulatorPaddedOutputTape D L) :=
+      hemitter.right L
+    rcases runConfig_eq_halt_of_haltsWithTape
+      hemitterRun with ⟨n, hn⟩
+    exact
+      seqSubroutine_haltsWithTape_of_haltsWithTape
+        hparser.left hemitter.left hparserRun
+        ⟨n, by
+          simpa [
+            CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
+              L] using hn⟩
+
+theorem fixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_of_parserEmitter_configRunner
+    (h :
+      FixedDescriptionBoundedSimulatorPaddedParserEmitterConstruction_configRunner) :
+    FixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_configRunner := by
+  intro D
+  rcases h.left with ⟨parser, hparser⟩
+  rcases h.right D with ⟨emitter, hemits⟩
+  exact
+    ⟨FixedDescriptionBoundedSimulatorPaddedParserEmitterRunner
+        parser emitter,
+      fixedDescriptionBoundedSimulatorPaddedExactShapeSpec_of_parser_emitter_configRunner
+        hparser hemits⟩
+
 theorem fixedDescriptionBoundedSimulatorPaddedSpec_of_exactShape_configRunner
     {D sim : MachineDescription}
     (hsim :
@@ -257,15 +335,35 @@ theorem fixedDescriptionBoundedSimulatorPaddedPhaseConstruction_of_exactShape_co
         hsim⟩
 
 /--
-Concrete finite-machine leaf for the config-runner padded fixed-description
-simulator.  The machine must parse a complete simulator layout, run the fixed
-description for the encoded stage bound, emit the updated simulator-layout code
-at the left edge, and leave the old input window as trailing blank padding.
+Concrete finite-machine leaf for parsing complete canonical simulator layouts.
+The parser halts on the standard one-cell-left handoff tape used by downstream
+emitter phases.
 -/
-theorem fixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_scaffold_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_configRunner := by
+theorem fixedDescriptionBoundedSimulatorPaddedParserConstruction_scaffold_configRunner :
+    CommonGround.SimulatorLayouts.ClosedRecognizerConstruction := by
+  sorry
+
+/--
+Concrete finite-machine leaf for the padded fixed-description simulator
+emitter.  On an already validated simulator layout tape, it must run the fixed
+description for the encoded stage bound, emit the updated simulator-layout code
+at the left edge, and leave the old simulator-layout window as trailing blank
+padding.
+-/
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_scaffold_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_configRunner := by
   intro D
   sorry
+
+theorem fixedDescriptionBoundedSimulatorPaddedParserEmitterConstruction_scaffold_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedParserEmitterConstruction_configRunner :=
+  ⟨fixedDescriptionBoundedSimulatorPaddedParserConstruction_scaffold_configRunner,
+    fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_scaffold_configRunner⟩
+
+theorem fixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_scaffold_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_of_parserEmitter_configRunner
+    fixedDescriptionBoundedSimulatorPaddedParserEmitterConstruction_scaffold_configRunner
 
 /--
 Finite-machine leaf for the config-runner fixed-description simulators.
