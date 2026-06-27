@@ -40,6 +40,174 @@ theorem final_normalizedOutput
   rw [encodeCodeWordAsInput_encodeNat]
   simp
 
+def finalInputLeftRev
+    (input : Word Bool) : List (Option Bool) :=
+  List.append
+    (projectionCodeCells (MachineDescription.encodeBoolWord input)).reverse
+    ([none, none, none, none] : List (Option Bool))
+
+def finalStageLeftRev
+    (input : Word Bool) (stage : Nat) : List (Option Bool) :=
+  List.append [none, none, none, none]
+    (List.append (projectionStageTickCellsRev stage)
+      (finalInputLeftRev input))
+
+def finalLeftRev
+    (input result : Word Bool) (stage : Nat) : List (Option Bool) :=
+  List.append (List.replicate (4 * result.length + 1) none)
+    (List.append [none, none, none, none]
+      (List.append (List.replicate (4 * result.length) none)
+        (List.append projectionDoneCodeCells.reverse
+          (List.append (projectionStageTickCellsRev stage)
+            (finalInputLeftRev input)))))
+
+def finalTape
+    (C : MachineDescription.DovetailControllerLayout) : Tape Bool :=
+  projectionTapeAtCells
+    (finalLeftRev C.input C.result C.stage) []
+
+theorem haltsWithTape_encode
+    (C : MachineDescription.DovetailControllerLayout) :
+    Description.HaltsWithTape
+      (MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.DovetailControllerLayout.encode C))
+      (finalTape C) := by
+  rcases C with ⟨input, stage, result⟩
+  let inputLeftRev := finalInputLeftRev input
+  let stageLeftRev := finalStageLeftRev input stage
+  let finalLeftRev := finalLeftRev input result stage
+  have hrun :
+      Description.runConfig
+          (4 + projectionInputBoolWordCost input + (4 * stage + 12) +
+            projectionResultBoolWordCost result + (8 * result.length + 5))
+          (Description.initial
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailControllerLayout.encode
+                { input := input, stage := stage, result := result }))) =
+        projectionConfig 999 finalLeftRev [] := by
+    rw [show
+        4 + projectionInputBoolWordCost input + (4 * stage + 12) +
+              projectionResultBoolWordCost result +
+              (8 * result.length + 5) =
+            4 +
+              (projectionInputBoolWordCost input +
+                ((4 * stage + 12) +
+                  (projectionResultBoolWordCost result +
+                    (8 * result.length + 5)))) by
+        omega]
+    rw [MachineDescription.runConfig_add]
+    change
+      Description.runConfig
+        (projectionInputBoolWordCost input +
+          ((4 * stage + 12) +
+            (projectionResultBoolWordCost result +
+              (8 * result.length + 5))))
+        (Description.runConfig 4
+          (Description.initial
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailControllerLayout.encode
+                { input := input, stage := stage, result := result })))) =
+        projectionConfig 999 finalLeftRev []
+    simp [MachineDescription.DovetailControllerLayout.encode,
+      MachineDescription.DovetailControllerLayout.encodeAppend,
+      MachineDescription.encodeCodeWordAsInput,
+      MachineDescription.encodeCodeSymbolAsInput]
+    change
+      Description.runConfig
+        (projectionInputBoolWordCost input +
+          ((4 * stage + 12) +
+            (projectionResultBoolWordCost result +
+              (8 * result.length + 5))))
+        (Description.runConfig 4
+          (Description.initial
+            (List.append [false, false, false, false]
+              (MachineDescription.encodeCodeWordAsInput
+                (MachineDescription.DovetailLayout.stageInputCodeAppend input
+                  stage (MachineDescription.encodeBoolWordAppend result [])))))) =
+        projectionConfig 999 finalLeftRev []
+    rw [run_header]
+    change
+      Description.runConfig
+        (projectionInputBoolWordCost input +
+          ((4 * stage + 12) +
+            (projectionResultBoolWordCost result +
+              (8 * result.length + 5))))
+        (projectionConfig 100 [none, none, none, none]
+          (projectionCodeCells
+            (MachineDescription.DovetailLayout.stageInputCodeAppend input stage
+              (MachineDescription.encodeBoolWord result)))) =
+        projectionConfig 999 finalLeftRev []
+    simp [MachineDescription.DovetailLayout.stageInputCodeAppend]
+    rw [MachineDescription.runConfig_add]
+    change
+      Description.runConfig
+        ((4 * stage + 12) +
+          (projectionResultBoolWordCost result + (8 * result.length + 5)))
+        (Description.runConfig
+          (projectionInputBoolWordCost input)
+          (projectionConfig 100
+            (List.append [none, none, none, none]
+              ([] : List (Option Bool)))
+            (projectionCodeCells
+              (MachineDescription.encodeBoolWordAppend input
+                (MachineDescription.encodeNatAppend stage
+                  (MachineDescription.encodeBoolWord result)))))) =
+        projectionConfig 999 finalLeftRev []
+    rw [run_input_bool_word
+      (stage := stage) (result := result) (baseLeftRev := [])]
+    rw [MachineDescription.runConfig_add]
+    change
+      Description.runConfig
+        (projectionResultBoolWordCost result + (8 * result.length + 5))
+        (Description.runConfig
+          (4 * stage + 12)
+          (projectionConfig 200 inputLeftRev
+            (projectionCodeCells
+              (MachineDescription.encodeNatAppend stage
+                (MachineDescription.encodeBoolWord result))))) =
+        projectionConfig 999 finalLeftRev []
+    rw [run_stage_nat]
+    change
+      Description.runConfig
+        (projectionResultBoolWordCost result + (8 * result.length + 5))
+        (projectionConfig 300 stageLeftRev
+          (projectionCodeCells (MachineDescription.encodeBoolWord result))) =
+        projectionConfig 999 finalLeftRev []
+    rw [MachineDescription.runConfig_add]
+    change
+      Description.runConfig
+        (8 * result.length + 5)
+        (Description.runConfig
+          (projectionResultBoolWordCost result)
+          (projectionConfig 300
+            (List.append [none, none, none, none]
+              (List.append (projectionStageTickCellsRev stage) inputLeftRev))
+            (projectionCodeCells
+              (MachineDescription.encodeBoolWord result)))) =
+        projectionConfig 999 finalLeftRev []
+    rw [run_result_bool_word]
+    change
+      Description.runConfig
+        (8 * result.length + 5)
+        (projectionConfig 367
+          (List.append projectionDoneCodeCells.reverse
+            (List.append (projectionStageTickCellsRev stage) inputLeftRev))
+          (List.append (projectionAllMarkedBoolWordCells result) [none])) =
+        projectionConfig 999 finalLeftRev []
+    rw [show 8 * result.length + 5 = (8 * result.length + 4) + 1 by
+      omega,
+      MachineDescription.runConfig_add]
+    rw [run_cleanup_all_marked_to_tail]
+    rfl
+  refine
+    ⟨4 + projectionInputBoolWordCost input + (4 * stage + 12) +
+        projectionResultBoolWordCost result + (8 * result.length + 5), ?_⟩
+  constructor
+  · rw [hrun]
+    rfl
+  · rw [hrun]
+    rfl
+
 theorem haltsWithOutput_encode
     (C : MachineDescription.DovetailControllerLayout) :
     Description.HaltsWithOutput
