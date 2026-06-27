@@ -519,6 +519,12 @@ theorem tailProjectorExactConstruction_of_handoff
     ⟨TailProjectorFromHandoff useAccept cleanup,
       tailProjectorFromHandoff_exact hcleanup⟩
 
+theorem not_tailProjectorHandoffExactConstruction :
+    ¬ TailProjectorHandoffExactConstruction := by
+  intro h
+  exact not_tailProjectorExactConstruction
+    (tailProjectorExactConstruction_of_handoff h)
+
 theorem tailProjectorForward_of_exact
     {useAccept : Bool}
     {projector : MachineDescription}
