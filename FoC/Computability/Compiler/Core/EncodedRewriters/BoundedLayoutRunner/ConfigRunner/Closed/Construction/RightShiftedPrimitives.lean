@@ -196,26 +196,6 @@ def SelectedProjectionCheckedEmitterConstruction : Prop :=
     exists emitter : MachineDescription,
       SelectedProjectionCheckedEmitterSpec useAccept emitter
 
-def SelectedProjectionCheckedProjectorExactSpec
-    (useAccept : Bool)
-    (projector : MachineDescription) : Prop :=
-  projector.SubroutineReady ∧
-    forall L : MachineDescription.DovetailLayout,
-      projector.HaltsFromTape
-        (ParsedLayoutCheckedTape L)
-        (MachineDescription.SimulatorLayout.tape
-          (SelectedProjectionSimulatorLayout useAccept L))
-
-def SelectedProjectionCheckedProjectorExactConstruction : Prop :=
-  forall useAccept : Bool,
-    exists projector : MachineDescription,
-      SelectedProjectionCheckedProjectorExactSpec useAccept projector
-
-def SelectedProjectionCheckedEmitterFromProjector
-    (projector : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine projector
-    MachineDescription.ExactIdentityDescription Direction.right
-
 theorem selectedProjectionOutputCode_true
     (L : MachineDescription.DovetailLayout) :
     SelectedProjectionOutputCode true L =
@@ -300,50 +280,6 @@ theorem simulatorLayoutRightOutput_contextLength_ge_input
         Tape.input, Tape.move, Tape.moveRight, Tape.contextLength,
         encodeCodeWordAsInput_length]
       omega
-
-theorem selectedProjectionCheckedEmitterSpec_of_projector
-    {useAccept : Bool} {projector : MachineDescription}
-    (hprojector :
-      SelectedProjectionCheckedProjectorExactSpec useAccept projector) :
-    SelectedProjectionCheckedEmitterSpec useAccept
-      (SelectedProjectionCheckedEmitterFromProjector projector) := by
-  have hid :
-      MachineDescription.ExactIdentityDescription.SubroutineReady :=
-    CommonGround.Identity.exactIdentityDescription_subroutineReady
-  constructor
-  · exact
-      MachineDescription.seqSubroutine_subroutineReady
-        hprojector.left hid
-  · intro L
-    have hprojectorRun := hprojector.right L
-    have hidentityReach :
-        exists nB : Nat,
-          MachineDescription.ExactIdentityDescription.runConfig nB
-              { state := MachineDescription.ExactIdentityDescription.start
-                tape :=
-                  Tape.move Direction.right
-                    (MachineDescription.SimulatorLayout.tape
-                      (SelectedProjectionSimulatorLayout useAccept L)) } =
-            { state := MachineDescription.ExactIdentityDescription.halt
-              tape := SelectedProjectionOutputTape useAccept L } := by
-      simpa [selectedProjectionOutputTape_eq_simulator_tape] using
-        CommonGround.Identity.exactIdentityDescription_run_from_start
-          (Tape.move Direction.right
-            (MachineDescription.SimulatorLayout.tape
-              (SelectedProjectionSimulatorLayout useAccept L)))
-    simpa [SelectedProjectionCheckedEmitterFromProjector] using
-      MachineDescription.seqSubroutine_haltsFromTape_of_haltsFromTape
-        hprojector.left hid hprojectorRun hidentityReach
-
-theorem selectedProjectionCheckedEmitterConstruction_of_projector
-    (hprojector :
-      SelectedProjectionCheckedProjectorExactConstruction) :
-    SelectedProjectionCheckedEmitterConstruction := by
-  intro useAccept
-  rcases hprojector useAccept with ⟨projector, hprojectorSpec⟩
-  exact
-    ⟨SelectedProjectionCheckedEmitterFromProjector projector,
-      selectedProjectionCheckedEmitterSpec_of_projector hprojectorSpec⟩
 
 def SelectedProjectionConfig
     (useAccept : Bool)
@@ -453,125 +389,6 @@ def SelectedProjectionInputQuoterSpec
 def SelectedProjectionInputQuoterConstruction : Prop :=
   exists quoter : MachineDescription,
     SelectedProjectionInputQuoterSpec quoter
-
-def SelectedProjectionOutputReturnSpec
-    (useAccept : Bool)
-    (returner : MachineDescription) : Prop :=
-  returner.SubroutineReady ∧
-    forall L : MachineDescription.DovetailLayout,
-      returner.HaltsFromTape
-        (SelectedProjectionTailProjector.outputTape useAccept L
-          ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
-            some))
-        (MachineDescription.SimulatorLayout.tape
-          (SelectedProjectionSimulatorLayout useAccept L))
-
-def SelectedProjectionOutputReturnConstruction : Prop :=
-  forall useAccept : Bool,
-    exists returner : MachineDescription,
-      SelectedProjectionOutputReturnSpec useAccept returner
-
-def SelectedProjectionCheckedProjectorComponentConstruction : Prop :=
-  SelectedProjectionInputQuoterConstruction ∧
-    SelectedProjectionTailProjector.TailProjectorExactConstruction ∧
-      SelectedProjectionOutputReturnConstruction
-
-theorem not_selectedProjectionCheckedProjectorComponentConstruction :
-    ¬ SelectedProjectionCheckedProjectorComponentConstruction := by
-  intro hcomponents
-  exact
-    SelectedProjectionTailProjector.not_tailProjectorExactConstruction
-      hcomponents.right.left
-
-def SelectedProjectionCheckedProjectorFromComponents
-    (quoter tail returner : MachineDescription) : MachineDescription :=
-  SeqViaCanonical (SeqViaCanonical quoter tail) returner
-
-theorem selectedProjectionCheckedProjectorExactSpec_of_components
-    {useAccept : Bool}
-    {quoter tail returner : MachineDescription}
-    (hquoter : SelectedProjectionInputQuoterSpec quoter)
-    (htail :
-      SelectedProjectionTailProjector.TailProjectorExactSpec
-        useAccept tail)
-    (hreturn : SelectedProjectionOutputReturnSpec useAccept returner) :
-    SelectedProjectionCheckedProjectorExactSpec useAccept
-      (SelectedProjectionCheckedProjectorFromComponents
-        quoter tail returner) := by
-  let baseLeft :=
-    fun L : MachineDescription.DovetailLayout =>
-      (SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
-        some
-  have hquoterTailReady : (SeqViaCanonical quoter tail).SubroutineReady :=
-    SeqViaCanonical_subroutineReady hquoter.left htail.left
-  constructor
-  · exact
-      SeqViaCanonical_subroutineReady hquoterTailReady hreturn.left
-  · intro L
-    have hquoterRun :
-        quoter.HaltsFromTape
-          (ParsedLayoutCheckedTape L)
-          (SelectedProjectionTailProjector.sourceTape L
-            (baseLeft L)) :=
-      hquoter.right L
-    have htailRun :
-        tail.HaltsFromTape
-          (SelectedProjectionTailProjector.sourceTape L
-            (baseLeft L))
-          (SelectedProjectionTailProjector.outputTape useAccept L
-            (baseLeft L)) :=
-      htail.right L (baseLeft L)
-    have hbridgeTail :
-        Tape.move Direction.left
-            (Tape.move Direction.right
-              (SelectedProjectionTailProjector.sourceTape L
-                (baseLeft L))) =
-          SelectedProjectionTailProjector.sourceTape L
-            (baseLeft L) :=
-      SelectedProjectionTailProjector.sourceTape_move_left_move_right
-        L (baseLeft L)
-    have hquoterTailRun :
-        (SeqViaCanonical quoter tail).HaltsFromTape
-          (ParsedLayoutCheckedTape L)
-          (SelectedProjectionTailProjector.outputTape useAccept L
-            (baseLeft L)) :=
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
-        hquoter.left htail.left hquoterRun hbridgeTail htailRun
-    have hreturnRun :
-        returner.HaltsFromTape
-          (SelectedProjectionTailProjector.outputTape useAccept L
-            (baseLeft L))
-          (MachineDescription.SimulatorLayout.tape
-            (SelectedProjectionSimulatorLayout useAccept L)) :=
-      hreturn.right L
-    have hbridgeReturn :
-        Tape.move Direction.left
-            (Tape.move Direction.right
-              (SelectedProjectionTailProjector.outputTape useAccept L
-                (baseLeft L))) =
-          SelectedProjectionTailProjector.outputTape useAccept L
-            (baseLeft L) :=
-      SelectedProjectionTailProjector.outputTape_move_left_move_right
-        useAccept L (baseLeft L)
-    simpa [SelectedProjectionCheckedProjectorFromComponents] using
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
-        hquoterTailReady hreturn.left
-        hquoterTailRun hbridgeReturn hreturnRun
-
-theorem selectedProjectionCheckedProjectorExactConstruction_of_components
-    (hcomponents :
-      SelectedProjectionCheckedProjectorComponentConstruction) :
-    SelectedProjectionCheckedProjectorExactConstruction := by
-  intro useAccept
-  rcases hcomponents with
-    ⟨⟨quoter, hquoter⟩, htailConstruction, hreturnConstruction⟩
-  rcases htailConstruction useAccept with ⟨tail, htail⟩
-  rcases hreturnConstruction useAccept with ⟨returner, hreturn⟩
-  exact
-    ⟨SelectedProjectionCheckedProjectorFromComponents
-        quoter tail returner,
-      selectedProjectionCheckedProjectorExactSpec_of_components
-        hquoter htail hreturn⟩
 
 def AcceptProjectionCheckedEmitterConstruction : Prop :=
   exists emitter : MachineDescription,

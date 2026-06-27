@@ -417,11 +417,11 @@ order.
 * Config-runner selected-merge equivalence leaf:
   {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedMergeEquivPaddedEmitterConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedMergeEquivPaddedEmitterConstruction_scaffold`
   is the selected-merge finite-machine obligation. The former exact
-  right-shifted merge target is impossible, as formalized by
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedMergeCounterexample.not_selectedMergePrimitiveRightShiftedConstruction)}`EncodedRewriters.BoundedLayoutRunner.SelectedMergeCounterexample.not_selectedMergePrimitiveRightShiftedConstruction`;
-  the merge phase must instead emit the selected output plus blank padding so
-  the exact tape is equivalent to the parsed dovetail-layout tape while
-  preserving simulator-layout scratch structure.
+  right-shifted merge target has a context-length shrink obstruction; see
+  {lit}`LEAN_COUNTEREXAMPLE_OVERVIEW.md` for the archived proof names.  The
+  merge phase must instead emit the selected output plus blank padding so the
+  exact tape is equivalent to the parsed dovetail-layout tape while preserving
+  simulator-layout scratch structure.
   The live selected-merge equivalence construction uses the forward-only
   identity parser adapter
   {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedMergeForwardParserConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedMergeForwardParserConstruction_scaffold`.
@@ -430,8 +430,8 @@ order.
   the exact/right-shifted input-validator primitive path is stronger adapter
   glue, not the phase parser dependency.
 * Fixed-description simulator phase leaf:
-  the old exact canonical phase is refuted by
-  {name (full := FoC.Computability.not_fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction)}`not_fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction`.
+  the old exact canonical phase has a context-length shrink obstruction; see
+  {lit}`LEAN_COUNTEREXAMPLE_OVERVIEW.md` for the archived proof names.
   The bounded-layout config runner now uses the padded/equivalence simulator
   boundary instead of that exact phase.  The full right-shifted
   {name (full := FoC.Computability.FixedDescriptionBoundedSimulatorCode)}`FixedDescriptionBoundedSimulatorCode`

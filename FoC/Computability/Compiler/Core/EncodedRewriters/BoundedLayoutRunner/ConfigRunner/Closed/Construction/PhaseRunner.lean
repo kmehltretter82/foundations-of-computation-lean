@@ -433,65 +433,6 @@ theorem rejectMergeEquivSpec_of_exact
     rw [h.right.right L T hhaltWith]
     exact Tape.Equiv.refl _
 
-/-!
-The exact merge specs above are too strong.  A merge starts from a simulator
-layout, whose encoded input contains the whole source dovetail layout as a
-field.  The merged parsed-layout output can be much shorter, and finite-machine
-runs cannot shrink {name}`Tape.contextLength`.
--/
-namespace MergePhaseCounterexample
-
-def blankConfig : MachineDescription.Configuration :=
-  { state := 0, tape := Tape.blank }
-
-def layout : MachineDescription.DovetailLayout :=
-  { input := []
-    stage := 0
-    acceptConfig := blankConfig
-    rejectConfig := blankConfig
-    acceptHit := false
-    rejectHit := false }
-
-def accept : MachineDescription :=
-  MachineDescription.ExactIdentityDescription
-
-def acceptSimulator : MachineDescription.SimulatorLayout :=
-  MachineDescription.SimulatorLayout.run accept layout.stage
-    (AcceptSimulatorLayout layout)
-
-def acceptInputBits : Word Bool :=
-  MachineDescription.SimulatorLayout.asBoolInput acceptSimulator
-
-theorem acceptMergeOutput_contextLength_lt_input :
-    Tape.contextLength
-        (ParsedLayoutTape (ConfigRunnerAfterAccept accept layout)) <
-      Tape.contextLength (Tape.input acceptInputBits) := by
-  native_decide
-
-theorem not_acceptMergeSpec (merger : MachineDescription) :
-    ¬ AcceptMergeSpec accept merger := by
-  intro hspec
-  have hhalt := hspec.right.left layout
-  rcases hhalt with ⟨n, hn⟩
-  have hmono :=
-    MachineDescription.runConfig_contextLength_mono merger n
-      (merger.initial acceptInputBits)
-  have hfinal :
-      Tape.contextLength
-          (merger.runConfig n (merger.initial acceptInputBits)).tape =
-        Tape.contextLength
-          (ParsedLayoutTape (ConfigRunnerAfterAccept accept layout)) := by
-    exact congrArg Tape.contextLength hn.right
-  rw [hfinal] at hmono
-  have hinput :
-      Tape.contextLength (merger.initial acceptInputBits).tape =
-        Tape.contextLength (Tape.input acceptInputBits) :=
-    rfl
-  rw [hinput] at hmono
-  exact (Nat.not_lt_of_ge hmono) acceptMergeOutput_contextLength_lt_input
-
-end MergePhaseCounterexample
-
 def ConfigRunnerPhaseConstructionData
     (accept reject : MachineDescription) : Prop :=
   exists acceptProject acceptSim acceptMerge
@@ -542,18 +483,6 @@ theorem configRunnerPhaseEquivConstruction_of_exact
       fixedDescriptionBoundedSimulatorEquivSpec_of_canonicalSpec
         hrejectSim,
       rejectMergeEquivSpec_of_exact hrejectMerge⟩
-
-theorem not_configRunnerPhaseConstruction :
-    ¬ ConfigRunnerPhaseConstruction := by
-  intro hconstruction
-  rcases hconstruction MergePhaseCounterexample.accept
-      MergePhaseCounterexample.accept with
-    ⟨_acceptProject, _acceptSim, acceptMerge,
-      _rejectProject, _rejectSim, _rejectMerge,
-      _hacceptProject, _hacceptSim, hacceptMerge,
-      _hrejectProject, _hrejectSim, _hrejectMerge⟩
-  exact MergePhaseCounterexample.not_acceptMergeSpec acceptMerge
-    hacceptMerge
 
 def ConfigRunnerPrimitiveClosedHandoffConstruction : Prop :=
   exists acceptProject acceptMerge
