@@ -302,6 +302,39 @@ def outputPrefixBits
     (MachineDescription.encodeCodeWordAsInput
       (MachineDescription.encodeBoolWordAppend (ParsedLayoutBits L) []))
 
+theorem outputPrefixBits_eq_header_quote_stageInput_sourceRestSuffix
+    (L : MachineDescription.DovetailLayout) :
+    outputPrefixBits L =
+      List.append
+        (MachineDescription.encodeCodeSymbolAsInput
+          MachineCodeSymbol.header)
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeBoolWordAppend
+            (List.append
+              (MachineDescription.encodeCodeSymbolAsInput
+                MachineCodeSymbol.transition)
+              (List.append (stageInputBits L.input L.stage)
+                (MachineDescription.encodeCodeWordAsInput
+                  (sourceRestSuffix L)))) [])) := by
+  rw [outputPrefixBits,
+    parsedLayoutBits_eq_transition_stageInput_sourceRestSuffix]
+
+theorem outputPrefixBits_eq_header_quote_stageInput_sourceRestFieldBits
+    (L : MachineDescription.DovetailLayout) :
+    outputPrefixBits L =
+      List.append
+        (MachineDescription.encodeCodeSymbolAsInput
+          MachineCodeSymbol.header)
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeBoolWordAppend
+            (List.append
+              (MachineDescription.encodeCodeSymbolAsInput
+                MachineCodeSymbol.transition)
+              (List.append (stageInputBits L.input L.stage)
+                (sourceRestFieldBits L))) [])) := by
+  rw [outputPrefixBits,
+    parsedLayoutBits_eq_transition_stageInput_sourceRestFieldBits]
+
 def outputAllBits
     (useAccept : Bool)
     (L : MachineDescription.DovetailLayout) : Word Bool :=
