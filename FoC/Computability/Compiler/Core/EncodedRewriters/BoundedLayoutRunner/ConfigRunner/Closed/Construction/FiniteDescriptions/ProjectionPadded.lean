@@ -243,6 +243,25 @@ theorem sourceTape_normalizedOutput_outputPrefix_eq_header_input_sourceSuffix
   rw [sourceTape_normalizedOutput_outputPrefix,
     outputPrefixBits_append_sourceFieldBits]
 
+theorem sourceTape_normalizedOutput_outputPrefix_eq_quoter_bits
+    (L : MachineDescription.DovetailLayout) :
+    exists b : Bool,
+    exists rest : Word Bool,
+      ParsedLayoutBits L = b :: rest ∧
+        Tape.normalizedOutput
+            (sourceTape L ((outputPrefixBits L).reverse.map some)) =
+          List.append
+            (MachineDescription.encodeCodeSymbolAsInput
+              MachineCodeSymbol.header)
+            (CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits
+              b rest (sourceSuffix L)) := by
+  rcases parsedLayoutBits_eq_false_false_tail L with ⟨tail, htail⟩
+  refine ⟨false, false :: tail, htail, ?_⟩
+  rw [sourceTape_normalizedOutput_outputPrefix_eq_header_input_sourceSuffix,
+    htail]
+  simp [MachineDescription.encodeCodeWordAsInput,
+    CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits_eq]
+
 theorem sourceScannerRightHandoffTape_normalizedOutput
     (L : MachineDescription.DovetailLayout)
     (baseLeft : List (Option Bool)) :
@@ -293,6 +312,28 @@ theorem
             (ParsedLayoutBits L) (sourceSuffix L)) := by
   rw [sourceScannerRightHandoffTape_normalizedOutput_outputPrefix,
     outputPrefixBits_append_sourceFieldBits]
+
+theorem
+    sourceScannerRightHandoffTape_normalizedOutput_outputPrefix_eq_quoter_bits
+    (L : MachineDescription.DovetailLayout) :
+    exists b : Bool,
+    exists rest : Word Bool,
+      ParsedLayoutBits L = b :: rest ∧
+        Tape.normalizedOutput
+          (sourceScannerRightHandoffTape L
+            ((outputPrefixBits L).reverse.map some)) =
+          List.append
+            (MachineDescription.encodeCodeSymbolAsInput
+              MachineCodeSymbol.header)
+            (CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits
+              b rest (sourceSuffix L)) := by
+  rcases parsedLayoutBits_eq_false_false_tail L with ⟨tail, htail⟩
+  refine ⟨false, false :: tail, htail, ?_⟩
+  rw [
+    sourceScannerRightHandoffTape_normalizedOutput_outputPrefix_eq_header_input_sourceSuffix,
+    htail]
+  simp [MachineDescription.encodeCodeWordAsInput,
+    CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits_eq]
 
 theorem sourceScannerRightHandoffTape_contextLength_ge_sourceTape
     (L : MachineDescription.DovetailLayout)
