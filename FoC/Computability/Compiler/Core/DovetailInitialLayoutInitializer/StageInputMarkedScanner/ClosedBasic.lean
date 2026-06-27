@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner.Basic
 
 set_option doc.verso true
@@ -108,37 +109,9 @@ theorem runConfig_halt_tape_functional_from_config
     (h₂ :
       D.runConfig n₂ c =
         { state := D.halt, tape := T₂ }) :
-    T₁ = T₂ := by
-  have hordered :
-      forall {n m : Nat} {Tn Tm : Tape Bool},
-        n ≤ m ->
-        D.runConfig n c = { state := D.halt, tape := Tn } ->
-        D.runConfig m c = { state := D.halt, tape := Tm } ->
-          Tn = Tm := by
-    intro n m Tn Tm hle hn hm
-    let d := m - n
-    have hm_eq : m = n + d := by
-      omega
-    have hrunm :
-        D.runConfig m c =
-          D.runConfig d (D.runConfig n c) := by
-      rw [hm_eq, MachineDescription.runConfig_add]
-    have hstay :
-        D.runConfig d (D.runConfig n c) =
-          D.runConfig n c := by
-      rw [hn]
-      exact MachineDescription.runConfig_halt hD Tn d
-    have htape_m :
-        (D.runConfig m c).tape = Tn := by
-      rw [hrunm, hstay, hn]
-    have htm : (D.runConfig m c).tape = Tm := by
-      rw [hm]
-    rw [htm] at htape_m
-    exact htape_m.symm
-  by_cases hle : n₁ ≤ n₂
-  · exact hordered hle h₁ h₂
-  · have hle' : n₂ ≤ n₁ := by omega
-    exact (hordered hle' h₂ h₁).symm
+    T₁ = T₂ :=
+  MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
+    hD h₁ h₂
 
 theorem scanner_state_ne_halt_of_later_ne_halt
     {c : MachineDescription.Configuration} {n k : Nat}
@@ -147,26 +120,9 @@ theorem scanner_state_ne_halt_of_later_ne_halt
       (StageInputMarkedScannerDescription.runConfig k c).state ≠
         StageInputMarkedScannerDescription.halt) :
     (StageInputMarkedScannerDescription.runConfig n c).state ≠
-      StageInputMarkedScannerDescription.halt := by
-  intro hhalt
-  have hk : k = n + (k - n) := by omega
-  have hcfg :
-      StageInputMarkedScannerDescription.runConfig n c =
-        { state := StageInputMarkedScannerDescription.halt
-          tape :=
-            (StageInputMarkedScannerDescription.runConfig n c).tape } := by
-    cases hrunN :
-        StageInputMarkedScannerDescription.runConfig n c with
-    | mk state tape =>
-        simp [hrunN] at hhalt
-        simp [hhalt]
-  have hfinal :
-      (StageInputMarkedScannerDescription.runConfig k c).state =
-        StageInputMarkedScannerDescription.halt := by
-    rw [hk, MachineDescription.runConfig_add, hcfg,
-      MachineDescription.runConfig_halt
-        stageInputMarkedScannerDescription_haltTransitionFree]
-  exact hlater hfinal
+      StageInputMarkedScannerDescription.halt :=
+  CommonGround.SeqComposition.runConfig_state_ne_halt_of_later_ne_halt
+    stageInputMarkedScannerDescription_haltTransitionFree hle hlater
 
 theorem scanner_ne_halt_of_reaches_stuck
     {c stuck : MachineDescription.Configuration} {k n : Nat}
@@ -177,15 +133,9 @@ theorem scanner_ne_halt_of_reaches_stuck
     (hstuck :
       stuck.state ≠ StageInputMarkedScannerDescription.halt) :
     (StageInputMarkedScannerDescription.runConfig n c).state ≠
-      StageInputMarkedScannerDescription.halt := by
-  by_cases hle : n ≤ k
-  · apply scanner_state_ne_halt_of_later_ne_halt hle
-    rw [hrun]
-    exact hstuck
-  · have hn : n = k + (n - k) := by omega
-    rw [hn, MachineDescription.runConfig_add, hrun,
-      MachineDescription.runConfig_of_stepConfig_none hstep]
-    exact hstuck
+      StageInputMarkedScannerDescription.halt :=
+  CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+    stageInputMarkedScannerDescription_haltTransitionFree hrun hstep hstuck
 
 theorem scanner_ne_halt_of_reaches_stepConfig_none
     {c : MachineDescription.Configuration} {k n : Nat}
@@ -212,14 +162,9 @@ theorem scanner_ne_halt_of_reaches_ne_halt_region
         (StageInputMarkedScannerDescription.runConfig m mid).state ≠
           StageInputMarkedScannerDescription.halt) :
     (StageInputMarkedScannerDescription.runConfig n c).state ≠
-      StageInputMarkedScannerDescription.halt := by
-  by_cases hle : n ≤ k
-  · apply scanner_state_ne_halt_of_later_ne_halt hle
-    rw [hrun]
-    exact hmid 0
-  · have hn : n = k + (n - k) := by omega
-    rw [hn, MachineDescription.runConfig_add, hrun]
-    exact hmid (n - k)
+      StageInputMarkedScannerDescription.halt :=
+  CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_ne_halt_region
+    stageInputMarkedScannerDescription_haltTransitionFree hrun hmid
 
 /-!
 **Closed-tail inversion.**  The scanner accepts some arbitrary bit tails that

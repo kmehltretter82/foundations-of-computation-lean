@@ -51,6 +51,26 @@ theorem runConfig_reaches_from_move_eq
         { state := B.halt, tape := Tout } :=
   ⟨nB, by simpa [hmove] using hrun⟩
 
+theorem runConfig_state_ne_halt_of_later_ne_halt
+    {D : MachineDescription} {c : MachineDescription.Configuration} {n k : Nat}
+    (hD : D.HaltTransitionFree)
+    (hle : n ≤ k)
+    (hlater : (D.runConfig k c).state ≠ D.halt) :
+    (D.runConfig n c).state ≠ D.halt := by
+  intro hhalt
+  have hk : k = n + (k - n) := by omega
+  have hcfg :
+      D.runConfig n c =
+        { state := D.halt, tape := (D.runConfig n c).tape } := by
+    cases hrunN : D.runConfig n c with
+    | mk state tape =>
+        simp [hrunN] at hhalt
+        simp [hhalt]
+  have hfinal : (D.runConfig k c).state = D.halt := by
+    rw [hk, MachineDescription.runConfig_add, hcfg,
+      MachineDescription.runConfig_halt hD]
+  exact hlater hfinal
+
 theorem runConfig_state_ne_halt_of_reaches_stuck
     {D : MachineDescription}
     {c stuck : MachineDescription.Configuration} {k n : Nat}
@@ -97,6 +117,23 @@ theorem runConfig_state_ne_halt_of_reaches_stuck
       rw [hstuckEq]
       exact hhalt
     exact hstuck hstate
+
+theorem runConfig_state_ne_halt_of_reaches_ne_halt_region
+    {D : MachineDescription}
+    {c mid : MachineDescription.Configuration} {k n : Nat}
+    (hD : D.HaltTransitionFree)
+    (hprefix : D.runConfig k c = mid)
+    (hmid : forall m : Nat, (D.runConfig m mid).state ≠ D.halt) :
+    (D.runConfig n c).state ≠ D.halt := by
+  by_cases hle : n ≤ k
+  · exact
+      runConfig_state_ne_halt_of_later_ne_halt hD hle
+        (by
+          rw [hprefix]
+          exact hmid 0)
+  · have hn : n = k + (n - k) := by omega
+    rw [hn, MachineDescription.runConfig_add, hprefix]
+    exact hmid (n - k)
 
 end SeqComposition
 end CommonGround

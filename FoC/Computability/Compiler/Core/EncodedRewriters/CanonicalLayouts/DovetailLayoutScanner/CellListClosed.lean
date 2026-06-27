@@ -28,30 +28,9 @@ theorem runConfig_state_ne_halt_of_reaches_ne_halt_region
     (hD : D.HaltTransitionFree)
     (hrun : D.runConfig k c = mid)
     (hmid : forall m : Nat, (D.runConfig m mid).state ≠ D.halt) :
-    (D.runConfig n c).state ≠ D.halt := by
-  by_cases hle : n ≤ k
-  · intro hhalt
-    let rem := k - n
-    have hk : k = n + rem := by
-      omega
-    have hcfg :
-        D.runConfig n c =
-          { state := D.halt
-            tape := (D.runConfig n c).tape } := by
-      cases hrunN : D.runConfig n c with
-      | mk state tape =>
-          simp [hrunN] at hhalt
-          simp [hhalt]
-    have hhaltAtK :
-        (D.runConfig k c).state = D.halt := by
-      rw [hk, MachineDescription.runConfig_add, hcfg,
-        MachineDescription.runConfig_halt hD]
-    rw [hrun] at hhaltAtK
-    exact hmid 0 hhaltAtK
-  · have hn : n = k + (n - k) := by
-      omega
-    rw [hn, MachineDescription.runConfig_add, hrun]
-    exact hmid (n - k)
+    (D.runConfig n c).state ≠ D.halt :=
+  CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_ne_halt_region
+    hD hrun hmid
 
 theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))

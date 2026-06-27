@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.ControllerStageInputProjection.ResultRun
 
 set_option doc.verso true
@@ -377,26 +378,9 @@ theorem state_ne_halt_of_later_ne_halt
       (Description.runConfig k c).state ≠
         Description.halt) :
     (Description.runConfig n c).state ≠
-      Description.halt := by
-  intro hhalt
-  have hk : k = n + (k - n) := by omega
-  have hcfg :
-      Description.runConfig n c =
-        { state := Description.halt
-          tape :=
-            (Description.runConfig n c).tape } := by
-    cases hrunN :
-        Description.runConfig n c with
-    | mk state tape =>
-        simp [hrunN] at hhalt
-        simp [hhalt]
-  have hfinal :
-      (Description.runConfig k c).state =
-        Description.halt := by
-    rw [hk, MachineDescription.runConfig_add, hcfg,
-      MachineDescription.runConfig_halt
-        haltTransitionFree]
-  exact hlater hfinal
+      Description.halt :=
+  CommonGround.SeqComposition.runConfig_state_ne_halt_of_later_ne_halt
+    haltTransitionFree hle hlater
 
 theorem ne_halt_of_reaches_stuck
     {c stuck : MachineDescription.Configuration} {k n : Nat}
@@ -408,18 +392,9 @@ theorem ne_halt_of_reaches_stuck
     (hstuck :
       stuck.state ≠ Description.halt) :
     (Description.runConfig n c).state ≠
-      Description.halt := by
-  by_cases hle : n ≤ k
-  · apply
-      state_ne_halt_of_later_ne_halt
-        hle
-    rw [hrun]
-    exact hstuck
-  · have hkn : k ≤ n := by omega
-    have hn : n = k + (n - k) := by omega
-    rw [hn, MachineDescription.runConfig_add, hrun,
-      MachineDescription.runConfig_of_stepConfig_none hstep]
-    exact hstuck
+      Description.halt :=
+  CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+    haltTransitionFree hrun hstep hstuck
 
 theorem ne_halt_of_reaches_stepConfig_none
     {c : MachineDescription.Configuration} {k n : Nat}
@@ -553,17 +528,9 @@ theorem ne_halt_of_reaches_ne_halt_region
           mid).state ≠
           Description.halt) :
     (Description.runConfig n c).state ≠
-      Description.halt := by
-  by_cases hle : n ≤ k
-  · apply
-      state_ne_halt_of_later_ne_halt
-        hle
-    rw [hrun]
-    exact hmid 0
-  · have hkn : k ≤ n := by omega
-    have hn : n = k + (n - k) := by omega
-    rw [hn, MachineDescription.runConfig_add, hrun]
-    exact hmid (n - k)
+      Description.halt :=
+  CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_ne_halt_region
+    haltTransitionFree hrun hmid
 
 theorem run_state200_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))

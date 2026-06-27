@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.ControllerResultContinue.Base
 import FoC.Computability.Compiler.Core.ControllerStageInputProjection
 
@@ -1441,26 +1442,9 @@ theorem resultNoneGuardScanRewindDescription_state_ne_halt_of_later_ne_halt
       (ResultNoneGuardScanRewindDescription.runConfig k c).state ≠
         ResultNoneGuardScanRewindDescription.halt) :
     (ResultNoneGuardScanRewindDescription.runConfig n c).state ≠
-      ResultNoneGuardScanRewindDescription.halt := by
-  intro hhalt
-  have hk : k = n + (k - n) := by omega
-  have hcfg :
-      ResultNoneGuardScanRewindDescription.runConfig n c =
-        { state := ResultNoneGuardScanRewindDescription.halt
-          tape :=
-            (ResultNoneGuardScanRewindDescription.runConfig n c).tape } := by
-    cases hrunN :
-        ResultNoneGuardScanRewindDescription.runConfig n c with
-    | mk state tape =>
-        simp [hrunN] at hhalt
-        simp [hhalt]
-  have hfinal :
-      (ResultNoneGuardScanRewindDescription.runConfig k c).state =
-        ResultNoneGuardScanRewindDescription.halt := by
-    rw [hk, MachineDescription.runConfig_add, hcfg,
-      MachineDescription.runConfig_halt
-        resultNoneGuardScanRewindDescription_haltTransitionFree]
-  exact hlater hfinal
+      ResultNoneGuardScanRewindDescription.halt :=
+  CommonGround.SeqComposition.runConfig_state_ne_halt_of_later_ne_halt
+    resultNoneGuardScanRewindDescription_haltTransitionFree hle hlater
 
 theorem resultNoneGuardScanRewindDescription_ne_halt_of_reaches_stepConfig_none
     {c stuck : MachineDescription.Configuration} {k n : Nat}
@@ -1471,18 +1455,9 @@ theorem resultNoneGuardScanRewindDescription_ne_halt_of_reaches_stepConfig_none
     (hstuck :
       stuck.state ≠ ResultNoneGuardScanRewindDescription.halt) :
     (ResultNoneGuardScanRewindDescription.runConfig n c).state ≠
-      ResultNoneGuardScanRewindDescription.halt := by
-  by_cases hle : n ≤ k
-  · apply
-      resultNoneGuardScanRewindDescription_state_ne_halt_of_later_ne_halt
-        hle
-    rw [hrun]
-    exact hstuck
-  · have hkn : k ≤ n := by omega
-    have hn : n = k + (n - k) := by omega
-    rw [hn, MachineDescription.runConfig_add, hrun,
-      MachineDescription.runConfig_of_stepConfig_none hstep]
-    exact hstuck
+      ResultNoneGuardScanRewindDescription.halt :=
+  CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+    resultNoneGuardScanRewindDescription_haltTransitionFree hrun hstep hstuck
 
 theorem resultNoneGuardScanRewindDescription_run_blank_of_accepts
     (boundary : ResultNoneGuardBoundary)

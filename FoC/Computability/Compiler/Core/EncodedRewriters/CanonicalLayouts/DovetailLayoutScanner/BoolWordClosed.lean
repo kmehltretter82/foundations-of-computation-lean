@@ -32,34 +32,9 @@ theorem boolWordSuffixScannerDescription_ne_halt_of_reaches_ne_halt_region
         (BoolWordSuffixScannerDescription.runConfig m mid).state ≠
           BoolWordSuffixScannerDescription.halt) :
     (BoolWordSuffixScannerDescription.runConfig n c).state ≠
-      BoolWordSuffixScannerDescription.halt := by
-  by_cases hle : n ≤ k
-  · intro hhalt
-    let rem := k - n
-    have hk : k = n + rem := by
-      omega
-    have hcfg :
-        BoolWordSuffixScannerDescription.runConfig n c =
-          { state := BoolWordSuffixScannerDescription.halt
-            tape :=
-              (BoolWordSuffixScannerDescription.runConfig n c).tape } := by
-      cases hrunN :
-          BoolWordSuffixScannerDescription.runConfig n c with
-      | mk state tape =>
-          simp [hrunN] at hhalt
-          simp [hhalt]
-    have hhaltAtK :
-        (BoolWordSuffixScannerDescription.runConfig k c).state =
-          BoolWordSuffixScannerDescription.halt := by
-      rw [hk, MachineDescription.runConfig_add, hcfg,
-        MachineDescription.runConfig_halt
-          boolWordSuffixScannerDescription_haltTransitionFree]
-    rw [hrun] at hhaltAtK
-    exact hmid 0 hhaltAtK
-  · have hn : n = k + (n - k) := by
-      omega
-    rw [hn, MachineDescription.runConfig_add, hrun]
-    exact hmid (n - k)
+      BoolWordSuffixScannerDescription.halt :=
+  CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_ne_halt_region
+    boolWordSuffixScannerDescription_haltTransitionFree hrun hmid
 
 theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
