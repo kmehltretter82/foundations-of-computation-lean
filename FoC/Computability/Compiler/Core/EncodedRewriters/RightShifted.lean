@@ -88,6 +88,74 @@ def RightShiftedOutputCompiledSubroutineByDescription
                   (Tape.input
                     (encodeCodeWordAsInput out))
 
+def ExactRightShiftedOutputCompiledSubroutineByDescription
+    (P : TapeCodePrimitive)
+    (D : MachineDescription) : Prop :=
+  D.WellFormed ∧
+    D.HaltTransitionFree ∧
+      (forall code out : Word MachineCodeSymbol,
+        P.transform code = some out ->
+          D.HaltsWithTape
+            (encodeCodeWordAsInput code)
+            (Tape.move Direction.right
+              (Tape.input
+                (encodeCodeWordAsInput out)))) ∧
+        forall code : Word MachineCodeSymbol,
+        forall T : Tape Bool,
+          D.HaltsWithTape
+              (encodeCodeWordAsInput code) T ->
+            exists out : Word MachineCodeSymbol,
+              P.transform code = some out ∧
+              T =
+                Tape.move Direction.right
+                  (Tape.input
+                    (encodeCodeWordAsInput out))
+
+theorem rightShiftedOutputCompiledSubroutineByDescription_of_exact
+    {P : TapeCodePrimitive}
+    {D : MachineDescription}
+    (h :
+      ExactRightShiftedOutputCompiledSubroutineByDescription P D) :
+    RightShiftedOutputCompiledSubroutineByDescription P D := by
+  constructor
+  · exact h.left
+  constructor
+  · exact h.right.left
+  constructor
+  · intro code out
+    constructor
+    · intro houtput
+      rcases houtput with ⟨n, hn⟩
+      let T : Tape Bool :=
+        (D.runConfig n
+          (D.initial
+            (encodeCodeWordAsInput code))).tape
+      have hhalt :
+          D.HaltsWithTape (encodeCodeWordAsInput code) T :=
+        ⟨n, ⟨hn.left, rfl⟩⟩
+      rcases h.right.right.right code T hhalt with
+        ⟨actual, hactual, hT⟩
+      have hbits :
+          encodeCodeWordAsInput out =
+            encodeCodeWordAsInput actual := by
+        have hnormalizedActual :
+            Tape.normalizedOutput T =
+              encodeCodeWordAsInput actual := by
+          rw [hT]
+          exact
+            tape_normalizedOutput_move_right_input
+              (encodeCodeWordAsInput actual)
+        exact hn.right.symm.trans hnormalizedActual
+      have hout : out = actual :=
+        encodeCodeWordAsInput_injective hbits
+      simpa [hout] using hactual
+    · intro htransform
+      simpa [tape_normalizedOutput_move_right_input] using
+        haltsWithOutput_of_haltsWithTape
+          (h.right.right.left code out htransform)
+  · intro code T hhalt
+    exact h.right.right.right code T hhalt
+
 /-!
 Accessor lemmas keep later proofs independent of the conjunction layout of
 {name}`RightShiftedOutputCompiledSubroutineByDescription`.

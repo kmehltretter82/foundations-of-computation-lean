@@ -257,6 +257,21 @@ def PaddedEquivEmitterSpec
       forall i : ι,
         Tape.Equiv (paddedOutputTape i) (canonicalOutputTape i)
 
+theorem PaddedEquivEmitterSpec.of_haltsFromTape_equiv
+    {ι : Type}
+    {inputTape paddedOutputTape canonicalOutputTape : ι -> Tape Bool}
+    {emitter : MachineDescription}
+    (hready : ReadySpec emitter)
+    (hforward :
+      forall i : ι,
+        emitter.HaltsFromTape (inputTape i) (paddedOutputTape i))
+    (hequiv :
+      forall i : ι,
+        Tape.Equiv (paddedOutputTape i) (canonicalOutputTape i)) :
+    PaddedEquivEmitterSpec inputTape paddedOutputTape
+      canonicalOutputTape emitter :=
+  ⟨hready, hforward, hequiv⟩
+
 theorem PaddedEquivEmitterSpec.haltsFromTapeEquiv
     {ι : Type}
     {inputTape paddedOutputTape canonicalOutputTape : ι -> Tape Bool}

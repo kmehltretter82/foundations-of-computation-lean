@@ -58,6 +58,33 @@ theorem SelectedProjectionEquivEmitterPaddedOutputTape_normalizedOutput_eq_tail
   rw [SelectedProjectionEquivEmitterPaddedOutputTape_normalizedOutput,
     selectedProjectionOutputBits_eq_tailProjector_outputAllBits]
 
+theorem SelectedProjectionEquivEmitterPaddedOutputTape_eq_outputAllBits
+    (useAccept : Bool) (L : DovetailLayout) :
+    SelectedProjectionEquivEmitterPaddedOutputTape useAccept L =
+      Tape.move Direction.right
+        (inputWithTrailingBlankPadding
+          (SelectedProjectionTailProjector.outputAllBits useAccept L)
+          (ParsedLayoutBits L).length) := by
+  simp [SelectedProjectionEquivEmitterPaddedOutputTape,
+    RightScratchPaddedOutputTape, ScratchPaddedOutputTape,
+    selectedProjectionOutputBits_eq_tailProjector_outputAllBits]
+
+theorem SelectedProjectionEquivEmitterPaddedOutputTape_eq_tapeAtCells
+    (useAccept : Bool) (L : DovetailLayout) :
+    SelectedProjectionEquivEmitterPaddedOutputTape useAccept L =
+      match
+          inputWithTrailingBlankPaddingCells
+            (SelectedProjectionTailProjector.outputAllBits useAccept L)
+            (ParsedLayoutBits L).length with
+      | [] => DovetailInitialLayoutInitializer.tapeAtCells [] []
+      | cell :: rest =>
+          DovetailInitialLayoutInitializer.tapeAtCells [cell] rest := by
+  rw [SelectedProjectionEquivEmitterPaddedOutputTape_eq_outputAllBits]
+  exact
+    inputWithTrailingBlankPadding_move_right_eq_tapeAtCells
+      (SelectedProjectionTailProjector.outputAllBits useAccept L)
+      (ParsedLayoutBits L).length
+
 theorem tapeAtCells_nil_normalizedOutput
     (leftRev : List (Option Bool)) :
     Tape.normalizedOutput

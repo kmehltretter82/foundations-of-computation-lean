@@ -181,6 +181,34 @@ theorem outputCompiledSubroutine
   exact
     outputCompiledSubroutineByDescription_of_spec hrunner
 
+def ClosedHandoffRightShiftedConstruction
+    (accept reject : MachineDescription) : Prop :=
+  exists runner : MachineDescription,
+    FoC.Computability.EncodedRewriters.ExactRightShiftedOutputCompiledSubroutineByDescription
+      (PairedRecognizerDovetailLayoutCode accept reject)
+      runner
+
+theorem closedHandoffCompiledSubroutine_of_rightShifted
+    {accept reject : MachineDescription}
+    (hright :
+      ClosedHandoffRightShiftedConstruction accept reject) :
+    exists runner : MachineDescription,
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject)
+        runner tapeCodePrimitiveCodeWordHandoffMove := by
+  rcases hright with ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  exact
+    FoC.Computability.EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
+      (FoC.Computability.EncodedRewriters.rightShiftedOutputCompiledSubroutineByDescription_of_exact
+        hrunner)
+      (fun htransform => by
+        rcases
+            pairedRecognizerDovetailLayoutCode_transform_eq_some_cons
+              htransform with
+          ⟨tail, htail⟩
+        exact ⟨MachineCodeSymbol.transition, tail, htail⟩)
+
 def PrimitivePipeline
     (accept reject : MachineDescription) :
     TapeCodePrimitive :=

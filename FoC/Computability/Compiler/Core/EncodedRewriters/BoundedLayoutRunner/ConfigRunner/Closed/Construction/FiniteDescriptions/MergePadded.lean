@@ -145,6 +145,20 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_inputBits
     SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_input
       useAccept p
 
+def SelectedMergePaddedEmitterExactShapeSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      emitter.HaltsFromTape
+        (SimulatorLayout.tape p.S)
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
+
+def SelectedMergePaddedEmitterExactShapeConstruction : Prop :=
+  forall useAccept : Bool,
+    exists emitter : MachineDescription,
+      SelectedMergePaddedEmitterExactShapeSpec useAccept emitter
+
 def SelectedMergeEquivPaddedEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
@@ -164,6 +178,30 @@ def SelectedMergeEquivPaddedEmitterConstruction : Prop :=
   forall useAccept : Bool,
     exists emitter : MachineDescription,
       SelectedMergeEquivPaddedEmitterSpec useAccept emitter
+
+theorem selectedMergeEquivPaddedEmitterSpec_of_exactShape
+    {useAccept : Bool} {emitter : MachineDescription}
+    (hemits :
+      SelectedMergePaddedEmitterExactShapeSpec useAccept emitter) :
+    SelectedMergeEquivPaddedEmitterSpec useAccept emitter := by
+  constructor
+  · exact hemits.left
+  constructor
+  · intro p
+    simpa [SelectedMergeEquivPaddedEmitterSpec,
+      SelectedMergeEquivEmitterPaddedOutputTape] using
+      hemits.right p
+  · intro p
+    exact SelectedMergeEquivEmitterPaddedOutputTape_equiv useAccept p
+
+theorem selectedMergeEquivPaddedEmitterConstruction_of_exactShape
+    (hemits : SelectedMergePaddedEmitterExactShapeConstruction) :
+    SelectedMergeEquivPaddedEmitterConstruction := by
+  intro useAccept
+  rcases hemits useAccept with ⟨emitter, hemits⟩
+  exact
+    ⟨emitter,
+      selectedMergeEquivPaddedEmitterSpec_of_exactShape hemits⟩
 
 theorem selectedMergeEquivEmitterSpec_of_padded
     {useAccept : Bool} {emitter : MachineDescription}
@@ -495,6 +533,64 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_fields
   rw [SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput,
     selectedMergeOutputCode_eq_fields]
 
+theorem SelectedMergeEquivEmitterPaddedOutputTape_eq_fields
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    SelectedMergeEquivEmitterPaddedOutputTape useAccept p =
+      inputWithTrailingBlankPadding
+        (encodeCodeWordAsInput
+          (MachineCodeSymbol.transition ::
+            encodeBoolWordAppend p.L.input
+              (encodeNatAppend p.L.stage
+                (encodeConfigurationAppend
+                  (SelectedMergeOutputAcceptConfig useAccept p.S p.L)
+                  (encodeConfigurationAppend
+                    (SelectedMergeOutputRejectConfig useAccept p.S p.L)
+                    (encodeBoolAppend
+                      (SelectedMergeOutputAcceptHit useAccept p.S p.L)
+                      (encodeBoolAppend
+                        (SelectedMergeOutputRejectHit useAccept p.S p.L)
+                        [])))))))
+        (SimulatorLayout.asBoolInput p.S).length := by
+  simp [SelectedMergeEquivEmitterPaddedOutputTape,
+    ScratchPaddedOutputTape, selectedMergeOutputCode_eq_fields]
+
+theorem SelectedMergeEquivEmitterPaddedOutputTape_eq_tapeAtCells_fields
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    SelectedMergeEquivEmitterPaddedOutputTape useAccept p =
+      DovetailInitialLayoutInitializer.tapeAtCells []
+        (inputWithTrailingBlankPaddingCells
+          (encodeCodeWordAsInput
+            (MachineCodeSymbol.transition ::
+              encodeBoolWordAppend p.L.input
+                (encodeNatAppend p.L.stage
+                  (encodeConfigurationAppend
+                    (SelectedMergeOutputAcceptConfig useAccept p.S p.L)
+                    (encodeConfigurationAppend
+                      (SelectedMergeOutputRejectConfig useAccept p.S p.L)
+                      (encodeBoolAppend
+                        (SelectedMergeOutputAcceptHit useAccept p.S p.L)
+                        (encodeBoolAppend
+                          (SelectedMergeOutputRejectHit useAccept p.S p.L)
+                          [])))))))
+          (SimulatorLayout.asBoolInput p.S).length) := by
+  rw [SelectedMergeEquivEmitterPaddedOutputTape_eq_fields]
+  exact
+    inputWithTrailingBlankPadding_eq_tapeAtCells
+      (encodeCodeWordAsInput
+        (MachineCodeSymbol.transition ::
+          encodeBoolWordAppend p.L.input
+            (encodeNatAppend p.L.stage
+              (encodeConfigurationAppend
+                (SelectedMergeOutputAcceptConfig useAccept p.S p.L)
+                (encodeConfigurationAppend
+                  (SelectedMergeOutputRejectConfig useAccept p.S p.L)
+                  (encodeBoolAppend
+                    (SelectedMergeOutputAcceptHit useAccept p.S p.L)
+                    (encodeBoolAppend
+                      (SelectedMergeOutputRejectHit useAccept p.S p.L)
+                      [])))))))
+      (SimulatorLayout.asBoolInput p.S).length
+
 theorem
     SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_parsedLayoutBits
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
@@ -710,9 +806,14 @@ blank padding in the old simulator-layout window, so the exact tape is
 equivalent to the unshifted merged dovetail-layout tape without requiring a
 context-length decrease.
 -/
-theorem selectedMergeEquivPaddedEmitterConstruction_scaffold :
-    SelectedMergeEquivPaddedEmitterConstruction := by
+theorem selectedMergePaddedEmitterExactShapeConstruction_scaffold :
+    SelectedMergePaddedEmitterExactShapeConstruction := by
   sorry
+
+theorem selectedMergeEquivPaddedEmitterConstruction_scaffold :
+    SelectedMergeEquivPaddedEmitterConstruction :=
+  selectedMergeEquivPaddedEmitterConstruction_of_exactShape
+    selectedMergePaddedEmitterExactShapeConstruction_scaffold
 
 theorem selectedMergeEquivEmitterConstruction_scaffold :
     SelectedMergeEquivEmitterConstruction :=

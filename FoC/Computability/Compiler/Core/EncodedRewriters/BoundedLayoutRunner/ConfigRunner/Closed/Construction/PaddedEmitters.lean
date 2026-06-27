@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.RightShifted
+import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.Spec
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Parser.Basic
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseAdapters
 
@@ -32,6 +33,69 @@ def inputWithTrailingBlankPadding
       { left := []
         head := some bit
         right := rest.map some ++ List.replicate padding none }
+
+def inputWithTrailingBlankPaddingCells
+    (w : Word Bool) (padding : Nat) : List (Option Bool) :=
+  match w with
+  | [] => none :: List.replicate padding none
+  | bit :: rest =>
+      (bit :: rest).map some ++ List.replicate padding none
+
+theorem inputWithTrailingBlankPadding_eq_tapeAtCells
+    (w : Word Bool) (padding : Nat) :
+    inputWithTrailingBlankPadding w padding =
+      DovetailInitialLayoutInitializer.tapeAtCells []
+        (inputWithTrailingBlankPaddingCells w padding) := by
+  cases w with
+  | nil =>
+      simp [inputWithTrailingBlankPadding,
+        inputWithTrailingBlankPaddingCells,
+        DovetailInitialLayoutInitializer.tapeAtCells]
+  | cons bit rest =>
+      simp [inputWithTrailingBlankPadding,
+        inputWithTrailingBlankPaddingCells,
+        DovetailInitialLayoutInitializer.tapeAtCells]
+
+theorem inputWithTrailingBlankPadding_move_right_eq_tapeAtCells
+    (w : Word Bool) (padding : Nat) :
+    Tape.move Direction.right
+        (inputWithTrailingBlankPadding w padding) =
+      match inputWithTrailingBlankPaddingCells w padding with
+      | [] => DovetailInitialLayoutInitializer.tapeAtCells [] []
+      | cell :: rest =>
+          DovetailInitialLayoutInitializer.tapeAtCells [cell] rest := by
+  cases w with
+  | nil =>
+      cases padding with
+      | zero =>
+          simp [inputWithTrailingBlankPadding,
+            inputWithTrailingBlankPaddingCells,
+            DovetailInitialLayoutInitializer.tapeAtCells,
+            Tape.move, Tape.moveRight]
+      | succ padding =>
+          simp [inputWithTrailingBlankPadding,
+            inputWithTrailingBlankPaddingCells,
+            DovetailInitialLayoutInitializer.tapeAtCells,
+            Tape.move, Tape.moveRight, List.replicate_succ]
+  | cons bit rest =>
+      cases rest with
+      | nil =>
+          cases padding with
+          | zero =>
+              simp [inputWithTrailingBlankPadding,
+                inputWithTrailingBlankPaddingCells,
+                DovetailInitialLayoutInitializer.tapeAtCells,
+                Tape.move, Tape.moveRight]
+          | succ padding =>
+              simp [inputWithTrailingBlankPadding,
+                inputWithTrailingBlankPaddingCells,
+                DovetailInitialLayoutInitializer.tapeAtCells,
+                Tape.move, Tape.moveRight, List.replicate_succ]
+      | cons bit' rest =>
+          simp [inputWithTrailingBlankPadding,
+            inputWithTrailingBlankPaddingCells,
+            DovetailInitialLayoutInitializer.tapeAtCells,
+            Tape.move, Tape.moveRight]
 
 theorem dropTrailingNone_replicate_none
     (padding : Nat) :

@@ -59,6 +59,46 @@ theorem fixedDescriptionBoundedSimulatorPaddedPhaseSpec_of_paddedSpec_configRunn
     exact
       FixedDescriptionBoundedSimulatorPaddedOutputTape_equiv_canonical D L
 
+theorem fixedDescriptionBoundedSimulatorPaddedSpec_of_paddedPhaseSpec_configRunner
+    {D sim : MachineDescription}
+    (hsim : FixedDescriptionBoundedSimulatorPaddedPhaseSpec_configRunner D sim) :
+    FixedDescriptionBoundedSimulatorPaddedSpec D sim := by
+  constructor
+  · exact hsim.left
+  constructor
+  · intro L
+    rcases hsim.right.left L with ⟨n, hn⟩
+    exact
+      ⟨n, by
+        simpa [FixedDescriptionBoundedSimulatorPaddedPhaseSpec_configRunner,
+          HaltsWithTapeIn,
+          HaltsFromTapeIn,
+          initial] using hn⟩
+  · intro L T hhalt
+    have hfrom :
+        sim.HaltsFromTape
+          (Tape.input (FixedDescriptionBoundedSimulatorInput L)) T := by
+      rcases hhalt with ⟨n, hn⟩
+      exact
+        ⟨n, by
+          simpa [HaltsWithTapeIn,
+            HaltsFromTapeIn,
+            initial] using hn⟩
+    exact
+      haltsFromTape_functional_of_haltTransitionFree
+        hsim.left.right hfrom (hsim.right.left L)
+
+theorem fixedDescriptionBoundedSimulatorPaddedConstruction_of_paddedPhase_configRunner
+    (hphase :
+      FixedDescriptionBoundedSimulatorPaddedPhaseConstruction_configRunner) :
+    FixedDescriptionBoundedSimulatorPaddedConstruction := by
+  intro D
+  rcases hphase D with ⟨sim, hsim⟩
+  exact
+    ⟨sim,
+      fixedDescriptionBoundedSimulatorPaddedSpec_of_paddedPhaseSpec_configRunner
+        hsim⟩
+
 theorem fixedDescriptionBoundedSimulatorEquivSpec_of_paddedPhase_configRunner
     {D sim : MachineDescription}
     (hsim : FixedDescriptionBoundedSimulatorPaddedPhaseSpec_configRunner D sim) :

@@ -53,6 +53,47 @@ def SelectedProjectionPaddedTailCleanupConstruction : Prop :=
     exists cleanup : MachineDescription,
       SelectedProjectionPaddedTailCleanupSpec useAccept cleanup
 
+def SelectedProjectionPaddedTailCleanupExactShapeSpec
+    (useAccept : Bool)
+    (cleanup : MachineDescription) : Prop :=
+  cleanup.SubroutineReady ∧
+    forall L : DovetailLayout,
+      cleanup.HaltsFromTape
+        (SelectedProjectionTailProjector.sourceScannerRightHandoffTape L
+          ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
+            some))
+        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
+
+def SelectedProjectionPaddedTailCleanupExactShapeConstruction : Prop :=
+  forall useAccept : Bool,
+    exists cleanup : MachineDescription,
+      SelectedProjectionPaddedTailCleanupExactShapeSpec useAccept cleanup
+
+theorem selectedProjectionPaddedTailCleanupSpec_of_exactShape
+    {useAccept : Bool} {cleanup : MachineDescription}
+    (hcleanup :
+      SelectedProjectionPaddedTailCleanupExactShapeSpec useAccept cleanup) :
+    SelectedProjectionPaddedTailCleanupSpec useAccept cleanup := by
+  constructor
+  · exact hcleanup.left
+  constructor
+  · intro L
+    simpa [SelectedProjectionPaddedTailCleanupSpec,
+      SelectedProjectionEquivEmitterPaddedOutputTape] using
+      hcleanup.right L
+  · intro L
+    exact SelectedProjectionEquivEmitterPaddedOutputTape_equiv useAccept L
+
+theorem selectedProjectionPaddedTailCleanupConstruction_of_exactShape
+    (hcleanup :
+      SelectedProjectionPaddedTailCleanupExactShapeConstruction) :
+    SelectedProjectionPaddedTailCleanupConstruction := by
+  intro useAccept
+  rcases hcleanup useAccept with ⟨cleanup, hcleanup⟩
+  exact
+    ⟨cleanup,
+      selectedProjectionPaddedTailCleanupSpec_of_exactShape hcleanup⟩
+
 def SelectedProjectionPaddedTailEmitterFromCleanup
     (_useAccept : Bool)
     (cleanup : MachineDescription) : MachineDescription :=
@@ -131,9 +172,14 @@ layout fields and handed off one cell to the right; this cleanup may leave
 trailing blank padding while emitting a tape equivalent to the right-shifted
 selected simulator-layout output.
 -/
-theorem selectedProjectionPaddedTailCleanupConstruction_scaffold :
-    SelectedProjectionPaddedTailCleanupConstruction := by
+theorem selectedProjectionPaddedTailCleanupExactShapeConstruction_scaffold :
+    SelectedProjectionPaddedTailCleanupExactShapeConstruction := by
   sorry
+
+theorem selectedProjectionPaddedTailCleanupConstruction_scaffold :
+    SelectedProjectionPaddedTailCleanupConstruction :=
+  selectedProjectionPaddedTailCleanupConstruction_of_exactShape
+    selectedProjectionPaddedTailCleanupExactShapeConstruction_scaffold
 
 theorem selectedProjectionPaddedTailEmitterConstruction_scaffold :
     SelectedProjectionPaddedTailEmitterConstruction :=
