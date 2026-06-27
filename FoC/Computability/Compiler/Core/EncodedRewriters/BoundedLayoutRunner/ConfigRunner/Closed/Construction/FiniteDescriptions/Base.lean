@@ -23,6 +23,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
@@ -31,11 +32,11 @@ def SelectedProjectionEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
   ReadySpec emitter ∧
-    (forall L : MachineDescription.DovetailLayout,
+    (forall L : DovetailLayout,
       emitter.HaltsWithTape
         (ParsedLayoutBits L)
         (SelectedProjectionOutputTape useAccept L)) ∧
-      forall L : MachineDescription.DovetailLayout,
+      forall L : DovetailLayout,
       forall T : Tape Bool,
         emitter.HaltsWithTape (ParsedLayoutBits L) T ->
           T = SelectedProjectionOutputTape useAccept L
@@ -63,7 +64,7 @@ def SelectedProjectionCheckedEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
   ReadySpec emitter ∧
-    forall L : MachineDescription.DovetailLayout,
+    forall L : DovetailLayout,
       emitter.HaltsFromTape
         (ParsedLayoutCheckedTape L)
         (SelectedProjectionOutputTape useAccept L)
@@ -74,114 +75,114 @@ def SelectedProjectionCheckedEmitterConstruction : Prop :=
       SelectedProjectionCheckedEmitterSpec useAccept emitter
 
 theorem selectedProjectionOutputCode_true
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     SelectedProjectionOutputCode true L =
-      MachineDescription.SimulatorLayout.encode
+      SimulatorLayout.encode
         (AcceptSimulatorLayout L) := by
   rfl
 
 theorem selectedProjectionOutputCode_false
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     SelectedProjectionOutputCode false L =
-      MachineDescription.SimulatorLayout.encode
+      SimulatorLayout.encode
         (RejectSimulatorLayout L) := by
   rfl
 
 theorem selectedProjectionOutputTape_true
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     SelectedProjectionOutputTape true L =
       Tape.move Direction.right
-        (MachineDescription.SimulatorLayout.tape
+        (SimulatorLayout.tape
           (AcceptSimulatorLayout L)) := by
   rfl
 
 theorem selectedProjectionOutputTape_false
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     SelectedProjectionOutputTape false L =
       Tape.move Direction.right
-        (MachineDescription.SimulatorLayout.tape
+        (SimulatorLayout.tape
           (RejectSimulatorLayout L)) := by
   rfl
 
 theorem selectedProjectionOutputTape_eq_simulator_tape
-    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    (useAccept : Bool) (L : DovetailLayout) :
     SelectedProjectionOutputTape useAccept L =
       Tape.move Direction.right
-        (MachineDescription.SimulatorLayout.tape
+        (SimulatorLayout.tape
           (SelectedProjectionSimulatorLayout useAccept L)) := by
   cases useAccept <;>
     rfl
 
 theorem simulatorLayoutRightOutput_contextLength_ge_input
     (input : Word Bool) (stage : Nat)
-    (config : MachineDescription.Configuration) (hit : Bool) :
+    (config : Configuration) (hit : Bool) :
     Tape.contextLength (Tape.input input) <=
       Tape.contextLength
         (Tape.move Direction.right
-          (MachineDescription.SimulatorLayout.tape
+          (SimulatorLayout.tape
             { input := input, stage := stage, config := config, hit := hit })) := by
   cases input with
   | nil =>
-      simp [MachineDescription.SimulatorLayout.tape,
-        MachineDescription.SimulatorLayout.asBoolInput,
-        MachineDescription.SimulatorLayout.encode,
-        MachineDescription.SimulatorLayout.encodeAppend,
-        MachineDescription.encodeCodeWordAsInput,
-        MachineDescription.encodeCodeSymbolAsInput,
-        MachineDescription.encodeBoolWordAppend,
-        MachineDescription.encodeCellListAppend,
-        MachineDescription.encodeNatAppend,
+      simp [SimulatorLayout.tape,
+        SimulatorLayout.asBoolInput,
+        SimulatorLayout.encode,
+        SimulatorLayout.encodeAppend,
+        encodeCodeWordAsInput,
+        encodeCodeSymbolAsInput,
+        encodeBoolWordAppend,
+        encodeCellListAppend,
+        encodeNatAppend,
         Tape.input, Tape.blank, Tape.move, Tape.moveRight,
         Tape.contextLength]
   | cons bit rest =>
       have hboolLen :
           (bit :: rest).length +
-              (MachineDescription.encodeNatAppend stage
-                (MachineDescription.encodeConfigurationAppend config
-                  (MachineDescription.encodeBoolAppend hit []))).length <=
-            (MachineDescription.encodeBoolWordAppend (bit :: rest)
-              (MachineDescription.encodeNatAppend stage
-                (MachineDescription.encodeConfigurationAppend config
-                  (MachineDescription.encodeBoolAppend hit [])))).length :=
+              (encodeNatAppend stage
+                (encodeConfigurationAppend config
+                  (encodeBoolAppend hit []))).length <=
+            (encodeBoolWordAppend (bit :: rest)
+              (encodeNatAppend stage
+                (encodeConfigurationAppend config
+                  (encodeBoolAppend hit [])))).length :=
         encodeBoolWordAppend_length_ge (bit :: rest)
-          (MachineDescription.encodeNatAppend stage
-            (MachineDescription.encodeConfigurationAppend config
-              (MachineDescription.encodeBoolAppend hit [])))
+          (encodeNatAppend stage
+            (encodeConfigurationAppend config
+              (encodeBoolAppend hit [])))
       simp at hboolLen
-      simp [MachineDescription.SimulatorLayout.tape,
-        MachineDescription.SimulatorLayout.asBoolInput,
-        MachineDescription.SimulatorLayout.encode,
-        MachineDescription.SimulatorLayout.encodeAppend,
-        MachineDescription.encodeCodeWordAsInput,
-        MachineDescription.encodeCodeSymbolAsInput,
+      simp [SimulatorLayout.tape,
+        SimulatorLayout.asBoolInput,
+        SimulatorLayout.encode,
+        SimulatorLayout.encodeAppend,
+        encodeCodeWordAsInput,
+        encodeCodeSymbolAsInput,
         Tape.input, Tape.move, Tape.moveRight, Tape.contextLength,
         encodeCodeWordAsInput_length]
       omega
 
 def SelectedProjectionConfig
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.Configuration :=
+    (L : DovetailLayout) :
+    Configuration :=
   if useAccept then L.acceptConfig else L.rejectConfig
 
 def SelectedProjectionHit
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) : Bool :=
+    (L : DovetailLayout) : Bool :=
   if useAccept then L.acceptHit else L.rejectHit
 
 def SelectedProjectionOutputSuffix
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     Word MachineCodeSymbol :=
-  MachineDescription.encodeNatAppend L.stage
-    (MachineDescription.encodeConfigurationAppend
+  encodeNatAppend L.stage
+    (encodeConfigurationAppend
       (SelectedProjectionConfig useAccept L)
-      (MachineDescription.encodeBoolAppend
+      (encodeBoolAppend
         (SelectedProjectionHit useAccept L) []))
 
 theorem selectedProjectionSimulatorLayout_eq
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     SelectedProjectionSimulatorLayout useAccept L =
       { input := ParsedLayoutBits L
         stage := L.stage
@@ -191,7 +192,7 @@ theorem selectedProjectionSimulatorLayout_eq
     rfl
 
 theorem selectedProjectionOutputTape_contextLength_ge_input
-    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    (useAccept : Bool) (L : DovetailLayout) :
     Tape.contextLength (Tape.input (ParsedLayoutBits L)) <=
       Tape.contextLength (SelectedProjectionOutputTape useAccept L) := by
   rw [selectedProjectionOutputTape_eq_simulator_tape,
@@ -203,10 +204,10 @@ theorem selectedProjectionOutputTape_contextLength_ge_input
 
 theorem selectedProjectionOutputCode_eq_fields
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     SelectedProjectionOutputCode useAccept L =
       MachineCodeSymbol.header ::
-        MachineDescription.encodeBoolWordAppend (ParsedLayoutBits L)
+        encodeBoolWordAppend (ParsedLayoutBits L)
           (SelectedProjectionOutputSuffix useAccept L) := by
   rw [SelectedProjectionOutputCode,
     selectedProjectionSimulatorLayout_eq]
@@ -214,19 +215,19 @@ theorem selectedProjectionOutputCode_eq_fields
 
 theorem selectedProjectionOutputSuffix_eq_fields
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     SelectedProjectionOutputSuffix useAccept L =
-      MachineDescription.encodeNatAppend L.stage
-        (MachineDescription.encodeConfigurationAppend
+      encodeNatAppend L.stage
+        (encodeConfigurationAppend
           (SelectedProjectionConfig useAccept L)
-          (MachineDescription.encodeBoolAppend
+          (encodeBoolAppend
             (SelectedProjectionHit useAccept L) [])) := by
   rfl
 
 theorem selectedProjectionOutputBits_eq_tailProjector_outputAllBits
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.encodeCodeWordAsInput
+    (L : DovetailLayout) :
+    encodeCodeWordAsInput
         (SelectedProjectionOutputCode useAccept L) =
       SelectedProjectionTailProjector.outputAllBits useAccept L := by
   simpa [SelectedProjectionOutputCode] using
@@ -235,14 +236,14 @@ theorem selectedProjectionOutputBits_eq_tailProjector_outputAllBits
 
 theorem selectedProjectionOutputBits_eq_quoter_bits
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     exists b : Bool,
     exists rest : Word Bool,
       ParsedLayoutBits L = b :: rest ∧
-        MachineDescription.encodeCodeWordAsInput
+        encodeCodeWordAsInput
             (SelectedProjectionOutputCode useAccept L) =
           List.append
-            (MachineDescription.encodeCodeSymbolAsInput
+            (encodeCodeSymbolAsInput
               MachineCodeSymbol.header)
             (CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits
                 b rest (SelectedProjectionOutputSuffix useAccept L)) := by
@@ -250,13 +251,13 @@ theorem selectedProjectionOutputBits_eq_quoter_bits
     ⟨tail, htail⟩
   refine ⟨false, false :: tail, htail, ?_⟩
   rw [selectedProjectionOutputCode_eq_fields, htail]
-  simp [MachineDescription.encodeCodeWordAsInput,
+  simp [encodeCodeWordAsInput,
     CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits_eq]
 
 def SelectedProjectionInputQuoterSpec
     (quoter : MachineDescription) : Prop :=
   quoter.SubroutineReady ∧
-    forall L : MachineDescription.DovetailLayout,
+    forall L : DovetailLayout,
       quoter.HaltsFromTape
         (ParsedLayoutCheckedTape L)
         (SelectedProjectionTailProjector.sourceTape L
@@ -291,11 +292,11 @@ def SelectedProjectionEquivEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
   ReadySpec emitter ∧
-    (forall L : MachineDescription.DovetailLayout,
+    (forall L : DovetailLayout,
       emitter.HaltsFromTapeEquiv
         (Tape.input (ParsedLayoutBits L))
         (SelectedProjectionOutputTape useAccept L)) ∧
-      forall L : MachineDescription.DovetailLayout,
+      forall L : DovetailLayout,
         emitter.ClosedFromTapeEquiv
           (Tape.input (ParsedLayoutBits L))
           (SelectedProjectionOutputTape useAccept L)
@@ -309,11 +310,11 @@ def SelectedProjectionCheckedEquivEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
   ReadySpec emitter ∧
-    (forall L : MachineDescription.DovetailLayout,
+    (forall L : DovetailLayout,
       emitter.HaltsFromTapeEquiv
         (ParsedLayoutCheckedTape L)
         (SelectedProjectionOutputTape useAccept L)) ∧
-      forall L : MachineDescription.DovetailLayout,
+      forall L : DovetailLayout,
         emitter.ClosedFromTapeEquiv
           (ParsedLayoutCheckedTape L)
           (SelectedProjectionOutputTape useAccept L)
@@ -335,20 +336,20 @@ theorem selectedProjectionEquivEmitterSpec_of_exact
         emitter.HaltsFromTape
           (Tape.input (ParsedLayoutBits L))
           (SelectedProjectionOutputTape useAccept L) := by
-      simpa [MachineDescription.HaltsWithTape,
-        MachineDescription.HaltsWithTapeIn,
-        MachineDescription.HaltsFromTape,
-        MachineDescription.HaltsFromTapeIn,
-        MachineDescription.initial] using hemitter.right.left L
-    exact MachineDescription.HaltsFromTape.toEquiv hfrom
+      simpa [HaltsWithTape,
+        HaltsWithTapeIn,
+        HaltsFromTape,
+        HaltsFromTapeIn,
+        initial] using hemitter.right.left L
+    exact HaltsFromTape.toEquiv hfrom
   · intro L T hhalt
     have hwith :
         emitter.HaltsWithTape (ParsedLayoutBits L) T := by
-      simpa [MachineDescription.HaltsWithTape,
-        MachineDescription.HaltsWithTapeIn,
-        MachineDescription.HaltsFromTape,
-        MachineDescription.HaltsFromTapeIn,
-        MachineDescription.initial] using hhalt
+      simpa [HaltsWithTape,
+        HaltsWithTapeIn,
+        HaltsFromTape,
+        HaltsFromTapeIn,
+        initial] using hhalt
     rw [hemitter.right.right L T hwith]
     exact Tape.Equiv.refl _
 
@@ -374,7 +375,7 @@ theorem selectedProjectionCheckedEquivEmitterSpec_of_equiv
           (ParsedLayoutCheckedTape L) :=
       Tape.Equiv.symm (checkedInputTape_equiv_input _)
     rcases
-        MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+        HaltsFromTapeEquiv_of_input_equiv
           hcheckedEquiv hactual with
       ⟨Tchecked, hchecked, hTchecked⟩
     exact
@@ -386,7 +387,7 @@ theorem selectedProjectionCheckedEquivEmitterSpec_of_equiv
           (Tape.input (ParsedLayoutBits L)) :=
       checkedInputTape_equiv_input _
     rcases
-        MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+        HaltsFromTapeEquiv_of_input_equiv
           hcheckedEquiv hhalt with
       ⟨Traw, hraw, hTraw⟩
     have hclosed := hemitter.right.right L Traw hraw
@@ -408,11 +409,11 @@ theorem selectedProjectionCheckedEquivEmitterSpec_of_checked
   · exact hemitter.left
   constructor
   · intro L
-    exact MachineDescription.HaltsFromTape.toEquiv (hemitter.right L)
+    exact HaltsFromTape.toEquiv (hemitter.right L)
   · intro L T hhalt
     have hT :
         T = SelectedProjectionOutputTape useAccept L :=
-      MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+      haltsFromTape_functional_of_haltTransitionFree
         hemitter.left.right hhalt (hemitter.right L)
     rw [hT]
     exact Tape.Equiv.refl _
@@ -442,11 +443,11 @@ theorem selectedProjectionSpec_of_parser_equivEmitter
         parser.HaltsFromTape
           (Tape.input (ParsedLayoutBits L))
           (ParsedLayoutCheckedTape L) := by
-      simpa [MachineDescription.HaltsWithTape,
-        MachineDescription.HaltsWithTapeIn,
-        MachineDescription.HaltsFromTape,
-        MachineDescription.HaltsFromTapeIn,
-        MachineDescription.initial] using hparser.right.left L
+      simpa [HaltsWithTape,
+        HaltsWithTapeIn,
+        HaltsFromTape,
+        HaltsFromTapeIn,
+        initial] using hparser.right.left L
     have hbridge :
         Tape.Equiv
           (Tape.move Direction.left
@@ -457,7 +458,7 @@ theorem selectedProjectionSpec_of_parser_equivEmitter
     exact
       SeqViaCanonical_haltsFromTapeEquiv_of_equiv
         hparser.left hemitter.left
-        (MachineDescription.HaltsFromTape.toEquiv hparserFrom)
+        (HaltsFromTape.toEquiv hparserFrom)
         hbridge
         (hemitter.right.left L)
   · intro code T hhalt
@@ -478,7 +479,7 @@ theorem selectedProjectionSpec_of_parser_equivEmitter
           (Tape.input (ParsedLayoutBits L)) :=
       checkedInputTape_equiv_input _
     rcases
-        MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+        HaltsFromTapeEquiv_of_input_equiv
           hcheckedEquiv hemitterRun' with
       ⟨Tactual, hactual, hTactual⟩
     have hclosed := hemitter.right.right L Tactual hactual
@@ -502,11 +503,11 @@ theorem selectedProjectionSpec_of_parser_checkedEquivEmitter
         parser.HaltsFromTape
           (Tape.input (ParsedLayoutBits L))
           (ParsedLayoutCheckedTape L) := by
-      simpa [MachineDescription.HaltsWithTape,
-        MachineDescription.HaltsWithTapeIn,
-        MachineDescription.HaltsFromTape,
-        MachineDescription.HaltsFromTapeIn,
-        MachineDescription.initial] using hparser.right.left L
+      simpa [HaltsWithTape,
+        HaltsWithTapeIn,
+        HaltsFromTape,
+        HaltsFromTapeIn,
+        initial] using hparser.right.left L
     rcases hemitter.right.left L with ⟨Tactual, hactual, hTactual⟩
     have hseq :
         (SeqViaCanonical parser emitter).HaltsFromTape
@@ -574,23 +575,23 @@ theorem selectedProjectionFiniteDescriptionConstruction_of_emitter
 def SelectedMergeParserSpec
     (parser : MachineDescription) : Prop :=
   ReadySpec parser ∧
-    (forall S : MachineDescription.SimulatorLayout,
-     forall L : MachineDescription.DovetailLayout,
-      MachineDescription.decodeCodeWordAsInput S.input =
-        some (MachineDescription.DovetailLayout.encode L) ->
+    (forall S : SimulatorLayout,
+     forall L : DovetailLayout,
+      decodeCodeWordAsInput S.input =
+        some (DovetailLayout.encode L) ->
       parser.HaltsWithTape
-        (MachineDescription.SimulatorLayout.asBoolInput S)
-        (MachineDescription.SimulatorLayout.tape S)) ∧
+        (SimulatorLayout.asBoolInput S)
+        (SimulatorLayout.tape S)) ∧
       forall code : Word MachineCodeSymbol,
       forall T : Tape Bool,
         parser.HaltsWithTape
-            (MachineDescription.encodeCodeWordAsInput code) T ->
-          exists S : MachineDescription.SimulatorLayout,
-          exists L : MachineDescription.DovetailLayout,
-            code = MachineDescription.SimulatorLayout.encode S ∧
-              MachineDescription.decodeCodeWordAsInput S.input =
-                some (MachineDescription.DovetailLayout.encode L) ∧
-              T = MachineDescription.SimulatorLayout.tape S
+            (encodeCodeWordAsInput code) T ->
+          exists S : SimulatorLayout,
+          exists L : DovetailLayout,
+            code = SimulatorLayout.encode S ∧
+              decodeCodeWordAsInput S.input =
+                some (DovetailLayout.encode L) ∧
+              T = SimulatorLayout.tape S
 
 def SelectedMergeParserConstruction : Prop :=
   exists parser : MachineDescription,
@@ -599,13 +600,13 @@ def SelectedMergeParserConstruction : Prop :=
 def SelectedMergeForwardParserSpec
     (parser : MachineDescription) : Prop :=
   parser.SubroutineReady ∧
-    forall S : MachineDescription.SimulatorLayout,
-    forall L : MachineDescription.DovetailLayout,
-      MachineDescription.decodeCodeWordAsInput S.input =
-        some (MachineDescription.DovetailLayout.encode L) ->
+    forall S : SimulatorLayout,
+    forall L : DovetailLayout,
+      decodeCodeWordAsInput S.input =
+        some (DovetailLayout.encode L) ->
       parser.HaltsWithTape
-        (MachineDescription.SimulatorLayout.asBoolInput S)
-        (MachineDescription.SimulatorLayout.tape S)
+        (SimulatorLayout.asBoolInput S)
+        (SimulatorLayout.tape S)
 
 def SelectedMergeForwardParserConstruction : Prop :=
   exists parser : MachineDescription,
@@ -625,27 +626,27 @@ theorem selectedMergeForwardParserConstruction_of_parser
 
 theorem selectedMergeForwardParserSpec_identity :
     SelectedMergeForwardParserSpec
-      MachineDescription.ExactIdentityDescription := by
+      ExactIdentityDescription := by
   constructor
   · exact CommonGround.Identity.exactIdentityDescription_subroutineReady
   · intro S _L _hinput
-    simpa [MachineDescription.SimulatorLayout.tape,
-      MachineDescription.HaltsWithTape, MachineDescription.HaltsFromTape,
-      MachineDescription.HaltsWithTapeIn,
-      MachineDescription.HaltsFromTapeIn,
-      MachineDescription.initial] using
+    simpa [SimulatorLayout.tape,
+      HaltsWithTape, HaltsFromTape,
+      HaltsWithTapeIn,
+      HaltsFromTapeIn,
+      initial] using
       CommonGround.Identity.exactIdentityDescription_haltsFromTape
-        (MachineDescription.SimulatorLayout.tape S)
+        (SimulatorLayout.tape S)
 
 theorem selectedMergeForwardParserConstruction_identity :
     SelectedMergeForwardParserConstruction :=
-  ⟨MachineDescription.ExactIdentityDescription,
+  ⟨ExactIdentityDescription,
     selectedMergeForwardParserSpec_identity⟩
 
 def SelectedMergeForwardParserFromSimulatorParser
     (parser : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine
-    parser MachineDescription.ExactIdentityDescription Direction.left
+  seqSubroutine
+    parser ExactIdentityDescription Direction.left
 
 theorem selectedMergeForwardParserSpec_of_simulatorParser
     {parser : MachineDescription}
@@ -654,37 +655,37 @@ theorem selectedMergeForwardParserSpec_of_simulatorParser
         parser) :
     SelectedMergeForwardParserSpec
       (SelectedMergeForwardParserFromSimulatorParser parser) := by
-  let identity := MachineDescription.ExactIdentityDescription
+  let identity := ExactIdentityDescription
   have hid : identity.SubroutineReady :=
     CommonGround.Identity.exactIdentityDescription_subroutineReady
   constructor
   · exact
-      MachineDescription.seqSubroutine_subroutineReady
+      seqSubroutine_subroutineReady
         hparser.left hid
   · intro S L _hinput
     have hparserRun :
         parser.HaltsWithTape
-          (MachineDescription.SimulatorLayout.asBoolInput S)
+          (SimulatorLayout.asBoolInput S)
           (CommonGround.SimulatorLayouts.handoffTape S) := by
       simpa [CommonGround.SimulatorLayouts.bits,
         CommonGround.SimulatorLayouts.encode,
         CommonGround.LayoutTapes.Bits,
-        MachineDescription.SimulatorLayout.asBoolInput] using
+        SimulatorLayout.asBoolInput] using
         hparser.right.left S
     have hhandoff :
         Tape.move Direction.left
             (CommonGround.SimulatorLayouts.handoffTape S) =
-          MachineDescription.SimulatorLayout.tape S := by
-      simpa [MachineDescription.SimulatorLayout.tape] using
+          SimulatorLayout.tape S := by
+      simpa [SimulatorLayout.tape] using
         CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape S
     exact
-      MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+      seqSubroutine_haltsWithTape_of_haltsWithTape
         hparser.left hid hparserRun
         (by
           rw [hhandoff]
           exact
             CommonGround.Identity.exactIdentityDescription_run_from_start
-              (MachineDescription.SimulatorLayout.tape S))
+              (SimulatorLayout.tape S))
 
 theorem selectedMergeForwardParserConstruction_of_simulatorParser
     (hparser :
@@ -698,62 +699,62 @@ theorem selectedMergeForwardParserConstruction_of_simulatorParser
 def SelectedMergeInputValidatorSpec
     (validator : MachineDescription) : Prop :=
   ReadySpec validator ∧
-    (forall S : MachineDescription.SimulatorLayout,
-     forall L : MachineDescription.DovetailLayout,
-      MachineDescription.decodeCodeWordAsInput S.input =
-        some (MachineDescription.DovetailLayout.encode L) ->
+    (forall S : SimulatorLayout,
+     forall L : DovetailLayout,
+      decodeCodeWordAsInput S.input =
+        some (DovetailLayout.encode L) ->
       validator.HaltsWithTape
-        (MachineDescription.SimulatorLayout.asBoolInput S)
-        (MachineDescription.SimulatorLayout.tape S)) ∧
-      forall S : MachineDescription.SimulatorLayout,
+        (SimulatorLayout.asBoolInput S)
+        (SimulatorLayout.tape S)) ∧
+      forall S : SimulatorLayout,
       forall T : Tape Bool,
         validator.HaltsWithTape
-            (MachineDescription.SimulatorLayout.asBoolInput S) T ->
-          exists L : MachineDescription.DovetailLayout,
-            MachineDescription.decodeCodeWordAsInput S.input =
-              some (MachineDescription.DovetailLayout.encode L) ∧
-              T = MachineDescription.SimulatorLayout.tape S
+            (SimulatorLayout.asBoolInput S) T ->
+          exists L : DovetailLayout,
+            decodeCodeWordAsInput S.input =
+              some (DovetailLayout.encode L) ∧
+              T = SimulatorLayout.tape S
 
 def SelectedMergeInputValidatorConstruction : Prop :=
   exists validator : MachineDescription,
     SelectedMergeInputValidatorSpec validator
 
 def SelectedMergeInputValidatorPrimitive :
-    MachineDescription.TapeCodePrimitive where
+    TapeCodePrimitive where
   transform := fun code =>
-    match MachineDescription.SimulatorLayout.decodeComplete code with
+    match SimulatorLayout.decodeComplete code with
     | none => none
     | some S =>
-        match MachineDescription.decodeCodeWordAsInput S.input with
+        match decodeCodeWordAsInput S.input with
         | none => none
         | some inputCode =>
-            match MachineDescription.DovetailLayout.decodeComplete inputCode with
+            match DovetailLayout.decodeComplete inputCode with
             | none => none
-            | some _ => some (MachineDescription.SimulatorLayout.encode S)
+            | some _ => some (SimulatorLayout.encode S)
 
 theorem selectedMergeInputValidatorPrimitive_transform_eq_some_iff
     (code out : Word MachineCodeSymbol) :
     SelectedMergeInputValidatorPrimitive.transform code = some out ↔
-      exists S : MachineDescription.SimulatorLayout,
-      exists L : MachineDescription.DovetailLayout,
-        code = MachineDescription.SimulatorLayout.encode S ∧
-          MachineDescription.decodeCodeWordAsInput S.input =
-            some (MachineDescription.DovetailLayout.encode L) ∧
-          out = MachineDescription.SimulatorLayout.encode S := by
+      exists S : SimulatorLayout,
+      exists L : DovetailLayout,
+        code = SimulatorLayout.encode S ∧
+          decodeCodeWordAsInput S.input =
+            some (DovetailLayout.encode L) ∧
+          out = SimulatorLayout.encode S := by
   constructor
   · intro h
     unfold SelectedMergeInputValidatorPrimitive at h
-    cases hS : MachineDescription.SimulatorLayout.decodeComplete code with
+    cases hS : SimulatorLayout.decodeComplete code with
     | none =>
         simp [hS] at h
     | some S =>
         cases hinput :
-            MachineDescription.decodeCodeWordAsInput S.input with
+            decodeCodeWordAsInput S.input with
         | none =>
             simp [hS, hinput] at h
         | some inputCode =>
             cases hL :
-                MachineDescription.DovetailLayout.decodeComplete
+                DovetailLayout.decodeComplete
                   inputCode with
             | none =>
                 simp [hS, hinput, hL] at h
@@ -761,11 +762,11 @@ theorem selectedMergeInputValidatorPrimitive_transform_eq_some_iff
                 simp [hS, hinput, hL] at h
                 cases h
                 have hcode :
-                    code = MachineDescription.SimulatorLayout.encode S :=
+                    code = SimulatorLayout.encode S :=
                   CommonGround.SimulatorLayouts.decodeComplete_eq_some_encode
                     hS
                 have hinputCode :
-                    inputCode = MachineDescription.DovetailLayout.encode L :=
+                    inputCode = DovetailLayout.encode L :=
                   CommonGround.DovetailLayouts.decode_eq_some_encode
                     hL
                 rw [hinputCode] at hinput
@@ -775,7 +776,7 @@ theorem selectedMergeInputValidatorPrimitive_transform_eq_some_iff
     simp [SelectedMergeInputValidatorPrimitive,
       CommonGround.SimulatorLayouts.decodeComplete_encode,
       hinput,
-      MachineDescription.DovetailLayout.decodeComplete_encode]
+      DovetailLayout.decodeComplete_encode]
 
 def SelectedMergeInputValidatorPrimitiveRightShiftedConstruction : Prop :=
   exists validator : MachineDescription,
@@ -783,34 +784,34 @@ def SelectedMergeInputValidatorPrimitiveRightShiftedConstruction : Prop :=
       SelectedMergeInputValidatorPrimitive validator
 
 structure SelectedMergeInputValidatorPayload where
-  S : MachineDescription.SimulatorLayout
-  L : MachineDescription.DovetailLayout
+  S : SimulatorLayout
+  L : DovetailLayout
   input :
-    MachineDescription.decodeCodeWordAsInput S.input =
-      some (MachineDescription.DovetailLayout.encode L)
+    decodeCodeWordAsInput S.input =
+      some (DovetailLayout.encode L)
 
 def SelectedMergeInputValidatorInputCode
     (p : SelectedMergeInputValidatorPayload) :
     Word MachineCodeSymbol :=
-  MachineDescription.SimulatorLayout.encode p.S
+  SimulatorLayout.encode p.S
 
 def SelectedMergeInputValidatorOutputCode
     (p : SelectedMergeInputValidatorPayload) :
     Word MachineCodeSymbol :=
-  MachineDescription.SimulatorLayout.encode p.S
+  SimulatorLayout.encode p.S
 
 def SelectedMergeInputValidatorOutputTape
     (p : SelectedMergeInputValidatorPayload) : Tape Bool :=
   Tape.move Direction.right
     (Tape.input
-      (MachineDescription.encodeCodeWordAsInput
+      (encodeCodeWordAsInput
         (SelectedMergeInputValidatorOutputCode p)))
 
 theorem selectedMergeInputValidatorOutputTape_eq_handoff
     (p : SelectedMergeInputValidatorPayload) :
     SelectedMergeInputValidatorOutputTape p =
       Tape.move Direction.right
-        (MachineDescription.SimulatorLayout.tape p.S) := by
+        (SimulatorLayout.tape p.S) := by
   rfl
 
 theorem selectedMergeInputValidatorOutputTape_eq_of_same_simulator
@@ -828,12 +829,12 @@ def SelectedMergeInputValidatorExactSpec
   ReadySpec validator ∧
     (forall p : SelectedMergeInputValidatorPayload,
       validator.HaltsWithTape
-        (MachineDescription.SimulatorLayout.asBoolInput p.S)
+        (SimulatorLayout.asBoolInput p.S)
         (SelectedMergeInputValidatorOutputTape p)) ∧
       forall code : Word MachineCodeSymbol,
       forall T : Tape Bool,
         validator.HaltsWithTape
-            (MachineDescription.encodeCodeWordAsInput code) T ->
+            (encodeCodeWordAsInput code) T ->
           exists p : SelectedMergeInputValidatorPayload,
             code = SelectedMergeInputValidatorInputCode p ∧
               T = SelectedMergeInputValidatorOutputTape p
@@ -845,23 +846,23 @@ def SelectedMergeInputValidatorExactConstruction : Prop :=
 def SelectedMergeInputFieldValidatorSpec
     (validator : MachineDescription) : Prop :=
   validator.SubroutineReady ∧
-    (forall S : MachineDescription.SimulatorLayout,
-     forall L : MachineDescription.DovetailLayout,
+    (forall S : SimulatorLayout,
+     forall L : DovetailLayout,
       forall hinput :
-        MachineDescription.decodeCodeWordAsInput S.input =
-          some (MachineDescription.DovetailLayout.encode L),
+        decodeCodeWordAsInput S.input =
+          some (DovetailLayout.encode L),
       validator.HaltsFromTape
-        (MachineDescription.SimulatorLayout.tape S)
+        (SimulatorLayout.tape S)
         (SelectedMergeInputValidatorOutputTape
           { S := S, L := L, input := hinput })) ∧
-      forall S : MachineDescription.SimulatorLayout,
+      forall S : SimulatorLayout,
       forall T : Tape Bool,
         validator.HaltsFromTape
-            (MachineDescription.SimulatorLayout.tape S) T ->
-          exists L : MachineDescription.DovetailLayout,
+            (SimulatorLayout.tape S) T ->
+          exists L : DovetailLayout,
           exists hinput :
-            MachineDescription.decodeCodeWordAsInput S.input =
-              some (MachineDescription.DovetailLayout.encode L),
+            decodeCodeWordAsInput S.input =
+              some (DovetailLayout.encode L),
             T =
               SelectedMergeInputValidatorOutputTape
                 { S := S, L := L, input := hinput }
@@ -873,23 +874,23 @@ def SelectedMergeInputFieldValidatorConstruction : Prop :=
 def SelectedMergeInputFieldCheckerSpec
     (checker : MachineDescription) : Prop :=
   checker.SubroutineReady ∧
-    (forall S : MachineDescription.SimulatorLayout,
-     forall L : MachineDescription.DovetailLayout,
+    (forall S : SimulatorLayout,
+     forall L : DovetailLayout,
       forall _hinput :
-        MachineDescription.decodeCodeWordAsInput S.input =
-          some (MachineDescription.DovetailLayout.encode L),
+        decodeCodeWordAsInput S.input =
+          some (DovetailLayout.encode L),
       checker.HaltsFromTape
-        (MachineDescription.SimulatorLayout.tape S)
-        (MachineDescription.SimulatorLayout.tape S)) ∧
-      forall S : MachineDescription.SimulatorLayout,
+        (SimulatorLayout.tape S)
+        (SimulatorLayout.tape S)) ∧
+      forall S : SimulatorLayout,
       forall T : Tape Bool,
         checker.HaltsFromTape
-            (MachineDescription.SimulatorLayout.tape S) T ->
-          exists L : MachineDescription.DovetailLayout,
+            (SimulatorLayout.tape S) T ->
+          exists L : DovetailLayout,
           exists _hinput :
-            MachineDescription.decodeCodeWordAsInput S.input =
-              some (MachineDescription.DovetailLayout.encode L),
-            T = MachineDescription.SimulatorLayout.tape S
+            decodeCodeWordAsInput S.input =
+              some (DovetailLayout.encode L),
+            T = SimulatorLayout.tape S
 
 def SelectedMergeInputFieldCheckerConstruction : Prop :=
   exists checker : MachineDescription,
@@ -897,39 +898,39 @@ def SelectedMergeInputFieldCheckerConstruction : Prop :=
 
 def SelectedMergeInputFieldValidatorFromChecker
     (checker : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine
-    checker MachineDescription.ExactIdentityDescription Direction.right
+  seqSubroutine
+    checker ExactIdentityDescription Direction.right
 
 theorem selectedMergeInputFieldValidatorSpec_of_checker
     {checker : MachineDescription}
     (hchecker : SelectedMergeInputFieldCheckerSpec checker) :
     SelectedMergeInputFieldValidatorSpec
       (SelectedMergeInputFieldValidatorFromChecker checker) := by
-  let identity := MachineDescription.ExactIdentityDescription
+  let identity := ExactIdentityDescription
   have hid : identity.SubroutineReady :=
     CommonGround.Identity.exactIdentityDescription_subroutineReady
   constructor
   · exact
-      MachineDescription.seqSubroutine_subroutineReady
+      seqSubroutine_subroutineReady
         hchecker.left hid
   constructor
   · intro S L hinput
     have hcheck :
         checker.HaltsFromTape
-          (MachineDescription.SimulatorLayout.tape S)
-          (MachineDescription.SimulatorLayout.tape S) :=
+          (SimulatorLayout.tape S)
+          (SimulatorLayout.tape S) :=
       hchecker.right.left S L hinput
     simpa [SelectedMergeInputFieldValidatorFromChecker,
       selectedMergeInputValidatorOutputTape_eq_handoff, identity] using
-      MachineDescription.seqSubroutine_haltsFromTape_of_haltsFromTape
+      seqSubroutine_haltsFromTape_of_haltsFromTape
         (A := checker) (B := identity) (handoffMove := Direction.right)
         hchecker.left hid hcheck
         (CommonGround.Identity.exactIdentityDescription_run_from_start
           (Tape.move Direction.right
-            (MachineDescription.SimulatorLayout.tape S)))
+            (SimulatorLayout.tape S)))
   · intro S T hhalt
     rcases
-        MachineDescription.seqSubroutine_haltsFromTape_inv
+        seqSubroutine_haltsFromTape_inv
           (A := checker) (B := identity) (handoffMove := Direction.right)
           hchecker.left hid
           (by
@@ -946,7 +947,7 @@ theorem selectedMergeInputFieldValidatorSpec_of_checker
     rw [hrun] at hn
     have htape :
         Tape.move Direction.right Tmid = T :=
-      congrArg MachineDescription.Configuration.tape hn
+      congrArg Configuration.tape hn
     rw [hTmid] at htape
     simpa [selectedMergeInputValidatorOutputTape_eq_handoff] using
       htape.symm
@@ -961,7 +962,7 @@ theorem selectedMergeInputFieldValidatorConstruction_of_checker
 
 def SelectedMergeInputValidatorFromParserChecker
     (parser checker : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine parser checker Direction.left
+  seqSubroutine parser checker Direction.left
 
 theorem selectedMergeInputValidatorSpec_of_parser_checker
     {parser checker : MachineDescription}
@@ -974,7 +975,7 @@ theorem selectedMergeInputValidatorSpec_of_parser_checker
   have hrunnerReady :
       (SelectedMergeInputValidatorFromParserChecker
         parser checker).SubroutineReady :=
-    MachineDescription.seqSubroutine_subroutineReady
+    seqSubroutine_subroutineReady
       hparser.left hchecker.left
   constructor
   · exact hrunnerReady
@@ -982,22 +983,22 @@ theorem selectedMergeInputValidatorSpec_of_parser_checker
   · intro S L hinput
     have hparserRun :
         parser.HaltsWithTape
-          (MachineDescription.SimulatorLayout.asBoolInput S)
+          (SimulatorLayout.asBoolInput S)
           (CommonGround.SimulatorLayouts.handoffTape S) := by
       simpa [CommonGround.SimulatorLayouts.bits,
         CommonGround.SimulatorLayouts.encode,
         CommonGround.LayoutTapes.Bits,
-        MachineDescription.SimulatorLayout.asBoolInput] using
+        SimulatorLayout.asBoolInput] using
         hparser.right.left S
     have hcheckerRun :
         checker.HaltsFromTape
-          (MachineDescription.SimulatorLayout.tape S)
-          (MachineDescription.SimulatorLayout.tape S) :=
+          (SimulatorLayout.tape S)
+          (SimulatorLayout.tape S) :=
       hchecker.right.left S L hinput
-    rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
+    rcases runConfig_eq_halt_of_haltsFromTape
       hcheckerRun with ⟨n, hn⟩
     exact
-      MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+      seqSubroutine_haltsWithTape_of_haltsWithTape
         hparser.left hchecker.left hparserRun
         ⟨n, by
           simpa [
@@ -1005,7 +1006,7 @@ theorem selectedMergeInputValidatorSpec_of_parser_checker
               S] using hn⟩
   · intro S T hhalt
     rcases
-        MachineDescription.seqSubroutine_haltsWithTape_inv
+        seqSubroutine_haltsWithTape_inv
           hparser.left hchecker.left
           (by
             simpa [SelectedMergeInputValidatorFromParserChecker] using
@@ -1013,17 +1014,17 @@ theorem selectedMergeInputValidatorSpec_of_parser_checker
       ⟨Tmid, hparserRun, hcheckerReach⟩
     have hparserRun' :
         parser.HaltsWithTape
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.SimulatorLayout.encode S)) Tmid := by
-      simpa [MachineDescription.SimulatorLayout.asBoolInput] using
+          (encodeCodeWordAsInput
+            (SimulatorLayout.encode S)) Tmid := by
+      simpa [SimulatorLayout.asBoolInput] using
         hparserRun
     rcases hparser.right.right
-        (MachineDescription.SimulatorLayout.encode S) Tmid hparserRun' with
+        (SimulatorLayout.encode S) Tmid hparserRun' with
       ⟨S', hdecode, hTmid⟩
     have hS' : S' = S := by
       have hdecode' :
-          MachineDescription.SimulatorLayout.decodeComplete
-              (MachineDescription.SimulatorLayout.encode S) =
+          SimulatorLayout.decodeComplete
+              (SimulatorLayout.encode S) =
             some S' := by
         simpa [CommonGround.SimulatorLayouts.decode,
           CommonGround.SimulatorLayouts.encode] using hdecode
@@ -1034,17 +1035,17 @@ theorem selectedMergeInputValidatorSpec_of_parser_checker
     rcases hcheckerReach with ⟨n, hn⟩
     have hcheckerRun :
         checker.HaltsFromTape
-          (MachineDescription.SimulatorLayout.tape S) T := by
+          (SimulatorLayout.tape S) T := by
       refine ⟨n, ?_⟩
       constructor
-      · simpa [MachineDescription.HaltsFromTapeIn,
-          MachineDescription.initial, hTmid,
+      · simpa [HaltsFromTapeIn,
+          initial, hTmid,
           CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
-            S] using congrArg MachineDescription.Configuration.state hn
-      · simpa [MachineDescription.HaltsFromTapeIn,
-          MachineDescription.initial, hTmid,
+            S] using congrArg Configuration.state hn
+      · simpa [HaltsFromTapeIn,
+          initial, hTmid,
           CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
-            S] using congrArg MachineDescription.Configuration.tape hn
+            S] using congrArg Configuration.tape hn
     rcases hchecker.right.right S T hcheckerRun with
       ⟨L, hinput, hT⟩
     exact ⟨L, hinput, hT⟩
@@ -1062,7 +1063,7 @@ theorem selectedMergeInputValidatorConstruction_of_parser_checker
 
 def SelectedMergeInputValidatorFromParserField
     (parser fieldValidator : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine parser fieldValidator Direction.left
+  seqSubroutine parser fieldValidator Direction.left
 
 theorem selectedMergeInputValidatorExactSpec_of_parser_fieldValidator
     {parser fieldValidator : MachineDescription}
@@ -1077,7 +1078,7 @@ theorem selectedMergeInputValidatorExactSpec_of_parser_fieldValidator
   have hrunnerReady :
       (SelectedMergeInputValidatorFromParserField
         parser fieldValidator).SubroutineReady :=
-    MachineDescription.seqSubroutine_subroutineReady
+    seqSubroutine_subroutineReady
       hparser.left hfield.left
   constructor
   · exact hrunnerReady
@@ -1085,22 +1086,22 @@ theorem selectedMergeInputValidatorExactSpec_of_parser_fieldValidator
   · intro p
     have hparserRun :
         parser.HaltsWithTape
-          (MachineDescription.SimulatorLayout.asBoolInput p.S)
+          (SimulatorLayout.asBoolInput p.S)
           (CommonGround.SimulatorLayouts.handoffTape p.S) := by
       simpa [CommonGround.SimulatorLayouts.bits,
         CommonGround.SimulatorLayouts.encode,
         CommonGround.LayoutTapes.Bits,
-        MachineDescription.SimulatorLayout.asBoolInput] using
+        SimulatorLayout.asBoolInput] using
         hparser.right.left p.S
     have hfieldRun :
         fieldValidator.HaltsFromTape
-          (MachineDescription.SimulatorLayout.tape p.S)
+          (SimulatorLayout.tape p.S)
           (SelectedMergeInputValidatorOutputTape p) :=
       hfield.right.left p.S p.L p.input
-    rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
+    rcases runConfig_eq_halt_of_haltsFromTape
       hfieldRun with ⟨n, hn⟩
     exact
-      MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+      seqSubroutine_haltsWithTape_of_haltsWithTape
         hparser.left hfield.left hparserRun
         ⟨n, by
           simpa [
@@ -1108,28 +1109,28 @@ theorem selectedMergeInputValidatorExactSpec_of_parser_fieldValidator
               p.S] using hn⟩
   · intro code T hhalt
     rcases
-        MachineDescription.seqSubroutine_haltsWithTape_inv
+        seqSubroutine_haltsWithTape_inv
           hparser.left hfield.left hhalt with
       ⟨Tmid, hparserRun, hfieldReach⟩
     rcases hparser.right.right code Tmid hparserRun with
       ⟨S, hdecode, hTmid⟩
-    have hcode : code = MachineDescription.SimulatorLayout.encode S :=
+    have hcode : code = SimulatorLayout.encode S :=
       CommonGround.SimulatorLayouts.decodeComplete_eq_some_encode
         hdecode
     rcases hfieldReach with ⟨n, hn⟩
     have hfieldRun :
         fieldValidator.HaltsFromTape
-          (MachineDescription.SimulatorLayout.tape S) T := by
+          (SimulatorLayout.tape S) T := by
       refine ⟨n, ?_⟩
       constructor
-      · simpa [MachineDescription.HaltsFromTapeIn,
-          MachineDescription.initial, hTmid,
+      · simpa [HaltsFromTapeIn,
+          initial, hTmid,
           CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
-            S] using congrArg MachineDescription.Configuration.state hn
-      · simpa [MachineDescription.HaltsFromTapeIn,
-          MachineDescription.initial, hTmid,
+            S] using congrArg Configuration.state hn
+      · simpa [HaltsFromTapeIn,
+          initial, hTmid,
           CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
-            S] using congrArg MachineDescription.Configuration.tape hn
+            S] using congrArg Configuration.tape hn
     rcases hfield.right.right S T hfieldRun with
       ⟨L, hinput, hT⟩
     exact
@@ -1169,7 +1170,7 @@ theorem selectedMergeInputValidatorPrimitiveRightShiftedConstruction_of_exact
       (by
         intro p
         simpa [SelectedMergeInputValidatorInputCode,
-          MachineDescription.SimulatorLayout.asBoolInput] using
+          SimulatorLayout.asBoolInput] using
           hvalidator.right.left p)
       hvalidator.right.right
       (by
@@ -1196,8 +1197,8 @@ theorem selectedMergeInputValidatorPrimitiveRightShiftedConstruction_of_exact
 
 def SelectedMergeInputValidatorFromRightShifted
     (validator : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine validator
-    MachineDescription.ExactIdentityDescription Direction.left
+  seqSubroutine validator
+    ExactIdentityDescription Direction.left
 
 theorem selectedMergeInputValidatorSpec_of_rightShifted
     {validator : MachineDescription}
@@ -1207,67 +1208,67 @@ theorem selectedMergeInputValidatorSpec_of_rightShifted
     SelectedMergeInputValidatorSpec
       (SelectedMergeInputValidatorFromRightShifted validator) := by
   have hidentityReady :
-      MachineDescription.ExactIdentityDescription.SubroutineReady :=
+      ExactIdentityDescription.SubroutineReady :=
     CommonGround.Identity.exactIdentityDescription_subroutineReady
   have hvalidatorReady : validator.SubroutineReady :=
     rightShiftedOutputCompiledSubroutineByDescription_subroutineReady
       hvalidator
   constructor
   · exact
-      MachineDescription.seqSubroutine_subroutineReady
+      seqSubroutine_subroutineReady
         hvalidatorReady hidentityReady
   constructor
   · intro S L hinput
     have htransform :
         SelectedMergeInputValidatorPrimitive.transform
-            (MachineDescription.SimulatorLayout.encode S) =
-          some (MachineDescription.SimulatorLayout.encode S) :=
+            (SimulatorLayout.encode S) =
+          some (SimulatorLayout.encode S) :=
       (selectedMergeInputValidatorPrimitive_transform_eq_some_iff
-        (MachineDescription.SimulatorLayout.encode S)
-        (MachineDescription.SimulatorLayout.encode S)).mpr
+        (SimulatorLayout.encode S)
+        (SimulatorLayout.encode S)).mpr
         ⟨S, L, rfl, hinput, rfl⟩
     have hright :
         validator.HaltsWithTape
-          (MachineDescription.SimulatorLayout.asBoolInput S)
+          (SimulatorLayout.asBoolInput S)
           (Tape.move Direction.right
             (Tape.input
-              (MachineDescription.encodeCodeWordAsInput
-                (MachineDescription.SimulatorLayout.encode S)))) := by
-      simpa [MachineDescription.SimulatorLayout.asBoolInput] using
+              (encodeCodeWordAsInput
+                (SimulatorLayout.encode S)))) := by
+      simpa [SimulatorLayout.asBoolInput] using
         rightShiftedOutputCompiled_haltsWithTape_of_transform
           hvalidator htransform
     have hbridge :
         Tape.move Direction.left
             (Tape.move Direction.right
               (Tape.input
-                (MachineDescription.encodeCodeWordAsInput
-                  (MachineDescription.SimulatorLayout.encode S)))) =
-          MachineDescription.SimulatorLayout.tape S := by
-      simpa [MachineDescription.SimulatorLayout.tape] using
+                (encodeCodeWordAsInput
+                  (SimulatorLayout.encode S)))) =
+          SimulatorLayout.tape S := by
+      simpa [SimulatorLayout.tape] using
         CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape S
     have hidentity :
         exists n : Nat,
-          MachineDescription.ExactIdentityDescription.runConfig n
-              { state := MachineDescription.ExactIdentityDescription.start
+          ExactIdentityDescription.runConfig n
+              { state := ExactIdentityDescription.start
                 tape :=
                   Tape.move Direction.left
                     (Tape.move Direction.right
                       (Tape.input
-                        (MachineDescription.encodeCodeWordAsInput
-                          (MachineDescription.SimulatorLayout.encode S)))) } =
-            { state := MachineDescription.ExactIdentityDescription.halt
-              tape := MachineDescription.SimulatorLayout.tape S } := by
+                        (encodeCodeWordAsInput
+                          (SimulatorLayout.encode S)))) } =
+            { state := ExactIdentityDescription.halt
+              tape := SimulatorLayout.tape S } := by
       rcases
           CommonGround.Identity.exactIdentityDescription_run_from_start
-            (MachineDescription.SimulatorLayout.tape S) with
+            (SimulatorLayout.tape S) with
         ⟨n, hn⟩
       exact ⟨n, by simpa [hbridge] using hn⟩
     simpa [SelectedMergeInputValidatorFromRightShifted] using
-      MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+      seqSubroutine_haltsWithTape_of_haltsWithTape
         hvalidatorReady hidentityReady hright hidentity
   · intro S T hhalt
     rcases
-        MachineDescription.seqSubroutine_haltsWithTape_inv
+        seqSubroutine_haltsWithTape_inv
           hvalidatorReady hidentityReady
           (by simpa [SelectedMergeInputValidatorFromRightShifted] using hhalt) with
       ⟨Tmid, hvalidatorRun, hidentityReach⟩
@@ -1277,19 +1278,19 @@ theorem selectedMergeInputValidatorSpec_of_rightShifted
       ⟨out, htransform, hTmid⟩
     rcases
         (selectedMergeInputValidatorPrimitive_transform_eq_some_iff
-          (MachineDescription.SimulatorLayout.encode S) out).mp htransform with
+          (SimulatorLayout.encode S) out).mp htransform with
       ⟨S', L, hcode, hinput, hout⟩
     have hS : S' = S := by
       have hsome :
           some S = some S' := by
         calc
           some S =
-              MachineDescription.SimulatorLayout.decodeComplete
-                (MachineDescription.SimulatorLayout.encode S) := by
+              SimulatorLayout.decodeComplete
+                (SimulatorLayout.encode S) := by
                 rw [CommonGround.SimulatorLayouts.decodeComplete_encode]
           _ =
-              MachineDescription.SimulatorLayout.decodeComplete
-                (MachineDescription.SimulatorLayout.encode S') := by
+              SimulatorLayout.decodeComplete
+                (SimulatorLayout.encode S') := by
                 rw [hcode]
           _ = some S' := by
                 rw [CommonGround.SimulatorLayouts.decodeComplete_encode]
@@ -1302,8 +1303,8 @@ theorem selectedMergeInputValidatorSpec_of_rightShifted
           Tape.move Direction.left
             (Tape.move Direction.right
               (Tape.input
-                (MachineDescription.encodeCodeWordAsInput
-                  (MachineDescription.SimulatorLayout.encode S)))) := by
+                (encodeCodeWordAsInput
+                  (SimulatorLayout.encode S)))) := by
       rcases hidentityReach with ⟨n, hn⟩
       have hrun :=
         CommonGround.Identity.exactIdentityDescription_runConfig_from_start
@@ -1311,12 +1312,12 @@ theorem selectedMergeInputValidatorSpec_of_rightShifted
       rw [hrun] at hn
       have htape :
           Tape.move Direction.left Tmid = T :=
-        congrArg MachineDescription.Configuration.tape hn
+        congrArg Configuration.tape hn
       rw [hTmid] at htape
       exact htape.symm
-    have hT : T = MachineDescription.SimulatorLayout.tape S := by
+    have hT : T = SimulatorLayout.tape S := by
       rw [hTleft]
-      simpa [MachineDescription.SimulatorLayout.tape] using
+      simpa [SimulatorLayout.tape] using
         CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape S
     exact ⟨L, hinput, hT⟩
 
@@ -1331,7 +1332,7 @@ theorem selectedMergeInputValidatorConstruction_of_rightShifted
 
 def SelectedMergeParserFromSimulatorValidator
     (parser validator : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine parser validator Direction.left
+  seqSubroutine parser validator Direction.left
 
 theorem selectedMergeParserSpec_of_simulatorParser_validator
     {parser validator : MachineDescription}
@@ -1344,7 +1345,7 @@ theorem selectedMergeParserSpec_of_simulatorParser_validator
   have hrunnerReady :
       (SelectedMergeParserFromSimulatorValidator
         parser validator).SubroutineReady :=
-    MachineDescription.seqSubroutine_subroutineReady
+    seqSubroutine_subroutineReady
       hparser.left hvalidator.left
   constructor
   · exact hrunnerReady
@@ -1352,22 +1353,22 @@ theorem selectedMergeParserSpec_of_simulatorParser_validator
   · intro S L hinput
     have hparserRun :
         parser.HaltsWithTape
-          (MachineDescription.SimulatorLayout.asBoolInput S)
+          (SimulatorLayout.asBoolInput S)
           (CommonGround.SimulatorLayouts.handoffTape S) := by
       simpa [CommonGround.SimulatorLayouts.bits,
         CommonGround.SimulatorLayouts.encode,
         CommonGround.LayoutTapes.Bits,
-        MachineDescription.SimulatorLayout.asBoolInput] using
+        SimulatorLayout.asBoolInput] using
         hparser.right.left S
     have hvalidatorRun :
         validator.HaltsWithTape
-          (MachineDescription.SimulatorLayout.asBoolInput S)
-          (MachineDescription.SimulatorLayout.tape S) :=
+          (SimulatorLayout.asBoolInput S)
+          (SimulatorLayout.tape S) :=
       hvalidator.right.left S L hinput
-    rcases MachineDescription.runConfig_eq_halt_of_haltsWithTape
+    rcases runConfig_eq_halt_of_haltsWithTape
       hvalidatorRun with ⟨n, hn⟩
     exact
-      MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+      seqSubroutine_haltsWithTape_of_haltsWithTape
         hparser.left hvalidator.left hparserRun
         ⟨n, by
           simpa [
@@ -1375,28 +1376,28 @@ theorem selectedMergeParserSpec_of_simulatorParser_validator
               S] using hn⟩
   · intro code T hhalt
     rcases
-        MachineDescription.seqSubroutine_haltsWithTape_inv
+        seqSubroutine_haltsWithTape_inv
           hparser.left hvalidator.left hhalt with
       ⟨Tmid, hparserRun, hvalidatorReach⟩
     rcases hparser.right.right code Tmid hparserRun with
       ⟨S, hdecode, hTmid⟩
-    have hcode : code = MachineDescription.SimulatorLayout.encode S :=
+    have hcode : code = SimulatorLayout.encode S :=
       CommonGround.SimulatorLayouts.decodeComplete_eq_some_encode
         hdecode
     rcases hvalidatorReach with ⟨n, hn⟩
     have hvalidatorRun :
         validator.HaltsWithTape
-          (MachineDescription.SimulatorLayout.asBoolInput S) T := by
+          (SimulatorLayout.asBoolInput S) T := by
       refine ⟨n, ?_⟩
       constructor
-      · simpa [MachineDescription.HaltsWithTapeIn,
-          MachineDescription.initial, hTmid,
+      · simpa [HaltsWithTapeIn,
+          initial, hTmid,
           CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
-            S] using congrArg MachineDescription.Configuration.state hn
-      · simpa [MachineDescription.HaltsWithTapeIn,
-          MachineDescription.initial, hTmid,
+            S] using congrArg Configuration.state hn
+      · simpa [HaltsWithTapeIn,
+          initial, hTmid,
           CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
-            S] using congrArg MachineDescription.Configuration.tape hn
+            S] using congrArg Configuration.tape hn
     rcases hvalidator.right.right S T hvalidatorRun with
       ⟨L, hinput, hT⟩
     exact ⟨S, L, hcode, hinput, hT⟩
@@ -1417,32 +1418,32 @@ def SelectedMergeEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
   ReadySpec emitter ∧
-    (forall S : MachineDescription.SimulatorLayout,
-     forall L : MachineDescription.DovetailLayout,
-      MachineDescription.decodeCodeWordAsInput S.input =
-        some (MachineDescription.DovetailLayout.encode L) ->
+    (forall S : SimulatorLayout,
+     forall L : DovetailLayout,
+      decodeCodeWordAsInput S.input =
+        some (DovetailLayout.encode L) ->
       emitter.HaltsWithTape
-        (MachineDescription.SimulatorLayout.asBoolInput S)
+        (SimulatorLayout.asBoolInput S)
         (SelectedMergeOutputTape useAccept S L)) ∧
-      forall S : MachineDescription.SimulatorLayout,
-      forall L : MachineDescription.DovetailLayout,
+      forall S : SimulatorLayout,
+      forall L : DovetailLayout,
       forall T : Tape Bool,
-        MachineDescription.decodeCodeWordAsInput S.input =
-          some (MachineDescription.DovetailLayout.encode L) ->
+        decodeCodeWordAsInput S.input =
+          some (DovetailLayout.encode L) ->
         emitter.HaltsWithTape
-            (MachineDescription.SimulatorLayout.asBoolInput S) T ->
+            (SimulatorLayout.asBoolInput S) T ->
           T = SelectedMergeOutputTape useAccept S L
 
 structure SelectedMergeEmitterPayload where
-  S : MachineDescription.SimulatorLayout
-  L : MachineDescription.DovetailLayout
+  S : SimulatorLayout
+  L : DovetailLayout
   input :
-    MachineDescription.decodeCodeWordAsInput S.input =
-      some (MachineDescription.DovetailLayout.encode L)
+    decodeCodeWordAsInput S.input =
+      some (DovetailLayout.encode L)
 
 def SelectedMergeEmitterInputBits
     (p : SelectedMergeEmitterPayload) : Word Bool :=
-  MachineDescription.SimulatorLayout.asBoolInput p.S
+  SimulatorLayout.asBoolInput p.S
 
 def SelectedMergeEmitterOutputCode
     (useAccept : Bool)
@@ -1508,7 +1509,7 @@ def SelectedMergeEquivEmitterSpec
   emitter.SubroutineReady ∧
     forall p : SelectedMergeEmitterPayload,
       emitter.HaltsFromTapeEquiv
-        (MachineDescription.SimulatorLayout.tape p.S)
+        (SimulatorLayout.tape p.S)
         (SelectedMergeEquivOutputTape useAccept p.S p.L)
 
 def SelectedMergeEquivEmitterConstruction : Prop :=

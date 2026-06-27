@@ -10,6 +10,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 noncomputable def PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
     (attempt : MachineDescription) :
@@ -19,16 +20,16 @@ noncomputable def PairedRecognizerDovetailTotalStageAttemptControllerSearchProgr
     exact
       { run := fun w limit =>
           if attempt.HaltsWithOutput
-              (MachineDescription.encodeCodeWordAsInput
+              (encodeCodeWordAsInput
                 (PairedRecognizerDovetailStageInputCode w limit))
-              (MachineDescription.encodeCodeWordAsInput
-                (MachineDescription.encodeBoolWord [true])) then
+              (encodeCodeWordAsInput
+                (encodeBoolWord [true])) then
             some [true]
           else if attempt.HaltsWithOutput
-              (MachineDescription.encodeCodeWordAsInput
+              (encodeCodeWordAsInput
                 (PairedRecognizerDovetailStageInputCode w limit))
-              (MachineDescription.encodeCodeWordAsInput
-                (MachineDescription.encodeBoolWord [false])) then
+              (encodeCodeWordAsInput
+                (encodeBoolWord [false])) then
             some [false]
           else
             none }
@@ -43,10 +44,10 @@ theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWi
       exists limit : Nat,
       exists result : Word Bool,
         attempt.HaltsWithOutput
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (PairedRecognizerDovetailStageInputCode w limit))
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.encodeBoolWord result)) ∧
+          (encodeCodeWordAsInput
+            (encodeBoolWord result)) ∧
         PairedRecognizerDovetailControllerRawOutput result = some [b] := by
   classical
   constructor
@@ -55,75 +56,75 @@ theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWi
     cases b
     · by_cases htrue :
         attempt.HaltsWithOutput
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (PairedRecognizerDovetailStageInputCode w limit))
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.encodeBoolWord [true]))
+          (encodeCodeWordAsInput
+            (encodeBoolWord [true]))
       · simp [PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram,
           htrue] at hrun
         cases hrun
       · by_cases hfalse :
           attempt.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w limit))
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeBoolWord [false]))
+            (encodeCodeWordAsInput
+              (encodeBoolWord [false]))
         · exact ⟨limit, [false], hfalse, by
             simp [PairedRecognizerDovetailControllerRawOutput,
-              MachineDescription.DovetailControllerLayout.rawOutput_singleton]⟩
+              DovetailControllerLayout.rawOutput_singleton]⟩
         · simp [PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram,
             htrue, hfalse] at hrun
     · by_cases htrue :
         attempt.HaltsWithOutput
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (PairedRecognizerDovetailStageInputCode w limit))
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.encodeBoolWord [true]))
+          (encodeCodeWordAsInput
+            (encodeBoolWord [true]))
       · exact ⟨limit, [true], htrue, by
           simp [PairedRecognizerDovetailControllerRawOutput,
-            MachineDescription.DovetailControllerLayout.rawOutput_singleton]⟩
+            DovetailControllerLayout.rawOutput_singleton]⟩
       · simp [PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram,
           htrue] at hrun
         cases hrun.right
   · intro h
     rcases h with ⟨limit, result, hattempt, hraw⟩
     have hresult : result = [b] :=
-      (MachineDescription.DovetailControllerLayout.rawOutput_eq_some_singleton_iff
+      (DovetailControllerLayout.rawOutput_eq_some_singleton_iff
         result b).mp hraw
     subst result
     refine ⟨limit, ?_⟩
     cases b
     · have hnotTrue :
           ¬ attempt.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w limit))
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeBoolWord [true])) := by
+            (encodeCodeWordAsInput
+              (encodeBoolWord [true])) := by
         intro htrue
         have hencoded :
-            MachineDescription.encodeBoolWord [false] =
-              MachineDescription.encodeBoolWord [true] := by
-          exact MachineDescription.encodeCodeWordAsInput_injective
-            (MachineDescription.haltsWithOutput_functional_of_haltTransitionFree
+            encodeBoolWord [false] =
+              encodeBoolWord [true] := by
+          exact encodeCodeWordAsInput_injective
+            (haltsWithOutput_functional_of_haltTransitionFree
               hattemptReady.right
               hattempt htrue)
         have hbool : [false] = [true] :=
-          MachineDescription.encodeBoolWord_injective hencoded
+          encodeBoolWord_injective hencoded
         cases hbool
       rw [show
           (PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
             attempt).run w limit =
             (if attempt.HaltsWithOutput
-                (MachineDescription.encodeCodeWordAsInput
+                (encodeCodeWordAsInput
                   (PairedRecognizerDovetailStageInputCode w limit))
-                (MachineDescription.encodeCodeWordAsInput
-                  (MachineDescription.encodeBoolWord [true])) then
+                (encodeCodeWordAsInput
+                  (encodeBoolWord [true])) then
               some [true]
             else if attempt.HaltsWithOutput
-                (MachineDescription.encodeCodeWordAsInput
+                (encodeCodeWordAsInput
                   (PairedRecognizerDovetailStageInputCode w limit))
-                (MachineDescription.encodeCodeWordAsInput
-                  (MachineDescription.encodeBoolWord [false])) then
+                (encodeCodeWordAsInput
+                  (encodeBoolWord [false])) then
               some [false]
             else
               none) by
@@ -157,19 +158,19 @@ noncomputable def PairedRecognizerDovetailStageAttemptSearchProgram
     exact
       { run := fun w limit =>
           if attempt.HaltsWithOutput
-              (MachineDescription.encodeCodeWordAsInput
+              (encodeCodeWordAsInput
                 (PairedRecognizerDovetailStageInputCode w limit))
-              (MachineDescription.encodeCodeWordAsInput
-                (MachineDescription.encodeBoolWord [true])) ∧
-              MachineDescription.boundedDovetailOutput
+              (encodeCodeWordAsInput
+                (encodeBoolWord [true])) ∧
+              boundedDovetailOutput
                 accept reject w limit = some [true] then
             some [true]
           else if attempt.HaltsWithOutput
-              (MachineDescription.encodeCodeWordAsInput
+              (encodeCodeWordAsInput
                 (PairedRecognizerDovetailStageInputCode w limit))
-              (MachineDescription.encodeCodeWordAsInput
-                (MachineDescription.encodeBoolWord [false])) ∧
-              MachineDescription.boundedDovetailOutput
+              (encodeCodeWordAsInput
+                (encodeBoolWord [false])) ∧
+              boundedDovetailOutput
                 accept reject w limit = some [false] then
             some [false]
           else
@@ -183,11 +184,11 @@ theorem pairedRecognizerDovetailStageAttemptSearchProgram_haltsWithOutput_iff
           accept reject attempt) w [b] <->
       exists limit : Nat,
         attempt.HaltsWithOutput
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (PairedRecognizerDovetailStageInputCode w limit))
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.encodeBoolWord [b])) ∧
-        MachineDescription.boundedDovetailOutput
+          (encodeCodeWordAsInput
+            (encodeBoolWord [b])) ∧
+        boundedDovetailOutput
           accept reject w limit = some [b] := by
   classical
   constructor
@@ -196,33 +197,33 @@ theorem pairedRecognizerDovetailStageAttemptSearchProgram_haltsWithOutput_iff
     cases b
     · by_cases htrue :
         attempt.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w limit))
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeBoolWord [true])) ∧
-          MachineDescription.boundedDovetailOutput
+            (encodeCodeWordAsInput
+              (encodeBoolWord [true])) ∧
+          boundedDovetailOutput
             accept reject w limit = some [true]
       · simp [PairedRecognizerDovetailStageAttemptSearchProgram,
           htrue] at hrun
         cases hrun
       · by_cases hfalse :
           attempt.HaltsWithOutput
-              (MachineDescription.encodeCodeWordAsInput
+              (encodeCodeWordAsInput
                 (PairedRecognizerDovetailStageInputCode w limit))
-              (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeBoolWord [false])) ∧
-            MachineDescription.boundedDovetailOutput
+              (encodeCodeWordAsInput
+              (encodeBoolWord [false])) ∧
+            boundedDovetailOutput
               accept reject w limit = some [false]
         · exact ⟨limit, hfalse⟩
         · simp [PairedRecognizerDovetailStageAttemptSearchProgram,
             htrue, hfalse] at hrun
     · by_cases htrue :
         attempt.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w limit))
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeBoolWord [true])) ∧
-          MachineDescription.boundedDovetailOutput
+            (encodeCodeWordAsInput
+              (encodeBoolWord [true])) ∧
+          boundedDovetailOutput
             accept reject w limit = some [true]
       · exact ⟨limit, htrue⟩
       · simp [PairedRecognizerDovetailStageAttemptSearchProgram,
@@ -234,20 +235,20 @@ theorem pairedRecognizerDovetailStageAttemptSearchProgram_haltsWithOutput_iff
     cases b
     · have hfalse :
           attempt.HaltsWithOutput
-              (MachineDescription.encodeCodeWordAsInput
+              (encodeCodeWordAsInput
                 (PairedRecognizerDovetailStageInputCode w limit))
-              (MachineDescription.encodeCodeWordAsInput
-                (MachineDescription.encodeBoolWord [false])) ∧
-            MachineDescription.boundedDovetailOutput
+              (encodeCodeWordAsInput
+                (encodeBoolWord [false])) ∧
+            boundedDovetailOutput
               accept reject w limit = some [false] := by
         exact ⟨hattempt, hout⟩
       have hnotTrue :
           ¬ (attempt.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w limit))
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeBoolWord [true])) ∧
-              MachineDescription.boundedDovetailOutput
+            (encodeCodeWordAsInput
+              (encodeBoolWord [true])) ∧
+              boundedDovetailOutput
               accept reject w limit = some [true]) := by
         intro htrue
         rw [hout] at htrue
@@ -257,20 +258,20 @@ theorem pairedRecognizerDovetailStageAttemptSearchProgram_haltsWithOutput_iff
             accept reject attempt).run w limit =
             (if
               attempt.HaltsWithOutput
-                (MachineDescription.encodeCodeWordAsInput
+                (encodeCodeWordAsInput
                   (PairedRecognizerDovetailStageInputCode w limit))
-                (MachineDescription.encodeCodeWordAsInput
-                  (MachineDescription.encodeBoolWord [true])) ∧
-              MachineDescription.boundedDovetailOutput
+                (encodeCodeWordAsInput
+                  (encodeBoolWord [true])) ∧
+              boundedDovetailOutput
                 accept reject w limit = some [true] then
               some [true]
             else if
               attempt.HaltsWithOutput
-                (MachineDescription.encodeCodeWordAsInput
+                (encodeCodeWordAsInput
                   (PairedRecognizerDovetailStageInputCode w limit))
-                (MachineDescription.encodeCodeWordAsInput
-                  (MachineDescription.encodeBoolWord [false])) ∧
-              MachineDescription.boundedDovetailOutput
+                (encodeCodeWordAsInput
+                  (encodeBoolWord [false])) ∧
+              boundedDovetailOutput
                 accept reject w limit = some [false] then
               some [false]
             else
@@ -322,12 +323,12 @@ theorem pairedRecognizerDovetailTotalStageAttemptControllerRawOutput_iff_of_outp
     (w : Word Bool) (limit : Nat) (b : Bool) :
     (exists result : Word Bool,
       attempt.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (PairedRecognizerDovetailStageInputCode w limit))
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeBoolWord result)) ∧
+        (encodeCodeWordAsInput
+          (encodeBoolWord result)) ∧
       PairedRecognizerDovetailControllerRawOutput result = some [b]) <->
-    MachineDescription.boundedDovetailOutput accept reject w limit =
+    boundedDovetailOutput accept reject w limit =
       some [b] := by
   constructor
   · intro h
@@ -336,44 +337,44 @@ theorem pairedRecognizerDovetailTotalStageAttemptControllerRawOutput_iff_of_outp
         (PairedRecognizerDovetailTotalStageAttemptCode
           accept reject).transform
             (PairedRecognizerDovetailStageInputCode w limit) =
-          some (MachineDescription.encodeBoolWord result) :=
+          some (encodeBoolWord result) :=
       (hattempt.right
         (PairedRecognizerDovetailStageInputCode w limit)
-        (MachineDescription.encodeBoolWord result)).mp hattemptHalt
+        (encodeBoolWord result)).mp hattemptHalt
     have hcanonical :
         (PairedRecognizerDovetailTotalStageAttemptCode
           accept reject).transform
             (PairedRecognizerDovetailStageInputCode w limit) =
           some
-            (MachineDescription.encodeBoolWord
-              (MachineDescription.DovetailLayout.outputWordFromOption
-                (MachineDescription.boundedDovetailOutput
+            (encodeBoolWord
+              (DovetailLayout.outputWordFromOption
+                (boundedDovetailOutput
                   accept reject w limit))) :=
       pairedRecognizerDovetailTotalStageAttemptCode_encode
         accept reject w limit
     have hencoded :
-        MachineDescription.encodeBoolWord result =
-          MachineDescription.encodeBoolWord
-            (MachineDescription.DovetailLayout.outputWordFromOption
-              (MachineDescription.boundedDovetailOutput
+        encodeBoolWord result =
+          encodeBoolWord
+            (DovetailLayout.outputWordFromOption
+              (boundedDovetailOutput
                 accept reject w limit)) := by
       have hsome :
-          some (MachineDescription.encodeBoolWord result) =
+          some (encodeBoolWord result) =
             some
-              (MachineDescription.encodeBoolWord
-                (MachineDescription.DovetailLayout.outputWordFromOption
-                  (MachineDescription.boundedDovetailOutput
+              (encodeBoolWord
+                (DovetailLayout.outputWordFromOption
+                  (boundedDovetailOutput
                     accept reject w limit))) := by
         rw [← htransform, hcanonical]
       exact Option.some.inj hsome
     have hresult :
         result =
-          MachineDescription.DovetailLayout.outputWordFromOption
-            (MachineDescription.boundedDovetailOutput
+          DovetailLayout.outputWordFromOption
+            (boundedDovetailOutput
               accept reject w limit) :=
-      MachineDescription.encodeBoolWord_injective hencoded
+      encodeBoolWord_injective hencoded
     rw [PairedRecognizerDovetailControllerRawOutput, hresult,
-      MachineDescription.DovetailControllerLayout.rawOutput_outputWordFromOption_boundedDovetailOutput]
+      DovetailControllerLayout.rawOutput_outputWordFromOption_boundedDovetailOutput]
       at hraw
     exact hraw
   · intro hbounded
@@ -381,13 +382,13 @@ theorem pairedRecognizerDovetailTotalStageAttemptControllerRawOutput_iff_of_outp
     · exact
         (hattempt.right
           (PairedRecognizerDovetailStageInputCode w limit)
-          (MachineDescription.encodeBoolWord [b])).mpr
+          (encodeBoolWord [b])).mpr
           (by
             rw [pairedRecognizerDovetailTotalStageAttemptCode_encode,
               hbounded]
             rfl)
     · simp [PairedRecognizerDovetailControllerRawOutput,
-        MachineDescription.DovetailControllerLayout.rawOutput_singleton]
+        DovetailControllerLayout.rawOutput_singleton]
 
 theorem Search.realizesOfControllerRealizes
     {accept reject attempt decider : MachineDescription}
@@ -408,7 +409,7 @@ theorem Search.realizesOfControllerRealizes
       rcases (hdriver.right w b).mp hhalt with
         ⟨limit, result, hattemptHalt, hraw⟩
       have hbounded :
-          MachineDescription.boundedDovetailOutput
+          boundedDovetailOutput
             accept reject w limit = some [b] := by
         exact
           (pairedRecognizerDovetailTotalStageAttemptControllerRawOutput_iff_of_outputCompiled
@@ -418,7 +419,7 @@ theorem Search.realizesOfControllerRealizes
       exact
         (hattempt.right
           (PairedRecognizerDovetailStageInputCode w limit)
-          (MachineDescription.encodeBoolWord [b])).mpr
+          (encodeBoolWord [b])).mpr
           (by
             rw [pairedRecognizerDovetailTotalStageAttemptCode_encode,
               hbounded]
@@ -428,7 +429,7 @@ theorem Search.realizesOfControllerRealizes
       apply (hdriver.right w b).mpr
       refine ⟨limit, [b], hattemptHalt, ?_⟩
       simp [PairedRecognizerDovetailControllerRawOutput,
-        MachineDescription.DovetailControllerLayout.rawOutput_singleton]
+        DovetailControllerLayout.rawOutput_singleton]
 
 theorem fixedDescriptionBoundedSimulatorCodeOutputRealizer_of_codeCompiler
     (hcompile :
@@ -457,9 +458,9 @@ theorem fixedDescriptionStepCodeOutputRealizer_of_configurationRealizer
   · exact hstepper.left
   · intro code out hcode
     unfold FixedDescriptionStepCode at hcode
-    simp [MachineDescription.stepConfigurationCodePrimitive,
-      MachineDescription.stepConfigurationCode] at hcode
-    cases hdecode : MachineDescription.decodeConfiguration code with
+    simp [stepConfigurationCodePrimitive,
+      stepConfigurationCode] at hcode
+    cases hdecode : decodeConfiguration code with
     | none =>
         simp [hdecode] at hcode
     | some parsed =>
@@ -469,8 +470,8 @@ theorem fixedDescriptionStepCodeOutputRealizer_of_configurationRealizer
             | nil =>
                 simp [hdecode] at hcode
                 have hcanonical :
-                    code = MachineDescription.encodeConfiguration c :=
-                  MachineDescription.decodeConfiguration_eq_some_encodeConfiguration
+                    code = encodeConfiguration c :=
+                  decodeConfiguration_eq_some_encodeConfiguration
                     hdecode
                 rw [hcanonical, ← hcode]
                 exact hstepper.right c
@@ -497,8 +498,8 @@ theorem fixedDescriptionStepCodeConfigurationRealizer_of_outputRealizer
   · exact hstepper.left
   · intro c
     exact hstepper.right
-      (MachineDescription.encodeConfiguration c)
-      (MachineDescription.encodeConfiguration (D.runConfig 1 c))
+      (encodeConfiguration c)
+      (encodeConfiguration (D.runConfig 1 c))
       (fixedDescriptionStepCode_encode D c)
 
 theorem fixedDescriptionStepCodeConfigurationRealizerConstruction_of_outputRealizerConstruction
@@ -524,8 +525,8 @@ theorem fixedDescriptionStepCodeConfigurationRealizes_of_runConfig_one_eq_id
     {D stepper : MachineDescription}
     (hstepper :
       TapeCodePrimitiveOutputRealizedByDescription
-        MachineDescription.TapeCodePrimitive.identity stepper)
-    (hD : forall c : MachineDescription.Configuration,
+        TapeCodePrimitive.identity stepper)
+    (hD : forall c : Configuration,
       D.runConfig 1 c = c) :
     FixedDescriptionStepCodeConfigurationRealizes D stepper := by
   constructor
@@ -533,49 +534,49 @@ theorem fixedDescriptionStepCodeConfigurationRealizes_of_runConfig_one_eq_id
   · intro c
     rw [hD c]
     exact hstepper.right
-      (MachineDescription.encodeConfiguration c)
-      (MachineDescription.encodeConfiguration c)
+      (encodeConfiguration c)
+      (encodeConfiguration c)
       rfl
 
 theorem runConfig_one_eq_id_of_transitions_nil
     {D : MachineDescription}
     (hD : D.transitions = []) :
-    forall c : MachineDescription.Configuration, D.runConfig 1 c = c := by
+    forall c : Configuration, D.runConfig 1 c = c := by
   intro c
   cases c
-  simp [MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, hD]
+  simp [runConfig, stepConfig,
+    lookupTransition, hD]
 
 theorem fixedDescriptionStepCodeConfigurationRealizes_transitionless
     {D : MachineDescription}
     (hD : D.transitions = []) :
     FixedDescriptionStepCodeConfigurationRealizes
-      D MachineDescription.ExactIdentityDescription :=
+      D ExactIdentityDescription :=
   fixedDescriptionStepCodeConfigurationRealizes_of_runConfig_one_eq_id
     tapeCodePrimitiveOutputRealizedByDescription_identity
     (runConfig_one_eq_id_of_transitions_nil hD)
 
 theorem fixedDescriptionStepCodeConfigurationRealizes_exactIdentityDescription :
     FixedDescriptionStepCodeConfigurationRealizes
-      MachineDescription.ExactIdentityDescription
-      MachineDescription.ExactIdentityDescription := by
+      ExactIdentityDescription
+      ExactIdentityDescription := by
   constructor
-  · exact MachineDescription.exactIdentityDescription_wellFormed
+  · exact exactIdentityDescription_wellFormed
   · intro c
     have hrun :
-        MachineDescription.ExactIdentityDescription.runConfig 1 c = c := by
+        ExactIdentityDescription.runConfig 1 c = c := by
       cases c
-      simp [MachineDescription.runConfig,
-        MachineDescription.stepConfig,
-        MachineDescription.lookupTransition,
-        MachineDescription.ExactIdentityDescription]
+      simp [runConfig,
+        stepConfig,
+        lookupTransition,
+        ExactIdentityDescription]
     rw [hrun]
-    exact MachineDescription.haltsWithOutput_of_haltsWithExactOutput
-      ((MachineDescription.exactIdentityDescription_haltsWithExactOutput_iff
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeConfiguration c))
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeConfiguration c))).mpr rfl)
+    exact haltsWithOutput_of_haltsWithExactOutput
+      ((exactIdentityDescription_haltsWithExactOutput_iff
+        (encodeCodeWordAsInput
+          (encodeConfiguration c))
+        (encodeCodeWordAsInput
+          (encodeConfiguration c))).mpr rfl)
 
 theorem pairedRecognizerDovetailLayoutCodeOutputRealizer_of_codeCompiler
     (hcompile :
@@ -675,7 +676,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptCode_transform_eq_of_stageAttem
     simpa [pairedRecognizerDovetailTotalThenRawOutputCode_eq_stageAttemptCode]
       using hstage
   unfold PairedRecognizerDovetailTotalThenRawOutputCode at hcompose
-  unfold MachineDescription.TapeCodePrimitive.compose at hcompose
+  unfold TapeCodePrimitive.compose at hcompose
   cases htotal :
       (PairedRecognizerDovetailTotalStageAttemptCode accept reject).transform
         code with
@@ -769,16 +770,16 @@ theorem pairedRecognizerBoundedDovetailTableRealizes_of_runnerSearchDriverRealiz
       refine ⟨limit, ?_, ?_⟩
       · exact
           hrunner.right
-            (MachineDescription.DovetailLayout.encode
-              (MachineDescription.DovetailLayout.initial
+            (DovetailLayout.encode
+              (DovetailLayout.initial
                 accept reject w limit))
-            (MachineDescription.DovetailLayout.encode
-              (MachineDescription.DovetailLayout.run accept reject limit
-                (MachineDescription.DovetailLayout.initial
+            (DovetailLayout.encode
+              (DovetailLayout.run accept reject limit
+                (DovetailLayout.initial
                   accept reject w limit)))
             (pairedRecognizerDovetailLayoutCode_encode
               accept reject
-              (MachineDescription.DovetailLayout.initial
+              (DovetailLayout.initial
                 accept reject w limit))
       · simpa [pairedRecognizerDovetailLayout_initial_output] using hout
 
@@ -832,7 +833,7 @@ theorem pairedRecognizerBoundedDovetailTableRealizes_of_stageAttemptSearchDriver
       exact
         hattempt.right
           (PairedRecognizerDovetailStageInputCode w limit)
-          (MachineDescription.encodeBoolWord [b])
+          (encodeBoolWord [b])
           (by
             rw [pairedRecognizerDovetailStageAttemptCode_encode, hout]
             rfl)
@@ -863,7 +864,7 @@ theorem pairedRecognizerBoundedDovetailTableRealizes_of_totalStageAttemptSearchD
       exact
         hattempt.right
           (PairedRecognizerDovetailStageInputCode w limit)
-          (MachineDescription.encodeBoolWord [b])
+          (encodeBoolWord [b])
           (by
             rw [pairedRecognizerDovetailTotalStageAttemptCode_encode, hout]
             rfl)
@@ -988,14 +989,14 @@ theorem fixedDescriptionBoundedSimulatorTableRealizes_of_codeCompiler
           (FixedDescriptionBoundedSimulatorInput L)
           (FixedDescriptionBoundedSimulatorOutput D L) := by
       have hcode := (hcompile.right
-        (MachineDescription.SimulatorLayout.encode L)
-        (MachineDescription.SimulatorLayout.encode
-          (MachineDescription.SimulatorLayout.run D L.stage L))).mpr
+        (SimulatorLayout.encode L)
+        (SimulatorLayout.encode
+          (SimulatorLayout.run D L.stage L))).mpr
           (fixedDescriptionBoundedSimulatorCode_encode D L)
       simpa [FixedDescriptionBoundedSimulatorInput,
         FixedDescriptionBoundedSimulatorOutput,
-        MachineDescription.SimulatorLayout.asBoolInput] using hcode
-    exact MachineDescription.haltsWithOutput_of_haltsWithExactOutput hExact
+        SimulatorLayout.asBoolInput] using hcode
+    exact haltsWithOutput_of_haltsWithExactOutput hExact
 
 theorem fixedDescriptionBoundedSimulatorTableCompiler_of_codeCompiler
     (hcompile :
@@ -1016,9 +1017,9 @@ theorem fixedDescriptionBoundedSimulatorTableRealizes_of_codeOutputRealizer
   · exact hcompile.left
   · intro L
     exact hcompile.right
-      (MachineDescription.SimulatorLayout.encode L)
-      (MachineDescription.SimulatorLayout.encode
-        (MachineDescription.SimulatorLayout.run D L.stage L))
+      (SimulatorLayout.encode L)
+      (SimulatorLayout.encode
+        (SimulatorLayout.run D L.stage L))
       (fixedDescriptionBoundedSimulatorCode_encode D L)
 
 theorem fixedDescriptionBoundedSimulatorTableCompiler_of_codeOutputRealizer

@@ -14,6 +14,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace CanonicalLayouts
@@ -30,9 +31,9 @@ field by field.
 -/
 
 def TapeSuffixScannerDescription : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     CellListSuffixScannerDescription
-    (MachineDescription.seqSubroutine
+    (seqSubroutine
       CellSuffixScannerDescription
       CellListSuffixScannerDescription
       Direction.right)
@@ -40,33 +41,33 @@ def TapeSuffixScannerDescription : MachineDescription :=
 
 theorem tapeSuffixScannerDescription_subroutineReady :
     TapeSuffixScannerDescription.SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     cellListSuffixScannerDescription_subroutineReady
-    (MachineDescription.seqSubroutine_subroutineReady
+    (seqSubroutine_subroutineReady
       cellSuffixScannerDescription_subroutineReady
       cellListSuffixScannerDescription_subroutineReady)
 
 def ConfigurationSuffixScannerDescription : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     DovetailStagePrefix.NonemptyNatSuffixScannerDescription
     TapeSuffixScannerDescription
     Direction.right
 
 theorem configurationSuffixScannerDescription_subroutineReady :
     ConfigurationSuffixScannerDescription.SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
     tapeSuffixScannerDescription_subroutineReady
 
 def FinalHitFlagsScannerDescription : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     BoolSuffixScannerDescription
     BoolFinalScannerDescription
     Direction.right
 
 theorem finalHitFlagsScannerDescription_subroutineReady :
     FinalHitFlagsScannerDescription.SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     boolSuffixScannerDescription_subroutineReady
     boolFinalScannerDescription_subroutineReady
 
@@ -122,9 +123,9 @@ theorem run_markFirstTransitionBit_raw
         (none :: some false :: tail.map some) := by
   cases tail <;>
     simp [MarkFirstTransitionBitDescription, config, tapeAtCells,
-      keepMove, writeMove, MachineDescription.runConfig,
-      MachineDescription.stepConfig, MachineDescription.lookupTransition,
-      MachineDescription.Matches, MachineDescription.transition,
+      keepMove, writeMove, runConfig,
+      stepConfig, lookupTransition,
+      Matches, transition,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
       Tape.moveRight]
 
@@ -169,7 +170,7 @@ def transitionRemainderBits : Word Bool :=
 
 def transitionRemainderHandoffConfigWithBase
     (baseLeft : List (Option Bool)) (suffixBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   { state := TransitionRemainderPrefixScannerDescription.halt
     tape :=
       Tape.move Direction.left
@@ -193,9 +194,9 @@ theorem run_transitionRemainderPrefix_raw_to_handoff_withBase
     simp [TransitionRemainderPrefixScannerDescription,
       transitionRemainderHandoffConfigWithBase,
       transitionRemainderBits, config, tapeAtCells, keepMove,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveLeft, Tape.moveRight]
 
 theorem transitionRemainderHandoffConfigWithBase_move_right
@@ -257,7 +258,7 @@ def restoredCheckedHandoffTapeFromTail (tail : Word Bool) : Tape Bool :=
 
 def returnToFirstMarkerScanConfig
     (remainingRev scanned : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   match remainingRev with
   | [] =>
       config 1 [] (none :: List.append (scanned.map some) [none])
@@ -279,10 +280,10 @@ theorem run_returnToFirstMarker_scan
       simp [returnToFirstMarkerScanConfig,
         restoredCheckedHandoffTapeFromTail,
         ReturnToFirstMarkerDescription, config, tapeAtCells,
-        keepMove, writeMove, MachineDescription.runConfig,
-        MachineDescription.stepConfig,
-        MachineDescription.lookupTransition, MachineDescription.Matches,
-        MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+        keepMove, writeMove, runConfig,
+        stepConfig,
+        lookupTransition, Matches,
+        transition, Tape.read, Tape.write, Tape.move,
         Tape.moveRight]
   | cons bit rest ih =>
       rw [show (bit :: rest).length + 1 = 1 + (rest.length + 1) by
@@ -295,12 +296,12 @@ theorem run_returnToFirstMarker_scan
         cases bit <;> cases rest <;>
           simp [returnToFirstMarkerScanConfig,
             ReturnToFirstMarkerDescription, config, tapeAtCells,
-            keepMove, writeMove, MachineDescription.runConfig,
-            MachineDescription.stepConfig,
-            MachineDescription.lookupTransition, MachineDescription.Matches,
-            MachineDescription.transition, Tape.read, Tape.write,
+            keepMove, writeMove, runConfig,
+            stepConfig,
+            lookupTransition, Matches,
+            transition, Tape.read, Tape.write,
             Tape.move, Tape.moveLeft]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [hstep]
       simpa [List.reverse_cons, List.append_assoc] using
         ih (bit :: scanned)
@@ -314,14 +315,14 @@ theorem run_returnToFirstMarker_from_reversedBits
         tape :=
           restoredCheckedHandoffTapeFromTail prefixRev.reverse } := by
   rw [show prefixRev.length + 2 = 1 + (prefixRev.length + 1) by omega]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   cases prefixRev with
   | nil =>
       simp [ReturnToFirstMarkerDescription, config, tapeAtCells,
-        keepMove, writeMove, MachineDescription.runConfig,
-        MachineDescription.stepConfig,
-        MachineDescription.lookupTransition, MachineDescription.Matches,
-        MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+        keepMove, writeMove, runConfig,
+        stepConfig,
+        lookupTransition, Matches,
+        transition, Tape.read, Tape.write, Tape.move,
         Tape.moveLeft, Tape.moveRight,
         restoredCheckedHandoffTapeFromTail]
   | cons bit rest =>
@@ -333,81 +334,81 @@ theorem run_returnToFirstMarker_from_reversedBits
         cases bit <;>
           simp [returnToFirstMarkerScanConfig,
             ReturnToFirstMarkerDescription, config, tapeAtCells,
-            keepMove, writeMove, MachineDescription.runConfig,
-            MachineDescription.stepConfig,
-            MachineDescription.lookupTransition, MachineDescription.Matches,
-            MachineDescription.transition, Tape.read, Tape.write,
+            keepMove, writeMove, runConfig,
+            stepConfig,
+            lookupTransition, Matches,
+            transition, Tape.read, Tape.write,
             Tape.move, Tape.moveLeft]
       rw [hstep]
       simpa [List.append_assoc] using
         run_returnToFirstMarker_scan (bit :: rest) []
 
 def RejectConfigAndFinalFlagsScannerDescription : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     ConfigurationSuffixScannerDescription
     FinalHitFlagsScannerDescription
     Direction.right
 
 theorem rejectConfigAndFinalFlagsScannerDescription_subroutineReady :
     RejectConfigAndFinalFlagsScannerDescription.SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     configurationSuffixScannerDescription_subroutineReady
     finalHitFlagsScannerDescription_subroutineReady
 
 def ConfigurationsAndFinalFlagsScannerDescription : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     ConfigurationSuffixScannerDescription
     RejectConfigAndFinalFlagsScannerDescription
     Direction.right
 
 theorem configurationsAndFinalFlagsScannerDescription_subroutineReady :
     ConfigurationsAndFinalFlagsScannerDescription.SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     configurationSuffixScannerDescription_subroutineReady
     rejectConfigAndFinalFlagsScannerDescription_subroutineReady
 
 def StageConfigurationsAndFinalFlagsScannerDescription :
     MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     DovetailStagePrefix.NonemptyNatSuffixScannerDescription
     ConfigurationsAndFinalFlagsScannerDescription
     Direction.right
 
 theorem stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady :
     StageConfigurationsAndFinalFlagsScannerDescription.SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
     configurationsAndFinalFlagsScannerDescription_subroutineReady
 
 def InputStageConfigurationsAndFinalFlagsScannerDescription :
     MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     BoolWordSuffixScannerDescription
     StageConfigurationsAndFinalFlagsScannerDescription
     Direction.right
 
 theorem inputStageConfigurationsAndFinalFlagsScannerDescription_subroutineReady :
     InputStageConfigurationsAndFinalFlagsScannerDescription.SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     boolWordSuffixScannerDescription_subroutineReady
     stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
 
 def MarkedDovetailLayoutBodyScannerDescription : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     TransitionRemainderPrefixScannerDescription
     InputStageConfigurationsAndFinalFlagsScannerDescription
     Direction.right
 
 theorem markedDovetailLayoutBodyScannerDescription_subroutineReady :
     MarkedDovetailLayoutBodyScannerDescription.SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     transitionRemainderPrefixScannerDescription_subroutineReady
     inputStageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
 
 def CheckedDovetailLayoutScannerDescription : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     MarkFirstTransitionBitDescription
-    (MachineDescription.seqSubroutine
+    (seqSubroutine
       MarkedDovetailLayoutBodyScannerDescription
       ReturnToFirstMarkerDescription
       Direction.right)
@@ -415,14 +416,14 @@ def CheckedDovetailLayoutScannerDescription : MachineDescription :=
 
 theorem checkedDovetailLayoutScannerDescription_subroutineReady :
     CheckedDovetailLayoutScannerDescription.SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     markFirstTransitionBitDescription_subroutineReady
-    (MachineDescription.seqSubroutine_subroutineReady
+    (seqSubroutine_subroutineReady
       markedDovetailLayoutBodyScannerDescription_subroutineReady
       returnToFirstMarkerDescription_subroutineReady)
 
 def configurationRestoredLeftWithBase
-    (cfg : MachineDescription.Configuration)
+    (cfg : Configuration)
     (baseLeft : List (Option Bool)) : List (Option Bool) :=
   cellListCanonicalRestoredLeftWithBase cfg.tape.right
     (List.append ((cellCodeBits cfg.tape.head).reverse.map some)
@@ -438,7 +439,7 @@ def finalHitFlagsRestoredLeftWithBase
       baseLeft)
 
 theorem configurationFieldBits_cons_false
-    (cfg : MachineDescription.Configuration) (suffixBits : Word Bool) :
+    (cfg : Configuration) (suffixBits : Word Bool) :
     exists tail : Word Bool,
       configurationFieldBits cfg suffixBits = false :: tail := by
   rcases stageNatBits_cons_false cfg.state with ⟨tail, htail⟩
@@ -499,7 +500,7 @@ theorem tapeFieldBits_append_nil
     List.append_assoc]
 
 theorem configurationFieldBits_append_nil
-    (cfg : MachineDescription.Configuration) (suffixBits : Word Bool) :
+    (cfg : Configuration) (suffixBits : Word Bool) :
     List.append (configurationFieldBits cfg []) suffixBits =
       configurationFieldBits cfg suffixBits := by
   simp [configurationFieldBits, tapeFieldBits, cellFieldBits,
@@ -594,14 +595,14 @@ theorem cellListCanonicalRestoredBitsRev_reverse
           simp [cellListFieldBits]
 
 def configurationRestoredBitsRev
-    (cfg : MachineDescription.Configuration) : Word Bool :=
+    (cfg : Configuration) : Word Bool :=
   List.append (cellListCanonicalRestoredBitsRev cfg.tape.right)
     (List.append (cellCodeBits cfg.tape.head).reverse
       (List.append (cellListCanonicalRestoredBitsRev cfg.tape.left)
         (stageNatBits cfg.state).reverse))
 
 theorem configurationRestoredBitsRev_map_some_withBase
-    (cfg : MachineDescription.Configuration)
+    (cfg : Configuration)
     (baseLeft : List (Option Bool)) :
     List.append ((configurationRestoredBitsRev cfg).map some)
         baseLeft =
@@ -654,7 +655,7 @@ theorem configurationRestoredBitsRev_map_some_withBase
             baseAfterLeft] using hright
 
 theorem configurationRestoredBitsRev_reverse
-    (cfg : MachineDescription.Configuration) :
+    (cfg : Configuration) :
     (configurationRestoredBitsRev cfg).reverse =
       configurationFieldBits cfg [] := by
   simp [configurationRestoredBitsRev, configurationFieldBits,
@@ -663,7 +664,7 @@ theorem configurationRestoredBitsRev_reverse
     List.reverse_append, List.append_assoc]
 
 def markedDovetailLayoutBodyRestoredBitsRev
-    (L : MachineDescription.DovetailLayout) : Word Bool :=
+    (L : DovetailLayout) : Word Bool :=
   List.append (cellCodeBits (some L.rejectHit)).reverse
     (List.append (cellCodeBits (some L.acceptHit)).reverse
       (List.append (configurationRestoredBitsRev L.rejectConfig)
@@ -674,7 +675,7 @@ def markedDovetailLayoutBodyRestoredBitsRev
               transitionRemainderBits.reverse)))))
 
 def markedDovetailLayoutBodyBits
-    (L : MachineDescription.DovetailLayout) : Word Bool :=
+    (L : DovetailLayout) : Word Bool :=
   List.append transitionRemainderBits
     (boolWordFieldBits L.input
       (List.append (stageNatBits L.stage)
@@ -684,7 +685,7 @@ def markedDovetailLayoutBodyBits
               (boolFieldBits L.rejectHit []))))))
 
 theorem markedDovetailLayoutBodyRestoredBitsRev_reverse
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     (markedDovetailLayoutBodyRestoredBitsRev L).reverse =
       markedDovetailLayoutBodyBits L := by
   simp [markedDovetailLayoutBodyRestoredBitsRev,
@@ -697,7 +698,7 @@ theorem markedDovetailLayoutBodyRestoredBitsRev_reverse
     cellListFieldBits, List.append_assoc]
 
 theorem markedDovetailLayoutBodyRestoredBitsRev_map_some_withMarker
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     List.append ((markedDovetailLayoutBodyRestoredBitsRev L).map some)
         [none] =
       finalHitFlagsRestoredLeftWithBase L.acceptHit L.rejectHit
@@ -784,15 +785,15 @@ theorem markedDovetailLayoutBodyRestoredBitsRev_map_some_withMarker
             baseAfterAccept]
 
 theorem dovetailLayoutFieldBits_nil_eq_first_body
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     dovetailLayoutFieldBits L [] =
       false :: markedDovetailLayoutBodyBits L := by
   simp [dovetailLayoutFieldBits, markedDovetailLayoutBodyBits,
     transitionPrefixBits, transitionRemainderBits,
-    MachineDescription.encodeCodeSymbolAsInput]
+    encodeCodeSymbolAsInput]
 
 theorem markedDovetailLayoutBodyBits_cons_false
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     exists tail : Word Bool,
       markedDovetailLayoutBodyBits L = false :: tail := by
   refine ⟨List.cons false (List.cons true
@@ -817,13 +818,13 @@ theorem rightHandoffSequential_runConfig_exists
             { state := B.start, tape := Tape.move Direction.right Tmid } =
           { state := B.halt, tape := Tout }) :
     exists steps : Nat,
-      (MachineDescription.seqSubroutine A B Direction.right).runConfig
+      (seqSubroutine A B Direction.right).runConfig
           steps
-          { state := (MachineDescription.seqSubroutine A B
+          { state := (seqSubroutine A B
               Direction.right).start
             tape := Tin } =
         { state :=
-            (MachineDescription.seqSubroutine A B Direction.right).halt
+            (seqSubroutine A B Direction.right).halt
           tape := Tout } :=
   CommonGround.SeqComposition.seqSubroutine_runConfig_exists
     (A := A) (B := B) (handoffMove := Direction.right)
@@ -922,12 +923,12 @@ theorem run_cellThenCellList_raw_to_handoff_withBase
     (head : Option Bool) (right baseLeft : List (Option Bool))
     (suffixTail : Word Bool) :
     exists steps : Nat,
-      (MachineDescription.seqSubroutine
+      (seqSubroutine
           CellSuffixScannerDescription
           CellListSuffixScannerDescription
           Direction.right).runConfig steps
           { state :=
-              (MachineDescription.seqSubroutine
+              (seqSubroutine
                 CellSuffixScannerDescription
                 CellListSuffixScannerDescription
                 Direction.right).start
@@ -937,7 +938,7 @@ theorem run_cellThenCellList_raw_to_handoff_withBase
                   (cellListFieldBits right
                     (false :: suffixTail))).map some) } =
         { state :=
-            (MachineDescription.seqSubroutine
+            (seqSubroutine
               CellSuffixScannerDescription
               CellListSuffixScannerDescription
               Direction.right).halt
@@ -1061,18 +1062,18 @@ theorem run_tapeSuffix_raw_to_handoff_withBase
     simpa [Tmid] using hleft
   have hBReach :
       exists nB : Nat,
-        (MachineDescription.seqSubroutine
+        (seqSubroutine
           CellSuffixScannerDescription
           CellListSuffixScannerDescription
           Direction.right).runConfig nB
             { state :=
-                (MachineDescription.seqSubroutine
+                (seqSubroutine
                   CellSuffixScannerDescription
                   CellListSuffixScannerDescription
                   Direction.right).start
               tape := Tape.move Direction.right Tmid.tape } =
           { state :=
-              (MachineDescription.seqSubroutine
+              (seqSubroutine
                 CellSuffixScannerDescription
                 CellListSuffixScannerDescription
                 Direction.right).halt
@@ -1096,7 +1097,7 @@ theorem run_tapeSuffix_raw_to_handoff_withBase
     exact
       CommonGround.SeqComposition.runConfig_reaches_from_move_eq
         (B :=
-          MachineDescription.seqSubroutine
+          seqSubroutine
             CellSuffixScannerDescription
             CellListSuffixScannerDescription
             Direction.right)
@@ -1108,19 +1109,19 @@ theorem run_tapeSuffix_raw_to_handoff_withBase
     CommonGround.SeqComposition.seqSubroutine_runConfig_exists
       (A := CellListSuffixScannerDescription)
       (B :=
-        MachineDescription.seqSubroutine
+        seqSubroutine
           CellSuffixScannerDescription
           CellListSuffixScannerDescription
           Direction.right)
       (handoffMove := Direction.right)
       cellListSuffixScannerDescription_subroutineReady
-      (MachineDescription.seqSubroutine_subroutineReady
+      (seqSubroutine_subroutineReady
         cellSuffixScannerDescription_subroutineReady
         cellListSuffixScannerDescription_subroutineReady)
       hArun hBReach
 
 theorem run_configurationSuffix_raw_to_handoff_withBase
-    (cfg : MachineDescription.Configuration)
+    (cfg : Configuration)
     (baseLeft : List (Option Bool)) (suffixTail : Word Bool) :
     exists steps : Nat,
       ConfigurationSuffixScannerDescription.runConfig steps
@@ -1220,7 +1221,7 @@ theorem run_configurationSuffix_raw_to_handoff_withBase
         hArun hBReach
 
 theorem run_rejectConfigAndFinalFlags_raw_to_handoff_withBase
-    (rejectConfig : MachineDescription.Configuration)
+    (rejectConfig : Configuration)
     (acceptHit rejectHit : Bool)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
@@ -1334,7 +1335,7 @@ theorem run_rejectConfigAndFinalFlags_raw_to_handoff_withBase
       hArun hBReach
 
 theorem run_configurationsAndFinalFlags_raw_to_handoff_withBase
-    (acceptConfig rejectConfig : MachineDescription.Configuration)
+    (acceptConfig rejectConfig : Configuration)
     (acceptHit rejectHit : Bool)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
@@ -1452,7 +1453,7 @@ theorem run_configurationsAndFinalFlags_raw_to_handoff_withBase
 
 theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
     (stage : Nat)
-    (acceptConfig rejectConfig : MachineDescription.Configuration)
+    (acceptConfig rejectConfig : Configuration)
     (acceptHit rejectHit : Bool)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
@@ -1568,7 +1569,7 @@ theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
 
 theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
     (input : Word Bool) (stage : Nat)
-    (acceptConfig rejectConfig : MachineDescription.Configuration)
+    (acceptConfig rejectConfig : Configuration)
     (acceptHit rejectHit : Bool)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
@@ -1696,7 +1697,7 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
         hArun hBReach
 
 theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
       MarkedDovetailLayoutBodyScannerDescription.runConfig steps
@@ -1819,7 +1820,7 @@ theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
         hArun hBReach
 
 theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
       MarkedDovetailLayoutBodyScannerDescription.runConfig steps
@@ -1851,14 +1852,14 @@ theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase
     L baseLeft
 
 theorem run_markedDovetailLayoutBody_return_to_checkedHandoff
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     exists steps : Nat,
-      (MachineDescription.seqSubroutine
+      (seqSubroutine
           MarkedDovetailLayoutBodyScannerDescription
           ReturnToFirstMarkerDescription
           Direction.right).runConfig steps
           { state :=
-              (MachineDescription.seqSubroutine
+              (seqSubroutine
                 MarkedDovetailLayoutBodyScannerDescription
                 ReturnToFirstMarkerDescription
                 Direction.right).start
@@ -1866,7 +1867,7 @@ theorem run_markedDovetailLayoutBody_return_to_checkedHandoff
               tapeAtCells [none]
                 ((markedDovetailLayoutBodyBits L).map some) } =
         { state :=
-            (MachineDescription.seqSubroutine
+            (seqSubroutine
               MarkedDovetailLayoutBodyScannerDescription
               ReturnToFirstMarkerDescription
               Direction.right).halt
@@ -1962,7 +1963,7 @@ theorem run_markedDovetailLayoutBody_return_to_checkedHandoff
       hArun hBReach
 
 theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff_phaseChain
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     exists steps : Nat,
       CheckedDovetailLayoutScannerDescription.runConfig steps
           { state := CheckedDovetailLayoutScannerDescription.start
@@ -1990,18 +1991,18 @@ theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff_phaseChain
       run_markFirstTransitionBit_raw bodyTail
   have hBReach :
       exists nB : Nat,
-        (MachineDescription.seqSubroutine
+        (seqSubroutine
           MarkedDovetailLayoutBodyScannerDescription
           ReturnToFirstMarkerDescription
           Direction.right).runConfig nB
             { state :=
-                (MachineDescription.seqSubroutine
+                (seqSubroutine
                   MarkedDovetailLayoutBodyScannerDescription
                   ReturnToFirstMarkerDescription
                   Direction.right).start
               tape := Tape.move Direction.right TmidTape } =
           { state :=
-              (MachineDescription.seqSubroutine
+              (seqSubroutine
                 MarkedDovetailLayoutBodyScannerDescription
                 ReturnToFirstMarkerDescription
                 Direction.right).halt
@@ -2019,7 +2020,7 @@ theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff_phaseChain
     exact
       CommonGround.SeqComposition.runConfig_reaches_from_move_eq
         (B :=
-          MachineDescription.seqSubroutine
+          seqSubroutine
             MarkedDovetailLayoutBodyScannerDescription
             ReturnToFirstMarkerDescription
             Direction.right)
@@ -2030,18 +2031,18 @@ theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff_phaseChain
     rightHandoffSequential_runConfig_exists
       (A := MarkFirstTransitionBitDescription)
       (B :=
-        MachineDescription.seqSubroutine
+        seqSubroutine
           MarkedDovetailLayoutBodyScannerDescription
           ReturnToFirstMarkerDescription
           Direction.right)
       markFirstTransitionBitDescription_subroutineReady
-      (MachineDescription.seqSubroutine_subroutineReady
+      (seqSubroutine_subroutineReady
         markedDovetailLayoutBodyScannerDescription_subroutineReady
         returnToFirstMarkerDescription_subroutineReady)
       hArun hBReach
 
 theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     exists steps : Nat,
       CheckedDovetailLayoutScannerDescription.runConfig steps
           { state := CheckedDovetailLayoutScannerDescription.start

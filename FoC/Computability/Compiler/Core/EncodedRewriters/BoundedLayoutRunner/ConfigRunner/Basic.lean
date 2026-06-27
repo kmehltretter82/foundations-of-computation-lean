@@ -15,36 +15,37 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
 
 def BoundedRunLayout
     (accept reject : MachineDescription)
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.DovetailLayout :=
-  MachineDescription.DovetailLayout.run accept reject L.stage L
+    (L : DovetailLayout) :
+    DovetailLayout :=
+  DovetailLayout.run accept reject L.stage L
 
 def ConfigRunnerOutputTape
     (accept reject : MachineDescription)
-    (L : MachineDescription.DovetailLayout) : Tape Bool :=
+    (L : DovetailLayout) : Tape Bool :=
   ParsedLayoutTape (BoundedRunLayout accept reject L)
 
 def ConfigRunnerOutputBits
     (accept reject : MachineDescription)
-    (L : MachineDescription.DovetailLayout) : Word Bool :=
+    (L : DovetailLayout) : Word Bool :=
   ParsedLayoutBits (BoundedRunLayout accept reject L)
 
 def AcceptRejectConfigRunnerForwardSpec
     (accept reject runner : MachineDescription) : Prop :=
-  forall L : MachineDescription.DovetailLayout,
+  forall L : DovetailLayout,
     runner.HaltsFromTapeEquiv
       (ParsedLayoutCheckedTape L)
       (ConfigRunnerOutputTape accept reject L)
 
 def AcceptRejectConfigRunnerClosedSpec
     (accept reject runner : MachineDescription) : Prop :=
-  forall L : MachineDescription.DovetailLayout,
+  forall L : DovetailLayout,
     runner.ClosedFromTapeEquiv
       (ParsedLayoutCheckedTape L)
       (ConfigRunnerOutputTape accept reject L)
@@ -62,14 +63,14 @@ def AcceptRejectConfigRunnerConstruction : Prop :=
 
 def AcceptRejectCheckedConfigRunnerForwardSpec
     (accept reject runner : MachineDescription) : Prop :=
-  forall L : MachineDescription.DovetailLayout,
+  forall L : DovetailLayout,
     runner.HaltsWithTape
       (ParsedLayoutBits L)
       (ParsedLayoutCheckedHandoffTape (BoundedRunLayout accept reject L))
 
 def AcceptRejectCheckedConfigRunnerClosedSpec
     (accept reject runner : MachineDescription) : Prop :=
-  forall L : MachineDescription.DovetailLayout,
+  forall L : DovetailLayout,
   forall T : Tape Bool,
     runner.HaltsWithTape (ParsedLayoutBits L) T ->
       T = ParsedLayoutCheckedHandoffTape (BoundedRunLayout accept reject L)

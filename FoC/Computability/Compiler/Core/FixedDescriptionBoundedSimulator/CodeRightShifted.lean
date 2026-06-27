@@ -24,52 +24,53 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 /-- The fixed-description simulator layout update computed by the code leaf. -/
 def FixedDescriptionBoundedSimulatorCodeRightShiftedRunLayout
     (D : MachineDescription)
-    (L : MachineDescription.SimulatorLayout) :
-    MachineDescription.SimulatorLayout :=
+    (L : SimulatorLayout) :
+    SimulatorLayout :=
   { L with
     config := D.runConfig L.stage L.config
     hit :=
       L.hit ||
-        MachineDescription.SimulatorLayout.hitsFromConfigByBool
+        SimulatorLayout.hitsFromConfigByBool
           D L.config L.stage }
 
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedRunLayout_eq_run
-    (D : MachineDescription) (L : MachineDescription.SimulatorLayout) :
+    (D : MachineDescription) (L : SimulatorLayout) :
     FixedDescriptionBoundedSimulatorCodeRightShiftedRunLayout D L =
-      MachineDescription.SimulatorLayout.run D L.stage L := by
+      SimulatorLayout.run D L.stage L := by
   rfl
 
 /-- Code word emitted by the right-shifted fixed-description simulator leaf. -/
 def FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode
     (D : MachineDescription)
-    (L : MachineDescription.SimulatorLayout) :
+    (L : SimulatorLayout) :
     Word MachineCodeSymbol :=
-  MachineDescription.SimulatorLayout.encode
+  SimulatorLayout.encode
     (FixedDescriptionBoundedSimulatorCodeRightShiftedRunLayout D L)
 
 /-- Tape emitted by the right-shifted fixed-description simulator leaf. -/
 def FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape
     (D : MachineDescription)
-    (L : MachineDescription.SimulatorLayout) :
+    (L : SimulatorLayout) :
     Tape Bool :=
   Tape.move Direction.right
     (Tape.input
-      (MachineDescription.encodeCodeWordAsInput
+      (encodeCodeWordAsInput
         (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode D L)))
 
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape_normalizedOutput
-    (D : MachineDescription) (L : MachineDescription.SimulatorLayout) :
+    (D : MachineDescription) (L : SimulatorLayout) :
     Tape.normalizedOutput
         (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape D L) =
-      MachineDescription.encodeCodeWordAsInput
+      encodeCodeWordAsInput
         (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode D L) := by
   simpa [FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape] using
     CommonGround.CodeWordEmitters.tape_normalizedOutput_move_right_input
-      (MachineDescription.encodeCodeWordAsInput
+      (encodeCodeWordAsInput
         (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode D L))
 
 /--
@@ -78,7 +79,7 @@ layout it halts just to the right of the updated layout code.
 -/
 def FixedDescriptionBoundedSimulatorCodeRightShiftedForwardSpec
     (D runner : MachineDescription) : Prop :=
-  forall L : MachineDescription.SimulatorLayout,
+  forall L : SimulatorLayout,
     runner.HaltsWithTape
       (FixedDescriptionBoundedSimulatorInput L)
       (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape D L)
@@ -93,9 +94,9 @@ def FixedDescriptionBoundedSimulatorCodeRightShiftedClosedSpec
   forall code : Word MachineCodeSymbol,
   forall T : Tape Bool,
     runner.HaltsWithTape
-        (MachineDescription.encodeCodeWordAsInput code) T ->
-      exists L : MachineDescription.SimulatorLayout,
-        MachineDescription.SimulatorLayout.decodeComplete code = some L ∧
+        (encodeCodeWordAsInput code) T ->
+      exists L : SimulatorLayout,
+        SimulatorLayout.decodeComplete code = some L ∧
           T = FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape D L
 
 /--
@@ -128,10 +129,10 @@ def FixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction 
     Prop :=
   exists parser : MachineDescription,
     EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription
-      MachineDescription.SimulatorLayout.normalizeCodePrimitive parser
+      SimulatorLayout.normalizeCodePrimitive parser
 
 theorem fixedDescriptionBoundedSimulatorCodeRightShifted_haltsWithTape_of_transform
-    {P : MachineDescription.TapeCodePrimitive}
+    {P : TapeCodePrimitive}
     {D : MachineDescription}
     (hD :
       EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription
@@ -139,23 +140,23 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShifted_haltsWithTape_of_transf
     {code out : Word MachineCodeSymbol}
     (htransform : P.transform code = some out) :
     D.HaltsWithTape
-      (MachineDescription.encodeCodeWordAsInput code)
+      (encodeCodeWordAsInput code)
       (Tape.move Direction.right
         (Tape.input
-          (MachineDescription.encodeCodeWordAsInput out))) := by
+          (encodeCodeWordAsInput out))) := by
   have houtput :
       D.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput code)
-        (MachineDescription.encodeCodeWordAsInput out) :=
+        (encodeCodeWordAsInput code)
+        (encodeCodeWordAsInput out) :=
     (hD.right.right.left code out).mpr htransform
   rcases houtput with ⟨n, hn⟩
   let T : Tape Bool :=
     (D.runConfig n
       (D.initial
-        (MachineDescription.encodeCodeWordAsInput code))).tape
+        (encodeCodeWordAsInput code))).tape
   have hhalt :
       D.HaltsWithTape
-        (MachineDescription.encodeCodeWordAsInput code) T := by
+        (encodeCodeWordAsInput code) T := by
     exact ⟨n, ⟨hn.left, rfl⟩⟩
   rcases hD.right.right.right code T hhalt with
     ⟨actual, hactual, hT⟩
@@ -177,9 +178,9 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_of_pr
   constructor
   · intro L
     have htransform :
-        MachineDescription.SimulatorLayout.normalizeCodePrimitive.transform
-            (MachineDescription.SimulatorLayout.encode L) =
-          some (MachineDescription.SimulatorLayout.encode L) :=
+        SimulatorLayout.normalizeCodePrimitive.transform
+            (SimulatorLayout.encode L) =
+          some (SimulatorLayout.encode L) :=
       CommonGround.SimulatorLayouts.normalizeCodePrimitive_encode L
     simpa [CommonGround.SimulatorLayouts.bits,
       CommonGround.SimulatorLayouts.handoffTape,
@@ -192,10 +193,10 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_of_pr
   · intro code T hhalt
     rcases hparser.right.right.right code T hhalt with
       ⟨out, htransform, hT⟩
-    unfold MachineDescription.SimulatorLayout.normalizeCodePrimitive at htransform
-    unfold MachineDescription.SimulatorLayout.normalizeCode at htransform
+    unfold SimulatorLayout.normalizeCodePrimitive at htransform
+    unfold SimulatorLayout.normalizeCode at htransform
     cases hdecode :
-        MachineDescription.SimulatorLayout.decodeComplete code with
+        SimulatorLayout.decodeComplete code with
     | none =>
         simp [hdecode] at htransform
     | some L =>
@@ -226,49 +227,49 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruct
       let T : Tape Bool :=
         (recognizer.runConfig n
           (recognizer.initial
-            (MachineDescription.encodeCodeWordAsInput code))).tape
+            (encodeCodeWordAsInput code))).tape
       have hTape :
           recognizer.HaltsWithTape
-              (MachineDescription.encodeCodeWordAsInput code) T := by
+              (encodeCodeWordAsInput code) T := by
         exact ⟨n, ⟨hn.left, rfl⟩⟩
       rcases hrecognizer.right.right code T hTape with
         ⟨L, hdecode, hT⟩
       have houtBits :
-          MachineDescription.encodeCodeWordAsInput out =
-            MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.SimulatorLayout.encode L) := by
+          encodeCodeWordAsInput out =
+            encodeCodeWordAsInput
+              (SimulatorLayout.encode L) := by
         calc
-          MachineDescription.encodeCodeWordAsInput out =
+          encodeCodeWordAsInput out =
               Tape.normalizedOutput T := by
                 simpa [T] using hn.right.symm
           _ =
-              MachineDescription.encodeCodeWordAsInput
-                (MachineDescription.SimulatorLayout.encode L) := by
+              encodeCodeWordAsInput
+                (SimulatorLayout.encode L) := by
                 rw [hT]
                 simpa [CommonGround.SimulatorLayouts.encode] using
                   CommonGround.SimulatorLayouts.handoffTape_normalizedOutput L
       have hout :
-          out = MachineDescription.SimulatorLayout.encode L :=
-        MachineDescription.encodeCodeWordAsInput_injective houtBits
+          out = SimulatorLayout.encode L :=
+        encodeCodeWordAsInput_injective houtBits
       have hdecode' :
-          MachineDescription.SimulatorLayout.decodeComplete code = some L := by
+          SimulatorLayout.decodeComplete code = some L := by
         simpa [CommonGround.SimulatorLayouts.decode] using
           hdecode
-      simp [MachineDescription.SimulatorLayout.normalizeCodePrimitive,
-        MachineDescription.SimulatorLayout.normalizeCode,
+      simp [SimulatorLayout.normalizeCodePrimitive,
+        SimulatorLayout.normalizeCode,
         hout, hdecode']
     · intro htransform
-      unfold MachineDescription.SimulatorLayout.normalizeCodePrimitive at htransform
-      unfold MachineDescription.SimulatorLayout.normalizeCode at htransform
+      unfold SimulatorLayout.normalizeCodePrimitive at htransform
+      unfold SimulatorLayout.normalizeCode at htransform
       cases hdecode :
-          MachineDescription.SimulatorLayout.decodeComplete code with
+          SimulatorLayout.decodeComplete code with
       | none =>
           simp [hdecode] at htransform
       | some L =>
           simp [hdecode] at htransform
           cases htransform
           have hcode :
-              code = MachineDescription.SimulatorLayout.encode L :=
+              code = SimulatorLayout.encode L :=
             CommonGround.SimulatorLayouts.decodeComplete_eq_some_encode
               hdecode
           subst code
@@ -278,12 +279,12 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruct
                 (CommonGround.SimulatorLayouts.handoffTape L) :=
             hrecognizer.right.left L
           have houtput :=
-            MachineDescription.haltsWithOutput_of_haltsWithTape hhaltTape
+            haltsWithOutput_of_haltsWithTape hhaltTape
           have hnormalized :
               Tape.normalizedOutput
                   (CommonGround.SimulatorLayouts.handoffTape L) =
-                MachineDescription.encodeCodeWordAsInput
-                  (MachineDescription.SimulatorLayout.encode L) := by
+                encodeCodeWordAsInput
+                  (SimulatorLayout.encode L) := by
             simpa [CommonGround.SimulatorLayouts.encode,
               CommonGround.SimulatorLayouts.bits,
               CommonGround.LayoutTapes.Bits] using
@@ -295,13 +296,13 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruct
   · intro code T hhalt
     rcases hrecognizer.right.right code T hhalt with
       ⟨L, hdecode, hT⟩
-    refine ⟨MachineDescription.SimulatorLayout.encode L, ?_, ?_⟩
+    refine ⟨SimulatorLayout.encode L, ?_, ?_⟩
     · have hdecode' :
-          MachineDescription.SimulatorLayout.decodeComplete code = some L := by
+          SimulatorLayout.decodeComplete code = some L := by
         simpa [CommonGround.SimulatorLayouts.decode] using
           hdecode
-      simp [MachineDescription.SimulatorLayout.normalizeCodePrimitive,
-        MachineDescription.SimulatorLayout.normalizeCode, hdecode']
+      simp [SimulatorLayout.normalizeCodePrimitive,
+        SimulatorLayout.normalizeCode, hdecode']
     · rw [hT]
       simp [CommonGround.SimulatorLayouts.encode,
         CommonGround.LayoutTapes.HandoffTape,
@@ -316,7 +317,7 @@ one cell to the right of the canonical code word.
 def FixedDescriptionBoundedSimulatorCodeRightShiftedEmitterSpec
     (D emitter : MachineDescription) : Prop :=
   CommonGround.CodeWordEmitters.EmitterSpec
-    MachineDescription.SimulatorLayout.asBoolInput
+    SimulatorLayout.asBoolInput
     (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode D)
     emitter
 
@@ -329,8 +330,8 @@ def FixedDescriptionBoundedSimulatorCodeRightShiftedEmitterConstruction :
 
 def FixedDescriptionBoundedSimulatorCodeRightShiftedEmitterRunner
     (sim : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine
-    sim MachineDescription.ExactIdentityDescription Direction.right
+  seqSubroutine
+    sim ExactIdentityDescription Direction.right
 
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterSpec_of_canonical
     {D sim : MachineDescription}
@@ -338,35 +339,35 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterSpec_of_canonical
     FixedDescriptionBoundedSimulatorCodeRightShiftedEmitterSpec D
       (FixedDescriptionBoundedSimulatorCodeRightShiftedEmitterRunner sim) := by
   have hidentityReady :
-      MachineDescription.ExactIdentityDescription.SubroutineReady :=
+      ExactIdentityDescription.SubroutineReady :=
     CommonGround.Identity.exactIdentityDescription_subroutineReady
   constructor
   · exact
-      MachineDescription.seqSubroutine_subroutineReady
+      seqSubroutine_subroutineReady
         hsim.left hidentityReady
   constructor
   · intro L
     have hsimRun :
         sim.HaltsWithTape
-          (MachineDescription.SimulatorLayout.asBoolInput L)
+          (SimulatorLayout.asBoolInput L)
           (FixedDescriptionBoundedSimulatorCanonicalOutputTape D L) := by
       simpa [FixedDescriptionBoundedSimulatorInput] using
         hsim.right.left L
     exact
-      MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+      seqSubroutine_haltsWithTape_of_haltsWithTape
         hsim.left hidentityReady hsimRun
         ⟨0, by
           simp [FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode,
             CommonGround.CodeWordEmitters.OutputTape,
             FixedDescriptionBoundedSimulatorCanonicalOutputTape,
             fixedDescriptionBoundedSimulatorCodeRightShiftedRunLayout_eq_run,
-            MachineDescription.SimulatorLayout.tape,
-            MachineDescription.SimulatorLayout.asBoolInput,
-            MachineDescription.runConfig,
-            MachineDescription.ExactIdentityDescription]⟩
+            SimulatorLayout.tape,
+            SimulatorLayout.asBoolInput,
+            runConfig,
+            ExactIdentityDescription]⟩
   · intro L T hhalt
     rcases
-        MachineDescription.seqSubroutine_haltsWithTape_inv
+        seqSubroutine_haltsWithTape_inv
           hsim.left hidentityReady hhalt with
       ⟨Tmid, hsimRun, hidentityRun⟩
     have hTmid :
@@ -387,14 +388,14 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterSpec_of_canonical
         Tape.move Direction.right
             (FixedDescriptionBoundedSimulatorCanonicalOutputTape D L) =
           T := by
-      simpa using congrArg MachineDescription.Configuration.tape hn
+      simpa using congrArg Configuration.tape hn
     simpa [FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape,
       FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode,
       CommonGround.CodeWordEmitters.OutputTape,
       FixedDescriptionBoundedSimulatorCanonicalOutputTape,
       fixedDescriptionBoundedSimulatorCodeRightShiftedRunLayout_eq_run,
-      MachineDescription.SimulatorLayout.tape,
-      MachineDescription.SimulatorLayout.asBoolInput] using hT.symm
+      SimulatorLayout.tape,
+      SimulatorLayout.asBoolInput] using hT.symm
 
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterConstruction_of_canonical
     (hcanonical : FixedDescriptionBoundedSimulatorCanonicalConstruction) :
@@ -419,13 +420,13 @@ def FixedDescriptionBoundedSimulatorCodeRightShiftedParserEmitterConstruction :
 
 def FixedDescriptionBoundedSimulatorCodeRightShiftedRunner
     (parser emitter : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine parser emitter Direction.left
+  seqSubroutine parser emitter Direction.left
 
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff
-    (L : MachineDescription.SimulatorLayout) :
+    (L : SimulatorLayout) :
     Tape.move Direction.left
         (CommonGround.SimulatorLayouts.handoffTape L) =
-      Tape.input (MachineDescription.SimulatorLayout.asBoolInput L) := by
+      Tape.input (SimulatorLayout.asBoolInput L) := by
   exact CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape L
 
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedSpec_of_parser_emitter
@@ -442,7 +443,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedSpec_of_parser_emitter
   have hrunnerReady :
       (FixedDescriptionBoundedSimulatorCodeRightShiftedRunner
         parser emitter).SubroutineReady := by
-    exact MachineDescription.seqSubroutine_subroutineReady
+    exact seqSubroutine_subroutineReady
       hparser.left hemitter.left
   constructor
   · exact hrunnerReady
@@ -459,15 +460,15 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedSpec_of_parser_emitter
         hparser.right.left L
     have hemitterRun :
         emitter.HaltsWithTape
-          (MachineDescription.SimulatorLayout.asBoolInput L)
+          (SimulatorLayout.asBoolInput L)
           (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape D L) := by
       simpa [FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape,
         CommonGround.CodeWordEmitters.OutputTape] using
         hemitter.right.left L
-    rcases MachineDescription.runConfig_eq_halt_of_haltsWithTape
+    rcases runConfig_eq_halt_of_haltsWithTape
       hemitterRun with ⟨n, hn⟩
     exact
-      MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+      seqSubroutine_haltsWithTape_of_haltsWithTape
         hparser.left hemitter.left hparserRun
         ⟨n, by
           simpa [
@@ -475,7 +476,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedSpec_of_parser_emitter
               L] using hn⟩
   · intro code T hhalt
     rcases
-        MachineDescription.seqSubroutine_haltsWithTape_inv
+        seqSubroutine_haltsWithTape_inv
           hparser.left hemitter.left hhalt with
       ⟨Tmid, hparserRun, hemitterReach⟩
     rcases hparser.right.right code Tmid hparserRun with
@@ -484,17 +485,17 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedSpec_of_parser_emitter
     rcases hemitterReach with ⟨n, hn⟩
     have hemitterRun :
         emitter.HaltsWithTape
-          (MachineDescription.SimulatorLayout.asBoolInput L) T := by
+          (SimulatorLayout.asBoolInput L) T := by
       refine ⟨n, ?_⟩
       constructor
-      · simpa [MachineDescription.HaltsWithTapeIn,
-          MachineDescription.initial, hTmid,
+      · simpa [HaltsWithTapeIn,
+          initial, hTmid,
           CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
-            L] using congrArg MachineDescription.Configuration.state hn
-      · simpa [MachineDescription.HaltsWithTapeIn,
-          MachineDescription.initial, hTmid,
+            L] using congrArg Configuration.state hn
+      · simpa [HaltsWithTapeIn,
+          initial, hTmid,
           CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
-            L] using congrArg MachineDescription.Configuration.tape hn
+            L] using congrArg Configuration.tape hn
     exact
       hemitter.right.right L T hemitterRun
 
@@ -514,17 +515,17 @@ theorem fixedDescriptionBoundedSimulatorCode_transform_eq_some_iff
     (D : MachineDescription)
     (code out : Word MachineCodeSymbol) :
     (FixedDescriptionBoundedSimulatorCode D).transform code = some out ↔
-      exists L : MachineDescription.SimulatorLayout,
-        MachineDescription.SimulatorLayout.decodeComplete code = some L ∧
+      exists L : SimulatorLayout,
+        SimulatorLayout.decodeComplete code = some L ∧
           out =
             FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode D L := by
   constructor
   · intro h
     unfold FixedDescriptionBoundedSimulatorCode at h
-    unfold MachineDescription.SimulatorLayout.runCodePrimitive at h
-    unfold MachineDescription.SimulatorLayout.runCode at h
+    unfold SimulatorLayout.runCodePrimitive at h
+    unfold SimulatorLayout.runCode at h
     cases hdecode :
-        MachineDescription.SimulatorLayout.decodeComplete code with
+        SimulatorLayout.decodeComplete code with
     | none =>
         simp [hdecode] at h
     | some L =>
@@ -537,8 +538,8 @@ theorem fixedDescriptionBoundedSimulatorCode_transform_eq_some_iff
   · intro h
     rcases h with ⟨L, hdecode, hout⟩
     unfold FixedDescriptionBoundedSimulatorCode
-    unfold MachineDescription.SimulatorLayout.runCodePrimitive
-    unfold MachineDescription.SimulatorLayout.runCode
+    unfold SimulatorLayout.runCodePrimitive
+    unfold SimulatorLayout.runCode
     simp [hdecode, hout,
       FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode,
       fixedDescriptionBoundedSimulatorCodeRightShiftedRunLayout_eq_run]
@@ -553,7 +554,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShifted_of_spec
     CommonGround.CodeWordEmitters.rightShiftedOutputCompiled_of_indexed_tape_spec
       hrunner.left.left
       hrunner.left.right
-      MachineDescription.SimulatorLayout.encode
+      SimulatorLayout.encode
       (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode D)
       (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape D)
       (by
@@ -562,7 +563,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShifted_of_spec
       (by
         intro L
         simpa [FixedDescriptionBoundedSimulatorInput,
-          MachineDescription.SimulatorLayout.asBoolInput] using
+          SimulatorLayout.asBoolInput] using
           hrunner.right.left L)
       (by
         intro code T hhalt
@@ -605,11 +606,11 @@ canonical layout tape.
 def FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction :
     Prop :=
   forall D : MachineDescription,
-    exists simulateStep : MachineDescription.Fragment,
+    exists simulateStep : Fragment,
       FixedDescriptionBoundedSimulatorPhaseRealizes
         (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
         FixedDescriptionBoundedSimulatorLayoutTape
-        (fun L => MachineDescription.SimulatorLayout.run D L.stage L)
+        (fun L => SimulatorLayout.run D L.stage L)
         simulateStep
 
 theorem fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_codeRightShifted :
@@ -617,7 +618,7 @@ theorem fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_codeRightSh
       (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
       FixedDescriptionBoundedSimulatorLayoutTape
       id
-      (MachineDescription.Fragment.handoff Direction.left) :=
+      (Fragment.handoff Direction.left) :=
   fixedDescriptionBoundedSimulatorReturnFromRightHandoffPhaseRealizes
 
 theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_rightHandoffStepPhase
@@ -626,18 +627,18 @@ theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_rightHandof
     FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction := by
   intro D
   rcases hstep D with ⟨simulateStep, hsimulateStep⟩
-  let S : MachineDescription.FixedSimulatorTableSkeleton :=
-    { decodeLayout := MachineDescription.Fragment.halt
+  let S : FixedSimulatorTableSkeleton :=
+    { decodeLayout := Fragment.halt
       simulateStep := simulateStep
-      repeatControl := MachineDescription.Fragment.handoff Direction.left
-      emitLayout := MachineDescription.Fragment.handoff Direction.left
+      repeatControl := Fragment.handoff Direction.left
+      emitLayout := Fragment.handoff Direction.left
       decodeLayout_wellFormed :=
-        MachineDescription.Fragment.halt_wellFormed
+        Fragment.halt_wellFormed
       simulateStep_wellFormed := hsimulateStep.left
       repeatControl_wellFormed :=
-        MachineDescription.Fragment.handoff_wellFormed Direction.left
+        Fragment.handoff_wellFormed Direction.left
       emitLayout_wellFormed :=
-        MachineDescription.Fragment.handoff_wellFormed Direction.left }
+        Fragment.handoff_wellFormed Direction.left }
   refine
     ⟨S, Direction.right,
       FixedDescriptionBoundedSimulatorPhaseTargets.canonical D, ?_⟩

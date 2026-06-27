@@ -16,16 +16,17 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
 def checkedNonemptyBoolWordQuoteExactBits
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol) : Word Bool :=
-  MachineDescription.encodeCodeWordAsInput
+  encodeCodeWordAsInput
     (MachineCodeSymbol.header ::
-      MachineDescription.encodeBoolWordAppend (b :: rest)
-        (MachineDescription.encodeNatAppend stage suffix))
+      encodeBoolWordAppend (b :: rest)
+        (encodeNatAppend stage suffix))
 
 def checkedNonemptyBoolWordQuoteNativeHaltTape
     (b : Bool) (rest : Word Bool) (stage : Nat)
@@ -34,7 +35,7 @@ def checkedNonemptyBoolWordQuoteNativeHaltTape
     (some false ::
       ((List.append
         (checkedNonemptyBoolWordQuoteDirectSourceBits b rest
-          (MachineDescription.encodeNatAppend stage suffix))
+          (encodeNatAppend stage suffix))
         (checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits rest)).map some))
 
 theorem checkedNonemptyBoolWordQuoteExactBits_eq
@@ -42,11 +43,11 @@ theorem checkedNonemptyBoolWordQuoteExactBits_eq
     (suffix : Word MachineCodeSymbol) :
     checkedNonemptyBoolWordQuoteExactBits b rest stage suffix =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.header)
+        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
         (checkedNonemptyBoolWordQuoteDirectSourceBits b rest
-          (MachineDescription.encodeNatAppend stage suffix)) := by
+          (encodeNatAppend stage suffix)) := by
   simp [checkedNonemptyBoolWordQuoteExactBits,
-    MachineDescription.encodeCodeWordAsInput,
+    encodeCodeWordAsInput,
     checkedNonemptyBoolWordQuoteDirectSourceBits_eq]
 
 theorem checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits_length_ge_three
@@ -54,7 +55,7 @@ theorem checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits_length_ge_three
     3 ≤ (checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits rest).length := by
   unfold checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits
   unfold inputTapeRightCellsDirectCopierDoneBits
-  simp [MachineDescription.encodeCodeSymbolAsInput, List.length_append]
+  simp [encodeCodeSymbolAsInput, List.length_append]
   omega
 
 theorem checkedNonemptyBoolWordQuoteNativeHaltTape_contextLength_gt_exact
@@ -70,7 +71,7 @@ theorem checkedNonemptyBoolWordQuoteNativeHaltTape_contextLength_gt_exact
       rest
   simp [checkedNonemptyBoolWordQuoteNativeHaltTape,
     checkedNonemptyBoolWordQuoteExactBits_eq,
-    MachineDescription.encodeCodeSymbolAsInput, tapeAtCells,
+    encodeCodeSymbolAsInput, tapeAtCells,
     Tape.input, Tape.contextLength, List.length_append] at *
   omega
 
@@ -90,7 +91,7 @@ theorem checkedNonemptyBoolWordQuoteNativeHaltTape_not_run_exactInput
               b rest stage suffix) } := by
   intro hrun
   have hmono :=
-    MachineDescription.runConfig_contextLength_mono D n
+    runConfig_contextLength_mono D n
       { state := D.start
         tape :=
           checkedNonemptyBoolWordQuoteNativeHaltTape
@@ -107,7 +108,7 @@ theorem checkedNonemptyBoolWordQuoteNativeHaltTape_not_run_exactInput
             (checkedNonemptyBoolWordQuoteExactBits
               b rest stage suffix)) := by
     simpa using congrArg
-      (fun c : MachineDescription.Configuration =>
+      (fun c : Configuration =>
         Tape.contextLength c.tape) hrun
   have hgt :=
     checkedNonemptyBoolWordQuoteNativeHaltTape_contextLength_gt_exact

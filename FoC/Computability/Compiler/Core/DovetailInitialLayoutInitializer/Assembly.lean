@@ -13,20 +13,21 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
 def finalBoolFlagsCode :
     Word MachineCodeSymbol :=
-  MachineDescription.encodeBoolAppend false
-    (MachineDescription.encodeBoolAppend false [])
+  encodeBoolAppend false
+    (encodeBoolAppend false [])
 
 theorem finalBoolFlagsCode_ne_nil :
     finalBoolFlagsCode ≠ [] := by
   simp [finalBoolFlagsCode,
-    MachineDescription.encodeBoolAppend,
-    MachineDescription.encodeCellAppend,
-    MachineDescription.encodeCell]
+    encodeBoolAppend,
+    encodeCellAppend,
+    encodeCell]
 
 def AppendFinalBoolFlagsReturnDescription :
     MachineDescription :=
@@ -43,7 +44,7 @@ theorem
 
 def AppendSecondInputTapeAndFlagsDescription
     (copier : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     copier
     AppendFinalBoolFlagsReturnDescription
     Direction.left
@@ -54,13 +55,13 @@ theorem
     (hcopier : AppendInputTapeReturnSpec copier) :
     (AppendSecondInputTapeAndFlagsDescription
       copier).SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     hcopier.left
     appendFinalBoolFlagsReturnDescription_subroutineReady
 
 def AppendRejectThenInputTapeAndFlagsDescription
     (reject copier : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     (TransitionPrefixedFirstBitAppendNatReturnDescription
       reject.start)
     (AppendSecondInputTapeAndFlagsDescription copier)
@@ -72,7 +73,7 @@ theorem
     (hcopier : AppendInputTapeReturnSpec copier) :
     (AppendRejectThenInputTapeAndFlagsDescription
       reject copier).SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     (transitionPrefixedFirstBitAppendNatReturnDescription_subroutineReady
       reject.start)
     (appendSecondInputTapeAndFlagsDescription_subroutineReady
@@ -80,7 +81,7 @@ theorem
 
 def AppendFirstInputTapeThenRejectDescription
     (reject copier : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     copier
     (AppendRejectThenInputTapeAndFlagsDescription reject copier)
     Direction.left
@@ -91,14 +92,14 @@ theorem
     (hcopier : AppendInputTapeReturnSpec copier) :
     (AppendFirstInputTapeThenRejectDescription
       reject copier).SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     hcopier.left
     (appendRejectThenInputTapeAndFlagsDescription_subroutineReady
       hcopier)
 
 def DescriptionWithCopier
     (accept reject copier : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     (MarkedPrefixAppendNatReturnDescription accept.start)
     (AppendFirstInputTapeThenRejectDescription reject copier)
     Direction.left
@@ -109,7 +110,7 @@ theorem
     (hcopier : AppendInputTapeReturnSpec copier) :
     (DescriptionWithCopier
       accept reject copier).SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     (markedPrefixAppendNatReturnDescription_subroutineReady
       accept.start)
     (appendFirstInputTapeThenRejectDescription_subroutineReady
@@ -142,7 +143,7 @@ theorem
                   (List.append (stageInputBits w stage)
                     (List.append suffixBits
                       (List.append (inputTapeBits w)
-                        (MachineDescription.encodeCodeWordAsInput
+                        (encodeCodeWordAsInput
                           finalBoolFlagsCode))))).map some)) } := by
   let A := copier
   let B := AppendFinalBoolFlagsReturnDescription
@@ -181,7 +182,7 @@ theorem
                     (List.append (stageInputBits w stage)
                       (List.append suffixBits
                         (List.append (inputTapeBits w)
-                          (MachineDescription.encodeCodeWordAsInput
+                          (encodeCodeWordAsInput
                             finalBoolFlagsCode))))).map some)) } := by
     rcases
         transitionPrefixedFirstBitAppendCodeWordReturnDescription_run
@@ -194,7 +195,7 @@ theorem
       Tmid, copiedSuffix, tapeAtCells, Tape.move, Tape.moveLeft,
       List.append_assoc] using hB
   rcases
-      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+      seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.left)
         hAready hBready hArun hBReach with
     ⟨n, hn⟩
@@ -230,7 +231,7 @@ theorem
                     (List.append suffixBits
                       (List.append (natBits reject.start)
                         (List.append (inputTapeBits w)
-                          (MachineDescription.encodeCodeWordAsInput
+                          (encodeCodeWordAsInput
                             finalBoolFlagsCode)))))).map some)) } := by
   let A :=
     TransitionPrefixedFirstBitAppendNatReturnDescription
@@ -282,7 +283,7 @@ theorem
                       (List.append suffixBits
                         (List.append (natBits reject.start)
                           (List.append (inputTapeBits w)
-                            (MachineDescription.encodeCodeWordAsInput
+                            (encodeCodeWordAsInput
                               finalBoolFlagsCode)))))).map some)) } := by
     rcases
         appendSecondInputTapeAndFlagsDescription_run
@@ -293,7 +294,7 @@ theorem
     simpa [B, Tmid, rejectSuffix, tapeAtCells,
       Tape.move, Tape.moveLeft, List.append_assoc] using hB
   rcases
-      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+      seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.left)
         hAready hBready hArun hBReach with
     ⟨n, hn⟩
@@ -330,7 +331,7 @@ theorem
                       (List.append (inputTapeBits w)
                         (List.append (natBits reject.start)
                           (List.append (inputTapeBits w)
-                            (MachineDescription.encodeCodeWordAsInput
+                            (encodeCodeWordAsInput
                               finalBoolFlagsCode))))))).map some)) } := by
   let A := copier
   let B := AppendRejectThenInputTapeAndFlagsDescription
@@ -374,7 +375,7 @@ theorem
                         (List.append (inputTapeBits w)
                           (List.append (natBits reject.start)
                             (List.append (inputTapeBits w)
-                              (MachineDescription.encodeCodeWordAsInput
+                              (encodeCodeWordAsInput
                                 finalBoolFlagsCode))))))).map some)) } := by
     rcases
         appendRejectThenInputTapeAndFlagsDescription_run
@@ -385,7 +386,7 @@ theorem
     simpa [B, Tmid, firstTapeSuffix, tapeAtCells,
       Tape.move, Tape.moveLeft, List.append_assoc] using hB
   rcases
-      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+      seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.left)
         hAready hBready hArun hBReach with
     ⟨n, hn⟩
@@ -403,7 +404,7 @@ theorem
         accept reject copier).runConfig steps
           ((DescriptionWithCopier
             accept reject copier).initial
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w stage))) =
         { state :=
             (DescriptionWithCopier
@@ -417,7 +418,7 @@ theorem
                       (List.append (inputTapeBits w)
                         (List.append (natBits reject.start)
                           (List.append (inputTapeBits w)
-                            (MachineDescription.encodeCodeWordAsInput
+                            (encodeCodeWordAsInput
                               finalBoolFlagsCode))))))).map some)) } := by
   let A := MarkedPrefixAppendNatReturnDescription accept.start
   let B := AppendFirstInputTapeThenRejectDescription
@@ -446,11 +447,11 @@ theorem
           { state := A.start
             tape :=
               Tape.input
-                (MachineDescription.encodeCodeWordAsInput
+                (encodeCodeWordAsInput
                   (PairedRecognizerDovetailStageInputCode w stage)) } =
         { state := A.halt, tape := Tmid } := by
     simpa [A, Tmid, acceptSuffix, stageInputBits,
-      natBits, MachineDescription.initial, List.append_assoc]
+      natBits, initial, List.append_assoc]
       using hA
   have hBReach :
       exists nB : Nat,
@@ -467,7 +468,7 @@ theorem
                         (List.append (inputTapeBits w)
                           (List.append (natBits reject.start)
                             (List.append (inputTapeBits w)
-                              (MachineDescription.encodeCodeWordAsInput
+                              (encodeCodeWordAsInput
                                 finalBoolFlagsCode))))))).map some)) } := by
     rcases
         appendFirstInputTapeThenRejectDescription_run
@@ -478,13 +479,13 @@ theorem
     simpa [B, Tmid, acceptSuffix, tapeAtCells,
       Tape.move, Tape.moveLeft, List.append_assoc] using hB
   rcases
-      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+      seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.left)
         hAready hBready hArun hBReach with
     ⟨n, hn⟩
   refine ⟨n, ?_⟩
   simpa [DescriptionWithCopier,
-    MachineDescription.initial, A, B] using hn
+    initial, A, B] using hn
 
 theorem
     descriptionWithCopier_run_bits_checked
@@ -510,7 +511,7 @@ theorem
                       (List.append (inputTapeBits w)
                         (List.append (natBits reject.start)
                           (List.append (inputTapeBits w)
-                            (MachineDescription.encodeCodeWordAsInput
+                            (encodeCodeWordAsInput
                               finalBoolFlagsCode))))))).map some)) } := by
   let A := MarkedPrefixAppendNatReturnDescription accept.start
   let B := AppendFirstInputTapeThenRejectDescription
@@ -557,7 +558,7 @@ theorem
                         (List.append (inputTapeBits w)
                           (List.append (natBits reject.start)
                             (List.append (inputTapeBits w)
-                              (MachineDescription.encodeCodeWordAsInput
+                              (encodeCodeWordAsInput
                                 finalBoolFlagsCode))))))).map some)) } := by
     rcases
         appendFirstInputTapeThenRejectDescription_run
@@ -568,7 +569,7 @@ theorem
     simpa [B, Tmid, acceptSuffix, tapeAtCells,
       Tape.move, Tape.moveLeft, List.append_assoc] using hB
   rcases
-      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+      seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.left)
         hAready hBready hArun hBReach with
     ⟨n, hn⟩
@@ -578,7 +579,7 @@ theorem
 
 theorem codeCells_encodeNat
     (n : Nat) :
-    codeCells (MachineDescription.encodeNat n) =
+    codeCells (encodeNat n) =
       natCodeCells n := by
   induction n with
   | zero =>
@@ -587,7 +588,7 @@ theorem codeCells_encodeNat
       change
         List.append
             (codeSymbolCells MachineCodeSymbol.tick)
-            (codeCells (MachineDescription.encodeNat n)) =
+            (codeCells (encodeNat n)) =
           List.append
             (codeSymbolCells MachineCodeSymbol.tick)
             (natCodeCells n)
@@ -596,15 +597,15 @@ theorem codeCells_encodeNat
 theorem codeCells_encodeNatAppend
     (n : Nat) (suffix : Word MachineCodeSymbol) :
     codeCells
-        (MachineDescription.encodeNatAppend n suffix) =
+        (encodeNatAppend n suffix) =
       List.append (natCodeCells n)
         (codeCells suffix) := by
-  rw [MachineDescription.encodeNatAppend, codeCells_append,
+  rw [encodeNatAppend, codeCells_append,
     codeCells_encodeNat]
 
 theorem codeCells_encodeCell
     (cell : Option Bool) :
-    codeCells (MachineDescription.encodeCell cell) =
+    codeCells (encodeCell cell) =
       cellCodeCells cell := by
   cases cell with
   | none =>
@@ -615,34 +616,34 @@ theorem codeCells_encodeCell
 theorem codeCells_encodeCellAppend
     (cell : Option Bool) (suffix : Word MachineCodeSymbol) :
     codeCells
-        (MachineDescription.encodeCellAppend cell suffix) =
+        (encodeCellAppend cell suffix) =
       List.append (cellCodeCells cell)
         (codeCells suffix) := by
-  rw [MachineDescription.encodeCellAppend, codeCells_append,
+  rw [encodeCellAppend, codeCells_append,
     codeCells_encodeCell]
 
 theorem codeCells_encodeCellsAppend
     (cells : List (Option Bool)) (suffix : Word MachineCodeSymbol) :
     codeCells
-        (MachineDescription.encodeCellsAppend cells suffix) =
+        (encodeCellsAppend cells suffix) =
       List.append (cellsCodeCells cells)
         (codeCells suffix) := by
   induction cells with
   | nil =>
       rfl
   | cons cell rest ih =>
-      rw [MachineDescription.encodeCellsAppend,
+      rw [encodeCellsAppend,
         codeCells_encodeCellAppend, ih]
       simp [cellsCodeCells, List.append_assoc]
 
 theorem codeCells_encodeCellListAppend
     (cells : List (Option Bool)) (suffix : Word MachineCodeSymbol) :
     codeCells
-        (MachineDescription.encodeCellListAppend cells suffix) =
+        (encodeCellListAppend cells suffix) =
       List.append (natCodeCells cells.length)
         (List.append (cellsCodeCells cells)
           (codeCells suffix)) := by
-  rw [MachineDescription.encodeCellListAppend,
+  rw [encodeCellListAppend,
     codeCells_encodeNatAppend,
     codeCells_encodeCellsAppend]
 
@@ -661,7 +662,7 @@ def inputTapeCodeCells :
 theorem codeCells_encodeTapeAppend_input
     (w : Word Bool) (suffix : Word MachineCodeSymbol) :
     codeCells
-        (MachineDescription.encodeTapeAppend (Tape.input w) suffix) =
+        (encodeTapeAppend (Tape.input w) suffix) =
       List.append (inputTapeCodeCells w)
         (codeCells suffix) := by
   cases w with
@@ -687,20 +688,20 @@ def boolCodeCells (b : Bool) :
 theorem codeCells_encodeBoolAppend
     (b : Bool) (suffix : Word MachineCodeSymbol) :
     codeCells
-        (MachineDescription.encodeBoolAppend b suffix) =
+        (encodeBoolAppend b suffix) =
       List.append (boolCodeCells b)
         (codeCells suffix) := by
-  rw [MachineDescription.encodeBoolAppend,
+  rw [encodeBoolAppend,
     codeCells_encodeCellAppend]
   rfl
 
 theorem codeCells_encodeBoolWordAppend
     (w : Word Bool) (suffix : Word MachineCodeSymbol) :
     codeCells
-        (MachineDescription.encodeBoolWordAppend w suffix) =
+        (encodeBoolWordAppend w suffix) =
       List.append (boolWordCells w)
         (codeCells suffix) := by
-  rw [MachineDescription.encodeBoolWordAppend,
+  rw [encodeBoolWordAppend,
     codeCells_encodeCellListAppend]
   simp [boolWordCells, boolPayloadCells,
     List.append_assoc]
@@ -711,11 +712,11 @@ theorem stageInputCells_eq_bool_word_nat
       List.append (boolWordCells w)
         (natCodeCells stage) := by
   rw [stageInputCells, PairedRecognizerDovetailStageInputCode,
-    MachineDescription.DovetailLayout.stageInputCode,
-    MachineDescription.DovetailLayout.stageInputCodeAppend,
+    DovetailLayout.stageInputCode,
+    DovetailLayout.stageInputCodeAppend,
     codeCells_encodeBoolWordAppend,
     codeCells_encodeNatAppend]
-  simp [codeCells, MachineDescription.encodeCodeWordAsInput]
+  simp [codeCells, encodeCodeWordAsInput]
 
 theorem suffixCells_eq_field_blocks
     (accept reject : MachineDescription)
@@ -734,7 +735,7 @@ theorem suffixCells_eq_field_blocks
     codeCells_encodeTapeAppend_input,
     codeCells_encodeBoolAppend,
     codeCells_encodeBoolAppend]
-  simp [codeCells, MachineDescription.encodeCodeWordAsInput]
+  simp [codeCells, encodeCodeWordAsInput]
 
 theorem outputCells_eq_stageInput_append_suffix
     (accept reject : MachineDescription)
@@ -748,26 +749,26 @@ theorem outputCells_eq_stageInput_append_suffix
     suffixCells,
     outputCode_eq_stageInput_append_suffix]
   unfold codeCells
-  simp [MachineDescription.encodeCodeWordAsInput,
-    MachineDescription.encodeCodeSymbolAsInput]
+  simp [encodeCodeWordAsInput,
+    encodeCodeSymbolAsInput]
   change
     List.map some
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (List.append
             (PairedRecognizerDovetailStageInputCode w stage)
             (SuffixCode accept reject w))) =
       List.append
         (List.map some
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (PairedRecognizerDovetailStageInputCode w stage)))
         (List.map some
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (SuffixCode accept reject w)))
-  rw [MachineDescription.encodeCodeWordAsInput_append]
+  rw [encodeCodeWordAsInput_append]
   exact map_some_append
-    (MachineDescription.encodeCodeWordAsInput
+    (encodeCodeWordAsInput
       (PairedRecognizerDovetailStageInputCode w stage))
-    (MachineDescription.encodeCodeWordAsInput
+    (encodeCodeWordAsInput
       (SuffixCode accept reject w))
 
 theorem outputCells_eq_phase_blocks
@@ -802,14 +803,14 @@ theorem tapeAtCells_eq_input_transition_prefixed
     (tail : Word Bool) :
     tapeAtCells []
         ((List.append
-          (MachineDescription.encodeCodeSymbolAsInput
+          (encodeCodeSymbolAsInput
             MachineCodeSymbol.transition) tail).map some) =
       Tape.input
         (List.append
-          (MachineDescription.encodeCodeSymbolAsInput
+          (encodeCodeSymbolAsInput
             MachineCodeSymbol.transition) tail) := by
   simp [tapeAtCells,
-    MachineDescription.encodeCodeSymbolAsInput, Tape.input]
+    encodeCodeSymbolAsInput, Tape.input]
 
 theorem tapeAtCells_right_eq_move_right_input_transition_prefixed
     (tail : Word Bool) :
@@ -820,10 +821,10 @@ theorem tapeAtCells_right_eq_move_right_input_transition_prefixed
       Tape.move Direction.right
         (Tape.input
           (List.append
-            (MachineDescription.encodeCodeSymbolAsInput
+            (encodeCodeSymbolAsInput
               MachineCodeSymbol.transition) tail)) := by
   simp [tapeAtCells,
-    MachineDescription.encodeCodeSymbolAsInput, Tape.input,
+    encodeCodeSymbolAsInput, Tape.input,
     Tape.move, Tape.moveRight]
 
 theorem outputTape_eq_cells
@@ -834,18 +835,18 @@ theorem outputTape_eq_cells
         [some false]
         (List.append [some false, some false, some true]
           (List.append
-            ((MachineDescription.encodeCodeWordAsInput
+            ((encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w stage)).map some)
-            ((MachineDescription.encodeCodeWordAsInput
+            ((encodeCodeWordAsInput
               (SuffixCode
                 accept reject w)).map some))) := by
   rw [outputTape_eq_stageInput_append_suffix]
   rw [← tapeAtCells_right_eq_move_right_input_transition_prefixed
     (tail :=
       List.append
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (PairedRecognizerDovetailStageInputCode w stage))
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (SuffixCode
             accept reject w)))]
   rw [map_some_append]
@@ -865,19 +866,19 @@ theorem inputTapeCodeCells_eq_bits
     codeCells_encodeTapeAppend_input
       w ([] : Word MachineCodeSymbol)
   simpa [inputTapeBits, codeCells,
-    MachineDescription.encodeCodeWordAsInput] using h.symm
+    encodeCodeWordAsInput] using h.symm
 
 theorem finalBoolFlagsCodeCells_eq_bits :
     List.append (boolCodeCells false)
         (boolCodeCells false) =
-      (MachineDescription.encodeCodeWordAsInput
+      (encodeCodeWordAsInput
         finalBoolFlagsCode).map some := by
   simp [finalBoolFlagsCode, boolCodeCells,
     cellCodeCells, codeSymbolCells,
-    MachineDescription.encodeBoolAppend, MachineDescription.encodeCellAppend,
-    MachineDescription.encodeCell,
-    MachineDescription.encodeCodeWordAsInput,
-    MachineDescription.encodeCodeSymbolAsInput]
+    encodeBoolAppend, encodeCellAppend,
+    encodeCell,
+    encodeCodeWordAsInput,
+    encodeCodeSymbolAsInput]
 
 theorem outputTape_eq_bits
     (accept reject : MachineDescription)
@@ -891,7 +892,7 @@ theorem outputTape_eq_bits
                 (List.append (inputTapeBits w)
                     (List.append (natBits reject.start)
                       (List.append (inputTapeBits w)
-                        (MachineDescription.encodeCodeWordAsInput
+                        (encodeCodeWordAsInput
                           finalBoolFlagsCode))))))).map some)) := by
   rw [outputTape_eq_cells]
   change
@@ -907,7 +908,7 @@ theorem outputTape_eq_bits
                 (List.append (inputTapeBits w)
                   (List.append (natBits reject.start)
                     (List.append (inputTapeBits w)
-                      (MachineDescription.encodeCodeWordAsInput
+                      (encodeCodeWordAsInput
                         finalBoolFlagsCode))))))).map some))
   rw [suffixCells_eq_field_blocks]
   simp only [natCodeCells_eq_bits,
@@ -934,26 +935,26 @@ theorem inputTapeRightCellsDirectCopierNatBits_eq_ticks_done
 
 theorem inputTapeRightCellsDirectCopierCellBits_append_natBits
     (rest : Word Bool) (stage : Nat) :
-    MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeCellsAppend (rest.map some)
-          (MachineDescription.encodeNat stage)) =
+    encodeCodeWordAsInput
+        (encodeCellsAppend (rest.map some)
+          (encodeNat stage)) =
       List.append (inputTapeRightCellsDirectCopierCellBits rest)
         (inputTapeRightCellsDirectCopierNatBits stage) := by
   rw [show
-      MachineDescription.encodeCellsAppend (rest.map some)
-          (MachineDescription.encodeNat stage) =
+      encodeCellsAppend (rest.map some)
+          (encodeNat stage) =
         List.append
-          (MachineDescription.encodeCellsAppend (rest.map some) [])
-          (MachineDescription.encodeNat stage) by
+          (encodeCellsAppend (rest.map some) [])
+          (encodeNat stage) by
       simpa using
         (encodeCellsAppend_append (rest.map some) []
-          (MachineDescription.encodeNat stage))]
-  rw [MachineDescription.encodeCodeWordAsInput_append]
+          (encodeNat stage))]
+  rw [encodeCodeWordAsInput_append]
   rfl
 
 theorem inputTapeRightCellsDirectCopierRightCellsCodeBits_eq
     (rest : Word Bool) :
-    MachineDescription.encodeCodeWordAsInput
+    encodeCodeWordAsInput
         (inputTapeRightCellsCode rest) =
       List.append (inputTapeRightCellsDirectCopierTickBits rest.length)
         (List.append inputTapeRightCellsDirectCopierDoneBits
@@ -974,26 +975,26 @@ theorem inputTapeRightCellsDirectCopierRightCellsCodeBits_eq
 
 theorem inputTapeRightCellsDirectCopierStageInputTailBits_eq
     (b : Bool) (rest : Word Bool) (stage : Nat) :
-    MachineDescription.encodeCodeWordAsInput
-        (List.append (MachineDescription.encodeNat rest.length)
+    encodeCodeWordAsInput
+        (List.append (encodeNat rest.length)
           ((if b then MachineCodeSymbol.one else MachineCodeSymbol.zero) ::
-            MachineDescription.encodeCellsAppend (rest.map some)
-              (MachineDescription.encodeNat stage))) =
+            encodeCellsAppend (rest.map some)
+              (encodeNat stage))) =
       List.append (inputTapeRightCellsDirectCopierTickBits rest.length)
         (List.append inputTapeRightCellsDirectCopierDoneBits
           (List.append (inputTapeRightCellsDirectCopierHeadBits b)
             (List.append (inputTapeRightCellsDirectCopierCellBits rest)
               (inputTapeRightCellsDirectCopierNatBits stage)))) := by
-  rw [MachineDescription.encodeCodeWordAsInput_append]
+  rw [encodeCodeWordAsInput_append]
   rw [show
-      MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeNat rest.length) =
+      encodeCodeWordAsInput
+          (encodeNat rest.length) =
         inputTapeRightCellsDirectCopierNatBits rest.length by
       rfl]
   rw [inputTapeRightCellsDirectCopierNatBits_eq_ticks_done]
   cases b <;>
-    simp [MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput,
+    simp [encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput,
       inputTapeRightCellsDirectCopierHeadBits,
       inputTapeRightCellsDirectCopierCellBits_append_natBits,
       List.append_assoc]
@@ -1002,7 +1003,7 @@ theorem stageInputBits_cons_eq_directCopierBits
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     stageInputBits (b :: rest) stage =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.tick)
+        (encodeCodeSymbolAsInput MachineCodeSymbol.tick)
         (List.append (inputTapeRightCellsDirectCopierTickBits rest.length)
           (List.append inputTapeRightCellsDirectCopierDoneBits
             (List.append (inputTapeRightCellsDirectCopierHeadBits b)
@@ -1010,31 +1011,31 @@ theorem stageInputBits_cons_eq_directCopierBits
                 (inputTapeRightCellsDirectCopierNatBits stage))))) := by
   cases b
   · simp [stageInputBits, PairedRecognizerDovetailStageInputCode,
-      MachineDescription.DovetailLayout.stageInputCode,
-      MachineDescription.DovetailLayout.stageInputCodeAppend,
-      MachineDescription.encodeBoolWordAppend,
-      MachineDescription.encodeCellListAppend,
-      MachineDescription.encodeNatAppend,
-      MachineDescription.encodeNat,
-      MachineDescription.encodeCellsAppend,
-      MachineDescription.encodeCellAppend,
-      MachineDescription.encodeCell,
-      MachineDescription.encodeCodeSymbolAsInput]
+      DovetailLayout.stageInputCode,
+      DovetailLayout.stageInputCodeAppend,
+      encodeBoolWordAppend,
+      encodeCellListAppend,
+      encodeNatAppend,
+      encodeNat,
+      encodeCellsAppend,
+      encodeCellAppend,
+      encodeCell,
+      encodeCodeSymbolAsInput]
     exact congrArg
       (fun bits => false :: false :: true :: false :: bits)
       (inputTapeRightCellsDirectCopierStageInputTailBits_eq
         false rest stage)
   · simp [stageInputBits, PairedRecognizerDovetailStageInputCode,
-      MachineDescription.DovetailLayout.stageInputCode,
-      MachineDescription.DovetailLayout.stageInputCodeAppend,
-      MachineDescription.encodeBoolWordAppend,
-      MachineDescription.encodeCellListAppend,
-      MachineDescription.encodeNatAppend,
-      MachineDescription.encodeNat,
-      MachineDescription.encodeCellsAppend,
-      MachineDescription.encodeCellAppend,
-      MachineDescription.encodeCell,
-      MachineDescription.encodeCodeSymbolAsInput]
+      DovetailLayout.stageInputCode,
+      DovetailLayout.stageInputCodeAppend,
+      encodeBoolWordAppend,
+      encodeCellListAppend,
+      encodeNatAppend,
+      encodeNat,
+      encodeCellsAppend,
+      encodeCellAppend,
+      encodeCell,
+      encodeCodeSymbolAsInput]
     exact congrArg
       (fun bits => false :: false :: true :: false :: bits)
       (inputTapeRightCellsDirectCopierStageInputTailBits_eq
@@ -1044,7 +1045,7 @@ theorem inputTapeRightCellsDirectCopierCoreSourceBits_eq
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffixBits : Word Bool) :
     List.append
-        (MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.tick)
+        (encodeCodeSymbolAsInput MachineCodeSymbol.tick)
         (inputTapeRightCellsDirectCopierCoreSourceBits
           b rest stage suffixBits) =
       List.append (stageInputBits (b :: rest) stage) suffixBits := by
@@ -1059,13 +1060,13 @@ theorem inputTapeRightCellsDirectCopierCoreOutputBits_eq
       List.append [false, true]
         (List.append (stageInputBits (b :: rest) stage)
           (List.append suffixBits
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (inputTapeRightCellsCode rest)))) := by
   rw [stageInputBits_cons_eq_directCopierBits]
   rw [inputTapeRightCellsDirectCopierRightCellsCodeBits_eq]
   simp [inputTapeRightCellsDirectCopierCoreOutputBits,
     inputTapeRightCellsDirectCopierPreludeBits,
-    MachineDescription.encodeCodeSymbolAsInput,
+    encodeCodeSymbolAsInput,
     List.append_assoc]
 
 theorem
@@ -1083,10 +1084,10 @@ theorem
     ⟨n, hn⟩
   refine ⟨n, ?_⟩
   constructor
-  · simpa [MachineDescription.HaltsWithTapeIn] using
-      congrArg MachineDescription.Configuration.state hn
+  · simpa [HaltsWithTapeIn] using
+      congrArg Configuration.state hn
   · have htape :=
-      congrArg MachineDescription.Configuration.tape hn
+      congrArg Configuration.tape hn
     exact htape.trans
       (outputTape_eq_bits
         accept reject w stage).symm

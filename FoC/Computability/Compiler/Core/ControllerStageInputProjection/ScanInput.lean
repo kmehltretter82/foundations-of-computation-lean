@@ -12,6 +12,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace ControllerStageInputProjection
 
@@ -45,7 +46,7 @@ def projectionScanLeftConfig
     (state : Nat) (leftOfBoundary : List (Option Bool))
     (boundaryHead : Option Bool) :
     List (Option Bool) -> List (Option Bool) ->
-      MachineDescription.Configuration
+      Configuration
   | [], tail =>
       projectionConfig state leftOfBoundary (boundaryHead :: tail)
   | cell :: rest, tail =>
@@ -143,22 +144,22 @@ theorem projectionMarkedTickCodeCells_scanCountFold_reverse :
 
 theorem projectionTickCodeCells_scanSafe_reverse :
     projectionScanSafe 0 projectionTickCodeCells.reverse := by
-  simp [projectionTickCodeCells, MachineDescription.encodeCodeSymbolAsInput,
+  simp [projectionTickCodeCells, encodeCodeSymbolAsInput,
     projectionScanSafe, projectionScanCountStep]
 
 theorem projectionTickCodeCells_scanCountFold_reverse :
     projectionScanCountFold 0 projectionTickCodeCells.reverse = 0 := by
-  simp [projectionTickCodeCells, MachineDescription.encodeCodeSymbolAsInput,
+  simp [projectionTickCodeCells, encodeCodeSymbolAsInput,
     projectionScanCountFold, projectionScanCountStep]
 
 theorem projectionDoneCodeCells_scanSafe_reverse :
     projectionScanSafe 0 projectionDoneCodeCells.reverse := by
-  simp [projectionDoneCodeCells, MachineDescription.encodeCodeSymbolAsInput,
+  simp [projectionDoneCodeCells, encodeCodeSymbolAsInput,
     projectionScanSafe, projectionScanCountStep]
 
 theorem projectionDoneCodeCells_scanCountFold_reverse :
     projectionScanCountFold 0 projectionDoneCodeCells.reverse = 0 := by
-  simp [projectionDoneCodeCells, MachineDescription.encodeCodeSymbolAsInput,
+  simp [projectionDoneCodeCells, encodeCodeSymbolAsInput,
     projectionScanCountFold, projectionScanCountStep]
 
 theorem projectionMarkedBoolCellCodeCells_scanSafe_reverse
@@ -318,7 +319,7 @@ theorem run_scan140_cells
       rw [show (cell :: rest).length = 1 + rest.length by
         simp
         omega,
-        MachineDescription.runConfig_add]
+        runConfig_add]
       change
         Description.runConfig
             rest.length
@@ -365,7 +366,7 @@ theorem run_scan140_cells_to_boundary
       projectionConfig 100
         (List.append [none, none, none, none] base)
         (List.append cellsRev.reverse tail) := by
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig 7
         (Description.runConfig
@@ -499,7 +500,7 @@ theorem run_scan160_cells
       rw [show (cell :: rest).length = 1 + rest.length by
         simp
         omega,
-        MachineDescription.runConfig_add]
+        runConfig_add]
       change
         Description.runConfig
             rest.length
@@ -546,7 +547,7 @@ theorem run_scan160_cells_to_boundary
       projectionConfig 170
         (List.append [none, none, none, none] base)
         (List.append cellsRev.reverse tail) := by
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig 7
         (Description.runConfig
@@ -599,7 +600,7 @@ theorem run_state100_marked_ticks
       rfl
   | succ count ih =>
       have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
-      rw [hsteps, MachineDescription.runConfig_add]
+      rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * count)
           (Description.runConfig 4
@@ -675,7 +676,7 @@ theorem run_state120_ticks
       rfl
   | succ count ih =>
       have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
-      rw [hsteps, MachineDescription.runConfig_add]
+      rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * count)
           (Description.runConfig 4
@@ -779,7 +780,7 @@ theorem run_state130_marked_payload
       have hsteps : 4 * (b :: rest).length = 4 + 4 * rest.length := by
         simp
         omega
-      rw [hsteps, MachineDescription.runConfig_add]
+      rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * rest.length)
           (Description.runConfig 4
@@ -872,7 +873,7 @@ theorem run_state150_marked_payload
       have hsteps : 4 * (b :: rest).length = 4 + 4 * rest.length := by
         simp
         omega
-      rw [hsteps, MachineDescription.runConfig_add]
+      rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * rest.length)
           (Description.runConfig 4
@@ -929,7 +930,7 @@ theorem run_state170_marked_ticks
       rfl
   | succ count ih =>
       have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
-      rw [hsteps, MachineDescription.runConfig_add]
+      rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * count)
           (Description.runConfig 4
@@ -1037,7 +1038,7 @@ theorem run_state180_marked_payload
       have hsteps : 4 * (b :: rest).length = 4 + 4 * rest.length := by
         simp
         omega
-      rw [hsteps, MachineDescription.runConfig_add]
+      rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * rest.length)
           (Description.runConfig 4
@@ -1137,7 +1138,7 @@ theorem projectionCodeCells_replicate_tick_length
     (projectionCodeCells
       (List.replicate n MachineCodeSymbol.tick)).length = 4 * n := by
   rw [projectionCodeCells_replicate_tick, projectionRepeatedCells_length]
-  simp [projectionTickCodeCells, MachineDescription.encodeCodeSymbolAsInput]
+  simp [projectionTickCodeCells, encodeCodeSymbolAsInput]
 
 theorem projectionCodeCells_replicate_tick_scanCountFold_reverse
     (n : Nat) :
@@ -1264,7 +1265,7 @@ theorem projectionInputMarkScanBackCellsRev_length
       projectionCodeCells_replicate_tick_length,
       projectionMarkedBoolPayloadCells_length,
       projectionMarkedTickCodeCells, projectionDoneCodeCells,
-      MachineDescription.encodeCodeSymbolAsInput] <;>
+      encodeCodeSymbolAsInput] <;>
     omega
 
 def projectionInputFinishScanBackCellsRev
@@ -1314,7 +1315,7 @@ theorem projectionInputFinishScanBackCellsRev_length
   simp [projectionInputFinishScanBackCellsRev,
     projectionMarkedBoolPayloadCells_length,
     projectionRepeatedCells_length, projectionMarkedTickCodeCells,
-    projectionDoneCodeCells, MachineDescription.encodeCodeSymbolAsInput]
+    projectionDoneCodeCells, encodeCodeSymbolAsInput]
   omega
 
 def projectionInputFinishSuffixTail
@@ -1322,18 +1323,18 @@ def projectionInputFinishSuffixTail
   match stage with
   | 0 =>
       [some true, some true] ++
-        projectionCodeCells (MachineDescription.encodeBoolWord result)
+        projectionCodeCells (encodeBoolWord result)
   | n + 1 =>
       [some true, some false] ++
         projectionCodeCells
-          (MachineDescription.encodeNatAppend n
-            (MachineDescription.encodeBoolWord result))
+          (encodeNatAppend n
+            (encodeBoolWord result))
 
 theorem projectionCodeCells_encodeNatAppend_cons_cons
     (stage : Nat) (result : Word Bool) :
     projectionCodeCells
-        (MachineDescription.encodeNatAppend stage
-          (MachineDescription.encodeBoolWord result)) =
+        (encodeNatAppend stage
+          (encodeBoolWord result)) =
       some false :: some false ::
         projectionInputFinishSuffixTail stage result := by
   cases stage <;> rfl
@@ -1345,11 +1346,11 @@ def projectionInputFinishSuffixTailFor
       [some true, some true] ++ projectionCodeCells suffix
   | n + 1 =>
       [some true, some false] ++
-        projectionCodeCells (MachineDescription.encodeNatAppend n suffix)
+        projectionCodeCells (encodeNatAppend n suffix)
 
 theorem projectionCodeCells_encodeNatAppend_cons_cons_suffix
     (stage : Nat) (suffix : Word MachineCodeSymbol) :
-    projectionCodeCells (MachineDescription.encodeNatAppend stage suffix) =
+    projectionCodeCells (encodeNatAppend stage suffix) =
       some false :: some false ::
         projectionInputFinishSuffixTailFor stage suffix := by
   cases stage <;> rfl

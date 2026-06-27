@@ -6,6 +6,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
@@ -14,14 +15,14 @@ def SelectedProjectionPaddedTailEmitterSpec
     (useAccept : Bool)
     (tail : MachineDescription) : Prop :=
   RightScratchPaddedEmitterSpec
-    (fun L : MachineDescription.DovetailLayout =>
+    (fun L : DovetailLayout =>
         (SelectedProjectionTailProjector.sourceTape L
           ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
             some)))
-    (fun L : MachineDescription.DovetailLayout =>
-      MachineDescription.encodeCodeWordAsInput
+    (fun L : DovetailLayout =>
+      encodeCodeWordAsInput
         (SelectedProjectionOutputCode useAccept L))
-    (fun L : MachineDescription.DovetailLayout =>
+    (fun L : DovetailLayout =>
       (ParsedLayoutBits L).length)
     (SelectedProjectionOutputTape useAccept)
     tail
@@ -35,14 +36,14 @@ def SelectedProjectionPaddedTailCleanupSpec
     (useAccept : Bool)
     (cleanup : MachineDescription) : Prop :=
   RightScratchPaddedEmitterSpec
-    (fun L : MachineDescription.DovetailLayout =>
+    (fun L : DovetailLayout =>
         (SelectedProjectionTailProjector.sourceScannerRightHandoffTape L
           ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
             some)))
-    (fun L : MachineDescription.DovetailLayout =>
-      MachineDescription.encodeCodeWordAsInput
+    (fun L : DovetailLayout =>
+      encodeCodeWordAsInput
         (SelectedProjectionOutputCode useAccept L))
-    (fun L : MachineDescription.DovetailLayout =>
+    (fun L : DovetailLayout =>
       (ParsedLayoutBits L).length)
     (SelectedProjectionOutputTape useAccept)
     cleanup
@@ -55,7 +56,7 @@ def SelectedProjectionPaddedTailCleanupConstruction : Prop :=
 def SelectedProjectionPaddedTailEmitterFromCleanup
     (_useAccept : Bool)
     (cleanup : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     CanonicalLayouts.DovetailLayoutScanner.StageConfigurationsAndFinalFlagsScannerDescription
     cleanup Direction.right
 
@@ -66,12 +67,12 @@ theorem selectedProjectionPaddedTailEmitterSpec_of_cleanup
       (SelectedProjectionPaddedTailEmitterFromCleanup useAccept
         cleanup) := by
   let baseLeft :=
-    fun L : MachineDescription.DovetailLayout =>
+    fun L : DovetailLayout =>
       (SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
         some
   constructor
   · exact
-      MachineDescription.seqSubroutine_subroutineReady
+      seqSubroutine_subroutineReady
         CanonicalLayouts.DovetailLayoutScanner.stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
         hcleanup.left
   constructor
@@ -98,11 +99,11 @@ theorem selectedProjectionPaddedTailEmitterSpec_of_cleanup
         SelectedProjectionTailProjector.sourceScannerRightHandoffTape,
         List.map_reverse]
         using
-          MachineDescription.runConfig_eq_halt_of_haltsFromTape
+          runConfig_eq_halt_of_haltsFromTape
             (hcleanup.right.left L)
     simpa [SelectedProjectionPaddedTailEmitterFromCleanup, baseLeft,
       List.map_reverse] using
-      MachineDescription.seqSubroutine_haltsFromTape_of_haltsFromTape
+      seqSubroutine_haltsFromTape_of_haltsFromTape
         (A :=
           CanonicalLayouts.DovetailLayoutScanner.StageConfigurationsAndFinalFlagsScannerDescription)
         (B := cleanup)

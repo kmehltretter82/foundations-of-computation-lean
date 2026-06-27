@@ -8,7 +8,7 @@ set_option doc.verso true
 This module states the semantic contract for the finite machine realizing
 {name (full := FoC.Computability.PairedRecognizerDovetailLayoutCode)}`PairedRecognizerDovetailLayoutCode`.
 The machine must validate a complete
-{name (full := FoC.Computability.MachineDescription.DovetailLayout)}`MachineDescription.DovetailLayout`,
+{name (full := FoC.Computability.MachineDescription.DovetailLayout)}`DovetailLayout`,
 run both recognizer configurations for the encoded stage bound, update the hit
 flags, and halt on the right-shifted encoding of the updated layout.
 -/
@@ -17,21 +17,22 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
 
 def OutputCode
     (accept reject : MachineDescription)
-    (L : MachineDescription.DovetailLayout) : Word MachineCodeSymbol :=
-  MachineDescription.DovetailLayout.encode
-    (MachineDescription.DovetailLayout.run accept reject L.stage L)
+    (L : DovetailLayout) : Word MachineCodeSymbol :=
+  DovetailLayout.encode
+    (DovetailLayout.run accept reject L.stage L)
 
 def OutputTape
     (accept reject : MachineDescription)
-    (L : MachineDescription.DovetailLayout) : Tape Bool :=
+    (L : DovetailLayout) : Tape Bool :=
   Tape.output
-    (MachineDescription.encodeCodeWordAsInput
+    (encodeCodeWordAsInput
       (OutputCode accept reject L))
 
 def ReadySpec
@@ -40,10 +41,10 @@ def ReadySpec
 
 def ForwardSpec
     (accept reject runner : MachineDescription) : Prop :=
-  forall L : MachineDescription.DovetailLayout,
+  forall L : DovetailLayout,
     runner.HaltsWithTapeEquiv
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.DovetailLayout.encode L))
+      (encodeCodeWordAsInput
+        (DovetailLayout.encode L))
       (OutputTape accept reject L)
 
 def ClosedSpec
@@ -51,9 +52,9 @@ def ClosedSpec
   forall code : Word MachineCodeSymbol,
   forall T : Tape Bool,
     runner.HaltsWithTapeEquiv
-        (MachineDescription.encodeCodeWordAsInput code) T ->
-      exists L : MachineDescription.DovetailLayout,
-        code = MachineDescription.DovetailLayout.encode L ∧
+        (encodeCodeWordAsInput code) T ->
+      exists L : DovetailLayout,
+        code = DovetailLayout.encode L ∧
           Tape.Equiv T (OutputTape accept reject L)
 
 def Spec
@@ -83,30 +84,30 @@ theorem outputCompiledSubroutineByDescription_of_spec
         let T : Tape Bool :=
           (runner.runConfig n
             (runner.initial
-              (MachineDescription.encodeCodeWordAsInput code))).tape
+              (encodeCodeWordAsInput code))).tape
         have hTapeEquiv :
             runner.HaltsWithTapeEquiv
-              (MachineDescription.encodeCodeWordAsInput code) T :=
+              (encodeCodeWordAsInput code) T :=
           ⟨T, ⟨n, ⟨hn.left, rfl⟩⟩, Tape.Equiv.refl T⟩
         rcases hrunner.right.right code T hTapeEquiv with
           ⟨L, hcode, hT⟩
         have hexpected :
             Tape.normalizedOutput T =
-              MachineDescription.encodeCodeWordAsInput
+              encodeCodeWordAsInput
                 (OutputCode accept reject L) := by
           rw [Tape.Equiv.normalizedOutput_eq hT]
           exact
             Tape.normalizedOutput_output
-              (MachineDescription.encodeCodeWordAsInput
+              (encodeCodeWordAsInput
                 (OutputCode accept reject L))
         have houtBits :
-            MachineDescription.encodeCodeWordAsInput out =
-              MachineDescription.encodeCodeWordAsInput
+            encodeCodeWordAsInput out =
+              encodeCodeWordAsInput
                 (OutputCode accept reject L) := by
-          have hactual : Tape.normalizedOutput T = MachineDescription.encodeCodeWordAsInput out := hn.right
+          have hactual : Tape.normalizedOutput T = encodeCodeWordAsInput out := hn.right
           exact hactual.symm.trans hexpected
         have hout : out = OutputCode accept reject L :=
-          MachineDescription.encodeCodeWordAsInput_injective houtBits
+          encodeCodeWordAsInput_injective houtBits
         exact
           (pairedRecognizerDovetailLayoutCode_transform_eq_some_iff
             accept reject code out).mpr
@@ -120,7 +121,7 @@ theorem outputCompiledSubroutineByDescription_of_spec
         subst out
         simpa [OutputTape, OutputCode,
           Tape.normalizedOutput_output] using
-          MachineDescription.haltsWithOutput_of_haltsWithTapeEquiv
+          haltsWithOutput_of_haltsWithTapeEquiv
             (hrunner.right.left L)
   · exact hrunner.left.right
 

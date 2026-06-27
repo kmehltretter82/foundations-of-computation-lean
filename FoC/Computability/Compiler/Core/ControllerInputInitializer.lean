@@ -17,13 +17,14 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 /-- Forward behavior required of a controller input initializer machine. -/
 def ControllerInputInitializerForwardSpec
     (initializer : MachineDescription) : Prop :=
   forall w : Word Bool,
     initializer.HaltsWithOutput w
-      (MachineDescription.encodeCodeWordAsInput
+      (encodeCodeWordAsInput
         (PairedRecognizerDovetailControllerInitialCode w))
 
 def ControllerInputInitializerConstructionData : Prop :=

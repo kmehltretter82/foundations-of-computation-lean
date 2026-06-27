@@ -13,19 +13,20 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 namespace StageInputMarkedScanner
 
 def finishStartConfigWithTailBits
-    (w tailBits : Word Bool) : MachineDescription.Configuration :=
+    (w tailBits : Word Bool) : Configuration :=
   config 150 (finishStartLeft w)
     (List.append ((markedCellsBits w).map some)
       (tailBits.map some))
 
 def markingState120WithTailBits
     (processed : Word Bool) (b : Bool) (rest tailBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   config 120 (activeLengthPrefixRev processed.length)
     (List.append ((stageNatBits rest.length).map some)
       (List.append ((markedCellsBits processed).map some)
@@ -35,7 +36,7 @@ def markingState120WithTailBits
 
 def state100AfterMarkedWithTailBits
     (processed : Word Bool) (b : Bool) (rest tailBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   config 100 (finishLengthPrefixRev processed.length)
     (List.append ((stageNatBits rest.length).map some)
       (List.append ((markedCellsBits processed).map some)
@@ -52,12 +53,12 @@ theorem run_mark_current_to_state100_with_tailBits
   refine
     ⟨(4 * rest.length + 4) +
         (4 * processed.length + (6 + (scanRev.length + 4))), ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   unfold markingState120WithTailBits
   rw [run_state120_stageNat]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state130_markedCells]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state130_currentCell]
   have hreturn :=
     run_state140_returnToLengthMarker scanRev b
@@ -84,7 +85,7 @@ theorem run_marking_loop_from_state120_with_tailBits
           processed b [] tailBits with
         ⟨markSteps, hmark⟩
       refine ⟨markSteps + 4, ?_⟩
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [hmark]
       unfold state100AfterMarkedWithTailBits
       change
@@ -109,16 +110,16 @@ theorem run_marking_loop_from_state120_with_tailBits
       refine ⟨markSteps + 4 + recSteps, ?_⟩
       rw [show markSteps + 4 + recSteps =
           markSteps + (4 + recSteps) by omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [hmark]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       unfold state100AfterMarkedWithTailBits
       rw [show
           (stageNatBits (next :: rest).length).map some =
             List.append (tickBits.map some)
               ((stageNatBits rest.length).map some) by
         simp [stageNatBits_succ, tickBits,
-          MachineDescription.encodeCodeSymbolAsInput]]
+          encodeCodeSymbolAsInput]]
       change
         StageInputMarkedScannerDescription.runConfig recSteps
             (StageInputMarkedScannerDescription.runConfig 4
@@ -155,14 +156,14 @@ theorem run_state120_bool_tail_to_finish
     using hsteps
 
 def state160AfterRestoreWithTailBits
-    (w tailBits : Word Bool) : MachineDescription.Configuration :=
+    (w tailBits : Word Bool) : Configuration :=
   config 160
     (List.append ((cellsBits w).reverse.map some)
       (finishStartLeft w))
     (some false :: none :: tailBits.map some)
 
 def appendBlankStartConfigWithTailBits
-    (w tailBits : Word Bool) : MachineDescription.Configuration :=
+    (w tailBits : Word Bool) : Configuration :=
   config 180 [none, some false]
     (List.append ((stageInputSecondBitTailPrefix w).map some)
       (some false :: none :: tailBits.map some))
@@ -171,7 +172,7 @@ theorem run_finish_restore_cells_tailBits
     StageInputMarkedScannerDescription.runConfig (4 * w.length + 2)
         (finishStartConfigWithTailBits w (false :: false :: tailBits)) =
       state160AfterRestoreWithTailBits w tailBits := by
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     StageInputMarkedScannerDescription.runConfig 2
         (StageInputMarkedScannerDescription.runConfig (4 * w.length)
@@ -202,12 +203,12 @@ theorem run_finish_scan_left_to_append_tailBits
   refine ⟨bits.length + 3, ?_⟩
   rw [show bits.length + 3 = bits.length + (1 + (1 + 1)) by
     omega]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [hstart]
   rw [run_state160_bits_to_boundary]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state160_none_to_state161]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state161_false_to_state170]
   rw [run_state170_none_to_state180]
   simp [appendBlankStartConfigWithTailBits, bits, scanRight,
@@ -226,7 +227,7 @@ theorem run_append_blank_to_state200_tailBits
   refine ⟨tailPrefix.length + 2, ?_⟩
   rw [show tailPrefix.length + 2 = tailPrefix.length + (1 + 1) by
     omega]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   unfold appendBlankStartConfigWithTailBits
   change
     StageInputMarkedScannerDescription.runConfig (1 + 1)
@@ -239,7 +240,7 @@ theorem run_append_blank_to_state200_tailBits
           (none :: [some false]))
         (some false :: some false :: tailBits.map some)
   rw [run_state180_bits]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state180_some]
   rw [run_state180_none_cons]
 theorem run_finish_tail_false_false_to_state200
@@ -264,51 +265,51 @@ theorem run_finish_tail_false_false_to_state200
         (4 * (b :: rest).length + 2) +
           (scanSteps + appendSteps) by
     omega]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_finish_restore_cells_tailBits]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [hscan]
   exact happend
 theorem decodeBoolWord_tick_tail_shape
     {rest suffix : Word MachineCodeSymbol} {w : Word Bool}
     (hinput :
-      MachineDescription.decodeBoolWord
+      decodeBoolWord
           (MachineCodeSymbol.tick :: rest) =
         some (w, suffix)) :
     exists b : Bool,
     exists restW : Word Bool,
       w = b :: restW ∧
         rest =
-          MachineDescription.encodeNatAppend restW.length
-            (MachineDescription.encodeCellAppend (some b)
-              (MachineDescription.encodeCellsAppend
+          encodeNatAppend restW.length
+            (encodeCellAppend (some b)
+              (encodeCellsAppend
                 (restW.map some) suffix)) := by
   have htokens :
       MachineCodeSymbol.tick :: rest =
-        MachineDescription.encodeBoolWordAppend w suffix :=
-    MachineDescription.decodeBoolWord_eq_some_encodeBoolWordAppend hinput
+        encodeBoolWordAppend w suffix :=
+    decodeBoolWord_eq_some_encodeBoolWordAppend hinput
   cases w with
   | nil =>
-      simp [MachineDescription.encodeBoolWordAppend,
-        MachineDescription.encodeCellListAppend,
-        MachineDescription.encodeNatAppend,
-        MachineDescription.encodeNat] at htokens
+      simp [encodeBoolWordAppend,
+        encodeCellListAppend,
+        encodeNatAppend,
+        encodeNat] at htokens
   | cons b restW =>
       refine ⟨b, restW, rfl, ?_⟩
-      simp [MachineDescription.encodeBoolWordAppend,
-        MachineDescription.encodeCellListAppend,
-        MachineDescription.encodeNatAppend,
-        MachineDescription.encodeNat,
-        MachineDescription.encodeCellsAppend,
-        MachineDescription.encodeCellAppend,
-        MachineDescription.encodeCell] at htokens
+      simp [encodeBoolWordAppend,
+        encodeCellListAppend,
+        encodeNatAppend,
+        encodeNat,
+        encodeCellsAppend,
+        encodeCellAppend,
+        encodeCell] at htokens
       exact htokens
 theorem run_finish_tail_blank_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
     (StageInputMarkedScannerDescription.runConfig n
       (finishStartConfigWithTailBits (b :: rest)
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (MachineCodeSymbol.blank :: suffixTail)))).state ≠
       StageInputMarkedScannerDescription.halt := by
   let stuck :=
@@ -317,22 +318,22 @@ theorem run_finish_tail_blank_ne_halt
         List.append ((cellsBits (b :: rest)).reverse.map some)
           (finishStartLeft (b :: rest)))
       (some true :: some false :: some false ::
-        (MachineDescription.encodeCodeWordAsInput suffixTail).map some)
+        (encodeCodeWordAsInput suffixTail).map some)
   have hstuck :
       StageInputMarkedScannerDescription.runConfig
           (4 * (b :: rest).length + 1)
           (finishStartConfigWithTailBits (b :: rest)
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (MachineCodeSymbol.blank :: suffixTail))) =
         stuck := by
-    rw [MachineDescription.runConfig_add]
+    rw [runConfig_add]
     simpa [stuck, finishStartConfigWithTailBits,
-      MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput] using
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput] using
       congrArg (StageInputMarkedScannerDescription.runConfig 1)
         (run_state150_markedCells (b :: rest)
           (finishStartLeft (b :: rest))
-          ((MachineDescription.encodeCodeWordAsInput
+          ((encodeCodeWordAsInput
             (MachineCodeSymbol.blank :: suffixTail)).map some))
   exact
     scanner_ne_halt_of_reaches_stuck
@@ -345,7 +346,7 @@ theorem run_finish_tail_zero_ne_halt
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
     (StageInputMarkedScannerDescription.runConfig n
       (finishStartConfigWithTailBits (b :: rest)
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (MachineCodeSymbol.zero :: suffixTail)))).state ≠
       StageInputMarkedScannerDescription.halt := by
   let stuck :=
@@ -354,22 +355,22 @@ theorem run_finish_tail_zero_ne_halt
         List.append ((cellsBits (b :: rest)).reverse.map some)
           (finishStartLeft (b :: rest)))
       (some true :: some false :: some true ::
-        (MachineDescription.encodeCodeWordAsInput suffixTail).map some)
+        (encodeCodeWordAsInput suffixTail).map some)
   have hstuck :
       StageInputMarkedScannerDescription.runConfig
           (4 * (b :: rest).length + 1)
           (finishStartConfigWithTailBits (b :: rest)
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (MachineCodeSymbol.zero :: suffixTail))) =
         stuck := by
-    rw [MachineDescription.runConfig_add]
+    rw [runConfig_add]
     simpa [stuck, finishStartConfigWithTailBits,
-      MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput] using
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput] using
       congrArg (StageInputMarkedScannerDescription.runConfig 1)
         (run_state150_markedCells (b :: rest)
           (finishStartLeft (b :: rest))
-          ((MachineDescription.encodeCodeWordAsInput
+          ((encodeCodeWordAsInput
             (MachineCodeSymbol.zero :: suffixTail)).map some))
   exact
     scanner_ne_halt_of_reaches_stuck
@@ -382,7 +383,7 @@ theorem run_finish_tail_one_ne_halt
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
     (StageInputMarkedScannerDescription.runConfig n
       (finishStartConfigWithTailBits (b :: rest)
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (MachineCodeSymbol.one :: suffixTail)))).state ≠
       StageInputMarkedScannerDescription.halt := by
   let stuck :=
@@ -391,22 +392,22 @@ theorem run_finish_tail_one_ne_halt
         List.append ((cellsBits (b :: rest)).reverse.map some)
           (finishStartLeft (b :: rest)))
       (some true :: some true :: some false ::
-        (MachineDescription.encodeCodeWordAsInput suffixTail).map some)
+        (encodeCodeWordAsInput suffixTail).map some)
   have hstuck :
       StageInputMarkedScannerDescription.runConfig
           (4 * (b :: rest).length + 1)
           (finishStartConfigWithTailBits (b :: rest)
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (MachineCodeSymbol.one :: suffixTail))) =
         stuck := by
-    rw [MachineDescription.runConfig_add]
+    rw [runConfig_add]
     simpa [stuck, finishStartConfigWithTailBits,
-      MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput] using
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput] using
       congrArg (StageInputMarkedScannerDescription.runConfig 1)
         (run_state150_markedCells (b :: rest)
           (finishStartLeft (b :: rest))
-          ((MachineDescription.encodeCodeWordAsInput
+          ((encodeCodeWordAsInput
             (MachineCodeSymbol.one :: suffixTail)).map some))
   exact
     scanner_ne_halt_of_reaches_stuck
@@ -419,7 +420,7 @@ theorem run_finish_tail_moveLeft_ne_halt
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
     (StageInputMarkedScannerDescription.runConfig n
       (finishStartConfigWithTailBits (b :: rest)
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (MachineCodeSymbol.moveLeft :: suffixTail)))).state ≠
       StageInputMarkedScannerDescription.halt := by
   let stuck :=
@@ -428,22 +429,22 @@ theorem run_finish_tail_moveLeft_ne_halt
         List.append ((cellsBits (b :: rest)).reverse.map some)
           (finishStartLeft (b :: rest)))
       (some true :: some true :: some true ::
-        (MachineDescription.encodeCodeWordAsInput suffixTail).map some)
+        (encodeCodeWordAsInput suffixTail).map some)
   have hstuck :
       StageInputMarkedScannerDescription.runConfig
           (4 * (b :: rest).length + 1)
           (finishStartConfigWithTailBits (b :: rest)
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (MachineCodeSymbol.moveLeft :: suffixTail))) =
         stuck := by
-    rw [MachineDescription.runConfig_add]
+    rw [runConfig_add]
     simpa [stuck, finishStartConfigWithTailBits,
-      MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput] using
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput] using
       congrArg (StageInputMarkedScannerDescription.runConfig 1)
         (run_state150_markedCells (b :: rest)
           (finishStartLeft (b :: rest))
-          ((MachineDescription.encodeCodeWordAsInput
+          ((encodeCodeWordAsInput
             (MachineCodeSymbol.moveLeft :: suffixTail)).map some))
   exact
     scanner_ne_halt_of_reaches_stuck
@@ -456,7 +457,7 @@ theorem run_finish_tail_moveRight_ne_halt
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
     (StageInputMarkedScannerDescription.runConfig n
       (finishStartConfigWithTailBits (b :: rest)
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (MachineCodeSymbol.moveRight :: suffixTail)))).state ≠
       StageInputMarkedScannerDescription.halt := by
   let stuck :=
@@ -465,22 +466,22 @@ theorem run_finish_tail_moveRight_ne_halt
         List.append ((cellsBits (b :: rest)).reverse.map some)
           (finishStartLeft (b :: rest)))
       (some false :: some false :: some false ::
-        (MachineDescription.encodeCodeWordAsInput suffixTail).map some)
+        (encodeCodeWordAsInput suffixTail).map some)
   have hstuck :
       StageInputMarkedScannerDescription.runConfig
           (4 * (b :: rest).length + 1)
           (finishStartConfigWithTailBits (b :: rest)
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (MachineCodeSymbol.moveRight :: suffixTail))) =
         stuck := by
-    rw [MachineDescription.runConfig_add]
+    rw [runConfig_add]
     simpa [stuck, finishStartConfigWithTailBits,
-      MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput] using
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput] using
       congrArg (StageInputMarkedScannerDescription.runConfig 1)
         (run_state150_markedCells (b :: rest)
           (finishStartLeft (b :: rest))
-          ((MachineDescription.encodeCodeWordAsInput
+          ((encodeCodeWordAsInput
             (MachineCodeSymbol.moveRight :: suffixTail)).map some))
   exact
     scanner_ne_halt_of_reaches_stuck
@@ -491,26 +492,26 @@ theorem run_finish_tail_moveRight_ne_halt
 theorem encode_bool_tail_input_bits
     (b : Bool) (restW : Word Bool)
     (suffix : Word MachineCodeSymbol) :
-    (MachineDescription.encodeCodeWordAsInput
-      (MachineDescription.encodeNatAppend restW.length
-        (MachineDescription.encodeCellAppend (some b)
-          (MachineDescription.encodeCellsAppend
+    (encodeCodeWordAsInput
+      (encodeNatAppend restW.length
+        (encodeCellAppend (some b)
+          (encodeCellsAppend
             (restW.map some) suffix)))).map some =
       List.append ((stageNatBits restW.length).map some)
         (List.append ((cellBits b).map some)
           (List.append ((cellsBits restW).map some)
-            ((MachineDescription.encodeCodeWordAsInput suffix).map
+            ((encodeCodeWordAsInput suffix).map
               some))) := by
   cases b <;>
   simp [stageNatBits, cellBits, cellsBits,
-    MachineDescription.encodeNatAppend,
-    MachineDescription.encodeCellAppend,
-    MachineDescription.encodeCell]
+    encodeNatAppend,
+    encodeCellAppend,
+    encodeCell]
   · rw [show
-        MachineDescription.encodeCellsAppend (List.map some restW)
+        encodeCellsAppend (List.map some restW)
             suffix =
           List.append
-            (MachineDescription.encodeCellsAppend
+            (encodeCellsAppend
               (List.map some restW) [])
             suffix by
         simpa using
@@ -518,29 +519,29 @@ theorem encode_bool_tail_input_bits
             ([] : Word MachineCodeSymbol) suffix)]
     change
       List.map some
-        (MachineDescription.encodeCodeWordAsInput
-          (List.append (MachineDescription.encodeNat restW.length)
+        (encodeCodeWordAsInput
+          (List.append (encodeNat restW.length)
             (MachineCodeSymbol.zero ::
               List.append
-                (MachineDescription.encodeCellsAppend
+                (encodeCellsAppend
                   (List.map some restW) [])
                 suffix))) = _
-    rw [MachineDescription.encodeCodeWordAsInput_append]
-    simp [MachineDescription.encodeCodeWordAsInput, List.map_append]
+    rw [encodeCodeWordAsInput_append]
+    simp [encodeCodeWordAsInput, List.map_append]
     change
       List.map some
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (List.append
-            (MachineDescription.encodeCellsAppend
+            (encodeCellsAppend
               (List.map some restW) [])
             suffix)) = _
-    rw [MachineDescription.encodeCodeWordAsInput_append]
+    rw [encodeCodeWordAsInput_append]
     simp [List.map_append]
   · rw [show
-        MachineDescription.encodeCellsAppend (List.map some restW)
+        encodeCellsAppend (List.map some restW)
             suffix =
           List.append
-            (MachineDescription.encodeCellsAppend
+            (encodeCellsAppend
               (List.map some restW) [])
             suffix by
         simpa using
@@ -548,23 +549,23 @@ theorem encode_bool_tail_input_bits
             ([] : Word MachineCodeSymbol) suffix)]
     change
       List.map some
-        (MachineDescription.encodeCodeWordAsInput
-          (List.append (MachineDescription.encodeNat restW.length)
+        (encodeCodeWordAsInput
+          (List.append (encodeNat restW.length)
             (MachineCodeSymbol.one ::
               List.append
-                (MachineDescription.encodeCellsAppend
+                (encodeCellsAppend
                   (List.map some restW) [])
                 suffix))) = _
-    rw [MachineDescription.encodeCodeWordAsInput_append]
-    simp [MachineDescription.encodeCodeWordAsInput, List.map_append]
+    rw [encodeCodeWordAsInput_append]
+    simp [encodeCodeWordAsInput, List.map_append]
     change
       List.map some
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (List.append
-            (MachineDescription.encodeCellsAppend
+            (encodeCellsAppend
               (List.map some restW) [])
             suffix)) = _
-    rw [MachineDescription.encodeCodeWordAsInput_append]
+    rw [encodeCodeWordAsInput_append]
     simp [List.map_append]
 theorem state120_tick_tail_stageSuffixDecoder_inv
     {rest suffix : Word MachineCodeSymbol} {w : Word Bool}
@@ -573,24 +574,24 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
       exists steps : Nat,
         StageInputMarkedScannerDescription.runConfig steps
             (config 120 [none, some true, none, some false]
-              ((MachineDescription.encodeCodeWordAsInput rest).map some)) =
+              ((encodeCodeWordAsInput rest).map some)) =
           { state := StageInputMarkedScannerDescription.halt
             tape := T })
     (hinput :
-      MachineDescription.decodeBoolWord
+      decodeBoolWord
           (MachineCodeSymbol.tick :: rest) =
         some (w, suffix)) :
     exists stage : Nat,
-      suffix = MachineDescription.encodeNat stage := by
+      suffix = encodeNat stage := by
   rcases decodeBoolWord_tick_tail_shape hinput with
     ⟨b, restW, hw, hrest⟩
   subst w
   have htailBits :
-      (MachineDescription.encodeCodeWordAsInput rest).map some =
+      (encodeCodeWordAsInput rest).map some =
         List.append ((stageNatBits restW.length).map some)
           (List.append ((cellBits b).map some)
             (List.append ((cellsBits restW).map some)
-              ((MachineDescription.encodeCodeWordAsInput suffix).map
+              ((encodeCodeWordAsInput suffix).map
                 some))) := by
     rw [hrest]
     exact encode_bool_tail_input_bits b restW suffix
@@ -601,7 +602,7 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
               (List.append ((stageNatBits restW.length).map some)
                 (List.append ((cellBits b).map some)
                   (List.append ((cellsBits restW).map some)
-                    ((MachineDescription.encodeCodeWordAsInput suffix).map
+                    ((encodeCodeWordAsInput suffix).map
                       some))))) =
           { state := StageInputMarkedScannerDescription.halt
             tape := T } := by
@@ -610,11 +611,11 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
     rw [← htailBits]
     exact hsteps
   rcases run_state120_bool_tail_to_finish b restW
-      (MachineDescription.encodeCodeWordAsInput suffix) with
+      (encodeCodeWordAsInput suffix) with
     ⟨finishSteps, hfinish⟩
   have hfinishState :
       (finishStartConfigWithTailBits (b :: restW)
-        (MachineDescription.encodeCodeWordAsInput suffix)).state ≠
+        (encodeCodeWordAsInput suffix)).state ≠
         StageInputMarkedScannerDescription.halt := by
     simp [finishStartConfigWithTailBits, config,
       StageInputMarkedScannerDescription]
@@ -664,14 +665,14 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
               ([] : Word Bool))).state =
             StageInputMarkedScannerDescription.halt := by
         simpa using
-          congrArg MachineDescription.Configuration.state hscannerFinish
+          congrArg Configuration.state hscannerFinish
       exact False.elim (hno hhalt)
   | cons symbol suffixTail =>
       cases symbol with
       | header =>
           rcases run_finish_tail_false_false_to_state200 b restW
               (false :: false ::
-                MachineDescription.encodeCodeWordAsInput suffixTail) with
+                encodeCodeWordAsInput suffixTail) with
             ⟨prefixSteps, hprefix⟩
           have hmid :
               (config 200
@@ -679,24 +680,24 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
                   ((stageInputSecondBitTailPrefix
                     (b :: restW)).reverse.map some)
                   (none :: [some false]))
-                ((MachineDescription.encodeCodeWordAsInput
+                ((encodeCodeWordAsInput
                   (MachineCodeSymbol.header :: suffixTail)).map some)).state ≠
                 StageInputMarkedScannerDescription.halt := by
             simp [config, StageInputMarkedScannerDescription]
           have hprefix' :
               StageInputMarkedScannerDescription.runConfig prefixSteps
                   (finishStartConfigWithTailBits (b :: restW)
-                    (MachineDescription.encodeCodeWordAsInput
+                    (encodeCodeWordAsInput
                       (MachineCodeSymbol.header :: suffixTail))) =
                 config 200
                   (List.append
                     ((stageInputSecondBitTailPrefix
                       (b :: restW)).reverse.map some)
                     (none :: [some false]))
-                  ((MachineDescription.encodeCodeWordAsInput
+                  ((encodeCodeWordAsInput
                     (MachineCodeSymbol.header :: suffixTail)).map some) := by
-            simpa [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput]
+            simpa [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput]
               using hprefix
           rcases
               runConfig_halt_after_prefix
@@ -707,7 +708,7 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
       | transition =>
           rcases run_finish_tail_false_false_to_state200 b restW
               (false :: true ::
-                MachineDescription.encodeCodeWordAsInput suffixTail) with
+                encodeCodeWordAsInput suffixTail) with
             ⟨prefixSteps, hprefix⟩
           have hmid :
               (config 200
@@ -715,7 +716,7 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
                   ((stageInputSecondBitTailPrefix
                     (b :: restW)).reverse.map some)
                   (none :: [some false]))
-                ((MachineDescription.encodeCodeWordAsInput
+                ((encodeCodeWordAsInput
                   (MachineCodeSymbol.transition :: suffixTail)).map
                     some)).state ≠
                 StageInputMarkedScannerDescription.halt := by
@@ -723,18 +724,18 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
           have hprefix' :
               StageInputMarkedScannerDescription.runConfig prefixSteps
                   (finishStartConfigWithTailBits (b :: restW)
-                    (MachineDescription.encodeCodeWordAsInput
+                    (encodeCodeWordAsInput
                       (MachineCodeSymbol.transition :: suffixTail))) =
                 config 200
                   (List.append
                     ((stageInputSecondBitTailPrefix
                       (b :: restW)).reverse.map some)
                     (none :: [some false]))
-                  ((MachineDescription.encodeCodeWordAsInput
+                  ((encodeCodeWordAsInput
                     (MachineCodeSymbol.transition :: suffixTail)).map
                       some) := by
-            simpa [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput]
+            simpa [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput]
               using hprefix
           rcases
               runConfig_halt_after_prefix
@@ -745,7 +746,7 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
       | tick =>
           rcases run_finish_tail_false_false_to_state200 b restW
               (true :: false ::
-                MachineDescription.encodeCodeWordAsInput suffixTail) with
+                encodeCodeWordAsInput suffixTail) with
             ⟨prefixSteps, hprefix⟩
           have hmid :
               (config 200
@@ -753,24 +754,24 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
                   ((stageInputSecondBitTailPrefix
                     (b :: restW)).reverse.map some)
                   (none :: [some false]))
-                ((MachineDescription.encodeCodeWordAsInput
+                ((encodeCodeWordAsInput
                   (MachineCodeSymbol.tick :: suffixTail)).map some)).state ≠
                 StageInputMarkedScannerDescription.halt := by
             simp [config, StageInputMarkedScannerDescription]
           have hprefix' :
               StageInputMarkedScannerDescription.runConfig prefixSteps
                   (finishStartConfigWithTailBits (b :: restW)
-                    (MachineDescription.encodeCodeWordAsInput
+                    (encodeCodeWordAsInput
                       (MachineCodeSymbol.tick :: suffixTail))) =
                 config 200
                   (List.append
                     ((stageInputSecondBitTailPrefix
                       (b :: restW)).reverse.map some)
                     (none :: [some false]))
-                  ((MachineDescription.encodeCodeWordAsInput
+                  ((encodeCodeWordAsInput
                     (MachineCodeSymbol.tick :: suffixTail)).map some) := by
-            simpa [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput]
+            simpa [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput]
               using hprefix
           rcases
               runConfig_halt_after_prefix
@@ -781,7 +782,7 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
       | done =>
           rcases run_finish_tail_false_false_to_state200 b restW
               (true :: true ::
-                MachineDescription.encodeCodeWordAsInput suffixTail) with
+                encodeCodeWordAsInput suffixTail) with
             ⟨prefixSteps, hprefix⟩
           have hmid :
               (config 200
@@ -789,24 +790,24 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
                   ((stageInputSecondBitTailPrefix
                     (b :: restW)).reverse.map some)
                   (none :: [some false]))
-                ((MachineDescription.encodeCodeWordAsInput
+                ((encodeCodeWordAsInput
                   (MachineCodeSymbol.done :: suffixTail)).map some)).state ≠
                 StageInputMarkedScannerDescription.halt := by
             simp [config, StageInputMarkedScannerDescription]
           have hprefix' :
               StageInputMarkedScannerDescription.runConfig prefixSteps
                   (finishStartConfigWithTailBits (b :: restW)
-                    (MachineDescription.encodeCodeWordAsInput
+                    (encodeCodeWordAsInput
                       (MachineCodeSymbol.done :: suffixTail))) =
                 config 200
                   (List.append
                     ((stageInputSecondBitTailPrefix
                       (b :: restW)).reverse.map some)
                     (none :: [some false]))
-                  ((MachineDescription.encodeCodeWordAsInput
+                  ((encodeCodeWordAsInput
                     (MachineCodeSymbol.done :: suffixTail)).map some) := by
-            simpa [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput]
+            simpa [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput]
               using hprefix
           rcases
               runConfig_halt_after_prefix
@@ -820,11 +821,11 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
           have hhalt :
               (StageInputMarkedScannerDescription.runConfig finishRem
                 (finishStartConfigWithTailBits (b :: restW)
-                  (MachineDescription.encodeCodeWordAsInput
+                  (encodeCodeWordAsInput
                     (MachineCodeSymbol.blank :: suffixTail)))).state =
                 StageInputMarkedScannerDescription.halt := by
             simpa using
-              congrArg MachineDescription.Configuration.state
+              congrArg Configuration.state
                 hscannerFinish
           exact False.elim (hno hhalt)
       | zero =>
@@ -833,11 +834,11 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
           have hhalt :
               (StageInputMarkedScannerDescription.runConfig finishRem
                 (finishStartConfigWithTailBits (b :: restW)
-                  (MachineDescription.encodeCodeWordAsInput
+                  (encodeCodeWordAsInput
                     (MachineCodeSymbol.zero :: suffixTail)))).state =
                 StageInputMarkedScannerDescription.halt := by
             simpa using
-              congrArg MachineDescription.Configuration.state
+              congrArg Configuration.state
                 hscannerFinish
           exact False.elim (hno hhalt)
       | one =>
@@ -846,11 +847,11 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
           have hhalt :
               (StageInputMarkedScannerDescription.runConfig finishRem
                 (finishStartConfigWithTailBits (b :: restW)
-                  (MachineDescription.encodeCodeWordAsInput
+                  (encodeCodeWordAsInput
                     (MachineCodeSymbol.one :: suffixTail)))).state =
                 StageInputMarkedScannerDescription.halt := by
             simpa using
-              congrArg MachineDescription.Configuration.state
+              congrArg Configuration.state
                 hscannerFinish
           exact False.elim (hno hhalt)
       | moveLeft =>
@@ -859,11 +860,11 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
           have hhalt :
               (StageInputMarkedScannerDescription.runConfig finishRem
                 (finishStartConfigWithTailBits (b :: restW)
-                  (MachineDescription.encodeCodeWordAsInput
+                  (encodeCodeWordAsInput
                     (MachineCodeSymbol.moveLeft :: suffixTail)))).state =
                 StageInputMarkedScannerDescription.halt := by
             simpa using
-              congrArg MachineDescription.Configuration.state
+              congrArg Configuration.state
                 hscannerFinish
           exact False.elim (hno hhalt)
       | moveRight =>
@@ -872,11 +873,11 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
           have hhalt :
               (StageInputMarkedScannerDescription.runConfig finishRem
                 (finishStartConfigWithTailBits (b :: restW)
-                  (MachineDescription.encodeCodeWordAsInput
+                  (encodeCodeWordAsInput
                     (MachineCodeSymbol.moveRight :: suffixTail)))).state =
                 StageInputMarkedScannerDescription.halt := by
             simpa using
-              congrArg MachineDescription.Configuration.state
+              congrArg Configuration.state
                 hscannerFinish
           exact False.elim (hno hhalt)
 
@@ -887,15 +888,15 @@ theorem state120_tick_tail_stage_suffix_inv
       exists steps : Nat,
         StageInputMarkedScannerDescription.runConfig steps
             (config 120 [none, some true, none, some false]
-              ((MachineDescription.encodeCodeWordAsInput rest).map some)) =
+              ((encodeCodeWordAsInput rest).map some)) =
           { state := StageInputMarkedScannerDescription.halt
             tape := T })
     (hinput :
-      MachineDescription.decodeBoolWord
+      decodeBoolWord
           (MachineCodeSymbol.tick :: rest) =
         some (w, suffix)) :
     exists stage : Nat,
-      suffix = MachineDescription.encodeNat stage :=
+      suffix = encodeNat stage :=
   state120_tick_tail_stageSuffixDecoder_inv hscanner hinput
 
 theorem state120_tick_tail_code_inv
@@ -904,7 +905,7 @@ theorem state120_tick_tail_code_inv
       exists steps : Nat,
         StageInputMarkedScannerDescription.runConfig steps
             (config 120 [none, some true, none, some false]
-              ((MachineDescription.encodeCodeWordAsInput rest).map some)) =
+              ((encodeCodeWordAsInput rest).map some)) =
           { state := StageInputMarkedScannerDescription.halt
             tape := T }) :
     exists w : Word Bool,
@@ -916,16 +917,16 @@ theorem state120_tick_tail_code_inv
   rcases state120_tick_tail_stage_suffix_inv hscanner hinput with
     ⟨stage, hsuffix⟩
   refine ⟨w, stage, ?_⟩
-  apply MachineDescription.DovetailLayout.decodeStageInputComplete_eq_some_stageInputCode
-  unfold MachineDescription.DovetailLayout.decodeStageInputComplete
-  unfold MachineDescription.DovetailLayout.decodeStageInput
+  apply DovetailLayout.decodeStageInputComplete_eq_some_stageInputCode
+  unfold DovetailLayout.decodeStageInputComplete
+  unfold DovetailLayout.decodeStageInput
   rw [hinput, hsuffix]
   simp only
   rw [show
-      MachineDescription.decodeNat (MachineDescription.encodeNat stage) =
+      decodeNat (encodeNat stage) =
         some (stage, []) by
-    simpa [MachineDescription.encodeNatAppend] using
-      MachineDescription.decodeNat_encodeNatAppend stage []]
+    simpa [encodeNatAppend] using
+      decodeNat_encodeNatAppend stage []]
 theorem scanner_marked_tick_tail_code_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :
@@ -933,7 +934,7 @@ theorem scanner_marked_tick_tail_code_inv
         StageInputMarkedScannerDescription.runConfig steps
             (markedTailStartConfig
               (true :: false ::
-                MachineDescription.encodeCodeWordAsInput rest)) =
+                encodeCodeWordAsInput rest)) =
           { state := StageInputMarkedScannerDescription.halt
             tape := T }) :
     exists w : Word Bool,
@@ -942,10 +943,10 @@ theorem scanner_marked_tick_tail_code_inv
         PairedRecognizerDovetailStageInputCode w stage := by
   have hprefix :=
     run_marked_tail_tick_to_state120
-      (MachineDescription.encodeCodeWordAsInput rest)
+      (encodeCodeWordAsInput rest)
   have hmid :
       (config 120 [none, some true, none, some false]
-        ((MachineDescription.encodeCodeWordAsInput rest).map some)).state ≠
+        ((encodeCodeWordAsInput rest).map some)).state ≠
         StageInputMarkedScannerDescription.halt := by
     simp [config, StageInputMarkedScannerDescription]
   rcases
@@ -961,14 +962,14 @@ theorem scanner_marked_tick_tail_bits_shape_inv
         StageInputMarkedScannerDescription.runConfig steps
             (markedTailStartConfig
               (true :: false ::
-                MachineDescription.encodeCodeWordAsInput rest)) =
+                encodeCodeWordAsInput rest)) =
           { state := StageInputMarkedScannerDescription.halt
             tape := T }) :
     exists w : Word Bool,
     exists stage : Nat,
       stageInputBits w stage =
         false :: false :: true :: false ::
-          MachineDescription.encodeCodeWordAsInput rest := by
+          encodeCodeWordAsInput rest := by
   rcases scanner_marked_tick_tail_code_inv hscanner with
     ⟨w, stage, hcode⟩
   exact ⟨w, stage, stageInputBits_tick_code_eq hcode⟩

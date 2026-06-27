@@ -16,6 +16,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 /--
 Construction data for the controller continuation subroutine, stated directly
@@ -29,12 +30,12 @@ def ControllerResultContinueConstructionData : Prop :=
         PairedRecognizerDovetailControllerResultContinueCode.transform code =
             some out ->
           continuer.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput code)
-            (MachineDescription.encodeCodeWordAsInput out)) ∧
+            (encodeCodeWordAsInput code)
+            (encodeCodeWordAsInput out)) ∧
       (forall code out : Word MachineCodeSymbol,
         continuer.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput code)
-            (MachineDescription.encodeCodeWordAsInput out) ->
+            (encodeCodeWordAsInput code)
+            (encodeCodeWordAsInput out) ->
           PairedRecognizerDovetailControllerResultContinueCode.transform code = some out)
 
 def ControllerResultContinueForwardSpec
@@ -43,15 +44,15 @@ def ControllerResultContinueForwardSpec
     PairedRecognizerDovetailControllerResultContinueCode.transform code =
         some out ->
       continuer.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput code)
-        (MachineDescription.encodeCodeWordAsInput out)
+        (encodeCodeWordAsInput code)
+        (encodeCodeWordAsInput out)
 
 def ControllerResultContinueClosedSpec
     (continuer : MachineDescription) : Prop :=
   forall code out : Word MachineCodeSymbol,
     continuer.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput code)
-        (MachineDescription.encodeCodeWordAsInput out) ->
+        (encodeCodeWordAsInput code)
+        (encodeCodeWordAsInput out) ->
       PairedRecognizerDovetailControllerResultContinueCode.transform code =
         some out
 
@@ -63,27 +64,27 @@ def ControllerResultContinueSpec
 
 def ControllerResultContinueCanonicalForwardSpec
     (continuer : MachineDescription) : Prop :=
-  forall C : MachineDescription.DovetailControllerLayout,
+  forall C : DovetailControllerLayout,
     PairedRecognizerDovetailControllerRawOutput C.result = none ->
       continuer.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode C))
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode
-            (MachineDescription.DovetailControllerLayout.nextStage C)))
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode C))
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.nextStage C)))
 
 def ControllerResultContinueClosedLayoutSpec
     (continuer : MachineDescription) : Prop :=
   forall code out : Word MachineCodeSymbol,
     continuer.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput code)
-        (MachineDescription.encodeCodeWordAsInput out) ->
-      exists C : MachineDescription.DovetailControllerLayout,
-        code = MachineDescription.DovetailControllerLayout.encode C ∧
+        (encodeCodeWordAsInput code)
+        (encodeCodeWordAsInput out) ->
+      exists C : DovetailControllerLayout,
+        code = DovetailControllerLayout.encode C ∧
           PairedRecognizerDovetailControllerRawOutput C.result = none ∧
             out =
-              MachineDescription.DovetailControllerLayout.encode
-                (MachineDescription.DovetailControllerLayout.nextStage C)
+              DovetailControllerLayout.encode
+                (DovetailControllerLayout.nextStage C)
 
 def ControllerResultContinueComponentSpec
     (continuer : MachineDescription) : Prop :=

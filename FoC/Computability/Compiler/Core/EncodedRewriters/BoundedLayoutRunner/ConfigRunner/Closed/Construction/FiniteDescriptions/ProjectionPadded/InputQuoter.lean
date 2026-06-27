@@ -6,16 +6,17 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
 
 def SelectedProjectionInputQuoterExactSourceTape
-    (L : MachineDescription.DovetailLayout) : Tape Bool :=
+    (L : DovetailLayout) : Tape Bool :=
   DovetailInitialLayoutInitializer.tapeAtCells []
     (List.append
       ((List.append
-        (MachineDescription.encodeCodeSymbolAsInput
+        (encodeCodeSymbolAsInput
           MachineCodeSymbol.transition)
         (List.append
           (DovetailInitialLayoutInitializer.stageInputBits
@@ -25,7 +26,7 @@ def SelectedProjectionInputQuoterExactSourceTape
       [none])
 
 def SelectedProjectionInputQuoterExactTargetTape
-    (L : MachineDescription.DovetailLayout) : Tape Bool :=
+    (L : DovetailLayout) : Tape Bool :=
   DovetailInitialLayoutInitializer.tapeAtCells
     ((SelectedProjectionTailProjector.outputPrefixStageInputSourceRestFieldBits
       L).reverse.map some)
@@ -35,14 +36,14 @@ def SelectedProjectionInputQuoterExactTargetTape
       (SelectedProjectionTailProjector.sourceRestFieldBits L)).map some)
 
 theorem parsedLayoutCheckedTape_eq_inputQuoterExactSourceTape
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     ParsedLayoutCheckedTape L =
       SelectedProjectionInputQuoterExactSourceTape L := by
   rw [SelectedProjectionInputQuoterExactSourceTape,
     SelectedProjectionTailProjector.parsedLayoutCheckedTape_eq_transition_stageInput_sourceRestFieldBits]
 
 theorem sourceTape_outputPrefix_eq_inputQuoterExactTargetTape
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     SelectedProjectionTailProjector.sourceTape L
         ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
           some) =
@@ -53,7 +54,7 @@ theorem sourceTape_outputPrefix_eq_inputQuoterExactTargetTape
 def SelectedProjectionInputQuoterExactShapeSpec
     (quoter : MachineDescription) : Prop :=
   quoter.SubroutineReady ∧
-    forall L : MachineDescription.DovetailLayout,
+    forall L : DovetailLayout,
       quoter.HaltsFromTape
         (SelectedProjectionInputQuoterExactSourceTape L)
         (SelectedProjectionInputQuoterExactTargetTape L)

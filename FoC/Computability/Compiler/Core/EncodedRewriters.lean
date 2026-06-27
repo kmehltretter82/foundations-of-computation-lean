@@ -14,10 +14,11 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 /-!
 **Milestone 2 parser/rewriter leaves.**  The remaining finite-source work is
-not a generic compiler for arbitrary {name}`MachineDescription.TapeCodePrimitive`
+not a generic compiler for arbitrary {name}`TapeCodePrimitive`
 values.  It is a fixed family of code-word parsers and rewriters for the
 canonical encodings used by the dovetail controller.  The declarations below
 name those finite transition-table obligations explicitly.  Each one is a
@@ -32,35 +33,35 @@ def EncodedCodeWordCanonicalRecognizerConstruction : Prop :=
       forall bits : Word Bool,
       forall code : Word MachineCodeSymbol,
         recognizer.HaltsWithOutput bits
-            (MachineDescription.encodeCodeWordAsInput code) <->
-          MachineDescription.decodeCodeWordAsInput bits = some code
+            (encodeCodeWordAsInput code) <->
+          decodeCodeWordAsInput bits = some code
 
 theorem encodedCodeWordCanonicalRecognizerConstruction_scaffold :
     EncodedCodeWordCanonicalRecognizerConstruction := by
   refine
-    ⟨MachineDescription.ExactIdentityDescription,
-      ⟨MachineDescription.exactIdentityDescription_wellFormed,
-        MachineDescription.exactIdentityDescription_haltTransitionFree⟩,
+    ⟨ExactIdentityDescription,
+      ⟨exactIdentityDescription_wellFormed,
+        exactIdentityDescription_haltTransitionFree⟩,
       ?_⟩
   intro bits code
   constructor
   · intro h
     have hbits :
-        MachineDescription.encodeCodeWordAsInput code = bits :=
-      (MachineDescription.exactIdentityDescription_haltsWithOutput_iff
-        bits (MachineDescription.encodeCodeWordAsInput code)).mp h
+        encodeCodeWordAsInput code = bits :=
+      (exactIdentityDescription_haltsWithOutput_iff
+        bits (encodeCodeWordAsInput code)).mp h
     rw [← hbits]
     exact
-      MachineDescription.decodeCodeWordAsInput_encodeCodeWordAsInput code
+      decodeCodeWordAsInput_encodeCodeWordAsInput code
   · intro h
     have hbits :
-        bits = MachineDescription.encodeCodeWordAsInput code :=
-      MachineDescription.decodeCodeWordAsInput_eq_some_encodeCodeWordAsInput h
+        bits = encodeCodeWordAsInput code :=
+      decodeCodeWordAsInput_eq_some_encodeCodeWordAsInput h
     rw [hbits]
     exact
-      (MachineDescription.exactIdentityDescription_haltsWithOutput_iff
-        (MachineDescription.encodeCodeWordAsInput code)
-        (MachineDescription.encodeCodeWordAsInput code)).mpr rfl
+      (exactIdentityDescription_haltsWithOutput_iff
+        (encodeCodeWordAsInput code)
+        (encodeCodeWordAsInput code)).mpr rfl
 
 def EncodedDovetailStageInputToInitialLayoutRewriterConstruction :
     Prop :=
@@ -69,8 +70,8 @@ def EncodedDovetailStageInputToInitialLayoutRewriterConstruction :
       initializer.SubroutineReady ∧
         forall code out : Word MachineCodeSymbol,
           initializer.HaltsWithOutput
-              (MachineDescription.encodeCodeWordAsInput code)
-              (MachineDescription.encodeCodeWordAsInput out) <->
+              (encodeCodeWordAsInput code)
+              (encodeCodeWordAsInput out) <->
             (PairedRecognizerDovetailInitialLayoutCode
               accept reject).transform code = some out
 
@@ -81,8 +82,8 @@ def EncodedDovetailLayoutBoundedRunnerRewriterConstruction :
       runner.SubroutineReady ∧
         forall code out : Word MachineCodeSymbol,
           runner.HaltsWithOutput
-              (MachineDescription.encodeCodeWordAsInput code)
-              (MachineDescription.encodeCodeWordAsInput out) <->
+              (encodeCodeWordAsInput code)
+              (encodeCodeWordAsInput out) <->
             (PairedRecognizerDovetailLayoutCode
               accept reject).transform code = some out
 
@@ -126,22 +127,22 @@ of restating the encoded input/output behavior.
 -/
 
 def EncodedTapeCodePrimitiveRewriterConstruction
-    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+    (P : TapeCodePrimitive) : Prop :=
   exists rewriter : MachineDescription,
     rewriter.SubroutineReady ∧
       forall code out : Word MachineCodeSymbol,
         rewriter.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput code)
-            (MachineDescription.encodeCodeWordAsInput out) <->
+            (encodeCodeWordAsInput code)
+            (encodeCodeWordAsInput out) <->
           P.transform code = some out
 
 def EncodedTapeCodePrimitiveOutputCompiledSubroutineConstruction
-    (P : MachineDescription.TapeCodePrimitive) : Prop :=
+    (P : TapeCodePrimitive) : Prop :=
   exists rewriter : MachineDescription,
     TapeCodePrimitiveOutputCompiledSubroutineByDescription P rewriter
 
 theorem encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine
-    {P : MachineDescription.TapeCodePrimitive}
+    {P : TapeCodePrimitive}
     (h : EncodedTapeCodePrimitiveOutputCompiledSubroutineConstruction P) :
     EncodedTapeCodePrimitiveRewriterConstruction P := by
   rcases h with ⟨rewriter, hrewriter⟩
@@ -153,7 +154,7 @@ theorem encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine
         hrewriter⟩
 
 theorem encodedTapeCodePrimitiveRewriterConstruction_of_closedHandoffCompiledSubroutine
-    {P : MachineDescription.TapeCodePrimitive}
+    {P : TapeCodePrimitive}
     {D : MachineDescription} {handoffMove : Direction}
     (h : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       P D handoffMove) :
@@ -169,7 +170,7 @@ def EncodedControllerInputInitializerRewriterConstruction :
     initializer.SubroutineReady ∧
       forall w : Word Bool,
         initializer.HaltsWithOutput w
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (PairedRecognizerDovetailControllerInitialCode w))
 
 def EncodedControllerStageInputProjectionRewriterConstruction :
@@ -178,8 +179,8 @@ def EncodedControllerStageInputProjectionRewriterConstruction :
     encoder.SubroutineReady ∧
       forall code out : Word MachineCodeSymbol,
         encoder.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput code)
-            (MachineDescription.encodeCodeWordAsInput out) <->
+            (encodeCodeWordAsInput code)
+            (encodeCodeWordAsInput out) <->
           PairedRecognizerDovetailControllerStageInputCodePrimitive.transform
             code = some out
 
@@ -187,11 +188,11 @@ def EncodedControllerResultEmitterRewriterConstruction :
     Prop :=
   exists emitter : MachineDescription,
     emitter.SubroutineReady ∧
-      forall C : MachineDescription.DovetailControllerLayout,
+      forall C : DovetailControllerLayout,
       forall b : Bool,
         emitter.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.DovetailControllerLayout.encode C))
+            (encodeCodeWordAsInput
+              (DovetailControllerLayout.encode C))
             [b] <->
           PairedRecognizerDovetailControllerRawOutput C.result = some [b]
 
@@ -199,13 +200,13 @@ def EncodedControllerContinueRewriterConstruction :
     Prop :=
   exists continuer : MachineDescription,
     continuer.SubroutineReady ∧
-      forall C : MachineDescription.DovetailControllerLayout,
+      forall C : DovetailControllerLayout,
         continuer.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.DovetailControllerLayout.encode C))
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.DovetailControllerLayout.encode
-                (MachineDescription.DovetailControllerLayout.nextStage C))) <->
+            (encodeCodeWordAsInput
+              (DovetailControllerLayout.encode C))
+            (encodeCodeWordAsInput
+              (DovetailControllerLayout.encode
+                (DovetailControllerLayout.nextStage C))) <->
           PairedRecognizerDovetailControllerRawOutput C.result = none
 
 def EncodedControllerStageInputProjectionCodeWordSubroutineConstruction :
@@ -234,9 +235,9 @@ theorem encodedControllerContinueRewriterConstruction_of_resultContinueCodeWordS
   intro C
   exact
     Iff.trans
-      (hspec (MachineDescription.DovetailControllerLayout.encode C)
-        (MachineDescription.DovetailControllerLayout.encode
-          (MachineDescription.DovetailControllerLayout.nextStage C)))
+      (hspec (DovetailControllerLayout.encode C)
+        (DovetailControllerLayout.encode
+          (DovetailControllerLayout.nextStage C)))
       pairedRecognizerDovetailControllerResultContinueCode_encode_nextStage_iff
 
 /-!

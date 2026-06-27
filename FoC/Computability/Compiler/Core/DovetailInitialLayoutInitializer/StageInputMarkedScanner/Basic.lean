@@ -21,6 +21,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 namespace StageInputMarkedScanner
@@ -34,18 +35,18 @@ state {lit}`100`, while the final one halts after finding the checked boundary.
 
 def keep (source : Nat) (read : Bool) (target : Nat) :
     TransitionDescription :=
-  MachineDescription.transition source (some read) (some read)
+  transition source (some read) (some read)
     Direction.right target
 
 def keepMove (source : Nat) (read : Option Bool)
     (move : Direction) (target : Nat) :
     TransitionDescription :=
-  MachineDescription.transition source read read move target
+  transition source read read move target
 
 def writeMove (source : Nat) (read write : Option Bool)
     (move : Direction) (target : Nat) :
     TransitionDescription :=
-  MachineDescription.transition source read write move target
+  transition source read write move target
 
 def scanLeftToSentinelRestart
     (scan checkLeft restoreMarker : Nat) :
@@ -73,17 +74,17 @@ cells used while scanning.
 -/
 
 def tickBits : Word Bool :=
-  MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.tick
+  encodeCodeSymbolAsInput MachineCodeSymbol.tick
 
 def doneBits : Word Bool :=
-  MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.done
+  encodeCodeSymbolAsInput MachineCodeSymbol.done
 
 def stageNatBits (stage : Nat) : Word Bool :=
-  MachineDescription.encodeCodeWordAsInput
-    (MachineDescription.encodeNat stage)
+  encodeCodeWordAsInput
+    (encodeNat stage)
 
 def cellBits (b : Bool) : Word Bool :=
-  MachineDescription.encodeCodeSymbolAsInput
+  encodeCodeSymbolAsInput
     (if b then MachineCodeSymbol.one else MachineCodeSymbol.zero)
 
 def markedCellBits (b : Bool) : Word Bool :=
@@ -93,8 +94,8 @@ def markedCellBits (b : Bool) : Word Bool :=
     [true, true, false, true]
 
 def cellsBits (w : Word Bool) : Word Bool :=
-  MachineDescription.encodeCodeWordAsInput
-    (MachineDescription.encodeCellsAppend (w.map some) [])
+  encodeCodeWordAsInput
+    (encodeCellsAppend (w.map some) [])
 
 def markedCellsBits : Word Bool -> Word Bool
   | [] => []
@@ -110,18 +111,18 @@ def markedCellsBits : Word Bool -> Word Bool
       List.append (cellBits b) (cellsBits rest) := by
   cases b
   · change
-      MachineDescription.encodeCodeWordAsInput
+      encodeCodeWordAsInput
           (List.append [MachineCodeSymbol.zero]
-            (MachineDescription.encodeCellsAppend
+            (encodeCellsAppend
               (List.map some rest) [])) = _
-    rw [MachineDescription.encodeCodeWordAsInput_append]
+    rw [encodeCodeWordAsInput_append]
     rfl
   · change
-      MachineDescription.encodeCodeWordAsInput
+      encodeCodeWordAsInput
           (List.append [MachineCodeSymbol.one]
-            (MachineDescription.encodeCellsAppend
+            (encodeCellsAppend
               (List.map some rest) [])) = _
-    rw [MachineDescription.encodeCodeWordAsInput_append]
+    rw [encodeCodeWordAsInput_append]
     rfl
 
 @[simp] theorem markedCellsBits_nil :
@@ -185,15 +186,15 @@ theorem stageInputSecondBitTail_nil
       true :: true :: stageNatBits stage := by
   unfold stageInputSecondBitTail stageInputBits
   simp [PairedRecognizerDovetailStageInputCode,
-    MachineDescription.DovetailLayout.stageInputCode,
-    MachineDescription.DovetailLayout.stageInputCodeAppend,
-    MachineDescription.encodeBoolWordAppend,
-    MachineDescription.encodeCellListAppend,
-    MachineDescription.encodeCellsAppend,
-    MachineDescription.encodeNatAppend,
-    MachineDescription.encodeNat,
-    MachineDescription.encodeCodeWordAsInput,
-    MachineDescription.encodeCodeSymbolAsInput,
+    DovetailLayout.stageInputCode,
+    DovetailLayout.stageInputCodeAppend,
+    encodeBoolWordAppend,
+    encodeCellListAppend,
+    encodeCellsAppend,
+    encodeNatAppend,
+    encodeNat,
+    encodeCodeWordAsInput,
+    encodeCodeSymbolAsInput,
     stageNatBits]
 
 theorem stageInputSecondBitTail_cons
@@ -206,65 +207,65 @@ theorem stageInputSecondBitTail_cons
   cases b <;>
   simp [stageInputSecondBitTail, stageInputBits,
     PairedRecognizerDovetailStageInputCode,
-    MachineDescription.DovetailLayout.stageInputCode,
-    MachineDescription.DovetailLayout.stageInputCodeAppend,
-    MachineDescription.encodeBoolWordAppend,
-    MachineDescription.encodeCellListAppend,
-    MachineDescription.encodeNatAppend,
-    MachineDescription.encodeNat,
-    MachineDescription.encodeCellAppend,
-    MachineDescription.encodeCell,
-    MachineDescription.encodeCellsAppend,
-    MachineDescription.encodeCodeSymbolAsInput,
+    DovetailLayout.stageInputCode,
+    DovetailLayout.stageInputCodeAppend,
+    encodeBoolWordAppend,
+    encodeCellListAppend,
+    encodeNatAppend,
+    encodeNat,
+    encodeCellAppend,
+    encodeCell,
+    encodeCellsAppend,
+    encodeCodeSymbolAsInput,
     stageNatBits, cellBits, cellsBits]
   · rw [show
-        MachineDescription.encodeCellsAppend (List.map some rest)
-            (MachineDescription.encodeNat stage) =
+        encodeCellsAppend (List.map some rest)
+            (encodeNat stage) =
           List.append
-            (MachineDescription.encodeCellsAppend
+            (encodeCellsAppend
               (List.map some rest) [])
-            (MachineDescription.encodeNat stage) by
+            (encodeNat stage) by
         simpa using
           (encodeCellsAppend_append (List.map some rest)
             ([] : Word MachineCodeSymbol)
-            (MachineDescription.encodeNat stage))]
+            (encodeNat stage))]
     change true :: false ::
-        MachineDescription.encodeCodeWordAsInput
-          (List.append (MachineDescription.encodeNat rest.length)
+        encodeCodeWordAsInput
+          (List.append (encodeNat rest.length)
             (List.append [MachineCodeSymbol.zero]
               (List.append
-                (MachineDescription.encodeCellsAppend
+                (encodeCellsAppend
                   (List.map some rest) [])
-                (MachineDescription.encodeNat stage)))) = _
-    rw [MachineDescription.encodeCodeWordAsInput_append]
-    rw [MachineDescription.encodeCodeWordAsInput_append]
-    rw [MachineDescription.encodeCodeWordAsInput_append]
-    simp [MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput]
+                (encodeNat stage)))) = _
+    rw [encodeCodeWordAsInput_append]
+    rw [encodeCodeWordAsInput_append]
+    rw [encodeCodeWordAsInput_append]
+    simp [encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput]
   · rw [show
-        MachineDescription.encodeCellsAppend (List.map some rest)
-            (MachineDescription.encodeNat stage) =
+        encodeCellsAppend (List.map some rest)
+            (encodeNat stage) =
           List.append
-            (MachineDescription.encodeCellsAppend
+            (encodeCellsAppend
               (List.map some rest) [])
-            (MachineDescription.encodeNat stage) by
+            (encodeNat stage) by
         simpa using
           (encodeCellsAppend_append (List.map some rest)
             ([] : Word MachineCodeSymbol)
-            (MachineDescription.encodeNat stage))]
+            (encodeNat stage))]
     change true :: false ::
-        MachineDescription.encodeCodeWordAsInput
-          (List.append (MachineDescription.encodeNat rest.length)
+        encodeCodeWordAsInput
+          (List.append (encodeNat rest.length)
             (List.append [MachineCodeSymbol.one]
               (List.append
-                (MachineDescription.encodeCellsAppend
+                (encodeCellsAppend
                   (List.map some rest) [])
-                (MachineDescription.encodeNat stage)))) = _
-    rw [MachineDescription.encodeCodeWordAsInput_append]
-    rw [MachineDescription.encodeCodeWordAsInput_append]
-    rw [MachineDescription.encodeCodeWordAsInput_append]
-    simp [MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput]
+                (encodeNat stage)))) = _
+    rw [encodeCodeWordAsInput_append]
+    rw [encodeCodeWordAsInput_append]
+    rw [encodeCodeWordAsInput_append]
+    simp [encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput]
 
 @[simp] theorem stageNatBits_zero :
     stageNatBits 0 = [false, false, true, true] := by
@@ -463,10 +464,10 @@ theorem run_state150_markedCell
     cellBits,
     config, tapeAtCells, keep, keepMove, writeMove,
     scanLeftToSentinelRestart, scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition,
-    MachineDescription.encodeCodeSymbolAsInput,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition,
+    encodeCodeSymbolAsInput,
     Tape.read, Tape.write, Tape.move, Tape.moveRight]
 
 theorem run_state150_markedCells
@@ -487,7 +488,7 @@ theorem run_state150_markedCells
   | cons b rest ih =>
       rw [show 4 * (b :: rest).length =
           4 + 4 * rest.length by simp; omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [show
           List.append ((markedCellsBits (b :: rest)).map some)
               right =
@@ -509,9 +510,9 @@ theorem run_state150_to_state160
   simp [StageInputMarkedScannerDescription,
     config, tapeAtCells, keep, keepMove, writeMove,
     scanLeftToSentinelRestart, scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition,
     Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
 
 theorem run_state150_stageNat_to_state160
@@ -537,7 +538,7 @@ theorem run_state150_markedCells_to_state160
         (List.append ((cellsBits processed).reverse.map some) left)
         (some false :: none ::
           ((stageNatBits stage).drop 2).map some) := by
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state150_markedCells]
   rw [run_state150_stageNat_to_state160]
 
@@ -557,9 +558,9 @@ theorem run_state180_some
   simp [StageInputMarkedScannerDescription, config, tapeAtCells,
     keep, keepMove, writeMove, scanLeftToSentinelRestart,
     scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write,
     Tape.move, Tape.moveRight]
 
 theorem run_state180_bits
@@ -580,7 +581,7 @@ theorem run_state180_bits
           config 180
             (List.append ((b :: rest).reverse.map some) left) right
       rw [show rest.length + 1 = 1 + rest.length by omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [run_state180_some]
       rw [ih]
       simp [List.map_append, List.append_assoc]
@@ -594,9 +595,9 @@ theorem run_state180_none_cons
   simp [StageInputMarkedScannerDescription, config, tapeAtCells,
     keep, keepMove, writeMove, scanLeftToSentinelRestart,
     scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft]
 
 theorem run_state200_tick
@@ -610,9 +611,9 @@ theorem run_state200_tick
   simp [StageInputMarkedScannerDescription, tickBits, config, tapeAtCells,
     keep, keepMove, writeMove, scanLeftToSentinelRestart,
     scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, MachineDescription.encodeCodeSymbolAsInput,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, encodeCodeSymbolAsInput,
     Tape.read, Tape.write, Tape.move, Tape.moveRight]
 
 def donePrefixRev : List (Option Bool) :=
@@ -630,9 +631,9 @@ theorem run_state200_done_blank
   simp [StageInputMarkedScannerDescription, doneBits, donePrefixRev,
     config, tapeAtCells, keep, keepMove, writeMove,
     scanLeftToSentinelRestart, scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, MachineDescription.encodeCodeSymbolAsInput,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, encodeCodeSymbolAsInput,
     Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
 
 theorem run_state120_tick
@@ -646,10 +647,10 @@ theorem run_state120_tick
   simp [StageInputMarkedScannerDescription, tickBits,
     config, tapeAtCells, keep, keepMove, writeMove,
     scanLeftToSentinelRestart, scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition,
-    MachineDescription.encodeCodeSymbolAsInput,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition,
+    encodeCodeSymbolAsInput,
     Tape.read, Tape.write, Tape.move, Tape.moveRight]
 
 theorem run_state120_done
@@ -663,10 +664,10 @@ theorem run_state120_done
   simp [StageInputMarkedScannerDescription, doneBits,
     config, tapeAtCells, keep, keepMove, writeMove,
     scanLeftToSentinelRestart, scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition,
-    MachineDescription.encodeCodeSymbolAsInput,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition,
+    encodeCodeSymbolAsInput,
     Tape.read, Tape.write, Tape.move, Tape.moveRight]
 
 theorem run_state120_stageNat
@@ -684,17 +685,17 @@ theorem run_state120_stageNat
   | succ n ih =>
       rw [show 4 * (n + 1) + 4 =
           4 + (4 * n + 4) by omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [show
           List.append ((stageNatBits (n + 1)).map some) right =
             List.append (tickBits.map some)
               (List.append ((stageNatBits n).map some) right) by
           simp [stageNatBits_succ, tickBits,
-            MachineDescription.encodeCodeSymbolAsInput]]
+            encodeCodeSymbolAsInput]]
       rw [run_state120_tick]
       rw [ih]
       simp [stageNatBits_succ, tickBits,
-        MachineDescription.encodeCodeSymbolAsInput,
+        encodeCodeSymbolAsInput,
         List.map_append, List.append_assoc]
 
 theorem run_state130_markedCell
@@ -709,9 +710,9 @@ theorem run_state130_markedCell
   simp [StageInputMarkedScannerDescription, markedCellBits,
     config, tapeAtCells, keep, keepMove, writeMove,
     scanLeftToSentinelRestart, scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition,
     Tape.read, Tape.write, Tape.move, Tape.moveRight]
 
 theorem run_state130_markedCells
@@ -732,7 +733,7 @@ theorem run_state130_markedCells
   | cons b rest ih =>
       rw [show 4 * (b :: rest).length =
           4 + 4 * rest.length by simp; omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [show
           List.append ((markedCellsBits (b :: rest)).map some)
               right =
@@ -756,10 +757,10 @@ theorem run_state130_currentCell
   simp [StageInputMarkedScannerDescription, cellBits,
     config, tapeAtCells, keep, keepMove, writeMove,
     scanLeftToSentinelRestart, scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition,
-    MachineDescription.encodeCodeSymbolAsInput,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition,
+    encodeCodeSymbolAsInput,
     Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
 
 theorem run_state140_returnToLengthMarker
@@ -780,16 +781,16 @@ theorem run_state140_returnToLengthMarker
       simp [StageInputMarkedScannerDescription,
         config, tapeAtCells, keep, keepMove, writeMove,
         scanLeftToSentinelRestart, scanLeftToSentinelHalt,
-        MachineDescription.runConfig, MachineDescription.stepConfig,
-        MachineDescription.lookupTransition, MachineDescription.Matches,
-        MachineDescription.transition,
+        runConfig, stepConfig,
+        lookupTransition, Matches,
+        transition,
         Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
   | cons b rest ih =>
       rw [show (b :: rest).length + 4 =
           1 + (rest.length + 4) by
         simp
         omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       change
         StageInputMarkedScannerDescription.runConfig (rest.length + 4)
           (StageInputMarkedScannerDescription.runConfig 1
@@ -814,9 +815,9 @@ theorem run_state140_returnToLengthMarker
         simp [StageInputMarkedScannerDescription,
           config, tapeAtCells, keep, keepMove, writeMove,
           scanLeftToSentinelRestart, scanLeftToSentinelHalt,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition,
           Tape.read, Tape.write, Tape.move, Tape.moveLeft]]
       rw [ih]
       simp [List.map_append, List.append_assoc]
@@ -831,9 +832,9 @@ theorem run_state220_some_cons
   simp [StageInputMarkedScannerDescription, config, tapeAtCells,
     keep, keepMove, writeMove, scanLeftToSentinelRestart,
     scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft]
 
 theorem run_state220_some_nil
@@ -845,9 +846,9 @@ theorem run_state220_some_nil
   simp [StageInputMarkedScannerDescription, config, tapeAtCells,
     keep, keepMove, writeMove, scanLeftToSentinelRestart,
     scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft]
 
 theorem run_state220_none
@@ -859,15 +860,15 @@ theorem run_state220_none
   simp [StageInputMarkedScannerDescription, config, tapeAtCells,
     keep, keepMove, writeMove, scanLeftToSentinelRestart,
     scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write,
     Tape.move, Tape.moveRight]
 
 def state220ScanConfig
     (bitsToLeft : Word Bool) (boundary : Option Bool)
     (leftTail right : List (Option Bool)) :
-    MachineDescription.Configuration :=
+    Configuration :=
   match bitsToLeft with
   | [] => config 220 leftTail (boundary :: right)
   | b :: rest =>
@@ -888,7 +889,7 @@ theorem run_state220_bits_to_boundary
   | cons b rest ih =>
       rw [show (b :: rest).length = rest.length + 1 by simp]
       rw [show rest.length + 1 = 1 + rest.length by omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       cases rest with
       | nil =>
           change
@@ -931,10 +932,10 @@ theorem run_state200_done_end
   simp [StageInputMarkedScannerDescription, doneBits,
     state220ScanConfig, config, tapeAtCells, keep, keepMove,
     writeMove, scanLeftToSentinelRestart, scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition,
-    MachineDescription.encodeCodeSymbolAsInput,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition,
+    encodeCodeSymbolAsInput,
     Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight,
     List.reverse_append]
 
@@ -955,17 +956,17 @@ theorem run_state200_stageNat_end
   | succ stage ih =>
       rw [show 4 * (stage + 1) + 5 =
           4 + (4 * stage + 5) by omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [show
           (stageNatBits (stage + 1)).map some =
             List.append (tickBits.map some)
               ((stageNatBits stage).map some) by
           simp [stageNatBits_succ, tickBits,
-            MachineDescription.encodeCodeSymbolAsInput]]
+            encodeCodeSymbolAsInput]]
       rw [run_state200_tick]
       have h := ih (List.append pre tickBits)
       simpa [stageNatBits_succ, tickBits,
-        MachineDescription.encodeCodeSymbolAsInput,
+        encodeCodeSymbolAsInput,
         List.reverse_append, List.map_append, List.append_assoc] using h
 
 /-!
@@ -1013,9 +1014,9 @@ theorem run_start_cons_to_state120
       config, tapeAtCells,
       keep, keepMove, writeMove, scanLeftToSentinelRestart,
       scanLeftToSentinelHalt,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft, Tape.moveRight]
     generalize
         List.map some (stageNatBits rest.length) ++
@@ -1027,9 +1028,9 @@ theorem run_start_cons_to_state120
       config, tapeAtCells,
       keep, keepMove, writeMove, scanLeftToSentinelRestart,
       scanLeftToSentinelHalt,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft, Tape.moveRight]
     generalize
         List.map some (stageNatBits rest.length) ++
@@ -1051,15 +1052,15 @@ theorem run_start_nil_to_state200
   rw [stageInputSecondBitTail_nil]
   cases stage <;>
   simp [StageInputMarkedScannerDescription, stageNatBits,
-    MachineDescription.encodeNat,
-    MachineDescription.encodeCodeWordAsInput,
-    MachineDescription.encodeCodeSymbolAsInput,
+    encodeNat,
+    encodeCodeWordAsInput,
+    encodeCodeSymbolAsInput,
     config, tapeAtCells,
     keep, keepMove, writeMove, scanLeftToSentinelRestart,
     scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
 theorem run_start_nil
@@ -1079,9 +1080,9 @@ theorem run_start_nil
       18 + ((4 * stage + 5) + (bitsToLeft.length + 1)) by
     simp [bitsToLeft, pre, stageNatBits_length]
     omega]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_start_nil_to_state200]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     StageInputMarkedScannerDescription.runConfig
         (bitsToLeft.length + 1)
@@ -1095,7 +1096,7 @@ theorem run_start_nil
           stageInputSecondBitMarkedCheckedHandoffTape
             ([] : Word Bool) stage }
   rw [run_state200_stageNat_end]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state220_bits_to_boundary]
   rw [run_state220_none]
   subst bitsToLeft
@@ -1116,18 +1117,18 @@ handoff tape.
 -/
 
 def markedStartConfig (w : Word Bool) (stage : Nat) :
-    MachineDescription.Configuration :=
+    Configuration :=
   { state := StageInputMarkedScannerDescription.start
     tape := stageInputSecondBitMarkedHandoffTape w stage }
 
 def checkedHaltConfig (w : Word Bool) (stage : Nat) :
-    MachineDescription.Configuration :=
+    Configuration :=
   { state := StageInputMarkedScannerDescription.halt
     tape := stageInputSecondBitMarkedCheckedHandoffTape w stage }
 
 def state120AfterStartConfig
     (b : Bool) (rest : Word Bool) (stage : Nat) :
-    MachineDescription.Configuration :=
+    Configuration :=
   config 120 [none, some true, none, some false]
     (List.append ((stageNatBits rest.length).map some)
       (List.append ((cellBits b).map some)
@@ -1153,7 +1154,7 @@ def finishStartLeft (w : Word Bool) : List (Option Bool) :=
     (finishLengthPrefixRev (w.length - 1))
 
 def finishStartConfig (w : Word Bool) (stage : Nat) :
-    MachineDescription.Configuration :=
+    Configuration :=
   config 150 (finishStartLeft w)
     (List.append ((markedCellsBits w).map some)
       ((stageNatBits stage).map some))
@@ -1188,7 +1189,7 @@ theorem activeLengthPrefixRestored (n : Nat) :
 
 def markingState120
     (processed : Word Bool) (b : Bool) (rest : Word Bool)
-    (stage : Nat) : MachineDescription.Configuration :=
+    (stage : Nat) : Configuration :=
   config 120 (activeLengthPrefixRev processed.length)
     (List.append ((stageNatBits rest.length).map some)
       (List.append ((markedCellsBits processed).map some)
@@ -1198,7 +1199,7 @@ def markingState120
 
 def state100AfterMarked
     (processed : Word Bool) (b : Bool) (rest : Word Bool)
-    (stage : Nat) : MachineDescription.Configuration :=
+    (stage : Nat) : Configuration :=
   config 100 (finishLengthPrefixRev processed.length)
     (List.append ((stageNatBits rest.length).map some)
       (List.append ((markedCellsBits processed).map some)
@@ -1223,12 +1224,12 @@ theorem run_mark_current_to_state100
   refine
     ⟨(4 * rest.length + 4) +
         (4 * processed.length + (6 + (scanRev.length + 4))), ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   unfold markingState120
   rw [run_state120_stageNat]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state130_markedCells]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state130_currentCell]
   have hreturn :=
     run_state140_returnToLengthMarker scanRev b
@@ -1254,7 +1255,7 @@ theorem run_marking_loop_from_state120
       rcases run_mark_current_to_state100 processed b [] stage with
         ⟨markSteps, hmark⟩
       refine ⟨markSteps + 4, ?_⟩
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [hmark]
       unfold state100AfterMarked
       change
@@ -1278,16 +1279,16 @@ theorem run_marking_loop_from_state120
       refine ⟨markSteps + 4 + recSteps, ?_⟩
       rw [show markSteps + 4 + recSteps =
           markSteps + (4 + recSteps) by omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [hmark]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       unfold state100AfterMarked
       rw [show
           (stageNatBits (next :: rest).length).map some =
             List.append (tickBits.map some)
               ((stageNatBits rest.length).map some) by
         simp [stageNatBits_succ, tickBits,
-          MachineDescription.encodeCodeSymbolAsInput]]
+          encodeCodeSymbolAsInput]]
       change
         StageInputMarkedScannerDescription.runConfig recSteps
             (StageInputMarkedScannerDescription.runConfig 4
@@ -1369,7 +1370,7 @@ theorem stageNatBits_eq_repeatedTickBits_doneBits (n : Nat) :
   induction n with
   | zero =>
       simp [repeatedTickBits, doneBits, stageNatBits_zero,
-        MachineDescription.encodeCodeSymbolAsInput]
+        encodeCodeSymbolAsInput]
   | succ n ih =>
       rw [stageNatBits_succ, ih]
       change
@@ -1401,7 +1402,7 @@ theorem finishLengthPrefixScanBits_reverse_repeatedTickBits
       rfl
   | succ n ih =>
       simp [finishLengthPrefixScanBits, repeatedTickBits,
-        tickBits, MachineDescription.encodeCodeSymbolAsInput,
+        tickBits, encodeCodeSymbolAsInput,
         ih, List.append_assoc]
 
 theorem finishLengthPrefixScanBits_reverse_doneBits (n : Nat) :
@@ -1424,7 +1425,7 @@ theorem finishScanBits_reverse_nonempty
         (fun bits =>
           List.append bits
             (List.append
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.zero)
               (List.append (cellsBits rest) [false])))
         (finishLengthPrefixScanBits_reverse_doneBits rest.length)
@@ -1435,7 +1436,7 @@ theorem finishScanBits_reverse_nonempty
         (fun bits =>
           List.append bits
             (List.append
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.one)
               (List.append (cellsBits rest) [false])))
         (finishLengthPrefixScanBits_reverse_doneBits rest.length)
@@ -1443,7 +1444,7 @@ theorem finishScanBits_reverse_nonempty
 def state160ScanConfig
     (bitsToRight : Word Bool) (boundary : Option Bool)
     (leftTail right : List (Option Bool)) :
-    MachineDescription.Configuration :=
+    Configuration :=
   match bitsToRight with
   | [] => config 160 leftTail (boundary :: right)
   | b :: rest =>
@@ -1460,9 +1461,9 @@ theorem run_state160_some_cons
   simp [StageInputMarkedScannerDescription, config, tapeAtCells,
     keep, keepMove, writeMove, scanLeftToSentinelRestart,
     scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft]
 
 theorem run_state160_bits_to_boundary
@@ -1480,7 +1481,7 @@ theorem run_state160_bits_to_boundary
       rw [show (b :: rest).length = 1 + rest.length by
         simp
         omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       cases rest with
       | nil =>
           change
@@ -1520,9 +1521,9 @@ theorem run_state160_none_to_state161
   simp [StageInputMarkedScannerDescription, config, tapeAtCells,
     keep, keepMove, writeMove, scanLeftToSentinelRestart,
     scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft]
 
 theorem run_state161_false_to_state170
@@ -1534,9 +1535,9 @@ theorem run_state161_false_to_state170
   simp [StageInputMarkedScannerDescription, config, tapeAtCells,
     keep, keepMove, writeMove, scanLeftToSentinelRestart,
     scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write,
     Tape.move, Tape.moveRight]
 
 theorem run_state170_none_to_state180
@@ -1548,13 +1549,13 @@ theorem run_state170_none_to_state180
   simp [StageInputMarkedScannerDescription, config, tapeAtCells,
     keep, keepMove, writeMove, scanLeftToSentinelRestart,
     scanLeftToSentinelHalt,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write,
     Tape.move, Tape.moveRight]
 
 def state160AfterRestoreConfig (w : Word Bool) (stage : Nat) :
-    MachineDescription.Configuration :=
+    Configuration :=
   config 160
     (List.append ((cellsBits w).reverse.map some)
       (finishStartLeft w))
@@ -1577,25 +1578,25 @@ def markedStageNatBits (stage : Nat) : List (Option Bool) :=
   some false :: none :: ((stageNatBits stage).drop 2).map some
 
 def appendBlankStartConfig (w : Word Bool) (stage : Nat) :
-    MachineDescription.Configuration :=
+    Configuration :=
   config 180 [none, some false]
     (List.append ((stageInputSecondBitTailPrefix w).map some)
       (markedStageNatBits stage))
 
 def AppendBlankStart
     (w : Word Bool) (stage : Nat)
-    (cfg : MachineDescription.Configuration) : Prop :=
+    (cfg : Configuration) : Prop :=
   cfg = appendBlankStartConfig w stage
 
 def checkedBoundaryScanConfig (w : Word Bool) (stage : Nat) :
-    MachineDescription.Configuration :=
+    Configuration :=
   state220ScanConfig
     (stageInputSecondBitTail w stage).reverse
     none [some false] [none]
 
 def CheckedBoundaryScanStart
     (w : Word Bool) (stage : Nat)
-    (cfg : MachineDescription.Configuration) : Prop :=
+    (cfg : Configuration) : Prop :=
   cfg = checkedBoundaryScanConfig w stage
 
 theorem run_state120_marking_loop
@@ -1620,7 +1621,7 @@ theorem run_start_cons_marking_loop
   rcases run_state120_marking_loop b rest stage with
     ⟨steps, hloop⟩
   refine ⟨6 + steps, ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     StageInputMarkedScannerDescription.runConfig steps
         (StageInputMarkedScannerDescription.runConfig 6
@@ -1645,7 +1646,7 @@ theorem run_finish_restore_cells
 theorem run_finish_scan_left_to_append
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     exists steps : Nat,
-    exists cfg : MachineDescription.Configuration,
+    exists cfg : Configuration,
       StageInputMarkedScannerDescription.runConfig steps
           (state160AfterRestoreConfig (b :: rest) stage) = cfg ∧
         AppendBlankStart (b :: rest) stage cfg := by
@@ -1665,12 +1666,12 @@ theorem run_finish_scan_left_to_append
     ?_, rfl⟩
   rw [show bits.length + 3 = bits.length + (1 + (1 + 1)) by
     omega]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [hstart]
   rw [run_state160_bits_to_boundary]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state160_none_to_state161]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state161_false_to_state170]
   rw [run_state170_none_to_state180]
   simp [appendBlankStartConfig, markedStageNatBits, bits, scanRight,
@@ -1678,10 +1679,10 @@ theorem run_finish_scan_left_to_append
 
 theorem run_finish_append_blank
     {w : Word Bool} {stage : Nat}
-    {cfg : MachineDescription.Configuration}
+    {cfg : Configuration}
     (hcfg : AppendBlankStart w stage cfg) :
     exists steps : Nat,
-    exists cfg' : MachineDescription.Configuration,
+    exists cfg' : Configuration,
       StageInputMarkedScannerDescription.runConfig steps cfg = cfg' ∧
         CheckedBoundaryScanStart w stage cfg' := by
   let tailPrefix := stageInputSecondBitTailPrefix w
@@ -1692,7 +1693,7 @@ theorem run_finish_append_blank
       tailPrefix.length + 2 + (4 * stage + 5) =
         tailPrefix.length + (1 + (1 + (4 * stage + 5))) by
     omega]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     StageInputMarkedScannerDescription.runConfig
         (1 + (1 + (4 * stage + 5)))
@@ -1710,9 +1711,9 @@ theorem run_finish_append_blank
                 ((stageNatBits stage).drop 2).map some)))) =
       checkedBoundaryScanConfig w stage
   rw [run_state180_bits]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state180_some]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state180_none_cons]
   have hstageBits :
       some false :: some false ::
@@ -1735,7 +1736,7 @@ theorem run_finish_append_blank
 
 theorem run_finish_boundary_to_halt
     {w : Word Bool} {stage : Nat}
-    {cfg : MachineDescription.Configuration}
+    {cfg : Configuration}
     (hcfg : CheckedBoundaryScanStart w stage cfg) :
     exists steps : Nat,
       StageInputMarkedScannerDescription.runConfig steps cfg =
@@ -1746,7 +1747,7 @@ theorem run_finish_boundary_to_halt
       (stageInputSecondBitTail w stage).length + 1 =
         (stageInputSecondBitTail w stage).reverse.length + 1 by
     simp]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     StageInputMarkedScannerDescription.runConfig 1
         (StageInputMarkedScannerDescription.runConfig
@@ -1786,11 +1787,11 @@ theorem run_forward_finish
       restoreSteps + scanSteps + appendSteps + boundarySteps =
         restoreSteps + (scanSteps + (appendSteps + boundarySteps)) by
     omega]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [hrestore]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [hscan]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [hblank]
   exact hhalt
 
@@ -1805,7 +1806,7 @@ theorem run_start_forward_cons
   rcases run_forward_finish b rest stage with
     ⟨finishSteps, hfinish⟩
   refine ⟨markSteps + finishSteps, ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [hmark]
   exact hfinish
 

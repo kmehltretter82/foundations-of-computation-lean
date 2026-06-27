@@ -10,6 +10,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 /-
 The broad dovetail compiler above talks about arbitrary Lean traces.  The
@@ -36,7 +37,7 @@ def PairedRecognizerBoundedDovetailTableRealizes
     forall w : Word Bool, forall b : Bool,
       decider.HaltsWithOutput w [b] <->
         exists limit : Nat,
-          MachineDescription.boundedDovetailOutput
+          boundedDovetailOutput
             accept reject w limit = some [b]
 
 def PairedRecognizerBoundedDovetailTableCompilerConstruction : Prop :=
@@ -49,19 +50,19 @@ def FiniteSourcePairedRecognizerBoundedDovetailTableCompilerConstruction :
   PairedRecognizerBoundedDovetailTableCompilerConstruction
 
 def FixedDescriptionBoundedSimulatorInput
-    (L : MachineDescription.SimulatorLayout) : Word Bool :=
-  MachineDescription.SimulatorLayout.asBoolInput L
+    (L : SimulatorLayout) : Word Bool :=
+  SimulatorLayout.asBoolInput L
 
 def FixedDescriptionBoundedSimulatorOutput
     (D : MachineDescription)
-    (L : MachineDescription.SimulatorLayout) : Word Bool :=
-  MachineDescription.SimulatorLayout.asBoolInput
-    (MachineDescription.SimulatorLayout.run D L.stage L)
+    (L : SimulatorLayout) : Word Bool :=
+  SimulatorLayout.asBoolInput
+    (SimulatorLayout.run D L.stage L)
 
 def FixedDescriptionBoundedSimulatorTableRealizes
     (D simulator : MachineDescription) : Prop :=
   simulator.WellFormed ∧
-    forall L : MachineDescription.SimulatorLayout,
+    forall L : SimulatorLayout,
       simulator.HaltsWithOutput
         (FixedDescriptionBoundedSimulatorInput L)
         (FixedDescriptionBoundedSimulatorOutput D L)
@@ -74,15 +75,15 @@ def FixedDescriptionBoundedSimulatorTableCompilerConstruction : Prop :=
 structure MachineBoundedTraceSearchConstruction : Prop where
   haltsInBool_correct :
     forall D : MachineDescription, forall n : Nat, forall w : Word Bool,
-      MachineDescription.haltsInBool D n w = true <-> D.HaltsIn n w
+      haltsInBool D n w = true <-> D.HaltsIn n w
   hitsByBool_correct :
     forall D : MachineDescription, forall w : Word Bool, forall limit : Nat,
-      MachineDescription.hitsByBool D w limit = true <->
+      hitsByBool D w limit = true <->
         exists n : Nat, n ≤ limit ∧ D.HaltsIn n w
   boundedDovetailOutput_correct :
     forall accept reject : MachineDescription,
       forall w : Word Bool, forall limit : Nat,
-        MachineDescription.boundedDovetailOutput accept reject w limit =
+        boundedDovetailOutput accept reject w limit =
           (DovetailProgram
             (fun w n => accept.HaltsIn n w)
             (fun w n => reject.HaltsIn n w)).run w limit
@@ -90,12 +91,12 @@ structure MachineBoundedTraceSearchConstruction : Prop where
 structure EncodedConfigurationTraceSearchConstruction : Prop where
   checksEncodedRun_canonical :
     forall D : MachineDescription,
-      forall c : MachineDescription.Configuration,
+      forall c : Configuration,
       forall steps : Nat,
-        MachineDescription.checksEncodedRun D
-          (MachineDescription.encodeConfiguration c)
+        checksEncodedRun D
+          (encodeConfiguration c)
           steps
-          (MachineDescription.encodeConfiguration
+          (encodeConfiguration
             (D.runConfig steps c)) = true
 
 structure BoundedTraceSearchConstruction : Prop where
@@ -104,16 +105,16 @@ structure BoundedTraceSearchConstruction : Prop where
 
 theorem machineBoundedTraceSearchConstruction :
     MachineBoundedTraceSearchConstruction where
-  haltsInBool_correct := MachineDescription.haltsInBool_eq_true_iff
-  hitsByBool_correct := MachineDescription.hitsByBool_eq_true_iff
+  haltsInBool_correct := haltsInBool_eq_true_iff
+  hitsByBool_correct := hitsByBool_eq_true_iff
   boundedDovetailOutput_correct :=
-    MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run
+    boundedDovetailOutput_eq_dovetailProgram_run
 
 theorem encodedConfigurationTraceSearchConstruction :
     EncodedConfigurationTraceSearchConstruction where
   checksEncodedRun_canonical :=
     fun D c steps =>
-      MachineDescription.checksEncodedRun_encodeConfiguration D steps c
+      checksEncodedRun_encodeConfiguration D steps c
 
 theorem boundedTraceSearchConstruction :
     BoundedTraceSearchConstruction where
@@ -129,41 +130,41 @@ theorem fixedDescriptionBoundedSimulatorTableRealizes_wellFormed
 theorem fixedDescriptionBoundedSimulatorTableRealizes_output
     {D simulator : MachineDescription}
     (h : FixedDescriptionBoundedSimulatorTableRealizes D simulator)
-    (L : MachineDescription.SimulatorLayout) :
+    (L : SimulatorLayout) :
     simulator.HaltsWithOutput
       (FixedDescriptionBoundedSimulatorInput L)
       (FixedDescriptionBoundedSimulatorOutput D L) :=
   h.right L
 
 theorem fixedDescriptionBoundedSimulatorOutput_run_hit
-    (D : MachineDescription) (L : MachineDescription.SimulatorLayout) :
-    (MachineDescription.SimulatorLayout.run D L.stage L).hit = true <->
+    (D : MachineDescription) (L : SimulatorLayout) :
+    (SimulatorLayout.run D L.stage L).hit = true <->
       L.hit = true ∨
         exists n : Nat, n ≤ L.stage ∧
           (D.runConfig n L.config).state = D.halt :=
-  MachineDescription.SimulatorLayout.run_hit_eq_true_iff D L.stage L
+  SimulatorLayout.run_hit_eq_true_iff D L.stage L
 
 def FixedDescriptionBoundedSimulatorCode
-    (D : MachineDescription) : MachineDescription.TapeCodePrimitive :=
-  MachineDescription.SimulatorLayout.runCodePrimitive D
+    (D : MachineDescription) : TapeCodePrimitive :=
+  SimulatorLayout.runCodePrimitive D
 
 def FixedDescriptionBoundedSimulatorCodeRealizes
     (D : MachineDescription)
-    (P : MachineDescription.TapeCodePrimitive) : Prop :=
-  forall L : MachineDescription.SimulatorLayout,
-    P.transform (MachineDescription.SimulatorLayout.encode L) =
+    (P : TapeCodePrimitive) : Prop :=
+  forall L : SimulatorLayout,
+    P.transform (SimulatorLayout.encode L) =
       some
-        (MachineDescription.SimulatorLayout.encode
-          (MachineDescription.SimulatorLayout.run D L.stage L))
+        (SimulatorLayout.encode
+          (SimulatorLayout.run D L.stage L))
 
 theorem fixedDescriptionBoundedSimulatorCode_encode
-    (D : MachineDescription) (L : MachineDescription.SimulatorLayout) :
+    (D : MachineDescription) (L : SimulatorLayout) :
     (FixedDescriptionBoundedSimulatorCode D).transform
-        (MachineDescription.SimulatorLayout.encode L) =
+        (SimulatorLayout.encode L) =
       some
-        (MachineDescription.SimulatorLayout.encode
-          (MachineDescription.SimulatorLayout.run D L.stage L)) :=
-  MachineDescription.SimulatorLayout.runCodePrimitive_encode D L
+        (SimulatorLayout.encode
+          (SimulatorLayout.run D L.stage L)) :=
+  SimulatorLayout.runCodePrimitive_encode D L
 
 theorem fixedDescriptionBoundedSimulatorCode_realizes
     (D : MachineDescription) :
@@ -172,32 +173,32 @@ theorem fixedDescriptionBoundedSimulatorCode_realizes
   fixedDescriptionBoundedSimulatorCode_encode D
 
 theorem fixedDescriptionBoundedSimulatorCode_boolOutput
-    (D : MachineDescription) (L : MachineDescription.SimulatorLayout) :
-    Option.map MachineDescription.encodeCodeWordAsInput
+    (D : MachineDescription) (L : SimulatorLayout) :
+    Option.map encodeCodeWordAsInput
         ((FixedDescriptionBoundedSimulatorCode D).transform
-          (MachineDescription.SimulatorLayout.encode L)) =
+          (SimulatorLayout.encode L)) =
       some (FixedDescriptionBoundedSimulatorOutput D L) := by
   simp [fixedDescriptionBoundedSimulatorCode_encode,
     FixedDescriptionBoundedSimulatorOutput,
-    MachineDescription.SimulatorLayout.asBoolInput]
+    SimulatorLayout.asBoolInput]
 
 def FixedDescriptionStepCode
-    (D : MachineDescription) : MachineDescription.TapeCodePrimitive :=
-  MachineDescription.stepConfigurationCodePrimitive D
+    (D : MachineDescription) : TapeCodePrimitive :=
+  stepConfigurationCodePrimitive D
 
 def FixedDescriptionStepCodeRealizes
     (D : MachineDescription)
-    (P : MachineDescription.TapeCodePrimitive) : Prop :=
-  forall c : MachineDescription.Configuration,
-    P.transform (MachineDescription.encodeConfiguration c) =
-      some (MachineDescription.encodeConfiguration (D.runConfig 1 c))
+    (P : TapeCodePrimitive) : Prop :=
+  forall c : Configuration,
+    P.transform (encodeConfiguration c) =
+      some (encodeConfiguration (D.runConfig 1 c))
 
 theorem fixedDescriptionStepCode_encode
-    (D : MachineDescription) (c : MachineDescription.Configuration) :
+    (D : MachineDescription) (c : Configuration) :
     (FixedDescriptionStepCode D).transform
-        (MachineDescription.encodeConfiguration c) =
-      some (MachineDescription.encodeConfiguration (D.runConfig 1 c)) :=
-  MachineDescription.stepConfigurationCodePrimitive_encodeConfiguration D c
+        (encodeConfiguration c) =
+      some (encodeConfiguration (D.runConfig 1 c)) :=
+  stepConfigurationCodePrimitive_encodeConfiguration D c
 
 theorem fixedDescriptionStepCode_realizes
     (D : MachineDescription) :

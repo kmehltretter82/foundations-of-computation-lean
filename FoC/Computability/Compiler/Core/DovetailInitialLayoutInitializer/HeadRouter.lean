@@ -13,6 +13,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
@@ -31,65 +32,65 @@ def AppendInputTapeHeadRouterDescription :
   start := 0
   halt := 31
   transitions :=
-    [ MachineDescription.transition
+    [ transition
         0 (some false) none Direction.right 1
-    , MachineDescription.transition
+    , transition
         1 (some false) (some false) Direction.right 2
-    , MachineDescription.transition
+    , transition
         2 (some false) (some false) Direction.right 3
-    , MachineDescription.transition
+    , transition
         3 (some true) (some true) Direction.right 4
-    , MachineDescription.transition
+    , transition
         4 (some false) (some false) Direction.right 5
-    , MachineDescription.transition
+    , transition
         5 (some false) (some false) Direction.right 6
-    , MachineDescription.transition
+    , transition
         6 (some true) (some true) Direction.right 7
-    , MachineDescription.transition
+    , transition
         7 (some true) (some true) Direction.left 20
-    , MachineDescription.transition
+    , transition
         7 (some false) (some false) Direction.right 8
-    , MachineDescription.transition
+    , transition
         8 (some false) (some false) Direction.right 9
-    , MachineDescription.transition
+    , transition
         9 (some false) (some false) Direction.right 10
-    , MachineDescription.transition
+    , transition
         10 (some true) (some true) Direction.right 11
-    , MachineDescription.transition
+    , transition
         11 (some false) (some false) Direction.right 8
-    , MachineDescription.transition
+    , transition
         11 (some true) (some true) Direction.right 12
-    , MachineDescription.transition
+    , transition
         12 (some false) (some false) Direction.right 13
-    , MachineDescription.transition
+    , transition
         13 (some true) (some true) Direction.right 14
-    , MachineDescription.transition
+    , transition
         14 (some false) (some false) Direction.left 21
-    , MachineDescription.transition
+    , transition
         14 (some true) (some true) Direction.left 22
-    , MachineDescription.transition
+    , transition
         20 (some false) (some false) Direction.left 20
-    , MachineDescription.transition
+    , transition
         20 (some true) (some true) Direction.left 20
-    , MachineDescription.transition
+    , transition
         20 none none Direction.right 31
-    , MachineDescription.transition
+    , transition
         21 (some false) (some false) Direction.left 21
-    , MachineDescription.transition
+    , transition
         21 (some true) (some true) Direction.left 21
-    , MachineDescription.transition
+    , transition
         21 none (some false) Direction.right 31
-    , MachineDescription.transition
+    , transition
         22 (some false) (some false) Direction.left 22
-    , MachineDescription.transition
+    , transition
         22 (some true) (some true) Direction.left 22
-    , MachineDescription.transition
+    , transition
         22 none (some true) Direction.right 31
-    , MachineDescription.transition
+    , transition
         23 (some false) none Direction.right 31
-    , MachineDescription.transition
+    , transition
         24 (some false) (some false) Direction.right 31
-    , MachineDescription.transition
+    , transition
         25 (some false) (some true) Direction.right 31
     ]
 
@@ -135,26 +136,26 @@ theorem appendInputTapeHeadRouterDescription_run_return20
       cases current <;>
         simp [AppendInputTapeHeadRouterDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, Tape.moveRight]
   | cons bit rest ih =>
       cases current
-      · simpa [MachineDescription.runConfig, config,
+      · simpa [runConfig, config,
           tapeAtCells,
           AppendInputTapeHeadRouterDescription,
-          MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, List.append_assoc] using
           ih bit (some false :: right)
-      · simpa [MachineDescription.runConfig, config,
+      · simpa [runConfig, config,
           tapeAtCells,
           AppendInputTapeHeadRouterDescription,
-          MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, List.append_assoc] using
           ih bit (some true :: right)
 theorem appendInputTapeHeadRouterDescription_run_return21
@@ -175,26 +176,26 @@ theorem appendInputTapeHeadRouterDescription_run_return21
       cases current <;>
         simp [AppendInputTapeHeadRouterDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, Tape.moveRight]
   | cons bit rest ih =>
       cases current
-      · simpa [MachineDescription.runConfig, config,
+      · simpa [runConfig, config,
           tapeAtCells,
           AppendInputTapeHeadRouterDescription,
-          MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, List.append_assoc] using
           ih bit (some false :: right)
-      · simpa [MachineDescription.runConfig, config,
+      · simpa [runConfig, config,
           tapeAtCells,
           AppendInputTapeHeadRouterDescription,
-          MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, List.append_assoc] using
           ih bit (some true :: right)
 theorem appendInputTapeHeadRouterDescription_run_return22
@@ -215,26 +216,26 @@ theorem appendInputTapeHeadRouterDescription_run_return22
       cases current <;>
         simp [AppendInputTapeHeadRouterDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, Tape.moveRight]
   | cons bit rest ih =>
       cases current
-      · simpa [MachineDescription.runConfig, config,
+      · simpa [runConfig, config,
           tapeAtCells,
           AppendInputTapeHeadRouterDescription,
-          MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, List.append_assoc] using
           ih bit (some false :: right)
-      · simpa [MachineDescription.runConfig, config,
+      · simpa [runConfig, config,
           tapeAtCells,
           AppendInputTapeHeadRouterDescription,
-          MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, List.append_assoc] using
           ih bit (some true :: right)
 
@@ -270,15 +271,15 @@ theorem appendInputTapeHeadRouterDescription_run_state8_false
         simp [nextBefore,
           AppendInputTapeHeadRouterDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, Tape.moveRight]
       rw [show beforeRevBits.length + 8 * 0 + 15 =
         7 + (nextBefore.length + 3) by
           simp [nextBefore]
           omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [hprefix]
       simpa [nextBefore,
         List.map_append, List.reverse_append, List.append_assoc] using
@@ -301,9 +302,9 @@ theorem appendInputTapeHeadRouterDescription_run_state8_false
         simp [nextBefore,
           AppendInputTapeHeadRouterDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveRight, List.map_append]
         cases
           List.map some (natBits n) ++
@@ -314,7 +315,7 @@ theorem appendInputTapeHeadRouterDescription_run_state8_false
         4 + (nextBefore.length + 8 * n + 15) by
           simp [nextBefore]
           omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [hprefix]
       simpa [nextBefore,
         List.map_append, List.reverse_append, List.append_assoc,
@@ -353,15 +354,15 @@ theorem appendInputTapeHeadRouterDescription_run_state8_true
         simp [nextBefore,
           AppendInputTapeHeadRouterDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, Tape.moveRight]
       rw [show beforeRevBits.length + 8 * 0 + 15 =
         7 + (nextBefore.length + 3) by
           simp [nextBefore]
           omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [hprefix]
       simpa [nextBefore,
         List.map_append, List.reverse_append, List.append_assoc] using
@@ -384,9 +385,9 @@ theorem appendInputTapeHeadRouterDescription_run_state8_true
         simp [nextBefore,
           AppendInputTapeHeadRouterDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveRight, List.map_append]
         cases
           List.map some (natBits n) ++
@@ -397,7 +398,7 @@ theorem appendInputTapeHeadRouterDescription_run_state8_true
         4 + (nextBefore.length + 8 * n + 15) by
           simp [nextBefore]
           omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [hprefix]
       simpa [nextBefore,
         List.map_append, List.reverse_append, List.append_assoc,
@@ -451,20 +452,20 @@ theorem appendInputTapeHeadRouterDescription_spec :
     refine ⟨15, ?_⟩
     simp [appendInputTapeHeadRouterTaggedTape,
       stageInputBits, PairedRecognizerDovetailStageInputCode,
-      MachineDescription.DovetailLayout.stageInputCode,
-      MachineDescription.DovetailLayout.stageInputCodeAppend,
-      MachineDescription.encodeBoolWordAppend,
-      MachineDescription.encodeCellListAppend,
-      MachineDescription.encodeNatAppend,
-      MachineDescription.encodeNat,
-      MachineDescription.encodeCellsAppend,
-      MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput,
+      DovetailLayout.stageInputCode,
+      DovetailLayout.stageInputCodeAppend,
+      encodeBoolWordAppend,
+      encodeCellListAppend,
+      encodeNatAppend,
+      encodeNat,
+      encodeCellsAppend,
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput,
       AppendInputTapeHeadRouterDescription,
       tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveLeft, Tape.moveRight]
   · intro b rest stage suffixBits
     cases b
@@ -472,18 +473,18 @@ theorem appendInputTapeHeadRouterDescription_spec :
         [false, true, false, false, true, false]
       let tailBits : Word Bool :=
         List.append
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.encodeCellsAppend (rest.map some)
-              (MachineDescription.encodeNatAppend stage [])))
+          (encodeCodeWordAsInput
+            (encodeCellsAppend (rest.map some)
+              (encodeNatAppend stage [])))
           suffixBits
       let rawCells : List (Option Bool) :=
         List.append
           (List.map some
-            (MachineDescription.encodeCodeWordAsInput
-              (List.append (MachineDescription.encodeNat rest.length)
+            (encodeCodeWordAsInput
+              (List.append (encodeNat rest.length)
                 (MachineCodeSymbol.zero ::
-                  MachineDescription.encodeCellsAppend (rest.map some)
-                    (MachineDescription.encodeNat stage)))))
+                  encodeCellsAppend (rest.map some)
+                    (encodeNat stage)))))
           (List.map some suffixBits)
       refine ⟨8 * rest.length + 29, ?_⟩
       have hprefix :
@@ -501,45 +502,45 @@ theorem appendInputTapeHeadRouterDescription_spec :
               rawCells := by
         simp [beforeRevBits, rawCells,
           stageInputBits, PairedRecognizerDovetailStageInputCode,
-          MachineDescription.DovetailLayout.stageInputCode,
-          MachineDescription.DovetailLayout.stageInputCodeAppend,
-          MachineDescription.encodeBoolWordAppend,
-          MachineDescription.encodeCellListAppend,
-          MachineDescription.encodeNatAppend,
-          MachineDescription.encodeNat,
-          MachineDescription.encodeCellsAppend,
-          MachineDescription.encodeCellAppend,
-          MachineDescription.encodeCell,
+          DovetailLayout.stageInputCode,
+          DovetailLayout.stageInputCodeAppend,
+          encodeBoolWordAppend,
+          encodeCellListAppend,
+          encodeNatAppend,
+          encodeNat,
+          encodeCellsAppend,
+          encodeCellAppend,
+          encodeCell,
           AppendInputTapeHeadRouterDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveRight, List.map_append]
         cases
           (List.map some
-            (MachineDescription.encodeCodeWordAsInput
-              (List.append (MachineDescription.encodeNat rest.length)
+            (encodeCodeWordAsInput
+              (List.append (encodeNat rest.length)
                 (MachineCodeSymbol.zero ::
-                  MachineDescription.encodeCellsAppend (rest.map some)
-                    (MachineDescription.encodeNat stage)))) ++
+                  encodeCellsAppend (rest.map some)
+                    (encodeNat stage)))) ++
             List.map some suffixBits) <;>
           rfl
       have hcells :
           rawCells =
             ((List.append (natBits rest.length)
               (false :: true :: false :: true :: tailBits)).map some) := by
-        simpa [rawCells, tailBits, MachineDescription.encodeNatAppend,
+        simpa [rawCells, tailBits, encodeNatAppend,
           List.map_append, List.append_assoc] using
           natBits_map_append_cell_false rest.length
-            (MachineDescription.encodeCellsAppend (rest.map some)
-              (MachineDescription.encodeNat stage))
+            (encodeCellsAppend (rest.map some)
+              (encodeNat stage))
             suffixBits
       rw [show 8 * rest.length + 29 =
         8 + (beforeRevBits.length + 8 * rest.length + 15) by
           simp [beforeRevBits]
           omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [hprefix]
       have hscan :=
         appendInputTapeHeadRouterDescription_run_state8_false
@@ -554,33 +555,33 @@ theorem appendInputTapeHeadRouterDescription_spec :
       simpa [beforeRevBits, rawCells, htailRaw,
         appendInputTapeHeadRouterTaggedTape,
         stageInputBits, PairedRecognizerDovetailStageInputCode,
-        MachineDescription.DovetailLayout.stageInputCode,
-        MachineDescription.DovetailLayout.stageInputCodeAppend,
-        MachineDescription.encodeBoolWordAppend,
-        MachineDescription.encodeCellListAppend,
-        MachineDescription.encodeNatAppend,
-        MachineDescription.encodeNat,
-        MachineDescription.encodeCellsAppend,
-        MachineDescription.encodeCellAppend,
-        MachineDescription.encodeCell,
+        DovetailLayout.stageInputCode,
+        DovetailLayout.stageInputCodeAppend,
+        encodeBoolWordAppend,
+        encodeCellListAppend,
+        encodeNatAppend,
+        encodeNat,
+        encodeCellsAppend,
+        encodeCellAppend,
+        encodeCell,
         List.map_append, List.reverse_append, List.append_assoc] using
         hscan
     · let beforeRevBits : Word Bool :=
         [false, true, false, false, true, false]
       let tailBits : Word Bool :=
         List.append
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.encodeCellsAppend (rest.map some)
-              (MachineDescription.encodeNatAppend stage [])))
+          (encodeCodeWordAsInput
+            (encodeCellsAppend (rest.map some)
+              (encodeNatAppend stage [])))
           suffixBits
       let rawCells : List (Option Bool) :=
         List.append
           (List.map some
-            (MachineDescription.encodeCodeWordAsInput
-              (List.append (MachineDescription.encodeNat rest.length)
+            (encodeCodeWordAsInput
+              (List.append (encodeNat rest.length)
                 (MachineCodeSymbol.one ::
-                  MachineDescription.encodeCellsAppend (rest.map some)
-                    (MachineDescription.encodeNat stage)))))
+                  encodeCellsAppend (rest.map some)
+                    (encodeNat stage)))))
           (List.map some suffixBits)
       refine ⟨8 * rest.length + 29, ?_⟩
       have hprefix :
@@ -598,45 +599,45 @@ theorem appendInputTapeHeadRouterDescription_spec :
               rawCells := by
         simp [beforeRevBits, rawCells,
           stageInputBits, PairedRecognizerDovetailStageInputCode,
-          MachineDescription.DovetailLayout.stageInputCode,
-          MachineDescription.DovetailLayout.stageInputCodeAppend,
-          MachineDescription.encodeBoolWordAppend,
-          MachineDescription.encodeCellListAppend,
-          MachineDescription.encodeNatAppend,
-          MachineDescription.encodeNat,
-          MachineDescription.encodeCellsAppend,
-          MachineDescription.encodeCellAppend,
-          MachineDescription.encodeCell,
+          DovetailLayout.stageInputCode,
+          DovetailLayout.stageInputCodeAppend,
+          encodeBoolWordAppend,
+          encodeCellListAppend,
+          encodeNatAppend,
+          encodeNat,
+          encodeCellsAppend,
+          encodeCellAppend,
+          encodeCell,
           AppendInputTapeHeadRouterDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveRight, List.map_append]
         cases
           (List.map some
-            (MachineDescription.encodeCodeWordAsInput
-              (List.append (MachineDescription.encodeNat rest.length)
+            (encodeCodeWordAsInput
+              (List.append (encodeNat rest.length)
                 (MachineCodeSymbol.one ::
-                  MachineDescription.encodeCellsAppend (rest.map some)
-                    (MachineDescription.encodeNat stage)))) ++
+                  encodeCellsAppend (rest.map some)
+                    (encodeNat stage)))) ++
             List.map some suffixBits) <;>
           rfl
       have hcells :
           rawCells =
             ((List.append (natBits rest.length)
               (false :: true :: true :: false :: tailBits)).map some) := by
-        simpa [rawCells, tailBits, MachineDescription.encodeNatAppend,
+        simpa [rawCells, tailBits, encodeNatAppend,
           List.map_append, List.append_assoc] using
           natBits_map_append_cell_true rest.length
-            (MachineDescription.encodeCellsAppend (rest.map some)
-              (MachineDescription.encodeNat stage))
+            (encodeCellsAppend (rest.map some)
+              (encodeNat stage))
             suffixBits
       rw [show 8 * rest.length + 29 =
         8 + (beforeRevBits.length + 8 * rest.length + 15) by
           simp [beforeRevBits]
           omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [hprefix]
       have hscan :=
         appendInputTapeHeadRouterDescription_run_state8_true
@@ -651,15 +652,15 @@ theorem appendInputTapeHeadRouterDescription_spec :
       simpa [beforeRevBits, rawCells, htailRaw,
         appendInputTapeHeadRouterTaggedTape,
         stageInputBits, PairedRecognizerDovetailStageInputCode,
-        MachineDescription.DovetailLayout.stageInputCode,
-        MachineDescription.DovetailLayout.stageInputCodeAppend,
-        MachineDescription.encodeBoolWordAppend,
-        MachineDescription.encodeCellListAppend,
-        MachineDescription.encodeNatAppend,
-        MachineDescription.encodeNat,
-        MachineDescription.encodeCellsAppend,
-        MachineDescription.encodeCellAppend,
-        MachineDescription.encodeCell,
+        DovetailLayout.stageInputCode,
+        DovetailLayout.stageInputCodeAppend,
+        encodeBoolWordAppend,
+        encodeCellListAppend,
+        encodeNatAppend,
+        encodeNat,
+        encodeCellsAppend,
+        encodeCellAppend,
+        encodeCell,
         List.map_append, List.reverse_append, List.append_assoc] using
         hscan
 
@@ -773,7 +774,7 @@ def AppendInputTapeHeadDispatcherConstruction :
 
 def AppendInputTapeHeadDispatcherDescription
     (router brancher : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine router brancher Direction.left
+  seqSubroutine router brancher Direction.left
 theorem appendInputTapeHeadDispatcherSpec_of_router_brancher
     {router brancher : MachineDescription}
     (hrouter : AppendInputTapeHeadRouterSpec router)
@@ -783,7 +784,7 @@ theorem appendInputTapeHeadDispatcherSpec_of_router_brancher
       (AppendInputTapeHeadDispatcherDescription
         router brancher) := by
   constructor
-  · exact MachineDescription.seqSubroutine_subroutineReady
+  · exact seqSubroutine_subroutineReady
       hrouter.left hbrancher.left
   constructor
   · intro stage suffixBits
@@ -825,7 +826,7 @@ theorem appendInputTapeHeadDispatcherSpec_of_router_brancher
       rcases hbrancher.right.left stage suffixBits with ⟨nB, hB⟩
       exact ⟨nB, by simpa [B, Tmid] using hB⟩
     rcases
-        MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+        seqSubroutine_reaches_of_runConfig_eq
           (A := A) (B := B) (handoffMove := Direction.left)
           hAready hBready hArun hBReach with
       ⟨n, hn⟩
@@ -871,7 +872,7 @@ theorem appendInputTapeHeadDispatcherSpec_of_router_brancher
       rcases hbrancher.right.right b rest stage suffixBits with ⟨nB, hB⟩
       exact ⟨nB, by simpa [B, Tmid] using hB⟩
     rcases
-        MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+        seqSubroutine_reaches_of_runConfig_eq
           (A := A) (B := B) (handoffMove := Direction.left)
           hAready hBready hArun hBReach with
       ⟨n, hn⟩

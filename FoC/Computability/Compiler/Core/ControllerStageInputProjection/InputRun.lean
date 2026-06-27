@@ -14,6 +14,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace ControllerStageInputProjection
 
@@ -55,7 +56,7 @@ theorem run_input_mark_one
     rw [projectionInputMarkScanBackCellsRev_length]
     simp [projectionInputMarkStepCost]
     omega
-  rw [hcost, MachineDescription.runConfig_add]
+  rw [hcost, runConfig_add]
   change
     Description.runConfig
         (4 + (4 * rest.length +
@@ -86,7 +87,7 @@ theorem run_input_mark_one
             (List.replicate rest.length MachineCodeSymbol.tick))
     rw [show rest.length + 1 = Nat.succ rest.length by omega]
     rfl
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [htickCells]
   change
     Description.runConfig
@@ -112,7 +113,7 @@ theorem run_input_mark_one
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
   rw [run_state100_mark_tick]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [projectionCodeCells_replicate_tick]
   change
     Description.runConfig
@@ -137,7 +138,7 @@ theorem run_input_mark_one
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
   rw [run_state120_ticks]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 * marked.length +
@@ -161,7 +162,7 @@ theorem run_input_mark_one
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
   rw [run_state120_done]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length + 7))
@@ -184,7 +185,7 @@ theorem run_input_mark_one
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
   rw [run_state130_marked_payload]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         ((projectionInputMarkScanBackCellsRev marked rest b).length + 7)
@@ -291,13 +292,13 @@ theorem run_input_finish_marked_suffix
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
           (projectionBoolWordWorkCells marked []
-            (MachineDescription.encodeNatAppend stage suffix))) =
+            (encodeNatAppend stage suffix))) =
       projectionConfig 200
         (List.append
-          (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
+          (projectionCodeCells (encodeBoolWord marked)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (projectionCodeCells
-          (MachineDescription.encodeNatAppend stage suffix)) := by
+          (encodeNatAppend stage suffix)) := by
   have hcost :
       24 * marked.length + 24 =
         4 * marked.length +
@@ -308,12 +309,12 @@ theorem run_input_finish_marked_suffix
     omega
   have hnil :
       projectionCodeCells ([] : Word MachineCodeSymbol) = [] := rfl
-  rw [hcost, MachineDescription.runConfig_add]
+  rw [hcost, runConfig_add]
   simp only [projectionBoolWordWorkCells]
   rw [projectionCodeCells_encodeNatAppend_cons_cons_suffix]
   rw [run_state100_marked_ticks]
   simp [List.length_nil, hnil, projectionBoolPayloadCells]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 * marked.length +
@@ -331,14 +332,14 @@ theorem run_input_finish_marked_suffix
                   projectionInputFinishSuffixTailFor stage suffix))))) =
       projectionConfig 200
         (List.append
-          (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
+          (projectionCodeCells (encodeBoolWord marked)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false ::
           projectionInputFinishSuffixTailFor stage suffix)
   rw [run_state100_done]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state150_marked_payload]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         ((projectionInputFinishScanBackCellsRev marked).length + 7 +
@@ -355,7 +356,7 @@ theorem run_input_finish_marked_suffix
               projectionInputFinishSuffixTailFor stage suffix))) =
       projectionConfig 200
         (List.append
-          (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
+          (projectionCodeCells (encodeBoolWord marked)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false ::
           projectionInputFinishSuffixTailFor stage suffix)
@@ -366,7 +367,7 @@ theorem run_input_finish_marked_suffix
         ((projectionInputFinishScanBackCellsRev marked).length + 7) +
           (4 * marked.length + (4 + (4 * marked.length + 2))) by
     omega,
-    MachineDescription.runConfig_add]
+    runConfig_add]
   rw [show
       projectionConfig 160
           (List.append (projectionMarkedBoolPayloadCells marked).reverse
@@ -388,7 +389,7 @@ theorem run_input_finish_marked_suffix
     (hcount := projectionInputFinishScanBackCellsRev_scanCountFold marked)]
   simp [projectionInputFinishScanBackCellsRev, List.reverse_append,
     List.append_assoc]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 + (4 * marked.length + 2))
@@ -405,14 +406,14 @@ theorem run_input_finish_marked_suffix
                     projectionInputFinishSuffixTailFor stage suffix)))))) =
       projectionConfig 200
         (List.append
-          (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
+          (projectionCodeCells (encodeBoolWord marked)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false ::
           projectionInputFinishSuffixTailFor stage suffix)
   rw [run_state170_marked_ticks]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state170_done]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state180_marked_payload]
   rw [run_state180_to_200]
   simp [projectionCodeCells_encodeBoolWord, List.reverse_append,
@@ -425,15 +426,15 @@ theorem run_input_finish_marked
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
           (projectionBoolWordWorkCells marked []
-            (MachineDescription.encodeNatAppend stage
-              (MachineDescription.encodeBoolWord result)))) =
+            (encodeNatAppend stage
+              (encodeBoolWord result)))) =
       projectionConfig 200
         (List.append
-          (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
+          (projectionCodeCells (encodeBoolWord marked)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (projectionCodeCells
-          (MachineDescription.encodeNatAppend stage
-            (MachineDescription.encodeBoolWord result))) := by
+          (encodeNatAppend stage
+            (encodeBoolWord result))) := by
   have hcost :
       24 * marked.length + 24 =
         4 * marked.length +
@@ -444,12 +445,12 @@ theorem run_input_finish_marked
     omega
   have hnil :
       projectionCodeCells ([] : Word MachineCodeSymbol) = [] := rfl
-  rw [hcost, MachineDescription.runConfig_add]
+  rw [hcost, runConfig_add]
   simp only [projectionBoolWordWorkCells]
   rw [projectionCodeCells_encodeNatAppend_cons_cons]
   rw [run_state100_marked_ticks]
   simp [List.length_nil, hnil, projectionBoolPayloadCells]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 * marked.length +
@@ -467,14 +468,14 @@ theorem run_input_finish_marked
                   projectionInputFinishSuffixTail stage result))))) =
       projectionConfig 200
         (List.append
-          (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
+          (projectionCodeCells (encodeBoolWord marked)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false ::
           projectionInputFinishSuffixTail stage result)
   rw [run_state100_done]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state150_marked_payload]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         ((projectionInputFinishScanBackCellsRev marked).length + 7 +
@@ -491,7 +492,7 @@ theorem run_input_finish_marked
               projectionInputFinishSuffixTail stage result))) =
       projectionConfig 200
         (List.append
-          (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
+          (projectionCodeCells (encodeBoolWord marked)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false ::
           projectionInputFinishSuffixTail stage result)
@@ -502,7 +503,7 @@ theorem run_input_finish_marked
         ((projectionInputFinishScanBackCellsRev marked).length + 7) +
           (4 * marked.length + (4 + (4 * marked.length + 2))) by
     omega,
-    MachineDescription.runConfig_add]
+    runConfig_add]
   rw [show
       projectionConfig 160
           (List.append (projectionMarkedBoolPayloadCells marked).reverse
@@ -524,7 +525,7 @@ theorem run_input_finish_marked
     (hcount := projectionInputFinishScanBackCellsRev_scanCountFold marked)]
   simp [projectionInputFinishScanBackCellsRev, List.reverse_append,
     List.append_assoc]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 + (4 * marked.length + 2))
@@ -541,14 +542,14 @@ theorem run_input_finish_marked
                     projectionInputFinishSuffixTail stage result)))))) =
       projectionConfig 200
         (List.append
-          (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
+          (projectionCodeCells (encodeBoolWord marked)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false ::
           projectionInputFinishSuffixTail stage result)
   rw [run_state170_marked_ticks]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state170_done]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state180_marked_payload]
   rw [run_state180_to_200]
   simp [projectionCodeCells_encodeBoolWord, List.reverse_append,
@@ -564,7 +565,7 @@ theorem run_input_finish_marked_false_false_tail
             (some false :: some false :: tail))) =
       projectionConfig 200
         (List.append
-          (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
+          (projectionCodeCells (encodeBoolWord marked)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false :: tail) := by
   have hcost :
@@ -575,11 +576,11 @@ theorem run_input_finish_marked_false_false_tail
               (4 * marked.length + (4 + (4 * marked.length + 2))))))) := by
     rw [projectionInputFinishScanBackCellsRev_length]
     omega
-  rw [hcost, MachineDescription.runConfig_add]
+  rw [hcost, runConfig_add]
   simp only [projectionResultTailWorkCells]
   rw [run_state100_marked_ticks]
   simp
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 * marked.length +
@@ -596,13 +597,13 @@ theorem run_input_finish_marked_false_false_tail
                 (some false :: some false :: tail))))) =
       projectionConfig 200
         (List.append
-          (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
+          (projectionCodeCells (encodeBoolWord marked)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false :: tail)
   rw [run_state100_done]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state150_marked_payload]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         ((projectionInputFinishScanBackCellsRev marked).length + 7 +
@@ -618,7 +619,7 @@ theorem run_input_finish_marked_false_false_tail
             (some false :: some false :: tail))) =
       projectionConfig 200
         (List.append
-          (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
+          (projectionCodeCells (encodeBoolWord marked)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false :: tail)
   rw [run_state150_to_scan160]
@@ -628,7 +629,7 @@ theorem run_input_finish_marked_false_false_tail
         ((projectionInputFinishScanBackCellsRev marked).length + 7) +
           (4 * marked.length + (4 + (4 * marked.length + 2))) by
     omega,
-    MachineDescription.runConfig_add]
+    runConfig_add]
   rw [show
       projectionConfig 160
           (List.append (projectionMarkedBoolPayloadCells marked).reverse
@@ -649,7 +650,7 @@ theorem run_input_finish_marked_false_false_tail
     (hcount := projectionInputFinishScanBackCellsRev_scanCountFold marked)]
   simp [projectionInputFinishScanBackCellsRev, List.reverse_append,
     List.append_assoc]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 + (4 * marked.length + 2))
@@ -665,13 +666,13 @@ theorem run_input_finish_marked_false_false_tail
                   (some false :: some false :: tail)))))) =
       projectionConfig 200
         (List.append
-          (projectionCodeCells (MachineDescription.encodeBoolWord marked)).reverse
+          (projectionCodeCells (encodeBoolWord marked)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (some false :: some false :: tail)
   rw [run_state170_marked_ticks]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state170_done]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state180_marked_payload]
   rw [run_state180_to_200]
   simp [projectionCodeCells_encodeBoolWord, List.reverse_append,
@@ -695,11 +696,11 @@ theorem run_input_finish_marked_to_state150_tail
   rw [show 8 * marked.length + 4 =
       4 * marked.length + (4 + 4 * marked.length) by
     omega,
-    MachineDescription.runConfig_add]
+    runConfig_add]
   simp only [projectionBoolWordWorkCells]
   rw [run_state100_marked_ticks]
   simp [List.length_nil, projectionBoolPayloadCells]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 * marked.length)
@@ -730,17 +731,17 @@ theorem run_input_bool_word_acc
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
           (projectionBoolWordWorkCells marked rest
-            (MachineDescription.encodeNatAppend stage
-              (MachineDescription.encodeBoolWord result)))) =
+            (encodeNatAppend stage
+              (encodeBoolWord result)))) =
       projectionConfig 200
         (List.append
           (projectionCodeCells
-            (MachineDescription.encodeBoolWord
+            (encodeBoolWord
               (List.append marked rest))).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (projectionCodeCells
-          (MachineDescription.encodeNatAppend stage
-            (MachineDescription.encodeBoolWord result))) := by
+          (encodeNatAppend stage
+            (encodeBoolWord result))) := by
   induction rest generalizing marked baseLeftRev with
   | nil =>
       simp [projectionInputRemainingCost]
@@ -755,7 +756,7 @@ theorem run_input_bool_word_acc
         simp [projectionInputRemainingCost, projectionInputMarkStepCost,
           Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
         omega
-      rw [hcost, MachineDescription.runConfig_add]
+      rw [hcost, runConfig_add]
       rw [run_input_mark_one]
       rw [ih]
       have hword :
@@ -771,16 +772,16 @@ theorem run_input_bool_word
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
           (projectionCodeCells
-            (MachineDescription.encodeBoolWordAppend w
-              (MachineDescription.encodeNatAppend stage
-                (MachineDescription.encodeBoolWord result))))) =
+            (encodeBoolWordAppend w
+              (encodeNatAppend stage
+                (encodeBoolWord result))))) =
       projectionConfig 200
         (List.append
-          (projectionCodeCells (MachineDescription.encodeBoolWord w)).reverse
+          (projectionCodeCells (encodeBoolWord w)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (projectionCodeCells
-          (MachineDescription.encodeNatAppend stage
-            (MachineDescription.encodeBoolWord result))) := by
+          (encodeNatAppend stage
+            (encodeBoolWord result))) := by
   have h :=
     run_input_bool_word_acc
       ([] : Word Bool) w stage result baseLeftRev
@@ -795,15 +796,15 @@ theorem run_input_bool_word_acc_suffix
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
           (projectionBoolWordWorkCells marked rest
-            (MachineDescription.encodeNatAppend stage suffix))) =
+            (encodeNatAppend stage suffix))) =
       projectionConfig 200
         (List.append
           (projectionCodeCells
-            (MachineDescription.encodeBoolWord
+            (encodeBoolWord
               (List.append marked rest))).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (projectionCodeCells
-          (MachineDescription.encodeNatAppend stage suffix)) := by
+          (encodeNatAppend stage suffix)) := by
   induction rest generalizing marked baseLeftRev with
   | nil =>
       simp [projectionInputRemainingCost]
@@ -818,7 +819,7 @@ theorem run_input_bool_word_acc_suffix
         simp [projectionInputRemainingCost, projectionInputMarkStepCost,
           Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
         omega
-      rw [hcost, MachineDescription.runConfig_add]
+      rw [hcost, runConfig_add]
       rw [run_input_mark_one]
       rw [ih]
       have hword :
@@ -835,14 +836,14 @@ theorem run_input_bool_word_suffix
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
           (projectionCodeCells
-            (MachineDescription.encodeBoolWordAppend w
-              (MachineDescription.encodeNatAppend stage suffix)))) =
+            (encodeBoolWordAppend w
+              (encodeNatAppend stage suffix)))) =
       projectionConfig 200
         (List.append
-          (projectionCodeCells (MachineDescription.encodeBoolWord w)).reverse
+          (projectionCodeCells (encodeBoolWord w)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (projectionCodeCells
-          (MachineDescription.encodeNatAppend stage suffix)) := by
+          (encodeNatAppend stage suffix)) := by
   have h :=
     run_input_bool_word_acc_suffix
       ([] : Word Bool) w stage suffix baseLeftRev
@@ -862,7 +863,7 @@ theorem run_input_bool_word_acc_false_false_suffix
       projectionConfig 200
         (List.append
           (projectionCodeCells
-            (MachineDescription.encodeBoolWord
+            (encodeBoolWord
               (List.append marked rest))).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (projectionCodeCells suffix) := by
@@ -880,7 +881,7 @@ theorem run_input_bool_word_acc_false_false_suffix
         simp [projectionInputRemainingCost, projectionInputMarkStepCost,
           Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
         omega
-      rw [hcost, MachineDescription.runConfig_add]
+      rw [hcost, runConfig_add]
       rw [run_input_mark_one]
       rw [ih (List.append marked [b]) baseLeftRev]
       have hword :
@@ -899,10 +900,10 @@ theorem run_input_bool_word_false_false_suffix
         (projectionConfig 100
           (List.append [none, none, none, none] baseLeftRev)
           (projectionCodeCells
-            (MachineDescription.encodeBoolWordAppend w suffix))) =
+            (encodeBoolWordAppend w suffix))) =
       projectionConfig 200
         (List.append
-          (projectionCodeCells (MachineDescription.encodeBoolWord w)).reverse
+          (projectionCodeCells (encodeBoolWord w)).reverse
           (List.append [none, none, none, none] baseLeftRev))
         (projectionCodeCells suffix) := by
   have h :=

@@ -12,13 +12,14 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
 def StageInputIdentityPrimitive :
-    MachineDescription.TapeCodePrimitive where
+    TapeCodePrimitive where
   transform := fun code =>
-    match MachineDescription.DovetailLayout.decodeStageInputComplete code with
+    match DovetailLayout.decodeStageInputComplete code with
     | some _ => some code
     | none => none
 
@@ -33,7 +34,7 @@ theorem stageInputIdentityPrimitive_transform_eq_some_iff
   · intro h
     unfold StageInputIdentityPrimitive at h
     cases hdecode :
-        MachineDescription.DovetailLayout.decodeStageInputComplete code with
+        DovetailLayout.decodeStageInputComplete code with
     | none =>
         simp [hdecode] at h
     | some parsed =>
@@ -43,15 +44,15 @@ theorem stageInputIdentityPrimitive_transform_eq_some_iff
             cases h
             exact
               ⟨w, stage,
-                MachineDescription.DovetailLayout.decodeStageInputComplete_eq_some_stageInputCode
+                DovetailLayout.decodeStageInputComplete_eq_some_stageInputCode
                   hdecode,
-                MachineDescription.DovetailLayout.decodeStageInputComplete_eq_some_stageInputCode
+                DovetailLayout.decodeStageInputComplete_eq_some_stageInputCode
                   hdecode⟩
   · intro h
     rcases h with ⟨w, stage, rfl, rfl⟩
     simp [StageInputIdentityPrimitive,
       PairedRecognizerDovetailStageInputCode,
-      MachineDescription.DovetailLayout.decodeStageInputComplete_stageInputCode]
+      DovetailLayout.decodeStageInputComplete_stageInputCode]
 
 def stageInputSecondBitTail
     (w : Word Bool) (stage : Nat) : Word Bool :=
@@ -67,22 +68,22 @@ theorem stageInputBits_eq_false_false_tail
   | nil =>
       simp [stageInputSecondBitTail, stageInputBits,
         PairedRecognizerDovetailStageInputCode,
-        MachineDescription.DovetailLayout.stageInputCode,
-        MachineDescription.DovetailLayout.stageInputCodeAppend,
-        MachineDescription.encodeBoolWordAppend,
-        MachineDescription.encodeCellListAppend,
-        MachineDescription.encodeNatAppend,
-        MachineDescription.encodeNat]
-      simp [MachineDescription.encodeCodeWordAsInput, MachineDescription.encodeCodeSymbolAsInput]
+        DovetailLayout.stageInputCode,
+        DovetailLayout.stageInputCodeAppend,
+        encodeBoolWordAppend,
+        encodeCellListAppend,
+        encodeNatAppend,
+        encodeNat]
+      simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput]
   | cons b rest =>
       simp [stageInputSecondBitTail, stageInputBits,
         PairedRecognizerDovetailStageInputCode,
-        MachineDescription.DovetailLayout.stageInputCode,
-        MachineDescription.DovetailLayout.stageInputCodeAppend,
-        MachineDescription.encodeBoolWordAppend,
-        MachineDescription.encodeCellListAppend,
-        MachineDescription.encodeNatAppend,
-        MachineDescription.encodeNat]
+        DovetailLayout.stageInputCode,
+        DovetailLayout.stageInputCodeAppend,
+        encodeBoolWordAppend,
+        encodeCellListAppend,
+        encodeNatAppend,
+        encodeNat]
 
 def stageInputSecondBitMarkedTape
     (w : Word Bool) (stage : Nat) : Tape Bool :=
@@ -132,7 +133,7 @@ def StageInputValidatorClosedSpec
   forall code : Word MachineCodeSymbol,
   forall T : Tape Bool,
     validator.HaltsWithTape
-        (MachineDescription.encodeCodeWordAsInput code) T ->
+        (encodeCodeWordAsInput code) T ->
       exists w : Word Bool,
       exists stage : Nat,
         code = PairedRecognizerDovetailStageInputCode w stage ∧
@@ -162,7 +163,7 @@ def StageInputRecognizerSpec
     (forall code : Word MachineCodeSymbol,
      forall T : Tape Bool,
       recognizer.HaltsWithTape
-          (MachineDescription.encodeCodeWordAsInput code) T ->
+          (encodeCodeWordAsInput code) T ->
         exists w : Word Bool,
         exists stage : Nat,
           code = PairedRecognizerDovetailStageInputCode w stage ∧
@@ -185,26 +186,26 @@ theorem
         stageInputSecondBitMarkedTape,
         stageInputSecondBitTail, stageInputBits,
         PairedRecognizerDovetailStageInputCode,
-        MachineDescription.DovetailLayout.stageInputCode,
-        MachineDescription.DovetailLayout.stageInputCodeAppend,
-        MachineDescription.encodeBoolWordAppend,
-        MachineDescription.encodeCellListAppend,
-        MachineDescription.encodeNatAppend,
-        MachineDescription.encodeNat,
+        DovetailLayout.stageInputCode,
+        DovetailLayout.stageInputCodeAppend,
+        encodeBoolWordAppend,
+        encodeCellListAppend,
+        encodeNatAppend,
+        encodeNat,
         tapeAtCells, Tape.move, Tape.moveRight, Tape.moveLeft]
-      simp [MachineDescription.encodeCodeWordAsInput,
-        MachineDescription.encodeCodeSymbolAsInput]
+      simp [encodeCodeWordAsInput,
+        encodeCodeSymbolAsInput]
   | cons b rest =>
       simp [stageInputSecondBitMarkedHandoffTape,
         stageInputSecondBitMarkedTape,
         stageInputSecondBitTail, stageInputBits,
         PairedRecognizerDovetailStageInputCode,
-        MachineDescription.DovetailLayout.stageInputCode,
-        MachineDescription.DovetailLayout.stageInputCodeAppend,
-        MachineDescription.encodeBoolWordAppend,
-        MachineDescription.encodeCellListAppend,
-        MachineDescription.encodeNatAppend,
-        MachineDescription.encodeNat,
+        DovetailLayout.stageInputCode,
+        DovetailLayout.stageInputCodeAppend,
+        encodeBoolWordAppend,
+        encodeCellListAppend,
+        encodeNatAppend,
+        encodeNat,
         tapeAtCells, Tape.move, Tape.moveRight, Tape.moveLeft]
 
 theorem
@@ -219,26 +220,26 @@ theorem
         stageInputSecondBitMarkedCheckedTape,
         stageInputSecondBitTail, stageInputBits,
         PairedRecognizerDovetailStageInputCode,
-        MachineDescription.DovetailLayout.stageInputCode,
-        MachineDescription.DovetailLayout.stageInputCodeAppend,
-        MachineDescription.encodeBoolWordAppend,
-        MachineDescription.encodeCellListAppend,
-        MachineDescription.encodeNatAppend,
-        MachineDescription.encodeNat,
+        DovetailLayout.stageInputCode,
+        DovetailLayout.stageInputCodeAppend,
+        encodeBoolWordAppend,
+        encodeCellListAppend,
+        encodeNatAppend,
+        encodeNat,
         tapeAtCells, Tape.move, Tape.moveRight, Tape.moveLeft]
-      simp [MachineDescription.encodeCodeWordAsInput,
-        MachineDescription.encodeCodeSymbolAsInput]
+      simp [encodeCodeWordAsInput,
+        encodeCodeSymbolAsInput]
   | cons b rest =>
       simp [stageInputSecondBitMarkedCheckedHandoffTape,
         stageInputSecondBitMarkedCheckedTape,
         stageInputSecondBitTail, stageInputBits,
         PairedRecognizerDovetailStageInputCode,
-        MachineDescription.DovetailLayout.stageInputCode,
-        MachineDescription.DovetailLayout.stageInputCodeAppend,
-        MachineDescription.encodeBoolWordAppend,
-        MachineDescription.encodeCellListAppend,
-        MachineDescription.encodeNatAppend,
-        MachineDescription.encodeNat,
+        DovetailLayout.stageInputCode,
+        DovetailLayout.stageInputCodeAppend,
+        encodeBoolWordAppend,
+        encodeCellListAppend,
+        encodeNatAppend,
+        encodeNat,
         tapeAtCells, Tape.move, Tape.moveRight, Tape.moveLeft]
 
 theorem stageInputCheckedInputTape_move_left_move_right
@@ -258,7 +259,7 @@ def RestoreStageInputSecondBitDescription :
   start := 0
   halt := 1
   transitions :=
-    [ MachineDescription.transition
+    [ transition
         0 none (some false) Direction.left 1 ]
 
 theorem restoreStageInputSecondBitDescription_wellFormed :
@@ -296,9 +297,9 @@ theorem restoreStageInputSecondBitDescription_run
   simp [RestoreStageInputSecondBitDescription,
     stageInputSecondBitMarkedTape,
     stageInputSecondBitTail,
-    tapeAtCells, MachineDescription.runConfig,
-    MachineDescription.stepConfig, MachineDescription.lookupTransition,
-    MachineDescription.Matches, MachineDescription.transition,
+    tapeAtCells, runConfig,
+    stepConfig, lookupTransition,
+    Matches, transition,
     Tape.read, Tape.write, Tape.move, Tape.moveLeft]
   simp [Tape.input]
 
@@ -314,9 +315,9 @@ theorem restoreStageInputSecondBitDescription_run_checked
   rw [stageInputBits_eq_false_false_tail w stage]
   simp [RestoreStageInputSecondBitDescription,
     stageInputSecondBitTail,
-    tapeAtCells, MachineDescription.runConfig,
-    MachineDescription.stepConfig, MachineDescription.lookupTransition,
-    MachineDescription.Matches, MachineDescription.transition,
+    tapeAtCells, runConfig,
+    stepConfig, lookupTransition,
+    Matches, transition,
     Tape.read, Tape.write, Tape.move, Tape.moveLeft]
 
 theorem restoreStageInputSecondBitDescription_run_succ
@@ -327,10 +328,10 @@ theorem restoreStageInputSecondBitDescription_run_succ
       { state := RestoreStageInputSecondBitDescription.halt
         tape := Tape.input (stageInputBits w stage) } := by
   rw [show n + 1 = 1 + n by omega]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [restoreStageInputSecondBitDescription_run]
   exact
-    MachineDescription.runConfig_halt
+    runConfig_halt
       restoreStageInputSecondBitDescription_haltTransitionFree
       (Tape.input (stageInputBits w stage)) n
 
@@ -342,10 +343,10 @@ theorem restoreStageInputSecondBitDescription_run_checked_succ
       { state := RestoreStageInputSecondBitDescription.halt
         tape := stageInputCheckedInputTape w stage } := by
   rw [show n + 1 = 1 + n by omega]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [restoreStageInputSecondBitDescription_run_checked]
   exact
-    MachineDescription.runConfig_halt
+    runConfig_halt
       restoreStageInputSecondBitDescription_haltTransitionFree
       (stageInputCheckedInputTape w stage) n
 
@@ -355,11 +356,11 @@ def MarkStageInputSecondBitDescription :
   start := 0
   halt := 3
   transitions :=
-    [ MachineDescription.transition
+    [ transition
         0 (some false) (some false) Direction.right 1
-    , MachineDescription.transition
+    , transition
         1 (some false) none Direction.left 2
-    , MachineDescription.transition
+    , transition
         2 (some false) (some false) Direction.right 3
     ]
 
@@ -398,10 +399,10 @@ theorem markStageInputSecondBitDescription_run
   simp [MarkStageInputSecondBitDescription,
     stageInputSecondBitMarkedTape,
     stageInputSecondBitTail,
-    tapeAtCells, MachineDescription.initial,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.input, Tape.read, Tape.write,
+    tapeAtCells, initial,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.input, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
 theorem markStageInputSecondBitDescription_run_bits
@@ -413,10 +414,10 @@ theorem markStageInputSecondBitDescription_run_bits
         tape := tapeAtCells [some false]
           (none :: tail.map some) } := by
   simp [MarkStageInputSecondBitDescription,
-    tapeAtCells, MachineDescription.initial,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.input, Tape.read, Tape.write,
+    tapeAtCells, initial,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.input, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
 theorem markStageInputSecondBitDescription_haltsWithTape_inv
@@ -430,7 +431,7 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
           tapeAtCells [some false]
             (none :: tail.map some) := by
   rcases
-      MachineDescription.runConfig_eq_halt_of_haltsWithTape h with
+      runConfig_eq_halt_of_haltsWithTape h with
     ⟨n, hn⟩
   cases bits with
   | nil =>
@@ -440,11 +441,11 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
             none := by
         native_decide
       have hrun :=
-        MachineDescription.runConfig_of_stepConfig_none hstep n
+        runConfig_of_stepConfig_none hstep n
       have hstate : 0 = 3 := by
         simpa [MarkStageInputSecondBitDescription,
-          MachineDescription.initial] using
-          congrArg MachineDescription.Configuration.state
+          initial] using
+          congrArg Configuration.state
             (hrun.symm.trans hn)
       omega
   | cons b rest =>
@@ -454,10 +455,10 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
             cases n with
             | zero =>
               simp [MarkStageInputSecondBitDescription,
-                  MachineDescription.runConfig]
+                  runConfig]
                   at hn
             | succ n =>
-                let c1 : MachineDescription.Configuration :=
+                let c1 : Configuration :=
                   { state := 1
                     tape := tapeAtCells [some false] [] }
                 have hstep0 :
@@ -466,11 +467,11 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                           [false]) =
                       some c1 := by
                   simp [c1, MarkStageInputSecondBitDescription,
-                    tapeAtCells, MachineDescription.initial,
-                    MachineDescription.stepConfig,
-                    MachineDescription.lookupTransition,
-                    MachineDescription.Matches,
-                    MachineDescription.transition, Tape.input, Tape.read,
+                    tapeAtCells, initial,
+                    stepConfig,
+                    lookupTransition,
+                    Matches,
+                    transition, Tape.input, Tape.read,
                     Tape.write, Tape.move, Tape.moveRight]
                 have hrun :
                     MarkStageInputSecondBitDescription.runConfig
@@ -479,18 +480,18 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                           [false]) =
                       MarkStageInputSecondBitDescription.runConfig
                         n c1 := by
-                  simp [MachineDescription.runConfig, hstep0]
+                  simp [runConfig, hstep0]
                 have hstep1 :
                     MarkStageInputSecondBitDescription.stepConfig
                         c1 = none := by
                   simp [c1, MarkStageInputSecondBitDescription,
                     tapeAtCells,
-                    MachineDescription.stepConfig,
-                    MachineDescription.lookupTransition,
-                    MachineDescription.Matches,
-                    MachineDescription.transition, Tape.read]
+                    stepConfig,
+                    lookupTransition,
+                    Matches,
+                    transition, Tape.read]
                 have hstay :=
-                  MachineDescription.runConfig_of_stepConfig_none hstep1 n
+                  runConfig_of_stepConfig_none hstep1 n
                 have hrunFinal :
                     MarkStageInputSecondBitDescription.runConfig
                         (Nat.succ n)
@@ -501,7 +502,7 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                 have hstate : 1 = 3 := by
                   simpa [c1, MarkStageInputSecondBitDescription]
                     using
-                    congrArg MachineDescription.Configuration.state
+                    congrArg Configuration.state
                       (hrunFinal.symm.trans hn)
                 omega
         | cons c tail =>
@@ -510,17 +511,17 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
               cases n with
               | zero =>
                   simp [MarkStageInputSecondBitDescription,
-                    MachineDescription.runConfig]
+                    runConfig]
                     at hn
               | succ n =>
                   cases n with
                   | zero =>
                       simp [MarkStageInputSecondBitDescription,
-                        MachineDescription.runConfig,
-                        MachineDescription.stepConfig,
-                        MachineDescription.lookupTransition,
-                        MachineDescription.Matches,
-                        MachineDescription.transition, Tape.input,
+                        runConfig,
+                        stepConfig,
+                        lookupTransition,
+                        Matches,
+                        transition, Tape.input,
                         Tape.read, Tape.write, Tape.move, Tape.moveRight]
                         at hn
                   | succ n =>
@@ -528,11 +529,11 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                       | zero =>
                           simp [
                             MarkStageInputSecondBitDescription,
-                            MachineDescription.runConfig,
-                            MachineDescription.stepConfig,
-                            MachineDescription.lookupTransition,
-                            MachineDescription.Matches,
-                            MachineDescription.transition, Tape.input,
+                            runConfig,
+                            stepConfig,
+                            lookupTransition,
+                            Matches,
+                            transition, Tape.input,
                             Tape.read, Tape.write, Tape.move,
                             Tape.moveLeft, Tape.moveRight] at hn
                       | succ k =>
@@ -549,16 +550,16 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                             rw [show
                               Nat.succ (Nat.succ (Nat.succ k)) =
                                 3 + k by omega]
-                            rw [MachineDescription.runConfig_add]
+                            rw [runConfig_add]
                             rw [markStageInputSecondBitDescription_run_bits
                               tail]
                             exact
-                              MachineDescription.runConfig_halt
+                              runConfig_halt
                                 markStageInputSecondBitDescription_haltTransitionFree
                                 (tapeAtCells [some false]
                                   (none :: tail.map some)) k
                           let cfgGood :
-                              MachineDescription.Configuration :=
+                              Configuration :=
                             { state :=
                                 MarkStageInputSecondBitDescription.halt,
                               tape :=
@@ -572,15 +573,15 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                             simpa [cfgGood] using hrun.symm.trans hn
                           exact
                             (congrArg
-                              MachineDescription.Configuration.tape
+                              Configuration.tape
                               hcfg).symm
             · cases n with
               | zero =>
                   simp [MarkStageInputSecondBitDescription,
-                    MachineDescription.runConfig]
+                    runConfig]
                     at hn
               | succ n =>
-                  let c1 : MachineDescription.Configuration :=
+                  let c1 : Configuration :=
                     { state := 1
                       tape :=
                         tapeAtCells [some false]
@@ -591,11 +592,11 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                             (false :: true :: tail)) =
                         some c1 := by
                     simp [c1, MarkStageInputSecondBitDescription,
-                      tapeAtCells, MachineDescription.initial,
-                      MachineDescription.stepConfig,
-                      MachineDescription.lookupTransition,
-                      MachineDescription.Matches,
-                      MachineDescription.transition, Tape.input, Tape.read,
+                      tapeAtCells, initial,
+                      stepConfig,
+                      lookupTransition,
+                      Matches,
+                      transition, Tape.input, Tape.read,
                       Tape.write, Tape.move, Tape.moveRight]
                   have hrun :
                       MarkStageInputSecondBitDescription.runConfig
@@ -604,18 +605,18 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                             (false :: true :: tail)) =
                         MarkStageInputSecondBitDescription.runConfig
                           n c1 := by
-                    simp [MachineDescription.runConfig, hstep0]
+                    simp [runConfig, hstep0]
                   have hstep1 :
                       MarkStageInputSecondBitDescription.stepConfig
                           c1 = none := by
                     simp [c1, MarkStageInputSecondBitDescription,
                       tapeAtCells,
-                      MachineDescription.stepConfig,
-                      MachineDescription.lookupTransition,
-                      MachineDescription.Matches,
-                      MachineDescription.transition, Tape.read]
+                      stepConfig,
+                      lookupTransition,
+                      Matches,
+                      transition, Tape.read]
                   have hstay :=
-                    MachineDescription.runConfig_of_stepConfig_none hstep1 n
+                    runConfig_of_stepConfig_none hstep1 n
                   have hrunFinal :
                       MarkStageInputSecondBitDescription.runConfig
                           (Nat.succ n)
@@ -626,7 +627,7 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                   have hstate : 1 = 3 := by
                     simpa [c1, MarkStageInputSecondBitDescription]
                       using
-                      congrArg MachineDescription.Configuration.state
+                      congrArg Configuration.state
                         (hrunFinal.symm.trans hn)
                   omega
       · have hstep :
@@ -635,16 +636,16 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                   (true :: rest)) =
               none := by
           simp [MarkStageInputSecondBitDescription,
-            MachineDescription.initial,
-            MachineDescription.stepConfig,
-            MachineDescription.lookupTransition, MachineDescription.Matches,
-            MachineDescription.transition, Tape.input, Tape.read]
+            initial,
+            stepConfig,
+            lookupTransition, Matches,
+            transition, Tape.input, Tape.read]
         have hrun :=
-          MachineDescription.runConfig_of_stepConfig_none hstep n
+          runConfig_of_stepConfig_none hstep n
         have hstate : 0 = 3 := by
           simpa [MarkStageInputSecondBitDescription,
-            MachineDescription.initial] using
-            congrArg MachineDescription.Configuration.state
+            initial] using
+            congrArg Configuration.state
               (hrun.symm.trans hn)
         omega
 
@@ -665,7 +666,7 @@ def StageInputMarkedScannerSpec
     (forall code : Word MachineCodeSymbol,
      forall Tmark T : Tape Bool,
       MarkStageInputSecondBitDescription.HaltsWithTape
-          (MachineDescription.encodeCodeWordAsInput code) Tmark ->
+          (encodeCodeWordAsInput code) Tmark ->
         (exists steps : Nat,
           scanner.runConfig steps
               { state := scanner.start
@@ -696,7 +697,7 @@ def StageInputMarkedCoreSpec
     (forall code : Word MachineCodeSymbol,
      forall T : Tape Bool,
       markedCore.HaltsWithTape
-          (MachineDescription.encodeCodeWordAsInput code) T ->
+          (encodeCodeWordAsInput code) T ->
         exists w : Word Bool,
         exists stage : Nat,
           code = PairedRecognizerDovetailStageInputCode w stage ∧
@@ -709,14 +710,14 @@ def StageInputMarkedCoreConstruction : Prop :=
 
 def StageInputMarkedCoreDescription
     (scanner : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     MarkStageInputSecondBitDescription scanner Direction.right
 
 theorem stageInputMarkedCoreDescription_subroutineReady
     {scanner : MachineDescription}
     (hscanner : StageInputMarkedScannerSpec scanner) :
     (StageInputMarkedCoreDescription scanner).SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     markStageInputSecondBitDescription_subroutineReady
     hscanner.left
 
@@ -741,7 +742,7 @@ theorem stageInputMarkedCoreSpec_of_markedScanner
             { state := A.start
               tape := Tape.input (stageInputBits w stage) } =
           { state := A.halt, tape := Tmid } := by
-      simpa [A, Tmid, MachineDescription.initial] using
+      simpa [A, Tmid, initial] using
         markStageInputSecondBitDescription_run w stage
     have hBReach :
         exists nB : Nat,
@@ -757,13 +758,13 @@ theorem stageInputMarkedCoreSpec_of_markedScanner
       simpa [B, Tmid,
         stageInputSecondBitMarkedCheckedHandoffTape] using hB
     rcases
-        MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+        seqSubroutine_reaches_of_runConfig_eq
           (A := A) (B := B) (handoffMove := Direction.right)
           hAready hBready hArun hBReach with
       ⟨n, hn⟩
     refine ⟨n, ?_⟩
     simpa [StageInputMarkedCoreDescription, A, B,
-      MachineDescription.initial] using hn
+      initial] using hn
   · intro code T hhalt
     let A := MarkStageInputSecondBitDescription
     let B := scanner
@@ -771,7 +772,7 @@ theorem stageInputMarkedCoreSpec_of_markedScanner
       markStageInputSecondBitDescription_subroutineReady
     have hBready : B.SubroutineReady := hscanner.left
     rcases
-        MachineDescription.seqSubroutine_haltsWithTape_inv
+        seqSubroutine_haltsWithTape_inv
           (A := A) (B := B) (handoffMove := Direction.right)
           hAready hBready hhalt with
       ⟨Tmark, hAhalt, hBReach⟩
@@ -779,14 +780,14 @@ theorem stageInputMarkedCoreSpec_of_markedScanner
 
 def StageInputRecognizerDescription
     (markedCore : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine markedCore
+  seqSubroutine markedCore
     RestoreStageInputSecondBitDescription Direction.left
 
 theorem stageInputRecognizerDescription_subroutineReady
     {markedCore : MachineDescription}
     (hmarkedCore : StageInputMarkedCoreSpec markedCore) :
     (StageInputRecognizerDescription markedCore).SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     hmarkedCore.left
     restoreStageInputSecondBitDescription_subroutineReady
 
@@ -814,7 +815,7 @@ theorem stageInputRecognizerSpec_of_markedCore
             tape :=
               stageInputSecondBitMarkedCheckedHandoffTape
                 w stage } := by
-      simpa [A, MachineDescription.initial] using hA
+      simpa [A, initial] using hA
     have hBReach :
         exists nB : Nat,
           B.runConfig nB
@@ -830,13 +831,13 @@ theorem stageInputRecognizerSpec_of_markedCore
       simpa [B] using
         restoreStageInputSecondBitDescription_run_checked w stage
     rcases
-        MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+        seqSubroutine_reaches_of_runConfig_eq
           (A := A) (B := B) (handoffMove := Direction.left)
           hAready hBready hArun hBReach with
       ⟨n, hn⟩
     refine ⟨n, ?_⟩
     simpa [StageInputRecognizerDescription, A, B,
-      MachineDescription.initial] using hn
+      initial] using hn
   · intro code T hhalt
     let A := markedCore
     let B := RestoreStageInputSecondBitDescription
@@ -844,7 +845,7 @@ theorem stageInputRecognizerSpec_of_markedCore
     have hBready : B.SubroutineReady :=
       restoreStageInputSecondBitDescription_subroutineReady
     rcases
-        MachineDescription.seqSubroutine_haltsWithTape_inv
+        seqSubroutine_haltsWithTape_inv
           (A := A) (B := B) (handoffMove := Direction.left)
           hAready hBready hhalt with
       ⟨Tmid, hAhalt, hBReach⟩
@@ -865,8 +866,8 @@ theorem stageInputRecognizerSpec_of_markedCore
       | zero =>
           have hstate : 0 = 1 := by
             simpa [B, RestoreStageInputSecondBitDescription,
-              MachineDescription.runConfig] using
-              congrArg MachineDescription.Configuration.state hBRunMarked
+              runConfig] using
+              congrArg Configuration.state hBRunMarked
           omega
       | succ nB =>
           have htarget :
@@ -882,39 +883,39 @@ theorem stageInputRecognizerSpec_of_markedCore
                 nB w stage
           have hcfg :
               ({ state := B.halt, tape := T } :
-                  MachineDescription.Configuration) =
+                  Configuration) =
                 { state := B.halt
                   tape :=
                     stageInputCheckedInputTape w stage } :=
             hBRunMarked.symm.trans htarget
-          exact congrArg MachineDescription.Configuration.tape hcfg
+          exact congrArg Configuration.tape hcfg
     exact ⟨w, stage, hcode, hT⟩
 
 theorem exactIdentityDescription_runConfig_from_start
     (n : Nat) (T : Tape Bool) :
-    MachineDescription.ExactIdentityDescription.runConfig n
-        { state := MachineDescription.ExactIdentityDescription.start
+    ExactIdentityDescription.runConfig n
+        { state := ExactIdentityDescription.start
           tape := T } =
-      { state := MachineDescription.ExactIdentityDescription.halt
+      { state := ExactIdentityDescription.halt
         tape := T } := by
   cases n <;>
-    simp [MachineDescription.ExactIdentityDescription,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition]
+    simp [ExactIdentityDescription,
+      runConfig, stepConfig,
+      lookupTransition]
 
 def StageInputIdentityDescription
     (recognizer : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine recognizer
-    MachineDescription.ExactIdentityDescription Direction.right
+  seqSubroutine recognizer
+    ExactIdentityDescription Direction.right
 
 theorem stageInputIdentityDescription_subroutineReady
     {recognizer : MachineDescription}
     (hrecognizer : StageInputRecognizerSpec recognizer) :
     (StageInputIdentityDescription recognizer).SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     hrecognizer.left
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    ⟨exactIdentityDescription_wellFormed,
+      exactIdentityDescription_haltTransitionFree⟩
 
 theorem stageInputIdentityDescription_spec_of_recognizer
     {recognizer : MachineDescription}
@@ -927,18 +928,18 @@ theorem stageInputIdentityDescription_spec_of_recognizer
   constructor
   · intro w stage
     let A := recognizer
-    let B := MachineDescription.ExactIdentityDescription
+    let B := ExactIdentityDescription
     have hAready : A.SubroutineReady := hrecognizer.left
     have hBready : B.SubroutineReady :=
-      ⟨MachineDescription.exactIdentityDescription_wellFormed,
-        MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+      ⟨exactIdentityDescription_wellFormed,
+        exactIdentityDescription_haltTransitionFree⟩
     rcases hrecognizer.right.left w stage with ⟨nA, hA⟩
     have hArun :
         A.runConfig nA
             { state := A.start
               tape :=
                 Tape.input
-                  (MachineDescription.encodeCodeWordAsInput
+                  (encodeCodeWordAsInput
                     (PairedRecognizerDovetailStageInputCode w stage)) } =
           { state := A.halt
             tape := stageInputCheckedInputTape w stage } := by
@@ -954,25 +955,25 @@ theorem stageInputIdentityDescription_spec_of_recognizer
               tape := stageInputCheckedValidatorTape w stage } := by
       refine ⟨0, ?_⟩
       simp [B, stageInputCheckedValidatorTape,
-        MachineDescription.runConfig,
-        MachineDescription.ExactIdentityDescription]
+        runConfig,
+        ExactIdentityDescription]
     rcases
-        MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+        seqSubroutine_reaches_of_runConfig_eq
           (A := A) (B := B) (handoffMove := Direction.right)
           hAready hBready hArun hBReach with
       ⟨n, hn⟩
     refine ⟨n, ?_⟩
     simpa [StageInputIdentityDescription, A, B,
-      MachineDescription.initial, stageInputBits] using hn
+      initial, stageInputBits] using hn
   · intro code T hhalt
     let A := recognizer
-    let B := MachineDescription.ExactIdentityDescription
+    let B := ExactIdentityDescription
     have hAready : A.SubroutineReady := hrecognizer.left
     have hBready : B.SubroutineReady :=
-      ⟨MachineDescription.exactIdentityDescription_wellFormed,
-        MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+      ⟨exactIdentityDescription_wellFormed,
+        exactIdentityDescription_haltTransitionFree⟩
     rcases
-        MachineDescription.seqSubroutine_haltsWithTape_inv
+        seqSubroutine_haltsWithTape_inv
           (A := A) (B := B) (handoffMove := Direction.right)
           hAready hBready hhalt with
       ⟨Tmid, hAhalt, hBReach⟩
@@ -980,15 +981,15 @@ theorem stageInputIdentityDescription_spec_of_recognizer
       ⟨w, stage, hcode, hTmid⟩
     rcases hBReach with ⟨nB, hBRun⟩
     have hBRun' :
-        MachineDescription.Configuration.mk B.halt
+        Configuration.mk B.halt
             (Tape.move Direction.right Tmid) =
-          MachineDescription.Configuration.mk B.halt T := by
+          Configuration.mk B.halt T := by
       simpa [B] using
         ((exactIdentityDescription_runConfig_from_start
             nB (Tape.move Direction.right Tmid)).symm.trans hBRun)
     have hT :
         T = Tape.move Direction.right Tmid := by
-      exact (congrArg MachineDescription.Configuration.tape hBRun').symm
+      exact (congrArg Configuration.tape hBRun').symm
     refine ⟨w, stage, hcode, ?_⟩
     rw [hT, hTmid]
     exact stageInputCheckedInputTape_move_left_move_right w stage

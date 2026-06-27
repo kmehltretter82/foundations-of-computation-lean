@@ -13,43 +13,45 @@ configurations.
 namespace FoC
 namespace Computability
 
+open MachineDescription
+
 namespace CommonGround
 namespace Identity
 
 theorem exactIdentityDescription_subroutineReady :
-    MachineDescription.ExactIdentityDescription.SubroutineReady :=
-  ⟨MachineDescription.exactIdentityDescription_wellFormed,
-    MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    ExactIdentityDescription.SubroutineReady :=
+  ⟨exactIdentityDescription_wellFormed,
+    exactIdentityDescription_haltTransitionFree⟩
 
 theorem exactIdentityDescription_haltsFromTape
     (T : Tape Bool) :
-    MachineDescription.ExactIdentityDescription.HaltsFromTape T T := by
+    ExactIdentityDescription.HaltsFromTape T T := by
   refine ⟨0, ?_⟩
   constructor <;> rfl
 
 theorem exactIdentityDescription_run_from_start
     (T : Tape Bool) :
     exists steps : Nat,
-      MachineDescription.ExactIdentityDescription.runConfig steps
-          { state := MachineDescription.ExactIdentityDescription.start
+      ExactIdentityDescription.runConfig steps
+          { state := ExactIdentityDescription.start
             tape := T } =
-        { state := MachineDescription.ExactIdentityDescription.halt
+        { state := ExactIdentityDescription.halt
           tape := T } := by
   refine ⟨0, ?_⟩
-  simp [MachineDescription.ExactIdentityDescription,
-    MachineDescription.runConfig]
+  simp [ExactIdentityDescription,
+    runConfig]
 
 theorem exactIdentityDescription_runConfig_from_start
     (n : Nat) (T : Tape Bool) :
-    MachineDescription.ExactIdentityDescription.runConfig n
-        { state := MachineDescription.ExactIdentityDescription.start
+    ExactIdentityDescription.runConfig n
+        { state := ExactIdentityDescription.start
           tape := T } =
-      { state := MachineDescription.ExactIdentityDescription.halt
+      { state := ExactIdentityDescription.halt
         tape := T } := by
   cases n <;>
-    simp [MachineDescription.ExactIdentityDescription,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition]
+    simp [ExactIdentityDescription,
+      runConfig, stepConfig,
+      lookupTransition]
 
 end Identity
 end CommonGround

@@ -10,6 +10,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 /-!
 ## Description-backed language recognition and decision
@@ -36,7 +37,7 @@ theorem machineDescriptionAcceptsLanguage_turingAcceptable
   exists fun b : Bool => b
   intro w
   rw [encodeWord_id]
-  exact Iff.trans (MachineDescription.toTuringMachine_haltsOnInput_iff
+  exact Iff.trans (toTuringMachine_haltsOnInput_iff
     h.left w) (h.right w)
 
 theorem machineDescriptionDecidesLanguage_turingDecidable
@@ -53,11 +54,11 @@ theorem machineDescriptionDecidesLanguage_turingDecidable
   constructor
   · intro hw
     rw [encodeWord_id]
-    exact (MachineDescription.toTuringMachine_haltsWithOutput_iff
+    exact (toTuringMachine_haltsWithOutput_iff
       h.left w [true]).mpr ((h.right w).left hw)
   · intro hw
     rw [encodeWord_id]
-    exact (MachineDescription.toTuringMachine_haltsWithOutput_iff
+    exact (toTuringMachine_haltsWithOutput_iff
       h.left w [false]).mpr ((h.right w).right hw)
 
 /-!

@@ -14,6 +14,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace CommonGround
 
@@ -36,7 +37,7 @@ export EncodedRewriters.CanonicalLayouts.Controller
     identityPrimitive_transform_eq_some_iff
     identityClosedHandoffConstruction_of_closedRecognizer )
 
-export MachineDescription.DovetailControllerLayout
+export DovetailControllerLayout
   ( encodeAppend
     decodeComplete
     decodeComplete_encode
@@ -59,122 +60,122 @@ export MachineDescription.DovetailControllerLayout
     continueResultCodePrimitive_encode_eq_some_iff )
 
 def initialSuffix : Word MachineCodeSymbol :=
-  MachineDescription.encodeNatAppend 0
-    (MachineDescription.encodeBoolWordAppend [] [])
+  encodeNatAppend 0
+    (encodeBoolWordAppend [] [])
 
 theorem initialCode_eq_header_boolWordAppend
     (w : Word Bool) :
     PairedRecognizerDovetailControllerInitialCode w =
       MachineCodeSymbol.header ::
-        MachineDescription.encodeBoolWordAppend w initialSuffix := by
+        encodeBoolWordAppend w initialSuffix := by
   rfl
 
 theorem stageInputCode_eq_boolWordNat
-    (C : MachineDescription.DovetailControllerLayout) :
+    (C : DovetailControllerLayout) :
     PairedRecognizerDovetailControllerStageInputCode C =
-      MachineDescription.encodeBoolWordAppend C.input
-        (MachineDescription.encodeNatAppend C.stage []) := by
+      encodeBoolWordAppend C.input
+        (encodeNatAppend C.stage []) := by
   cases C
   rfl
 
 theorem withResult_input
-    (C : MachineDescription.DovetailControllerLayout)
+    (C : DovetailControllerLayout)
     (result : Word Bool) :
-    (MachineDescription.DovetailControllerLayout.withResult C result).input =
+    (DovetailControllerLayout.withResult C result).input =
       C.input := by
   cases C
   rfl
 
 theorem withResult_stage
-    (C : MachineDescription.DovetailControllerLayout)
+    (C : DovetailControllerLayout)
     (result : Word Bool) :
-    (MachineDescription.DovetailControllerLayout.withResult C result).stage =
+    (DovetailControllerLayout.withResult C result).stage =
       C.stage := by
   cases C
   rfl
 
 theorem withResult_result
-    (C : MachineDescription.DovetailControllerLayout)
+    (C : DovetailControllerLayout)
     (result : Word Bool) :
-    (MachineDescription.DovetailControllerLayout.withResult C result).result =
+    (DovetailControllerLayout.withResult C result).result =
       result := by
   cases C
   rfl
 
 theorem stageInputCode_withResult
-    (C : MachineDescription.DovetailControllerLayout)
+    (C : DovetailControllerLayout)
     (result : Word Bool) :
     PairedRecognizerDovetailControllerStageInputCode
-        (MachineDescription.DovetailControllerLayout.withResult C result) =
+        (DovetailControllerLayout.withResult C result) =
       PairedRecognizerDovetailControllerStageInputCode C := by
   cases C
   rfl
 
 theorem encode_eq_header_stageInput_append_result
-    (C : MachineDescription.DovetailControllerLayout) :
-    MachineDescription.DovetailControllerLayout.encode C =
+    (C : DovetailControllerLayout) :
+    DovetailControllerLayout.encode C =
       MachineCodeSymbol.header ::
         List.append (PairedRecognizerDovetailControllerStageInputCode C)
-          (MachineDescription.encodeBoolWordAppend C.result []) :=
+          (encodeBoolWordAppend C.result []) :=
   dovetailControllerLayout_encode_eq_header_stageInput_append_result C
 
 theorem withResult_encode_eq_header_stage_result
-    (C : MachineDescription.DovetailControllerLayout)
+    (C : DovetailControllerLayout)
     (result : Word Bool) :
-    MachineDescription.DovetailControllerLayout.encode
-        (MachineDescription.DovetailControllerLayout.withResult C result) =
+    DovetailControllerLayout.encode
+        (DovetailControllerLayout.withResult C result) =
       MachineCodeSymbol.header ::
-        MachineDescription.encodeBoolWordAppend C.input
-          (MachineDescription.encodeNatAppend C.stage
-            (MachineDescription.encodeBoolWordAppend result [])) := by
+        encodeBoolWordAppend C.input
+          (encodeNatAppend C.stage
+            (encodeBoolWordAppend result [])) := by
   cases C
   rfl
 
 theorem withResult_encode_eq_stageInput_append_result
-    (C : MachineDescription.DovetailControllerLayout)
+    (C : DovetailControllerLayout)
     (result : Word Bool) :
-    MachineDescription.DovetailControllerLayout.encode
-        (MachineDescription.DovetailControllerLayout.withResult C result) =
+    DovetailControllerLayout.encode
+        (DovetailControllerLayout.withResult C result) =
       MachineCodeSymbol.header ::
         List.append (PairedRecognizerDovetailControllerStageInputCode C)
-          (MachineDescription.encodeBoolWordAppend result []) := by
+          (encodeBoolWordAppend result []) := by
   simpa [stageInputCode_withResult, withResult_result] using
     encode_eq_header_stageInput_append_result
-      (MachineDescription.DovetailControllerLayout.withResult C result)
+      (DovetailControllerLayout.withResult C result)
 
 theorem resultContinue_transform_eq_some_iff
     (code out : Word MachineCodeSymbol) :
     PairedRecognizerDovetailControllerResultContinueCode.transform code =
         some out <->
-      exists C : MachineDescription.DovetailControllerLayout,
-        code = MachineDescription.DovetailControllerLayout.encode C ∧
+      exists C : DovetailControllerLayout,
+        code = DovetailControllerLayout.encode C ∧
           PairedRecognizerDovetailControllerRawOutput C.result = none ∧
             out =
-              MachineDescription.DovetailControllerLayout.encode
-                (MachineDescription.DovetailControllerLayout.nextStage C) :=
+              DovetailControllerLayout.encode
+                (DovetailControllerLayout.nextStage C) :=
   pairedRecognizerDovetailControllerResultContinueCode_transform_eq_some_iff
     code out
 
 theorem resultContinue_encode_nextStage_iff
-    {C : MachineDescription.DovetailControllerLayout} :
+    {C : DovetailControllerLayout} :
     PairedRecognizerDovetailControllerResultContinueCode.transform
-        (MachineDescription.DovetailControllerLayout.encode C) =
+        (DovetailControllerLayout.encode C) =
         some
-          (MachineDescription.DovetailControllerLayout.encode
-            (MachineDescription.DovetailControllerLayout.nextStage C)) <->
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.nextStage C)) <->
       PairedRecognizerDovetailControllerRawOutput C.result = none :=
   pairedRecognizerDovetailControllerResultContinueCode_encode_nextStage_iff
 
 theorem resultContinue_encode_eq_some_iff
-    {C : MachineDescription.DovetailControllerLayout}
+    {C : DovetailControllerLayout}
     {outCode : Word MachineCodeSymbol} :
     PairedRecognizerDovetailControllerResultContinueCode.transform
-        (MachineDescription.DovetailControllerLayout.encode C) =
+        (DovetailControllerLayout.encode C) =
         some outCode <->
       PairedRecognizerDovetailControllerRawOutput C.result = none ∧
         outCode =
-          MachineDescription.DovetailControllerLayout.encode
-            (MachineDescription.DovetailControllerLayout.nextStage C) :=
+          DovetailControllerLayout.encode
+            (DovetailControllerLayout.nextStage C) :=
   pairedRecognizerDovetailControllerResultContinueCode_encode_eq_some_iff
 
 end ControllerLayouts
@@ -183,39 +184,39 @@ namespace ControllerInvocation
 
 def StageAttemptWitnessedForwardSpec
     (attempt invoker : MachineDescription) : Prop :=
-  forall C : MachineDescription.DovetailControllerLayout,
+  forall C : DovetailControllerLayout,
   forall result : Word Bool,
   forall n : Nat,
     attempt.HaltsWithOutputIn n
-      (MachineDescription.encodeCodeWordAsInput
+      (encodeCodeWordAsInput
         (PairedRecognizerDovetailControllerStageInputCode C))
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeBoolWord result)) ->
+      (encodeCodeWordAsInput
+        (encodeBoolWord result)) ->
     invoker.HaltsWithOutput
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.DovetailControllerLayout.encode C))
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.DovetailControllerLayout.encode
-          (MachineDescription.DovetailControllerLayout.withResult
+      (encodeCodeWordAsInput
+        (DovetailControllerLayout.encode C))
+      (encodeCodeWordAsInput
+        (DovetailControllerLayout.encode
+          (DovetailControllerLayout.withResult
             C result)))
 
 def StageAttemptFramedClosedSpec
     (attempt invoker : MachineDescription) : Prop :=
-  forall C : MachineDescription.DovetailControllerLayout,
+  forall C : DovetailControllerLayout,
   forall result : Word Bool,
     invoker.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode C))
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode
-            (MachineDescription.DovetailControllerLayout.withResult
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode C))
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.withResult
               C result))) ->
       exists n : Nat,
         attempt.HaltsWithOutputIn n
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (PairedRecognizerDovetailControllerStageInputCode C))
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.encodeBoolWord result))
+          (encodeCodeWordAsInput
+            (encodeBoolWord result))
 
 def StageAttemptWitnessedRealizes
     (attempt invoker : MachineDescription) : Prop :=

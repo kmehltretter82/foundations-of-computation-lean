@@ -13,6 +13,8 @@ import without pulling in the full common-ground wrapper surface.
 namespace FoC
 namespace Computability
 
+open MachineDescription
+
 namespace CommonGround
 namespace SeqComposition
 
@@ -29,12 +31,12 @@ theorem seqSubroutine_runConfig_exists
             { state := B.start, tape := Tape.move handoffMove Tmid } =
           { state := B.halt, tape := Tout }) :
     exists steps : Nat,
-      (MachineDescription.seqSubroutine A B handoffMove).runConfig steps
-          { state := (MachineDescription.seqSubroutine A B handoffMove).start,
+      (seqSubroutine A B handoffMove).runConfig steps
+          { state := (seqSubroutine A B handoffMove).start,
             tape := Tin } =
-        { state := (MachineDescription.seqSubroutine A B handoffMove).halt,
+        { state := (seqSubroutine A B handoffMove).halt,
           tape := Tout } :=
-  MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+  seqSubroutine_reaches_of_runConfig_eq
     (A := A) (B := B) (handoffMove := handoffMove)
     hA hB hArun hBReach
 
@@ -52,7 +54,7 @@ theorem runConfig_reaches_from_move_eq
   ⟨nB, by simpa [hmove] using hrun⟩
 
 theorem runConfig_state_ne_halt_of_later_ne_halt
-    {D : MachineDescription} {c : MachineDescription.Configuration} {n k : Nat}
+    {D : MachineDescription} {c : Configuration} {n k : Nat}
     (hD : D.HaltTransitionFree)
     (hle : n ≤ k)
     (hlater : (D.runConfig k c).state ≠ D.halt) :
@@ -67,13 +69,13 @@ theorem runConfig_state_ne_halt_of_later_ne_halt
         simp [hrunN] at hhalt
         simp [hhalt]
   have hfinal : (D.runConfig k c).state = D.halt := by
-    rw [hk, MachineDescription.runConfig_add, hcfg,
-      MachineDescription.runConfig_halt hD]
+    rw [hk, runConfig_add, hcfg,
+      runConfig_halt hD]
   exact hlater hfinal
 
 theorem runConfig_state_ne_halt_of_reaches_stuck
     {D : MachineDescription}
-    {c stuck : MachineDescription.Configuration} {k n : Nat}
+    {c stuck : Configuration} {k n : Nat}
     (hD : D.HaltTransitionFree)
     (hprefix : D.runConfig k c = stuck)
     (hstep : D.stepConfig stuck = none)
@@ -85,9 +87,9 @@ theorem runConfig_state_ne_halt_of_reaches_stuck
     have hn : n = k + rem := by omega
     have hrun :
         D.runConfig n c = D.runConfig rem stuck := by
-      rw [hn, MachineDescription.runConfig_add, hprefix]
+      rw [hn, runConfig_add, hprefix]
     have hstay :=
-      MachineDescription.runConfig_of_stepConfig_none hstep rem
+      runConfig_of_stepConfig_none hstep rem
     have hstate : stuck.state = D.halt := by
       have hstateEq :
           (D.runConfig n c).state = stuck.state := by
@@ -108,19 +110,19 @@ theorem runConfig_state_ne_halt_of_reaches_stuck
         D.runConfig rem (D.runConfig n c) =
           D.runConfig n c := by
       rw [hrunHalt]
-      exact MachineDescription.runConfig_halt hD
+      exact runConfig_halt hD
         (D.runConfig n c).tape rem
     have hstate : stuck.state = D.halt := by
       have hstuckEq :
           stuck = D.runConfig n c := by
-        rw [← hprefix, hk, MachineDescription.runConfig_add, hstay]
+        rw [← hprefix, hk, runConfig_add, hstay]
       rw [hstuckEq]
       exact hhalt
     exact hstuck hstate
 
 theorem runConfig_state_ne_halt_of_reaches_ne_halt_region
     {D : MachineDescription}
-    {c mid : MachineDescription.Configuration} {k n : Nat}
+    {c mid : Configuration} {k n : Nat}
     (hD : D.HaltTransitionFree)
     (hprefix : D.runConfig k c = mid)
     (hmid : forall m : Nat, (D.runConfig m mid).state ≠ D.halt) :
@@ -132,7 +134,7 @@ theorem runConfig_state_ne_halt_of_reaches_ne_halt_region
           rw [hprefix]
           exact hmid 0)
   · have hn : n = k + (n - k) := by omega
-    rw [hn, MachineDescription.runConfig_add, hprefix]
+    rw [hn, runConfig_add, hprefix]
     exact hmid (n - k)
 
 end SeqComposition

@@ -15,38 +15,39 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 theorem fixedDescriptionBoundedSimulatorPhaseRealizes_standard_tape
     {phase :
-      MachineDescription.SimulatorLayout ->
-        MachineDescription.SimulatorLayout}
-    {fragment : MachineDescription.Fragment}
+      SimulatorLayout ->
+        SimulatorLayout}
+    {fragment : Fragment}
     (h :
       FixedDescriptionBoundedSimulatorPhaseRealizes
         FixedDescriptionBoundedSimulatorLayoutTape
         FixedDescriptionBoundedSimulatorLayoutTape
         phase fragment)
-    (L : MachineDescription.SimulatorLayout) :
+    (L : SimulatorLayout) :
     fragment.toDescription.HaltsWithTape
       (FixedDescriptionBoundedSimulatorInput L)
       (FixedDescriptionBoundedSimulatorLayoutTape (phase L)) := by
   rcases h.right L with ⟨n, hn, _hminimal⟩
   refine ⟨n, ?_⟩
   constructor
-  · simpa [MachineDescription.Fragment.toDescription,
+  · simpa [Fragment.toDescription,
       FixedDescriptionBoundedSimulatorInput,
       FixedDescriptionBoundedSimulatorLayoutTape,
-      MachineDescription.SimulatorLayout.tape] using congrArg
-        (fun c : MachineDescription.Configuration => c.state) hn
-  · simpa [MachineDescription.Fragment.toDescription,
+      SimulatorLayout.tape] using congrArg
+        (fun c : Configuration => c.state) hn
+  · simpa [Fragment.toDescription,
       FixedDescriptionBoundedSimulatorInput,
       FixedDescriptionBoundedSimulatorLayoutTape,
-      MachineDescription.SimulatorLayout.tape] using congrArg
-        (fun c : MachineDescription.Configuration => c.tape) hn
+      SimulatorLayout.tape] using congrArg
+        (fun c : Configuration => c.tape) hn
 
 theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
     {D : MachineDescription}
-    {S : MachineDescription.FixedSimulatorTableSkeleton}
+    {S : FixedSimulatorTableSkeleton}
     {handoffMove : Direction}
     {targets : FixedDescriptionBoundedSimulatorPhaseTargets D}
     (htargets :
@@ -59,7 +60,7 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
         FixedDescriptionBoundedSimulatorLayoutTape
         FixedDescriptionBoundedSimulatorLayoutTape
         (fun L => targets.simulateStep (targets.decodeLayout L))
-        (MachineDescription.Fragment.seq
+        (Fragment.seq
           S.decodeLayout S.simulateStep handoffMove) :=
     fixedDescriptionBoundedSimulatorPhaseRealizes_seq
       (entryTape := FixedDescriptionBoundedSimulatorLayoutTape)
@@ -78,8 +79,8 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
         (fun L =>
           targets.repeatControl
             (targets.simulateStep (targets.decodeLayout L)))
-        (MachineDescription.Fragment.seq
-          (MachineDescription.Fragment.seq
+        (Fragment.seq
+          (Fragment.seq
             S.decodeLayout S.simulateStep handoffMove)
           S.repeatControl handoffMove) :=
     fixedDescriptionBoundedSimulatorPhaseRealizes_seq
@@ -89,7 +90,7 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
       (phaseA := fun L =>
         targets.simulateStep (targets.decodeLayout L))
       (phaseB := targets.repeatControl)
-      (A := MachineDescription.Fragment.seq
+      (A := Fragment.seq
         S.decodeLayout S.simulateStep handoffMove)
       (B := S.repeatControl)
       (handoffMove := handoffMove)
@@ -102,9 +103,9 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
           targets.emitLayout
             (targets.repeatControl
               (targets.simulateStep (targets.decodeLayout L))))
-        (MachineDescription.Fragment.seq
-          (MachineDescription.Fragment.seq
-            (MachineDescription.Fragment.seq
+        (Fragment.seq
+          (Fragment.seq
+            (Fragment.seq
               S.decodeLayout S.simulateStep handoffMove)
             S.repeatControl handoffMove)
           S.emitLayout handoffMove) :=
@@ -116,8 +117,8 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
         targets.repeatControl
           (targets.simulateStep (targets.decodeLayout L)))
       (phaseB := targets.emitLayout)
-      (A := MachineDescription.Fragment.seq
-        (MachineDescription.Fragment.seq
+      (A := Fragment.seq
+        (Fragment.seq
           S.decodeLayout S.simulateStep handoffMove)
         S.repeatControl handoffMove)
       (B := S.emitLayout)
@@ -126,8 +127,8 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
   have hready :
       (S.toDescription handoffMove).SubroutineReady := by
     exact
-      MachineDescription.Fragment.toDescription_subroutineReady
-        (MachineDescription.FixedSimulatorTableSkeleton.toFragment_wellFormed
+      Fragment.toDescription_subroutineReady
+        (FixedSimulatorTableSkeleton.toFragment_wellFormed
           S handoffMove)
   constructor
   · exact hready
@@ -140,10 +141,10 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
         targets.emitLayout
             (targets.repeatControl
               (targets.simulateStep (targets.decodeLayout L))) =
-          MachineDescription.SimulatorLayout.run D L.stage L :=
+          SimulatorLayout.run D L.stage L :=
       targets.pipeline_correct L
-    simpa [MachineDescription.FixedSimulatorTableSkeleton.toDescription,
-      MachineDescription.FixedSimulatorTableSkeleton.toFragment,
+    simpa [FixedSimulatorTableSkeleton.toDescription,
+      FixedSimulatorTableSkeleton.toFragment,
       FixedDescriptionBoundedSimulatorCanonicalOutputTape,
       FixedDescriptionBoundedSimulatorInput,
       FixedDescriptionBoundedSimulatorLayoutTape, hpipeline] using hTape
@@ -165,10 +166,10 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
                 targets.emitLayout
                     (targets.repeatControl
                       (targets.simulateStep (targets.decodeLayout L'))) =
-                  MachineDescription.SimulatorLayout.run D L'.stage L' :=
+                  SimulatorLayout.run D L'.stage L' :=
               targets.pipeline_correct L'
-            simpa [MachineDescription.FixedSimulatorTableSkeleton.toDescription,
-              MachineDescription.FixedSimulatorTableSkeleton.toFragment,
+            simpa [FixedSimulatorTableSkeleton.toDescription,
+              FixedSimulatorTableSkeleton.toFragment,
               FixedDescriptionBoundedSimulatorCanonicalOutputTape,
               FixedDescriptionBoundedSimulatorInput,
               FixedDescriptionBoundedSimulatorLayoutTape, hpipeline] using hTape)

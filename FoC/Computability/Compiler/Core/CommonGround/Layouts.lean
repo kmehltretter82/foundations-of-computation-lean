@@ -13,6 +13,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace CommonGround
 
@@ -121,7 +122,7 @@ export EncodedRewriters.CanonicalLayouts.Simulator
     identityPrimitive_transform_eq_some_iff
     identityClosedHandoffConstruction_of_closedRecognizer )
 
-export MachineDescription.SimulatorLayout
+export SimulatorLayout
   ( encodeAppend
     decodeComplete
     decodeComplete_encode
@@ -135,7 +136,7 @@ export MachineDescription.SimulatorLayout
 
 theorem handoffTape_normalizedOutput (L : Layout) :
     Tape.normalizedOutput (handoffTape L) =
-      MachineDescription.encodeCodeWordAsInput (encode L) := by
+      encodeCodeWordAsInput (encode L) := by
   simpa [bits, encode, LayoutTapes.Bits] using
     LayoutTapes.handoffTape_normalizedOutput encode L
 
@@ -147,23 +148,23 @@ theorem handoffTape_handoff (L : Layout) :
 
 theorem handoffTape_move_left_eq_tape (L : Layout) :
     Tape.move Direction.left (handoffTape L) =
-      Tape.input (MachineDescription.SimulatorLayout.asBoolInput L) := by
+      Tape.input (SimulatorLayout.asBoolInput L) := by
   simpa [handoffTape, inputTape, encode, LayoutTapes.HandoffTape,
-    LayoutTapes.InputTape, MachineDescription.SimulatorLayout.asBoolInput,
+    LayoutTapes.InputTape, SimulatorLayout.asBoolInput,
     tapeCodePrimitiveCodeWordHandoffMove] using
     handoffTape_handoff L
 
 theorem runCodePrimitive_transform_eq_some_cons
     {D : MachineDescription} {code out : Word MachineCodeSymbol}
     (h :
-      (MachineDescription.SimulatorLayout.runCodePrimitive D).transform code =
+      (SimulatorLayout.runCodePrimitive D).transform code =
         some out) :
     exists symbol : MachineCodeSymbol,
     exists tail : Word MachineCodeSymbol,
       out = symbol :: tail := by
-  unfold MachineDescription.SimulatorLayout.runCodePrimitive at h
-  unfold MachineDescription.SimulatorLayout.runCode at h
-  cases hdecode : MachineDescription.SimulatorLayout.decodeComplete code with
+  unfold SimulatorLayout.runCodePrimitive at h
+  unfold SimulatorLayout.runCode at h
+  cases hdecode : SimulatorLayout.decodeComplete code with
   | none =>
       simp [hdecode] at h
   | some L =>
@@ -171,7 +172,7 @@ theorem runCodePrimitive_transform_eq_some_cons
       cases h
       exact
         EncodedRewriters.CanonicalLayouts.Simulator.encode_cons
-          (MachineDescription.SimulatorLayout.run D L.stage L)
+          (SimulatorLayout.run D L.stage L)
 
 end SimulatorLayouts
 

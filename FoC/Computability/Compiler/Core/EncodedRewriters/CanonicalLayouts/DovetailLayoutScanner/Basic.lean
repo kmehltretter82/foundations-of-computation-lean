@@ -6,7 +6,7 @@ set_option doc.verso true
 # Dovetail-layout scanner components
 
 Concrete field scanners for the complete
-{name (full := FoC.Computability.MachineDescription.DovetailLayout)}`MachineDescription.DovetailLayout`
+{name (full := FoC.Computability.MachineDescription.DovetailLayout)}`DovetailLayout`
 recognizer. The cell-list scanner marks length ticks and payload cells, then
 restores the payload before halting just left of the next field.
 -/
@@ -15,6 +15,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace CanonicalLayouts
@@ -27,7 +28,7 @@ open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
 ## Suffix-aware cell-list scanner
 
 The scanner starts with the head on the first bit of an encoded
-{name (full := FoC.Computability.MachineDescription.encodeCellListAppend)}`MachineDescription.encodeCellListAppend`
+{name (full := FoC.Computability.MachineDescription.encodeCellListAppend)}`encodeCellListAppend`
 field.  It accepts arbitrary cell payloads
 ({lit}`blank`, {lit}`zero`, and {lit}`one`) and halts one cell to the left of the first bit of
 the nonempty suffix.  Downstream sequencing uses a right handoff move to place
@@ -117,8 +118,8 @@ theorem cellListSuffix_lookup_150_false :
   native_decide
 
 def cellCodeBits (cell : Option Bool) : Word Bool :=
-  MachineDescription.encodeCodeWordAsInput
-    (MachineDescription.encodeCell cell)
+  encodeCodeWordAsInput
+    (encodeCell cell)
 
 def markedCellCodeBits : Option Bool -> Word Bool
   | none => [true, true, false, false]
@@ -205,126 +206,126 @@ theorem map_some_append (left right : Word Bool) :
 theorem cellCodeBits_eq
     (cell : Option Bool) :
     cellCodeBits cell =
-      MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeCell cell) := rfl
+      encodeCodeWordAsInput
+        (encodeCell cell) := rfl
 
 theorem cellsCodeBits_eq_encodeCellsAppend
     (cells : List (Option Bool)) :
     cellsCodeBits cells =
-      MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeCellsAppend cells []) := by
+      encodeCodeWordAsInput
+        (encodeCellsAppend cells []) := by
   induction cells with
   | nil =>
       rfl
   | cons cell rest ih =>
       change
         List.append (cellCodeBits cell) (cellsCodeBits rest) =
-          MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.encodeCellAppend cell
-              (MachineDescription.encodeCellsAppend rest []))
-      rw [MachineDescription.encodeCellAppend]
-      rw [MachineDescription.encodeCodeWordAsInput_append]
+          encodeCodeWordAsInput
+            (encodeCellAppend cell
+              (encodeCellsAppend rest []))
+      rw [encodeCellAppend]
+      rw [encodeCodeWordAsInput_append]
       rw [ih]
       rfl
 
 theorem cellListBits_eq_encodeCellListAppend
     (cells : List (Option Bool))
     (suffix : Word MachineCodeSymbol) :
-    MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeCellListAppend cells suffix) =
+    encodeCodeWordAsInput
+        (encodeCellListAppend cells suffix) =
       List.append (stageNatBits cells.length)
         (List.append (cellsCodeBits cells)
-          (MachineDescription.encodeCodeWordAsInput suffix)) := by
-  rw [MachineDescription.encodeCellListAppend]
+          (encodeCodeWordAsInput suffix)) := by
+  rw [encodeCellListAppend]
   change
-    MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeNatAppend cells.length
-          (MachineDescription.encodeCellsAppend cells suffix)) =
+    encodeCodeWordAsInput
+        (encodeNatAppend cells.length
+          (encodeCellsAppend cells suffix)) =
       List.append (stageNatBits cells.length)
         (List.append (cellsCodeBits cells)
-          (MachineDescription.encodeCodeWordAsInput suffix))
-  rw [MachineDescription.encodeNatAppend]
-  rw [MachineDescription.encodeCodeWordAsInput_append]
+          (encodeCodeWordAsInput suffix))
+  rw [encodeNatAppend]
+  rw [encodeCodeWordAsInput_append]
   rw [show
-      MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeCellsAppend cells suffix) =
+      encodeCodeWordAsInput
+          (encodeCellsAppend cells suffix) =
         List.append (cellsCodeBits cells)
-          (MachineDescription.encodeCodeWordAsInput suffix) by
+          (encodeCodeWordAsInput suffix) by
     rw [show
-        MachineDescription.encodeCellsAppend cells suffix =
-          List.append (MachineDescription.encodeCellsAppend cells [])
+        encodeCellsAppend cells suffix =
+          List.append (encodeCellsAppend cells [])
             suffix by
       simpa using encodeCellsAppend_append cells [] suffix]
-    rw [MachineDescription.encodeCodeWordAsInput_append]
+    rw [encodeCodeWordAsInput_append]
     rw [← cellsCodeBits_eq_encodeCellsAppend cells]]
   rfl
 
 theorem boolWordBits_eq_encodeBoolWordAppend
     (w : Word Bool) (suffix : Word MachineCodeSymbol) :
-    MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeBoolWordAppend w suffix) =
+    encodeCodeWordAsInput
+        (encodeBoolWordAppend w suffix) =
       List.append (stageNatBits w.length)
         (List.append (cellsCodeBits (w.map some))
-          (MachineDescription.encodeCodeWordAsInput suffix)) := by
-  simpa [MachineDescription.encodeBoolWordAppend] using
+          (encodeCodeWordAsInput suffix)) := by
+  simpa [encodeBoolWordAppend] using
     cellListBits_eq_encodeCellListAppend (w.map some) suffix
 
 theorem cellBits_eq_encodeCellAppend
     (cell : Option Bool) (suffix : Word MachineCodeSymbol) :
-    MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeCellAppend cell suffix) =
+    encodeCodeWordAsInput
+        (encodeCellAppend cell suffix) =
       List.append (cellCodeBits cell)
-        (MachineDescription.encodeCodeWordAsInput suffix) := by
-  rw [MachineDescription.encodeCellAppend]
-  rw [MachineDescription.encodeCodeWordAsInput_append]
+        (encodeCodeWordAsInput suffix) := by
+  rw [encodeCellAppend]
+  rw [encodeCodeWordAsInput_append]
   rfl
 
 theorem boolBits_eq_encodeBoolAppend
     (b : Bool) (suffix : Word MachineCodeSymbol) :
-    MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeBoolAppend b suffix) =
+    encodeCodeWordAsInput
+        (encodeBoolAppend b suffix) =
       List.append (cellCodeBits (some b))
-        (MachineDescription.encodeCodeWordAsInput suffix) := by
-  simpa [MachineDescription.encodeBoolAppend] using
+        (encodeCodeWordAsInput suffix) := by
+  simpa [encodeBoolAppend] using
     cellBits_eq_encodeCellAppend (some b) suffix
 
 theorem tapeBits_eq_encodeTapeAppend
     (T : Tape Bool) (suffix : Word MachineCodeSymbol) :
-    MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeTapeAppend T suffix) =
+    encodeCodeWordAsInput
+        (encodeTapeAppend T suffix) =
       List.append (stageNatBits T.left.length)
         (List.append (cellsCodeBits T.left)
           (List.append (cellCodeBits T.head)
             (List.append (stageNatBits T.right.length)
               (List.append (cellsCodeBits T.right)
-                (MachineDescription.encodeCodeWordAsInput suffix))))) := by
+                (encodeCodeWordAsInput suffix))))) := by
   cases T with
   | mk left head right =>
-      rw [MachineDescription.encodeTapeAppend]
+      rw [encodeTapeAppend]
       rw [cellListBits_eq_encodeCellListAppend]
       rw [cellBits_eq_encodeCellAppend]
       rw [cellListBits_eq_encodeCellListAppend]
 
 theorem configurationBits_eq_encodeConfigurationAppend
-    (cfg : MachineDescription.Configuration)
+    (cfg : Configuration)
     (suffix : Word MachineCodeSymbol) :
-    MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeConfigurationAppend cfg suffix) =
+    encodeCodeWordAsInput
+        (encodeConfigurationAppend cfg suffix) =
       List.append (stageNatBits cfg.state)
         (List.append (stageNatBits cfg.tape.left.length)
           (List.append (cellsCodeBits cfg.tape.left)
             (List.append (cellCodeBits cfg.tape.head)
               (List.append (stageNatBits cfg.tape.right.length)
                 (List.append (cellsCodeBits cfg.tape.right)
-                  (MachineDescription.encodeCodeWordAsInput suffix)))))) := by
+                  (encodeCodeWordAsInput suffix)))))) := by
   cases cfg with
   | mk state tape =>
-      rw [MachineDescription.encodeConfigurationAppend]
+      rw [encodeConfigurationAppend]
       rw [DovetailStagePrefix.natBits_eq_encodeNatAppend]
       rw [tapeBits_eq_encodeTapeAppend]
 
 def transitionPrefixBits : Word Bool :=
-  MachineDescription.encodeCodeSymbolAsInput
+  encodeCodeSymbolAsInput
     MachineCodeSymbol.transition
 
 def cellListFieldBits
@@ -367,19 +368,19 @@ theorem cellCodeBits_cons_false (cell : Option Bool) :
   cases cell with
   | none =>
       refine ⟨[true, false, false], ?_⟩
-      simp [cellCodeBits, MachineDescription.encodeCell,
-        MachineDescription.encodeCodeWordAsInput,
-        MachineDescription.encodeCodeSymbolAsInput]
+      simp [cellCodeBits, encodeCell,
+        encodeCodeWordAsInput,
+        encodeCodeSymbolAsInput]
   | some b =>
       cases b
       · refine ⟨[true, false, true], ?_⟩
-        simp [cellCodeBits, MachineDescription.encodeCell,
-          MachineDescription.encodeCodeWordAsInput,
-          MachineDescription.encodeCodeSymbolAsInput]
+        simp [cellCodeBits, encodeCell,
+          encodeCodeWordAsInput,
+          encodeCodeSymbolAsInput]
       · refine ⟨[true, true, false], ?_⟩
-        simp [cellCodeBits, MachineDescription.encodeCell,
-          MachineDescription.encodeCodeWordAsInput,
-          MachineDescription.encodeCodeSymbolAsInput]
+        simp [cellCodeBits, encodeCell,
+          encodeCodeWordAsInput,
+          encodeCodeSymbolAsInput]
 
 theorem cellFieldBits_cons_false
     (cell : Option Bool) (suffixBits : Word Bool) :
@@ -408,13 +409,13 @@ theorem tapeFieldBits_cons_false
       (cellListFieldBits T.right suffixBits))
 
 def configurationFieldBits
-    (cfg : MachineDescription.Configuration)
+    (cfg : Configuration)
     (suffixBits : Word Bool) : Word Bool :=
   List.append (stageNatBits cfg.state)
     (tapeFieldBits cfg.tape suffixBits)
 
 def dovetailLayoutFieldBits
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (suffixBits : Word Bool) : Word Bool :=
   List.append transitionPrefixBits
     (boolWordFieldBits L.input
@@ -426,43 +427,43 @@ def dovetailLayoutFieldBits
 
 theorem tapeFieldBits_eq_encodeTapeAppend
     (T : Tape Bool) (suffix : Word MachineCodeSymbol) :
-    MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeTapeAppend T suffix) =
+    encodeCodeWordAsInput
+        (encodeTapeAppend T suffix) =
       tapeFieldBits T
-        (MachineDescription.encodeCodeWordAsInput suffix) := by
+        (encodeCodeWordAsInput suffix) := by
   rw [tapeBits_eq_encodeTapeAppend]
   rfl
 
 theorem configurationFieldBits_eq_encodeConfigurationAppend
-    (cfg : MachineDescription.Configuration)
+    (cfg : Configuration)
     (suffix : Word MachineCodeSymbol) :
-    MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeConfigurationAppend cfg suffix) =
+    encodeCodeWordAsInput
+        (encodeConfigurationAppend cfg suffix) =
       configurationFieldBits cfg
-        (MachineDescription.encodeCodeWordAsInput suffix) := by
+        (encodeCodeWordAsInput suffix) := by
   rw [configurationBits_eq_encodeConfigurationAppend]
   rfl
 
 theorem dovetailLayoutFieldBits_eq_encodeAppend
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (suffix : Word MachineCodeSymbol) :
-    MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.DovetailLayout.encodeAppend L suffix) =
+    encodeCodeWordAsInput
+        (DovetailLayout.encodeAppend L suffix) =
       dovetailLayoutFieldBits L
-        (MachineDescription.encodeCodeWordAsInput suffix) := by
-  rw [MachineDescription.DovetailLayout.encodeAppend]
+        (encodeCodeWordAsInput suffix) := by
+  rw [DovetailLayout.encodeAppend]
   change
     List.append transitionPrefixBits
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeBoolWordAppend L.input
-            (MachineDescription.encodeNatAppend L.stage
-              (MachineDescription.encodeConfigurationAppend L.acceptConfig
-                (MachineDescription.encodeConfigurationAppend L.rejectConfig
-                  (MachineDescription.encodeBoolAppend L.acceptHit
-                    (MachineDescription.encodeBoolAppend L.rejectHit
+        (encodeCodeWordAsInput
+          (encodeBoolWordAppend L.input
+            (encodeNatAppend L.stage
+              (encodeConfigurationAppend L.acceptConfig
+                (encodeConfigurationAppend L.rejectConfig
+                  (encodeBoolAppend L.acceptHit
+                    (encodeBoolAppend L.rejectHit
                       suffix))))))) =
       dovetailLayoutFieldBits L
-        (MachineDescription.encodeCodeWordAsInput suffix)
+        (encodeCodeWordAsInput suffix)
   rw [boolWordBits_eq_encodeBoolWordAppend]
   rw [DovetailStagePrefix.natBits_eq_encodeNatAppend]
   rw [configurationFieldBits_eq_encodeConfigurationAppend]
@@ -522,7 +523,7 @@ theorem cellSuffixScannerDescription_subroutineReady :
 
 def cellSuffixHandoffConfigWithBase
     (cell : Option Bool) (baseLeft : List (Option Bool))
-    (suffixBits : Word Bool) : MachineDescription.Configuration :=
+    (suffixBits : Word Bool) : Configuration :=
   { state := CellSuffixScannerDescription.halt
     tape :=
       Tape.move Direction.left
@@ -532,7 +533,7 @@ def cellSuffixHandoffConfigWithBase
 
 def boolSuffixHandoffConfigWithBase
     (b : Bool) (baseLeft : List (Option Bool))
-    (suffixBits : Word Bool) : MachineDescription.Configuration :=
+    (suffixBits : Word Bool) : Configuration :=
   cellSuffixHandoffConfigWithBase (some b) baseLeft suffixBits
 
 theorem run_cellSuffix_raw_to_handoff_withBase
@@ -552,11 +553,11 @@ theorem run_cellSuffix_raw_to_handoff_withBase
         simp [CellSuffixScannerDescription,
           cellSuffixHandoffConfigWithBase, cellCodeBits,
           config, tapeAtCells, keepMove,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, MachineDescription.encodeCell,
-          MachineDescription.encodeCodeWordAsInput,
-          MachineDescription.encodeCodeSymbolAsInput,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, encodeCell,
+          encodeCodeWordAsInput,
+          encodeCodeSymbolAsInput,
           Tape.read, Tape.write, Tape.move, Tape.moveLeft,
           Tape.moveRight]
   | some c =>
@@ -564,11 +565,11 @@ theorem run_cellSuffix_raw_to_handoff_withBase
         simp [CellSuffixScannerDescription,
           cellSuffixHandoffConfigWithBase, cellCodeBits,
           config, tapeAtCells, keepMove,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, MachineDescription.encodeCell,
-          MachineDescription.encodeCodeWordAsInput,
-          MachineDescription.encodeCodeSymbolAsInput,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, encodeCell,
+          encodeCodeWordAsInput,
+          encodeCodeSymbolAsInput,
           Tape.read, Tape.write, Tape.move, Tape.moveLeft,
           Tape.moveRight]
 
@@ -598,26 +599,26 @@ theorem cellSuffixHandoffConfigWithBase_move_right
   unfold cellSuffixHandoffConfigWithBase
   cases cell with
   | none =>
-      simpa [cellCodeBits, MachineDescription.encodeCell,
-        MachineDescription.encodeCodeWordAsInput,
-        MachineDescription.encodeCodeSymbolAsInput, List.append_assoc] using
+      simpa [cellCodeBits, encodeCell,
+        encodeCodeWordAsInput,
+        encodeCodeSymbolAsInput, List.append_assoc] using
         FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
           (some false)
           (some false :: some true :: some false :: baseLeft)
           (some b) (suffixTail.map some)
   | some c =>
       cases c
-      · simpa [cellCodeBits, MachineDescription.encodeCell,
-          MachineDescription.encodeCodeWordAsInput,
-          MachineDescription.encodeCodeSymbolAsInput, List.append_assoc]
+      · simpa [cellCodeBits, encodeCell,
+          encodeCodeWordAsInput,
+          encodeCodeSymbolAsInput, List.append_assoc]
           using
             FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
               (some true)
               (some false :: some true :: some false :: baseLeft)
               (some b) (suffixTail.map some)
-      · simpa [cellCodeBits, MachineDescription.encodeCell,
-          MachineDescription.encodeCodeWordAsInput,
-          MachineDescription.encodeCodeSymbolAsInput, List.append_assoc]
+      · simpa [cellCodeBits, encodeCell,
+          encodeCodeWordAsInput,
+          encodeCodeSymbolAsInput, List.append_assoc]
           using
             FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
               (some false)
@@ -687,7 +688,7 @@ theorem boolSuffixScannerDescription_subroutineReady :
 
 def boolOnlySuffixHandoffConfigWithBase
     (flag : Bool) (baseLeft : List (Option Bool))
-    (suffixBits : Word Bool) : MachineDescription.Configuration :=
+    (suffixBits : Word Bool) : Configuration :=
   { state := BoolSuffixScannerDescription.halt
     tape :=
       Tape.move Direction.left
@@ -711,11 +712,11 @@ theorem run_boolOnlySuffix_raw_to_handoff_withBase
     simp [BoolSuffixScannerDescription,
       boolOnlySuffixHandoffConfigWithBase, cellCodeBits,
       config, tapeAtCells, keepMove,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, MachineDescription.encodeCell,
-      MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, encodeCell,
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
       Tape.moveRight]
 
@@ -731,16 +732,16 @@ theorem boolOnlySuffixHandoffConfigWithBase_move_right
         ((b :: suffixTail).map some) := by
   unfold boolOnlySuffixHandoffConfigWithBase
   cases flag
-  · simpa [cellCodeBits, MachineDescription.encodeCell,
-      MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput, List.append_assoc] using
+  · simpa [cellCodeBits, encodeCell,
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput, List.append_assoc] using
       FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
         (some true)
         (some false :: some true :: some false :: baseLeft)
         (some b) (suffixTail.map some)
-  · simpa [cellCodeBits, MachineDescription.encodeCell,
-      MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput, List.append_assoc] using
+  · simpa [cellCodeBits, encodeCell,
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput, List.append_assoc] using
       FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
         (some false)
         (some true :: some true :: some false :: baseLeft)
@@ -785,7 +786,7 @@ theorem boolFinalScannerDescription_subroutineReady :
 
 def boolFinalHandoffConfigWithBase
     (flag : Bool) (baseLeft : List (Option Bool)) :
-    MachineDescription.Configuration :=
+    Configuration :=
   { state := BoolFinalScannerDescription.halt
     tape :=
       Tape.move Direction.left
@@ -806,11 +807,11 @@ theorem run_boolFinal_raw_to_handoff_withBase
     simp [BoolFinalScannerDescription,
       boolFinalHandoffConfigWithBase, cellCodeBits,
       config, tapeAtCells, keepMove,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, MachineDescription.encodeCell,
-      MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, encodeCell,
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
       Tape.moveRight]
 
@@ -825,9 +826,9 @@ theorem boolFinalHandoffConfigWithBase_move_right
   cases flag <;>
     simp [boolFinalHandoffConfigWithBase, cellCodeBits,
       tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight,
-      MachineDescription.encodeCell,
-      MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput]
+      encodeCell,
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput]
 
 /-!
 ## Leading transition marker scanner
@@ -876,7 +877,7 @@ theorem transitionPrefixScannerDescription_subroutineReady :
 
 def transitionPrefixHandoffConfigWithBase
     (baseLeft : List (Option Bool)) (suffixBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   { state := TransitionPrefixScannerDescription.halt
     tape :=
       Tape.move Direction.left
@@ -900,10 +901,10 @@ theorem run_transitionPrefix_raw_to_handoff_withBase
     simp [TransitionPrefixScannerDescription,
       transitionPrefixHandoffConfigWithBase, transitionPrefixBits,
       config, tapeAtCells, keepMove,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition,
-      MachineDescription.encodeCodeSymbolAsInput,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition,
+      encodeCodeSymbolAsInput,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
       Tape.moveRight]
 
@@ -917,7 +918,7 @@ theorem transitionPrefixHandoffConfigWithBase_move_right
         (List.append (transitionPrefixBits.reverse.map some) baseLeft)
         ((b :: suffixTail).map some) := by
   unfold transitionPrefixHandoffConfigWithBase transitionPrefixBits
-  simpa [MachineDescription.encodeCodeSymbolAsInput, List.append_assoc]
+  simpa [encodeCodeSymbolAsInput, List.append_assoc]
     using
       FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
         (some true)
@@ -937,12 +938,12 @@ theorem run_cellList_state130_currentCell
         simp [CellListSuffixScannerDescription, cellCodeBits,
           cellCodeTailCells, config, tapeAtCells, keep, keepMove,
           writeMove, scanLeftToSentinelRestart,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition,
-          MachineDescription.encodeCell,
-          MachineDescription.encodeCodeWordAsInput,
-          MachineDescription.encodeCodeSymbolAsInput,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition,
+          encodeCell,
+          encodeCodeWordAsInput,
+          encodeCodeSymbolAsInput,
           Tape.read, Tape.write, Tape.move, Tape.moveLeft,
           Tape.moveRight]
   | some b =>
@@ -950,12 +951,12 @@ theorem run_cellList_state130_currentCell
         simp [CellListSuffixScannerDescription, cellCodeBits,
           cellCodeTailCells, config, tapeAtCells, keep, keepMove,
           writeMove, scanLeftToSentinelRestart,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition,
-          MachineDescription.encodeCell,
-          MachineDescription.encodeCodeWordAsInput,
-          MachineDescription.encodeCodeSymbolAsInput,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition,
+          encodeCell,
+          encodeCodeWordAsInput,
+          encodeCodeSymbolAsInput,
           Tape.read, Tape.write, Tape.move, Tape.moveLeft,
           Tape.moveRight]
 
@@ -1003,10 +1004,10 @@ theorem run_cellList_state120_tick
   simp [CellListSuffixScannerDescription, tickBits,
     config, tapeAtCells, keep, keepMove, writeMove,
     scanLeftToSentinelRestart,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition,
-    MachineDescription.encodeCodeSymbolAsInput,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition,
+    encodeCodeSymbolAsInput,
     Tape.read, Tape.write, Tape.move, Tape.moveRight]
 
 theorem run_cellList_state120_done
@@ -1020,10 +1021,10 @@ theorem run_cellList_state120_done
   simp [CellListSuffixScannerDescription, doneBits,
     config, tapeAtCells, keep, keepMove, writeMove,
     scanLeftToSentinelRestart,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition,
-    MachineDescription.encodeCodeSymbolAsInput,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition,
+    encodeCodeSymbolAsInput,
     Tape.read, Tape.write, Tape.move, Tape.moveRight]
 
 theorem run_cellList_state120_stageNat
@@ -1041,17 +1042,17 @@ theorem run_cellList_state120_stageNat
   | succ n ih =>
       rw [show 4 * (n + 1) + 4 =
           4 + (4 * n + 4) by omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [show
           List.append ((stageNatBits (n + 1)).map some) right =
             List.append (tickBits.map some)
               (List.append ((stageNatBits n).map some) right) by
           simp [stageNatBits_succ, tickBits,
-            MachineDescription.encodeCodeSymbolAsInput]]
+            encodeCodeSymbolAsInput]]
       rw [run_cellList_state120_tick]
       rw [ih]
       simp [stageNatBits_succ, tickBits,
-        MachineDescription.encodeCodeSymbolAsInput,
+        encodeCodeSymbolAsInput,
         List.map_append, List.append_assoc]
 
 theorem run_cellList_state130_markedCell
@@ -1068,18 +1069,18 @@ theorem run_cellList_state130_markedCell
         simp [CellListSuffixScannerDescription, markedCellCodeBits,
           config, tapeAtCells, keep, keepMove, writeMove,
           scanLeftToSentinelRestart,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition,
           Tape.read, Tape.write, Tape.move, Tape.moveRight]
   | some b =>
       cases b <;> cases right <;>
         simp [CellListSuffixScannerDescription, markedCellCodeBits,
           config, tapeAtCells, keep, keepMove, writeMove,
           scanLeftToSentinelRestart,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition,
           Tape.read, Tape.write, Tape.move, Tape.moveRight]
 
 theorem run_cellList_state130_markedCells
@@ -1100,7 +1101,7 @@ theorem run_cellList_state130_markedCells
   | cons cell rest ih =>
       rw [show 4 * (cell :: rest).length =
           4 + 4 * rest.length by simp; omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [show
           List.append ((markedCellsCodeBits (cell :: rest)).map some)
               right =
@@ -1130,9 +1131,9 @@ theorem run_cellList_state140_returnToLengthMarker
       cases headBit <;> cases right <;>
         simp [CellListSuffixScannerDescription, config, tapeAtCells,
           keep, keepMove, writeMove, scanLeftToSentinelRestart,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition,
           Tape.read, Tape.write, Tape.move, Tape.moveLeft,
           Tape.moveRight]
   | cons b rest ih =>
@@ -1140,7 +1141,7 @@ theorem run_cellList_state140_returnToLengthMarker
           1 + (rest.length + 4) by
         simp
         omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       change
         CellListSuffixScannerDescription.runConfig (rest.length + 4)
           (CellListSuffixScannerDescription.runConfig 1
@@ -1165,9 +1166,9 @@ theorem run_cellList_state140_returnToLengthMarker
         simp [CellListSuffixScannerDescription,
           config, tapeAtCells, keep, keepMove, writeMove,
           scanLeftToSentinelRestart,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition,
           Tape.read, Tape.write, Tape.move, Tape.moveLeft]]
       rw [ih]
       simp [List.map_append, List.append_assoc]
@@ -1186,22 +1187,22 @@ theorem run_cellList_state150_markedCell
         simp [CellListSuffixScannerDescription, markedCellCodeBits,
           cellCodeBits, config, tapeAtCells, keep, keepMove, writeMove,
           scanLeftToSentinelRestart,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, MachineDescription.encodeCell,
-          MachineDescription.encodeCodeWordAsInput,
-          MachineDescription.encodeCodeSymbolAsInput,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, encodeCell,
+          encodeCodeWordAsInput,
+          encodeCodeSymbolAsInput,
           Tape.read, Tape.write, Tape.move, Tape.moveRight]
   | some b =>
       cases b <;> cases right <;>
         simp [CellListSuffixScannerDescription, markedCellCodeBits,
           cellCodeBits, config, tapeAtCells, keep, keepMove, writeMove,
           scanLeftToSentinelRestart,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, MachineDescription.encodeCell,
-          MachineDescription.encodeCodeWordAsInput,
-          MachineDescription.encodeCodeSymbolAsInput,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, encodeCell,
+          encodeCodeWordAsInput,
+          encodeCodeSymbolAsInput,
           Tape.read, Tape.write, Tape.move, Tape.moveRight]
 
 theorem run_cellList_state150_markedCells
@@ -1222,7 +1223,7 @@ theorem run_cellList_state150_markedCells
   | cons cell rest ih =>
       rw [show 4 * (cell :: rest).length =
           4 + 4 * rest.length by simp; omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [show
           List.append ((markedCellsCodeBits (cell :: rest)).map some)
               right =
@@ -1243,7 +1244,7 @@ def cellListFinishStartLeft : List (Option Bool) -> List (Option Bool)
 
 def cellListFinishStartConfig
     (cells : List (Option Bool)) (suffixBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   config 150 (cellListFinishStartLeft cells)
     (List.append ((markedCellsCodeBits cells).map some)
       (suffixBits.map some))
@@ -1255,7 +1256,7 @@ def cellListRestoredLeft
 
 def cellListHandoffConfig
     (cells : List (Option Bool)) (suffixBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   { state := CellListSuffixScannerDescription.halt
     tape :=
       Tape.move Direction.left
@@ -1265,7 +1266,7 @@ def cellListHandoffConfig
 def cellListMarkingState120
     (processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   config 120 (activeLengthPrefixRev processed.length)
     (List.append ((stageNatBits rest.length).map some)
       (List.append ((markedCellsCodeBits processed).map some)
@@ -1276,7 +1277,7 @@ def cellListMarkingState120
 def cellListState100AfterMarked
     (processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   config 100 (finishLengthPrefixRev processed.length)
     (List.append ((stageNatBits rest.length).map some)
       (List.append ((markedCellsCodeBits processed).map some)
@@ -1293,7 +1294,7 @@ def cellListCanonicalLengthPrefixRev : Nat -> List (Option Bool)
 def cellListRawMarkingState120
     (processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   config 120
     (List.append markedTickRev
       (cellListCanonicalLengthPrefixRev processed.length))
@@ -1306,7 +1307,7 @@ def cellListRawMarkingState120
 def cellListRawState100AfterMarked
     (processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   config 100 (cellListCanonicalLengthPrefixRev (processed.length + 1))
     (List.append ((stageNatBits rest.length).map some)
       (List.append ((markedCellsCodeBits processed).map some)
@@ -1321,7 +1322,7 @@ def cellListCanonicalFinishStartLeft
 
 def cellListCanonicalFinishStartConfig
     (cells : List (Option Bool)) (suffixBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   config 150 (cellListCanonicalFinishStartLeft cells)
     (List.append ((markedCellsCodeBits cells).map some)
       (suffixBits.map some))
@@ -1333,7 +1334,7 @@ def cellListCanonicalRestoredLeft
 
 def cellListCanonicalHandoffConfig
     (cells : List (Option Bool)) (suffixBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   { state := CellListSuffixScannerDescription.halt
     tape :=
       Tape.move Direction.left
@@ -1343,7 +1344,7 @@ def cellListCanonicalHandoffConfig
 def cellListRawMarkingState120WithBase
     (baseLeft processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   config 120
     (List.append markedTickRev
       (List.append (cellListCanonicalLengthPrefixRev processed.length)
@@ -1357,7 +1358,7 @@ def cellListRawMarkingState120WithBase
 def cellListRawState100AfterMarkedWithBase
     (baseLeft processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   config 100
     (List.append
       (cellListCanonicalLengthPrefixRev (processed.length + 1))
@@ -1376,7 +1377,7 @@ def cellListCanonicalFinishStartLeftWithBase
 
 def cellListCanonicalFinishStartConfigWithBase
     (cells baseLeft : List (Option Bool)) (suffixBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   config 150 (cellListCanonicalFinishStartLeftWithBase cells baseLeft)
     (List.append ((markedCellsCodeBits cells).map some)
       (suffixBits.map some))
@@ -1388,7 +1389,7 @@ def cellListCanonicalRestoredLeftWithBase
 
 def cellListCanonicalHandoffConfigWithBase
     (cells baseLeft : List (Option Bool)) (suffixBits : Word Bool) :
-    MachineDescription.Configuration :=
+    Configuration :=
   { state := CellListSuffixScannerDescription.halt
     tape :=
       Tape.move Direction.left
@@ -1398,7 +1399,7 @@ def cellListCanonicalHandoffConfigWithBase
 
 def boolWordCanonicalHandoffConfigWithBase
     (w : Word Bool) (baseLeft : List (Option Bool))
-    (suffixBits : Word Bool) : MachineDescription.Configuration :=
+    (suffixBits : Word Bool) : Configuration :=
   cellListCanonicalHandoffConfigWithBase (w.map some) baseLeft suffixBits
 
 def cellListMarkingReturnScanRev
@@ -1418,12 +1419,12 @@ theorem run_cellList_raw_mark_current_to_state100
   refine
     ⟨(4 * rest.length + 4) +
         (4 * processed.length + (6 + (scanRev.length + 4))), ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   unfold cellListRawMarkingState120
   rw [run_cellList_state120_stageNat]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_cellList_state130_markedCells]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_cellList_state130_currentCell]
   cases cell with
   | none =>
@@ -1478,12 +1479,12 @@ theorem run_cellList_raw_mark_current_to_state100_withBase
   refine
     ⟨(4 * rest.length + 4) +
         (4 * processed.length + (6 + (scanRev.length + 4))), ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   unfold cellListRawMarkingState120WithBase
   rw [run_cellList_state120_stageNat]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_cellList_state130_markedCells]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_cellList_state130_currentCell]
   cases cell with
   | none =>
@@ -1549,7 +1550,7 @@ theorem run_cellList_raw_marking_loop_from_state100
       rw [show (stageNatBits ([] : List (Option Bool)).length).map some =
           doneBits.map some by
         simp [stageNatBits_zero, doneBits,
-          MachineDescription.encodeCodeSymbolAsInput]]
+          encodeCodeSymbolAsInput]]
       change
         CellListSuffixScannerDescription.runConfig 4
             (config 100
@@ -1571,13 +1572,13 @@ theorem run_cellList_raw_marking_loop_from_state100
       refine ⟨4 + markSteps + recSteps, ?_⟩
       rw [show 4 + markSteps + recSteps =
           4 + (markSteps + recSteps) by omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [show
           (stageNatBits (cell :: rest).length).map some =
             List.append (tickBits.map some)
               ((stageNatBits rest.length).map some) by
         simp [stageNatBits_succ, tickBits,
-          MachineDescription.encodeCodeSymbolAsInput]]
+          encodeCodeSymbolAsInput]]
       rw [show
           List.append
               (List.append (tickBits.map some)
@@ -1608,7 +1609,7 @@ theorem run_cellList_raw_marking_loop_from_state100
           cellListCanonicalFinishStartConfig
             (List.append processed (cell :: rest)) suffixBits
       rw [run_cellList_state100_tick]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       change
         CellListSuffixScannerDescription.runConfig recSteps
             (CellListSuffixScannerDescription.runConfig markSteps
@@ -1643,7 +1644,7 @@ theorem run_cellList_raw_marking_loop_from_state100_withBase
       rw [show (stageNatBits ([] : List (Option Bool)).length).map some =
           doneBits.map some by
         simp [stageNatBits_zero, doneBits,
-          MachineDescription.encodeCodeSymbolAsInput]]
+          encodeCodeSymbolAsInput]]
       change
         CellListSuffixScannerDescription.runConfig 4
             (config 100
@@ -1667,13 +1668,13 @@ theorem run_cellList_raw_marking_loop_from_state100_withBase
       refine ⟨4 + markSteps + recSteps, ?_⟩
       rw [show 4 + markSteps + recSteps =
           4 + (markSteps + recSteps) by omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [show
           (stageNatBits (cell :: rest).length).map some =
             List.append (tickBits.map some)
               ((stageNatBits rest.length).map some) by
         simp [stageNatBits_succ, tickBits,
-          MachineDescription.encodeCodeSymbolAsInput]]
+          encodeCodeSymbolAsInput]]
       rw [show
           List.append
               (List.append (tickBits.map some)
@@ -1706,7 +1707,7 @@ theorem run_cellList_raw_marking_loop_from_state100_withBase
           cellListCanonicalFinishStartConfigWithBase
             (List.append processed (cell :: rest)) baseLeft suffixBits
       rw [run_cellList_state100_tick]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       change
         CellListSuffixScannerDescription.runConfig recSteps
             (CellListSuffixScannerDescription.runConfig markSteps
@@ -1731,12 +1732,12 @@ theorem run_cellList_mark_current_to_state100
   refine
     ⟨(4 * rest.length + 4) +
         (4 * processed.length + (6 + (scanRev.length + 4))), ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   unfold cellListMarkingState120
   rw [run_cellList_state120_stageNat]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_cellList_state130_markedCells]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_cellList_state130_currentCell]
   cases cell with
   | none =>
@@ -1790,7 +1791,7 @@ theorem run_cellList_marking_loop_from_state120
           processed cell [] suffixBits with
         ⟨markSteps, hmark⟩
       refine ⟨markSteps + 4, ?_⟩
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [hmark]
       unfold cellListState100AfterMarked
       change
@@ -1821,16 +1822,16 @@ theorem run_cellList_marking_loop_from_state120
       refine ⟨markSteps + 4 + recSteps, ?_⟩
       rw [show markSteps + 4 + recSteps =
           markSteps + (4 + recSteps) by omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [hmark]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       unfold cellListState100AfterMarked
       rw [show
           (stageNatBits (next :: rest).length).map some =
             List.append (tickBits.map some)
               ((stageNatBits rest.length).map some) by
         simp [stageNatBits_succ, tickBits,
-          MachineDescription.encodeCodeSymbolAsInput]]
+          encodeCodeSymbolAsInput]]
       change
         CellListSuffixScannerDescription.runConfig recSteps
             (CellListSuffixScannerDescription.runConfig 4
@@ -1861,8 +1862,8 @@ theorem run_cellList_state150_handoff_false
   cases cell <;> cases right <;>
     simp [config, tapeAtCells, keepMove,
       cellListSuffix_lookup_150_false,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.transition,
+      runConfig, stepConfig,
+      transition,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft]
 
 theorem run_cellList_finish_to_handoff
@@ -1872,7 +1873,7 @@ theorem run_cellList_finish_to_handoff
           (cellListFinishStartConfig cells (false :: suffixTail)) =
         cellListHandoffConfig cells (false :: suffixTail) := by
   refine ⟨4 * cells.length + 1, ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   unfold cellListFinishStartConfig
   rw [run_cellList_state150_markedCells]
   change
@@ -1885,8 +1886,8 @@ theorem run_cellList_finish_to_handoff
   | nil =>
       simp [config, tapeAtCells,
         cellListSuffix_lookup_150_false, keepMove,
-        MachineDescription.runConfig, MachineDescription.stepConfig,
-        MachineDescription.transition, Tape.read, Tape.write,
+        runConfig, stepConfig,
+        transition, Tape.read, Tape.write,
         Tape.move, Tape.moveLeft]
   | cons cell left =>
       simpa [config, tapeAtCells, hleft] using
@@ -1901,7 +1902,7 @@ theorem run_cellList_canonical_finish_to_handoff
             (false :: suffixTail)) =
         cellListCanonicalHandoffConfig cells (false :: suffixTail) := by
   refine ⟨4 * cells.length + 1, ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   unfold cellListCanonicalFinishStartConfig
   rw [run_cellList_state150_markedCells]
   change
@@ -1914,8 +1915,8 @@ theorem run_cellList_canonical_finish_to_handoff
   | nil =>
       simp [config, tapeAtCells,
         cellListSuffix_lookup_150_false, keepMove,
-        MachineDescription.runConfig, MachineDescription.stepConfig,
-        MachineDescription.transition, Tape.read, Tape.write,
+        runConfig, stepConfig,
+        transition, Tape.read, Tape.write,
         Tape.move, Tape.moveLeft]
   | cons cell left =>
       simpa [config, tapeAtCells, hleft] using
@@ -1931,7 +1932,7 @@ theorem run_cellList_canonical_finish_to_handoff_withBase
         cellListCanonicalHandoffConfigWithBase cells baseLeft
           (false :: suffixTail) := by
   refine ⟨4 * cells.length + 1, ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   unfold cellListCanonicalFinishStartConfigWithBase
   rw [run_cellList_state150_markedCells]
   change
@@ -1946,8 +1947,8 @@ theorem run_cellList_canonical_finish_to_handoff_withBase
   | nil =>
       simp [config, tapeAtCells,
         cellListSuffix_lookup_150_false, keepMove,
-        MachineDescription.runConfig, MachineDescription.stepConfig,
-        MachineDescription.transition, Tape.read, Tape.write,
+        runConfig, stepConfig,
+        transition, Tape.read, Tape.write,
         Tape.move, Tape.moveLeft]
   | cons cell left =>
       simpa [config, tapeAtCells, hleft] using
@@ -1978,7 +1979,7 @@ theorem run_cellList_raw_to_canonical_handoff
   rcases run_cellList_canonical_finish_to_handoff cells suffixTail with
     ⟨finishSteps, hfinish⟩
   refine ⟨markSteps + finishSteps, ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [cellListSuffixScannerDescription_initial_eq_config]
   rw [show
       (List.append (stageNatBits cells.length)
@@ -2018,7 +2019,7 @@ theorem run_cellList_raw_to_canonical_handoff_withBase
       cells baseLeft suffixTail with
     ⟨finishSteps, hfinish⟩
   refine ⟨markSteps + finishSteps, ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [hmark']
   exact hfinish
 
@@ -2029,20 +2030,20 @@ theorem cellListCanonicalRestoredLeftWithBase_ne_nil
   | nil =>
       simp [cellListCanonicalRestoredLeftWithBase,
         cellListCanonicalFinishStartLeftWithBase, doneBits,
-        MachineDescription.encodeCodeSymbolAsInput]
+        encodeCodeSymbolAsInput]
   | cons cell rest =>
       cases cell with
       | none =>
           simp [cellListCanonicalRestoredLeftWithBase, cellsCodeBits,
-            cellCodeBits, MachineDescription.encodeCell,
-            MachineDescription.encodeCodeWordAsInput,
-            MachineDescription.encodeCodeSymbolAsInput]
+            cellCodeBits, encodeCell,
+            encodeCodeWordAsInput,
+            encodeCodeSymbolAsInput]
       | some b =>
           cases b <;>
             simp [cellListCanonicalRestoredLeftWithBase, cellsCodeBits,
-              cellCodeBits, MachineDescription.encodeCell,
-              MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput]
+              cellCodeBits, encodeCell,
+              encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput]
 
 theorem cellListCanonicalHandoffConfigWithBase_move_right
     (cells baseLeft : List (Option Bool))
@@ -2096,7 +2097,7 @@ theorem run_cellList_marking_loop_to_handoff
       (List.append processed (cell :: rest)) suffixTail with
     ⟨finishSteps, hfinish⟩
   refine ⟨markSteps + finishSteps, ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [hmark]
   exact hfinish
 

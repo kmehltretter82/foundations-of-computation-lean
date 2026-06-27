@@ -11,6 +11,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
@@ -18,17 +19,17 @@ namespace BoundedLayoutRunner
 def FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner :
     Prop :=
   forall D : MachineDescription,
-    exists simulateStep : MachineDescription.Fragment,
+    exists simulateStep : Fragment,
       FixedDescriptionBoundedSimulatorPhaseRealizes
         (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
         FixedDescriptionBoundedSimulatorLayoutTape
-        (fun L => MachineDescription.SimulatorLayout.run D L.stage L)
+        (fun L => SimulatorLayout.run D L.stage L)
         simulateStep
 
 def FixedDescriptionBoundedSimulatorPaddedPhaseSpec_configRunner
     (D sim : MachineDescription) : Prop :=
   PaddedEquivEmitterSpec
-    (fun L : MachineDescription.SimulatorLayout =>
+    (fun L : SimulatorLayout =>
       Tape.input (FixedDescriptionBoundedSimulatorInput L))
     (FixedDescriptionBoundedSimulatorPaddedOutputTape D)
     (FixedDescriptionBoundedSimulatorCanonicalOutputTape D)
@@ -49,11 +50,11 @@ theorem fixedDescriptionBoundedSimulatorPaddedPhaseSpec_of_paddedSpec_configRunn
   constructor
   · intro L
     simpa [FixedDescriptionBoundedSimulatorPaddedPhaseSpec_configRunner,
-      MachineDescription.HaltsWithTape,
-      MachineDescription.HaltsWithTapeIn,
-      MachineDescription.HaltsFromTape,
-      MachineDescription.HaltsFromTapeIn,
-      MachineDescription.initial] using hsim.right.left L
+      HaltsWithTape,
+      HaltsWithTapeIn,
+      HaltsFromTape,
+      HaltsFromTapeIn,
+      initial] using hsim.right.left L
   · intro L
     exact
       FixedDescriptionBoundedSimulatorPaddedOutputTape_equiv_canonical D L
@@ -72,9 +73,9 @@ theorem fixedDescriptionBoundedSimulatorEquivSpec_of_paddedPhase_configRunner
     rcases hactual with ⟨n, hn⟩
     exact
       ⟨n, by
-        simpa [MachineDescription.HaltsWithTapeIn,
-          MachineDescription.HaltsFromTapeIn,
-          MachineDescription.initial] using hn⟩
+        simpa [HaltsWithTapeIn,
+          HaltsFromTapeIn,
+          initial] using hn⟩
   · intro L T hhalt
     have hfrom :
         sim.HaltsFromTape
@@ -82,9 +83,9 @@ theorem fixedDescriptionBoundedSimulatorEquivSpec_of_paddedPhase_configRunner
       rcases hhalt with ⟨n, hn⟩
       exact
         ⟨n, by
-          simpa [MachineDescription.HaltsWithTapeIn,
-            MachineDescription.HaltsFromTapeIn,
-            MachineDescription.initial] using hn⟩
+          simpa [HaltsWithTapeIn,
+            HaltsFromTapeIn,
+            initial] using hn⟩
     exact
       PaddedEquivEmitterSpec.closedFromTapeEquiv hsim L T hfrom
 
@@ -104,7 +105,7 @@ theorem fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_configRunne
       (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
       FixedDescriptionBoundedSimulatorLayoutTape
       id
-      (MachineDescription.Fragment.handoff Direction.left) :=
+      (Fragment.handoff Direction.left) :=
   fixedDescriptionBoundedSimulatorReturnFromRightHandoffPhaseRealizes
 
 theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_stepPhase_configRunner
@@ -113,18 +114,18 @@ theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_stepPhase_c
     FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction := by
   intro D
   rcases hstep D with ⟨simulateStep, hsimulateStep⟩
-  let S : MachineDescription.FixedSimulatorTableSkeleton :=
-    { decodeLayout := MachineDescription.Fragment.halt
+  let S : FixedSimulatorTableSkeleton :=
+    { decodeLayout := Fragment.halt
       simulateStep := simulateStep
-      repeatControl := MachineDescription.Fragment.handoff Direction.left
-      emitLayout := MachineDescription.Fragment.handoff Direction.left
+      repeatControl := Fragment.handoff Direction.left
+      emitLayout := Fragment.handoff Direction.left
       decodeLayout_wellFormed :=
-        MachineDescription.Fragment.halt_wellFormed
+        Fragment.halt_wellFormed
       simulateStep_wellFormed := hsimulateStep.left
       repeatControl_wellFormed :=
-        MachineDescription.Fragment.handoff_wellFormed Direction.left
+        Fragment.handoff_wellFormed Direction.left
       emitLayout_wellFormed :=
-        MachineDescription.Fragment.handoff_wellFormed Direction.left }
+        Fragment.handoff_wellFormed Direction.left }
   refine
     ⟨S, Direction.right,
       FixedDescriptionBoundedSimulatorPhaseTargets.canonical D, ?_⟩

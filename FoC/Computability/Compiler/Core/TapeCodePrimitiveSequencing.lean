@@ -14,17 +14,18 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose
-    {P Q : MachineDescription.TapeCodePrimitive}
+    {P Q : TapeCodePrimitive}
     {A B : MachineDescription} {handoffMove : Direction}
     (hP : TapeCodePrimitiveHandoffSubroutineRealizedByDescription
       P A handoffMove)
     (hQ : TapeCodePrimitiveHandoffSubroutineRealizedByDescription
       Q B handoffMove) :
     TapeCodePrimitiveHandoffSubroutineRealizedByDescription
-      (MachineDescription.TapeCodePrimitive.compose P Q)
-      (MachineDescription.seqSubroutine A B handoffMove)
+      (TapeCodePrimitive.compose P Q)
+      (seqSubroutine A B handoffMove)
       handoffMove := by
   have hAready : A.SubroutineReady :=
     tapeCodePrimitiveHandoffSubroutineRealizedByDescription_subroutineReady
@@ -34,17 +35,17 @@ theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose
       hQ
   have hseqTape :
       forall {code out : Word MachineCodeSymbol},
-        (MachineDescription.TapeCodePrimitive.compose P Q).transform code =
+        (TapeCodePrimitive.compose P Q).transform code =
             some out ->
           exists Tout : Tape Bool,
-            (MachineDescription.seqSubroutine A B handoffMove).HaltsWithTape
-              (MachineDescription.encodeCodeWordAsInput code) Tout ∧
+            (seqSubroutine A B handoffMove).HaltsWithTape
+              (encodeCodeWordAsInput code) Tout ∧
             Tape.move handoffMove Tout =
-              Tape.input (MachineDescription.encodeCodeWordAsInput out) ∧
+              Tape.input (encodeCodeWordAsInput out) ∧
             Tape.normalizedOutput Tout =
-              MachineDescription.encodeCodeWordAsInput out := by
+              encodeCodeWordAsInput out := by
     intro code out hcompose
-    unfold MachineDescription.TapeCodePrimitive.compose at hcompose
+    unfold TapeCodePrimitive.compose at hcompose
     cases hPcode : P.transform code with
     | none =>
         simp [hPcode] at hcompose
@@ -59,7 +60,7 @@ theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose
             tapeCodePrimitiveHandoffSubroutineRealizedByDescription_haltsWithTape_of_transform_eq_some
               hQ hQout with
           ⟨Tout, hBhalt, hQmove⟩
-        rcases MachineDescription.runConfig_eq_halt_of_haltsWithTape
+        rcases runConfig_eq_halt_of_haltsWithTape
             hBhalt with
           ⟨nB, hBRunInput⟩
         have hBReach :
@@ -70,25 +71,25 @@ theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose
                 { state := B.halt, tape := Tout } := by
           exact ⟨nB, by simpa [hPmove] using hBRunInput⟩
         have hSeqTape :
-            (MachineDescription.seqSubroutine A B handoffMove).HaltsWithTape
-              (MachineDescription.encodeCodeWordAsInput code) Tout :=
-          MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+            (seqSubroutine A B handoffMove).HaltsWithTape
+              (encodeCodeWordAsInput code) Tout :=
+          seqSubroutine_haltsWithTape_of_haltsWithTape
             hAready hBready hAhalt hBReach
         have hQOutCanonical :
             B.HaltsWithOutput
-              (MachineDescription.encodeCodeWordAsInput mid)
-              (MachineDescription.encodeCodeWordAsInput out) :=
+              (encodeCodeWordAsInput mid)
+              (encodeCodeWordAsInput out) :=
           tapeCodePrimitiveHandoffSubroutineRealizedByDescription_haltsWithOutput_of_transform_eq_some
             hQ hQout
         have hQOutTape :
             B.HaltsWithOutput
-              (MachineDescription.encodeCodeWordAsInput mid)
+              (encodeCodeWordAsInput mid)
               (Tape.normalizedOutput Tout) :=
-          MachineDescription.haltsWithOutput_of_haltsWithTape hBhalt
+          haltsWithOutput_of_haltsWithTape hBhalt
         have hToutNorm :
             Tape.normalizedOutput Tout =
-              MachineDescription.encodeCodeWordAsInput out :=
-          MachineDescription.haltsWithOutput_functional_of_haltTransitionFree
+              encodeCodeWordAsInput out :=
+          haltsWithOutput_functional_of_haltTransitionFree
             (tapeCodePrimitiveHandoffSubroutineRealizedByDescription_haltTransitionFree
               hQ)
             hQOutTape hQOutCanonical
@@ -96,13 +97,13 @@ theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose
   constructor
   · constructor
     · constructor
-      · exact MachineDescription.seqSubroutine_wellFormed hAready hBready
+      · exact seqSubroutine_wellFormed hAready hBready
       · intro code out hcompose
         rcases hseqTape hcompose with
           ⟨Tout, hSeqTape, _hmove, hToutNorm⟩
         simpa [hToutNorm] using
-          MachineDescription.haltsWithOutput_of_haltsWithTape hSeqTape
-    · exact MachineDescription.seqSubroutine_haltTransitionFree
+          haltsWithOutput_of_haltsWithTape hSeqTape
+    · exact seqSubroutine_haltTransitionFree
         hAready hBready
   · intro code out hcompose
     rcases hseqTape hcompose with
@@ -110,14 +111,14 @@ theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose
     exact ⟨Tout, hSeqTape, hmove⟩
 
 theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose_output
-    {P Q : MachineDescription.TapeCodePrimitive}
+    {P Q : TapeCodePrimitive}
     {A B : MachineDescription} {handoffMove : Direction}
     (hP : TapeCodePrimitiveHandoffSubroutineRealizedByDescription
       P A handoffMove)
     (hQ : TapeCodePrimitiveOutputSubroutineRealizedByDescription Q B) :
     TapeCodePrimitiveOutputSubroutineRealizedByDescription
-      (MachineDescription.TapeCodePrimitive.compose P Q)
-      (MachineDescription.seqSubroutine A B handoffMove) := by
+      (TapeCodePrimitive.compose P Q)
+      (seqSubroutine A B handoffMove) := by
   have hAready : A.SubroutineReady :=
     tapeCodePrimitiveHandoffSubroutineRealizedByDescription_subroutineReady
       hP
@@ -126,9 +127,9 @@ theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose_output
       hQ
   constructor
   · constructor
-    · exact MachineDescription.seqSubroutine_wellFormed hAready hBready
+    · exact seqSubroutine_wellFormed hAready hBready
     · intro code out hcompose
-      unfold MachineDescription.TapeCodePrimitive.compose at hcompose
+      unfold TapeCodePrimitive.compose at hcompose
       cases hPcode : P.transform code with
       | none =>
           simp [hPcode] at hcompose
@@ -141,26 +142,26 @@ theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose_output
             ⟨Tmid, hAhalt, hPmove⟩
           have hBOut :
               B.HaltsWithOutput
-                (MachineDescription.encodeCodeWordAsInput mid)
-                (MachineDescription.encodeCodeWordAsInput out) :=
+                (encodeCodeWordAsInput mid)
+                (encodeCodeWordAsInput out) :=
             hQ.left.right mid out hQout
           rcases hBOut with ⟨nB, hBOutIn⟩
           let Tout : Tape Bool :=
             (B.runConfig nB
               (B.initial
-                (MachineDescription.encodeCodeWordAsInput mid))).tape
+                (encodeCodeWordAsInput mid))).tape
           have hBRunInput :
               B.runConfig nB
                   (B.initial
-                    (MachineDescription.encodeCodeWordAsInput mid)) =
+                    (encodeCodeWordAsInput mid)) =
                 { state := B.halt, tape := Tout } := by
             cases hfinal :
                 B.runConfig nB
                   (B.initial
-                    (MachineDescription.encodeCodeWordAsInput mid)) with
+                    (encodeCodeWordAsInput mid)) with
             | mk state tape =>
                 have hstate : state = B.halt := by
-                  simpa [MachineDescription.HaltsWithOutputIn,
+                  simpa [HaltsWithOutputIn,
                     hfinal] using hBOutIn.left
                 simp [Tout, hfinal, hstate]
           have hBReach :
@@ -177,33 +178,33 @@ theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose_output
                 { state := B.halt, tape := Tout }
             simpa [hPmove] using hBRunInput
           have hSeqTape :
-              (MachineDescription.seqSubroutine A B handoffMove).HaltsWithTape
-                (MachineDescription.encodeCodeWordAsInput code) Tout :=
-            MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+              (seqSubroutine A B handoffMove).HaltsWithTape
+                (encodeCodeWordAsInput code) Tout :=
+            seqSubroutine_haltsWithTape_of_haltsWithTape
               hAready hBready hAhalt hBReach
           have hToutNorm :
               Tape.normalizedOutput Tout =
-                MachineDescription.encodeCodeWordAsInput out := by
+                encodeCodeWordAsInput out := by
             change
               Tape.normalizedOutput
                   (B.runConfig nB
                     (B.initial
-                      (MachineDescription.encodeCodeWordAsInput mid))).tape =
-                MachineDescription.encodeCodeWordAsInput out
+                      (encodeCodeWordAsInput mid))).tape =
+                encodeCodeWordAsInput out
             simpa [Tout] using hBOutIn.right
           simpa [hToutNorm] using
-            MachineDescription.haltsWithOutput_of_haltsWithTape hSeqTape
-  · exact MachineDescription.seqSubroutine_haltTransitionFree hAready hBready
+            haltsWithOutput_of_haltsWithTape hSeqTape
+  · exact seqSubroutine_haltTransitionFree hAready hBready
 
 theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose_outputCompiled
-    {P Q : MachineDescription.TapeCodePrimitive}
+    {P Q : TapeCodePrimitive}
     {A B : MachineDescription} {handoffMove : Direction}
     (hP : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       P A handoffMove)
     (hQ : TapeCodePrimitiveOutputCompiledSubroutineByDescription Q B) :
     TapeCodePrimitiveOutputCompiledSubroutineByDescription
-      (MachineDescription.TapeCodePrimitive.compose P Q)
-      (MachineDescription.seqSubroutine A B handoffMove) := by
+      (TapeCodePrimitive.compose P Q)
+      (seqSubroutine A B handoffMove) := by
   have hAready : A.SubroutineReady :=
     tapeCodePrimitiveOutputCompiledSubroutineByDescription_subroutineReady
       hP.left
@@ -212,27 +213,27 @@ theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose_ou
       hQ
   constructor
   · constructor
-    · exact MachineDescription.seqSubroutine_wellFormed hAready hBready
+    · exact seqSubroutine_wellFormed hAready hBready
     · intro code out
       constructor
       · intro hseqOut
         rcases hseqOut with ⟨n, hn⟩
         let seq :=
-          MachineDescription.seqSubroutine A B handoffMove
+          seqSubroutine A B handoffMove
         let Tout : Tape Bool :=
           (seq.runConfig n
             (seq.initial
-              (MachineDescription.encodeCodeWordAsInput code))).tape
+              (encodeCodeWordAsInput code))).tape
         have hSeqTape :
             seq.HaltsWithTape
-              (MachineDescription.encodeCodeWordAsInput code) Tout := by
+              (encodeCodeWordAsInput code) Tout := by
           refine ⟨n, ?_⟩
           exact ⟨hn.left, rfl⟩
         have hToutNorm :
             Tape.normalizedOutput Tout =
-              MachineDescription.encodeCodeWordAsInput out :=
+              encodeCodeWordAsInput out :=
           hn.right
-        rcases MachineDescription.seqSubroutine_haltsWithTape_inv
+        rcases seqSubroutine_haltsWithTape_inv
             hAready hBready hSeqTape with
           ⟨Tmid, hAhalt, hBReach⟩
         rcases hP.right code Tmid hAhalt with
@@ -241,38 +242,38 @@ theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose_ou
         have hBRunInput :
             B.runConfig nB
                 (B.initial
-                  (MachineDescription.encodeCodeWordAsInput mid)) =
+                  (encodeCodeWordAsInput mid)) =
               { state := B.halt, tape := Tout } := by
           change
             B.runConfig nB
                 { state := B.start,
                   tape := Tape.input
-                    (MachineDescription.encodeCodeWordAsInput mid) } =
+                    (encodeCodeWordAsInput mid) } =
               { state := B.halt, tape := Tout }
           simpa [hTmidMove] using hBRun
         have hBhalt :
             B.HaltsWithOutput
-              (MachineDescription.encodeCodeWordAsInput mid)
-              (MachineDescription.encodeCodeWordAsInput out) := by
+              (encodeCodeWordAsInput mid)
+              (encodeCodeWordAsInput out) := by
           refine ⟨nB, ?_⟩
           constructor
-          · exact congrArg MachineDescription.Configuration.state
+          · exact congrArg Configuration.state
               hBRunInput
           · change
               Tape.normalizedOutput
                   (B.runConfig nB
                     (B.initial
-                      (MachineDescription.encodeCodeWordAsInput mid))).tape =
-                MachineDescription.encodeCodeWordAsInput out
+                      (encodeCodeWordAsInput mid))).tape =
+                encodeCodeWordAsInput out
             rw [hBRunInput]
             exact hToutNorm
         have hQout : Q.transform mid = some out :=
           (hQ.left.right mid out).mp hBhalt
         exact
-          MachineDescription.TapeCodePrimitive.compose_transform_some
+          TapeCodePrimitive.compose_transform_some
             hPmid hQout
       · intro hcompose
-        unfold MachineDescription.TapeCodePrimitive.compose at hcompose
+        unfold TapeCodePrimitive.compose at hcompose
         cases hPcode : P.transform code with
         | none =>
             simp [hPcode] at hcompose
@@ -291,7 +292,7 @@ theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose_ou
             let Tout : Tape Bool :=
               (B.runConfig nB
                 (B.initial
-                  (MachineDescription.encodeCodeWordAsInput mid))).tape
+                  (encodeCodeWordAsInput mid))).tape
             have hBReach :
                 exists nB : Nat,
                   B.runConfig nB
@@ -307,41 +308,41 @@ theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose_ou
               have hBRun :
                   B.runConfig nB
                       (B.initial
-                        (MachineDescription.encodeCodeWordAsInput mid)) =
+                        (encodeCodeWordAsInput mid)) =
                     { state := B.halt, tape := Tout } := by
                 cases hfinal :
                     B.runConfig nB
                       (B.initial
-                        (MachineDescription.encodeCodeWordAsInput mid)) with
+                        (encodeCodeWordAsInput mid)) with
                 | mk state tape =>
                     have hstate : state = B.halt := by
-                      simpa [MachineDescription.HaltsWithOutputIn,
+                      simpa [HaltsWithOutputIn,
                         hfinal] using hBOut.left
                     simp [Tout, hfinal, hstate]
               simpa [hTmidMove] using hBRun
             have hseqTape :
-                (MachineDescription.seqSubroutine A B handoffMove).HaltsWithTape
-                  (MachineDescription.encodeCodeWordAsInput code) Tout :=
-              MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+                (seqSubroutine A B handoffMove).HaltsWithTape
+                  (encodeCodeWordAsInput code) Tout :=
+              seqSubroutine_haltsWithTape_of_haltsWithTape
                 hAready hBready hAhalt hBReach
             have hToutNorm :
                 Tape.normalizedOutput Tout =
-                  MachineDescription.encodeCodeWordAsInput out := by
+                  encodeCodeWordAsInput out := by
               simpa [Tout] using hBOut.right
             simpa [hToutNorm] using
-              MachineDescription.haltsWithOutput_of_haltsWithTape hseqTape
-  · exact MachineDescription.seqSubroutine_haltTransitionFree hAready hBready
+              haltsWithOutput_of_haltsWithTape hseqTape
+  · exact seqSubroutine_haltTransitionFree hAready hBready
 
 theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
-    {P Q : MachineDescription.TapeCodePrimitive}
+    {P Q : TapeCodePrimitive}
     {A B : MachineDescription} {handoffMove : Direction}
     (hP : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       P A handoffMove)
     (hQ : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       Q B handoffMove) :
     TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-      (MachineDescription.TapeCodePrimitive.compose P Q)
-      (MachineDescription.seqSubroutine A B handoffMove)
+      (TapeCodePrimitive.compose P Q)
+      (seqSubroutine A B handoffMove)
       handoffMove := by
   have hAready : A.SubroutineReady :=
     tapeCodePrimitiveOutputCompiledSubroutineByDescription_subroutineReady
@@ -351,8 +352,8 @@ theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
       hQ.left
   have hrealized :
       TapeCodePrimitiveHandoffSubroutineRealizedByDescription
-        (MachineDescription.TapeCodePrimitive.compose P Q)
-        (MachineDescription.seqSubroutine A B handoffMove)
+        (TapeCodePrimitive.compose P Q)
+        (seqSubroutine A B handoffMove)
         handoffMove :=
     tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose
       (tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffRealized
@@ -362,27 +363,27 @@ theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
   constructor
   · constructor
     · constructor
-      · exact MachineDescription.seqSubroutine_wellFormed hAready hBready
+      · exact seqSubroutine_wellFormed hAready hBready
       · intro code out
         constructor
         · intro hseqOut
           rcases hseqOut with ⟨n, hn⟩
           let seq :=
-            MachineDescription.seqSubroutine A B handoffMove
+            seqSubroutine A B handoffMove
           let Tout : Tape Bool :=
             (seq.runConfig n
               (seq.initial
-                (MachineDescription.encodeCodeWordAsInput code))).tape
+                (encodeCodeWordAsInput code))).tape
           have hSeqTape :
               seq.HaltsWithTape
-                (MachineDescription.encodeCodeWordAsInput code) Tout := by
+                (encodeCodeWordAsInput code) Tout := by
             refine ⟨n, ?_⟩
             exact ⟨hn.left, rfl⟩
           have hToutNorm :
               Tape.normalizedOutput Tout =
-                MachineDescription.encodeCodeWordAsInput out :=
+                encodeCodeWordAsInput out :=
             hn.right
-          rcases MachineDescription.seqSubroutine_haltsWithTape_inv
+          rcases seqSubroutine_haltsWithTape_inv
               hAready hBready hSeqTape with
             ⟨Tmid, hAhalt, hBReach⟩
           rcases hP.right code Tmid hAhalt with
@@ -391,47 +392,47 @@ theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
           have hBRunInput :
               B.runConfig nB
                   (B.initial
-                    (MachineDescription.encodeCodeWordAsInput mid)) =
+                    (encodeCodeWordAsInput mid)) =
                 { state := B.halt, tape := Tout } := by
             change
               B.runConfig nB
                   { state := B.start,
                     tape := Tape.input
-                      (MachineDescription.encodeCodeWordAsInput mid) } =
+                      (encodeCodeWordAsInput mid) } =
                 { state := B.halt, tape := Tout }
             simpa [hTmidMove] using hBRun
           have hBhalt :
               B.HaltsWithTape
-                (MachineDescription.encodeCodeWordAsInput mid) Tout := by
+                (encodeCodeWordAsInput mid) Tout := by
             refine ⟨nB, ?_⟩
             constructor
-            · exact congrArg MachineDescription.Configuration.state
+            · exact congrArg Configuration.state
                   hBRunInput
             · exact
-                (congrArg MachineDescription.Configuration.tape
+                (congrArg Configuration.tape
                   hBRunInput).trans (show
                     Tout =
                       (seq.runConfig n
                         (seq.initial
-                          (MachineDescription.encodeCodeWordAsInput code))).tape
+                          (encodeCodeWordAsInput code))).tape
                     from rfl)
           have hBout :
               B.HaltsWithOutput
-                (MachineDescription.encodeCodeWordAsInput mid)
-                (MachineDescription.encodeCodeWordAsInput out) := by
+                (encodeCodeWordAsInput mid)
+                (encodeCodeWordAsInput out) := by
             simpa [hToutNorm] using
-              MachineDescription.haltsWithOutput_of_haltsWithTape hBhalt
+              haltsWithOutput_of_haltsWithTape hBhalt
           have hQout : Q.transform mid = some out :=
             (hQ.left.left.right mid out).mp hBout
           exact
-            MachineDescription.TapeCodePrimitive.compose_transform_some
+            TapeCodePrimitive.compose_transform_some
               hPmid hQout
         · intro hcompose
           exact hrealized.left.left.right code out hcompose
-    · exact MachineDescription.seqSubroutine_haltTransitionFree
+    · exact seqSubroutine_haltTransitionFree
         hAready hBready
   · intro code Tout hSeqTape
-    rcases MachineDescription.seqSubroutine_haltsWithTape_inv
+    rcases seqSubroutine_haltsWithTape_inv
         hAready hBready hSeqTape with
       ⟨Tmid, hAhalt, hBReach⟩
     rcases hP.right code Tmid hAhalt with
@@ -440,34 +441,34 @@ theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
     have hBRunInput :
         B.runConfig nB
             (B.initial
-              (MachineDescription.encodeCodeWordAsInput mid)) =
+              (encodeCodeWordAsInput mid)) =
           { state := B.halt, tape := Tout } := by
       change
         B.runConfig nB
             { state := B.start,
               tape := Tape.input
-                (MachineDescription.encodeCodeWordAsInput mid) } =
+                (encodeCodeWordAsInput mid) } =
           { state := B.halt, tape := Tout }
       simpa [hTmidMove] using hBRun
     have hBhalt :
         B.HaltsWithTape
-          (MachineDescription.encodeCodeWordAsInput mid) Tout := by
+          (encodeCodeWordAsInput mid) Tout := by
       refine ⟨nB, ?_⟩
       constructor
-      · exact congrArg MachineDescription.Configuration.state
+      · exact congrArg Configuration.state
           hBRunInput
       · change
           (B.runConfig nB
             (B.initial
-              (MachineDescription.encodeCodeWordAsInput mid))).tape =
+              (encodeCodeWordAsInput mid))).tape =
               Tout
-        exact congrArg MachineDescription.Configuration.tape
+        exact congrArg Configuration.tape
           hBRunInput
     rcases hQ.right mid Tout hBhalt with
       ⟨out, hQout, hToutNorm, hToutMove⟩
     exact
       ⟨out,
-        MachineDescription.TapeCodePrimitive.compose_transform_some
+        TapeCodePrimitive.compose_transform_some
           hPmid hQout,
         hToutNorm,
         hToutMove⟩

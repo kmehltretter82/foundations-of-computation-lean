@@ -12,6 +12,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
@@ -21,17 +22,17 @@ def WriteTransitionPrefixDescription :
   start := 0
   halt := 5
   transitions :=
-    [ MachineDescription.transition
+    [ transition
         0 (some false) (some false) Direction.left 1
-    , MachineDescription.transition
+    , transition
         0 (some true) (some true) Direction.left 1
-    , MachineDescription.transition
+    , transition
         1 none (some true) Direction.left 2
-    , MachineDescription.transition
+    , transition
         2 none (some false) Direction.left 3
-    , MachineDescription.transition
+    , transition
         3 none (some false) Direction.left 4
-    , MachineDescription.transition
+    , transition
         4 none (some false) Direction.right 5
     ]
 
@@ -69,9 +70,9 @@ theorem writeTransitionPrefixDescription_run
   cases b <;>
     simp [WriteTransitionPrefixDescription,
       config, tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveLeft, Tape.moveRight]
 
 def WriteMarkedTransitionPrefixDescription :
@@ -80,17 +81,17 @@ def WriteMarkedTransitionPrefixDescription :
   start := 0
   halt := 5
   transitions :=
-    [ MachineDescription.transition
+    [ transition
         0 (some false) (some false) Direction.left 1
-    , MachineDescription.transition
+    , transition
         0 (some true) (some true) Direction.left 1
-    , MachineDescription.transition
+    , transition
         1 none (some true) Direction.left 2
-    , MachineDescription.transition
+    , transition
         2 none (some false) Direction.left 3
-    , MachineDescription.transition
+    , transition
         3 none none Direction.left 4
-    , MachineDescription.transition
+    , transition
         4 none (some false) Direction.right 5
     ]
 
@@ -128,9 +129,9 @@ theorem writeMarkedTransitionPrefixDescription_run
   cases b <;>
     simp [WriteMarkedTransitionPrefixDescription,
       config, tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveLeft, Tape.moveRight]
 
 def appendRightLastTape
@@ -145,21 +146,21 @@ def AppendFixedFourBitsLastDescription
   start := 0
   halt := 5
   transitions :=
-    [ MachineDescription.transition
+    [ transition
         0 (some false) (some false) Direction.right 0
-    , MachineDescription.transition
+    , transition
         0 (some true) (some true) Direction.right 0
-    , MachineDescription.transition
+    , transition
         0 none (some b0) Direction.right 1
-    , MachineDescription.transition
+    , transition
         1 none (some b1) Direction.right 2
-    , MachineDescription.transition
+    , transition
         2 none (some b2) Direction.right 3
-    , MachineDescription.transition
+    , transition
         3 none (some b3) Direction.left 4
-    , MachineDescription.transition
+    , transition
         4 (some false) (some false) Direction.right 5
-    , MachineDescription.transition
+    , transition
         4 (some true) (some true) Direction.right 5
     ]
 
@@ -211,18 +212,18 @@ theorem appendFixedFourBitsLastDescription_step_scan_nonempty
     (leftRev : Word Bool) (b : Bool) (rest : Word Bool) :
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).stepConfig
         { state := 0
-          tape := MachineDescription.appendRightScanTape leftRev (b :: rest) } =
+          tape := appendRightScanTape leftRev (b :: rest) } =
       some
         { state := 0
-          tape := MachineDescription.appendRightScanTape
+          tape := appendRightScanTape
             (b :: leftRev) rest } := by
   cases b <;>
     cases rest <;>
       simp [AppendFixedFourBitsLastDescription,
-        MachineDescription.stepConfig,
-        MachineDescription.lookupTransition, MachineDescription.Matches,
-        MachineDescription.transition,
-        MachineDescription.appendRightScanTape, Tape.read, Tape.write,
+        stepConfig,
+        lookupTransition, Matches,
+        transition,
+        appendRightScanTape, Tape.read, Tape.write,
         Tape.move, Tape.moveRight]
 
 theorem appendFixedFourBitsLastDescription_run_scan
@@ -231,16 +232,16 @@ theorem appendFixedFourBitsLastDescription_run_scan
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).runConfig
         remaining.length
         { state := 0
-          tape := MachineDescription.appendRightScanTape leftRev remaining } =
+          tape := appendRightScanTape leftRev remaining } =
       { state := 0
         tape :=
-          MachineDescription.appendRightScanTape
+          appendRightScanTape
             (List.append remaining.reverse leftRev) [] } := by
   induction remaining generalizing leftRev with
   | nil =>
-      simp [MachineDescription.runConfig]
+      simp [runConfig]
   | cons b rest ih =>
-      simp [MachineDescription.runConfig,
+      simp [runConfig,
         appendFixedFourBitsLastDescription_step_scan_nonempty,
         ih, List.append_assoc]
 
@@ -248,16 +249,16 @@ theorem appendFixedFourBitsLastDescription_run_write
     (b0 b1 b2 b3 : Bool) (leftRev : Word Bool) :
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).runConfig 5
         { state := 0
-          tape := MachineDescription.appendRightScanTape leftRev [] } =
+          tape := appendRightScanTape leftRev [] } =
       { state := 5
         tape := appendRightLastTape leftRev b0 b1 b2 b3 } := by
   cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
     simp [AppendFixedFourBitsLastDescription,
       appendRightLastTape,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition,
-      MachineDescription.appendRightScanTape, Tape.read, Tape.write,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition,
+      appendRightScanTape, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft, Tape.moveRight]
 
 theorem appendFixedFourBitsLastDescription_run_halt
@@ -267,17 +268,17 @@ theorem appendFixedFourBitsLastDescription_run_halt
         ((AppendFixedFourBitsLastDescription b0 b1 b2 b3).initial w) =
       { state := 5
         tape := appendRightLastTape w.reverse b0 b1 b2 b3 } := by
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   have hscan :
       (AppendFixedFourBitsLastDescription b0 b1 b2 b3).runConfig
           w.length
           ((AppendFixedFourBitsLastDescription
             b0 b1 b2 b3).initial w) =
         { state := 0
-          tape := MachineDescription.appendRightScanTape w.reverse [] } := by
-    simpa [MachineDescription.initial,
+          tape := appendRightScanTape w.reverse [] } := by
+    simpa [initial,
       AppendFixedFourBitsLastDescription,
-      MachineDescription.appendRightScanTape_nil_eq_input] using
+      appendRightScanTape_nil_eq_input] using
       appendFixedFourBitsLastDescription_run_scan
         b0 b1 b2 b3 [] w
   rw [hscan]
@@ -311,7 +312,7 @@ def appendRightLastTapeAtCells
 theorem appendScanTapeAtCells_of_bits
     (leftRev remaining : Word Bool) :
     appendScanTapeAtCells (leftRev.map some) remaining =
-      MachineDescription.appendRightScanTape leftRev remaining := by
+      appendRightScanTape leftRev remaining := by
   cases remaining <;> rfl
 
 theorem appendRightLastTapeAtCells_of_bits
@@ -336,9 +337,9 @@ theorem appendFixedFourBitsLastDescription_step_scan_nonempty_atCells
     cases rest <;>
       simp [AppendFixedFourBitsLastDescription,
         appendScanTapeAtCells,
-        MachineDescription.stepConfig,
-        MachineDescription.lookupTransition, MachineDescription.Matches,
-        MachineDescription.transition, Tape.read, Tape.write,
+        stepConfig,
+        lookupTransition, Matches,
+        transition, Tape.read, Tape.write,
         Tape.move, Tape.moveRight]
 
 theorem appendFixedFourBitsLastDescription_step_scan_nonempty_atCellsChecked
@@ -355,9 +356,9 @@ theorem appendFixedFourBitsLastDescription_step_scan_nonempty_atCellsChecked
     cases rest <;>
       simp [AppendFixedFourBitsLastDescription,
         appendScanTapeAtCellsChecked,
-        MachineDescription.stepConfig,
-        MachineDescription.lookupTransition, MachineDescription.Matches,
-        MachineDescription.transition, Tape.read, Tape.write,
+        stepConfig,
+        lookupTransition, Matches,
+        transition, Tape.read, Tape.write,
         Tape.move, Tape.moveRight]
 
 theorem appendFixedFourBitsLastDescription_run_scan_atCells
@@ -373,9 +374,9 @@ theorem appendFixedFourBitsLastDescription_run_scan_atCells
             (List.append (remaining.reverse.map some) leftRev) [] } := by
   induction remaining generalizing leftRev with
   | nil =>
-      simp [MachineDescription.runConfig]
+      simp [runConfig]
   | cons b rest ih =>
-      simp [MachineDescription.runConfig,
+      simp [runConfig,
         appendFixedFourBitsLastDescription_step_scan_nonempty_atCells,
         ih, List.append_assoc]
 
@@ -392,10 +393,10 @@ theorem appendFixedFourBitsLastDescription_run_scan_atCellsChecked
             (List.append (remaining.reverse.map some) leftRev) [] } := by
   induction remaining generalizing leftRev with
   | nil =>
-      simp [MachineDescription.runConfig, appendScanTapeAtCellsChecked,
+      simp [runConfig, appendScanTapeAtCellsChecked,
         appendScanTapeAtCells]
   | cons b rest ih =>
-      simp [MachineDescription.runConfig,
+      simp [runConfig,
         appendFixedFourBitsLastDescription_step_scan_nonempty_atCellsChecked,
         ih, List.append_assoc]
 
@@ -412,9 +413,9 @@ theorem appendFixedFourBitsLastDescription_run_write_atCells
     simp [AppendFixedFourBitsLastDescription,
       appendScanTapeAtCells,
       appendRightLastTapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft, Tape.moveRight]
 
 theorem appendFixedFourBitsLastDescription_run_from_scan_atCells
@@ -429,7 +430,7 @@ theorem appendFixedFourBitsLastDescription_run_from_scan_atCells
           appendRightLastTapeAtCells
             (List.append (remaining.reverse.map some) leftRev)
             b0 b1 b2 b3 } := by
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [appendFixedFourBitsLastDescription_run_scan_atCells]
   exact appendFixedFourBitsLastDescription_run_write_atCells
     b0 b1 b2 b3 _
@@ -446,7 +447,7 @@ theorem appendFixedFourBitsLastDescription_run_from_scan_atCellsChecked
           appendRightLastTapeAtCells
             (List.append (remaining.reverse.map some) leftRev)
             b0 b1 b2 b3 } := by
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [appendFixedFourBitsLastDescription_run_scan_atCellsChecked]
   exact appendFixedFourBitsLastDescription_run_write_atCells
     b0 b1 b2 b3 _
@@ -479,14 +480,14 @@ theorem writeMarkedTransitionPrefixDescription_handoff_to_append_checked
 
 def AppendCodeSymbolLastDescription
     (symbol : MachineCodeSymbol) : MachineDescription :=
-  match MachineDescription.encodeCodeSymbolAsInput symbol with
+  match encodeCodeSymbolAsInput symbol with
   | [b0, b1, b2, b3] =>
       AppendFixedFourBitsLastDescription b0 b1 b2 b3
-  | _ => MachineDescription.ExactIdentityDescription
+  | _ => ExactIdentityDescription
 
 def appendCodeSymbolLastTape
     (leftRev : Word Bool) (symbol : MachineCodeSymbol) : Tape Bool :=
-  match MachineDescription.encodeCodeSymbolAsInput symbol with
+  match encodeCodeSymbolAsInput symbol with
   | [b0, b1, b2, b3] =>
       appendRightLastTape leftRev b0 b1 b2 b3
   | _ => Tape.input leftRev.reverse
@@ -522,16 +523,16 @@ theorem appendCodeSymbolLastDescription_run_from_scan
     (AppendCodeSymbolLastDescription symbol).runConfig
         (remaining.length + 5)
         { state := 0
-          tape := MachineDescription.appendRightScanTape leftRev remaining } =
+          tape := appendRightScanTape leftRev remaining } =
       { state := 5
         tape :=
           appendCodeSymbolLastTape
             (List.append remaining.reverse leftRev) symbol } := by
   cases symbol <;>
-    rw [MachineDescription.runConfig_add] <;>
+    rw [runConfig_add] <;>
     simp [AppendCodeSymbolLastDescription,
       appendCodeSymbolLastTape,
-      MachineDescription.encodeCodeSymbolAsInput,
+      encodeCodeSymbolAsInput,
       appendFixedFourBitsLastDescription_run_scan,
       appendFixedFourBitsLastDescription_run_write]
 
@@ -545,7 +546,7 @@ theorem appendCodeSymbolLastDescription_run_halt
   cases symbol <;>
     simpa [AppendCodeSymbolLastDescription,
       appendCodeSymbolLastTape,
-      MachineDescription.encodeCodeSymbolAsInput] using
+      encodeCodeSymbolAsInput] using
       appendFixedFourBitsLastDescription_run_halt
         _ _ _ _ w
 
@@ -553,15 +554,15 @@ theorem appendCodeSymbolLastTape_move_right
     (leftRev : Word Bool) (symbol : MachineCodeSymbol) :
     Tape.move Direction.right
         (appendCodeSymbolLastTape leftRev symbol) =
-      MachineDescription.appendRightScanTape
+      appendRightScanTape
         (List.append
-          (MachineDescription.encodeCodeSymbolAsInput symbol).reverse
+          (encodeCodeSymbolAsInput symbol).reverse
           leftRev) [] := by
   cases symbol <;>
     simp [appendCodeSymbolLastTape,
       appendRightLastTape,
-      MachineDescription.encodeCodeSymbolAsInput,
-      MachineDescription.appendRightScanTape, Tape.move, Tape.moveRight]
+      encodeCodeSymbolAsInput,
+      appendRightScanTape, Tape.move, Tape.moveRight]
 
 theorem appendCodeSymbolLastDescription_haltsWithTape
     (symbol : MachineCodeSymbol) (w : Word Bool) :
@@ -575,10 +576,10 @@ theorem appendCodeSymbolLastDescription_haltsWithTape
 
 def AppendCodeWordLastDescription :
     Word MachineCodeSymbol -> MachineDescription
-  | [] => MachineDescription.ExactIdentityDescription
+  | [] => ExactIdentityDescription
   | symbol :: [] => AppendCodeSymbolLastDescription symbol
   | symbol :: next :: rest =>
-      MachineDescription.seqSubroutine
+      seqSubroutine
         (AppendCodeSymbolLastDescription symbol)
         (AppendCodeWordLastDescription (next :: rest))
         Direction.right
@@ -586,12 +587,12 @@ def AppendCodeWordLastDescription :
 def appendCodeWordLastTape
     (leftRev : Word Bool) :
     Word MachineCodeSymbol -> Tape Bool
-  | [] => MachineDescription.appendRightScanTape leftRev []
+  | [] => appendRightScanTape leftRev []
   | symbol :: [] => appendCodeSymbolLastTape leftRev symbol
   | symbol :: next :: rest =>
       appendCodeWordLastTape
         (List.append
-          (MachineDescription.encodeCodeSymbolAsInput symbol).reverse
+          (encodeCodeSymbolAsInput symbol).reverse
           leftRev)
         (next :: rest)
 
@@ -609,7 +610,7 @@ theorem appendCodeWordLastDescription_subroutineReady :
   | symbol :: [], _ =>
       appendCodeSymbolLastDescription_subroutineReady symbol
   | symbol :: next :: rest, _ =>
-      MachineDescription.seqSubroutine_subroutineReady
+      seqSubroutine_subroutineReady
         (appendCodeSymbolLastDescription_subroutineReady symbol)
         (appendCodeWordLastDescription_subroutineReady
           (next :: rest) (by intro h; cases h))
@@ -622,7 +623,7 @@ theorem appendCodeWordLastDescription_run_from_scan :
             (AppendCodeWordLastDescription code).runConfig n
                 { state := (AppendCodeWordLastDescription code).start
                   tape :=
-                    MachineDescription.appendRightScanTape
+                    appendRightScanTape
                       leftRev remaining } =
               { state := (AppendCodeWordLastDescription code).halt
                 tape :=
@@ -647,7 +648,7 @@ theorem appendCodeWordLastDescription_run_from_scan :
           (List.append remaining.reverse leftRev) symbol
       let leftAfterSymbol :=
         List.append
-          (MachineDescription.encodeCodeSymbolAsInput symbol).reverse
+          (encodeCodeSymbolAsInput symbol).reverse
           (List.append remaining.reverse leftRev)
       have hAready : A.SubroutineReady := by
         exact appendCodeSymbolLastDescription_subroutineReady symbol
@@ -659,7 +660,7 @@ theorem appendCodeWordLastDescription_run_from_scan :
           A.runConfig (remaining.length + 5)
               { state := A.start
                 tape :=
-                  MachineDescription.appendRightScanTape leftRev remaining } =
+                  appendRightScanTape leftRev remaining } =
             { state := A.halt, tape := Tmid } := by
         simpa [A, Tmid,
           appendCodeSymbolLastDescription_start,
@@ -684,7 +685,7 @@ theorem appendCodeWordLastDescription_run_from_scan :
         simpa [B, Tmid, leftAfterSymbol,
           appendCodeSymbolLastTape_move_right] using hB
       rcases
-          MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+          seqSubroutine_reaches_of_runConfig_eq
             (A := A) (B := B) (handoffMove := Direction.right)
             hAready hBready hArun hBReach with
         ⟨n, hn⟩
@@ -705,8 +706,8 @@ theorem appendCodeWordLastDescription_run_halt
         code hcode ([] : Word Bool) w with
     ⟨n, hn⟩
   refine ⟨n, ?_⟩
-  simpa [MachineDescription.initial,
-    MachineDescription.appendRightScanTape_nil_eq_input] using hn
+  simpa [initial,
+    appendRightScanTape_nil_eq_input] using hn
 
 theorem appendCodeWordLastDescription_haltsWithTape
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
@@ -718,15 +719,15 @@ theorem appendCodeWordLastDescription_haltsWithTape
     ⟨n, hn⟩
   exact ⟨n, by
     constructor
-    · simpa [MachineDescription.HaltsWithTapeIn] using
-        congrArg MachineDescription.Configuration.state hn
-    · simpa [MachineDescription.HaltsWithTapeIn] using
-        congrArg MachineDescription.Configuration.tape hn⟩
+    · simpa [HaltsWithTapeIn] using
+        congrArg Configuration.state hn
+    · simpa [HaltsWithTapeIn] using
+        congrArg Configuration.tape hn⟩
 
 def appendCodeSymbolLastTapeAtCells
     (leftRev : List (Option Bool))
     (symbol : MachineCodeSymbol) : Tape Bool :=
-  match MachineDescription.encodeCodeSymbolAsInput symbol with
+  match encodeCodeSymbolAsInput symbol with
   | [b0, b1, b2, b3] =>
       appendRightLastTapeAtCells leftRev b0 b1 b2 b3
   | _ => appendScanTapeAtCells leftRev []
@@ -740,7 +741,7 @@ theorem appendCodeSymbolLastTapeAtCells_of_bits
     simp [appendCodeSymbolLastTapeAtCells,
       appendCodeSymbolLastTape,
       appendRightLastTapeAtCells_of_bits,
-      MachineDescription.encodeCodeSymbolAsInput]
+      encodeCodeSymbolAsInput]
 
 theorem appendCodeSymbolLastDescription_run_from_scan_atCells
     (symbol : MachineCodeSymbol)
@@ -756,7 +757,7 @@ theorem appendCodeSymbolLastDescription_run_from_scan_atCells
   cases symbol <;>
     simpa [AppendCodeSymbolLastDescription,
       appendCodeSymbolLastTapeAtCells,
-      MachineDescription.encodeCodeSymbolAsInput] using
+      encodeCodeSymbolAsInput] using
       appendFixedFourBitsLastDescription_run_from_scan_atCells
         _ _ _ _ leftRev remaining
 
@@ -774,7 +775,7 @@ theorem appendCodeSymbolLastDescription_run_from_scan_atCellsChecked
   cases symbol <;>
     simpa [AppendCodeSymbolLastDescription,
       appendCodeSymbolLastTapeAtCells,
-      MachineDescription.encodeCodeSymbolAsInput] using
+      encodeCodeSymbolAsInput] using
       appendFixedFourBitsLastDescription_run_from_scan_atCellsChecked
         _ _ _ _ leftRev remaining
 
@@ -784,13 +785,13 @@ theorem appendCodeSymbolLastTapeAtCells_move_right
         (appendCodeSymbolLastTapeAtCells leftRev symbol) =
       appendScanTapeAtCells
         (List.append
-          ((MachineDescription.encodeCodeSymbolAsInput symbol).reverse.map some)
+          ((encodeCodeSymbolAsInput symbol).reverse.map some)
           leftRev) [] := by
   cases symbol <;>
     simp [appendCodeSymbolLastTapeAtCells,
       appendRightLastTapeAtCells,
       appendScanTapeAtCells,
-      MachineDescription.encodeCodeSymbolAsInput,
+      encodeCodeSymbolAsInput,
       Tape.move, Tape.moveRight]
 
 def appendCodeWordLastTapeAtCells
@@ -801,7 +802,7 @@ def appendCodeWordLastTapeAtCells
   | symbol :: next :: rest =>
       appendCodeWordLastTapeAtCells
         (List.append
-          ((MachineDescription.encodeCodeSymbolAsInput symbol).reverse.map some)
+          ((encodeCodeSymbolAsInput symbol).reverse.map some)
           leftRev)
         (next :: rest)
 
@@ -823,20 +824,20 @@ theorem appendCodeWordLastTapeAtCells_of_bits :
       change
         appendCodeWordLastTapeAtCells
             (List.append
-              ((MachineDescription.encodeCodeSymbolAsInput symbol).reverse.map some)
+              ((encodeCodeSymbolAsInput symbol).reverse.map some)
               (leftRev.map some))
             (next :: rest) =
           appendCodeWordLastTape
             (List.append
-              (MachineDescription.encodeCodeSymbolAsInput symbol).reverse
+              (encodeCodeSymbolAsInput symbol).reverse
               leftRev)
             (next :: rest)
       have hmap :
           List.append
-              ((MachineDescription.encodeCodeSymbolAsInput symbol).reverse.map some)
+              ((encodeCodeSymbolAsInput symbol).reverse.map some)
               (leftRev.map some) =
             (List.append
-              (MachineDescription.encodeCodeSymbolAsInput symbol).reverse
+              (encodeCodeSymbolAsInput symbol).reverse
               leftRev).map some := by
         simp
       rw [hmap]
@@ -844,7 +845,7 @@ theorem appendCodeWordLastTapeAtCells_of_bits :
         appendCodeWordLastTapeAtCells_of_bits
           (next :: rest)
           (List.append
-            (MachineDescription.encodeCodeSymbolAsInput symbol).reverse
+            (encodeCodeSymbolAsInput symbol).reverse
             leftRev)
 
 theorem appendCodeWordLastDescription_run_from_scan_atCells :
@@ -881,7 +882,7 @@ theorem appendCodeWordLastDescription_run_from_scan_atCells :
           (List.append (remaining.reverse.map some) leftRev) symbol
       let leftAfterSymbol :=
         List.append
-          ((MachineDescription.encodeCodeSymbolAsInput symbol).reverse.map some)
+          ((encodeCodeSymbolAsInput symbol).reverse.map some)
           (List.append (remaining.reverse.map some) leftRev)
       have hAready : A.SubroutineReady := by
         exact appendCodeSymbolLastDescription_subroutineReady symbol
@@ -918,7 +919,7 @@ theorem appendCodeWordLastDescription_run_from_scan_atCells :
         simpa [B, Tmid, leftAfterSymbol,
           appendCodeSymbolLastTapeAtCells_move_right] using hB
       rcases
-          MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+          seqSubroutine_reaches_of_runConfig_eq
             (A := A) (B := B) (handoffMove := Direction.right)
             hAready hBready hArun hBReach with
         ⟨n, hn⟩
@@ -961,7 +962,7 @@ theorem appendCodeWordLastDescription_run_from_scan_atCellsChecked :
           (List.append (remaining.reverse.map some) leftRev) symbol
       let leftAfterSymbol :=
         List.append
-          ((MachineDescription.encodeCodeSymbolAsInput symbol).reverse.map some)
+          ((encodeCodeSymbolAsInput symbol).reverse.map some)
           (List.append (remaining.reverse.map some) leftRev)
       have hAready : A.SubroutineReady := by
         exact appendCodeSymbolLastDescription_subroutineReady symbol
@@ -998,7 +999,7 @@ theorem appendCodeWordLastDescription_run_from_scan_atCellsChecked :
         simpa [B, Tmid, leftAfterSymbol,
           appendCodeSymbolLastTapeAtCells_move_right] using hB
       rcases
-          MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+          seqSubroutine_reaches_of_runConfig_eq
             (A := A) (B := B) (handoffMove := Direction.right)
             hAready hBready hArun hBReach with
         ⟨n, hn⟩
@@ -1009,7 +1010,7 @@ theorem appendCodeWordLastDescription_run_from_scan_atCellsChecked :
 
 def MarkedPrefixThenAppendCodeWordLastDescription
     (code : Word MachineCodeSymbol) : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     WriteMarkedTransitionPrefixDescription
     (AppendCodeWordLastDescription code)
     Direction.right
@@ -1018,7 +1019,7 @@ theorem markedPrefixThenAppendCodeWordLastDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (MarkedPrefixThenAppendCodeWordLastDescription
       code).SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     writeMarkedTransitionPrefixDescription_subroutineReady
     (appendCodeWordLastDescription_subroutineReady code hcode)
 
@@ -1052,7 +1053,7 @@ theorem markedPrefixThenAppendCodeWordLastDescription_run
           { state := A.start
             tape := Tape.input (b :: rest) } =
         { state := A.halt, tape := Tmid } := by
-    simpa [A, Tmid, MachineDescription.initial,
+    simpa [A, Tmid, initial,
       config, tapeAtCells, Tape.input] using
       writeMarkedTransitionPrefixDescription_run
         b (rest.map some)
@@ -1076,13 +1077,13 @@ theorem markedPrefixThenAppendCodeWordLastDescription_run
     simpa [B, Tmid,
       writeMarkedTransitionPrefixDescription_handoff_to_append] using hB
   rcases
-      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+      seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.right)
         hAready hBready hArun hBReach with
     ⟨n, hn⟩
   refine ⟨n, ?_⟩
   simpa [MarkedPrefixThenAppendCodeWordLastDescription,
-    MachineDescription.initial, A, B] using hn
+    initial, A, B] using hn
 
 theorem markedPrefixThenAppendCodeWordLastDescription_run_checked
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
@@ -1141,7 +1142,7 @@ theorem markedPrefixThenAppendCodeWordLastDescription_run_checked
     simpa [B, Tmid,
       writeMarkedTransitionPrefixDescription_handoff_to_append_checked] using hB
   rcases
-      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+      seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.right)
         hAready hBready hArun hBReach with
     ⟨n, hn⟩
@@ -1150,24 +1151,24 @@ theorem markedPrefixThenAppendCodeWordLastDescription_run_checked
     A, B] using hn
 
 theorem encodeNat_ne_nil (n : Nat) :
-    MachineDescription.encodeNat n ≠ [] := by
-  cases n <;> simp [MachineDescription.encodeNat]
+    encodeNat n ≠ [] := by
+  cases n <;> simp [encodeNat]
 
 def AppendNatLastDescription
     (n : Nat) : MachineDescription :=
   AppendCodeWordLastDescription
-    (MachineDescription.encodeNat n)
+    (encodeNat n)
 
 def appendNatLastTape
     (leftRev : Word Bool) (n : Nat) : Tape Bool :=
   appendCodeWordLastTape leftRev
-    (MachineDescription.encodeNat n)
+    (encodeNat n)
 
 theorem appendNatLastDescription_subroutineReady
     (n : Nat) :
     (AppendNatLastDescription n).SubroutineReady :=
   appendCodeWordLastDescription_subroutineReady
-    (MachineDescription.encodeNat n)
+    (encodeNat n)
     (encodeNat_ne_nil n)
 
 theorem appendNatLastDescription_run_from_scan
@@ -1175,7 +1176,7 @@ theorem appendNatLastDescription_run_from_scan
     exists steps : Nat,
       (AppendNatLastDescription n).runConfig steps
           { state := (AppendNatLastDescription n).start
-            tape := MachineDescription.appendRightScanTape leftRev remaining } =
+            tape := appendRightScanTape leftRev remaining } =
         { state := (AppendNatLastDescription n).halt
           tape :=
             appendNatLastTape
@@ -1183,7 +1184,7 @@ theorem appendNatLastDescription_run_from_scan
   simpa [AppendNatLastDescription,
     appendNatLastTape] using
     appendCodeWordLastDescription_run_from_scan
-      (MachineDescription.encodeNat n)
+      (encodeNat n)
       (encodeNat_ne_nil n)
       leftRev remaining
 
@@ -1194,21 +1195,21 @@ theorem appendNatLastDescription_haltsWithTape
   simpa [AppendNatLastDescription,
     appendNatLastTape] using
     appendCodeWordLastDescription_haltsWithTape
-      (MachineDescription.encodeNat n)
+      (encodeNat n)
       (encodeNat_ne_nil n)
       w
 
 def MarkedPrefixThenAppendNatLastDescription
     (n : Nat) : MachineDescription :=
   MarkedPrefixThenAppendCodeWordLastDescription
-    (MachineDescription.encodeNat n)
+    (encodeNat n)
 
 theorem markedPrefixThenAppendNatLastDescription_subroutineReady
     (n : Nat) :
     (MarkedPrefixThenAppendNatLastDescription
       n).SubroutineReady :=
   markedPrefixThenAppendCodeWordLastDescription_subroutineReady
-    (MachineDescription.encodeNat n)
+    (encodeNat n)
     (encodeNat_ne_nil n)
 
 theorem markedPrefixThenAppendNatLastDescription_run
@@ -1224,10 +1225,10 @@ theorem markedPrefixThenAppendNatLastDescription_run
               (List.append
                 ((false :: true :: b :: rest).reverse.map some)
                 [none, some false])
-              (MachineDescription.encodeNat n) } := by
+              (encodeNat n) } := by
   simpa [MarkedPrefixThenAppendNatLastDescription] using
     markedPrefixThenAppendCodeWordLastDescription_run
-      (MachineDescription.encodeNat n)
+      (encodeNat n)
       (encodeNat_ne_nil n)
       b rest
 

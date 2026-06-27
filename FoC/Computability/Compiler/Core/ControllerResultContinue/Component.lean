@@ -13,6 +13,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace ControllerResultContinueConstruction
 
@@ -21,17 +22,17 @@ def ProjectionTailRewindDescription : MachineDescription where
   start := 0
   halt := 2
   transitions :=
-    [ MachineDescription.transition
+    [ transition
         0 none none Direction.left 0
-    , MachineDescription.transition
+    , transition
         0 (some false) (some false) Direction.left 1
-    , MachineDescription.transition
+    , transition
         0 (some true) (some true) Direction.left 1
-    , MachineDescription.transition
+    , transition
         1 (some false) (some false) Direction.left 1
-    , MachineDescription.transition
+    , transition
         1 (some true) (some true) Direction.left 1
-    , MachineDescription.transition
+    , transition
         1 none none Direction.right 2
     ]
 
@@ -85,14 +86,14 @@ theorem stageInputContinueBoundaryRewriterDescription_subroutineReady :
     stageInputContinueBoundaryRewriterDescription_haltTransitionFree⟩
 
 def ProjectedStageInputContinueDescription : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     ProjectionTailRewindDescription
     StageInputContinueBoundaryRewriterDescription
     Direction.left
 
 theorem projectedStageInputContinueDescription_subroutineReady :
     ProjectedStageInputContinueDescription.SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     projectionTailRewindDescription_subroutineReady
     stageInputContinueBoundaryRewriterDescription_subroutineReady
 
@@ -111,9 +112,9 @@ theorem stageInputContinueBoundaryRewriterDescription_run_header
   simp [StageInputContinueBoundaryRewriterDescription,
     StageInputContinueCheckedRewriterDescription,
     DovetailInitialLayoutInitializer.tapeAtCells,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write, Tape.move,
     Tape.moveLeft, Tape.moveRight]
 
 theorem stageInputContinueBoundaryRewriterDescription_run_scan_nonempty
@@ -132,9 +133,9 @@ theorem stageInputContinueBoundaryRewriterDescription_run_scan_nonempty
     simp [StageInputContinueBoundaryRewriterDescription,
       StageInputContinueCheckedRewriterDescription,
       DovetailInitialLayoutInitializer.tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem stageInputContinueBoundaryRewriterDescription_run_scan
@@ -150,12 +151,12 @@ theorem stageInputContinueBoundaryRewriterDescription_run_scan
             (List.append (bits.reverse.map some) leftRev) [none] } := by
   induction bits generalizing leftRev with
   | nil =>
-      simp [MachineDescription.runConfig]
+      simp [runConfig]
   | cons b rest ih =>
       rw [show (b :: rest).length = 1 + rest.length by
         simp
         omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       change
         StageInputContinueBoundaryRewriterDescription.runConfig rest.length
             (StageInputContinueBoundaryRewriterDescription.runConfig 1
@@ -187,9 +188,9 @@ theorem stageInputContinueBoundaryRewriterDescription_run_to_last_bit
     simp [StageInputContinueBoundaryRewriterDescription,
       StageInputContinueCheckedRewriterDescription,
       DovetailInitialLayoutInitializer.tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveLeft]
 
 theorem stageInputContinueBoundaryRewriterDescription_run_rewrite_last
@@ -207,9 +208,9 @@ theorem stageInputContinueBoundaryRewriterDescription_run_rewrite_last
     simp [StageInputContinueBoundaryRewriterDescription,
       StageInputContinueCheckedRewriterDescription,
       DovetailInitialLayoutInitializer.tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem stageInputContinueBoundaryRewriterDescription_run_append_done_done
@@ -227,12 +228,12 @@ theorem stageInputContinueBoundaryRewriterDescription_run_append_done_done
   simp [StageInputContinueBoundaryRewriterDescription,
     StageInputContinueCheckedRewriterDescription,
     stageInputContinueDoneDoneBits,
-    MachineDescription.encodeCodeWordAsInput,
-    MachineDescription.encodeCodeSymbolAsInput,
+    encodeCodeWordAsInput,
+    encodeCodeSymbolAsInput,
     DovetailInitialLayoutInitializer.tapeAtCells,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write, Tape.move,
     Tape.moveRight]
 
 theorem stageInputContinueBoundaryRewriterDescription_haltsFromTape_prefixBits
@@ -269,7 +270,7 @@ theorem stageInputContinueBoundaryRewriterDescription_haltsFromTape_prefixBits
           tape := stageInputContinueOutputTape outputBits } := by
     rw [show 4 + scanBits.length + 10 =
         4 + (scanBits.length + 10) by omega]
-    rw [MachineDescription.runConfig_add]
+    rw [runConfig_add]
     have hheader :
         StageInputContinueBoundaryRewriterDescription.runConfig 4
             { state := StageInputContinueBoundaryRewriterDescription.start
@@ -285,7 +286,7 @@ theorem stageInputContinueBoundaryRewriterDescription_haltsFromTape_prefixBits
     rw [hheader]
     rw [show scanBits.length + 10 =
         scanBits.length + (1 + (1 + 8)) by omega]
-    rw [MachineDescription.runConfig_add]
+    rw [runConfig_add]
     have hscan :
         StageInputContinueBoundaryRewriterDescription.runConfig
             scanBits.length
@@ -311,10 +312,10 @@ theorem stageInputContinueBoundaryRewriterDescription_haltsFromTape_prefixBits
           some true :: leftAfterLast := by
       simp [scanBits, inputBits, leftAfterLast,
         stageInputContinueDoneBits,
-        MachineDescription.encodeCodeSymbolAsInput,
+        encodeCodeSymbolAsInput,
         List.reverse_append, List.map_append, List.append_assoc]
     rw [hleft]
-    rw [MachineDescription.runConfig_add]
+    rw [runConfig_add]
     have hlast :
       StageInputContinueBoundaryRewriterDescription.runConfig 1
             { state := 5
@@ -329,7 +330,7 @@ theorem stageInputContinueBoundaryRewriterDescription_haltsFromTape_prefixBits
         stageInputContinueBoundaryRewriterDescription_run_to_last_bit
           leftAfterLast true
     rw [hlast]
-    rw [MachineDescription.runConfig_add]
+    rw [runConfig_add]
     have hrewrite :
       StageInputContinueBoundaryRewriterDescription.runConfig 1
             { state := 6
@@ -359,19 +360,19 @@ theorem stageInputContinueBoundaryRewriterDescription_haltsFromTape_prefixBits
         stageInputContinueBitsOutputFromPrefix, leftAfterLast,
         stageInputContinueHeaderBits, stageInputContinueTickBits,
         stageInputContinueDoneDoneBits,
-        MachineDescription.encodeCodeSymbolAsInput,
-        MachineDescription.encodeCodeWordAsInput,
+        encodeCodeSymbolAsInput,
+        encodeCodeWordAsInput,
         List.reverse_append, List.map_append, List.append_assoc] using hbase
     exact happend
   constructor
   · exact
       (by
         simpa [inputBits, outputBits] using
-          congrArg MachineDescription.Configuration.state hrun)
+          congrArg Configuration.state hrun)
   · exact
       (by
         simpa [inputBits, outputBits] using
-          congrArg MachineDescription.Configuration.tape hrun)
+          congrArg Configuration.tape hrun)
 
 theorem dropTrailingNone_replicate_none_bool
     (n : Nat) :
@@ -484,7 +485,7 @@ theorem tapeAtCells_move_left_of_cells_ne_nil
 
 def stageInputContinueStagePrefixBits
     (input : Word Bool) (stage : Nat) : Word Bool :=
-  MachineDescription.encodeCodeWordAsInput
+  encodeCodeWordAsInput
     (stageInputContinueStagePrefix input stage)
 
 def projectionStageInputBitsLeftRev
@@ -502,7 +503,7 @@ theorem projectionStageInputBitsLeftRev_payload_cells
         stageInputContinueDoneBits).map some := by
   simp [projectionStageInputBitsLeftRev,
     stageInputContinueDoneBits,
-    MachineDescription.encodeCodeSymbolAsInput,
+    encodeCodeSymbolAsInput,
     List.map_append, List.append_assoc]
 
 theorem projectionStageInputBitsLeftRev_payload_cells_mapped
@@ -522,14 +523,14 @@ theorem stageInputContinueStagePrefixBits_map_reverse
         (stageInputContinueStagePrefixBits input stage)).reverse =
       List.append
         (List.map some
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (List.replicate stage MachineCodeSymbol.tick))).reverse
         (List.map some
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.encodeBoolWord input))).reverse := by
+          (encodeCodeWordAsInput
+            (encodeBoolWord input))).reverse := by
   unfold stageInputContinueStagePrefixBits stageInputContinueStagePrefix
   rw [encodeCodeWordAsInput_encodeBoolWordAppend]
-  simp [MachineDescription.encodeBoolWord, List.map_append,
+  simp [encodeBoolWord, List.map_append,
     List.reverse_append]
 
 theorem replicate_none_succ_append
@@ -617,7 +618,7 @@ theorem projectionFinalTape_move_left_eq_tailBlock
       ControllerStageInputProjection.projectionCodeCells,
       ControllerStageInputProjection.projectionDoneCodeCells,
       ControllerStageInputProjection.projectionStageTickCellsRev,
-      MachineDescription.encodeCodeSymbolAsInput]
+      encodeCodeSymbolAsInput]
   rw [htape]
   rw [hlead]
   simp [ControllerStageInputProjection.projectionTapeAtCells,
@@ -637,9 +638,9 @@ theorem projectionTailRewindDescription_run_blank
             leftRev (none :: none :: right) } := by
   simp [ProjectionTailRewindDescription,
     DovetailInitialLayoutInitializer.tapeAtCells,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write, Tape.move,
     Tape.moveLeft]
 
 theorem projectionTailRewindDescription_run_blank_to_cell
@@ -656,9 +657,9 @@ theorem projectionTailRewindDescription_run_blank_to_cell
   cases leftCell <;>
     simp [ProjectionTailRewindDescription,
       DovetailInitialLayoutInitializer.tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveLeft]
 
 theorem projectionTailRewindDescription_run_state0_bit
@@ -676,9 +677,9 @@ theorem projectionTailRewindDescription_run_state0_bit
   cases leftCell <;> cases bit <;>
     simp [ProjectionTailRewindDescription,
       DovetailInitialLayoutInitializer.tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveLeft]
 
 theorem projectionTailRewindDescription_run_scan_bit
@@ -696,9 +697,9 @@ theorem projectionTailRewindDescription_run_scan_bit
   cases leftCell <;> cases bit <;>
     simp [ProjectionTailRewindDescription,
       DovetailInitialLayoutInitializer.tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveLeft]
 
 theorem projectionTailRewindDescription_run_finish
@@ -715,9 +716,9 @@ theorem projectionTailRewindDescription_run_finish
   cases right <;>
     simp [ProjectionTailRewindDescription,
       DovetailInitialLayoutInitializer.tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem projectionTailRewindDescription_run_blanks
@@ -735,10 +736,10 @@ theorem projectionTailRewindDescription_run_blanks
             (List.append (List.replicate (n + 1) none) right) } := by
   induction n generalizing right with
   | zero =>
-      simp [MachineDescription.runConfig]
+      simp [runConfig]
   | succ n ih =>
       rw [show (n + 1) = 1 + n by omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       change
         ProjectionTailRewindDescription.runConfig n
             (ProjectionTailRewindDescription.runConfig 1
@@ -784,7 +785,7 @@ theorem projectionTailRewindDescription_run_scan_to_first_bit
   | nil =>
       simp only [List.length_nil, List.map_nil, List.reverse_nil]
       rw [show 0 + 2 = 1 + 1 by omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       change
         ProjectionTailRewindDescription.runConfig 1
             (ProjectionTailRewindDescription.runConfig 1
@@ -804,7 +805,7 @@ theorem projectionTailRewindDescription_run_scan_to_first_bit
           1 + (rest.length + 2) by
         simp
         omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       change
         ProjectionTailRewindDescription.runConfig
             (rest.length + 2)
@@ -847,7 +848,7 @@ theorem projectionTailRewindDescription_run_from_last_bit
   | nil =>
       simp only [List.length_nil, List.map_nil, List.reverse_nil]
       rw [show 0 + 2 = 1 + 1 by omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       change
         ProjectionTailRewindDescription.runConfig 1
             (ProjectionTailRewindDescription.runConfig 1
@@ -867,7 +868,7 @@ theorem projectionTailRewindDescription_run_from_last_bit
           1 + (rest.length + 2) by
         simp
         omega]
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       change
         ProjectionTailRewindDescription.runConfig
             (rest.length + 2)
@@ -913,9 +914,9 @@ theorem projectionTailRewindDescription_run_tail_block
                   (List.replicate trail none) right)) } := by
   rw [show trail + 1 + (bitsLeftRev.length + 2) =
       trail + (1 + (bitsLeftRev.length + 2)) by omega]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [projectionTailRewindDescription_run_blanks]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   have hright :
       List.append (List.replicate (trail + 1) none) right =
         none :: List.append (List.replicate trail none) right :=
@@ -931,8 +932,8 @@ theorem projectedStageInputContinueDescription_haltsFromTape_finalTape
         (ControllerStageInputProjection.finalTape
           { input := input, stage := stage, result := result }))
       (stageInputContinueOutputTape
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
             { input := input, stage := stage + 1, result := [] }))) := by
   let prefixBits := stageInputContinueStagePrefixBits input stage
   let trail := 8 * result.length + 4
@@ -1059,12 +1060,12 @@ theorem projectedStageInputContinueDescription_haltsFromTape_finalTape
           Tboundary
           (stageInputContinueOutputTape
             (stageInputContinueBitsOutputFromPrefix prefixBits)) :=
-      MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+      HaltsFromTapeEquiv_of_input_equiv
         (Tape.Equiv.symm hboundaryEquiv) hBclean
     simpa [hboundary] using hfromBoundary
   rcases hBactualEquiv with ⟨Tactual, hBactual, hTactual⟩
   rcases
-      MachineDescription.runConfig_eq_halt_of_haltsFromTape hBactual with
+      runConfig_eq_halt_of_haltsFromTape hBactual with
     ⟨nB, hBRun⟩
   have hseq :
       ProjectedStageInputContinueDescription.HaltsFromTape
@@ -1073,7 +1074,7 @@ theorem projectedStageInputContinueDescription_haltsFromTape_finalTape
             { input := input, stage := stage, result := result }))
         Tactual := by
     exact
-      MachineDescription.seqSubroutine_haltsFromTape_of_haltsFromTape
+      seqSubroutine_haltsFromTape_of_haltsFromTape
         projectionTailRewindDescription_subroutineReady
         stageInputContinueBoundaryRewriterDescription_subroutineReady
         hAhaltStart ⟨nB, hBRun⟩
@@ -1082,34 +1083,34 @@ theorem projectedStageInputContinueDescription_haltsFromTape_finalTape
       stageInputContinueOutputTape
           (stageInputContinueBitsOutputFromPrefix prefixBits) =
         stageInputContinueOutputTape
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.DovetailControllerLayout.encode
+          (encodeCodeWordAsInput
+            (DovetailControllerLayout.encode
               { input := input, stage := stage + 1, result := [] })) := by
     simp [prefixBits, stageInputContinueStagePrefixBits,
       stageInputContinue_outputBits_eq_prefix input stage]
   simpa [htarget] using hTactual
 
 def ControllerResultContinueDescription : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     ResultNoneGuardStageInputProjectionDescription
     ProjectedStageInputContinueDescription
     Direction.left
 
 theorem controllerResultContinueDescription_subroutineReady :
     ControllerResultContinueDescription.SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     resultNoneGuardStageInputProjectionDescription_subroutineReady
     projectedStageInputContinueDescription_subroutineReady
 
 theorem resultNoneGuardStageInputProjectionDescription_haltsWithTapeEquiv_finalTape_controllerEncode
-    (C : MachineDescription.DovetailControllerLayout)
+    (C : DovetailControllerLayout)
     (hraw : PairedRecognizerDovetailControllerRawOutput C.result = none) :
     ResultNoneGuardStageInputProjectionDescription.HaltsWithTapeEquiv
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.DovetailControllerLayout.encode C))
+      (encodeCodeWordAsInput
+        (DovetailControllerLayout.encode C))
       (ControllerStageInputProjection.finalTape C) := by
-  let code := MachineDescription.DovetailControllerLayout.encode C
-  let inputBits := MachineDescription.encodeCodeWordAsInput code
+  let code := DovetailControllerLayout.encode C
+  let inputBits := encodeCodeWordAsInput code
   have haccept : (resultNoneGuardScanBoundary code).accepts :=
     (resultNoneGuardScanBoundary_controllerEncode_accepts_iff C).mpr hraw
   rcases
@@ -1130,20 +1131,20 @@ theorem resultNoneGuardStageInputProjectionDescription_haltsWithTapeEquiv_finalT
         (Tape.input inputBits)
         (ControllerStageInputProjection.finalTape C) := by
     rcases hprojWith with ⟨nProj, hnProj⟩
-    exact ⟨nProj, by simpa [MachineDescription.initial] using hnProj⟩
+    exact ⟨nProj, by simpa [initial] using hnProj⟩
   rcases
-      MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+      HaltsFromTapeEquiv_of_input_equiv
         (Tape.Equiv.symm hguardMove) hprojFrom with
     ⟨Tactual, hprojActual, hactualEquiv⟩
   rcases
-      MachineDescription.runConfig_eq_halt_of_haltsFromTape
+      runConfig_eq_halt_of_haltsFromTape
         hprojActual with
     ⟨nProjActual, hprojRun⟩
   have hseq :
       ResultNoneGuardStageInputProjectionDescription.HaltsWithTape
         inputBits Tactual := by
     simpa [ResultNoneGuardStageInputProjectionDescription, inputBits] using
-      MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+      seqSubroutine_haltsWithTape_of_haltsWithTape
         resultNoneGuardScanRewindDescription_subroutineReady
         hprojReady hguard ⟨nProjActual, hprojRun⟩
   exact ⟨Tactual, hseq, hactualEquiv⟩
@@ -1152,12 +1153,12 @@ theorem resultNoneGuardStageInputProjectionDescription_haltsWithTape_inv_finalTa
     {code : Word MachineCodeSymbol} {T : Tape Bool}
     (hhalt :
       ResultNoneGuardStageInputProjectionDescription.HaltsWithTape
-        (MachineDescription.encodeCodeWordAsInput code) T) :
-    exists C : MachineDescription.DovetailControllerLayout,
-      code = MachineDescription.DovetailControllerLayout.encode C ∧
+        (encodeCodeWordAsInput code) T) :
+    exists C : DovetailControllerLayout,
+      code = DovetailControllerLayout.encode C ∧
         PairedRecognizerDovetailControllerRawOutput C.result = none ∧
           Tape.Equiv T (ControllerStageInputProjection.finalTape C) := by
-  let inputBits := MachineDescription.encodeCodeWordAsInput code
+  let inputBits := encodeCodeWordAsInput code
   have hguardReady : ResultNoneGuardScanRewindDescription.SubroutineReady :=
     resultNoneGuardScanRewindDescription_subroutineReady
   have hprojReady :
@@ -1165,7 +1166,7 @@ theorem resultNoneGuardStageInputProjectionDescription_haltsWithTape_inv_finalTa
     ⟨ControllerStageInputProjection.wellFormed,
       ControllerStageInputProjection.haltTransitionFree⟩
   rcases
-      MachineDescription.seqSubroutine_haltsWithTape_inv
+      seqSubroutine_haltsWithTape_inv
         hguardReady hprojReady
         (by simpa [ResultNoneGuardStageInputProjectionDescription,
           inputBits] using hhalt) with
@@ -1193,23 +1194,23 @@ theorem resultNoneGuardStageInputProjectionDescription_haltsWithTape_inv_finalTa
     rw [hprojRun]
     exact ⟨rfl, rfl⟩
   rcases
-      MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+      HaltsFromTapeEquiv_of_input_equiv
         hguardEquiv hprojActual with
     ⟨Tclean, hprojClean, hcleanEquiv⟩
   have hprojCleanWith :
       ControllerStageInputProjection.Description.HaltsWithTape
         inputBits Tclean := by
     rcases hprojClean with ⟨nClean, hnClean⟩
-    exact ⟨nClean, by simpa [MachineDescription.initial] using hnClean⟩
+    exact ⟨nClean, by simpa [initial] using hnClean⟩
   rcases hprojClean with ⟨nClean, hnClean⟩
   rcases
       ControllerStageInputProjection.decodeComplete_of_halting_run
         (code := code) (n := nClean)
-        (by simpa [MachineDescription.initial] using hnClean.left) with
+        (by simpa [initial] using hnClean.left) with
     ⟨C, hdecode⟩
   have hcode :
-      code = MachineDescription.DovetailControllerLayout.encode C :=
-    MachineDescription.DovetailControllerLayout.decodeComplete_eq_some_encode
+      code = DovetailControllerLayout.encode C :=
+    DovetailControllerLayout.decodeComplete_eq_some_encode
       hdecode
   have haccept :
       (resultNoneGuardScanBoundary code).accepts :=
@@ -1237,27 +1238,27 @@ theorem resultNoneGuardStageInputProjectionDescription_haltsWithTape_inv_finalTa
       (by rw [hTclean]; exact Tape.Equiv.refl _)
 
 theorem controllerResultContinueDescription_haltsWithOutput_controllerEncode
-    (C : MachineDescription.DovetailControllerLayout)
+    (C : DovetailControllerLayout)
     (hraw : PairedRecognizerDovetailControllerRawOutput C.result = none) :
     ControllerResultContinueDescription.HaltsWithOutput
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.DovetailControllerLayout.encode C))
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.DovetailControllerLayout.encode
-          (MachineDescription.DovetailControllerLayout.nextStage C))) := by
+      (encodeCodeWordAsInput
+        (DovetailControllerLayout.encode C))
+      (encodeCodeWordAsInput
+        (DovetailControllerLayout.encode
+          (DovetailControllerLayout.nextStage C))) := by
   rcases C with ⟨input, stage, result⟩
-  let C : MachineDescription.DovetailControllerLayout :=
+  let C : DovetailControllerLayout :=
     { input := input, stage := stage, result := result }
   let nextCode : Word MachineCodeSymbol :=
-    MachineDescription.DovetailControllerLayout.encode
-      (MachineDescription.DovetailControllerLayout.nextStage C)
+    DovetailControllerLayout.encode
+      (DovetailControllerLayout.nextStage C)
   let outputTape : Tape Bool :=
     stageInputContinueOutputTape
-      (MachineDescription.encodeCodeWordAsInput nextCode)
+      (encodeCodeWordAsInput nextCode)
   have hprefixEquiv :
       ResultNoneGuardStageInputProjectionDescription.HaltsWithTapeEquiv
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode C))
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode C))
         (ControllerStageInputProjection.finalTape C) := by
     exact
       resultNoneGuardStageInputProjectionDescription_haltsWithTapeEquiv_finalTape_controllerEncode
@@ -1282,7 +1283,7 @@ theorem controllerResultContinueDescription_haltsWithOutput_controllerEncode
       ProjectedStageInputContinueDescription.HaltsFromTapeEquiv
         (Tape.move Direction.left Tprefix) outputTape := by
     rcases
-        MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+        HaltsFromTapeEquiv_of_input_equiv
           hhandoffEquiv hcontCleanExact with
       ⟨TactualOut, hactualOut, hactualToClean⟩
     exact
@@ -1290,29 +1291,29 @@ theorem controllerResultContinueDescription_haltsWithOutput_controllerEncode
         Tape.Equiv.trans hactualToClean hcleanOutEquiv⟩
   rcases hcontActualEquiv with ⟨Tout, hcontActual, hToutEquiv⟩
   rcases
-      MachineDescription.runConfig_eq_halt_of_haltsFromTape
+      runConfig_eq_halt_of_haltsFromTape
         hcontActual with
     ⟨nCont, hcontRun⟩
   have hfull :
       ControllerResultContinueDescription.HaltsWithTape
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode C))
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode C))
         Tout := by
     exact
-      MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+      seqSubroutine_haltsWithTape_of_haltsWithTape
         resultNoneGuardStageInputProjectionDescription_subroutineReady
         projectedStageInputContinueDescription_subroutineReady
         hprefix ⟨nCont, hcontRun⟩
   have hfullEquiv :
       ControllerResultContinueDescription.HaltsWithTapeEquiv
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode C))
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode C))
         outputTape :=
     ⟨Tout, hfull, hToutEquiv⟩
   have hout :=
-    MachineDescription.haltsWithOutput_of_haltsWithTapeEquiv hfullEquiv
+    haltsWithOutput_of_haltsWithTapeEquiv hfullEquiv
   simpa [C, nextCode, outputTape,
-    MachineDescription.DovetailControllerLayout.nextStage,
+    DovetailControllerLayout.nextStage,
     stageInputContinueOutputTape_normalizedOutput] using hout
 
 theorem controllerResultContinueDescription_canonicalForwardSpec :
@@ -1328,7 +1329,7 @@ theorem controllerResultContinueDescription_closedLayoutSpec :
       ControllerResultContinueDescription := by
   intro code out hhalt
   rcases hhalt with ⟨n, hn⟩
-  let inputBits := MachineDescription.encodeCodeWordAsInput code
+  let inputBits := encodeCodeWordAsInput code
   let seq := ControllerResultContinueDescription
   let Tout : Tape Bool :=
     (seq.runConfig n (seq.initial inputBits)).tape
@@ -1338,7 +1339,7 @@ theorem controllerResultContinueDescription_closedLayoutSpec :
     exact ⟨hn.left, rfl⟩
   have hToutNorm :
       Tape.normalizedOutput Tout =
-        MachineDescription.encodeCodeWordAsInput out :=
+        encodeCodeWordAsInput out :=
     hn.right
   have hprefixReady :
       ResultNoneGuardStageInputProjectionDescription.SubroutineReady :=
@@ -1347,7 +1348,7 @@ theorem controllerResultContinueDescription_closedLayoutSpec :
       ProjectedStageInputContinueDescription.SubroutineReady :=
     projectedStageInputContinueDescription_subroutineReady
   rcases
-      MachineDescription.seqSubroutine_haltsWithTape_inv
+      seqSubroutine_haltsWithTape_inv
         hprefixReady hcontinueReady
         (by simpa [seq, ControllerResultContinueDescription,
           inputBits] using hfullTape) with
@@ -1373,16 +1374,16 @@ theorem controllerResultContinueDescription_closedLayoutSpec :
     exact ⟨rfl, rfl⟩
   let expectedTape : Tape Bool :=
     stageInputContinueOutputTape
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.DovetailControllerLayout.encode
-          (MachineDescription.DovetailControllerLayout.nextStage C)))
+      (encodeCodeWordAsInput
+        (DovetailControllerLayout.encode
+          (DovetailControllerLayout.nextStage C)))
   have hcleanContinue :
       ProjectedStageInputContinueDescription.HaltsFromTapeEquiv
         (Tape.move Direction.left
           (ControllerStageInputProjection.finalTape C))
         expectedTape := by
     simpa [expectedTape,
-      MachineDescription.DovetailControllerLayout.nextStage] using
+      DovetailControllerLayout.nextStage] using
       projectedStageInputContinueDescription_haltsFromTape_finalTape
         C.input C.result C.stage
   rcases hcleanContinue with
@@ -1394,11 +1395,11 @@ theorem controllerResultContinueDescription_closedLayoutSpec :
         (Tape.move Direction.left Tprefix) :=
     Tape.Equiv.move (Tape.Equiv.symm hprefixEquiv) Direction.left
   rcases
-      MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+      HaltsFromTapeEquiv_of_input_equiv
         hinputEquiv hcleanContinueExact with
     ⟨TknownOut, hknownContinue, hknownToClean⟩
   have hToutEq : Tout = TknownOut :=
-    MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+    haltsFromTape_functional_of_haltTransitionFree
       projectedStageInputContinueDescription_subroutineReady.right
       hcontinueActual hknownContinue
   have hToutExpectedNorm :
@@ -1410,22 +1411,22 @@ theorem controllerResultContinueDescription_closedLayoutSpec :
         (Tape.Equiv.trans hknownToClean hcleanOutEquiv)
   have hExpectedNorm :
       Tape.normalizedOutput expectedTape =
-        MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode
-            (MachineDescription.DovetailControllerLayout.nextStage C)) := by
+        encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.nextStage C)) := by
     simp [expectedTape, stageInputContinueOutputTape_normalizedOutput]
   have houtBits :
-      MachineDescription.encodeCodeWordAsInput out =
-        MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode
-            (MachineDescription.DovetailControllerLayout.nextStage C)) := by
+      encodeCodeWordAsInput out =
+        encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.nextStage C)) := by
     rw [← hToutNorm]
     exact hToutExpectedNorm.trans hExpectedNorm
   have hout :
       out =
-        MachineDescription.DovetailControllerLayout.encode
-      (MachineDescription.DovetailControllerLayout.nextStage C) :=
-    MachineDescription.encodeCodeWordAsInput_injective houtBits
+        DovetailControllerLayout.encode
+      (DovetailControllerLayout.nextStage C) :=
+    encodeCodeWordAsInput_injective houtBits
   exact ⟨C, hcode, hraw, hout⟩
 
 theorem controllerResultContinueComponentConstruction :

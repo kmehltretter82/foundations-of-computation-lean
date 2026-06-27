@@ -13,6 +13,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace CommonGround
 namespace CodeWordEmitters
@@ -37,7 +38,7 @@ export EncodedRewriters.CanonicalLayouts
 
 theorem rightShiftedOutputCompiled_of_indexed_tape_spec
     {ι : Type}
-    {P : MachineDescription.TapeCodePrimitive}
+    {P : TapeCodePrimitive}
     {runner : MachineDescription}
     (hwell : runner.WellFormed)
     (hhaltFree : runner.HaltTransitionFree)
@@ -48,18 +49,18 @@ theorem rightShiftedOutputCompiled_of_indexed_tape_spec
         outputTape i =
           Tape.move Direction.right
             (Tape.input
-              (MachineDescription.encodeCodeWordAsInput
+              (encodeCodeWordAsInput
                 (outputCode i))))
     (hforward :
       forall i : ι,
         runner.HaltsWithTape
-          (MachineDescription.encodeCodeWordAsInput (inputCode i))
+          (encodeCodeWordAsInput (inputCode i))
           (outputTape i))
     (hclosed :
       forall code : Word MachineCodeSymbol,
       forall T : Tape Bool,
         runner.HaltsWithTape
-          (MachineDescription.encodeCodeWordAsInput code) T ->
+          (encodeCodeWordAsInput code) T ->
         exists i : ι, code = inputCode i ∧ T = outputTape i)
     (htransform :
       forall code out : Word MachineCodeSymbol,
@@ -79,36 +80,36 @@ theorem rightShiftedOutputCompiled_of_indexed_tape_spec
       let T : Tape Bool :=
         (runner.runConfig n
           (runner.initial
-            (MachineDescription.encodeCodeWordAsInput code))).tape
+            (encodeCodeWordAsInput code))).tape
       have hTape :
           runner.HaltsWithTape
-              (MachineDescription.encodeCodeWordAsInput code) T := by
+              (encodeCodeWordAsInput code) T := by
         exact ⟨n, ⟨hn.left, rfl⟩⟩
       rcases hclosed code T hTape with ⟨i, hcode, hT⟩
       have hactual :
           Tape.normalizedOutput T =
-            MachineDescription.encodeCodeWordAsInput out := by
+            encodeCodeWordAsInput out := by
         simpa [T] using hn.right
       have hexpected :
           Tape.normalizedOutput T =
-            MachineDescription.encodeCodeWordAsInput (outputCode i) := by
+            encodeCodeWordAsInput (outputCode i) := by
         rw [hT, houtputTape i]
         exact
           EncodedRewriters.tape_normalizedOutput_move_right_input
-            (MachineDescription.encodeCodeWordAsInput (outputCode i))
+            (encodeCodeWordAsInput (outputCode i))
       have houtBits :
-          MachineDescription.encodeCodeWordAsInput out =
-            MachineDescription.encodeCodeWordAsInput (outputCode i) :=
+          encodeCodeWordAsInput out =
+            encodeCodeWordAsInput (outputCode i) :=
         hactual.symm.trans hexpected
       have hout : out = outputCode i :=
-        MachineDescription.encodeCodeWordAsInput_injective houtBits
+        encodeCodeWordAsInput_injective houtBits
       exact (htransform code out).mpr ⟨i, hcode, hout⟩
     · intro hP
       rcases (htransform code out).mp hP with ⟨i, hcode, hout⟩
       rw [hcode, hout]
       simpa [houtputTape i,
         EncodedRewriters.tape_normalizedOutput_move_right_input] using
-        MachineDescription.haltsWithOutput_of_haltsWithTape
+        haltsWithOutput_of_haltsWithTape
           (hforward i)
   · intro code T hhalt
     rcases hclosed code T hhalt with ⟨i, hcode, hT⟩

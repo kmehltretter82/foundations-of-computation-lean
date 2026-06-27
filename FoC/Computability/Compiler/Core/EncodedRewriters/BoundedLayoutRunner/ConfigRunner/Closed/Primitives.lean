@@ -17,33 +17,34 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
 
 def AcceptSimulatorLayout
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.SimulatorLayout where
+    (L : DovetailLayout) :
+    SimulatorLayout where
   input := ParsedLayoutBits L
   stage := L.stage
   config := L.acceptConfig
   hit := L.acceptHit
 
 def RejectSimulatorLayout
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.SimulatorLayout where
+    (L : DovetailLayout) :
+    SimulatorLayout where
   input := ParsedLayoutBits L
   stage := L.stage
   config := L.rejectConfig
   hit := L.rejectHit
 
 def MergeAcceptSimulatorResult
-    (S : MachineDescription.SimulatorLayout) :
-    Option MachineDescription.DovetailLayout :=
-  match MachineDescription.decodeCodeWordAsInput S.input with
+    (S : SimulatorLayout) :
+    Option DovetailLayout :=
+  match decodeCodeWordAsInput S.input with
   | none => none
   | some code =>
-      match MachineDescription.DovetailLayout.decodeComplete code with
+      match DovetailLayout.decodeComplete code with
       | none => none
       | some L =>
           some { L with
@@ -51,12 +52,12 @@ def MergeAcceptSimulatorResult
             acceptHit := S.hit }
 
 def MergeRejectSimulatorResult
-    (S : MachineDescription.SimulatorLayout) :
-    Option MachineDescription.DovetailLayout :=
-  match MachineDescription.decodeCodeWordAsInput S.input with
+    (S : SimulatorLayout) :
+    Option DovetailLayout :=
+  match decodeCodeWordAsInput S.input with
   | none => none
   | some code =>
-      match MachineDescription.DovetailLayout.decodeComplete code with
+      match DovetailLayout.decodeComplete code with
       | none => none
       | some L =>
           some { L with
@@ -64,47 +65,47 @@ def MergeRejectSimulatorResult
             rejectHit := S.hit }
 
 def AcceptProjectionPrimitive :
-    MachineDescription.TapeCodePrimitive where
+    TapeCodePrimitive where
   transform := fun code =>
-    match MachineDescription.DovetailLayout.decodeComplete code with
+    match DovetailLayout.decodeComplete code with
     | none => none
     | some L =>
         some
-          (MachineDescription.SimulatorLayout.encode
+          (SimulatorLayout.encode
             (AcceptSimulatorLayout L))
 
 def RejectProjectionPrimitive :
-    MachineDescription.TapeCodePrimitive where
+    TapeCodePrimitive where
   transform := fun code =>
-    match MachineDescription.DovetailLayout.decodeComplete code with
+    match DovetailLayout.decodeComplete code with
     | none => none
     | some L =>
         some
-          (MachineDescription.SimulatorLayout.encode
+          (SimulatorLayout.encode
             (RejectSimulatorLayout L))
 
 def AcceptMergePrimitive :
-    MachineDescription.TapeCodePrimitive where
+    TapeCodePrimitive where
   transform := fun code =>
-    match MachineDescription.SimulatorLayout.decodeComplete code with
+    match SimulatorLayout.decodeComplete code with
     | none => none
     | some S =>
-        Option.map MachineDescription.DovetailLayout.encode
+        Option.map DovetailLayout.encode
           (MergeAcceptSimulatorResult S)
 
 def RejectMergePrimitive :
-    MachineDescription.TapeCodePrimitive where
+    TapeCodePrimitive where
   transform := fun code =>
-    match MachineDescription.SimulatorLayout.decodeComplete code with
+    match SimulatorLayout.decodeComplete code with
     | none => none
     | some S =>
-        Option.map MachineDescription.DovetailLayout.encode
+        Option.map DovetailLayout.encode
           (MergeRejectSimulatorResult S)
 
 def SelectedProjectionSimulatorLayout
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.SimulatorLayout :=
+    (L : DovetailLayout) :
+    SimulatorLayout :=
   if useAccept then
     AcceptSimulatorLayout L
   else
@@ -112,19 +113,19 @@ def SelectedProjectionSimulatorLayout
 
 def SelectedProjectionPrimitive
     (useAccept : Bool) :
-    MachineDescription.TapeCodePrimitive where
+    TapeCodePrimitive where
   transform := fun code =>
-    match MachineDescription.DovetailLayout.decodeComplete code with
+    match DovetailLayout.decodeComplete code with
     | none => none
     | some L =>
         some
-          (MachineDescription.SimulatorLayout.encode
+          (SimulatorLayout.encode
             (SelectedProjectionSimulatorLayout useAccept L))
 
 def SelectedMergeSimulatorResult
     (useAccept : Bool)
-    (S : MachineDescription.SimulatorLayout) :
-    Option MachineDescription.DovetailLayout :=
+    (S : SimulatorLayout) :
+    Option DovetailLayout :=
   if useAccept then
     MergeAcceptSimulatorResult S
   else
@@ -132,103 +133,103 @@ def SelectedMergeSimulatorResult
 
 def SelectedMergePrimitive
     (useAccept : Bool) :
-    MachineDescription.TapeCodePrimitive where
+    TapeCodePrimitive where
   transform := fun code =>
-    match MachineDescription.SimulatorLayout.decodeComplete code with
+    match SimulatorLayout.decodeComplete code with
     | none => none
     | some S =>
-        Option.map MachineDescription.DovetailLayout.encode
+        Option.map DovetailLayout.encode
           (SelectedMergeSimulatorResult useAccept S)
 
 def ConfigRunnerAfterAccept
     (accept : MachineDescription)
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.DovetailLayout :=
+    (L : DovetailLayout) :
+    DovetailLayout :=
   { L with
     acceptConfig :=
       accept.runConfig L.stage L.acceptConfig
     acceptHit :=
       L.acceptHit ||
-        MachineDescription.SimulatorLayout.hitsFromConfigByBool
+        SimulatorLayout.hitsFromConfigByBool
           accept L.acceptConfig L.stage }
 
 def ConfigRunnerAfterReject
     (reject : MachineDescription)
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.DovetailLayout :=
+    (L : DovetailLayout) :
+    DovetailLayout :=
   { L with
     rejectConfig :=
       reject.runConfig L.stage L.rejectConfig
     rejectHit :=
       L.rejectHit ||
-        MachineDescription.SimulatorLayout.hitsFromConfigByBool
+        SimulatorLayout.hitsFromConfigByBool
           reject L.rejectConfig L.stage }
 
 theorem decodeCodeWordAsInput_parsedLayoutBits
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.decodeCodeWordAsInput (ParsedLayoutBits L) =
-      some (MachineDescription.DovetailLayout.encode L) := by
+    (L : DovetailLayout) :
+    decodeCodeWordAsInput (ParsedLayoutBits L) =
+      some (DovetailLayout.encode L) := by
   simpa [ParsedLayoutBits] using
-    MachineDescription.decodeCodeWordAsInput_encodeCodeWordAsInput
-      (MachineDescription.DovetailLayout.encode L)
+    decodeCodeWordAsInput_encodeCodeWordAsInput
+      (DovetailLayout.encode L)
 
 theorem MergeAcceptSimulatorResult_run
     (accept : MachineDescription)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     MergeAcceptSimulatorResult
-        (MachineDescription.SimulatorLayout.run
+        (SimulatorLayout.run
           accept L.stage (AcceptSimulatorLayout L)) =
       some (ConfigRunnerAfterAccept accept L) := by
   simp [MergeAcceptSimulatorResult, ConfigRunnerAfterAccept,
     AcceptSimulatorLayout, decodeCodeWordAsInput_parsedLayoutBits,
-    MachineDescription.DovetailLayout.decodeComplete_encode,
-    MachineDescription.SimulatorLayout.run]
+    DovetailLayout.decodeComplete_encode,
+    SimulatorLayout.run]
 
 theorem MergeRejectSimulatorResult_run
     (reject : MachineDescription)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     MergeRejectSimulatorResult
-        (MachineDescription.SimulatorLayout.run
+        (SimulatorLayout.run
           reject L.stage (RejectSimulatorLayout L)) =
       some (ConfigRunnerAfterReject reject L) := by
   simp [MergeRejectSimulatorResult, ConfigRunnerAfterReject,
     RejectSimulatorLayout, decodeCodeWordAsInput_parsedLayoutBits,
-    MachineDescription.DovetailLayout.decodeComplete_encode,
-    MachineDescription.SimulatorLayout.run]
+    DovetailLayout.decodeComplete_encode,
+    SimulatorLayout.run]
 
 theorem AcceptProjectionPrimitive_encode
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     AcceptProjectionPrimitive.transform
-        (MachineDescription.DovetailLayout.encode L) =
+        (DovetailLayout.encode L) =
       some
-        (MachineDescription.SimulatorLayout.encode
+        (SimulatorLayout.encode
           (AcceptSimulatorLayout L)) := by
   simp [AcceptProjectionPrimitive,
-    MachineDescription.DovetailLayout.decodeComplete_encode]
+    DovetailLayout.decodeComplete_encode]
 
 theorem RejectProjectionPrimitive_encode
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     RejectProjectionPrimitive.transform
-        (MachineDescription.DovetailLayout.encode L) =
+        (DovetailLayout.encode L) =
       some
-        (MachineDescription.SimulatorLayout.encode
+        (SimulatorLayout.encode
           (RejectSimulatorLayout L)) := by
   simp [RejectProjectionPrimitive,
-    MachineDescription.DovetailLayout.decodeComplete_encode]
+    DovetailLayout.decodeComplete_encode]
 
 theorem SelectedProjectionPrimitive_transform_eq_some_iff
     (useAccept : Bool) (code out : Word MachineCodeSymbol) :
     (SelectedProjectionPrimitive useAccept).transform code = some out ↔
-      exists L : MachineDescription.DovetailLayout,
-        code = MachineDescription.DovetailLayout.encode L ∧
+      exists L : DovetailLayout,
+        code = DovetailLayout.encode L ∧
           out =
-            MachineDescription.SimulatorLayout.encode
+            SimulatorLayout.encode
               (SelectedProjectionSimulatorLayout useAccept L) := by
   constructor
   · intro h
     unfold SelectedProjectionPrimitive at h
     cases hdecode :
-        MachineDescription.DovetailLayout.decodeComplete code with
+        DovetailLayout.decodeComplete code with
     | none =>
         simp [hdecode] at h
     | some L =>
@@ -236,69 +237,69 @@ theorem SelectedProjectionPrimitive_transform_eq_some_iff
         cases h
         refine ⟨L, ?_, rfl⟩
         exact
-          MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
+          DovetailLayout.decodeComplete_eq_some_encode
             hdecode
   · intro h
     rcases h with ⟨L, rfl, rfl⟩
     simp [SelectedProjectionPrimitive,
-      MachineDescription.DovetailLayout.decodeComplete_encode]
+      DovetailLayout.decodeComplete_encode]
 
 theorem AcceptMergePrimitive_encode_run
     (accept : MachineDescription)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     AcceptMergePrimitive.transform
-        (MachineDescription.SimulatorLayout.encode
-          (MachineDescription.SimulatorLayout.run
+        (SimulatorLayout.encode
+          (SimulatorLayout.run
             accept L.stage (AcceptSimulatorLayout L))) =
       some
-        (MachineDescription.DovetailLayout.encode
+        (DovetailLayout.encode
           (ConfigRunnerAfterAccept accept L)) := by
   simp [AcceptMergePrimitive,
-    MachineDescription.SimulatorLayout.decodeComplete_encode,
+    SimulatorLayout.decodeComplete_encode,
     MergeAcceptSimulatorResult_run]
 
 theorem RejectMergePrimitive_encode_run
     (reject : MachineDescription)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     RejectMergePrimitive.transform
-        (MachineDescription.SimulatorLayout.encode
-          (MachineDescription.SimulatorLayout.run
+        (SimulatorLayout.encode
+          (SimulatorLayout.run
             reject L.stage (RejectSimulatorLayout L))) =
       some
-        (MachineDescription.DovetailLayout.encode
+        (DovetailLayout.encode
           (ConfigRunnerAfterReject reject L)) := by
   simp [RejectMergePrimitive,
-    MachineDescription.SimulatorLayout.decodeComplete_encode,
+    SimulatorLayout.decodeComplete_encode,
     MergeRejectSimulatorResult_run]
 
 theorem AcceptMergePrimitive_transform_eq_some_iff
     (code out : Word MachineCodeSymbol) :
     AcceptMergePrimitive.transform code = some out ↔
-      exists S : MachineDescription.SimulatorLayout,
-        exists L : MachineDescription.DovetailLayout,
-          code = MachineDescription.SimulatorLayout.encode S ∧
-          MachineDescription.decodeCodeWordAsInput S.input =
-            some (MachineDescription.DovetailLayout.encode L) ∧
+      exists S : SimulatorLayout,
+        exists L : DovetailLayout,
+          code = SimulatorLayout.encode S ∧
+          decodeCodeWordAsInput S.input =
+            some (DovetailLayout.encode L) ∧
           out =
-            MachineDescription.DovetailLayout.encode
+            DovetailLayout.encode
               { L with
                 acceptConfig := S.config
                 acceptHit := S.hit } := by
   constructor
   · intro h
     unfold AcceptMergePrimitive at h
-    cases hS : MachineDescription.SimulatorLayout.decodeComplete code with
+    cases hS : SimulatorLayout.decodeComplete code with
     | none =>
         simp [hS] at h
     | some S =>
         simp [hS] at h
         unfold MergeAcceptSimulatorResult at h
-        cases hinput : MachineDescription.decodeCodeWordAsInput S.input with
+        cases hinput : decodeCodeWordAsInput S.input with
         | none =>
             simp [hinput] at h
         | some innerCode =>
             cases hL :
-                MachineDescription.DovetailLayout.decodeComplete innerCode with
+                DovetailLayout.decodeComplete innerCode with
             | none =>
                 simp [hinput, hL] at h
             | some L =>
@@ -306,47 +307,47 @@ theorem AcceptMergePrimitive_transform_eq_some_iff
                 cases h
                 refine ⟨S, L, ?_, ?_, rfl⟩
                 · exact
-                    MachineDescription.SimulatorLayout.decodeComplete_eq_some_encode
+                    SimulatorLayout.decodeComplete_eq_some_encode
                       hS
                 · rw [
-                    MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
+                    DovetailLayout.decodeComplete_eq_some_encode
                       hL] at hinput
                   exact hinput
   · intro h
     rcases h with ⟨S, L, rfl, hinput, rfl⟩
     simp [AcceptMergePrimitive,
-      MachineDescription.SimulatorLayout.decodeComplete_encode,
+      SimulatorLayout.decodeComplete_encode,
       MergeAcceptSimulatorResult, hinput,
-      MachineDescription.DovetailLayout.decodeComplete_encode]
+      DovetailLayout.decodeComplete_encode]
 
 theorem RejectMergePrimitive_transform_eq_some_iff
     (code out : Word MachineCodeSymbol) :
     RejectMergePrimitive.transform code = some out ↔
-      exists S : MachineDescription.SimulatorLayout,
-        exists L : MachineDescription.DovetailLayout,
-          code = MachineDescription.SimulatorLayout.encode S ∧
-          MachineDescription.decodeCodeWordAsInput S.input =
-            some (MachineDescription.DovetailLayout.encode L) ∧
+      exists S : SimulatorLayout,
+        exists L : DovetailLayout,
+          code = SimulatorLayout.encode S ∧
+          decodeCodeWordAsInput S.input =
+            some (DovetailLayout.encode L) ∧
           out =
-            MachineDescription.DovetailLayout.encode
+            DovetailLayout.encode
               { L with
                 rejectConfig := S.config
                 rejectHit := S.hit } := by
   constructor
   · intro h
     unfold RejectMergePrimitive at h
-    cases hS : MachineDescription.SimulatorLayout.decodeComplete code with
+    cases hS : SimulatorLayout.decodeComplete code with
     | none =>
         simp [hS] at h
     | some S =>
         simp [hS] at h
         unfold MergeRejectSimulatorResult at h
-        cases hinput : MachineDescription.decodeCodeWordAsInput S.input with
+        cases hinput : decodeCodeWordAsInput S.input with
         | none =>
             simp [hinput] at h
         | some innerCode =>
             cases hL :
-                MachineDescription.DovetailLayout.decodeComplete innerCode with
+                DovetailLayout.decodeComplete innerCode with
             | none =>
                 simp [hinput, hL] at h
             | some L =>
@@ -354,18 +355,18 @@ theorem RejectMergePrimitive_transform_eq_some_iff
                 cases h
                 refine ⟨S, L, ?_, ?_, rfl⟩
                 · exact
-                    MachineDescription.SimulatorLayout.decodeComplete_eq_some_encode
+                    SimulatorLayout.decodeComplete_eq_some_encode
                       hS
                 · rw [
-                    MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
+                    DovetailLayout.decodeComplete_eq_some_encode
                       hL] at hinput
                   exact hinput
   · intro h
     rcases h with ⟨S, L, rfl, hinput, rfl⟩
     simp [RejectMergePrimitive,
-      MachineDescription.SimulatorLayout.decodeComplete_encode,
+      SimulatorLayout.decodeComplete_encode,
       MergeRejectSimulatorResult, hinput,
-      MachineDescription.DovetailLayout.decodeComplete_encode]
+      DovetailLayout.decodeComplete_encode]
 
 theorem AcceptMergePrimitive_transform_eq_some_cons
     {code out : Word MachineCodeSymbol}
@@ -418,19 +419,19 @@ theorem SelectedMergePrimitive_transform_eq_some_cons
 
 theorem ConfigRunnerAfterReject_afterAccept
     (accept reject : MachineDescription)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     ConfigRunnerAfterReject reject
         (ConfigRunnerAfterAccept accept L) =
       BoundedRunLayout accept reject L := by
   cases L
   simp [ConfigRunnerAfterReject, ConfigRunnerAfterAccept,
-    BoundedRunLayout, MachineDescription.DovetailLayout.run]
+    BoundedRunLayout, DovetailLayout.run]
 
 theorem MergeRejectSimulatorResult_run_afterAccept
     (accept reject : MachineDescription)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     MergeRejectSimulatorResult
-        (MachineDescription.SimulatorLayout.run
+        (SimulatorLayout.run
           reject (ConfigRunnerAfterAccept accept L).stage
           (RejectSimulatorLayout (ConfigRunnerAfterAccept accept L))) =
       some (BoundedRunLayout accept reject L) := by
@@ -440,14 +441,14 @@ theorem MergeRejectSimulatorResult_run_afterAccept
 
 theorem ConfigRunnerSemanticPipeline
     (accept reject : MachineDescription)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     (do
       let acceptResult :=
-        MachineDescription.SimulatorLayout.run
+        SimulatorLayout.run
           accept L.stage (AcceptSimulatorLayout L)
       let Laccept ← MergeAcceptSimulatorResult acceptResult
       let rejectResult :=
-        MachineDescription.SimulatorLayout.run
+        SimulatorLayout.run
           reject Laccept.stage (RejectSimulatorLayout Laccept)
       MergeRejectSimulatorResult rejectResult) =
         some (BoundedRunLayout accept reject L) := by
@@ -455,9 +456,9 @@ theorem ConfigRunnerSemanticPipeline
     MergeRejectSimulatorResult_run_afterAccept]
 
 theorem simulatorLayout_encode_cons
-    (S : MachineDescription.SimulatorLayout) :
+    (S : SimulatorLayout) :
     exists tail : Word MachineCodeSymbol,
-      MachineDescription.SimulatorLayout.encode S =
+      SimulatorLayout.encode S =
         MachineCodeSymbol.header :: tail := by
   cases S
   exact ⟨_, rfl⟩
@@ -477,21 +478,21 @@ theorem SelectedProjectionPrimitive_transform_eq_some_cons
   exact ⟨tail, by rw [hout, htail]⟩
 
 theorem simulatorLayoutTape_move_left_move_right
-    (S : MachineDescription.SimulatorLayout) :
+    (S : SimulatorLayout) :
     Tape.move Direction.left
         (Tape.move Direction.right
-          (MachineDescription.SimulatorLayout.tape S)) =
-      MachineDescription.SimulatorLayout.tape S := by
+          (SimulatorLayout.tape S)) =
+      SimulatorLayout.tape S := by
   rcases simulatorLayout_encode_cons S with ⟨tail, htail⟩
-  unfold MachineDescription.SimulatorLayout.tape
-    MachineDescription.SimulatorLayout.asBoolInput
+  unfold SimulatorLayout.tape
+    SimulatorLayout.asBoolInput
   rw [htail]
   exact
     EncodedRewriters.tape_move_left_move_right_input_encodeCodeWordAsInput_cons
       MachineCodeSymbol.header tail
 
 theorem parsedLayoutTape_move_left_move_right_configRunner
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     Tape.move Direction.left
         (Tape.move Direction.right (ParsedLayoutTape L)) =
       ParsedLayoutTape L := by
@@ -505,24 +506,24 @@ theorem parsedLayoutTape_move_left_move_right_configRunner
 
 def SelectedProjectionOutputCode
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     Word MachineCodeSymbol :=
-  MachineDescription.SimulatorLayout.encode
+  SimulatorLayout.encode
     (SelectedProjectionSimulatorLayout useAccept L)
 
 def SelectedProjectionOutputTape
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     Tape Bool :=
   Tape.move Direction.right
     (Tape.input
-      (MachineDescription.encodeCodeWordAsInput
+      (encodeCodeWordAsInput
         (SelectedProjectionOutputCode useAccept L)))
 
 def SelectedProjectionForwardSpec
     (useAccept : Bool)
     (runner : MachineDescription) : Prop :=
-  forall L : MachineDescription.DovetailLayout,
+  forall L : DovetailLayout,
     runner.HaltsFromTapeEquiv
       (Tape.input (ParsedLayoutBits L))
       (SelectedProjectionOutputTape useAccept L)
@@ -533,9 +534,9 @@ def SelectedProjectionClosedSpec
   forall code : Word MachineCodeSymbol,
   forall T : Tape Bool,
     runner.HaltsFromTape
-        (Tape.input (MachineDescription.encodeCodeWordAsInput code)) T ->
-      exists L : MachineDescription.DovetailLayout,
-        code = MachineDescription.DovetailLayout.encode L ∧
+        (Tape.input (encodeCodeWordAsInput code)) T ->
+      exists L : DovetailLayout,
+        code = DovetailLayout.encode L ∧
           Tape.Equiv T (SelectedProjectionOutputTape useAccept L)
 
 def SelectedProjectionSpec
@@ -552,10 +553,10 @@ def SelectedProjectionFiniteDescriptionConstruction : Prop :=
 
 def SelectedMergeOutputCode
     (useAccept : Bool)
-    (S : MachineDescription.SimulatorLayout)
-    (L : MachineDescription.DovetailLayout) :
+    (S : SimulatorLayout)
+    (L : DovetailLayout) :
     Word MachineCodeSymbol :=
-  MachineDescription.DovetailLayout.encode
+  DovetailLayout.encode
     (if useAccept then
       { L with
         acceptConfig := S.config
@@ -567,22 +568,22 @@ def SelectedMergeOutputCode
 
 def SelectedMergeOutputTape
     (useAccept : Bool)
-    (S : MachineDescription.SimulatorLayout)
-    (L : MachineDescription.DovetailLayout) :
+    (S : SimulatorLayout)
+    (L : DovetailLayout) :
     Tape Bool :=
   Tape.move Direction.right
     (Tape.input
-      (MachineDescription.encodeCodeWordAsInput
+      (encodeCodeWordAsInput
         (SelectedMergeOutputCode useAccept S L)))
 
 theorem SelectedMergePrimitive_transform_eq_some_iff
     (useAccept : Bool) (code out : Word MachineCodeSymbol) :
     (SelectedMergePrimitive useAccept).transform code = some out ↔
-      exists S : MachineDescription.SimulatorLayout,
-      exists L : MachineDescription.DovetailLayout,
-        code = MachineDescription.SimulatorLayout.encode S ∧
-          MachineDescription.decodeCodeWordAsInput S.input =
-            some (MachineDescription.DovetailLayout.encode L) ∧
+      exists S : SimulatorLayout,
+      exists L : DovetailLayout,
+        code = SimulatorLayout.encode S ∧
+          decodeCodeWordAsInput S.input =
+            some (DovetailLayout.encode L) ∧
           out = SelectedMergeOutputCode useAccept S L := by
   cases useAccept
   · simpa [SelectedMergePrimitive, SelectedMergeSimulatorResult,
@@ -595,12 +596,12 @@ theorem SelectedMergePrimitive_transform_eq_some_iff
 def SelectedMergeForwardSpec
     (useAccept : Bool)
     (runner : MachineDescription) : Prop :=
-  forall S : MachineDescription.SimulatorLayout,
-  forall L : MachineDescription.DovetailLayout,
-    MachineDescription.decodeCodeWordAsInput S.input =
-      some (MachineDescription.DovetailLayout.encode L) ->
+  forall S : SimulatorLayout,
+  forall L : DovetailLayout,
+    decodeCodeWordAsInput S.input =
+      some (DovetailLayout.encode L) ->
     runner.HaltsWithTape
-      (MachineDescription.SimulatorLayout.asBoolInput S)
+      (SimulatorLayout.asBoolInput S)
       (SelectedMergeOutputTape useAccept S L)
 
 def SelectedMergeClosedSpec
@@ -609,12 +610,12 @@ def SelectedMergeClosedSpec
   forall code : Word MachineCodeSymbol,
   forall T : Tape Bool,
     runner.HaltsWithTape
-        (MachineDescription.encodeCodeWordAsInput code) T ->
-      exists S : MachineDescription.SimulatorLayout,
-      exists L : MachineDescription.DovetailLayout,
-        code = MachineDescription.SimulatorLayout.encode S ∧
-          MachineDescription.decodeCodeWordAsInput S.input =
-            some (MachineDescription.DovetailLayout.encode L) ∧
+        (encodeCodeWordAsInput code) T ->
+      exists S : SimulatorLayout,
+      exists L : DovetailLayout,
+        code = SimulatorLayout.encode S ∧
+          decodeCodeWordAsInput S.input =
+            some (DovetailLayout.encode L) ∧
           T = SelectedMergeOutputTape useAccept S L
 
 def SelectedMergeSpec
@@ -636,16 +637,16 @@ theorem selectedMergeRightShifted_of_spec
       (SelectedMergePrimitive useAccept) runner := by
   let Index : Type :=
     { pair :
-        MachineDescription.SimulatorLayout ×
-          MachineDescription.DovetailLayout //
-      MachineDescription.decodeCodeWordAsInput pair.1.input =
-        some (MachineDescription.DovetailLayout.encode pair.2) }
+        SimulatorLayout ×
+          DovetailLayout //
+      decodeCodeWordAsInput pair.1.input =
+        some (DovetailLayout.encode pair.2) }
   exact
     CommonGround.CodeWordEmitters.rightShiftedOutputCompiled_of_indexed_tape_spec
       (ι := Index)
       hrunner.left.left
       hrunner.left.right
-      (fun i => MachineDescription.SimulatorLayout.encode i.1.1)
+      (fun i => SimulatorLayout.encode i.1.1)
       (fun i => SelectedMergeOutputCode useAccept i.1.1 i.1.2)
       (fun i => SelectedMergeOutputTape useAccept i.1.1 i.1.2)
       (by

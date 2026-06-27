@@ -16,6 +16,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
@@ -23,21 +24,21 @@ def checkedNonemptyBoolWordQuoteDirectSourceBits
     (b : Bool) (rest : Word Bool)
     (suffix : Word MachineCodeSymbol) : Word Bool :=
   List.append
-    (MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.tick)
+    (encodeCodeSymbolAsInput MachineCodeSymbol.tick)
     (List.append
       (List.append
         (inputTapeRightCellsDirectCopierTickBits rest.length)
         inputTapeRightCellsDirectCopierDoneBits)
       (List.append (inputTapeRightCellsDirectCopierHeadBits b)
         (List.append (inputTapeRightCellsDirectCopierCellBits rest)
-          (MachineDescription.encodeCodeWordAsInput suffix))))
+          (encodeCodeWordAsInput suffix))))
 
 theorem inputTapeRightCellsDirectCopierTickDoneBits_eq_natBits
     (n : Nat) :
     List.append (inputTapeRightCellsDirectCopierTickBits n)
         inputTapeRightCellsDirectCopierDoneBits =
-      MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeNat n) := by
+      encodeCodeWordAsInput
+        (encodeNat n) := by
   induction n with
   | zero =>
       rfl
@@ -46,52 +47,52 @@ theorem inputTapeRightCellsDirectCopierTickDoneBits_eq_natBits
       calc
         List.append
             (List.append
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.tick)
               (inputTapeRightCellsDirectCopierTickBits n))
             inputTapeRightCellsDirectCopierDoneBits =
           List.append
-            (MachineDescription.encodeCodeSymbolAsInput
+            (encodeCodeSymbolAsInput
               MachineCodeSymbol.tick)
             (List.append (inputTapeRightCellsDirectCopierTickBits n)
               inputTapeRightCellsDirectCopierDoneBits) := by
             simp [List.append_assoc]
         _ =
           List.append
-            (MachineDescription.encodeCodeSymbolAsInput
+            (encodeCodeSymbolAsInput
               MachineCodeSymbol.tick)
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeNat n)) := by
+            (encodeCodeWordAsInput
+              (encodeNat n)) := by
             rw [ih]
         _ =
-          MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.encodeNat (n + 1)) := by
+          encodeCodeWordAsInput
+            (encodeNat (n + 1)) := by
             rfl
 
 theorem inputTapeRightCellsDirectCopierCellBits_append_suffix
     (cells : Word Bool) (suffix : Word MachineCodeSymbol) :
     List.append (inputTapeRightCellsDirectCopierCellBits cells)
-        (MachineDescription.encodeCodeWordAsInput suffix) =
-      MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeCellsAppend (cells.map some) suffix) := by
+        (encodeCodeWordAsInput suffix) =
+      encodeCodeWordAsInput
+        (encodeCellsAppend (cells.map some) suffix) := by
   have h :=
     encodeCellsAppend_append (cells.map some)
       ([] : Word MachineCodeSymbol) suffix
   rw [show
-      MachineDescription.encodeCellsAppend (cells.map some) suffix =
+      encodeCellsAppend (cells.map some) suffix =
         List.append
-          (MachineDescription.encodeCellsAppend (cells.map some) [])
+          (encodeCellsAppend (cells.map some) [])
           suffix by
       simpa using h]
-  rw [MachineDescription.encodeCodeWordAsInput_append]
+  rw [encodeCodeWordAsInput_append]
   rfl
 
 theorem checkedNonemptyBoolWordQuoteDirectSourceBits_eq
     (b : Bool) (rest : Word Bool)
     (suffix : Word MachineCodeSymbol) :
     checkedNonemptyBoolWordQuoteDirectSourceBits b rest suffix =
-      MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeBoolWordAppend (b :: rest) suffix) := by
+      encodeCodeWordAsInput
+        (encodeBoolWordAppend (b :: rest) suffix) := by
   have hnat :=
     inputTapeRightCellsDirectCopierTickDoneBits_eq_natBits
       rest.length
@@ -102,54 +103,54 @@ theorem checkedNonemptyBoolWordQuoteDirectSourceBits_eq
   · rw [show
         checkedNonemptyBoolWordQuoteDirectSourceBits false rest suffix =
           List.append
-            (MachineDescription.encodeCodeSymbolAsInput
+            (encodeCodeSymbolAsInput
               MachineCodeSymbol.tick)
             (List.append
               (List.append
                 (inputTapeRightCellsDirectCopierTickBits rest.length)
                 inputTapeRightCellsDirectCopierDoneBits)
               (List.append
-                (MachineDescription.encodeCodeSymbolAsInput
+                (encodeCodeSymbolAsInput
                   MachineCodeSymbol.zero)
                 (List.append (inputTapeRightCellsDirectCopierCellBits rest)
-                  (MachineDescription.encodeCodeWordAsInput suffix)))) by
+                  (encodeCodeWordAsInput suffix)))) by
         rfl]
     rw [hnat, hcells]
-    simp only [MachineDescription.encodeBoolWordAppend,
-      MachineDescription.encodeCellListAppend,
-      MachineDescription.encodeNatAppend]
-    rw [MachineDescription.encodeCodeWordAsInput_append]
-    simp [MachineDescription.encodeNat,
-      MachineDescription.encodeCellsAppend,
-      MachineDescription.encodeCellAppend,
-      MachineDescription.encodeCell,
-      MachineDescription.encodeCodeWordAsInput,
+    simp only [encodeBoolWordAppend,
+      encodeCellListAppend,
+      encodeNatAppend]
+    rw [encodeCodeWordAsInput_append]
+    simp [encodeNat,
+      encodeCellsAppend,
+      encodeCellAppend,
+      encodeCell,
+      encodeCodeWordAsInput,
       List.append_assoc]
   · rw [show
         checkedNonemptyBoolWordQuoteDirectSourceBits true rest suffix =
           List.append
-            (MachineDescription.encodeCodeSymbolAsInput
+            (encodeCodeSymbolAsInput
               MachineCodeSymbol.tick)
             (List.append
               (List.append
                 (inputTapeRightCellsDirectCopierTickBits rest.length)
                 inputTapeRightCellsDirectCopierDoneBits)
               (List.append
-                (MachineDescription.encodeCodeSymbolAsInput
+                (encodeCodeSymbolAsInput
                   MachineCodeSymbol.one)
                 (List.append (inputTapeRightCellsDirectCopierCellBits rest)
-                  (MachineDescription.encodeCodeWordAsInput suffix)))) by
+                  (encodeCodeWordAsInput suffix)))) by
         rfl]
     rw [hnat, hcells]
-    simp only [MachineDescription.encodeBoolWordAppend,
-      MachineDescription.encodeCellListAppend,
-      MachineDescription.encodeNatAppend]
-    rw [MachineDescription.encodeCodeWordAsInput_append]
-    simp [MachineDescription.encodeNat,
-      MachineDescription.encodeCellsAppend,
-      MachineDescription.encodeCellAppend,
-      MachineDescription.encodeCell,
-      MachineDescription.encodeCodeWordAsInput,
+    simp only [encodeBoolWordAppend,
+      encodeCellListAppend,
+      encodeNatAppend]
+    rw [encodeCodeWordAsInput_append]
+    simp [encodeNat,
+      encodeCellsAppend,
+      encodeCellAppend,
+      encodeCell,
+      encodeCodeWordAsInput,
       List.append_assoc]
 
 def checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits
@@ -162,16 +163,16 @@ theorem checkedNonemptyBoolWordQuoteDirectSourceBits_encodeNatAppend
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol) :
     checkedNonemptyBoolWordQuoteDirectSourceBits b rest
-        (MachineDescription.encodeNatAppend stage suffix) =
+        (encodeNatAppend stage suffix) =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.tick)
+        (encodeCodeSymbolAsInput MachineCodeSymbol.tick)
         (inputTapeRightCellsDirectCopierCoreSourceBits b rest stage
-          (MachineDescription.encodeCodeWordAsInput suffix)) := by
+          (encodeCodeWordAsInput suffix)) := by
   unfold checkedNonemptyBoolWordQuoteDirectSourceBits
   unfold inputTapeRightCellsDirectCopierCoreSourceBits
   unfold inputTapeRightCellsDirectCopierNatBits
-  simp only [MachineDescription.encodeNatAppend]
-  rw [MachineDescription.encodeCodeWordAsInput_append]
+  simp only [encodeNatAppend]
+  rw [encodeCodeWordAsInput_append]
   simp [List.append_assoc]
 
 theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_donePass
@@ -219,27 +220,27 @@ theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_phaseC
       InputTapeRightCellsDirectCopierDescription.runConfig steps
           (config 0
             (List.append
-              ((MachineDescription.encodeCodeSymbolAsInput
+              ((encodeCodeSymbolAsInput
                 MachineCodeSymbol.tick).reverse.map some)
               [none, some false])
             ((inputTapeRightCellsDirectCopierCoreSourceBits b rest stage
-              (MachineDescription.encodeCodeWordAsInput suffix)).map
+              (encodeCodeWordAsInput suffix)).map
               some)) =
         config 99 [some false]
           (some false ::
             ((List.append
               (checkedNonemptyBoolWordQuoteDirectSourceBits b rest
-                (MachineDescription.encodeNatAppend stage suffix))
+                (encodeNatAppend stage suffix))
               (checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits
                 rest)).map some)) := by
   let pre0 :=
-    MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.tick
+    encodeCodeSymbolAsInput MachineCodeSymbol.tick
   let tickBits := inputTapeRightCellsDirectCopierTickBits rest.length
   let doneBits := inputTapeRightCellsDirectCopierDoneBits
   let headBits := inputTapeRightCellsDirectCopierHeadBits b
   let cellBits := inputTapeRightCellsDirectCopierCellBits rest
   let stageBits := inputTapeRightCellsDirectCopierNatBits stage
-  let suffixBits := MachineDescription.encodeCodeWordAsInput suffix
+  let suffixBits := encodeCodeWordAsInput suffix
   let sourceTailAfterDone : Word Bool :=
     List.append cellBits (List.append stageBits suffixBits)
   let outputAfterDone : Word Bool :=
@@ -291,15 +292,15 @@ theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_phaseC
       tickSteps + (doneSteps + (cellSteps +
         ((List.append preAfterDone cellBits).length + 5))) by
       omega]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [show
       config 0
         (List.append
-          ((MachineDescription.encodeCodeSymbolAsInput
+          ((encodeCodeSymbolAsInput
             MachineCodeSymbol.tick).reverse.map some)
           [none, some false])
         ((inputTapeRightCellsDirectCopierCoreSourceBits b rest stage
-          (MachineDescription.encodeCodeWordAsInput suffix)).map some) =
+          (encodeCodeWordAsInput suffix)).map some) =
       config 0
         (List.append (pre0.reverse.map some) [none, some false])
         ((List.append tickBits
@@ -311,7 +312,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_phaseC
         stageBits, suffixBits, sourceTailAfterDone,
         inputTapeRightCellsDirectCopierCoreSourceBits]]
   rw [hticks]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [show
       config 0
         (List.append (tickBits.reverse.map some)
@@ -328,7 +329,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_phaseC
             (List.append sourceTailAfterDone tickBits))).map some) by
       simp [List.reverse_append, List.map_append, List.append_assoc]]
   rw [hdone]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [show
       config 10
         (List.append (preAfterDone.reverse.map some) [none, some false])
@@ -376,17 +377,17 @@ theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative
       InputTapeRightCellsDirectCopierDescription.runConfig steps
           (config 0
             (List.append
-              ((MachineDescription.encodeCodeSymbolAsInput
+              ((encodeCodeSymbolAsInput
                 MachineCodeSymbol.tick).reverse.map some)
               [none, some false])
             ((inputTapeRightCellsDirectCopierCoreSourceBits b rest stage
-              (MachineDescription.encodeCodeWordAsInput suffix)).map
+              (encodeCodeWordAsInput suffix)).map
               some)) =
         config 99 [some false]
           (some false ::
             ((List.append
               (checkedNonemptyBoolWordQuoteDirectSourceBits b rest
-                (MachineDescription.encodeNatAppend stage suffix))
+                (encodeNatAppend stage suffix))
               (checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits
                 rest)).map some)) :=
   inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_phaseChain
@@ -417,7 +418,7 @@ theorem checkedRawBoolWordAppendCodeWordReturnDescription_run
             tapeAtCells [some false]
               (some false ::
                 ((List.append (false :: true :: b :: rest)
-                  (MachineDescription.encodeCodeWordAsInput code)).map
+                  (encodeCodeWordAsInput code)).map
                   some)) } := by
   simpa [CheckedRawBoolWordAppendCodeWordReturnDescription] using
     markedPrefixAppendCodeWordReturnDescription_run_checked
@@ -432,7 +433,7 @@ theorem checkedRawBoolWordAppendCodeWordReturnDescription_haltsFromTape
       (tapeAtCells [some false]
         (some false ::
           ((List.append (false :: true :: b :: rest)
-            (MachineDescription.encodeCodeWordAsInput code)).map
+            (encodeCodeWordAsInput code)).map
             some))) := by
   rcases
       checkedRawBoolWordAppendCodeWordReturnDescription_run
@@ -440,10 +441,10 @@ theorem checkedRawBoolWordAppendCodeWordReturnDescription_haltsFromTape
     ⟨steps, hsteps⟩
   refine ⟨steps, ?_⟩
   constructor
-  · simpa [MachineDescription.HaltsFromTapeIn] using
-      congrArg MachineDescription.Configuration.state hsteps
-  · simpa [MachineDescription.HaltsFromTapeIn] using
-      congrArg MachineDescription.Configuration.tape hsteps
+  · simpa [HaltsFromTapeIn] using
+      congrArg Configuration.state hsteps
+  · simpa [HaltsFromTapeIn] using
+      congrArg Configuration.tape hsteps
 
 def CheckedRawBoolWordAppendHeaderReturnDescription
     (suffix : Word MachineCodeSymbol) : MachineDescription :=
@@ -475,7 +476,7 @@ theorem checkedRawBoolWordAppendHeaderReturnDescription_run
             tapeAtCells [some false]
               (some false ::
                 ((List.append (false :: true :: b :: rest)
-                  (MachineDescription.encodeCodeWordAsInput
+                  (encodeCodeWordAsInput
                     (MachineCodeSymbol.header :: suffix))).map
                   some)) } := by
   simpa [CheckedRawBoolWordAppendHeaderReturnDescription] using
@@ -493,7 +494,7 @@ theorem checkedRawBoolWordAppendHeaderReturnDescription_haltsFromTape
       (tapeAtCells [some false]
         (some false ::
           ((List.append (false :: true :: b :: rest)
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (MachineCodeSymbol.header :: suffix))).map
             some))) := by
   rcases
@@ -502,10 +503,10 @@ theorem checkedRawBoolWordAppendHeaderReturnDescription_haltsFromTape
     ⟨steps, hsteps⟩
   refine ⟨steps, ?_⟩
   constructor
-  · simpa [MachineDescription.HaltsFromTapeIn] using
-      congrArg MachineDescription.Configuration.state hsteps
-  · simpa [MachineDescription.HaltsFromTapeIn] using
-      congrArg MachineDescription.Configuration.tape hsteps
+  · simpa [HaltsFromTapeIn] using
+      congrArg Configuration.state hsteps
+  · simpa [HaltsFromTapeIn] using
+      congrArg Configuration.tape hsteps
 
 
 end DovetailInitialLayoutInitializer

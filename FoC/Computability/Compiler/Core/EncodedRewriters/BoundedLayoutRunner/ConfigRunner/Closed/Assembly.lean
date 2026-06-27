@@ -17,6 +17,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
@@ -68,8 +69,8 @@ theorem configRunnerPhaseEquivConstruction_scaffold :
 
 def ConfigRunnerFromClosedHandoff
     (closed : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine closed
-    MachineDescription.ExactIdentityDescription
+  seqSubroutine closed
+    ExactIdentityDescription
     tapeCodePrimitiveCodeWordHandoffMove
 
 theorem configRunnerFromClosedHandoff_spec
@@ -80,7 +81,7 @@ theorem configRunnerFromClosedHandoff_spec
         closed tapeCodePrimitiveCodeWordHandoffMove) :
     AcceptRejectConfigRunnerSpec accept reject
       (ConfigRunnerFromClosedHandoff closed) := by
-  let identity := MachineDescription.ExactIdentityDescription
+  let identity := ExactIdentityDescription
   have hclosedReady : closed.SubroutineReady :=
     tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady
       hclosed
@@ -88,31 +89,31 @@ theorem configRunnerFromClosedHandoff_spec
     CommonGround.Identity.exactIdentityDescription_subroutineReady
   constructor
   · exact
-      MachineDescription.seqSubroutine_subroutineReady
+      seqSubroutine_subroutineReady
         hclosedReady hidentityReady
   constructor
   · intro L
     have htransform :
         (PairedRecognizerDovetailLayoutCode accept reject).transform
-            (MachineDescription.DovetailLayout.encode L) =
+            (DovetailLayout.encode L) =
           some
-            (MachineDescription.DovetailLayout.encode
+            (DovetailLayout.encode
               (BoundedRunLayout accept reject L)) := by
       simpa [PairedRecognizerDovetailLayoutCode,
         BoundedRunLayout] using
-        MachineDescription.DovetailLayout.runCodePrimitive_encode
+        DovetailLayout.runCodePrimitive_encode
           accept reject L
     exact TapeCodeCheckedPhaseFromClosedHandoff_forward hclosed htransform
   · intro L T hhalt
     have htransform :
         (PairedRecognizerDovetailLayoutCode accept reject).transform
-            (MachineDescription.DovetailLayout.encode L) =
+            (DovetailLayout.encode L) =
           some
-            (MachineDescription.DovetailLayout.encode
+            (DovetailLayout.encode
               (BoundedRunLayout accept reject L)) := by
       simpa [PairedRecognizerDovetailLayoutCode,
         BoundedRunLayout] using
-        MachineDescription.DovetailLayout.runCodePrimitive_encode
+        DovetailLayout.runCodePrimitive_encode
           accept reject L
     exact TapeCodeCheckedPhaseFromClosedHandoff_closed_equiv hclosed htransform hhalt
 

@@ -13,6 +13,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace ControllerStageInputProjection
 
@@ -38,11 +39,11 @@ theorem run_result_marked_suffix_to_state350
       8 * marked.length + 4 =
         4 * marked.length + (4 + 4 * marked.length) := by
     omega
-  rw [hsteps, MachineDescription.runConfig_add]
+  rw [hsteps, runConfig_add]
   simp only [projectionBoolWordWorkCells]
   rw [run_state300_marked_ticks]
   simp [List.length_nil, projectionBoolPayloadCells]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 * marked.length)
@@ -100,7 +101,7 @@ theorem run_result_suffix_to_state350_acc
         simp [projectionResultSuffixRejectCost, projectionInputMarkStepCost,
           Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
         omega
-      rw [hcost, MachineDescription.runConfig_add]
+      rw [hcost, runConfig_add]
       rw [run_result_mark_one]
       rw [ih]
       have hword :
@@ -118,7 +119,7 @@ theorem run_result_suffix_ne_halt
       (projectionConfig 300
         (List.append [none, none, none, none] baseLeftRev)
         (projectionCodeCells
-          (MachineDescription.encodeBoolWordAppend w
+          (encodeBoolWordAppend w
             (symbol :: suffix))))).state ≠
       Description.halt := by
   apply
@@ -152,19 +153,19 @@ theorem run_result_suffix_ne_halt
 
  /-- {name}`encodeAppend_nonempty_suffix_ne_halt` establishes the halting condition in this construction. -/
 theorem encodeAppend_nonempty_suffix_ne_halt
-    (C : MachineDescription.DovetailControllerLayout)
+    (C : DovetailControllerLayout)
     (symbol : MachineCodeSymbol) (suffix : Word MachineCodeSymbol)
     (n : Nat) :
     (Description.runConfig n
       (Description.initial
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encodeAppend C
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encodeAppend C
             (symbol :: suffix))))).state ≠
       Description.halt := by
   rcases C with ⟨input, stage, result⟩
   let inputLeftRev :=
     List.append
-      (projectionCodeCells (MachineDescription.encodeBoolWord input)).reverse
+      (projectionCodeCells (encodeBoolWord input)).reverse
       ([none, none, none, none] : List (Option Bool))
   let stageLeftRev :=
     List.append [none, none, none, none]
@@ -175,43 +176,43 @@ theorem encodeAppend_nonempty_suffix_ne_halt
       (mid :=
         projectionConfig 300 stageLeftRev
           (projectionCodeCells
-            (MachineDescription.encodeBoolWordAppend result
+            (encodeBoolWordAppend result
               (symbol :: suffix))))
   · rw [show
         4 + projectionInputBoolWordCost input + (4 * stage + 12) =
           4 + (projectionInputBoolWordCost input + (4 * stage + 12)) by
         omega]
-    rw [MachineDescription.runConfig_add]
+    rw [runConfig_add]
     change
       Description.runConfig
         (projectionInputBoolWordCost input + (4 * stage + 12))
         (Description.runConfig 4
           (Description.initial
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.DovetailControllerLayout.encodeAppend
+            (encodeCodeWordAsInput
+              (DovetailControllerLayout.encodeAppend
                 { input := input, stage := stage, result := result }
                 (symbol :: suffix))))) =
         projectionConfig 300 stageLeftRev
           (projectionCodeCells
-            (MachineDescription.encodeBoolWordAppend result
+            (encodeBoolWordAppend result
               (symbol :: suffix)))
-    simp [MachineDescription.DovetailControllerLayout.encodeAppend,
-      MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput]
+    simp [DovetailControllerLayout.encodeAppend,
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput]
     change
       Description.runConfig
         (projectionInputBoolWordCost input + (4 * stage + 12))
         (Description.runConfig 4
           (Description.initial
             (List.append [false, false, false, false]
-              (MachineDescription.encodeCodeWordAsInput
-                (MachineDescription.DovetailLayout.stageInputCodeAppend input
+              (encodeCodeWordAsInput
+                (DovetailLayout.stageInputCodeAppend input
                   stage
-                  (MachineDescription.encodeBoolWordAppend result
+                  (encodeBoolWordAppend result
                     (symbol :: suffix))))))) =
         projectionConfig 300 stageLeftRev
           (projectionCodeCells
-            (MachineDescription.encodeBoolWordAppend result
+            (encodeBoolWordAppend result
               (symbol :: suffix)))
     rw [run_header]
     change
@@ -219,15 +220,15 @@ theorem encodeAppend_nonempty_suffix_ne_halt
         (projectionInputBoolWordCost input + (4 * stage + 12))
         (projectionConfig 100 [none, none, none, none]
           (projectionCodeCells
-            (MachineDescription.DovetailLayout.stageInputCodeAppend input stage
-              (MachineDescription.encodeBoolWordAppend result
+            (DovetailLayout.stageInputCodeAppend input stage
+              (encodeBoolWordAppend result
                 (symbol :: suffix))))) =
         projectionConfig 300 stageLeftRev
           (projectionCodeCells
-            (MachineDescription.encodeBoolWordAppend result
+            (encodeBoolWordAppend result
               (symbol :: suffix)))
-    simp [MachineDescription.DovetailLayout.stageInputCodeAppend]
-    rw [MachineDescription.runConfig_add]
+    simp [DovetailLayout.stageInputCodeAppend]
+    rw [runConfig_add]
     change
       Description.runConfig
         (4 * stage + 12)
@@ -237,17 +238,17 @@ theorem encodeAppend_nonempty_suffix_ne_halt
             (List.append [none, none, none, none]
               ([] : List (Option Bool)))
             (projectionCodeCells
-              (MachineDescription.encodeBoolWordAppend input
-                (MachineDescription.encodeNatAppend stage
-                  (MachineDescription.encodeBoolWordAppend result
+              (encodeBoolWordAppend input
+                (encodeNatAppend stage
+                  (encodeBoolWordAppend result
                     (symbol :: suffix))))))) =
         projectionConfig 300 stageLeftRev
           (projectionCodeCells
-            (MachineDescription.encodeBoolWordAppend result
+            (encodeBoolWordAppend result
               (symbol :: suffix)))
     rw [run_input_bool_word_suffix
       (stage := stage)
-      (suffix := MachineDescription.encodeBoolWordAppend result
+      (suffix := encodeBoolWordAppend result
         (symbol :: suffix))
       (baseLeftRev := [])]
     change
@@ -255,12 +256,12 @@ theorem encodeAppend_nonempty_suffix_ne_halt
         (4 * stage + 12)
         (projectionConfig 200 inputLeftRev
           (projectionCodeCells
-            (MachineDescription.encodeNatAppend stage
-              (MachineDescription.encodeBoolWordAppend result
+            (encodeNatAppend stage
+              (encodeBoolWordAppend result
                 (symbol :: suffix))))) =
         projectionConfig 300 stageLeftRev
           (projectionCodeCells
-            (MachineDescription.encodeBoolWordAppend result
+            (encodeBoolWordAppend result
               (symbol :: suffix)))
     rw [run_stage_nat_bool_word_suffix]
   · intro m
@@ -273,11 +274,11 @@ theorem encodeAppend_nonempty_suffix_ne_halt
 theorem decode_none_ne_halt
     {code : Word MachineCodeSymbol}
     (hdecode :
-      MachineDescription.DovetailControllerLayout.decode code = none)
+      DovetailControllerLayout.decode code = none)
     (n : Nat) :
     (Description.runConfig n
       (Description.initial
-        (MachineDescription.encodeCodeWordAsInput code))).state ≠
+        (encodeCodeWordAsInput code))).state ≠
       Description.halt := by
   cases code with
   | nil =>
@@ -295,12 +296,12 @@ theorem decode_none_ne_halt
                   (projectionConfig 100 [none, none, none, none]
                     (projectionCodeCells rest))).state ≠
                   Description.halt := by
-            unfold MachineDescription.DovetailControllerLayout.decode at hdecode
+            unfold DovetailControllerLayout.decode at hdecode
             cases hstage :
-                MachineDescription.DovetailLayout.decodeStageInput rest with
+                DovetailLayout.decodeStageInput rest with
             | none =>
-                unfold MachineDescription.DovetailLayout.decodeStageInput at hstage
-                cases hinput : MachineDescription.decodeBoolWord rest with
+                unfold DovetailLayout.decodeStageInput at hstage
+                cases hinput : decodeBoolWord rest with
                 | none =>
                     intro m
                     exact
@@ -309,13 +310,13 @@ theorem decode_none_ne_halt
                 | some parsedInput =>
                     rcases parsedInput with ⟨input, restAfterInput⟩
                     simp [hinput] at hstage
-                    cases hnat : MachineDescription.decodeNat restAfterInput with
+                    cases hnat : decodeNat restAfterInput with
                     | none =>
                         have hrest :
                             rest =
-                              MachineDescription.encodeBoolWordAppend input
+                              encodeBoolWordAppend input
                                 restAfterInput :=
-                          MachineDescription.decodeBoolWord_eq_some_encodeBoolWordAppend
+                          decodeBoolWord_eq_some_encodeBoolWordAppend
                             hinput
                         intro m
                         rw [hrest]
@@ -329,13 +330,13 @@ theorem decode_none_ne_halt
                 rcases parsedStage with ⟨parsedInputStage, restAfterStage⟩
                 rcases parsedInputStage with ⟨input, stage⟩
                 cases hresult :
-                    MachineDescription.decodeBoolWord restAfterStage with
+                    decodeBoolWord restAfterStage with
                 | none =>
                     have hrest :
                         rest =
-                          MachineDescription.DovetailLayout.stageInputCodeAppend
+                          DovetailLayout.stageInputCodeAppend
                             input stage restAfterStage :=
-                      MachineDescription.DovetailLayout.decodeStageInput_eq_some_stageInputCodeAppend
+                      DovetailLayout.decodeStageInput_eq_some_stageInputCodeAppend
                         hstage
                     intro m
                     rw [hrest]
@@ -346,13 +347,13 @@ theorem decode_none_ne_halt
                           projectionConfig 200
                             (List.append
                               (projectionCodeCells
-                                (MachineDescription.encodeBoolWord input)).reverse
+                                (encodeBoolWord input)).reverse
                               (List.append [none, none, none, none]
                                 ([] : List (Option Bool))))
                             (projectionCodeCells
-                              (MachineDescription.encodeNatAppend stage
+                              (encodeNatAppend stage
                                 restAfterStage)))
-                    · simp [MachineDescription.DovetailLayout.stageInputCodeAppend]
+                    · simp [DovetailLayout.stageInputCodeAppend]
                       exact
                         run_input_bool_word_suffix
                           input stage restAfterStage
@@ -363,7 +364,7 @@ theorem decode_none_ne_halt
                           stage restAfterStage
                           (List.append
                             (projectionCodeCells
-                              (MachineDescription.encodeBoolWord input)).reverse
+                              (encodeBoolWord input)).reverse
                             (List.append [none, none, none, none]
                               ([] : List (Option Bool))))
                           hresult t
@@ -375,13 +376,13 @@ theorem decode_none_ne_halt
               (mid :=
                 projectionConfig 100 [none, none, none, none]
                   (projectionCodeCells rest))
-          · simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput]
+          · simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput]
             change
               Description.runConfig 4
                 (Description.initial
                   (List.append [false, false, false, false]
-                    (MachineDescription.encodeCodeWordAsInput rest))) =
+                    (encodeCodeWordAsInput rest))) =
                 projectionConfig 100 [none, none, none, none]
                   (projectionCodeCells rest)
             rw [run_header]
@@ -442,13 +443,13 @@ theorem decodeComplete_of_halting_run
     (hstate :
       (Description.runConfig n
         (Description.initial
-          (MachineDescription.encodeCodeWordAsInput code))).state =
+          (encodeCodeWordAsInput code))).state =
         Description.halt) :
-    exists C : MachineDescription.DovetailControllerLayout,
-      MachineDescription.DovetailControllerLayout.decodeComplete code =
+    exists C : DovetailControllerLayout,
+      DovetailControllerLayout.decodeComplete code =
         some C := by
-  unfold MachineDescription.DovetailControllerLayout.decodeComplete
-  cases hdecode : MachineDescription.DovetailControllerLayout.decode code with
+  unfold DovetailControllerLayout.decodeComplete
+  cases hdecode : DovetailControllerLayout.decode code with
   | none =>
       exfalso
       exact
@@ -463,9 +464,9 @@ theorem decodeComplete_of_halting_run
           exfalso
           have hcode :
               code =
-                MachineDescription.DovetailControllerLayout.encodeAppend C
+                DovetailControllerLayout.encodeAppend C
                   (symbol :: rest) :=
-            MachineDescription.DovetailControllerLayout.decode_eq_some_encodeAppend
+            DovetailControllerLayout.decode_eq_some_encodeAppend
               hdecode
           subst code
           exact
@@ -477,10 +478,10 @@ theorem decodeComplete_of_haltsWithOutput
     {code out : Word MachineCodeSymbol}
     (h :
       Description.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput code)
-        (MachineDescription.encodeCodeWordAsInput out)) :
-    exists C : MachineDescription.DovetailControllerLayout,
-      MachineDescription.DovetailControllerLayout.decodeComplete code =
+        (encodeCodeWordAsInput code)
+        (encodeCodeWordAsInput out)) :
+    exists C : DovetailControllerLayout,
+      DovetailControllerLayout.decodeComplete code =
         some C := by
   rcases h with ⟨n, hn⟩
   exact
@@ -492,43 +493,43 @@ theorem exists_layout_of_haltsWithOutput
     {code out : Word MachineCodeSymbol}
     (h :
       Description.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput code)
-        (MachineDescription.encodeCodeWordAsInput out)) :
-    exists C : MachineDescription.DovetailControllerLayout,
-      code = MachineDescription.DovetailControllerLayout.encode C ∧
-        out = MachineDescription.DovetailControllerLayout.stageInputCode C := by
+        (encodeCodeWordAsInput code)
+        (encodeCodeWordAsInput out)) :
+    exists C : DovetailControllerLayout,
+      code = DovetailControllerLayout.encode C ∧
+        out = DovetailControllerLayout.stageInputCode C := by
   rcases
     decodeComplete_of_haltsWithOutput
       h with
     ⟨C, hdecode⟩
   have hcode :
-      code = MachineDescription.DovetailControllerLayout.encode C :=
-    MachineDescription.DovetailControllerLayout.decodeComplete_eq_some_encode
+      code = DovetailControllerLayout.encode C :=
+    DovetailControllerLayout.decodeComplete_eq_some_encode
       hdecode
   subst code
   have hsuccess :=
     haltsWithOutput_encode C
   have hbits :
-      MachineDescription.encodeCodeWordAsInput out =
-        MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.stageInputCode C) :=
-    MachineDescription.haltsWithOutput_functional_of_haltTransitionFree
+      encodeCodeWordAsInput out =
+        encodeCodeWordAsInput
+          (DovetailControllerLayout.stageInputCode C) :=
+    haltsWithOutput_functional_of_haltTransitionFree
       haltTransitionFree
       h hsuccess
   have hout :
-      out = MachineDescription.DovetailControllerLayout.stageInputCode C :=
-    MachineDescription.encodeCodeWordAsInput_injective hbits
+      out = DovetailControllerLayout.stageInputCode C :=
+    encodeCodeWordAsInput_injective hbits
   exact ⟨C, rfl, hout⟩
 
  /-- {name}`haltsWithOutput_iff_exists_layout` provides an important equivalence or equality lemma. -/
 theorem haltsWithOutput_iff_exists_layout
     (code out : Word MachineCodeSymbol) :
     Description.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput code)
-        (MachineDescription.encodeCodeWordAsInput out) <->
-      exists C : MachineDescription.DovetailControllerLayout,
-        code = MachineDescription.DovetailControllerLayout.encode C ∧
-          out = MachineDescription.DovetailControllerLayout.stageInputCode C := by
+        (encodeCodeWordAsInput code)
+        (encodeCodeWordAsInput out) <->
+      exists C : DovetailControllerLayout,
+        code = DovetailControllerLayout.encode C ∧
+          out = DovetailControllerLayout.stageInputCode C := by
   constructor
   · intro h
     exact
@@ -546,8 +547,8 @@ theorem haltsWithOutput_of_transform_eq_some
       PairedRecognizerDovetailControllerStageInputCodePrimitive.transform
           code = some out) :
     Description.HaltsWithOutput
-      (MachineDescription.encodeCodeWordAsInput code)
-      (MachineDescription.encodeCodeWordAsInput out) := by
+      (encodeCodeWordAsInput code)
+      (encodeCodeWordAsInput out) := by
   have hparsed :=
     (pairedRecognizerDovetailControllerStageInputCode_transform_eq_some_iff
       code out).mp h
@@ -560,8 +561,8 @@ theorem transform_eq_some_of_haltsWithOutput
     {code out : Word MachineCodeSymbol}
     (h :
       Description.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput code)
-        (MachineDescription.encodeCodeWordAsInput out)) :
+        (encodeCodeWordAsInput code)
+        (encodeCodeWordAsInput out)) :
     PairedRecognizerDovetailControllerStageInputCodePrimitive.transform
         code = some out := by
   have hparsed :=
@@ -575,8 +576,8 @@ theorem transform_eq_some_of_haltsWithOutput
 theorem haltsWithOutput_iff
     (code out : Word MachineCodeSymbol) :
     Description.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput code)
-        (MachineDescription.encodeCodeWordAsInput out) <->
+        (encodeCodeWordAsInput code)
+        (encodeCodeWordAsInput out) <->
       PairedRecognizerDovetailControllerStageInputCodePrimitive.transform
         code = some out := by
   constructor

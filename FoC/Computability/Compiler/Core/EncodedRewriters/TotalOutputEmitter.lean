@@ -18,18 +18,19 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace TotalOutputEmitter
 
 def OutputCode
-    (L : MachineDescription.DovetailLayout) : Word MachineCodeSymbol :=
-  MachineDescription.encodeBoolWord
-    (MachineDescription.DovetailLayout.outputWordFromHits L)
+    (L : DovetailLayout) : Word MachineCodeSymbol :=
+  encodeBoolWord
+    (DovetailLayout.outputWordFromHits L)
 
 def OutputBits
-    (L : MachineDescription.DovetailLayout) : Word Bool :=
-  MachineDescription.encodeCodeWordAsInput
+    (L : DovetailLayout) : Word Bool :=
+  encodeCodeWordAsInput
     (OutputCode L)
 
 def ReadySpec
@@ -38,10 +39,10 @@ def ReadySpec
 
 def ForwardSpec
     (emitter : MachineDescription) : Prop :=
-  forall L : MachineDescription.DovetailLayout,
+  forall L : DovetailLayout,
     emitter.HaltsWithOutput
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.DovetailLayout.encode L))
+      (encodeCodeWordAsInput
+        (DovetailLayout.encode L))
       (OutputBits L)
 
 def Spec
@@ -121,7 +122,7 @@ def outputWord : HitBoundary -> Word Bool
 theorem outputWord_ofHits
     (acceptHit rejectHit : Bool) :
     (ofHits acceptHit rejectHit).outputWord =
-      MachineDescription.DovetailLayout.outputWordFromOption
+      DovetailLayout.outputWordFromOption
         (if acceptHit = true then
           some [true]
         else if rejectHit = true then
@@ -181,14 +182,14 @@ def totalOutputEmitterHalt : Nat :=
 
 def totalOutputEmitterBoundaryOutputBits
     (boundary : HitBoundary) : Word Bool :=
-  MachineDescription.encodeCodeWordAsInput
-    (MachineDescription.encodeBoolWord boundary.outputWord)
+  encodeCodeWordAsInput
+    (encodeBoolWord boundary.outputWord)
 
 def totalOutputEmitterWriterTransitionsFrom
     (source : Nat) : Word Bool -> List TransitionDescription
   | [] => []
   | bit :: rest =>
-      MachineDescription.transition source none (some bit) Direction.right
+      transition source none (some bit) Direction.right
           (if rest = [] then totalOutputEmitterHalt else source + 1) ::
         totalOutputEmitterWriterTransitionsFrom (source + 1) rest
 
@@ -200,138 +201,138 @@ def totalOutputEmitterWriterTransitions
 
 def totalOutputEmitterPrefixTransitions
     (boundary : Nat) : List TransitionDescription :=
-  [ MachineDescription.transition
+  [ transition
       (totalOutputEmitterState boundary 0 0)
       (some false) none Direction.right
       (totalOutputEmitterState boundary 1 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 0 0)
       (some true) none Direction.right
       (totalOutputEmitterState boundary 1 1)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 1 0)
       (some false) none Direction.right
       (totalOutputEmitterState boundary 2 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 1 0)
       (some true) none Direction.right
       (totalOutputEmitterState boundary 2 1)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 1 1)
       (some false) none Direction.right
       (totalOutputEmitterState boundary 2 2)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 1 1)
       (some true) none Direction.right
       (totalOutputEmitterState boundary 2 3)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 2 0)
       (some false) none Direction.right
       (totalOutputEmitterState boundary 3 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 2 0)
       (some true) none Direction.right
       (totalOutputEmitterState boundary 3 1)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 2 1)
       (some false) none Direction.right
       (totalOutputEmitterState boundary 3 2)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 2 1)
       (some true) none Direction.right
       (totalOutputEmitterState boundary 3 3)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 2 2)
       (some false) none Direction.right
       (totalOutputEmitterState boundary 3 4)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 2 2)
       (some true) none Direction.right
       (totalOutputEmitterState boundary 3 5)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 2 3)
       (some false) none Direction.right
       (totalOutputEmitterState boundary 3 6)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 2 3)
       (some true) none Direction.right
       (totalOutputEmitterState boundary 3 7)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 0)
       (some false) none Direction.right
       (totalOutputEmitterState
         (totalOutputEmitterUpdateCode boundary 0) 0 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 0)
       (some true) none Direction.right
       (totalOutputEmitterState
         (totalOutputEmitterUpdateCode boundary 1) 0 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 1)
       (some false) none Direction.right
       (totalOutputEmitterState
         (totalOutputEmitterUpdateCode boundary 2) 0 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 1)
       (some true) none Direction.right
       (totalOutputEmitterState
         (totalOutputEmitterUpdateCode boundary 3) 0 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 2)
       (some false) none Direction.right
       (totalOutputEmitterState
         (totalOutputEmitterUpdateCode boundary 4) 0 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 2)
       (some true) none Direction.right
       (totalOutputEmitterState
         (totalOutputEmitterUpdateCode boundary 5) 0 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 3)
       (some false) none Direction.right
       (totalOutputEmitterState
         (totalOutputEmitterUpdateCode boundary 6) 0 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 3)
       (some true) none Direction.right
       (totalOutputEmitterState
         (totalOutputEmitterUpdateCode boundary 7) 0 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 4)
       (some false) none Direction.right
       (totalOutputEmitterState
         (totalOutputEmitterUpdateCode boundary 8) 0 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 4)
       (some true) none Direction.right
       (totalOutputEmitterState
         (totalOutputEmitterUpdateCode boundary 9) 0 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 5)
       (some false) none Direction.right
       (totalOutputEmitterState
         (totalOutputEmitterUpdateCode boundary 10) 0 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 5)
       (some true) none Direction.right
       (totalOutputEmitterState
         (totalOutputEmitterUpdateCode boundary 11) 0 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 6)
       (some false) none Direction.right
       (totalOutputEmitterState
         (totalOutputEmitterUpdateCode boundary 12) 0 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 6)
       (some true) none Direction.right
       (totalOutputEmitterState
         (totalOutputEmitterUpdateCode boundary 13) 0 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 7)
       (some false) none Direction.right
       (totalOutputEmitterState
         (totalOutputEmitterUpdateCode boundary 14) 0 0)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState boundary 3 7)
       (some true) none Direction.right
       (totalOutputEmitterState
@@ -350,31 +351,31 @@ def totalOutputEmitterBitTransitions :
 
 def totalOutputEmitterBlankTransitions :
     List TransitionDescription :=
-  [ MachineDescription.transition
+  [ transition
       (totalOutputEmitterState HitBoundary.other.toNat 0 0)
       none none Direction.right
       (totalOutputEmitterWriterStart HitBoundary.other)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState HitBoundary.lastFalse.toNat 0 0)
       none none Direction.right
       (totalOutputEmitterWriterStart HitBoundary.lastFalse)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState HitBoundary.lastTrue.toNat 0 0)
       none none Direction.right
       (totalOutputEmitterWriterStart HitBoundary.lastTrue)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState HitBoundary.falseFalse.toNat 0 0)
       none none Direction.right
       (totalOutputEmitterWriterStart HitBoundary.falseFalse)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState HitBoundary.falseTrue.toNat 0 0)
       none none Direction.right
       (totalOutputEmitterWriterStart HitBoundary.falseTrue)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState HitBoundary.trueFalse.toNat 0 0)
       none none Direction.right
       (totalOutputEmitterWriterStart HitBoundary.trueFalse)
-  , MachineDescription.transition
+  , transition
       (totalOutputEmitterState HitBoundary.trueTrue.toNat 0 0)
       none none Direction.right
       (totalOutputEmitterWriterStart HitBoundary.trueTrue)
@@ -426,11 +427,11 @@ theorem run_first_bit
     (bit : Bool) (erased : Nat) (suffix : Word Bool) :
     Description.runConfig 1
         { state := totalOutputEmitterState boundary.toNat 0 0
-          tape := MachineDescription.eraseRightTape erased (bit :: suffix) } =
+          tape := eraseRightTape erased (bit :: suffix) } =
       { state :=
           totalOutputEmitterState boundary.toNat 1
             (totalOutputEmitterBitValue bit)
-        tape := MachineDescription.eraseRightTape (erased + 1) suffix } := by
+        tape := eraseRightTape (erased + 1) suffix } := by
   cases boundary <;> cases bit <;> cases suffix <;> rfl
 
 theorem run_second_bit
@@ -440,12 +441,12 @@ theorem run_second_bit
         { state :=
             totalOutputEmitterState boundary.toNat 1
               (totalOutputEmitterBitValue bit0)
-          tape := MachineDescription.eraseRightTape erased (bit1 :: suffix) } =
+          tape := eraseRightTape erased (bit1 :: suffix) } =
       { state :=
           totalOutputEmitterState boundary.toNat 2
             (totalOutputEmitterBitValue bit0 * 2 +
               totalOutputEmitterBitValue bit1)
-        tape := MachineDescription.eraseRightTape (erased + 1) suffix } := by
+        tape := eraseRightTape (erased + 1) suffix } := by
   cases boundary <;> cases bit0 <;> cases bit1 <;> cases suffix <;> rfl
 
 theorem run_third_bit
@@ -456,13 +457,13 @@ theorem run_third_bit
             totalOutputEmitterState boundary.toNat 2
               (totalOutputEmitterBitValue bit0 * 2 +
                 totalOutputEmitterBitValue bit1)
-          tape := MachineDescription.eraseRightTape erased (bit2 :: suffix) } =
+          tape := eraseRightTape erased (bit2 :: suffix) } =
       { state :=
           totalOutputEmitterState boundary.toNat 3
             ((totalOutputEmitterBitValue bit0 * 2 +
                 totalOutputEmitterBitValue bit1) * 2 +
               totalOutputEmitterBitValue bit2)
-        tape := MachineDescription.eraseRightTape (erased + 1) suffix } := by
+        tape := eraseRightTape (erased + 1) suffix } := by
   cases boundary <;> cases bit0 <;> cases bit1 <;> cases bit2 <;>
     cases suffix <;> rfl
 
@@ -475,12 +476,12 @@ theorem run_fourth_bit
               ((totalOutputEmitterBitValue bit0 * 2 +
                   totalOutputEmitterBitValue bit1) * 2 +
                 totalOutputEmitterBitValue bit2)
-          tape := MachineDescription.eraseRightTape erased (bit3 :: suffix) } =
+          tape := eraseRightTape erased (bit3 :: suffix) } =
       { state :=
           totalOutputEmitterState
             (totalOutputEmitterUpdateCode boundary.toNat
               (totalOutputEmitterCodeOfBits bit0 bit1 bit2 bit3)) 0 0
-        tape := MachineDescription.eraseRightTape (erased + 1) suffix } := by
+        tape := eraseRightTape (erased + 1) suffix } := by
   cases boundary <;> cases bit0 <;> cases bit1 <;> cases bit2 <;>
     cases bit3 <;> cases suffix <;> rfl
 
@@ -491,28 +492,28 @@ theorem run_bits
     Description.runConfig 4
         { state := totalOutputEmitterState boundary.toNat 0 0
           tape :=
-            MachineDescription.eraseRightTape erased
+            eraseRightTape erased
               (List.append [bit0, bit1, bit2, bit3] suffix) } =
       { state :=
           totalOutputEmitterState
             (totalOutputEmitterUpdateCode boundary.toNat
               (totalOutputEmitterCodeOfBits bit0 bit1 bit2 bit3)) 0 0
-        tape := MachineDescription.eraseRightTape (erased + 4) suffix } := by
-  rw [show 4 = 1 + 3 by decide, MachineDescription.runConfig_add]
+        tape := eraseRightTape (erased + 4) suffix } := by
+  rw [show 4 = 1 + 3 by decide, runConfig_add]
   change
     Description.runConfig 3
         (Description.runConfig 1
           { state := totalOutputEmitterState boundary.toNat 0 0
             tape :=
-              MachineDescription.eraseRightTape erased
+              eraseRightTape erased
                 (bit0 :: bit1 :: bit2 :: bit3 :: suffix) }) =
       { state :=
           totalOutputEmitterState
             (totalOutputEmitterUpdateCode boundary.toNat
               (totalOutputEmitterCodeOfBits bit0 bit1 bit2 bit3)) 0 0
-        tape := MachineDescription.eraseRightTape (erased + 4) suffix }
+        tape := eraseRightTape (erased + 4) suffix }
   rw [run_first_bit]
-  rw [show 3 = 1 + 2 by decide, MachineDescription.runConfig_add]
+  rw [show 3 = 1 + 2 by decide, runConfig_add]
   change
     Description.runConfig 2
         (Description.runConfig 1
@@ -520,15 +521,15 @@ theorem run_bits
               totalOutputEmitterState boundary.toNat 1
                 (totalOutputEmitterBitValue bit0)
             tape :=
-              MachineDescription.eraseRightTape (erased + 1)
+              eraseRightTape (erased + 1)
                 (bit1 :: bit2 :: bit3 :: suffix) }) =
       { state :=
           totalOutputEmitterState
             (totalOutputEmitterUpdateCode boundary.toNat
               (totalOutputEmitterCodeOfBits bit0 bit1 bit2 bit3)) 0 0
-        tape := MachineDescription.eraseRightTape (erased + 4) suffix }
+        tape := eraseRightTape (erased + 4) suffix }
   rw [run_second_bit]
-  rw [show 2 = 1 + 1 by decide, MachineDescription.runConfig_add]
+  rw [show 2 = 1 + 1 by decide, runConfig_add]
   change
     Description.runConfig 1
         (Description.runConfig 1
@@ -537,13 +538,13 @@ theorem run_bits
                 (totalOutputEmitterBitValue bit0 * 2 +
                   totalOutputEmitterBitValue bit1)
             tape :=
-              MachineDescription.eraseRightTape ((erased + 1) + 1)
+              eraseRightTape ((erased + 1) + 1)
                 (bit2 :: bit3 :: suffix) }) =
       { state :=
           totalOutputEmitterState
             (totalOutputEmitterUpdateCode boundary.toNat
               (totalOutputEmitterCodeOfBits bit0 bit1 bit2 bit3)) 0 0
-        tape := MachineDescription.eraseRightTape (erased + 4) suffix }
+        tape := eraseRightTape (erased + 4) suffix }
   rw [run_third_bit]
   rw [run_fourth_bit]
 
@@ -562,40 +563,40 @@ theorem run_encoded_symbol
     Description.runConfig 4
         { state := totalOutputEmitterState boundary.toNat 0 0
           tape :=
-            MachineDescription.eraseRightTape erased
+            eraseRightTape erased
               (List.append
-                (MachineDescription.encodeCodeSymbolAsInput symbol) suffix) } =
+                (encodeCodeSymbolAsInput symbol) suffix) } =
       { state :=
           totalOutputEmitterState
             (totalOutputEmitterUpdateCode boundary.toNat
               (totalOutputEmitterSymbolCode symbol)) 0 0
-        tape := MachineDescription.eraseRightTape (erased + 4) suffix } := by
+        tape := eraseRightTape (erased + 4) suffix } := by
   cases symbol
-  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+  · simpa [encodeCodeSymbolAsInput,
       totalOutputEmitterCodeOfBits, totalOutputEmitterSymbolCode] using
       (run_bits boundary false false false false erased suffix)
-  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+  · simpa [encodeCodeSymbolAsInput,
       totalOutputEmitterCodeOfBits, totalOutputEmitterSymbolCode] using
       (run_bits boundary false false false true erased suffix)
-  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+  · simpa [encodeCodeSymbolAsInput,
       totalOutputEmitterCodeOfBits, totalOutputEmitterSymbolCode] using
       (run_bits boundary false false true false erased suffix)
-  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+  · simpa [encodeCodeSymbolAsInput,
       totalOutputEmitterCodeOfBits, totalOutputEmitterSymbolCode] using
       (run_bits boundary false false true true erased suffix)
-  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+  · simpa [encodeCodeSymbolAsInput,
       totalOutputEmitterCodeOfBits, totalOutputEmitterSymbolCode] using
       (run_bits boundary false true false false erased suffix)
-  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+  · simpa [encodeCodeSymbolAsInput,
       totalOutputEmitterCodeOfBits, totalOutputEmitterSymbolCode] using
       (run_bits boundary false true false true erased suffix)
-  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+  · simpa [encodeCodeSymbolAsInput,
       totalOutputEmitterCodeOfBits, totalOutputEmitterSymbolCode] using
       (run_bits boundary false true true false erased suffix)
-  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+  · simpa [encodeCodeSymbolAsInput,
       totalOutputEmitterCodeOfBits, totalOutputEmitterSymbolCode] using
       (run_bits boundary false true true true erased suffix)
-  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+  · simpa [encodeCodeSymbolAsInput,
       totalOutputEmitterCodeOfBits, totalOutputEmitterSymbolCode] using
       (run_bits boundary true false false false erased suffix)
 
@@ -607,13 +608,13 @@ theorem run_symbol
         { state :=
             totalOutputEmitterState boundary.toNat 0 0
           tape :=
-            MachineDescription.eraseRightTape erased
+            eraseRightTape erased
               (List.append
-                (MachineDescription.encodeCodeSymbolAsInput symbol) suffix) } =
+                (encodeCodeSymbolAsInput symbol) suffix) } =
       { state :=
           totalOutputEmitterState
             (boundary.update symbol).toNat 0 0
-        tape := MachineDescription.eraseRightTape (erased + 4) suffix } := by
+        tape := eraseRightTape (erased + 4) suffix } := by
   rw [run_encoded_symbol]
   rw [updateCode_symbol]
 
@@ -648,38 +649,38 @@ theorem run_code_from
         { state :=
             totalOutputEmitterState boundary.toNat 0 0
           tape :=
-            MachineDescription.eraseRightTape erased
+            eraseRightTape erased
               (List.append
-                (MachineDescription.encodeCodeWordAsInput code) suffix) } =
+                (encodeCodeWordAsInput code) suffix) } =
       { state :=
           totalOutputEmitterState
             (scanBoundaryFrom boundary code).toNat 0 0
         tape :=
-          MachineDescription.eraseRightTape
+          eraseRightTape
             (erased + 4 * code.length) suffix } := by
   induction code generalizing boundary erased with
   | nil =>
-      simp [MachineDescription.encodeCodeWordAsInput,
-        scanBoundaryFrom, MachineDescription.runConfig]
+      simp [encodeCodeWordAsInput,
+        scanBoundaryFrom, runConfig]
   | cons symbol rest ih =>
       rw [show 4 * (symbol :: rest).length = 4 + 4 * rest.length by
         simp
         omega]
-      rw [MachineDescription.runConfig_add]
-      simp only [MachineDescription.encodeCodeWordAsInput]
+      rw [runConfig_add]
+      simp only [encodeCodeWordAsInput]
       have happ :
           List.append
               (List.append
-                (MachineDescription.encodeCodeSymbolAsInput symbol)
-                (MachineDescription.encodeCodeWordAsInput rest))
+                (encodeCodeSymbolAsInput symbol)
+                (encodeCodeWordAsInput rest))
               suffix =
             List.append
-              (MachineDescription.encodeCodeSymbolAsInput symbol)
+              (encodeCodeSymbolAsInput symbol)
               (List.append
-                (MachineDescription.encodeCodeWordAsInput rest) suffix) :=
+                (encodeCodeWordAsInput rest) suffix) :=
         List.append_assoc
-          (MachineDescription.encodeCodeSymbolAsInput symbol)
-          (MachineDescription.encodeCodeWordAsInput rest) suffix
+          (encodeCodeSymbolAsInput symbol)
+          (encodeCodeWordAsInput rest) suffix
       rw [happ]
       change
         Description.runConfig
@@ -687,17 +688,17 @@ theorem run_code_from
             (Description.runConfig 4
               { state := totalOutputEmitterState boundary.toNat 0 0
                 tape :=
-                  MachineDescription.eraseRightTape erased
+                  eraseRightTape erased
                     (List.append
-                      (MachineDescription.encodeCodeSymbolAsInput symbol)
+                      (encodeCodeSymbolAsInput symbol)
                       (List.append
-                        (MachineDescription.encodeCodeWordAsInput rest)
+                        (encodeCodeWordAsInput rest)
                         suffix)) }) =
           { state :=
               totalOutputEmitterState
                 (scanBoundaryFrom boundary (symbol :: rest)).toNat 0 0
             tape :=
-              MachineDescription.eraseRightTape
+              eraseRightTape
                 (erased + (4 + 4 * rest.length)) suffix }
       rw [run_symbol]
       rw [ih]
@@ -718,7 +719,7 @@ theorem run_blank
     Description.runConfig
         (1 + (totalOutputEmitterBoundaryOutputBits boundary).length)
         { state := totalOutputEmitterState boundary.toNat 0 0
-          tape := MachineDescription.eraseRightTape erased [] } =
+          tape := eraseRightTape erased [] } =
       { state := Description.halt
         tape := finalTape erased boundary } := by
   cases boundary <;> rfl
@@ -730,7 +731,7 @@ theorem run_code_halt
           (totalOutputEmitterBoundaryOutputBits
             (scanBoundary code)).length)
         (Description.initial
-          (MachineDescription.encodeCodeWordAsInput code)) =
+          (encodeCodeWordAsInput code)) =
       { state := Description.halt
         tape :=
           finalTape (0 + 4 * code.length)
@@ -742,18 +743,18 @@ theorem run_code_halt
         4 * code.length +
           (1 + (totalOutputEmitterBoundaryOutputBits
             (scanBoundary code)).length) by omega]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   have hinitial :
       Description.initial
-          (MachineDescription.encodeCodeWordAsInput code) =
+          (encodeCodeWordAsInput code) =
         { state :=
             totalOutputEmitterState HitBoundary.other.toNat 0 0
           tape :=
-            MachineDescription.eraseRightTape 0
+            eraseRightTape 0
               (List.append
-                (MachineDescription.encodeCodeWordAsInput code) []) } := by
-    simp [Description, MachineDescription.initial,
-      MachineDescription.eraseRightTape_zero_eq_input]
+                (encodeCodeWordAsInput code) []) } := by
+    simp [Description, initial,
+      eraseRightTape_zero_eq_input]
   rw [hinitial]
   rw [run_code_from]
   change
@@ -761,7 +762,7 @@ theorem run_code_halt
         (1 + (totalOutputEmitterBoundaryOutputBits
           (scanBoundary code)).length)
         { state := totalOutputEmitterState (scanBoundary code).toNat 0 0
-          tape := MachineDescription.eraseRightTape
+          tape := eraseRightTape
             (0 + 4 * code.length) [] } =
       { state := Description.halt
         tape :=
@@ -790,7 +791,7 @@ theorem finalTape_normalizedOutput
 theorem haltsWithOutput_code
     (code : Word MachineCodeSymbol) :
     Description.HaltsWithOutput
-      (MachineDescription.encodeCodeWordAsInput code)
+      (encodeCodeWordAsInput code)
       (totalOutputEmitterBoundaryOutputBits (scanBoundary code)) := by
   refine
     ⟨4 * code.length + 1 +
@@ -804,90 +805,90 @@ theorem haltsWithOutput_code
 theorem scanBoundaryFrom_hit_suffix
     (boundary : HitBoundary) (acceptHit rejectHit : Bool) :
     scanBoundaryFrom boundary
-        (MachineDescription.encodeBoolAppend acceptHit
-          (MachineDescription.encodeBoolAppend rejectHit [])) =
+        (encodeBoolAppend acceptHit
+          (encodeBoolAppend rejectHit [])) =
       HitBoundary.ofHits acceptHit rejectHit := by
   cases boundary <;> cases acceptHit <;> cases rejectHit <;>
     rfl
 
 theorem scanBoundary_encode
-    (L : MachineDescription.DovetailLayout) :
-    scanBoundary (MachineDescription.DovetailLayout.encode L) =
+    (L : DovetailLayout) :
+    scanBoundary (DovetailLayout.encode L) =
       HitBoundary.ofHits L.acceptHit L.rejectHit := by
   cases L with
   | mk input stage acceptConfig rejectConfig acceptHit rejectHit =>
       let suffix : Word MachineCodeSymbol :=
-        MachineDescription.encodeBoolAppend acceptHit
-          (MachineDescription.encodeBoolAppend rejectHit [])
+        encodeBoolAppend acceptHit
+          (encodeBoolAppend rejectHit [])
       let pre : Word MachineCodeSymbol :=
         MachineCodeSymbol.transition ::
-          MachineDescription.encodeBoolWordAppend input
-            (MachineDescription.encodeNatAppend stage
-              (MachineDescription.encodeConfigurationAppend acceptConfig
-                (MachineDescription.encodeConfigurationAppend rejectConfig [])))
+          encodeBoolWordAppend input
+            (encodeNatAppend stage
+              (encodeConfigurationAppend acceptConfig
+                (encodeConfigurationAppend rejectConfig [])))
       have hreject :
-          MachineDescription.encodeConfigurationAppend rejectConfig suffix =
+          encodeConfigurationAppend rejectConfig suffix =
             List.append
-              (MachineDescription.encodeConfigurationAppend rejectConfig [])
+              (encodeConfigurationAppend rejectConfig [])
               suffix := by
         simpa [suffix] using
           encodeConfigurationAppend_append rejectConfig
             ([] : Word MachineCodeSymbol) suffix
       have haccept :
-          MachineDescription.encodeConfigurationAppend acceptConfig
-              (MachineDescription.encodeConfigurationAppend rejectConfig
+          encodeConfigurationAppend acceptConfig
+              (encodeConfigurationAppend rejectConfig
                 suffix) =
             List.append
-              (MachineDescription.encodeConfigurationAppend acceptConfig
-                (MachineDescription.encodeConfigurationAppend rejectConfig []))
+              (encodeConfigurationAppend acceptConfig
+                (encodeConfigurationAppend rejectConfig []))
               suffix := by
         rw [hreject]
         exact
           encodeConfigurationAppend_append acceptConfig
-            (MachineDescription.encodeConfigurationAppend rejectConfig [])
+            (encodeConfigurationAppend rejectConfig [])
             suffix
       have hstage :
-          MachineDescription.encodeNatAppend stage
-              (MachineDescription.encodeConfigurationAppend acceptConfig
-                (MachineDescription.encodeConfigurationAppend rejectConfig
+          encodeNatAppend stage
+              (encodeConfigurationAppend acceptConfig
+                (encodeConfigurationAppend rejectConfig
                   suffix)) =
             List.append
-              (MachineDescription.encodeNatAppend stage
-                (MachineDescription.encodeConfigurationAppend acceptConfig
-                  (MachineDescription.encodeConfigurationAppend rejectConfig [])))
+              (encodeNatAppend stage
+                (encodeConfigurationAppend acceptConfig
+                  (encodeConfigurationAppend rejectConfig [])))
               suffix := by
         rw [haccept]
         exact
           encodeNatAppend_append stage
-            (MachineDescription.encodeConfigurationAppend acceptConfig
-              (MachineDescription.encodeConfigurationAppend rejectConfig []))
+            (encodeConfigurationAppend acceptConfig
+              (encodeConfigurationAppend rejectConfig []))
             suffix
       have hinput :
-          MachineDescription.encodeBoolWordAppend input
-              (MachineDescription.encodeNatAppend stage
-                (MachineDescription.encodeConfigurationAppend acceptConfig
-                  (MachineDescription.encodeConfigurationAppend rejectConfig
+          encodeBoolWordAppend input
+              (encodeNatAppend stage
+                (encodeConfigurationAppend acceptConfig
+                  (encodeConfigurationAppend rejectConfig
                     suffix))) =
             List.append
-              (MachineDescription.encodeBoolWordAppend input
-                (MachineDescription.encodeNatAppend stage
-                  (MachineDescription.encodeConfigurationAppend acceptConfig
-                    (MachineDescription.encodeConfigurationAppend rejectConfig []))))
+              (encodeBoolWordAppend input
+                (encodeNatAppend stage
+                  (encodeConfigurationAppend acceptConfig
+                    (encodeConfigurationAppend rejectConfig []))))
               suffix := by
         rw [hstage]
         exact
           encodeBoolWordAppend_append input
-            (MachineDescription.encodeNatAppend stage
-              (MachineDescription.encodeConfigurationAppend acceptConfig
-                (MachineDescription.encodeConfigurationAppend rejectConfig [])))
+            (encodeNatAppend stage
+              (encodeConfigurationAppend acceptConfig
+                (encodeConfigurationAppend rejectConfig [])))
             suffix
       change
         scanBoundaryFrom HitBoundary.other
           (MachineCodeSymbol.transition ::
-            MachineDescription.encodeBoolWordAppend input
-              (MachineDescription.encodeNatAppend stage
-                (MachineDescription.encodeConfigurationAppend acceptConfig
-                  (MachineDescription.encodeConfigurationAppend rejectConfig
+            encodeBoolWordAppend input
+              (encodeNatAppend stage
+                (encodeConfigurationAppend acceptConfig
+                  (encodeConfigurationAppend rejectConfig
                     suffix)))) =
           HitBoundary.ofHits acceptHit rejectHit
       rw [hinput]
@@ -900,9 +901,9 @@ theorem scanBoundary_encode
         (scanBoundaryFrom HitBoundary.other pre) acceptHit rejectHit
 
 theorem boundaryOutputBits_encode
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     totalOutputEmitterBoundaryOutputBits
-        (scanBoundary (MachineDescription.DovetailLayout.encode L)) =
+        (scanBoundary (DovetailLayout.encode L)) =
       OutputBits L := by
   rw [scanBoundary_encode]
   cases L with
@@ -915,7 +916,7 @@ theorem description_forward :
   intro L
   simpa [boundaryOutputBits_encode L] using
     haltsWithOutput_code
-      (MachineDescription.DovetailLayout.encode L)
+      (DovetailLayout.encode L)
 
 theorem finiteDescriptionConstruction_scaffold :
     FiniteDescriptionConstruction := by

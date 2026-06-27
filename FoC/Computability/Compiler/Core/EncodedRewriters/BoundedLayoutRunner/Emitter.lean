@@ -13,20 +13,21 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
 
 def OutputEmitterForwardSpec
     (accept reject emitter : MachineDescription) : Prop :=
-  forall L : MachineDescription.DovetailLayout,
+  forall L : DovetailLayout,
     emitter.HaltsWithTape
       (ConfigRunnerOutputBits accept reject L)
       (OutputTape accept reject L)
 
 def OutputEmitterClosedSpec
     (accept reject emitter : MachineDescription) : Prop :=
-  forall L : MachineDescription.DovetailLayout,
+  forall L : DovetailLayout,
   forall T : Tape Bool,
     emitter.HaltsWithTape
         (ConfigRunnerOutputBits accept reject L) T ->
@@ -44,29 +45,29 @@ def OutputEmitterConstruction : Prop :=
       OutputEmitterSpec accept reject emitter
 
 def OutputEmitterDescription : MachineDescription :=
-  MachineDescription.ExactIdentityDescription
+  ExactIdentityDescription
 
 theorem outputEmitterDescription_ready :
     ReadySpec OutputEmitterDescription := by
   exact
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    ⟨exactIdentityDescription_wellFormed,
+      exactIdentityDescription_haltTransitionFree⟩
 
 theorem outputEmitterDescription_haltsWithTape
     (accept reject : MachineDescription)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     OutputEmitterDescription.HaltsWithTape
       (ConfigRunnerOutputBits accept reject L)
       (OutputTape accept reject L) := by
   refine ⟨0, ?_⟩
   constructor
-  · simp [OutputEmitterDescription, MachineDescription.initial,
-      MachineDescription.ExactIdentityDescription,
-      MachineDescription.runConfig]
-  · simp [OutputEmitterDescription, MachineDescription.initial,
-      MachineDescription.ExactIdentityDescription, ConfigRunnerOutputBits,
+  · simp [OutputEmitterDescription, initial,
+      ExactIdentityDescription,
+      runConfig]
+  · simp [OutputEmitterDescription, initial,
+      ExactIdentityDescription, ConfigRunnerOutputBits,
       ParsedLayoutBits, BoundedRunLayout, OutputTape, OutputCode, Tape.output,
-      MachineDescription.runConfig]
+      runConfig]
 
 theorem outputEmitterConstruction_scaffold :
     OutputEmitterConstruction := by

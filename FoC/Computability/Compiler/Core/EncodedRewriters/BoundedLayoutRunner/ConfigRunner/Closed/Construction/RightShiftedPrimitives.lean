@@ -17,6 +17,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
@@ -71,15 +72,15 @@ theorem selectedProjectionFiniteDescriptionConstruction_of_rightShifted
   · intro L
     have htransform :
         (SelectedProjectionPrimitive useAccept).transform
-            (MachineDescription.DovetailLayout.encode L) =
+            (DovetailLayout.encode L) =
           some (SelectedProjectionOutputCode useAccept L) :=
       (SelectedProjectionPrimitive_transform_eq_some_iff
         useAccept
-        (MachineDescription.DovetailLayout.encode L)
+        (DovetailLayout.encode L)
         (SelectedProjectionOutputCode useAccept L)).mpr
         ⟨L, rfl, by simp [SelectedProjectionOutputCode]⟩
     have hexact := rightShiftedOutputCompiled_haltsWithTape_of_transform hrunner htransform
-    have hequiv := MachineDescription.HaltsFromTape.toEquiv hexact
+    have hequiv := HaltsFromTape.toEquiv hexact
     simpa [ParsedLayoutBits, SelectedProjectionOutputTape] using hequiv
   · intro code T hhalt
     rcases hrunner.right.right.right code T hhalt with
@@ -105,14 +106,14 @@ theorem selectedMergeFiniteDescriptionConstruction_of_rightShifted
   · intro S L hinput
     have htransform :
         (SelectedMergePrimitive useAccept).transform
-            (MachineDescription.SimulatorLayout.encode S) =
+            (SimulatorLayout.encode S) =
           some (SelectedMergeOutputCode useAccept S L) :=
       (SelectedMergePrimitive_transform_eq_some_iff
         useAccept
-        (MachineDescription.SimulatorLayout.encode S)
+        (SimulatorLayout.encode S)
         (SelectedMergeOutputCode useAccept S L)).mpr
         ⟨S, L, rfl, hinput, rfl⟩
-    simpa [MachineDescription.SimulatorLayout.asBoolInput,
+    simpa [SimulatorLayout.asBoolInput,
       SelectedMergeOutputTape] using
       rightShiftedOutputCompiled_haltsWithTape_of_transform
         hrunner htransform
@@ -171,16 +172,16 @@ def SelectedProjectionPrimitiveExactSpec
     (useAccept : Bool)
     (runner : MachineDescription) : Prop :=
   ReadySpec runner ∧
-    (forall L : MachineDescription.DovetailLayout,
+    (forall L : DovetailLayout,
       runner.HaltsWithTape
         (ParsedLayoutBits L)
         (SelectedProjectionOutputTape useAccept L)) ∧
       forall code : Word MachineCodeSymbol,
       forall T : Tape Bool,
         runner.HaltsWithTape
-            (MachineDescription.encodeCodeWordAsInput code) T ->
-          exists L : MachineDescription.DovetailLayout,
-            code = MachineDescription.DovetailLayout.encode L ∧
+            (encodeCodeWordAsInput code) T ->
+          exists L : DovetailLayout,
+            code = DovetailLayout.encode L ∧
               T = SelectedProjectionOutputTape useAccept L
 
 def SelectedProjectionPrimitiveExactConstruction : Prop :=
@@ -198,11 +199,11 @@ theorem selectedProjectionPrimitiveRightShiftedConstruction_of_exact
     CommonGround.CodeWordEmitters.rightShiftedOutputCompiled_of_indexed_tape_spec
       hrunner.left.left
       hrunner.left.right
-      (fun L : MachineDescription.DovetailLayout =>
-        MachineDescription.DovetailLayout.encode L)
-      (fun L : MachineDescription.DovetailLayout =>
+      (fun L : DovetailLayout =>
+        DovetailLayout.encode L)
+      (fun L : DovetailLayout =>
         SelectedProjectionOutputCode useAccept L)
-      (fun L : MachineDescription.DovetailLayout =>
+      (fun L : DovetailLayout =>
         SelectedProjectionOutputTape useAccept L)
       (by
         intro L
@@ -232,11 +233,11 @@ theorem selectedProjectionPrimitiveExactSpec_of_checkedParser_checkedEmitter
         parser.HaltsFromTape
           (Tape.input (ParsedLayoutBits L))
           (ParsedLayoutCheckedTape L) := by
-      simpa [MachineDescription.HaltsWithTape,
-        MachineDescription.HaltsWithTapeIn,
-        MachineDescription.HaltsFromTape,
-        MachineDescription.HaltsFromTapeIn,
-        MachineDescription.initial] using hparser.right.left L
+      simpa [HaltsWithTape,
+        HaltsWithTapeIn,
+        HaltsFromTape,
+        HaltsFromTapeIn,
+        initial] using hparser.right.left L
     have hseq :
         (SeqViaCanonical parser emitter).HaltsFromTape
           (Tape.input (ParsedLayoutBits L))
@@ -246,32 +247,32 @@ theorem selectedProjectionPrimitiveExactSpec_of_checkedParser_checkedEmitter
         hparserFrom
         (parsedLayoutCheckedTape_move_left_move_right L)
         (hemitter.right L)
-    simpa [MachineDescription.HaltsWithTape,
-      MachineDescription.HaltsWithTapeIn,
-      MachineDescription.HaltsFromTape,
-      MachineDescription.HaltsFromTapeIn,
-      MachineDescription.initial] using hseq
+    simpa [HaltsWithTape,
+      HaltsWithTapeIn,
+      HaltsFromTape,
+      HaltsFromTapeIn,
+      initial] using hseq
   · intro code T hhalt
     have hhaltFrom :
         (SeqViaCanonical parser emitter).HaltsFromTape
-          (Tape.input (MachineDescription.encodeCodeWordAsInput code)) T := by
-      simpa [MachineDescription.HaltsWithTape,
-        MachineDescription.HaltsWithTapeIn,
-        MachineDescription.HaltsFromTape,
-        MachineDescription.HaltsFromTapeIn,
-        MachineDescription.initial] using hhalt
+          (Tape.input (encodeCodeWordAsInput code)) T := by
+      simpa [HaltsWithTape,
+        HaltsWithTapeIn,
+        HaltsFromTape,
+        HaltsFromTapeIn,
+        initial] using hhalt
     rcases
         SeqViaCanonical_haltsFromTape_inv
           hparser.left hemitter.left hhaltFrom with
       ⟨Tmid, hparserRun, hemitterRun⟩
     have hparserWith :
         parser.HaltsWithTape
-          (MachineDescription.encodeCodeWordAsInput code) Tmid := by
-      simpa [MachineDescription.HaltsWithTape,
-        MachineDescription.HaltsWithTapeIn,
-        MachineDescription.HaltsFromTape,
-        MachineDescription.HaltsFromTapeIn,
-        MachineDescription.initial] using hparserRun
+          (encodeCodeWordAsInput code) Tmid := by
+      simpa [HaltsWithTape,
+        HaltsWithTapeIn,
+        HaltsFromTape,
+        HaltsFromTapeIn,
+        initial] using hparserRun
     rcases hparser.right.right code Tmid hparserWith with
       ⟨L, hdecode, hTmid⟩
     have hemitterRun' :
@@ -282,7 +283,7 @@ theorem selectedProjectionPrimitiveExactSpec_of_checkedParser_checkedEmitter
         using hemitterRun
     have hT :
         T = SelectedProjectionOutputTape useAccept L :=
-      MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+      haltsFromTape_functional_of_haltTransitionFree
         hemitter.left.right hemitterRun' (hemitter.right L)
     refine ⟨L, ?_, hT⟩
     exact CommonGround.DovetailLayouts.decode_eq_some_encode hdecode

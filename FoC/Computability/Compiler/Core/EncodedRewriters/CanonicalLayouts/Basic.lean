@@ -15,13 +15,14 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace CanonicalLayouts
 
 def Bits {α : Type}
     (encode : α -> Word MachineCodeSymbol) (a : α) : Word Bool :=
-  MachineDescription.encodeCodeWordAsInput (encode a)
+  encodeCodeWordAsInput (encode a)
 
 def InputTape {α : Type}
     (encode : α -> Word MachineCodeSymbol) (a : α) : Tape Bool :=
@@ -33,7 +34,7 @@ def HandoffTape {α : Type}
 
 def IdentityPrimitive {α : Type}
     (decode : Word MachineCodeSymbol -> Option α) :
-    MachineDescription.TapeCodePrimitive where
+    TapeCodePrimitive where
   transform := fun code =>
     match decode code with
     | none => none
@@ -113,7 +114,7 @@ def ClosedRecognizerSpec {α : Type}
       forall code : Word MachineCodeSymbol,
       forall T : FoC.Computability.Tape Bool,
         recognizer.HaltsWithTape
-            (MachineDescription.encodeCodeWordAsInput code) T ->
+            (encodeCodeWordAsInput code) T ->
           exists a : α,
             decode code = some a ∧
               T = HandoffTape encode a
@@ -187,27 +188,27 @@ theorem identityClosedHandoffConstruction_of_closedRecognizer
           let T : FoC.Computability.Tape Bool :=
             (recognizer.runConfig n
               (recognizer.initial
-                (MachineDescription.encodeCodeWordAsInput code))).tape
+                (encodeCodeWordAsInput code))).tape
           have hTape :
               recognizer.HaltsWithTape
-                  (MachineDescription.encodeCodeWordAsInput code) T := by
+                  (encodeCodeWordAsInput code) T := by
             refine ⟨n, ?_⟩
             exact ⟨hn.left, rfl⟩
           rcases hrecognizer.right.right code T hTape with
             ⟨a, hdecode, hT⟩
           have houtBits :
-              MachineDescription.encodeCodeWordAsInput out =
-                MachineDescription.encodeCodeWordAsInput (encode a) := by
+              encodeCodeWordAsInput out =
+                encodeCodeWordAsInput (encode a) := by
             calc
-              MachineDescription.encodeCodeWordAsInput out =
+              encodeCodeWordAsInput out =
                   FoC.Computability.Tape.normalizedOutput T := by
                     simpa [T] using hn.right.symm
               _ =
-                  MachineDescription.encodeCodeWordAsInput (encode a) := by
+                  encodeCodeWordAsInput (encode a) := by
                     rw [hT]
                     simp [Bits, handoffTape_normalizedOutput]
           have hout : out = encode a :=
-            MachineDescription.encodeCodeWordAsInput_injective houtBits
+            encodeCodeWordAsInput_injective houtBits
           have hcode : code = encode a :=
             hdecodeEqSomeEncode hdecode
           rw [hcode, hout]
@@ -222,10 +223,10 @@ theorem identityClosedHandoffConstruction_of_closedRecognizer
           subst out
           have hhalt :
               recognizer.HaltsWithOutput
-                (MachineDescription.encodeCodeWordAsInput (encode a))
+                (encodeCodeWordAsInput (encode a))
                 (FoC.Computability.Tape.normalizedOutput
                   (HandoffTape encode a)) :=
-            MachineDescription.haltsWithOutput_of_haltsWithTape
+            haltsWithOutput_of_haltsWithTape
               (hrecognizer.right.left a)
           simpa [Bits, handoffTape_normalizedOutput] using hhalt
     · exact hrecognizer.left.right

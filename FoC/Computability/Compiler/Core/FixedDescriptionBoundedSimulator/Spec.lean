@@ -16,12 +16,13 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 def FixedDescriptionBoundedSimulatorCanonicalOutputTape
     (D : MachineDescription)
-    (L : MachineDescription.SimulatorLayout) : Tape Bool :=
-  MachineDescription.SimulatorLayout.tape
-    (MachineDescription.SimulatorLayout.run D L.stage L)
+    (L : SimulatorLayout) : Tape Bool :=
+  SimulatorLayout.tape
+    (SimulatorLayout.run D L.stage L)
 
 def FixedDescriptionBoundedSimulatorPaddedTape
     (w : Word Bool) (padding : Nat) : Tape Bool :=
@@ -120,28 +121,28 @@ theorem FixedDescriptionBoundedSimulatorPaddedTape_contextLength_ge_padding
 
 def FixedDescriptionBoundedSimulatorPaddedOutputTape
     (D : MachineDescription)
-    (L : MachineDescription.SimulatorLayout) : Tape Bool :=
+    (L : SimulatorLayout) : Tape Bool :=
   FixedDescriptionBoundedSimulatorPaddedTape
     (FixedDescriptionBoundedSimulatorOutput D L)
     (Tape.contextLength
       (Tape.input (FixedDescriptionBoundedSimulatorInput L)))
 
 theorem FixedDescriptionBoundedSimulatorPaddedOutputTape_equiv_canonical
-    (D : MachineDescription) (L : MachineDescription.SimulatorLayout) :
+    (D : MachineDescription) (L : SimulatorLayout) :
     Tape.Equiv
       (FixedDescriptionBoundedSimulatorPaddedOutputTape D L)
       (FixedDescriptionBoundedSimulatorCanonicalOutputTape D L) := by
   simpa [FixedDescriptionBoundedSimulatorPaddedOutputTape,
     FixedDescriptionBoundedSimulatorCanonicalOutputTape,
     FixedDescriptionBoundedSimulatorOutput,
-    MachineDescription.SimulatorLayout.tape] using
+    SimulatorLayout.tape] using
     FixedDescriptionBoundedSimulatorPaddedTape_equiv_input
       (FixedDescriptionBoundedSimulatorOutput D L)
       (Tape.contextLength
         (Tape.input (FixedDescriptionBoundedSimulatorInput L)))
 
 theorem FixedDescriptionBoundedSimulatorPaddedOutputTape_normalizedOutput
-    (D : MachineDescription) (L : MachineDescription.SimulatorLayout) :
+    (D : MachineDescription) (L : SimulatorLayout) :
     Tape.normalizedOutput
         (FixedDescriptionBoundedSimulatorPaddedOutputTape D L) =
       FixedDescriptionBoundedSimulatorOutput D L := by
@@ -152,7 +153,7 @@ theorem FixedDescriptionBoundedSimulatorPaddedOutputTape_normalizedOutput
         (Tape.input (FixedDescriptionBoundedSimulatorInput L)))
 
 theorem FixedDescriptionBoundedSimulatorPaddedOutputTape_contextLength_ge_input
-    (D : MachineDescription) (L : MachineDescription.SimulatorLayout) :
+    (D : MachineDescription) (L : SimulatorLayout) :
     Tape.contextLength
         (Tape.input (FixedDescriptionBoundedSimulatorInput L)) <=
       Tape.contextLength
@@ -165,14 +166,14 @@ theorem FixedDescriptionBoundedSimulatorPaddedOutputTape_contextLength_ge_input
 
 def FixedDescriptionBoundedSimulatorCanonicalForwardSpec
     (D sim : MachineDescription) : Prop :=
-  forall L : MachineDescription.SimulatorLayout,
+  forall L : SimulatorLayout,
     sim.HaltsWithTape
       (FixedDescriptionBoundedSimulatorInput L)
       (FixedDescriptionBoundedSimulatorCanonicalOutputTape D L)
 
 def FixedDescriptionBoundedSimulatorCanonicalClosedSpec
     (D sim : MachineDescription) : Prop :=
-  forall L : MachineDescription.SimulatorLayout,
+  forall L : SimulatorLayout,
   forall T : Tape Bool,
     sim.HaltsWithTape (FixedDescriptionBoundedSimulatorInput L) T ->
       T = FixedDescriptionBoundedSimulatorCanonicalOutputTape D L
@@ -190,14 +191,14 @@ def FixedDescriptionBoundedSimulatorCanonicalConstruction : Prop :=
 
 def FixedDescriptionBoundedSimulatorEquivForwardSpec
     (D sim : MachineDescription) : Prop :=
-  forall L : MachineDescription.SimulatorLayout,
+  forall L : SimulatorLayout,
     sim.HaltsWithTapeEquiv
       (FixedDescriptionBoundedSimulatorInput L)
       (FixedDescriptionBoundedSimulatorCanonicalOutputTape D L)
 
 def FixedDescriptionBoundedSimulatorEquivClosedSpec
     (D sim : MachineDescription) : Prop :=
-  forall L : MachineDescription.SimulatorLayout,
+  forall L : SimulatorLayout,
   forall T : Tape Bool,
     sim.HaltsWithTape (FixedDescriptionBoundedSimulatorInput L) T ->
       Tape.Equiv T (FixedDescriptionBoundedSimulatorCanonicalOutputTape D L)
@@ -215,14 +216,14 @@ def FixedDescriptionBoundedSimulatorEquivConstruction : Prop :=
 
 def FixedDescriptionBoundedSimulatorPaddedForwardSpec
     (D sim : MachineDescription) : Prop :=
-  forall L : MachineDescription.SimulatorLayout,
+  forall L : SimulatorLayout,
     sim.HaltsWithTape
       (FixedDescriptionBoundedSimulatorInput L)
       (FixedDescriptionBoundedSimulatorPaddedOutputTape D L)
 
 def FixedDescriptionBoundedSimulatorPaddedClosedSpec
     (D sim : MachineDescription) : Prop :=
-  forall L : MachineDescription.SimulatorLayout,
+  forall L : SimulatorLayout,
   forall T : Tape Bool,
     sim.HaltsWithTape (FixedDescriptionBoundedSimulatorInput L) T ->
       T = FixedDescriptionBoundedSimulatorPaddedOutputTape D L
@@ -246,7 +247,7 @@ theorem fixedDescriptionBoundedSimulatorEquivSpec_of_canonicalSpec
   · exact hsim.left
   constructor
   · intro L
-    exact MachineDescription.HaltsWithTape.toEquiv
+    exact HaltsWithTape.toEquiv
       (hsim.right.left L)
   · intro L T hhalt
     rw [hsim.right.right L T hhalt]
@@ -290,19 +291,19 @@ theorem fixedDescriptionBoundedSimulatorEquivConstruction_of_padded
 theorem FixedDescriptionBoundedSimulatorEquivSpec.haltsFromTapeEquiv
     {D sim : MachineDescription}
     (hsim : FixedDescriptionBoundedSimulatorEquivSpec D sim)
-    (L : MachineDescription.SimulatorLayout) :
+    (L : SimulatorLayout) :
     sim.HaltsFromTapeEquiv
-      (MachineDescription.SimulatorLayout.tape L)
+      (SimulatorLayout.tape L)
       (FixedDescriptionBoundedSimulatorCanonicalOutputTape D L) := by
   rcases hsim.right.left L with ⟨Tactual, hhalt, hequiv⟩
   refine ⟨Tactual, ?_, hequiv⟩
   rcases hhalt with ⟨n, hn⟩
   refine ⟨n, ?_⟩
-  simpa [MachineDescription.HaltsWithTapeIn,
-    MachineDescription.HaltsFromTapeIn,
-    MachineDescription.initial,
+  simpa [HaltsWithTapeIn,
+    HaltsFromTapeIn,
+    initial,
     FixedDescriptionBoundedSimulatorInput,
-    MachineDescription.SimulatorLayout.tape] using hn
+    SimulatorLayout.tape] using hn
 
 theorem fixedDescriptionBoundedSimulatorTableRealizes_of_canonicalSpec
     {D sim : MachineDescription}
@@ -313,9 +314,9 @@ theorem fixedDescriptionBoundedSimulatorTableRealizes_of_canonicalSpec
   · intro L
     simpa [FixedDescriptionBoundedSimulatorCanonicalOutputTape,
       FixedDescriptionBoundedSimulatorOutput,
-      MachineDescription.SimulatorLayout.tape_normalizedOutput,
-      MachineDescription.SimulatorLayout.asBoolInput] using
-      MachineDescription.haltsWithOutput_of_haltsWithTape
+      SimulatorLayout.tape_normalizedOutput,
+      SimulatorLayout.asBoolInput] using
+      haltsWithOutput_of_haltsWithTape
         (hsim.right.left L)
 
 theorem fixedDescriptionBoundedSimulatorTableRealizes_of_equivSpec
@@ -327,9 +328,9 @@ theorem fixedDescriptionBoundedSimulatorTableRealizes_of_equivSpec
   · intro L
     simpa [FixedDescriptionBoundedSimulatorCanonicalOutputTape,
       FixedDescriptionBoundedSimulatorOutput,
-      MachineDescription.SimulatorLayout.tape_normalizedOutput,
-      MachineDescription.SimulatorLayout.asBoolInput] using
-      MachineDescription.haltsWithOutput_of_haltsWithTapeEquiv
+      SimulatorLayout.tape_normalizedOutput,
+      SimulatorLayout.asBoolInput] using
+      haltsWithOutput_of_haltsWithTapeEquiv
         (hsim.right.left L)
 
 theorem fixedDescriptionBoundedSimulatorTableCompiler_of_equivConstruction

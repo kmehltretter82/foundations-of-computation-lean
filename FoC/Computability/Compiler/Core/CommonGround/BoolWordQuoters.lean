@@ -15,6 +15,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace CommonGround
 namespace BoolWordQuoters
@@ -44,9 +45,9 @@ def RawBoolWordHeaderEmitterSpec
   emitter.SubroutineReady ∧
     forall w : Word Bool,
       emitter.HaltsWithOutput w
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (MachineCodeSymbol.header ::
-            MachineDescription.encodeBoolWordAppend w suffix))
+            encodeBoolWordAppend w suffix))
 
 def RawBoolWordHeaderEmitterConstruction
     (suffix : Word MachineCodeSymbol) : Prop :=

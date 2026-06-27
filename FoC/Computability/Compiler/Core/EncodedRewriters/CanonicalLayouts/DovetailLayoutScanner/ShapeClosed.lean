@@ -15,6 +15,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 open FoC.Computability.DovetailInitialLayoutInitializer
 open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
 
@@ -73,152 +74,152 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_inputNatPrefix_inv
 theorem encodeCodeWordAsInput_transition_prefix_inv
     {code : Word MachineCodeSymbol} {tail : Word Bool}
     (h :
-      MachineDescription.encodeCodeWordAsInput code =
+      encodeCodeWordAsInput code =
         false :: false :: false :: true :: tail) :
     exists rest : Word MachineCodeSymbol,
       code = MachineCodeSymbol.transition :: rest ∧
-        MachineDescription.encodeCodeWordAsInput rest = tail := by
+        encodeCodeWordAsInput rest = tail := by
   cases code with
   | nil =>
-      simp [MachineDescription.encodeCodeWordAsInput] at h
+      simp [encodeCodeWordAsInput] at h
   | cons symbol rest =>
       cases symbol with
       | header =>
-          simp [MachineDescription.encodeCodeWordAsInput,
-            MachineDescription.encodeCodeSymbolAsInput] at h
+          simp [encodeCodeWordAsInput,
+            encodeCodeSymbolAsInput] at h
           cases h
       | transition =>
-          simp [MachineDescription.encodeCodeWordAsInput,
-            MachineDescription.encodeCodeSymbolAsInput] at h
+          simp [encodeCodeWordAsInput,
+            encodeCodeSymbolAsInput] at h
           cases h
           exact ⟨rest, rfl, rfl⟩
       | tick =>
-          simp [MachineDescription.encodeCodeWordAsInput,
-            MachineDescription.encodeCodeSymbolAsInput] at h
+          simp [encodeCodeWordAsInput,
+            encodeCodeSymbolAsInput] at h
           cases h
       | done =>
-          simp [MachineDescription.encodeCodeWordAsInput,
-            MachineDescription.encodeCodeSymbolAsInput] at h
+          simp [encodeCodeWordAsInput,
+            encodeCodeSymbolAsInput] at h
           cases h
       | blank =>
-          simp [MachineDescription.encodeCodeWordAsInput,
-            MachineDescription.encodeCodeSymbolAsInput] at h
+          simp [encodeCodeWordAsInput,
+            encodeCodeSymbolAsInput] at h
           cases h
       | zero =>
-          simp [MachineDescription.encodeCodeWordAsInput,
-            MachineDescription.encodeCodeSymbolAsInput] at h
+          simp [encodeCodeWordAsInput,
+            encodeCodeSymbolAsInput] at h
           cases h
       | one =>
-          simp [MachineDescription.encodeCodeWordAsInput,
-            MachineDescription.encodeCodeSymbolAsInput] at h
+          simp [encodeCodeWordAsInput,
+            encodeCodeSymbolAsInput] at h
           cases h
       | moveLeft =>
-          simp [MachineDescription.encodeCodeWordAsInput,
-            MachineDescription.encodeCodeSymbolAsInput] at h
+          simp [encodeCodeWordAsInput,
+            encodeCodeSymbolAsInput] at h
           cases h
       | moveRight =>
-          simp [MachineDescription.encodeCodeWordAsInput,
-            MachineDescription.encodeCodeSymbolAsInput] at h
+          simp [encodeCodeWordAsInput,
+            encodeCodeSymbolAsInput] at h
           cases h
 
 theorem encodeCodeWordAsInput_nat_opener_inv
     {code : Word MachineCodeSymbol} {doneBit : Bool}
     {tail : Word Bool}
     (h :
-      MachineDescription.encodeCodeWordAsInput code =
+      encodeCodeWordAsInput code =
         false :: false :: true :: doneBit :: tail) :
     exists rest : Word MachineCodeSymbol,
       code =
         (if doneBit then MachineCodeSymbol.done else MachineCodeSymbol.tick) ::
           rest ∧
-        MachineDescription.encodeCodeWordAsInput rest = tail := by
+        encodeCodeWordAsInput rest = tail := by
   cases code with
   | nil =>
-      simp [MachineDescription.encodeCodeWordAsInput] at h
+      simp [encodeCodeWordAsInput] at h
   | cons symbol rest =>
       cases doneBit
       · cases symbol with
         | header =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
         | transition =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
         | tick =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
             exact ⟨rest, rfl, rfl⟩
         | done =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
         | blank =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
         | zero =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
         | one =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
         | moveLeft =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
         | moveRight =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
       · cases symbol with
         | header =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
         | transition =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
         | tick =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
         | done =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
             exact ⟨rest, rfl, rfl⟩
         | blank =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
         | zero =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
         | one =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
         | moveLeft =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
         | moveRight =>
-            simp [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] at h
+            simp [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] at h
             cases h
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_codeInputNatOpener_inv
     {code : Word MachineCodeSymbol} {Tout : Tape Bool}
     (h :
       CheckedDovetailLayoutScannerDescription.HaltsWithTape
-        (MachineDescription.encodeCodeWordAsInput code) Tout) :
+        (encodeCodeWordAsInput code) Tout) :
     exists doneBit : Bool,
     exists inputRest : Word MachineCodeSymbol,
       code =
@@ -242,10 +243,10 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_inputBoolWord_inv
     {code : Word MachineCodeSymbol} {Tout : Tape Bool}
     (h :
       CheckedDovetailLayoutScannerDescription.HaltsWithTape
-        (MachineDescription.encodeCodeWordAsInput code) Tout) :
+        (encodeCodeWordAsInput code) Tout) :
     exists inputWord : Word Bool,
     exists inputRest : Word MachineCodeSymbol,
-      code = MachineCodeSymbol.transition :: MachineDescription.encodeBoolWordAppend inputWord inputRest := by
+      code = MachineCodeSymbol.transition :: encodeBoolWordAppend inputWord inputRest := by
   rcases checkedDovetailLayoutScannerDescription_haltsWithTape_finalFlags_inv h with
     ⟨b, suffixTail, Tinput, Tstage, Taccept, Treject, TacceptHit,
       Tbody, nInput, nStage, nAccept, nReject, nAcceptHit,
@@ -257,7 +258,7 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_inputBoolWord_inv
       BoolWordSuffixScannerDescription.runConfig nInput
           (config BoolWordSuffixScannerDescription.start
             (List.append (transitionRemainderBits.reverse.map some) [none])
-            ((MachineDescription.encodeCodeWordAsInput inputCode).map
+            ((encodeCodeWordAsInput inputCode).map
               some)) =
         { state := BoolWordSuffixScannerDescription.halt
           tape := Tinput } := by

@@ -13,189 +13,190 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 theorem encodeNatAppend_append
     (n : Nat) (suffix tail : Word MachineCodeSymbol) :
-    MachineDescription.encodeNatAppend n (List.append suffix tail) =
-      List.append (MachineDescription.encodeNatAppend n suffix) tail := by
-  simp [MachineDescription.encodeNatAppend, List.append_assoc]
+    encodeNatAppend n (List.append suffix tail) =
+      List.append (encodeNatAppend n suffix) tail := by
+  simp [encodeNatAppend, List.append_assoc]
 
 theorem encodeCellAppend_append
     (cell : Option Bool) (suffix tail : Word MachineCodeSymbol) :
-    MachineDescription.encodeCellAppend cell (List.append suffix tail) =
-      List.append (MachineDescription.encodeCellAppend cell suffix) tail := by
+    encodeCellAppend cell (List.append suffix tail) =
+      List.append (encodeCellAppend cell suffix) tail := by
   cases cell with
   | none =>
-      simp [MachineDescription.encodeCellAppend, MachineDescription.encodeCell]
+      simp [encodeCellAppend, encodeCell]
   | some b =>
       cases b <;>
-        simp [MachineDescription.encodeCellAppend,
-          MachineDescription.encodeCell]
+        simp [encodeCellAppend,
+          encodeCell]
 
 theorem encodeBoolAppend_append
     (b : Bool) (suffix tail : Word MachineCodeSymbol) :
-    MachineDescription.encodeBoolAppend b (List.append suffix tail) =
-      List.append (MachineDescription.encodeBoolAppend b suffix) tail := by
+    encodeBoolAppend b (List.append suffix tail) =
+      List.append (encodeBoolAppend b suffix) tail := by
   cases b <;>
-    simp [MachineDescription.encodeBoolAppend,
-      MachineDescription.encodeCellAppend, MachineDescription.encodeCell]
+    simp [encodeBoolAppend,
+      encodeCellAppend, encodeCell]
 
 theorem encodeCellsAppend_append
     (cells : List (Option Bool)) (suffix tail : Word MachineCodeSymbol) :
-    MachineDescription.encodeCellsAppend cells (List.append suffix tail) =
-      List.append (MachineDescription.encodeCellsAppend cells suffix)
+    encodeCellsAppend cells (List.append suffix tail) =
+      List.append (encodeCellsAppend cells suffix)
         tail := by
   induction cells with
   | nil =>
       rfl
   | cons cell rest ih =>
-      simp [MachineDescription.encodeCellsAppend,
-        MachineDescription.encodeCellAppend]
+      simp [encodeCellsAppend,
+        encodeCellAppend]
       change
-        List.append (MachineDescription.encodeCell cell)
-          (MachineDescription.encodeCellsAppend rest
+        List.append (encodeCell cell)
+          (encodeCellsAppend rest
             (List.append suffix tail)) =
-        List.append (MachineDescription.encodeCell cell)
-          (List.append (MachineDescription.encodeCellsAppend rest suffix)
+        List.append (encodeCell cell)
+          (List.append (encodeCellsAppend rest suffix)
             tail)
       rw [ih]
 
 theorem encodeCellListAppend_append
     (cells : List (Option Bool)) (suffix tail : Word MachineCodeSymbol) :
-    MachineDescription.encodeCellListAppend cells (List.append suffix tail) =
-      List.append (MachineDescription.encodeCellListAppend cells suffix)
+    encodeCellListAppend cells (List.append suffix tail) =
+      List.append (encodeCellListAppend cells suffix)
         tail := by
-  simp [MachineDescription.encodeCellListAppend]
+  simp [encodeCellListAppend]
   change
-    MachineDescription.encodeNatAppend cells.length
-        (MachineDescription.encodeCellsAppend cells
+    encodeNatAppend cells.length
+        (encodeCellsAppend cells
           (List.append suffix tail)) =
       List.append
-        (MachineDescription.encodeNatAppend cells.length
-          (MachineDescription.encodeCellsAppend cells suffix))
+        (encodeNatAppend cells.length
+          (encodeCellsAppend cells suffix))
         tail
   rw [encodeCellsAppend_append]
   rw [encodeNatAppend_append]
 
 theorem encodeBoolWordAppend_append
     (w : Word Bool) (suffix tail : Word MachineCodeSymbol) :
-    MachineDescription.encodeBoolWordAppend w (List.append suffix tail) =
-      List.append (MachineDescription.encodeBoolWordAppend w suffix)
+    encodeBoolWordAppend w (List.append suffix tail) =
+      List.append (encodeBoolWordAppend w suffix)
         tail := by
-  simpa [MachineDescription.encodeBoolWordAppend] using
+  simpa [encodeBoolWordAppend] using
     encodeCellListAppend_append (w.map some) suffix tail
 
 theorem dovetailControllerLayout_encode_eq_header_stageInput_append_result
-    (C : MachineDescription.DovetailControllerLayout) :
-    MachineDescription.DovetailControllerLayout.encode C =
+    (C : DovetailControllerLayout) :
+    DovetailControllerLayout.encode C =
       MachineCodeSymbol.header ::
         List.append (PairedRecognizerDovetailControllerStageInputCode C)
-          (MachineDescription.encodeBoolWordAppend C.result []) := by
+          (encodeBoolWordAppend C.result []) := by
   cases C with
   | mk input stage result =>
       have hnat :
-          MachineDescription.encodeNatAppend stage
-              (MachineDescription.encodeBoolWordAppend result []) =
-            List.append (MachineDescription.encodeNatAppend stage [])
-              (MachineDescription.encodeBoolWordAppend result []) := by
+          encodeNatAppend stage
+              (encodeBoolWordAppend result []) =
+            List.append (encodeNatAppend stage [])
+              (encodeBoolWordAppend result []) := by
         simpa using
           encodeNatAppend_append stage ([] : Word MachineCodeSymbol)
-            (MachineDescription.encodeBoolWordAppend result [])
+            (encodeBoolWordAppend result [])
       have hbool :
-          MachineDescription.encodeBoolWordAppend input
-              (List.append (MachineDescription.encodeNatAppend stage [])
-                (MachineDescription.encodeBoolWordAppend result [])) =
+          encodeBoolWordAppend input
+              (List.append (encodeNatAppend stage [])
+                (encodeBoolWordAppend result [])) =
             List.append
-              (MachineDescription.encodeBoolWordAppend input
-                (MachineDescription.encodeNatAppend stage []))
-              (MachineDescription.encodeBoolWordAppend result []) :=
+              (encodeBoolWordAppend input
+                (encodeNatAppend stage []))
+              (encodeBoolWordAppend result []) :=
         encodeBoolWordAppend_append input
-          (MachineDescription.encodeNatAppend stage [])
-          (MachineDescription.encodeBoolWordAppend result [])
+          (encodeNatAppend stage [])
+          (encodeBoolWordAppend result [])
       simp [PairedRecognizerDovetailControllerStageInputCode,
-        MachineDescription.DovetailControllerLayout.encode,
-        MachineDescription.DovetailControllerLayout.encodeAppend,
-        MachineDescription.DovetailControllerLayout.stageInputCode,
-        MachineDescription.DovetailLayout.stageInputCode,
-        MachineDescription.DovetailLayout.stageInputCodeAppend]
+        DovetailControllerLayout.encode,
+        DovetailControllerLayout.encodeAppend,
+        DovetailControllerLayout.stageInputCode,
+        DovetailLayout.stageInputCode,
+        DovetailLayout.stageInputCodeAppend]
       change
         MachineCodeSymbol.header ::
-            MachineDescription.encodeBoolWordAppend input
-              (MachineDescription.encodeNatAppend stage
-                (MachineDescription.encodeBoolWordAppend result [])) =
+            encodeBoolWordAppend input
+              (encodeNatAppend stage
+                (encodeBoolWordAppend result [])) =
           MachineCodeSymbol.header ::
             List.append
-              (MachineDescription.encodeBoolWordAppend input
-                (MachineDescription.encodeNatAppend stage []))
-              (MachineDescription.encodeBoolWordAppend result [])
+              (encodeBoolWordAppend input
+                (encodeNatAppend stage []))
+              (encodeBoolWordAppend result [])
       rw [hnat, hbool]
 
 theorem encodeTapeAppend_append
     (T : Tape Bool) (suffix tail : Word MachineCodeSymbol) :
-    MachineDescription.encodeTapeAppend T (List.append suffix tail) =
-      List.append (MachineDescription.encodeTapeAppend T suffix) tail := by
+    encodeTapeAppend T (List.append suffix tail) =
+      List.append (encodeTapeAppend T suffix) tail := by
   cases T with
   | mk left head right =>
-      simp [MachineDescription.encodeTapeAppend]
+      simp [encodeTapeAppend]
       change
-        MachineDescription.encodeCellListAppend left
-            (MachineDescription.encodeCellAppend head
-              (MachineDescription.encodeCellListAppend right
+        encodeCellListAppend left
+            (encodeCellAppend head
+              (encodeCellListAppend right
                 (List.append suffix tail))) =
           List.append
-            (MachineDescription.encodeCellListAppend left
-              (MachineDescription.encodeCellAppend head
-                (MachineDescription.encodeCellListAppend right suffix)))
+            (encodeCellListAppend left
+              (encodeCellAppend head
+                (encodeCellListAppend right suffix)))
             tail
       rw [encodeCellListAppend_append right suffix tail]
       rw [encodeCellAppend_append head
-        (MachineDescription.encodeCellListAppend right suffix) tail]
+        (encodeCellListAppend right suffix) tail]
       rw [encodeCellListAppend_append left
-        (MachineDescription.encodeCellAppend head
-          (MachineDescription.encodeCellListAppend right suffix)) tail]
+        (encodeCellAppend head
+          (encodeCellListAppend right suffix)) tail]
 
 theorem encodeConfigurationAppend_append
-    (c : MachineDescription.Configuration)
+    (c : Configuration)
     (suffix tail : Word MachineCodeSymbol) :
-    MachineDescription.encodeConfigurationAppend c
+    encodeConfigurationAppend c
         (List.append suffix tail) =
       List.append
-        (MachineDescription.encodeConfigurationAppend c suffix) tail := by
+        (encodeConfigurationAppend c suffix) tail := by
   cases c with
   | mk state tape =>
-      simp [MachineDescription.encodeConfigurationAppend]
+      simp [encodeConfigurationAppend]
       change
-        MachineDescription.encodeNatAppend state
-            (MachineDescription.encodeTapeAppend tape
+        encodeNatAppend state
+            (encodeTapeAppend tape
               (List.append suffix tail)) =
           List.append
-            (MachineDescription.encodeNatAppend state
-              (MachineDescription.encodeTapeAppend tape suffix))
+            (encodeNatAppend state
+              (encodeTapeAppend tape suffix))
             tail
       rw [encodeTapeAppend_append tape suffix tail]
       rw [encodeNatAppend_append state
-        (MachineDescription.encodeTapeAppend tape suffix) tail]
+        (encodeTapeAppend tape suffix) tail]
 
 theorem encodeCodeWordAsInput_encodeBoolWordAppend
     (w : Word Bool) (suffix : Word MachineCodeSymbol) :
-    MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeBoolWordAppend w suffix) =
+    encodeCodeWordAsInput
+        (encodeBoolWordAppend w suffix) =
       List.append
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeBoolWord w))
-        (MachineDescription.encodeCodeWordAsInput suffix) := by
+        (encodeCodeWordAsInput
+          (encodeBoolWord w))
+        (encodeCodeWordAsInput suffix) := by
   have h :=
     encodeBoolWordAppend_append w ([] : Word MachineCodeSymbol) suffix
   simp at h
   rw [h]
   change
-    MachineDescription.encodeCodeWordAsInput
-        (List.append (MachineDescription.encodeBoolWordAppend w []) suffix) =
+    encodeCodeWordAsInput
+        (List.append (encodeBoolWordAppend w []) suffix) =
       List.append
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeBoolWord w))
-        (MachineDescription.encodeCodeWordAsInput suffix)
-  rw [MachineDescription.encodeCodeWordAsInput_append]
+        (encodeCodeWordAsInput
+          (encodeBoolWord w))
+        (encodeCodeWordAsInput suffix)
+  rw [encodeCodeWordAsInput_append]
   rfl
 
 /-!
@@ -208,54 +209,54 @@ proofs can choose when to expose encoding lengths.
 
 theorem encodeCellsAppend_length
     (cells : List (Option Bool)) (suffix : Word MachineCodeSymbol) :
-    (MachineDescription.encodeCellsAppend cells suffix).length =
+    (encodeCellsAppend cells suffix).length =
       cells.length + suffix.length := by
   induction cells with
   | nil =>
-      simp [MachineDescription.encodeCellsAppend]
+      simp [encodeCellsAppend]
   | cons cell rest ih =>
       cases cell with
       | none =>
-          simp [MachineDescription.encodeCellsAppend,
-            MachineDescription.encodeCellAppend,
-            MachineDescription.encodeCell, ih]
+          simp [encodeCellsAppend,
+            encodeCellAppend,
+            encodeCell, ih]
           omega
       | some b =>
           cases b <;>
-            simp [MachineDescription.encodeCellsAppend,
-              MachineDescription.encodeCellAppend,
-              MachineDescription.encodeCell, ih] <;>
+            simp [encodeCellsAppend,
+              encodeCellAppend,
+              encodeCell, ih] <;>
             omega
 
 theorem encodeCellListAppend_length_ge
     (cells : List (Option Bool)) (suffix : Word MachineCodeSymbol) :
     cells.length + suffix.length <=
-      (MachineDescription.encodeCellListAppend cells suffix).length := by
-  simp [MachineDescription.encodeCellListAppend,
-    MachineDescription.encodeNatAppend, encodeCellsAppend_length,
+      (encodeCellListAppend cells suffix).length := by
+  simp [encodeCellListAppend,
+    encodeNatAppend, encodeCellsAppend_length,
     List.length_append]
 
 theorem encodeBoolWordAppend_length_ge
     (w : Word Bool) (suffix : Word MachineCodeSymbol) :
     w.length + suffix.length <=
-      (MachineDescription.encodeBoolWordAppend w suffix).length := by
-  simpa [MachineDescription.encodeBoolWordAppend] using
+      (encodeBoolWordAppend w suffix).length := by
+  simpa [encodeBoolWordAppend] using
     encodeCellListAppend_length_ge (w.map some) suffix
 
 theorem encodeCodeSymbolAsInput_length
     (symbol : MachineCodeSymbol) :
-    (MachineDescription.encodeCodeSymbolAsInput symbol).length = 4 := by
+    (encodeCodeSymbolAsInput symbol).length = 4 := by
   cases symbol <;> rfl
 
 theorem encodeCodeWordAsInput_length
     (tokens : Word MachineCodeSymbol) :
-    (MachineDescription.encodeCodeWordAsInput tokens).length =
+    (encodeCodeWordAsInput tokens).length =
       4 * tokens.length := by
   induction tokens with
   | nil =>
       rfl
   | cons symbol rest ih =>
-      simp [MachineDescription.encodeCodeWordAsInput,
+      simp [encodeCodeWordAsInput,
         encodeCodeSymbolAsInput_length, ih, Nat.mul_add, Nat.add_comm]
 
 /-!
@@ -264,7 +265,7 @@ theorem encodeCodeWordAsInput_length
 The structured encoders below are self-delimiting: decoding an encoded prefix
 returns both the payload and the unconsumed suffix.  These lemmas package the
 standard proof pattern "decode both sides, then compare the returned pairs".
-They are intentionally not provided for raw {name}`MachineDescription.encodeCellsAppend`,
+They are intentionally not provided for raw {name}`encodeCellsAppend`,
 whose split between payload cells and suffix is not unique without the
 length-prefixed wrapper.
 -/
@@ -273,61 +274,61 @@ theorem encodeNatAppend_inj
     {n m : Nat}
     {suffix tail : Word MachineCodeSymbol}
     (h :
-      MachineDescription.encodeNatAppend n suffix =
-        MachineDescription.encodeNatAppend m tail) :
+      encodeNatAppend n suffix =
+        encodeNatAppend m tail) :
     n = m ∧ suffix = tail := by
   have hdecode :
-      MachineDescription.decodeNat
-          (MachineDescription.encodeNatAppend n suffix) =
-        MachineDescription.decodeNat
-          (MachineDescription.encodeNatAppend m tail) := by
+      decodeNat
+          (encodeNatAppend n suffix) =
+        decodeNat
+          (encodeNatAppend m tail) := by
     rw [h]
   have hpair : (n, suffix) = (m, tail) := by
-    simpa [MachineDescription.decodeNat_encodeNatAppend] using hdecode
+    simpa [decodeNat_encodeNatAppend] using hdecode
   exact ⟨congrArg Prod.fst hpair, congrArg Prod.snd hpair⟩
 
 theorem encodeCellAppend_inj
     {cell other : Option Bool}
     {suffix tail : Word MachineCodeSymbol}
     (h :
-      MachineDescription.encodeCellAppend cell suffix =
-        MachineDescription.encodeCellAppend other tail) :
+      encodeCellAppend cell suffix =
+        encodeCellAppend other tail) :
     cell = other ∧ suffix = tail := by
   have hdecode :
-      MachineDescription.decodeCell
-          (MachineDescription.encodeCellAppend cell suffix) =
-        MachineDescription.decodeCell
-          (MachineDescription.encodeCellAppend other tail) := by
+      decodeCell
+          (encodeCellAppend cell suffix) =
+        decodeCell
+          (encodeCellAppend other tail) := by
     rw [h]
   have hpair : (cell, suffix) = (other, tail) := by
-    simpa [MachineDescription.decodeCell_encodeCellAppend] using hdecode
+    simpa [decodeCell_encodeCellAppend] using hdecode
   exact ⟨congrArg Prod.fst hpair, congrArg Prod.snd hpair⟩
 
 theorem encodeBoolAppend_inj
     {b c : Bool}
     {suffix tail : Word MachineCodeSymbol}
     (h :
-      MachineDescription.encodeBoolAppend b suffix =
-        MachineDescription.encodeBoolAppend c tail) :
+      encodeBoolAppend b suffix =
+        encodeBoolAppend c tail) :
     b = c ∧ suffix = tail := by
-  simpa [MachineDescription.encodeBoolAppend] using
+  simpa [encodeBoolAppend] using
     encodeCellAppend_inj h
 
 theorem encodeDirectionAppend_inj
     {dir other : Direction}
     {suffix tail : Word MachineCodeSymbol}
     (h :
-      MachineDescription.encodeDirectionAppend dir suffix =
-        MachineDescription.encodeDirectionAppend other tail) :
+      encodeDirectionAppend dir suffix =
+        encodeDirectionAppend other tail) :
     dir = other ∧ suffix = tail := by
   have hdecode :
-      MachineDescription.decodeDirection
-          (MachineDescription.encodeDirectionAppend dir suffix) =
-        MachineDescription.decodeDirection
-          (MachineDescription.encodeDirectionAppend other tail) := by
+      decodeDirection
+          (encodeDirectionAppend dir suffix) =
+        decodeDirection
+          (encodeDirectionAppend other tail) := by
     rw [h]
   have hpair : (dir, suffix) = (other, tail) := by
-    simpa [MachineDescription.decodeDirection_encodeDirectionAppend] using
+    simpa [decodeDirection_encodeDirectionAppend] using
       hdecode
   exact ⟨congrArg Prod.fst hpair, congrArg Prod.snd hpair⟩
 
@@ -335,17 +336,17 @@ theorem encodeCellListAppend_inj
     {cells other : List (Option Bool)}
     {suffix tail : Word MachineCodeSymbol}
     (h :
-      MachineDescription.encodeCellListAppend cells suffix =
-        MachineDescription.encodeCellListAppend other tail) :
+      encodeCellListAppend cells suffix =
+        encodeCellListAppend other tail) :
     cells = other ∧ suffix = tail := by
   have hdecode :
-      MachineDescription.decodeCellList
-          (MachineDescription.encodeCellListAppend cells suffix) =
-        MachineDescription.decodeCellList
-          (MachineDescription.encodeCellListAppend other tail) := by
+      decodeCellList
+          (encodeCellListAppend cells suffix) =
+        decodeCellList
+          (encodeCellListAppend other tail) := by
     rw [h]
   have hpair : (cells, suffix) = (other, tail) := by
-    simpa [MachineDescription.decodeCellList_encodeCellListAppend] using
+    simpa [decodeCellList_encodeCellListAppend] using
       hdecode
   exact ⟨congrArg Prod.fst hpair, congrArg Prod.snd hpair⟩
 
@@ -353,17 +354,17 @@ theorem encodeBoolWordAppend_inj
     {w v : Word Bool}
     {suffix tail : Word MachineCodeSymbol}
     (h :
-      MachineDescription.encodeBoolWordAppend w suffix =
-        MachineDescription.encodeBoolWordAppend v tail) :
+      encodeBoolWordAppend w suffix =
+        encodeBoolWordAppend v tail) :
     w = v ∧ suffix = tail := by
   have hdecode :
-      MachineDescription.decodeBoolWord
-          (MachineDescription.encodeBoolWordAppend w suffix) =
-        MachineDescription.decodeBoolWord
-          (MachineDescription.encodeBoolWordAppend v tail) := by
+      decodeBoolWord
+          (encodeBoolWordAppend w suffix) =
+        decodeBoolWord
+          (encodeBoolWordAppend v tail) := by
     rw [h]
   have hpair : (w, suffix) = (v, tail) := by
-    simpa [MachineDescription.decodeBoolWord_encodeBoolWordAppend] using
+    simpa [decodeBoolWord_encodeBoolWordAppend] using
       hdecode
   exact ⟨congrArg Prod.fst hpair, congrArg Prod.snd hpair⟩
 
@@ -371,34 +372,34 @@ theorem encodeTapeAppend_inj
     {T U : Tape Bool}
     {suffix tail : Word MachineCodeSymbol}
     (h :
-      MachineDescription.encodeTapeAppend T suffix =
-        MachineDescription.encodeTapeAppend U tail) :
+      encodeTapeAppend T suffix =
+        encodeTapeAppend U tail) :
     T = U ∧ suffix = tail := by
   have hdecode :
-      MachineDescription.decodeTape
-          (MachineDescription.encodeTapeAppend T suffix) =
-        MachineDescription.decodeTape
-          (MachineDescription.encodeTapeAppend U tail) := by
+      decodeTape
+          (encodeTapeAppend T suffix) =
+        decodeTape
+          (encodeTapeAppend U tail) := by
     rw [h]
   have hpair : (T, suffix) = (U, tail) := by
-    simpa [MachineDescription.decodeTape_encodeTapeAppend] using hdecode
+    simpa [decodeTape_encodeTapeAppend] using hdecode
   exact ⟨congrArg Prod.fst hpair, congrArg Prod.snd hpair⟩
 
 theorem encodeConfigurationAppend_inj
-    {c d : MachineDescription.Configuration}
+    {c d : Configuration}
     {suffix tail : Word MachineCodeSymbol}
     (h :
-      MachineDescription.encodeConfigurationAppend c suffix =
-        MachineDescription.encodeConfigurationAppend d tail) :
+      encodeConfigurationAppend c suffix =
+        encodeConfigurationAppend d tail) :
     c = d ∧ suffix = tail := by
   have hdecode :
-      MachineDescription.decodeConfiguration
-          (MachineDescription.encodeConfigurationAppend c suffix) =
-        MachineDescription.decodeConfiguration
-          (MachineDescription.encodeConfigurationAppend d tail) := by
+      decodeConfiguration
+          (encodeConfigurationAppend c suffix) =
+        decodeConfiguration
+          (encodeConfigurationAppend d tail) := by
     rw [h]
   have hpair : (c, suffix) = (d, tail) := by
-    simpa [MachineDescription.decodeConfiguration_encodeConfigurationAppend]
+    simpa [decodeConfiguration_encodeConfigurationAppend]
       using hdecode
   exact ⟨congrArg Prod.fst hpair, congrArg Prod.snd hpair⟩
 
@@ -406,17 +407,17 @@ theorem encodeTransitionAppend_inj
     {t u : TransitionDescription}
     {suffix tail : Word MachineCodeSymbol}
     (h :
-      MachineDescription.encodeTransitionAppend t suffix =
-        MachineDescription.encodeTransitionAppend u tail) :
+      encodeTransitionAppend t suffix =
+        encodeTransitionAppend u tail) :
     t = u ∧ suffix = tail := by
   have hdecode :
-      MachineDescription.decodeTransition
-          (MachineDescription.encodeTransitionAppend t suffix) =
-        MachineDescription.decodeTransition
-          (MachineDescription.encodeTransitionAppend u tail) := by
+      decodeTransition
+          (encodeTransitionAppend t suffix) =
+        decodeTransition
+          (encodeTransitionAppend u tail) := by
     rw [h]
   have hpair : (t, suffix) = (u, tail) := by
-    simpa [MachineDescription.decodeTransition_encodeTransition_append]
+    simpa [decodeTransition_encodeTransition_append]
       using hdecode
   exact ⟨congrArg Prod.fst hpair, congrArg Prod.snd hpair⟩
 
@@ -424,17 +425,17 @@ theorem encodeDescriptionAppend_inj
     {D E : MachineDescription}
     {suffix tail : Word MachineCodeSymbol}
     (h :
-      MachineDescription.encodeDescriptionAppend D suffix =
-        MachineDescription.encodeDescriptionAppend E tail) :
+      encodeDescriptionAppend D suffix =
+        encodeDescriptionAppend E tail) :
     D = E ∧ suffix = tail := by
   have hdecode :
-      MachineDescription.decodeDescriptionPrefix
-          (MachineDescription.encodeDescriptionAppend D suffix) =
-        MachineDescription.decodeDescriptionPrefix
-          (MachineDescription.encodeDescriptionAppend E tail) := by
+      decodeDescriptionPrefix
+          (encodeDescriptionAppend D suffix) =
+        decodeDescriptionPrefix
+          (encodeDescriptionAppend E tail) := by
     rw [h]
   have hpair : (D, suffix) = (E, tail) := by
-    simpa [MachineDescription.decodeDescriptionPrefix_encodeDescriptionAppend]
+    simpa [decodeDescriptionPrefix_encodeDescriptionAppend]
       using hdecode
   exact ⟨congrArg Prod.fst hpair, congrArg Prod.snd hpair⟩
 

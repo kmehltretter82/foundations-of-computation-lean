@@ -12,6 +12,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace ControllerStageInputProjection
 
@@ -129,7 +130,7 @@ theorem run_scan340_cells
       rw [show (cell :: rest).length = 1 + rest.length by
         simp
         omega,
-        MachineDescription.runConfig_add]
+        runConfig_add]
       change
         Description.runConfig
             rest.length
@@ -174,7 +175,7 @@ theorem run_scan340_cells_to_boundary
       projectionConfig 300
         (List.append [none, none, none, none] base)
         (List.append cellsRev.reverse tail) := by
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig 7
         (Description.runConfig
@@ -225,7 +226,7 @@ theorem run_state300_marked_ticks
       rfl
   | succ count ih =>
       have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
-      rw [hsteps, MachineDescription.runConfig_add]
+      rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * count)
           (Description.runConfig 4
@@ -298,7 +299,7 @@ theorem run_state320_ticks
       rfl
   | succ count ih =>
       have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
-      rw [hsteps, MachineDescription.runConfig_add]
+      rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * count)
           (Description.runConfig 4
@@ -414,7 +415,7 @@ theorem run_state330_marked_payload
       have hsteps : 4 * (b :: rest).length = 4 + 4 * rest.length := by
         simp
         omega
-      rw [hsteps, MachineDescription.runConfig_add]
+      rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * rest.length)
           (Description.runConfig 4
@@ -508,7 +509,7 @@ theorem run_state350_marked_payload
       have hsteps : 4 * (b :: rest).length = 4 + 4 * rest.length := by
         simp
         omega
-      rw [hsteps, MachineDescription.runConfig_add]
+      rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * rest.length)
           (Description.runConfig 4
@@ -635,7 +636,7 @@ theorem run_scan360_cells
       rw [show (cell :: rest).length = 1 + rest.length by
         simp
         omega,
-        MachineDescription.runConfig_add]
+        runConfig_add]
       change
         Description.runConfig
             rest.length
@@ -682,7 +683,7 @@ theorem run_scan360_cells_to_boundary
       projectionConfig 367
         (List.append projectionDoneCodeCells.reverse base)
         (List.append cellsRev.reverse tail) := by
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig 7
         (Description.runConfig
@@ -756,7 +757,7 @@ theorem projectionResultFinishScanBackCellsRev_length
   simp [projectionResultFinishScanBackCellsRev,
     projectionMarkedBoolPayloadCells_length,
     projectionRepeatedCells_length, projectionMarkedTickCodeCells,
-    projectionDoneCodeCells, MachineDescription.encodeCodeSymbolAsInput]
+    projectionDoneCodeCells, encodeCodeSymbolAsInput]
   omega
 theorem run_result_tail_to_first_payload
     (marked : Word Bool) (restCount : Nat)
@@ -776,7 +777,7 @@ theorem run_result_tail_to_first_payload
         4 * marked.length +
           (4 + (4 * restCount + (4 + 4 * marked.length))) by
     omega,
-    MachineDescription.runConfig_add]
+    runConfig_add]
   simp only [projectionResultTailWorkCells]
   rw [run_state300_marked_ticks]
   have htickCells :
@@ -787,7 +788,7 @@ theorem run_result_tail_to_first_payload
             (List.replicate restCount MachineCodeSymbol.tick)) := by
     rw [show restCount + 1 = Nat.succ restCount by omega]
     rfl
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [htickCells]
   change
     Description.runConfig
@@ -809,10 +810,10 @@ theorem run_result_tail_to_first_payload
         (projectionResultTailPayloadLeftRev marked restCount baseLeftRev)
         payload
   rw [run_state300_mark_tick]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [projectionCodeCells_replicate_tick]
   rw [run_state320_ticks]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state320_done]
   rw [run_state330_marked_payload]
   simp [projectionResultTailPayloadLeftRev]
@@ -843,7 +844,7 @@ theorem run_result_mark_one_tail
     rw [projectionInputMarkScanBackCellsRev_length]
     simp [projectionResultMarkTailStepCost, hrestLen]
     omega
-  rw [hcost, MachineDescription.runConfig_add]
+  rw [hcost, runConfig_add]
   change
     Description.runConfig
         (4 + (4 * rest.length +
@@ -870,7 +871,7 @@ theorem run_result_mark_one_tail
             (List.replicate restCount MachineCodeSymbol.tick)) := by
     rw [show restCount + 1 = Nat.succ restCount by omega]
     rfl
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [htickCells]
   rw [show rest.length = restCount by exact hrestLen]
   change
@@ -897,7 +898,7 @@ theorem run_result_mark_one_tail
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
   rw [run_state300_mark_tick]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [projectionCodeCells_replicate_tick]
   change
     Description.runConfig
@@ -922,7 +923,7 @@ theorem run_result_mark_one_tail
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
   rw [run_state320_ticks]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 * marked.length +
@@ -946,7 +947,7 @@ theorem run_result_mark_one_tail
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
   rw [run_state320_done]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length + 7))
@@ -969,7 +970,7 @@ theorem run_result_mark_one_tail
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
   rw [run_state330_marked_payload]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         ((projectionInputMarkScanBackCellsRev marked rest b).length + 7)
@@ -1044,7 +1045,7 @@ theorem run_input_tail_to_first_payload
         4 * marked.length +
           (4 + (4 * restCount + (4 + 4 * marked.length))) by
     omega,
-    MachineDescription.runConfig_add]
+    runConfig_add]
   simp only [projectionResultTailWorkCells]
   rw [run_state100_marked_ticks]
   have htickCells :
@@ -1055,7 +1056,7 @@ theorem run_input_tail_to_first_payload
             (List.replicate restCount MachineCodeSymbol.tick)) := by
     rw [show restCount + 1 = Nat.succ restCount by omega]
     rfl
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [htickCells]
   change
     Description.runConfig
@@ -1077,10 +1078,10 @@ theorem run_input_tail_to_first_payload
         (projectionResultTailPayloadLeftRev marked restCount baseLeftRev)
         payload
   rw [run_state100_mark_tick]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [projectionCodeCells_replicate_tick]
   rw [run_state120_ticks]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [run_state120_done]
   rw [run_state130_marked_payload]
   simp [projectionResultTailPayloadLeftRev]
@@ -1111,7 +1112,7 @@ theorem run_input_mark_one_tail
     rw [projectionInputMarkScanBackCellsRev_length]
     simp [projectionResultMarkTailStepCost, hrestLen]
     omega
-  rw [hcost, MachineDescription.runConfig_add]
+  rw [hcost, runConfig_add]
   change
     Description.runConfig
         (4 + (4 * rest.length +
@@ -1138,7 +1139,7 @@ theorem run_input_mark_one_tail
             (List.replicate restCount MachineCodeSymbol.tick)) := by
     rw [show restCount + 1 = Nat.succ restCount by omega]
     rfl
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [htickCells]
   rw [show rest.length = restCount by exact hrestLen]
   change
@@ -1165,7 +1166,7 @@ theorem run_input_mark_one_tail
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
   rw [run_state100_mark_tick]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [projectionCodeCells_replicate_tick]
   change
     Description.runConfig
@@ -1190,7 +1191,7 @@ theorem run_input_mark_one_tail
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
   rw [run_state120_ticks]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 * marked.length +
@@ -1214,7 +1215,7 @@ theorem run_input_mark_one_tail
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
   rw [run_state120_done]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length + 7))
@@ -1237,7 +1238,7 @@ theorem run_input_mark_one_tail
         (projectionResultTailWorkCells (List.append marked [b])
           restCount tail)
   rw [run_state130_marked_payload]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         ((projectionInputMarkScanBackCellsRev marked rest b).length + 7)
@@ -1316,7 +1317,7 @@ theorem run_result_mark_one
     rw [projectionInputMarkScanBackCellsRev_length]
     simp [projectionInputMarkStepCost]
     omega
-  rw [hcost, MachineDescription.runConfig_add]
+  rw [hcost, runConfig_add]
   change
     Description.runConfig
         (4 + (4 * rest.length +
@@ -1347,7 +1348,7 @@ theorem run_result_mark_one
             (List.replicate rest.length MachineCodeSymbol.tick))
     rw [show rest.length + 1 = Nat.succ rest.length by omega]
     rfl
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [htickCells]
   change
     Description.runConfig
@@ -1373,7 +1374,7 @@ theorem run_result_mark_one
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
   rw [run_state300_mark_tick]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [projectionCodeCells_replicate_tick]
   change
     Description.runConfig
@@ -1398,7 +1399,7 @@ theorem run_result_mark_one
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
   rw [run_state320_ticks]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 * marked.length +
@@ -1422,7 +1423,7 @@ theorem run_result_mark_one
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
   rw [run_state320_done]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 + ((projectionInputMarkScanBackCellsRev marked rest b).length + 7))
@@ -1445,7 +1446,7 @@ theorem run_result_mark_one
         (List.append [none, none, none, none] baseLeftRev)
         (projectionBoolWordWorkCells (List.append marked [b]) rest suffix)
   rw [run_state330_marked_payload]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         ((projectionInputMarkScanBackCellsRev marked rest b).length + 7)
@@ -1535,11 +1536,11 @@ theorem run_result_finish_marked
     omega
   have hnil :
       projectionCodeCells ([] : Word MachineCodeSymbol) = [] := rfl
-  rw [hcost, MachineDescription.runConfig_add]
+  rw [hcost, runConfig_add]
   simp only [projectionBoolWordWorkCells]
   rw [run_state300_marked_ticks]
   simp [List.length_nil, hnil, projectionBoolPayloadCells]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (4 * marked.length +
@@ -1556,7 +1557,7 @@ theorem run_result_finish_marked
         (List.append projectionDoneCodeCells.reverse baseLeftRev)
         (List.append (projectionAllMarkedBoolWordCells marked) [none])
   rw [run_state300_done]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   change
     Description.runConfig
         (1 + ((projectionResultFinishScanBackCellsRev marked).length + 7))
@@ -1581,7 +1582,7 @@ theorem run_result_finish_marked
       1 + ((projectionResultFinishScanBackCellsRev marked).length + 7) =
         1 + ((projectionResultFinishScanBackCellsRev marked).length + 7) by
     rfl,
-    MachineDescription.runConfig_add]
+    runConfig_add]
   change
     Description.runConfig
         ((projectionResultFinishScanBackCellsRev marked).length + 7)
@@ -1652,7 +1653,7 @@ theorem run_result_bool_word_acc
         simp [projectionResultRemainingCost, projectionInputMarkStepCost,
           Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
         omega
-      rw [hcost, MachineDescription.runConfig_add]
+      rw [hcost, runConfig_add]
       rw [run_result_mark_one]
       rw [ih]
       have hword :
@@ -1666,7 +1667,7 @@ theorem run_result_bool_word
         (projectionResultBoolWordCost w)
         (projectionConfig 300
           (List.append [none, none, none, none] baseLeftRev)
-          (projectionCodeCells (MachineDescription.encodeBoolWord w))) =
+          (projectionCodeCells (encodeBoolWord w))) =
       projectionConfig 367
         (List.append projectionDoneCodeCells.reverse baseLeftRev)
         (List.append (projectionAllMarkedBoolWordCells w) [none]) := by

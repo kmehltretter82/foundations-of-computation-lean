@@ -15,6 +15,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace CanonicalLayouts
@@ -24,14 +25,14 @@ open FoC.Computability.DovetailInitialLayoutInitializer
 open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
 
 def MarkedDovetailLayoutBodyReturnDescription : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     MarkedDovetailLayoutBodyScannerDescription
     ReturnToFirstMarkerDescription
     Direction.right
 
 theorem markedDovetailLayoutBodyReturnDescription_subroutineReady :
     MarkedDovetailLayoutBodyReturnDescription.SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     markedDovetailLayoutBodyScannerDescription_subroutineReady
     returnToFirstMarkerDescription_subroutineReady
 
@@ -43,7 +44,7 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
         T =
           (config MarkFirstTransitionBitDescription.halt []
             (none :: some false :: tail.map some)).tape := by
-  rcases MachineDescription.runConfig_eq_halt_of_haltsWithTape h with
+  rcases runConfig_eq_halt_of_haltsWithTape h with
     ⟨n, hn⟩
   cases bits with
   | nil =>
@@ -52,11 +53,11 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
               (MarkFirstTransitionBitDescription.initial []) = none := by
         native_decide
       have hrun :=
-        MachineDescription.runConfig_of_stepConfig_none hstep n
+        runConfig_of_stepConfig_none hstep n
       have hstate : 0 = 9 := by
         simpa [MarkFirstTransitionBitDescription,
-          MachineDescription.initial] using
-          congrArg MachineDescription.Configuration.state
+          initial] using
+          congrArg Configuration.state
             (hrun.symm.trans hn)
       omega
   | cons b rest =>
@@ -66,9 +67,9 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
             cases n with
             | zero =>
                 simp [MarkFirstTransitionBitDescription,
-                  MachineDescription.runConfig] at hn
+                  runConfig] at hn
             | succ n =>
-                let c1 : MachineDescription.Configuration :=
+                let c1 : Configuration :=
                   { state := 1
                     tape := tapeAtCells [none] [] }
                 have hstep0 :
@@ -77,26 +78,26 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                       some c1 := by
                   simp [c1, MarkFirstTransitionBitDescription,
                     tapeAtCells, keepMove, writeMove,
-                    MachineDescription.initial,
-                    MachineDescription.stepConfig,
-                    MachineDescription.lookupTransition,
-                    MachineDescription.Matches,
-                    MachineDescription.transition, Tape.input, Tape.read,
+                    initial,
+                    stepConfig,
+                    lookupTransition,
+                    Matches,
+                    transition, Tape.input, Tape.read,
                     Tape.write, Tape.move, Tape.moveRight]
                 have hrun :
                     MarkFirstTransitionBitDescription.runConfig (Nat.succ n)
                         (MarkFirstTransitionBitDescription.initial [false]) =
                       MarkFirstTransitionBitDescription.runConfig n c1 := by
-                  simp [MachineDescription.runConfig, hstep0]
+                  simp [runConfig, hstep0]
                 have hstep1 :
                     MarkFirstTransitionBitDescription.stepConfig c1 = none := by
                   simp [c1, MarkFirstTransitionBitDescription, tapeAtCells,
-                    keepMove, writeMove, MachineDescription.stepConfig,
-                    MachineDescription.lookupTransition,
-                    MachineDescription.Matches,
-                    MachineDescription.transition, Tape.read]
+                    keepMove, writeMove, stepConfig,
+                    lookupTransition,
+                    Matches,
+                    transition, Tape.read]
                 have hstay :=
-                  MachineDescription.runConfig_of_stepConfig_none hstep1 n
+                  runConfig_of_stepConfig_none hstep1 n
                 have hrunFinal :
                     MarkFirstTransitionBitDescription.runConfig (Nat.succ n)
                         (MarkFirstTransitionBitDescription.initial [false]) =
@@ -104,7 +105,7 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                   hrun.trans hstay
                 have hstate : 1 = 9 := by
                   simpa [c1, MarkFirstTransitionBitDescription] using
-                    congrArg MachineDescription.Configuration.state
+                    congrArg Configuration.state
                       (hrunFinal.symm.trans hn)
                 omega
         | cons c tail =>
@@ -113,17 +114,17 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
               cases n with
               | zero =>
                   simp [MarkFirstTransitionBitDescription,
-                    MachineDescription.runConfig] at hn
+                    runConfig] at hn
               | succ n =>
                   cases n with
                   | zero =>
                       simp [MarkFirstTransitionBitDescription,
                         keepMove, writeMove,
-                        MachineDescription.runConfig,
-                        MachineDescription.stepConfig,
-                        MachineDescription.lookupTransition,
-                        MachineDescription.Matches,
-                        MachineDescription.transition, Tape.input,
+                        runConfig,
+                        stepConfig,
+                        lookupTransition,
+                        Matches,
+                        transition, Tape.input,
                         Tape.read, Tape.write, Tape.move, Tape.moveRight]
                         at hn
                   | succ k =>
@@ -135,23 +136,23 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                             config MarkFirstTransitionBitDescription.halt []
                               (none :: some false :: tail.map some) := by
                         rw [show Nat.succ (Nat.succ k) = 2 + k by omega]
-                        rw [MachineDescription.runConfig_add]
+                        rw [runConfig_add]
                         have h2 :
                             MarkFirstTransitionBitDescription.runConfig 2
                                 (MarkFirstTransitionBitDescription.initial
                                   (false :: false :: tail)) =
                               config MarkFirstTransitionBitDescription.halt []
                                 (none :: some false :: tail.map some) := by
-                          simpa [MachineDescription.initial, config,
+                          simpa [initial, config,
                             tapeAtCells] using
                             run_markFirstTransitionBit_raw tail
                         rw [h2]
                         exact
-                          MachineDescription.runConfig_halt
+                          runConfig_halt
                             markFirstTransitionBitDescription_haltTransitionFree
                             (config MarkFirstTransitionBitDescription.halt []
                               (none :: some false :: tail.map some)).tape k
-                      let cfgGood : MachineDescription.Configuration :=
+                      let cfgGood : Configuration :=
                         config MarkFirstTransitionBitDescription.halt []
                           (none :: some false :: tail.map some)
                       have hcfg :
@@ -160,14 +161,14 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                               tape := T } := by
                         simpa [cfgGood] using hrun.symm.trans hn
                       exact
-                        (congrArg MachineDescription.Configuration.tape
+                        (congrArg Configuration.tape
                           hcfg).symm
             · cases n with
               | zero =>
                   simp [MarkFirstTransitionBitDescription,
-                    MachineDescription.runConfig] at hn
+                    runConfig] at hn
               | succ n =>
-                  let c1 : MachineDescription.Configuration :=
+                  let c1 : Configuration :=
                     { state := 1
                       tape := tapeAtCells [none]
                         (some true :: tail.map some) }
@@ -178,11 +179,11 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                         some c1 := by
                     simp [c1, MarkFirstTransitionBitDescription,
                       tapeAtCells, keepMove, writeMove,
-                      MachineDescription.initial,
-                      MachineDescription.stepConfig,
-                      MachineDescription.lookupTransition,
-                      MachineDescription.Matches,
-                      MachineDescription.transition, Tape.input, Tape.read,
+                      initial,
+                      stepConfig,
+                      lookupTransition,
+                      Matches,
+                      transition, Tape.input, Tape.read,
                       Tape.write, Tape.move, Tape.moveRight]
                   have hrun :
                       MarkFirstTransitionBitDescription.runConfig
@@ -190,17 +191,17 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                           (MarkFirstTransitionBitDescription.initial
                             (false :: true :: tail)) =
                         MarkFirstTransitionBitDescription.runConfig n c1 := by
-                    simp [MachineDescription.runConfig, hstep0]
+                    simp [runConfig, hstep0]
                   have hstep1 :
                       MarkFirstTransitionBitDescription.stepConfig c1 =
                         none := by
                     simp [c1, MarkFirstTransitionBitDescription, tapeAtCells,
-                      keepMove, writeMove, MachineDescription.stepConfig,
-                      MachineDescription.lookupTransition,
-                      MachineDescription.Matches,
-                      MachineDescription.transition, Tape.read]
+                      keepMove, writeMove, stepConfig,
+                      lookupTransition,
+                      Matches,
+                      transition, Tape.read]
                   have hstay :=
-                    MachineDescription.runConfig_of_stepConfig_none hstep1 n
+                    runConfig_of_stepConfig_none hstep1 n
                   have hrunFinal :
                       MarkFirstTransitionBitDescription.runConfig
                           (Nat.succ n)
@@ -210,7 +211,7 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                     hrun.trans hstay
                   have hstate : 1 = 9 := by
                     simpa [c1, MarkFirstTransitionBitDescription] using
-                      congrArg MachineDescription.Configuration.state
+                      congrArg Configuration.state
                         (hrunFinal.symm.trans hn)
                   omega
       · have hstep :
@@ -218,15 +219,15 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                 (MarkFirstTransitionBitDescription.initial (true :: rest)) =
               none := by
           simp [MarkFirstTransitionBitDescription, keepMove, writeMove,
-            MachineDescription.initial, MachineDescription.stepConfig,
-            MachineDescription.lookupTransition, MachineDescription.Matches,
-            MachineDescription.transition, Tape.input, Tape.read]
+            initial, stepConfig,
+            lookupTransition, Matches,
+            transition, Tape.input, Tape.read]
         have hrun :=
-          MachineDescription.runConfig_of_stepConfig_none hstep n
+          runConfig_of_stepConfig_none hstep n
         have hstate : 0 = 9 := by
           simpa [MarkFirstTransitionBitDescription,
-            MachineDescription.initial] using
-            congrArg MachineDescription.Configuration.state
+            initial] using
+            congrArg Configuration.state
               (hrun.symm.trans hn)
         omega
 
@@ -245,7 +246,7 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_marker_inv
           { state := MarkedDovetailLayoutBodyReturnDescription.halt
             tape := Tout } := by
   rcases
-      MachineDescription.seqSubroutine_haltsWithTape_inv
+      seqSubroutine_haltsWithTape_inv
         (A := MarkFirstTransitionBitDescription)
         (B := MarkedDovetailLayoutBodyReturnDescription)
         (handoffMove := Direction.right)
@@ -289,7 +290,7 @@ theorem markedDovetailLayoutBodyReturnDescription_runConfig_inv
             { state := ReturnToFirstMarkerDescription.halt
               tape := Tout } := by
   simpa [MarkedDovetailLayoutBodyReturnDescription] using
-    MachineDescription.seqSubroutine_runConfig_inv
+    seqSubroutine_runConfig_inv
       (A := MarkedDovetailLayoutBodyScannerDescription)
       (B := ReturnToFirstMarkerDescription)
       (handoffMove := Direction.right)
@@ -327,7 +328,7 @@ theorem markedDovetailLayoutBodyScannerDescription_runConfig_inv
                 InputStageConfigurationsAndFinalFlagsScannerDescription.halt
               tape := Tout } := by
   simpa [MarkedDovetailLayoutBodyScannerDescription] using
-    MachineDescription.seqSubroutine_runConfig_inv
+    seqSubroutine_runConfig_inv
       (A := TransitionRemainderPrefixScannerDescription)
       (B := InputStageConfigurationsAndFinalFlagsScannerDescription)
         (handoffMove := Direction.right)
@@ -371,7 +372,7 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_body_return_inv
 
 theorem runConfig_state_ne_halt_of_reaches_stuck
     {D : MachineDescription}
-    {c stuck : MachineDescription.Configuration} {k n : Nat}
+    {c stuck : Configuration} {k n : Nat}
     (hD : D.HaltTransitionFree)
     (hprefix : D.runConfig k c = stuck)
     (hstep : D.stepConfig stuck = none)
@@ -394,14 +395,14 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
         T =
           (transitionRemainderHandoffConfigWithBase [none]
             (b :: suffixTail)).tape := by
-  let start : MachineDescription.Configuration :=
+  let start : Configuration :=
     { state := TransitionRemainderPrefixScannerDescription.start
       tape := tapeAtCells [none] (some false :: tail.map some) }
   have hhaltState :
       (TransitionRemainderPrefixScannerDescription.runConfig n start).state =
         TransitionRemainderPrefixScannerDescription.halt := by
     simpa [start] using
-      congrArg MachineDescription.Configuration.state h
+      congrArg Configuration.state h
   cases tail with
   | nil =>
       let stuck :=
@@ -410,19 +411,19 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
           TransitionRemainderPrefixScannerDescription.stepConfig stuck =
             none := by
         simp [stuck, start, TransitionRemainderPrefixScannerDescription,
-          tapeAtCells, keepMove, MachineDescription.runConfig,
-          MachineDescription.stepConfig,
-          MachineDescription.lookupTransition,
-          MachineDescription.Matches, MachineDescription.transition,
+          tapeAtCells, keepMove, runConfig,
+          stepConfig,
+          lookupTransition,
+          Matches, transition,
           Tape.read, Tape.write, Tape.move, Tape.moveRight]
       have hstuck :
           stuck.state ≠
             TransitionRemainderPrefixScannerDescription.halt := by
         simp [stuck, start, TransitionRemainderPrefixScannerDescription,
-          tapeAtCells, keepMove, MachineDescription.runConfig,
-          MachineDescription.stepConfig,
-          MachineDescription.lookupTransition,
-          MachineDescription.Matches, MachineDescription.transition,
+          tapeAtCells, keepMove, runConfig,
+          stepConfig,
+          lookupTransition,
+          Matches, transition,
           Tape.read, Tape.write, Tape.move, Tape.moveRight]
       exact False.elim
         (runConfig_state_ne_halt_of_reaches_stuck
@@ -441,20 +442,20 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
                     stuck = none := by
               simp [stuck, start,
                 TransitionRemainderPrefixScannerDescription,
-                tapeAtCells, keepMove, MachineDescription.runConfig,
-                MachineDescription.stepConfig,
-                MachineDescription.lookupTransition,
-                MachineDescription.Matches, MachineDescription.transition,
+                tapeAtCells, keepMove, runConfig,
+                stepConfig,
+                lookupTransition,
+                Matches, transition,
                 Tape.read, Tape.write, Tape.move, Tape.moveRight]
             have hstuck :
                 stuck.state ≠
                   TransitionRemainderPrefixScannerDescription.halt := by
               simp [stuck, start,
                 TransitionRemainderPrefixScannerDescription,
-                tapeAtCells, keepMove, MachineDescription.runConfig,
-                MachineDescription.stepConfig,
-                MachineDescription.lookupTransition,
-                MachineDescription.Matches, MachineDescription.transition,
+                tapeAtCells, keepMove, runConfig,
+                stepConfig,
+                lookupTransition,
+                Matches, transition,
                 Tape.read, Tape.write, Tape.move, Tape.moveRight]
             exact False.elim
               (runConfig_state_ne_halt_of_reaches_stuck
@@ -473,10 +474,10 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
                 cases restTail <;>
                   simp [stuck, start,
                     TransitionRemainderPrefixScannerDescription,
-                    tapeAtCells, keepMove, MachineDescription.runConfig,
-                    MachineDescription.stepConfig,
-                    MachineDescription.lookupTransition,
-                    MachineDescription.Matches, MachineDescription.transition,
+                    tapeAtCells, keepMove, runConfig,
+                    stepConfig,
+                    lookupTransition,
+                    Matches, transition,
                     Tape.read, Tape.write, Tape.move, Tape.moveRight]
               have hstuck :
                   stuck.state ≠
@@ -484,10 +485,10 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
                 cases restTail <;>
                   simp [stuck, start,
                     TransitionRemainderPrefixScannerDescription,
-                    tapeAtCells, keepMove, MachineDescription.runConfig,
-                    MachineDescription.stepConfig,
-                    MachineDescription.lookupTransition,
-                    MachineDescription.Matches, MachineDescription.transition,
+                    tapeAtCells, keepMove, runConfig,
+                    stepConfig,
+                    lookupTransition,
+                    Matches, transition,
                     Tape.read, Tape.write, Tape.move, Tape.moveRight]
               exact False.elim
                 (runConfig_state_ne_halt_of_reaches_stuck
@@ -505,22 +506,22 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
                           stuck = none := by
                     simp [stuck, start,
                       TransitionRemainderPrefixScannerDescription,
-                      tapeAtCells, keepMove, MachineDescription.runConfig,
-                      MachineDescription.stepConfig,
-                      MachineDescription.lookupTransition,
-                      MachineDescription.Matches,
-                      MachineDescription.transition, Tape.read, Tape.write,
+                      tapeAtCells, keepMove, runConfig,
+                      stepConfig,
+                      lookupTransition,
+                      Matches,
+                      transition, Tape.read, Tape.write,
                       Tape.move, Tape.moveRight]
                   have hstuck :
                       stuck.state ≠
                         TransitionRemainderPrefixScannerDescription.halt := by
                     simp [stuck, start,
                       TransitionRemainderPrefixScannerDescription,
-                      tapeAtCells, keepMove, MachineDescription.runConfig,
-                      MachineDescription.stepConfig,
-                      MachineDescription.lookupTransition,
-                      MachineDescription.Matches,
-                      MachineDescription.transition, Tape.read, Tape.write,
+                      tapeAtCells, keepMove, runConfig,
+                      stepConfig,
+                      lookupTransition,
+                      Matches,
+                      transition, Tape.read, Tape.write,
                       Tape.move, Tape.moveRight]
                   exact False.elim
                     (runConfig_state_ne_halt_of_reaches_stuck
@@ -556,20 +557,20 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
               none := by
           cases rest <;>
             simp [stuck, start, TransitionRemainderPrefixScannerDescription,
-              tapeAtCells, keepMove, MachineDescription.runConfig,
-              MachineDescription.stepConfig,
-              MachineDescription.lookupTransition,
-              MachineDescription.Matches, MachineDescription.transition,
+              tapeAtCells, keepMove, runConfig,
+              stepConfig,
+              lookupTransition,
+              Matches, transition,
               Tape.read, Tape.write, Tape.move, Tape.moveRight]
         have hstuck :
             stuck.state ≠
               TransitionRemainderPrefixScannerDescription.halt := by
           cases rest <;>
             simp [stuck, start, TransitionRemainderPrefixScannerDescription,
-              tapeAtCells, keepMove, MachineDescription.runConfig,
-              MachineDescription.stepConfig,
-              MachineDescription.lookupTransition,
-              MachineDescription.Matches, MachineDescription.transition,
+              tapeAtCells, keepMove, runConfig,
+              stepConfig,
+              lookupTransition,
+              Matches, transition,
               Tape.read, Tape.write, Tape.move, Tape.moveRight]
         exact False.elim
           (runConfig_state_ne_halt_of_reaches_stuck
@@ -689,7 +690,7 @@ theorem inputStageConfigurationsAndFinalFlagsScannerDescription_runConfig_inv
             { state := StageConfigurationsAndFinalFlagsScannerDescription.halt
               tape := Tout } := by
   simpa [InputStageConfigurationsAndFinalFlagsScannerDescription] using
-    MachineDescription.seqSubroutine_runConfig_inv
+    seqSubroutine_runConfig_inv
       (A := BoolWordSuffixScannerDescription)
       (B := StageConfigurationsAndFinalFlagsScannerDescription)
       (handoffMove := Direction.right)
@@ -777,7 +778,7 @@ theorem stageConfigurationsAndFinalFlagsScannerDescription_runConfig_inv
             { state := ConfigurationsAndFinalFlagsScannerDescription.halt
               tape := Tout } := by
   simpa [StageConfigurationsAndFinalFlagsScannerDescription] using
-    MachineDescription.seqSubroutine_runConfig_inv
+    seqSubroutine_runConfig_inv
       (A := DovetailStagePrefix.NonemptyNatSuffixScannerDescription)
       (B := ConfigurationsAndFinalFlagsScannerDescription)
       (handoffMove := Direction.right)
@@ -867,7 +868,7 @@ theorem configurationsAndFinalFlagsScannerDescription_runConfig_inv
             { state := RejectConfigAndFinalFlagsScannerDescription.halt
               tape := Tout } := by
   simpa [ConfigurationsAndFinalFlagsScannerDescription] using
-    MachineDescription.seqSubroutine_runConfig_inv
+    seqSubroutine_runConfig_inv
       (A := ConfigurationSuffixScannerDescription)
       (B := RejectConfigAndFinalFlagsScannerDescription)
       (handoffMove := Direction.right)
@@ -964,7 +965,7 @@ theorem rejectConfigAndFinalFlagsScannerDescription_runConfig_inv
             { state := FinalHitFlagsScannerDescription.halt
               tape := Tout } := by
   simpa [RejectConfigAndFinalFlagsScannerDescription] using
-    MachineDescription.seqSubroutine_runConfig_inv
+    seqSubroutine_runConfig_inv
       (A := ConfigurationSuffixScannerDescription)
       (B := FinalHitFlagsScannerDescription)
       (handoffMove := Direction.right)
@@ -1068,7 +1069,7 @@ theorem finalHitFlagsScannerDescription_runConfig_inv
             { state := BoolFinalScannerDescription.halt
               tape := Tout } := by
   simpa [FinalHitFlagsScannerDescription] using
-    MachineDescription.seqSubroutine_runConfig_inv
+    seqSubroutine_runConfig_inv
       (A := BoolSuffixScannerDescription)
       (B := BoolFinalScannerDescription)
       (handoffMove := Direction.right)

@@ -14,6 +14,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace CanonicalLayouts
@@ -21,13 +22,13 @@ namespace CanonicalLayouts
 def ExactOutputTape
     (outputCode : α -> Word MachineCodeSymbol) (a : α) : Tape Bool :=
   Tape.input
-    (MachineDescription.encodeCodeWordAsInput (outputCode a))
+    (encodeCodeWordAsInput (outputCode a))
 
 def OutputTape
     (outputCode : α -> Word MachineCodeSymbol) (a : α) : Tape Bool :=
   Tape.move Direction.right
     (Tape.input
-      (MachineDescription.encodeCodeWordAsInput (outputCode a)))
+      (encodeCodeWordAsInput (outputCode a)))
 
 abbrev RightShiftedOutputTape
     (outputCode : α -> Word MachineCodeSymbol) (a : α) : Tape Bool :=
@@ -87,23 +88,23 @@ abbrev RightShiftedEmitterConstruction
 theorem exactOutputTape_normalizedOutput
     (outputCode : α -> Word MachineCodeSymbol) (a : α) :
     Tape.normalizedOutput (ExactOutputTape outputCode a) =
-      MachineDescription.encodeCodeWordAsInput (outputCode a) := by
+      encodeCodeWordAsInput (outputCode a) := by
   simpa [ExactOutputTape, Tape.output] using
     Tape.normalizedOutput_output
-      (MachineDescription.encodeCodeWordAsInput (outputCode a))
+      (encodeCodeWordAsInput (outputCode a))
 
 theorem outputTape_normalizedOutput
     (outputCode : α -> Word MachineCodeSymbol) (a : α) :
     Tape.normalizedOutput (OutputTape outputCode a) =
-      MachineDescription.encodeCodeWordAsInput (outputCode a) := by
+      encodeCodeWordAsInput (outputCode a) := by
   simpa [OutputTape] using
     EncodedRewriters.tape_normalizedOutput_move_right_input
-      (MachineDescription.encodeCodeWordAsInput (outputCode a))
+      (encodeCodeWordAsInput (outputCode a))
 
 theorem rightShiftedOutputTape_normalizedOutput
     (outputCode : α -> Word MachineCodeSymbol) (a : α) :
     Tape.normalizedOutput (RightShiftedOutputTape outputCode a) =
-      MachineDescription.encodeCodeWordAsInput (outputCode a) :=
+      encodeCodeWordAsInput (outputCode a) :=
   outputTape_normalizedOutput outputCode a
 
 end CanonicalLayouts

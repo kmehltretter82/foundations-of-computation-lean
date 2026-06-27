@@ -13,13 +13,14 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
 def DescriptionWithValidatorCopier
     (accept reject validator copier : MachineDescription) :
     MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     validator
     (DescriptionWithCopier
       accept reject copier)
@@ -33,7 +34,7 @@ theorem
     (hcopier : AppendInputTapeReturnSpec copier) :
     (DescriptionWithValidatorCopier
       accept reject validator copier).SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     hvalidator.left
     (descriptionWithCopier_subroutineReady
       hcopier)
@@ -50,7 +51,7 @@ theorem
         accept reject validator copier).runConfig steps
           ((DescriptionWithValidatorCopier
             accept reject validator copier).initial
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w stage))) =
         { state :=
             (DescriptionWithValidatorCopier
@@ -74,11 +75,11 @@ theorem
           { state := A.start
             tape :=
               Tape.input
-                (MachineDescription.encodeCodeWordAsInput
+                (encodeCodeWordAsInput
                   (PairedRecognizerDovetailStageInputCode w stage)) } =
         { state := A.halt, tape := Tmid } := by
     simpa [A, Tmid, stageInputBits,
-      MachineDescription.initial] using hA
+      initial] using hA
   have hBReach :
       exists nB : Nat,
         B.runConfig nB
@@ -104,22 +105,22 @@ theorem
       exact hB.trans (by
         simp [B, outputTape_eq_bits])
     have hstart :
-        MachineDescription.Configuration.mk
+        Configuration.mk
             B.start (Tape.move Direction.left Tmid) =
-          MachineDescription.Configuration.mk
+          Configuration.mk
             B.start (stageInputCheckedInputTape w stage) := by
       simp [Tmid, stageInputCheckedValidatorTape,
         stageInputCheckedInputTape_move_left_move_right]
     rw [hstart]
     exact hBout
   rcases
-      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+      seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.left)
         hAready hBready hArun hBReach with
     ⟨n, hn⟩
   refine ⟨n, ?_⟩
   simpa [DescriptionWithValidatorCopier,
-    A, B, MachineDescription.initial, stageInputBits] using hn
+    A, B, initial, stageInputBits] using hn
      /-- {name}`descriptionWithValidatorCopier_forward` captures the core lemma for this local construction. -/
 
 theorem
@@ -139,10 +140,10 @@ theorem
     ⟨n, hn⟩
   exact ⟨n, by
     constructor
-    · simpa [MachineDescription.HaltsWithTapeIn] using
-        congrArg MachineDescription.Configuration.state hn
-    · simpa [MachineDescription.HaltsWithTapeIn] using
-        congrArg MachineDescription.Configuration.tape hn⟩
+    · simpa [HaltsWithTapeIn] using
+        congrArg Configuration.state hn
+    · simpa [HaltsWithTapeIn] using
+        congrArg Configuration.tape hn⟩
      /-- {name}`descriptionWithValidatorCopier_closed` captures the core lemma for this local construction. -/
 
 theorem
@@ -164,7 +165,7 @@ theorem
     descriptionWithCopier_subroutineReady
       hcopier
   rcases
-      MachineDescription.seqSubroutine_haltsWithTape_inv
+      seqSubroutine_haltsWithTape_inv
         (A := A) (B := B) (handoffMove := Direction.left)
         hAready hBready hhalt with
     ⟨Tmid, hAhalt, nB, hBrun⟩
@@ -195,7 +196,7 @@ theorem
   have hT :
       T =
         OutputTape accept reject w stage :=
-    runConfig_halt_tape_functional_of_haltTransitionFree
+    MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
       hBready.right hBrun' hBexpected
   exact ⟨w, stage, rfl, hT⟩
 
@@ -223,17 +224,17 @@ theorem rightShiftedSpec_of_rightShiftedOutputCompiled
           accept reject w stage
     have houtput :
         initializer.HaltsWithOutput
-          (MachineDescription.encodeCodeWordAsInput code)
-          (MachineDescription.encodeCodeWordAsInput out) :=
+          (encodeCodeWordAsInput code)
+          (encodeCodeWordAsInput out) :=
       (hinit.right.right.left code out).mpr htransform
     rcases houtput with ⟨n, hn⟩
     let T :=
       (initializer.runConfig n
         (initializer.initial
-          (MachineDescription.encodeCodeWordAsInput code))).tape
+          (encodeCodeWordAsInput code))).tape
     have hTape :
         initializer.HaltsWithTape
-          (MachineDescription.encodeCodeWordAsInput code) T := by
+          (encodeCodeWordAsInput code) T := by
       exact ⟨n, ⟨hn.left, rfl⟩⟩
     rcases hinit.right.right.right code T hTape with
       ⟨actualOut, hactual, hT⟩
@@ -280,8 +281,8 @@ theorem rightShiftedSpec_haltsWithOutput_iff
         accept reject initializer)
     (code out : Word MachineCodeSymbol) :
     initializer.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput code)
-        (MachineDescription.encodeCodeWordAsInput out) <->
+        (encodeCodeWordAsInput code)
+        (encodeCodeWordAsInput out) <->
       (PairedRecognizerDovetailInitialLayoutCode accept reject).transform
         code = some out := by
   constructor
@@ -290,34 +291,34 @@ theorem rightShiftedSpec_haltsWithOutput_iff
     let T :=
       (initializer.runConfig n
         (initializer.initial
-          (MachineDescription.encodeCodeWordAsInput code))).tape
+          (encodeCodeWordAsInput code))).tape
     have hTape :
         initializer.HaltsWithTape
-          (MachineDescription.encodeCodeWordAsInput code) T := by
+          (encodeCodeWordAsInput code) T := by
       exact ⟨n, ⟨hn.left, rfl⟩⟩
     rcases hinit.right.right code T hTape with
       ⟨w, stage, hcode, hT⟩
     let expected :=
-      MachineDescription.DovetailLayout.encode
-        (MachineDescription.DovetailLayout.initial accept reject w stage)
+      DovetailLayout.encode
+        (DovetailLayout.initial accept reject w stage)
     have hactual :
         Tape.normalizedOutput T =
-          MachineDescription.encodeCodeWordAsInput out := by
+          encodeCodeWordAsInput out := by
       simpa [T] using hn.right
     have hexpected :
         Tape.normalizedOutput T =
-          MachineDescription.encodeCodeWordAsInput expected := by
+          encodeCodeWordAsInput expected := by
       rw [hT]
       exact
         tape_normalizedOutput_move_right_input
-          (MachineDescription.encodeCodeWordAsInput expected)
+          (encodeCodeWordAsInput expected)
     have houtBits :
-        MachineDescription.encodeCodeWordAsInput out =
-          MachineDescription.encodeCodeWordAsInput expected := by
+        encodeCodeWordAsInput out =
+          encodeCodeWordAsInput expected := by
       rw [← hactual]
       exact hexpected
     have hout : out = expected :=
-      MachineDescription.encodeCodeWordAsInput_injective houtBits
+      encodeCodeWordAsInput_injective houtBits
     exact
       (pairedRecognizerDovetailInitialLayoutCode_transform_eq_some_iff
         accept reject code out).mpr
@@ -332,7 +333,7 @@ theorem rightShiftedSpec_haltsWithOutput_iff
     simpa [OutputTape,
       OutputCode,
       tape_normalizedOutput_move_right_input] using
-      MachineDescription.haltsWithOutput_of_haltsWithTape
+      haltsWithOutput_of_haltsWithTape
         (hinit.right.left w stage)
 
  /-- {name}`tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLayoutSpec` states the finite-machine specification. -/
@@ -356,20 +357,20 @@ theorem tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLayoutSpec
         rcases hinit.right.right code T hhalt with
           ⟨w, stage, hcode, hT⟩
         refine
-          ⟨MachineDescription.DovetailLayout.encode
-            (MachineDescription.DovetailLayout.initial
+          ⟨DovetailLayout.encode
+            (DovetailLayout.initial
               accept reject w stage), ?_, hT⟩
         exact
           (pairedRecognizerDovetailInitialLayoutCode_transform_eq_some_iff
             accept reject code
-              (MachineDescription.DovetailLayout.encode
-                (MachineDescription.DovetailLayout.initial
+              (DovetailLayout.encode
+                (DovetailLayout.initial
                   accept reject w stage))).mpr
             ⟨w, stage, hcode, rfl⟩
 
  /-- {name}`tapeCodePrimitiveClosedHandoffCompiled_of_rightShiftedOutputCompiled` captures the core lemma for this local construction. -/
 theorem tapeCodePrimitiveClosedHandoffCompiled_of_rightShiftedOutputCompiled
-    {P : MachineDescription.TapeCodePrimitive}
+    {P : TapeCodePrimitive}
     {D : MachineDescription}
     (hD :
       TapeCodePrimitiveRightShiftedOutputCompiledSubroutineByDescription

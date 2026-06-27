@@ -18,6 +18,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
@@ -35,21 +36,21 @@ theorem phaseAssemblyConstruction_scaffold :
   intro accept reject hparser hconfig
   rcases hparser with ⟨parser, hparser⟩
   rcases hconfig with ⟨configRunner, hconfig⟩
-  let identity := MachineDescription.ExactIdentityDescription
+  let identity := ExactIdentityDescription
   let parserId :=
-    MachineDescription.seqSubroutine parser identity Direction.right
+    seqSubroutine parser identity Direction.right
   let runner :=
-    MachineDescription.seqSubroutine parserId configRunner Direction.left
+    seqSubroutine parserId configRunner Direction.left
   refine ⟨runner, ?_⟩
   have hparserReady : parser.SubroutineReady := hparser.left
   have hconfigReady : configRunner.SubroutineReady := hconfig.left
   have hidReady : identity.SubroutineReady :=
     CommonGround.Identity.exactIdentityDescription_subroutineReady
   have hparserIdReady : parserId.SubroutineReady :=
-    MachineDescription.seqSubroutine_subroutineReady
+    seqSubroutine_subroutineReady
       hparserReady hidReady
   have hrunnerReady : runner.SubroutineReady :=
-    MachineDescription.seqSubroutine_subroutineReady
+    seqSubroutine_subroutineReady
       hparserIdReady hconfigReady
   constructor
   · exact hrunnerReady
@@ -65,7 +66,7 @@ theorem phaseAssemblyConstruction_scaffold :
           (ParsedLayoutBits L)
           (Tape.move Direction.right (ParsedLayoutCheckedTape L)) := by
       exact
-        MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+        seqSubroutine_haltsWithTape_of_haltsWithTape
           (A := parser) (B := identity)
           (handoffMove := Direction.right)
           hparserReady hidReady
@@ -83,7 +84,7 @@ theorem phaseAssemblyConstruction_scaffold :
                     (Tape.move Direction.right (ParsedLayoutCheckedTape L)) } =
             { state := configRunner.halt
               tape := Tactual } := by
-      rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape h_halt with ⟨nB, hB⟩
+      rcases runConfig_eq_halt_of_haltsFromTape h_halt with ⟨nB, hB⟩
       refine ⟨nB, ?_⟩
       simpa [parsedLayoutCheckedTape_move_left_move_right L] using hB
     have h_runner_halts :
@@ -91,7 +92,7 @@ theorem phaseAssemblyConstruction_scaffold :
           (ParsedLayoutBits L)
           Tactual := by
       exact
-        MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+        seqSubroutine_haltsWithTape_of_haltsWithTape
           (A := parserId) (B := configRunner)
           (handoffMove := Direction.left)
           hparserIdReady hconfigReady
@@ -100,14 +101,14 @@ theorem phaseAssemblyConstruction_scaffold :
   · intro code T hhalt_equiv
     rcases hhalt_equiv with ⟨Tactual, hhalt, hT_equiv⟩
     rcases
-        MachineDescription.seqSubroutine_haltsWithTape_inv
+        seqSubroutine_haltsWithTape_inv
           (A := parserId) (B := configRunner)
           (handoffMove := Direction.left)
           hparserIdReady hconfigReady
           (by simpa [runner] using hhalt) with
       ⟨TconfigInLeft, hparserIdHalt, hconfigHalt⟩
     rcases
-        MachineDescription.seqSubroutine_haltsWithTape_inv
+        seqSubroutine_haltsWithTape_inv
           (A := parser) (B := identity)
           (handoffMove := Direction.right)
           hparserReady hidReady
@@ -116,8 +117,8 @@ theorem phaseAssemblyConstruction_scaffold :
     rcases hparser.right.right code Tparser hparserHalt with
       ⟨L, hdecode, hTparser⟩
     have hcode :
-        code = MachineDescription.DovetailLayout.encode L :=
-      MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
+        code = DovetailLayout.encode L :=
+      DovetailLayout.decodeComplete_eq_some_encode
         hdecode
     rcases hidAfterParser with ⟨nIdParser, hIdParser⟩
     have hTconfigInLeft :
@@ -126,7 +127,7 @@ theorem phaseAssemblyConstruction_scaffold :
       have hcfg :
           ({ state := identity.halt
              tape := Tape.move Direction.right Tparser } :
-            MachineDescription.Configuration) =
+            Configuration) =
           { state := identity.halt
             tape := TconfigInLeft } := by
         simpa [identity] using
@@ -135,13 +136,13 @@ theorem phaseAssemblyConstruction_scaffold :
               (Tape.move Direction.right Tparser)).symm.trans
             hIdParser)
       simpa [hTparser] using
-        (congrArg MachineDescription.Configuration.tape hcfg).symm
+        (congrArg Configuration.tape hcfg).symm
     have hconfigRunStart :
         configRunner.HaltsFromTape
           (Tape.move Direction.left TconfigInLeft)
           Tactual := by
       rcases hconfigHalt with ⟨n, hn⟩
-      exact ⟨n, ⟨congrArg MachineDescription.Configuration.state hn, congrArg MachineDescription.Configuration.tape hn⟩⟩
+      exact ⟨n, ⟨congrArg Configuration.state hn, congrArg Configuration.tape hn⟩⟩
     have hconfigRunExact :
         configRunner.HaltsFromTape
           (ParsedLayoutCheckedTape L)
@@ -182,12 +183,12 @@ theorem outputCompiledSubroutine
 
 def PrimitivePipeline
     (accept reject : MachineDescription) :
-    MachineDescription.TapeCodePrimitive :=
-  MachineDescription.TapeCodePrimitive.compose
-    (MachineDescription.TapeCodePrimitive.compose
-      (MachineDescription.TapeCodePrimitive.compose
-        (MachineDescription.TapeCodePrimitive.compose
-          (MachineDescription.TapeCodePrimitive.compose
+    TapeCodePrimitive :=
+  TapeCodePrimitive.compose
+    (TapeCodePrimitive.compose
+      (TapeCodePrimitive.compose
+        (TapeCodePrimitive.compose
+          (TapeCodePrimitive.compose
             AcceptProjectionPrimitive
             (FixedDescriptionBoundedSimulatorCode accept))
           AcceptMergePrimitive)
@@ -201,35 +202,35 @@ theorem primitivePipeline_transform_eq
     (PrimitivePipeline accept reject).transform code =
       (PairedRecognizerDovetailLayoutCode accept reject).transform code := by
   unfold PrimitivePipeline
-  unfold MachineDescription.TapeCodePrimitive.compose
+  unfold TapeCodePrimitive.compose
   unfold PairedRecognizerDovetailLayoutCode
-  unfold MachineDescription.DovetailLayout.runCodePrimitive
-  unfold MachineDescription.DovetailLayout.runCode
+  unfold DovetailLayout.runCodePrimitive
+  unfold DovetailLayout.runCode
   cases hdecode :
-      MachineDescription.DovetailLayout.decodeComplete code with
+      DovetailLayout.decodeComplete code with
   | none =>
       simp [AcceptProjectionPrimitive, hdecode]
   | some L =>
       have hacceptMerge :
           AcceptMergePrimitive.transform
-              (MachineDescription.SimulatorLayout.encode
-                (MachineDescription.SimulatorLayout.run accept
+              (SimulatorLayout.encode
+                (SimulatorLayout.run accept
                   (AcceptSimulatorLayout L).stage (AcceptSimulatorLayout L))) =
             some
-              (MachineDescription.DovetailLayout.encode
+              (DovetailLayout.encode
                 (ConfigRunnerAfterAccept accept L)) := by
         simpa [AcceptSimulatorLayout] using
           AcceptMergePrimitive_encode_run accept L
       have hrejectMerge :
           RejectMergePrimitive.transform
-              (MachineDescription.SimulatorLayout.encode
-                (MachineDescription.SimulatorLayout.run reject
+              (SimulatorLayout.encode
+                (SimulatorLayout.run reject
                   (RejectSimulatorLayout
                     (ConfigRunnerAfterAccept accept L)).stage
                   (RejectSimulatorLayout
                     (ConfigRunnerAfterAccept accept L)))) =
             some
-              (MachineDescription.DovetailLayout.encode
+              (DovetailLayout.encode
                 (ConfigRunnerAfterReject reject
                   (ConfigRunnerAfterAccept accept L))) := by
         simpa [RejectSimulatorLayout] using

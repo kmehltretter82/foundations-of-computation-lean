@@ -12,6 +12,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
@@ -21,19 +22,19 @@ def RightCellsCopierStartHandoffDescription :
   start := 0
   halt := 7
   transitions :=
-    [ MachineDescription.transition
+    [ transition
         0 (some false) (some false) Direction.right 1
-    , MachineDescription.transition
+    , transition
         1 (some false) none Direction.right 2
-    , MachineDescription.transition
+    , transition
         2 (some false) (some false) Direction.right 3
-    , MachineDescription.transition
+    , transition
         3 (some true) (some true) Direction.right 4
-    , MachineDescription.transition
+    , transition
         4 (some false) (some false) Direction.right 5
-    , MachineDescription.transition
+    , transition
         5 (some false) (some false) Direction.right 6
-    , MachineDescription.transition
+    , transition
         6 (some true) (some true) Direction.right 7
     ]
 
@@ -76,14 +77,14 @@ theorem rightCellsCopierStartHandoffDescription_run
   cases tail <;>
     simp [RightCellsCopierStartHandoffDescription,
       config, tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 def inputTapeRightCellsDirectCopierTickBits (n : Nat) :
     Word Bool :=
-  MachineDescription.encodeCodeWordAsInput
+  encodeCodeWordAsInput
     (List.replicate n MachineCodeSymbol.tick)
 
 @[simp] theorem
@@ -96,11 +97,11 @@ def inputTapeRightCellsDirectCopierTickBits (n : Nat) :
     (n : Nat) :
     inputTapeRightCellsDirectCopierTickBits (n + 1) =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput
+        (encodeCodeSymbolAsInput
           MachineCodeSymbol.tick)
         (inputTapeRightCellsDirectCopierTickBits n) := by
   simp [inputTapeRightCellsDirectCopierTickBits,
-    MachineDescription.encodeCodeWordAsInput, List.replicate_succ]
+    encodeCodeWordAsInput, List.replicate_succ]
 
 theorem
     inputTapeRightCellsDirectCopierDescription_run_copy_ticks
@@ -126,10 +127,10 @@ theorem
   induction n generalizing pre output with
   | zero =>
       refine ⟨0, ?_⟩
-      simp [MachineDescription.runConfig, List.map_append]
+      simp [runConfig, List.map_append]
   | succ n ih =>
       let tickBits :=
-        MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.tick
+        encodeCodeSymbolAsInput MachineCodeSymbol.tick
       rcases
           inputTapeRightCellsDirectCopierDescription_run_copy_tick
             leftOfMarker pre
@@ -141,7 +142,7 @@ theorem
           (List.append output tickBits) with
         ⟨restSteps, hrest⟩
       refine ⟨tickSteps + restSteps, ?_⟩
-      rw [MachineDescription.runConfig_add]
+      rw [runConfig_add]
       rw [show
           config 0
             (List.append (pre.reverse.map some)
@@ -153,7 +154,7 @@ theorem
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker))
             ((List.append
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.tick)
               (List.append
                 (inputTapeRightCellsDirectCopierTickBits n)
@@ -163,14 +164,14 @@ theorem
       rw [show
           config 0
             (List.append
-              ((MachineDescription.encodeCodeSymbolAsInput
+              ((encodeCodeSymbolAsInput
                 MachineCodeSymbol.tick).reverse.map some)
               (List.append (pre.reverse.map some)
                 (none :: leftOfMarker)))
             (((List.append
               (inputTapeRightCellsDirectCopierTickBits n)
               (List.append sourceTail output)).append
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.tick)).map some) =
           config 0
             (List.append ((List.append pre tickBits).reverse.map some)
@@ -215,9 +216,9 @@ theorem
   cases bit <;> cases rest <;>
     simp [InputTapeRightCellsDirectCopierDescription,
       config, tapeAtCells,
-      MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem
@@ -230,10 +231,10 @@ theorem
         (List.append (remaining.reverse.map some) leftRev) [] := by
   induction remaining generalizing leftRev with
   | nil =>
-      simp [MachineDescription.runConfig, config,
+      simp [runConfig, config,
         tapeAtCells]
   | cons bit rest ih =>
-      simp [MachineDescription.runConfig,
+      simp [runConfig,
         inputTapeRightCellsDirectCopierDescription_step_scan30,
         ih, List.append_assoc]
 
@@ -247,9 +248,9 @@ theorem
         [some true, some true] := by
   simp [InputTapeRightCellsDirectCopierDescription,
     config, tapeAtCells,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write, Tape.move,
     Tape.moveLeft, Tape.moveRight]
 
 theorem
@@ -267,8 +268,8 @@ theorem
   cases leftBit <;> cases current <;> cases right <;>
     simp [InputTapeRightCellsDirectCopierDescription,
       config, tapeAtCells,
-      MachineDescription.stepConfig, MachineDescription.lookupTransition,
-      MachineDescription.Matches, MachineDescription.transition, Tape.read,
+      stepConfig, lookupTransition,
+      Matches, transition, Tape.read,
       Tape.write, Tape.move, Tape.moveLeft]
 
 theorem
@@ -288,15 +289,15 @@ theorem
       cases current <;> cases right <;>
         simp [InputTapeRightCellsDirectCopierDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, Tape.moveRight]
   | cons bit rest ih =>
       simp only [List.map_cons, List.length_cons, List.reverse_cons]
       rw [show rest.length + 1 + 2 = (rest.length + 2) + 1 by
         omega]
-      rw [MachineDescription.runConfig]
+      rw [runConfig]
       rw [inputTapeRightCellsDirectCopierDescription_step_return34]
       simpa [List.append_assoc] using ih bit (some current :: right)
 
@@ -309,9 +310,9 @@ theorem
       some (config 36 (some bit :: leftRev) right) := by
   cases bit <;> cases right <;>
     simp [InputTapeRightCellsDirectCopierDescription,
-      config, tapeAtCells, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      config, tapeAtCells, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem
@@ -323,9 +324,9 @@ theorem
       some (config 37 (some bit :: leftRev) right) := by
   cases bit <;> cases right <;>
     simp [InputTapeRightCellsDirectCopierDescription,
-      config, tapeAtCells, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      config, tapeAtCells, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem
@@ -337,9 +338,9 @@ theorem
       some (config 38 (some bit :: leftRev) right) := by
   cases bit <;> cases right <;>
     simp [InputTapeRightCellsDirectCopierDescription,
-      config, tapeAtCells, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      config, tapeAtCells, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem
@@ -351,9 +352,9 @@ theorem
       some (config 39 (some bit :: leftRev) right) := by
   cases bit <;> cases right <;>
     simp [InputTapeRightCellsDirectCopierDescription,
-      config, tapeAtCells, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      config, tapeAtCells, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem
@@ -365,9 +366,9 @@ theorem
       some (config 40 (some bit :: leftRev) right) := by
   cases bit <;> cases right <;>
     simp [InputTapeRightCellsDirectCopierDescription,
-      config, tapeAtCells, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      config, tapeAtCells, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem
@@ -379,9 +380,9 @@ theorem
       some (config 41 (some bit :: leftRev) right) := by
   cases bit <;> cases right <;>
     simp [InputTapeRightCellsDirectCopierDescription,
-      config, tapeAtCells, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      config, tapeAtCells, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem
@@ -393,9 +394,9 @@ theorem
       some (config 10 (some bit :: leftRev) right) := by
   cases bit <;> cases right <;>
     simp [InputTapeRightCellsDirectCopierDescription,
-      config, tapeAtCells, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      config, tapeAtCells, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem
@@ -410,7 +411,7 @@ theorem
         (some b7 :: some b6 :: some b5 :: some b4 :: some b3 ::
           some b2 :: some b1 :: leftRev)
         right := by
-  simp only [MachineDescription.runConfig.eq_def]
+  simp only [runConfig.eq_def]
   rw [inputTapeRightCellsDirectCopierDescription_step_advance35]
   simp only
   rw [inputTapeRightCellsDirectCopierDescription_step_advance36]
@@ -436,7 +437,7 @@ theorem
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker))
             ((List.append
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.done)
               (List.append [h0, h1, h2, h3]
                 (List.append sourceTail output))).map some)) =
@@ -444,16 +445,16 @@ theorem
           (List.append
             ((List.append pre
               (List.append
-                (MachineDescription.encodeCodeSymbolAsInput
+                (encodeCodeSymbolAsInput
                   MachineCodeSymbol.done)
                 [h0, h1, h2, h3])).reverse.map some)
             (none :: leftOfMarker))
           ((List.append sourceTail
             (List.append output
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.done))).map some) := by
   let doneBits :=
-    MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.done
+    encodeCodeSymbolAsInput MachineCodeSymbol.done
   let headBits : Word Bool := [h0, h1, h2, h3]
   let remaining : Word Bool :=
     List.append headBits (List.append sourceTail output)
@@ -474,21 +475,21 @@ theorem
         config 30 afterPrefixLeft (remaining.map some) := by
     simp [doneBits, remaining, afterPrefixLeft,
       InputTapeRightCellsDirectCopierDescription,
-      MachineDescription.encodeCodeSymbolAsInput,
+      encodeCodeSymbolAsInput,
       config, tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight, List.map_reverse]
     cases List.map some remaining <;> rfl
   refine
     ⟨4 + (remaining.length + (4 + ((returnPre.length + 2) + 7))), ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [show
       config 0
         (List.append (pre.reverse.map some) (none :: leftOfMarker))
         ((List.append
-          (MachineDescription.encodeCodeSymbolAsInput
+          (encodeCodeSymbolAsInput
             MachineCodeSymbol.done)
           (List.append [h0, h1, h2, h3]
             (List.append sourceTail output))).map some) =
@@ -497,11 +498,11 @@ theorem
         ((List.append doneBits remaining).map some) by
       simp [doneBits, remaining, headBits]]
   rw [hprefix]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [inputTapeRightCellsDirectCopierDescription_run_scan30]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [inputTapeRightCellsDirectCopierDescription_run_write_done]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   have hleft :
       List.append [some false, some false]
           (List.append (remaining.reverse.map some) afterPrefixLeft) =
@@ -531,11 +532,11 @@ theorem
           ((List.append sourceTail
             (List.append output doneBits)).map some)) by
         simp [returnPre, remaining, headBits, doneBits,
-          MachineDescription.encodeCodeSymbolAsInput, List.map_append,
+          encodeCodeSymbolAsInput, List.map_append,
           List.reverse_append, List.append_assoc]]
   rw [inputTapeRightCellsDirectCopierDescription_run_advance35_to10]
   simp [returnLeft, doneBits,
-    MachineDescription.encodeCodeSymbolAsInput, List.map_append,
+    encodeCodeSymbolAsInput, List.map_append,
     List.reverse_append]
 
 theorem
@@ -548,9 +549,9 @@ theorem
   cases bit <;> cases rest <;>
     simp [InputTapeRightCellsDirectCopierDescription,
       config, tapeAtCells,
-      MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem
@@ -563,10 +564,10 @@ theorem
         (List.append (remaining.reverse.map some) leftRev) [] := by
   induction remaining generalizing leftRev with
   | nil =>
-      simp [MachineDescription.runConfig, config,
+      simp [runConfig, config,
         tapeAtCells]
   | cons bit rest ih =>
-      simp [MachineDescription.runConfig,
+      simp [runConfig,
         inputTapeRightCellsDirectCopierDescription_step_scan60,
         ih, List.append_assoc]
 
@@ -580,9 +581,9 @@ theorem
         [some false, some true] := by
   simp [InputTapeRightCellsDirectCopierDescription,
     config, tapeAtCells,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write, Tape.move,
     Tape.moveLeft, Tape.moveRight]
 
 theorem
@@ -600,8 +601,8 @@ theorem
   cases leftBit <;> cases current <;> cases right <;>
     simp [InputTapeRightCellsDirectCopierDescription,
       config, tapeAtCells,
-      MachineDescription.stepConfig, MachineDescription.lookupTransition,
-      MachineDescription.Matches, MachineDescription.transition, Tape.read,
+      stepConfig, lookupTransition,
+      Matches, transition, Tape.read,
       Tape.write, Tape.move, Tape.moveLeft]
 
 theorem
@@ -621,15 +622,15 @@ theorem
       cases current <;> cases right <;>
         simp [InputTapeRightCellsDirectCopierDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, Tape.moveRight]
   | cons bit rest ih =>
       simp only [List.map_cons, List.length_cons, List.reverse_cons]
       rw [show rest.length + 1 + 2 = (rest.length + 2) + 1 by
         omega]
-      rw [MachineDescription.runConfig]
+      rw [runConfig]
       rw [inputTapeRightCellsDirectCopierDescription_step_return64]
       simpa [List.append_assoc] using ih bit (some current :: right)
 
@@ -645,9 +646,9 @@ theorem
   cases b1 <;> cases b2 <;> cases b3 <;> cases right <;>
     simp [InputTapeRightCellsDirectCopierDescription,
       config, tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem
@@ -660,21 +661,21 @@ theorem
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker))
             ((List.append
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.zero)
               (List.append sourceTail output)).map some)) =
         config 10
           (List.append
             ((List.append pre
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.zero)).reverse.map some)
             (none :: leftOfMarker))
           ((List.append sourceTail
             (List.append output
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.zero))).map some) := by
   let zeroBits :=
-    MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.zero
+    encodeCodeSymbolAsInput MachineCodeSymbol.zero
   let remaining : Word Bool := List.append sourceTail output
   let afterPrefixLeft : List (Option Bool) :=
     List.append [some true, some false, some true, none]
@@ -693,21 +694,21 @@ theorem
         config 60 afterPrefixLeft (remaining.map some) := by
     simp [zeroBits, remaining, afterPrefixLeft,
       InputTapeRightCellsDirectCopierDescription,
-      MachineDescription.encodeCodeSymbolAsInput,
+      encodeCodeSymbolAsInput,
       config, tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveLeft, Tape.moveRight, List.map_reverse]
     cases List.map some sourceTail ++ List.map some output <;> simp
   refine
     ⟨6 + (remaining.length + (4 + ((returnPre.length + 2) + 3))), ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [show
       config 10
         (List.append (pre.reverse.map some) (none :: leftOfMarker))
         ((List.append
-          (MachineDescription.encodeCodeSymbolAsInput
+          (encodeCodeSymbolAsInput
             MachineCodeSymbol.zero)
           (List.append sourceTail output)).map some) =
       config 10
@@ -715,11 +716,11 @@ theorem
         ((List.append zeroBits remaining).map some) by
       simp [zeroBits, remaining]]
   rw [hprefix]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [inputTapeRightCellsDirectCopierDescription_run_scan60]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [inputTapeRightCellsDirectCopierDescription_run_write_zero]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   have hleft :
       List.append [some true, some false]
           (List.append (remaining.reverse.map some) afterPrefixLeft) =
@@ -748,11 +749,11 @@ theorem
           ((List.append sourceTail
             (List.append output zeroBits)).map some)) by
         simp [returnPre, remaining, zeroBits,
-          MachineDescription.encodeCodeSymbolAsInput, List.map_append,
+          encodeCodeSymbolAsInput, List.map_append,
           List.reverse_append, List.append_assoc]]
   rw [inputTapeRightCellsDirectCopierDescription_run_advance65_to10]
   simp [returnLeft, zeroBits,
-    MachineDescription.encodeCodeSymbolAsInput, List.map_append,
+    encodeCodeSymbolAsInput, List.map_append,
     List.reverse_append]
 
 theorem
@@ -765,9 +766,9 @@ theorem
   cases bit <;> cases rest <;>
     simp [InputTapeRightCellsDirectCopierDescription,
       config, tapeAtCells,
-      MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem
@@ -780,10 +781,10 @@ theorem
         (List.append (remaining.reverse.map some) leftRev) [] := by
   induction remaining generalizing leftRev with
   | nil =>
-      simp [MachineDescription.runConfig, config,
+      simp [runConfig, config,
         tapeAtCells]
   | cons bit rest ih =>
-      simp [MachineDescription.runConfig,
+      simp [runConfig,
         inputTapeRightCellsDirectCopierDescription_step_scan70,
         ih, List.append_assoc]
 
@@ -797,9 +798,9 @@ theorem
         [some true, some false] := by
   simp [InputTapeRightCellsDirectCopierDescription,
     config, tapeAtCells,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write, Tape.move,
     Tape.moveLeft, Tape.moveRight]
 
 theorem
@@ -817,8 +818,8 @@ theorem
   cases leftBit <;> cases current <;> cases right <;>
     simp [InputTapeRightCellsDirectCopierDescription,
       config, tapeAtCells,
-      MachineDescription.stepConfig, MachineDescription.lookupTransition,
-      MachineDescription.Matches, MachineDescription.transition, Tape.read,
+      stepConfig, lookupTransition,
+      Matches, transition, Tape.read,
       Tape.write, Tape.move, Tape.moveLeft]
 
 theorem
@@ -838,15 +839,15 @@ theorem
       cases current <;> cases right <;>
         simp [InputTapeRightCellsDirectCopierDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, Tape.moveRight]
   | cons bit rest ih =>
       simp only [List.map_cons, List.length_cons, List.reverse_cons]
       rw [show rest.length + 1 + 2 = (rest.length + 2) + 1 by
         omega]
-      rw [MachineDescription.runConfig]
+      rw [runConfig]
       rw [inputTapeRightCellsDirectCopierDescription_step_return74]
       simpa [List.append_assoc] using ih bit (some current :: right)
 
@@ -862,9 +863,9 @@ theorem
   cases b1 <;> cases b2 <;> cases b3 <;> cases right <;>
     simp [InputTapeRightCellsDirectCopierDescription,
       config, tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem
@@ -877,21 +878,21 @@ theorem
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker))
             ((List.append
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.one)
               (List.append sourceTail output)).map some)) =
         config 10
           (List.append
             ((List.append pre
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.one)).reverse.map some)
             (none :: leftOfMarker))
           ((List.append sourceTail
             (List.append output
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.one))).map some) := by
   let oneBits :=
-    MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.one
+    encodeCodeSymbolAsInput MachineCodeSymbol.one
   let remaining : Word Bool := List.append sourceTail output
   let afterPrefixLeft : List (Option Bool) :=
     List.append [some false, some true, some true, none]
@@ -910,21 +911,21 @@ theorem
         config 70 afterPrefixLeft (remaining.map some) := by
     simp [oneBits, remaining, afterPrefixLeft,
       InputTapeRightCellsDirectCopierDescription,
-      MachineDescription.encodeCodeSymbolAsInput,
+      encodeCodeSymbolAsInput,
       config, tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveLeft, Tape.moveRight, List.map_reverse]
     cases List.map some sourceTail ++ List.map some output <;> simp
   refine
     ⟨6 + (remaining.length + (4 + ((returnPre.length + 2) + 3))), ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [show
       config 10
         (List.append (pre.reverse.map some) (none :: leftOfMarker))
         ((List.append
-          (MachineDescription.encodeCodeSymbolAsInput
+          (encodeCodeSymbolAsInput
             MachineCodeSymbol.one)
           (List.append sourceTail output)).map some) =
       config 10
@@ -932,11 +933,11 @@ theorem
         ((List.append oneBits remaining).map some) by
       simp [oneBits, remaining]]
   rw [hprefix]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [inputTapeRightCellsDirectCopierDescription_run_scan70]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [inputTapeRightCellsDirectCopierDescription_run_write_one]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   have hleft :
       List.append [some true, some false]
           (List.append (remaining.reverse.map some) afterPrefixLeft) =
@@ -965,11 +966,11 @@ theorem
           ((List.append sourceTail
             (List.append output oneBits)).map some)) by
         simp [returnPre, remaining, oneBits,
-          MachineDescription.encodeCodeSymbolAsInput, List.map_append,
+          encodeCodeSymbolAsInput, List.map_append,
           List.reverse_append, List.append_assoc]]
   rw [inputTapeRightCellsDirectCopierDescription_run_advance75_to10]
   simp [returnLeft, oneBits,
-    MachineDescription.encodeCodeSymbolAsInput, List.map_append,
+    encodeCodeSymbolAsInput, List.map_append,
     List.reverse_append]
 
 theorem
@@ -987,8 +988,8 @@ theorem
   cases leftBit <;> cases current <;> cases right <;>
     simp [InputTapeRightCellsDirectCopierDescription,
       config, tapeAtCells,
-      MachineDescription.stepConfig, MachineDescription.lookupTransition,
-      MachineDescription.Matches, MachineDescription.transition, Tape.read,
+      stepConfig, lookupTransition,
+      Matches, transition, Tape.read,
       Tape.write, Tape.move, Tape.moveLeft]
 
 theorem
@@ -1009,15 +1010,15 @@ theorem
       cases current <;> cases right <;>
         simp [InputTapeRightCellsDirectCopierDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, Tape.moveRight]
   | cons bit rest ih =>
       simp only [List.map_cons, List.length_cons, List.reverse_cons]
       rw [show rest.length + 1 + 3 = (rest.length + 3) + 1 by
         omega]
-      rw [MachineDescription.runConfig]
+      rw [runConfig]
       rw [inputTapeRightCellsDirectCopierDescription_step_return80]
       simpa [List.append_assoc] using ih bit (some current :: right)
 
@@ -1035,7 +1036,7 @@ theorem
   rw [show pre.length + 5 = 2 + (pre.reverse.length + 3) by
     simp
     omega]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   have hprefix :
       InputTapeRightCellsDirectCopierDescription.runConfig 2
           (config 10
@@ -1047,9 +1048,9 @@ theorem
     cases tail <;>
       simp [InputTapeRightCellsDirectCopierDescription,
         config, tapeAtCells,
-        MachineDescription.runConfig, MachineDescription.stepConfig,
-        MachineDescription.lookupTransition, MachineDescription.Matches,
-        MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+        runConfig, stepConfig,
+        lookupTransition, Matches,
+        transition, Tape.read, Tape.write, Tape.move,
         Tape.moveLeft, Tape.moveRight]
   rw [hprefix]
   rw [inputTapeRightCellsDirectCopierDescription_run_return80_to99]
@@ -1057,8 +1058,8 @@ theorem
 
 def inputTapeRightCellsDirectCopierCellBits
     (cells : Word Bool) : Word Bool :=
-  MachineDescription.encodeCodeWordAsInput
-    (MachineDescription.encodeCellsAppend (cells.map some) [])
+  encodeCodeWordAsInput
+    (encodeCellsAppend (cells.map some) [])
 
 @[simp] theorem
     inputTapeRightCellsDirectCopierCellBits_nil :
@@ -1070,19 +1071,19 @@ def inputTapeRightCellsDirectCopierCellBits
     (rest : Word Bool) :
     inputTapeRightCellsDirectCopierCellBits (false :: rest) =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput
+        (encodeCodeSymbolAsInput
           MachineCodeSymbol.zero)
         (inputTapeRightCellsDirectCopierCellBits rest) := by
   change
-    MachineDescription.encodeCodeWordAsInput
+    encodeCodeWordAsInput
         (List.append [MachineCodeSymbol.zero]
-          (MachineDescription.encodeCellsAppend (rest.map some) [])) =
+          (encodeCellsAppend (rest.map some) [])) =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput
+        (encodeCodeSymbolAsInput
           MachineCodeSymbol.zero)
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeCellsAppend (rest.map some) []))
-  rw [MachineDescription.encodeCodeWordAsInput_append]
+        (encodeCodeWordAsInput
+          (encodeCellsAppend (rest.map some) []))
+  rw [encodeCodeWordAsInput_append]
   rfl
 
 @[simp] theorem
@@ -1090,19 +1091,19 @@ def inputTapeRightCellsDirectCopierCellBits
     (rest : Word Bool) :
     inputTapeRightCellsDirectCopierCellBits (true :: rest) =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput
+        (encodeCodeSymbolAsInput
           MachineCodeSymbol.one)
         (inputTapeRightCellsDirectCopierCellBits rest) := by
   change
-    MachineDescription.encodeCodeWordAsInput
+    encodeCodeWordAsInput
         (List.append [MachineCodeSymbol.one]
-          (MachineDescription.encodeCellsAppend (rest.map some) [])) =
+          (encodeCellsAppend (rest.map some) [])) =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput
+        (encodeCodeSymbolAsInput
           MachineCodeSymbol.one)
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeCellsAppend (rest.map some) []))
-  rw [MachineDescription.encodeCodeWordAsInput_append]
+        (encodeCodeWordAsInput
+          (encodeCellsAppend (rest.map some) []))
+  rw [encodeCodeWordAsInput_append]
   rfl
 
 theorem
@@ -1128,11 +1129,11 @@ theorem
   induction cells generalizing pre output with
   | nil =>
       refine ⟨0, ?_⟩
-      simp [MachineDescription.runConfig, List.map_append]
+      simp [runConfig, List.map_append]
   | cons cell rest ih =>
       cases cell
       · let cellBits :=
-          MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.zero
+          encodeCodeSymbolAsInput MachineCodeSymbol.zero
         rcases
             inputTapeRightCellsDirectCopierDescription_run_copy_zero_cell
               [some false] pre
@@ -1145,7 +1146,7 @@ theorem
             (List.append output cellBits) with
           ⟨restSteps, hrest⟩
         refine ⟨cellSteps + restSteps, ?_⟩
-        rw [MachineDescription.runConfig_add]
+        rw [runConfig_add]
         rw [show
             config 10
               (List.append (pre.reverse.map some) [none, some false])
@@ -1204,7 +1205,7 @@ theorem
             List.append_assoc]
         exact hrest.trans hfinish
       · let cellBits :=
-          MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.one
+          encodeCodeSymbolAsInput MachineCodeSymbol.one
         rcases
             inputTapeRightCellsDirectCopierDescription_run_copy_one_cell
               [some false] pre
@@ -1217,7 +1218,7 @@ theorem
             (List.append output cellBits) with
           ⟨restSteps, hrest⟩
         refine ⟨cellSteps + restSteps, ?_⟩
-        rw [MachineDescription.runConfig_add]
+        rw [runConfig_add]
         rw [show
             config 10
               (List.append (pre.reverse.map some) [none, some false])
@@ -1278,8 +1279,8 @@ theorem
 
 def inputTapeRightCellsDirectCopierNatBits (n : Nat) :
     Word Bool :=
-  MachineDescription.encodeCodeWordAsInput
-    (MachineDescription.encodeNat n)
+  encodeCodeWordAsInput
+    (encodeNat n)
 
 @[simp] theorem
     inputTapeRightCellsDirectCopierNatBits_zero :
@@ -1329,14 +1330,14 @@ def inputTapeRightCellsDirectCopierPreludeBits : Word Bool :=
   [false, true, false, false, true, false]
 
 def inputTapeRightCellsDirectCopierDoneBits : Word Bool :=
-  MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.done
+  encodeCodeSymbolAsInput MachineCodeSymbol.done
 
 def inputTapeRightCellsDirectCopierHeadBits
     (b : Bool) : Word Bool :=
   if b then
-    MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.one
+    encodeCodeSymbolAsInput MachineCodeSymbol.one
   else
-    MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.zero
+    encodeCodeSymbolAsInput MachineCodeSymbol.zero
 
 def inputTapeRightCellsDirectCopierCoreSourceBits
     (b : Bool) (rest : Word Bool) (stage : Nat)
@@ -1453,7 +1454,7 @@ theorem
       tickSteps + (doneSteps + (cellSteps +
         ((List.append preAfterDone cellBits).length + 5))) by
       omega]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [show
       config 0
         (List.append
@@ -1472,7 +1473,7 @@ theorem
         stageBits, sourceTailAfterDone,
         inputTapeRightCellsDirectCopierCoreSourceBits]]
   rw [hticks]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [show
       config 0
         (List.append (tickBits.reverse.map some)
@@ -1489,7 +1490,7 @@ theorem
             (List.append sourceTailAfterDone tickBits))).map some) by
       simp [List.reverse_append, List.map_append, List.append_assoc]]
   rw [hdone]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [show
       config 10
         (List.append (preAfterDone.reverse.map some) [none, some false])
@@ -1529,7 +1530,7 @@ theorem
     List.map_append, List.append_assoc]
 
 def InputTapeRightCellsDirectReturnDescription : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     RightCellsCopierStartHandoffDescription
     InputTapeRightCellsDirectCopierDescription
     Direction.right
@@ -1537,7 +1538,7 @@ def InputTapeRightCellsDirectReturnDescription : MachineDescription :=
 theorem
     inputTapeRightCellsDirectReturnDescription_subroutineReady :
     InputTapeRightCellsDirectReturnDescription.SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     rightCellsCopierStartHandoffDescription_subroutineReady
     inputTapeRightCellsDirectCopierDescription_subroutineReady
 
@@ -1553,7 +1554,7 @@ theorem
                 (some false :: some false ::
                   ((List.append [false, true]
                     (List.append
-                      (MachineDescription.encodeCodeSymbolAsInput
+                      (encodeCodeSymbolAsInput
                         MachineCodeSymbol.tick)
                       (inputTapeRightCellsDirectCopierCoreSourceBits
                         b rest stage suffixBits))).map some)) } =
@@ -1585,12 +1586,12 @@ theorem
                 (some false :: some false ::
                   ((List.append [false, true]
                     (List.append
-                      (MachineDescription.encodeCodeSymbolAsInput
+                      (encodeCodeSymbolAsInput
                         MachineCodeSymbol.tick)
                       sourceBits)).map some)) } =
         { state := A.halt, tape := Tmid.tape } := by
     simpa [A, Tmid, sourceBits,
-      MachineDescription.encodeCodeSymbolAsInput, config,
+      encodeCodeSymbolAsInput, config,
       tapeAtCells, List.map_append, List.append_assoc] using
       rightCellsCopierStartHandoffDescription_run
         (sourceBits.map some)
@@ -1613,7 +1614,7 @@ theorem
     rw [show
         ({ state := B.start
            tape := Tape.move Direction.right Tmid.tape } :
-            MachineDescription.Configuration) =
+            Configuration) =
           (config 0
             (List.append
               (inputTapeRightCellsDirectCopierPreludeBits.reverse.map some)
@@ -1631,7 +1632,7 @@ theorem
               (some false ::
                 ((inputTapeRightCellsDirectCopierCoreOutputBits
                   b rest stage suffixBits).map some)) } :
-            MachineDescription.Configuration) =
+            Configuration) =
         config 99 [some false]
           (some false ::
             ((inputTapeRightCellsDirectCopierCoreOutputBits
@@ -1640,7 +1641,7 @@ theorem
           config, tapeAtCells]]
     simpa [B, sourceBits] using hB
   rcases
-      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+      seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.right)
         hAready hBready hArun hBReach with
     ⟨steps, hsteps⟩

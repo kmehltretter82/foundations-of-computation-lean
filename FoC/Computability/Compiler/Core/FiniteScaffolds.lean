@@ -17,29 +17,30 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 /-- Forward half of an output-compiled tape-code primitive subroutine. -/
 def TapeCodePrimitiveOutputCompiledForwardSpec
-    (P : MachineDescription.TapeCodePrimitive)
+    (P : TapeCodePrimitive)
     (D : MachineDescription) : Prop :=
   forall code out : Word MachineCodeSymbol,
     P.transform code = some out ->
       D.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput code)
-        (MachineDescription.encodeCodeWordAsInput out)
+        (encodeCodeWordAsInput code)
+        (encodeCodeWordAsInput out)
 
 /-- Closed half of an output-compiled tape-code primitive subroutine. -/
 def TapeCodePrimitiveOutputCompiledClosedSpec
-    (P : MachineDescription.TapeCodePrimitive)
+    (P : TapeCodePrimitive)
     (D : MachineDescription) : Prop :=
   forall code out : Word MachineCodeSymbol,
     D.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput code)
-        (MachineDescription.encodeCodeWordAsInput out) ->
+        (encodeCodeWordAsInput code)
+        (encodeCodeWordAsInput out) ->
       P.transform code = some out
 
 theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_of_forward_closed
-    {P : MachineDescription.TapeCodePrimitive}
+    {P : TapeCodePrimitive}
     {D : MachineDescription}
     (hready : D.SubroutineReady)
     (hforward : TapeCodePrimitiveOutputCompiledForwardSpec P D)
@@ -55,7 +56,7 @@ theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_of_forward_closed
   · exact hready.right
 
 theorem encodedTapeCodePrimitiveOutputCompiledSubroutineConstruction_of_forward_closed
-    {P : MachineDescription.TapeCodePrimitive}
+    {P : TapeCodePrimitive}
     (h :
       exists D : MachineDescription,
         D.SubroutineReady ∧
@@ -156,7 +157,7 @@ so the final scaffold section can name only construction dependencies.
 section ContractBridges
 
 private theorem encodedTapeCodePrimitiveOutputCompiledSubroutineConstruction_of_rewriter
-    {P : MachineDescription.TapeCodePrimitive}
+    {P : TapeCodePrimitive}
     (h : EncodedTapeCodePrimitiveRewriterConstruction P) :
     EncodedTapeCodePrimitiveOutputCompiledSubroutineConstruction P := by
   rcases h with ⟨rewriter, hready, hspec⟩
@@ -313,47 +314,47 @@ invoker, result emitter, and continuer into the finite search driver.
 
 def PairedRecognizerDovetailStageAttemptInvocationForwardSpec
     (attempt encoder invoker : MachineDescription) : Prop :=
-  forall C : MachineDescription.DovetailControllerLayout,
+  forall C : DovetailControllerLayout,
   forall result : Word Bool,
     encoder.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode C))
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode C))
+        (encodeCodeWordAsInput
           (PairedRecognizerDovetailControllerStageInputCode C)) ∧
       attempt.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (PairedRecognizerDovetailControllerStageInputCode C))
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeBoolWord result)) ->
+        (encodeCodeWordAsInput
+          (encodeBoolWord result)) ->
     invoker.HaltsWithOutput
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.DovetailControllerLayout.encode C))
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.DovetailControllerLayout.encode
-          (MachineDescription.DovetailControllerLayout.withResult
+      (encodeCodeWordAsInput
+        (DovetailControllerLayout.encode C))
+      (encodeCodeWordAsInput
+        (DovetailControllerLayout.encode
+          (DovetailControllerLayout.withResult
             C result)))
 
 def PairedRecognizerDovetailStageAttemptInvocationClosedSpec
     (attempt encoder invoker : MachineDescription) : Prop :=
-  forall C : MachineDescription.DovetailControllerLayout,
+  forall C : DovetailControllerLayout,
   forall result : Word Bool,
     invoker.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode C))
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode
-            (MachineDescription.DovetailControllerLayout.withResult
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode C))
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.withResult
               C result))) ->
       encoder.HaltsWithOutput
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.DovetailControllerLayout.encode C))
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
+            (DovetailControllerLayout.encode C))
+          (encodeCodeWordAsInput
             (PairedRecognizerDovetailControllerStageInputCode C)) ∧
         attempt.HaltsWithOutput
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (PairedRecognizerDovetailControllerStageInputCode C))
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.encodeBoolWord result))
+          (encodeCodeWordAsInput
+            (encodeBoolWord result))
 
 theorem pairedRecognizerDovetailStageAttemptInvocationRealizes_of_forward_closed
     {attempt encoder invoker : MachineDescription}
@@ -407,20 +408,20 @@ only needed to expose the public closed/forward specification.
 def PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
     (attempt invoker : MachineDescription) : Prop :=
   invoker.SubroutineReady ∧
-    forall C : MachineDescription.DovetailControllerLayout,
+    forall C : DovetailControllerLayout,
     forall result : Word Bool,
       invoker.HaltsWithOutput
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.DovetailControllerLayout.encode C))
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.DovetailControllerLayout.encode
-              (MachineDescription.DovetailControllerLayout.withResult
+          (encodeCodeWordAsInput
+            (DovetailControllerLayout.encode C))
+          (encodeCodeWordAsInput
+            (DovetailControllerLayout.encode
+              (DovetailControllerLayout.withResult
                 C result))) <->
         attempt.HaltsWithOutput
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (PairedRecognizerDovetailControllerStageInputCode C))
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.encodeBoolWord result))
+          (encodeCodeWordAsInput
+            (encodeBoolWord result))
 
 /--
 Construction target for the protected core: preserve/reconstruct the controller
@@ -437,20 +438,20 @@ def PairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData :
 
 def PairedRecognizerDovetailStageAttemptFramedRunInvocationForwardSpec
     (attempt invoker : MachineDescription) : Prop :=
-  forall C : MachineDescription.DovetailControllerLayout,
+  forall C : DovetailControllerLayout,
   forall result : Word Bool,
     (exists n : Nat,
       attempt.HaltsWithOutputIn n
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (PairedRecognizerDovetailControllerStageInputCode C))
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeBoolWord result))) ->
+        (encodeCodeWordAsInput
+          (encodeBoolWord result))) ->
     invoker.HaltsWithOutput
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.DovetailControllerLayout.encode C))
-      (MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.DovetailControllerLayout.encode
-          (MachineDescription.DovetailControllerLayout.withResult
+      (encodeCodeWordAsInput
+        (DovetailControllerLayout.encode C))
+      (encodeCodeWordAsInput
+        (DovetailControllerLayout.encode
+          (DovetailControllerLayout.withResult
             C result)))
 
 def PairedRecognizerDovetailStageAttemptFramedRunInvocationClosedSpec
@@ -628,10 +629,10 @@ def PairedRecognizerDovetailFiniteStageLoopForwardSpec
     (exists limit : Nat,
       exists result : Word Bool,
         attempt.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w limit))
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeBoolWord result)) ∧
+            (encodeCodeWordAsInput
+              (encodeBoolWord result)) ∧
           PairedRecognizerDovetailControllerRawOutput result = some [b]) ->
       decider.HaltsWithOutput w [b]
 
@@ -643,10 +644,10 @@ def PairedRecognizerDovetailFiniteStageLoopClosedSpec
       exists limit : Nat,
       exists result : Word Bool,
         attempt.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w limit))
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeBoolWord result)) ∧
+            (encodeCodeWordAsInput
+              (encodeBoolWord result)) ∧
           PairedRecognizerDovetailControllerRawOutput result = some [b]
 
 theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes_of_forward_closed
@@ -762,7 +763,7 @@ theorem pairedRecognizerDovetailFiniteStageLoopSequencingConstruction_of_data
 
 private def pairedRecognizerDovetailFiniteStageLoopStageLayout
     (w : Word Bool) (limit : Nat) :
-    MachineDescription.DovetailControllerLayout :=
+    DovetailControllerLayout :=
   { input := w, stage := limit, result := [] }
 
 private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerForwardSpec
@@ -772,23 +773,23 @@ private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerForwardSpec
     (exists limit : Nat,
       exists result : Word Bool,
         initializer.HaltsWithOutput w
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailControllerInitialCode w)) ∧
           invoker.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.DovetailControllerLayout.encode
+            (encodeCodeWordAsInput
+              (DovetailControllerLayout.encode
                 (pairedRecognizerDovetailFiniteStageLoopStageLayout
                   w limit)))
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.DovetailControllerLayout.encode
-                (MachineDescription.DovetailControllerLayout.withResult
+            (encodeCodeWordAsInput
+              (DovetailControllerLayout.encode
+                (DovetailControllerLayout.withResult
                   (pairedRecognizerDovetailFiniteStageLoopStageLayout
                     w limit)
                   result))) ∧
           emitter.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.DovetailControllerLayout.encode
-                (MachineDescription.DovetailControllerLayout.withResult
+            (encodeCodeWordAsInput
+              (DovetailControllerLayout.encode
+                (DovetailControllerLayout.withResult
                   (pairedRecognizerDovetailFiniteStageLoopStageLayout
                     w limit)
                   result)))
@@ -803,23 +804,23 @@ private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerClosedSpec
       exists limit : Nat,
       exists result : Word Bool,
         initializer.HaltsWithOutput w
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailControllerInitialCode w)) ∧
           invoker.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.DovetailControllerLayout.encode
+            (encodeCodeWordAsInput
+              (DovetailControllerLayout.encode
                 (pairedRecognizerDovetailFiniteStageLoopStageLayout
                   w limit)))
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.DovetailControllerLayout.encode
-                (MachineDescription.DovetailControllerLayout.withResult
+            (encodeCodeWordAsInput
+              (DovetailControllerLayout.encode
+                (DovetailControllerLayout.withResult
                   (pairedRecognizerDovetailFiniteStageLoopStageLayout
                     w limit)
                   result))) ∧
           emitter.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.DovetailControllerLayout.encode
-                (MachineDescription.DovetailControllerLayout.withResult
+            (encodeCodeWordAsInput
+              (DovetailControllerLayout.encode
+                (DovetailControllerLayout.withResult
                   (pairedRecognizerDovetailFiniteStageLoopStageLayout
                     w limit)
                   result)))
@@ -827,14 +828,14 @@ private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerClosedSpec
 
 private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerContinueSpec
     (continuer : MachineDescription) : Prop :=
-  forall C : MachineDescription.DovetailControllerLayout,
+  forall C : DovetailControllerLayout,
     PairedRecognizerDovetailControllerRawOutput C.result = none ->
       continuer.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode C))
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.DovetailControllerLayout.encode
-            (MachineDescription.DovetailControllerLayout.nextStage C)))
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode C))
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.nextStage C)))
 
 private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes
     (initializer invoker emitter continuer decider : MachineDescription) :
@@ -886,7 +887,7 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealize
         (pairedRecognizerDovetailFiniteStageLoopStageLayout w limit)
         result).mp hinvoked
     · exact (hemitter.right
-        (MachineDescription.DovetailControllerLayout.withResult
+        (DovetailControllerLayout.withResult
           (pairedRecognizerDovetailFiniteStageLoopStageLayout w limit)
           result)
         b).mp hemitted
@@ -898,7 +899,7 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealize
         (pairedRecognizerDovetailFiniteStageLoopStageLayout w limit)
         result).mpr hattempt
     · exact (hemitter.right
-        (MachineDescription.DovetailControllerLayout.withResult
+        (DovetailControllerLayout.withResult
           (pairedRecognizerDovetailFiniteStageLoopStageLayout w limit)
           result)
         b).mpr hraw
@@ -968,9 +969,9 @@ theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencingConstructionDa
     refine ⟨limit, result, hinitializer.right w, ?_, ?_⟩
     · exact (hinvoker.right C result).mpr hattempt
     · exact (hemitter.right
-        (MachineDescription.DovetailControllerLayout.withResult C result)
+        (DovetailControllerLayout.withResult C result)
         b).mpr (by
-          simpa [C, MachineDescription.DovetailControllerLayout.withResult]
+          simpa [C, DovetailControllerLayout.withResult]
             using hraw)
   · intro w b hhalt
     rcases hclosed w b hhalt with
@@ -981,7 +982,7 @@ theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencingConstructionDa
     · exact (hinvoker.right C result).mp (by
         simpa [C] using hinvoked)
     · exact (hemitter.right
-        (MachineDescription.DovetailControllerLayout.withResult C result)
+        (DovetailControllerLayout.withResult C result)
         b).mp (by
           simpa [C] using hemitted)
 

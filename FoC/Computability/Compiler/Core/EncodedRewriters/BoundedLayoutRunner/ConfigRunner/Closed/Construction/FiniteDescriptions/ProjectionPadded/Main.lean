@@ -7,6 +7,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
@@ -15,12 +16,12 @@ def SelectedProjectionEquivPaddedEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
   RightScratchPaddedEmitterSpec
-    (fun L : MachineDescription.DovetailLayout =>
+    (fun L : DovetailLayout =>
       Tape.input (ParsedLayoutBits L))
-    (fun L : MachineDescription.DovetailLayout =>
-      MachineDescription.encodeCodeWordAsInput
+    (fun L : DovetailLayout =>
+      encodeCodeWordAsInput
         (SelectedProjectionOutputCode useAccept L))
-    (fun L : MachineDescription.DovetailLayout =>
+    (fun L : DovetailLayout =>
       (ParsedLayoutBits L).length)
     (SelectedProjectionOutputTape useAccept)
     emitter
@@ -34,12 +35,12 @@ def SelectedProjectionCheckedEquivPaddedEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
   RightScratchPaddedEmitterSpec
-    (fun L : MachineDescription.DovetailLayout =>
+    (fun L : DovetailLayout =>
       ParsedLayoutCheckedTape L)
-    (fun L : MachineDescription.DovetailLayout =>
-      MachineDescription.encodeCodeWordAsInput
+    (fun L : DovetailLayout =>
+      encodeCodeWordAsInput
         (SelectedProjectionOutputCode useAccept L))
-    (fun L : MachineDescription.DovetailLayout =>
+    (fun L : DovetailLayout =>
       (ParsedLayoutBits L).length)
     (SelectedProjectionOutputTape useAccept)
     emitter
@@ -69,7 +70,7 @@ theorem selectedProjectionCheckedEquivPaddedEmitterSpec_of_components
       (SelectedProjectionCheckedEquivPaddedEmitterFromComponents
         quoter tail) := by
   let baseLeft :=
-    fun L : MachineDescription.DovetailLayout =>
+    fun L : DovetailLayout =>
       (SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
         some
   constructor

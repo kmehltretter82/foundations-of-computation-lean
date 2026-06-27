@@ -13,21 +13,22 @@ namespace FoC
 namespace Computability
 namespace ControllerStageInputProjection
 open Languages
+open MachineDescription
 theorem run_state300_decodeBoolWord_none_ne_halt
     (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
-    (hdecode : MachineDescription.decodeBoolWord tokens = none)
+    (hdecode : decodeBoolWord tokens = none)
     (n : Nat) :
     (Description.runConfig n
       (projectionConfig 300
         (List.append [none, none, none, none] baseLeftRev)
         (projectionCodeCells tokens))).state ≠
       Description.halt := by
-  unfold MachineDescription.decodeBoolWord at hdecode
-  cases hcells : MachineDescription.decodeCellList tokens with
+  unfold decodeBoolWord at hdecode
+  cases hcells : decodeCellList tokens with
   | none =>
-      unfold MachineDescription.decodeCellList at hcells
-      cases hnat : MachineDescription.decodeNat tokens with
+      unfold decodeCellList at hcells
+      cases hnat : decodeNat tokens with
       | none =>
           exact
             run_state300_decodeNat_none_ne_halt
@@ -38,8 +39,8 @@ theorem run_state300_decodeBoolWord_none_ne_halt
           simp [hnat] at hcells
           have htokens :
               tokens =
-                MachineDescription.encodeNatAppend len restAfterLen :=
-            MachineDescription.decodeNat_eq_some_encodeNatAppend hnat
+                encodeNatAppend len restAfterLen :=
+            decodeNat_eq_some_encodeNatAppend hnat
           rw [htokens]
           rw [projectionCodeCells_encodeNatAppend]
           change
@@ -54,15 +55,15 @@ theorem run_state300_decodeBoolWord_none_ne_halt
               ([] : Word Bool) len restAfterLen baseLeftRev hcells n
   | some parsedCells =>
       rcases parsedCells with ⟨cells, suffix⟩
-      cases hword : MachineDescription.cellsToWord? cells with
+      cases hword : cellsToWord? cells with
       | none =>
           have htokens :
               tokens =
-                MachineDescription.encodeCellListAppend cells suffix :=
-            MachineDescription.decodeCellList_eq_some_encodeCellListAppend
+                encodeCellListAppend cells suffix :=
+            decodeCellList_eq_some_encodeCellListAppend
               hcells
           rw [htokens]
-          rw [MachineDescription.encodeCellListAppend,
+          rw [encodeCellListAppend,
             projectionCodeCells_encodeNatAppend]
           change
             (Description.runConfig n
@@ -70,7 +71,7 @@ theorem run_state300_decodeBoolWord_none_ne_halt
                 (List.append [none, none, none, none] baseLeftRev)
                 (projectionResultTailWorkCells ([] : Word Bool) cells.length
                   (projectionCodeCells
-                    (MachineDescription.encodeCellsAppend cells
+                    (encodeCellsAppend cells
                       suffix))))).state ≠
               Description.halt
           exact
@@ -82,7 +83,7 @@ theorem run_input_tail_decodeCells_none_ne_halt
     (marked : Word Bool) (len : Nat)
     (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
-    (hdecode : MachineDescription.decodeCells len tokens = none)
+    (hdecode : decodeCells len tokens = none)
     (n : Nat) :
     (Description.runConfig n
       (projectionConfig 100
@@ -92,9 +93,9 @@ theorem run_input_tail_decodeCells_none_ne_halt
       Description.halt := by
   induction len generalizing marked tokens baseLeftRev n with
   | zero =>
-      simp [MachineDescription.decodeCells] at hdecode
+      simp [decodeCells] at hdecode
   | succ len ih =>
-      cases hcell : MachineDescription.decodeCell tokens with
+      cases hcell : decodeCell tokens with
       | none =>
           apply
             ne_halt_of_reaches_ne_halt_region
@@ -116,8 +117,8 @@ theorem run_input_tail_decodeCells_none_ne_halt
           rcases parsedCell with ⟨cell, restAfterCell⟩
           have htokens :
               tokens =
-                MachineDescription.encodeCellAppend cell restAfterCell :=
-            MachineDescription.decodeCell_eq_some_encodeCellAppend hcell
+                encodeCellAppend cell restAfterCell :=
+            decodeCell_eq_some_encodeCellAppend hcell
           cases cell with
           | none =>
               apply
@@ -128,14 +129,14 @@ theorem run_input_tail_decodeCells_none_ne_halt
                       (projectionResultTailPayloadLeftRev marked len
                         baseLeftRev)
                       (projectionCodeCells
-                        (MachineDescription.encodeCellAppend none
+                        (encodeCellAppend none
                           restAfterCell)))
               · rw [htokens]
                 exact
                   run_input_tail_to_first_payload
                     marked len
                     (projectionCodeCells
-                      (MachineDescription.encodeCellAppend none
+                      (encodeCellAppend none
                         restAfterCell))
                     baseLeftRev
               · intro m
@@ -147,7 +148,7 @@ theorem run_input_tail_decodeCells_none_ne_halt
                     m
           | some b =>
               cases hrest :
-                  MachineDescription.decodeCells len restAfterCell with
+                  decodeCells len restAfterCell with
               | none =>
                   apply
                     ne_halt_of_reaches_ne_halt_region
@@ -204,23 +205,23 @@ theorem run_input_tail_decodeCells_none_ne_halt
                       ih (List.append marked [b]) restAfterCell
                         baseLeftRev hrest m
               | some parsedRest =>
-                  simp [MachineDescription.decodeCells, hcell, hrest] at hdecode
+                  simp [decodeCells, hcell, hrest] at hdecode
 theorem run_input_tail_cellsToWord_none_ne_halt
     (marked : Word Bool) (cells : List (Option Bool))
     (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
-    (hword : MachineDescription.cellsToWord? cells = none)
+    (hword : cellsToWord? cells = none)
     (n : Nat) :
     (Description.runConfig n
       (projectionConfig 100
         (List.append [none, none, none, none] baseLeftRev)
         (projectionResultTailWorkCells marked cells.length
           (projectionCodeCells
-            (MachineDescription.encodeCellsAppend cells suffix))))).state ≠
+            (encodeCellsAppend cells suffix))))).state ≠
       Description.halt := by
   induction cells generalizing marked suffix baseLeftRev n with
   | nil =>
-      simp [MachineDescription.cellsToWord?] at hword
+      simp [cellsToWord?] at hword
   | cons cell rest ih =>
       cases cell with
       | none =>
@@ -232,8 +233,8 @@ theorem run_input_tail_cellsToWord_none_ne_halt
                   (projectionResultTailPayloadLeftRev marked rest.length
                     baseLeftRev)
                   (projectionCodeCells
-                    (MachineDescription.encodeCellAppend none
-                      (MachineDescription.encodeCellsAppend rest suffix))))
+                    (encodeCellAppend none
+                      (encodeCellsAppend rest suffix))))
           · change
               Description.runConfig
                   (8 * marked.length + 4 * rest.length + 8)
@@ -242,24 +243,24 @@ theorem run_input_tail_cellsToWord_none_ne_halt
                     (projectionResultTailWorkCells marked
                       (rest.length + 1)
                       (projectionCodeCells
-                        (MachineDescription.encodeCellAppend none
-                          (MachineDescription.encodeCellsAppend rest suffix))))) =
+                        (encodeCellAppend none
+                          (encodeCellsAppend rest suffix))))) =
                 projectionConfig 130
                   (projectionResultTailPayloadLeftRev marked rest.length
                     baseLeftRev)
                   (projectionCodeCells
-                    (MachineDescription.encodeCellAppend none
-                      (MachineDescription.encodeCellsAppend rest suffix)))
+                    (encodeCellAppend none
+                      (encodeCellsAppend rest suffix)))
             rw [run_input_tail_to_first_payload]
           · intro m
             exact
               run_state130_blank_cell_ne_halt
-                (MachineDescription.encodeCellsAppend rest suffix)
+                (encodeCellsAppend rest suffix)
                 (projectionResultTailPayloadLeftRev marked rest.length
                   baseLeftRev)
                 m
       | some b =>
-          cases hrest : MachineDescription.cellsToWord? rest with
+          cases hrest : cellsToWord? rest with
           | none =>
               apply
                 ne_halt_of_reaches_ne_halt_region
@@ -270,7 +271,7 @@ theorem run_input_tail_cellsToWord_none_ne_halt
                       (projectionResultTailWorkCells
                         (List.append marked [b]) rest.length
                         (projectionCodeCells
-                          (MachineDescription.encodeCellsAppend rest
+                          (encodeCellsAppend rest
                             suffix))))
               · cases b with
                 | false =>
@@ -283,14 +284,14 @@ theorem run_input_tail_cellsToWord_none_ne_halt
                             (rest.length + 1)
                             (List.append (projectionBoolCellCodeCells false)
                               (projectionCodeCells
-                                (MachineDescription.encodeCellsAppend rest
+                                (encodeCellsAppend rest
                                   suffix))))) =
                         projectionConfig 100
                           (List.append [none, none, none, none] baseLeftRev)
                           (projectionResultTailWorkCells
                             (List.append marked [false]) rest.length
                             (projectionCodeCells
-                              (MachineDescription.encodeCellsAppend rest
+                              (encodeCellsAppend rest
                                 suffix)))
                     rw [run_input_mark_one_tail]
                 | true =>
@@ -303,36 +304,36 @@ theorem run_input_tail_cellsToWord_none_ne_halt
                             (rest.length + 1)
                             (List.append (projectionBoolCellCodeCells true)
                               (projectionCodeCells
-                                (MachineDescription.encodeCellsAppend rest
+                                (encodeCellsAppend rest
                                   suffix))))) =
                         projectionConfig 100
                           (List.append [none, none, none, none] baseLeftRev)
                           (projectionResultTailWorkCells
                             (List.append marked [true]) rest.length
                             (projectionCodeCells
-                              (MachineDescription.encodeCellsAppend rest
+                              (encodeCellsAppend rest
                                 suffix)))
                     rw [run_input_mark_one_tail]
               · intro m
                 exact
                   ih (List.append marked [b]) suffix baseLeftRev hrest m
           | some decoded =>
-              simp [MachineDescription.cellsToWord?, hrest] at hword
+              simp [cellsToWord?, hrest] at hword
 theorem run_state100_decodeBoolWord_none_ne_halt
     (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
-    (hdecode : MachineDescription.decodeBoolWord tokens = none)
+    (hdecode : decodeBoolWord tokens = none)
     (n : Nat) :
     (Description.runConfig n
       (projectionConfig 100
         (List.append [none, none, none, none] baseLeftRev)
         (projectionCodeCells tokens))).state ≠
       Description.halt := by
-  unfold MachineDescription.decodeBoolWord at hdecode
-  cases hcells : MachineDescription.decodeCellList tokens with
+  unfold decodeBoolWord at hdecode
+  cases hcells : decodeCellList tokens with
   | none =>
-      unfold MachineDescription.decodeCellList at hcells
-      cases hnat : MachineDescription.decodeNat tokens with
+      unfold decodeCellList at hcells
+      cases hnat : decodeNat tokens with
       | none =>
           exact
             run_state100_decodeNat_none_ne_halt
@@ -343,8 +344,8 @@ theorem run_state100_decodeBoolWord_none_ne_halt
           simp [hnat] at hcells
           have htokens :
               tokens =
-                MachineDescription.encodeNatAppend len restAfterLen :=
-            MachineDescription.decodeNat_eq_some_encodeNatAppend hnat
+                encodeNatAppend len restAfterLen :=
+            decodeNat_eq_some_encodeNatAppend hnat
           rw [htokens]
           rw [projectionCodeCells_encodeNatAppend]
           change
@@ -359,15 +360,15 @@ theorem run_state100_decodeBoolWord_none_ne_halt
               ([] : Word Bool) len restAfterLen baseLeftRev hcells n
   | some parsedCells =>
       rcases parsedCells with ⟨cells, suffix⟩
-      cases hword : MachineDescription.cellsToWord? cells with
+      cases hword : cellsToWord? cells with
       | none =>
           have htokens :
               tokens =
-                MachineDescription.encodeCellListAppend cells suffix :=
-            MachineDescription.decodeCellList_eq_some_encodeCellListAppend
+                encodeCellListAppend cells suffix :=
+            decodeCellList_eq_some_encodeCellListAppend
               hcells
           rw [htokens]
-          rw [MachineDescription.encodeCellListAppend,
+          rw [encodeCellListAppend,
             projectionCodeCells_encodeNatAppend]
           change
             (Description.runConfig n
@@ -375,7 +376,7 @@ theorem run_state100_decodeBoolWord_none_ne_halt
                 (List.append [none, none, none, none] baseLeftRev)
                 (projectionResultTailWorkCells ([] : Word Bool) cells.length
                   (projectionCodeCells
-                    (MachineDescription.encodeCellsAppend cells
+                    (encodeCellsAppend cells
                       suffix))))).state ≠
               Description.halt
           exact
@@ -386,7 +387,7 @@ theorem run_state100_decodeBoolWord_none_ne_halt
 theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
     (marked restInput : Word Bool) (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
-    (hdecode : MachineDescription.decodeNat tokens = none)
+    (hdecode : decodeNat tokens = none)
     (n : Nat) :
     (Description.runConfig n
       (projectionConfig 100
@@ -428,7 +429,7 @@ theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
                     projectionConfig 200
                       (List.append
                         (projectionCodeCells
-                          (MachineDescription.encodeBoolWord marked)).reverse
+                          (encodeBoolWord marked)).reverse
                         (List.append [none, none, none, none] baseLeftRev))
                       (projectionCodeCells
                         (MachineCodeSymbol.header :: suffix)))
@@ -445,7 +446,7 @@ theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
                     (MachineCodeSymbol.header :: suffix)
                     (List.append
                       (projectionCodeCells
-                        (MachineDescription.encodeBoolWord marked)).reverse
+                        (encodeBoolWord marked)).reverse
                       (List.append [none, none, none, none] baseLeftRev))
                     hdecode m
           | transition =>
@@ -456,7 +457,7 @@ theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
                     projectionConfig 200
                       (List.append
                         (projectionCodeCells
-                          (MachineDescription.encodeBoolWord marked)).reverse
+                          (encodeBoolWord marked)).reverse
                         (List.append [none, none, none, none] baseLeftRev))
                       (projectionCodeCells
                         (MachineCodeSymbol.transition :: suffix)))
@@ -473,7 +474,7 @@ theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
                     (MachineCodeSymbol.transition :: suffix)
                     (List.append
                       (projectionCodeCells
-                        (MachineDescription.encodeBoolWord marked)).reverse
+                        (encodeBoolWord marked)).reverse
                       (List.append [none, none, none, none] baseLeftRev))
                     hdecode m
           | tick =>
@@ -484,7 +485,7 @@ theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
                     projectionConfig 200
                       (List.append
                         (projectionCodeCells
-                          (MachineDescription.encodeBoolWord marked)).reverse
+                          (encodeBoolWord marked)).reverse
                         (List.append [none, none, none, none] baseLeftRev))
                       (projectionCodeCells (MachineCodeSymbol.tick :: suffix)))
               · simpa using
@@ -500,11 +501,11 @@ theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
                     (MachineCodeSymbol.tick :: suffix)
                     (List.append
                       (projectionCodeCells
-                        (MachineDescription.encodeBoolWord marked)).reverse
+                        (encodeBoolWord marked)).reverse
                       (List.append [none, none, none, none] baseLeftRev))
                     hdecode m
           | done =>
-              simp [MachineDescription.decodeNat] at hdecode
+              simp [decodeNat] at hdecode
           | blank =>
               apply
                 ne_halt_of_reaches_ne_halt_region
@@ -642,13 +643,13 @@ theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
 theorem run_state100_input_bool_word_stage_decodeNat_none_ne_halt
     (w : Word Bool) (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
-    (hdecode : MachineDescription.decodeNat tokens = none)
+    (hdecode : decodeNat tokens = none)
     (n : Nat) :
     (Description.runConfig n
       (projectionConfig 100
         (List.append [none, none, none, none] baseLeftRev)
         (projectionCodeCells
-          (MachineDescription.encodeBoolWordAppend w tokens)))).state ≠
+          (encodeBoolWordAppend w tokens)))).state ≠
       Description.halt := by
   have h :=
     run_input_bool_word_acc_stage_decodeNat_none_ne_halt
@@ -657,12 +658,12 @@ theorem run_state100_input_bool_word_stage_decodeNat_none_ne_halt
 theorem run_state200_stage_nat_result_decodeBoolWord_none_ne_halt
     (stage : Nat) (tokens : Word MachineCodeSymbol)
     (leftRev : List (Option Bool))
-    (hdecode : MachineDescription.decodeBoolWord tokens = none)
+    (hdecode : decodeBoolWord tokens = none)
     (n : Nat) :
     (Description.runConfig n
       (projectionConfig 200 leftRev
         (projectionCodeCells
-          (MachineDescription.encodeNatAppend stage tokens)))).state ≠
+          (encodeNatAppend stage tokens)))).state ≠
       Description.halt := by
   induction stage generalizing leftRev n with
   | zero =>
@@ -796,17 +797,17 @@ theorem run_state200_stage_nat_result_decodeBoolWord_none_ne_halt
             projectionConfig 200
               (List.append projectionTickCodeCellsRev leftRev)
               (projectionCodeCells
-                (MachineDescription.encodeNatAppend stage tokens)))
+                (encodeNatAppend stage tokens)))
       · change
           Description.runConfig 4
             (projectionConfig 200 leftRev
               (List.append projectionTickCodeCells
                 (projectionCodeCells
-                  (MachineDescription.encodeNatAppend stage tokens)))) =
+                  (encodeNatAppend stage tokens)))) =
             projectionConfig 200
               (List.append projectionTickCodeCellsRev leftRev)
               (projectionCodeCells
-                (MachineDescription.encodeNatAppend stage tokens))
+                (encodeNatAppend stage tokens))
         rw [run_stage_tick]
       · intro m
         exact ih (List.append projectionTickCodeCellsRev leftRev) m
@@ -823,14 +824,14 @@ theorem run_state350_code_symbol_ne_halt
       omega
   | succ n =>
       cases symbol <;>
-        simp [projectionCodeCells, MachineDescription.encodeCodeWordAsInput,
-          MachineDescription.encodeCodeSymbolAsInput]
+        simp [projectionCodeCells, encodeCodeWordAsInput,
+          encodeCodeSymbolAsInput]
       · change
           (Description.runConfig n
             (projectionConfig 351 (some false :: leftRev)
               (some false :: some false :: some false ::
                 List.map some
-                  (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
+                  (encodeCodeWordAsInput suffix)))).state ≠
             Description.halt
         exact
           state_ne_halt_of_stepConfig_none
@@ -843,7 +844,7 @@ theorem run_state350_code_symbol_ne_halt
             (projectionConfig 351 (some false :: leftRev)
               (some false :: some false :: some true ::
                 List.map some
-                  (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
+                  (encodeCodeWordAsInput suffix)))).state ≠
             Description.halt
         exact
           state_ne_halt_of_stepConfig_none
@@ -856,7 +857,7 @@ theorem run_state350_code_symbol_ne_halt
             (projectionConfig 351 (some false :: leftRev)
               (some false :: some true :: some false ::
                 List.map some
-                  (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
+                  (encodeCodeWordAsInput suffix)))).state ≠
             Description.halt
         exact
           state_ne_halt_of_stepConfig_none
@@ -869,7 +870,7 @@ theorem run_state350_code_symbol_ne_halt
             (projectionConfig 351 (some false :: leftRev)
               (some false :: some true :: some true ::
                 List.map some
-                  (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
+                  (encodeCodeWordAsInput suffix)))).state ≠
             Description.halt
         exact
           state_ne_halt_of_stepConfig_none
@@ -882,7 +883,7 @@ theorem run_state350_code_symbol_ne_halt
             (projectionConfig 351 (some false :: leftRev)
               (some true :: some false :: some false ::
                 List.map some
-                  (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
+                  (encodeCodeWordAsInput suffix)))).state ≠
             Description.halt
         exact
           state_ne_halt_of_stepConfig_none
@@ -895,7 +896,7 @@ theorem run_state350_code_symbol_ne_halt
             (projectionConfig 351 (some false :: leftRev)
               (some true :: some false :: some true ::
                 List.map some
-                  (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
+                  (encodeCodeWordAsInput suffix)))).state ≠
             Description.halt
         exact
           state_ne_halt_of_stepConfig_none
@@ -908,7 +909,7 @@ theorem run_state350_code_symbol_ne_halt
             (projectionConfig 351 (some false :: leftRev)
               (some true :: some true :: some false ::
                 List.map some
-                  (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
+                  (encodeCodeWordAsInput suffix)))).state ≠
             Description.halt
         exact
           state_ne_halt_of_stepConfig_none
@@ -921,7 +922,7 @@ theorem run_state350_code_symbol_ne_halt
             (projectionConfig 351 (some false :: leftRev)
               (some true :: some true :: some true ::
                 List.map some
-                  (MachineDescription.encodeCodeWordAsInput suffix)))).state ≠
+                  (encodeCodeWordAsInput suffix)))).state ≠
             Description.halt
         exact
           state_ne_halt_of_stepConfig_none

@@ -10,27 +10,28 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 def MachineDescriptionTapeCodeExactCompilerConstruction : Prop :=
-  forall P : MachineDescription.TapeCodePrimitive,
+  forall P : TapeCodePrimitive,
     exists D : MachineDescription,
       TapeCodePrimitiveCompiledByDescription P D
 
 def MachineDescriptionTapeCodeOutputCompilerConstruction : Prop :=
-  forall P : MachineDescription.TapeCodePrimitive,
+  forall P : TapeCodePrimitive,
     exists D : MachineDescription,
       TapeCodePrimitiveOutputRealizedByDescription P D
 
 theorem not_machineDescriptionTapeCodeExactCompilerConstruction :
     ¬ MachineDescriptionTapeCodeExactCompilerConstruction := by
   intro hcompile
-  rcases hcompile MachineDescription.TapeCodePrimitive.erase with
+  rcases hcompile TapeCodePrimitive.erase with
     ⟨D, hD⟩
   exact not_tapeCodePrimitiveCompiledByDescription_erase ⟨D, hD⟩
 
 theorem machineDescriptionTapeCodeOutputCompiler_realizes
     (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction)
-    (P : MachineDescription.TapeCodePrimitive) :
+    (P : TapeCodePrimitive) :
     exists D : MachineDescription,
       TapeCodePrimitiveOutputRealizedByDescription P D :=
   hcompile P
@@ -40,24 +41,24 @@ def TapeCodePrimitiveCodeComposition
   C.WellFormed ∧
     forall code out : Word MachineCodeSymbol,
       C.HaltsWithExactOutput
-        (MachineDescription.encodeCodeWordAsInput code)
-        (MachineDescription.encodeCodeWordAsInput out) <->
+        (encodeCodeWordAsInput code)
+        (encodeCodeWordAsInput out) <->
         exists mid : Word MachineCodeSymbol,
           A.HaltsWithExactOutput
-              (MachineDescription.encodeCodeWordAsInput code)
-              (MachineDescription.encodeCodeWordAsInput mid) ∧
+              (encodeCodeWordAsInput code)
+              (encodeCodeWordAsInput mid) ∧
             B.HaltsWithExactOutput
-              (MachineDescription.encodeCodeWordAsInput mid)
-              (MachineDescription.encodeCodeWordAsInput out)
+              (encodeCodeWordAsInput mid)
+              (encodeCodeWordAsInput out)
 
 theorem tapeCodePrimitiveCompiledByDescription_compose
-    {P Q : MachineDescription.TapeCodePrimitive}
+    {P Q : TapeCodePrimitive}
     {A B C : MachineDescription}
     (hcomp : TapeCodePrimitiveCodeComposition A B C)
     (hP : TapeCodePrimitiveCompiledByDescription P A)
     (hQ : TapeCodePrimitiveCompiledByDescription Q B) :
     TapeCodePrimitiveCompiledByDescription
-      (MachineDescription.TapeCodePrimitive.compose P Q) C := by
+      (TapeCodePrimitive.compose P Q) C := by
   constructor
   · exact hcomp.left
   · intro code out
@@ -70,10 +71,10 @@ theorem tapeCodePrimitiveCompiledByDescription_compose
       have hQout : Q.transform mid = some out :=
         (hQ.right mid out).mp hB
       exact
-        MachineDescription.TapeCodePrimitive.compose_transform_some
+        TapeCodePrimitive.compose_transform_some
           hPmid hQout
     · intro h
-      unfold MachineDescription.TapeCodePrimitive.compose at h
+      unfold TapeCodePrimitive.compose at h
       cases hPcode : P.transform code with
       | none =>
           simp [hPcode] at h
@@ -119,12 +120,12 @@ def FixedDescriptionStepCodeOutputRealizerConstruction : Prop :=
 def FixedDescriptionStepCodeConfigurationRealizes
     (D stepper : MachineDescription) : Prop :=
   stepper.WellFormed ∧
-    forall c : MachineDescription.Configuration,
+    forall c : Configuration,
       stepper.HaltsWithOutput
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeConfiguration c))
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeConfiguration (D.runConfig 1 c)))
+        (encodeCodeWordAsInput
+          (encodeConfiguration c))
+        (encodeCodeWordAsInput
+          (encodeConfiguration (D.runConfig 1 c)))
 
 def FixedDescriptionStepCodeConfigurationRealizerConstruction : Prop :=
   forall D : MachineDescription,
@@ -359,16 +360,16 @@ def PairedRecognizerDovetailRunnerSearchDriverRealizes
       decider.HaltsWithOutput w [b] <->
         exists limit : Nat,
           runner.HaltsWithOutput
-            (MachineDescription.DovetailLayout.asBoolInput
-              (MachineDescription.DovetailLayout.initial
+            (DovetailLayout.asBoolInput
+              (DovetailLayout.initial
                 accept reject w limit))
-            (MachineDescription.DovetailLayout.asBoolInput
-              (MachineDescription.DovetailLayout.run accept reject limit
-                (MachineDescription.DovetailLayout.initial
+            (DovetailLayout.asBoolInput
+              (DovetailLayout.run accept reject limit
+                (DovetailLayout.initial
                   accept reject w limit))) ∧
-          MachineDescription.DovetailLayout.outputFromHits
-              (MachineDescription.DovetailLayout.run accept reject limit
-                (MachineDescription.DovetailLayout.initial
+          DovetailLayout.outputFromHits
+              (DovetailLayout.run accept reject limit
+                (DovetailLayout.initial
                   accept reject w limit)) =
             some [b]
 
@@ -393,11 +394,11 @@ def PairedRecognizerDovetailStageAttemptSearchDriverRealizes
       decider.HaltsWithOutput w [b] <->
         exists limit : Nat,
           attempt.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w limit))
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeBoolWord [b])) ∧
-          MachineDescription.boundedDovetailOutput
+            (encodeCodeWordAsInput
+              (encodeBoolWord [b])) ∧
+          boundedDovetailOutput
             accept reject w limit = some [b]
 
 def PairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction :
@@ -414,11 +415,11 @@ def PairedRecognizerDovetailTotalStageAttemptSearchDriverRealizes
       decider.HaltsWithOutput w [b] <->
         exists limit : Nat,
           attempt.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w limit))
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeBoolWord [b])) ∧
-          MachineDescription.boundedDovetailOutput
+            (encodeCodeWordAsInput
+              (encodeBoolWord [b])) ∧
+          boundedDovetailOutput
             accept reject w limit = some [b]
 
 def PairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction :
@@ -437,10 +438,10 @@ def PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
         exists limit : Nat,
         exists result : Word Bool,
           attempt.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w limit))
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeBoolWord result)) ∧
+            (encodeCodeWordAsInput
+              (encodeBoolWord result)) ∧
           PairedRecognizerDovetailControllerRawOutput result = some [b]
 
 def PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :
@@ -464,7 +465,7 @@ def PairedRecognizerDovetailControllerInputInitializerRealizes
   initializer.SubroutineReady ∧
     forall w : Word Bool,
       initializer.HaltsWithOutput w
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (PairedRecognizerDovetailControllerInitialCode w))
 
 def PairedRecognizerDovetailControllerInputInitializerConstruction :
@@ -521,25 +522,25 @@ theorem pairedRecognizerDovetailControllerStageInputEncoderConstruction_of_close
 def PairedRecognizerDovetailStageAttemptInvocationRealizes
     (attempt encoder invoker : MachineDescription) : Prop :=
   invoker.SubroutineReady ∧
-    forall C : MachineDescription.DovetailControllerLayout,
+    forall C : DovetailControllerLayout,
     forall result : Word Bool,
       invoker.HaltsWithOutput
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.DovetailControllerLayout.encode C))
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.DovetailControllerLayout.encode
-              (MachineDescription.DovetailControllerLayout.withResult
+          (encodeCodeWordAsInput
+            (DovetailControllerLayout.encode C))
+          (encodeCodeWordAsInput
+            (DovetailControllerLayout.encode
+              (DovetailControllerLayout.withResult
                 C result))) <->
         encoder.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.DovetailControllerLayout.encode C))
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
+              (DovetailControllerLayout.encode C))
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailControllerStageInputCode C)) ∧
           attempt.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailControllerStageInputCode C))
-            (MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeBoolWord result))
+            (encodeCodeWordAsInput
+              (encodeBoolWord result))
 
 def PairedRecognizerDovetailStageAttemptInvocationConstruction :
     Prop :=
@@ -594,11 +595,11 @@ theorem pairedRecognizerDovetailStageAttemptInvocationClosedHandoffConstruction_
 def PairedRecognizerDovetailControllerResultEmitterRealizes
     (emitter : MachineDescription) : Prop :=
   emitter.SubroutineReady ∧
-    forall C : MachineDescription.DovetailControllerLayout,
+    forall C : DovetailControllerLayout,
     forall b : Bool,
       emitter.HaltsWithOutput
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.DovetailControllerLayout.encode C))
+          (encodeCodeWordAsInput
+            (DovetailControllerLayout.encode C))
           [b] <->
         PairedRecognizerDovetailControllerRawOutput C.result = some [b]
 
@@ -610,13 +611,13 @@ def PairedRecognizerDovetailControllerResultEmitterConstruction :
 def PairedRecognizerDovetailControllerContinueRealizes
     (continuer : MachineDescription) : Prop :=
   continuer.SubroutineReady ∧
-    forall C : MachineDescription.DovetailControllerLayout,
+    forall C : DovetailControllerLayout,
       continuer.HaltsWithOutput
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.DovetailControllerLayout.encode C))
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.DovetailControllerLayout.encode
-              (MachineDescription.DovetailControllerLayout.nextStage C))) <->
+          (encodeCodeWordAsInput
+            (DovetailControllerLayout.encode C))
+          (encodeCodeWordAsInput
+            (DovetailControllerLayout.encode
+              (DovetailControllerLayout.nextStage C))) <->
         PairedRecognizerDovetailControllerRawOutput C.result = none
 
 def PairedRecognizerDovetailControllerContinueConstruction :

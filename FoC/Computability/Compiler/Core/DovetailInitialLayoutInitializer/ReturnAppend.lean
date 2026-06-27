@@ -12,6 +12,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
@@ -21,9 +22,9 @@ def MarkTransitionSecondBitDescription :
   start := 0
   halt := 2
   transitions :=
-    [ MachineDescription.transition
+    [ transition
         0 (some false) none Direction.left 1
-    , MachineDescription.transition
+    , transition
         1 (some false) (some false) Direction.right 2
     ]
 
@@ -65,14 +66,14 @@ theorem markTransitionSecondBitDescription_run
   cases payload <;>
     simp [MarkTransitionSecondBitDescription,
       config, tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveLeft, Tape.moveRight]
 
 def TransitionPrefixedThenAppendCodeWordLastDescription
     (code : Word MachineCodeSymbol) : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     MarkTransitionSecondBitDescription
     (AppendCodeWordLastDescription code)
     Direction.right
@@ -82,7 +83,7 @@ theorem
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (TransitionPrefixedThenAppendCodeWordLastDescription
       code).SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     markTransitionSecondBitDescription_subroutineReady
     (appendCodeWordLastDescription_subroutineReady code hcode)
 
@@ -149,7 +150,7 @@ theorem
     simpa [B, Tmid, tapeAtCells,
       appendScanTapeAtCells, Tape.move, Tape.moveRight] using hB
   rcases
-      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+      seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.right)
         hAready hBready hArun hBReach with
     ⟨n, hn⟩
@@ -163,11 +164,11 @@ def ReturnToCurrentMarkerDescription :
   start := 0
   halt := 1
   transitions :=
-    [ MachineDescription.transition
+    [ transition
         0 (some false) (some false) Direction.left 0
-    , MachineDescription.transition
+    , transition
         0 (some true) (some true) Direction.left 0
-    , MachineDescription.transition
+    , transition
         0 none (some false) Direction.right 1
     ]
 
@@ -213,9 +214,9 @@ theorem returnToCurrentMarkerDescription_step_scan
   cases leftBit <;> cases current <;>
     simp [ReturnToCurrentMarkerDescription,
       config, tapeAtCells,
-      MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write,
+      stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft]
 theorem returnToCurrentMarkerDescription_run
     (preRev : Word Bool) (current : Bool)
@@ -234,14 +235,14 @@ theorem returnToCurrentMarkerDescription_run
       cases current <;>
         simp [ReturnToCurrentMarkerDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write,
           Tape.move, Tape.moveLeft, Tape.moveRight]
   | cons b rest ih =>
       simp only [List.map_cons, List.length_cons, List.reverse_cons]
       rw [show Nat.succ rest.length + 2 = (rest.length + 2) + 1 by omega]
-      rw [MachineDescription.runConfig]
+      rw [runConfig]
       rw [returnToCurrentMarkerDescription_step_scan]
       simpa [List.append_assoc] using ih b (some current :: right)
 
@@ -286,7 +287,7 @@ theorem
                 ReturnToCurrentMarkerDescription.halt
                 (some false :: leftOfMarker)
                 ((List.append pre
-                  (MachineDescription.encodeCodeWordAsInput code)).map some)
+                  (encodeCodeWordAsInput code)).map some)
   | [], h => False.elim (h rfl)
   | symbol :: [], _ => by
       intro pre leftOfMarker
@@ -295,14 +296,14 @@ theorem
         simpa [appendCodeWordLastTapeAtCells,
           appendCodeSymbolLastTapeAtCells,
           appendRightLastTapeAtCells,
-          MachineDescription.encodeCodeSymbolAsInput,
-          MachineDescription.encodeCodeWordAsInput,
+          encodeCodeSymbolAsInput,
+          encodeCodeWordAsInput,
           Tape.move, Tape.moveLeft, List.append_assoc] using
           returnToCurrentMarkerDescription_run_after_append_four_atCells
             pre leftOfMarker _ _ _ _
   | symbol :: next :: rest, _ => by
       intro pre leftOfMarker
-      let symbolBits := MachineDescription.encodeCodeSymbolAsInput symbol
+      let symbolBits := encodeCodeSymbolAsInput symbol
       rcases
           returnToCurrentMarkerDescription_run_after_append_atCells
             (next :: rest) (by intro h; cases h)
@@ -319,19 +320,19 @@ theorem
         simp [List.reverse_append, List.map_append, List.append_assoc]
       have hbits :
           List.append (List.append pre symbolBits)
-              (MachineDescription.encodeCodeWordAsInput (next :: rest)) =
+              (encodeCodeWordAsInput (next :: rest)) =
             List.append pre
-              (MachineDescription.encodeCodeWordAsInput
+              (encodeCodeWordAsInput
                 (symbol :: next :: rest)) := by
         simp [symbolBits,
-          MachineDescription.encodeCodeWordAsInput, List.append_assoc]
+          encodeCodeWordAsInput, List.append_assoc]
       simpa [appendCodeWordLastTapeAtCells, symbolBits,
-        hleft, hbits, MachineDescription.encodeCodeWordAsInput,
+        hleft, hbits, encodeCodeWordAsInput,
         List.map_append, List.append_assoc] using hsteps
 
 def AppendCodeWordReturnToCurrentMarkerDescription
     (code : Word MachineCodeSymbol) : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     (AppendCodeWordLastDescription code)
     ReturnToCurrentMarkerDescription
     Direction.left
@@ -341,7 +342,7 @@ theorem
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (AppendCodeWordReturnToCurrentMarkerDescription
       code).SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     (appendCodeWordLastDescription_subroutineReady code hcode)
     returnToCurrentMarkerDescription_subroutineReady
 
@@ -366,7 +367,7 @@ theorem
             code).halt
           (some false :: leftOfMarker)
           ((List.append (List.append pre remaining)
-            (MachineDescription.encodeCodeWordAsInput code)).map some) := by
+            (encodeCodeWordAsInput code)).map some) := by
   let A := AppendCodeWordLastDescription code
   let B := ReturnToCurrentMarkerDescription
   let preAll := List.append pre remaining
@@ -404,7 +405,7 @@ theorem
           config B.halt
             (some false :: leftOfMarker)
             ((List.append preAll
-              (MachineDescription.encodeCodeWordAsInput code)).map some) := by
+              (encodeCodeWordAsInput code)).map some) := by
     have hleft :
         List.append ((List.map some remaining).reverse)
             (List.append ((List.map some pre).reverse)
@@ -421,7 +422,7 @@ theorem
     have hstart :
         ({ state := B.start
            tape := Tape.move Direction.left Tmid } :
-            MachineDescription.Configuration) =
+            Configuration) =
           { state := B.start
             tape :=
               Tape.move Direction.left
@@ -439,7 +440,7 @@ theorem
     rw [hstart]
     simpa [B] using hB
   rcases
-      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+      seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.left)
         hAready hBready hArun hBReach with
     ⟨n, hn⟩
@@ -453,21 +454,21 @@ def RightCellsCopierStartDescription :
   start := 0
   halt := 8
   transitions :=
-    [ MachineDescription.transition
+    [ transition
         0 (some false) (some false) Direction.right 1
-    , MachineDescription.transition
+    , transition
         1 (some false) none Direction.right 2
-    , MachineDescription.transition
+    , transition
         2 (some false) (some false) Direction.right 3
-    , MachineDescription.transition
+    , transition
         3 (some true) (some true) Direction.right 4
-    , MachineDescription.transition
+    , transition
         4 (some false) (some false) Direction.right 5
-    , MachineDescription.transition
+    , transition
         5 (some false) (some false) Direction.right 6
-    , MachineDescription.transition
+    , transition
         6 (some true) (some true) Direction.right 7
-    , MachineDescription.transition
+    , transition
         7 (some false) (some false) Direction.right 8
     ]
 
@@ -510,9 +511,9 @@ theorem rightCellsCopierStartDescription_run
   cases tail <;>
     simp [RightCellsCopierStartDescription,
       config, tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 def InputTapeRightCellsDirectCopierDescription :
@@ -522,223 +523,223 @@ def InputTapeRightCellsDirectCopierDescription :
   halt := 99
   transitions :=
     [ -- Copy the residual unary length prefix.
-      MachineDescription.transition
+      transition
         0 (some false) none Direction.right 1
-    , MachineDescription.transition
+    , transition
         1 (some false) (some false) Direction.right 2
-    , MachineDescription.transition
+    , transition
         2 (some true) (some true) Direction.right 3
-    , MachineDescription.transition
+    , transition
         3 (some false) (some false) Direction.right 20
-    , MachineDescription.transition
+    , transition
         3 (some true) (some true) Direction.right 30
 
       -- In cell mode, stop when the next source symbol is a nat symbol.
-    , MachineDescription.transition
+    , transition
         10 (some false) (some false) Direction.right 11
-    , MachineDescription.transition
+    , transition
         11 (some false) (some false) Direction.left 80
-    , MachineDescription.transition
+    , transition
         11 (some true) (some true) Direction.left 12
-    , MachineDescription.transition
+    , transition
         12 (some false) none Direction.right 13
-    , MachineDescription.transition
+    , transition
         13 (some true) (some true) Direction.right 14
-    , MachineDescription.transition
+    , transition
         14 (some false) (some false) Direction.right 15
-    , MachineDescription.transition
+    , transition
         14 (some true) (some true) Direction.right 18
-    , MachineDescription.transition
+    , transition
         15 (some false) (some false) Direction.right 50
-    , MachineDescription.transition
+    , transition
         15 (some true) (some true) Direction.right 60
-    , MachineDescription.transition
+    , transition
         18 (some false) (some false) Direction.right 70
 
       -- Append a tick symbol, return to its temporary marker, and advance.
-    , MachineDescription.transition
+    , transition
         20 (some false) (some false) Direction.right 20
-    , MachineDescription.transition
+    , transition
         20 (some true) (some true) Direction.right 20
-    , MachineDescription.transition
+    , transition
         20 none (some false) Direction.right 21
-    , MachineDescription.transition
+    , transition
         21 none (some false) Direction.right 22
-    , MachineDescription.transition
+    , transition
         22 none (some true) Direction.right 23
-    , MachineDescription.transition
+    , transition
         23 none (some false) Direction.left 24
-    , MachineDescription.transition
+    , transition
         24 (some false) (some false) Direction.left 24
-    , MachineDescription.transition
+    , transition
         24 (some true) (some true) Direction.left 24
-    , MachineDescription.transition
+    , transition
         24 none (some false) Direction.right 25
-    , MachineDescription.transition
+    , transition
         25 (some false) (some false) Direction.right 26
-    , MachineDescription.transition
+    , transition
         25 (some true) (some true) Direction.right 26
-    , MachineDescription.transition
+    , transition
         26 (some false) (some false) Direction.right 27
-    , MachineDescription.transition
+    , transition
         26 (some true) (some true) Direction.right 27
-    , MachineDescription.transition
+    , transition
         27 (some false) (some false) Direction.right 0
-    , MachineDescription.transition
+    , transition
         27 (some true) (some true) Direction.right 0
 
       -- Append the done symbol, return, then skip done plus the head cell.
-    , MachineDescription.transition
+    , transition
         30 (some false) (some false) Direction.right 30
-    , MachineDescription.transition
+    , transition
         30 (some true) (some true) Direction.right 30
-    , MachineDescription.transition
+    , transition
         30 none (some false) Direction.right 31
-    , MachineDescription.transition
+    , transition
         31 none (some false) Direction.right 32
-    , MachineDescription.transition
+    , transition
         32 none (some true) Direction.right 33
-    , MachineDescription.transition
+    , transition
         33 none (some true) Direction.left 34
-    , MachineDescription.transition
+    , transition
         34 (some false) (some false) Direction.left 34
-    , MachineDescription.transition
+    , transition
         34 (some true) (some true) Direction.left 34
-    , MachineDescription.transition
+    , transition
         34 none (some false) Direction.right 35
-    , MachineDescription.transition
+    , transition
         35 (some false) (some false) Direction.right 36
-    , MachineDescription.transition
+    , transition
         35 (some true) (some true) Direction.right 36
-    , MachineDescription.transition
+    , transition
         36 (some false) (some false) Direction.right 37
-    , MachineDescription.transition
+    , transition
         36 (some true) (some true) Direction.right 37
-    , MachineDescription.transition
+    , transition
         37 (some false) (some false) Direction.right 38
-    , MachineDescription.transition
+    , transition
         37 (some true) (some true) Direction.right 38
-    , MachineDescription.transition
+    , transition
         38 (some false) (some false) Direction.right 39
-    , MachineDescription.transition
+    , transition
         38 (some true) (some true) Direction.right 39
-    , MachineDescription.transition
+    , transition
         39 (some false) (some false) Direction.right 40
-    , MachineDescription.transition
+    , transition
         39 (some true) (some true) Direction.right 40
-    , MachineDescription.transition
+    , transition
         40 (some false) (some false) Direction.right 41
-    , MachineDescription.transition
+    , transition
         40 (some true) (some true) Direction.right 41
-    , MachineDescription.transition
+    , transition
         41 (some false) (some false) Direction.right 10
-    , MachineDescription.transition
+    , transition
         41 (some true) (some true) Direction.right 10
 
       -- Append blank, zero, and one cell symbols from the remaining cells.
-    , MachineDescription.transition
+    , transition
         50 (some false) (some false) Direction.right 50
-    , MachineDescription.transition
+    , transition
         50 (some true) (some true) Direction.right 50
-    , MachineDescription.transition
+    , transition
         50 none (some false) Direction.right 51
-    , MachineDescription.transition
+    , transition
         51 none (some true) Direction.right 52
-    , MachineDescription.transition
+    , transition
         52 none (some false) Direction.right 53
-    , MachineDescription.transition
+    , transition
         53 none (some false) Direction.left 54
-    , MachineDescription.transition
+    , transition
         54 (some false) (some false) Direction.left 54
-    , MachineDescription.transition
+    , transition
         54 (some true) (some true) Direction.left 54
-    , MachineDescription.transition
+    , transition
         54 none (some false) Direction.right 55
-    , MachineDescription.transition
+    , transition
         55 (some false) (some false) Direction.right 56
-    , MachineDescription.transition
+    , transition
         55 (some true) (some true) Direction.right 56
-    , MachineDescription.transition
+    , transition
         56 (some false) (some false) Direction.right 57
-    , MachineDescription.transition
+    , transition
         56 (some true) (some true) Direction.right 57
-    , MachineDescription.transition
+    , transition
         57 (some false) (some false) Direction.right 10
-    , MachineDescription.transition
+    , transition
         57 (some true) (some true) Direction.right 10
 
-    , MachineDescription.transition
+    , transition
         60 (some false) (some false) Direction.right 60
-    , MachineDescription.transition
+    , transition
         60 (some true) (some true) Direction.right 60
-    , MachineDescription.transition
+    , transition
         60 none (some false) Direction.right 61
-    , MachineDescription.transition
+    , transition
         61 none (some true) Direction.right 62
-    , MachineDescription.transition
+    , transition
         62 none (some false) Direction.right 63
-    , MachineDescription.transition
+    , transition
         63 none (some true) Direction.left 64
-    , MachineDescription.transition
+    , transition
         64 (some false) (some false) Direction.left 64
-    , MachineDescription.transition
+    , transition
         64 (some true) (some true) Direction.left 64
-    , MachineDescription.transition
+    , transition
         64 none (some false) Direction.right 65
-    , MachineDescription.transition
+    , transition
         65 (some false) (some false) Direction.right 66
-    , MachineDescription.transition
+    , transition
         65 (some true) (some true) Direction.right 66
-    , MachineDescription.transition
+    , transition
         66 (some false) (some false) Direction.right 67
-    , MachineDescription.transition
+    , transition
         66 (some true) (some true) Direction.right 67
-    , MachineDescription.transition
+    , transition
         67 (some false) (some false) Direction.right 10
-    , MachineDescription.transition
+    , transition
         67 (some true) (some true) Direction.right 10
 
-    , MachineDescription.transition
+    , transition
         70 (some false) (some false) Direction.right 70
-    , MachineDescription.transition
+    , transition
         70 (some true) (some true) Direction.right 70
-    , MachineDescription.transition
+    , transition
         70 none (some false) Direction.right 71
-    , MachineDescription.transition
+    , transition
         71 none (some true) Direction.right 72
-    , MachineDescription.transition
+    , transition
         72 none (some true) Direction.right 73
-    , MachineDescription.transition
+    , transition
         73 none (some false) Direction.left 74
-    , MachineDescription.transition
+    , transition
         74 (some false) (some false) Direction.left 74
-    , MachineDescription.transition
+    , transition
         74 (some true) (some true) Direction.left 74
-    , MachineDescription.transition
+    , transition
         74 none (some false) Direction.right 75
-    , MachineDescription.transition
+    , transition
         75 (some false) (some false) Direction.right 76
-    , MachineDescription.transition
+    , transition
         75 (some true) (some true) Direction.right 76
-    , MachineDescription.transition
+    , transition
         76 (some false) (some false) Direction.right 77
-    , MachineDescription.transition
+    , transition
         76 (some true) (some true) Direction.right 77
-    , MachineDescription.transition
+    , transition
         77 (some false) (some false) Direction.right 10
-    , MachineDescription.transition
+    , transition
         77 (some true) (some true) Direction.right 10
 
       -- Return to the transition marker and halt on the restored marker.
-    , MachineDescription.transition
+    , transition
         80 (some false) (some false) Direction.left 80
-    , MachineDescription.transition
+    , transition
         80 (some true) (some true) Direction.left 80
-    , MachineDescription.transition
+    , transition
         80 none (some false) Direction.left 81
-    , MachineDescription.transition
+    , transition
         81 (some false) (some false) Direction.right 99
-    , MachineDescription.transition
+    , transition
         81 (some true) (some true) Direction.right 99
     ]
 
@@ -776,9 +777,9 @@ theorem
   cases bit <;> cases rest <;>
     simp [InputTapeRightCellsDirectCopierDescription,
       config, tapeAtCells,
-      MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem
@@ -791,10 +792,10 @@ theorem
         (List.append (remaining.reverse.map some) leftRev) [] := by
   induction remaining generalizing leftRev with
   | nil =>
-      simp [MachineDescription.runConfig, config,
+      simp [runConfig, config,
         tapeAtCells]
   | cons bit rest ih =>
-      simp [MachineDescription.runConfig,
+      simp [runConfig,
         inputTapeRightCellsDirectCopierDescription_step_scan20,
         ih, List.append_assoc]
 
@@ -808,9 +809,9 @@ theorem
         [some true, some false] := by
   simp [InputTapeRightCellsDirectCopierDescription,
     config, tapeAtCells,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.read, Tape.write, Tape.move,
     Tape.moveLeft, Tape.moveRight]
 
 theorem
@@ -828,8 +829,8 @@ theorem
   cases leftBit <;> cases current <;> cases right <;>
     simp [InputTapeRightCellsDirectCopierDescription,
       config, tapeAtCells,
-      MachineDescription.stepConfig, MachineDescription.lookupTransition,
-      MachineDescription.Matches, MachineDescription.transition, Tape.read,
+      stepConfig, lookupTransition,
+      Matches, transition, Tape.read,
       Tape.write, Tape.move, Tape.moveLeft]
 
 theorem
@@ -849,15 +850,15 @@ theorem
       cases current <;> cases right <;>
         simp [InputTapeRightCellsDirectCopierDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, Tape.moveRight]
   | cons bit rest ih =>
       simp only [List.map_cons, List.length_cons, List.reverse_cons]
       rw [show rest.length + 1 + 2 = (rest.length + 2) + 1 by
         omega]
-      rw [MachineDescription.runConfig]
+      rw [runConfig]
       rw [inputTapeRightCellsDirectCopierDescription_step_return24]
       simpa [List.append_assoc] using ih bit (some current :: right)
 
@@ -873,9 +874,9 @@ theorem
   cases b1 <;> cases b2 <;> cases b3 <;> cases right <;>
     simp [InputTapeRightCellsDirectCopierDescription,
       config, tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
 theorem
@@ -888,17 +889,17 @@ theorem
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker))
             ((List.append
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.tick)
               remaining).map some)) =
         config 0
           (List.append
-            ((MachineDescription.encodeCodeSymbolAsInput
+            ((encodeCodeSymbolAsInput
               MachineCodeSymbol.tick).reverse.map some)
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker)))
           ((List.append remaining
-            (MachineDescription.encodeCodeSymbolAsInput
+            (encodeCodeSymbolAsInput
               MachineCodeSymbol.tick)).map some) := by
   let afterPrefixLeft : List (Option Bool) :=
     List.append [some false, some true, some false, none]
@@ -914,28 +915,28 @@ theorem
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker))
             ((List.append
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.tick)
               remaining).map some)) =
         config 20 afterPrefixLeft (remaining.map some) := by
     simp [afterPrefixLeft,
       InputTapeRightCellsDirectCopierDescription,
-      MachineDescription.encodeCodeSymbolAsInput,
+      encodeCodeSymbolAsInput,
       config, tapeAtCells,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write, Tape.move,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight, List.map_reverse]
     cases List.map some remaining <;> rfl
   refine
     ⟨4 + (remaining.length + (4 + ((returnPre.length + 2) + 3))), ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [hprefix]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [inputTapeRightCellsDirectCopierDescription_run_scan20]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [inputTapeRightCellsDirectCopierDescription_run_write_tick]
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   have hleft :
       List.append [some false, some false]
           (List.append (remaining.reverse.map some) afterPrefixLeft) =
@@ -962,12 +963,12 @@ theorem
       config 25 (some false :: returnLeft)
         (some false :: some true :: some false ::
           ((List.append remaining
-            (MachineDescription.encodeCodeSymbolAsInput
+            (encodeCodeSymbolAsInput
               MachineCodeSymbol.tick)).map some)) by
-        simp [returnPre, MachineDescription.encodeCodeSymbolAsInput,
+        simp [returnPre, encodeCodeSymbolAsInput,
           List.map_append, List.reverse_append, List.append_assoc]]
   rw [inputTapeRightCellsDirectCopierDescription_run_advance25_to0]
-  simp [returnLeft, MachineDescription.encodeCodeSymbolAsInput,
+  simp [returnLeft, encodeCodeSymbolAsInput,
     List.map_append]
 
 def AppendCodeSymbolReturnToCurrentMarkerDescription
@@ -1003,7 +1004,7 @@ theorem
             symbol).halt
           (some false :: leftOfMarker)
           ((List.append (List.append pre remaining)
-            (MachineDescription.encodeCodeSymbolAsInput symbol)).map
+            (encodeCodeSymbolAsInput symbol)).map
             some) := by
   rcases
       appendCodeWordReturnToCurrentMarkerDescription_run_from_scan
@@ -1012,7 +1013,7 @@ theorem
     ⟨steps, hsteps⟩
   refine ⟨steps, ?_⟩
   simpa [AppendCodeSymbolReturnToCurrentMarkerDescription,
-    MachineDescription.encodeCodeWordAsInput] using hsteps
+    encodeCodeWordAsInput] using hsteps
 
 def ReturnToTransitionMarkerDescription :
     MachineDescription where
@@ -1020,15 +1021,15 @@ def ReturnToTransitionMarkerDescription :
   start := 0
   halt := 2
   transitions :=
-    [ MachineDescription.transition
+    [ transition
         0 (some false) (some false) Direction.left 0
-    , MachineDescription.transition
+    , transition
         0 (some true) (some true) Direction.left 0
-    , MachineDescription.transition
+    , transition
         0 none (some false) Direction.left 1
-    , MachineDescription.transition
+    , transition
         1 (some false) (some false) Direction.right 2
-    , MachineDescription.transition
+    , transition
         1 (some true) (some true) Direction.right 2
     ]
 
@@ -1070,9 +1071,9 @@ theorem returnToTransitionMarkerDescription_step_scan
   cases leftBit <;> cases current <;>
     simp [ReturnToTransitionMarkerDescription,
       config, tapeAtCells,
-      MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      MachineDescription.transition, Tape.read, Tape.write,
+      stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft]
 theorem returnToTransitionMarkerDescription_run
     (preRev : Word Bool) (current : Bool)
@@ -1091,14 +1092,14 @@ theorem returnToTransitionMarkerDescription_run
       cases current <;>
         simp [ReturnToTransitionMarkerDescription,
           config, tapeAtCells,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read, Tape.write,
+          runConfig, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read, Tape.write,
           Tape.move, Tape.moveLeft, Tape.moveRight]
   | cons b rest ih =>
       simp only [List.map_cons, List.length_cons, List.reverse_cons]
       rw [show Nat.succ rest.length + 3 = (rest.length + 3) + 1 by omega]
-      rw [MachineDescription.runConfig]
+      rw [runConfig]
       rw [returnToTransitionMarkerDescription_step_scan]
       simpa [List.append_assoc] using ih b (some current :: right)
 
@@ -1142,7 +1143,7 @@ theorem
                   tapeAtCells [some false]
                     (some false ::
                       ((List.append pre
-                        (MachineDescription.encodeCodeWordAsInput code)).map
+                        (encodeCodeWordAsInput code)).map
                         some)) }
   | [], h => False.elim (h rfl)
   | symbol :: [], _ => by
@@ -1152,14 +1153,14 @@ theorem
         simpa [appendCodeWordLastTapeAtCells,
           appendCodeSymbolLastTapeAtCells,
           appendRightLastTapeAtCells,
-          MachineDescription.encodeCodeSymbolAsInput,
-          MachineDescription.encodeCodeWordAsInput,
+          encodeCodeSymbolAsInput,
+          encodeCodeWordAsInput,
           Tape.move, Tape.moveLeft, List.append_assoc] using
           returnToTransitionMarkerDescription_run_after_append_four_atCells
             pre _ _ _ _
   | symbol :: next :: rest, _ => by
       intro pre
-      let symbolBits := MachineDescription.encodeCodeSymbolAsInput symbol
+      let symbolBits := encodeCodeSymbolAsInput symbol
       rcases
           returnToTransitionMarkerDescription_run_after_append_atCells
             (next :: rest) (by intro h; cases h)
@@ -1175,19 +1176,19 @@ theorem
         simp [List.reverse_append, List.map_append, List.append_assoc]
       have hbits :
           List.append (List.append pre symbolBits)
-              (MachineDescription.encodeCodeWordAsInput (next :: rest)) =
+              (encodeCodeWordAsInput (next :: rest)) =
             List.append pre
-              (MachineDescription.encodeCodeWordAsInput
+              (encodeCodeWordAsInput
                 (symbol :: next :: rest)) := by
         simp [symbolBits,
-          MachineDescription.encodeCodeWordAsInput, List.append_assoc]
+          encodeCodeWordAsInput, List.append_assoc]
       simpa [appendCodeWordLastTapeAtCells, symbolBits,
-        hleft, hbits, MachineDescription.encodeCodeWordAsInput,
+        hleft, hbits, encodeCodeWordAsInput,
         List.map_append, List.append_assoc] using hsteps
 
 def MarkedPrefixAppendCodeWordReturnDescription
     (code : Word MachineCodeSymbol) : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     (MarkedPrefixThenAppendCodeWordLastDescription code)
     ReturnToTransitionMarkerDescription
     Direction.left
@@ -1197,7 +1198,7 @@ theorem
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (MarkedPrefixAppendCodeWordReturnDescription
       code).SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     (markedPrefixThenAppendCodeWordLastDescription_subroutineReady
       code hcode)
     returnToTransitionMarkerDescription_subroutineReady
@@ -1214,7 +1215,7 @@ theorem markedPrefixAppendCodeWordReturnDescription_run
             tapeAtCells [some false]
               (some false ::
                 ((List.append (false :: true :: b :: rest)
-                  (MachineDescription.encodeCodeWordAsInput code)).map
+                  (encodeCodeWordAsInput code)).map
                   some)) } := by
   let A := MarkedPrefixThenAppendCodeWordLastDescription code
   let B := ReturnToTransitionMarkerDescription
@@ -1239,7 +1240,7 @@ theorem markedPrefixAppendCodeWordReturnDescription_run
           { state := A.start
             tape := Tape.input (b :: rest) } =
         { state := A.halt, tape := Tmid } := by
-    simpa [A, Tmid, MachineDescription.initial] using hArunBase
+    simpa [A, Tmid, initial] using hArunBase
   have hBReach :
       exists nB : Nat,
         B.runConfig nB
@@ -1250,7 +1251,7 @@ theorem markedPrefixAppendCodeWordReturnDescription_run
               tapeAtCells [some false]
                 (some false ::
                   ((List.append (false :: true :: b :: rest)
-                    (MachineDescription.encodeCodeWordAsInput code)).map
+                    (encodeCodeWordAsInput code)).map
                     some)) } := by
     rcases
         returnToTransitionMarkerDescription_run_after_append_atCells
@@ -1259,13 +1260,13 @@ theorem markedPrefixAppendCodeWordReturnDescription_run
     refine ⟨nB, ?_⟩
     simpa [B, Tmid] using hB
   rcases
-      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+      seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.left)
         hAready hBready hArun hBReach with
     ⟨n, hn⟩
   refine ⟨n, ?_⟩
   simpa [MarkedPrefixAppendCodeWordReturnDescription,
-    MachineDescription.initial, A, B] using hn
+    initial, A, B] using hn
 theorem markedPrefixAppendCodeWordReturnDescription_run_checked
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (b : Bool) (rest : Word Bool) :
@@ -1281,7 +1282,7 @@ theorem markedPrefixAppendCodeWordReturnDescription_run_checked
             tapeAtCells [some false]
               (some false ::
                 ((List.append (false :: true :: b :: rest)
-                  (MachineDescription.encodeCodeWordAsInput code)).map
+                  (encodeCodeWordAsInput code)).map
                   some)) } := by
   let A := MarkedPrefixThenAppendCodeWordLastDescription code
   let B := ReturnToTransitionMarkerDescription
@@ -1319,7 +1320,7 @@ theorem markedPrefixAppendCodeWordReturnDescription_run_checked
               tapeAtCells [some false]
                 (some false ::
                   ((List.append (false :: true :: b :: rest)
-                    (MachineDescription.encodeCodeWordAsInput code)).map
+                    (encodeCodeWordAsInput code)).map
                     some)) } := by
     rcases
         returnToTransitionMarkerDescription_run_after_append_atCells
@@ -1328,7 +1329,7 @@ theorem markedPrefixAppendCodeWordReturnDescription_run_checked
     refine ⟨nB, ?_⟩
     simpa [B, Tmid] using hB
   rcases
-      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+      seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.left)
         hAready hBready hArun hBReach with
     ⟨n, hn⟩
@@ -1339,7 +1340,7 @@ theorem markedPrefixAppendCodeWordReturnDescription_run_checked
 def MarkedPrefixAppendNatReturnDescription
     (n : Nat) : MachineDescription :=
   MarkedPrefixAppendCodeWordReturnDescription
-    (MachineDescription.encodeNat n)
+    (encodeNat n)
 
 theorem
     markedPrefixAppendNatReturnDescription_subroutineReady
@@ -1347,7 +1348,7 @@ theorem
     (MarkedPrefixAppendNatReturnDescription
       n).SubroutineReady :=
   markedPrefixAppendCodeWordReturnDescription_subroutineReady
-    (MachineDescription.encodeNat n)
+    (encodeNat n)
     (encodeNat_ne_nil n)
 theorem markedPrefixAppendNatReturnDescription_run
     (n : Nat) (b : Bool) (rest : Word Bool) :
@@ -1361,11 +1362,11 @@ theorem markedPrefixAppendNatReturnDescription_run
             tapeAtCells [some false]
               (some false ::
                 ((List.append (false :: true :: b :: rest)
-                  (MachineDescription.encodeCodeWordAsInput
-                    (MachineDescription.encodeNat n))).map some)) } := by
+                  (encodeCodeWordAsInput
+                    (encodeNat n))).map some)) } := by
   simpa [MarkedPrefixAppendNatReturnDescription] using
     markedPrefixAppendCodeWordReturnDescription_run
-      (MachineDescription.encodeNat n)
+      (encodeNat n)
       (encodeNat_ne_nil n)
       b rest
 theorem markedPrefixAppendNatReturnDescription_run_checked
@@ -1383,35 +1384,35 @@ theorem markedPrefixAppendNatReturnDescription_run_checked
             tapeAtCells [some false]
               (some false ::
                 ((List.append (false :: true :: b :: rest)
-                  (MachineDescription.encodeCodeWordAsInput
-                    (MachineDescription.encodeNat n))).map some)) } := by
+                  (encodeCodeWordAsInput
+                    (encodeNat n))).map some)) } := by
   simpa [MarkedPrefixAppendNatReturnDescription] using
     markedPrefixAppendCodeWordReturnDescription_run_checked
-      (MachineDescription.encodeNat n)
+      (encodeNat n)
       (encodeNat_ne_nil n)
       b rest
 theorem stageInputBits_exists_cons
     (w : Word Bool) (stage : Nat) :
     exists b : Bool,
     exists rest : Word Bool,
-      MachineDescription.encodeCodeWordAsInput
+      encodeCodeWordAsInput
           (PairedRecognizerDovetailStageInputCode w stage) =
         b :: rest := by
   have hne :
-      MachineDescription.encodeCodeWordAsInput
+      encodeCodeWordAsInput
           (PairedRecognizerDovetailStageInputCode w stage) ≠ [] := by
     cases w <;>
       simp [PairedRecognizerDovetailStageInputCode,
-        MachineDescription.DovetailLayout.stageInputCode,
-        MachineDescription.DovetailLayout.stageInputCodeAppend,
-        MachineDescription.encodeBoolWordAppend,
-        MachineDescription.encodeCellListAppend,
-        MachineDescription.encodeNatAppend,
-        MachineDescription.encodeNat,
-        MachineDescription.encodeCodeWordAsInput,
-        MachineDescription.encodeCodeSymbolAsInput]
+        DovetailLayout.stageInputCode,
+        DovetailLayout.stageInputCodeAppend,
+        encodeBoolWordAppend,
+        encodeCellListAppend,
+        encodeNatAppend,
+        encodeNat,
+        encodeCodeWordAsInput,
+        encodeCodeSymbolAsInput]
   cases hbits :
-      MachineDescription.encodeCodeWordAsInput
+      encodeCodeWordAsInput
         (PairedRecognizerDovetailStageInputCode w stage) with
   | nil =>
       exact False.elim (hne hbits)
@@ -1426,7 +1427,7 @@ theorem
       (MarkedPrefixAppendCodeWordReturnDescription code).runConfig steps
           ((MarkedPrefixAppendCodeWordReturnDescription
             code).initial
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w stage))) =
         { state :=
             (MarkedPrefixAppendCodeWordReturnDescription code).halt
@@ -1435,9 +1436,9 @@ theorem
               (some false ::
                 ((List.append [false, true]
                   (List.append
-                    (MachineDescription.encodeCodeWordAsInput
+                    (encodeCodeWordAsInput
                       (PairedRecognizerDovetailStageInputCode w stage))
-                    (MachineDescription.encodeCodeWordAsInput code))).map
+                    (encodeCodeWordAsInput code))).map
                   some)) } := by
   rcases stageInputBits_exists_cons w stage with
     ⟨b, rest, hbits⟩
@@ -1446,14 +1447,14 @@ theorem
         code hcode b rest with
     ⟨steps, hsteps⟩
   refine ⟨steps, ?_⟩
-  simpa [hbits, MachineDescription.initial, List.append_assoc] using hsteps
+  simpa [hbits, initial, List.append_assoc] using hsteps
 theorem markedPrefixAppendNatReturnDescription_run_stageInput
     (n : Nat) (w : Word Bool) (stage : Nat) :
     exists steps : Nat,
       (MarkedPrefixAppendNatReturnDescription n).runConfig steps
           ((MarkedPrefixAppendNatReturnDescription
             n).initial
-            (MachineDescription.encodeCodeWordAsInput
+            (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w stage))) =
         { state :=
             (MarkedPrefixAppendNatReturnDescription n).halt
@@ -1462,13 +1463,13 @@ theorem markedPrefixAppendNatReturnDescription_run_stageInput
               (some false ::
                 ((List.append [false, true]
                   (List.append
-                    (MachineDescription.encodeCodeWordAsInput
+                    (encodeCodeWordAsInput
                       (PairedRecognizerDovetailStageInputCode w stage))
-                    (MachineDescription.encodeCodeWordAsInput
-                      (MachineDescription.encodeNat n)))).map some)) } := by
+                    (encodeCodeWordAsInput
+                      (encodeNat n)))).map some)) } := by
   simpa [MarkedPrefixAppendNatReturnDescription] using
     markedPrefixAppendCodeWordReturnDescription_run_stageInput
-      (MachineDescription.encodeNat n)
+      (encodeNat n)
       (encodeNat_ne_nil n)
       w stage
 theorem markedPrefixAppendNatReturnDescription_run_stageInput_checked
@@ -1480,7 +1481,7 @@ theorem markedPrefixAppendNatReturnDescription_run_stageInput_checked
             tape :=
               tapeAtCells []
                 (List.append
-                  ((MachineDescription.encodeCodeWordAsInput
+                  ((encodeCodeWordAsInput
                     (PairedRecognizerDovetailStageInputCode w stage)).map
                     some)
                   [none]) } =
@@ -1491,10 +1492,10 @@ theorem markedPrefixAppendNatReturnDescription_run_stageInput_checked
               (some false ::
                 ((List.append [false, true]
                   (List.append
-                    (MachineDescription.encodeCodeWordAsInput
+                    (encodeCodeWordAsInput
                       (PairedRecognizerDovetailStageInputCode w stage))
-                    (MachineDescription.encodeCodeWordAsInput
-                      (MachineDescription.encodeNat n)))).map some)) } := by
+                    (encodeCodeWordAsInput
+                      (encodeNat n)))).map some)) } := by
   rcases stageInputBits_exists_cons w stage with
     ⟨b, rest, hbits⟩
   rcases
@@ -1506,7 +1507,7 @@ theorem markedPrefixAppendNatReturnDescription_run_stageInput_checked
 
 def TransitionPrefixedAppendCodeWordReturnDescription
     (code : Word MachineCodeSymbol) : MachineDescription :=
-  MachineDescription.seqSubroutine
+  seqSubroutine
     (TransitionPrefixedThenAppendCodeWordLastDescription code)
     ReturnToTransitionMarkerDescription
     Direction.left
@@ -1516,7 +1517,7 @@ theorem
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (TransitionPrefixedAppendCodeWordReturnDescription
       code).SubroutineReady :=
-  MachineDescription.seqSubroutine_subroutineReady
+  seqSubroutine_subroutineReady
     (transitionPrefixedThenAppendCodeWordLastDescription_subroutineReady
       code hcode)
     returnToTransitionMarkerDescription_subroutineReady
@@ -1540,7 +1541,7 @@ theorem transitionPrefixedAppendCodeWordReturnDescription_run
             tapeAtCells [some false]
               (some false ::
                 ((List.append (false :: true :: payload)
-                  (MachineDescription.encodeCodeWordAsInput code)).map
+                  (encodeCodeWordAsInput code)).map
                   some)) } := by
   let A := TransitionPrefixedThenAppendCodeWordLastDescription code
   let B := ReturnToTransitionMarkerDescription
@@ -1579,7 +1580,7 @@ theorem transitionPrefixedAppendCodeWordReturnDescription_run
               tapeAtCells [some false]
                 (some false ::
                   ((List.append (false :: true :: payload)
-                    (MachineDescription.encodeCodeWordAsInput code)).map
+                    (encodeCodeWordAsInput code)).map
                     some)) } := by
     rcases
         returnToTransitionMarkerDescription_run_after_append_atCells
@@ -1588,7 +1589,7 @@ theorem transitionPrefixedAppendCodeWordReturnDescription_run
     refine ⟨nB, ?_⟩
     simpa [B, Tmid] using hB
   rcases
-      MachineDescription.seqSubroutine_reaches_of_runConfig_eq
+      seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.left)
         hAready hBready hArun hBReach with
     ⟨n, hn⟩
@@ -1599,7 +1600,7 @@ theorem transitionPrefixedAppendCodeWordReturnDescription_run
 def TransitionPrefixedAppendNatReturnDescription
     (n : Nat) : MachineDescription :=
   TransitionPrefixedAppendCodeWordReturnDescription
-    (MachineDescription.encodeNat n)
+    (encodeNat n)
 
 theorem
     transitionPrefixedAppendNatReturnDescription_subroutineReady
@@ -1607,7 +1608,7 @@ theorem
     (TransitionPrefixedAppendNatReturnDescription
       n).SubroutineReady :=
   transitionPrefixedAppendCodeWordReturnDescription_subroutineReady
-    (MachineDescription.encodeNat n)
+    (encodeNat n)
     (encodeNat_ne_nil n)
 theorem transitionPrefixedAppendNatReturnDescription_run
     (n : Nat) (payload : Word Bool) :
@@ -1627,11 +1628,11 @@ theorem transitionPrefixedAppendNatReturnDescription_run
             tapeAtCells [some false]
               (some false ::
                 ((List.append (false :: true :: payload)
-                  (MachineDescription.encodeCodeWordAsInput
-                    (MachineDescription.encodeNat n))).map some)) } := by
+                  (encodeCodeWordAsInput
+                    (encodeNat n))).map some)) } := by
   simpa [TransitionPrefixedAppendNatReturnDescription] using
     transitionPrefixedAppendCodeWordReturnDescription_run
-      (MachineDescription.encodeNat n)
+      (encodeNat n)
       (encodeNat_ne_nil n)
       payload
 

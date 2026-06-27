@@ -12,6 +12,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
@@ -47,16 +48,16 @@ def RestoreFirstBitTaggedBrancherDescription
   start := 0
   halt := 1
   transitions :=
-    [ MachineDescription.transition
+    [ transition
         0 none (some false) Direction.right
         (if blankBranch.start = blankBranch.halt then 1
           else taggedBranchBlankOffset + blankBranch.start)
-    , MachineDescription.transition
+    , transition
         0 (some false) (some false) Direction.right
         (if falseBranch.start = falseBranch.halt then 1
           else taggedBranchFalseOffset blankBranch +
             falseBranch.start)
-    , MachineDescription.transition
+    , transition
         0 (some true) (some false) Direction.right
         (if trueBranch.start = trueBranch.halt then 1
           else taggedBranchTrueOffset blankBranch falseBranch +
@@ -76,8 +77,8 @@ def RestoreFirstBitTaggedBrancherDescription
 
 def sharedExitBranchConfiguration
     (offset oldHalt commonHalt : Nat)
-    (c : MachineDescription.Configuration) :
-    MachineDescription.Configuration where
+    (c : Configuration) :
+    Configuration where
   state := if c.state = oldHalt then commonHalt else offset + c.state
   tape := c.tape
 
@@ -146,7 +147,7 @@ theorem
         taggedBranchFalseOffset,
         taggedBranchBlankOffset,
         sharedExitRetargetTransition,
-        MachineDescription.transition,
+        transition,
         TransitionDescription.WellFormed] at ht ⊢
       have hblankStart : blankBranch.start < blankBranch.stateCount :=
         hblank.left.right.left
@@ -269,7 +270,7 @@ theorem
         taggedBranchFalseOffset,
         taggedBranchBlankOffset,
         sharedExitRetargetTransition,
-        MachineDescription.transition] at ht hu ⊢
+        transition] at ht hu ⊢
       rcases ht with rfl | rfl | rfl |
           ⟨baseT, hbaseT, rfl⟩ |
           ⟨baseT, hbaseT, rfl⟩ |
@@ -380,7 +381,7 @@ theorem
       taggedBranchFalseOffset,
       taggedBranchBlankOffset,
       sharedExitRetargetTransition,
-      MachineDescription.transition] at ht ⊢
+      transition] at ht ⊢
     rcases ht with rfl | rfl | rfl |
         ⟨base, _hbase, rfl⟩ |
         ⟨base, _hbase, rfl⟩ |
@@ -401,34 +402,34 @@ theorem
         (sharedExitRetargetTransition
           taggedBranchBlankOffset blankBranch.halt 1)
         (blankBranch.lookupTransition state cell) := by
-  unfold MachineDescription.lookupTransition
+  unfold lookupTransition
   have hfindControl :
       List.find?
-          (MachineDescription.Matches
+          (Matches
             (taggedBranchBlankOffset + state) cell)
-          [ MachineDescription.transition
+          [ transition
               0 none (some false) Direction.right
               (if blankBranch.start = blankBranch.halt then 1
                 else taggedBranchBlankOffset + blankBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some false) (some false) Direction.right
               (if falseBranch.start = falseBranch.halt then 1
                 else taggedBranchFalseOffset blankBranch +
                   falseBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some true) (some false) Direction.right
               (if trueBranch.start = trueBranch.halt then 1
                 else taggedBranchTrueOffset blankBranch falseBranch +
                   trueBranch.start)
           ] = none := by
-    simp [MachineDescription.Matches, MachineDescription.transition,
+    simp [Matches, transition,
       taggedBranchBlankOffset,
       taggedBranchFalseOffset,
       taggedBranchTrueOffset]
     omega
   have hfindFalse :
       List.find?
-          (MachineDescription.Matches
+          (Matches
             (taggedBranchBlankOffset + state) cell)
           (falseBranch.transitions.map
             (sharedExitRetargetTransition
@@ -446,7 +447,7 @@ theorem
           taggedBranchFalseOffset blankBranch + base.source =
               taggedBranchBlankOffset + state ∧
             base.read = cell := by
-        simpa [MachineDescription.Matches,
+        simpa [Matches,
           sharedExitRetargetTransition] using hmatch
       exact hpair.left
     simp [taggedBranchBlankOffset,
@@ -454,7 +455,7 @@ theorem
     omega
   have hfindTrue :
       List.find?
-          (MachineDescription.Matches
+          (Matches
             (taggedBranchBlankOffset + state) cell)
           (trueBranch.transitions.map
             (sharedExitRetargetTransition
@@ -474,7 +475,7 @@ theorem
                 base.source =
               taggedBranchBlankOffset + state ∧
             base.read = cell := by
-        simpa [MachineDescription.Matches,
+        simpa [Matches,
           sharedExitRetargetTransition] using hmatch
       exact hpair.left
     simp [taggedBranchBlankOffset,
@@ -482,11 +483,11 @@ theorem
       taggedBranchTrueOffset] at hsource
     omega
   have hpredicate :
-      (MachineDescription.Matches
+      (Matches
           (taggedBranchBlankOffset + state) cell ∘
         sharedExitRetargetTransition
           taggedBranchBlankOffset blankBranch.halt 1) =
-        MachineDescription.Matches state cell := by
+        Matches state cell := by
     funext t
     have hsourceBeq :
         (taggedBranchBlankOffset + t.source ==
@@ -519,20 +520,20 @@ theorem
           rw [beq_eq_false_iff_ne]
           exact hsource
         rw [hleft, hright]
-    simp [Function.comp, MachineDescription.Matches,
+    simp [Function.comp, Matches,
       sharedExitRetargetTransition, hsourceBeq]
   have hfindControl' :
       List.find?
-          (MachineDescription.Matches (2 + state) cell)
-          [ MachineDescription.transition
+          (Matches (2 + state) cell)
+          [ transition
               0 none (some false) Direction.right
               (if blankBranch.start = blankBranch.halt then 1
                 else 2 + blankBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some false) (some false) Direction.right
               (if falseBranch.start = falseBranch.halt then 1
                 else 2 + blankBranch.stateCount + falseBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some true) (some false) Direction.right
               (if trueBranch.start = trueBranch.halt then 1
                 else 2 + blankBranch.stateCount + falseBranch.stateCount +
@@ -543,7 +544,7 @@ theorem
       taggedBranchTrueOffset] using hfindControl
   have hfindFalse' :
       List.find?
-          (MachineDescription.Matches (2 + state) cell)
+          (Matches (2 + state) cell)
           (falseBranch.transitions.map
             (sharedExitRetargetTransition
               (2 + blankBranch.stateCount) falseBranch.halt 1)) = none := by
@@ -551,7 +552,7 @@ theorem
       taggedBranchFalseOffset] using hfindFalse
   have hfindTrue' :
       List.find?
-          (MachineDescription.Matches (2 + state) cell)
+          (Matches (2 + state) cell)
           (trueBranch.transitions.map
             (sharedExitRetargetTransition
               (2 + blankBranch.stateCount + falseBranch.stateCount)
@@ -561,16 +562,16 @@ theorem
       taggedBranchTrueOffset] using hfindTrue
   change
     List.find?
-        (MachineDescription.Matches (2 + state) cell)
-        ([ MachineDescription.transition
+        (Matches (2 + state) cell)
+        ([ transition
               0 none (some false) Direction.right
               (if blankBranch.start = blankBranch.halt then 1
                 else 2 + blankBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some false) (some false) Direction.right
               (if falseBranch.start = falseBranch.halt then 1
                 else 2 + blankBranch.stateCount + falseBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some true) (some false) Direction.right
               (if trueBranch.start = trueBranch.halt then 1
                 else 2 + blankBranch.stateCount + falseBranch.stateCount +
@@ -587,20 +588,20 @@ theorem
               trueBranch.halt 1))) =
       Option.map
         (sharedExitRetargetTransition 2 blankBranch.halt 1)
-        (List.find? (MachineDescription.Matches state cell)
+        (List.find? (Matches state cell)
           blankBranch.transitions)
   have hpredicate' :
-      (MachineDescription.Matches (2 + state) cell ∘
+      (Matches (2 + state) cell ∘
         sharedExitRetargetTransition
           2 blankBranch.halt 1) =
-        MachineDescription.Matches state cell := by
+        Matches state cell := by
     simpa [taggedBranchBlankOffset] using hpredicate
   have hfalseMapNone :
       Option.map
           (sharedExitRetargetTransition
             (2 + blankBranch.stateCount) falseBranch.halt 1)
           (List.find?
-            (MachineDescription.Matches (2 + state) cell ∘
+            (Matches (2 + state) cell ∘
               sharedExitRetargetTransition
                 (2 + blankBranch.stateCount) falseBranch.halt 1)
             falseBranch.transitions) = none := by
@@ -612,7 +613,7 @@ theorem
             (2 + blankBranch.stateCount + falseBranch.stateCount)
             trueBranch.halt 1)
           (List.find?
-            (MachineDescription.Matches (2 + state) cell ∘
+            (Matches (2 + state) cell ∘
               sharedExitRetargetTransition
                 (2 + blankBranch.stateCount + falseBranch.stateCount)
                 trueBranch.halt 1)
@@ -623,7 +624,7 @@ theorem
   simp
   rw [hpredicate', hfalseMapNone, htrueMapNone]
   cases hlocal :
-      List.find? (MachineDescription.Matches state cell)
+      List.find? (Matches state cell)
         blankBranch.transitions <;>
     simp
 
@@ -633,7 +634,7 @@ theorem
     (hblank : blankBranch.SubroutineReady)
     (hfalse : falseBranch.SubroutineReady)
     (htrue : trueBranch.SubroutineReady)
-    {c : MachineDescription.Configuration}
+    {c : Configuration}
     (hstate : c.state < blankBranch.stateCount) :
     (RestoreFirstBitTaggedBrancherDescription
       blankBranch falseBranch trueBranch).stepConfig
@@ -650,12 +651,12 @@ theorem
         have hblankStep :
             blankBranch.stepConfig
                 { state := blankBranch.halt, tape := tape } = none :=
-          MachineDescription.stepConfig_halt_none hblank.right tape
+          stepConfig_halt_none hblank.right tape
         have hbrancherStep :
             (RestoreFirstBitTaggedBrancherDescription
               blankBranch falseBranch trueBranch).stepConfig
                 { state := 1, tape := tape } = none :=
-          MachineDescription.stepConfig_halt_none
+          stepConfig_halt_none
             (restoreFirstBitTaggedBrancherDescription_subroutineReady
               hblank hfalse htrue).right tape
         simp [sharedExitBranchConfiguration, hblankStep,
@@ -664,7 +665,7 @@ theorem
           restoreFirstBitTaggedBrancherDescription_lookup_blank
             hblank hfalse htrue (state := state)
             (cell := Tape.read tape) hstate
-        simp [MachineDescription.stepConfig,
+        simp [stepConfig,
           sharedExitBranchConfiguration, hhalt, hlookup]
         cases hlocal :
             blankBranch.lookupTransition state (Tape.read tape) with
@@ -678,7 +679,7 @@ theorem restoreFirstBitTaggedBrancherDescription_run_blank
     (hblank : blankBranch.SubroutineReady)
     (hfalse : falseBranch.SubroutineReady)
     (htrue : trueBranch.SubroutineReady)
-    (n : Nat) (c : MachineDescription.Configuration)
+    (n : Nat) (c : Configuration)
     (hstate : c.state < blankBranch.stateCount) :
     (RestoreFirstBitTaggedBrancherDescription
       blankBranch falseBranch trueBranch).runConfig n
@@ -691,16 +692,16 @@ theorem restoreFirstBitTaggedBrancherDescription_run_blank
   | zero =>
       rfl
   | succ n ih =>
-      rw [MachineDescription.runConfig]
+      rw [runConfig]
       rw [restoreFirstBitTaggedBrancherDescription_step_blank
         hblank hfalse htrue hstate]
       cases hstep : blankBranch.stepConfig c with
       | none =>
-          simp [MachineDescription.runConfig, hstep]
+          simp [runConfig, hstep]
       | some next =>
           have hnextState : next.state < blankBranch.stateCount :=
-            MachineDescription.stepConfig_state_bound hblank.left hstep
-          simp [MachineDescription.runConfig, hstep, ih next hnextState]
+            stepConfig_state_bound hblank.left hstep
+          simp [runConfig, hstep, ih next hnextState]
 theorem restoreFirstBitTaggedBrancherDescription_run_none
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
@@ -730,7 +731,7 @@ theorem restoreFirstBitTaggedBrancherDescription_run_none
   let D :=
     RestoreFirstBitTaggedBrancherDescription
       blankBranch falseBranch trueBranch
-  let branchStart : MachineDescription.Configuration :=
+  let branchStart : Configuration :=
     { state := blankBranch.start
       tape := Tape.move Direction.right (Tape.write (some false) T) }
   have hfirst :
@@ -748,14 +749,14 @@ theorem restoreFirstBitTaggedBrancherDescription_run_none
               taggedBranchBlankOffset,
               taggedBranchFalseOffset,
               taggedBranchTrueOffset,
-              MachineDescription.runConfig, MachineDescription.stepConfig,
-              MachineDescription.lookupTransition, MachineDescription.Matches,
-              MachineDescription.transition, Tape.read, Tape.write,
+              runConfig, stepConfig,
+              lookupTransition, Matches,
+              transition, Tape.read, Tape.write,
               Tape.move, Tape.moveRight]
         | some b =>
             cases b <;> simp [Tape.read] at hread
   refine ⟨1 + n, ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [hfirst]
   have hstartBound : branchStart.state < blankBranch.stateCount := by
     exact hblank.left.right.left
@@ -781,34 +782,34 @@ theorem
           (taggedBranchFalseOffset blankBranch)
           falseBranch.halt 1)
         (falseBranch.lookupTransition state cell) := by
-  unfold MachineDescription.lookupTransition
+  unfold lookupTransition
   have hfindControl :
       List.find?
-          (MachineDescription.Matches
+          (Matches
             (taggedBranchFalseOffset blankBranch + state) cell)
-          [ MachineDescription.transition
+          [ transition
               0 none (some false) Direction.right
               (if blankBranch.start = blankBranch.halt then 1
                 else taggedBranchBlankOffset + blankBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some false) (some false) Direction.right
               (if falseBranch.start = falseBranch.halt then 1
                 else taggedBranchFalseOffset blankBranch +
                   falseBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some true) (some false) Direction.right
               (if trueBranch.start = trueBranch.halt then 1
                 else taggedBranchTrueOffset blankBranch falseBranch +
                   trueBranch.start)
           ] = none := by
-    simp [MachineDescription.Matches, MachineDescription.transition,
+    simp [Matches, transition,
       taggedBranchBlankOffset,
       taggedBranchFalseOffset,
       taggedBranchTrueOffset]
     omega
   have hfindBlank :
       List.find?
-          (MachineDescription.Matches
+          (Matches
             (taggedBranchFalseOffset blankBranch + state) cell)
           (blankBranch.transitions.map
             (sharedExitRetargetTransition
@@ -826,7 +827,7 @@ theorem
           taggedBranchBlankOffset + base.source =
               taggedBranchFalseOffset blankBranch + state ∧
             base.read = cell := by
-        simpa [MachineDescription.Matches,
+        simpa [Matches,
           sharedExitRetargetTransition] using hmatch
       exact hpair.left
     simp [taggedBranchBlankOffset,
@@ -834,7 +835,7 @@ theorem
     omega
   have hfindTrue :
       List.find?
-          (MachineDescription.Matches
+          (Matches
             (taggedBranchFalseOffset blankBranch + state) cell)
           (trueBranch.transitions.map
             (sharedExitRetargetTransition
@@ -854,7 +855,7 @@ theorem
                 base.source =
               taggedBranchFalseOffset blankBranch + state ∧
             base.read = cell := by
-        simpa [MachineDescription.Matches,
+        simpa [Matches,
           sharedExitRetargetTransition] using hmatch
       exact hpair.left
     simp [taggedBranchBlankOffset,
@@ -862,12 +863,12 @@ theorem
       taggedBranchTrueOffset] at hsource
     omega
   have hpredicate :
-      (MachineDescription.Matches
+      (Matches
           (taggedBranchFalseOffset blankBranch + state) cell ∘
         sharedExitRetargetTransition
           (taggedBranchFalseOffset blankBranch)
           falseBranch.halt 1) =
-        MachineDescription.Matches state cell := by
+        Matches state cell := by
     funext t
     have hsourceBeq :
         (taggedBranchFalseOffset blankBranch + t.source ==
@@ -902,21 +903,21 @@ theorem
           rw [beq_eq_false_iff_ne]
           exact hsource
         rw [hleft, hright]
-    simp [Function.comp, MachineDescription.Matches,
+    simp [Function.comp, Matches,
       sharedExitRetargetTransition, hsourceBeq]
   have hfindControl' :
       List.find?
-          (MachineDescription.Matches
+          (Matches
             (2 + blankBranch.stateCount + state) cell)
-          [ MachineDescription.transition
+          [ transition
               0 none (some false) Direction.right
               (if blankBranch.start = blankBranch.halt then 1
                 else 2 + blankBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some false) (some false) Direction.right
               (if falseBranch.start = falseBranch.halt then 1
                 else 2 + blankBranch.stateCount + falseBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some true) (some false) Direction.right
               (if trueBranch.start = trueBranch.halt then 1
                 else 2 + blankBranch.stateCount + falseBranch.stateCount +
@@ -927,7 +928,7 @@ theorem
       taggedBranchTrueOffset] using hfindControl
   have hfindBlank' :
       List.find?
-          (MachineDescription.Matches
+          (Matches
             (2 + blankBranch.stateCount + state) cell)
           (blankBranch.transitions.map
             (sharedExitRetargetTransition 2
@@ -936,7 +937,7 @@ theorem
       taggedBranchFalseOffset] using hfindBlank
   have hfindTrue' :
       List.find?
-          (MachineDescription.Matches
+          (Matches
             (2 + blankBranch.stateCount + state) cell)
           (trueBranch.transitions.map
             (sharedExitRetargetTransition
@@ -947,17 +948,17 @@ theorem
       taggedBranchTrueOffset] using hfindTrue
   change
     List.find?
-        (MachineDescription.Matches
+        (Matches
           (2 + blankBranch.stateCount + state) cell)
-        ([ MachineDescription.transition
+        ([ transition
               0 none (some false) Direction.right
               (if blankBranch.start = blankBranch.halt then 1
                 else 2 + blankBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some false) (some false) Direction.right
               (if falseBranch.start = falseBranch.halt then 1
                 else 2 + blankBranch.stateCount + falseBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some true) (some false) Direction.right
               (if trueBranch.start = trueBranch.halt then 1
                 else 2 + blankBranch.stateCount + falseBranch.stateCount +
@@ -975,21 +976,21 @@ theorem
       Option.map
         (sharedExitRetargetTransition
           (2 + blankBranch.stateCount) falseBranch.halt 1)
-        (List.find? (MachineDescription.Matches state cell)
+        (List.find? (Matches state cell)
           falseBranch.transitions)
   have hpredicate' :
-      (MachineDescription.Matches
+      (Matches
           (2 + blankBranch.stateCount + state) cell ∘
         sharedExitRetargetTransition
           (2 + blankBranch.stateCount) falseBranch.halt 1) =
-        MachineDescription.Matches state cell := by
+        Matches state cell := by
     simpa [taggedBranchBlankOffset,
       taggedBranchFalseOffset] using hpredicate
   have hblankMapNone :
       Option.map
           (sharedExitRetargetTransition 2 blankBranch.halt 1)
           (List.find?
-            (MachineDescription.Matches
+            (Matches
                 (2 + blankBranch.stateCount + state) cell ∘
               sharedExitRetargetTransition 2
                 blankBranch.halt 1)
@@ -1002,7 +1003,7 @@ theorem
             (2 + blankBranch.stateCount + falseBranch.stateCount)
             trueBranch.halt 1)
           (List.find?
-            (MachineDescription.Matches
+            (Matches
                 (2 + blankBranch.stateCount + state) cell ∘
               sharedExitRetargetTransition
                 (2 + blankBranch.stateCount + falseBranch.stateCount)
@@ -1014,7 +1015,7 @@ theorem
   simp
   rw [hblankMapNone, hpredicate', htrueMapNone]
   cases hlocal :
-      List.find? (MachineDescription.Matches state cell)
+      List.find? (Matches state cell)
         falseBranch.transitions <;>
     simp
 
@@ -1024,7 +1025,7 @@ theorem
     (hblank : blankBranch.SubroutineReady)
     (hfalse : falseBranch.SubroutineReady)
     (htrue : trueBranch.SubroutineReady)
-    {c : MachineDescription.Configuration}
+    {c : Configuration}
     (hstate : c.state < falseBranch.stateCount) :
     (RestoreFirstBitTaggedBrancherDescription
       blankBranch falseBranch trueBranch).stepConfig
@@ -1043,12 +1044,12 @@ theorem
         have hfalseStep :
             falseBranch.stepConfig
                 { state := falseBranch.halt, tape := tape } = none :=
-          MachineDescription.stepConfig_halt_none hfalse.right tape
+          stepConfig_halt_none hfalse.right tape
         have hbrancherStep :
             (RestoreFirstBitTaggedBrancherDescription
               blankBranch falseBranch trueBranch).stepConfig
                 { state := 1, tape := tape } = none :=
-          MachineDescription.stepConfig_halt_none
+          stepConfig_halt_none
             (restoreFirstBitTaggedBrancherDescription_subroutineReady
               hblank hfalse htrue).right tape
         simp [sharedExitBranchConfiguration, hfalseStep,
@@ -1057,7 +1058,7 @@ theorem
           restoreFirstBitTaggedBrancherDescription_lookup_false
             hblank hfalse htrue (state := state)
             (cell := Tape.read tape) hstate
-        simp [MachineDescription.stepConfig,
+        simp [stepConfig,
           sharedExitBranchConfiguration, hhalt, hlookup]
         cases hlocal :
             falseBranch.lookupTransition state (Tape.read tape) with
@@ -1071,7 +1072,7 @@ theorem restoreFirstBitTaggedBrancherDescription_run_false_branch
     (hblank : blankBranch.SubroutineReady)
     (hfalse : falseBranch.SubroutineReady)
     (htrue : trueBranch.SubroutineReady)
-    (n : Nat) (c : MachineDescription.Configuration)
+    (n : Nat) (c : Configuration)
     (hstate : c.state < falseBranch.stateCount) :
     (RestoreFirstBitTaggedBrancherDescription
       blankBranch falseBranch trueBranch).runConfig n
@@ -1086,16 +1087,16 @@ theorem restoreFirstBitTaggedBrancherDescription_run_false_branch
   | zero =>
       rfl
   | succ n ih =>
-      rw [MachineDescription.runConfig]
+      rw [runConfig]
       rw [restoreFirstBitTaggedBrancherDescription_step_false
         hblank hfalse htrue hstate]
       cases hstep : falseBranch.stepConfig c with
       | none =>
-          simp [MachineDescription.runConfig, hstep]
+          simp [runConfig, hstep]
       | some next =>
           have hnextState : next.state < falseBranch.stateCount :=
-            MachineDescription.stepConfig_state_bound hfalse.left hstep
-          simp [MachineDescription.runConfig, hstep, ih next hnextState]
+            stepConfig_state_bound hfalse.left hstep
+          simp [runConfig, hstep, ih next hnextState]
 
 theorem
     restoreFirstBitTaggedBrancherDescription_run_false
@@ -1127,7 +1128,7 @@ theorem
   let D :=
     RestoreFirstBitTaggedBrancherDescription
       blankBranch falseBranch trueBranch
-  let branchStart : MachineDescription.Configuration :=
+  let branchStart : Configuration :=
     { state := falseBranch.start
       tape := Tape.move Direction.right (Tape.write (some false) T) }
   have hfirst :
@@ -1149,14 +1150,14 @@ theorem
                 taggedBranchBlankOffset,
                 taggedBranchFalseOffset,
                 taggedBranchTrueOffset,
-                MachineDescription.runConfig, MachineDescription.stepConfig,
-                MachineDescription.lookupTransition,
-                MachineDescription.Matches,
-                MachineDescription.transition, Tape.read, Tape.write,
+                runConfig, stepConfig,
+                lookupTransition,
+                Matches,
+                transition, Tape.read, Tape.write,
                 Tape.move, Tape.moveRight]
             · simp [Tape.read] at hread
   refine ⟨1 + n, ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [hfirst]
   have hstartBound : branchStart.state < falseBranch.stateCount := by
     exact hfalse.left.right.left
@@ -1183,35 +1184,35 @@ theorem
           (taggedBranchTrueOffset blankBranch falseBranch)
           trueBranch.halt 1)
         (trueBranch.lookupTransition state cell) := by
-  unfold MachineDescription.lookupTransition
+  unfold lookupTransition
   have hfindControl :
       List.find?
-          (MachineDescription.Matches
+          (Matches
             (taggedBranchTrueOffset blankBranch falseBranch +
               state) cell)
-          [ MachineDescription.transition
+          [ transition
               0 none (some false) Direction.right
               (if blankBranch.start = blankBranch.halt then 1
                 else taggedBranchBlankOffset + blankBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some false) (some false) Direction.right
               (if falseBranch.start = falseBranch.halt then 1
                 else taggedBranchFalseOffset blankBranch +
                   falseBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some true) (some false) Direction.right
               (if trueBranch.start = trueBranch.halt then 1
                 else taggedBranchTrueOffset blankBranch falseBranch +
                   trueBranch.start)
           ] = none := by
-    simp [MachineDescription.Matches, MachineDescription.transition,
+    simp [Matches, transition,
       taggedBranchBlankOffset,
       taggedBranchFalseOffset,
       taggedBranchTrueOffset]
     omega
   have hfindBlank :
       List.find?
-          (MachineDescription.Matches
+          (Matches
             (taggedBranchTrueOffset blankBranch falseBranch +
               state) cell)
           (blankBranch.transitions.map
@@ -1232,7 +1233,7 @@ theorem
               taggedBranchTrueOffset blankBranch falseBranch +
                 state ∧
             base.read = cell := by
-        simpa [MachineDescription.Matches,
+        simpa [Matches,
           sharedExitRetargetTransition] using hmatch
       exact hpair.left
     simp [taggedBranchBlankOffset,
@@ -1241,7 +1242,7 @@ theorem
     omega
   have hfindFalse :
       List.find?
-          (MachineDescription.Matches
+          (Matches
             (taggedBranchTrueOffset blankBranch falseBranch +
               state) cell)
           (falseBranch.transitions.map
@@ -1262,7 +1263,7 @@ theorem
               taggedBranchTrueOffset blankBranch falseBranch +
                 state ∧
             base.read = cell := by
-        simpa [MachineDescription.Matches,
+        simpa [Matches,
           sharedExitRetargetTransition] using hmatch
       exact hpair.left
     simp [taggedBranchBlankOffset,
@@ -1270,13 +1271,13 @@ theorem
       taggedBranchTrueOffset] at hsource
     omega
   have hpredicate :
-      (MachineDescription.Matches
+      (Matches
           (taggedBranchTrueOffset blankBranch falseBranch +
             state) cell ∘
         sharedExitRetargetTransition
           (taggedBranchTrueOffset blankBranch falseBranch)
           trueBranch.halt 1) =
-        MachineDescription.Matches state cell := by
+        Matches state cell := by
     funext t
     have hsourceBeq :
         (taggedBranchTrueOffset blankBranch falseBranch +
@@ -1319,22 +1320,22 @@ theorem
           rw [beq_eq_false_iff_ne]
           exact hsource
         rw [hleft, hright]
-    simp [Function.comp, MachineDescription.Matches,
+    simp [Function.comp, Matches,
       sharedExitRetargetTransition, hsourceBeq]
   have hfindControl' :
       List.find?
-          (MachineDescription.Matches
+          (Matches
             (2 + blankBranch.stateCount + falseBranch.stateCount + state)
             cell)
-          [ MachineDescription.transition
+          [ transition
               0 none (some false) Direction.right
               (if blankBranch.start = blankBranch.halt then 1
                 else 2 + blankBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some false) (some false) Direction.right
               (if falseBranch.start = falseBranch.halt then 1
                 else 2 + blankBranch.stateCount + falseBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some true) (some false) Direction.right
               (if trueBranch.start = trueBranch.halt then 1
                 else 2 + blankBranch.stateCount + falseBranch.stateCount +
@@ -1345,7 +1346,7 @@ theorem
       taggedBranchTrueOffset] using hfindControl
   have hfindBlank' :
       List.find?
-          (MachineDescription.Matches
+          (Matches
             (2 + blankBranch.stateCount + falseBranch.stateCount + state)
             cell)
           (blankBranch.transitions.map
@@ -1356,7 +1357,7 @@ theorem
       taggedBranchTrueOffset] using hfindBlank
   have hfindFalse' :
       List.find?
-          (MachineDescription.Matches
+          (Matches
             (2 + blankBranch.stateCount + falseBranch.stateCount + state)
             cell)
           (falseBranch.transitions.map
@@ -1368,18 +1369,18 @@ theorem
       taggedBranchTrueOffset] using hfindFalse
   change
     List.find?
-        (MachineDescription.Matches
+        (Matches
           (2 + blankBranch.stateCount + falseBranch.stateCount + state)
           cell)
-        ([ MachineDescription.transition
+        ([ transition
               0 none (some false) Direction.right
               (if blankBranch.start = blankBranch.halt then 1
                 else 2 + blankBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some false) (some false) Direction.right
               (if falseBranch.start = falseBranch.halt then 1
                 else 2 + blankBranch.stateCount + falseBranch.start)
-          , MachineDescription.transition
+          , transition
               0 (some true) (some false) Direction.right
               (if trueBranch.start = trueBranch.halt then 1
                 else 2 + blankBranch.stateCount + falseBranch.stateCount +
@@ -1398,16 +1399,16 @@ theorem
         (sharedExitRetargetTransition
           (2 + blankBranch.stateCount + falseBranch.stateCount)
           trueBranch.halt 1)
-        (List.find? (MachineDescription.Matches state cell)
+        (List.find? (Matches state cell)
           trueBranch.transitions)
   have hpredicate' :
-      (MachineDescription.Matches
+      (Matches
           (2 + blankBranch.stateCount + falseBranch.stateCount + state)
           cell ∘
         sharedExitRetargetTransition
           (2 + blankBranch.stateCount + falseBranch.stateCount)
           trueBranch.halt 1) =
-        MachineDescription.Matches state cell := by
+        Matches state cell := by
     simpa [taggedBranchBlankOffset,
       taggedBranchFalseOffset,
       taggedBranchTrueOffset] using hpredicate
@@ -1415,7 +1416,7 @@ theorem
       Option.map
           (sharedExitRetargetTransition 2 blankBranch.halt 1)
           (List.find?
-            (MachineDescription.Matches
+            (Matches
                 (2 + blankBranch.stateCount + falseBranch.stateCount +
                   state) cell ∘
               sharedExitRetargetTransition 2
@@ -1428,7 +1429,7 @@ theorem
           (sharedExitRetargetTransition
             (2 + blankBranch.stateCount) falseBranch.halt 1)
           (List.find?
-            (MachineDescription.Matches
+            (Matches
                 (2 + blankBranch.stateCount + falseBranch.stateCount +
                   state) cell ∘
               sharedExitRetargetTransition
@@ -1440,7 +1441,7 @@ theorem
   simp
   rw [hblankMapNone, hfalseMapNone, hpredicate']
   cases hlocal :
-      List.find? (MachineDescription.Matches state cell)
+      List.find? (Matches state cell)
         trueBranch.transitions <;>
     simp
 
@@ -1450,7 +1451,7 @@ theorem
     (hblank : blankBranch.SubroutineReady)
     (hfalse : falseBranch.SubroutineReady)
     (htrue : trueBranch.SubroutineReady)
-    {c : MachineDescription.Configuration}
+    {c : Configuration}
     (hstate : c.state < trueBranch.stateCount) :
     (RestoreFirstBitTaggedBrancherDescription
       blankBranch falseBranch trueBranch).stepConfig
@@ -1469,12 +1470,12 @@ theorem
         have htrueStep :
             trueBranch.stepConfig
                 { state := trueBranch.halt, tape := tape } = none :=
-          MachineDescription.stepConfig_halt_none htrue.right tape
+          stepConfig_halt_none htrue.right tape
         have hbrancherStep :
             (RestoreFirstBitTaggedBrancherDescription
               blankBranch falseBranch trueBranch).stepConfig
                 { state := 1, tape := tape } = none :=
-          MachineDescription.stepConfig_halt_none
+          stepConfig_halt_none
             (restoreFirstBitTaggedBrancherDescription_subroutineReady
               hblank hfalse htrue).right tape
         simp [sharedExitBranchConfiguration, htrueStep,
@@ -1483,7 +1484,7 @@ theorem
           restoreFirstBitTaggedBrancherDescription_lookup_true
             hblank hfalse htrue (state := state)
             (cell := Tape.read tape) hstate
-        simp [MachineDescription.stepConfig,
+        simp [stepConfig,
           sharedExitBranchConfiguration, hhalt, hlookup]
         cases hlocal :
             trueBranch.lookupTransition state (Tape.read tape) with
@@ -1497,7 +1498,7 @@ theorem restoreFirstBitTaggedBrancherDescription_run_true_branch
     (hblank : blankBranch.SubroutineReady)
     (hfalse : falseBranch.SubroutineReady)
     (htrue : trueBranch.SubroutineReady)
-    (n : Nat) (c : MachineDescription.Configuration)
+    (n : Nat) (c : Configuration)
     (hstate : c.state < trueBranch.stateCount) :
     (RestoreFirstBitTaggedBrancherDescription
       blankBranch falseBranch trueBranch).runConfig n
@@ -1512,16 +1513,16 @@ theorem restoreFirstBitTaggedBrancherDescription_run_true_branch
   | zero =>
       rfl
   | succ n ih =>
-      rw [MachineDescription.runConfig]
+      rw [runConfig]
       rw [restoreFirstBitTaggedBrancherDescription_step_true
         hblank hfalse htrue hstate]
       cases hstep : trueBranch.stepConfig c with
       | none =>
-          simp [MachineDescription.runConfig, hstep]
+          simp [runConfig, hstep]
       | some next =>
           have hnextState : next.state < trueBranch.stateCount :=
-            MachineDescription.stepConfig_state_bound htrue.left hstep
-          simp [MachineDescription.runConfig, hstep, ih next hnextState]
+            stepConfig_state_bound htrue.left hstep
+          simp [runConfig, hstep, ih next hnextState]
 theorem restoreFirstBitTaggedBrancherDescription_run_true
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
@@ -1551,7 +1552,7 @@ theorem restoreFirstBitTaggedBrancherDescription_run_true
   let D :=
     RestoreFirstBitTaggedBrancherDescription
       blankBranch falseBranch trueBranch
-  let branchStart : MachineDescription.Configuration :=
+  let branchStart : Configuration :=
     { state := trueBranch.start
       tape := Tape.move Direction.right (Tape.write (some false) T) }
   have hfirst :
@@ -1574,13 +1575,13 @@ theorem restoreFirstBitTaggedBrancherDescription_run_true
                 taggedBranchBlankOffset,
                 taggedBranchFalseOffset,
                 taggedBranchTrueOffset,
-                MachineDescription.runConfig, MachineDescription.stepConfig,
-                MachineDescription.lookupTransition,
-                MachineDescription.Matches,
-                MachineDescription.transition, Tape.read, Tape.write,
+                runConfig, stepConfig,
+                lookupTransition,
+                Matches,
+                transition, Tape.read, Tape.write,
                 Tape.move, Tape.moveRight]
   refine ⟨1 + n, ?_⟩
-  rw [MachineDescription.runConfig_add]
+  rw [runConfig_add]
   rw [hfirst]
   have hstartBound : branchStart.state < trueBranch.stateCount := by
     exact htrue.left.right.left

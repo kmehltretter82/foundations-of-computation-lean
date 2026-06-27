@@ -10,18 +10,19 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace CanonicalLayouts
 namespace Controller
 
-abbrev Layout := MachineDescription.DovetailControllerLayout
+abbrev Layout := DovetailControllerLayout
 
 def decode : Word MachineCodeSymbol -> Option Layout :=
-  MachineDescription.DovetailControllerLayout.decodeComplete
+  DovetailControllerLayout.decodeComplete
 
 def encode : Layout -> Word MachineCodeSymbol :=
-  MachineDescription.DovetailControllerLayout.encode
+  DovetailControllerLayout.encode
 
 abbrev bits : Layout -> Word Bool :=
   Bits encode
@@ -32,7 +33,7 @@ abbrev inputTape : Layout -> Tape Bool :=
 abbrev handoffTape : Layout -> Tape Bool :=
   HandoffTape encode
 
-abbrev identityPrimitive : MachineDescription.TapeCodePrimitive :=
+abbrev identityPrimitive : TapeCodePrimitive :=
   IdentityPrimitive decode
 
 abbrev ClosedRecognizerSpec (recognizer : MachineDescription) : Prop :=
@@ -46,13 +47,13 @@ abbrev IdentityClosedHandoffConstruction : Prop :=
 
 theorem decode_encode (C : Layout) :
     decode (encode C) = some C :=
-  MachineDescription.DovetailControllerLayout.decodeComplete_encode C
+  DovetailControllerLayout.decodeComplete_encode C
 
 theorem decode_eq_some_encode
     {code : Word MachineCodeSymbol} {C : Layout}
     (h : decode code = some C) :
     code = encode C :=
-  MachineDescription.DovetailControllerLayout.decodeComplete_eq_some_encode h
+  DovetailControllerLayout.decodeComplete_eq_some_encode h
 
 theorem encode_cons (C : Layout) :
     exists symbol : MachineCodeSymbol,

@@ -6,7 +6,7 @@ set_option doc.verso true
 # Canonical configuration validators
 
 This module specializes the shared canonical-layout contracts to complete
-encoded {name (full := FoC.Computability.MachineDescription.Configuration)}`MachineDescription.Configuration`
+encoded {name (full := FoC.Computability.MachineDescription.Configuration)}`Configuration`
 values.  Dovetail-layout scanners use this as the field-level contract for the
 accept and reject configurations.
 -/
@@ -15,18 +15,19 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace CanonicalLayouts
 namespace Configuration
 
-abbrev Layout := MachineDescription.Configuration
+abbrev Layout := Configuration
 
 def decode : Word MachineCodeSymbol -> Option Layout :=
   CanonicalLayouts.Fields.decodeConfigurationComplete
 
 def encode : Layout -> Word MachineCodeSymbol :=
-  MachineDescription.encodeConfiguration
+  encodeConfiguration
 
 abbrev bits : Layout -> Word Bool :=
   Bits encode
@@ -37,7 +38,7 @@ abbrev inputTape : Layout -> Tape Bool :=
 abbrev handoffTape : Layout -> Tape Bool :=
   HandoffTape encode
 
-abbrev identityPrimitive : MachineDescription.TapeCodePrimitive :=
+abbrev identityPrimitive : TapeCodePrimitive :=
   IdentityPrimitive decode
 
 abbrev ClosedRecognizerSpec (recognizer : MachineDescription) : Prop :=
@@ -64,11 +65,11 @@ theorem encode_cons (cfg : Layout) :
     exists tail : Word MachineCodeSymbol,
       encode cfg = symbol :: tail := by
   rcases EncodedRewriters.encodeNatAppend_cons cfg.state
-      (MachineDescription.encodeTapeAppend cfg.tape []) with
+      (encodeTapeAppend cfg.tape []) with
     ⟨symbol, tail, htail⟩
   exact ⟨symbol, tail, by simpa [encode,
-    MachineDescription.encodeConfiguration,
-    MachineDescription.encodeConfigurationAppend] using htail⟩
+    encodeConfiguration,
+    encodeConfigurationAppend] using htail⟩
 
 theorem identityPrimitive_transform_eq_some_iff
     (code out : Word MachineCodeSymbol) :

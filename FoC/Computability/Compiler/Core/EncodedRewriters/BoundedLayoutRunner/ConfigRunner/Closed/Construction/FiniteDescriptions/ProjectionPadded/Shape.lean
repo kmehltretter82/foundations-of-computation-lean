@@ -6,23 +6,24 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
 
 def SelectedProjectionEquivEmitterPaddedOutputTape
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) : Tape Bool :=
+    (L : DovetailLayout) : Tape Bool :=
   RightScratchPaddedOutputTape
-    (fun L : MachineDescription.DovetailLayout =>
-      MachineDescription.encodeCodeWordAsInput
+    (fun L : DovetailLayout =>
+      encodeCodeWordAsInput
         (SelectedProjectionOutputCode useAccept L))
-    (fun L : MachineDescription.DovetailLayout =>
+    (fun L : DovetailLayout =>
       (ParsedLayoutBits L).length)
     L
 
 theorem SelectedProjectionEquivEmitterPaddedOutputTape_equiv
-    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    (useAccept : Bool) (L : DovetailLayout) :
     Tape.Equiv
       (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
       (SelectedProjectionOutputTape useAccept L) := by
@@ -31,26 +32,26 @@ theorem SelectedProjectionEquivEmitterPaddedOutputTape_equiv
     ScratchPaddedOutputTape] using
     Tape.Equiv.move
       (inputWithTrailingBlankPadding_equiv_input
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (SelectedProjectionOutputCode useAccept L))
         (ParsedLayoutBits L).length)
       Direction.right
 
 theorem SelectedProjectionEquivEmitterPaddedOutputTape_normalizedOutput
-    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    (useAccept : Bool) (L : DovetailLayout) :
     Tape.normalizedOutput
         (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) =
-      MachineDescription.encodeCodeWordAsInput
+      encodeCodeWordAsInput
         (SelectedProjectionOutputCode useAccept L) := by
   simpa [SelectedProjectionEquivEmitterPaddedOutputTape,
     RightScratchPaddedOutputTape, ScratchPaddedOutputTape] using
     inputWithTrailingBlankPadding_move_right_normalizedOutput
-      (MachineDescription.encodeCodeWordAsInput
+      (encodeCodeWordAsInput
         (SelectedProjectionOutputCode useAccept L))
       (ParsedLayoutBits L).length
 
 theorem SelectedProjectionEquivEmitterPaddedOutputTape_normalizedOutput_eq_tail
-    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    (useAccept : Bool) (L : DovetailLayout) :
     Tape.normalizedOutput
         (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) =
       SelectedProjectionTailProjector.outputAllBits useAccept L := by
@@ -66,7 +67,7 @@ theorem tapeAtCells_nil_normalizedOutput
     Tape.normalizedOutput, Tape.cells]
 
 theorem dovetailScanner_configurationRestoredLeftWithBase_reverse_filterMap
-    (cfg : MachineDescription.Configuration)
+    (cfg : Configuration)
     (baseLeft : List (Option Bool)) :
     (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
         cfg baseLeft).reverse.filterMap (fun cell => cell) =
@@ -95,19 +96,19 @@ theorem dovetailScanner_finalHitFlagsRestoredLeftWithBase_reverse_filterMap
     List.append_assoc]
 
 theorem SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_input
-    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    (useAccept : Bool) (L : DovetailLayout) :
     Tape.contextLength (Tape.input (ParsedLayoutBits L)) <=
       Tape.contextLength
         (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) := by
   have hpad :=
     inputWithTrailingBlankPadding_contextLength_ge_input
-      (MachineDescription.encodeCodeWordAsInput
+      (encodeCodeWordAsInput
         (SelectedProjectionOutputCode useAccept L))
       (ParsedLayoutBits L)
   have hmove :=
     tape_contextLength_le_move_right
       (inputWithTrailingBlankPadding
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (SelectedProjectionOutputCode useAccept L))
         (ParsedLayoutBits L).length)
   exact Nat.le_trans hpad hmove
@@ -115,24 +116,24 @@ theorem SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_input
 namespace SelectedProjectionTailProjector
 
 theorem parsedLayoutCheckedTape_normalizedOutput_eq_transition_stageInput_sourceRestSuffix
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     Tape.normalizedOutput (ParsedLayoutCheckedTape L) =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput
+        (encodeCodeSymbolAsInput
           MachineCodeSymbol.transition)
         (List.append
           (DovetailInitialLayoutInitializer.stageInputBits
             L.input L.stage)
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (sourceRestSuffix L))) := by
   rw [parsedLayoutCheckedTape_normalizedOutput,
     parsedLayoutBits_eq_transition_stageInput_sourceRestSuffix]
 
 theorem parsedLayoutCheckedTape_normalizedOutput_eq_transition_stageInput_sourceRestFieldBits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     Tape.normalizedOutput (ParsedLayoutCheckedTape L) =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput
+        (encodeCodeSymbolAsInput
           MachineCodeSymbol.transition)
         (List.append
           (DovetailInitialLayoutInitializer.stageInputBits
@@ -142,32 +143,32 @@ theorem parsedLayoutCheckedTape_normalizedOutput_eq_transition_stageInput_source
     parsedLayoutBits_eq_transition_stageInput_sourceRestFieldBits]
 
 theorem parsedLayoutCheckedTape_eq_transition_stageInput_sourceRestSuffix
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     ParsedLayoutCheckedTape L =
       DovetailInitialLayoutInitializer.tapeAtCells []
         (List.append
           ((List.append
-            (MachineDescription.encodeCodeSymbolAsInput
+            (encodeCodeSymbolAsInput
               MachineCodeSymbol.transition)
             (List.append
               (DovetailInitialLayoutInitializer.stageInputBits
                 L.input L.stage)
-              (MachineDescription.encodeCodeWordAsInput
+              (encodeCodeWordAsInput
                 (sourceRestSuffix L)))).map some)
           [none]) := by
   rw [ParsedLayoutCheckedTape,
     parsedLayoutBits_eq_transition_stageInput_sourceRestSuffix]
   simp [checkedInputTape, DovetailInitialLayoutInitializer.tapeAtCells,
-    MachineDescription.encodeCodeSymbolAsInput, List.map_append,
+    encodeCodeSymbolAsInput, List.map_append,
     List.append_assoc]
 
 theorem parsedLayoutCheckedTape_eq_transition_stageInput_sourceRestFieldBits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     ParsedLayoutCheckedTape L =
       DovetailInitialLayoutInitializer.tapeAtCells []
         (List.append
           ((List.append
-            (MachineDescription.encodeCodeSymbolAsInput
+            (encodeCodeSymbolAsInput
               MachineCodeSymbol.transition)
             (List.append
               (DovetailInitialLayoutInitializer.stageInputBits
@@ -177,11 +178,11 @@ theorem parsedLayoutCheckedTape_eq_transition_stageInput_sourceRestFieldBits
   rw [ParsedLayoutCheckedTape,
     parsedLayoutBits_eq_transition_stageInput_sourceRestFieldBits]
   simp [checkedInputTape, DovetailInitialLayoutInitializer.tapeAtCells,
-    MachineDescription.encodeCodeSymbolAsInput, List.map_append,
+    encodeCodeSymbolAsInput, List.map_append,
     List.append_assoc]
 
 theorem parsedLayoutCheckedHandoffTape_eq_transition_stageInput_sourceRestSuffix
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     ParsedLayoutCheckedHandoffTape L =
       DovetailInitialLayoutInitializer.tapeAtCells [some false]
         (List.append [some false, some false, some true]
@@ -189,17 +190,17 @@ theorem parsedLayoutCheckedHandoffTape_eq_transition_stageInput_sourceRestSuffix
             ((List.append
               (DovetailInitialLayoutInitializer.stageInputBits
                 L.input L.stage)
-              (MachineDescription.encodeCodeWordAsInput
+              (encodeCodeWordAsInput
                 (sourceRestSuffix L))).map some)
             [none])) := by
   rw [ParsedLayoutCheckedHandoffTape,
     parsedLayoutCheckedTape_eq_transition_stageInput_sourceRestSuffix]
   simp [DovetailInitialLayoutInitializer.tapeAtCells,
-    MachineDescription.encodeCodeSymbolAsInput, Tape.move, Tape.moveRight,
+    encodeCodeSymbolAsInput, Tape.move, Tape.moveRight,
     List.map_append, List.append_assoc]
 
 theorem parsedLayoutCheckedHandoffTape_eq_transition_stageInput_sourceRestFieldBits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     ParsedLayoutCheckedHandoffTape L =
       DovetailInitialLayoutInitializer.tapeAtCells [some false]
         (List.append [some false, some false, some true]
@@ -212,66 +213,66 @@ theorem parsedLayoutCheckedHandoffTape_eq_transition_stageInput_sourceRestFieldB
   rw [ParsedLayoutCheckedHandoffTape,
     parsedLayoutCheckedTape_eq_transition_stageInput_sourceRestFieldBits]
   simp [DovetailInitialLayoutInitializer.tapeAtCells,
-    MachineDescription.encodeCodeSymbolAsInput, Tape.move, Tape.moveRight,
+    encodeCodeSymbolAsInput, Tape.move, Tape.moveRight,
     List.map_append, List.append_assoc]
 
 theorem sourceFieldBits_length_le_parsedLayoutBits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     (sourceFieldBits L).length <= (ParsedLayoutBits L).length := by
   rw [← sourceSuffix_bits_eq_fields]
   rw [ParsedLayoutBits,
     dovetailLayout_encode_eq_transition_input_sourceSuffix]
   have happend :
-      MachineDescription.encodeBoolWordAppend L.input
+      encodeBoolWordAppend L.input
           (sourceSuffix L) =
         List.append
-          (MachineDescription.encodeBoolWordAppend L.input [])
+          (encodeBoolWordAppend L.input [])
           (sourceSuffix L) := by
     simpa using
       encodeBoolWordAppend_append L.input ([] : Word MachineCodeSymbol)
         (sourceSuffix L)
   rw [happend]
   change List.length
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (sourceSuffix L)) <=
       List.length
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (List.append
             (MachineCodeSymbol.transition ::
-              MachineDescription.encodeBoolWordAppend L.input [])
+              encodeBoolWordAppend L.input [])
             (sourceSuffix L)))
-  rw [MachineDescription.encodeCodeWordAsInput_append]
-  simp [MachineDescription.encodeCodeWordAsInput]
+  rw [encodeCodeWordAsInput_append]
+  simp [encodeCodeWordAsInput]
   omega
 
 theorem outputPrefixBits_length_ge_parsedLayoutBits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     (ParsedLayoutBits L).length <= (outputPrefixBits L).length := by
   have hquote :
       (ParsedLayoutBits L).length <=
-        (MachineDescription.encodeBoolWordAppend
+        (encodeBoolWordAppend
           (ParsedLayoutBits L) []).length := by
     simpa using
       encodeBoolWordAppend_length_ge (ParsedLayoutBits L)
         ([] : Word MachineCodeSymbol)
   have hencoded :
-      (MachineDescription.encodeBoolWordAppend
+      (encodeBoolWordAppend
           (ParsedLayoutBits L) []).length <=
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeBoolWordAppend
+        (encodeCodeWordAsInput
+          (encodeBoolWordAppend
             (ParsedLayoutBits L) [])).length := by
     rw [encodeCodeWordAsInput_length]
     omega
   have hprefix :
-      (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeBoolWordAppend
+      (encodeCodeWordAsInput
+          (encodeBoolWordAppend
             (ParsedLayoutBits L) [])).length <=
         (outputPrefixBits L).length := by
     simp [outputPrefixBits, List.length_append]
   exact Nat.le_trans hquote (Nat.le_trans hencoded hprefix)
 
 theorem sourceTape_contextLength_ge_parsedLayoutCheckedTape
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     Tape.contextLength (ParsedLayoutCheckedTape L) <=
       Tape.contextLength
         (sourceTape L ((outputPrefixBits L).reverse.map some)) := by
@@ -295,7 +296,7 @@ theorem sourceTape_contextLength_ge_parsedLayoutCheckedTape
   exact Nat.le_trans hprefix htarget
 
 theorem sourceTape_normalizedOutput
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     Tape.normalizedOutput (sourceTape L baseLeft) =
       List.append (baseLeft.reverse.filterMap (fun cell => cell))
@@ -308,7 +309,7 @@ theorem sourceTape_normalizedOutput
     List.filterMap_append]
 
 theorem sourceTape_normalizedOutput_outputPrefix
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     Tape.normalizedOutput
         (sourceTape L ((outputPrefixBits L).reverse.map some)) =
       List.append (outputPrefixBits L) (sourceFieldBits L) := by
@@ -316,7 +317,7 @@ theorem sourceTape_normalizedOutput_outputPrefix
   simp [Function.comp_def, List.map_reverse]
 
 theorem sourceTape_outputPrefix_eq_stageInputSourceRestFieldBits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     sourceTape L ((outputPrefixBits L).reverse.map some) =
       DovetailInitialLayoutInitializer.tapeAtCells
         ((outputPrefixStageInputSourceRestFieldBits L).reverse.map some)
@@ -328,47 +329,47 @@ theorem sourceTape_outputPrefix_eq_stageInputSourceRestFieldBits
     sourceFieldBits_eq_stageNatBits_sourceRestFieldBits]
 
 theorem outputPrefixBits_append_sourceFieldBits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     List.append (outputPrefixBits L) (sourceFieldBits L) =
-      MachineDescription.encodeCodeWordAsInput
+      encodeCodeWordAsInput
         (MachineCodeSymbol.header ::
-          MachineDescription.encodeBoolWordAppend
+          encodeBoolWordAppend
             (ParsedLayoutBits L) (sourceSuffix L)) := by
   have happend :
-      MachineDescription.encodeBoolWordAppend
+      encodeBoolWordAppend
           (ParsedLayoutBits L) (sourceSuffix L) =
         List.append
-          (MachineDescription.encodeBoolWordAppend
+          (encodeBoolWordAppend
             (ParsedLayoutBits L) [])
           (sourceSuffix L) := by
     simpa using
       encodeBoolWordAppend_append (ParsedLayoutBits L)
         ([] : Word MachineCodeSymbol) (sourceSuffix L)
   rw [outputPrefixBits, ← sourceSuffix_bits_eq_fields L, happend]
-  simp only [MachineDescription.encodeCodeWordAsInput]
-  rw [MachineDescription.encodeCodeWordAsInput_append]
+  simp only [encodeCodeWordAsInput]
+  rw [encodeCodeWordAsInput_append]
   simp [List.append_assoc]
 
 theorem sourceTape_normalizedOutput_outputPrefix_eq_header_input_sourceSuffix
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     Tape.normalizedOutput
         (sourceTape L ((outputPrefixBits L).reverse.map some)) =
-      MachineDescription.encodeCodeWordAsInput
+      encodeCodeWordAsInput
         (MachineCodeSymbol.header ::
-          MachineDescription.encodeBoolWordAppend
+          encodeBoolWordAppend
             (ParsedLayoutBits L) (sourceSuffix L)) := by
   rw [sourceTape_normalizedOutput_outputPrefix,
     outputPrefixBits_append_sourceFieldBits]
 
 theorem sourceTape_normalizedOutput_outputPrefix_eq_quoter_bits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     exists b : Bool,
     exists rest : Word Bool,
       ParsedLayoutBits L = b :: rest ∧
         Tape.normalizedOutput
             (sourceTape L ((outputPrefixBits L).reverse.map some)) =
           List.append
-            (MachineDescription.encodeCodeSymbolAsInput
+            (encodeCodeSymbolAsInput
               MachineCodeSymbol.header)
             (CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits
               b rest (sourceSuffix L)) := by
@@ -376,11 +377,11 @@ theorem sourceTape_normalizedOutput_outputPrefix_eq_quoter_bits
   refine ⟨false, false :: tail, htail, ?_⟩
   rw [sourceTape_normalizedOutput_outputPrefix_eq_header_input_sourceSuffix,
     htail]
-  simp [MachineDescription.encodeCodeWordAsInput,
+  simp [encodeCodeWordAsInput,
     CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits_eq]
 
 theorem sourceScannerRightHandoffTape_normalizedOutput
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     Tape.normalizedOutput
         (sourceScannerRightHandoffTape L baseLeft) =
@@ -400,7 +401,7 @@ theorem sourceScannerRightHandoffTape_normalizedOutput
     CanonicalLayouts.DovetailLayoutScanner.boolFieldBits]
 
 theorem sourceScannerRightHandoffTape_normalizedOutput_eq_sourceTape
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     Tape.normalizedOutput
         (sourceScannerRightHandoffTape L baseLeft) =
@@ -409,7 +410,7 @@ theorem sourceScannerRightHandoffTape_normalizedOutput_eq_sourceTape
     sourceTape_normalizedOutput]
 
 theorem sourceScannerRightHandoffTape_normalizedOutput_outputPrefix
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     Tape.normalizedOutput
         (sourceScannerRightHandoffTape L
           ((outputPrefixBits L).reverse.map some)) =
@@ -419,20 +420,20 @@ theorem sourceScannerRightHandoffTape_normalizedOutput_outputPrefix
 
 theorem
     sourceScannerRightHandoffTape_normalizedOutput_outputPrefix_eq_header_input_sourceSuffix
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     Tape.normalizedOutput
         (sourceScannerRightHandoffTape L
           ((outputPrefixBits L).reverse.map some)) =
-      MachineDescription.encodeCodeWordAsInput
+      encodeCodeWordAsInput
         (MachineCodeSymbol.header ::
-          MachineDescription.encodeBoolWordAppend
+          encodeBoolWordAppend
             (ParsedLayoutBits L) (sourceSuffix L)) := by
   rw [sourceScannerRightHandoffTape_normalizedOutput_outputPrefix,
     outputPrefixBits_append_sourceFieldBits]
 
 theorem
     sourceScannerRightHandoffTape_normalizedOutput_outputPrefix_eq_quoter_bits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     exists b : Bool,
     exists rest : Word Bool,
       ParsedLayoutBits L = b :: rest ∧
@@ -440,7 +441,7 @@ theorem
           (sourceScannerRightHandoffTape L
             ((outputPrefixBits L).reverse.map some)) =
           List.append
-            (MachineDescription.encodeCodeSymbolAsInput
+            (encodeCodeSymbolAsInput
               MachineCodeSymbol.header)
             (CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits
               b rest (sourceSuffix L)) := by
@@ -449,11 +450,11 @@ theorem
   rw [
     sourceScannerRightHandoffTape_normalizedOutput_outputPrefix_eq_header_input_sourceSuffix,
     htail]
-  simp [MachineDescription.encodeCodeWordAsInput,
+  simp [encodeCodeWordAsInput,
     CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits_eq]
 
 theorem sourceScannerRightHandoffTape_contextLength_ge_sourceTape
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     Tape.contextLength (sourceTape L baseLeft) <=
       Tape.contextLength (sourceScannerRightHandoffTape L baseLeft) := by
@@ -462,7 +463,7 @@ theorem sourceScannerRightHandoffTape_contextLength_ge_sourceTape
   let scanner :=
     CanonicalLayouts.DovetailLayoutScanner.StageConfigurationsAndFinalFlagsScannerDescription
   have hmono :=
-    MachineDescription.runConfig_contextLength_mono
+    runConfig_contextLength_mono
       scanner steps
       { state := scanner.start
         tape := sourceTape L baseLeft }
@@ -482,7 +483,7 @@ theorem sourceScannerRightHandoffTape_contextLength_ge_sourceTape
 end SelectedProjectionTailProjector
 
 theorem SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_source
-    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    (useAccept : Bool) (L : DovetailLayout) :
     Tape.contextLength
         (SelectedProjectionTailProjector.sourceTape L
           ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
@@ -535,7 +536,7 @@ theorem SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_source
 
 theorem
     SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_checkedInput
-    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    (useAccept : Bool) (L : DovetailLayout) :
     Tape.contextLength (ParsedLayoutCheckedTape L) <=
       Tape.contextLength
         (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) := by
@@ -559,7 +560,7 @@ theorem dovetailScanner_cellListCanonicalRestoredLeftWithBase_length
   rw [CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredBitsRev_reverse]
 
 theorem dovetailScanner_configurationRestoredLeftWithBase_length
-    (cfg : MachineDescription.Configuration)
+    (cfg : Configuration)
     (baseLeft : List (Option Bool)) :
     (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
         cfg baseLeft).length =
@@ -587,7 +588,7 @@ theorem dovetailScanner_finalHitFlagsRestoredLeftWithBase_length
 
 theorem
     SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_sourceScannerRightHandoff
-    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    (useAccept : Bool) (L : DovetailLayout) :
     Tape.contextLength
         (SelectedProjectionTailProjector.sourceScannerRightHandoffTape L
           ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map

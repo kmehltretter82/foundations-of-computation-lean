@@ -17,6 +17,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 open FoC.Computability.DovetailInitialLayoutInitializer
 open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
 open FoC.Computability.EncodedRewriters.CanonicalLayouts
@@ -28,54 +29,54 @@ namespace SelectedProjectionTailProjector
 
 def selectedConfig
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.Configuration :=
+    (L : DovetailLayout) :
+    Configuration :=
   if useAccept then L.acceptConfig else L.rejectConfig
 
 def selectedHit
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) : Bool :=
+    (L : DovetailLayout) : Bool :=
   if useAccept then L.acceptHit else L.rejectHit
 
 theorem selectedConfig_true
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     selectedConfig true L = L.acceptConfig := by
   rfl
 
 theorem selectedConfig_false
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     selectedConfig false L = L.rejectConfig := by
   rfl
 
 theorem selectedHit_true
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     selectedHit true L = L.acceptHit := by
   rfl
 
 theorem selectedHit_false
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     selectedHit false L = L.rejectHit := by
   rfl
 
 def sourceSuffix
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     Word MachineCodeSymbol :=
-  MachineDescription.encodeNatAppend L.stage
-    (MachineDescription.encodeConfigurationAppend L.acceptConfig
-      (MachineDescription.encodeConfigurationAppend L.rejectConfig
-        (MachineDescription.encodeBoolAppend L.acceptHit
-          (MachineDescription.encodeBoolAppend L.rejectHit []))))
+  encodeNatAppend L.stage
+    (encodeConfigurationAppend L.acceptConfig
+      (encodeConfigurationAppend L.rejectConfig
+        (encodeBoolAppend L.acceptHit
+          (encodeBoolAppend L.rejectHit []))))
 
 def sourceRestSuffix
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     Word MachineCodeSymbol :=
-  MachineDescription.encodeConfigurationAppend L.acceptConfig
-    (MachineDescription.encodeConfigurationAppend L.rejectConfig
-      (MachineDescription.encodeBoolAppend L.acceptHit
-        (MachineDescription.encodeBoolAppend L.rejectHit [])))
+  encodeConfigurationAppend L.acceptConfig
+    (encodeConfigurationAppend L.rejectConfig
+      (encodeBoolAppend L.acceptHit
+        (encodeBoolAppend L.rejectHit [])))
 
 def sourceFieldBits
-    (L : MachineDescription.DovetailLayout) : Word Bool :=
+    (L : DovetailLayout) : Word Bool :=
   List.append (stageNatBits L.stage)
     (configurationFieldBits L.acceptConfig
       (configurationFieldBits L.rejectConfig
@@ -83,28 +84,28 @@ def sourceFieldBits
           (boolFieldBits L.rejectHit []))))
 
 def sourceRestFieldBits
-    (L : MachineDescription.DovetailLayout) : Word Bool :=
+    (L : DovetailLayout) : Word Bool :=
   configurationFieldBits L.acceptConfig
     (configurationFieldBits L.rejectConfig
       (boolFieldBits L.acceptHit
         (boolFieldBits L.rejectHit [])))
 
 theorem sourceSuffix_eq_encodeNatAppend_sourceRestSuffix
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     sourceSuffix L =
-      MachineDescription.encodeNatAppend L.stage
+      encodeNatAppend L.stage
         (sourceRestSuffix L) := by
   rfl
 
 theorem sourceFieldBits_eq_stageNatBits_sourceRestFieldBits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     sourceFieldBits L =
       List.append (stageNatBits L.stage) (sourceRestFieldBits L) := by
   rfl
 
 theorem sourceRestSuffix_bits_eq_fields
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.encodeCodeWordAsInput (sourceRestSuffix L) =
+    (L : DovetailLayout) :
+    encodeCodeWordAsInput (sourceRestSuffix L) =
       sourceRestFieldBits L := by
   rw [sourceRestSuffix, sourceRestFieldBits]
   rw [configurationFieldBits_eq_encodeConfigurationAppend]
@@ -112,11 +113,11 @@ theorem sourceRestSuffix_bits_eq_fields
   rw [boolBits_eq_encodeBoolAppend]
   rw [boolBits_eq_encodeBoolAppend]
   simp [boolFieldBits, cellFieldBits,
-    MachineDescription.encodeCodeWordAsInput]
+    encodeCodeWordAsInput]
 
 theorem sourceSuffix_bits_eq_fields
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.encodeCodeWordAsInput (sourceSuffix L) =
+    (L : DovetailLayout) :
+    encodeCodeWordAsInput (sourceSuffix L) =
       sourceFieldBits L := by
   rw [sourceSuffix, sourceFieldBits]
   rw [DovetailStagePrefix.natBits_eq_encodeNatAppend]
@@ -125,67 +126,67 @@ theorem sourceSuffix_bits_eq_fields
   rw [boolBits_eq_encodeBoolAppend]
   rw [boolBits_eq_encodeBoolAppend]
   simp [boolFieldBits, cellFieldBits,
-    MachineDescription.encodeCodeWordAsInput]
+    encodeCodeWordAsInput]
 
 theorem dovetailLayout_encode_eq_transition_input_sourceSuffix
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.DovetailLayout.encode L =
+    (L : DovetailLayout) :
+    DovetailLayout.encode L =
       MachineCodeSymbol.transition ::
-        MachineDescription.encodeBoolWordAppend L.input
+        encodeBoolWordAppend L.input
           (sourceSuffix L) := by
   rfl
 
 theorem parsedLayoutBits_eq_transition_input_sourceSuffix
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     ParsedLayoutBits L =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput
+        (encodeCodeSymbolAsInput
           MachineCodeSymbol.transition)
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeBoolWordAppend L.input
+        (encodeCodeWordAsInput
+          (encodeBoolWordAppend L.input
             (sourceSuffix L))) := by
   simp [ParsedLayoutBits, dovetailLayout_encode_eq_transition_input_sourceSuffix,
-    MachineDescription.encodeCodeWordAsInput]
+    encodeCodeWordAsInput]
 
 theorem stageInputBits_append_sourceRestSuffix_bits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     List.append (stageInputBits L.input L.stage)
-        (MachineDescription.encodeCodeWordAsInput
+        (encodeCodeWordAsInput
           (sourceRestSuffix L)) =
-      MachineDescription.encodeCodeWordAsInput
-        (MachineDescription.encodeBoolWordAppend L.input
+      encodeCodeWordAsInput
+        (encodeBoolWordAppend L.input
           (sourceSuffix L)) := by
   rw [stageInputBits, PairedRecognizerDovetailStageInputCode,
-    MachineDescription.DovetailLayout.stageInputCode,
-    MachineDescription.DovetailLayout.stageInputCodeAppend,
+    DovetailLayout.stageInputCode,
+    DovetailLayout.stageInputCodeAppend,
     sourceSuffix_eq_encodeNatAppend_sourceRestSuffix]
   rw [show
-      MachineDescription.encodeNatAppend L.stage (sourceRestSuffix L) =
-        List.append (MachineDescription.encodeNatAppend L.stage [])
+      encodeNatAppend L.stage (sourceRestSuffix L) =
+        List.append (encodeNatAppend L.stage [])
           (sourceRestSuffix L) by
       simpa using
         encodeNatAppend_append L.stage ([] : Word MachineCodeSymbol)
           (sourceRestSuffix L)]
   rw [encodeBoolWordAppend_append]
-  rw [MachineDescription.encodeCodeWordAsInput_append]
+  rw [encodeCodeWordAsInput_append]
 
 theorem parsedLayoutBits_eq_transition_stageInput_sourceRestSuffix
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     ParsedLayoutBits L =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput
+        (encodeCodeSymbolAsInput
           MachineCodeSymbol.transition)
         (List.append (stageInputBits L.input L.stage)
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (sourceRestSuffix L))) := by
   rw [parsedLayoutBits_eq_transition_input_sourceSuffix]
   rw [← stageInputBits_append_sourceRestSuffix_bits L]
 
 theorem parsedLayoutBits_eq_transition_stageInput_sourceRestFieldBits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     ParsedLayoutBits L =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput
+        (encodeCodeSymbolAsInput
           MachineCodeSymbol.transition)
         (List.append (stageInputBits L.input L.stage)
           (sourceRestFieldBits L)) := by
@@ -193,34 +194,34 @@ theorem parsedLayoutBits_eq_transition_stageInput_sourceRestFieldBits
   rw [sourceRestSuffix_bits_eq_fields]
 
 theorem parsedLayoutBits_eq_transition_input_sourceFieldBits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     ParsedLayoutBits L =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput
+        (encodeCodeSymbolAsInput
           MachineCodeSymbol.transition)
         (List.append
-          (MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.encodeBoolWordAppend L.input []))
+          (encodeCodeWordAsInput
+            (encodeBoolWordAppend L.input []))
           (sourceFieldBits L)) := by
   have happend :
-      MachineDescription.encodeBoolWordAppend L.input (sourceSuffix L) =
+      encodeBoolWordAppend L.input (sourceSuffix L) =
         List.append
-          (MachineDescription.encodeBoolWordAppend L.input [])
+          (encodeBoolWordAppend L.input [])
           (sourceSuffix L) := by
     simpa using
       encodeBoolWordAppend_append L.input
         ([] : Word MachineCodeSymbol) (sourceSuffix L)
   rw [parsedLayoutBits_eq_transition_input_sourceSuffix, happend]
-  rw [MachineDescription.encodeCodeWordAsInput_append,
+  rw [encodeCodeWordAsInput_append,
     sourceSuffix_bits_eq_fields]
 
 def sourceTape
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) : Tape Bool :=
   tapeAtCells baseLeft ((sourceFieldBits L).map some)
 
 def sourceScannerHandoffTape
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) : Tape Bool :=
   (boolFinalHandoffConfigWithBase L.rejectHit
     (List.append ((cellCodeBits (some L.acceptHit)).reverse.map some)
@@ -230,12 +231,12 @@ def sourceScannerHandoffTape
               baseLeft))))).tape
 
 def sourceScannerRightHandoffTape
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) : Tape Bool :=
   Tape.move Direction.right (sourceScannerHandoffTape L baseLeft)
 
 theorem sourceScannerRightHandoffTape_eq
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     sourceScannerRightHandoffTape L baseLeft =
       tapeAtCells
@@ -255,7 +256,7 @@ theorem sourceScannerRightHandoffTape_eq
               baseLeft))))
 
 theorem sourceScanner_run_withBase
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
       StageConfigurationsAndFinalFlagsScannerDescription.runConfig steps
@@ -269,7 +270,7 @@ theorem sourceScanner_run_withBase
       baseLeft
 
 theorem sourceScanner_haltsFromTape_withBase
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     StageConfigurationsAndFinalFlagsScannerDescription.HaltsFromTape
       (sourceTape L baseLeft)
@@ -282,53 +283,53 @@ theorem sourceScanner_haltsFromTape_withBase
 
 def outputSuffix
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     Word MachineCodeSymbol :=
-  MachineDescription.encodeNatAppend L.stage
-    (MachineDescription.encodeConfigurationAppend
+  encodeNatAppend L.stage
+    (encodeConfigurationAppend
       (selectedConfig useAccept L)
-      (MachineDescription.encodeBoolAppend
+      (encodeBoolAppend
         (selectedHit useAccept L) []))
 
 def outputBits
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) : Word Bool :=
-  MachineDescription.encodeCodeWordAsInput (outputSuffix useAccept L)
+    (L : DovetailLayout) : Word Bool :=
+  encodeCodeWordAsInput (outputSuffix useAccept L)
 
 def outputPrefixBits
-    (L : MachineDescription.DovetailLayout) : Word Bool :=
+    (L : DovetailLayout) : Word Bool :=
   List.append
-    (MachineDescription.encodeCodeSymbolAsInput MachineCodeSymbol.header)
-    (MachineDescription.encodeCodeWordAsInput
-      (MachineDescription.encodeBoolWordAppend (ParsedLayoutBits L) []))
+    (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+    (encodeCodeWordAsInput
+      (encodeBoolWordAppend (ParsedLayoutBits L) []))
 
 theorem outputPrefixBits_eq_header_quote_stageInput_sourceRestSuffix
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     outputPrefixBits L =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput
+        (encodeCodeSymbolAsInput
           MachineCodeSymbol.header)
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeBoolWordAppend
+        (encodeCodeWordAsInput
+          (encodeBoolWordAppend
             (List.append
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.transition)
               (List.append (stageInputBits L.input L.stage)
-                (MachineDescription.encodeCodeWordAsInput
+                (encodeCodeWordAsInput
                   (sourceRestSuffix L)))) [])) := by
   rw [outputPrefixBits,
     parsedLayoutBits_eq_transition_stageInput_sourceRestSuffix]
 
 theorem outputPrefixBits_eq_header_quote_stageInput_sourceRestFieldBits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     outputPrefixBits L =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput
+        (encodeCodeSymbolAsInput
           MachineCodeSymbol.header)
-        (MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeBoolWordAppend
+        (encodeCodeWordAsInput
+          (encodeBoolWordAppend
             (List.append
-              (MachineDescription.encodeCodeSymbolAsInput
+              (encodeCodeSymbolAsInput
                 MachineCodeSymbol.transition)
               (List.append (stageInputBits L.input L.stage)
                 (sourceRestFieldBits L))) [])) := by
@@ -336,27 +337,27 @@ theorem outputPrefixBits_eq_header_quote_stageInput_sourceRestFieldBits
     parsedLayoutBits_eq_transition_stageInput_sourceRestFieldBits]
 
 def outputPrefixStageInputSourceRestFieldBits
-    (L : MachineDescription.DovetailLayout) : Word Bool :=
+    (L : DovetailLayout) : Word Bool :=
   List.append
-    (MachineDescription.encodeCodeSymbolAsInput
+    (encodeCodeSymbolAsInput
       MachineCodeSymbol.header)
-    (MachineDescription.encodeCodeWordAsInput
-      (MachineDescription.encodeBoolWordAppend
+    (encodeCodeWordAsInput
+      (encodeBoolWordAppend
         (List.append
-          (MachineDescription.encodeCodeSymbolAsInput
+          (encodeCodeSymbolAsInput
             MachineCodeSymbol.transition)
           (List.append (stageInputBits L.input L.stage)
             (sourceRestFieldBits L))) []))
 
 theorem outputPrefixBits_eq_stageInputSourceRestFieldBits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     outputPrefixBits L =
       outputPrefixStageInputSourceRestFieldBits L := by
   rw [outputPrefixStageInputSourceRestFieldBits,
     outputPrefixBits_eq_header_quote_stageInput_sourceRestFieldBits]
 
 theorem sourceScannerRightHandoffTape_outputPrefix_eq_stageInputSourceRestFieldBits
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     sourceScannerRightHandoffTape L ((outputPrefixBits L).reverse.map some) =
       tapeAtCells
         (finalHitFlagsRestoredLeftWithBase L.acceptHit L.rejectHit
@@ -371,45 +372,45 @@ theorem sourceScannerRightHandoffTape_outputPrefix_eq_stageInputSourceRestFieldB
 
 def outputAllBits
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) : Word Bool :=
+    (L : DovetailLayout) : Word Bool :=
   List.append (outputPrefixBits L) (outputBits useAccept L)
 
 def outputFieldBits
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) : Word Bool :=
+    (L : DovetailLayout) : Word Bool :=
   List.append (stageNatBits L.stage)
     (configurationFieldBits (selectedConfig useAccept L)
       (boolFieldBits (selectedHit useAccept L) []))
 
 theorem outputBits_eq_fields
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     outputBits useAccept L = outputFieldBits useAccept L := by
   rw [outputBits, outputSuffix, outputFieldBits]
   rw [DovetailStagePrefix.natBits_eq_encodeNatAppend]
   rw [configurationFieldBits_eq_encodeConfigurationAppend]
   rw [boolBits_eq_encodeBoolAppend]
   simp [boolFieldBits, cellFieldBits,
-    MachineDescription.encodeCodeWordAsInput]
+    encodeCodeWordAsInput]
 
 theorem outputSuffix_true
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     outputSuffix true L =
-      MachineDescription.encodeNatAppend L.stage
-        (MachineDescription.encodeConfigurationAppend L.acceptConfig
-          (MachineDescription.encodeBoolAppend L.acceptHit [])) := by
+      encodeNatAppend L.stage
+        (encodeConfigurationAppend L.acceptConfig
+          (encodeBoolAppend L.acceptHit [])) := by
   rfl
 
 theorem outputSuffix_false
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     outputSuffix false L =
-      MachineDescription.encodeNatAppend L.stage
-        (MachineDescription.encodeConfigurationAppend L.rejectConfig
-          (MachineDescription.encodeBoolAppend L.rejectHit [])) := by
+      encodeNatAppend L.stage
+        (encodeConfigurationAppend L.rejectConfig
+          (encodeBoolAppend L.rejectHit [])) := by
   rfl
 
 theorem outputBits_true_eq_fields
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     outputBits true L =
       List.append (stageNatBits L.stage)
         (configurationFieldBits L.acceptConfig
@@ -417,7 +418,7 @@ theorem outputBits_true_eq_fields
   simpa [outputFieldBits] using outputBits_eq_fields true L
 
 theorem outputBits_false_eq_fields
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     outputBits false L =
       List.append (stageNatBits L.stage)
         (configurationFieldBits L.rejectConfig
@@ -426,7 +427,7 @@ theorem outputBits_false_eq_fields
 
 theorem selectedProjectionSimulatorLayout_eq_fields
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
+    (L : DovetailLayout) :
     SelectedProjectionSimulatorLayout useAccept L =
       { input := ParsedLayoutBits L
         stage := L.stage
@@ -437,59 +438,59 @@ theorem selectedProjectionSimulatorLayout_eq_fields
 
 theorem simulatorLayout_encode_eq_header_input_outputSuffix
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.SimulatorLayout.encode
+    (L : DovetailLayout) :
+    SimulatorLayout.encode
         (SelectedProjectionSimulatorLayout useAccept L) =
       MachineCodeSymbol.header ::
-        MachineDescription.encodeBoolWordAppend (ParsedLayoutBits L)
+        encodeBoolWordAppend (ParsedLayoutBits L)
           (outputSuffix useAccept L) := by
   rw [selectedProjectionSimulatorLayout_eq_fields]
   rfl
 
 theorem simulatorLayout_asBoolInput_eq_header_input_outputSuffix
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.SimulatorLayout.asBoolInput
+    (L : DovetailLayout) :
+    SimulatorLayout.asBoolInput
         (SelectedProjectionSimulatorLayout useAccept L) =
-      MachineDescription.encodeCodeWordAsInput
+      encodeCodeWordAsInput
         (MachineCodeSymbol.header ::
-          MachineDescription.encodeBoolWordAppend (ParsedLayoutBits L)
+          encodeBoolWordAppend (ParsedLayoutBits L)
             (outputSuffix useAccept L)) := by
-  rw [MachineDescription.SimulatorLayout.asBoolInput]
+  rw [SimulatorLayout.asBoolInput]
   rw [simulatorLayout_encode_eq_header_input_outputSuffix]
 
 theorem simulatorLayout_asBoolInput_eq_outputAllBits
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout) :
-    MachineDescription.SimulatorLayout.asBoolInput
+    (L : DovetailLayout) :
+    SimulatorLayout.asBoolInput
         (SelectedProjectionSimulatorLayout useAccept L) =
       outputAllBits useAccept L := by
   rw [simulatorLayout_asBoolInput_eq_header_input_outputSuffix]
   unfold outputAllBits outputPrefixBits outputBits
   have happend :
-      MachineDescription.encodeBoolWordAppend
+      encodeBoolWordAppend
           (ParsedLayoutBits L) (outputSuffix useAccept L) =
         List.append
-          (MachineDescription.encodeBoolWordAppend
+          (encodeBoolWordAppend
             (ParsedLayoutBits L) [])
           (outputSuffix useAccept L) := by
     simpa using
       encodeBoolWordAppend_append (ParsedLayoutBits L)
         ([] : Word MachineCodeSymbol) (outputSuffix useAccept L)
   rw [happend]
-  simp only [MachineDescription.encodeCodeWordAsInput]
-  rw [MachineDescription.encodeCodeWordAsInput_append]
+  simp only [encodeCodeWordAsInput]
+  rw [encodeCodeWordAsInput_append]
   simp [List.append_assoc]
 
 def outputTape
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) : Tape Bool :=
   tapeAtCells baseLeft ((outputBits useAccept L).map some)
 
 theorem outputTape_eq_fields
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     outputTape useAccept L baseLeft =
       tapeAtCells baseLeft
@@ -511,7 +512,7 @@ theorem stageNatBits_cons_cons
           by simp [stageNatBits_succ]⟩
 
 theorem sourceTape_move_left_move_right
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     Tape.move Direction.left (Tape.move Direction.right
       (sourceTape L baseLeft)) =
@@ -523,7 +524,7 @@ theorem sourceTape_move_left_move_right
 
 theorem outputTape_move_left_move_right
     (useAccept : Bool)
-    (L : MachineDescription.DovetailLayout)
+    (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     Tape.move Direction.left (Tape.move Direction.right
       (outputTape useAccept L baseLeft)) =

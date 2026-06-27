@@ -16,6 +16,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace CanonicalLayouts
@@ -52,7 +53,7 @@ private theorem cellSuffixScannerDescription_runConfig_nil_ne_halt
               CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
               none = none := by
           native_decide
-        simp [config, tapeAtCells, MachineDescription.stepConfig,
+        simp [config, tapeAtCells, stepConfig,
           hlookup, Tape.read])
       (by
         change (10 : Nat) ≠ 99
@@ -86,7 +87,7 @@ private theorem cellSuffixScannerDescription_runConfig_true_start_ne_halt
               CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
               (some true) = none := by
           native_decide
-        simp [config, tapeAtCells, MachineDescription.stepConfig,
+        simp [config, tapeAtCells, stepConfig,
           hlookup, Tape.read])
       (by
         change (10 : Nat) ≠ 99
@@ -100,11 +101,11 @@ private theorem cellSuffixScannerDescription_runConfig_false_false_ne_halt
         CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
         baseLeft (some false :: some false :: rest))).state ≠
       CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.halt := by
-  let start : MachineDescription.Configuration :=
+  let start : Configuration :=
     config
       CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
       baseLeft (some false :: some false :: rest)
-  let stuck : MachineDescription.Configuration :=
+  let stuck : Configuration :=
     CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.runConfig
       1 start
   exact
@@ -117,19 +118,19 @@ private theorem cellSuffixScannerDescription_runConfig_false_false_ne_halt
         simp [stuck, start,
           CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription,
           config, tapeAtCells, keepMove,
-          MachineDescription.runConfig,
-          MachineDescription.stepConfig,
-          MachineDescription.lookupTransition,
-          MachineDescription.Matches, MachineDescription.transition,
+          runConfig,
+          stepConfig,
+          lookupTransition,
+          Matches, transition,
           Tape.read, Tape.write, Tape.move, Tape.moveRight])
       (by
         simp [stuck, start,
           CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription,
           config, tapeAtCells, keepMove,
-          MachineDescription.runConfig,
-          MachineDescription.stepConfig,
-          MachineDescription.lookupTransition,
-          MachineDescription.Matches, MachineDescription.transition,
+          runConfig,
+          stepConfig,
+          lookupTransition,
+          Matches, transition,
           Tape.read, Tape.write, Tape.move, Tape.moveRight])
 
 private theorem cellSuffixScannerDescription_runConfig_false_true_true_ne_halt
@@ -141,12 +142,12 @@ private theorem cellSuffixScannerDescription_runConfig_false_true_true_ne_halt
         baseLeft
         (some false :: some true :: some true :: some true :: rest))).state ≠
       CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.halt := by
-  let start : MachineDescription.Configuration :=
+  let start : Configuration :=
     config
       CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
       baseLeft
       (some false :: some true :: some true :: some true :: rest)
-  let stuck : MachineDescription.Configuration :=
+  let stuck : Configuration :=
     CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.runConfig
       3 start
   exact
@@ -159,19 +160,19 @@ private theorem cellSuffixScannerDescription_runConfig_false_true_true_ne_halt
         simp [stuck, start,
           CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription,
           config, tapeAtCells, keepMove,
-          MachineDescription.runConfig,
-          MachineDescription.stepConfig,
-          MachineDescription.lookupTransition,
-          MachineDescription.Matches, MachineDescription.transition,
+          runConfig,
+          stepConfig,
+          lookupTransition,
+          Matches, transition,
           Tape.read, Tape.write, Tape.move, Tape.moveRight])
       (by
         simp [stuck, start,
           CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription,
           config, tapeAtCells, keepMove,
-          MachineDescription.runConfig,
-          MachineDescription.stepConfig,
-          MachineDescription.lookupTransition,
-          MachineDescription.Matches, MachineDescription.transition,
+          runConfig,
+          stepConfig,
+          lookupTransition,
+          Matches, transition,
           Tape.read, Tape.write, Tape.move, Tape.moveRight])
 
 theorem cellSuffixScannerDescription_runConfig_code_inv
@@ -183,13 +184,13 @@ theorem cellSuffixScannerDescription_runConfig_code_inv
           (config
             CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
             baseLeft
-            ((MachineDescription.encodeCodeWordAsInput code).map some)) =
+            ((encodeCodeWordAsInput code).map some)) =
         { state :=
             CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.halt
           tape := Tout }) :
     exists cell : Option Bool,
     exists suffix : Word MachineCodeSymbol,
-      code = MachineDescription.encodeCellAppend cell suffix := by
+      code = encodeCellAppend cell suffix := by
   cases code with
   | nil =>
       have hstate :
@@ -199,8 +200,8 @@ theorem cellSuffixScannerDescription_runConfig_code_inv
               CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
               baseLeft ([] : List (Option Bool)))).state =
             CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.halt := by
-        simpa [MachineDescription.encodeCodeWordAsInput] using
-          congrArg MachineDescription.Configuration.state h
+        simpa [encodeCodeWordAsInput] using
+          congrArg Configuration.state h
       exact False.elim
         ((cellSuffixScannerDescription_runConfig_nil_ne_halt
           baseLeft n) hstate)
@@ -214,17 +215,17 @@ theorem cellSuffixScannerDescription_runConfig_code_inv
                   CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
                   baseLeft
                   (some false :: some false :: some false :: some false ::
-                    (MachineDescription.encodeCodeWordAsInput rest).map
+                    (encodeCodeWordAsInput rest).map
                       some))).state =
                 CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.halt := by
-            simpa [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] using
-              congrArg MachineDescription.Configuration.state h
+            simpa [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] using
+              congrArg Configuration.state h
           exact False.elim
             ((cellSuffixScannerDescription_runConfig_false_false_ne_halt
               baseLeft
               (some false :: some false ::
-                (MachineDescription.encodeCodeWordAsInput rest).map some)
+                (encodeCodeWordAsInput rest).map some)
               n) hstate)
       | transition =>
           have hstate :
@@ -234,17 +235,17 @@ theorem cellSuffixScannerDescription_runConfig_code_inv
                   CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
                   baseLeft
                   (some false :: some false :: some false :: some true ::
-                    (MachineDescription.encodeCodeWordAsInput rest).map
+                    (encodeCodeWordAsInput rest).map
                       some))).state =
                 CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.halt := by
-            simpa [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] using
-              congrArg MachineDescription.Configuration.state h
+            simpa [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] using
+              congrArg Configuration.state h
           exact False.elim
             ((cellSuffixScannerDescription_runConfig_false_false_ne_halt
               baseLeft
               (some false :: some true ::
-                (MachineDescription.encodeCodeWordAsInput rest).map some)
+                (encodeCodeWordAsInput rest).map some)
               n) hstate)
       | tick =>
           have hstate :
@@ -254,17 +255,17 @@ theorem cellSuffixScannerDescription_runConfig_code_inv
                   CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
                   baseLeft
                   (some false :: some false :: some true :: some false ::
-                    (MachineDescription.encodeCodeWordAsInput rest).map
+                    (encodeCodeWordAsInput rest).map
                       some))).state =
                 CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.halt := by
-            simpa [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] using
-              congrArg MachineDescription.Configuration.state h
+            simpa [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] using
+              congrArg Configuration.state h
           exact False.elim
             ((cellSuffixScannerDescription_runConfig_false_false_ne_halt
               baseLeft
               (some true :: some false ::
-                (MachineDescription.encodeCodeWordAsInput rest).map some)
+                (encodeCodeWordAsInput rest).map some)
               n) hstate)
       | done =>
           have hstate :
@@ -274,17 +275,17 @@ theorem cellSuffixScannerDescription_runConfig_code_inv
                   CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
                   baseLeft
                   (some false :: some false :: some true :: some true ::
-                    (MachineDescription.encodeCodeWordAsInput rest).map
+                    (encodeCodeWordAsInput rest).map
                       some))).state =
                 CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.halt := by
-            simpa [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] using
-              congrArg MachineDescription.Configuration.state h
+            simpa [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] using
+              congrArg Configuration.state h
           exact False.elim
             ((cellSuffixScannerDescription_runConfig_false_false_ne_halt
               baseLeft
               (some true :: some true ::
-                (MachineDescription.encodeCodeWordAsInput rest).map some)
+                (encodeCodeWordAsInput rest).map some)
               n) hstate)
       | blank =>
           exact ⟨none, rest, rfl⟩
@@ -300,16 +301,16 @@ theorem cellSuffixScannerDescription_runConfig_code_inv
                   CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
                   baseLeft
                   (some false :: some true :: some true :: some true ::
-                    (MachineDescription.encodeCodeWordAsInput rest).map
+                    (encodeCodeWordAsInput rest).map
                       some))).state =
                 CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.halt := by
-            simpa [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] using
-              congrArg MachineDescription.Configuration.state h
+            simpa [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] using
+              congrArg Configuration.state h
           exact False.elim
             ((cellSuffixScannerDescription_runConfig_false_true_true_ne_halt
               baseLeft
-              ((MachineDescription.encodeCodeWordAsInput rest).map some)
+              ((encodeCodeWordAsInput rest).map some)
               n) hstate)
       | moveRight =>
           have hstate :
@@ -319,62 +320,62 @@ theorem cellSuffixScannerDescription_runConfig_code_inv
                   CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
                   baseLeft
                   (some true :: some false :: some false :: some false ::
-                    (MachineDescription.encodeCodeWordAsInput rest).map
+                    (encodeCodeWordAsInput rest).map
                       some))).state =
                 CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.halt := by
-            simpa [MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput] using
-              congrArg MachineDescription.Configuration.state h
+            simpa [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput] using
+              congrArg Configuration.state h
           exact False.elim
             ((cellSuffixScannerDescription_runConfig_true_start_ne_halt
               baseLeft
               (some false :: some false :: some false ::
-                (MachineDescription.encodeCodeWordAsInput rest).map some)
+                (encodeCodeWordAsInput rest).map some)
               n) hstate)
 
 theorem encodeCodeWordAsInput_cons_bits
     (symbol : MachineCodeSymbol) (rest : Word MachineCodeSymbol) :
     exists b : Bool,
     exists tail : Word Bool,
-      MachineDescription.encodeCodeWordAsInput (symbol :: rest) =
+      encodeCodeWordAsInput (symbol :: rest) =
         b :: tail := by
   cases symbol
   · refine ⟨false, List.append [false, false, false]
-      (MachineDescription.encodeCodeWordAsInput rest), ?_⟩
-    simp [MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput]
+      (encodeCodeWordAsInput rest), ?_⟩
+    simp [encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput]
   · refine ⟨false, List.append [false, false, true]
-      (MachineDescription.encodeCodeWordAsInput rest), ?_⟩
-    simp [MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput]
+      (encodeCodeWordAsInput rest), ?_⟩
+    simp [encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput]
   · refine ⟨false, List.append [false, true, false]
-      (MachineDescription.encodeCodeWordAsInput rest), ?_⟩
-    simp [MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput]
+      (encodeCodeWordAsInput rest), ?_⟩
+    simp [encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput]
   · refine ⟨false, List.append [false, true, true]
-      (MachineDescription.encodeCodeWordAsInput rest), ?_⟩
-    simp [MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput]
+      (encodeCodeWordAsInput rest), ?_⟩
+    simp [encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput]
   · refine ⟨false, List.append [true, false, false]
-      (MachineDescription.encodeCodeWordAsInput rest), ?_⟩
-    simp [MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput]
+      (encodeCodeWordAsInput rest), ?_⟩
+    simp [encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput]
   · refine ⟨false, List.append [true, false, true]
-      (MachineDescription.encodeCodeWordAsInput rest), ?_⟩
-    simp [MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput]
+      (encodeCodeWordAsInput rest), ?_⟩
+    simp [encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput]
   · refine ⟨false, List.append [true, true, false]
-      (MachineDescription.encodeCodeWordAsInput rest), ?_⟩
-    simp [MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput]
+      (encodeCodeWordAsInput rest), ?_⟩
+    simp [encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput]
   · refine ⟨false, List.append [true, true, true]
-      (MachineDescription.encodeCodeWordAsInput rest), ?_⟩
-    simp [MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput]
+      (encodeCodeWordAsInput rest), ?_⟩
+    simp [encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput]
   · refine ⟨true, List.append [false, false, false]
-      (MachineDescription.encodeCodeWordAsInput rest), ?_⟩
-    simp [MachineDescription.encodeCodeWordAsInput,
-      MachineDescription.encodeCodeSymbolAsInput]
+      (encodeCodeWordAsInput rest), ?_⟩
+    simp [encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput]
 
 private theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_nil_ne_halt
     (cell : Option Bool) (baseLeft : List (Option Bool)) (n : Nat) :
@@ -383,8 +384,8 @@ private theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_nil_ne_h
       (config
         CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
         baseLeft
-        ((MachineDescription.encodeCodeWordAsInput
-          (MachineDescription.encodeCellAppend cell [])).map some))).state ≠
+        ((encodeCodeWordAsInput
+          (encodeCellAppend cell [])).map some))).state ≠
       CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.halt := by
   cases cell with
   | none =>
@@ -396,37 +397,37 @@ private theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_nil_ne_h
             config
               CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
               baseLeft
-              ((MachineDescription.encodeCodeWordAsInput
-                (MachineDescription.encodeCellAppend none [])).map some))
+              ((encodeCodeWordAsInput
+                (encodeCellAppend none [])).map some))
           (stuck :=
             CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.runConfig
               4
               (config
                 CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
                 baseLeft
-                ((MachineDescription.encodeCodeWordAsInput
-                  (MachineDescription.encodeCellAppend none [])).map some)))
+                ((encodeCodeWordAsInput
+                  (encodeCellAppend none [])).map some)))
           (k := 4) (n := n)
           rfl
           (by
             simp [CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription,
               config, tapeAtCells, keepMove,
-              MachineDescription.runConfig, MachineDescription.stepConfig,
-              MachineDescription.lookupTransition, MachineDescription.Matches,
-              MachineDescription.transition, MachineDescription.encodeCellAppend,
-              MachineDescription.encodeCell,
-              MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput, Tape.read,
+              runConfig, stepConfig,
+              lookupTransition, Matches,
+              transition, encodeCellAppend,
+              encodeCell,
+              encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput, Tape.read,
               Tape.write, Tape.move, Tape.moveRight])
           (by
             simp [CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription,
               config, tapeAtCells, keepMove,
-              MachineDescription.runConfig, MachineDescription.stepConfig,
-              MachineDescription.lookupTransition, MachineDescription.Matches,
-              MachineDescription.transition, MachineDescription.encodeCellAppend,
-              MachineDescription.encodeCell,
-              MachineDescription.encodeCodeWordAsInput,
-              MachineDescription.encodeCodeSymbolAsInput, Tape.read,
+              runConfig, stepConfig,
+              lookupTransition, Matches,
+              transition, encodeCellAppend,
+              encodeCell,
+              encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput, Tape.read,
               Tape.write, Tape.move, Tape.moveRight])
   | some b =>
       cases b
@@ -438,8 +439,8 @@ private theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_nil_ne_h
               config
                 CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
                 baseLeft
-                ((MachineDescription.encodeCodeWordAsInput
-                  (MachineDescription.encodeCellAppend (some false) [])).map
+                ((encodeCodeWordAsInput
+                  (encodeCellAppend (some false) [])).map
                   some))
             (stuck :=
               CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.runConfig
@@ -447,32 +448,32 @@ private theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_nil_ne_h
                 (config
                   CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
                   baseLeft
-                  ((MachineDescription.encodeCodeWordAsInput
-                    (MachineDescription.encodeCellAppend (some false) [])).map
+                  ((encodeCodeWordAsInput
+                    (encodeCellAppend (some false) [])).map
                     some)))
             (k := 4) (n := n)
             rfl
             (by
               simp [CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription,
                 config, tapeAtCells, keepMove,
-                MachineDescription.runConfig, MachineDescription.stepConfig,
-                MachineDescription.lookupTransition, MachineDescription.Matches,
-                MachineDescription.transition,
-                MachineDescription.encodeCellAppend,
-                MachineDescription.encodeCell,
-                MachineDescription.encodeCodeWordAsInput,
-                MachineDescription.encodeCodeSymbolAsInput, Tape.read,
+                runConfig, stepConfig,
+                lookupTransition, Matches,
+                transition,
+                encodeCellAppend,
+                encodeCell,
+                encodeCodeWordAsInput,
+                encodeCodeSymbolAsInput, Tape.read,
                 Tape.write, Tape.move, Tape.moveRight])
             (by
               simp [CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription,
                 config, tapeAtCells, keepMove,
-                MachineDescription.runConfig, MachineDescription.stepConfig,
-                MachineDescription.lookupTransition, MachineDescription.Matches,
-                MachineDescription.transition,
-                MachineDescription.encodeCellAppend,
-                MachineDescription.encodeCell,
-                MachineDescription.encodeCodeWordAsInput,
-                MachineDescription.encodeCodeSymbolAsInput, Tape.read,
+                runConfig, stepConfig,
+                lookupTransition, Matches,
+                transition,
+                encodeCellAppend,
+                encodeCell,
+                encodeCodeWordAsInput,
+                encodeCodeSymbolAsInput, Tape.read,
                 Tape.write, Tape.move, Tape.moveRight])
       · exact
           CanonicalLayouts.DovetailLayoutScanner.primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -482,8 +483,8 @@ private theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_nil_ne_h
               config
                 CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
                 baseLeft
-                ((MachineDescription.encodeCodeWordAsInput
-                  (MachineDescription.encodeCellAppend (some true) [])).map
+                ((encodeCodeWordAsInput
+                  (encodeCellAppend (some true) [])).map
                   some))
             (stuck :=
               CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.runConfig
@@ -491,32 +492,32 @@ private theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_nil_ne_h
                 (config
                   CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
                   baseLeft
-                  ((MachineDescription.encodeCodeWordAsInput
-                    (MachineDescription.encodeCellAppend (some true) [])).map
+                  ((encodeCodeWordAsInput
+                    (encodeCellAppend (some true) [])).map
                     some)))
             (k := 4) (n := n)
             rfl
             (by
               simp [CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription,
                 config, tapeAtCells, keepMove,
-                MachineDescription.runConfig, MachineDescription.stepConfig,
-                MachineDescription.lookupTransition, MachineDescription.Matches,
-                MachineDescription.transition,
-                MachineDescription.encodeCellAppend,
-                MachineDescription.encodeCell,
-                MachineDescription.encodeCodeWordAsInput,
-                MachineDescription.encodeCodeSymbolAsInput, Tape.read,
+                runConfig, stepConfig,
+                lookupTransition, Matches,
+                transition,
+                encodeCellAppend,
+                encodeCell,
+                encodeCodeWordAsInput,
+                encodeCodeSymbolAsInput, Tape.read,
                 Tape.write, Tape.move, Tape.moveRight])
             (by
               simp [CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription,
                 config, tapeAtCells, keepMove,
-                MachineDescription.runConfig, MachineDescription.stepConfig,
-                MachineDescription.lookupTransition, MachineDescription.Matches,
-                MachineDescription.transition,
-                MachineDescription.encodeCellAppend,
-                MachineDescription.encodeCell,
-                MachineDescription.encodeCodeWordAsInput,
-                MachineDescription.encodeCodeSymbolAsInput, Tape.read,
+                runConfig, stepConfig,
+                lookupTransition, Matches,
+                transition,
+                encodeCellAppend,
+                encodeCell,
+                encodeCodeWordAsInput,
+                encodeCodeSymbolAsInput, Tape.read,
                 Tape.write, Tape.move, Tape.moveRight])
 
 theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_handoff
@@ -529,14 +530,14 @@ theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_handoff
           (config
             CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
             baseLeft
-            ((MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeCellAppend cell suffix)).map some)) =
+            ((encodeCodeWordAsInput
+              (encodeCellAppend cell suffix)).map some)) =
         { state :=
             CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.halt
           tape := Tout }) :
     exists b : Bool,
     exists suffixTail : Word Bool,
-      MachineDescription.encodeCodeWordAsInput suffix = b :: suffixTail ∧
+      encodeCodeWordAsInput suffix = b :: suffixTail ∧
         Tout =
           (CanonicalLayouts.DovetailLayoutScanner.cellSuffixHandoffConfigWithBase
             cell baseLeft (b :: suffixTail)).tape := by
@@ -548,11 +549,11 @@ theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_handoff
             (config
               CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
               baseLeft
-              ((MachineDescription.encodeCodeWordAsInput
-                (MachineDescription.encodeCellAppend cell [])).map
+              ((encodeCodeWordAsInput
+                (encodeCellAppend cell [])).map
                 some))).state =
             CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.halt := by
-        simpa using congrArg MachineDescription.Configuration.state h
+        simpa using congrArg Configuration.state h
       exact False.elim
         ((cellSuffixScannerDescription_runConfig_encodeCellAppend_nil_ne_halt
           cell baseLeft n) hstate)
@@ -560,12 +561,12 @@ theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_handoff
       rcases encodeCodeWordAsInput_cons_bits symbol rest with
         ⟨b, suffixTail, hsuffix⟩
       refine ⟨b, suffixTail, hsuffix, ?_⟩
-      let c0 : MachineDescription.Configuration :=
+      let c0 : Configuration :=
         config
           CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription.start
           baseLeft
-          ((MachineDescription.encodeCodeWordAsInput
-            (MachineDescription.encodeCellAppend cell (symbol :: rest))).map
+          ((encodeCodeWordAsInput
+            (encodeCellAppend cell (symbol :: rest))).map
             some)
       rcases
           CanonicalLayouts.DovetailLayoutScanner.run_cellSuffix_raw_to_handoff_withBase
@@ -595,42 +596,42 @@ theorem tapeSuffixScannerDescription_runConfig_code_handoff
           (config
             CanonicalLayouts.DovetailLayoutScanner.TapeSuffixScannerDescription.start
             baseLeft
-            ((MachineDescription.encodeCodeWordAsInput code).map some)) =
+            ((encodeCodeWordAsInput code).map some)) =
         { state :=
             CanonicalLayouts.DovetailLayoutScanner.TapeSuffixScannerDescription.halt
           tape := Tout }) :
     exists T : Tape Bool,
     exists suffix : Word MachineCodeSymbol,
     exists baseAfter : List (Option Bool),
-      code = MachineDescription.encodeTapeAppend T suffix ∧
+      code = encodeTapeAppend T suffix ∧
         Tape.move Direction.right Tout =
           tapeAtCells baseAfter
-            ((MachineDescription.encodeCodeWordAsInput suffix).map
+            ((encodeCodeWordAsInput suffix).map
               some) := by
   have hseq :
-      (MachineDescription.seqSubroutine
+      (seqSubroutine
         CanonicalLayouts.DovetailLayoutScanner.CellListSuffixScannerDescription
-        (MachineDescription.seqSubroutine
+        (seqSubroutine
           CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription
           CanonicalLayouts.DovetailLayoutScanner.CellListSuffixScannerDescription
           Direction.right)
         Direction.right).runConfig n
           { state :=
-              (MachineDescription.seqSubroutine
+              (seqSubroutine
                 CanonicalLayouts.DovetailLayoutScanner.CellListSuffixScannerDescription
-                (MachineDescription.seqSubroutine
+                (seqSubroutine
                   CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription
                   CanonicalLayouts.DovetailLayoutScanner.CellListSuffixScannerDescription
                   Direction.right)
                 Direction.right).start
             tape :=
               tapeAtCells baseLeft
-                ((MachineDescription.encodeCodeWordAsInput code).map
+                ((encodeCodeWordAsInput code).map
                   some) } =
         { state :=
-            (MachineDescription.seqSubroutine
+            (seqSubroutine
               CanonicalLayouts.DovetailLayoutScanner.CellListSuffixScannerDescription
-              (MachineDescription.seqSubroutine
+              (seqSubroutine
                 CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription
                 CanonicalLayouts.DovetailLayoutScanner.CellListSuffixScannerDescription
                 Direction.right)
@@ -639,15 +640,15 @@ theorem tapeSuffixScannerDescription_runConfig_code_handoff
     simpa [CanonicalLayouts.DovetailLayoutScanner.TapeSuffixScannerDescription,
       config] using h
   rcases
-      MachineDescription.seqSubroutine_runConfig_inv
+      seqSubroutine_runConfig_inv
         (A := CanonicalLayouts.DovetailLayoutScanner.CellListSuffixScannerDescription)
-        (B := MachineDescription.seqSubroutine
+        (B := seqSubroutine
           CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription
           CanonicalLayouts.DovetailLayoutScanner.CellListSuffixScannerDescription
           Direction.right)
         (handoffMove := Direction.right)
         CanonicalLayouts.DovetailLayoutScanner.cellListSuffixScannerDescription_subroutineReady
-        (MachineDescription.seqSubroutine_subroutineReady
+        (seqSubroutine_subroutineReady
           CanonicalLayouts.DovetailLayoutScanner.cellSuffixScannerDescription_subroutineReady
           CanonicalLayouts.DovetailLayoutScanner.cellListSuffixScannerDescription_subroutineReady)
         hseq with
@@ -667,7 +668,7 @@ theorem tapeSuffixScannerDescription_runConfig_code_handoff
         tapeAtCells
           (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
             leftCells baseLeft)
-          ((MachineDescription.encodeCodeWordAsInput afterLeft).map
+          ((encodeCodeWordAsInput afterLeft).map
             some) := by
     have hleftTape :=
       CanonicalLayouts.DovetailLayoutScanner.cellListSuffixScannerDescription_runConfig_encodeCellListAppend_handoff_false
@@ -679,28 +680,28 @@ theorem tapeSuffixScannerDescription_runConfig_code_handoff
         leftCells baseLeft (false :: afterLeftTail)
   rcases hheadRight with ⟨nHeadRight, hheadRightRun⟩
   have hheadRightCode :
-      (MachineDescription.seqSubroutine
+      (seqSubroutine
           CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription
           CanonicalLayouts.DovetailLayoutScanner.CellListSuffixScannerDescription
           Direction.right).runConfig nHeadRight
         (config
-          (MachineDescription.seqSubroutine
+          (seqSubroutine
             CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription
             CanonicalLayouts.DovetailLayoutScanner.CellListSuffixScannerDescription
             Direction.right).start
           (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
             leftCells baseLeft)
-          ((MachineDescription.encodeCodeWordAsInput afterLeft).map
+          ((encodeCodeWordAsInput afterLeft).map
             some)) =
         { state :=
-            (MachineDescription.seqSubroutine
+            (seqSubroutine
               CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription
               CanonicalLayouts.DovetailLayoutScanner.CellListSuffixScannerDescription
               Direction.right).halt
           tape := Tout } := by
     simpa [config, hleftMove] using hheadRightRun
   rcases
-      MachineDescription.seqSubroutine_runConfig_inv
+      seqSubroutine_runConfig_inv
         (A := CanonicalLayouts.DovetailLayoutScanner.CellSuffixScannerDescription)
         (B := CanonicalLayouts.DovetailLayoutScanner.CellListSuffixScannerDescription)
         (handoffMove := Direction.right)
@@ -728,7 +729,7 @@ theorem tapeSuffixScannerDescription_runConfig_code_handoff
             ((CanonicalLayouts.DovetailLayoutScanner.cellCodeBits headCell).reverse.map
               some)
             baseAfterLeft)
-          ((MachineDescription.encodeCodeWordAsInput afterHead).map
+          ((encodeCodeWordAsInput afterHead).map
             some) := by
     rw [hheadTape]
     simpa [hafterHeadBits] using
@@ -746,7 +747,7 @@ theorem tapeSuffixScannerDescription_runConfig_code_handoff
           (config
             CanonicalLayouts.DovetailLayoutScanner.CellListSuffixScannerDescription.start
             baseAfterHead
-            ((MachineDescription.encodeCodeWordAsInput afterHead).map
+            ((encodeCodeWordAsInput afterHead).map
               some)) =
         { state :=
             CanonicalLayouts.DovetailLayoutScanner.CellListSuffixScannerDescription.halt
@@ -772,7 +773,7 @@ theorem tapeSuffixScannerDescription_runConfig_code_handoff
       CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
         rightCells baseAfterHead,
       ?_, ?_⟩
-  · simp [T, MachineDescription.encodeTapeAppend, hcodeLeft,
+  · simp [T, encodeTapeAppend, hcodeLeft,
       hafterLeft, hafterHead]
   · rw [hrightTape]
     simpa [hsuffixBits] using

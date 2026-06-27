@@ -20,6 +20,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
@@ -48,9 +49,9 @@ theorem tape_move_left_move_right_input_encodeCodeWordAsInput_cons
     Tape.move Direction.left
         (Tape.move Direction.right
           (Tape.input
-            (MachineDescription.encodeCodeWordAsInput (symbol :: code)))) =
+            (encodeCodeWordAsInput (symbol :: code)))) =
       Tape.input
-        (MachineDescription.encodeCodeWordAsInput (symbol :: code)) := by
+        (encodeCodeWordAsInput (symbol :: code)) := by
   cases symbol <;> rfl
 
 theorem tapeCodePrimitiveCodeWord_handoff_tape
@@ -58,16 +59,16 @@ theorem tapeCodePrimitiveCodeWord_handoff_tape
     Tape.normalizedOutput
         (Tape.move Direction.right
           (Tape.input
-            (MachineDescription.encodeCodeWordAsInput (symbol :: code)))) =
-        MachineDescription.encodeCodeWordAsInput (symbol :: code) ∧
+            (encodeCodeWordAsInput (symbol :: code)))) =
+        encodeCodeWordAsInput (symbol :: code) ∧
       Tape.move tapeCodePrimitiveCodeWordHandoffMove
         (Tape.move Direction.right
           (Tape.input
-            (MachineDescription.encodeCodeWordAsInput (symbol :: code)))) =
+            (encodeCodeWordAsInput (symbol :: code)))) =
         Tape.input
-          (MachineDescription.encodeCodeWordAsInput (symbol :: code)) :=
+          (encodeCodeWordAsInput (symbol :: code)) :=
   ⟨tape_normalizedOutput_move_right_input
-      (MachineDescription.encodeCodeWordAsInput (symbol :: code)),
+      (encodeCodeWordAsInput (symbol :: code)),
     by
       simpa [tapeCodePrimitiveCodeWordHandoffMove] using
       tape_move_left_move_right_input_encodeCodeWordAsInput_cons
@@ -98,25 +99,25 @@ theorem haltsWithTape_functional_of_haltTransitionFree
       cases hfinal : D.runConfig n c₀ with
       | mk state tape =>
           have hstate : state = D.halt := by
-            simpa [MachineDescription.HaltsWithTapeIn, c₀, hfinal] using
+            simpa [HaltsWithTapeIn, c₀, hfinal] using
               hn.left
           have htape : tape = Tn := by
-            simpa [MachineDescription.HaltsWithTapeIn, c₀, hfinal] using
+            simpa [HaltsWithTapeIn, c₀, hfinal] using
               hn.right
           simp [hstate, htape]
     have hrunm :
         D.runConfig m c₀ = D.runConfig d (D.runConfig n c₀) := by
-      rw [hm_eq, MachineDescription.runConfig_add]
+      rw [hm_eq, runConfig_add]
     have hstay :
         D.runConfig d (D.runConfig n c₀) =
           D.runConfig n c₀ := by
       rw [hconfig_n]
-      exact MachineDescription.runConfig_halt hD Tn d
+      exact runConfig_halt hD Tn d
     have htape_m :
         (D.runConfig m c₀).tape = Tn := by
       rw [hrunm, hstay, hconfig_n]
     have htm : (D.runConfig m c₀).tape = Tm := by
-      simpa [MachineDescription.HaltsWithTapeIn, c₀] using hm.right
+      simpa [HaltsWithTapeIn, c₀] using hm.right
     rw [htm] at htape_m
     exact htape_m.symm
   by_cases hle : n₁ ≤ n₂
@@ -125,7 +126,7 @@ theorem haltsWithTape_functional_of_haltTransitionFree
     exact (hordered hle' h₂ h₁).symm
 
 theorem runConfig_halt_tape_functional_of_haltTransitionFree
-    {D : MachineDescription} {c : MachineDescription.Configuration}
+    {D : MachineDescription} {c : Configuration}
     {n₁ n₂ : Nat} {T₁ T₂ : Tape Bool}
     (hD : D.HaltTransitionFree)
     (h₁ : D.runConfig n₁ c = { state := D.halt, tape := T₁ })
@@ -143,12 +144,12 @@ theorem runConfig_halt_tape_functional_of_haltTransitionFree
       omega
     have hrunm :
         D.runConfig m c = D.runConfig d (D.runConfig n c) := by
-      rw [hm_eq, MachineDescription.runConfig_add]
+      rw [hm_eq, runConfig_add]
     have hstay :
         D.runConfig d (D.runConfig n c) =
           D.runConfig n c := by
       rw [hn]
-      exact MachineDescription.runConfig_halt hD Tn d
+      exact runConfig_halt hD Tn d
     have htape_m :
         (D.runConfig m c).tape = Tn := by
       rw [hrunm, hstay, hn]
@@ -164,43 +165,43 @@ theorem runConfig_halt_tape_functional_of_haltTransitionFree
 theorem encodeConfigurationAppend_initial
     (D : MachineDescription) (w : Word Bool)
     (suffix : Word MachineCodeSymbol) :
-    MachineDescription.encodeConfigurationAppend (D.initial w) suffix =
-      MachineDescription.encodeNatAppend D.start
-        (MachineDescription.encodeTapeAppend (Tape.input w) suffix) := by
+    encodeConfigurationAppend (D.initial w) suffix =
+      encodeNatAppend D.start
+        (encodeTapeAppend (Tape.input w) suffix) := by
   rfl
 
 theorem dovetailInitialLayoutCode_output_eq_transition_cons
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) :
-    MachineDescription.DovetailLayout.encode
-        (MachineDescription.DovetailLayout.initial
+    DovetailLayout.encode
+        (DovetailLayout.initial
           accept reject w stage) =
       MachineCodeSymbol.transition ::
-        MachineDescription.encodeBoolWordAppend w
-          (MachineDescription.encodeNatAppend stage
-            (MachineDescription.encodeConfigurationAppend
+        encodeBoolWordAppend w
+          (encodeNatAppend stage
+            (encodeConfigurationAppend
               (accept.initial w)
-              (MachineDescription.encodeConfigurationAppend
+              (encodeConfigurationAppend
                 (reject.initial w)
-                (MachineDescription.encodeBoolAppend false
-                  (MachineDescription.encodeBoolAppend false []))))) := by
+                (encodeBoolAppend false
+                  (encodeBoolAppend false []))))) := by
   rfl
 
 theorem dovetailInitialLayoutCode_output_eq_expanded
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) :
-    MachineDescription.DovetailLayout.encode
-        (MachineDescription.DovetailLayout.initial
+    DovetailLayout.encode
+        (DovetailLayout.initial
           accept reject w stage) =
       MachineCodeSymbol.transition ::
-        MachineDescription.encodeBoolWordAppend w
-          (MachineDescription.encodeNatAppend stage
-            (MachineDescription.encodeNatAppend accept.start
-              (MachineDescription.encodeTapeAppend (Tape.input w)
-                (MachineDescription.encodeNatAppend reject.start
-                  (MachineDescription.encodeTapeAppend (Tape.input w)
-                    (MachineDescription.encodeBoolAppend false
-                      (MachineDescription.encodeBoolAppend false []))))))) := by
+        encodeBoolWordAppend w
+          (encodeNatAppend stage
+            (encodeNatAppend accept.start
+              (encodeTapeAppend (Tape.input w)
+                (encodeNatAppend reject.start
+                  (encodeTapeAppend (Tape.input w)
+                    (encodeBoolAppend false
+                      (encodeBoolAppend false []))))))) := by
   rw [dovetailInitialLayoutCode_output_eq_transition_cons,
     encodeConfigurationAppend_initial,
     encodeConfigurationAppend_initial]
@@ -218,26 +219,26 @@ theorem pairedRecognizerDovetailInitialLayoutCode_transform_eq_some_cons
         accept reject code out).mp h with
     ⟨w, stage, _hcode, hout⟩
   refine
-    ⟨MachineDescription.encodeBoolWordAppend w
-      (MachineDescription.encodeNatAppend stage
-        (MachineDescription.encodeConfigurationAppend
+    ⟨encodeBoolWordAppend w
+      (encodeNatAppend stage
+        (encodeConfigurationAppend
           (accept.initial w)
-          (MachineDescription.encodeConfigurationAppend
+          (encodeConfigurationAppend
             (reject.initial w)
-            (MachineDescription.encodeBoolAppend false
-              (MachineDescription.encodeBoolAppend false []))))), ?_⟩
+            (encodeBoolAppend false
+              (encodeBoolAppend false []))))), ?_⟩
   rw [hout, dovetailInitialLayoutCode_output_eq_transition_cons]
 
 theorem tapeCodePrimitiveClosedHandoffCompiled_of_halt_tape_move_right
-    {P : MachineDescription.TapeCodePrimitive}
+    {P : TapeCodePrimitive}
     {D : MachineDescription}
     (hwell : D.WellFormed)
     (hhaltFree : D.HaltTransitionFree)
     (houtput :
       forall code out : Word MachineCodeSymbol,
         D.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput code)
-            (MachineDescription.encodeCodeWordAsInput out) <->
+            (encodeCodeWordAsInput code)
+            (encodeCodeWordAsInput out) <->
           P.transform code = some out)
     (houtCons :
       forall {code out : Word MachineCodeSymbol},
@@ -249,13 +250,13 @@ theorem tapeCodePrimitiveClosedHandoffCompiled_of_halt_tape_move_right
       forall code : Word MachineCodeSymbol,
       forall T : Tape Bool,
         D.HaltsWithTape
-            (MachineDescription.encodeCodeWordAsInput code) T ->
+            (encodeCodeWordAsInput code) T ->
           exists out : Word MachineCodeSymbol,
             P.transform code = some out ∧
               T =
                 Tape.move Direction.right
                   (Tape.input
-                    (MachineDescription.encodeCodeWordAsInput out))) :
+                    (encodeCodeWordAsInput out))) :
     TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       P D tapeCodePrimitiveCodeWordHandoffMove := by
   constructor
@@ -270,48 +271,48 @@ theorem tapeCodePrimitiveClosedHandoffCompiled_of_halt_tape_move_right
     exact ⟨symbol :: tail, hp, hnorm, hmove⟩
 
 def TapeCodePrimitiveRightShiftedOutputCompiledSubroutineByDescription
-    (P : MachineDescription.TapeCodePrimitive)
+    (P : TapeCodePrimitive)
     (D : MachineDescription) : Prop :=
   D.WellFormed ∧
     D.HaltTransitionFree ∧
       (forall code out : Word MachineCodeSymbol,
         D.HaltsWithOutput
-            (MachineDescription.encodeCodeWordAsInput code)
-            (MachineDescription.encodeCodeWordAsInput out) <->
+            (encodeCodeWordAsInput code)
+            (encodeCodeWordAsInput out) <->
           P.transform code = some out) ∧
         forall code : Word MachineCodeSymbol,
         forall T : Tape Bool,
           D.HaltsWithTape
-              (MachineDescription.encodeCodeWordAsInput code) T ->
+              (encodeCodeWordAsInput code) T ->
             exists out : Word MachineCodeSymbol,
               P.transform code = some out ∧
                 T =
                   Tape.move Direction.right
                     (Tape.input
-                      (MachineDescription.encodeCodeWordAsInput out))
+                      (encodeCodeWordAsInput out))
 
 def OutputCode
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) : Word MachineCodeSymbol :=
-  MachineDescription.DovetailLayout.encode
-    (MachineDescription.DovetailLayout.initial accept reject w stage)
+  DovetailLayout.encode
+    (DovetailLayout.initial accept reject w stage)
 
 def SuffixCode
     (accept reject : MachineDescription)
     (w : Word Bool) : Word MachineCodeSymbol :=
-  MachineDescription.encodeNatAppend accept.start
-    (MachineDescription.encodeTapeAppend (Tape.input w)
-      (MachineDescription.encodeNatAppend reject.start
-        (MachineDescription.encodeTapeAppend (Tape.input w)
-          (MachineDescription.encodeBoolAppend false
-            (MachineDescription.encodeBoolAppend false [])))))
+  encodeNatAppend accept.start
+    (encodeTapeAppend (Tape.input w)
+      (encodeNatAppend reject.start
+        (encodeTapeAppend (Tape.input w)
+          (encodeBoolAppend false
+            (encodeBoolAppend false [])))))
 
 def OutputTape
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) : Tape Bool :=
   Tape.move Direction.right
     (Tape.input
-      (MachineDescription.encodeCodeWordAsInput
+      (encodeCodeWordAsInput
         (OutputCode
           accept reject w stage)))
 
@@ -324,7 +325,7 @@ def ForwardSpec
   forall w : Word Bool,
   forall stage : Nat,
     initializer.HaltsWithTape
-      (MachineDescription.encodeCodeWordAsInput
+      (encodeCodeWordAsInput
         (PairedRecognizerDovetailStageInputCode w stage))
       (OutputTape
         accept reject w stage)
@@ -334,7 +335,7 @@ def ClosedSpec
   forall code : Word MachineCodeSymbol,
   forall T : Tape Bool,
     initializer.HaltsWithTape
-        (MachineDescription.encodeCodeWordAsInput code) T ->
+        (encodeCodeWordAsInput code) T ->
       exists w : Word Bool,
       exists stage : Nat,
         code = PairedRecognizerDovetailStageInputCode w stage ∧
@@ -397,14 +398,14 @@ theorem outputCode_eq_expanded
     (w : Word Bool) (stage : Nat) :
     OutputCode accept reject w stage =
       MachineCodeSymbol.transition ::
-        MachineDescription.encodeBoolWordAppend w
-          (MachineDescription.encodeNatAppend stage
-            (MachineDescription.encodeNatAppend accept.start
-              (MachineDescription.encodeTapeAppend (Tape.input w)
-                (MachineDescription.encodeNatAppend reject.start
-                  (MachineDescription.encodeTapeAppend (Tape.input w)
-                    (MachineDescription.encodeBoolAppend false
-                      (MachineDescription.encodeBoolAppend false []))))))) := by
+        encodeBoolWordAppend w
+          (encodeNatAppend stage
+            (encodeNatAppend accept.start
+              (encodeTapeAppend (Tape.input w)
+                (encodeNatAppend reject.start
+                  (encodeTapeAppend (Tape.input w)
+                    (encodeBoolAppend false
+                      (encodeBoolAppend false []))))))) := by
   exact dovetailInitialLayoutCode_output_eq_expanded accept reject w stage
 
 theorem outputTape_eq_expanded
@@ -413,16 +414,16 @@ theorem outputTape_eq_expanded
     OutputTape accept reject w stage =
       Tape.move Direction.right
         (Tape.input
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (MachineCodeSymbol.transition ::
-              MachineDescription.encodeBoolWordAppend w
-                (MachineDescription.encodeNatAppend stage
-                  (MachineDescription.encodeNatAppend accept.start
-                    (MachineDescription.encodeTapeAppend (Tape.input w)
-                      (MachineDescription.encodeNatAppend reject.start
-                        (MachineDescription.encodeTapeAppend (Tape.input w)
-                          (MachineDescription.encodeBoolAppend false
-                            (MachineDescription.encodeBoolAppend false [])))))))))) := by
+              encodeBoolWordAppend w
+                (encodeNatAppend stage
+                  (encodeNatAppend accept.start
+                    (encodeTapeAppend (Tape.input w)
+                      (encodeNatAppend reject.start
+                        (encodeTapeAppend (Tape.input w)
+                          (encodeBoolAppend false
+                            (encodeBoolAppend false [])))))))))) := by
   rw [OutputTape,
     outputCode_eq_expanded]
 
@@ -430,12 +431,12 @@ theorem suffixCode_eq_configurations
     (accept reject : MachineDescription)
     (w : Word Bool) :
     SuffixCode accept reject w =
-      MachineDescription.encodeConfigurationAppend
+      encodeConfigurationAppend
         (accept.initial w)
-        (MachineDescription.encodeConfigurationAppend
+        (encodeConfigurationAppend
           (reject.initial w)
-          (MachineDescription.encodeBoolAppend false
-            (MachineDescription.encodeBoolAppend false []))) := by
+          (encodeBoolAppend false
+            (encodeBoolAppend false []))) := by
   rw [SuffixCode,
     encodeConfigurationAppend_initial,
     encodeConfigurationAppend_initial]
@@ -446,71 +447,71 @@ theorem outputCode_eq_stageInput_append_suffix
     OutputCode accept reject w stage =
       MachineCodeSymbol.transition ::
         List.append
-          (MachineDescription.DovetailLayout.stageInputCode w stage)
+          (DovetailLayout.stageInputCode w stage)
           (SuffixCode accept reject w) := by
   rw [outputCode_eq_expanded]
   change
     MachineCodeSymbol.transition ::
-        MachineDescription.encodeBoolWordAppend w
-          (MachineDescription.encodeNatAppend stage
+        encodeBoolWordAppend w
+          (encodeNatAppend stage
             (SuffixCode accept reject w)) =
       MachineCodeSymbol.transition ::
         List.append
-          (MachineDescription.DovetailLayout.stageInputCode w stage)
+          (DovetailLayout.stageInputCode w stage)
           (SuffixCode accept reject w)
   congr 1
   have hnat :
-      MachineDescription.encodeNatAppend stage
+      encodeNatAppend stage
           (SuffixCode accept reject w) =
-        List.append (MachineDescription.encodeNatAppend stage [])
+        List.append (encodeNatAppend stage [])
           (SuffixCode accept reject w) := by
     simpa using
       encodeNatAppend_append stage ([] : Word MachineCodeSymbol)
         (SuffixCode accept reject w)
   have hbool :=
     encodeBoolWordAppend_append w
-      (MachineDescription.encodeNatAppend stage [])
+      (encodeNatAppend stage [])
       (SuffixCode accept reject w)
   rw [← hnat] at hbool
-  simpa [MachineDescription.DovetailLayout.stageInputCode,
-    MachineDescription.DovetailLayout.stageInputCodeAppend] using hbool
+  simpa [DovetailLayout.stageInputCode,
+    DovetailLayout.stageInputCodeAppend] using hbool
 
 theorem encodeTapeAppend_input_nil
     (suffix : Word MachineCodeSymbol) :
-    MachineDescription.encodeTapeAppend (Tape.input ([] : Word Bool)) suffix =
-      MachineDescription.encodeCellListAppend []
-        (MachineDescription.encodeCellAppend none
-          (MachineDescription.encodeCellListAppend [] suffix)) := by
+    encodeTapeAppend (Tape.input ([] : Word Bool)) suffix =
+      encodeCellListAppend []
+        (encodeCellAppend none
+          (encodeCellListAppend [] suffix)) := by
   rfl
 
 theorem encodeTapeAppend_input_cons
     (b : Bool) (rest : Word Bool)
     (suffix : Word MachineCodeSymbol) :
-    MachineDescription.encodeTapeAppend (Tape.input (b :: rest)) suffix =
-      MachineDescription.encodeCellListAppend []
-        (MachineDescription.encodeCellAppend (some b)
-          (MachineDescription.encodeCellListAppend (rest.map some)
+    encodeTapeAppend (Tape.input (b :: rest)) suffix =
+      encodeCellListAppend []
+        (encodeCellAppend (some b)
+          (encodeCellListAppend (rest.map some)
             suffix)) := by
   rfl
 
 theorem outputBits_eq_stageInput_append_suffix
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) :
-    MachineDescription.encodeCodeWordAsInput
+    encodeCodeWordAsInput
         (OutputCode
           accept reject w stage) =
       List.append
-        (MachineDescription.encodeCodeSymbolAsInput
+        (encodeCodeSymbolAsInput
           MachineCodeSymbol.transition)
         (List.append
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (PairedRecognizerDovetailStageInputCode w stage))
-          (MachineDescription.encodeCodeWordAsInput
+          (encodeCodeWordAsInput
             (SuffixCode
               accept reject w))) := by
   rw [outputCode_eq_stageInput_append_suffix,
-    MachineDescription.encodeCodeWordAsInput]
-  rw [MachineDescription.encodeCodeWordAsInput_append]
+    encodeCodeWordAsInput]
+  rw [encodeCodeWordAsInput_append]
   rfl
 
 theorem outputTape_eq_stageInput_append_suffix
@@ -520,12 +521,12 @@ theorem outputTape_eq_stageInput_append_suffix
       Tape.move Direction.right
         (Tape.input
           (List.append
-            (MachineDescription.encodeCodeSymbolAsInput
+            (encodeCodeSymbolAsInput
               MachineCodeSymbol.transition)
             (List.append
-              (MachineDescription.encodeCodeWordAsInput
+              (encodeCodeWordAsInput
                 (PairedRecognizerDovetailStageInputCode w stage))
-              (MachineDescription.encodeCodeWordAsInput
+              (encodeCodeWordAsInput
                 (SuffixCode
                   accept reject w))))) := by
   rw [OutputTape,
@@ -539,12 +540,12 @@ def tapeAtCells
 
 def config
     (state : Nat) (leftRev cells : List (Option Bool)) :
-    MachineDescription.Configuration :=
+    Configuration :=
   { state := state, tape := tapeAtCells leftRev cells }
 
 def codeCells
     (code : Word MachineCodeSymbol) : List (Option Bool) :=
-  (MachineDescription.encodeCodeWordAsInput code).map some
+  (encodeCodeWordAsInput code).map some
 
 def stageInputCells
     (w : Word Bool) (stage : Nat) : List (Option Bool) :=
@@ -580,14 +581,14 @@ theorem codeCells_append
     codeCells (List.append pre suffix) =
       List.append (codeCells pre) (codeCells suffix) := by
   unfold codeCells
-  rw [MachineDescription.encodeCodeWordAsInput_append]
+  rw [encodeCodeWordAsInput_append]
   exact map_some_append
-    (MachineDescription.encodeCodeWordAsInput pre)
-    (MachineDescription.encodeCodeWordAsInput suffix)
+    (encodeCodeWordAsInput pre)
+    (encodeCodeWordAsInput suffix)
 
 def codeSymbolCells
     (symbol : MachineCodeSymbol) : List (Option Bool) :=
-  (MachineDescription.encodeCodeSymbolAsInput symbol).map some
+  (encodeCodeSymbolAsInput symbol).map some
 
 def natCodeCells : Nat -> List (Option Bool)
   | 0 => codeSymbolCells MachineCodeSymbol.done

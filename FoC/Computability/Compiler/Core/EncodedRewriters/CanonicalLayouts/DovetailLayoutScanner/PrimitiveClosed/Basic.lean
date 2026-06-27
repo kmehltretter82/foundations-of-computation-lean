@@ -14,6 +14,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 namespace EncodedRewriters
 namespace CanonicalLayouts
@@ -39,9 +40,9 @@ theorem cellListSuffixScannerDescription_runConfig_start_cell_inv
       cases n with
       | zero =>
           simp [CellListSuffixScannerDescription, config, tapeAtCells,
-            MachineDescription.runConfig] at h
+            runConfig] at h
       | succ k =>
-          let c0 : MachineDescription.Configuration :=
+          let c0 : Configuration :=
             config CellListSuffixScannerDescription.start baseLeft
               (none :: suffixTail)
           have hstep :
@@ -50,17 +51,17 @@ theorem cellListSuffixScannerDescription_runConfig_start_cell_inv
               simp [c0, CellListSuffixScannerDescription, config,
                 tapeAtCells, keep, keepMove, writeMove,
                 scanLeftToSentinelRestart,
-                MachineDescription.stepConfig,
-                MachineDescription.lookupTransition,
-                MachineDescription.Matches,
-                MachineDescription.transition, Tape.read]
+                stepConfig,
+                lookupTransition,
+                Matches,
+                transition, Tape.read]
           have hstay :
               CellListSuffixScannerDescription.runConfig (Nat.succ k) c0 =
                 c0 := by
-            exact MachineDescription.runConfig_of_stepConfig_none hstep
+            exact runConfig_of_stepConfig_none hstep
               (Nat.succ k)
           have hstate :=
-            congrArg MachineDescription.Configuration.state
+            congrArg Configuration.state
               (hstay.symm.trans (by simpa [c0] using h))
           simp [c0, config, CellListSuffixScannerDescription] at hstate
   | some bit =>
@@ -72,9 +73,9 @@ theorem cellListSuffixScannerDescription_runConfig_start_cell_inv
           cases n with
           | zero =>
               simp [CellListSuffixScannerDescription, config, tapeAtCells,
-                MachineDescription.runConfig] at h
+                runConfig] at h
           | succ k =>
-              let c0 : MachineDescription.Configuration :=
+              let c0 : Configuration :=
                 config CellListSuffixScannerDescription.start baseLeft
                   (some true :: suffixTail)
               have hstep :
@@ -83,18 +84,18 @@ theorem cellListSuffixScannerDescription_runConfig_start_cell_inv
                   simp [c0, CellListSuffixScannerDescription, config,
                     tapeAtCells, keep, keepMove, writeMove,
                     scanLeftToSentinelRestart,
-                    MachineDescription.stepConfig,
-                    MachineDescription.lookupTransition,
-                    MachineDescription.Matches,
-                    MachineDescription.transition, Tape.read]
+                    stepConfig,
+                    lookupTransition,
+                    Matches,
+                    transition, Tape.read]
               have hstay :
                   CellListSuffixScannerDescription.runConfig (Nat.succ k)
                       c0 =
                     c0 := by
-                exact MachineDescription.runConfig_of_stepConfig_none hstep
+                exact runConfig_of_stepConfig_none hstep
                   (Nat.succ k)
               have hstate :=
-                congrArg MachineDescription.Configuration.state
+                congrArg Configuration.state
                   (hstay.symm.trans (by simpa [c0] using h))
               simp [c0, config, CellListSuffixScannerDescription] at hstate
 
@@ -116,7 +117,7 @@ theorem cellListSuffixScannerDescription_runConfig_start_bit_inv
 
 theorem primitive_runConfig_state_ne_halt_of_reaches_stuck
     {D : MachineDescription}
-    {c stuck : MachineDescription.Configuration} {k n : Nat}
+    {c stuck : Configuration} {k n : Nat}
     (hD : D.HaltTransitionFree)
     (hprefix : D.runConfig k c = stuck)
     (hstep : D.stepConfig stuck = none)
@@ -137,23 +138,23 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
     exists doneBit : Bool,
     exists tail : Word Bool,
       bits = false :: false :: true :: doneBit :: tail := by
-  let start : MachineDescription.Configuration :=
+  let start : Configuration :=
     config CellListSuffixScannerDescription.start baseLeft (bits.map some)
   have hhaltState :
       (CellListSuffixScannerDescription.runConfig n start).state =
         CellListSuffixScannerDescription.halt := by
     simpa [start] using
-      congrArg MachineDescription.Configuration.state h
+      congrArg Configuration.state h
   cases bits with
   | nil =>
-      let stuck : MachineDescription.Configuration := start
+      let stuck : Configuration := start
       have hstep :
           CellListSuffixScannerDescription.stepConfig stuck = none := by
         simp [stuck, start, CellListSuffixScannerDescription, config,
           tapeAtCells, keep, keepMove, writeMove,
-          scanLeftToSentinelRestart, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read]
+          scanLeftToSentinelRestart, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read]
       have hstuck :
           stuck.state ≠ CellListSuffixScannerDescription.halt := by
         simp [stuck, start, CellListSuffixScannerDescription, config]
@@ -173,21 +174,21 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                 CellListSuffixScannerDescription.stepConfig stuck = none := by
               simp [stuck, start, CellListSuffixScannerDescription, config,
                 tapeAtCells, keep, keepMove, writeMove,
-                scanLeftToSentinelRestart, MachineDescription.runConfig,
-                MachineDescription.stepConfig,
-                MachineDescription.lookupTransition,
-                MachineDescription.Matches,
-                MachineDescription.transition, Tape.read, Tape.write,
+                scanLeftToSentinelRestart, runConfig,
+                stepConfig,
+                lookupTransition,
+                Matches,
+                transition, Tape.read, Tape.write,
                 Tape.move, Tape.moveRight]
             have hstuck :
                 stuck.state ≠ CellListSuffixScannerDescription.halt := by
               simp [stuck, start, CellListSuffixScannerDescription, config,
                 tapeAtCells, keep, keepMove, writeMove,
-                scanLeftToSentinelRestart, MachineDescription.runConfig,
-                MachineDescription.stepConfig,
-                MachineDescription.lookupTransition,
-                MachineDescription.Matches,
-                MachineDescription.transition, Tape.read, Tape.write,
+                scanLeftToSentinelRestart, runConfig,
+                stepConfig,
+                lookupTransition,
+                Matches,
+                transition, Tape.read, Tape.write,
                 Tape.move, Tape.moveRight]
             exact False.elim
               (primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -207,11 +208,11 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                     simp [stuck, start, CellListSuffixScannerDescription,
                       config, tapeAtCells, keep, keepMove, writeMove,
                       scanLeftToSentinelRestart,
-                      MachineDescription.runConfig,
-                      MachineDescription.stepConfig,
-                      MachineDescription.lookupTransition,
-                      MachineDescription.Matches,
-                      MachineDescription.transition, Tape.read, Tape.write,
+                      runConfig,
+                      stepConfig,
+                      lookupTransition,
+                      Matches,
+                      transition, Tape.read, Tape.write,
                       Tape.move, Tape.moveRight]
                   have hstuck :
                       stuck.state ≠
@@ -219,11 +220,11 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                     simp [stuck, start, CellListSuffixScannerDescription,
                       config, tapeAtCells, keep, keepMove, writeMove,
                       scanLeftToSentinelRestart,
-                      MachineDescription.runConfig,
-                      MachineDescription.stepConfig,
-                      MachineDescription.lookupTransition,
-                      MachineDescription.Matches,
-                      MachineDescription.transition, Tape.read, Tape.write,
+                      runConfig,
+                      stepConfig,
+                      lookupTransition,
+                      Matches,
+                      transition, Tape.read, Tape.write,
                       Tape.move, Tape.moveRight]
                   exact False.elim
                     (primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -243,11 +244,11 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                           CellListSuffixScannerDescription, config,
                           tapeAtCells, keep, keepMove, writeMove,
                           scanLeftToSentinelRestart,
-                          MachineDescription.runConfig,
-                          MachineDescription.stepConfig,
-                          MachineDescription.lookupTransition,
-                          MachineDescription.Matches,
-                          MachineDescription.transition, Tape.read,
+                          runConfig,
+                          stepConfig,
+                          lookupTransition,
+                          Matches,
+                          transition, Tape.read,
                           Tape.write, Tape.move, Tape.moveRight]
                     have hstuck :
                         stuck.state ≠
@@ -257,11 +258,11 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                           CellListSuffixScannerDescription, config,
                           tapeAtCells, keep, keepMove, writeMove,
                           scanLeftToSentinelRestart,
-                          MachineDescription.runConfig,
-                          MachineDescription.stepConfig,
-                          MachineDescription.lookupTransition,
-                          MachineDescription.Matches,
-                          MachineDescription.transition, Tape.read,
+                          runConfig,
+                          stepConfig,
+                          lookupTransition,
+                          Matches,
+                          transition, Tape.read,
                           Tape.write, Tape.move, Tape.moveRight]
                     exact False.elim
                       (primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -280,11 +281,11 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                             CellListSuffixScannerDescription, config,
                             tapeAtCells, keep, keepMove, writeMove,
                             scanLeftToSentinelRestart,
-                            MachineDescription.runConfig,
-                            MachineDescription.stepConfig,
-                            MachineDescription.lookupTransition,
-                            MachineDescription.Matches,
-                            MachineDescription.transition, Tape.read,
+                            runConfig,
+                            stepConfig,
+                            lookupTransition,
+                            Matches,
+                            transition, Tape.read,
                             Tape.write, Tape.move, Tape.moveRight]
                         have hstuck :
                             stuck.state ≠
@@ -293,11 +294,11 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                             CellListSuffixScannerDescription, config,
                             tapeAtCells, keep, keepMove, writeMove,
                             scanLeftToSentinelRestart,
-                            MachineDescription.runConfig,
-                            MachineDescription.stepConfig,
-                            MachineDescription.lookupTransition,
-                            MachineDescription.Matches,
-                            MachineDescription.transition, Tape.read,
+                            runConfig,
+                            stepConfig,
+                            lookupTransition,
+                            Matches,
+                            transition, Tape.read,
                             Tape.write, Tape.move, Tape.moveRight]
                         exact False.elim
                           (primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -315,11 +316,11 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                   simp [stuck, start, CellListSuffixScannerDescription,
                     config, tapeAtCells, keep, keepMove, writeMove,
                     scanLeftToSentinelRestart,
-                    MachineDescription.runConfig,
-                    MachineDescription.stepConfig,
-                    MachineDescription.lookupTransition,
-                    MachineDescription.Matches,
-                    MachineDescription.transition, Tape.read, Tape.write,
+                    runConfig,
+                    stepConfig,
+                    lookupTransition,
+                    Matches,
+                    transition, Tape.read, Tape.write,
                     Tape.move, Tape.moveRight]
               have hstuck :
                   stuck.state ≠ CellListSuffixScannerDescription.halt := by
@@ -327,11 +328,11 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                   simp [stuck, start, CellListSuffixScannerDescription,
                     config, tapeAtCells, keep, keepMove, writeMove,
                     scanLeftToSentinelRestart,
-                    MachineDescription.runConfig,
-                    MachineDescription.stepConfig,
-                    MachineDescription.lookupTransition,
-                    MachineDescription.Matches,
-                    MachineDescription.transition, Tape.read, Tape.write,
+                    runConfig,
+                    stepConfig,
+                    lookupTransition,
+                    Matches,
+                    transition, Tape.read, Tape.write,
                     Tape.move, Tape.moveRight]
               exact False.elim
                 (primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -365,9 +366,9 @@ theorem boolWordSuffixScannerDescription_runConfig_start_cell_inv
       cases n with
       | zero =>
           simp [BoolWordSuffixScannerDescription, config, tapeAtCells,
-            MachineDescription.runConfig] at h
+            runConfig] at h
       | succ k =>
-          let c0 : MachineDescription.Configuration :=
+          let c0 : Configuration :=
             config BoolWordSuffixScannerDescription.start baseLeft
               (none :: suffixTail)
           have hstep :
@@ -376,17 +377,17 @@ theorem boolWordSuffixScannerDescription_runConfig_start_cell_inv
               simp [c0, BoolWordSuffixScannerDescription, config,
                 tapeAtCells, keep, keepMove, writeMove,
                 scanLeftToSentinelRestart,
-                MachineDescription.stepConfig,
-                MachineDescription.lookupTransition,
-                MachineDescription.Matches,
-                MachineDescription.transition, Tape.read]
+                stepConfig,
+                lookupTransition,
+                Matches,
+                transition, Tape.read]
           have hstay :
               BoolWordSuffixScannerDescription.runConfig (Nat.succ k) c0 =
                 c0 := by
-            exact MachineDescription.runConfig_of_stepConfig_none hstep
+            exact runConfig_of_stepConfig_none hstep
               (Nat.succ k)
           have hstate :=
-            congrArg MachineDescription.Configuration.state
+            congrArg Configuration.state
               (hstay.symm.trans (by simpa [c0] using h))
           simp [c0, config, BoolWordSuffixScannerDescription] at hstate
   | some bit =>
@@ -398,9 +399,9 @@ theorem boolWordSuffixScannerDescription_runConfig_start_cell_inv
           cases n with
           | zero =>
               simp [BoolWordSuffixScannerDescription, config, tapeAtCells,
-                MachineDescription.runConfig] at h
+                runConfig] at h
           | succ k =>
-              let c0 : MachineDescription.Configuration :=
+              let c0 : Configuration :=
                 config BoolWordSuffixScannerDescription.start baseLeft
                   (some true :: suffixTail)
               have hstep :
@@ -409,18 +410,18 @@ theorem boolWordSuffixScannerDescription_runConfig_start_cell_inv
                   simp [c0, BoolWordSuffixScannerDescription, config,
                     tapeAtCells, keep, keepMove, writeMove,
                     scanLeftToSentinelRestart,
-                    MachineDescription.stepConfig,
-                    MachineDescription.lookupTransition,
-                    MachineDescription.Matches,
-                    MachineDescription.transition, Tape.read]
+                    stepConfig,
+                    lookupTransition,
+                    Matches,
+                    transition, Tape.read]
               have hstay :
                   BoolWordSuffixScannerDescription.runConfig (Nat.succ k)
                       c0 =
                     c0 := by
-                exact MachineDescription.runConfig_of_stepConfig_none hstep
+                exact runConfig_of_stepConfig_none hstep
                   (Nat.succ k)
               have hstate :=
-                congrArg MachineDescription.Configuration.state
+                congrArg Configuration.state
                   (hstay.symm.trans (by simpa [c0] using h))
               simp [c0, config, BoolWordSuffixScannerDescription] at hstate
 
@@ -452,23 +453,23 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
     exists doneBit : Bool,
     exists tail : Word Bool,
       bits = false :: false :: true :: doneBit :: tail := by
-  let start : MachineDescription.Configuration :=
+  let start : Configuration :=
     config BoolWordSuffixScannerDescription.start baseLeft (bits.map some)
   have hhaltState :
       (BoolWordSuffixScannerDescription.runConfig n start).state =
         BoolWordSuffixScannerDescription.halt := by
     simpa [start] using
-      congrArg MachineDescription.Configuration.state h
+      congrArg Configuration.state h
   cases bits with
   | nil =>
-      let stuck : MachineDescription.Configuration := start
+      let stuck : Configuration := start
       have hstep :
           BoolWordSuffixScannerDescription.stepConfig stuck = none := by
         simp [stuck, start, BoolWordSuffixScannerDescription, config,
           tapeAtCells, keep, keepMove, writeMove,
-          scanLeftToSentinelRestart, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          MachineDescription.transition, Tape.read]
+          scanLeftToSentinelRestart, stepConfig,
+          lookupTransition, Matches,
+          transition, Tape.read]
       have hstuck :
           stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
         simp [stuck, start, BoolWordSuffixScannerDescription, config]
@@ -488,21 +489,21 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                 BoolWordSuffixScannerDescription.stepConfig stuck = none := by
               simp [stuck, start, BoolWordSuffixScannerDescription, config,
                 tapeAtCells, keep, keepMove, writeMove,
-                scanLeftToSentinelRestart, MachineDescription.runConfig,
-                MachineDescription.stepConfig,
-                MachineDescription.lookupTransition,
-                MachineDescription.Matches,
-                MachineDescription.transition, Tape.read, Tape.write,
+                scanLeftToSentinelRestart, runConfig,
+                stepConfig,
+                lookupTransition,
+                Matches,
+                transition, Tape.read, Tape.write,
                 Tape.move, Tape.moveRight]
             have hstuck :
                 stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
               simp [stuck, start, BoolWordSuffixScannerDescription, config,
                 tapeAtCells, keep, keepMove, writeMove,
-                scanLeftToSentinelRestart, MachineDescription.runConfig,
-                MachineDescription.stepConfig,
-                MachineDescription.lookupTransition,
-                MachineDescription.Matches,
-                MachineDescription.transition, Tape.read, Tape.write,
+                scanLeftToSentinelRestart, runConfig,
+                stepConfig,
+                lookupTransition,
+                Matches,
+                transition, Tape.read, Tape.write,
                 Tape.move, Tape.moveRight]
             exact False.elim
               (primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -522,11 +523,11 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                     simp [stuck, start, BoolWordSuffixScannerDescription,
                       config, tapeAtCells, keep, keepMove, writeMove,
                       scanLeftToSentinelRestart,
-                      MachineDescription.runConfig,
-                      MachineDescription.stepConfig,
-                      MachineDescription.lookupTransition,
-                      MachineDescription.Matches,
-                      MachineDescription.transition, Tape.read, Tape.write,
+                      runConfig,
+                      stepConfig,
+                      lookupTransition,
+                      Matches,
+                      transition, Tape.read, Tape.write,
                       Tape.move, Tape.moveRight]
                   have hstuck :
                       stuck.state ≠
@@ -534,11 +535,11 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                     simp [stuck, start, BoolWordSuffixScannerDescription,
                       config, tapeAtCells, keep, keepMove, writeMove,
                       scanLeftToSentinelRestart,
-                      MachineDescription.runConfig,
-                      MachineDescription.stepConfig,
-                      MachineDescription.lookupTransition,
-                      MachineDescription.Matches,
-                      MachineDescription.transition, Tape.read, Tape.write,
+                      runConfig,
+                      stepConfig,
+                      lookupTransition,
+                      Matches,
+                      transition, Tape.read, Tape.write,
                       Tape.move, Tape.moveRight]
                   exact False.elim
                     (primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -558,11 +559,11 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                           BoolWordSuffixScannerDescription, config,
                           tapeAtCells, keep, keepMove, writeMove,
                           scanLeftToSentinelRestart,
-                          MachineDescription.runConfig,
-                          MachineDescription.stepConfig,
-                          MachineDescription.lookupTransition,
-                          MachineDescription.Matches,
-                          MachineDescription.transition, Tape.read,
+                          runConfig,
+                          stepConfig,
+                          lookupTransition,
+                          Matches,
+                          transition, Tape.read,
                           Tape.write, Tape.move, Tape.moveRight]
                     have hstuck :
                         stuck.state ≠
@@ -572,11 +573,11 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                           BoolWordSuffixScannerDescription, config,
                           tapeAtCells, keep, keepMove, writeMove,
                           scanLeftToSentinelRestart,
-                          MachineDescription.runConfig,
-                          MachineDescription.stepConfig,
-                          MachineDescription.lookupTransition,
-                          MachineDescription.Matches,
-                          MachineDescription.transition, Tape.read,
+                          runConfig,
+                          stepConfig,
+                          lookupTransition,
+                          Matches,
+                          transition, Tape.read,
                           Tape.write, Tape.move, Tape.moveRight]
                     exact False.elim
                       (primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -595,11 +596,11 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                             BoolWordSuffixScannerDescription, config,
                             tapeAtCells, keep, keepMove, writeMove,
                             scanLeftToSentinelRestart,
-                            MachineDescription.runConfig,
-                            MachineDescription.stepConfig,
-                            MachineDescription.lookupTransition,
-                            MachineDescription.Matches,
-                            MachineDescription.transition, Tape.read,
+                            runConfig,
+                            stepConfig,
+                            lookupTransition,
+                            Matches,
+                            transition, Tape.read,
                             Tape.write, Tape.move, Tape.moveRight]
                         have hstuck :
                             stuck.state ≠
@@ -608,11 +609,11 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                             BoolWordSuffixScannerDescription, config,
                             tapeAtCells, keep, keepMove, writeMove,
                             scanLeftToSentinelRestart,
-                            MachineDescription.runConfig,
-                            MachineDescription.stepConfig,
-                            MachineDescription.lookupTransition,
-                            MachineDescription.Matches,
-                            MachineDescription.transition, Tape.read,
+                            runConfig,
+                            stepConfig,
+                            lookupTransition,
+                            Matches,
+                            transition, Tape.read,
                             Tape.write, Tape.move, Tape.moveRight]
                         exact False.elim
                           (primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -630,11 +631,11 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                   simp [stuck, start, BoolWordSuffixScannerDescription,
                     config, tapeAtCells, keep, keepMove, writeMove,
                     scanLeftToSentinelRestart,
-                    MachineDescription.runConfig,
-                    MachineDescription.stepConfig,
-                    MachineDescription.lookupTransition,
-                    MachineDescription.Matches,
-                    MachineDescription.transition, Tape.read, Tape.write,
+                    runConfig,
+                    stepConfig,
+                    lookupTransition,
+                    Matches,
+                    transition, Tape.read, Tape.write,
                     Tape.move, Tape.moveRight]
               have hstuck :
                   stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
@@ -642,11 +643,11 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                   simp [stuck, start, BoolWordSuffixScannerDescription,
                     config, tapeAtCells, keep, keepMove, writeMove,
                     scanLeftToSentinelRestart,
-                    MachineDescription.runConfig,
-                    MachineDescription.stepConfig,
-                    MachineDescription.lookupTransition,
-                    MachineDescription.Matches,
-                    MachineDescription.transition, Tape.read, Tape.write,
+                    runConfig,
+                    stepConfig,
+                    lookupTransition,
+                    Matches,
+                    transition, Tape.read, Tape.write,
                     Tape.move, Tape.moveRight]
               exact False.elim
                 (primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -679,7 +680,7 @@ theorem natSuffixScannerDescription_runConfig_nonblank_suffix_inv
         (tapeAtCells
           (List.append ((stageNatBits stage).reverse.map some) baseLeft)
           (some b :: suffixTail)) := by
-  let c0 : MachineDescription.Configuration :=
+  let c0 : Configuration :=
     config DovetailStagePrefix.NatSuffixScannerDescription.start baseLeft
       (List.append ((stageNatBits stage).map some) (some b :: suffixTail))
   let Tfinal : Tape Bool :=
@@ -696,7 +697,7 @@ theorem natSuffixScannerDescription_runConfig_nonblank_suffix_inv
         DovetailStagePrefix.stageNatBits_reverse_map_some_cons stage with
       ⟨tail, htail⟩
     rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by omega]
-    rw [MachineDescription.runConfig_add]
+    rw [runConfig_add]
     have hprefix :=
       DovetailStagePrefix.natSuffix_run_state200_stageNat_to_state210
         stage baseLeft (some b :: suffixTail)
@@ -742,7 +743,7 @@ theorem natSuffixScannerDescription_runConfig_stageNat_handoff
             ((stageNatBits stage).reverse.map some)
             baseLeft)
           ((b :: suffixTail).map some) := by
-  let c0 : MachineDescription.Configuration :=
+  let c0 : Configuration :=
     config
       DovetailStagePrefix.NatSuffixScannerDescription.start
       baseLeft
@@ -772,14 +773,14 @@ theorem natSuffixScannerDescription_runConfig_encodeNatAppend_handoff
     (suffix : Word MachineCodeSymbol) (b : Bool) (suffixTail : Word Bool)
     {Tout : Tape Bool} {n : Nat}
     (hsuffix :
-      MachineDescription.encodeCodeWordAsInput suffix = b :: suffixTail)
+      encodeCodeWordAsInput suffix = b :: suffixTail)
     (h :
       DovetailStagePrefix.NatSuffixScannerDescription.runConfig n
           (config
             DovetailStagePrefix.NatSuffixScannerDescription.start
             baseLeft
-            ((MachineDescription.encodeCodeWordAsInput
-              (MachineDescription.encodeNatAppend stage suffix)).map
+            ((encodeCodeWordAsInput
+              (encodeNatAppend stage suffix)).map
               some)) =
         { state :=
             DovetailStagePrefix.NatSuffixScannerDescription.halt
@@ -787,7 +788,7 @@ theorem natSuffixScannerDescription_runConfig_encodeNatAppend_handoff
     exists baseAfter : List (Option Bool),
       Tape.move Direction.right Tout =
         tapeAtCells baseAfter
-          ((MachineDescription.encodeCodeWordAsInput suffix).map some) := by
+          ((encodeCodeWordAsInput suffix).map some) := by
   refine
     ⟨List.append ((stageNatBits stage).reverse.map some) baseLeft, ?_⟩
   have hrun :
@@ -820,7 +821,7 @@ theorem boolWordSuffixScannerDescription_runConfig_canonical_false_suffix_inv
       Tout =
         (boolWordCanonicalHandoffConfigWithBase bits baseLeft
           (false :: suffixTail)).tape := by
-  let c0 : MachineDescription.Configuration :=
+  let c0 : Configuration :=
     config BoolWordSuffixScannerDescription.start baseLeft
       (List.append ((stageNatBits bits.length).map some)
         (List.append ((cellsCodeBits (bits.map some)).map some)
@@ -849,7 +850,7 @@ theorem cellListSuffixScannerDescription_runConfig_canonical_false_suffix_inv
       Tout =
         (cellListCanonicalHandoffConfigWithBase cells baseLeft
           (false :: suffixTail)).tape := by
-  let c0 : MachineDescription.Configuration :=
+  let c0 : Configuration :=
     config CellListSuffixScannerDescription.start baseLeft
       (List.append ((stageNatBits cells.length).map some)
         (List.append ((cellsCodeBits cells).map some)
@@ -881,7 +882,7 @@ theorem tapeSuffixScannerDescription_runConfig_canonical_false_suffix_inv
           (List.append ((cellCodeBits T.head).map some).reverse
             (cellListCanonicalRestoredLeftWithBase T.left baseLeft))
           (false :: suffixTail)).tape := by
-  let c0 : MachineDescription.Configuration :=
+  let c0 : Configuration :=
     { state := TapeSuffixScannerDescription.start
       tape :=
         tapeAtCells baseLeft
@@ -896,7 +897,7 @@ theorem tapeSuffixScannerDescription_runConfig_canonical_false_suffix_inv
   exact htape.symm
 
 theorem configurationSuffixScannerDescription_runConfig_canonical_false_suffix_inv
-    (cfg : MachineDescription.Configuration)
+    (cfg : Configuration)
     (baseLeft : List (Option Bool)) (suffixTail : Word Bool)
     {Tout : Tape Bool} {n : Nat}
     (h :
@@ -915,7 +916,7 @@ theorem configurationSuffixScannerDescription_runConfig_canonical_false_suffix_i
               (List.append ((stageNatBits cfg.state).map some).reverse
                 baseLeft)))
           (false :: suffixTail)).tape := by
-  let c0 : MachineDescription.Configuration :=
+  let c0 : Configuration :=
     { state := ConfigurationSuffixScannerDescription.start
       tape :=
         tapeAtCells baseLeft
@@ -947,7 +948,7 @@ theorem finalHitFlagsScannerDescription_runConfig_canonical_inv
         (boolFinalHandoffConfigWithBase rejectHit
           (List.append ((cellCodeBits (some acceptHit)).map some).reverse
             baseLeft)).tape := by
-  let c0 : MachineDescription.Configuration :=
+  let c0 : Configuration :=
     { state := FinalHitFlagsScannerDescription.start
       tape :=
         tapeAtCells baseLeft
@@ -964,7 +965,7 @@ theorem finalHitFlagsScannerDescription_runConfig_canonical_inv
   exact htape.symm
 
 theorem configurationsAndFinalFlagsScannerDescription_runConfig_canonical_inv
-    (acceptConfig rejectConfig : MachineDescription.Configuration)
+    (acceptConfig rejectConfig : Configuration)
     (acceptHit rejectHit : Bool)
     (baseLeft : List (Option Bool))
     {Tout : Tape Bool} {n : Nat}
@@ -985,7 +986,7 @@ theorem configurationsAndFinalFlagsScannerDescription_runConfig_canonical_inv
             (configurationRestoredLeftWithBase rejectConfig
               (configurationRestoredLeftWithBase acceptConfig
                 baseLeft)))).tape := by
-  let c0 : MachineDescription.Configuration :=
+  let c0 : Configuration :=
     { state := ConfigurationsAndFinalFlagsScannerDescription.start
       tape :=
         tapeAtCells baseLeft
@@ -1005,7 +1006,7 @@ theorem configurationsAndFinalFlagsScannerDescription_runConfig_canonical_inv
 
 theorem stageConfigurationsAndFinalFlagsScannerDescription_runConfig_canonical_inv
     (stage : Nat)
-    (acceptConfig rejectConfig : MachineDescription.Configuration)
+    (acceptConfig rejectConfig : Configuration)
     (acceptHit rejectHit : Bool)
     (baseLeft : List (Option Bool))
     {Tout : Tape Bool} {n : Nat}
@@ -1028,7 +1029,7 @@ theorem stageConfigurationsAndFinalFlagsScannerDescription_runConfig_canonical_i
               (configurationRestoredLeftWithBase acceptConfig
                 (List.append ((stageNatBits stage).map some).reverse
                   baseLeft))))).tape := by
-  let c0 : MachineDescription.Configuration :=
+  let c0 : Configuration :=
     { state := StageConfigurationsAndFinalFlagsScannerDescription.start
       tape :=
         tapeAtCells baseLeft
@@ -1049,7 +1050,7 @@ theorem stageConfigurationsAndFinalFlagsScannerDescription_runConfig_canonical_i
 
 theorem inputStageConfigurationsAndFinalFlagsScannerDescription_runConfig_canonical_inv
     (input : Word Bool) (stage : Nat)
-    (acceptConfig rejectConfig : MachineDescription.Configuration)
+    (acceptConfig rejectConfig : Configuration)
     (acceptHit rejectHit : Bool)
     (baseLeft : List (Option Bool))
     {Tout : Tape Bool} {n : Nat}
@@ -1074,7 +1075,7 @@ theorem inputStageConfigurationsAndFinalFlagsScannerDescription_runConfig_canoni
                 (List.append ((stageNatBits stage).map some).reverse
                   (cellListCanonicalRestoredLeftWithBase
                     (input.map some) baseLeft)))))).tape := by
-  let c0 : MachineDescription.Configuration :=
+  let c0 : Configuration :=
     { state := InputStageConfigurationsAndFinalFlagsScannerDescription.start
       tape :=
         tapeAtCells baseLeft
