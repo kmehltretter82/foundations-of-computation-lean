@@ -1175,6 +1175,22 @@ theorem inputWithTrailingBlankPadding_contextLength_ge_input
       Tape.contextLength] <;>
     omega
 
+theorem inputWithTrailingBlankPadding_move_right_normalizedOutput
+    (w : Word Bool) (padding : Nat) :
+    Tape.normalizedOutput
+        (Tape.move Direction.right
+          (inputWithTrailingBlankPadding w padding)) = w := by
+  have hequiv :
+      Tape.Equiv
+        (Tape.move Direction.right
+          (inputWithTrailingBlankPadding w padding))
+        (Tape.move Direction.right (Tape.input w)) :=
+    Tape.Equiv.move
+      (inputWithTrailingBlankPadding_equiv_input w padding)
+      Direction.right
+  rw [Tape.Equiv.normalizedOutput_eq hequiv]
+  exact tape_normalizedOutput_move_right_input w
+
 theorem tape_contextLength_le_move_right
     (T : Tape Bool) :
     Tape.contextLength T <=
@@ -1207,6 +1223,26 @@ theorem SelectedProjectionEquivEmitterPaddedOutputTape_equiv
           (SelectedProjectionOutputCode useAccept L))
         (ParsedLayoutBits L).length)
       Direction.right
+
+theorem SelectedProjectionEquivEmitterPaddedOutputTape_normalizedOutput
+    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    Tape.normalizedOutput
+        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) =
+      MachineDescription.encodeCodeWordAsInput
+        (SelectedProjectionOutputCode useAccept L) := by
+  simpa [SelectedProjectionEquivEmitterPaddedOutputTape] using
+    inputWithTrailingBlankPadding_move_right_normalizedOutput
+      (MachineDescription.encodeCodeWordAsInput
+        (SelectedProjectionOutputCode useAccept L))
+      (ParsedLayoutBits L).length
+
+theorem SelectedProjectionEquivEmitterPaddedOutputTape_normalizedOutput_eq_tail
+    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    Tape.normalizedOutput
+        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) =
+      SelectedProjectionTailProjector.outputAllBits useAccept L := by
+  rw [SelectedProjectionEquivEmitterPaddedOutputTape_normalizedOutput,
+    selectedProjectionOutputBits_eq_tailProjector_outputAllBits]
 
 theorem SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_input
     (useAccept : Bool) (L : MachineDescription.DovetailLayout) :

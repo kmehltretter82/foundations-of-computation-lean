@@ -410,6 +410,16 @@ theorem selectedProjectionOutputSuffix_eq_fields
             (SelectedProjectionHit useAccept L) [])) := by
   rfl
 
+theorem selectedProjectionOutputBits_eq_tailProjector_outputAllBits
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    MachineDescription.encodeCodeWordAsInput
+        (SelectedProjectionOutputCode useAccept L) =
+      SelectedProjectionTailProjector.outputAllBits useAccept L := by
+  simpa [SelectedProjectionOutputCode] using
+    SelectedProjectionTailProjector.simulatorLayout_asBoolInput_eq_outputAllBits
+      useAccept L
+
 theorem selectedProjectionOutputBits_eq_quoter_bits
     (useAccept : Bool)
     (L : MachineDescription.DovetailLayout) :
