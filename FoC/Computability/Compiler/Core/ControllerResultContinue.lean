@@ -1167,6 +1167,230 @@ theorem resultNoneGuardScannerDescription_haltsWithOutput_controllerEncode
       ((resultNoneGuardScanBoundary_controllerEncode_accepts_iff C).mpr
         hraw)
 
+def ResultNoneGuardRewindDescription : MachineDescription where
+  stateCount := 5
+  start := 0
+  halt := 4
+  transitions :=
+    [ MachineDescription.transition 0 none none Direction.left 1
+    , MachineDescription.transition 1 none none Direction.left 2
+    , MachineDescription.transition 2 (some false) (some false)
+        Direction.left 2
+    , MachineDescription.transition 2 (some true) (some true)
+        Direction.left 2
+    , MachineDescription.transition 2 none none Direction.right 3
+    , MachineDescription.transition 3 none none Direction.right 4
+    , MachineDescription.transition 3 (some false) (some false)
+        Direction.right 4
+    , MachineDescription.transition 3 (some true) (some true)
+        Direction.right 4
+    ]
+
+theorem resultNoneGuardRewindDescription_wellFormed :
+    ResultNoneGuardRewindDescription.WellFormed := by
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := ResultNoneGuardRewindDescription.transitions)
+      (stateCount := ResultNoneGuardRewindDescription.stateCount)
+      (by native_decide)
+  · exact transition_deterministic_of_all
+      (l := ResultNoneGuardRewindDescription.transitions)
+      (by native_decide)
+
+theorem resultNoneGuardRewindDescription_haltTransitionFree :
+    ResultNoneGuardRewindDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := ResultNoneGuardRewindDescription.transitions)
+    (state := ResultNoneGuardRewindDescription.halt)
+    (by native_decide)
+
+theorem resultNoneGuardRewindDescription_subroutineReady :
+    ResultNoneGuardRewindDescription.SubroutineReady :=
+  ⟨resultNoneGuardRewindDescription_wellFormed,
+    resultNoneGuardRewindDescription_haltTransitionFree⟩
+
+def resultNoneGuardRewindLeftScanTape
+    (leftRev : Word Bool) (right : List (Option Bool)) : Tape Bool :=
+  match leftRev with
+  | [] =>
+      { left := []
+        head := none
+        right := right }
+  | b :: rest =>
+      { left := rest.map some
+        head := some b
+        right := right }
+
+def resultNoneGuardRewindBoundaryTape
+    (bits : Word Bool) : Tape Bool :=
+  { left := []
+    head := none
+    right := (bits.map some) ++ [none, none] }
+
+def resultNoneGuardRewindFinalTape
+    (bits : Word Bool) : Tape Bool :=
+  Tape.move Direction.right
+    (Tape.move Direction.right
+      (resultNoneGuardRewindBoundaryTape bits))
+
+theorem resultNoneGuardRewindDescription_run_start
+    (leftRev : Word Bool) :
+    ResultNoneGuardRewindDescription.runConfig 2
+        { state := ResultNoneGuardRewindDescription.start
+          tape := resultNoneGuardScannedBlankTape leftRev } =
+      { state := 2
+        tape := resultNoneGuardRewindLeftScanTape
+          leftRev [none, none] } := by
+  cases leftRev with
+  | nil =>
+      rfl
+  | cons b rest =>
+      cases b <;> rfl
+
+theorem resultNoneGuardRewindDescription_run_left_scan
+    (leftRev : Word Bool) (right : List (Option Bool)) :
+    ResultNoneGuardRewindDescription.runConfig leftRev.length
+        { state := 2
+          tape := resultNoneGuardRewindLeftScanTape leftRev right } =
+      { state := 2
+        tape :=
+          { left := []
+            head := none
+            right := (leftRev.reverse.map some) ++ right } } := by
+  induction leftRev generalizing right with
+  | nil =>
+      rfl
+  | cons b rest ih =>
+      rw [show (b :: rest).length = 1 + rest.length by
+        simp
+        omega]
+      rw [MachineDescription.runConfig_add]
+      cases b
+      · have hstep :
+            ResultNoneGuardRewindDescription.runConfig 1
+                { state := 2
+                  tape :=
+                    resultNoneGuardRewindLeftScanTape
+                      (false :: rest) right } =
+              { state := 2
+                tape :=
+                  resultNoneGuardRewindLeftScanTape rest
+                    (some false :: right) } := by
+          cases rest with
+          | nil =>
+              rfl
+          | cons c tail =>
+              cases c <;> rfl
+        rw [hstep]
+        rw [ih]
+        simp [List.append_assoc]
+      · have hstep :
+            ResultNoneGuardRewindDescription.runConfig 1
+                { state := 2
+                  tape :=
+                    resultNoneGuardRewindLeftScanTape
+                      (true :: rest) right } =
+              { state := 2
+                tape :=
+                  resultNoneGuardRewindLeftScanTape rest
+                    (some true :: right) } := by
+          cases rest with
+          | nil =>
+              rfl
+          | cons c tail =>
+              cases c <;> rfl
+        rw [hstep]
+        rw [ih]
+        simp [List.append_assoc]
+
+theorem resultNoneGuardRewindDescription_run_finish
+    (bits : Word Bool) :
+    ResultNoneGuardRewindDescription.runConfig 2
+        { state := 2
+          tape := resultNoneGuardRewindBoundaryTape bits } =
+      { state := ResultNoneGuardRewindDescription.halt
+        tape := resultNoneGuardRewindFinalTape bits } := by
+  cases bits with
+  | nil =>
+      rfl
+  | cons b rest =>
+      cases b <;> cases rest <;> rfl
+
+theorem resultNoneGuardRewindDescription_run_scanned
+    (bits : Word Bool) :
+    ResultNoneGuardRewindDescription.runConfig
+        (bits.length + 4)
+        { state := ResultNoneGuardRewindDescription.start
+          tape := resultNoneGuardScannedBlankTape bits.reverse } =
+      { state := ResultNoneGuardRewindDescription.halt
+        tape := resultNoneGuardRewindFinalTape bits } := by
+  rw [show bits.length + 4 = 2 + (bits.length + 2) by omega]
+  rw [MachineDescription.runConfig_add]
+  rw [resultNoneGuardRewindDescription_run_start]
+  rw [show bits.length + 2 = bits.reverse.length + 2 by simp]
+  rw [MachineDescription.runConfig_add]
+  rw [resultNoneGuardRewindDescription_run_left_scan]
+  change
+    ResultNoneGuardRewindDescription.runConfig 2
+        { state := 2
+          tape :=
+            { left := []
+              head := none
+              right := (bits.reverse.reverse.map some) ++ [none, none] } } =
+      { state := ResultNoneGuardRewindDescription.halt
+        tape := resultNoneGuardRewindFinalTape bits }
+  simp only [List.reverse_reverse]
+  exact resultNoneGuardRewindDescription_run_finish bits
+
+theorem resultNoneGuardRewind_dropTrailingNone_map_some
+    (bits : Word Bool) :
+    Tape.dropTrailingNone (bits.map some) = bits.map some := by
+  induction bits with
+  | nil =>
+      rfl
+  | cons b rest ih =>
+      cases b <;>
+        simp [Tape.dropTrailingNone, ih]
+
+theorem resultNoneGuardRewind_dropTrailingNone_map_some_append_blanks
+    (bits : Word Bool) :
+    Tape.dropTrailingNone (bits.map some ++ [none, none]) =
+      bits.map some := by
+  induction bits with
+  | nil =>
+      rfl
+  | cons b rest ih =>
+      cases b <;>
+        simp [Tape.dropTrailingNone, ih]
+
+theorem resultNoneGuardRewindFinalTape_handoff_equiv
+    (bits : Word Bool) :
+    Tape.Equiv
+      (resultNoneGuardRewindFinalTape bits)
+      (Tape.move Direction.right (Tape.input bits)) := by
+  cases bits with
+  | nil =>
+      simp [resultNoneGuardRewindFinalTape,
+        resultNoneGuardRewindBoundaryTape, Tape.input, Tape.blank,
+        Tape.move, Tape.moveRight, Tape.Equiv,
+        Tape.dropTrailingNone]
+  | cons b rest =>
+      cases rest with
+      | nil =>
+          cases b <;>
+            simp [resultNoneGuardRewindFinalTape,
+              resultNoneGuardRewindBoundaryTape, Tape.input,
+              Tape.move, Tape.moveRight, Tape.Equiv,
+              Tape.dropTrailingNone]
+      | cons c tail =>
+          cases b <;> cases c <;>
+            simp [resultNoneGuardRewindFinalTape,
+              resultNoneGuardRewindBoundaryTape, Tape.input,
+              Tape.move, Tape.moveRight, Tape.Equiv,
+              Tape.dropTrailingNone,
+              resultNoneGuardRewind_dropTrailingNone_map_some,
+              resultNoneGuardRewind_dropTrailingNone_map_some_append_blanks]
+
 end ControllerResultContinueConstruction
 
 theorem controllerResultContinueForwardSpec_of_canonical
