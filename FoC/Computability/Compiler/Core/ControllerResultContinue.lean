@@ -1391,6 +1391,87 @@ theorem resultNoneGuardRewindFinalTape_handoff_equiv
               resultNoneGuardRewind_dropTrailingNone_map_some,
               resultNoneGuardRewind_dropTrailingNone_map_some_append_blanks]
 
+def resultNoneGuardOffsetTransition
+    (offset : Nat) (t : TransitionDescription) :
+    TransitionDescription :=
+  { source := offset + t.source
+    read := t.read
+    write := t.write
+    move := t.move
+    target := offset + t.target }
+
+def resultNoneGuardRewindOffset : Nat :=
+  ResultNoneGuardScannerDescription.stateCount
+
+def resultNoneGuardScanRewindAcceptTransitions :
+    List TransitionDescription :=
+  [ MachineDescription.transition
+      (resultNoneGuardState ResultNoneGuardBoundary.other.toNat 0 0)
+      none none Direction.right
+      (resultNoneGuardRewindOffset + ResultNoneGuardRewindDescription.start)
+  , MachineDescription.transition
+      (resultNoneGuardState ResultNoneGuardBoundary.tick.toNat 0 0)
+      none none Direction.right
+      (resultNoneGuardRewindOffset + ResultNoneGuardRewindDescription.start)
+  , MachineDescription.transition
+      (resultNoneGuardState ResultNoneGuardBoundary.tickDone.toNat 0 0)
+      none none Direction.right
+      (resultNoneGuardRewindOffset + ResultNoneGuardRewindDescription.start)
+  ]
+
+def ResultNoneGuardScanRewindDescription : MachineDescription where
+  stateCount :=
+    ResultNoneGuardScannerDescription.stateCount +
+      ResultNoneGuardRewindDescription.stateCount
+  start := ResultNoneGuardScannerDescription.start
+  halt := resultNoneGuardRewindOffset + ResultNoneGuardRewindDescription.halt
+  transitions :=
+    resultNoneGuardBitTransitions ++
+      resultNoneGuardScanRewindAcceptTransitions ++
+        (ResultNoneGuardRewindDescription.transitions.map
+          (resultNoneGuardOffsetTransition resultNoneGuardRewindOffset))
+
+theorem resultNoneGuardScanRewindDescription_wellFormed :
+    ResultNoneGuardScanRewindDescription.WellFormed := by
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := ResultNoneGuardScanRewindDescription.transitions)
+      (stateCount := ResultNoneGuardScanRewindDescription.stateCount)
+      (by native_decide)
+  · exact transition_deterministic_of_all
+      (l := ResultNoneGuardScanRewindDescription.transitions)
+      (by native_decide)
+
+theorem resultNoneGuardScanRewindDescription_haltTransitionFree :
+    ResultNoneGuardScanRewindDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := ResultNoneGuardScanRewindDescription.transitions)
+    (state := ResultNoneGuardScanRewindDescription.halt)
+    (by native_decide)
+
+theorem resultNoneGuardScanRewindDescription_subroutineReady :
+    ResultNoneGuardScanRewindDescription.SubroutineReady :=
+  ⟨resultNoneGuardScanRewindDescription_wellFormed,
+    resultNoneGuardScanRewindDescription_haltTransitionFree⟩
+
+theorem resultNoneGuardScanRewindDescription_run_blank_of_accepts
+    (boundary : ResultNoneGuardBoundary)
+    (haccept : boundary.accepts)
+    (leftRev : Word Bool) :
+    ResultNoneGuardScanRewindDescription.runConfig 1
+        { state := resultNoneGuardState boundary.toNat 0 0
+          tape := MachineDescription.appendRightScanTape leftRev [] } =
+      { state :=
+          resultNoneGuardRewindOffset +
+            ResultNoneGuardRewindDescription.start
+        tape := resultNoneGuardScannedBlankTape leftRev } := by
+  cases boundary
+  · rfl
+  · rfl
+  · rfl
+  · cases haccept
+  · cases haccept
+
 end ControllerResultContinueConstruction
 
 theorem controllerResultContinueForwardSpec_of_canonical
