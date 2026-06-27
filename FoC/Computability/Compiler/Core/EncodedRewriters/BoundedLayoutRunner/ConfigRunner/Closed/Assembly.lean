@@ -116,10 +116,12 @@ theorem configRunnerPhaseEquivConstruction_scaffold :
       rejectSim,
       rejectMerge,
       AcceptProjectionSpec_of_selected hacceptProject,
-      hacceptSim,
+      fixedDescriptionBoundedSimulatorEquivSpec_of_canonicalSpec
+        hacceptSim,
       acceptMergeEquivSpec_of_selected hacceptMerge,
       RejectProjectionSpec_of_selected hrejectProject,
-      hrejectSim,
+      fixedDescriptionBoundedSimulatorEquivSpec_of_canonicalSpec
+        hrejectSim,
       rejectMergeEquivSpec_of_selected hrejectMerge⟩
 
 def ConfigRunnerFromClosedHandoff

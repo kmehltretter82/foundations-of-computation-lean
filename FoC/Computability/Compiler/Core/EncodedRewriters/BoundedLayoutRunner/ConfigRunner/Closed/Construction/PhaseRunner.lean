@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseAdapters
+import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.Spec
 
 set_option doc.verso true
 
@@ -511,10 +512,10 @@ def ConfigRunnerPhaseEquivConstructionData
   exists acceptProject acceptSim acceptMerge
     rejectProject rejectSim rejectMerge : MachineDescription,
     AcceptProjectionSpec acceptProject ∧
-      FixedDescriptionBoundedSimulatorCanonicalSpec accept acceptSim ∧
+      FixedDescriptionBoundedSimulatorEquivSpec accept acceptSim ∧
       AcceptMergeEquivSpec accept acceptMerge ∧
       RejectProjectionSpec rejectProject ∧
-      FixedDescriptionBoundedSimulatorCanonicalSpec reject rejectSim ∧
+      FixedDescriptionBoundedSimulatorEquivSpec reject rejectSim ∧
       RejectMergeEquivSpec reject rejectMerge
 
 def ConfigRunnerPhaseEquivConstruction : Prop :=
@@ -533,9 +534,13 @@ theorem configRunnerPhaseEquivConstruction_of_exact
   exact
     ⟨acceptProject, acceptSim, acceptMerge,
       rejectProject, rejectSim, rejectMerge,
-      hacceptProject, hacceptSim,
+      hacceptProject,
+      fixedDescriptionBoundedSimulatorEquivSpec_of_canonicalSpec
+        hacceptSim,
       acceptMergeEquivSpec_of_exact hacceptMerge,
-      hrejectProject, hrejectSim,
+      hrejectProject,
+      fixedDescriptionBoundedSimulatorEquivSpec_of_canonicalSpec
+        hrejectSim,
       rejectMergeEquivSpec_of_exact hrejectMerge⟩
 
 theorem not_configRunnerPhaseConstruction :
@@ -850,11 +855,11 @@ theorem configRunnerPhaseRunner_spec
       rejectProject rejectSim rejectMerge : MachineDescription}
     (hacceptProject : AcceptProjectionSpec acceptProject)
     (hacceptSim :
-      FixedDescriptionBoundedSimulatorCanonicalSpec accept acceptSim)
+      FixedDescriptionBoundedSimulatorEquivSpec accept acceptSim)
     (hacceptMerge : AcceptMergeEquivSpec accept acceptMerge)
     (hrejectProject : RejectProjectionSpec rejectProject)
     (hrejectSim :
-      FixedDescriptionBoundedSimulatorCanonicalSpec reject rejectSim)
+      FixedDescriptionBoundedSimulatorEquivSpec reject rejectSim)
     (hrejectMerge : RejectMergeEquivSpec reject rejectMerge) :
     AcceptRejectConfigRunnerSpec accept reject
       (ConfigRunnerPhaseRunner
@@ -902,16 +907,17 @@ theorem configRunnerPhaseRunner_spec
             (AcceptSimulatorLayout L)) :=
       hacceptProject.right.left L
     have hAcceptSimRun :
-        acceptSim.HaltsWithTape
-          (MachineDescription.SimulatorLayout.asBoolInput
-            (AcceptSimulatorLayout L))
+        acceptSim.HaltsFromTapeEquiv
+          (Tape.input
+            (MachineDescription.SimulatorLayout.asBoolInput
+              (AcceptSimulatorLayout L)))
           (MachineDescription.SimulatorLayout.tape
             (MachineDescription.SimulatorLayout.run
               accept L.stage (AcceptSimulatorLayout L))) := by
       simpa [FixedDescriptionBoundedSimulatorInput,
         FixedDescriptionBoundedSimulatorCanonicalOutputTape,
         AcceptSimulatorLayout] using
-        hacceptSim.right.left (AcceptSimulatorLayout L)
+        hacceptSim.haltsFromTapeEquiv (AcceptSimulatorLayout L)
     have hAPASRun :
         APAS.HaltsFromTapeEquiv
           (ParsedLayoutCheckedTape L)
@@ -919,7 +925,7 @@ theorem configRunnerPhaseRunner_spec
             (MachineDescription.SimulatorLayout.run
               accept L.stage (AcceptSimulatorLayout L))) := by
       exact
-        SeqViaCanonical_haltsFromTapeEquiv_of_haltsWithTape
+        SeqViaCanonical_haltsFromTapeEquiv_of_equiv
           hAcceptProjectReady hAcceptSimReady
           hAcceptProjectRun
           (by
@@ -976,18 +982,19 @@ theorem configRunnerPhaseRunner_spec
             exact Tape.Equiv.refl _)
           hRejectProjectRun
     have hRejectSimRun :
-        rejectSim.HaltsWithTape
-          (MachineDescription.SimulatorLayout.asBoolInput
-            (RejectSimulatorLayout
-              (ConfigRunnerAfterAccept accept L)))
+        rejectSim.HaltsFromTapeEquiv
+          (Tape.input
+            (MachineDescription.SimulatorLayout.asBoolInput
+              (RejectSimulatorLayout
+                (ConfigRunnerAfterAccept accept L))))
           (MachineDescription.SimulatorLayout.tape
             (MachineDescription.SimulatorLayout.run
               reject (ConfigRunnerAfterAccept accept L).stage
-              (RejectSimulatorLayout
-                (ConfigRunnerAfterAccept accept L)))) := by
+                (RejectSimulatorLayout
+                  (ConfigRunnerAfterAccept accept L)))) := by
       simpa [FixedDescriptionBoundedSimulatorInput,
         FixedDescriptionBoundedSimulatorCanonicalOutputTape] using
-        hrejectSim.right.left
+        hrejectSim.haltsFromTapeEquiv
           (RejectSimulatorLayout (ConfigRunnerAfterAccept accept L))
     have hAPASMRPRSRun :
         APASMRPRS.HaltsFromTapeEquiv
@@ -998,7 +1005,7 @@ theorem configRunnerPhaseRunner_spec
               (RejectSimulatorLayout
                 (ConfigRunnerAfterAccept accept L)))) := by
       exact
-        SeqViaCanonical_haltsFromTapeEquiv_of_haltsWithTape
+        SeqViaCanonical_haltsFromTapeEquiv_of_equiv
           hAPASMRPReady hRejectSimReady
           hAPASMRPRun
           (by
