@@ -229,9 +229,11 @@ def transitionListParserMachine :
     | _, _ => none
   statesFinite := TransitionListParserState.finite
 
+private abbrev TLPM := transitionListParserMachine
+
 theorem transitionListParserMachine_haltingTransitionsDisabled :
     TuringMachine.HaltingTransitionsDisabled
-      transitionListParserMachine := by
+      TLPM := by
   intro cell
   cases cell <;>
     simp [transitionListParserMachine]
@@ -240,10 +242,10 @@ theorem transitionListParserMachine_halts_from_of_computes_suffix
     {c d : TuringMachine.Configuration MachineCodeSymbol
       TransitionListParserState}
     (hprefix :
-      TuringMachine.Computes transitionListParserMachine c d)
+      TuringMachine.Computes TLPM c d)
     (hhalt :
-      TuringMachine.HaltsFrom transitionListParserMachine c) :
-    TuringMachine.HaltsFrom transitionListParserMachine d := by
+      TuringMachine.HaltsFrom TLPM c) :
+    TuringMachine.HaltsFrom TLPM d := by
   rcases hhalt with ⟨final, hfinalComp, hfinalHalt⟩
   induction hprefix generalizing final with
   | refl c =>
@@ -389,12 +391,12 @@ theorem transitionListParserMachine_not_haltsFrom_of_stuck
     {c : TuringMachine.Configuration MachineCodeSymbol
       TransitionListParserState}
     (hnotHalt :
-      ¬ TuringMachine.Halted transitionListParserMachine c)
+      ¬ TuringMachine.Halted TLPM c)
     (hnostep :
       forall d : TuringMachine.Configuration MachineCodeSymbol
         TransitionListParserState,
-        ¬ TuringMachine.Step transitionListParserMachine c d) :
-    ¬ TuringMachine.HaltsFrom transitionListParserMachine c := by
+        ¬ TuringMachine.Step TLPM c d) :
+    ¬ TuringMachine.HaltsFrom TLPM c := by
   intro h
   rcases h with ⟨final, hcomp, hhalt⟩
   cases hcomp with
@@ -405,7 +407,7 @@ theorem transitionListParserMachine_not_haltsFrom_of_stuck
 
 theorem transitionListParserMachine_not_haltsFrom_needTransition_empty
     (leftRev : List (Option MachineCodeSymbol)) :
-    ¬ TuringMachine.HaltsFrom transitionListParserMachine
+    ¬ TuringMachine.HaltsFrom TLPM
       { state := TransitionListParserState.needTransition
         tape := transitionListParserOptionTape leftRev [] } := by
   refine
@@ -423,7 +425,7 @@ theorem transitionListParserMachine_not_haltsFrom_needTransition_nonTransition
     (hsymbol : symbol ≠ MachineCodeSymbol.transition)
     (leftRev : List (Option MachineCodeSymbol))
     (suffix : List (Option MachineCodeSymbol)) :
-    ¬ TuringMachine.HaltsFrom transitionListParserMachine
+    ¬ TuringMachine.HaltsFrom TLPM
       { state := TransitionListParserState.needTransition
         tape :=
           transitionListParserOptionTape leftRev
@@ -437,11 +439,11 @@ theorem transitionListParserMachine_not_haltsFrom_needTransition_nonTransition
     | mk htransition =>
         cases symbol <;>
           simp [transitionListParserMachine,
-            transitionListParserOptionTape, Tape.read] at hsymbol htransition
+          transitionListParserOptionTape, Tape.read] at hsymbol htransition
 
 theorem transitionListParserMachine_not_haltsFrom_needTransition_none
     (leftRev suffix : List (Option MachineCodeSymbol)) :
-    ¬ TuringMachine.HaltsFrom transitionListParserMachine
+    ¬ TuringMachine.HaltsFrom TLPM
       { state := TransitionListParserState.needTransition
         tape :=
           transitionListParserOptionTape leftRev
@@ -593,9 +595,9 @@ theorem transitionListParserMachine_step_keep_right
     {leftRev suffix : List (Option MachineCodeSymbol)}
     {cell : Option MachineCodeSymbol}
     (htransition :
-      transitionListParserMachine.transition state cell =
+      TLPM.transition state cell =
         some (cell, Direction.right, next)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := state
         tape :=
           transitionListParserOptionTape leftRev
@@ -614,9 +616,9 @@ theorem transitionListParserMachine_step_write_right
     {leftRev suffix : List (Option MachineCodeSymbol)}
     {cell write : Option MachineCodeSymbol}
     (htransition :
-      transitionListParserMachine.transition state cell =
+      TLPM.transition state cell =
         some (write, Direction.right, next)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := state
         tape :=
           transitionListParserOptionTape leftRev
@@ -635,9 +637,9 @@ theorem transitionListParserMachine_step_keep_left_nonempty
     {leftTail suffix : List (Option MachineCodeSymbol)}
     {leftHead cell : Option MachineCodeSymbol}
     (htransition :
-      transitionListParserMachine.transition state cell =
+      TLPM.transition state cell =
         some (cell, Direction.left, next)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := state
         tape :=
           transitionListParserOptionTape
@@ -656,9 +658,9 @@ theorem transitionListParserMachine_step_write_left_nonempty
     {leftTail suffix : List (Option MachineCodeSymbol)}
     {leftHead cell write : Option MachineCodeSymbol}
     (htransition :
-      transitionListParserMachine.transition state cell =
+      TLPM.transition state cell =
         some (write, Direction.left, next)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := state
         tape :=
           transitionListParserOptionTape
@@ -677,9 +679,9 @@ theorem transitionListParserMachine_step_write_left_empty
     {leftTail : List (Option MachineCodeSymbol)}
     {leftHead write : Option MachineCodeSymbol}
     (htransition :
-      transitionListParserMachine.transition state none =
+      TLPM.transition state none =
         some (write, Direction.left, next)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := state
         tape :=
           transitionListParserOptionTape
@@ -698,9 +700,9 @@ theorem transitionListParserMachine_step_keep_left_boundary
     {suffix : List (Option MachineCodeSymbol)}
     {cell : Option MachineCodeSymbol}
     (htransition :
-      transitionListParserMachine.transition state cell =
+      TLPM.transition state cell =
         some (cell, Direction.left, next)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := state
         tape :=
           transitionListParserOptionTape [] (cell :: suffix) }
@@ -718,7 +720,7 @@ theorem transitionListParserMachine_step_returnLeft_some_nonempty
     (leftTail suffix : List (Option MachineCodeSymbol))
     (leftHead : Option MachineCodeSymbol)
     (symbol : MachineCodeSymbol) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.returnLeft saved
         tape :=
           transitionListParserOptionTape
@@ -736,7 +738,7 @@ theorem transitionListParserMachine_step_returnLeft_some_boundary
     (saved : Option MachineCodeSymbol)
     (suffix : List (Option MachineCodeSymbol))
     (symbol : MachineCodeSymbol) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.returnLeft saved
         tape :=
           transitionListParserOptionTape []
@@ -752,7 +754,7 @@ theorem transitionListParserMachine_step_returnLeft_some_boundary
 theorem transitionListParserMachine_step_returnLeft_none_boundary
     (saved : Option MachineCodeSymbol)
     (suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.returnLeft saved
         tape :=
           transitionListParserOptionTape []
@@ -769,7 +771,7 @@ theorem transitionListParserMachine_step_returnLeft_none_boundary
 theorem transitionListParserMachine_step_returnLeft_none
     (saved : Option MachineCodeSymbol)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.returnLeft saved
         tape :=
           transitionListParserOptionTape leftRev
@@ -787,7 +789,7 @@ theorem transitionListParserMachine_step_returnLeft_none
 theorem transitionListParserMachine_step_findCount_done
     (marker : TransitionListParserMarker)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.findCount marker
         tape :=
           transitionListParserOptionTape leftRev
@@ -805,7 +807,7 @@ theorem transitionListParserMachine_step_findCount_done
 theorem transitionListParserMachine_step_findCount_blank
     (marker : TransitionListParserMarker)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.findCount marker
         tape :=
           transitionListParserOptionTape leftRev
@@ -823,7 +825,7 @@ theorem transitionListParserMachine_step_findCount_blank
 theorem transitionListParserMachine_step_findCount_tick
     (marker : TransitionListParserMarker)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.findCount marker
         tape :=
           transitionListParserOptionTape leftRev
@@ -841,7 +843,7 @@ theorem transitionListParserMachine_step_findCount_tick
 theorem transitionListParserMachine_step_seekCountDone_tick
     (marker : TransitionListParserMarker)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.seekCountDone marker
         tape :=
           transitionListParserOptionTape leftRev
@@ -858,7 +860,7 @@ theorem transitionListParserMachine_step_seekCountDone_tick
 
 theorem transitionListParserMachine_step_seekCountDone_done_initial
     (leftRev suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state :=
           TransitionListParserState.seekCountDone
             TransitionListParserMarker.initial
@@ -876,7 +878,7 @@ theorem transitionListParserMachine_step_seekCountDone_done_initial
 theorem transitionListParserMachine_step_seekCountDone_done_saved
     (saved : Option MachineCodeSymbol)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state :=
           TransitionListParserState.seekCountDone
             (TransitionListParserMarker.saved saved)
@@ -896,7 +898,7 @@ theorem transitionListParserMachine_step_seekMarker_nonHeader
     {symbol : MachineCodeSymbol}
     (hsymbol : symbol ≠ MachineCodeSymbol.header)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.seekMarker saved
         tape :=
           transitionListParserOptionTape leftRev
@@ -915,7 +917,7 @@ theorem transitionListParserMachine_step_seekMarker_header
     (saved : Option MachineCodeSymbol)
     (leftTail suffix : List (Option MachineCodeSymbol))
     (leftHead : Option MachineCodeSymbol) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.seekMarker saved
         tape :=
           transitionListParserOptionTape
@@ -932,7 +934,7 @@ theorem transitionListParserMachine_step_seekMarker_header
 theorem transitionListParserMachine_step_enterMarkedPosition
     (leftRev suffix : List (Option MachineCodeSymbol))
     (cell : Option MachineCodeSymbol) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.enterMarkedPosition
         tape :=
           transitionListParserOptionTape leftRev
@@ -949,7 +951,7 @@ theorem transitionListParserMachine_step_enterMarkedPosition
 
 theorem transitionListParserMachine_step_enterMarkedPosition_empty
     (leftRev : List (Option MachineCodeSymbol)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.enterMarkedPosition
         tape :=
           transitionListParserOptionTape leftRev [] }
@@ -960,14 +962,14 @@ theorem transitionListParserMachine_step_enterMarkedPosition_empty
   rw [← transitionListParserOptionTape_move_right_empty leftRev none]
   exact TuringMachine.Step.mk (by
     simp [transitionListParserMachine,
-      transitionListParserOptionTape, Tape.read,
+          transitionListParserOptionTape, Tape.read,
       transitionListParserKeep])
 
 theorem transitionListParserMachine_step_markPosition
     (saved : Option MachineCodeSymbol)
     (leftTail suffix : List (Option MachineCodeSymbol))
     (leftHead : Option MachineCodeSymbol) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.markPosition
         tape :=
           transitionListParserOptionTape
@@ -983,7 +985,7 @@ theorem transitionListParserMachine_step_markPosition
 theorem transitionListParserMachine_step_markPosition_empty
     (leftTail : List (Option MachineCodeSymbol))
     (leftHead : Option MachineCodeSymbol) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.markPosition
         tape :=
           transitionListParserOptionTape
@@ -998,7 +1000,7 @@ theorem transitionListParserMachine_step_markPosition_empty
 
 theorem transitionListParserMachine_step_sourceNat_tick
     (leftRev suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.sourceNat
         tape :=
           transitionListParserOptionTape leftRev
@@ -1013,7 +1015,7 @@ theorem transitionListParserMachine_step_sourceNat_tick
 
 theorem transitionListParserMachine_step_sourceNat_done
     (leftRev suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.sourceNat
         tape :=
           transitionListParserOptionTape leftRev
@@ -1028,7 +1030,7 @@ theorem transitionListParserMachine_step_sourceNat_done
 
 theorem transitionListParserMachine_step_targetNat_tick
     (leftRev suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.targetNat
         tape :=
           transitionListParserOptionTape leftRev
@@ -1043,7 +1045,7 @@ theorem transitionListParserMachine_step_targetNat_tick
 
 theorem transitionListParserMachine_step_targetNat_done
     (leftRev suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Step transitionListParserMachine
+    TuringMachine.Step TLPM
       { state := TransitionListParserState.targetNat
         tape :=
           transitionListParserOptionTape leftRev
@@ -1060,7 +1062,7 @@ theorem transitionListParserMachine_computes_nat
     {current next : TransitionListParserState}
     (htick :
       forall leftRev suffix : List (Option MachineCodeSymbol),
-        TuringMachine.Step transitionListParserMachine
+        TuringMachine.Step TLPM
           { state := current
             tape :=
               transitionListParserOptionTape leftRev
@@ -1071,7 +1073,7 @@ theorem transitionListParserMachine_computes_nat
                 (some MachineCodeSymbol.tick :: leftRev) suffix })
     (hdone :
       forall leftRev suffix : List (Option MachineCodeSymbol),
-        TuringMachine.Step transitionListParserMachine
+        TuringMachine.Step TLPM
           { state := current
             tape :=
               transitionListParserOptionTape leftRev
@@ -1082,7 +1084,7 @@ theorem transitionListParserMachine_computes_nat
                 (some MachineCodeSymbol.done :: leftRev) suffix })
     (leftRev : List (Option MachineCodeSymbol)) (n : Nat)
     (suffix : Word MachineCodeSymbol) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state := current
         tape :=
           transitionListParserOptionTape leftRev
@@ -1104,7 +1106,7 @@ theorem transitionListParserMachine_computes_nat
   | succ n ih =>
       have htail := ih (some MachineCodeSymbol.tick :: leftRev)
       have hcomp :
-          TuringMachine.Computes transitionListParserMachine
+          TuringMachine.Computes TLPM
             { state := current
               tape :=
                 transitionListParserOptionTape leftRev
@@ -1127,7 +1129,7 @@ theorem transitionListParserMachine_computes_nat
 theorem transitionListParserMachine_computes_seekCountDone_initial
     (leftRev : List (Option MachineCodeSymbol)) (count : Nat)
     (tokens : Word MachineCodeSymbol) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state :=
           TransitionListParserState.seekCountDone
             TransitionListParserMarker.initial
@@ -1151,7 +1153,7 @@ theorem transitionListParserMachine_computes_seekCountDone_saved
     (saved : Option MachineCodeSymbol)
     (leftRev : List (Option MachineCodeSymbol)) (count : Nat)
     (tokens : Word MachineCodeSymbol) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state :=
           TransitionListParserState.seekCountDone
             (TransitionListParserMarker.saved saved)
@@ -1174,7 +1176,7 @@ theorem transitionListParserMachine_computes_seekCountDone_saved
 theorem transitionListParserMachine_computes_needTransition
     (leftRev : List (Option MachineCodeSymbol))
     (suffix : Word MachineCodeSymbol) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state := TransitionListParserState.needTransition
         tape :=
           transitionListParserOptionTape leftRev
@@ -1193,7 +1195,7 @@ theorem transitionListParserMachine_computes_readCell
     (cell : Option Bool)
     (leftRev : List (Option MachineCodeSymbol))
     (suffix : Word MachineCodeSymbol) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state := TransitionListParserState.readCell
         tape :=
           transitionListParserOptionTape leftRev
@@ -1226,7 +1228,7 @@ theorem transitionListParserMachine_computes_writeCell
     (cell : Option Bool)
     (leftRev : List (Option MachineCodeSymbol))
     (suffix : Word MachineCodeSymbol) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state := TransitionListParserState.writeCell
         tape :=
           transitionListParserOptionTape leftRev
@@ -1259,7 +1261,7 @@ theorem transitionListParserMachine_computes_moveField
     (dir : Direction)
     (leftRev : List (Option MachineCodeSymbol))
     (suffix : Word MachineCodeSymbol) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state := TransitionListParserState.moveField
         tape :=
           transitionListParserOptionTape leftRev
@@ -1283,7 +1285,7 @@ theorem transitionListParserMachine_computes_transition
     (t : TransitionDescription)
     (leftRev : List (Option MachineCodeSymbol))
     (suffix : Word MachineCodeSymbol) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state := TransitionListParserState.needTransition
         tape :=
           transitionListParserOptionTape leftRev
@@ -1330,7 +1332,7 @@ theorem transitionListParserMachine_computes_transition
             (MachineDescription.encodeDirectionAppend t.move
               (MachineDescription.encodeNatAppend t.target suffix)))))
   have hsource :
-      TuringMachine.Computes transitionListParserMachine
+      TuringMachine.Computes TLPM
         { state := TransitionListParserState.sourceNat
           tape :=
             transitionListParserOptionTape afterTransition
@@ -1358,7 +1360,7 @@ theorem transitionListParserMachine_computes_transition
             (MachineDescription.encodeDirectionAppend t.move
               (MachineDescription.encodeNatAppend t.target suffix))))
   have hread :
-      TuringMachine.Computes transitionListParserMachine
+      TuringMachine.Computes TLPM
         { state := TransitionListParserState.readCell
           tape :=
             transitionListParserOptionTape afterSource
@@ -1381,7 +1383,7 @@ theorem transitionListParserMachine_computes_transition
           (MachineDescription.encodeDirectionAppend t.move
             (MachineDescription.encodeNatAppend t.target suffix)))
   have hwrite :
-      TuringMachine.Computes transitionListParserMachine
+      TuringMachine.Computes TLPM
         { state := TransitionListParserState.writeCell
           tape :=
             transitionListParserOptionTape afterRead
@@ -1401,7 +1403,7 @@ theorem transitionListParserMachine_computes_transition
         (MachineDescription.encodeDirectionAppend t.move
           (MachineDescription.encodeNatAppend t.target suffix))
   have hmove :
-      TuringMachine.Computes transitionListParserMachine
+      TuringMachine.Computes TLPM
         { state := TransitionListParserState.moveField
           tape :=
             transitionListParserOptionTape afterWrite
@@ -1418,7 +1420,7 @@ theorem transitionListParserMachine_computes_transition
         t.move afterWrite
         (MachineDescription.encodeNatAppend t.target suffix)
   have htarget :
-      TuringMachine.Computes transitionListParserMachine
+      TuringMachine.Computes TLPM
         { state := TransitionListParserState.targetNat
           tape :=
             transitionListParserOptionTape afterMove
@@ -1451,7 +1453,7 @@ theorem transitionListParserMachine_computes_transition
 
 theorem transitionListParserMachine_computes_succCount_to_needTransition
     (count : Nat) (tokens : Word MachineCodeSymbol) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state :=
           TransitionListParserState.findCount
             TransitionListParserMarker.initial
@@ -1466,7 +1468,7 @@ theorem transitionListParserMachine_computes_succCount_to_needTransition
               MachineDescription.encodeNat count).reverse.map some)
             (tokens.map some) } := by
   have htick :
-      TuringMachine.Step transitionListParserMachine
+      TuringMachine.Step TLPM
         { state :=
             TransitionListParserState.findCount
               TransitionListParserMarker.initial
@@ -1500,7 +1502,7 @@ theorem transitionListParserMachine_computes_succCount_to_needTransition
 theorem transitionListParserMachine_computes_nextTransition_to_markPosition
     (count : Nat) (t : TransitionDescription)
     (suffix : Word MachineCodeSymbol) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state :=
           TransitionListParserState.findCount
             TransitionListParserMarker.initial
@@ -1518,7 +1520,7 @@ theorem transitionListParserMachine_computes_nextTransition_to_markPosition
               (MachineDescription.encodeTransition t)).reverse.map some)
             (suffix.map some) } := by
   have htick :
-      TuringMachine.Step transitionListParserMachine
+      TuringMachine.Step TLPM
         { state :=
             TransitionListParserState.findCount
               TransitionListParserMarker.initial
@@ -1572,7 +1574,7 @@ theorem transitionListParserMachine_returnLeft_noBoundary
     (leftSymbols : Word MachineCodeSymbol)
     (current : MachineCodeSymbol)
     (suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state := TransitionListParserState.returnLeft saved
         tape :=
           transitionListParserOptionTape
@@ -1613,7 +1615,7 @@ theorem transitionListParserMachine_returnLeft_withBoundary
     (leftSymbols : Word MachineCodeSymbol)
     (current : MachineCodeSymbol)
     (suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state := TransitionListParserState.returnLeft saved
         tape :=
           transitionListParserOptionTape
@@ -1655,7 +1657,7 @@ theorem transitionListParserMachine_returnLeft_toBoundary
     (leftSymbols : Word MachineCodeSymbol)
     (prefixLeft suffix : List (Option MachineCodeSymbol))
     (current : MachineCodeSymbol) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state := TransitionListParserState.returnLeft saved
         tape :=
           transitionListParserOptionTape
@@ -1700,7 +1702,7 @@ theorem transitionListParserMachine_markPosition_returnLeft_noBoundary
     (leftSymbols : Word MachineCodeSymbol)
     (current : MachineCodeSymbol)
     (suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state := TransitionListParserState.markPosition
         tape :=
           transitionListParserOptionTape
@@ -1728,7 +1730,7 @@ theorem transitionListParserMachine_markPosition_returnLeft_toBoundary
     (prefixLeft : List (Option MachineCodeSymbol))
     (current : MachineCodeSymbol)
     (suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state := TransitionListParserState.markPosition
         tape :=
           transitionListParserOptionTape
@@ -1757,7 +1759,7 @@ theorem transitionListParserMachine_markPosition_returnLeft_toBoundary
 theorem transitionListParserMachine_markPosition_empty_returnLeft_noBoundary
     (leftSymbols : Word MachineCodeSymbol)
     (current : MachineCodeSymbol) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state := TransitionListParserState.markPosition
         tape :=
           transitionListParserOptionTape
@@ -1782,7 +1784,7 @@ theorem transitionListParserMachine_markPosition_empty_returnLeft_toBoundary
     (leftSymbols : Word MachineCodeSymbol)
     (prefixLeft : List (Option MachineCodeSymbol))
     (current : MachineCodeSymbol) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state := TransitionListParserState.markPosition
         tape :=
           transitionListParserOptionTape
@@ -1810,7 +1812,7 @@ theorem transitionListParserMachine_markPosition_empty_returnLeft_toBoundary
 theorem transitionListParserMachine_haltsFrom_findCount_blank_done
     (marker : TransitionListParserMarker)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.HaltsFrom transitionListParserMachine
+    TuringMachine.HaltsFrom TLPM
       { state := TransitionListParserState.findCount marker
         tape :=
           transitionListParserOptionTape leftRev
@@ -1823,7 +1825,7 @@ theorem transitionListParserMachine_haltsFrom_findCount_blank_done
     transitionListParserMachine_step_findCount_done
       marker (some MachineCodeSymbol.blank :: leftRev) suffix
   have hcomp :
-      TuringMachine.Computes transitionListParserMachine
+      TuringMachine.Computes TLPM
         { state := TransitionListParserState.findCount marker
           tape :=
             transitionListParserOptionTape leftRev
@@ -1843,7 +1845,7 @@ theorem transitionListParserMachine_haltsFrom_findCount_blank_done
 theorem transitionListParserMachine_haltsFrom_findCount_blanks_done
     (marker : TransitionListParserMarker)
     (blanks : Nat) (leftRev suffix : List (Option MachineCodeSymbol)) :
-    TuringMachine.HaltsFrom transitionListParserMachine
+    TuringMachine.HaltsFrom TLPM
       { state := TransitionListParserState.findCount marker
         tape :=
           transitionListParserOptionTape leftRev
@@ -1906,7 +1908,7 @@ theorem transitionListParser_blank_cons_replicate_append_none
 theorem transitionListParserMachine_computes_findCount_blanks
     (marker : TransitionListParserMarker)
     (blanks : Nat) (leftRev rest : List (Option MachineCodeSymbol)) :
-    TuringMachine.Computes transitionListParserMachine
+    TuringMachine.Computes TLPM
       { state := TransitionListParserState.findCount marker
         tape :=
           transitionListParserOptionTape leftRev

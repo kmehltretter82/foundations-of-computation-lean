@@ -561,6 +561,8 @@ def finite (hdescription : Foundation.FiniteType descriptionState) :
 
 end BudgetCheckerDescriptionRunnerState
 
+private abbrev BCRS := BudgetCheckerDescriptionRunnerState
+
 def budgetCheckerDescriptionRunnerTape
     (blankPrefix : Nat) (rest : Word MachineCodeSymbol) :
     Tape MachineCodeSymbol :=
@@ -574,9 +576,11 @@ def budgetCheckerDescriptionRunnerTape
         head := some symbol
         right := suffix.map some }
 
+private abbrev BCRT := budgetCheckerDescriptionRunnerTape
+
 theorem budgetCheckerDescriptionRunnerTape_nil_eq_input
     (tokens : Word MachineCodeSymbol) :
-    budgetCheckerDescriptionRunnerTape 0 tokens = Tape.input tokens := by
+    BCRT 0 tokens = Tape.input tokens := by
   cases tokens <;> rfl
 
 theorem budgetCheckerDescriptionRunnerTape_move_right
@@ -584,9 +588,9 @@ theorem budgetCheckerDescriptionRunnerTape_move_right
     (suffix : Word MachineCodeSymbol) :
     Tape.move Direction.right
         (Tape.write none
-          (budgetCheckerDescriptionRunnerTape blankPrefix
+          (BCRT blankPrefix
             (symbol :: suffix))) =
-      budgetCheckerDescriptionRunnerTape (blankPrefix + 1) suffix := by
+      BCRT (blankPrefix + 1) suffix := by
   cases suffix <;>
     simp [budgetCheckerDescriptionRunnerTape, Tape.move,
       Tape.moveRight, Tape.write]
@@ -596,7 +600,7 @@ theorem budgetCheckerDescriptionRunnerTape_move_right
 def budgetCheckerDescriptionRunnerMachine
     (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState) :
     TuringMachine MachineCodeSymbol
-      (BudgetCheckerDescriptionRunnerState descriptionState) where
+      (BCRS descriptionState) where
   start := BudgetCheckerDescriptionRunnerState.scan
   halt := BudgetCheckerDescriptionRunnerState.run descriptionDecoder.halt
   transition := fun state cell =>
@@ -621,42 +625,47 @@ def budgetCheckerDescriptionRunnerMachine
     BudgetCheckerDescriptionRunnerState.finite
       descriptionDecoder.statesFinite
 
+private abbrev BCRM
+    {descriptionState : Type uDescription}
+    (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState) :=
+  budgetCheckerDescriptionRunnerMachine descriptionDecoder
+
 theorem budgetCheckerDescriptionRunnerMachine_step_tick
     (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState)
     (blankPrefix : Nat) (suffix : Word MachineCodeSymbol) :
     TuringMachine.Step
-      (budgetCheckerDescriptionRunnerMachine descriptionDecoder)
+      (BCRM descriptionDecoder)
       { state := BudgetCheckerDescriptionRunnerState.scan
         tape :=
-          budgetCheckerDescriptionRunnerTape blankPrefix
+          BCRT blankPrefix
             (MachineCodeSymbol.tick :: suffix) }
       { state := BudgetCheckerDescriptionRunnerState.scan
         tape :=
-          budgetCheckerDescriptionRunnerTape (blankPrefix + 1) suffix } := by
+          BCRT (blankPrefix + 1) suffix } := by
   rw [← budgetCheckerDescriptionRunnerTape_move_right
     blankPrefix MachineCodeSymbol.tick suffix]
   exact TuringMachine.Step.mk (by
     simp [budgetCheckerDescriptionRunnerMachine,
-      budgetCheckerDescriptionRunnerTape, Tape.read])
+                budgetCheckerDescriptionRunnerTape, Tape.read])
 
 theorem budgetCheckerDescriptionRunnerMachine_step_done
     (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState)
     (blankPrefix : Nat) (suffix : Word MachineCodeSymbol) :
     TuringMachine.Step
-      (budgetCheckerDescriptionRunnerMachine descriptionDecoder)
+      (BCRM descriptionDecoder)
       { state := BudgetCheckerDescriptionRunnerState.scan
         tape :=
-          budgetCheckerDescriptionRunnerTape blankPrefix
+          BCRT blankPrefix
             (MachineCodeSymbol.done :: suffix) }
       { state :=
           BudgetCheckerDescriptionRunnerState.run descriptionDecoder.start
         tape :=
-          budgetCheckerDescriptionRunnerTape (blankPrefix + 1) suffix } := by
+          BCRT (blankPrefix + 1) suffix } := by
   rw [← budgetCheckerDescriptionRunnerTape_move_right
     blankPrefix MachineCodeSymbol.done suffix]
   exact TuringMachine.Step.mk (by
     simp [budgetCheckerDescriptionRunnerMachine,
-      budgetCheckerDescriptionRunnerTape, Tape.read])
+                budgetCheckerDescriptionRunnerTape, Tape.read])
 
 theorem budgetCheckerDescriptionRunnerMachine_step_run
     (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState)
@@ -667,7 +676,7 @@ theorem budgetCheckerDescriptionRunnerMachine_step_run
       descriptionDecoder.transition state (Tape.read tape) =
         some (write, dir, nextState)) :
     TuringMachine.Step
-      (budgetCheckerDescriptionRunnerMachine descriptionDecoder)
+      (BCRM descriptionDecoder)
       { state := BudgetCheckerDescriptionRunnerState.run state
         tape := tape }
       { state := BudgetCheckerDescriptionRunnerState.run nextState
@@ -687,7 +696,7 @@ theorem dropTrailingNone_replicate_none
 theorem budgetCheckerDescriptionRunnerTape_equiv_input
     (blankPrefix : Nat) (encoded : Word MachineCodeSymbol) :
     Tape.Equiv
-      (budgetCheckerDescriptionRunnerTape blankPrefix encoded)
+      (BCRT blankPrefix encoded)
       (Tape.input encoded) := by
   cases encoded with
   | nil =>
@@ -769,7 +778,7 @@ theorem budgetCheckerDescriptionRunnerMachine_computes_run
     {c d : TuringMachine.Configuration MachineCodeSymbol descriptionState}
     (hcomp : TuringMachine.Computes descriptionDecoder c d) :
     TuringMachine.Computes
-      (budgetCheckerDescriptionRunnerMachine descriptionDecoder)
+      (BCRM descriptionDecoder)
       { state := BudgetCheckerDescriptionRunnerState.run c.state
         tape := c.tape }
       { state := BudgetCheckerDescriptionRunnerState.run d.state
@@ -789,16 +798,16 @@ theorem budgetCheckerDescriptionRunnerMachine_computesIn_scan
     (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState)
     (blankPrefix budget : Nat) (encoded : Word MachineCodeSymbol) :
     TuringMachine.ComputesIn
-      (budgetCheckerDescriptionRunnerMachine descriptionDecoder)
+      (BCRM descriptionDecoder)
       (budget + 1)
       { state := BudgetCheckerDescriptionRunnerState.scan
         tape :=
-          budgetCheckerDescriptionRunnerTape blankPrefix
+          BCRT blankPrefix
             (CodePrefixRecognizerStageCode encoded budget) }
       { state :=
           BudgetCheckerDescriptionRunnerState.run descriptionDecoder.start
         tape :=
-          budgetCheckerDescriptionRunnerTape
+          BCRT
             (blankPrefix + budget + 1) encoded } := by
   induction budget generalizing blankPrefix with
   | zero =>
@@ -827,7 +836,7 @@ theorem budgetCheckerDescriptionRunnerMachine_halts_run_only
     {tape : Tape MachineCodeSymbol}
     (hhalt :
       TuringMachine.HaltsFromIn
-        (budgetCheckerDescriptionRunnerMachine descriptionDecoder)
+        (BCRM descriptionDecoder)
         steps
         { state := BudgetCheckerDescriptionRunnerState.run state
           tape := tape }) :
@@ -861,7 +870,7 @@ theorem budgetCheckerDescriptionRunnerMachine_halts_run_only
                   cases hnext
                   have htail :
                       TuringMachine.HaltsFromIn
-                        (budgetCheckerDescriptionRunnerMachine
+                        (BCRM
                           descriptionDecoder)
                         steps
                         { state :=
@@ -884,16 +893,16 @@ theorem budgetCheckerDescriptionRunnerMachine_halts_scan_only
     {encoded : Word MachineCodeSymbol}
     (hhalt :
       TuringMachine.HaltsFromIn
-        (budgetCheckerDescriptionRunnerMachine descriptionDecoder)
+        (BCRM descriptionDecoder)
         steps
         { state := BudgetCheckerDescriptionRunnerState.scan
           tape :=
-            budgetCheckerDescriptionRunnerTape blankPrefix
+            BCRT blankPrefix
               (CodePrefixRecognizerStageCode encoded budget) }) :
     TuringMachine.HaltsFrom descriptionDecoder
       { state := descriptionDecoder.start
         tape :=
-          budgetCheckerDescriptionRunnerTape
+          BCRT
             (blankPrefix + budget + 1) encoded } := by
   induction budget generalizing steps blankPrefix with
   | zero =>
@@ -917,14 +926,14 @@ theorem budgetCheckerDescriptionRunnerMachine_halts_scan_only
               cases hnext
               have htail :
                   TuringMachine.HaltsFromIn
-                    (budgetCheckerDescriptionRunnerMachine
+                    (BCRM
                       descriptionDecoder)
                     tailSteps
                     { state :=
                         BudgetCheckerDescriptionRunnerState.run
                           descriptionDecoder.start
                       tape :=
-                        budgetCheckerDescriptionRunnerTape
+                        BCRT
                           (blankPrefix + 1) encoded } := by
                 refine ⟨final, ?_, hfinal⟩
                 simpa [CodePrefixRecognizerStageCode,
@@ -956,12 +965,12 @@ theorem budgetCheckerDescriptionRunnerMachine_halts_scan_only
               cases hnext
               have htail :
                   TuringMachine.HaltsFromIn
-                    (budgetCheckerDescriptionRunnerMachine
+                    (BCRM
                       descriptionDecoder)
                     tailSteps
                     { state := BudgetCheckerDescriptionRunnerState.scan
                       tape :=
-                        budgetCheckerDescriptionRunnerTape
+                        BCRT
                           (blankPrefix + 1)
                           (CodePrefixRecognizerStageCode encoded budget) } := by
                 refine ⟨final, ?_, hfinal⟩
@@ -1042,44 +1051,49 @@ noncomputable def budgetCheckerDescriptionRunnerIndexedMachine
     budgetCheckerDescriptionRunnerIndexedStateFinite
       descriptionDecoder.statesFinite.elems.length
 
+private noncomputable abbrev BCRIM
+    {descriptionState : Type uDescription}
+    (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState) :=
+  budgetCheckerDescriptionRunnerIndexedMachine descriptionDecoder
+
 theorem budgetCheckerDescriptionRunnerIndexedMachine_step_tick
     (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState)
     (blankPrefix : Nat) (suffix : Word MachineCodeSymbol) :
     TuringMachine.Step
-      (budgetCheckerDescriptionRunnerIndexedMachine descriptionDecoder)
+      (BCRIM descriptionDecoder)
       { state := none
         tape :=
-          budgetCheckerDescriptionRunnerTape blankPrefix
+          BCRT blankPrefix
             (MachineCodeSymbol.tick :: suffix) }
       { state := none
         tape :=
-          budgetCheckerDescriptionRunnerTape (blankPrefix + 1) suffix } := by
+          BCRT (blankPrefix + 1) suffix } := by
   rw [← budgetCheckerDescriptionRunnerTape_move_right
     blankPrefix MachineCodeSymbol.tick suffix]
   exact TuringMachine.Step.mk (by
     simp [budgetCheckerDescriptionRunnerIndexedMachine,
-      budgetCheckerDescriptionRunnerTape, Tape.read])
+                budgetCheckerDescriptionRunnerTape, Tape.read])
 
 theorem budgetCheckerDescriptionRunnerIndexedMachine_step_done
     (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState)
     (blankPrefix : Nat) (suffix : Word MachineCodeSymbol) :
     TuringMachine.Step
-      (budgetCheckerDescriptionRunnerIndexedMachine descriptionDecoder)
+      (BCRIM descriptionDecoder)
       { state := none
         tape :=
-          budgetCheckerDescriptionRunnerTape blankPrefix
+          BCRT blankPrefix
             (MachineCodeSymbol.done :: suffix) }
       { state :=
           some
             (finiteStateIndexOf descriptionDecoder.statesFinite
               descriptionDecoder.start)
         tape :=
-          budgetCheckerDescriptionRunnerTape (blankPrefix + 1) suffix } := by
+          BCRT (blankPrefix + 1) suffix } := by
   rw [← budgetCheckerDescriptionRunnerTape_move_right
     blankPrefix MachineCodeSymbol.done suffix]
   exact TuringMachine.Step.mk (by
     simp [budgetCheckerDescriptionRunnerIndexedMachine,
-      budgetCheckerDescriptionRunnerTape, Tape.read])
+                budgetCheckerDescriptionRunnerTape, Tape.read])
 
 theorem budgetCheckerDescriptionRunnerIndexedMachine_step_run
     (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState)
@@ -1090,7 +1104,7 @@ theorem budgetCheckerDescriptionRunnerIndexedMachine_step_run
       descriptionDecoder.transition state (Tape.read tape) =
         some (write, dir, nextState)) :
     TuringMachine.Step
-      (budgetCheckerDescriptionRunnerIndexedMachine descriptionDecoder)
+      (BCRIM descriptionDecoder)
       { state :=
           some
             (finiteStateIndexOf descriptionDecoder.statesFinite state)
@@ -1107,18 +1121,18 @@ theorem budgetCheckerDescriptionRunnerIndexedMachine_computesIn_scan
     (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState)
     (blankPrefix budget : Nat) (encoded : Word MachineCodeSymbol) :
     TuringMachine.ComputesIn
-      (budgetCheckerDescriptionRunnerIndexedMachine descriptionDecoder)
+      (BCRIM descriptionDecoder)
       (budget + 1)
       { state := none
         tape :=
-          budgetCheckerDescriptionRunnerTape blankPrefix
+          BCRT blankPrefix
             (CodePrefixRecognizerStageCode encoded budget) }
       { state :=
           some
             (finiteStateIndexOf descriptionDecoder.statesFinite
               descriptionDecoder.start)
         tape :=
-          budgetCheckerDescriptionRunnerTape
+          BCRT
             (blankPrefix + budget + 1) encoded } := by
   induction budget generalizing blankPrefix with
   | zero =>
@@ -1146,7 +1160,7 @@ theorem budgetCheckerDescriptionRunnerIndexedMachine_computes_run
     {c d : TuringMachine.Configuration MachineCodeSymbol descriptionState}
     (hcomp : TuringMachine.Computes descriptionDecoder c d) :
     TuringMachine.Computes
-      (budgetCheckerDescriptionRunnerIndexedMachine descriptionDecoder)
+      (BCRIM descriptionDecoder)
       { state :=
           some
             (finiteStateIndexOf descriptionDecoder.statesFinite c.state)
@@ -1173,7 +1187,7 @@ theorem budgetCheckerDescriptionRunnerIndexedMachine_halts_run_only
     {tape : Tape MachineCodeSymbol}
     (hhalt :
       TuringMachine.HaltsFromIn
-        (budgetCheckerDescriptionRunnerIndexedMachine descriptionDecoder)
+        (BCRIM descriptionDecoder)
         steps
         { state := some index
           tape := tape }) :
@@ -1215,7 +1229,7 @@ theorem budgetCheckerDescriptionRunnerIndexedMachine_halts_run_only
                   cases hnext
                   have htail :
                       TuringMachine.HaltsFromIn
-                        (budgetCheckerDescriptionRunnerIndexedMachine
+                        (BCRIM
                           descriptionDecoder)
                         steps
                         { state :=
@@ -1246,16 +1260,16 @@ theorem budgetCheckerDescriptionRunnerIndexedMachine_halts_scan_only
     {encoded : Word MachineCodeSymbol}
     (hhalt :
       TuringMachine.HaltsFromIn
-        (budgetCheckerDescriptionRunnerIndexedMachine descriptionDecoder)
+        (BCRIM descriptionDecoder)
         steps
         { state := none
           tape :=
-            budgetCheckerDescriptionRunnerTape blankPrefix
+            BCRT blankPrefix
               (CodePrefixRecognizerStageCode encoded budget) }) :
     TuringMachine.HaltsFrom descriptionDecoder
       { state := descriptionDecoder.start
         tape :=
-          budgetCheckerDescriptionRunnerTape
+          BCRT
             (blankPrefix + budget + 1) encoded } := by
   induction budget generalizing steps blankPrefix with
   | zero =>
@@ -1279,7 +1293,7 @@ theorem budgetCheckerDescriptionRunnerIndexedMachine_halts_scan_only
               cases hnext
               have htail :
                   TuringMachine.HaltsFromIn
-                    (budgetCheckerDescriptionRunnerIndexedMachine
+                    (BCRIM
                       descriptionDecoder)
                     tailSteps
                     { state :=
@@ -1288,7 +1302,7 @@ theorem budgetCheckerDescriptionRunnerIndexedMachine_halts_scan_only
                             descriptionDecoder.statesFinite
                             descriptionDecoder.start)
                       tape :=
-                        budgetCheckerDescriptionRunnerTape
+                        BCRT
                           (blankPrefix + 1) encoded } := by
                 refine ⟨final, ?_, hfinal⟩
                 simpa [CodePrefixRecognizerStageCode,
@@ -1321,12 +1335,12 @@ theorem budgetCheckerDescriptionRunnerIndexedMachine_halts_scan_only
               cases hnext
               have htail :
                   TuringMachine.HaltsFromIn
-                    (budgetCheckerDescriptionRunnerIndexedMachine
+                    (BCRIM
                       descriptionDecoder)
                     tailSteps
                     { state := none
                       tape :=
-                        budgetCheckerDescriptionRunnerTape
+                        BCRT
                           (blankPrefix + 1)
                           (CodePrefixRecognizerStageCode encoded budget) } := by
                 refine ⟨final, ?_, hfinal⟩
@@ -1349,7 +1363,7 @@ theorem codePrefixStageSearchControllerBudgetCheckerDescriptionRunnerObligation_
       descriptionDecoder := by
   refine
     ⟨Option (Fin descriptionDecoder.statesFinite.elems.length),
-      budgetCheckerDescriptionRunnerIndexedMachine descriptionDecoder, ?_⟩
+      BCRIM descriptionDecoder, ?_⟩
   intro encoded budget
   constructor
   · intro hrunner
@@ -1358,21 +1372,21 @@ theorem codePrefixStageSearchControllerBudgetCheckerDescriptionRunnerObligation_
       ⟨steps, hsteps⟩
     have hfrom :
         TuringMachine.HaltsFromIn
-          (budgetCheckerDescriptionRunnerIndexedMachine descriptionDecoder)
+          (BCRIM descriptionDecoder)
           steps
           { state := none
             tape :=
-              budgetCheckerDescriptionRunnerTape 0
+              BCRT 0
                 (CodePrefixRecognizerStageCode encoded budget) } := by
       simpa [TuringMachine.HaltsOnInputIn, TuringMachine.initial,
-        budgetCheckerDescriptionRunnerIndexedMachine,
+        BCRIM,
         budgetCheckerDescriptionRunnerTape_nil_eq_input] using hsteps
     have hdescFrom :=
       budgetCheckerDescriptionRunnerIndexedMachine_halts_scan_only
         descriptionDecoder hfrom
     have hequiv :
         Tape.Equiv
-          (budgetCheckerDescriptionRunnerTape (0 + budget + 1) encoded)
+          (BCRT (0 + budget + 1) encoded)
           (Tape.input encoded) :=
       budgetCheckerDescriptionRunnerTape_equiv_input
         (0 + budget + 1) encoded
@@ -1386,22 +1400,22 @@ theorem codePrefixStageSearchControllerBudgetCheckerDescriptionRunnerObligation_
         descriptionDecoder 0 budget encoded
     have hscan :
         TuringMachine.Computes
-          (budgetCheckerDescriptionRunnerIndexedMachine descriptionDecoder)
+          (BCRIM descriptionDecoder)
           { state := none
             tape :=
-              budgetCheckerDescriptionRunnerTape 0
+              BCRT 0
                 (CodePrefixRecognizerStageCode encoded budget) }
           { state :=
               some
                 (finiteStateIndexOf descriptionDecoder.statesFinite
                   descriptionDecoder.start)
             tape :=
-              budgetCheckerDescriptionRunnerTape (0 + budget + 1)
+              BCRT (0 + budget + 1)
                 encoded } :=
       TuringMachine.computesIn_to_computes hscanIn
     have hequiv :
         Tape.Equiv (Tape.input encoded)
-          (budgetCheckerDescriptionRunnerTape (0 + budget + 1)
+          (BCRT (0 + budget + 1)
             encoded) :=
       Tape.Equiv.symm
         (budgetCheckerDescriptionRunnerTape_equiv_input
@@ -1410,13 +1424,13 @@ theorem codePrefixStageSearchControllerBudgetCheckerDescriptionRunnerObligation_
       ⟨final', hcomp', hstate, _htape⟩
     have hrun :
         TuringMachine.Computes
-          (budgetCheckerDescriptionRunnerIndexedMachine descriptionDecoder)
+          (BCRIM descriptionDecoder)
           { state :=
               some
                 (finiteStateIndexOf descriptionDecoder.statesFinite
                   descriptionDecoder.start)
             tape :=
-              budgetCheckerDescriptionRunnerTape (0 + budget + 1)
+              BCRT (0 + budget + 1)
                 encoded }
           { state :=
               some
@@ -1427,7 +1441,7 @@ theorem codePrefixStageSearchControllerBudgetCheckerDescriptionRunnerObligation_
         descriptionDecoder hcomp'
     have hhalt' :
         TuringMachine.Halted
-          (budgetCheckerDescriptionRunnerIndexedMachine descriptionDecoder)
+          (BCRIM descriptionDecoder)
           { state :=
               some
                 (finiteStateIndexOf descriptionDecoder.statesFinite
@@ -1439,15 +1453,15 @@ theorem codePrefixStageSearchControllerBudgetCheckerDescriptionRunnerObligation_
         budgetCheckerDescriptionRunnerIndexedMachine, hfinalState]
     have hrunnerFrom :
         TuringMachine.HaltsFrom
-          (budgetCheckerDescriptionRunnerIndexedMachine descriptionDecoder)
+          (BCRIM descriptionDecoder)
           { state := none
             tape :=
-              budgetCheckerDescriptionRunnerTape 0
+              BCRT 0
                 (CodePrefixRecognizerStageCode encoded budget) } :=
       TuringMachine.halts_from_of_computes
         (TuringMachine.computes_trans hscan hrun) hhalt'
     simpa [TuringMachine.HaltsOnInput, TuringMachine.initial,
-      budgetCheckerDescriptionRunnerIndexedMachine,
+      BCRIM,
       budgetCheckerDescriptionRunnerTape_nil_eq_input] using hrunnerFrom
 
 /--
