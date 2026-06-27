@@ -139,6 +139,60 @@ theorem sourceFieldBits_length_le_parsedLayoutBits
   simp [MachineDescription.encodeCodeWordAsInput]
   omega
 
+theorem sourceTape_normalizedOutput
+    (L : MachineDescription.DovetailLayout)
+    (baseLeft : List (Option Bool)) :
+    Tape.normalizedOutput (sourceTape L baseLeft) =
+      List.append (baseLeft.reverse.filterMap (fun cell => cell))
+        (sourceFieldBits L) := by
+  rcases stageNatBits_cons_cons L.stage with
+    ⟨first, second, rest, hstage⟩
+  rw [sourceTape, sourceFieldBits, hstage]
+  simp [DovetailInitialLayoutInitializer.tapeAtCells,
+    Tape.normalizedOutput, Tape.cells, Function.comp_def,
+    List.filterMap_append]
+
+theorem sourceTape_normalizedOutput_outputPrefix
+    (L : MachineDescription.DovetailLayout) :
+    Tape.normalizedOutput
+        (sourceTape L ((outputPrefixBits L).reverse.map some)) =
+      List.append (outputPrefixBits L) (sourceFieldBits L) := by
+  rw [sourceTape_normalizedOutput]
+  simp [Function.comp_def, List.map_reverse]
+
+theorem outputPrefixBits_append_sourceFieldBits
+    (L : MachineDescription.DovetailLayout) :
+    List.append (outputPrefixBits L) (sourceFieldBits L) =
+      MachineDescription.encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          MachineDescription.encodeBoolWordAppend
+            (ParsedLayoutBits L) (sourceSuffix L)) := by
+  have happend :
+      MachineDescription.encodeBoolWordAppend
+          (ParsedLayoutBits L) (sourceSuffix L) =
+        List.append
+          (MachineDescription.encodeBoolWordAppend
+            (ParsedLayoutBits L) [])
+          (sourceSuffix L) := by
+    simpa using
+      encodeBoolWordAppend_append (ParsedLayoutBits L)
+        ([] : Word MachineCodeSymbol) (sourceSuffix L)
+  rw [outputPrefixBits, ← sourceSuffix_bits_eq_fields L, happend]
+  simp only [MachineDescription.encodeCodeWordAsInput]
+  rw [MachineDescription.encodeCodeWordAsInput_append]
+  simp [List.append_assoc]
+
+theorem sourceTape_normalizedOutput_outputPrefix_eq_header_input_sourceSuffix
+    (L : MachineDescription.DovetailLayout) :
+    Tape.normalizedOutput
+        (sourceTape L ((outputPrefixBits L).reverse.map some)) =
+      MachineDescription.encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          MachineDescription.encodeBoolWordAppend
+            (ParsedLayoutBits L) (sourceSuffix L)) := by
+  rw [sourceTape_normalizedOutput_outputPrefix,
+    outputPrefixBits_append_sourceFieldBits]
+
 theorem sourceScannerRightHandoffTape_normalizedOutput
     (L : MachineDescription.DovetailLayout)
     (baseLeft : List (Option Bool)) :
