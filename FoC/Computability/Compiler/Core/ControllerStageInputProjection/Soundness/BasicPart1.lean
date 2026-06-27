@@ -430,94 +430,94 @@ private theorem stepConfig_projectionConfig_cons_none
     projectionTapeAtCells, Tape.read, hlookup]
 private theorem lookupTransition_100_none :
     Description.lookupTransition 100 none = none := by
-  native_decide
+  decide
 private theorem lookupTransition_100_true :
     Description.lookupTransition 100 (some true) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_101_true :
     Description.lookupTransition 101 (some true) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_102_false :
     Description.lookupTransition 102 (some false) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_120_none :
     Description.lookupTransition 120 none = none := by
-  native_decide
+  decide
 private theorem lookupTransition_120_true :
     Description.lookupTransition 120 (some true) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_121_true :
     Description.lookupTransition 121 (some true) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_122_false :
     Description.lookupTransition 122 (some false) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_130_none :
     Description.lookupTransition 130 none = none := by
-  native_decide
+  decide
 private theorem lookupTransition_130_true :
     Description.lookupTransition 130 (some true) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_131_false :
     Description.lookupTransition 131 (some false) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_133_false :
     Description.lookupTransition 133 (some false) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_134_true :
     Description.lookupTransition 134 (some true) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_200_none :
     Description.lookupTransition 200 none = none := by
-  native_decide
+  decide
 private theorem lookupTransition_200_true :
     Description.lookupTransition 200 (some true) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_201_true :
     Description.lookupTransition 201 (some true) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_202_false :
     Description.lookupTransition 202 (some false) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_300_none :
     Description.lookupTransition 300 none = none := by
-  native_decide
+  decide
 private theorem lookupTransition_300_true :
     Description.lookupTransition 300 (some true) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_301_true :
     Description.lookupTransition 301 (some true) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_302_false :
     Description.lookupTransition 302 (some false) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_320_none :
     Description.lookupTransition 320 none = none := by
-  native_decide
+  decide
 private theorem lookupTransition_320_true :
     Description.lookupTransition 320 (some true) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_321_true :
     Description.lookupTransition 321 (some true) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_322_false :
     Description.lookupTransition 322 (some false) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_330_none :
     Description.lookupTransition 330 none = none := by
-  native_decide
+  decide
 private theorem lookupTransition_330_true :
     Description.lookupTransition 330 (some true) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_331_false :
     Description.lookupTransition 331 (some false) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_333_false :
     Description.lookupTransition 333 (some false) = none := by
-  native_decide
+  decide
 private theorem lookupTransition_334_true :
     Description.lookupTransition 334 (some true) = none := by
-  native_decide
+  decide
 
 theorem ne_halt_of_reaches_ne_halt_region
     {c mid : Configuration} {k n : Nat}

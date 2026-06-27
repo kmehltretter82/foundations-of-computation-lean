@@ -32,22 +32,22 @@ private abbrev MTSB := MarkTransitionSecondBitDescription
 
 theorem markTransitionSecondBitDescription_wellFormed :
     MTSB.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := MTSB.transitions)
       (stateCount :=
         MTSB.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := MTSB.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem markTransitionSecondBitDescription_haltTransitionFree :
     MTSB.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := MTSB.transitions)
     (state := MTSB.halt)
-    (by native_decide)
+    (by decide)
 
 theorem markTransitionSecondBitDescription_subroutineReady :
     MTSB.SubroutineReady :=
@@ -178,22 +178,22 @@ private abbrev RTCM := ReturnToCurrentMarkerDescription
 
 theorem returnToCurrentMarkerDescription_wellFormed :
     RTCM.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := RTCM.transitions)
       (stateCount :=
         RTCM.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := RTCM.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem returnToCurrentMarkerDescription_haltTransitionFree :
     RTCM.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := RTCM.transitions)
     (state := RTCM.halt)
-    (by native_decide)
+    (by decide)
 
 theorem returnToCurrentMarkerDescription_subroutineReady :
     RTCM.SubroutineReady :=
@@ -478,22 +478,22 @@ def RightCellsCopierStartDescription :
 
 theorem rightCellsCopierStartDescription_wellFormed :
     RightCellsCopierStartDescription.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := RightCellsCopierStartDescription.transitions)
       (stateCount :=
         RightCellsCopierStartDescription.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := RightCellsCopierStartDescription.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem rightCellsCopierStartDescription_haltTransitionFree :
     RightCellsCopierStartDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := RightCellsCopierStartDescription.transitions)
     (state := RightCellsCopierStartDescription.halt)
-    (by native_decide)
+    (by decide)
 
 theorem rightCellsCopierStartDescription_subroutineReady :
     RightCellsCopierStartDescription.SubroutineReady :=
@@ -751,22 +751,22 @@ private abbrev ITCD := InputTapeRightCellsDirectCopierDescription
 
 theorem inputTapeRightCellsDirectCopierDescription_wellFormed :
     ITCD.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := ITCD.transitions)
       (stateCount :=
         ITCD.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := ITCD.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem inputTapeRightCellsDirectCopierDescription_haltTransitionFree :
     ITCD.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := ITCD.transitions)
     (state := ITCD.halt)
-    (by native_decide)
+    (by decide)
 
 theorem inputTapeRightCellsDirectCopierDescription_subroutineReady :
     ITCD.SubroutineReady :=
@@ -1043,22 +1043,22 @@ private abbrev RTTM := ReturnToTransitionMarkerDescription
 
 theorem returnToTransitionMarkerDescription_wellFormed :
     RTTM.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := RTTM.transitions)
       (stateCount :=
         RTTM.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := RTTM.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem returnToTransitionMarkerDescription_haltTransitionFree :
     RTTM.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := RTTM.transitions)
     (state := RTTM.halt)
-    (by native_decide)
+    (by decide)
 
 theorem returnToTransitionMarkerDescription_subroutineReady :
     RTTM.SubroutineReady :=

@@ -402,7 +402,7 @@ def Description : MachineDescription where
 
 theorem description_wellFormed :
     Description.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := Description.transitions)
       (stateCount := Description.stateCount)

@@ -242,22 +242,22 @@ def StageInputContinueCheckedRewriterDescription : MachineDescription where
 
 theorem stageInputContinueCheckedRewriterDescription_wellFormed :
     StageInputContinueCheckedRewriterDescription.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := StageInputContinueCheckedRewriterDescription.transitions)
       (stateCount :=
         StageInputContinueCheckedRewriterDescription.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := StageInputContinueCheckedRewriterDescription.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem stageInputContinueCheckedRewriterDescription_haltTransitionFree :
     StageInputContinueCheckedRewriterDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := StageInputContinueCheckedRewriterDescription.transitions)
     (state := StageInputContinueCheckedRewriterDescription.halt)
-    (by native_decide)
+    (by decide)
 
 theorem stageInputContinueCheckedRewriterDescription_subroutineReady :
     StageInputContinueCheckedRewriterDescription.SubroutineReady :=

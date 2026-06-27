@@ -386,21 +386,21 @@ private abbrev SIMS := StageInputMarkedScannerDescription
 
 theorem stageInputMarkedScannerDescription_wellFormed :
     SIMS.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := SIMS.transitions)
       (stateCount := SIMS.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := SIMS.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem stageInputMarkedScannerDescription_haltTransitionFree :
     SIMS.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := SIMS.transitions)
     (state := SIMS.halt)
-    (by native_decide)
+    (by decide)
 
 theorem stageInputMarkedScannerDescription_subroutineReady :
     SIMS.SubroutineReady :=

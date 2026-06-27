@@ -52,7 +52,7 @@ private theorem cellSuffixScannerDescription_runConfig_nil_ne_halt
             CellSuffixScannerDescription.lookupTransition
               CellSuffixScannerDescription.start
               none = none := by
-          native_decide
+          decide
         simp [config, tapeAtCells, stepConfig,
           hlookup, Tape.read])
       (by
@@ -86,7 +86,7 @@ private theorem cellSuffixScannerDescription_runConfig_true_start_ne_halt
             CellSuffixScannerDescription.lookupTransition
               CellSuffixScannerDescription.start
               (some true) = none := by
-          native_decide
+          decide
         simp [config, tapeAtCells, stepConfig,
           hlookup, Tape.read])
       (by

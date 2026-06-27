@@ -405,7 +405,7 @@ private theorem boolSuffixScannerDescription_runConfig_nil_ne_halt
         have hlookup :
             BSS.lookupTransition
               BSS.start none = none := by
-          native_decide
+          decide
         simp [config, tapeAtCells, stepConfig,
           hlookup, Tape.read])
       (by
@@ -434,7 +434,7 @@ private theorem boolSuffixScannerDescription_runConfig_true_start_ne_halt
         have hlookup :
             BSS.lookupTransition
               BSS.start (some true) = none := by
-          native_decide
+          decide
         simp [config, tapeAtCells, stepConfig,
           hlookup, Tape.read])
       (by
@@ -819,7 +819,7 @@ private theorem boolFinalScannerDescription_runConfig_nil_ne_halt
         have hlookup :
             BFS.lookupTransition
               BFS.start none = none := by
-          native_decide
+          decide
         simp [config, tapeAtCells, stepConfig,
           hlookup, Tape.read])
       (by
@@ -848,7 +848,7 @@ private theorem boolFinalScannerDescription_runConfig_true_start_ne_halt
         have hlookup :
             BFS.lookupTransition
               BFS.start (some true) = none := by
-          native_decide
+          decide
         simp [config, tapeAtCells, stepConfig,
           hlookup, Tape.read])
       (by

@@ -78,21 +78,21 @@ private abbrev BWSS := BoolWordSuffixScannerDescription
 theorem boolWordSuffixScannerDescription_wellFormed :
     BWSS.WellFormed := by
   constructor
-  · native_decide
+  · decide
   constructor
-  · native_decide
+  · decide
   constructor
-  · native_decide
+  · decide
   constructor
   · exact transition_wellFormed_of_all
       (l := BWSS.transitions)
       (stateCount := BWSS.stateCount)
       (by
-        native_decide)
+        decide)
   · exact transition_deterministic_of_all
       (l := BWSS.transitions)
       (by
-        native_decide)
+        decide)
 
 theorem boolWordSuffixScannerDescription_haltTransitionFree :
     BWSS.HaltTransitionFree :=
@@ -100,7 +100,7 @@ theorem boolWordSuffixScannerDescription_haltTransitionFree :
     (l := BWSS.transitions)
     (state := BWSS.halt)
     (by
-      native_decide)
+      decide)
 
 theorem boolWordSuffixScannerDescription_subroutineReady :
     BWSS.SubroutineReady :=
@@ -117,7 +117,7 @@ theorem boolWordSuffix_lookup_150_false :
     BWSS.lookupTransition 150 (some false) =
       some (keepMove 150 (some false) Direction.left
         BWSS.halt) := by
-  native_decide
+  decide
 
 theorem run_boolWordSuffix_state130_currentBit
     (bit : Bool) (left right : List (Option Bool)) :

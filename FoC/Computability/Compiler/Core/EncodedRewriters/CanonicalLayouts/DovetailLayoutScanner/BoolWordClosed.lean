@@ -1170,18 +1170,18 @@ theorem boolWordCanonicalHandoffConfigWithBase_move_right_all
 
 theorem boolWordSuffix_lookup_150_none :
     BWSS.lookupTransition 150 none = none := by
-  native_decide
+  decide
 
 theorem boolWordSuffix_lookup_150_true :
     BWSS.lookupTransition 150 (some true) =
       some
         (writeMove 150 (some true) (some false) Direction.right 152) := by
-  native_decide
+  decide
 
 theorem boolWordSuffix_lookup_152_false :
     BWSS.lookupTransition 152 (some false) =
       none := by
-  native_decide
+  decide
 
 theorem boolWordSuffixScannerDescription_runConfig_finish_empty_suffix_ne_halt
     (bits : Word Bool) (baseLeft : List (Option Bool))

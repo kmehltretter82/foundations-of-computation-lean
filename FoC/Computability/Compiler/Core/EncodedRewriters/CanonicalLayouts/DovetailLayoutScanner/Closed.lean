@@ -69,7 +69,7 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
       have hstep :
           MFTB.stepConfig
               (MFTB.initial []) = none := by
-        native_decide
+        decide
       have hrun :=
         runConfig_of_stepConfig_none hstep n
       have hstate : 0 = 9 := by

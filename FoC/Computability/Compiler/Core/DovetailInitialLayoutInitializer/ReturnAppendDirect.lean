@@ -44,22 +44,22 @@ private abbrev RCSH := RightCellsCopierStartHandoffDescription
 
 theorem rightCellsCopierStartHandoffDescription_wellFormed :
     RCSH.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := RCSH.transitions)
       (stateCount :=
         RCSH.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := RCSH.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem rightCellsCopierStartHandoffDescription_haltTransitionFree :
     RCSH.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := RCSH.transitions)
     (state := RCSH.halt)
-    (by native_decide)
+    (by decide)
 
 theorem rightCellsCopierStartHandoffDescription_subroutineReady :
     RCSH.SubroutineReady :=

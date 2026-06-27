@@ -50,21 +50,21 @@ def MarkedPrefixScannerDescription : MachineDescription where
 theorem markedPrefixScannerDescription_wellFormed :
     MarkedPrefixScannerDescription.WellFormed := by
   constructor
-  · native_decide
+  · decide
   constructor
-  · native_decide
+  · decide
   constructor
-  · native_decide
+  · decide
   constructor
   · exact transition_wellFormed_of_all
       (l := MarkedPrefixScannerDescription.transitions)
       (stateCount := MarkedPrefixScannerDescription.stateCount)
       (by
-        native_decide)
+        decide)
   · exact transition_deterministic_of_all
       (l := MarkedPrefixScannerDescription.transitions)
       (by
-        native_decide)
+        decide)
 
 theorem markedPrefixScannerDescription_haltTransitionFree :
     MarkedPrefixScannerDescription.HaltTransitionFree :=
@@ -72,7 +72,7 @@ theorem markedPrefixScannerDescription_haltTransitionFree :
     (l := MarkedPrefixScannerDescription.transitions)
     (state := MarkedPrefixScannerDescription.halt)
     (by
-      native_decide)
+      decide)
 
 theorem markedPrefixScannerDescription_subroutineReady :
     MarkedPrefixScannerDescription.SubroutineReady :=
@@ -88,21 +88,21 @@ def NatSuffixScannerDescription : MachineDescription where
 theorem natSuffixScannerDescription_wellFormed :
     NatSuffixScannerDescription.WellFormed := by
   constructor
-  · native_decide
+  · decide
   constructor
-  · native_decide
+  · decide
   constructor
-  · native_decide
+  · decide
   constructor
   · exact transition_wellFormed_of_all
       (l := NatSuffixScannerDescription.transitions)
       (stateCount := NatSuffixScannerDescription.stateCount)
       (by
-        native_decide)
+        decide)
   · exact transition_deterministic_of_all
       (l := NatSuffixScannerDescription.transitions)
       (by
-        native_decide)
+        decide)
 
 theorem natSuffixScannerDescription_haltTransitionFree :
     NatSuffixScannerDescription.HaltTransitionFree :=
@@ -110,7 +110,7 @@ theorem natSuffixScannerDescription_haltTransitionFree :
     (l := NatSuffixScannerDescription.transitions)
     (state := NatSuffixScannerDescription.halt)
     (by
-      native_decide)
+      decide)
 
 theorem natSuffixScannerDescription_subroutineReady :
     NatSuffixScannerDescription.SubroutineReady :=
@@ -135,21 +135,21 @@ def NonemptyNatSuffixScannerDescription : MachineDescription where
 theorem nonemptyNatSuffixScannerDescription_wellFormed :
     NonemptyNatSuffixScannerDescription.WellFormed := by
   constructor
-  · native_decide
+  · decide
   constructor
-  · native_decide
+  · decide
   constructor
-  · native_decide
+  · decide
   constructor
   · exact transition_wellFormed_of_all
       (l := NonemptyNatSuffixScannerDescription.transitions)
       (stateCount := NonemptyNatSuffixScannerDescription.stateCount)
       (by
-        native_decide)
+        decide)
   · exact transition_deterministic_of_all
       (l := NonemptyNatSuffixScannerDescription.transitions)
       (by
-        native_decide)
+        decide)
 
 theorem nonemptyNatSuffixScannerDescription_haltTransitionFree :
     NonemptyNatSuffixScannerDescription.HaltTransitionFree :=
@@ -157,7 +157,7 @@ theorem nonemptyNatSuffixScannerDescription_haltTransitionFree :
     (l := NonemptyNatSuffixScannerDescription.transitions)
     (state := NonemptyNatSuffixScannerDescription.halt)
     (by
-      native_decide)
+      decide)
 
 theorem nonemptyNatSuffixScannerDescription_subroutineReady :
     NonemptyNatSuffixScannerDescription.SubroutineReady :=
@@ -215,32 +215,32 @@ theorem markedPrefix_lookup_210_false :
       some
         (keepMove 210 (some false) Direction.left
           MarkedPrefixScannerDescription.halt) := by
-  native_decide
+  decide
 
 theorem markedPrefix_lookup_210_true :
     MarkedPrefixScannerDescription.lookupTransition 210 (some true) =
       some
         (keepMove 210 (some true) Direction.left
           MarkedPrefixScannerDescription.halt) := by
-  native_decide
+  decide
 
 theorem nonemptyNatSuffix_lookup_210_false :
     NonemptyNatSuffixScannerDescription.lookupTransition 210 (some false) =
       some
         (keepMove 210 (some false) Direction.left
           NonemptyNatSuffixScannerDescription.halt) := by
-  native_decide
+  decide
 
 theorem nonemptyNatSuffix_lookup_210_true :
     NonemptyNatSuffixScannerDescription.lookupTransition 210 (some true) =
       some
         (keepMove 210 (some true) Direction.left
           NonemptyNatSuffixScannerDescription.halt) := by
-  native_decide
+  decide
 
 theorem nonemptyNatSuffix_lookup_210_none :
     NonemptyNatSuffixScannerDescription.lookupTransition 210 none = none := by
-  native_decide
+  decide
 
 theorem markedPrefix_run_state200_stageNat_to_state210
     (stage : Nat) (left right : List (Option Bool)) :

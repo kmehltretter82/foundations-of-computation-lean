@@ -40,22 +40,22 @@ private abbrev WTP := WriteTransitionPrefixDescription
 
 theorem writeTransitionPrefixDescription_wellFormed :
     WTP.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := WTP.transitions)
       (stateCount :=
         WTP.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := WTP.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem writeTransitionPrefixDescription_haltTransitionFree :
     WTP.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := WTP.transitions)
     (state := WTP.halt)
-    (by native_decide)
+    (by decide)
 
 theorem writeTransitionPrefixDescription_subroutineReady :
     WTP.SubroutineReady :=
@@ -101,22 +101,22 @@ private abbrev WMTP := WriteMarkedTransitionPrefixDescription
 
 theorem writeMarkedTransitionPrefixDescription_wellFormed :
     WMTP.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := WMTP.transitions)
       (stateCount :=
         WMTP.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := WMTP.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem writeMarkedTransitionPrefixDescription_haltTransitionFree :
     WMTP.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := WMTP.transitions)
     (state := WMTP.halt)
-    (by native_decide)
+    (by decide)
 
 theorem writeMarkedTransitionPrefixDescription_subroutineReady :
     WMTP.SubroutineReady :=
@@ -173,11 +173,11 @@ theorem appendFixedFourBitsLastDescription_wellFormed
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).WellFormed := by
   refine ⟨?_, ?_, ?_, ?_, ?_⟩
   · cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-      native_decide
+      decide
   · cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-      native_decide
+      decide
   · cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-      native_decide
+      decide
   · exact transition_wellFormed_of_all
       (l :=
         (AppendFixedFourBitsLastDescription
@@ -187,14 +187,14 @@ theorem appendFixedFourBitsLastDescription_wellFormed
           b0 b1 b2 b3).stateCount)
       (by
         cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-          native_decide)
+          decide)
   · exact transition_deterministic_of_all
       (l :=
         (AppendFixedFourBitsLastDescription
           b0 b1 b2 b3).transitions)
       (by
         cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-          native_decide)
+          decide)
 
 theorem appendFixedFourBitsLastDescription_haltTransitionFree
     (b0 b1 b2 b3 : Bool) :
@@ -209,7 +209,7 @@ theorem appendFixedFourBitsLastDescription_haltTransitionFree
         b0 b1 b2 b3).halt)
     (by
       cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-        native_decide)
+        decide)
 
 theorem appendFixedFourBitsLastDescription_step_scan_nonempty
     (b0 b1 b2 b3 : Bool)

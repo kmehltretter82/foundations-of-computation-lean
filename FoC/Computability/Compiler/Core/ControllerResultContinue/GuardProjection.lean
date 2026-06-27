@@ -530,11 +530,11 @@ def ResultNoneGuardScannerDescription : MachineDescription where
 
 theorem resultNoneGuardScannerDescription_wellFormed :
     ResultNoneGuardScannerDescription.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := ResultNoneGuardScannerDescription.transitions)
       (stateCount := ResultNoneGuardScannerDescription.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := ResultNoneGuardScannerDescription.transitions)
       (by native_decide)
@@ -544,7 +544,7 @@ theorem resultNoneGuardScannerDescription_haltTransitionFree :
   transition_notFrom_of_all
     (l := ResultNoneGuardScannerDescription.transitions)
     (state := ResultNoneGuardScannerDescription.halt)
-    (by native_decide)
+    (by decide)
 
 theorem resultNoneGuardScannerDescription_subroutineReady :
     ResultNoneGuardScannerDescription.SubroutineReady :=
@@ -1170,21 +1170,21 @@ def ResultNoneGuardRewindDescription : MachineDescription where
 
 theorem resultNoneGuardRewindDescription_wellFormed :
     ResultNoneGuardRewindDescription.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := ResultNoneGuardRewindDescription.transitions)
       (stateCount := ResultNoneGuardRewindDescription.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := ResultNoneGuardRewindDescription.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem resultNoneGuardRewindDescription_haltTransitionFree :
     ResultNoneGuardRewindDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := ResultNoneGuardRewindDescription.transitions)
     (state := ResultNoneGuardRewindDescription.halt)
-    (by native_decide)
+    (by decide)
 
 theorem resultNoneGuardRewindDescription_subroutineReady :
     ResultNoneGuardRewindDescription.SubroutineReady :=
@@ -1415,11 +1415,11 @@ def ResultNoneGuardScanRewindDescription : MachineDescription where
 
 theorem resultNoneGuardScanRewindDescription_wellFormed :
     ResultNoneGuardScanRewindDescription.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := ResultNoneGuardScanRewindDescription.transitions)
       (stateCount := ResultNoneGuardScanRewindDescription.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := ResultNoneGuardScanRewindDescription.transitions)
       (by native_decide)
@@ -1429,7 +1429,7 @@ theorem resultNoneGuardScanRewindDescription_haltTransitionFree :
   transition_notFrom_of_all
     (l := ResultNoneGuardScanRewindDescription.transitions)
     (state := ResultNoneGuardScanRewindDescription.halt)
-    (by native_decide)
+    (by decide)
 
 theorem resultNoneGuardScanRewindDescription_subroutineReady :
     ResultNoneGuardScanRewindDescription.SubroutineReady :=
@@ -1502,8 +1502,8 @@ theorem resultNoneGuardScanRewindDescription_reject_blank_state_ne_halt
   · exact (hreject trivial).elim
   · exact (hreject trivial).elim
   · exact (hreject trivial).elim
-  · native_decide
-  · native_decide
+  · decide
+  · decide
 
 theorem resultNoneGuardScanRewindDescription_run_bits
     (boundary : ResultNoneGuardBoundary)

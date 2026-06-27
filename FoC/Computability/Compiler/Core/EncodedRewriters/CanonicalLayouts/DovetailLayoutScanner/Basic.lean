@@ -86,21 +86,21 @@ private abbrev CLSS := CellListSuffixScannerDescription
 
 theorem cellListSuffixScannerDescription_wellFormed :
     CLSS.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := CLSS.transitions)
       (stateCount := CLSS.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := CLSS.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem cellListSuffixScannerDescription_haltTransitionFree :
     CLSS.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := CLSS.transitions)
     (state := CLSS.halt)
-    (by native_decide)
+    (by decide)
 
 theorem cellListSuffixScannerDescription_subroutineReady :
     CLSS.SubroutineReady :=
@@ -117,7 +117,7 @@ theorem cellListSuffix_lookup_150_false :
     CLSS.lookupTransition 150 (some false) =
       some (keepMove 150 (some false) Direction.left
         CLSS.halt) := by
-  native_decide
+  decide
 
 def cellCodeBits (cell : Option Bool) : Word Bool :=
   encodeCodeWordAsInput
@@ -504,21 +504,21 @@ private abbrev CSS := CellSuffixScannerDescription
 
 theorem cellSuffixScannerDescription_wellFormed :
     CSS.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := CSS.transitions)
       (stateCount := CSS.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := CSS.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem cellSuffixScannerDescription_haltTransitionFree :
     CSS.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := CSS.transitions)
     (state := CSS.halt)
-    (by native_decide)
+    (by decide)
 
 theorem cellSuffixScannerDescription_subroutineReady :
     CSS.SubroutineReady :=
@@ -671,21 +671,21 @@ private abbrev BSS := BoolSuffixScannerDescription
 
 theorem boolSuffixScannerDescription_wellFormed :
     BSS.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := BSS.transitions)
       (stateCount := BSS.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := BSS.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem boolSuffixScannerDescription_haltTransitionFree :
     BSS.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := BSS.transitions)
     (state := BSS.halt)
-    (by native_decide)
+    (by decide)
 
 theorem boolSuffixScannerDescription_subroutineReady :
     BSS.SubroutineReady :=
@@ -771,21 +771,21 @@ private abbrev BFS := BoolFinalScannerDescription
 
 theorem boolFinalScannerDescription_wellFormed :
     BFS.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := BFS.transitions)
       (stateCount := BFS.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := BFS.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem boolFinalScannerDescription_haltTransitionFree :
     BFS.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := BFS.transitions)
     (state := BFS.halt)
-    (by native_decide)
+    (by decide)
 
 theorem boolFinalScannerDescription_subroutineReady :
     BFS.SubroutineReady :=
@@ -864,21 +864,21 @@ private abbrev TPS := TransitionPrefixScannerDescription
 
 theorem transitionPrefixScannerDescription_wellFormed :
     TPS.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := TPS.transitions)
       (stateCount := TPS.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := TPS.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem transitionPrefixScannerDescription_haltTransitionFree :
     TPS.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := TPS.transitions)
     (state := TPS.halt)
-    (by native_decide)
+    (by decide)
 
 theorem transitionPrefixScannerDescription_subroutineReady :
     TPS.SubroutineReady :=

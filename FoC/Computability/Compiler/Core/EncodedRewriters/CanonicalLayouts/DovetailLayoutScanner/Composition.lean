@@ -94,21 +94,21 @@ def MarkFirstTransitionBitDescription : MachineDescription where
 
 theorem markFirstTransitionBitDescription_wellFormed :
     MarkFirstTransitionBitDescription.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := MarkFirstTransitionBitDescription.transitions)
       (stateCount := MarkFirstTransitionBitDescription.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := MarkFirstTransitionBitDescription.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem markFirstTransitionBitDescription_haltTransitionFree :
     MarkFirstTransitionBitDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := MarkFirstTransitionBitDescription.transitions)
     (state := MarkFirstTransitionBitDescription.halt)
-    (by native_decide)
+    (by decide)
 
 theorem markFirstTransitionBitDescription_subroutineReady :
     MarkFirstTransitionBitDescription.SubroutineReady :=
@@ -144,22 +144,22 @@ def TransitionRemainderPrefixScannerDescription : MachineDescription where
 
 theorem transitionRemainderPrefixScannerDescription_wellFormed :
     TransitionRemainderPrefixScannerDescription.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := TransitionRemainderPrefixScannerDescription.transitions)
       (stateCount :=
         TransitionRemainderPrefixScannerDescription.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := TransitionRemainderPrefixScannerDescription.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem transitionRemainderPrefixScannerDescription_haltTransitionFree :
     TransitionRemainderPrefixScannerDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := TransitionRemainderPrefixScannerDescription.transitions)
     (state := TransitionRemainderPrefixScannerDescription.halt)
-    (by native_decide)
+    (by decide)
 
 theorem transitionRemainderPrefixScannerDescription_subroutineReady :
     TransitionRemainderPrefixScannerDescription.SubroutineReady :=
@@ -230,21 +230,21 @@ def ReturnToFirstMarkerDescription : MachineDescription where
 
 theorem returnToFirstMarkerDescription_wellFormed :
     ReturnToFirstMarkerDescription.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := ReturnToFirstMarkerDescription.transitions)
       (stateCount := ReturnToFirstMarkerDescription.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := ReturnToFirstMarkerDescription.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem returnToFirstMarkerDescription_haltTransitionFree :
     ReturnToFirstMarkerDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := ReturnToFirstMarkerDescription.transitions)
     (state := ReturnToFirstMarkerDescription.halt)
-    (by native_decide)
+    (by decide)
 
 theorem returnToFirstMarkerDescription_subroutineReady :
     ReturnToFirstMarkerDescription.SubroutineReady :=

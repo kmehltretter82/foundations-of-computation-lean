@@ -38,21 +38,21 @@ def ProjectionTailRewindDescription : MachineDescription where
 
 theorem projectionTailRewindDescription_wellFormed :
     ProjectionTailRewindDescription.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := ProjectionTailRewindDescription.transitions)
       (stateCount := ProjectionTailRewindDescription.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := ProjectionTailRewindDescription.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem projectionTailRewindDescription_haltTransitionFree :
     ProjectionTailRewindDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := ProjectionTailRewindDescription.transitions)
     (state := ProjectionTailRewindDescription.halt)
-    (by native_decide)
+    (by decide)
 
 theorem projectionTailRewindDescription_subroutineReady :
     ProjectionTailRewindDescription.SubroutineReady :=
@@ -64,21 +64,21 @@ def StageInputContinueBoundaryRewriterDescription : MachineDescription :=
 
 theorem stageInputContinueBoundaryRewriterDescription_wellFormed :
     StageInputContinueBoundaryRewriterDescription.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := StageInputContinueBoundaryRewriterDescription.transitions)
       (stateCount := StageInputContinueBoundaryRewriterDescription.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := StageInputContinueBoundaryRewriterDescription.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem stageInputContinueBoundaryRewriterDescription_haltTransitionFree :
     StageInputContinueBoundaryRewriterDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := StageInputContinueBoundaryRewriterDescription.transitions)
     (state := StageInputContinueBoundaryRewriterDescription.halt)
-    (by native_decide)
+    (by decide)
 
 theorem stageInputContinueBoundaryRewriterDescription_subroutineReady :
     StageInputContinueBoundaryRewriterDescription.SubroutineReady :=

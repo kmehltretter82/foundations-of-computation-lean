@@ -266,22 +266,22 @@ private abbrev RSIB := RestoreStageInputSecondBitDescription
 
 theorem restoreStageInputSecondBitDescription_wellFormed :
     RSIB.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := RSIB.transitions)
       (stateCount :=
         RSIB.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := RSIB.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem restoreStageInputSecondBitDescription_haltTransitionFree :
     RSIB.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := RSIB.transitions)
     (state := RSIB.halt)
-    (by native_decide)
+    (by decide)
 
 theorem restoreStageInputSecondBitDescription_subroutineReady :
     RSIB.SubroutineReady :=
@@ -370,22 +370,22 @@ private abbrev MSIB := MarkStageInputSecondBitDescription
 
 theorem markStageInputSecondBitDescription_wellFormed :
     MSIB.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := MSIB.transitions)
       (stateCount :=
         MSIB.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := MSIB.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem markStageInputSecondBitDescription_haltTransitionFree :
     MSIB.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := MSIB.transitions)
     (state := MSIB.halt)
-    (by native_decide)
+    (by decide)
 
 theorem markStageInputSecondBitDescription_subroutineReady :
     MSIB.SubroutineReady :=
@@ -443,7 +443,7 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
           MSIB.stepConfig
               (MSIB.initial []) =
             none := by
-        native_decide
+        decide
       have hrun :=
         runConfig_of_stepConfig_none hstep n
       have hstate : 0 = 3 := by

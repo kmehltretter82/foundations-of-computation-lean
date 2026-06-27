@@ -603,7 +603,7 @@ theorem wellFormed :
   · exact transition_wellFormed_of_all
       (l := Description.transitions)
       (stateCount := Description.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := Description.transitions)
       (by native_decide)
@@ -613,7 +613,7 @@ theorem haltTransitionFree :
   transition_notFrom_of_all
     (l := Description.transitions)
     (state := Description.halt)
-    (by native_decide)
+    (by decide)
 
 theorem run_header
     (suffix : Word Bool) :

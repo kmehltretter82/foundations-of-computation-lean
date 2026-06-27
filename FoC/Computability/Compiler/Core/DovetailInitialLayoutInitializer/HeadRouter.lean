@@ -98,22 +98,22 @@ private abbrev AIHR := AppendInputTapeHeadRouterDescription
 
 theorem appendInputTapeHeadRouterDescription_wellFormed :
     AIHR.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := AIHR.transitions)
       (stateCount :=
         AIHR.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := AIHR.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem appendInputTapeHeadRouterDescription_haltTransitionFree :
     AIHR.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := AIHR.transitions)
     (state := AIHR.halt)
-    (by native_decide)
+    (by decide)
 
 theorem appendInputTapeHeadRouterDescription_subroutineReady :
     AIHR.SubroutineReady :=

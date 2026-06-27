@@ -143,15 +143,15 @@ private abbrev CIH := ControllerInitialRawBoolWordHeaderEmitterDescription
 
 theorem controllerInitialRawBoolWordHeaderEmitterDescription_wellFormed :
     CIH.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := CIH.transitions)
       (stateCount :=
         CIH.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := CIH.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem
     controllerInitialRawBoolWordHeaderEmitterDescription_haltTransitionFree :
@@ -159,7 +159,7 @@ theorem
   transition_notFrom_of_all
     (l := CIH.transitions)
     (state := CIH.halt)
-    (by native_decide)
+    (by decide)
 
 theorem controllerInitialRawBoolWordHeaderEmitterDescription_subroutineReady :
     CIH.SubroutineReady :=

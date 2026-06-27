@@ -323,11 +323,11 @@ def DovetailControllerResultEmitterDescription :
 
 theorem dovetailControllerResultEmitterDescription_wellFormed :
     DovetailControllerResultEmitterDescription.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := DovetailControllerResultEmitterDescription.transitions)
       (stateCount := DovetailControllerResultEmitterDescription.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := DovetailControllerResultEmitterDescription.transitions)
       (by native_decide)
@@ -337,7 +337,7 @@ theorem dovetailControllerResultEmitterDescription_haltTransitionFree :
   transition_notFrom_of_all
     (l := DovetailControllerResultEmitterDescription.transitions)
     (state := DovetailControllerResultEmitterDescription.halt)
-    (by native_decide)
+    (by decide)
 
 theorem dovetailControllerResultEmitterDescription_subroutineReady :
     DovetailControllerResultEmitterDescription.SubroutineReady :=
