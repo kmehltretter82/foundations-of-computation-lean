@@ -54,6 +54,23 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_input
         (SelectedMergeOutputCode useAccept p.S p.L))
       (MachineDescription.SimulatorLayout.asBoolInput p.S)
 
+theorem SelectedMergeEmitterInputTape_normalizedOutput
+    (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput (MachineDescription.SimulatorLayout.tape p.S) =
+      SelectedMergeEmitterInputBits p := by
+  simpa [SelectedMergeEmitterInputBits] using
+    MachineDescription.SimulatorLayout.tape_normalizedOutput p.S
+
+theorem SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_inputBits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    Tape.contextLength (Tape.input (SelectedMergeEmitterInputBits p)) <=
+      Tape.contextLength
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p) := by
+  simpa [SelectedMergeEmitterInputBits,
+    MachineDescription.SimulatorLayout.tape] using
+    SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_input
+      useAccept p
+
 def SelectedMergeEquivPaddedEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
@@ -335,6 +352,26 @@ theorem selectedMergeOutputCode_eq_fields
                     (SelectedMergeOutputRejectHit useAccept S L) []))))) := by
   cases useAccept <;>
     rfl
+
+theorem SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_fields
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p) =
+      MachineDescription.encodeCodeWordAsInput
+        (MachineCodeSymbol.transition ::
+          MachineDescription.encodeBoolWordAppend p.L.input
+            (MachineDescription.encodeNatAppend p.L.stage
+              (MachineDescription.encodeConfigurationAppend
+                (SelectedMergeOutputAcceptConfig useAccept p.S p.L)
+                (MachineDescription.encodeConfigurationAppend
+                  (SelectedMergeOutputRejectConfig useAccept p.S p.L)
+                  (MachineDescription.encodeBoolAppend
+                    (SelectedMergeOutputAcceptHit useAccept p.S p.L)
+                    (MachineDescription.encodeBoolAppend
+                      (SelectedMergeOutputRejectHit useAccept p.S p.L)
+                      [])))))) := by
+  rw [SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput,
+    selectedMergeOutputCode_eq_fields]
 
 
 theorem selectedMergeSpec_of_parser_emitter
