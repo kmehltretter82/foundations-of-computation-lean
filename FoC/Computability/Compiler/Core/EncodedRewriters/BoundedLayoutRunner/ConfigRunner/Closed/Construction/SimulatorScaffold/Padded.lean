@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseAdapters
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic
 import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.CodeRightShifted
 
 set_option doc.verso true
@@ -12,6 +13,7 @@ namespace Computability
 
 open Languages
 open MachineDescription
+open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
@@ -334,14 +336,154 @@ theorem fixedDescriptionBoundedSimulatorPaddedPhaseConstruction_of_exactShape_co
       fixedDescriptionBoundedSimulatorPaddedPhaseSpec_of_exactShape_configRunner
         hsim⟩
 
+def fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner :
+    Word Bool :=
+  encodeCodeSymbolAsInput MachineCodeSymbol.header
+
+def FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner :
+    MachineDescription where
+  stateCount := 100
+  start := 30
+  halt := 99
+  transitions :=
+    [ keepMove 30 (some false) Direction.right 31
+    , keepMove 31 (some false) Direction.right 32
+    , keepMove 32 (some false) Direction.right 33
+    , keepMove 33 (some false) Direction.right 40
+    , keepMove 40 (some false) Direction.left 99
+    , keepMove 40 (some true) Direction.left 99
+    ]
+
+theorem fixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_wellFormed_configRunner :
+    FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l :=
+        FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.transitions)
+      (stateCount :=
+        FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l :=
+        FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.transitions)
+      (by decide)
+
+theorem fixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_haltTransitionFree_configRunner :
+    FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l :=
+      FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.transitions)
+    (state :=
+      FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.halt)
+    (by decide)
+
+theorem fixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_subroutineReady_configRunner :
+    FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.SubroutineReady :=
+  ⟨fixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_wellFormed_configRunner,
+    fixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_haltTransitionFree_configRunner⟩
+
+def fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBase_configRunner
+    (baseLeft : List (Option Bool)) (suffixBits : Word Bool) :
+    Configuration :=
+  { state :=
+      FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.halt
+    tape :=
+      Tape.move Direction.left
+        (DovetailInitialLayoutInitializer.tapeAtCells
+          (List.append
+            (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.reverse.map
+              some)
+            baseLeft)
+          (suffixBits.map some)) }
+
+theorem fixedDescriptionBoundedSimulatorHeaderPrefix_run_raw_to_handoff_withBase_configRunner
+    (baseLeft : List (Option Bool)) (b : Bool)
+    (suffixTail : Word Bool) :
+    exists steps : Nat,
+      FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.runConfig
+          steps
+          (DovetailInitialLayoutInitializer.config
+            FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.start
+            baseLeft
+            (List.append
+              (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.map
+                some)
+              (some b :: suffixTail.map some))) =
+        fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBase_configRunner
+          baseLeft (b :: suffixTail) := by
+  refine ⟨5, ?_⟩
+  cases b <;>
+    simp [FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner,
+      fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBase_configRunner,
+      fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
+      DovetailInitialLayoutInitializer.config,
+      DovetailInitialLayoutInitializer.tapeAtCells, keepMove, runConfig,
+      stepConfig,
+      lookupTransition, Matches, transition, encodeCodeSymbolAsInput,
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+def FixedDescriptionBoundedSimulatorHeaderPrefixScannerSpec_configRunner
+    (scanner : MachineDescription) : Prop :=
+  scanner.SubroutineReady ∧
+    forall (baseLeft : List (Option Bool)) (b : Bool)
+      (suffixTail : Word Bool),
+      scanner.HaltsFromTape
+        (DovetailInitialLayoutInitializer.tapeAtCells baseLeft
+          (List.append
+            (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.map
+              some)
+            (some b :: suffixTail.map some)))
+        (fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBase_configRunner
+          baseLeft (b :: suffixTail)).tape
+
+def FixedDescriptionBoundedSimulatorHeaderPrefixScannerConstruction_configRunner :
+    Prop :=
+  exists scanner : MachineDescription,
+    FixedDescriptionBoundedSimulatorHeaderPrefixScannerSpec_configRunner
+      scanner
+
+theorem fixedDescriptionBoundedSimulatorHeaderPrefixScannerConstruction_scaffold_configRunner :
+    FixedDescriptionBoundedSimulatorHeaderPrefixScannerConstruction_configRunner := by
+  refine
+    ⟨FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner,
+      ?_⟩
+  constructor
+  · exact
+      fixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_subroutineReady_configRunner
+  · intro baseLeft b suffixTail
+    rcases
+        fixedDescriptionBoundedSimulatorHeaderPrefix_run_raw_to_handoff_withBase_configRunner
+          baseLeft b suffixTail with
+      ⟨steps, hsteps⟩
+    exact
+      ⟨steps, by
+        constructor
+        · simpa [HaltsFromTapeIn] using
+            congrArg Configuration.state hsteps
+        · simpa [HaltsFromTapeIn] using
+            congrArg Configuration.tape hsteps⟩
+
+/--
+Concrete finite-machine leaf for the simulator-layout parser primitive.  The
+machine must implement {name}`SimulatorLayout.normalizeCodePrimitive`: reject
+malformed code words and, for a complete simulator layout, emit the same
+canonical simulator-layout code one cell to the right.  The header-prefix block
+above handles the first code symbol; the remaining parser work is to compose it
+with the bool-word, stage, configuration, and hit-flag field scanners.
+-/
+theorem fixedDescriptionBoundedSimulatorPaddedParserPrimitiveConstruction_scaffold_configRunner :
+    FixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction := by
+  sorry
+
 /--
 Concrete finite-machine leaf for parsing complete canonical simulator layouts.
 The parser halts on the standard one-cell-left handoff tape used by downstream
 emitter phases.
 -/
 theorem fixedDescriptionBoundedSimulatorPaddedParserConstruction_scaffold_configRunner :
-    CommonGround.SimulatorLayouts.ClosedRecognizerConstruction := by
-  sorry
+    CommonGround.SimulatorLayouts.ClosedRecognizerConstruction :=
+  fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_of_primitive
+    fixedDescriptionBoundedSimulatorPaddedParserPrimitiveConstruction_scaffold_configRunner
 
 /--
 Concrete finite-machine leaf for the padded fixed-description simulator
