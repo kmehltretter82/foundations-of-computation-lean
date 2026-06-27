@@ -430,9 +430,10 @@ order.
   the exact/right-shifted input-validator primitive path is stronger adapter
   glue, not the phase parser dependency.
 * Fixed-description simulator phase leaf:
-  {name (full := FoC.Computability.fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_scaffold)}`fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_scaffold`
-  is the reusable canonical simulator phase needed by the bounded-layout
-  config runner.  The full right-shifted
+  the old exact canonical phase is refuted by
+  {name (full := FoC.Computability.not_fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction)}`not_fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction`.
+  The bounded-layout config runner now uses the padded/equivalence simulator
+  boundary instead of that exact phase.  The full right-shifted
   {name (full := FoC.Computability.FixedDescriptionBoundedSimulatorCode)}`FixedDescriptionBoundedSimulatorCode`
   package is no longer a live bounded-runner dependency; parser/primitive
   packaging remains available through adapter theorems rather than public

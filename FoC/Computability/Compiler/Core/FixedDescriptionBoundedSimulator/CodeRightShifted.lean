@@ -771,33 +771,81 @@ theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_rightHandof
   · simpa [S, FixedDescriptionBoundedSimulatorPhaseTargets.canonical] using
       fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_codeRightShifted
 
-/--
-Finite-machine leaf for the one real phase in the canonical simulator skeleton.
--/
-theorem fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_scaffold :
-    FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction := by
-  sorry
-
-/--
-Finite-machine leaf for the canonical fixed-description simulator used by the
-right-shifted emitter adapter.
--/
-theorem fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterCanonicalConstruction_scaffold :
-    FixedDescriptionBoundedSimulatorCanonicalConstruction := by
+theorem not_fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction :
+    ¬ FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction := by
+  intro h
+  rcases h
+      FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkDescription
+    with ⟨fragment, hfragment⟩
   exact
-    fixedDescriptionBoundedSimulatorCanonicalConstruction_of_phaseConstruction
-      (fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_rightHandoffStepPhase
-        fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_scaffold)
+    FixedDescriptionBoundedSimulatorRightHandoffCounterexample.not_rightHandoffStepPhaseRealizes
+      fragment hfragment
 
-/--
-Finite-machine leaf for the fixed-description bounded config runner and
-right-shifted simulator-layout emitter.
--/
-theorem fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterConstruction_scaffold :
-    FixedDescriptionBoundedSimulatorCodeRightShiftedEmitterConstruction := by
+theorem not_fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterCanonicalConstruction :
+    ¬ FixedDescriptionBoundedSimulatorCanonicalConstruction :=
+  FixedDescriptionBoundedSimulatorRightHandoffCounterexample.not_canonicalConstruction
+
+theorem shrinkRightShiftedOutput_contextLength_lt_input :
+    Tape.contextLength
+        (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape
+          FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkDescription
+          FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkLayout) <
+      Tape.contextLength
+        (Tape.input
+          (FixedDescriptionBoundedSimulatorInput
+            FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkLayout)) := by
+  native_decide
+
+theorem not_fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterConstruction :
+    ¬ FixedDescriptionBoundedSimulatorCodeRightShiftedEmitterConstruction := by
+  intro h
+  rcases h
+      FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkDescription
+    with ⟨emitter, hemits⟩
+  have hhalt :
+      emitter.HaltsWithTape
+        (MachineDescription.SimulatorLayout.asBoolInput
+          FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkLayout)
+        (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape
+          FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkDescription
+          FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkLayout) := by
+    simpa [FixedDescriptionBoundedSimulatorCodeRightShiftedEmitterSpec,
+      CommonGround.CodeWordEmitters.OutputTape,
+      FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape] using
+      hemits.right.left
+        FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkLayout
+  rcases hhalt with ⟨steps, hsteps⟩
+  have hmono :=
+    MachineDescription.runConfig_contextLength_mono emitter steps
+      (emitter.initial
+        (MachineDescription.SimulatorLayout.asBoolInput
+          FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkLayout))
+  have hfinal :
+      Tape.contextLength
+          ((emitter.runConfig steps
+            (emitter.initial
+              (MachineDescription.SimulatorLayout.asBoolInput
+                FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkLayout))).tape) =
+        Tape.contextLength
+          (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape
+            FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkDescription
+            FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkLayout) := by
+    exact congrArg Tape.contextLength hsteps.right
+  rw [hfinal] at hmono
+  have hinput :
+      Tape.contextLength
+          (emitter.initial
+            (MachineDescription.SimulatorLayout.asBoolInput
+              FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkLayout)).tape =
+        Tape.contextLength
+          (Tape.input
+            (FixedDescriptionBoundedSimulatorInput
+              FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkLayout)) :=
+    rfl
+  rw [hinput] at hmono
   exact
-    fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterConstruction_of_canonical
-      fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterCanonicalConstruction_scaffold
+    (Nat.not_lt_of_ge hmono)
+      shrinkRightShiftedOutput_contextLength_lt_input
 
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_specConstruction
     (h :

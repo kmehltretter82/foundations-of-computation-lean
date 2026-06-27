@@ -69,25 +69,32 @@ theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_stepPhase_c
   · simpa [S, FixedDescriptionBoundedSimulatorPhaseTargets.canonical] using
       fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_configRunner
 
-theorem fixedDescriptionBoundedSimulatorStepPhaseConstruction_scaffold_configRunner :
-    FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner :=
-  FoC.Computability.fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_scaffold
+theorem not_fixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner :
+    ¬ FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner := by
+  intro h
+  rcases h
+      FixedDescriptionBoundedSimulatorRightHandoffCounterexample.shrinkDescription
+    with ⟨fragment, hfragment⟩
+  exact
+    FixedDescriptionBoundedSimulatorRightHandoffCounterexample.not_rightHandoffStepPhaseRealizes
+      fragment hfragment
 
-theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_scaffold_configRunner :
-    FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction :=
-  fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_stepPhase_configRunner
-    fixedDescriptionBoundedSimulatorStepPhaseConstruction_scaffold_configRunner
+theorem not_fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_configRunner :
+    ¬ FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction := by
+  intro h
+  exact
+    FixedDescriptionBoundedSimulatorRightHandoffCounterexample.not_canonicalConstruction
+      (fixedDescriptionBoundedSimulatorCanonicalConstruction_of_phaseConstruction h)
 
-theorem fixedDescriptionBoundedSimulatorCanonicalConstruction_scaffold_configRunner :
-    FixedDescriptionBoundedSimulatorCanonicalConstruction :=
-  fixedDescriptionBoundedSimulatorCanonicalConstruction_of_phaseConstruction
-    fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_scaffold_configRunner
+theorem not_fixedDescriptionBoundedSimulatorCanonicalConstruction_configRunner :
+    ¬ FixedDescriptionBoundedSimulatorCanonicalConstruction :=
+  FixedDescriptionBoundedSimulatorRightHandoffCounterexample.not_canonicalConstruction
 
 /--
 Finite-machine leaf for the config-runner fixed-description simulators.
 
-The exact right-handoff skeleton target above is retained only as an old
-adapter path: it is refuted by the context-length counterexample in
+The exact right-handoff skeleton target is refuted by the context-length
+counterexample in
 {lit}`FixedDescriptionBoundedSimulatorRightHandoffCounterexample`.  The live
 config-runner assembly should use this padded target, whose output is
 equivalent to the canonical simulator layout while preserving enough blank
