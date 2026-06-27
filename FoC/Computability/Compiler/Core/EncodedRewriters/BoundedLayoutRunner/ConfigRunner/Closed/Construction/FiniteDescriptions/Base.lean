@@ -1643,6 +1643,88 @@ theorem inputWithTrailingBlankPadding_move_right_normalizedOutput
   rw [Tape.Equiv.normalizedOutput_eq hequiv]
   exact tape_normalizedOutput_move_right_input w
 
+def ScratchPaddedOutputTape
+    {ι : Type}
+    (outputBits : ι -> Word Bool)
+    (scratchWidth : ι -> Nat)
+    (i : ι) : Tape Bool :=
+  inputWithTrailingBlankPadding (outputBits i) (scratchWidth i)
+
+def RightScratchPaddedOutputTape
+    {ι : Type}
+    (outputBits : ι -> Word Bool)
+    (scratchWidth : ι -> Nat)
+    (i : ι) : Tape Bool :=
+  Tape.move Direction.right
+    (ScratchPaddedOutputTape outputBits scratchWidth i)
+
+theorem ScratchPaddedOutputTape_equiv_input
+    {ι : Type}
+    (outputBits : ι -> Word Bool)
+    (scratchWidth : ι -> Nat)
+    (i : ι) :
+    Tape.Equiv
+      (ScratchPaddedOutputTape outputBits scratchWidth i)
+      (Tape.input (outputBits i)) :=
+  inputWithTrailingBlankPadding_equiv_input
+    (outputBits i) (scratchWidth i)
+
+theorem RightScratchPaddedOutputTape_equiv_right_input
+    {ι : Type}
+    (outputBits : ι -> Word Bool)
+    (scratchWidth : ι -> Nat)
+    (i : ι) :
+    Tape.Equiv
+      (RightScratchPaddedOutputTape outputBits scratchWidth i)
+      (Tape.move Direction.right (Tape.input (outputBits i))) :=
+  Tape.Equiv.move
+    (ScratchPaddedOutputTape_equiv_input outputBits scratchWidth i)
+    Direction.right
+
+theorem ScratchPaddedOutputTape_normalizedOutput
+    {ι : Type}
+    (outputBits : ι -> Word Bool)
+    (scratchWidth : ι -> Nat)
+    (i : ι) :
+    Tape.normalizedOutput
+        (ScratchPaddedOutputTape outputBits scratchWidth i) =
+      outputBits i :=
+  inputWithTrailingBlankPadding_normalizedOutput
+    (outputBits i) (scratchWidth i)
+
+theorem RightScratchPaddedOutputTape_normalizedOutput
+    {ι : Type}
+    (outputBits : ι -> Word Bool)
+    (scratchWidth : ι -> Nat)
+    (i : ι) :
+    Tape.normalizedOutput
+        (RightScratchPaddedOutputTape outputBits scratchWidth i) =
+      outputBits i :=
+  inputWithTrailingBlankPadding_move_right_normalizedOutput
+    (outputBits i) (scratchWidth i)
+
+def ScratchPaddedEmitterSpec
+    {ι : Type}
+    (inputTape : ι -> Tape Bool)
+    (outputBits : ι -> Word Bool)
+    (scratchWidth : ι -> Nat)
+    (canonicalOutputTape : ι -> Tape Bool)
+    (emitter : MachineDescription) : Prop :=
+  PaddedEquivEmitterSpec inputTape
+    (ScratchPaddedOutputTape outputBits scratchWidth)
+    canonicalOutputTape emitter
+
+def RightScratchPaddedEmitterSpec
+    {ι : Type}
+    (inputTape : ι -> Tape Bool)
+    (outputBits : ι -> Word Bool)
+    (scratchWidth : ι -> Nat)
+    (canonicalOutputTape : ι -> Tape Bool)
+    (emitter : MachineDescription) : Prop :=
+  PaddedEquivEmitterSpec inputTape
+    (RightScratchPaddedOutputTape outputBits scratchWidth)
+    canonicalOutputTape emitter
+
 theorem tape_contextLength_le_move_right
     (T : Tape Bool) :
     Tape.contextLength T <=

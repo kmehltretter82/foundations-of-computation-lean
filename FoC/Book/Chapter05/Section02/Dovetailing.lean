@@ -569,6 +569,11 @@ theorem bounded_dovetail_table_compiler_of_finite_controller_closeout
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_finiteControllerCompilerCloseout
     hclose
 
+theorem bounded_dovetail_table_compiler_of_paired_recognizer_surface
+    (h : PairedRecognizerDovetailSurface) :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+  h.boundedTableCompiler
+
 theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_description_bool_decider_compiler
     (hattempt :
       ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
@@ -649,6 +654,11 @@ theorem paired_recognizer_dovetail_compiler_of_finite_controller_closeout
     ConcretePairedRecognizerDovetailCompilerConstruction :=
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_finiteControllerCompilerCloseout
     hclose
+
+theorem paired_recognizer_dovetail_compiler_of_surface
+    (h : PairedRecognizerDovetailSurface) :
+    ConcretePairedRecognizerDovetailCompilerConstruction :=
+  h.finiteSourceCompiler
 
 theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_description_bool_decider_compiler
     (hattempt :

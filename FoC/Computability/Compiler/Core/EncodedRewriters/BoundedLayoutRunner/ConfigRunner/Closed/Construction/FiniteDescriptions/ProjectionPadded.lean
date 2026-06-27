@@ -13,11 +13,13 @@ namespace BoundedLayoutRunner
 def SelectedProjectionEquivEmitterPaddedOutputTape
     (useAccept : Bool)
     (L : MachineDescription.DovetailLayout) : Tape Bool :=
-  Tape.move Direction.right
-    (inputWithTrailingBlankPadding
-      (MachineDescription.encodeCodeWordAsInput
+  RightScratchPaddedOutputTape
+    (fun L : MachineDescription.DovetailLayout =>
+      MachineDescription.encodeCodeWordAsInput
         (SelectedProjectionOutputCode useAccept L))
+    (fun L : MachineDescription.DovetailLayout =>
       (ParsedLayoutBits L).length)
+    L
 
 theorem SelectedProjectionEquivEmitterPaddedOutputTape_equiv
     (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
@@ -25,7 +27,8 @@ theorem SelectedProjectionEquivEmitterPaddedOutputTape_equiv
       (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
       (SelectedProjectionOutputTape useAccept L) := by
   simpa [SelectedProjectionEquivEmitterPaddedOutputTape,
-    SelectedProjectionOutputTape] using
+    SelectedProjectionOutputTape, RightScratchPaddedOutputTape,
+    ScratchPaddedOutputTape] using
     Tape.Equiv.move
       (inputWithTrailingBlankPadding_equiv_input
         (MachineDescription.encodeCodeWordAsInput
@@ -39,7 +42,8 @@ theorem SelectedProjectionEquivEmitterPaddedOutputTape_normalizedOutput
         (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) =
       MachineDescription.encodeCodeWordAsInput
         (SelectedProjectionOutputCode useAccept L) := by
-  simpa [SelectedProjectionEquivEmitterPaddedOutputTape] using
+  simpa [SelectedProjectionEquivEmitterPaddedOutputTape,
+    RightScratchPaddedOutputTape, ScratchPaddedOutputTape] using
     inputWithTrailingBlankPadding_move_right_normalizedOutput
       (MachineDescription.encodeCodeWordAsInput
         (SelectedProjectionOutputCode useAccept L))
@@ -522,6 +526,7 @@ theorem SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_source
         Tape.contextLength
           (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) := by
     simpa [SelectedProjectionEquivEmitterPaddedOutputTape,
+      RightScratchPaddedOutputTape, ScratchPaddedOutputTape,
       selectedProjectionOutputBits_eq_tailProjector_outputAllBits] using
       inputWithTrailingBlankPadding_move_right_contextLength_ge_pred
         (SelectedProjectionTailProjector.outputAllBits useAccept L)
@@ -635,6 +640,7 @@ theorem
         Tape.contextLength
           (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) := by
     simpa [SelectedProjectionEquivEmitterPaddedOutputTape,
+      RightScratchPaddedOutputTape, ScratchPaddedOutputTape,
       selectedProjectionOutputBits_eq_tailProjector_outputAllBits] using
       inputWithTrailingBlankPadding_move_right_contextLength_ge_pred
         (SelectedProjectionTailProjector.outputAllBits useAccept L)
@@ -644,11 +650,16 @@ theorem
 def SelectedProjectionEquivPaddedEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
-  ReadySpec emitter ∧
-    forall L : MachineDescription.DovetailLayout,
-      emitter.HaltsFromTape
-        (Tape.input (ParsedLayoutBits L))
-        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
+  RightScratchPaddedEmitterSpec
+    (fun L : MachineDescription.DovetailLayout =>
+      Tape.input (ParsedLayoutBits L))
+    (fun L : MachineDescription.DovetailLayout =>
+      MachineDescription.encodeCodeWordAsInput
+        (SelectedProjectionOutputCode useAccept L))
+    (fun L : MachineDescription.DovetailLayout =>
+      (ParsedLayoutBits L).length)
+    (SelectedProjectionOutputTape useAccept)
+    emitter
 
 def SelectedProjectionEquivPaddedEmitterConstruction : Prop :=
   forall useAccept : Bool,
@@ -658,11 +669,16 @@ def SelectedProjectionEquivPaddedEmitterConstruction : Prop :=
 def SelectedProjectionCheckedEquivPaddedEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
-  ReadySpec emitter ∧
-    forall L : MachineDescription.DovetailLayout,
-      emitter.HaltsFromTape
-        (ParsedLayoutCheckedTape L)
-        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
+  RightScratchPaddedEmitterSpec
+    (fun L : MachineDescription.DovetailLayout =>
+      ParsedLayoutCheckedTape L)
+    (fun L : MachineDescription.DovetailLayout =>
+      MachineDescription.encodeCodeWordAsInput
+        (SelectedProjectionOutputCode useAccept L))
+    (fun L : MachineDescription.DovetailLayout =>
+      (ParsedLayoutBits L).length)
+    (SelectedProjectionOutputTape useAccept)
+    emitter
 
 def SelectedProjectionCheckedEquivPaddedEmitterConstruction : Prop :=
   forall useAccept : Bool,
@@ -672,13 +688,18 @@ def SelectedProjectionCheckedEquivPaddedEmitterConstruction : Prop :=
 def SelectedProjectionPaddedTailEmitterSpec
     (useAccept : Bool)
     (tail : MachineDescription) : Prop :=
-  ReadySpec tail ∧
-    forall L : MachineDescription.DovetailLayout,
-      tail.HaltsFromTape
+  RightScratchPaddedEmitterSpec
+    (fun L : MachineDescription.DovetailLayout =>
         (SelectedProjectionTailProjector.sourceTape L
           ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
-            some))
-        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
+            some)))
+    (fun L : MachineDescription.DovetailLayout =>
+      MachineDescription.encodeCodeWordAsInput
+        (SelectedProjectionOutputCode useAccept L))
+    (fun L : MachineDescription.DovetailLayout =>
+      (ParsedLayoutBits L).length)
+    (SelectedProjectionOutputTape useAccept)
+    tail
 
 def SelectedProjectionPaddedTailEmitterConstruction : Prop :=
   forall useAccept : Bool,
@@ -688,13 +709,18 @@ def SelectedProjectionPaddedTailEmitterConstruction : Prop :=
 def SelectedProjectionPaddedTailCleanupSpec
     (useAccept : Bool)
     (cleanup : MachineDescription) : Prop :=
-  ReadySpec cleanup ∧
-    forall L : MachineDescription.DovetailLayout,
-      cleanup.HaltsFromTape
+  RightScratchPaddedEmitterSpec
+    (fun L : MachineDescription.DovetailLayout =>
         (SelectedProjectionTailProjector.sourceScannerRightHandoffTape L
           ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
-            some))
-        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
+            some)))
+    (fun L : MachineDescription.DovetailLayout =>
+      MachineDescription.encodeCodeWordAsInput
+        (SelectedProjectionOutputCode useAccept L))
+    (fun L : MachineDescription.DovetailLayout =>
+      (ParsedLayoutBits L).length)
+    (SelectedProjectionOutputTape useAccept)
+    cleanup
 
 def SelectedProjectionPaddedTailCleanupConstruction : Prop :=
   forall useAccept : Bool,
@@ -723,6 +749,7 @@ theorem selectedProjectionPaddedTailEmitterSpec_of_cleanup
       MachineDescription.seqSubroutine_subroutineReady
         CanonicalLayouts.DovetailLayoutScanner.stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
         hcleanup.left
+  constructor
   · intro L
     have hscanner :
         CanonicalLayouts.DovetailLayoutScanner.StageConfigurationsAndFinalFlagsScannerDescription.HaltsFromTape
@@ -747,7 +774,7 @@ theorem selectedProjectionPaddedTailEmitterSpec_of_cleanup
         List.map_reverse]
         using
           MachineDescription.runConfig_eq_halt_of_haltsFromTape
-            (hcleanup.right L)
+            (hcleanup.right.left L)
     simpa [SelectedProjectionPaddedTailEmitterFromCleanup, baseLeft,
       List.map_reverse] using
       MachineDescription.seqSubroutine_haltsFromTape_of_haltsFromTape
@@ -757,6 +784,8 @@ theorem selectedProjectionPaddedTailEmitterSpec_of_cleanup
         (handoffMove := Direction.right)
         CanonicalLayouts.DovetailLayoutScanner.stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
         hcleanup.left hscanner hcleanupRun
+  · intro L
+    exact SelectedProjectionEquivEmitterPaddedOutputTape_equiv useAccept L
 
 theorem selectedProjectionPaddedTailEmitterConstruction_of_cleanup
     (hcleanup : SelectedProjectionPaddedTailCleanupConstruction) :
@@ -790,6 +819,7 @@ theorem selectedProjectionCheckedEquivPaddedEmitterSpec_of_components
         some
   constructor
   · exact SeqViaCanonical_subroutineReady hquoter.left htail.left
+  constructor
   · intro L
     have hquoterRun :
         quoter.HaltsFromTape
@@ -802,7 +832,7 @@ theorem selectedProjectionCheckedEquivPaddedEmitterSpec_of_components
           (SelectedProjectionTailProjector.sourceTape L
             (baseLeft L))
           (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) :=
-      htail.right L
+      htail.right.left L
     have hbridge :
         Tape.move Direction.left
             (Tape.move Direction.right
@@ -815,6 +845,8 @@ theorem selectedProjectionCheckedEquivPaddedEmitterSpec_of_components
     simpa [SelectedProjectionCheckedEquivPaddedEmitterFromComponents] using
       SeqViaCanonical_haltsFromTape_of_haltsFromTape
         hquoter.left htail.left hquoterRun hbridge htailRun
+  · intro L
+    exact SelectedProjectionEquivEmitterPaddedOutputTape_equiv useAccept L
 
 theorem selectedProjectionCheckedEquivPaddedEmitterConstruction_of_components
     (hcomponents :
@@ -836,17 +868,9 @@ theorem selectedProjectionEquivEmitterSpec_of_padded
   · exact hemits.left
   constructor
   · intro L
-    exact
-      ⟨SelectedProjectionEquivEmitterPaddedOutputTape useAccept L,
-        hemits.right L,
-        SelectedProjectionEquivEmitterPaddedOutputTape_equiv useAccept L⟩
+    exact PaddedEquivEmitterSpec.haltsFromTapeEquiv hemits L
   · intro L T hhalt
-    have hT :
-        T = SelectedProjectionEquivEmitterPaddedOutputTape useAccept L :=
-      MachineDescription.haltsFromTape_functional_of_haltTransitionFree
-        hemits.left.right hhalt (hemits.right L)
-    rw [hT]
-    exact SelectedProjectionEquivEmitterPaddedOutputTape_equiv useAccept L
+    exact PaddedEquivEmitterSpec.closedFromTapeEquiv hemits L T hhalt
 
 theorem selectedProjectionEquivEmitterConstruction_of_padded
     (h : SelectedProjectionEquivPaddedEmitterConstruction) :
@@ -864,17 +888,9 @@ theorem selectedProjectionCheckedEquivEmitterSpec_of_padded
   · exact hemits.left
   constructor
   · intro L
-    exact
-      ⟨SelectedProjectionEquivEmitterPaddedOutputTape useAccept L,
-        hemits.right L,
-        SelectedProjectionEquivEmitterPaddedOutputTape_equiv useAccept L⟩
+    exact PaddedEquivEmitterSpec.haltsFromTapeEquiv hemits L
   · intro L T hhalt
-    have hT :
-        T = SelectedProjectionEquivEmitterPaddedOutputTape useAccept L :=
-      MachineDescription.haltsFromTape_functional_of_haltTransitionFree
-        hemits.left.right hhalt (hemits.right L)
-    rw [hT]
-    exact SelectedProjectionEquivEmitterPaddedOutputTape_equiv useAccept L
+    exact PaddedEquivEmitterSpec.closedFromTapeEquiv hemits L T hhalt
 
 theorem selectedProjectionCheckedEquivEmitterConstruction_of_padded
     (h : SelectedProjectionCheckedEquivPaddedEmitterConstruction) :

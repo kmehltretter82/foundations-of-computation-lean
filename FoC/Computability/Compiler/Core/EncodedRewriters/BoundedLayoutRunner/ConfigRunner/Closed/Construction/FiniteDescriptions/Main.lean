@@ -13,10 +13,13 @@ namespace BoundedLayoutRunner
 def SelectedMergeEquivEmitterPaddedOutputTape
     (useAccept : Bool)
     (p : SelectedMergeEmitterPayload) : Tape Bool :=
-  inputWithTrailingBlankPadding
-    (MachineDescription.encodeCodeWordAsInput
-      (SelectedMergeOutputCode useAccept p.S p.L))
-    (MachineDescription.SimulatorLayout.asBoolInput p.S).length
+  ScratchPaddedOutputTape
+    (fun p : SelectedMergeEmitterPayload =>
+      MachineDescription.encodeCodeWordAsInput
+        (SelectedMergeOutputCode useAccept p.S p.L))
+    (fun p : SelectedMergeEmitterPayload =>
+      (MachineDescription.SimulatorLayout.asBoolInput p.S).length)
+    p
 
 theorem SelectedMergeEquivEmitterPaddedOutputTape_equiv
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
@@ -24,7 +27,7 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_equiv
       (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
       (SelectedMergeEquivOutputTape useAccept p.S p.L) := by
   simpa [SelectedMergeEquivEmitterPaddedOutputTape,
-    SelectedMergeEquivOutputTape] using
+    SelectedMergeEquivOutputTape, ScratchPaddedOutputTape] using
     inputWithTrailingBlankPadding_equiv_input
       (MachineDescription.encodeCodeWordAsInput
         (SelectedMergeOutputCode useAccept p.S p.L))
@@ -36,7 +39,8 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput
         (SelectedMergeEquivEmitterPaddedOutputTape useAccept p) =
       MachineDescription.encodeCodeWordAsInput
         (SelectedMergeOutputCode useAccept p.S p.L) := by
-  simpa [SelectedMergeEquivEmitterPaddedOutputTape] using
+  simpa [SelectedMergeEquivEmitterPaddedOutputTape,
+    ScratchPaddedOutputTape] using
     inputWithTrailingBlankPadding_normalizedOutput
       (MachineDescription.encodeCodeWordAsInput
         (SelectedMergeOutputCode useAccept p.S p.L))
@@ -48,7 +52,7 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_input
       Tape.contextLength
         (SelectedMergeEquivEmitterPaddedOutputTape useAccept p) := by
   simpa [SelectedMergeEquivEmitterPaddedOutputTape,
-    MachineDescription.SimulatorLayout.tape] using
+    ScratchPaddedOutputTape, MachineDescription.SimulatorLayout.tape] using
     inputWithTrailingBlankPadding_contextLength_ge_input
       (MachineDescription.encodeCodeWordAsInput
         (SelectedMergeOutputCode useAccept p.S p.L))
@@ -143,11 +147,17 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_inputBits
 def SelectedMergeEquivPaddedEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
-  emitter.SubroutineReady ∧
-    forall p : SelectedMergeEmitterPayload,
-      emitter.HaltsFromTape
-        (MachineDescription.SimulatorLayout.tape p.S)
-        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
+  ScratchPaddedEmitterSpec
+    (fun p : SelectedMergeEmitterPayload =>
+      MachineDescription.SimulatorLayout.tape p.S)
+    (fun p : SelectedMergeEmitterPayload =>
+      MachineDescription.encodeCodeWordAsInput
+        (SelectedMergeOutputCode useAccept p.S p.L))
+    (fun p : SelectedMergeEmitterPayload =>
+      (MachineDescription.SimulatorLayout.asBoolInput p.S).length)
+    (fun p : SelectedMergeEmitterPayload =>
+      SelectedMergeEquivOutputTape useAccept p.S p.L)
+    emitter
 
 def SelectedMergeEquivPaddedEmitterConstruction : Prop :=
   forall useAccept : Bool,
@@ -161,10 +171,7 @@ theorem selectedMergeEquivEmitterSpec_of_padded
   constructor
   · exact hemits.left
   · intro p
-    exact
-      ⟨SelectedMergeEquivEmitterPaddedOutputTape useAccept p,
-        hemits.right p,
-        SelectedMergeEquivEmitterPaddedOutputTape_equiv useAccept p⟩
+    exact PaddedEquivEmitterSpec.haltsFromTapeEquiv hemits p
 
 theorem selectedMergeEquivEmitterConstruction_of_padded
     (h : SelectedMergeEquivPaddedEmitterConstruction) :
@@ -289,6 +296,27 @@ theorem selectedMergeEquivConstruction_of_forwardParser_emitter
   exact
     ⟨SeqViaCanonical parser emitter,
       selectedMergeEquivSpec_of_forwardParser_emitter hparser hemits⟩
+
+theorem selectedMergeEquivSpec_of_forwardParser_paddedEmitter
+    {useAccept : Bool} {parser emitter : MachineDescription}
+    (hparser : SelectedMergeForwardParserSpec parser)
+    (hemitter : SelectedMergeEquivPaddedEmitterSpec useAccept emitter) :
+    SelectedMergeEquivSpec useAccept
+      (SeqViaCanonical parser emitter) :=
+  selectedMergeEquivSpec_of_forwardParser_emitter hparser
+    (selectedMergeEquivEmitterSpec_of_padded hemitter)
+
+theorem selectedMergeEquivConstruction_of_forwardParser_paddedEmitter
+    (hparser : SelectedMergeForwardParserConstruction)
+    (hemitter : SelectedMergeEquivPaddedEmitterConstruction) :
+    SelectedMergeEquivConstruction := by
+  intro useAccept
+  rcases hparser with ⟨parser, hparser⟩
+  rcases hemitter useAccept with ⟨emitter, hemits⟩
+  exact
+    ⟨SeqViaCanonical parser emitter,
+      selectedMergeEquivSpec_of_forwardParser_paddedEmitter
+        hparser hemits⟩
 
 def SelectedMergeCanonicalEmitterConstruction : Prop :=
   forall useAccept : Bool,
@@ -481,7 +509,8 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_equiv_parsedLayoutTape
       (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
       (ParsedLayoutTape (SelectedMergeOutputLayout useAccept p.S p.L)) := by
   simpa [SelectedMergeEquivEmitterPaddedOutputTape, ParsedLayoutTape,
-    ParsedLayoutBits, selectedMergeOutputCode_eq_outputLayout] using
+    ParsedLayoutBits, ScratchPaddedOutputTape,
+    selectedMergeOutputCode_eq_outputLayout] using
     inputWithTrailingBlankPadding_equiv_input
       (MachineDescription.encodeCodeWordAsInput
         (SelectedMergeOutputCode useAccept p.S p.L))
@@ -691,9 +720,9 @@ theorem selectedMergeEquivEmitterConstruction_scaffold :
 
 theorem selectedMergeEquivConstruction_scaffold :
     SelectedMergeEquivConstruction :=
-  selectedMergeEquivConstruction_of_forwardParser_emitter
+  selectedMergeEquivConstruction_of_forwardParser_paddedEmitter
     selectedMergeForwardParserConstruction_scaffold
-    selectedMergeEquivEmitterConstruction_scaffold
+    selectedMergeEquivPaddedEmitterConstruction_scaffold
 
 
 end BoundedLayoutRunner

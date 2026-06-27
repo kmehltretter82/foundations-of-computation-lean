@@ -25,6 +25,80 @@ def FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner :
         (fun L => MachineDescription.SimulatorLayout.run D L.stage L)
         simulateStep
 
+def FixedDescriptionBoundedSimulatorPaddedPhaseSpec_configRunner
+    (D sim : MachineDescription) : Prop :=
+  PaddedEquivEmitterSpec
+    (fun L : MachineDescription.SimulatorLayout =>
+      Tape.input (FixedDescriptionBoundedSimulatorInput L))
+    (FixedDescriptionBoundedSimulatorPaddedOutputTape D)
+    (FixedDescriptionBoundedSimulatorCanonicalOutputTape D)
+    sim
+
+def FixedDescriptionBoundedSimulatorPaddedPhaseConstruction_configRunner :
+    Prop :=
+  forall D : MachineDescription,
+    exists sim : MachineDescription,
+      FixedDescriptionBoundedSimulatorPaddedPhaseSpec_configRunner D sim
+
+theorem fixedDescriptionBoundedSimulatorPaddedPhaseSpec_of_paddedSpec_configRunner
+    {D sim : MachineDescription}
+    (hsim : FixedDescriptionBoundedSimulatorPaddedSpec D sim) :
+    FixedDescriptionBoundedSimulatorPaddedPhaseSpec_configRunner D sim := by
+  constructor
+  · exact hsim.left
+  constructor
+  · intro L
+    simpa [FixedDescriptionBoundedSimulatorPaddedPhaseSpec_configRunner,
+      MachineDescription.HaltsWithTape,
+      MachineDescription.HaltsWithTapeIn,
+      MachineDescription.HaltsFromTape,
+      MachineDescription.HaltsFromTapeIn,
+      MachineDescription.initial] using hsim.right.left L
+  · intro L
+    exact
+      FixedDescriptionBoundedSimulatorPaddedOutputTape_equiv_canonical D L
+
+theorem fixedDescriptionBoundedSimulatorEquivSpec_of_paddedPhase_configRunner
+    {D sim : MachineDescription}
+    (hsim : FixedDescriptionBoundedSimulatorPaddedPhaseSpec_configRunner D sim) :
+    FixedDescriptionBoundedSimulatorEquivSpec D sim := by
+  constructor
+  · exact hsim.left
+  constructor
+  · intro L
+    rcases PaddedEquivEmitterSpec.haltsFromTapeEquiv hsim L with
+      ⟨Tactual, hactual, hactualEquiv⟩
+    refine ⟨Tactual, ?_, hactualEquiv⟩
+    rcases hactual with ⟨n, hn⟩
+    exact
+      ⟨n, by
+        simpa [MachineDescription.HaltsWithTapeIn,
+          MachineDescription.HaltsFromTapeIn,
+          MachineDescription.initial] using hn⟩
+  · intro L T hhalt
+    have hfrom :
+        sim.HaltsFromTape
+          (Tape.input (FixedDescriptionBoundedSimulatorInput L)) T := by
+      rcases hhalt with ⟨n, hn⟩
+      exact
+        ⟨n, by
+          simpa [MachineDescription.HaltsWithTapeIn,
+            MachineDescription.HaltsFromTapeIn,
+            MachineDescription.initial] using hn⟩
+    exact
+      PaddedEquivEmitterSpec.closedFromTapeEquiv hsim L T hfrom
+
+theorem fixedDescriptionBoundedSimulatorEquivConstruction_of_paddedPhase_configRunner
+    (hphase :
+      FixedDescriptionBoundedSimulatorPaddedPhaseConstruction_configRunner) :
+    FixedDescriptionBoundedSimulatorEquivConstruction := by
+  intro D
+  rcases hphase D with ⟨sim, hsim⟩
+  exact
+    ⟨sim,
+      fixedDescriptionBoundedSimulatorEquivSpec_of_paddedPhase_configRunner
+        hsim⟩
+
 theorem fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_configRunner :
     FixedDescriptionBoundedSimulatorPhaseRealizes
       (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
@@ -83,10 +157,21 @@ theorem fixedDescriptionBoundedSimulatorPaddedConstruction_scaffold_configRunner
   intro D
   sorry
 
+theorem fixedDescriptionBoundedSimulatorPaddedPhaseConstruction_scaffold_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedPhaseConstruction_configRunner := by
+  intro D
+  rcases fixedDescriptionBoundedSimulatorPaddedConstruction_scaffold_configRunner
+      D with
+    ⟨sim, hsim⟩
+  exact
+    ⟨sim,
+      fixedDescriptionBoundedSimulatorPaddedPhaseSpec_of_paddedSpec_configRunner
+        hsim⟩
+
 theorem fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner :
     FixedDescriptionBoundedSimulatorEquivConstruction :=
-  fixedDescriptionBoundedSimulatorEquivConstruction_of_padded
-    fixedDescriptionBoundedSimulatorPaddedConstruction_scaffold_configRunner
+  fixedDescriptionBoundedSimulatorEquivConstruction_of_paddedPhase_configRunner
+    fixedDescriptionBoundedSimulatorPaddedPhaseConstruction_scaffold_configRunner
 
 end BoundedLayoutRunner
 end EncodedRewriters

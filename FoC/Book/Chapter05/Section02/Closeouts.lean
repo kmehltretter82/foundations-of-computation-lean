@@ -159,6 +159,13 @@ theorem recursive_language_iff_re_and_co_re_of_section52_closeout
     (dovetailing_decidable_construction_of_section52_closeout hclose)
     L
 
+theorem recursive_language_iff_re_and_co_re_of_semantic_surface
+    (h : SemanticLanguagePrincipleSurface terminal)
+    (L : Language terminal) :
+    RecursiveLanguage L <-> RecursivelyEnumerableLanguageWithComplement L :=
+  recursive_language_iff_re_and_co_re_of_constructions
+    h.decidableToAcceptable h.dovetailingDecidable L
+
 theorem partially_listable_language_iff_concrete_compiled_partial_unary_range_of_section52_closeout
     (hclose : ConcreteBooleanSection52CompilerCloseout)
     (L : Language Bool) :

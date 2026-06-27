@@ -246,6 +246,96 @@ theorem SeqViaCanonical_haltsFromTapeEquiv_of_equiv
     ⟨Tseq, hseq, hequivSeq⟩
   exact ⟨Tseq, hseq, Tape.Equiv.trans hequivSeq hequivB⟩
 
+def PaddedEquivEmitterSpec
+    {ι : Type}
+    (inputTape paddedOutputTape canonicalOutputTape : ι -> Tape Bool)
+    (emitter : MachineDescription) : Prop :=
+  ReadySpec emitter ∧
+    (forall i : ι,
+      emitter.HaltsFromTape (inputTape i) (paddedOutputTape i)) ∧
+      forall i : ι,
+        Tape.Equiv (paddedOutputTape i) (canonicalOutputTape i)
+
+theorem PaddedEquivEmitterSpec.haltsFromTapeEquiv
+    {ι : Type}
+    {inputTape paddedOutputTape canonicalOutputTape : ι -> Tape Bool}
+    {emitter : MachineDescription}
+    (hemits :
+      PaddedEquivEmitterSpec inputTape paddedOutputTape
+        canonicalOutputTape emitter)
+    (i : ι) :
+    emitter.HaltsFromTapeEquiv (inputTape i) (canonicalOutputTape i) :=
+  ⟨paddedOutputTape i, hemits.right.left i, hemits.right.right i⟩
+
+theorem PaddedEquivEmitterSpec.closedFromTapeEquiv
+    {ι : Type}
+    {inputTape paddedOutputTape canonicalOutputTape : ι -> Tape Bool}
+    {emitter : MachineDescription}
+    (hemits :
+      PaddedEquivEmitterSpec inputTape paddedOutputTape
+        canonicalOutputTape emitter)
+    (i : ι) :
+    emitter.ClosedFromTapeEquiv (inputTape i) (canonicalOutputTape i) := by
+  intro T hhalt
+  have hT : T = paddedOutputTape i :=
+    MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+      hemits.left.right hhalt (hemits.right.left i)
+  rw [hT]
+  exact hemits.right.right i
+
+theorem SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin TinB Tmid Tout : Tape Bool}
+    (hAmid : A.HaltsFromTapeEquiv Tin Tmid)
+    (hbridge :
+      Tape.Equiv
+        (Tape.move Direction.left (Tape.move Direction.right Tmid))
+        TinB)
+    (hBout : B.HaltsFromTapeEquiv TinB Tout) :
+    MachineDescription.HaltsFromTapeEquiv (SeqViaCanonical A B) Tin Tout := by
+  rcases hAmid with ⟨Tactual, hAactual, hTactual⟩
+  have hbridgeActual :
+      Tape.Equiv
+        (Tape.move Direction.left (Tape.move Direction.right Tactual))
+        TinB := by
+    exact
+      Tape.Equiv.trans
+        (Tape.Equiv.move
+          (Tape.Equiv.move hTactual Direction.right) Direction.left)
+        hbridge
+  rcases hBout with ⟨TactualB, hBactual, hBactualEquiv⟩
+  rcases
+      MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+        (Tape.Equiv.symm hbridgeActual) hBactual with
+    ⟨TseqOut, hBfromActual, hTseqOut⟩
+  have hseq :
+      (SeqViaCanonical A B).HaltsFromTape Tin TseqOut :=
+    SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      hA hB hAactual rfl hBfromActual
+  exact
+    ⟨TseqOut, hseq, Tape.Equiv.trans hTseqOut hBactualEquiv⟩
+
+theorem SeqViaCanonical_haltsFromTapeEquiv_of_paddedEmitter
+    {ι : Type}
+    {inputTape paddedOutputTape canonicalOutputTape : ι -> Tape Bool}
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady)
+    (hB :
+      PaddedEquivEmitterSpec inputTape paddedOutputTape
+        canonicalOutputTape B)
+    {Tin Tmid : Tape Bool} (i : ι)
+    (hAmid : A.HaltsFromTapeEquiv Tin Tmid)
+    (hbridge :
+      Tape.Equiv
+        (Tape.move Direction.left (Tape.move Direction.right Tmid))
+        (inputTape i)) :
+    MachineDescription.HaltsFromTapeEquiv
+      (SeqViaCanonical A B) Tin (canonicalOutputTape i) :=
+  SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
+    hA hB.left hAmid hbridge
+    (PaddedEquivEmitterSpec.haltsFromTapeEquiv hB i)
+
 theorem SeqViaCanonical_haltsFromTape_inv
     {A B : MachineDescription}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)

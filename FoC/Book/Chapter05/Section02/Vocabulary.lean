@@ -311,6 +311,70 @@ def ConcreteFinitePartialUnaryRangeProgramCompilerConstruction : Prop :=
 def ConcreteFinitePartialUnaryRangeProgramCloseoutConstruction : Prop :=
   FinitePartialUnaryRangeProgram.RangeCloseoutConstruction
 
+/-!
+## Grouped construction surfaces
+
+The names above remain available as compatibility vocabulary.  New Section 5.2
+statements should prefer these smaller surfaces when they need to pass several
+construction hypotheses together: semantic language principles, paired
+recognizer dovetailing, bounded layout/config-runner code, and finite
+grammar/range data.
+-/
+
+structure SemanticLanguagePrincipleSurface (alpha : Type u) where
+  decidableToAcceptable :
+    DecidableToAcceptableConstruction alpha
+  dovetailingDecidable :
+    DovetailingDecidableConstruction alpha
+  recursiveIffReCoRE :
+    RecursiveIffReCoREConstruction alpha
+  stagedAcceptorCompilation :
+    StagedAcceptorCompilationConstruction alpha
+  stagedBoolDeciderCompilation :
+    StagedBoolDeciderCompilationConstruction alpha
+
+structure PairedRecognizerDovetailSurface where
+  finiteSourceCompiler :
+    ConcreteFiniteSourcePairedRecognizerDovetailCompilerConstruction
+  boundedTableCompiler :
+    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction
+  layoutOutputRealizer :
+    ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction
+  totalStageAttemptSubroutine :
+    ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction
+  controllerCompilerCloseout :
+    ConcretePairedRecognizerDovetailControllerCompilerCloseout
+  finiteControllerCompilerCloseout :
+    ConcretePairedRecognizerDovetailFiniteControllerCompilerCloseout
+
+structure BoundedLayoutConfigRunnerSurface where
+  fixedSimulatorOutput :
+    ConcreteFixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction
+  fixedStepConfiguration :
+    ConcreteFixedDescriptionStepCodeConfigurationRealizerConstruction
+  boundedLayoutRunner :
+    ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction
+  totalStageAttempt :
+    ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction
+  finiteStageLoopController :
+    ConcretePairedRecognizerDovetailFiniteStageLoopControllerConstruction
+
+structure FiniteGrammarRangeSurface where
+  machineTraceSearch :
+    ConcreteMachineBoundedTraceSearchConstruction
+  encodedTraceSearch :
+    ConcreteEncodedConfigurationTraceSearchConstruction
+  boundedTraceSearch :
+    BoundedTraceSearchConstruction
+  finiteDovetailProgram :
+    ConcreteFiniteDovetailCompilerConstruction
+  semanticPartialUnaryRange :
+    ConcretePartialUnaryRangeDescriptionCompilerConstruction
+  finitePartialUnaryRangeProgram :
+    ConcreteFinitePartialUnaryRangeProgramCompilerConstruction
+  finitePartialUnaryRangeCloseout :
+    ConcreteFinitePartialUnaryRangeProgramCloseoutConstruction
+
 def PartialFunctionDomainLanguage
     (f : Word input -> Option (Word output)) : Language input :=
   PartialFunctionDomain f

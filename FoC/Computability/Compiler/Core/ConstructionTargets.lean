@@ -675,5 +675,25 @@ theorem pairedRecognizerDovetailFiniteStageLoopSequencingHandoffConstruction_of_
       hencoder)
     hinvoker hemitter hcontinuer
 
+/-!
+## Grouped bounded-runner target
+
+The individual construction targets above remain the stable compatibility API.
+This grouped surface is the preferred internal boundary when a downstream
+closeout needs the padded/equivalence bounded-runner route as a package.
+-/
+
+structure BoundedRunnerConstructionSurface where
+  fixedSimulatorOutput :
+    FixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction
+  fixedStepConfiguration :
+    FixedDescriptionStepCodeConfigurationRealizerConstruction
+  layoutRunnerSubroutine :
+    PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction
+  totalStageAttemptSubroutine :
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction
+  finiteStageLoopController :
+    PairedRecognizerDovetailFiniteStageLoopControllerConstruction
+
 end Computability
 end FoC
