@@ -95,6 +95,40 @@ theorem dovetailLayout_encode_eq_transition_input_sourceSuffix
           (sourceSuffix L) := by
   rfl
 
+theorem parsedLayoutBits_eq_transition_input_sourceSuffix
+    (L : MachineDescription.DovetailLayout) :
+    ParsedLayoutBits L =
+      List.append
+        (MachineDescription.encodeCodeSymbolAsInput
+          MachineCodeSymbol.transition)
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeBoolWordAppend L.input
+            (sourceSuffix L))) := by
+  simp [ParsedLayoutBits, dovetailLayout_encode_eq_transition_input_sourceSuffix,
+    MachineDescription.encodeCodeWordAsInput]
+
+theorem parsedLayoutBits_eq_transition_input_sourceFieldBits
+    (L : MachineDescription.DovetailLayout) :
+    ParsedLayoutBits L =
+      List.append
+        (MachineDescription.encodeCodeSymbolAsInput
+          MachineCodeSymbol.transition)
+        (List.append
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.encodeBoolWordAppend L.input []))
+          (sourceFieldBits L)) := by
+  have happend :
+      MachineDescription.encodeBoolWordAppend L.input (sourceSuffix L) =
+        List.append
+          (MachineDescription.encodeBoolWordAppend L.input [])
+          (sourceSuffix L) := by
+    simpa using
+      encodeBoolWordAppend_append L.input
+        ([] : Word MachineCodeSymbol) (sourceSuffix L)
+  rw [parsedLayoutBits_eq_transition_input_sourceSuffix, happend]
+  rw [MachineDescription.encodeCodeWordAsInput_append,
+    sourceSuffix_bits_eq_fields]
+
 def sourceTape
     (L : MachineDescription.DovetailLayout)
     (baseLeft : List (Option Bool)) : Tape Bool :=
