@@ -799,6 +799,187 @@ theorem selectedMergeForwardParserConstruction_scaffold :
     SelectedMergeForwardParserConstruction :=
   selectedMergeForwardParserConstruction_identity
 
+def SelectedMergePaddedEmitterHeaderRewriterDescription :
+    MachineDescription where
+  stateCount := 5
+  start := 0
+  halt := 4
+  transitions :=
+    [ MachineDescription.transition 0 (some false) (some false)
+        Direction.right 1,
+      MachineDescription.transition 1 (some false) (some false)
+        Direction.right 2,
+      MachineDescription.transition 2 (some false) (some false)
+        Direction.right 3,
+      MachineDescription.transition 3 (some false) (some true)
+        Direction.right 4 ]
+
+theorem selectedMergePaddedEmitterHeaderRewriter_subroutineReady :
+    SelectedMergePaddedEmitterHeaderRewriterDescription.SubroutineReady := by
+  constructor
+  · constructor
+    · decide
+    constructor
+    · decide
+    constructor
+    · decide
+    constructor
+    · intro t ht
+      simp [SelectedMergePaddedEmitterHeaderRewriterDescription,
+        MachineDescription.transition,
+        TransitionDescription.WellFormed] at ht ⊢
+      rcases ht with rfl | rfl | rfl | rfl <;> decide
+    · intro t u ht hu hkey
+      simp [SelectedMergePaddedEmitterHeaderRewriterDescription,
+        MachineDescription.transition] at ht hu
+      rcases ht with rfl | rfl | rfl | rfl <;>
+        rcases hu with rfl | rfl | rfl | rfl <;>
+          simp [TransitionDescription.SameKey,
+            TransitionDescription.SameAction] at hkey ⊢
+  · intro t ht
+    simp [SelectedMergePaddedEmitterHeaderRewriterDescription,
+      MachineDescription.transition] at ht
+    rcases ht with rfl | rfl | rfl | rfl <;> decide
+
+theorem selectedMergePaddedEmitterHeaderRewriter_runConfig
+    (left rest : List (Option Bool)) :
+    SelectedMergePaddedEmitterHeaderRewriterDescription.runConfig 4
+        (DovetailInitialLayoutInitializer.config 0 left
+          (some false :: some false :: some false :: some false :: rest)) =
+      DovetailInitialLayoutInitializer.config 4
+        (some true :: some false :: some false :: some false :: left)
+        rest := by
+  cases rest with
+  | nil =>
+      simp [SelectedMergePaddedEmitterHeaderRewriterDescription,
+        DovetailInitialLayoutInitializer.config,
+        DovetailInitialLayoutInitializer.tapeAtCells,
+        MachineDescription.runConfig,
+        MachineDescription.stepConfig,
+        MachineDescription.lookupTransition,
+        MachineDescription.Matches,
+        MachineDescription.transition,
+        Tape.read, Tape.write, Tape.move, Tape.moveRight]
+  | cons cell rest =>
+      simp [SelectedMergePaddedEmitterHeaderRewriterDescription,
+        DovetailInitialLayoutInitializer.config,
+        DovetailInitialLayoutInitializer.tapeAtCells,
+        MachineDescription.runConfig,
+        MachineDescription.stepConfig,
+        MachineDescription.lookupTransition,
+        MachineDescription.Matches,
+        MachineDescription.transition,
+        Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+theorem selectedMergePaddedEmitterHeaderRewriter_haltsFromTapeIn
+    (left rest : List (Option Bool)) :
+    SelectedMergePaddedEmitterHeaderRewriterDescription.HaltsFromTapeIn 4
+      (DovetailInitialLayoutInitializer.tapeAtCells left
+        (((encodeCodeSymbolAsInput MachineCodeSymbol.header).map some) ++
+          rest))
+      (DovetailInitialLayoutInitializer.tapeAtCells
+        (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse ++
+          left)
+        rest) := by
+  constructor
+  · simpa [MachineDescription.HaltsFromTapeIn,
+      SelectedMergePaddedEmitterHeaderRewriterDescription,
+      encodeCodeSymbolAsInput,
+      DovetailInitialLayoutInitializer.config] using
+      congrArg MachineDescription.Configuration.state
+        (selectedMergePaddedEmitterHeaderRewriter_runConfig left rest)
+  · simpa [MachineDescription.HaltsFromTapeIn,
+      SelectedMergePaddedEmitterHeaderRewriterDescription,
+      encodeCodeSymbolAsInput,
+      DovetailInitialLayoutInitializer.config] using
+      congrArg MachineDescription.Configuration.tape
+        (selectedMergePaddedEmitterHeaderRewriter_runConfig left rest)
+
+theorem selectedMergePaddedEmitterHeaderRewriter_haltsFromTape
+    (left rest : List (Option Bool)) :
+    SelectedMergePaddedEmitterHeaderRewriterDescription.HaltsFromTape
+      (DovetailInitialLayoutInitializer.tapeAtCells left
+        (((encodeCodeSymbolAsInput MachineCodeSymbol.header).map some) ++
+          rest))
+      (DovetailInitialLayoutInitializer.tapeAtCells
+        (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse ++
+          left)
+        rest) :=
+  ⟨4, selectedMergePaddedEmitterHeaderRewriter_haltsFromTapeIn left rest⟩
+
+def SelectedMergePaddedEmitterOuterTailBits
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  encodeCodeWordAsInput
+    (encodeBoolWordAppend (ParsedLayoutBits p.L)
+      (encodeNatAppend p.S.stage
+        (encodeConfigurationAppend p.S.config
+          (encodeBoolAppend p.S.hit []))))
+
+def SelectedMergePaddedEmitterAfterHeaderTape
+    (p : SelectedMergeEmitterPayload) : Tape Bool :=
+  DovetailInitialLayoutInitializer.tapeAtCells
+    (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse)
+    ((SelectedMergePaddedEmitterOuterTailBits p).map some)
+
+theorem SelectedMergeEmitterInputTape_eq_headerTailCells
+    (p : SelectedMergeEmitterPayload) :
+    SimulatorLayout.tape p.S =
+      DovetailInitialLayoutInitializer.tapeAtCells []
+        (((encodeCodeSymbolAsInput MachineCodeSymbol.header).map some) ++
+          (SelectedMergePaddedEmitterOuterTailBits p).map some) := by
+  change Tape.input (SelectedMergeEmitterInputBits p) = _
+  rw [SelectedMergeEmitterInputBits_eq_parsedLayoutFields p]
+  simp [SelectedMergePaddedEmitterOuterTailBits,
+    encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+    DovetailInitialLayoutInitializer.tapeAtCells, Tape.input]
+
+theorem selectedMergePaddedEmitterHeaderRewriter_haltsFromPayload
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterHeaderRewriterDescription.HaltsFromTape
+      (SimulatorLayout.tape p.S)
+      (SelectedMergePaddedEmitterAfterHeaderTape p) := by
+  rw [SelectedMergeEmitterInputTape_eq_headerTailCells p]
+  simp [SelectedMergePaddedEmitterAfterHeaderTape]
+  exact
+    selectedMergePaddedEmitterHeaderRewriter_haltsFromTape
+      [] ((SelectedMergePaddedEmitterOuterTailBits p).map some)
+
+def SelectedMergePaddedEmitterOutputTailBits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) : Word Bool :=
+  encodeCodeWordAsInput
+    (encodeBoolWordAppend p.L.input
+      (encodeNatAppend p.L.stage
+        (encodeConfigurationAppend
+          (SelectedMergeOutputAcceptConfig useAccept p.S p.L)
+          (encodeConfigurationAppend
+            (SelectedMergeOutputRejectConfig useAccept p.S p.L)
+            (encodeBoolAppend
+              (SelectedMergeOutputAcceptHit useAccept p.S p.L)
+              (encodeBoolAppend
+                (SelectedMergeOutputRejectHit useAccept p.S p.L) []))))))
+
+theorem SelectedMergeEquivEmitterPaddedOutputTape_eq_transitionTailCells
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    SelectedMergeEquivEmitterPaddedOutputTape useAccept p =
+      DovetailInitialLayoutInitializer.tapeAtCells []
+        (inputWithTrailingBlankPaddingCells
+          (List.append
+            (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+            (SelectedMergePaddedEmitterOutputTailBits useAccept p))
+          (SimulatorLayout.asBoolInput p.S).length) := by
+  rw [SelectedMergeEquivEmitterPaddedOutputTape_eq_tapeAtCells_fields]
+  simp [SelectedMergePaddedEmitterOutputTailBits, encodeCodeWordAsInput,
+    encodeCodeSymbolAsInput]
+
+def SelectedMergePaddedEmitterAfterHeaderSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      emitter.HaltsFromTape
+        (SelectedMergePaddedEmitterAfterHeaderTape p)
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
+
 /--
 Finite-machine leaf for selected merge under the equivalence-based phase
 contract.  It emits the merged dovetail-layout code at the left edge and leaves
