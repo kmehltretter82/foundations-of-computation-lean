@@ -174,7 +174,45 @@ theorem checkedNonemptyBoolWordQuoteDirectSourceBits_encodeNatAppend
   rw [MachineDescription.encodeCodeWordAsInput_append]
   simp [List.append_assoc]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative
+theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_donePass
+    (b : Bool) (pre0 tickBits sourceTailAfterDone : Word Bool) :
+    exists steps : Nat,
+      InputTapeRightCellsDirectCopierDescription.runConfig steps
+          (config 0
+            (List.append ((List.append pre0 tickBits).reverse.map some)
+              [none, some false])
+            ((List.append inputTapeRightCellsDirectCopierDoneBits
+              (List.append (inputTapeRightCellsDirectCopierHeadBits b)
+                (List.append sourceTailAfterDone tickBits))).map some)) =
+        config 10
+          (List.append
+            ((List.append pre0
+              (List.append tickBits
+                (List.append inputTapeRightCellsDirectCopierDoneBits
+                  (inputTapeRightCellsDirectCopierHeadBits b)))).reverse.map
+              some)
+            [none, some false])
+          ((List.append sourceTailAfterDone
+            (List.append tickBits
+              inputTapeRightCellsDirectCopierDoneBits)).map some) := by
+  by_cases hb : b = true
+  · subst b
+    simpa [inputTapeRightCellsDirectCopierHeadBits,
+      inputTapeRightCellsDirectCopierDoneBits,
+      List.reverse_append, List.map_append, List.append_assoc] using
+      inputTapeRightCellsDirectCopierDescription_run_copy_done_skip_four
+        [some false] (List.append pre0 tickBits)
+        sourceTailAfterDone tickBits false true true false
+  · cases b
+    · simpa [inputTapeRightCellsDirectCopierHeadBits,
+        inputTapeRightCellsDirectCopierDoneBits,
+        List.reverse_append, List.map_append, List.append_assoc] using
+        inputTapeRightCellsDirectCopierDescription_run_copy_done_skip_four
+          [some false] (List.append pre0 tickBits)
+          sourceTailAfterDone tickBits false true false true
+    · contradiction
+
+theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_phaseChain
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol) :
     exists steps : Nat,
@@ -216,39 +254,25 @@ theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative
           (List.append headBits sourceTailAfterDone))
         [] with
     ⟨tickSteps, hticks⟩
-  have hdoneExists :
-      exists steps : Nat,
-        InputTapeRightCellsDirectCopierDescription.runConfig steps
-            (config 0
-              (List.append ((List.append pre0 tickBits).reverse.map some)
-                [none, some false])
-              ((List.append doneBits
-                (List.append headBits
-                  (List.append sourceTailAfterDone tickBits))).map some)) =
-          config 10
-            (List.append (preAfterDone.reverse.map some)
+  rcases
+      inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_donePass
+        b pre0 tickBits sourceTailAfterDone with
+    ⟨doneSteps, hdoneRaw⟩
+  have hdone :
+      InputTapeRightCellsDirectCopierDescription.runConfig doneSteps
+          (config 0
+            (List.append ((List.append pre0 tickBits).reverse.map some)
               [none, some false])
-            ((List.append sourceTailAfterDone outputAfterDone).map
-              some) := by
-    by_cases hb : b = true
-    · subst b
-      simpa [headBits, inputTapeRightCellsDirectCopierHeadBits,
-        doneBits, inputTapeRightCellsDirectCopierDoneBits,
-        sourceTailAfterDone, outputAfterDone, preAfterDone,
-        List.reverse_append, List.map_append, List.append_assoc] using
-        inputTapeRightCellsDirectCopierDescription_run_copy_done_skip_four
-          [some false] (List.append pre0 tickBits)
-          sourceTailAfterDone tickBits false true true false
-    · cases b
-      · simpa [headBits, inputTapeRightCellsDirectCopierHeadBits,
-          doneBits, inputTapeRightCellsDirectCopierDoneBits,
-          sourceTailAfterDone, outputAfterDone, preAfterDone,
-          List.reverse_append, List.map_append, List.append_assoc] using
-          inputTapeRightCellsDirectCopierDescription_run_copy_done_skip_four
-            [some false] (List.append pre0 tickBits)
-            sourceTailAfterDone tickBits false true false true
-      · contradiction
-  rcases hdoneExists with ⟨doneSteps, hdone⟩
+            ((List.append doneBits
+              (List.append headBits
+                (List.append sourceTailAfterDone tickBits))).map some)) =
+        config 10
+          (List.append (preAfterDone.reverse.map some)
+            [none, some false])
+          ((List.append sourceTailAfterDone outputAfterDone).map
+            some) := by
+    simpa [doneBits, headBits, outputAfterDone, preAfterDone,
+      List.append_assoc] using hdoneRaw
   rcases
       inputTapeRightCellsDirectCopierDescription_run_copy_cells
         rest preAfterDone (List.append stageBits suffixBits)
@@ -344,6 +368,29 @@ theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative
     inputTapeRightCellsDirectCopierDoneBits,
     inputTapeRightCellsDirectCopierNatBits,
     List.map_append, List.append_assoc]
+
+theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative
+    (b : Bool) (rest : Word Bool) (stage : Nat)
+    (suffix : Word MachineCodeSymbol) :
+    exists steps : Nat,
+      InputTapeRightCellsDirectCopierDescription.runConfig steps
+          (config 0
+            (List.append
+              ((MachineDescription.encodeCodeSymbolAsInput
+                MachineCodeSymbol.tick).reverse.map some)
+              [none, some false])
+            ((inputTapeRightCellsDirectCopierCoreSourceBits b rest stage
+              (MachineDescription.encodeCodeWordAsInput suffix)).map
+              some)) =
+        config 99 [some false]
+          (some false ::
+            ((List.append
+              (checkedNonemptyBoolWordQuoteDirectSourceBits b rest
+                (MachineDescription.encodeNatAppend stage suffix))
+              (checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits
+                rest)).map some)) :=
+  inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_phaseChain
+    b rest stage suffix
 
 def CheckedRawBoolWordAppendCodeWordReturnDescription
     (code : Word MachineCodeSymbol) : MachineDescription :=

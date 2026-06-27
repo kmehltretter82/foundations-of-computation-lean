@@ -804,6 +804,31 @@ theorem markedDovetailLayoutBodyBits_cons_false
               (boolFieldBits L.rejectHit []))))))), ?_⟩
   simp [markedDovetailLayoutBodyBits, transitionRemainderBits]
 
+theorem rightHandoffSequential_runConfig_exists
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {nA : Nat} {Tin Tmid Tout : Tape Bool}
+    (hArun :
+      A.runConfig nA { state := A.start, tape := Tin } =
+        { state := A.halt, tape := Tmid })
+    (hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start, tape := Tape.move Direction.right Tmid } =
+          { state := B.halt, tape := Tout }) :
+    exists steps : Nat,
+      (MachineDescription.seqSubroutine A B Direction.right).runConfig
+          steps
+          { state := (MachineDescription.seqSubroutine A B
+              Direction.right).start
+            tape := Tin } =
+        { state :=
+            (MachineDescription.seqSubroutine A B Direction.right).halt
+          tape := Tout } :=
+  CommonGround.SeqComposition.seqSubroutine_runConfig_exists
+    (A := A) (B := B) (handoffMove := Direction.right)
+    hA hB hArun hBReach
+
 theorem run_finalHitFlags_raw_to_handoff_withBase
     (acceptHit rejectHit : Bool)
     (baseLeft : List (Option Bool)) :
@@ -1670,7 +1695,7 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
         stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
         hArun hBReach
 
-theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase
+theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
     (L : MachineDescription.DovetailLayout)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
@@ -1786,13 +1811,44 @@ theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase
         (by simpa [baseAfterTransition, inputSuffix] using hinput)
   simpa [MarkedDovetailLayoutBodyScannerDescription, TmidTape,
     baseAfterTransition] using
-      CommonGround.SeqComposition.seqSubroutine_runConfig_exists
+      rightHandoffSequential_runConfig_exists
         (A := TransitionRemainderPrefixScannerDescription)
         (B := InputStageConfigurationsAndFinalFlagsScannerDescription)
-        (handoffMove := Direction.right)
         transitionRemainderPrefixScannerDescription_subroutineReady
         inputStageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
         hArun hBReach
+
+theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase
+    (L : MachineDescription.DovetailLayout)
+    (baseLeft : List (Option Bool)) :
+    exists steps : Nat,
+      MarkedDovetailLayoutBodyScannerDescription.runConfig steps
+          { state := MarkedDovetailLayoutBodyScannerDescription.start
+            tape :=
+              tapeAtCells baseLeft
+                ((List.append transitionRemainderBits
+                  (boolWordFieldBits L.input
+                    (List.append (stageNatBits L.stage)
+                      (configurationFieldBits L.acceptConfig
+                        (configurationFieldBits L.rejectConfig
+                          (boolFieldBits L.acceptHit
+                            (boolFieldBits L.rejectHit []))))))).map
+                  some) } =
+        { state := MarkedDovetailLayoutBodyScannerDescription.halt
+          tape :=
+            (boolFinalHandoffConfigWithBase L.rejectHit
+              (List.append
+                ((cellCodeBits (some L.acceptHit)).reverse.map some)
+                (configurationRestoredLeftWithBase L.rejectConfig
+                  (configurationRestoredLeftWithBase L.acceptConfig
+                    (List.append ((stageNatBits L.stage).reverse.map some)
+                      (cellListCanonicalRestoredLeftWithBase
+                        (L.input.map some)
+                        (List.append
+                          (transitionRemainderBits.reverse.map some)
+                          baseLeft))))))).tape } :=
+  run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
+    L baseLeft
 
 theorem run_markedDovetailLayoutBody_return_to_checkedHandoff
     (L : MachineDescription.DovetailLayout) :
@@ -1905,7 +1961,7 @@ theorem run_markedDovetailLayoutBody_return_to_checkedHandoff
       returnToFirstMarkerDescription_subroutineReady
       hArun hBReach
 
-theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff
+theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff_phaseChain
     (L : MachineDescription.DovetailLayout) :
     exists steps : Nat,
       CheckedDovetailLayoutScannerDescription.runConfig steps
@@ -1971,19 +2027,30 @@ theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff
         hmove
         hbodyReturn
   simpa [CheckedDovetailLayoutScannerDescription, TmidTape] using
-    CommonGround.SeqComposition.seqSubroutine_runConfig_exists
+    rightHandoffSequential_runConfig_exists
       (A := MarkFirstTransitionBitDescription)
       (B :=
         MachineDescription.seqSubroutine
           MarkedDovetailLayoutBodyScannerDescription
           ReturnToFirstMarkerDescription
           Direction.right)
-      (handoffMove := Direction.right)
       markFirstTransitionBitDescription_subroutineReady
       (MachineDescription.seqSubroutine_subroutineReady
         markedDovetailLayoutBodyScannerDescription_subroutineReady
         returnToFirstMarkerDescription_subroutineReady)
       hArun hBReach
+
+theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff
+    (L : MachineDescription.DovetailLayout) :
+    exists steps : Nat,
+      CheckedDovetailLayoutScannerDescription.runConfig steps
+          { state := CheckedDovetailLayoutScannerDescription.start
+            tape := tapeAtCells [] ((dovetailLayoutFieldBits L []).map some) } =
+        { state := CheckedDovetailLayoutScannerDescription.halt
+          tape :=
+            restoredCheckedHandoffTapeFromTail
+              (markedDovetailLayoutBodyRestoredBitsRev L).reverse } :=
+  run_checkedDovetailLayoutScanner_raw_to_checkedHandoff_phaseChain L
 
 end DovetailLayoutScanner
 end CanonicalLayouts

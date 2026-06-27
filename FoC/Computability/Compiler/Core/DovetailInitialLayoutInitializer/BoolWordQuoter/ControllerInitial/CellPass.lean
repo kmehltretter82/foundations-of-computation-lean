@@ -1517,7 +1517,7 @@ theorem controllerInitialRawBoolWordHeaderEmitterOutput_bits_eq
     MachineDescription.encodeCodeWordAsInput,
     MachineDescription.encodeCodeSymbolAsInput]
 
-theorem controllerInitialRawBoolWordHeaderEmitterDescription_run
+theorem controllerInitialRawBoolWordHeaderEmitterDescription_run_phaseChain
     (w : Word Bool) :
     exists steps : Nat,
       ControllerInitialRawBoolWordHeaderEmitterDescription.runConfig steps
@@ -1615,6 +1615,15 @@ theorem controllerInitialRawBoolWordHeaderEmitterDescription_run
             pad)
           [])
       (controllerInitialRawBoolWordHeaderEmitter_twoBlankPadding w.length)
+
+theorem controllerInitialRawBoolWordHeaderEmitterDescription_run
+    (w : Word Bool) :
+    exists steps : Nat,
+      ControllerInitialRawBoolWordHeaderEmitterDescription.runConfig steps
+          (ControllerInitialRawBoolWordHeaderEmitterDescription.initial w) =
+        { state := ControllerInitialRawBoolWordHeaderEmitterDescription.halt
+          tape := controllerInitialRawBoolWordHeaderEmitterFinalTape w } :=
+  controllerInitialRawBoolWordHeaderEmitterDescription_run_phaseChain w
 
 theorem controllerInitialRawBoolWordHeaderEmitterDescription_haltsWithOutput
     (w : Word Bool) :

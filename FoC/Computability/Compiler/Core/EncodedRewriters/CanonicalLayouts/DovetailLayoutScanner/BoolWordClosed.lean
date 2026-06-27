@@ -1410,7 +1410,8 @@ theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_moveRigh
         boolWordSuffixScannerDescription_runConfig_finish_moveRight_suffix_ne_halt
           bits baseLeft suffixTail m)
 
-theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_handoff
+theorem
+    boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_handoff_phaseBridge
     (baseLeft : List (Option Bool)) (bits : Word Bool)
     (suffix : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}
@@ -1574,6 +1575,26 @@ theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_handoff
                     MachineDescription.encodeCodeWordAsInput,
                     MachineDescription.encodeCodeSymbolAsInput,
                     List.map_append, List.append_assoc] using h)
+
+theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_handoff
+    (baseLeft : List (Option Bool)) (bits : Word Bool)
+    (suffix : Word MachineCodeSymbol)
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      BoolWordSuffixScannerDescription.runConfig n
+          (config BoolWordSuffixScannerDescription.start baseLeft
+            ((MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.encodeBoolWordAppend bits
+                suffix)).map some)) =
+        { state := BoolWordSuffixScannerDescription.halt
+          tape := Tout }) :
+    exists suffixTail : Word Bool,
+      MachineDescription.encodeCodeWordAsInput suffix = false :: suffixTail ∧
+        Tout =
+          (boolWordCanonicalHandoffConfigWithBase bits baseLeft
+            (false :: suffixTail)).tape :=
+  boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_handoff_phaseBridge
+    baseLeft bits suffix h
 
 end DovetailLayoutScanner
 end CanonicalLayouts
