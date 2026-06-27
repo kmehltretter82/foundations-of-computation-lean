@@ -263,6 +263,15 @@ theorem sourceScannerRightHandoffTape_normalizedOutput
     CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
     CanonicalLayouts.DovetailLayoutScanner.boolFieldBits]
 
+theorem sourceScannerRightHandoffTape_normalizedOutput_eq_sourceTape
+    (L : MachineDescription.DovetailLayout)
+    (baseLeft : List (Option Bool)) :
+    Tape.normalizedOutput
+        (sourceScannerRightHandoffTape L baseLeft) =
+      Tape.normalizedOutput (sourceTape L baseLeft) := by
+  rw [sourceScannerRightHandoffTape_normalizedOutput,
+    sourceTape_normalizedOutput]
+
 theorem sourceScannerRightHandoffTape_normalizedOutput_outputPrefix
     (L : MachineDescription.DovetailLayout) :
     Tape.normalizedOutput
@@ -271,6 +280,46 @@ theorem sourceScannerRightHandoffTape_normalizedOutput_outputPrefix
       List.append (outputPrefixBits L) (sourceFieldBits L) := by
   rw [sourceScannerRightHandoffTape_normalizedOutput]
   simp [Function.comp_def, List.map_reverse]
+
+theorem
+    sourceScannerRightHandoffTape_normalizedOutput_outputPrefix_eq_header_input_sourceSuffix
+    (L : MachineDescription.DovetailLayout) :
+    Tape.normalizedOutput
+        (sourceScannerRightHandoffTape L
+          ((outputPrefixBits L).reverse.map some)) =
+      MachineDescription.encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          MachineDescription.encodeBoolWordAppend
+            (ParsedLayoutBits L) (sourceSuffix L)) := by
+  rw [sourceScannerRightHandoffTape_normalizedOutput_outputPrefix,
+    outputPrefixBits_append_sourceFieldBits]
+
+theorem sourceScannerRightHandoffTape_contextLength_ge_sourceTape
+    (L : MachineDescription.DovetailLayout)
+    (baseLeft : List (Option Bool)) :
+    Tape.contextLength (sourceTape L baseLeft) <=
+      Tape.contextLength (sourceScannerRightHandoffTape L baseLeft) := by
+  rcases sourceScanner_haltsFromTape_withBase L baseLeft with
+    ⟨steps, hsteps⟩
+  let scanner :=
+    CanonicalLayouts.DovetailLayoutScanner.StageConfigurationsAndFinalFlagsScannerDescription
+  have hmono :=
+    MachineDescription.runConfig_contextLength_mono
+      scanner steps
+      { state := scanner.start
+        tape := sourceTape L baseLeft }
+  have hhandoff :
+      Tape.contextLength
+          ((scanner.runConfig steps
+            { state := scanner.start
+              tape := sourceTape L baseLeft }).tape) =
+        Tape.contextLength (sourceScannerHandoffTape L baseLeft) :=
+    congrArg Tape.contextLength hsteps.right
+  rw [hhandoff] at hmono
+  have hmove := tape_contextLength_le_move_right
+    (sourceScannerHandoffTape L baseLeft)
+  exact Nat.le_trans hmono
+    (by simpa [sourceScannerRightHandoffTape] using hmove)
 
 end SelectedProjectionTailProjector
 
