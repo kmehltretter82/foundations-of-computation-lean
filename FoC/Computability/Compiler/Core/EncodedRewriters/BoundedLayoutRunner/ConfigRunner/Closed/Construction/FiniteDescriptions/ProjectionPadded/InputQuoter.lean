@@ -51,6 +51,28 @@ theorem sourceTape_outputPrefix_eq_inputQuoterExactTargetTape
   rw [SelectedProjectionInputQuoterExactTargetTape,
     SelectedProjectionTailProjector.sourceTape_outputPrefix_eq_stageInputSourceRestFieldBits]
 
+theorem selectedProjectionInputQuoterExactSourceTape_normalizedOutput
+    (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (SelectedProjectionInputQuoterExactSourceTape L) =
+      ParsedLayoutBits L := by
+  rw [← parsedLayoutCheckedTape_eq_inputQuoterExactSourceTape L]
+  exact parsedLayoutCheckedTape_normalizedOutput L
+
+theorem selectedProjectionInputQuoterExactTargetTape_normalizedOutput
+    (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (SelectedProjectionInputQuoterExactTargetTape L) =
+      encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          encodeBoolWordAppend
+            (ParsedLayoutBits L)
+            (SelectedProjectionTailProjector.sourceSuffix L)) := by
+  rw [← sourceTape_outputPrefix_eq_inputQuoterExactTargetTape L]
+  exact
+    SelectedProjectionTailProjector.sourceTape_normalizedOutput_outputPrefix_eq_header_input_sourceSuffix
+      L
+
 def SelectedProjectionInputQuoterExactShapeSpec
     (quoter : MachineDescription) : Prop :=
   quoter.SubroutineReady ∧
