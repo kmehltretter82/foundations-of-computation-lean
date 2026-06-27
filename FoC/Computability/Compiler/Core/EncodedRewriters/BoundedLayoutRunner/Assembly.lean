@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround
+import FoC.Computability.Compiler.Core.CommonGround.Identity
 import FoC.Computability.Compiler.Core.TapeCodePrimitiveSequencing
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner
 

@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround
+import FoC.Computability.Compiler.Core.CommonGround.Controller
 import FoC.Computability.Compiler.Core.ControllerResultEmitter
 import FoC.Computability.Compiler.Core.ControllerInputInitializer
 import FoC.Computability.Compiler.Core.ControllerResultContinue

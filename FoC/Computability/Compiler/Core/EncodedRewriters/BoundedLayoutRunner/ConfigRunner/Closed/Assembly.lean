@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround
+import FoC.Computability.Compiler.Core.CommonGround.Identity
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction
 
 set_option doc.verso true

@@ -1,6 +1,8 @@
 import FoC.Computability.Compiler.SeqSubroutineSemantics
 import FoC.Computability.Compiler.Core.EncodingLemmas
-import FoC.Computability.Compiler.Core.CommonGround
+import FoC.Computability.Compiler.Core.CommonGround.Identity
+import FoC.Computability.Compiler.Core.CommonGround.Layouts
+import FoC.Computability.Compiler.Core.CommonGround.Scanners
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Dovetail
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Parser.Basic

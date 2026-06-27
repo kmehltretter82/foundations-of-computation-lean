@@ -75,11 +75,12 @@ descriptions and code words.
   {name (full := FoC.Computability.encodeConfigurationAppend_inj)}`encodeConfigurationAppend_inj`,
   and
   {name (full := FoC.Computability.encodeDescriptionAppend_inj)}`encodeDescriptionAppend_inj`.
-* {module}`FoC.Computability.Compiler.Core.CommonGround` is the proof-facing
-  facade for recurring compiler construction helpers. It re-exports stable
-  names for field inversions, scanner inversions, code-word emitters,
-  controller-layout facts, controller-invocation contracts, exact identity
-  helpers, Boolean-word quoters, and append/return subroutines.
+* {module}`FoC.Computability.Compiler.Core.CommonGround` is the compatibility
+  facade for recurring compiler construction helpers. New construction files
+  should prefer its narrow submodules for sequential composition, exact
+  identity helpers, layouts, scanner inversions, code-word emitters,
+  controller-layout facts, controller-invocation contracts, and Boolean-word
+  quoters.
 * {module}`FoC.Computability.FiniteProgram` packages finite executable program
   descriptions whose concrete machine descriptions are explicitly supplied.
 
@@ -129,11 +130,32 @@ the final head position and exact tape window.
 ## Common Proof Ground
 
 {module}`FoC.Computability.Compiler.Core.CommonGround` is not a replacement for
-this cross-reference page. This page explains the API map; CommonGround is the
-first Lean import to try when a proof needs reusable construction plumbing.
+this cross-reference page. This page explains the API map; CommonGround is a
+compatibility wrapper. New construction proofs should import the narrow
+submodule whose helper family they use.
 
-The CommonGround namespaces group the helpers that have already appeared in
-multiple completed proofs.
+The CommonGround submodules and namespaces group the helpers that have already
+appeared in multiple completed proofs.
+
+* {module}`FoC.Computability.Compiler.Core.CommonGround.Layouts`
+  provides {lit}`CommonGround.LayoutTapes`,
+  {lit}`CommonGround.FieldInversions`, {lit}`CommonGround.DovetailLayouts`,
+  and {lit}`CommonGround.SimulatorLayouts`.
+* {module}`FoC.Computability.Compiler.Core.CommonGround.Scanners`
+  provides {lit}`CommonGround.ScannerInversions`.
+* {module}`FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters`
+  provides {lit}`CommonGround.CodeWordEmitters`.
+* {module}`FoC.Computability.Compiler.Core.CommonGround.Controller`
+  provides {lit}`CommonGround.ControllerLayouts` and
+  {lit}`CommonGround.ControllerInvocation`.
+* {module}`FoC.Computability.Compiler.Core.CommonGround.Identity`
+  provides {lit}`CommonGround.Identity`.
+* {module}`FoC.Computability.Compiler.Core.CommonGround.BoolWordQuoters`
+  provides {lit}`CommonGround.BoolWordQuoters`.
+* {module}`FoC.Computability.Compiler.Core.CommonGround.SeqComposition`
+  provides {lit}`CommonGround.SeqComposition`.
+
+The main namespace families have the following intended uses.
 
 * {lit}`CommonGround.FieldInversions`
   collects complete decoder inversions for canonical fields.
@@ -149,11 +171,12 @@ multiple completed proofs.
   {module}`FoC.Computability.Compiler.Core.FiniteScaffolds`.
 * {lit}`CommonGround.Identity`
   contains the reusable exact-identity ready and run facts.
-* {lit}`CommonGround.BoolWordQuoters` and {lit}`CommonGround.AppendReturn`
-  expose initializer-derived quoters and append/return machines.
+* {lit}`CommonGround.BoolWordQuoters`
+  exposes initializer-derived quoters.
 
 When a proof starts by rebuilding one of those facts locally, prefer extending
-CommonGround or its earlier source lemma and then using the shared name.
+the relevant narrow CommonGround submodule or its earlier source lemma and then
+using the shared name.
 
 ## Canonical Layouts and Closed Parsers
 
@@ -228,7 +251,11 @@ finite-construction proofs.
   {module}`FoC.Computability.Compiler.Core.Closeout`,
   {module}`FoC.Computability.Compiler.Core.TapeCodePrimitives`,
   {module}`FoC.Computability.Compiler.Core.EncodingLemmas`,
-  {module}`FoC.Computability.Compiler.Core.CommonGround`, and
+  {module}`FoC.Computability.Compiler.Core.CommonGround`,
+  {module}`FoC.Computability.Compiler.Core.CommonGround.Layouts`,
+  {module}`FoC.Computability.Compiler.Core.CommonGround.Scanners`,
+  {module}`FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters`,
+  {module}`FoC.Computability.Compiler.Core.CommonGround.Controller`, and
   {module}`FoC.Computability.Compiler.Core.EncodedRewriters.RightShifted`.
   These are the files to check first for reusable records, wrappers, aliases,
   append-cancellation facts, and exact-tape handoff contracts.
@@ -292,8 +319,9 @@ Before opening a remaining proof hole, classify the goal by contract strength.
 * A parser or scanner inversion that compares encoded prefixes should first
   try the decoder-backed cancellation helpers in
   {module}`FoC.Computability.Compiler.Core.EncodingLemmas` and the scanner
-  exports in {module}`FoC.Computability.Compiler.Core.CommonGround`. If the
-  goal is still about a canonical layout field, then move into the
+  exports in
+  {module}`FoC.Computability.Compiler.Core.CommonGround.Scanners`. If the goal
+  is still about a canonical layout field, then move into the
   DovetailLayoutScanner closed modules.
 * A theorem whose name ends in {lit}`_scaffold` is deliberately a construction
   target. It should be discharged by supplying finite descriptions and

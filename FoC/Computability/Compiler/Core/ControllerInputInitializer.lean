@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround
+import FoC.Computability.Compiler.Core.CommonGround.BoolWordQuoters
 import FoC.Computability.Compiler.Core.ConstructionTargets
 
 set_option doc.verso true

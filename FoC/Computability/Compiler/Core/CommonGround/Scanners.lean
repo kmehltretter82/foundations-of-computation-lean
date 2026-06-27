@@ -1,0 +1,70 @@
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts
+
+set_option doc.verso true
+
+/-!
+# Common scanner inversions
+
+This module re-exports the closed scanner machines and inversions used by the
+bounded-layout parser leaves.
+-/
+
+namespace FoC
+namespace Computability
+
+namespace CommonGround
+namespace ScannerInversions
+
+export EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
+  ( BoolWordSuffixScannerDescription
+    CheckedDovetailLayoutScannerDescription
+    transitionRemainderBits
+    cellListCanonicalRestoredLeftWithBase
+    boolWordCanonicalHandoffConfigWithBase_move_right_all
+    boolSuffixScannerDescription_runConfig_encodeBoolAppend_handoff
+    boolSuffixScannerDescription_runConfig_code_handoff
+    boolFinalScannerDescription_runConfig_encodeBoolAppend_terminal_inv
+    boolFinalScannerDescription_runConfig_code_terminal_inv
+    boolWordSuffixScannerDescription_runConfig_start_bit_inv
+    boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
+    boolWordSuffixScannerDescription_runConfig_code_inv
+    boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_handoff
+    cellListSuffixScannerDescription_runConfig_code_inv
+    cellListSuffixScannerDescription_runConfig_encodeCellListAppend_handoff_false
+    cellListSuffixScannerDescription_runConfig_encodeCellListAppend_suffix_false
+    encodeCodeWordAsInput_cons_bits
+    cellSuffixScannerDescription_runConfig_code_inv
+    cellSuffixScannerDescription_runConfig_encodeCellAppend_handoff
+    tapeSuffixScannerDescription_runConfig_code_handoff
+    natSuffixScannerDescription_runConfig_stageNat_handoff
+    natSuffixScannerDescription_runConfig_encodeNatAppend_handoff
+    natSuffixScannerDescription_runConfig_nonblank_suffix_inv
+    configurationSuffixScannerDescription_runConfig_code_handoff
+    configurationSuffixScannerDescription_runConfig_encodeNat_empty_ne_halt
+    configurationSuffixScannerDescription_runConfig_canonical_false_suffix_inv
+    finalHitFlagsScannerDescription_runConfig_encodeBoolAppend_terminal_inv
+    finalHitFlagsScannerDescription_runConfig_code_inv
+    finalHitFlagsScannerDescription_runConfig_canonical_inv
+    finalHitFlagsScannerDescription_runConfig_inv
+    encodeCodeWordAsInput_transition_prefix_inv
+    checkedDovetailLayoutScannerDescription_haltsWithTape_inputBoolWord_inv
+    checkedDovetailLayoutScannerDescription_haltsWithTape_stageField_inv
+    checkedDovetailLayoutScannerDescription_haltsWithTape_finalFlags_inv )
+
+export EncodedRewriters.CanonicalLayouts.DovetailStagePrefix
+  ( NatSuffixScannerDescription
+    NonemptyNatSuffixScannerDescription
+    natBits_eq_encodeNatAppend
+    natSuffixScannerDescription_runConfig_code_inv
+    nonemptyNatSuffixScannerDescription_runConfig_code_inv
+    nonemptyNatSuffixScannerDescription_runConfig_encodeNatAppend_handoff
+    nonemptyNatSuffixScannerDescription_runConfig_encodeNat_empty_ne_halt
+    markedPrefix_run_state200_stageNat_handoff
+    natSuffix_run_state200_stageNat_to_state210
+    nonemptyNatSuffix_run_state200_stageNat_to_state210 )
+
+end ScannerInversions
+end CommonGround
+
+end Computability
+end FoC

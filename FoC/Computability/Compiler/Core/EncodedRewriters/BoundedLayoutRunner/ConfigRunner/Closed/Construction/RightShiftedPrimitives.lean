@@ -1,7 +1,9 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseAdapters
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.SelectedProjectionTailProjector
 import FoC.Computability.Compiler.Core.EncodingLemmas
-import FoC.Computability.Compiler.Core.CommonGround
+import FoC.Computability.Compiler.Core.CommonGround.BoolWordQuoters
+import FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters
+import FoC.Computability.Compiler.Core.CommonGround.Layouts
 
 set_option doc.verso true
 
