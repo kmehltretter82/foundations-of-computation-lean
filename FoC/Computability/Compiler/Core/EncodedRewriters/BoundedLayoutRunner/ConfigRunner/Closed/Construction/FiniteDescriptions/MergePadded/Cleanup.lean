@@ -442,78 +442,35 @@ theorem selectedMergePaddedEmitterSourceScanner_haltsFromPayload
     SelectedMergePaddedEmitterSourceScannerDescription.HaltsFromTape
       (SelectedMergePaddedEmitterAfterHeaderTape p)
       (SelectedMergePaddedEmitterAfterHitTape p) := by
-  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
-      (selectedMergePaddedEmitterInputScanner_haltsFromPayload p) with
-    ⟨inputSteps, hinput⟩
-  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
-      (selectedMergePaddedEmitterStageScanner_haltsFromAfterInputHandoff p) with
-    ⟨stageSteps, hstage⟩
-  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
-      (selectedMergePaddedEmitterConfigScanner_haltsFromAfterStageHandoff p) with
-    ⟨configSteps, hconfig⟩
-  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
-      (selectedMergePaddedEmitterHitScanner_haltsFromAfterConfigHandoff p) with
-    ⟨hitSteps, hhit⟩
   have hconfigHit :
-      exists steps : Nat,
-        (seqSubroutine
-            SelectedMergePaddedEmitterConfigScannerDescription
-            SelectedMergePaddedEmitterHitScannerDescription
-            Direction.right).runConfig steps
-            { state :=
-                (seqSubroutine
-                  SelectedMergePaddedEmitterConfigScannerDescription
-                  SelectedMergePaddedEmitterHitScannerDescription
-                  Direction.right).start
-              tape := SelectedMergePaddedEmitterAfterStageHandoffTape p } =
-          { state :=
-              (seqSubroutine
-                SelectedMergePaddedEmitterConfigScannerDescription
-                SelectedMergePaddedEmitterHitScannerDescription
-                Direction.right).halt
-            tape := SelectedMergePaddedEmitterAfterHitTape p } := by
+      (seqSubroutine
+        SelectedMergePaddedEmitterConfigScannerDescription
+        SelectedMergePaddedEmitterHitScannerDescription
+        Direction.right).HaltsFromTape
+        (SelectedMergePaddedEmitterAfterStageHandoffTape p)
+        (SelectedMergePaddedEmitterAfterHitTape p) := by
     exact
-      CommonGround.SeqComposition.seqSubroutine_runConfig_exists
+      CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
         (A := SelectedMergePaddedEmitterConfigScannerDescription)
         (B := SelectedMergePaddedEmitterHitScannerDescription)
         (handoffMove := Direction.right)
         selectedMergePaddedEmitterConfigScanner_subroutineReady
         selectedMergePaddedEmitterHitScanner_subroutineReady
-        hconfig
-        (CommonGround.SeqComposition.runConfig_reaches_from_move_eq
-          (B := SelectedMergePaddedEmitterHitScannerDescription)
-          (handoffMove := Direction.right)
-          (selectedMergePaddedEmitterAfterConfigTape_move_right p)
-          hhit)
+        (selectedMergePaddedEmitterConfigScanner_haltsFromAfterStageHandoff p)
+        (selectedMergePaddedEmitterAfterConfigTape_move_right p)
+        (selectedMergePaddedEmitterHitScanner_haltsFromAfterConfigHandoff p)
   have hstageConfigHit :
-      exists steps : Nat,
+      (seqSubroutine
+        SelectedMergePaddedEmitterStageScannerDescription
         (seqSubroutine
-            SelectedMergePaddedEmitterStageScannerDescription
-            (seqSubroutine
-              SelectedMergePaddedEmitterConfigScannerDescription
-              SelectedMergePaddedEmitterHitScannerDescription
-              Direction.right)
-            Direction.right).runConfig steps
-            { state :=
-                (seqSubroutine
-                  SelectedMergePaddedEmitterStageScannerDescription
-                  (seqSubroutine
-                    SelectedMergePaddedEmitterConfigScannerDescription
-                    SelectedMergePaddedEmitterHitScannerDescription
-                    Direction.right)
-                  Direction.right).start
-              tape := SelectedMergePaddedEmitterAfterInputHandoffTape p } =
-          { state :=
-              (seqSubroutine
-                SelectedMergePaddedEmitterStageScannerDescription
-                (seqSubroutine
-                  SelectedMergePaddedEmitterConfigScannerDescription
-                  SelectedMergePaddedEmitterHitScannerDescription
-                  Direction.right)
-                Direction.right).halt
-            tape := SelectedMergePaddedEmitterAfterHitTape p } := by
-    refine
-      CommonGround.SeqComposition.seqSubroutine_runConfig_exists
+          SelectedMergePaddedEmitterConfigScannerDescription
+          SelectedMergePaddedEmitterHitScannerDescription
+          Direction.right)
+        Direction.right).HaltsFromTape
+        (SelectedMergePaddedEmitterAfterInputHandoffTape p)
+        (SelectedMergePaddedEmitterAfterHitTape p) := by
+    exact
+      CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
         (A := SelectedMergePaddedEmitterStageScannerDescription)
         (B :=
           seqSubroutine
@@ -525,62 +482,30 @@ theorem selectedMergePaddedEmitterSourceScanner_haltsFromPayload
         (seqSubroutine_subroutineReady
           selectedMergePaddedEmitterConfigScanner_subroutineReady
           selectedMergePaddedEmitterHitScanner_subroutineReady)
-        hstage ?_
-    rcases hconfigHit with ⟨configHitSteps, hconfigHitSteps⟩
-    exact
-      CommonGround.SeqComposition.runConfig_reaches_from_move_eq
-        (B :=
-          seqSubroutine
+        (selectedMergePaddedEmitterStageScanner_haltsFromAfterInputHandoff p)
+        (selectedMergePaddedEmitterAfterStageTape_move_right p)
+        hconfigHit
+  simpa [SelectedMergePaddedEmitterSourceScannerDescription] using
+    CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      (A := SelectedMergePaddedEmitterInputScannerDescription)
+      (B :=
+        seqSubroutine
+          SelectedMergePaddedEmitterStageScannerDescription
+          (seqSubroutine
             SelectedMergePaddedEmitterConfigScannerDescription
             SelectedMergePaddedEmitterHitScannerDescription
             Direction.right)
-        (handoffMove := Direction.right)
-        (selectedMergePaddedEmitterAfterStageTape_move_right p)
-        hconfigHitSteps
-  rcases
-      CommonGround.SeqComposition.seqSubroutine_runConfig_exists
-        (A := SelectedMergePaddedEmitterInputScannerDescription)
-        (B :=
-          seqSubroutine
-            SelectedMergePaddedEmitterStageScannerDescription
-            (seqSubroutine
-              SelectedMergePaddedEmitterConfigScannerDescription
-              SelectedMergePaddedEmitterHitScannerDescription
-              Direction.right)
-            Direction.right)
-        (handoffMove := Direction.right)
-        selectedMergePaddedEmitterInputScanner_subroutineReady
+          Direction.right)
+      (handoffMove := Direction.right)
+      selectedMergePaddedEmitterInputScanner_subroutineReady
+      (seqSubroutine_subroutineReady
+        selectedMergePaddedEmitterStageScanner_subroutineReady
         (seqSubroutine_subroutineReady
-          selectedMergePaddedEmitterStageScanner_subroutineReady
-          (seqSubroutine_subroutineReady
-            selectedMergePaddedEmitterConfigScanner_subroutineReady
-            selectedMergePaddedEmitterHitScanner_subroutineReady))
-        hinput
-        (by
-          rcases hstageConfigHit with
-            ⟨stageConfigHitSteps, hstageConfigHitSteps⟩
-          exact
-            CommonGround.SeqComposition.runConfig_reaches_from_move_eq
-              (B :=
-                seqSubroutine
-                  SelectedMergePaddedEmitterStageScannerDescription
-                  (seqSubroutine
-                    SelectedMergePaddedEmitterConfigScannerDescription
-                    SelectedMergePaddedEmitterHitScannerDescription
-                    Direction.right)
-                  Direction.right)
-              (handoffMove := Direction.right)
-              (selectedMergePaddedEmitterAfterInputTape_move_right p)
-              hstageConfigHitSteps) with
-    ⟨steps, hsteps⟩
-  refine ⟨steps, ?_⟩
-  constructor
-  · simpa [MachineDescription.HaltsFromTapeIn,
-      SelectedMergePaddedEmitterSourceScannerDescription]
-      using congrArg MachineDescription.Configuration.state hsteps
-  · simpa [MachineDescription.HaltsFromTapeIn,
-      SelectedMergePaddedEmitterSourceScannerDescription]
-      using congrArg MachineDescription.Configuration.tape hsteps
+          selectedMergePaddedEmitterConfigScanner_subroutineReady
+          selectedMergePaddedEmitterHitScanner_subroutineReady))
+      (selectedMergePaddedEmitterInputScanner_haltsFromPayload p)
+      (selectedMergePaddedEmitterAfterInputTape_move_right p)
+      hstageConfigHit
 
 /--
 Finite-machine leaf for selected merge under the equivalence-based phase

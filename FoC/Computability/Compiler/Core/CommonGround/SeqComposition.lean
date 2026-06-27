@@ -53,6 +53,33 @@ theorem runConfig_reaches_from_move_eq
         { state := B.halt, tape := Tout } :=
   ⟨nB, by simpa [hmove] using hrun⟩
 
+theorem seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tmid Tnext Tout : Tape Bool}
+    (hAhalts : A.HaltsFromTape Tin Tmid)
+    (hmove : Tape.move handoffMove Tmid = Tnext)
+    (hBhalts : B.HaltsFromTape Tnext Tout) :
+    (seqSubroutine A B handoffMove).HaltsFromTape Tin Tout := by
+  rcases runConfig_eq_halt_of_haltsFromTape hAhalts with
+    ⟨nA, hnA⟩
+  rcases runConfig_eq_halt_of_haltsFromTape hBhalts with
+    ⟨nB, hnB⟩
+  rcases
+      seqSubroutine_runConfig_exists
+        (A := A) (B := B) (handoffMove := handoffMove)
+        hA hB hnA
+        (runConfig_reaches_from_move_eq
+          (B := B) (handoffMove := handoffMove)
+          hmove hnB) with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  constructor
+  · simpa [MachineDescription.HaltsFromTapeIn] using
+      congrArg MachineDescription.Configuration.state hsteps
+  · simpa [MachineDescription.HaltsFromTapeIn] using
+      congrArg MachineDescription.Configuration.tape hsteps
+
 theorem runConfig_state_ne_halt_of_later_ne_halt
     {D : MachineDescription} {c : Configuration} {n k : Nat}
     (hD : D.HaltTransitionFree)
