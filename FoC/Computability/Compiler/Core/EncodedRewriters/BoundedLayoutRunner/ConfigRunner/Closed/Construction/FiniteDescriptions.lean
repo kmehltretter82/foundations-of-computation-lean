@@ -74,6 +74,24 @@ theorem selectedProjectionFiniteDescriptionConstruction_of_emitter
     ⟨SeqViaCanonical parser emitter,
       selectedProjectionSpec_of_parser_emitter hparser hemits⟩
 
+/--
+Direct finite-machine leaf for selected projection as used by the
+equivalence-based phase graph.
+
+This valid-input emitter leaf is weaker than the public exact/right-shifted
+primitive chain: the existing complete layout parser supplies malformed-input
+closedness, while this machine only has to emit the selected simulator-layout
+code from a canonical parsed layout.
+-/
+theorem selectedProjectionEmitterConstruction_scaffold :
+    SelectedProjectionEmitterConstruction := by
+  sorry
+
+theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
+    SelectedProjectionFiniteDescriptionConstruction :=
+  selectedProjectionFiniteDescriptionConstruction_of_emitter
+    selectedProjectionEmitterConstruction_scaffold
+
 def SelectedMergeParserSpec
     (parser : MachineDescription) : Prop :=
   ReadySpec parser ∧

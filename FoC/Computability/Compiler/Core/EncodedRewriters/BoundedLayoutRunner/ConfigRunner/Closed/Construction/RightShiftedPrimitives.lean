@@ -746,11 +746,6 @@ theorem selectedProjectionPrimitiveRightShiftedConstruction_scaffold :
     SelectedProjectionPrimitiveRightShiftedConstruction := by
   exact selectedProjectionPrimitiveRightShiftedConstruction_core
 
-theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
-    SelectedProjectionFiniteDescriptionConstruction :=
-    selectedProjectionFiniteDescriptionConstruction_of_rightShifted
-    selectedProjectionPrimitiveRightShiftedConstruction_scaffold
-
 
 end BoundedLayoutRunner
 end EncodedRewriters
