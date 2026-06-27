@@ -1316,6 +1316,37 @@ theorem inputWithTrailingBlankPadding_contextLength_ge_input
       Tape.contextLength] <;>
     omega
 
+theorem inputWithTrailingBlankPadding_move_right_contextLength_ge_pred
+    (w : Word Bool) (padding : Nat) :
+    w.length + padding - 1 <=
+      Tape.contextLength
+        (Tape.move Direction.right
+          (inputWithTrailingBlankPadding w padding)) := by
+  cases w with
+  | nil =>
+      cases padding with
+      | zero =>
+          simp [inputWithTrailingBlankPadding, Tape.contextLength,
+            Tape.move, Tape.moveRight]
+      | succ padding =>
+          simp [inputWithTrailingBlankPadding, Tape.contextLength,
+            Tape.move, Tape.moveRight, List.replicate_succ]
+  | cons bit rest =>
+      cases rest with
+      | nil =>
+          cases padding with
+          | zero =>
+              simp [inputWithTrailingBlankPadding, Tape.contextLength,
+                Tape.move, Tape.moveRight]
+          | succ padding =>
+              simp [inputWithTrailingBlankPadding, Tape.contextLength,
+                Tape.move, Tape.moveRight, List.replicate_succ]
+              omega
+      | cons bit' rest =>
+          simp [inputWithTrailingBlankPadding, Tape.contextLength,
+            Tape.move, Tape.moveRight]
+          omega
+
 theorem inputWithTrailingBlankPadding_move_right_normalizedOutput
     (w : Word Bool) (padding : Nat) :
     Tape.normalizedOutput
@@ -1402,6 +1433,90 @@ theorem SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_input
           (SelectedProjectionOutputCode useAccept L))
         (ParsedLayoutBits L).length)
   exact Nat.le_trans hpad hmove
+
+namespace SelectedProjectionTailProjector
+
+theorem sourceFieldBits_length_le_parsedLayoutBits
+    (L : MachineDescription.DovetailLayout) :
+    (sourceFieldBits L).length <= (ParsedLayoutBits L).length := by
+  rw [← sourceSuffix_bits_eq_fields]
+  rw [ParsedLayoutBits,
+    dovetailLayout_encode_eq_transition_input_sourceSuffix]
+  have happend :
+      MachineDescription.encodeBoolWordAppend L.input
+          (sourceSuffix L) =
+        List.append
+          (MachineDescription.encodeBoolWordAppend L.input [])
+          (sourceSuffix L) := by
+    simpa using
+      encodeBoolWordAppend_append L.input ([] : Word MachineCodeSymbol)
+        (sourceSuffix L)
+  rw [happend]
+  change List.length
+        (MachineDescription.encodeCodeWordAsInput
+          (sourceSuffix L)) <=
+      List.length
+        (MachineDescription.encodeCodeWordAsInput
+          (List.append
+            (MachineCodeSymbol.transition ::
+              MachineDescription.encodeBoolWordAppend L.input [])
+            (sourceSuffix L)))
+  rw [MachineDescription.encodeCodeWordAsInput_append]
+  simp [MachineDescription.encodeCodeWordAsInput]
+  omega
+
+end SelectedProjectionTailProjector
+
+theorem SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_source
+    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    Tape.contextLength
+        (SelectedProjectionTailProjector.sourceTape L
+          ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
+            some)) <=
+      Tape.contextLength
+        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) := by
+  have hsourceLen :=
+    SelectedProjectionTailProjector.sourceFieldBits_length_le_parsedLayoutBits
+      L
+  have hsource :
+      Tape.contextLength
+          (SelectedProjectionTailProjector.sourceTape L
+            ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
+              some)) <=
+        (SelectedProjectionTailProjector.outputAllBits useAccept L).length +
+          (ParsedLayoutBits L).length - 1 := by
+    rcases SelectedProjectionTailProjector.stageNatBits_cons_cons L.stage with
+      ⟨first, second, rest, hstage⟩
+    cases useAccept <;>
+      rw [SelectedProjectionTailProjector.sourceTape,
+        SelectedProjectionTailProjector.sourceFieldBits,
+        SelectedProjectionTailProjector.outputAllBits,
+        SelectedProjectionTailProjector.outputPrefixBits,
+        SelectedProjectionTailProjector.outputBits_eq_fields,
+        SelectedProjectionTailProjector.outputFieldBits,
+        hstage]
+      <;> simp [SelectedProjectionTailProjector.sourceFieldBits,
+        SelectedProjectionTailProjector.selectedConfig,
+        SelectedProjectionTailProjector.selectedHit,
+        DovetailInitialLayoutInitializer.tapeAtCells, Tape.contextLength,
+        CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits,
+        CanonicalLayouts.DovetailLayoutScanner.tapeFieldBits,
+        CanonicalLayouts.DovetailLayoutScanner.cellListFieldBits,
+        CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+        CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+        List.length_append] at hsourceLen ⊢
+      <;> omega
+  have htarget :
+      (SelectedProjectionTailProjector.outputAllBits useAccept L).length +
+          (ParsedLayoutBits L).length - 1 <=
+        Tape.contextLength
+          (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) := by
+    simpa [SelectedProjectionEquivEmitterPaddedOutputTape,
+      selectedProjectionOutputBits_eq_tailProjector_outputAllBits] using
+      inputWithTrailingBlankPadding_move_right_contextLength_ge_pred
+        (SelectedProjectionTailProjector.outputAllBits useAccept L)
+        (ParsedLayoutBits L).length
+  exact Nat.le_trans hsource htarget
 
 def SelectedProjectionEquivPaddedEmitterSpec
     (useAccept : Bool)
