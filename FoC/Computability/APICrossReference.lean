@@ -199,6 +199,11 @@ controller machines.
   layout runner.
 * {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner`
   contains the closed primitive and assembly layer for one bounded layout step.
+  Selected projection is assembled through the finite-description
+  padded/equivalence route under
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.FiniteDescriptions`;
+  exact and right-shifted selected-projection wrappers are adapter-level
+  compatibility surfaces, not the active phase-construction path.
 
 These files are proof-internal compared with the semantic API, but they are
 not temporary. They are the finite-parser and exact-tape machinery needed for
@@ -431,17 +436,21 @@ order.
   plus the decoder-backed cancellation helpers from
   {module}`FoC.Computability.Compiler.Core.EncodingLemmas`, and should produce
   the exact checked handoff equation, not merely a decoded layout.
-* Selected-projection right-shifted leaf:
+* Selected-projection padded/equivalence leaves:
+  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionInputQuoterExactShapeConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionInputQuoterExactShapeConstruction_scaffold`
+  and
+  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionPaddedTailCleanupConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionPaddedTailCleanupConstruction_scaffold`
+  are the live selected-projection finite-machine obligations. They feed
+  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold`
+  through the checked-equivalence padded emitter route, which is the active
+  proof path used by bounded-runner phase assembly.
+  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveExactConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveExactConstruction_scaffold`
+  and
   {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveRightShiftedConstruction_core)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveRightShiftedConstruction_core`
-  is the current public scaffold for packaging selected projection as
-  {name (full := FoC.Computability.EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription)}`EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription`.
-  Its live construction leaf is now
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveExactConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveExactConstruction_scaffold`,
-  not the retired checked-projector scaffold path.
-  The phase runner now accepts
-  {name (full := FoC.Computability.Tape.Equiv)}`Tape.Equiv` at both projection
-  boundaries, so future refactors may replace this exact scaffold with a
-  phase-level projection contract if they preserve the simulator handoff shape.
+  are legacy adapter-level compatibility targets for public exact or
+  right-shifted primitive packaging. They may remain only when needed for that
+  adapter surface, and they should not be used on the route to the known
+  context-length shrink obstruction.
 * Config-runner selected-merge equivalence leaf:
   {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedMergeEquivPaddedEmitterConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedMergeEquivPaddedEmitterConstruction_scaffold`
   is the selected-merge finite-machine obligation. The former exact

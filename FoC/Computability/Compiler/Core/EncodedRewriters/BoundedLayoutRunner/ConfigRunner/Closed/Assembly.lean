@@ -84,6 +84,11 @@ theorem rejectProjectionPrimitiveClosedHandoffConstruction_scaffold :
       selectedProjectionPrimitiveClosedHandoffConstruction_scaffold
 
 /-!
+Selected projection enters phase assembly through the finite-description
+padded/equivalence route.  The exact/right-shifted selected-projection
+constructors remain above as public closed-handoff adapter glue; they are not
+used to build {lit}`configRunnerPhaseEquivConstruction_scaffold`.
+
 The exact/right-shifted selected-merge primitive scaffold chain is false: the
 merge phase intentionally preserves simulator-layout scratch structure that is
 only equivalent to the parsed dovetail layout.  The live config-runner scaffold

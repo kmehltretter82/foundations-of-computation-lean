@@ -1,10 +1,21 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.RightShiftedPrimitives
+import FoC.Computability.Compiler.Core.CommonGround.BoolWordQuoters
+import FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters
+import FoC.Computability.Compiler.Core.CommonGround.Identity
+import FoC.Computability.Compiler.Core.CommonGround.Layouts
+import FoC.Computability.Compiler.Core.EncodingLemmas
+import FoC.Computability.Compiler.Core.EncodedRewriters.RightShifted
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseRunner
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.SelectedProjectionTailProjector
 
 set_option doc.verso true
 
 /-!
 # Bounded runner parser and emitter adapters
+
+This module owns the neutral finite-description boundary for selected
+projection and selected merge.  The selected-projection route exposed here is
+the padded/equivalence route used by the phase runner; exact and right-shifted
+selected-projection wrappers are adapter-level compatibility surfaces.
 -/
 
 namespace FoC
@@ -14,6 +25,266 @@ open Languages
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
+
+def SelectedProjectionEmitterSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  ReadySpec emitter ∧
+    (forall L : MachineDescription.DovetailLayout,
+      emitter.HaltsWithTape
+        (ParsedLayoutBits L)
+        (SelectedProjectionOutputTape useAccept L)) ∧
+      forall L : MachineDescription.DovetailLayout,
+      forall T : Tape Bool,
+        emitter.HaltsWithTape (ParsedLayoutBits L) T ->
+          T = SelectedProjectionOutputTape useAccept L
+
+def SelectedProjectionCanonicalEmitterSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  CanonicalLayouts.EmitterSpec
+    ParsedLayoutBits
+    (SelectedProjectionOutputCode useAccept)
+    emitter
+
+theorem selectedProjectionEmitterSpec_iff_canonical
+    (useAccept : Bool) (emitter : MachineDescription) :
+    SelectedProjectionEmitterSpec useAccept emitter ↔
+      SelectedProjectionCanonicalEmitterSpec useAccept emitter := by
+  rfl
+
+def SelectedProjectionEmitterConstruction : Prop :=
+  forall useAccept : Bool,
+    exists emitter : MachineDescription,
+      SelectedProjectionEmitterSpec useAccept emitter
+
+def SelectedProjectionCheckedEmitterSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  ReadySpec emitter ∧
+    forall L : MachineDescription.DovetailLayout,
+      emitter.HaltsFromTape
+        (ParsedLayoutCheckedTape L)
+        (SelectedProjectionOutputTape useAccept L)
+
+def SelectedProjectionCheckedEmitterConstruction : Prop :=
+  forall useAccept : Bool,
+    exists emitter : MachineDescription,
+      SelectedProjectionCheckedEmitterSpec useAccept emitter
+
+theorem selectedProjectionOutputCode_true
+    (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionOutputCode true L =
+      MachineDescription.SimulatorLayout.encode
+        (AcceptSimulatorLayout L) := by
+  rfl
+
+theorem selectedProjectionOutputCode_false
+    (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionOutputCode false L =
+      MachineDescription.SimulatorLayout.encode
+        (RejectSimulatorLayout L) := by
+  rfl
+
+theorem selectedProjectionOutputTape_true
+    (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionOutputTape true L =
+      Tape.move Direction.right
+        (MachineDescription.SimulatorLayout.tape
+          (AcceptSimulatorLayout L)) := by
+  rfl
+
+theorem selectedProjectionOutputTape_false
+    (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionOutputTape false L =
+      Tape.move Direction.right
+        (MachineDescription.SimulatorLayout.tape
+          (RejectSimulatorLayout L)) := by
+  rfl
+
+theorem selectedProjectionOutputTape_eq_simulator_tape
+    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionOutputTape useAccept L =
+      Tape.move Direction.right
+        (MachineDescription.SimulatorLayout.tape
+          (SelectedProjectionSimulatorLayout useAccept L)) := by
+  cases useAccept <;>
+    rfl
+
+theorem simulatorLayoutRightOutput_contextLength_ge_input
+    (input : Word Bool) (stage : Nat)
+    (config : MachineDescription.Configuration) (hit : Bool) :
+    Tape.contextLength (Tape.input input) <=
+      Tape.contextLength
+        (Tape.move Direction.right
+          (MachineDescription.SimulatorLayout.tape
+            { input := input, stage := stage, config := config, hit := hit })) := by
+  cases input with
+  | nil =>
+      simp [MachineDescription.SimulatorLayout.tape,
+        MachineDescription.SimulatorLayout.asBoolInput,
+        MachineDescription.SimulatorLayout.encode,
+        MachineDescription.SimulatorLayout.encodeAppend,
+        MachineDescription.encodeCodeWordAsInput,
+        MachineDescription.encodeCodeSymbolAsInput,
+        MachineDescription.encodeBoolWordAppend,
+        MachineDescription.encodeCellListAppend,
+        MachineDescription.encodeNatAppend,
+        Tape.input, Tape.blank, Tape.move, Tape.moveRight,
+        Tape.contextLength]
+  | cons bit rest =>
+      have hboolLen :
+          (bit :: rest).length +
+              (MachineDescription.encodeNatAppend stage
+                (MachineDescription.encodeConfigurationAppend config
+                  (MachineDescription.encodeBoolAppend hit []))).length <=
+            (MachineDescription.encodeBoolWordAppend (bit :: rest)
+              (MachineDescription.encodeNatAppend stage
+                (MachineDescription.encodeConfigurationAppend config
+                  (MachineDescription.encodeBoolAppend hit [])))).length :=
+        encodeBoolWordAppend_length_ge (bit :: rest)
+          (MachineDescription.encodeNatAppend stage
+            (MachineDescription.encodeConfigurationAppend config
+              (MachineDescription.encodeBoolAppend hit [])))
+      simp at hboolLen
+      simp [MachineDescription.SimulatorLayout.tape,
+        MachineDescription.SimulatorLayout.asBoolInput,
+        MachineDescription.SimulatorLayout.encode,
+        MachineDescription.SimulatorLayout.encodeAppend,
+        MachineDescription.encodeCodeWordAsInput,
+        MachineDescription.encodeCodeSymbolAsInput,
+        Tape.input, Tape.move, Tape.moveRight, Tape.contextLength,
+        encodeCodeWordAsInput_length]
+      omega
+
+def SelectedProjectionConfig
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    MachineDescription.Configuration :=
+  if useAccept then L.acceptConfig else L.rejectConfig
+
+def SelectedProjectionHit
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) : Bool :=
+  if useAccept then L.acceptHit else L.rejectHit
+
+def SelectedProjectionOutputSuffix
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    Word MachineCodeSymbol :=
+  MachineDescription.encodeNatAppend L.stage
+    (MachineDescription.encodeConfigurationAppend
+      (SelectedProjectionConfig useAccept L)
+      (MachineDescription.encodeBoolAppend
+        (SelectedProjectionHit useAccept L) []))
+
+theorem selectedProjectionSimulatorLayout_eq
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionSimulatorLayout useAccept L =
+      { input := ParsedLayoutBits L
+        stage := L.stage
+        config := SelectedProjectionConfig useAccept L
+        hit := SelectedProjectionHit useAccept L } := by
+  cases useAccept <;>
+    rfl
+
+theorem selectedProjectionOutputTape_contextLength_ge_input
+    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    Tape.contextLength (Tape.input (ParsedLayoutBits L)) <=
+      Tape.contextLength (SelectedProjectionOutputTape useAccept L) := by
+  rw [selectedProjectionOutputTape_eq_simulator_tape,
+    selectedProjectionSimulatorLayout_eq]
+  exact simulatorLayoutRightOutput_contextLength_ge_input
+    (ParsedLayoutBits L) L.stage
+    (SelectedProjectionConfig useAccept L)
+    (SelectedProjectionHit useAccept L)
+
+theorem selectedProjectionOutputCode_eq_fields
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionOutputCode useAccept L =
+      MachineCodeSymbol.header ::
+        MachineDescription.encodeBoolWordAppend (ParsedLayoutBits L)
+          (SelectedProjectionOutputSuffix useAccept L) := by
+  rw [SelectedProjectionOutputCode,
+    selectedProjectionSimulatorLayout_eq]
+  rfl
+
+theorem selectedProjectionOutputSuffix_eq_fields
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    SelectedProjectionOutputSuffix useAccept L =
+      MachineDescription.encodeNatAppend L.stage
+        (MachineDescription.encodeConfigurationAppend
+          (SelectedProjectionConfig useAccept L)
+          (MachineDescription.encodeBoolAppend
+            (SelectedProjectionHit useAccept L) [])) := by
+  rfl
+
+theorem selectedProjectionOutputBits_eq_tailProjector_outputAllBits
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    MachineDescription.encodeCodeWordAsInput
+        (SelectedProjectionOutputCode useAccept L) =
+      SelectedProjectionTailProjector.outputAllBits useAccept L := by
+  simpa [SelectedProjectionOutputCode] using
+    SelectedProjectionTailProjector.simulatorLayout_asBoolInput_eq_outputAllBits
+      useAccept L
+
+theorem selectedProjectionOutputBits_eq_quoter_bits
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout) :
+    exists b : Bool,
+    exists rest : Word Bool,
+      ParsedLayoutBits L = b :: rest ∧
+        MachineDescription.encodeCodeWordAsInput
+            (SelectedProjectionOutputCode useAccept L) =
+          List.append
+            (MachineDescription.encodeCodeSymbolAsInput
+              MachineCodeSymbol.header)
+            (CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits
+                b rest (SelectedProjectionOutputSuffix useAccept L)) := by
+  rcases parsedLayoutBits_eq_false_false_tail L with
+    ⟨tail, htail⟩
+  refine ⟨false, false :: tail, htail, ?_⟩
+  rw [selectedProjectionOutputCode_eq_fields, htail]
+  simp [MachineDescription.encodeCodeWordAsInput,
+    CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits_eq]
+
+def SelectedProjectionInputQuoterSpec
+    (quoter : MachineDescription) : Prop :=
+  quoter.SubroutineReady ∧
+    forall L : MachineDescription.DovetailLayout,
+      quoter.HaltsFromTape
+        (ParsedLayoutCheckedTape L)
+        (SelectedProjectionTailProjector.sourceTape L
+          ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
+            some))
+
+def SelectedProjectionInputQuoterConstruction : Prop :=
+  exists quoter : MachineDescription,
+    SelectedProjectionInputQuoterSpec quoter
+
+def AcceptProjectionCheckedEmitterConstruction : Prop :=
+  exists emitter : MachineDescription,
+    SelectedProjectionCheckedEmitterSpec true emitter
+
+def RejectProjectionCheckedEmitterConstruction : Prop :=
+  exists emitter : MachineDescription,
+    SelectedProjectionCheckedEmitterSpec false emitter
+
+def SelectedProjectionCheckedEmitterSideConstruction : Prop :=
+  AcceptProjectionCheckedEmitterConstruction ∧
+    RejectProjectionCheckedEmitterConstruction
+
+theorem selectedProjectionCheckedEmitterConstruction_of_sides
+    (h : SelectedProjectionCheckedEmitterSideConstruction) :
+    SelectedProjectionCheckedEmitterConstruction := by
+  intro useAccept
+  cases useAccept
+  · exact h.right
+  · exact h.left
 
 def SelectedProjectionEquivEmitterSpec
     (useAccept : Bool)
