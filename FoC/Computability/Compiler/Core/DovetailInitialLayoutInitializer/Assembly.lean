@@ -17,6 +17,16 @@ open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
+private abbrev TPFACWR := TransitionPrefixedFirstBitAppendCodeWordReturnDescription
+private abbrev TPFANR := TransitionPrefixedFirstBitAppendNatReturnDescription
+private abbrev MPANR := MarkedPrefixAppendNatReturnDescription
+private abbrev RFB := RestoreFirstBitTaggedBrancherDescription
+private abbrev AIHD := AppendInputTapeHeadDispatcherDescription
+private abbrev AIHR := AppendInputTapeHeadRouterDescription
+private abbrev SIMS := StageInputMarkedScannerDescription
+private abbrev SIMC := StageInputMarkedCoreDescription
+private abbrev SIR := StageInputRecognizerDescription
+
 def finalBoolFlagsCode :
     Word MachineCodeSymbol :=
   encodeBoolAppend false
@@ -31,12 +41,13 @@ theorem finalBoolFlagsCode_ne_nil :
 
 def AppendFinalBoolFlagsReturnDescription :
     MachineDescription :=
-  TransitionPrefixedFirstBitAppendCodeWordReturnDescription
-    finalBoolFlagsCode
+  TPFACWR finalBoolFlagsCode
+
+private abbrev AFFR := AppendFinalBoolFlagsReturnDescription
 
 theorem
     appendFinalBoolFlagsReturnDescription_subroutineReady :
-    AppendFinalBoolFlagsReturnDescription.SubroutineReady := by
+    AFFR.SubroutineReady := by
   exact
     transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
       finalBoolFlagsCode
@@ -46,15 +57,16 @@ def AppendSecondInputTapeAndFlagsDescription
     (copier : MachineDescription) : MachineDescription :=
   seqSubroutine
     copier
-    AppendFinalBoolFlagsReturnDescription
+    AFFR
     Direction.left
+
+private abbrev ASITF := AppendSecondInputTapeAndFlagsDescription
 
 theorem
     appendSecondInputTapeAndFlagsDescription_subroutineReady
     {copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier) :
-    (AppendSecondInputTapeAndFlagsDescription
-      copier).SubroutineReady :=
+    (ASITF copier).SubroutineReady :=
   seqSubroutine_subroutineReady
     hcopier.left
     appendFinalBoolFlagsReturnDescription_subroutineReady
@@ -62,17 +74,17 @@ theorem
 def AppendRejectThenInputTapeAndFlagsDescription
     (reject copier : MachineDescription) : MachineDescription :=
   seqSubroutine
-    (TransitionPrefixedFirstBitAppendNatReturnDescription
-      reject.start)
-    (AppendSecondInputTapeAndFlagsDescription copier)
+    (TPFANR reject.start)
+    (ASITF copier)
     Direction.left
+
+private abbrev ARTIF := AppendRejectThenInputTapeAndFlagsDescription
 
 theorem
     appendRejectThenInputTapeAndFlagsDescription_subroutineReady
     {reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier) :
-    (AppendRejectThenInputTapeAndFlagsDescription
-      reject copier).SubroutineReady :=
+    (ARTIF reject copier).SubroutineReady :=
   seqSubroutine_subroutineReady
     (transitionPrefixedFirstBitAppendNatReturnDescription_subroutineReady
       reject.start)
@@ -83,15 +95,16 @@ def AppendFirstInputTapeThenRejectDescription
     (reject copier : MachineDescription) : MachineDescription :=
   seqSubroutine
     copier
-    (AppendRejectThenInputTapeAndFlagsDescription reject copier)
+    (ARTIF reject copier)
     Direction.left
+
+private abbrev AFITR := AppendFirstInputTapeThenRejectDescription
 
 theorem
     appendFirstInputTapeThenRejectDescription_subroutineReady
     {reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier) :
-    (AppendFirstInputTapeThenRejectDescription
-      reject copier).SubroutineReady :=
+    (AFITR reject copier).SubroutineReady :=
   seqSubroutine_subroutineReady
     hcopier.left
     (appendRejectThenInputTapeAndFlagsDescription_subroutineReady
@@ -100,16 +113,17 @@ theorem
 def DescriptionWithCopier
     (accept reject copier : MachineDescription) : MachineDescription :=
   seqSubroutine
-    (MarkedPrefixAppendNatReturnDescription accept.start)
-    (AppendFirstInputTapeThenRejectDescription reject copier)
+    (MPANR accept.start)
+    (AFITR reject copier)
     Direction.left
+
+private abbrev DWC := DescriptionWithCopier
 
 theorem
     descriptionWithCopier_subroutineReady
     {accept reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier) :
-    (DescriptionWithCopier
-      accept reject copier).SubroutineReady :=
+    (DWC accept reject copier).SubroutineReady :=
   seqSubroutine_subroutineReady
     (markedPrefixAppendNatReturnDescription_subroutineReady
       accept.start)
@@ -122,11 +136,9 @@ theorem
     (hcopier : AppendInputTapeReturnSpec copier)
     (w : Word Bool) (stage : Nat) (suffixBits : Word Bool) :
     exists steps : Nat,
-      (AppendSecondInputTapeAndFlagsDescription
-        copier).runConfig steps
+      (ASITF copier).runConfig steps
           { state :=
-              (AppendSecondInputTapeAndFlagsDescription
-                copier).start
+              (ASITF copier).start
             tape :=
               tapeAtCells []
                 (some false :: some false ::
@@ -134,8 +146,7 @@ theorem
                     (List.append (stageInputBits w stage)
                       suffixBits)).map some)) } =
         { state :=
-            (AppendSecondInputTapeAndFlagsDescription
-              copier).halt
+            (ASITF copier).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -146,7 +157,7 @@ theorem
                         (encodeCodeWordAsInput
                           finalBoolFlagsCode))))).map some)) } := by
   let A := copier
-  let B := AppendFinalBoolFlagsReturnDescription
+  let B := AFFR
   let copiedSuffix :=
     List.append (stageInputBits w stage)
       (List.append suffixBits (inputTapeBits w))
@@ -209,11 +220,9 @@ theorem
     (hcopier : AppendInputTapeReturnSpec copier)
     (w : Word Bool) (stage : Nat) (suffixBits : Word Bool) :
     exists steps : Nat,
-      (AppendRejectThenInputTapeAndFlagsDescription
-        reject copier).runConfig steps
+      (ARTIF reject copier).runConfig steps
           { state :=
-              (AppendRejectThenInputTapeAndFlagsDescription
-                reject copier).start
+              (ARTIF reject copier).start
             tape :=
               tapeAtCells []
                 (some false :: some false ::
@@ -221,8 +230,7 @@ theorem
                     (List.append (stageInputBits w stage)
                       suffixBits)).map some)) } =
         { state :=
-            (AppendRejectThenInputTapeAndFlagsDescription
-              reject copier).halt
+            (ARTIF reject copier).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -233,10 +241,8 @@ theorem
                         (List.append (inputTapeBits w)
                           (encodeCodeWordAsInput
                             finalBoolFlagsCode)))))).map some)) } := by
-  let A :=
-    TransitionPrefixedFirstBitAppendNatReturnDescription
-      reject.start
-  let B := AppendSecondInputTapeAndFlagsDescription copier
+  let A := TPFANR reject.start
+  let B := ASITF copier
   let rejectSuffix :=
     List.append (stageInputBits w stage)
       (List.append suffixBits (natBits reject.start))
@@ -308,11 +314,9 @@ theorem
     (hcopier : AppendInputTapeReturnSpec copier)
     (w : Word Bool) (stage : Nat) (suffixBits : Word Bool) :
     exists steps : Nat,
-      (AppendFirstInputTapeThenRejectDescription
-        reject copier).runConfig steps
+      (AFITR reject copier).runConfig steps
           { state :=
-              (AppendFirstInputTapeThenRejectDescription
-                reject copier).start
+              (AFITR reject copier).start
             tape :=
               tapeAtCells []
                 (some false :: some false ::
@@ -320,8 +324,7 @@ theorem
                     (List.append (stageInputBits w stage)
                       suffixBits)).map some)) } =
         { state :=
-            (AppendFirstInputTapeThenRejectDescription
-              reject copier).halt
+            (AFITR reject copier).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -334,8 +337,7 @@ theorem
                             (encodeCodeWordAsInput
                               finalBoolFlagsCode))))))).map some)) } := by
   let A := copier
-  let B := AppendRejectThenInputTapeAndFlagsDescription
-    reject copier
+  let B := ARTIF reject copier
   let firstTapeSuffix :=
     List.append (stageInputBits w stage)
       (List.append suffixBits (inputTapeBits w))
@@ -400,15 +402,12 @@ theorem
     (hcopier : AppendInputTapeReturnSpec copier)
     (w : Word Bool) (stage : Nat) :
     exists steps : Nat,
-      (DescriptionWithCopier
-        accept reject copier).runConfig steps
-          ((DescriptionWithCopier
-            accept reject copier).initial
+      (DWC accept reject copier).runConfig steps
+          ((DWC accept reject copier).initial
             (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w stage))) =
         { state :=
-            (DescriptionWithCopier
-              accept reject copier).halt
+            (DWC accept reject copier).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -420,9 +419,8 @@ theorem
                           (List.append (inputTapeBits w)
                             (encodeCodeWordAsInput
                               finalBoolFlagsCode))))))).map some)) } := by
-  let A := MarkedPrefixAppendNatReturnDescription accept.start
-  let B := AppendFirstInputTapeThenRejectDescription
-    reject copier
+  let A := MPANR accept.start
+  let B := AFITR reject copier
   let acceptSuffix :=
     List.append (stageInputBits w stage)
       (natBits accept.start)
@@ -493,15 +491,12 @@ theorem
     (hcopier : AppendInputTapeReturnSpec copier)
     (w : Word Bool) (stage : Nat) :
     exists steps : Nat,
-      (DescriptionWithCopier
-        accept reject copier).runConfig steps
+      (DWC accept reject copier).runConfig steps
           { state :=
-              (DescriptionWithCopier
-                accept reject copier).start
+              (DWC accept reject copier).start
             tape := stageInputCheckedInputTape w stage } =
         { state :=
-            (DescriptionWithCopier
-              accept reject copier).halt
+            (DWC accept reject copier).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -513,9 +508,8 @@ theorem
                           (List.append (inputTapeBits w)
                             (encodeCodeWordAsInput
                               finalBoolFlagsCode))))))).map some)) } := by
-  let A := MarkedPrefixAppendNatReturnDescription accept.start
-  let B := AppendFirstInputTapeThenRejectDescription
-    reject copier
+  let A := MPANR accept.start
+  let B := AFITR reject copier
   let acceptSuffix :=
     List.append (stageInputBits w stage)
       (natBits accept.start)
@@ -1075,8 +1069,7 @@ theorem
     (hcopier : AppendInputTapeReturnSpec copier) :
     ForwardSpec
       accept reject
-      (DescriptionWithCopier
-        accept reject copier) := by
+      (DWC accept reject copier) := by
   intro w stage
   rcases
       descriptionWithCopier_run_bits
@@ -1124,8 +1117,7 @@ theorem appendInputTapeHeadTaggedBrancher_realizer :
     AppendKnownHeadInputTapeSecondBitReturnDescription
       true rightCopier
   let brancher :=
-    RestoreFirstBitTaggedBrancherDescription
-      blankBranch falseBranch trueBranch
+    RFB blankBranch falseBranch trueBranch
   have hblankReady : blankBranch.SubroutineReady := by
     exact appendEmptyInputTapeSecondBitReturnDescription_subroutineReady
   have hfalseReady : falseBranch.SubroutineReady := by
@@ -1267,8 +1259,7 @@ theorem appendInputTapeHeadDispatcher_realizer :
         rightCopier hrightCopier with
     ⟨brancher, hbrancher⟩
   exact
-    ⟨AppendInputTapeHeadDispatcherDescription
-        AppendInputTapeHeadRouterDescription brancher,
+    ⟨AIHD AIHR brancher,
       appendInputTapeHeadDispatcherSpec_of_router_brancher
         appendInputTapeHeadRouterDescription_spec hbrancher⟩
 
@@ -1288,7 +1279,7 @@ theorem appendInputTapeReturnSpec_realizer :
 theorem stageInputMarkedScanner_realizer :
     StageInputMarkedScannerConstruction := by
   exact
-    ⟨StageInputMarkedScannerDescription,
+    ⟨SIMS,
       stageInputMarkedScannerDescription_spec⟩
 
 theorem stageInputMarkedCore_realizer :
@@ -1296,7 +1287,7 @@ theorem stageInputMarkedCore_realizer :
   rcases stageInputMarkedScanner_realizer with
     ⟨scanner, hscanner⟩
   exact
-    ⟨StageInputMarkedCoreDescription scanner,
+    ⟨SIMC scanner,
       stageInputMarkedCoreSpec_of_markedScanner hscanner⟩
 
 theorem stageInputRecognizer_realizer :
@@ -1304,7 +1295,7 @@ theorem stageInputRecognizer_realizer :
   rcases stageInputMarkedCore_realizer with
     ⟨markedCore, hmarkedCore⟩
   exact
-    ⟨StageInputRecognizerDescription markedCore,
+    ⟨SIR markedCore,
       stageInputRecognizerSpec_of_markedCore hmarkedCore⟩
 
 theorem stageInputIdentityClosedHandoff_realizer :

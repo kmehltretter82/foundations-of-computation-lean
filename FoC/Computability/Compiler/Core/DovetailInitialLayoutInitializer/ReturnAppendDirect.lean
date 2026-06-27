@@ -16,6 +16,8 @@ open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
+private abbrev ITCD := InputTapeRightCellsDirectCopierDescription
+
 def RightCellsCopierStartHandoffDescription :
     MachineDescription where
   stateCount := 8
@@ -38,33 +40,35 @@ def RightCellsCopierStartHandoffDescription :
         6 (some true) (some true) Direction.right 7
     ]
 
+private abbrev RCSH := RightCellsCopierStartHandoffDescription
+
 theorem rightCellsCopierStartHandoffDescription_wellFormed :
-    RightCellsCopierStartHandoffDescription.WellFormed := by
+    RCSH.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := RightCellsCopierStartHandoffDescription.transitions)
+      (l := RCSH.transitions)
       (stateCount :=
-        RightCellsCopierStartHandoffDescription.stateCount)
+        RCSH.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := RightCellsCopierStartHandoffDescription.transitions)
+      (l := RCSH.transitions)
       (by native_decide)
 
 theorem rightCellsCopierStartHandoffDescription_haltTransitionFree :
-    RightCellsCopierStartHandoffDescription.HaltTransitionFree :=
+    RCSH.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := RightCellsCopierStartHandoffDescription.transitions)
-    (state := RightCellsCopierStartHandoffDescription.halt)
+    (l := RCSH.transitions)
+    (state := RCSH.halt)
     (by native_decide)
 
 theorem rightCellsCopierStartHandoffDescription_subroutineReady :
-    RightCellsCopierStartHandoffDescription.SubroutineReady :=
+    RCSH.SubroutineReady :=
   ⟨rightCellsCopierStartHandoffDescription_wellFormed,
     rightCellsCopierStartHandoffDescription_haltTransitionFree⟩
 
 theorem rightCellsCopierStartHandoffDescription_run
     (tail : List (Option Bool)) :
-    RightCellsCopierStartHandoffDescription.runConfig 7
+    RCSH.runConfig 7
         (config 0 []
           (List.append
             [some false, some false, some false, some true,
@@ -108,7 +112,7 @@ theorem
     (n : Nat) (leftOfMarker : List (Option Bool))
     (pre sourceTail output : Word Bool) :
     exists steps : Nat,
-      InputTapeRightCellsDirectCopierDescription.runConfig steps
+      ITCD.runConfig steps
           (config 0
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker))
@@ -209,7 +213,7 @@ theorem
 theorem
     inputTapeRightCellsDirectCopierDescription_step_scan30
     (leftRev : List (Option Bool)) (bit : Bool) (rest : Word Bool) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 30 leftRev (some bit :: rest.map some)) =
       some (config 30 (some bit :: leftRev)
         (rest.map some)) := by
@@ -224,7 +228,7 @@ theorem
 theorem
     inputTapeRightCellsDirectCopierDescription_run_scan30
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
-    InputTapeRightCellsDirectCopierDescription.runConfig
+    ITCD.runConfig
         remaining.length
         (config 30 leftRev (remaining.map some)) =
       config 30
@@ -241,7 +245,7 @@ theorem
 theorem
     inputTapeRightCellsDirectCopierDescription_run_write_done
     (leftRev : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.runConfig 4
+    ITCD.runConfig 4
         (config 30 leftRev []) =
       config 34
         (List.append [some false, some false] leftRev)
@@ -257,7 +261,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_step_return34
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (leftBit current : Bool) (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 34
           (List.append (some leftBit :: preRev.map some)
             (none :: leftOfMarker))
@@ -276,7 +280,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_run_return34
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (current : Bool) (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.runConfig
+    ITCD.runConfig
         (preRev.length + 2)
         (config 34
           (List.append (preRev.map some) (none :: leftOfMarker))
@@ -305,7 +309,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_step_advance35
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 35 leftRev (some bit :: right)) =
       some (config 36 (some bit :: leftRev) right) := by
   cases bit <;> cases right <;>
@@ -319,7 +323,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_step_advance36
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 36 leftRev (some bit :: right)) =
       some (config 37 (some bit :: leftRev) right) := by
   cases bit <;> cases right <;>
@@ -333,7 +337,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_step_advance37
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 37 leftRev (some bit :: right)) =
       some (config 38 (some bit :: leftRev) right) := by
   cases bit <;> cases right <;>
@@ -347,7 +351,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_step_advance38
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 38 leftRev (some bit :: right)) =
       some (config 39 (some bit :: leftRev) right) := by
   cases bit <;> cases right <;>
@@ -361,7 +365,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_step_advance39
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 39 leftRev (some bit :: right)) =
       some (config 40 (some bit :: leftRev) right) := by
   cases bit <;> cases right <;>
@@ -375,7 +379,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_step_advance40
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 40 leftRev (some bit :: right)) =
       some (config 41 (some bit :: leftRev) right) := by
   cases bit <;> cases right <;>
@@ -389,7 +393,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_step_advance41
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 41 leftRev (some bit :: right)) =
       some (config 10 (some bit :: leftRev) right) := by
   cases bit <;> cases right <;>
@@ -403,7 +407,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_run_advance35_to10
     (leftRev : List (Option Bool)) (b1 b2 b3 b4 b5 b6 b7 : Bool)
     (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.runConfig 7
+    ITCD.runConfig 7
         (config 35 leftRev
           (some b1 :: some b2 :: some b3 :: some b4 :: some b5 ::
             some b6 :: some b7 :: right)) =
@@ -432,7 +436,7 @@ theorem
     (pre sourceTail output : Word Bool)
     (h0 h1 h2 h3 : Bool) :
     exists steps : Nat,
-      InputTapeRightCellsDirectCopierDescription.runConfig steps
+      ITCD.runConfig steps
           (config 0
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker))
@@ -467,7 +471,7 @@ theorem
   let returnLeft : List (Option Bool) :=
     List.append (pre.reverse.map some) (none :: leftOfMarker)
   have hprefix :
-      InputTapeRightCellsDirectCopierDescription.runConfig 4
+      ITCD.runConfig 4
           (config 0
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker))
@@ -542,7 +546,7 @@ theorem
 theorem
     inputTapeRightCellsDirectCopierDescription_step_scan60
     (leftRev : List (Option Bool)) (bit : Bool) (rest : Word Bool) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 60 leftRev (some bit :: rest.map some)) =
       some (config 60 (some bit :: leftRev)
         (rest.map some)) := by
@@ -557,7 +561,7 @@ theorem
 theorem
     inputTapeRightCellsDirectCopierDescription_run_scan60
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
-    InputTapeRightCellsDirectCopierDescription.runConfig
+    ITCD.runConfig
         remaining.length
         (config 60 leftRev (remaining.map some)) =
       config 60
@@ -574,7 +578,7 @@ theorem
 theorem
     inputTapeRightCellsDirectCopierDescription_run_write_zero
     (leftRev : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.runConfig 4
+    ITCD.runConfig 4
         (config 60 leftRev []) =
       config 64
         (List.append [some true, some false] leftRev)
@@ -590,7 +594,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_step_return64
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (leftBit current : Bool) (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 64
           (List.append (some leftBit :: preRev.map some)
             (none :: leftOfMarker))
@@ -609,7 +613,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_run_return64
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (current : Bool) (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.runConfig
+    ITCD.runConfig
         (preRev.length + 2)
         (config 64
           (List.append (preRev.map some) (none :: leftOfMarker))
@@ -638,7 +642,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_run_advance65_to10
     (leftRev : List (Option Bool)) (b1 b2 b3 : Bool)
     (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.runConfig 3
+    ITCD.runConfig 3
         (config 65 leftRev
           (some b1 :: some b2 :: some b3 :: right)) =
       config 10
@@ -656,7 +660,7 @@ theorem
     (leftOfMarker : List (Option Bool))
     (pre sourceTail output : Word Bool) :
     exists steps : Nat,
-      InputTapeRightCellsDirectCopierDescription.runConfig steps
+      ITCD.runConfig steps
           (config 10
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker))
@@ -686,7 +690,7 @@ theorem
   let returnLeft : List (Option Bool) :=
     List.append (pre.reverse.map some) (none :: leftOfMarker)
   have hprefix :
-      InputTapeRightCellsDirectCopierDescription.runConfig 6
+      ITCD.runConfig 6
           (config 10
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker))
@@ -759,7 +763,7 @@ theorem
 theorem
     inputTapeRightCellsDirectCopierDescription_step_scan70
     (leftRev : List (Option Bool)) (bit : Bool) (rest : Word Bool) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 70 leftRev (some bit :: rest.map some)) =
       some (config 70 (some bit :: leftRev)
         (rest.map some)) := by
@@ -774,7 +778,7 @@ theorem
 theorem
     inputTapeRightCellsDirectCopierDescription_run_scan70
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
-    InputTapeRightCellsDirectCopierDescription.runConfig
+    ITCD.runConfig
         remaining.length
         (config 70 leftRev (remaining.map some)) =
       config 70
@@ -791,7 +795,7 @@ theorem
 theorem
     inputTapeRightCellsDirectCopierDescription_run_write_one
     (leftRev : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.runConfig 4
+    ITCD.runConfig 4
         (config 70 leftRev []) =
       config 74
         (List.append [some true, some false] leftRev)
@@ -807,7 +811,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_step_return74
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (leftBit current : Bool) (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 74
           (List.append (some leftBit :: preRev.map some)
             (none :: leftOfMarker))
@@ -826,7 +830,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_run_return74
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (current : Bool) (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.runConfig
+    ITCD.runConfig
         (preRev.length + 2)
         (config 74
           (List.append (preRev.map some) (none :: leftOfMarker))
@@ -855,7 +859,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_run_advance75_to10
     (leftRev : List (Option Bool)) (b1 b2 b3 : Bool)
     (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.runConfig 3
+    ITCD.runConfig 3
         (config 75 leftRev
           (some b1 :: some b2 :: some b3 :: right)) =
       config 10
@@ -873,7 +877,7 @@ theorem
     (leftOfMarker : List (Option Bool))
     (pre sourceTail output : Word Bool) :
     exists steps : Nat,
-      InputTapeRightCellsDirectCopierDescription.runConfig steps
+      ITCD.runConfig steps
           (config 10
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker))
@@ -903,7 +907,7 @@ theorem
   let returnLeft : List (Option Bool) :=
     List.append (pre.reverse.map some) (none :: leftOfMarker)
   have hprefix :
-      InputTapeRightCellsDirectCopierDescription.runConfig 6
+      ITCD.runConfig 6
           (config 10
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker))
@@ -977,7 +981,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_step_return80
     (preRev : Word Bool) (leftBit current : Bool)
     (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 80
           (List.append (some leftBit :: preRev.map some)
             [none, some false])
@@ -996,7 +1000,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_run_return80_to99
     (preRev : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.runConfig
+    ITCD.runConfig
         (preRev.length + 3)
         (config 80
           (List.append (preRev.map some) [none, some false])
@@ -1025,7 +1029,7 @@ theorem
 theorem
     inputTapeRightCellsDirectCopierDescription_run_stop_at_nat_prefix
     (pre tail : Word Bool) :
-    InputTapeRightCellsDirectCopierDescription.runConfig
+    ITCD.runConfig
         (pre.length + 5)
         (config 10
           (List.append (pre.reverse.map some) [none, some false])
@@ -1038,7 +1042,7 @@ theorem
     omega]
   rw [runConfig_add]
   have hprefix :
-      InputTapeRightCellsDirectCopierDescription.runConfig 2
+      ITCD.runConfig 2
           (config 10
             (List.append (pre.reverse.map some) [none, some false])
             ((false :: false :: tail).map some)) =
@@ -1110,7 +1114,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_run_copy_cells
     (cells : Word Bool) (pre sourceTail output : Word Bool) :
     exists steps : Nat,
-      InputTapeRightCellsDirectCopierDescription.runConfig steps
+      ITCD.runConfig steps
           (config 10
             (List.append (pre.reverse.map some) [none, some false])
             ((List.append
@@ -1299,7 +1303,7 @@ def inputTapeRightCellsDirectCopierNatBits (n : Nat) :
 theorem
     inputTapeRightCellsDirectCopierDescription_run_stop_at_natBits
     (pre : Word Bool) (stage : Nat) (tail : Word Bool) :
-    InputTapeRightCellsDirectCopierDescription.runConfig
+    ITCD.runConfig
         (pre.length + 5)
         (config 10
           (List.append (pre.reverse.map some) [none, some false])
@@ -1371,7 +1375,7 @@ theorem
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffixBits : Word Bool) :
     exists steps : Nat,
-      InputTapeRightCellsDirectCopierDescription.runConfig steps
+      ITCD.runConfig steps
           (config 0
             (List.append
               (inputTapeRightCellsDirectCopierPreludeBits.reverse.map some)
@@ -1404,7 +1408,7 @@ theorem
     ⟨tickSteps, hticks⟩
   have hdoneExists :
       exists steps : Nat,
-        InputTapeRightCellsDirectCopierDescription.runConfig steps
+        ITCD.runConfig steps
             (config 0
               (List.append ((List.append pre0 tickBits).reverse.map some)
                 [none, some false])
@@ -1531,8 +1535,8 @@ theorem
 
 def InputTapeRightCellsDirectReturnDescription : MachineDescription :=
   seqSubroutine
-    RightCellsCopierStartHandoffDescription
-    InputTapeRightCellsDirectCopierDescription
+    RCSH
+    ITCD
     Direction.right
 
 theorem
@@ -1564,8 +1568,8 @@ theorem
               (some false ::
                 ((inputTapeRightCellsDirectCopierCoreOutputBits
                   b rest stage suffixBits).map some)) } := by
-  let A := RightCellsCopierStartHandoffDescription
-  let B := InputTapeRightCellsDirectCopierDescription
+  let A := RCSH
+  let B := ITCD
   let sourceBits :=
     inputTapeRightCellsDirectCopierCoreSourceBits
       b rest stage suffixBits

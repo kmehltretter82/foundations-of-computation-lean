@@ -94,34 +94,36 @@ def AppendInputTapeHeadRouterDescription :
         25 (some false) (some true) Direction.right 31
     ]
 
+private abbrev AIHR := AppendInputTapeHeadRouterDescription
+
 theorem appendInputTapeHeadRouterDescription_wellFormed :
-    AppendInputTapeHeadRouterDescription.WellFormed := by
+    AIHR.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := AppendInputTapeHeadRouterDescription.transitions)
+      (l := AIHR.transitions)
       (stateCount :=
-        AppendInputTapeHeadRouterDescription.stateCount)
+        AIHR.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := AppendInputTapeHeadRouterDescription.transitions)
+      (l := AIHR.transitions)
       (by native_decide)
 
 theorem appendInputTapeHeadRouterDescription_haltTransitionFree :
-    AppendInputTapeHeadRouterDescription.HaltTransitionFree :=
+    AIHR.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := AppendInputTapeHeadRouterDescription.transitions)
-    (state := AppendInputTapeHeadRouterDescription.halt)
+    (l := AIHR.transitions)
+    (state := AIHR.halt)
     (by native_decide)
 
 theorem appendInputTapeHeadRouterDescription_subroutineReady :
-    AppendInputTapeHeadRouterDescription.SubroutineReady :=
+    AIHR.SubroutineReady :=
   ⟨appendInputTapeHeadRouterDescription_wellFormed,
     appendInputTapeHeadRouterDescription_haltTransitionFree⟩
 
 theorem appendInputTapeHeadRouterDescription_run_return20
     (beforeRevBits : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
-    AppendInputTapeHeadRouterDescription.runConfig
+    AIHR.runConfig
         (beforeRevBits.length + 3)
         (config 20
           (List.append (beforeRevBits.map some)
@@ -161,7 +163,7 @@ theorem appendInputTapeHeadRouterDescription_run_return20
 theorem appendInputTapeHeadRouterDescription_run_return21
     (beforeRevBits : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
-    AppendInputTapeHeadRouterDescription.runConfig
+    AIHR.runConfig
         (beforeRevBits.length + 3)
         (config 21
           (List.append (beforeRevBits.map some)
@@ -201,7 +203,7 @@ theorem appendInputTapeHeadRouterDescription_run_return21
 theorem appendInputTapeHeadRouterDescription_run_return22
     (beforeRevBits : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
-    AppendInputTapeHeadRouterDescription.runConfig
+    AIHR.runConfig
         (beforeRevBits.length + 3)
         (config 22
           (List.append (beforeRevBits.map some)
@@ -241,7 +243,7 @@ theorem appendInputTapeHeadRouterDescription_run_return22
 
 theorem appendInputTapeHeadRouterDescription_run_state8_false
     (n : Nat) (beforeRevBits tailBits : Word Bool) :
-    AppendInputTapeHeadRouterDescription.runConfig
+    AIHR.runConfig
         (beforeRevBits.length + 8 * n + 15)
         (config 8
           (List.append (beforeRevBits.map some)
@@ -258,7 +260,7 @@ theorem appendInputTapeHeadRouterDescription_run_state8_false
       let nextBefore : Word Bool :=
         List.append [false, true, true, false, false] beforeRevBits
       have hprefix :
-          AppendInputTapeHeadRouterDescription.runConfig 7
+          AIHR.runConfig 7
               (config 8
                 (List.append (beforeRevBits.map some)
                   [some false, none])
@@ -289,7 +291,7 @@ theorem appendInputTapeHeadRouterDescription_run_state8_false
       let nextBefore : Word Bool :=
         List.append [false, true, false, false] beforeRevBits
       have hprefix :
-          AppendInputTapeHeadRouterDescription.runConfig 4
+          AIHR.runConfig 4
               (config 8
                 (List.append (beforeRevBits.map some)
                   [some false, none])
@@ -324,7 +326,7 @@ theorem appendInputTapeHeadRouterDescription_run_state8_false
 
 theorem appendInputTapeHeadRouterDescription_run_state8_true
     (n : Nat) (beforeRevBits tailBits : Word Bool) :
-    AppendInputTapeHeadRouterDescription.runConfig
+    AIHR.runConfig
         (beforeRevBits.length + 8 * n + 15)
         (config 8
           (List.append (beforeRevBits.map some)
@@ -341,7 +343,7 @@ theorem appendInputTapeHeadRouterDescription_run_state8_true
       let nextBefore : Word Bool :=
         List.append [false, true, true, false, false] beforeRevBits
       have hprefix :
-          AppendInputTapeHeadRouterDescription.runConfig 7
+          AIHR.runConfig 7
               (config 8
                 (List.append (beforeRevBits.map some)
                   [some false, none])
@@ -372,7 +374,7 @@ theorem appendInputTapeHeadRouterDescription_run_state8_true
       let nextBefore : Word Bool :=
         List.append [false, true, false, false] beforeRevBits
       have hprefix :
-          AppendInputTapeHeadRouterDescription.runConfig 4
+          AIHR.runConfig 4
               (config 8
                 (List.append (beforeRevBits.map some)
                   [some false, none])
@@ -444,7 +446,7 @@ def AppendInputTapeHeadRouterSpec
                 (some b) (b :: rest) stage suffixBits })
 theorem appendInputTapeHeadRouterDescription_spec :
     AppendInputTapeHeadRouterSpec
-      AppendInputTapeHeadRouterDescription := by
+      AIHR := by
   constructor
   · exact appendInputTapeHeadRouterDescription_subroutineReady
   constructor
@@ -488,8 +490,8 @@ theorem appendInputTapeHeadRouterDescription_spec :
           (List.map some suffixBits)
       refine ⟨8 * rest.length + 29, ?_⟩
       have hprefix :
-          AppendInputTapeHeadRouterDescription.runConfig 8
-              { state := AppendInputTapeHeadRouterDescription.start
+          AIHR.runConfig 8
+              { state := AIHR.start
                 tape :=
                   tapeAtCells []
                     (some false :: some false ::
@@ -585,8 +587,8 @@ theorem appendInputTapeHeadRouterDescription_spec :
           (List.map some suffixBits)
       refine ⟨8 * rest.length + 29, ?_⟩
       have hprefix :
-          AppendInputTapeHeadRouterDescription.runConfig 8
-              { state := AppendInputTapeHeadRouterDescription.start
+          AIHR.runConfig 8
+              { state := AIHR.start
                 tape :=
                   tapeAtCells []
                     (some false :: some false ::

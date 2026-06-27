@@ -28,37 +28,39 @@ def MarkTransitionSecondBitDescription :
         1 (some false) (some false) Direction.right 2
     ]
 
+private abbrev MTSB := MarkTransitionSecondBitDescription
+
 theorem markTransitionSecondBitDescription_wellFormed :
-    MarkTransitionSecondBitDescription.WellFormed := by
+    MTSB.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := MarkTransitionSecondBitDescription.transitions)
+      (l := MTSB.transitions)
       (stateCount :=
-        MarkTransitionSecondBitDescription.stateCount)
+        MTSB.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := MarkTransitionSecondBitDescription.transitions)
+      (l := MTSB.transitions)
       (by native_decide)
 
 theorem markTransitionSecondBitDescription_haltTransitionFree :
-    MarkTransitionSecondBitDescription.HaltTransitionFree :=
+    MTSB.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := MarkTransitionSecondBitDescription.transitions)
-    (state := MarkTransitionSecondBitDescription.halt)
+    (l := MTSB.transitions)
+    (state := MTSB.halt)
     (by native_decide)
 
 theorem markTransitionSecondBitDescription_subroutineReady :
-    MarkTransitionSecondBitDescription.SubroutineReady :=
+    MTSB.SubroutineReady :=
   ⟨markTransitionSecondBitDescription_wellFormed,
     markTransitionSecondBitDescription_haltTransitionFree⟩
 
 theorem markTransitionSecondBitDescription_run
     (payload : Word Bool) :
-    MarkTransitionSecondBitDescription.runConfig 2
+    MTSB.runConfig 2
         (config 0 [some false]
           (some false ::
             ((List.append [false, true] payload).map some))) =
-      { state := MarkTransitionSecondBitDescription.halt
+      { state := MTSB.halt
         tape :=
           tapeAtCells [some false]
             (none ::
@@ -74,7 +76,7 @@ theorem markTransitionSecondBitDescription_run
 def TransitionPrefixedThenAppendCodeWordLastDescription
     (code : Word MachineCodeSymbol) : MachineDescription :=
   seqSubroutine
-    MarkTransitionSecondBitDescription
+    MTSB
     (AppendCodeWordLastDescription code)
     Direction.right
 
@@ -110,7 +112,7 @@ theorem
                 ((false :: true :: payload).reverse.map some)
                 [none, some false])
               code } := by
-  let A := MarkTransitionSecondBitDescription
+  let A := MTSB
   let B := AppendCodeWordLastDescription code
   let Tmid :=
     tapeAtCells [some false]
@@ -172,34 +174,36 @@ def ReturnToCurrentMarkerDescription :
         0 none (some false) Direction.right 1
     ]
 
+private abbrev RTCM := ReturnToCurrentMarkerDescription
+
 theorem returnToCurrentMarkerDescription_wellFormed :
-    ReturnToCurrentMarkerDescription.WellFormed := by
+    RTCM.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := ReturnToCurrentMarkerDescription.transitions)
+      (l := RTCM.transitions)
       (stateCount :=
-        ReturnToCurrentMarkerDescription.stateCount)
+        RTCM.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := ReturnToCurrentMarkerDescription.transitions)
+      (l := RTCM.transitions)
       (by native_decide)
 
 theorem returnToCurrentMarkerDescription_haltTransitionFree :
-    ReturnToCurrentMarkerDescription.HaltTransitionFree :=
+    RTCM.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := ReturnToCurrentMarkerDescription.transitions)
-    (state := ReturnToCurrentMarkerDescription.halt)
+    (l := RTCM.transitions)
+    (state := RTCM.halt)
     (by native_decide)
 
 theorem returnToCurrentMarkerDescription_subroutineReady :
-    ReturnToCurrentMarkerDescription.SubroutineReady :=
+    RTCM.SubroutineReady :=
   ⟨returnToCurrentMarkerDescription_wellFormed,
     returnToCurrentMarkerDescription_haltTransitionFree⟩
 
 theorem returnToCurrentMarkerDescription_step_scan
     (preRev : Word Bool) (leftBit current : Bool)
     (leftOfMarker right : List (Option Bool)) :
-    ReturnToCurrentMarkerDescription.stepConfig
+    RTCM.stepConfig
         (config 0
           (List.append
             (some leftBit :: preRev.map some)
@@ -221,7 +225,7 @@ theorem returnToCurrentMarkerDescription_step_scan
 theorem returnToCurrentMarkerDescription_run
     (preRev : Word Bool) (current : Bool)
     (leftOfMarker right : List (Option Bool)) :
-    ReturnToCurrentMarkerDescription.runConfig
+    RTCM.runConfig
         (preRev.length + 2)
         (config 0
           (List.append (preRev.map some) (none :: leftOfMarker))
@@ -250,16 +254,16 @@ theorem
     returnToCurrentMarkerDescription_run_after_append_four_atCells
     (pre : Word Bool) (leftOfMarker : List (Option Bool))
     (b0 b1 b2 b3 : Bool) :
-    ReturnToCurrentMarkerDescription.runConfig
+    RTCM.runConfig
         (pre.length + 4)
-        { state := ReturnToCurrentMarkerDescription.start
+        { state := RTCM.start
           tape :=
             Tape.move Direction.left
               (appendRightLastTapeAtCells
                 (List.append (pre.reverse.map some)
                   (none :: leftOfMarker)) b0 b1 b2 b3) } =
       config
-        ReturnToCurrentMarkerDescription.halt
+        RTCM.halt
         (some false :: leftOfMarker)
         ((List.append pre [b0, b1, b2, b3]).map some) := by
   simpa [appendRightLastTapeAtCells, config,
@@ -275,8 +279,8 @@ theorem
         forall pre : Word Bool,
         forall leftOfMarker : List (Option Bool),
           exists steps : Nat,
-            ReturnToCurrentMarkerDescription.runConfig steps
-                { state := ReturnToCurrentMarkerDescription.start
+            RTCM.runConfig steps
+                { state := RTCM.start
                   tape :=
                     Tape.move Direction.left
                       (appendCodeWordLastTapeAtCells
@@ -284,7 +288,7 @@ theorem
                           (none :: leftOfMarker))
                         code) } =
               config
-                ReturnToCurrentMarkerDescription.halt
+                RTCM.halt
                 (some false :: leftOfMarker)
                 ((List.append pre
                   (encodeCodeWordAsInput code)).map some)
@@ -334,7 +338,7 @@ def AppendCodeWordReturnToCurrentMarkerDescription
     (code : Word MachineCodeSymbol) : MachineDescription :=
   seqSubroutine
     (AppendCodeWordLastDescription code)
-    ReturnToCurrentMarkerDescription
+    RTCM
     Direction.left
 
 theorem
@@ -369,7 +373,7 @@ theorem
           ((List.append (List.append pre remaining)
             (encodeCodeWordAsInput code)).map some) := by
   let A := AppendCodeWordLastDescription code
-  let B := ReturnToCurrentMarkerDescription
+  let B := RTCM
   let preAll := List.append pre remaining
   let Tmid :=
     appendCodeWordLastTapeAtCells
@@ -743,34 +747,36 @@ def InputTapeRightCellsDirectCopierDescription :
         81 (some true) (some true) Direction.right 99
     ]
 
+private abbrev ITCD := InputTapeRightCellsDirectCopierDescription
+
 theorem inputTapeRightCellsDirectCopierDescription_wellFormed :
-    InputTapeRightCellsDirectCopierDescription.WellFormed := by
+    ITCD.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := InputTapeRightCellsDirectCopierDescription.transitions)
+      (l := ITCD.transitions)
       (stateCount :=
-        InputTapeRightCellsDirectCopierDescription.stateCount)
+        ITCD.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := InputTapeRightCellsDirectCopierDescription.transitions)
+      (l := ITCD.transitions)
       (by native_decide)
 
 theorem inputTapeRightCellsDirectCopierDescription_haltTransitionFree :
-    InputTapeRightCellsDirectCopierDescription.HaltTransitionFree :=
+    ITCD.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := InputTapeRightCellsDirectCopierDescription.transitions)
-    (state := InputTapeRightCellsDirectCopierDescription.halt)
+    (l := ITCD.transitions)
+    (state := ITCD.halt)
     (by native_decide)
 
 theorem inputTapeRightCellsDirectCopierDescription_subroutineReady :
-    InputTapeRightCellsDirectCopierDescription.SubroutineReady :=
+    ITCD.SubroutineReady :=
   ⟨inputTapeRightCellsDirectCopierDescription_wellFormed,
     inputTapeRightCellsDirectCopierDescription_haltTransitionFree⟩
 
 theorem
     inputTapeRightCellsDirectCopierDescription_step_scan20
     (leftRev : List (Option Bool)) (bit : Bool) (rest : Word Bool) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 20 leftRev (some bit :: rest.map some)) =
       some (config 20 (some bit :: leftRev)
         (rest.map some)) := by
@@ -785,7 +791,7 @@ theorem
 theorem
     inputTapeRightCellsDirectCopierDescription_run_scan20
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
-    InputTapeRightCellsDirectCopierDescription.runConfig
+    ITCD.runConfig
         remaining.length
         (config 20 leftRev (remaining.map some)) =
       config 20
@@ -802,7 +808,7 @@ theorem
 theorem
     inputTapeRightCellsDirectCopierDescription_run_write_tick
     (leftRev : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.runConfig 4
+    ITCD.runConfig 4
         (config 20 leftRev []) =
       config 24
         (List.append [some false, some false] leftRev)
@@ -818,7 +824,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_step_return24
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (leftBit current : Bool) (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.stepConfig
+    ITCD.stepConfig
         (config 24
           (List.append (some leftBit :: preRev.map some)
             (none :: leftOfMarker))
@@ -837,7 +843,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_run_return24
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (current : Bool) (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.runConfig
+    ITCD.runConfig
         (preRev.length + 2)
         (config 24
           (List.append (preRev.map some) (none :: leftOfMarker))
@@ -866,7 +872,7 @@ theorem
     inputTapeRightCellsDirectCopierDescription_run_advance25_to0
     (leftRev : List (Option Bool)) (b1 b2 b3 : Bool)
     (right : List (Option Bool)) :
-    InputTapeRightCellsDirectCopierDescription.runConfig 3
+    ITCD.runConfig 3
         (config 25 leftRev
           (some b1 :: some b2 :: some b3 :: right)) =
       config 0
@@ -884,7 +890,7 @@ theorem
     (leftOfMarker : List (Option Bool))
     (pre remaining : Word Bool) :
     exists steps : Nat,
-      InputTapeRightCellsDirectCopierDescription.runConfig steps
+      ITCD.runConfig steps
           (config 0
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker))
@@ -910,7 +916,7 @@ theorem
   let returnLeft : List (Option Bool) :=
     List.append (pre.reverse.map some) (none :: leftOfMarker)
   have hprefix :
-      InputTapeRightCellsDirectCopierDescription.runConfig 4
+      ITCD.runConfig 4
           (config 0
             (List.append (pre.reverse.map some)
               (none :: leftOfMarker))
@@ -1033,33 +1039,35 @@ def ReturnToTransitionMarkerDescription :
         1 (some true) (some true) Direction.right 2
     ]
 
+private abbrev RTTM := ReturnToTransitionMarkerDescription
+
 theorem returnToTransitionMarkerDescription_wellFormed :
-    ReturnToTransitionMarkerDescription.WellFormed := by
+    RTTM.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := ReturnToTransitionMarkerDescription.transitions)
+      (l := RTTM.transitions)
       (stateCount :=
-        ReturnToTransitionMarkerDescription.stateCount)
+        RTTM.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := ReturnToTransitionMarkerDescription.transitions)
+      (l := RTTM.transitions)
       (by native_decide)
 
 theorem returnToTransitionMarkerDescription_haltTransitionFree :
-    ReturnToTransitionMarkerDescription.HaltTransitionFree :=
+    RTTM.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := ReturnToTransitionMarkerDescription.transitions)
-    (state := ReturnToTransitionMarkerDescription.halt)
+    (l := RTTM.transitions)
+    (state := RTTM.halt)
     (by native_decide)
 
 theorem returnToTransitionMarkerDescription_subroutineReady :
-    ReturnToTransitionMarkerDescription.SubroutineReady :=
+    RTTM.SubroutineReady :=
   ⟨returnToTransitionMarkerDescription_wellFormed,
     returnToTransitionMarkerDescription_haltTransitionFree⟩
 theorem returnToTransitionMarkerDescription_step_scan
     (preRev : Word Bool) (leftBit current : Bool)
     (right : List (Option Bool)) :
-    ReturnToTransitionMarkerDescription.stepConfig
+    RTTM.stepConfig
         (config 0
           (List.append
             (some leftBit :: preRev.map some) [none, some false])
@@ -1078,7 +1086,7 @@ theorem returnToTransitionMarkerDescription_step_scan
 theorem returnToTransitionMarkerDescription_run
     (preRev : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
-    ReturnToTransitionMarkerDescription.runConfig
+    RTTM.runConfig
         (preRev.length + 3)
         (config 0
           (List.append (preRev.map some) [none, some false])
@@ -1106,15 +1114,15 @@ theorem returnToTransitionMarkerDescription_run
 theorem
     returnToTransitionMarkerDescription_run_after_append_four_atCells
     (pre : Word Bool) (b0 b1 b2 b3 : Bool) :
-    ReturnToTransitionMarkerDescription.runConfig
+    RTTM.runConfig
         (pre.length + 5)
-        { state := ReturnToTransitionMarkerDescription.start
+        { state := RTTM.start
           tape :=
             Tape.move Direction.left
               (appendRightLastTapeAtCells
                 (List.append (pre.reverse.map some)
                   [none, some false]) b0 b1 b2 b3) } =
-      { state := ReturnToTransitionMarkerDescription.halt
+      { state := RTTM.halt
         tape :=
           tapeAtCells [some false]
             (some false ::
@@ -1130,15 +1138,15 @@ theorem
       code ≠ [] ->
         forall pre : Word Bool,
           exists steps : Nat,
-            ReturnToTransitionMarkerDescription.runConfig steps
-                { state := ReturnToTransitionMarkerDescription.start
+            RTTM.runConfig steps
+                { state := RTTM.start
                   tape :=
                     Tape.move Direction.left
                       (appendCodeWordLastTapeAtCells
                         (List.append (pre.reverse.map some)
                           [none, some false])
                         code) } =
-              { state := ReturnToTransitionMarkerDescription.halt
+              { state := RTTM.halt
                 tape :=
                   tapeAtCells [some false]
                     (some false ::
@@ -1190,7 +1198,7 @@ def MarkedPrefixAppendCodeWordReturnDescription
     (code : Word MachineCodeSymbol) : MachineDescription :=
   seqSubroutine
     (MarkedPrefixThenAppendCodeWordLastDescription code)
-    ReturnToTransitionMarkerDescription
+    RTTM
     Direction.left
 
 theorem
@@ -1218,7 +1226,7 @@ theorem markedPrefixAppendCodeWordReturnDescription_run
                   (encodeCodeWordAsInput code)).map
                   some)) } := by
   let A := MarkedPrefixThenAppendCodeWordLastDescription code
-  let B := ReturnToTransitionMarkerDescription
+  let B := RTTM
   let Tmid :=
     appendCodeWordLastTapeAtCells
       (List.append
@@ -1285,7 +1293,7 @@ theorem markedPrefixAppendCodeWordReturnDescription_run_checked
                   (encodeCodeWordAsInput code)).map
                   some)) } := by
   let A := MarkedPrefixThenAppendCodeWordLastDescription code
-  let B := ReturnToTransitionMarkerDescription
+  let B := RTTM
   let Tmid :=
     appendCodeWordLastTapeAtCells
       (List.append
@@ -1509,7 +1517,7 @@ def TransitionPrefixedAppendCodeWordReturnDescription
     (code : Word MachineCodeSymbol) : MachineDescription :=
   seqSubroutine
     (TransitionPrefixedThenAppendCodeWordLastDescription code)
-    ReturnToTransitionMarkerDescription
+    RTTM
     Direction.left
 
 theorem
@@ -1544,7 +1552,7 @@ theorem transitionPrefixedAppendCodeWordReturnDescription_run
                   (encodeCodeWordAsInput code)).map
                   some)) } := by
   let A := TransitionPrefixedThenAppendCodeWordLastDescription code
-  let B := ReturnToTransitionMarkerDescription
+  let B := RTTM
   let Tmid :=
     appendCodeWordLastTapeAtCells
       (List.append

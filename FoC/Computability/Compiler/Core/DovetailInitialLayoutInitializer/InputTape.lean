@@ -28,11 +28,12 @@ def TransitionPrefixedFirstBitAppendCodeWordReturnDescription
     (TransitionPrefixedAppendCodeWordReturnDescription code)
     Direction.right
 
+private abbrev TPFACWR := TransitionPrefixedFirstBitAppendCodeWordReturnDescription
+
 theorem
     transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
-    (TransitionPrefixedFirstBitAppendCodeWordReturnDescription
-      code).SubroutineReady :=
+    (TPFACWR code).SubroutineReady :=
   seqSubroutine_subroutineReady
     exactIdentityDescription_subroutineReady
     (transitionPrefixedAppendCodeWordReturnDescription_subroutineReady
@@ -43,18 +44,15 @@ theorem
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (payload : Word Bool) :
     exists steps : Nat,
-      (TransitionPrefixedFirstBitAppendCodeWordReturnDescription
-        code).runConfig steps
+      (TPFACWR code).runConfig steps
           { state :=
-              (TransitionPrefixedFirstBitAppendCodeWordReturnDescription
-                code).start
+              (TPFACWR code).start
             tape :=
               tapeAtCells []
                 (some false :: some false ::
                   ((List.append [false, true] payload).map some)) } =
         { state :=
-            (TransitionPrefixedFirstBitAppendCodeWordReturnDescription
-              code).halt
+            (TPFACWR code).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -108,14 +106,14 @@ theorem
 
 def TransitionPrefixedFirstBitAppendNatReturnDescription
     (n : Nat) : MachineDescription :=
-  TransitionPrefixedFirstBitAppendCodeWordReturnDescription
-    (encodeNat n)
+  TPFACWR (encodeNat n)
+
+private abbrev TPFANR := TransitionPrefixedFirstBitAppendNatReturnDescription
 
 theorem
     transitionPrefixedFirstBitAppendNatReturnDescription_subroutineReady
     (n : Nat) :
-    (TransitionPrefixedFirstBitAppendNatReturnDescription
-      n).SubroutineReady :=
+    (TPFANR n).SubroutineReady :=
   transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
     (encodeNat n)
     (encodeNat_ne_nil n)
@@ -124,18 +122,15 @@ theorem
     transitionPrefixedFirstBitAppendNatReturnDescription_run
     (n : Nat) (payload : Word Bool) :
     exists steps : Nat,
-      (TransitionPrefixedFirstBitAppendNatReturnDescription
-        n).runConfig steps
+      (TPFANR n).runConfig steps
           { state :=
-              (TransitionPrefixedFirstBitAppendNatReturnDescription
-                n).start
+              (TPFANR n).start
             tape :=
               tapeAtCells []
                 (some false :: some false ::
                   ((List.append [false, true] payload).map some)) } =
         { state :=
-            (TransitionPrefixedFirstBitAppendNatReturnDescription
-              n).halt
+            (TPFANR n).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -153,15 +148,15 @@ def AppendTwoCodeWordsReturnDescription
     (first second : Word MachineCodeSymbol) : MachineDescription :=
   seqSubroutine
     (MarkedPrefixAppendCodeWordReturnDescription first)
-    (TransitionPrefixedFirstBitAppendCodeWordReturnDescription
-      second)
+    (TPFACWR second)
     Direction.left
+
+private abbrev ATCWR := AppendTwoCodeWordsReturnDescription
 
 theorem appendTwoCodeWordsReturnDescription_subroutineReady
     (first second : Word MachineCodeSymbol)
     (hfirst : first ≠ []) (hsecond : second ≠ []) :
-    (AppendTwoCodeWordsReturnDescription
-      first second).SubroutineReady :=
+    (ATCWR first second).SubroutineReady :=
   seqSubroutine_subroutineReady
     (markedPrefixAppendCodeWordReturnDescription_subroutineReady
       first hfirst)
@@ -173,13 +168,10 @@ theorem appendTwoCodeWordsReturnDescription_run
     (hfirst : first ≠ []) (hsecond : second ≠ [])
     (b : Bool) (rest : Word Bool) :
     exists steps : Nat,
-      (AppendTwoCodeWordsReturnDescription
-        first second).runConfig steps
-          ((AppendTwoCodeWordsReturnDescription
-            first second).initial (b :: rest)) =
+      (ATCWR first second).runConfig steps
+          ((ATCWR first second).initial (b :: rest)) =
         { state :=
-            (AppendTwoCodeWordsReturnDescription
-              first second).halt
+            (ATCWR first second).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -189,9 +181,7 @@ theorem appendTwoCodeWordsReturnDescription_run
                     (encodeCodeWordAsInput second))).map
                   some)) } := by
   let A := MarkedPrefixAppendCodeWordReturnDescription first
-  let B :=
-    TransitionPrefixedFirstBitAppendCodeWordReturnDescription
-      second
+  let B := TPFACWR second
   let firstBits := encodeCodeWordAsInput first
   let secondBits := encodeCodeWordAsInput second
   let Tmid :=
@@ -248,15 +238,12 @@ theorem appendTwoCodeWordsReturnDescription_run_stageInput
     (hfirst : first ≠ []) (hsecond : second ≠ [])
     (w : Word Bool) (stage : Nat) :
     exists steps : Nat,
-      (AppendTwoCodeWordsReturnDescription
-        first second).runConfig steps
-          ((AppendTwoCodeWordsReturnDescription
-            first second).initial
+      (ATCWR first second).runConfig steps
+          ((ATCWR first second).initial
             (encodeCodeWordAsInput
               (PairedRecognizerDovetailStageInputCode w stage))) =
         { state :=
-            (AppendTwoCodeWordsReturnDescription
-              first second).halt
+            (ATCWR first second).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -465,12 +452,13 @@ theorem emptyInputTapeCode_ne_nil :
 
 def AppendEmptyInputTapeReturnDescription :
     MachineDescription :=
-  TransitionPrefixedFirstBitAppendCodeWordReturnDescription
-    emptyInputTapeCode
+  TPFACWR emptyInputTapeCode
+
+private abbrev AEITR := AppendEmptyInputTapeReturnDescription
 
 theorem
     appendEmptyInputTapeReturnDescription_subroutineReady :
-    AppendEmptyInputTapeReturnDescription.SubroutineReady :=
+    AEITR.SubroutineReady :=
   transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
     emptyInputTapeCode
     emptyInputTapeCode_ne_nil
@@ -484,8 +472,8 @@ theorem inputTapeBits_nil :
 theorem appendEmptyInputTapeReturnDescription_run
     (stage : Nat) (suffixBits : Word Bool) :
     exists steps : Nat,
-      AppendEmptyInputTapeReturnDescription.runConfig steps
-          { state := AppendEmptyInputTapeReturnDescription.start
+      AEITR.runConfig steps
+          { state := AEITR.start
             tape :=
               tapeAtCells []
                 (some false :: some false ::
@@ -493,7 +481,7 @@ theorem appendEmptyInputTapeReturnDescription_run
                     (List.append
                       (stageInputBits ([] : Word Bool) stage)
                       suffixBits)).map some)) } =
-        { state := AppendEmptyInputTapeReturnDescription.halt
+        { state := AEITR.halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -613,13 +601,15 @@ theorem inputTapeBits_cons_eq_headPrefix_append
 
 def AppendInputTapeHeadPrefixReturnDescription
     (b : Bool) : MachineDescription :=
-  TransitionPrefixedFirstBitAppendCodeWordReturnDescription
+  TPFACWR
     (inputTapeHeadPrefixCode b)
+
+private abbrev AIHPR := AppendInputTapeHeadPrefixReturnDescription
 
 theorem
     appendInputTapeHeadPrefixReturnDescription_subroutineReady
     (b : Bool) :
-    (AppendInputTapeHeadPrefixReturnDescription b).SubroutineReady :=
+    (AIHPR b).SubroutineReady :=
   transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
     (inputTapeHeadPrefixCode b)
     (inputTapeHeadPrefixCode_ne_nil b)
@@ -627,14 +617,14 @@ theorem
 theorem appendInputTapeHeadPrefixReturnDescription_run
     (b : Bool) (payload suffixBits : Word Bool) :
     exists steps : Nat,
-      (AppendInputTapeHeadPrefixReturnDescription b).runConfig steps
-          { state := (AppendInputTapeHeadPrefixReturnDescription b).start
+      (AIHPR b).runConfig steps
+          { state := (AIHPR b).start
             tape :=
               tapeAtCells []
                 (some false :: some false ::
                   ((List.append [false, true]
                     (List.append payload suffixBits)).map some)) } =
-        { state := (AppendInputTapeHeadPrefixReturnDescription b).halt
+        { state := (AIHPR b).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -687,17 +677,18 @@ def AppendKnownHeadInputTapeReturnDescription
     (b : Bool) (rightCopier : MachineDescription) :
     MachineDescription :=
   seqSubroutine
-    (AppendInputTapeHeadPrefixReturnDescription b)
+    (AIHPR b)
     rightCopier
     Direction.left
+
+private abbrev AKHITR := AppendKnownHeadInputTapeReturnDescription
 
 theorem
     appendKnownHeadInputTapeReturnDescription_subroutineReady
     {rightCopier : MachineDescription}
     (hright : AppendInputTapeRightCellsReturnSpec rightCopier)
     (b : Bool) :
-    (AppendKnownHeadInputTapeReturnDescription
-      b rightCopier).SubroutineReady :=
+    (AKHITR b rightCopier).SubroutineReady :=
   seqSubroutine_subroutineReady
     (appendInputTapeHeadPrefixReturnDescription_subroutineReady b)
     hright.left
@@ -708,11 +699,9 @@ theorem appendKnownHeadInputTapeReturnDescription_run
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffixBits : Word Bool) :
     exists steps : Nat,
-      (AppendKnownHeadInputTapeReturnDescription
-        b rightCopier).runConfig steps
+      (AKHITR b rightCopier).runConfig steps
           { state :=
-              (AppendKnownHeadInputTapeReturnDescription
-                b rightCopier).start
+              (AKHITR b rightCopier).start
             tape :=
               tapeAtCells []
                 (some false :: some false ::
@@ -721,8 +710,7 @@ theorem appendKnownHeadInputTapeReturnDescription_run
                       (stageInputBits (b :: rest) stage)
                       suffixBits)).map some)) } =
         { state :=
-            (AppendKnownHeadInputTapeReturnDescription
-              b rightCopier).halt
+            (AKHITR b rightCopier).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -731,7 +719,7 @@ theorem appendKnownHeadInputTapeReturnDescription_run
                     (stageInputBits (b :: rest) stage)
                     (List.append suffixBits
                       (inputTapeBits (b :: rest))))).map some)) } := by
-  let A := AppendInputTapeHeadPrefixReturnDescription b
+  let A := AIHPR b
   let B := rightCopier
   let headBits :=
     encodeCodeWordAsInput
@@ -798,8 +786,10 @@ theorem appendKnownHeadInputTapeReturnDescription_run
 
 def AppendEmptyRightCellsReturnDescription :
     MachineDescription :=
-  TransitionPrefixedFirstBitAppendCodeWordReturnDescription
+  TPFACWR
     (inputTapeRightCellsCode ([] : Word Bool))
+
+private abbrev AERCR := AppendEmptyRightCellsReturnDescription
 
 theorem inputTapeRightCellsCode_nil_ne_nil :
     inputTapeRightCellsCode ([] : Word Bool) ≠ [] := by
@@ -810,7 +800,7 @@ theorem inputTapeRightCellsCode_nil_ne_nil :
 
 theorem
     appendEmptyRightCellsReturnDescription_subroutineReady :
-    AppendEmptyRightCellsReturnDescription.SubroutineReady :=
+    AERCR.SubroutineReady :=
   transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
     (inputTapeRightCellsCode ([] : Word Bool))
     inputTapeRightCellsCode_nil_ne_nil
@@ -818,8 +808,8 @@ theorem
 theorem appendEmptyRightCellsReturnDescription_run
     (b : Bool) (stage : Nat) (suffixBits : Word Bool) :
     exists steps : Nat,
-      AppendEmptyRightCellsReturnDescription.runConfig steps
-          { state := AppendEmptyRightCellsReturnDescription.start
+      AERCR.runConfig steps
+          { state := AERCR.start
             tape :=
               tapeAtCells []
                 (some false :: some false ::
@@ -827,7 +817,7 @@ theorem appendEmptyRightCellsReturnDescription_run
                     (List.append
                       (stageInputBits ([b] : Word Bool) stage)
                       suffixBits)).map some)) } =
-        { state := AppendEmptyRightCellsReturnDescription.halt
+        { state := AERCR.halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -853,15 +843,16 @@ theorem appendEmptyRightCellsReturnDescription_run
 def AppendSingletonInputTapeReturnDescription
     (b : Bool) : MachineDescription :=
   seqSubroutine
-    (AppendInputTapeHeadPrefixReturnDescription b)
-    AppendEmptyRightCellsReturnDescription
+    (AIHPR b)
+    AERCR
     Direction.left
+
+private abbrev ASITR := AppendSingletonInputTapeReturnDescription
 
 theorem
     appendSingletonInputTapeReturnDescription_subroutineReady
     (b : Bool) :
-    (AppendSingletonInputTapeReturnDescription
-      b).SubroutineReady :=
+    (ASITR b).SubroutineReady :=
   seqSubroutine_subroutineReady
     (appendInputTapeHeadPrefixReturnDescription_subroutineReady b)
     appendEmptyRightCellsReturnDescription_subroutineReady
@@ -869,9 +860,9 @@ theorem
 theorem appendSingletonInputTapeReturnDescription_run
     (b : Bool) (stage : Nat) (suffixBits : Word Bool) :
     exists steps : Nat,
-      (AppendSingletonInputTapeReturnDescription b).runConfig steps
+      (ASITR b).runConfig steps
           { state :=
-              (AppendSingletonInputTapeReturnDescription b).start
+              (ASITR b).start
             tape :=
               tapeAtCells []
                 (some false :: some false ::
@@ -880,7 +871,7 @@ theorem appendSingletonInputTapeReturnDescription_run
                       (stageInputBits ([b] : Word Bool) stage)
                       suffixBits)).map some)) } =
         { state :=
-            (AppendSingletonInputTapeReturnDescription b).halt
+            (ASITR b).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -890,8 +881,8 @@ theorem appendSingletonInputTapeReturnDescription_run
                     (List.append suffixBits
                       (inputTapeBits ([b] : Word Bool))))).map
                     some)) } := by
-  let A := AppendInputTapeHeadPrefixReturnDescription b
-  let B := AppendEmptyRightCellsReturnDescription
+  let A := AIHPR b
+  let B := AERCR
   let headBits :=
     encodeCodeWordAsInput
       (inputTapeHeadPrefixCode b)
@@ -963,9 +954,11 @@ def AppendEmptyInputTapeSecondBitReturnDescription :
   TransitionPrefixedAppendCodeWordReturnDescription
     emptyInputTapeCode
 
+private abbrev AEITSBR := AppendEmptyInputTapeSecondBitReturnDescription
+
 theorem
     appendEmptyInputTapeSecondBitReturnDescription_subroutineReady :
-    AppendEmptyInputTapeSecondBitReturnDescription.SubroutineReady :=
+    AEITSBR.SubroutineReady :=
   transitionPrefixedAppendCodeWordReturnDescription_subroutineReady
     emptyInputTapeCode
     emptyInputTapeCode_ne_nil
@@ -973,9 +966,9 @@ theorem
 theorem appendEmptyInputTapeSecondBitReturnDescription_run
     (stage : Nat) (suffixBits : Word Bool) :
     exists steps : Nat,
-      AppendEmptyInputTapeSecondBitReturnDescription.runConfig steps
+      AEITSBR.runConfig steps
           { state :=
-              AppendEmptyInputTapeSecondBitReturnDescription.start
+              AEITSBR.start
             tape :=
               tapeAtCells [some false]
                 (some false ::
@@ -984,7 +977,7 @@ theorem appendEmptyInputTapeSecondBitReturnDescription_run
                       (stageInputBits ([] : Word Bool) stage)
                       suffixBits)).map some)) } =
         { state :=
-            AppendEmptyInputTapeSecondBitReturnDescription.halt
+            AEITSBR.halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -1011,11 +1004,12 @@ def AppendInputTapeSecondBitHeadPrefixReturnDescription
   TransitionPrefixedAppendCodeWordReturnDescription
     (inputTapeHeadPrefixCode b)
 
+private abbrev AISBHPR := AppendInputTapeSecondBitHeadPrefixReturnDescription
+
 theorem
     appendInputTapeSecondBitHeadPrefixReturnDescription_subroutineReady
     (b : Bool) :
-    (AppendInputTapeSecondBitHeadPrefixReturnDescription
-      b).SubroutineReady :=
+    (AISBHPR b).SubroutineReady :=
   transitionPrefixedAppendCodeWordReturnDescription_subroutineReady
     (inputTapeHeadPrefixCode b)
     (inputTapeHeadPrefixCode_ne_nil b)
@@ -1024,19 +1018,16 @@ theorem
     appendInputTapeSecondBitHeadPrefixReturnDescription_run
     (b : Bool) (payload suffixBits : Word Bool) :
     exists steps : Nat,
-      (AppendInputTapeSecondBitHeadPrefixReturnDescription
-        b).runConfig steps
+      (AISBHPR b).runConfig steps
           { state :=
-              (AppendInputTapeSecondBitHeadPrefixReturnDescription
-                b).start
+              (AISBHPR b).start
             tape :=
               tapeAtCells [some false]
                 (some false ::
                   ((List.append [false, true]
                     (List.append payload suffixBits)).map some)) } =
         { state :=
-            (AppendInputTapeSecondBitHeadPrefixReturnDescription
-              b).halt
+            (AISBHPR b).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -1060,17 +1051,18 @@ def AppendKnownHeadInputTapeSecondBitReturnDescription
     (b : Bool) (rightCopier : MachineDescription) :
     MachineDescription :=
   seqSubroutine
-    (AppendInputTapeSecondBitHeadPrefixReturnDescription b)
+    (AISBHPR b)
     rightCopier
     Direction.left
+
+private abbrev AKHITSBR := AppendKnownHeadInputTapeSecondBitReturnDescription
 
 theorem
     appendKnownHeadInputTapeSecondBitReturnDescription_subroutineReady
     {rightCopier : MachineDescription}
     (hright : AppendInputTapeRightCellsReturnSpec rightCopier)
     (b : Bool) :
-    (AppendKnownHeadInputTapeSecondBitReturnDescription
-      b rightCopier).SubroutineReady :=
+    (AKHITSBR b rightCopier).SubroutineReady :=
   seqSubroutine_subroutineReady
     (appendInputTapeSecondBitHeadPrefixReturnDescription_subroutineReady
       b)
@@ -1083,11 +1075,9 @@ theorem
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffixBits : Word Bool) :
     exists steps : Nat,
-      (AppendKnownHeadInputTapeSecondBitReturnDescription
-        b rightCopier).runConfig steps
+      (AKHITSBR b rightCopier).runConfig steps
           { state :=
-              (AppendKnownHeadInputTapeSecondBitReturnDescription
-                b rightCopier).start
+              (AKHITSBR b rightCopier).start
             tape :=
               tapeAtCells [some false]
                 (some false ::
@@ -1096,8 +1086,7 @@ theorem
                       (stageInputBits (b :: rest) stage)
                       suffixBits)).map some)) } =
         { state :=
-            (AppendKnownHeadInputTapeSecondBitReturnDescription
-              b rightCopier).halt
+            (AKHITSBR b rightCopier).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -1106,7 +1095,7 @@ theorem
                     (stageInputBits (b :: rest) stage)
                     (List.append suffixBits
                       (inputTapeBits (b :: rest))))).map some)) } := by
-  let A := AppendInputTapeSecondBitHeadPrefixReturnDescription b
+  let A := AISBHPR b
   let B := rightCopier
   let headBits :=
     encodeCodeWordAsInput

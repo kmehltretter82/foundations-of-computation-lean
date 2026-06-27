@@ -75,6 +75,8 @@ def RestoreFirstBitTaggedBrancherDescription
         (taggedBranchTrueOffset blankBranch falseBranch)
         trueBranch.halt 1)
 
+private abbrev RFB := RestoreFirstBitTaggedBrancherDescription
+
 def sharedExitBranchConfiguration
     (offset oldHalt commonHalt : Nat)
     (c : Configuration) :
@@ -115,7 +117,7 @@ theorem
     (hblank : blankBranch.SubroutineReady)
     (hfalse : falseBranch.SubroutineReady)
     (htrue : trueBranch.SubroutineReady) :
-    (RestoreFirstBitTaggedBrancherDescription
+    (RFB
       blankBranch falseBranch trueBranch).SubroutineReady := by
   constructor
   · constructor
@@ -395,7 +397,7 @@ theorem
     (htrue : trueBranch.SubroutineReady)
     {state : Nat} {cell : Option Bool}
     (hstate : state < blankBranch.stateCount) :
-    (RestoreFirstBitTaggedBrancherDescription
+    (RFB
       blankBranch falseBranch trueBranch).lookupTransition
         (taggedBranchBlankOffset + state) cell =
       Option.map
@@ -636,7 +638,7 @@ theorem
     (htrue : trueBranch.SubroutineReady)
     {c : Configuration}
     (hstate : c.state < blankBranch.stateCount) :
-    (RestoreFirstBitTaggedBrancherDescription
+    (RFB
       blankBranch falseBranch trueBranch).stepConfig
         (sharedExitBranchConfiguration
           taggedBranchBlankOffset blankBranch.halt 1 c) =
@@ -653,7 +655,7 @@ theorem
                 { state := blankBranch.halt, tape := tape } = none :=
           stepConfig_halt_none hblank.right tape
         have hbrancherStep :
-            (RestoreFirstBitTaggedBrancherDescription
+            (RFB
               blankBranch falseBranch trueBranch).stepConfig
                 { state := 1, tape := tape } = none :=
           stepConfig_halt_none
@@ -681,7 +683,7 @@ theorem restoreFirstBitTaggedBrancherDescription_run_blank
     (htrue : trueBranch.SubroutineReady)
     (n : Nat) (c : Configuration)
     (hstate : c.state < blankBranch.stateCount) :
-    (RestoreFirstBitTaggedBrancherDescription
+    (RFB
       blankBranch falseBranch trueBranch).runConfig n
         (sharedExitBranchConfiguration
           taggedBranchBlankOffset blankBranch.halt 1 c) =
@@ -717,19 +719,19 @@ theorem restoreFirstBitTaggedBrancherDescription_run_none
                 (Tape.write (some false) T) } =
           { state := blankBranch.halt, tape := Tout }) :
     exists steps : Nat,
-      (RestoreFirstBitTaggedBrancherDescription
+      (RFB
         blankBranch falseBranch trueBranch).runConfig steps
           { state :=
-              (RestoreFirstBitTaggedBrancherDescription
+              (RFB
                 blankBranch falseBranch trueBranch).start
             tape := T } =
         { state :=
-            (RestoreFirstBitTaggedBrancherDescription
+            (RFB
               blankBranch falseBranch trueBranch).halt
           tape := Tout } := by
   rcases hbranch with ⟨n, hn⟩
   let D :=
-    RestoreFirstBitTaggedBrancherDescription
+    RFB
       blankBranch falseBranch trueBranch
   let branchStart : Configuration :=
     { state := blankBranch.start
@@ -774,7 +776,7 @@ theorem
     (htrue : trueBranch.SubroutineReady)
     {state : Nat} {cell : Option Bool}
     (hstate : state < falseBranch.stateCount) :
-    (RestoreFirstBitTaggedBrancherDescription
+    (RFB
       blankBranch falseBranch trueBranch).lookupTransition
         (taggedBranchFalseOffset blankBranch + state) cell =
       Option.map
@@ -1027,7 +1029,7 @@ theorem
     (htrue : trueBranch.SubroutineReady)
     {c : Configuration}
     (hstate : c.state < falseBranch.stateCount) :
-    (RestoreFirstBitTaggedBrancherDescription
+    (RFB
       blankBranch falseBranch trueBranch).stepConfig
         (sharedExitBranchConfiguration
           (taggedBranchFalseOffset blankBranch)
@@ -1046,7 +1048,7 @@ theorem
                 { state := falseBranch.halt, tape := tape } = none :=
           stepConfig_halt_none hfalse.right tape
         have hbrancherStep :
-            (RestoreFirstBitTaggedBrancherDescription
+            (RFB
               blankBranch falseBranch trueBranch).stepConfig
                 { state := 1, tape := tape } = none :=
           stepConfig_halt_none
@@ -1074,7 +1076,7 @@ theorem restoreFirstBitTaggedBrancherDescription_run_false_branch
     (htrue : trueBranch.SubroutineReady)
     (n : Nat) (c : Configuration)
     (hstate : c.state < falseBranch.stateCount) :
-    (RestoreFirstBitTaggedBrancherDescription
+    (RFB
       blankBranch falseBranch trueBranch).runConfig n
         (sharedExitBranchConfiguration
           (taggedBranchFalseOffset blankBranch)
@@ -1114,19 +1116,19 @@ theorem
                 (Tape.write (some false) T) } =
           { state := falseBranch.halt, tape := Tout }) :
     exists steps : Nat,
-      (RestoreFirstBitTaggedBrancherDescription
+      (RFB
         blankBranch falseBranch trueBranch).runConfig steps
           { state :=
-              (RestoreFirstBitTaggedBrancherDescription
+              (RFB
                 blankBranch falseBranch trueBranch).start
             tape := T } =
         { state :=
-            (RestoreFirstBitTaggedBrancherDescription
+            (RFB
               blankBranch falseBranch trueBranch).halt
           tape := Tout } := by
   rcases hbranch with ⟨n, hn⟩
   let D :=
-    RestoreFirstBitTaggedBrancherDescription
+    RFB
       blankBranch falseBranch trueBranch
   let branchStart : Configuration :=
     { state := falseBranch.start
@@ -1175,7 +1177,7 @@ theorem
     (_htrue : trueBranch.SubroutineReady)
     {state : Nat} {cell : Option Bool}
     (_hstate : state < trueBranch.stateCount) :
-    (RestoreFirstBitTaggedBrancherDescription
+    (RFB
       blankBranch falseBranch trueBranch).lookupTransition
         (taggedBranchTrueOffset blankBranch falseBranch + state)
         cell =
@@ -1453,7 +1455,7 @@ theorem
     (htrue : trueBranch.SubroutineReady)
     {c : Configuration}
     (hstate : c.state < trueBranch.stateCount) :
-    (RestoreFirstBitTaggedBrancherDescription
+    (RFB
       blankBranch falseBranch trueBranch).stepConfig
         (sharedExitBranchConfiguration
           (taggedBranchTrueOffset blankBranch falseBranch)
@@ -1472,7 +1474,7 @@ theorem
                 { state := trueBranch.halt, tape := tape } = none :=
           stepConfig_halt_none htrue.right tape
         have hbrancherStep :
-            (RestoreFirstBitTaggedBrancherDescription
+            (RFB
               blankBranch falseBranch trueBranch).stepConfig
                 { state := 1, tape := tape } = none :=
           stepConfig_halt_none
@@ -1500,7 +1502,7 @@ theorem restoreFirstBitTaggedBrancherDescription_run_true_branch
     (htrue : trueBranch.SubroutineReady)
     (n : Nat) (c : Configuration)
     (hstate : c.state < trueBranch.stateCount) :
-    (RestoreFirstBitTaggedBrancherDescription
+    (RFB
       blankBranch falseBranch trueBranch).runConfig n
         (sharedExitBranchConfiguration
           (taggedBranchTrueOffset blankBranch falseBranch)
@@ -1538,19 +1540,19 @@ theorem restoreFirstBitTaggedBrancherDescription_run_true
                 (Tape.write (some false) T) } =
           { state := trueBranch.halt, tape := Tout }) :
     exists steps : Nat,
-      (RestoreFirstBitTaggedBrancherDescription
+      (RFB
         blankBranch falseBranch trueBranch).runConfig steps
           { state :=
-              (RestoreFirstBitTaggedBrancherDescription
+              (RFB
                 blankBranch falseBranch trueBranch).start
             tape := T } =
         { state :=
-            (RestoreFirstBitTaggedBrancherDescription
+            (RFB
               blankBranch falseBranch trueBranch).halt
           tape := Tout } := by
   rcases hbranch with ⟨n, hn⟩
   let D :=
-    RestoreFirstBitTaggedBrancherDescription
+    RFB
       blankBranch falseBranch trueBranch
   let branchStart : Configuration :=
     { state := trueBranch.start

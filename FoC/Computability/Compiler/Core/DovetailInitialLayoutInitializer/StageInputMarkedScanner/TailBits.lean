@@ -18,6 +18,8 @@ open MachineDescription
 namespace DovetailInitialLayoutInitializer
 namespace StageInputMarkedScanner
 
+private abbrev SIMS := StageInputMarkedScannerDescription
+
 def finishStartConfigWithTailBits
     (w tailBits : Word Bool) : Configuration :=
   config 150 (finishStartLeft w)
@@ -46,7 +48,7 @@ def state100AfterMarkedWithTailBits
 theorem run_mark_current_to_state100_with_tailBits
     (processed : Word Bool) (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
-      StageInputMarkedScannerDescription.runConfig steps
+      SIMS.runConfig steps
           (markingState120WithTailBits processed b rest tailBits) =
         state100AfterMarkedWithTailBits processed b rest tailBits := by
   let scanRev := markingReturnScanRev processed rest
@@ -75,7 +77,7 @@ theorem run_mark_current_to_state100_with_tailBits
 theorem run_marking_loop_from_state120_with_tailBits
     (processed : Word Bool) (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
-      StageInputMarkedScannerDescription.runConfig steps
+      SIMS.runConfig steps
           (markingState120WithTailBits processed b rest tailBits) =
         finishStartConfigWithTailBits
           (List.append processed (b :: rest)) tailBits := by
@@ -89,7 +91,7 @@ theorem run_marking_loop_from_state120_with_tailBits
       rw [hmark]
       unfold state100AfterMarkedWithTailBits
       change
-        StageInputMarkedScannerDescription.runConfig 4
+        SIMS.runConfig 4
             (config 100 (finishLengthPrefixRev processed.length)
               (List.append (doneBits.map some)
                 (List.append ((markedCellsBits processed).map some)
@@ -121,8 +123,8 @@ theorem run_marking_loop_from_state120_with_tailBits
         simp [stageNatBits_succ, tickBits,
           encodeCodeSymbolAsInput]]
       change
-        StageInputMarkedScannerDescription.runConfig recSteps
-            (StageInputMarkedScannerDescription.runConfig 4
+        SIMS.runConfig recSteps
+            (SIMS.runConfig 4
               (config 100 (finishLengthPrefixRev processed.length)
                 (List.append (tickBits.map some)
                   (List.append ((stageNatBits rest.length).map some)
@@ -141,7 +143,7 @@ theorem run_marking_loop_from_state120_with_tailBits
 theorem run_state120_bool_tail_to_finish
     (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
-      StageInputMarkedScannerDescription.runConfig steps
+      SIMS.runConfig steps
           (config 120 [none, some true, none, some false]
             (List.append ((stageNatBits rest.length).map some)
               (List.append ((cellBits b).map some)
@@ -169,13 +171,13 @@ def appendBlankStartConfigWithTailBits
       (some false :: none :: tailBits.map some))
 theorem run_finish_restore_cells_tailBits
     (w tailBits : Word Bool) :
-    StageInputMarkedScannerDescription.runConfig (4 * w.length + 2)
+    SIMS.runConfig (4 * w.length + 2)
         (finishStartConfigWithTailBits w (false :: false :: tailBits)) =
       state160AfterRestoreWithTailBits w tailBits := by
   rw [runConfig_add]
   change
-    StageInputMarkedScannerDescription.runConfig 2
-        (StageInputMarkedScannerDescription.runConfig (4 * w.length)
+    SIMS.runConfig 2
+        (SIMS.runConfig (4 * w.length)
           (config 150 (finishStartLeft w)
             (List.append ((markedCellsBits w).map some)
               (some false :: some false :: tailBits.map some)))) =
@@ -186,7 +188,7 @@ theorem run_finish_restore_cells_tailBits
 theorem run_finish_scan_left_to_append_tailBits
     (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
-      StageInputMarkedScannerDescription.runConfig steps
+      SIMS.runConfig steps
           (state160AfterRestoreWithTailBits (b :: rest) tailBits) =
         appendBlankStartConfigWithTailBits (b :: rest) tailBits := by
   let bits := finishScanBits (b :: rest)
@@ -216,7 +218,7 @@ theorem run_finish_scan_left_to_append_tailBits
 theorem run_append_blank_to_state200_tailBits
     (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
-      StageInputMarkedScannerDescription.runConfig steps
+      SIMS.runConfig steps
           (appendBlankStartConfigWithTailBits (b :: rest) tailBits) =
         config 200
           (List.append
@@ -230,8 +232,8 @@ theorem run_append_blank_to_state200_tailBits
   rw [runConfig_add]
   unfold appendBlankStartConfigWithTailBits
   change
-    StageInputMarkedScannerDescription.runConfig (1 + 1)
-        (StageInputMarkedScannerDescription.runConfig tailPrefix.length
+    SIMS.runConfig (1 + 1)
+        (SIMS.runConfig tailPrefix.length
           (config 180 [none, some false]
             (List.append (tailPrefix.map some)
               (some false :: none :: tailBits.map some)))) =
@@ -246,7 +248,7 @@ theorem run_append_blank_to_state200_tailBits
 theorem run_finish_tail_false_false_to_state200
     (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
-      StageInputMarkedScannerDescription.runConfig steps
+      SIMS.runConfig steps
           (finishStartConfigWithTailBits (b :: rest)
             (false :: false :: tailBits)) =
         config 200
@@ -307,11 +309,11 @@ theorem decodeBoolWord_tick_tail_shape
 theorem run_finish_tail_blank_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
-    (StageInputMarkedScannerDescription.runConfig n
+    (SIMS.runConfig n
       (finishStartConfigWithTailBits (b :: rest)
         (encodeCodeWordAsInput
           (MachineCodeSymbol.blank :: suffixTail)))).state ≠
-      StageInputMarkedScannerDescription.halt := by
+      SIMS.halt := by
   let stuck :=
     config 151
       (some false ::
@@ -320,7 +322,7 @@ theorem run_finish_tail_blank_ne_halt
       (some true :: some false :: some false ::
         (encodeCodeWordAsInput suffixTail).map some)
   have hstuck :
-      StageInputMarkedScannerDescription.runConfig
+      SIMS.runConfig
           (4 * (b :: rest).length + 1)
           (finishStartConfigWithTailBits (b :: rest)
             (encodeCodeWordAsInput
@@ -330,7 +332,7 @@ theorem run_finish_tail_blank_ne_halt
     simpa [stuck, finishStartConfigWithTailBits,
       encodeCodeWordAsInput,
       encodeCodeSymbolAsInput] using
-      congrArg (StageInputMarkedScannerDescription.runConfig 1)
+      congrArg (SIMS.runConfig 1)
         (run_state150_markedCells (b :: rest)
           (finishStartLeft (b :: rest))
           ((encodeCodeWordAsInput
@@ -344,11 +346,11 @@ theorem run_finish_tail_blank_ne_halt
 theorem run_finish_tail_zero_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
-    (StageInputMarkedScannerDescription.runConfig n
+    (SIMS.runConfig n
       (finishStartConfigWithTailBits (b :: rest)
         (encodeCodeWordAsInput
           (MachineCodeSymbol.zero :: suffixTail)))).state ≠
-      StageInputMarkedScannerDescription.halt := by
+      SIMS.halt := by
   let stuck :=
     config 151
       (some false ::
@@ -357,7 +359,7 @@ theorem run_finish_tail_zero_ne_halt
       (some true :: some false :: some true ::
         (encodeCodeWordAsInput suffixTail).map some)
   have hstuck :
-      StageInputMarkedScannerDescription.runConfig
+      SIMS.runConfig
           (4 * (b :: rest).length + 1)
           (finishStartConfigWithTailBits (b :: rest)
             (encodeCodeWordAsInput
@@ -367,7 +369,7 @@ theorem run_finish_tail_zero_ne_halt
     simpa [stuck, finishStartConfigWithTailBits,
       encodeCodeWordAsInput,
       encodeCodeSymbolAsInput] using
-      congrArg (StageInputMarkedScannerDescription.runConfig 1)
+      congrArg (SIMS.runConfig 1)
         (run_state150_markedCells (b :: rest)
           (finishStartLeft (b :: rest))
           ((encodeCodeWordAsInput
@@ -381,11 +383,11 @@ theorem run_finish_tail_zero_ne_halt
 theorem run_finish_tail_one_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
-    (StageInputMarkedScannerDescription.runConfig n
+    (SIMS.runConfig n
       (finishStartConfigWithTailBits (b :: rest)
         (encodeCodeWordAsInput
           (MachineCodeSymbol.one :: suffixTail)))).state ≠
-      StageInputMarkedScannerDescription.halt := by
+      SIMS.halt := by
   let stuck :=
     config 151
       (some false ::
@@ -394,7 +396,7 @@ theorem run_finish_tail_one_ne_halt
       (some true :: some true :: some false ::
         (encodeCodeWordAsInput suffixTail).map some)
   have hstuck :
-      StageInputMarkedScannerDescription.runConfig
+      SIMS.runConfig
           (4 * (b :: rest).length + 1)
           (finishStartConfigWithTailBits (b :: rest)
             (encodeCodeWordAsInput
@@ -404,7 +406,7 @@ theorem run_finish_tail_one_ne_halt
     simpa [stuck, finishStartConfigWithTailBits,
       encodeCodeWordAsInput,
       encodeCodeSymbolAsInput] using
-      congrArg (StageInputMarkedScannerDescription.runConfig 1)
+      congrArg (SIMS.runConfig 1)
         (run_state150_markedCells (b :: rest)
           (finishStartLeft (b :: rest))
           ((encodeCodeWordAsInput
@@ -418,11 +420,11 @@ theorem run_finish_tail_one_ne_halt
 theorem run_finish_tail_moveLeft_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
-    (StageInputMarkedScannerDescription.runConfig n
+    (SIMS.runConfig n
       (finishStartConfigWithTailBits (b :: rest)
         (encodeCodeWordAsInput
           (MachineCodeSymbol.moveLeft :: suffixTail)))).state ≠
-      StageInputMarkedScannerDescription.halt := by
+      SIMS.halt := by
   let stuck :=
     config 151
       (some false ::
@@ -431,7 +433,7 @@ theorem run_finish_tail_moveLeft_ne_halt
       (some true :: some true :: some true ::
         (encodeCodeWordAsInput suffixTail).map some)
   have hstuck :
-      StageInputMarkedScannerDescription.runConfig
+      SIMS.runConfig
           (4 * (b :: rest).length + 1)
           (finishStartConfigWithTailBits (b :: rest)
             (encodeCodeWordAsInput
@@ -441,7 +443,7 @@ theorem run_finish_tail_moveLeft_ne_halt
     simpa [stuck, finishStartConfigWithTailBits,
       encodeCodeWordAsInput,
       encodeCodeSymbolAsInput] using
-      congrArg (StageInputMarkedScannerDescription.runConfig 1)
+      congrArg (SIMS.runConfig 1)
         (run_state150_markedCells (b :: rest)
           (finishStartLeft (b :: rest))
           ((encodeCodeWordAsInput
@@ -455,11 +457,11 @@ theorem run_finish_tail_moveLeft_ne_halt
 theorem run_finish_tail_moveRight_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
-    (StageInputMarkedScannerDescription.runConfig n
+    (SIMS.runConfig n
       (finishStartConfigWithTailBits (b :: rest)
         (encodeCodeWordAsInput
           (MachineCodeSymbol.moveRight :: suffixTail)))).state ≠
-      StageInputMarkedScannerDescription.halt := by
+      SIMS.halt := by
   let stuck :=
     config 152
       (some false ::
@@ -468,7 +470,7 @@ theorem run_finish_tail_moveRight_ne_halt
       (some false :: some false :: some false ::
         (encodeCodeWordAsInput suffixTail).map some)
   have hstuck :
-      StageInputMarkedScannerDescription.runConfig
+      SIMS.runConfig
           (4 * (b :: rest).length + 1)
           (finishStartConfigWithTailBits (b :: rest)
             (encodeCodeWordAsInput
@@ -478,7 +480,7 @@ theorem run_finish_tail_moveRight_ne_halt
     simpa [stuck, finishStartConfigWithTailBits,
       encodeCodeWordAsInput,
       encodeCodeSymbolAsInput] using
-      congrArg (StageInputMarkedScannerDescription.runConfig 1)
+      congrArg (SIMS.runConfig 1)
         (run_state150_markedCells (b :: rest)
           (finishStartLeft (b :: rest))
           ((encodeCodeWordAsInput
@@ -572,10 +574,10 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
     {T : Tape Bool}
     (hscanner :
       exists steps : Nat,
-        StageInputMarkedScannerDescription.runConfig steps
+        SIMS.runConfig steps
             (config 120 [none, some true, none, some false]
               ((encodeCodeWordAsInput rest).map some)) =
-          { state := StageInputMarkedScannerDescription.halt
+          { state := SIMS.halt
             tape := T })
     (hinput :
       decodeBoolWord
@@ -597,14 +599,14 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
     exact encode_bool_tail_input_bits b restW suffix
   have hscannerTail :
       exists steps : Nat,
-        StageInputMarkedScannerDescription.runConfig steps
+        SIMS.runConfig steps
             (config 120 [none, some true, none, some false]
               (List.append ((stageNatBits restW.length).map some)
                 (List.append ((cellBits b).map some)
                   (List.append ((cellsBits restW).map some)
                     ((encodeCodeWordAsInput suffix).map
                       some))))) =
-          { state := StageInputMarkedScannerDescription.halt
+          { state := SIMS.halt
             tape := T } := by
     rcases hscanner with ⟨steps, hsteps⟩
     refine ⟨steps, ?_⟩
@@ -616,7 +618,7 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
   have hfinishState :
       (finishStartConfigWithTailBits (b :: restW)
         (encodeCodeWordAsInput suffix)).state ≠
-        StageInputMarkedScannerDescription.halt := by
+        SIMS.halt := by
     simp [finishStartConfigWithTailBits, config,
       StageInputMarkedScannerDescription]
   rcases
@@ -627,12 +629,12 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
   cases suffix with
   | nil =>
       have hno :
-          (StageInputMarkedScannerDescription.runConfig finishRem
+          (SIMS.runConfig finishRem
             (finishStartConfigWithTailBits (b :: restW)
               ([] : Word Bool))).state ≠
-            StageInputMarkedScannerDescription.halt := by
+            SIMS.halt := by
         have hstuck :
-            StageInputMarkedScannerDescription.runConfig
+            SIMS.runConfig
                 (4 * (b :: restW).length)
                 (finishStartConfigWithTailBits (b :: restW)
                   ([] : Word Bool)) =
@@ -660,10 +662,10 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
               change (150 : Nat) ≠ 999
               omega)
       have hhalt :
-          (StageInputMarkedScannerDescription.runConfig finishRem
+          (SIMS.runConfig finishRem
             (finishStartConfigWithTailBits (b :: restW)
               ([] : Word Bool))).state =
-            StageInputMarkedScannerDescription.halt := by
+            SIMS.halt := by
         simpa using
           congrArg Configuration.state hscannerFinish
       exact False.elim (hno hhalt)
@@ -682,10 +684,10 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
                   (none :: [some false]))
                 ((encodeCodeWordAsInput
                   (MachineCodeSymbol.header :: suffixTail)).map some)).state ≠
-                StageInputMarkedScannerDescription.halt := by
+                SIMS.halt := by
             simp [config, StageInputMarkedScannerDescription]
           have hprefix' :
-              StageInputMarkedScannerDescription.runConfig prefixSteps
+              SIMS.runConfig prefixSteps
                   (finishStartConfigWithTailBits (b :: restW)
                     (encodeCodeWordAsInput
                       (MachineCodeSymbol.header :: suffixTail))) =
@@ -719,10 +721,10 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
                 ((encodeCodeWordAsInput
                   (MachineCodeSymbol.transition :: suffixTail)).map
                     some)).state ≠
-                StageInputMarkedScannerDescription.halt := by
+                SIMS.halt := by
             simp [config, StageInputMarkedScannerDescription]
           have hprefix' :
-              StageInputMarkedScannerDescription.runConfig prefixSteps
+              SIMS.runConfig prefixSteps
                   (finishStartConfigWithTailBits (b :: restW)
                     (encodeCodeWordAsInput
                       (MachineCodeSymbol.transition :: suffixTail))) =
@@ -756,10 +758,10 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
                   (none :: [some false]))
                 ((encodeCodeWordAsInput
                   (MachineCodeSymbol.tick :: suffixTail)).map some)).state ≠
-                StageInputMarkedScannerDescription.halt := by
+                SIMS.halt := by
             simp [config, StageInputMarkedScannerDescription]
           have hprefix' :
-              StageInputMarkedScannerDescription.runConfig prefixSteps
+              SIMS.runConfig prefixSteps
                   (finishStartConfigWithTailBits (b :: restW)
                     (encodeCodeWordAsInput
                       (MachineCodeSymbol.tick :: suffixTail))) =
@@ -792,10 +794,10 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
                   (none :: [some false]))
                 ((encodeCodeWordAsInput
                   (MachineCodeSymbol.done :: suffixTail)).map some)).state ≠
-                StageInputMarkedScannerDescription.halt := by
+                SIMS.halt := by
             simp [config, StageInputMarkedScannerDescription]
           have hprefix' :
-              StageInputMarkedScannerDescription.runConfig prefixSteps
+              SIMS.runConfig prefixSteps
                   (finishStartConfigWithTailBits (b :: restW)
                     (encodeCodeWordAsInput
                       (MachineCodeSymbol.done :: suffixTail))) =
@@ -819,11 +821,11 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
           have hno :=
             run_finish_tail_blank_ne_halt b restW suffixTail finishRem
           have hhalt :
-              (StageInputMarkedScannerDescription.runConfig finishRem
+              (SIMS.runConfig finishRem
                 (finishStartConfigWithTailBits (b :: restW)
                   (encodeCodeWordAsInput
                     (MachineCodeSymbol.blank :: suffixTail)))).state =
-                StageInputMarkedScannerDescription.halt := by
+                SIMS.halt := by
             simpa using
               congrArg Configuration.state
                 hscannerFinish
@@ -832,11 +834,11 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
           have hno :=
             run_finish_tail_zero_ne_halt b restW suffixTail finishRem
           have hhalt :
-              (StageInputMarkedScannerDescription.runConfig finishRem
+              (SIMS.runConfig finishRem
                 (finishStartConfigWithTailBits (b :: restW)
                   (encodeCodeWordAsInput
                     (MachineCodeSymbol.zero :: suffixTail)))).state =
-                StageInputMarkedScannerDescription.halt := by
+                SIMS.halt := by
             simpa using
               congrArg Configuration.state
                 hscannerFinish
@@ -845,11 +847,11 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
           have hno :=
             run_finish_tail_one_ne_halt b restW suffixTail finishRem
           have hhalt :
-              (StageInputMarkedScannerDescription.runConfig finishRem
+              (SIMS.runConfig finishRem
                 (finishStartConfigWithTailBits (b :: restW)
                   (encodeCodeWordAsInput
                     (MachineCodeSymbol.one :: suffixTail)))).state =
-                StageInputMarkedScannerDescription.halt := by
+                SIMS.halt := by
             simpa using
               congrArg Configuration.state
                 hscannerFinish
@@ -858,11 +860,11 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
           have hno :=
             run_finish_tail_moveLeft_ne_halt b restW suffixTail finishRem
           have hhalt :
-              (StageInputMarkedScannerDescription.runConfig finishRem
+              (SIMS.runConfig finishRem
                 (finishStartConfigWithTailBits (b :: restW)
                   (encodeCodeWordAsInput
                     (MachineCodeSymbol.moveLeft :: suffixTail)))).state =
-                StageInputMarkedScannerDescription.halt := by
+                SIMS.halt := by
             simpa using
               congrArg Configuration.state
                 hscannerFinish
@@ -871,11 +873,11 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
           have hno :=
             run_finish_tail_moveRight_ne_halt b restW suffixTail finishRem
           have hhalt :
-              (StageInputMarkedScannerDescription.runConfig finishRem
+              (SIMS.runConfig finishRem
                 (finishStartConfigWithTailBits (b :: restW)
                   (encodeCodeWordAsInput
                     (MachineCodeSymbol.moveRight :: suffixTail)))).state =
-                StageInputMarkedScannerDescription.halt := by
+                SIMS.halt := by
             simpa using
               congrArg Configuration.state
                 hscannerFinish
@@ -886,10 +888,10 @@ theorem state120_tick_tail_stage_suffix_inv
     {T : Tape Bool}
     (hscanner :
       exists steps : Nat,
-        StageInputMarkedScannerDescription.runConfig steps
+        SIMS.runConfig steps
             (config 120 [none, some true, none, some false]
               ((encodeCodeWordAsInput rest).map some)) =
-          { state := StageInputMarkedScannerDescription.halt
+          { state := SIMS.halt
             tape := T })
     (hinput :
       decodeBoolWord
@@ -903,10 +905,10 @@ theorem state120_tick_tail_code_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :
       exists steps : Nat,
-        StageInputMarkedScannerDescription.runConfig steps
+        SIMS.runConfig steps
             (config 120 [none, some true, none, some false]
               ((encodeCodeWordAsInput rest).map some)) =
-          { state := StageInputMarkedScannerDescription.halt
+          { state := SIMS.halt
             tape := T }) :
     exists w : Word Bool,
     exists stage : Nat,
@@ -931,11 +933,11 @@ theorem scanner_marked_tick_tail_code_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :
       exists steps : Nat,
-        StageInputMarkedScannerDescription.runConfig steps
+        SIMS.runConfig steps
             (markedTailStartConfig
               (true :: false ::
                 encodeCodeWordAsInput rest)) =
-          { state := StageInputMarkedScannerDescription.halt
+          { state := SIMS.halt
             tape := T }) :
     exists w : Word Bool,
     exists stage : Nat,
@@ -947,7 +949,7 @@ theorem scanner_marked_tick_tail_code_inv
   have hmid :
       (config 120 [none, some true, none, some false]
         ((encodeCodeWordAsInput rest).map some)).state ≠
-        StageInputMarkedScannerDescription.halt := by
+        SIMS.halt := by
     simp [config, StageInputMarkedScannerDescription]
   rcases
       runConfig_halt_after_prefix
@@ -959,11 +961,11 @@ theorem scanner_marked_tick_tail_bits_shape_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :
       exists steps : Nat,
-        StageInputMarkedScannerDescription.runConfig steps
+        SIMS.runConfig steps
             (markedTailStartConfig
               (true :: false ::
                 encodeCodeWordAsInput rest)) =
-          { state := StageInputMarkedScannerDescription.halt
+          { state := SIMS.halt
             tape := T }) :
     exists w : Word Bool,
     exists stage : Nat,

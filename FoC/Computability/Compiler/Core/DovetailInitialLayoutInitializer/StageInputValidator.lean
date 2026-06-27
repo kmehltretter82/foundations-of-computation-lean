@@ -262,36 +262,38 @@ def RestoreStageInputSecondBitDescription :
     [ transition
         0 none (some false) Direction.left 1 ]
 
+private abbrev RSIB := RestoreStageInputSecondBitDescription
+
 theorem restoreStageInputSecondBitDescription_wellFormed :
-    RestoreStageInputSecondBitDescription.WellFormed := by
+    RSIB.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := RestoreStageInputSecondBitDescription.transitions)
+      (l := RSIB.transitions)
       (stateCount :=
-        RestoreStageInputSecondBitDescription.stateCount)
+        RSIB.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := RestoreStageInputSecondBitDescription.transitions)
+      (l := RSIB.transitions)
       (by native_decide)
 
 theorem restoreStageInputSecondBitDescription_haltTransitionFree :
-    RestoreStageInputSecondBitDescription.HaltTransitionFree :=
+    RSIB.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := RestoreStageInputSecondBitDescription.transitions)
-    (state := RestoreStageInputSecondBitDescription.halt)
+    (l := RSIB.transitions)
+    (state := RSIB.halt)
     (by native_decide)
 
 theorem restoreStageInputSecondBitDescription_subroutineReady :
-    RestoreStageInputSecondBitDescription.SubroutineReady :=
+    RSIB.SubroutineReady :=
   ⟨restoreStageInputSecondBitDescription_wellFormed,
     restoreStageInputSecondBitDescription_haltTransitionFree⟩
 
 theorem restoreStageInputSecondBitDescription_run
     (w : Word Bool) (stage : Nat) :
-    RestoreStageInputSecondBitDescription.runConfig 1
-        { state := RestoreStageInputSecondBitDescription.start
+    RSIB.runConfig 1
+        { state := RSIB.start
           tape := stageInputSecondBitMarkedTape w stage } =
-      { state := RestoreStageInputSecondBitDescription.halt
+      { state := RSIB.halt
         tape := Tape.input (stageInputBits w stage) } := by
   rw [stageInputBits_eq_false_false_tail w stage]
   simp [RestoreStageInputSecondBitDescription,
@@ -305,10 +307,10 @@ theorem restoreStageInputSecondBitDescription_run
 
 theorem restoreStageInputSecondBitDescription_run_checked
     (w : Word Bool) (stage : Nat) :
-    RestoreStageInputSecondBitDescription.runConfig 1
-        { state := RestoreStageInputSecondBitDescription.start
+    RSIB.runConfig 1
+        { state := RSIB.start
           tape := stageInputSecondBitMarkedCheckedTape w stage } =
-      { state := RestoreStageInputSecondBitDescription.halt
+      { state := RSIB.halt
         tape := stageInputCheckedInputTape w stage } := by
   unfold stageInputSecondBitMarkedCheckedTape
   unfold stageInputCheckedInputTape
@@ -322,10 +324,10 @@ theorem restoreStageInputSecondBitDescription_run_checked
 
 theorem restoreStageInputSecondBitDescription_run_succ
     (n : Nat) (w : Word Bool) (stage : Nat) :
-    RestoreStageInputSecondBitDescription.runConfig (n + 1)
-        { state := RestoreStageInputSecondBitDescription.start
+    RSIB.runConfig (n + 1)
+        { state := RSIB.start
           tape := stageInputSecondBitMarkedTape w stage } =
-      { state := RestoreStageInputSecondBitDescription.halt
+      { state := RSIB.halt
         tape := Tape.input (stageInputBits w stage) } := by
   rw [show n + 1 = 1 + n by omega]
   rw [runConfig_add]
@@ -337,10 +339,10 @@ theorem restoreStageInputSecondBitDescription_run_succ
 
 theorem restoreStageInputSecondBitDescription_run_checked_succ
     (n : Nat) (w : Word Bool) (stage : Nat) :
-    RestoreStageInputSecondBitDescription.runConfig (n + 1)
-        { state := RestoreStageInputSecondBitDescription.start
+    RSIB.runConfig (n + 1)
+        { state := RSIB.start
           tape := stageInputSecondBitMarkedCheckedTape w stage } =
-      { state := RestoreStageInputSecondBitDescription.halt
+      { state := RSIB.halt
         tape := stageInputCheckedInputTape w stage } := by
   rw [show n + 1 = 1 + n by omega]
   rw [runConfig_add]
@@ -364,36 +366,38 @@ def MarkStageInputSecondBitDescription :
         2 (some false) (some false) Direction.right 3
     ]
 
+private abbrev MSIB := MarkStageInputSecondBitDescription
+
 theorem markStageInputSecondBitDescription_wellFormed :
-    MarkStageInputSecondBitDescription.WellFormed := by
+    MSIB.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := MarkStageInputSecondBitDescription.transitions)
+      (l := MSIB.transitions)
       (stateCount :=
-        MarkStageInputSecondBitDescription.stateCount)
+        MSIB.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := MarkStageInputSecondBitDescription.transitions)
+      (l := MSIB.transitions)
       (by native_decide)
 
 theorem markStageInputSecondBitDescription_haltTransitionFree :
-    MarkStageInputSecondBitDescription.HaltTransitionFree :=
+    MSIB.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := MarkStageInputSecondBitDescription.transitions)
-    (state := MarkStageInputSecondBitDescription.halt)
+    (l := MSIB.transitions)
+    (state := MSIB.halt)
     (by native_decide)
 
 theorem markStageInputSecondBitDescription_subroutineReady :
-    MarkStageInputSecondBitDescription.SubroutineReady :=
+    MSIB.SubroutineReady :=
   ⟨markStageInputSecondBitDescription_wellFormed,
     markStageInputSecondBitDescription_haltTransitionFree⟩
 
 theorem markStageInputSecondBitDescription_run
     (w : Word Bool) (stage : Nat) :
-    MarkStageInputSecondBitDescription.runConfig 3
-        (MarkStageInputSecondBitDescription.initial
+    MSIB.runConfig 3
+        (MSIB.initial
           (stageInputBits w stage)) =
-      { state := MarkStageInputSecondBitDescription.halt
+      { state := MSIB.halt
         tape := stageInputSecondBitMarkedTape w stage } := by
   rw [stageInputBits_eq_false_false_tail w stage]
   simp [MarkStageInputSecondBitDescription,
@@ -407,10 +411,10 @@ theorem markStageInputSecondBitDescription_run
 
 theorem markStageInputSecondBitDescription_run_bits
     (tail : Word Bool) :
-    MarkStageInputSecondBitDescription.runConfig 3
-        (MarkStageInputSecondBitDescription.initial
+    MSIB.runConfig 3
+        (MSIB.initial
           (false :: false :: tail)) =
-      { state := MarkStageInputSecondBitDescription.halt
+      { state := MSIB.halt
         tape := tapeAtCells [some false]
           (none :: tail.map some) } := by
   simp [MarkStageInputSecondBitDescription,
@@ -423,7 +427,7 @@ theorem markStageInputSecondBitDescription_run_bits
 theorem markStageInputSecondBitDescription_haltsWithTape_inv
     {bits : Word Bool} {T : Tape Bool}
     (h :
-      MarkStageInputSecondBitDescription.HaltsWithTape
+      MSIB.HaltsWithTape
         bits T) :
     exists tail : Word Bool,
       bits = false :: false :: tail ∧
@@ -436,8 +440,8 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
   cases bits with
   | nil =>
       have hstep :
-          MarkStageInputSecondBitDescription.stepConfig
-              (MarkStageInputSecondBitDescription.initial []) =
+          MSIB.stepConfig
+              (MSIB.initial []) =
             none := by
         native_decide
       have hrun :=
@@ -462,8 +466,8 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                   { state := 1
                     tape := tapeAtCells [some false] [] }
                 have hstep0 :
-                    MarkStageInputSecondBitDescription.stepConfig
-                        (MarkStageInputSecondBitDescription.initial
+                    MSIB.stepConfig
+                        (MSIB.initial
                           [false]) =
                       some c1 := by
                   simp [c1, MarkStageInputSecondBitDescription,
@@ -474,15 +478,15 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                     transition, Tape.input, Tape.read,
                     Tape.write, Tape.move, Tape.moveRight]
                 have hrun :
-                    MarkStageInputSecondBitDescription.runConfig
+                    MSIB.runConfig
                         (Nat.succ n)
-                        (MarkStageInputSecondBitDescription.initial
+                        (MSIB.initial
                           [false]) =
-                      MarkStageInputSecondBitDescription.runConfig
+                      MSIB.runConfig
                         n c1 := by
                   simp [runConfig, hstep0]
                 have hstep1 :
-                    MarkStageInputSecondBitDescription.stepConfig
+                    MSIB.stepConfig
                         c1 = none := by
                   simp [c1, MarkStageInputSecondBitDescription,
                     tapeAtCells,
@@ -493,9 +497,9 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                 have hstay :=
                   runConfig_of_stepConfig_none hstep1 n
                 have hrunFinal :
-                    MarkStageInputSecondBitDescription.runConfig
+                    MSIB.runConfig
                         (Nat.succ n)
-                        (MarkStageInputSecondBitDescription.initial
+                        (MSIB.initial
                           [false]) =
                       c1 :=
                   hrun.trans hstay
@@ -538,12 +542,12 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                             Tape.moveLeft, Tape.moveRight] at hn
                       | succ k =>
                           have hrun :
-                              MarkStageInputSecondBitDescription.runConfig
+                              MSIB.runConfig
                                   (Nat.succ (Nat.succ (Nat.succ k)))
-                                  (MarkStageInputSecondBitDescription.initial
+                                  (MSIB.initial
                                     (false :: false :: tail)) =
                                 { state :=
-                                    MarkStageInputSecondBitDescription.halt
+                                    MSIB.halt
                                   tape :=
                                     tapeAtCells [some false]
                                       (none :: tail.map some) } := by
@@ -561,14 +565,14 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                           let cfgGood :
                               Configuration :=
                             { state :=
-                                MarkStageInputSecondBitDescription.halt,
+                                MSIB.halt,
                               tape :=
                                 tapeAtCells [some false]
                                   (none :: tail.map some) }
                           have hcfg :
                               cfgGood =
                                 { state :=
-                                    MarkStageInputSecondBitDescription.halt,
+                                    MSIB.halt,
                                   tape := T } := by
                             simpa [cfgGood] using hrun.symm.trans hn
                           exact
@@ -587,8 +591,8 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                         tapeAtCells [some false]
                           (some true :: tail.map some) }
                   have hstep0 :
-                      MarkStageInputSecondBitDescription.stepConfig
-                          (MarkStageInputSecondBitDescription.initial
+                      MSIB.stepConfig
+                          (MSIB.initial
                             (false :: true :: tail)) =
                         some c1 := by
                     simp [c1, MarkStageInputSecondBitDescription,
@@ -599,15 +603,15 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                       transition, Tape.input, Tape.read,
                       Tape.write, Tape.move, Tape.moveRight]
                   have hrun :
-                      MarkStageInputSecondBitDescription.runConfig
+                      MSIB.runConfig
                           (Nat.succ n)
-                          (MarkStageInputSecondBitDescription.initial
+                          (MSIB.initial
                             (false :: true :: tail)) =
-                        MarkStageInputSecondBitDescription.runConfig
+                        MSIB.runConfig
                           n c1 := by
                     simp [runConfig, hstep0]
                   have hstep1 :
-                      MarkStageInputSecondBitDescription.stepConfig
+                      MSIB.stepConfig
                           c1 = none := by
                     simp [c1, MarkStageInputSecondBitDescription,
                       tapeAtCells,
@@ -618,9 +622,9 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                   have hstay :=
                     runConfig_of_stepConfig_none hstep1 n
                   have hrunFinal :
-                      MarkStageInputSecondBitDescription.runConfig
+                      MSIB.runConfig
                           (Nat.succ n)
-                          (MarkStageInputSecondBitDescription.initial
+                          (MSIB.initial
                             (false :: true :: tail)) =
                         c1 :=
                     hrun.trans hstay
@@ -631,8 +635,8 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                         (hrunFinal.symm.trans hn)
                   omega
       · have hstep :
-            MarkStageInputSecondBitDescription.stepConfig
-                (MarkStageInputSecondBitDescription.initial
+            MSIB.stepConfig
+                (MSIB.initial
                   (true :: rest)) =
               none := by
           simp [MarkStageInputSecondBitDescription,
@@ -665,7 +669,7 @@ def StageInputMarkedScannerSpec
                 w stage }) ∧
     (forall code : Word MachineCodeSymbol,
      forall Tmark T : Tape Bool,
-      MarkStageInputSecondBitDescription.HaltsWithTape
+      MSIB.HaltsWithTape
           (encodeCodeWordAsInput code) Tmark ->
         (exists steps : Nat,
           scanner.runConfig steps
@@ -711,12 +715,14 @@ def StageInputMarkedCoreConstruction : Prop :=
 def StageInputMarkedCoreDescription
     (scanner : MachineDescription) : MachineDescription :=
   seqSubroutine
-    MarkStageInputSecondBitDescription scanner Direction.right
+    MSIB scanner Direction.right
+
+private abbrev SIMC := StageInputMarkedCoreDescription
 
 theorem stageInputMarkedCoreDescription_subroutineReady
     {scanner : MachineDescription}
     (hscanner : StageInputMarkedScannerSpec scanner) :
-    (StageInputMarkedCoreDescription scanner).SubroutineReady :=
+    (SIMC scanner).SubroutineReady :=
   seqSubroutine_subroutineReady
     markStageInputSecondBitDescription_subroutineReady
     hscanner.left
@@ -725,13 +731,13 @@ theorem stageInputMarkedCoreSpec_of_markedScanner
     {scanner : MachineDescription}
     (hscanner : StageInputMarkedScannerSpec scanner) :
     StageInputMarkedCoreSpec
-      (StageInputMarkedCoreDescription scanner) := by
+      (SIMC scanner) := by
   constructor
   · exact
       stageInputMarkedCoreDescription_subroutineReady hscanner
   constructor
   · intro w stage
-    let A := MarkStageInputSecondBitDescription
+    let A := MSIB
     let B := scanner
     let Tmid := stageInputSecondBitMarkedTape w stage
     have hAready : A.SubroutineReady :=
@@ -766,7 +772,7 @@ theorem stageInputMarkedCoreSpec_of_markedScanner
     simpa [StageInputMarkedCoreDescription, A, B,
       initial] using hn
   · intro code T hhalt
-    let A := MarkStageInputSecondBitDescription
+    let A := MSIB
     let B := scanner
     have hAready : A.SubroutineReady :=
       markStageInputSecondBitDescription_subroutineReady
@@ -781,12 +787,14 @@ theorem stageInputMarkedCoreSpec_of_markedScanner
 def StageInputRecognizerDescription
     (markedCore : MachineDescription) : MachineDescription :=
   seqSubroutine markedCore
-    RestoreStageInputSecondBitDescription Direction.left
+    RSIB Direction.left
+
+private abbrev SIR := StageInputRecognizerDescription
 
 theorem stageInputRecognizerDescription_subroutineReady
     {markedCore : MachineDescription}
     (hmarkedCore : StageInputMarkedCoreSpec markedCore) :
-    (StageInputRecognizerDescription markedCore).SubroutineReady :=
+    (SIR markedCore).SubroutineReady :=
   seqSubroutine_subroutineReady
     hmarkedCore.left
     restoreStageInputSecondBitDescription_subroutineReady
@@ -795,14 +803,14 @@ theorem stageInputRecognizerSpec_of_markedCore
     {markedCore : MachineDescription}
     (hmarkedCore : StageInputMarkedCoreSpec markedCore) :
     StageInputRecognizerSpec
-      (StageInputRecognizerDescription markedCore) := by
+      (SIR markedCore) := by
   constructor
   · exact stageInputRecognizerDescription_subroutineReady
       hmarkedCore
   constructor
   · intro w stage
     let A := markedCore
-    let B := RestoreStageInputSecondBitDescription
+    let B := RSIB
     have hAready : A.SubroutineReady := hmarkedCore.left
     have hBready : B.SubroutineReady :=
       restoreStageInputSecondBitDescription_subroutineReady
@@ -840,7 +848,7 @@ theorem stageInputRecognizerSpec_of_markedCore
       initial] using hn
   · intro code T hhalt
     let A := markedCore
-    let B := RestoreStageInputSecondBitDescription
+    let B := RSIB
     have hAready : A.SubroutineReady := hmarkedCore.left
     have hBready : B.SubroutineReady :=
       restoreStageInputSecondBitDescription_subroutineReady
@@ -908,10 +916,12 @@ def StageInputIdentityDescription
   seqSubroutine recognizer
     ExactIdentityDescription Direction.right
 
+private abbrev SIID := StageInputIdentityDescription
+
 theorem stageInputIdentityDescription_subroutineReady
     {recognizer : MachineDescription}
     (hrecognizer : StageInputRecognizerSpec recognizer) :
-    (StageInputIdentityDescription recognizer).SubroutineReady :=
+    (SIID recognizer).SubroutineReady :=
   seqSubroutine_subroutineReady
     hrecognizer.left
     ⟨exactIdentityDescription_wellFormed,
@@ -921,7 +931,7 @@ theorem stageInputIdentityDescription_spec_of_recognizer
     {recognizer : MachineDescription}
     (hrecognizer : StageInputRecognizerSpec recognizer) :
     StageInputValidatorSpec
-      (StageInputIdentityDescription recognizer) := by
+      (SIID recognizer) := by
   constructor
   · exact stageInputIdentityDescription_subroutineReady
       hrecognizer
@@ -999,7 +1009,7 @@ theorem
     {recognizer : MachineDescription}
     (hrecognizer : StageInputRecognizerSpec recognizer) :
     StageInputIdentityClosedHandoffConstruction :=
-  ⟨StageInputIdentityDescription recognizer,
+  ⟨SIID recognizer,
     stageInputIdentityDescription_spec_of_recognizer hrecognizer⟩
 
 theorem stageInputValidatorSpec_of_identityClosedHandoff

@@ -20,6 +20,8 @@ open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
+private abbrev ITCD := InputTapeRightCellsDirectCopierDescription
+
 def checkedNonemptyBoolWordQuoteDirectSourceBits
     (b : Bool) (rest : Word Bool)
     (suffix : Word MachineCodeSymbol) : Word Bool :=
@@ -178,7 +180,7 @@ theorem checkedNonemptyBoolWordQuoteDirectSourceBits_encodeNatAppend
 theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_donePass
     (b : Bool) (pre0 tickBits sourceTailAfterDone : Word Bool) :
     exists steps : Nat,
-      InputTapeRightCellsDirectCopierDescription.runConfig steps
+      ITCD.runConfig steps
           (config 0
             (List.append ((List.append pre0 tickBits).reverse.map some)
               [none, some false])
@@ -217,7 +219,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_phaseC
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol) :
     exists steps : Nat,
-      InputTapeRightCellsDirectCopierDescription.runConfig steps
+      ITCD.runConfig steps
           (config 0
             (List.append
               ((encodeCodeSymbolAsInput
@@ -260,7 +262,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_phaseC
         b pre0 tickBits sourceTailAfterDone with
     ⟨doneSteps, hdoneRaw⟩
   have hdone :
-      InputTapeRightCellsDirectCopierDescription.runConfig doneSteps
+      ITCD.runConfig doneSteps
           (config 0
             (List.append ((List.append pre0 tickBits).reverse.map some)
               [none, some false])
@@ -374,7 +376,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol) :
     exists steps : Nat,
-      InputTapeRightCellsDirectCopierDescription.runConfig steps
+      ITCD.runConfig steps
           (config 0
             (List.append
               ((encodeCodeSymbolAsInput
@@ -397,23 +399,25 @@ def CheckedRawBoolWordAppendCodeWordReturnDescription
     (code : Word MachineCodeSymbol) : MachineDescription :=
   MarkedPrefixAppendCodeWordReturnDescription code
 
+private abbrev CRBACW := CheckedRawBoolWordAppendCodeWordReturnDescription
+
 theorem checkedRawBoolWordAppendCodeWordReturnDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
-    (CheckedRawBoolWordAppendCodeWordReturnDescription code).SubroutineReady :=
+    (CRBACW code).SubroutineReady :=
   markedPrefixAppendCodeWordReturnDescription_subroutineReady code hcode
 
 theorem checkedRawBoolWordAppendCodeWordReturnDescription_run
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (b : Bool) (rest : Word Bool) :
     exists steps : Nat,
-      (CheckedRawBoolWordAppendCodeWordReturnDescription code).runConfig steps
+      (CRBACW code).runConfig steps
           { state :=
-              (CheckedRawBoolWordAppendCodeWordReturnDescription code).start
+              (CRBACW code).start
             tape :=
               tapeAtCells []
                 (List.append (some b :: rest.map some) [none]) } =
         { state :=
-            (CheckedRawBoolWordAppendCodeWordReturnDescription code).halt
+            (CRBACW code).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -427,7 +431,7 @@ theorem checkedRawBoolWordAppendCodeWordReturnDescription_run
 theorem checkedRawBoolWordAppendCodeWordReturnDescription_haltsFromTape
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (b : Bool) (rest : Word Bool) :
-    (CheckedRawBoolWordAppendCodeWordReturnDescription code).HaltsFromTape
+    (CRBACW code).HaltsFromTape
       (tapeAtCells []
         (List.append (some b :: rest.map some) [none]))
       (tapeAtCells [some false]
@@ -448,14 +452,14 @@ theorem checkedRawBoolWordAppendCodeWordReturnDescription_haltsFromTape
 
 def CheckedRawBoolWordAppendHeaderReturnDescription
     (suffix : Word MachineCodeSymbol) : MachineDescription :=
-  CheckedRawBoolWordAppendCodeWordReturnDescription
-    (MachineCodeSymbol.header :: suffix)
+  CRBACW (MachineCodeSymbol.header :: suffix)
+
+private abbrev CRBAH := CheckedRawBoolWordAppendHeaderReturnDescription
 
 theorem
     checkedRawBoolWordAppendHeaderReturnDescription_subroutineReady
     (suffix : Word MachineCodeSymbol) :
-    (CheckedRawBoolWordAppendHeaderReturnDescription
-      suffix).SubroutineReady :=
+    (CRBAH suffix).SubroutineReady :=
   checkedRawBoolWordAppendCodeWordReturnDescription_subroutineReady
     (MachineCodeSymbol.header :: suffix)
     (by intro h; cases h)
@@ -464,14 +468,14 @@ theorem checkedRawBoolWordAppendHeaderReturnDescription_run
     (suffix : Word MachineCodeSymbol)
     (b : Bool) (rest : Word Bool) :
     exists steps : Nat,
-      (CheckedRawBoolWordAppendHeaderReturnDescription suffix).runConfig steps
+      (CRBAH suffix).runConfig steps
           { state :=
-              (CheckedRawBoolWordAppendHeaderReturnDescription suffix).start
+              (CRBAH suffix).start
             tape :=
               tapeAtCells []
                 (List.append (some b :: rest.map some) [none]) } =
         { state :=
-            (CheckedRawBoolWordAppendHeaderReturnDescription suffix).halt
+            (CRBAH suffix).halt
           tape :=
             tapeAtCells [some false]
               (some false ::
@@ -488,7 +492,7 @@ theorem checkedRawBoolWordAppendHeaderReturnDescription_run
 theorem checkedRawBoolWordAppendHeaderReturnDescription_haltsFromTape
     (suffix : Word MachineCodeSymbol)
     (b : Bool) (rest : Word Bool) :
-    (CheckedRawBoolWordAppendHeaderReturnDescription suffix).HaltsFromTape
+    (CRBAH suffix).HaltsFromTape
       (tapeAtCells []
         (List.append (some b :: rest.map some) [none]))
       (tapeAtCells [some false]

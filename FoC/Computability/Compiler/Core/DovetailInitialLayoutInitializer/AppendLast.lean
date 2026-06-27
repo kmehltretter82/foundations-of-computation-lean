@@ -36,33 +36,35 @@ def WriteTransitionPrefixDescription :
         4 none (some false) Direction.right 5
     ]
 
+private abbrev WTP := WriteTransitionPrefixDescription
+
 theorem writeTransitionPrefixDescription_wellFormed :
-    WriteTransitionPrefixDescription.WellFormed := by
+    WTP.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := WriteTransitionPrefixDescription.transitions)
+      (l := WTP.transitions)
       (stateCount :=
-        WriteTransitionPrefixDescription.stateCount)
+        WTP.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := WriteTransitionPrefixDescription.transitions)
+      (l := WTP.transitions)
       (by native_decide)
 
 theorem writeTransitionPrefixDescription_haltTransitionFree :
-    WriteTransitionPrefixDescription.HaltTransitionFree :=
+    WTP.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := WriteTransitionPrefixDescription.transitions)
-    (state := WriteTransitionPrefixDescription.halt)
+    (l := WTP.transitions)
+    (state := WTP.halt)
     (by native_decide)
 
 theorem writeTransitionPrefixDescription_subroutineReady :
-    WriteTransitionPrefixDescription.SubroutineReady :=
+    WTP.SubroutineReady :=
   ⟨writeTransitionPrefixDescription_wellFormed,
     writeTransitionPrefixDescription_haltTransitionFree⟩
 
 theorem writeTransitionPrefixDescription_run
     (b : Bool) (rest : List (Option Bool)) :
-    WriteTransitionPrefixDescription.runConfig 5
+    WTP.runConfig 5
         (config 0 [] (some b :: rest)) =
       config 5 [some false]
         (List.append [some false, some false, some true]
@@ -95,33 +97,35 @@ def WriteMarkedTransitionPrefixDescription :
         4 none (some false) Direction.right 5
     ]
 
+private abbrev WMTP := WriteMarkedTransitionPrefixDescription
+
 theorem writeMarkedTransitionPrefixDescription_wellFormed :
-    WriteMarkedTransitionPrefixDescription.WellFormed := by
+    WMTP.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := WriteMarkedTransitionPrefixDescription.transitions)
+      (l := WMTP.transitions)
       (stateCount :=
-        WriteMarkedTransitionPrefixDescription.stateCount)
+        WMTP.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := WriteMarkedTransitionPrefixDescription.transitions)
+      (l := WMTP.transitions)
       (by native_decide)
 
 theorem writeMarkedTransitionPrefixDescription_haltTransitionFree :
-    WriteMarkedTransitionPrefixDescription.HaltTransitionFree :=
+    WMTP.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := WriteMarkedTransitionPrefixDescription.transitions)
-    (state := WriteMarkedTransitionPrefixDescription.halt)
+    (l := WMTP.transitions)
+    (state := WMTP.halt)
     (by native_decide)
 
 theorem writeMarkedTransitionPrefixDescription_subroutineReady :
-    WriteMarkedTransitionPrefixDescription.SubroutineReady :=
+    WMTP.SubroutineReady :=
   ⟨writeMarkedTransitionPrefixDescription_wellFormed,
     writeMarkedTransitionPrefixDescription_haltTransitionFree⟩
 
 theorem writeMarkedTransitionPrefixDescription_run
     (b : Bool) (rest : List (Option Bool)) :
-    WriteMarkedTransitionPrefixDescription.runConfig 5
+    WMTP.runConfig 5
         (config 0 [] (some b :: rest)) =
       config 5 [some false]
         (List.append [none, some false, some true]
@@ -1011,13 +1015,15 @@ theorem appendCodeWordLastDescription_run_from_scan_atCellsChecked :
 def MarkedPrefixThenAppendCodeWordLastDescription
     (code : Word MachineCodeSymbol) : MachineDescription :=
   seqSubroutine
-    WriteMarkedTransitionPrefixDescription
+    WMTP
     (AppendCodeWordLastDescription code)
     Direction.right
 
+private abbrev MPACW := MarkedPrefixThenAppendCodeWordLastDescription
+
 theorem markedPrefixThenAppendCodeWordLastDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
-    (MarkedPrefixThenAppendCodeWordLastDescription
+    (MPACW
       code).SubroutineReady :=
   seqSubroutine_subroutineReady
     writeMarkedTransitionPrefixDescription_subroutineReady
@@ -1027,18 +1033,18 @@ theorem markedPrefixThenAppendCodeWordLastDescription_run
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (b : Bool) (rest : Word Bool) :
     exists n : Nat,
-      (MarkedPrefixThenAppendCodeWordLastDescription code).runConfig n
-          ((MarkedPrefixThenAppendCodeWordLastDescription
+      (MPACW code).runConfig n
+          ((MPACW
             code).initial (b :: rest)) =
         { state :=
-            (MarkedPrefixThenAppendCodeWordLastDescription code).halt
+            (MPACW code).halt
           tape :=
             appendCodeWordLastTapeAtCells
               (List.append
                 ((false :: true :: b :: rest).reverse.map some)
                 [none, some false])
               code } := by
-  let A := WriteMarkedTransitionPrefixDescription
+  let A := WMTP
   let B := AppendCodeWordLastDescription code
   let Tmid :=
     tapeAtCells [some false]
@@ -1089,20 +1095,20 @@ theorem markedPrefixThenAppendCodeWordLastDescription_run_checked
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (b : Bool) (rest : Word Bool) :
     exists n : Nat,
-      (MarkedPrefixThenAppendCodeWordLastDescription code).runConfig n
-          { state := (MarkedPrefixThenAppendCodeWordLastDescription code).start
+      (MPACW code).runConfig n
+          { state := (MPACW code).start
             tape :=
               tapeAtCells []
                 (List.append (some b :: rest.map some) [none]) } =
         { state :=
-            (MarkedPrefixThenAppendCodeWordLastDescription code).halt
+            (MPACW code).halt
           tape :=
             appendCodeWordLastTapeAtCells
               (List.append
                 ((false :: true :: b :: rest).reverse.map some)
                 [none, some false])
               code } := by
-  let A := WriteMarkedTransitionPrefixDescription
+  let A := WMTP
   let B := AppendCodeWordLastDescription code
   let Tmid :=
     tapeAtCells [some false]
@@ -1201,7 +1207,7 @@ theorem appendNatLastDescription_haltsWithTape
 
 def MarkedPrefixThenAppendNatLastDescription
     (n : Nat) : MachineDescription :=
-  MarkedPrefixThenAppendCodeWordLastDescription
+  MPACW
     (encodeNat n)
 
 theorem markedPrefixThenAppendNatLastDescription_subroutineReady

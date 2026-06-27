@@ -11,6 +11,8 @@ open MachineDescription
 namespace DovetailInitialLayoutInitializer
 namespace StageInputMarkedScanner
 
+private abbrev SIMS := StageInputMarkedScannerDescription
+
 theorem stageInputBits_nil_eq_done_nat
     (stage : Nat) :
     stageInputBits ([] : Word Bool) stage =
@@ -25,11 +27,11 @@ theorem scanner_marked_done_tail_decodeNat_none_ne_halt
     (rest : Word MachineCodeSymbol)
     (hdecode : decodeNat rest = none)
     (n : Nat) :
-    (StageInputMarkedScannerDescription.runConfig n
+    (SIMS.runConfig n
       (markedTailStartConfig
         (true :: true ::
           encodeCodeWordAsInput rest))).state ≠
-      StageInputMarkedScannerDescription.halt := by
+      SIMS.halt := by
   cases rest with
   | nil =>
       exact
@@ -210,11 +212,11 @@ theorem scanner_marked_done_tail_decodeNat_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :
       exists steps : Nat,
-        StageInputMarkedScannerDescription.runConfig steps
+        SIMS.runConfig steps
             (markedTailStartConfig
               (true :: true ::
                 encodeCodeWordAsInput rest)) =
-          { state := StageInputMarkedScannerDescription.halt
+          { state := SIMS.halt
             tape := T }) :
     exists stage : Nat,
     exists suffix : Word MachineCodeSymbol,
@@ -226,11 +228,11 @@ theorem scanner_marked_done_tail_decodeNat_inv
         scanner_marked_done_tail_decodeNat_none_ne_halt
           rest hdecode steps
       have hstate :
-          (StageInputMarkedScannerDescription.runConfig steps
+          (SIMS.runConfig steps
             (markedTailStartConfig
               (true :: true ::
                 encodeCodeWordAsInput rest))).state =
-            StageInputMarkedScannerDescription.halt := by
+            SIMS.halt := by
         simpa using
           congrArg Configuration.state hsteps
       exact False.elim (hne hstate)
@@ -242,11 +244,11 @@ theorem scanner_marked_done_tail_nat_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :
       exists steps : Nat,
-        StageInputMarkedScannerDescription.runConfig steps
+        SIMS.runConfig steps
             (markedTailStartConfig
               (true :: true ::
                 encodeCodeWordAsInput rest)) =
-          { state := StageInputMarkedScannerDescription.halt
+          { state := SIMS.halt
             tape := T }) :
     exists stage : Nat,
       rest = encodeNat stage := by
@@ -257,7 +259,7 @@ theorem scanner_marked_done_tail_nat_inv
         encodeNatAppend stagePrefix suffix :=
     decodeNat_eq_some_encodeNatAppend hdecode
   have hprefix :
-      StageInputMarkedScannerDescription.runConfig 18
+      SIMS.runConfig 18
           (markedTailStartConfig
             (true :: true ::
               encodeCodeWordAsInput rest)) =
@@ -265,7 +267,7 @@ theorem scanner_marked_done_tail_nat_inv
           ((encodeCodeWordAsInput rest).map some) := by
     rw [hrest]
     change
-      StageInputMarkedScannerDescription.runConfig 18
+      SIMS.runConfig 18
           (markedTailStartConfig
             (true :: true ::
               encodeCodeWordAsInput
@@ -284,7 +286,7 @@ theorem scanner_marked_done_tail_nat_inv
   have hmid :
       (config 200 [some true, some true, none, some false]
         ((encodeCodeWordAsInput rest).map some)).state ≠
-        StageInputMarkedScannerDescription.halt := by
+        SIMS.halt := by
     simp [config, StageInputMarkedScannerDescription]
   rcases
       runConfig_halt_after_prefix
@@ -297,11 +299,11 @@ theorem scanner_marked_done_tail_bits_shape_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :
       exists steps : Nat,
-        StageInputMarkedScannerDescription.runConfig steps
+        SIMS.runConfig steps
             (markedTailStartConfig
               (true :: true ::
                 encodeCodeWordAsInput rest)) =
-          { state := StageInputMarkedScannerDescription.halt
+          { state := SIMS.halt
             tape := T }) :
     exists stage : Nat,
       stageInputBits ([] : Word Bool) stage =
@@ -319,9 +321,9 @@ theorem scanner_marked_code_tail_bits_shape_inv
         false :: false :: tail)
     (hscanner :
       exists steps : Nat,
-        StageInputMarkedScannerDescription.runConfig steps
+        SIMS.runConfig steps
             (markedTailStartConfig tail) =
-          { state := StageInputMarkedScannerDescription.halt
+          { state := SIMS.halt
             tape := T }) :
     exists w : Word Bool,
     exists stage : Nat,
@@ -361,9 +363,9 @@ theorem scanner_marked_code_tail_shape_inv
         false :: false :: tail)
     (hscanner :
       exists steps : Nat,
-        StageInputMarkedScannerDescription.runConfig steps
+        SIMS.runConfig steps
             (markedTailStartConfig tail) =
-          { state := StageInputMarkedScannerDescription.halt
+          { state := SIMS.halt
             tape := T }) :
     exists w : Word Bool,
     exists stage : Nat,
@@ -380,9 +382,9 @@ theorem scanner_marked_tail_tape_inv
     {w : Word Bool} {stage : Nat}
     (hscanner :
       exists steps : Nat,
-        StageInputMarkedScannerDescription.runConfig steps
+        SIMS.runConfig steps
             (markedTailStartConfig tail) =
-          { state := StageInputMarkedScannerDescription.halt
+          { state := SIMS.halt
             tape := T })
     (htail : tail = stageInputSecondBitTail w stage) :
     T = stageInputSecondBitMarkedCheckedHandoffTape w stage := by
@@ -404,9 +406,9 @@ theorem scanner_marked_code_tail_inv
         false :: false :: tail)
     (hscanner :
       exists steps : Nat,
-        StageInputMarkedScannerDescription.runConfig steps
+        SIMS.runConfig steps
             (markedTailStartConfig tail) =
-          { state := StageInputMarkedScannerDescription.halt
+          { state := SIMS.halt
             tape := T }) :
     exists w : Word Bool,
     exists stage : Nat,
@@ -459,10 +461,10 @@ theorem stageInputMarkedScannerDescription_closed
         (encodeCodeWordAsInput code) Tmark)
     (hscanner :
       exists steps : Nat,
-        StageInputMarkedScannerDescription.runConfig steps
-            { state := StageInputMarkedScannerDescription.start
+        SIMS.runConfig steps
+            { state := SIMS.start
               tape := Tape.move Direction.right Tmark } =
-          { state := StageInputMarkedScannerDescription.halt
+          { state := SIMS.halt
             tape := T }) :
     exists w : Word Bool,
     exists stage : Nat,
@@ -472,9 +474,9 @@ theorem stageInputMarkedScannerDescription_closed
     ⟨tail, hbits, hTmark⟩
   have hscannerTail :
       exists steps : Nat,
-        StageInputMarkedScannerDescription.runConfig steps
+        SIMS.runConfig steps
             (markedTailStartConfig tail) =
-          { state := StageInputMarkedScannerDescription.halt
+          { state := SIMS.halt
             tape := T } := by
     rcases hscanner with ⟨steps, hsteps⟩
     refine ⟨steps, ?_⟩
@@ -491,7 +493,7 @@ has a phase-specific name.
 -/
 
 theorem stageInputMarkedScannerDescription_spec :
-    StageInputMarkedScannerSpec StageInputMarkedScannerDescription := by
+    StageInputMarkedScannerSpec SIMS := by
   constructor
   · exact stageInputMarkedScannerDescription_subroutineReady
   constructor

@@ -382,26 +382,28 @@ def StageInputMarkedScannerDescription :
       ++ scanLeftToSentinelRestart 140 141 142
       ++ scanLeftToSentinelHalt 220
 
+private abbrev SIMS := StageInputMarkedScannerDescription
+
 theorem stageInputMarkedScannerDescription_wellFormed :
-    StageInputMarkedScannerDescription.WellFormed := by
+    SIMS.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := StageInputMarkedScannerDescription.transitions)
-      (stateCount := StageInputMarkedScannerDescription.stateCount)
+      (l := SIMS.transitions)
+      (stateCount := SIMS.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := StageInputMarkedScannerDescription.transitions)
+      (l := SIMS.transitions)
       (by native_decide)
 
 theorem stageInputMarkedScannerDescription_haltTransitionFree :
-    StageInputMarkedScannerDescription.HaltTransitionFree :=
+    SIMS.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := StageInputMarkedScannerDescription.transitions)
-    (state := StageInputMarkedScannerDescription.halt)
+    (l := SIMS.transitions)
+    (state := SIMS.halt)
     (by native_decide)
 
 theorem stageInputMarkedScannerDescription_subroutineReady :
-    StageInputMarkedScannerDescription.SubroutineReady :=
+    SIMS.SubroutineReady :=
   ⟨stageInputMarkedScannerDescription_wellFormed,
     stageInputMarkedScannerDescription_haltTransitionFree⟩
 
@@ -420,7 +422,7 @@ def markedTickRev : List (Option Bool) :=
 
 theorem run_state100_tick
     (left tail : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 4
+    SIMS.runConfig 4
         (config 100 left
           (List.append (tickBits.map some) tail)) =
       config 120 (List.append markedTickRev left) tail := by
@@ -436,7 +438,7 @@ theorem run_state100_tick
 
 theorem run_state100_done
     (left tail : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 4
+    SIMS.runConfig 4
         (config 100 left
           (List.append (doneBits.map some) tail)) =
       config 150
@@ -453,7 +455,7 @@ theorem run_state100_done
 
 theorem run_state150_markedCell
     (b : Bool) (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 4
+    SIMS.runConfig 4
         (config 150 left
           (List.append ((markedCellBits b).map some) right)) =
       config 150
@@ -473,7 +475,7 @@ theorem run_state150_markedCell
 theorem run_state150_markedCells
     (processed : Word Bool)
     (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig
+    SIMS.runConfig
         (4 * processed.length)
         (config 150 left
           (List.append ((markedCellsBits processed).map some)
@@ -503,7 +505,7 @@ theorem run_state150_markedCells
 
 theorem run_state150_to_state160
     (left tail : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 2
+    SIMS.runConfig 2
         (config 150 left (some false :: some false :: tail)) =
       config 160 left (some false :: none :: tail) := by
   cases tail <;>
@@ -517,7 +519,7 @@ theorem run_state150_to_state160
 
 theorem run_state150_stageNat_to_state160
     (stage : Nat) (left : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 2
+    SIMS.runConfig 2
         (config 150 left ((stageNatBits stage).map some)) =
       config 160 left
         (some false :: none ::
@@ -529,7 +531,7 @@ theorem run_state150_stageNat_to_state160
 theorem run_state150_markedCells_to_state160
     (processed : Word Bool) (stage : Nat)
     (left : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig
+    SIMS.runConfig
         (4 * processed.length + 2)
         (config 150 left
           (List.append ((markedCellsBits processed).map some)
@@ -551,7 +553,7 @@ and move left to the boundary that should become the halted head position.
 
 theorem run_state180_some
     (b : Bool) (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 1
+    SIMS.runConfig 1
         (config 180 left (some b :: right)) =
       config 180 (some b :: left) right := by
   cases b <;> cases right <;>
@@ -565,7 +567,7 @@ theorem run_state180_some
 
 theorem run_state180_bits
     (bits : Word Bool) (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig bits.length
+    SIMS.runConfig bits.length
         (config 180 left (List.append (bits.map some) right)) =
       config 180
         (List.append (bits.reverse.map some) left) right := by
@@ -574,7 +576,7 @@ theorem run_state180_bits
       rfl
   | cons b rest ih =>
       change
-        StageInputMarkedScannerDescription.runConfig
+        SIMS.runConfig
             (rest.length + 1)
             (config 180 left
               (some b :: List.append (rest.map some) right)) =
@@ -588,7 +590,7 @@ theorem run_state180_bits
 
 theorem run_state180_none_cons
     (cell : Option Bool) (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 1
+    SIMS.runConfig 1
         (config 180 (cell :: left) (none :: right)) =
       config 200 left (cell :: some false :: right) := by
   cases cell <;>
@@ -602,7 +604,7 @@ theorem run_state180_none_cons
 
 theorem run_state200_tick
     (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 4
+    SIMS.runConfig 4
         (config 200 left
           (List.append (tickBits.map some) right)) =
       config 200
@@ -621,7 +623,7 @@ def donePrefixRev : List (Option Bool) :=
 
 theorem run_state200_done_blank
     (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 5
+    SIMS.runConfig 5
         (config 200 left
           (List.append (doneBits.map some) (none :: right))) =
       config 220
@@ -638,7 +640,7 @@ theorem run_state200_done_blank
 
 theorem run_state120_tick
     (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 4
+    SIMS.runConfig 4
         (config 120 left
           (List.append (tickBits.map some) right)) =
       config 120
@@ -655,7 +657,7 @@ theorem run_state120_tick
 
 theorem run_state120_done
     (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 4
+    SIMS.runConfig 4
         (config 120 left
           (List.append (doneBits.map some) right)) =
       config 130
@@ -672,7 +674,7 @@ theorem run_state120_done
 
 theorem run_state120_stageNat
     (n : Nat) (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig (4 * n + 4)
+    SIMS.runConfig (4 * n + 4)
         (config 120 left
           (List.append ((stageNatBits n).map some) right)) =
       config 130
@@ -700,7 +702,7 @@ theorem run_state120_stageNat
 
 theorem run_state130_markedCell
     (b : Bool) (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 4
+    SIMS.runConfig 4
         (config 130 left
           (List.append ((markedCellBits b).map some) right)) =
       config 130
@@ -718,7 +720,7 @@ theorem run_state130_markedCell
 theorem run_state130_markedCells
     (processed : Word Bool)
     (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig
+    SIMS.runConfig
         (4 * processed.length)
         (config 130 left
           (List.append ((markedCellsBits processed).map some)
@@ -748,7 +750,7 @@ theorem run_state130_markedCells
 
 theorem run_state130_currentCell
     (b : Bool) (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 6
+    SIMS.runConfig 6
         (config 130 left
           (List.append ((cellBits b).map some) right)) =
       config 140 (some true :: some true :: left)
@@ -766,7 +768,7 @@ theorem run_state130_currentCell
 theorem run_state140_returnToLengthMarker
     (scanRev : Word Bool) (headBit : Bool)
     (leftTail right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig
+    SIMS.runConfig
         (scanRev.length + 4)
         (config 140
           (List.append (scanRev.map some)
@@ -792,8 +794,8 @@ theorem run_state140_returnToLengthMarker
         omega]
       rw [runConfig_add]
       change
-        StageInputMarkedScannerDescription.runConfig (rest.length + 4)
-          (StageInputMarkedScannerDescription.runConfig 1
+        SIMS.runConfig (rest.length + 4)
+          (SIMS.runConfig 1
             (config 140
               (some b :: List.append (List.map some rest)
                 (none :: some true :: leftTail))
@@ -802,7 +804,7 @@ theorem run_state140_returnToLengthMarker
             (List.append (List.map some (b :: rest).reverse)
               (some headBit :: right))
       rw [show
-          StageInputMarkedScannerDescription.runConfig 1
+          SIMS.runConfig 1
             (config 140
               (some b :: List.append (List.map some rest)
                 (none :: some true :: leftTail))
@@ -825,7 +827,7 @@ theorem run_state140_returnToLengthMarker
 theorem run_state220_some_cons
     (b : Bool) (left : List (Option Bool))
     (cell : Option Bool) (right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 1
+    SIMS.runConfig 1
         (config 220 (cell :: left) (some b :: right)) =
       config 220 left (cell :: some b :: right) := by
   cases b <;> cases cell <;>
@@ -839,7 +841,7 @@ theorem run_state220_some_cons
 
 theorem run_state220_some_nil
     (b : Bool) (right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 1
+    SIMS.runConfig 1
         (config 220 [] (some b :: right)) =
       config 220 [] (none :: some b :: right) := by
   cases b <;>
@@ -853,7 +855,7 @@ theorem run_state220_some_nil
 
 theorem run_state220_none
     (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 1
+    SIMS.runConfig 1
         (config 220 left (none :: right)) =
       config 999 (none :: left) right := by
   cases right <;>
@@ -878,7 +880,7 @@ def state220ScanConfig
 theorem run_state220_bits_to_boundary
     (bitsToLeft : Word Bool) (boundary : Option Bool)
     (leftTail right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig bitsToLeft.length
+    SIMS.runConfig bitsToLeft.length
         (state220ScanConfig bitsToLeft boundary leftTail right) =
       config 220 leftTail
         (boundary ::
@@ -893,8 +895,8 @@ theorem run_state220_bits_to_boundary
       cases rest with
       | nil =>
           change
-            StageInputMarkedScannerDescription.runConfig 0
-                (StageInputMarkedScannerDescription.runConfig 1
+            SIMS.runConfig 0
+                (SIMS.runConfig 1
                   (config 220 (boundary :: leftTail)
                     (some b :: right))) =
               config 220 leftTail (boundary :: some b :: right)
@@ -902,9 +904,9 @@ theorem run_state220_bits_to_boundary
           rfl
       | cons b' rest =>
           change
-            StageInputMarkedScannerDescription.runConfig
+            SIMS.runConfig
                 (b' :: rest).length
-                (StageInputMarkedScannerDescription.runConfig 1
+                (SIMS.runConfig 1
                   (config 220
                     (some b' ::
                       List.append (rest.map some)
@@ -923,7 +925,7 @@ theorem run_state220_bits_to_boundary
 theorem run_state200_done_end
     (pre : Word Bool) (boundary : Option Bool)
     (leftTail : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 5
+    SIMS.runConfig 5
         (config 200
           (List.append (pre.reverse.map some) (boundary :: leftTail))
           (doneBits.map some)) =
@@ -942,7 +944,7 @@ theorem run_state200_done_end
 theorem run_state200_stageNat_end
     (stage : Nat) (pre : Word Bool) (boundary : Option Bool)
     (leftTail : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig (4 * stage + 5)
+    SIMS.runConfig (4 * stage + 5)
         (config 200
           (List.append (pre.reverse.map some) (boundary :: leftTail))
           ((stageNatBits stage).map some)) =
@@ -978,8 +980,8 @@ tick.
 
 theorem run_start_cons_to_state120
     (b : Bool) (rest : Word Bool) (stage : Nat) :
-    StageInputMarkedScannerDescription.runConfig 6
-        { state := StageInputMarkedScannerDescription.start
+    SIMS.runConfig 6
+        { state := SIMS.start
           tape :=
             stageInputSecondBitMarkedHandoffTape
               (b :: rest) stage } =
@@ -992,8 +994,8 @@ theorem run_start_cons_to_state120
   unfold stageInputSecondBitMarkedTape
   rw [stageInputSecondBitTail_cons]
   change
-    StageInputMarkedScannerDescription.runConfig 6
-        { state := StageInputMarkedScannerDescription.start
+    SIMS.runConfig 6
+        { state := SIMS.start
           tape :=
             Tape.move Direction.right
               (tapeAtCells [some false]
@@ -1041,8 +1043,8 @@ theorem run_start_cons_to_state120
 
 theorem run_start_nil_to_state200
     (stage : Nat) :
-    StageInputMarkedScannerDescription.runConfig 18
-        { state := StageInputMarkedScannerDescription.start
+    SIMS.runConfig 18
+        { state := SIMS.start
           tape := stageInputSecondBitMarkedHandoffTape
             ([] : Word Bool) stage } =
       config 200 [some true, some true, none, some false]
@@ -1065,11 +1067,11 @@ theorem run_start_nil_to_state200
 
 theorem run_start_nil
     (stage : Nat) :
-    StageInputMarkedScannerDescription.runConfig (30 + 8 * stage)
-        { state := StageInputMarkedScannerDescription.start
+    SIMS.runConfig (30 + 8 * stage)
+        { state := SIMS.start
           tape := stageInputSecondBitMarkedHandoffTape
             ([] : Word Bool) stage } =
-      { state := StageInputMarkedScannerDescription.halt
+      { state := SIMS.halt
         tape :=
           stageInputSecondBitMarkedCheckedHandoffTape
             ([] : Word Bool) stage } := by
@@ -1084,14 +1086,14 @@ theorem run_start_nil
   rw [run_start_nil_to_state200]
   rw [runConfig_add]
   change
-    StageInputMarkedScannerDescription.runConfig
+    SIMS.runConfig
         (bitsToLeft.length + 1)
-        (StageInputMarkedScannerDescription.runConfig (4 * stage + 5)
+        (SIMS.runConfig (4 * stage + 5)
           (config 200
             (List.append (pre.reverse.map some)
               (none :: [some false]))
             ((stageNatBits stage).map some))) =
-      { state := StageInputMarkedScannerDescription.halt
+      { state := SIMS.halt
         tape :=
           stageInputSecondBitMarkedCheckedHandoffTape
             ([] : Word Bool) stage }
@@ -1118,12 +1120,12 @@ handoff tape.
 
 def markedStartConfig (w : Word Bool) (stage : Nat) :
     Configuration :=
-  { state := StageInputMarkedScannerDescription.start
+  { state := SIMS.start
     tape := stageInputSecondBitMarkedHandoffTape w stage }
 
 def checkedHaltConfig (w : Word Bool) (stage : Nat) :
     Configuration :=
-  { state := StageInputMarkedScannerDescription.halt
+  { state := SIMS.halt
     tape := stageInputSecondBitMarkedCheckedHandoffTape w stage }
 
 def state120AfterStartConfig
@@ -1217,7 +1219,7 @@ theorem run_mark_current_to_state100
     (processed : Word Bool) (b : Bool) (rest : Word Bool)
     (stage : Nat) :
     exists steps : Nat,
-      StageInputMarkedScannerDescription.runConfig steps
+      SIMS.runConfig steps
           (markingState120 processed b rest stage) =
         state100AfterMarked processed b rest stage := by
   let scanRev := markingReturnScanRev processed rest
@@ -1247,7 +1249,7 @@ theorem run_marking_loop_from_state120
     (processed : Word Bool) (b : Bool) (rest : Word Bool)
     (stage : Nat) :
     exists steps : Nat,
-      StageInputMarkedScannerDescription.runConfig steps
+      SIMS.runConfig steps
           (markingState120 processed b rest stage) =
         finishStartConfig (List.append processed (b :: rest)) stage := by
   induction rest generalizing processed b with
@@ -1259,7 +1261,7 @@ theorem run_marking_loop_from_state120
       rw [hmark]
       unfold state100AfterMarked
       change
-        StageInputMarkedScannerDescription.runConfig 4
+        SIMS.runConfig 4
             (config 100 (finishLengthPrefixRev processed.length)
               (List.append (doneBits.map some)
                 (List.append ((markedCellsBits processed).map some)
@@ -1290,8 +1292,8 @@ theorem run_marking_loop_from_state120
         simp [stageNatBits_succ, tickBits,
           encodeCodeSymbolAsInput]]
       change
-        StageInputMarkedScannerDescription.runConfig recSteps
-            (StageInputMarkedScannerDescription.runConfig 4
+        SIMS.runConfig recSteps
+            (SIMS.runConfig 4
               (config 100 (finishLengthPrefixRev processed.length)
                 (List.append (tickBits.map some)
                   (List.append ((stageNatBits rest.length).map some)
@@ -1454,7 +1456,7 @@ def state160ScanConfig
 theorem run_state160_some_cons
     (b : Bool) (cell : Option Bool)
     (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 1
+    SIMS.runConfig 1
         (config 160 (cell :: left) (some b :: right)) =
       config 160 left (cell :: some b :: right) := by
   cases b <;> cases cell <;> cases right <;>
@@ -1469,7 +1471,7 @@ theorem run_state160_some_cons
 theorem run_state160_bits_to_boundary
     (bitsToRight : Word Bool) (boundary : Option Bool)
     (leftTail right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig bitsToRight.length
+    SIMS.runConfig bitsToRight.length
         (state160ScanConfig bitsToRight boundary leftTail right) =
       config 160 leftTail
         (boundary ::
@@ -1485,8 +1487,8 @@ theorem run_state160_bits_to_boundary
       cases rest with
       | nil =>
           change
-            StageInputMarkedScannerDescription.runConfig 0
-                (StageInputMarkedScannerDescription.runConfig 1
+            SIMS.runConfig 0
+                (SIMS.runConfig 1
                   (config 160 (boundary :: leftTail)
                     (some b :: right))) =
               config 160 leftTail (boundary :: some b :: right)
@@ -1494,9 +1496,9 @@ theorem run_state160_bits_to_boundary
           rfl
       | cons b' rest =>
           change
-            StageInputMarkedScannerDescription.runConfig
+            SIMS.runConfig
                 (b' :: rest).length
-                (StageInputMarkedScannerDescription.runConfig 1
+                (SIMS.runConfig 1
                   (config 160
                     (some b' ::
                       List.append (rest.map some)
@@ -1514,7 +1516,7 @@ theorem run_state160_bits_to_boundary
 
 theorem run_state160_none_to_state161
     (cell : Option Bool) (left right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 1
+    SIMS.runConfig 1
         (config 160 (cell :: left) (none :: right)) =
       config 161 left (cell :: none :: right) := by
   cases cell <;> cases right <;>
@@ -1528,7 +1530,7 @@ theorem run_state160_none_to_state161
 
 theorem run_state161_false_to_state170
     (right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 1
+    SIMS.runConfig 1
         (config 161 [] (some false :: right)) =
       config 170 [some false] right := by
   cases right <;>
@@ -1542,7 +1544,7 @@ theorem run_state161_false_to_state170
 
 theorem run_state170_none_to_state180
     (right : List (Option Bool)) :
-    StageInputMarkedScannerDescription.runConfig 1
+    SIMS.runConfig 1
         (config 170 [some false] (none :: right)) =
       config 180 [none, some false] right := by
   cases right <;>
@@ -1602,7 +1604,7 @@ def CheckedBoundaryScanStart
 theorem run_state120_marking_loop
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     exists steps : Nat,
-      StageInputMarkedScannerDescription.runConfig steps
+      SIMS.runConfig steps
           (state120AfterStartConfig b rest stage) =
         finishStartConfig (b :: rest) stage := by
   rcases run_marking_loop_from_state120
@@ -1615,7 +1617,7 @@ theorem run_state120_marking_loop
 theorem run_start_cons_marking_loop
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     exists steps : Nat,
-      StageInputMarkedScannerDescription.runConfig steps
+      SIMS.runConfig steps
           (markedStartConfig (b :: rest) stage) =
         finishStartConfig (b :: rest) stage := by
   rcases run_state120_marking_loop b rest stage with
@@ -1623,9 +1625,9 @@ theorem run_start_cons_marking_loop
   refine ⟨6 + steps, ?_⟩
   rw [runConfig_add]
   change
-    StageInputMarkedScannerDescription.runConfig steps
-        (StageInputMarkedScannerDescription.runConfig 6
-          { state := StageInputMarkedScannerDescription.start
+    SIMS.runConfig steps
+        (SIMS.runConfig 6
+          { state := SIMS.start
             tape :=
               stageInputSecondBitMarkedHandoffTape
                 (b :: rest) stage }) =
@@ -1636,7 +1638,7 @@ theorem run_start_cons_marking_loop
 theorem run_finish_restore_cells
     (w : Word Bool) (stage : Nat) :
     exists steps : Nat,
-      StageInputMarkedScannerDescription.runConfig steps
+      SIMS.runConfig steps
           (finishStartConfig w stage) =
         state160AfterRestoreConfig w stage := by
   refine ⟨4 * w.length + 2, ?_⟩
@@ -1647,7 +1649,7 @@ theorem run_finish_scan_left_to_append
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     exists steps : Nat,
     exists cfg : Configuration,
-      StageInputMarkedScannerDescription.runConfig steps
+      SIMS.runConfig steps
           (state160AfterRestoreConfig (b :: rest) stage) = cfg ∧
         AppendBlankStart (b :: rest) stage cfg := by
   let bits := finishScanBits (b :: rest)
@@ -1683,7 +1685,7 @@ theorem run_finish_append_blank
     (hcfg : AppendBlankStart w stage cfg) :
     exists steps : Nat,
     exists cfg' : Configuration,
-      StageInputMarkedScannerDescription.runConfig steps cfg = cfg' ∧
+      SIMS.runConfig steps cfg = cfg' ∧
         CheckedBoundaryScanStart w stage cfg' := by
   let tailPrefix := stageInputSecondBitTailPrefix w
   refine ⟨tailPrefix.length + 2 + (4 * stage + 5),
@@ -1695,16 +1697,16 @@ theorem run_finish_append_blank
     omega]
   rw [runConfig_add]
   change
-    StageInputMarkedScannerDescription.runConfig
+    SIMS.runConfig
         (1 + (1 + (4 * stage + 5)))
-        (StageInputMarkedScannerDescription.runConfig tailPrefix.length
+        (SIMS.runConfig tailPrefix.length
           (appendBlankStartConfig w stage)) =
       checkedBoundaryScanConfig w stage
   unfold appendBlankStartConfig markedStageNatBits
   change
-    StageInputMarkedScannerDescription.runConfig
+    SIMS.runConfig
         (1 + (1 + (4 * stage + 5)))
-        (StageInputMarkedScannerDescription.runConfig tailPrefix.length
+        (SIMS.runConfig tailPrefix.length
           (config 180 [none, some false]
             (List.append (tailPrefix.map some)
               (some false :: none ::
@@ -1724,7 +1726,7 @@ theorem run_finish_append_blank
     rfl
   rw [hstageBits]
   change
-    StageInputMarkedScannerDescription.runConfig (4 * stage + 5)
+    SIMS.runConfig (4 * stage + 5)
         (config 200
           (List.append (tailPrefix.reverse.map some)
             (none :: [some false]))
@@ -1739,7 +1741,7 @@ theorem run_finish_boundary_to_halt
     {cfg : Configuration}
     (hcfg : CheckedBoundaryScanStart w stage cfg) :
     exists steps : Nat,
-      StageInputMarkedScannerDescription.runConfig steps cfg =
+      SIMS.runConfig steps cfg =
         checkedHaltConfig w stage := by
   refine ⟨(stageInputSecondBitTail w stage).length + 1, ?_⟩
   rw [hcfg]
@@ -1749,8 +1751,8 @@ theorem run_finish_boundary_to_halt
     simp]
   rw [runConfig_add]
   change
-    StageInputMarkedScannerDescription.runConfig 1
-        (StageInputMarkedScannerDescription.runConfig
+    SIMS.runConfig 1
+        (SIMS.runConfig
           (stageInputSecondBitTail w stage).reverse.length
           (state220ScanConfig
             (stageInputSecondBitTail w stage).reverse
@@ -1770,7 +1772,7 @@ theorem run_finish_boundary_to_halt
 theorem run_forward_finish
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     exists steps : Nat,
-      StageInputMarkedScannerDescription.runConfig steps
+      SIMS.runConfig steps
           (finishStartConfig (b :: rest) stage) =
         checkedHaltConfig (b :: rest) stage := by
   rcases run_finish_restore_cells (b :: rest) stage with
@@ -1798,7 +1800,7 @@ theorem run_forward_finish
 theorem run_start_forward_cons
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     exists steps : Nat,
-      StageInputMarkedScannerDescription.runConfig steps
+      SIMS.runConfig steps
           (markedStartConfig (b :: rest) stage) =
         checkedHaltConfig (b :: rest) stage := by
   rcases run_start_cons_marking_loop b rest stage with
@@ -1813,7 +1815,7 @@ theorem run_start_forward_cons
 theorem run_start_forward
     (w : Word Bool) (stage : Nat) :
     exists steps : Nat,
-      StageInputMarkedScannerDescription.runConfig steps
+      SIMS.runConfig steps
           (markedStartConfig w stage) =
         checkedHaltConfig w stage := by
   cases w with
