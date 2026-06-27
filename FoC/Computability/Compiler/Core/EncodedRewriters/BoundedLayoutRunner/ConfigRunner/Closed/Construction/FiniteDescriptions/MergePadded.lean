@@ -922,10 +922,20 @@ def SelectedMergePaddedEmitterOuterSuffixCode
     (encodeConfigurationAppend p.S.config
       (encodeBoolAppend p.S.hit []))
 
+def SelectedMergePaddedEmitterOuterStageSuffixCode
+    (p : SelectedMergeEmitterPayload) : Word MachineCodeSymbol :=
+  encodeConfigurationAppend p.S.config
+    (encodeBoolAppend p.S.hit [])
+
 def SelectedMergePaddedEmitterOuterSuffixBits
     (p : SelectedMergeEmitterPayload) : Word Bool :=
   encodeCodeWordAsInput
     (SelectedMergePaddedEmitterOuterSuffixCode p)
+
+def SelectedMergePaddedEmitterOuterStageSuffixBits
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  encodeCodeWordAsInput
+    (SelectedMergePaddedEmitterOuterStageSuffixCode p)
 
 theorem SelectedMergePaddedEmitterOuterTailBits_eq_boolWordFieldBits
     (p : SelectedMergeEmitterPayload) :
@@ -960,6 +970,42 @@ theorem SelectedMergePaddedEmitterOuterSuffixBits_cons_false
     ⟨List.append tail
         (encodeCodeWordAsInput
           (encodeConfigurationAppend p.S.config
+            (encodeBoolAppend p.S.hit []))), ?_⟩
+  simp [htail]
+
+theorem SelectedMergePaddedEmitterOuterSuffixBits_eq_stageFieldBits
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterOuterSuffixBits p =
+      List.append
+        (FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          p.S.stage)
+        (SelectedMergePaddedEmitterOuterStageSuffixBits p) := by
+  rw [SelectedMergePaddedEmitterOuterSuffixBits,
+    SelectedMergePaddedEmitterOuterSuffixCode,
+    SelectedMergePaddedEmitterOuterStageSuffixBits,
+    SelectedMergePaddedEmitterOuterStageSuffixCode]
+  exact
+    CanonicalLayouts.DovetailStagePrefix.natBits_eq_encodeNatAppend
+      p.S.stage
+      (encodeConfigurationAppend p.S.config
+        (encodeBoolAppend p.S.hit []))
+
+theorem SelectedMergePaddedEmitterOuterStageSuffixBits_cons_false
+    (p : SelectedMergeEmitterPayload) :
+    exists tail : Word Bool,
+      SelectedMergePaddedEmitterOuterStageSuffixBits p = false :: tail := by
+  rw [SelectedMergePaddedEmitterOuterStageSuffixBits,
+    SelectedMergePaddedEmitterOuterStageSuffixCode,
+    encodeConfigurationAppend]
+  rw [CanonicalLayouts.DovetailStagePrefix.natBits_eq_encodeNatAppend]
+  rcases
+      CanonicalLayouts.DovetailLayoutScanner.stageNatBits_cons_false
+        p.S.config.state with
+    ⟨tail, htail⟩
+  refine
+    ⟨List.append tail
+        (encodeCodeWordAsInput
+          (encodeTapeAppend p.S.config.tape
             (encodeBoolAppend p.S.hit []))), ?_⟩
   simp [htail]
 
@@ -1075,6 +1121,96 @@ def SelectedMergePaddedEmitterAfterInputHandoffSpec
       emitter.HaltsFromTape
         (SelectedMergePaddedEmitterAfterInputHandoffTape p)
         (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
+
+def SelectedMergePaddedEmitterStageScannerDescription :
+    MachineDescription :=
+  CanonicalLayouts.DovetailStagePrefix.NonemptyNatSuffixScannerDescription
+
+theorem selectedMergePaddedEmitterStageScanner_subroutineReady :
+    SelectedMergePaddedEmitterStageScannerDescription.SubroutineReady := by
+  simpa [SelectedMergePaddedEmitterStageScannerDescription] using
+    CanonicalLayouts.DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
+
+def SelectedMergePaddedEmitterAfterStageTape
+  (p : SelectedMergeEmitterPayload) : Tape Bool :=
+  (CanonicalLayouts.DovetailStagePrefix.nonemptyNatSuffixHandoffConfigWithBase
+      p.S.stage
+      (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+        ((ParsedLayoutBits p.L).map some)
+        (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse))
+      (SelectedMergePaddedEmitterOuterStageSuffixBits p)).tape
+
+def SelectedMergePaddedEmitterAfterStageHandoffTape
+    (p : SelectedMergeEmitterPayload) : Tape Bool :=
+  DovetailInitialLayoutInitializer.tapeAtCells
+    (List.append
+      ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          p.S.stage).reverse.map some)
+      (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+        ((ParsedLayoutBits p.L).map some)
+        (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse)))
+    ((SelectedMergePaddedEmitterOuterStageSuffixBits p).map some)
+
+theorem selectedMergePaddedEmitterAfterStageTape_move_right
+    (p : SelectedMergeEmitterPayload) :
+    Tape.move Direction.right
+        (SelectedMergePaddedEmitterAfterStageTape p) =
+      SelectedMergePaddedEmitterAfterStageHandoffTape p := by
+  rcases SelectedMergePaddedEmitterOuterStageSuffixBits_cons_false p with
+    ⟨suffixTail, hsuffix⟩
+  rw [SelectedMergePaddedEmitterAfterStageTape,
+    SelectedMergePaddedEmitterAfterStageHandoffTape, hsuffix]
+  simpa using
+    CanonicalLayouts.DovetailStagePrefix.nonemptyNatSuffixHandoffConfigWithBase_move_right
+        p.S.stage
+        (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+          ((ParsedLayoutBits p.L).map some)
+          (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse))
+        false suffixTail
+
+def SelectedMergePaddedEmitterAfterStageHandoffSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      emitter.HaltsFromTape
+        (SelectedMergePaddedEmitterAfterStageHandoffTape p)
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
+
+theorem selectedMergePaddedEmitterStageScanner_haltsFromAfterInputHandoff
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterStageScannerDescription.HaltsFromTape
+      (SelectedMergePaddedEmitterAfterInputHandoffTape p)
+      (SelectedMergePaddedEmitterAfterStageTape p) := by
+  rcases SelectedMergePaddedEmitterOuterStageSuffixBits_cons_false p with
+    ⟨suffixTail, hsuffix⟩
+  rcases
+      CanonicalLayouts.DovetailStagePrefix.run_nonemptyNatSuffix_raw_to_handoff_withBase
+          p.S.stage
+          (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+            ((ParsedLayoutBits p.L).map some)
+            (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse))
+          false suffixTail with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  constructor
+  · simpa [MachineDescription.HaltsFromTapeIn,
+      SelectedMergePaddedEmitterStageScannerDescription,
+      CanonicalLayouts.DovetailStagePrefix.NonemptyNatSuffixScannerDescription,
+      SelectedMergePaddedEmitterAfterInputHandoffTape,
+      SelectedMergePaddedEmitterOuterSuffixBits_eq_stageFieldBits,
+      hsuffix,
+      DovetailInitialLayoutInitializer.config]
+      using congrArg MachineDescription.Configuration.state hsteps
+  · simpa [MachineDescription.HaltsFromTapeIn,
+      SelectedMergePaddedEmitterStageScannerDescription,
+      CanonicalLayouts.DovetailStagePrefix.NonemptyNatSuffixScannerDescription,
+      SelectedMergePaddedEmitterAfterInputHandoffTape,
+      SelectedMergePaddedEmitterAfterStageTape,
+      SelectedMergePaddedEmitterOuterSuffixBits_eq_stageFieldBits,
+      hsuffix,
+      DovetailInitialLayoutInitializer.config]
+      using congrArg MachineDescription.Configuration.tape hsteps
 
 theorem selectedMergePaddedEmitterInputScanner_haltsFromPayload
     (p : SelectedMergeEmitterPayload) :
