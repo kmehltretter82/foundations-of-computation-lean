@@ -930,6 +930,332 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_scan21
         rw [ih (some true :: leftRev)]
         simp [List.reverse_cons, List.append_assoc]
 
+def controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev
+    (rawLeft : List (Option Bool)) (scanRev : Word Bool)
+    (right : List (Option Bool)) : Tape Bool :=
+  match scanRev with
+  | [] => tapeAtCells rawLeft (none :: right)
+  | b :: rest =>
+      { left := List.append (rest.map some) (none :: rawLeft)
+        head := some b
+        right := right }
+
+def controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev
+    (leftRev : List (Option Bool)) (scanRev : Word Bool)
+    (right : List (Option Bool)) : Tape Bool :=
+  match scanRev with
+  | [] => tapeAtCells leftRev (none :: right)
+  | b :: rest =>
+      { left := List.append (rest.map some) (none :: leftRev)
+        head := some b
+        right := right }
+
+theorem controllerInitialRawBoolWordHeaderEmitter_run_scan17
+    (leftRev : List (Option Bool)) (rawRev outputRev : Word Bool)
+    (right : List (Option Bool)) :
+    ControllerInitialRawBoolWordHeaderEmitterDescription.runConfig
+        (outputRev.length + 1)
+        { state := 17
+          tape :=
+            controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev
+              (List.append (rawRev.map some) (none :: leftRev))
+              outputRev right } =
+      { state := 16
+        tape :=
+          controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev
+            leftRev rawRev
+            (none :: List.append (outputRev.reverse.map some) right) } := by
+  induction outputRev generalizing right with
+  | nil =>
+      simp [controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev,
+        controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev,
+        ControllerInitialRawBoolWordHeaderEmitterDescription,
+        tapeAtCells, MachineDescription.runConfig,
+        MachineDescription.stepConfig,
+        MachineDescription.lookupTransition, MachineDescription.Matches,
+        MachineDescription.transition, Tape.read, Tape.write,
+        Tape.move, Tape.moveLeft]
+      cases rawRev <;> rfl
+  | cons b rest ih =>
+      cases b
+      · rw [show (false :: rest).length + 1 = 1 + (rest.length + 1) by
+          simp [Nat.add_comm, Nat.add_left_comm]]
+        rw [MachineDescription.runConfig_add]
+        have hfirst :
+            ControllerInitialRawBoolWordHeaderEmitterDescription.runConfig 1
+              { state := 17
+                tape :=
+                  controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev
+                    (List.append (rawRev.map some) (none :: leftRev))
+                    (false :: rest) right } =
+            { state := 17
+              tape :=
+                controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev
+                  (List.append (rawRev.map some) (none :: leftRev))
+                  rest (some false :: right) } := by
+          simp [controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev,
+            ControllerInitialRawBoolWordHeaderEmitterDescription,
+            tapeAtCells, MachineDescription.runConfig,
+            MachineDescription.stepConfig,
+            MachineDescription.lookupTransition, MachineDescription.Matches,
+            MachineDescription.transition, Tape.read, Tape.write,
+            Tape.move, Tape.moveLeft]
+          cases rest <;> rfl
+        rw [hfirst]
+        rw [ih (some false :: right)]
+        simp [List.reverse_cons, List.append_assoc]
+      · rw [show (true :: rest).length + 1 = 1 + (rest.length + 1) by
+          simp [Nat.add_comm, Nat.add_left_comm]]
+        rw [MachineDescription.runConfig_add]
+        have hfirst :
+            ControllerInitialRawBoolWordHeaderEmitterDescription.runConfig 1
+              { state := 17
+                tape :=
+                  controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev
+                    (List.append (rawRev.map some) (none :: leftRev))
+                    (true :: rest) right } =
+            { state := 17
+              tape :=
+                controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev
+                  (List.append (rawRev.map some) (none :: leftRev))
+                  rest (some true :: right) } := by
+          simp [controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev,
+            ControllerInitialRawBoolWordHeaderEmitterDescription,
+            tapeAtCells, MachineDescription.runConfig,
+            MachineDescription.stepConfig,
+            MachineDescription.lookupTransition, MachineDescription.Matches,
+            MachineDescription.transition, Tape.read, Tape.write,
+            Tape.move, Tape.moveLeft]
+          cases rest <;> rfl
+        rw [hfirst]
+        rw [ih (some true :: right)]
+        simp [List.reverse_cons, List.append_assoc]
+
+theorem controllerInitialRawBoolWordHeaderEmitter_run_scan27
+    (leftRev : List (Option Bool)) (rawRev outputRev : Word Bool)
+    (right : List (Option Bool)) :
+    ControllerInitialRawBoolWordHeaderEmitterDescription.runConfig
+        (outputRev.length + 1)
+        { state := 27
+          tape :=
+            controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev
+              (List.append (rawRev.map some) (none :: leftRev))
+              outputRev right } =
+      { state := 26
+        tape :=
+          controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev
+            leftRev rawRev
+            (none :: List.append (outputRev.reverse.map some) right) } := by
+  induction outputRev generalizing right with
+  | nil =>
+      simp [controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev,
+        controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev,
+        ControllerInitialRawBoolWordHeaderEmitterDescription,
+        tapeAtCells, MachineDescription.runConfig,
+        MachineDescription.stepConfig,
+        MachineDescription.lookupTransition, MachineDescription.Matches,
+        MachineDescription.transition, Tape.read, Tape.write,
+        Tape.move, Tape.moveLeft]
+      cases rawRev <;> rfl
+  | cons b rest ih =>
+      cases b
+      · rw [show (false :: rest).length + 1 = 1 + (rest.length + 1) by
+          simp [Nat.add_comm, Nat.add_left_comm]]
+        rw [MachineDescription.runConfig_add]
+        have hfirst :
+            ControllerInitialRawBoolWordHeaderEmitterDescription.runConfig 1
+              { state := 27
+                tape :=
+                  controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev
+                    (List.append (rawRev.map some) (none :: leftRev))
+                    (false :: rest) right } =
+            { state := 27
+              tape :=
+                controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev
+                  (List.append (rawRev.map some) (none :: leftRev))
+                  rest (some false :: right) } := by
+          simp [controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev,
+            ControllerInitialRawBoolWordHeaderEmitterDescription,
+            tapeAtCells, MachineDescription.runConfig,
+            MachineDescription.stepConfig,
+            MachineDescription.lookupTransition, MachineDescription.Matches,
+            MachineDescription.transition, Tape.read, Tape.write,
+            Tape.move, Tape.moveLeft]
+          cases rest <;> rfl
+        rw [hfirst]
+        rw [ih (some false :: right)]
+        simp [List.reverse_cons, List.append_assoc]
+      · rw [show (true :: rest).length + 1 = 1 + (rest.length + 1) by
+          simp [Nat.add_comm, Nat.add_left_comm]]
+        rw [MachineDescription.runConfig_add]
+        have hfirst :
+            ControllerInitialRawBoolWordHeaderEmitterDescription.runConfig 1
+              { state := 27
+                tape :=
+                  controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev
+                    (List.append (rawRev.map some) (none :: leftRev))
+                    (true :: rest) right } =
+            { state := 27
+              tape :=
+                controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev
+                  (List.append (rawRev.map some) (none :: leftRev))
+                  rest (some true :: right) } := by
+          simp [controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev,
+            ControllerInitialRawBoolWordHeaderEmitterDescription,
+            tapeAtCells, MachineDescription.runConfig,
+            MachineDescription.stepConfig,
+            MachineDescription.lookupTransition, MachineDescription.Matches,
+            MachineDescription.transition, Tape.read, Tape.write,
+            Tape.move, Tape.moveLeft]
+          cases rest <;> rfl
+        rw [hfirst]
+        rw [ih (some true :: right)]
+        simp [List.reverse_cons, List.append_assoc]
+
+theorem controllerInitialRawBoolWordHeaderEmitter_run_return16
+    (leftRev : List (Option Bool)) (scanRev : Word Bool)
+    (right : List (Option Bool)) :
+    ControllerInitialRawBoolWordHeaderEmitterDescription.runConfig
+        (scanRev.length + 1)
+        { state := 16
+          tape :=
+            controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev
+              leftRev scanRev right } =
+      config 7 (some false :: leftRev)
+        (List.append (scanRev.reverse.map some) right) := by
+  induction scanRev generalizing right with
+  | nil =>
+      simp [controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev,
+        ControllerInitialRawBoolWordHeaderEmitterDescription,
+        config, tapeAtCells, MachineDescription.runConfig,
+        MachineDescription.stepConfig,
+        MachineDescription.lookupTransition, MachineDescription.Matches,
+        MachineDescription.transition, Tape.read, Tape.write,
+        Tape.move, Tape.moveRight]
+      cases right <;> rfl
+  | cons b rest ih =>
+      cases b
+      · rw [show (false :: rest).length + 1 = 1 + (rest.length + 1) by
+          simp [Nat.add_comm, Nat.add_left_comm]]
+        rw [MachineDescription.runConfig_add]
+        have hfirst :
+            ControllerInitialRawBoolWordHeaderEmitterDescription.runConfig 1
+              { state := 16
+                tape :=
+                  controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev
+                    leftRev (false :: rest) right } =
+            { state := 16
+              tape :=
+                controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev
+                  leftRev rest (some false :: right) } := by
+          simp [controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev,
+            ControllerInitialRawBoolWordHeaderEmitterDescription,
+            tapeAtCells, MachineDescription.runConfig,
+            MachineDescription.stepConfig,
+            MachineDescription.lookupTransition, MachineDescription.Matches,
+            MachineDescription.transition, Tape.read, Tape.write,
+            Tape.move, Tape.moveLeft]
+          cases rest <;> rfl
+        rw [hfirst]
+        rw [ih (some false :: right)]
+        simp [List.reverse_cons, List.append_assoc]
+      · rw [show (true :: rest).length + 1 = 1 + (rest.length + 1) by
+          simp [Nat.add_comm, Nat.add_left_comm]]
+        rw [MachineDescription.runConfig_add]
+        have hfirst :
+            ControllerInitialRawBoolWordHeaderEmitterDescription.runConfig 1
+              { state := 16
+                tape :=
+                  controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev
+                    leftRev (true :: rest) right } =
+            { state := 16
+              tape :=
+                controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev
+                  leftRev rest (some true :: right) } := by
+          simp [controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev,
+            ControllerInitialRawBoolWordHeaderEmitterDescription,
+            tapeAtCells, MachineDescription.runConfig,
+            MachineDescription.stepConfig,
+            MachineDescription.lookupTransition, MachineDescription.Matches,
+            MachineDescription.transition, Tape.read, Tape.write,
+            Tape.move, Tape.moveLeft]
+          cases rest <;> rfl
+        rw [hfirst]
+        rw [ih (some true :: right)]
+        simp [List.reverse_cons, List.append_assoc]
+
+theorem controllerInitialRawBoolWordHeaderEmitter_run_return26
+    (leftRev : List (Option Bool)) (scanRev : Word Bool)
+    (right : List (Option Bool)) :
+    ControllerInitialRawBoolWordHeaderEmitterDescription.runConfig
+        (scanRev.length + 1)
+        { state := 26
+          tape :=
+            controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev
+              leftRev scanRev right } =
+      config 7 (some true :: leftRev)
+        (List.append (scanRev.reverse.map some) right) := by
+  induction scanRev generalizing right with
+  | nil =>
+      simp [controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev,
+        ControllerInitialRawBoolWordHeaderEmitterDescription,
+        config, tapeAtCells, MachineDescription.runConfig,
+        MachineDescription.stepConfig,
+        MachineDescription.lookupTransition, MachineDescription.Matches,
+        MachineDescription.transition, Tape.read, Tape.write,
+        Tape.move, Tape.moveRight]
+      cases right <;> rfl
+  | cons b rest ih =>
+      cases b
+      · rw [show (false :: rest).length + 1 = 1 + (rest.length + 1) by
+          simp [Nat.add_comm, Nat.add_left_comm]]
+        rw [MachineDescription.runConfig_add]
+        have hfirst :
+            ControllerInitialRawBoolWordHeaderEmitterDescription.runConfig 1
+              { state := 26
+                tape :=
+                  controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev
+                    leftRev (false :: rest) right } =
+            { state := 26
+              tape :=
+                controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev
+                  leftRev rest (some false :: right) } := by
+          simp [controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev,
+            ControllerInitialRawBoolWordHeaderEmitterDescription,
+            tapeAtCells, MachineDescription.runConfig,
+            MachineDescription.stepConfig,
+            MachineDescription.lookupTransition, MachineDescription.Matches,
+            MachineDescription.transition, Tape.read, Tape.write,
+            Tape.move, Tape.moveLeft]
+          cases rest <;> rfl
+        rw [hfirst]
+        rw [ih (some false :: right)]
+        simp [List.reverse_cons, List.append_assoc]
+      · rw [show (true :: rest).length + 1 = 1 + (rest.length + 1) by
+          simp [Nat.add_comm, Nat.add_left_comm]]
+        rw [MachineDescription.runConfig_add]
+        have hfirst :
+            ControllerInitialRawBoolWordHeaderEmitterDescription.runConfig 1
+              { state := 26
+                tape :=
+                  controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev
+                    leftRev (true :: rest) right } =
+            { state := 26
+              tape :=
+                controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev
+                  leftRev rest (some true :: right) } := by
+          simp [controllerInitialRawBoolWordHeaderEmitterRawReturnTapeRev,
+            ControllerInitialRawBoolWordHeaderEmitterDescription,
+            tapeAtCells, MachineDescription.runConfig,
+            MachineDescription.stepConfig,
+            MachineDescription.lookupTransition, MachineDescription.Matches,
+            MachineDescription.transition, Tape.read, Tape.write,
+            Tape.move, Tape.moveLeft]
+          cases rest <;> rfl
+        rw [hfirst]
+        rw [ih (some true :: right)]
+        simp [List.reverse_cons, List.append_assoc]
+
 theorem controllerInitialRawBoolWordHeaderEmitterDescription_run
     (w : Word Bool) :
     exists steps : Nat,
