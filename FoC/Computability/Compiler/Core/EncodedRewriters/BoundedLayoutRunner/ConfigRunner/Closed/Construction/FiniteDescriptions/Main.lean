@@ -403,6 +403,30 @@ def SelectedMergeOutputRejectHit
     (L : MachineDescription.DovetailLayout) : Bool :=
   if useAccept then L.rejectHit else S.hit
 
+def SelectedMergeOutputLayout
+    (useAccept : Bool)
+    (S : MachineDescription.SimulatorLayout)
+    (L : MachineDescription.DovetailLayout) :
+    MachineDescription.DovetailLayout :=
+  if useAccept then
+    { L with
+      acceptConfig := S.config
+      acceptHit := S.hit }
+  else
+    { L with
+      rejectConfig := S.config
+      rejectHit := S.hit }
+
+theorem selectedMergeOutputCode_eq_outputLayout
+    (useAccept : Bool)
+    (S : MachineDescription.SimulatorLayout)
+    (L : MachineDescription.DovetailLayout) :
+    SelectedMergeOutputCode useAccept S L =
+      MachineDescription.DovetailLayout.encode
+        (SelectedMergeOutputLayout useAccept S L) := by
+  cases useAccept <;>
+    rfl
+
 theorem selectedMergeOutputCode_eq_fields
     (useAccept : Bool)
     (S : MachineDescription.SimulatorLayout)
@@ -441,6 +465,67 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_fields
                       [])))))) := by
   rw [SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput,
     selectedMergeOutputCode_eq_fields]
+
+theorem
+    SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_parsedLayoutBits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p) =
+      ParsedLayoutBits (SelectedMergeOutputLayout useAccept p.S p.L) := by
+  rw [SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput,
+    selectedMergeOutputCode_eq_outputLayout, ParsedLayoutBits]
+
+theorem selectedMergeOutputLayout_accept_run
+    (accept : MachineDescription) (L : MachineDescription.DovetailLayout) :
+    SelectedMergeOutputLayout true
+        (MachineDescription.SimulatorLayout.run
+          accept L.stage (AcceptSimulatorLayout L)) L =
+      ConfigRunnerAfterAccept accept L := by
+  simp [SelectedMergeOutputLayout, ConfigRunnerAfterAccept,
+    AcceptSimulatorLayout, MachineDescription.SimulatorLayout.run]
+
+theorem selectedMergeOutputLayout_reject_run
+    (reject : MachineDescription) (L : MachineDescription.DovetailLayout) :
+    SelectedMergeOutputLayout false
+        (MachineDescription.SimulatorLayout.run
+          reject L.stage (RejectSimulatorLayout L)) L =
+      ConfigRunnerAfterReject reject L := by
+  simp [SelectedMergeOutputLayout, ConfigRunnerAfterReject,
+    RejectSimulatorLayout, MachineDescription.SimulatorLayout.run]
+
+theorem
+    SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_accept_run
+    (accept : MachineDescription) (L : MachineDescription.DovetailLayout) :
+    Tape.normalizedOutput
+        (SelectedMergeEquivEmitterPaddedOutputTape true
+          { S :=
+              MachineDescription.SimulatorLayout.run
+                accept L.stage (AcceptSimulatorLayout L)
+            L := L
+            input := by
+              simpa [AcceptSimulatorLayout,
+                MachineDescription.SimulatorLayout.run] using
+                decodeCodeWordAsInput_parsedLayoutBits L }) =
+      ParsedLayoutBits (ConfigRunnerAfterAccept accept L) := by
+  rw [SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_parsedLayoutBits]
+  rw [selectedMergeOutputLayout_accept_run]
+
+theorem
+    SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_reject_run
+    (reject : MachineDescription) (L : MachineDescription.DovetailLayout) :
+    Tape.normalizedOutput
+        (SelectedMergeEquivEmitterPaddedOutputTape false
+          { S :=
+              MachineDescription.SimulatorLayout.run
+                reject L.stage (RejectSimulatorLayout L)
+            L := L
+            input := by
+              simpa [RejectSimulatorLayout,
+                MachineDescription.SimulatorLayout.run] using
+                decodeCodeWordAsInput_parsedLayoutBits L }) =
+      ParsedLayoutBits (ConfigRunnerAfterReject reject L) := by
+  rw [SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_parsedLayoutBits]
+  rw [selectedMergeOutputLayout_reject_run]
 
 
 theorem selectedMergeSpec_of_parser_emitter
