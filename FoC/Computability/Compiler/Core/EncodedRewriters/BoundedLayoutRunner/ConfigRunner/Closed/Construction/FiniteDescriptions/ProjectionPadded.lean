@@ -139,6 +139,56 @@ theorem sourceFieldBits_length_le_parsedLayoutBits
   simp [MachineDescription.encodeCodeWordAsInput]
   omega
 
+theorem outputPrefixBits_length_ge_parsedLayoutBits
+    (L : MachineDescription.DovetailLayout) :
+    (ParsedLayoutBits L).length <= (outputPrefixBits L).length := by
+  have hquote :
+      (ParsedLayoutBits L).length <=
+        (MachineDescription.encodeBoolWordAppend
+          (ParsedLayoutBits L) []).length := by
+    simpa using
+      encodeBoolWordAppend_length_ge (ParsedLayoutBits L)
+        ([] : Word MachineCodeSymbol)
+  have hencoded :
+      (MachineDescription.encodeBoolWordAppend
+          (ParsedLayoutBits L) []).length <=
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeBoolWordAppend
+            (ParsedLayoutBits L) [])).length := by
+    rw [encodeCodeWordAsInput_length]
+    omega
+  have hprefix :
+      (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeBoolWordAppend
+            (ParsedLayoutBits L) [])).length <=
+        (outputPrefixBits L).length := by
+    simp [outputPrefixBits, List.length_append]
+  exact Nat.le_trans hquote (Nat.le_trans hencoded hprefix)
+
+theorem sourceTape_contextLength_ge_parsedLayoutCheckedTape
+    (L : MachineDescription.DovetailLayout) :
+    Tape.contextLength (ParsedLayoutCheckedTape L) <=
+      Tape.contextLength
+        (sourceTape L ((outputPrefixBits L).reverse.map some)) := by
+  have hinput :
+      Tape.contextLength (ParsedLayoutCheckedTape L) =
+        (ParsedLayoutBits L).length := by
+    rcases parsedLayoutBits_eq_false_false_tail L with ⟨tail, htail⟩
+    simp [ParsedLayoutCheckedTape, checkedInputTape, htail,
+      Tape.contextLength]
+  have hprefix := outputPrefixBits_length_ge_parsedLayoutBits L
+  have htarget :
+      (outputPrefixBits L).length <=
+        Tape.contextLength
+          (sourceTape L ((outputPrefixBits L).reverse.map some)) := by
+    rcases stageNatBits_cons_cons L.stage with
+      ⟨first, second, rest, hstage⟩
+    rw [sourceTape, sourceFieldBits, hstage]
+    simp [DovetailInitialLayoutInitializer.tapeAtCells,
+      Tape.contextLength, List.length_append]
+  rw [hinput]
+  exact Nat.le_trans hprefix htarget
+
 theorem sourceTape_normalizedOutput
     (L : MachineDescription.DovetailLayout)
     (baseLeft : List (Option Bool)) :
