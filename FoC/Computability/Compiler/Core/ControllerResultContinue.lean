@@ -1472,6 +1472,436 @@ theorem resultNoneGuardScanRewindDescription_run_blank_of_accepts
   · cases haccept
   · cases haccept
 
+theorem resultNoneGuardScanRewindDescription_run_bits
+    (boundary : ResultNoneGuardBoundary)
+    (bit0 bit1 bit2 bit3 : Bool)
+    (leftRev suffix : Word Bool) :
+    ResultNoneGuardScanRewindDescription.runConfig 4
+        { state := resultNoneGuardState boundary.toNat 0 0
+          tape :=
+            MachineDescription.appendRightScanTape leftRev
+              (List.append [bit0, bit1, bit2, bit3] suffix) } =
+      { state :=
+          resultNoneGuardState
+            (resultNoneGuardBoundaryUpdateCode boundary.toNat
+              (resultNoneGuardCodeOfBits bit0 bit1 bit2 bit3)) 0 0
+        tape := MachineDescription.appendRightScanTape
+          (bit3 :: bit2 :: bit1 :: bit0 :: leftRev) suffix } := by
+  cases boundary <;> cases bit0 <;> cases bit1 <;> cases bit2 <;>
+    cases bit3 <;> cases suffix <;> rfl
+
+theorem resultNoneGuardScanRewindDescription_run_encoded_symbol
+    (boundary : ResultNoneGuardBoundary)
+    (symbol : MachineCodeSymbol)
+    (leftRev suffix : Word Bool) :
+    ResultNoneGuardScanRewindDescription.runConfig 4
+        { state := resultNoneGuardState boundary.toNat 0 0
+          tape :=
+            MachineDescription.appendRightScanTape leftRev
+              (List.append
+                (MachineDescription.encodeCodeSymbolAsInput symbol)
+                suffix) } =
+      { state :=
+          resultNoneGuardState
+            (resultNoneGuardBoundaryUpdateCode boundary.toNat
+              (resultNoneGuardSymbolCode symbol)) 0 0
+        tape :=
+          MachineDescription.appendRightScanTape
+            (List.append
+              (MachineDescription.encodeCodeSymbolAsInput symbol).reverse
+              leftRev)
+            suffix } := by
+  cases symbol
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      (resultNoneGuardScanRewindDescription_run_bits boundary
+        false false false false leftRev suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      (resultNoneGuardScanRewindDescription_run_bits boundary
+        false false false true leftRev suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      (resultNoneGuardScanRewindDescription_run_bits boundary
+        false false true false leftRev suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      (resultNoneGuardScanRewindDescription_run_bits boundary
+        false false true true leftRev suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      (resultNoneGuardScanRewindDescription_run_bits boundary
+        false true false false leftRev suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      (resultNoneGuardScanRewindDescription_run_bits boundary
+        false true false true leftRev suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      (resultNoneGuardScanRewindDescription_run_bits boundary
+        false true true false leftRev suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      (resultNoneGuardScanRewindDescription_run_bits boundary
+        false true true true leftRev suffix)
+  · simpa [MachineDescription.encodeCodeSymbolAsInput,
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      (resultNoneGuardScanRewindDescription_run_bits boundary
+        true false false false leftRev suffix)
+
+theorem resultNoneGuardScanRewindDescription_run_symbol
+    (boundary : ResultNoneGuardBoundary)
+    (symbol : MachineCodeSymbol)
+    (leftRev suffix : Word Bool) :
+    ResultNoneGuardScanRewindDescription.runConfig 4
+        { state := resultNoneGuardState boundary.toNat 0 0
+          tape :=
+            MachineDescription.appendRightScanTape leftRev
+              (List.append
+                (MachineDescription.encodeCodeSymbolAsInput symbol)
+                suffix) } =
+      { state :=
+          resultNoneGuardState (boundary.update symbol).toNat 0 0
+        tape :=
+          MachineDescription.appendRightScanTape
+            (List.append
+              (MachineDescription.encodeCodeSymbolAsInput symbol).reverse
+              leftRev)
+            suffix } := by
+  rw [resultNoneGuardScanRewindDescription_run_encoded_symbol]
+  rw [resultNoneGuardBoundaryUpdateCode_symbol]
+
+theorem resultNoneGuardScanRewindDescription_run_code_from
+    (boundary : ResultNoneGuardBoundary)
+    (code : Word MachineCodeSymbol)
+    (leftRev suffix : Word Bool) :
+    ResultNoneGuardScanRewindDescription.runConfig
+        (4 * code.length)
+        { state := resultNoneGuardState boundary.toNat 0 0
+          tape :=
+            MachineDescription.appendRightScanTape leftRev
+              (List.append
+                (MachineDescription.encodeCodeWordAsInput code) suffix) } =
+      { state :=
+          resultNoneGuardState
+            (resultNoneGuardScanBoundaryFrom boundary code).toNat 0 0
+        tape :=
+          MachineDescription.appendRightScanTape
+            (List.append
+              (MachineDescription.encodeCodeWordAsInput code).reverse
+              leftRev)
+            suffix } := by
+  induction code generalizing boundary leftRev with
+  | nil =>
+      simp [MachineDescription.encodeCodeWordAsInput,
+        resultNoneGuardScanBoundaryFrom,
+        MachineDescription.runConfig]
+  | cons symbol rest ih =>
+      rw [show 4 * (symbol :: rest).length = 4 + 4 * rest.length by
+        simp
+        omega]
+      rw [MachineDescription.runConfig_add]
+      simp only [MachineDescription.encodeCodeWordAsInput]
+      have happ :
+          List.append
+              (List.append
+                (MachineDescription.encodeCodeSymbolAsInput symbol)
+                (MachineDescription.encodeCodeWordAsInput rest))
+              suffix =
+            List.append
+              (MachineDescription.encodeCodeSymbolAsInput symbol)
+              (List.append
+                (MachineDescription.encodeCodeWordAsInput rest)
+                suffix) :=
+        List.append_assoc
+          (MachineDescription.encodeCodeSymbolAsInput symbol)
+          (MachineDescription.encodeCodeWordAsInput rest) suffix
+      rw [happ]
+      change
+        ResultNoneGuardScanRewindDescription.runConfig
+            (4 * rest.length)
+            (ResultNoneGuardScanRewindDescription.runConfig 4
+              { state := resultNoneGuardState boundary.toNat 0 0
+                tape :=
+                  MachineDescription.appendRightScanTape leftRev
+                    (List.append
+                      (MachineDescription.encodeCodeSymbolAsInput symbol)
+                      (List.append
+                        (MachineDescription.encodeCodeWordAsInput rest)
+                        suffix)) }) =
+          { state :=
+              resultNoneGuardState
+                (resultNoneGuardScanBoundaryFrom boundary
+                  (symbol :: rest)).toNat 0 0
+            tape :=
+              MachineDescription.appendRightScanTape
+                (List.append
+                  (List.append
+                    (MachineDescription.encodeCodeSymbolAsInput symbol)
+                    (MachineDescription.encodeCodeWordAsInput rest)).reverse
+                  leftRev)
+                suffix }
+      rw [resultNoneGuardScanRewindDescription_run_symbol]
+      rw [ih]
+      simp [resultNoneGuardScanBoundaryFrom, List.reverse_append,
+        List.append_assoc]
+
+theorem resultNoneGuardScanRewindDescription_run_rewind_start
+    (leftRev : Word Bool) :
+    ResultNoneGuardScanRewindDescription.runConfig 2
+        { state :=
+            resultNoneGuardRewindOffset +
+              ResultNoneGuardRewindDescription.start
+          tape := resultNoneGuardScannedBlankTape leftRev } =
+      { state := resultNoneGuardRewindOffset + 2
+        tape := resultNoneGuardRewindLeftScanTape
+          leftRev [none, none] } := by
+  cases leftRev with
+  | nil =>
+      rfl
+  | cons b rest =>
+      cases b <;> rfl
+
+theorem resultNoneGuardScanRewindDescription_run_rewind_left_scan
+    (leftRev : Word Bool) (right : List (Option Bool)) :
+    ResultNoneGuardScanRewindDescription.runConfig leftRev.length
+        { state := resultNoneGuardRewindOffset + 2
+          tape := resultNoneGuardRewindLeftScanTape leftRev right } =
+      { state := resultNoneGuardRewindOffset + 2
+        tape :=
+          { left := []
+            head := none
+            right := (leftRev.reverse.map some) ++ right } } := by
+  induction leftRev generalizing right with
+  | nil =>
+      rfl
+  | cons b rest ih =>
+      rw [show (b :: rest).length = 1 + rest.length by
+        simp
+        omega]
+      rw [MachineDescription.runConfig_add]
+      cases b
+      · have hstep :
+            ResultNoneGuardScanRewindDescription.runConfig 1
+                { state := resultNoneGuardRewindOffset + 2
+                  tape :=
+                    resultNoneGuardRewindLeftScanTape
+                      (false :: rest) right } =
+              { state := resultNoneGuardRewindOffset + 2
+                tape :=
+                  resultNoneGuardRewindLeftScanTape rest
+                    (some false :: right) } := by
+          cases rest with
+          | nil =>
+              rfl
+          | cons c tail =>
+              cases c <;> rfl
+        rw [hstep]
+        rw [ih]
+        simp [List.append_assoc]
+      · have hstep :
+            ResultNoneGuardScanRewindDescription.runConfig 1
+                { state := resultNoneGuardRewindOffset + 2
+                  tape :=
+                    resultNoneGuardRewindLeftScanTape
+                      (true :: rest) right } =
+              { state := resultNoneGuardRewindOffset + 2
+                tape :=
+                  resultNoneGuardRewindLeftScanTape rest
+                    (some true :: right) } := by
+          cases rest with
+          | nil =>
+              rfl
+          | cons c tail =>
+              cases c <;> rfl
+        rw [hstep]
+        rw [ih]
+        simp [List.append_assoc]
+
+theorem resultNoneGuardScanRewindDescription_run_rewind_finish
+    (bits : Word Bool) :
+    ResultNoneGuardScanRewindDescription.runConfig 2
+        { state := resultNoneGuardRewindOffset + 2
+          tape := resultNoneGuardRewindBoundaryTape bits } =
+      { state := ResultNoneGuardScanRewindDescription.halt
+        tape := resultNoneGuardRewindFinalTape bits } := by
+  cases bits with
+  | nil =>
+      rfl
+  | cons b rest =>
+      cases b <;> cases rest <;> rfl
+
+theorem resultNoneGuardScanRewindDescription_run_rewind_scanned
+    (bits : Word Bool) :
+    ResultNoneGuardScanRewindDescription.runConfig
+        (bits.length + 4)
+        { state :=
+            resultNoneGuardRewindOffset +
+              ResultNoneGuardRewindDescription.start
+          tape := resultNoneGuardScannedBlankTape bits.reverse } =
+      { state := ResultNoneGuardScanRewindDescription.halt
+        tape := resultNoneGuardRewindFinalTape bits } := by
+  rw [show bits.length + 4 = 2 + (bits.length + 2) by omega]
+  rw [MachineDescription.runConfig_add]
+  rw [resultNoneGuardScanRewindDescription_run_rewind_start]
+  rw [show bits.length + 2 = bits.reverse.length + 2 by simp]
+  rw [MachineDescription.runConfig_add]
+  rw [resultNoneGuardScanRewindDescription_run_rewind_left_scan]
+  change
+    ResultNoneGuardScanRewindDescription.runConfig 2
+        { state := resultNoneGuardRewindOffset + 2
+          tape :=
+            { left := []
+              head := none
+              right := (bits.reverse.reverse.map some) ++ [none, none] } } =
+      { state := ResultNoneGuardScanRewindDescription.halt
+        tape := resultNoneGuardRewindFinalTape bits }
+  simp only [List.reverse_reverse]
+  exact resultNoneGuardScanRewindDescription_run_rewind_finish bits
+
+theorem resultNoneGuardScanRewindDescription_run_code_halt_of_accepts
+    (code : Word MachineCodeSymbol)
+    (haccept : (resultNoneGuardScanBoundary code).accepts) :
+    ResultNoneGuardScanRewindDescription.runConfig
+        (4 * code.length + 1 +
+          (MachineDescription.encodeCodeWordAsInput code).length + 4)
+        (ResultNoneGuardScanRewindDescription.initial
+          (MachineDescription.encodeCodeWordAsInput code)) =
+      { state := ResultNoneGuardScanRewindDescription.halt
+        tape :=
+          resultNoneGuardRewindFinalTape
+            (MachineDescription.encodeCodeWordAsInput code) } := by
+  rw [show
+      4 * code.length + 1 +
+          (MachineDescription.encodeCodeWordAsInput code).length + 4 =
+        4 * code.length +
+          (1 + ((MachineDescription.encodeCodeWordAsInput code).length + 4)) by
+    omega]
+  rw [MachineDescription.runConfig_add]
+  have hinitial :
+      ResultNoneGuardScanRewindDescription.initial
+          (MachineDescription.encodeCodeWordAsInput code) =
+        { state :=
+            resultNoneGuardState ResultNoneGuardBoundary.other.toNat 0 0
+          tape :=
+            MachineDescription.appendRightScanTape []
+              (List.append
+                (MachineDescription.encodeCodeWordAsInput code) []) } := by
+    simp [ResultNoneGuardScanRewindDescription,
+      ResultNoneGuardScannerDescription,
+      MachineDescription.initial,
+      MachineDescription.appendRightScanTape_nil_eq_input]
+  rw [hinitial]
+  rw [resultNoneGuardScanRewindDescription_run_code_from]
+  rw [show
+      1 + ((MachineDescription.encodeCodeWordAsInput code).length + 4) =
+        1 + ((MachineDescription.encodeCodeWordAsInput code).length + 4) by
+    rfl]
+  rw [MachineDescription.runConfig_add]
+  change
+    ResultNoneGuardScanRewindDescription.runConfig
+        ((MachineDescription.encodeCodeWordAsInput code).length + 4)
+        (ResultNoneGuardScanRewindDescription.runConfig 1
+          { state :=
+              resultNoneGuardState
+                (resultNoneGuardScanBoundaryFrom
+                  ResultNoneGuardBoundary.other code).toNat 0 0
+            tape :=
+              MachineDescription.appendRightScanTape
+                ((MachineDescription.encodeCodeWordAsInput code).reverse.append [])
+                [] }) =
+      { state := ResultNoneGuardScanRewindDescription.halt
+        tape :=
+          resultNoneGuardRewindFinalTape
+            (MachineDescription.encodeCodeWordAsInput code) }
+  rw [resultNoneGuardScanRewindDescription_run_blank_of_accepts]
+  · simpa using
+      resultNoneGuardScanRewindDescription_run_rewind_scanned
+        (MachineDescription.encodeCodeWordAsInput code)
+  · simpa [resultNoneGuardScanBoundary] using haccept
+
+theorem resultNoneGuardScanRewindDescription_haltsWithTape_code_of_accepts
+    (code : Word MachineCodeSymbol)
+    (haccept : (resultNoneGuardScanBoundary code).accepts) :
+    ResultNoneGuardScanRewindDescription.HaltsWithTape
+      (MachineDescription.encodeCodeWordAsInput code)
+      (resultNoneGuardRewindFinalTape
+        (MachineDescription.encodeCodeWordAsInput code)) := by
+  refine
+    ⟨4 * code.length + 1 +
+        (MachineDescription.encodeCodeWordAsInput code).length + 4, ?_⟩
+  change
+    (ResultNoneGuardScanRewindDescription.runConfig
+          (4 * code.length + 1 +
+            (MachineDescription.encodeCodeWordAsInput code).length + 4)
+          (ResultNoneGuardScanRewindDescription.initial
+            (MachineDescription.encodeCodeWordAsInput code))).state =
+        ResultNoneGuardScanRewindDescription.halt ∧
+      (ResultNoneGuardScanRewindDescription.runConfig
+          (4 * code.length + 1 +
+            (MachineDescription.encodeCodeWordAsInput code).length + 4)
+          (ResultNoneGuardScanRewindDescription.initial
+            (MachineDescription.encodeCodeWordAsInput code))).tape =
+        resultNoneGuardRewindFinalTape
+          (MachineDescription.encodeCodeWordAsInput code)
+  rw [resultNoneGuardScanRewindDescription_run_code_halt_of_accepts
+    code haccept]
+  exact ⟨rfl, rfl⟩
+
+theorem resultNoneGuard_moveLeft_moveRight_input_equiv
+    (bits : Word Bool) :
+    Tape.Equiv
+      (Tape.move Direction.left
+        (Tape.move Direction.right (Tape.input bits)))
+      (Tape.input bits) := by
+  cases bits with
+  | nil =>
+      simp [Tape.input, Tape.blank, Tape.move, Tape.moveLeft,
+        Tape.moveRight, Tape.Equiv, Tape.dropTrailingNone]
+  | cons b rest =>
+      cases rest with
+      | nil =>
+          cases b <;>
+            simp [Tape.input, Tape.move, Tape.moveLeft,
+              Tape.moveRight, Tape.Equiv, Tape.dropTrailingNone]
+      | cons c tail =>
+          cases b <;> cases c <;>
+            simp [Tape.input, Tape.move, Tape.moveLeft,
+              Tape.moveRight, Tape.Equiv, Tape.dropTrailingNone,
+              resultNoneGuardRewind_dropTrailingNone_map_some]
+
+theorem resultNoneGuardRewindFinalTape_moveLeft_input_equiv
+    (bits : Word Bool) :
+    Tape.Equiv
+      (Tape.move Direction.left
+        (resultNoneGuardRewindFinalTape bits))
+      (Tape.input bits) := by
+  exact
+    Tape.Equiv.trans
+      (Tape.Equiv.move
+        (resultNoneGuardRewindFinalTape_handoff_equiv bits)
+        Direction.left)
+      (resultNoneGuard_moveLeft_moveRight_input_equiv bits)
+
+theorem resultNoneGuardScanRewindDescription_handoff_equiv_code_of_accepts
+    (code : Word MachineCodeSymbol)
+    (haccept : (resultNoneGuardScanBoundary code).accepts) :
+    exists T : Tape Bool,
+      ResultNoneGuardScanRewindDescription.HaltsWithTape
+        (MachineDescription.encodeCodeWordAsInput code) T ∧
+        Tape.Equiv
+          (Tape.move Direction.left T)
+          (Tape.input (MachineDescription.encodeCodeWordAsInput code)) := by
+  refine
+    ⟨resultNoneGuardRewindFinalTape
+        (MachineDescription.encodeCodeWordAsInput code), ?_, ?_⟩
+  · exact
+      resultNoneGuardScanRewindDescription_haltsWithTape_code_of_accepts
+        code haccept
+  · exact
+      resultNoneGuardRewindFinalTape_moveLeft_input_equiv
+        (MachineDescription.encodeCodeWordAsInput code)
+
 end ControllerResultContinueConstruction
 
 theorem controllerResultContinueForwardSpec_of_canonical
