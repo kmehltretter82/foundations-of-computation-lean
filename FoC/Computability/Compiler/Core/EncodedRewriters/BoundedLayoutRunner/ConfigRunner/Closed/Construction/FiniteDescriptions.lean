@@ -1431,6 +1431,83 @@ def SelectedProjectionCheckedEquivPaddedEmitterConstruction : Prop :=
     exists emitter : MachineDescription,
       SelectedProjectionCheckedEquivPaddedEmitterSpec useAccept emitter
 
+def SelectedProjectionPaddedTailEmitterSpec
+    (useAccept : Bool)
+    (tail : MachineDescription) : Prop :=
+  ReadySpec tail ∧
+    forall L : MachineDescription.DovetailLayout,
+      tail.HaltsFromTape
+        (SelectedProjectionTailProjector.sourceTape L
+          ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
+            some))
+        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
+
+def SelectedProjectionPaddedTailEmitterConstruction : Prop :=
+  forall useAccept : Bool,
+    exists tail : MachineDescription,
+      SelectedProjectionPaddedTailEmitterSpec useAccept tail
+
+def SelectedProjectionCheckedEquivPaddedEmitterComponentConstruction :
+    Prop :=
+  SelectedProjectionInputQuoterConstruction ∧
+    SelectedProjectionPaddedTailEmitterConstruction
+
+def SelectedProjectionCheckedEquivPaddedEmitterFromComponents
+    (quoter tail : MachineDescription) : MachineDescription :=
+  SeqViaCanonical quoter tail
+
+theorem selectedProjectionCheckedEquivPaddedEmitterSpec_of_components
+    {useAccept : Bool}
+    {quoter tail : MachineDescription}
+    (hquoter : SelectedProjectionInputQuoterSpec quoter)
+    (htail : SelectedProjectionPaddedTailEmitterSpec useAccept tail) :
+    SelectedProjectionCheckedEquivPaddedEmitterSpec useAccept
+      (SelectedProjectionCheckedEquivPaddedEmitterFromComponents
+        quoter tail) := by
+  let baseLeft :=
+    fun L : MachineDescription.DovetailLayout =>
+      (SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
+        some
+  constructor
+  · exact SeqViaCanonical_subroutineReady hquoter.left htail.left
+  · intro L
+    have hquoterRun :
+        quoter.HaltsFromTape
+          (ParsedLayoutCheckedTape L)
+          (SelectedProjectionTailProjector.sourceTape L
+            (baseLeft L)) :=
+      hquoter.right L
+    have htailRun :
+        tail.HaltsFromTape
+          (SelectedProjectionTailProjector.sourceTape L
+            (baseLeft L))
+          (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) :=
+      htail.right L
+    have hbridge :
+        Tape.move Direction.left
+            (Tape.move Direction.right
+              (SelectedProjectionTailProjector.sourceTape L
+                (baseLeft L))) =
+          SelectedProjectionTailProjector.sourceTape L
+            (baseLeft L) :=
+      SelectedProjectionTailProjector.sourceTape_move_left_move_right
+        L (baseLeft L)
+    simpa [SelectedProjectionCheckedEquivPaddedEmitterFromComponents] using
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        hquoter.left htail.left hquoterRun hbridge htailRun
+
+theorem selectedProjectionCheckedEquivPaddedEmitterConstruction_of_components
+    (hcomponents :
+      SelectedProjectionCheckedEquivPaddedEmitterComponentConstruction) :
+    SelectedProjectionCheckedEquivPaddedEmitterConstruction := by
+  intro useAccept
+  rcases hcomponents with ⟨⟨quoter, hquoter⟩, htailConstruction⟩
+  rcases htailConstruction useAccept with ⟨tail, htail⟩
+  exact
+    ⟨SelectedProjectionCheckedEquivPaddedEmitterFromComponents quoter tail,
+      selectedProjectionCheckedEquivPaddedEmitterSpec_of_components
+        hquoter htail⟩
+
 theorem selectedProjectionEquivEmitterSpec_of_padded
     {useAccept : Bool} {emitter : MachineDescription}
     (hemits : SelectedProjectionEquivPaddedEmitterSpec useAccept emitter) :
@@ -1490,13 +1567,32 @@ theorem selectedProjectionCheckedEquivEmitterConstruction_of_padded
 /--
 Finite-machine leaf for selected projection under the equivalence-based phase
 contract.  The checked parser supplies the canonical checked parsed-layout
-input.  The machine may leave trailing blank padding in that old parsed-layout
-window, but its halting tape must be equivalent to the right-shifted selected
-simulator-layout output.
+input.  This first phase quotes the input field and positions the remaining
+layout fields for the selected padded tail emitter.
 -/
-theorem selectedProjectionCheckedEquivPaddedEmitterConstruction_scaffold :
-    SelectedProjectionCheckedEquivPaddedEmitterConstruction := by
+theorem selectedProjectionInputQuoterConstruction_scaffold :
+    SelectedProjectionInputQuoterConstruction := by
   sorry
+
+/--
+Finite-machine leaf for the selected-projection tail.  It starts after the
+input quoter, consumes the stage/configuration/hit fields, and may leave
+trailing blank padding while emitting a tape equivalent to the right-shifted
+selected simulator-layout output.
+-/
+theorem selectedProjectionPaddedTailEmitterConstruction_scaffold :
+    SelectedProjectionPaddedTailEmitterConstruction := by
+  sorry
+
+theorem selectedProjectionCheckedEquivPaddedEmitterComponentConstruction_scaffold :
+    SelectedProjectionCheckedEquivPaddedEmitterComponentConstruction :=
+  ⟨selectedProjectionInputQuoterConstruction_scaffold,
+    selectedProjectionPaddedTailEmitterConstruction_scaffold⟩
+
+theorem selectedProjectionCheckedEquivPaddedEmitterConstruction_scaffold :
+    SelectedProjectionCheckedEquivPaddedEmitterConstruction :=
+  selectedProjectionCheckedEquivPaddedEmitterConstruction_of_components
+    selectedProjectionCheckedEquivPaddedEmitterComponentConstruction_scaffold
 
 theorem selectedProjectionCheckedEquivEmitterConstruction_scaffold :
     SelectedProjectionCheckedEquivEmitterConstruction :=
