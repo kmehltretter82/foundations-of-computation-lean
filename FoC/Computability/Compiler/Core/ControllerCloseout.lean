@@ -97,7 +97,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineCon
     (hinitializer :
       PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction)
     (hrunner :
-      PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction)
+      PairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction)
     (hemitter :
       PairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction)
     (hseq :

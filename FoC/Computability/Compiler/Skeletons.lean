@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.FixedSimulatorSkeletons
 import FoC.Computability.Compiler.Core.TapeCodePrimitiveSequencing
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseAdapters
 import FoC.Computability.Compiler.Core.FiniteScaffolds
 import FoC.Computability.Compiler.Core.SearchDrivers
 import FoC.Computability.Compiler.Core.Closeout
@@ -14,6 +15,7 @@ namespace FoC
 namespace Computability
 
 open Languages
+open MachineDescription
 
 theorem pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction_scaffold :
     PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction := by
@@ -175,16 +177,370 @@ theorem pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstructio
 
 theorem pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConstruction_scaffold :
     PairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConstruction := by
-  -- Finite-machine obligation for the output/equivalence-aware stage-attempt
-  -- route.  This intentionally consumes the bounded runner's normalized output
-  -- contract instead of an exact code-word handoff.
-  sorry
+  intro accept reject initializer runner emitter
+    hinitializer hrunner hemitter
+  let initRunner :=
+    MachineDescription.seqSubroutine initializer runner
+      tapeCodePrimitiveCodeWordHandoffMove
+  let attempt :=
+    EncodedRewriters.BoundedLayoutRunner.SeqViaCanonical initRunner emitter
+  refine ⟨attempt, ?_⟩
+  let firstCode :=
+    MachineDescription.TapeCodePrimitive.compose
+      (PairedRecognizerDovetailInitialLayoutCode accept reject)
+      (PairedRecognizerDovetailLayoutCode accept reject)
+  let totalCode :=
+    MachineDescription.TapeCodePrimitive.compose firstCode
+      PairedRecognizerDovetailTotalOutputCode
+  have hinitReady : initializer.SubroutineReady :=
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_subroutineReady
+      hinitializer
+  have hrunnerReady : runner.SubroutineReady :=
+    hrunner.left
+  have hinitRunnerReady : initRunner.SubroutineReady := by
+    exact
+      MachineDescription.seqSubroutine_subroutineReady
+        hinitReady hrunnerReady
+  have hemitterReady : emitter.SubroutineReady :=
+    tapeCodePrimitiveOutputSubroutineRealizedByDescription_subroutineReady
+      hemitter
+  have hattemptReady : attempt.SubroutineReady := by
+    exact
+      EncodedRewriters.BoundedLayoutRunner.SeqViaCanonical_subroutineReady
+        hinitRunnerReady hemitterReady
+  have hinitHandoff :
+      TapeCodePrimitiveHandoffCompiledSubroutineByDescription
+        (PairedRecognizerDovetailInitialLayoutCode accept reject)
+        initializer tapeCodePrimitiveCodeWordHandoffMove :=
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
+      hinitializer
+  have hinitRunnerForward :
+      forall {code mid : Word MachineCodeSymbol},
+        firstCode.transform code = some mid ->
+          initRunner.HaltsFromTapeEquiv
+            (Tape.input (MachineDescription.encodeCodeWordAsInput code))
+            (Tape.input (MachineDescription.encodeCodeWordAsInput mid)) := by
+    intro code mid hfirst
+    unfold firstCode at hfirst
+    unfold MachineDescription.TapeCodePrimitive.compose at hfirst
+    cases hinit :
+        (PairedRecognizerDovetailInitialLayoutCode accept reject).transform
+          code with
+    | none =>
+        simp [hinit] at hfirst
+    | some initOut =>
+        have hrun :
+            (PairedRecognizerDovetailLayoutCode accept reject).transform
+                initOut = some mid := by
+          simpa [hinit] using hfirst
+        rcases
+            (pairedRecognizerDovetailLayoutCode_transform_eq_some_iff
+              accept reject initOut mid).mp hrun with
+          ⟨L, hinitOut, hmid⟩
+        subst initOut
+        subst mid
+        rcases
+            tapeCodePrimitiveHandoffCompiledSubroutineByDescription_haltsWithTape_of_transform_eq_some
+              hinitHandoff hinit with
+          ⟨Tinit, hInitTape, hInitMove⟩
+        rcases hrunner.right.left L with
+          ⟨Trunner, hRunnerTape, hRunnerEquiv⟩
+        have hRunnerReach :
+            exists nB : Nat,
+              runner.runConfig nB
+                  { state := runner.start,
+                    tape := Tape.move tapeCodePrimitiveCodeWordHandoffMove
+                      Tinit } =
+                { state := runner.halt, tape := Trunner } := by
+          rcases runConfig_eq_halt_of_haltsWithTape hRunnerTape with
+            ⟨nB, hBRun⟩
+          refine ⟨nB, ?_⟩
+          simpa [hInitMove] using hBRun
+        have hSeqTape :
+            initRunner.HaltsWithTape
+              (MachineDescription.encodeCodeWordAsInput code)
+              Trunner :=
+          MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+            hinitReady hrunnerReady hInitTape hRunnerReach
+        refine ⟨Trunner, ?_, ?_⟩
+        · rcases hSeqTape with ⟨n, hn⟩
+          exact
+            ⟨n, by
+              simpa [MachineDescription.HaltsWithTapeIn,
+                MachineDescription.HaltsFromTapeIn,
+                MachineDescription.initial] using hn⟩
+        · simpa [EncodedRewriters.BoundedLayoutRunner.OutputTape,
+            EncodedRewriters.BoundedLayoutRunner.OutputCode,
+            Tape.output] using hRunnerEquiv
+  have hinitRunnerClosed :
+      forall {code : Word MachineCodeSymbol} {T : Tape Bool},
+        initRunner.HaltsFromTape
+            (Tape.input (MachineDescription.encodeCodeWordAsInput code)) T ->
+          exists mid : Word MachineCodeSymbol,
+            firstCode.transform code = some mid ∧
+              Tape.Equiv T
+                (Tape.input (MachineDescription.encodeCodeWordAsInput mid)) := by
+    intro code T hhalt
+    rcases
+        MachineDescription.seqSubroutine_haltsFromTape_inv
+          hinitReady hrunnerReady hhalt with
+      ⟨Tinit, hInitFrom, hRunnerReach⟩
+    have hInitTape :
+        initializer.HaltsWithTape
+          (MachineDescription.encodeCodeWordAsInput code) Tinit := by
+      rcases hInitFrom with ⟨nA, hnA⟩
+      exact
+        ⟨nA, by
+          simpa [MachineDescription.HaltsWithTapeIn,
+            MachineDescription.HaltsFromTapeIn,
+            MachineDescription.initial] using hnA⟩
+    rcases
+        tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_haltsWithTape_output
+          hinitializer hInitTape with
+      ⟨initOut, hinitTransform, _hinitNorm, hinitMove⟩
+    rcases hRunnerReach with ⟨nB, hBRun⟩
+    have hRunnerTape :
+        runner.HaltsWithTape
+          (MachineDescription.encodeCodeWordAsInput initOut) T := by
+      have hBRunInput :
+          runner.runConfig nB
+              (runner.initial
+                (MachineDescription.encodeCodeWordAsInput initOut)) =
+            { state := runner.halt, tape := T } := by
+        change
+          runner.runConfig nB
+              { state := runner.start,
+                tape := Tape.input
+                  (MachineDescription.encodeCodeWordAsInput initOut) } =
+            { state := runner.halt, tape := T }
+        simpa [hinitMove] using hBRun
+      exact
+        ⟨nB,
+          ⟨congrArg MachineDescription.Configuration.state hBRunInput,
+            congrArg MachineDescription.Configuration.tape hBRunInput⟩⟩
+    have hRunnerTapeEquiv :
+        runner.HaltsWithTapeEquiv
+          (MachineDescription.encodeCodeWordAsInput initOut) T :=
+      ⟨T, hRunnerTape, Tape.Equiv.refl T⟩
+    rcases hrunner.right.right initOut T hRunnerTapeEquiv with
+      ⟨L, hinitOut, hTEquiv⟩
+    let mid : Word MachineCodeSymbol :=
+      MachineDescription.DovetailLayout.encode
+        (MachineDescription.DovetailLayout.run
+          accept reject L.stage L)
+    have hrunnerTransform :
+        (PairedRecognizerDovetailLayoutCode accept reject).transform
+            initOut = some mid := by
+      simpa [mid, hinitOut] using
+        pairedRecognizerDovetailLayoutCode_encode accept reject L
+    refine ⟨mid, ?_, ?_⟩
+    · unfold firstCode
+      exact
+        MachineDescription.TapeCodePrimitive.compose_transform_some
+          hinitTransform hrunnerTransform
+    · simpa [mid, EncodedRewriters.BoundedLayoutRunner.OutputTape,
+        EncodedRewriters.BoundedLayoutRunner.OutputCode,
+        Tape.output] using hTEquiv
+  have hcompiled :
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        totalCode attempt := by
+    refine
+      tapeCodePrimitiveOutputCompiledSubroutineByDescription_of_forward_closed
+        hattemptReady ?_ ?_
+    · intro code out htransform
+      cases hfirst : firstCode.transform code with
+      | none =>
+          simp [totalCode, MachineDescription.TapeCodePrimitive.compose,
+            hfirst] at htransform
+      | some mid =>
+          have hout :
+              PairedRecognizerDovetailTotalOutputCode.transform mid =
+                some out := by
+            simpa [totalCode, MachineDescription.TapeCodePrimitive.compose,
+              hfirst] using htransform
+          have hA :=
+            hinitRunnerForward (code := code) (mid := mid) hfirst
+          have hBOut :
+              emitter.HaltsWithOutput
+                (MachineDescription.encodeCodeWordAsInput mid)
+                (MachineDescription.encodeCodeWordAsInput out) :=
+            hemitter.left.right mid out hout
+          rcases hBOut with ⟨nB, hnB⟩
+          let Tout : Tape Bool :=
+            (emitter.runConfig nB
+              (emitter.initial
+                (MachineDescription.encodeCodeWordAsInput mid))).tape
+          have hBTape :
+              emitter.HaltsWithTape
+                (MachineDescription.encodeCodeWordAsInput mid) Tout :=
+            ⟨nB, ⟨hnB.left, rfl⟩⟩
+          have hBFrom :
+              emitter.HaltsFromTape
+                (Tape.input
+                  (MachineDescription.encodeCodeWordAsInput mid)) Tout := by
+            rcases hBTape with ⟨n, hn⟩
+            exact
+              ⟨n, by
+                simpa [MachineDescription.HaltsWithTapeIn,
+                  MachineDescription.HaltsFromTapeIn,
+                  MachineDescription.initial] using hn⟩
+          have hBEq :
+              emitter.HaltsFromTapeEquiv
+                (Tape.input
+                  (MachineDescription.encodeCodeWordAsInput mid)) Tout :=
+            MachineDescription.HaltsFromTape.toEquiv hBFrom
+          have hbridge :
+              Tape.Equiv
+                (Tape.move Direction.left
+                  (Tape.move Direction.right
+                    (Tape.input
+                      (MachineDescription.encodeCodeWordAsInput mid))))
+                (Tape.input
+                  (MachineDescription.encodeCodeWordAsInput mid)) :=
+            EncodedRewriters.BoundedLayoutRunner.moveLeft_moveRight_equiv_self
+              (Tape.input (MachineDescription.encodeCodeWordAsInput mid))
+          have hAttemptFrom :
+              attempt.HaltsFromTapeEquiv
+                (Tape.input
+                  (MachineDescription.encodeCodeWordAsInput code)) Tout :=
+            EncodedRewriters.BoundedLayoutRunner.SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
+              hinitRunnerReady hemitterReady hA hbridge hBEq
+          have hAttemptWith :
+              attempt.HaltsWithTapeEquiv
+                (MachineDescription.encodeCodeWordAsInput code) Tout := by
+            rcases hAttemptFrom with ⟨Tactual, hActual, hEquiv⟩
+            refine ⟨Tactual, ?_, hEquiv⟩
+            rcases hActual with ⟨n, hn⟩
+            exact
+              ⟨n, by
+                simpa [MachineDescription.HaltsWithTapeIn,
+                  MachineDescription.HaltsFromTapeIn,
+                  MachineDescription.initial] using hn⟩
+          have hAttemptOut :=
+            MachineDescription.haltsWithOutput_of_haltsWithTapeEquiv
+              hAttemptWith
+          have hToutNorm :
+              Tape.normalizedOutput Tout =
+                MachineDescription.encodeCodeWordAsInput out := by
+            simpa [Tout] using hnB.right
+          simpa [hToutNorm] using hAttemptOut
+    · intro code out hhalt
+      rcases hhalt with ⟨n, hn⟩
+      let Tout : Tape Bool :=
+        (attempt.runConfig n
+          (attempt.initial
+            (MachineDescription.encodeCodeWordAsInput code))).tape
+      have hSeqFrom :
+          attempt.HaltsFromTape
+            (Tape.input (MachineDescription.encodeCodeWordAsInput code))
+            Tout := by
+        refine ⟨n, ?_⟩
+        exact
+          ⟨hn.left, by
+            change
+              (attempt.runConfig n
+                (attempt.initial
+                  (MachineDescription.encodeCodeWordAsInput code))).tape =
+                Tout
+            rfl⟩
+      have hToutNorm :
+          Tape.normalizedOutput Tout =
+            MachineDescription.encodeCodeWordAsInput out :=
+        hn.right
+      rcases
+          EncodedRewriters.BoundedLayoutRunner.SeqViaCanonical_haltsFromTape_inv
+            hinitRunnerReady hemitterReady hSeqFrom with
+        ⟨Tmid, hFirstFrom, hEmitterFrom⟩
+      rcases hinitRunnerClosed hFirstFrom with
+        ⟨mid, hFirstCode, hTmid⟩
+      have hbridge :
+          Tape.Equiv
+            (Tape.move Direction.left (Tape.move Direction.right Tmid))
+            (Tape.input (MachineDescription.encodeCodeWordAsInput mid)) :=
+        Tape.Equiv.trans
+          (EncodedRewriters.BoundedLayoutRunner.moveLeft_moveRight_equiv_self
+            Tmid)
+          hTmid
+      have hEmitterEquiv :
+          emitter.HaltsFromTapeEquiv
+            (Tape.input (MachineDescription.encodeCodeWordAsInput mid))
+            Tout :=
+        MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+          hbridge hEmitterFrom
+      have hEmitterWith :
+          emitter.HaltsWithTapeEquiv
+            (MachineDescription.encodeCodeWordAsInput mid) Tout := by
+        rcases hEmitterEquiv with ⟨Tactual, hActual, hEquiv⟩
+        refine ⟨Tactual, ?_, hEquiv⟩
+        rcases hActual with ⟨nB, hnB⟩
+        exact
+          ⟨nB, by
+            simpa [MachineDescription.HaltsWithTapeIn,
+              MachineDescription.HaltsFromTapeIn,
+              MachineDescription.initial] using hnB⟩
+      have hEmitterOut :=
+        MachineDescription.haltsWithOutput_of_haltsWithTapeEquiv
+          hEmitterWith
+      have hEmitterActual :
+          emitter.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput mid)
+            (MachineDescription.encodeCodeWordAsInput out) := by
+        simpa [hToutNorm] using hEmitterOut
+      have hmidLayout :
+          exists L : MachineDescription.DovetailLayout,
+            mid = MachineDescription.DovetailLayout.encode L := by
+        unfold firstCode at hFirstCode
+        unfold MachineDescription.TapeCodePrimitive.compose at hFirstCode
+        cases hinit :
+            (PairedRecognizerDovetailInitialLayoutCode accept reject).transform
+              code with
+        | none =>
+            simp [hinit] at hFirstCode
+        | some initOut =>
+            have hrunnerMid :
+                (PairedRecognizerDovetailLayoutCode accept reject).transform
+                    initOut = some mid := by
+              simpa [hinit] using hFirstCode
+            rcases
+                (pairedRecognizerDovetailLayoutCode_transform_eq_some_iff
+                  accept reject initOut mid).mp hrunnerMid with
+              ⟨L, _hinitOut, hmid⟩
+            exact
+              ⟨MachineDescription.DovetailLayout.run
+                accept reject L.stage L, hmid⟩
+      rcases hmidLayout with ⟨Lmid, hmid⟩
+      subst mid
+      let expected : Word MachineCodeSymbol :=
+        MachineDescription.encodeBoolWord
+          (MachineDescription.DovetailLayout.outputWordFromHits Lmid)
+      have hExpected :
+          PairedRecognizerDovetailTotalOutputCode.transform
+              (MachineDescription.DovetailLayout.encode Lmid) =
+            some expected := by
+        exact pairedRecognizerDovetailTotalOutputCode_encode Lmid
+      have hEmitterExpected :
+          emitter.HaltsWithOutput
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailLayout.encode Lmid))
+            (MachineDescription.encodeCodeWordAsInput expected) :=
+        hemitter.left.right
+          (MachineDescription.DovetailLayout.encode Lmid)
+          expected hExpected
+      have hout : out = expected :=
+        haltsWithEncodedCodeOutput_functional_of_haltTransitionFree
+          hemitter.right hEmitterActual hEmitterExpected
+      exact
+        MachineDescription.TapeCodePrimitive.compose_transform_some
+          hFirstCode
+          (by simpa [hout] using hExpected)
+  simpa [PairedRecognizerDovetailTotalStageAttemptSourceCode,
+    initRunner, attempt, firstCode, totalCode] using hcompiled
 
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold :
     PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :=
   pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_of_outputFiniteSourceComponents
     pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold
-    pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold
+    pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold
     pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_scaffold
     pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConstruction_scaffold
 

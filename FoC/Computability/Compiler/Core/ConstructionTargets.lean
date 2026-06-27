@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.RightShifted
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Basic
 
 set_option doc.verso true
 
@@ -217,6 +217,12 @@ def PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :
         (PairedRecognizerDovetailLayoutCode accept reject)
         runner
 
+def PairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction :
+    Prop :=
+  forall accept reject : MachineDescription,
+    exists runner : MachineDescription,
+      EncodedRewriters.BoundedLayoutRunner.Spec accept reject runner
+
 def PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction :
     Prop :=
   exists emitter : MachineDescription,
@@ -310,9 +316,7 @@ def PairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConstruct
     TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       (PairedRecognizerDovetailInitialLayoutCode accept reject)
       initializer tapeCodePrimitiveCodeWordHandoffMove ->
-    TapeCodePrimitiveOutputCompiledSubroutineByDescription
-      (PairedRecognizerDovetailLayoutCode accept reject)
-      runner ->
+    EncodedRewriters.BoundedLayoutRunner.Spec accept reject runner ->
     TapeCodePrimitiveOutputSubroutineRealizedByDescription
       PairedRecognizerDovetailTotalOutputCode
       emitter ->

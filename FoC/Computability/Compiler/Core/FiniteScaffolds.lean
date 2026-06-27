@@ -183,6 +183,17 @@ theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstructio
       (P := PairedRecognizerDovetailLayoutCode accept reject)
       (h accept reject)
 
+theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_spec
+    (h :
+      PairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction := by
+  intro accept reject
+  rcases h accept reject with ⟨runner, hrunner⟩
+  exact
+    ⟨runner,
+      EncodedRewriters.BoundedLayoutRunner.outputCompiledSubroutineByDescription_of_spec
+        hrunner⟩
+
 theorem pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_of_encodedRewriter
     (h :
       EncodedDovetailTotalOutputEmitterRewriterConstruction) :
@@ -264,10 +275,14 @@ theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruct
     (pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_of_encodedRewriter
       encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold)
 
+theorem pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold :
+    PairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction :=
+  EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold
+
 theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold :
     PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :=
-  pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_encodedRewriter
-    encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold
+  pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_spec
+    pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold
 
 theorem pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_scaffold :
     PairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction :=
