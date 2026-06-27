@@ -680,6 +680,51 @@ theorem not_rightHandoffStepPhaseRealizes
   rw [hfinal] at hmono
   exact (Nat.not_lt_of_ge hmono) shrinkTarget_contextLength_lt_source
 
+theorem shrinkTarget_contextLength_lt_input :
+    Tape.contextLength
+        (FixedDescriptionBoundedSimulatorCanonicalOutputTape
+          shrinkDescription shrinkLayout) <
+      Tape.contextLength
+        (Tape.input
+          (FixedDescriptionBoundedSimulatorInput shrinkLayout)) := by
+  native_decide
+
+theorem not_canonicalSpec
+    (sim : MachineDescription) :
+    ¬ FixedDescriptionBoundedSimulatorCanonicalSpec
+        shrinkDescription sim := by
+  intro hsim
+  rcases hsim.right.left shrinkLayout with ⟨steps, hsteps⟩
+  have hmono :=
+    MachineDescription.runConfig_contextLength_mono sim steps
+      (sim.initial (FixedDescriptionBoundedSimulatorInput shrinkLayout))
+  have hfinal :
+      Tape.contextLength
+          ((sim.runConfig steps
+            (sim.initial
+              (FixedDescriptionBoundedSimulatorInput shrinkLayout))).tape) =
+        Tape.contextLength
+          (FixedDescriptionBoundedSimulatorCanonicalOutputTape
+            shrinkDescription shrinkLayout) := by
+    exact congrArg Tape.contextLength hsteps.right
+  rw [hfinal] at hmono
+  have hinput :
+      Tape.contextLength
+          (sim.initial
+            (FixedDescriptionBoundedSimulatorInput shrinkLayout)).tape =
+        Tape.contextLength
+          (Tape.input
+            (FixedDescriptionBoundedSimulatorInput shrinkLayout)) :=
+    rfl
+  rw [hinput] at hmono
+  exact (Nat.not_lt_of_ge hmono) shrinkTarget_contextLength_lt_input
+
+theorem not_canonicalConstruction :
+    ¬ FixedDescriptionBoundedSimulatorCanonicalConstruction := by
+  intro h
+  rcases h shrinkDescription with ⟨sim, hsim⟩
+  exact not_canonicalSpec sim hsim
+
 end FixedDescriptionBoundedSimulatorRightHandoffCounterexample
 
 theorem fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_codeRightShifted :
