@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround
 import FoC.Computability.Compiler.Core.ConstructionTargets
+import FoC.Computability.Compiler.Core.ControllerStageInputProjection
 
 set_option doc.verso true
 
@@ -1901,6 +1902,96 @@ theorem resultNoneGuardScanRewindDescription_handoff_equiv_code_of_accepts
   · exact
       resultNoneGuardRewindFinalTape_moveLeft_input_equiv
         (MachineDescription.encodeCodeWordAsInput code)
+
+def ResultNoneGuardStageInputProjectionDescription : MachineDescription :=
+  MachineDescription.seqSubroutine
+    ResultNoneGuardScanRewindDescription
+    ControllerStageInputProjection.Description
+    Direction.left
+
+theorem resultNoneGuardStageInputProjectionDescription_subroutineReady :
+    ResultNoneGuardStageInputProjectionDescription.SubroutineReady :=
+  MachineDescription.seqSubroutine_subroutineReady
+    resultNoneGuardScanRewindDescription_subroutineReady
+    ⟨ControllerStageInputProjection.wellFormed,
+      ControllerStageInputProjection.haltTransitionFree⟩
+
+theorem resultNoneGuardStageInputProjectionDescription_haltsWithOutput_controllerEncode
+    (C : MachineDescription.DovetailControllerLayout)
+    (hraw : PairedRecognizerDovetailControllerRawOutput C.result = none) :
+    ResultNoneGuardStageInputProjectionDescription.HaltsWithOutput
+      (MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.DovetailControllerLayout.encode C))
+      (MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.DovetailControllerLayout.stageInputCode C)) := by
+  let code := MachineDescription.DovetailControllerLayout.encode C
+  let inputBits := MachineDescription.encodeCodeWordAsInput code
+  let stageBits :=
+    MachineDescription.encodeCodeWordAsInput
+      (MachineDescription.DovetailControllerLayout.stageInputCode C)
+  have haccept : (resultNoneGuardScanBoundary code).accepts :=
+    (resultNoneGuardScanBoundary_controllerEncode_accepts_iff C).mpr hraw
+  rcases
+      resultNoneGuardScanRewindDescription_handoff_equiv_code_of_accepts
+        code haccept with
+    ⟨Tguard, hguard, hguardMove⟩
+  have hprojReady : ControllerStageInputProjection.Description.SubroutineReady :=
+    ⟨ControllerStageInputProjection.wellFormed,
+      ControllerStageInputProjection.haltTransitionFree⟩
+  have hprojOut :
+      ControllerStageInputProjection.Description.HaltsWithOutput
+        inputBits stageBits := by
+    simpa [code, inputBits, stageBits] using
+      ControllerStageInputProjection.haltsWithOutput_encode C
+  rcases hprojOut with ⟨nProj, hnProj⟩
+  let Tproj : Tape Bool :=
+    (ControllerStageInputProjection.Description.runConfig nProj
+      (ControllerStageInputProjection.Description.initial inputBits)).tape
+  have hprojTape :
+      ControllerStageInputProjection.Description.HaltsFromTape
+        (Tape.input inputBits) Tproj := by
+    refine ⟨nProj, ?_⟩
+    change
+      (ControllerStageInputProjection.Description.runConfig nProj
+        { state := ControllerStageInputProjection.Description.start
+          tape := Tape.input inputBits }).state =
+          ControllerStageInputProjection.Description.halt ∧
+        (ControllerStageInputProjection.Description.runConfig nProj
+          { state := ControllerStageInputProjection.Description.start
+            tape := Tape.input inputBits }).tape = Tproj
+    constructor
+    · simpa [Tproj, MachineDescription.HaltsWithOutputIn] using hnProj.left
+    · rfl
+  rcases
+      MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+        (Tape.Equiv.symm hguardMove) hprojTape with
+    ⟨Tactual, hprojActual, hactualEquiv⟩
+  have hprojReach :
+      exists nB : Nat,
+        ControllerStageInputProjection.Description.runConfig nB
+            { state := ControllerStageInputProjection.Description.start
+              tape := Tape.move Direction.left Tguard } =
+          { state := ControllerStageInputProjection.Description.halt
+            tape := Tactual } :=
+    MachineDescription.runConfig_eq_halt_of_haltsFromTape hprojActual
+  have hseqTape :
+      ResultNoneGuardStageInputProjectionDescription.HaltsWithTape
+        inputBits Tactual := by
+    simpa [ResultNoneGuardStageInputProjectionDescription, inputBits] using
+      MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
+        resultNoneGuardScanRewindDescription_subroutineReady
+        hprojReady hguard hprojReach
+  have hTprojNorm : Tape.normalizedOutput Tproj = stageBits := by
+    change
+      Tape.normalizedOutput
+          (ControllerStageInputProjection.Description.runConfig nProj
+            (ControllerStageInputProjection.Description.initial inputBits)).tape =
+        stageBits
+    exact hnProj.right
+  have hTactualNorm : Tape.normalizedOutput Tactual = stageBits :=
+    (Tape.Equiv.normalizedOutput_eq hactualEquiv).trans hTprojNorm
+  simpa [hTactualNorm, code, inputBits, stageBits] using
+    MachineDescription.haltsWithOutput_of_haltsWithTape hseqTape
 
 end ControllerResultContinueConstruction
 
