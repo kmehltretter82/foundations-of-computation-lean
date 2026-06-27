@@ -566,7 +566,7 @@ theorem encode_bool_tail_input_bits
             suffix)) = _
     rw [MachineDescription.encodeCodeWordAsInput_append]
     simp [List.map_append]
-theorem state120_tick_tail_stage_suffix_inv
+theorem state120_tick_tail_stageSuffixDecoder_inv
     {rest suffix : Word MachineCodeSymbol} {w : Word Bool}
     {T : Tape Bool}
     (hscanner :
@@ -879,6 +879,25 @@ theorem state120_tick_tail_stage_suffix_inv
               congrArg MachineDescription.Configuration.state
                 hscannerFinish
           exact False.elim (hno hhalt)
+
+theorem state120_tick_tail_stage_suffix_inv
+    {rest suffix : Word MachineCodeSymbol} {w : Word Bool}
+    {T : Tape Bool}
+    (hscanner :
+      exists steps : Nat,
+        StageInputMarkedScannerDescription.runConfig steps
+            (config 120 [none, some true, none, some false]
+              ((MachineDescription.encodeCodeWordAsInput rest).map some)) =
+          { state := StageInputMarkedScannerDescription.halt
+            tape := T })
+    (hinput :
+      MachineDescription.decodeBoolWord
+          (MachineCodeSymbol.tick :: rest) =
+        some (w, suffix)) :
+    exists stage : Nat,
+      suffix = MachineDescription.encodeNat stage :=
+  state120_tick_tail_stageSuffixDecoder_inv hscanner hinput
+
 theorem state120_tick_tail_code_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :

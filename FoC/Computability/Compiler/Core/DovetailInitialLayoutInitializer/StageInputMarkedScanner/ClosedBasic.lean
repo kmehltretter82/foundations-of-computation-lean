@@ -381,7 +381,7 @@ theorem run_marked_tail_done_false_false_to_state200
     MachineDescription.transition, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem run_state120_decodeNat_none_ne_halt
+theorem state120_natPrefixFailure_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeNat tokens = none) (n : Nat) :
     (StageInputMarkedScannerDescription.runConfig n
@@ -558,7 +558,16 @@ theorem run_state120_decodeNat_none_ne_halt
                 change (120 : Nat) ≠ 999
                 omega)
 
-theorem run_state130_decodeCell_none_ne_halt
+theorem run_state120_decodeNat_none_ne_halt
+    (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
+    (hdecode : MachineDescription.decodeNat tokens = none) (n : Nat) :
+    (StageInputMarkedScannerDescription.runConfig n
+      (config 120 leftRev
+        ((MachineDescription.encodeCodeWordAsInput tokens).map some))).state ≠
+      StageInputMarkedScannerDescription.halt :=
+  state120_natPrefixFailure_ne_halt tokens leftRev hdecode n
+
+theorem state130_cellPrefixFailure_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : MachineDescription.decodeCell tokens = none) (n : Nat) :
     (StageInputMarkedScannerDescription.runConfig n
@@ -697,6 +706,15 @@ theorem run_state130_decodeCell_none_ne_halt
               (by
                 change (135 : Nat) ≠ 999
                 omega)
+
+theorem run_state130_decodeCell_none_ne_halt
+    (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
+    (hdecode : MachineDescription.decodeCell tokens = none) (n : Nat) :
+    (StageInputMarkedScannerDescription.runConfig n
+      (config 130 leftRev
+        ((MachineDescription.encodeCodeWordAsInput tokens).map some))).state ≠
+      StageInputMarkedScannerDescription.halt :=
+  state130_cellPrefixFailure_ne_halt tokens leftRev hdecode n
 
 theorem run_state130_blank_cell_ne_halt
     (suffix : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -868,7 +886,7 @@ theorem run_marking_tail_mark_one
   rw [hleftNext]
   simp
 
-theorem run_marking_tail_decodeCells_none_ne_halt
+theorem markingTail_cellListFailure_ne_halt
     (marked : Word Bool) (remainingCells : Nat)
     (tokens : Word MachineCodeSymbol)
     (hdecode :
@@ -958,7 +976,18 @@ theorem run_marking_tail_decodeCells_none_ne_halt
                   simp [MachineDescription.decodeCells, hcell, hrest]
                     at hdecode
 
-theorem run_marking_tail_cellsToWord_none_ne_halt
+theorem run_marking_tail_decodeCells_none_ne_halt
+    (marked : Word Bool) (remainingCells : Nat)
+    (tokens : Word MachineCodeSymbol)
+    (hdecode :
+      MachineDescription.decodeCells remainingCells tokens = none)
+    (n : Nat) :
+    (StageInputMarkedScannerDescription.runConfig n
+      (markingTailConfig marked remainingCells tokens)).state ≠
+      StageInputMarkedScannerDescription.halt :=
+  markingTail_cellListFailure_ne_halt marked remainingCells tokens hdecode n
+
+theorem markingTail_boolWordFailure_ne_halt
     (marked : Word Bool) (cells : List (Option Bool))
     (suffix : Word MachineCodeSymbol)
     (hword : MachineDescription.cellsToWord? cells = none)
@@ -1044,7 +1073,18 @@ theorem run_marking_tail_cellsToWord_none_ne_halt
           | some decoded =>
               simp [MachineDescription.cellsToWord?, hrest] at hword
 
-theorem run_state120_decodeBoolWord_none_ne_halt
+theorem run_marking_tail_cellsToWord_none_ne_halt
+    (marked : Word Bool) (cells : List (Option Bool))
+    (suffix : Word MachineCodeSymbol)
+    (hword : MachineDescription.cellsToWord? cells = none)
+    (n : Nat) :
+    (StageInputMarkedScannerDescription.runConfig n
+      (markingTailConfig marked cells.length
+        (MachineDescription.encodeCellsAppend cells suffix))).state ≠
+      StageInputMarkedScannerDescription.halt :=
+  markingTail_boolWordFailure_ne_halt marked cells suffix hword n
+
+theorem state120_boolWordFailure_ne_halt
     (rest : Word MachineCodeSymbol)
     (hdecode :
       MachineDescription.decodeBoolWord
@@ -1120,6 +1160,18 @@ theorem run_state120_decodeBoolWord_none_ne_halt
                 MachineDescription.decodeCellList,
                 MachineDescription.decodeNat, hnat, hcells, hword]
                 at hdecode
+
+theorem run_state120_decodeBoolWord_none_ne_halt
+    (rest : Word MachineCodeSymbol)
+    (hdecode :
+      MachineDescription.decodeBoolWord
+        (MachineCodeSymbol.tick :: rest) = none)
+    (n : Nat) :
+    (StageInputMarkedScannerDescription.runConfig n
+      (config 120 [none, some true, none, some false]
+        ((MachineDescription.encodeCodeWordAsInput rest).map some))).state ≠
+      StageInputMarkedScannerDescription.halt :=
+  state120_boolWordFailure_ne_halt rest hdecode n
 
 theorem run_state200_done_to_state210
     (left right : List (Option Bool)) :
@@ -1381,7 +1433,7 @@ theorem run_state200_decodeNat_none_ne_halt
                 change (200 : Nat) ≠ 999
                 omega)
 
-theorem run_state200_stageNat_suffix_ne_halt
+theorem state200_nonemptySuffixFailure_ne_halt
     (stage : Nat) (symbol : MachineCodeSymbol)
     (suffix : Word MachineCodeSymbol)
     (leftRev : List (Option Bool)) (n : Nat) :
@@ -1429,6 +1481,18 @@ theorem run_state200_stageNat_suffix_ne_halt
     exact run_state210_encoded_cons_ne_halt symbol suffix
       (List.append ((stageNatBits stage).reverse.map some) leftRev) m
 
+theorem run_state200_stageNat_suffix_ne_halt
+    (stage : Nat) (symbol : MachineCodeSymbol)
+    (suffix : Word MachineCodeSymbol)
+    (leftRev : List (Option Bool)) (n : Nat) :
+    (StageInputMarkedScannerDescription.runConfig n
+      (config 200 leftRev
+        ((MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeNatAppend stage
+            (symbol :: suffix))).map some))).state ≠
+      StageInputMarkedScannerDescription.halt :=
+  state200_nonemptySuffixFailure_ne_halt stage symbol suffix leftRev n
+
 theorem state200_code_tail_nat_inv
     {rest : Word MachineCodeSymbol} {leftRev : List (Option Bool)}
     {T : Tape Bool}
@@ -1466,7 +1530,7 @@ theorem state200_code_tail_nat_inv
       | cons symbol suffixTail =>
           rw [hrest] at hsteps
           have hne :=
-            run_state200_stageNat_suffix_ne_halt
+            state200_nonemptySuffixFailure_ne_halt
               stage symbol suffixTail leftRev steps
           have hstate :
               (StageInputMarkedScannerDescription.runConfig steps
