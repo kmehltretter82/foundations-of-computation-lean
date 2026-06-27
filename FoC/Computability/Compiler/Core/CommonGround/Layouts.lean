@@ -1,4 +1,7 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Basic
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Fields
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Dovetail
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Simulator
 
 set_option doc.verso true
 

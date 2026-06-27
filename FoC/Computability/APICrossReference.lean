@@ -186,10 +186,10 @@ controller machines.
 * {module}`FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts`
   collects the layout encoders, field scanners, configuration encoders,
   controller layout encoders, and simulator layout facts.
-* {module}`FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner`
-  is a wrapper around the closed scanner implementation. Its submodules divide
-  primitive field closedness, bool-word closed inversions, shape facts, and
-  composition facts.
+* The dovetail-layout scanner implementation lives under
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Composition`
+  and its closed inversion modules.  The submodules divide primitive field
+  closedness, bool-word closed inversions, shape facts, and composition facts.
 * {module}`FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWordClosed`
   is part of the parser API, not dead code. It contains the code-origin closed
   inversions needed before the full dovetail-layout parser can recover a

@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.DovetailCode
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts
+import FoC.Computability.Compiler.Core.EncodingLemmas
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Controller
 
 set_option doc.verso true
 

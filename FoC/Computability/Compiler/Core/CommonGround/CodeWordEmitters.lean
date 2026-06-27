@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts
+import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Emitters
 
 set_option doc.verso true
 
