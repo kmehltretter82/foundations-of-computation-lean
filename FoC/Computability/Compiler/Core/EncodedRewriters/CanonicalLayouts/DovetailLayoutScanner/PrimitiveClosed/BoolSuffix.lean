@@ -21,16 +21,19 @@ namespace DovetailLayoutScanner
 open FoC.Computability.DovetailInitialLayoutInitializer
 open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
 
+private abbrev BSS := BoolSuffixScannerDescription
+private abbrev BFS := BoolFinalScannerDescription
+
 theorem boolSuffixScannerDescription_runConfig_suffix_inv
     (flag : Bool) (baseLeft suffixCells : List (Option Bool))
     {Tout : Tape Bool} {n : Nat}
     (h :
-      BoolSuffixScannerDescription.runConfig n
-          { state := BoolSuffixScannerDescription.start
+      BSS.runConfig n
+          { state := BSS.start
             tape := tapeAtCells baseLeft
               (List.append ((cellCodeBits (some flag)).map some)
                 suffixCells) } =
-        { state := BoolSuffixScannerDescription.halt
+        { state := BSS.halt
           tape := Tout }) :
     exists b : Bool,
     exists suffixTail : List (Option Bool),
@@ -124,10 +127,10 @@ theorem boolSuffixScannerDescription_runConfig_suffix_inv
                             baseLeft)
                           (some false :: rest))
                     have hsimp :
-                        BoolSuffixScannerDescription.runConfig n5
-                            { state := BoolSuffixScannerDescription.halt
+                        BSS.runConfig n5
+                            { state := BSS.halt
                               tape := Tfinal } =
-                          { state := BoolSuffixScannerDescription.halt
+                          { state := BSS.halt
                             tape := Tout } := by
                       simpa [Tfinal, hflag, BoolSuffixScannerDescription,
                         runConfig,
@@ -156,10 +159,10 @@ theorem boolSuffixScannerDescription_runConfig_suffix_inv
                             baseLeft)
                           (some true :: rest))
                     have hsimp :
-                        BoolSuffixScannerDescription.runConfig n5
-                            { state := BoolSuffixScannerDescription.halt
+                        BSS.runConfig n5
+                            { state := BSS.halt
                               tape := Tfinal } =
-                          { state := BoolSuffixScannerDescription.halt
+                          { state := BSS.halt
                             tape := Tout } := by
                       simpa [Tfinal, hflag, BoolSuffixScannerDescription,
                         runConfig,
@@ -184,12 +187,12 @@ theorem boolFinalScannerDescription_runConfig_terminal_inv
     (flag : Bool) (baseLeft terminalCells : List (Option Bool))
     {Tout : Tape Bool} {n : Nat}
     (h :
-      BoolFinalScannerDescription.runConfig n
-          { state := BoolFinalScannerDescription.start
+      BFS.runConfig n
+          { state := BFS.start
             tape := tapeAtCells baseLeft
               (List.append ((cellCodeBits (some flag)).map some)
                 terminalCells) } =
-        { state := BoolFinalScannerDescription.halt
+        { state := BFS.halt
           tape := Tout }) :
     (terminalCells = [] ∨
       exists rest : List (Option Bool), terminalCells = none :: rest) ∧
@@ -260,10 +263,10 @@ theorem boolFinalScannerDescription_runConfig_terminal_inv
                           baseLeft)
                         [])
                   have hsimp :
-                      BoolFinalScannerDescription.runConfig n5
-                          { state := BoolFinalScannerDescription.halt
+                      BFS.runConfig n5
+                          { state := BFS.halt
                             tape := Tfinal } =
-                        { state := BoolFinalScannerDescription.halt
+                        { state := BFS.halt
                           tape := Tout } := by
                     simpa [Tfinal, hflag, BoolFinalScannerDescription,
                       runConfig,
@@ -295,10 +298,10 @@ theorem boolFinalScannerDescription_runConfig_terminal_inv
                             baseLeft)
                           (none :: rest))
                     have hsimp :
-                        BoolFinalScannerDescription.runConfig n5
-                            { state := BoolFinalScannerDescription.halt
+                        BFS.runConfig n5
+                            { state := BFS.halt
                               tape := Tfinal } =
-                          { state := BoolFinalScannerDescription.halt
+                          { state := BFS.halt
                             tape := Tout } := by
                       simpa [Tfinal, hflag, BoolFinalScannerDescription,
                         runConfig,
@@ -382,26 +385,26 @@ private theorem encodeCodeWordAsInput_map_some_ne_none_cons
 
 private theorem boolSuffixScannerDescription_runConfig_nil_ne_halt
     (baseLeft : List (Option Bool)) (n : Nat) :
-    (BoolSuffixScannerDescription.runConfig n
-      (config BoolSuffixScannerDescription.start baseLeft
+    (BSS.runConfig n
+      (config BSS.start baseLeft
         ([] : List (Option Bool)))).state ≠
-      BoolSuffixScannerDescription.halt := by
+      BSS.halt := by
   exact
     primitive_runConfig_state_ne_halt_of_reaches_stuck
       boolSuffixScannerDescription_haltTransitionFree
-      (D := BoolSuffixScannerDescription)
+      (D := BSS)
       (c :=
-        config BoolSuffixScannerDescription.start baseLeft
+        config BSS.start baseLeft
           ([] : List (Option Bool)))
       (stuck :=
-        config BoolSuffixScannerDescription.start baseLeft
+        config BSS.start baseLeft
           ([] : List (Option Bool)))
       (k := 0) (n := n)
       rfl
       (by
         have hlookup :
-            BoolSuffixScannerDescription.lookupTransition
-              BoolSuffixScannerDescription.start none = none := by
+            BSS.lookupTransition
+              BSS.start none = none := by
           native_decide
         simp [config, tapeAtCells, stepConfig,
           hlookup, Tape.read])
@@ -411,26 +414,26 @@ private theorem boolSuffixScannerDescription_runConfig_nil_ne_halt
 
 private theorem boolSuffixScannerDescription_runConfig_true_start_ne_halt
     (baseLeft rest : List (Option Bool)) (n : Nat) :
-    (BoolSuffixScannerDescription.runConfig n
-      (config BoolSuffixScannerDescription.start baseLeft
+    (BSS.runConfig n
+      (config BSS.start baseLeft
         (some true :: rest))).state ≠
-      BoolSuffixScannerDescription.halt := by
+      BSS.halt := by
   exact
     primitive_runConfig_state_ne_halt_of_reaches_stuck
       boolSuffixScannerDescription_haltTransitionFree
-      (D := BoolSuffixScannerDescription)
+      (D := BSS)
       (c :=
-        config BoolSuffixScannerDescription.start baseLeft
+        config BSS.start baseLeft
           (some true :: rest))
       (stuck :=
-        config BoolSuffixScannerDescription.start baseLeft
+        config BSS.start baseLeft
           (some true :: rest))
       (k := 0) (n := n)
       rfl
       (by
         have hlookup :
-            BoolSuffixScannerDescription.lookupTransition
-              BoolSuffixScannerDescription.start (some true) = none := by
+            BSS.lookupTransition
+              BSS.start (some true) = none := by
           native_decide
         simp [config, tapeAtCells, stepConfig,
           hlookup, Tape.read])
@@ -440,19 +443,19 @@ private theorem boolSuffixScannerDescription_runConfig_true_start_ne_halt
 
 private theorem boolSuffixScannerDescription_runConfig_false_false_ne_halt
     (baseLeft rest : List (Option Bool)) (n : Nat) :
-    (BoolSuffixScannerDescription.runConfig n
-      (config BoolSuffixScannerDescription.start baseLeft
+    (BSS.runConfig n
+      (config BSS.start baseLeft
         (some false :: some false :: rest))).state ≠
-      BoolSuffixScannerDescription.halt := by
+      BSS.halt := by
   let start : Configuration :=
-    config BoolSuffixScannerDescription.start baseLeft
+    config BSS.start baseLeft
       (some false :: some false :: rest)
   let stuck : Configuration :=
-    BoolSuffixScannerDescription.runConfig 1 start
+    BSS.runConfig 1 start
   exact
     primitive_runConfig_state_ne_halt_of_reaches_stuck
       boolSuffixScannerDescription_haltTransitionFree
-      (D := BoolSuffixScannerDescription)
+      (D := BSS)
       (c := start) (stuck := stuck) (k := 1) (n := n)
       rfl
       (by
@@ -472,19 +475,19 @@ private theorem boolSuffixScannerDescription_runConfig_false_false_ne_halt
 
 private theorem boolSuffixScannerDescription_runConfig_false_true_false_false_ne_halt
     (baseLeft rest : List (Option Bool)) (n : Nat) :
-    (BoolSuffixScannerDescription.runConfig n
-      (config BoolSuffixScannerDescription.start baseLeft
+    (BSS.runConfig n
+      (config BSS.start baseLeft
         (some false :: some true :: some false :: some false :: rest))).state ≠
-      BoolSuffixScannerDescription.halt := by
+      BSS.halt := by
   let start : Configuration :=
-    config BoolSuffixScannerDescription.start baseLeft
+    config BSS.start baseLeft
       (some false :: some true :: some false :: some false :: rest)
   let stuck : Configuration :=
-    BoolSuffixScannerDescription.runConfig 3 start
+    BSS.runConfig 3 start
   exact
     primitive_runConfig_state_ne_halt_of_reaches_stuck
       boolSuffixScannerDescription_haltTransitionFree
-      (D := BoolSuffixScannerDescription)
+      (D := BSS)
       (c := start) (stuck := stuck) (k := 3) (n := n)
       rfl
       (by
@@ -504,19 +507,19 @@ private theorem boolSuffixScannerDescription_runConfig_false_true_false_false_ne
 
 private theorem boolSuffixScannerDescription_runConfig_false_true_true_true_ne_halt
     (baseLeft rest : List (Option Bool)) (n : Nat) :
-    (BoolSuffixScannerDescription.runConfig n
-      (config BoolSuffixScannerDescription.start baseLeft
+    (BSS.runConfig n
+      (config BSS.start baseLeft
         (some false :: some true :: some true :: some true :: rest))).state ≠
-      BoolSuffixScannerDescription.halt := by
+      BSS.halt := by
   let start : Configuration :=
-    config BoolSuffixScannerDescription.start baseLeft
+    config BSS.start baseLeft
       (some false :: some true :: some true :: some true :: rest)
   let stuck : Configuration :=
-    BoolSuffixScannerDescription.runConfig 3 start
+    BSS.runConfig 3 start
   exact
     primitive_runConfig_state_ne_halt_of_reaches_stuck
       boolSuffixScannerDescription_haltTransitionFree
-      (D := BoolSuffixScannerDescription)
+      (D := BSS)
       (c := start) (stuck := stuck) (k := 3) (n := n)
       rfl
       (by
@@ -539,12 +542,12 @@ theorem boolSuffixScannerDescription_runConfig_encodeBoolAppend_handoff
     (suffix : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      BoolSuffixScannerDescription.runConfig n
-          (config BoolSuffixScannerDescription.start baseLeft
+      BSS.runConfig n
+          (config BSS.start baseLeft
             ((encodeCodeWordAsInput
               (encodeBoolAppend flag suffix)).map
               some)) =
-        { state := BoolSuffixScannerDescription.halt
+        { state := BSS.halt
           tape := Tout }) :
     exists b : Bool,
     exists suffixTail : Word Bool,
@@ -554,13 +557,13 @@ theorem boolSuffixScannerDescription_runConfig_encodeBoolAppend_handoff
           tapeAtCells baseAfter
             ((encodeCodeWordAsInput suffix).map some) := by
   have hraw :
-      BoolSuffixScannerDescription.runConfig n
-          { state := BoolSuffixScannerDescription.start
+      BSS.runConfig n
+          { state := BSS.start
             tape := tapeAtCells baseLeft
               (List.append ((cellCodeBits (some flag)).map some)
                 ((encodeCodeWordAsInput suffix).map
                   some)) } =
-        { state := BoolSuffixScannerDescription.halt
+        { state := BSS.halt
           tape := Tout } := by
     simpa [config, boolBits_eq_encodeBoolAppend, List.map_append] using h
   rcases
@@ -584,10 +587,10 @@ theorem boolSuffixScannerDescription_runConfig_code_handoff
     (baseLeft : List (Option Bool)) (code : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      BoolSuffixScannerDescription.runConfig n
-          (config BoolSuffixScannerDescription.start baseLeft
+      BSS.runConfig n
+          (config BSS.start baseLeft
             ((encodeCodeWordAsInput code).map some)) =
-        { state := BoolSuffixScannerDescription.halt
+        { state := BSS.halt
           tape := Tout }) :
     exists flag : Bool,
     exists suffix : Word MachineCodeSymbol,
@@ -599,10 +602,10 @@ theorem boolSuffixScannerDescription_runConfig_code_handoff
   cases code with
   | nil =>
       have hstate :
-          (BoolSuffixScannerDescription.runConfig n
-            (config BoolSuffixScannerDescription.start baseLeft
+          (BSS.runConfig n
+            (config BSS.start baseLeft
               ([] : List (Option Bool)))).state =
-            BoolSuffixScannerDescription.halt := by
+            BSS.halt := by
         simpa [encodeCodeWordAsInput] using
           congrArg Configuration.state h
       exact False.elim
@@ -612,12 +615,12 @@ theorem boolSuffixScannerDescription_runConfig_code_handoff
       cases symbol with
       | header =>
           have hstate :
-              (BoolSuffixScannerDescription.runConfig n
-                (config BoolSuffixScannerDescription.start baseLeft
+              (BSS.runConfig n
+                (config BSS.start baseLeft
                   (some false :: some false :: some false :: some false ::
                     (encodeCodeWordAsInput rest).map
                       some))).state =
-                BoolSuffixScannerDescription.halt := by
+                BSS.halt := by
             simpa [encodeCodeWordAsInput,
               encodeCodeSymbolAsInput] using
               congrArg Configuration.state h
@@ -629,12 +632,12 @@ theorem boolSuffixScannerDescription_runConfig_code_handoff
               n) hstate)
       | transition =>
           have hstate :
-              (BoolSuffixScannerDescription.runConfig n
-                (config BoolSuffixScannerDescription.start baseLeft
+              (BSS.runConfig n
+                (config BSS.start baseLeft
                   (some false :: some false :: some false :: some true ::
                     (encodeCodeWordAsInput rest).map
                       some))).state =
-                BoolSuffixScannerDescription.halt := by
+                BSS.halt := by
             simpa [encodeCodeWordAsInput,
               encodeCodeSymbolAsInput] using
               congrArg Configuration.state h
@@ -646,12 +649,12 @@ theorem boolSuffixScannerDescription_runConfig_code_handoff
               n) hstate)
       | tick =>
           have hstate :
-              (BoolSuffixScannerDescription.runConfig n
-                (config BoolSuffixScannerDescription.start baseLeft
+              (BSS.runConfig n
+                (config BSS.start baseLeft
                   (some false :: some false :: some true :: some false ::
                     (encodeCodeWordAsInput rest).map
                       some))).state =
-                BoolSuffixScannerDescription.halt := by
+                BSS.halt := by
             simpa [encodeCodeWordAsInput,
               encodeCodeSymbolAsInput] using
               congrArg Configuration.state h
@@ -663,12 +666,12 @@ theorem boolSuffixScannerDescription_runConfig_code_handoff
               n) hstate)
       | done =>
           have hstate :
-              (BoolSuffixScannerDescription.runConfig n
-                (config BoolSuffixScannerDescription.start baseLeft
+              (BSS.runConfig n
+                (config BSS.start baseLeft
                   (some false :: some false :: some true :: some true ::
                     (encodeCodeWordAsInput rest).map
                       some))).state =
-                BoolSuffixScannerDescription.halt := by
+                BSS.halt := by
             simpa [encodeCodeWordAsInput,
               encodeCodeSymbolAsInput] using
               congrArg Configuration.state h
@@ -680,12 +683,12 @@ theorem boolSuffixScannerDescription_runConfig_code_handoff
               n) hstate)
       | blank =>
           have hstate :
-              (BoolSuffixScannerDescription.runConfig n
-                (config BoolSuffixScannerDescription.start baseLeft
+              (BSS.runConfig n
+                (config BSS.start baseLeft
                   (some false :: some true :: some false :: some false ::
                     (encodeCodeWordAsInput rest).map
                       some))).state =
-                BoolSuffixScannerDescription.halt := by
+                BSS.halt := by
             simpa [encodeCodeWordAsInput,
               encodeCodeSymbolAsInput] using
               congrArg Configuration.state h
@@ -713,12 +716,12 @@ theorem boolSuffixScannerDescription_runConfig_code_handoff
           exact ⟨true, rest, baseAfter, rfl, hmove⟩
       | moveLeft =>
           have hstate :
-              (BoolSuffixScannerDescription.runConfig n
-                (config BoolSuffixScannerDescription.start baseLeft
+              (BSS.runConfig n
+                (config BSS.start baseLeft
                   (some false :: some true :: some true :: some true ::
                     (encodeCodeWordAsInput rest).map
                       some))).state =
-                BoolSuffixScannerDescription.halt := by
+                BSS.halt := by
             simpa [encodeCodeWordAsInput,
               encodeCodeSymbolAsInput] using
               congrArg Configuration.state h
@@ -728,12 +731,12 @@ theorem boolSuffixScannerDescription_runConfig_code_handoff
               n) hstate)
       | moveRight =>
           have hstate :
-              (BoolSuffixScannerDescription.runConfig n
-                (config BoolSuffixScannerDescription.start baseLeft
+              (BSS.runConfig n
+                (config BSS.start baseLeft
                   (some true :: some false :: some false :: some false ::
                     (encodeCodeWordAsInput rest).map
                       some))).state =
-                BoolSuffixScannerDescription.halt := by
+                BSS.halt := by
             simpa [encodeCodeWordAsInput,
               encodeCodeSymbolAsInput] using
               congrArg Configuration.state h
@@ -749,12 +752,12 @@ theorem boolFinalScannerDescription_runConfig_encodeBoolAppend_terminal_inv
     (suffix : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      BoolFinalScannerDescription.runConfig n
-          (config BoolFinalScannerDescription.start baseLeft
+      BFS.runConfig n
+          (config BFS.start baseLeft
             ((encodeCodeWordAsInput
               (encodeBoolAppend flag suffix)).map
               some)) =
-        { state := BoolFinalScannerDescription.halt
+        { state := BFS.halt
           tape := Tout }) :
     suffix = [] ∧
       Tape.move Direction.right Tout =
@@ -763,13 +766,13 @@ theorem boolFinalScannerDescription_runConfig_encodeBoolAppend_terminal_inv
             baseLeft)
           [] := by
   have hraw :
-      BoolFinalScannerDescription.runConfig n
-          { state := BoolFinalScannerDescription.start
+      BFS.runConfig n
+          { state := BFS.start
             tape := tapeAtCells baseLeft
               (List.append ((cellCodeBits (some flag)).map some)
                 ((encodeCodeWordAsInput suffix).map
                   some)) } =
-        { state := BoolFinalScannerDescription.halt
+        { state := BFS.halt
           tape := Tout } := by
     simpa [config, boolBits_eq_encodeBoolAppend, List.map_append] using h
   rcases
@@ -796,26 +799,26 @@ theorem boolFinalScannerDescription_runConfig_encodeBoolAppend_terminal_inv
 
 private theorem boolFinalScannerDescription_runConfig_nil_ne_halt
     (baseLeft : List (Option Bool)) (n : Nat) :
-    (BoolFinalScannerDescription.runConfig n
-      (config BoolFinalScannerDescription.start baseLeft
+    (BFS.runConfig n
+      (config BFS.start baseLeft
         ([] : List (Option Bool)))).state ≠
-      BoolFinalScannerDescription.halt := by
+      BFS.halt := by
   exact
     primitive_runConfig_state_ne_halt_of_reaches_stuck
       boolFinalScannerDescription_haltTransitionFree
-      (D := BoolFinalScannerDescription)
+      (D := BFS)
       (c :=
-        config BoolFinalScannerDescription.start baseLeft
+        config BFS.start baseLeft
           ([] : List (Option Bool)))
       (stuck :=
-        config BoolFinalScannerDescription.start baseLeft
+        config BFS.start baseLeft
           ([] : List (Option Bool)))
       (k := 0) (n := n)
       rfl
       (by
         have hlookup :
-            BoolFinalScannerDescription.lookupTransition
-              BoolFinalScannerDescription.start none = none := by
+            BFS.lookupTransition
+              BFS.start none = none := by
           native_decide
         simp [config, tapeAtCells, stepConfig,
           hlookup, Tape.read])
@@ -825,26 +828,26 @@ private theorem boolFinalScannerDescription_runConfig_nil_ne_halt
 
 private theorem boolFinalScannerDescription_runConfig_true_start_ne_halt
     (baseLeft rest : List (Option Bool)) (n : Nat) :
-    (BoolFinalScannerDescription.runConfig n
-      (config BoolFinalScannerDescription.start baseLeft
+    (BFS.runConfig n
+      (config BFS.start baseLeft
         (some true :: rest))).state ≠
-      BoolFinalScannerDescription.halt := by
+      BFS.halt := by
   exact
     primitive_runConfig_state_ne_halt_of_reaches_stuck
       boolFinalScannerDescription_haltTransitionFree
-      (D := BoolFinalScannerDescription)
+      (D := BFS)
       (c :=
-        config BoolFinalScannerDescription.start baseLeft
+        config BFS.start baseLeft
           (some true :: rest))
       (stuck :=
-        config BoolFinalScannerDescription.start baseLeft
+        config BFS.start baseLeft
           (some true :: rest))
       (k := 0) (n := n)
       rfl
       (by
         have hlookup :
-            BoolFinalScannerDescription.lookupTransition
-              BoolFinalScannerDescription.start (some true) = none := by
+            BFS.lookupTransition
+              BFS.start (some true) = none := by
           native_decide
         simp [config, tapeAtCells, stepConfig,
           hlookup, Tape.read])
@@ -854,19 +857,19 @@ private theorem boolFinalScannerDescription_runConfig_true_start_ne_halt
 
 private theorem boolFinalScannerDescription_runConfig_false_false_ne_halt
     (baseLeft rest : List (Option Bool)) (n : Nat) :
-    (BoolFinalScannerDescription.runConfig n
-      (config BoolFinalScannerDescription.start baseLeft
+    (BFS.runConfig n
+      (config BFS.start baseLeft
         (some false :: some false :: rest))).state ≠
-      BoolFinalScannerDescription.halt := by
+      BFS.halt := by
   let start : Configuration :=
-    config BoolFinalScannerDescription.start baseLeft
+    config BFS.start baseLeft
       (some false :: some false :: rest)
   let stuck : Configuration :=
-    BoolFinalScannerDescription.runConfig 1 start
+    BFS.runConfig 1 start
   exact
     primitive_runConfig_state_ne_halt_of_reaches_stuck
       boolFinalScannerDescription_haltTransitionFree
-      (D := BoolFinalScannerDescription)
+      (D := BFS)
       (c := start) (stuck := stuck) (k := 1) (n := n)
       rfl
       (by
@@ -886,19 +889,19 @@ private theorem boolFinalScannerDescription_runConfig_false_false_ne_halt
 
 private theorem boolFinalScannerDescription_runConfig_false_true_false_false_ne_halt
     (baseLeft rest : List (Option Bool)) (n : Nat) :
-    (BoolFinalScannerDescription.runConfig n
-      (config BoolFinalScannerDescription.start baseLeft
+    (BFS.runConfig n
+      (config BFS.start baseLeft
         (some false :: some true :: some false :: some false :: rest))).state ≠
-      BoolFinalScannerDescription.halt := by
+      BFS.halt := by
   let start : Configuration :=
-    config BoolFinalScannerDescription.start baseLeft
+    config BFS.start baseLeft
       (some false :: some true :: some false :: some false :: rest)
   let stuck : Configuration :=
-    BoolFinalScannerDescription.runConfig 3 start
+    BFS.runConfig 3 start
   exact
     primitive_runConfig_state_ne_halt_of_reaches_stuck
       boolFinalScannerDescription_haltTransitionFree
-      (D := BoolFinalScannerDescription)
+      (D := BFS)
       (c := start) (stuck := stuck) (k := 3) (n := n)
       rfl
       (by
@@ -918,19 +921,19 @@ private theorem boolFinalScannerDescription_runConfig_false_true_false_false_ne_
 
 private theorem boolFinalScannerDescription_runConfig_false_true_true_true_ne_halt
     (baseLeft rest : List (Option Bool)) (n : Nat) :
-    (BoolFinalScannerDescription.runConfig n
-      (config BoolFinalScannerDescription.start baseLeft
+    (BFS.runConfig n
+      (config BFS.start baseLeft
         (some false :: some true :: some true :: some true :: rest))).state ≠
-      BoolFinalScannerDescription.halt := by
+      BFS.halt := by
   let start : Configuration :=
-    config BoolFinalScannerDescription.start baseLeft
+    config BFS.start baseLeft
       (some false :: some true :: some true :: some true :: rest)
   let stuck : Configuration :=
-    BoolFinalScannerDescription.runConfig 3 start
+    BFS.runConfig 3 start
   exact
     primitive_runConfig_state_ne_halt_of_reaches_stuck
       boolFinalScannerDescription_haltTransitionFree
-      (D := BoolFinalScannerDescription)
+      (D := BFS)
       (c := start) (stuck := stuck) (k := 3) (n := n)
       rfl
       (by
@@ -952,10 +955,10 @@ theorem boolFinalScannerDescription_runConfig_code_terminal_inv
     (baseLeft : List (Option Bool)) (code : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      BoolFinalScannerDescription.runConfig n
-          (config BoolFinalScannerDescription.start baseLeft
+      BFS.runConfig n
+          (config BFS.start baseLeft
             ((encodeCodeWordAsInput code).map some)) =
-        { state := BoolFinalScannerDescription.halt
+        { state := BFS.halt
           tape := Tout }) :
     exists flag : Bool,
       code = encodeBoolAppend flag [] ∧
@@ -967,10 +970,10 @@ theorem boolFinalScannerDescription_runConfig_code_terminal_inv
   cases code with
   | nil =>
       have hstate :
-          (BoolFinalScannerDescription.runConfig n
-            (config BoolFinalScannerDescription.start baseLeft
+          (BFS.runConfig n
+            (config BFS.start baseLeft
               ([] : List (Option Bool)))).state =
-            BoolFinalScannerDescription.halt := by
+            BFS.halt := by
         simpa [encodeCodeWordAsInput] using
           congrArg Configuration.state h
       exact False.elim
@@ -980,12 +983,12 @@ theorem boolFinalScannerDescription_runConfig_code_terminal_inv
       cases symbol with
       | header =>
           have hstate :
-              (BoolFinalScannerDescription.runConfig n
-                (config BoolFinalScannerDescription.start baseLeft
+              (BFS.runConfig n
+                (config BFS.start baseLeft
                   (some false :: some false :: some false :: some false ::
                     (encodeCodeWordAsInput rest).map
                       some))).state =
-                BoolFinalScannerDescription.halt := by
+                BFS.halt := by
             simpa [encodeCodeWordAsInput,
               encodeCodeSymbolAsInput] using
               congrArg Configuration.state h
@@ -997,12 +1000,12 @@ theorem boolFinalScannerDescription_runConfig_code_terminal_inv
               n) hstate)
       | transition =>
           have hstate :
-              (BoolFinalScannerDescription.runConfig n
-                (config BoolFinalScannerDescription.start baseLeft
+              (BFS.runConfig n
+                (config BFS.start baseLeft
                   (some false :: some false :: some false :: some true ::
                     (encodeCodeWordAsInput rest).map
                       some))).state =
-                BoolFinalScannerDescription.halt := by
+                BFS.halt := by
             simpa [encodeCodeWordAsInput,
               encodeCodeSymbolAsInput] using
               congrArg Configuration.state h
@@ -1014,12 +1017,12 @@ theorem boolFinalScannerDescription_runConfig_code_terminal_inv
               n) hstate)
       | tick =>
           have hstate :
-              (BoolFinalScannerDescription.runConfig n
-                (config BoolFinalScannerDescription.start baseLeft
+              (BFS.runConfig n
+                (config BFS.start baseLeft
                   (some false :: some false :: some true :: some false ::
                     (encodeCodeWordAsInput rest).map
                       some))).state =
-                BoolFinalScannerDescription.halt := by
+                BFS.halt := by
             simpa [encodeCodeWordAsInput,
               encodeCodeSymbolAsInput] using
               congrArg Configuration.state h
@@ -1031,12 +1034,12 @@ theorem boolFinalScannerDescription_runConfig_code_terminal_inv
               n) hstate)
       | done =>
           have hstate :
-              (BoolFinalScannerDescription.runConfig n
-                (config BoolFinalScannerDescription.start baseLeft
+              (BFS.runConfig n
+                (config BFS.start baseLeft
                   (some false :: some false :: some true :: some true ::
                     (encodeCodeWordAsInput rest).map
                       some))).state =
-                BoolFinalScannerDescription.halt := by
+                BFS.halt := by
             simpa [encodeCodeWordAsInput,
               encodeCodeSymbolAsInput] using
               congrArg Configuration.state h
@@ -1048,12 +1051,12 @@ theorem boolFinalScannerDescription_runConfig_code_terminal_inv
               n) hstate)
       | blank =>
           have hstate :
-              (BoolFinalScannerDescription.runConfig n
-                (config BoolFinalScannerDescription.start baseLeft
+              (BFS.runConfig n
+                (config BFS.start baseLeft
                   (some false :: some true :: some false :: some false ::
                     (encodeCodeWordAsInput rest).map
                       some))).state =
-                BoolFinalScannerDescription.halt := by
+                BFS.halt := by
             simpa [encodeCodeWordAsInput,
               encodeCodeSymbolAsInput] using
               congrArg Configuration.state h
@@ -1083,12 +1086,12 @@ theorem boolFinalScannerDescription_runConfig_code_terminal_inv
           exact ⟨true, rfl, hmove⟩
       | moveLeft =>
           have hstate :
-              (BoolFinalScannerDescription.runConfig n
-                (config BoolFinalScannerDescription.start baseLeft
+              (BFS.runConfig n
+                (config BFS.start baseLeft
                   (some false :: some true :: some true :: some true ::
                     (encodeCodeWordAsInput rest).map
                       some))).state =
-                BoolFinalScannerDescription.halt := by
+                BFS.halt := by
             simpa [encodeCodeWordAsInput,
               encodeCodeSymbolAsInput] using
               congrArg Configuration.state h
@@ -1098,12 +1101,12 @@ theorem boolFinalScannerDescription_runConfig_code_terminal_inv
               n) hstate)
       | moveRight =>
           have hstate :
-              (BoolFinalScannerDescription.runConfig n
-                (config BoolFinalScannerDescription.start baseLeft
+              (BFS.runConfig n
+                (config BFS.start baseLeft
                   (some true :: some false :: some false :: some false ::
                     (encodeCodeWordAsInput rest).map
                       some))).state =
-                BoolFinalScannerDescription.halt := by
+                BFS.halt := by
             simpa [encodeCodeWordAsInput,
               encodeCodeSymbolAsInput] using
               congrArg Configuration.state h
@@ -1133,13 +1136,13 @@ theorem finalHitFlagsScannerDescription_runConfig_encodeBoolAppend_terminal_inv
         Tape.move Direction.right Tout = tapeAtCells baseAfter [] := by
   have hseq :
       (seqSubroutine
-        BoolSuffixScannerDescription
-        BoolFinalScannerDescription
+        BSS
+        BFS
         Direction.right).runConfig n
           (config
             (seqSubroutine
-              BoolSuffixScannerDescription
-              BoolFinalScannerDescription
+              BSS
+              BFS
               Direction.right).start
             baseLeft
             ((encodeCodeWordAsInput
@@ -1148,15 +1151,15 @@ theorem finalHitFlagsScannerDescription_runConfig_encodeBoolAppend_terminal_inv
                   suffix))).map some)) =
         { state :=
             (seqSubroutine
-              BoolSuffixScannerDescription
-              BoolFinalScannerDescription
+              BSS
+              BFS
               Direction.right).halt
           tape := Tout } := by
     simpa [FinalHitFlagsScannerDescription, config] using h
   rcases
       seqSubroutine_runConfig_inv
-        (A := BoolSuffixScannerDescription)
-        (B := BoolFinalScannerDescription)
+        (A := BSS)
+        (B := BFS)
         (handoffMove := Direction.right)
         boolSuffixScannerDescription_subroutineReady
         boolFinalScannerDescription_subroutineReady
@@ -1172,12 +1175,12 @@ theorem finalHitFlagsScannerDescription_runConfig_encodeBoolAppend_terminal_inv
       _hrejectBits, hacceptHitMove⟩
   rcases hrejectHit with ⟨nRejectHit, hrejectHitRun⟩
   have hrejectHitCodeRun :
-      BoolFinalScannerDescription.runConfig nRejectHit
-          (config BoolFinalScannerDescription.start baseAfterAcceptHit
+      BFS.runConfig nRejectHit
+          (config BFS.start baseAfterAcceptHit
             ((encodeCodeWordAsInput
               (encodeBoolAppend rejectHit suffix)).map
               some)) =
-        { state := BoolFinalScannerDescription.halt
+        { state := BFS.halt
           tape := Tout } := by
     simpa [config, hacceptHitMove] using hrejectHitRun
   rcases
@@ -1209,27 +1212,27 @@ theorem finalHitFlagsScannerDescription_runConfig_code_inv
           tapeAtCells baseAfter [] := by
   have hseq :
       (seqSubroutine
-        BoolSuffixScannerDescription
-        BoolFinalScannerDescription
+        BSS
+        BFS
         Direction.right).runConfig n
           (config
             (seqSubroutine
-              BoolSuffixScannerDescription
-              BoolFinalScannerDescription
+              BSS
+              BFS
               Direction.right).start
             baseLeft
             ((encodeCodeWordAsInput code).map some)) =
         { state :=
             (seqSubroutine
-              BoolSuffixScannerDescription
-              BoolFinalScannerDescription
+              BSS
+              BFS
               Direction.right).halt
           tape := Tout } := by
     simpa [FinalHitFlagsScannerDescription, config] using h
   rcases
       seqSubroutine_runConfig_inv
-        (A := BoolSuffixScannerDescription)
-        (B := BoolFinalScannerDescription)
+        (A := BSS)
+        (B := BFS)
         (handoffMove := Direction.right)
         boolSuffixScannerDescription_subroutineReady
         boolFinalScannerDescription_subroutineReady
@@ -1243,11 +1246,11 @@ theorem finalHitFlagsScannerDescription_runConfig_code_inv
       hacceptHitMove⟩
   rcases hrejectHit with ⟨nRejectHit, hrejectHitRun⟩
   have hrejectHitCodeRun :
-      BoolFinalScannerDescription.runConfig nRejectHit
-          (config BoolFinalScannerDescription.start baseAfterAcceptHit
+      BFS.runConfig nRejectHit
+          (config BFS.start baseAfterAcceptHit
             ((encodeCodeWordAsInput rejectCode).map
               some)) =
-        { state := BoolFinalScannerDescription.halt
+        { state := BFS.halt
           tape := Tout } := by
     simpa [config, hacceptHitMove] using hrejectHitRun
   rcases

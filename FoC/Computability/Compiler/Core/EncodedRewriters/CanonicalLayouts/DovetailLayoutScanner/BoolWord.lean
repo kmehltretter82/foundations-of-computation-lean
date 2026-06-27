@@ -73,8 +73,10 @@ def BoolWordSuffixScannerDescription : MachineDescription where
     ]
       ++ scanLeftToSentinelRestart 140 141 142
 
+private abbrev BWSS := BoolWordSuffixScannerDescription
+
 theorem boolWordSuffixScannerDescription_wellFormed :
-    BoolWordSuffixScannerDescription.WellFormed := by
+    BWSS.WellFormed := by
   constructor
   · native_decide
   constructor
@@ -83,43 +85,43 @@ theorem boolWordSuffixScannerDescription_wellFormed :
   · native_decide
   constructor
   · exact transition_wellFormed_of_all
-      (l := BoolWordSuffixScannerDescription.transitions)
-      (stateCount := BoolWordSuffixScannerDescription.stateCount)
+      (l := BWSS.transitions)
+      (stateCount := BWSS.stateCount)
       (by
         native_decide)
   · exact transition_deterministic_of_all
-      (l := BoolWordSuffixScannerDescription.transitions)
+      (l := BWSS.transitions)
       (by
         native_decide)
 
 theorem boolWordSuffixScannerDescription_haltTransitionFree :
-    BoolWordSuffixScannerDescription.HaltTransitionFree :=
+    BWSS.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := BoolWordSuffixScannerDescription.transitions)
-    (state := BoolWordSuffixScannerDescription.halt)
+    (l := BWSS.transitions)
+    (state := BWSS.halt)
     (by
       native_decide)
 
 theorem boolWordSuffixScannerDescription_subroutineReady :
-    BoolWordSuffixScannerDescription.SubroutineReady :=
+    BWSS.SubroutineReady :=
   ⟨boolWordSuffixScannerDescription_wellFormed,
     boolWordSuffixScannerDescription_haltTransitionFree⟩
 
 theorem boolWordSuffixScannerDescription_initial_eq_config
     (bits : Word Bool) :
-    BoolWordSuffixScannerDescription.initial bits =
+    BWSS.initial bits =
       config 100 [] (bits.map some) := by
   cases bits <;> rfl
 
 theorem boolWordSuffix_lookup_150_false :
-    BoolWordSuffixScannerDescription.lookupTransition 150 (some false) =
+    BWSS.lookupTransition 150 (some false) =
       some (keepMove 150 (some false) Direction.left
-        BoolWordSuffixScannerDescription.halt) := by
+        BWSS.halt) := by
   native_decide
 
 theorem run_boolWordSuffix_state130_currentBit
     (bit : Bool) (left right : List (Option Bool)) :
-    BoolWordSuffixScannerDescription.runConfig 6
+    BWSS.runConfig 6
         (config 130 left
           (List.append ((cellCodeBits (some bit)).map some) right)) =
       config 140 (some true :: some true :: left)
@@ -138,7 +140,7 @@ theorem run_boolWordSuffix_state130_currentBit
 
 theorem run_boolWordSuffix_state100_tick
     (left tail : List (Option Bool)) :
-    BoolWordSuffixScannerDescription.runConfig 4
+    BWSS.runConfig 4
         (config 100 left
           (List.append (tickBits.map some) tail)) =
       config 120 (List.append markedTickRev left) tail := by
@@ -154,7 +156,7 @@ theorem run_boolWordSuffix_state100_tick
 
 theorem run_boolWordSuffix_state100_done
     (left tail : List (Option Bool)) :
-    BoolWordSuffixScannerDescription.runConfig 4
+    BWSS.runConfig 4
         (config 100 left
           (List.append (doneBits.map some) tail)) =
       config 150
@@ -171,7 +173,7 @@ theorem run_boolWordSuffix_state100_done
 
 theorem run_boolWordSuffix_state120_tick
     (left right : List (Option Bool)) :
-    BoolWordSuffixScannerDescription.runConfig 4
+    BWSS.runConfig 4
         (config 120 left
           (List.append (tickBits.map some) right)) =
       config 120
@@ -188,7 +190,7 @@ theorem run_boolWordSuffix_state120_tick
 
 theorem run_boolWordSuffix_state120_done
     (left right : List (Option Bool)) :
-    BoolWordSuffixScannerDescription.runConfig 4
+    BWSS.runConfig 4
         (config 120 left
           (List.append (doneBits.map some) right)) =
       config 130
@@ -205,7 +207,7 @@ theorem run_boolWordSuffix_state120_done
 
 theorem run_boolWordSuffix_state120_stageNat
     (n : Nat) (left right : List (Option Bool)) :
-    BoolWordSuffixScannerDescription.runConfig (4 * n + 4)
+    BWSS.runConfig (4 * n + 4)
         (config 120 left
           (List.append ((stageNatBits n).map some) right)) =
       config 130
@@ -233,7 +235,7 @@ theorem run_boolWordSuffix_state120_stageNat
 
 theorem run_boolWordSuffix_state130_markedBit
     (bit : Bool) (left right : List (Option Bool)) :
-    BoolWordSuffixScannerDescription.runConfig 4
+    BWSS.runConfig 4
         (config 130 left
           (List.append ((markedCellCodeBits (some bit)).map some) right)) =
       config 130
@@ -251,7 +253,7 @@ theorem run_boolWordSuffix_state130_markedBit
 
 theorem run_boolWordSuffix_state130_markedBits
     (processed : Word Bool) (left right : List (Option Bool)) :
-    BoolWordSuffixScannerDescription.runConfig
+    BWSS.runConfig
         (4 * processed.length)
         (config 130 left
           (List.append
@@ -286,7 +288,7 @@ theorem run_boolWordSuffix_state130_markedBits
 theorem run_boolWordSuffix_state140_returnToLengthMarker
     (scanRev : Word Bool) (headBit : Bool)
     (leftTail right : List (Option Bool)) :
-    BoolWordSuffixScannerDescription.runConfig
+    BWSS.runConfig
         (scanRev.length + 4)
         (config 140
           (List.append (scanRev.map some)
@@ -312,8 +314,8 @@ theorem run_boolWordSuffix_state140_returnToLengthMarker
         omega]
       rw [runConfig_add]
       change
-        BoolWordSuffixScannerDescription.runConfig (rest.length + 4)
-          (BoolWordSuffixScannerDescription.runConfig 1
+        BWSS.runConfig (rest.length + 4)
+          (BWSS.runConfig 1
             (config 140
               (some b :: List.append (List.map some rest)
                 (none :: some true :: leftTail))
@@ -322,7 +324,7 @@ theorem run_boolWordSuffix_state140_returnToLengthMarker
             (List.append (List.map some (b :: rest).reverse)
               (some headBit :: right))
       rw [show
-          BoolWordSuffixScannerDescription.runConfig 1
+          BWSS.runConfig 1
             (config 140
               (some b :: List.append (List.map some rest)
                 (none :: some true :: leftTail))
@@ -344,7 +346,7 @@ theorem run_boolWordSuffix_state140_returnToLengthMarker
 
 theorem run_boolWordSuffix_state150_markedBit
     (bit : Bool) (left right : List (Option Bool)) :
-    BoolWordSuffixScannerDescription.runConfig 4
+    BWSS.runConfig 4
         (config 150 left
           (List.append ((markedCellCodeBits (some bit)).map some) right)) =
       config 150
@@ -363,7 +365,7 @@ theorem run_boolWordSuffix_state150_markedBit
 
 theorem run_boolWordSuffix_state150_markedBits
     (cells : Word Bool) (left right : List (Option Bool)) :
-    BoolWordSuffixScannerDescription.runConfig
+    BWSS.runConfig
         (4 * cells.length)
         (config 150 left
           (List.append
@@ -398,7 +400,7 @@ theorem run_boolWordSuffix_raw_mark_current_to_state100_withBase
     (baseLeft : List (Option Bool)) (processed : Word Bool)
     (bit : Bool) (rest : Word Bool) (suffixBits : Word Bool) :
     exists steps : Nat,
-      BoolWordSuffixScannerDescription.runConfig steps
+      BWSS.runConfig steps
           (cellListRawMarkingState120WithBase baseLeft
             (processed.map some) (some bit) (rest.map some) suffixBits) =
         cellListRawState100AfterMarkedWithBase baseLeft
@@ -450,7 +452,7 @@ theorem run_boolWordSuffix_raw_marking_loop_from_state100_withBase
     (baseLeft : List (Option Bool)) (processed cells : Word Bool)
     (suffixBits : Word Bool) :
     exists steps : Nat,
-      BoolWordSuffixScannerDescription.runConfig steps
+      BWSS.runConfig steps
           (config 100
             (List.append
               (cellListCanonicalLengthPrefixRev processed.length)
@@ -470,7 +472,7 @@ theorem run_boolWordSuffix_raw_marking_loop_from_state100_withBase
         simp [stageNatBits_zero, doneBits,
           encodeCodeSymbolAsInput]]
       change
-        BoolWordSuffixScannerDescription.runConfig 4
+        BWSS.runConfig 4
             (config 100
               (List.append
                 (cellListCanonicalLengthPrefixRev processed.length)
@@ -519,8 +521,8 @@ theorem run_boolWordSuffix_raw_marking_loop_from_state100_withBase
                       (suffixBits.map some))))) by
         simp [cellsCodeBits, List.map_append, List.append_assoc]]
       change
-        BoolWordSuffixScannerDescription.runConfig (markSteps + recSteps)
-            (BoolWordSuffixScannerDescription.runConfig 4
+        BWSS.runConfig (markSteps + recSteps)
+            (BWSS.runConfig 4
               (config 100
                 (List.append
                   (cellListCanonicalLengthPrefixRev processed.length)
@@ -568,9 +570,9 @@ theorem run_boolWordSuffix_raw_marking_loop_from_state100_withBase
 
 theorem run_boolWordSuffix_state150_handoff_false
     (cell : Option Bool) (left right : List (Option Bool)) :
-    BoolWordSuffixScannerDescription.runConfig 1
+    BWSS.runConfig 1
         (config 150 (cell :: left) (some false :: right)) =
-      config BoolWordSuffixScannerDescription.halt left
+      config BWSS.halt left
         (cell :: some false :: right) := by
   cases cell <;> cases right <;>
     simp [config, tapeAtCells, keepMove,
@@ -583,10 +585,10 @@ theorem run_boolWordSuffix_canonical_finish_to_handoff_withBase
     (w : Word Bool) (baseLeft : List (Option Bool))
     (suffixTail : Word Bool) :
     exists steps : Nat,
-      BoolWordSuffixScannerDescription.runConfig steps
+      BWSS.runConfig steps
           (cellListCanonicalFinishStartConfigWithBase
             (w.map some) baseLeft (false :: suffixTail)) =
-        { state := BoolWordSuffixScannerDescription.halt
+        { state := BWSS.halt
           tape :=
             (boolWordCanonicalHandoffConfigWithBase w baseLeft
               (false :: suffixTail)).tape } := by
@@ -595,11 +597,11 @@ theorem run_boolWordSuffix_canonical_finish_to_handoff_withBase
   unfold cellListCanonicalFinishStartConfigWithBase
   rw [run_boolWordSuffix_state150_markedBits]
   change
-    BoolWordSuffixScannerDescription.runConfig 1
+    BWSS.runConfig 1
       (config 150
         (cellListCanonicalRestoredLeftWithBase (w.map some) baseLeft)
         (some false :: suffixTail.map some)) =
-      { state := BoolWordSuffixScannerDescription.halt
+      { state := BWSS.halt
         tape :=
           (boolWordCanonicalHandoffConfigWithBase w baseLeft
             (false :: suffixTail)).tape }
@@ -622,12 +624,12 @@ theorem run_boolWordSuffix_raw_to_canonical_handoff_withBase
     (w : Word Bool) (baseLeft : List (Option Bool))
     (suffixTail : Word Bool) :
     exists steps : Nat,
-      BoolWordSuffixScannerDescription.runConfig steps
+      BWSS.runConfig steps
           (config 100 baseLeft
             (List.append ((stageNatBits w.length).map some)
               (List.append ((cellsCodeBits (w.map some)).map some)
                 (some false :: suffixTail.map some)))) =
-        { state := BoolWordSuffixScannerDescription.halt
+        { state := BWSS.halt
           tape :=
             (boolWordCanonicalHandoffConfigWithBase w baseLeft
               (false :: suffixTail)).tape } := by
@@ -635,7 +637,7 @@ theorem run_boolWordSuffix_raw_to_canonical_handoff_withBase
       baseLeft ([] : Word Bool) w (false :: suffixTail) with
     ⟨markSteps, hmark⟩
   have hmark' :
-      BoolWordSuffixScannerDescription.runConfig markSteps
+      BWSS.runConfig markSteps
           (config 100 baseLeft
             (List.append ((stageNatBits w.length).map some)
               (List.append ((cellsCodeBits (w.map some)).map some)

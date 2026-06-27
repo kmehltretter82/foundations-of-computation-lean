@@ -23,6 +23,10 @@ namespace DovetailLayoutScanner
 open FoC.Computability.DovetailInitialLayoutInitializer
 open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
 
+private abbrev CLSS := CellListSuffixScannerDescription
+private theorem CLSS_htf : CLSS.HaltTransitionFree :=
+  cellListSuffixScannerDescription_haltTransitionFree
+
 theorem runConfig_state_ne_halt_of_reaches_ne_halt_region
     {D : MachineDescription}
     {c mid : Configuration} {k n : Nat}
@@ -36,16 +40,16 @@ theorem runConfig_state_ne_halt_of_reaches_ne_halt_region
 theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : decodeNat tokens = none) (n : Nat) :
-    (CellListSuffixScannerDescription.runConfig n
+    (CLSS.runConfig n
       (config 120 leftRev
         ((encodeCodeWordAsInput tokens).map some))).state ≠
-      CellListSuffixScannerDescription.halt := by
+      CLSS.halt := by
   induction tokens generalizing leftRev n with
   | nil =>
       exact
         primitive_runConfig_state_ne_halt_of_reaches_stuck
-          cellListSuffixScannerDescription_haltTransitionFree
-          (D := CellListSuffixScannerDescription)
+          CLSS_htf
+          (D := CLSS)
           (c :=
             config 120 leftRev
               ((encodeCodeWordAsInput
@@ -65,14 +69,14 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
       | header =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              cellListSuffixScannerDescription_haltTransitionFree
-              (D := CellListSuffixScannerDescription)
+              CLSS_htf
+              (D := CLSS)
               (c :=
                 config 120 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.header :: rest)).map some))
               (stuck :=
-                CellListSuffixScannerDescription.runConfig 2
+                CLSS.runConfig 2
                   (config 120 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.header :: rest)).map some)))
@@ -97,14 +101,14 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
       | transition =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              cellListSuffixScannerDescription_haltTransitionFree
-              (D := CellListSuffixScannerDescription)
+              CLSS_htf
+              (D := CLSS)
               (c :=
                 config 120 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.transition :: rest)).map some))
               (stuck :=
-                CellListSuffixScannerDescription.runConfig 2
+                CLSS.runConfig 2
                   (config 120 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.transition :: rest)).map some)))
@@ -133,7 +137,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
               simp [hrest] at hdecode
               apply
                 runConfig_state_ne_halt_of_reaches_ne_halt_region
-                  cellListSuffixScannerDescription_haltTransitionFree
+                  CLSS_htf
                   (k := 4)
                   (mid :=
                     config 120
@@ -155,14 +159,14 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
       | blank =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              cellListSuffixScannerDescription_haltTransitionFree
-              (D := CellListSuffixScannerDescription)
+              CLSS_htf
+              (D := CLSS)
               (c :=
                 config 120 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.blank :: rest)).map some))
               (stuck :=
-                CellListSuffixScannerDescription.runConfig 1
+                CLSS.runConfig 1
                   (config 120 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.blank :: rest)).map some)))
@@ -187,14 +191,14 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
       | zero =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              cellListSuffixScannerDescription_haltTransitionFree
-              (D := CellListSuffixScannerDescription)
+              CLSS_htf
+              (D := CLSS)
               (c :=
                 config 120 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.zero :: rest)).map some))
               (stuck :=
-                CellListSuffixScannerDescription.runConfig 1
+                CLSS.runConfig 1
                   (config 120 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.zero :: rest)).map some)))
@@ -219,14 +223,14 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
       | one =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              cellListSuffixScannerDescription_haltTransitionFree
-              (D := CellListSuffixScannerDescription)
+              CLSS_htf
+              (D := CLSS)
               (c :=
                 config 120 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.one :: rest)).map some))
               (stuck :=
-                CellListSuffixScannerDescription.runConfig 1
+                CLSS.runConfig 1
                   (config 120 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.one :: rest)).map some)))
@@ -251,14 +255,14 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
       | moveLeft =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              cellListSuffixScannerDescription_haltTransitionFree
-              (D := CellListSuffixScannerDescription)
+              CLSS_htf
+              (D := CLSS)
               (c :=
                 config 120 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.moveLeft :: rest)).map some))
               (stuck :=
-                CellListSuffixScannerDescription.runConfig 1
+                CLSS.runConfig 1
                   (config 120 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.moveLeft :: rest)).map some)))
@@ -283,8 +287,8 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
       | moveRight =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              cellListSuffixScannerDescription_haltTransitionFree
-              (D := CellListSuffixScannerDescription)
+              CLSS_htf
+              (D := CLSS)
               (c :=
                 config 120 leftRev
                   ((encodeCodeWordAsInput
@@ -314,16 +318,16 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
 theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : decodeCell tokens = none) (n : Nat) :
-    (CellListSuffixScannerDescription.runConfig n
+    (CLSS.runConfig n
       (config 130 leftRev
         ((encodeCodeWordAsInput tokens).map some))).state ≠
-      CellListSuffixScannerDescription.halt := by
+      CLSS.halt := by
   cases tokens with
   | nil =>
       exact
         primitive_runConfig_state_ne_halt_of_reaches_stuck
-          cellListSuffixScannerDescription_haltTransitionFree
-          (D := CellListSuffixScannerDescription)
+          CLSS_htf
+          (D := CLSS)
           (c :=
             config 130 leftRev
               ((encodeCodeWordAsInput
@@ -343,14 +347,14 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
       | header =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              cellListSuffixScannerDescription_haltTransitionFree
-              (D := CellListSuffixScannerDescription)
+              CLSS_htf
+              (D := CLSS)
               (c :=
                 config 130 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.header :: rest)).map some))
               (stuck :=
-                CellListSuffixScannerDescription.runConfig 1
+                CLSS.runConfig 1
                   (config 130 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.header :: rest)).map some)))
@@ -375,14 +379,14 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
       | transition =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              cellListSuffixScannerDescription_haltTransitionFree
-              (D := CellListSuffixScannerDescription)
+              CLSS_htf
+              (D := CLSS)
               (c :=
                 config 130 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.transition :: rest)).map some))
               (stuck :=
-                CellListSuffixScannerDescription.runConfig 1
+                CLSS.runConfig 1
                   (config 130 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.transition :: rest)).map some)))
@@ -407,14 +411,14 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
       | tick =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              cellListSuffixScannerDescription_haltTransitionFree
-              (D := CellListSuffixScannerDescription)
+              CLSS_htf
+              (D := CLSS)
               (c :=
                 config 130 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.tick :: rest)).map some))
               (stuck :=
-                CellListSuffixScannerDescription.runConfig 1
+                CLSS.runConfig 1
                   (config 130 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.tick :: rest)).map some)))
@@ -439,14 +443,14 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
       | done =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              cellListSuffixScannerDescription_haltTransitionFree
-              (D := CellListSuffixScannerDescription)
+              CLSS_htf
+              (D := CLSS)
               (c :=
                 config 130 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.done :: rest)).map some))
               (stuck :=
-                CellListSuffixScannerDescription.runConfig 1
+                CLSS.runConfig 1
                   (config 130 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.done :: rest)).map some)))
@@ -477,8 +481,8 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
       | moveLeft =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              cellListSuffixScannerDescription_haltTransitionFree
-              (D := CellListSuffixScannerDescription)
+              CLSS_htf
+              (D := CLSS)
               (c :=
                 config 130 leftRev
                   ((encodeCodeWordAsInput
@@ -522,14 +526,14 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
       | moveRight =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              cellListSuffixScannerDescription_haltTransitionFree
-              (D := CellListSuffixScannerDescription)
+              CLSS_htf
+              (D := CLSS)
               (c :=
                 config 130 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.moveRight :: rest)).map some))
               (stuck :=
-                CellListSuffixScannerDescription.runConfig 1
+                CLSS.runConfig 1
                   (config 130 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.moveRight :: rest)).map some)))
@@ -583,7 +587,7 @@ def cellListMarkingTailReturnScanRev
 theorem cellListMarkingTail_to_first_payload
     (baseLeft marked : List (Option Bool))
     (remainingLengthTail : Nat) (tokens : Word MachineCodeSymbol) :
-    CellListSuffixScannerDescription.runConfig
+    CLSS.runConfig
         ((4 * remainingLengthTail + 4) + 4 * marked.length)
         (cellListMarkingTailConfig baseLeft marked
           (remainingLengthTail + 1) tokens) =
@@ -595,7 +599,7 @@ theorem cellListMarkingTail_to_first_payload
     cellListMarkingTailPayloadLeftRev
   simp only [Nat.add_sub_cancel_right]
   change
-    CellListSuffixScannerDescription.runConfig
+    CLSS.runConfig
         ((4 * remainingLengthTail + 4) + 4 * marked.length)
         (config 120
           (List.append markedTickRev
@@ -621,7 +625,7 @@ theorem cellListMarkingTail_mark_one
     (remainingLengthTail : Nat) (cell : Option Bool)
     (restAfterCell : Word MachineCodeSymbol) :
     exists steps : Nat,
-      CellListSuffixScannerDescription.runConfig steps
+      CLSS.runConfig steps
           (cellListMarkingTailConfig baseLeft marked
             (remainingLengthTail + 2)
             (encodeCellAppend cell restAfterCell)) =
@@ -659,9 +663,9 @@ theorem cellListMarkingTail_mark_one
           encodeCodeSymbolAsInput, cellCodeBits]
   rw [hcellBits]
   change
-    CellListSuffixScannerDescription.runConfig
+    CLSS.runConfig
         ((scanRev.length + 4) + 4)
-        (CellListSuffixScannerDescription.runConfig 6
+        (CLSS.runConfig 6
           (config 130
             (cellListMarkingTailPayloadLeftRev baseLeft marked
               (remainingLengthTail + 1))
@@ -832,9 +836,9 @@ theorem cellListMarkingTail_decodeCells_none_ne_halt
     (hdecode :
       decodeCells remainingCells tokens = none)
     (n : Nat) :
-    (CellListSuffixScannerDescription.runConfig n
+    (CLSS.runConfig n
       (cellListMarkingTailConfig baseLeft marked remainingCells tokens)).state ≠
-      CellListSuffixScannerDescription.halt := by
+      CLSS.halt := by
   induction remainingCells generalizing marked tokens n with
   | zero =>
       simp [decodeCells] at hdecode
@@ -843,7 +847,7 @@ theorem cellListMarkingTail_decodeCells_none_ne_halt
       | none =>
           apply
             runConfig_state_ne_halt_of_reaches_ne_halt_region
-              cellListSuffixScannerDescription_haltTransitionFree
+              CLSS_htf
               (k := (4 * remainingTail + 4) + 4 * marked.length)
               (mid :=
                 config 130
@@ -881,7 +885,7 @@ theorem cellListMarkingTail_decodeCells_none_ne_halt
                     ⟨steps, hsteps⟩
                   apply
                     runConfig_state_ne_halt_of_reaches_ne_halt_region
-                      cellListSuffixScannerDescription_haltTransitionFree
+                      CLSS_htf
                       (k := steps)
                       (mid :=
                         cellListMarkingTailConfig baseLeft
@@ -903,10 +907,10 @@ theorem cellListSuffixScannerDescription_runConfig_state120_tick_decodeCellList_
       decodeCellList (MachineCodeSymbol.tick :: rest) =
         none)
     (n : Nat) :
-    (CellListSuffixScannerDescription.runConfig n
+    (CLSS.runConfig n
       (config 120 (List.append markedTickRev baseLeft)
         ((encodeCodeWordAsInput rest).map some))).state ≠
-      CellListSuffixScannerDescription.halt := by
+      CLSS.halt := by
   cases hnat : decodeNat rest with
   | none =>
       exact
@@ -921,13 +925,13 @@ theorem cellListSuffixScannerDescription_runConfig_state120_tick_decodeCellList_
         decodeNat_eq_some_encodeNatAppend hnat
       rw [hrest]
       change
-        (CellListSuffixScannerDescription.runConfig n
+        (CLSS.runConfig n
           (config 120 (List.append markedTickRev baseLeft)
             (List.map some
               (encodeCodeWordAsInput
                 (encodeNatAppend remainingTail
                   tokensAfterLen))))).state ≠
-          CellListSuffixScannerDescription.halt
+          CLSS.halt
       unfold encodeNatAppend
       rw [encodeCodeWordAsInput_append]
       have hbits :
@@ -958,10 +962,10 @@ theorem cellListSuffixScannerDescription_runConfig_state120_tick_code_inv
     (baseLeft : List (Option Bool)) (rest : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      CellListSuffixScannerDescription.runConfig n
+      CLSS.runConfig n
           (config 120 (List.append markedTickRev baseLeft)
             ((encodeCodeWordAsInput rest).map some)) =
-        { state := CellListSuffixScannerDescription.halt
+        { state := CLSS.halt
           tape := Tout }) :
     exists cells : List (Option Bool),
     exists suffix : Word MachineCodeSymbol,
@@ -974,11 +978,11 @@ theorem cellListSuffixScannerDescription_runConfig_state120_tick_code_inv
         cellListSuffixScannerDescription_runConfig_state120_tick_decodeCellList_none_ne_halt
           baseLeft rest hdecode n
       have hstate :
-          (CellListSuffixScannerDescription.runConfig n
+          (CLSS.runConfig n
             (config 120 (List.append markedTickRev baseLeft)
               ((encodeCodeWordAsInput rest).map
                 some))).state =
-            CellListSuffixScannerDescription.halt := by
+            CLSS.halt := by
         simpa using congrArg Configuration.state h
       exact False.elim (hne hstate)
   | some parsed =>
@@ -992,10 +996,10 @@ theorem cellListSuffixScannerDescription_runConfig_code_inv
     (baseLeft : List (Option Bool)) (code : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      CellListSuffixScannerDescription.runConfig n
-          (config CellListSuffixScannerDescription.start baseLeft
+      CLSS.runConfig n
+          (config CLSS.start baseLeft
             ((encodeCodeWordAsInput code).map some)) =
-        { state := CellListSuffixScannerDescription.halt
+        { state := CLSS.halt
           tape := Tout }) :
     exists cells : List (Option Bool),
     exists suffix : Word MachineCodeSymbol,
@@ -1014,28 +1018,28 @@ theorem cellListSuffixScannerDescription_runConfig_code_inv
       · cases hprefix
       · cases hprefix
       · let c0 : Configuration :=
-          config CellListSuffixScannerDescription.start baseLeft
+          config CLSS.start baseLeft
             ((encodeCodeWordAsInput
               (MachineCodeSymbol.tick :: rest)).map some)
         let c1 : Configuration :=
           config 120 (List.append markedTickRev baseLeft)
             ((encodeCodeWordAsInput rest).map some)
         have hforward :
-            CellListSuffixScannerDescription.runConfig 4 c0 = c1 := by
+            CLSS.runConfig 4 c0 = c1 := by
           dsimp [c0, c1]
           simpa [encodeCodeWordAsInput,
             encodeCodeSymbolAsInput, tickBits] using
             run_cellList_state100_tick baseLeft
               ((encodeCodeWordAsInput rest).map some)
         have hhalt :
-            CellListSuffixScannerDescription.runConfig n c0 =
-              { state := CellListSuffixScannerDescription.halt
+            CLSS.runConfig n c0 =
+              { state := CLSS.halt
                 tape := Tout } := by
           simpa [c0] using h
         rcases
-            runConfig_forward_inv CellListSuffixScannerDescription
+            runConfig_forward_inv CLSS
               c0 c1 n 4 hhalt hforward
-              cellListSuffixScannerDescription_haltTransitionFree with
+              CLSS_htf with
           ⟨_m, _hm_le, hm_halt⟩
         exact
           cellListSuffixScannerDescription_runConfig_state120_tick_code_inv
@@ -1059,12 +1063,12 @@ theorem cellListSuffixScannerDescription_runConfig_encodeCellListAppend_handoff_
       encodeCodeWordAsInput suffix =
         false :: suffixTail)
     (h :
-      CellListSuffixScannerDescription.runConfig n
-          (config CellListSuffixScannerDescription.start baseLeft
+      CLSS.runConfig n
+          (config CLSS.start baseLeft
             ((encodeCodeWordAsInput
               (encodeCellListAppend cells
                 suffix)).map some)) =
-        { state := CellListSuffixScannerDescription.halt
+        { state := CLSS.halt
           tape := Tout }) :
       Tout =
         (cellListCanonicalHandoffConfigWithBase cells baseLeft
@@ -1078,17 +1082,17 @@ theorem cellListSuffixScannerDescription_runConfig_encodeCellListAppend_handoff_
 
 theorem cellListCanonicalFinishStartConfigWithBase_nil_suffix_ne_halt
     (cells baseLeft : List (Option Bool)) (n : Nat) :
-    (CellListSuffixScannerDescription.runConfig n
+    (CLSS.runConfig n
       (cellListCanonicalFinishStartConfigWithBase cells baseLeft [])).state ≠
-      CellListSuffixScannerDescription.halt := by
+      CLSS.halt := by
   let stuck : Configuration :=
     config 150
       (cellListCanonicalRestoredLeftWithBase cells baseLeft)
       ([] : List (Option Bool))
   apply
     primitive_runConfig_state_ne_halt_of_reaches_stuck
-      cellListSuffixScannerDescription_haltTransitionFree
-      (D := CellListSuffixScannerDescription)
+      CLSS_htf
+      (D := CLSS)
       (c := cellListCanonicalFinishStartConfigWithBase cells baseLeft [])
       (stuck := stuck)
       (k := 4 * cells.length) (n := n)
@@ -1106,19 +1110,19 @@ theorem cellListCanonicalFinishStartConfigWithBase_nil_suffix_ne_halt
 
 theorem cellListCanonicalFinishStartConfigWithBase_moveRight_suffix_ne_halt
     (cells baseLeft : List (Option Bool)) (tail : Word Bool) (n : Nat) :
-    (CellListSuffixScannerDescription.runConfig n
+    (CLSS.runConfig n
       (cellListCanonicalFinishStartConfigWithBase cells baseLeft
         (true :: false :: false :: false :: tail))).state ≠
-      CellListSuffixScannerDescription.halt := by
+      CLSS.halt := by
   let stuck : Configuration :=
-    CellListSuffixScannerDescription.runConfig 1
+    CLSS.runConfig 1
       (config 150
         (cellListCanonicalRestoredLeftWithBase cells baseLeft)
         ((true :: false :: false :: false :: tail).map some))
   apply
     primitive_runConfig_state_ne_halt_of_reaches_stuck
-      cellListSuffixScannerDescription_haltTransitionFree
-      (D := CellListSuffixScannerDescription)
+      CLSS_htf
+      (D := CLSS)
       (c :=
         cellListCanonicalFinishStartConfigWithBase cells baseLeft
           (true :: false :: false :: false :: tail))
@@ -1128,7 +1132,7 @@ theorem cellListCanonicalFinishStartConfigWithBase_moveRight_suffix_ne_halt
     rw [runConfig_add]
     unfold stuck cellListCanonicalFinishStartConfigWithBase
     rw [show
-        CellListSuffixScannerDescription.runConfig (4 * cells.length)
+        CLSS.runConfig (4 * cells.length)
             (config 150
               (cellListCanonicalFinishStartLeftWithBase cells baseLeft)
               (List.append ((markedCellsCodeBits cells).map some)
@@ -1153,7 +1157,7 @@ theorem cellListCanonicalFinishStartConfigWithBase_moveRight_suffix_ne_halt
         Tape.moveRight]
   · unfold stuck
     change
-      (CellListSuffixScannerDescription.runConfig 1
+      (CLSS.runConfig 1
         (config 150
           (cellListCanonicalRestoredLeftWithBase cells baseLeft)
           ((true :: false :: false :: false :: tail).map some))).state ≠
@@ -1171,12 +1175,12 @@ theorem cellListSuffixScannerDescription_runConfig_encodeCellListAppend_suffix_f
     (suffix : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      CellListSuffixScannerDescription.runConfig n
-          (config CellListSuffixScannerDescription.start baseLeft
+      CLSS.runConfig n
+          (config CLSS.start baseLeft
             ((encodeCodeWordAsInput
               (encodeCellListAppend cells suffix)).map
               some)) =
-        { state := CellListSuffixScannerDescription.halt
+        { state := CLSS.halt
           tape := Tout }) :
     exists suffixTail : Word Bool,
       encodeCodeWordAsInput suffix =
@@ -1185,12 +1189,12 @@ theorem cellListSuffixScannerDescription_runConfig_encodeCellListAppend_suffix_f
   cases suffix with
   | nil =>
       have hstate :
-          (CellListSuffixScannerDescription.runConfig n
-            (config CellListSuffixScannerDescription.start baseLeft
+          (CLSS.runConfig n
+            (config CLSS.start baseLeft
               ((encodeCodeWordAsInput
                 (encodeCellListAppend cells
                   ([] : Word MachineCodeSymbol))).map some))).state =
-            CellListSuffixScannerDescription.halt := by
+            CLSS.halt := by
         simpa using congrArg Configuration.state h
       rcases
           run_cellList_raw_marking_loop_from_state100_withBase
@@ -1198,8 +1202,8 @@ theorem cellListSuffixScannerDescription_runConfig_encodeCellListAppend_suffix_f
             ([] : Word Bool) with
         ⟨steps, hsteps⟩
       have hprefix :
-          CellListSuffixScannerDescription.runConfig steps
-              (config CellListSuffixScannerDescription.start baseLeft
+          CLSS.runConfig steps
+              (config CLSS.start baseLeft
                 ((encodeCodeWordAsInput
                   (encodeCellListAppend cells
                     ([] : Word MachineCodeSymbol))).map some)) =
@@ -1211,7 +1215,7 @@ theorem cellListSuffixScannerDescription_runConfig_encodeCellListAppend_suffix_f
           List.map_append, List.append_assoc] using hsteps
       exact False.elim
         ((runConfig_state_ne_halt_of_reaches_ne_halt_region
-            cellListSuffixScannerDescription_haltTransitionFree
+            CLSS_htf
             hprefix
             (by
               intro m
@@ -1224,12 +1228,12 @@ theorem cellListSuffixScannerDescription_runConfig_encodeCellListAppend_suffix_f
       cases symbol with
       | moveRight =>
           have hstate :
-              (CellListSuffixScannerDescription.runConfig n
-                (config CellListSuffixScannerDescription.start baseLeft
+              (CLSS.runConfig n
+                (config CLSS.start baseLeft
                   ((encodeCodeWordAsInput
                     (encodeCellListAppend cells
                       (MachineCodeSymbol.moveRight :: rest))).map some))).state =
-                CellListSuffixScannerDescription.halt := by
+                CLSS.halt := by
             simpa using congrArg Configuration.state h
           rcases
               run_cellList_raw_marking_loop_from_state100_withBase
@@ -1238,8 +1242,8 @@ theorem cellListSuffixScannerDescription_runConfig_encodeCellListAppend_suffix_f
                   (MachineCodeSymbol.moveRight :: rest)) with
             ⟨steps, hsteps⟩
           have hprefix :
-              CellListSuffixScannerDescription.runConfig steps
-                  (config CellListSuffixScannerDescription.start baseLeft
+              CLSS.runConfig steps
+                  (config CLSS.start baseLeft
                     ((encodeCodeWordAsInput
                       (encodeCellListAppend cells
                         (MachineCodeSymbol.moveRight :: rest))).map some)) =
@@ -1252,7 +1256,7 @@ theorem cellListSuffixScannerDescription_runConfig_encodeCellListAppend_suffix_f
               List.map_append, List.append_assoc] using hsteps
           exact False.elim
             ((runConfig_state_ne_halt_of_reaches_ne_halt_region
-                cellListSuffixScannerDescription_haltTransitionFree
+                CLSS_htf
                 hprefix
                 (by
                   intro m

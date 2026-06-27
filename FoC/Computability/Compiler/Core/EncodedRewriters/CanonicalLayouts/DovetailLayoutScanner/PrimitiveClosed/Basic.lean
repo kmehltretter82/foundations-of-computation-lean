@@ -22,16 +22,21 @@ namespace DovetailLayoutScanner
 
 open FoC.Computability.DovetailInitialLayoutInitializer
 open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
+open CommonGround.SeqComposition
+
+private abbrev CLSS := CellListSuffixScannerDescription
+private abbrev BWSS := BoolWordSuffixScannerDescription
+private abbrev NSS := DovetailStagePrefix.NatSuffixScannerDescription
 
 theorem cellListSuffixScannerDescription_runConfig_start_cell_inv
     (baseLeft : List (Option Bool)) (first : Option Bool)
     (suffixTail : List (Option Bool))
     {Tout : Tape Bool} {n : Nat}
     (h :
-      CellListSuffixScannerDescription.runConfig n
-          (config CellListSuffixScannerDescription.start baseLeft
+      CLSS.runConfig n
+          (config CLSS.start baseLeft
             (first :: suffixTail)) =
-        { state := CellListSuffixScannerDescription.halt
+        { state := CLSS.halt
           tape := Tout }) :
       first = some false := by
   cases first with
@@ -43,10 +48,10 @@ theorem cellListSuffixScannerDescription_runConfig_start_cell_inv
             runConfig] at h
       | succ k =>
           let c0 : Configuration :=
-            config CellListSuffixScannerDescription.start baseLeft
+            config CLSS.start baseLeft
               (none :: suffixTail)
           have hstep :
-              CellListSuffixScannerDescription.stepConfig c0 = none := by
+              CLSS.stepConfig c0 = none := by
             cases suffixTail <;>
               simp [c0, CellListSuffixScannerDescription, config,
                 tapeAtCells, keep, keepMove, writeMove,
@@ -56,7 +61,7 @@ theorem cellListSuffixScannerDescription_runConfig_start_cell_inv
                 Matches,
                 transition, Tape.read]
           have hstay :
-              CellListSuffixScannerDescription.runConfig (Nat.succ k) c0 =
+              CLSS.runConfig (Nat.succ k) c0 =
                 c0 := by
             exact runConfig_of_stepConfig_none hstep
               (Nat.succ k)
@@ -76,10 +81,10 @@ theorem cellListSuffixScannerDescription_runConfig_start_cell_inv
                 runConfig] at h
           | succ k =>
               let c0 : Configuration :=
-                config CellListSuffixScannerDescription.start baseLeft
+                config CLSS.start baseLeft
                   (some true :: suffixTail)
               have hstep :
-                  CellListSuffixScannerDescription.stepConfig c0 = none := by
+                  CLSS.stepConfig c0 = none := by
                 cases suffixTail <;>
                   simp [c0, CellListSuffixScannerDescription, config,
                     tapeAtCells, keep, keepMove, writeMove,
@@ -89,7 +94,7 @@ theorem cellListSuffixScannerDescription_runConfig_start_cell_inv
                     Matches,
                     transition, Tape.read]
               have hstay :
-                  CellListSuffixScannerDescription.runConfig (Nat.succ k)
+                  CLSS.runConfig (Nat.succ k)
                       c0 =
                     c0 := by
                 exact runConfig_of_stepConfig_none hstep
@@ -104,10 +109,10 @@ theorem cellListSuffixScannerDescription_runConfig_start_bit_inv
     (suffixTail : List (Option Bool))
     {Tout : Tape Bool} {n : Nat}
     (h :
-      CellListSuffixScannerDescription.runConfig n
-          (config CellListSuffixScannerDescription.start baseLeft
+      CLSS.runConfig n
+          (config CLSS.start baseLeft
             (some first :: suffixTail)) =
-        { state := CellListSuffixScannerDescription.halt
+        { state := CLSS.halt
           tape := Tout }) :
       first = false := by
   have hcell :=
@@ -123,45 +128,45 @@ theorem primitive_runConfig_state_ne_halt_of_reaches_stuck
     (hstep : D.stepConfig stuck = none)
     (hstuck : stuck.state ≠ D.halt) :
     (D.runConfig n c).state ≠ D.halt := by
-  exact CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+  exact runConfig_state_ne_halt_of_reaches_stuck
     hD hprefix hstep hstuck
 
 theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
     (baseLeft : List (Option Bool)) (bits : Word Bool)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      CellListSuffixScannerDescription.runConfig n
-          (config CellListSuffixScannerDescription.start baseLeft
+      CLSS.runConfig n
+          (config CLSS.start baseLeft
             (bits.map some)) =
-        { state := CellListSuffixScannerDescription.halt
+        { state := CLSS.halt
           tape := Tout }) :
     exists doneBit : Bool,
     exists tail : Word Bool,
       bits = false :: false :: true :: doneBit :: tail := by
   let start : Configuration :=
-    config CellListSuffixScannerDescription.start baseLeft (bits.map some)
+    config CLSS.start baseLeft (bits.map some)
   have hhaltState :
-      (CellListSuffixScannerDescription.runConfig n start).state =
-        CellListSuffixScannerDescription.halt := by
+      (CLSS.runConfig n start).state =
+        CLSS.halt := by
     simpa [start] using
       congrArg Configuration.state h
   cases bits with
   | nil =>
       let stuck : Configuration := start
       have hstep :
-          CellListSuffixScannerDescription.stepConfig stuck = none := by
+          CLSS.stepConfig stuck = none := by
         simp [stuck, start, CellListSuffixScannerDescription, config,
           tapeAtCells, keep, keepMove, writeMove,
           scanLeftToSentinelRestart, stepConfig,
           lookupTransition, Matches,
           transition, Tape.read]
       have hstuck :
-          stuck.state ≠ CellListSuffixScannerDescription.halt := by
+          stuck.state ≠ CLSS.halt := by
         simp [stuck, start, CellListSuffixScannerDescription, config]
       exact False.elim
         (primitive_runConfig_state_ne_halt_of_reaches_stuck
           cellListSuffixScannerDescription_haltTransitionFree
-          (D := CellListSuffixScannerDescription)
+          (D := CLSS)
           (c := start) (stuck := stuck) (k := 0) (n := n)
           rfl hstep hstuck hhaltState)
   | cons first rest =>
@@ -169,9 +174,9 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
       · cases rest with
         | nil =>
             let stuck :=
-              CellListSuffixScannerDescription.runConfig 1 start
+              CLSS.runConfig 1 start
             have hstep :
-                CellListSuffixScannerDescription.stepConfig stuck = none := by
+                CLSS.stepConfig stuck = none := by
               simp [stuck, start, CellListSuffixScannerDescription, config,
                 tapeAtCells, keep, keepMove, writeMove,
                 scanLeftToSentinelRestart, runConfig,
@@ -181,7 +186,7 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                 transition, Tape.read, Tape.write,
                 Tape.move, Tape.moveRight]
             have hstuck :
-                stuck.state ≠ CellListSuffixScannerDescription.halt := by
+                stuck.state ≠ CLSS.halt := by
               simp [stuck, start, CellListSuffixScannerDescription, config,
                 tapeAtCells, keep, keepMove, writeMove,
                 scanLeftToSentinelRestart, runConfig,
@@ -193,7 +198,7 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
             exact False.elim
               (primitive_runConfig_state_ne_halt_of_reaches_stuck
                 cellListSuffixScannerDescription_haltTransitionFree
-                (D := CellListSuffixScannerDescription)
+                (D := CLSS)
                 (c := start) (stuck := stuck) (k := 1) (n := n)
                 rfl hstep hstuck hhaltState)
         | cons second restTail =>
@@ -201,9 +206,9 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
             · cases restTail with
               | nil =>
                   let stuck :=
-                    CellListSuffixScannerDescription.runConfig 2 start
+                    CLSS.runConfig 2 start
                   have hstep :
-                      CellListSuffixScannerDescription.stepConfig stuck =
+                      CLSS.stepConfig stuck =
                         none := by
                     simp [stuck, start, CellListSuffixScannerDescription,
                       config, tapeAtCells, keep, keepMove, writeMove,
@@ -216,7 +221,7 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                       Tape.move, Tape.moveRight]
                   have hstuck :
                       stuck.state ≠
-                        CellListSuffixScannerDescription.halt := by
+                        CLSS.halt := by
                     simp [stuck, start, CellListSuffixScannerDescription,
                       config, tapeAtCells, keep, keepMove, writeMove,
                       scanLeftToSentinelRestart,
@@ -229,15 +234,15 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                   exact False.elim
                     (primitive_runConfig_state_ne_halt_of_reaches_stuck
                       cellListSuffixScannerDescription_haltTransitionFree
-                      (D := CellListSuffixScannerDescription)
+                      (D := CLSS)
                       (c := start) (stuck := stuck) (k := 2) (n := n)
                       rfl hstep hstuck hhaltState)
               | cons third tail =>
                   cases third
                   · let stuck :=
-                      CellListSuffixScannerDescription.runConfig 2 start
+                      CLSS.runConfig 2 start
                     have hstep :
-                        CellListSuffixScannerDescription.stepConfig stuck =
+                        CLSS.stepConfig stuck =
                           none := by
                       cases tail <;>
                         simp [stuck, start,
@@ -252,7 +257,7 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                           Tape.write, Tape.move, Tape.moveRight]
                     have hstuck :
                         stuck.state ≠
-                          CellListSuffixScannerDescription.halt := by
+                          CLSS.halt := by
                       cases tail <;>
                         simp [stuck, start,
                           CellListSuffixScannerDescription, config,
@@ -267,15 +272,15 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                     exact False.elim
                       (primitive_runConfig_state_ne_halt_of_reaches_stuck
                         cellListSuffixScannerDescription_haltTransitionFree
-                        (D := CellListSuffixScannerDescription)
+                        (D := CLSS)
                         (c := start) (stuck := stuck) (k := 2) (n := n)
                         rfl hstep hstuck hhaltState)
                   · cases tail with
                     | nil =>
                         let stuck :=
-                          CellListSuffixScannerDescription.runConfig 4 start
+                          CLSS.runConfig 4 start
                         have hstep :
-                            CellListSuffixScannerDescription.stepConfig
+                            CLSS.stepConfig
                                 stuck = none := by
                           simp [stuck, start,
                             CellListSuffixScannerDescription, config,
@@ -289,7 +294,7 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                             Tape.write, Tape.move, Tape.moveRight]
                         have hstuck :
                             stuck.state ≠
-                              CellListSuffixScannerDescription.halt := by
+                              CLSS.halt := by
                           simp [stuck, start,
                             CellListSuffixScannerDescription, config,
                             tapeAtCells, keep, keepMove, writeMove,
@@ -303,15 +308,15 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                         exact False.elim
                           (primitive_runConfig_state_ne_halt_of_reaches_stuck
                             cellListSuffixScannerDescription_haltTransitionFree
-                            (D := CellListSuffixScannerDescription)
+                            (D := CLSS)
                             (c := start) (stuck := stuck) (k := 4)
                             (n := n) rfl hstep hstuck hhaltState)
                     | cons doneBit tailRest =>
                         exact ⟨doneBit, tailRest, rfl⟩
             · let stuck :=
-                CellListSuffixScannerDescription.runConfig 1 start
+                CLSS.runConfig 1 start
               have hstep :
-                  CellListSuffixScannerDescription.stepConfig stuck = none := by
+                  CLSS.stepConfig stuck = none := by
                 cases restTail <;>
                   simp [stuck, start, CellListSuffixScannerDescription,
                     config, tapeAtCells, keep, keepMove, writeMove,
@@ -323,7 +328,7 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
                     transition, Tape.read, Tape.write,
                     Tape.move, Tape.moveRight]
               have hstuck :
-                  stuck.state ≠ CellListSuffixScannerDescription.halt := by
+                  stuck.state ≠ CLSS.halt := by
                 cases restTail <;>
                   simp [stuck, start, CellListSuffixScannerDescription,
                     config, tapeAtCells, keep, keepMove, writeMove,
@@ -337,7 +342,7 @@ theorem cellListSuffixScannerDescription_runConfig_start_nat_prefix_inv
               exact False.elim
                 (primitive_runConfig_state_ne_halt_of_reaches_stuck
                   cellListSuffixScannerDescription_haltTransitionFree
-                  (D := CellListSuffixScannerDescription)
+                  (D := CLSS)
                   (c := start) (stuck := stuck) (k := 1) (n := n)
                   rfl hstep hstuck hhaltState)
       · have hfirstFalse :
@@ -354,10 +359,10 @@ theorem boolWordSuffixScannerDescription_runConfig_start_cell_inv
     (suffixTail : List (Option Bool))
     {Tout : Tape Bool} {n : Nat}
     (h :
-      BoolWordSuffixScannerDescription.runConfig n
-          (config BoolWordSuffixScannerDescription.start baseLeft
+      BWSS.runConfig n
+          (config BWSS.start baseLeft
             (first :: suffixTail)) =
-        { state := BoolWordSuffixScannerDescription.halt
+        { state := BWSS.halt
           tape := Tout }) :
       first = some false := by
   cases first with
@@ -369,10 +374,10 @@ theorem boolWordSuffixScannerDescription_runConfig_start_cell_inv
             runConfig] at h
       | succ k =>
           let c0 : Configuration :=
-            config BoolWordSuffixScannerDescription.start baseLeft
+            config BWSS.start baseLeft
               (none :: suffixTail)
           have hstep :
-              BoolWordSuffixScannerDescription.stepConfig c0 = none := by
+              BWSS.stepConfig c0 = none := by
             cases suffixTail <;>
               simp [c0, BoolWordSuffixScannerDescription, config,
                 tapeAtCells, keep, keepMove, writeMove,
@@ -382,7 +387,7 @@ theorem boolWordSuffixScannerDescription_runConfig_start_cell_inv
                 Matches,
                 transition, Tape.read]
           have hstay :
-              BoolWordSuffixScannerDescription.runConfig (Nat.succ k) c0 =
+              BWSS.runConfig (Nat.succ k) c0 =
                 c0 := by
             exact runConfig_of_stepConfig_none hstep
               (Nat.succ k)
@@ -402,10 +407,10 @@ theorem boolWordSuffixScannerDescription_runConfig_start_cell_inv
                 runConfig] at h
           | succ k =>
               let c0 : Configuration :=
-                config BoolWordSuffixScannerDescription.start baseLeft
+                config BWSS.start baseLeft
                   (some true :: suffixTail)
               have hstep :
-                  BoolWordSuffixScannerDescription.stepConfig c0 = none := by
+                  BWSS.stepConfig c0 = none := by
                 cases suffixTail <;>
                   simp [c0, BoolWordSuffixScannerDescription, config,
                     tapeAtCells, keep, keepMove, writeMove,
@@ -415,7 +420,7 @@ theorem boolWordSuffixScannerDescription_runConfig_start_cell_inv
                     Matches,
                     transition, Tape.read]
               have hstay :
-                  BoolWordSuffixScannerDescription.runConfig (Nat.succ k)
+                  BWSS.runConfig (Nat.succ k)
                       c0 =
                     c0 := by
                 exact runConfig_of_stepConfig_none hstep
@@ -430,10 +435,10 @@ theorem boolWordSuffixScannerDescription_runConfig_start_bit_inv
     (suffixTail : List (Option Bool))
     {Tout : Tape Bool} {n : Nat}
     (h :
-      BoolWordSuffixScannerDescription.runConfig n
-          (config BoolWordSuffixScannerDescription.start baseLeft
+      BWSS.runConfig n
+          (config BWSS.start baseLeft
             (some first :: suffixTail)) =
-        { state := BoolWordSuffixScannerDescription.halt
+        { state := BWSS.halt
           tape := Tout }) :
       first = false := by
   have hcell :=
@@ -445,38 +450,38 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
     (baseLeft : List (Option Bool)) (bits : Word Bool)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      BoolWordSuffixScannerDescription.runConfig n
-          (config BoolWordSuffixScannerDescription.start baseLeft
+      BWSS.runConfig n
+          (config BWSS.start baseLeft
             (bits.map some)) =
-        { state := BoolWordSuffixScannerDescription.halt
+        { state := BWSS.halt
           tape := Tout }) :
     exists doneBit : Bool,
     exists tail : Word Bool,
       bits = false :: false :: true :: doneBit :: tail := by
   let start : Configuration :=
-    config BoolWordSuffixScannerDescription.start baseLeft (bits.map some)
+    config BWSS.start baseLeft (bits.map some)
   have hhaltState :
-      (BoolWordSuffixScannerDescription.runConfig n start).state =
-        BoolWordSuffixScannerDescription.halt := by
+      (BWSS.runConfig n start).state =
+        BWSS.halt := by
     simpa [start] using
       congrArg Configuration.state h
   cases bits with
   | nil =>
       let stuck : Configuration := start
       have hstep :
-          BoolWordSuffixScannerDescription.stepConfig stuck = none := by
+          BWSS.stepConfig stuck = none := by
         simp [stuck, start, BoolWordSuffixScannerDescription, config,
           tapeAtCells, keep, keepMove, writeMove,
           scanLeftToSentinelRestart, stepConfig,
           lookupTransition, Matches,
           transition, Tape.read]
       have hstuck :
-          stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
+          stuck.state ≠ BWSS.halt := by
         simp [stuck, start, BoolWordSuffixScannerDescription, config]
       exact False.elim
         (primitive_runConfig_state_ne_halt_of_reaches_stuck
           boolWordSuffixScannerDescription_haltTransitionFree
-          (D := BoolWordSuffixScannerDescription)
+          (D := BWSS)
           (c := start) (stuck := stuck) (k := 0) (n := n)
           rfl hstep hstuck hhaltState)
   | cons first rest =>
@@ -484,9 +489,9 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
       · cases rest with
         | nil =>
             let stuck :=
-              BoolWordSuffixScannerDescription.runConfig 1 start
+              BWSS.runConfig 1 start
             have hstep :
-                BoolWordSuffixScannerDescription.stepConfig stuck = none := by
+                BWSS.stepConfig stuck = none := by
               simp [stuck, start, BoolWordSuffixScannerDescription, config,
                 tapeAtCells, keep, keepMove, writeMove,
                 scanLeftToSentinelRestart, runConfig,
@@ -496,7 +501,7 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                 transition, Tape.read, Tape.write,
                 Tape.move, Tape.moveRight]
             have hstuck :
-                stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
+                stuck.state ≠ BWSS.halt := by
               simp [stuck, start, BoolWordSuffixScannerDescription, config,
                 tapeAtCells, keep, keepMove, writeMove,
                 scanLeftToSentinelRestart, runConfig,
@@ -508,7 +513,7 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
             exact False.elim
               (primitive_runConfig_state_ne_halt_of_reaches_stuck
                 boolWordSuffixScannerDescription_haltTransitionFree
-                (D := BoolWordSuffixScannerDescription)
+                (D := BWSS)
                 (c := start) (stuck := stuck) (k := 1) (n := n)
                 rfl hstep hstuck hhaltState)
         | cons second restTail =>
@@ -516,9 +521,9 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
             · cases restTail with
               | nil =>
                   let stuck :=
-                    BoolWordSuffixScannerDescription.runConfig 2 start
+                    BWSS.runConfig 2 start
                   have hstep :
-                      BoolWordSuffixScannerDescription.stepConfig stuck =
+                      BWSS.stepConfig stuck =
                         none := by
                     simp [stuck, start, BoolWordSuffixScannerDescription,
                       config, tapeAtCells, keep, keepMove, writeMove,
@@ -531,7 +536,7 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                       Tape.move, Tape.moveRight]
                   have hstuck :
                       stuck.state ≠
-                        BoolWordSuffixScannerDescription.halt := by
+                        BWSS.halt := by
                     simp [stuck, start, BoolWordSuffixScannerDescription,
                       config, tapeAtCells, keep, keepMove, writeMove,
                       scanLeftToSentinelRestart,
@@ -544,15 +549,15 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                   exact False.elim
                     (primitive_runConfig_state_ne_halt_of_reaches_stuck
                       boolWordSuffixScannerDescription_haltTransitionFree
-                      (D := BoolWordSuffixScannerDescription)
+                      (D := BWSS)
                       (c := start) (stuck := stuck) (k := 2) (n := n)
                       rfl hstep hstuck hhaltState)
               | cons third tail =>
                   cases third
                   · let stuck :=
-                      BoolWordSuffixScannerDescription.runConfig 2 start
+                      BWSS.runConfig 2 start
                     have hstep :
-                        BoolWordSuffixScannerDescription.stepConfig stuck =
+                        BWSS.stepConfig stuck =
                           none := by
                       cases tail <;>
                         simp [stuck, start,
@@ -567,7 +572,7 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                           Tape.write, Tape.move, Tape.moveRight]
                     have hstuck :
                         stuck.state ≠
-                          BoolWordSuffixScannerDescription.halt := by
+                          BWSS.halt := by
                       cases tail <;>
                         simp [stuck, start,
                           BoolWordSuffixScannerDescription, config,
@@ -582,15 +587,15 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                     exact False.elim
                       (primitive_runConfig_state_ne_halt_of_reaches_stuck
                         boolWordSuffixScannerDescription_haltTransitionFree
-                        (D := BoolWordSuffixScannerDescription)
+                        (D := BWSS)
                         (c := start) (stuck := stuck) (k := 2) (n := n)
                         rfl hstep hstuck hhaltState)
                   · cases tail with
                     | nil =>
                         let stuck :=
-                          BoolWordSuffixScannerDescription.runConfig 4 start
+                          BWSS.runConfig 4 start
                         have hstep :
-                            BoolWordSuffixScannerDescription.stepConfig
+                            BWSS.stepConfig
                                 stuck = none := by
                           simp [stuck, start,
                             BoolWordSuffixScannerDescription, config,
@@ -604,7 +609,7 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                             Tape.write, Tape.move, Tape.moveRight]
                         have hstuck :
                             stuck.state ≠
-                              BoolWordSuffixScannerDescription.halt := by
+                              BWSS.halt := by
                           simp [stuck, start,
                             BoolWordSuffixScannerDescription, config,
                             tapeAtCells, keep, keepMove, writeMove,
@@ -618,15 +623,15 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                         exact False.elim
                           (primitive_runConfig_state_ne_halt_of_reaches_stuck
                             boolWordSuffixScannerDescription_haltTransitionFree
-                            (D := BoolWordSuffixScannerDescription)
+                            (D := BWSS)
                             (c := start) (stuck := stuck) (k := 4)
                             (n := n) rfl hstep hstuck hhaltState)
                     | cons doneBit tailRest =>
                         exact ⟨doneBit, tailRest, rfl⟩
             · let stuck :=
-                BoolWordSuffixScannerDescription.runConfig 1 start
+                BWSS.runConfig 1 start
               have hstep :
-                  BoolWordSuffixScannerDescription.stepConfig stuck = none := by
+                  BWSS.stepConfig stuck = none := by
                 cases restTail <;>
                   simp [stuck, start, BoolWordSuffixScannerDescription,
                     config, tapeAtCells, keep, keepMove, writeMove,
@@ -638,7 +643,7 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
                     transition, Tape.read, Tape.write,
                     Tape.move, Tape.moveRight]
               have hstuck :
-                  stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
+                  stuck.state ≠ BWSS.halt := by
                 cases restTail <;>
                   simp [stuck, start, BoolWordSuffixScannerDescription,
                     config, tapeAtCells, keep, keepMove, writeMove,
@@ -652,7 +657,7 @@ theorem boolWordSuffixScannerDescription_runConfig_start_nat_prefix_inv
               exact False.elim
                 (primitive_runConfig_state_ne_halt_of_reaches_stuck
                   boolWordSuffixScannerDescription_haltTransitionFree
-                  (D := BoolWordSuffixScannerDescription)
+                  (D := BWSS)
                   (c := start) (stuck := stuck) (k := 1) (n := n)
                   rfl hstep hstuck hhaltState)
       · have hfirstFalse :
@@ -669,19 +674,19 @@ theorem natSuffixScannerDescription_runConfig_nonblank_suffix_inv
     (b : Bool) (suffixTail : List (Option Bool))
     {Tout : Tape Bool} {n : Nat}
     (h :
-      DovetailStagePrefix.NatSuffixScannerDescription.runConfig n
-          (config DovetailStagePrefix.NatSuffixScannerDescription.start
+      NSS.runConfig n
+          (config NSS.start
             baseLeft
             (List.append ((stageNatBits stage).map some)
               (some b :: suffixTail))) =
-        { state := DovetailStagePrefix.NatSuffixScannerDescription.halt
+        { state := NSS.halt
           tape := Tout }) :
       Tout = Tape.move Direction.left
         (tapeAtCells
           (List.append ((stageNatBits stage).reverse.map some) baseLeft)
           (some b :: suffixTail)) := by
   let c0 : Configuration :=
-    config DovetailStagePrefix.NatSuffixScannerDescription.start baseLeft
+    config NSS.start baseLeft
       (List.append ((stageNatBits stage).map some) (some b :: suffixTail))
   let Tfinal : Tape Bool :=
     Tape.move Direction.left
@@ -689,9 +694,9 @@ theorem natSuffixScannerDescription_runConfig_nonblank_suffix_inv
         (List.append ((stageNatBits stage).reverse.map some) baseLeft)
         (some b :: suffixTail))
   have hforward :
-      DovetailStagePrefix.NatSuffixScannerDescription.runConfig
+      NSS.runConfig
           (4 * stage + 5) c0 =
-        { state := DovetailStagePrefix.NatSuffixScannerDescription.halt
+        { state := NSS.halt
           tape := Tfinal } := by
     rcases
         DovetailStagePrefix.stageNatBits_reverse_map_some_cons stage with
@@ -702,7 +707,7 @@ theorem natSuffixScannerDescription_runConfig_nonblank_suffix_inv
       DovetailStagePrefix.natSuffix_run_state200_stageNat_to_state210
         stage baseLeft (some b :: suffixTail)
     rw [show
-        DovetailStagePrefix.NatSuffixScannerDescription.runConfig
+        NSS.runConfig
             (4 * stage + 4) c0 =
           config 210
             (List.append ((stageNatBits stage).reverse.map some)
@@ -727,15 +732,15 @@ theorem natSuffixScannerDescription_runConfig_stageNat_handoff
     (b : Bool) (suffixTail : Word Bool)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      DovetailStagePrefix.NatSuffixScannerDescription.runConfig n
+      NSS.runConfig n
           (config
-            DovetailStagePrefix.NatSuffixScannerDescription.start
+            NSS.start
             baseLeft
             (List.append
               ((stageNatBits stage).map some)
               ((b :: suffixTail).map some))) =
         { state :=
-            DovetailStagePrefix.NatSuffixScannerDescription.halt
+            NSS.halt
           tape := Tout }) :
       Tape.move Direction.right Tout =
         tapeAtCells
@@ -745,7 +750,7 @@ theorem natSuffixScannerDescription_runConfig_stageNat_handoff
           ((b :: suffixTail).map some) := by
   let c0 : Configuration :=
     config
-      DovetailStagePrefix.NatSuffixScannerDescription.start
+      NSS.start
       baseLeft
       (List.append
         ((stageNatBits stage).map some)
@@ -775,15 +780,15 @@ theorem natSuffixScannerDescription_runConfig_encodeNatAppend_handoff
     (hsuffix :
       encodeCodeWordAsInput suffix = b :: suffixTail)
     (h :
-      DovetailStagePrefix.NatSuffixScannerDescription.runConfig n
+      NSS.runConfig n
           (config
-            DovetailStagePrefix.NatSuffixScannerDescription.start
+            NSS.start
             baseLeft
             ((encodeCodeWordAsInput
               (encodeNatAppend stage suffix)).map
               some)) =
         { state :=
-            DovetailStagePrefix.NatSuffixScannerDescription.halt
+            NSS.halt
           tape := Tout }) :
     exists baseAfter : List (Option Bool),
       Tape.move Direction.right Tout =
@@ -792,14 +797,14 @@ theorem natSuffixScannerDescription_runConfig_encodeNatAppend_handoff
   refine
     ⟨List.append ((stageNatBits stage).reverse.map some) baseLeft, ?_⟩
   have hrun :
-      DovetailStagePrefix.NatSuffixScannerDescription.runConfig n
+      NSS.runConfig n
           (config
-            DovetailStagePrefix.NatSuffixScannerDescription.start
+            NSS.start
             baseLeft
             (List.append ((stageNatBits stage).map some)
               ((b :: suffixTail).map some))) =
         { state :=
-            DovetailStagePrefix.NatSuffixScannerDescription.halt
+            NSS.halt
           tape := Tout } := by
     simpa [DovetailStagePrefix.natBits_eq_encodeNatAppend,
       hsuffix, List.map_append] using h
@@ -811,18 +816,18 @@ theorem boolWordSuffixScannerDescription_runConfig_canonical_false_suffix_inv
     (bits : Word Bool) (baseLeft : List (Option Bool)) (suffixTail : Word Bool)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      BoolWordSuffixScannerDescription.runConfig n
-          (config BoolWordSuffixScannerDescription.start baseLeft
+      BWSS.runConfig n
+          (config BWSS.start baseLeft
             (List.append ((stageNatBits bits.length).map some)
               (List.append ((cellsCodeBits (bits.map some)).map some)
                 (some false :: suffixTail.map some)))) =
-        { state := BoolWordSuffixScannerDescription.halt
+        { state := BWSS.halt
           tape := Tout }) :
       Tout =
         (boolWordCanonicalHandoffConfigWithBase bits baseLeft
           (false :: suffixTail)).tape := by
   let c0 : Configuration :=
-    config BoolWordSuffixScannerDescription.start baseLeft
+    config BWSS.start baseLeft
       (List.append ((stageNatBits bits.length).map some)
         (List.append ((cellsCodeBits (bits.map some)).map some)
           (some false :: suffixTail.map some)))
@@ -840,18 +845,18 @@ theorem cellListSuffixScannerDescription_runConfig_canonical_false_suffix_inv
     (cells baseLeft : List (Option Bool)) (suffixTail : Word Bool)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      CellListSuffixScannerDescription.runConfig n
-          (config CellListSuffixScannerDescription.start baseLeft
+      CLSS.runConfig n
+          (config CLSS.start baseLeft
             (List.append ((stageNatBits cells.length).map some)
               (List.append ((cellsCodeBits cells).map some)
                 (some false :: suffixTail.map some)))) =
-        { state := CellListSuffixScannerDescription.halt
+        { state := CLSS.halt
           tape := Tout }) :
       Tout =
         (cellListCanonicalHandoffConfigWithBase cells baseLeft
           (false :: suffixTail)).tape := by
   let c0 : Configuration :=
-    config CellListSuffixScannerDescription.start baseLeft
+    config CLSS.start baseLeft
       (List.append ((stageNatBits cells.length).map some)
         (List.append ((cellsCodeBits cells).map some)
           (some false :: suffixTail.map some)))

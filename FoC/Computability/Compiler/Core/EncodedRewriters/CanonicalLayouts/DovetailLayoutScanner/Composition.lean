@@ -22,6 +22,7 @@ namespace DovetailLayoutScanner
 
 open FoC.Computability.DovetailInitialLayoutInitializer
 open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
+open CommonGround.SeqComposition
 
 /-!
 ## Composed tape and configuration field scanners
@@ -826,21 +827,40 @@ theorem rightHandoffSequential_runConfig_exists
         { state :=
             (seqSubroutine A B Direction.right).halt
           tape := Tout } :=
-  CommonGround.SeqComposition.seqSubroutine_runConfig_exists
+  seqSubroutine_runConfig_exists
     (A := A) (B := B) (handoffMove := Direction.right)
     hA hB hArun hBReach
+
+private abbrev CLSS := CellListSuffixScannerDescription
+private abbrev CSS := CellSuffixScannerDescription
+private abbrev TSS := TapeSuffixScannerDescription
+private abbrev CFS := ConfigurationSuffixScannerDescription
+private abbrev FHFS := FinalHitFlagsScannerDescription
+private abbrev RCF := RejectConfigAndFinalFlagsScannerDescription
+private abbrev CFFS := ConfigurationsAndFinalFlagsScannerDescription
+private abbrev SCFFS := StageConfigurationsAndFinalFlagsScannerDescription
+private abbrev ISCFFS := InputStageConfigurationsAndFinalFlagsScannerDescription
+private abbrev MDBS := MarkedDovetailLayoutBodyScannerDescription
+private abbrev CDL := CheckedDovetailLayoutScannerDescription
+private abbrev TRP := TransitionRemainderPrefixScannerDescription
+private abbrev RFM := ReturnToFirstMarkerDescription
+private abbrev MFTB := MarkFirstTransitionBitDescription
+private abbrev BWSS := BoolWordSuffixScannerDescription
+private abbrev BSS := BoolSuffixScannerDescription
+private abbrev BFS := BoolFinalScannerDescription
+private abbrev NNSS := DovetailStagePrefix.NonemptyNatSuffixScannerDescription
 
 theorem run_finalHitFlags_raw_to_handoff_withBase
     (acceptHit rejectHit : Bool)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
-      FinalHitFlagsScannerDescription.runConfig steps
-          { state := FinalHitFlagsScannerDescription.start
+      FHFS.runConfig steps
+          { state := FHFS.start
             tape :=
               tapeAtCells baseLeft
                 ((boolFieldBits acceptHit
                   (boolFieldBits rejectHit [])).map some) } =
-        { state := FinalHitFlagsScannerDescription.halt
+        { state := FHFS.halt
           tape :=
             (boolFinalHandoffConfigWithBase rejectHit
               (List.append
@@ -858,16 +878,16 @@ theorem run_finalHitFlags_raw_to_handoff_withBase
     boolOnlySuffixHandoffConfigWithBase acceptHit baseLeft
       (false :: tail)
   have hArun :
-      BoolSuffixScannerDescription.runConfig acceptSteps
-          { state := BoolSuffixScannerDescription.start
+      BSS.runConfig acceptSteps
+          { state := BSS.start
             tape :=
               tapeAtCells baseLeft
                 ((boolFieldBits acceptHit
                   (boolFieldBits rejectHit [])).map some) } =
-        { state := BoolSuffixScannerDescription.halt
+        { state := BSS.halt
           tape := Tmid.tape } := by
     change
-      BoolSuffixScannerDescription.runConfig acceptSteps
+      BSS.runConfig acceptSteps
           (config 10 baseLeft
             ((boolFieldBits acceptHit
               (boolFieldBits rejectHit [])).map some)) =
@@ -886,10 +906,10 @@ theorem run_finalHitFlags_raw_to_handoff_withBase
     simpa [Tmid] using haccept
   have hBReach :
       exists nB : Nat,
-        BoolFinalScannerDescription.runConfig nB
-            { state := BoolFinalScannerDescription.start
+        BFS.runConfig nB
+            { state := BFS.start
               tape := Tape.move Direction.right Tmid.tape } =
-          { state := BoolFinalScannerDescription.halt
+          { state := BFS.halt
             tape :=
               (boolFinalHandoffConfigWithBase rejectHit
                 baseAfterAccept).tape } := by
@@ -904,16 +924,16 @@ theorem run_finalHitFlags_raw_to_handoff_withBase
         boolOnlySuffixHandoffConfigWithBase_move_right
           acceptHit baseLeft false tail
     exact
-      CommonGround.SeqComposition.runConfig_reaches_from_move_eq
-        (B := BoolFinalScannerDescription)
+      runConfig_reaches_from_move_eq
+        (B := BFS)
         (handoffMove := Direction.right)
         hmove
         (by simpa [config] using hfinal)
   simpa [FinalHitFlagsScannerDescription, Tmid, baseAfterAccept]
     using
-      CommonGround.SeqComposition.seqSubroutine_runConfig_exists
-        (A := BoolSuffixScannerDescription)
-        (B := BoolFinalScannerDescription)
+      seqSubroutine_runConfig_exists
+        (A := BSS)
+        (B := BFS)
         (handoffMove := Direction.right)
         boolSuffixScannerDescription_subroutineReady
         boolFinalScannerDescription_subroutineReady
@@ -924,13 +944,13 @@ theorem run_cellThenCellList_raw_to_handoff_withBase
     (suffixTail : Word Bool) :
     exists steps : Nat,
       (seqSubroutine
-          CellSuffixScannerDescription
-          CellListSuffixScannerDescription
+          CSS
+          CLSS
           Direction.right).runConfig steps
           { state :=
               (seqSubroutine
-                CellSuffixScannerDescription
-                CellListSuffixScannerDescription
+                CSS
+                CLSS
                 Direction.right).start
             tape :=
               tapeAtCells baseLeft
@@ -939,8 +959,8 @@ theorem run_cellThenCellList_raw_to_handoff_withBase
                     (false :: suffixTail))).map some) } =
         { state :=
             (seqSubroutine
-              CellSuffixScannerDescription
-              CellListSuffixScannerDescription
+              CSS
+              CLSS
               Direction.right).halt
           tape :=
             (cellListCanonicalHandoffConfigWithBase right
@@ -957,23 +977,23 @@ theorem run_cellThenCellList_raw_to_handoff_withBase
   let Tmid := cellSuffixHandoffConfigWithBase head baseLeft
     (false :: fieldTail)
   have hArun :
-      CellSuffixScannerDescription.runConfig headSteps
-          { state := CellSuffixScannerDescription.start
+      CSS.runConfig headSteps
+          { state := CSS.start
             tape :=
               tapeAtCells baseLeft
                 ((cellFieldBits head
                   (cellListFieldBits right
                     (false :: suffixTail))).map some) } =
-        { state := CellSuffixScannerDescription.halt
+        { state := CSS.halt
           tape := Tmid.tape } := by
     simpa [Tmid, cellFieldBits, hfieldTail, List.map_append] using
       hhead
   have hBReach :
       exists nB : Nat,
-        CellListSuffixScannerDescription.runConfig nB
-            { state := CellListSuffixScannerDescription.start
+        CLSS.runConfig nB
+            { state := CLSS.start
               tape := Tape.move Direction.right Tmid.tape } =
-          { state := CellListSuffixScannerDescription.halt
+          { state := CLSS.halt
             tape :=
               (cellListCanonicalHandoffConfigWithBase right
                 baseAfterHead (false :: suffixTail)).tape } := by
@@ -989,8 +1009,8 @@ theorem run_cellThenCellList_raw_to_handoff_withBase
         cellSuffixHandoffConfigWithBase_move_right
           head baseLeft false fieldTail
     exact
-      CommonGround.SeqComposition.runConfig_reaches_from_move_eq
-        (B := CellListSuffixScannerDescription)
+      runConfig_reaches_from_move_eq
+        (B := CLSS)
         (handoffMove := Direction.right)
         hmove
         (by
@@ -999,9 +1019,9 @@ theorem run_cellThenCellList_raw_to_handoff_withBase
             hright)
   simpa [Tmid, baseAfterHead, cellFieldBits, hfieldTail,
     List.map_append] using
-      CommonGround.SeqComposition.seqSubroutine_runConfig_exists
-        (A := CellSuffixScannerDescription)
-        (B := CellListSuffixScannerDescription)
+      seqSubroutine_runConfig_exists
+        (A := CSS)
+        (B := CLSS)
         (handoffMove := Direction.right)
         cellSuffixScannerDescription_subroutineReady
         cellListSuffixScannerDescription_subroutineReady
@@ -1011,12 +1031,12 @@ theorem run_tapeSuffix_raw_to_handoff_withBase
     (T : Tape Bool) (baseLeft : List (Option Bool))
     (suffixTail : Word Bool) :
     exists steps : Nat,
-      TapeSuffixScannerDescription.runConfig steps
-          { state := TapeSuffixScannerDescription.start
+      TSS.runConfig steps
+          { state := TSS.start
             tape :=
               tapeAtCells baseLeft
                 ((tapeFieldBits T (false :: suffixTail)).map some) } =
-        { state := TapeSuffixScannerDescription.halt
+        { state := TSS.halt
           tape :=
             (cellListCanonicalHandoffConfigWithBase T.right
               (List.append ((cellCodeBits T.head).reverse.map some)
@@ -1032,15 +1052,15 @@ theorem run_tapeSuffix_raw_to_handoff_withBase
   let Tmid := cellListCanonicalHandoffConfigWithBase T.left baseLeft
     (false :: headTail)
   have hArun :
-      CellListSuffixScannerDescription.runConfig leftSteps
-          { state := CellListSuffixScannerDescription.start
+      CLSS.runConfig leftSteps
+          { state := CLSS.start
             tape :=
               tapeAtCells baseLeft
                 ((tapeFieldBits T (false :: suffixTail)).map some) } =
-        { state := CellListSuffixScannerDescription.halt
+        { state := CLSS.halt
           tape := Tmid.tape } := by
     change
-      CellListSuffixScannerDescription.runConfig leftSteps
+      CLSS.runConfig leftSteps
           (config 100 baseLeft
             ((tapeFieldBits T (false :: suffixTail)).map some)) =
         Tmid
@@ -1063,19 +1083,19 @@ theorem run_tapeSuffix_raw_to_handoff_withBase
   have hBReach :
       exists nB : Nat,
         (seqSubroutine
-          CellSuffixScannerDescription
-          CellListSuffixScannerDescription
+          CSS
+          CLSS
           Direction.right).runConfig nB
             { state :=
                 (seqSubroutine
-                  CellSuffixScannerDescription
-                  CellListSuffixScannerDescription
+                  CSS
+                  CLSS
                   Direction.right).start
               tape := Tape.move Direction.right Tmid.tape } =
           { state :=
               (seqSubroutine
-                CellSuffixScannerDescription
-                CellListSuffixScannerDescription
+                CSS
+                CLSS
                 Direction.right).halt
             tape :=
               (cellListCanonicalHandoffConfigWithBase T.right
@@ -1095,23 +1115,23 @@ theorem run_tapeSuffix_raw_to_handoff_withBase
         cellListCanonicalHandoffConfigWithBase_move_right
           T.left baseLeft false headTail
     exact
-      CommonGround.SeqComposition.runConfig_reaches_from_move_eq
+      runConfig_reaches_from_move_eq
         (B :=
           seqSubroutine
-            CellSuffixScannerDescription
-            CellListSuffixScannerDescription
+            CSS
+            CLSS
             Direction.right)
         (handoffMove := Direction.right)
         hmove
         (by simpa [baseAfterLeft] using hinner)
   simpa [TapeSuffixScannerDescription, Tmid, baseAfterLeft,
     tapeFieldBits, hheadTail, List.map_append] using
-    CommonGround.SeqComposition.seqSubroutine_runConfig_exists
-      (A := CellListSuffixScannerDescription)
+    seqSubroutine_runConfig_exists
+      (A := CLSS)
       (B :=
         seqSubroutine
-          CellSuffixScannerDescription
-          CellListSuffixScannerDescription
+          CSS
+          CLSS
           Direction.right)
       (handoffMove := Direction.right)
       cellListSuffixScannerDescription_subroutineReady
@@ -1124,13 +1144,13 @@ theorem run_configurationSuffix_raw_to_handoff_withBase
     (cfg : Configuration)
     (baseLeft : List (Option Bool)) (suffixTail : Word Bool) :
     exists steps : Nat,
-      ConfigurationSuffixScannerDescription.runConfig steps
-          { state := ConfigurationSuffixScannerDescription.start
+      CFS.runConfig steps
+          { state := CFS.start
             tape :=
               tapeAtCells baseLeft
                 ((configurationFieldBits cfg
                   (false :: suffixTail)).map some) } =
-        { state := ConfigurationSuffixScannerDescription.halt
+        { state := CFS.halt
           tape :=
             (cellListCanonicalHandoffConfigWithBase cfg.tape.right
               (List.append ((cellCodeBits cfg.tape.head).reverse.map some)
@@ -1150,18 +1170,18 @@ theorem run_configurationSuffix_raw_to_handoff_withBase
     DovetailStagePrefix.nonemptyNatSuffixHandoffConfigWithBase
       cfg.state baseLeft (false :: tapeTail)
   have hArun :
-      DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig
+      NNSS.runConfig
           stateSteps
           { state :=
-              DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
+              NNSS.start
             tape :=
               tapeAtCells baseLeft
                 ((configurationFieldBits cfg
                   (false :: suffixTail)).map some) } =
-        { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt
+        { state := NNSS.halt
           tape := Tmid.tape } := by
     change
-      DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig
+      NNSS.runConfig
           stateSteps
           (config 200 baseLeft
             ((configurationFieldBits cfg
@@ -1182,10 +1202,10 @@ theorem run_configurationSuffix_raw_to_handoff_withBase
     simpa [Tmid] using hstate
   have hBReach :
       exists nB : Nat,
-        TapeSuffixScannerDescription.runConfig nB
-            { state := TapeSuffixScannerDescription.start
+        TSS.runConfig nB
+            { state := TSS.start
               tape := Tape.move Direction.right Tmid.tape } =
-          { state := TapeSuffixScannerDescription.halt
+          { state := TSS.halt
             tape :=
               (cellListCanonicalHandoffConfigWithBase cfg.tape.right
                 (List.append
@@ -1205,16 +1225,16 @@ theorem run_configurationSuffix_raw_to_handoff_withBase
         DovetailStagePrefix.nonemptyNatSuffixHandoffConfigWithBase_move_right
           cfg.state baseLeft false tapeTail
     exact
-      CommonGround.SeqComposition.runConfig_reaches_from_move_eq
-        (B := TapeSuffixScannerDescription)
+      runConfig_reaches_from_move_eq
+        (B := TSS)
         (handoffMove := Direction.right)
         hmove
         (by simpa [baseAfterState] using htape)
   simpa [ConfigurationSuffixScannerDescription, Tmid, baseAfterState,
     configurationFieldBits, htapeTail, List.map_append] using
-      CommonGround.SeqComposition.seqSubroutine_runConfig_exists
-        (A := DovetailStagePrefix.NonemptyNatSuffixScannerDescription)
-        (B := TapeSuffixScannerDescription)
+      seqSubroutine_runConfig_exists
+        (A := NNSS)
+        (B := TSS)
         (handoffMove := Direction.right)
         DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
         tapeSuffixScannerDescription_subroutineReady
@@ -1225,14 +1245,14 @@ theorem run_rejectConfigAndFinalFlags_raw_to_handoff_withBase
     (acceptHit rejectHit : Bool)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
-      RejectConfigAndFinalFlagsScannerDescription.runConfig steps
-          { state := RejectConfigAndFinalFlagsScannerDescription.start
+      RCF.runConfig steps
+          { state := RCF.start
             tape :=
               tapeAtCells baseLeft
                 ((configurationFieldBits rejectConfig
                   (boolFieldBits acceptHit
                     (boolFieldBits rejectHit []))).map some) } =
-        { state := RejectConfigAndFinalFlagsScannerDescription.halt
+        { state := RCF.halt
           tape :=
             (boolFinalHandoffConfigWithBase rejectHit
               (List.append
@@ -1253,14 +1273,14 @@ theorem run_rejectConfigAndFinalFlags_raw_to_handoff_withBase
             baseLeft)))
       (false :: flagsTail)).tape
   have hArun :
-      ConfigurationSuffixScannerDescription.runConfig configSteps
-          { state := ConfigurationSuffixScannerDescription.start
+      CFS.runConfig configSteps
+          { state := CFS.start
             tape :=
             tapeAtCells baseLeft
                 ((configurationFieldBits rejectConfig
                   (boolFieldBits acceptHit
                     (boolFieldBits rejectHit []))).map some) } =
-        { state := ConfigurationSuffixScannerDescription.halt
+        { state := CFS.halt
           tape := TmidTape } := by
     rw [show
         ((configurationFieldBits rejectConfig
@@ -1276,10 +1296,10 @@ theorem run_rejectConfigAndFinalFlags_raw_to_handoff_withBase
     simpa [TmidTape] using hconfig
   have hBReach :
       exists nB : Nat,
-        FinalHitFlagsScannerDescription.runConfig nB
-            { state := FinalHitFlagsScannerDescription.start
+        FHFS.runConfig nB
+            { state := FHFS.start
               tape := Tape.move Direction.right TmidTape } =
-          { state := FinalHitFlagsScannerDescription.halt
+          { state := FHFS.halt
             tape :=
               (boolFinalHandoffConfigWithBase rejectHit
                 (List.append
@@ -1320,15 +1340,15 @@ theorem run_rejectConfigAndFinalFlags_raw_to_handoff_withBase
           congrArg (fun bits => bits.map some) hflagsTail.symm
       simp [hflagsCells]
     exact
-      CommonGround.SeqComposition.runConfig_reaches_from_move_eq
-        (B := FinalHitFlagsScannerDescription)
+      runConfig_reaches_from_move_eq
+        (B := FHFS)
         (handoffMove := Direction.right)
         hmove
         (by simpa using hflags)
   simpa [RejectConfigAndFinalFlagsScannerDescription, TmidTape] using
-    CommonGround.SeqComposition.seqSubroutine_runConfig_exists
-      (A := ConfigurationSuffixScannerDescription)
-      (B := FinalHitFlagsScannerDescription)
+    seqSubroutine_runConfig_exists
+      (A := CFS)
+      (B := FHFS)
       (handoffMove := Direction.right)
       configurationSuffixScannerDescription_subroutineReady
       finalHitFlagsScannerDescription_subroutineReady
@@ -1339,15 +1359,15 @@ theorem run_configurationsAndFinalFlags_raw_to_handoff_withBase
     (acceptHit rejectHit : Bool)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
-      ConfigurationsAndFinalFlagsScannerDescription.runConfig steps
-          { state := ConfigurationsAndFinalFlagsScannerDescription.start
+      CFFS.runConfig steps
+          { state := CFFS.start
             tape :=
               tapeAtCells baseLeft
                 ((configurationFieldBits acceptConfig
                   (configurationFieldBits rejectConfig
                     (boolFieldBits acceptHit
                       (boolFieldBits rejectHit [])))).map some) } =
-        { state := ConfigurationsAndFinalFlagsScannerDescription.halt
+        { state := CFFS.halt
           tape :=
             (boolFinalHandoffConfigWithBase rejectHit
               (List.append
@@ -1369,15 +1389,15 @@ theorem run_configurationsAndFinalFlags_raw_to_handoff_withBase
             baseLeft)))
       (false :: rejectTail)).tape
   have hArun :
-      ConfigurationSuffixScannerDescription.runConfig acceptSteps
-          { state := ConfigurationSuffixScannerDescription.start
+      CFS.runConfig acceptSteps
+          { state := CFS.start
             tape :=
               tapeAtCells baseLeft
                 ((configurationFieldBits acceptConfig
                   (configurationFieldBits rejectConfig
                     (boolFieldBits acceptHit
                       (boolFieldBits rejectHit [])))).map some) } =
-        { state := ConfigurationSuffixScannerDescription.halt
+        { state := CFS.halt
           tape := TmidTape } := by
     rw [show
         ((configurationFieldBits acceptConfig
@@ -1390,10 +1410,10 @@ theorem run_configurationsAndFinalFlags_raw_to_handoff_withBase
     simpa [TmidTape] using haccept
   have hBReach :
       exists nB : Nat,
-        RejectConfigAndFinalFlagsScannerDescription.runConfig nB
-            { state := RejectConfigAndFinalFlagsScannerDescription.start
+        RCF.runConfig nB
+            { state := RCF.start
               tape := Tape.move Direction.right TmidTape } =
-          { state := RejectConfigAndFinalFlagsScannerDescription.halt
+          { state := RCF.halt
             tape :=
               (boolFinalHandoffConfigWithBase rejectHit
                 (List.append
@@ -1437,15 +1457,15 @@ theorem run_configurationsAndFinalFlags_raw_to_handoff_withBase
           congrArg (fun bits => bits.map some) hrejectTail.symm
       simp [hrejectCells]
     exact
-      CommonGround.SeqComposition.runConfig_reaches_from_move_eq
-        (B := RejectConfigAndFinalFlagsScannerDescription)
+      runConfig_reaches_from_move_eq
+        (B := RCF)
         (handoffMove := Direction.right)
         hmove
         (by simpa using hreject)
   simpa [ConfigurationsAndFinalFlagsScannerDescription, TmidTape] using
-    CommonGround.SeqComposition.seqSubroutine_runConfig_exists
-      (A := ConfigurationSuffixScannerDescription)
-      (B := RejectConfigAndFinalFlagsScannerDescription)
+    seqSubroutine_runConfig_exists
+      (A := CFS)
+      (B := RCF)
       (handoffMove := Direction.right)
       configurationSuffixScannerDescription_subroutineReady
       rejectConfigAndFinalFlagsScannerDescription_subroutineReady
@@ -1457,8 +1477,8 @@ theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
     (acceptHit rejectHit : Bool)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
-      StageConfigurationsAndFinalFlagsScannerDescription.runConfig steps
-          { state := StageConfigurationsAndFinalFlagsScannerDescription.start
+      SCFFS.runConfig steps
+          { state := SCFFS.start
             tape :=
               tapeAtCells baseLeft
                 ((List.append (stageNatBits stage)
@@ -1466,7 +1486,7 @@ theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
                     (configurationFieldBits rejectConfig
                       (boolFieldBits acceptHit
                         (boolFieldBits rejectHit []))))).map some) } =
-        { state := StageConfigurationsAndFinalFlagsScannerDescription.halt
+        { state := SCFFS.halt
           tape :=
             (boolFinalHandoffConfigWithBase rejectHit
               (List.append
@@ -1488,10 +1508,10 @@ theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
   let baseAfterStage : List (Option Bool) :=
     List.append ((stageNatBits stage).reverse.map some) baseLeft
   have hArun :
-      DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig
+      NNSS.runConfig
           stageSteps
           { state :=
-              DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
+              NNSS.start
             tape :=
               tapeAtCells baseLeft
                 ((List.append (stageNatBits stage)
@@ -1499,7 +1519,7 @@ theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
                     (configurationFieldBits rejectConfig
                       (boolFieldBits acceptHit
                         (boolFieldBits rejectHit []))))).map some) } =
-        { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt
+        { state := NNSS.halt
           tape := TmidTape } := by
     rw [show
         (List.append (stageNatBits stage)
@@ -1513,10 +1533,10 @@ theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
     simpa [TmidTape] using hstage
   have hBReach :
       exists nB : Nat,
-        ConfigurationsAndFinalFlagsScannerDescription.runConfig nB
-            { state := ConfigurationsAndFinalFlagsScannerDescription.start
+        CFFS.runConfig nB
+            { state := CFFS.start
               tape := Tape.move Direction.right TmidTape } =
-          { state := ConfigurationsAndFinalFlagsScannerDescription.halt
+          { state := CFFS.halt
             tape :=
               (boolFinalHandoffConfigWithBase rejectHit
                 (List.append
@@ -1552,16 +1572,16 @@ theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
           congrArg (fun bits => bits.map some) hacceptTail.symm
       simp [hacceptCells]
     exact
-      CommonGround.SeqComposition.runConfig_reaches_from_move_eq
-        (B := ConfigurationsAndFinalFlagsScannerDescription)
+      runConfig_reaches_from_move_eq
+        (B := CFFS)
         (handoffMove := Direction.right)
         hmove
         (by simpa [baseAfterStage] using hconfigs)
-  simpa [StageConfigurationsAndFinalFlagsScannerDescription, TmidTape,
+  simpa [SCFFS, TmidTape,
     baseAfterStage] using
-      CommonGround.SeqComposition.seqSubroutine_runConfig_exists
-        (A := DovetailStagePrefix.NonemptyNatSuffixScannerDescription)
-        (B := ConfigurationsAndFinalFlagsScannerDescription)
+      seqSubroutine_runConfig_exists
+        (A := NNSS)
+        (B := CFFS)
         (handoffMove := Direction.right)
         DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
         configurationsAndFinalFlagsScannerDescription_subroutineReady
@@ -1573,10 +1593,10 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
     (acceptHit rejectHit : Bool)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
-      InputStageConfigurationsAndFinalFlagsScannerDescription.runConfig
+      ISCFFS.runConfig
           steps
           { state :=
-              InputStageConfigurationsAndFinalFlagsScannerDescription.start
+              ISCFFS.start
             tape :=
               tapeAtCells baseLeft
                 ((boolWordFieldBits input
@@ -1586,7 +1606,7 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
                         (boolFieldBits acceptHit
                           (boolFieldBits rejectHit [])))))).map some) } =
         { state :=
-            InputStageConfigurationsAndFinalFlagsScannerDescription.halt
+            ISCFFS.halt
           tape :=
             (boolFinalHandoffConfigWithBase rejectHit
               (List.append
@@ -1612,8 +1632,8 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
   let baseAfterInput : List (Option Bool) :=
     cellListCanonicalRestoredLeftWithBase (input.map some) baseLeft
   have hArun :
-      BoolWordSuffixScannerDescription.runConfig inputSteps
-          { state := BoolWordSuffixScannerDescription.start
+      BWSS.runConfig inputSteps
+          { state := BWSS.start
             tape :=
               tapeAtCells baseLeft
                 ((boolWordFieldBits input
@@ -1622,15 +1642,15 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
                       (configurationFieldBits rejectConfig
                         (boolFieldBits acceptHit
                           (boolFieldBits rejectHit [])))))).map some) } =
-        { state := BoolWordSuffixScannerDescription.halt
+        { state := BWSS.halt
           tape := TmidTape } := by
     change
-      BoolWordSuffixScannerDescription.runConfig inputSteps
+      BWSS.runConfig inputSteps
           (config 100 baseLeft
             ((boolWordFieldBits input
               (List.append (stageNatBits stage)
                 stageSuffix)).map some)) =
-        { state := BoolWordSuffixScannerDescription.halt
+        { state := BWSS.halt
           tape := TmidTape }
     rw [show
         ((boolWordFieldBits input
@@ -1645,11 +1665,11 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
       hinput
   have hBReach :
       exists nB : Nat,
-        StageConfigurationsAndFinalFlagsScannerDescription.runConfig nB
+        SCFFS.runConfig nB
             { state :=
-                StageConfigurationsAndFinalFlagsScannerDescription.start
+                SCFFS.start
               tape := Tape.move Direction.right TmidTape } =
-          { state := StageConfigurationsAndFinalFlagsScannerDescription.halt
+          { state := SCFFS.halt
             tape :=
               (boolFinalHandoffConfigWithBase rejectHit
                 (List.append
@@ -1681,16 +1701,16 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
         simp [inputSuffixTail, List.map_append]
       simp [hsuffixCells]
     exact
-      CommonGround.SeqComposition.runConfig_reaches_from_move_eq
-        (B := StageConfigurationsAndFinalFlagsScannerDescription)
+      runConfig_reaches_from_move_eq
+        (B := SCFFS)
         (handoffMove := Direction.right)
         hmove
         (by simpa [baseAfterInput, stageSuffix] using hstage)
-  simpa [InputStageConfigurationsAndFinalFlagsScannerDescription,
+  simpa [ISCFFS,
     TmidTape, baseAfterInput] using
-      CommonGround.SeqComposition.seqSubroutine_runConfig_exists
-        (A := BoolWordSuffixScannerDescription)
-        (B := StageConfigurationsAndFinalFlagsScannerDescription)
+      seqSubroutine_runConfig_exists
+        (A := BWSS)
+        (B := SCFFS)
         (handoffMove := Direction.right)
         boolWordSuffixScannerDescription_subroutineReady
         stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
@@ -1700,8 +1720,8 @@ theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
     (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
-      MarkedDovetailLayoutBodyScannerDescription.runConfig steps
-          { state := MarkedDovetailLayoutBodyScannerDescription.start
+      MDBS.runConfig steps
+          { state := MDBS.start
             tape :=
               tapeAtCells baseLeft
                 ((List.append transitionRemainderBits
@@ -1712,7 +1732,7 @@ theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
                           (boolFieldBits L.acceptHit
                             (boolFieldBits L.rejectHit []))))))).map
                   some) } =
-        { state := MarkedDovetailLayoutBodyScannerDescription.halt
+        { state := MDBS.halt
           tape :=
             (boolFinalHandoffConfigWithBase L.rejectHit
               (List.append
@@ -1743,14 +1763,14 @@ theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
   let baseAfterTransition : List (Option Bool) :=
     List.append (transitionRemainderBits.reverse.map some) baseLeft
   have hArun :
-      TransitionRemainderPrefixScannerDescription.runConfig
+      TRP.runConfig
           transitionSteps
-          { state := TransitionRemainderPrefixScannerDescription.start
+          { state := TRP.start
             tape :=
               tapeAtCells baseLeft
                 ((List.append transitionRemainderBits
                   (boolWordFieldBits L.input inputSuffix)).map some) } =
-        { state := TransitionRemainderPrefixScannerDescription.halt
+        { state := TRP.halt
           tape := TmidTape } := by
     rw [show
         (List.append transitionRemainderBits
@@ -1765,12 +1785,12 @@ theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
     simpa [TmidTape] using htransition
   have hBReach :
       exists nB : Nat,
-        InputStageConfigurationsAndFinalFlagsScannerDescription.runConfig nB
+        ISCFFS.runConfig nB
             { state :=
-                InputStageConfigurationsAndFinalFlagsScannerDescription.start
+                ISCFFS.start
               tape := Tape.move Direction.right TmidTape } =
           { state :=
-              InputStageConfigurationsAndFinalFlagsScannerDescription.halt
+              ISCFFS.halt
             tape :=
               (boolFinalHandoffConfigWithBase L.rejectHit
                 (List.append
@@ -1805,16 +1825,16 @@ theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
           congrArg (fun bits => bits.map some) hinputTail.symm
       simp [hinputCells]
     exact
-      CommonGround.SeqComposition.runConfig_reaches_from_move_eq
-        (B := InputStageConfigurationsAndFinalFlagsScannerDescription)
+      runConfig_reaches_from_move_eq
+        (B := ISCFFS)
         (handoffMove := Direction.right)
         hmove
         (by simpa [baseAfterTransition, inputSuffix] using hinput)
   simpa [MarkedDovetailLayoutBodyScannerDescription, TmidTape,
     baseAfterTransition] using
       rightHandoffSequential_runConfig_exists
-        (A := TransitionRemainderPrefixScannerDescription)
-        (B := InputStageConfigurationsAndFinalFlagsScannerDescription)
+        (A := TRP)
+        (B := ISCFFS)
         transitionRemainderPrefixScannerDescription_subroutineReady
         inputStageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
         hArun hBReach
@@ -1823,8 +1843,8 @@ theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase
     (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
-      MarkedDovetailLayoutBodyScannerDescription.runConfig steps
-          { state := MarkedDovetailLayoutBodyScannerDescription.start
+      MDBS.runConfig steps
+          { state := MDBS.start
             tape :=
               tapeAtCells baseLeft
                 ((List.append transitionRemainderBits
@@ -1835,7 +1855,7 @@ theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase
                           (boolFieldBits L.acceptHit
                             (boolFieldBits L.rejectHit []))))))).map
                   some) } =
-        { state := MarkedDovetailLayoutBodyScannerDescription.halt
+        { state := MDBS.halt
           tape :=
             (boolFinalHandoffConfigWithBase L.rejectHit
               (List.append
@@ -1855,21 +1875,21 @@ theorem run_markedDovetailLayoutBody_return_to_checkedHandoff
     (L : DovetailLayout) :
     exists steps : Nat,
       (seqSubroutine
-          MarkedDovetailLayoutBodyScannerDescription
-          ReturnToFirstMarkerDescription
+          MDBS
+          RFM
           Direction.right).runConfig steps
           { state :=
               (seqSubroutine
-                MarkedDovetailLayoutBodyScannerDescription
-                ReturnToFirstMarkerDescription
+                MDBS
+                RFM
                 Direction.right).start
             tape :=
               tapeAtCells [none]
                 ((markedDovetailLayoutBodyBits L).map some) } =
         { state :=
             (seqSubroutine
-              MarkedDovetailLayoutBodyScannerDescription
-              ReturnToFirstMarkerDescription
+              MDBS
+              RFM
               Direction.right).halt
           tape :=
             restoredCheckedHandoffTapeFromTail
@@ -1889,20 +1909,20 @@ theorem run_markedDovetailLayoutBody_return_to_checkedHandoff
                 (List.append (transitionRemainderBits.reverse.map some)
                   [none]))))))).tape
   have hArun :
-      MarkedDovetailLayoutBodyScannerDescription.runConfig bodySteps
-          { state := MarkedDovetailLayoutBodyScannerDescription.start
+      MDBS.runConfig bodySteps
+          { state := MDBS.start
             tape :=
               tapeAtCells [none]
                 ((markedDovetailLayoutBodyBits L).map some) } =
-        { state := MarkedDovetailLayoutBodyScannerDescription.halt
+        { state := MDBS.halt
           tape := TmidTape } := by
     simpa [markedDovetailLayoutBodyBits, TmidTape] using hbody
   have hBReach :
       exists nB : Nat,
-        ReturnToFirstMarkerDescription.runConfig nB
-            { state := ReturnToFirstMarkerDescription.start
+        RFM.runConfig nB
+            { state := RFM.start
               tape := Tape.move Direction.right TmidTape } =
-          { state := ReturnToFirstMarkerDescription.halt
+          { state := RFM.halt
             tape :=
               restoredCheckedHandoffTapeFromTail
                 (markedDovetailLayoutBodyRestoredBitsRev L).reverse } := by
@@ -1945,8 +1965,8 @@ theorem run_markedDovetailLayoutBody_return_to_checkedHandoff
       rw [← markedDovetailLayoutBodyRestoredBitsRev_map_some_withMarker L]
       rfl
     exact
-      CommonGround.SeqComposition.runConfig_reaches_from_move_eq
-        (B := ReturnToFirstMarkerDescription)
+      runConfig_reaches_from_move_eq
+        (B := RFM)
         (handoffMove := Direction.right)
         hmove
         (by
@@ -1954,9 +1974,9 @@ theorem run_markedDovetailLayoutBody_return_to_checkedHandoff
             run_returnToFirstMarker_from_reversedBits
               (markedDovetailLayoutBodyRestoredBitsRev L))
   simpa [TmidTape] using
-    CommonGround.SeqComposition.seqSubroutine_runConfig_exists
-      (A := MarkedDovetailLayoutBodyScannerDescription)
-      (B := ReturnToFirstMarkerDescription)
+    seqSubroutine_runConfig_exists
+      (A := MDBS)
+      (B := RFM)
       (handoffMove := Direction.right)
       markedDovetailLayoutBodyScannerDescription_subroutineReady
       returnToFirstMarkerDescription_subroutineReady
@@ -1965,25 +1985,25 @@ theorem run_markedDovetailLayoutBody_return_to_checkedHandoff
 theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff_phaseChain
     (L : DovetailLayout) :
     exists steps : Nat,
-      CheckedDovetailLayoutScannerDescription.runConfig steps
-          { state := CheckedDovetailLayoutScannerDescription.start
+      CDL.runConfig steps
+          { state := CDL.start
             tape := tapeAtCells [] ((dovetailLayoutFieldBits L []).map some) } =
-        { state := CheckedDovetailLayoutScannerDescription.halt
+        { state := CDL.halt
           tape :=
             restoredCheckedHandoffTapeFromTail
               (markedDovetailLayoutBodyRestoredBitsRev L).reverse } := by
   rcases markedDovetailLayoutBodyBits_cons_false L with
     ⟨bodyTail, hbodyTail⟩
   let TmidTape : Tape Bool :=
-    (config MarkFirstTransitionBitDescription.halt []
+    (config MFTB.halt []
       (none :: some false :: bodyTail.map some)).tape
   have hArun :
-      MarkFirstTransitionBitDescription.runConfig 2
-          { state := MarkFirstTransitionBitDescription.start
+      MFTB.runConfig 2
+          { state := MFTB.start
             tape :=
               tapeAtCells []
                 ((dovetailLayoutFieldBits L []).map some) } =
-        { state := MarkFirstTransitionBitDescription.halt
+        { state := MFTB.halt
           tape := TmidTape } := by
     rw [dovetailLayoutFieldBits_nil_eq_first_body L]
     rw [hbodyTail]
@@ -1992,19 +2012,19 @@ theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff_phaseChain
   have hBReach :
       exists nB : Nat,
         (seqSubroutine
-          MarkedDovetailLayoutBodyScannerDescription
-          ReturnToFirstMarkerDescription
+          MDBS
+          RFM
           Direction.right).runConfig nB
             { state :=
                 (seqSubroutine
-                  MarkedDovetailLayoutBodyScannerDescription
-                  ReturnToFirstMarkerDescription
+                  MDBS
+                  RFM
                   Direction.right).start
               tape := Tape.move Direction.right TmidTape } =
           { state :=
               (seqSubroutine
-                MarkedDovetailLayoutBodyScannerDescription
-                ReturnToFirstMarkerDescription
+                MDBS
+                RFM
                 Direction.right).halt
             tape :=
               restoredCheckedHandoffTapeFromTail
@@ -2018,22 +2038,22 @@ theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff_phaseChain
       simp [TmidTape, hbodyTail, config, tapeAtCells, Tape.move,
         Tape.moveRight]
     exact
-      CommonGround.SeqComposition.runConfig_reaches_from_move_eq
+      runConfig_reaches_from_move_eq
         (B :=
           seqSubroutine
-            MarkedDovetailLayoutBodyScannerDescription
-            ReturnToFirstMarkerDescription
+            MDBS
+            RFM
             Direction.right)
         (handoffMove := Direction.right)
         hmove
         hbodyReturn
   simpa [CheckedDovetailLayoutScannerDescription, TmidTape] using
     rightHandoffSequential_runConfig_exists
-      (A := MarkFirstTransitionBitDescription)
+      (A := MFTB)
       (B :=
         seqSubroutine
-          MarkedDovetailLayoutBodyScannerDescription
-          ReturnToFirstMarkerDescription
+          MDBS
+          RFM
           Direction.right)
       markFirstTransitionBitDescription_subroutineReady
       (seqSubroutine_subroutineReady
@@ -2044,10 +2064,10 @@ theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff_phaseChain
 theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff
     (L : DovetailLayout) :
     exists steps : Nat,
-      CheckedDovetailLayoutScannerDescription.runConfig steps
-          { state := CheckedDovetailLayoutScannerDescription.start
+      CDL.runConfig steps
+          { state := CDL.start
             tape := tapeAtCells [] ((dovetailLayoutFieldBits L []).map some) } =
-        { state := CheckedDovetailLayoutScannerDescription.halt
+        { state := CDL.halt
           tape :=
             restoredCheckedHandoffTapeFromTail
               (markedDovetailLayoutBodyRestoredBitsRev L).reverse } :=

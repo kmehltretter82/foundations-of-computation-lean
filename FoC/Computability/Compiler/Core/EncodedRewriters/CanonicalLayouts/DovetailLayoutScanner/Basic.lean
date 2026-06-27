@@ -82,39 +82,41 @@ def CellListSuffixScannerDescription : MachineDescription where
     ]
       ++ scanLeftToSentinelRestart 140 141 142
 
+private abbrev CLSS := CellListSuffixScannerDescription
+
 theorem cellListSuffixScannerDescription_wellFormed :
-    CellListSuffixScannerDescription.WellFormed := by
+    CLSS.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := CellListSuffixScannerDescription.transitions)
-      (stateCount := CellListSuffixScannerDescription.stateCount)
+      (l := CLSS.transitions)
+      (stateCount := CLSS.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := CellListSuffixScannerDescription.transitions)
+      (l := CLSS.transitions)
       (by native_decide)
 
 theorem cellListSuffixScannerDescription_haltTransitionFree :
-    CellListSuffixScannerDescription.HaltTransitionFree :=
+    CLSS.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := CellListSuffixScannerDescription.transitions)
-    (state := CellListSuffixScannerDescription.halt)
+    (l := CLSS.transitions)
+    (state := CLSS.halt)
     (by native_decide)
 
 theorem cellListSuffixScannerDescription_subroutineReady :
-    CellListSuffixScannerDescription.SubroutineReady :=
+    CLSS.SubroutineReady :=
   ⟨cellListSuffixScannerDescription_wellFormed,
     cellListSuffixScannerDescription_haltTransitionFree⟩
 
 theorem cellListSuffixScannerDescription_initial_eq_config
     (bits : Word Bool) :
-    CellListSuffixScannerDescription.initial bits =
+    CLSS.initial bits =
       config 100 [] (bits.map some) := by
   cases bits <;> rfl
 
 theorem cellListSuffix_lookup_150_false :
-    CellListSuffixScannerDescription.lookupTransition 150 (some false) =
+    CLSS.lookupTransition 150 (some false) =
       some (keepMove 150 (some false) Direction.left
-        CellListSuffixScannerDescription.halt) := by
+        CLSS.halt) := by
   native_decide
 
 def cellCodeBits (cell : Option Bool) : Word Bool :=
@@ -498,33 +500,35 @@ def CellSuffixScannerDescription : MachineDescription where
     , keepMove 20 (some true) Direction.left 99
     ]
 
+private abbrev CSS := CellSuffixScannerDescription
+
 theorem cellSuffixScannerDescription_wellFormed :
-    CellSuffixScannerDescription.WellFormed := by
+    CSS.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := CellSuffixScannerDescription.transitions)
-      (stateCount := CellSuffixScannerDescription.stateCount)
+      (l := CSS.transitions)
+      (stateCount := CSS.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := CellSuffixScannerDescription.transitions)
+      (l := CSS.transitions)
       (by native_decide)
 
 theorem cellSuffixScannerDescription_haltTransitionFree :
-    CellSuffixScannerDescription.HaltTransitionFree :=
+    CSS.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := CellSuffixScannerDescription.transitions)
-    (state := CellSuffixScannerDescription.halt)
+    (l := CSS.transitions)
+    (state := CSS.halt)
     (by native_decide)
 
 theorem cellSuffixScannerDescription_subroutineReady :
-    CellSuffixScannerDescription.SubroutineReady :=
+    CSS.SubroutineReady :=
   ⟨cellSuffixScannerDescription_wellFormed,
     cellSuffixScannerDescription_haltTransitionFree⟩
 
 def cellSuffixHandoffConfigWithBase
     (cell : Option Bool) (baseLeft : List (Option Bool))
     (suffixBits : Word Bool) : Configuration :=
-  { state := CellSuffixScannerDescription.halt
+  { state := CSS.halt
     tape :=
       Tape.move Direction.left
         (tapeAtCells
@@ -540,7 +544,7 @@ theorem run_cellSuffix_raw_to_handoff_withBase
     (cell : Option Bool) (baseLeft : List (Option Bool))
     (b : Bool) (suffixTail : Word Bool) :
     exists steps : Nat,
-      CellSuffixScannerDescription.runConfig steps
+      CSS.runConfig steps
           (config 10 baseLeft
             (List.append ((cellCodeBits cell).map some)
               (some b :: suffixTail.map some))) =
@@ -577,7 +581,7 @@ theorem run_boolSuffix_raw_to_handoff_withBase
     (cellBit : Bool) (baseLeft : List (Option Bool))
     (b : Bool) (suffixTail : Word Bool) :
     exists steps : Nat,
-      CellSuffixScannerDescription.runConfig steps
+      CSS.runConfig steps
           (config 10 baseLeft
             (List.append ((cellCodeBits (some cellBit)).map some)
               (some b :: suffixTail.map some))) =
@@ -602,7 +606,7 @@ theorem cellSuffixHandoffConfigWithBase_move_right
       simpa [cellCodeBits, encodeCell,
         encodeCodeWordAsInput,
         encodeCodeSymbolAsInput, List.append_assoc] using
-        FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+        DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
           (some false)
           (some false :: some true :: some false :: baseLeft)
           (some b) (suffixTail.map some)
@@ -612,7 +616,7 @@ theorem cellSuffixHandoffConfigWithBase_move_right
           encodeCodeWordAsInput,
           encodeCodeSymbolAsInput, List.append_assoc]
           using
-            FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+            DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
               (some true)
               (some false :: some true :: some false :: baseLeft)
               (some b) (suffixTail.map some)
@@ -620,7 +624,7 @@ theorem cellSuffixHandoffConfigWithBase_move_right
           encodeCodeWordAsInput,
           encodeCodeSymbolAsInput, List.append_assoc]
           using
-            FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+            DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
               (some false)
               (some true :: some true :: some false :: baseLeft)
               (some b) (suffixTail.map some)
@@ -663,33 +667,35 @@ def BoolSuffixScannerDescription : MachineDescription where
     , keepMove 20 (some true) Direction.left 99
     ]
 
+private abbrev BSS := BoolSuffixScannerDescription
+
 theorem boolSuffixScannerDescription_wellFormed :
-    BoolSuffixScannerDescription.WellFormed := by
+    BSS.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := BoolSuffixScannerDescription.transitions)
-      (stateCount := BoolSuffixScannerDescription.stateCount)
+      (l := BSS.transitions)
+      (stateCount := BSS.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := BoolSuffixScannerDescription.transitions)
+      (l := BSS.transitions)
       (by native_decide)
 
 theorem boolSuffixScannerDescription_haltTransitionFree :
-    BoolSuffixScannerDescription.HaltTransitionFree :=
+    BSS.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := BoolSuffixScannerDescription.transitions)
-    (state := BoolSuffixScannerDescription.halt)
+    (l := BSS.transitions)
+    (state := BSS.halt)
     (by native_decide)
 
 theorem boolSuffixScannerDescription_subroutineReady :
-    BoolSuffixScannerDescription.SubroutineReady :=
+    BSS.SubroutineReady :=
   ⟨boolSuffixScannerDescription_wellFormed,
     boolSuffixScannerDescription_haltTransitionFree⟩
 
 def boolOnlySuffixHandoffConfigWithBase
     (flag : Bool) (baseLeft : List (Option Bool))
     (suffixBits : Word Bool) : Configuration :=
-  { state := BoolSuffixScannerDescription.halt
+  { state := BSS.halt
     tape :=
       Tape.move Direction.left
         (tapeAtCells
@@ -701,7 +707,7 @@ theorem run_boolOnlySuffix_raw_to_handoff_withBase
     (flag : Bool) (baseLeft : List (Option Bool))
     (b : Bool) (suffixTail : Word Bool) :
     exists steps : Nat,
-      BoolSuffixScannerDescription.runConfig steps
+      BSS.runConfig steps
           (config 10 baseLeft
             (List.append ((cellCodeBits (some flag)).map some)
               (some b :: suffixTail.map some))) =
@@ -735,14 +741,14 @@ theorem boolOnlySuffixHandoffConfigWithBase_move_right
   · simpa [cellCodeBits, encodeCell,
       encodeCodeWordAsInput,
       encodeCodeSymbolAsInput, List.append_assoc] using
-      FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+      DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
         (some true)
         (some false :: some true :: some false :: baseLeft)
         (some b) (suffixTail.map some)
   · simpa [cellCodeBits, encodeCell,
       encodeCodeWordAsInput,
       encodeCodeSymbolAsInput, List.append_assoc] using
-      FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+      DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
         (some false)
         (some true :: some true :: some false :: baseLeft)
         (some b) (suffixTail.map some)
@@ -761,33 +767,35 @@ def BoolFinalScannerDescription : MachineDescription where
     , keepMove 20 none Direction.left 99
     ]
 
+private abbrev BFS := BoolFinalScannerDescription
+
 theorem boolFinalScannerDescription_wellFormed :
-    BoolFinalScannerDescription.WellFormed := by
+    BFS.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := BoolFinalScannerDescription.transitions)
-      (stateCount := BoolFinalScannerDescription.stateCount)
+      (l := BFS.transitions)
+      (stateCount := BFS.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := BoolFinalScannerDescription.transitions)
+      (l := BFS.transitions)
       (by native_decide)
 
 theorem boolFinalScannerDescription_haltTransitionFree :
-    BoolFinalScannerDescription.HaltTransitionFree :=
+    BFS.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := BoolFinalScannerDescription.transitions)
-    (state := BoolFinalScannerDescription.halt)
+    (l := BFS.transitions)
+    (state := BFS.halt)
     (by native_decide)
 
 theorem boolFinalScannerDescription_subroutineReady :
-    BoolFinalScannerDescription.SubroutineReady :=
+    BFS.SubroutineReady :=
   ⟨boolFinalScannerDescription_wellFormed,
     boolFinalScannerDescription_haltTransitionFree⟩
 
 def boolFinalHandoffConfigWithBase
     (flag : Bool) (baseLeft : List (Option Bool)) :
     Configuration :=
-  { state := BoolFinalScannerDescription.halt
+  { state := BFS.halt
     tape :=
       Tape.move Direction.left
         (tapeAtCells
@@ -798,7 +806,7 @@ def boolFinalHandoffConfigWithBase
 theorem run_boolFinal_raw_to_handoff_withBase
     (flag : Bool) (baseLeft : List (Option Bool)) :
     exists steps : Nat,
-      BoolFinalScannerDescription.runConfig steps
+      BFS.runConfig steps
           (config 10 baseLeft
             ((cellCodeBits (some flag)).map some)) =
         boolFinalHandoffConfigWithBase flag baseLeft := by
@@ -852,33 +860,35 @@ def TransitionPrefixScannerDescription : MachineDescription where
     , keepMove 40 (some true) Direction.left 99
     ]
 
+private abbrev TPS := TransitionPrefixScannerDescription
+
 theorem transitionPrefixScannerDescription_wellFormed :
-    TransitionPrefixScannerDescription.WellFormed := by
+    TPS.WellFormed := by
   refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
-      (l := TransitionPrefixScannerDescription.transitions)
-      (stateCount := TransitionPrefixScannerDescription.stateCount)
+      (l := TPS.transitions)
+      (stateCount := TPS.stateCount)
       (by native_decide)
   · exact transition_deterministic_of_all
-      (l := TransitionPrefixScannerDescription.transitions)
+      (l := TPS.transitions)
       (by native_decide)
 
 theorem transitionPrefixScannerDescription_haltTransitionFree :
-    TransitionPrefixScannerDescription.HaltTransitionFree :=
+    TPS.HaltTransitionFree :=
   transition_notFrom_of_all
-    (l := TransitionPrefixScannerDescription.transitions)
-    (state := TransitionPrefixScannerDescription.halt)
+    (l := TPS.transitions)
+    (state := TPS.halt)
     (by native_decide)
 
 theorem transitionPrefixScannerDescription_subroutineReady :
-    TransitionPrefixScannerDescription.SubroutineReady :=
+    TPS.SubroutineReady :=
   ⟨transitionPrefixScannerDescription_wellFormed,
     transitionPrefixScannerDescription_haltTransitionFree⟩
 
 def transitionPrefixHandoffConfigWithBase
     (baseLeft : List (Option Bool)) (suffixBits : Word Bool) :
     Configuration :=
-  { state := TransitionPrefixScannerDescription.halt
+  { state := TPS.halt
     tape :=
       Tape.move Direction.left
         (tapeAtCells
@@ -890,7 +900,7 @@ theorem run_transitionPrefix_raw_to_handoff_withBase
     (baseLeft : List (Option Bool)) (b : Bool)
     (suffixTail : Word Bool) :
     exists steps : Nat,
-      TransitionPrefixScannerDescription.runConfig steps
+      TPS.runConfig steps
           (config 30 baseLeft
             (List.append (transitionPrefixBits.map some)
               (some b :: suffixTail.map some))) =
@@ -920,14 +930,14 @@ theorem transitionPrefixHandoffConfigWithBase_move_right
   unfold transitionPrefixHandoffConfigWithBase transitionPrefixBits
   simpa [encodeCodeSymbolAsInput, List.append_assoc]
     using
-      FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+      DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
         (some true)
         (some false :: some false :: some false :: baseLeft)
         (some b) (suffixTail.map some)
 
 theorem run_cellList_state130_currentCell
     (cell : Option Bool) (left right : List (Option Bool)) :
-    CellListSuffixScannerDescription.runConfig 6
+    CLSS.runConfig 6
         (config 130 left
           (List.append ((cellCodeBits cell).map some) right)) =
       config 140 (some true :: some true :: left)
@@ -962,7 +972,7 @@ theorem run_cellList_state130_currentCell
 
 theorem run_cellList_state100_tick
     (left tail : List (Option Bool)) :
-    CellListSuffixScannerDescription.runConfig 4
+    CLSS.runConfig 4
         (config 100 left
           (List.append (tickBits.map some) tail)) =
       config 120 (List.append markedTickRev left) tail := by
@@ -978,7 +988,7 @@ theorem run_cellList_state100_tick
 
 theorem run_cellList_state100_done
     (left tail : List (Option Bool)) :
-    CellListSuffixScannerDescription.runConfig 4
+    CLSS.runConfig 4
         (config 100 left
           (List.append (doneBits.map some) tail)) =
       config 150
@@ -995,7 +1005,7 @@ theorem run_cellList_state100_done
 
 theorem run_cellList_state120_tick
     (left right : List (Option Bool)) :
-    CellListSuffixScannerDescription.runConfig 4
+    CLSS.runConfig 4
         (config 120 left
           (List.append (tickBits.map some) right)) =
       config 120
@@ -1012,7 +1022,7 @@ theorem run_cellList_state120_tick
 
 theorem run_cellList_state120_done
     (left right : List (Option Bool)) :
-    CellListSuffixScannerDescription.runConfig 4
+    CLSS.runConfig 4
         (config 120 left
           (List.append (doneBits.map some) right)) =
       config 130
@@ -1029,7 +1039,7 @@ theorem run_cellList_state120_done
 
 theorem run_cellList_state120_stageNat
     (n : Nat) (left right : List (Option Bool)) :
-    CellListSuffixScannerDescription.runConfig (4 * n + 4)
+    CLSS.runConfig (4 * n + 4)
         (config 120 left
           (List.append ((stageNatBits n).map some) right)) =
       config 130
@@ -1057,7 +1067,7 @@ theorem run_cellList_state120_stageNat
 
 theorem run_cellList_state130_markedCell
     (cell : Option Bool) (left right : List (Option Bool)) :
-    CellListSuffixScannerDescription.runConfig 4
+    CLSS.runConfig 4
         (config 130 left
           (List.append ((markedCellCodeBits cell).map some) right)) =
       config 130
@@ -1086,7 +1096,7 @@ theorem run_cellList_state130_markedCell
 theorem run_cellList_state130_markedCells
     (processed : List (Option Bool))
     (left right : List (Option Bool)) :
-    CellListSuffixScannerDescription.runConfig
+    CLSS.runConfig
         (4 * processed.length)
         (config 130 left
           (List.append ((markedCellsCodeBits processed).map some)
@@ -1117,7 +1127,7 @@ theorem run_cellList_state130_markedCells
 theorem run_cellList_state140_returnToLengthMarker
     (scanRev : Word Bool) (headBit : Bool)
     (leftTail right : List (Option Bool)) :
-    CellListSuffixScannerDescription.runConfig
+    CLSS.runConfig
         (scanRev.length + 4)
         (config 140
           (List.append (scanRev.map some)
@@ -1143,8 +1153,8 @@ theorem run_cellList_state140_returnToLengthMarker
         omega]
       rw [runConfig_add]
       change
-        CellListSuffixScannerDescription.runConfig (rest.length + 4)
-          (CellListSuffixScannerDescription.runConfig 1
+        CLSS.runConfig (rest.length + 4)
+          (CLSS.runConfig 1
             (config 140
               (some b :: List.append (List.map some rest)
                 (none :: some true :: leftTail))
@@ -1153,7 +1163,7 @@ theorem run_cellList_state140_returnToLengthMarker
             (List.append (List.map some (b :: rest).reverse)
               (some headBit :: right))
       rw [show
-          CellListSuffixScannerDescription.runConfig 1
+          CLSS.runConfig 1
             (config 140
               (some b :: List.append (List.map some rest)
                 (none :: some true :: leftTail))
@@ -1175,7 +1185,7 @@ theorem run_cellList_state140_returnToLengthMarker
 
 theorem run_cellList_state150_markedCell
     (cell : Option Bool) (left right : List (Option Bool)) :
-    CellListSuffixScannerDescription.runConfig 4
+    CLSS.runConfig 4
         (config 150 left
           (List.append ((markedCellCodeBits cell).map some) right)) =
       config 150
@@ -1208,7 +1218,7 @@ theorem run_cellList_state150_markedCell
 theorem run_cellList_state150_markedCells
     (cells : List (Option Bool))
     (left right : List (Option Bool)) :
-    CellListSuffixScannerDescription.runConfig
+    CLSS.runConfig
         (4 * cells.length)
         (config 150 left
           (List.append ((markedCellsCodeBits cells).map some)
@@ -1257,7 +1267,7 @@ def cellListRestoredLeft
 def cellListHandoffConfig
     (cells : List (Option Bool)) (suffixBits : Word Bool) :
     Configuration :=
-  { state := CellListSuffixScannerDescription.halt
+  { state := CLSS.halt
     tape :=
       Tape.move Direction.left
         (tapeAtCells (cellListRestoredLeft cells)
@@ -1335,7 +1345,7 @@ def cellListCanonicalRestoredLeft
 def cellListCanonicalHandoffConfig
     (cells : List (Option Bool)) (suffixBits : Word Bool) :
     Configuration :=
-  { state := CellListSuffixScannerDescription.halt
+  { state := CLSS.halt
     tape :=
       Tape.move Direction.left
         (tapeAtCells (cellListCanonicalRestoredLeft cells)
@@ -1390,7 +1400,7 @@ def cellListCanonicalRestoredLeftWithBase
 def cellListCanonicalHandoffConfigWithBase
     (cells baseLeft : List (Option Bool)) (suffixBits : Word Bool) :
     Configuration :=
-  { state := CellListSuffixScannerDescription.halt
+  { state := CLSS.halt
     tape :=
       Tape.move Direction.left
         (tapeAtCells
@@ -1412,7 +1422,7 @@ theorem run_cellList_raw_mark_current_to_state100
     (processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixBits : Word Bool) :
     exists steps : Nat,
-      CellListSuffixScannerDescription.runConfig steps
+      CLSS.runConfig steps
           (cellListRawMarkingState120 processed cell rest suffixBits) =
         cellListRawState100AfterMarked processed cell rest suffixBits := by
   let scanRev := cellListMarkingReturnScanRev processed rest
@@ -1470,7 +1480,7 @@ theorem run_cellList_raw_mark_current_to_state100_withBase
     (baseLeft processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixBits : Word Bool) :
     exists steps : Nat,
-      CellListSuffixScannerDescription.runConfig steps
+      CLSS.runConfig steps
           (cellListRawMarkingState120WithBase baseLeft processed cell rest
             suffixBits) =
         cellListRawState100AfterMarkedWithBase baseLeft processed cell rest
@@ -1535,7 +1545,7 @@ theorem run_cellList_raw_mark_current_to_state100_withBase
 theorem run_cellList_raw_marking_loop_from_state100
     (processed cells : List (Option Bool)) (suffixBits : Word Bool) :
     exists steps : Nat,
-      CellListSuffixScannerDescription.runConfig steps
+      CLSS.runConfig steps
           (config 100
             (cellListCanonicalLengthPrefixRev processed.length)
             (List.append ((stageNatBits cells.length).map some)
@@ -1552,7 +1562,7 @@ theorem run_cellList_raw_marking_loop_from_state100
         simp [stageNatBits_zero, doneBits,
           encodeCodeSymbolAsInput]]
       change
-        CellListSuffixScannerDescription.runConfig 4
+        CLSS.runConfig 4
             (config 100
               (cellListCanonicalLengthPrefixRev processed.length)
               (List.append (doneBits.map some)
@@ -1595,8 +1605,8 @@ theorem run_cellList_raw_marking_loop_from_state100
                       (suffixBits.map some))))) by
         simp [cellsCodeBits, List.map_append, List.append_assoc]]
       change
-        CellListSuffixScannerDescription.runConfig (markSteps + recSteps)
-            (CellListSuffixScannerDescription.runConfig 4
+        CLSS.runConfig (markSteps + recSteps)
+            (CLSS.runConfig 4
               (config 100
                 (cellListCanonicalLengthPrefixRev processed.length)
                 (List.append (tickBits.map some)
@@ -1611,8 +1621,8 @@ theorem run_cellList_raw_marking_loop_from_state100
       rw [run_cellList_state100_tick]
       rw [runConfig_add]
       change
-        CellListSuffixScannerDescription.runConfig recSteps
-            (CellListSuffixScannerDescription.runConfig markSteps
+        CLSS.runConfig recSteps
+            (CLSS.runConfig markSteps
               (cellListRawMarkingState120 processed cell rest
                 suffixBits)) =
           cellListCanonicalFinishStartConfig
@@ -1627,7 +1637,7 @@ theorem run_cellList_raw_marking_loop_from_state100_withBase
     (baseLeft processed cells : List (Option Bool))
     (suffixBits : Word Bool) :
     exists steps : Nat,
-      CellListSuffixScannerDescription.runConfig steps
+      CLSS.runConfig steps
           (config 100
             (List.append
               (cellListCanonicalLengthPrefixRev processed.length)
@@ -1646,7 +1656,7 @@ theorem run_cellList_raw_marking_loop_from_state100_withBase
         simp [stageNatBits_zero, doneBits,
           encodeCodeSymbolAsInput]]
       change
-        CellListSuffixScannerDescription.runConfig 4
+        CLSS.runConfig 4
             (config 100
               (List.append
                 (cellListCanonicalLengthPrefixRev processed.length)
@@ -1691,8 +1701,8 @@ theorem run_cellList_raw_marking_loop_from_state100_withBase
                       (suffixBits.map some))))) by
         simp [cellsCodeBits, List.map_append, List.append_assoc]]
       change
-        CellListSuffixScannerDescription.runConfig (markSteps + recSteps)
-            (CellListSuffixScannerDescription.runConfig 4
+        CLSS.runConfig (markSteps + recSteps)
+            (CLSS.runConfig 4
               (config 100
                 (List.append
                   (cellListCanonicalLengthPrefixRev processed.length)
@@ -1709,8 +1719,8 @@ theorem run_cellList_raw_marking_loop_from_state100_withBase
       rw [run_cellList_state100_tick]
       rw [runConfig_add]
       change
-        CellListSuffixScannerDescription.runConfig recSteps
-            (CellListSuffixScannerDescription.runConfig markSteps
+        CLSS.runConfig recSteps
+            (CLSS.runConfig markSteps
               (cellListRawMarkingState120WithBase baseLeft processed cell
                 rest suffixBits)) =
           cellListCanonicalFinishStartConfigWithBase
@@ -1725,7 +1735,7 @@ theorem run_cellList_mark_current_to_state100
     (processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixBits : Word Bool) :
     exists steps : Nat,
-      CellListSuffixScannerDescription.runConfig steps
+      CLSS.runConfig steps
           (cellListMarkingState120 processed cell rest suffixBits) =
         cellListState100AfterMarked processed cell rest suffixBits := by
   let scanRev := cellListMarkingReturnScanRev processed rest
@@ -1781,7 +1791,7 @@ theorem run_cellList_marking_loop_from_state120
     (processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixBits : Word Bool) :
     exists steps : Nat,
-      CellListSuffixScannerDescription.runConfig steps
+      CLSS.runConfig steps
           (cellListMarkingState120 processed cell rest suffixBits) =
         cellListFinishStartConfig
           (List.append processed (cell :: rest)) suffixBits := by
@@ -1795,7 +1805,7 @@ theorem run_cellList_marking_loop_from_state120
       rw [hmark]
       unfold cellListState100AfterMarked
       change
-        CellListSuffixScannerDescription.runConfig 4
+        CLSS.runConfig 4
             (config 100 (finishLengthPrefixRev processed.length)
               (List.append (doneBits.map some)
                 (List.append ((markedCellsCodeBits processed).map some)
@@ -1833,8 +1843,8 @@ theorem run_cellList_marking_loop_from_state120
         simp [stageNatBits_succ, tickBits,
           encodeCodeSymbolAsInput]]
       change
-        CellListSuffixScannerDescription.runConfig recSteps
-            (CellListSuffixScannerDescription.runConfig 4
+        CLSS.runConfig recSteps
+            (CLSS.runConfig 4
               (config 100 (finishLengthPrefixRev processed.length)
                 (List.append (tickBits.map some)
                   (List.append ((stageNatBits rest.length).map some)
@@ -1855,9 +1865,9 @@ theorem run_cellList_marking_loop_from_state120
 
 theorem run_cellList_state150_handoff_false
     (cell : Option Bool) (left right : List (Option Bool)) :
-    CellListSuffixScannerDescription.runConfig 1
+    CLSS.runConfig 1
         (config 150 (cell :: left) (some false :: right)) =
-      config CellListSuffixScannerDescription.halt left
+      config CLSS.halt left
         (cell :: some false :: right) := by
   cases cell <;> cases right <;>
     simp [config, tapeAtCells, keepMove,
@@ -1869,7 +1879,7 @@ theorem run_cellList_state150_handoff_false
 theorem run_cellList_finish_to_handoff
     (cells : List (Option Bool)) (suffixTail : Word Bool) :
     exists steps : Nat,
-      CellListSuffixScannerDescription.runConfig steps
+      CLSS.runConfig steps
           (cellListFinishStartConfig cells (false :: suffixTail)) =
         cellListHandoffConfig cells (false :: suffixTail) := by
   refine ⟨4 * cells.length + 1, ?_⟩
@@ -1877,7 +1887,7 @@ theorem run_cellList_finish_to_handoff
   unfold cellListFinishStartConfig
   rw [run_cellList_state150_markedCells]
   change
-    CellListSuffixScannerDescription.runConfig 1
+    CLSS.runConfig 1
       (config 150 (cellListRestoredLeft cells)
         (some false :: suffixTail.map some)) =
       cellListHandoffConfig cells (false :: suffixTail)
@@ -1897,7 +1907,7 @@ theorem run_cellList_finish_to_handoff
 theorem run_cellList_canonical_finish_to_handoff
     (cells : List (Option Bool)) (suffixTail : Word Bool) :
     exists steps : Nat,
-      CellListSuffixScannerDescription.runConfig steps
+      CLSS.runConfig steps
           (cellListCanonicalFinishStartConfig cells
             (false :: suffixTail)) =
         cellListCanonicalHandoffConfig cells (false :: suffixTail) := by
@@ -1906,7 +1916,7 @@ theorem run_cellList_canonical_finish_to_handoff
   unfold cellListCanonicalFinishStartConfig
   rw [run_cellList_state150_markedCells]
   change
-    CellListSuffixScannerDescription.runConfig 1
+    CLSS.runConfig 1
       (config 150 (cellListCanonicalRestoredLeft cells)
         (some false :: suffixTail.map some)) =
       cellListCanonicalHandoffConfig cells (false :: suffixTail)
@@ -1926,7 +1936,7 @@ theorem run_cellList_canonical_finish_to_handoff
 theorem run_cellList_canonical_finish_to_handoff_withBase
     (cells baseLeft : List (Option Bool)) (suffixTail : Word Bool) :
     exists steps : Nat,
-      CellListSuffixScannerDescription.runConfig steps
+      CLSS.runConfig steps
           (cellListCanonicalFinishStartConfigWithBase cells baseLeft
             (false :: suffixTail)) =
         cellListCanonicalHandoffConfigWithBase cells baseLeft
@@ -1936,7 +1946,7 @@ theorem run_cellList_canonical_finish_to_handoff_withBase
   unfold cellListCanonicalFinishStartConfigWithBase
   rw [run_cellList_state150_markedCells]
   change
-    CellListSuffixScannerDescription.runConfig 1
+    CLSS.runConfig 1
       (config 150
         (cellListCanonicalRestoredLeftWithBase cells baseLeft)
         (some false :: suffixTail.map some)) =
@@ -1958,8 +1968,8 @@ theorem run_cellList_canonical_finish_to_handoff_withBase
 theorem run_cellList_raw_to_canonical_handoff
     (cells : List (Option Bool)) (suffixTail : Word Bool) :
     exists steps : Nat,
-      CellListSuffixScannerDescription.runConfig steps
-          (CellListSuffixScannerDescription.initial
+      CLSS.runConfig steps
+          (CLSS.initial
             (List.append (stageNatBits cells.length)
               (List.append (cellsCodeBits cells)
                 (false :: suffixTail)))) =
@@ -1968,7 +1978,7 @@ theorem run_cellList_raw_to_canonical_handoff
       ([] : List (Option Bool)) cells (false :: suffixTail) with
     ⟨markSteps, hmark⟩
   have hmark' :
-      CellListSuffixScannerDescription.runConfig markSteps
+      CLSS.runConfig markSteps
           (config 100 []
             (List.append ((stageNatBits cells.length).map some)
               (List.append ((cellsCodeBits cells).map some)
@@ -1995,7 +2005,7 @@ theorem run_cellList_raw_to_canonical_handoff
 theorem run_cellList_raw_to_canonical_handoff_withBase
     (cells baseLeft : List (Option Bool)) (suffixTail : Word Bool) :
     exists steps : Nat,
-      CellListSuffixScannerDescription.runConfig steps
+      CLSS.runConfig steps
           (config 100 baseLeft
             (List.append ((stageNatBits cells.length).map some)
               (List.append ((cellsCodeBits cells).map some)
@@ -2007,7 +2017,7 @@ theorem run_cellList_raw_to_canonical_handoff_withBase
       (false :: suffixTail) with
     ⟨markSteps, hmark⟩
   have hmark' :
-      CellListSuffixScannerDescription.runConfig markSteps
+      CLSS.runConfig markSteps
           (config 100 baseLeft
             (List.append ((stageNatBits cells.length).map some)
               (List.append ((cellsCodeBits cells).map some)
@@ -2063,14 +2073,14 @@ theorem cellListCanonicalHandoffConfigWithBase_move_right
         hleft
   | cons cell left =>
       simpa [hleft] using
-        FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+        DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
           cell left (some b) (suffixTail.map some)
 
 theorem run_boolWord_raw_to_canonical_handoff_withBase
     (w : Word Bool) (baseLeft : List (Option Bool))
     (suffixTail : Word Bool) :
     exists steps : Nat,
-      CellListSuffixScannerDescription.runConfig steps
+      CLSS.runConfig steps
           (config 100 baseLeft
             (List.append ((stageNatBits w.length).map some)
               (List.append ((cellsCodeBits (w.map some)).map some)
@@ -2085,7 +2095,7 @@ theorem run_cellList_marking_loop_to_handoff
     (processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixTail : Word Bool) :
     exists steps : Nat,
-      CellListSuffixScannerDescription.runConfig steps
+      CLSS.runConfig steps
           (cellListMarkingState120 processed cell rest
             (false :: suffixTail)) =
         cellListHandoffConfig (List.append processed (cell :: rest))

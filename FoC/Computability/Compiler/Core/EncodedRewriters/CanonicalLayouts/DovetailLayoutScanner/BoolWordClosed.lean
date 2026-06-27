@@ -24,32 +24,36 @@ namespace DovetailLayoutScanner
 open FoC.Computability.DovetailInitialLayoutInitializer
 open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
 
+private abbrev BWSS := BoolWordSuffixScannerDescription
+private theorem BWSS_htf : BWSS.HaltTransitionFree :=
+  boolWordSuffixScannerDescription_haltTransitionFree
+
 theorem boolWordSuffixScannerDescription_ne_halt_of_reaches_ne_halt_region
     {c mid : Configuration} {k n : Nat}
     (hrun :
-      BoolWordSuffixScannerDescription.runConfig k c = mid)
+      BWSS.runConfig k c = mid)
     (hmid :
       forall m : Nat,
-        (BoolWordSuffixScannerDescription.runConfig m mid).state ≠
-          BoolWordSuffixScannerDescription.halt) :
-    (BoolWordSuffixScannerDescription.runConfig n c).state ≠
-      BoolWordSuffixScannerDescription.halt :=
+        (BWSS.runConfig m mid).state ≠
+          BWSS.halt) :
+    (BWSS.runConfig n c).state ≠
+      BWSS.halt :=
   CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_ne_halt_region
-    boolWordSuffixScannerDescription_haltTransitionFree hrun hmid
+    BWSS_htf hrun hmid
 
 theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : decodeNat tokens = none) (n : Nat) :
-    (BoolWordSuffixScannerDescription.runConfig n
+    (BWSS.runConfig n
       (config 120 leftRev
         ((encodeCodeWordAsInput tokens).map some))).state ≠
-      BoolWordSuffixScannerDescription.halt := by
+      BWSS.halt := by
   induction tokens generalizing leftRev n with
   | nil =>
       exact
         primitive_runConfig_state_ne_halt_of_reaches_stuck
-          boolWordSuffixScannerDescription_haltTransitionFree
-          (D := BoolWordSuffixScannerDescription)
+          BWSS_htf
+          (D := BWSS)
           (c :=
             config 120 leftRev
               ((encodeCodeWordAsInput
@@ -69,14 +73,14 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
       | header =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              boolWordSuffixScannerDescription_haltTransitionFree
-              (D := BoolWordSuffixScannerDescription)
+              BWSS_htf
+              (D := BWSS)
               (c :=
                 config 120 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.header :: rest)).map some))
               (stuck :=
-                BoolWordSuffixScannerDescription.runConfig 2
+                BWSS.runConfig 2
                   (config 120 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.header :: rest)).map some)))
@@ -101,14 +105,14 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
       | transition =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              boolWordSuffixScannerDescription_haltTransitionFree
-              (D := BoolWordSuffixScannerDescription)
+              BWSS_htf
+              (D := BWSS)
               (c :=
                 config 120 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.transition :: rest)).map some))
               (stuck :=
-                BoolWordSuffixScannerDescription.runConfig 2
+                BWSS.runConfig 2
                   (config 120 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.transition :: rest)).map some)))
@@ -158,14 +162,14 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
       | blank =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              boolWordSuffixScannerDescription_haltTransitionFree
-              (D := BoolWordSuffixScannerDescription)
+              BWSS_htf
+              (D := BWSS)
               (c :=
                 config 120 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.blank :: rest)).map some))
               (stuck :=
-                BoolWordSuffixScannerDescription.runConfig 1
+                BWSS.runConfig 1
                   (config 120 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.blank :: rest)).map some)))
@@ -190,14 +194,14 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
       | zero =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              boolWordSuffixScannerDescription_haltTransitionFree
-              (D := BoolWordSuffixScannerDescription)
+              BWSS_htf
+              (D := BWSS)
               (c :=
                 config 120 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.zero :: rest)).map some))
               (stuck :=
-                BoolWordSuffixScannerDescription.runConfig 1
+                BWSS.runConfig 1
                   (config 120 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.zero :: rest)).map some)))
@@ -222,14 +226,14 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
       | one =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              boolWordSuffixScannerDescription_haltTransitionFree
-              (D := BoolWordSuffixScannerDescription)
+              BWSS_htf
+              (D := BWSS)
               (c :=
                 config 120 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.one :: rest)).map some))
               (stuck :=
-                BoolWordSuffixScannerDescription.runConfig 1
+                BWSS.runConfig 1
                   (config 120 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.one :: rest)).map some)))
@@ -254,14 +258,14 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
       | moveLeft =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              boolWordSuffixScannerDescription_haltTransitionFree
-              (D := BoolWordSuffixScannerDescription)
+              BWSS_htf
+              (D := BWSS)
               (c :=
                 config 120 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.moveLeft :: rest)).map some))
               (stuck :=
-                BoolWordSuffixScannerDescription.runConfig 1
+                BWSS.runConfig 1
                   (config 120 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.moveLeft :: rest)).map some)))
@@ -286,8 +290,8 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
       | moveRight =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              boolWordSuffixScannerDescription_haltTransitionFree
-              (D := BoolWordSuffixScannerDescription)
+              BWSS_htf
+              (D := BWSS)
               (c :=
                 config 120 leftRev
                   ((encodeCodeWordAsInput
@@ -317,16 +321,16 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
 theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : decodeCell tokens = none) (n : Nat) :
-    (BoolWordSuffixScannerDescription.runConfig n
+    (BWSS.runConfig n
       (config 130 leftRev
         ((encodeCodeWordAsInput tokens).map some))).state ≠
-      BoolWordSuffixScannerDescription.halt := by
+      BWSS.halt := by
   cases tokens with
   | nil =>
       exact
         primitive_runConfig_state_ne_halt_of_reaches_stuck
-          boolWordSuffixScannerDescription_haltTransitionFree
-          (D := BoolWordSuffixScannerDescription)
+          BWSS_htf
+          (D := BWSS)
           (c :=
             config 130 leftRev
               ((encodeCodeWordAsInput
@@ -346,14 +350,14 @@ theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
       | header =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              boolWordSuffixScannerDescription_haltTransitionFree
-              (D := BoolWordSuffixScannerDescription)
+              BWSS_htf
+              (D := BWSS)
               (c :=
                 config 130 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.header :: rest)).map some))
               (stuck :=
-                BoolWordSuffixScannerDescription.runConfig 1
+                BWSS.runConfig 1
                   (config 130 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.header :: rest)).map some)))
@@ -378,14 +382,14 @@ theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
       | transition =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              boolWordSuffixScannerDescription_haltTransitionFree
-              (D := BoolWordSuffixScannerDescription)
+              BWSS_htf
+              (D := BWSS)
               (c :=
                 config 130 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.transition :: rest)).map some))
               (stuck :=
-                BoolWordSuffixScannerDescription.runConfig 1
+                BWSS.runConfig 1
                   (config 130 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.transition :: rest)).map some)))
@@ -410,14 +414,14 @@ theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
       | tick =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              boolWordSuffixScannerDescription_haltTransitionFree
-              (D := BoolWordSuffixScannerDescription)
+              BWSS_htf
+              (D := BWSS)
               (c :=
                 config 130 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.tick :: rest)).map some))
               (stuck :=
-                BoolWordSuffixScannerDescription.runConfig 1
+                BWSS.runConfig 1
                   (config 130 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.tick :: rest)).map some)))
@@ -442,14 +446,14 @@ theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
       | done =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              boolWordSuffixScannerDescription_haltTransitionFree
-              (D := BoolWordSuffixScannerDescription)
+              BWSS_htf
+              (D := BWSS)
               (c :=
                 config 130 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.done :: rest)).map some))
               (stuck :=
-                BoolWordSuffixScannerDescription.runConfig 1
+                BWSS.runConfig 1
                   (config 130 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.done :: rest)).map some)))
@@ -480,14 +484,14 @@ theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
       | moveLeft =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              boolWordSuffixScannerDescription_haltTransitionFree
-              (D := BoolWordSuffixScannerDescription)
+              BWSS_htf
+              (D := BWSS)
               (c :=
                 config 130 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.moveLeft :: rest)).map some))
               (stuck :=
-                BoolWordSuffixScannerDescription.runConfig 5
+                BWSS.runConfig 5
                   (config 130 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.moveLeft :: rest)).map some)))
@@ -513,14 +517,14 @@ theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
       | moveRight =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
-              boolWordSuffixScannerDescription_haltTransitionFree
-              (D := BoolWordSuffixScannerDescription)
+              BWSS_htf
+              (D := BWSS)
               (c :=
                 config 130 leftRev
                   ((encodeCodeWordAsInput
                     (MachineCodeSymbol.moveRight :: rest)).map some))
               (stuck :=
-                BoolWordSuffixScannerDescription.runConfig 1
+                BWSS.runConfig 1
                   (config 130 leftRev
                     ((encodeCodeWordAsInput
                       (MachineCodeSymbol.moveRight :: rest)).map some)))
@@ -546,21 +550,21 @@ theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
 theorem boolWordSuffixScannerDescription_runConfig_state130_blank_cell_ne_halt
     (suffix : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (n : Nat) :
-    (BoolWordSuffixScannerDescription.runConfig n
+    (BWSS.runConfig n
       (config 130 leftRev
         ((encodeCodeWordAsInput
           (encodeCellAppend none suffix)).map some))).state ≠
-      BoolWordSuffixScannerDescription.halt := by
+      BWSS.halt := by
   exact
     primitive_runConfig_state_ne_halt_of_reaches_stuck
-      boolWordSuffixScannerDescription_haltTransitionFree
-      (D := BoolWordSuffixScannerDescription)
+      BWSS_htf
+      (D := BWSS)
       (c :=
         config 130 leftRev
           ((encodeCodeWordAsInput
             (encodeCellAppend none suffix)).map some))
       (stuck :=
-        BoolWordSuffixScannerDescription.runConfig 5
+        BWSS.runConfig 5
           (config 130 leftRev
             ((encodeCodeWordAsInput
               (encodeCellAppend none suffix)).map some)))
@@ -613,7 +617,7 @@ def boolWordMarkingTailReturnScanRev
 theorem boolWordMarkingTail_to_first_payload
     (baseLeft : List (Option Bool)) (marked : Word Bool)
     (remainingLengthTail : Nat) (tokens : Word MachineCodeSymbol) :
-    BoolWordSuffixScannerDescription.runConfig
+    BWSS.runConfig
         ((4 * remainingLengthTail + 4) + 4 * marked.length)
         (boolWordMarkingTailConfig baseLeft marked
           (remainingLengthTail + 1) tokens) =
@@ -625,7 +629,7 @@ theorem boolWordMarkingTail_to_first_payload
     boolWordMarkingTailPayloadLeftRev
   simp only [Nat.add_sub_cancel_right]
   change
-    BoolWordSuffixScannerDescription.runConfig
+    BWSS.runConfig
         ((4 * remainingLengthTail + 4) + 4 * marked.length)
         (config 120
           (List.append markedTickRev
@@ -653,7 +657,7 @@ theorem boolWordMarkingTail_mark_one
     (remainingLengthTail : Nat) (b : Bool)
     (restAfterCell : Word MachineCodeSymbol) :
     exists steps : Nat,
-      BoolWordSuffixScannerDescription.runConfig steps
+      BWSS.runConfig steps
           (boolWordMarkingTailConfig baseLeft marked
             (remainingLengthTail + 2)
             (encodeCellAppend (some b)
@@ -685,9 +689,9 @@ theorem boolWordMarkingTail_mark_one
       encodeCodeSymbolAsInput, cellCodeBits]
   rw [hcellBits]
   change
-    BoolWordSuffixScannerDescription.runConfig
+    BWSS.runConfig
         ((scanRev.length + 4) + 4)
-        (BoolWordSuffixScannerDescription.runConfig 6
+        (BWSS.runConfig 6
           (config 130
             (boolWordMarkingTailPayloadLeftRev baseLeft marked
               (remainingLengthTail + 1))
@@ -777,9 +781,9 @@ theorem boolWordMarkingTail_decodeCells_none_ne_halt
     (hdecode :
       decodeCells remainingCells tokens = none)
     (n : Nat) :
-    (BoolWordSuffixScannerDescription.runConfig n
+    (BWSS.runConfig n
       (boolWordMarkingTailConfig baseLeft marked remainingCells tokens)).state ≠
-      BoolWordSuffixScannerDescription.halt := by
+      BWSS.halt := by
   induction remainingCells generalizing marked tokens n with
   | zero =>
       simp [decodeCells] at hdecode
@@ -872,10 +876,10 @@ theorem boolWordMarkingTail_cellsToWord_none_ne_halt
     (cells : List (Option Bool)) (suffix : Word MachineCodeSymbol)
     (hword : cellsToWord? cells = none)
     (n : Nat) :
-    (BoolWordSuffixScannerDescription.runConfig n
+    (BWSS.runConfig n
       (boolWordMarkingTailConfig baseLeft marked cells.length
         (encodeCellsAppend cells suffix))).state ≠
-      BoolWordSuffixScannerDescription.halt := by
+      BWSS.halt := by
   induction cells generalizing marked suffix n with
   | nil =>
       simp [cellsToWord?] at hword
@@ -894,7 +898,7 @@ theorem boolWordMarkingTail_cellsToWord_none_ne_halt
                       (encodeCellsAppend rest
                         suffix))).map some))
           · change
-              BoolWordSuffixScannerDescription.runConfig
+              BWSS.runConfig
                   ((4 * rest.length + 4) + 4 * marked.length)
                   (boolWordMarkingTailConfig baseLeft marked
                     (rest.length + 1)
@@ -942,7 +946,7 @@ theorem boolWordMarkingTail_cellsToWord_none_ne_halt
                           (encodeCellsAppend
                             (nextCell :: restTail) suffix))
                   · change
-                      BoolWordSuffixScannerDescription.runConfig steps
+                      BWSS.runConfig steps
                         (boolWordMarkingTailConfig baseLeft marked
                           (restTail.length + 2)
                           (encodeCellAppend (some b)
@@ -966,10 +970,10 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_tick_decodeBoolWord_
       decodeBoolWord (MachineCodeSymbol.tick :: rest) =
         none)
     (n : Nat) :
-    (BoolWordSuffixScannerDescription.runConfig n
+    (BWSS.runConfig n
       (config 120 (List.append markedTickRev baseLeft)
         ((encodeCodeWordAsInput rest).map some))).state ≠
-      BoolWordSuffixScannerDescription.halt := by
+      BWSS.halt := by
   cases hnat : decodeNat rest with
   | none =>
       exact
@@ -984,13 +988,13 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_tick_decodeBoolWord_
         decodeNat_eq_some_encodeNatAppend hnat
       rw [hrest]
       change
-        (BoolWordSuffixScannerDescription.runConfig n
+        (BWSS.runConfig n
           (config 120 (List.append markedTickRev baseLeft)
             (List.map some
               (encodeCodeWordAsInput
                 (encodeNatAppend remainingTail
                   tokensAfterLen))))).state ≠
-          BoolWordSuffixScannerDescription.halt
+          BWSS.halt
       unfold encodeNatAppend
       rw [encodeCodeWordAsInput_append]
       have hbits :
@@ -1038,10 +1042,10 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_tick_code_inv
     (baseLeft : List (Option Bool)) (rest : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      BoolWordSuffixScannerDescription.runConfig n
+      BWSS.runConfig n
           (config 120 (List.append markedTickRev baseLeft)
             ((encodeCodeWordAsInput rest).map some)) =
-        { state := BoolWordSuffixScannerDescription.halt
+        { state := BWSS.halt
           tape := Tout }) :
     exists bits : Word Bool,
     exists suffix : Word MachineCodeSymbol,
@@ -1054,11 +1058,11 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_tick_code_inv
         boolWordSuffixScannerDescription_runConfig_state120_tick_decodeBoolWord_none_ne_halt
           baseLeft rest hdecode n
       have hstate :
-          (BoolWordSuffixScannerDescription.runConfig n
+          (BWSS.runConfig n
             (config 120 (List.append markedTickRev baseLeft)
               ((encodeCodeWordAsInput rest).map
                 some))).state =
-            BoolWordSuffixScannerDescription.halt := by
+            BWSS.halt := by
         simpa using congrArg Configuration.state h
       exact False.elim (hne hstate)
   | some parsed =>
@@ -1072,10 +1076,10 @@ theorem boolWordSuffixScannerDescription_runConfig_code_inv
     (baseLeft : List (Option Bool)) (code : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      BoolWordSuffixScannerDescription.runConfig n
-          (config BoolWordSuffixScannerDescription.start baseLeft
+      BWSS.runConfig n
+          (config BWSS.start baseLeft
             ((encodeCodeWordAsInput code).map some)) =
-        { state := BoolWordSuffixScannerDescription.halt
+        { state := BWSS.halt
           tape := Tout }) :
     exists bits : Word Bool,
     exists suffix : Word MachineCodeSymbol,
@@ -1094,28 +1098,28 @@ theorem boolWordSuffixScannerDescription_runConfig_code_inv
       · cases hprefix
       · cases hprefix
       · let c0 : Configuration :=
-          config BoolWordSuffixScannerDescription.start baseLeft
+          config BWSS.start baseLeft
             ((encodeCodeWordAsInput
               (MachineCodeSymbol.tick :: rest)).map some)
         let c1 : Configuration :=
           config 120 (List.append markedTickRev baseLeft)
             ((encodeCodeWordAsInput rest).map some)
         have hforward :
-            BoolWordSuffixScannerDescription.runConfig 4 c0 = c1 := by
+            BWSS.runConfig 4 c0 = c1 := by
           dsimp [c0, c1]
           simpa [encodeCodeWordAsInput,
             encodeCodeSymbolAsInput, tickBits] using
             run_boolWordSuffix_state100_tick baseLeft
               ((encodeCodeWordAsInput rest).map some)
         have hhalt :
-            BoolWordSuffixScannerDescription.runConfig n c0 =
-              { state := BoolWordSuffixScannerDescription.halt
+            BWSS.runConfig n c0 =
+              { state := BWSS.halt
                 tape := Tout } := by
           simpa [c0] using h
         rcases
-            runConfig_forward_inv BoolWordSuffixScannerDescription
+            runConfig_forward_inv BWSS
               c0 c1 n 4 hhalt hforward
-              boolWordSuffixScannerDescription_haltTransitionFree with
+              BWSS_htf with
           ⟨m, _hm_le, hm_halt⟩
         exact
           boolWordSuffixScannerDescription_runConfig_state120_tick_code_inv
@@ -1165,33 +1169,33 @@ theorem boolWordCanonicalHandoffConfigWithBase_move_right_all
       (bits.map some) baseLeft suffixBits
 
 theorem boolWordSuffix_lookup_150_none :
-    BoolWordSuffixScannerDescription.lookupTransition 150 none = none := by
+    BWSS.lookupTransition 150 none = none := by
   native_decide
 
 theorem boolWordSuffix_lookup_150_true :
-    BoolWordSuffixScannerDescription.lookupTransition 150 (some true) =
+    BWSS.lookupTransition 150 (some true) =
       some
         (writeMove 150 (some true) (some false) Direction.right 152) := by
   native_decide
 
 theorem boolWordSuffix_lookup_152_false :
-    BoolWordSuffixScannerDescription.lookupTransition 152 (some false) =
+    BWSS.lookupTransition 152 (some false) =
       none := by
   native_decide
 
 theorem boolWordSuffixScannerDescription_runConfig_finish_empty_suffix_ne_halt
     (bits : Word Bool) (baseLeft : List (Option Bool))
     (n : Nat) :
-    (BoolWordSuffixScannerDescription.runConfig n
+    (BWSS.runConfig n
       (cellListCanonicalFinishStartConfigWithBase
         (bits.map some) baseLeft ([] : Word Bool))).state ≠
-      BoolWordSuffixScannerDescription.halt := by
+      BWSS.halt := by
   let stuck : Configuration :=
     config 150
       (cellListCanonicalRestoredLeftWithBase (bits.map some) baseLeft)
       (([] : Word Bool).map some)
   have hreach :
-      BoolWordSuffixScannerDescription.runConfig (4 * bits.length)
+      BWSS.runConfig (4 * bits.length)
         (cellListCanonicalFinishStartConfigWithBase
           (bits.map some) baseLeft ([] : Word Bool)) =
         stuck := by
@@ -1203,16 +1207,16 @@ theorem boolWordSuffixScannerDescription_runConfig_finish_empty_suffix_ne_halt
         (cellListCanonicalFinishStartLeftWithBase
           (bits.map some) baseLeft)
         ((([] : Word Bool).map some))
-  have hstep : BoolWordSuffixScannerDescription.stepConfig stuck = none := by
+  have hstep : BWSS.stepConfig stuck = none := by
     simp [stuck, config, tapeAtCells,
       stepConfig, boolWordSuffix_lookup_150_none,
       Tape.read]
-  have hstuck : stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
+  have hstuck : stuck.state ≠ BWSS.halt := by
     simp [stuck, config, BoolWordSuffixScannerDescription]
   exact
     primitive_runConfig_state_ne_halt_of_reaches_stuck
-      boolWordSuffixScannerDescription_haltTransitionFree
-      (D := BoolWordSuffixScannerDescription)
+      BWSS_htf
+      (D := BWSS)
       (c :=
         cellListCanonicalFinishStartConfigWithBase
           (bits.map some) baseLeft ([] : Word Bool))
@@ -1222,14 +1226,14 @@ theorem boolWordSuffixScannerDescription_runConfig_finish_empty_suffix_ne_halt
 theorem boolWordSuffixScannerDescription_runConfig_finish_moveRight_suffix_ne_halt
     (bits : Word Bool) (baseLeft : List (Option Bool))
     (suffixTail : Word Bool) (n : Nat) :
-    (BoolWordSuffixScannerDescription.runConfig n
+    (BWSS.runConfig n
       (cellListCanonicalFinishStartConfigWithBase
         (bits.map some) baseLeft
         (List.append
           (encodeCodeSymbolAsInput
             MachineCodeSymbol.moveRight)
           suffixTail))).state ≠
-      BoolWordSuffixScannerDescription.halt := by
+      BWSS.halt := by
   let mid : Configuration :=
     config 150
       (cellListCanonicalRestoredLeftWithBase (bits.map some) baseLeft)
@@ -1238,9 +1242,9 @@ theorem boolWordSuffixScannerDescription_runConfig_finish_moveRight_suffix_ne_ha
           MachineCodeSymbol.moveRight)
         suffixTail).map some)
   let stuck : Configuration :=
-    BoolWordSuffixScannerDescription.runConfig 1 mid
+    BWSS.runConfig 1 mid
   have hfinish :
-      BoolWordSuffixScannerDescription.runConfig (4 * bits.length)
+      BWSS.runConfig (4 * bits.length)
         (cellListCanonicalFinishStartConfigWithBase
           (bits.map some) baseLeft
           (List.append
@@ -1260,7 +1264,7 @@ theorem boolWordSuffixScannerDescription_runConfig_finish_moveRight_suffix_ne_ha
             MachineCodeSymbol.moveRight)
           suffixTail).map some)
   have hreach :
-      BoolWordSuffixScannerDescription.runConfig (4 * bits.length + 1)
+      BWSS.runConfig (4 * bits.length + 1)
         (cellListCanonicalFinishStartConfigWithBase
           (bits.map some) baseLeft
           (List.append
@@ -1269,14 +1273,14 @@ theorem boolWordSuffixScannerDescription_runConfig_finish_moveRight_suffix_ne_ha
             suffixTail)) =
         stuck := by
     rw [runConfig_add, hfinish]
-  have hstep : BoolWordSuffixScannerDescription.stepConfig stuck = none := by
+  have hstep : BWSS.stepConfig stuck = none := by
     simp [stuck, mid, config, tapeAtCells,
       encodeCodeSymbolAsInput,
       runConfig, stepConfig,
       boolWordSuffix_lookup_150_true, boolWordSuffix_lookup_152_false,
       transition, writeMove, Tape.read, Tape.write,
       Tape.move, Tape.moveRight]
-  have hstuck : stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
+  have hstuck : stuck.state ≠ BWSS.halt := by
     dsimp [stuck, mid]
     simp [config, tapeAtCells,
       encodeCodeSymbolAsInput,
@@ -1288,8 +1292,8 @@ theorem boolWordSuffixScannerDescription_runConfig_finish_moveRight_suffix_ne_ha
     omega
   exact
     primitive_runConfig_state_ne_halt_of_reaches_stuck
-      boolWordSuffixScannerDescription_haltTransitionFree
-      (D := BoolWordSuffixScannerDescription)
+      BWSS_htf
+      (D := BWSS)
       (c :=
         cellListCanonicalFinishStartConfigWithBase
           (bits.map some) baseLeft
@@ -1302,19 +1306,19 @@ theorem boolWordSuffixScannerDescription_runConfig_finish_moveRight_suffix_ne_ha
 
 theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_empty_suffix_ne_halt
     (baseLeft : List (Option Bool)) (bits : Word Bool) (n : Nat) :
-    (BoolWordSuffixScannerDescription.runConfig n
-      (config BoolWordSuffixScannerDescription.start baseLeft
+    (BWSS.runConfig n
+      (config BWSS.start baseLeft
         ((encodeCodeWordAsInput
           (encodeBoolWordAppend bits
             ([] : Word MachineCodeSymbol))).map some))).state ≠
-      BoolWordSuffixScannerDescription.halt := by
+      BWSS.halt := by
   rcases
       run_boolWordSuffix_raw_marking_loop_from_state100_withBase
         baseLeft ([] : Word Bool) bits ([] : Word Bool) with
     ⟨markSteps, hmark⟩
   have hreach :
-      BoolWordSuffixScannerDescription.runConfig markSteps
-        (config BoolWordSuffixScannerDescription.start baseLeft
+      BWSS.runConfig markSteps
+        (config BWSS.start baseLeft
           ((encodeCodeWordAsInput
             (encodeBoolWordAppend bits
               ([] : Word MachineCodeSymbol))).map some)) =
@@ -1338,12 +1342,12 @@ theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_empty_su
 theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_moveRight_suffix_ne_halt
     (baseLeft : List (Option Bool)) (bits : Word Bool)
     (rest : Word MachineCodeSymbol) (n : Nat) :
-    (BoolWordSuffixScannerDescription.runConfig n
-      (config BoolWordSuffixScannerDescription.start baseLeft
+    (BWSS.runConfig n
+      (config BWSS.start baseLeft
         ((encodeCodeWordAsInput
           (encodeBoolWordAppend bits
             (MachineCodeSymbol.moveRight :: rest))).map some))).state ≠
-      BoolWordSuffixScannerDescription.halt := by
+      BWSS.halt := by
   let suffixTail : Word Bool :=
     encodeCodeWordAsInput rest
   rcases
@@ -1355,8 +1359,8 @@ theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_moveRigh
             suffixTail) with
     ⟨markSteps, hmark⟩
   have hreach :
-      BoolWordSuffixScannerDescription.runConfig markSteps
-        (config BoolWordSuffixScannerDescription.start baseLeft
+      BWSS.runConfig markSteps
+        (config BWSS.start baseLeft
           ((encodeCodeWordAsInput
             (encodeBoolWordAppend bits
               (MachineCodeSymbol.moveRight :: rest))).map some)) =
@@ -1392,12 +1396,12 @@ theorem
     (suffix : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      BoolWordSuffixScannerDescription.runConfig n
-          (config BoolWordSuffixScannerDescription.start baseLeft
+      BWSS.runConfig n
+          (config BWSS.start baseLeft
             ((encodeCodeWordAsInput
               (encodeBoolWordAppend bits
                 suffix)).map some)) =
-        { state := BoolWordSuffixScannerDescription.halt
+        { state := BWSS.halt
           tape := Tout }) :
     exists suffixTail : Word Bool,
       encodeCodeWordAsInput suffix = false :: suffixTail ∧
@@ -1407,12 +1411,12 @@ theorem
   cases suffix with
   | nil =>
       have hstate :
-          (BoolWordSuffixScannerDescription.runConfig n
-            (config BoolWordSuffixScannerDescription.start baseLeft
+          (BWSS.runConfig n
+            (config BWSS.start baseLeft
               ((encodeCodeWordAsInput
                 (encodeBoolWordAppend bits
                   ([] : Word MachineCodeSymbol))).map some))).state =
-            BoolWordSuffixScannerDescription.halt := by
+            BWSS.halt := by
         simpa using congrArg Configuration.state h
       exact False.elim
         (boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_empty_suffix_ne_halt
@@ -1421,12 +1425,12 @@ theorem
       cases symbol with
       | moveRight =>
           have hstate :
-              (BoolWordSuffixScannerDescription.runConfig n
-                (config BoolWordSuffixScannerDescription.start baseLeft
+              (BWSS.runConfig n
+                (config BWSS.start baseLeft
                   ((encodeCodeWordAsInput
                     (encodeBoolWordAppend bits
                       (MachineCodeSymbol.moveRight :: rest))).map some))).state =
-                BoolWordSuffixScannerDescription.halt := by
+                BWSS.halt := by
             simpa using congrArg Configuration.state h
           exact False.elim
             (boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_moveRight_suffix_ne_halt
@@ -1557,12 +1561,12 @@ theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_handoff
     (suffix : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}
     (h :
-      BoolWordSuffixScannerDescription.runConfig n
-          (config BoolWordSuffixScannerDescription.start baseLeft
+      BWSS.runConfig n
+          (config BWSS.start baseLeft
             ((encodeCodeWordAsInput
               (encodeBoolWordAppend bits
                 suffix)).map some)) =
-        { state := BoolWordSuffixScannerDescription.halt
+        { state := BWSS.halt
           tape := Tout }) :
     exists suffixTail : Word Bool,
       encodeCodeWordAsInput suffix = false :: suffixTail ∧

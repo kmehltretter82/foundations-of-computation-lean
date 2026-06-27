@@ -23,6 +23,7 @@ namespace DovetailLayoutScanner
 
 open FoC.Computability.DovetailInitialLayoutInitializer
 open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
+open CommonGround.SeqComposition
 
 def MarkedDovetailLayoutBodyReturnDescription : MachineDescription :=
   seqSubroutine
@@ -36,21 +37,38 @@ theorem markedDovetailLayoutBodyReturnDescription_subroutineReady :
     markedDovetailLayoutBodyScannerDescription_subroutineReady
     returnToFirstMarkerDescription_subroutineReady
 
+private abbrev MDBR := MarkedDovetailLayoutBodyReturnDescription
+private abbrev MFTB := MarkFirstTransitionBitDescription
+private abbrev CDL := CheckedDovetailLayoutScannerDescription
+private abbrev MDBS := MarkedDovetailLayoutBodyScannerDescription
+private abbrev RFM := ReturnToFirstMarkerDescription
+private abbrev TRP := TransitionRemainderPrefixScannerDescription
+private abbrev ISCFFS := InputStageConfigurationsAndFinalFlagsScannerDescription
+private abbrev SCFFS := StageConfigurationsAndFinalFlagsScannerDescription
+private abbrev BWSS := BoolWordSuffixScannerDescription
+private abbrev NNSS := DovetailStagePrefix.NonemptyNatSuffixScannerDescription
+private abbrev CFFS := ConfigurationsAndFinalFlagsScannerDescription
+private abbrev CFS := ConfigurationSuffixScannerDescription
+private abbrev RCF := RejectConfigAndFinalFlagsScannerDescription
+private abbrev FHFS := FinalHitFlagsScannerDescription
+private abbrev BSS := BoolSuffixScannerDescription
+private abbrev BFS := BoolFinalScannerDescription
+
 theorem markFirstTransitionBitDescription_haltsWithTape_inv
     {bits : Word Bool} {T : Tape Bool}
-    (h : MarkFirstTransitionBitDescription.HaltsWithTape bits T) :
+    (h : MFTB.HaltsWithTape bits T) :
     exists tail : Word Bool,
       bits = false :: false :: tail ∧
         T =
-          (config MarkFirstTransitionBitDescription.halt []
+          (config MFTB.halt []
             (none :: some false :: tail.map some)).tape := by
   rcases runConfig_eq_halt_of_haltsWithTape h with
     ⟨n, hn⟩
   cases bits with
   | nil =>
       have hstep :
-          MarkFirstTransitionBitDescription.stepConfig
-              (MarkFirstTransitionBitDescription.initial []) = none := by
+          MFTB.stepConfig
+              (MFTB.initial []) = none := by
         native_decide
       have hrun :=
         runConfig_of_stepConfig_none hstep n
@@ -73,8 +91,8 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                   { state := 1
                     tape := tapeAtCells [none] [] }
                 have hstep0 :
-                    MarkFirstTransitionBitDescription.stepConfig
-                        (MarkFirstTransitionBitDescription.initial [false]) =
+                    MFTB.stepConfig
+                        (MFTB.initial [false]) =
                       some c1 := by
                   simp [c1, MarkFirstTransitionBitDescription,
                     tapeAtCells, keepMove, writeMove,
@@ -85,12 +103,12 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                     transition, Tape.input, Tape.read,
                     Tape.write, Tape.move, Tape.moveRight]
                 have hrun :
-                    MarkFirstTransitionBitDescription.runConfig (Nat.succ n)
-                        (MarkFirstTransitionBitDescription.initial [false]) =
-                      MarkFirstTransitionBitDescription.runConfig n c1 := by
+                    MFTB.runConfig (Nat.succ n)
+                        (MFTB.initial [false]) =
+                      MFTB.runConfig n c1 := by
                   simp [runConfig, hstep0]
                 have hstep1 :
-                    MarkFirstTransitionBitDescription.stepConfig c1 = none := by
+                    MFTB.stepConfig c1 = none := by
                   simp [c1, MarkFirstTransitionBitDescription, tapeAtCells,
                     keepMove, writeMove, stepConfig,
                     lookupTransition,
@@ -99,8 +117,8 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                 have hstay :=
                   runConfig_of_stepConfig_none hstep1 n
                 have hrunFinal :
-                    MarkFirstTransitionBitDescription.runConfig (Nat.succ n)
-                        (MarkFirstTransitionBitDescription.initial [false]) =
+                    MFTB.runConfig (Nat.succ n)
+                        (MFTB.initial [false]) =
                       c1 :=
                   hrun.trans hstay
                 have hstate : 1 = 9 := by
@@ -129,19 +147,19 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                         at hn
                   | succ k =>
                       have hrun :
-                          MarkFirstTransitionBitDescription.runConfig
+                          MFTB.runConfig
                               (Nat.succ (Nat.succ k))
-                              (MarkFirstTransitionBitDescription.initial
+                              (MFTB.initial
                                 (false :: false :: tail)) =
-                            config MarkFirstTransitionBitDescription.halt []
+                            config MFTB.halt []
                               (none :: some false :: tail.map some) := by
                         rw [show Nat.succ (Nat.succ k) = 2 + k by omega]
                         rw [runConfig_add]
                         have h2 :
-                            MarkFirstTransitionBitDescription.runConfig 2
-                                (MarkFirstTransitionBitDescription.initial
+                            MFTB.runConfig 2
+                                (MFTB.initial
                                   (false :: false :: tail)) =
-                              config MarkFirstTransitionBitDescription.halt []
+                              config MFTB.halt []
                                 (none :: some false :: tail.map some) := by
                           simpa [initial, config,
                             tapeAtCells] using
@@ -150,14 +168,14 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                         exact
                           runConfig_halt
                             markFirstTransitionBitDescription_haltTransitionFree
-                            (config MarkFirstTransitionBitDescription.halt []
+                            (config MFTB.halt []
                               (none :: some false :: tail.map some)).tape k
                       let cfgGood : Configuration :=
-                        config MarkFirstTransitionBitDescription.halt []
+                        config MFTB.halt []
                           (none :: some false :: tail.map some)
                       have hcfg :
                           cfgGood =
-                            { state := MarkFirstTransitionBitDescription.halt
+                            { state := MFTB.halt
                               tape := T } := by
                         simpa [cfgGood] using hrun.symm.trans hn
                       exact
@@ -173,8 +191,8 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                       tape := tapeAtCells [none]
                         (some true :: tail.map some) }
                   have hstep0 :
-                      MarkFirstTransitionBitDescription.stepConfig
-                          (MarkFirstTransitionBitDescription.initial
+                      MFTB.stepConfig
+                          (MFTB.initial
                             (false :: true :: tail)) =
                         some c1 := by
                     simp [c1, MarkFirstTransitionBitDescription,
@@ -186,14 +204,14 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                       transition, Tape.input, Tape.read,
                       Tape.write, Tape.move, Tape.moveRight]
                   have hrun :
-                      MarkFirstTransitionBitDescription.runConfig
+                      MFTB.runConfig
                           (Nat.succ n)
-                          (MarkFirstTransitionBitDescription.initial
+                          (MFTB.initial
                             (false :: true :: tail)) =
-                        MarkFirstTransitionBitDescription.runConfig n c1 := by
+                        MFTB.runConfig n c1 := by
                     simp [runConfig, hstep0]
                   have hstep1 :
-                      MarkFirstTransitionBitDescription.stepConfig c1 =
+                      MFTB.stepConfig c1 =
                         none := by
                     simp [c1, MarkFirstTransitionBitDescription, tapeAtCells,
                       keepMove, writeMove, stepConfig,
@@ -203,9 +221,9 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                   have hstay :=
                     runConfig_of_stepConfig_none hstep1 n
                   have hrunFinal :
-                      MarkFirstTransitionBitDescription.runConfig
+                      MFTB.runConfig
                           (Nat.succ n)
-                          (MarkFirstTransitionBitDescription.initial
+                          (MFTB.initial
                             (false :: true :: tail)) =
                         c1 :=
                     hrun.trans hstay
@@ -215,8 +233,8 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                         (hrunFinal.symm.trans hn)
                   omega
       · have hstep :
-            MarkFirstTransitionBitDescription.stepConfig
-                (MarkFirstTransitionBitDescription.initial (true :: rest)) =
+            MFTB.stepConfig
+                (MFTB.initial (true :: rest)) =
               none := by
           simp [MarkFirstTransitionBitDescription, keepMove, writeMove,
             initial, stepConfig,
@@ -233,28 +251,28 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_marker_inv
     {bits : Word Bool} {Tout : Tape Bool}
-    (h : CheckedDovetailLayoutScannerDescription.HaltsWithTape bits Tout) :
+    (h : CDL.HaltsWithTape bits Tout) :
     exists tail : Word Bool,
     exists nB : Nat,
       bits = false :: false :: tail ∧
-        MarkedDovetailLayoutBodyReturnDescription.runConfig nB
-            { state := MarkedDovetailLayoutBodyReturnDescription.start
+        MDBR.runConfig nB
+            { state := MDBR.start
               tape :=
                 Tape.move Direction.right
-                  (config MarkFirstTransitionBitDescription.halt []
+                  (config MFTB.halt []
                     (none :: some false :: tail.map some)).tape } =
-          { state := MarkedDovetailLayoutBodyReturnDescription.halt
+          { state := MDBR.halt
             tape := Tout } := by
   rcases
       seqSubroutine_haltsWithTape_inv
-        (A := MarkFirstTransitionBitDescription)
-        (B := MarkedDovetailLayoutBodyReturnDescription)
+        (A := MFTB)
+        (B := MDBR)
         (handoffMove := Direction.right)
         markFirstTransitionBitDescription_subroutineReady
         markedDovetailLayoutBodyReturnDescription_subroutineReady
         (by
           simpa [CheckedDovetailLayoutScannerDescription,
-            MarkedDovetailLayoutBodyReturnDescription] using h) with
+            MDBR] using h) with
     ⟨Tmid, hmark, nB, hbody⟩
   rcases markFirstTransitionBitDescription_haltsWithTape_inv hmark with
     ⟨tail, hbits, hTmid⟩
@@ -265,34 +283,34 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_marker_inv
 theorem markedDovetailLayoutBodyReturnDescription_runConfig_inv
     {Tin Tout : Tape Bool} {n : Nat}
     (h :
-      MarkedDovetailLayoutBodyReturnDescription.runConfig n
-          { state := MarkedDovetailLayoutBodyReturnDescription.start
+      MDBR.runConfig n
+          { state := MDBR.start
             tape := Tin } =
-        { state := MarkedDovetailLayoutBodyReturnDescription.halt
+        { state := MDBR.halt
           tape := Tout }) :
     exists Tbody : Tape Bool,
       (exists nBody : Nat,
-        MarkedDovetailLayoutBodyScannerDescription.runConfig nBody
-            { state := MarkedDovetailLayoutBodyScannerDescription.start
+        MDBS.runConfig nBody
+            { state := MDBS.start
               tape := Tin } =
-          { state := MarkedDovetailLayoutBodyScannerDescription.halt
+          { state := MDBS.halt
             tape := Tbody } ∧
           forall k : Nat,
             k < nBody ->
-              (MarkedDovetailLayoutBodyScannerDescription.runConfig k
-                { state := MarkedDovetailLayoutBodyScannerDescription.start
+              (MDBS.runConfig k
+                { state := MDBS.start
                   tape := Tin }).state ≠
-                MarkedDovetailLayoutBodyScannerDescription.halt) ∧
+                MDBS.halt) ∧
         exists nReturn : Nat,
-          ReturnToFirstMarkerDescription.runConfig nReturn
-              { state := ReturnToFirstMarkerDescription.start
+          RFM.runConfig nReturn
+              { state := RFM.start
                 tape := Tape.move Direction.right Tbody } =
-            { state := ReturnToFirstMarkerDescription.halt
+            { state := RFM.halt
               tape := Tout } := by
   simpa [MarkedDovetailLayoutBodyReturnDescription] using
     seqSubroutine_runConfig_inv
-      (A := MarkedDovetailLayoutBodyScannerDescription)
-      (B := ReturnToFirstMarkerDescription)
+      (A := MDBS)
+      (B := RFM)
       (handoffMove := Direction.right)
       markedDovetailLayoutBodyScannerDescription_subroutineReady
       returnToFirstMarkerDescription_subroutineReady
@@ -301,36 +319,36 @@ theorem markedDovetailLayoutBodyReturnDescription_runConfig_inv
 theorem markedDovetailLayoutBodyScannerDescription_runConfig_inv
     {Tin Tout : Tape Bool} {n : Nat}
     (h :
-      MarkedDovetailLayoutBodyScannerDescription.runConfig n
-          { state := MarkedDovetailLayoutBodyScannerDescription.start
+      MDBS.runConfig n
+          { state := MDBS.start
             tape := Tin } =
-        { state := MarkedDovetailLayoutBodyScannerDescription.halt
+        { state := MDBS.halt
           tape := Tout }) :
     exists Ttransition : Tape Bool,
       (exists nTransition : Nat,
-        TransitionRemainderPrefixScannerDescription.runConfig nTransition
-            { state := TransitionRemainderPrefixScannerDescription.start
+        TRP.runConfig nTransition
+            { state := TRP.start
               tape := Tin } =
-          { state := TransitionRemainderPrefixScannerDescription.halt
+          { state := TRP.halt
             tape := Ttransition } ∧
           forall k : Nat,
             k < nTransition ->
-              (TransitionRemainderPrefixScannerDescription.runConfig k
-                { state := TransitionRemainderPrefixScannerDescription.start
+              (TRP.runConfig k
+                { state := TRP.start
                   tape := Tin }).state ≠
-                TransitionRemainderPrefixScannerDescription.halt) ∧
+                TRP.halt) ∧
         exists nRest : Nat,
-          InputStageConfigurationsAndFinalFlagsScannerDescription.runConfig nRest
+          ISCFFS.runConfig nRest
               { state :=
-                  InputStageConfigurationsAndFinalFlagsScannerDescription.start
+                  ISCFFS.start
                 tape := Tape.move Direction.right Ttransition } =
             { state :=
-                InputStageConfigurationsAndFinalFlagsScannerDescription.halt
+                ISCFFS.halt
               tape := Tout } := by
   simpa [MarkedDovetailLayoutBodyScannerDescription] using
     seqSubroutine_runConfig_inv
-      (A := TransitionRemainderPrefixScannerDescription)
-      (B := InputStageConfigurationsAndFinalFlagsScannerDescription)
+      (A := TRP)
+      (B := ISCFFS)
         (handoffMove := Direction.right)
       transitionRemainderPrefixScannerDescription_subroutineReady
       inputStageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
@@ -338,21 +356,21 @@ theorem markedDovetailLayoutBodyScannerDescription_runConfig_inv
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_body_return_inv
     {bits : Word Bool} {Tout : Tape Bool}
-    (h : CheckedDovetailLayoutScannerDescription.HaltsWithTape bits Tout) :
+    (h : CDL.HaltsWithTape bits Tout) :
     exists tail : Word Bool,
     exists Tbody : Tape Bool,
     exists nBody : Nat,
     exists nReturn : Nat,
       bits = false :: false :: tail ∧
-        MarkedDovetailLayoutBodyScannerDescription.runConfig nBody
-            { state := MarkedDovetailLayoutBodyScannerDescription.start
+        MDBS.runConfig nBody
+            { state := MDBS.start
               tape := tapeAtCells [none] (some false :: tail.map some) } =
-          { state := MarkedDovetailLayoutBodyScannerDescription.halt
+          { state := MDBS.halt
             tape := Tbody } ∧
-        ReturnToFirstMarkerDescription.runConfig nReturn
-            { state := ReturnToFirstMarkerDescription.start
+        RFM.runConfig nReturn
+            { state := RFM.start
               tape := Tape.move Direction.right Tbody } =
-          { state := ReturnToFirstMarkerDescription.halt
+          { state := RFM.halt
             tape := Tout } := by
   rcases checkedDovetailLayoutScannerDescription_haltsWithTape_marker_inv h with
     ⟨tail, nBodyReturn, hbits, hrun⟩
@@ -364,7 +382,7 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_body_return_inv
   refine ⟨tail, Tbody, nBody, nReturn, hbits, ?_, hreturnRun⟩
   have hmove :
       Tape.move Direction.right
-          (config MarkFirstTransitionBitDescription.halt []
+          (config MFTB.halt []
             (none :: some false :: tail.map some)).tape =
         tapeAtCells [none] (some false :: tail.map some) := by
     simp [config, tapeAtCells, Tape.move, Tape.moveRight]
@@ -384,10 +402,10 @@ theorem runConfig_state_ne_halt_of_reaches_stuck
 theorem transitionRemainderPrefixScannerDescription_markedTail_inv
     {tail : Word Bool} {T : Tape Bool} {n : Nat}
     (h :
-      TransitionRemainderPrefixScannerDescription.runConfig n
-          { state := TransitionRemainderPrefixScannerDescription.start
+      TRP.runConfig n
+          { state := TRP.start
             tape := tapeAtCells [none] (some false :: tail.map some) } =
-        { state := TransitionRemainderPrefixScannerDescription.halt
+        { state := TRP.halt
           tape := T }) :
     exists b : Bool,
     exists suffixTail : Word Bool,
@@ -396,19 +414,19 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
           (transitionRemainderHandoffConfigWithBase [none]
             (b :: suffixTail)).tape := by
   let start : Configuration :=
-    { state := TransitionRemainderPrefixScannerDescription.start
+    { state := TRP.start
       tape := tapeAtCells [none] (some false :: tail.map some) }
   have hhaltState :
-      (TransitionRemainderPrefixScannerDescription.runConfig n start).state =
-        TransitionRemainderPrefixScannerDescription.halt := by
+      (TRP.runConfig n start).state =
+        TRP.halt := by
     simpa [start] using
       congrArg Configuration.state h
   cases tail with
   | nil =>
       let stuck :=
-        TransitionRemainderPrefixScannerDescription.runConfig 1 start
+        TRP.runConfig 1 start
       have hstep :
-          TransitionRemainderPrefixScannerDescription.stepConfig stuck =
+          TRP.stepConfig stuck =
             none := by
         simp [stuck, start, TransitionRemainderPrefixScannerDescription,
           tapeAtCells, keepMove, runConfig,
@@ -418,7 +436,7 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
           Tape.read, Tape.write, Tape.move, Tape.moveRight]
       have hstuck :
           stuck.state ≠
-            TransitionRemainderPrefixScannerDescription.halt := by
+            TRP.halt := by
         simp [stuck, start, TransitionRemainderPrefixScannerDescription,
           tapeAtCells, keepMove, runConfig,
           stepConfig,
@@ -428,7 +446,7 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
       exact False.elim
         (runConfig_state_ne_halt_of_reaches_stuck
           transitionRemainderPrefixScannerDescription_haltTransitionFree
-          (D := TransitionRemainderPrefixScannerDescription)
+          (D := TRP)
           (c := start) (stuck := stuck) (k := 1) (n := n)
           rfl hstep hstuck hhaltState)
   | cons first rest =>
@@ -436,9 +454,9 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
       · cases rest with
         | nil =>
             let stuck :=
-              TransitionRemainderPrefixScannerDescription.runConfig 2 start
+              TRP.runConfig 2 start
             have hstep :
-                TransitionRemainderPrefixScannerDescription.stepConfig
+                TRP.stepConfig
                     stuck = none := by
               simp [stuck, start,
                 TransitionRemainderPrefixScannerDescription,
@@ -449,7 +467,7 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
                 Tape.read, Tape.write, Tape.move, Tape.moveRight]
             have hstuck :
                 stuck.state ≠
-                  TransitionRemainderPrefixScannerDescription.halt := by
+                  TRP.halt := by
               simp [stuck, start,
                 TransitionRemainderPrefixScannerDescription,
                 tapeAtCells, keepMove, runConfig,
@@ -460,16 +478,16 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
             exact False.elim
               (runConfig_state_ne_halt_of_reaches_stuck
                 transitionRemainderPrefixScannerDescription_haltTransitionFree
-                (D := TransitionRemainderPrefixScannerDescription)
+                (D := TRP)
                 (c := start) (stuck := stuck) (k := 2) (n := n)
                 rfl hstep hstuck hhaltState)
         | cons second restTail =>
             cases second
             · let stuck :=
-                TransitionRemainderPrefixScannerDescription.runConfig 2
+                TRP.runConfig 2
                   start
               have hstep :
-                  TransitionRemainderPrefixScannerDescription.stepConfig
+                  TRP.stepConfig
                       stuck = none := by
                 cases restTail <;>
                   simp [stuck, start,
@@ -481,7 +499,7 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
                     Tape.read, Tape.write, Tape.move, Tape.moveRight]
               have hstuck :
                   stuck.state ≠
-                    TransitionRemainderPrefixScannerDescription.halt := by
+                    TRP.halt := by
                 cases restTail <;>
                   simp [stuck, start,
                     TransitionRemainderPrefixScannerDescription,
@@ -493,16 +511,16 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
               exact False.elim
                 (runConfig_state_ne_halt_of_reaches_stuck
                   transitionRemainderPrefixScannerDescription_haltTransitionFree
-                  (D := TransitionRemainderPrefixScannerDescription)
+                  (D := TRP)
                   (c := start) (stuck := stuck) (k := 2) (n := n)
                   rfl hstep hstuck hhaltState)
             · cases restTail with
               | nil =>
                   let stuck :=
-                    TransitionRemainderPrefixScannerDescription.runConfig 3
+                    TRP.runConfig 3
                       start
                   have hstep :
-                      TransitionRemainderPrefixScannerDescription.stepConfig
+                      TRP.stepConfig
                           stuck = none := by
                     simp [stuck, start,
                       TransitionRemainderPrefixScannerDescription,
@@ -514,7 +532,7 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
                       Tape.move, Tape.moveRight]
                   have hstuck :
                       stuck.state ≠
-                        TransitionRemainderPrefixScannerDescription.halt := by
+                        TRP.halt := by
                     simp [stuck, start,
                       TransitionRemainderPrefixScannerDescription,
                       tapeAtCells, keepMove, runConfig,
@@ -526,7 +544,7 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
                   exact False.elim
                     (runConfig_state_ne_halt_of_reaches_stuck
                       transitionRemainderPrefixScannerDescription_haltTransitionFree
-                      (D := TransitionRemainderPrefixScannerDescription)
+                      (D := TRP)
                       (c := start) (stuck := stuck) (k := 3) (n := n)
                       rfl hstep hstuck hhaltState)
               | cons b suffixTail =>
@@ -536,10 +554,10 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
                         [none] b suffixTail with
                     ⟨steps, hsteps⟩
                   have hstepsHalt :
-                      TransitionRemainderPrefixScannerDescription.runConfig
+                      TRP.runConfig
                           steps start =
                         { state :=
-                            TransitionRemainderPrefixScannerDescription.halt
+                            TRP.halt
                           tape :=
                             (transitionRemainderHandoffConfigWithBase [none]
                               (b :: suffixTail)).tape } := by
@@ -551,9 +569,9 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
                       hstepsHalt
                       (by simpa [start] using h)).symm
       · let stuck :=
-          TransitionRemainderPrefixScannerDescription.runConfig 1 start
+          TRP.runConfig 1 start
         have hstep :
-            TransitionRemainderPrefixScannerDescription.stepConfig stuck =
+            TRP.stepConfig stuck =
               none := by
           cases rest <;>
             simp [stuck, start, TransitionRemainderPrefixScannerDescription,
@@ -564,7 +582,7 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
               Tape.read, Tape.write, Tape.move, Tape.moveRight]
         have hstuck :
             stuck.state ≠
-              TransitionRemainderPrefixScannerDescription.halt := by
+              TRP.halt := by
           cases rest <;>
             simp [stuck, start, TransitionRemainderPrefixScannerDescription,
               tapeAtCells, keepMove, runConfig,
@@ -575,13 +593,13 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
         exact False.elim
           (runConfig_state_ne_halt_of_reaches_stuck
             transitionRemainderPrefixScannerDescription_haltTransitionFree
-            (D := TransitionRemainderPrefixScannerDescription)
+            (D := TRP)
             (c := start) (stuck := stuck) (k := 1) (n := n)
             rfl hstep hstuck hhaltState)
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_transition_inv
     {bits : Word Bool} {Tout : Tape Bool}
-    (h : CheckedDovetailLayoutScannerDescription.HaltsWithTape bits Tout) :
+    (h : CDL.HaltsWithTape bits Tout) :
     exists tail : Word Bool,
     exists Ttransition : Tape Bool,
     exists Tbody : Tape Bool,
@@ -589,22 +607,22 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_transition_inv
     exists nRest : Nat,
     exists nReturn : Nat,
       bits = false :: false :: tail ∧
-        TransitionRemainderPrefixScannerDescription.runConfig nTransition
-            { state := TransitionRemainderPrefixScannerDescription.start
+        TRP.runConfig nTransition
+            { state := TRP.start
               tape := tapeAtCells [none] (some false :: tail.map some) } =
-          { state := TransitionRemainderPrefixScannerDescription.halt
+          { state := TRP.halt
             tape := Ttransition } ∧
-        InputStageConfigurationsAndFinalFlagsScannerDescription.runConfig nRest
+        ISCFFS.runConfig nRest
             { state :=
-                InputStageConfigurationsAndFinalFlagsScannerDescription.start
+                ISCFFS.start
               tape := Tape.move Direction.right Ttransition } =
           { state :=
-              InputStageConfigurationsAndFinalFlagsScannerDescription.halt
+              ISCFFS.halt
             tape := Tbody } ∧
-        ReturnToFirstMarkerDescription.runConfig nReturn
-            { state := ReturnToFirstMarkerDescription.start
+        RFM.runConfig nReturn
+            { state := RFM.start
               tape := Tape.move Direction.right Tbody } =
-          { state := ReturnToFirstMarkerDescription.halt
+          { state := RFM.halt
             tape := Tout } := by
   rcases
       checkedDovetailLayoutScannerDescription_haltsWithTape_body_return_inv
@@ -622,28 +640,28 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_transition_inv
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_afterTransition_inv
     {bits : Word Bool} {Tout : Tape Bool}
-    (h : CheckedDovetailLayoutScannerDescription.HaltsWithTape bits Tout) :
+    (h : CDL.HaltsWithTape bits Tout) :
     exists b : Bool,
     exists suffixTail : Word Bool,
     exists Tbody : Tape Bool,
     exists nRest : Nat,
     exists nReturn : Nat,
       bits = false :: false :: false :: true :: b :: suffixTail ∧
-        InputStageConfigurationsAndFinalFlagsScannerDescription.runConfig nRest
+        ISCFFS.runConfig nRest
             { state :=
-                InputStageConfigurationsAndFinalFlagsScannerDescription.start
+                ISCFFS.start
               tape :=
                 tapeAtCells
                   (List.append (transitionRemainderBits.reverse.map some)
                     [none])
                   ((b :: suffixTail).map some) } =
           { state :=
-              InputStageConfigurationsAndFinalFlagsScannerDescription.halt
+              ISCFFS.halt
             tape := Tbody } ∧
-        ReturnToFirstMarkerDescription.runConfig nReturn
-            { state := ReturnToFirstMarkerDescription.start
+        RFM.runConfig nReturn
+            { state := RFM.start
               tape := Tape.move Direction.right Tbody } =
-          { state := ReturnToFirstMarkerDescription.halt
+          { state := RFM.halt
             tape := Tout } := by
   rcases
       checkedDovetailLayoutScannerDescription_haltsWithTape_transition_inv h with
@@ -662,37 +680,37 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_afterTransition_in
 theorem inputStageConfigurationsAndFinalFlagsScannerDescription_runConfig_inv
     {Tin Tout : Tape Bool} {n : Nat}
     (h :
-      InputStageConfigurationsAndFinalFlagsScannerDescription.runConfig n
+      ISCFFS.runConfig n
           { state :=
-              InputStageConfigurationsAndFinalFlagsScannerDescription.start
+              ISCFFS.start
             tape := Tin } =
         { state :=
-            InputStageConfigurationsAndFinalFlagsScannerDescription.halt
+            ISCFFS.halt
           tape := Tout }) :
     exists Tinput : Tape Bool,
       (exists nInput : Nat,
-        BoolWordSuffixScannerDescription.runConfig nInput
-            { state := BoolWordSuffixScannerDescription.start
+        BWSS.runConfig nInput
+            { state := BWSS.start
               tape := Tin } =
-          { state := BoolWordSuffixScannerDescription.halt
+          { state := BWSS.halt
             tape := Tinput } ∧
           forall k : Nat,
             k < nInput ->
-              (BoolWordSuffixScannerDescription.runConfig k
-                { state := BoolWordSuffixScannerDescription.start
+              (BWSS.runConfig k
+                { state := BWSS.start
                   tape := Tin }).state ≠
-                BoolWordSuffixScannerDescription.halt) ∧
+                BWSS.halt) ∧
         exists nStage : Nat,
-          StageConfigurationsAndFinalFlagsScannerDescription.runConfig nStage
+          SCFFS.runConfig nStage
               { state :=
-                  StageConfigurationsAndFinalFlagsScannerDescription.start
+                  SCFFS.start
                 tape := Tape.move Direction.right Tinput } =
-            { state := StageConfigurationsAndFinalFlagsScannerDescription.halt
+            { state := SCFFS.halt
               tape := Tout } := by
   simpa [InputStageConfigurationsAndFinalFlagsScannerDescription] using
     seqSubroutine_runConfig_inv
-      (A := BoolWordSuffixScannerDescription)
-      (B := StageConfigurationsAndFinalFlagsScannerDescription)
+      (A := BWSS)
+      (B := SCFFS)
       (handoffMove := Direction.right)
       boolWordSuffixScannerDescription_subroutineReady
       stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
@@ -702,7 +720,7 @@ theorem inputStageConfigurationsAndFinalFlagsScannerDescription_runConfig_inv
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_inputField_inv
     {bits : Word Bool} {Tout : Tape Bool}
-    (h : CheckedDovetailLayoutScannerDescription.HaltsWithTape bits Tout) :
+    (h : CDL.HaltsWithTape bits Tout) :
     exists b : Bool,
     exists suffixTail : Word Bool,
     exists Tinput : Tape Bool,
@@ -711,25 +729,25 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_inputField_inv
     exists nStage : Nat,
     exists nReturn : Nat,
       bits = false :: false :: false :: true :: b :: suffixTail ∧
-        BoolWordSuffixScannerDescription.runConfig nInput
-            { state := BoolWordSuffixScannerDescription.start
+        BWSS.runConfig nInput
+            { state := BWSS.start
               tape :=
                 tapeAtCells
                   (List.append (transitionRemainderBits.reverse.map some)
                     [none])
                   ((b :: suffixTail).map some) } =
-          { state := BoolWordSuffixScannerDescription.halt
+          { state := BWSS.halt
             tape := Tinput } ∧
-        StageConfigurationsAndFinalFlagsScannerDescription.runConfig nStage
+        SCFFS.runConfig nStage
             { state :=
-                StageConfigurationsAndFinalFlagsScannerDescription.start
+                SCFFS.start
               tape := Tape.move Direction.right Tinput } =
-          { state := StageConfigurationsAndFinalFlagsScannerDescription.halt
+          { state := SCFFS.halt
             tape := Tbody } ∧
-        ReturnToFirstMarkerDescription.runConfig nReturn
-            { state := ReturnToFirstMarkerDescription.start
+        RFM.runConfig nReturn
+            { state := RFM.start
               tape := Tape.move Direction.right Tbody } =
-          { state := ReturnToFirstMarkerDescription.halt
+          { state := RFM.halt
             tape := Tout } := by
   rcases
       checkedDovetailLayoutScannerDescription_haltsWithTape_afterTransition_inv
@@ -749,38 +767,38 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_inputField_inv
 theorem stageConfigurationsAndFinalFlagsScannerDescription_runConfig_inv
     {Tin Tout : Tape Bool} {n : Nat}
     (h :
-      StageConfigurationsAndFinalFlagsScannerDescription.runConfig n
+      SCFFS.runConfig n
           { state :=
-              StageConfigurationsAndFinalFlagsScannerDescription.start
+              SCFFS.start
             tape := Tin } =
         { state :=
-            StageConfigurationsAndFinalFlagsScannerDescription.halt
+            SCFFS.halt
           tape := Tout }) :
     exists Tstage : Tape Bool,
       (exists nStage : Nat,
-        DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig nStage
-            { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
+        NNSS.runConfig nStage
+            { state := NNSS.start
               tape := Tin } =
-          { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt
+          { state := NNSS.halt
             tape := Tstage } ∧
           forall k : Nat,
             k < nStage ->
-              (DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig k
+              (NNSS.runConfig k
                 { state :=
-                    DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
+                    NNSS.start
                   tape := Tin }).state ≠
-                DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt) ∧
+                NNSS.halt) ∧
         exists nConfigs : Nat,
-          ConfigurationsAndFinalFlagsScannerDescription.runConfig nConfigs
+          CFFS.runConfig nConfigs
               { state :=
-                  ConfigurationsAndFinalFlagsScannerDescription.start
+                  CFFS.start
                 tape := Tape.move Direction.right Tstage } =
-            { state := ConfigurationsAndFinalFlagsScannerDescription.halt
+            { state := CFFS.halt
               tape := Tout } := by
   simpa [StageConfigurationsAndFinalFlagsScannerDescription] using
     seqSubroutine_runConfig_inv
-      (A := DovetailStagePrefix.NonemptyNatSuffixScannerDescription)
-      (B := ConfigurationsAndFinalFlagsScannerDescription)
+      (A := NNSS)
+      (B := CFFS)
       (handoffMove := Direction.right)
       DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
       configurationsAndFinalFlagsScannerDescription_subroutineReady
@@ -789,7 +807,7 @@ theorem stageConfigurationsAndFinalFlagsScannerDescription_runConfig_inv
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_stageField_inv
     {bits : Word Bool} {Tout : Tape Bool}
-    (h : CheckedDovetailLayoutScannerDescription.HaltsWithTape bits Tout) :
+    (h : CDL.HaltsWithTape bits Tout) :
     exists b : Bool,
     exists suffixTail : Word Bool,
     exists Tinput : Tape Bool,
@@ -800,29 +818,29 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_stageField_inv
     exists nConfigs : Nat,
     exists nReturn : Nat,
       bits = false :: false :: false :: true :: b :: suffixTail ∧
-        BoolWordSuffixScannerDescription.runConfig nInput
-            { state := BoolWordSuffixScannerDescription.start
+        BWSS.runConfig nInput
+            { state := BWSS.start
               tape :=
                 tapeAtCells
                   (List.append (transitionRemainderBits.reverse.map some)
                     [none])
                   ((b :: suffixTail).map some) } =
-          { state := BoolWordSuffixScannerDescription.halt
+          { state := BWSS.halt
             tape := Tinput } ∧
-        DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig nStage
-            { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
+        NNSS.runConfig nStage
+            { state := NNSS.start
               tape := Tape.move Direction.right Tinput } =
-          { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt
+          { state := NNSS.halt
             tape := Tstage } ∧
-        ConfigurationsAndFinalFlagsScannerDescription.runConfig nConfigs
-            { state := ConfigurationsAndFinalFlagsScannerDescription.start
+        CFFS.runConfig nConfigs
+            { state := CFFS.start
               tape := Tape.move Direction.right Tstage } =
-          { state := ConfigurationsAndFinalFlagsScannerDescription.halt
+          { state := CFFS.halt
             tape := Tbody } ∧
-        ReturnToFirstMarkerDescription.runConfig nReturn
-            { state := ReturnToFirstMarkerDescription.start
+        RFM.runConfig nReturn
+            { state := RFM.start
               tape := Tape.move Direction.right Tbody } =
-          { state := ReturnToFirstMarkerDescription.halt
+          { state := RFM.halt
             tape := Tout } := by
   rcases
       checkedDovetailLayoutScannerDescription_haltsWithTape_inputField_inv h with
@@ -842,35 +860,35 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_stageField_inv
 theorem configurationsAndFinalFlagsScannerDescription_runConfig_inv
     {Tin Tout : Tape Bool} {n : Nat}
     (h :
-      ConfigurationsAndFinalFlagsScannerDescription.runConfig n
-          { state := ConfigurationsAndFinalFlagsScannerDescription.start
+      CFFS.runConfig n
+          { state := CFFS.start
             tape := Tin } =
-        { state := ConfigurationsAndFinalFlagsScannerDescription.halt
+        { state := CFFS.halt
           tape := Tout }) :
     exists Taccept : Tape Bool,
       (exists nAccept : Nat,
-        ConfigurationSuffixScannerDescription.runConfig nAccept
-            { state := ConfigurationSuffixScannerDescription.start
+        CFS.runConfig nAccept
+            { state := CFS.start
               tape := Tin } =
-          { state := ConfigurationSuffixScannerDescription.halt
+          { state := CFS.halt
             tape := Taccept } ∧
           forall k : Nat,
             k < nAccept ->
-              (ConfigurationSuffixScannerDescription.runConfig k
-                { state := ConfigurationSuffixScannerDescription.start
+              (CFS.runConfig k
+                { state := CFS.start
                   tape := Tin }).state ≠
-                ConfigurationSuffixScannerDescription.halt) ∧
+                CFS.halt) ∧
         exists nRejectFlags : Nat,
-          RejectConfigAndFinalFlagsScannerDescription.runConfig
+          RCF.runConfig
               nRejectFlags
-              { state := RejectConfigAndFinalFlagsScannerDescription.start
+              { state := RCF.start
                 tape := Tape.move Direction.right Taccept } =
-            { state := RejectConfigAndFinalFlagsScannerDescription.halt
+            { state := RCF.halt
               tape := Tout } := by
   simpa [ConfigurationsAndFinalFlagsScannerDescription] using
     seqSubroutine_runConfig_inv
-      (A := ConfigurationSuffixScannerDescription)
-      (B := RejectConfigAndFinalFlagsScannerDescription)
+      (A := CFS)
+      (B := RCF)
       (handoffMove := Direction.right)
       configurationSuffixScannerDescription_subroutineReady
       rejectConfigAndFinalFlagsScannerDescription_subroutineReady
@@ -879,7 +897,7 @@ theorem configurationsAndFinalFlagsScannerDescription_runConfig_inv
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_acceptConfig_inv
     {bits : Word Bool} {Tout : Tape Bool}
-    (h : CheckedDovetailLayoutScannerDescription.HaltsWithTape bits Tout) :
+    (h : CDL.HaltsWithTape bits Tout) :
     exists b : Bool,
     exists suffixTail : Word Bool,
     exists Tinput : Tape Bool,
@@ -892,34 +910,34 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_acceptConfig_inv
     exists nRejectFlags : Nat,
     exists nReturn : Nat,
       bits = false :: false :: false :: true :: b :: suffixTail ∧
-        BoolWordSuffixScannerDescription.runConfig nInput
-            { state := BoolWordSuffixScannerDescription.start
+        BWSS.runConfig nInput
+            { state := BWSS.start
               tape :=
                 tapeAtCells
                   (List.append (transitionRemainderBits.reverse.map some)
                     [none])
                   ((b :: suffixTail).map some) } =
-          { state := BoolWordSuffixScannerDescription.halt
+          { state := BWSS.halt
             tape := Tinput } ∧
-        DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig nStage
-            { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
+        NNSS.runConfig nStage
+            { state := NNSS.start
               tape := Tape.move Direction.right Tinput } =
-          { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt
+          { state := NNSS.halt
             tape := Tstage } ∧
-        ConfigurationSuffixScannerDescription.runConfig nAccept
-            { state := ConfigurationSuffixScannerDescription.start
+        CFS.runConfig nAccept
+            { state := CFS.start
               tape := Tape.move Direction.right Tstage } =
-          { state := ConfigurationSuffixScannerDescription.halt
+          { state := CFS.halt
             tape := Taccept } ∧
-        RejectConfigAndFinalFlagsScannerDescription.runConfig nRejectFlags
-            { state := RejectConfigAndFinalFlagsScannerDescription.start
+        RCF.runConfig nRejectFlags
+            { state := RCF.start
               tape := Tape.move Direction.right Taccept } =
-          { state := RejectConfigAndFinalFlagsScannerDescription.halt
+          { state := RCF.halt
             tape := Tbody } ∧
-        ReturnToFirstMarkerDescription.runConfig nReturn
-            { state := ReturnToFirstMarkerDescription.start
+        RFM.runConfig nReturn
+            { state := RFM.start
               tape := Tape.move Direction.right Tbody } =
-          { state := ReturnToFirstMarkerDescription.halt
+          { state := RFM.halt
             tape := Tout } := by
   rcases
       checkedDovetailLayoutScannerDescription_haltsWithTape_stageField_inv h with
@@ -940,34 +958,34 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_acceptConfig_inv
 theorem rejectConfigAndFinalFlagsScannerDescription_runConfig_inv
     {Tin Tout : Tape Bool} {n : Nat}
     (h :
-      RejectConfigAndFinalFlagsScannerDescription.runConfig n
-          { state := RejectConfigAndFinalFlagsScannerDescription.start
+      RCF.runConfig n
+          { state := RCF.start
             tape := Tin } =
-        { state := RejectConfigAndFinalFlagsScannerDescription.halt
+        { state := RCF.halt
           tape := Tout }) :
     exists Treject : Tape Bool,
       (exists nReject : Nat,
-        ConfigurationSuffixScannerDescription.runConfig nReject
-            { state := ConfigurationSuffixScannerDescription.start
+        CFS.runConfig nReject
+            { state := CFS.start
               tape := Tin } =
-          { state := ConfigurationSuffixScannerDescription.halt
+          { state := CFS.halt
             tape := Treject } ∧
           forall k : Nat,
             k < nReject ->
-              (ConfigurationSuffixScannerDescription.runConfig k
-                { state := ConfigurationSuffixScannerDescription.start
+              (CFS.runConfig k
+                { state := CFS.start
                   tape := Tin }).state ≠
-                ConfigurationSuffixScannerDescription.halt) ∧
+                CFS.halt) ∧
         exists nFinalFlags : Nat,
-          FinalHitFlagsScannerDescription.runConfig nFinalFlags
-              { state := FinalHitFlagsScannerDescription.start
+          FHFS.runConfig nFinalFlags
+              { state := FHFS.start
                 tape := Tape.move Direction.right Treject } =
-            { state := FinalHitFlagsScannerDescription.halt
+            { state := FHFS.halt
               tape := Tout } := by
   simpa [RejectConfigAndFinalFlagsScannerDescription] using
     seqSubroutine_runConfig_inv
-      (A := ConfigurationSuffixScannerDescription)
-      (B := FinalHitFlagsScannerDescription)
+      (A := CFS)
+      (B := FHFS)
       (handoffMove := Direction.right)
       configurationSuffixScannerDescription_subroutineReady
       finalHitFlagsScannerDescription_subroutineReady
@@ -976,7 +994,7 @@ theorem rejectConfigAndFinalFlagsScannerDescription_runConfig_inv
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_rejectConfig_inv
     {bits : Word Bool} {Tout : Tape Bool}
-    (h : CheckedDovetailLayoutScannerDescription.HaltsWithTape bits Tout) :
+    (h : CDL.HaltsWithTape bits Tout) :
     exists b : Bool,
     exists suffixTail : Word Bool,
     exists Tinput : Tape Bool,
@@ -991,39 +1009,39 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_rejectConfig_inv
     exists nFinalFlags : Nat,
     exists nReturn : Nat,
       bits = false :: false :: false :: true :: b :: suffixTail ∧
-        BoolWordSuffixScannerDescription.runConfig nInput
-            { state := BoolWordSuffixScannerDescription.start
+        BWSS.runConfig nInput
+            { state := BWSS.start
               tape :=
                 tapeAtCells
                   (List.append (transitionRemainderBits.reverse.map some)
                     [none])
                   ((b :: suffixTail).map some) } =
-          { state := BoolWordSuffixScannerDescription.halt
+          { state := BWSS.halt
             tape := Tinput } ∧
-        DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig nStage
-            { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
+        NNSS.runConfig nStage
+            { state := NNSS.start
               tape := Tape.move Direction.right Tinput } =
-          { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt
+          { state := NNSS.halt
             tape := Tstage } ∧
-        ConfigurationSuffixScannerDescription.runConfig nAccept
-            { state := ConfigurationSuffixScannerDescription.start
+        CFS.runConfig nAccept
+            { state := CFS.start
               tape := Tape.move Direction.right Tstage } =
-          { state := ConfigurationSuffixScannerDescription.halt
+          { state := CFS.halt
             tape := Taccept } ∧
-        ConfigurationSuffixScannerDescription.runConfig nReject
-            { state := ConfigurationSuffixScannerDescription.start
+        CFS.runConfig nReject
+            { state := CFS.start
               tape := Tape.move Direction.right Taccept } =
-          { state := ConfigurationSuffixScannerDescription.halt
+          { state := CFS.halt
             tape := Treject } ∧
-        FinalHitFlagsScannerDescription.runConfig nFinalFlags
-            { state := FinalHitFlagsScannerDescription.start
+        FHFS.runConfig nFinalFlags
+            { state := FHFS.start
               tape := Tape.move Direction.right Treject } =
-          { state := FinalHitFlagsScannerDescription.halt
+          { state := FHFS.halt
             tape := Tbody } ∧
-        ReturnToFirstMarkerDescription.runConfig nReturn
-            { state := ReturnToFirstMarkerDescription.start
+        RFM.runConfig nReturn
+            { state := RFM.start
               tape := Tape.move Direction.right Tbody } =
-          { state := ReturnToFirstMarkerDescription.halt
+          { state := RFM.halt
             tape := Tout } := by
   rcases
       checkedDovetailLayoutScannerDescription_haltsWithTape_acceptConfig_inv h with
@@ -1044,34 +1062,34 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_rejectConfig_inv
 theorem finalHitFlagsScannerDescription_runConfig_inv
     {Tin Tout : Tape Bool} {n : Nat}
     (h :
-      FinalHitFlagsScannerDescription.runConfig n
-          { state := FinalHitFlagsScannerDescription.start
+      FHFS.runConfig n
+          { state := FHFS.start
             tape := Tin } =
-        { state := FinalHitFlagsScannerDescription.halt
+        { state := FHFS.halt
           tape := Tout }) :
     exists TacceptHit : Tape Bool,
       (exists nAcceptHit : Nat,
-        BoolSuffixScannerDescription.runConfig nAcceptHit
-            { state := BoolSuffixScannerDescription.start
+        BSS.runConfig nAcceptHit
+            { state := BSS.start
               tape := Tin } =
-          { state := BoolSuffixScannerDescription.halt
+          { state := BSS.halt
             tape := TacceptHit } ∧
           forall k : Nat,
             k < nAcceptHit ->
-              (BoolSuffixScannerDescription.runConfig k
-                { state := BoolSuffixScannerDescription.start
+              (BSS.runConfig k
+                { state := BSS.start
                   tape := Tin }).state ≠
-                BoolSuffixScannerDescription.halt) ∧
+                BSS.halt) ∧
         exists nRejectHit : Nat,
-          BoolFinalScannerDescription.runConfig nRejectHit
-              { state := BoolFinalScannerDescription.start
+          BFS.runConfig nRejectHit
+              { state := BFS.start
                 tape := Tape.move Direction.right TacceptHit } =
-            { state := BoolFinalScannerDescription.halt
+            { state := BFS.halt
               tape := Tout } := by
   simpa [FinalHitFlagsScannerDescription] using
     seqSubroutine_runConfig_inv
-      (A := BoolSuffixScannerDescription)
-      (B := BoolFinalScannerDescription)
+      (A := BSS)
+      (B := BFS)
       (handoffMove := Direction.right)
       boolSuffixScannerDescription_subroutineReady
       boolFinalScannerDescription_subroutineReady
@@ -1080,7 +1098,7 @@ theorem finalHitFlagsScannerDescription_runConfig_inv
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_finalFlags_inv
     {bits : Word Bool} {Tout : Tape Bool}
-    (h : CheckedDovetailLayoutScannerDescription.HaltsWithTape bits Tout) :
+    (h : CDL.HaltsWithTape bits Tout) :
     exists b : Bool,
     exists suffixTail : Word Bool,
     exists Tinput : Tape Bool,
@@ -1097,44 +1115,44 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_finalFlags_inv
     exists nRejectHit : Nat,
     exists nReturn : Nat,
       bits = false :: false :: false :: true :: b :: suffixTail ∧
-        BoolWordSuffixScannerDescription.runConfig nInput
-            { state := BoolWordSuffixScannerDescription.start
+        BWSS.runConfig nInput
+            { state := BWSS.start
               tape :=
                 tapeAtCells
                   (List.append (transitionRemainderBits.reverse.map some)
                     [none])
                   ((b :: suffixTail).map some) } =
-          { state := BoolWordSuffixScannerDescription.halt
+          { state := BWSS.halt
             tape := Tinput } ∧
-        DovetailStagePrefix.NonemptyNatSuffixScannerDescription.runConfig nStage
-            { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.start
+        NNSS.runConfig nStage
+            { state := NNSS.start
               tape := Tape.move Direction.right Tinput } =
-          { state := DovetailStagePrefix.NonemptyNatSuffixScannerDescription.halt
+          { state := NNSS.halt
             tape := Tstage } ∧
-        ConfigurationSuffixScannerDescription.runConfig nAccept
-            { state := ConfigurationSuffixScannerDescription.start
+        CFS.runConfig nAccept
+            { state := CFS.start
               tape := Tape.move Direction.right Tstage } =
-          { state := ConfigurationSuffixScannerDescription.halt
+          { state := CFS.halt
             tape := Taccept } ∧
-        ConfigurationSuffixScannerDescription.runConfig nReject
-            { state := ConfigurationSuffixScannerDescription.start
+        CFS.runConfig nReject
+            { state := CFS.start
               tape := Tape.move Direction.right Taccept } =
-          { state := ConfigurationSuffixScannerDescription.halt
+          { state := CFS.halt
             tape := Treject } ∧
-        BoolSuffixScannerDescription.runConfig nAcceptHit
-            { state := BoolSuffixScannerDescription.start
+        BSS.runConfig nAcceptHit
+            { state := BSS.start
               tape := Tape.move Direction.right Treject } =
-          { state := BoolSuffixScannerDescription.halt
+          { state := BSS.halt
             tape := TacceptHit } ∧
-        BoolFinalScannerDescription.runConfig nRejectHit
-            { state := BoolFinalScannerDescription.start
+        BFS.runConfig nRejectHit
+            { state := BFS.start
               tape := Tape.move Direction.right TacceptHit } =
-          { state := BoolFinalScannerDescription.halt
+          { state := BFS.halt
             tape := Tbody } ∧
-        ReturnToFirstMarkerDescription.runConfig nReturn
-            { state := ReturnToFirstMarkerDescription.start
+        RFM.runConfig nReturn
+            { state := RFM.start
               tape := Tape.move Direction.right Tbody } =
-          { state := ReturnToFirstMarkerDescription.halt
+          { state := RFM.halt
             tape := Tout } := by
   rcases
       checkedDovetailLayoutScannerDescription_haltsWithTape_rejectConfig_inv h with
