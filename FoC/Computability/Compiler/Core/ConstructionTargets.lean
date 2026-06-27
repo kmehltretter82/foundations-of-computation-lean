@@ -239,6 +239,11 @@ def PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstr
         (PairedRecognizerDovetailInitialLayoutCode accept reject)
         initializer tapeCodePrimitiveCodeWordHandoffMove
 
+/--
+Obsolete compatibility target for the bounded runner.  The active bounded-runner
+route is {name}`PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction`,
+which uses the output-compiled padded/equivalence contract.
+-/
 def PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction :
     Prop :=
   forall accept reject : MachineDescription,
@@ -262,6 +267,11 @@ def PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutine
         (PairedRecognizerDovetailInitialLayoutCode accept reject)
         initializer tapeCodePrimitiveCodeWordHandoffMove
 
+/--
+Obsolete compatibility target for the bounded runner.  Exact closed handoff is
+too strong for the padded/equivalence runner and has no active construction
+scaffold.
+-/
 def PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction :
     Prop :=
   forall accept reject : MachineDescription,
@@ -286,6 +296,23 @@ def PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction :
     TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       (PairedRecognizerDovetailLayoutCode accept reject)
       runner tapeCodePrimitiveCodeWordHandoffMove ->
+    TapeCodePrimitiveOutputSubroutineRealizedByDescription
+      PairedRecognizerDovetailTotalOutputCode
+      emitter ->
+    exists attempt : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailTotalStageAttemptSourceCode accept reject)
+        attempt
+
+def PairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConstruction :
+    Prop :=
+  forall accept reject initializer runner emitter : MachineDescription,
+    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+      (PairedRecognizerDovetailInitialLayoutCode accept reject)
+      initializer tapeCodePrimitiveCodeWordHandoffMove ->
+    TapeCodePrimitiveOutputCompiledSubroutineByDescription
+      (PairedRecognizerDovetailLayoutCode accept reject)
+      runner ->
     TapeCodePrimitiveOutputSubroutineRealizedByDescription
       PairedRecognizerDovetailTotalOutputCode
       emitter ->

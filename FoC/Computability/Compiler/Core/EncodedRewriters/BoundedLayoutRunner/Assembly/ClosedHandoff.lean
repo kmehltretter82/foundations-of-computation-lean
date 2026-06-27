@@ -269,21 +269,13 @@ theorem primitivePipeline_transform_eq
         RejectProjectionPrimitive_encode, hrejectMerge,
         ConfigRunnerAfterReject_afterAccept, BoundedRunLayout]
 
-/-- Direct finite-machine leaf for the closed-handoff bounded runner.
-
-The older decomposition through {name}`PrimitivePipeline` required exact
-closed-handoff merge primitives.  That split is too strong: the merge phases
-return tapes equivalent to the parsed dovetail layout, while preserving
-simulator-layout scratch structure.  The public closed-handoff theorem is
-therefore kept as one finite-machine construction obligation.
+/-!
+The exact closed-handoff bounded-runner target is intentionally retired.
+The padded/equivalence construction above proves {name}`outputCompiledSubroutine`,
+which is the contract used by the high-level bounded-runner route.  Requiring
+this runner to halt in the exact code-word handoff position is stronger than
+normalized output and is not a valid construction target for shrinking layouts.
 -/
-theorem closedHandoffCompiledSubroutine
-    (accept reject : MachineDescription) :
-    exists runner : MachineDescription,
-      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-        (PairedRecognizerDovetailLayoutCode accept reject)
-        runner tapeCodePrimitiveCodeWordHandoffMove := by
-  sorry
 
 end BoundedLayoutRunner
 end EncodedRewriters

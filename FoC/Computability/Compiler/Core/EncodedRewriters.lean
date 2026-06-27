@@ -97,6 +97,10 @@ def EncodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction :
     Prop :=
   PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction
 
+/--
+Obsolete compatibility alias for the bounded runner.  The active encoded route
+is {name}`EncodedDovetailLayoutBoundedRunnerRewriterConstruction`.
+-/
 def EncodedDovetailLayoutBoundedRunnerHandoffRewriterConstruction :
     Prop :=
   PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction
@@ -109,6 +113,10 @@ def EncodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction :
     Prop :=
   PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction
 
+/--
+Obsolete compatibility alias for the bounded runner.  The output-compiled
+padded/equivalence route deliberately has no closed-handoff scaffold.
+-/
 def EncodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction :
     Prop :=
   PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction
@@ -241,9 +249,11 @@ theorem encodedControllerContinueRewriterConstruction_of_resultContinueCodeWordS
       pairedRecognizerDovetailControllerResultContinueCode_encode_nextStage_iff
 
 /-!
-The first two stage-attempt components are routed through closed handoff
-subroutines.  The total-output emitter is the final shrinking phase, so it only
-uses the normalized output-compiled contract.
+The stage-input initializer still has an exact closed-handoff contract.  The
+bounded-layout runner intentionally uses the normalized output-compiled
+contract: its padded/equivalence machine may shrink the physical tape window,
+so an exact closed-handoff target would over-constrain the implementation.  The
+total-output emitter is also a normalized output component.
 -/
 
 theorem encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold :
@@ -275,18 +285,6 @@ theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
     encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine
       ⟨runner, hrunner⟩
 
-/--
-Closed-handoff bounded-runner construction.  This is the remaining
-finite-machine leaf for the bounded layout runner; the nearby handoff theorem
-below is only adapter glue over this target.
--/
-theorem encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold :
-    EncodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction := by
-  intro accept reject
-  exact
-    EncodedRewriters.BoundedLayoutRunner.closedHandoffCompiledSubroutine
-      accept reject
-
 theorem encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold :
     EncodedDovetailTotalOutputEmitterRewriterConstruction := by
   exact EncodedRewriters.TotalOutputEmitter.outputRealizedSubroutine
@@ -295,11 +293,6 @@ theorem encodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction_scaf
     EncodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction :=
   pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_of_closedHandoff
     encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold
-
-theorem encodedDovetailLayoutBoundedRunnerHandoffRewriterConstruction_scaffold :
-    EncodedDovetailLayoutBoundedRunnerHandoffRewriterConstruction :=
-  pairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction_of_closedHandoff
-    encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold
 
 end Computability
 end FoC

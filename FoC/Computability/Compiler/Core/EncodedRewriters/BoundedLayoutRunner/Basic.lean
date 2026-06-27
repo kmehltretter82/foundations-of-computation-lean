@@ -10,7 +10,8 @@ This module states the semantic contract for the finite machine realizing
 The machine must validate a complete
 {name (full := FoC.Computability.MachineDescription.DovetailLayout)}`DovetailLayout`,
 run both recognizer configurations for the encoded stage bound, update the hit
-flags, and halt on the right-shifted encoding of the updated layout.
+flags, and halt on a tape equivalent to the normalized encoding of the updated
+layout.
 -/
 
 namespace FoC

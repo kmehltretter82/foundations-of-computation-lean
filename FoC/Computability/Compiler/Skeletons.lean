@@ -173,13 +173,20 @@ theorem pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstructio
   simpa [PairedRecognizerDovetailTotalStageAttemptSourceCode,
     initRunner, attempt] using hsecond
 
+theorem pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConstruction_scaffold :
+    PairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConstruction := by
+  -- Finite-machine obligation for the output/equivalence-aware stage-attempt
+  -- route.  This intentionally consumes the bounded runner's normalized output
+  -- contract instead of an exact code-word handoff.
+  sorry
+
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold :
     PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :=
-  pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_of_finiteSourceComponents
+  pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_of_outputFiniteSourceComponents
     pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold
-    pairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction_scaffold
+    pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold
     pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_scaffold
-    pairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction_scaffold
+    pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConstruction_scaffold
 
 def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold :
     PairedRecognizerDovetailFiniteControllerCompilerCloseout where

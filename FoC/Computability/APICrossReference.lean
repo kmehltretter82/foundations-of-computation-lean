@@ -336,10 +336,10 @@ The current construction surface is intentionally split by role.
 * Broad finite-machine construction leaves: the twelve real build warnings are
   the controller raw-Bool header emitter, two selected-projection padded
   leaves, the selected-merge padded emitter, the fixed-description bounded
-  simulator padded leaf, the bounded-runner closed-handoff leaf, two
-  controller-loop leaves, and four universal finite-source leaves. Prose
-  mentions of {lit}`sorry` in this page are navigation notes, not declaration
-  warnings.
+  simulator padded leaf, the output/equivalence-aware total stage-attempt
+  sequencing leaf, two controller-loop leaves, and four universal finite-source
+  leaves. Prose mentions of {lit}`sorry` in this page are navigation notes, not
+  declaration warnings.
 
 ## Proof Navigation Rules
 
@@ -475,11 +475,13 @@ below, not by file order.
    {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedConstruction_scaffold_configRunner)}`EncodedRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedConstruction_scaffold_configRunner`
    is the config-runner simulator padded/equivalence leaf.  It should not be
    replaced by the old exact right-handoff skeleton.
-6. Bounded-runner closed handoff:
-   {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.closedHandoffCompiledSubroutine)}`EncodedRewriters.BoundedLayoutRunner.closedHandoffCompiledSubroutine`
-   is a broad compiler-construction leaf for the public closed-handoff
-   rewriter.  It cannot be closed from output compilation alone; it needs a
-   construction that exposes the required closed-handoff behavior.
+6. Total stage-attempt output sequencing:
+   {name (full := FoC.Computability.pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConstruction_scaffold)}`pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConstruction_scaffold`
+   is the output/equivalence-aware finite-machine leaf that composes the
+   closed-handoff initializer, the output-compiled bounded runner, and the
+   total-output emitter.  This replaces the obsolete bounded-runner
+   closed-handoff route; do not try to prove an exact handoff theorem for the
+   bounded runner.
 7. Controller stage invocation and finite loop:
    the private {lit}`controllerStageAttemptWitnessedInvocationConstruction_leaf`
    feeds
