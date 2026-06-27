@@ -560,6 +560,54 @@ theorem sourceRightEndDescription_haltsFrom_rewindTarget_sourceBits
       (sourceRightEndTape (sourceBits L)) :=
   sourceRightEndDescription_haltsFromTape (sourceBits L)
 
+theorem tapeAtCells_move_left_move_right_cons_cons
+    (left : List (Option Bool)) (head next : Option Bool)
+    (right : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (DovetailInitialLayoutInitializer.tapeAtCells left
+            (head :: next :: right))) =
+      DovetailInitialLayoutInitializer.tapeAtCells left
+        (head :: next :: right) := by
+  simp [DovetailInitialLayoutInitializer.tapeAtCells, Tape.move,
+    Tape.moveLeft, Tape.moveRight]
+
+theorem rewindTargetTape_sourceBits_move_left_move_right
+    (L : DovetailLayout) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (rewindTargetTape (sourceBits L))) =
+      rewindTargetTape (sourceBits L) := by
+  simp [rewindTargetTape, sourceBits,
+    SelectedProjectionTailProjector.outputPrefixBits,
+    encodeCodeSymbolAsInput,
+    DovetailInitialLayoutInitializer.tapeAtCells,
+    Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem tape_move_left_tapeAtCells_single_move_left_move_right
+    (left : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (Tape.move Direction.left
+            (DovetailInitialLayoutInitializer.tapeAtCells left [none]))) =
+      Tape.move Direction.left
+        (DovetailInitialLayoutInitializer.tapeAtCells left [none]) := by
+  cases left with
+  | nil =>
+      simp [DovetailInitialLayoutInitializer.tapeAtCells,
+        Tape.move, Tape.moveLeft, Tape.moveRight]
+  | cons cell rest =>
+      simp [DovetailInitialLayoutInitializer.tapeAtCells,
+        Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem sourceRightEndTape_move_left_move_right
+    (bits : Word Bool) :
+    Tape.move Direction.left
+        (Tape.move Direction.right (sourceRightEndTape bits)) =
+      sourceRightEndTape bits := by
+  simp [sourceRightEndTape,
+    tape_move_left_tapeAtCells_single_move_left_move_right]
+
 def sourceRightEndLeftFields
     (L : DovetailLayout) : List (Option Bool) :=
   List.append
@@ -954,6 +1002,313 @@ theorem selectedHitFromRewindDescription_haltsFrom_rewindTarget_sourceBits
       sourceRightEndDescription_haltsFrom_rewindTarget_sourceBits L
   · simpa [selectedHitFromRewindDescription] using
       acceptHitFromRewindDescription_haltsFrom_rewindTarget_sourceBits L
+
+def eraseRightBoolFieldAfterCurrentDescription : MachineDescription where
+  stateCount := 6
+  start := 0
+  halt := 5
+  transitions :=
+    [ transition 0 (some false) (some false) Direction.right 1
+    , transition 0 (some true) (some true) Direction.right 1
+    , transition 1 (some false) none Direction.right 2
+    , transition 1 (some true) none Direction.right 2
+    , transition 2 (some false) none Direction.right 3
+    , transition 2 (some true) none Direction.right 3
+    , transition 3 (some false) none Direction.right 4
+    , transition 3 (some true) none Direction.right 4
+    , transition 4 (some false) none Direction.right 5
+    , transition 4 (some true) none Direction.right 5 ]
+
+theorem eraseRightBoolFieldAfterCurrentDescription_wellFormed :
+    eraseRightBoolFieldAfterCurrentDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := eraseRightBoolFieldAfterCurrentDescription.transitions)
+      (stateCount :=
+        eraseRightBoolFieldAfterCurrentDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := eraseRightBoolFieldAfterCurrentDescription.transitions)
+      (by decide)
+
+theorem eraseRightBoolFieldAfterCurrentDescription_haltTransitionFree :
+    eraseRightBoolFieldAfterCurrentDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := eraseRightBoolFieldAfterCurrentDescription.transitions)
+    (state := eraseRightBoolFieldAfterCurrentDescription.halt)
+    (by decide)
+
+theorem eraseRightBoolFieldAfterCurrentDescription_subroutineReady :
+    eraseRightBoolFieldAfterCurrentDescription.SubroutineReady :=
+  ⟨eraseRightBoolFieldAfterCurrentDescription_wellFormed,
+    eraseRightBoolFieldAfterCurrentDescription_haltTransitionFree⟩
+
+theorem eraseRightBoolFieldAfterCurrentDescription_run
+    (current b0 b1 b2 b3 : Bool)
+    (left right : List (Option Bool)) :
+    eraseRightBoolFieldAfterCurrentDescription.runConfig 5
+        { state := eraseRightBoolFieldAfterCurrentDescription.start
+          tape :=
+            DovetailInitialLayoutInitializer.tapeAtCells
+              left
+              (some current :: some b0 :: some b1 ::
+                some b2 :: some b3 :: right) } =
+      { state := eraseRightBoolFieldAfterCurrentDescription.halt
+        tape :=
+          DovetailInitialLayoutInitializer.tapeAtCells
+            (List.append (List.replicate 4 (none : Option Bool))
+              (some current :: left))
+            right } := by
+  cases current <;> cases b0 <;> cases b1 <;> cases b2 <;>
+    cases b3 <;> cases right <;>
+    simp [eraseRightBoolFieldAfterCurrentDescription,
+      DovetailInitialLayoutInitializer.tapeAtCells,
+      runConfig, stepConfig, lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
+      Tape.moveRight]
+
+def eraseLeftBoolFieldBeforeCurrentDescription : MachineDescription where
+  stateCount := 9
+  start := 0
+  halt := 8
+  transitions :=
+    [ transition 0 (some false) (some false) Direction.left 1
+    , transition 0 (some true) (some true) Direction.left 1
+    , transition 1 (some false) (some false) Direction.left 2
+    , transition 1 (some true) (some true) Direction.left 2
+    , transition 2 (some false) (some false) Direction.left 3
+    , transition 2 (some true) (some true) Direction.left 3
+    , transition 3 (some false) (some false) Direction.left 4
+    , transition 3 (some true) (some true) Direction.left 4
+    , transition 4 (some false) none Direction.left 5
+    , transition 4 (some true) none Direction.left 5
+    , transition 5 (some false) none Direction.left 6
+    , transition 5 (some true) none Direction.left 6
+    , transition 6 (some false) none Direction.left 7
+    , transition 6 (some true) none Direction.left 7
+    , transition 7 (some false) none Direction.left 8
+    , transition 7 (some true) none Direction.left 8 ]
+
+theorem eraseLeftBoolFieldBeforeCurrentDescription_wellFormed :
+    eraseLeftBoolFieldBeforeCurrentDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := eraseLeftBoolFieldBeforeCurrentDescription.transitions)
+      (stateCount :=
+        eraseLeftBoolFieldBeforeCurrentDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := eraseLeftBoolFieldBeforeCurrentDescription.transitions)
+      (by decide)
+
+theorem eraseLeftBoolFieldBeforeCurrentDescription_haltTransitionFree :
+    eraseLeftBoolFieldBeforeCurrentDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := eraseLeftBoolFieldBeforeCurrentDescription.transitions)
+    (state := eraseLeftBoolFieldBeforeCurrentDescription.halt)
+    (by decide)
+
+theorem eraseLeftBoolFieldBeforeCurrentDescription_subroutineReady :
+    eraseLeftBoolFieldBeforeCurrentDescription.SubroutineReady :=
+  ⟨eraseLeftBoolFieldBeforeCurrentDescription_wellFormed,
+    eraseLeftBoolFieldBeforeCurrentDescription_haltTransitionFree⟩
+
+def selectedHitOtherFlagErasedTape
+    (useAccept : Bool) (L : DovetailLayout) : Tape Bool :=
+  if useAccept then
+    DovetailInitialLayoutInitializer.tapeAtCells
+      (List.append (List.replicate 4 (none : Option Bool))
+        (List.append
+          ((CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            L.acceptHit []).reverse.map some)
+          (List.append
+            ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+              L.rejectConfig []).reverse.map some)
+            (List.append
+              ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                L.acceptConfig []).reverse.map some)
+              (List.append
+                ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                  L.stage).reverse.map some)
+                (List.append
+                  ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
+                    some)
+                  [none]))))))
+      [none]
+  else
+    Tape.move Direction.left
+      (DovetailInitialLayoutInitializer.tapeAtCells
+        (List.append
+          ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+            L.rejectConfig []).reverse.map some)
+          (List.append
+            ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+              L.acceptConfig []).reverse.map some)
+            (List.append
+              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                L.stage).reverse.map some)
+              (List.append
+                ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
+                  some)
+                [none]))))
+        (List.append (List.replicate 4 (none : Option Bool))
+          (List.append
+            ((CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+              L.rejectHit []).map some)
+            [none])))
+
+def eraseOtherHitFlagDescription
+    (useAccept : Bool) : MachineDescription :=
+  if useAccept then
+    eraseRightBoolFieldAfterCurrentDescription
+  else
+    eraseLeftBoolFieldBeforeCurrentDescription
+
+theorem eraseOtherHitFlagDescription_subroutineReady
+    (useAccept : Bool) :
+    (eraseOtherHitFlagDescription useAccept).SubroutineReady := by
+  cases useAccept
+  · simpa [eraseOtherHitFlagDescription] using
+      eraseLeftBoolFieldBeforeCurrentDescription_subroutineReady
+  · simpa [eraseOtherHitFlagDescription] using
+      eraseRightBoolFieldAfterCurrentDescription_subroutineReady
+
+theorem eraseOtherHitFlagDescription_haltsFrom_selectedHitRightEndTape
+    (useAccept : Bool) (L : DovetailLayout) :
+    (eraseOtherHitFlagDescription useAccept).HaltsFromTape
+      (selectedHitRightEndTape useAccept L)
+      (selectedHitOtherFlagErasedTape useAccept L) := by
+  cases useAccept
+  · refine ⟨8, ?_⟩
+    constructor <;>
+      by_cases hreject : L.rejectHit <;>
+      by_cases haccept : L.acceptHit <;>
+        simp [eraseOtherHitFlagDescription,
+          selectedHitRightEndTape, selectedHitOtherFlagErasedTape,
+          sourceRightEndTape_sourceBits_eq_fields,
+          sourceRightEndLeftFields,
+          eraseLeftBoolFieldBeforeCurrentDescription,
+          hreject, haccept,
+          CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+          CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+          CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+          encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+          DovetailInitialLayoutInitializer.tapeAtCells,
+          runConfig, stepConfig, lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft]
+  · refine ⟨5, ?_⟩
+    constructor <;>
+      by_cases hreject : L.rejectHit <;>
+      by_cases haccept : L.acceptHit <;>
+        simp [eraseOtherHitFlagDescription,
+          selectedHitRightEndTape, selectedHitOtherFlagErasedTape,
+          eraseRightBoolFieldAfterCurrentDescription,
+          hreject, haccept,
+          CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+          CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+          CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+          encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+          DovetailInitialLayoutInitializer.tapeAtCells,
+          runConfig, stepConfig, lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft, Tape.moveRight]
+
+theorem selectedHitRightEndTape_move_left_move_right
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (selectedHitRightEndTape useAccept L)) =
+      selectedHitRightEndTape useAccept L := by
+  cases useAccept
+  · simpa [selectedHitRightEndTape] using
+      sourceRightEndTape_move_left_move_right (sourceBits L)
+  · by_cases hreject : L.rejectHit
+    · by_cases haccept : L.acceptHit
+      · simp [selectedHitRightEndTape, hreject, haccept,
+          CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+          CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+          CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+          encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+          DovetailInitialLayoutInitializer.tapeAtCells,
+          Tape.move, Tape.moveLeft, Tape.moveRight]
+      · simp [selectedHitRightEndTape, hreject, haccept,
+          CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+          CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+          CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+          encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+          DovetailInitialLayoutInitializer.tapeAtCells,
+          Tape.move, Tape.moveLeft, Tape.moveRight]
+    · by_cases haccept : L.acceptHit
+      · simp [selectedHitRightEndTape, hreject, haccept,
+          CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+          CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+          CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+          encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+          DovetailInitialLayoutInitializer.tapeAtCells,
+          Tape.move, Tape.moveLeft, Tape.moveRight]
+      · simp [selectedHitRightEndTape, hreject, haccept,
+          CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+          CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+          CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+          encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+          DovetailInitialLayoutInitializer.tapeAtCells,
+          Tape.move, Tape.moveLeft, Tape.moveRight]
+
+def selectedHitFromScannerDescription
+    (useAccept : Bool) : MachineDescription :=
+  SeqViaCanonical sourceRewindDescription
+    (selectedHitFromRewindDescription useAccept)
+
+theorem selectedHitFromScannerDescription_subroutineReady
+    (useAccept : Bool) :
+    (selectedHitFromScannerDescription useAccept).SubroutineReady :=
+  SeqViaCanonical_subroutineReady
+    sourceRewindDescription_subroutineReady
+    (selectedHitFromRewindDescription_subroutineReady useAccept)
+
+theorem selectedHitFromScannerDescription_haltsFrom_sourceScannerRightHandoffTape
+    (useAccept : Bool) (L : DovetailLayout) :
+    (selectedHitFromScannerDescription useAccept).HaltsFromTape
+      (SelectedProjectionTailProjector.sourceScannerRightHandoffTape L
+        ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
+          some))
+      (selectedHitRightEndTape useAccept L) :=
+  SeqViaCanonical_haltsFromTape_of_haltsFromTape
+    sourceRewindDescription_subroutineReady
+    (selectedHitFromRewindDescription_subroutineReady useAccept)
+    (sourceRewindDescription_haltsFrom_sourceScannerRightHandoffTape L)
+    (rewindTargetTape_sourceBits_move_left_move_right L)
+    (selectedHitFromRewindDescription_haltsFrom_rewindTarget_sourceBits
+      useAccept L)
+
+def selectedHitOtherFlagErasedFromScannerDescription
+    (useAccept : Bool) : MachineDescription :=
+  SeqViaCanonical (selectedHitFromScannerDescription useAccept)
+    (eraseOtherHitFlagDescription useAccept)
+
+theorem selectedHitOtherFlagErasedFromScannerDescription_subroutineReady
+    (useAccept : Bool) :
+    (selectedHitOtherFlagErasedFromScannerDescription useAccept).SubroutineReady :=
+  SeqViaCanonical_subroutineReady
+    (selectedHitFromScannerDescription_subroutineReady useAccept)
+    (eraseOtherHitFlagDescription_subroutineReady useAccept)
+
+theorem selectedHitOtherFlagErasedFromScannerDescription_haltsFrom_sourceScannerRightHandoffTape
+    (useAccept : Bool) (L : DovetailLayout) :
+    (selectedHitOtherFlagErasedFromScannerDescription useAccept).HaltsFromTape
+      (SelectedProjectionTailProjector.sourceScannerRightHandoffTape L
+        ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
+          some))
+      (selectedHitOtherFlagErasedTape useAccept L) :=
+  SeqViaCanonical_haltsFromTape_of_haltsFromTape
+    (selectedHitFromScannerDescription_subroutineReady useAccept)
+    (eraseOtherHitFlagDescription_subroutineReady useAccept)
+    (selectedHitFromScannerDescription_haltsFrom_sourceScannerRightHandoffTape
+      useAccept L)
+    (selectedHitRightEndTape_move_left_move_right useAccept L)
+    (eraseOtherHitFlagDescription_haltsFrom_selectedHitRightEndTape
+      useAccept L)
 
 end SelectedProjectionPaddedTailCleanup
 
