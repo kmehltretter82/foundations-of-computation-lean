@@ -1,6 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.RightShiftedPrimitives
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseRunner
-import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.CodeRightShifted
 
 set_option doc.verso true
 
@@ -48,7 +47,7 @@ theorem selectedProjectionSpec_of_parser_emitter
       ⟨Tmid, hparser_run, hemitter_run⟩
     rcases hparser.right.right code Tmid hparser_run with
       ⟨L, hcode, hTmid_equiv⟩
-    refine ⟨L, MachineDescription.DovetailLayout.decodeComplete_eq_some_encode hcode, ?_⟩
+    refine ⟨L, CommonGround.DovetailLayouts.decode_eq_some_encode hcode, ?_⟩
     have hemitter_exact := hemitter.right.left L
     have h_in_equiv :
         Tape.Equiv (Tape.input (ParsedLayoutBits L))
@@ -154,7 +153,7 @@ def SelectedMergeForwardParserFromSimulatorParser
 theorem selectedMergeForwardParserSpec_of_simulatorParser
     {parser : MachineDescription}
     (hparser :
-      EncodedRewriters.CanonicalLayouts.Simulator.ClosedRecognizerSpec
+      CommonGround.SimulatorLayouts.ClosedRecognizerSpec
         parser) :
     SelectedMergeForwardParserSpec
       (SelectedMergeForwardParserFromSimulatorParser parser) := by
@@ -169,18 +168,18 @@ theorem selectedMergeForwardParserSpec_of_simulatorParser
     have hparserRun :
         parser.HaltsWithTape
           (MachineDescription.SimulatorLayout.asBoolInput S)
-          (EncodedRewriters.CanonicalLayouts.Simulator.handoffTape S) := by
-      simpa [EncodedRewriters.CanonicalLayouts.Simulator.bits,
-        EncodedRewriters.CanonicalLayouts.Simulator.encode,
-        EncodedRewriters.CanonicalLayouts.Bits,
+          (CommonGround.SimulatorLayouts.handoffTape S) := by
+      simpa [CommonGround.SimulatorLayouts.bits,
+        CommonGround.SimulatorLayouts.encode,
+        CommonGround.LayoutTapes.Bits,
         MachineDescription.SimulatorLayout.asBoolInput] using
         hparser.right.left S
     have hhandoff :
         Tape.move Direction.left
-            (EncodedRewriters.CanonicalLayouts.Simulator.handoffTape S) =
+            (CommonGround.SimulatorLayouts.handoffTape S) =
           MachineDescription.SimulatorLayout.tape S := by
       simpa [MachineDescription.SimulatorLayout.tape] using
-        fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff S
+        CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape S
     exact
       MachineDescription.seqSubroutine_haltsWithTape_of_haltsWithTape
         hparser.left hid hparserRun
@@ -192,7 +191,7 @@ theorem selectedMergeForwardParserSpec_of_simulatorParser
 
 theorem selectedMergeForwardParserConstruction_of_simulatorParser
     (hparser :
-      EncodedRewriters.CanonicalLayouts.Simulator.ClosedRecognizerConstruction) :
+      CommonGround.SimulatorLayouts.ClosedRecognizerConstruction) :
     SelectedMergeForwardParserConstruction := by
   rcases hparser with ⟨parser, hparser⟩
   exact
@@ -266,18 +265,18 @@ theorem selectedMergeInputValidatorPrimitive_transform_eq_some_iff
                 cases h
                 have hcode :
                     code = MachineDescription.SimulatorLayout.encode S :=
-                  MachineDescription.SimulatorLayout.decodeComplete_eq_some_encode
+                  CommonGround.SimulatorLayouts.decodeComplete_eq_some_encode
                     hS
                 have hinputCode :
                     inputCode = MachineDescription.DovetailLayout.encode L :=
-                  MachineDescription.DovetailLayout.decodeComplete_eq_some_encode
+                  CommonGround.DovetailLayouts.decode_eq_some_encode
                     hL
                 rw [hinputCode] at hinput
                 exact ⟨S, L, hcode, hinput, rfl⟩
   · intro h
     rcases h with ⟨S, L, rfl, hinput, rfl⟩
     simp [SelectedMergeInputValidatorPrimitive,
-      MachineDescription.SimulatorLayout.decodeComplete_encode,
+      CommonGround.SimulatorLayouts.decodeComplete_encode,
       hinput,
       MachineDescription.DovetailLayout.decodeComplete_encode]
 
@@ -470,7 +469,7 @@ def SelectedMergeInputValidatorFromParserChecker
 theorem selectedMergeInputValidatorSpec_of_parser_checker
     {parser checker : MachineDescription}
     (hparser :
-      EncodedRewriters.CanonicalLayouts.Simulator.ClosedRecognizerSpec
+      CommonGround.SimulatorLayouts.ClosedRecognizerSpec
         parser)
     (hchecker : SelectedMergeInputFieldCheckerSpec checker) :
     SelectedMergeInputValidatorSpec
@@ -487,10 +486,10 @@ theorem selectedMergeInputValidatorSpec_of_parser_checker
     have hparserRun :
         parser.HaltsWithTape
           (MachineDescription.SimulatorLayout.asBoolInput S)
-          (EncodedRewriters.CanonicalLayouts.Simulator.handoffTape S) := by
-      simpa [EncodedRewriters.CanonicalLayouts.Simulator.bits,
-        EncodedRewriters.CanonicalLayouts.Simulator.encode,
-        EncodedRewriters.CanonicalLayouts.Bits,
+          (CommonGround.SimulatorLayouts.handoffTape S) := by
+      simpa [CommonGround.SimulatorLayouts.bits,
+        CommonGround.SimulatorLayouts.encode,
+        CommonGround.LayoutTapes.Bits,
         MachineDescription.SimulatorLayout.asBoolInput] using
         hparser.right.left S
     have hcheckerRun :
@@ -505,7 +504,7 @@ theorem selectedMergeInputValidatorSpec_of_parser_checker
         hparser.left hchecker.left hparserRun
         ⟨n, by
           simpa [
-            fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff
+            CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
               S] using hn⟩
   · intro S T hhalt
     rcases
@@ -529,9 +528,9 @@ theorem selectedMergeInputValidatorSpec_of_parser_checker
           MachineDescription.SimulatorLayout.decodeComplete
               (MachineDescription.SimulatorLayout.encode S) =
             some S' := by
-        simpa [EncodedRewriters.CanonicalLayouts.Simulator.decode,
-          EncodedRewriters.CanonicalLayouts.Simulator.encode] using hdecode
-      rw [MachineDescription.SimulatorLayout.decodeComplete_encode] at hdecode'
+        simpa [CommonGround.SimulatorLayouts.decode,
+          CommonGround.SimulatorLayouts.encode] using hdecode
+      rw [CommonGround.SimulatorLayouts.decodeComplete_encode] at hdecode'
       cases hdecode'
       rfl
     subst S'
@@ -543,11 +542,11 @@ theorem selectedMergeInputValidatorSpec_of_parser_checker
       constructor
       · simpa [MachineDescription.HaltsFromTapeIn,
           MachineDescription.initial, hTmid,
-          fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff
+          CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
             S] using congrArg MachineDescription.Configuration.state hn
       · simpa [MachineDescription.HaltsFromTapeIn,
           MachineDescription.initial, hTmid,
-          fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff
+          CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
             S] using congrArg MachineDescription.Configuration.tape hn
     rcases hchecker.right.right S T hcheckerRun with
       ⟨L, hinput, hT⟩
@@ -555,7 +554,7 @@ theorem selectedMergeInputValidatorSpec_of_parser_checker
 
 theorem selectedMergeInputValidatorConstruction_of_parser_checker
     (hparser :
-      EncodedRewriters.CanonicalLayouts.Simulator.ClosedRecognizerConstruction)
+      CommonGround.SimulatorLayouts.ClosedRecognizerConstruction)
     (hchecker : SelectedMergeInputFieldCheckerConstruction) :
     SelectedMergeInputValidatorConstruction := by
   rcases hparser with ⟨parser, hparser⟩
@@ -571,7 +570,7 @@ def SelectedMergeInputValidatorFromParserField
 theorem selectedMergeInputValidatorExactSpec_of_parser_fieldValidator
     {parser fieldValidator : MachineDescription}
     (hparser :
-      EncodedRewriters.CanonicalLayouts.Simulator.ClosedRecognizerSpec
+      CommonGround.SimulatorLayouts.ClosedRecognizerSpec
         parser)
     (hfield :
       SelectedMergeInputFieldValidatorSpec fieldValidator) :
@@ -590,10 +589,10 @@ theorem selectedMergeInputValidatorExactSpec_of_parser_fieldValidator
     have hparserRun :
         parser.HaltsWithTape
           (MachineDescription.SimulatorLayout.asBoolInput p.S)
-          (EncodedRewriters.CanonicalLayouts.Simulator.handoffTape p.S) := by
-      simpa [EncodedRewriters.CanonicalLayouts.Simulator.bits,
-        EncodedRewriters.CanonicalLayouts.Simulator.encode,
-        EncodedRewriters.CanonicalLayouts.Bits,
+          (CommonGround.SimulatorLayouts.handoffTape p.S) := by
+      simpa [CommonGround.SimulatorLayouts.bits,
+        CommonGround.SimulatorLayouts.encode,
+        CommonGround.LayoutTapes.Bits,
         MachineDescription.SimulatorLayout.asBoolInput] using
         hparser.right.left p.S
     have hfieldRun :
@@ -608,7 +607,7 @@ theorem selectedMergeInputValidatorExactSpec_of_parser_fieldValidator
         hparser.left hfield.left hparserRun
         ⟨n, by
           simpa [
-            fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff
+            CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
               p.S] using hn⟩
   · intro code T hhalt
     rcases
@@ -618,7 +617,7 @@ theorem selectedMergeInputValidatorExactSpec_of_parser_fieldValidator
     rcases hparser.right.right code Tmid hparserRun with
       ⟨S, hdecode, hTmid⟩
     have hcode : code = MachineDescription.SimulatorLayout.encode S :=
-      MachineDescription.SimulatorLayout.decodeComplete_eq_some_encode
+      CommonGround.SimulatorLayouts.decodeComplete_eq_some_encode
         hdecode
     rcases hfieldReach with ⟨n, hn⟩
     have hfieldRun :
@@ -628,11 +627,11 @@ theorem selectedMergeInputValidatorExactSpec_of_parser_fieldValidator
       constructor
       · simpa [MachineDescription.HaltsFromTapeIn,
           MachineDescription.initial, hTmid,
-          fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff
+          CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
             S] using congrArg MachineDescription.Configuration.state hn
       · simpa [MachineDescription.HaltsFromTapeIn,
           MachineDescription.initial, hTmid,
-          fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff
+          CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
             S] using congrArg MachineDescription.Configuration.tape hn
     rcases hfield.right.right S T hfieldRun with
       ⟨L, hinput, hT⟩
@@ -643,7 +642,7 @@ theorem selectedMergeInputValidatorExactSpec_of_parser_fieldValidator
 
 theorem selectedMergeInputValidatorExactConstruction_of_parser_fieldValidator
     (hparser :
-      EncodedRewriters.CanonicalLayouts.Simulator.ClosedRecognizerConstruction)
+      CommonGround.SimulatorLayouts.ClosedRecognizerConstruction)
     (hfield :
       SelectedMergeInputFieldValidatorConstruction) :
     SelectedMergeInputValidatorExactConstruction := by
@@ -748,7 +747,7 @@ theorem selectedMergeInputValidatorSpec_of_rightShifted
                   (MachineDescription.SimulatorLayout.encode S)))) =
           MachineDescription.SimulatorLayout.tape S := by
       simpa [MachineDescription.SimulatorLayout.tape] using
-        fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff S
+        CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape S
     have hidentity :
         exists n : Nat,
           MachineDescription.ExactIdentityDescription.runConfig n
@@ -790,13 +789,13 @@ theorem selectedMergeInputValidatorSpec_of_rightShifted
           some S =
               MachineDescription.SimulatorLayout.decodeComplete
                 (MachineDescription.SimulatorLayout.encode S) := by
-                rw [MachineDescription.SimulatorLayout.decodeComplete_encode]
+                rw [CommonGround.SimulatorLayouts.decodeComplete_encode]
           _ =
               MachineDescription.SimulatorLayout.decodeComplete
                 (MachineDescription.SimulatorLayout.encode S') := by
                 rw [hcode]
           _ = some S' := by
-                rw [MachineDescription.SimulatorLayout.decodeComplete_encode]
+                rw [CommonGround.SimulatorLayouts.decodeComplete_encode]
       cases hsome
       rfl
     subst S'
@@ -821,7 +820,7 @@ theorem selectedMergeInputValidatorSpec_of_rightShifted
     have hT : T = MachineDescription.SimulatorLayout.tape S := by
       rw [hTleft]
       simpa [MachineDescription.SimulatorLayout.tape] using
-        fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff S
+        CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape S
     exact ⟨L, hinput, hT⟩
 
 theorem selectedMergeInputValidatorConstruction_of_rightShifted
@@ -840,7 +839,7 @@ def SelectedMergeParserFromSimulatorValidator
 theorem selectedMergeParserSpec_of_simulatorParser_validator
     {parser validator : MachineDescription}
     (hparser :
-      EncodedRewriters.CanonicalLayouts.Simulator.ClosedRecognizerSpec
+      CommonGround.SimulatorLayouts.ClosedRecognizerSpec
         parser)
     (hvalidator : SelectedMergeInputValidatorSpec validator) :
     SelectedMergeParserSpec
@@ -857,10 +856,10 @@ theorem selectedMergeParserSpec_of_simulatorParser_validator
     have hparserRun :
         parser.HaltsWithTape
           (MachineDescription.SimulatorLayout.asBoolInput S)
-          (EncodedRewriters.CanonicalLayouts.Simulator.handoffTape S) := by
-      simpa [EncodedRewriters.CanonicalLayouts.Simulator.bits,
-        EncodedRewriters.CanonicalLayouts.Simulator.encode,
-        EncodedRewriters.CanonicalLayouts.Bits,
+          (CommonGround.SimulatorLayouts.handoffTape S) := by
+      simpa [CommonGround.SimulatorLayouts.bits,
+        CommonGround.SimulatorLayouts.encode,
+        CommonGround.LayoutTapes.Bits,
         MachineDescription.SimulatorLayout.asBoolInput] using
         hparser.right.left S
     have hvalidatorRun :
@@ -875,7 +874,7 @@ theorem selectedMergeParserSpec_of_simulatorParser_validator
         hparser.left hvalidator.left hparserRun
         ⟨n, by
           simpa [
-            fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff
+            CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
               S] using hn⟩
   · intro code T hhalt
     rcases
@@ -885,7 +884,7 @@ theorem selectedMergeParserSpec_of_simulatorParser_validator
     rcases hparser.right.right code Tmid hparserRun with
       ⟨S, hdecode, hTmid⟩
     have hcode : code = MachineDescription.SimulatorLayout.encode S :=
-      MachineDescription.SimulatorLayout.decodeComplete_eq_some_encode
+      CommonGround.SimulatorLayouts.decodeComplete_eq_some_encode
         hdecode
     rcases hvalidatorReach with ⟨n, hn⟩
     have hvalidatorRun :
@@ -895,11 +894,11 @@ theorem selectedMergeParserSpec_of_simulatorParser_validator
       constructor
       · simpa [MachineDescription.HaltsWithTapeIn,
           MachineDescription.initial, hTmid,
-          fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff
+          CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
             S] using congrArg MachineDescription.Configuration.state hn
       · simpa [MachineDescription.HaltsWithTapeIn,
           MachineDescription.initial, hTmid,
-          fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff
+          CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
             S] using congrArg MachineDescription.Configuration.tape hn
     rcases hvalidator.right.right S T hvalidatorRun with
       ⟨L, hinput, hT⟩
@@ -907,7 +906,7 @@ theorem selectedMergeParserSpec_of_simulatorParser_validator
 
 theorem selectedMergeParserConstruction_of_simulatorParser_validator
     (hparser :
-      EncodedRewriters.CanonicalLayouts.Simulator.ClosedRecognizerConstruction)
+      CommonGround.SimulatorLayouts.ClosedRecognizerConstruction)
     (hvalidator : SelectedMergeInputValidatorConstruction) :
     SelectedMergeParserConstruction := by
   rcases hparser with ⟨parser, hparser⟩
@@ -1707,8 +1706,7 @@ theorem selectedMergeSpec_of_parser_emitter
   · intro code T hhalt
     let identity := MachineDescription.ExactIdentityDescription
     have hid : identity.SubroutineReady :=
-      ⟨MachineDescription.exactIdentityDescription_wellFormed,
-        MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+      CommonGround.Identity.exactIdentityDescription_subroutineReady
     rcases
         MachineDescription.seqSubroutine_haltsWithTape_inv
           (A := MachineDescription.seqSubroutine

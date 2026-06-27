@@ -2,8 +2,6 @@ import FoC.Computability.Compiler.SeqSubroutineSemantics
 import FoC.Computability.Compiler.Core.ConstructionTargets
 import FoC.Computability.Compiler.Core.CommonGround
 import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.Skeleton
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Emitters
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Simulator
 
 set_option doc.verso true
 
@@ -68,7 +66,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape_normalizedOut
       MachineDescription.encodeCodeWordAsInput
         (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode D L) := by
   simpa [FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape] using
-    EncodedRewriters.tape_normalizedOutput_move_right_input
+    CommonGround.CodeWordEmitters.tape_normalizedOutput_move_right_input
       (MachineDescription.encodeCodeWordAsInput
         (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode D L))
 
@@ -118,7 +116,7 @@ def FixedDescriptionBoundedSimulatorCodeRightShiftedSpecConstruction : Prop :=
 /-- Closed complete simulator-layout parser needed by the right-shifted code leaf. -/
 abbrev FixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction :
     Prop :=
-  EncodedRewriters.CanonicalLayouts.Simulator.ClosedRecognizerConstruction
+  CommonGround.SimulatorLayouts.ClosedRecognizerConstruction
 
 /--
 Concrete parser leaf in the standard right-shifted code-word form: normalize a
@@ -180,13 +178,13 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_of_pr
         MachineDescription.SimulatorLayout.normalizeCodePrimitive.transform
             (MachineDescription.SimulatorLayout.encode L) =
           some (MachineDescription.SimulatorLayout.encode L) :=
-      MachineDescription.SimulatorLayout.normalizeCodePrimitive_encode L
-    simpa [EncodedRewriters.CanonicalLayouts.Simulator.bits,
-      EncodedRewriters.CanonicalLayouts.Simulator.handoffTape,
-      EncodedRewriters.CanonicalLayouts.Simulator.encode,
-      EncodedRewriters.CanonicalLayouts.Bits,
-      EncodedRewriters.CanonicalLayouts.HandoffTape,
-      EncodedRewriters.CanonicalLayouts.InputTape] using
+      CommonGround.SimulatorLayouts.normalizeCodePrimitive_encode L
+    simpa [CommonGround.SimulatorLayouts.bits,
+      CommonGround.SimulatorLayouts.handoffTape,
+      CommonGround.SimulatorLayouts.encode,
+      CommonGround.LayoutTapes.Bits,
+      CommonGround.LayoutTapes.HandoffTape,
+      CommonGround.LayoutTapes.InputTape] using
       fixedDescriptionBoundedSimulatorCodeRightShifted_haltsWithTape_of_transform
         hparser htransform
   · intro code T hhalt
@@ -202,11 +200,11 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_of_pr
         simp [hdecode] at htransform
         cases htransform
         refine ⟨L, hdecode, ?_⟩
-        simpa [EncodedRewriters.CanonicalLayouts.Simulator.handoffTape,
-          EncodedRewriters.CanonicalLayouts.Simulator.encode,
-          EncodedRewriters.CanonicalLayouts.HandoffTape,
-          EncodedRewriters.CanonicalLayouts.InputTape,
-          EncodedRewriters.CanonicalLayouts.Bits] using hT
+        simpa [CommonGround.SimulatorLayouts.handoffTape,
+          CommonGround.SimulatorLayouts.encode,
+          CommonGround.LayoutTapes.HandoffTape,
+          CommonGround.LayoutTapes.InputTape,
+          CommonGround.LayoutTapes.Bits] using hT
 
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction_of_closedRecognizer
     (h :
@@ -245,16 +243,14 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruct
               MachineDescription.encodeCodeWordAsInput
                 (MachineDescription.SimulatorLayout.encode L) := by
                 rw [hT]
-                simpa [EncodedRewriters.CanonicalLayouts.Simulator.encode,
-                  EncodedRewriters.CanonicalLayouts.Bits] using
-                  EncodedRewriters.CanonicalLayouts.handoffTape_normalizedOutput
-                    EncodedRewriters.CanonicalLayouts.Simulator.encode L
+                simpa [CommonGround.SimulatorLayouts.encode] using
+                  CommonGround.SimulatorLayouts.handoffTape_normalizedOutput L
       have hout :
           out = MachineDescription.SimulatorLayout.encode L :=
         MachineDescription.encodeCodeWordAsInput_injective houtBits
       have hdecode' :
           MachineDescription.SimulatorLayout.decodeComplete code = some L := by
-        simpa [EncodedRewriters.CanonicalLayouts.Simulator.decode] using
+        simpa [CommonGround.SimulatorLayouts.decode] using
           hdecode
       simp [MachineDescription.SimulatorLayout.normalizeCodePrimitive,
         MachineDescription.SimulatorLayout.normalizeCode,
@@ -271,45 +267,44 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruct
           cases htransform
           have hcode :
               code = MachineDescription.SimulatorLayout.encode L :=
-            MachineDescription.SimulatorLayout.decodeComplete_eq_some_encode
+            CommonGround.SimulatorLayouts.decodeComplete_eq_some_encode
               hdecode
           subst code
           have hhaltTape :
               recognizer.HaltsWithTape
-                (EncodedRewriters.CanonicalLayouts.Simulator.bits L)
-                (EncodedRewriters.CanonicalLayouts.Simulator.handoffTape L) :=
+                (CommonGround.SimulatorLayouts.bits L)
+                (CommonGround.SimulatorLayouts.handoffTape L) :=
             hrecognizer.right.left L
           have houtput :=
             MachineDescription.haltsWithOutput_of_haltsWithTape hhaltTape
           have hnormalized :
               Tape.normalizedOutput
-                  (EncodedRewriters.CanonicalLayouts.Simulator.handoffTape L) =
+                  (CommonGround.SimulatorLayouts.handoffTape L) =
                 MachineDescription.encodeCodeWordAsInput
                   (MachineDescription.SimulatorLayout.encode L) := by
-            simpa [EncodedRewriters.CanonicalLayouts.Simulator.encode,
-              EncodedRewriters.CanonicalLayouts.Simulator.bits,
-              EncodedRewriters.CanonicalLayouts.Bits] using
-              EncodedRewriters.CanonicalLayouts.handoffTape_normalizedOutput
-                EncodedRewriters.CanonicalLayouts.Simulator.encode L
+            simpa [CommonGround.SimulatorLayouts.encode,
+              CommonGround.SimulatorLayouts.bits,
+              CommonGround.LayoutTapes.Bits] using
+              CommonGround.SimulatorLayouts.handoffTape_normalizedOutput L
           rw [hnormalized] at houtput
-          simpa [EncodedRewriters.CanonicalLayouts.Simulator.bits,
-            EncodedRewriters.CanonicalLayouts.Simulator.encode,
-            EncodedRewriters.CanonicalLayouts.Bits] using houtput
+          simpa [CommonGround.SimulatorLayouts.bits,
+            CommonGround.SimulatorLayouts.encode,
+            CommonGround.LayoutTapes.Bits] using houtput
   · intro code T hhalt
     rcases hrecognizer.right.right code T hhalt with
       ⟨L, hdecode, hT⟩
     refine ⟨MachineDescription.SimulatorLayout.encode L, ?_, ?_⟩
     · have hdecode' :
           MachineDescription.SimulatorLayout.decodeComplete code = some L := by
-        simpa [EncodedRewriters.CanonicalLayouts.Simulator.decode] using
+        simpa [CommonGround.SimulatorLayouts.decode] using
           hdecode
       simp [MachineDescription.SimulatorLayout.normalizeCodePrimitive,
         MachineDescription.SimulatorLayout.normalizeCode, hdecode']
     · rw [hT]
-      simp [EncodedRewriters.CanonicalLayouts.Simulator.encode,
-        EncodedRewriters.CanonicalLayouts.HandoffTape,
-        EncodedRewriters.CanonicalLayouts.InputTape,
-        EncodedRewriters.CanonicalLayouts.Bits]
+      simp [CommonGround.SimulatorLayouts.encode,
+        CommonGround.LayoutTapes.HandoffTape,
+        CommonGround.LayoutTapes.InputTape,
+        CommonGround.LayoutTapes.Bits]
 
 /--
 Emitter half of the right-shifted code leaf: after the complete simulator
@@ -318,7 +313,7 @@ one cell to the right of the canonical code word.
 -/
 def FixedDescriptionBoundedSimulatorCodeRightShiftedEmitterSpec
     (D emitter : MachineDescription) : Prop :=
-  EncodedRewriters.CanonicalLayouts.EmitterSpec
+  CommonGround.CodeWordEmitters.EmitterSpec
     MachineDescription.SimulatorLayout.asBoolInput
     (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode D)
     emitter
@@ -335,18 +330,6 @@ def FixedDescriptionBoundedSimulatorCodeRightShiftedEmitterRunner
   MachineDescription.seqSubroutine
     sim MachineDescription.ExactIdentityDescription Direction.right
 
-theorem exactIdentityDescription_runConfig_from_start_tape_rightShifted
-    (n : Nat) (T : Tape Bool) :
-    MachineDescription.ExactIdentityDescription.runConfig n
-        { state := MachineDescription.ExactIdentityDescription.start,
-          tape := T } =
-      { state := MachineDescription.ExactIdentityDescription.halt,
-        tape := T } := by
-  cases n <;>
-    simp [MachineDescription.ExactIdentityDescription,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition]
-
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterSpec_of_canonical
     {D sim : MachineDescription}
     (hsim : FixedDescriptionBoundedSimulatorCanonicalSpec D sim) :
@@ -354,8 +337,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterSpec_of_canonical
       (FixedDescriptionBoundedSimulatorCodeRightShiftedEmitterRunner sim) := by
   have hidentityReady :
       MachineDescription.ExactIdentityDescription.SubroutineReady :=
-    ⟨MachineDescription.exactIdentityDescription_wellFormed,
-      MachineDescription.exactIdentityDescription_haltTransitionFree⟩
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
   constructor
   · exact
       MachineDescription.seqSubroutine_subroutineReady
@@ -373,7 +355,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterSpec_of_canonical
         hsim.left hidentityReady hsimRun
         ⟨0, by
           simp [FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode,
-            EncodedRewriters.CanonicalLayouts.OutputTape,
+            CommonGround.CodeWordEmitters.OutputTape,
             FixedDescriptionBoundedSimulatorCanonicalOutputTape,
             fixedDescriptionBoundedSimulatorCodeRightShiftedRunLayout_eq_run,
             MachineDescription.SimulatorLayout.tape,
@@ -394,7 +376,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterSpec_of_canonical
     subst Tmid
     rcases hidentityRun with ⟨n, hn⟩
     have hrun :=
-      exactIdentityDescription_runConfig_from_start_tape_rightShifted
+      CommonGround.Identity.exactIdentityDescription_runConfig_from_start
         n
         (Tape.move Direction.right
           (FixedDescriptionBoundedSimulatorCanonicalOutputTape D L))
@@ -406,7 +388,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterSpec_of_canonical
       simpa using congrArg MachineDescription.Configuration.tape hn
     simpa [FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape,
       FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode,
-      EncodedRewriters.CanonicalLayouts.OutputTape,
+      CommonGround.CodeWordEmitters.OutputTape,
       FixedDescriptionBoundedSimulatorCanonicalOutputTape,
       fixedDescriptionBoundedSimulatorCodeRightShiftedRunLayout_eq_run,
       MachineDescription.SimulatorLayout.tape,
@@ -440,22 +422,14 @@ def FixedDescriptionBoundedSimulatorCodeRightShiftedRunner
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff
     (L : MachineDescription.SimulatorLayout) :
     Tape.move Direction.left
-        (EncodedRewriters.CanonicalLayouts.Simulator.handoffTape L) =
+        (CommonGround.SimulatorLayouts.handoffTape L) =
       Tape.input (MachineDescription.SimulatorLayout.asBoolInput L) := by
-  simpa [EncodedRewriters.CanonicalLayouts.Simulator.handoffTape,
-    EncodedRewriters.CanonicalLayouts.Simulator.inputTape,
-    EncodedRewriters.CanonicalLayouts.Simulator.encode,
-    EncodedRewriters.CanonicalLayouts.HandoffTape,
-    EncodedRewriters.CanonicalLayouts.InputTape,
-    MachineDescription.SimulatorLayout.asBoolInput,
-    tapeCodePrimitiveCodeWordHandoffMove] using
-    EncodedRewriters.CanonicalLayouts.handoffTape_handoff
-      EncodedRewriters.CanonicalLayouts.Simulator.encode_cons L
+  exact CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape L
 
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedSpec_of_parser_emitter
     {D parser emitter : MachineDescription}
     (hparser :
-      EncodedRewriters.CanonicalLayouts.Simulator.ClosedRecognizerSpec
+      CommonGround.SimulatorLayouts.ClosedRecognizerSpec
         parser)
     (hemitter :
       FixedDescriptionBoundedSimulatorCodeRightShiftedEmitterSpec
@@ -475,18 +449,18 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedSpec_of_parser_emitter
     have hparserRun :
         parser.HaltsWithTape
           (FixedDescriptionBoundedSimulatorInput L)
-          (EncodedRewriters.CanonicalLayouts.Simulator.handoffTape L) := by
+          (CommonGround.SimulatorLayouts.handoffTape L) := by
       simpa [FixedDescriptionBoundedSimulatorInput,
-        EncodedRewriters.CanonicalLayouts.Simulator.bits,
-        EncodedRewriters.CanonicalLayouts.Bits,
-        EncodedRewriters.CanonicalLayouts.Simulator.encode] using
+        CommonGround.SimulatorLayouts.bits,
+        CommonGround.LayoutTapes.Bits,
+        CommonGround.SimulatorLayouts.encode] using
         hparser.right.left L
     have hemitterRun :
         emitter.HaltsWithTape
           (MachineDescription.SimulatorLayout.asBoolInput L)
           (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape D L) := by
       simpa [FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape,
-        EncodedRewriters.CanonicalLayouts.OutputTape] using
+        CommonGround.CodeWordEmitters.OutputTape] using
         hemitter.right.left L
     rcases MachineDescription.runConfig_eq_halt_of_haltsWithTape
       hemitterRun with ⟨n, hn⟩
@@ -495,7 +469,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedSpec_of_parser_emitter
         hparser.left hemitter.left hparserRun
         ⟨n, by
           simpa [
-            fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff
+            CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
               L] using hn⟩
   · intro code T hhalt
     rcases
@@ -513,11 +487,11 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedSpec_of_parser_emitter
       constructor
       · simpa [MachineDescription.HaltsWithTapeIn,
           MachineDescription.initial, hTmid,
-          fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff
+          CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
             L] using congrArg MachineDescription.Configuration.state hn
       · simpa [MachineDescription.HaltsWithTapeIn,
           MachineDescription.initial, hTmid,
-          fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff
+          CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
             L] using congrArg MachineDescription.Configuration.tape hn
     exact
       hemitter.right.right L T hemitterRun

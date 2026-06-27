@@ -363,14 +363,14 @@ theorem selectedProjectionOutputBits_eq_quoter_bits
           List.append
             (MachineDescription.encodeCodeSymbolAsInput
               MachineCodeSymbol.header)
-            (FoC.Computability.CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits
+            (CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits
                 b rest (SelectedProjectionOutputSuffix useAccept L)) := by
   rcases parsedLayoutBits_eq_false_false_tail L with
     ⟨tail, htail⟩
   refine ⟨false, false :: tail, htail, ?_⟩
   rw [selectedProjectionOutputCode_eq_fields, htail]
   simp [MachineDescription.encodeCodeWordAsInput,
-    FoC.Computability.CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits_eq]
+    CommonGround.BoolWordQuoters.checkedNonemptyBoolWordQuoteDirectSourceBits_eq]
 
 def SelectedProjectionInputQuoterSpec
     (quoter : MachineDescription) : Prop :=
@@ -622,7 +622,7 @@ theorem selectedProjectionPrimitiveExactSpec_of_checkedParser_checkedEmitter
       MachineDescription.haltsFromTape_functional_of_haltTransitionFree
         hemitter.left.right hemitterRun' (hemitter.right L)
     refine ⟨L, ?_, hT⟩
-    exact MachineDescription.DovetailLayout.decodeComplete_eq_some_encode hdecode
+    exact CommonGround.DovetailLayouts.decode_eq_some_encode hdecode
 
 theorem selectedProjectionPrimitiveExactConstruction_of_checkedParser_checkedEmitter
     (hparser : LayoutCheckedParserConstruction)

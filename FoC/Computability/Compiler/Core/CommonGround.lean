@@ -27,6 +27,17 @@ open Languages
 
 namespace CommonGround
 
+namespace LayoutTapes
+
+export EncodedRewriters.CanonicalLayouts
+  ( Bits
+    InputTape
+    HandoffTape
+    handoffTape_normalizedOutput
+    handoffTape_handoff )
+
+end LayoutTapes
+
 namespace FieldInversions
 
 export EncodedRewriters.CanonicalLayouts.Fields
@@ -107,6 +118,10 @@ export EncodedRewriters.CanonicalLayouts.DovetailStagePrefix
 end ScannerInversions
 
 namespace CodeWordEmitters
+
+export EncodedRewriters
+  ( tape_normalizedOutput_move_right_input
+    tape_move_left_move_right_input_encodeCodeWordAsInput_cons )
 
 export EncodedRewriters.CanonicalLayouts
   ( ExactOutputTape
@@ -281,7 +296,28 @@ export MachineDescription.SimulatorLayout
     run
     runCode
     runCodePrimitive
+    normalizeCodePrimitive_encode
     normalizeCodePrimitive )
+
+theorem handoffTape_normalizedOutput (L : Layout) :
+    Tape.normalizedOutput (handoffTape L) =
+      MachineDescription.encodeCodeWordAsInput (encode L) := by
+  simpa [bits, encode, LayoutTapes.Bits] using
+    LayoutTapes.handoffTape_normalizedOutput encode L
+
+theorem handoffTape_handoff (L : Layout) :
+    Tape.move tapeCodePrimitiveCodeWordHandoffMove (handoffTape L) =
+      inputTape L := by
+  simpa [handoffTape, inputTape, encode] using
+    LayoutTapes.handoffTape_handoff encode_cons L
+
+theorem handoffTape_move_left_eq_tape (L : Layout) :
+    Tape.move Direction.left (handoffTape L) =
+      Tape.input (MachineDescription.SimulatorLayout.asBoolInput L) := by
+  simpa [handoffTape, inputTape, encode, LayoutTapes.HandoffTape,
+    LayoutTapes.InputTape, MachineDescription.SimulatorLayout.asBoolInput,
+    tapeCodePrimitiveCodeWordHandoffMove] using
+    handoffTape_handoff L
 
 theorem runCodePrimitive_transform_eq_some_cons
     {D : MachineDescription} {code out : Word MachineCodeSymbol}
