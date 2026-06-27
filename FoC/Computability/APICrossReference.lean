@@ -303,6 +303,44 @@ intentional {lit}`sorry` warnings under {lit}`FoC/Computability`. If that
 changes, update this page together with the construction target or helper
 theorem that changed the proof surface.
 
+## Construction Route Classification
+
+The current construction surface is intentionally split by role.
+
+* Public semantic and book-facing closeout API:
+  {module}`FoC.Computability.Compiler.Core.ConstructionTargets`,
+  {module}`FoC.Computability.Compiler.Core.Closeout`,
+  {module}`FoC.Computability.Compiler.Core.ControllerCloseout`,
+  {module}`FoC.Computability.Compiler.Core.SearchDrivers`, and the Chapter 5
+  book wrapper modules. These declarations state or package the construction
+  hypotheses consumed by book-facing theorems.
+* Active padded/equivalence route:
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.FiniteDescriptions`,
+  its selected-projection padded submodule, the selected-merge padded emitter,
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.SimulatorScaffold`,
+  phase adapters, phase runner, and closed assembly. The active assembly route
+  imports the finite-description selected-projection and selected-merge
+  contracts plus the simulator padded/equivalence construction.
+* Compatibility wrappers:
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.RightShifted`,
+  the exact code-word emitter helpers in
+  {module}`FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters`, and
+  the explicit
+  {lit}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.RightShiftedPrimitives`
+  module. Import the last module only for legacy adapter consumers.
+* Obsolete exact/right-shifted selected primitive route: there is no active
+  scaffold exported for {lit}`SelectedProjectionPrimitiveExactConstruction` or
+  {lit}`SelectedProjectionPrimitiveRightShiftedConstruction`, and the selected
+  merge exact/right-shifted scaffold chain is not an active target. The live
+  route is the padded/equivalence finite-description route.
+* Broad finite-machine construction leaves: the twelve real build warnings are
+  the controller raw-Bool header emitter, two selected-projection padded
+  leaves, the selected-merge padded emitter, the fixed-description bounded
+  simulator padded leaf, the bounded-runner closed-handoff leaf, two
+  controller-loop leaves, and four universal finite-source leaves. Prose
+  mentions of {lit}`sorry` in this page are navigation notes, not declaration
+  warnings.
+
 ## Proof Navigation Rules
 
 Before opening a remaining proof hole, classify the goal by contract strength.
