@@ -1175,6 +1175,16 @@ theorem inputWithTrailingBlankPadding_contextLength_ge_input
       Tape.contextLength] <;>
     omega
 
+theorem tape_contextLength_le_move_right
+    (T : Tape Bool) :
+    Tape.contextLength T <=
+      Tape.contextLength (Tape.move Direction.right T) := by
+  cases T with
+  | mk left head right =>
+      cases right <;>
+        simp [Tape.contextLength, Tape.move, Tape.moveRight] <;>
+        omega
+
 def SelectedProjectionEquivEmitterPaddedOutputTape
     (useAccept : Bool)
     (L : MachineDescription.DovetailLayout) : Tape Bool :=
@@ -1197,6 +1207,24 @@ theorem SelectedProjectionEquivEmitterPaddedOutputTape_equiv
           (SelectedProjectionOutputCode useAccept L))
         (ParsedLayoutBits L).length)
       Direction.right
+
+theorem SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_input
+    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    Tape.contextLength (Tape.input (ParsedLayoutBits L)) <=
+      Tape.contextLength
+        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) := by
+  have hpad :=
+    inputWithTrailingBlankPadding_contextLength_ge_input
+      (MachineDescription.encodeCodeWordAsInput
+        (SelectedProjectionOutputCode useAccept L))
+      (ParsedLayoutBits L)
+  have hmove :=
+    tape_contextLength_le_move_right
+      (inputWithTrailingBlankPadding
+        (MachineDescription.encodeCodeWordAsInput
+          (SelectedProjectionOutputCode useAccept L))
+        (ParsedLayoutBits L).length)
+  exact Nat.le_trans hpad hmove
 
 def SelectedProjectionEquivPaddedEmitterSpec
     (useAccept : Bool)
