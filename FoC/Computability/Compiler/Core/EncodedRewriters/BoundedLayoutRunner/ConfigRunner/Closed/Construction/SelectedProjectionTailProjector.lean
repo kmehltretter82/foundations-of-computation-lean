@@ -181,6 +181,17 @@ theorem parsedLayoutBits_eq_transition_stageInput_sourceRestSuffix
   rw [parsedLayoutBits_eq_transition_input_sourceSuffix]
   rw [← stageInputBits_append_sourceRestSuffix_bits L]
 
+theorem parsedLayoutBits_eq_transition_stageInput_sourceRestFieldBits
+    (L : MachineDescription.DovetailLayout) :
+    ParsedLayoutBits L =
+      List.append
+        (MachineDescription.encodeCodeSymbolAsInput
+          MachineCodeSymbol.transition)
+        (List.append (stageInputBits L.input L.stage)
+          (sourceRestFieldBits L)) := by
+  rw [parsedLayoutBits_eq_transition_stageInput_sourceRestSuffix]
+  rw [sourceRestSuffix_bits_eq_fields]
+
 theorem parsedLayoutBits_eq_transition_input_sourceFieldBits
     (L : MachineDescription.DovetailLayout) :
     ParsedLayoutBits L =

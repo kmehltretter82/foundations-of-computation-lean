@@ -110,6 +110,33 @@ theorem SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_input
 
 namespace SelectedProjectionTailProjector
 
+theorem parsedLayoutCheckedTape_normalizedOutput_eq_transition_stageInput_sourceRestSuffix
+    (L : MachineDescription.DovetailLayout) :
+    Tape.normalizedOutput (ParsedLayoutCheckedTape L) =
+      List.append
+        (MachineDescription.encodeCodeSymbolAsInput
+          MachineCodeSymbol.transition)
+        (List.append
+          (DovetailInitialLayoutInitializer.stageInputBits
+            L.input L.stage)
+          (MachineDescription.encodeCodeWordAsInput
+            (sourceRestSuffix L))) := by
+  rw [parsedLayoutCheckedTape_normalizedOutput,
+    parsedLayoutBits_eq_transition_stageInput_sourceRestSuffix]
+
+theorem parsedLayoutCheckedTape_normalizedOutput_eq_transition_stageInput_sourceRestFieldBits
+    (L : MachineDescription.DovetailLayout) :
+    Tape.normalizedOutput (ParsedLayoutCheckedTape L) =
+      List.append
+        (MachineDescription.encodeCodeSymbolAsInput
+          MachineCodeSymbol.transition)
+        (List.append
+          (DovetailInitialLayoutInitializer.stageInputBits
+            L.input L.stage)
+          (sourceRestFieldBits L)) := by
+  rw [parsedLayoutCheckedTape_normalizedOutput,
+    parsedLayoutBits_eq_transition_stageInput_sourceRestFieldBits]
+
 theorem sourceFieldBits_length_le_parsedLayoutBits
     (L : MachineDescription.DovetailLayout) :
     (sourceFieldBits L).length <= (ParsedLayoutBits L).length := by
