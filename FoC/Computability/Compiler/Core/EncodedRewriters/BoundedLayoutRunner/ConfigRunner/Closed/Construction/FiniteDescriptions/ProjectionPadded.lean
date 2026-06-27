@@ -137,6 +137,80 @@ theorem parsedLayoutCheckedTape_normalizedOutput_eq_transition_stageInput_source
   rw [parsedLayoutCheckedTape_normalizedOutput,
     parsedLayoutBits_eq_transition_stageInput_sourceRestFieldBits]
 
+theorem parsedLayoutCheckedTape_eq_transition_stageInput_sourceRestSuffix
+    (L : MachineDescription.DovetailLayout) :
+    ParsedLayoutCheckedTape L =
+      DovetailInitialLayoutInitializer.tapeAtCells []
+        (List.append
+          ((List.append
+            (MachineDescription.encodeCodeSymbolAsInput
+              MachineCodeSymbol.transition)
+            (List.append
+              (DovetailInitialLayoutInitializer.stageInputBits
+                L.input L.stage)
+              (MachineDescription.encodeCodeWordAsInput
+                (sourceRestSuffix L)))).map some)
+          [none]) := by
+  rw [ParsedLayoutCheckedTape,
+    parsedLayoutBits_eq_transition_stageInput_sourceRestSuffix]
+  simp [checkedInputTape, DovetailInitialLayoutInitializer.tapeAtCells,
+    MachineDescription.encodeCodeSymbolAsInput, List.map_append,
+    List.append_assoc]
+
+theorem parsedLayoutCheckedTape_eq_transition_stageInput_sourceRestFieldBits
+    (L : MachineDescription.DovetailLayout) :
+    ParsedLayoutCheckedTape L =
+      DovetailInitialLayoutInitializer.tapeAtCells []
+        (List.append
+          ((List.append
+            (MachineDescription.encodeCodeSymbolAsInput
+              MachineCodeSymbol.transition)
+            (List.append
+              (DovetailInitialLayoutInitializer.stageInputBits
+                L.input L.stage)
+              (sourceRestFieldBits L))).map some)
+          [none]) := by
+  rw [ParsedLayoutCheckedTape,
+    parsedLayoutBits_eq_transition_stageInput_sourceRestFieldBits]
+  simp [checkedInputTape, DovetailInitialLayoutInitializer.tapeAtCells,
+    MachineDescription.encodeCodeSymbolAsInput, List.map_append,
+    List.append_assoc]
+
+theorem parsedLayoutCheckedHandoffTape_eq_transition_stageInput_sourceRestSuffix
+    (L : MachineDescription.DovetailLayout) :
+    ParsedLayoutCheckedHandoffTape L =
+      DovetailInitialLayoutInitializer.tapeAtCells [some false]
+        (List.append [some false, some false, some true]
+          (List.append
+            ((List.append
+              (DovetailInitialLayoutInitializer.stageInputBits
+                L.input L.stage)
+              (MachineDescription.encodeCodeWordAsInput
+                (sourceRestSuffix L))).map some)
+            [none])) := by
+  rw [ParsedLayoutCheckedHandoffTape,
+    parsedLayoutCheckedTape_eq_transition_stageInput_sourceRestSuffix]
+  simp [DovetailInitialLayoutInitializer.tapeAtCells,
+    MachineDescription.encodeCodeSymbolAsInput, Tape.move, Tape.moveRight,
+    List.map_append, List.append_assoc]
+
+theorem parsedLayoutCheckedHandoffTape_eq_transition_stageInput_sourceRestFieldBits
+    (L : MachineDescription.DovetailLayout) :
+    ParsedLayoutCheckedHandoffTape L =
+      DovetailInitialLayoutInitializer.tapeAtCells [some false]
+        (List.append [some false, some false, some true]
+          (List.append
+            ((List.append
+              (DovetailInitialLayoutInitializer.stageInputBits
+                L.input L.stage)
+              (sourceRestFieldBits L)).map some)
+            [none])) := by
+  rw [ParsedLayoutCheckedHandoffTape,
+    parsedLayoutCheckedTape_eq_transition_stageInput_sourceRestFieldBits]
+  simp [DovetailInitialLayoutInitializer.tapeAtCells,
+    MachineDescription.encodeCodeSymbolAsInput, Tape.move, Tape.moveRight,
+    List.map_append, List.append_assoc]
+
 theorem sourceFieldBits_length_le_parsedLayoutBits
     (L : MachineDescription.DovetailLayout) :
     (sourceFieldBits L).length <= (ParsedLayoutBits L).length := by
