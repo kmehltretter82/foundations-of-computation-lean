@@ -347,6 +347,23 @@ theorem outputTape_move_left_move_right
   rw [outputTape_eq_fields, outputFieldBits, hstage]
   simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
 
+theorem sourceTape_contextLength_gt_outputTape
+    (useAccept : Bool)
+    (L : MachineDescription.DovetailLayout)
+    (baseLeft : List (Option Bool)) :
+    Tape.contextLength (sourceTape L baseLeft) >
+      Tape.contextLength (outputTape useAccept L baseLeft) := by
+  rcases stageNatBits_cons_cons L.stage with
+    ⟨first, second, rest, hstage⟩
+  cases useAccept <;>
+    rw [sourceTape, outputTape_eq_fields, sourceFieldBits,
+      outputFieldBits, hstage]
+    <;> simp [selectedConfig, selectedHit, configurationFieldBits,
+      tapeFieldBits, cellListFieldBits, cellFieldBits, boolFieldBits,
+      stageNatBits_length, tapeAtCells, Tape.contextLength,
+      List.length_append]
+    <;> omega
+
 def TailProjectorForwardSpec
     (useAccept : Bool)
     (projector : MachineDescription) : Prop :=
@@ -356,15 +373,68 @@ def TailProjectorForwardSpec
       (sourceTape L baseLeft)
       (outputTape useAccept L baseLeft)
 
+theorem not_tailProjector_haltsFromTape
+    (useAccept : Bool)
+    (projector : MachineDescription)
+    (L : MachineDescription.DovetailLayout)
+    (baseLeft : List (Option Bool)) :
+    ¬ projector.HaltsFromTape
+      (sourceTape L baseLeft)
+      (outputTape useAccept L baseLeft) := by
+  intro hhalt
+  rcases hhalt with ⟨steps, hsteps⟩
+  have hmono :=
+    MachineDescription.runConfig_contextLength_mono projector steps
+      { state := projector.start
+        tape := sourceTape L baseLeft }
+  have hfinal :
+      Tape.contextLength
+          ((projector.runConfig steps
+            { state := projector.start
+              tape := sourceTape L baseLeft }).tape) =
+        Tape.contextLength (outputTape useAccept L baseLeft) := by
+    exact congrArg Tape.contextLength hsteps.right
+  have hgt := sourceTape_contextLength_gt_outputTape useAccept L baseLeft
+  rw [hfinal] at hmono
+  exact (Nat.not_lt_of_ge hmono) hgt
+
+theorem not_tailProjectorForwardSpec
+    (useAccept : Bool)
+    (projector : MachineDescription) :
+    ¬ TailProjectorForwardSpec useAccept projector := by
+  intro hprojector
+  let L : MachineDescription.DovetailLayout :=
+    { input := []
+      stage := 0
+      acceptConfig := { state := 0, tape := Tape.blank }
+      rejectConfig := { state := 0, tape := Tape.blank }
+      acceptHit := false
+      rejectHit := false }
+  exact not_tailProjector_haltsFromTape useAccept projector L []
+    (hprojector L [])
+
 def TailProjectorExactSpec
     (useAccept : Bool)
     (projector : MachineDescription) : Prop :=
   projector.SubroutineReady ∧ TailProjectorForwardSpec useAccept projector
 
+theorem not_tailProjectorExactSpec
+    (useAccept : Bool)
+    (projector : MachineDescription) :
+    ¬ TailProjectorExactSpec useAccept projector := by
+  intro hprojector
+  exact not_tailProjectorForwardSpec useAccept projector hprojector.right
+
 def TailProjectorExactConstruction : Prop :=
   forall useAccept : Bool,
     exists projector : MachineDescription,
       TailProjectorExactSpec useAccept projector
+
+theorem not_tailProjectorExactConstruction :
+    ¬ TailProjectorExactConstruction := by
+  intro hconstruction
+  rcases hconstruction false with ⟨projector, hprojector⟩
+  exact not_tailProjectorExactSpec false projector hprojector
 
 def TailProjectorHandoffForwardSpec
     (useAccept : Bool)

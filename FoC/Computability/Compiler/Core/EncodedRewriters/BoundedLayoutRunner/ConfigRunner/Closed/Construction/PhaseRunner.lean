@@ -32,16 +32,161 @@ def RejectProjectionSpec
     (projector : MachineDescription) : Prop :=
   projector.SubroutineReady ∧
     (forall L : MachineDescription.DovetailLayout,
-      projector.HaltsWithTape
-        (ParsedLayoutBits L)
+      projector.HaltsFromTapeEquiv
+        (ParsedLayoutTape L)
         (MachineDescription.SimulatorLayout.tape
           (RejectSimulatorLayout L))) ∧
     (forall L : MachineDescription.DovetailLayout,
-     forall T : Tape Bool,
-      projector.HaltsWithTape (ParsedLayoutBits L) T ->
-        T =
-          MachineDescription.SimulatorLayout.tape
-            (RejectSimulatorLayout L))
+      projector.ClosedFromTapeEquiv
+        (ParsedLayoutTape L)
+        (MachineDescription.SimulatorLayout.tape
+          (RejectSimulatorLayout L)))
+
+def SelectedProjectionPhaseFromOutputTape
+    (runner : MachineDescription) : MachineDescription :=
+  MachineDescription.seqSubroutine runner
+    MachineDescription.ExactIdentityDescription Direction.left
+
+theorem selectedProjectionOutputTape_move_left_equiv_simulator_tape
+    {useAccept : Bool} {L : MachineDescription.DovetailLayout}
+    {T : Tape Bool}
+    (hT : Tape.Equiv T (SelectedProjectionOutputTape useAccept L)) :
+    Tape.Equiv (Tape.move Direction.left T)
+      (MachineDescription.SimulatorLayout.tape
+        (SelectedProjectionSimulatorLayout useAccept L)) := by
+  have hmove := Tape.Equiv.move hT Direction.left
+  have htarget :
+      Tape.move Direction.left (SelectedProjectionOutputTape useAccept L) =
+        MachineDescription.SimulatorLayout.tape
+          (SelectedProjectionSimulatorLayout useAccept L) := by
+    have houtput :
+        SelectedProjectionOutputTape useAccept L =
+          Tape.move Direction.right
+            (MachineDescription.SimulatorLayout.tape
+              (SelectedProjectionSimulatorLayout useAccept L)) := by
+      cases useAccept <;>
+        rfl
+    rw [houtput]
+    exact simulatorLayoutTape_move_left_move_right
+      (SelectedProjectionSimulatorLayout useAccept L)
+  simpa [htarget] using hmove
+
+theorem selectedProjectionPhaseFromOutputTape_forward
+    {useAccept : Bool} {runner : MachineDescription}
+    (hrunner : SelectedProjectionSpec useAccept runner)
+    {Tin : Tape Bool} (L : MachineDescription.DovetailLayout)
+    (hinput :
+      Tape.Equiv (Tape.input (ParsedLayoutBits L)) Tin) :
+    (SelectedProjectionPhaseFromOutputTape runner).HaltsFromTapeEquiv
+      Tin
+      (MachineDescription.SimulatorLayout.tape
+        (SelectedProjectionSimulatorLayout useAccept L)) := by
+  let identity := MachineDescription.ExactIdentityDescription
+  have hid : identity.SubroutineReady :=
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
+  rcases hrunner.right.left L with ⟨Tmid, hmid, hTmid⟩
+  have hmidFromInput :
+      runner.HaltsFromTapeEquiv Tin Tmid :=
+    MachineDescription.HaltsFromTapeEquiv_of_input_equiv hinput hmid
+  rcases hmidFromInput with ⟨Tactual, hactual, hTactualMid⟩
+  have hTactual :
+      Tape.Equiv Tactual (SelectedProjectionOutputTape useAccept L) :=
+    Tape.Equiv.trans hTactualMid hTmid
+  have hidentityReach :
+      exists nB : Nat,
+        identity.runConfig nB
+            { state := identity.start
+              tape := Tape.move Direction.left Tactual } =
+          { state := identity.halt
+            tape := Tape.move Direction.left Tactual } :=
+    CommonGround.Identity.exactIdentityDescription_run_from_start
+      (Tape.move Direction.left Tactual)
+  have hseq :
+      (SelectedProjectionPhaseFromOutputTape runner).HaltsFromTape
+        Tin (Tape.move Direction.left Tactual) := by
+    simpa [SelectedProjectionPhaseFromOutputTape, identity] using
+      MachineDescription.seqSubroutine_haltsFromTape_of_haltsFromTape
+        (A := runner) (B := identity) (handoffMove := Direction.left)
+        hrunner.left hid hactual hidentityReach
+  exact
+    ⟨Tape.move Direction.left Tactual, hseq,
+      selectedProjectionOutputTape_move_left_equiv_simulator_tape
+        hTactual⟩
+
+theorem selectedProjectionPhaseFromOutputTape_closed
+    {useAccept : Bool} {runner : MachineDescription}
+    (hrunner : SelectedProjectionSpec useAccept runner)
+    {Tin : Tape Bool} (L : MachineDescription.DovetailLayout)
+    (hinput :
+      Tape.Equiv (Tape.input (ParsedLayoutBits L)) Tin) :
+    (SelectedProjectionPhaseFromOutputTape runner).ClosedFromTapeEquiv
+      Tin
+      (MachineDescription.SimulatorLayout.tape
+        (SelectedProjectionSimulatorLayout useAccept L)) := by
+  intro T hhalt
+  let identity := MachineDescription.ExactIdentityDescription
+  have hid : identity.SubroutineReady :=
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
+  have hready :
+      (SelectedProjectionPhaseFromOutputTape runner).SubroutineReady := by
+    simpa [SelectedProjectionPhaseFromOutputTape, identity] using
+      MachineDescription.seqSubroutine_subroutineReady
+        hrunner.left hid
+  rcases
+      selectedProjectionPhaseFromOutputTape_forward
+        hrunner L hinput with
+    ⟨Tactual, hactual, hTactual⟩
+  have hT : T = Tactual :=
+    MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+      hready.right hhalt hactual
+  rw [hT]
+  exact hTactual
+
+theorem AcceptProjectionSpec_of_selected
+    {runner : MachineDescription}
+    (hrunner : SelectedProjectionSpec true runner) :
+    AcceptProjectionSpec
+      (SelectedProjectionPhaseFromOutputTape runner) := by
+  constructor
+  · have hid :
+        MachineDescription.ExactIdentityDescription.SubroutineReady :=
+      CommonGround.Identity.exactIdentityDescription_subroutineReady
+    exact
+      MachineDescription.seqSubroutine_subroutineReady
+        hrunner.left hid
+  constructor
+  · intro L
+    simpa [SelectedProjectionSimulatorLayout] using
+      selectedProjectionPhaseFromOutputTape_forward
+        hrunner L
+        (Tape.Equiv.symm (checkedInputTape_equiv_input _))
+  · intro L
+    simpa [SelectedProjectionSimulatorLayout] using
+      selectedProjectionPhaseFromOutputTape_closed
+        hrunner L
+        (Tape.Equiv.symm (checkedInputTape_equiv_input _))
+
+theorem RejectProjectionSpec_of_selected
+    {runner : MachineDescription}
+    (hrunner : SelectedProjectionSpec false runner) :
+    RejectProjectionSpec
+      (SelectedProjectionPhaseFromOutputTape runner) := by
+  constructor
+  · have hid :
+        MachineDescription.ExactIdentityDescription.SubroutineReady :=
+      CommonGround.Identity.exactIdentityDescription_subroutineReady
+    exact
+      MachineDescription.seqSubroutine_subroutineReady
+        hrunner.left hid
+  constructor
+  · intro L
+    simpa [SelectedProjectionSimulatorLayout, ParsedLayoutTape] using
+      selectedProjectionPhaseFromOutputTape_forward
+        hrunner L (Tape.Equiv.refl _)
+  · intro L
+    simpa [SelectedProjectionSimulatorLayout, ParsedLayoutTape] using
+      selectedProjectionPhaseFromOutputTape_closed
+        hrunner L (Tape.Equiv.refl _)
 
 def AcceptMergeSpec
     (accept merger : MachineDescription) : Prop :=
@@ -77,6 +222,275 @@ def RejectMergeSpec
             reject L.stage (RejectSimulatorLayout L))) T ->
         T = ParsedLayoutTape (ConfigRunnerAfterReject reject L))
 
+def AcceptMergeEquivSpec
+    (accept merger : MachineDescription) : Prop :=
+  merger.SubroutineReady ∧
+    (forall L : MachineDescription.DovetailLayout,
+      merger.HaltsFromTapeEquiv
+        (MachineDescription.SimulatorLayout.tape
+          (MachineDescription.SimulatorLayout.run
+            accept L.stage (AcceptSimulatorLayout L)))
+        (ParsedLayoutTape (ConfigRunnerAfterAccept accept L))) ∧
+    (forall L : MachineDescription.DovetailLayout,
+      merger.ClosedFromTapeEquiv
+        (MachineDescription.SimulatorLayout.tape
+          (MachineDescription.SimulatorLayout.run
+            accept L.stage (AcceptSimulatorLayout L)))
+        (ParsedLayoutTape (ConfigRunnerAfterAccept accept L)))
+
+def RejectMergeEquivSpec
+    (reject merger : MachineDescription) : Prop :=
+  merger.SubroutineReady ∧
+    (forall L : MachineDescription.DovetailLayout,
+      merger.HaltsFromTapeEquiv
+        (MachineDescription.SimulatorLayout.tape
+          (MachineDescription.SimulatorLayout.run
+            reject L.stage (RejectSimulatorLayout L)))
+        (ParsedLayoutTape (ConfigRunnerAfterReject reject L))) ∧
+    (forall L : MachineDescription.DovetailLayout,
+      merger.ClosedFromTapeEquiv
+        (MachineDescription.SimulatorLayout.tape
+          (MachineDescription.SimulatorLayout.run
+            reject L.stage (RejectSimulatorLayout L)))
+        (ParsedLayoutTape (ConfigRunnerAfterReject reject L)))
+
+def SelectedMergeEquivOutputTape
+    (useAccept : Bool)
+    (S : MachineDescription.SimulatorLayout)
+    (L : MachineDescription.DovetailLayout) : Tape Bool :=
+  Tape.input
+    (MachineDescription.encodeCodeWordAsInput
+      (SelectedMergeOutputCode useAccept S L))
+
+def SelectedMergeEquivSpec
+    (useAccept : Bool)
+    (merger : MachineDescription) : Prop :=
+  merger.SubroutineReady ∧
+    (forall S : MachineDescription.SimulatorLayout,
+     forall L : MachineDescription.DovetailLayout,
+      MachineDescription.decodeCodeWordAsInput S.input =
+        some (MachineDescription.DovetailLayout.encode L) ->
+      merger.HaltsFromTapeEquiv
+        (MachineDescription.SimulatorLayout.tape S)
+        (SelectedMergeEquivOutputTape useAccept S L)) ∧
+    forall S : MachineDescription.SimulatorLayout,
+    forall L : MachineDescription.DovetailLayout,
+      MachineDescription.decodeCodeWordAsInput S.input =
+        some (MachineDescription.DovetailLayout.encode L) ->
+      merger.ClosedFromTapeEquiv
+        (MachineDescription.SimulatorLayout.tape S)
+        (SelectedMergeEquivOutputTape useAccept S L)
+
+def SelectedMergeEquivConstruction : Prop :=
+  forall useAccept : Bool,
+    exists merger : MachineDescription,
+      SelectedMergeEquivSpec useAccept merger
+
+theorem selectedMergeEquivOutputTape_accept_run
+    (accept : MachineDescription) (L : MachineDescription.DovetailLayout) :
+    SelectedMergeEquivOutputTape true
+        (MachineDescription.SimulatorLayout.run
+          accept L.stage (AcceptSimulatorLayout L)) L =
+      ParsedLayoutTape (ConfigRunnerAfterAccept accept L) := by
+  simp [SelectedMergeEquivOutputTape, SelectedMergeOutputCode,
+    ParsedLayoutTape, ParsedLayoutBits, ConfigRunnerAfterAccept,
+    AcceptSimulatorLayout, MachineDescription.SimulatorLayout.run]
+
+theorem selectedMergeEquivOutputTape_reject_run
+    (reject : MachineDescription) (L : MachineDescription.DovetailLayout) :
+    SelectedMergeEquivOutputTape false
+        (MachineDescription.SimulatorLayout.run
+          reject L.stage (RejectSimulatorLayout L)) L =
+      ParsedLayoutTape (ConfigRunnerAfterReject reject L) := by
+  simp [SelectedMergeEquivOutputTape, SelectedMergeOutputCode,
+    ParsedLayoutTape, ParsedLayoutBits, ConfigRunnerAfterReject,
+    RejectSimulatorLayout, MachineDescription.SimulatorLayout.run]
+
+theorem acceptMergeEquivSpec_of_selected
+    {accept merger : MachineDescription}
+    (h : SelectedMergeEquivSpec true merger) :
+    AcceptMergeEquivSpec accept merger := by
+  constructor
+  · exact h.left
+  constructor
+  · intro L
+    have hinput :
+        MachineDescription.decodeCodeWordAsInput
+            (MachineDescription.SimulatorLayout.run
+              accept L.stage (AcceptSimulatorLayout L)).input =
+          some (MachineDescription.DovetailLayout.encode L) := by
+      simpa [MachineDescription.SimulatorLayout.run, AcceptSimulatorLayout]
+        using decodeCodeWordAsInput_parsedLayoutBits L
+    have hrun := h.right.left
+      (MachineDescription.SimulatorLayout.run
+        accept L.stage (AcceptSimulatorLayout L)) L hinput
+    simpa [selectedMergeEquivOutputTape_accept_run accept L] using hrun
+  · intro L T hhalt
+    have hinput :
+        MachineDescription.decodeCodeWordAsInput
+            (MachineDescription.SimulatorLayout.run
+              accept L.stage (AcceptSimulatorLayout L)).input =
+          some (MachineDescription.DovetailLayout.encode L) := by
+      simpa [MachineDescription.SimulatorLayout.run, AcceptSimulatorLayout]
+        using decodeCodeWordAsInput_parsedLayoutBits L
+    have hclosed := h.right.right
+      (MachineDescription.SimulatorLayout.run
+        accept L.stage (AcceptSimulatorLayout L)) L hinput
+    simpa [selectedMergeEquivOutputTape_accept_run accept L] using
+      hclosed T hhalt
+
+theorem rejectMergeEquivSpec_of_selected
+    {reject merger : MachineDescription}
+    (h : SelectedMergeEquivSpec false merger) :
+    RejectMergeEquivSpec reject merger := by
+  constructor
+  · exact h.left
+  constructor
+  · intro L
+    have hinput :
+        MachineDescription.decodeCodeWordAsInput
+            (MachineDescription.SimulatorLayout.run
+              reject L.stage (RejectSimulatorLayout L)).input =
+          some (MachineDescription.DovetailLayout.encode L) := by
+      simpa [MachineDescription.SimulatorLayout.run, RejectSimulatorLayout]
+        using decodeCodeWordAsInput_parsedLayoutBits L
+    have hrun := h.right.left
+      (MachineDescription.SimulatorLayout.run
+        reject L.stage (RejectSimulatorLayout L)) L hinput
+    simpa [selectedMergeEquivOutputTape_reject_run reject L] using hrun
+  · intro L T hhalt
+    have hinput :
+        MachineDescription.decodeCodeWordAsInput
+            (MachineDescription.SimulatorLayout.run
+              reject L.stage (RejectSimulatorLayout L)).input =
+          some (MachineDescription.DovetailLayout.encode L) := by
+      simpa [MachineDescription.SimulatorLayout.run, RejectSimulatorLayout]
+        using decodeCodeWordAsInput_parsedLayoutBits L
+    have hclosed := h.right.right
+      (MachineDescription.SimulatorLayout.run
+        reject L.stage (RejectSimulatorLayout L)) L hinput
+    simpa [selectedMergeEquivOutputTape_reject_run reject L] using
+      hclosed T hhalt
+
+theorem acceptMergeEquivSpec_of_exact
+    {accept merger : MachineDescription}
+    (h : AcceptMergeSpec accept merger) :
+    AcceptMergeEquivSpec accept merger := by
+  constructor
+  · exact h.left
+  constructor
+  · intro L
+    have hrun :
+        merger.HaltsFromTape
+          (MachineDescription.SimulatorLayout.tape
+            (MachineDescription.SimulatorLayout.run
+              accept L.stage (AcceptSimulatorLayout L)))
+          (ParsedLayoutTape (ConfigRunnerAfterAccept accept L)) := by
+      simpa [MachineDescription.SimulatorLayout.tape] using h.right.left L
+    exact MachineDescription.HaltsFromTape.toEquiv hrun
+  · intro L T hhalt
+    have hhaltWith :
+        merger.HaltsWithTape
+          (MachineDescription.SimulatorLayout.asBoolInput
+            (MachineDescription.SimulatorLayout.run
+              accept L.stage (AcceptSimulatorLayout L))) T := by
+      simpa [MachineDescription.SimulatorLayout.tape,
+        MachineDescription.HaltsWithTape, MachineDescription.HaltsFromTape,
+        MachineDescription.HaltsWithTapeIn,
+        MachineDescription.HaltsFromTapeIn,
+        MachineDescription.initial] using hhalt
+    rw [h.right.right L T hhaltWith]
+    exact Tape.Equiv.refl _
+
+theorem rejectMergeEquivSpec_of_exact
+    {reject merger : MachineDescription}
+    (h : RejectMergeSpec reject merger) :
+    RejectMergeEquivSpec reject merger := by
+  constructor
+  · exact h.left
+  constructor
+  · intro L
+    have hrun :
+        merger.HaltsFromTape
+          (MachineDescription.SimulatorLayout.tape
+            (MachineDescription.SimulatorLayout.run
+              reject L.stage (RejectSimulatorLayout L)))
+          (ParsedLayoutTape (ConfigRunnerAfterReject reject L)) := by
+      simpa [MachineDescription.SimulatorLayout.tape] using h.right.left L
+    exact MachineDescription.HaltsFromTape.toEquiv hrun
+  · intro L T hhalt
+    have hhaltWith :
+        merger.HaltsWithTape
+          (MachineDescription.SimulatorLayout.asBoolInput
+            (MachineDescription.SimulatorLayout.run
+              reject L.stage (RejectSimulatorLayout L))) T := by
+      simpa [MachineDescription.SimulatorLayout.tape,
+        MachineDescription.HaltsWithTape, MachineDescription.HaltsFromTape,
+        MachineDescription.HaltsWithTapeIn,
+        MachineDescription.HaltsFromTapeIn,
+        MachineDescription.initial] using hhalt
+    rw [h.right.right L T hhaltWith]
+    exact Tape.Equiv.refl _
+
+/-!
+The exact merge specs above are too strong.  A merge starts from a simulator
+layout, whose encoded input contains the whole source dovetail layout as a
+field.  The merged parsed-layout output can be much shorter, and finite-machine
+runs cannot shrink {name}`Tape.contextLength`.
+-/
+namespace MergePhaseCounterexample
+
+def blankConfig : MachineDescription.Configuration :=
+  { state := 0, tape := Tape.blank }
+
+def layout : MachineDescription.DovetailLayout :=
+  { input := []
+    stage := 0
+    acceptConfig := blankConfig
+    rejectConfig := blankConfig
+    acceptHit := false
+    rejectHit := false }
+
+def accept : MachineDescription :=
+  MachineDescription.ExactIdentityDescription
+
+def acceptSimulator : MachineDescription.SimulatorLayout :=
+  MachineDescription.SimulatorLayout.run accept layout.stage
+    (AcceptSimulatorLayout layout)
+
+def acceptInputBits : Word Bool :=
+  MachineDescription.SimulatorLayout.asBoolInput acceptSimulator
+
+theorem acceptMergeOutput_contextLength_lt_input :
+    Tape.contextLength
+        (ParsedLayoutTape (ConfigRunnerAfterAccept accept layout)) <
+      Tape.contextLength (Tape.input acceptInputBits) := by
+  native_decide
+
+theorem not_acceptMergeSpec (merger : MachineDescription) :
+    ¬ AcceptMergeSpec accept merger := by
+  intro hspec
+  have hhalt := hspec.right.left layout
+  rcases hhalt with ⟨n, hn⟩
+  have hmono :=
+    MachineDescription.runConfig_contextLength_mono merger n
+      (merger.initial acceptInputBits)
+  have hfinal :
+      Tape.contextLength
+          (merger.runConfig n (merger.initial acceptInputBits)).tape =
+        Tape.contextLength
+          (ParsedLayoutTape (ConfigRunnerAfterAccept accept layout)) := by
+    exact congrArg Tape.contextLength hn.right
+  rw [hfinal] at hmono
+  have hinput :
+      Tape.contextLength (merger.initial acceptInputBits).tape =
+        Tape.contextLength (Tape.input acceptInputBits) :=
+    rfl
+  rw [hinput] at hmono
+  exact (Nat.not_lt_of_ge hmono) acceptMergeOutput_contextLength_lt_input
+
+end MergePhaseCounterexample
+
 def ConfigRunnerPhaseConstructionData
     (accept reject : MachineDescription) : Prop :=
   exists acceptProject acceptSim acceptMerge
@@ -91,6 +505,50 @@ def ConfigRunnerPhaseConstructionData
 def ConfigRunnerPhaseConstruction : Prop :=
   forall accept reject : MachineDescription,
     ConfigRunnerPhaseConstructionData accept reject
+
+def ConfigRunnerPhaseEquivConstructionData
+    (accept reject : MachineDescription) : Prop :=
+  exists acceptProject acceptSim acceptMerge
+    rejectProject rejectSim rejectMerge : MachineDescription,
+    AcceptProjectionSpec acceptProject ∧
+      FixedDescriptionBoundedSimulatorCanonicalSpec accept acceptSim ∧
+      AcceptMergeEquivSpec accept acceptMerge ∧
+      RejectProjectionSpec rejectProject ∧
+      FixedDescriptionBoundedSimulatorCanonicalSpec reject rejectSim ∧
+      RejectMergeEquivSpec reject rejectMerge
+
+def ConfigRunnerPhaseEquivConstruction : Prop :=
+  forall accept reject : MachineDescription,
+    ConfigRunnerPhaseEquivConstructionData accept reject
+
+theorem configRunnerPhaseEquivConstruction_of_exact
+    (h : ConfigRunnerPhaseConstruction) :
+    ConfigRunnerPhaseEquivConstruction := by
+  intro accept reject
+  rcases h accept reject with
+    ⟨acceptProject, acceptSim, acceptMerge,
+      rejectProject, rejectSim, rejectMerge,
+      hacceptProject, hacceptSim, hacceptMerge,
+      hrejectProject, hrejectSim, hrejectMerge⟩
+  exact
+    ⟨acceptProject, acceptSim, acceptMerge,
+      rejectProject, rejectSim, rejectMerge,
+      hacceptProject, hacceptSim,
+      acceptMergeEquivSpec_of_exact hacceptMerge,
+      hrejectProject, hrejectSim,
+      rejectMergeEquivSpec_of_exact hrejectMerge⟩
+
+theorem not_configRunnerPhaseConstruction :
+    ¬ ConfigRunnerPhaseConstruction := by
+  intro hconstruction
+  rcases hconstruction MergePhaseCounterexample.accept
+      MergePhaseCounterexample.accept with
+    ⟨_acceptProject, _acceptSim, acceptMerge,
+      _rejectProject, _rejectSim, _rejectMerge,
+      _hacceptProject, _hacceptSim, hacceptMerge,
+      _hrejectProject, _hrejectSim, _hrejectMerge⟩
+  exact MergePhaseCounterexample.not_acceptMergeSpec acceptMerge
+    hacceptMerge
 
 def ConfigRunnerPrimitiveClosedHandoffConstruction : Prop :=
   exists acceptProject acceptMerge
@@ -265,22 +723,28 @@ theorem RejectProjectionSpec_of_closedHandoff
   · exact TapeCodeExactPhaseFromClosedHandoff_subroutineReady hclosed
   constructor
   · intro L
-    simpa [ParsedLayoutBits,
-      MachineDescription.SimulatorLayout.tape,
-      MachineDescription.SimulatorLayout.asBoolInput] using
-      TapeCodeExactPhaseFromClosedHandoff_forward
-        hclosed (RejectProjectionPrimitive_encode L)
+    have hrun :
+        (TapeCodeExactPhaseFromClosedHandoff closed).HaltsFromTape
+          (ParsedLayoutTape L)
+          (MachineDescription.SimulatorLayout.tape
+            (RejectSimulatorLayout L)) := by
+      simpa [ParsedLayoutTape, ParsedLayoutBits,
+        MachineDescription.SimulatorLayout.tape,
+        MachineDescription.SimulatorLayout.asBoolInput] using
+        TapeCodeExactPhaseFromClosedHandoff_forward
+          hclosed (RejectProjectionPrimitive_encode L)
+    exact MachineDescription.HaltsFromTape.toEquiv hrun
   · intro L T hhalt
     have hhalt' :
         (TapeCodeExactPhaseFromClosedHandoff closed).HaltsWithTape
           (MachineDescription.encodeCodeWordAsInput
             (MachineDescription.DovetailLayout.encode L)) T := by
-      simpa [ParsedLayoutBits] using hhalt
+      simpa [ParsedLayoutTape, ParsedLayoutBits] using hhalt
     have hT :=
       TapeCodeExactPhaseFromClosedHandoff_closed_eq
         hclosed (RejectProjectionPrimitive_encode L) hhalt'
-    simpa [MachineDescription.SimulatorLayout.tape,
-      MachineDescription.SimulatorLayout.asBoolInput] using hT
+    rw [hT]
+    exact Tape.Equiv.refl _
 
 theorem AcceptMergeSpec_of_closedHandoff
     (accept : MachineDescription)
@@ -387,11 +851,11 @@ theorem configRunnerPhaseRunner_spec
     (hacceptProject : AcceptProjectionSpec acceptProject)
     (hacceptSim :
       FixedDescriptionBoundedSimulatorCanonicalSpec accept acceptSim)
-    (hacceptMerge : AcceptMergeSpec accept acceptMerge)
+    (hacceptMerge : AcceptMergeEquivSpec accept acceptMerge)
     (hrejectProject : RejectProjectionSpec rejectProject)
     (hrejectSim :
       FixedDescriptionBoundedSimulatorCanonicalSpec reject rejectSim)
-    (hrejectMerge : RejectMergeSpec reject rejectMerge) :
+    (hrejectMerge : RejectMergeEquivSpec reject rejectMerge) :
     AcceptRejectConfigRunnerSpec accept reject
       (ConfigRunnerPhaseRunner
         acceptProject acceptSim acceptMerge
@@ -465,18 +929,20 @@ theorem configRunnerPhaseRunner_spec
             exact Tape.Equiv.refl _)
           hAcceptSimRun
     have hAcceptMergeRun :
-        acceptMerge.HaltsWithTape
-          (MachineDescription.SimulatorLayout.asBoolInput
-            (MachineDescription.SimulatorLayout.run
-              accept L.stage (AcceptSimulatorLayout L)))
-          (ParsedLayoutTape (ConfigRunnerAfterAccept accept L)) :=
-      hacceptMerge.right.left L
+        acceptMerge.HaltsFromTapeEquiv
+          (Tape.input
+            (MachineDescription.SimulatorLayout.asBoolInput
+              (MachineDescription.SimulatorLayout.run
+                accept L.stage (AcceptSimulatorLayout L))))
+          (ParsedLayoutTape (ConfigRunnerAfterAccept accept L)) := by
+      simpa [MachineDescription.SimulatorLayout.tape] using
+        hacceptMerge.right.left L
     have hAPASMRun :
         APASM.HaltsFromTapeEquiv
           (ParsedLayoutCheckedTape L)
           (ParsedLayoutTape (ConfigRunnerAfterAccept accept L)) := by
       exact
-        SeqViaCanonical_haltsFromTapeEquiv_of_haltsWithTape
+        SeqViaCanonical_haltsFromTapeEquiv_of_equiv
           hAPASReady hAcceptMergeReady
           hAPASRun
           (by
@@ -487,8 +953,8 @@ theorem configRunnerPhaseRunner_spec
             exact Tape.Equiv.refl _)
           hAcceptMergeRun
     have hRejectProjectRun :
-        rejectProject.HaltsWithTape
-          (ParsedLayoutBits (ConfigRunnerAfterAccept accept L))
+        rejectProject.HaltsFromTapeEquiv
+          (ParsedLayoutTape (ConfigRunnerAfterAccept accept L))
           (MachineDescription.SimulatorLayout.tape
             (RejectSimulatorLayout
               (ConfigRunnerAfterAccept accept L))) :=
@@ -500,7 +966,7 @@ theorem configRunnerPhaseRunner_spec
             (RejectSimulatorLayout
               (ConfigRunnerAfterAccept accept L))) := by
       exact
-        SeqViaCanonical_haltsFromTapeEquiv_of_haltsWithTape
+        SeqViaCanonical_haltsFromTapeEquiv_of_equiv
           hAPASMReady hRejectProjectReady
           hAPASMRun
           (by
@@ -543,16 +1009,18 @@ theorem configRunnerPhaseRunner_spec
             exact Tape.Equiv.refl _)
           hRejectSimRun
     have hRejectMergeRun :
-        rejectMerge.HaltsWithTape
-          (MachineDescription.SimulatorLayout.asBoolInput
-            (MachineDescription.SimulatorLayout.run
-              reject (ConfigRunnerAfterAccept accept L).stage
-              (RejectSimulatorLayout
-                (ConfigRunnerAfterAccept accept L))))
+        rejectMerge.HaltsFromTapeEquiv
+          (Tape.input
+            (MachineDescription.SimulatorLayout.asBoolInput
+              (MachineDescription.SimulatorLayout.run
+                reject (ConfigRunnerAfterAccept accept L).stage
+                (RejectSimulatorLayout
+                  (ConfigRunnerAfterAccept accept L)))))
           (ParsedLayoutTape
             (ConfigRunnerAfterReject reject
-              (ConfigRunnerAfterAccept accept L))) :=
-      hrejectMerge.right.left (ConfigRunnerAfterAccept accept L)
+              (ConfigRunnerAfterAccept accept L))) := by
+      simpa [MachineDescription.SimulatorLayout.tape] using
+        hrejectMerge.right.left (ConfigRunnerAfterAccept accept L)
     have hRunner :
         runner.HaltsFromTapeEquiv
           (ParsedLayoutCheckedTape L)
@@ -560,7 +1028,7 @@ theorem configRunnerPhaseRunner_spec
             (ConfigRunnerAfterReject reject
               (ConfigRunnerAfterAccept accept L))) := by
       exact
-        SeqViaCanonical_haltsFromTapeEquiv_of_haltsWithTape
+        SeqViaCanonical_haltsFromTapeEquiv_of_equiv
           hAPASMRPRSReady hRejectMergeReady
           hAPASMRPRSRun
           (by
@@ -606,8 +1074,8 @@ theorem configRunnerPhaseRunner_spec
     rw [hT_eq_Tactual]
     exact hequiv
 
-theorem acceptRejectConfigRunnerConstruction_of_phaseConstruction
-    (h : ConfigRunnerPhaseConstruction) :
+theorem acceptRejectConfigRunnerConstruction_of_phaseEquivConstruction
+    (h : ConfigRunnerPhaseEquivConstruction) :
     AcceptRejectConfigRunnerConstruction := by
   intro accept reject
   rcases h accept reject with
@@ -622,6 +1090,12 @@ theorem acceptRejectConfigRunnerConstruction_of_phaseConstruction
       configRunnerPhaseRunner_spec
         hacceptProject hacceptSim hacceptMerge
         hrejectProject hrejectSim hrejectMerge⟩
+
+theorem acceptRejectConfigRunnerConstruction_of_phaseConstruction
+    (h : ConfigRunnerPhaseConstruction) :
+    AcceptRejectConfigRunnerConstruction :=
+  acceptRejectConfigRunnerConstruction_of_phaseEquivConstruction
+    (configRunnerPhaseEquivConstruction_of_exact h)
 
 
 end BoundedLayoutRunner

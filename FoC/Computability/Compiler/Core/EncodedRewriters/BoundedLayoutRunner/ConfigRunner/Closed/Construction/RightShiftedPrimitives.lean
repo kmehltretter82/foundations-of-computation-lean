@@ -121,6 +121,13 @@ theorem selectedMergeFiniteDescriptionConstruction_of_rightShifted
     refine ⟨S, L, hcode, hinput, ?_⟩
     simpa [SelectedMergeOutputTape, hout] using hT
 
+theorem selectedMergePrimitiveRightShiftedConstruction_of_finiteDescription
+    (h : SelectedMergeFiniteDescriptionConstruction) :
+    SelectedMergePrimitiveRightShiftedConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨runner, hrunner⟩
+  exact ⟨runner, selectedMergeRightShifted_of_spec hrunner⟩
+
 def SelectedProjectionPrimitiveExactSpec
     (useAccept : Bool)
     (runner : MachineDescription) : Prop :=
@@ -401,6 +408,13 @@ def SelectedProjectionCheckedProjectorComponentConstruction : Prop :=
     SelectedProjectionTailProjector.TailProjectorExactConstruction ∧
       SelectedProjectionOutputReturnConstruction
 
+theorem not_selectedProjectionCheckedProjectorComponentConstruction :
+    ¬ SelectedProjectionCheckedProjectorComponentConstruction := by
+  intro hcomponents
+  exact
+    SelectedProjectionTailProjector.not_tailProjectorExactConstruction
+      hcomponents.right.left
+
 def SelectedProjectionCheckedProjectorFromComponents
     (quoter tail returner : MachineDescription) : MachineDescription :=
   SeqViaCanonical (SeqViaCanonical quoter tail) returner
@@ -623,47 +637,16 @@ theorem selectedProjectionPrimitiveExactConstruction_of_checkedParser_checkedEmi
         hparser hemits⟩
 
 /--
-Finite-machine leaf for the accept/reject checked projection projectors,
-split into the raw input quoter, selected tail projector, and final returner.
+Finite-machine leaf for the selected projection primitive.
+
+The earlier checked-projector route is stronger than the public primitive
+needs.  This target should validate the canonical dovetail-layout input and
+emit the selected simulator-layout code one cell to the right, with the closed
+direction ruling out malformed canonical code words.
 -/
-theorem selectedProjectionCheckedProjectorComponentConstruction_scaffold :
-    SelectedProjectionCheckedProjectorComponentConstruction := by
-  sorry
-
-/--
-Packages the component-level finite-machine leaves as exact checked
-projectors.  The emitter construction below only adds the final right handoff.
--/
-theorem selectedProjectionCheckedProjectorExactConstruction_scaffold :
-    SelectedProjectionCheckedProjectorExactConstruction :=
-  selectedProjectionCheckedProjectorExactConstruction_of_components
-    selectedProjectionCheckedProjectorComponentConstruction_scaffold
-
-/--
-Packages the exact checked projectors as accept/reject checked projection
-emitters.  The right-shifted primitive construction below is adapter glue over
-this target and the checked layout parser.
--/
-theorem selectedProjectionCheckedEmitterSideConstruction_scaffold :
-    SelectedProjectionCheckedEmitterSideConstruction := by
-  have hchecked :
-      SelectedProjectionCheckedEmitterConstruction :=
-    selectedProjectionCheckedEmitterConstruction_of_projector
-      selectedProjectionCheckedProjectorExactConstruction_scaffold
-  exact ⟨hchecked true, hchecked false⟩
-
-theorem selectedProjectionCheckedEmitterConstruction_scaffold :
-    SelectedProjectionCheckedEmitterConstruction := by
-  exact
-    selectedProjectionCheckedEmitterConstruction_of_sides
-      selectedProjectionCheckedEmitterSideConstruction_scaffold
-
 theorem selectedProjectionPrimitiveExactConstruction_scaffold :
     SelectedProjectionPrimitiveExactConstruction := by
-  exact
-    selectedProjectionPrimitiveExactConstruction_of_checkedParser_checkedEmitter
-      layoutCheckedParserConstruction_scaffold
-      selectedProjectionCheckedEmitterConstruction_scaffold
+  sorry
 
 theorem selectedProjectionPrimitiveRightShiftedConstruction_core :
     SelectedProjectionPrimitiveRightShiftedConstruction := by
@@ -709,53 +692,6 @@ theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
     SelectedProjectionFiniteDescriptionConstruction :=
     selectedProjectionFiniteDescriptionConstruction_of_rightShifted
     selectedProjectionPrimitiveRightShiftedConstruction_scaffold
-
-/--
-Finite-machine leaf for the selected accept/reject merge primitive, packaged
-as a right-shifted output subroutine.
--/
-theorem selectedMergePrimitiveRightShiftedConstruction_core :
-    SelectedMergePrimitiveRightShiftedConstruction := by
-  sorry
-
-theorem acceptMergePrimitiveRightShiftedConstruction_scaffold :
-    AcceptMergePrimitiveRightShiftedConstruction := by
-  rcases selectedMergePrimitiveRightShiftedConstruction_core true with
-    ⟨runner, hrunner⟩
-  refine ⟨runner, ?_⟩
-  exact
-    rightShiftedOutputCompiledSubroutineByDescription_congr
-      (P := SelectedMergePrimitive true)
-      (Q := AcceptMergePrimitive)
-      (D := runner)
-      (by
-        intro code
-        rfl)
-      hrunner
-
-theorem rejectMergePrimitiveRightShiftedConstruction_scaffold :
-    RejectMergePrimitiveRightShiftedConstruction := by
-  rcases selectedMergePrimitiveRightShiftedConstruction_core false with
-    ⟨runner, hrunner⟩
-  refine ⟨runner, ?_⟩
-  exact
-    rightShiftedOutputCompiledSubroutineByDescription_congr
-      (P := SelectedMergePrimitive false)
-      (Q := RejectMergePrimitive)
-      (D := runner)
-      (by
-        intro code
-        rfl)
-      hrunner
-
-theorem selectedMergePrimitiveRightShiftedConstruction_scaffold :
-    SelectedMergePrimitiveRightShiftedConstruction := by
-  exact selectedMergePrimitiveRightShiftedConstruction_core
-
-theorem selectedMergeFiniteDescriptionConstruction_scaffold :
-    SelectedMergeFiniteDescriptionConstruction :=
-  selectedMergeFiniteDescriptionConstruction_of_rightShifted
-    selectedMergePrimitiveRightShiftedConstruction_scaffold
 
 
 end BoundedLayoutRunner

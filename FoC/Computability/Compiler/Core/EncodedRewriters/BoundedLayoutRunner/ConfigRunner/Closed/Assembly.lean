@@ -71,93 +71,11 @@ theorem selectedProjectionAcceptPrimitiveClosedHandoffConstruction_scaffold :
         closed tapeCodePrimitiveCodeWordHandoffMove :=
   selectedProjectionPrimitiveClosedHandoffConstruction_scaffold true
 
-theorem selectedMergePrimitiveClosedHandoffConstruction_finite_scaffold :
-    SelectedMergePrimitiveClosedHandoffConstruction :=
-  selectedMergePrimitiveClosedHandoffConstruction_of_rightShifted
-    selectedMergePrimitiveRightShiftedConstruction_scaffold
-
-theorem rejectMergePrimitiveClosedHandoffConstruction_finite_scaffold :
-    RejectMergePrimitiveClosedHandoffConstruction :=
-  rejectMergePrimitiveClosedHandoffConstruction_of_selected
-    selectedMergePrimitiveClosedHandoffConstruction_finite_scaffold
-
-def AcceptMergePrimitiveClosedHandoffFiniteMachineConstruction : Prop :=
-  exists closed : MachineDescription,
-    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-      AcceptMergePrimitive
-      closed tapeCodePrimitiveCodeWordHandoffMove
-
-theorem acceptMergePrimitiveClosedHandoffConstruction_of_finiteMachine
-    (h : AcceptMergePrimitiveClosedHandoffFiniteMachineConstruction) :
-    AcceptMergePrimitiveClosedHandoffConstruction :=
-  h
-
--- Actual finite parser/emitter table for the accept-side merge rewriter.
-theorem acceptMergePrimitiveClosedHandoffFiniteMachineConstruction_scaffold :
-    AcceptMergePrimitiveClosedHandoffFiniteMachineConstruction :=
-  acceptMergePrimitiveClosedHandoffConstruction_of_selected
-    selectedMergePrimitiveClosedHandoffConstruction_finite_scaffold
-
-theorem acceptMergePrimitiveClosedHandoffConstruction_finite_scaffold :
-    AcceptMergePrimitiveClosedHandoffConstruction := by
-  exact
-    acceptMergePrimitiveClosedHandoffConstruction_of_finiteMachine
-      acceptMergePrimitiveClosedHandoffFiniteMachineConstruction_scaffold
-
-theorem selectedMergeRejectPrimitiveClosedHandoffConstruction_scaffold :
-    exists closed : MachineDescription,
-      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-        (SelectedMergePrimitive false)
-        closed tapeCodePrimitiveCodeWordHandoffMove := by
-  rcases rejectMergePrimitiveClosedHandoffConstruction_finite_scaffold with
-    ⟨closed, hclosed⟩
-  refine ⟨closed, ?_⟩
-  exact
-    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_congr
-      (P := RejectMergePrimitive)
-      (Q := SelectedMergePrimitive false)
-      (D := closed)
-      (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
-      (by
-        intro code
-        rfl)
-      hclosed
-
-theorem selectedMergeAcceptPrimitiveClosedHandoffConstruction_scaffold :
-    exists closed : MachineDescription,
-      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-        (SelectedMergePrimitive true)
-        closed tapeCodePrimitiveCodeWordHandoffMove := by
-  rcases acceptMergePrimitiveClosedHandoffConstruction_finite_scaffold with
-    ⟨closed, hclosed⟩
-  refine ⟨closed, ?_⟩
-  exact
-    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_congr
-      (P := AcceptMergePrimitive)
-      (Q := SelectedMergePrimitive true)
-      (D := closed)
-      (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
-      (by
-        intro code
-        rfl)
-      hclosed
-
-theorem selectedMergePrimitiveClosedHandoffConstruction_scaffold :
-    SelectedMergePrimitiveClosedHandoffConstruction := by
-  intro useAccept
-  cases useAccept
-  · exact selectedMergeRejectPrimitiveClosedHandoffConstruction_scaffold
-  · exact selectedMergeAcceptPrimitiveClosedHandoffConstruction_scaffold
-
 theorem acceptProjectionPrimitiveClosedHandoffConstruction_scaffold :
     AcceptProjectionPrimitiveClosedHandoffConstruction := by
   exact
     acceptProjectionPrimitiveClosedHandoffConstruction_of_selected
       selectedProjectionPrimitiveClosedHandoffConstruction_scaffold
-
-theorem acceptMergePrimitiveClosedHandoffConstruction_scaffold :
-    AcceptMergePrimitiveClosedHandoffConstruction := by
-  exact acceptMergePrimitiveClosedHandoffConstruction_finite_scaffold
 
 theorem rejectProjectionPrimitiveClosedHandoffConstruction_scaffold :
     RejectProjectionPrimitiveClosedHandoffConstruction := by
@@ -165,24 +83,44 @@ theorem rejectProjectionPrimitiveClosedHandoffConstruction_scaffold :
     rejectProjectionPrimitiveClosedHandoffConstruction_of_selected
       selectedProjectionPrimitiveClosedHandoffConstruction_scaffold
 
-theorem rejectMergePrimitiveClosedHandoffConstruction_scaffold :
-    RejectMergePrimitiveClosedHandoffConstruction := by
-  exact rejectMergePrimitiveClosedHandoffConstruction_finite_scaffold
-
-theorem configRunnerPrimitiveClosedHandoffConstruction_scaffold :
-    ConfigRunnerPrimitiveClosedHandoffConstruction := by
+/-!
+The exact/right-shifted selected-merge primitive scaffold chain is false: the
+merge phase intentionally preserves simulator-layout scratch structure that is
+only equivalent to the parsed dovetail layout.  The live config-runner scaffold
+therefore uses the equivalence-based merge phase contract from the
+finite-description construction module instead of requiring an exact parsed
+layout tape.
+-/
+theorem configRunnerPhaseEquivConstruction_scaffold :
+    ConfigRunnerPhaseEquivConstruction := by
+  intro accept reject
+  rcases selectedProjectionFiniteDescriptionConstruction_scaffold true with
+    ⟨acceptProject, hacceptProject⟩
+  rcases selectedProjectionFiniteDescriptionConstruction_scaffold false with
+    ⟨rejectProject, hrejectProject⟩
+  rcases fixedDescriptionBoundedSimulatorCanonicalConstruction_scaffold_configRunner
+      accept with
+    ⟨acceptSim, hacceptSim⟩
+  rcases fixedDescriptionBoundedSimulatorCanonicalConstruction_scaffold_configRunner
+      reject with
+    ⟨rejectSim, hrejectSim⟩
+  rcases selectedMergeEquivConstruction_scaffold true with
+    ⟨acceptMerge, hacceptMerge⟩
+  rcases selectedMergeEquivConstruction_scaffold false with
+    ⟨rejectMerge, hrejectMerge⟩
   exact
-    configRunnerPrimitiveClosedHandoffConstruction_of_parts
-      acceptProjectionPrimitiveClosedHandoffConstruction_scaffold
-      acceptMergePrimitiveClosedHandoffConstruction_scaffold
-      rejectProjectionPrimitiveClosedHandoffConstruction_scaffold
-      rejectMergePrimitiveClosedHandoffConstruction_scaffold
-
-theorem configRunnerPhaseConstruction_scaffold :
-    ConfigRunnerPhaseConstruction :=
-  configRunnerPhaseConstruction_of_primitiveClosedHandoff
-    fixedDescriptionBoundedSimulatorCanonicalConstruction_scaffold_configRunner
-    configRunnerPrimitiveClosedHandoffConstruction_scaffold
+    ⟨SelectedProjectionPhaseFromOutputTape acceptProject,
+      acceptSim,
+      acceptMerge,
+      SelectedProjectionPhaseFromOutputTape rejectProject,
+      rejectSim,
+      rejectMerge,
+      AcceptProjectionSpec_of_selected hacceptProject,
+      hacceptSim,
+      acceptMergeEquivSpec_of_selected hacceptMerge,
+      RejectProjectionSpec_of_selected hrejectProject,
+      hrejectSim,
+      rejectMergeEquivSpec_of_selected hrejectMerge⟩
 
 def ConfigRunnerFromClosedHandoff
     (closed : MachineDescription) : MachineDescription :=
@@ -247,8 +185,8 @@ theorem acceptRejectConfigRunnerConstruction_of_closedHandoffConstruction
 theorem acceptRejectConfigRunnerConstruction_scaffold :
     AcceptRejectConfigRunnerConstruction := by
   exact
-    acceptRejectConfigRunnerConstruction_of_phaseConstruction
-      configRunnerPhaseConstruction_scaffold
+    acceptRejectConfigRunnerConstruction_of_phaseEquivConstruction
+      configRunnerPhaseEquivConstruction_scaffold
 
 
 end BoundedLayoutRunner

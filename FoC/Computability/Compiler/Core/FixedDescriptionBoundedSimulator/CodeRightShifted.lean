@@ -208,6 +208,109 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_of_pr
           EncodedRewriters.CanonicalLayouts.InputTape,
           EncodedRewriters.CanonicalLayouts.Bits] using hT
 
+theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction_of_closedRecognizer
+    (h :
+      FixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction) :
+    FixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction := by
+  rcases h with ⟨recognizer, hrecognizer⟩
+  refine ⟨recognizer, ?_⟩
+  constructor
+  · exact hrecognizer.left.left
+  constructor
+  · exact hrecognizer.left.right
+  constructor
+  · intro code out
+    constructor
+    · intro hhalt
+      rcases hhalt with ⟨n, hn⟩
+      let T : Tape Bool :=
+        (recognizer.runConfig n
+          (recognizer.initial
+            (MachineDescription.encodeCodeWordAsInput code))).tape
+      have hTape :
+          recognizer.HaltsWithTape
+              (MachineDescription.encodeCodeWordAsInput code) T := by
+        exact ⟨n, ⟨hn.left, rfl⟩⟩
+      rcases hrecognizer.right.right code T hTape with
+        ⟨L, hdecode, hT⟩
+      have houtBits :
+          MachineDescription.encodeCodeWordAsInput out =
+            MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.SimulatorLayout.encode L) := by
+        calc
+          MachineDescription.encodeCodeWordAsInput out =
+              Tape.normalizedOutput T := by
+                simpa [T] using hn.right.symm
+          _ =
+              MachineDescription.encodeCodeWordAsInput
+                (MachineDescription.SimulatorLayout.encode L) := by
+                rw [hT]
+                simpa [EncodedRewriters.CanonicalLayouts.Simulator.encode,
+                  EncodedRewriters.CanonicalLayouts.Bits] using
+                  EncodedRewriters.CanonicalLayouts.handoffTape_normalizedOutput
+                    EncodedRewriters.CanonicalLayouts.Simulator.encode L
+      have hout :
+          out = MachineDescription.SimulatorLayout.encode L :=
+        MachineDescription.encodeCodeWordAsInput_injective houtBits
+      have hdecode' :
+          MachineDescription.SimulatorLayout.decodeComplete code = some L := by
+        simpa [EncodedRewriters.CanonicalLayouts.Simulator.decode] using
+          hdecode
+      simp [MachineDescription.SimulatorLayout.normalizeCodePrimitive,
+        MachineDescription.SimulatorLayout.normalizeCode,
+        hout, hdecode']
+    · intro htransform
+      unfold MachineDescription.SimulatorLayout.normalizeCodePrimitive at htransform
+      unfold MachineDescription.SimulatorLayout.normalizeCode at htransform
+      cases hdecode :
+          MachineDescription.SimulatorLayout.decodeComplete code with
+      | none =>
+          simp [hdecode] at htransform
+      | some L =>
+          simp [hdecode] at htransform
+          cases htransform
+          have hcode :
+              code = MachineDescription.SimulatorLayout.encode L :=
+            MachineDescription.SimulatorLayout.decodeComplete_eq_some_encode
+              hdecode
+          subst code
+          have hhaltTape :
+              recognizer.HaltsWithTape
+                (EncodedRewriters.CanonicalLayouts.Simulator.bits L)
+                (EncodedRewriters.CanonicalLayouts.Simulator.handoffTape L) :=
+            hrecognizer.right.left L
+          have houtput :=
+            MachineDescription.haltsWithOutput_of_haltsWithTape hhaltTape
+          have hnormalized :
+              Tape.normalizedOutput
+                  (EncodedRewriters.CanonicalLayouts.Simulator.handoffTape L) =
+                MachineDescription.encodeCodeWordAsInput
+                  (MachineDescription.SimulatorLayout.encode L) := by
+            simpa [EncodedRewriters.CanonicalLayouts.Simulator.encode,
+              EncodedRewriters.CanonicalLayouts.Simulator.bits,
+              EncodedRewriters.CanonicalLayouts.Bits] using
+              EncodedRewriters.CanonicalLayouts.handoffTape_normalizedOutput
+                EncodedRewriters.CanonicalLayouts.Simulator.encode L
+          rw [hnormalized] at houtput
+          simpa [EncodedRewriters.CanonicalLayouts.Simulator.bits,
+            EncodedRewriters.CanonicalLayouts.Simulator.encode,
+            EncodedRewriters.CanonicalLayouts.Bits] using houtput
+  · intro code T hhalt
+    rcases hrecognizer.right.right code T hhalt with
+      ⟨L, hdecode, hT⟩
+    refine ⟨MachineDescription.SimulatorLayout.encode L, ?_, ?_⟩
+    · have hdecode' :
+          MachineDescription.SimulatorLayout.decodeComplete code = some L := by
+        simpa [EncodedRewriters.CanonicalLayouts.Simulator.decode] using
+          hdecode
+      simp [MachineDescription.SimulatorLayout.normalizeCodePrimitive,
+        MachineDescription.SimulatorLayout.normalizeCode, hdecode']
+    · rw [hT]
+      simp [EncodedRewriters.CanonicalLayouts.Simulator.encode,
+        EncodedRewriters.CanonicalLayouts.HandoffTape,
+        EncodedRewriters.CanonicalLayouts.InputTape,
+        EncodedRewriters.CanonicalLayouts.Bits]
+
 /--
 Emitter half of the right-shifted code leaf: after the complete simulator
 layout has been parsed, emit the fixed-{lean}`D` bounded run/update-hit layout
@@ -518,22 +621,6 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShifted_of_spec
                 hout⟩)
 
 /--
-Finite-machine leaf for the complete simulator-layout parser primitive.
--/
-theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction_scaffold :
-    FixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction := by
-  sorry
-
-/--
-Finite-machine leaf for the complete simulator-layout parser.
--/
-theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_scaffold :
-    FixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction := by
-  exact
-    fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_of_primitive
-      fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction_scaffold
-
-/--
 Narrow finite-machine leaf for the canonical fixed-description simulator: after
 the skeleton handoff has moved one cell right from a canonical simulator-layout
 tape, one fragment performs the fixed-description bounded run and returns to the
@@ -630,22 +717,6 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterConstruction_scaf
     fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterConstruction_of_canonical
       fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterCanonicalConstruction_scaffold
 
-/--
-Assembly of the simulator-layout parser, fixed-description bounded config
-runner, and right-shifted simulator-layout emitter.
--/
-theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserEmitterConstruction_scaffold :
-    FixedDescriptionBoundedSimulatorCodeRightShiftedParserEmitterConstruction := by
-  exact
-    ⟨fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_scaffold,
-      fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterConstruction_scaffold⟩
-
-theorem fixedDescriptionBoundedSimulatorCodeRightShiftedSpecConstruction_scaffold :
-    FixedDescriptionBoundedSimulatorCodeRightShiftedSpecConstruction := by
-  exact
-    fixedDescriptionBoundedSimulatorCodeRightShiftedSpecConstruction_of_parserEmitter
-      fixedDescriptionBoundedSimulatorCodeRightShiftedParserEmitterConstruction_scaffold
-
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_specConstruction
     (h :
       FixedDescriptionBoundedSimulatorCodeRightShiftedSpecConstruction) :
@@ -655,13 +726,6 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_specCons
   exact
     ⟨runner,
       fixedDescriptionBoundedSimulatorCodeRightShifted_of_spec hrunner⟩
-
-/-- Finite-machine leaf for the right-shifted fixed-description simulator. -/
-theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_scaffold :
-    FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction := by
-  exact
-    fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_specConstruction
-      fixedDescriptionBoundedSimulatorCodeRightShiftedSpecConstruction_scaffold
 
 end Computability
 end FoC

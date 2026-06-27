@@ -330,6 +330,12 @@ into smaller targets.
 * In the selected-primitive assembly, closed handoff is derived from
   right-shifted output. Using a selected closed-handoff scaffold to prove a
   selected right-shifted leaf would be circular.
+* The live bounded config-runner assembly consumes selected projection through
+  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPhaseFromOutputTape)}`SelectedProjectionPhaseFromOutputTape`
+  and the {lit}`AcceptProjectionSpec_of_selected` /
+  {lit}`RejectProjectionSpec_of_selected` adapters. Do not route the phase
+  assembly back through selected closed-handoff projection scaffolds just to
+  repair the right-shifted head position.
 * {lit}`controllerResultContinueConstruction_scaffold` is the missing
   code-word subroutine construction itself, not merely an adapter around an
   already compiled subroutine.
@@ -397,20 +403,40 @@ order.
   plus the decoder-backed cancellation helpers from
   {module}`FoC.Computability.Compiler.Core.EncodingLemmas`, and should produce
   the exact checked handoff equation, not merely a decoded layout.
-* Config-runner exact-tape leaves:
+* Selected-projection right-shifted leaf:
   {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveRightShiftedConstruction_core)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveRightShiftedConstruction_core`
-  and
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedMergePrimitiveRightShiftedConstruction_core)}`EncodedRewriters.BoundedLayoutRunner.selectedMergePrimitiveRightShiftedConstruction_core`
-  must produce
+  is the current public scaffold for packaging selected projection as
   {name (full := FoC.Computability.EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription)}`EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription`.
-  A theorem that only proves
-  {name (full := FoC.Computability.Tape.Equiv)}`Tape.Equiv` for the selected
-  projection or merge output is too weak.
-* Fixed-description simulator exact-tape leaf:
-  {name (full := FoC.Computability.fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_scaffold)}`fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_scaffold`
-  is the reusable right-shifted compiler target for
-  {name (full := FoC.Computability.FixedDescriptionBoundedSimulatorCode)}`FixedDescriptionBoundedSimulatorCode`.
-  Proving it would unblock downstream config-runner phase construction.
+  Its live construction leaf is now
+  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveExactConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedProjectionPrimitiveExactConstruction_scaffold`,
+  not the retired checked-projector scaffold path.
+  The phase runner now accepts
+  {name (full := FoC.Computability.Tape.Equiv)}`Tape.Equiv` at both projection
+  boundaries, so future refactors may replace this exact scaffold with a
+  phase-level projection contract if they preserve the simulator handoff shape.
+* Config-runner selected-merge equivalence leaf:
+  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedMergeEquivPaddedEmitterConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedMergeEquivPaddedEmitterConstruction_scaffold`
+  is the selected-merge finite-machine obligation. The former exact
+  right-shifted merge target is impossible, as formalized by
+  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedMergeCounterexample.not_selectedMergePrimitiveRightShiftedConstruction)}`EncodedRewriters.BoundedLayoutRunner.SelectedMergeCounterexample.not_selectedMergePrimitiveRightShiftedConstruction`;
+  the merge phase must instead emit the selected output plus blank padding so
+  the exact tape is equivalent to the parsed dovetail-layout tape while
+  preserving simulator-layout scratch structure.
+  The live selected-merge equivalence construction uses the forward-only
+  identity parser adapter
+  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedMergeForwardParserConstruction_scaffold)}`EncodedRewriters.BoundedLayoutRunner.selectedMergeForwardParserConstruction_scaffold`.
+  The stronger selected-merge input validator uses
+  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedMergeInputValidatorConstruction_of_parser_checker)}`EncodedRewriters.BoundedLayoutRunner.selectedMergeInputValidatorConstruction_of_parser_checker`;
+  the exact/right-shifted input-validator primitive path is stronger adapter
+  glue, not the phase parser dependency.
+* Fixed-description simulator phase leaf:
+  {name (full := FoC.Computability.fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_scaffold)}`fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_scaffold`
+  is the reusable canonical simulator phase needed by the bounded-layout
+  config runner.  The full right-shifted
+  {name (full := FoC.Computability.FixedDescriptionBoundedSimulatorCode)}`FixedDescriptionBoundedSimulatorCode`
+  package is no longer a live bounded-runner dependency; parser/primitive
+  packaging remains available through adapter theorems rather than public
+  scaffolds.
 * Bounded-layout closed handoff wrapper:
   {name (full := FoC.Computability.encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold)}`encodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction_scaffold`
   cannot be closed from an output-compiled runner alone. It needs either the

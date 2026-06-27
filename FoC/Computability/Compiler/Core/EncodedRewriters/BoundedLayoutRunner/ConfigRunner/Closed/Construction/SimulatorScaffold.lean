@@ -42,147 +42,6 @@ theorem fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_configRunne
     simpa [FixedDescriptionBoundedSimulatorHandoffTape,
       FixedDescriptionBoundedSimulatorLayoutTape] using hn
 
-theorem fixedDescriptionBoundedSimulatorRightShiftedRunCodePhaseRealizes_configRunner
-    {D runner : MachineDescription}
-    (hrunner :
-      RightShiftedOutputCompiledSubroutineByDescription
-        (FixedDescriptionBoundedSimulatorCode D) runner) :
-    FixedDescriptionBoundedSimulatorPhaseRealizes
-      FixedDescriptionBoundedSimulatorLayoutTape
-      (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
-      (fun L => MachineDescription.SimulatorLayout.run D L.stage L)
-      runner.asFragment := by
-  constructor
-  · exact
-      MachineDescription.asFragment_wellFormed
-        ⟨hrunner.left, hrunner.right.left⟩
-  · intro L
-    have hhalt :
-        runner.HaltsWithTape
-          (FixedDescriptionBoundedSimulatorInput L)
-          (FixedDescriptionBoundedSimulatorHandoffTape Direction.right
-            (MachineDescription.SimulatorLayout.run D L.stage L)) := by
-      have htransform :
-          (FixedDescriptionBoundedSimulatorCode D).transform
-              (MachineDescription.SimulatorLayout.encode L) =
-            some
-              (MachineDescription.SimulatorLayout.encode
-                (MachineDescription.SimulatorLayout.run D L.stage L)) :=
-        fixedDescriptionBoundedSimulatorCode_encode D L
-      simpa [FixedDescriptionBoundedSimulatorInput,
-        FixedDescriptionBoundedSimulatorHandoffTape,
-        FixedDescriptionBoundedSimulatorLayoutTape,
-        MachineDescription.SimulatorLayout.tape,
-        MachineDescription.SimulatorLayout.asBoolInput] using
-        rightShiftedOutputCompiled_haltsWithTape_of_transform
-          hrunner htransform
-    rcases MachineDescription.runConfig_eq_halt_of_haltsWithTape hhalt with
-      ⟨n, hn⟩
-    rcases
-        MachineDescription.firstReaches_halt_of_runConfig_eq
-          hrunner.right.left hn with
-      ⟨m, _hmle, hm, hminimal⟩
-    refine ⟨m, ?_, ?_⟩
-    · simpa [MachineDescription.asFragment_toDescription,
-        MachineDescription.asFragment] using hm
-    · intro k hk
-      simpa [MachineDescription.asFragment_toDescription,
-        MachineDescription.asFragment] using hminimal k hk
-
-theorem fixedDescriptionBoundedSimulatorStepPhaseConstruction_of_rightShifted_configRunner
-    (hcode :
-      FoC.Computability.FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction) :
-    FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner := by
-  intro D
-  rcases hcode D with ⟨runner, hrunner⟩
-  let leftReturn : MachineDescription.Fragment :=
-    MachineDescription.Fragment.handoff Direction.left
-  let rightPause : MachineDescription.Fragment :=
-    MachineDescription.Fragment.halt
-  let runCode : MachineDescription.Fragment :=
-    runner.asFragment
-  let finalPause : MachineDescription.Fragment :=
-    MachineDescription.Fragment.halt
-  let enterRun : MachineDescription.Fragment :=
-    MachineDescription.Fragment.seq leftReturn rightPause Direction.right
-  let runAndReturn : MachineDescription.Fragment :=
-    MachineDescription.Fragment.seq runCode finalPause Direction.left
-  let simulateStep : MachineDescription.Fragment :=
-    MachineDescription.Fragment.seq enterRun runAndReturn Direction.left
-  refine ⟨simulateStep, ?_⟩
-  have hEnterRun :
-      FixedDescriptionBoundedSimulatorPhaseRealizes
-        (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
-        (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
-        id enterRun := by
-    have hLeft :=
-      fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_configRunner
-    have hPause :
-        FixedDescriptionBoundedSimulatorPhaseRealizes
-          (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
-          (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
-          id rightPause := by
-      simpa [rightPause] using
-        fixedDescriptionBoundedSimulatorHaltPhaseRealizes
-          (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
-    simpa [enterRun, leftReturn] using
-      fixedDescriptionBoundedSimulatorPhaseRealizes_seq
-        (entryTape := FixedDescriptionBoundedSimulatorHandoffTape
-          Direction.right)
-        (midTape := FixedDescriptionBoundedSimulatorLayoutTape)
-        (exitTape := FixedDescriptionBoundedSimulatorHandoffTape
-          Direction.right)
-        (phaseA := id)
-        (phaseB := id)
-        (A := leftReturn)
-        (B := rightPause)
-        (handoffMove := Direction.right)
-        hLeft hPause
-  have hRunAndReturn :
-      FixedDescriptionBoundedSimulatorPhaseRealizes
-        FixedDescriptionBoundedSimulatorLayoutTape
-        FixedDescriptionBoundedSimulatorLayoutTape
-        (fun L => MachineDescription.SimulatorLayout.run D L.stage L)
-        runAndReturn := by
-    have hRun :=
-      fixedDescriptionBoundedSimulatorRightShiftedRunCodePhaseRealizes_configRunner
-        hrunner
-    have hPause :
-        FixedDescriptionBoundedSimulatorPhaseRealizes
-          FixedDescriptionBoundedSimulatorLayoutTape
-          FixedDescriptionBoundedSimulatorLayoutTape
-          id finalPause := by
-      simpa [finalPause] using
-        fixedDescriptionBoundedSimulatorHaltPhaseRealizes
-          FixedDescriptionBoundedSimulatorLayoutTape
-    simpa [runAndReturn, runCode, finalPause] using
-      fixedDescriptionBoundedSimulatorPhaseRealizes_seq
-        (entryTape := FixedDescriptionBoundedSimulatorLayoutTape)
-        (midTape := FixedDescriptionBoundedSimulatorHandoffTape
-          Direction.right)
-        (exitTape := FixedDescriptionBoundedSimulatorLayoutTape)
-        (phaseA := fun L =>
-          MachineDescription.SimulatorLayout.run D L.stage L)
-        (phaseB := id)
-        (A := runCode)
-        (B := finalPause)
-        (handoffMove := Direction.left)
-        hRun hPause
-  simpa [simulateStep, enterRun, runAndReturn] using
-    fixedDescriptionBoundedSimulatorPhaseRealizes_seq
-      (entryTape := FixedDescriptionBoundedSimulatorHandoffTape
-        Direction.right)
-      (midTape := FixedDescriptionBoundedSimulatorHandoffTape
-        Direction.right)
-      (exitTape := FixedDescriptionBoundedSimulatorLayoutTape)
-      (phaseA := id)
-      (phaseB := fun L =>
-        MachineDescription.SimulatorLayout.run D L.stage L)
-      (A := enterRun)
-      (B := runAndReturn)
-      (handoffMove := Direction.left)
-      hEnterRun hRunAndReturn
-
 theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_stepPhase_configRunner
     (hstep :
       FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner) :
@@ -219,14 +78,9 @@ theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_stepPhase_c
   · simpa [S, FixedDescriptionBoundedSimulatorPhaseTargets.canonical] using
       fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_configRunner
 
-theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_scaffold_configRunner :
-    FoC.Computability.FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction :=
-  FoC.Computability.fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_scaffold
-
 theorem fixedDescriptionBoundedSimulatorStepPhaseConstruction_scaffold_configRunner :
     FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner :=
-  fixedDescriptionBoundedSimulatorStepPhaseConstruction_of_rightShifted_configRunner
-    fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_scaffold_configRunner
+  FoC.Computability.fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_scaffold
 
 theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_scaffold_configRunner :
     FixedDescriptionBoundedSimulatorSkeletonPhaseConstruction :=

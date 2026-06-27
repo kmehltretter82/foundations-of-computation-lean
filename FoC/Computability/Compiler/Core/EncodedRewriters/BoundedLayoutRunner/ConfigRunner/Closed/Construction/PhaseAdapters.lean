@@ -221,6 +221,31 @@ theorem SeqViaCanonical_haltsFromTapeEquiv_of_haltsWithTape
   have hbridge_actual := Tape.Equiv.trans hequiv3 hbridge
   exact SeqViaCanonical_haltsFromTape_of_haltsWithTape_equiv hA hB hhalt hbridge_actual hBout
 
+theorem SeqViaCanonical_haltsFromTapeEquiv_of_equiv
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin : Tape Bool} {midInput : Word Bool} {Tmid Tout : Tape Bool}
+    (hAmid : A.HaltsFromTapeEquiv Tin Tmid)
+    (hbridge :
+      Tape.Equiv
+        (Tape.move Direction.left (Tape.move Direction.right Tmid))
+        (Tape.input midInput))
+    (hBout : B.HaltsFromTapeEquiv (Tape.input midInput) Tout) :
+    MachineDescription.HaltsFromTapeEquiv (SeqViaCanonical A B) Tin Tout := by
+  rcases hBout with ⟨Tactual, hBactual, hequivB⟩
+  have hBwith : B.HaltsWithTape midInput Tactual := by
+    rcases hBactual with ⟨n, hn⟩
+    exact
+      ⟨n, by
+        simpa [MachineDescription.HaltsWithTapeIn,
+          MachineDescription.HaltsFromTapeIn,
+          MachineDescription.initial] using hn⟩
+  rcases
+      SeqViaCanonical_haltsFromTapeEquiv_of_haltsWithTape
+        hA hB hAmid hbridge hBwith with
+    ⟨Tseq, hseq, hequivSeq⟩
+  exact ⟨Tseq, hseq, Tape.Equiv.trans hequivSeq hequivB⟩
+
 theorem SeqViaCanonical_haltsFromTape_inv
     {A B : MachineDescription}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)

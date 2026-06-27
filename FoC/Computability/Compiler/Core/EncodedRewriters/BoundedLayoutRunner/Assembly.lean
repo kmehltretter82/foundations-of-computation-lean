@@ -240,131 +240,21 @@ theorem primitivePipeline_transform_eq
         RejectProjectionPrimitive_encode, hrejectMerge,
         ConfigRunnerAfterReject_afterAccept, BoundedRunLayout]
 
-theorem fixedDescriptionBoundedSimulatorCodeClosedHandoffConstruction
-    (D : MachineDescription) :
-    exists runner : MachineDescription,
-      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-        (FixedDescriptionBoundedSimulatorCode D)
-        runner tapeCodePrimitiveCodeWordHandoffMove := by
-  rcases
-      fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_scaffold_configRunner
-        D with
-    ⟨runner, hrunner⟩
-  refine ⟨runner, ?_⟩
-  exact
-    EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
-      hrunner
-      (by
-        intro code out htransform
-        exact
-          CommonGround.SimulatorLayouts.runCodePrimitive_transform_eq_some_cons
-            htransform)
+/-- Direct finite-machine leaf for the closed-handoff bounded runner.
 
-theorem primitivePipelineClosedHandoffConstruction
-    (accept reject : MachineDescription) :
-    exists runner : MachineDescription,
-      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-        (PrimitivePipeline accept reject)
-        runner tapeCodePrimitiveCodeWordHandoffMove := by
-  rcases acceptProjectionPrimitiveClosedHandoffConstruction_scaffold with
-    ⟨acceptProject, hacceptProject⟩
-  rcases fixedDescriptionBoundedSimulatorCodeClosedHandoffConstruction
-      accept with
-    ⟨acceptSim, hacceptSim⟩
-  rcases acceptMergePrimitiveClosedHandoffConstruction_scaffold with
-    ⟨acceptMerge, hacceptMerge⟩
-  rcases rejectProjectionPrimitiveClosedHandoffConstruction_scaffold with
-    ⟨rejectProject, hrejectProject⟩
-  rcases fixedDescriptionBoundedSimulatorCodeClosedHandoffConstruction
-      reject with
-    ⟨rejectSim, hrejectSim⟩
-  rcases rejectMergePrimitiveClosedHandoffConstruction_scaffold with
-    ⟨rejectMerge, hrejectMerge⟩
-  let acceptProjectSim :=
-    MachineDescription.seqSubroutine acceptProject acceptSim
-      tapeCodePrimitiveCodeWordHandoffMove
-  let acceptUpdated :=
-    MachineDescription.seqSubroutine acceptProjectSim acceptMerge
-      tapeCodePrimitiveCodeWordHandoffMove
-  let rejectProjected :=
-    MachineDescription.seqSubroutine acceptUpdated rejectProject
-      tapeCodePrimitiveCodeWordHandoffMove
-  let rejectSimulated :=
-    MachineDescription.seqSubroutine rejectProjected rejectSim
-      tapeCodePrimitiveCodeWordHandoffMove
-  let runner :=
-    MachineDescription.seqSubroutine rejectSimulated rejectMerge
-      tapeCodePrimitiveCodeWordHandoffMove
-  refine ⟨runner, ?_⟩
-  have hAcceptProjectSim :
-      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-        (MachineDescription.TapeCodePrimitive.compose
-          AcceptProjectionPrimitive
-          (FixedDescriptionBoundedSimulatorCode accept))
-        acceptProjectSim tapeCodePrimitiveCodeWordHandoffMove := by
-    simpa [acceptProjectSim] using
-      tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
-        hacceptProject hacceptSim
-  have hAcceptUpdated :
-      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-        (MachineDescription.TapeCodePrimitive.compose
-          (MachineDescription.TapeCodePrimitive.compose
-            AcceptProjectionPrimitive
-            (FixedDescriptionBoundedSimulatorCode accept))
-          AcceptMergePrimitive)
-        acceptUpdated tapeCodePrimitiveCodeWordHandoffMove := by
-    simpa [acceptUpdated, acceptProjectSim] using
-      tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
-        hAcceptProjectSim hacceptMerge
-  have hRejectProjected :
-      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-        (MachineDescription.TapeCodePrimitive.compose
-          (MachineDescription.TapeCodePrimitive.compose
-            (MachineDescription.TapeCodePrimitive.compose
-              AcceptProjectionPrimitive
-              (FixedDescriptionBoundedSimulatorCode accept))
-            AcceptMergePrimitive)
-          RejectProjectionPrimitive)
-        rejectProjected tapeCodePrimitiveCodeWordHandoffMove := by
-    simpa [rejectProjected, acceptUpdated] using
-      tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
-        hAcceptUpdated hrejectProject
-  have hRejectSimulated :
-      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-        (MachineDescription.TapeCodePrimitive.compose
-          (MachineDescription.TapeCodePrimitive.compose
-            (MachineDescription.TapeCodePrimitive.compose
-              (MachineDescription.TapeCodePrimitive.compose
-                AcceptProjectionPrimitive
-                (FixedDescriptionBoundedSimulatorCode accept))
-              AcceptMergePrimitive)
-            RejectProjectionPrimitive)
-          (FixedDescriptionBoundedSimulatorCode reject))
-        rejectSimulated tapeCodePrimitiveCodeWordHandoffMove := by
-    simpa [rejectSimulated, rejectProjected] using
-      tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
-        hRejectProjected hrejectSim
-  simpa [runner, rejectSimulated, PrimitivePipeline] using
-    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
-      hRejectSimulated hrejectMerge
-
+The older decomposition through {name}`PrimitivePipeline` required exact
+closed-handoff merge primitives.  That split is too strong: the merge phases
+return tapes equivalent to the parsed dovetail layout, while preserving
+simulator-layout scratch structure.  The public closed-handoff theorem is
+therefore kept as one finite-machine construction obligation.
+-/
 theorem closedHandoffCompiledSubroutine
     (accept reject : MachineDescription) :
     exists runner : MachineDescription,
       TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
         (PairedRecognizerDovetailLayoutCode accept reject)
         runner tapeCodePrimitiveCodeWordHandoffMove := by
-  rcases primitivePipelineClosedHandoffConstruction accept reject with
-    ⟨runner, hrunner⟩
-  refine ⟨runner, ?_⟩
-  exact
-    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_congr
-      (P := PrimitivePipeline accept reject)
-      (Q := PairedRecognizerDovetailLayoutCode accept reject)
-      (D := runner)
-      (handoffMove := tapeCodePrimitiveCodeWordHandoffMove)
-      (primitivePipeline_transform_eq accept reject)
-      hrunner
+  sorry
 
 end BoundedLayoutRunner
 end EncodedRewriters
