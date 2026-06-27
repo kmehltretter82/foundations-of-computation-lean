@@ -30,6 +30,18 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_equiv
         (SelectedMergeOutputCode useAccept p.S p.L))
       (MachineDescription.SimulatorLayout.asBoolInput p.S).length
 
+theorem SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p) =
+      MachineDescription.encodeCodeWordAsInput
+        (SelectedMergeOutputCode useAccept p.S p.L) := by
+  simpa [SelectedMergeEquivEmitterPaddedOutputTape] using
+    inputWithTrailingBlankPadding_normalizedOutput
+      (MachineDescription.encodeCodeWordAsInput
+        (SelectedMergeOutputCode useAccept p.S p.L))
+      (MachineDescription.SimulatorLayout.asBoolInput p.S).length
+
 theorem SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_input
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     Tape.contextLength (MachineDescription.SimulatorLayout.tape p.S) <=

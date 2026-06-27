@@ -1306,6 +1306,15 @@ theorem inputWithTrailingBlankPadding_equiv_input
         · exact dropTrailingNone_append_replicate_none
             (rest.map some) padding
 
+theorem inputWithTrailingBlankPadding_normalizedOutput
+    (w : Word Bool) (padding : Nat) :
+    Tape.normalizedOutput
+        (inputWithTrailingBlankPadding w padding) = w := by
+  have hequiv :=
+    inputWithTrailingBlankPadding_equiv_input w padding
+  rw [Tape.Equiv.normalizedOutput_eq hequiv]
+  simpa [Tape.output] using Tape.normalizedOutput_output w
+
 theorem inputWithTrailingBlankPadding_contextLength_ge_input
     (outputBits inputBits : Word Bool) :
     Tape.contextLength (Tape.input inputBits) <=
