@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.ControllerStageInputProjection.Soundness
+import FoC.Computability.Compiler.Core.ControllerStageInputProjection.Soundness.BasicPart2
 
 set_option doc.verso true
 

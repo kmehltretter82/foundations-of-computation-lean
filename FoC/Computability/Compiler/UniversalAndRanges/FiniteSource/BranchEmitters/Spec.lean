@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchEmitters
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchEmitters.Transitions
 set_option doc.verso true
 
 /-!

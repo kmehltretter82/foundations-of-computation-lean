@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Soundness.Final
 set_option doc.verso true
 
 /-!

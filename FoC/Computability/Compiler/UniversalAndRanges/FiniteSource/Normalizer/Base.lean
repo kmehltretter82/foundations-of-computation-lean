@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser.Soundness
 
 set_option doc.verso true
 

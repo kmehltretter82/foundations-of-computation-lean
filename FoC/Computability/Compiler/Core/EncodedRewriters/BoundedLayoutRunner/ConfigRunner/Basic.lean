@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Parser
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Parser.Closed
 
 set_option doc.verso true
 

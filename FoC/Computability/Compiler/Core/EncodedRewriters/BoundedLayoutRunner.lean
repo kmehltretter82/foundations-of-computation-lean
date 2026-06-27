@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Assembly
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Assembly.ClosedHandoff
 
 set_option doc.verso true
 
