@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseAdapters
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.SelectedProjectionTailProjector
+import FoC.Computability.Compiler.Core.EncodingLemmas
 import FoC.Computability.Compiler.Core.CommonGround
 
 set_option doc.verso true
@@ -254,6 +255,52 @@ theorem selectedProjectionOutputTape_eq_simulator_tape
   cases useAccept <;>
     rfl
 
+theorem simulatorLayoutRightOutput_contextLength_ge_input
+    (input : Word Bool) (stage : Nat)
+    (config : MachineDescription.Configuration) (hit : Bool) :
+    Tape.contextLength (Tape.input input) <=
+      Tape.contextLength
+        (Tape.move Direction.right
+          (MachineDescription.SimulatorLayout.tape
+            { input := input, stage := stage, config := config, hit := hit })) := by
+  cases input with
+  | nil =>
+      simp [MachineDescription.SimulatorLayout.tape,
+        MachineDescription.SimulatorLayout.asBoolInput,
+        MachineDescription.SimulatorLayout.encode,
+        MachineDescription.SimulatorLayout.encodeAppend,
+        MachineDescription.encodeCodeWordAsInput,
+        MachineDescription.encodeCodeSymbolAsInput,
+        MachineDescription.encodeBoolWordAppend,
+        MachineDescription.encodeCellListAppend,
+        MachineDescription.encodeNatAppend,
+        Tape.input, Tape.blank, Tape.move, Tape.moveRight,
+        Tape.contextLength]
+  | cons bit rest =>
+      have hboolLen :
+          (bit :: rest).length +
+              (MachineDescription.encodeNatAppend stage
+                (MachineDescription.encodeConfigurationAppend config
+                  (MachineDescription.encodeBoolAppend hit []))).length <=
+            (MachineDescription.encodeBoolWordAppend (bit :: rest)
+              (MachineDescription.encodeNatAppend stage
+                (MachineDescription.encodeConfigurationAppend config
+                  (MachineDescription.encodeBoolAppend hit [])))).length :=
+        encodeBoolWordAppend_length_ge (bit :: rest)
+          (MachineDescription.encodeNatAppend stage
+            (MachineDescription.encodeConfigurationAppend config
+              (MachineDescription.encodeBoolAppend hit [])))
+      simp at hboolLen
+      simp [MachineDescription.SimulatorLayout.tape,
+        MachineDescription.SimulatorLayout.asBoolInput,
+        MachineDescription.SimulatorLayout.encode,
+        MachineDescription.SimulatorLayout.encodeAppend,
+        MachineDescription.encodeCodeWordAsInput,
+        MachineDescription.encodeCodeSymbolAsInput,
+        Tape.input, Tape.move, Tape.moveRight, Tape.contextLength,
+        encodeCodeWordAsInput_length]
+      omega
+
 theorem selectedProjectionCheckedEmitterSpec_of_projector
     {useAccept : Bool} {projector : MachineDescription}
     (hprojector :
@@ -329,6 +376,17 @@ theorem selectedProjectionSimulatorLayout_eq
         hit := SelectedProjectionHit useAccept L } := by
   cases useAccept <;>
     rfl
+
+theorem selectedProjectionOutputTape_contextLength_ge_input
+    (useAccept : Bool) (L : MachineDescription.DovetailLayout) :
+    Tape.contextLength (Tape.input (ParsedLayoutBits L)) <=
+      Tape.contextLength (SelectedProjectionOutputTape useAccept L) := by
+  rw [selectedProjectionOutputTape_eq_simulator_tape,
+    selectedProjectionSimulatorLayout_eq]
+  exact simulatorLayoutRightOutput_contextLength_ge_input
+    (ParsedLayoutBits L) L.stage
+    (SelectedProjectionConfig useAccept L)
+    (SelectedProjectionHit useAccept L)
 
 theorem selectedProjectionOutputCode_eq_fields
     (useAccept : Bool)

@@ -199,6 +199,66 @@ theorem encodeCodeWordAsInput_encodeBoolWordAppend
   rfl
 
 /-!
+## Encoding length bounds
+
+These opt-in length facts support tape-window monotonicity checks for concrete
+rewriters.  They are kept out of the global simp set so downstream scanner
+proofs can choose when to expose encoding lengths.
+-/
+
+theorem encodeCellsAppend_length
+    (cells : List (Option Bool)) (suffix : Word MachineCodeSymbol) :
+    (MachineDescription.encodeCellsAppend cells suffix).length =
+      cells.length + suffix.length := by
+  induction cells with
+  | nil =>
+      simp [MachineDescription.encodeCellsAppend]
+  | cons cell rest ih =>
+      cases cell with
+      | none =>
+          simp [MachineDescription.encodeCellsAppend,
+            MachineDescription.encodeCellAppend,
+            MachineDescription.encodeCell, ih]
+          omega
+      | some b =>
+          cases b <;>
+            simp [MachineDescription.encodeCellsAppend,
+              MachineDescription.encodeCellAppend,
+              MachineDescription.encodeCell, ih] <;>
+            omega
+
+theorem encodeCellListAppend_length_ge
+    (cells : List (Option Bool)) (suffix : Word MachineCodeSymbol) :
+    cells.length + suffix.length <=
+      (MachineDescription.encodeCellListAppend cells suffix).length := by
+  simp [MachineDescription.encodeCellListAppend,
+    MachineDescription.encodeNatAppend, encodeCellsAppend_length,
+    List.length_append]
+
+theorem encodeBoolWordAppend_length_ge
+    (w : Word Bool) (suffix : Word MachineCodeSymbol) :
+    w.length + suffix.length <=
+      (MachineDescription.encodeBoolWordAppend w suffix).length := by
+  simpa [MachineDescription.encodeBoolWordAppend] using
+    encodeCellListAppend_length_ge (w.map some) suffix
+
+theorem encodeCodeSymbolAsInput_length
+    (symbol : MachineCodeSymbol) :
+    (MachineDescription.encodeCodeSymbolAsInput symbol).length = 4 := by
+  cases symbol <;> rfl
+
+theorem encodeCodeWordAsInput_length
+    (tokens : Word MachineCodeSymbol) :
+    (MachineDescription.encodeCodeWordAsInput tokens).length =
+      4 * tokens.length := by
+  induction tokens with
+  | nil =>
+      rfl
+  | cons symbol rest ih =>
+      simp [MachineDescription.encodeCodeWordAsInput,
+        encodeCodeSymbolAsInput_length, ih, Nat.mul_add, Nat.add_comm]
+
+/-!
 ## Decoder-backed cancellation
 
 The structured encoders below are self-delimiting: decoding an encoded prefix
