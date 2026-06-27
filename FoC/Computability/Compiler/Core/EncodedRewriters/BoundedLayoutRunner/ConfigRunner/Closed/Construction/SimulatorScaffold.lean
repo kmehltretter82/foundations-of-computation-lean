@@ -83,6 +83,25 @@ theorem fixedDescriptionBoundedSimulatorCanonicalConstruction_scaffold_configRun
   fixedDescriptionBoundedSimulatorCanonicalConstruction_of_phaseConstruction
     fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_scaffold_configRunner
 
+/--
+Finite-machine leaf for the config-runner fixed-description simulators.
+
+The exact right-handoff skeleton target above is retained only as an old
+adapter path: it is refuted by the context-length counterexample in
+{lit}`FixedDescriptionBoundedSimulatorRightHandoffCounterexample`.  The live
+config-runner assembly should use this padded target, whose output is
+equivalent to the canonical simulator layout while preserving enough blank
+window to avoid a forced shrink.
+-/
+theorem fixedDescriptionBoundedSimulatorPaddedConstruction_scaffold_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedConstruction := by
+  intro D
+  sorry
+
+theorem fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner :
+    FixedDescriptionBoundedSimulatorEquivConstruction :=
+  fixedDescriptionBoundedSimulatorEquivConstruction_of_padded
+    fixedDescriptionBoundedSimulatorPaddedConstruction_scaffold_configRunner
 
 end BoundedLayoutRunner
 end EncodedRewriters

@@ -98,10 +98,10 @@ theorem configRunnerPhaseEquivConstruction_scaffold :
     ⟨acceptProject, hacceptProject⟩
   rcases selectedProjectionFiniteDescriptionConstruction_scaffold false with
     ⟨rejectProject, hrejectProject⟩
-  rcases fixedDescriptionBoundedSimulatorCanonicalConstruction_scaffold_configRunner
+  rcases fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner
       accept with
     ⟨acceptSim, hacceptSim⟩
-  rcases fixedDescriptionBoundedSimulatorCanonicalConstruction_scaffold_configRunner
+  rcases fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner
       reject with
     ⟨rejectSim, hrejectSim⟩
   rcases selectedMergeEquivConstruction_scaffold true with
@@ -116,12 +116,10 @@ theorem configRunnerPhaseEquivConstruction_scaffold :
       rejectSim,
       rejectMerge,
       AcceptProjectionSpec_of_selected hacceptProject,
-      fixedDescriptionBoundedSimulatorEquivSpec_of_canonicalSpec
-        hacceptSim,
+      hacceptSim,
       acceptMergeEquivSpec_of_selected hacceptMerge,
       RejectProjectionSpec_of_selected hrejectProject,
-      fixedDescriptionBoundedSimulatorEquivSpec_of_canonicalSpec
-        hrejectSim,
+      hrejectSim,
       rejectMergeEquivSpec_of_selected hrejectMerge⟩
 
 def ConfigRunnerFromClosedHandoff
