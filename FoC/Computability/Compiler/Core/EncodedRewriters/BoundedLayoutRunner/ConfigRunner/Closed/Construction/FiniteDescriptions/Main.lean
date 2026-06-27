@@ -475,6 +475,18 @@ theorem
   rw [SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput,
     selectedMergeOutputCode_eq_outputLayout, ParsedLayoutBits]
 
+theorem SelectedMergeEquivEmitterPaddedOutputTape_equiv_parsedLayoutTape
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    Tape.Equiv
+      (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
+      (ParsedLayoutTape (SelectedMergeOutputLayout useAccept p.S p.L)) := by
+  simpa [SelectedMergeEquivEmitterPaddedOutputTape, ParsedLayoutTape,
+    ParsedLayoutBits, selectedMergeOutputCode_eq_outputLayout] using
+    inputWithTrailingBlankPadding_equiv_input
+      (MachineDescription.encodeCodeWordAsInput
+        (SelectedMergeOutputCode useAccept p.S p.L))
+      (MachineDescription.SimulatorLayout.asBoolInput p.S).length
+
 theorem selectedMergeOutputLayout_accept_run
     (accept : MachineDescription) (L : MachineDescription.DovetailLayout) :
     SelectedMergeOutputLayout true
@@ -510,6 +522,31 @@ theorem
   rw [SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_parsedLayoutBits]
   rw [selectedMergeOutputLayout_accept_run]
 
+theorem SelectedMergeEquivEmitterPaddedOutputTape_equiv_accept_run
+    (accept : MachineDescription) (L : MachineDescription.DovetailLayout) :
+    Tape.Equiv
+        (SelectedMergeEquivEmitterPaddedOutputTape true
+          { S :=
+              MachineDescription.SimulatorLayout.run
+                accept L.stage (AcceptSimulatorLayout L)
+            L := L
+            input := by
+              simpa [AcceptSimulatorLayout,
+                MachineDescription.SimulatorLayout.run] using
+                decodeCodeWordAsInput_parsedLayoutBits L })
+        (ParsedLayoutTape (ConfigRunnerAfterAccept accept L)) := by
+  simpa [selectedMergeOutputLayout_accept_run] using
+    SelectedMergeEquivEmitterPaddedOutputTape_equiv_parsedLayoutTape
+      true
+      { S :=
+          MachineDescription.SimulatorLayout.run
+            accept L.stage (AcceptSimulatorLayout L)
+        L := L
+        input := by
+          simpa [AcceptSimulatorLayout,
+            MachineDescription.SimulatorLayout.run] using
+            decodeCodeWordAsInput_parsedLayoutBits L }
+
 theorem
     SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_reject_run
     (reject : MachineDescription) (L : MachineDescription.DovetailLayout) :
@@ -526,6 +563,31 @@ theorem
       ParsedLayoutBits (ConfigRunnerAfterReject reject L) := by
   rw [SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_parsedLayoutBits]
   rw [selectedMergeOutputLayout_reject_run]
+
+theorem SelectedMergeEquivEmitterPaddedOutputTape_equiv_reject_run
+    (reject : MachineDescription) (L : MachineDescription.DovetailLayout) :
+    Tape.Equiv
+        (SelectedMergeEquivEmitterPaddedOutputTape false
+          { S :=
+              MachineDescription.SimulatorLayout.run
+                reject L.stage (RejectSimulatorLayout L)
+            L := L
+            input := by
+              simpa [RejectSimulatorLayout,
+                MachineDescription.SimulatorLayout.run] using
+                decodeCodeWordAsInput_parsedLayoutBits L })
+        (ParsedLayoutTape (ConfigRunnerAfterReject reject L)) := by
+  simpa [selectedMergeOutputLayout_reject_run] using
+    SelectedMergeEquivEmitterPaddedOutputTape_equiv_parsedLayoutTape
+      false
+      { S :=
+          MachineDescription.SimulatorLayout.run
+            reject L.stage (RejectSimulatorLayout L)
+        L := L
+        input := by
+          simpa [RejectSimulatorLayout,
+            MachineDescription.SimulatorLayout.run] using
+            decodeCodeWordAsInput_parsedLayoutBits L }
 
 
 theorem selectedMergeSpec_of_parser_emitter
