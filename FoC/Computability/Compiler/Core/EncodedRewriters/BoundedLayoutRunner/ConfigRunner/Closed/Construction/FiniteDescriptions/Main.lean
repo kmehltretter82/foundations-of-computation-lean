@@ -61,6 +61,75 @@ theorem SelectedMergeEmitterInputTape_normalizedOutput
   simpa [SelectedMergeEmitterInputBits] using
     MachineDescription.SimulatorLayout.tape_normalizedOutput p.S
 
+theorem SelectedMergeEmitterPayload.input_eq_encodeCodeWordAsInput
+    (p : SelectedMergeEmitterPayload) :
+    p.S.input =
+      MachineDescription.encodeCodeWordAsInput
+        (MachineDescription.DovetailLayout.encode p.L) :=
+  MachineDescription.decodeCodeWordAsInput_eq_some_encodeCodeWordAsInput
+    p.input
+
+theorem SelectedMergeEmitterPayload.input_eq_parsedLayoutBits
+    (p : SelectedMergeEmitterPayload) :
+    p.S.input = ParsedLayoutBits p.L := by
+  rw [SelectedMergeEmitterPayload.input_eq_encodeCodeWordAsInput,
+    ParsedLayoutBits]
+
+theorem SelectedMergeEmitterInputBits_eq_fields
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergeEmitterInputBits p =
+      MachineDescription.encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          MachineDescription.encodeBoolWordAppend
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailLayout.encode p.L))
+            (MachineDescription.encodeNatAppend p.S.stage
+              (MachineDescription.encodeConfigurationAppend p.S.config
+                (MachineDescription.encodeBoolAppend p.S.hit [])))) := by
+  rw [SelectedMergeEmitterInputBits,
+    MachineDescription.SimulatorLayout.asBoolInput,
+    MachineDescription.SimulatorLayout.encode,
+    MachineDescription.SimulatorLayout.encodeAppend,
+    SelectedMergeEmitterPayload.input_eq_encodeCodeWordAsInput]
+
+theorem SelectedMergeEmitterInputTape_normalizedOutput_eq_fields
+    (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput (MachineDescription.SimulatorLayout.tape p.S) =
+      MachineDescription.encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          MachineDescription.encodeBoolWordAppend
+            (MachineDescription.encodeCodeWordAsInput
+              (MachineDescription.DovetailLayout.encode p.L))
+            (MachineDescription.encodeNatAppend p.S.stage
+              (MachineDescription.encodeConfigurationAppend p.S.config
+                (MachineDescription.encodeBoolAppend p.S.hit [])))) := by
+  rw [SelectedMergeEmitterInputTape_normalizedOutput,
+    SelectedMergeEmitterInputBits_eq_fields]
+
+theorem SelectedMergeEmitterInputBits_eq_parsedLayoutFields
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergeEmitterInputBits p =
+      MachineDescription.encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          MachineDescription.encodeBoolWordAppend (ParsedLayoutBits p.L)
+            (MachineDescription.encodeNatAppend p.S.stage
+              (MachineDescription.encodeConfigurationAppend p.S.config
+                (MachineDescription.encodeBoolAppend p.S.hit [])))) := by
+  simpa [ParsedLayoutBits] using
+    SelectedMergeEmitterInputBits_eq_fields p
+
+theorem SelectedMergeEmitterInputTape_normalizedOutput_eq_parsedLayoutFields
+    (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput (MachineDescription.SimulatorLayout.tape p.S) =
+      MachineDescription.encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          MachineDescription.encodeBoolWordAppend (ParsedLayoutBits p.L)
+            (MachineDescription.encodeNatAppend p.S.stage
+              (MachineDescription.encodeConfigurationAppend p.S.config
+                (MachineDescription.encodeBoolAppend p.S.hit [])))) := by
+  rw [SelectedMergeEmitterInputTape_normalizedOutput,
+    SelectedMergeEmitterInputBits_eq_parsedLayoutFields]
+
 theorem SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_inputBits
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     Tape.contextLength (Tape.input (SelectedMergeEmitterInputBits p)) <=
