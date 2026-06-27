@@ -310,6 +310,21 @@ private def controllerResultEmitterBlankTransitions :
       none (some true) Direction.right controllerResultEmitterHalt
   ]
 
+private def controllerResultEmitterTransitionChunks :
+    List (List TransitionDescription) :=
+  [ controllerResultEmitterPrefixTransitions
+      ControllerResultEmitterBoundary.other.toNat
+  , controllerResultEmitterPrefixTransitions
+      ControllerResultEmitterBoundary.tick.toNat
+  , controllerResultEmitterPrefixTransitions
+      ControllerResultEmitterBoundary.tickDone.toNat
+  , controllerResultEmitterPrefixTransitions
+      ControllerResultEmitterBoundary.falseResult.toNat
+  , controllerResultEmitterPrefixTransitions
+      ControllerResultEmitterBoundary.trueResult.toNat
+  , controllerResultEmitterBlankTransitions
+  ]
+
 def DovetailControllerResultEmitterDescription :
     MachineDescription where
   stateCount := controllerResultEmitterHalt + 1
@@ -317,25 +332,23 @@ def DovetailControllerResultEmitterDescription :
     controllerResultEmitterState
       ControllerResultEmitterBoundary.other.toNat 0 0
   halt := controllerResultEmitterHalt
-  transitions :=
-    controllerResultEmitterBitTransitions ++
-      controllerResultEmitterBlankTransitions
+  transitions := controllerResultEmitterTransitionChunks.flatten
 
 theorem dovetailControllerResultEmitterDescription_wellFormed :
     DovetailControllerResultEmitterDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := DovetailControllerResultEmitterDescription.transitions)
+  · exact transition_wellFormed_of_chunk_all
+      (chunks := controllerResultEmitterTransitionChunks)
       (stateCount := DovetailControllerResultEmitterDescription.stateCount)
       (by decide)
-  · exact transition_deterministic_of_all
-      (l := DovetailControllerResultEmitterDescription.transitions)
-      (by native_decide)
+  · exact transition_deterministic_of_chunk_all
+      (chunks := controllerResultEmitterTransitionChunks)
+      (by decide)
 
 theorem dovetailControllerResultEmitterDescription_haltTransitionFree :
     DovetailControllerResultEmitterDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := DovetailControllerResultEmitterDescription.transitions)
+  transition_notFrom_of_chunk_all
+    (chunks := controllerResultEmitterTransitionChunks)
     (state := DovetailControllerResultEmitterDescription.halt)
     (by decide)
 
@@ -661,7 +674,7 @@ private theorem dovetailControllerResultEmitterDescription_run_blank
         tape := controllerResultEmitterFinalTape erased boundary } := by
   cases boundary <;>
     simp [DovetailControllerResultEmitterDescription,
-      controllerResultEmitterBitTransitions,
+      controllerResultEmitterTransitionChunks,
       controllerResultEmitterPrefixTransitions,
       controllerResultEmitterBlankTransitions,
       controllerResultEmitterState,

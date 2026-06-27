@@ -507,6 +507,20 @@ def resultNoneGuardBitTransitions :
     resultNoneGuardPrefixTransitions
       ResultNoneGuardBoundary.trueResult.toNat
 
+def resultNoneGuardBitTransitionChunks :
+    List (List TransitionDescription) :=
+  [ resultNoneGuardPrefixTransitions
+      ResultNoneGuardBoundary.other.toNat
+  , resultNoneGuardPrefixTransitions
+      ResultNoneGuardBoundary.tick.toNat
+  , resultNoneGuardPrefixTransitions
+      ResultNoneGuardBoundary.tickDone.toNat
+  , resultNoneGuardPrefixTransitions
+      ResultNoneGuardBoundary.falseResult.toNat
+  , resultNoneGuardPrefixTransitions
+      ResultNoneGuardBoundary.trueResult.toNat
+  ]
+
 def resultNoneGuardBlankTransitions :
     List TransitionDescription :=
   [ transition
@@ -520,29 +534,32 @@ def resultNoneGuardBlankTransitions :
       none none Direction.right resultNoneGuardHalt
   ]
 
+def resultNoneGuardScannerTransitionChunks :
+    List (List TransitionDescription) :=
+  resultNoneGuardBitTransitionChunks ++
+    [resultNoneGuardBlankTransitions]
+
 def ResultNoneGuardScannerDescription : MachineDescription where
   stateCount := resultNoneGuardHalt + 1
   start := resultNoneGuardState ResultNoneGuardBoundary.other.toNat 0 0
   halt := resultNoneGuardHalt
-  transitions :=
-    resultNoneGuardBitTransitions ++
-      resultNoneGuardBlankTransitions
+  transitions := resultNoneGuardScannerTransitionChunks.flatten
 
 theorem resultNoneGuardScannerDescription_wellFormed :
     ResultNoneGuardScannerDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := ResultNoneGuardScannerDescription.transitions)
+  · exact transition_wellFormed_of_chunk_all
+      (chunks := resultNoneGuardScannerTransitionChunks)
       (stateCount := ResultNoneGuardScannerDescription.stateCount)
       (by decide)
-  · exact transition_deterministic_of_all
-      (l := ResultNoneGuardScannerDescription.transitions)
-      (by native_decide)
+  · exact transition_deterministic_of_chunk_all
+      (chunks := resultNoneGuardScannerTransitionChunks)
+      (by decide)
 
 theorem resultNoneGuardScannerDescription_haltTransitionFree :
     ResultNoneGuardScannerDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := ResultNoneGuardScannerDescription.transitions)
+  transition_notFrom_of_chunk_all
+    (chunks := resultNoneGuardScannerTransitionChunks)
     (state := ResultNoneGuardScannerDescription.halt)
     (by decide)
 
@@ -1401,33 +1418,37 @@ def resultNoneGuardScanRewindAcceptTransitions :
       (resultNoneGuardRewindOffset + ResultNoneGuardRewindDescription.start)
   ]
 
+def resultNoneGuardScanRewindTransitionChunks :
+    List (List TransitionDescription) :=
+  resultNoneGuardBitTransitionChunks ++
+    [ resultNoneGuardScanRewindAcceptTransitions
+    , ResultNoneGuardRewindDescription.transitions.map
+        (resultNoneGuardOffsetTransition resultNoneGuardRewindOffset)
+    ]
+
 def ResultNoneGuardScanRewindDescription : MachineDescription where
   stateCount :=
     ResultNoneGuardScannerDescription.stateCount +
       ResultNoneGuardRewindDescription.stateCount
   start := ResultNoneGuardScannerDescription.start
   halt := resultNoneGuardRewindOffset + ResultNoneGuardRewindDescription.halt
-  transitions :=
-    resultNoneGuardBitTransitions ++
-      resultNoneGuardScanRewindAcceptTransitions ++
-        (ResultNoneGuardRewindDescription.transitions.map
-          (resultNoneGuardOffsetTransition resultNoneGuardRewindOffset))
+  transitions := resultNoneGuardScanRewindTransitionChunks.flatten
 
 theorem resultNoneGuardScanRewindDescription_wellFormed :
     ResultNoneGuardScanRewindDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := ResultNoneGuardScanRewindDescription.transitions)
+  · exact transition_wellFormed_of_chunk_all
+      (chunks := resultNoneGuardScanRewindTransitionChunks)
       (stateCount := ResultNoneGuardScanRewindDescription.stateCount)
       (by decide)
-  · exact transition_deterministic_of_all
-      (l := ResultNoneGuardScanRewindDescription.transitions)
-      (by native_decide)
+  · exact transition_deterministic_of_chunk_all
+      (chunks := resultNoneGuardScanRewindTransitionChunks)
+      (by decide)
 
 theorem resultNoneGuardScanRewindDescription_haltTransitionFree :
     ResultNoneGuardScanRewindDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := ResultNoneGuardScanRewindDescription.transitions)
+  transition_notFrom_of_chunk_all
+    (chunks := resultNoneGuardScanRewindTransitionChunks)
     (state := ResultNoneGuardScanRewindDescription.halt)
     (by decide)
 

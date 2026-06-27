@@ -349,6 +349,17 @@ def totalOutputEmitterBitTransitions :
     totalOutputEmitterPrefixTransitions HitBoundary.trueFalse.toNat ++
     totalOutputEmitterPrefixTransitions HitBoundary.trueTrue.toNat
 
+def totalOutputEmitterBitTransitionChunks :
+    List (List TransitionDescription) :=
+  [ totalOutputEmitterPrefixTransitions HitBoundary.other.toNat
+  , totalOutputEmitterPrefixTransitions HitBoundary.lastFalse.toNat
+  , totalOutputEmitterPrefixTransitions HitBoundary.lastTrue.toNat
+  , totalOutputEmitterPrefixTransitions HitBoundary.falseFalse.toNat
+  , totalOutputEmitterPrefixTransitions HitBoundary.falseTrue.toNat
+  , totalOutputEmitterPrefixTransitions HitBoundary.trueFalse.toNat
+  , totalOutputEmitterPrefixTransitions HitBoundary.trueTrue.toNat
+  ]
+
 def totalOutputEmitterBlankTransitions :
     List TransitionDescription :=
   [ transition
@@ -391,32 +402,46 @@ def totalOutputEmitterAllWriterTransitions :
     totalOutputEmitterWriterTransitions HitBoundary.trueFalse ++
     totalOutputEmitterWriterTransitions HitBoundary.trueTrue
 
+def totalOutputEmitterWriterTransitionChunks :
+    List (List TransitionDescription) :=
+  [ totalOutputEmitterWriterTransitions HitBoundary.other
+  , totalOutputEmitterWriterTransitions HitBoundary.lastFalse
+  , totalOutputEmitterWriterTransitions HitBoundary.lastTrue
+  , totalOutputEmitterWriterTransitions HitBoundary.falseFalse
+  , totalOutputEmitterWriterTransitions HitBoundary.falseTrue
+  , totalOutputEmitterWriterTransitions HitBoundary.trueFalse
+  , totalOutputEmitterWriterTransitions HitBoundary.trueTrue
+  ]
+
+def totalOutputEmitterTransitionChunks :
+    List (List TransitionDescription) :=
+  totalOutputEmitterBitTransitionChunks ++
+    [totalOutputEmitterBlankTransitions] ++
+      totalOutputEmitterWriterTransitionChunks
+
 def Description : MachineDescription where
   stateCount := totalOutputEmitterHalt + 1
   start := totalOutputEmitterState HitBoundary.other.toNat 0 0
   halt := totalOutputEmitterHalt
-  transitions :=
-    totalOutputEmitterBitTransitions ++
-      totalOutputEmitterBlankTransitions ++
-        totalOutputEmitterAllWriterTransitions
+  transitions := totalOutputEmitterTransitionChunks.flatten
 
 theorem description_wellFormed :
     Description.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := Description.transitions)
+  · exact transition_wellFormed_of_chunk_all
+      (chunks := totalOutputEmitterTransitionChunks)
       (stateCount := Description.stateCount)
-      (by native_decide)
-  · exact transition_deterministic_of_all
-      (l := Description.transitions)
-      (by native_decide)
+      (by decide)
+  · exact transition_deterministic_of_chunk_all
+      (chunks := totalOutputEmitterTransitionChunks)
+      (by decide)
 
 theorem description_haltTransitionFree :
     Description.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := Description.transitions)
+  transition_notFrom_of_chunk_all
+    (chunks := totalOutputEmitterTransitionChunks)
     (state := Description.halt)
-    (by native_decide)
+    (by decide)
 
 theorem description_ready :
     ReadySpec Description :=

@@ -430,13 +430,8 @@ theorem projectionCodeCells_encodeBoolWord
     projectionMarkedBoolPayloadCells, projectionCodeCells_replicate_tick,
     hnil]
 
-def Description :
-    MachineDescription where
-  stateCount := 1000
-  start := 0
-  halt := 999
-  transitions :=
-    [ erase 0 (some false) 1
+def transitionCore : List TransitionDescription :=
+  [ erase 0 (some false) 1
     , erase 1 (some false) 2
     , erase 2 (some false) 3
     , erase 3 (some false) 100
@@ -572,19 +567,19 @@ def Description :
     , erase 382 (some true) 384
     , erase 383 (some true) 380
     , erase 384 (some false) 380 ]
-      ++ scanLeftToBoundary 140 141 142 143 144
-      ++
-    [ keepMove 144 none Direction.right 145
+
+def transitionChunks : List (List TransitionDescription) :=
+  [ transitionCore
+  , scanLeftToBoundary 140 141 142 143 144
+  , [ keepMove 144 none Direction.right 145
     , keepMove 145 none Direction.right 146
     , keepMove 146 none Direction.right 100 ]
-      ++ scanLeftToBoundary 160 161 162 163 164
-      ++ scanLeftToBoundary 340 341 342 343 344
-      ++
-    [ keepMove 344 none Direction.right 345
+  , scanLeftToBoundary 160 161 162 163 164
+  , scanLeftToBoundary 340 341 342 343 344
+  , [ keepMove 344 none Direction.right 345
     , keepMove 345 none Direction.right 346
     , keepMove 346 none Direction.right 300 ]
-      ++
-    [ keepMove 360 none Direction.left 361
+  , [ keepMove 360 none Direction.left 361
     , keepMove 360 (some false) Direction.left 360
     , keepMove 360 (some true) Direction.left 360
     , keepMove 361 none Direction.left 362
@@ -595,23 +590,31 @@ def Description :
     , keepMove 362 (some true) Direction.left 360
     , keepMove 363 (some false) Direction.left 360
     , keepMove 363 (some true) Direction.left 360 ]
+  ]
+
+def Description :
+    MachineDescription where
+  stateCount := 1000
+  start := 0
+  halt := 999
+  transitions := transitionChunks.flatten
 
 theorem wellFormed :
     Description.WellFormed := by
   refine ⟨by simp [Description], by simp [Description],
     by simp [Description], ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := Description.transitions)
+  · exact transition_wellFormed_of_chunk_all
+      (chunks := transitionChunks)
       (stateCount := Description.stateCount)
       (by decide)
-  · exact transition_deterministic_of_all
-      (l := Description.transitions)
-      (by native_decide)
+  · exact transition_deterministic_of_chunk_all
+      (chunks := transitionChunks)
+      (by decide)
 
 theorem haltTransitionFree :
     Description.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := Description.transitions)
+  transition_notFrom_of_chunk_all
+    (chunks := transitionChunks)
     (state := Description.halt)
     (by decide)
 
