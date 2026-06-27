@@ -134,6 +134,8 @@ def PreservingCellPassDescription : MachineDescription where
     ]
 
 private abbrev PCP := PreservingCellPassDescription
+private abbrev SIMS :=
+  DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription
 
 theorem preservingCellPassDescription_wellFormed :
     PCP.WellFormed := by
@@ -937,6 +939,395 @@ theorem preservingCellPassDescription_run_cells
         rw [hrest]
         simp [preservingCellPassCellBits, preservingCellPassOneBits,
           List.reverse_cons, List.map_append, List.append_assoc]
+
+/--
+Finite skeleton for the exact input-quoter assembly layer.  The high states
+consume the fixed {lit}`transition` symbol and the first two bits of the
+stage-input field, replacing the second stage-input bit with the scanner
+marker.  Control then drops into the existing marked stage-input scanner at
+state {lit}`0`; state {lit}`210` is the important internal boundary where the
+scanner has consumed the input prefix and the stage nat, leaving the
+source-rest suffix under the head.
+-/
+def AssemblySkeletonDescription : MachineDescription where
+  stateCount := 2000
+  start := 1800
+  halt := 1999
+  transitions :=
+    [ transition 1800 (some false) (some false) Direction.right 1801
+    , transition 1801 (some false) (some false) Direction.right 1802
+    , transition 1802 (some false) (some false) Direction.right 1803
+    , transition 1803 (some true) (some true) Direction.right 1804
+    , transition 1804 (some false) (some false) Direction.right 1805
+    , transition 1805 (some false) none Direction.right 0
+    ] ++ SIMS.transitions
+
+private abbrev ASM := AssemblySkeletonDescription
+
+theorem assemblySkeletonDescription_wellFormed :
+    ASM.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := ASM.transitions)
+      (stateCount := ASM.stateCount)
+      (by native_decide)
+  · exact transition_deterministic_of_all
+      (l := ASM.transitions)
+      (by native_decide)
+
+theorem assemblySkeletonDescription_haltTransitionFree :
+    ASM.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := ASM.transitions)
+    (state := ASM.halt)
+    (by native_decide)
+
+theorem assemblySkeletonDescription_subroutineReady :
+    ASM.SubroutineReady :=
+  ⟨assemblySkeletonDescription_wellFormed,
+    assemblySkeletonDescription_haltTransitionFree⟩
+
+theorem runConfig_eq_of_transitions
+    {D E : MachineDescription}
+    (htrans : D.transitions = E.transitions)
+    (n : Nat) (c : Configuration) :
+    D.runConfig n c = E.runConfig n c := by
+  induction n generalizing c with
+  | zero =>
+      rfl
+  | succ n ih =>
+      simp only [runConfig]
+      have hstep : D.stepConfig c = E.stepConfig c := by
+        unfold stepConfig lookupTransition
+        rw [htrans]
+      rw [hstep]
+      cases E.stepConfig c with
+      | none => rfl
+      | some next => exact ih next
+
+theorem assemblySkeletonDescription_lookupTransition_eq_scanner
+    (state : Nat) (read : Option Bool) (hstate : state < 1800) :
+    ASM.lookupTransition state read = SIMS.lookupTransition state read := by
+  have h1800' : 1800 ≠ state := by omega
+  have h1801' : 1801 ≠ state := by omega
+  have h1802' : 1802 ≠ state := by omega
+  have h1803' : 1803 ≠ state := by omega
+  have h1804' : 1804 ≠ state := by omega
+  have h1805' : 1805 ≠ state := by omega
+  cases read <;>
+    simp [ASM, AssemblySkeletonDescription, lookupTransition, Matches,
+      transition, h1800', h1801', h1802', h1803', h1804', h1805']
+
+theorem assemblySkeletonDescription_stepConfig_eq_scanner
+    (c : Configuration) (hstate : c.state < 1800) :
+    ASM.stepConfig c = SIMS.stepConfig c := by
+  unfold stepConfig
+  rw [assemblySkeletonDescription_lookupTransition_eq_scanner
+    c.state (Tape.read c.tape) hstate]
+
+theorem assemblySkeletonDescription_runConfig_eq_scanner
+    (n : Nat) (c : Configuration)
+    (hstate : c.state < SIMS.stateCount) :
+    ASM.runConfig n c = SIMS.runConfig n c := by
+  induction n generalizing c with
+  | zero =>
+      rfl
+  | succ n ih =>
+      simp only [runConfig]
+      have hlt1800 : c.state < 1800 := by
+        have hs : SIMS.stateCount = 1000 := rfl
+        omega
+      rw [assemblySkeletonDescription_stepConfig_eq_scanner c hlt1800]
+      cases hstep : SIMS.stepConfig c with
+      | none => rfl
+      | some next =>
+          exact ih next
+            (stepConfig_state_bound
+              DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputMarkedScannerDescription_wellFormed
+              hstep)
+
+def markedTailStartConfigWithBase
+    (leftTail : List (Option Bool)) (tail : Word Bool) :
+    Configuration :=
+  { state := SIMS.start
+    tape :=
+      Tape.move Direction.right
+        (tapeAtCells (some false :: leftTail)
+          (none :: tail.map some)) }
+
+def transitionPrefixLeftTail : List (Option Bool) :=
+  [some true, some false, some false, some false]
+
+theorem assemblySkeletonDescription_run_prefix_to_marked_tail
+    (tail : Word Bool) :
+    ASM.runConfig 6
+        (config ASM.start []
+          (List.append
+            (List.map some
+              (List.append
+                (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+                [false, false]))
+            (tail.map some))) =
+      markedTailStartConfigWithBase transitionPrefixLeftTail tail := by
+  cases tail <;>
+    simp [ASM, AssemblySkeletonDescription,
+      SIMS,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription,
+      markedTailStartConfigWithBase, transitionPrefixLeftTail,
+      encodeCodeSymbolAsInput, config, tapeAtCells,
+      runConfig, stepConfig, lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
+      Tape.moveRight]
+
+theorem assemblySkeletonDescription_run_prefix_to_stageInput_tail
+    (w : Word Bool) (stage : Nat) (sourceRestBits : Word Bool) :
+    ASM.runConfig 6
+        (config ASM.start []
+          (List.append
+            (List.map some
+              (List.append
+                (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+                (DovetailInitialLayoutInitializer.stageInputBits
+                  w stage)))
+            (sourceRestBits.map some))) =
+      markedTailStartConfigWithBase transitionPrefixLeftTail
+        (List.append
+          (DovetailInitialLayoutInitializer.stageInputSecondBitTail
+            w stage)
+          sourceRestBits) := by
+  rw [DovetailInitialLayoutInitializer.stageInputBits_eq_false_false_tail]
+  rw [show
+      List.append
+          (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+          (false :: false ::
+            DovetailInitialLayoutInitializer.stageInputSecondBitTail
+              w stage) =
+        List.append
+          (List.append
+            (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+            [false, false])
+          (DovetailInitialLayoutInitializer.stageInputSecondBitTail
+            w stage) by
+      simp [encodeCodeSymbolAsInput]]
+  simpa [List.map_append, List.append_assoc] using
+    assemblySkeletonDescription_run_prefix_to_marked_tail
+      (List.append
+        (DovetailInitialLayoutInitializer.stageInputSecondBitTail
+          w stage)
+        sourceRestBits)
+
+theorem assemblySkeletonDescription_run_marked_tail_done_stageNat_to_state200_withBase
+    (stage : Nat) (suffixBits : Word Bool)
+    (leftTail : List (Option Bool)) :
+    ASM.runConfig 18
+        (markedTailStartConfigWithBase leftTail
+          (true :: true ::
+            List.append
+              (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                stage)
+              suffixBits)) =
+      config 200
+        (List.append [some true, some true, none, some false]
+          leftTail)
+        (List.append
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).map some)
+          (suffixBits.map some)) := by
+  cases stage <;>
+    simp [ASM, AssemblySkeletonDescription, markedTailStartConfigWithBase,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits,
+      encodeNat, encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+      config, tapeAtCells,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.keep,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.keepMove,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.writeMove,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.scanLeftToSentinelRestart,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.scanLeftToSentinelHalt,
+      runConfig, stepConfig, lookupTransition, Matches, transition,
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem assemblySkeletonDescription_run_marked_tail_tick_to_state120_withBase
+    (bits : Word Bool) (leftTail : List (Option Bool)) :
+    ASM.runConfig 6
+        (markedTailStartConfigWithBase leftTail
+          (true :: false :: bits)) =
+      config 120
+        (List.append [none, some true, none, some false] leftTail)
+        (bits.map some) := by
+  rw [assemblySkeletonDescription_runConfig_eq_scanner]
+  · simp [markedTailStartConfigWithBase,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription,
+      config, tapeAtCells,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.keep,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.keepMove,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.writeMove,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.scanLeftToSentinelRestart,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.scanLeftToSentinelHalt,
+      runConfig, stepConfig, lookupTransition, Matches, transition,
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
+    generalize bits.map some = cells
+    cases cells <;> rfl
+  · simp [markedTailStartConfigWithBase, SIMS,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription]
+
+theorem assemblySkeletonDescription_run_state200_tick
+    (left right : List (Option Bool)) :
+    ASM.runConfig 4
+        (config 200 left
+          (List.append
+            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.tickBits.map
+              some)
+            right)) =
+      config 200
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.tickBits.reverse.map
+            some)
+          left)
+        right := by
+  cases right <;>
+    simp [ASM, AssemblySkeletonDescription,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.tickBits,
+      encodeCodeSymbolAsInput, config, tapeAtCells,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.keep,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.keepMove,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.writeMove,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.scanLeftToSentinelRestart,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.scanLeftToSentinelHalt,
+      runConfig, stepConfig, lookupTransition, Matches, transition,
+      Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+theorem assemblySkeletonDescription_run_state200_done_to_state210
+    (left right : List (Option Bool)) :
+    ASM.runConfig 4
+        (config 200 left
+          (List.append
+            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.doneBits.map
+              some)
+            right)) =
+      config 210
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.doneBits.reverse.map
+            some)
+          left)
+        right := by
+  cases right <;>
+    simp [ASM, AssemblySkeletonDescription,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.doneBits,
+      encodeCodeSymbolAsInput, config, tapeAtCells,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.keep,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.keepMove,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.writeMove,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.scanLeftToSentinelRestart,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.scanLeftToSentinelHalt,
+      runConfig, stepConfig, lookupTransition, Matches, transition,
+      Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+theorem assemblySkeletonDescription_run_state200_stageNat_to_state210
+    (stage : Nat) (left right : List (Option Bool)) :
+    ASM.runConfig (4 * stage + 4)
+        (config 200 left
+          (List.append
+            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              stage).map some)
+            right)) =
+      config 210
+        (List.append
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).reverse.map some)
+          left)
+        right := by
+  induction stage generalizing left with
+  | zero =>
+      simpa [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_zero] using
+        assemblySkeletonDescription_run_state200_done_to_state210
+          left right
+  | succ stage ih =>
+      rw [show 4 * (stage + 1) + 4 = 4 + (4 * stage + 4) by
+        omega]
+      rw [runConfig_add]
+      rw [show
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              (stage + 1)).map some =
+            List.append
+              (DovetailInitialLayoutInitializer.StageInputMarkedScanner.tickBits.map
+                some)
+              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                stage).map some) by
+          simp [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_succ,
+            DovetailInitialLayoutInitializer.StageInputMarkedScanner.tickBits,
+            encodeCodeSymbolAsInput]]
+      change
+        ASM.runConfig (4 * stage + 4)
+          (ASM.runConfig 4
+            (config 200 left
+              (List.append
+                (DovetailInitialLayoutInitializer.StageInputMarkedScanner.tickBits.map
+                  some)
+                (List.append
+                  ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                    stage).map some)
+                  right)))) =
+          config 210
+            (List.append
+              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                (stage + 1)).reverse.map some)
+              left)
+            right
+      rw [assemblySkeletonDescription_run_state200_tick]
+      have h := ih
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.tickBits.reverse.map
+            some)
+          left)
+      simpa [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_succ,
+        DovetailInitialLayoutInitializer.StageInputMarkedScanner.tickBits,
+        encodeCodeSymbolAsInput, List.reverse_append, List.map_append,
+        List.append_assoc] using h
+
+theorem assemblySkeletonDescription_run_empty_stageInput_to_sourceRest_boundary
+    (stage : Nat) (sourceRestBits : Word Bool) :
+    exists steps : Nat,
+      ASM.runConfig steps
+          (config ASM.start []
+            (List.append
+              (List.map some
+                (List.append
+                  (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+                  (DovetailInitialLayoutInitializer.stageInputBits
+                    ([] : Word Bool) stage)))
+              (sourceRestBits.map some))) =
+        config 210
+          (List.append
+            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              stage).reverse.map some)
+            (List.append [some true, some true, none, some false]
+              transitionPrefixLeftTail))
+          (sourceRestBits.map some) := by
+  refine ⟨6 + (18 + (4 * stage + 4)), ?_⟩
+  rw [runConfig_add]
+  rw [assemblySkeletonDescription_run_prefix_to_stageInput_tail]
+  rw [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTail_nil]
+  change
+    ASM.runConfig (18 + (4 * stage + 4))
+        (markedTailStartConfigWithBase transitionPrefixLeftTail
+          (true :: true ::
+            List.append
+              (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                stage)
+              sourceRestBits)) =
+      config 210
+        (List.append
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).reverse.map some)
+          (List.append [some true, some true, none, some false]
+            transitionPrefixLeftTail))
+        (sourceRestBits.map some)
+  rw [runConfig_add]
+  rw [assemblySkeletonDescription_run_marked_tail_done_stageNat_to_state200_withBase]
+  rw [assemblySkeletonDescription_run_state200_stageNat_to_state210]
 
 end SelectedProjectionInputQuoterFiniteLeaf
 
