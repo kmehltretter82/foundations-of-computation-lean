@@ -1333,6 +1333,142 @@ def SelectedMergePaddedEmitterAfterConfigHandoffSpec
         (SelectedMergePaddedEmitterAfterConfigHandoffTape p)
         (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
 
+def SelectedMergePaddedEmitterHitScannerDescription :
+    MachineDescription where
+  stateCount := 6
+  start := 0
+  halt := 5
+  transitions :=
+    [ MachineDescription.transition 0 (some false) (some false)
+        Direction.right 1,
+      MachineDescription.transition 1 (some true) (some true)
+        Direction.right 2,
+      MachineDescription.transition 2 (some false) (some false)
+        Direction.right 3,
+      MachineDescription.transition 2 (some true) (some true)
+        Direction.right 4,
+      MachineDescription.transition 3 (some true) (some true)
+        Direction.right 5,
+      MachineDescription.transition 4 (some false) (some false)
+        Direction.right 5 ]
+
+theorem selectedMergePaddedEmitterHitScanner_subroutineReady :
+    SelectedMergePaddedEmitterHitScannerDescription.SubroutineReady := by
+  constructor
+  · constructor
+    · decide
+    constructor
+    · decide
+    constructor
+    · decide
+    constructor
+    · intro t ht
+      simp [SelectedMergePaddedEmitterHitScannerDescription,
+        MachineDescription.transition,
+        TransitionDescription.WellFormed] at ht ⊢
+      rcases ht with rfl | rfl | rfl | rfl | rfl | rfl <;>
+        decide
+    · intro t u ht hu hkey
+      simp [SelectedMergePaddedEmitterHitScannerDescription,
+        MachineDescription.transition] at ht hu
+      rcases ht with rfl | rfl | rfl | rfl | rfl | rfl <;>
+        rcases hu with rfl | rfl | rfl | rfl | rfl | rfl <;>
+          simp [TransitionDescription.SameKey,
+            TransitionDescription.SameAction] at hkey ⊢
+  · intro t ht
+    simp [SelectedMergePaddedEmitterHitScannerDescription,
+      MachineDescription.transition] at ht
+    rcases ht with rfl | rfl | rfl | rfl | rfl | rfl <;> decide
+
+theorem selectedMergePaddedEmitterHitScanner_runConfig
+    (b : Bool) (left : List (Option Bool)) :
+    SelectedMergePaddedEmitterHitScannerDescription.runConfig 4
+        (DovetailInitialLayoutInitializer.config 0 left
+          ((encodeCodeWordAsInput (encodeBoolAppend b [])).map some)) =
+      DovetailInitialLayoutInitializer.config 5
+        (((encodeCodeWordAsInput (encodeBoolAppend b [])).reverse.map some) ++
+          left)
+        [] := by
+  cases b <;>
+    simp [SelectedMergePaddedEmitterHitScannerDescription,
+      DovetailInitialLayoutInitializer.config,
+      DovetailInitialLayoutInitializer.tapeAtCells,
+      MachineDescription.runConfig,
+      MachineDescription.stepConfig,
+      MachineDescription.lookupTransition,
+      MachineDescription.Matches,
+      MachineDescription.transition,
+      encodeBoolAppend, encodeCellAppend, encodeCell,
+      encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+      Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+def SelectedMergePaddedEmitterAfterHitTape
+    (p : SelectedMergeEmitterPayload) : Tape Bool :=
+  DovetailInitialLayoutInitializer.tapeAtCells
+    (((SelectedMergePaddedEmitterOuterHitSuffixBits p).reverse.map some) ++
+      (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+        p.S.config
+        (List.append
+          ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            p.S.stage).reverse.map some)
+          (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+            ((ParsedLayoutBits p.L).map some)
+            (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse)))))
+    []
+
+theorem selectedMergePaddedEmitterHitScanner_haltsFromAfterConfigHandoff
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterHitScannerDescription.HaltsFromTape
+      (SelectedMergePaddedEmitterAfterConfigHandoffTape p)
+      (SelectedMergePaddedEmitterAfterHitTape p) := by
+  refine ⟨4, ?_⟩
+  constructor
+  · simpa [MachineDescription.HaltsFromTapeIn,
+      SelectedMergePaddedEmitterAfterConfigHandoffTape,
+      SelectedMergePaddedEmitterAfterHitTape,
+      SelectedMergePaddedEmitterOuterHitSuffixBits,
+      SelectedMergePaddedEmitterOuterHitSuffixCode,
+      DovetailInitialLayoutInitializer.config]
+      using
+        congrArg MachineDescription.Configuration.state
+          (selectedMergePaddedEmitterHitScanner_runConfig
+            p.S.hit
+            (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+              p.S.config
+              (List.append
+                ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                  p.S.stage).reverse.map some)
+                (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+                  ((ParsedLayoutBits p.L).map some)
+                  (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse)))))
+  · simpa [MachineDescription.HaltsFromTapeIn,
+      SelectedMergePaddedEmitterAfterConfigHandoffTape,
+      SelectedMergePaddedEmitterAfterHitTape,
+      SelectedMergePaddedEmitterOuterHitSuffixBits,
+      SelectedMergePaddedEmitterOuterHitSuffixCode,
+      DovetailInitialLayoutInitializer.config]
+      using
+        congrArg MachineDescription.Configuration.tape
+          (selectedMergePaddedEmitterHitScanner_runConfig
+            p.S.hit
+            (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+              p.S.config
+              (List.append
+                ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                  p.S.stage).reverse.map some)
+                (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+                  ((ParsedLayoutBits p.L).map some)
+                  (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse)))))
+
+def SelectedMergePaddedEmitterAfterHitSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      emitter.HaltsFromTape
+        (SelectedMergePaddedEmitterAfterHitTape p)
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
+
 theorem selectedMergePaddedEmitterStageScanner_haltsFromAfterInputHandoff
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterStageScannerDescription.HaltsFromTape
