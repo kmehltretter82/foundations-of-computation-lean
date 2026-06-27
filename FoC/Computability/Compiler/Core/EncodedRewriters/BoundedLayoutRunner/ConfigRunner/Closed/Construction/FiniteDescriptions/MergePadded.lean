@@ -1416,6 +1416,90 @@ def SelectedMergePaddedEmitterAfterHitTape
             (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse)))))
     []
 
+theorem
+    selectedMergePaddedEmitter_cellListCanonicalRestoredLeftWithBase_reverse_filterMap
+    (cells baseLeft : List (Option Bool)) :
+    (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+        cells baseLeft).reverse.filterMap (fun cell => cell) =
+      List.append (baseLeft.reverse.filterMap (fun cell => cell))
+        (CanonicalLayouts.DovetailLayoutScanner.cellListFieldBits cells []) := by
+  rw [←
+    CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredBitsRev_map_some_withBase
+      cells baseLeft]
+  simp [Function.comp_def, List.reverse_append, List.filterMap_append,
+    CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredBitsRev_reverse]
+
+def SelectedMergePaddedEmitterAfterHitSourceBits
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  List.append
+    (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+    (CanonicalLayouts.DovetailLayoutScanner.boolWordFieldBits
+      (ParsedLayoutBits p.L)
+      (List.append
+        (FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          p.S.stage)
+        (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+          p.S.config
+          (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            p.S.hit []))))
+
+theorem SelectedMergePaddedEmitterAfterHitTape_normalizedOutput
+    (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput (SelectedMergePaddedEmitterAfterHitTape p) =
+      SelectedMergePaddedEmitterAfterHitSourceBits p := by
+  have hbase :
+      (List.append
+          ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            p.S.stage).reverse.map some)
+          (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+            ((ParsedLayoutBits p.L).map some)
+            (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse))).reverse.filterMap
+            (fun cell => cell) =
+        List.append
+          (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+          (CanonicalLayouts.DovetailLayoutScanner.boolWordFieldBits
+            (ParsedLayoutBits p.L)
+            (FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              p.S.stage)) := by
+    have hreverse :
+        List.filterMap (fun cell => cell)
+            (((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                p.S.stage).reverse.map some).append
+              (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+                ((ParsedLayoutBits p.L).map some)
+                (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse))).reverse =
+          List.append
+            (List.filterMap (fun cell => cell)
+              (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+                ((ParsedLayoutBits p.L).map some)
+                (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse)).reverse)
+            (List.filterMap (fun cell => cell)
+              (((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                p.S.stage).reverse.map some).reverse)) := by
+      simp [List.reverse_append, List.filterMap_append]
+    rw [hreverse]
+    rw [selectedMergePaddedEmitter_cellListCanonicalRestoredLeftWithBase_reverse_filterMap]
+    simp [CanonicalLayouts.DovetailLayoutScanner.boolWordFieldBits,
+      CanonicalLayouts.DovetailLayoutScanner.cellListFieldBits,
+      Function.comp_def, List.append_assoc]
+  rw [SelectedMergePaddedEmitterAfterHitTape,
+    tapeAtCells_nil_normalizedOutput]
+  rw [List.reverse_append, List.filterMap_append]
+  rw [dovetailScanner_configurationRestoredLeftWithBase_reverse_filterMap]
+  rw [hbase]
+  simp [SelectedMergePaddedEmitterAfterHitSourceBits,
+    SelectedMergePaddedEmitterOuterHitSuffixBits,
+    SelectedMergePaddedEmitterOuterHitSuffixCode,
+    CanonicalLayouts.DovetailLayoutScanner.boolWordFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.cellListFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.tapeFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.boolBits_eq_encodeBoolAppend,
+    encodeCodeWordAsInput, Function.comp_def, List.map_reverse,
+    List.append_assoc]
+
 theorem selectedMergePaddedEmitterHitScanner_haltsFromAfterConfigHandoff
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterHitScannerDescription.HaltsFromTape
@@ -1571,6 +1655,151 @@ theorem selectedMergePaddedEmitterInputScanner_haltsFromPayload
       CanonicalLayouts.DovetailLayoutScanner.cellListFieldBits,
       hsuffix,
       DovetailInitialLayoutInitializer.config]
+      using congrArg MachineDescription.Configuration.tape hsteps
+
+theorem selectedMergePaddedEmitterSourceScanner_haltsFromPayload
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterSourceScannerDescription.HaltsFromTape
+      (SelectedMergePaddedEmitterAfterHeaderTape p)
+      (SelectedMergePaddedEmitterAfterHitTape p) := by
+  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
+      (selectedMergePaddedEmitterInputScanner_haltsFromPayload p) with
+    ⟨inputSteps, hinput⟩
+  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
+      (selectedMergePaddedEmitterStageScanner_haltsFromAfterInputHandoff p) with
+    ⟨stageSteps, hstage⟩
+  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
+      (selectedMergePaddedEmitterConfigScanner_haltsFromAfterStageHandoff p) with
+    ⟨configSteps, hconfig⟩
+  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
+      (selectedMergePaddedEmitterHitScanner_haltsFromAfterConfigHandoff p) with
+    ⟨hitSteps, hhit⟩
+  have hconfigHit :
+      exists steps : Nat,
+        (seqSubroutine
+            SelectedMergePaddedEmitterConfigScannerDescription
+            SelectedMergePaddedEmitterHitScannerDescription
+            Direction.right).runConfig steps
+            { state :=
+                (seqSubroutine
+                  SelectedMergePaddedEmitterConfigScannerDescription
+                  SelectedMergePaddedEmitterHitScannerDescription
+                  Direction.right).start
+              tape := SelectedMergePaddedEmitterAfterStageHandoffTape p } =
+          { state :=
+              (seqSubroutine
+                SelectedMergePaddedEmitterConfigScannerDescription
+                SelectedMergePaddedEmitterHitScannerDescription
+                Direction.right).halt
+            tape := SelectedMergePaddedEmitterAfterHitTape p } := by
+    exact
+      CommonGround.SeqComposition.seqSubroutine_runConfig_exists
+        (A := SelectedMergePaddedEmitterConfigScannerDescription)
+        (B := SelectedMergePaddedEmitterHitScannerDescription)
+        (handoffMove := Direction.right)
+        selectedMergePaddedEmitterConfigScanner_subroutineReady
+        selectedMergePaddedEmitterHitScanner_subroutineReady
+        hconfig
+        (CommonGround.SeqComposition.runConfig_reaches_from_move_eq
+          (B := SelectedMergePaddedEmitterHitScannerDescription)
+          (handoffMove := Direction.right)
+          (selectedMergePaddedEmitterAfterConfigTape_move_right p)
+          hhit)
+  have hstageConfigHit :
+      exists steps : Nat,
+        (seqSubroutine
+            SelectedMergePaddedEmitterStageScannerDescription
+            (seqSubroutine
+              SelectedMergePaddedEmitterConfigScannerDescription
+              SelectedMergePaddedEmitterHitScannerDescription
+              Direction.right)
+            Direction.right).runConfig steps
+            { state :=
+                (seqSubroutine
+                  SelectedMergePaddedEmitterStageScannerDescription
+                  (seqSubroutine
+                    SelectedMergePaddedEmitterConfigScannerDescription
+                    SelectedMergePaddedEmitterHitScannerDescription
+                    Direction.right)
+                  Direction.right).start
+              tape := SelectedMergePaddedEmitterAfterInputHandoffTape p } =
+          { state :=
+              (seqSubroutine
+                SelectedMergePaddedEmitterStageScannerDescription
+                (seqSubroutine
+                  SelectedMergePaddedEmitterConfigScannerDescription
+                  SelectedMergePaddedEmitterHitScannerDescription
+                  Direction.right)
+                Direction.right).halt
+            tape := SelectedMergePaddedEmitterAfterHitTape p } := by
+    refine
+      CommonGround.SeqComposition.seqSubroutine_runConfig_exists
+        (A := SelectedMergePaddedEmitterStageScannerDescription)
+        (B :=
+          seqSubroutine
+            SelectedMergePaddedEmitterConfigScannerDescription
+            SelectedMergePaddedEmitterHitScannerDescription
+            Direction.right)
+        (handoffMove := Direction.right)
+        selectedMergePaddedEmitterStageScanner_subroutineReady
+        (seqSubroutine_subroutineReady
+          selectedMergePaddedEmitterConfigScanner_subroutineReady
+          selectedMergePaddedEmitterHitScanner_subroutineReady)
+        hstage ?_
+    rcases hconfigHit with ⟨configHitSteps, hconfigHitSteps⟩
+    exact
+      CommonGround.SeqComposition.runConfig_reaches_from_move_eq
+        (B :=
+          seqSubroutine
+            SelectedMergePaddedEmitterConfigScannerDescription
+            SelectedMergePaddedEmitterHitScannerDescription
+            Direction.right)
+        (handoffMove := Direction.right)
+        (selectedMergePaddedEmitterAfterStageTape_move_right p)
+        hconfigHitSteps
+  rcases
+      CommonGround.SeqComposition.seqSubroutine_runConfig_exists
+        (A := SelectedMergePaddedEmitterInputScannerDescription)
+        (B :=
+          seqSubroutine
+            SelectedMergePaddedEmitterStageScannerDescription
+            (seqSubroutine
+              SelectedMergePaddedEmitterConfigScannerDescription
+              SelectedMergePaddedEmitterHitScannerDescription
+              Direction.right)
+            Direction.right)
+        (handoffMove := Direction.right)
+        selectedMergePaddedEmitterInputScanner_subroutineReady
+        (seqSubroutine_subroutineReady
+          selectedMergePaddedEmitterStageScanner_subroutineReady
+          (seqSubroutine_subroutineReady
+            selectedMergePaddedEmitterConfigScanner_subroutineReady
+            selectedMergePaddedEmitterHitScanner_subroutineReady))
+        hinput
+        (by
+          rcases hstageConfigHit with
+            ⟨stageConfigHitSteps, hstageConfigHitSteps⟩
+          exact
+            CommonGround.SeqComposition.runConfig_reaches_from_move_eq
+              (B :=
+                seqSubroutine
+                  SelectedMergePaddedEmitterStageScannerDescription
+                  (seqSubroutine
+                    SelectedMergePaddedEmitterConfigScannerDescription
+                    SelectedMergePaddedEmitterHitScannerDescription
+                    Direction.right)
+                  Direction.right)
+              (handoffMove := Direction.right)
+              (selectedMergePaddedEmitterAfterInputTape_move_right p)
+              hstageConfigHitSteps) with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  constructor
+  · simpa [MachineDescription.HaltsFromTapeIn,
+      SelectedMergePaddedEmitterSourceScannerDescription]
+      using congrArg MachineDescription.Configuration.state hsteps
+  · simpa [MachineDescription.HaltsFromTapeIn,
+      SelectedMergePaddedEmitterSourceScannerDescription]
       using congrArg MachineDescription.Configuration.tape hsteps
 
 /--
