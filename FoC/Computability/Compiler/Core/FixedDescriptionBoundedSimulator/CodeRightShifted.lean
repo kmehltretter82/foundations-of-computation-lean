@@ -615,17 +615,8 @@ theorem fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_codeRightSh
       (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
       FixedDescriptionBoundedSimulatorLayoutTape
       id
-      (MachineDescription.Fragment.handoff Direction.left) := by
-  constructor
-  · exact MachineDescription.Fragment.handoff_wellFormed Direction.left
-  · intro L
-    rcases
-        MachineDescription.Fragment.handoff_firstReaches Direction.left
-          (FixedDescriptionBoundedSimulatorHandoffTape Direction.right L) with
-      ⟨n, hn, hminimal⟩
-    refine ⟨n, ?_, hminimal⟩
-    simpa [FixedDescriptionBoundedSimulatorHandoffTape,
-      FixedDescriptionBoundedSimulatorLayoutTape] using hn
+      (MachineDescription.Fragment.handoff Direction.left) :=
+  fixedDescriptionBoundedSimulatorReturnFromRightHandoffPhaseRealizes
 
 theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_rightHandoffStepPhase
     (hstep :
