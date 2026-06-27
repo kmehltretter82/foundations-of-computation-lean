@@ -60,7 +60,8 @@ theorem controllerInputInitializerConstruction_of_data
 
 theorem controllerInputInitializerRawBoolWordHeaderEmitterConstruction_scaffold :
     ControllerInputInitializerRawBoolWordHeaderEmitterConstruction := by
-  sorry
+  exact
+    CommonGround.BoolWordQuoters.controllerInitialRawBoolWordHeaderEmitterConstruction
 
 theorem controllerInputInitializerConstructionData_scaffold :
     ControllerInputInitializerConstructionData := by

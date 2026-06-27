@@ -591,6 +591,23 @@ def RawBoolWordHeaderEmitterConstruction
   exists emitter : MachineDescription,
     RawBoolWordHeaderEmitterSpec suffix emitter
 
+theorem controllerInitialRawBoolWordHeaderEmitterConstruction :
+    RawBoolWordHeaderEmitterConstruction
+      ControllerLayouts.initialSuffix := by
+  refine
+    ⟨_root_.FoC.Computability.DovetailInitialLayoutInitializer.ControllerInitialRawBoolWordHeaderEmitterDescription,
+      ?_⟩
+  constructor
+  · exact
+      _root_.FoC.Computability.DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterDescription_subroutineReady
+  · intro w
+    simpa [RawBoolWordHeaderEmitterSpec,
+      ControllerLayouts.initialSuffix,
+      _root_.FoC.Computability.DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterOutput,
+      _root_.FoC.Computability.DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterSuffix] using
+      _root_.FoC.Computability.DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterDescription_haltsWithOutput
+          w
+
 end BoolWordQuoters
 
 namespace Identity
