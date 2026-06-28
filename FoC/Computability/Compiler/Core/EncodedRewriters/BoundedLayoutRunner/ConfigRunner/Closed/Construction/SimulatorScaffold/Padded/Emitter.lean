@@ -1,5 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PaddedEmitters
-import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.SimulatorScaffold.Padded.Parser
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.SimulatorScaffold.Padded.Emitter.PostScanner
 
 set_option doc.verso true
 
@@ -12,111 +11,9 @@ namespace Computability
 
 open Languages
 open MachineDescription
-open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
-
-open CanonicalLayouts.DovetailLayoutScanner
-open CanonicalLayouts.DovetailStagePrefix
-open CommonGround.SeqComposition
-
-def FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner
-    (D : MachineDescription)
-    (L : SimulatorLayout) : Word Bool :=
-  FixedDescriptionBoundedSimulatorOutput D L
-
-def FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner
-    (L : SimulatorLayout) : Nat :=
-  Tape.contextLength
-    (Tape.input (FixedDescriptionBoundedSimulatorInput L))
-
-def FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
-    (D : MachineDescription)
-    (L : SimulatorLayout) : Tape Bool :=
-  ScratchPaddedOutputTape
-    (FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner D)
-    FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner
-    L
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_eq_outputTape_configRunner
-    (D : MachineDescription) (L : SimulatorLayout) :
-    FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner D L =
-      FixedDescriptionBoundedSimulatorPaddedOutputTape D L := by
-  cases houtput : FixedDescriptionBoundedSimulatorOutput D L with
-  | nil =>
-      simp [FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner,
-        ScratchPaddedOutputTape,
-        FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner,
-        FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner,
-        FixedDescriptionBoundedSimulatorPaddedOutputTape,
-        FixedDescriptionBoundedSimulatorPaddedTape,
-        inputWithTrailingBlankPadding, houtput]
-  | cons bit rest =>
-      simp [FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner,
-        ScratchPaddedOutputTape,
-        FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner,
-        FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner,
-        FixedDescriptionBoundedSimulatorPaddedOutputTape,
-        FixedDescriptionBoundedSimulatorPaddedTape,
-        inputWithTrailingBlankPadding, houtput]
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_normalizedOutput_configRunner
-    (D : MachineDescription) (L : SimulatorLayout) :
-    Tape.normalizedOutput
-        (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
-          D L) =
-      FixedDescriptionBoundedSimulatorOutput D L := by
-  simpa [FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner,
-    FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner] using
-    ScratchPaddedOutputTape_normalizedOutput
-      (FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner D)
-      FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner
-      L
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_eq_tapeAtCells_configRunner
-    (D : MachineDescription) (L : SimulatorLayout) :
-    FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner D L =
-      DovetailInitialLayoutInitializer.tapeAtCells []
-        (inputWithTrailingBlankPaddingCells
-          (FixedDescriptionBoundedSimulatorOutput D L)
-          (Tape.contextLength
-            (Tape.input (FixedDescriptionBoundedSimulatorInput L)))) := by
-  simpa [FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner,
-    ScratchPaddedOutputTape,
-    FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner,
-    FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner] using
-    inputWithTrailingBlankPadding_eq_tapeAtCells
-      (FixedDescriptionBoundedSimulatorOutput D L)
-      (Tape.contextLength
-        (Tape.input (FixedDescriptionBoundedSimulatorInput L)))
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_equiv_canonical_configRunner
-    (D : MachineDescription) (L : SimulatorLayout) :
-    Tape.Equiv
-      (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
-        D L)
-      (FixedDescriptionBoundedSimulatorCanonicalOutputTape D L) := by
-  rw [
-    fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_eq_outputTape_configRunner
-      D L]
-  exact FixedDescriptionBoundedSimulatorPaddedOutputTape_equiv_canonical D L
-
-def FixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeSpec_configRunner
-    (D emitter : MachineDescription) : Prop :=
-  emitter.SubroutineReady ∧
-    forall L : SimulatorLayout,
-      emitter.HaltsWithTape
-        (SimulatorLayout.asBoolInput L)
-        (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
-          D L)
-
-def FixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstruction_configRunner :
-    Prop :=
-  forall D : MachineDescription,
-    exists emitter : MachineDescription,
-      FixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeSpec_configRunner
-        D emitter
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeSpec_of_scratch_configRunner
     {D emitter : MachineDescription}
@@ -152,9 +49,9 @@ at the left edge, and leave the old simulator-layout window as trailing blank
 padding.
 -/
 theorem fixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstruction_scaffold_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstruction_configRunner := by
-  intro D
-  sorry
+    FixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstruction_of_terminal_configRunner
+    fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalConstruction_configRunner
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_scaffold_configRunner :
     FixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_configRunner :=
