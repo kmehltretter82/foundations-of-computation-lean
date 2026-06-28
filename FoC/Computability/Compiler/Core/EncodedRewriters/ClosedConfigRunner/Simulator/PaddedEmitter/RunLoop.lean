@@ -248,7 +248,11 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewind_halts_terminal
     fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_haltsFromTape_configRunner
       (SimulatorLayout.asBoolInput L)
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_move_left_move_right_cons_cons_configRunner
+namespace FixedDescriptionBoundedSimulator
+namespace PaddedEmitter
+namespace SourceRewindTargetTape
+
+theorem move_left_move_right_cons_cons_configRunner
     (first second : Bool) (rest : Word Bool) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -262,7 +266,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_move
       DovetailInitialLayoutInitializer.tapeAtCells,
       Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_move_left_move_right_simulator_configRunner
+theorem move_left_move_right_simulator_configRunner
     (L : SimulatorLayout) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -283,11 +287,10 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_move
           simp [hbits] at hlen
       | cons second tail =>
           simpa [hbits] using
-            fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_move_left_move_right_cons_cons_configRunner
+            move_left_move_right_cons_cons_configRunner
               first second tail
 
-namespace FixedDescriptionBoundedSimulator
-namespace PaddedEmitter
+end SourceRewindTargetTape
 
 namespace RunLoop
 
@@ -343,7 +346,9 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRu
     (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
       bits)
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterReturnToRightShiftedInput_haltsFrom_sourceRewindTarget_cons_cons_configRunner
+namespace ReturnToRightShiftedInput
+
+theorem haltsFrom_sourceRewindTarget_cons_cons_configRunner
     (first second : Bool) (rest : Word Bool) :
     FixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_configRunner.HaltsFromTape
       (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
@@ -370,7 +375,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterReturnToRightShiftedInput_h
         keepMove, transition, Tape.read, Tape.write, Tape.move,
         Tape.moveLeft, Tape.moveRight]
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterReturnToRightShiftedInput_haltsFrom_sourceRewindTarget_configRunner
+theorem haltsFrom_sourceRewindTarget_configRunner
     (L : SimulatorLayout) :
     FixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_configRunner.HaltsFromTape
       (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
@@ -390,10 +395,14 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterReturnToRightShiftedInput_h
           simp [hbits] at hlen
       | cons second tail =>
           simpa [hbits] using
-            fixedDescriptionBoundedSimulatorPaddedEmitterReturnToRightShiftedInput_haltsFrom_sourceRewindTarget_cons_cons_configRunner
+            haltsFrom_sourceRewindTarget_cons_cons_configRunner
               first second tail
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_move_left_move_right_cons_cons_configRunner
+end ReturnToRightShiftedInput
+
+namespace RightShiftedSourceTape
+
+theorem move_left_move_right_cons_cons_configRunner
     (first second : Bool) (rest : Word Bool) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -408,7 +417,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_move
       DovetailInitialLayoutInitializer.tapeAtCells,
       Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_move_left_move_right_simulator_configRunner
+theorem move_left_move_right_simulator_configRunner
     (L : SimulatorLayout) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -429,8 +438,10 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_move
           simp [hbits] at hlen
       | cons second tail =>
           simpa [hbits] using
-            fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_move_left_move_right_cons_cons_configRunner
+            move_left_move_right_cons_cons_configRunner
               first second tail
+
+end RightShiftedSourceTape
 
 namespace AfterRightShiftedInput
 
@@ -474,9 +485,9 @@ theorem spec_of_afterRightShiftedInput
       SeqViaCanonical_haltsFromTape_of_haltsFromTape
         fixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_subroutineReady_configRunner
         hafterRight.left
-        (fixedDescriptionBoundedSimulatorPaddedEmitterReturnToRightShiftedInput_haltsFrom_sourceRewindTarget_configRunner
+        (ReturnToRightShiftedInput.haltsFrom_sourceRewindTarget_configRunner
           L)
-        (fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_move_left_move_right_simulator_configRunner
+        (RightShiftedSourceTape.move_left_move_right_simulator_configRunner
           L)
         (hafterRight.right L)
 
@@ -541,7 +552,7 @@ theorem spec_of_postRewind
         hpostRewind.left
         (fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewind_halts_terminal_configRunner
           L)
-        (fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_move_left_move_right_simulator_configRunner
+        (SourceRewindTargetTape.move_left_move_right_simulator_configRunner
           L)
         (hpostRewind.right L)
 

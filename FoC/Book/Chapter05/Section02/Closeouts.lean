@@ -215,7 +215,7 @@ theorem boolean_recursive_language_iff_general_grammar_pair_of_section52_closeou
 theorem finite_general_grammar_to_recursively_enumerable_construction_of_finite_section52_closeout
     (hclose : ConcreteBooleanFiniteGrammarSection52Closeout) :
     FiniteGeneralGrammarToRecursivelyEnumerableConstruction Bool :=
-  boolean_finite_general_grammar_to_recursively_enumerable_construction_of_concrete_finite_grammar_compiler
+  BooleanFiniteGeneralGrammar.to_re_construction_of_concreteFiniteGrammarCompiler
     (concrete_finite_grammar_recognizer_compiler_of_finite_presentation_compiler
       hclose.finiteGrammarRecognizerDescription)
 

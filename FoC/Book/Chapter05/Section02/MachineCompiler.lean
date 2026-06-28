@@ -197,11 +197,19 @@ def concrete_machine_description_compiler_closeout_of_tape_code_output_compiler
   Computability.machineDescriptionCompilerCloseout_of_tapeCodeOutputCompiler
     hcompile
 
-theorem concrete_fixed_description_step_code_configuration_realizer_construction_of_tape_code_output_compiler
+namespace ConcreteFixedDescriptionStepCode
+
+namespace ConfigurationRealizerConstruction
+
+theorem of_tapeCodeOutputCompiler
     (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
     ConcreteFixedDescriptionStepCodeConfigurationRealizerConstruction :=
   Computability.fixedDescriptionStepCodeConfigurationRealizerConstruction_of_tapeCodeOutputCompiler
     hcompile
+
+end ConfigurationRealizerConstruction
+
+end ConcreteFixedDescriptionStepCode
 
 theorem concrete_fixed_description_bounded_simulator_table_compiler_of_tape_code_output_compiler
     (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
@@ -233,29 +241,49 @@ theorem concrete_paired_recognizer_dovetail_stage_attempt_code_output_realizer_o
   Computability.pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
-theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_output_realizer_of_tape_code_output_compiler
+namespace ConcretePairedRecognizerDovetail
+
+namespace TotalStageAttemptCodeOutputRealizer
+
+theorem of_tapeCodeOutputCompiler
     (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
     ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailTotalStageAttemptCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
-theorem concrete_paired_recognizer_dovetail_total_then_raw_output_code_output_realizer_of_tape_code_output_compiler
+end TotalStageAttemptCodeOutputRealizer
+
+namespace TotalThenRawOutputCodeOutputRealizer
+
+theorem of_tapeCodeOutputCompiler
     (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
     ConcretePairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
-theorem concrete_paired_recognizer_dovetail_controller_continue_code_output_realizer_of_tape_code_output_compiler
+end TotalThenRawOutputCodeOutputRealizer
+
+namespace ControllerContinueCodeOutputRealizer
+
+theorem of_tapeCodeOutputCompiler
     (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
     ConcretePairedRecognizerDovetailControllerContinueCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailControllerContinueCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
-theorem concrete_paired_recognizer_dovetail_controller_emit_code_output_realizer_of_tape_code_output_compiler
+end ControllerContinueCodeOutputRealizer
+
+namespace ControllerEmitCodeOutputRealizer
+
+theorem of_tapeCodeOutputCompiler
     (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
     ConcretePairedRecognizerDovetailControllerEmitCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailControllerEmitCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
+
+end ControllerEmitCodeOutputRealizer
+
+end ConcretePairedRecognizerDovetail
 
 theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_output_realizer_of_subroutine_realizer
     (hcompile :
@@ -264,19 +292,27 @@ theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_output_real
   Computability.pairedRecognizerDovetailTotalStageAttemptCodeOutputRealizer_of_subroutineRealizer
     hcompile
 
-theorem concrete_paired_recognizer_dovetail_stage_attempt_code_output_realizer_of_total_then_raw_output_code_output_realizer
+namespace ConcretePairedRecognizerDovetail
+
+namespace StageAttemptCodeOutputRealizer
+
+theorem of_totalThenRawOutput
     (hcompile :
       ConcretePairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction) :
     ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :=
-  Computability.pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalThenRawOutputCodeOutputRealizerConstruction
+  Computability.PairedRecognizerDovetail.StageAttemptCodeOutputRealizer.of_totalThenRawOutputConstruction
     hcompile
 
-theorem concrete_paired_recognizer_dovetail_stage_attempt_code_output_realizer_of_total_stage_attempt_code_output_realizer
+theorem of_totalStageAttemptOutput
     (hcompile :
       ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction) :
     ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :=
   Computability.Search.stageOutputConstructionOfTotal
     hcompile
+
+end StageAttemptCodeOutputRealizer
+
+end ConcretePairedRecognizerDovetail
 
 theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_controller_result_realizes
     (accept reject : MachineDescription) :
@@ -515,24 +551,36 @@ theorem concrete_fixed_description_step_code_output_realizer_of_configuration_re
   Computability.fixedDescriptionStepCodeOutputRealizer_of_configurationRealizer
     hstepper
 
-theorem concrete_fixed_description_step_code_output_realizer_construction_of_configuration_realizer_construction
+namespace ConcreteFixedDescriptionStepCode
+
+namespace OutputRealizerConstruction
+
+theorem of_configurationRealizerConstruction
     (hcompile :
       ConcreteFixedDescriptionStepCodeConfigurationRealizerConstruction) :
     ConcreteFixedDescriptionStepCodeOutputRealizerConstruction :=
   Computability.fixedDescriptionStepCodeOutputRealizerConstruction_of_configurationRealizerConstruction
     hcompile
 
-theorem concrete_fixed_description_step_code_configuration_realizer_construction_of_output_realizer_construction
+end OutputRealizerConstruction
+
+namespace ConfigurationRealizerConstruction
+
+theorem of_outputRealizerConstruction
     (hcompile :
       ConcreteFixedDescriptionStepCodeOutputRealizerConstruction) :
     ConcreteFixedDescriptionStepCodeConfigurationRealizerConstruction :=
   Computability.fixedDescriptionStepCodeConfigurationRealizerConstruction_of_outputRealizerConstruction
     hcompile
 
-theorem concrete_fixed_description_step_code_configuration_realizer_construction_iff_output_realizer_construction :
+theorem iff_outputRealizerConstruction :
     ConcreteFixedDescriptionStepCodeConfigurationRealizerConstruction <->
       ConcreteFixedDescriptionStepCodeOutputRealizerConstruction :=
   Computability.fixedDescriptionStepCodeConfigurationRealizerConstruction_iff_outputRealizerConstruction
+
+end ConfigurationRealizerConstruction
+
+end ConcreteFixedDescriptionStepCode
 
 theorem concrete_fixed_description_step_code_configuration_realizes_transitionless
     {D : MachineDescription}

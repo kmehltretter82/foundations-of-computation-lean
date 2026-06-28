@@ -1561,7 +1561,11 @@ theorem fixedDescriptionBoundedSimulatorLayoutScannerDescription_haltsWithOutput
       fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBase_normalizedOutput_configRunner
         L []
 
-theorem fixedDescriptionBoundedSimulatorLayoutScannerRestoredLeft_eq_asBoolInput_reverse_map_some_configRunner
+namespace FixedDescriptionBoundedSimulator
+
+namespace LayoutScannerRestoredLeft
+
+theorem eq_asBoolInput_reverse_map_some_configRunner
     (L : SimulatorLayout) :
     List.append ((cellCodeBits (some L.hit)).reverse.map some)
       (configurationRestoredLeftWithBase L.config
@@ -1626,6 +1630,10 @@ theorem fixedDescriptionBoundedSimulatorLayoutScannerRestoredLeft_eq_asBoolInput
     tapeFieldBits, encodeCodeWordAsInput, List.append_assoc,
     List.map_append, List.reverse_append]
 
+end LayoutScannerRestoredLeft
+
+end FixedDescriptionBoundedSimulator
+
 theorem fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBase_move_right_eq_terminal_configRunner
     (L : SimulatorLayout) :
     Tape.move Direction.right
@@ -1641,7 +1649,7 @@ theorem fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBase_move_ri
         congrArg
           (fun left =>
             DovetailInitialLayoutInitializer.tapeAtCells left [])
-          (fixedDescriptionBoundedSimulatorLayoutScannerRestoredLeft_eq_asBoolInput_reverse_map_some_configRunner
+          (FixedDescriptionBoundedSimulator.LayoutScannerRestoredLeft.eq_asBoolInput_reverse_map_some_configRunner
             L)
 
 /--
@@ -1808,7 +1816,7 @@ theorem fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBase_eq_term
   rw [boolFinalHandoffConfigWithBase]
   simp
   have hleft :=
-    fixedDescriptionBoundedSimulatorLayoutScannerRestoredLeft_eq_asBoolInput_reverse_map_some_configRunner
+    FixedDescriptionBoundedSimulator.LayoutScannerRestoredLeft.eq_asBoolInput_reverse_map_some_configRunner
       L
   simpa [List.map_reverse] using
     congrArg
@@ -1836,7 +1844,11 @@ theorem fixedDescriptionBoundedSimulator_tapeAtCells_left_blank_append_none_equi
           Tape.input,
           fixedDescriptionBoundedSimulator_dropTrailingNone_append_none]
 
-theorem fixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_haltsFromTapeEquiv_terminal_configRunner
+namespace FixedDescriptionBoundedSimulator
+
+namespace ReturnToRightShiftedInputDescription
+
+theorem haltsFromTapeEquiv_terminal_configRunner
     (middleRev : Word Bool) (penult last : Bool) :
     FDBSReturnToRightShiftedInput_configRunner.HaltsFromTapeEquiv
       (Tape.move Direction.left
@@ -1873,7 +1885,7 @@ theorem fixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_hal
         Direction.right
     simpa [Tactual, List.map_append, List.append_assoc] using heq
 
-theorem fixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_haltsFromTapeEquiv_scannerHandoff_configRunner
+theorem haltsFromTapeEquiv_scannerHandoff_configRunner
     (L : SimulatorLayout) :
     FDBSReturnToRightShiftedInput_configRunner.HaltsFromTapeEquiv
       (Tape.move Direction.left
@@ -1889,7 +1901,7 @@ theorem fixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_hal
         (SimulatorLayout.asBoolInput L) hlen with
     ⟨last, penult, middleRev, hrev, hw⟩
   have hreturn :=
-    fixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_haltsFromTapeEquiv_terminal_configRunner
+    haltsFromTapeEquiv_terminal_configRunner
       middleRev penult last
   have hout :
       List.append middleRev.reverse [penult, last] =
@@ -1909,6 +1921,10 @@ theorem fixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_hal
     CommonGround.LayoutTapes.HandoffTape,
     CommonGround.LayoutTapes.InputTape,
     CommonGround.LayoutTapes.Bits] using hreturn
+
+end ReturnToRightShiftedInputDescription
+
+end FixedDescriptionBoundedSimulator
 
 def FixedDescriptionBoundedSimulatorPaddedParserEquivRunner_configRunner :
     MachineDescription :=
@@ -1953,7 +1969,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedParserEquivRunner_haltsWithTapeEqu
     fixedDescriptionBoundedSimulatorLayoutScannerDescription_haltsWithTape_configRunner
       L
   rcases
-      fixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_haltsFromTapeEquiv_scannerHandoff_configRunner
+      FixedDescriptionBoundedSimulator.ReturnToRightShiftedInputDescription.haltsFromTapeEquiv_scannerHandoff_configRunner
         L with
     ⟨Tactual, hreturn, hTequiv⟩
   have hseq :
@@ -2004,7 +2020,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedParserEquivRunner_closed_configRun
     · simpa [HaltsFromTapeIn] using
         congrArg Configuration.tape hn
   rcases
-      fixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_haltsFromTapeEquiv_scannerHandoff_configRunner
+      FixedDescriptionBoundedSimulator.ReturnToRightShiftedInputDescription.haltsFromTapeEquiv_scannerHandoff_configRunner
         L with
     ⟨Tactual, hreturnActual, hTequiv⟩
   have hT_eq : T = Tactual :=

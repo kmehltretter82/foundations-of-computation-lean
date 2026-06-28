@@ -467,7 +467,9 @@ theorem bounded_dovetail_table_compiler_iff_paired_recognizer_dovetail_compiler 
       ConcretePairedRecognizerDovetailCompilerConstruction :=
   Computability.pairedRecognizerBoundedDovetailTableCompiler_iff_pairedRecognizerDovetailDescriptionCompiler
 
-theorem bounded_dovetail_table_compiler_of_layout_code_output_realizer_and_search_driver
+namespace BoundedDovetailTableCompiler
+
+theorem of_layoutOutput_and_searchDriver
     (hrunner :
       ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
     (hdriver :
@@ -476,69 +478,89 @@ theorem bounded_dovetail_table_compiler_of_layout_code_output_realizer_and_searc
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputRealizer_and_searchDriver
     hrunner hdriver
 
-theorem bounded_dovetail_table_compiler_of_stage_attempt_code_output_realizer_and_stage_attempt_search_driver
+theorem of_stageAttemptOutput_and_searchDriver
     (hattempt :
       ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction)
     (hdriver :
       ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
-  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_stageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
+  Computability.PairedRecognizerBoundedDovetailTableCompiler.of_stageAttemptOutput_and_search
     hattempt hdriver
 
-theorem bounded_dovetail_table_compiler_of_total_then_raw_output_code_output_realizer_and_stage_attempt_search_driver
+theorem of_totalThenRawOutput_and_searchDriver
     (hattempt :
       ConcretePairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction)
     (hdriver :
       ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
-  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_totalThenRawOutputCodeOutputRealizer_and_stageAttemptSearchDriver
+  Computability.PairedRecognizerBoundedDovetailTableCompiler.of_totalThenRawOutput_and_search
     hattempt hdriver
 
-theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_realizer_and_stage_attempt_search_driver
+theorem of_totalStageAttemptOutput_and_searchDriver
     (hattempt :
       ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction)
     (hdriver :
       ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
-  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
+  Computability.PairedRecognizerBoundedDovetailTableCompiler.of_totalStageAttemptOutput_and_search
     hattempt hdriver
 
-theorem paired_recognizer_dovetail_stage_attempt_search_driver_of_description_bool_decider_compiler
+end BoundedDovetailTableCompiler
+
+namespace PairedRecognizerDovetail
+
+namespace StageAttemptSearchDriver
+
+theorem of_descriptionBoolDeciderCompiler
     (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
     ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction :=
   Computability.Search.stageCompilerOfDecider
     hcompile
 
-theorem paired_recognizer_dovetail_total_stage_attempt_search_driver_of_description_bool_decider_compiler
+end StageAttemptSearchDriver
+
+namespace TotalStageAttemptSearchDriver
+
+theorem of_descriptionBoolDeciderCompiler
     (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
     ConcretePairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction :=
   Computability.Search.totalStageCompilerOfDecider
     hcompile
 
-theorem paired_recognizer_dovetail_total_stage_attempt_controller_search_driver_of_description_bool_decider_compiler
+end TotalStageAttemptSearchDriver
+
+namespace TotalStageAttemptControllerSearchDriver
+
+theorem of_descriptionBoolDeciderCompiler
     (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
     ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :=
   Computability.Search.controllerCompilerOfDecider
     hcompile
 
-theorem paired_recognizer_dovetail_total_stage_attempt_controller_search_driver_of_finite_stage_loop_controller
+theorem of_finiteStageLoopController
     (hloop :
       ConcretePairedRecognizerDovetailFiniteStageLoopControllerConstruction) :
     ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :=
   Computability.pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_finiteStageLoopController
     hloop
 
-theorem bounded_dovetail_table_compiler_of_tape_code_output_compiler_and_description_bool_decider_compiler
+end TotalStageAttemptControllerSearchDriver
+
+end PairedRecognizerDovetail
+
+namespace BoundedDovetailTableCompiler
+
+theorem of_tapeCodeCompiler_and_descriptionBoolDeciderCompiler
     (htape : ConcreteTapeCodeOutputCompilerConstruction)
     (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
-  bounded_dovetail_table_compiler_of_stage_attempt_code_output_realizer_and_stage_attempt_search_driver
+  of_stageAttemptOutput_and_searchDriver
     (Computability.pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_tapeCodeOutputCompiler
       htape)
-    (paired_recognizer_dovetail_stage_attempt_search_driver_of_description_bool_decider_compiler
+    (PairedRecognizerDovetail.StageAttemptSearchDriver.of_descriptionBoolDeciderCompiler
       hbool)
 
-theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_subroutine_realizer_and_total_stage_attempt_search_driver
+theorem of_totalStageAttemptSubroutine_and_totalSearchDriver
     (hattempt :
       ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction)
     (hdriver :
@@ -547,7 +569,7 @@ theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_subro
   Computability.Search.boundedCompilerOfSubroutineAndTotalSearch
     hattempt hdriver
 
-theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_controller_search_driver
+theorem of_compiledSubroutine_and_controllerSearchDriver
     (hattempt :
       ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
     (hdriver :
@@ -556,25 +578,25 @@ theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compi
   Computability.Search.boundedCompilerOfCompiledSubroutineAndController
     hattempt hdriver
 
-theorem bounded_dovetail_table_compiler_of_controller_closeout
+theorem of_controllerCloseout
     (hclose : ConcretePairedRecognizerDovetailControllerCompilerCloseout) :
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_controllerCompilerCloseout
     hclose
 
-theorem bounded_dovetail_table_compiler_of_finite_controller_closeout
+theorem of_finiteControllerCloseout
     (hclose :
       ConcretePairedRecognizerDovetailFiniteControllerCompilerCloseout) :
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_finiteControllerCompilerCloseout
     hclose
 
-theorem bounded_dovetail_table_compiler_of_paired_recognizer_surface
+theorem of_pairedRecognizerSurface
     (h : PairedRecognizerDovetailSurface) :
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
   h.boundedTableCompiler
 
-theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_description_bool_decider_compiler
+theorem of_compiledSubroutine_and_descriptionBoolDeciderCompiler
     (hattempt :
       ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
     (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
@@ -582,23 +604,39 @@ theorem bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compi
   Computability.Search.boundedCompilerOfCompiledSubroutineAndDecider
     hattempt hbool
 
-theorem paired_recognizer_dovetail_layout_code_output_realizer_of_subroutine_realizer
+end BoundedDovetailTableCompiler
+
+namespace PairedRecognizerDovetail
+
+namespace LayoutCodeOutputRealizer
+
+theorem of_subroutineRealizer
     (hrunner :
       ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction) :
     ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailLayoutCodeOutputRealizer_of_subroutineRealizer
     hrunner
 
-theorem bounded_dovetail_table_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_search_driver
+end LayoutCodeOutputRealizer
+
+end PairedRecognizerDovetail
+
+namespace BoundedDovetailTableCompiler
+
+theorem of_layoutSubroutine_and_subroutineSearchDriver
     (hrunner :
       ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
     (hdriver :
       ConcretePairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
-  Computability.pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineSearchDriver
+  Computability.PairedRecognizerBoundedDovetailTableCompiler.of_layoutSubroutine_and_subroutineSearch
     hrunner hdriver
 
-theorem paired_recognizer_dovetail_compiler_of_layout_code_output_realizer_and_search_driver
+end BoundedDovetailTableCompiler
+
+namespace PairedRecognizerDovetailCompiler
+
+theorem of_layoutOutput_and_searchDriver
     (hrunner :
       ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
     (hdriver :
@@ -607,7 +645,7 @@ theorem paired_recognizer_dovetail_compiler_of_layout_code_output_realizer_and_s
   Computability.DescriptionCompiler.ofLayoutAndSearch
     hrunner hdriver
 
-theorem paired_recognizer_dovetail_compiler_of_stage_attempt_code_output_realizer_and_stage_attempt_search_driver
+theorem of_stageAttemptOutput_and_searchDriver
     (hattempt :
       ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction)
     (hdriver :
@@ -616,14 +654,14 @@ theorem paired_recognizer_dovetail_compiler_of_stage_attempt_code_output_realize
   Computability.DescriptionCompiler.ofStageAttemptAndSearch
     hattempt hdriver
 
-theorem paired_recognizer_dovetail_compiler_of_tape_code_output_compiler_and_description_bool_decider_compiler
+theorem of_tapeCodeCompiler_and_descriptionBoolDeciderCompiler
     (htape : ConcreteTapeCodeOutputCompilerConstruction)
     (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
   Computability.DescriptionCompiler.ofTapeCodeAndDecider
     htape hbool
 
-theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_subroutine_realizer_and_total_stage_attempt_search_driver
+theorem of_totalStageAttemptSubroutine_and_totalSearchDriver
     (hattempt :
       ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction)
     (hdriver :
@@ -632,35 +670,35 @@ theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_s
   Computability.DescriptionCompiler.ofTotalStageSubroutineAndSearch
     hattempt hdriver
 
-theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_controller_search_driver
+theorem of_compiledSubroutine_and_controllerSearchDriver
     (hattempt :
       ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
     (hdriver :
       ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
   paired_recognizer_dovetail_compiler_of_bounded_dovetail_table_compiler
-    (bounded_dovetail_table_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_controller_search_driver
+    (BoundedDovetailTableCompiler.of_compiledSubroutine_and_controllerSearchDriver
       hattempt hdriver)
 
-theorem paired_recognizer_dovetail_compiler_of_controller_closeout
+theorem of_controllerCloseout
     (hclose : ConcretePairedRecognizerDovetailControllerCompilerCloseout) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_controllerCompilerCloseout
     hclose
 
-theorem paired_recognizer_dovetail_compiler_of_finite_controller_closeout
+theorem of_finiteControllerCloseout
     (hclose :
       ConcretePairedRecognizerDovetailFiniteControllerCompilerCloseout) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_finiteControllerCompilerCloseout
     hclose
 
-theorem paired_recognizer_dovetail_compiler_of_surface
+theorem of_surface
     (h : PairedRecognizerDovetailSurface) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
   h.finiteSourceCompiler
 
-theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_compiled_subroutine_and_description_bool_decider_compiler
+theorem of_compiledSubroutine_and_descriptionBoolDeciderCompiler
     (hattempt :
       ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
     (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
@@ -668,73 +706,95 @@ theorem paired_recognizer_dovetail_compiler_of_total_stage_attempt_code_output_c
   Computability.DescriptionCompiler.ofCompiledSubroutineAndDecider
     hattempt hbool
 
-theorem paired_recognizer_dovetail_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_search_driver
+theorem of_layoutSubroutine_and_subroutineSearchDriver
     (hrunner :
       ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
     (hdriver :
       ConcretePairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
   paired_recognizer_dovetail_compiler_of_bounded_dovetail_table_compiler
-    (bounded_dovetail_table_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_search_driver
+    (BoundedDovetailTableCompiler.of_layoutSubroutine_and_subroutineSearchDriver
       hrunner hdriver)
 
-theorem paired_recognizer_dovetail_search_driver_of_runner_search_driver
+end PairedRecognizerDovetailCompiler
+
+namespace PairedRecognizerDovetail
+
+namespace SearchDriver
+
+theorem of_runnerSearchDriver
     (hdriver :
       ConcretePairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerDovetailSearchDriverCompilerConstruction :=
   Computability.pairedRecognizerDovetailSearchDriverCompiler_of_runnerSearchDriverCompiler
     hdriver
 
-theorem paired_recognizer_dovetail_subroutine_search_driver_of_subroutine_runner_search_driver
+end SearchDriver
+
+namespace SubroutineSearchDriver
+
+theorem of_subroutineRunnerSearchDriver
     (hdriver :
       ConcretePairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction :=
   Computability.pairedRecognizerDovetailSubroutineSearchDriverCompiler_of_subroutineRunnerSearchDriverCompiler
     hdriver
 
-theorem bounded_dovetail_table_compiler_of_layout_code_output_realizer_and_runner_search_driver
+end SubroutineSearchDriver
+
+end PairedRecognizerDovetail
+
+namespace BoundedDovetailTableCompiler
+
+theorem of_layoutOutput_and_runnerSearchDriver
     (hrunner :
       ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
     (hdriver :
       ConcretePairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
-  bounded_dovetail_table_compiler_of_layout_code_output_realizer_and_search_driver
+  of_layoutOutput_and_searchDriver
     hrunner
-    (paired_recognizer_dovetail_search_driver_of_runner_search_driver
+    (PairedRecognizerDovetail.SearchDriver.of_runnerSearchDriver
       hdriver)
 
-theorem bounded_dovetail_table_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_runner_search_driver
+theorem of_layoutSubroutine_and_runnerSearchDriver
     (hrunner :
       ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
     (hdriver :
       ConcretePairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
-  bounded_dovetail_table_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_search_driver
+  of_layoutSubroutine_and_subroutineSearchDriver
     hrunner
-    (paired_recognizer_dovetail_subroutine_search_driver_of_subroutine_runner_search_driver
+    (PairedRecognizerDovetail.SubroutineSearchDriver.of_subroutineRunnerSearchDriver
       hdriver)
 
-theorem paired_recognizer_dovetail_compiler_of_layout_code_output_realizer_and_runner_search_driver
+end BoundedDovetailTableCompiler
+
+namespace PairedRecognizerDovetailCompiler
+
+theorem of_layoutOutput_and_runnerSearchDriver
     (hrunner :
       ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
     (hdriver :
       ConcretePairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
-  paired_recognizer_dovetail_compiler_of_layout_code_output_realizer_and_search_driver
+  of_layoutOutput_and_searchDriver
     hrunner
-    (paired_recognizer_dovetail_search_driver_of_runner_search_driver
+    (PairedRecognizerDovetail.SearchDriver.of_runnerSearchDriver
       hdriver)
 
-theorem paired_recognizer_dovetail_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_runner_search_driver
+theorem of_layoutSubroutine_and_runnerSearchDriver
     (hrunner :
       ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
     (hdriver :
       ConcretePairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
-  paired_recognizer_dovetail_compiler_of_layout_code_output_subroutine_realizer_and_subroutine_search_driver
+  of_layoutSubroutine_and_subroutineSearchDriver
     hrunner
-    (paired_recognizer_dovetail_subroutine_search_driver_of_subroutine_runner_search_driver
+    (PairedRecognizerDovetail.SubroutineSearchDriver.of_subroutineRunnerSearchDriver
       hdriver)
+
+end PairedRecognizerDovetailCompiler
 
 theorem dovetailing_decidable_construction_of_concrete_dovetail_description_compiler
     (hcompile : ConcreteDovetailDescriptionCompilerConstruction) :

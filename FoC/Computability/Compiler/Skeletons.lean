@@ -538,7 +538,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConst
 
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold :
     PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :=
-  pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_of_outputFiniteSourceComponents
+  PairedRecognizerDovetail.TotalStageAttemptCodeOutputCompiledSubroutineConstruction.of_outputFiniteSourceComponents
     pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold
     pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold
     pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_scaffold
@@ -681,7 +681,7 @@ theorem DescriptionCompiler.ofStageAttemptAndSearch
       PairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
     PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
-    (pairedRecognizerBoundedDovetailTableCompiler_of_stageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
+    (PairedRecognizerBoundedDovetailTableCompiler.of_stageAttemptOutput_and_search
       hattempt hdriver)
 
 theorem DescriptionCompiler.ofTapeCodeAndDecider
@@ -750,7 +750,7 @@ theorem DescriptionCompiler.ofLayoutSubroutineAndSearch
       PairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction) :
     PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
-    (pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineSearchDriver
+    (PairedRecognizerBoundedDovetailTableCompiler.of_layoutSubroutine_and_subroutineSearch
       hrunner hdriver)
 
 theorem DescriptionCompiler.ofLayoutSubroutineAndRunner
@@ -760,7 +760,7 @@ theorem DescriptionCompiler.ofLayoutSubroutineAndRunner
       PairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
     PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
-    (pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineRunnerSearchDriver
+    (PairedRecognizerBoundedDovetailTableCompiler.of_layoutSubroutine_and_runnerSearch
       hrunner hdriver)
 
 theorem dovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler

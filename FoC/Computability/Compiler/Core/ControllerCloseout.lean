@@ -64,7 +64,11 @@ def pairedRecognizerDovetailControllerCompilerCloseout_of_finiteControllerCloseo
     hclose.totalStageAttemptSubroutine
     hclose.finiteStageLoopController
 
-theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_of_finiteSourceComponents
+namespace PairedRecognizerDovetail
+
+namespace TotalStageAttemptCodeOutputCompiledSubroutineConstruction
+
+theorem of_finiteSourceComponents
     (hinitializer :
       PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction)
     (hrunner :
@@ -93,7 +97,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineCon
           accept reject)
         hattempt⟩
 
-theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_of_outputFiniteSourceComponents
+theorem of_outputFiniteSourceComponents
     (hinitializer :
       PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction)
     (hrunner :
@@ -121,6 +125,10 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineCon
         (pairedRecognizerDovetailTotalStageAttemptSourceCode_transform_eq
           accept reject)
         hattempt⟩
+
+end TotalStageAttemptCodeOutputCompiledSubroutineConstruction
+
+end PairedRecognizerDovetail
 
 theorem pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_of_closedHandoff
     (h :
@@ -209,7 +217,11 @@ theorem pairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction
       tapeCodePrimitiveHandoffCompiledSubroutineByDescription_outputCompiled
         hemitter⟩
 
-theorem pairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction_of_finiteSourceHandoffComponents
+namespace PairedRecognizerDovetail
+
+namespace TotalStageAttemptCodeHandoffSubroutineRealizerConstruction
+
+theorem of_finiteSourceHandoffComponents
     (hinitializer :
       PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction)
     (hrunner :
@@ -233,6 +245,10 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerCo
         (pairedRecognizerDovetailTotalStageAttemptSourceCode_transform_eq
           accept reject)
         hattempt⟩
+
+end TotalStageAttemptCodeHandoffSubroutineRealizerConstruction
+
+end PairedRecognizerDovetail
 
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction_of_handoff
     (h :

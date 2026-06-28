@@ -652,7 +652,11 @@ theorem pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalThenRawOu
     apply hattempt.right code out
     rwa [pairedRecognizerDovetailTotalThenRawOutputCode_eq_stageAttemptCode]
 
-theorem pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalThenRawOutputCodeOutputRealizerConstruction
+namespace PairedRecognizerDovetail
+
+namespace StageAttemptCodeOutputRealizer
+
+theorem of_totalThenRawOutputConstruction
     (hcompile :
       PairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction) :
     PairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction := by
@@ -661,6 +665,10 @@ theorem pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalThenRawOu
   exact ⟨attempt,
     pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalThenRawOutputCodeOutputRealizer
       hattempt⟩
+
+end StageAttemptCodeOutputRealizer
+
+end PairedRecognizerDovetail
 
 theorem pairedRecognizerDovetailTotalStageAttemptCode_transform_eq_of_stageAttemptCode_eq_some
     {accept reject : MachineDescription}
@@ -736,7 +744,9 @@ theorem pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputRealizer
   rcases hrunner accept reject with ⟨runner, hrunnerRealizes⟩
   exact hdriver accept reject runner hrunnerRealizes
 
-theorem pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineSearchDriver
+namespace PairedRecognizerBoundedDovetailTableCompiler
+
+theorem of_layoutSubroutine_and_subroutineSearch
     (hrunner :
       PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
     (hdriver :
@@ -745,6 +755,8 @@ theorem pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputSubrouti
   intro accept reject
   rcases hrunner accept reject with ⟨runner, hrunnerRealizes⟩
   exact hdriver accept reject runner hrunnerRealizes
+
+end PairedRecognizerBoundedDovetailTableCompiler
 
 theorem pairedRecognizerBoundedDovetailTableRealizes_of_runnerSearchDriverRealizes
     {accept reject runner decider : MachineDescription}
@@ -869,7 +881,9 @@ theorem pairedRecognizerBoundedDovetailTableRealizes_of_totalStageAttemptSearchD
             rw [pairedRecognizerDovetailTotalStageAttemptCode_encode, hout]
             rfl)
 
-theorem pairedRecognizerBoundedDovetailTableCompiler_of_stageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
+namespace PairedRecognizerBoundedDovetailTableCompiler
+
+theorem of_stageAttemptOutput_and_search
     (hattempt :
       PairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction)
     (hdriver :
@@ -882,27 +896,29 @@ theorem pairedRecognizerBoundedDovetailTableCompiler_of_stageAttemptCodeOutputRe
     pairedRecognizerBoundedDovetailTableRealizes_of_stageAttemptSearchDriverRealizes
       hattemptRealizes hdecider⟩
 
-theorem pairedRecognizerBoundedDovetailTableCompiler_of_totalThenRawOutputCodeOutputRealizer_and_stageAttemptSearchDriver
+theorem of_totalThenRawOutput_and_search
     (hattempt :
       PairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction)
     (hdriver :
       PairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
     PairedRecognizerBoundedDovetailTableCompilerConstruction :=
-  pairedRecognizerBoundedDovetailTableCompiler_of_stageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
-    (pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_totalThenRawOutputCodeOutputRealizerConstruction
+  of_stageAttemptOutput_and_search
+    (PairedRecognizerDovetail.StageAttemptCodeOutputRealizer.of_totalThenRawOutputConstruction
       hattempt)
     hdriver
 
-theorem pairedRecognizerBoundedDovetailTableCompiler_of_totalStageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
+theorem of_totalStageAttemptOutput_and_search
     (hattempt :
       PairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction)
     (hdriver :
       PairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
     PairedRecognizerBoundedDovetailTableCompilerConstruction :=
-  pairedRecognizerBoundedDovetailTableCompiler_of_stageAttemptCodeOutputRealizer_and_stageAttemptSearchDriver
+  of_stageAttemptOutput_and_search
     (Search.stageOutputConstructionOfTotal
       hattempt)
     hdriver
+
+end PairedRecognizerBoundedDovetailTableCompiler
 
 theorem Search.boundedCompilerOfSubroutineAndTotalSearch
     (hattempt :
@@ -965,16 +981,20 @@ theorem pairedRecognizerBoundedDovetailTableCompiler_of_finiteControllerCompiler
     (pairedRecognizerDovetailControllerCompilerCloseout_of_finiteControllerCloseout
       hclose)
 
-theorem pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineRunnerSearchDriver
+namespace PairedRecognizerBoundedDovetailTableCompiler
+
+theorem of_layoutSubroutine_and_runnerSearch
     (hrunner :
       PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
     (hdriver :
       PairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
     PairedRecognizerBoundedDovetailTableCompilerConstruction :=
-  pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputSubroutineRealizer_and_subroutineSearchDriver
+  of_layoutSubroutine_and_subroutineSearch
     hrunner
     (pairedRecognizerDovetailSubroutineSearchDriverCompiler_of_subroutineRunnerSearchDriverCompiler
       hdriver)
+
+end PairedRecognizerBoundedDovetailTableCompiler
 
 theorem fixedDescriptionBoundedSimulatorTableRealizes_of_codeCompiler
     {D simulator : MachineDescription}

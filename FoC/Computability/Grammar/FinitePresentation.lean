@@ -473,25 +473,48 @@ def FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompi
     Prop :=
   FiniteBoolGeneralGrammarPresentation.CheckedIndexedCertificateRecognizerCompilerConstruction
 
-theorem finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_descriptionCompiler
+namespace FiniteBoolGeneralGrammarPresentation
+
+namespace RecognizerCompilerConstruction
+
+theorem of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
     FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
   FiniteBoolGeneralGrammarPresentation.compilerConstruction_of_descriptionCompiler
     hcompile
 
-theorem finiteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction_of_descriptionCompiler
+end RecognizerCompilerConstruction
+
+namespace CertificateRecognizerCompilerConstruction
+
+theorem of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
     FiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction :=
   FiniteBoolGeneralGrammarPresentation.certificateRecognizerCompilerConstruction_of_descriptionCompiler
     hcompile
 
-theorem finiteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
+end CertificateRecognizerCompilerConstruction
+
+namespace IndexedCertificateRecognizerCompilerConstruction
+
+theorem of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
     FiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction :=
   FiniteBoolGeneralGrammarPresentation.indexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
     hcompile
 
-theorem finiteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
+theorem of_checkedIndexedCertificateRecognizerCompiler
+    (hcompile :
+      FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
+    FiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction :=
+  FiniteBoolGeneralGrammarPresentation.indexedCertificateRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
+    hcompile
+
+end IndexedCertificateRecognizerCompilerConstruction
+
+namespace CheckedIndexedCertificateRecognizerCompilerConstruction
+
+theorem of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
     FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction :=
   FiniteBoolGeneralGrammarPresentation.checkedIndexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
@@ -506,55 +529,60 @@ certificate compiler is supplied, the existing equivalence bridges derive the
 indexed, bounded, and full presentation recognizers.
 -/
 
-theorem finiteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction_scaffold
+theorem scaffold
     (hcompile :
       FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
     FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction :=
   hcompile
 
-theorem finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_certificateRecognizerCompiler
+end CheckedIndexedCertificateRecognizerCompilerConstruction
+
+namespace BoundedRecognizerCompilerConstruction
+
+theorem of_certificateRecognizerCompiler
     (hcompile :
       FiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction) :
     FiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :=
   FiniteBoolGeneralGrammarPresentation.boundedRecognizerCompilerConstruction_of_certificateRecognizerCompiler
     hcompile
 
-theorem finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_indexedCertificateRecognizerCompiler
+theorem of_indexedCertificateRecognizerCompiler
     (hcompile :
       FiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction) :
     FiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :=
   FiniteBoolGeneralGrammarPresentation.boundedRecognizerCompilerConstruction_of_indexedCertificateRecognizerCompiler
     hcompile
 
-theorem finiteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
-    (hcompile :
-      FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
-    FiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction :=
-  FiniteBoolGeneralGrammarPresentation.indexedCertificateRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
-    hcompile
-
-theorem finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
+theorem of_checkedIndexedCertificateRecognizerCompiler
     (hcompile :
       FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
     FiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :=
   FiniteBoolGeneralGrammarPresentation.boundedRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
     hcompile
 
-theorem finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_boundedRecognizerCompiler
+end BoundedRecognizerCompilerConstruction
+
+namespace RecognizerCompilerConstruction
+
+theorem of_boundedRecognizerCompiler
     (hcompile :
       FiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction) :
     FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
   FiniteBoolGeneralGrammarPresentation.compilerConstruction_of_boundedRecognizerCompiler
     hcompile
 
-theorem finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_scaffold
+theorem scaffold
     (hcompile :
       FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
     FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
-  finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_boundedRecognizerCompiler
-    (finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
-      (finiteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction_scaffold
+  of_boundedRecognizerCompiler
+    (BoundedRecognizerCompilerConstruction.of_checkedIndexedCertificateRecognizerCompiler
+      (CheckedIndexedCertificateRecognizerCompilerConstruction.scaffold
         hcompile))
+
+end RecognizerCompilerConstruction
+
+end FiniteBoolGeneralGrammarPresentation
 
 theorem generalGrammar_generatedLanguage_programAcceptable
     (G : GeneralGrammar terminal nonterminal) :

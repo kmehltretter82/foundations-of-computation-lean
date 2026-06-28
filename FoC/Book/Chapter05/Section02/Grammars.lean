@@ -357,64 +357,84 @@ theorem concrete_finite_grammar_recognizer_compiler_of_finite_presentation_compi
     (concrete_finite_production_list_grammar_recognizer_compiler_of_finite_presentation_compiler
       hcompile)
 
-theorem concrete_finite_bool_general_grammar_presentation_compiler_of_bounded_recognizer_compiler
+namespace ConcreteFiniteBoolGeneralGrammarPresentation
+
+namespace RecognizerCompiler
+
+theorem of_boundedRecognizerCompiler
     (hcompile :
       ConcreteFiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction) :
     ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
-  Computability.finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_boundedRecognizerCompiler
+  Computability.FiniteBoolGeneralGrammarPresentation.RecognizerCompilerConstruction.of_boundedRecognizerCompiler
     hcompile
 
-theorem concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_certificate_recognizer_compiler
+end RecognizerCompiler
+
+namespace BoundedRecognizerCompiler
+
+theorem of_certificateRecognizerCompiler
     (hcompile :
       ConcreteFiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction) :
     ConcreteFiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :=
-  Computability.finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_certificateRecognizerCompiler
+  Computability.FiniteBoolGeneralGrammarPresentation.BoundedRecognizerCompilerConstruction.of_certificateRecognizerCompiler
     hcompile
 
-theorem concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_indexed_certificate_recognizer_compiler
+theorem of_indexedCertificateRecognizerCompiler
     (hcompile :
       ConcreteFiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction) :
     ConcreteFiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :=
-  Computability.finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_indexedCertificateRecognizerCompiler
+  Computability.FiniteBoolGeneralGrammarPresentation.BoundedRecognizerCompilerConstruction.of_indexedCertificateRecognizerCompiler
     hcompile
 
-theorem concrete_finite_bool_general_grammar_presentation_indexed_certificate_recognizer_compiler_of_checked_indexed_certificate_recognizer_compiler
+theorem of_checkedIndexedCertificateRecognizerCompiler
+    (hcompile :
+      ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
+    ConcreteFiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :=
+  Computability.FiniteBoolGeneralGrammarPresentation.BoundedRecognizerCompilerConstruction.of_checkedIndexedCertificateRecognizerCompiler
+    hcompile
+
+end BoundedRecognizerCompiler
+
+namespace IndexedCertificateRecognizerCompiler
+
+theorem of_checkedIndexedCertificateRecognizerCompiler
     (hcompile :
       ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
     ConcreteFiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction :=
-  Computability.finiteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
+  Computability.FiniteBoolGeneralGrammarPresentation.IndexedCertificateRecognizerCompilerConstruction.of_checkedIndexedCertificateRecognizerCompiler
     hcompile
 
-theorem concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_checked_indexed_certificate_recognizer_compiler
-    (hcompile :
-      ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
-    ConcreteFiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :=
-  Computability.finiteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
-    hcompile
+end IndexedCertificateRecognizerCompiler
 
-theorem concrete_finite_bool_general_grammar_presentation_compiler_of_certificate_recognizer_compiler
+namespace RecognizerCompiler
+
+theorem of_certificateRecognizerCompiler
     (hcompile :
       ConcreteFiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction) :
     ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
-  concrete_finite_bool_general_grammar_presentation_compiler_of_bounded_recognizer_compiler
-    (concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_certificate_recognizer_compiler
+  of_boundedRecognizerCompiler
+    (BoundedRecognizerCompiler.of_certificateRecognizerCompiler
       hcompile)
 
-theorem concrete_finite_bool_general_grammar_presentation_compiler_of_indexed_certificate_recognizer_compiler
+theorem of_indexedCertificateRecognizerCompiler
     (hcompile :
       ConcreteFiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction) :
     ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
-  concrete_finite_bool_general_grammar_presentation_compiler_of_bounded_recognizer_compiler
-    (concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_indexed_certificate_recognizer_compiler
+  of_boundedRecognizerCompiler
+    (BoundedRecognizerCompiler.of_indexedCertificateRecognizerCompiler
       hcompile)
 
-theorem concrete_finite_bool_general_grammar_presentation_compiler_of_checked_indexed_certificate_recognizer_compiler
+theorem of_checkedIndexedCertificateRecognizerCompiler
     (hcompile :
       ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
     ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
-  concrete_finite_bool_general_grammar_presentation_compiler_of_bounded_recognizer_compiler
-    (concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_checked_indexed_certificate_recognizer_compiler
+  of_boundedRecognizerCompiler
+    (BoundedRecognizerCompiler.of_checkedIndexedCertificateRecognizerCompiler
       hcompile)
+
+end RecognizerCompiler
+
+end ConcreteFiniteBoolGeneralGrammarPresentation
 
 theorem concrete_finite_bool_general_grammar_presentation_has_finite_productions
     (P : ConcreteFiniteBoolGeneralGrammarPresentation) :
@@ -430,43 +450,67 @@ theorem concrete_finite_bool_general_grammar_presentation_staged_recognizer_acce
   Computability.FiniteBoolGeneralGrammarPresentation.recognizerProgram_acceptsLanguage
     P
 
-theorem concrete_finite_bool_general_grammar_presentation_compiler_of_description_compiler
+namespace ConcreteFiniteBoolGeneralGrammarPresentation
+
+namespace RecognizerCompiler
+
+theorem of_descriptionCompiler
     (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
     ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
-  Computability.finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_of_descriptionCompiler
+  Computability.FiniteBoolGeneralGrammarPresentation.RecognizerCompilerConstruction.of_descriptionCompiler
     hcompile
 
-theorem concrete_finite_bool_general_grammar_presentation_certificate_recognizer_compiler_of_description_compiler
+end RecognizerCompiler
+
+namespace CertificateRecognizerCompiler
+
+theorem of_descriptionCompiler
     (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
     ConcreteFiniteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction :=
-  Computability.finiteBoolGeneralGrammarPresentationCertificateRecognizerCompilerConstruction_of_descriptionCompiler
+  Computability.FiniteBoolGeneralGrammarPresentation.CertificateRecognizerCompilerConstruction.of_descriptionCompiler
     hcompile
 
-theorem concrete_finite_bool_general_grammar_presentation_indexed_certificate_recognizer_compiler_of_description_compiler
+end CertificateRecognizerCompiler
+
+namespace IndexedCertificateRecognizerCompiler
+
+theorem of_descriptionCompiler
     (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
     ConcreteFiniteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction :=
-  Computability.finiteBoolGeneralGrammarPresentationIndexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
+  Computability.FiniteBoolGeneralGrammarPresentation.IndexedCertificateRecognizerCompilerConstruction.of_descriptionCompiler
     hcompile
 
-theorem concrete_finite_bool_general_grammar_presentation_checked_indexed_certificate_recognizer_compiler_of_description_compiler
+end IndexedCertificateRecognizerCompiler
+
+namespace CheckedIndexedCertificateRecognizerCompiler
+
+theorem of_descriptionCompiler
     (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
     ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction :=
-  Computability.finiteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
+  Computability.FiniteBoolGeneralGrammarPresentation.CheckedIndexedCertificateRecognizerCompilerConstruction.of_descriptionCompiler
     hcompile
 
-theorem concrete_finite_bool_general_grammar_presentation_checked_indexed_certificate_recognizer_compiler_scaffold
+theorem scaffold
     (hcompile :
       ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
     ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction :=
-  Computability.finiteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction_scaffold
+  Computability.FiniteBoolGeneralGrammarPresentation.CheckedIndexedCertificateRecognizerCompilerConstruction.scaffold
     hcompile
 
-theorem concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_description_compiler
+end CheckedIndexedCertificateRecognizerCompiler
+
+namespace BoundedRecognizerCompiler
+
+theorem of_descriptionCompiler
     (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
     ConcreteFiniteBoolGeneralGrammarPresentationBoundedRecognizerCompilerConstruction :=
-  concrete_finite_bool_general_grammar_presentation_bounded_recognizer_compiler_of_checked_indexed_certificate_recognizer_compiler
-    (concrete_finite_bool_general_grammar_presentation_checked_indexed_certificate_recognizer_compiler_of_description_compiler
+  of_checkedIndexedCertificateRecognizerCompiler
+    (CheckedIndexedCertificateRecognizerCompiler.of_descriptionCompiler
       hcompile)
+
+end BoundedRecognizerCompiler
+
+end ConcreteFiniteBoolGeneralGrammarPresentation
 
 theorem concrete_general_grammar_recognizer_compiler_of_description_compiler
     (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
@@ -484,7 +528,7 @@ theorem concrete_finite_bool_general_grammar_presentation_compiler_scaffold
     (hcompile :
       ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
     ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
-  Computability.finiteBoolGeneralGrammarPresentationRecognizerCompilerConstruction_scaffold
+  Computability.FiniteBoolGeneralGrammarPresentation.RecognizerCompilerConstruction.scaffold
     hcompile
 
 theorem concrete_finite_section52_closeout_of_semantic_closeout
@@ -511,7 +555,7 @@ theorem concrete_finite_section52_closeout_of_semantic_closeout_and_description_
     (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
     ConcreteBooleanFiniteGrammarSection52Closeout :=
   concrete_finite_section52_closeout_of_semantic_closeout hclose
-    (concrete_finite_bool_general_grammar_presentation_compiler_of_description_compiler
+    (ConcreteFiniteBoolGeneralGrammarPresentation.RecognizerCompiler.of_descriptionCompiler
       hcompile)
     (recursively_enumerable_to_finite_general_grammar_construction_of_description_compiler
       hcompile)
@@ -542,7 +586,7 @@ theorem concrete_finite_data_section52_closeout_of_semantic_closeout_and_descrip
     paired_recognizer_dovetail_compiler_of_concrete_bool_description_compiler
       hbool
   finiteGrammarRecognizerDescription :=
-    concrete_finite_bool_general_grammar_presentation_compiler_of_description_compiler
+    ConcreteFiniteBoolGeneralGrammarPresentation.RecognizerCompiler.of_descriptionCompiler
       haccept
   descriptionRecognizerToFiniteGrammar :=
     Computability.machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
@@ -1081,7 +1125,9 @@ theorem boolean_finite_general_grammar_generated_is_recursively_enumerable_of_co
             boolean_general_grammar_generated_is_recursively_enumerable_of_concrete_grammar_compiler
               hcompile (nonterminal := nonterminal) G hG.right
 
-theorem boolean_finite_general_grammar_generated_is_recursively_enumerable_of_concrete_finite_grammar_compiler
+namespace BooleanFiniteGeneralGrammar
+
+theorem generated_re_of_concreteFiniteGrammarCompiler
     (hcompile : ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction)
     {L : Language Bool}
     (h : FiniteGeneralGrammarGenerated L) :
@@ -1095,6 +1141,8 @@ theorem boolean_finite_general_grammar_generated_is_recursively_enumerable_of_co
               exact
                 boolean_general_grammar_generated_is_recursively_enumerable_of_concrete_description
                   G hD hG.right
+
+end BooleanFiniteGeneralGrammar
 
 theorem concrete_finite_general_grammar_recognizer_presentation_of_finite_compiler
     (hcompile : ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction)
@@ -1133,13 +1181,17 @@ theorem boolean_finite_general_grammar_to_recursively_enumerable_construction_of
     boolean_finite_general_grammar_generated_is_recursively_enumerable_of_concrete_grammar_compiler
       hcompile hgenerated
 
-theorem boolean_finite_general_grammar_to_recursively_enumerable_construction_of_concrete_finite_grammar_compiler
+namespace BooleanFiniteGeneralGrammar
+
+theorem to_re_construction_of_concreteFiniteGrammarCompiler
     (hcompile : ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction) :
     FiniteGeneralGrammarToRecursivelyEnumerableConstruction Bool := by
   intro L hgenerated
   exact
-    boolean_finite_general_grammar_generated_is_recursively_enumerable_of_concrete_finite_grammar_compiler
+    generated_re_of_concreteFiniteGrammarCompiler
       hcompile hgenerated
+
+end BooleanFiniteGeneralGrammar
 
 theorem finite_general_grammar_generated_language_is_program_acceptable
     {L : Language terminal}
