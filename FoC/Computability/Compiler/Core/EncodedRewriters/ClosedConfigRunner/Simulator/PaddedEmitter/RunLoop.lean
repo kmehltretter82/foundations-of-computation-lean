@@ -248,6 +248,24 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewind_halts_terminal
     fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_haltsFromTape_configRunner
       (SimulatorLayout.asBoolInput L)
 
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTarget_normalizedOutput_configRunner
+    (w : Word Bool) :
+    Tape.normalizedOutput
+      (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
+        w) =
+      w := by
+  cases w with
+  | nil =>
+      simp [
+        FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner,
+        DovetailInitialLayoutInitializer.tapeAtCells, Tape.normalizedOutput,
+        Tape.cells]
+  | cons bit rest =>
+      simp [
+        FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner,
+        DovetailInitialLayoutInitializer.tapeAtCells, Tape.normalizedOutput,
+        Tape.cells, Function.comp_def]
+
 namespace FixedDescriptionBoundedSimulator
 namespace PaddedEmitter
 namespace SourceRewindTargetTape
@@ -402,6 +420,76 @@ end ReturnToRightShiftedInput
 
 namespace RightShiftedSourceTape
 
+theorem contextLength_configRunner
+    (w : Word Bool) (hlen : 2 <= w.length) :
+    Tape.contextLength
+      (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
+        w) =
+      w.length + 1 := by
+  cases hbits : w with
+  | nil =>
+      simp [hbits] at hlen
+  | cons first rest =>
+      cases hrest : rest with
+      | nil =>
+          simp [hbits, hrest] at hlen
+      | cons second tail =>
+          cases first <;> cases second <;>
+            simp [
+              FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner,
+              FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner,
+              DovetailInitialLayoutInitializer.tapeAtCells,
+              Tape.contextLength, Tape.move, Tape.moveRight] <;>
+            omega
+
+theorem simulator_contextLength_configRunner
+    (L : SimulatorLayout) :
+    Tape.contextLength
+      (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
+        (SimulatorLayout.asBoolInput L)) =
+      (SimulatorLayout.asBoolInput L).length + 1 := by
+  have hlen : 2 <= (SimulatorLayout.asBoolInput L).length := by
+    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
+    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
+      encodeCodeSymbolAsInput]
+  exact contextLength_configRunner (SimulatorLayout.asBoolInput L) hlen
+
+theorem move_left_eq_sourceRewindTarget_configRunner
+    (w : Word Bool) (hlen : 2 <= w.length) :
+    Tape.move Direction.left
+      (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
+        w) =
+    FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
+      w := by
+  cases hbits : w with
+  | nil =>
+      simp [hbits] at hlen
+  | cons first rest =>
+      cases hrest : rest with
+      | nil =>
+          simp [hbits, hrest] at hlen
+      | cons second tail =>
+          cases first <;> cases second <;>
+            simp [
+              FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner,
+              FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner,
+              DovetailInitialLayoutInitializer.tapeAtCells,
+              Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem simulator_move_left_eq_sourceRewindTarget_configRunner
+    (L : SimulatorLayout) :
+    Tape.move Direction.left
+      (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
+        (SimulatorLayout.asBoolInput L)) =
+    FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
+      (SimulatorLayout.asBoolInput L) := by
+  have hlen : 2 <= (SimulatorLayout.asBoolInput L).length := by
+    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
+    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
+      encodeCodeSymbolAsInput]
+  exact move_left_eq_sourceRewindTarget_configRunner
+    (SimulatorLayout.asBoolInput L) hlen
+
 theorem move_left_move_right_cons_cons_configRunner
     (first second : Bool) (rest : Word Bool) :
     Tape.move Direction.left
@@ -442,6 +530,46 @@ theorem move_left_move_right_simulator_configRunner
               first second tail
 
 end RightShiftedSourceTape
+
+theorem fixedDescriptionBoundedSimulatorOutput_length_ge_header_configRunner
+    (D : MachineDescription) (L : SimulatorLayout) :
+    4 <= (FixedDescriptionBoundedSimulatorOutput D L).length := by
+  rw [FixedDescriptionBoundedSimulatorOutput]
+  rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
+  simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
+    encodeCodeSymbolAsInput]
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_contextLength_ge_afterRight_source_configRunner
+    (D : MachineDescription) (L : SimulatorLayout) :
+    Tape.contextLength
+      (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
+        (SimulatorLayout.asBoolInput L)) <=
+    Tape.contextLength
+      (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner D L) := by
+  have hsource :=
+    RightShiftedSourceTape.simulator_contextLength_configRunner L
+  have houtput :=
+    fixedDescriptionBoundedSimulatorOutput_length_ge_header_configRunner D L
+  have hinputLen : 2 <= (SimulatorLayout.asBoolInput L).length := by
+    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
+    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
+      encodeCodeSymbolAsInput]
+  rw [hsource]
+  rw [fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_eq_tapeAtCells_configRunner]
+  cases hinput : SimulatorLayout.asBoolInput L with
+  | nil =>
+      simp [hinput] at hinputLen
+  | cons inputHead inputRest =>
+      cases houtputBits : FixedDescriptionBoundedSimulatorOutput D L with
+      | nil =>
+          simp [houtputBits] at houtput
+      | cons outputHead outputRest =>
+          simp [
+            FixedDescriptionBoundedSimulatorInput,
+            inputWithTrailingBlankPaddingCells,
+            DovetailInitialLayoutInitializer.tapeAtCells,
+            Tape.contextLength, Tape.input, hinput, houtputBits] at *
+          omega
 
 namespace AfterRightShiftedInput
 
