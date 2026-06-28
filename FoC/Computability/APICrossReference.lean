@@ -202,9 +202,9 @@ controller machines.
   {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Assembly`
   contains the closed primitive and assembly layer.  Selected projection is
   assembled through the finite-description padded/equivalence route under
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.FiniteDescriptions.ProjectionPadded.Main`
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Projection.Padded.Main`
   and
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.FiniteDescriptions.MergePadded.Cleanup`;
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Merge.Padded.Cleanup`;
   exact and right-shifted selected-projection wrappers are adapter-level
   compatibility surfaces, not the active phase-construction path.
 
@@ -317,10 +317,10 @@ The current construction surface is intentionally split by role.
   book wrapper modules. These declarations state or package the construction
   hypotheses consumed by book-facing theorems.
 * Active padded/equivalence route:
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.FiniteDescriptions.ProjectionPadded.Main`,
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Projection.Padded.Main`,
   the selected-merge padded emitter in
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.FiniteDescriptions.MergePadded.Cleanup`,
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.SimulatorScaffold.Padded.Emitter`,
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Merge.Padded.Cleanup`,
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Simulator.PaddedEmitter`,
   phase adapters, phase runner, and closed assembly. The active assembly route
   imports the finite-description selected-projection and selected-merge
   contracts plus the simulator padded/equivalence construction.
