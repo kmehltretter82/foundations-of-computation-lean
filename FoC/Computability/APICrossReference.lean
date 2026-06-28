@@ -474,8 +474,8 @@ below, not by file order.
    right-shifted merge path remains too strong because it would force a
    context-length decrease; use the forward parser adapter and padded emitter
    route.
-5. Fixed-description bounded simulator padded construction:
-   {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedConstruction_scaffold_configRunner)}`EncodedRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedConstruction_scaffold_configRunner`
+5. Fixed-description bounded simulator padded/equivalence construction:
+   {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner)}`EncodedRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner`
    is the config-runner simulator padded/equivalence leaf.  It should not be
    replaced by the old exact right-handoff skeleton.
 6. Total stage-attempt output sequencing:
