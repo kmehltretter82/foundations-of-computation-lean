@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Simulator.PaddedEmitter.PostScanner
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Simulator.PaddedEmitter.RunLoop
 
 set_option doc.verso true
 
@@ -41,6 +41,23 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_of_s
       fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeSpec_of_scratch_configRunner
         hemitsD⟩
 
+namespace FixedDescriptionBoundedSimulator
+namespace PaddedEmitter
+namespace Terminal
+
+theorem construction :
+    FixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalConstruction_configRunner := by
+  intro D
+  rcases
+      FixedDescriptionBoundedSimulator.PaddedEmitter.RunLoop.construction
+        D with
+    ⟨runLoop, hrunLoop⟩
+  exact ⟨runLoop, hrunLoop⟩
+
+end Terminal
+end PaddedEmitter
+end FixedDescriptionBoundedSimulator
+
 /--
 Concrete finite-machine leaf for the padded fixed-description simulator
 emitter.  On an already validated simulator layout tape, it must run the fixed
@@ -51,7 +68,7 @@ padding.
 theorem fixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstruction_scaffold_configRunner :
     FixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstruction_configRunner :=
   fixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstruction_of_terminal_configRunner
-    fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalConstruction_configRunner
+    FixedDescriptionBoundedSimulator.PaddedEmitter.Terminal.construction
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_scaffold_configRunner :
     FixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_configRunner :=

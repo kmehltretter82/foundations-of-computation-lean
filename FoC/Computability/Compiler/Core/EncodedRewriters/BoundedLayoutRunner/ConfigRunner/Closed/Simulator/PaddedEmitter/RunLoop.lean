@@ -286,6 +286,11 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_move
             fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_move_left_move_right_cons_cons_configRunner
               first second tail
 
+namespace FixedDescriptionBoundedSimulator
+namespace PaddedEmitter
+
+namespace RunLoop
+
 /--
 Post-scanner run-loop contract for the padded fixed-description simulator
 emitter.
@@ -296,7 +301,7 @@ finite-machine obligation is to run the fixed description for the encoded stage
 bound, compute the accumulated hit bit including stage zero, and emit the exact
 scratch-padded output tape.
 -/
-def FixedDescriptionBoundedSimulatorPaddedEmitterRunLoopSpec_configRunner
+def Spec
     (D runLoop : MachineDescription) : Prop :=
   runLoop.SubroutineReady ∧
     forall L : SimulatorLayout,
@@ -306,14 +311,16 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterRunLoopSpec_configRunner
         (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
           D L)
 
-def FixedDescriptionBoundedSimulatorPaddedEmitterRunLoopConstruction_configRunner :
-    Prop :=
+def Construction : Prop :=
   forall D : MachineDescription,
     exists runLoop : MachineDescription,
-      FixedDescriptionBoundedSimulatorPaddedEmitterRunLoopSpec_configRunner
-        D runLoop
+      Spec D runLoop
 
-def FixedDescriptionBoundedSimulatorPaddedEmitterPostRewindSpec_configRunner
+end RunLoop
+
+namespace PostRewind
+
+def Spec
     (D postRewind : MachineDescription) : Prop :=
   postRewind.SubroutineReady ∧
     forall L : SimulatorLayout,
@@ -323,12 +330,12 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterPostRewindSpec_configRunner
         (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
           D L)
 
-def FixedDescriptionBoundedSimulatorPaddedEmitterPostRewindConstruction_configRunner :
-    Prop :=
+def Construction : Prop :=
   forall D : MachineDescription,
     exists postRewind : MachineDescription,
-      FixedDescriptionBoundedSimulatorPaddedEmitterPostRewindSpec_configRunner
-        D postRewind
+      Spec D postRewind
+
+end PostRewind
 
 def FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
     (bits : Word Bool) : Tape Bool :=
@@ -425,7 +432,9 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_move
             fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_move_left_move_right_cons_cons_configRunner
               first second tail
 
-def FixedDescriptionBoundedSimulatorPaddedEmitterAfterRightShiftedInputSpec_configRunner
+namespace AfterRightShiftedInput
+
+def Spec
     (D afterRight : MachineDescription) : Prop :=
   afterRight.SubroutineReady ∧
     forall L : SimulatorLayout,
@@ -435,28 +444,26 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterAfterRightShiftedInputSpec_conf
         (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
           D L)
 
-def FixedDescriptionBoundedSimulatorPaddedEmitterAfterRightShiftedInputConstruction_configRunner :
-    Prop :=
+def Construction : Prop :=
   forall D : MachineDescription,
     exists afterRight : MachineDescription,
-      FixedDescriptionBoundedSimulatorPaddedEmitterAfterRightShiftedInputSpec_configRunner
-        D afterRight
+      Spec D afterRight
 
-def FixedDescriptionBoundedSimulatorPaddedEmitterPostRewindFromAfterRightShiftedInput_configRunner
+end AfterRightShiftedInput
+
+namespace PostRewind
+
+def fromAfterRightShiftedInput
     (afterRight : MachineDescription) : MachineDescription :=
   SeqViaCanonical
     FixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_configRunner
     afterRight
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterPostRewindSpec_of_afterRightShiftedInput_configRunner
+theorem spec_of_afterRightShiftedInput
     {D afterRight : MachineDescription}
     (hafterRight :
-      FixedDescriptionBoundedSimulatorPaddedEmitterAfterRightShiftedInputSpec_configRunner
-        D afterRight) :
-    FixedDescriptionBoundedSimulatorPaddedEmitterPostRewindSpec_configRunner
-      D
-      (FixedDescriptionBoundedSimulatorPaddedEmitterPostRewindFromAfterRightShiftedInput_configRunner
-        afterRight) := by
+      AfterRightShiftedInput.Spec D afterRight) :
+    Spec D (fromAfterRightShiftedInput afterRight) := by
   constructor
   · exact
       SeqViaCanonical_subroutineReady
@@ -473,17 +480,19 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterPostRewindSpec_of_afterRigh
           L)
         (hafterRight.right L)
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterPostRewindConstruction_of_afterRightShiftedInput_configRunner
+theorem construction_of_afterRightShiftedInput
     (hafterRight :
-      FixedDescriptionBoundedSimulatorPaddedEmitterAfterRightShiftedInputConstruction_configRunner) :
-    FixedDescriptionBoundedSimulatorPaddedEmitterPostRewindConstruction_configRunner := by
+      AfterRightShiftedInput.Construction) :
+    Construction := by
   intro D
   rcases hafterRight D with ⟨afterRight, hafterRightD⟩
   exact
-    ⟨FixedDescriptionBoundedSimulatorPaddedEmitterPostRewindFromAfterRightShiftedInput_configRunner
-      afterRight,
-      fixedDescriptionBoundedSimulatorPaddedEmitterPostRewindSpec_of_afterRightShiftedInput_configRunner
-        hafterRightD⟩
+    ⟨fromAfterRightShiftedInput afterRight,
+      spec_of_afterRightShiftedInput hafterRightD⟩
+
+end PostRewind
+
+namespace AfterRightShiftedInput
 
 /--
 Remaining hard finite-machine leaf for the padded simulator emitter.
@@ -493,26 +502,33 @@ head is in the right-shifted handoff position.  The leaf must decode the source
 fields, run the fixed description for the encoded stage count while accounting
 for the stage-zero hit check, and emit the exact scratch-padded output tape.
 -/
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterAfterRightShiftedInputConstruction_finiteMachine_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedEmitterAfterRightShiftedInputConstruction_configRunner := by
+theorem finiteMachine : Construction := by
   intro D
   sorry
 
-def FixedDescriptionBoundedSimulatorPaddedEmitterRunLoopFromPostRewind_configRunner
+end AfterRightShiftedInput
+
+namespace PostRewind
+
+theorem construction : Construction :=
+  construction_of_afterRightShiftedInput
+    AfterRightShiftedInput.finiteMachine
+
+end PostRewind
+
+namespace RunLoop
+
+def fromPostRewind
     (postRewind : MachineDescription) : MachineDescription :=
   SeqViaCanonical
     FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner
     postRewind
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterRunLoopSpec_of_postRewind_configRunner
+theorem spec_of_postRewind
     {D postRewind : MachineDescription}
     (hpostRewind :
-      FixedDescriptionBoundedSimulatorPaddedEmitterPostRewindSpec_configRunner
-        D postRewind) :
-    FixedDescriptionBoundedSimulatorPaddedEmitterRunLoopSpec_configRunner
-      D
-      (FixedDescriptionBoundedSimulatorPaddedEmitterRunLoopFromPostRewind_configRunner
-        postRewind) := by
+      PostRewind.Spec D postRewind) :
+    Spec D (fromPostRewind postRewind) := by
   constructor
   · exact
       SeqViaCanonical_subroutineReady
@@ -529,27 +545,23 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterRunLoopSpec_of_postRewind_c
           L)
         (hpostRewind.right L)
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterRunLoopConstruction_of_postRewind_configRunner
+theorem construction_of_postRewind
     (hpostRewind :
-      FixedDescriptionBoundedSimulatorPaddedEmitterPostRewindConstruction_configRunner) :
-    FixedDescriptionBoundedSimulatorPaddedEmitterRunLoopConstruction_configRunner := by
+      PostRewind.Construction) :
+    Construction := by
   intro D
   rcases hpostRewind D with ⟨postRewind, hpostRewindD⟩
   exact
-    ⟨FixedDescriptionBoundedSimulatorPaddedEmitterRunLoopFromPostRewind_configRunner
-      postRewind,
-      fixedDescriptionBoundedSimulatorPaddedEmitterRunLoopSpec_of_postRewind_configRunner
-        hpostRewindD⟩
+    ⟨fromPostRewind postRewind,
+      spec_of_postRewind hpostRewindD⟩
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterPostRewindConstruction_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedEmitterPostRewindConstruction_configRunner :=
-  fixedDescriptionBoundedSimulatorPaddedEmitterPostRewindConstruction_of_afterRightShiftedInput_configRunner
-    fixedDescriptionBoundedSimulatorPaddedEmitterAfterRightShiftedInputConstruction_finiteMachine_configRunner
+theorem construction : Construction :=
+  construction_of_postRewind PostRewind.construction
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterRunLoopConstruction_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedEmitterRunLoopConstruction_configRunner :=
-  fixedDescriptionBoundedSimulatorPaddedEmitterRunLoopConstruction_of_postRewind_configRunner
-    fixedDescriptionBoundedSimulatorPaddedEmitterPostRewindConstruction_configRunner
+end RunLoop
+
+end PaddedEmitter
+end FixedDescriptionBoundedSimulator
 
 end BoundedLayoutRunner
 end EncodedRewriters
