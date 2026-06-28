@@ -157,7 +157,7 @@ stage-coded input, and simulate the supplied attempt machine for the selected
 fuel.
 -/
 def CodePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchObligation
-    {attemptState : Type}
+    {attemptState : Type uStage}
     (attempt : TuringMachine MachineCodeSymbol attemptState) : Prop :=
   exists searcherState : Type,
   exists searcher : TuringMachine MachineCodeSymbol searcherState,
@@ -169,17 +169,107 @@ def CodePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchObligation
             (CodePrefixRecognizerStageCode encoded limit)
 
 /--
-Concrete finite-machine leaf for the raw outer-loop fuel search.  The machine
-must preserve the input, dovetail over generated stage prefixes and bounded
-simulation fuel, rebuild each stage-coded input, and simulate the supplied
-machine for the selected fuel.
+Nested limit/fuel code used internally by the raw outer-loop searcher.  The
+outer stage code carries the selected attempt fuel; the inner stage code
+carries the generated outer limit and the preserved raw input.
+-/
+def codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode
+    (encoded : Word MachineCodeSymbol) (limit fuel : Nat) :
+    Word MachineCodeSymbol :=
+  CodePrefixRecognizerStageCode
+    (CodePrefixRecognizerStageCode encoded limit) fuel
+
+/--
+Selected-attempt runner for the raw outer-loop search.  The machine unpacks a
+fixed generated limit and attempt fuel, rebuilds the corresponding
+stage-coded attempt input, and simulates the supplied attempt machine for that
+fuel.
+-/
+def CodePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptObligation
+    {attemptState : Type uStage}
+    (attempt : TuringMachine MachineCodeSymbol attemptState) : Prop :=
+  exists selectedState : Type,
+  exists selected : TuringMachine MachineCodeSymbol selectedState,
+    forall encoded : Word MachineCodeSymbol,
+    forall limit : Nat,
+    forall fuel : Nat,
+      TuringMachine.HaltsOnInput selected
+          (codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode
+            encoded limit fuel) <->
+        TuringMachine.HaltsOnInputIn attempt fuel
+          (CodePrefixRecognizerStageCode encoded limit)
+
+/--
+Limit/fuel enumerator for the raw outer-loop search.  The machine preserves
+the raw encoded input, enumerates generated outer limits and attempt fuels,
+and calls the supplied selected-attempt runner on the nested code.
+-/
+def CodePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelEnumeratorObligation
+    {selectedState : Type uSimulator}
+    (selected : TuringMachine MachineCodeSymbol selectedState) : Prop :=
+  exists searcherState : Type,
+  exists searcher : TuringMachine MachineCodeSymbol searcherState,
+    forall encoded : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput searcher encoded <->
+        exists limit : Nat,
+        exists fuel : Nat,
+          TuringMachine.HaltsOnInput selected
+            (codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode
+              encoded limit fuel)
+
+/--
+Finite-machine leaf for the selected-attempt runner used by the raw
+outer-loop fuel search.
+-/
+theorem codePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptFiniteLeaf
+    {attemptState : Type uStage}
+    (attempt : TuringMachine MachineCodeSymbol attemptState) :
+    CodePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptObligation
+      attempt := by
+  sorry
+
+/--
+Finite-machine leaf for the limit/fuel enumerator used by the raw outer-loop
+fuel search.
+-/
+theorem codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelEnumeratorFiniteLeaf
+    {selectedState : Type uSimulator}
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    CodePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelEnumeratorObligation
+      selected := by
+  sorry
+
+/--
+Adapter from the selected-attempt runner and limit/fuel enumerator to the raw
+outer-loop fuel-search contract.
 -/
 theorem codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchFiniteLeaf
-    {attemptState : Type}
+    {attemptState : Type uStage}
     (attempt : TuringMachine MachineCodeSymbol attemptState) :
     CodePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchObligation
       attempt := by
-  sorry
+  rcases
+      codePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptFiniteLeaf
+        attempt with
+    ⟨selectedState, selected, hselected⟩
+  rcases
+      codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelEnumeratorFiniteLeaf
+        selected with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro encoded
+  constructor
+  · intro hhalt
+    rcases (hsearcher encoded).mp hhalt with
+      ⟨limit, fuel, hselectedHalt⟩
+    exact
+      ⟨limit, fuel,
+        (hselected encoded limit fuel).mp hselectedHalt⟩
+  · intro htarget
+    rcases htarget with ⟨limit, fuel, hattempt⟩
+    exact (hsearcher encoded).mpr
+      ⟨limit, fuel,
+        (hselected encoded limit fuel).mpr hattempt⟩
 
 /--
 Global wrapper for the raw stage-code/fuel search construction.  The concrete

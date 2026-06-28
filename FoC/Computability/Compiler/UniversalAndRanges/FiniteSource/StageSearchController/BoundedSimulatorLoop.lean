@@ -10,16 +10,104 @@ open Languages
 universe uStage uDescription uSimulator
 
 /--
-Finite-machine leaf for the canonical bounded simulator loop.  The machine
-starts from an already stage-coded budget input, enumerates bounded
-{lit}`(checkedStage, fuel)` pairs, rebuilds each checked stage-code input, and
+Canonical-input wrapper obligation for the bounded simulator loop.  The
+machine parses a {name}`CodePrefixRecognizerStageCode` input and dispatches
+the preserved canonical input to the supplied pair runner.
+-/
+def CodePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalInputParserObligation
+    {pairState : Type uStage}
+    (pairRunner : TuringMachine MachineCodeSymbol pairState) : Prop :=
+  exists runnerState : Type,
+  exists runner : TuringMachine MachineCodeSymbol runnerState,
+    forall tokens : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput runner tokens <->
+        exists budget : Nat,
+        exists encoded : Word MachineCodeSymbol,
+          tokens = CodePrefixRecognizerStageCode encoded budget ∧
+            TuringMachine.HaltsOnInput pairRunner
+              (CodePrefixRecognizerStageCode encoded budget)
+
+/--
+Bounded pair-loop obligation for the canonical bounded simulator loop.  The
+machine enumerates bounded {lit}`(checkedStage, fuel)` pairs, rebuilds each
+checked stage-code input, and runs the supplied simulator for the selected
+fuel.
+-/
+def CodePrefixStageSearchControllerBudgetCheckerBoundedSimulatorPairLoopObligation
+    {simulatorState : Type uSimulator}
+    (simulator : TuringMachine MachineCodeSymbol simulatorState) : Prop :=
+  exists runnerState : Type,
+  exists runner : TuringMachine MachineCodeSymbol runnerState,
+    forall encoded : Word MachineCodeSymbol,
+    forall budget : Nat,
+      TuringMachine.HaltsOnInput runner
+          (CodePrefixRecognizerStageCode encoded budget) <->
+        exists checkedStage : Nat,
+        exists fuel : Nat,
+          checkedStage ≤ budget ∧
+            fuel ≤ budget ∧
+            TuringMachine.HaltsOnInputIn simulator fuel
+              (CodePrefixRecognizerStageCode encoded checkedStage)
+
+/--
+Finite-machine leaf for parsing canonical stage-code input before invoking a
+bounded pair runner.
+-/
+theorem codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalInputParserFiniteLeaf
+    {pairState : Type uStage}
+    (pairRunner : TuringMachine MachineCodeSymbol pairState) :
+    CodePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalInputParserObligation
+      pairRunner := by
+  sorry
+
+/--
+Finite-machine leaf for the bounded pair loop.  This is the transition-table
+work that enumerates bounded pairs, rebuilds checked stage-code inputs, and
 runs the supplied simulator for the selected fuel.
 -/
+theorem codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorPairLoopFiniteLeaf
+    {simulatorState : Type uSimulator}
+    (simulator : TuringMachine MachineCodeSymbol simulatorState) :
+    CodePrefixStageSearchControllerBudgetCheckerBoundedSimulatorPairLoopObligation
+      simulator := by
+  sorry
+
+/--
+Adapter from the parser wrapper and pair-loop construction to the canonical
+raw-loop contract.
+-/
 theorem codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopFiniteLeaf
+    {simulatorState : Type uSimulator}
     (simulator : TuringMachine MachineCodeSymbol simulatorState) :
     CodePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopObligation
       simulator := by
-  sorry
+  rcases
+      codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorPairLoopFiniteLeaf
+        simulator with
+    ⟨pairState, pairRunner, hpairRunner⟩
+  rcases
+      codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalInputParserFiniteLeaf
+        pairRunner with
+    ⟨runnerState, runner, hrunner⟩
+  refine ⟨runnerState, runner, ?_⟩
+  intro tokens
+  constructor
+  · intro hhalt
+    rcases (hrunner tokens).mp hhalt with
+      ⟨budget, encoded, htokens, hpair⟩
+    rcases (hpairRunner encoded budget).mp hpair with
+      ⟨checkedStage, fuel, hcheckedStage, hfuel, hsimulator⟩
+    exact
+      ⟨budget, encoded, checkedStage, fuel, htokens,
+        hcheckedStage, hfuel, hsimulator⟩
+  · intro htarget
+    rcases htarget with
+      ⟨budget, encoded, checkedStage, fuel, htokens,
+        hcheckedStage, hfuel, hsimulator⟩
+    exact (hrunner tokens).mpr
+      ⟨budget, encoded, htokens,
+        (hpairRunner encoded budget).mpr
+          ⟨checkedStage, fuel, hcheckedStage, hfuel, hsimulator⟩⟩
 
 /--
 Adapter from the canonical bounded simulator loop to the
