@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.Terminal
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.RunLoop.SourceShape
 
 set_option doc.verso true
 
@@ -30,15 +30,6 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configR
     , transition 1 (some false) (some false) Direction.left 1
     , transition 1 (some true) (some true) Direction.left 1
     , transition 1 none none Direction.right 2 ]
-
-def FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindSourceTape_configRunner
-    (bits : Word Bool) : Tape Bool :=
-  DovetailInitialLayoutInitializer.tapeAtCells (bits.reverse.map some) []
-
-def FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
-    (bits : Word Bool) : Tape Bool :=
-  DovetailInitialLayoutInitializer.tapeAtCells [none]
-    (List.append (bits.map some) [none])
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_wellFormed_configRunner :
     FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner.WellFormed := by
@@ -248,67 +239,8 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewind_halts_terminal
     fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_haltsFromTape_configRunner
       (SimulatorLayout.asBoolInput L)
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTarget_normalizedOutput_configRunner
-    (w : Word Bool) :
-    Tape.normalizedOutput
-      (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
-        w) =
-      w := by
-  cases w with
-  | nil =>
-      simp [
-        FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner,
-        DovetailInitialLayoutInitializer.tapeAtCells, Tape.normalizedOutput,
-        Tape.cells]
-  | cons bit rest =>
-      simp [
-        FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner,
-        DovetailInitialLayoutInitializer.tapeAtCells, Tape.normalizedOutput,
-        Tape.cells, Function.comp_def]
-
 namespace FixedDescriptionBoundedSimulator
 namespace PaddedEmitter
-namespace SourceRewindTargetTape
-
-theorem move_left_move_right_cons_cons_configRunner
-    (first second : Bool) (rest : Word Bool) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
-            (first :: second :: rest))) =
-      FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
-        (first :: second :: rest) := by
-  cases first <;> cases second <;>
-    simp [
-      FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner,
-      DovetailInitialLayoutInitializer.tapeAtCells,
-      Tape.move, Tape.moveLeft, Tape.moveRight]
-
-theorem move_left_move_right_simulator_configRunner
-    (L : SimulatorLayout) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
-            (SimulatorLayout.asBoolInput L))) =
-      FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
-        (SimulatorLayout.asBoolInput L) := by
-  have hlen : 2 <= (SimulatorLayout.asBoolInput L).length := by
-    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
-    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
-      encodeCodeSymbolAsInput]
-  cases hbits : SimulatorLayout.asBoolInput L with
-  | nil =>
-      simp [hbits] at hlen
-  | cons first rest =>
-      cases rest with
-      | nil =>
-          simp [hbits] at hlen
-      | cons second tail =>
-          simpa [hbits] using
-            move_left_move_right_cons_cons_configRunner
-              first second tail
-
-end SourceRewindTargetTape
 
 namespace RunLoop
 
@@ -357,12 +289,6 @@ def Construction : Prop :=
       Spec D postRewind
 
 end PostRewind
-
-def FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
-    (bits : Word Bool) : Tape Bool :=
-  Tape.move Direction.right
-    (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
-      bits)
 
 namespace ReturnToRightShiftedInput
 
@@ -418,178 +344,6 @@ theorem haltsFrom_sourceRewindTarget_configRunner
 
 end ReturnToRightShiftedInput
 
-namespace RightShiftedSourceTape
-
-theorem contextLength_configRunner
-    (w : Word Bool) (hlen : 2 <= w.length) :
-    Tape.contextLength
-      (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
-        w) =
-      w.length + 1 := by
-  cases hbits : w with
-  | nil =>
-      simp [hbits] at hlen
-  | cons first rest =>
-      cases hrest : rest with
-      | nil =>
-          simp [hbits, hrest] at hlen
-      | cons second tail =>
-          cases first <;> cases second <;>
-            simp [
-              FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner,
-              FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner,
-              DovetailInitialLayoutInitializer.tapeAtCells,
-              Tape.contextLength, Tape.move, Tape.moveRight] <;>
-            omega
-
-theorem simulator_contextLength_configRunner
-    (L : SimulatorLayout) :
-    Tape.contextLength
-      (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
-        (SimulatorLayout.asBoolInput L)) =
-      (SimulatorLayout.asBoolInput L).length + 1 := by
-  have hlen : 2 <= (SimulatorLayout.asBoolInput L).length := by
-    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
-    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
-      encodeCodeSymbolAsInput]
-  exact contextLength_configRunner (SimulatorLayout.asBoolInput L) hlen
-
-theorem move_left_eq_sourceRewindTarget_configRunner
-    (w : Word Bool) (hlen : 2 <= w.length) :
-    Tape.move Direction.left
-      (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
-        w) =
-    FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
-      w := by
-  cases hbits : w with
-  | nil =>
-      simp [hbits] at hlen
-  | cons first rest =>
-      cases hrest : rest with
-      | nil =>
-          simp [hbits, hrest] at hlen
-      | cons second tail =>
-          cases first <;> cases second <;>
-            simp [
-              FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner,
-              FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner,
-              DovetailInitialLayoutInitializer.tapeAtCells,
-              Tape.move, Tape.moveLeft, Tape.moveRight]
-
-theorem simulator_move_left_eq_sourceRewindTarget_configRunner
-    (L : SimulatorLayout) :
-    Tape.move Direction.left
-      (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
-        (SimulatorLayout.asBoolInput L)) =
-    FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
-      (SimulatorLayout.asBoolInput L) := by
-  have hlen : 2 <= (SimulatorLayout.asBoolInput L).length := by
-    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
-    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
-      encodeCodeSymbolAsInput]
-  exact move_left_eq_sourceRewindTarget_configRunner
-    (SimulatorLayout.asBoolInput L) hlen
-
-theorem move_left_move_right_cons_cons_configRunner
-    (first second : Bool) (rest : Word Bool) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
-            (first :: second :: rest))) =
-      FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
-        (first :: second :: rest) := by
-  cases first <;> cases second <;> cases rest <;>
-    simp [
-      FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner,
-      FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner,
-      DovetailInitialLayoutInitializer.tapeAtCells,
-      Tape.move, Tape.moveLeft, Tape.moveRight]
-
-theorem move_left_move_right_simulator_configRunner
-    (L : SimulatorLayout) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
-            (SimulatorLayout.asBoolInput L))) =
-      FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
-        (SimulatorLayout.asBoolInput L) := by
-  have hlen : 2 <= (SimulatorLayout.asBoolInput L).length := by
-    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
-    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
-      encodeCodeSymbolAsInput]
-  cases hbits : SimulatorLayout.asBoolInput L with
-  | nil =>
-      simp [hbits] at hlen
-  | cons first rest =>
-      cases rest with
-      | nil =>
-          simp [hbits] at hlen
-      | cons second tail =>
-          simpa [hbits] using
-            move_left_move_right_cons_cons_configRunner
-              first second tail
-
-end RightShiftedSourceTape
-
-theorem fixedDescriptionBoundedSimulatorOutput_length_ge_header_configRunner
-    (D : MachineDescription) (L : SimulatorLayout) :
-    4 <= (FixedDescriptionBoundedSimulatorOutput D L).length := by
-  rw [FixedDescriptionBoundedSimulatorOutput]
-  rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
-  simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
-    encodeCodeSymbolAsInput]
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_contextLength_ge_afterRight_source_configRunner
-    (D : MachineDescription) (L : SimulatorLayout) :
-    Tape.contextLength
-      (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
-        (SimulatorLayout.asBoolInput L)) <=
-    Tape.contextLength
-      (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner D L) := by
-  have hsource :=
-    RightShiftedSourceTape.simulator_contextLength_configRunner L
-  have houtput :=
-    fixedDescriptionBoundedSimulatorOutput_length_ge_header_configRunner D L
-  have hinputLen : 2 <= (SimulatorLayout.asBoolInput L).length := by
-    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
-    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
-      encodeCodeSymbolAsInput]
-  rw [hsource]
-  rw [fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_eq_tapeAtCells_configRunner]
-  cases hinput : SimulatorLayout.asBoolInput L with
-  | nil =>
-      simp [hinput] at hinputLen
-  | cons inputHead inputRest =>
-      cases houtputBits : FixedDescriptionBoundedSimulatorOutput D L with
-      | nil =>
-          simp [houtputBits] at houtput
-      | cons outputHead outputRest =>
-          simp [
-            FixedDescriptionBoundedSimulatorInput,
-            inputWithTrailingBlankPaddingCells,
-            DovetailInitialLayoutInitializer.tapeAtCells,
-            Tape.contextLength, Tape.input, hinput, houtputBits] at *
-          omega
-
-namespace AfterRightShiftedInput
-
-def Spec
-    (D afterRight : MachineDescription) : Prop :=
-  afterRight.SubroutineReady ∧
-    forall L : SimulatorLayout,
-      afterRight.HaltsFromTape
-        (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
-          (SimulatorLayout.asBoolInput L))
-        (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
-          D L)
-
-def Construction : Prop :=
-  forall D : MachineDescription,
-    exists afterRight : MachineDescription,
-      Spec D afterRight
-
-end AfterRightShiftedInput
-
 namespace PostRewind
 
 def fromAfterRightShiftedInput
@@ -634,16 +388,15 @@ end PostRewind
 namespace AfterRightShiftedInput
 
 /--
-Remaining hard finite-machine leaf for the padded simulator emitter.
+Run-loop entry point for the after-right-shifted padded emitter leaf.
 
-At this point the validated simulator-layout source has been rewound and the
-head is in the right-shifted handoff position.  The leaf must decode the source
-fields, run the fixed description for the encoded stage count while accounting
-for the stage-zero hit check, and emit the exact scratch-padded output tape.
+The transition-table obligation itself lives in
+{name}`finiteMachineCore`, which is upstream of this sequencing module and
+therefore does not depend on the terminal/emitter scaffolds that consume this
+theorem.
 -/
 theorem finiteMachine : Construction := by
-  intro D
-  sorry
+  exact finiteMachineCore
 
 end AfterRightShiftedInput
 
