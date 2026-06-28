@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseAdapters
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Composition
@@ -261,15 +262,18 @@ theorem fixedDescriptionBoundedSimulatorPaddedExactShapeSpec_of_parser_emitter_c
           (SimulatorLayout.asBoolInput L)
           (FixedDescriptionBoundedSimulatorPaddedOutputTape D L) :=
       hemitter.right L
-    rcases runConfig_eq_halt_of_haltsWithTape
-      hemitterRun with ⟨n, hn⟩
+    have hemitterFrom :
+        emitter.HaltsFromTape
+          (Tape.input (SimulatorLayout.asBoolInput L))
+          (FixedDescriptionBoundedSimulatorPaddedOutputTape D L) := by
+      rcases hemitterRun with ⟨n, hn⟩
+      exact ⟨n, by
+        simpa [HaltsWithTapeIn, HaltsFromTapeIn] using hn⟩
     exact
-      seqSubroutine_haltsWithTape_of_haltsWithTape
+      seqSubroutine_haltsWithTape_of_haltsWithTape_eq
         hparser.left hemitter.left hparserRun
-        ⟨n, by
-          simpa [
-            CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
-              L] using hn⟩
+        (CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape L)
+        hemitterFrom
 
 theorem fixedDescriptionBoundedSimulatorPaddedExactShapeConstruction_of_parserEmitter_configRunner
     (h :

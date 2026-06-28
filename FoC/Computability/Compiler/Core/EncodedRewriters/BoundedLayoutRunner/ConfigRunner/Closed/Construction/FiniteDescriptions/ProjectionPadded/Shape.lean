@@ -85,6 +85,160 @@ theorem SelectedProjectionEquivEmitterPaddedOutputTape_eq_tapeAtCells
       (SelectedProjectionTailProjector.outputAllBits useAccept L)
       (ParsedLayoutBits L).length
 
+theorem selectedProjection_outputAllBits_cons_cons
+    (useAccept : Bool) (L : DovetailLayout) :
+    exists first : Bool,
+    exists second : Bool,
+    exists rest : Word Bool,
+      SelectedProjectionTailProjector.outputAllBits useAccept L =
+        first :: second :: rest := by
+  refine ⟨false, false, ?_⟩
+  refine
+    ⟨false :: false ::
+      List.append
+        (encodeCodeWordAsInput
+          (encodeBoolWordAppend (ParsedLayoutBits L) []))
+        (SelectedProjectionTailProjector.outputBits useAccept L), ?_⟩
+  simp [SelectedProjectionTailProjector.outputAllBits,
+    SelectedProjectionTailProjector.outputPrefixBits,
+    encodeCodeSymbolAsInput]
+
+theorem selectedProjection_outputAllBits_headerPrefix
+    (useAccept : Bool) (L : DovetailLayout) :
+    exists rest : Word Bool,
+      SelectedProjectionTailProjector.outputAllBits useAccept L =
+        false :: false :: false :: false :: rest := by
+  refine
+    ⟨List.append
+      (encodeCodeWordAsInput
+        (encodeBoolWordAppend (ParsedLayoutBits L) []))
+      (SelectedProjectionTailProjector.outputBits useAccept L), ?_⟩
+  simp [SelectedProjectionTailProjector.outputAllBits,
+    SelectedProjectionTailProjector.outputPrefixBits,
+    encodeCodeSymbolAsInput]
+
+theorem inputWithTrailingBlankPaddingCells_outputAllBits_eq
+    (useAccept : Bool) (L : DovetailLayout) :
+    inputWithTrailingBlankPaddingCells
+        (SelectedProjectionTailProjector.outputAllBits useAccept L)
+        (ParsedLayoutBits L).length =
+      List.append
+        ((SelectedProjectionTailProjector.outputAllBits useAccept L).map some)
+        (List.replicate (ParsedLayoutBits L).length none) := by
+  rcases selectedProjection_outputAllBits_cons_cons useAccept L with
+    ⟨first, second, rest, hbits⟩
+  rw [hbits]
+  rfl
+
+theorem SelectedProjectionEquivEmitterPaddedOutputTape_eq_tapeAtCells_of_outputAllBits
+    {useAccept : Bool} {L : DovetailLayout}
+    {first : Bool} {rest : Word Bool}
+    (hbits :
+      SelectedProjectionTailProjector.outputAllBits useAccept L =
+        first :: rest) :
+    SelectedProjectionEquivEmitterPaddedOutputTape useAccept L =
+      DovetailInitialLayoutInitializer.tapeAtCells
+        [some first]
+        (List.append (rest.map some)
+          (List.replicate (ParsedLayoutBits L).length none)) := by
+  rw [SelectedProjectionEquivEmitterPaddedOutputTape_eq_tapeAtCells]
+  rw [inputWithTrailingBlankPaddingCells_outputAllBits_eq]
+  rw [hbits]
+  rfl
+
+theorem SelectedProjectionEquivEmitterPaddedOutputTape_eq_tapeAtCells_cons_cons
+    (useAccept : Bool) (L : DovetailLayout) :
+    exists first : Bool,
+    exists second : Bool,
+    exists rest : Word Bool,
+      SelectedProjectionEquivEmitterPaddedOutputTape useAccept L =
+        DovetailInitialLayoutInitializer.tapeAtCells
+          [some first]
+          (some second :: List.append (rest.map some)
+            (List.replicate (ParsedLayoutBits L).length none)) ∧
+      SelectedProjectionTailProjector.outputAllBits useAccept L =
+        first :: second :: rest := by
+  rcases selectedProjection_outputAllBits_cons_cons useAccept L with
+    ⟨first, second, rest, hbits⟩
+  refine ⟨first, second, rest, ?_, hbits⟩
+  have htape :=
+    SelectedProjectionEquivEmitterPaddedOutputTape_eq_tapeAtCells_of_outputAllBits
+      (useAccept := useAccept) (L := L) (first := first)
+      (rest := second :: rest) hbits
+  simpa using htape
+
+theorem SelectedProjectionEquivEmitterPaddedOutputTape_cells
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.cells (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) =
+      List.append
+        ((SelectedProjectionTailProjector.outputAllBits useAccept L).map some)
+        (List.replicate (ParsedLayoutBits L).length none) := by
+  rcases
+      SelectedProjectionEquivEmitterPaddedOutputTape_eq_tapeAtCells_cons_cons
+        useAccept L with
+    ⟨first, second, rest, htape, hbits⟩
+  rw [htape, hbits]
+  simp [DovetailInitialLayoutInitializer.tapeAtCells,
+    Tape.cells]
+
+theorem SelectedProjectionEquivEmitterPaddedOutputTape_true_cells
+    (L : DovetailLayout) :
+    Tape.cells (SelectedProjectionEquivEmitterPaddedOutputTape true L) =
+      List.append
+        (List.map some
+          (List.append (SelectedProjectionTailProjector.outputPrefixBits L)
+            (List.append
+              (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                L.stage)
+              (List.append
+                (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                  L.acceptConfig [])
+                (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+                  L.acceptHit [])))))
+        (List.replicate (ParsedLayoutBits L).length none) := by
+  rw [SelectedProjectionEquivEmitterPaddedOutputTape_cells]
+  rw [SelectedProjectionTailProjector.outputAllBits,
+    SelectedProjectionTailProjector.outputBits_true_eq_fields]
+  rw [←
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil]
+
+theorem SelectedProjectionEquivEmitterPaddedOutputTape_false_cells
+    (L : DovetailLayout) :
+    Tape.cells (SelectedProjectionEquivEmitterPaddedOutputTape false L) =
+      List.append
+        (List.map some
+          (List.append (SelectedProjectionTailProjector.outputPrefixBits L)
+            (List.append
+              (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                L.stage)
+              (List.append
+                (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                  L.rejectConfig [])
+                (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+                  L.rejectHit [])))))
+        (List.replicate (ParsedLayoutBits L).length none) := by
+  rw [SelectedProjectionEquivEmitterPaddedOutputTape_cells]
+  rw [SelectedProjectionTailProjector.outputAllBits,
+    SelectedProjectionTailProjector.outputBits_false_eq_fields]
+  rw [←
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil]
+
+theorem SelectedProjectionEquivEmitterPaddedOutputTape_move_left_move_right
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)) =
+      SelectedProjectionEquivEmitterPaddedOutputTape useAccept L := by
+  rcases selectedProjection_outputAllBits_headerPrefix useAccept L with
+    ⟨rest, hbits⟩
+  have htape :=
+    SelectedProjectionEquivEmitterPaddedOutputTape_eq_tapeAtCells_of_outputAllBits
+      (useAccept := useAccept) (L := L) (first := false)
+      (rest := false :: false :: false :: rest) hbits
+  rw [htape]
+  simp [DovetailInitialLayoutInitializer.tapeAtCells,
+    Tape.move, Tape.moveLeft, Tape.moveRight]
+
 theorem tapeAtCells_nil_normalizedOutput
     (leftRev : List (Option Bool)) :
     Tape.normalizedOutput

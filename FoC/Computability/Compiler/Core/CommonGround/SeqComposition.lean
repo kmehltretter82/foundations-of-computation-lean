@@ -14,6 +14,7 @@ namespace FoC
 namespace Computability
 
 open MachineDescription
+open Languages
 
 namespace CommonGround
 namespace SeqComposition
@@ -79,6 +80,41 @@ theorem seqSubroutine_haltsFromTape_of_haltsFromTape_eq
       congrArg MachineDescription.Configuration.state hsteps
   · simpa [MachineDescription.HaltsFromTapeIn] using
       congrArg MachineDescription.Configuration.tape hsteps
+
+theorem seqSubroutine_haltsWithTape_of_haltsWithTape_eq
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {input : Word Bool} {Tmid Tnext Tout : Tape Bool}
+    (hAhalts : A.HaltsWithTape input Tmid)
+    (hmove : Tape.move handoffMove Tmid = Tnext)
+    (hBhalts : B.HaltsFromTape Tnext Tout) :
+    (seqSubroutine A B handoffMove).HaltsWithTape input Tout := by
+  rcases runConfig_eq_halt_of_haltsFromTape hBhalts with
+    ⟨nB, hnB⟩
+  exact
+    seqSubroutine_haltsWithTape_of_haltsWithTape
+      hA hB hAhalts
+      (runConfig_reaches_from_move_eq
+        (B := B) (handoffMove := handoffMove)
+        hmove hnB)
+
+theorem seqSubroutine_exactFamilySpec
+    {ι : Type} {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    (Tin Tmid Tnext Tout : ι -> Tape Bool)
+    (hAhalts : forall i : ι, A.HaltsFromTape (Tin i) (Tmid i))
+    (hmove : forall i : ι, Tape.move handoffMove (Tmid i) = Tnext i)
+    (hBhalts : forall i : ι, B.HaltsFromTape (Tnext i) (Tout i)) :
+    (seqSubroutine A B handoffMove).SubroutineReady ∧
+      forall i : ι,
+        (seqSubroutine A B handoffMove).HaltsFromTape
+          (Tin i) (Tout i) := by
+  constructor
+  · exact seqSubroutine_subroutineReady hA hB
+  · intro i
+    exact
+      seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+        hA hB (hAhalts i) (hmove i) (hBhalts i)
 
 theorem runConfig_state_ne_halt_of_later_ne_halt
     {D : MachineDescription} {c : Configuration} {n k : Nat}

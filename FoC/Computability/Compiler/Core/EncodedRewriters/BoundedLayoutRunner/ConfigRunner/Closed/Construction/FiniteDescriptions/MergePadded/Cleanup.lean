@@ -13,6 +13,74 @@ namespace BoundedLayoutRunner
 
 namespace SelectedMergePaddedEmitterCleanup
 
+def leftMoveOnceDescription : MachineDescription where
+  stateCount := 2
+  start := 0
+  halt := 1
+  transitions :=
+    [ MachineDescription.transition 0 none none Direction.left 1
+    , MachineDescription.transition 0 (some false) (some false)
+        Direction.left 1
+    , MachineDescription.transition 0 (some true) (some true)
+        Direction.left 1
+    ]
+
+theorem leftMoveOnceDescription_wellFormed :
+    leftMoveOnceDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := leftMoveOnceDescription.transitions)
+      (stateCount := leftMoveOnceDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := leftMoveOnceDescription.transitions)
+      (by decide)
+
+theorem leftMoveOnceDescription_haltTransitionFree :
+    leftMoveOnceDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := leftMoveOnceDescription.transitions)
+    (state := leftMoveOnceDescription.halt)
+    (by decide)
+
+theorem leftMoveOnceDescription_subroutineReady :
+    leftMoveOnceDescription.SubroutineReady :=
+  ⟨leftMoveOnceDescription_wellFormed,
+    leftMoveOnceDescription_haltTransitionFree⟩
+
+theorem leftMoveOnceDescription_haltsFromTape
+    (T : Tape Bool) :
+    leftMoveOnceDescription.HaltsFromTape T
+      (Tape.move Direction.left T) := by
+  have hrun :
+      leftMoveOnceDescription.runConfig 1
+          { state := leftMoveOnceDescription.start
+            tape := T } =
+        { state := leftMoveOnceDescription.halt
+          tape := Tape.move Direction.left T } := by
+    cases T with
+    | mk left head right =>
+        cases head with
+        | none =>
+            simp [leftMoveOnceDescription, MachineDescription.runConfig,
+              MachineDescription.stepConfig,
+              MachineDescription.lookupTransition,
+              MachineDescription.Matches,
+              MachineDescription.transition, Tape.read, Tape.write]
+        | some b =>
+            cases b <;>
+              simp [leftMoveOnceDescription, MachineDescription.runConfig,
+                MachineDescription.stepConfig,
+                MachineDescription.lookupTransition,
+                MachineDescription.Matches,
+                MachineDescription.transition, Tape.read, Tape.write]
+  refine ⟨1, ?_⟩
+  constructor
+  · simpa [MachineDescription.HaltsFromTapeIn] using
+      congrArg MachineDescription.Configuration.state hrun
+  · simpa [MachineDescription.HaltsFromTapeIn] using
+      congrArg MachineDescription.Configuration.tape hrun
+
 def sourceBits (p : SelectedMergeEmitterPayload) : Word Bool :=
   SelectedMergePaddedEmitterAfterHitSourceBits p
 
@@ -333,6 +401,49 @@ def SelectedMergePaddedEmitterAfterHitSpec
         (SelectedMergePaddedEmitterAfterHitTape p)
         (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
 
+def SelectedMergePaddedEmitterAfterHitRightLeftHandoffTape
+    (p : SelectedMergeEmitterPayload) : Tape Bool :=
+  Tape.move Direction.left
+    (Tape.move Direction.right
+      (SelectedMergePaddedEmitterAfterHitTape p))
+
+def SelectedMergePaddedEmitterAfterHitRightLeftHandoffSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      emitter.HaltsFromTape
+        (SelectedMergePaddedEmitterAfterHitRightLeftHandoffTape p)
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
+
+def SelectedMergePaddedEmitterAfterHitRightLeftHandoffConstruction :
+    Prop :=
+  forall useAccept : Bool,
+    exists emitter : MachineDescription,
+      SelectedMergePaddedEmitterAfterHitRightLeftHandoffSpec
+        useAccept emitter
+
+def SelectedMergePaddedEmitterAfterHeaderRightHandoffTape
+    (p : SelectedMergeEmitterPayload) : Tape Bool :=
+  Tape.move Direction.right
+    (SelectedMergePaddedEmitterAfterHeaderTape p)
+
+def SelectedMergePaddedEmitterAfterHeaderRightHandoffSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      emitter.HaltsFromTape
+        (SelectedMergePaddedEmitterAfterHeaderRightHandoffTape p)
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
+
+def SelectedMergePaddedEmitterAfterHeaderRightHandoffConstruction :
+    Prop :=
+  forall useAccept : Bool,
+    exists emitter : MachineDescription,
+      SelectedMergePaddedEmitterAfterHeaderRightHandoffSpec
+        useAccept emitter
+
 def SelectedMergePaddedEmitterSourceScannerDescription :
     MachineDescription :=
   seqSubroutine
@@ -507,6 +618,124 @@ theorem selectedMergePaddedEmitterSourceScanner_haltsFromPayload
       (selectedMergePaddedEmitterAfterInputTape_move_right p)
       hstageConfigHit
 
+theorem SelectedMergePaddedEmitterOuterTailBits_cons_cons_false_false
+    (p : SelectedMergeEmitterPayload) :
+    exists tail : Word Bool,
+      SelectedMergePaddedEmitterOuterTailBits p =
+        false :: false :: tail := by
+  rw [SelectedMergePaddedEmitterOuterTailBits_eq_boolWordFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.boolWordFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.cellListFieldBits]
+  cases hlength : (ParsedLayoutBits p.L).map some |>.length with
+  | zero =>
+      refine
+        ⟨true :: true ::
+          List.append
+            (CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits
+              ((ParsedLayoutBits p.L).map some))
+            (SelectedMergePaddedEmitterOuterSuffixBits p), ?_⟩
+      simp
+  | succ n =>
+      refine
+        ⟨true :: false ::
+          List.append
+            (FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits n)
+            (List.append
+              (CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits
+                ((ParsedLayoutBits p.L).map some))
+              (SelectedMergePaddedEmitterOuterSuffixBits p)), ?_⟩
+      simp [
+        FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_succ]
+
+theorem tapeAtCells_move_left_move_right_cons_cons
+    (left : List (Option Bool)) (cell next : Option Bool)
+    (rest : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (DovetailInitialLayoutInitializer.tapeAtCells left
+            (cell :: next :: rest))) =
+      DovetailInitialLayoutInitializer.tapeAtCells left
+        (cell :: next :: rest) := by
+  rfl
+
+theorem selectedMergePaddedEmitterAfterHeaderTape_move_left_move_right
+    (p : SelectedMergeEmitterPayload) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (SelectedMergePaddedEmitterAfterHeaderTape p)) =
+      SelectedMergePaddedEmitterAfterHeaderTape p := by
+  rcases
+      SelectedMergePaddedEmitterOuterTailBits_cons_cons_false_false p with
+    ⟨tail, htail⟩
+  rw [SelectedMergePaddedEmitterAfterHeaderTape, htail]
+  simpa using
+    tapeAtCells_move_left_move_right_cons_cons
+      ((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse
+      (some false) (some false) (tail.map some)
+
+def SelectedMergePaddedEmitterAfterHeaderScannerDescription :
+    MachineDescription :=
+  SeqViaCanonical SelectedMergePaddedEmitterCleanup.leftMoveOnceDescription
+    SelectedMergePaddedEmitterSourceScannerDescription
+
+theorem selectedMergePaddedEmitterAfterHeaderScanner_subroutineReady :
+    SelectedMergePaddedEmitterAfterHeaderScannerDescription.SubroutineReady :=
+  SeqViaCanonical_subroutineReady
+    SelectedMergePaddedEmitterCleanup.leftMoveOnceDescription_subroutineReady
+    selectedMergePaddedEmitterSourceScanner_subroutineReady
+
+theorem selectedMergePaddedEmitterAfterHeaderScanner_haltsFromPayload
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterAfterHeaderScannerDescription.HaltsFromTape
+      (SelectedMergePaddedEmitterAfterHeaderRightHandoffTape p)
+      (SelectedMergePaddedEmitterAfterHitTape p) := by
+  exact
+    SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      SelectedMergePaddedEmitterCleanup.leftMoveOnceDescription_subroutineReady
+      selectedMergePaddedEmitterSourceScanner_subroutineReady
+      (SelectedMergePaddedEmitterCleanup.leftMoveOnceDescription_haltsFromTape
+        (SelectedMergePaddedEmitterAfterHeaderRightHandoffTape p))
+      (by
+        simpa [SelectedMergePaddedEmitterAfterHeaderRightHandoffTape] using
+          selectedMergePaddedEmitterAfterHeaderTape_move_left_move_right p)
+      (selectedMergePaddedEmitterSourceScanner_haltsFromPayload p)
+
+/--
+Post-scan finite-machine leaf for selected merge under the padded equivalence
+contract.  The source fields have been scanned and restored; the sequential
+adapter has performed its canonical right-left handoff from the after-hit tape.
+The remaining machine must emit the padded merged dovetail-layout code.
+-/
+theorem selectedMergePaddedEmitterAfterHitRightLeftHandoffConstruction :
+    SelectedMergePaddedEmitterAfterHitRightLeftHandoffConstruction := by
+  sorry
+
+theorem selectedMergePaddedEmitterAfterHeaderRightHandoffConstruction :
+    SelectedMergePaddedEmitterAfterHeaderRightHandoffConstruction := by
+  intro useAccept
+  rcases
+      selectedMergePaddedEmitterAfterHitRightLeftHandoffConstruction
+        useAccept with
+    ⟨afterHit, hafterHit⟩
+  refine
+    ⟨SeqViaCanonical
+      SelectedMergePaddedEmitterAfterHeaderScannerDescription
+      afterHit, ?_⟩
+  constructor
+  · exact
+      SeqViaCanonical_subroutineReady
+        selectedMergePaddedEmitterAfterHeaderScanner_subroutineReady
+        hafterHit.left
+  · intro p
+    exact
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        selectedMergePaddedEmitterAfterHeaderScanner_subroutineReady
+        hafterHit.left
+        (selectedMergePaddedEmitterAfterHeaderScanner_haltsFromPayload p)
+        (by
+          rfl)
+        (hafterHit.right p)
+
 /--
 Finite-machine leaf for selected merge under the equivalence-based phase
 contract.  It emits the merged dovetail-layout code at the left edge and leaves
@@ -516,7 +745,29 @@ context-length decrease.
 -/
 theorem selectedMergePaddedEmitterExactShapeConstruction_scaffold :
     SelectedMergePaddedEmitterExactShapeConstruction := by
-  sorry
+  intro useAccept
+  rcases
+      selectedMergePaddedEmitterAfterHeaderRightHandoffConstruction
+        useAccept with
+    ⟨postHeader, hpostHeader⟩
+  refine
+    ⟨seqSubroutine
+      SelectedMergePaddedEmitterHeaderRewriterDescription
+      postHeader Direction.right, ?_⟩
+  constructor
+  · exact
+      seqSubroutine_subroutineReady
+        selectedMergePaddedEmitterHeaderRewriter_subroutineReady
+        hpostHeader.left
+  · intro p
+    exact
+      CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+        selectedMergePaddedEmitterHeaderRewriter_subroutineReady
+        hpostHeader.left
+        (selectedMergePaddedEmitterHeaderRewriter_haltsFromPayload p)
+        (by
+          rfl)
+        (hpostHeader.right p)
 
 theorem selectedMergeEquivPaddedEmitterConstruction_scaffold :
     SelectedMergeEquivPaddedEmitterConstruction :=

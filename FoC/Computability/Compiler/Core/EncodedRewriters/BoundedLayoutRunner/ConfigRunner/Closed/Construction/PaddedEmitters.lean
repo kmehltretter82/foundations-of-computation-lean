@@ -97,6 +97,29 @@ theorem inputWithTrailingBlankPadding_move_right_eq_tapeAtCells
             DovetailInitialLayoutInitializer.tapeAtCells,
             Tape.move, Tape.moveRight]
 
+theorem inputWithTrailingBlankPadding_cons_move_right_eq_tapeAtCells
+    (bit : Bool) (rest : Word Bool) (padding : Nat) :
+    Tape.move Direction.right
+        (inputWithTrailingBlankPadding (bit :: rest) padding) =
+      DovetailInitialLayoutInitializer.tapeAtCells [some bit]
+        (List.append (rest.map some)
+          (List.replicate padding (none : Option Bool))) := by
+  cases rest with
+  | nil =>
+      cases padding with
+      | zero =>
+          simp [inputWithTrailingBlankPadding,
+            DovetailInitialLayoutInitializer.tapeAtCells,
+            Tape.move, Tape.moveRight]
+      | succ padding =>
+          simp [inputWithTrailingBlankPadding,
+            DovetailInitialLayoutInitializer.tapeAtCells,
+            Tape.move, Tape.moveRight, List.replicate_succ]
+  | cons next rest =>
+      simp [inputWithTrailingBlankPadding,
+        DovetailInitialLayoutInitializer.tapeAtCells,
+        Tape.move, Tape.moveRight]
+
 theorem dropTrailingNone_replicate_none
     (padding : Nat) :
     Tape.dropTrailingNone

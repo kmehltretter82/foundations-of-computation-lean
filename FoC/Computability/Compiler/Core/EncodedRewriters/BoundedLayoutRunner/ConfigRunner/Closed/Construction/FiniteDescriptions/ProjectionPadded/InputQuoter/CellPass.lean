@@ -208,6 +208,104 @@ theorem preservingCellPassDescription_run_scan20
         rw [ih (some true :: leftRev)]
         simp [List.reverse_cons, List.append_assoc]
 
+theorem preservingCellPassDescription_run_scan10_oneBlank
+    (leftRev : List (Option Bool)) (rest : Word Bool) :
+    PCP.runConfig
+        (rest.length + 1)
+        (config 10 leftRev
+          (List.append (rest.map some) [none])) =
+      config 11
+        (none :: List.append (rest.reverse.map some) leftRev)
+        [] := by
+  induction rest generalizing leftRev with
+  | nil =>
+      simp [PCP, PreservingCellPassDescription, config, tapeAtCells,
+        runConfig, stepConfig, lookupTransition, Matches, transition,
+        Tape.read, Tape.write, Tape.move, Tape.moveRight]
+  | cons b rest ih =>
+      cases b
+      · rw [show (false :: rest).length + 1 = 1 + (rest.length + 1) by
+          simp [Nat.add_comm, Nat.add_left_comm]]
+        rw [runConfig_add]
+        have hfirst :
+            PCP.runConfig 1
+              (config 10 leftRev
+                (List.append ((false :: rest).map some) [none])) =
+            config 10 (some false :: leftRev)
+              (List.append (rest.map some) [none]) := by
+          simp [PCP, PreservingCellPassDescription, config, tapeAtCells,
+            runConfig, stepConfig, lookupTransition, Matches, transition,
+            Tape.read, Tape.write, Tape.move, Tape.moveRight]
+          cases rest <;> rfl
+        rw [hfirst]
+        rw [ih (some false :: leftRev)]
+        simp [List.reverse_cons, List.append_assoc]
+      · rw [show (true :: rest).length + 1 = 1 + (rest.length + 1) by
+          simp [Nat.add_comm, Nat.add_left_comm]]
+        rw [runConfig_add]
+        have hfirst :
+            PCP.runConfig 1
+              (config 10 leftRev
+                (List.append ((true :: rest).map some) [none])) =
+            config 10 (some true :: leftRev)
+              (List.append (rest.map some) [none]) := by
+          simp [PCP, PreservingCellPassDescription, config, tapeAtCells,
+            runConfig, stepConfig, lookupTransition, Matches, transition,
+            Tape.read, Tape.write, Tape.move, Tape.moveRight]
+          cases rest <;> rfl
+        rw [hfirst]
+        rw [ih (some true :: leftRev)]
+        simp [List.reverse_cons, List.append_assoc]
+
+theorem preservingCellPassDescription_run_scan20_oneBlank
+    (leftRev : List (Option Bool)) (rest : Word Bool) :
+    PCP.runConfig
+        (rest.length + 1)
+        (config 20 leftRev
+          (List.append (rest.map some) [none])) =
+      config 21
+        (none :: List.append (rest.reverse.map some) leftRev)
+        [] := by
+  induction rest generalizing leftRev with
+  | nil =>
+      simp [PCP, PreservingCellPassDescription, config, tapeAtCells,
+        runConfig, stepConfig, lookupTransition, Matches, transition,
+        Tape.read, Tape.write, Tape.move, Tape.moveRight]
+  | cons b rest ih =>
+      cases b
+      · rw [show (false :: rest).length + 1 = 1 + (rest.length + 1) by
+          simp [Nat.add_comm, Nat.add_left_comm]]
+        rw [runConfig_add]
+        have hfirst :
+            PCP.runConfig 1
+              (config 20 leftRev
+                (List.append ((false :: rest).map some) [none])) =
+            config 20 (some false :: leftRev)
+              (List.append (rest.map some) [none]) := by
+          simp [PCP, PreservingCellPassDescription, config, tapeAtCells,
+            runConfig, stepConfig, lookupTransition, Matches, transition,
+            Tape.read, Tape.write, Tape.move, Tape.moveRight]
+          cases rest <;> rfl
+        rw [hfirst]
+        rw [ih (some false :: leftRev)]
+        simp [List.reverse_cons, List.append_assoc]
+      · rw [show (true :: rest).length + 1 = 1 + (rest.length + 1) by
+          simp [Nat.add_comm, Nat.add_left_comm]]
+        rw [runConfig_add]
+        have hfirst :
+            PCP.runConfig 1
+              (config 20 leftRev
+                (List.append ((true :: rest).map some) [none])) =
+            config 20 (some true :: leftRev)
+              (List.append (rest.map some) [none]) := by
+          simp [PCP, PreservingCellPassDescription, config, tapeAtCells,
+            runConfig, stepConfig, lookupTransition, Matches, transition,
+            Tape.read, Tape.write, Tape.move, Tape.moveRight]
+          cases rest <;> rfl
+        rw [hfirst]
+        rw [ih (some true :: leftRev)]
+        simp [List.reverse_cons, List.append_assoc]
+
 theorem preservingCellPassDescription_run_scan11
     (leftRev : List (Option Bool)) (output : Word Bool) :
     PCP.runConfig
@@ -700,8 +798,7 @@ theorem preservingCellPassDescription_run_cell_false
             [none]))
   rw [preservingCellPassDescription_run_scan17]
   rw [preservingCellPassDescription_run_return16]
-  simp [outputRev, preservingCellPassZeroBits, List.map_append,
-    List.append_assoc]
+  simp [outputRev, preservingCellPassZeroBits]
 
 theorem preservingCellPassDescription_run_cell_true
     (leftRev : List (Option Bool)) (rest output : Word Bool) :
@@ -779,8 +876,179 @@ theorem preservingCellPassDescription_run_cell_true
             [none]))
   rw [preservingCellPassDescription_run_scan27]
   rw [preservingCellPassDescription_run_return26]
-  simp [outputRev, preservingCellPassOneBits, List.map_append,
-    List.append_assoc]
+  simp [outputRev, preservingCellPassOneBits]
+
+theorem preservingCellPassDescription_run_cell_false_oneBlank
+    (leftRev : List (Option Bool)) (rest : Word Bool) :
+    ∃ steps : Nat,
+      PCP.runConfig steps
+        (config 7 leftRev
+          (some false :: List.append (rest.map some) [none])) =
+        config 7 (some false :: leftRev)
+          (List.append (rest.map some)
+            (none :: List.append
+              (preservingCellPassZeroBits.map some)
+              [none])) := by
+  let outputRev : Word Bool := [true, false, true, false]
+  refine
+    ⟨1 +
+      ((rest.length + 1) +
+        (1 + (4 + ((outputRev.length + 1) + (rest.reverse.length + 1))))),
+      ?_⟩
+  rw [runConfig_add]
+  have hfirst :
+      PCP.runConfig 1
+        (config 7 leftRev
+          (some false :: List.append (rest.map some) [none])) =
+        config 10 (none :: leftRev)
+          (List.append (rest.map some) [none]) := by
+    simp [PCP, PreservingCellPassDescription,
+      config, tapeAtCells, runConfig, stepConfig, lookupTransition,
+      Matches, transition, Tape.read, Tape.write, Tape.move,
+      Tape.moveRight]
+    cases rest <;> rfl
+  rw [hfirst]
+  rw [runConfig_add]
+  rw [preservingCellPassDescription_run_scan10_oneBlank]
+  rw [runConfig_add]
+  have hscan11 :
+      PCP.runConfig 1
+          (config 11
+            (none :: List.append (rest.reverse.map some) (none :: leftRev))
+            []) =
+        config 12
+          (some false ::
+            List.append ((([] : Word Bool).reverse).map some)
+              (none :: List.append (rest.reverse.map some)
+                (none :: leftRev)))
+          [] := by
+    simpa [config, tapeAtCells] using
+      preservingCellPassDescription_run_scan11
+        (none :: List.append (rest.reverse.map some) (none :: leftRev))
+        ([] : Word Bool)
+  rw [hscan11]
+  rw [runConfig_add]
+  change
+    PCP.runConfig
+      ((outputRev.length + 1) + (rest.reverse.length + 1))
+      (PCP.runConfig 4
+        (config 12
+          (some false ::
+            List.append ((([] : Word Bool).reverse).map some)
+              (none :: List.append (rest.reverse.map some)
+                (none :: leftRev))) [])) =
+        config 7 (some false :: leftRev)
+          (List.append (rest.map some)
+            (none :: List.append
+              (preservingCellPassZeroBits.map some)
+              [none]))
+  rw [preservingCellPassDescription_run_writeZero12]
+  rw [runConfig_add]
+  change
+    PCP.runConfig
+      (rest.reverse.length + 1)
+      (PCP.runConfig
+        (outputRev.length + 1)
+        { state := 17
+          tape :=
+            controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev
+              (List.append (rest.reverse.map some) (none :: leftRev))
+              [true, false, true, false]
+              [none] }) =
+      config 7 (some false :: leftRev)
+        (List.append (rest.map some)
+          (none :: List.append
+            (preservingCellPassZeroBits.map some)
+            [none]))
+  rw [preservingCellPassDescription_run_scan17]
+  rw [preservingCellPassDescription_run_return16]
+  simp [outputRev, preservingCellPassZeroBits]
+
+theorem preservingCellPassDescription_run_cell_true_oneBlank
+    (leftRev : List (Option Bool)) (rest : Word Bool) :
+    ∃ steps : Nat,
+      PCP.runConfig steps
+        (config 7 leftRev
+          (some true :: List.append (rest.map some) [none])) =
+        config 7 (some true :: leftRev)
+          (List.append (rest.map some)
+            (none :: List.append
+              (preservingCellPassOneBits.map some)
+              [none])) := by
+  let outputRev : Word Bool := [false, true, true, false]
+  refine
+    ⟨1 +
+      ((rest.length + 1) +
+        (1 + (4 + ((outputRev.length + 1) + (rest.reverse.length + 1))))),
+      ?_⟩
+  rw [runConfig_add]
+  have hfirst :
+      PCP.runConfig 1
+        (config 7 leftRev
+          (some true :: List.append (rest.map some) [none])) =
+        config 20 (none :: leftRev)
+          (List.append (rest.map some) [none]) := by
+    simp [PCP, PreservingCellPassDescription,
+      config, tapeAtCells, runConfig, stepConfig, lookupTransition,
+      Matches, transition, Tape.read, Tape.write, Tape.move,
+      Tape.moveRight]
+    cases rest <;> rfl
+  rw [hfirst]
+  rw [runConfig_add]
+  rw [preservingCellPassDescription_run_scan20_oneBlank]
+  rw [runConfig_add]
+  have hscan21 :
+      PCP.runConfig 1
+          (config 21
+            (none :: List.append (rest.reverse.map some) (none :: leftRev))
+            []) =
+        config 22
+          (some false ::
+            List.append ((([] : Word Bool).reverse).map some)
+              (none :: List.append (rest.reverse.map some)
+                (none :: leftRev)))
+          [] := by
+    simpa [config, tapeAtCells] using
+      preservingCellPassDescription_run_scan21
+        (none :: List.append (rest.reverse.map some) (none :: leftRev))
+        ([] : Word Bool)
+  rw [hscan21]
+  rw [runConfig_add]
+  change
+    PCP.runConfig
+      ((outputRev.length + 1) + (rest.reverse.length + 1))
+      (PCP.runConfig 4
+        (config 22
+          (some false ::
+            List.append ((([] : Word Bool).reverse).map some)
+              (none :: List.append (rest.reverse.map some)
+                (none :: leftRev))) [])) =
+        config 7 (some true :: leftRev)
+          (List.append (rest.map some)
+            (none :: List.append
+              (preservingCellPassOneBits.map some)
+              [none]))
+  rw [preservingCellPassDescription_run_writeOne22]
+  rw [runConfig_add]
+  change
+    PCP.runConfig
+      (rest.reverse.length + 1)
+      (PCP.runConfig
+        (outputRev.length + 1)
+        { state := 27
+          tape :=
+            controllerInitialRawBoolWordHeaderEmitterOutputLeftScanTapeRev
+              (List.append (rest.reverse.map some) (none :: leftRev))
+              [false, true, true, false]
+              [none] }) =
+      config 7 (some true :: leftRev)
+        (List.append (rest.map some)
+          (none :: List.append
+            (preservingCellPassOneBits.map some)
+            [none]))
+  rw [preservingCellPassDescription_run_scan27]
+  rw [preservingCellPassDescription_run_return26]
+  simp [outputRev, preservingCellPassOneBits]
 
 def preservingCellPassCellBits : Word Bool -> Word Bool
   | [] => []
@@ -810,6 +1078,68 @@ theorem preservingCellPassCellBits_append_suffix
           encodeCellsAppend, encodeCellAppend, encodeCell,
           encodeCodeWordAsInput, encodeCodeSymbolAsInput,
           List.append_assoc] using ih
+
+theorem preservingCellPassCellBits_eq_encodeCellsAppend
+    (cells : Word Bool) :
+    preservingCellPassCellBits cells =
+      encodeCodeWordAsInput
+        (encodeCellsAppend (cells.map some) []) := by
+  simpa [encodeCodeWordAsInput] using
+    preservingCellPassCellBits_append_suffix
+      cells ([] : Word MachineCodeSymbol)
+
+theorem preservingCellPassQuoteBits_eq_encodeBoolWordAppend
+    (cells : Word Bool) :
+    List.append
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          cells.length)
+        (preservingCellPassCellBits cells) =
+      encodeCodeWordAsInput
+        (encodeBoolWordAppend cells []) := by
+  rw [preservingCellPassCellBits_eq_encodeCellsAppend]
+  change
+    List.append
+        (encodeCodeWordAsInput (encodeNat cells.length))
+        (encodeCodeWordAsInput
+          (encodeCellsAppend (cells.map some) [])) =
+      encodeCodeWordAsInput
+        (encodeBoolWordAppend cells [])
+  rw [← encodeCodeWordAsInput_append]
+  simp [encodeBoolWordAppend, encodeCellListAppend, encodeNatAppend]
+
+theorem preservingCellPassHeaderQuoteBits_eq_encodeBoolWordAppend
+    (cells : Word Bool) :
+    List.append
+        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            cells.length)
+          (preservingCellPassCellBits cells)) =
+      encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          encodeBoolWordAppend cells []) := by
+  rw [preservingCellPassQuoteBits_eq_encodeBoolWordAppend]
+  rfl
+
+theorem preservingCellPassHeaderQuoteBits_eq_outputPrefixStageInputSourceRestFieldBits
+    (L : DovetailLayout) :
+    let sourceBits :=
+      List.append
+        (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+        (List.append
+          (DovetailInitialLayoutInitializer.stageInputBits L.input L.stage)
+          (SelectedProjectionTailProjector.sourceRestFieldBits L))
+    List.append
+        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            sourceBits.length)
+          (preservingCellPassCellBits sourceBits)) =
+      SelectedProjectionTailProjector.outputPrefixStageInputSourceRestFieldBits
+        L := by
+  dsimp only
+  rw [preservingCellPassHeaderQuoteBits_eq_encodeBoolWordAppend]
+  rfl
 
 theorem preservingCellPassDescription_run_cells
     (leftRev : List (Option Bool)) (cells output : Word Bool) :
@@ -877,6 +1207,198 @@ theorem preservingCellPassDescription_run_cells
         rw [hrest]
         simp [preservingCellPassCellBits, preservingCellPassOneBits,
           List.reverse_cons, List.map_append, List.append_assoc]
+
+theorem preservingCellPassDescription_run_nonempty_cells_oneBlank
+    (leftRev : List (Option Bool)) (b : Bool) (rest : Word Bool) :
+    ∃ steps : Nat,
+      PCP.runConfig steps
+        (config 7 leftRev
+          (List.append ((b :: rest).map some) [none])) =
+        config 7
+          (List.append ((b :: rest).reverse.map some) leftRev)
+          (none :: List.append
+            ((preservingCellPassCellBits (b :: rest)).map some)
+            [none]) := by
+  cases b
+  · rcases preservingCellPassDescription_run_cell_false_oneBlank
+        leftRev rest with
+      ⟨cellSteps, hcell⟩
+    rcases preservingCellPassDescription_run_cells
+        (some false :: leftRev) rest preservingCellPassZeroBits with
+      ⟨restSteps, hrest⟩
+    refine ⟨cellSteps + restSteps, ?_⟩
+    rw [runConfig_add]
+    change
+      PCP.runConfig restSteps
+        (PCP.runConfig cellSteps
+          (config 7 leftRev
+            (some false :: List.append (rest.map some) [none]))) =
+        config 7
+          (List.append ((false :: rest).reverse.map some) leftRev)
+          (none :: List.append
+            ((preservingCellPassCellBits (false :: rest)).map some)
+            [none])
+    rw [hcell]
+    rw [hrest]
+    simp [preservingCellPassCellBits, preservingCellPassZeroBits,
+      List.reverse_cons, List.map_append, List.append_assoc]
+  · rcases preservingCellPassDescription_run_cell_true_oneBlank
+        leftRev rest with
+      ⟨cellSteps, hcell⟩
+    rcases preservingCellPassDescription_run_cells
+        (some true :: leftRev) rest preservingCellPassOneBits with
+      ⟨restSteps, hrest⟩
+    refine ⟨cellSteps + restSteps, ?_⟩
+    rw [runConfig_add]
+    change
+      PCP.runConfig restSteps
+        (PCP.runConfig cellSteps
+          (config 7 leftRev
+            (some true :: List.append (rest.map some) [none]))) =
+        config 7
+          (List.append ((true :: rest).reverse.map some) leftRev)
+          (none :: List.append
+            ((preservingCellPassCellBits (true :: rest)).map some)
+            [none])
+    rw [hcell]
+    rw [hrest]
+    simp [preservingCellPassCellBits, preservingCellPassOneBits,
+      List.reverse_cons, List.map_append, List.append_assoc]
+
+def preservingCellPassHaltTape
+    (leftRev : List (Option Bool)) (cells output : Word Bool) :
+    Tape Bool :=
+  Tape.move Direction.right
+    (tapeAtCells
+      (List.append (cells.reverse.map some) leftRev)
+      (none :: List.append
+        ((List.append output
+          (preservingCellPassCellBits cells)).map some)
+        [none]))
+
+theorem preservingCellPassHaltTape_right_cons_of_nonempty
+    (leftRev : List (Option Bool)) (b : Bool) (rest : Word Bool) :
+    exists cell : Option Bool,
+    exists right : List (Option Bool),
+      (preservingCellPassHaltTape leftRev (b :: rest) []).right =
+        cell :: right := by
+  cases b <;>
+    refine ⟨some true, ?_⟩ <;>
+    simp [preservingCellPassHaltTape, preservingCellPassCellBits,
+      preservingCellPassZeroBits, preservingCellPassOneBits, tapeAtCells,
+      Tape.move, Tape.moveRight, List.append_assoc]
+
+theorem preservingCellPassHaltTape_nonempty_empty_output_eq_tapeAtCells
+    (leftRev : List (Option Bool)) (b : Bool) (rest : Word Bool) :
+    preservingCellPassHaltTape leftRev (b :: rest) [] =
+      tapeAtCells
+        (none :: List.append ((b :: rest).reverse.map some) leftRev)
+        (List.append
+          ((preservingCellPassCellBits (b :: rest)).map some)
+          [none]) := by
+  cases b <;>
+    simp [preservingCellPassHaltTape, preservingCellPassCellBits,
+      preservingCellPassZeroBits, preservingCellPassOneBits, tapeAtCells,
+      Tape.move, Tape.moveRight, List.append_assoc]
+
+theorem preservingCellPassDescription_haltsFrom_cells
+    (leftRev : List (Option Bool)) (cells output : Word Bool) :
+    PCP.HaltsFromTape
+      (tapeAtCells leftRev
+        (List.append (cells.map some)
+          (none :: List.append (output.map some) [none])))
+      (preservingCellPassHaltTape leftRev cells output) := by
+  rcases preservingCellPassDescription_run_cells
+      leftRev cells output with
+    ⟨steps, hsteps⟩
+  refine ⟨steps + 1, ?_⟩
+  have hsteps' :
+      PCP.runConfig steps
+          { state := PCP.start
+            tape := tapeAtCells leftRev
+              (List.append (cells.map some)
+                (none :: List.append (output.map some) [none])) } =
+        config 7
+          (List.append (cells.reverse.map some) leftRev)
+          (none :: List.append
+            ((List.append output
+              (preservingCellPassCellBits cells)).map some)
+            [none]) := by
+    simpa [PCP, PreservingCellPassDescription, config] using hsteps
+  unfold MachineDescription.HaltsFromTapeIn
+  rw [runConfig_add]
+  rw [hsteps']
+  constructor <;>
+    simp [PCP, PreservingCellPassDescription,
+      preservingCellPassHaltTape,
+      config, tapeAtCells,
+      runConfig, stepConfig, lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
+      Tape.moveRight]
+
+theorem preservingCellPassDescription_haltsFrom_nonempty_cells_oneBlank
+    (leftRev : List (Option Bool)) (b : Bool) (rest : Word Bool) :
+    PCP.HaltsFromTape
+      (tapeAtCells leftRev
+        (List.append ((b :: rest).map some) [none]))
+      (preservingCellPassHaltTape leftRev (b :: rest) []) := by
+  rcases preservingCellPassDescription_run_nonempty_cells_oneBlank
+      leftRev b rest with
+    ⟨steps, hsteps⟩
+  refine ⟨steps + 1, ?_⟩
+  have hsteps' :
+      PCP.runConfig steps
+          { state := PCP.start
+            tape := tapeAtCells leftRev
+              (List.append ((b :: rest).map some) [none]) } =
+        config 7
+          (List.append ((b :: rest).reverse.map some) leftRev)
+          (none :: List.append
+            ((preservingCellPassCellBits (b :: rest)).map some)
+            [none]) := by
+    simpa [PCP, PreservingCellPassDescription, config] using hsteps
+  unfold MachineDescription.HaltsFromTapeIn
+  rw [runConfig_add]
+  rw [hsteps']
+  constructor <;>
+    simp [PCP, PreservingCellPassDescription,
+      preservingCellPassHaltTape,
+      config, tapeAtCells,
+      runConfig, stepConfig, lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
+      Tape.moveRight]
+
+theorem preservingCellPassHaltTape_normalizedOutput
+    (leftRev : List (Option Bool)) (cells output : Word Bool) :
+    Tape.normalizedOutput
+        (preservingCellPassHaltTape leftRev cells output) =
+      List.append (leftRev.reverse.filterMap (fun cell => cell))
+        (List.append cells
+          (List.append output (preservingCellPassCellBits cells))) := by
+  cases output with
+  | nil =>
+      cases cells with
+      | nil =>
+          simp [preservingCellPassHaltTape,
+            DovetailInitialLayoutInitializer.tapeAtCells,
+            Tape.normalizedOutput, Tape.cells, Tape.move, Tape.moveRight,
+            preservingCellPassCellBits]
+      | cons b rest =>
+          cases b <;>
+          simp [preservingCellPassHaltTape,
+            DovetailInitialLayoutInitializer.tapeAtCells,
+            Tape.normalizedOutput, Tape.cells, Tape.move, Tape.moveRight,
+            preservingCellPassCellBits, preservingCellPassZeroBits,
+            preservingCellPassOneBits, List.filterMap_append,
+            List.map_append, List.reverse_append, List.append_assoc,
+            Function.comp_def]
+  | cons b outRest =>
+      cases b <;>
+      simp [preservingCellPassHaltTape,
+        DovetailInitialLayoutInitializer.tapeAtCells,
+        Tape.normalizedOutput, Tape.cells, Tape.move, Tape.moveRight,
+        List.filterMap_append, List.map_append, List.reverse_append,
+        List.append_assoc, Function.comp_def]
 
 end SelectedProjectionInputQuoterFiniteLeaf
 

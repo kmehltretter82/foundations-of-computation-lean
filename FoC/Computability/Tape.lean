@@ -146,6 +146,45 @@ theorem normalizedOutput_of_eq_output {T : Tape symbol} {w : Word symbol}
     normalizedOutput T = w := by
   rw [h, normalizedOutput_output]
 
+theorem normalizedOutput_moveLeft (T : Tape symbol) :
+    normalizedOutput (moveLeft T) = normalizedOutput T := by
+  cases T with
+  | mk left head right =>
+      cases left with
+      | nil =>
+          simp [moveLeft, normalizedOutput, cells]
+      | cons leftHead leftTail =>
+          simp [moveLeft, normalizedOutput, cells, List.reverse_cons,
+            List.append_assoc]
+
+theorem normalizedOutput_moveRight (T : Tape symbol) :
+    normalizedOutput (moveRight T) = normalizedOutput T := by
+  cases T with
+  | mk left head right =>
+      cases right with
+      | nil =>
+          cases head <;>
+            simp [moveRight, normalizedOutput, cells, List.reverse_cons,
+              List.append_assoc]
+      | cons rightHead rightTail =>
+          simp [moveRight, normalizedOutput, cells, List.reverse_cons,
+            List.append_assoc]
+
+theorem normalizedOutput_move (dir : Direction) (T : Tape symbol) :
+    normalizedOutput (move dir T) = normalizedOutput T := by
+  cases dir with
+  | left => exact normalizedOutput_moveLeft T
+  | right => exact normalizedOutput_moveRight T
+
+theorem move_left_move_right_eq_self_of_right_cons
+    (T : Tape symbol) {cell : Option symbol} {right : List (Option symbol)}
+    (h : T.right = cell :: right) :
+    move Direction.left (move Direction.right T) = T := by
+  cases T with
+  | mk left head rightCells =>
+      cases h
+      simp [move, moveLeft, moveRight]
+
 theorem list_map_some_injective {xs ys : List symbol}
     (h : xs.map some = ys.map some) : xs = ys := by
   induction xs generalizing ys with

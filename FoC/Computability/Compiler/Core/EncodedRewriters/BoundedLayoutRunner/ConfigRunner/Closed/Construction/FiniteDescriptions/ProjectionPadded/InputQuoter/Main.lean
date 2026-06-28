@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.FiniteDescriptions.ProjectionPadded.InputQuoter.Assembly
+import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.FiniteDescriptions.ProjectionPadded.InputQuoter.AssemblyRawCells
 
 set_option doc.verso true
 
@@ -50,7 +50,27 @@ layout fields for the selected padded tail emitter.
 -/
 theorem selectedProjectionInputQuoterExactShapeConstruction_scaffold :
     SelectedProjectionInputQuoterExactShapeConstruction := by
-  sorry
+  rcases
+      SelectedProjectionInputQuoterFiniteLeaf.selectedProjectionInputQuoterPostBoundaryConstruction with
+    ⟨post, hpost⟩
+  refine
+    ⟨SeqViaCanonical
+      SelectedProjectionInputQuoterFiniteLeaf.AssemblyPrefixDescription
+      post, ?_⟩
+  constructor
+  · exact
+      SeqViaCanonical_subroutineReady
+        SelectedProjectionInputQuoterFiniteLeaf.assemblyPrefixDescription_subroutineReady
+        hpost.left
+  · intro L
+    exact
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        SelectedProjectionInputQuoterFiniteLeaf.assemblyPrefixDescription_subroutineReady
+        hpost.left
+        (SelectedProjectionInputQuoterFiniteLeaf.assemblyPrefixDescription_haltsFrom_exactSourceTape_to_prefixBoundary
+          L)
+        (by rfl)
+        (hpost.right L)
 
 theorem selectedProjectionInputQuoterConstruction_scaffold :
     SelectedProjectionInputQuoterConstruction :=
