@@ -199,12 +199,12 @@ controller machines.
   layout runner.
 * {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Basic`
   states the one-step bounded-layout runner contract, while
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Assembly`
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Assembly`
   contains the closed primitive and assembly layer.  Selected projection is
   assembled through the finite-description padded/equivalence route under
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Projection.Padded.Main`
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.Main`
   and
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Merge.Padded.Cleanup`;
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.Cleanup`;
   exact and right-shifted selected-projection wrappers are adapter-level
   compatibility surfaces, not the active phase-construction path.
 
@@ -279,9 +279,9 @@ finite-construction proofs.
 * Bounded-layout runner proof internals:
   {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Parser.Closed`,
   {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Basic`,
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Assembly`,
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Assembly`,
   and the phase modules under
-  {lit}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction/*`.
+  {lit}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner/*`.
   These are the files to inspect for the checked-layout parser inversion and
   the selected projection/merge padded-equivalence constructions.
 * Controller and finite-loop construction internals:
@@ -317,10 +317,10 @@ The current construction surface is intentionally split by role.
   book wrapper modules. These declarations state or package the construction
   hypotheses consumed by book-facing theorems.
 * Active padded/equivalence route:
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Projection.Padded.Main`,
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.Main`,
   the selected-merge padded emitter in
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Merge.Padded.Cleanup`,
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Simulator.PaddedEmitter`,
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.Cleanup`,
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter`,
   phase adapters, phase runner, and closed assembly. The active assembly route
   imports the finite-description selected-projection and selected-merge
   contracts plus the simulator padded/equivalence construction.
@@ -329,7 +329,7 @@ The current construction surface is intentionally split by role.
   the exact code-word emitter helpers in
   {module}`FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters`, and
   the explicit
-  {lit}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.RightShiftedPrimitives`
+  {lit}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.RightShiftedPrimitives`
   module. Import the last module only for legacy adapter consumers.
 * Obsolete exact/right-shifted selected primitive route: there is no active
   scaffold exported for {lit}`SelectedProjectionPrimitiveExactConstruction` or
@@ -507,7 +507,7 @@ below, not by file order.
 
 The legacy selected-projection exact/right-shifted adapter predicates remain
 quarantined in
-{lit}`FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.RightShiftedPrimitives`.
+{lit}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.RightShiftedPrimitives`.
 There is intentionally no exported scaffold for
 {lit}`SelectedProjectionPrimitiveExactConstruction` or
 {lit}`SelectedProjectionPrimitiveRightShiftedConstruction`: the live route is

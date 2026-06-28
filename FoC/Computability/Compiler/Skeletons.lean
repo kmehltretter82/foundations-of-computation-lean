@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.FixedSimulatorSkeletons
 import FoC.Computability.Compiler.Core.TapeCodePrimitiveSequencing
-import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Construction.PhaseAdapters
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.PhaseAdapters
 import FoC.Computability.Compiler.Core.FiniteScaffolds
 import FoC.Computability.Compiler.Core.SearchDrivers
 import FoC.Computability.Compiler.Core.Closeout

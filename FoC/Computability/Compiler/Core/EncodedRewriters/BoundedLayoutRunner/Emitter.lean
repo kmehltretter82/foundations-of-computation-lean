@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Assembly
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Assembly
 
 set_option doc.verso true
 

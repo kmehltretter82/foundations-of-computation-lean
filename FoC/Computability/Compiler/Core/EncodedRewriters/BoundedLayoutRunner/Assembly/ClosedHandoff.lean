@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.Identity
 import FoC.Computability.Compiler.Core.TapeCodePrimitiveSequencing
-import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Closed.Assembly
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Assembly
 
 set_option doc.verso true
 
