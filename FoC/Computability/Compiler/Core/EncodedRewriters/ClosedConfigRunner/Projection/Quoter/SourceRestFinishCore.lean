@@ -40,6 +40,22 @@ def assemblySourceRestFinishTargetPrefixBits
       (preservingCellPassCellBits
         (assemblySourceRestFinishSourceBits w sourceRestBits stage)))
 
+def assemblySourceRestFinishRawSourceBits
+    (w sourceRestBits : Word Bool) (stage : Nat) : Word Bool :=
+  assemblySourceRestFinishSourceBits w sourceRestBits stage
+
+def assemblySourceRestFinishRawTailBits
+    (sourceRestBits : Word Bool) (stage : Nat) : Word Bool :=
+  List.append
+    (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+      stage)
+    sourceRestBits
+
+def assemblySourceRestFinishQuotedPrefixBits
+    (w : Word Bool) (stage : Nat) : Word Bool :=
+  preservingCellPassCellBits
+    (assemblySourceRestFinishSourcePrefixBits w stage)
+
 theorem assemblySourceRestFinishSourceBits_eq
     (w sourceRestBits : Word Bool) (stage : Nat) :
     assemblySourceRestFinishSourceBits w sourceRestBits stage =
@@ -58,6 +74,15 @@ theorem assemblySourceRestFinishSourceBits_eq_prefix_append_sourceRest
         sourceRestBits := by
   simp [assemblySourceRestFinishSourceBits,
     assemblySourceRestFinishSourcePrefixBits, List.append_assoc]
+
+theorem assemblySourceRestFinishRawSourceBits_eq_prefix_append_sourceRest
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    assemblySourceRestFinishRawSourceBits w sourceRestBits stage =
+      List.append
+        (assemblySourceRestFinishSourcePrefixBits w stage)
+        sourceRestBits := by
+  rw [assemblySourceRestFinishRawSourceBits,
+    assemblySourceRestFinishSourceBits_eq_prefix_append_sourceRest]
 
 theorem assemblySourceRestFinishSourcePrefixBits_eq_fields
     (w : Word Bool) (stage : Nat) :
@@ -183,6 +208,21 @@ theorem assemblySourceRestFinishTargetPrefixBits_eq_splitQuote_prefixLength
             (preservingCellPassCellBits sourceRestBits))) := by
   rw [assemblySourceRestFinishTargetPrefixBits_eq_splitQuote,
     assemblySourceRestFinishSourceBits_length_eq_prefix_add]
+
+theorem assemblySourceRestFinishTargetPrefixBits_eq_named_splitQuote_prefixLength
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    assemblySourceRestFinishTargetPrefixBits w sourceRestBits stage =
+      List.append
+        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            ((assemblySourceRestFinishSourcePrefixBits w stage).length +
+              sourceRestBits.length))
+          (List.append
+            (assemblySourceRestFinishQuotedPrefixBits w stage)
+            (preservingCellPassCellBits sourceRestBits))) := by
+  rw [assemblySourceRestFinishTargetPrefixBits_eq_splitQuote_prefixLength]
+  rfl
 
 theorem assemblySourceRestFinishTargetPrefixBits_length_eq_headerQuote
     (w sourceRestBits : Word Bool) (stage : Nat) :
@@ -847,6 +887,23 @@ def AssemblySourceRestFinishLeftBoundaryConstruction : Prop :=
   exists finish : MachineDescription,
     AssemblySourceRestFinishLeftBoundarySpec finish
 
+def AssemblySourceRestFinishLeftBoundaryCoreSpec
+    (finish : MachineDescription) : Prop :=
+  finish.SubroutineReady ∧
+    forall (w sourceRestBits : Word Bool) (stage : Nat),
+      finish.HaltsFromTape
+        (assemblySourceRestFinishLeftBoundaryTape w sourceRestBits stage)
+        (assemblySourceRestFinishTargetTape w sourceRestBits stage)
+
+def AssemblySourceRestFinishLeftBoundaryCoreConstruction : Prop :=
+  exists finish : MachineDescription,
+    AssemblySourceRestFinishLeftBoundaryCoreSpec finish
+
+theorem assemblySourceRestFinishLeftBoundaryConstruction_of_core
+    (h : AssemblySourceRestFinishLeftBoundaryCoreConstruction) :
+    AssemblySourceRestFinishLeftBoundaryConstruction := by
+  exact h
+
 theorem scanLeftToBlankLeftHaltTape_cons
     (cell : Option Bool) (leftBase : List (Option Bool))
     (bits : Word Bool) (right : List (Option Bool)) :
@@ -997,6 +1054,17 @@ theorem assemblySourceRestFinishTargetTape_eq_tapeAtCells_fields_prefixLength
           sourceRestBits).map some) := by
   rw [assemblySourceRestFinishTargetTape,
     assemblySourceRestFinishTargetPrefixBits_eq_splitQuote_prefixLength]
+
+theorem assemblySourceRestFinishTargetTape_eq_tapeAtCells_named_prefixLength
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    assemblySourceRestFinishTargetTape w sourceRestBits stage =
+      tapeAtCells
+        ((assemblySourceRestFinishTargetPrefixBits
+          w sourceRestBits stage).reverse.map some)
+        ((assemblySourceRestFinishRawTailBits
+          sourceRestBits stage).map some) := by
+  rw [assemblySourceRestFinishTargetTape,
+    assemblySourceRestFinishRawTailBits]
 
 theorem preservingCellPassHaltTape_eq_assemblySourceRestFinishSourceTape
     (w : Word Bool) (b : Bool) (rest : Word Bool) (stage : Nat) :
@@ -1168,9 +1236,14 @@ theorem assemblySourceRestFinishConstruction_of_boundary
     ⟨assemblySourceRestFinishFromBoundary finish,
       assemblySourceRestFinishSpec_of_boundary hfinish⟩
 
-theorem assemblySourceRestFinishLeftBoundaryConstruction :
-    AssemblySourceRestFinishLeftBoundaryConstruction := by
+theorem assemblySourceRestFinishLeftBoundaryCoreConstruction :
+    AssemblySourceRestFinishLeftBoundaryCoreConstruction := by
   sorry
+
+theorem assemblySourceRestFinishLeftBoundaryConstruction :
+    AssemblySourceRestFinishLeftBoundaryConstruction :=
+  assemblySourceRestFinishLeftBoundaryConstruction_of_core
+    assemblySourceRestFinishLeftBoundaryCoreConstruction
 
 theorem assemblySourceRestFinishQuoteBoundaryConstruction :
     AssemblySourceRestFinishQuoteBoundaryConstruction :=
