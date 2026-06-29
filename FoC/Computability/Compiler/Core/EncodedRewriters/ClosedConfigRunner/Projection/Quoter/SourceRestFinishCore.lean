@@ -2,6 +2,23 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+# Source-rest finish core
+
+This module records the exact tape and bit views for the final source-rest
+finishing phase of the selected projection input quoter.  The phase starts
+after the assembly scanner has parsed the {lit}`transition` field and the
+stage-input prefix.  At that point the tape still contains a mixed parser-stack
+layout: ordinary data cells are interleaved with parser {lit}`none` markers, and
+the physical source-rest suffix remains live on the right.
+
+The target tape has a fresh {lit}`header` length field, the quoted parser-stack
+and stage-prefix bits, the quoted source-rest field, and the live tail named by
+{lit}`assemblySourceRestFinishRawTailBits`.  The lemmas below keep these
+pieces separate so the finite copier can distinguish structural markers from
+payload cells while still quoting markers with {lit}`optionBitDefaultFalse`.
+-/
+
 namespace FoC
 namespace Computability
 
@@ -15,6 +32,13 @@ namespace SelectedProjectionInputQuoterFiniteLeaf
 
 open DovetailInitialLayoutInitializer
 open DovetailInitialLayoutInitializer.StageInputMarkedScanner
+
+/-!
+**Source and target bit views.**  These definitions name the raw source field,
+the parsed source prefix, the emitted header/quote prefix, and the final live
+tail.  Later proofs use these names instead of repeatedly expanding the nested
+encoding append structure.
+-/
 
 def assemblySourceRestFinishSourceBits
     (w sourceRestBits : Word Bool) (stage : Nat) : Word Bool :=
@@ -122,6 +146,14 @@ theorem assemblySourceRestBoundaryLeftRev_defaultBits_eq_sourcePrefix
       assemblySourceRestFinishSourcePrefixBits w stage := by
   rw [assemblySourceRestBoundaryLeftRev_defaultBits,
     assemblySourceRestFinishSourcePrefixBits]
+
+/-!
+**Mixed parser-stack cells.**  The boundary scanner leaves the parsed prefix in
+the same physical cell layout that the parser used.  The {lit}`none` separator
+inside {lit}`assemblySourceRestFinishParserPrefixCells` is data for this
+phase, not the blank that ends the source-rest field, so the split lemmas below
+name the marker explicitly.
+-/
 
 def assemblySourceRestFinishParserStackCells
     (w : Word Bool) (stage : Nat) : List (Option Bool) :=
@@ -331,6 +363,14 @@ theorem assemblySourceRestFinishParserPrefixCells_eq_marker_split
         assemblySourceRestFinishParserMarkerLeftCells,
         assemblySourceRestFinishParserMarkerRightCells,
         List.append_assoc]
+
+/-!
+**Abstract mixed rewriter layout.**  These tapes describe the intended finite
+leaf independently from a concrete transition table.  The source tape starts at
+the left boundary of the mixed parser-stack/source-rest segment, while the
+target tape has already emitted the header and quoted prefix and leaves
+{lit}`stageBits ++ sourceRestBits` as the live right-hand tail.
+-/
 
 def MixedParserStackRewriterSourceTape
     (prefixCells : List (Option Bool))
@@ -791,6 +831,14 @@ theorem assemblySourceRestFinishTargetPrefixBits_length_eq_splitQuote
   simp [encodeCodeSymbolAsInput, preservingCellPassCellBits_length,
     Nat.add_assoc]
   omega
+
+/-!
+**Exact source, boundary, and target tapes.**  These definitions pin down the
+physical tape windows used by the finish phase.  The accompanying facts give
+both {name}`Tape.cells` and {name}`Tape.normalizedOutput` views so later
+subroutine composition can use exact-tape handoffs rather than semantic output
+shortcuts.
+-/
 
 def assemblySourceRestFinishSourceTape
     (w sourceRestBits : Word Bool) (stage : Nat) : Tape Bool :=
@@ -1345,6 +1393,13 @@ theorem assemblySourceRestFinishTargetTape_normalizedOutput_eq_targetBits
     assemblySourceRestFinishLengthHeaderBits]
   simp [List.append_assoc]
 
+/-!
+**Construction contracts.**  The public finish specification starts at
+{name}`assemblySourceRestFinishSourceTape`.  The intermediate contracts expose
+the exact scanner handoff points: the post-boundary tape, the quote-boundary
+tape, and the left-boundary tape used by the still-local core copier.
+-/
+
 def AssemblySourceRestFinishSpec (finish : MachineDescription) : Prop :=
   finish.SubroutineReady ∧
     forall (w sourceRestBits : Word Bool) (stage : Nat),
@@ -1553,6 +1608,14 @@ theorem assemblySourceRestFinishBoundaryTape_move_left_move_right
       (List.append (sourceRestBits.reverse.map some)
         (assemblySourceRestBoundaryLeftRev w stage))
       ((preservingCellPassCellBits sourceRestBits).map some)
+
+/-!
+**Scanner handoff reductions.**  The first reductions move from the source tape
+to the quote boundary by scanning across the already-quoted source-rest field,
+then back to the left boundary.  They are stated as exact
+{name}`MachineDescription.HaltsFromTape` facts so the final construction can be
+assembled with {name}`SeqViaCanonical`.
+-/
 
 def assemblySourceRestFinishQuoteBoundaryTape
     (w sourceRestBits : Word Bool) (stage : Nat) : Tape Bool :=
@@ -2101,6 +2164,13 @@ theorem assemblySourceRestFinishTailCopiedTape_eq_targetTape
   rw [assemblySourceRestFinishTailCopiedTape,
     assemblySourceRestFinishQuoteRestJoinedTape_eq_targetTape]
 
+/-!
+**Phase composition.**  The remaining lemmas compose the small scanners around
+the left-boundary core.  The only finite-machine leaf still hidden behind the
+core construction is the copier that consumes the mixed parser-stack layout and
+emits the normalized target tape.
+-/
+
 theorem preservingCellPassHaltTape_eq_assemblySourceRestFinishSourceTape
     (w : Word Bool) (b : Bool) (rest : Word Bool) (stage : Nat) :
     preservingCellPassHaltTape
@@ -2271,6 +2341,12 @@ theorem assemblySourceRestFinishConstruction_of_boundary
     ⟨assemblySourceRestFinishFromBoundary finish,
       assemblySourceRestFinishSpec_of_boundary hfinish⟩
 
+/--
+Core finite-machine obligation for the left-boundary source-rest finish phase.
+All surrounding results are exact-tape adapters; this leaf is responsible for
+rewriting the mixed parser-stack/source-rest layout into
+{name}`assemblySourceRestFinishTargetTape`.
+-/
 theorem assemblySourceRestFinishLeftBoundaryCoreConstruction :
     AssemblySourceRestFinishLeftBoundaryCoreConstruction := by
   sorry
