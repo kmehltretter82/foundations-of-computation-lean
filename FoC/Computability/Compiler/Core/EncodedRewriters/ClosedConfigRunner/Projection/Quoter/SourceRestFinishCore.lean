@@ -847,6 +847,27 @@ def AssemblySourceRestFinishLeftBoundaryConstruction : Prop :=
   exists finish : MachineDescription,
     AssemblySourceRestFinishLeftBoundarySpec finish
 
+theorem scanLeftToBlankLeftHaltTape_cons
+    (cell : Option Bool) (leftBase : List (Option Bool))
+    (bits : Word Bool) (right : List (Option Bool)) :
+    scanLeftToBlankLeftHaltTape (cell :: leftBase) bits right =
+      { left := leftBase
+        head := cell
+        right := none :: List.append (bits.map some) right } := by
+  simp [scanLeftToBlankLeftHaltTape, tapeAtCells, Tape.move,
+    Tape.moveLeft]
+
+theorem scanLeftToBlankLeftHaltTape_right_of_left_ne_nil
+    (leftBase : List (Option Bool)) (bits : Word Bool)
+    (right : List (Option Bool)) (hleft : leftBase ≠ []) :
+    (scanLeftToBlankLeftHaltTape leftBase bits right).right =
+      none :: List.append (bits.map some) right := by
+  cases leftBase with
+  | nil =>
+      contradiction
+  | cons cell rest =>
+      simp [scanLeftToBlankLeftHaltTape_cons]
+
 theorem assemblySourceRestBoundaryLeftRev_ne_nil
     (w : Word Bool) (stage : Nat) :
     assemblySourceRestBoundaryLeftRev w stage ≠ [] := by
@@ -934,6 +955,48 @@ theorem assemblySourceRestFinishLeftBoundaryTape_defaultedCells_eq_fields
   rw [
     assemblySourceRestFinishLeftBoundaryTape_defaultedCells_eq_prefix_sourceRest_quote]
   simp
+
+theorem assemblySourceRestFinishLeftBoundaryTape_right
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    (assemblySourceRestFinishLeftBoundaryTape w sourceRestBits stage).right =
+      none ::
+        List.append
+          ((preservingCellPassCellBits sourceRestBits).map some)
+          [none] := by
+  rw [assemblySourceRestFinishLeftBoundaryTape]
+  exact
+    scanLeftToBlankLeftHaltTape_right_of_left_ne_nil
+      (List.append (sourceRestBits.reverse.map some)
+        (assemblySourceRestBoundaryLeftRev w stage))
+      (preservingCellPassCellBits sourceRestBits)
+      [none]
+      (by
+        cases sourceRestBits with
+        | nil =>
+            simpa using assemblySourceRestBoundaryLeftRev_ne_nil w stage
+        | cons bit rest =>
+            simp)
+
+theorem assemblySourceRestFinishTargetTape_eq_tapeAtCells_fields_prefixLength
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    assemblySourceRestFinishTargetTape w sourceRestBits stage =
+      tapeAtCells
+        ((List.append
+          (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+          (List.append
+            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              ((assemblySourceRestFinishSourcePrefixBits w stage).length +
+                sourceRestBits.length))
+            (List.append
+              (preservingCellPassCellBits
+                (assemblySourceRestFinishSourcePrefixBits w stage))
+              (preservingCellPassCellBits sourceRestBits)))).reverse.map some)
+        ((List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage)
+          sourceRestBits).map some) := by
+  rw [assemblySourceRestFinishTargetTape,
+    assemblySourceRestFinishTargetPrefixBits_eq_splitQuote_prefixLength]
 
 theorem preservingCellPassHaltTape_eq_assemblySourceRestFinishSourceTape
     (w : Word Bool) (b : Bool) (rest : Word Bool) (stage : Nat) :
