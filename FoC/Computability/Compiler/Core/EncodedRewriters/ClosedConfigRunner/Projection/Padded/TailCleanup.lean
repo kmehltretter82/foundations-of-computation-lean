@@ -2097,6 +2097,18 @@ theorem selectedHitOtherFlagErasedRejectAfterPaddingTape_move_left_move_right
           (some false) (some bit)
           (List.append (rest.map some) [none])
 
+theorem selectedHitOtherFlagErasedAfterPaddingTape_move_left_move_right
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (selectedHitOtherFlagErasedAfterPaddingTape useAccept L)) =
+      selectedHitOtherFlagErasedAfterPaddingTape useAccept L := by
+  cases useAccept
+  · simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
+      selectedHitOtherFlagErasedRejectAfterPaddingTape_move_left_move_right L
+  · simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
+      selectedHitOtherFlagErasedAcceptAfterPaddingTape_move_left_move_right L
+
 theorem selectedHitOtherFlagErasedAcceptAfterPaddingTape_cells
     (L : DovetailLayout) :
     Tape.cells (selectedHitOtherFlagErasedAcceptAfterPaddingTape L) =
@@ -2509,8 +2521,10 @@ theorem selectedProjectionPaddedTailCleanupPostEraseSpec_of_postPadding
           hpostPadding.left
           (skipCurrentAndFourBlankPaddingRightDescription_haltsFrom_rejectHandoff_named
             L)
-          (selectedHitOtherFlagErasedRejectAfterPaddingTape_move_left_move_right
-            L)
+          (by
+            simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
+              selectedHitOtherFlagErasedAfterPaddingTape_move_left_move_right
+                false L)
           (by
             simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
               hpostPadding.right L)
@@ -2526,8 +2540,10 @@ theorem selectedProjectionPaddedTailCleanupPostEraseSpec_of_postPadding
           hpostPadding.left
           (skipCurrentAndFourBlankPaddingLeftDescription_haltsFrom_acceptHandoff
             L)
-          (selectedHitOtherFlagErasedAcceptAfterPaddingTape_move_left_move_right
-            L)
+          (by
+            simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
+              selectedHitOtherFlagErasedAfterPaddingTape_move_left_move_right
+                true L)
           (by
             simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
               hpostPadding.right L)
