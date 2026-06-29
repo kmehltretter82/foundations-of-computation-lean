@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.UniversalAndRanges.Basic
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallHandoff
 
 set_option doc.verso true
 
@@ -79,152 +79,119 @@ theorem nestedCodePrefixRecognizerStageCode_eq_iff
     subst input₂
     rfl
 
-theorem turingMachine_step_of_tape_equiv
-    {M : TuringMachine symbol state}
-    {c d : TuringMachine.Configuration symbol state}
-    {tape : Tape symbol}
-    (hstep : TuringMachine.Step M c d)
-    (htape : Tape.Equiv c.tape tape) :
-    exists nextTape : Tape symbol,
-      TuringMachine.Step M
-        { state := c.state, tape := tape }
-        { state := d.state, tape := nextTape } ∧
-        Tape.Equiv d.tape nextTape := by
-  cases hstep with
-  | mk haction =>
-      rename_i write dir nextState
-      refine
-        ⟨Tape.move dir (Tape.write write tape), ?_, ?_⟩
-      · exact TuringMachine.Step.mk (by
-          rw [← Tape.Equiv.read_eq htape]
-          exact haction)
-      · exact Tape.Equiv.move (Tape.Equiv.write htape write) dir
+/--
+Exact-fuel generated-call runner.  The concrete machine parses a generated
+stage code, treats the parsed natural as the exact simulation fuel, rebuilds
+the payload as the wrapped machine's input, and halts precisely when the
+wrapped machine halts in that exact number of steps.
+-/
+def CodePrefixExactFuelRunnerConstruction
+    {machineState : Type u}
+    (M : TuringMachine MachineCodeSymbol machineState) : Prop :=
+  exists runnerState : Type,
+  exists runner : TuringMachine MachineCodeSymbol runnerState,
+    forall input : Word MachineCodeSymbol,
+    forall fuel : Nat,
+      TuringMachine.HaltsOnInput runner
+          (CodePrefixRecognizerStageCode input fuel) <->
+        TuringMachine.HaltsOnInputIn M fuel input
 
 /--
-Unbounded computations are stable under tape equivalence at the starting
-tape, preserving the final state.
+Finite-machine leaf for {name}`CodePrefixExactFuelRunnerConstruction`.
+This is the shared exact-fuel runner promised by the generated-call helper
+plan.
 -/
-theorem turingMachine_computes_of_tape_equiv
-    {M : TuringMachine symbol state}
-    {c e : TuringMachine.Configuration symbol state}
-    {tape : Tape symbol}
-    (hcomp : TuringMachine.Computes M c e)
-    (htape : Tape.Equiv c.tape tape) :
-    exists e' : TuringMachine.Configuration symbol state,
-      TuringMachine.Computes M { state := c.state, tape := tape } e' ∧
-        e'.state = e.state ∧
-        Tape.Equiv e.tape e'.tape := by
-  induction hcomp generalizing tape with
-  | refl c =>
-      exact
-        ⟨{ state := c.state, tape := tape },
-          TuringMachine.Computes.refl _, rfl, htape⟩
-  | step hstep hrest ih =>
-      rcases turingMachine_step_of_tape_equiv hstep htape with
-        ⟨nextTape, hstep', htape'⟩
-      rcases ih htape' with
-        ⟨e', hcomp', hstate'', htape''⟩
-      exact
-        ⟨e', TuringMachine.Computes.step hstep' hcomp',
-          hstate'', htape''⟩
+theorem codePrefixExactFuelRunnerFiniteLeaf
+    {machineState : Type u}
+    (M : TuringMachine MachineCodeSymbol machineState) :
+    CodePrefixExactFuelRunnerConstruction M := by
+  sorry
 
 /--
-Unbounded halting from a configuration is stable under tape equivalence at the
-starting tape.
+Unbounded generated-pair enumerator.  The concrete machine preserves the raw
+input, enumerates two unary natural parameters, rebuilds the nested generated
+call, and invokes the supplied selected runner.
 -/
-theorem turingMachine_haltsFrom_of_tape_equiv
-    {M : TuringMachine symbol state}
-    {state : state} {tape tape' : Tape symbol}
-    (htape : Tape.Equiv tape tape')
-    (hhalt : TuringMachine.HaltsFrom M { state := state, tape := tape }) :
-    TuringMachine.HaltsFrom M { state := state, tape := tape' } := by
-  rcases hhalt with ⟨final, hcomp, hfinal⟩
-  rcases turingMachine_computes_of_tape_equiv hcomp htape with
-    ⟨final', hcomp', hstate, _htape'⟩
-  exact
-    ⟨final', hcomp',
-      by simpa [TuringMachine.Halted, hstate] using hfinal⟩
+def CodePrefixNestedPairEnumeratorConstruction
+    {selectedState : Type u}
+    (selected : TuringMachine MachineCodeSymbol selectedState) : Prop :=
+  exists searcherState : Type,
+  exists searcher : TuringMachine MachineCodeSymbol searcherState,
+    forall input : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput searcher input <->
+        exists inner : Nat,
+        exists outer : Nat,
+          TuringMachine.HaltsOnInput selected
+            (NestedCodePrefixRecognizerStageCode input inner outer)
 
 /--
-Unbounded halting from equivalent starting tapes is equivalent.
+Finite-machine leaf for unbounded generated-pair enumeration.
 -/
-theorem turingMachine_haltsFrom_tape_equiv_iff
-    (M : TuringMachine symbol state)
-    (state : state) {tape tape' : Tape symbol}
-    (htape : Tape.Equiv tape tape') :
-    TuringMachine.HaltsFrom M { state := state, tape := tape } <->
-      TuringMachine.HaltsFrom M { state := state, tape := tape' } := by
-  constructor
-  · exact turingMachine_haltsFrom_of_tape_equiv htape
-  · exact
-      turingMachine_haltsFrom_of_tape_equiv
-        (Tape.Equiv.symm htape)
+theorem codePrefixNestedPairEnumeratorFiniteLeaf
+    {selectedState : Type u}
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    CodePrefixNestedPairEnumeratorConstruction selected := by
+  sorry
 
 /--
-Exact computations are stable under tape equivalence at the starting tape,
-with the same step count and final state.
+Bounded generated-pair enumerator.  The input carries an outer budget; the
+machine enumerates pairs bounded by that budget and invokes the selected
+runner on each rebuilt nested generated call.
 -/
-theorem turingMachine_computesIn_of_tape_equiv
-    {M : TuringMachine symbol state}
-    {n : Nat}
-    {c e : TuringMachine.Configuration symbol state}
-    {tape : Tape symbol}
-    (hcomp : TuringMachine.ComputesIn M n c e)
-    (htape : Tape.Equiv c.tape tape) :
-    exists e' : TuringMachine.Configuration symbol state,
-      TuringMachine.ComputesIn M n
-        { state := c.state, tape := tape } e' ∧
-        e'.state = e.state ∧
-        Tape.Equiv e.tape e'.tape := by
-  induction hcomp generalizing tape with
-  | zero c =>
-      exact
-        ⟨{ state := c.state, tape := tape },
-          TuringMachine.ComputesIn.zero _, rfl, htape⟩
-  | succ hstep hrest ih =>
-      rcases
-          turingMachine_step_of_tape_equiv
-            hstep htape with
-        ⟨nextTape, hstep', htape'⟩
-      rcases ih htape' with
-        ⟨e', hcomp', hstate'', htape''⟩
-      exact
-        ⟨e', TuringMachine.ComputesIn.succ hstep' hcomp',
-          hstate'', htape''⟩
+def CodePrefixBoundedNestedPairEnumeratorConstruction
+    {selectedState : Type u}
+    (selected : TuringMachine MachineCodeSymbol selectedState) : Prop :=
+  exists searcherState : Type,
+  exists searcher : TuringMachine MachineCodeSymbol searcherState,
+    forall input : Word MachineCodeSymbol,
+    forall budget : Nat,
+      TuringMachine.HaltsOnInput searcher
+          (CodePrefixRecognizerStageCode input budget) <->
+        exists inner : Nat,
+        exists outer : Nat,
+          inner ≤ budget ∧
+            outer ≤ budget ∧
+            TuringMachine.HaltsOnInput selected
+              (NestedCodePrefixRecognizerStageCode input inner outer)
 
 /--
-Exact halting from a configuration is stable under tape equivalence at the
-starting tape, preserving the same step bound.
+Finite-machine leaf for bounded generated-pair enumeration.
 -/
-theorem turingMachine_haltsFromIn_of_tape_equiv
-    {M : TuringMachine symbol state}
-    {n : Nat} {state : state} {tape tape' : Tape symbol}
-    (htape : Tape.Equiv tape tape')
-    (hhalt :
-      TuringMachine.HaltsFromIn M n { state := state, tape := tape }) :
-    TuringMachine.HaltsFromIn M n { state := state, tape := tape' } := by
-  rcases hhalt with ⟨final, hcomp, hfinal⟩
-  rcases turingMachine_computesIn_of_tape_equiv hcomp htape with
-    ⟨final', hcomp', hstate, _htape'⟩
-  exact
-    ⟨final', hcomp',
-      by simpa [TuringMachine.Halted, hstate] using hfinal⟩
+theorem codePrefixBoundedNestedPairEnumeratorFiniteLeaf
+    {selectedState : Type u}
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    CodePrefixBoundedNestedPairEnumeratorConstruction selected := by
+  sorry
 
 /--
-Exact halting from equivalent starting tapes is equivalent for the same step
-bound.
+Product exact-fuel runner for recognizer intersection.  The input carries two
+generated fuel parameters; the machine runs the left recognizer for the outer
+fuel and the right recognizer for the inner fuel on the same preserved input.
 -/
-theorem turingMachine_haltsFromIn_tape_equiv_iff
-    (M : TuringMachine symbol state)
-    (n : Nat) (state : state) {tape tape' : Tape symbol}
-    (htape : Tape.Equiv tape tape') :
-    TuringMachine.HaltsFromIn M n { state := state, tape := tape } <->
-      TuringMachine.HaltsFromIn M n { state := state, tape := tape' } := by
-  constructor
-  · exact turingMachine_haltsFromIn_of_tape_equiv htape
-  · exact
-      turingMachine_haltsFromIn_of_tape_equiv
-        (Tape.Equiv.symm htape)
+def CodePrefixExactFuelProductRunnerConstruction
+    {leftState : Type uStage} {rightState : Type uDescription}
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState) : Prop :=
+  exists selectedState : Type,
+  exists selected : TuringMachine MachineCodeSymbol selectedState,
+    forall input : Word MachineCodeSymbol,
+    forall leftFuel : Nat,
+    forall rightFuel : Nat,
+      TuringMachine.HaltsOnInput selected
+          (NestedCodePrefixRecognizerStageCode
+            input rightFuel leftFuel) <->
+        TuringMachine.HaltsOnInputIn left leftFuel input ∧
+          TuringMachine.HaltsOnInputIn right rightFuel input
+
+/--
+Finite-machine leaf for the product exact-fuel runner.
+-/
+theorem codePrefixExactFuelProductRunnerFiniteLeaf
+    {leftState : Type uStage} {rightState : Type uDescription}
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState) :
+    CodePrefixExactFuelProductRunnerConstruction left right := by
+  sorry
 
 /--
 Generic pair-bounding algebra for dovetail drivers: existential search over a

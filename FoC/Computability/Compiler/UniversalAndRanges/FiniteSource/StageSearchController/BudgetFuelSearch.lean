@@ -245,7 +245,12 @@ theorem codePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptFiniteL
     (attempt : TuringMachine MachineCodeSymbol attemptState) :
     CodePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptObligation
       attempt := by
-  sorry
+  rcases codePrefixExactFuelRunnerFiniteLeaf attempt with
+    ⟨selectedState, selected, hselected⟩
+  refine ⟨selectedState, selected, ?_⟩
+  intro encoded limit fuel
+  simpa [codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode]
+    using hselected (CodePrefixRecognizerStageCode encoded limit) fuel
 
 /--
 Finite-machine leaf for the limit/fuel enumerator used by the raw outer-loop
@@ -256,7 +261,23 @@ theorem codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelEnumeratorFin
     (selected : TuringMachine MachineCodeSymbol selectedState) :
     CodePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelEnumeratorObligation
       selected := by
-  sorry
+  rcases codePrefixNestedPairEnumeratorFiniteLeaf selected with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro encoded
+  constructor
+  · intro hhalt
+    rcases (hsearcher encoded).mp hhalt with
+      ⟨limit, fuel, hselected⟩
+    exact ⟨limit, fuel, by
+      simpa [codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode,
+        NestedCodePrefixRecognizerStageCode] using hselected⟩
+  · intro htarget
+    rcases htarget with ⟨limit, fuel, hselected⟩
+    exact (hsearcher encoded).mpr
+      ⟨limit, fuel, by
+        simpa [codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode,
+          NestedCodePrefixRecognizerStageCode] using hselected⟩
 
 /--
 Adapter from the selected-attempt runner and limit/fuel enumerator to the raw

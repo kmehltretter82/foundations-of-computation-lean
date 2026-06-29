@@ -121,7 +121,14 @@ intersection.
 -/
 theorem codePrefixStageSearchControllerBudgetCheckerIntersectionSelectedFuelRunFiniteLeaf :
     CodePrefixStageSearchControllerBudgetCheckerIntersectionSelectedFuelRunObligation := by
-  sorry
+  intro leftState rightState left right
+  rcases codePrefixExactFuelProductRunnerFiniteLeaf left right with
+    ⟨selectedState, selected, hselected⟩
+  refine ⟨selectedState, selected, ?_⟩
+  intro input leftFuel rightFuel
+  simpa [codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairCode,
+    NestedCodePrefixRecognizerStageCode] using
+    hselected input leftFuel rightFuel
 
 /--
 Finite-machine leaf for the fuel-pair enumerator used by recognizer
@@ -132,7 +139,23 @@ theorem codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairEnumerat
     (selected : TuringMachine MachineCodeSymbol selectedState) :
     CodePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairEnumeratorObligation
       selected := by
-  sorry
+  rcases codePrefixNestedPairEnumeratorFiniteLeaf selected with
+    ⟨bothState, both, hboth⟩
+  refine ⟨bothState, both, ?_⟩
+  intro input
+  constructor
+  · intro hhalt
+    rcases (hboth input).mp hhalt with
+      ⟨rightFuel, leftFuel, hselected⟩
+    exact ⟨leftFuel, rightFuel, by
+      simpa [codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairCode,
+        NestedCodePrefixRecognizerStageCode] using hselected⟩
+  · intro htarget
+    rcases htarget with ⟨leftFuel, rightFuel, hselected⟩
+    exact (hboth input).mpr
+      ⟨rightFuel, leftFuel, by
+        simpa [codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairCode,
+          NestedCodePrefixRecognizerStageCode] using hselected⟩
 
 /--
 Adapter from the selected-fuel runner and fuel-pair enumerator to the
