@@ -123,6 +123,261 @@ theorem assemblySourceRestBoundaryLeftRev_defaultBits_eq_sourcePrefix
   rw [assemblySourceRestBoundaryLeftRev_defaultBits,
     assemblySourceRestFinishSourcePrefixBits]
 
+def assemblySourceRestFinishParserStackCells
+    (w : Word Bool) (stage : Nat) : List (Option Bool) :=
+  List.reverse (assemblySourceRestBoundaryLeftRev w stage)
+
+def assemblySourceRestFinishFlatSourceCells
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    List (Option Bool) :=
+  List.append
+    (assemblySourceRestFinishParserStackCells w stage)
+    (sourceRestBits.map some)
+
+def assemblySourceRestFinishQuoteRestCells
+    (sourceRestBits : Word Bool) : List (Option Bool) :=
+  (preservingCellPassCellBits sourceRestBits).map some
+
+def assemblySourceRestFinishParserPrefixCells
+    (w : Word Bool) : List (Option Bool) :=
+  match w with
+  | [] =>
+      List.append
+        (List.reverse transitionPrefixLeftTail)
+        [some false, none, some true, some true]
+  | b :: rest =>
+      List.append
+        (List.reverse transitionPrefixLeftTail)
+        (List.append [some false, none]
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTailPrefix
+            (b :: rest)).map some))
+
+theorem assemblySourceRestFinishParserStackCells_nil_eq_segments
+    (stage : Nat) :
+    assemblySourceRestFinishParserStackCells ([] : Word Bool) stage =
+      List.append
+        (List.reverse transitionPrefixLeftTail)
+        (List.append [some false, none, some true, some true]
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).map some)) := by
+  simp [assemblySourceRestFinishParserStackCells,
+    assemblySourceRestBoundaryLeftRev, List.reverse_append,
+    List.map_reverse, List.append_assoc]
+
+theorem assemblySourceRestFinishParserStackCells_cons_eq_segments
+    (b : Bool) (rest : Word Bool) (stage : Nat) :
+    assemblySourceRestFinishParserStackCells (b :: rest) stage =
+      List.append
+        (List.reverse transitionPrefixLeftTail)
+        (List.append [some false, none]
+          (List.append
+            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTailPrefix
+              (b :: rest)).map some)
+            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              stage).map some))) := by
+  simp [assemblySourceRestFinishParserStackCells,
+    assemblySourceRestBoundaryLeftRev, List.reverse_append,
+    List.map_reverse, List.append_assoc]
+
+theorem assemblySourceRestFinishParserPrefixCells_nil
+    :
+    assemblySourceRestFinishParserPrefixCells ([] : Word Bool) =
+      List.append
+        (List.reverse transitionPrefixLeftTail)
+        [some false, none, some true, some true] := by
+  rfl
+
+theorem assemblySourceRestFinishParserPrefixCells_cons
+    (b : Bool) (rest : Word Bool) :
+    assemblySourceRestFinishParserPrefixCells (b :: rest) =
+      List.append
+        (List.reverse transitionPrefixLeftTail)
+        (List.append [some false, none]
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTailPrefix
+            (b :: rest)).map some)) := by
+  rfl
+
+theorem assemblySourceRestFinishParserStackCells_defaultBits
+    (w : Word Bool) (stage : Nat) :
+    List.map optionBitDefaultFalse
+        (assemblySourceRestFinishParserStackCells w stage) =
+      assemblySourceRestFinishSourcePrefixBits w stage := by
+  rw [assemblySourceRestFinishParserStackCells,
+    assemblySourceRestBoundaryLeftRev_defaultBits_eq_sourcePrefix]
+
+theorem assemblySourceRestFinishFlatSourceCells_defaultBits
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    List.map optionBitDefaultFalse
+        (assemblySourceRestFinishFlatSourceCells w sourceRestBits stage) =
+      assemblySourceRestFinishSourceBits w sourceRestBits stage := by
+  simp [assemblySourceRestFinishFlatSourceCells,
+    assemblySourceRestFinishSourceBits_eq_prefix_append_sourceRest,
+    List.map_append, List.map_map,
+    assemblySourceRestFinishParserStackCells_defaultBits,
+    optionBitDefaultFalse_map_some]
+
+theorem assemblySourceRestFinishQuoteRestCells_defaultBits
+    (sourceRestBits : Word Bool) :
+    List.map optionBitDefaultFalse
+        (assemblySourceRestFinishQuoteRestCells sourceRestBits) =
+      preservingCellPassCellBits sourceRestBits := by
+  simp [assemblySourceRestFinishQuoteRestCells, List.map_map,
+    optionBitDefaultFalse_map_some]
+
+theorem assemblySourceRestFinishParserStackCells_eq_prefix_append_stageNat
+    (w : Word Bool) (stage : Nat) :
+    exists prefixCells : List (Option Bool),
+      assemblySourceRestFinishParserStackCells w stage =
+        List.append prefixCells
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).map some) := by
+  cases w with
+  | nil =>
+      refine
+        ⟨List.append
+          (List.reverse transitionPrefixLeftTail)
+          [some false, none, some true, some true], ?_⟩
+      rw [assemblySourceRestFinishParserStackCells_nil_eq_segments]
+      simp [List.append_assoc]
+  | cons b rest =>
+      refine
+        ⟨List.append
+          (List.reverse transitionPrefixLeftTail)
+          (List.append [some false, none]
+            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTailPrefix
+              (b :: rest)).map some)), ?_⟩
+      rw [assemblySourceRestFinishParserStackCells_cons_eq_segments]
+      simp [List.append_assoc]
+
+theorem assemblySourceRestFinishParserStackCells_eq_prefixCells_append_stageNat
+    (w : Word Bool) (stage : Nat) :
+    assemblySourceRestFinishParserStackCells w stage =
+      List.append
+        (assemblySourceRestFinishParserPrefixCells w)
+        ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          stage).map some) := by
+  cases w with
+  | nil =>
+      rw [assemblySourceRestFinishParserStackCells_nil_eq_segments]
+      rfl
+  | cons b rest =>
+      rw [assemblySourceRestFinishParserStackCells_cons_eq_segments]
+      rfl
+
+def MixedParserStackRewriterSourceTape
+    (prefixCells : List (Option Bool))
+    (stageBits sourceRestBits quoteRestBits : Word Bool) : Tape Bool :=
+  scanLeftToBlankLeftHaltTape
+    (List.append
+      (sourceRestBits.reverse.map some)
+      (List.append (stageBits.reverse.map some)
+        prefixCells.reverse))
+    quoteRestBits
+    [none]
+
+def MixedParserStackRewriterTargetTape
+    (prefixQuote lengthHeader : Word Bool)
+    (stageBits sourceRestBits quoteRestBits : Word Bool) : Tape Bool :=
+  tapeAtCells
+    ((List.append lengthHeader
+      (List.append prefixQuote quoteRestBits)).reverse.map some)
+    ((List.append stageBits sourceRestBits).map some)
+
+theorem mixedParserStack_defaultBits_length
+    (cells : List (Option Bool)) :
+    (cells.map optionBitDefaultFalse).length = cells.length := by
+  simp
+
+def mixedParserStackQuotedCellBits (cell : Option Bool) : Word Bool :=
+  match cell with
+  | none => preservingCellPassZeroBits
+  | some false => preservingCellPassZeroBits
+  | some true => preservingCellPassOneBits
+
+def mixedParserStackQuotedCellsBits :
+    List (Option Bool) -> Word Bool
+  | [] => []
+  | cell :: rest =>
+      List.append
+        (mixedParserStackQuotedCellBits cell)
+        (mixedParserStackQuotedCellsBits rest)
+
+theorem mixedParserStackQuotedCellsBits_append
+    (pref suffix : List (Option Bool)) :
+    mixedParserStackQuotedCellsBits (List.append pref suffix) =
+      List.append (mixedParserStackQuotedCellsBits pref)
+        (mixedParserStackQuotedCellsBits suffix) := by
+  induction pref with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      change
+        mixedParserStackQuotedCellsBits
+            (cell :: List.append rest suffix) =
+          List.append
+            (List.append (mixedParserStackQuotedCellBits cell)
+              (mixedParserStackQuotedCellsBits rest))
+            (mixedParserStackQuotedCellsBits suffix)
+      change
+        List.append (mixedParserStackQuotedCellBits cell)
+            (mixedParserStackQuotedCellsBits
+              (List.append rest suffix)) =
+          List.append
+            (List.append (mixedParserStackQuotedCellBits cell)
+              (mixedParserStackQuotedCellsBits rest))
+            (mixedParserStackQuotedCellsBits suffix)
+      rw [ih]
+      exact
+        (List.append_assoc
+          (mixedParserStackQuotedCellBits cell)
+          (mixedParserStackQuotedCellsBits rest)
+          (mixedParserStackQuotedCellsBits suffix)).symm
+
+theorem mixedParserStackQuotedCellsBits_eq_defaultBits
+    (cells : List (Option Bool)) :
+    mixedParserStackQuotedCellsBits cells =
+      preservingCellPassCellBits
+        (List.map optionBitDefaultFalse cells) := by
+  induction cells with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      cases cell with
+      | none =>
+          simp [mixedParserStackQuotedCellsBits,
+            mixedParserStackQuotedCellBits, optionBitDefaultFalse,
+            preservingCellPassCellBits, preservingCellPassZeroBits,
+            ih]
+      | some b =>
+          cases b <;>
+            simp [mixedParserStackQuotedCellsBits,
+              mixedParserStackQuotedCellBits, optionBitDefaultFalse,
+              preservingCellPassCellBits, preservingCellPassZeroBits,
+              preservingCellPassOneBits, ih]
+
+theorem mixedParserStackQuotedCellsBits_length
+    (cells : List (Option Bool)) :
+    (mixedParserStackQuotedCellsBits cells).length =
+      4 * cells.length := by
+  rw [mixedParserStackQuotedCellsBits_eq_defaultBits]
+  rw [preservingCellPassCellBits_length]
+  simp
+
+def MixedParserStackRewriterPrefixQuote
+    (prefixCells : List (Option Bool)) (stageBits : Word Bool) :
+    Word Bool :=
+  List.append
+    (mixedParserStackQuotedCellsBits prefixCells)
+    (preservingCellPassCellBits stageBits)
+
+def MixedParserStackRewriterLengthHeader
+    (prefixCells : List (Option Bool))
+    (stageBits sourceRestBits : Word Bool) : Word Bool :=
+  List.append
+    (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+    (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+      (prefixCells.length + stageBits.length + sourceRestBits.length))
+
 theorem assemblySourceRestFinishSourcePrefixBits_length_eq_fields
     (w : Word Bool) (stage : Nat) :
     (assemblySourceRestFinishSourcePrefixBits w stage).length =
@@ -207,6 +462,95 @@ theorem preservingCellPassCellBits_append_bool
               List.append (preservingCellPassCellBits rest)
                 (preservingCellPassCellBits suffix)
         rw [ih]
+
+theorem assemblySourceRestFinishSourcePrefixBits_eq_split_defaulted
+    (w : Word Bool) (stage : Nat)
+    (prefixCells : List (Option Bool))
+    (hsplit :
+      assemblySourceRestFinishParserStackCells w stage =
+        List.append prefixCells
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).map some)) :
+    assemblySourceRestFinishSourcePrefixBits w stage =
+      List.append (List.map optionBitDefaultFalse prefixCells)
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          stage) := by
+  rw [← assemblySourceRestFinishParserStackCells_defaultBits w stage]
+  rw [hsplit]
+  simp [List.map_append, List.map_map, optionBitDefaultFalse_map_some]
+
+theorem MixedParserStackRewriterPrefixQuote_eq_assemblyQuotedPrefix_of_split
+    (w : Word Bool) (stage : Nat)
+    (prefixCells : List (Option Bool))
+    (hsplit :
+      assemblySourceRestFinishParserStackCells w stage =
+        List.append prefixCells
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).map some)) :
+    MixedParserStackRewriterPrefixQuote prefixCells
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          stage) =
+      assemblySourceRestFinishQuotedPrefixBits w stage := by
+  rw [MixedParserStackRewriterPrefixQuote,
+    assemblySourceRestFinishQuotedPrefixBits,
+    assemblySourceRestFinishSourcePrefixBits_eq_split_defaulted
+      w stage prefixCells hsplit,
+    preservingCellPassCellBits_append_bool,
+    mixedParserStackQuotedCellsBits_eq_defaultBits]
+
+theorem MixedParserStackRewriterLengthHeader_eq_assemblyLengthHeader_of_split
+    (w sourceRestBits : Word Bool) (stage : Nat)
+    (prefixCells : List (Option Bool))
+    (hsplit :
+      assemblySourceRestFinishParserStackCells w stage =
+        List.append prefixCells
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).map some)) :
+    MixedParserStackRewriterLengthHeader prefixCells
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          stage)
+        sourceRestBits =
+      assemblySourceRestFinishLengthHeaderBits
+        w sourceRestBits stage := by
+  have hprefix :=
+    assemblySourceRestFinishSourcePrefixBits_eq_split_defaulted
+      w stage prefixCells hsplit
+  have hlen :
+      (assemblySourceRestFinishSourcePrefixBits w stage).length =
+        prefixCells.length +
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).length := by
+    rw [hprefix]
+    simp
+  simp [MixedParserStackRewriterLengthHeader,
+    assemblySourceRestFinishLengthHeaderBits, hlen, Nat.add_assoc]
+
+theorem MixedParserStackRewriterPrefixQuote_eq_assemblyQuotedPrefix
+    (w : Word Bool) (stage : Nat) :
+    MixedParserStackRewriterPrefixQuote
+        (assemblySourceRestFinishParserPrefixCells w)
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          stage) =
+      assemblySourceRestFinishQuotedPrefixBits w stage :=
+  MixedParserStackRewriterPrefixQuote_eq_assemblyQuotedPrefix_of_split
+    w stage (assemblySourceRestFinishParserPrefixCells w)
+    (assemblySourceRestFinishParserStackCells_eq_prefixCells_append_stageNat
+      w stage)
+
+theorem MixedParserStackRewriterLengthHeader_eq_assemblyLengthHeader
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    MixedParserStackRewriterLengthHeader
+        (assemblySourceRestFinishParserPrefixCells w)
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          stage)
+        sourceRestBits =
+      assemblySourceRestFinishLengthHeaderBits
+        w sourceRestBits stage :=
+  MixedParserStackRewriterLengthHeader_eq_assemblyLengthHeader_of_split
+    w sourceRestBits stage
+    (assemblySourceRestFinishParserPrefixCells w)
+    (assemblySourceRestFinishParserStackCells_eq_prefixCells_append_stageNat
+      w stage)
 
 theorem assemblySourceRestFinishTargetPrefixBits_eq_splitQuote
     (w sourceRestBits : Word Bool) (stage : Nat) :
@@ -972,6 +1316,57 @@ theorem tapeAtCells_move_left_none_cons_cells_of_left_ne_nil
   | cons cell rest =>
       simp [tapeAtCells, Tape.cells, Tape.move, Tape.moveLeft]
 
+theorem MixedParserStackRewriterSourceTape_cells_of_left_ne_nil
+    (prefixCells : List (Option Bool))
+    (stageBits sourceRestBits quoteRestBits : Word Bool)
+    (hleft :
+      List.append
+        (sourceRestBits.reverse.map some)
+        (List.append (stageBits.reverse.map some)
+          prefixCells.reverse) ≠ []) :
+    Tape.cells
+        (MixedParserStackRewriterSourceTape
+          prefixCells stageBits sourceRestBits quoteRestBits) =
+      List.append prefixCells
+        (List.append (stageBits.map some)
+          (List.append (sourceRestBits.map some)
+            (none ::
+              List.append (quoteRestBits.map some) [none]))) := by
+  rw [MixedParserStackRewriterSourceTape,
+    scanLeftToBlankLeftHaltTape]
+  rw [tapeAtCells_move_left_none_cons_cells_of_left_ne_nil _ _ hleft]
+  simp [List.reverse_append, List.map_reverse, List.append_assoc]
+
+theorem MixedParserStackRewriterSourceTape_cells_stageNat
+    (prefixCells : List (Option Bool))
+    (sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (MixedParserStackRewriterSourceTape prefixCells
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage)
+          sourceRestBits quoteRestBits) =
+      List.append prefixCells
+        (List.append
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).map some)
+          (List.append (sourceRestBits.map some)
+            (none ::
+              List.append (quoteRestBits.map some) [none]))) := by
+  rcases SelectedProjectionTailProjector.stageNatBits_cons_cons stage with
+    ⟨head, next, right, hstage⟩
+  exact
+    MixedParserStackRewriterSourceTape_cells_of_left_ne_nil
+      prefixCells
+      (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+        stage)
+      sourceRestBits quoteRestBits
+      (by
+        cases sourceRestBits with
+        | nil =>
+            simp [hstage]
+        | cons bit rest =>
+            simp)
+
 theorem assemblySourceRestFinishSourceTape_move_left
     (w sourceRestBits : Word Bool) (stage : Nat) :
     Tape.move Direction.left
@@ -1269,6 +1664,69 @@ theorem assemblySourceRestFinishLeftBoundaryTape_right
         | cons bit rest =>
             simp)
 
+theorem MixedParserStackRewriterSourceTape_eq_leftBoundary_of_split
+    (w sourceRestBits : Word Bool) (stage : Nat)
+    (prefixCells : List (Option Bool))
+    (hsplit :
+      assemblySourceRestFinishParserStackCells w stage =
+        List.append prefixCells
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).map some)) :
+    MixedParserStackRewriterSourceTape prefixCells
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          stage)
+        sourceRestBits
+        (preservingCellPassCellBits sourceRestBits) =
+      assemblySourceRestFinishLeftBoundaryTape
+        w sourceRestBits stage := by
+  have hboundary :
+      assemblySourceRestBoundaryLeftRev w stage =
+        List.append
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).reverse.map some)
+          prefixCells.reverse := by
+    have hrev := congrArg List.reverse hsplit
+    simpa [assemblySourceRestFinishParserStackCells,
+      List.reverse_append, List.map_reverse] using hrev
+  rw [MixedParserStackRewriterSourceTape,
+    assemblySourceRestFinishLeftBoundaryTape, hboundary]
+
+theorem
+    exists_MixedParserStackRewriterSourceTape_eq_leftBoundary
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    exists prefixCells : List (Option Bool),
+      MixedParserStackRewriterSourceTape prefixCells
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage)
+          sourceRestBits
+          (preservingCellPassCellBits sourceRestBits) =
+        assemblySourceRestFinishLeftBoundaryTape
+          w sourceRestBits stage := by
+  rcases
+      assemblySourceRestFinishParserStackCells_eq_prefix_append_stageNat
+        w stage with
+    ⟨prefixCells, hsplit⟩
+  exact
+    ⟨prefixCells,
+      MixedParserStackRewriterSourceTape_eq_leftBoundary_of_split
+        w sourceRestBits stage prefixCells hsplit⟩
+
+theorem MixedParserStackRewriterSourceTape_eq_leftBoundary
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    MixedParserStackRewriterSourceTape
+        (assemblySourceRestFinishParserPrefixCells w)
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          stage)
+        sourceRestBits
+        (preservingCellPassCellBits sourceRestBits) =
+      assemblySourceRestFinishLeftBoundaryTape
+        w sourceRestBits stage :=
+  MixedParserStackRewriterSourceTape_eq_leftBoundary_of_split
+    w sourceRestBits stage
+    (assemblySourceRestFinishParserPrefixCells w)
+    (assemblySourceRestFinishParserStackCells_eq_prefixCells_append_stageNat
+      w stage)
+
 theorem assemblySourceRestFinishTargetTape_eq_tapeAtCells_fields_prefixLength
     (w sourceRestBits : Word Bool) (stage : Nat) :
     assemblySourceRestFinishTargetTape w sourceRestBits stage =
@@ -1333,6 +1791,23 @@ theorem assemblySourceRestFinishTargetTape_eq_tapeAtCells_segments
   rw [assemblySourceRestFinishTargetTape,
     assemblySourceRestFinishTargetPrefixBits_eq_prefixQuote_append_restQuote,
     assemblySourceRestFinishRawTailBits]
+
+theorem MixedParserStackRewriterTargetTape_eq_targetTape
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    MixedParserStackRewriterTargetTape
+        (assemblySourceRestFinishQuotedPrefixBits w stage)
+        (assemblySourceRestFinishLengthHeaderBits
+          w sourceRestBits stage)
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          stage)
+        sourceRestBits
+        (preservingCellPassCellBits sourceRestBits) =
+      assemblySourceRestFinishTargetTape w sourceRestBits stage := by
+  rw [MixedParserStackRewriterTargetTape,
+    assemblySourceRestFinishTargetTape_eq_tapeAtCells_segments,
+    assemblySourceRestFinishPrefixQuoteOutputBits,
+    assemblySourceRestFinishRawTailBits]
+  simp [List.append_assoc]
 
 def assemblySourceRestFinishLengthHeaderTape
     (w sourceRestBits : Word Bool) (stage : Nat) : Tape Bool :=
