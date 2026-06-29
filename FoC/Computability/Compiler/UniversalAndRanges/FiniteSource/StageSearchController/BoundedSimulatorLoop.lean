@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.Basic
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch
 
 set_option doc.verso true
 
@@ -231,79 +232,6 @@ theorem boundedSimulatorCanonicalInputParser_handoffTape_equiv_input
             Tape.Equiv, Tape.move, Tape.moveRight,
             Tape.input, List.replicate,
             Tape.dropTrailingNone]
-
-theorem boundedSimulator_turingMachine_step_of_tape_equiv
-    {M : TuringMachine symbol state}
-    {c d : TuringMachine.Configuration symbol state}
-    {tape : Tape symbol}
-    (hstep : TuringMachine.Step M c d)
-    (htape : Tape.Equiv c.tape tape) :
-    exists nextTape : Tape symbol,
-      TuringMachine.Step M
-        { state := c.state, tape := tape }
-        { state := d.state, tape := nextTape } ∧
-        Tape.Equiv d.tape nextTape := by
-  cases hstep with
-  | mk haction =>
-      rename_i write dir nextState
-      refine
-        ⟨Tape.move dir (Tape.write write tape), ?_, ?_⟩
-      · exact TuringMachine.Step.mk (by
-          rw [← Tape.Equiv.read_eq htape]
-          exact haction)
-      · exact Tape.Equiv.move (Tape.Equiv.write htape write) dir
-
-theorem boundedSimulator_turingMachine_computes_of_tape_equiv
-    {M : TuringMachine symbol state}
-    {c e : TuringMachine.Configuration symbol state}
-    {tape : Tape symbol}
-    (hcomp : TuringMachine.Computes M c e)
-    (htape : Tape.Equiv c.tape tape) :
-    exists e' : TuringMachine.Configuration symbol state,
-      TuringMachine.Computes M { state := c.state, tape := tape } e' ∧
-        e'.state = e.state ∧
-        Tape.Equiv e.tape e'.tape := by
-  induction hcomp generalizing tape with
-  | refl c =>
-      exact
-        ⟨{ state := c.state, tape := tape },
-          TuringMachine.Computes.refl _, rfl, htape⟩
-  | step hstep hrest ih =>
-      rcases
-          boundedSimulator_turingMachine_step_of_tape_equiv
-            hstep htape with
-        ⟨nextTape, hstep', htape'⟩
-      rcases ih htape' with ⟨e', hcomp', hstate'', htape''⟩
-      exact
-        ⟨e', TuringMachine.Computes.step hstep' hcomp',
-          hstate'', htape''⟩
-
-theorem boundedSimulator_turingMachine_haltsFrom_of_tape_equiv
-    {M : TuringMachine symbol state}
-    {state : state} {tape tape' : Tape symbol}
-    (htape : Tape.Equiv tape tape')
-    (hhalt : TuringMachine.HaltsFrom M { state := state, tape := tape }) :
-    TuringMachine.HaltsFrom M { state := state, tape := tape' } := by
-  rcases hhalt with ⟨final, hcomp, hfinal⟩
-  rcases
-      boundedSimulator_turingMachine_computes_of_tape_equiv
-        hcomp htape with
-    ⟨final', hcomp', hstate, _htape'⟩
-  exact
-    ⟨final', hcomp',
-      by simpa [TuringMachine.Halted, hstate] using hfinal⟩
-
-theorem boundedSimulator_turingMachine_haltsFrom_tape_equiv_iff
-    (M : TuringMachine symbol state)
-    (state : state) {tape tape' : Tape symbol}
-    (htape : Tape.Equiv tape tape') :
-    TuringMachine.HaltsFrom M { state := state, tape := tape } <->
-      TuringMachine.HaltsFrom M { state := state, tape := tape' } := by
-  constructor
-  · exact boundedSimulator_turingMachine_haltsFrom_of_tape_equiv htape
-  · exact
-      boundedSimulator_turingMachine_haltsFrom_of_tape_equiv
-        (Tape.Equiv.symm htape)
 
 theorem boundedSimulatorCanonicalInputParserMachine_step_scan_tick
     (pairRunner : TuringMachine MachineCodeSymbol pairState)
@@ -811,7 +739,7 @@ theorem boundedSimulatorCanonicalInputParserMachine_halts_of_pairRunner
       simpa [TuringMachine.HaltsOnInput, TuringMachine.initial]
         using hpair
     exact
-      (boundedSimulator_turingMachine_haltsFrom_tape_equiv_iff
+      (turingMachine_haltsFrom_tape_equiv_iff
         pairRunner pairRunner.start (Tape.Equiv.symm hequiv)).mp
         hinput
   rcases hpairFrom with ⟨pairFinal, hpairComp, hpairHalt⟩
@@ -1266,7 +1194,7 @@ theorem boundedSimulatorCanonicalInputParserMachine_halts_rewindFirst_only
         { state := pairRunner.start
           tape :=
             Tape.input (CodePrefixRecognizerStageCode encoded stage) } :=
-    (boundedSimulator_turingMachine_haltsFrom_tape_equiv_iff
+    (turingMachine_haltsFrom_tape_equiv_iff
       pairRunner pairRunner.start hequiv).mp hpairFrom
   simpa [TuringMachine.HaltsOnInput, TuringMachine.initial] using hinput
 

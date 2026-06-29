@@ -79,7 +79,7 @@ theorem nestedCodePrefixRecognizerStageCode_eq_iff
     subst input₂
     rfl
 
-private theorem generatedCall_turingMachine_step_of_tape_equiv
+theorem turingMachine_step_of_tape_equiv
     {M : TuringMachine symbol state}
     {c d : TuringMachine.Configuration symbol state}
     {tape : Tape symbol}
@@ -99,6 +99,66 @@ private theorem generatedCall_turingMachine_step_of_tape_equiv
           rw [← Tape.Equiv.read_eq htape]
           exact haction)
       · exact Tape.Equiv.move (Tape.Equiv.write htape write) dir
+
+/--
+Unbounded computations are stable under tape equivalence at the starting
+tape, preserving the final state.
+-/
+theorem turingMachine_computes_of_tape_equiv
+    {M : TuringMachine symbol state}
+    {c e : TuringMachine.Configuration symbol state}
+    {tape : Tape symbol}
+    (hcomp : TuringMachine.Computes M c e)
+    (htape : Tape.Equiv c.tape tape) :
+    exists e' : TuringMachine.Configuration symbol state,
+      TuringMachine.Computes M { state := c.state, tape := tape } e' ∧
+        e'.state = e.state ∧
+        Tape.Equiv e.tape e'.tape := by
+  induction hcomp generalizing tape with
+  | refl c =>
+      exact
+        ⟨{ state := c.state, tape := tape },
+          TuringMachine.Computes.refl _, rfl, htape⟩
+  | step hstep hrest ih =>
+      rcases turingMachine_step_of_tape_equiv hstep htape with
+        ⟨nextTape, hstep', htape'⟩
+      rcases ih htape' with
+        ⟨e', hcomp', hstate'', htape''⟩
+      exact
+        ⟨e', TuringMachine.Computes.step hstep' hcomp',
+          hstate'', htape''⟩
+
+/--
+Unbounded halting from a configuration is stable under tape equivalence at the
+starting tape.
+-/
+theorem turingMachine_haltsFrom_of_tape_equiv
+    {M : TuringMachine symbol state}
+    {state : state} {tape tape' : Tape symbol}
+    (htape : Tape.Equiv tape tape')
+    (hhalt : TuringMachine.HaltsFrom M { state := state, tape := tape }) :
+    TuringMachine.HaltsFrom M { state := state, tape := tape' } := by
+  rcases hhalt with ⟨final, hcomp, hfinal⟩
+  rcases turingMachine_computes_of_tape_equiv hcomp htape with
+    ⟨final', hcomp', hstate, _htape'⟩
+  exact
+    ⟨final', hcomp',
+      by simpa [TuringMachine.Halted, hstate] using hfinal⟩
+
+/--
+Unbounded halting from equivalent starting tapes is equivalent.
+-/
+theorem turingMachine_haltsFrom_tape_equiv_iff
+    (M : TuringMachine symbol state)
+    (state : state) {tape tape' : Tape symbol}
+    (htape : Tape.Equiv tape tape') :
+    TuringMachine.HaltsFrom M { state := state, tape := tape } <->
+      TuringMachine.HaltsFrom M { state := state, tape := tape' } := by
+  constructor
+  · exact turingMachine_haltsFrom_of_tape_equiv htape
+  · exact
+      turingMachine_haltsFrom_of_tape_equiv
+        (Tape.Equiv.symm htape)
 
 /--
 Exact computations are stable under tape equivalence at the starting tape,
@@ -123,7 +183,7 @@ theorem turingMachine_computesIn_of_tape_equiv
           TuringMachine.ComputesIn.zero _, rfl, htape⟩
   | succ hstep hrest ih =>
       rcases
-          generatedCall_turingMachine_step_of_tape_equiv
+          turingMachine_step_of_tape_equiv
             hstep htape with
         ⟨nextTape, hstep', htape'⟩
       rcases ih htape' with

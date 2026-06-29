@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.BoundedSimulatorLoop
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch
 
 set_option doc.verso true
 
@@ -178,71 +179,6 @@ theorem budgetCheckerDescriptionRunnerTape_equiv_input
       constructor
       · exact dropTrailingNone_replicate_none blankPrefix
       · constructor <;> rfl
-
-theorem turingMachine_step_of_tape_equiv
-    {M : TuringMachine symbol state}
-    {c d : TuringMachine.Configuration symbol state}
-    {tape : Tape symbol}
-    (hstep : TuringMachine.Step M c d)
-    (htape : Tape.Equiv c.tape tape) :
-    exists nextTape : Tape symbol,
-      TuringMachine.Step M
-        { state := c.state, tape := tape }
-        { state := d.state, tape := nextTape } ∧
-        Tape.Equiv d.tape nextTape := by
-  cases hstep with
-  | mk haction =>
-      rename_i write dir nextState
-      refine
-        ⟨Tape.move dir (Tape.write write tape), ?_, ?_⟩
-      · exact TuringMachine.Step.mk (by
-          rw [← Tape.Equiv.read_eq htape]
-          exact haction)
-      · exact Tape.Equiv.move (Tape.Equiv.write htape write) dir
-
-theorem turingMachine_computes_of_tape_equiv
-    {M : TuringMachine symbol state}
-    {c e : TuringMachine.Configuration symbol state}
-    {tape : Tape symbol}
-    (hcomp : TuringMachine.Computes M c e)
-    (htape : Tape.Equiv c.tape tape) :
-    exists e' : TuringMachine.Configuration symbol state,
-      TuringMachine.Computes M { state := c.state, tape := tape } e' ∧
-        e'.state = e.state ∧
-        Tape.Equiv e.tape e'.tape := by
-  induction hcomp generalizing tape with
-  | refl c =>
-      exact
-        ⟨{ state := c.state, tape := tape },
-          TuringMachine.Computes.refl _, rfl, htape⟩
-  | step hstep hrest ih =>
-      rcases turingMachine_step_of_tape_equiv hstep htape with
-        ⟨nextTape, hstep', htape'⟩
-      rcases ih htape' with ⟨e', hcomp', hstate'', htape''⟩
-      exact
-        ⟨e', TuringMachine.Computes.step hstep' hcomp',
-          hstate'', htape''⟩
-
-theorem turingMachine_haltsFrom_of_tape_equiv
-    {M : TuringMachine symbol state}
-    {state : state} {tape tape' : Tape symbol}
-    (htape : Tape.Equiv tape tape')
-    (hhalt : TuringMachine.HaltsFrom M { state := state, tape := tape }) :
-    TuringMachine.HaltsFrom M { state := state, tape := tape' } := by
-  rcases hhalt with ⟨final, hcomp, hfinal⟩
-  rcases turingMachine_computes_of_tape_equiv hcomp htape with
-    ⟨final', hcomp', hstate, _htape'⟩
-  exact ⟨final', hcomp', by simpa [TuringMachine.Halted, hstate] using hfinal⟩
-
-theorem turingMachine_haltsFrom_tape_equiv_iff
-    (M : TuringMachine symbol state)
-    (state : state) {tape tape' : Tape symbol}
-    (htape : Tape.Equiv tape tape') :
-    TuringMachine.HaltsFrom M { state := state, tape := tape } <->
-      TuringMachine.HaltsFrom M { state := state, tape := tape' } := by
-  constructor
-  · exact turingMachine_haltsFrom_of_tape_equiv htape
-  · exact turingMachine_haltsFrom_of_tape_equiv (Tape.Equiv.symm htape)
 
 theorem budgetCheckerDescriptionRunnerMachine_computes_run
     (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState)
