@@ -385,6 +385,23 @@ theorem assemblySourceRestFinishTargetTape_cells_eq_headerQuote
   rw [assemblySourceRestFinishTargetTape_cells]
   rw [assemblySourceRestFinishTargetPrefixBits_eq_headerQuote]
 
+theorem assemblySourceRestFinishTargetTape_cells_eq_encodeBoolWordAppend
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (assemblySourceRestFinishTargetTape w sourceRestBits stage) =
+      List.append
+        ((encodeCodeWordAsInput
+          (MachineCodeSymbol.header ::
+            encodeBoolWordAppend
+              (assemblySourceRestFinishSourceBits w sourceRestBits stage)
+              [])).map some)
+        ((List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage)
+          sourceRestBits).map some) := by
+  rw [assemblySourceRestFinishTargetTape_cells]
+  rw [assemblySourceRestFinishTargetPrefixBits_eq_encodeBoolWordAppend]
+
 theorem assemblySourceRestFinishTargetTape_cells_eq_splitQuote
     (w sourceRestBits : Word Bool) (stage : Nat) :
     Tape.cells
@@ -449,6 +466,25 @@ theorem assemblySourceRestFinishTargetTape_defaultedCells_eq_headerQuote
   rw [assemblySourceRestFinishTargetTape_cells_eq_headerQuote]
   simp [optionBitDefaultFalse, Function.comp_def, List.map_append,
     List.append_assoc]
+
+theorem
+    assemblySourceRestFinishTargetTape_defaultedCells_eq_encodeBoolWordAppend
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (assemblySourceRestFinishTargetTape w sourceRestBits stage)) =
+      List.append
+        (encodeCodeWordAsInput
+          (MachineCodeSymbol.header ::
+            encodeBoolWordAppend
+              (assemblySourceRestFinishSourceBits w sourceRestBits stage)
+              []))
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage)
+          sourceRestBits) := by
+  rw [assemblySourceRestFinishTargetTape_cells_eq_encodeBoolWordAppend]
+  simp [optionBitDefaultFalse, Function.comp_def, List.map_append]
 
 theorem assemblySourceRestFinishTargetTape_normalizedOutput
     (w sourceRestBits : Word Bool) (stage : Nat) :
