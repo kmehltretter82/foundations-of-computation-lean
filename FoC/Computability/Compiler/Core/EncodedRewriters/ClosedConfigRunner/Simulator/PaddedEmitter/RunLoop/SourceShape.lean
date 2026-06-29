@@ -596,6 +596,77 @@ theorem sourceRightEndLeftTape_normalizedOutput_configRunner
   cases bits <;>
     simp [Function.comp_def]
 
+theorem sourceRightEndLeftTape_cells_eq_sourceRewindTarget_cells_configRunner
+    (bits : Word Bool) :
+    Tape.cells (sourceRightEndLeftTape_configRunner bits) =
+      Tape.cells
+        (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
+          bits) := by
+  rw [sourceRightEndLeftTape_cells_configRunner,
+    fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTarget_cells_configRunner]
+
+theorem sourceRightEndLeftTape_simulator_cells_eq_sourceRewindTarget_cells_configRunner
+    (L : SimulatorLayout) :
+    Tape.cells
+        (sourceRightEndLeftTape_configRunner
+          (SimulatorLayout.asBoolInput L)) =
+      Tape.cells
+        (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
+          (SimulatorLayout.asBoolInput L)) :=
+  sourceRightEndLeftTape_cells_eq_sourceRewindTarget_cells_configRunner
+    (SimulatorLayout.asBoolInput L)
+
+theorem sourceRightEndLeftTape_contextLength_configRunner
+    (bits : Word Bool) :
+    Tape.contextLength (sourceRightEndLeftTape_configRunner bits) =
+      bits.length + 1 := by
+  cases bits with
+  | nil =>
+      simp [sourceRightEndLeftTape_configRunner,
+        DovetailInitialLayoutInitializer.tapeAtCells, Tape.contextLength,
+        Tape.move, Tape.moveLeft]
+  | cons bit rest =>
+      cases hrev : rest.reverse with
+      | nil =>
+          have hrest : rest = [] := by
+            simpa using congrArg List.reverse hrev
+          cases bit <;>
+            simp [sourceRightEndLeftTape_configRunner,
+              DovetailInitialLayoutInitializer.tapeAtCells,
+              Tape.contextLength, Tape.move, Tape.moveLeft, hrest]
+      | cons head tail =>
+          have hrest : rest = (head :: tail).reverse := by
+            rw [← hrev, List.reverse_reverse]
+          cases bit <;>
+            simp [sourceRightEndLeftTape_configRunner,
+              DovetailInitialLayoutInitializer.tapeAtCells,
+              Tape.contextLength, Tape.move, Tape.moveLeft, hrest,
+              List.append_assoc] <;>
+            omega
+
+theorem sourceRightEndLeftTape_simulator_contextLength_configRunner
+    (L : SimulatorLayout) :
+    Tape.contextLength
+        (sourceRightEndLeftTape_configRunner
+          (SimulatorLayout.asBoolInput L)) =
+      (SimulatorLayout.asBoolInput L).length + 1 :=
+  sourceRightEndLeftTape_contextLength_configRunner
+    (SimulatorLayout.asBoolInput L)
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_contextLength_ge_sourceRightEndLeft_configRunner
+    (D : MachineDescription) (L : SimulatorLayout) :
+    Tape.contextLength
+        (sourceRightEndLeftTape_configRunner
+          (SimulatorLayout.asBoolInput L)) <=
+      Tape.contextLength
+        (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
+          D L) := by
+  rw [sourceRightEndLeftTape_simulator_contextLength_configRunner]
+  rw [← RightShiftedSourceTape.simulator_contextLength_configRunner]
+  exact
+    fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_contextLength_ge_afterRight_source_configRunner
+      D L
+
 def sourceScanRightToBlankLeftHaltTape_configRunner
     (leftRev : List (Option Bool)) (bits : Word Bool) : Tape Bool :=
   Tape.move Direction.left
