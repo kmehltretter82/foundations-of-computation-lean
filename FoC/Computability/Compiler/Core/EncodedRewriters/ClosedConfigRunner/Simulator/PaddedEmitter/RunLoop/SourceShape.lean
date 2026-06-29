@@ -391,6 +391,86 @@ theorem sourceLeftMoveOnceDescription_haltsFrom_rightShiftedSource_configRunner
       (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
         (SimulatorLayout.asBoolInput L))
 
+theorem fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner
+    (L : SimulatorLayout) :
+    SimulatorLayout.asBoolInput L =
+      encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          encodeBoolWordAppend L.input
+            (encodeNatAppend L.stage
+              (encodeConfigurationAppend L.config
+                (encodeBoolAppend L.hit [])))) := by
+  simp [SimulatorLayout.asBoolInput, SimulatorLayout.encode,
+    SimulatorLayout.encodeAppend]
+
+theorem
+    fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_normalizedOutput_eq_fields_configRunner
+    (L : SimulatorLayout) :
+    Tape.normalizedOutput
+        (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
+          (SimulatorLayout.asBoolInput L)) =
+      encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          encodeBoolWordAppend L.input
+            (encodeNatAppend L.stage
+              (encodeConfigurationAppend L.config
+                (encodeBoolAppend L.hit [])))) := by
+  rw [RightShiftedSourceTape.normalizedOutput_configRunner,
+    fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner]
+
+theorem
+    fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_cells_eq_fields_configRunner
+    (L : SimulatorLayout) :
+    Tape.cells
+        (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
+          (SimulatorLayout.asBoolInput L)) =
+      none ::
+        List.append
+          ((encodeCodeWordAsInput
+            (MachineCodeSymbol.header ::
+              encodeBoolWordAppend L.input
+                (encodeNatAppend L.stage
+                  (encodeConfigurationAppend L.config
+                    (encodeBoolAppend L.hit []))))).map some)
+          [none] := by
+  rw [RightShiftedSourceTape.simulator_cells_configRunner,
+    fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner]
+
+theorem
+    fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTarget_normalizedOutput_eq_fields_configRunner
+    (L : SimulatorLayout) :
+    Tape.normalizedOutput
+        (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
+          (SimulatorLayout.asBoolInput L)) =
+      encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          encodeBoolWordAppend L.input
+            (encodeNatAppend L.stage
+              (encodeConfigurationAppend L.config
+                (encodeBoolAppend L.hit [])))) := by
+  rw [
+    fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTarget_normalizedOutput_configRunner,
+    fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner]
+
+theorem
+    fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTarget_cells_eq_fields_configRunner
+    (L : SimulatorLayout) :
+    Tape.cells
+        (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
+          (SimulatorLayout.asBoolInput L)) =
+      none ::
+        List.append
+          ((encodeCodeWordAsInput
+            (MachineCodeSymbol.header ::
+              encodeBoolWordAppend L.input
+                (encodeNatAppend L.stage
+                  (encodeConfigurationAppend L.config
+                    (encodeBoolAppend L.hit []))))).map some)
+          [none] := by
+  rw [
+    fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTarget_cells_configRunner,
+    fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner]
+
 theorem fixedDescriptionBoundedSimulatorOutput_length_ge_header_configRunner
     (D : MachineDescription) (L : SimulatorLayout) :
     4 <= (FixedDescriptionBoundedSimulatorOutput D L).length := by
@@ -596,6 +676,20 @@ theorem sourceRightEndLeftTape_normalizedOutput_configRunner
   cases bits <;>
     simp [Function.comp_def]
 
+theorem sourceRightEndLeftTape_simulator_normalizedOutput_eq_fields_configRunner
+    (L : SimulatorLayout) :
+    Tape.normalizedOutput
+        (sourceRightEndLeftTape_configRunner
+          (SimulatorLayout.asBoolInput L)) =
+      encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          encodeBoolWordAppend L.input
+            (encodeNatAppend L.stage
+              (encodeConfigurationAppend L.config
+                (encodeBoolAppend L.hit [])))) := by
+  rw [sourceRightEndLeftTape_normalizedOutput_configRunner,
+    fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner]
+
 theorem sourceRightEndLeftTape_cells_eq_sourceRewindTarget_cells_configRunner
     (bits : Word Bool) :
     Tape.cells (sourceRightEndLeftTape_configRunner bits) =
@@ -615,6 +709,23 @@ theorem sourceRightEndLeftTape_simulator_cells_eq_sourceRewindTarget_cells_confi
           (SimulatorLayout.asBoolInput L)) :=
   sourceRightEndLeftTape_cells_eq_sourceRewindTarget_cells_configRunner
     (SimulatorLayout.asBoolInput L)
+
+theorem sourceRightEndLeftTape_simulator_cells_eq_fields_configRunner
+    (L : SimulatorLayout) :
+    Tape.cells
+        (sourceRightEndLeftTape_configRunner
+          (SimulatorLayout.asBoolInput L)) =
+      none ::
+        List.append
+          ((encodeCodeWordAsInput
+            (MachineCodeSymbol.header ::
+              encodeBoolWordAppend L.input
+                (encodeNatAppend L.stage
+                  (encodeConfigurationAppend L.config
+                    (encodeBoolAppend L.hit []))))).map some)
+          [none] := by
+  rw [sourceRightEndLeftTape_cells_configRunner,
+    fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner]
 
 theorem sourceRightEndLeftTape_contextLength_configRunner
     (bits : Word Bool) :
