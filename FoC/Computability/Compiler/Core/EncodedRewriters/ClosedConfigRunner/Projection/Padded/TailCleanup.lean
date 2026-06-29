@@ -2469,6 +2469,15 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_branches
   · exact hReject
   · exact hAccept
 
+/--
+Combined post-padding finite-machine leaf for selected-projection tail cleanup.
+The branch wrappers below project this single obligation into the accepting and
+rejecting branch contracts.
+-/
+theorem selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction :
+    SelectedProjectionPaddedTailCleanupPostPaddingConstruction := by
+  sorry
+
 def selectedHitOtherFlagErasedPostEraseFromPostPadding
     (useAccept : Bool) (postPadding : MachineDescription) :
     MachineDescription :=
@@ -2541,7 +2550,7 @@ accepting projection branch.
 -/
 theorem selectedProjectionPaddedTailCleanupPostPaddingAcceptConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction true := by
-  sorry
+  exact selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction true
 
 /--
 Post-padding finite-machine leaf for selected-projection tail cleanup on the
@@ -2549,7 +2558,7 @@ rejecting projection branch.
 -/
 theorem selectedProjectionPaddedTailCleanupPostPaddingRejectConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction false := by
-  sorry
+  exact selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction false
 
 theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingConstruction :=
