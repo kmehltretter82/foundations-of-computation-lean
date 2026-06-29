@@ -1318,139 +1318,6 @@ theorem selectedProjectionInputQuoterAfterSourceRestShapeConstruction :
     hfinish.right L.input
       (SelectedProjectionTailProjector.sourceRestFieldBits L) L.stage
 
-theorem assemblySkeletonDescription_run_nonempty_stageInput_to_sourceRest_boundary_cells_pre
-    (b : Bool) (rest : Word Bool) (stage : Nat)
-    (sourceRestCells : List (Option Bool)) :
-    exists steps : Nat,
-      AssemblySkeletonDescription.runConfig steps
-          (config AssemblySkeletonDescription.start []
-            (List.append
-              (List.map some
-                (List.append
-                  (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
-                  (DovetailInitialLayoutInitializer.stageInputBits
-                    (b :: rest) stage)))
-              sourceRestCells)) =
-        config 210
-          (List.append
-            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-              stage).reverse.map some)
-            (List.append
-              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTailPrefix
-                (b :: rest)).reverse.map some)
-              (List.append [none, some false] transitionPrefixLeftTail)))
-          sourceRestCells := by
-  rcases
-      DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_false_false_tail
-        stage with
-    ⟨stageTail, hstageTail⟩
-  rcases assemblySkeletonDescription_run_state120_bool_tail_to_finish_withBase_cells
-      b rest
-      (List.append
-        ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-          stage).map some)
-        sourceRestCells)
-      transitionPrefixLeftTail with
-    ⟨markSteps, hmark⟩
-  rcases assemblySkeletonDescription_run_finish_cells_false_false_to_state200_withBase
-      b rest
-      (List.append (stageTail.map some) sourceRestCells)
-      transitionPrefixLeftTail with
-    ⟨finishSteps, hfinish⟩
-  refine
-    ⟨6 + (6 + (markSteps + finishSteps + (4 * stage + 4))), ?_⟩
-  rw [show
-      6 + (6 + (markSteps + finishSteps + (4 * stage + 4))) =
-        6 + (6 + (markSteps + (finishSteps + (4 * stage + 4)))) by
-    omega]
-  rw [runConfig_add]
-  rw [assemblySkeletonDescription_run_prefix_to_stageInput_tail_cells]
-  rw [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTail_cons]
-  rw [show
-      List.append
-          ((true :: false ::
-            List.append
-              (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                rest.length)
-              (List.append
-                (DovetailInitialLayoutInitializer.StageInputMarkedScanner.cellBits
-                  b)
-                (List.append
-                  (DovetailInitialLayoutInitializer.StageInputMarkedScanner.cellsBits
-                    rest)
-                  (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                    stage)))).map some)
-          sourceRestCells =
-        some true :: some false ::
-          List.append
-            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-              rest.length).map some)
-            (List.append
-              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.cellBits
-                b).map some)
-              (List.append
-                ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.cellsBits
-                  rest).map some)
-                (List.append
-                  ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                    stage).map some)
-                  sourceRestCells))) by
-    simp [List.map_append, List.append_assoc]]
-  change
-    AssemblySkeletonDescription.runConfig
-        (6 + (markSteps + (finishSteps + (4 * stage + 4))))
-        (markedTailStartConfigWithBaseCells transitionPrefixLeftTail
-          (some true :: some false ::
-            List.append
-              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                rest.length).map some)
-              (List.append
-                ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.cellBits
-                  b).map some)
-                (List.append
-                  ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.cellsBits
-                    rest).map some)
-                  (List.append
-                    ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                      stage).map some)
-                    sourceRestCells))))) =
-      config 210
-        (List.append
-          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-            stage).reverse.map some)
-          (List.append
-            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTailPrefix
-              (b :: rest)).reverse.map some)
-            (List.append [none, some false] transitionPrefixLeftTail)))
-        sourceRestCells
-  rw [runConfig_add]
-  rw [assemblySkeletonDescription_run_marked_tail_tick_to_state120_withBase_cells]
-  rw [runConfig_add]
-  rw [hmark]
-  rw [hstageTail]
-  rw [runConfig_add]
-  have htailCells :
-      List.append (List.map some (false :: false :: stageTail))
-          sourceRestCells =
-        some false :: some false ::
-          List.append (stageTail.map some) sourceRestCells := by
-    simp
-  rw [htailCells]
-  rw [hfinish]
-  rw [← hstageTail]
-  have hright :
-      some false :: some false ::
-          List.append (stageTail.map some) sourceRestCells =
-        List.append
-          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-            stage).map some)
-          sourceRestCells := by
-    rw [hstageTail]
-    simp
-  rw [hright]
-  rw [assemblySkeletonDescription_run_state200_stageNat_to_state210]
-  simp
-
 def selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape
     (L : DovetailLayout) : Tape Bool :=
   scanRightToBlankLeftHaltTape
@@ -1705,7 +1572,7 @@ theorem assemblySkeletonDescription_run_nonempty_stageInput_to_sourceRest_bounda
               (List.append [none, some false] transitionPrefixLeftTail)))
           sourceRestCells := by
   exact
-    assemblySkeletonDescription_run_nonempty_stageInput_to_sourceRest_boundary_cells_pre
+    assemblySkeletonDescription_run_nonempty_stageInput_to_sourceRest_boundary_cells_aux
       b rest stage sourceRestCells
 
 end SelectedProjectionInputQuoterFiniteLeaf
