@@ -2329,6 +2329,41 @@ theorem selectedHitOtherFlagErasedAfterPaddingTape_cells_eq_branchFields
   · exact selectedHitOtherFlagErasedAcceptAfterPaddingTape_cells_eq_branchFields
       L
 
+theorem selectedHitOtherFlagErasedAcceptAfterPaddingTape_cells_eq_sourceFields
+    (L : DovetailLayout) :
+    Tape.cells (selectedHitOtherFlagErasedAfterPaddingTape true L) =
+      List.append [none]
+        (List.append
+          ((List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
+            (List.append
+              (selectedProjectionPaddedTailCleanupSelectedConfigBits true L)
+              (List.append
+                (selectedProjectionPaddedTailCleanupUnselectedConfigBits true L)
+                (selectedProjectionPaddedTailCleanupSelectedHitBits true L)))).map
+            some)
+          (List.replicate 6 (none : Option Bool))) := by
+  simpa [List.map_append, List.append_assoc] using
+    selectedHitOtherFlagErasedAcceptAfterPaddingTape_cells_eq_branchFields L
+
+theorem selectedHitOtherFlagErasedRejectAfterPaddingTape_cells_eq_sourceFields
+    (L : DovetailLayout) :
+    Tape.cells (selectedHitOtherFlagErasedAfterPaddingTape false L) =
+      List.append [none]
+        (List.append
+          ((List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
+            (List.append
+              (selectedProjectionPaddedTailCleanupUnselectedConfigBits false L)
+              (selectedProjectionPaddedTailCleanupSelectedConfigBits false L))).map
+            some)
+          (List.append
+            (List.replicate 4 (none : Option Bool))
+            (List.append
+              ((selectedProjectionPaddedTailCleanupSelectedHitBits false L).map
+                some)
+              [none]))) := by
+  simpa [List.map_append, List.append_assoc] using
+    selectedHitOtherFlagErasedRejectAfterPaddingTape_cells_eq_branchFields L
+
 theorem selectedHitOtherFlagErasedAcceptAfterPaddingTape_normalizedOutput
     (L : DovetailLayout) :
     Tape.normalizedOutput
@@ -2400,6 +2435,32 @@ theorem selectedHitOtherFlagErasedAfterPaddingTape_normalizedOutput_eq_sourceBit
   · simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
       selectedHitOtherFlagErasedAcceptAfterPaddingTape_normalizedOutput_eq_sourceBits
         L
+
+theorem selectedHitOtherFlagErasedAcceptAfterPaddingTape_normalizedOutput_eq_sourceFields
+    (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (selectedHitOtherFlagErasedAfterPaddingTape true L) =
+      List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
+        (List.append
+          (selectedProjectionPaddedTailCleanupSelectedConfigBits true L)
+          (List.append
+            (selectedProjectionPaddedTailCleanupUnselectedConfigBits true L)
+            (selectedProjectionPaddedTailCleanupSelectedHitBits true L))) := by
+  rw [selectedHitOtherFlagErasedAfterPaddingTape_normalizedOutput_eq_sourceBits,
+    selectedProjectionPaddedTailCleanupPostPaddingSourceBits_true_eq_selected_unselected]
+
+theorem selectedHitOtherFlagErasedRejectAfterPaddingTape_normalizedOutput_eq_sourceFields
+    (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (selectedHitOtherFlagErasedAfterPaddingTape false L) =
+      List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
+        (List.append
+          (selectedProjectionPaddedTailCleanupUnselectedConfigBits false L)
+          (List.append
+            (selectedProjectionPaddedTailCleanupSelectedConfigBits false L)
+            (selectedProjectionPaddedTailCleanupSelectedHitBits false L))) := by
+  rw [selectedHitOtherFlagErasedAfterPaddingTape_normalizedOutput_eq_sourceBits,
+    selectedProjectionPaddedTailCleanupPostPaddingSourceBits_false_eq_unselected_selected]
 
 theorem selectedHitOtherFlagErasedRightLeftHandoffTape_normalizedOutput
     (useAccept : Bool) (L : DovetailLayout) :
