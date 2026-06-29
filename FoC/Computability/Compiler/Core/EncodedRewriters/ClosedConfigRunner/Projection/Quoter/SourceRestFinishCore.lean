@@ -152,6 +152,55 @@ def assemblySourceRestFinishParserPrefixCells
           ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTailPrefix
             (b :: rest)).map some))
 
+def assemblySourceRestFinishParserMarkerLeftCells :
+    List (Option Bool) :=
+  List.append (List.reverse transitionPrefixLeftTail) [some false]
+
+def assemblySourceRestFinishParserMarkerRightCells
+    (w : Word Bool) : List (Option Bool) :=
+  match w with
+  | [] => [some true, some true]
+  | b :: rest =>
+      (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTailPrefix
+        (b :: rest)).map some
+
+def assemblySourceRestFinishParserMarkerRightBits
+    (w : Word Bool) : Word Bool :=
+  match w with
+  | [] => [true, true]
+  | b :: rest =>
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTailPrefix
+        (b :: rest)
+
+theorem assemblySourceRestFinishParserMarkerRightCells_eq_bits
+    (w : Word Bool) :
+    assemblySourceRestFinishParserMarkerRightCells w =
+      (assemblySourceRestFinishParserMarkerRightBits w).map some := by
+  cases w with
+  | nil =>
+      rfl
+  | cons b rest =>
+      rfl
+
+theorem assemblySourceRestFinishParserMarkerRightBits_nil :
+    assemblySourceRestFinishParserMarkerRightBits ([] : Word Bool) =
+      [true, true] := by
+  rfl
+
+theorem assemblySourceRestFinishParserMarkerRightBits_cons
+    (b : Bool) (rest : Word Bool) :
+    assemblySourceRestFinishParserMarkerRightBits (b :: rest) =
+      true :: false ::
+        List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            rest.length)
+          (List.append
+            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.cellBits
+              b)
+            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.cellsBits
+              rest)) := by
+  rfl
+
 theorem assemblySourceRestFinishParserStackCells_nil_eq_segments
     (stage : Nat) :
     assemblySourceRestFinishParserStackCells ([] : Word Bool) stage =
@@ -264,6 +313,25 @@ theorem assemblySourceRestFinishParserStackCells_eq_prefixCells_append_stageNat
       rw [assemblySourceRestFinishParserStackCells_cons_eq_segments]
       rfl
 
+theorem assemblySourceRestFinishParserPrefixCells_eq_marker_split
+    (w : Word Bool) :
+    assemblySourceRestFinishParserPrefixCells w =
+      List.append
+        assemblySourceRestFinishParserMarkerLeftCells
+        (none ::
+          assemblySourceRestFinishParserMarkerRightCells w) := by
+  cases w with
+  | nil =>
+      simp [assemblySourceRestFinishParserPrefixCells,
+        assemblySourceRestFinishParserMarkerLeftCells,
+        assemblySourceRestFinishParserMarkerRightCells,
+        List.append_assoc]
+  | cons b rest =>
+      simp [assemblySourceRestFinishParserPrefixCells,
+        assemblySourceRestFinishParserMarkerLeftCells,
+        assemblySourceRestFinishParserMarkerRightCells,
+        List.append_assoc]
+
 def MixedParserStackRewriterSourceTape
     (prefixCells : List (Option Bool))
     (stageBits sourceRestBits quoteRestBits : Word Bool) : Tape Bool :=
@@ -363,6 +431,51 @@ theorem mixedParserStackQuotedCellsBits_length
   rw [preservingCellPassCellBits_length]
   simp
 
+theorem mixedParserStackQuotedCellsBits_cons_none
+    (cells : List (Option Bool)) :
+    mixedParserStackQuotedCellsBits (none :: cells) =
+      List.append preservingCellPassZeroBits
+        (mixedParserStackQuotedCellsBits cells) := by
+  rfl
+
+theorem mixedParserStackQuotedCellsBits_marker_split
+    (w : Word Bool) :
+    mixedParserStackQuotedCellsBits
+        (assemblySourceRestFinishParserPrefixCells w) =
+      List.append
+        (mixedParserStackQuotedCellsBits
+          assemblySourceRestFinishParserMarkerLeftCells)
+        (List.append preservingCellPassZeroBits
+          (mixedParserStackQuotedCellsBits
+            (assemblySourceRestFinishParserMarkerRightCells w))) := by
+  rw [assemblySourceRestFinishParserPrefixCells_eq_marker_split,
+    mixedParserStackQuotedCellsBits_append]
+  rfl
+
+theorem assemblySourceRestFinishParserPrefixCells_defaultBits_marker_split
+    (w : Word Bool) :
+    List.map optionBitDefaultFalse
+        (assemblySourceRestFinishParserPrefixCells w) =
+      List.append
+        (List.map optionBitDefaultFalse
+          assemblySourceRestFinishParserMarkerLeftCells)
+        (false ::
+          assemblySourceRestFinishParserMarkerRightBits w) := by
+  rw [assemblySourceRestFinishParserPrefixCells_eq_marker_split]
+  rw [assemblySourceRestFinishParserMarkerRightCells_eq_bits]
+  simp [List.map_append, List.map_map, optionBitDefaultFalse,
+    optionBitDefaultFalse_map_some]
+
+theorem mixedParserStackQuotedCellsBits_markerRight_eq_bits
+    (w : Word Bool) :
+    mixedParserStackQuotedCellsBits
+        (assemblySourceRestFinishParserMarkerRightCells w) =
+      preservingCellPassCellBits
+        (assemblySourceRestFinishParserMarkerRightBits w) := by
+  rw [mixedParserStackQuotedCellsBits_eq_defaultBits,
+    assemblySourceRestFinishParserMarkerRightCells_eq_bits]
+  simp [List.map_map, optionBitDefaultFalse_map_some]
+
 def MixedParserStackRewriterPrefixQuote
     (prefixCells : List (Option Bool)) (stageBits : Word Bool) :
     Word Bool :=
@@ -377,6 +490,23 @@ def MixedParserStackRewriterLengthHeader
     (encodeCodeSymbolAsInput MachineCodeSymbol.header)
     (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
       (prefixCells.length + stageBits.length + sourceRestBits.length))
+
+theorem MixedParserStackRewriterPrefixQuote_marker_split
+    (w : Word Bool) (stageBits : Word Bool) :
+    MixedParserStackRewriterPrefixQuote
+        (assemblySourceRestFinishParserPrefixCells w)
+        stageBits =
+      List.append
+        (mixedParserStackQuotedCellsBits
+          assemblySourceRestFinishParserMarkerLeftCells)
+        (List.append preservingCellPassZeroBits
+          (List.append
+            (mixedParserStackQuotedCellsBits
+              (assemblySourceRestFinishParserMarkerRightCells w))
+            (preservingCellPassCellBits stageBits))) := by
+  rw [MixedParserStackRewriterPrefixQuote,
+    mixedParserStackQuotedCellsBits_marker_split]
+  simp [List.append_assoc]
 
 theorem assemblySourceRestFinishSourcePrefixBits_length_eq_fields
     (w : Word Bool) (stage : Nat) :
@@ -1367,6 +1497,28 @@ theorem MixedParserStackRewriterSourceTape_cells_stageNat
         | cons bit rest =>
             simp)
 
+theorem MixedParserStackRewriterSourceTape_cells_marker_split_stageNat
+    (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (MixedParserStackRewriterSourceTape
+          (assemblySourceRestFinishParserPrefixCells w)
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage)
+          sourceRestBits quoteRestBits) =
+      List.append assemblySourceRestFinishParserMarkerLeftCells
+        (none ::
+          List.append
+            (assemblySourceRestFinishParserMarkerRightCells w)
+            (List.append
+              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                stage).map some)
+              (List.append (sourceRestBits.map some)
+                (none ::
+                  List.append (quoteRestBits.map some) [none])))) := by
+  rw [MixedParserStackRewriterSourceTape_cells_stageNat]
+  rw [assemblySourceRestFinishParserPrefixCells_eq_marker_split]
+  simp [List.append_assoc]
+
 theorem assemblySourceRestFinishSourceTape_move_left
     (w sourceRestBits : Word Bool) (stage : Nat) :
     Tape.move Direction.left
@@ -1557,6 +1709,96 @@ theorem assemblySourceRestFinishLeftBoundaryTape_cells_eq_prefix_sourceRest_quot
               [none])) :=
   assemblySourceRestFinishLeftBoundaryTape_cells_eq_fields
     w sourceRestBits stage
+
+theorem assemblySourceRestFinishLeftBoundaryTape_cells_eq_marker_split
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (assemblySourceRestFinishLeftBoundaryTape w sourceRestBits stage) =
+      List.append assemblySourceRestFinishParserMarkerLeftCells
+        (none ::
+          List.append
+            (assemblySourceRestFinishParserMarkerRightCells w)
+            (List.append
+              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                stage).map some)
+              (List.append (sourceRestBits.map some)
+                (none ::
+                  List.append
+                    ((preservingCellPassCellBits sourceRestBits).map some)
+                    [none])))) := by
+  rw [assemblySourceRestFinishLeftBoundaryTape_cells_eq_fields]
+  change
+    List.append
+      (assemblySourceRestFinishParserStackCells w stage)
+      (List.append
+        (sourceRestBits.map some)
+        (none ::
+          List.append
+            ((preservingCellPassCellBits sourceRestBits).map some)
+            [none])) =
+      List.append assemblySourceRestFinishParserMarkerLeftCells
+        (none ::
+          List.append
+            (assemblySourceRestFinishParserMarkerRightCells w)
+            (List.append
+              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                stage).map some)
+              (List.append (sourceRestBits.map some)
+                (none ::
+                  List.append
+                    ((preservingCellPassCellBits sourceRestBits).map some)
+                    [none]))))
+  rw [assemblySourceRestFinishParserStackCells_eq_prefixCells_append_stageNat]
+  rw [assemblySourceRestFinishParserPrefixCells_eq_marker_split]
+  simp [List.append_assoc]
+
+theorem assemblySourceRestFinishLeftBoundaryTape_cells_nil_eq_marker_split
+    (sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (assemblySourceRestFinishLeftBoundaryTape
+          ([] : Word Bool) sourceRestBits stage) =
+      List.append assemblySourceRestFinishParserMarkerLeftCells
+        (none ::
+          List.append
+            ([true, true].map some)
+            (List.append
+              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                stage).map some)
+              (List.append (sourceRestBits.map some)
+                (none ::
+                  List.append
+                    ((preservingCellPassCellBits sourceRestBits).map some)
+                    [none])))) := by
+  rw [assemblySourceRestFinishLeftBoundaryTape_cells_eq_marker_split]
+  rfl
+
+theorem assemblySourceRestFinishLeftBoundaryTape_cells_cons_eq_marker_split
+    (b : Bool) (rest sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (assemblySourceRestFinishLeftBoundaryTape
+          (b :: rest) sourceRestBits stage) =
+      List.append assemblySourceRestFinishParserMarkerLeftCells
+        (none ::
+          List.append
+            ((true :: false ::
+              List.append
+                (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                  rest.length)
+                (List.append
+                  (DovetailInitialLayoutInitializer.StageInputMarkedScanner.cellBits
+                    b)
+                  (DovetailInitialLayoutInitializer.StageInputMarkedScanner.cellsBits
+                    rest))).map some)
+            (List.append
+              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                stage).map some)
+              (List.append (sourceRestBits.map some)
+                (none ::
+                  List.append
+                    ((preservingCellPassCellBits sourceRestBits).map some)
+                    [none])))) := by
+  rw [assemblySourceRestFinishLeftBoundaryTape_cells_eq_marker_split]
+  rfl
 
 theorem assemblySourceRestFinishLeftBoundaryTape_cells_eq_boundaryTape_cells
     (w sourceRestBits : Word Bool) (stage : Nat) :
