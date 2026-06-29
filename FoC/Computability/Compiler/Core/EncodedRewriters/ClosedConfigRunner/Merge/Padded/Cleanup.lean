@@ -124,6 +124,103 @@ def rewindTargetTape (bits : Word Bool) : Tape Bool :=
   DovetailInitialLayoutInitializer.tapeAtCells
     [none] (List.append (bits.map some) [none])
 
+def rewindTargetPaddedTape (bits : Word Bool) : Tape Bool :=
+  DovetailInitialLayoutInitializer.tapeAtCells
+    [none] (List.append (bits.map some) [none, none])
+
+theorem rewindTargetPaddedTape_cells
+    (bits : Word Bool) :
+    Tape.cells (rewindTargetPaddedTape bits) =
+      none :: List.append (bits.map some) [none, none] := by
+  cases bits <;>
+    simp [rewindTargetPaddedTape,
+      DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells]
+
+theorem rewindTargetPaddedTape_normalizedOutput
+    (bits : Word Bool) :
+    Tape.normalizedOutput (rewindTargetPaddedTape bits) = bits := by
+  rw [Tape.normalizedOutput, rewindTargetPaddedTape_cells]
+  simp [Function.comp_def]
+
+def skipTransitionPrefixDescription : MachineDescription where
+  stateCount := 5
+  start := 0
+  halt := 4
+  transitions :=
+    [ MachineDescription.transition 0 (some false) (some false)
+        Direction.right 1
+    , MachineDescription.transition 1 (some false) (some false)
+        Direction.right 2
+    , MachineDescription.transition 2 (some false) (some false)
+        Direction.right 3
+    , MachineDescription.transition 3 (some true) (some true)
+        Direction.right 4 ]
+
+theorem skipTransitionPrefixDescription_wellFormed :
+    skipTransitionPrefixDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := skipTransitionPrefixDescription.transitions)
+      (stateCount := skipTransitionPrefixDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := skipTransitionPrefixDescription.transitions)
+      (by decide)
+
+theorem skipTransitionPrefixDescription_haltTransitionFree :
+    skipTransitionPrefixDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := skipTransitionPrefixDescription.transitions)
+    (state := skipTransitionPrefixDescription.halt)
+    (by decide)
+
+theorem skipTransitionPrefixDescription_subroutineReady :
+    skipTransitionPrefixDescription.SubroutineReady :=
+  ⟨skipTransitionPrefixDescription_wellFormed,
+    skipTransitionPrefixDescription_haltTransitionFree⟩
+
+theorem skipTransitionPrefixDescription_run
+    (left rest : List (Option Bool)) :
+    skipTransitionPrefixDescription.runConfig 4
+        { state := skipTransitionPrefixDescription.start
+          tape :=
+            DovetailInitialLayoutInitializer.tapeAtCells left
+              (List.append
+                ((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map
+                  some)
+                rest) } =
+      { state := skipTransitionPrefixDescription.halt
+        tape :=
+          DovetailInitialLayoutInitializer.tapeAtCells
+            (List.append
+              ((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map
+                some).reverse
+              left)
+            rest } := by
+  cases rest <;>
+    simp [skipTransitionPrefixDescription,
+      encodeCodeSymbolAsInput,
+      DovetailInitialLayoutInitializer.tapeAtCells,
+      runConfig, stepConfig, lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
+      Tape.moveRight]
+
+theorem skipTransitionPrefixDescription_haltsFromTape
+    (left rest : List (Option Bool)) :
+    skipTransitionPrefixDescription.HaltsFromTape
+      (DovetailInitialLayoutInitializer.tapeAtCells left
+        (List.append
+          ((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some)
+          rest))
+      (DovetailInitialLayoutInitializer.tapeAtCells
+        (List.append
+          ((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse
+          left)
+        rest) := by
+  refine ⟨4, ?_⟩
+  constructor <;>
+    rw [skipTransitionPrefixDescription_run]
+
 theorem sourceRewindDescription_wellFormed :
     sourceRewindDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
@@ -234,6 +331,36 @@ theorem sourceRewindDescription_step_finish
           MachineDescription.transition,
           Tape.read, Tape.move, Tape.moveRight, Tape.write]
 
+theorem sourceRewindDescription_step_finish_padded
+    (bits : Word Bool) :
+    sourceRewindDescription.runConfig 1
+        { state := 1
+          tape :=
+            DovetailInitialLayoutInitializer.tapeAtCells []
+              (none :: List.append (bits.map some) [none, none]) } =
+      { state := sourceRewindDescription.halt
+        tape := rewindTargetPaddedTape bits } := by
+  cases bits with
+  | nil =>
+      simp [sourceRewindDescription, rewindTargetPaddedTape,
+        DovetailInitialLayoutInitializer.tapeAtCells,
+        MachineDescription.runConfig,
+        MachineDescription.stepConfig,
+        MachineDescription.lookupTransition,
+        MachineDescription.Matches,
+        MachineDescription.transition,
+        Tape.read, Tape.move, Tape.moveRight, Tape.write]
+  | cons bit rest =>
+      cases bit <;>
+        simp [sourceRewindDescription, rewindTargetPaddedTape,
+          DovetailInitialLayoutInitializer.tapeAtCells,
+          MachineDescription.runConfig,
+          MachineDescription.stepConfig,
+          MachineDescription.lookupTransition,
+          MachineDescription.Matches,
+          MachineDescription.transition,
+          Tape.read, Tape.move, Tape.moveRight, Tape.write]
+
 theorem sourceRewindDescription_run_from_leftStack
     (leftStack : Word Bool) :
     sourceRewindDescription.runConfig (leftStack.length + 2)
@@ -288,6 +415,61 @@ theorem sourceRewindDescription_run_from_leftStack
         sourceRewindDescription_step_finish
           (List.append rest.reverse [current])
 
+theorem sourceRewindDescription_run_from_leftStack_padded
+    (leftStack : Word Bool) :
+    sourceRewindDescription.runConfig (leftStack.length + 2)
+        { state := sourceRewindDescription.start
+          tape :=
+            DovetailInitialLayoutInitializer.tapeAtCells
+              (leftStack.map some) [none, none] } =
+      { state := sourceRewindDescription.halt
+        tape :=
+          DovetailInitialLayoutInitializer.tapeAtCells [none]
+            (List.append (leftStack.reverse.map some) [none, none]) } := by
+  cases leftStack with
+  | nil =>
+      simp [sourceRewindDescription,
+        DovetailInitialLayoutInitializer.tapeAtCells,
+        MachineDescription.runConfig,
+        MachineDescription.stepConfig,
+        MachineDescription.lookupTransition,
+        MachineDescription.Matches,
+        MachineDescription.transition,
+        Tape.read, Tape.move, Tape.moveLeft, Tape.moveRight, Tape.write]
+  | cons current rest =>
+      rw [show (current :: rest).length + 2 =
+        1 + ((rest.length + 1) + 1) by
+        simp
+        omega]
+      rw [MachineDescription.runConfig_add]
+      have hstart :
+          sourceRewindDescription.runConfig 1
+              { state := sourceRewindDescription.start
+                tape :=
+                  DovetailInitialLayoutInitializer.tapeAtCells
+                    ((current :: rest).map some) [none, none] } =
+            { state := 1
+              tape :=
+                DovetailInitialLayoutInitializer.tapeAtCells
+                  (rest.map some) (some current :: [none, none]) } := by
+        cases current <;>
+          simp [sourceRewindDescription,
+            DovetailInitialLayoutInitializer.tapeAtCells,
+            MachineDescription.runConfig,
+            MachineDescription.stepConfig,
+            MachineDescription.lookupTransition,
+            MachineDescription.Matches,
+            MachineDescription.transition,
+            Tape.read, Tape.move, Tape.moveLeft, Tape.write]
+      rw [hstart]
+      rw [show (rest.length + 1) + 1 = (rest.length + 1) + 1 by rfl]
+      rw [MachineDescription.runConfig_add]
+      rw [sourceRewindDescription_run_scan rest current [none, none]]
+      simpa [rewindTargetPaddedTape, List.map_append,
+        List.append_assoc] using
+        sourceRewindDescription_step_finish_padded
+          (List.append rest.reverse [current])
+
 theorem sourceRewindDescription_run
     (bits : Word Bool) :
     sourceRewindDescription.runConfig (bits.length + 2)
@@ -298,6 +480,18 @@ theorem sourceRewindDescription_run
   simpa [rewindSourceTape, rewindTargetTape] using
     sourceRewindDescription_run_from_leftStack bits.reverse
 
+theorem sourceRewindDescription_run_padded
+    (bits : Word Bool) :
+    sourceRewindDescription.runConfig (bits.length + 2)
+        { state := sourceRewindDescription.start
+          tape :=
+            DovetailInitialLayoutInitializer.tapeAtCells
+              (bits.reverse.map some) [none, none] } =
+      { state := sourceRewindDescription.halt
+        tape := rewindTargetPaddedTape bits } := by
+  simpa [rewindTargetPaddedTape] using
+    sourceRewindDescription_run_from_leftStack_padded bits.reverse
+
 theorem sourceRewindDescription_haltsFromTape
     (bits : Word Bool) :
     sourceRewindDescription.HaltsFromTape
@@ -306,6 +500,33 @@ theorem sourceRewindDescription_haltsFromTape
   constructor
   · rw [sourceRewindDescription_run]
   · rw [sourceRewindDescription_run]
+
+theorem sourceRewindDescription_haltsFromPaddedTape
+    (bits : Word Bool) :
+    sourceRewindDescription.HaltsFromTape
+      (DovetailInitialLayoutInitializer.tapeAtCells
+        (bits.reverse.map some) [none, none])
+      (rewindTargetPaddedTape bits) := by
+  refine ⟨bits.length + 2, ?_⟩
+  constructor
+  · rw [sourceRewindDescription_run_padded]
+  · rw [sourceRewindDescription_run_padded]
+
+theorem rewindTargetPaddedTape_move_left_move_right
+    (bits : Word Bool) :
+    Tape.move Direction.left
+        (Tape.move Direction.right (rewindTargetPaddedTape bits)) =
+      rewindTargetPaddedTape bits := by
+  cases bits with
+  | nil =>
+      simp [rewindTargetPaddedTape,
+        DovetailInitialLayoutInitializer.tapeAtCells,
+        Tape.move, Tape.moveLeft, Tape.moveRight]
+  | cons first rest =>
+      cases first <;> cases rest <;>
+        simp [rewindTargetPaddedTape,
+          DovetailInitialLayoutInitializer.tapeAtCells,
+          Tape.move, Tape.moveLeft, Tape.moveRight]
 
 theorem SelectedMergePaddedEmitterAfterHitTape_eq_rewindSourceTape
     (p : SelectedMergeEmitterPayload) :
@@ -327,6 +548,14 @@ theorem SelectedMergePaddedEmitterAfterHitTape_eq_rewindSourceTape
       ((ParsedLayoutBits p.L).map some)
       (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse)]
   simp [List.map_append, List.append_assoc]
+
+theorem SelectedMergePaddedEmitterAfterHitTape_eq_sourceLeftBitsRev_tapeAtCells
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterAfterHitTape p =
+      DovetailInitialLayoutInitializer.tapeAtCells
+        ((sourceLeftBitsRev p).map some) [] := by
+  rw [SelectedMergePaddedEmitterAfterHitTape_eq_rewindSourceTape]
+  simp [rewindSourceTape]
 
 theorem sourceLeftBitsRev_reverse_eq_sourceBits
     (p : SelectedMergeEmitterPayload) :
@@ -407,6 +636,166 @@ def SelectedMergePaddedEmitterAfterHitRightLeftHandoffTape
     (Tape.move Direction.right
       (SelectedMergePaddedEmitterAfterHitTape p))
 
+theorem SelectedMergePaddedEmitterAfterHitRightLeftHandoffTape_eq_tapeAtCells
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterAfterHitRightLeftHandoffTape p =
+      DovetailInitialLayoutInitializer.tapeAtCells
+        ((SelectedMergePaddedEmitterCleanup.sourceLeftBitsRev p).map some)
+        [none, none] := by
+  rw [SelectedMergePaddedEmitterAfterHitRightLeftHandoffTape,
+    SelectedMergePaddedEmitterCleanup.SelectedMergePaddedEmitterAfterHitTape_eq_sourceLeftBitsRev_tapeAtCells]
+  simp [DovetailInitialLayoutInitializer.tapeAtCells,
+    Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem sourceRewindDescription_haltsFrom_afterHitRightLeftHandoffTape
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterCleanup.sourceRewindDescription.HaltsFromTape
+      (SelectedMergePaddedEmitterAfterHitRightLeftHandoffTape p)
+      (SelectedMergePaddedEmitterCleanup.rewindTargetPaddedTape
+        (SelectedMergePaddedEmitterCleanup.sourceBits p)) := by
+  have hleft :
+      (SelectedMergePaddedEmitterCleanup.sourceBits p).reverse =
+        SelectedMergePaddedEmitterCleanup.sourceLeftBitsRev p := by
+    rw [←
+      SelectedMergePaddedEmitterCleanup.sourceLeftBitsRev_reverse_eq_sourceBits
+        p]
+    simp
+  rw [SelectedMergePaddedEmitterAfterHitRightLeftHandoffTape_eq_tapeAtCells,
+    ← hleft]
+  exact
+    SelectedMergePaddedEmitterCleanup.sourceRewindDescription_haltsFromPaddedTape
+      (SelectedMergePaddedEmitterCleanup.sourceBits p)
+
+theorem SelectedMergePaddedEmitterAfterHitRewindSource_normalizedOutput
+    (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput
+        (SelectedMergePaddedEmitterCleanup.rewindTargetPaddedTape
+          (SelectedMergePaddedEmitterCleanup.sourceBits p)) =
+      SelectedMergePaddedEmitterAfterHitSourceBits p := by
+  exact
+    SelectedMergePaddedEmitterCleanup.rewindTargetPaddedTape_normalizedOutput
+      (SelectedMergePaddedEmitterCleanup.sourceBits p)
+
+theorem SelectedMergePaddedEmitterAfterHitRightLeftHandoffTape_normalizedOutput
+    (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput
+        (SelectedMergePaddedEmitterAfterHitRightLeftHandoffTape p) =
+      SelectedMergePaddedEmitterAfterHitSourceBits p := by
+  rw [SelectedMergePaddedEmitterAfterHitRightLeftHandoffTape]
+  rw [Tape.normalizedOutput_move]
+  rw [Tape.normalizedOutput_move]
+  exact SelectedMergePaddedEmitterAfterHitTape_normalizedOutput p
+
+def SelectedMergePaddedEmitterTargetBits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) : Word Bool :=
+  encodeCodeWordAsInput
+    (MachineCodeSymbol.transition ::
+      encodeBoolWordAppend p.L.input
+        (encodeNatAppend p.L.stage
+          (encodeConfigurationAppend
+            (SelectedMergeOutputAcceptConfig useAccept p.S p.L)
+            (encodeConfigurationAppend
+              (SelectedMergeOutputRejectConfig useAccept p.S p.L)
+              (encodeBoolAppend
+                (SelectedMergeOutputAcceptHit useAccept p.S p.L)
+                  (encodeBoolAppend
+                    (SelectedMergeOutputRejectHit useAccept p.S p.L)
+                  []))))))
+
+theorem SelectedMergePaddedEmitterTargetBits_eq_transition_outputTail
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterTargetBits useAccept p =
+      List.append (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+        (SelectedMergePaddedEmitterOutputTailBits useAccept p) := by
+  simp [SelectedMergePaddedEmitterTargetBits,
+    SelectedMergePaddedEmitterOutputTailBits,
+    encodeCodeWordAsInput, encodeCodeSymbolAsInput]
+
+theorem SelectedMergePaddedEmitterOutputTailBits_true
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterOutputTailBits true p =
+      encodeCodeWordAsInput
+        (encodeBoolWordAppend p.L.input
+          (encodeNatAppend p.L.stage
+            (encodeConfigurationAppend p.S.config
+              (encodeConfigurationAppend p.L.rejectConfig
+                (encodeBoolAppend p.S.hit
+                  (encodeBoolAppend p.L.rejectHit [])))))) := by
+  simp [SelectedMergePaddedEmitterOutputTailBits,
+    SelectedMergeOutputAcceptConfig,
+    SelectedMergeOutputRejectConfig,
+    SelectedMergeOutputAcceptHit,
+    SelectedMergeOutputRejectHit]
+
+theorem SelectedMergePaddedEmitterOutputTailBits_false
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterOutputTailBits false p =
+      encodeCodeWordAsInput
+        (encodeBoolWordAppend p.L.input
+          (encodeNatAppend p.L.stage
+            (encodeConfigurationAppend p.L.acceptConfig
+              (encodeConfigurationAppend p.S.config
+                (encodeBoolAppend p.L.acceptHit
+                  (encodeBoolAppend p.S.hit [])))))) := by
+  simp [SelectedMergePaddedEmitterOutputTailBits,
+    SelectedMergeOutputAcceptConfig,
+    SelectedMergeOutputRejectConfig,
+    SelectedMergeOutputAcceptHit,
+    SelectedMergeOutputRejectHit]
+
+theorem SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_targetBits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p) =
+      SelectedMergePaddedEmitterTargetBits useAccept p := by
+  simpa [SelectedMergePaddedEmitterTargetBits] using
+    SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_fields
+      useAccept p
+
+theorem SelectedMergePaddedEmitterTargetBits_eq_parsedLayoutBits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterTargetBits useAccept p =
+      ParsedLayoutBits (SelectedMergeOutputLayout useAccept p.S p.L) := by
+  exact
+    (SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_targetBits
+      useAccept p).symm.trans
+      (SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_parsedLayoutBits
+        useAccept p)
+
+theorem SelectedMergeEquivEmitterPaddedOutputTape_cells_eq_targetBits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    Tape.cells (SelectedMergeEquivEmitterPaddedOutputTape useAccept p) =
+      List.append
+        ((SelectedMergePaddedEmitterTargetBits useAccept p).map some)
+        (List.replicate (SimulatorLayout.asBoolInput p.S).length none) := by
+  simp [SelectedMergePaddedEmitterTargetBits,
+    SelectedMergeEquivEmitterPaddedOutputTape_eq_fields,
+    inputWithTrailingBlankPadding, Tape.cells,
+    encodeCodeWordAsInput, encodeCodeSymbolAsInput]
+
+theorem
+    SelectedMergeEquivEmitterPaddedOutputTape_cells_eq_transition_outputTail
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    Tape.cells (SelectedMergeEquivEmitterPaddedOutputTape useAccept p) =
+      List.append
+        ((List.append (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+          (SelectedMergePaddedEmitterOutputTailBits useAccept p)).map some)
+        (List.replicate (SimulatorLayout.asBoolInput p.S).length none) := by
+  rw [SelectedMergeEquivEmitterPaddedOutputTape_cells_eq_targetBits,
+    SelectedMergePaddedEmitterTargetBits_eq_transition_outputTail]
+
+theorem SelectedMergeEquivEmitterPaddedOutputTape_eq_tapeAtCells_targetBits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    SelectedMergeEquivEmitterPaddedOutputTape useAccept p =
+      DovetailInitialLayoutInitializer.tapeAtCells []
+        (List.append
+          ((SelectedMergePaddedEmitterTargetBits useAccept p).map some)
+          (List.replicate (SimulatorLayout.asBoolInput p.S).length none)) := by
+  rw [SelectedMergeEquivEmitterPaddedOutputTape_eq_tapeAtCells_fields]
+  simp [SelectedMergePaddedEmitterTargetBits,
+    inputWithTrailingBlankPaddingCells,
+    encodeCodeWordAsInput, encodeCodeSymbolAsInput]
+
 def SelectedMergePaddedEmitterAfterHitRightLeftHandoffSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
@@ -422,6 +811,62 @@ def SelectedMergePaddedEmitterAfterHitRightLeftHandoffConstruction :
     exists emitter : MachineDescription,
       SelectedMergePaddedEmitterAfterHitRightLeftHandoffSpec
         useAccept emitter
+
+def SelectedMergePaddedEmitterAfterHitRewindSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      emitter.HaltsFromTape
+        (SelectedMergePaddedEmitterCleanup.rewindTargetPaddedTape
+          (SelectedMergePaddedEmitterCleanup.sourceBits p))
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
+
+def SelectedMergePaddedEmitterAfterHitRewindConstruction :
+    Prop :=
+  forall useAccept : Bool,
+    exists emitter : MachineDescription,
+      SelectedMergePaddedEmitterAfterHitRewindSpec useAccept emitter
+
+def SelectedMergePaddedEmitterAfterHitRightLeftHandoffFromRewind
+    (postRewind : MachineDescription) : MachineDescription :=
+  SeqViaCanonical
+    SelectedMergePaddedEmitterCleanup.sourceRewindDescription
+    postRewind
+
+theorem SelectedMergePaddedEmitterAfterHitRightLeftHandoffSpec_of_rewind
+    {useAccept : Bool} {postRewind : MachineDescription}
+    (hpostRewind :
+      SelectedMergePaddedEmitterAfterHitRewindSpec useAccept postRewind) :
+    SelectedMergePaddedEmitterAfterHitRightLeftHandoffSpec useAccept
+      (SelectedMergePaddedEmitterAfterHitRightLeftHandoffFromRewind
+        postRewind) := by
+  constructor
+  · exact
+      SeqViaCanonical_subroutineReady
+        SelectedMergePaddedEmitterCleanup.sourceRewindDescription_subroutineReady
+        hpostRewind.left
+  · intro p
+    exact
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        SelectedMergePaddedEmitterCleanup.sourceRewindDescription_subroutineReady
+        hpostRewind.left
+        (sourceRewindDescription_haltsFrom_afterHitRightLeftHandoffTape p)
+        (SelectedMergePaddedEmitterCleanup.rewindTargetPaddedTape_move_left_move_right
+          (SelectedMergePaddedEmitterCleanup.sourceBits p))
+        (hpostRewind.right p)
+
+theorem SelectedMergePaddedEmitterAfterHitRightLeftHandoffConstruction_of_rewind
+    (h :
+      SelectedMergePaddedEmitterAfterHitRewindConstruction) :
+    SelectedMergePaddedEmitterAfterHitRightLeftHandoffConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨postRewind, hpostRewind⟩
+  exact
+    ⟨SelectedMergePaddedEmitterAfterHitRightLeftHandoffFromRewind
+        postRewind,
+      SelectedMergePaddedEmitterAfterHitRightLeftHandoffSpec_of_rewind
+        hpostRewind⟩
 
 def SelectedMergePaddedEmitterAfterHeaderRightHandoffTape
     (p : SelectedMergeEmitterPayload) : Tape Bool :=
@@ -673,6 +1118,173 @@ theorem selectedMergePaddedEmitterAfterHeaderTape_move_left_move_right
       ((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse
       (some false) (some false) (tail.map some)
 
+def SelectedMergePaddedEmitterAfterTransitionPaddedTape
+    (p : SelectedMergeEmitterPayload) : Tape Bool :=
+  DovetailInitialLayoutInitializer.tapeAtCells
+    (List.append
+      ((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse
+      [none])
+    (List.append ((SelectedMergePaddedEmitterOuterTailBits p).map some)
+      [none, none])
+
+theorem SelectedMergePaddedEmitterAfterTransitionPaddedTape_cells
+    (p : SelectedMergeEmitterPayload) :
+    Tape.cells (SelectedMergePaddedEmitterAfterTransitionPaddedTape p) =
+      List.append [none]
+        (List.append
+          ((List.append (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+            (SelectedMergePaddedEmitterOuterTailBits p)).map some)
+          [none, none]) := by
+  rcases
+      SelectedMergePaddedEmitterOuterTailBits_cons_cons_false_false p with
+    ⟨tail, htail⟩
+  rw [SelectedMergePaddedEmitterAfterTransitionPaddedTape, htail]
+  simp [
+    DovetailInitialLayoutInitializer.tapeAtCells,
+    Tape.cells, List.map_append, List.append_assoc]
+
+theorem SelectedMergePaddedEmitterAfterHitSourceBits_eq_transition_outerTail
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterCleanup.sourceBits p =
+      List.append (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+        (SelectedMergePaddedEmitterOuterTailBits p) := by
+  rw [SelectedMergePaddedEmitterCleanup.sourceBits,
+    SelectedMergePaddedEmitterAfterHitSourceBits,
+    SelectedMergePaddedEmitterOuterTailBits_eq_boolWordFieldBits,
+    SelectedMergePaddedEmitterOuterSuffixBits_eq_stageFieldBits,
+    SelectedMergePaddedEmitterOuterStageSuffixBits_eq_configurationFieldBits]
+  simp [SelectedMergePaddedEmitterOuterHitSuffixBits,
+    SelectedMergePaddedEmitterOuterHitSuffixCode,
+    CanonicalLayouts.DovetailLayoutScanner.boolBits_eq_encodeBoolAppend,
+    CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+    encodeCodeWordAsInput]
+
+theorem SelectedMergePaddedEmitterAfterTransitionPaddedTape_normalizedOutput
+    (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput
+        (SelectedMergePaddedEmitterAfterTransitionPaddedTape p) =
+      SelectedMergePaddedEmitterCleanup.sourceBits p := by
+  rw [Tape.normalizedOutput,
+    SelectedMergePaddedEmitterAfterTransitionPaddedTape_cells,
+    SelectedMergePaddedEmitterAfterHitSourceBits_eq_transition_outerTail]
+  simp [Function.comp_def, List.map_append]
+
+theorem SelectedMergePaddedEmitterAfterTransitionPaddedTape_cells_eq_sourceBits
+    (p : SelectedMergeEmitterPayload) :
+    Tape.cells (SelectedMergePaddedEmitterAfterTransitionPaddedTape p) =
+      List.append [none]
+        (List.append
+          ((SelectedMergePaddedEmitterCleanup.sourceBits p).map some)
+          [none, none]) := by
+  rw [SelectedMergePaddedEmitterAfterTransitionPaddedTape_cells,
+    SelectedMergePaddedEmitterAfterHitSourceBits_eq_transition_outerTail]
+
+theorem skipTransitionPrefixDescription_haltsFrom_afterHitRewindSource
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterCleanup.skipTransitionPrefixDescription.HaltsFromTape
+      (SelectedMergePaddedEmitterCleanup.rewindTargetPaddedTape
+        (SelectedMergePaddedEmitterCleanup.sourceBits p))
+      (SelectedMergePaddedEmitterAfterTransitionPaddedTape p) := by
+  rw [SelectedMergePaddedEmitterCleanup.rewindTargetPaddedTape,
+    SelectedMergePaddedEmitterAfterTransitionPaddedTape,
+    SelectedMergePaddedEmitterAfterHitSourceBits_eq_transition_outerTail]
+  simpa [List.map_append, List.append_assoc] using
+    SelectedMergePaddedEmitterCleanup.skipTransitionPrefixDescription_haltsFromTape
+      [none]
+      (List.append ((SelectedMergePaddedEmitterOuterTailBits p).map some)
+        [none, none])
+
+theorem SelectedMergePaddedEmitterAfterTransitionPaddedTape_move_left_move_right
+    (p : SelectedMergeEmitterPayload) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (SelectedMergePaddedEmitterAfterTransitionPaddedTape p)) =
+      SelectedMergePaddedEmitterAfterTransitionPaddedTape p := by
+  rcases
+      SelectedMergePaddedEmitterOuterTailBits_cons_cons_false_false p with
+    ⟨tail, htail⟩
+  rw [SelectedMergePaddedEmitterAfterTransitionPaddedTape, htail]
+  simpa [List.map_append, List.append_assoc] using
+    tapeAtCells_move_left_move_right_cons_cons
+      (List.append
+        ((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse
+        [none])
+      (some false) (some false)
+      (List.append (tail.map some) [none, none])
+
+def SelectedMergePaddedEmitterAfterTransitionPaddedSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      emitter.HaltsFromTape
+        (SelectedMergePaddedEmitterAfterTransitionPaddedTape p)
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
+
+def SelectedMergePaddedEmitterAfterTransitionPaddedConstruction :
+    Prop :=
+  forall useAccept : Bool,
+    exists emitter : MachineDescription,
+      SelectedMergePaddedEmitterAfterTransitionPaddedSpec useAccept emitter
+
+def SelectedMergePaddedEmitterAfterTransitionPaddedBranchConstruction
+    (useAccept : Bool) : Prop :=
+  exists emitter : MachineDescription,
+    SelectedMergePaddedEmitterAfterTransitionPaddedSpec useAccept emitter
+
+def SelectedMergePaddedEmitterAfterHitRewindFromTransition
+    (afterTransition : MachineDescription) : MachineDescription :=
+  SeqViaCanonical
+    SelectedMergePaddedEmitterCleanup.skipTransitionPrefixDescription
+    afterTransition
+
+theorem SelectedMergePaddedEmitterAfterHitRewindSpec_of_afterTransition
+    {useAccept : Bool} {afterTransition : MachineDescription}
+    (hafterTransition :
+      SelectedMergePaddedEmitterAfterTransitionPaddedSpec
+        useAccept afterTransition) :
+    SelectedMergePaddedEmitterAfterHitRewindSpec useAccept
+      (SelectedMergePaddedEmitterAfterHitRewindFromTransition
+        afterTransition) := by
+  constructor
+  · exact
+      SeqViaCanonical_subroutineReady
+        SelectedMergePaddedEmitterCleanup.skipTransitionPrefixDescription_subroutineReady
+        hafterTransition.left
+  · intro p
+    exact
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        SelectedMergePaddedEmitterCleanup.skipTransitionPrefixDescription_subroutineReady
+        hafterTransition.left
+        (skipTransitionPrefixDescription_haltsFrom_afterHitRewindSource p)
+        (SelectedMergePaddedEmitterAfterTransitionPaddedTape_move_left_move_right
+          p)
+        (hafterTransition.right p)
+
+theorem SelectedMergePaddedEmitterAfterHitRewindConstruction_of_afterTransition
+    (h :
+      SelectedMergePaddedEmitterAfterTransitionPaddedConstruction) :
+    SelectedMergePaddedEmitterAfterHitRewindConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨afterTransition, hafterTransition⟩
+  exact
+    ⟨SelectedMergePaddedEmitterAfterHitRewindFromTransition
+        afterTransition,
+      SelectedMergePaddedEmitterAfterHitRewindSpec_of_afterTransition
+        hafterTransition⟩
+
+theorem selectedMergePaddedEmitterAfterTransitionPaddedConstruction_of_branches
+    (hAccept :
+      SelectedMergePaddedEmitterAfterTransitionPaddedBranchConstruction true)
+    (hReject :
+      SelectedMergePaddedEmitterAfterTransitionPaddedBranchConstruction false) :
+    SelectedMergePaddedEmitterAfterTransitionPaddedConstruction := by
+  intro useAccept
+  cases useAccept
+  · exact hReject
+  · exact hAccept
+
 def SelectedMergePaddedEmitterAfterHeaderScannerDescription :
     MachineDescription :=
   SeqViaCanonical SelectedMergePaddedEmitterCleanup.leftMoveOnceDescription
@@ -701,14 +1313,50 @@ theorem selectedMergePaddedEmitterAfterHeaderScanner_haltsFromPayload
       (selectedMergePaddedEmitterSourceScanner_haltsFromPayload p)
 
 /--
+Post-transition finite-machine leaf for selected merge under the padded
+equivalence contract.  The restored source has been rewound to the left edge
+and the leading transition code has been consumed, with the extra trailing
+blank padding retained from the canonical handoff.
+-/
+theorem selectedMergePaddedEmitterAfterTransitionPaddedAcceptConstruction :
+    SelectedMergePaddedEmitterAfterTransitionPaddedBranchConstruction true := by
+  sorry
+
+/--
+Post-transition finite-machine leaf for selected merge under the rejecting
+padded equivalence branch.
+-/
+theorem selectedMergePaddedEmitterAfterTransitionPaddedRejectConstruction :
+    SelectedMergePaddedEmitterAfterTransitionPaddedBranchConstruction false := by
+  sorry
+
+theorem selectedMergePaddedEmitterAfterTransitionPaddedConstruction :
+    SelectedMergePaddedEmitterAfterTransitionPaddedConstruction :=
+  selectedMergePaddedEmitterAfterTransitionPaddedConstruction_of_branches
+    selectedMergePaddedEmitterAfterTransitionPaddedAcceptConstruction
+    selectedMergePaddedEmitterAfterTransitionPaddedRejectConstruction
+
+/--
+Post-rewind finite-machine leaf for selected merge under the padded equivalence
+contract.  A checked transition-prefix skipper reduces this to the
+post-transition padded obligation above.
+-/
+theorem selectedMergePaddedEmitterAfterHitRewindConstruction :
+    SelectedMergePaddedEmitterAfterHitRewindConstruction :=
+  SelectedMergePaddedEmitterAfterHitRewindConstruction_of_afterTransition
+    selectedMergePaddedEmitterAfterTransitionPaddedConstruction
+
+/--
 Post-scan finite-machine leaf for selected merge under the padded equivalence
 contract.  The source fields have been scanned and restored; the sequential
 adapter has performed its canonical right-left handoff from the after-hit tape.
-The remaining machine must emit the padded merged dovetail-layout code.
+The reusable rewind prefix reduces the remaining machine to the post-rewind
+emitter obligation above.
 -/
 theorem selectedMergePaddedEmitterAfterHitRightLeftHandoffConstruction :
-    SelectedMergePaddedEmitterAfterHitRightLeftHandoffConstruction := by
-  sorry
+    SelectedMergePaddedEmitterAfterHitRightLeftHandoffConstruction :=
+  SelectedMergePaddedEmitterAfterHitRightLeftHandoffConstruction_of_rewind
+    selectedMergePaddedEmitterAfterHitRewindConstruction
 
 theorem selectedMergePaddedEmitterAfterHeaderRightHandoffConstruction :
     SelectedMergePaddedEmitterAfterHeaderRightHandoffConstruction := by

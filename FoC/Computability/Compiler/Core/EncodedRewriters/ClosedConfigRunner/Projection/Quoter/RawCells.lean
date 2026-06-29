@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.Assembly
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore
 
 set_option doc.verso true
 
@@ -1254,50 +1254,6 @@ def SelectedProjectionInputQuoterAfterSourceRestShapeConstruction :
   exists finish : MachineDescription,
     SelectedProjectionInputQuoterAfterSourceRestShapeSpec finish
 
-def assemblySourceRestFinishTargetPrefixBits
-    (w sourceRestBits : Word Bool) (stage : Nat) : Word Bool :=
-  let sourceBits :=
-    List.append
-      (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
-      (List.append
-        (DovetailInitialLayoutInitializer.stageInputBits w stage)
-        sourceRestBits)
-  List.append
-    (encodeCodeSymbolAsInput MachineCodeSymbol.header)
-    (List.append
-      (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-        sourceBits.length)
-      (preservingCellPassCellBits sourceBits))
-
-def assemblySourceRestFinishSourceTape
-    (w sourceRestBits : Word Bool) (stage : Nat) : Tape Bool :=
-  tapeAtCells
-    (none :: List.append (sourceRestBits.reverse.map some)
-      (assemblySourceRestBoundaryLeftRev w stage))
-    (List.append
-      ((preservingCellPassCellBits sourceRestBits).map some)
-      [none])
-
-def assemblySourceRestFinishTargetTape
-    (w sourceRestBits : Word Bool) (stage : Nat) : Tape Bool :=
-  tapeAtCells
-    ((assemblySourceRestFinishTargetPrefixBits
-      w sourceRestBits stage).reverse.map some)
-    ((List.append
-      (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-        stage)
-      sourceRestBits).map some)
-
-def AssemblySourceRestFinishSpec (finish : MachineDescription) : Prop :=
-  finish.SubroutineReady ∧
-    forall (w sourceRestBits : Word Bool) (stage : Nat),
-      finish.HaltsFromTape
-        (assemblySourceRestFinishSourceTape w sourceRestBits stage)
-        (assemblySourceRestFinishTargetTape w sourceRestBits stage)
-
-def AssemblySourceRestFinishConstruction : Prop :=
-  exists finish : MachineDescription,
-    AssemblySourceRestFinishSpec finish
 
 theorem assemblySourceRestFinishTargetPrefixBits_eq_outputPrefix
     (L : DovetailLayout) :
@@ -1305,9 +1261,20 @@ theorem assemblySourceRestFinishTargetPrefixBits_eq_outputPrefix
         (SelectedProjectionTailProjector.sourceRestFieldBits L) L.stage =
       SelectedProjectionTailProjector.outputPrefixStageInputSourceRestFieldBits
         L := by
-  simpa [assemblySourceRestFinishTargetPrefixBits] using
+  simpa [assemblySourceRestFinishTargetPrefixBits,
+    assemblySourceRestFinishSourceBits] using
     preservingCellPassHeaderQuoteBits_eq_outputPrefixStageInputSourceRestFieldBits
       L
+
+theorem assemblySourceRestFinishSourceBits_eq_parsedLayoutBits
+    (L : DovetailLayout) :
+    assemblySourceRestFinishSourceBits L.input
+        (SelectedProjectionTailProjector.sourceRestFieldBits L) L.stage =
+      ParsedLayoutBits L := by
+  rw [assemblySourceRestFinishSourceBits_eq]
+  exact
+    (SelectedProjectionTailProjector.parsedLayoutBits_eq_transition_stageInput_sourceRestFieldBits
+      L).symm
 
 theorem assemblySourceRestFinishSourceTape_cells
     (w sourceRestBits : Word Bool) (stage : Nat) :
@@ -1332,11 +1299,7 @@ theorem assemblySourceRestFinishSourceTape_defaultedCells
         (Tape.cells
           (assemblySourceRestFinishSourceTape w sourceRestBits stage)) =
       List.append
-        (List.append
-          (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
-          (List.append
-            (DovetailInitialLayoutInitializer.stageInputBits w stage)
-            sourceRestBits))
+        (assemblySourceRestFinishSourceBits w sourceRestBits stage)
         (false ::
           List.append (preservingCellPassCellBits sourceRestBits)
             [false]) := by
@@ -1344,7 +1307,8 @@ theorem assemblySourceRestFinishSourceTape_defaultedCells
   have hprefix :=
     assemblySourceRestBoundaryLeftRev_defaultBits_append
       w sourceRestBits stage
-  simpa [optionBitDefaultFalse, Function.comp_def, List.map_append,
+  simpa [assemblySourceRestFinishSourceBits, optionBitDefaultFalse,
+    Function.comp_def, List.map_append,
     List.map_reverse, List.append_assoc] using
     congrArg
       (fun pref =>
@@ -1353,6 +1317,61 @@ theorem assemblySourceRestFinishSourceTape_defaultedCells
             List.append (preservingCellPassCellBits sourceRestBits)
               [false]))
       hprefix
+
+theorem assemblySourceRestFinishBoundaryTape_cells
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (assemblySourceRestFinishBoundaryTape w sourceRestBits stage) =
+      List.append
+        (List.reverse (assemblySourceRestBoundaryLeftRev w stage))
+        (List.append
+          (sourceRestBits.map some)
+          (none ::
+            List.append
+              ((preservingCellPassCellBits sourceRestBits).map some)
+              [none])) := by
+  rw [assemblySourceRestFinishBoundaryTape]
+  cases preservingCellPassCellBits sourceRestBits <;>
+    simp [tapeAtCells, Tape.cells,
+      List.reverse_append, List.map_reverse, List.append_assoc]
+
+theorem assemblySourceRestFinishBoundaryTape_cells_eq_sourceTape_cells
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (assemblySourceRestFinishBoundaryTape w sourceRestBits stage) =
+      Tape.cells
+        (assemblySourceRestFinishSourceTape w sourceRestBits stage) := by
+  rw [assemblySourceRestFinishBoundaryTape_cells,
+    assemblySourceRestFinishSourceTape_cells]
+
+theorem assemblySourceRestFinishBoundaryTape_defaultedCells
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (assemblySourceRestFinishBoundaryTape w sourceRestBits stage)) =
+      List.append
+        (assemblySourceRestFinishSourceBits w sourceRestBits stage)
+        (false ::
+          List.append (preservingCellPassCellBits sourceRestBits)
+            [false]) := by
+  rw [assemblySourceRestFinishBoundaryTape_cells_eq_sourceTape_cells]
+  exact assemblySourceRestFinishSourceTape_defaultedCells
+    w sourceRestBits stage
+
+theorem assemblySourceRestFinishBoundaryTape_defaultedCells_eq_prefix_sourceRest_quote
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (assemblySourceRestFinishBoundaryTape w sourceRestBits stage)) =
+      List.append
+        (assemblySourceRestFinishSourcePrefixBits w stage)
+        (List.append sourceRestBits
+          (false ::
+            List.append (preservingCellPassCellBits sourceRestBits)
+              [false])) := by
+  rw [assemblySourceRestFinishBoundaryTape_defaultedCells,
+    assemblySourceRestFinishSourceBits_eq_prefix_append_sourceRest]
+  simp [List.append_assoc]
 
 theorem assemblySourceRestFinishTargetTape_cells
     (w sourceRestBits : Word Bool) (stage : Nat) :
@@ -1371,6 +1390,91 @@ theorem assemblySourceRestFinishTargetTape_cells
   simp [tapeAtCells, Tape.cells,
     List.map_reverse, List.map_append]
 
+theorem assemblySourceRestFinishTargetTape_cells_eq_headerQuote
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (assemblySourceRestFinishTargetTape w sourceRestBits stage) =
+      List.append
+        ((List.append
+          (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+          (List.append
+            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              (assemblySourceRestFinishSourceBits w sourceRestBits stage).length)
+            (preservingCellPassCellBits
+              (assemblySourceRestFinishSourceBits
+                w sourceRestBits stage)))).map some)
+        ((List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage)
+          sourceRestBits).map some) := by
+  rw [assemblySourceRestFinishTargetTape_cells]
+  rw [assemblySourceRestFinishTargetPrefixBits_eq_headerQuote]
+
+theorem assemblySourceRestFinishTargetTape_cells_eq_splitQuote
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (assemblySourceRestFinishTargetTape w sourceRestBits stage) =
+      List.append
+        ((List.append
+          (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+          (List.append
+            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              (assemblySourceRestFinishSourceBits w sourceRestBits stage).length)
+            (List.append
+              (preservingCellPassCellBits
+                (assemblySourceRestFinishSourcePrefixBits w stage))
+              (preservingCellPassCellBits sourceRestBits)))).map some)
+        ((List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage)
+          sourceRestBits).map some) := by
+  rw [assemblySourceRestFinishTargetTape_cells]
+  rw [assemblySourceRestFinishTargetPrefixBits_eq_splitQuote]
+
+theorem assemblySourceRestFinishTargetTape_defaultedCells_eq_splitQuote
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (assemblySourceRestFinishTargetTape w sourceRestBits stage)) =
+      List.append
+        (List.append
+          (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+          (List.append
+            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              (assemblySourceRestFinishSourceBits w sourceRestBits stage).length)
+            (List.append
+              (preservingCellPassCellBits
+                (assemblySourceRestFinishSourcePrefixBits w stage))
+              (preservingCellPassCellBits sourceRestBits))))
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage)
+          sourceRestBits) := by
+  rw [assemblySourceRestFinishTargetTape_cells_eq_splitQuote]
+  simp [optionBitDefaultFalse, Function.comp_def, List.map_append,
+    List.append_assoc]
+
+theorem assemblySourceRestFinishTargetTape_defaultedCells_eq_headerQuote
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (assemblySourceRestFinishTargetTape w sourceRestBits stage)) =
+      List.append
+        (List.append
+          (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+          (List.append
+            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              (assemblySourceRestFinishSourceBits w sourceRestBits stage).length)
+            (preservingCellPassCellBits
+              (assemblySourceRestFinishSourceBits w sourceRestBits stage))))
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage)
+          sourceRestBits) := by
+  rw [assemblySourceRestFinishTargetTape_cells_eq_headerQuote]
+  simp [optionBitDefaultFalse, Function.comp_def, List.map_append,
+    List.append_assoc]
+
 theorem assemblySourceRestFinishTargetTape_normalizedOutput
     (w sourceRestBits : Word Bool) (stage : Nat) :
     Tape.normalizedOutput
@@ -1385,108 +1489,66 @@ theorem assemblySourceRestFinishTargetTape_normalizedOutput
   rw [assemblySourceRestFinishTargetTape_cells]
   simp [Function.comp_def, List.map_append]
 
-/--
-Generic finite-table leaf after the source-rest cells have been quoted by the
-preserving cell pass.  The machine must quote the defaulted assembly prefix
-stored to the left of the source-rest boundary, preserve the raw stage/source
-field, and halt on the exact header-plus-quoted-layout target.
--/
-theorem assemblySourceRestFinishConstruction :
-    AssemblySourceRestFinishConstruction := by
-  sorry
+theorem assemblySourceRestFinishTargetTape_normalizedOutput_eq_encodeBoolWordAppend
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.normalizedOutput
+        (assemblySourceRestFinishTargetTape w sourceRestBits stage) =
+      List.append
+        (encodeCodeWordAsInput
+          (MachineCodeSymbol.header ::
+            encodeBoolWordAppend
+              (assemblySourceRestFinishSourceBits w sourceRestBits stage)
+              []))
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage)
+          sourceRestBits) := by
+  rw [assemblySourceRestFinishTargetTape_normalizedOutput]
+  rw [assemblySourceRestFinishTargetPrefixBits_eq_encodeBoolWordAppend]
 
-/--
-Selected-layout adapter for the generic assembly source-rest finish leaf.
--/
+theorem assemblySourceRestFinishTargetTape_selected_normalizedOutput
+    (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (assemblySourceRestFinishTargetTape L.input
+          (SelectedProjectionTailProjector.sourceRestFieldBits L)
+          L.stage) =
+      List.append
+        (SelectedProjectionTailProjector.outputPrefixStageInputSourceRestFieldBits
+          L)
+        (SelectedProjectionTailProjector.sourceFieldBits L) := by
+  rw [assemblySourceRestFinishTargetTape_normalizedOutput]
+  rw [assemblySourceRestFinishTargetPrefixBits_eq_outputPrefix]
+  rw [SelectedProjectionTailProjector.sourceFieldBits_eq_stageNatBits_sourceRestFieldBits]
+
+theorem assemblySourceRestFinishSourceTape_selected_eq_shapeTape
+    (L : DovetailLayout) :
+    assemblySourceRestFinishSourceTape L.input
+        (SelectedProjectionTailProjector.sourceRestFieldBits L) L.stage =
+      selectedProjectionInputQuoterAfterSourceRestSourceShapeTape L := by
+  rfl
+
+theorem assemblySourceRestFinishTargetTape_selected_eq_shapeTape
+    (L : DovetailLayout) :
+    assemblySourceRestFinishTargetTape L.input
+        (SelectedProjectionTailProjector.sourceRestFieldBits L) L.stage =
+      selectedProjectionInputQuoterRawCellQuoteTargetShapeTape L := by
+  rw [assemblySourceRestFinishTargetTape,
+    selectedProjectionInputQuoterRawCellQuoteTargetShapeTape]
+  rw [assemblySourceRestFinishTargetPrefixBits_eq_outputPrefix]
+  rw [SelectedProjectionTailProjector.sourceFieldBits_eq_stageNatBits_sourceRestFieldBits]
+
 theorem selectedProjectionInputQuoterAfterSourceRestShapeConstruction :
     SelectedProjectionInputQuoterAfterSourceRestShapeConstruction := by
-  rcases assemblySourceRestFinishConstruction with
-    ⟨finish, hfinish⟩
+  rcases assemblySourceRestFinishConstruction with ⟨finish, hfinish⟩
   refine ⟨finish, hfinish.left, ?_⟩
   intro L
-  have hrun :=
+  rw [← assemblySourceRestFinishSourceTape_selected_eq_shapeTape,
+    ← assemblySourceRestFinishTargetTape_selected_eq_shapeTape]
+  exact
     hfinish.right L.input
       (SelectedProjectionTailProjector.sourceRestFieldBits L) L.stage
-  simpa [assemblySourceRestFinishSourceTape,
-    assemblySourceRestFinishTargetTape,
-    selectedProjectionInputQuoterAfterSourceRestSourceShapeTape,
-    selectedProjectionInputQuoterRawCellQuoteTargetShapeTape,
-    assemblySourceRestFinishTargetPrefixBits_eq_outputPrefix,
-    SelectedProjectionTailProjector.sourceFieldBits_eq_stageNatBits_sourceRestFieldBits] using
-    hrun
 
-theorem selectedProjectionInputQuoterAfterSourceRestPassConstruction_of_shape
-    (h : SelectedProjectionInputQuoterAfterSourceRestShapeConstruction) :
-    SelectedProjectionInputQuoterAfterSourceRestPassConstruction := by
-  rcases h with ⟨finish, hfinish⟩
-  refine ⟨finish, hfinish.left, ?_⟩
-  intro L
-  simpa [selectedProjectionInputQuoterAfterSourceRestPassTape_eq_tapeAtCells,
-    selectedProjectionInputQuoterRawCellQuoteTargetTape_eq_shapeTape] using
-    hfinish.right L
-
-theorem selectedProjectionInputQuoterAfterSourceRestPassConstruction :
-    SelectedProjectionInputQuoterAfterSourceRestPassConstruction := by
-  exact
-    selectedProjectionInputQuoterAfterSourceRestPassConstruction_of_shape
-      selectedProjectionInputQuoterAfterSourceRestShapeConstruction
-
-def SelectedProjectionInputQuoterRawCellQuoteSpec
-    (raw : MachineDescription) : Prop :=
-  raw.SubroutineReady ∧
-    forall L : DovetailLayout,
-      raw.HaltsFromTape
-        (selectedProjectionInputQuoterPostBoundarySourceTape L)
-        (selectedProjectionInputQuoterRawCellQuoteTargetTape L)
-
-def SelectedProjectionInputQuoterRawCellQuoteConstruction : Prop :=
-  exists raw : MachineDescription,
-    SelectedProjectionInputQuoterRawCellQuoteSpec raw
-
-/--
-Raw-cell quote/preserve finite-table leaf for the exact input quoter.  At the
-source-rest boundary the parsed-layout prefix is split across the defaulted
-left context and the remaining source-rest bits under the head.  This machine
-must quote that whole defaulted parsed-layout word while preserving the exact
-stage/source field expected by the selected-projection tail emitter.
--/
-theorem selectedProjectionInputQuoterRawCellQuoteConstruction :
-    SelectedProjectionInputQuoterRawCellQuoteConstruction := by
-  rcases selectedProjectionInputQuoterAfterSourceRestPassConstruction with
-    ⟨finish, hfinish⟩
-  refine
-    ⟨SeqViaCanonical PreservingCellPassDescription finish, ?_⟩
-  constructor
-  · exact
-      SeqViaCanonical_subroutineReady
-        preservingCellPassDescription_subroutineReady
-        hfinish.left
-  · intro L
-    exact
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
-        preservingCellPassDescription_subroutineReady
-        hfinish.left
-        (preservingCellPassDescription_haltsFrom_postBoundarySourceTape L)
-        (by
-          rfl)
-        (hfinish.right L)
-
-/--
-The remaining post-boundary finite-table obligation for the exact input
-quoter.  The prefix phase has already restored the source-rest boundary; this
-phase must quote the defaulted parsed-layout bits and leave the exact source
-field under the head.
--/
-theorem selectedProjectionInputQuoterPostBoundaryConstruction :
-    SelectedProjectionInputQuoterPostBoundaryConstruction := by
-  rcases selectedProjectionInputQuoterRawCellQuoteConstruction with
-    ⟨raw, hraw⟩
-  refine ⟨raw, hraw.left, ?_⟩
-  intro L
-  rw [selectedProjectionInputQuoterExactTargetTape_eq_rawCellQuoteTargetTape]
-  exact hraw.right L
-
-theorem assemblySkeletonDescription_run_nonempty_stageInput_to_sourceRest_boundary_cells
+theorem assemblySkeletonDescription_run_nonempty_stageInput_to_sourceRest_boundary_cells_pre
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (sourceRestCells : List (Option Bool)) :
     exists steps : Nat,
@@ -1618,6 +1680,263 @@ theorem assemblySkeletonDescription_run_nonempty_stageInput_to_sourceRest_bounda
   rw [hright]
   rw [assemblySkeletonDescription_run_state200_stageNat_to_state210]
   simp
+
+def selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape
+    (L : DovetailLayout) : Tape Bool :=
+  scanRightToBlankLeftHaltTape
+    (none ::
+      List.append
+        ((SelectedProjectionTailProjector.sourceRestFieldBits L).reverse.map
+          some)
+        (assemblySourceRestBoundaryLeftRev L.input L.stage))
+    (preservingCellPassCellBits
+      (SelectedProjectionTailProjector.sourceRestFieldBits L))
+
+theorem scanRightToBlankLeftDescription_haltsFrom_afterSourceRestPassTape
+    (L : DovetailLayout) :
+    scanRightToBlankLeftDescription.HaltsFromTape
+      (selectedProjectionInputQuoterAfterSourceRestPassTape L)
+      (selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape L) := by
+  rw [selectedProjectionInputQuoterAfterSourceRestPassTape_eq_tapeAtCells,
+    selectedProjectionInputQuoterAfterSourceRestSourceShapeTape,
+    selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape]
+  exact
+    scanRightToBlankLeftDescription_haltsFromTape
+      (none ::
+        List.append
+          ((SelectedProjectionTailProjector.sourceRestFieldBits L).reverse.map
+            some)
+          (assemblySourceRestBoundaryLeftRev L.input L.stage))
+      (preservingCellPassCellBits
+        (SelectedProjectionTailProjector.sourceRestFieldBits L))
+
+theorem selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape_move_left_move_right
+    (L : DovetailLayout) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape L)) =
+      selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape L := by
+  rcases sourceRestFieldBits_cons_cons L with
+    ⟨head, next, right, hsource⟩
+  rcases preservingCellPassCellBits_cons_exists head (next :: right) with
+    ⟨quoteHead, quoteTail, hquote⟩
+  rw [selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape,
+    hsource, hquote]
+  exact
+    scanRightToBlankLeftHaltTape_move_left_move_right_cons
+      (none ::
+        List.append (((head :: next :: right).reverse).map some)
+          (assemblySourceRestBoundaryLeftRev L.input L.stage))
+      quoteHead quoteTail
+
+def selectedProjectionInputQuoterAfterSourceRestLeftBoundaryTape
+    (L : DovetailLayout) : Tape Bool :=
+  scanLeftToBlankLeftHaltTape
+    (List.append
+      ((SelectedProjectionTailProjector.sourceRestFieldBits L).reverse.map
+        some)
+      (assemblySourceRestBoundaryLeftRev L.input L.stage))
+    (preservingCellPassCellBits
+      (SelectedProjectionTailProjector.sourceRestFieldBits L))
+    [none]
+
+theorem scanLeftToBlankLeftDescription_haltsFrom_afterSourceRestQuoteBoundaryTape
+    (L : DovetailLayout) :
+    scanLeftToBlankLeftDescription.HaltsFromTape
+      (selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape L)
+      (selectedProjectionInputQuoterAfterSourceRestLeftBoundaryTape L) := by
+  rcases sourceRestFieldBits_cons_cons L with
+    ⟨head, next, right, hsource⟩
+  rcases preservingCellPassCellBits_cons_exists head (next :: right) with
+    ⟨quoteHead, quoteTail, hquote⟩
+  rcases exists_reverse_append_singleton_of_cons quoteHead quoteTail with
+    ⟨scanRev, current, hscan⟩
+  rw [selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape,
+    selectedProjectionInputQuoterAfterSourceRestLeftBoundaryTape,
+    hsource, hquote, hscan]
+  exact
+    scanLeftToBlankLeftDescription_haltsFrom_scanRightToBlankLeftHaltTape
+      (List.append (((head :: next :: right).reverse).map some)
+        (assemblySourceRestBoundaryLeftRev L.input L.stage))
+      scanRev current
+
+theorem selectedProjectionInputQuoterAfterSourceRestLeftBoundaryTape_move_left_move_right
+    (L : DovetailLayout) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (selectedProjectionInputQuoterAfterSourceRestLeftBoundaryTape L)) =
+      selectedProjectionInputQuoterAfterSourceRestLeftBoundaryTape L := by
+  rw [selectedProjectionInputQuoterAfterSourceRestLeftBoundaryTape]
+  exact
+    scanLeftToBlankLeftHaltTape_move_left_move_right_none_right
+      (List.append
+        ((SelectedProjectionTailProjector.sourceRestFieldBits L).reverse.map
+          some)
+        (assemblySourceRestBoundaryLeftRev L.input L.stage))
+      (preservingCellPassCellBits
+        (SelectedProjectionTailProjector.sourceRestFieldBits L))
+      []
+
+def SelectedProjectionInputQuoterAfterSourceRestQuoteBoundarySpec
+    (finish : MachineDescription) : Prop :=
+  finish.SubroutineReady ∧
+    forall L : DovetailLayout,
+      finish.HaltsFromTape
+        (selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape L)
+        (selectedProjectionInputQuoterRawCellQuoteTargetTape L)
+
+def SelectedProjectionInputQuoterAfterSourceRestQuoteBoundaryConstruction :
+    Prop :=
+  exists finish : MachineDescription,
+    SelectedProjectionInputQuoterAfterSourceRestQuoteBoundarySpec finish
+
+def SelectedProjectionInputQuoterAfterSourceRestLeftBoundarySpec
+    (finish : MachineDescription) : Prop :=
+  finish.SubroutineReady ∧
+    forall L : DovetailLayout,
+      finish.HaltsFromTape
+        (selectedProjectionInputQuoterAfterSourceRestLeftBoundaryTape L)
+        (selectedProjectionInputQuoterRawCellQuoteTargetTape L)
+
+def SelectedProjectionInputQuoterAfterSourceRestLeftBoundaryConstruction :
+    Prop :=
+  exists finish : MachineDescription,
+    SelectedProjectionInputQuoterAfterSourceRestLeftBoundarySpec finish
+
+theorem selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryConstruction_of_leftBoundary
+    (h : SelectedProjectionInputQuoterAfterSourceRestLeftBoundaryConstruction) :
+    SelectedProjectionInputQuoterAfterSourceRestQuoteBoundaryConstruction := by
+  rcases h with ⟨finish, hfinish⟩
+  refine
+    ⟨SeqViaCanonical scanLeftToBlankLeftDescription finish, ?_⟩
+  constructor
+  · exact
+      SeqViaCanonical_subroutineReady
+        scanLeftToBlankLeftDescription_subroutineReady
+        hfinish.left
+  · intro L
+    exact
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        scanLeftToBlankLeftDescription_subroutineReady
+        hfinish.left
+        (scanLeftToBlankLeftDescription_haltsFrom_afterSourceRestQuoteBoundaryTape
+          L)
+        (selectedProjectionInputQuoterAfterSourceRestLeftBoundaryTape_move_left_move_right
+          L)
+        (hfinish.right L)
+
+theorem selectedProjectionInputQuoterAfterSourceRestPassConstruction_of_quoteBoundary
+    (h : SelectedProjectionInputQuoterAfterSourceRestQuoteBoundaryConstruction) :
+    SelectedProjectionInputQuoterAfterSourceRestPassConstruction := by
+  rcases h with ⟨finish, hfinish⟩
+  refine
+    ⟨SeqViaCanonical scanRightToBlankLeftDescription finish, ?_⟩
+  constructor
+  · exact
+      SeqViaCanonical_subroutineReady
+        scanRightToBlankLeftDescription_subroutineReady
+        hfinish.left
+  · intro L
+    exact
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        scanRightToBlankLeftDescription_subroutineReady
+        hfinish.left
+        (scanRightToBlankLeftDescription_haltsFrom_afterSourceRestPassTape
+          L)
+        (selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape_move_left_move_right
+          L)
+        (hfinish.right L)
+
+theorem selectedProjectionInputQuoterAfterSourceRestPassConstruction :
+    SelectedProjectionInputQuoterAfterSourceRestPassConstruction := by
+  rcases selectedProjectionInputQuoterAfterSourceRestShapeConstruction with
+    ⟨finish, hfinish⟩
+  refine ⟨finish, hfinish.left, ?_⟩
+  intro L
+  simpa [selectedProjectionInputQuoterAfterSourceRestPassTape_eq_tapeAtCells,
+    selectedProjectionInputQuoterRawCellQuoteTargetTape_eq_shapeTape] using
+    hfinish.right L
+
+def SelectedProjectionInputQuoterRawCellQuoteSpec
+    (raw : MachineDescription) : Prop :=
+  raw.SubroutineReady ∧
+    forall L : DovetailLayout,
+      raw.HaltsFromTape
+        (selectedProjectionInputQuoterPostBoundarySourceTape L)
+        (selectedProjectionInputQuoterRawCellQuoteTargetTape L)
+
+def SelectedProjectionInputQuoterRawCellQuoteConstruction : Prop :=
+  exists raw : MachineDescription,
+    SelectedProjectionInputQuoterRawCellQuoteSpec raw
+
+/--
+Raw-cell quote/preserve finite-table leaf for the exact input quoter.  At the
+source-rest boundary the parsed-layout prefix is split across the defaulted
+left context and the remaining source-rest bits under the head.  This machine
+must quote that whole defaulted parsed-layout word while preserving the exact
+stage/source field expected by the selected-projection tail emitter.
+-/
+theorem selectedProjectionInputQuoterRawCellQuoteConstruction :
+    SelectedProjectionInputQuoterRawCellQuoteConstruction := by
+  rcases selectedProjectionInputQuoterAfterSourceRestPassConstruction with
+    ⟨finish, hfinish⟩
+  refine
+    ⟨SeqViaCanonical PreservingCellPassDescription finish, ?_⟩
+  constructor
+  · exact
+      SeqViaCanonical_subroutineReady
+        preservingCellPassDescription_subroutineReady
+        hfinish.left
+  · intro L
+    exact
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        preservingCellPassDescription_subroutineReady
+        hfinish.left
+        (preservingCellPassDescription_haltsFrom_postBoundarySourceTape L)
+        (by
+          rfl)
+        (hfinish.right L)
+
+/--
+The remaining post-boundary finite-table obligation for the exact input
+quoter.  The prefix phase has already restored the source-rest boundary; this
+phase must quote the defaulted parsed-layout bits and leave the exact source
+field under the head.
+-/
+theorem selectedProjectionInputQuoterPostBoundaryConstruction :
+    SelectedProjectionInputQuoterPostBoundaryConstruction := by
+  rcases selectedProjectionInputQuoterRawCellQuoteConstruction with
+    ⟨raw, hraw⟩
+  refine ⟨raw, hraw.left, ?_⟩
+  intro L
+  rw [selectedProjectionInputQuoterExactTargetTape_eq_rawCellQuoteTargetTape]
+  exact hraw.right L
+
+theorem assemblySkeletonDescription_run_nonempty_stageInput_to_sourceRest_boundary_cells
+    (b : Bool) (rest : Word Bool) (stage : Nat)
+    (sourceRestCells : List (Option Bool)) :
+    exists steps : Nat,
+      AssemblySkeletonDescription.runConfig steps
+          (config AssemblySkeletonDescription.start []
+            (List.append
+              (List.map some
+                (List.append
+                  (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+                  (DovetailInitialLayoutInitializer.stageInputBits
+                    (b :: rest) stage)))
+              sourceRestCells)) =
+        config 210
+          (List.append
+            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              stage).reverse.map some)
+            (List.append
+              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTailPrefix
+                (b :: rest)).reverse.map some)
+              (List.append [none, some false] transitionPrefixLeftTail)))
+          sourceRestCells := by
+  exact
+    assemblySkeletonDescription_run_nonempty_stageInput_to_sourceRest_boundary_cells_pre
+      b rest stage sourceRestCells
 
 end SelectedProjectionInputQuoterFiniteLeaf
 

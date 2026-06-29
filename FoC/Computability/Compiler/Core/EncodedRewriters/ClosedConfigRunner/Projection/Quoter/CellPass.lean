@@ -1059,6 +1059,16 @@ def preservingCellPassCellBits : Word Bool -> Word Bool
       List.append preservingCellPassOneBits
         (preservingCellPassCellBits rest)
 
+theorem preservingCellPassCellBits_length (cells : Word Bool) :
+    (preservingCellPassCellBits cells).length = 4 * cells.length := by
+  induction cells with
+  | nil =>
+      rfl
+  | cons b rest ih =>
+      cases b <;>
+        simp [preservingCellPassCellBits, preservingCellPassZeroBits,
+          preservingCellPassOneBits, ih, Nat.mul_succ]
+
 theorem preservingCellPassCellBits_append_suffix
     (cells : Word Bool) (suffix : Word MachineCodeSymbol) :
     List.append (preservingCellPassCellBits cells)
