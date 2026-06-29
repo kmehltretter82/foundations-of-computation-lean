@@ -676,6 +676,34 @@ theorem sourceRightEndLeftTape_normalizedOutput_configRunner
   cases bits <;>
     simp [Function.comp_def]
 
+theorem sourceRightEndLeftTape_move_right_eq_terminal_with_blank_configRunner
+    (bits : Word Bool) :
+    Tape.move Direction.right (sourceRightEndLeftTape_configRunner bits) =
+      DovetailInitialLayoutInitializer.tapeAtCells
+        (List.append (bits.reverse.map some) [none]) [] := by
+  rw [sourceRightEndLeftTape_configRunner]
+  cases hleft : bits.reverse.map some with
+  | nil =>
+      simp [DovetailInitialLayoutInitializer.tapeAtCells,
+        Tape.move, Tape.moveLeft, Tape.moveRight]
+  | cons cell rest =>
+      simp [DovetailInitialLayoutInitializer.tapeAtCells,
+        Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem sourceRightEndLeftTape_move_right_equiv_terminal_configRunner
+    (bits : Word Bool) :
+    Tape.Equiv
+      (Tape.move Direction.right (sourceRightEndLeftTape_configRunner bits))
+      (DovetailInitialLayoutInitializer.tapeAtCells
+        (bits.reverse.map some) []) := by
+  rw [sourceRightEndLeftTape_move_right_eq_terminal_with_blank_configRunner]
+  constructor
+  · exact
+      fixedDescriptionBoundedSimulator_dropTrailingNone_append_none
+        (bits.reverse.map some)
+  constructor <;>
+    rfl
+
 theorem sourceRightEndLeftTape_simulator_normalizedOutput_eq_fields_configRunner
     (L : SimulatorLayout) :
     Tape.normalizedOutput
