@@ -80,6 +80,47 @@ theorem nestedCodePrefixRecognizerStageCode_eq_iff
     rfl
 
 /--
+Ordinary generated-call parser construction.  This is the reusable wrapper
+already supplied by {module}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallHandoff`:
+it parses a generated stage-code prefix and invokes the supplied runner on the
+rebuilt input.  It does not expose an exact step count for the wrapped runner.
+-/
+def CodePrefixGeneratedCallParserConstruction
+    {selectedState : Type u}
+    (selected : TuringMachine MachineCodeSymbol selectedState) : Prop :=
+  exists runnerState : Type,
+  exists runner : TuringMachine MachineCodeSymbol runnerState,
+    forall tokens : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput runner tokens <->
+        exists fuel : Nat,
+        exists input : Word MachineCodeSymbol,
+          tokens = CodePrefixRecognizerStageCode input fuel ∧
+            TuringMachine.HaltsOnInput selected
+              (CodePrefixRecognizerStageCode input fuel)
+
+/--
+Named adapter for the ordinary generated-call parser.  Keep this separate from
+{lit}`CodePrefixExactFuelRunnerConstruction`: the exact-fuel contract below
+requires {name}`TuringMachine.HaltsOnInputIn`, while this parser preserves only
+ordinary halting of the wrapped machine.
+-/
+theorem codePrefixGeneratedCallParserConstruction_finite
+    {selectedState : Type u}
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    CodePrefixGeneratedCallParserConstruction selected := by
+  rcases
+      boundedSimulatorCanonicalInputParserMachine_construction selected with
+    ⟨runnerState, runner, hrunner⟩
+  refine
+    ⟨Fin runner.statesFinite.elems.length,
+      TuringMachine.indexed runner, ?_⟩
+  intro tokens
+  exact
+    Iff.trans
+      (TuringMachine.indexed_haltsOnInput_iff runner tokens)
+      (hrunner tokens)
+
+/--
 Exact-fuel generated-call runner.  The concrete machine parses a generated
 stage code, treats the parsed natural as the exact simulation fuel, rebuilds
 the payload as the wrapped machine's input, and halts precisely when the

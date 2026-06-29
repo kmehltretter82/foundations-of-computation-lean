@@ -30,6 +30,42 @@ structure FiniteType (alpha : Type u) where
   elems : List alpha
   complete : forall x : alpha, x ∈ elems
 
+namespace FiniteType
+
+/-!
+Finite-state constructions sometimes need to replace an arbitrary finite state
+type by a concrete index type.  The index/value helpers below use the
+enumerating list carried by {name}`FiniteType`; they are intentionally
+noncomputable because the project only needs them for finite construction
+packaging, not for extracted computation.
+-/
+
+def fin (n : Nat) : FiniteType (Fin n) where
+  elems := List.finRange n
+  complete := List.mem_finRange
+
+noncomputable def indexOf
+    (finite : FiniteType alpha) (x : alpha) : Fin finite.elems.length :=
+  let h : ∃ i, ∃ hlt : i < finite.elems.length,
+      finite.elems[i] = x :=
+    (List.mem_iff_getElem).mp (finite.complete x)
+  ⟨Classical.choose h, Classical.choose (Classical.choose_spec h)⟩
+
+def valueOf
+    (finite : FiniteType alpha) (index : Fin finite.elems.length) : alpha :=
+  finite.elems[index]
+
+theorem valueOf_indexOf
+    (finite : FiniteType alpha) (x : alpha) :
+    valueOf finite (indexOf finite x) = x := by
+  unfold valueOf indexOf
+  let h : ∃ i, ∃ hlt : i < finite.elems.length,
+      finite.elems[i] = x :=
+    (List.mem_iff_getElem).mp (finite.complete x)
+  exact Classical.choose_spec (Classical.choose_spec h)
+
+end FiniteType
+
 namespace FSet
 
 /-!

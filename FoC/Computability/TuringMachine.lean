@@ -69,6 +69,69 @@ inductive Step (M : TuringMachine symbol state) :
       Step M c
         { state := nextState, tape := Tape.move dir (Tape.write write c.tape) }
 
+/-!
+# Finite-state reindexing
+
+The construction layers sometimes receive a machine whose state type lives in
+an arbitrary universe.  Since every machine carries a finite-state witness, it
+can be reindexed to a concrete {name}`Fin` state space without changing its
+halting behavior.
+-/
+
+noncomputable def indexed (M : TuringMachine symbol state) :
+    TuringMachine symbol (Fin M.statesFinite.elems.length) where
+  start := Foundation.FiniteType.indexOf M.statesFinite M.start
+  halt := Foundation.FiniteType.indexOf M.statesFinite M.halt
+  transition := fun index cell =>
+    match M.transition
+        (Foundation.FiniteType.valueOf M.statesFinite index) cell with
+    | none => none
+    | some (write, dir, nextState) =>
+        some (write, dir,
+          Foundation.FiniteType.indexOf M.statesFinite nextState)
+  statesFinite := Foundation.FiniteType.fin M.statesFinite.elems.length
+
+theorem indexed_step_of_step
+    {M : TuringMachine symbol state}
+    {c d : Configuration symbol state}
+    (hstep : Step M c d) :
+    Step (indexed M)
+      { state := Foundation.FiniteType.indexOf M.statesFinite c.state,
+        tape := c.tape }
+      { state := Foundation.FiniteType.indexOf M.statesFinite d.state,
+        tape := d.tape } := by
+  cases hstep with
+  | mk haction =>
+      exact Step.mk (by
+        simp [indexed, Foundation.FiniteType.valueOf_indexOf, haction])
+
+theorem step_of_indexed_step
+    {M : TuringMachine symbol state}
+    {c d : Configuration symbol (Fin M.statesFinite.elems.length)}
+    (hstep : Step (indexed M) c d) :
+    Step M
+      { state := Foundation.FiniteType.valueOf M.statesFinite c.state,
+        tape := c.tape }
+      { state := Foundation.FiniteType.valueOf M.statesFinite d.state,
+        tape := d.tape } := by
+  cases hstep with
+  | mk haction =>
+      cases hM :
+          M.transition
+            (Foundation.FiniteType.valueOf M.statesFinite c.state)
+            (Tape.read c.tape) with
+      | none =>
+          simp [indexed, hM] at haction
+      | some action =>
+          rcases action with ⟨write, dir, nextState⟩
+          simp [indexed, hM] at haction
+          rcases haction with ⟨hwrite, hdir, hstate⟩
+          subst hwrite
+          subst hdir
+          cases hstate
+          simpa [Foundation.FiniteType.valueOf_indexOf] using
+            Step.mk hM
+
 inductive Computes (M : TuringMachine symbol state) :
     Configuration symbol state -> Configuration symbol state -> Prop where
   | refl (c : Configuration symbol state) : Computes M c c
@@ -80,6 +143,36 @@ inductive ComputesIn (M : TuringMachine symbol state) :
   | zero (c : Configuration symbol state) : ComputesIn M 0 c c
   | succ {n : Nat} {c d e : Configuration symbol state} :
       Step M c d -> ComputesIn M n d e -> ComputesIn M (n + 1) c e
+
+theorem indexed_computes_of_computes
+    {M : TuringMachine symbol state}
+    {c d : Configuration symbol state}
+    (hcomp : Computes M c d) :
+    Computes (indexed M)
+      { state := Foundation.FiniteType.indexOf M.statesFinite c.state,
+        tape := c.tape }
+      { state := Foundation.FiniteType.indexOf M.statesFinite d.state,
+        tape := d.tape } := by
+  induction hcomp with
+  | refl c =>
+      exact Computes.refl _
+  | step hstep _ ih =>
+      exact Computes.step (indexed_step_of_step hstep) ih
+
+theorem computes_of_indexed_computes
+    {M : TuringMachine symbol state}
+    {c d : Configuration symbol (Fin M.statesFinite.elems.length)}
+    (hcomp : Computes (indexed M) c d) :
+    Computes M
+      { state := Foundation.FiniteType.valueOf M.statesFinite c.state,
+        tape := c.tape }
+      { state := Foundation.FiniteType.valueOf M.statesFinite d.state,
+        tape := d.tape } := by
+  induction hcomp with
+  | refl c =>
+      exact Computes.refl _
+  | step hstep _ ih =>
+      exact Computes.step (step_of_indexed_step hstep) ih
 
 /-!
 # Exact tape-window invariants
@@ -201,6 +294,54 @@ def AcceptedLanguage (M : TuringMachine symbol state) : Language symbol :=
 
 def Recognizes (M : TuringMachine symbol state) (L : Language symbol) : Prop :=
   Language.Equal (AcceptedLanguage M) L
+
+theorem indexed_haltsFrom_iff
+    (M : TuringMachine symbol state)
+    (c : Configuration symbol state) :
+    HaltsFrom (indexed M)
+        { state := Foundation.FiniteType.indexOf M.statesFinite c.state,
+          tape := c.tape } <->
+      HaltsFrom M c := by
+  constructor
+  · intro hhalt
+    rcases hhalt with ⟨final, hcomp, hfinal⟩
+    have hcompOriginal :=
+      computes_of_indexed_computes (M := M) hcomp
+    have hstate :
+        Foundation.FiniteType.valueOf M.statesFinite final.state =
+          M.halt := by
+      have hindex :
+          final.state =
+            Foundation.FiniteType.indexOf M.statesFinite M.halt := by
+        simpa [Halted, indexed] using hfinal
+      rw [hindex, Foundation.FiniteType.valueOf_indexOf]
+    exact
+      ⟨{ state :=
+            Foundation.FiniteType.valueOf M.statesFinite final.state,
+          tape := final.tape },
+        by
+          simpa [Foundation.FiniteType.valueOf_indexOf] using
+            hcompOriginal,
+        by
+          simp [Halted, hstate]⟩
+  · intro hhalt
+    rcases hhalt with ⟨final, hcomp, hfinal⟩
+    have hcompIndexed :=
+      indexed_computes_of_computes (M := M) hcomp
+    exact
+      ⟨{ state := Foundation.FiniteType.indexOf M.statesFinite final.state,
+          tape := final.tape },
+        hcompIndexed,
+        by
+          have hstate : final.state = M.halt := by
+            simpa [Halted] using hfinal
+          simp [Halted, indexed, hstate]⟩
+
+theorem indexed_haltsOnInput_iff
+    (M : TuringMachine symbol state) (w : Word symbol) :
+    HaltsOnInput (indexed M) w <-> HaltsOnInput M w := by
+  simpa [HaltsOnInput, initial, indexed] using
+    indexed_haltsFrom_iff (M := M) (c := initial M w)
 
 /-!
 # Computation algebra

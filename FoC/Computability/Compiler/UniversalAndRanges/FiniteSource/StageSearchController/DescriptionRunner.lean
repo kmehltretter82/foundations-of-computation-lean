@@ -392,25 +392,18 @@ theorem budgetCheckerDescriptionRunnerMachine_halts_scan_only
 noncomputable def finiteStateIndexOf
     {α : Type uDescription} (finite : Foundation.FiniteType α)
     (state : α) : Fin finite.elems.length :=
-  let h : ∃ i, ∃ hlt : i < finite.elems.length,
-      finite.elems[i] = state :=
-    (List.mem_iff_getElem).mp (finite.complete state)
-  ⟨Classical.choose h, Classical.choose (Classical.choose_spec h)⟩
+  Foundation.FiniteType.indexOf finite state
 
 def finiteStateValueOf
     {α : Type uDescription} (finite : Foundation.FiniteType α)
     (index : Fin finite.elems.length) : α :=
-  finite.elems[index]
+  Foundation.FiniteType.valueOf finite index
 
 theorem finiteStateValueOf_indexOf
     {α : Type uDescription} (finite : Foundation.FiniteType α)
     (state : α) :
     finiteStateValueOf finite (finiteStateIndexOf finite state) = state := by
-  unfold finiteStateValueOf finiteStateIndexOf
-  let h : ∃ i, ∃ hlt : i < finite.elems.length,
-      finite.elems[i] = state :=
-    (List.mem_iff_getElem).mp (finite.complete state)
-  exact Classical.choose_spec (Classical.choose_spec h)
+  exact Foundation.FiniteType.valueOf_indexOf finite state
 
 def budgetCheckerDescriptionRunnerIndexedStateFinite (n : Nat) :
     Foundation.FiniteType (Option (Fin n)) where
