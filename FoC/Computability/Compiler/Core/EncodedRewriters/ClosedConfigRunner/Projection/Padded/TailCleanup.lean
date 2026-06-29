@@ -1735,6 +1735,23 @@ theorem selectedProjectionPaddedTailCleanupTargetBits_eq_selectedFields
       selectedProjectionPaddedTailCleanupSelectedHitBits,
       List.append_assoc]
 
+theorem selectedProjectionPaddedTailCleanupTargetBits_eq_outputCode
+    (useAccept : Bool) (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupTargetBits useAccept L =
+      encodeCodeWordAsInput
+        (SelectedProjectionOutputCode useAccept L) := by
+  rw [selectedProjectionOutputBits_eq_tailProjector_outputAllBits]
+  cases useAccept <;>
+    simp [selectedProjectionPaddedTailCleanupTargetBits,
+      SelectedProjectionTailProjector.outputAllBits,
+      SelectedProjectionTailProjector.outputBits_true_eq_fields,
+      SelectedProjectionTailProjector.outputBits_false_eq_fields]
+  all_goals
+    conv =>
+      rhs
+      rw [← CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil]
+    rfl
+
 theorem selectedProjectionPaddedTailCleanupPostPaddingSourceBits_true
     (L : DovetailLayout) :
     selectedProjectionPaddedTailCleanupPostPaddingSourceBits true L =
@@ -1797,6 +1814,15 @@ theorem selectedProjectionPaddedTailCleanupTargetTape_normalizedOutput_eq_select
   rw [selectedProjectionPaddedTailCleanupTargetBits_eq_normalizedOutput]
   rw [selectedProjectionPaddedTailCleanupTargetBits_eq_selectedFields]
 
+theorem selectedProjectionPaddedTailCleanupTargetTape_normalizedOutput_eq_outputCode
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) =
+      encodeCodeWordAsInput
+        (SelectedProjectionOutputCode useAccept L) := by
+  rw [selectedProjectionPaddedTailCleanupTargetBits_eq_normalizedOutput,
+    selectedProjectionPaddedTailCleanupTargetBits_eq_outputCode]
+
 theorem selectedProjectionPaddedTailCleanupTargetTape_cells_eq_bits
     (useAccept : Bool) (L : DovetailLayout) :
     Tape.cells (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) =
@@ -1825,6 +1851,16 @@ theorem selectedProjectionPaddedTailCleanupTargetTape_cells_eq_selectedFields
         (List.replicate (ParsedLayoutBits L).length none) := by
   rw [selectedProjectionPaddedTailCleanupTargetTape_cells_eq_bits,
     selectedProjectionPaddedTailCleanupTargetBits_eq_selectedFields]
+
+theorem selectedProjectionPaddedTailCleanupTargetTape_cells_eq_outputCode
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.cells (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) =
+      List.append
+        ((encodeCodeWordAsInput
+          (SelectedProjectionOutputCode useAccept L)).map some)
+        (List.replicate (ParsedLayoutBits L).length none) := by
+  rw [selectedProjectionPaddedTailCleanupTargetTape_cells_eq_bits,
+    selectedProjectionPaddedTailCleanupTargetBits_eq_outputCode]
 
 theorem selectedProjectionPaddedTailCleanupTargetTape_true_cells_eq_fields
     (L : DovetailLayout) :
