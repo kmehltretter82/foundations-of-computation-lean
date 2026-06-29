@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.DescriptionRunner
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch
 
 set_option doc.verso true
 
@@ -38,6 +39,28 @@ def codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairCode
     Word MachineCodeSymbol :=
   CodePrefixRecognizerStageCode
     (CodePrefixRecognizerStageCode input rightFuel) leftFuel
+
+theorem codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairCode_eq
+    (input : Word MachineCodeSymbol) (leftFuel rightFuel : Nat) :
+    codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairCode
+        input leftFuel rightFuel =
+      NestedCodePrefixRecognizerStageCode input rightFuel leftFuel := by
+  rfl
+
+theorem codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairCode_injective
+    {input₁ input₂ : Word MachineCodeSymbol}
+    {leftFuel₁ leftFuel₂ rightFuel₁ rightFuel₂ : Nat}
+    (h :
+      codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairCode
+          input₁ leftFuel₁ rightFuel₁ =
+        codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairCode
+          input₂ leftFuel₂ rightFuel₂) :
+    leftFuel₁ = leftFuel₂ ∧ rightFuel₁ = rightFuel₂ ∧ input₁ = input₂ := by
+  simpa [codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairCode_eq]
+    using nestedCodePrefixRecognizerStageCode_injective
+      (input₁ := input₁) (input₂ := input₂)
+      (inner₁ := rightFuel₁) (inner₂ := rightFuel₂)
+      (outer₁ := leftFuel₁) (outer₂ := leftFuel₂) h
 
 /--
 Selected-fuel runner for intersection.  The machine unpacks a fixed pair of
@@ -88,21 +111,9 @@ theorem codePrefixStageSearchControllerBudgetCheckerIntersection_boundedPair_iff
           TuringMachine.HaltsOnInputIn right rightFuel input) <->
       TuringMachine.HaltsOnInput left input ∧
         TuringMachine.HaltsOnInput right input := by
-  constructor
-  · intro h
-    rcases h with ⟨leftFuel, rightFuel, hleft, hright⟩
-    exact
-      ⟨TuringMachine.halts_on_input_in_to_halts_on_input hleft,
-        TuringMachine.halts_on_input_in_to_halts_on_input hright⟩
-  · intro h
-    rcases h with ⟨hleft, hright⟩
-    rcases TuringMachine.halts_on_input_to_halts_on_input_in
-        hleft with
-      ⟨leftFuel, hleftFuel⟩
-    rcases TuringMachine.halts_on_input_to_halts_on_input_in
-        hright with
-      ⟨rightFuel, hrightFuel⟩
-    exact ⟨leftFuel, rightFuel, hleftFuel, hrightFuel⟩
+  exact
+    exists_pair_haltsOnInputIn_and_iff_haltsOnInput_and
+      left right input
 
 /--
 Finite-machine leaf for the selected-fuel runner used by recognizer

@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.Intersection
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch
 
 set_option doc.verso true
 
@@ -34,15 +35,11 @@ theorem codePrefixStageSearchControllerBudgetDovetailWitness_iff_budgetFuel
       exists fuel : Nat,
         TuringMachine.HaltsOnInputIn checker fuel
           (CodePrefixRecognizerStageCode encoded budget) := by
-  constructor
-  · intro h
-    rcases h with ⟨_limit, budget, fuel, _hbudget, _hfuel, hrun⟩
-    exact ⟨budget, fuel, hrun⟩
-  · intro h
-    rcases h with ⟨budget, fuel, hrun⟩
-    refine ⟨Nat.max budget fuel, budget, fuel, ?_, ?_, hrun⟩
-    · exact Nat.le_max_left budget fuel
-    · exact Nat.le_max_right budget fuel
+  exact
+    exists_bounded_pair_iff_exists_pair
+      (fun budget fuel =>
+        TuringMachine.HaltsOnInputIn checker fuel
+          (CodePrefixRecognizerStageCode encoded budget))
 
 /--
 Finite-machine construction obligation for the raw budget/fuel enumerator.
@@ -178,6 +175,28 @@ def codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode
     Word MachineCodeSymbol :=
   CodePrefixRecognizerStageCode
     (CodePrefixRecognizerStageCode encoded limit) fuel
+
+theorem codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode_eq
+    (encoded : Word MachineCodeSymbol) (limit fuel : Nat) :
+    codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode
+        encoded limit fuel =
+      NestedCodePrefixRecognizerStageCode encoded limit fuel := by
+  rfl
+
+theorem codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode_injective
+    {encoded₁ encoded₂ : Word MachineCodeSymbol}
+    {limit₁ limit₂ fuel₁ fuel₂ : Nat}
+    (h :
+      codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode
+          encoded₁ limit₁ fuel₁ =
+        codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode
+          encoded₂ limit₂ fuel₂) :
+    fuel₁ = fuel₂ ∧ limit₁ = limit₂ ∧ encoded₁ = encoded₂ := by
+  simpa [codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode_eq]
+    using nestedCodePrefixRecognizerStageCode_injective
+      (input₁ := encoded₁) (input₂ := encoded₂)
+      (inner₁ := limit₁) (inner₂ := limit₂)
+      (outer₁ := fuel₁) (outer₂ := fuel₂) h
 
 /--
 Selected-attempt runner for the raw outer-loop search.  The machine unpacks a
@@ -496,20 +515,10 @@ theorem codePrefixStageSearchControllerBudgetDovetailWitness_iff
       exists budget : Nat,
         TuringMachine.HaltsOnInput checker
           (CodePrefixRecognizerStageCode encoded budget) := by
-  constructor
-  · intro h
-    rcases h with ⟨_limit, budget, fuel, _hbudget, _hfuel, hrun⟩
-    exact
-      ⟨budget,
-        TuringMachine.halts_on_input_in_to_halts_on_input hrun⟩
-  · intro h
-    rcases h with ⟨budget, hhalt⟩
-    rcases
-        TuringMachine.halts_on_input_to_halts_on_input_in hhalt with
-      ⟨fuel, hfuel⟩
-    refine ⟨Nat.max budget fuel, budget, fuel, ?_, ?_, hfuel⟩
-    · exact Nat.le_max_left budget fuel
-    · exact Nat.le_max_right budget fuel
+  exact
+    exists_bounded_pair_haltsOnInputIn_iff_exists_haltsOnInput
+      checker
+      (fun budget => CodePrefixRecognizerStageCode encoded budget)
 
 /-- Generic adapter from the bounded-pair dovetailer to budget enumeration. -/
 theorem codePrefixStageSearchControllerBudgetEnumeratorConstruction_core

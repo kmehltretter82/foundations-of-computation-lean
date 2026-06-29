@@ -1645,18 +1645,5 @@ theorem codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorRawLoopOblig
           exact codePrefixRecognizerStageCode_decodeNat encoded budget,
         hcheckedStage, hfuel, hsimulator⟩
 
-theorem codePrefixRecognizerStageCode_injective
-    {encoded1 encoded2 : Word MachineCodeSymbol}
-    {stage1 stage2 : Nat}
-    (h :
-      CodePrefixRecognizerStageCode encoded1 stage1 =
-        CodePrefixRecognizerStageCode encoded2 stage2) :
-    stage1 = stage2 ∧ encoded1 = encoded2 := by
-  have hdecode := congrArg MachineDescription.decodeNat h
-  simp [CodePrefixRecognizerStageCode,
-    MachineDescription.decodeNat_encodeNatAppend] at hdecode
-  exact ⟨hdecode.left, hdecode.right⟩
-
-
 end Computability
 end FoC
