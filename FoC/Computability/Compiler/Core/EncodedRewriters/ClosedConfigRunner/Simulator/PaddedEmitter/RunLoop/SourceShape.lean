@@ -562,6 +562,40 @@ def sourceRightEndLeftTape_configRunner
     (DovetailInitialLayoutInitializer.tapeAtCells
       (List.append (bits.reverse.map some) [none]) [none])
 
+theorem sourceRightEndLeftTape_cells_configRunner
+    (bits : Word Bool) :
+    Tape.cells (sourceRightEndLeftTape_configRunner bits) =
+      none :: List.append (bits.map some) [none] := by
+  cases bits with
+  | nil =>
+      simp [sourceRightEndLeftTape_configRunner,
+        DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells,
+        Tape.move, Tape.moveLeft]
+  | cons bit rest =>
+      cases hrev : rest.reverse with
+      | nil =>
+          have hrest : rest = [] := by
+            simpa using congrArg List.reverse hrev
+          simp [sourceRightEndLeftTape_configRunner,
+            DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells,
+            Tape.move, Tape.moveLeft, hrest]
+      | cons head tail =>
+          have hrest : rest = (head :: tail).reverse := by
+            rw [← hrev, List.reverse_reverse]
+          simp [sourceRightEndLeftTape_configRunner,
+            DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells,
+            Tape.move, Tape.moveLeft, hrest, List.map_reverse,
+            List.append_assoc]
+
+theorem sourceRightEndLeftTape_normalizedOutput_configRunner
+    (bits : Word Bool) :
+    Tape.normalizedOutput (sourceRightEndLeftTape_configRunner bits) =
+      bits := by
+  rw [Tape.normalizedOutput]
+  rw [sourceRightEndLeftTape_cells_configRunner]
+  cases bits <;>
+    simp [Function.comp_def]
+
 def sourceScanRightToBlankLeftHaltTape_configRunner
     (leftRev : List (Option Bool)) (bits : Word Bool) : Tape Bool :=
   Tape.move Direction.left
