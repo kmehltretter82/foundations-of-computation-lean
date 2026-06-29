@@ -555,26 +555,6 @@ theorem codePrefixStageDescriptionPrefixDecoderConstruction_scaffold :
       headerFieldsParserConstruction_scaffold
       transitionListParserConstruction_scaffold)
 
-theorem codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_of_decoders_finite
-    {stageState descriptionState : Type}
-    (_stageDecoder : TuringMachine MachineCodeSymbol stageState)
-    (_descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState)
-    (_hstage :
-      forall tokens : Word MachineCodeSymbol,
-        TuringMachine.HaltsOnInput stageDecoder tokens <->
-          exists stage : Nat,
-          exists encoded : Word MachineCodeSymbol,
-            tokens = CodePrefixRecognizerStageCode encoded stage)
-    (_hdescription :
-      forall encoded : Word MachineCodeSymbol,
-        TuringMachine.HaltsOnInput descriptionDecoder encoded <->
-          exists D : MachineDescription,
-          exists input : Word MachineCodeSymbol,
-            MachineDescription.decodeDescriptionPrefix encoded =
-              some (D, input)) :
-    CodePrefixDecodedBoundedSimulatorSemanticMachineConstruction := by
-  exact codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_core
-
 theorem codePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction_scaffold :
     CodePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction := by
   intro stageState descriptionState stageDecoder descriptionDecoder
@@ -602,9 +582,8 @@ theorem codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_of_decoders
   rcases hdescription with
     ⟨descriptionState, descriptionDecoder, hdescription⟩
   exact
-    codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_of_codeMachine
-      (codePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction_scaffold
-        stageDecoder descriptionDecoder hstage hdescription)
+    codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_of_decoders_finite
+      stageDecoder descriptionDecoder hstage hdescription
 
 theorem codePrefixDecodedBoundedSimulatorCodeMachineConstruction_scaffold :
     CodePrefixDecodedBoundedSimulatorCodeMachineConstruction := by

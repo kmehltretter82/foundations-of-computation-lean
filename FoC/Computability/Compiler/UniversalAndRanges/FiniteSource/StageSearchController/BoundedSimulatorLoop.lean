@@ -71,32 +71,7 @@ theorem codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorPairLoopFini
     (simulator : TuringMachine MachineCodeSymbol simulatorState) :
     CodePrefixStageSearchControllerBudgetCheckerBoundedSimulatorPairLoopObligation
       simulator := by
-  rcases codePrefixExactFuelRunnerFiniteLeaf simulator with
-    ⟨selectedState, selected, hselected⟩
-  rcases codePrefixBoundedNestedPairEnumeratorFiniteLeaf selected with
-    ⟨runnerState, runner, hrunner⟩
-  refine ⟨runnerState, runner, ?_⟩
-  intro encoded budget
-  constructor
-  · intro hhalt
-    rcases (hrunner encoded budget).mp hhalt with
-      ⟨checkedStage, fuel, hcheckedStage, hfuel, hselectedHalt⟩
-    exact
-      ⟨checkedStage, fuel, hcheckedStage, hfuel,
-        (hselected
-          (CodePrefixRecognizerStageCode encoded checkedStage) fuel).mp
-          (by
-            simpa [NestedCodePrefixRecognizerStageCode] using
-              hselectedHalt)⟩
-  · intro htarget
-    rcases htarget with
-      ⟨checkedStage, fuel, hcheckedStage, hfuel, hsimulator⟩
-    exact (hrunner encoded budget).mpr
-      ⟨checkedStage, fuel, hcheckedStage, hfuel, by
-        simpa [NestedCodePrefixRecognizerStageCode] using
-          (hselected
-            (CodePrefixRecognizerStageCode encoded checkedStage) fuel).mpr
-            hsimulator⟩
+  exact codePrefixBoundedNestedExactFuelSearchFiniteLeaf simulator
 
 /--
 Adapter from the parser wrapper and pair-loop construction to the canonical

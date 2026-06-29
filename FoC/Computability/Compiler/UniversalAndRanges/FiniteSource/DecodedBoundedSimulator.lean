@@ -487,6 +487,31 @@ theorem codePrefixDecodedBoundedSimulatorSemanticMachineFiniteLeaf :
   sorry
 
 /--
+Finite decoded-simulator construction after the stage-code and description
+decoders have exposed their parser contracts.  The remaining transition-table
+obligation is the semantic bounded simulator leaf above.
+-/
+theorem codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_of_decoders_finite
+    {stageState descriptionState : Type}
+    (stageDecoder : TuringMachine MachineCodeSymbol stageState)
+    (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState)
+    (_hstage :
+      forall tokens : Word MachineCodeSymbol,
+        TuringMachine.HaltsOnInput stageDecoder tokens <->
+          exists stage : Nat,
+          exists encoded : Word MachineCodeSymbol,
+            tokens = CodePrefixRecognizerStageCode encoded stage)
+    (_hdescription :
+      forall encoded : Word MachineCodeSymbol,
+        TuringMachine.HaltsOnInput descriptionDecoder encoded <->
+          exists D : MachineDescription,
+          exists input : Word MachineCodeSymbol,
+            MachineDescription.decodeDescriptionPrefix encoded =
+              some (D, input)) :
+    CodePrefixDecodedBoundedSimulatorSemanticMachineConstruction := by
+  exact codePrefixDecodedBoundedSimulatorSemanticMachineFiniteLeaf
+
+/--
 Adapter from the semantic decoded simulator leaf to the code-primitive
 contract.
 -/
@@ -504,7 +529,10 @@ theorem codePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction_core 
     CodePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction := by
   intro stageState descriptionState stageDecoder descriptionDecoder
     hstage hdescription
-  exact codePrefixDecodedBoundedSimulatorCodeMachineConstruction_core
+  exact
+    codePrefixDecodedBoundedSimulatorCodeMachineConstruction_of_semanticMachine
+      (codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_of_decoders_finite
+        stageDecoder descriptionDecoder hstage hdescription)
 
 theorem codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_core :
     CodePrefixDecodedBoundedSimulatorSemanticMachineConstruction :=

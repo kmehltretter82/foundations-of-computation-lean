@@ -164,29 +164,7 @@ bounded-pair driver used by recognizer intersection.
 theorem codePrefixStageSearchControllerBudgetCheckerIntersectionBoundedPairObligation_core :
     CodePrefixStageSearchControllerBudgetCheckerIntersectionBoundedPairObligation := by
   intro leftState rightState left right
-  rcases
-      codePrefixStageSearchControllerBudgetCheckerIntersectionSelectedFuelRunFiniteLeaf
-        left right with
-    ⟨selectedState, selected, hselected⟩
-  rcases
-      codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairEnumeratorFiniteLeaf
-        selected with
-    ⟨bothState, both, hboth⟩
-  refine ⟨bothState, both, ?_⟩
-  intro input
-  constructor
-  · intro hhalt
-    rcases (hboth input).mp hhalt with
-      ⟨leftFuel, rightFuel, hselectedHalt⟩
-    exact
-      ⟨leftFuel, rightFuel,
-        (hselected input leftFuel rightFuel).mp hselectedHalt⟩
-  · intro htarget
-    rcases htarget with
-      ⟨leftFuel, rightFuel, hleft, hright⟩
-    exact (hboth input).mpr
-      ⟨leftFuel, rightFuel,
-        (hselected input leftFuel rightFuel).mpr ⟨hleft, hright⟩⟩
+  exact codePrefixExactFuelProductSearchFiniteLeaf left right
 
 /--
 Finite-machine leaf for intersecting two same-alphabet recognizers.  The
@@ -196,15 +174,7 @@ the input and halts after both simulations have halted.
 theorem codePrefixStageSearchControllerBudgetCheckerIntersectionObligation_core :
     CodePrefixStageSearchControllerBudgetCheckerIntersectionObligation := by
   intro leftState rightState left right
-  rcases
-      codePrefixStageSearchControllerBudgetCheckerIntersectionBoundedPairObligation_core
-        left right with
-    ⟨bothState, both, hboth⟩
-  refine ⟨bothState, both, ?_⟩
-  intro input
-  exact Iff.trans (hboth input)
-    (codePrefixStageSearchControllerBudgetCheckerIntersection_boundedPair_iff
-      left right input)
+  exact codePrefixProductHaltingSearchFiniteLeaf left right
 
 /--
 Concrete finite-machine construction for the bounded checker driver.  This is

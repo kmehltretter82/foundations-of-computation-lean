@@ -108,6 +108,45 @@ theorem codePrefixExactFuelRunnerFiniteLeaf
   sorry
 
 /--
+Specialization of an exact-fuel runner to a nested generated call.  The outer
+bound is the exact fuel for the wrapped machine, and the inner generated call
+is preserved as the wrapped input.
+-/
+theorem codePrefixExactFuelRunner_haltsOnNested_iff
+    {machineState : Type u} {runnerState : Type v}
+    {M : TuringMachine MachineCodeSymbol machineState}
+    {runner : TuringMachine MachineCodeSymbol runnerState}
+    (hrunner :
+      forall input : Word MachineCodeSymbol,
+      forall fuel : Nat,
+        TuringMachine.HaltsOnInput runner
+            (CodePrefixRecognizerStageCode input fuel) <->
+          TuringMachine.HaltsOnInputIn M fuel input)
+    (input : Word MachineCodeSymbol) (inner outer : Nat) :
+    TuringMachine.HaltsOnInput runner
+        (NestedCodePrefixRecognizerStageCode input inner outer) <->
+      TuringMachine.HaltsOnInputIn M outer
+        (CodePrefixRecognizerStageCode input inner) := by
+  simpa [NestedCodePrefixRecognizerStageCode] using
+    hrunner (CodePrefixRecognizerStageCode input inner) outer
+
+/--
+Unbounded search over generated inner inputs and exact outer fuels for a
+wrapped machine.
+-/
+def CodePrefixNestedExactFuelSearchConstruction
+    {machineState : Type u}
+    (M : TuringMachine MachineCodeSymbol machineState) : Prop :=
+  exists searcherState : Type,
+  exists searcher : TuringMachine MachineCodeSymbol searcherState,
+    forall input : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput searcher input <->
+        exists inner : Nat,
+        exists outer : Nat,
+          TuringMachine.HaltsOnInputIn M outer
+            (CodePrefixRecognizerStageCode input inner)
+
+/--
 Unbounded generated-pair enumerator.  The concrete machine preserves the raw
 input, enumerates two unary natural parameters, rebuilds the nested generated
 call, and invokes the supplied selected runner.
@@ -134,6 +173,35 @@ theorem codePrefixNestedPairEnumeratorFiniteLeaf
   sorry
 
 /--
+Composition of the exact-fuel runner and unbounded generated-pair enumerator.
+This is the shared helper behind raw budget/fuel searches.
+-/
+theorem codePrefixNestedExactFuelSearchFiniteLeaf
+    {machineState : Type u}
+    (M : TuringMachine MachineCodeSymbol machineState) :
+    CodePrefixNestedExactFuelSearchConstruction M := by
+  rcases codePrefixExactFuelRunnerFiniteLeaf M with
+    ⟨selectedState, selected, hselected⟩
+  rcases codePrefixNestedPairEnumeratorFiniteLeaf selected with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input
+  constructor
+  · intro hhalt
+    rcases (hsearcher input).mp hhalt with
+      ⟨inner, outer, hselectedHalt⟩
+    exact
+      ⟨inner, outer,
+        (codePrefixExactFuelRunner_haltsOnNested_iff
+          hselected input inner outer).mp hselectedHalt⟩
+  · intro htarget
+    rcases htarget with ⟨inner, outer, hM⟩
+    exact (hsearcher input).mpr
+      ⟨inner, outer,
+        (codePrefixExactFuelRunner_haltsOnNested_iff
+          hselected input inner outer).mpr hM⟩
+
+/--
 Bounded generated-pair enumerator.  The input carries an outer budget; the
 machine enumerates pairs bounded by that budget and invokes the selected
 runner on each rebuilt nested generated call.
@@ -155,6 +223,26 @@ def CodePrefixBoundedNestedPairEnumeratorConstruction
               (NestedCodePrefixRecognizerStageCode input inner outer)
 
 /--
+Bounded search over generated inner inputs and exact outer fuels for a wrapped
+machine.
+-/
+def CodePrefixBoundedNestedExactFuelSearchConstruction
+    {machineState : Type u}
+    (M : TuringMachine MachineCodeSymbol machineState) : Prop :=
+  exists searcherState : Type,
+  exists searcher : TuringMachine MachineCodeSymbol searcherState,
+    forall input : Word MachineCodeSymbol,
+    forall budget : Nat,
+      TuringMachine.HaltsOnInput searcher
+          (CodePrefixRecognizerStageCode input budget) <->
+        exists inner : Nat,
+        exists outer : Nat,
+          inner ≤ budget ∧
+            outer ≤ budget ∧
+            TuringMachine.HaltsOnInputIn M outer
+              (CodePrefixRecognizerStageCode input inner)
+
+/--
 Finite-machine leaf for bounded generated-pair enumeration.
 -/
 theorem codePrefixBoundedNestedPairEnumeratorFiniteLeaf
@@ -162,6 +250,35 @@ theorem codePrefixBoundedNestedPairEnumeratorFiniteLeaf
     (selected : TuringMachine MachineCodeSymbol selectedState) :
     CodePrefixBoundedNestedPairEnumeratorConstruction selected := by
   sorry
+
+/--
+Composition of the exact-fuel runner and bounded generated-pair enumerator.
+This is the shared helper behind bounded simulator pair loops.
+-/
+theorem codePrefixBoundedNestedExactFuelSearchFiniteLeaf
+    {machineState : Type u}
+    (M : TuringMachine MachineCodeSymbol machineState) :
+    CodePrefixBoundedNestedExactFuelSearchConstruction M := by
+  rcases codePrefixExactFuelRunnerFiniteLeaf M with
+    ⟨selectedState, selected, hselected⟩
+  rcases codePrefixBoundedNestedPairEnumeratorFiniteLeaf selected with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input budget
+  constructor
+  · intro hhalt
+    rcases (hsearcher input budget).mp hhalt with
+      ⟨inner, outer, hinner, houter, hselectedHalt⟩
+    exact
+      ⟨inner, outer, hinner, houter,
+        (codePrefixExactFuelRunner_haltsOnNested_iff
+          hselected input inner outer).mp hselectedHalt⟩
+  · intro htarget
+    rcases htarget with ⟨inner, outer, hinner, houter, hM⟩
+    exact (hsearcher input budget).mpr
+      ⟨inner, outer, hinner, houter,
+        (codePrefixExactFuelRunner_haltsOnNested_iff
+          hselected input inner outer).mpr hM⟩
 
 /--
 Product exact-fuel runner for recognizer intersection.  The input carries two
@@ -192,6 +309,52 @@ theorem codePrefixExactFuelProductRunnerFiniteLeaf
     (right : TuringMachine MachineCodeSymbol rightState) :
     CodePrefixExactFuelProductRunnerConstruction left right := by
   sorry
+
+/--
+Unbounded product search over exact left/right fuel witnesses for a preserved
+input.
+-/
+def CodePrefixExactFuelProductSearchConstruction
+    {leftState : Type uStage} {rightState : Type uDescription}
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState) : Prop :=
+  exists bothState : Type,
+  exists both : TuringMachine MachineCodeSymbol bothState,
+    forall input : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput both input <->
+        exists leftFuel : Nat,
+        exists rightFuel : Nat,
+          TuringMachine.HaltsOnInputIn left leftFuel input ∧
+            TuringMachine.HaltsOnInputIn right rightFuel input
+
+/--
+Composition of the exact-fuel product runner and unbounded generated-pair
+enumerator.  This is the shared helper behind recognizer-intersection fuel
+search.
+-/
+theorem codePrefixExactFuelProductSearchFiniteLeaf
+    {leftState : Type uStage} {rightState : Type uDescription}
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState) :
+    CodePrefixExactFuelProductSearchConstruction left right := by
+  rcases codePrefixExactFuelProductRunnerFiniteLeaf left right with
+    ⟨selectedState, selected, hselected⟩
+  rcases codePrefixNestedPairEnumeratorFiniteLeaf selected with
+    ⟨bothState, both, hboth⟩
+  refine ⟨bothState, both, ?_⟩
+  intro input
+  constructor
+  · intro hhalt
+    rcases (hboth input).mp hhalt with
+      ⟨rightFuel, leftFuel, hselectedHalt⟩
+    exact
+      ⟨leftFuel, rightFuel,
+        (hselected input leftFuel rightFuel).mp hselectedHalt⟩
+  · intro htarget
+    rcases htarget with ⟨leftFuel, rightFuel, hleftRight⟩
+    exact (hboth input).mpr
+      ⟨rightFuel, leftFuel,
+        (hselected input leftFuel rightFuel).mpr hleftRight⟩
 
 /--
 Generic pair-bounding algebra for dovetail drivers: existential search over a
@@ -298,6 +461,69 @@ theorem exists_pair_haltsOnInputIn_and_iff_haltsOnInput_and
         hright with
       ⟨rightFuel, hrightFuel⟩
     exact ⟨leftFuel, rightFuel, hleftFuel, hrightFuel⟩
+
+/--
+Unbounded search over generated inner inputs for a wrapped machine, hiding the
+exact simulation fuel behind ordinary halting.
+-/
+def CodePrefixNestedHaltingSearchConstruction
+    {machineState : Type u}
+    (M : TuringMachine MachineCodeSymbol machineState) : Prop :=
+  exists searcherState : Type,
+  exists searcher : TuringMachine MachineCodeSymbol searcherState,
+    forall input : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput searcher input <->
+        exists inner : Nat,
+          TuringMachine.HaltsOnInput M
+            (CodePrefixRecognizerStageCode input inner)
+
+/--
+Composition of nested exact-fuel search with the standard equivalence between
+unbounded halting and exact-step halting.
+-/
+theorem codePrefixNestedHaltingSearchFiniteLeaf
+    {machineState : Type u}
+    (M : TuringMachine MachineCodeSymbol machineState) :
+    CodePrefixNestedHaltingSearchConstruction M := by
+  rcases codePrefixNestedExactFuelSearchFiniteLeaf M with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input
+  exact Iff.trans (hsearcher input)
+    (exists_pair_haltsOnInputIn_iff_exists_haltsOnInput
+      M (fun inner => CodePrefixRecognizerStageCode input inner))
+
+/--
+Unbounded product search for recognizer intersection, hiding both exact fuel
+witnesses behind ordinary halting.
+-/
+def CodePrefixProductHaltingSearchConstruction
+    {leftState : Type uStage} {rightState : Type uDescription}
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState) : Prop :=
+  exists bothState : Type,
+  exists both : TuringMachine MachineCodeSymbol bothState,
+    forall input : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput both input <->
+        TuringMachine.HaltsOnInput left input ∧
+          TuringMachine.HaltsOnInput right input
+
+/--
+Composition of product exact-fuel search with the standard exact-step
+existential equivalence.
+-/
+theorem codePrefixProductHaltingSearchFiniteLeaf
+    {leftState : Type uStage} {rightState : Type uDescription}
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState) :
+    CodePrefixProductHaltingSearchConstruction left right := by
+  rcases codePrefixExactFuelProductSearchFiniteLeaf left right with
+    ⟨bothState, both, hboth⟩
+  refine ⟨bothState, both, ?_⟩
+  intro input
+  exact Iff.trans (hboth input)
+    (exists_pair_haltsOnInputIn_and_iff_haltsOnInput_and
+      left right input)
 
 /--
 Bounded dovetailing over two fuel components is equivalent to both machines

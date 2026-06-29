@@ -250,7 +250,9 @@ theorem codePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptFiniteL
   refine ⟨selectedState, selected, ?_⟩
   intro encoded limit fuel
   simpa [codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode]
-    using hselected (CodePrefixRecognizerStageCode encoded limit) fuel
+    using
+      codePrefixExactFuelRunner_haltsOnNested_iff
+        hselected encoded limit fuel
 
 /--
 Finite-machine leaf for the limit/fuel enumerator used by the raw outer-loop
@@ -288,28 +290,7 @@ theorem codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchFiniteLeaf
     (attempt : TuringMachine MachineCodeSymbol attemptState) :
     CodePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchObligation
       attempt := by
-  rcases
-      codePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptFiniteLeaf
-        attempt with
-    ⟨selectedState, selected, hselected⟩
-  rcases
-      codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelEnumeratorFiniteLeaf
-        selected with
-    ⟨searcherState, searcher, hsearcher⟩
-  refine ⟨searcherState, searcher, ?_⟩
-  intro encoded
-  constructor
-  · intro hhalt
-    rcases (hsearcher encoded).mp hhalt with
-      ⟨limit, fuel, hselectedHalt⟩
-    exact
-      ⟨limit, fuel,
-        (hselected encoded limit fuel).mp hselectedHalt⟩
-  · intro htarget
-    rcases htarget with ⟨limit, fuel, hattempt⟩
-    exact (hsearcher encoded).mpr
-      ⟨limit, fuel,
-        (hselected encoded limit fuel).mpr hattempt⟩
+  exact codePrefixNestedExactFuelSearchFiniteLeaf attempt
 
 /--
 Global wrapper for the raw stage-code/fuel search construction.  The concrete
@@ -318,22 +299,19 @@ transition-table obligation is the per-machine outer-loop fuel-search leaf.
 theorem codePrefixStageSearchControllerBudgetFuelEnumeratorConstruction_core :
     CodePrefixStageSearchControllerBudgetFuelEnumeratorConstruction := by
   intro checkerState checker
-  exact
-    codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchFiniteLeaf
-      checker
+  exact codePrefixNestedExactFuelSearchFiniteLeaf checker
 
 /--
-Concrete finite-machine leaf for the raw outer-loop fuel search.  The concrete
-machine has to dovetail over generated outer limits and bounded attempt fuel.
+Concrete finite-machine leaf for the raw outer-loop fuel search.  The shared
+generated-call helper supplies the dovetail over generated outer limits and
+attempt fuels.
 -/
 theorem codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchObligation_core
     {attemptState : Type}
     (attempt : TuringMachine MachineCodeSymbol attemptState) :
     CodePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchObligation
       attempt := by
-  exact
-    codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchFiniteLeaf
-      attempt
+  exact codePrefixNestedExactFuelSearchFiniteLeaf attempt
 
 /--
 Finite-machine leaf for the bounded attempt phase of the raw budget/fuel
@@ -344,29 +322,7 @@ theorem codePrefixStageSearchControllerBudgetFuelBoundedAttemptObligation_core
     (checker : TuringMachine MachineCodeSymbol checkerState) :
     CodePrefixStageSearchControllerBudgetFuelBoundedAttemptObligation
       checker := by
-  rcases
-      codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorRawLoopObligation_core
-        checker with
-    ⟨attemptState, attempt, hattempt⟩
-  refine ⟨attemptState, attempt, ?_⟩
-  intro encoded limit
-  constructor
-  · intro hhalt
-    rcases
-        (hattempt (CodePrefixRecognizerStageCode encoded limit)).mp
-          hhalt with
-      ⟨outerBudget, encoded', budget, fuel, htokens,
-        hbudget, hfuel, hchecker⟩
-    rcases codePrefixRecognizerStageCode_injective htokens with
-      ⟨hlimit, hencoded⟩
-    subst outerBudget
-    subst encoded'
-    exact ⟨budget, fuel, hbudget, hfuel, hchecker⟩
-  · intro htarget
-    rcases htarget with ⟨budget, fuel, hbudget, hfuel, hchecker⟩
-    exact
-      (hattempt (CodePrefixRecognizerStageCode encoded limit)).mpr
-        ⟨limit, encoded, budget, fuel, rfl, hbudget, hfuel, hchecker⟩
+  exact codePrefixBoundedNestedExactFuelSearchFiniteLeaf checker
 
 /--
 Finite-machine leaf for the unbounded outer-loop phase of the raw budget/fuel
@@ -377,63 +333,19 @@ theorem codePrefixStageSearchControllerBudgetFuelOuterLoopObligation_core
     (attempt : TuringMachine MachineCodeSymbol attemptState) :
     CodePrefixStageSearchControllerBudgetFuelOuterLoopObligation
       attempt := by
-  rcases
-      codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchObligation_core
-        attempt with
-    ⟨searcherState, searcher, hsearcher⟩
-  refine ⟨searcherState, searcher, ?_⟩
-  intro encoded
-  constructor
-  · intro hhalt
-    rcases (hsearcher encoded).mp hhalt with
-      ⟨limit, fuel, hattempt⟩
-    exact
-      ⟨limit,
-        TuringMachine.halts_on_input_in_to_halts_on_input hattempt⟩
-  · intro htarget
-    rcases htarget with ⟨limit, hattempt⟩
-    rcases TuringMachine.halts_on_input_to_halts_on_input_in
-        hattempt with
-      ⟨fuel, hfuel⟩
-    exact (hsearcher encoded).mpr ⟨limit, fuel, hfuel⟩
+  exact codePrefixNestedHaltingSearchFiniteLeaf attempt
 
 /--
 Concrete finite-machine construction for the raw budget/fuel dovetail driver.
-This is the remaining transition-table work: enumerate budget/fuel pairs,
-rebuild the stage-coded checker input, and run the checker for the selected
-fuel.
+The shared generated-call helper enumerates budget/fuel pairs, rebuilds the
+stage-coded checker input, and runs the checker for the selected fuel.
 -/
 theorem codePrefixStageSearchControllerBudgetFuelRawDriverObligation_core
     {checkerState : Type}
     (checker : TuringMachine MachineCodeSymbol checkerState) :
     CodePrefixStageSearchControllerBudgetFuelRawDriverObligation
       checker := by
-  rcases
-      codePrefixStageSearchControllerBudgetFuelBoundedAttemptObligation_core
-        checker with
-    ⟨attemptState, attempt, hattempt⟩
-  rcases
-      codePrefixStageSearchControllerBudgetFuelOuterLoopObligation_core
-        attempt with
-    ⟨searcherState, searcher, hsearcher⟩
-  refine ⟨searcherState, searcher, ?_⟩
-  intro encoded
-  constructor
-  · intro hhalt
-    rcases (hsearcher encoded).mp hhalt with
-      ⟨limit, hattemptHalt⟩
-    rcases (hattempt encoded limit).mp hattemptHalt with
-      ⟨budget, fuel, _hbudget, _hfuel, hchecker⟩
-    exact ⟨budget, fuel, hchecker⟩
-  · intro htarget
-    rcases htarget with ⟨budget, fuel, hchecker⟩
-    let limit := Nat.max budget fuel
-    have hbudget : budget ≤ limit := Nat.le_max_left budget fuel
-    have hfuel : fuel ≤ limit := Nat.le_max_right budget fuel
-    exact (hsearcher encoded).mpr
-      ⟨limit,
-        (hattempt encoded limit).mpr
-          ⟨budget, fuel, hbudget, hfuel, hchecker⟩⟩
+  exact codePrefixNestedExactFuelSearchFiniteLeaf checker
 
 /--
 Finite-machine construction for the budget-only searcher.  The remaining
@@ -444,26 +356,7 @@ theorem codePrefixStageSearchControllerBudgetRawSearchObligation_core
     {checkerState : Type}
     (checker : TuringMachine MachineCodeSymbol checkerState) :
     CodePrefixStageSearchControllerBudgetRawSearchObligation checker := by
-  rcases
-      codePrefixStageSearchControllerBudgetFuelRawDriverObligation_core
-        checker with
-    ⟨searcherState, searcher, hsearcher⟩
-  refine ⟨searcherState, searcher, ?_⟩
-  intro encoded
-  constructor
-  · intro hhalt
-    rcases (hsearcher encoded).mp hhalt with
-      ⟨budget, fuel, hfuel⟩
-    exact
-      ⟨budget,
-        TuringMachine.halts_on_input_in_to_halts_on_input hfuel⟩
-  · intro hhit
-    rcases hhit with ⟨budget, hbudget⟩
-    rcases
-        TuringMachine.halts_on_input_to_halts_on_input_in
-          hbudget with
-      ⟨fuel, hfuel⟩
-    exact (hsearcher encoded).mpr ⟨budget, fuel, hfuel⟩
+  exact codePrefixNestedHaltingSearchFiniteLeaf checker
 
 /--
 Finite-machine obligation for the outer budget/fuel dovetail driver.  The raw
@@ -541,7 +434,7 @@ theorem codePrefixStageSearchControllerBudgetDovetailWitness_iff
       checker
       (fun budget => CodePrefixRecognizerStageCode encoded budget)
 
-/-- Generic adapter from the bounded-pair dovetailer to budget enumeration. -/
+/-- Generic generated-call searcher for budget enumeration. -/
 theorem codePrefixStageSearchControllerBudgetEnumeratorConstruction_core
     {checkerState : Type}
     (checker : TuringMachine MachineCodeSymbol checkerState) :
@@ -552,14 +445,7 @@ theorem codePrefixStageSearchControllerBudgetEnumeratorConstruction_core
           exists budget : Nat,
             TuringMachine.HaltsOnInput checker
               (CodePrefixRecognizerStageCode encoded budget) := by
-  rcases codePrefixStageSearchControllerBudgetDovetailerFiniteLeaf
-      checker with
-    ⟨searcherState, searcher, hsearcher⟩
-  refine ⟨searcherState, searcher, ?_⟩
-  intro encoded
-  exact Iff.trans (hsearcher encoded)
-    (codePrefixStageSearchControllerBudgetDovetailWitness_iff
-      checker encoded)
+  exact codePrefixNestedHaltingSearchFiniteLeaf checker
 
 /-- Finite-machine leaf for enumerating budgets using a bounded checker. -/
 theorem codePrefixStageSearchControllerBudgetSearchSequencingConstruction_core :
