@@ -1682,6 +1682,23 @@ def selectedProjectionPaddedTailCleanupSelectedHitBits
   else
     CanonicalLayouts.DovetailLayoutScanner.boolFieldBits L.rejectHit []
 
+def selectedProjectionPaddedTailCleanupKeptPrefixBits
+    (useAccept : Bool) (L : DovetailLayout) : Word Bool :=
+  if useAccept then
+    List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
+      (selectedProjectionPaddedTailCleanupSelectedConfigBits true L)
+  else
+    selectedProjectionPaddedTailCleanupPrefixBits L
+
+def selectedProjectionPaddedTailCleanupKeptSuffixBits
+    (useAccept : Bool) (L : DovetailLayout) : Word Bool :=
+  if useAccept then
+    selectedProjectionPaddedTailCleanupSelectedHitBits true L
+  else
+    List.append
+      (selectedProjectionPaddedTailCleanupSelectedConfigBits false L)
+      (selectedProjectionPaddedTailCleanupSelectedHitBits false L)
+
 def selectedProjectionPaddedTailCleanupPostPaddingSourceBits
     (useAccept : Bool) (L : DovetailLayout) : Word Bool :=
   if useAccept then
@@ -1720,6 +1737,41 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingSourceBits_false_eq_unsele
             (selectedProjectionPaddedTailCleanupSelectedConfigBits false L)
             (selectedProjectionPaddedTailCleanupSelectedHitBits false L))) := by
   rfl
+
+theorem selectedProjectionPaddedTailCleanupTargetBits_eq_kept
+    (useAccept : Bool) (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupTargetBits useAccept L =
+      List.append
+        (selectedProjectionPaddedTailCleanupKeptPrefixBits useAccept L)
+        (selectedProjectionPaddedTailCleanupKeptSuffixBits useAccept L) := by
+  cases useAccept <;>
+    simp [selectedProjectionPaddedTailCleanupTargetBits,
+      selectedProjectionPaddedTailCleanupKeptPrefixBits,
+      selectedProjectionPaddedTailCleanupKeptSuffixBits,
+      selectedProjectionPaddedTailCleanupPrefixBits,
+      selectedProjectionPaddedTailCleanupSelectedConfigBits,
+      selectedProjectionPaddedTailCleanupSelectedHitBits,
+      List.append_assoc]
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingSourceBits_eq_deleteBlock
+    (useAccept : Bool) (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupPostPaddingSourceBits useAccept L =
+      List.append
+        (selectedProjectionPaddedTailCleanupKeptPrefixBits useAccept L)
+        (List.append
+          (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+            useAccept L)
+          (selectedProjectionPaddedTailCleanupKeptSuffixBits
+            useAccept L)) := by
+  cases useAccept <;>
+    simp [selectedProjectionPaddedTailCleanupPostPaddingSourceBits,
+      selectedProjectionPaddedTailCleanupKeptPrefixBits,
+      selectedProjectionPaddedTailCleanupKeptSuffixBits,
+      selectedProjectionPaddedTailCleanupPrefixBits,
+      selectedProjectionPaddedTailCleanupSelectedConfigBits,
+      selectedProjectionPaddedTailCleanupUnselectedConfigBits,
+      selectedProjectionPaddedTailCleanupSelectedHitBits,
+      List.append_assoc]
 
 theorem selectedProjectionPaddedTailCleanupTargetBits_eq_selectedFields
     (useAccept : Bool) (L : DovetailLayout) :
@@ -1814,6 +1866,16 @@ theorem selectedProjectionPaddedTailCleanupTargetTape_normalizedOutput_eq_select
   rw [selectedProjectionPaddedTailCleanupTargetBits_eq_normalizedOutput]
   rw [selectedProjectionPaddedTailCleanupTargetBits_eq_selectedFields]
 
+theorem selectedProjectionPaddedTailCleanupTargetTape_normalizedOutput_eq_kept
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) =
+      List.append
+        (selectedProjectionPaddedTailCleanupKeptPrefixBits useAccept L)
+        (selectedProjectionPaddedTailCleanupKeptSuffixBits useAccept L) := by
+  rw [selectedProjectionPaddedTailCleanupTargetBits_eq_normalizedOutput]
+  rw [selectedProjectionPaddedTailCleanupTargetBits_eq_kept]
+
 theorem selectedProjectionPaddedTailCleanupTargetTape_normalizedOutput_eq_outputCode
     (useAccept : Bool) (L : DovetailLayout) :
     Tape.normalizedOutput
@@ -1851,6 +1913,18 @@ theorem selectedProjectionPaddedTailCleanupTargetTape_cells_eq_selectedFields
         (List.replicate (ParsedLayoutBits L).length none) := by
   rw [selectedProjectionPaddedTailCleanupTargetTape_cells_eq_bits,
     selectedProjectionPaddedTailCleanupTargetBits_eq_selectedFields]
+
+theorem selectedProjectionPaddedTailCleanupTargetTape_cells_eq_kept
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.cells (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) =
+      List.append
+        ((List.append
+          (selectedProjectionPaddedTailCleanupKeptPrefixBits useAccept L)
+          (selectedProjectionPaddedTailCleanupKeptSuffixBits useAccept L)).map
+          some)
+        (List.replicate (ParsedLayoutBits L).length none) := by
+  rw [selectedProjectionPaddedTailCleanupTargetTape_cells_eq_bits,
+    selectedProjectionPaddedTailCleanupTargetBits_eq_kept]
 
 theorem selectedProjectionPaddedTailCleanupTargetTape_cells_eq_outputCode
     (useAccept : Bool) (L : DovetailLayout) :
@@ -2435,6 +2509,20 @@ theorem selectedHitOtherFlagErasedAfterPaddingTape_normalizedOutput_eq_sourceBit
   · simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
       selectedHitOtherFlagErasedAcceptAfterPaddingTape_normalizedOutput_eq_sourceBits
         L
+
+theorem selectedHitOtherFlagErasedAfterPaddingTape_normalizedOutput_eq_deleteBlock
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (selectedHitOtherFlagErasedAfterPaddingTape useAccept L) =
+      List.append
+        (selectedProjectionPaddedTailCleanupKeptPrefixBits useAccept L)
+        (List.append
+          (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+            useAccept L)
+          (selectedProjectionPaddedTailCleanupKeptSuffixBits
+            useAccept L)) := by
+  rw [selectedHitOtherFlagErasedAfterPaddingTape_normalizedOutput_eq_sourceBits,
+    selectedProjectionPaddedTailCleanupPostPaddingSourceBits_eq_deleteBlock]
 
 theorem selectedHitOtherFlagErasedAcceptAfterPaddingTape_normalizedOutput_eq_sourceFields
     (L : DovetailLayout) :
