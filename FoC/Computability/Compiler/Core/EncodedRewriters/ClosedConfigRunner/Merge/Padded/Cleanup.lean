@@ -694,6 +694,25 @@ def SelectedMergePaddedEmitterAfterTransitionSourceCode
         (encodeConfigurationAppend p.S.config
           (encodeBoolAppend p.S.hit [])))
 
+theorem SelectedMergePaddedEmitterAfterTransitionSourceCode_eq_fields
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterAfterTransitionSourceCode p =
+      MachineCodeSymbol.transition ::
+        encodeBoolWordAppend
+          (encodeCodeWordAsInput
+            (MachineCodeSymbol.transition ::
+              encodeBoolWordAppend p.L.input
+                (encodeNatAppend p.L.stage
+                  (encodeConfigurationAppend p.L.acceptConfig
+                    (encodeConfigurationAppend p.L.rejectConfig
+                      (encodeBoolAppend p.L.acceptHit
+                        (encodeBoolAppend p.L.rejectHit [])))))))
+          (encodeNatAppend p.S.stage
+            (encodeConfigurationAppend p.S.config
+              (encodeBoolAppend p.S.hit []))) := by
+  simp [SelectedMergePaddedEmitterAfterTransitionSourceCode,
+    ParsedLayoutBits, DovetailLayout.encode, DovetailLayout.encodeAppend]
+
 def SelectedMergePaddedEmitterTargetBits
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) : Word Bool :=
   encodeCodeWordAsInput
@@ -1331,6 +1350,26 @@ theorem SelectedMergePaddedEmitterAfterTransitionSourceBits_eq_sourceCode
     SelectedMergePaddedEmitterOuterTailBits, encodeCodeWordAsInput,
     encodeCodeSymbolAsInput]
 
+theorem SelectedMergePaddedEmitterAfterTransitionSourceBits_eq_fields
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterCleanup.sourceBits p =
+      encodeCodeWordAsInput
+        (MachineCodeSymbol.transition ::
+          encodeBoolWordAppend
+            (encodeCodeWordAsInput
+              (MachineCodeSymbol.transition ::
+                encodeBoolWordAppend p.L.input
+                  (encodeNatAppend p.L.stage
+                    (encodeConfigurationAppend p.L.acceptConfig
+                      (encodeConfigurationAppend p.L.rejectConfig
+                        (encodeBoolAppend p.L.acceptHit
+                          (encodeBoolAppend p.L.rejectHit [])))))))
+            (encodeNatAppend p.S.stage
+              (encodeConfigurationAppend p.S.config
+                (encodeBoolAppend p.S.hit [])))) := by
+  rw [SelectedMergePaddedEmitterAfterTransitionSourceBits_eq_sourceCode,
+    SelectedMergePaddedEmitterAfterTransitionSourceCode_eq_fields]
+
 theorem SelectedMergePaddedEmitterAfterTransitionPaddedTape_normalizedOutput
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
@@ -1405,6 +1444,28 @@ theorem
   simp [SelectedMergePaddedEmitterOuterTailBits,
     encodeCodeWordAsInput, encodeCodeSymbolAsInput]
 
+theorem
+    SelectedMergePaddedEmitterAfterTransitionPaddedTape_normalizedOutput_eq_sourceFields
+    (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput
+        (SelectedMergePaddedEmitterAfterTransitionPaddedTape p) =
+      encodeCodeWordAsInput
+        (MachineCodeSymbol.transition ::
+          encodeBoolWordAppend
+            (encodeCodeWordAsInput
+              (MachineCodeSymbol.transition ::
+                encodeBoolWordAppend p.L.input
+                  (encodeNatAppend p.L.stage
+                    (encodeConfigurationAppend p.L.acceptConfig
+                      (encodeConfigurationAppend p.L.rejectConfig
+                        (encodeBoolAppend p.L.acceptHit
+                          (encodeBoolAppend p.L.rejectHit [])))))))
+            (encodeNatAppend p.S.stage
+              (encodeConfigurationAppend p.S.config
+                (encodeBoolAppend p.S.hit [])))) := by
+  rw [SelectedMergePaddedEmitterAfterTransitionPaddedTape_normalizedOutput,
+    SelectedMergePaddedEmitterAfterTransitionSourceBits_eq_fields]
+
 theorem SelectedMergePaddedEmitterAfterTransitionPaddedTape_cells_eq_sourceBits
     (p : SelectedMergeEmitterPayload) :
     Tape.cells (SelectedMergePaddedEmitterAfterTransitionPaddedTape p) =
@@ -1425,6 +1486,29 @@ theorem SelectedMergePaddedEmitterAfterTransitionPaddedTape_cells_eq_sourceCode
           [none, none]) := by
   rw [SelectedMergePaddedEmitterAfterTransitionPaddedTape_cells_eq_sourceBits,
     SelectedMergePaddedEmitterAfterTransitionSourceBits_eq_sourceCode]
+
+theorem SelectedMergePaddedEmitterAfterTransitionPaddedTape_cells_eq_sourceFields
+    (p : SelectedMergeEmitterPayload) :
+    Tape.cells (SelectedMergePaddedEmitterAfterTransitionPaddedTape p) =
+      List.append [none]
+        (List.append
+          ((encodeCodeWordAsInput
+            (MachineCodeSymbol.transition ::
+              encodeBoolWordAppend
+                (encodeCodeWordAsInput
+                  (MachineCodeSymbol.transition ::
+                    encodeBoolWordAppend p.L.input
+                      (encodeNatAppend p.L.stage
+                        (encodeConfigurationAppend p.L.acceptConfig
+                          (encodeConfigurationAppend p.L.rejectConfig
+                            (encodeBoolAppend p.L.acceptHit
+                              (encodeBoolAppend p.L.rejectHit [])))))))
+                (encodeNatAppend p.S.stage
+                  (encodeConfigurationAppend p.S.config
+                    (encodeBoolAppend p.S.hit []))))).map some)
+          [none, none]) := by
+  rw [SelectedMergePaddedEmitterAfterTransitionPaddedTape_cells_eq_sourceBits,
+    SelectedMergePaddedEmitterAfterTransitionSourceBits_eq_fields]
 
 theorem SelectedMergePaddedEmitterAfterTransitionPaddedTape_cells_eq_fields
     (p : SelectedMergeEmitterPayload) :
