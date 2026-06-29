@@ -1296,6 +1296,45 @@ theorem SelectedMergePaddedEmitterAfterTransitionPaddedTape_normalizedOutput
     SelectedMergePaddedEmitterAfterHitSourceBits_eq_transition_outerTail]
   simp [Function.comp_def, List.map_append]
 
+theorem SelectedMergePaddedEmitterAfterTransitionPaddedTape_contextLength
+    (p : SelectedMergeEmitterPayload) :
+    Tape.contextLength (SelectedMergePaddedEmitterAfterTransitionPaddedTape p) =
+      (SelectedMergePaddedEmitterCleanup.sourceBits p).length + 2 := by
+  rcases
+      SelectedMergePaddedEmitterOuterTailBits_cons_cons_false_false p with
+    ⟨tail, htail⟩
+  rw [SelectedMergePaddedEmitterAfterTransitionPaddedTape, htail,
+    SelectedMergePaddedEmitterAfterHitSourceBits_eq_transition_outerTail]
+  rw [htail]
+  simp [DovetailInitialLayoutInitializer.tapeAtCells, Tape.contextLength,
+    encodeCodeSymbolAsInput]
+  omega
+
+theorem SelectedMergePaddedEmitterAfterHitSourceBits_length_eq_inputBits
+    (p : SelectedMergeEmitterPayload) :
+    (SelectedMergePaddedEmitterCleanup.sourceBits p).length =
+      (SimulatorLayout.asBoolInput p.S).length := by
+  rw [SelectedMergePaddedEmitterAfterHitSourceBits_eq_transition_outerTail]
+  rw [SelectedMergePaddedEmitterOuterTailBits]
+  rw [SimulatorLayout.asBoolInput, SimulatorLayout.encode,
+    SimulatorLayout.encodeAppend]
+  rw [SelectedMergeEmitterPayload.input_eq_parsedLayoutBits]
+  simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput]
+
+theorem SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_afterTransitionPadded
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    Tape.contextLength (SelectedMergePaddedEmitterAfterTransitionPaddedTape p) <=
+      Tape.contextLength
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p) := by
+  rw [SelectedMergePaddedEmitterAfterTransitionPaddedTape_contextLength,
+    SelectedMergePaddedEmitterAfterHitSourceBits_length_eq_inputBits]
+  cases useAccept <;>
+    simp [SelectedMergeEquivEmitterPaddedOutputTape,
+      ScratchPaddedOutputTape, inputWithTrailingBlankPadding,
+      selectedMergeOutputCode_eq_fields, encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput, Tape.contextLength] <;>
+    omega
+
 theorem
     SelectedMergePaddedEmitterAfterTransitionPaddedTape_normalizedOutput_eq_fields
     (p : SelectedMergeEmitterPayload) :
