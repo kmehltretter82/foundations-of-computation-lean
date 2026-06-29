@@ -1666,6 +1666,113 @@ def selectedProjectionPaddedTailCleanupSelectedConfigBits
     CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
       L.rejectConfig []
 
+def selectedProjectionPaddedTailCleanupUnselectedConfigBits
+    (useAccept : Bool) (L : DovetailLayout) : Word Bool :=
+  if useAccept then
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+      L.rejectConfig []
+  else
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+      L.acceptConfig []
+
+def selectedProjectionPaddedTailCleanupSelectedHitBits
+    (useAccept : Bool) (L : DovetailLayout) : Word Bool :=
+  if useAccept then
+    CanonicalLayouts.DovetailLayoutScanner.boolFieldBits L.acceptHit []
+  else
+    CanonicalLayouts.DovetailLayoutScanner.boolFieldBits L.rejectHit []
+
+def selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+    (useAccept : Bool) (L : DovetailLayout) : Word Bool :=
+  if useAccept then
+    List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
+      (List.append
+        (selectedProjectionPaddedTailCleanupSelectedConfigBits true L)
+        (List.append
+          (selectedProjectionPaddedTailCleanupUnselectedConfigBits true L)
+          (selectedProjectionPaddedTailCleanupSelectedHitBits true L)))
+  else
+    List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
+      (List.append
+        (selectedProjectionPaddedTailCleanupUnselectedConfigBits false L)
+        (List.append
+          (selectedProjectionPaddedTailCleanupSelectedConfigBits false L)
+          (selectedProjectionPaddedTailCleanupSelectedHitBits false L)))
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingSourceBits_true_eq_selected_unselected
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupPostPaddingSourceBits true L =
+      List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
+        (List.append
+          (selectedProjectionPaddedTailCleanupSelectedConfigBits true L)
+          (List.append
+            (selectedProjectionPaddedTailCleanupUnselectedConfigBits true L)
+            (selectedProjectionPaddedTailCleanupSelectedHitBits true L))) := by
+  rfl
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingSourceBits_false_eq_unselected_selected
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupPostPaddingSourceBits false L =
+      List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
+        (List.append
+          (selectedProjectionPaddedTailCleanupUnselectedConfigBits false L)
+          (List.append
+            (selectedProjectionPaddedTailCleanupSelectedConfigBits false L)
+            (selectedProjectionPaddedTailCleanupSelectedHitBits false L))) := by
+  rfl
+
+theorem selectedProjectionPaddedTailCleanupTargetBits_eq_selectedFields
+    (useAccept : Bool) (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupTargetBits useAccept L =
+      List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
+        (List.append
+          (selectedProjectionPaddedTailCleanupSelectedConfigBits useAccept L)
+          (selectedProjectionPaddedTailCleanupSelectedHitBits useAccept L)) := by
+  cases useAccept <;>
+    simp [selectedProjectionPaddedTailCleanupTargetBits,
+      selectedProjectionPaddedTailCleanupPrefixBits,
+      selectedProjectionPaddedTailCleanupSelectedConfigBits,
+      selectedProjectionPaddedTailCleanupSelectedHitBits,
+      List.append_assoc]
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingSourceBits_true
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupPostPaddingSourceBits true L =
+      List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
+        (List.append
+          (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+            L.acceptConfig [])
+          (List.append
+            (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+              L.rejectConfig [])
+            (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+              L.acceptHit []))) := by
+  simp [selectedProjectionPaddedTailCleanupPostPaddingSourceBits,
+    selectedProjectionPaddedTailCleanupPrefixBits,
+    selectedProjectionPaddedTailCleanupSelectedConfigBits,
+    selectedProjectionPaddedTailCleanupUnselectedConfigBits,
+    selectedProjectionPaddedTailCleanupSelectedHitBits,
+    List.append_assoc]
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingSourceBits_false
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupPostPaddingSourceBits false L =
+      List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
+        (List.append
+          (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+            L.acceptConfig [])
+          (List.append
+            (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+              L.rejectConfig [])
+            (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+              L.rejectHit []))) := by
+  simp [selectedProjectionPaddedTailCleanupPostPaddingSourceBits,
+    selectedProjectionPaddedTailCleanupPrefixBits,
+    selectedProjectionPaddedTailCleanupSelectedConfigBits,
+    selectedProjectionPaddedTailCleanupUnselectedConfigBits,
+    selectedProjectionPaddedTailCleanupSelectedHitBits,
+    List.append_assoc]
+
 theorem selectedProjectionPaddedTailCleanupTargetBits_eq_normalizedOutput
     (useAccept : Bool) (L : DovetailLayout) :
     Tape.normalizedOutput
@@ -2097,6 +2204,38 @@ theorem selectedHitOtherFlagErasedRejectAfterPaddingTape_normalizedOutput
   rw [selectedHitOtherFlagErasedRejectAfterPaddingTape_cells]
   simp [Function.comp_def, List.filterMap_append]
 
+theorem selectedHitOtherFlagErasedAcceptAfterPaddingTape_normalizedOutput_eq_sourceBits
+    (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (selectedHitOtherFlagErasedAcceptAfterPaddingTape L) =
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits true L := by
+  rw [selectedHitOtherFlagErasedAcceptAfterPaddingTape_normalizedOutput,
+    selectedProjectionPaddedTailCleanupPostPaddingSourceBits_true]
+  simp [selectedProjectionPaddedTailCleanupPrefixBits, List.append_assoc]
+
+theorem selectedHitOtherFlagErasedRejectAfterPaddingTape_normalizedOutput_eq_sourceBits
+    (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (selectedHitOtherFlagErasedRejectAfterPaddingTape L) =
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits false L := by
+  rw [selectedHitOtherFlagErasedRejectAfterPaddingTape_normalizedOutput,
+    selectedProjectionPaddedTailCleanupPostPaddingSourceBits_false]
+  simp [selectedProjectionPaddedTailCleanupPrefixBits, List.append_assoc]
+
+theorem selectedHitOtherFlagErasedAfterPaddingTape_normalizedOutput_eq_sourceBits
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (selectedHitOtherFlagErasedAfterPaddingTape useAccept L) =
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+        useAccept L := by
+  cases useAccept
+  · simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
+      selectedHitOtherFlagErasedRejectAfterPaddingTape_normalizedOutput_eq_sourceBits
+        L
+  · simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
+      selectedHitOtherFlagErasedAcceptAfterPaddingTape_normalizedOutput_eq_sourceBits
+        L
+
 theorem selectedHitOtherFlagErasedRightLeftHandoffTape_normalizedOutput
     (useAccept : Bool) (L : DovetailLayout) :
     Tape.normalizedOutput
@@ -2142,29 +2281,6 @@ def selectedProjectionPaddedTailCleanupBothConfigBits
       L.acceptConfig [])
     (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
       L.rejectConfig [])
-
-def selectedProjectionPaddedTailCleanupSelectedHitBits
-    (useAccept : Bool) (L : DovetailLayout) : Word Bool :=
-  if useAccept then
-    CanonicalLayouts.DovetailLayoutScanner.boolFieldBits L.acceptHit []
-  else
-    CanonicalLayouts.DovetailLayoutScanner.boolFieldBits L.rejectHit []
-
-theorem selectedProjectionPaddedTailCleanupTargetBits_eq_selectedFields
-    (useAccept : Bool) (L : DovetailLayout) :
-    selectedProjectionPaddedTailCleanupTargetBits useAccept L =
-      List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
-        (List.append
-          (selectedProjectionPaddedTailCleanupSelectedConfigBits
-            useAccept L)
-          (selectedProjectionPaddedTailCleanupSelectedHitBits
-            useAccept L)) := by
-  cases useAccept <;>
-    simp [selectedProjectionPaddedTailCleanupTargetBits,
-      selectedProjectionPaddedTailCleanupPrefixBits,
-      selectedProjectionPaddedTailCleanupSelectedConfigBits,
-      selectedProjectionPaddedTailCleanupSelectedHitBits,
-      List.append_assoc]
 
 theorem selectedHitOtherFlagErasedRightLeftHandoffBits_eq_bothConfigs_selectedHit
     (useAccept : Bool) (L : DovetailLayout) :
