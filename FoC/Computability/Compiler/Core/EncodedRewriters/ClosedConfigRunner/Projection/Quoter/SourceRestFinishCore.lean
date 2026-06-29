@@ -224,6 +224,21 @@ theorem assemblySourceRestFinishTargetPrefixBits_eq_named_splitQuote_prefixLengt
   rw [assemblySourceRestFinishTargetPrefixBits_eq_splitQuote_prefixLength]
   rfl
 
+theorem assemblySourceRestFinishTargetPrefixBits_eq_named_fields_prefixLength
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    assemblySourceRestFinishTargetPrefixBits w sourceRestBits stage =
+      List.append
+        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            ((assemblySourceRestFinishSourcePrefixBits w stage).length +
+              sourceRestBits.length))
+          (List.append
+            (assemblySourceRestFinishQuotedPrefixBits w stage)
+            (preservingCellPassCellBits sourceRestBits))) :=
+  assemblySourceRestFinishTargetPrefixBits_eq_named_splitQuote_prefixLength
+    w sourceRestBits stage
+
 theorem assemblySourceRestFinishTargetPrefixBits_length_eq_headerQuote
     (w sourceRestBits : Word Bool) (stage : Nat) :
     (assemblySourceRestFinishTargetPrefixBits w sourceRestBits stage).length =
@@ -372,6 +387,19 @@ theorem assemblySourceRestFinishSourceTape_defaultedCells
               [false]))
       hprefix
 
+theorem assemblySourceRestFinishSourceTape_defaultedCells_eq_named_fields
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (assemblySourceRestFinishSourceTape w sourceRestBits stage)) =
+      List.append
+        (assemblySourceRestFinishRawSourceBits w sourceRestBits stage)
+        (false ::
+          List.append (preservingCellPassCellBits sourceRestBits)
+            [false]) := by
+  rw [assemblySourceRestFinishSourceTape_defaultedCells,
+    assemblySourceRestFinishRawSourceBits]
+
 theorem assemblySourceRestFinishBoundaryTape_cells
     (w sourceRestBits : Word Bool) (stage : Nat) :
     Tape.cells
@@ -408,6 +436,19 @@ theorem assemblySourceRestFinishBoundaryTape_defaultedCells
   rw [assemblySourceRestFinishBoundaryTape_cells_eq_sourceTape_cells]
   exact assemblySourceRestFinishSourceTape_defaultedCells
     w sourceRestBits stage
+
+theorem assemblySourceRestFinishBoundaryTape_defaultedCells_eq_named_fields
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (assemblySourceRestFinishBoundaryTape w sourceRestBits stage)) =
+      List.append
+        (assemblySourceRestFinishRawSourceBits w sourceRestBits stage)
+        (false ::
+          List.append (preservingCellPassCellBits sourceRestBits)
+            [false]) := by
+  rw [assemblySourceRestFinishBoundaryTape_defaultedCells,
+    assemblySourceRestFinishRawSourceBits]
 
 theorem assemblySourceRestFinishBoundaryTape_defaultedCells_eq_prefix_sourceRest_quote
     (w sourceRestBits : Word Bool) (stage : Nat) :
@@ -517,6 +558,26 @@ theorem assemblySourceRestFinishTargetTape_cells_eq_splitQuote_prefixLength
   rw [assemblySourceRestFinishTargetTape_cells_eq_splitQuote,
     assemblySourceRestFinishSourceBits_length_eq_prefix_add]
 
+theorem assemblySourceRestFinishTargetTape_cells_eq_named_fields_prefixLength
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (assemblySourceRestFinishTargetTape w sourceRestBits stage) =
+      List.append
+        ((List.append
+          (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+          (List.append
+            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              ((assemblySourceRestFinishSourcePrefixBits w stage).length +
+                sourceRestBits.length))
+            (List.append
+              (assemblySourceRestFinishQuotedPrefixBits w stage)
+              (preservingCellPassCellBits sourceRestBits)))).map some)
+        ((assemblySourceRestFinishRawTailBits
+          sourceRestBits stage).map some) := by
+  rw [assemblySourceRestFinishTargetTape_cells_eq_splitQuote_prefixLength,
+    assemblySourceRestFinishQuotedPrefixBits,
+    assemblySourceRestFinishRawTailBits]
+
 theorem assemblySourceRestFinishTargetTape_defaultedCells_eq_splitQuote
     (w sourceRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
@@ -584,6 +645,27 @@ theorem assemblySourceRestFinishTargetTape_defaultedCells_eq_fields_prefixLength
                 sourceRestBits)))) := by
   rw [assemblySourceRestFinishTargetTape_defaultedCells_eq_fields,
     assemblySourceRestFinishSourceBits_length_eq_prefix_add]
+
+theorem assemblySourceRestFinishTargetTape_defaultedCells_eq_named_fields_prefixLength
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (assemblySourceRestFinishTargetTape w sourceRestBits stage)) =
+      List.append
+        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            ((assemblySourceRestFinishSourcePrefixBits w stage).length +
+              sourceRestBits.length))
+          (List.append
+            (assemblySourceRestFinishQuotedPrefixBits w stage)
+            (List.append
+              (preservingCellPassCellBits sourceRestBits)
+              (assemblySourceRestFinishRawTailBits
+                sourceRestBits stage)))) := by
+  rw [assemblySourceRestFinishTargetTape_defaultedCells_eq_fields_prefixLength,
+    assemblySourceRestFinishQuotedPrefixBits,
+    assemblySourceRestFinishRawTailBits]
 
 theorem assemblySourceRestFinishTargetTape_defaultedCells_eq_headerQuote
     (w sourceRestBits : Word Bool) (stage : Nat) :
@@ -678,6 +760,26 @@ theorem assemblySourceRestFinishTargetTape_normalizedOutput_eq_fields_prefixLeng
   rw [assemblySourceRestFinishTargetTape_normalizedOutput]
   rw [assemblySourceRestFinishTargetPrefixBits_eq_splitQuote_prefixLength]
   simp [List.append_assoc]
+
+theorem assemblySourceRestFinishTargetTape_normalizedOutput_eq_named_fields_prefixLength
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.normalizedOutput
+        (assemblySourceRestFinishTargetTape w sourceRestBits stage) =
+      List.append
+        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            ((assemblySourceRestFinishSourcePrefixBits w stage).length +
+              sourceRestBits.length))
+          (List.append
+            (assemblySourceRestFinishQuotedPrefixBits w stage)
+            (List.append
+              (preservingCellPassCellBits sourceRestBits)
+              (assemblySourceRestFinishRawTailBits
+                sourceRestBits stage)))) := by
+  rw [assemblySourceRestFinishTargetTape_normalizedOutput_eq_fields_prefixLength,
+    assemblySourceRestFinishQuotedPrefixBits,
+    assemblySourceRestFinishRawTailBits]
 
 def AssemblySourceRestFinishSpec (finish : MachineDescription) : Prop :=
   finish.SubroutineReady ∧
@@ -980,6 +1082,20 @@ theorem assemblySourceRestFinishLeftBoundaryTape_defaultedCells
   exact assemblySourceRestFinishBoundaryTape_defaultedCells
     w sourceRestBits stage
 
+theorem assemblySourceRestFinishLeftBoundaryTape_defaultedCells_eq_named_fields
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (assemblySourceRestFinishLeftBoundaryTape
+            w sourceRestBits stage)) =
+      List.append
+        (assemblySourceRestFinishRawSourceBits w sourceRestBits stage)
+        (false ::
+          List.append (preservingCellPassCellBits sourceRestBits)
+            [false]) := by
+  rw [assemblySourceRestFinishLeftBoundaryTape_defaultedCells,
+    assemblySourceRestFinishRawSourceBits]
+
 theorem
     assemblySourceRestFinishLeftBoundaryTape_defaultedCells_eq_prefix_sourceRest_quote
     (w sourceRestBits : Word Bool) (stage : Nat) :
@@ -1064,6 +1180,25 @@ theorem assemblySourceRestFinishTargetTape_eq_tapeAtCells_named_prefixLength
         ((assemblySourceRestFinishRawTailBits
           sourceRestBits stage).map some) := by
   rw [assemblySourceRestFinishTargetTape,
+    assemblySourceRestFinishRawTailBits]
+
+theorem assemblySourceRestFinishTargetTape_eq_tapeAtCells_named_fields_prefixLength
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    assemblySourceRestFinishTargetTape w sourceRestBits stage =
+      tapeAtCells
+        ((List.append
+          (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+          (List.append
+            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              ((assemblySourceRestFinishSourcePrefixBits w stage).length +
+                sourceRestBits.length))
+            (List.append
+              (assemblySourceRestFinishQuotedPrefixBits w stage)
+              (preservingCellPassCellBits sourceRestBits)))).reverse.map some)
+        ((assemblySourceRestFinishRawTailBits
+          sourceRestBits stage).map some) := by
+  rw [assemblySourceRestFinishTargetTape,
+    assemblySourceRestFinishTargetPrefixBits_eq_named_fields_prefixLength,
     assemblySourceRestFinishRawTailBits]
 
 theorem preservingCellPassHaltTape_eq_assemblySourceRestFinishSourceTape
