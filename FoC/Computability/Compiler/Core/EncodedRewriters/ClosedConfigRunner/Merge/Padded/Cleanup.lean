@@ -1444,6 +1444,15 @@ theorem selectedMergePaddedEmitterAfterTransitionPaddedConstruction_of_branches
   · exact hReject
   · exact hAccept
 
+/--
+Combined post-transition finite-machine leaf for selected merge under the
+padded equivalence contract.  The branch wrappers below project this single
+obligation into the accepting and rejecting branch contracts.
+-/
+theorem selectedMergePaddedEmitterAfterTransitionPaddedCoreConstruction :
+    SelectedMergePaddedEmitterAfterTransitionPaddedConstruction := by
+  sorry
+
 def SelectedMergePaddedEmitterAfterHeaderScannerDescription :
     MachineDescription :=
   SeqViaCanonical SelectedMergePaddedEmitterCleanup.leftMoveOnceDescription
@@ -1479,7 +1488,7 @@ blank padding retained from the canonical handoff.
 -/
 theorem selectedMergePaddedEmitterAfterTransitionPaddedAcceptConstruction :
     SelectedMergePaddedEmitterAfterTransitionPaddedBranchConstruction true := by
-  sorry
+  exact selectedMergePaddedEmitterAfterTransitionPaddedCoreConstruction true
 
 /--
 Post-transition finite-machine leaf for selected merge under the rejecting
@@ -1487,7 +1496,7 @@ padded equivalence branch.
 -/
 theorem selectedMergePaddedEmitterAfterTransitionPaddedRejectConstruction :
     SelectedMergePaddedEmitterAfterTransitionPaddedBranchConstruction false := by
-  sorry
+  exact selectedMergePaddedEmitterAfterTransitionPaddedCoreConstruction false
 
 theorem selectedMergePaddedEmitterAfterTransitionPaddedConstruction :
     SelectedMergePaddedEmitterAfterTransitionPaddedConstruction :=
