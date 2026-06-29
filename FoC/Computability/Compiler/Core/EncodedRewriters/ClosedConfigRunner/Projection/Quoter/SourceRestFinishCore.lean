@@ -185,6 +185,11 @@ def assemblySourceRestFinishSourceTape
       ((preservingCellPassCellBits sourceRestBits).map some)
       [none])
 
+def assemblySourceRestFinishPostBoundaryTape
+    (w sourceRestBits : Word Bool) (stage : Nat) : Tape Bool :=
+  tapeAtCells (assemblySourceRestBoundaryLeftRev w stage)
+    (List.append (sourceRestBits.map some) [none])
+
 def assemblySourceRestFinishBoundaryTape
     (w sourceRestBits : Word Bool) (stage : Nat) : Tape Bool :=
   tapeAtCells
@@ -204,6 +209,57 @@ def assemblySourceRestFinishTargetTape
       (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
         stage)
       sourceRestBits).map some)
+
+theorem assemblySourceRestFinishSourceTape_cells_eq_fields
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (assemblySourceRestFinishSourceTape w sourceRestBits stage) =
+      List.append
+        (List.reverse (assemblySourceRestBoundaryLeftRev w stage))
+        (List.append
+          (sourceRestBits.map some)
+          (none ::
+            List.append
+              ((preservingCellPassCellBits sourceRestBits).map some)
+              [none])) := by
+  rw [assemblySourceRestFinishSourceTape]
+  cases preservingCellPassCellBits sourceRestBits <;>
+    simp [tapeAtCells, Tape.cells,
+      List.reverse_append, List.map_reverse, List.append_assoc]
+
+theorem assemblySourceRestFinishBoundaryTape_cells_eq_fields
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (assemblySourceRestFinishBoundaryTape w sourceRestBits stage) =
+      List.append
+        (List.reverse (assemblySourceRestBoundaryLeftRev w stage))
+        (List.append
+          (sourceRestBits.map some)
+          (none ::
+            List.append
+              ((preservingCellPassCellBits sourceRestBits).map some)
+              [none])) := by
+  rw [assemblySourceRestFinishBoundaryTape]
+  cases preservingCellPassCellBits sourceRestBits <;>
+    simp [tapeAtCells, Tape.cells,
+      List.reverse_append, List.map_reverse, List.append_assoc]
+
+theorem assemblySourceRestFinishTargetTape_cells_eq_fields
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (assemblySourceRestFinishTargetTape w sourceRestBits stage) =
+      List.append
+        ((assemblySourceRestFinishTargetPrefixBits
+          w sourceRestBits stage).map some)
+        ((List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage)
+          sourceRestBits).map some) := by
+  rcases SelectedProjectionTailProjector.stageNatBits_cons_cons stage with
+    ⟨head, next, right, hstage⟩
+  rw [assemblySourceRestFinishTargetTape, hstage]
+  simp [tapeAtCells, Tape.cells,
+    List.map_reverse, List.map_append]
 
 def AssemblySourceRestFinishSpec (finish : MachineDescription) : Prop :=
   finish.SubroutineReady ∧
@@ -295,6 +351,16 @@ theorem tapeAtCells_move_left_move_right_none_cons_append_singleton
       tapeAtCells left (none :: List.append cells [none]) := by
   cases cells <;>
     simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem tapeAtCells_move_left_none_cons_cells_of_left_ne_nil
+    (left right : List (Option Bool)) (hleft : left ≠ []) :
+    Tape.cells (Tape.move Direction.left (tapeAtCells left (none :: right))) =
+      List.append left.reverse (none :: right) := by
+  cases left with
+  | nil =>
+      contradiction
+  | cons cell rest =>
+      simp [tapeAtCells, Tape.cells, Tape.move, Tape.moveLeft]
 
 theorem assemblySourceRestFinishSourceTape_move_left
     (w sourceRestBits : Word Bool) (stage : Nat) :
@@ -402,6 +468,57 @@ def AssemblySourceRestFinishLeftBoundarySpec
 def AssemblySourceRestFinishLeftBoundaryConstruction : Prop :=
   exists finish : MachineDescription,
     AssemblySourceRestFinishLeftBoundarySpec finish
+
+theorem assemblySourceRestBoundaryLeftRev_ne_nil
+    (w : Word Bool) (stage : Nat) :
+    assemblySourceRestBoundaryLeftRev w stage ≠ [] := by
+  cases w <;>
+    simp [assemblySourceRestBoundaryLeftRev]
+
+theorem assemblySourceRestFinishLeftBoundaryTape_cells_eq_fields
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (assemblySourceRestFinishLeftBoundaryTape w sourceRestBits stage) =
+      List.append
+        (List.reverse (assemblySourceRestBoundaryLeftRev w stage))
+        (List.append
+          (sourceRestBits.map some)
+          (none ::
+            List.append
+              ((preservingCellPassCellBits sourceRestBits).map some)
+              [none])) := by
+  rw [assemblySourceRestFinishLeftBoundaryTape,
+    scanLeftToBlankLeftHaltTape]
+  have hleft :
+      List.append (sourceRestBits.reverse.map some)
+          (assemblySourceRestBoundaryLeftRev w stage) ≠ [] := by
+    cases sourceRestBits with
+    | nil =>
+        simpa using assemblySourceRestBoundaryLeftRev_ne_nil w stage
+    | cons bit rest =>
+        simp
+  rw [tapeAtCells_move_left_none_cons_cells_of_left_ne_nil _ _ hleft]
+  simp [List.reverse_append, List.map_reverse, List.append_assoc]
+
+theorem preservingCellPassHaltTape_eq_assemblySourceRestFinishSourceTape
+    (w : Word Bool) (b : Bool) (rest : Word Bool) (stage : Nat) :
+    preservingCellPassHaltTape
+        (assemblySourceRestBoundaryLeftRev w stage) (b :: rest) [] =
+      assemblySourceRestFinishSourceTape w (b :: rest) stage := by
+  simpa [assemblySourceRestFinishSourceTape] using
+    preservingCellPassHaltTape_nonempty_empty_output_eq_tapeAtCells
+      (assemblySourceRestBoundaryLeftRev w stage) b rest
+
+theorem preservingCellPassDescription_haltsFrom_finishPostBoundaryTape
+    (w : Word Bool) (b : Bool) (rest : Word Bool) (stage : Nat) :
+    PreservingCellPassDescription.HaltsFromTape
+      (assemblySourceRestFinishPostBoundaryTape w (b :: rest) stage)
+      (assemblySourceRestFinishSourceTape w (b :: rest) stage) := by
+  rw [assemblySourceRestFinishPostBoundaryTape]
+  rw [← preservingCellPassHaltTape_eq_assemblySourceRestFinishSourceTape]
+  simpa [List.map_cons] using
+    preservingCellPassDescription_haltsFrom_nonempty_cells_oneBlank
+      (assemblySourceRestBoundaryLeftRev w stage) b rest
 
 theorem scanLeftToBlankLeftDescription_haltsFrom_empty_scanRightToBlankLeftHaltTape
     (leftBase : List (Option Bool)) :

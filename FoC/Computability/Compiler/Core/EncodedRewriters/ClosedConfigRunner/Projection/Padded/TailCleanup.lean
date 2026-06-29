@@ -1692,6 +1692,42 @@ theorem selectedProjectionPaddedTailCleanupTargetTape_cells_eq_bits
       List.map_append, List.append_assoc] using
       SelectedProjectionEquivEmitterPaddedOutputTape_true_cells L
 
+theorem selectedProjectionPaddedTailCleanupTargetTape_true_cells_eq_fields
+    (L : DovetailLayout) :
+    Tape.cells (SelectedProjectionEquivEmitterPaddedOutputTape true L) =
+      List.append
+        ((List.append (SelectedProjectionTailProjector.outputPrefixBits L)
+          (List.append
+            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              L.stage)
+            (List.append
+              (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                L.acceptConfig [])
+              (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+                L.acceptHit [])))).map some)
+        (List.replicate (ParsedLayoutBits L).length none) := by
+  simpa [selectedProjectionPaddedTailCleanupTargetBits,
+    List.map_append, List.append_assoc] using
+    selectedProjectionPaddedTailCleanupTargetTape_cells_eq_bits true L
+
+theorem selectedProjectionPaddedTailCleanupTargetTape_false_cells_eq_fields
+    (L : DovetailLayout) :
+    Tape.cells (SelectedProjectionEquivEmitterPaddedOutputTape false L) =
+      List.append
+        ((List.append (SelectedProjectionTailProjector.outputPrefixBits L)
+          (List.append
+            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              L.stage)
+            (List.append
+              (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                L.rejectConfig [])
+              (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+                L.rejectHit [])))).map some)
+        (List.replicate (ParsedLayoutBits L).length none) := by
+  simpa [selectedProjectionPaddedTailCleanupTargetBits,
+    List.map_append, List.append_assoc] using
+    selectedProjectionPaddedTailCleanupTargetTape_cells_eq_bits false L
+
 def eraseOtherHitFlagDescription
     (useAccept : Bool) : MachineDescription :=
   if useAccept then
@@ -1954,6 +1990,113 @@ theorem selectedHitOtherFlagErasedRejectAfterPaddingTape_move_left_move_right
           (some false) (some bit)
           (List.append (rest.map some) [none])
 
+theorem selectedHitOtherFlagErasedAcceptAfterPaddingTape_cells
+    (L : DovetailLayout) :
+    Tape.cells (selectedHitOtherFlagErasedAcceptAfterPaddingTape L) =
+      List.append [none]
+        (List.append
+          ((SelectedProjectionTailProjector.outputPrefixBits L).map some)
+          (List.append
+            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              L.stage).map some)
+            (List.append
+              ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                L.acceptConfig []).map some)
+              (List.append
+                ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                  L.rejectConfig []).map some)
+                (List.append
+                  ((CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+                    L.acceptHit []).map some)
+                  (List.replicate 6 (none : Option Bool))))))) := by
+  by_cases haccept : L.acceptHit <;>
+    simp [selectedHitOtherFlagErasedAcceptAfterPaddingTape,
+      selectedHitOtherFlagErasedAcceptHitRestLeftRev,
+      selectedHitOtherFlagErasedAcceptHitHead,
+      haccept,
+      DovetailInitialLayoutInitializer.tapeAtCells,
+      Tape.cells,
+      CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+      CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+      CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+      encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+      List.reverse_append, List.append_assoc]
+
+theorem selectedHitOtherFlagErasedRejectAfterPaddingTape_cells
+    (L : DovetailLayout) :
+    Tape.cells (selectedHitOtherFlagErasedRejectAfterPaddingTape L) =
+      List.append [none]
+        (List.append
+          ((SelectedProjectionTailProjector.outputPrefixBits L).map some)
+          (List.append
+            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              L.stage).map some)
+            (List.append
+              ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                L.acceptConfig []).map some)
+              (List.append
+                ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                  L.rejectConfig []).map some)
+                (List.append
+                  (List.replicate 4 (none : Option Bool))
+                  (List.append
+                    ((CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+                      L.rejectHit []).map some)
+                    [none])))))) := by
+  by_cases hreject : L.rejectHit <;>
+    simp [selectedHitOtherFlagErasedRejectAfterPaddingTape,
+      selectedHitOtherFlagErasedRejectBaseLeftRev,
+      selectedHitOtherFlagErasedRejectBaseCells,
+      hreject,
+      DovetailInitialLayoutInitializer.tapeAtCells,
+      Tape.cells,
+      CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+      CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+      CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+      encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+      List.drop, List.reverse_append, List.map_reverse,
+      List.append_assoc]
+
+theorem selectedHitOtherFlagErasedAcceptAfterPaddingTape_normalizedOutput
+    (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (selectedHitOtherFlagErasedAcceptAfterPaddingTape L) =
+      List.append (SelectedProjectionTailProjector.outputPrefixBits L)
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            L.stage)
+          (List.append
+            (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+              L.acceptConfig [])
+            (List.append
+              (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                L.rejectConfig [])
+              (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+                L.acceptHit [])))) := by
+  rw [Tape.normalizedOutput]
+  rw [selectedHitOtherFlagErasedAcceptAfterPaddingTape_cells]
+  simp [Function.comp_def, List.filterMap_append]
+
+theorem selectedHitOtherFlagErasedRejectAfterPaddingTape_normalizedOutput
+    (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (selectedHitOtherFlagErasedRejectAfterPaddingTape L) =
+      List.append (SelectedProjectionTailProjector.outputPrefixBits L)
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            L.stage)
+          (List.append
+            (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+              L.acceptConfig [])
+            (List.append
+              (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                L.rejectConfig [])
+              (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+                L.rejectHit [])))) := by
+  rw [Tape.normalizedOutput]
+  rw [selectedHitOtherFlagErasedRejectAfterPaddingTape_cells]
+  simp [Function.comp_def, List.filterMap_append]
+
 theorem selectedHitOtherFlagErasedRightLeftHandoffTape_normalizedOutput
     (useAccept : Bool) (L : DovetailLayout) :
     Tape.normalizedOutput
@@ -2193,6 +2336,23 @@ def SelectedProjectionPaddedTailCleanupPostPaddingConstruction :
       SelectedProjectionPaddedTailCleanupPostPaddingSpec
         useAccept postPadding
 
+def SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction
+    (useAccept : Bool) : Prop :=
+  exists postPadding : MachineDescription,
+    SelectedProjectionPaddedTailCleanupPostPaddingSpec
+      useAccept postPadding
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_branches
+    (hAccept :
+      SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction true)
+    (hReject :
+      SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction false) :
+    SelectedProjectionPaddedTailCleanupPostPaddingConstruction := by
+  intro useAccept
+  cases useAccept
+  · exact hReject
+  · exact hAccept
+
 def selectedHitOtherFlagErasedPostEraseFromPostPadding
     (useAccept : Bool) (postPadding : MachineDescription) :
     MachineDescription :=
@@ -2260,11 +2420,26 @@ theorem selectedProjectionPaddedTailCleanupPostEraseConstruction_of_postPadding
         hpostPadding⟩
 
 /--
-Post-padding finite-machine leaf for selected-projection tail cleanup.
+Post-padding finite-machine leaf for selected-projection tail cleanup on the
+accepting projection branch.
 -/
-theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction :
-    SelectedProjectionPaddedTailCleanupPostPaddingConstruction := by
+theorem selectedProjectionPaddedTailCleanupPostPaddingAcceptConstruction :
+    SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction true := by
   sorry
+
+/--
+Post-padding finite-machine leaf for selected-projection tail cleanup on the
+rejecting projection branch.
+-/
+theorem selectedProjectionPaddedTailCleanupPostPaddingRejectConstruction :
+    SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction false := by
+  sorry
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction :
+    SelectedProjectionPaddedTailCleanupPostPaddingConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_branches
+    selectedProjectionPaddedTailCleanupPostPaddingAcceptConstruction
+    selectedProjectionPaddedTailCleanupPostPaddingRejectConstruction
 
 theorem selectedProjectionPaddedTailCleanupPostEraseConstruction :
     SelectedProjectionPaddedTailCleanupPostEraseConstruction :=
