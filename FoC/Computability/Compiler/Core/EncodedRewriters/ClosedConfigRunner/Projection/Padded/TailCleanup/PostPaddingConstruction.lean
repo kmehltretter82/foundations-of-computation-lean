@@ -1001,6 +1001,73 @@ theorem postPaddingRejectSourceWithPadding_eq_tapeAtCells
       (selectedProjectionPaddedTailCleanupPostPaddingSourceBits false L)
       padding
 
+theorem postPaddingSourceWithPadding_eq_deleteBlock_tapeAtCells
+    (useAccept : Bool) (L : DovetailLayout)
+    (padding : List (Option Bool)) :
+    FSTStatefulOptionAppendSourceTapeWithPadding
+        (selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+          useAccept L)
+        1 padding =
+      tapeAtCells [none]
+        (List.append
+          ((selectedProjectionPaddedTailCleanupKeptPrefixBits
+            useAccept L).map some)
+          (List.append
+            ((selectedProjectionPaddedTailCleanupUnselectedConfigBits
+              useAccept L).map some)
+            (List.append
+              ((selectedProjectionPaddedTailCleanupKeptSuffixBits
+                useAccept L).map some)
+              (none :: padding)))) := by
+  rw [FSTStatefulOptionAppendSourceTapeWithPadding_one_eq_tapeAtCells]
+  rw [selectedProjectionPaddedTailCleanupPostPaddingSourceBits_eq_deleteBlock]
+  simp [List.map_append, List.append_assoc]
+
+theorem postPaddingAcceptSourceWithFivePadding_splitKeptPrefix
+    (L : DovetailLayout) :
+    exists hitTail : Word Bool,
+    exists pref : Word Bool,
+    exists leftBit : Bool,
+      selectedProjectionPaddedTailCleanupKeptPrefixBits true L =
+          List.append pref [leftBit] ∧
+      CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          L.acceptHit [] =
+        false :: hitTail ∧
+      FSTStatefulOptionAppendSourceTapeWithPadding
+          (selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+            true L)
+          1 (List.replicate 5 (none : Option Bool)) =
+        tapeAtCells [none]
+          (List.append (pref.map some)
+            (some leftBit ::
+              List.append
+                ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                  L.rejectConfig []).map some)
+                (List.append ((false :: hitTail).map some)
+                  (none ::
+                    List.replicate 5 (none : Option Bool))))) := by
+  rcases selectedProjectionPaddedTailCleanupKeptPrefix_true_append_last
+      L with
+    ⟨pref, leftBit, hpref⟩
+  rcases
+      CanonicalLayouts.DovetailLayoutScanner.cellFieldBits_cons_false
+        (some L.acceptHit) [] with
+    ⟨hitTail, hhitTail⟩
+  refine ⟨hitTail, pref, leftBit, hpref, ?_, ?_⟩
+  · simpa [CanonicalLayouts.DovetailLayoutScanner.boolFieldBits] using
+      hhitTail
+  · rw [postPaddingSourceWithPadding_eq_deleteBlock_tapeAtCells, hpref]
+    have hhit :
+        CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            L.acceptHit [] =
+          false :: hitTail := by
+      simpa [CanonicalLayouts.DovetailLayoutScanner.boolFieldBits] using
+        hhitTail
+    simp [selectedProjectionPaddedTailCleanupUnselectedConfigBits,
+      selectedProjectionPaddedTailCleanupKeptSuffixBits,
+      selectedProjectionPaddedTailCleanupSelectedHitBits, hhit,
+      List.map_append, List.append_assoc]
+
 theorem rightEdgeRewindDescription_haltsFrom_acceptAfterPadding_tapeAtCells
     (L : DovetailLayout) :
     rightEdgeRewindDescription.HaltsFromTape
