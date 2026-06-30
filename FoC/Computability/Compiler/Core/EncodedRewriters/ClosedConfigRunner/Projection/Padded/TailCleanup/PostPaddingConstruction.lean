@@ -1,5 +1,7 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingFramework
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingFieldEraser
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingPrefixScanner
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingRouteBridges
 
 set_option doc.verso true
 
@@ -1622,70 +1624,6 @@ theorem rightBlankGapPayloadScanTargetTape_move_right_eq_rightEndCompactionSourc
       (none :: rightPadding)
       (some current)
 
-def rightMoveAcrossFiveBlanksDescription : MachineDescription :=
-  SeqViaCanonical rightMoveAcrossFourBlanksDescription
-    rightMoveOnceDescription
-
-theorem rightMoveAcrossFiveBlanksDescription_subroutineReady :
-    rightMoveAcrossFiveBlanksDescription.SubroutineReady :=
-  SeqViaCanonical_subroutineReady
-    rightMoveAcrossFourBlanksDescription_subroutineReady
-    rightMoveOnceDescription_subroutineReady
-
-theorem rightMoveAcrossFourBlanksTarget_move_left_move_right
-    (leftCells : List (Option Bool)) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (tapeAtCells
-            (List.append (List.replicate 4 (none : Option Bool))
-              leftCells.reverse)
-            [none, none])) =
-      tapeAtCells
-        (List.append (List.replicate 4 (none : Option Bool))
-          leftCells.reverse)
-        [none, none] := by
-  simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
-
-theorem rightMoveOnceDescription_haltsFrom_fourBlankTarget
-    (leftCells : List (Option Bool)) :
-    rightMoveOnceDescription.HaltsFromTape
-      (tapeAtCells
-        (List.append (List.replicate 4 (none : Option Bool))
-          leftCells.reverse)
-        [none, none])
-      (rightEndCompactionSourceTape
-        (List.append leftCells
-          (List.replicate 5 (none : Option Bool)))) := by
-  have hmove :=
-    rightMoveOnceDescription_haltsFromTape
-      (tapeAtCells
-        (List.append (List.replicate 4 (none : Option Bool))
-          leftCells.reverse)
-        [none, none])
-  simpa [rightEndCompactionSourceTape, tapeAtCells, Tape.move,
-    Tape.moveRight, List.reverse_append, List.replicate_succ,
-    List.append_assoc] using hmove
-
-theorem rightMoveAcrossFiveBlanksDescription_haltsFrom_rightPadding
-    (leftCells : List (Option Bool)) :
-    rightMoveAcrossFiveBlanksDescription.HaltsFromTape
-      (rightEndCompactionSourceTapeWithRightPadding
-        leftCells (List.replicate 5 (none : Option Bool)))
-      (rightEndCompactionSourceTape
-        (List.append leftCells
-          (List.replicate 5 (none : Option Bool)))) := by
-  exact
-    SeqViaCanonical_haltsFromTape_of_haltsFromTape
-      rightMoveAcrossFourBlanksDescription_subroutineReady
-      rightMoveOnceDescription_subroutineReady
-      (by
-        simpa [rightEndCompactionSourceTapeWithRightPadding,
-          List.replicate_succ] using
-          rightMoveAcrossFourBlanksDescription_haltsFromTape
-            leftCells.reverse [none, none])
-      (rightMoveAcrossFourBlanksTarget_move_left_move_right leftCells)
-      (rightMoveOnceDescription_haltsFrom_fourBlankTarget leftCells)
-
 theorem FSTStatefulOptionAppendSourceTapeWithPadding_eq_tapeAtCells
     (input : Word Bool) (leftScratch : Nat)
     (padding : List (Option Bool)) :
@@ -2402,6 +2340,152 @@ theorem postPaddingOutputPrefixStageConfigScannerDescription_acceptSourceBits_ha
       List.reverse_append]
     rfl
 
+def selectedProjectionPaddedTailCleanupAcceptPrefixEraseDescription :
+    MachineDescription :=
+  seqSubroutine postPaddingOutputPrefixStageConfigScannerDescription
+    leftBoundaryBitConfigurationFieldEraseAndPayloadScanDescription
+    Direction.right
+
+theorem selectedProjectionPaddedTailCleanupAcceptPrefixEraseDescription_subroutineReady :
+    selectedProjectionPaddedTailCleanupAcceptPrefixEraseDescription.SubroutineReady :=
+  seqSubroutine_subroutineReady
+    postPaddingOutputPrefixStageConfigScannerDescription_subroutineReady
+    leftBoundaryBitConfigurationFieldEraseAndPayloadScanDescription_subroutineReady
+
+theorem selectedProjectionPaddedTailCleanupAcceptPrefixEraseDescription_haltsFrom_sourceWithRight
+    (L : DovetailLayout) (padding : List (Option Bool)) :
+    exists hitTail : Word Bool,
+    exists pref : Word Bool,
+    exists leftBit : Bool,
+      selectedProjectionPaddedTailCleanupKeptPrefixBits true L =
+          List.append pref [leftBit] ∧
+      CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          L.acceptHit [] =
+        false :: hitTail ∧
+      selectedProjectionPaddedTailCleanupAcceptPrefixEraseDescription.HaltsFromTape
+        (tapeAtCells [none]
+          (List.append
+            ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+              true L).map some)
+            (none :: padding)))
+        (rightBlankGapPayloadScanTargetTape
+          (some leftBit :: List.append (pref.reverse.map some) [none])
+          (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+            L.rejectConfig []).length
+          false hitTail padding) := by
+  rcases
+      postPaddingOutputPrefixStageConfigScannerDescription_acceptSourceBits_handoff_splitKeptPrefix_withRight
+        L (none :: padding) with
+    ⟨scannerTail, hitTail, pref, leftBit, hpref, hhit,
+      hscan, hmove⟩
+  refine ⟨hitTail, pref, leftBit, hpref, hhit, ?_⟩
+  exact
+    CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      postPaddingOutputPrefixStageConfigScannerDescription_subroutineReady
+      leftBoundaryBitConfigurationFieldEraseAndPayloadScanDescription_subroutineReady
+      hscan
+      (by
+        simpa [List.append_assoc] using hmove)
+      (leftBoundaryBitConfigurationFieldEraseAndPayloadScanDescription_haltsFromTape
+        leftBit L.rejectConfig
+        (List.append (pref.reverse.map some) [none])
+        hitTail padding)
+
+def selectedProjectionPaddedTailCleanupAcceptEraseToRightEndDescription :
+    MachineDescription :=
+  seqSubroutine
+    selectedProjectionPaddedTailCleanupAcceptPrefixEraseDescription
+    rightMoveAcrossFiveBlanksDescription
+    Direction.right
+
+theorem selectedProjectionPaddedTailCleanupAcceptEraseToRightEndDescription_subroutineReady :
+    selectedProjectionPaddedTailCleanupAcceptEraseToRightEndDescription.SubroutineReady :=
+  seqSubroutine_subroutineReady
+    selectedProjectionPaddedTailCleanupAcceptPrefixEraseDescription_subroutineReady
+    rightMoveAcrossFiveBlanksDescription_subroutineReady
+
+theorem selectedProjectionPaddedTailCleanupAcceptEraseToRightEndDescription_haltsFrom_sourceWithRight
+    (L : DovetailLayout) (rightPadding : List (Option Bool)) :
+    selectedProjectionPaddedTailCleanupAcceptEraseToRightEndDescription.HaltsFromTape
+      (tapeAtCells [none]
+        (List.append
+          ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+            true L).map some)
+          (none ::
+            List.append (List.replicate 5 (none : Option Bool))
+              rightPadding)))
+      (rightEndCompactionSourceTapeWithRightPadding
+        (selectedProjectionPaddedTailCleanupDeletedAcceptRightEndLeftCells L)
+        rightPadding) := by
+  rcases
+      selectedProjectionPaddedTailCleanupAcceptPrefixEraseDescription_haltsFrom_sourceWithRight
+        L
+        (List.append (List.replicate 5 (none : Option Bool))
+          rightPadding) with
+    ⟨hitTail, pref, leftBit, hpref, hhit, herase⟩
+  let leftCells : List (Option Bool) :=
+    List.append
+      (some leftBit ::
+        List.append (pref.reverse.map some) [none]).reverse
+      (List.append
+        (List.replicate
+          (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+            L.rejectConfig []).length
+          (none : Option Bool))
+        ((false :: hitTail).map some))
+  have hleft :
+      List.append leftCells
+          (List.replicate 5 (none : Option Bool)) =
+        selectedProjectionPaddedTailCleanupDeletedAcceptRightEndLeftCells
+          L := by
+    have hprefMap :
+        List.append
+            ((selectedProjectionPaddedTailCleanupPrefixBits L).map some)
+            ((selectedProjectionPaddedTailCleanupSelectedConfigBits
+              true L).map some) =
+          List.append (pref.map some) [some leftBit] := by
+      have hmap := congrArg (List.map some) hpref
+      simpa [selectedProjectionPaddedTailCleanupKeptPrefixBits,
+        List.map_append] using hmap
+    simp [leftCells,
+      selectedProjectionPaddedTailCleanupDeletedAcceptRightEndLeftCells,
+      selectedProjectionPaddedTailCleanupUnselectedConfigBits,
+      selectedProjectionPaddedTailCleanupSelectedHitBits,
+      hhit, List.map_append, List.append_assoc]
+    simpa [List.append_assoc] using
+      congrArg
+        (fun xs =>
+          List.append xs
+            (List.append
+              (List.replicate
+                (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                  L.rejectConfig []).length
+                (none : Option Bool))
+              (some false ::
+                (List.map some hitTail ++
+                  [none, none, none, none, none]))))
+        hprefMap.symm
+  exact
+    CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      selectedProjectionPaddedTailCleanupAcceptPrefixEraseDescription_subroutineReady
+      rightMoveAcrossFiveBlanksDescription_subroutineReady
+      herase
+      (by
+        simpa [leftCells] using
+          rightBlankGapPayloadScanTargetTape_move_right_eq_rightEndCompactionSourceTapeWithRightPadding
+            (some leftBit ::
+              List.append (pref.reverse.map some) [none])
+            (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+              L.rejectConfig []).length
+            false hitTail
+            (List.append (List.replicate 5 (none : Option Bool))
+              rightPadding))
+      (by
+        rw [← hleft]
+        simpa [leftCells, List.append_assoc] using
+          rightMoveAcrossFiveBlanksDescription_haltsFrom_rightPaddingWithTail
+            leftCells rightPadding)
+
 theorem postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_rejectSourceBits
     (L : DovetailLayout) :
     exists suffixTail : Word Bool,
@@ -2580,112 +2664,6 @@ theorem postPaddingOutputPrefixStageConfigScannerDescription_rejectSourceBits_ha
       selectedProjectionPaddedTailCleanupUnselectedConfigBits,
       List.map_append, List.append_assoc]
     rfl
-
-/--
-Combined post-padding finite-machine leaf for selected-projection tail cleanup.
-The branch wrappers below project this single obligation into the accepting and
-rejecting branch contracts.
--/
-theorem selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction :
-    SelectedProjectionPaddedTailCleanupPostPaddingConstruction := by
-  sorry
-
-def selectedHitOtherFlagErasedPostEraseFromPostPadding
-    (useAccept : Bool) (postPadding : MachineDescription) :
-    MachineDescription :=
-  if useAccept then
-    SeqViaCanonical skipCurrentAndFourBlankPaddingLeftDescription
-      postPadding
-  else
-    SeqViaCanonical skipCurrentAndFourBlankPaddingRightDescription
-      postPadding
-
-theorem selectedProjectionPaddedTailCleanupPostEraseSpec_of_postPadding
-    {useAccept : Bool} {postPadding : MachineDescription}
-    (hpostPadding :
-      SelectedProjectionPaddedTailCleanupPostPaddingSpec
-        useAccept postPadding) :
-    SelectedProjectionPaddedTailCleanupPostEraseSpec useAccept
-      (selectedHitOtherFlagErasedPostEraseFromPostPadding
-        useAccept postPadding) := by
-  cases useAccept
-  · constructor
-    · simpa [selectedHitOtherFlagErasedPostEraseFromPostPadding] using
-        SeqViaCanonical_subroutineReady
-          skipCurrentAndFourBlankPaddingRightDescription_subroutineReady
-          hpostPadding.left
-    · intro L
-      exact
-        SeqViaCanonical_haltsFromTape_of_haltsFromTape
-          skipCurrentAndFourBlankPaddingRightDescription_subroutineReady
-          hpostPadding.left
-          (skipCurrentAndFourBlankPaddingRightDescription_haltsFrom_rejectHandoff_named
-            L)
-          (by
-            simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
-              selectedHitOtherFlagErasedAfterPaddingTape_move_left_move_right
-                false L)
-          (by
-            simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
-              hpostPadding.right L)
-  · constructor
-    · simpa [selectedHitOtherFlagErasedPostEraseFromPostPadding] using
-        SeqViaCanonical_subroutineReady
-          skipCurrentAndFourBlankPaddingLeftDescription_subroutineReady
-          hpostPadding.left
-    · intro L
-      exact
-        SeqViaCanonical_haltsFromTape_of_haltsFromTape
-          skipCurrentAndFourBlankPaddingLeftDescription_subroutineReady
-          hpostPadding.left
-          (skipCurrentAndFourBlankPaddingLeftDescription_haltsFrom_acceptHandoff
-            L)
-          (by
-            simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
-              selectedHitOtherFlagErasedAfterPaddingTape_move_left_move_right
-                true L)
-          (by
-            simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
-              hpostPadding.right L)
-
-theorem selectedProjectionPaddedTailCleanupPostEraseConstruction_of_postPadding
-    (h :
-      SelectedProjectionPaddedTailCleanupPostPaddingConstruction) :
-    SelectedProjectionPaddedTailCleanupPostEraseConstruction := by
-  intro useAccept
-  rcases h useAccept with ⟨postPadding, hpostPadding⟩
-  exact
-    ⟨selectedHitOtherFlagErasedPostEraseFromPostPadding
-        useAccept postPadding,
-      selectedProjectionPaddedTailCleanupPostEraseSpec_of_postPadding
-        hpostPadding⟩
-
-/--
-Post-padding finite-machine leaf for selected-projection tail cleanup on the
-accepting projection branch.
--/
-theorem selectedProjectionPaddedTailCleanupPostPaddingAcceptConstruction :
-    SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction true := by
-  exact selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction true
-
-/--
-Post-padding finite-machine leaf for selected-projection tail cleanup on the
-rejecting projection branch.
--/
-theorem selectedProjectionPaddedTailCleanupPostPaddingRejectConstruction :
-    SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction false := by
-  exact selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction false
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction :
-    SelectedProjectionPaddedTailCleanupPostPaddingConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_branches
-    selectedProjectionPaddedTailCleanupPostPaddingAcceptConstruction
-    selectedProjectionPaddedTailCleanupPostPaddingRejectConstruction
-
-theorem selectedProjectionPaddedTailCleanupPostEraseConstruction :
-    SelectedProjectionPaddedTailCleanupPostEraseConstruction :=
-  selectedProjectionPaddedTailCleanupPostEraseConstruction_of_postPadding
-    selectedProjectionPaddedTailCleanupPostPaddingConstruction
 
 end SelectedProjectionPaddedTailCleanup
 
