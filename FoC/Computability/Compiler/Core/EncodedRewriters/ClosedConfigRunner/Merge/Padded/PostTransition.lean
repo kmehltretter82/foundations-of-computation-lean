@@ -1059,6 +1059,128 @@ theorem
       p.L SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft).symm
 
 theorem
+    SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft_reverse_filterMap :
+    SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft.reverse.filterMap
+        (fun cell => cell) =
+      encodeCodeSymbolAsInput MachineCodeSymbol.transition := by
+  simp [SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft,
+    SelectedMergePaddedEmitterOuterTransitionBaseLeft,
+    Function.comp_def]
+
+theorem
+    SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft_filterMap_reverse :
+    (SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft.filterMap
+        (fun cell => cell)).reverse =
+      encodeCodeSymbolAsInput MachineCodeSymbol.transition := by
+  simp [SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft,
+    SelectedMergePaddedEmitterOuterTransitionBaseLeft,
+    Function.comp_def]
+
+theorem
+    SelectedMergePaddedEmitterNestedLayoutParsedLeft_reverse_filterMap
+    (p : SelectedMergeEmitterPayload) :
+    (SelectedMergePaddedEmitterNestedLayoutParsedLeft p).reverse.filterMap
+        (fun cell => cell) =
+      List.append
+        (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+        (CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits
+          p.L) := by
+  rw [SelectedMergePaddedEmitterNestedLayoutParsedLeft_eq_markedBodyRestoredBitsRev]
+  simp [List.reverse_append, List.filterMap_append,
+    SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft_filterMap_reverse,
+    CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyRestoredBitsRev_reverse,
+    Function.comp_def]
+
+theorem
+    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_normalizedOutput_eq_markedBody
+    (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput
+        (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p) =
+      List.append
+        (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+        (List.append
+          (CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits
+            p.L)
+          (List.append
+            (FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              p.S.stage)
+            (List.append
+              (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                p.S.config [])
+              (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+                p.S.hit [])))) := by
+  have hbase :
+      (List.append
+          ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            p.S.stage).reverse.map some)
+          (SelectedMergePaddedEmitterNestedLayoutParsedLeft p)).reverse.filterMap
+            (fun cell => cell) =
+        List.append
+          (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+          (List.append
+            (CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits
+              p.L)
+            (FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              p.S.stage)) := by
+    have hreverse :
+        List.filterMap (fun cell => cell)
+            (((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              p.S.stage).reverse.map some).append
+              (SelectedMergePaddedEmitterNestedLayoutParsedLeft p)).reverse =
+          List.append
+            (List.filterMap (fun cell => cell)
+              (SelectedMergePaddedEmitterNestedLayoutParsedLeft p).reverse)
+            (List.filterMap (fun cell => cell)
+              (((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                p.S.stage).reverse.map some).reverse)) := by
+      simp [List.reverse_append, List.filterMap_append]
+    rw [hreverse]
+    rw [SelectedMergePaddedEmitterNestedLayoutParsedLeft_reverse_filterMap]
+    simp [List.append_assoc, Function.comp_def]
+  have hcfg :
+      (List.filterMap (fun cell => cell)
+          (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+            p.S.config
+            (List.append
+              ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                p.S.stage).reverse.map some)
+              (SelectedMergePaddedEmitterNestedLayoutParsedLeft p)))).reverse =
+        List.append
+          (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+          (List.append
+            (CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits
+              p.L)
+            (List.append
+              (FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                p.S.stage)
+              (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                p.S.config []))) := by
+    rw [← Tape.filterMap_reverse]
+    rw [dovetailScanner_configurationRestoredLeftWithBase_reverse_filterMap]
+    rw [hbase]
+    simp [List.append_assoc]
+  rw [SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape]
+  simp [DovetailInitialLayoutInitializer.tapeAtCells,
+    Tape.normalizedOutput, Tape.cells, List.reverse_append,
+    List.filterMap_append]
+  rw [← List.map_reverse]
+  have hcfgWithHit :=
+    congrArg
+      (fun xs =>
+        List.append xs
+          (List.filterMap ((fun cell => cell) ∘ some)
+            (SelectedMergePaddedEmitterOuterHitSuffixBits p)))
+      hcfg
+  simpa [SelectedMergePaddedEmitterOuterHitSuffixBits,
+    SelectedMergePaddedEmitterOuterHitSuffixCode,
+    CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.boolBits_eq_encodeBoolAppend,
+    encodeCodeWordAsInput, encodeCodeSymbolAsInput, Function.comp_def,
+    List.append_assoc]
+    using hcfgWithHit
+
+theorem
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_move_left_move_right
     (p : SelectedMergeEmitterPayload) :
     Tape.move Direction.left
