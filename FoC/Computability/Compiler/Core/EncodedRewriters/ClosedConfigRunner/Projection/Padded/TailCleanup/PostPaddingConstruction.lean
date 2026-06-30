@@ -389,6 +389,23 @@ theorem selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithLayoutExt
     (selectedProjectionPaddedTailCleanupSentinelBaseScratch_add_extraScratch
       true L hle)
 
+theorem selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithLayoutExtraScratch_cells_eq_output
+    (L : DovetailLayout) :
+    Tape.cells
+        (selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithRightPadding
+          L
+          (List.replicate
+            (selectedProjectionPaddedTailCleanupSentinelExtraScratch true L)
+            (none : Option Bool))) =
+      Tape.cells (SelectedProjectionEquivEmitterPaddedOutputTape true L) := by
+  rw [
+    selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithLayoutExtraScratch_cells_eq_parsed
+      L
+      (selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_true
+        L)]
+  rw [selectedProjectionPaddedTailCleanupTargetTape_cells_eq_bits]
+  rfl
+
 theorem selectedProjectionPaddedTailCleanupRejectSentinelTargetTape_cells
     (L : DovetailLayout) :
     Tape.cells
@@ -563,6 +580,23 @@ theorem selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithLayoutExt
     (selectedProjectionPaddedTailCleanupSentinelExtraScratch false L)
     (selectedProjectionPaddedTailCleanupSentinelBaseScratch_add_extraScratch
       false L hle)
+
+theorem selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithLayoutExtraScratch_cells_eq_output
+    (L : DovetailLayout) :
+    Tape.cells
+        (selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithRightPadding
+          L
+          (List.replicate
+            (selectedProjectionPaddedTailCleanupSentinelExtraScratch false L)
+            (none : Option Bool))) =
+      Tape.cells (SelectedProjectionEquivEmitterPaddedOutputTape false L) := by
+  rw [
+    selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithLayoutExtraScratch_cells_eq_parsed
+      L
+      (selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_false
+        L)]
+  rw [selectedProjectionPaddedTailCleanupTargetTape_cells_eq_bits]
+  rfl
 
 def selectedProjectionPaddedTailCleanupSentinelRewindDescription :
     MachineDescription :=
