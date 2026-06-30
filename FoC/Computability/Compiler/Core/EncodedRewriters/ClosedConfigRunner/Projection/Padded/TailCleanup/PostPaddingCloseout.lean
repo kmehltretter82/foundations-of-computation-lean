@@ -383,6 +383,310 @@ theorem selectedProjectionPaddedTailCleanupRejectSourceToEquivOutputDescription_
       selectedProjectionPaddedTailCleanupDeletedRejectRightEndToEquivOutputDescription_subroutineReady
       herase hbridge hfinish
 
+def selectedProjectionPaddedTailCleanupAcceptLayoutScratchSourceTape
+    (L : DovetailLayout) : Tape Bool :=
+  tapeAtCells [none]
+    (List.append
+      ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+        true L).map some)
+      (none ::
+        List.append (List.replicate 5 (none : Option Bool))
+          (List.replicate
+            (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+              true L)
+            (none : Option Bool))))
+
+def selectedProjectionPaddedTailCleanupRejectLayoutScratchSourceTape
+    (L : DovetailLayout) : Tape Bool :=
+  tapeAtCells [none]
+    (List.append
+      (List.append
+        (List.append
+          ((selectedProjectionPaddedTailCleanupPrefixBits L).map some)
+          ((selectedProjectionPaddedTailCleanupUnselectedConfigBits
+            false L).map some))
+        ((selectedProjectionPaddedTailCleanupSelectedConfigBits
+          false L).map some))
+      (List.append (List.replicate 4 (none : Option Bool))
+        (List.append
+          ((selectedProjectionPaddedTailCleanupSelectedHitBits
+            false L).map some)
+          (none :: none ::
+            List.replicate
+              (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                false L)
+              (none : Option Bool)))))
+
+def selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
+    (useAccept : Bool) (L : DovetailLayout) : Tape Bool :=
+  if useAccept then
+    selectedProjectionPaddedTailCleanupAcceptLayoutScratchSourceTape L
+  else
+    selectedProjectionPaddedTailCleanupRejectLayoutScratchSourceTape L
+
+def selectedProjectionPaddedTailCleanupAcceptBaseSourceTape
+    (L : DovetailLayout) : Tape Bool :=
+  tapeAtCells [none]
+    (List.append
+      ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+        true L).map some)
+      (none :: List.replicate 5 (none : Option Bool)))
+
+def selectedProjectionPaddedTailCleanupRejectBaseSourceTape
+    (L : DovetailLayout) : Tape Bool :=
+  tapeAtCells [none]
+    (List.append
+      (List.append
+        (List.append
+          ((selectedProjectionPaddedTailCleanupPrefixBits L).map some)
+          ((selectedProjectionPaddedTailCleanupUnselectedConfigBits
+            false L).map some))
+        ((selectedProjectionPaddedTailCleanupSelectedConfigBits
+          false L).map some))
+      (List.append (List.replicate 4 (none : Option Bool))
+        (List.append
+          ((selectedProjectionPaddedTailCleanupSelectedHitBits
+            false L).map some)
+          (none :: none :: []))))
+
+def selectedProjectionPaddedTailCleanupBaseSourceTape
+    (useAccept : Bool) (L : DovetailLayout) : Tape Bool :=
+  if useAccept then
+    selectedProjectionPaddedTailCleanupAcceptBaseSourceTape L
+  else
+    selectedProjectionPaddedTailCleanupRejectBaseSourceTape L
+
+def selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription
+    (useAccept : Bool) : MachineDescription :=
+  if useAccept then
+    selectedProjectionPaddedTailCleanupAcceptSourceToEquivOutputDescription
+  else
+    selectedProjectionPaddedTailCleanupRejectSourceToEquivOutputDescription
+
+theorem selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription_subroutineReady
+    (useAccept : Bool) :
+    (selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription
+      useAccept).SubroutineReady := by
+  cases useAccept
+  · simpa [selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription]
+      using
+        selectedProjectionPaddedTailCleanupRejectSourceToEquivOutputDescription_subroutineReady
+  · simpa [selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription]
+      using
+        selectedProjectionPaddedTailCleanupAcceptSourceToEquivOutputDescription_subroutineReady
+
+theorem selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription_haltsFrom_layoutScratchSource
+    (useAccept : Bool) (L : DovetailLayout) :
+    (selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription
+      useAccept).HaltsFromTape
+      (selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
+        useAccept L)
+      (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) := by
+  cases useAccept
+  · simpa [
+      selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription,
+      selectedProjectionPaddedTailCleanupLayoutScratchSourceTape,
+      selectedProjectionPaddedTailCleanupRejectLayoutScratchSourceTape,
+      selectedProjectionPaddedTailCleanupUnselectedConfigBits,
+      selectedProjectionPaddedTailCleanupSelectedConfigBits]
+      using
+        selectedProjectionPaddedTailCleanupRejectSourceToEquivOutputDescription_haltsFrom_source
+          L
+  · simpa [
+      selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription,
+      selectedProjectionPaddedTailCleanupLayoutScratchSourceTape,
+      selectedProjectionPaddedTailCleanupAcceptLayoutScratchSourceTape]
+      using
+        selectedProjectionPaddedTailCleanupAcceptSourceToEquivOutputDescription_haltsFrom_source
+          L
+
+theorem selectedProjectionPaddedTailCleanupLayoutScratchSourceTape_move_left_move_right
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
+            useAccept L)) =
+      selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
+        useAccept L := by
+  cases useAccept
+  · simp [
+      selectedProjectionPaddedTailCleanupLayoutScratchSourceTape,
+      selectedProjectionPaddedTailCleanupRejectLayoutScratchSourceTape,
+      selectedProjectionPaddedTailCleanupPrefixBits,
+      SelectedProjectionTailProjector.outputPrefixBits,
+      encodeCodeSymbolAsInput, tapeAtCells, Tape.move,
+      Tape.moveLeft, Tape.moveRight, List.append_assoc]
+  · simp [
+      selectedProjectionPaddedTailCleanupLayoutScratchSourceTape,
+      selectedProjectionPaddedTailCleanupAcceptLayoutScratchSourceTape,
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits,
+      selectedProjectionPaddedTailCleanupPrefixBits,
+      SelectedProjectionTailProjector.outputPrefixBits,
+      encodeCodeSymbolAsInput, tapeAtCells, Tape.move,
+      Tape.moveLeft, Tape.moveRight, List.map_append,
+      List.append_assoc]
+
+theorem selectedProjectionPaddedTailCleanupBaseSourceTape_move_left_move_right
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (selectedProjectionPaddedTailCleanupBaseSourceTape
+            useAccept L)) =
+      selectedProjectionPaddedTailCleanupBaseSourceTape
+        useAccept L := by
+  cases useAccept
+  · simp [
+      selectedProjectionPaddedTailCleanupBaseSourceTape,
+      selectedProjectionPaddedTailCleanupRejectBaseSourceTape,
+      selectedProjectionPaddedTailCleanupPrefixBits,
+      SelectedProjectionTailProjector.outputPrefixBits,
+      encodeCodeSymbolAsInput, tapeAtCells, Tape.move,
+      Tape.moveLeft, Tape.moveRight, List.append_assoc]
+  · simp [
+      selectedProjectionPaddedTailCleanupBaseSourceTape,
+      selectedProjectionPaddedTailCleanupAcceptBaseSourceTape,
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits,
+      selectedProjectionPaddedTailCleanupPrefixBits,
+      SelectedProjectionTailProjector.outputPrefixBits,
+      encodeCodeSymbolAsInput, tapeAtCells, Tape.move,
+      Tape.moveLeft, Tape.moveRight, List.map_append,
+      List.append_assoc]
+
+def SelectedProjectionPaddedTailCleanupPostPaddingBaseSourceMaterializerSpec
+    (useAccept : Bool) (materializer : MachineDescription) : Prop :=
+  materializer.SubroutineReady ∧
+    forall L : DovetailLayout,
+      materializer.HaltsFromTape
+        (selectedHitOtherFlagErasedAfterPaddingTape useAccept L)
+        (selectedProjectionPaddedTailCleanupBaseSourceTape useAccept L)
+
+def SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
+    (useAccept : Bool) (allocator : MachineDescription) : Prop :=
+  allocator.SubroutineReady ∧
+    forall L : DovetailLayout,
+      allocator.HaltsFromTape
+        (selectedProjectionPaddedTailCleanupBaseSourceTape useAccept L)
+        (selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
+          useAccept L)
+
+def SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec
+    (useAccept : Bool) (materializer : MachineDescription) : Prop :=
+  materializer.SubroutineReady ∧
+    forall L : DovetailLayout,
+      materializer.HaltsFromTape
+        (selectedHitOtherFlagErasedAfterPaddingTape useAccept L)
+        (selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
+          useAccept L)
+
+def SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction :
+    Prop :=
+  forall useAccept : Bool,
+    exists materializer : MachineDescription,
+      SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec
+        useAccept materializer
+
+def SelectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction :
+    Prop :=
+  (exists rejectMaterializer : MachineDescription,
+      SelectedProjectionPaddedTailCleanupPostPaddingBaseSourceMaterializerSpec
+        false rejectMaterializer) ∧
+    forall useAccept : Bool,
+      exists allocator : MachineDescription,
+        SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
+          useAccept allocator
+
+theorem selectedProjectionPaddedTailCleanupAcceptBaseSourceMaterializerSpec :
+    SelectedProjectionPaddedTailCleanupPostPaddingBaseSourceMaterializerSpec
+      true rightEdgeRewindDescription := by
+  constructor
+  · exact rightEdgeRewindDescription_subroutineReady
+  · intro L
+    simpa [selectedProjectionPaddedTailCleanupAcceptBaseSourceTape,
+      selectedProjectionPaddedTailCleanupBaseSourceTape] using
+      rightEdgeRewindDescription_haltsFrom_acceptAfterPadding_tapeAtCells
+        L
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec_of_baseAndScratch
+    {useAccept : Bool}
+    {baseMaterializer allocator : MachineDescription}
+    (hbase :
+      SelectedProjectionPaddedTailCleanupPostPaddingBaseSourceMaterializerSpec
+        useAccept baseMaterializer)
+    (hallocator :
+      SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
+        useAccept allocator) :
+    SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec
+      useAccept (canonicalSeqDescription baseMaterializer allocator) := by
+  constructor
+  · exact canonicalSeqDescription_subroutineReady hbase.left hallocator.left
+  · intro L
+    exact
+      canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+        hbase.left hallocator.left
+        (hbase.right L)
+        (selectedProjectionPaddedTailCleanupBaseSourceTape_move_left_move_right
+          useAccept L)
+        (hallocator.right L)
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_baseAndScratch
+    (h :
+      SelectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction := by
+  intro useAccept
+  cases useAccept
+  · rcases h.left with ⟨rejectMaterializer, hreject⟩
+    rcases h.right false with ⟨allocator, hallocator⟩
+    exact
+      ⟨canonicalSeqDescription rejectMaterializer allocator,
+        selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec_of_baseAndScratch
+          hreject hallocator⟩
+  · rcases h.right true with ⟨allocator, hallocator⟩
+    exact
+      ⟨canonicalSeqDescription rightEdgeRewindDescription allocator,
+        selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec_of_baseAndScratch
+          selectedProjectionPaddedTailCleanupAcceptBaseSourceMaterializerSpec
+          hallocator⟩
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingBranchConstruction_of_sourceMaterializer
+    {useAccept : Bool} {materializer : MachineDescription}
+    (hmaterializer :
+      SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec
+        useAccept materializer) :
+    SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction
+      useAccept := by
+  refine
+    ⟨canonicalSeqDescription materializer
+        (selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription
+          useAccept), ?_⟩
+  constructor
+  · exact
+      canonicalSeqDescription_subroutineReady
+        hmaterializer.left
+        (selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription_subroutineReady
+          useAccept)
+  · intro L
+    exact
+      canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+        hmaterializer.left
+        (selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription_subroutineReady
+          useAccept)
+        (hmaterializer.right L)
+        (selectedProjectionPaddedTailCleanupLayoutScratchSourceTape_move_left_move_right
+          useAccept L)
+        (selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription_haltsFrom_layoutScratchSource
+          useAccept L)
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializers
+    (hmaterializers :
+      SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingConstruction := by
+  intro useAccept
+  rcases hmaterializers useAccept with
+    ⟨materializer, hmaterializer⟩
+  exact
+    selectedProjectionPaddedTailCleanupPostPaddingBranchConstruction_of_sourceMaterializer
+      hmaterializer
+
 /--
 Combined post-padding finite-machine leaf for selected-projection tail cleanup.
 The branch wrappers below project this single obligation into the accepting and
@@ -390,7 +694,11 @@ rejecting branch contracts.
 -/
 theorem selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingConstruction := by
-  sorry
+  exact
+    selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializers
+      (selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_baseAndScratch
+        (by
+          sorry))
 
 def selectedHitOtherFlagErasedPostEraseFromPostPadding
     (useAccept : Bool) (postPadding : MachineDescription) :
