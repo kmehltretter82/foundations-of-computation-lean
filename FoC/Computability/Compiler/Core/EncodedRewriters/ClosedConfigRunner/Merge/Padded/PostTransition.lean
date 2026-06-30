@@ -821,6 +821,56 @@ theorem
     SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_cells_eq_sourceBits,
     SelectedMergePaddedEmitterAfterTransitionSourceBits_eq_fields]
 
+def SelectedMergePaddedEmitterOuterTransitionBaseLeft :
+    List (Option Bool) :=
+  List.append
+    (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse)
+    [none]
+
+def SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft :
+    List (Option Bool) :=
+  none :: SelectedMergePaddedEmitterOuterTransitionBaseLeft
+
+def SelectedMergePaddedEmitterNestedLayoutParsedLeft
+    (p : SelectedMergeEmitterPayload) : List (Option Bool) :=
+  CanonicalLayouts.DovetailLayoutScanner.finalHitFlagsRestoredLeftWithBase
+    p.L.acceptHit p.L.rejectHit
+    (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+      p.L.rejectConfig
+      (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+        p.L.acceptConfig
+        (List.append
+          ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            p.L.stage).reverse.map some)
+          (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+            (p.L.input.map some)
+            (List.append
+              (CanonicalLayouts.DovetailLayoutScanner.transitionRemainderBits.reverse.map some)
+              SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft)))))
+
+def SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape
+    (p : SelectedMergeEmitterPayload) : Tape Bool :=
+  DovetailInitialLayoutInitializer.tapeAtCells
+    (((SelectedMergePaddedEmitterOuterHitSuffixBits p).reverse.map some) ++
+      (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+        p.S.config
+        (List.append
+          ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            p.S.stage).reverse.map some)
+          (SelectedMergePaddedEmitterNestedLayoutParsedLeft p))))
+    [none, none]
+
+theorem
+    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_move_left_move_right
+    (p : SelectedMergeEmitterPayload) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p)) =
+      SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p := by
+  simp [SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape,
+    DovetailInitialLayoutInitializer.tapeAtCells,
+    Tape.move, Tape.moveLeft, Tape.moveRight]
+
 theorem SelectedMergePaddedEmitterAfterHitPaddedTape_move_left_move_right
     (p : SelectedMergeEmitterPayload) :
     Tape.move Direction.left
@@ -1223,6 +1273,121 @@ def SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction :
   exists emitter : MachineDescription,
     SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsSpec emitter
 
+def SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec
+    (parser : MachineDescription) : Prop :=
+  parser.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      parser.HaltsFromTape
+        (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p)
+        (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p)
+
+def SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction :
+    Prop :=
+  exists parser : MachineDescription,
+    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec parser
+
+def SelectedMergePaddedEmitterAfterHitPaddedAcceptParsedInnerSpec
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      emitter.HaltsFromTape
+        (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p)
+        (SelectedMergePaddedEmitterAcceptDecodedHandoffTape p)
+
+def SelectedMergePaddedEmitterAfterHitPaddedRejectParsedInnerSpec
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      emitter.HaltsFromTape
+        (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p)
+        (SelectedMergePaddedEmitterRejectDecodedHandoffTape p)
+
+def SelectedMergePaddedEmitterAfterHitPaddedAcceptParsedInnerConstruction :
+    Prop :=
+  exists emitter : MachineDescription,
+    SelectedMergePaddedEmitterAfterHitPaddedAcceptParsedInnerSpec emitter
+
+def SelectedMergePaddedEmitterAfterHitPaddedRejectParsedInnerConstruction :
+    Prop :=
+  exists emitter : MachineDescription,
+    SelectedMergePaddedEmitterAfterHitPaddedRejectParsedInnerSpec emitter
+
+def SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsFromNestedParsed
+    (parser emitter : MachineDescription) : MachineDescription :=
+  SeqViaCanonical parser emitter
+
+theorem
+    selectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsSpec_of_parsedInner
+    {parser emitter : MachineDescription}
+    (hparser :
+      SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec parser)
+    (hemitter :
+      SelectedMergePaddedEmitterAfterHitPaddedAcceptParsedInnerSpec emitter) :
+    SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsSpec
+      (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsFromNestedParsed
+        parser emitter) := by
+  constructor
+  · exact SeqViaCanonical_subroutineReady hparser.left hemitter.left
+  · intro p
+    exact
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        hparser.left hemitter.left
+        (hparser.right p)
+        (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_move_left_move_right
+          p)
+        (hemitter.right p)
+
+theorem
+    selectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsSpec_of_parsedInner
+    {parser emitter : MachineDescription}
+    (hparser :
+      SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec parser)
+    (hemitter :
+      SelectedMergePaddedEmitterAfterHitPaddedRejectParsedInnerSpec emitter) :
+    SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsSpec
+      (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsFromNestedParsed
+        parser emitter) := by
+  constructor
+  · exact SeqViaCanonical_subroutineReady hparser.left hemitter.left
+  · intro p
+    exact
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        hparser.left hemitter.left
+        (hparser.right p)
+        (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_move_left_move_right
+          p)
+        (hemitter.right p)
+
+theorem
+    selectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction_of_parsedInner
+    (hparser :
+      SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction)
+    (hemitter :
+      SelectedMergePaddedEmitterAfterHitPaddedAcceptParsedInnerConstruction) :
+    SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction := by
+  rcases hparser with ⟨parser, hparser⟩
+  rcases hemitter with ⟨emitter, hemits⟩
+  exact
+    ⟨SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsFromNestedParsed
+        parser emitter,
+      selectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsSpec_of_parsedInner
+        hparser hemits⟩
+
+theorem
+    selectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction_of_parsedInner
+    (hparser :
+      SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction)
+    (hemitter :
+      SelectedMergePaddedEmitterAfterHitPaddedRejectParsedInnerConstruction) :
+    SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction := by
+  rcases hparser with ⟨parser, hparser⟩
+  rcases hemitter with ⟨emitter, hemits⟩
+  exact
+    ⟨SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsFromNestedParsed
+        parser emitter,
+      selectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsSpec_of_parsedInner
+        hparser hemits⟩
+
 theorem selectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction_of_sourceFields
     (h :
       SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction) :
@@ -1274,22 +1439,42 @@ theorem selectedMergePaddedEmitterAfterHitPaddedRejectConstruction_of_decoded
     exact hemits.right p
 
 /--
-Finite-machine leaf that rewrites the explicit source-field stack into the
-decoded accepting-merge field order after the common padded source scanner has
-restored all source fields.
+Common finite-machine leaf that parses the nested layout code word after the
+outer source fields have been restored.
 -/
-theorem selectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction :
-    SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction := by
+theorem selectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction :
+    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction := by
   sorry
 
 /--
-Finite-machine leaf that rewrites the explicit source-field stack into the
-decoded rejecting-merge field order after the common padded source scanner has
-restored all source fields.
+Finite-machine leaf that rewrites the parsed nested layout plus outer source
+fields into the decoded accepting-merge field order.
 -/
+theorem selectedMergePaddedEmitterAfterHitPaddedAcceptParsedInnerConstruction :
+    SelectedMergePaddedEmitterAfterHitPaddedAcceptParsedInnerConstruction := by
+  sorry
+
+/--
+Finite-machine leaf that rewrites the parsed nested layout plus outer source
+fields into the decoded rejecting-merge field order.
+-/
+theorem selectedMergePaddedEmitterAfterHitPaddedRejectParsedInnerConstruction :
+    SelectedMergePaddedEmitterAfterHitPaddedRejectParsedInnerConstruction := by
+  sorry
+
+theorem selectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction :
+    SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction := by
+  exact
+    selectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction_of_parsedInner
+      selectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction
+      selectedMergePaddedEmitterAfterHitPaddedAcceptParsedInnerConstruction
+
 theorem selectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction :
     SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction := by
-  sorry
+  exact
+    selectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction_of_parsedInner
+      selectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction
+      selectedMergePaddedEmitterAfterHitPaddedRejectParsedInnerConstruction
 
 theorem selectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction :
     SelectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction := by
