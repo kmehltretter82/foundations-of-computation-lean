@@ -40,6 +40,15 @@ theorem configurationFieldBoundaryEraserDescription_subroutineReady :
     configurationSuffixScannerDescription_subroutineReady
     leftBoundaryEraserDescription_subroutineReady
 
+theorem configurationRestoredLeftWithBase_eq_fieldBits_reverse_append
+    (cfg : Configuration) (baseLeft : List (Option Bool)) :
+    configurationRestoredLeftWithBase cfg baseLeft =
+      List.append ((configurationFieldBits cfg []).reverse.map some)
+        baseLeft := by
+  rw [← configurationRestoredBitsRev_map_some_withBase cfg baseLeft]
+  rw [← configurationRestoredBitsRev_reverse cfg]
+  simp
+
 theorem configurationSuffixScannerDescription_haltsFrom_boundary
     (cfg : Configuration)
     (baseLeft : List (Option Bool)) (suffixTail : Word Bool) :

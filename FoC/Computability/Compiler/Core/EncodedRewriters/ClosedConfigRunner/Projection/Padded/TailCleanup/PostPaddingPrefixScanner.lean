@@ -314,6 +314,27 @@ theorem postPaddingOutputPrefixStageScannerTarget_move_right_eq_configSource
       stage (postPaddingOutputPrefixStageHandoffBase quoted baseLeft)
       false fieldTail
 
+theorem postPaddingOutputPrefixStageConfigScannerTarget_move_right_eq_suffixSource
+    (quoted : Word Bool) (stage : Nat) (cfg : Configuration)
+    (baseLeft : List (Option Bool)) (suffixTail : Word Bool) :
+    Tape.move Direction.right
+        (postPaddingOutputPrefixStageConfigScannerTargetTape
+          quoted stage cfg baseLeft suffixTail) =
+      tapeAtCells
+        (configurationRestoredLeftWithBase cfg
+          (postPaddingOutputPrefixAfterStageBase quoted stage baseLeft))
+        ((false :: suffixTail).map some) := by
+  simpa [postPaddingOutputPrefixStageConfigScannerTargetTape,
+    configurationRestoredLeftWithBase] using
+    cellListCanonicalHandoffConfigWithBase_move_right
+      cfg.tape.right
+      (List.append ((cellCodeBits cfg.tape.head).reverse.map some)
+        (cellListCanonicalRestoredLeftWithBase cfg.tape.left
+          (List.append ((stageNatBits cfg.state).reverse.map some)
+            (postPaddingOutputPrefixAfterStageBase
+              quoted stage baseLeft))))
+      false suffixTail
+
 theorem configurationSuffixScannerDescription_haltsFrom_afterPrefixStage
     (quoted : Word Bool) (stage : Nat) (cfg : Configuration)
     (baseLeft : List (Option Bool)) (suffixTail : Word Bool) :
