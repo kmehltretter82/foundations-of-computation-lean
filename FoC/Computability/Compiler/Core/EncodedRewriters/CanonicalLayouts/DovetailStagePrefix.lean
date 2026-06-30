@@ -368,6 +368,18 @@ def nonemptyNatSuffixHandoffConfigWithBase
             baseLeft)
           (suffixBits.map some)) }
 
+def nonemptyNatSuffixHandoffConfigWithBaseAndRight
+    (stage : Nat) (baseLeft : List (Option Bool))
+    (suffixBits : Word Bool) (rightPadding : List (Option Bool)) :
+    Configuration :=
+  { state := NonemptyNatSuffixScannerDescription.halt
+    tape :=
+      Tape.move Direction.left
+        (tapeAtCells
+          (List.append ((stageNatBits stage).reverse.map some)
+            baseLeft)
+          (List.append (suffixBits.map some) rightPadding)) }
+
 theorem natSuffix_run_state200_stageNat_to_state210
     (stage : Nat) (left right : List (Option Bool)) :
     NatSuffixScannerDescription.runConfig (4 * stage + 4)
@@ -512,6 +524,31 @@ theorem run_nonemptyNatSuffix_raw_to_handoff_withBase
     nonemptyNatSuffix_run_state210_handoff b (some true)
       (List.append tail baseLeft) (suffixTail.map some)
 
+theorem run_nonemptyNatSuffix_raw_to_handoff_withBaseAndRight
+    (stage : Nat) (baseLeft : List (Option Bool))
+    (b : Bool) (suffixTail : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      NonemptyNatSuffixScannerDescription.runConfig steps
+          (config 200 baseLeft
+            (List.append ((stageNatBits stage).map some)
+              (some b ::
+                List.append (suffixTail.map some) rightPadding))) =
+        nonemptyNatSuffixHandoffConfigWithBaseAndRight
+          stage baseLeft (b :: suffixTail) rightPadding := by
+  rcases stageNatBits_reverse_map_some_cons stage with
+    ⟨tail, htail⟩
+  refine ⟨4 * stage + 5, ?_⟩
+  rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by omega]
+  rw [runConfig_add]
+  rw [nonemptyNatSuffix_run_state200_stageNat_to_state210]
+  rw [htail]
+  unfold nonemptyNatSuffixHandoffConfigWithBaseAndRight
+  simpa [config, tapeAtCells, htail, List.append_assoc] using
+    nonemptyNatSuffix_run_state210_handoff b (some true)
+      (List.append tail baseLeft)
+      (List.append (suffixTail.map some) rightPadding)
+
 theorem nonemptyNatSuffixHandoffConfigWithBase_move_right
     (stage : Nat) (baseLeft : List (Option Bool))
     (b : Bool) (suffixTail : Word Bool) :
@@ -528,6 +565,25 @@ theorem nonemptyNatSuffixHandoffConfigWithBase_move_right
   simpa [List.append_assoc] using
     tapeAtCells_move_right_move_left_cons (some true)
       (List.append tail baseLeft) (some b) (suffixTail.map some)
+
+theorem nonemptyNatSuffixHandoffConfigWithBaseAndRight_move_right
+    (stage : Nat) (baseLeft : List (Option Bool))
+    (b : Bool) (suffixTail : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    Tape.move Direction.right
+        (nonemptyNatSuffixHandoffConfigWithBaseAndRight
+          stage baseLeft (b :: suffixTail) rightPadding).tape =
+      tapeAtCells
+        (List.append ((stageNatBits stage).reverse.map some) baseLeft)
+        (List.append ((b :: suffixTail).map some) rightPadding) := by
+  rcases stageNatBits_reverse_map_some_cons stage with
+    ⟨tail, htail⟩
+  unfold nonemptyNatSuffixHandoffConfigWithBaseAndRight
+  rw [htail]
+  simpa [List.append_assoc] using
+    tapeAtCells_move_right_move_left_cons (some true)
+      (List.append tail baseLeft) (some b)
+      (List.append (suffixTail.map some) rightPadding)
 
 theorem nonemptyNatSuffixScannerDescription_runConfig_stageNat_handoff
     (baseLeft : List (Option Bool)) (stage : Nat)

@@ -448,6 +448,61 @@ theorem run_boolWordSuffix_raw_mark_current_to_state100_withBase
       List.map_append, List.reverse_append, List.append_assoc] using
         hreturn
 
+theorem run_boolWordSuffix_raw_mark_current_to_state100_withBaseAndRight
+    (baseLeft : List (Option Bool)) (processed : Word Bool)
+    (bit : Bool) (rest : Word Bool) (suffixBits : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      BWSS.runConfig steps
+          (cellListRawMarkingState120WithBaseAndRight baseLeft
+            (processed.map some) (some bit) (rest.map some)
+            suffixBits rightPadding) =
+        cellListRawState100AfterMarkedWithBaseAndRight baseLeft
+          (processed.map some) (some bit) (rest.map some)
+          suffixBits rightPadding := by
+  let scanRev := cellListMarkingReturnScanRev
+    (processed.map some) (rest.map some)
+  refine
+    ⟨(4 * rest.length + 4) +
+        (4 * processed.length + (6 + (scanRev.length + 4))), ?_⟩
+  rw [runConfig_add]
+  unfold cellListRawMarkingState120WithBaseAndRight
+  simp only [List.length_map]
+  rw [run_boolWordSuffix_state120_stageNat]
+  rw [runConfig_add]
+  rw [run_boolWordSuffix_state130_markedBits]
+  rw [runConfig_add]
+  rw [run_boolWordSuffix_state130_currentBit]
+  cases bit
+  · have hreturn :=
+      run_boolWordSuffix_state140_returnToLengthMarker scanRev false
+        (some false :: some false ::
+          List.append
+            (cellListCanonicalLengthPrefixRev processed.length)
+            baseLeft)
+        (some true ::
+          List.append ((cellsCodeBits (rest.map some)).map some)
+            (List.append (suffixBits.map some) rightPadding))
+    simpa [cellListRawState100AfterMarkedWithBaseAndRight, scanRev,
+      cellListMarkingReturnScanRev, markedCellCodeBits,
+      cellCodeTailCells, cellListCanonicalLengthPrefixRev,
+      List.map_append, List.reverse_append, List.append_assoc] using
+        hreturn
+  · have hreturn :=
+      run_boolWordSuffix_state140_returnToLengthMarker scanRev true
+        (some false :: some false ::
+          List.append
+            (cellListCanonicalLengthPrefixRev processed.length)
+            baseLeft)
+        (some false ::
+          List.append ((cellsCodeBits (rest.map some)).map some)
+            (List.append (suffixBits.map some) rightPadding))
+    simpa [cellListRawState100AfterMarkedWithBaseAndRight, scanRev,
+      cellListMarkingReturnScanRev, markedCellCodeBits,
+      cellCodeTailCells, cellListCanonicalLengthPrefixRev,
+      List.map_append, List.reverse_append, List.append_assoc] using
+        hreturn
+
 theorem run_boolWordSuffix_raw_marking_loop_from_state100_withBase
     (baseLeft : List (Option Bool)) (processed cells : Word Bool)
     (suffixBits : Word Bool) :
@@ -568,6 +623,131 @@ theorem run_boolWordSuffix_raw_marking_loop_from_state100_withBase
         markedCellsCodeBits, markedCellsCodeBits_append, cellsCodeBits,
         List.length_append, List.map_append, List.append_assoc] using hrec'
 
+theorem run_boolWordSuffix_raw_marking_loop_from_state100_withBaseAndRight
+    (baseLeft : List (Option Bool)) (processed cells : Word Bool)
+    (suffixBits : Word Bool) (rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      BWSS.runConfig steps
+          (config 100
+            (List.append
+              (cellListCanonicalLengthPrefixRev processed.length)
+              baseLeft)
+            (List.append ((stageNatBits cells.length).map some)
+              (List.append
+                ((markedCellsCodeBits (processed.map some)).map some)
+                (List.append ((cellsCodeBits (cells.map some)).map some)
+                  (List.append (suffixBits.map some) rightPadding))))) =
+        cellListCanonicalFinishStartConfigWithBaseAndRight
+          ((List.append processed cells).map some) baseLeft suffixBits
+          rightPadding := by
+  induction cells generalizing processed with
+  | nil =>
+      refine ⟨4, ?_⟩
+      rw [show (stageNatBits ([] : Word Bool).length).map some =
+          doneBits.map some by
+        simp [stageNatBits_zero, doneBits,
+          encodeCodeSymbolAsInput]]
+      change
+        BWSS.runConfig 4
+            (config 100
+              (List.append
+                (cellListCanonicalLengthPrefixRev processed.length)
+                baseLeft)
+              (List.append (doneBits.map some)
+                (List.append
+                  ((markedCellsCodeBits (processed.map some)).map some)
+                  (List.append (suffixBits.map some) rightPadding)))) =
+          cellListCanonicalFinishStartConfigWithBaseAndRight
+            ((List.append processed []).map some) baseLeft suffixBits
+            rightPadding
+      rw [run_boolWordSuffix_state100_done]
+      simp [cellListCanonicalFinishStartConfigWithBaseAndRight,
+        cellListCanonicalFinishStartLeftWithBase]
+  | cons bit rest ih =>
+      rcases run_boolWordSuffix_raw_mark_current_to_state100_withBaseAndRight
+          baseLeft processed bit rest suffixBits rightPadding with
+        ⟨markSteps, hmark⟩
+      rcases ih (List.append processed [bit]) with
+        ⟨recSteps, hrec⟩
+      refine ⟨4 + markSteps + recSteps, ?_⟩
+      rw [show 4 + markSteps + recSteps =
+          4 + (markSteps + recSteps) by omega]
+      rw [runConfig_add]
+      rw [show
+          (stageNatBits (bit :: rest).length).map some =
+            List.append (tickBits.map some)
+              ((stageNatBits rest.length).map some) by
+        simp [stageNatBits_succ, tickBits,
+          encodeCodeSymbolAsInput]]
+      rw [show
+          List.append
+              (List.append (tickBits.map some)
+                ((stageNatBits rest.length).map some))
+              (List.append
+                ((markedCellsCodeBits (processed.map some)).map some)
+                (List.append
+                  ((cellsCodeBits ((bit :: rest).map some)).map some)
+                  (List.append (suffixBits.map some) rightPadding))) =
+            List.append (tickBits.map some)
+              (List.append ((stageNatBits rest.length).map some)
+                (List.append
+                  ((markedCellsCodeBits (processed.map some)).map some)
+                  (List.append ((cellCodeBits (some bit)).map some)
+                    (List.append
+                      ((cellsCodeBits (rest.map some)).map some)
+                      (List.append (suffixBits.map some)
+                        rightPadding))))) by
+        simp [cellsCodeBits, List.map_append, List.append_assoc]]
+      change
+        BWSS.runConfig (markSteps + recSteps)
+            (BWSS.runConfig 4
+              (config 100
+                (List.append
+                  (cellListCanonicalLengthPrefixRev processed.length)
+                  baseLeft)
+                (List.append (tickBits.map some)
+                  (List.append ((stageNatBits rest.length).map some)
+                    (List.append
+                      ((markedCellsCodeBits (processed.map some)).map some)
+                      (List.append ((cellCodeBits (some bit)).map some)
+                        (List.append
+                          ((cellsCodeBits (rest.map some)).map some)
+                          (List.append (suffixBits.map some)
+                            rightPadding)))))))) =
+          cellListCanonicalFinishStartConfigWithBaseAndRight
+            ((List.append processed (bit :: rest)).map some) baseLeft
+            suffixBits rightPadding
+      rw [run_boolWordSuffix_state100_tick]
+      rw [runConfig_add]
+      rw [show
+          config 120
+              (List.append markedTickRev
+                (List.append
+                  (cellListCanonicalLengthPrefixRev processed.length)
+                  baseLeft))
+              (List.append ((stageNatBits rest.length).map some)
+                (List.append
+                  ((markedCellsCodeBits (processed.map some)).map some)
+                  (List.append ((cellCodeBits (some bit)).map some)
+                    (List.append
+                      ((cellsCodeBits (rest.map some)).map some)
+                      (List.append (suffixBits.map some)
+                        rightPadding))))) =
+            cellListRawMarkingState120WithBaseAndRight baseLeft
+              (processed.map some) (some bit) (rest.map some)
+              suffixBits rightPadding by
+        simp [cellListRawMarkingState120WithBaseAndRight]]
+      rw [hmark]
+      rw [show (List.append processed [bit]).map some =
+          List.append (processed.map some) [some bit] by
+        simp [List.map_append]] at hrec
+      rw [map_markedCellsCodeBits_append_single
+        (processed.map some) (some bit)] at hrec
+      have hrec' := hrec
+      simpa [cellListRawState100AfterMarkedWithBaseAndRight,
+        markedCellsCodeBits, markedCellsCodeBits_append, cellsCodeBits,
+        List.length_append, List.map_append, List.append_assoc] using hrec'
+
 theorem run_boolWordSuffix_state150_handoff_false
     (cell : Option Bool) (left right : List (Option Bool)) :
     BWSS.runConfig 1
@@ -620,6 +800,46 @@ theorem run_boolWordSuffix_canonical_finish_to_handoff_withBase
         run_boolWordSuffix_state150_handoff_false cell left
           (suffixTail.map some)
 
+theorem run_boolWordSuffix_canonical_finish_to_handoff_withBaseAndRight
+    (w : Word Bool) (baseLeft : List (Option Bool))
+    (suffixTail : Word Bool) (rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      BWSS.runConfig steps
+          (cellListCanonicalFinishStartConfigWithBaseAndRight
+            (w.map some) baseLeft (false :: suffixTail) rightPadding) =
+        { state := BWSS.halt
+          tape :=
+            (boolWordCanonicalHandoffConfigWithBaseAndRight w baseLeft
+              (false :: suffixTail) rightPadding).tape } := by
+  refine ⟨4 * w.length + 1, ?_⟩
+  rw [runConfig_add]
+  unfold cellListCanonicalFinishStartConfigWithBaseAndRight
+  rw [run_boolWordSuffix_state150_markedBits]
+  change
+    BWSS.runConfig 1
+      (config 150
+        (cellListCanonicalRestoredLeftWithBase (w.map some) baseLeft)
+        (some false ::
+          List.append (suffixTail.map some) rightPadding)) =
+      { state := BWSS.halt
+        tape :=
+          (boolWordCanonicalHandoffConfigWithBaseAndRight w baseLeft
+            (false :: suffixTail) rightPadding).tape }
+  unfold boolWordCanonicalHandoffConfigWithBaseAndRight
+  unfold cellListCanonicalHandoffConfigWithBaseAndRight
+  cases hleft : cellListCanonicalRestoredLeftWithBase
+      (w.map some) baseLeft with
+  | nil =>
+      simp [config, tapeAtCells,
+        boolWordSuffix_lookup_150_false, keepMove,
+        runConfig, stepConfig,
+        transition, Tape.read, Tape.write,
+        Tape.move, Tape.moveLeft]
+  | cons cell left =>
+      simpa [config, tapeAtCells, hleft] using
+        run_boolWordSuffix_state150_handoff_false cell left
+          (List.append (suffixTail.map some) rightPadding)
+
 theorem run_boolWordSuffix_raw_to_canonical_handoff_withBase
     (w : Word Bool) (baseLeft : List (Option Bool))
     (suffixTail : Word Bool) :
@@ -647,6 +867,41 @@ theorem run_boolWordSuffix_raw_to_canonical_handoff_withBase
     simpa using hmark
   rcases run_boolWordSuffix_canonical_finish_to_handoff_withBase
       w baseLeft suffixTail with
+    ⟨finishSteps, hfinish⟩
+  refine ⟨markSteps + finishSteps, ?_⟩
+  rw [runConfig_add]
+  rw [hmark']
+  exact hfinish
+
+theorem run_boolWordSuffix_raw_to_canonical_handoff_withBaseAndRight
+    (w : Word Bool) (baseLeft : List (Option Bool))
+    (suffixTail : Word Bool) (rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      BWSS.runConfig steps
+          (config 100 baseLeft
+            (List.append ((stageNatBits w.length).map some)
+              (List.append ((cellsCodeBits (w.map some)).map some)
+                (some false ::
+                  List.append (suffixTail.map some) rightPadding)))) =
+        { state := BWSS.halt
+          tape :=
+            (boolWordCanonicalHandoffConfigWithBaseAndRight w baseLeft
+              (false :: suffixTail) rightPadding).tape } := by
+  rcases run_boolWordSuffix_raw_marking_loop_from_state100_withBaseAndRight
+      baseLeft ([] : Word Bool) w (false :: suffixTail) rightPadding with
+    ⟨markSteps, hmark⟩
+  have hmark' :
+      BWSS.runConfig markSteps
+          (config 100 baseLeft
+            (List.append ((stageNatBits w.length).map some)
+              (List.append ((cellsCodeBits (w.map some)).map some)
+                (some false ::
+                  List.append (suffixTail.map some) rightPadding)))) =
+        cellListCanonicalFinishStartConfigWithBaseAndRight
+          (w.map some) baseLeft (false :: suffixTail) rightPadding := by
+    simpa using hmark
+  rcases run_boolWordSuffix_canonical_finish_to_handoff_withBaseAndRight
+      w baseLeft suffixTail rightPadding with
     ⟨finishSteps, hfinish⟩
   refine ⟨markSteps + finishSteps, ?_⟩
   rw [runConfig_add]

@@ -73,6 +73,14 @@ def postPaddingOutputPrefixStageScannerTargetTape
     (postPaddingOutputPrefixStageHandoffBase quoted baseLeft)
     (false :: fieldTail)).tape
 
+def postPaddingOutputPrefixStageScannerTargetTapeWithRight
+    (quoted : Word Bool) (stage : Nat)
+    (baseLeft : List (Option Bool)) (fieldTail : Word Bool)
+    (rightPadding : List (Option Bool)) : Tape Bool :=
+  (nonemptyNatSuffixHandoffConfigWithBaseAndRight stage
+    (postPaddingOutputPrefixStageHandoffBase quoted baseLeft)
+    (false :: fieldTail) rightPadding).tape
+
 def postPaddingOutputPrefixAfterStageBase
     (quoted : Word Bool) (stage : Nat)
     (baseLeft : List (Option Bool)) : List (Option Bool) :=
@@ -135,6 +143,18 @@ def postPaddingOutputPrefixStageConfigScannerTargetTape
             quoted stage baseLeft))))
     (false :: suffixTail)).tape
 
+def postPaddingOutputPrefixStageConfigScannerTargetTapeWithRight
+    (quoted : Word Bool) (stage : Nat) (cfg : Configuration)
+    (baseLeft : List (Option Bool)) (suffixTail : Word Bool)
+    (rightPadding : List (Option Bool)) : Tape Bool :=
+  (cellListCanonicalHandoffConfigWithBaseAndRight cfg.tape.right
+    (List.append ((cellCodeBits cfg.tape.head).reverse.map some)
+      (cellListCanonicalRestoredLeftWithBase cfg.tape.left
+        (List.append ((stageNatBits cfg.state).reverse.map some)
+          (postPaddingOutputPrefixAfterStageBase
+            quoted stage baseLeft))))
+    (false :: suffixTail) rightPadding).tape
+
 theorem rightMoveAcrossFourBitsDescription_haltsFrom_header
     (baseLeft right : List (Option Bool)) :
     CommonGround.FiniteTransducers.rightMoveAcrossFourBitsDescription.HaltsFromTape
@@ -189,6 +209,32 @@ theorem postPaddingOutputPrefixHeaderTarget_move_left_move_right
   simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight,
     List.map_append, List.append_assoc]
 
+theorem postPaddingOutputPrefixHeaderTarget_move_left_move_right_withRight
+    (quoted stageTail : Word Bool)
+    (baseLeft rightPadding : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (tapeAtCells
+            (postPaddingOutputPrefixHeaderBase baseLeft)
+            (List.append
+              ((encodeCodeWordAsInput
+                (encodeBoolWordAppend quoted [])).map some)
+              (some false ::
+                List.append (stageTail.map some) rightPadding)))) =
+      tapeAtCells
+        (postPaddingOutputPrefixHeaderBase baseLeft)
+        (List.append
+          ((encodeCodeWordAsInput
+            (encodeBoolWordAppend quoted [])).map some)
+          (some false ::
+            List.append (stageTail.map some) rightPadding)) := by
+  rcases postPaddingStageNatBits_cons_cons quoted.length with
+    ⟨first, second, rest, hstage⟩
+  rw [boolWordBits_eq_encodeBoolWordAppend]
+  rw [hstage]
+  simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight,
+    List.map_append, List.append_assoc]
+
 theorem boolWordSuffixScannerDescription_haltsFrom_outputPrefixTail
     (quoted stageTail : Word Bool)
     (baseLeft : List (Option Bool)) :
@@ -207,6 +253,36 @@ theorem boolWordSuffixScannerDescription_haltsFrom_outputPrefixTail
         quoted
         (postPaddingOutputPrefixHeaderBase baseLeft)
         stageTail with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  constructor
+  · simpa [boolWordBits_eq_encodeBoolWordAppend, List.map_append,
+      List.append_assoc] using
+      congrArg Configuration.state hsteps
+  · simpa [boolWordBits_eq_encodeBoolWordAppend, List.map_append,
+      List.append_assoc] using
+      congrArg Configuration.tape hsteps
+
+theorem boolWordSuffixScannerDescription_haltsFrom_outputPrefixTail_withRight
+    (quoted stageTail : Word Bool)
+    (baseLeft rightPadding : List (Option Bool)) :
+    BoolWordSuffixScannerDescription.HaltsFromTape
+      (tapeAtCells
+        (postPaddingOutputPrefixHeaderBase baseLeft)
+        (List.append
+          ((encodeCodeWordAsInput
+            (encodeBoolWordAppend quoted [])).map some)
+          (some false ::
+            List.append (stageTail.map some) rightPadding)))
+      (boolWordCanonicalHandoffConfigWithBaseAndRight quoted
+        (postPaddingOutputPrefixHeaderBase baseLeft)
+        (false :: stageTail) rightPadding).tape := by
+  rcases
+      run_boolWordSuffix_raw_to_canonical_handoff_withBaseAndRight
+        quoted
+        (postPaddingOutputPrefixHeaderBase baseLeft)
+        stageTail
+        rightPadding with
     ⟨steps, hsteps⟩
   refine ⟨steps, ?_⟩
   constructor
@@ -246,6 +322,37 @@ theorem postPaddingOutputPrefixScannerDescription_haltsFrom
       (boolWordSuffixScannerDescription_haltsFrom_outputPrefixTail
         quoted stageTail baseLeft)
 
+theorem postPaddingOutputPrefixScannerDescription_haltsFrom_withRight
+    (quoted stageTail : Word Bool)
+    (baseLeft rightPadding : List (Option Bool)) :
+    postPaddingOutputPrefixScannerDescription.HaltsFromTape
+      (tapeAtCells baseLeft
+        (List.append
+          ((encodeCodeSymbolAsInput MachineCodeSymbol.header).map some)
+          (List.append
+            ((encodeCodeWordAsInput
+              (encodeBoolWordAppend quoted [])).map some)
+            (some false ::
+              List.append (stageTail.map some) rightPadding))))
+      (boolWordCanonicalHandoffConfigWithBaseAndRight quoted
+        (postPaddingOutputPrefixHeaderBase baseLeft)
+        (false :: stageTail) rightPadding).tape := by
+  exact
+    SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      CommonGround.FiniteTransducers.rightMoveAcrossFourBitsDescription_subroutineReady
+      boolWordSuffixScannerDescription_subroutineReady
+      (rightMoveAcrossFourBitsDescription_haltsFrom_header
+        baseLeft
+        (List.append
+          ((encodeCodeWordAsInput
+            (encodeBoolWordAppend quoted [])).map some)
+          (some false ::
+            List.append (stageTail.map some) rightPadding)))
+      (postPaddingOutputPrefixHeaderTarget_move_left_move_right_withRight
+        quoted stageTail baseLeft rightPadding)
+      (boolWordSuffixScannerDescription_haltsFrom_outputPrefixTail_withRight
+        quoted stageTail baseLeft rightPadding)
+
 theorem nonemptyNatSuffixScannerDescription_haltsFrom_outputPrefixStage
     (quoted : Word Bool) (stage : Nat)
     (baseLeft : List (Option Bool)) (fieldTail : Word Bool) :
@@ -267,6 +374,31 @@ theorem nonemptyNatSuffixScannerDescription_haltsFrom_outputPrefixStage
   · simpa [postPaddingOutputPrefixStageScannerTargetTape] using
       congrArg Configuration.state hsteps
   · simpa [postPaddingOutputPrefixStageScannerTargetTape] using
+      congrArg Configuration.tape hsteps
+
+theorem nonemptyNatSuffixScannerDescription_haltsFrom_outputPrefixStage_withRight
+    (quoted : Word Bool) (stage : Nat)
+    (baseLeft : List (Option Bool)) (fieldTail : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    NonemptyNatSuffixScannerDescription.HaltsFromTape
+      (tapeAtCells
+        (postPaddingOutputPrefixStageHandoffBase quoted baseLeft)
+        (List.append ((stageNatBits stage).map some)
+          (some false ::
+            List.append (fieldTail.map some) rightPadding)))
+      (postPaddingOutputPrefixStageScannerTargetTapeWithRight
+        quoted stage baseLeft fieldTail rightPadding) := by
+  rcases
+      run_nonemptyNatSuffix_raw_to_handoff_withBaseAndRight
+        stage
+        (postPaddingOutputPrefixStageHandoffBase quoted baseLeft)
+        false fieldTail rightPadding with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  constructor
+  · simpa [postPaddingOutputPrefixStageScannerTargetTapeWithRight] using
+      congrArg Configuration.state hsteps
+  · simpa [postPaddingOutputPrefixStageScannerTargetTapeWithRight] using
       congrArg Configuration.tape hsteps
 
 theorem postPaddingOutputPrefixScannerTarget_move_right_eq_stageSource
@@ -330,6 +462,80 @@ theorem postPaddingOutputPrefixStageScannerDescription_haltsFrom_raw
       nonemptyNatSuffixScannerDescription_haltsFrom_outputPrefixStage
         quoted stage baseLeft fieldTail
 
+theorem postPaddingOutputPrefixScannerTarget_move_right_eq_stageSource_withRight
+    (quoted : Word Bool) (stage : Nat)
+    (baseLeft : List (Option Bool)) (fieldTail stageTail : Word Bool)
+    (rightPadding : List (Option Bool))
+    (hstage : stageNatBits stage = false :: stageTail) :
+    Tape.move Direction.right
+        (boolWordCanonicalHandoffConfigWithBaseAndRight quoted
+          (postPaddingOutputPrefixHeaderBase baseLeft)
+          (false :: List.append stageTail (false :: fieldTail))
+          rightPadding).tape =
+      tapeAtCells
+        (postPaddingOutputPrefixStageHandoffBase quoted baseLeft)
+        (List.append ((stageNatBits stage).map some)
+          (some false ::
+            List.append (fieldTail.map some) rightPadding)) := by
+  rw [hstage]
+  simpa [boolWordCanonicalHandoffConfigWithBaseAndRight,
+    postPaddingOutputPrefixStageHandoffBase, List.map_append,
+    List.append_assoc] using
+    cellListCanonicalHandoffConfigWithBaseAndRight_move_right
+      (quoted.map some)
+      (postPaddingOutputPrefixHeaderBase baseLeft)
+      false (List.append stageTail (false :: fieldTail))
+      rightPadding
+
+theorem postPaddingOutputPrefixStageScannerDescription_haltsFrom_raw_withRight
+    (quoted : Word Bool) (stage : Nat)
+    (baseLeft : List (Option Bool)) (fieldTail : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    postPaddingOutputPrefixStageScannerDescription.HaltsFromTape
+      (tapeAtCells baseLeft
+        (List.append
+          ((encodeCodeSymbolAsInput MachineCodeSymbol.header).map some)
+          (List.append
+            ((encodeCodeWordAsInput
+              (encodeBoolWordAppend quoted [])).map some)
+            (List.append ((stageNatBits stage).map some)
+              (some false ::
+                List.append (fieldTail.map some) rightPadding)))))
+      (postPaddingOutputPrefixStageScannerTargetTapeWithRight
+        quoted stage baseLeft fieldTail rightPadding) := by
+  rcases stageNatBits_cons_false stage with
+    ⟨stageTail, hstage⟩
+  refine
+    seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      (A := postPaddingOutputPrefixScannerDescription)
+      (B := NonemptyNatSuffixScannerDescription)
+      (handoffMove := Direction.right)
+      (Tmid :=
+        (boolWordCanonicalHandoffConfigWithBaseAndRight quoted
+          (postPaddingOutputPrefixHeaderBase baseLeft)
+          (false :: List.append stageTail (false :: fieldTail))
+          rightPadding).tape)
+      (Tnext :=
+        tapeAtCells
+          (postPaddingOutputPrefixStageHandoffBase quoted baseLeft)
+          (List.append ((stageNatBits stage).map some)
+            (some false ::
+              List.append (fieldTail.map some) rightPadding)))
+      postPaddingOutputPrefixScannerDescription_subroutineReady
+      nonemptyNatSuffixScannerDescription_subroutineReady
+      ?hprefix ?hmove ?hstageRun
+  · rw [hstage]
+    simpa [List.map_append, List.append_assoc] using
+      postPaddingOutputPrefixScannerDescription_haltsFrom_withRight
+        quoted (List.append stageTail (false :: fieldTail)) baseLeft
+        rightPadding
+  · exact
+      postPaddingOutputPrefixScannerTarget_move_right_eq_stageSource_withRight
+        quoted stage baseLeft fieldTail stageTail rightPadding hstage
+  · exact
+      nonemptyNatSuffixScannerDescription_haltsFrom_outputPrefixStage_withRight
+        quoted stage baseLeft fieldTail rightPadding
+
 theorem postPaddingOutputPrefixStageScannerTarget_move_right_eq_configSource
     (quoted : Word Bool) (stage : Nat)
     (baseLeft : List (Option Bool)) (fieldTail : Word Bool) :
@@ -344,6 +550,22 @@ theorem postPaddingOutputPrefixStageScannerTarget_move_right_eq_configSource
     nonemptyNatSuffixHandoffConfigWithBase_move_right
       stage (postPaddingOutputPrefixStageHandoffBase quoted baseLeft)
       false fieldTail
+
+theorem postPaddingOutputPrefixStageScannerTarget_move_right_eq_configSource_withRight
+    (quoted : Word Bool) (stage : Nat)
+    (baseLeft : List (Option Bool)) (fieldTail : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    Tape.move Direction.right
+        (postPaddingOutputPrefixStageScannerTargetTapeWithRight
+          quoted stage baseLeft fieldTail rightPadding) =
+      tapeAtCells
+        (postPaddingOutputPrefixAfterStageBase quoted stage baseLeft)
+        (List.append ((false :: fieldTail).map some) rightPadding) := by
+  simpa [postPaddingOutputPrefixStageScannerTargetTapeWithRight,
+    postPaddingOutputPrefixAfterStageBase] using
+    nonemptyNatSuffixHandoffConfigWithBaseAndRight_move_right
+      stage (postPaddingOutputPrefixStageHandoffBase quoted baseLeft)
+      false fieldTail rightPadding
 
 theorem postPaddingOutputPrefixStageConfigScannerTarget_move_right_eq_suffixSource
     (quoted : Word Bool) (stage : Nat) (cfg : Configuration)
@@ -365,6 +587,28 @@ theorem postPaddingOutputPrefixStageConfigScannerTarget_move_right_eq_suffixSour
             (postPaddingOutputPrefixAfterStageBase
               quoted stage baseLeft))))
       false suffixTail
+
+theorem postPaddingOutputPrefixStageConfigScannerTarget_move_right_eq_suffixSource_withRight
+    (quoted : Word Bool) (stage : Nat) (cfg : Configuration)
+    (baseLeft : List (Option Bool)) (suffixTail : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    Tape.move Direction.right
+        (postPaddingOutputPrefixStageConfigScannerTargetTapeWithRight
+          quoted stage cfg baseLeft suffixTail rightPadding) =
+      tapeAtCells
+        (configurationRestoredLeftWithBase cfg
+          (postPaddingOutputPrefixAfterStageBase quoted stage baseLeft))
+        (List.append ((false :: suffixTail).map some) rightPadding) := by
+  simpa [postPaddingOutputPrefixStageConfigScannerTargetTapeWithRight,
+    configurationRestoredLeftWithBase] using
+    cellListCanonicalHandoffConfigWithBaseAndRight_move_right
+      cfg.tape.right
+      (List.append ((cellCodeBits cfg.tape.head).reverse.map some)
+        (cellListCanonicalRestoredLeftWithBase cfg.tape.left
+          (List.append ((stageNatBits cfg.state).reverse.map some)
+            (postPaddingOutputPrefixAfterStageBase
+              quoted stage baseLeft))))
+      false suffixTail rightPadding
 
 theorem configurationSuffixScannerDescription_haltsFrom_afterPrefixStage
     (quoted : Word Bool) (stage : Nat) (cfg : Configuration)
@@ -388,6 +632,34 @@ theorem configurationSuffixScannerDescription_haltsFrom_afterPrefixStage
   · simpa [postPaddingOutputPrefixStageConfigScannerTargetTape] using
       congrArg Configuration.state hsteps
   · simpa [postPaddingOutputPrefixStageConfigScannerTargetTape] using
+      congrArg Configuration.tape hsteps
+
+theorem configurationSuffixScannerDescription_haltsFrom_afterPrefixStage_withRight
+    (quoted : Word Bool) (stage : Nat) (cfg : Configuration)
+    (baseLeft : List (Option Bool)) (suffixTail : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    ConfigurationSuffixScannerDescription.HaltsFromTape
+      (tapeAtCells
+        (postPaddingOutputPrefixAfterStageBase quoted stage baseLeft)
+        (List.append
+          ((configurationFieldBits cfg
+            (false :: suffixTail)).map some)
+          rightPadding))
+      (postPaddingOutputPrefixStageConfigScannerTargetTapeWithRight
+        quoted stage cfg baseLeft suffixTail rightPadding) := by
+  rcases
+      run_configurationSuffix_raw_to_handoff_withBaseAndRight
+        cfg
+        (postPaddingOutputPrefixAfterStageBase
+          quoted stage baseLeft)
+        suffixTail
+        rightPadding with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  constructor
+  · simpa [postPaddingOutputPrefixStageConfigScannerTargetTapeWithRight] using
+      congrArg Configuration.state hsteps
+  · simpa [postPaddingOutputPrefixStageConfigScannerTargetTapeWithRight] using
       congrArg Configuration.tape hsteps
 
 theorem postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_raw
@@ -435,6 +707,57 @@ theorem postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_raw
   · exact
       configurationSuffixScannerDescription_haltsFrom_afterPrefixStage
         quoted stage cfg baseLeft suffixTail
+
+theorem postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_raw_withRight
+    (quoted : Word Bool) (stage : Nat) (cfg : Configuration)
+    (baseLeft : List (Option Bool)) (suffixTail : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    postPaddingOutputPrefixStageConfigScannerDescription.HaltsFromTape
+      (tapeAtCells baseLeft
+        (List.append
+          ((encodeCodeSymbolAsInput MachineCodeSymbol.header).map some)
+          (List.append
+            ((encodeCodeWordAsInput
+              (encodeBoolWordAppend quoted [])).map some)
+            (List.append ((stageNatBits stage).map some)
+              (List.append
+                ((configurationFieldBits cfg
+                  (false :: suffixTail)).map some)
+                rightPadding)))))
+      (postPaddingOutputPrefixStageConfigScannerTargetTapeWithRight
+        quoted stage cfg baseLeft suffixTail rightPadding) := by
+  rcases configurationFieldBits_cons_false cfg (false :: suffixTail) with
+    ⟨fieldTail, hfield⟩
+  refine
+    seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      (A := postPaddingOutputPrefixStageScannerDescription)
+      (B := ConfigurationSuffixScannerDescription)
+      (handoffMove := Direction.right)
+      (Tmid :=
+        postPaddingOutputPrefixStageScannerTargetTapeWithRight
+          quoted stage baseLeft fieldTail rightPadding)
+      (Tnext :=
+        tapeAtCells
+          (postPaddingOutputPrefixAfterStageBase
+            quoted stage baseLeft)
+          (List.append
+            ((configurationFieldBits cfg
+              (false :: suffixTail)).map some)
+            rightPadding))
+      postPaddingOutputPrefixStageScannerDescription_subroutineReady
+      configurationSuffixScannerDescription_subroutineReady
+      ?hprefix ?hmove ?hconfig
+  · rw [hfield]
+    simpa [List.map_append, List.append_assoc] using
+      postPaddingOutputPrefixStageScannerDescription_haltsFrom_raw_withRight
+        quoted stage baseLeft fieldTail rightPadding
+  · rw [hfield]
+    exact
+      postPaddingOutputPrefixStageScannerTarget_move_right_eq_configSource_withRight
+        quoted stage baseLeft fieldTail rightPadding
+  · exact
+      configurationSuffixScannerDescription_haltsFrom_afterPrefixStage_withRight
+        quoted stage cfg baseLeft suffixTail rightPadding
 
 end SelectedProjectionPaddedTailCleanup
 end BoundedLayoutRunner

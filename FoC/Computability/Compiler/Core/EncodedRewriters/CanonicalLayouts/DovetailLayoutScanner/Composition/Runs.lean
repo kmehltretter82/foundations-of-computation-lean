@@ -231,6 +231,101 @@ theorem run_cellThenCellList_raw_to_handoff_withBase
       seqSubroutine_runConfig_exists
         (A := CSS)
         (B := CLSS)
+      (handoffMove := Direction.right)
+      cellSuffixScannerDescription_subroutineReady
+      cellListSuffixScannerDescription_subroutineReady
+      hArun hBReach
+
+theorem run_cellThenCellList_raw_to_handoff_withBaseAndRight
+    (head : Option Bool) (right baseLeft : List (Option Bool))
+    (suffixTail : Word Bool) (rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      (seqSubroutine
+          CSS
+          CLSS
+          Direction.right).runConfig steps
+          { state :=
+              (seqSubroutine
+                CSS
+                CLSS
+                Direction.right).start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((cellFieldBits head
+                    (cellListFieldBits right
+                      (false :: suffixTail))).map some)
+                  rightPadding) } =
+        { state :=
+            (seqSubroutine
+              CSS
+              CLSS
+              Direction.right).halt
+          tape :=
+            (cellListCanonicalHandoffConfigWithBaseAndRight right
+              (List.append ((cellCodeBits head).reverse.map some)
+                baseLeft)
+              (false :: suffixTail) rightPadding).tape } := by
+  rcases cellListFieldBits_cons_false right (false :: suffixTail) with
+    ⟨fieldTail, hfieldTail⟩
+  rcases run_cellSuffix_raw_to_handoff_withBaseAndRight
+      head baseLeft false fieldTail rightPadding with
+    ⟨headSteps, hhead⟩
+  let baseAfterHead :=
+    List.append ((cellCodeBits head).reverse.map some) baseLeft
+  let Tmid := cellSuffixHandoffConfigWithBaseAndRight head baseLeft
+    (false :: fieldTail) rightPadding
+  have hArun :
+      CSS.runConfig headSteps
+          { state := CSS.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((cellFieldBits head
+                    (cellListFieldBits right
+                      (false :: suffixTail))).map some)
+                  rightPadding) } =
+        { state := CSS.halt
+          tape := Tmid.tape } := by
+    simpa [Tmid, cellFieldBits, hfieldTail, List.map_append,
+      List.append_assoc] using hhead
+  have hBReach :
+      exists nB : Nat,
+        CLSS.runConfig nB
+            { state := CLSS.start
+              tape := Tape.move Direction.right Tmid.tape } =
+          { state := CLSS.halt
+            tape :=
+              (cellListCanonicalHandoffConfigWithBaseAndRight right
+                baseAfterHead (false :: suffixTail) rightPadding).tape } := by
+    rcases run_cellList_raw_to_canonical_handoff_withBaseAndRight
+        right baseAfterHead suffixTail rightPadding with
+      ⟨rightSteps, hright⟩
+    have hmove :
+        Tape.move Direction.right Tmid.tape =
+          tapeAtCells baseAfterHead
+            (List.append
+              ((cellListFieldBits right
+                (false :: suffixTail)).map some)
+              rightPadding) := by
+      simpa [Tmid, baseAfterHead, hfieldTail, List.map_append,
+        List.append_assoc] using
+        cellSuffixHandoffConfigWithBaseAndRight_move_right
+          head baseLeft false fieldTail rightPadding
+    exact
+      runConfig_reaches_from_move_eq
+        (B := CLSS)
+        (handoffMove := Direction.right)
+        hmove
+        (by
+          simpa [CellListSuffixScannerDescription, config,
+            cellListFieldBits, List.map_append, List.append_assoc,
+            baseAfterHead] using hright)
+  simpa [Tmid, baseAfterHead, cellFieldBits, hfieldTail,
+    List.map_append, List.append_assoc] using
+      seqSubroutine_runConfig_exists
+        (A := CSS)
+        (B := CLSS)
         (handoffMove := Direction.right)
         cellSuffixScannerDescription_subroutineReady
         cellListSuffixScannerDescription_subroutineReady
@@ -349,6 +444,134 @@ theorem run_tapeSuffix_raw_to_handoff_withBase
         cellListSuffixScannerDescription_subroutineReady)
       hArun hBReach
 
+theorem run_tapeSuffix_raw_to_handoff_withBaseAndRight
+    (T : Tape Bool) (baseLeft : List (Option Bool))
+    (suffixTail : Word Bool) (rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      TSS.runConfig steps
+          { state := TSS.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((tapeFieldBits T (false :: suffixTail)).map some)
+                  rightPadding) } =
+        { state := TSS.halt
+          tape :=
+            (cellListCanonicalHandoffConfigWithBaseAndRight T.right
+              (List.append ((cellCodeBits T.head).reverse.map some)
+                (cellListCanonicalRestoredLeftWithBase T.left baseLeft))
+              (false :: suffixTail) rightPadding).tape } := by
+  rcases cellFieldBits_cons_false T.head
+      (cellListFieldBits T.right (false :: suffixTail)) with
+    ⟨headTail, hheadTail⟩
+  rcases run_cellList_raw_to_canonical_handoff_withBaseAndRight
+      T.left baseLeft headTail rightPadding with
+    ⟨leftSteps, hleft⟩
+  let baseAfterLeft := cellListCanonicalRestoredLeftWithBase T.left baseLeft
+  let Tmid := cellListCanonicalHandoffConfigWithBaseAndRight
+    T.left baseLeft (false :: headTail) rightPadding
+  have hArun :
+      CLSS.runConfig leftSteps
+          { state := CLSS.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((tapeFieldBits T (false :: suffixTail)).map some)
+                  rightPadding) } =
+        { state := CLSS.halt
+          tape := Tmid.tape } := by
+    change
+      CLSS.runConfig leftSteps
+          (config 100 baseLeft
+            (List.append
+              ((tapeFieldBits T (false :: suffixTail)).map some)
+              rightPadding)) =
+        Tmid
+    rw [show
+        List.append
+            ((tapeFieldBits T (false :: suffixTail)).map some)
+            rightPadding =
+          List.append ((stageNatBits T.left.length).map some)
+            (List.append ((cellsCodeBits T.left).map some)
+              (some false ::
+                List.append (headTail.map some) rightPadding)) by
+      change
+        List.append
+          ((cellListFieldBits T.left
+            (cellFieldBits T.head
+              (cellListFieldBits T.right
+                (false :: suffixTail)))).map some)
+          rightPadding =
+            List.append ((stageNatBits T.left.length).map some)
+              (List.append ((cellsCodeBits T.left).map some)
+                (some false ::
+                  List.append (headTail.map some) rightPadding))
+      rw [hheadTail]
+      simp [cellListFieldBits, List.map_append, List.append_assoc]]
+    simpa [Tmid] using hleft
+  have hBReach :
+      exists nB : Nat,
+        (seqSubroutine
+          CSS
+          CLSS
+          Direction.right).runConfig nB
+            { state :=
+                (seqSubroutine
+                  CSS
+                  CLSS
+                  Direction.right).start
+              tape := Tape.move Direction.right Tmid.tape } =
+          { state :=
+              (seqSubroutine
+                CSS
+                CLSS
+                Direction.right).halt
+            tape :=
+              (cellListCanonicalHandoffConfigWithBaseAndRight T.right
+                (List.append ((cellCodeBits T.head).reverse.map some)
+                  baseAfterLeft)
+                (false :: suffixTail) rightPadding).tape } := by
+    rcases run_cellThenCellList_raw_to_handoff_withBaseAndRight
+        T.head T.right baseAfterLeft suffixTail rightPadding with
+      ⟨innerSteps, hinner⟩
+    have hmove :
+        Tape.move Direction.right Tmid.tape =
+          tapeAtCells baseAfterLeft
+            (List.append
+              ((cellFieldBits T.head
+                (cellListFieldBits T.right
+                  (false :: suffixTail))).map some)
+              rightPadding) := by
+      simpa [Tmid, baseAfterLeft, hheadTail, List.map_append,
+        List.append_assoc] using
+        cellListCanonicalHandoffConfigWithBaseAndRight_move_right
+          T.left baseLeft false headTail rightPadding
+    exact
+      runConfig_reaches_from_move_eq
+        (B :=
+          seqSubroutine
+            CSS
+            CLSS
+            Direction.right)
+        (handoffMove := Direction.right)
+        hmove
+        (by simpa [baseAfterLeft] using hinner)
+  simpa [TapeSuffixScannerDescription, Tmid, baseAfterLeft,
+    tapeFieldBits, hheadTail, List.map_append, List.append_assoc] using
+    seqSubroutine_runConfig_exists
+      (A := CLSS)
+      (B :=
+        seqSubroutine
+          CSS
+          CLSS
+          Direction.right)
+      (handoffMove := Direction.right)
+      cellListSuffixScannerDescription_subroutineReady
+      (seqSubroutine_subroutineReady
+        cellSuffixScannerDescription_subroutineReady
+        cellListSuffixScannerDescription_subroutineReady)
+      hArun hBReach
+
 theorem run_configurationSuffix_raw_to_handoff_withBase
     (cfg : Configuration)
     (baseLeft : List (Option Bool)) (suffixTail : Word Bool) :
@@ -441,6 +664,125 @@ theorem run_configurationSuffix_raw_to_handoff_withBase
         (by simpa [baseAfterState] using htape)
   simpa [ConfigurationSuffixScannerDescription, Tmid, baseAfterState,
     configurationFieldBits, htapeTail, List.map_append] using
+      seqSubroutine_runConfig_exists
+      (A := NNSS)
+      (B := TSS)
+      (handoffMove := Direction.right)
+      DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
+      tapeSuffixScannerDescription_subroutineReady
+      hArun hBReach
+
+theorem run_configurationSuffix_raw_to_handoff_withBaseAndRight
+    (cfg : Configuration)
+    (baseLeft : List (Option Bool)) (suffixTail : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      CFS.runConfig steps
+          { state := CFS.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((configurationFieldBits cfg
+                    (false :: suffixTail)).map some)
+                  rightPadding) } =
+        { state := CFS.halt
+          tape :=
+            (cellListCanonicalHandoffConfigWithBaseAndRight
+              cfg.tape.right
+              (List.append ((cellCodeBits cfg.tape.head).reverse.map some)
+                (cellListCanonicalRestoredLeftWithBase cfg.tape.left
+                  (List.append ((stageNatBits cfg.state).reverse.map some)
+                    baseLeft)))
+              (false :: suffixTail) rightPadding).tape } := by
+  rcases tapeFieldBits_cons_false cfg.tape (false :: suffixTail) with
+    ⟨tapeTail, htapeTail⟩
+  rcases
+      DovetailStagePrefix.run_nonemptyNatSuffix_raw_to_handoff_withBaseAndRight
+        cfg.state baseLeft false tapeTail rightPadding with
+    ⟨stateSteps, hstate⟩
+  let baseAfterState :=
+    List.append ((stageNatBits cfg.state).reverse.map some) baseLeft
+  let Tmid :=
+    DovetailStagePrefix.nonemptyNatSuffixHandoffConfigWithBaseAndRight
+      cfg.state baseLeft (false :: tapeTail) rightPadding
+  have hArun :
+      NNSS.runConfig
+          stateSteps
+          { state :=
+              NNSS.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((configurationFieldBits cfg
+                    (false :: suffixTail)).map some)
+                  rightPadding) } =
+        { state := NNSS.halt
+          tape := Tmid.tape } := by
+    change
+      NNSS.runConfig
+          stateSteps
+          (config 200 baseLeft
+            (List.append
+              ((configurationFieldBits cfg
+                (false :: suffixTail)).map some)
+              rightPadding)) =
+        Tmid
+    rw [show
+        List.append
+            ((configurationFieldBits cfg
+              (false :: suffixTail)).map some)
+            rightPadding =
+          List.append ((stageNatBits cfg.state).map some)
+            (some false ::
+              List.append (tapeTail.map some) rightPadding) by
+      change
+        List.append
+          ((List.append (stageNatBits cfg.state)
+            (tapeFieldBits cfg.tape (false :: suffixTail))).map some)
+          rightPadding =
+            List.append ((stageNatBits cfg.state).map some)
+              (some false ::
+                List.append (tapeTail.map some) rightPadding)
+      rw [htapeTail]
+      simp [List.map_append, List.append_assoc]]
+    simpa [Tmid] using hstate
+  have hBReach :
+      exists nB : Nat,
+        TSS.runConfig nB
+            { state := TSS.start
+              tape := Tape.move Direction.right Tmid.tape } =
+          { state := TSS.halt
+            tape :=
+              (cellListCanonicalHandoffConfigWithBaseAndRight
+                cfg.tape.right
+                (List.append
+                  ((cellCodeBits cfg.tape.head).reverse.map some)
+                  (cellListCanonicalRestoredLeftWithBase cfg.tape.left
+                    baseAfterState))
+                (false :: suffixTail) rightPadding).tape } := by
+    rcases run_tapeSuffix_raw_to_handoff_withBaseAndRight
+        cfg.tape baseAfterState suffixTail rightPadding with
+      ⟨tapeSteps, htape⟩
+    have hmove :
+        Tape.move Direction.right Tmid.tape =
+          tapeAtCells baseAfterState
+            (List.append
+              ((tapeFieldBits cfg.tape
+                (false :: suffixTail)).map some)
+              rightPadding) := by
+      simpa [Tmid, baseAfterState, htapeTail, List.map_append,
+        List.append_assoc] using
+        DovetailStagePrefix.nonemptyNatSuffixHandoffConfigWithBaseAndRight_move_right
+          cfg.state baseLeft false tapeTail rightPadding
+    exact
+      runConfig_reaches_from_move_eq
+        (B := TSS)
+        (handoffMove := Direction.right)
+        hmove
+        (by simpa [baseAfterState] using htape)
+  simpa [ConfigurationSuffixScannerDescription, Tmid, baseAfterState,
+    configurationFieldBits, htapeTail, List.map_append, List.append_assoc]
+    using
       seqSubroutine_runConfig_exists
         (A := NNSS)
         (B := TSS)
