@@ -614,6 +614,37 @@ def SelectedMergePaddedEmitterAfterHitPaddedTape
               [none])))))
     [none, none]
 
+def SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape
+    (p : SelectedMergeEmitterPayload) : Tape Bool :=
+  DovetailInitialLayoutInitializer.tapeAtCells
+    (((SelectedMergePaddedEmitterOuterHitSuffixBits p).reverse.map some) ++
+      (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+        p.S.config
+        (List.append
+          ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            p.S.stage).reverse.map some)
+          (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+            ((encodeCodeWordAsInput
+              (MachineCodeSymbol.transition ::
+                encodeBoolWordAppend p.L.input
+                  (encodeNatAppend p.L.stage
+                    (encodeConfigurationAppend p.L.acceptConfig
+                      (encodeConfigurationAppend p.L.rejectConfig
+                        (encodeBoolAppend p.L.acceptHit
+                          (encodeBoolAppend p.L.rejectHit []))))))).map some)
+            (List.append
+              (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse)
+              [none])))))
+    [none, none]
+
+theorem SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceFieldsTape
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterAfterHitPaddedTape p =
+      SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p := by
+  rw [SelectedMergePaddedEmitterAfterHitPaddedTape,
+    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape]
+  simp [ParsedLayoutBits, DovetailLayout.encode, DovetailLayout.encodeAppend]
+
 theorem SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceLeftBitsRev_tapeAtCells
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterAfterHitPaddedTape p =
@@ -1074,6 +1105,56 @@ def SelectedMergePaddedEmitterAfterHitPaddedRejectDecodedConstruction :
   exists emitter : MachineDescription,
     SelectedMergePaddedEmitterAfterHitPaddedRejectDecodedSpec emitter
 
+def SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsSpec
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      emitter.HaltsFromTape
+        (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p)
+        (SelectedMergePaddedEmitterAcceptDecodedHandoffTape p)
+
+def SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsSpec
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      emitter.HaltsFromTape
+        (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p)
+        (SelectedMergePaddedEmitterRejectDecodedHandoffTape p)
+
+def SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction :
+    Prop :=
+  exists emitter : MachineDescription,
+    SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsSpec emitter
+
+def SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction :
+    Prop :=
+  exists emitter : MachineDescription,
+    SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsSpec emitter
+
+theorem selectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction_of_sourceFields
+    (h :
+      SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction) :
+    SelectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction := by
+  rcases h with ⟨emitter, hemits⟩
+  refine ⟨emitter, ?_⟩
+  constructor
+  · exact hemits.left
+  · intro p
+    rw [SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceFieldsTape p]
+    exact hemits.right p
+
+theorem selectedMergePaddedEmitterAfterHitPaddedRejectDecodedConstruction_of_sourceFields
+    (h :
+      SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction) :
+    SelectedMergePaddedEmitterAfterHitPaddedRejectDecodedConstruction := by
+  rcases h with ⟨emitter, hemits⟩
+  refine ⟨emitter, ?_⟩
+  constructor
+  · exact hemits.left
+  · intro p
+    rw [SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceFieldsTape p]
+    exact hemits.right p
+
 theorem selectedMergePaddedEmitterAfterHitPaddedAcceptConstruction_of_decoded
     (h :
       SelectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction) :
@@ -1101,20 +1182,34 @@ theorem selectedMergePaddedEmitterAfterHitPaddedRejectConstruction_of_decoded
     exact hemits.right p
 
 /--
-Finite-machine leaf that emits the decoded accepting-merge field order after
-the common padded source scanner has restored all source fields.
+Finite-machine leaf that rewrites the explicit source-field stack into the
+decoded accepting-merge field order after the common padded source scanner has
+restored all source fields.
 -/
-theorem selectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction :
-    SelectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction := by
+theorem selectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction :
+    SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction := by
   sorry
 
 /--
-Finite-machine leaf that emits the decoded rejecting-merge field order after
-the common padded source scanner has restored all source fields.
+Finite-machine leaf that rewrites the explicit source-field stack into the
+decoded rejecting-merge field order after the common padded source scanner has
+restored all source fields.
 -/
+theorem selectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction :
+    SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction := by
+  sorry
+
+theorem selectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction :
+    SelectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction := by
+  exact
+    selectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction_of_sourceFields
+      selectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction
+
 theorem selectedMergePaddedEmitterAfterHitPaddedRejectDecodedConstruction :
     SelectedMergePaddedEmitterAfterHitPaddedRejectDecodedConstruction := by
-  sorry
+  exact
+    selectedMergePaddedEmitterAfterHitPaddedRejectDecodedConstruction_of_sourceFields
+      selectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction
 
 /--
 Post-source-scanner finite-machine leaf for selected merge under the accepting
