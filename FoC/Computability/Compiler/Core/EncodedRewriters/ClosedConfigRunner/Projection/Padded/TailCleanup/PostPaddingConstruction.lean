@@ -91,6 +91,100 @@ theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_add_extraScratch
   rw [selectedProjectionPaddedTailCleanupSentinelExtraScratch]
   omega
 
+theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_true
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupSentinelBaseScratch true L <=
+      (ParsedLayoutBits L).length := by
+  have hsource :=
+    SelectedProjectionTailProjector.sourceFieldBits_length_le_parsedLayoutBits
+      L
+  have hbools :
+      8 <=
+        (boolFieldBits L.acceptHit []).length +
+          (boolFieldBits L.rejectHit []).length := by
+    cases L.acceptHit <;> cases L.rejectHit <;>
+      simp [boolFieldBits, cellFieldBits, cellCodeBits,
+        encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput]
+  have hsplit :
+      (SelectedProjectionTailProjector.sourceFieldBits L).length =
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          L.stage).length +
+          (configurationFieldBits L.acceptConfig []).length +
+          (configurationFieldBits L.rejectConfig []).length +
+          (boolFieldBits L.acceptHit []).length +
+          (boolFieldBits L.rejectHit []).length := by
+    rw [SelectedProjectionTailProjector.sourceFieldBits]
+    rw [←
+      configurationFieldBits_append_nil L.acceptConfig
+        (configurationFieldBits L.rejectConfig
+          (boolFieldBits L.acceptHit
+            (boolFieldBits L.rejectHit [])))]
+    rw [←
+      configurationFieldBits_append_nil L.rejectConfig
+        (boolFieldBits L.acceptHit
+          (boolFieldBits L.rejectHit []))]
+    rw [show
+        boolFieldBits L.acceptHit (boolFieldBits L.rejectHit []) =
+          List.append (boolFieldBits L.acceptHit [])
+            (boolFieldBits L.rejectHit []) by
+      simpa [boolFieldBits] using
+        (cellFieldBits_append_nil (some L.acceptHit)
+          (boolFieldBits L.rejectHit [])).symm]
+    simp [List.length_append, Nat.add_assoc, Nat.add_comm,
+      Nat.add_left_comm]
+  apply Nat.le_trans ?_ hsource
+  rw [hsplit]
+  simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch,
+    selectedProjectionPaddedTailCleanupUnselectedConfigBits]
+  omega
+
+theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_false
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupSentinelBaseScratch false L <=
+      (ParsedLayoutBits L).length := by
+  have hsource :=
+    SelectedProjectionTailProjector.sourceFieldBits_length_le_parsedLayoutBits
+      L
+  have hbools :
+      8 <=
+        (boolFieldBits L.acceptHit []).length +
+          (boolFieldBits L.rejectHit []).length := by
+    cases L.acceptHit <;> cases L.rejectHit <;>
+      simp [boolFieldBits, cellFieldBits, cellCodeBits,
+        encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput]
+  have hsplit :
+      (SelectedProjectionTailProjector.sourceFieldBits L).length =
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          L.stage).length +
+          (configurationFieldBits L.acceptConfig []).length +
+          (configurationFieldBits L.rejectConfig []).length +
+          (boolFieldBits L.acceptHit []).length +
+          (boolFieldBits L.rejectHit []).length := by
+    rw [SelectedProjectionTailProjector.sourceFieldBits]
+    rw [←
+      configurationFieldBits_append_nil L.acceptConfig
+        (configurationFieldBits L.rejectConfig
+          (boolFieldBits L.acceptHit
+            (boolFieldBits L.rejectHit [])))]
+    rw [←
+      configurationFieldBits_append_nil L.rejectConfig
+        (boolFieldBits L.acceptHit
+          (boolFieldBits L.rejectHit []))]
+    rw [show
+        boolFieldBits L.acceptHit (boolFieldBits L.rejectHit []) =
+          List.append (boolFieldBits L.acceptHit [])
+            (boolFieldBits L.rejectHit []) by
+      simpa [boolFieldBits] using
+        (cellFieldBits_append_nil (some L.acceptHit)
+          (boolFieldBits L.rejectHit [])).symm]
+    simp [List.length_append, Nat.add_assoc, Nat.add_comm,
+      Nat.add_left_comm]
+  apply Nat.le_trans ?_ hsource
+  rw [hsplit]
+  simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch,
+    selectedProjectionPaddedTailCleanupUnselectedConfigBits]
+  omega
+
 theorem selectedProjectionPaddedTailCleanupDeletedAcceptRightEnd_to_acceptSentinelTarget
     (L : DovetailLayout) :
     sentinelRightEndGapCompactorDescription.HaltsFromTape
