@@ -535,6 +535,88 @@ theorem rightBlankGapPayloadScanTargetTape_move_right_eq_rightEndCompactionSourc
       (none :: rightPadding)
       (some current)
 
+theorem FSTStatefulOptionAppendSourceTapeWithPadding_eq_tapeAtCells
+    (input : Word Bool) (leftScratch : Nat)
+    (padding : List (Option Bool)) :
+    FSTStatefulOptionAppendSourceTapeWithPadding input leftScratch padding =
+      tapeAtCells (List.replicate leftScratch (none : Option Bool))
+        (List.append (input.map some) (none :: padding)) := by
+  rfl
+
+theorem FSTStatefulOptionAppendSourceTapeWithPadding_one_eq_tapeAtCells
+    (input : Word Bool) (padding : List (Option Bool)) :
+    FSTStatefulOptionAppendSourceTapeWithPadding input 1 padding =
+      tapeAtCells [none]
+        (List.append (input.map some) (none :: padding)) := by
+  simp [FSTStatefulOptionAppendSourceTapeWithPadding_eq_tapeAtCells]
+
+theorem postPaddingAcceptSourceWithPadding_eq_tapeAtCells
+    (L : DovetailLayout) (padding : List (Option Bool)) :
+    FSTStatefulOptionAppendSourceTapeWithPadding
+        (selectedProjectionPaddedTailCleanupPostPaddingSourceBits true L)
+        1 padding =
+      tapeAtCells [none]
+        (List.append
+          ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+            true L).map some)
+          (none :: padding)) := by
+  exact
+    FSTStatefulOptionAppendSourceTapeWithPadding_one_eq_tapeAtCells
+      (selectedProjectionPaddedTailCleanupPostPaddingSourceBits true L)
+      padding
+
+theorem postPaddingRejectSourceWithPadding_eq_tapeAtCells
+    (L : DovetailLayout) (padding : List (Option Bool)) :
+    FSTStatefulOptionAppendSourceTapeWithPadding
+        (selectedProjectionPaddedTailCleanupPostPaddingSourceBits false L)
+        1 padding =
+      tapeAtCells [none]
+        (List.append
+          ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+            false L).map some)
+          (none :: padding)) := by
+  exact
+    FSTStatefulOptionAppendSourceTapeWithPadding_one_eq_tapeAtCells
+      (selectedProjectionPaddedTailCleanupPostPaddingSourceBits false L)
+      padding
+
+theorem rightEdgeRewindDescription_haltsFrom_acceptAfterPadding_tapeAtCells
+    (L : DovetailLayout) :
+    rightEdgeRewindDescription.HaltsFromTape
+      (selectedHitOtherFlagErasedAfterPaddingTape true L)
+      (tapeAtCells [none]
+        (List.append
+          ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+            true L).map some)
+          (none :: List.replicate 5 (none : Option Bool)))) := by
+  rw [←
+    postPaddingAcceptSourceWithPadding_eq_tapeAtCells
+      L (List.replicate 5 (none : Option Bool))]
+  exact rightEdgeRewindDescription_haltsFrom_acceptAfterPadding L
+
+theorem rightEndCompactionSourceTape_move_left_move_right_eq_withRightPadding
+    (leftCells : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (rightEndCompactionSourceTape leftCells)) =
+      rightEndCompactionSourceTapeWithRightPadding
+        leftCells [none] := by
+  simp [rightEndCompactionSourceTape,
+    rightEndCompactionSourceTapeWithRightPadding, tapeAtCells, Tape.move,
+    Tape.moveLeft, Tape.moveRight]
+
+theorem rightEndCompactionSourceTapeWithRightPadding_move_left_move_right_cons
+    (leftCells : List (Option Bool)) (cell : Option Bool)
+    (rightPadding : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (rightEndCompactionSourceTapeWithRightPadding
+            leftCells (cell :: rightPadding))) =
+      rightEndCompactionSourceTapeWithRightPadding
+        leftCells (cell :: rightPadding) := by
+  simp [rightEndCompactionSourceTapeWithRightPadding, tapeAtCells,
+    Tape.move, Tape.moveLeft, Tape.moveRight]
+
 theorem postPaddingOutputPrefixAfterStageBase_eq_prefixBits_reverse
     (L : DovetailLayout) :
     postPaddingOutputPrefixAfterStageBase
