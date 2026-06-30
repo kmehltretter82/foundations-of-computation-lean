@@ -301,6 +301,63 @@ theorem sourceRewindDescription_run_scan
       simpa [List.append_assoc] using
         ih next (some current :: rightCells)
 
+theorem sourceRewindDescription_run_scan_boundary
+    (leftBits : Word Bool) (current : Bool)
+    (rightCells : List (Option Bool)) :
+    sourceRewindDescription.runConfig (leftBits.length + 1)
+        { state := 1
+          tape :=
+            DovetailInitialLayoutInitializer.tapeAtCells
+              (List.append (leftBits.map some) [none])
+              (some current :: rightCells) } =
+      { state := 1
+        tape :=
+          DovetailInitialLayoutInitializer.tapeAtCells []
+            (none ::
+              List.append
+                ((List.append leftBits.reverse [current]).map some)
+                rightCells) } := by
+  induction leftBits generalizing current rightCells with
+  | nil =>
+      cases current <;>
+        simp [sourceRewindDescription,
+          DovetailInitialLayoutInitializer.tapeAtCells,
+          MachineDescription.runConfig,
+          MachineDescription.stepConfig,
+          MachineDescription.lookupTransition,
+          MachineDescription.Matches,
+          MachineDescription.transition,
+          Tape.read, Tape.move, Tape.moveLeft, Tape.write]
+  | cons next rest ih =>
+      rw [show (next :: rest).length + 1 = 1 + (rest.length + 1) by
+        simp
+        omega]
+      rw [MachineDescription.runConfig_add]
+      have hstep :
+          sourceRewindDescription.runConfig 1
+              { state := 1
+                tape :=
+                  DovetailInitialLayoutInitializer.tapeAtCells
+                    (List.append ((next :: rest).map some) [none])
+                    (some current :: rightCells) } =
+            { state := 1
+              tape :=
+                DovetailInitialLayoutInitializer.tapeAtCells
+                  (List.append (rest.map some) [none])
+                  (some next :: some current :: rightCells) } := by
+        cases current <;>
+          simp [sourceRewindDescription,
+            DovetailInitialLayoutInitializer.tapeAtCells,
+            MachineDescription.runConfig,
+            MachineDescription.stepConfig,
+            MachineDescription.lookupTransition,
+            MachineDescription.Matches,
+            MachineDescription.transition,
+            Tape.read, Tape.move, Tape.moveLeft, Tape.write]
+      rw [hstep]
+      simpa [List.append_assoc] using
+        ih next (some current :: rightCells)
+
 theorem sourceRewindDescription_step_finish
     (bits : Word Bool) :
     sourceRewindDescription.runConfig 1
@@ -470,6 +527,63 @@ theorem sourceRewindDescription_run_from_leftStack_padded
         sourceRewindDescription_step_finish_padded
           (List.append rest.reverse [current])
 
+theorem sourceRewindDescription_run_from_leftStack_boundary_padded
+    (leftStack : Word Bool) :
+    sourceRewindDescription.runConfig (leftStack.length + 2)
+        { state := sourceRewindDescription.start
+          tape :=
+            DovetailInitialLayoutInitializer.tapeAtCells
+              (List.append (leftStack.map some) [none]) [none, none] } =
+      { state := sourceRewindDescription.halt
+        tape :=
+          DovetailInitialLayoutInitializer.tapeAtCells [none]
+            (List.append (leftStack.reverse.map some) [none, none]) } := by
+  cases leftStack with
+  | nil =>
+      simp [sourceRewindDescription,
+        DovetailInitialLayoutInitializer.tapeAtCells,
+        MachineDescription.runConfig,
+        MachineDescription.stepConfig,
+        MachineDescription.lookupTransition,
+        MachineDescription.Matches,
+        MachineDescription.transition,
+        Tape.read, Tape.move, Tape.moveLeft, Tape.moveRight, Tape.write]
+  | cons current rest =>
+      rw [show (current :: rest).length + 2 =
+        1 + (rest.length + 2) by
+        simp
+        omega]
+      rw [MachineDescription.runConfig_add]
+      have hstart :
+          sourceRewindDescription.runConfig 1
+              { state := sourceRewindDescription.start
+                tape :=
+                  DovetailInitialLayoutInitializer.tapeAtCells
+                    (List.append ((current :: rest).map some) [none])
+                    [none, none] } =
+            { state := 1
+              tape :=
+                DovetailInitialLayoutInitializer.tapeAtCells
+                  (List.append (rest.map some) [none])
+                  (some current :: [none, none]) } := by
+        cases current <;>
+          simp [sourceRewindDescription,
+            DovetailInitialLayoutInitializer.tapeAtCells,
+            MachineDescription.runConfig,
+            MachineDescription.stepConfig,
+            MachineDescription.lookupTransition,
+            MachineDescription.Matches,
+            MachineDescription.transition,
+            Tape.read, Tape.move, Tape.moveLeft, Tape.write]
+      rw [hstart]
+      rw [show rest.length + 2 = (rest.length + 1) + 1 by omega]
+      rw [MachineDescription.runConfig_add]
+      rw [sourceRewindDescription_run_scan_boundary]
+      simpa [rewindTargetPaddedTape, List.map_append,
+        List.append_assoc] using
+        sourceRewindDescription_step_finish_padded
+          (List.append rest.reverse [current])
+
 theorem sourceRewindDescription_run
     (bits : Word Bool) :
     sourceRewindDescription.runConfig (bits.length + 2)
@@ -511,6 +625,22 @@ theorem sourceRewindDescription_haltsFromPaddedTape
   constructor
   · rw [sourceRewindDescription_run_padded]
   · rw [sourceRewindDescription_run_padded]
+
+theorem sourceRewindDescription_haltsFromBoundaryPaddedTape
+    (bits : Word Bool) :
+    sourceRewindDescription.HaltsFromTape
+      (DovetailInitialLayoutInitializer.tapeAtCells
+        (List.append (bits.reverse.map some) [none]) [none, none])
+      (rewindTargetPaddedTape bits) := by
+  have hrun :=
+    sourceRewindDescription_run_from_leftStack_boundary_padded
+      bits.reverse
+  refine ⟨bits.length + 2, ?_⟩
+  constructor
+  · simpa [rewindTargetPaddedTape] using
+      congrArg MachineDescription.Configuration.state hrun
+  · simpa [rewindTargetPaddedTape] using
+      congrArg MachineDescription.Configuration.tape hrun
 
 theorem rewindTargetPaddedTape_move_left_move_right
     (bits : Word Bool) :
@@ -1994,6 +2124,25 @@ theorem SelectedMergePaddedEmitterAfterHitPaddedTape_move_left_move_right
   rw [SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceLeftBitsRev_tapeAtCells]
   simp [DovetailInitialLayoutInitializer.tapeAtCells,
     Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem sourceRewindDescription_haltsFrom_afterHitPaddedTape
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterCleanup.sourceRewindDescription.HaltsFromTape
+      (SelectedMergePaddedEmitterAfterHitPaddedTape p)
+      (SelectedMergePaddedEmitterCleanup.rewindTargetPaddedTape
+        (SelectedMergePaddedEmitterCleanup.sourceBits p)) := by
+  have hleft :
+      (SelectedMergePaddedEmitterCleanup.sourceBits p).reverse =
+        SelectedMergePaddedEmitterCleanup.sourceLeftBitsRev p := by
+    rw [←
+      SelectedMergePaddedEmitterCleanup.sourceLeftBitsRev_reverse_eq_sourceBits
+        p]
+    simp
+  rw [SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceLeftBitsRev_tapeAtCells,
+    ← hleft]
+  exact
+    SelectedMergePaddedEmitterCleanup.sourceRewindDescription_haltsFromBoundaryPaddedTape
+      (SelectedMergePaddedEmitterCleanup.sourceBits p)
 
 theorem selectedMergePaddedEmitterHitScanner_haltsFromAfterConfigPaddedHandoff
     (p : SelectedMergeEmitterPayload) :
