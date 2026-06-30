@@ -653,6 +653,42 @@ theorem sentinelGapCompactorFinalPadding_replicate
       congr 1
       omega
 
+theorem sentinelGapCompactorFinalPadding_eq_replicate_append
+    (gap paddingTail : Nat) (rightPadding : List (Option Bool)) :
+    sentinelGapCompactorFinalPadding gap (Nat.succ paddingTail)
+        rightPadding =
+      List.append
+        (List.replicate (Nat.succ paddingTail + gap)
+          (none : Option Bool))
+        rightPadding := by
+  induction gap generalizing paddingTail rightPadding with
+  | zero =>
+      rfl
+  | succ gap ih =>
+      rw [sentinelGapCompactorFinalPadding]
+      rw [ih]
+      calc
+        List.append
+            (List.replicate (Nat.succ 1 + gap) (none : Option Bool))
+            (List.append
+              (List.replicate paddingTail (none : Option Bool))
+              rightPadding) =
+          List.append
+            (List.append
+              (List.replicate (Nat.succ 1 + gap) (none : Option Bool))
+              (List.replicate paddingTail (none : Option Bool)))
+            rightPadding := by
+            exact (List.append_assoc _ _ _).symm
+        _ =
+          List.append
+            (List.replicate (paddingTail.succ + (gap + 1))
+              (none : Option Bool))
+            rightPadding := by
+            congr 1
+            rw [replicate_none_append_replicate_none]
+            congr 1
+            omega
+
 theorem replicate_add_two_none
     (n : Nat) :
     List.replicate (n + 2) (none : Option Bool) =
@@ -676,6 +712,20 @@ theorem sentinelGapCompactorFinalPadding_cons_cons
     gap (Nat.succ paddingTail) 0
   simpa [replicate_add_two_none, Nat.add_assoc,
     Nat.add_comm, Nat.add_left_comm] using h
+
+theorem sentinelGapCompactorFinalPadding_cons_cons_right
+    (gap paddingTail : Nat) (rightPadding : List (Option Bool)) :
+    sentinelGapCompactorFinalPadding gap
+        (Nat.succ (Nat.succ paddingTail)) rightPadding =
+      none :: none ::
+        List.append
+          (List.replicate (paddingTail + gap) (none : Option Bool))
+          rightPadding := by
+  have h :=
+    sentinelGapCompactorFinalPadding_eq_replicate_append
+      gap (Nat.succ paddingTail) rightPadding
+  simpa [replicate_add_two_none, Nat.add_assoc,
+    Nat.add_comm, Nat.add_left_comm, List.append_assoc] using h
 
 theorem sentinelGapCompactorDescription_haltsFromTape_gapBase
     (gap : Nat) (baseTail : List (Option Bool))
@@ -816,6 +866,26 @@ theorem rightBlankLocalGapCompactorSourceTapeWithBaseAndRight_eq_rightEndSentine
   exact (replicate_none_append_none_cons gap
     (some leftBit :: baseTail)).symm
 
+theorem rightBlankLocalGapCompactorSourceTapeWithBaseAndRight_eq_rightEndSentinelGapSourceWithRightPadding
+    (baseTail : List (Option Bool)) (leftBit current : Bool)
+    (leftRest : Word Bool) (gap paddingScratch : Nat)
+    (rightPadding : List (Option Bool)) :
+    rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+        (rightBlankLocalGapBaseLeft gap (some leftBit :: baseTail))
+        current leftRest paddingScratch rightPadding =
+      rightEndCompactionSourceTapeWithRightPadding
+        (rightEndSentinelGapCompactorSourceLeftCells
+          baseTail leftBit current leftRest gap paddingScratch)
+        rightPadding := by
+  simp [rightBlankLocalGapCompactorSourceTapeWithBaseAndRight,
+    rightBlankLocalGapBaseLeft,
+    rightEndCompactionSourceTapeWithRightPadding,
+    rightEndSentinelGapCompactorSourceLeftCells,
+    tapeAtCells, List.reverse_append, List.map_reverse,
+    List.append_assoc, List.replicate_succ]
+  exact (replicate_none_append_none_cons gap
+    (some leftBit :: baseTail)).symm
+
 theorem sentinelGapCompactorDescription_haltsFromTape_rightEndGapSource
     (gap : Nat) (baseTail : List (Option Bool))
     (leftBit current : Bool) (leftRest : Word Bool)
@@ -832,6 +902,131 @@ theorem sentinelGapCompactorDescription_haltsFromTape_rightEndGapSource
   exact
     sentinelGapCompactorDescription_haltsFromTape_gapBase
       gap baseTail leftBit current leftRest paddingTail []
+
+theorem sentinelGapCompactorDescription_haltsFromTape_rightEndGapSourceWithRightPadding
+    (gap : Nat) (baseTail : List (Option Bool))
+    (leftBit current : Bool) (leftRest : Word Bool)
+    (paddingTail : Nat) (rightPadding : List (Option Bool)) :
+    sentinelGapCompactorDescription.HaltsFromTape
+      (rightEndCompactionSourceTapeWithRightPadding
+        (rightEndSentinelGapCompactorSourceLeftCells
+          baseTail leftBit current leftRest gap (Nat.succ paddingTail))
+        rightPadding)
+      (leadingBlankLeftShiftTargetTapeWithPadding
+        (some leftBit :: baseTail) (current :: leftRest).reverse
+        (sentinelGapCompactorFinalPadding gap (Nat.succ paddingTail)
+          rightPadding)) := by
+  rw [←
+    rightBlankLocalGapCompactorSourceTapeWithBaseAndRight_eq_rightEndSentinelGapSourceWithRightPadding]
+  exact
+    sentinelGapCompactorDescription_haltsFromTape_gapBase
+      gap baseTail leftBit current leftRest paddingTail rightPadding
+
+theorem leadingBlankLeftShiftTargetTapeWithPadding_eq_nextRightBlankLocalGapSource_nil
+    (baseTail : List (Option Bool)) (current : Bool)
+    (leftRest : Word Bool) :
+    leadingBlankLeftShiftTargetTapeWithPadding
+        (none :: baseTail) (current :: leftRest).reverse [] =
+      rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+        baseTail current leftRest 2 [] := by
+  simp [leadingBlankLeftShiftTargetTapeWithPadding,
+    rightBlankLocalGapCompactorSourceTapeWithBaseAndRight,
+    tapeAtCells, List.replicate, List.reverse_append]
+
+theorem sentinelGapCompactorDescription_haltsFromTape_gapBase_zero
+    (gap : Nat) (baseTail : List (Option Bool))
+    (leftBit current : Bool) (leftRest : Word Bool) :
+    sentinelGapCompactorDescription.HaltsFromTape
+      (rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+        (rightBlankLocalGapBaseLeft gap (some leftBit :: baseTail))
+        current leftRest 0 [])
+      (leadingBlankLeftShiftTargetTapeWithPadding
+        (some leftBit :: baseTail) (current :: leftRest).reverse
+        (sentinelGapCompactorFinalPadding gap 0 [])) := by
+  cases gap with
+  | zero =>
+      simpa [rightBlankLocalGapBaseLeft,
+        sentinelGapCompactorFinalPadding] using
+        sentinelGapCompactorDescription_haltsFromTape_final_pass
+          baseTail leftBit current leftRest 0 []
+  | succ gap =>
+      rcases
+          sentinelGapCompactorDescription_haltsFromTape_gapBase
+            gap baseTail leftBit current leftRest 1 [] with
+        ⟨n, hn⟩
+      let continueSteps : Nat :=
+        ((0 + leftRest.length + 3) +
+          (1 + (3 * (current :: leftRest).length + 2)))
+      refine ⟨continueSteps + n, ?_⟩
+      constructor
+      · rw [runConfig_add]
+        change (sentinelGapCompactorDescription.runConfig n
+          (sentinelGapCompactorDescription.runConfig continueSteps
+            { state := 0
+              tape :=
+                rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+                  (rightBlankLocalGapBaseLeft (Nat.succ gap)
+                    (some leftBit :: baseTail))
+                  current leftRest 0 [] })).state =
+            sentinelGapCompactorDescription.halt
+        rw [show rightBlankLocalGapBaseLeft (Nat.succ gap)
+              (some leftBit :: baseTail) =
+            none :: rightBlankLocalGapBaseLeft gap
+              (some leftBit :: baseTail) by
+          exact rightBlankLocalGapBaseLeft_succ gap
+            (some leftBit :: baseTail)]
+        rw [show continueSteps =
+            ((0 + leftRest.length + 3) +
+              (1 + (3 * (current :: leftRest).length + 2))) by rfl]
+        rw [sentinelGapCompactorDescription_run_continue_pass]
+        change (sentinelGapCompactorDescription.runConfig n
+          { state := 0
+            tape :=
+              leadingBlankLeftShiftTargetTapeWithPadding
+                (none ::
+                  rightBlankLocalGapBaseLeft gap
+                    (some leftBit :: baseTail))
+                (current :: leftRest).reverse [] }).state =
+            sentinelGapCompactorDescription.halt
+        rw [
+          leadingBlankLeftShiftTargetTapeWithPadding_eq_nextRightBlankLocalGapSource_nil]
+        exact hn.left
+      · rw [runConfig_add]
+        change (sentinelGapCompactorDescription.runConfig n
+          (sentinelGapCompactorDescription.runConfig continueSteps
+            { state := 0
+              tape :=
+                rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+                  (rightBlankLocalGapBaseLeft (Nat.succ gap)
+                    (some leftBit :: baseTail))
+                  current leftRest 0 [] })).tape =
+            leadingBlankLeftShiftTargetTapeWithPadding
+              (some leftBit :: baseTail) (current :: leftRest).reverse
+              (sentinelGapCompactorFinalPadding (Nat.succ gap) 0 [])
+        rw [show rightBlankLocalGapBaseLeft (Nat.succ gap)
+              (some leftBit :: baseTail) =
+            none :: rightBlankLocalGapBaseLeft gap
+              (some leftBit :: baseTail) by
+          exact rightBlankLocalGapBaseLeft_succ gap
+            (some leftBit :: baseTail)]
+        rw [show continueSteps =
+            ((0 + leftRest.length + 3) +
+              (1 + (3 * (current :: leftRest).length + 2))) by rfl]
+        rw [sentinelGapCompactorDescription_run_continue_pass]
+        change (sentinelGapCompactorDescription.runConfig n
+          { state := 0
+            tape :=
+              leadingBlankLeftShiftTargetTapeWithPadding
+                (none ::
+                  rightBlankLocalGapBaseLeft gap
+                    (some leftBit :: baseTail))
+                (current :: leftRest).reverse [] }).tape =
+            leadingBlankLeftShiftTargetTapeWithPadding
+              (some leftBit :: baseTail) (current :: leftRest).reverse
+              (sentinelGapCompactorFinalPadding (Nat.succ gap) 0 [])
+        rw [
+          leadingBlankLeftShiftTargetTapeWithPadding_eq_nextRightBlankLocalGapSource_nil]
+        simpa [sentinelGapCompactorFinalPadding] using hn.right
 
 theorem sentinelGapTarget_move_left_left_eq_rightEdgeRewindSourceWithBoundary
     (pref bits : Word Bool) (leftBit : Bool)
@@ -1058,6 +1253,38 @@ theorem sentinelRightEndGapCompactorDescription_haltsFrom_rightEndGapSource
             pref (current :: leftRest).reverse leftBit
             (sentinelGapCompactorFinalPadding gap
               (Nat.succ (Nat.succ paddingTail)) []))
+
+theorem sentinelRightEndGapCompactorDescription_haltsFrom_rightEndGapSourceWithRightPadding
+    (gap : Nat) (pref : Word Bool) (leftBit current : Bool)
+    (leftRest : Word Bool) (paddingTail : Nat)
+    (rightPadding : List (Option Bool)) :
+    sentinelRightEndGapCompactorDescription.HaltsFromTape
+      (rightEndCompactionSourceTapeWithRightPadding
+        (rightEndSentinelGapCompactorSourceLeftCells
+          (List.append (pref.reverse.map some) [none])
+          leftBit current leftRest gap
+          (Nat.succ (Nat.succ paddingTail)))
+        rightPadding)
+      (leadingBlankLeftShiftTargetTapeWithPadding []
+        (List.append pref (leftBit :: (current :: leftRest).reverse))
+        (none :: sentinelGapCompactorFinalPadding gap
+          (Nat.succ (Nat.succ paddingTail)) rightPadding)) := by
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      sentinelGapCompactorDescription_subroutineReady
+      sentinelBoundaryCleanupDescription_subroutineReady
+      (sentinelGapCompactorDescription_haltsFromTape_rightEndGapSourceWithRightPadding
+        gap (List.append (pref.reverse.map some) [none])
+        leftBit current leftRest (Nat.succ paddingTail) rightPadding)
+      (by
+        rw [sentinelGapCompactorFinalPadding_cons_cons_right])
+      (by
+        simpa [sentinelGapCompactorFinalPadding_cons_cons_right,
+          leadingBlankLeftShiftTargetVisiblePadding] using
+          sentinelBoundaryCleanupDescription_haltsFrom_sentinelTarget
+            pref (current :: leftRest).reverse leftBit
+            (sentinelGapCompactorFinalPadding gap
+              (Nat.succ (Nat.succ paddingTail)) rightPadding))
 
 end FiniteTransducers
 end CommonGround

@@ -47,6 +47,10 @@ def rightEndCompactionSourceTape
     (leftCells : List (Option Bool)) : Tape Bool :=
   tapeAtCells leftCells.reverse [none]
 
+def rightEndCompactionSourceTapeWithRightPadding
+    (leftCells rightPadding : List (Option Bool)) : Tape Bool :=
+  tapeAtCells leftCells.reverse (none :: rightPadding)
+
 def rightEndCompactionTargetTape
     (leftCells : List (Option Bool)) (extraScratch : Nat) :
     Tape Bool :=
@@ -169,6 +173,23 @@ theorem rightEndCompactionSourceTape_cells
       rightEndCompactionVisibleCells leftCells := by
   simp [rightEndCompactionSourceTape,
     rightEndCompactionVisibleCells, tapeAtCells, Tape.cells]
+
+theorem rightEndCompactionSourceTapeWithRightPadding_nil
+    (leftCells : List (Option Bool)) :
+    rightEndCompactionSourceTapeWithRightPadding leftCells [] =
+      rightEndCompactionSourceTape leftCells := by
+  rfl
+
+theorem rightEndCompactionSourceTapeWithRightPadding_cells
+    (leftCells rightPadding : List (Option Bool)) :
+    Tape.cells
+        (rightEndCompactionSourceTapeWithRightPadding
+          leftCells rightPadding) =
+      List.append (rightEndCompactionVisibleCells leftCells)
+        rightPadding := by
+  simp [rightEndCompactionSourceTapeWithRightPadding,
+    rightEndCompactionVisibleCells, tapeAtCells, Tape.cells,
+    List.append_assoc]
 
 theorem rightEndCompactionTargetTape_normalizedOutput
     (leftCells : List (Option Bool)) (extraScratch : Nat) :
