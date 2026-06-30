@@ -821,6 +821,62 @@ theorem
     SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_cells_eq_sourceBits,
     SelectedMergePaddedEmitterAfterTransitionSourceBits_eq_fields]
 
+theorem SelectedMergePaddedEmitterNestedLayoutSourceBits_eq_dovetailLayoutFieldBits
+    (p : SelectedMergeEmitterPayload) :
+    encodeCodeWordAsInput
+        (MachineCodeSymbol.transition ::
+          encodeBoolWordAppend p.L.input
+            (encodeNatAppend p.L.stage
+              (encodeConfigurationAppend p.L.acceptConfig
+                (encodeConfigurationAppend p.L.rejectConfig
+                  (encodeBoolAppend p.L.acceptHit
+                    (encodeBoolAppend p.L.rejectHit [])))))) =
+      CanonicalLayouts.DovetailLayoutScanner.dovetailLayoutFieldBits
+        p.L [] := by
+  simpa [DovetailLayout.encodeAppend, encodeCodeWordAsInput] using
+    CanonicalLayouts.DovetailLayoutScanner.dovetailLayoutFieldBits_eq_encodeAppend
+      p.L []
+
+theorem SelectedMergePaddedEmitterNestedLayoutSourceBits_eq_markedBodyBits
+    (p : SelectedMergeEmitterPayload) :
+    encodeCodeWordAsInput
+        (MachineCodeSymbol.transition ::
+          encodeBoolWordAppend p.L.input
+            (encodeNatAppend p.L.stage
+              (encodeConfigurationAppend p.L.acceptConfig
+                (encodeConfigurationAppend p.L.rejectConfig
+                  (encodeBoolAppend p.L.acceptHit
+                    (encodeBoolAppend p.L.rejectHit [])))))) =
+      false ::
+        CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits
+          p.L := by
+  rw [SelectedMergePaddedEmitterNestedLayoutSourceBits_eq_dovetailLayoutFieldBits]
+  exact
+    CanonicalLayouts.DovetailLayoutScanner.dovetailLayoutFieldBits_nil_eq_first_body
+      p.L
+
+theorem
+    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_eq_dovetailLayoutFieldBits
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p =
+      DovetailInitialLayoutInitializer.tapeAtCells
+        (((SelectedMergePaddedEmitterOuterHitSuffixBits p).reverse.map some) ++
+          (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+            p.S.config
+            (List.append
+              ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                p.S.stage).reverse.map some)
+              (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+                ((CanonicalLayouts.DovetailLayoutScanner.dovetailLayoutFieldBits
+                  p.L []).map some)
+                (List.append
+                  (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse)
+                  [none])))))
+        [none, none] := by
+  rw [SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape]
+  rw [
+    SelectedMergePaddedEmitterNestedLayoutSourceBits_eq_dovetailLayoutFieldBits]
+
 theorem markedDovetailLayoutBodyRestoredBitsRev_map_some_withBase
     (L : DovetailLayout) (baseLeft : List (Option Bool)) :
     List.append
