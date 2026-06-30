@@ -79,6 +79,37 @@ def postPaddingOutputPrefixAfterStageBase
   List.append ((stageNatBits stage).reverse.map some)
     (postPaddingOutputPrefixStageHandoffBase quoted baseLeft)
 
+theorem postPaddingOutputPrefixStageHandoffBase_eq_bits_reverse
+    (quoted : Word Bool) (baseLeft : List (Option Bool)) :
+    postPaddingOutputPrefixStageHandoffBase quoted baseLeft =
+      List.append
+        ((encodeCodeWordAsInput
+          (encodeBoolWordAppend quoted [])).reverse.map some)
+        (postPaddingOutputPrefixHeaderBase baseLeft) := by
+  rw [postPaddingOutputPrefixStageHandoffBase]
+  rw [← cellListCanonicalRestoredBitsRev_map_some_withBase
+    (quoted.map some) (postPaddingOutputPrefixHeaderBase baseLeft)]
+  have hbits :
+      cellListFieldBits (quoted.map some) [] =
+        encodeCodeWordAsInput (encodeBoolWordAppend quoted []) := by
+    simpa [cellListFieldBits, encodeCodeWordAsInput] using
+      (boolWordBits_eq_encodeBoolWordAppend quoted []).symm
+  rw [← hbits]
+  rw [← cellListCanonicalRestoredBitsRev_reverse (quoted.map some)]
+  simp
+
+theorem postPaddingOutputPrefixAfterStageBase_eq_bits_reverse
+    (quoted : Word Bool) (stage : Nat)
+    (baseLeft : List (Option Bool)) :
+    postPaddingOutputPrefixAfterStageBase quoted stage baseLeft =
+      List.append ((stageNatBits stage).reverse.map some)
+        (List.append
+          ((encodeCodeWordAsInput
+            (encodeBoolWordAppend quoted [])).reverse.map some)
+          (postPaddingOutputPrefixHeaderBase baseLeft)) := by
+  rw [postPaddingOutputPrefixAfterStageBase,
+    postPaddingOutputPrefixStageHandoffBase_eq_bits_reverse]
+
 def postPaddingOutputPrefixStageConfigScannerDescription :
     MachineDescription :=
   seqSubroutine

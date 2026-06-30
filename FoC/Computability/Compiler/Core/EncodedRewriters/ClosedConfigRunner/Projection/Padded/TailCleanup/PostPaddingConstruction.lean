@@ -494,6 +494,34 @@ theorem rightBlankGapPayloadScanTargetTapeImplicit_move_right_eq_rightEndCompact
       (List.append (List.replicate gap (none : Option Bool)) baseLeft)
       (some current)
 
+theorem postPaddingOutputPrefixAfterStageBase_eq_prefixBits_reverse
+    (L : DovetailLayout) :
+    postPaddingOutputPrefixAfterStageBase
+        (ParsedLayoutBits L) L.stage [none] =
+      List.append
+        ((selectedProjectionPaddedTailCleanupPrefixBits L).reverse.map some)
+        [none] := by
+  rw [postPaddingOutputPrefixAfterStageBase_eq_bits_reverse]
+  rw [selectedProjectionPaddedTailCleanupPrefixBits]
+  rw [SelectedProjectionTailProjector.outputPrefixBits]
+  simp [postPaddingOutputPrefixHeaderBase, List.reverse_append,
+    List.map_append, List.append_assoc]
+
+theorem postPaddingAcceptConfigRestoredBase_eq_keptPrefix_reverse
+    (L : DovetailLayout) :
+    configurationRestoredLeftWithBase L.acceptConfig
+        (postPaddingOutputPrefixAfterStageBase
+          (ParsedLayoutBits L) L.stage [none]) =
+      List.append
+        ((selectedProjectionPaddedTailCleanupKeptPrefixBits true L).reverse.map
+          some)
+        [none] := by
+  rw [configurationRestoredLeftWithBase_eq_fieldBits_reverse_append]
+  rw [postPaddingOutputPrefixAfterStageBase_eq_prefixBits_reverse]
+  simp [selectedProjectionPaddedTailCleanupKeptPrefixBits,
+    selectedProjectionPaddedTailCleanupSelectedConfigBits,
+    List.reverse_append, List.map_append, List.append_assoc]
+
 theorem postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_acceptSourceBits
     (L : DovetailLayout) :
     exists suffixTail : Word Bool,
@@ -552,6 +580,57 @@ theorem postPaddingOutputPrefixStageConfigScannerTarget_accept_move_right_eq_uns
   exact
     postPaddingOutputPrefixStageConfigScannerTarget_move_right_eq_suffixSource
       (ParsedLayoutBits L) L.stage L.acceptConfig [none] suffixTail
+
+theorem postPaddingOutputPrefixStageConfigScannerDescription_acceptSourceBits_handoff
+    (L : DovetailLayout) :
+    exists suffixTail : Word Bool,
+      postPaddingOutputPrefixStageConfigScannerDescription.HaltsFromTape
+        (tapeAtCells [none]
+          ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+            true L).map some))
+        (postPaddingOutputPrefixStageConfigScannerTargetTape
+          (ParsedLayoutBits L) L.stage L.acceptConfig [none] suffixTail) ∧
+      Tape.move Direction.right
+          (postPaddingOutputPrefixStageConfigScannerTargetTape
+            (ParsedLayoutBits L) L.stage L.acceptConfig [none]
+            suffixTail) =
+        tapeAtCells
+          (List.append
+            ((selectedProjectionPaddedTailCleanupKeptPrefixBits
+              true L).reverse.map some)
+            [none])
+          ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+            L.rejectConfig
+            (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+              L.acceptHit [])).map some) := by
+  rcases
+      CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_cons_false
+        L.rejectConfig
+        (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          L.acceptHit []) with
+    ⟨suffixTail, hsuffix⟩
+  refine ⟨suffixTail, ?_, ?_⟩
+  · rw [selectedProjectionPaddedTailCleanupPostPaddingSourceBits_true]
+    rw [selectedProjectionPaddedTailCleanupPrefixBits]
+    rw [SelectedProjectionTailProjector.outputPrefixBits]
+    rw [
+      CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
+        L.rejectConfig
+        (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          L.acceptHit [])]
+    rw [hsuffix]
+    rw [
+      CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
+        L.acceptConfig (false :: suffixTail)]
+    simpa [List.map_append, List.append_assoc] using
+      postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_raw
+        (ParsedLayoutBits L) L.stage L.acceptConfig [none] suffixTail
+  · rw [hsuffix]
+    have hmove :=
+      postPaddingOutputPrefixStageConfigScannerTarget_move_right_eq_suffixSource
+        (ParsedLayoutBits L) L.stage L.acceptConfig [none] suffixTail
+    rw [postPaddingAcceptConfigRestoredBase_eq_keptPrefix_reverse] at hmove
+    exact hmove
 
 theorem postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_rejectSourceBits
     (L : DovetailLayout) :
