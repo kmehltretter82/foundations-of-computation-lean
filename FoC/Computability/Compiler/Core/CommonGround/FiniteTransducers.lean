@@ -1,9 +1,11 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Basic
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.AppendWord
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.AlternatingOptionAppend
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoundaryEraser
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Compaction
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.DeleteWindow
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.EraseAppend
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayloadScan
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.LeftShiftCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.MapAppend
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
@@ -11,6 +13,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OptionAppe
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OptionSpecializations
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.PaddedIdentity
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RewriteWrites
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.SentinelGapCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StatefulOptionAppend
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StatefulOptionAppendGenerated
