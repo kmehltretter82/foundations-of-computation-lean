@@ -465,6 +465,15 @@ theorem tapeAtCells_move_right_move_left_append_cons_blank
   cases pref <;>
     simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
 
+theorem tapeAtCells_move_right_move_left_append_cons
+    (pref tail right : List (Option Bool)) (cell : Option Bool) :
+    Tape.move Direction.right
+        (Tape.move Direction.left
+          (tapeAtCells (List.append pref (cell :: tail)) right)) =
+      tapeAtCells (List.append pref (cell :: tail)) right := by
+  cases pref <;> cases right <;>
+    simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
 theorem rightBlankGapPayloadScanTargetTapeImplicit_move_right_eq_rightEndCompactionSourceTape
     (baseLeft : List (Option Bool)) (gap : Nat)
     (current : Bool) (payloadRest : Word Bool) :
@@ -492,6 +501,38 @@ theorem rightBlankGapPayloadScanTargetTapeImplicit_move_right_eq_rightEndCompact
     tapeAtCells_move_right_move_left_append_cons_blank
       (payloadRest.reverse.map some)
       (List.append (List.replicate gap (none : Option Bool)) baseLeft)
+      (some current)
+
+theorem rightBlankGapPayloadScanTargetTape_move_right_eq_rightEndCompactionSourceTapeWithRightPadding
+    (baseLeft : List (Option Bool)) (gap : Nat)
+    (current : Bool) (payloadRest : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    Tape.move Direction.right
+        (rightBlankGapPayloadScanTargetTape
+          baseLeft gap current payloadRest rightPadding) =
+      rightEndCompactionSourceTapeWithRightPadding
+        (List.append baseLeft.reverse
+          (List.append
+            (List.replicate gap (none : Option Bool))
+            ((current :: payloadRest).map some)))
+        rightPadding := by
+  rw [rightBlankGapPayloadScanTargetTape,
+    rightEndCompactionSourceTapeWithRightPadding]
+  rw [show
+      (List.append baseLeft.reverse
+          (List.append
+            (List.replicate gap (none : Option Bool))
+            ((current :: payloadRest).map some))).reverse =
+        List.append (payloadRest.reverse.map some)
+              (some current ::
+                List.append (List.replicate gap (none : Option Bool))
+                  baseLeft) by
+    simp [List.reverse_append, List.append_assoc]]
+  simpa [List.reverse_cons, List.map_append, List.append_assoc] using
+    tapeAtCells_move_right_move_left_append_cons
+      (payloadRest.reverse.map some)
+      (List.append (List.replicate gap (none : Option Bool)) baseLeft)
+      (none :: rightPadding)
       (some current)
 
 theorem postPaddingOutputPrefixAfterStageBase_eq_prefixBits_reverse
@@ -690,6 +731,61 @@ theorem postPaddingOutputPrefixStageConfigScannerTarget_reject_move_right_eq_sel
   exact
     postPaddingOutputPrefixStageConfigScannerTarget_move_right_eq_suffixSource
       (ParsedLayoutBits L) L.stage L.acceptConfig [none] suffixTail
+
+theorem postPaddingOutputPrefixStageConfigScannerDescription_rejectSourceBits_handoff
+    (L : DovetailLayout) :
+    exists suffixTail : Word Bool,
+      postPaddingOutputPrefixStageConfigScannerDescription.HaltsFromTape
+        (tapeAtCells [none]
+          ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+            false L).map some))
+        (postPaddingOutputPrefixStageConfigScannerTargetTape
+          (ParsedLayoutBits L) L.stage L.acceptConfig [none] suffixTail) ∧
+      Tape.move Direction.right
+          (postPaddingOutputPrefixStageConfigScannerTargetTape
+            (ParsedLayoutBits L) L.stage L.acceptConfig [none]
+            suffixTail) =
+        tapeAtCells
+          (List.append
+            ((List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
+              (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                false L)).reverse.map some)
+            [none])
+          ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+            L.rejectConfig
+            (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+              L.rejectHit [])).map some) := by
+  rcases
+      CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_cons_false
+        L.rejectConfig
+        (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          L.rejectHit []) with
+    ⟨suffixTail, hsuffix⟩
+  refine ⟨suffixTail, ?_, ?_⟩
+  · rw [selectedProjectionPaddedTailCleanupPostPaddingSourceBits_false]
+    rw [selectedProjectionPaddedTailCleanupPrefixBits]
+    rw [SelectedProjectionTailProjector.outputPrefixBits]
+    rw [
+      CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
+        L.rejectConfig
+        (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          L.rejectHit [])]
+    rw [hsuffix]
+    rw [
+      CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
+        L.acceptConfig (false :: suffixTail)]
+    simpa [List.map_append, List.append_assoc] using
+      postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_raw
+        (ParsedLayoutBits L) L.stage L.acceptConfig [none] suffixTail
+  · rw [hsuffix]
+    have hmove :=
+      postPaddingOutputPrefixStageConfigScannerTarget_move_right_eq_suffixSource
+        (ParsedLayoutBits L) L.stage L.acceptConfig [none] suffixTail
+    rw [postPaddingAcceptConfigRestoredBase_eq_keptPrefix_reverse] at hmove
+    simpa [selectedProjectionPaddedTailCleanupKeptPrefixBits,
+      selectedProjectionPaddedTailCleanupSelectedConfigBits,
+      selectedProjectionPaddedTailCleanupUnselectedConfigBits,
+      List.append_assoc] using hmove
 
 /--
 Combined post-padding finite-machine leaf for selected-projection tail cleanup.
