@@ -1270,6 +1270,68 @@ theorem scratchCounterPreservingMarkerAppendDescription_run_word_withRight
                 Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using
                 ih (some true :: baseLeft) (markers + 1)
 
+theorem scratchCounterPreservingMarkerAppendDescription_haltsFrom_word_withRight
+    (baseLeft : List (Option Bool)) (source : Word Bool)
+    (markers : Nat) (suffix : List (Option Bool)) :
+    SCPMA.HaltsFromTape
+      (tapeAtCells baseLeft
+        (List.append (source.map some)
+          (none ::
+            List.append
+              (List.replicate markers (some false : Option Bool))
+              (some true ::
+                List.append
+                  (List.replicate source.length (none : Option Bool))
+                  suffix))))
+      (tapeAtCells
+        (none :: List.append (source.reverse.map some) baseLeft)
+        (List.append
+          (List.replicate (markers + source.length)
+            (some false : Option Bool))
+          (some true :: suffix))) := by
+  refine
+    ⟨scratchCounterPreservingMarkerAppendWordSteps source markers, ?_⟩
+  change
+    (SCPMA.runConfig
+        (scratchCounterPreservingMarkerAppendWordSteps source markers)
+        { state := 0
+          tape :=
+            tapeAtCells baseLeft
+              (List.append (source.map some)
+                (none ::
+                  List.append
+                    (List.replicate markers
+                      (some false : Option Bool))
+                    (some true ::
+                      List.append
+                        (List.replicate source.length
+                          (none : Option Bool))
+                        suffix))) }).state =
+        SCPMA.halt ∧
+      (SCPMA.runConfig
+        (scratchCounterPreservingMarkerAppendWordSteps source markers)
+        { state := 0
+          tape :=
+            tapeAtCells baseLeft
+              (List.append (source.map some)
+                (none ::
+                  List.append
+                    (List.replicate markers
+                      (some false : Option Bool))
+                    (some true ::
+                      List.append
+                        (List.replicate source.length
+                          (none : Option Bool))
+                        suffix))) }).tape =
+        tapeAtCells
+          (none :: List.append (source.reverse.map some) baseLeft)
+          (List.append
+            (List.replicate (markers + source.length)
+              (some false : Option Bool))
+            (some true :: suffix))
+  constructor <;>
+    rw [scratchCounterPreservingMarkerAppendDescription_run_word_withRight]
+
 /--
 Erase a temporary counter-marker block after it has served as exact scratch
 width evidence.  The pass turns all {lit}`false` markers and the final
@@ -1655,6 +1717,478 @@ theorem scratchCounterMarkerInitDescription_haltsFrom_withRight
   refine ⟨scratchCounterMarkerInitSteps source, ?_⟩
   constructor <;>
     rw [scratchCounterMarkerInitDescription_run_withRight]
+
+/--
+Erase a temporary counter-marker block from the right end back to the source
+boundary.  The block itself remains nonblank until the return pass, so the
+machine can distinguish the source separator from the scratch cells it is
+cleaning, then rewind over the preserved source word.
+-/
+def scratchCounterMarkerCleanupLeftDescription : MachineDescription where
+  stateCount := 4
+  start := 0
+  halt := 3
+  transitions :=
+    [ transition 0 (some false) (some false) Direction.right 0
+    , transition 0 (some true) none Direction.left 1
+    , transition 1 (some false) none Direction.left 1
+    , transition 1 none none Direction.left 2
+    , transition 2 (some false) (some false) Direction.left 2
+    , transition 2 (some true) (some true) Direction.left 2
+    , transition 2 none none Direction.right 3
+    ]
+
+private abbrev SCMCL := scratchCounterMarkerCleanupLeftDescription
+
+theorem scratchCounterMarkerCleanupLeftDescription_wellFormed :
+    SCMCL.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := SCMCL.transitions)
+      (stateCount := SCMCL.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := SCMCL.transitions)
+      (by decide)
+
+theorem scratchCounterMarkerCleanupLeftDescription_haltTransitionFree :
+    SCMCL.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := SCMCL.transitions)
+    (state := SCMCL.halt)
+    (by decide)
+
+theorem scratchCounterMarkerCleanupLeftDescription_subroutineReady :
+    SCMCL.SubroutineReady :=
+  ⟨scratchCounterMarkerCleanupLeftDescription_wellFormed,
+    scratchCounterMarkerCleanupLeftDescription_haltTransitionFree⟩
+
+def scratchCounterMarkerCleanupLeftSteps
+    (source : Word Bool) (markers : Nat) : Nat :=
+  (markers + 1) + ((markers + 1) + (source.length + 1))
+
+theorem scratchCounterMarkerCleanupLeftDescription_run_scan_markers
+    (leftRev : List (Option Bool)) (markers : Nat)
+    (suffix : List (Option Bool)) :
+    SCMCL.runConfig (markers + 1)
+        { state := SCMCL.start
+          tape :=
+            tapeAtCells leftRev
+              (List.append
+                (List.replicate markers (some false : Option Bool))
+                (some true :: suffix)) } =
+      { state := 1
+        tape :=
+          Tape.move Direction.left
+            (tapeAtCells
+              (List.append
+                (List.replicate markers (some false : Option Bool))
+                leftRev)
+              (none :: suffix)) } := by
+  induction markers generalizing leftRev with
+  | zero =>
+      cases suffix <;>
+        simp [SCMCL, scratchCounterMarkerCleanupLeftDescription,
+          runConfig, stepConfig, lookupTransition, Matches, transition,
+          tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+  | succ markers ih =>
+      rw [show markers + 1 + 1 = 1 + (markers + 1) by omega]
+      rw [runConfig_add]
+      have hstep :
+          SCMCL.runConfig 1
+              { state := SCMCL.start
+                tape :=
+                  tapeAtCells leftRev
+                    (List.append
+                      (List.replicate (markers + 1)
+                        (some false : Option Bool))
+                      (some true :: suffix)) } =
+            { state := SCMCL.start
+              tape :=
+                tapeAtCells (some false :: leftRev)
+                  (List.append
+                    (List.replicate markers
+                      (some false : Option Bool))
+                    (some true :: suffix)) } := by
+        rw [show
+            List.replicate (markers + 1)
+                (some false : Option Bool) =
+              some false ::
+                List.replicate markers
+                  (some false : Option Bool) by
+          simp [List.replicate_succ]]
+        simp [SCMCL, scratchCounterMarkerCleanupLeftDescription,
+          runConfig, stepConfig, lookupTransition, Matches, transition,
+          tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveRight]
+        split <;> simp_all
+      rw [hstep]
+      calc
+        SCMCL.runConfig (markers + 1)
+            { state := SCMCL.start
+              tape :=
+                tapeAtCells (some false :: leftRev)
+                  (List.append
+                    (List.replicate markers
+                      (some false : Option Bool))
+                    (some true :: suffix)) } =
+          { state := 1
+            tape :=
+              Tape.move Direction.left
+                (tapeAtCells
+                  (List.append
+                    (List.replicate markers
+                      (some false : Option Bool))
+                    (some false :: leftRev))
+                  (none :: suffix)) } := by
+            exact ih (some false :: leftRev)
+        _ =
+          { state := 1
+            tape :=
+              Tape.move Direction.left
+                (tapeAtCells
+                  (List.append
+                    (List.replicate (markers + 1)
+                      (some false : Option Bool))
+                    leftRev)
+                  (none :: suffix)) } := by
+            rw [scratchCounter_replicate_false_append_cons
+              markers leftRev]
+
+theorem scratchCounterMarkerCleanupLeftDescription_run_erase_markers
+    (sourceRevBase : List (Option Bool)) (markers : Nat)
+    (suffix : List (Option Bool)) :
+    SCMCL.runConfig (markers + 1)
+        { state := 1
+          tape :=
+            Tape.move Direction.left
+              (tapeAtCells
+                (List.append
+                  (List.replicate markers
+                    (some false : Option Bool))
+                  (none :: sourceRevBase))
+                (none :: suffix)) } =
+      { state := 2
+        tape :=
+          Tape.move Direction.left
+            (tapeAtCells sourceRevBase
+              (none ::
+                List.append
+                  (List.replicate (markers + 1)
+                    (none : Option Bool))
+                  suffix)) } := by
+  induction markers generalizing suffix with
+  | zero =>
+      cases suffix <;>
+        simp [SCMCL, scratchCounterMarkerCleanupLeftDescription,
+          runConfig, stepConfig, lookupTransition, Matches, transition,
+          tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+  | succ markers ih =>
+      rw [show markers + 1 + 1 = 1 + (markers + 1) by omega]
+      rw [runConfig_add]
+      have hstep :
+          SCMCL.runConfig 1
+              { state := 1
+                tape :=
+                  Tape.move Direction.left
+                    (tapeAtCells
+                      (List.append
+                        (List.replicate (markers + 1)
+                          (some false : Option Bool))
+                        (none :: sourceRevBase))
+                      (none :: suffix)) } =
+            { state := 1
+              tape :=
+                Tape.move Direction.left
+                  (tapeAtCells
+                    (List.append
+                      (List.replicate markers
+                        (some false : Option Bool))
+                      (none :: sourceRevBase))
+                    (none :: none :: suffix)) } := by
+        rw [show
+            List.replicate (markers + 1)
+                (some false : Option Bool) =
+              some false ::
+                List.replicate markers
+                  (some false : Option Bool) by
+          simp [List.replicate_succ]]
+        simp [SCMCL, scratchCounterMarkerCleanupLeftDescription,
+          runConfig, stepConfig, lookupTransition, Matches, transition,
+          tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+      rw [hstep]
+      calc
+        SCMCL.runConfig (markers + 1)
+            { state := 1
+              tape :=
+                Tape.move Direction.left
+                  (tapeAtCells
+                    (List.append
+                      (List.replicate markers
+                        (some false : Option Bool))
+                      (none :: sourceRevBase))
+                    (none :: none :: suffix)) } =
+          { state := 2
+            tape :=
+              Tape.move Direction.left
+                (tapeAtCells sourceRevBase
+                  (none ::
+                    List.append
+                      (List.replicate (markers + 1)
+                        (none : Option Bool))
+                      (none :: suffix))) } := by
+            exact ih (none :: suffix)
+        _ =
+          { state := 2
+            tape :=
+              Tape.move Direction.left
+                (tapeAtCells sourceRevBase
+                  (none ::
+                    List.append
+                      (List.replicate (1 + (markers + 1))
+                        (none : Option Bool))
+                      suffix)) } := by
+            rw [show 1 + (markers + 1) = markers + 1 + 1 by omega]
+            rw [scratchCounter_replicate_none_append_cons
+              (markers + 1) suffix]
+
+theorem scratchCounterMarkerCleanupLeftDescription_run_rewind_leftStack
+    (baseLeft : List (Option Bool)) (sourceRev : Word Bool)
+    (current : Option Bool) (rightTail : List (Option Bool)) :
+    SCMCL.runConfig (sourceRev.length + 1)
+        { state := 2
+          tape :=
+            Tape.move Direction.left
+              (tapeAtCells
+                (List.append (sourceRev.map some) (none :: baseLeft))
+                (current :: rightTail)) } =
+      { state := SCMCL.halt
+        tape :=
+          tapeAtCells (none :: baseLeft)
+            (List.append (sourceRev.reverse.map some)
+              (current :: rightTail)) } := by
+  induction sourceRev generalizing current rightTail with
+  | nil =>
+      cases current <;> cases rightTail <;>
+        simp [SCMCL, scratchCounterMarkerCleanupLeftDescription,
+          runConfig, stepConfig, lookupTransition, Matches, transition,
+          tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+          Tape.moveRight]
+  | cons bit rest ih =>
+      rw [show (bit :: rest).length + 1 = 1 + (rest.length + 1) by
+        simp
+        omega]
+      rw [runConfig_add]
+      have hstep :
+          SCMCL.runConfig 1
+              { state := 2
+                tape :=
+                  Tape.move Direction.left
+                    (tapeAtCells
+                      (List.append ((bit :: rest).map some)
+                        (none :: baseLeft))
+                      (current :: rightTail)) } =
+            { state := 2
+              tape :=
+                Tape.move Direction.left
+                  (tapeAtCells
+                    (List.append (rest.map some) (none :: baseLeft))
+                    (some bit :: current :: rightTail)) } := by
+        cases bit <;> cases current <;> cases rightTail <;>
+          simp [SCMCL, scratchCounterMarkerCleanupLeftDescription,
+            runConfig, stepConfig, lookupTransition, Matches, transition,
+            tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+      rw [hstep]
+      simpa [List.reverse_cons, List.map_append, List.append_assoc] using
+        ih (some bit) (current :: rightTail)
+
+theorem scratchCounterMarkerCleanupLeftDescription_run_withRight
+    (baseLeft : List (Option Bool)) (source : Word Bool)
+    (markers : Nat) (suffix : List (Option Bool)) :
+    SCMCL.runConfig
+        (scratchCounterMarkerCleanupLeftSteps source markers)
+        { state := SCMCL.start
+          tape :=
+            tapeAtCells
+              (none ::
+                List.append (source.reverse.map some)
+                  (none :: baseLeft))
+              (List.append
+                (List.replicate markers (some false : Option Bool))
+                (some true :: suffix)) } =
+      { state := SCMCL.halt
+        tape :=
+          tapeAtCells (none :: baseLeft)
+            (List.append (source.map some)
+              (none ::
+                List.append
+                  (List.replicate (markers + 1)
+                    (none : Option Bool))
+                  suffix)) } := by
+  rw [scratchCounterMarkerCleanupLeftSteps]
+  rw [runConfig_add]
+  change
+    SCMCL.runConfig ((markers + 1) + (source.length + 1))
+      (SCMCL.runConfig (markers + 1)
+        { state := SCMCL.start
+          tape :=
+            tapeAtCells
+              (none ::
+                List.append (source.reverse.map some)
+                  (none :: baseLeft))
+              (List.append
+                (List.replicate markers (some false : Option Bool))
+                (some true :: suffix)) }) =
+      { state := SCMCL.halt
+        tape :=
+          tapeAtCells (none :: baseLeft)
+            (List.append (source.map some)
+              (none ::
+                List.append
+                  (List.replicate (markers + 1)
+                    (none : Option Bool))
+                  suffix)) }
+  rw [scratchCounterMarkerCleanupLeftDescription_run_scan_markers]
+  rw [runConfig_add]
+  have herase :=
+    scratchCounterMarkerCleanupLeftDescription_run_erase_markers
+      (List.append (source.reverse.map some) (none :: baseLeft))
+      markers suffix
+  rw [herase]
+  simpa [List.length_reverse, List.reverse_reverse, List.append_assoc] using
+    scratchCounterMarkerCleanupLeftDescription_run_rewind_leftStack
+      baseLeft source.reverse none
+      (List.append
+        (List.replicate (markers + 1) (none : Option Bool))
+        suffix)
+
+theorem scratchCounterMarkerCleanupLeftDescription_haltsFrom_withRight
+    (baseLeft : List (Option Bool)) (source : Word Bool)
+    (markers : Nat) (suffix : List (Option Bool)) :
+    SCMCL.HaltsFromTape
+      (tapeAtCells
+        (none ::
+          List.append (source.reverse.map some) (none :: baseLeft))
+        (List.append
+          (List.replicate markers (some false : Option Bool))
+          (some true :: suffix)))
+      (tapeAtCells (none :: baseLeft)
+        (List.append (source.map some)
+          (none ::
+            List.append
+              (List.replicate (markers + 1)
+                (none : Option Bool))
+              suffix))) := by
+  refine ⟨scratchCounterMarkerCleanupLeftSteps source markers, ?_⟩
+  constructor <;>
+    rw [scratchCounterMarkerCleanupLeftDescription_run_withRight]
+
+def scratchCounterAppendBlanksDescription : MachineDescription :=
+  canonicalSeqDescription
+    SCMI
+    (canonicalSeqDescription SCPMA SCMCL)
+
+theorem scratchCounterAppendBlanksDescription_subroutineReady :
+    scratchCounterAppendBlanksDescription.SubroutineReady :=
+  canonicalSeqDescription_subroutineReady
+    scratchCounterMarkerInitDescription_subroutineReady
+    (canonicalSeqDescription_subroutineReady
+      scratchCounterPreservingMarkerAppendDescription_subroutineReady
+      scratchCounterMarkerCleanupLeftDescription_subroutineReady)
+
+theorem scratchCounterMarkerInitTarget_move_left_move_right
+    (baseLeft : List (Option Bool)) (source : Word Bool)
+    (suffix : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (tapeAtCells (none :: baseLeft)
+            (List.append (source.map some)
+              (none :: some true :: suffix)))) =
+      tapeAtCells (none :: baseLeft)
+        (List.append (source.map some)
+          (none :: some true :: suffix)) := by
+  cases source with
+  | nil =>
+      simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+  | cons bit rest =>
+      cases rest <;>
+        simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem scratchCounterMarkerAppendTarget_move_left_move_right_of_pos
+    (baseLeft : List (Option Bool)) (source : Word Bool)
+    (suffix : List (Option Bool)) (hsource : 0 < source.length) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (tapeAtCells
+            (none :: List.append (source.reverse.map some)
+              (none :: baseLeft))
+            (List.append
+              (List.replicate source.length (some false : Option Bool))
+              (some true :: suffix)))) =
+      tapeAtCells
+        (none :: List.append (source.reverse.map some)
+          (none :: baseLeft))
+        (List.append
+          (List.replicate source.length (some false : Option Bool))
+          (some true :: suffix)) := by
+  cases source with
+  | nil =>
+      simp at hsource
+  | cons bit rest =>
+      cases rest <;>
+        simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight,
+          List.replicate_succ, List.append_assoc]
+
+theorem scratchCounterAppendBlanksDescription_haltsFrom_withRight
+    (baseLeft : List (Option Bool)) (source : Word Bool)
+    (suffix : List (Option Bool)) (hsource : 0 < source.length) :
+    scratchCounterAppendBlanksDescription.HaltsFromTape
+      (tapeAtCells (none :: baseLeft)
+        (List.append (source.map some)
+          (none ::
+            none ::
+            List.append
+              (List.replicate source.length (none : Option Bool))
+              suffix)))
+      (tapeAtCells (none :: baseLeft)
+        (List.append (source.map some)
+          (none ::
+            List.append
+              (List.replicate (source.length + 1)
+                (none : Option Bool))
+              suffix))) := by
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      scratchCounterMarkerInitDescription_subroutineReady
+      (canonicalSeqDescription_subroutineReady
+        scratchCounterPreservingMarkerAppendDescription_subroutineReady
+        scratchCounterMarkerCleanupLeftDescription_subroutineReady)
+      (scratchCounterMarkerInitDescription_haltsFrom_withRight
+        baseLeft source
+        (List.append
+          (List.replicate source.length (none : Option Bool))
+          suffix))
+      (by
+        simpa [List.append_assoc] using
+          scratchCounterMarkerInitTarget_move_left_move_right
+            baseLeft source
+            (List.append
+              (List.replicate source.length (none : Option Bool))
+              suffix))
+      (canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+        scratchCounterPreservingMarkerAppendDescription_subroutineReady
+        scratchCounterMarkerCleanupLeftDescription_subroutineReady
+        (by
+          simpa [List.append_assoc] using
+            scratchCounterPreservingMarkerAppendDescription_haltsFrom_word_withRight
+              (none :: baseLeft) source 0 suffix)
+        (by
+          simpa [Nat.zero_add, List.append_assoc] using
+            scratchCounterMarkerAppendTarget_move_left_move_right_of_pos
+              baseLeft source suffix hsource)
+        (by
+          simpa [Nat.zero_add, List.append_assoc] using
+            scratchCounterMarkerCleanupLeftDescription_haltsFrom_withRight
+              baseLeft source source.length suffix))
 
 end SelectedProjectionPaddedTailCleanup
 
