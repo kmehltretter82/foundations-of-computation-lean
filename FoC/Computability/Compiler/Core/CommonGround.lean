@@ -1,6 +1,7 @@
 import FoC.Computability.Compiler.Core.CommonGround.BoolWordQuoters
 import FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters
 import FoC.Computability.Compiler.Core.CommonGround.Controller
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers
 import FoC.Computability.Compiler.Core.CommonGround.Identity
 import FoC.Computability.Compiler.Core.CommonGround.Layouts
 import FoC.Computability.Compiler.Core.CommonGround.Scanners
@@ -18,6 +19,7 @@ by construction proofs:
 * {module}`FoC.Computability.Compiler.Core.CommonGround.Identity`
 * {module}`FoC.Computability.Compiler.Core.CommonGround.Layouts`
 * {module}`FoC.Computability.Compiler.Core.CommonGround.Scanners`
+* {module}`FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers`
 * {module}`FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters`
 * {module}`FoC.Computability.Compiler.Core.CommonGround.Controller`
 * {module}`FoC.Computability.Compiler.Core.CommonGround.BoolWordQuoters`
