@@ -552,6 +552,197 @@ theorem selectedProjectionPaddedTailCleanupBaseSourceTape_move_left_move_right
       Tape.moveLeft, Tape.moveRight, List.map_append,
       List.append_assoc]
 
+def leftMoveCurrentAcrossFourBlankGapDescription :
+    MachineDescription where
+  stateCount := 5
+  start := 0
+  halt := 4
+  transitions :=
+    [ transition 0 (some false) (some false) Direction.left 1
+    , transition 0 (some true) (some true) Direction.left 1
+    , transition 1 none none Direction.left 2
+    , transition 2 none none Direction.left 3
+    , transition 3 none none Direction.left 4
+    ]
+
+theorem leftMoveCurrentAcrossFourBlankGapDescription_wellFormed :
+    leftMoveCurrentAcrossFourBlankGapDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := leftMoveCurrentAcrossFourBlankGapDescription.transitions)
+      (stateCount :=
+        leftMoveCurrentAcrossFourBlankGapDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := leftMoveCurrentAcrossFourBlankGapDescription.transitions)
+      (by decide)
+
+theorem leftMoveCurrentAcrossFourBlankGapDescription_haltTransitionFree :
+    leftMoveCurrentAcrossFourBlankGapDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := leftMoveCurrentAcrossFourBlankGapDescription.transitions)
+    (state := leftMoveCurrentAcrossFourBlankGapDescription.halt)
+    (by decide)
+
+theorem leftMoveCurrentAcrossFourBlankGapDescription_subroutineReady :
+    leftMoveCurrentAcrossFourBlankGapDescription.SubroutineReady :=
+  ⟨leftMoveCurrentAcrossFourBlankGapDescription_wellFormed,
+    leftMoveCurrentAcrossFourBlankGapDescription_haltTransitionFree⟩
+
+theorem leftMoveCurrentAcrossFourBlankGapDescription_run
+    (current : Bool) (left right : List (Option Bool)) :
+    leftMoveCurrentAcrossFourBlankGapDescription.runConfig 4
+        { state := leftMoveCurrentAcrossFourBlankGapDescription.start
+          tape :=
+            tapeAtCells
+              (none :: none :: none :: none :: left)
+              (some current :: right) } =
+      { state := leftMoveCurrentAcrossFourBlankGapDescription.halt
+        tape :=
+          tapeAtCells left
+            (none :: none :: none :: none :: some current :: right) } := by
+  cases current <;> cases right <;>
+    simp [leftMoveCurrentAcrossFourBlankGapDescription, runConfig,
+      stepConfig, lookupTransition, Matches, transition, tapeAtCells,
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+
+theorem leftMoveCurrentAcrossFourBlankGapDescription_haltsFromTape
+    (current : Bool) (left right : List (Option Bool)) :
+    leftMoveCurrentAcrossFourBlankGapDescription.HaltsFromTape
+      (tapeAtCells
+        (none :: none :: none :: none :: left)
+        (some current :: right))
+      (tapeAtCells left
+        (none :: none :: none :: none :: some current :: right)) := by
+  refine ⟨4, ?_⟩
+  constructor <;>
+    rw [leftMoveCurrentAcrossFourBlankGapDescription_run]
+
+def selectedProjectionPaddedTailCleanupRejectRightEndToBaseSourceDescription :
+    MachineDescription :=
+  canonicalSeqDescription
+    (canonicalSeqDescription rightEdgeRewindDescription
+      leftMoveCurrentAcrossFourBlankGapDescription)
+    rightEdgeRewindDescription
+
+theorem selectedProjectionPaddedTailCleanupRejectRightEndToBaseSourceDescription_subroutineReady :
+    selectedProjectionPaddedTailCleanupRejectRightEndToBaseSourceDescription.SubroutineReady :=
+  canonicalSeqDescription_subroutineReady
+    (canonicalSeqDescription_subroutineReady
+      rightEdgeRewindDescription_subroutineReady
+      leftMoveCurrentAcrossFourBlankGapDescription_subroutineReady)
+    rightEdgeRewindDescription_subroutineReady
+
+theorem selectedProjectionPaddedTailCleanupRejectRightEndToBaseSourceDescription_haltsFrom
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupRejectRightEndToBaseSourceDescription.HaltsFromTape
+      (rightEndCompactionSourceTapeWithRightPadding
+        (selectedHitOtherFlagErasedRejectAfterPaddingRightEndLeftCells L)
+        [none])
+      (selectedProjectionPaddedTailCleanupRejectBaseSourceTape L) := by
+  rcases cellFieldBits_cons_false (some L.rejectHit) [] with
+    ⟨hitTail, hhitTail⟩
+  have hhit :
+      selectedProjectionPaddedTailCleanupSelectedHitBits false L =
+        false :: hitTail := by
+    simpa [selectedProjectionPaddedTailCleanupSelectedHitBits,
+      boolFieldBits] using hhitTail
+  let baseBits : Word Bool :=
+    List.append
+      (selectedProjectionPaddedTailCleanupPrefixBits L)
+      (List.append
+        (selectedProjectionPaddedTailCleanupUnselectedConfigBits false L)
+        (selectedProjectionPaddedTailCleanupSelectedConfigBits false L))
+  let hitBits : Word Bool := false :: hitTail
+  let hitBaseLeft : List (Option Bool) :=
+    List.append (List.replicate 3 (none : Option Bool))
+      (List.append (baseBits.reverse.map some) [none])
+  let finalPadding : List (Option Bool) :=
+    List.append (List.replicate 3 (none : Option Bool))
+      (List.append (hitBits.map some)
+        [none, none])
+  have hstart :
+      rightEndCompactionSourceTapeWithRightPadding
+          (selectedHitOtherFlagErasedRejectAfterPaddingRightEndLeftCells L)
+          [none] =
+        rightEdgeRewindSourceTapeWithBase hitBaseLeft hitBits [none] := by
+    rw [selectedHitOtherFlagErasedRejectAfterPaddingRightEndLeftCells_eq_sourceFields]
+    rw [hhit]
+    simp [rightEndCompactionSourceTapeWithRightPadding,
+      rightEdgeRewindSourceTapeWithBase, hitBaseLeft, hitBits, baseBits,
+      selectedProjectionPaddedTailCleanupUnselectedConfigBits,
+      selectedProjectionPaddedTailCleanupSelectedConfigBits,
+      tapeAtCells, List.reverse_append, List.map_append,
+      List.replicate_succ, List.append_assoc]
+  have hrewindHit :
+      rightEdgeRewindDescription.HaltsFromTape
+        (rightEndCompactionSourceTapeWithRightPadding
+          (selectedHitOtherFlagErasedRejectAfterPaddingRightEndLeftCells L)
+          [none])
+        (rightEdgeRewindTargetTapeWithBase hitBaseLeft hitBits [none]) := by
+    simpa [hstart] using
+      rightEdgeRewindDescription_haltsFromTapeWithBase
+        hitBaseLeft hitBits [none]
+  have hbridgeHit :
+      Tape.move Direction.left
+          (Tape.move Direction.right
+            (rightEdgeRewindTargetTapeWithBase hitBaseLeft hitBits [none])) =
+        rightEdgeRewindTargetTapeWithBase hitBaseLeft hitBits [none] := by
+    cases hitTail <;>
+      simp [rightEdgeRewindTargetTapeWithBase, hitBits, tapeAtCells,
+        Tape.move, Tape.moveLeft, Tape.moveRight]
+  have hmoveGap :
+      leftMoveCurrentAcrossFourBlankGapDescription.HaltsFromTape
+        (rightEdgeRewindTargetTapeWithBase hitBaseLeft hitBits [none])
+        (rightEdgeRewindSourceTapeWithBase [] baseBits finalPadding) := by
+    simpa [rightEdgeRewindTargetTapeWithBase,
+      rightEdgeRewindSourceTapeWithBase, hitBaseLeft, finalPadding,
+      hitBits, List.replicate_succ, List.append_assoc] using
+      leftMoveCurrentAcrossFourBlankGapDescription_haltsFromTape
+        false
+        (List.append (baseBits.reverse.map some) [none])
+        (List.append (hitTail.map some) [none, none])
+  have hfirst :
+      (canonicalSeqDescription rightEdgeRewindDescription
+        leftMoveCurrentAcrossFourBlankGapDescription).HaltsFromTape
+        (rightEndCompactionSourceTapeWithRightPadding
+          (selectedHitOtherFlagErasedRejectAfterPaddingRightEndLeftCells L)
+          [none])
+        (rightEdgeRewindSourceTapeWithBase [] baseBits finalPadding) :=
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      rightEdgeRewindDescription_subroutineReady
+      leftMoveCurrentAcrossFourBlankGapDescription_subroutineReady
+      hrewindHit hbridgeHit hmoveGap
+  have hbridgeBase :
+      Tape.move Direction.left
+          (Tape.move Direction.right
+            (rightEdgeRewindSourceTapeWithBase [] baseBits finalPadding)) =
+        rightEdgeRewindSourceTapeWithBase [] baseBits finalPadding := by
+    simpa [finalPadding, hitBits, List.append_assoc] using
+      rightEdgeRewindSourceTapeWithBase_move_left_move_right_padding_append_cons
+        [] baseBits 3 (some false)
+        (List.append (hitTail.map some) [none, none])
+  have hrewindBase :
+      rightEdgeRewindDescription.HaltsFromTape
+        (rightEdgeRewindSourceTapeWithBase [] baseBits finalPadding)
+        (selectedProjectionPaddedTailCleanupRejectBaseSourceTape L) := by
+    have hrewind :=
+      rightEdgeRewindDescription_haltsFromTapeWithBase
+        [] baseBits finalPadding
+    simpa [rightEdgeRewindTargetTapeWithBase,
+      selectedProjectionPaddedTailCleanupRejectBaseSourceTape,
+      finalPadding, hitBits, baseBits, hhit,
+      selectedProjectionPaddedTailCleanupUnselectedConfigBits,
+      selectedProjectionPaddedTailCleanupSelectedConfigBits,
+      List.replicate_succ, List.append_assoc] using hrewind
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      (canonicalSeqDescription_subroutineReady
+        rightEdgeRewindDescription_subroutineReady
+        leftMoveCurrentAcrossFourBlankGapDescription_subroutineReady)
+      rightEdgeRewindDescription_subroutineReady
+      hfirst hbridgeBase hrewindBase
+
 def SelectedProjectionPaddedTailCleanupPostPaddingBaseSourceMaterializerSpec
     (useAccept : Bool) (materializer : MachineDescription) : Prop :=
   materializer.SubroutineReady ∧
@@ -605,6 +796,29 @@ theorem selectedProjectionPaddedTailCleanupAcceptBaseSourceMaterializerSpec :
       selectedProjectionPaddedTailCleanupBaseSourceTape] using
       rightEdgeRewindDescription_haltsFrom_acceptAfterPadding_tapeAtCells
         L
+
+theorem selectedProjectionPaddedTailCleanupRejectBaseSourceMaterializerSpec :
+    SelectedProjectionPaddedTailCleanupPostPaddingBaseSourceMaterializerSpec
+      false
+      (canonicalSeqDescription
+        selectedHitOtherFlagErasedRejectToRightEndDescription
+        selectedProjectionPaddedTailCleanupRejectRightEndToBaseSourceDescription) := by
+  constructor
+  · exact
+      canonicalSeqDescription_subroutineReady
+        selectedHitOtherFlagErasedRejectToRightEndDescription_subroutineReady
+        selectedProjectionPaddedTailCleanupRejectRightEndToBaseSourceDescription_subroutineReady
+  · intro L
+    exact
+      canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+        selectedHitOtherFlagErasedRejectToRightEndDescription_subroutineReady
+        selectedProjectionPaddedTailCleanupRejectRightEndToBaseSourceDescription_subroutineReady
+        (selectedHitOtherFlagErasedRejectToRightEndDescription_haltsFrom_afterPadding
+          L)
+        (rightEndCompactionSourceTape_move_left_move_right_eq_withRightPadding
+          (selectedHitOtherFlagErasedRejectAfterPaddingRightEndLeftCells L))
+        (selectedProjectionPaddedTailCleanupRejectRightEndToBaseSourceDescription_haltsFrom
+          L)
 
 theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec_of_baseAndScratch
     {useAccept : Bool}
@@ -698,6 +912,12 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction :
     selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializers
       (selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_baseAndScratch
         (by
+          refine
+            ⟨⟨canonicalSeqDescription
+                selectedHitOtherFlagErasedRejectToRightEndDescription
+                selectedProjectionPaddedTailCleanupRejectRightEndToBaseSourceDescription,
+              selectedProjectionPaddedTailCleanupRejectBaseSourceMaterializerSpec⟩,
+              ?_⟩
           sorry))
 
 def selectedHitOtherFlagErasedPostEraseFromPostPadding
