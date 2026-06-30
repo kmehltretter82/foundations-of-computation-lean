@@ -131,6 +131,79 @@ theorem selectedProjectionPaddedTailCleanupSentinelExtraScratch_pos_false
   rw [selectedProjectionPaddedTailCleanupSentinelExtraScratch]
   omega
 
+theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_eq_unselected_length_add_seven
+    (useAccept : Bool) (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupSentinelBaseScratch useAccept L =
+      (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+        useAccept L).length + 7 := by
+  have hpos :=
+    selectedProjectionPaddedTailCleanupUnselectedConfigBits_length_pos
+      useAccept L
+  simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch]
+  omega
+
+theorem selectedProjectionPaddedTailCleanupUnselectedLength_add_seven_add_extraScratch
+    (useAccept : Bool) (L : DovetailLayout)
+    (hle :
+      selectedProjectionPaddedTailCleanupSentinelBaseScratch useAccept L <=
+        (ParsedLayoutBits L).length) :
+    (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+        useAccept L).length + 7 +
+        selectedProjectionPaddedTailCleanupSentinelExtraScratch useAccept L =
+      (ParsedLayoutBits L).length := by
+  rw [←
+    selectedProjectionPaddedTailCleanupSentinelBaseScratch_eq_unselected_length_add_seven
+      useAccept L]
+  exact
+    selectedProjectionPaddedTailCleanupSentinelBaseScratch_add_extraScratch
+      useAccept L hle
+
+theorem selectedProjectionPaddedTailCleanupUnselectedLength_add_seven_add_extraScratch_true
+    (L : DovetailLayout) :
+    (selectedProjectionPaddedTailCleanupUnselectedConfigBits true L).length +
+        7 +
+        selectedProjectionPaddedTailCleanupSentinelExtraScratch true L =
+      (ParsedLayoutBits L).length :=
+  selectedProjectionPaddedTailCleanupUnselectedLength_add_seven_add_extraScratch
+    true L
+    (selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_true L)
+
+theorem selectedProjectionPaddedTailCleanupUnselectedLength_add_seven_add_extraScratch_false
+    (L : DovetailLayout) :
+    (selectedProjectionPaddedTailCleanupUnselectedConfigBits false L).length +
+        7 +
+        selectedProjectionPaddedTailCleanupSentinelExtraScratch false L =
+      (ParsedLayoutBits L).length :=
+  selectedProjectionPaddedTailCleanupUnselectedLength_add_seven_add_extraScratch
+    false L
+    (selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_false L)
+
+def selectedProjectionPaddedTailCleanupScratchCountBits
+    (useAccept : Bool) (L : DovetailLayout) : Word Bool :=
+  (ParsedLayoutBits L).drop
+    (selectedProjectionPaddedTailCleanupSentinelBaseScratch useAccept L)
+
+theorem selectedProjectionPaddedTailCleanupScratchCountBits_length
+    (useAccept : Bool) (L : DovetailLayout) :
+    (selectedProjectionPaddedTailCleanupScratchCountBits
+        useAccept L).length =
+      selectedProjectionPaddedTailCleanupSentinelExtraScratch
+        useAccept L := by
+  simp [selectedProjectionPaddedTailCleanupScratchCountBits,
+    selectedProjectionPaddedTailCleanupSentinelExtraScratch]
+
+theorem selectedProjectionPaddedTailCleanupScratchCountBits_length_true
+    (L : DovetailLayout) :
+    (selectedProjectionPaddedTailCleanupScratchCountBits true L).length =
+      selectedProjectionPaddedTailCleanupSentinelExtraScratch true L :=
+  selectedProjectionPaddedTailCleanupScratchCountBits_length true L
+
+theorem selectedProjectionPaddedTailCleanupScratchCountBits_length_false
+    (L : DovetailLayout) :
+    (selectedProjectionPaddedTailCleanupScratchCountBits false L).length =
+      selectedProjectionPaddedTailCleanupSentinelExtraScratch false L :=
+  selectedProjectionPaddedTailCleanupScratchCountBits_length false L
+
 def selectedProjectionPaddedTailCleanupAcceptSourceToEquivOutputDescription :
     MachineDescription :=
   canonicalSeqDescription
@@ -432,6 +505,16 @@ def selectedProjectionPaddedTailCleanupAcceptBaseSourceTape
         true L).map some)
       (none :: List.replicate 5 (none : Option Bool)))
 
+def selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch
+    (L : DovetailLayout) (extraScratch : Nat) : Tape Bool :=
+  tapeAtCells [none]
+    (List.append
+      ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+        true L).map some)
+      (none ::
+        List.append (List.replicate 5 (none : Option Bool))
+          (List.replicate extraScratch (none : Option Bool))))
+
 def selectedProjectionPaddedTailCleanupRejectBaseSourceTape
     (L : DovetailLayout) : Tape Bool :=
   tapeAtCells [none]
@@ -449,12 +532,101 @@ def selectedProjectionPaddedTailCleanupRejectBaseSourceTape
             false L).map some)
           (none :: none :: []))))
 
+def selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch
+    (L : DovetailLayout) (extraScratch : Nat) : Tape Bool :=
+  tapeAtCells [none]
+    (List.append
+      (List.append
+        (List.append
+          ((selectedProjectionPaddedTailCleanupPrefixBits L).map some)
+          ((selectedProjectionPaddedTailCleanupUnselectedConfigBits
+            false L).map some))
+        ((selectedProjectionPaddedTailCleanupSelectedConfigBits
+          false L).map some))
+      (List.append (List.replicate 4 (none : Option Bool))
+        (List.append
+          ((selectedProjectionPaddedTailCleanupSelectedHitBits
+            false L).map some)
+          (none :: none ::
+            List.replicate extraScratch (none : Option Bool)))))
+
 def selectedProjectionPaddedTailCleanupBaseSourceTape
     (useAccept : Bool) (L : DovetailLayout) : Tape Bool :=
   if useAccept then
     selectedProjectionPaddedTailCleanupAcceptBaseSourceTape L
   else
     selectedProjectionPaddedTailCleanupRejectBaseSourceTape L
+
+def selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    Tape Bool :=
+  if useAccept then
+    selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch
+      L extraScratch
+  else
+    selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch
+      L extraScratch
+
+theorem selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch_zero
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch
+        L 0 =
+      selectedProjectionPaddedTailCleanupAcceptBaseSourceTape L := by
+  simp [selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch,
+    selectedProjectionPaddedTailCleanupAcceptBaseSourceTape]
+
+theorem selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch_zero
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch
+        L 0 =
+      selectedProjectionPaddedTailCleanupRejectBaseSourceTape L := by
+  simp [selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch,
+    selectedProjectionPaddedTailCleanupRejectBaseSourceTape]
+
+theorem selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_zero
+    (useAccept : Bool) (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+        useAccept L 0 =
+      selectedProjectionPaddedTailCleanupBaseSourceTape useAccept L := by
+  cases useAccept
+  · exact
+      selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch_zero
+        L
+  · exact
+      selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch_zero
+        L
+
+theorem selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithLayoutExtraScratch
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch
+        L
+        (selectedProjectionPaddedTailCleanupSentinelExtraScratch true L) =
+      selectedProjectionPaddedTailCleanupAcceptLayoutScratchSourceTape L := by
+  rfl
+
+theorem selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithLayoutExtraScratch
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch
+        L
+        (selectedProjectionPaddedTailCleanupSentinelExtraScratch false L) =
+      selectedProjectionPaddedTailCleanupRejectLayoutScratchSourceTape L := by
+  rfl
+
+theorem selectedProjectionPaddedTailCleanupBaseSourceTapeWithLayoutExtraScratch
+    (useAccept : Bool) (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+        useAccept L
+        (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+          useAccept L) =
+      selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
+        useAccept L := by
+  cases useAccept
+  · exact
+      selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithLayoutExtraScratch
+        L
+  · exact
+      selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithLayoutExtraScratch
+        L
 
 def selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription
     (useAccept : Bool) : MachineDescription :=
@@ -760,6 +932,30 @@ def SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
         (selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
           useAccept L)
 
+def SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec
+    (useAccept : Bool) (extender : MachineDescription) : Prop :=
+  extender.SubroutineReady ∧
+    forall L : DovetailLayout,
+      extender.HaltsFromTape
+        (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+          useAccept L 0)
+        (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+          useAccept L
+          (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+            useAccept L))
+
+def SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderSpec
+    (useAccept : Bool) (extender : MachineDescription) : Prop :=
+  extender.SubroutineReady ∧
+    forall L : DovetailLayout,
+      extender.HaltsFromTape
+        (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+          useAccept L 0)
+        (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+          useAccept L
+          (selectedProjectionPaddedTailCleanupScratchCountBits
+            useAccept L).length)
+
 def SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec
     (useAccept : Bool) (materializer : MachineDescription) : Prop :=
   materializer.SubroutineReady ∧
@@ -785,6 +981,78 @@ def SelectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction :
       exists allocator : MachineDescription,
         SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
           useAccept allocator
+
+def SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :
+    Prop :=
+  forall useAccept : Bool,
+    exists allocator : MachineDescription,
+      SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
+        useAccept allocator
+
+def SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction :
+    Prop :=
+  forall useAccept : Bool,
+    exists extender : MachineDescription,
+      SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec
+        useAccept extender
+
+def SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction :
+    Prop :=
+  forall useAccept : Bool,
+    exists extender : MachineDescription,
+      SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderSpec
+        useAccept extender
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec_of_countExtenderSpec
+    {useAccept : Bool} {extender : MachineDescription}
+    (hextender :
+      SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderSpec
+        useAccept extender) :
+    SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec
+      useAccept extender := by
+  constructor
+  · exact hextender.left
+  · intro L
+    simpa [
+      selectedProjectionPaddedTailCleanupScratchCountBits_length]
+      using hextender.right L
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction_of_countExtenders
+    (h :
+      SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨extender, hextender⟩
+  exact
+    ⟨extender,
+      selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec_of_countExtenderSpec
+        hextender⟩
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec_of_extenderSpec
+    {useAccept : Bool} {extender : MachineDescription}
+    (hextender :
+      SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec
+        useAccept extender) :
+    SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
+      useAccept extender := by
+  constructor
+  · exact hextender.left
+  · intro L
+    simpa [
+      selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_zero,
+      selectedProjectionPaddedTailCleanupBaseSourceTapeWithLayoutExtraScratch]
+      using hextender.right L
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_extenders
+    (h :
+      SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction := by
+  intro useAccept
+  rcases h useAccept with ⟨extender, hextender⟩
+  exact
+    ⟨extender,
+      selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec_of_extenderSpec
+        hextender⟩
 
 theorem selectedProjectionPaddedTailCleanupAcceptBaseSourceMaterializerSpec :
     SelectedProjectionPaddedTailCleanupPostPaddingBaseSourceMaterializerSpec
@@ -861,6 +1129,25 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruc
           selectedProjectionPaddedTailCleanupAcceptBaseSourceMaterializerSpec
           hallocator⟩
 
+theorem selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_scratchAllocators
+    (h :
+      SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction := by
+  refine
+    ⟨⟨canonicalSeqDescription
+        selectedHitOtherFlagErasedRejectToRightEndDescription
+        selectedProjectionPaddedTailCleanupRejectRightEndToBaseSourceDescription,
+      selectedProjectionPaddedTailCleanupRejectBaseSourceMaterializerSpec⟩,
+      h⟩
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_scratchAllocators
+    (h :
+      SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_baseAndScratch
+    (selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_scratchAllocators
+      h)
+
 theorem selectedProjectionPaddedTailCleanupPostPaddingBranchConstruction_of_sourceMaterializer
     {useAccept : Bool} {materializer : MachineDescription}
     (hmaterializer :
@@ -910,15 +1197,11 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingConstruction := by
   exact
     selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializers
-      (selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_baseAndScratch
-        (by
-          refine
-            ⟨⟨canonicalSeqDescription
-                selectedHitOtherFlagErasedRejectToRightEndDescription
-                selectedProjectionPaddedTailCleanupRejectRightEndToBaseSourceDescription,
-              selectedProjectionPaddedTailCleanupRejectBaseSourceMaterializerSpec⟩,
-              ?_⟩
-          sorry))
+      (selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_scratchAllocators
+        (selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_extenders
+          (selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction_of_countExtenders
+            (by
+              sorry))))
 
 def selectedHitOtherFlagErasedPostEraseFromPostPadding
     (useAccept : Bool) (postPadding : MachineDescription) :
