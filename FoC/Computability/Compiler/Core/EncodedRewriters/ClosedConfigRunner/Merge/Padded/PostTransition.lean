@@ -729,6 +729,98 @@ theorem SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceLeftBitsRev_tapeAt
   simp [transitionBase, parsedCells, stageBase,
     List.map_append, List.append_assoc]
 
+theorem
+    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_eq_sourceLeftBitsRev_tapeAtCells
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p =
+      DovetailInitialLayoutInitializer.tapeAtCells
+        (List.append
+          ((SelectedMergePaddedEmitterCleanup.sourceLeftBitsRev p).map some)
+          [none])
+        [none, none] := by
+  rw [← SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceFieldsTape]
+  exact
+    SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceLeftBitsRev_tapeAtCells
+      p
+
+theorem
+    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_normalizedOutput_eq_sourceBits
+    (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput
+        (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p) =
+      SelectedMergePaddedEmitterCleanup.sourceBits p := by
+  rw [
+    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_eq_sourceLeftBitsRev_tapeAtCells]
+  rw [←
+    SelectedMergePaddedEmitterCleanup.sourceLeftBitsRev_reverse_eq_sourceBits
+      p]
+  simp [DovetailInitialLayoutInitializer.tapeAtCells,
+    Tape.normalizedOutput, Tape.cells, Function.comp_def]
+
+theorem
+    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_normalizedOutput_eq_fields
+    (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput
+        (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p) =
+      encodeCodeWordAsInput
+        (MachineCodeSymbol.transition ::
+          encodeBoolWordAppend
+            (encodeCodeWordAsInput
+              (MachineCodeSymbol.transition ::
+                encodeBoolWordAppend p.L.input
+                  (encodeNatAppend p.L.stage
+                    (encodeConfigurationAppend p.L.acceptConfig
+                      (encodeConfigurationAppend p.L.rejectConfig
+                        (encodeBoolAppend p.L.acceptHit
+                          (encodeBoolAppend p.L.rejectHit [])))))))
+            (encodeNatAppend p.S.stage
+              (encodeConfigurationAppend p.S.config
+                (encodeBoolAppend p.S.hit [])))) := by
+  rw [
+    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_normalizedOutput_eq_sourceBits,
+    SelectedMergePaddedEmitterAfterTransitionSourceBits_eq_fields]
+
+theorem
+    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_cells_eq_sourceBits
+    (p : SelectedMergeEmitterPayload) :
+    Tape.cells (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p) =
+      List.append [none]
+        (List.append
+          ((SelectedMergePaddedEmitterCleanup.sourceBits p).map some)
+          [none, none]) := by
+  rw [
+    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_eq_sourceLeftBitsRev_tapeAtCells]
+  rw [←
+    SelectedMergePaddedEmitterCleanup.sourceLeftBitsRev_reverse_eq_sourceBits
+      p]
+  simp [DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells,
+    List.map_reverse]
+
+theorem
+    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_cells_eq_fields
+    (p : SelectedMergeEmitterPayload) :
+    Tape.cells (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p) =
+      List.append [none]
+        (List.append
+          ((encodeCodeWordAsInput
+            (MachineCodeSymbol.transition ::
+              encodeBoolWordAppend
+                (encodeCodeWordAsInput
+                  (MachineCodeSymbol.transition ::
+                    encodeBoolWordAppend p.L.input
+                      (encodeNatAppend p.L.stage
+                        (encodeConfigurationAppend p.L.acceptConfig
+                          (encodeConfigurationAppend p.L.rejectConfig
+                            (encodeBoolAppend p.L.acceptHit
+                              (encodeBoolAppend p.L.rejectHit [])))))))
+                (encodeNatAppend p.S.stage
+                  (encodeConfigurationAppend p.S.config
+                    (encodeBoolAppend p.S.hit []))))).map some)
+          [none, none]) := by
+  rw [
+    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_cells_eq_sourceBits,
+    SelectedMergePaddedEmitterAfterTransitionSourceBits_eq_fields]
+
 theorem SelectedMergePaddedEmitterAfterHitPaddedTape_move_left_move_right
     (p : SelectedMergeEmitterPayload) :
     Tape.move Direction.left
