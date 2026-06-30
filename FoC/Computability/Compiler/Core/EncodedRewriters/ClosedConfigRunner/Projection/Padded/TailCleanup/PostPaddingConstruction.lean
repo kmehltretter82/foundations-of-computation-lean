@@ -1622,6 +1622,70 @@ theorem rightBlankGapPayloadScanTargetTape_move_right_eq_rightEndCompactionSourc
       (none :: rightPadding)
       (some current)
 
+def rightMoveAcrossFiveBlanksDescription : MachineDescription :=
+  SeqViaCanonical rightMoveAcrossFourBlanksDescription
+    rightMoveOnceDescription
+
+theorem rightMoveAcrossFiveBlanksDescription_subroutineReady :
+    rightMoveAcrossFiveBlanksDescription.SubroutineReady :=
+  SeqViaCanonical_subroutineReady
+    rightMoveAcrossFourBlanksDescription_subroutineReady
+    rightMoveOnceDescription_subroutineReady
+
+theorem rightMoveAcrossFourBlanksTarget_move_left_move_right
+    (leftCells : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (tapeAtCells
+            (List.append (List.replicate 4 (none : Option Bool))
+              leftCells.reverse)
+            [none, none])) =
+      tapeAtCells
+        (List.append (List.replicate 4 (none : Option Bool))
+          leftCells.reverse)
+        [none, none] := by
+  simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem rightMoveOnceDescription_haltsFrom_fourBlankTarget
+    (leftCells : List (Option Bool)) :
+    rightMoveOnceDescription.HaltsFromTape
+      (tapeAtCells
+        (List.append (List.replicate 4 (none : Option Bool))
+          leftCells.reverse)
+        [none, none])
+      (rightEndCompactionSourceTape
+        (List.append leftCells
+          (List.replicate 5 (none : Option Bool)))) := by
+  have hmove :=
+    rightMoveOnceDescription_haltsFromTape
+      (tapeAtCells
+        (List.append (List.replicate 4 (none : Option Bool))
+          leftCells.reverse)
+        [none, none])
+  simpa [rightEndCompactionSourceTape, tapeAtCells, Tape.move,
+    Tape.moveRight, List.reverse_append, List.replicate_succ,
+    List.append_assoc] using hmove
+
+theorem rightMoveAcrossFiveBlanksDescription_haltsFrom_rightPadding
+    (leftCells : List (Option Bool)) :
+    rightMoveAcrossFiveBlanksDescription.HaltsFromTape
+      (rightEndCompactionSourceTapeWithRightPadding
+        leftCells (List.replicate 5 (none : Option Bool)))
+      (rightEndCompactionSourceTape
+        (List.append leftCells
+          (List.replicate 5 (none : Option Bool)))) := by
+  exact
+    SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      rightMoveAcrossFourBlanksDescription_subroutineReady
+      rightMoveOnceDescription_subroutineReady
+      (by
+        simpa [rightEndCompactionSourceTapeWithRightPadding,
+          List.replicate_succ] using
+          rightMoveAcrossFourBlanksDescription_haltsFromTape
+            leftCells.reverse [none, none])
+      (rightMoveAcrossFourBlanksTarget_move_left_move_right leftCells)
+      (rightMoveOnceDescription_haltsFrom_fourBlankTarget leftCells)
+
 theorem FSTStatefulOptionAppendSourceTapeWithPadding_eq_tapeAtCells
     (input : Word Bool) (leftScratch : Nat)
     (padding : List (Option Bool)) :
@@ -2025,6 +2089,61 @@ theorem postPaddingOutputPrefixAfterStageBase_eq_prefixBits_reverse
   rw [SelectedProjectionTailProjector.outputPrefixBits]
   simp [postPaddingOutputPrefixHeaderBase, List.reverse_append,
     List.map_append, List.append_assoc]
+
+theorem postPaddingOutputPrefixStageScannerDescription_rejectSourceBits_handoff_withRight
+    (L : DovetailLayout) (rightPadding : List (Option Bool)) :
+    exists fieldTail : Word Bool,
+      postPaddingOutputPrefixStageScannerDescription.HaltsFromTape
+        (tapeAtCells [none]
+          (List.append
+            ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+              false L).map some)
+            rightPadding))
+        (postPaddingOutputPrefixStageScannerTargetTapeWithRight
+          (ParsedLayoutBits L) L.stage [none] fieldTail rightPadding) ∧
+      Tape.move Direction.right
+          (postPaddingOutputPrefixStageScannerTargetTapeWithRight
+            (ParsedLayoutBits L) L.stage [none] fieldTail rightPadding) =
+        tapeAtCells
+          (List.append
+            ((selectedProjectionPaddedTailCleanupPrefixBits L).reverse.map
+              some)
+            [none])
+          (List.append
+            ((configurationFieldBits L.acceptConfig
+              (configurationFieldBits L.rejectConfig
+                (boolFieldBits L.rejectHit []))).map some)
+            rightPadding) := by
+  rcases
+      configurationFieldBits_cons_false
+        L.acceptConfig
+        (configurationFieldBits L.rejectConfig
+          (boolFieldBits L.rejectHit [])) with
+    ⟨fieldTail, hfieldTail⟩
+  refine ⟨fieldTail, ?_, ?_⟩
+  · rw [selectedProjectionPaddedTailCleanupPostPaddingSourceBits_false]
+    rw [selectedProjectionPaddedTailCleanupPrefixBits]
+    rw [SelectedProjectionTailProjector.outputPrefixBits]
+    rw [
+      configurationFieldBits_append_nil
+        L.rejectConfig (boolFieldBits L.rejectHit [])]
+    rw [
+      configurationFieldBits_append_nil
+        L.acceptConfig
+        (configurationFieldBits L.rejectConfig
+          (boolFieldBits L.rejectHit []))]
+    rw [hfieldTail]
+    simpa [List.map_append, List.append_assoc] using
+      postPaddingOutputPrefixStageScannerDescription_haltsFrom_raw_withRight
+        (ParsedLayoutBits L) L.stage [none] fieldTail rightPadding
+  · have hmove :=
+      postPaddingOutputPrefixStageScannerTarget_move_right_eq_configSource_withRight
+        (ParsedLayoutBits L) L.stage [none] fieldTail rightPadding
+    rw [postPaddingOutputPrefixAfterStageBase_eq_prefixBits_reverse] at hmove
+    rw [hmove, ← hfieldTail]
+    simp [DovetailInitialLayoutInitializer.tapeAtCells, tapeAtCells,
+      List.map_reverse]
+    rfl
 
 theorem postPaddingAcceptConfigRestoredBase_eq_keptPrefix_reverse
     (L : DovetailLayout) :
