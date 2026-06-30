@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingFramework
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingPrefixScanner
 
 set_option doc.verso true
 
@@ -452,6 +453,44 @@ theorem selectedProjectionPaddedTailCleanupRejectRewindTargetTape_cells
       omega]
     simp [List.replicate_succ]
   rw [hpad]
+
+theorem tapeAtCells_move_right_move_left_append_cons_blank
+    (pref tail : List (Option Bool)) (cell : Option Bool) :
+    Tape.move Direction.right
+        (Tape.move Direction.left
+          (tapeAtCells (List.append pref (cell :: tail)) [])) =
+      tapeAtCells (List.append pref (cell :: tail)) [none] := by
+  cases pref <;>
+    simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem rightBlankGapPayloadScanTargetTapeImplicit_move_right_eq_rightEndCompactionSourceTape
+    (baseLeft : List (Option Bool)) (gap : Nat)
+    (current : Bool) (payloadRest : Word Bool) :
+    Tape.move Direction.right
+        (rightBlankGapPayloadScanTargetTapeImplicit
+          baseLeft gap current payloadRest) =
+      rightEndCompactionSourceTape
+        (List.append baseLeft.reverse
+          (List.append
+            (List.replicate gap (none : Option Bool))
+            ((current :: payloadRest).map some))) := by
+  rw [rightBlankGapPayloadScanTargetTapeImplicit,
+    rightEndCompactionSourceTape]
+  rw [show
+      (List.append baseLeft.reverse
+          (List.append
+            (List.replicate gap (none : Option Bool))
+            ((current :: payloadRest).map some))).reverse =
+        List.append (payloadRest.reverse.map some)
+              (some current ::
+                List.append (List.replicate gap (none : Option Bool))
+                  baseLeft) by
+    simp [List.reverse_append, List.append_assoc]]
+  simpa [List.reverse_cons, List.map_append, List.append_assoc] using
+    tapeAtCells_move_right_move_left_append_cons_blank
+      (payloadRest.reverse.map some)
+      (List.append (List.replicate gap (none : Option Bool)) baseLeft)
+      (some current)
 
 /--
 Combined post-padding finite-machine leaf for selected-projection tail cleanup.
