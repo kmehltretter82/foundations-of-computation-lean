@@ -1985,6 +1985,16 @@ theorem SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceLeftBitsRev_tapeAt
   simp [transitionBase, parsedCells, stageBase,
     List.map_append, List.append_assoc]
 
+theorem SelectedMergePaddedEmitterAfterHitPaddedTape_move_left_move_right
+    (p : SelectedMergeEmitterPayload) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (SelectedMergePaddedEmitterAfterHitPaddedTape p)) =
+      SelectedMergePaddedEmitterAfterHitPaddedTape p := by
+  rw [SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceLeftBitsRev_tapeAtCells]
+  simp [DovetailInitialLayoutInitializer.tapeAtCells,
+    Tape.move, Tape.moveLeft, Tape.moveRight]
+
 theorem selectedMergePaddedEmitterHitScanner_haltsFromAfterConfigPaddedHandoff
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterHitScannerDescription.HaltsFromTape
@@ -2127,6 +2137,63 @@ def SelectedMergePaddedEmitterAfterTransitionPaddedBranchConstruction
   exists emitter : MachineDescription,
     SelectedMergePaddedEmitterAfterTransitionPaddedSpec useAccept emitter
 
+def SelectedMergePaddedEmitterAfterHitPaddedSpec
+    (useAccept : Bool)
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      emitter.HaltsFromTape
+        (SelectedMergePaddedEmitterAfterHitPaddedTape p)
+        (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
+
+def SelectedMergePaddedEmitterAfterHitPaddedBranchConstruction
+    (useAccept : Bool) : Prop :=
+  exists emitter : MachineDescription,
+    SelectedMergePaddedEmitterAfterHitPaddedSpec useAccept emitter
+
+def SelectedMergePaddedEmitterAfterTransitionPaddedFromSourceScanner
+    (afterHit : MachineDescription) : MachineDescription :=
+  SeqViaCanonical
+    SelectedMergePaddedEmitterSourceScannerDescription
+    afterHit
+
+theorem SelectedMergePaddedEmitterAfterTransitionPaddedSpec_of_afterHitPadded
+    {useAccept : Bool} {afterHit : MachineDescription}
+    (hafterHit :
+      SelectedMergePaddedEmitterAfterHitPaddedSpec
+        useAccept afterHit) :
+    SelectedMergePaddedEmitterAfterTransitionPaddedSpec useAccept
+      (SelectedMergePaddedEmitterAfterTransitionPaddedFromSourceScanner
+        afterHit) := by
+  constructor
+  · exact
+      SeqViaCanonical_subroutineReady
+        selectedMergePaddedEmitterSourceScanner_subroutineReady
+        hafterHit.left
+  · intro p
+    exact
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        selectedMergePaddedEmitterSourceScanner_subroutineReady
+        hafterHit.left
+        (selectedMergePaddedEmitterSourceScanner_haltsFrom_afterTransitionPadded p)
+        (SelectedMergePaddedEmitterAfterHitPaddedTape_move_left_move_right
+          p)
+        (hafterHit.right p)
+
+theorem SelectedMergePaddedEmitterAfterTransitionPaddedBranchConstruction_of_afterHitPadded
+    {useAccept : Bool}
+    (h :
+      SelectedMergePaddedEmitterAfterHitPaddedBranchConstruction
+        useAccept) :
+    SelectedMergePaddedEmitterAfterTransitionPaddedBranchConstruction
+        useAccept := by
+  rcases h with ⟨afterHit, hafterHit⟩
+  exact
+    ⟨SelectedMergePaddedEmitterAfterTransitionPaddedFromSourceScanner
+        afterHit,
+      SelectedMergePaddedEmitterAfterTransitionPaddedSpec_of_afterHitPadded
+        hafterHit⟩
+
 def SelectedMergePaddedEmitterAfterHitRewindFromTransition
     (afterTransition : MachineDescription) : MachineDescription :=
   SeqViaCanonical
@@ -2180,20 +2247,42 @@ theorem selectedMergePaddedEmitterAfterTransitionPaddedConstruction_of_branches
   · exact hAccept
 
 /--
-Post-transition finite-machine leaf for selected merge under the accepting
+Post-source-scanner finite-machine leaf for selected merge under the accepting
 padded equivalence branch.
 -/
-theorem selectedMergePaddedEmitterAfterTransitionPaddedAcceptConstruction :
-    SelectedMergePaddedEmitterAfterTransitionPaddedBranchConstruction true := by
+theorem selectedMergePaddedEmitterAfterHitPaddedAcceptConstruction :
+    SelectedMergePaddedEmitterAfterHitPaddedBranchConstruction true := by
   sorry
 
 /--
-Post-transition finite-machine leaf for selected merge under the rejecting
+Post-source-scanner finite-machine leaf for selected merge under the rejecting
 padded equivalence branch.
+-/
+theorem selectedMergePaddedEmitterAfterHitPaddedRejectConstruction :
+    SelectedMergePaddedEmitterAfterHitPaddedBranchConstruction false := by
+  sorry
+
+/--
+Post-transition finite-machine leaf for selected merge under the accepting
+padded equivalence branch.  The common source scanner reduces this branch to
+the post-source-scanner leaf.
+-/
+theorem selectedMergePaddedEmitterAfterTransitionPaddedAcceptConstruction :
+    SelectedMergePaddedEmitterAfterTransitionPaddedBranchConstruction true := by
+  exact
+    SelectedMergePaddedEmitterAfterTransitionPaddedBranchConstruction_of_afterHitPadded
+      selectedMergePaddedEmitterAfterHitPaddedAcceptConstruction
+
+/--
+Post-transition finite-machine leaf for selected merge under the rejecting
+padded equivalence branch.  The common source scanner reduces this branch to
+the post-source-scanner leaf.
 -/
 theorem selectedMergePaddedEmitterAfterTransitionPaddedRejectConstruction :
     SelectedMergePaddedEmitterAfterTransitionPaddedBranchConstruction false := by
-  sorry
+  exact
+    SelectedMergePaddedEmitterAfterTransitionPaddedBranchConstruction_of_afterHitPadded
+      selectedMergePaddedEmitterAfterHitPaddedRejectConstruction
 
 /--
 Combined post-transition finite-machine leaf for selected merge under the
