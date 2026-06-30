@@ -91,6 +91,23 @@ theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_add_extraScratch
   rw [selectedProjectionPaddedTailCleanupSentinelExtraScratch]
   omega
 
+theorem selectedProjectionPaddedTailCleanupUnselectedConfigBits_length_pos
+    (useAccept : Bool) (L : DovetailLayout) :
+    0 <
+      (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+        useAccept L).length := by
+  cases useAccept
+  · rcases
+      CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_cons_false
+        L.acceptConfig [] with
+      ⟨tail, htail⟩
+    simp [selectedProjectionPaddedTailCleanupUnselectedConfigBits, htail]
+  · rcases
+      CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_cons_false
+        L.rejectConfig [] with
+      ⟨tail, htail⟩
+    simp [selectedProjectionPaddedTailCleanupUnselectedConfigBits, htail]
+
 theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_true
     (L : DovetailLayout) :
     selectedProjectionPaddedTailCleanupSentinelBaseScratch true L <=
@@ -183,6 +200,42 @@ theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_false
   rw [hsplit]
   simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch,
     selectedProjectionPaddedTailCleanupUnselectedConfigBits]
+  omega
+
+theorem selectedProjectionPaddedTailCleanupAcceptRightEndScratchWidth_eq_parsed
+    (L : DovetailLayout) :
+    1 +
+          (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+            true L).length + 6 +
+        selectedProjectionPaddedTailCleanupSentinelExtraScratch true L =
+      (ParsedLayoutBits L).length := by
+  have hbase :=
+    selectedProjectionPaddedTailCleanupSentinelBaseScratch_add_extraScratch
+      true L
+      (selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_true
+        L)
+  have hpos :=
+    selectedProjectionPaddedTailCleanupUnselectedConfigBits_length_pos
+      true L
+  simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch] at hbase
+  omega
+
+theorem selectedProjectionPaddedTailCleanupRejectFixedGapScratchWidth_eq_parsed
+    (L : DovetailLayout) :
+    1 +
+          (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+            false L).length + 6 +
+        selectedProjectionPaddedTailCleanupSentinelExtraScratch false L =
+      (ParsedLayoutBits L).length := by
+  have hbase :=
+    selectedProjectionPaddedTailCleanupSentinelBaseScratch_add_extraScratch
+      false L
+      (selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_false
+        L)
+  have hpos :=
+    selectedProjectionPaddedTailCleanupUnselectedConfigBits_length_pos
+      false L
+  simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch] at hbase
   omega
 
 theorem selectedProjectionPaddedTailCleanupDeletedAcceptRightEnd_to_acceptSentinelTarget
@@ -2343,6 +2396,71 @@ theorem postPaddingOutputPrefixStageConfigScannerDescription_rejectSourceBits_ha
       selectedProjectionPaddedTailCleanupSelectedConfigBits,
       selectedProjectionPaddedTailCleanupUnselectedConfigBits,
       List.append_assoc] using hmove
+
+theorem postPaddingOutputPrefixStageConfigScannerDescription_rejectSourceBits_handoff_withRight
+    (L : DovetailLayout) (rightPadding : List (Option Bool)) :
+    exists suffixTail : Word Bool,
+      postPaddingOutputPrefixStageConfigScannerDescription.HaltsFromTape
+        (tapeAtCells [none]
+          (List.append
+            ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+              false L).map some)
+            rightPadding))
+        (postPaddingOutputPrefixStageConfigScannerTargetTapeWithRight
+          (ParsedLayoutBits L) L.stage L.acceptConfig [none]
+          suffixTail rightPadding) ∧
+      Tape.move Direction.right
+          (postPaddingOutputPrefixStageConfigScannerTargetTapeWithRight
+            (ParsedLayoutBits L) L.stage L.acceptConfig [none]
+            suffixTail rightPadding) =
+        tapeAtCells
+          (List.append
+            ((List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
+              (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                false L)).reverse.map some)
+            [none])
+          (List.append
+            ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+              L.rejectConfig
+              (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+                L.rejectHit [])).map some)
+            rightPadding) := by
+  rcases
+      CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_cons_false
+        L.rejectConfig
+        (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          L.rejectHit []) with
+    ⟨suffixTail, hsuffix⟩
+  refine ⟨suffixTail, ?_, ?_⟩
+  · rw [selectedProjectionPaddedTailCleanupPostPaddingSourceBits_false]
+    rw [selectedProjectionPaddedTailCleanupPrefixBits]
+    rw [SelectedProjectionTailProjector.outputPrefixBits]
+    rw [
+      CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
+        L.rejectConfig
+        (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          L.rejectHit [])]
+    rw [hsuffix]
+    rw [
+      CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
+        L.acceptConfig (false :: suffixTail)]
+    simpa [List.map_append, List.append_assoc] using
+      postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_raw_withRight
+        (ParsedLayoutBits L) L.stage L.acceptConfig [none]
+        suffixTail rightPadding
+  · have hmove :=
+      postPaddingOutputPrefixStageConfigScannerTarget_move_right_eq_suffixSource_withRight
+        (ParsedLayoutBits L) L.stage L.acceptConfig [none]
+        suffixTail rightPadding
+    rw [postPaddingAcceptConfigRestoredBase_eq_keptPrefix_reverse] at hmove
+    rw [hmove]
+    rw [← hsuffix]
+    simp [DovetailInitialLayoutInitializer.tapeAtCells, tapeAtCells,
+      selectedProjectionPaddedTailCleanupKeptPrefixBits,
+      selectedProjectionPaddedTailCleanupSelectedConfigBits,
+      selectedProjectionPaddedTailCleanupUnselectedConfigBits,
+      List.map_append, List.append_assoc]
+    rfl
 
 /--
 Combined post-padding finite-machine leaf for selected-projection tail cleanup.
