@@ -821,6 +821,136 @@ theorem
     SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_cells_eq_sourceBits,
     SelectedMergePaddedEmitterAfterTransitionSourceBits_eq_fields]
 
+theorem markedDovetailLayoutBodyRestoredBitsRev_map_some_withBase
+    (L : DovetailLayout) (baseLeft : List (Option Bool)) :
+    List.append
+        ((CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyRestoredBitsRev
+          L).map some)
+        baseLeft =
+      CanonicalLayouts.DovetailLayoutScanner.finalHitFlagsRestoredLeftWithBase
+        L.acceptHit L.rejectHit
+        (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+          L.rejectConfig
+          (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+            L.acceptConfig
+            (List.append
+              ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                L.stage).reverse.map some)
+              (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+                (L.input.map some)
+                (List.append
+                  (CanonicalLayouts.DovetailLayoutScanner.transitionRemainderBits.reverse.map some)
+                  baseLeft))))) := by
+  let baseAfterTransition :=
+    List.append
+      (CanonicalLayouts.DovetailLayoutScanner.transitionRemainderBits.reverse.map some)
+      baseLeft
+  let baseAfterInput :=
+    CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+      (L.input.map some) baseAfterTransition
+  let baseAfterStage :=
+    List.append
+      ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+        L.stage).reverse.map some)
+      baseAfterInput
+  let baseAfterAccept :=
+    CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+      L.acceptConfig baseAfterStage
+  have hinput :
+      List.append
+          ((CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredBitsRev
+            (L.input.map some)).map some)
+          baseAfterTransition =
+        baseAfterInput := by
+    simpa [baseAfterInput] using
+      CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredBitsRev_map_some_withBase
+        (L.input.map some) baseAfterTransition
+  have haccept :
+      List.append
+          ((CanonicalLayouts.DovetailLayoutScanner.configurationRestoredBitsRev
+            L.acceptConfig).map some)
+          baseAfterStage =
+        baseAfterAccept := by
+    simpa [baseAfterAccept] using
+      CanonicalLayouts.DovetailLayoutScanner.configurationRestoredBitsRev_map_some_withBase
+        L.acceptConfig baseAfterStage
+  have hreject :
+      List.append
+          ((CanonicalLayouts.DovetailLayoutScanner.configurationRestoredBitsRev
+            L.rejectConfig).map some)
+          baseAfterAccept =
+        CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+          L.rejectConfig baseAfterAccept :=
+    CanonicalLayouts.DovetailLayoutScanner.configurationRestoredBitsRev_map_some_withBase
+      L.rejectConfig baseAfterAccept
+  calc
+    List.append
+        ((CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyRestoredBitsRev
+          L).map some)
+        baseLeft =
+      CanonicalLayouts.DovetailLayoutScanner.finalHitFlagsRestoredLeftWithBase
+        L.acceptHit L.rejectHit
+        (List.append
+          ((CanonicalLayouts.DovetailLayoutScanner.configurationRestoredBitsRev
+            L.rejectConfig).map some)
+          (List.append
+            ((CanonicalLayouts.DovetailLayoutScanner.configurationRestoredBitsRev
+              L.acceptConfig).map some)
+            (List.append
+              ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                L.stage).reverse.map some)
+              (List.append
+                ((CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredBitsRev
+                  (L.input.map some)).map some)
+                baseAfterTransition)))) := by
+          simp [
+            CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyRestoredBitsRev,
+            CanonicalLayouts.DovetailLayoutScanner.finalHitFlagsRestoredLeftWithBase,
+            baseAfterTransition, List.map_append, List.map_reverse,
+            List.append_assoc]
+    _ =
+      CanonicalLayouts.DovetailLayoutScanner.finalHitFlagsRestoredLeftWithBase
+        L.acceptHit L.rejectHit
+        (List.append
+          ((CanonicalLayouts.DovetailLayoutScanner.configurationRestoredBitsRev
+            L.rejectConfig).map some)
+          (List.append
+            ((CanonicalLayouts.DovetailLayoutScanner.configurationRestoredBitsRev
+              L.acceptConfig).map some)
+            baseAfterStage)) := by
+          rw [hinput]
+    _ =
+      CanonicalLayouts.DovetailLayoutScanner.finalHitFlagsRestoredLeftWithBase
+        L.acceptHit L.rejectHit
+        (List.append
+          ((CanonicalLayouts.DovetailLayoutScanner.configurationRestoredBitsRev
+            L.rejectConfig).map some)
+          baseAfterAccept) := by
+          rw [haccept]
+    _ =
+      CanonicalLayouts.DovetailLayoutScanner.finalHitFlagsRestoredLeftWithBase
+        L.acceptHit L.rejectHit
+        (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+          L.rejectConfig baseAfterAccept) := by
+          rw [hreject]
+    _ =
+      CanonicalLayouts.DovetailLayoutScanner.finalHitFlagsRestoredLeftWithBase
+        L.acceptHit L.rejectHit
+        (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+          L.rejectConfig
+          (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+            L.acceptConfig
+            (List.append
+              ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                L.stage).reverse.map some)
+              (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
+                (L.input.map some)
+                (List.append
+                  (CanonicalLayouts.DovetailLayoutScanner.transitionRemainderBits.reverse.map some)
+                  baseLeft))))) := by
+          simp [baseAfterTransition, baseAfterInput, baseAfterStage,
+            baseAfterAccept]
+
 def SelectedMergePaddedEmitterOuterTransitionBaseLeft :
     List (Option Bool) :=
   List.append
@@ -859,6 +989,18 @@ def SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape
             p.S.stage).reverse.map some)
           (SelectedMergePaddedEmitterNestedLayoutParsedLeft p))))
     [none, none]
+
+theorem
+    SelectedMergePaddedEmitterNestedLayoutParsedLeft_eq_markedBodyRestoredBitsRev
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterNestedLayoutParsedLeft p =
+      List.append
+        ((CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyRestoredBitsRev
+          p.L).map some)
+        SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft := by
+  exact
+    (markedDovetailLayoutBodyRestoredBitsRev_map_some_withBase
+      p.L SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft).symm
 
 theorem
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_move_left_move_right
