@@ -112,6 +112,76 @@ theorem configurationSuffixScannerDescription_haltsFrom_boundary
       (by simpa using congrArg Configuration.tape hsteps)
       htarget
 
+theorem configurationSuffixScannerDescription_haltsFrom_boundary_withRight
+    (cfg : Configuration)
+    (baseLeft : List (Option Bool)) (suffixTail : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    ConfigurationSuffixScannerDescription.HaltsFromTape
+      (tapeAtCells (none :: baseLeft)
+        (List.append
+          ((configurationFieldBits cfg
+            (false :: suffixTail)).map some)
+          rightPadding))
+      (leftBoundaryEraserSourceTape baseLeft
+        (configurationFieldBits cfg [])
+        (some false)
+        (List.append (suffixTail.map some) rightPadding)) := by
+  rcases
+      run_configurationSuffix_raw_to_handoff_withBaseAndRight
+        cfg (none :: baseLeft) suffixTail rightPadding with
+    ⟨steps, hsteps⟩
+  have htarget :
+      (cellListCanonicalHandoffConfigWithBaseAndRight cfg.tape.right
+          (List.append ((cellCodeBits cfg.tape.head).reverse.map
+            some)
+            (cellListCanonicalRestoredLeftWithBase cfg.tape.left
+              (List.append ((stageNatBits cfg.state).reverse.map
+                some)
+                (none :: baseLeft))))
+          (false :: suffixTail) rightPadding).tape =
+        leftBoundaryEraserSourceTape baseLeft
+          (configurationFieldBits cfg [])
+          (some false)
+          (List.append (suffixTail.map some) rightPadding) := by
+    rw [leftBoundaryEraserSourceTape]
+    simp [cellListCanonicalHandoffConfigWithBaseAndRight]
+    have hleft :
+        cellListCanonicalRestoredLeftWithBase cfg.tape.right
+            ((List.map some (cellCodeBits cfg.tape.head)).reverse ++
+              cellListCanonicalRestoredLeftWithBase cfg.tape.left
+                ((List.map some (stageNatBits cfg.state)).reverse ++
+                  none :: baseLeft)) =
+          configurationRestoredLeftWithBase cfg (none :: baseLeft) := by
+      simp [configurationRestoredLeftWithBase]
+    rw [hleft]
+    change
+      Tape.move Direction.left
+          (DovetailInitialLayoutInitializer.tapeAtCells
+            (configurationRestoredLeftWithBase cfg (none :: baseLeft))
+            (some false ::
+              List.append (List.map some suffixTail) rightPadding)) =
+        Tape.move Direction.left
+          (DovetailInitialLayoutInitializer.tapeAtCells
+            ((List.map some (configurationFieldBits cfg [])).reverse ++
+              none :: baseLeft)
+            (some false ::
+              List.append (List.map some suffixTail) rightPadding))
+    have hcfg :
+        configurationRestoredLeftWithBase cfg (none :: baseLeft) =
+          (List.map some (configurationFieldBits cfg [])).reverse ++
+            none :: baseLeft := by
+      rw [← configurationRestoredBitsRev_map_some_withBase
+        cfg (none :: baseLeft)]
+      rw [← configurationRestoredBitsRev_reverse cfg]
+      simp [List.map_reverse]
+    rw [hcfg]
+  refine ⟨steps, ?_⟩
+  constructor
+  · simpa using congrArg Configuration.state hsteps
+  · exact Eq.trans
+      (by simpa using congrArg Configuration.tape hsteps)
+      htarget
+
 theorem configurationFieldBoundaryEraserDescription_haltsFrom
     (cfg : Configuration)
     (baseLeft : List (Option Bool)) (suffixTail : Word Bool) :
@@ -134,6 +204,35 @@ theorem configurationFieldBoundaryEraserDescription_haltsFrom
       (leftBoundaryEraserDescription_haltsFromTape
         baseLeft (configurationFieldBits cfg [])
         (some false) (suffixTail.map some))
+
+theorem configurationFieldBoundaryEraserDescription_haltsFrom_withRight
+    (cfg : Configuration)
+    (baseLeft : List (Option Bool)) (suffixTail : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    configurationFieldBoundaryEraserDescription.HaltsFromTape
+      (tapeAtCells (none :: baseLeft)
+        (List.append
+          ((configurationFieldBits cfg
+            (false :: suffixTail)).map some)
+          rightPadding))
+      (leftBoundaryEraserTargetTape baseLeft
+        (configurationFieldBits cfg [])
+        (some false)
+        (List.append (suffixTail.map some) rightPadding)) := by
+  exact
+    SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      configurationSuffixScannerDescription_subroutineReady
+      leftBoundaryEraserDescription_subroutineReady
+      (configurationSuffixScannerDescription_haltsFrom_boundary_withRight
+        cfg baseLeft suffixTail rightPadding)
+      (leftBoundaryEraserSourceTape_move_left_move_right
+        baseLeft (configurationFieldBits cfg [])
+        (some false)
+        (List.append (suffixTail.map some) rightPadding))
+      (leftBoundaryEraserDescription_haltsFromTape
+        baseLeft (configurationFieldBits cfg [])
+        (some false)
+        (List.append (suffixTail.map some) rightPadding))
 
 def configurationFieldBoundaryEraseAndPayloadScanDescription :
     MachineDescription :=
@@ -158,6 +257,44 @@ theorem leftBoundaryEraserTargetTape_eq_gapPayloadScanSource
         (configurationFieldBits cfg []).length false suffixTail := by
   simp [leftBoundaryEraserTargetTape,
     rightBlankGapPayloadScanSourceTapeImplicit]
+
+theorem leftBoundaryEraserTargetTape_eq_gapPayloadScanSource_withRight
+    (cfg : Configuration)
+    (baseLeft : List (Option Bool)) (suffixTail : Word Bool)
+    (padding : List (Option Bool)) :
+    leftBoundaryEraserTargetTape baseLeft
+        (configurationFieldBits cfg [])
+        (some false)
+        (List.append (suffixTail.map some)
+          (none :: padding)) =
+      rightBlankGapPayloadScanSourceTape
+        (none :: baseLeft)
+        (configurationFieldBits cfg []).length false suffixTail
+        padding := by
+  simp [leftBoundaryEraserTargetTape,
+    rightBlankGapPayloadScanSourceTape]
+
+theorem rightBlankGapPayloadScanSourceTape_move_left_move_right
+    (baseLeft : List (Option Bool)) (gap : Nat)
+    (current : Bool) (payloadRest : Word Bool)
+    (padding : List (Option Bool)) (hgap : 0 < gap) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (rightBlankGapPayloadScanSourceTape
+            baseLeft gap current payloadRest padding)) =
+      rightBlankGapPayloadScanSourceTape
+        baseLeft gap current payloadRest padding := by
+  cases gap with
+  | zero =>
+      omega
+  | succ gap =>
+      cases gap with
+      | zero =>
+          simp [rightBlankGapPayloadScanSourceTape, tapeAtCells,
+            Tape.move, Tape.moveLeft, Tape.moveRight, List.replicate_succ]
+      | succ gap =>
+          simp [rightBlankGapPayloadScanSourceTape, tapeAtCells,
+            Tape.move, Tape.moveLeft, Tape.moveRight, List.replicate_succ]
 
 theorem configurationFieldBits_length_pos
     (cfg : Configuration) :
@@ -193,6 +330,39 @@ theorem configurationFieldBoundaryEraseAndPayloadScanDescription_haltsFrom
       (rightBlankGapPayloadScanDescription_haltsFromTapeImplicit
         (none :: baseLeft)
         (configurationFieldBits cfg []).length false suffixTail)
+
+theorem configurationFieldBoundaryEraseAndPayloadScanDescription_haltsFrom_withRight
+    (cfg : Configuration)
+    (baseLeft : List (Option Bool)) (suffixTail : Word Bool)
+    (padding : List (Option Bool)) :
+    configurationFieldBoundaryEraseAndPayloadScanDescription.HaltsFromTape
+      (tapeAtCells (none :: baseLeft)
+        (List.append
+          ((configurationFieldBits cfg
+            (false :: suffixTail)).map some)
+          (none :: padding)))
+      (rightBlankGapPayloadScanTargetTape
+        (none :: baseLeft)
+        (configurationFieldBits cfg []).length false suffixTail
+        padding) := by
+  exact
+    SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      configurationFieldBoundaryEraserDescription_subroutineReady
+      rightBlankGapPayloadScanDescription_subroutineReady
+      (configurationFieldBoundaryEraserDescription_haltsFrom_withRight
+        cfg baseLeft suffixTail (none :: padding))
+      (by
+        rw [leftBoundaryEraserTargetTape_eq_gapPayloadScanSource_withRight]
+        exact
+          rightBlankGapPayloadScanSourceTape_move_left_move_right
+            (none :: baseLeft)
+            (configurationFieldBits cfg []).length false suffixTail
+            padding
+            (configurationFieldBits_length_pos cfg))
+      (rightBlankGapPayloadScanDescription_haltsFromTape
+        (none :: baseLeft)
+        (configurationFieldBits cfg []).length false suffixTail
+        padding)
 
 end SelectedProjectionPaddedTailCleanup
 end BoundedLayoutRunner

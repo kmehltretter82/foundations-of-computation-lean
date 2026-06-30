@@ -598,6 +598,86 @@ theorem selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithLayoutExt
   rw [selectedProjectionPaddedTailCleanupTargetTape_cells_eq_bits]
   rfl
 
+theorem selectedProjectionPaddedTailCleanupTargetBits_headerPrefix
+    (useAccept : Bool) (L : DovetailLayout) :
+    exists rest : Word Bool,
+      selectedProjectionPaddedTailCleanupTargetBits useAccept L =
+        false :: false :: false :: false :: rest := by
+  rcases selectedProjection_outputAllBits_headerPrefix useAccept L with
+    ⟨rest, hbits⟩
+  refine ⟨rest, ?_⟩
+  rw [selectedProjectionPaddedTailCleanupTargetBits_eq_outputCode,
+    selectedProjectionOutputBits_eq_tailProjector_outputAllBits]
+  exact hbits
+
+theorem selectedProjectionPaddedTailCleanupTargetBits_false_cons_cons
+    (useAccept : Bool) (L : DovetailLayout) :
+    exists rest : Word Bool,
+      selectedProjectionPaddedTailCleanupTargetBits useAccept L =
+        false :: false :: rest := by
+  rcases
+      selectedProjectionPaddedTailCleanupTargetBits_headerPrefix
+        useAccept L with
+    ⟨rest, hbits⟩
+  exact ⟨false :: false :: rest, hbits⟩
+
+theorem selectedProjectionPaddedTailCleanupFalseMarkerRestoreTarget_eq_output
+    {useAccept : Bool} {L : DovetailLayout}
+    {second : Bool} {rest : Word Bool}
+    {padding : List (Option Bool)}
+    (hbits :
+      selectedProjectionPaddedTailCleanupTargetBits useAccept L =
+        false :: second :: rest)
+    (hpadding :
+      none :: none ::
+          leadingBlankLeftShiftTargetVisiblePadding padding =
+        List.replicate (ParsedLayoutBits L).length
+          (none : Option Bool)) :
+    tapeAtCells [some false]
+        (List.append ((second :: rest).map some)
+          (none :: none ::
+            leadingBlankLeftShiftTargetVisiblePadding padding)) =
+      SelectedProjectionEquivEmitterPaddedOutputTape useAccept L := by
+  have houtput :
+      SelectedProjectionTailProjector.outputAllBits useAccept L =
+        false :: second :: rest := by
+    rw [← selectedProjectionOutputBits_eq_tailProjector_outputAllBits]
+    rw [← selectedProjectionPaddedTailCleanupTargetBits_eq_outputCode]
+    exact hbits
+  have htape :=
+    SelectedProjectionEquivEmitterPaddedOutputTape_eq_tapeAtCells_of_outputAllBits
+      (useAccept := useAccept) (L := L) (first := false)
+      (rest := second :: rest) houtput
+  rw [htape]
+  rw [hpadding]
+  simp [DovetailInitialLayoutInitializer.tapeAtCells, tapeAtCells]
+
+theorem selectedProjectionPaddedTailCleanupFalseMarkerRestoreDescription_haltsFrom
+    {useAccept : Bool} (L : DovetailLayout)
+    (second : Bool) (rest : Word Bool)
+    (padding : List (Option Bool))
+    (hbits :
+      selectedProjectionPaddedTailCleanupTargetBits useAccept L =
+        false :: second :: rest)
+    (hpadding :
+      none :: none ::
+          leadingBlankLeftShiftTargetVisiblePadding padding =
+        List.replicate (ParsedLayoutBits L).length
+          (none : Option Bool)) :
+    falseMarkerTargetRestoreDescription.HaltsFromTape
+      (leadingBlankLeftShiftTargetTapeWithPadding
+        [none] (second :: rest) padding)
+      (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) := by
+  have htape :=
+    selectedProjectionPaddedTailCleanupFalseMarkerRestoreTarget_eq_output
+      (useAccept := useAccept) (L := L) (second := second)
+      (rest := rest) (padding := padding) hbits hpadding
+  have hrun :=
+    falseMarkerTargetRestoreDescription_haltsFromTape_cons
+      second rest padding
+  rw [htape] at hrun
+  exact hrun
+
 def selectedProjectionPaddedTailCleanupSentinelRewindDescription :
     MachineDescription :=
   SeqViaCanonical leftMoveOnceDescription

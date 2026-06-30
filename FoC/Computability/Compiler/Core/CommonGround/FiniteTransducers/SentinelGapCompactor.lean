@@ -1286,6 +1286,418 @@ theorem sentinelRightEndGapCompactorDescription_haltsFrom_rightEndGapSourceWithR
             (sentinelGapCompactorFinalPadding gap
               (Nat.succ (Nat.succ paddingTail)) rightPadding))
 
+def eraseLeadingGapFalseDescription : MachineDescription where
+  stateCount := 3
+  start := 0
+  halt := 2
+  transitions :=
+    [ transition 0 none none Direction.right 1
+    , transition 1 (some false) none Direction.left 2 ]
+
+theorem eraseLeadingGapFalseDescription_wellFormed :
+    eraseLeadingGapFalseDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := eraseLeadingGapFalseDescription.transitions)
+      (stateCount := eraseLeadingGapFalseDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := eraseLeadingGapFalseDescription.transitions)
+      (by decide)
+
+theorem eraseLeadingGapFalseDescription_haltTransitionFree :
+    eraseLeadingGapFalseDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := eraseLeadingGapFalseDescription.transitions)
+    (state := eraseLeadingGapFalseDescription.halt)
+    (by decide)
+
+theorem eraseLeadingGapFalseDescription_subroutineReady :
+    eraseLeadingGapFalseDescription.SubroutineReady :=
+  ⟨eraseLeadingGapFalseDescription_wellFormed,
+    eraseLeadingGapFalseDescription_haltTransitionFree⟩
+
+theorem eraseLeadingGapFalseDescription_run
+    (right : List (Option Bool)) :
+    eraseLeadingGapFalseDescription.runConfig 2
+        { state := eraseLeadingGapFalseDescription.start
+          tape := tapeAtCells [] (none :: some false :: right) } =
+      { state := eraseLeadingGapFalseDescription.halt
+        tape := tapeAtCells [] (none :: none :: right) } := by
+  cases right <;>
+    simp [eraseLeadingGapFalseDescription, runConfig, stepConfig,
+      lookupTransition, Matches, transition, Tape.read, Tape.write,
+      Tape.move, Tape.moveLeft, Tape.moveRight, tapeAtCells]
+
+theorem eraseLeadingGapFalseDescription_haltsFrom_falseHead
+    (rest : Word Bool) (padding : List (Option Bool)) :
+    eraseLeadingGapFalseDescription.HaltsFromTape
+      (leadingBlankLeftShiftSourceTapeWithPadding
+        [] (false :: rest) padding)
+      (tapeAtCells []
+        (none :: none ::
+          List.append (rest.map some) (none :: padding))) := by
+  refine ⟨2, ?_⟩
+  constructor
+  · simpa [leadingBlankLeftShiftSourceTapeWithPadding,
+      List.append_assoc] using
+      congrArg Configuration.state
+        (eraseLeadingGapFalseDescription_run
+          (List.append (rest.map some) (none :: padding)))
+  · simpa [leadingBlankLeftShiftSourceTapeWithPadding,
+      List.append_assoc] using
+      congrArg Configuration.tape
+        (eraseLeadingGapFalseDescription_run
+          (List.append (rest.map some) (none :: padding)))
+
+theorem eraseLeadingGapFalseDescription_target_move_right
+    (rest : Word Bool) (padding : List (Option Bool)) :
+    Tape.move Direction.right
+        (tapeAtCells []
+          (none :: none ::
+            List.append (rest.map some) (none :: padding))) =
+      leadingBlankLeftShiftSourceTapeWithPadding [none] rest padding := by
+  cases rest <;> cases padding <;>
+    simp [leadingBlankLeftShiftSourceTapeWithPadding, tapeAtCells,
+      Tape.move, Tape.moveRight]
+
+def falseMarkerLeftShiftDescription : MachineDescription :=
+  seqSubroutine eraseLeadingGapFalseDescription
+    leadingBlankLeftShiftDescription Direction.right
+
+theorem falseMarkerLeftShiftDescription_subroutineReady :
+    falseMarkerLeftShiftDescription.SubroutineReady :=
+  seqSubroutine_subroutineReady
+    eraseLeadingGapFalseDescription_subroutineReady
+    leadingBlankLeftShiftDescription_subroutineReady
+
+theorem falseMarkerLeftShiftDescription_haltsFromTape
+    (rest : Word Bool) (padding : List (Option Bool)) :
+    falseMarkerLeftShiftDescription.HaltsFromTape
+      (leadingBlankLeftShiftSourceTapeWithPadding
+        [] (false :: rest) padding)
+      (leadingBlankLeftShiftTargetTapeWithPadding
+        [none] rest padding) := by
+  exact
+    CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      eraseLeadingGapFalseDescription_subroutineReady
+      leadingBlankLeftShiftDescription_subroutineReady
+      (eraseLeadingGapFalseDescription_haltsFrom_falseHead
+        rest padding)
+      (eraseLeadingGapFalseDescription_target_move_right rest padding)
+      (leadingBlankLeftShiftDescription_haltsFromTape_withPadding
+        [none] rest padding)
+
+def falseMarkerRightEndCompactorDescription : MachineDescription :=
+  canonicalSeqDescription
+    (canonicalSeqDescription
+      rightEdgeRewindDescription
+      leftMoveOnceDescription)
+    falseMarkerLeftShiftDescription
+
+theorem falseMarkerRightEndCompactorDescription_subroutineReady :
+    falseMarkerRightEndCompactorDescription.SubroutineReady :=
+  canonicalSeqDescription_subroutineReady
+    (canonicalSeqDescription_subroutineReady
+      rightEdgeRewindDescription_subroutineReady
+      leftMoveOnceDescription_subroutineReady)
+    falseMarkerLeftShiftDescription_subroutineReady
+
+theorem falseMarkerRightEndCompactorDescription_haltsFromTape
+    (rest : Word Bool) (padding : List (Option Bool)) :
+    falseMarkerRightEndCompactorDescription.HaltsFromTape
+      (rightEdgeRewindSourceTape (false :: rest) padding)
+      (leadingBlankLeftShiftTargetTapeWithPadding
+        [none] rest padding) := by
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      (canonicalSeqDescription_subroutineReady
+        rightEdgeRewindDescription_subroutineReady
+        leftMoveOnceDescription_subroutineReady)
+      falseMarkerLeftShiftDescription_subroutineReady
+      (rewindThenLeftMoveDescription_haltsFromTape_cons
+        false rest padding)
+      (leadingBlankLeftShiftSourceTapeWithPadding_move_left_move_right
+        (false :: rest) padding)
+      (falseMarkerLeftShiftDescription_haltsFromTape rest padding)
+
+theorem falseMarkerRightEndCompactorDescription_haltsFromTapeWithBaseBoundary
+    (rest : Word Bool) (padding : List (Option Bool)) :
+    falseMarkerRightEndCompactorDescription.HaltsFromTape
+      (rightEdgeRewindSourceTapeWithBase [] (false :: rest) padding)
+      (leadingBlankLeftShiftTargetTapeWithPadding
+        [none] rest padding) := by
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      (canonicalSeqDescription_subroutineReady
+        rightEdgeRewindDescription_subroutineReady
+        leftMoveOnceDescription_subroutineReady)
+      falseMarkerLeftShiftDescription_subroutineReady
+      (rewindThenLeftMoveDescription_haltsFromTapeWithBase_cons
+        [] false rest padding)
+      (leadingBlankLeftShiftSourceTapeWithPadding_move_left_move_right
+        (false :: rest) padding)
+      (falseMarkerLeftShiftDescription_haltsFromTape rest padding)
+
+def sentinelFalseMarkerBoundaryCleanupDescription : MachineDescription :=
+  canonicalSeqDescription leftMoveTwiceDescription
+    falseMarkerRightEndCompactorDescription
+
+theorem sentinelFalseMarkerBoundaryCleanupDescription_subroutineReady :
+    sentinelFalseMarkerBoundaryCleanupDescription.SubroutineReady :=
+  canonicalSeqDescription_subroutineReady
+    leftMoveTwiceDescription_subroutineReady
+    falseMarkerRightEndCompactorDescription_subroutineReady
+
+theorem sentinelFalseMarkerBoundaryCleanupDescription_haltsFrom_sentinelTarget
+    (pref bits rest : Word Bool) (leftBit : Bool)
+    (padding : List (Option Bool))
+    (hfull : List.append pref (leftBit :: bits) = false :: rest) :
+    sentinelFalseMarkerBoundaryCleanupDescription.HaltsFromTape
+      (leadingBlankLeftShiftTargetTapeWithPadding
+        (some leftBit :: List.append (pref.reverse.map some) [none])
+        bits padding)
+      (leadingBlankLeftShiftTargetTapeWithPadding
+        [none] rest
+        (none :: leadingBlankLeftShiftTargetVisiblePadding padding)) := by
+  let fullBits : Word Bool := List.append pref (leftBit :: bits)
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      leftMoveTwiceDescription_subroutineReady
+      falseMarkerRightEndCompactorDescription_subroutineReady
+      (leftMoveTwiceDescription_haltsFromTape
+        (leadingBlankLeftShiftTargetTapeWithPadding
+          (some leftBit :: List.append (pref.reverse.map some) [none])
+          bits padding))
+      (by
+        change Tape.move Direction.left
+            (Tape.move Direction.right
+              (Tape.move Direction.left
+                (Tape.move Direction.left
+                  (leadingBlankLeftShiftTargetTapeWithPadding
+                    (some leftBit ::
+                      List.append (pref.reverse.map some) [none])
+                    bits padding)))) =
+          rightEdgeRewindSourceTapeWithBase [] (false :: rest)
+            (none :: leadingBlankLeftShiftTargetVisiblePadding padding)
+        rw [sentinelGapTarget_move_left_left_eq_rightEdgeRewindSourceWithBoundary]
+        rw [hfull]
+        exact
+          rightEdgeRewindSourceTapeWithBase_move_left_move_right_padding_cons
+            [] (false :: rest) none
+            (leadingBlankLeftShiftTargetVisiblePadding padding))
+      (falseMarkerRightEndCompactorDescription_haltsFromTapeWithBaseBoundary
+        rest (none :: leadingBlankLeftShiftTargetVisiblePadding padding))
+
+def sentinelFalseMarkerRightEndGapCompactorDescription :
+    MachineDescription :=
+  canonicalSeqDescription sentinelGapCompactorDescription
+    sentinelFalseMarkerBoundaryCleanupDescription
+
+theorem sentinelFalseMarkerRightEndGapCompactorDescription_subroutineReady :
+    sentinelFalseMarkerRightEndGapCompactorDescription.SubroutineReady :=
+  canonicalSeqDescription_subroutineReady
+    sentinelGapCompactorDescription_subroutineReady
+    sentinelFalseMarkerBoundaryCleanupDescription_subroutineReady
+
+theorem sentinelFalseMarkerRightEndGapCompactorDescription_haltsFrom_rightEndGapSourceWithRightPadding
+    (gap : Nat) (pref rest : Word Bool) (leftBit current : Bool)
+    (leftRest : Word Bool) (paddingTail : Nat)
+    (rightPadding : List (Option Bool))
+    (hfull :
+      List.append pref (leftBit :: (current :: leftRest).reverse) =
+        false :: rest) :
+    sentinelFalseMarkerRightEndGapCompactorDescription.HaltsFromTape
+      (rightEndCompactionSourceTapeWithRightPadding
+        (rightEndSentinelGapCompactorSourceLeftCells
+          (List.append (pref.reverse.map some) [none])
+          leftBit current leftRest gap
+          (Nat.succ (Nat.succ paddingTail)))
+        rightPadding)
+      (leadingBlankLeftShiftTargetTapeWithPadding
+        [none] rest
+        (none :: sentinelGapCompactorFinalPadding gap
+          (Nat.succ (Nat.succ paddingTail)) rightPadding)) := by
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      sentinelGapCompactorDescription_subroutineReady
+      sentinelFalseMarkerBoundaryCleanupDescription_subroutineReady
+      (sentinelGapCompactorDescription_haltsFromTape_rightEndGapSourceWithRightPadding
+        gap (List.append (pref.reverse.map some) [none])
+        leftBit current leftRest (Nat.succ paddingTail) rightPadding)
+      (by
+        rw [sentinelGapCompactorFinalPadding_cons_cons_right])
+      (by
+        simpa [sentinelGapCompactorFinalPadding_cons_cons_right,
+          leadingBlankLeftShiftTargetVisiblePadding] using
+          sentinelFalseMarkerBoundaryCleanupDescription_haltsFrom_sentinelTarget
+            pref (current :: leftRest).reverse rest leftBit
+            (sentinelGapCompactorFinalPadding gap
+              (Nat.succ (Nat.succ paddingTail)) rightPadding)
+            hfull)
+
+def restoreLeftMarkerFalseDescription : MachineDescription where
+  stateCount := 3
+  start := 0
+  halt := 2
+  transitions :=
+    [ transition 0 none none Direction.left 1
+    , transition 0 (some false) (some false) Direction.left 1
+    , transition 0 (some true) (some true) Direction.left 1
+    , transition 1 none (some false) Direction.right 2 ]
+
+theorem restoreLeftMarkerFalseDescription_wellFormed :
+    restoreLeftMarkerFalseDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := restoreLeftMarkerFalseDescription.transitions)
+      (stateCount := restoreLeftMarkerFalseDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := restoreLeftMarkerFalseDescription.transitions)
+      (by decide)
+
+theorem restoreLeftMarkerFalseDescription_haltTransitionFree :
+    restoreLeftMarkerFalseDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := restoreLeftMarkerFalseDescription.transitions)
+    (state := restoreLeftMarkerFalseDescription.halt)
+    (by decide)
+
+theorem restoreLeftMarkerFalseDescription_subroutineReady :
+    restoreLeftMarkerFalseDescription.SubroutineReady :=
+  ⟨restoreLeftMarkerFalseDescription_wellFormed,
+    restoreLeftMarkerFalseDescription_haltTransitionFree⟩
+
+theorem restoreLeftMarkerFalseDescription_run
+    (right : List (Option Bool)) :
+    restoreLeftMarkerFalseDescription.runConfig 2
+        { state := restoreLeftMarkerFalseDescription.start
+          tape := tapeAtCells [none] right } =
+      { state := restoreLeftMarkerFalseDescription.halt
+        tape := tapeAtCells [some false] right } := by
+  cases right with
+  | nil =>
+    simp [restoreLeftMarkerFalseDescription, runConfig, stepConfig,
+      lookupTransition, Matches, transition, Tape.read, Tape.write,
+      Tape.move, Tape.moveLeft, Tape.moveRight, tapeAtCells]
+  | cons head tail =>
+      cases head with
+      | none =>
+          simp [restoreLeftMarkerFalseDescription, runConfig, stepConfig,
+            lookupTransition, Matches, transition, Tape.read, Tape.write,
+            Tape.move, Tape.moveLeft, Tape.moveRight, tapeAtCells]
+      | some bit =>
+          cases bit <;>
+            simp [restoreLeftMarkerFalseDescription, runConfig,
+              stepConfig, lookupTransition, Matches, transition,
+              Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+              Tape.moveRight, tapeAtCells]
+
+theorem restoreLeftMarkerFalseDescription_haltsFromTape
+    (right : List (Option Bool)) :
+    restoreLeftMarkerFalseDescription.HaltsFromTape
+      (tapeAtCells [none] right)
+      (tapeAtCells [some false] right) := by
+  refine ⟨2, ?_⟩
+  constructor <;>
+    rw [restoreLeftMarkerFalseDescription_run]
+
+def restoreFalseMarkerRewindDescription : MachineDescription :=
+  canonicalSeqDescription rightEdgeRewindDescription
+    restoreLeftMarkerFalseDescription
+
+theorem restoreFalseMarkerRewindDescription_subroutineReady :
+    restoreFalseMarkerRewindDescription.SubroutineReady :=
+  canonicalSeqDescription_subroutineReady
+    rightEdgeRewindDescription_subroutineReady
+    restoreLeftMarkerFalseDescription_subroutineReady
+
+theorem restoreFalseMarkerRewindDescription_haltsFromTape_cons
+    (second : Bool) (rest : Word Bool)
+    (padding : List (Option Bool)) :
+    restoreFalseMarkerRewindDescription.HaltsFromTape
+      (rightEdgeRewindSourceTapeWithBase
+        [] (second :: rest) padding)
+      (tapeAtCells [some false]
+        (List.append ((second :: rest).map some)
+          (none :: padding))) := by
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      rightEdgeRewindDescription_subroutineReady
+      restoreLeftMarkerFalseDescription_subroutineReady
+      (rightEdgeRewindDescription_haltsFromTapeWithBase
+        [] (second :: rest) padding)
+      (rightEdgeRewindTargetTapeWithBase_move_left_move_right_cons
+        [] second rest padding)
+      (by
+        simpa [rightEdgeRewindTargetTapeWithBase] using
+          restoreLeftMarkerFalseDescription_haltsFromTape
+            (List.append ((second :: rest).map some)
+              (none :: padding)))
+
+def falseMarkerTargetRestoreDescription : MachineDescription :=
+  canonicalSeqDescription leftMoveTwiceDescription
+    restoreFalseMarkerRewindDescription
+
+theorem falseMarkerTargetRestoreDescription_subroutineReady :
+    falseMarkerTargetRestoreDescription.SubroutineReady :=
+  canonicalSeqDescription_subroutineReady
+    leftMoveTwiceDescription_subroutineReady
+    restoreFalseMarkerRewindDescription_subroutineReady
+
+theorem falseMarkerTarget_move_left_left_eq_restoreSource
+    (second : Bool) (rest : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.left
+          (leadingBlankLeftShiftTargetTapeWithPadding
+            [none] (second :: rest) padding)) =
+      rightEdgeRewindSourceTapeWithBase [] (second :: rest)
+        (none :: leadingBlankLeftShiftTargetVisiblePadding padding) := by
+  cases rest <;> cases padding <;> cases second <;>
+    simp [leadingBlankLeftShiftTargetTapeWithPadding,
+      rightEdgeRewindSourceTapeWithBase,
+      leadingBlankLeftShiftTargetVisiblePadding, tapeAtCells,
+      Tape.move, Tape.moveLeft, List.map_reverse, List.append_assoc]
+
+theorem falseMarkerTargetRestoreDescription_haltsFromTape_cons
+    (second : Bool) (rest : Word Bool)
+    (padding : List (Option Bool)) :
+    falseMarkerTargetRestoreDescription.HaltsFromTape
+      (leadingBlankLeftShiftTargetTapeWithPadding
+        [none] (second :: rest) padding)
+      (tapeAtCells [some false]
+        (List.append ((second :: rest).map some)
+          (none :: none ::
+            leadingBlankLeftShiftTargetVisiblePadding padding))) := by
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      leftMoveTwiceDescription_subroutineReady
+      restoreFalseMarkerRewindDescription_subroutineReady
+      (leftMoveTwiceDescription_haltsFromTape
+        (leadingBlankLeftShiftTargetTapeWithPadding
+          [none] (second :: rest) padding))
+      (by
+        change Tape.move Direction.left
+            (Tape.move Direction.right
+              (Tape.move Direction.left
+                (Tape.move Direction.left
+                  (leadingBlankLeftShiftTargetTapeWithPadding
+                    [none] (second :: rest) padding)))) =
+          rightEdgeRewindSourceTapeWithBase [] (second :: rest)
+            (none :: leadingBlankLeftShiftTargetVisiblePadding padding)
+        rw [falseMarkerTarget_move_left_left_eq_restoreSource]
+        exact
+          rightEdgeRewindSourceTapeWithBase_move_left_move_right_padding_cons
+            [] (second :: rest) none
+            (leadingBlankLeftShiftTargetVisiblePadding padding))
+      (by
+        simpa using
+          restoreFalseMarkerRewindDescription_haltsFromTape_cons
+            second rest
+            (none :: leadingBlankLeftShiftTargetVisiblePadding padding))
+
 end FiniteTransducers
 end CommonGround
 
