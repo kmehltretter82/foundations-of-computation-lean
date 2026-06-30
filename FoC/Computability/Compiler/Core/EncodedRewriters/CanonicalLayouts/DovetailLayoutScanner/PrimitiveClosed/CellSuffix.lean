@@ -587,6 +587,57 @@ theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_handoff
           hforwardCode
           (by simpa [c0] using h)).symm
 
+theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_handoff_withRight
+    (baseLeft : List (Option Bool)) (cell : Option Bool)
+    (suffix : Word MachineCodeSymbol)
+    (b : Bool) (suffixTail : Word Bool)
+    (rightPadding : List (Option Bool))
+    {Tout : Tape Bool} {n : Nat}
+    (hsuffix :
+      encodeCodeWordAsInput suffix = b :: suffixTail)
+    (h :
+      CellSuffixScannerDescription.runConfig
+          n
+          (config
+            CellSuffixScannerDescription.start
+            baseLeft
+            (List.append
+              ((encodeCodeWordAsInput
+                (encodeCellAppend cell suffix)).map some)
+              rightPadding)) =
+        { state :=
+            CellSuffixScannerDescription.halt
+          tape := Tout }) :
+      Tout =
+        (cellSuffixHandoffConfigWithBaseAndRight
+          cell baseLeft (b :: suffixTail) rightPadding).tape := by
+  let c0 : Configuration :=
+    config
+      CellSuffixScannerDescription.start
+      baseLeft
+      (List.append
+        ((encodeCodeWordAsInput
+          (encodeCellAppend cell suffix)).map some)
+        rightPadding)
+  rcases
+      run_cellSuffix_raw_to_handoff_withBaseAndRight
+        cell baseLeft b suffixTail rightPadding with
+    ⟨steps, hforward⟩
+  have hforwardCode :
+      CellSuffixScannerDescription.runConfig
+          steps c0 =
+        cellSuffixHandoffConfigWithBaseAndRight
+          cell baseLeft (b :: suffixTail) rightPadding := by
+    have hbits :=
+      cellBits_eq_encodeCellAppend cell suffix
+    simpa [c0, hbits, hsuffix, List.map_append,
+      List.append_assoc] using hforward
+  exact
+    (MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
+      cellSuffixScannerDescription_haltTransitionFree
+      hforwardCode
+      (by simpa [c0] using h)).symm
+
 theorem tapeSuffixScannerDescription_runConfig_code_handoff
     (baseLeft : List (Option Bool)) (code : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}

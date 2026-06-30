@@ -16,6 +16,7 @@ namespace Computability
 open Languages
 open MachineDescription
 open FoC.Computability.DovetailInitialLayoutInitializer
+open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
 
 namespace EncodedRewriters
 namespace CanonicalLayouts
@@ -98,6 +99,42 @@ theorem configurationSuffixScannerDescription_runConfig_code_handoff
     ⟨{ state := state, tape := tape }, suffix, baseAfter, ?_, hmove⟩
   simp [encodeConfigurationAppend, hcodeState,
     htapeCode]
+
+theorem configurationSuffixScannerDescription_runConfig_canonical_false_suffix_inv_withRight
+    (cfg : Configuration) (baseLeft : List (Option Bool))
+    (suffixTail : Word Bool) (rightPadding : List (Option Bool))
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      ConfigurationSuffixScannerDescription.runConfig n
+          (config ConfigurationSuffixScannerDescription.start baseLeft
+            (List.append
+              ((configurationFieldBits cfg
+                (false :: suffixTail)).map some)
+              rightPadding)) =
+        { state := ConfigurationSuffixScannerDescription.halt
+          tape := Tout }) :
+      Tout =
+        (cellListCanonicalHandoffConfigWithBaseAndRight cfg.tape.right
+          (List.append ((cellCodeBits cfg.tape.head).reverse.map some)
+            (cellListCanonicalRestoredLeftWithBase cfg.tape.left
+              (List.append ((stageNatBits cfg.state).reverse.map some)
+                baseLeft)))
+          (false :: suffixTail) rightPadding).tape := by
+  let c0 : Configuration :=
+    config ConfigurationSuffixScannerDescription.start baseLeft
+      (List.append
+        ((configurationFieldBits cfg
+          (false :: suffixTail)).map some)
+        rightPadding)
+  rcases
+      run_configurationSuffix_raw_to_handoff_withBaseAndRight
+        cfg baseLeft suffixTail rightPadding with
+    ⟨_forwardSteps, hforward⟩
+  exact
+    (MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
+      configurationSuffixScannerDescription_subroutineReady.right
+      (by simpa [c0] using hforward)
+      (by simpa [c0] using h)).symm
 
 theorem configurationSuffixScannerDescription_runConfig_encodeNat_empty_ne_halt
     (state : Nat) (baseLeft : List (Option Bool)) (n : Nat) :

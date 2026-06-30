@@ -773,6 +773,54 @@ theorem natSuffixScannerDescription_runConfig_stageNat_handoff
     DovetailStagePrefix.natSuffixHandoffConfigWithBase_move_right
       stage baseLeft b suffixTail
 
+theorem natSuffixScannerDescription_runConfig_stageNat_handoff_withRight
+    (baseLeft : List (Option Bool)) (stage : Nat)
+    (b : Bool) (suffixTail : Word Bool)
+    (rightPadding : List (Option Bool))
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      NSS.runConfig n
+          (config
+            NSS.start
+            baseLeft
+            (List.append
+              ((stageNatBits stage).map some)
+              (some b ::
+                List.append (suffixTail.map some) rightPadding))) =
+        { state :=
+            NSS.halt
+          tape := Tout }) :
+      Tape.move Direction.right Tout =
+        tapeAtCells
+          (List.append
+            ((stageNatBits stage).reverse.map some)
+            baseLeft)
+          (List.append ((b :: suffixTail).map some) rightPadding) := by
+  let c0 : Configuration :=
+    config
+      NSS.start
+      baseLeft
+      (List.append
+        ((stageNatBits stage).map some)
+        (some b :: List.append (suffixTail.map some) rightPadding))
+  rcases
+      DovetailStagePrefix.run_natSuffix_raw_to_handoff_withBaseAndRight
+        stage baseLeft b suffixTail rightPadding with
+    ⟨_steps, hforward⟩
+  have hTout :
+      Tout =
+        (DovetailStagePrefix.natSuffixHandoffConfigWithBaseAndRight
+          stage baseLeft (b :: suffixTail) rightPadding).tape := by
+    exact
+      (MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
+        DovetailStagePrefix.natSuffixScannerDescription_haltTransitionFree
+        (by simpa [c0] using hforward)
+        (by simpa [c0] using h)).symm
+  rw [hTout]
+  exact
+    DovetailStagePrefix.natSuffixHandoffConfigWithBaseAndRight_move_right
+      stage baseLeft b suffixTail rightPadding
+
 theorem natSuffixScannerDescription_runConfig_encodeNatAppend_handoff
     (baseLeft : List (Option Bool)) (stage : Nat)
     (suffix : Word MachineCodeSymbol) (b : Bool) (suffixTail : Word Bool)
@@ -811,6 +859,49 @@ theorem natSuffixScannerDescription_runConfig_encodeNatAppend_handoff
   simpa [hsuffix] using
     natSuffixScannerDescription_runConfig_stageNat_handoff
       baseLeft stage b suffixTail hrun
+
+theorem natSuffixScannerDescription_runConfig_encodeNatAppend_handoff_withRight
+    (baseLeft : List (Option Bool)) (stage : Nat)
+    (suffix : Word MachineCodeSymbol) (b : Bool) (suffixTail : Word Bool)
+    (rightPadding : List (Option Bool))
+    {Tout : Tape Bool} {n : Nat}
+    (hsuffix :
+      encodeCodeWordAsInput suffix = b :: suffixTail)
+    (h :
+      NSS.runConfig n
+          (config
+            NSS.start
+            baseLeft
+            (List.append
+              ((encodeCodeWordAsInput
+                (encodeNatAppend stage suffix)).map some)
+              rightPadding)) =
+        { state :=
+            NSS.halt
+          tape := Tout }) :
+    exists baseAfter : List (Option Bool),
+      Tape.move Direction.right Tout =
+        tapeAtCells baseAfter
+          (List.append ((encodeCodeWordAsInput suffix).map some)
+            rightPadding) := by
+  refine
+    ⟨List.append ((stageNatBits stage).reverse.map some) baseLeft, ?_⟩
+  have hrun :
+      NSS.runConfig n
+          (config
+            NSS.start
+            baseLeft
+            (List.append ((stageNatBits stage).map some)
+              (some b ::
+                List.append (suffixTail.map some) rightPadding))) =
+        { state :=
+            NSS.halt
+          tape := Tout } := by
+    simpa [DovetailStagePrefix.natBits_eq_encodeNatAppend,
+      hsuffix, List.map_append, List.append_assoc] using h
+  simpa [hsuffix, List.map_append, List.append_assoc] using
+    natSuffixScannerDescription_runConfig_stageNat_handoff_withRight
+      baseLeft stage b suffixTail rightPadding hrun
 
 theorem boolWordSuffixScannerDescription_runConfig_canonical_false_suffix_inv
     (bits : Word Bool) (baseLeft : List (Option Bool)) (suffixTail : Word Bool)
@@ -862,6 +953,38 @@ theorem cellListSuffixScannerDescription_runConfig_canonical_false_suffix_inv
           (some false :: suffixTail.map some)))
   rcases run_cellList_raw_to_canonical_handoff_withBase
       cells baseLeft suffixTail with
+    ⟨_forwardSteps, hforward⟩
+  have htape :=
+    runConfig_halt_tape_functional_from_config
+      cellListSuffixScannerDescription_haltTransitionFree
+      (by simpa [c0] using hforward)
+      (by simpa [c0] using h)
+  exact htape.symm
+
+theorem cellListSuffixScannerDescription_runConfig_canonical_false_suffix_inv_withRight
+    (cells baseLeft : List (Option Bool)) (suffixTail : Word Bool)
+    (rightPadding : List (Option Bool))
+    {Tout : Tape Bool} {n : Nat}
+    (h :
+      CLSS.runConfig n
+          (config CLSS.start baseLeft
+            (List.append ((stageNatBits cells.length).map some)
+              (List.append ((cellsCodeBits cells).map some)
+                (some false ::
+                  List.append (suffixTail.map some) rightPadding)))) =
+        { state := CLSS.halt
+          tape := Tout }) :
+      Tout =
+        (cellListCanonicalHandoffConfigWithBaseAndRight cells baseLeft
+          (false :: suffixTail) rightPadding).tape := by
+  let c0 : Configuration :=
+    config CLSS.start baseLeft
+      (List.append ((stageNatBits cells.length).map some)
+        (List.append ((cellsCodeBits cells).map some)
+          (some false ::
+            List.append (suffixTail.map some) rightPadding)))
+  rcases run_cellList_raw_to_canonical_handoff_withBaseAndRight
+      cells baseLeft suffixTail rightPadding with
     ⟨_forwardSteps, hforward⟩
   have htape :=
     runConfig_halt_tape_functional_from_config
