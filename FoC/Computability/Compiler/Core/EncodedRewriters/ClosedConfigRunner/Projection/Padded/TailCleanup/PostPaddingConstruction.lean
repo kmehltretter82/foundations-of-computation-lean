@@ -34,6 +34,63 @@ def selectedProjectionPaddedTailCleanupRejectSentinelTargetTape
         false L).length.pred
       2 (List.replicate 3 (none : Option Bool)))
 
+def selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithRightPadding
+    (L : DovetailLayout)
+    (rightPadding : List (Option Bool)) : Tape Bool :=
+  leadingBlankLeftShiftTargetTapeWithPadding []
+    (selectedProjectionPaddedTailCleanupTargetBits true L)
+    (none :: sentinelGapCompactorFinalPadding
+      (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+        true L).length.pred
+      5 rightPadding)
+
+def selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithRightPadding
+    (L : DovetailLayout)
+    (rightPadding : List (Option Bool)) : Tape Bool :=
+  leadingBlankLeftShiftTargetTapeWithPadding []
+    (selectedProjectionPaddedTailCleanupTargetBits false L)
+    (none :: sentinelGapCompactorFinalPadding
+      (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+        false L).length.pred
+      2 (List.append (List.replicate 3 (none : Option Bool))
+        rightPadding))
+
+theorem selectedProjectionPaddedTailCleanupAcceptSentinelTargetTape_eq_withRightPadding_nil
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupAcceptSentinelTargetTape L =
+      selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithRightPadding
+        L [] := by
+  rfl
+
+theorem selectedProjectionPaddedTailCleanupRejectSentinelTargetTape_eq_withRightPadding_nil
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupRejectSentinelTargetTape L =
+      selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithRightPadding
+        L [] := by
+  simp [selectedProjectionPaddedTailCleanupRejectSentinelTargetTape,
+    selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithRightPadding]
+
+def selectedProjectionPaddedTailCleanupSentinelBaseScratch
+    (useAccept : Bool) (L : DovetailLayout) : Nat :=
+  (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+    useAccept L).length.pred + 8
+
+def selectedProjectionPaddedTailCleanupSentinelExtraScratch
+    (useAccept : Bool) (L : DovetailLayout) : Nat :=
+  (ParsedLayoutBits L).length -
+    selectedProjectionPaddedTailCleanupSentinelBaseScratch useAccept L
+
+theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_add_extraScratch
+    (useAccept : Bool) (L : DovetailLayout)
+    (hle :
+      selectedProjectionPaddedTailCleanupSentinelBaseScratch useAccept L <=
+        (ParsedLayoutBits L).length) :
+    selectedProjectionPaddedTailCleanupSentinelBaseScratch useAccept L +
+        selectedProjectionPaddedTailCleanupSentinelExtraScratch useAccept L =
+      (ParsedLayoutBits L).length := by
+  rw [selectedProjectionPaddedTailCleanupSentinelExtraScratch]
+  omega
+
 theorem selectedProjectionPaddedTailCleanupDeletedAcceptRightEnd_to_acceptSentinelTarget
     (L : DovetailLayout) :
     sentinelRightEndGapCompactorDescription.HaltsFromTape
@@ -43,6 +100,21 @@ theorem selectedProjectionPaddedTailCleanupDeletedAcceptRightEnd_to_acceptSentin
   simpa [selectedProjectionPaddedTailCleanupAcceptSentinelTargetTape] using
     selectedProjectionPaddedTailCleanupDeletedAcceptRightEnd_sentinelCompactor_haltsFrom
       L
+
+theorem selectedProjectionPaddedTailCleanupDeletedAcceptRightEnd_to_acceptSentinelTargetWithRightPadding
+    (L : DovetailLayout)
+    (rightPadding : List (Option Bool)) :
+    sentinelRightEndGapCompactorDescription.HaltsFromTape
+      (rightEndCompactionSourceTapeWithRightPadding
+        (selectedProjectionPaddedTailCleanupDeletedAcceptRightEndLeftCells L)
+        rightPadding)
+      (selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithRightPadding
+        L rightPadding) := by
+  simpa [
+    selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithRightPadding]
+    using
+      selectedProjectionPaddedTailCleanupDeletedAcceptRightEnd_sentinelCompactor_haltsFrom_withRightPadding
+        L rightPadding
 
 theorem selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosed_to_rejectSentinelTarget
     (L : DovetailLayout) :
@@ -125,6 +197,104 @@ theorem selectedProjectionPaddedTailCleanupAcceptSentinelTargetTape_cells
     omega]
   simp [List.replicate_succ]
 
+theorem selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithExtraScratch_cells
+    (L : DovetailLayout)
+    (extraScratch : Nat) :
+    Tape.cells
+        (selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithRightPadding
+          L (List.replicate extraScratch (none : Option Bool))) =
+      rightScratchOutputCells
+        (selectedProjectionPaddedTailCleanupTargetBits true L)
+        ((selectedProjectionPaddedTailCleanupUnselectedConfigBits
+          true L).length.pred + 8 + extraScratch) := by
+  rw [
+    selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithRightPadding,
+    leadingBlankLeftShiftTargetTapeWithPadding_cells]
+  simp [rightScratchOutputCells, leadingBlankLeftShiftTargetCellsWithPadding,
+    leadingBlankLeftShiftTargetVisiblePadding]
+  have hpad :
+      sentinelGapCompactorFinalPadding
+          (List.length
+              (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                true L) -
+            1)
+          5 (List.replicate extraScratch (none : Option Bool)) =
+        List.replicate
+          (5 +
+            (List.length
+                (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                  true L) -
+              1) +
+            extraScratch)
+          (none : Option Bool) := by
+    simpa using
+      sentinelGapCompactorFinalPadding_replicate
+        (List.length
+            (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+              true L) -
+          1)
+        4 extraScratch
+  rw [hpad]
+  rw [show
+      (List.length
+          (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+            true L) -
+        1) + 8 + extraScratch =
+        Nat.succ
+          (Nat.succ
+            (Nat.succ
+              (5 +
+                (List.length
+                    (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                      true L) -
+                  1) +
+                extraScratch))) by
+    omega]
+  simp [List.replicate_succ]
+
+theorem selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithExtraScratch_cells_eq_parsed
+    (L : DovetailLayout) (extraScratch : Nat)
+    (hscratch :
+      selectedProjectionPaddedTailCleanupSentinelBaseScratch true L +
+          extraScratch =
+        (ParsedLayoutBits L).length) :
+    Tape.cells
+        (selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithRightPadding
+          L (List.replicate extraScratch (none : Option Bool))) =
+      rightScratchOutputCells
+        (selectedProjectionPaddedTailCleanupTargetBits true L)
+        (ParsedLayoutBits L).length := by
+  rw [
+    selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithExtraScratch_cells]
+  change rightScratchOutputCells
+      (selectedProjectionPaddedTailCleanupTargetBits true L)
+      (selectedProjectionPaddedTailCleanupSentinelBaseScratch true L +
+        extraScratch) =
+    rightScratchOutputCells
+      (selectedProjectionPaddedTailCleanupTargetBits true L)
+      (ParsedLayoutBits L).length
+  rw [hscratch]
+
+theorem selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithLayoutExtraScratch_cells_eq_parsed
+    (L : DovetailLayout)
+    (hle :
+      selectedProjectionPaddedTailCleanupSentinelBaseScratch true L <=
+        (ParsedLayoutBits L).length) :
+    Tape.cells
+        (selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithRightPadding
+          L
+          (List.replicate
+            (selectedProjectionPaddedTailCleanupSentinelExtraScratch true L)
+            (none : Option Bool))) =
+      rightScratchOutputCells
+        (selectedProjectionPaddedTailCleanupTargetBits true L)
+        (ParsedLayoutBits L).length :=
+  selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithExtraScratch_cells_eq_parsed
+    L
+    (selectedProjectionPaddedTailCleanupSentinelExtraScratch true L)
+    (selectedProjectionPaddedTailCleanupSentinelBaseScratch_add_extraScratch
+      true L hle)
+
 theorem selectedProjectionPaddedTailCleanupRejectSentinelTargetTape_cells
     (L : DovetailLayout) :
     Tape.cells
@@ -176,6 +346,129 @@ theorem selectedProjectionPaddedTailCleanupRejectSentinelTargetTape_cells
                 3))) by
     omega]
   simp [List.replicate_succ]
+
+theorem selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithExtraScratch_cells
+    (L : DovetailLayout)
+    (extraScratch : Nat) :
+    Tape.cells
+        (selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithRightPadding
+          L (List.replicate extraScratch (none : Option Bool))) =
+      rightScratchOutputCells
+        (selectedProjectionPaddedTailCleanupTargetBits false L)
+        ((selectedProjectionPaddedTailCleanupUnselectedConfigBits
+          false L).length.pred + 8 + extraScratch) := by
+  rw [
+    selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithRightPadding,
+    leadingBlankLeftShiftTargetTapeWithPadding_cells]
+  simp [rightScratchOutputCells, leadingBlankLeftShiftTargetCellsWithPadding,
+    leadingBlankLeftShiftTargetVisiblePadding]
+  have hright :
+      List.append (List.replicate 3 (none : Option Bool))
+          (List.replicate extraScratch (none : Option Bool)) =
+        List.replicate (3 + extraScratch) (none : Option Bool) :=
+    replicate_none_append_replicate_none 3 extraScratch
+  have hpad :
+      sentinelGapCompactorFinalPadding
+          (List.length
+              (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                false L) -
+            1)
+          2
+          (none :: none :: none ::
+            List.replicate extraScratch (none : Option Bool)) =
+        List.replicate
+          (2 +
+            (List.length
+                (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                  false L) -
+              1) +
+            (3 + extraScratch))
+          (none : Option Bool) := by
+    change
+      sentinelGapCompactorFinalPadding
+          (List.length
+              (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                false L) -
+            1)
+          2
+          (List.append (List.replicate 3 (none : Option Bool))
+            (List.replicate extraScratch (none : Option Bool))) =
+        List.replicate
+          (2 +
+            (List.length
+                (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                  false L) -
+              1) +
+            (3 + extraScratch))
+          (none : Option Bool)
+    rw [hright]
+    simpa using
+      sentinelGapCompactorFinalPadding_replicate
+        (List.length
+            (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+              false L) -
+          1)
+        1 (3 + extraScratch)
+  rw [hpad]
+  rw [show
+      (List.length
+          (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+            false L) -
+        1) + 8 + extraScratch =
+        Nat.succ
+          (Nat.succ
+            (Nat.succ
+              (2 +
+                (List.length
+                    (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                      false L) -
+                  1) +
+                (3 + extraScratch)))) by
+    omega]
+  simp [List.replicate_succ]
+
+theorem selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithExtraScratch_cells_eq_parsed
+    (L : DovetailLayout) (extraScratch : Nat)
+    (hscratch :
+      selectedProjectionPaddedTailCleanupSentinelBaseScratch false L +
+          extraScratch =
+        (ParsedLayoutBits L).length) :
+    Tape.cells
+        (selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithRightPadding
+          L (List.replicate extraScratch (none : Option Bool))) =
+      rightScratchOutputCells
+        (selectedProjectionPaddedTailCleanupTargetBits false L)
+        (ParsedLayoutBits L).length := by
+  rw [
+    selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithExtraScratch_cells]
+  change rightScratchOutputCells
+      (selectedProjectionPaddedTailCleanupTargetBits false L)
+      (selectedProjectionPaddedTailCleanupSentinelBaseScratch false L +
+        extraScratch) =
+    rightScratchOutputCells
+      (selectedProjectionPaddedTailCleanupTargetBits false L)
+      (ParsedLayoutBits L).length
+  rw [hscratch]
+
+theorem selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithLayoutExtraScratch_cells_eq_parsed
+    (L : DovetailLayout)
+    (hle :
+      selectedProjectionPaddedTailCleanupSentinelBaseScratch false L <=
+        (ParsedLayoutBits L).length) :
+    Tape.cells
+        (selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithRightPadding
+          L
+          (List.replicate
+            (selectedProjectionPaddedTailCleanupSentinelExtraScratch false L)
+            (none : Option Bool))) =
+      rightScratchOutputCells
+        (selectedProjectionPaddedTailCleanupTargetBits false L)
+        (ParsedLayoutBits L).length :=
+  selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithExtraScratch_cells_eq_parsed
+    L
+    (selectedProjectionPaddedTailCleanupSentinelExtraScratch false L)
+    (selectedProjectionPaddedTailCleanupSentinelBaseScratch_add_extraScratch
+      false L hle)
 
 def selectedProjectionPaddedTailCleanupSentinelRewindDescription :
     MachineDescription :=
