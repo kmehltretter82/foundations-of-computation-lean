@@ -2300,6 +2300,34 @@ def SelectedMergePaddedEmitterAfterHitPaddedBranchConstruction
   exists emitter : MachineDescription,
     SelectedMergePaddedEmitterAfterHitPaddedSpec useAccept emitter
 
+def SelectedMergePaddedEmitterAfterHitPaddedFromRewind
+    (postRewind : MachineDescription) : MachineDescription :=
+  SeqViaCanonical
+    SelectedMergePaddedEmitterCleanup.sourceRewindDescription
+    postRewind
+
+theorem SelectedMergePaddedEmitterAfterHitPaddedSpec_of_rewind
+    {useAccept : Bool} {postRewind : MachineDescription}
+    (hpostRewind :
+      SelectedMergePaddedEmitterAfterHitRewindSpec
+        useAccept postRewind) :
+    SelectedMergePaddedEmitterAfterHitPaddedSpec useAccept
+      (SelectedMergePaddedEmitterAfterHitPaddedFromRewind postRewind) := by
+  constructor
+  · exact
+      SeqViaCanonical_subroutineReady
+        SelectedMergePaddedEmitterCleanup.sourceRewindDescription_subroutineReady
+        hpostRewind.left
+  · intro p
+    exact
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        SelectedMergePaddedEmitterCleanup.sourceRewindDescription_subroutineReady
+        hpostRewind.left
+        (sourceRewindDescription_haltsFrom_afterHitPaddedTape p)
+        (SelectedMergePaddedEmitterCleanup.rewindTargetPaddedTape_move_left_move_right
+          (SelectedMergePaddedEmitterCleanup.sourceBits p))
+        (hpostRewind.right p)
+
 def SelectedMergePaddedEmitterAfterTransitionPaddedFromSourceScanner
     (afterHit : MachineDescription) : MachineDescription :=
   SeqViaCanonical
