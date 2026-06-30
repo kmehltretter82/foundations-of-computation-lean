@@ -617,6 +617,221 @@ theorem rightEndCompactionSourceTapeWithRightPadding_move_left_move_right_cons
   simp [rightEndCompactionSourceTapeWithRightPadding, tapeAtCells,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
+theorem sentinelGapCompactorDescription_haltsFromTape_gapBase_zero_cons_right
+    (gap : Nat) (baseTail : List (Option Bool))
+    (leftBit current : Bool) (leftRest : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    sentinelGapCompactorDescription.HaltsFromTape
+      (rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+        (rightBlankLocalGapBaseLeft (Nat.succ gap)
+          (some leftBit :: baseTail))
+        current leftRest 0 (none :: rightPadding))
+      (leadingBlankLeftShiftTargetTapeWithPadding
+        (some leftBit :: baseTail) (current :: leftRest).reverse
+        (sentinelGapCompactorFinalPadding (Nat.succ gap) 0
+          rightPadding)) := by
+  rcases
+      sentinelGapCompactorDescription_haltsFromTape_gapBase
+        gap baseTail leftBit current leftRest 1 rightPadding with
+    ⟨n, hn⟩
+  let continueSteps : Nat :=
+    ((0 + leftRest.length + 3) +
+      (1 + (3 * (current :: leftRest).length + 2)))
+  refine ⟨continueSteps + n, ?_⟩
+  constructor
+  · rw [runConfig_add]
+    change (sentinelGapCompactorDescription.runConfig n
+      (sentinelGapCompactorDescription.runConfig continueSteps
+        { state := 0
+          tape :=
+            rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+              (rightBlankLocalGapBaseLeft (Nat.succ gap)
+                (some leftBit :: baseTail))
+              current leftRest 0 (none :: rightPadding) })).state =
+        sentinelGapCompactorDescription.halt
+    rw [show rightBlankLocalGapBaseLeft (Nat.succ gap)
+          (some leftBit :: baseTail) =
+        none :: rightBlankLocalGapBaseLeft gap
+          (some leftBit :: baseTail) by
+      exact rightBlankLocalGapBaseLeft_succ gap
+        (some leftBit :: baseTail)]
+    rw [show continueSteps =
+        ((0 + leftRest.length + 3) +
+          (1 + (3 * (current :: leftRest).length + 2))) by rfl]
+    rw [sentinelGapCompactorDescription_run_continue_pass]
+    change (sentinelGapCompactorDescription.runConfig n
+      { state := 0
+        tape :=
+          leadingBlankLeftShiftTargetTapeWithPadding
+            (none :: rightBlankLocalGapBaseLeft gap
+              (some leftBit :: baseTail))
+            (current :: leftRest).reverse
+            (none :: rightPadding) }).state =
+        sentinelGapCompactorDescription.halt
+    rw [leadingBlankLeftShiftTargetTapeWithPadding_eq_nextRightBlankLocalGapSource]
+    exact hn.left
+  · rw [runConfig_add]
+    change (sentinelGapCompactorDescription.runConfig n
+      (sentinelGapCompactorDescription.runConfig continueSteps
+        { state := 0
+          tape :=
+            rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+              (rightBlankLocalGapBaseLeft (Nat.succ gap)
+                (some leftBit :: baseTail))
+              current leftRest 0 (none :: rightPadding) })).tape =
+        leadingBlankLeftShiftTargetTapeWithPadding
+          (some leftBit :: baseTail) (current :: leftRest).reverse
+          (sentinelGapCompactorFinalPadding (Nat.succ gap) 0
+            rightPadding)
+    rw [show rightBlankLocalGapBaseLeft (Nat.succ gap)
+          (some leftBit :: baseTail) =
+        none :: rightBlankLocalGapBaseLeft gap
+          (some leftBit :: baseTail) by
+      exact rightBlankLocalGapBaseLeft_succ gap
+        (some leftBit :: baseTail)]
+    rw [show continueSteps =
+        ((0 + leftRest.length + 3) +
+          (1 + (3 * (current :: leftRest).length + 2))) by rfl]
+    rw [sentinelGapCompactorDescription_run_continue_pass]
+    change (sentinelGapCompactorDescription.runConfig n
+      { state := 0
+        tape :=
+          leadingBlankLeftShiftTargetTapeWithPadding
+            (none :: rightBlankLocalGapBaseLeft gap
+              (some leftBit :: baseTail))
+            (current :: leftRest).reverse
+            (none :: rightPadding) }).tape =
+        leadingBlankLeftShiftTargetTapeWithPadding
+          (some leftBit :: baseTail) (current :: leftRest).reverse
+          (sentinelGapCompactorFinalPadding (Nat.succ gap) 0
+            rightPadding)
+    rw [leadingBlankLeftShiftTargetTapeWithPadding_eq_nextRightBlankLocalGapSource]
+    simpa [sentinelGapCompactorFinalPadding] using hn.right
+
+theorem selectedHitOtherFlagErasedRejectAfterPaddingRightEndLeftCells_eq_sourceFields
+    (L : DovetailLayout) :
+    selectedHitOtherFlagErasedRejectAfterPaddingRightEndLeftCells L =
+      List.append [none]
+        (List.append
+          ((selectedProjectionPaddedTailCleanupPrefixBits L).map some)
+          (List.append
+            ((selectedProjectionPaddedTailCleanupUnselectedConfigBits
+              false L).map some)
+            (List.append
+              ((selectedProjectionPaddedTailCleanupSelectedConfigBits
+                false L).map some)
+              (List.append
+                (List.replicate 4 (none : Option Bool))
+                ((selectedProjectionPaddedTailCleanupSelectedHitBits
+                  false L).map some))))) := by
+  rw [selectedHitOtherFlagErasedRejectAfterPaddingRightEndLeftCells,
+    selectedHitOtherFlagErasedRejectAfterPaddingScanLeft,
+    selectedHitOtherFlagErasedRejectBaseLeftRev]
+  simp [selectedProjectionPaddedTailCleanupPrefixBits,
+    selectedProjectionPaddedTailCleanupUnselectedConfigBits,
+    selectedProjectionPaddedTailCleanupSelectedConfigBits,
+    selectedProjectionPaddedTailCleanupSelectedHitBits,
+    List.reverse_append, List.map_reverse, List.map_append,
+    List.append_assoc]
+
+theorem selectedProjectionPaddedTailCleanupDeletedRejectRightEnd_fixedGap_sentinelCompactor_haltsFrom_bridgePadding
+    (L : DovetailLayout) :
+    sentinelGapCompactorDescription.HaltsFromTape
+      (rightEndCompactionSourceTapeWithRightPadding
+        (selectedProjectionPaddedTailCleanupDeletedRejectRightEndLeftCells L)
+        [none])
+      (rightEndCompactionSourceTapeWithRightPadding
+        (selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosedLeftCells
+          L)
+        (List.replicate 3 (none : Option Bool))) := by
+  rcases
+      selectedProjectionPaddedTailCleanupSelectedConfig_false_append_last
+        L with
+    ⟨cfgPref, leftBit, hcfg⟩
+  rcases
+      selectedProjectionPaddedTailCleanupSelectedHit_false_reverse_cons
+        L with
+    ⟨current, leftRest, hhitRev⟩
+  let baseTail : List (Option Bool) :=
+    List.append (cfgPref.reverse.map some)
+      (List.append
+        (List.replicate
+          (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+            false L).length
+          (none : Option Bool))
+        (List.append
+          ((selectedProjectionPaddedTailCleanupPrefixBits L).reverse.map
+            some)
+          [none]))
+  have hhit : (current :: leftRest).reverse =
+      selectedProjectionPaddedTailCleanupSelectedHitBits false L := by
+    rw [← hhitRev]
+    simp
+  have hsource :
+      rightEndCompactionSourceTapeWithRightPadding
+          (selectedProjectionPaddedTailCleanupDeletedRejectRightEndLeftCells
+            L)
+          [none] =
+        rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+          (rightBlankLocalGapBaseLeft 3 (some leftBit :: baseTail))
+          current leftRest 0 [none] := by
+    simp [rightBlankLocalGapCompactorSourceTapeWithBaseAndRight,
+      rightEndCompactionSourceTapeWithRightPadding,
+      selectedProjectionPaddedTailCleanupDeletedRejectRightEndLeftCells,
+      rightBlankLocalGapBaseLeft, baseTail, hcfg, ← hhit,
+      tapeAtCells, List.reverse_append, List.map_reverse,
+      List.map_append, List.append_assoc]
+  have htarget :
+      rightEndCompactionSourceTapeWithRightPadding
+          (selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosedLeftCells
+            L)
+          (List.replicate 3 (none : Option Bool)) =
+        leadingBlankLeftShiftTargetTapeWithPadding
+          (some leftBit :: baseTail) (current :: leftRest).reverse
+          (sentinelGapCompactorFinalPadding 3 0 []) := by
+    simp [rightEndCompactionSourceTapeWithRightPadding,
+      selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosedLeftCells,
+      leadingBlankLeftShiftTargetTapeWithPadding, baseTail, hcfg,
+      ← hhit, sentinelGapCompactorFinalPadding, tapeAtCells,
+      List.reverse_append, List.map_reverse, List.map_append,
+      List.append_assoc]
+  rw [hsource, htarget]
+  simpa using
+    sentinelGapCompactorDescription_haltsFromTape_gapBase_zero_cons_right
+      2 baseTail leftBit current leftRest []
+
+def selectedProjectionPaddedTailCleanupDeletedRejectToSentinelDescription :
+    MachineDescription :=
+  SeqViaCanonical sentinelGapCompactorDescription
+    sentinelRightEndGapCompactorDescription
+
+theorem selectedProjectionPaddedTailCleanupDeletedRejectToSentinelDescription_subroutineReady :
+    selectedProjectionPaddedTailCleanupDeletedRejectToSentinelDescription.SubroutineReady :=
+  SeqViaCanonical_subroutineReady
+    sentinelGapCompactorDescription_subroutineReady
+    sentinelRightEndGapCompactorDescription_subroutineReady
+
+theorem selectedProjectionPaddedTailCleanupDeletedRejectToSentinelDescription_haltsFrom
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupDeletedRejectToSentinelDescription.HaltsFromTape
+      (rightEndCompactionSourceTapeWithRightPadding
+        (selectedProjectionPaddedTailCleanupDeletedRejectRightEndLeftCells L)
+        [none])
+      (selectedProjectionPaddedTailCleanupRejectSentinelTargetTape L) := by
+  exact
+    SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      sentinelGapCompactorDescription_subroutineReady
+      sentinelRightEndGapCompactorDescription_subroutineReady
+      (selectedProjectionPaddedTailCleanupDeletedRejectRightEnd_fixedGap_sentinelCompactor_haltsFrom_bridgePadding
+        L)
+      (rightEndCompactionSourceTapeWithRightPadding_move_left_move_right_cons
+        (selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosedLeftCells
+          L)
+        none
+        (List.replicate 2 (none : Option Bool)))
+      (selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosed_to_rejectSentinelTarget
+        L)
+
 theorem postPaddingOutputPrefixAfterStageBase_eq_prefixBits_reverse
     (L : DovetailLayout) :
     postPaddingOutputPrefixAfterStageBase
