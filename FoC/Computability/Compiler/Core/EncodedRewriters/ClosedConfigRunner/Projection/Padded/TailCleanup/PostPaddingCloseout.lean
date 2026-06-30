@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingRejectRoute
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchCounter
 
 set_option doc.verso true
 
@@ -178,10 +178,95 @@ theorem selectedProjectionPaddedTailCleanupUnselectedLength_add_seven_add_extraS
     false L
     (selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_false L)
 
+theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed
+    (useAccept : Bool) (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupSentinelBaseScratch useAccept L <=
+      (ParsedLayoutBits L).length := by
+  cases useAccept
+  · exact
+      selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_false
+        L
+  · exact
+      selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_true
+        L
+
 def selectedProjectionPaddedTailCleanupScratchCountBits
     (useAccept : Bool) (L : DovetailLayout) : Word Bool :=
   (ParsedLayoutBits L).drop
     (selectedProjectionPaddedTailCleanupSentinelBaseScratch useAccept L)
+
+def selectedProjectionPaddedTailCleanupScratchSkippedBits
+    (useAccept : Bool) (L : DovetailLayout) : Word Bool :=
+  (ParsedLayoutBits L).take
+    (selectedProjectionPaddedTailCleanupSentinelBaseScratch useAccept L)
+
+theorem selectedProjectionPaddedTailCleanupScratchSkippedBits_length
+    (useAccept : Bool) (L : DovetailLayout) :
+    (selectedProjectionPaddedTailCleanupScratchSkippedBits
+        useAccept L).length =
+      selectedProjectionPaddedTailCleanupSentinelBaseScratch useAccept L := by
+  simp [selectedProjectionPaddedTailCleanupScratchSkippedBits,
+    selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed
+      useAccept L]
+
+theorem selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count
+    (useAccept : Bool) (L : DovetailLayout) :
+    ParsedLayoutBits L =
+      List.append
+        (selectedProjectionPaddedTailCleanupScratchSkippedBits useAccept L)
+        (selectedProjectionPaddedTailCleanupScratchCountBits
+          useAccept L) := by
+  simp [selectedProjectionPaddedTailCleanupScratchSkippedBits,
+    selectedProjectionPaddedTailCleanupScratchCountBits,
+    List.take_append_drop]
+
+theorem selectedProjectionPaddedTailCleanupParsedLayoutBoolWordBits_split
+    (useAccept : Bool) (L : DovetailLayout)
+    (suffix : Word MachineCodeSymbol) :
+    encodeCodeWordAsInput
+        (encodeBoolWordAppend (ParsedLayoutBits L) suffix) =
+      List.append
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          (ParsedLayoutBits L).length)
+        (List.append
+          (cellsCodeBits
+            ((selectedProjectionPaddedTailCleanupScratchSkippedBits
+              useAccept L).map some))
+          (List.append
+            (cellsCodeBits
+              ((selectedProjectionPaddedTailCleanupScratchCountBits
+                useAccept L).map some))
+            (encodeCodeWordAsInput suffix))) := by
+  have hsplit :=
+    selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count
+      useAccept L
+  have hmap :
+      (ParsedLayoutBits L).map some =
+        List.append
+          ((selectedProjectionPaddedTailCleanupScratchSkippedBits
+            useAccept L).map some)
+          ((selectedProjectionPaddedTailCleanupScratchCountBits
+            useAccept L).map some) := by
+    rw [hsplit]
+    simp [List.map_append]
+  rw [boolWordBits_eq_encodeBoolWordAppend]
+  rw [hmap]
+  rw [cellsCodeBits_append]
+  exact
+    congrArg
+      (fun tail =>
+        List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            (ParsedLayoutBits L).length)
+          tail)
+      (List.append_assoc
+        (cellsCodeBits
+          ((selectedProjectionPaddedTailCleanupScratchSkippedBits
+            useAccept L).map some))
+        (cellsCodeBits
+          ((selectedProjectionPaddedTailCleanupScratchCountBits
+            useAccept L).map some))
+        (encodeCodeWordAsInput suffix))
 
 theorem selectedProjectionPaddedTailCleanupScratchCountBits_length
     (useAccept : Bool) (L : DovetailLayout) :
@@ -203,6 +288,19 @@ theorem selectedProjectionPaddedTailCleanupScratchCountBits_length_false
     (selectedProjectionPaddedTailCleanupScratchCountBits false L).length =
       selectedProjectionPaddedTailCleanupSentinelExtraScratch false L :=
   selectedProjectionPaddedTailCleanupScratchCountBits_length false L
+
+theorem selectedProjectionPaddedTailCleanupScratchCountBits_length_pos
+    (useAccept : Bool) (L : DovetailLayout) :
+    0 <
+      (selectedProjectionPaddedTailCleanupScratchCountBits
+        useAccept L).length := by
+  cases useAccept
+  · rw [selectedProjectionPaddedTailCleanupScratchCountBits_length_false]
+    exact selectedProjectionPaddedTailCleanupSentinelExtraScratch_pos_false
+      L
+  · rw [selectedProjectionPaddedTailCleanupScratchCountBits_length_true]
+    exact selectedProjectionPaddedTailCleanupSentinelExtraScratch_pos_true
+      L
 
 def selectedProjectionPaddedTailCleanupAcceptSourceToEquivOutputDescription :
     MachineDescription :=
