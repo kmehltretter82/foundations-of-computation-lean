@@ -5,6 +5,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoundaryEr
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Compaction
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.DeleteWindow
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.EraseAppend
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.FixedSkips
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayloadScan
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.LeftShiftCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.MapAppend
