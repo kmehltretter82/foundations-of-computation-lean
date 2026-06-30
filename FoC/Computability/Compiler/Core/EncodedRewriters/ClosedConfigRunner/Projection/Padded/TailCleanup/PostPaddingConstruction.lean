@@ -678,6 +678,539 @@ theorem selectedProjectionPaddedTailCleanupFalseMarkerRestoreDescription_haltsFr
   rw [htape] at hrun
   exact hrun
 
+theorem selectedProjectionPaddedTailCleanupAcceptFalseMarkerRestorePadding_eq_parsed
+    (L : DovetailLayout) :
+    none :: none ::
+        leadingBlankLeftShiftTargetVisiblePadding
+          (none ::
+            sentinelGapCompactorFinalPadding
+              (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                true L).length.pred
+              5
+              (List.replicate
+                (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                  true L)
+                (none : Option Bool))) =
+      List.replicate (ParsedLayoutBits L).length
+        (none : Option Bool) := by
+  simp [leadingBlankLeftShiftTargetVisiblePadding]
+  have hpad :
+      sentinelGapCompactorFinalPadding
+          (List.length
+            (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+              true L) - 1)
+          5
+          (List.replicate
+            (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+              true L)
+            (none : Option Bool)) =
+        List.replicate
+          (5 +
+            (List.length
+              (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                true L) - 1) +
+            selectedProjectionPaddedTailCleanupSentinelExtraScratch
+              true L)
+          (none : Option Bool) := by
+    simpa using
+      sentinelGapCompactorFinalPadding_replicate
+        (List.length
+          (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+            true L) - 1)
+        4
+        (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+          true L)
+  rw [hpad]
+  rw [← List.replicate_succ]
+  rw [← List.replicate_succ]
+  rw [← List.replicate_succ]
+  rw [show
+      5 +
+              (List.length
+                  (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                    true L) -
+                1) +
+              selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                true L +
+            1 +
+          1 +
+        1 =
+        selectedProjectionPaddedTailCleanupSentinelBaseScratch true L +
+          selectedProjectionPaddedTailCleanupSentinelExtraScratch true L by
+    simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch]
+    omega]
+  rw [
+    selectedProjectionPaddedTailCleanupSentinelBaseScratch_add_extraScratch
+      true L
+      (selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_true
+        L)]
+
+theorem selectedProjectionPaddedTailCleanupRejectFalseMarkerRestorePadding_eq_parsed
+    (L : DovetailLayout) :
+    none :: none ::
+        leadingBlankLeftShiftTargetVisiblePadding
+          (none ::
+            sentinelGapCompactorFinalPadding
+              (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                false L).length.pred
+              2
+              (List.append (List.replicate 3 (none : Option Bool))
+                (List.replicate
+                  (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                    false L)
+                  (none : Option Bool)))) =
+      List.replicate (ParsedLayoutBits L).length
+        (none : Option Bool) := by
+  simp [leadingBlankLeftShiftTargetVisiblePadding]
+  have hright :
+      List.append (List.replicate 3 (none : Option Bool))
+          (List.replicate
+            (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+              false L)
+            (none : Option Bool)) =
+        List.replicate
+          (3 +
+            selectedProjectionPaddedTailCleanupSentinelExtraScratch
+              false L)
+          (none : Option Bool) :=
+    replicate_none_append_replicate_none 3
+      (selectedProjectionPaddedTailCleanupSentinelExtraScratch false L)
+  have hpad :
+      sentinelGapCompactorFinalPadding
+          (List.length
+            (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+              false L) - 1)
+          2
+          (none :: none :: none ::
+            List.replicate
+              (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                false L)
+              (none : Option Bool)) =
+        List.replicate
+          (2 +
+            (List.length
+              (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                false L) - 1) +
+            (3 +
+              selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                false L))
+          (none : Option Bool) := by
+    change
+      sentinelGapCompactorFinalPadding
+          (List.length
+            (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+              false L) - 1)
+          2
+          (List.append (List.replicate 3 (none : Option Bool))
+            (List.replicate
+              (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                false L)
+              (none : Option Bool))) =
+        List.replicate
+          (2 +
+            (List.length
+              (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                false L) - 1) +
+            (3 +
+              selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                false L))
+          (none : Option Bool)
+    rw [hright]
+    simpa using
+      sentinelGapCompactorFinalPadding_replicate
+        (List.length
+          (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+            false L) - 1)
+        1
+        (3 +
+          selectedProjectionPaddedTailCleanupSentinelExtraScratch
+            false L)
+  rw [hpad]
+  rw [← List.replicate_succ]
+  rw [← List.replicate_succ]
+  rw [← List.replicate_succ]
+  rw [show
+      2 +
+              (List.length
+                  (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                    false L) -
+                1) +
+              (3 +
+                selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                  false L) +
+            1 +
+          1 +
+        1 =
+        selectedProjectionPaddedTailCleanupSentinelBaseScratch false L +
+          selectedProjectionPaddedTailCleanupSentinelExtraScratch false L by
+    simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch]
+    omega]
+  rw [
+    selectedProjectionPaddedTailCleanupSentinelBaseScratch_add_extraScratch
+      false L
+      (selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_false
+        L)]
+
+theorem selectedProjectionPaddedTailCleanupAcceptFalseMarkerRestoreDescription_haltsFrom
+    (L : DovetailLayout) :
+    exists rest : Word Bool,
+      falseMarkerTargetRestoreDescription.HaltsFromTape
+        (leadingBlankLeftShiftTargetTapeWithPadding
+          [none] (false :: rest)
+          (none ::
+            sentinelGapCompactorFinalPadding
+              (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                true L).length.pred
+              5
+              (List.replicate
+                (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                  true L)
+                (none : Option Bool))))
+        (SelectedProjectionEquivEmitterPaddedOutputTape true L) := by
+  rcases
+      selectedProjectionPaddedTailCleanupTargetBits_false_cons_cons
+        true L with
+    ⟨rest, hbits⟩
+  refine ⟨rest, ?_⟩
+  exact
+    selectedProjectionPaddedTailCleanupFalseMarkerRestoreDescription_haltsFrom
+      (useAccept := true) L false rest
+      (none ::
+        sentinelGapCompactorFinalPadding
+          (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+            true L).length.pred
+          5
+          (List.replicate
+            (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+              true L)
+            (none : Option Bool)))
+      hbits
+      (selectedProjectionPaddedTailCleanupAcceptFalseMarkerRestorePadding_eq_parsed
+        L)
+
+theorem selectedProjectionPaddedTailCleanupRejectFalseMarkerRestoreDescription_haltsFrom
+    (L : DovetailLayout) :
+    exists rest : Word Bool,
+      falseMarkerTargetRestoreDescription.HaltsFromTape
+        (leadingBlankLeftShiftTargetTapeWithPadding
+          [none] (false :: rest)
+          (none ::
+            sentinelGapCompactorFinalPadding
+              (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                false L).length.pred
+              2
+              (List.append (List.replicate 3 (none : Option Bool))
+                (List.replicate
+                  (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                    false L)
+                  (none : Option Bool)))))
+        (SelectedProjectionEquivEmitterPaddedOutputTape false L) := by
+  rcases
+      selectedProjectionPaddedTailCleanupTargetBits_false_cons_cons
+        false L with
+    ⟨rest, hbits⟩
+  refine ⟨rest, ?_⟩
+  exact
+    selectedProjectionPaddedTailCleanupFalseMarkerRestoreDescription_haltsFrom
+      (useAccept := false) L false rest
+      (none ::
+        sentinelGapCompactorFinalPadding
+          (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+            false L).length.pred
+          2
+          (List.append (List.replicate 3 (none : Option Bool))
+            (List.replicate
+              (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                false L)
+              (none : Option Bool))))
+      hbits
+      (selectedProjectionPaddedTailCleanupRejectFalseMarkerRestorePadding_eq_parsed
+        L)
+
+def selectedProjectionPaddedTailCleanupFalseMarkerToEquivOutputDescription :
+    MachineDescription :=
+  canonicalSeqDescription
+    sentinelFalseMarkerRightEndGapCompactorDescription
+    falseMarkerTargetRestoreDescription
+
+theorem selectedProjectionPaddedTailCleanupFalseMarkerToEquivOutputDescription_subroutineReady :
+    selectedProjectionPaddedTailCleanupFalseMarkerToEquivOutputDescription.SubroutineReady :=
+  canonicalSeqDescription_subroutineReady
+    sentinelFalseMarkerRightEndGapCompactorDescription_subroutineReady
+    falseMarkerTargetRestoreDescription_subroutineReady
+
+theorem selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosed_to_equivOutput_withLayoutExtraScratch
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupFalseMarkerToEquivOutputDescription.HaltsFromTape
+      (rightEndCompactionSourceTapeWithRightPadding
+        (selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosedLeftCells
+          L)
+        (List.append (List.replicate 3 (none : Option Bool))
+          (List.replicate
+            (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+              false L)
+            (none : Option Bool))))
+      (SelectedProjectionEquivEmitterPaddedOutputTape false L) := by
+  rcases selectedProjectionPaddedTailCleanupPrefix_append_last L with
+    ⟨pref, leftBit, hpref⟩
+  rcases
+      selectedProjectionPaddedTailCleanupSelectedHit_false_reverse_cons
+        L with
+    ⟨current, hitLeftRest, hhitRev⟩
+  rcases
+      CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_cons_false
+        L.acceptConfig [] with
+    ⟨deletedTail, hdeleted⟩
+  rcases
+      selectedProjectionPaddedTailCleanupTargetBits_false_cons_cons
+        false L with
+    ⟨rest, hbits⟩
+  let payload : Word Bool :=
+    List.append
+      (selectedProjectionPaddedTailCleanupSelectedConfigBits false L)
+      (selectedProjectionPaddedTailCleanupSelectedHitBits false L)
+  let leftRest : Word Bool :=
+    List.append hitLeftRest
+      (selectedProjectionPaddedTailCleanupSelectedConfigBits false L).reverse
+  have hpayload :
+      (current :: leftRest).reverse = payload := by
+    have hhit :
+        hitLeftRest.reverse ++ [current] =
+          selectedProjectionPaddedTailCleanupSelectedHitBits false L := by
+      rw [←
+        List.reverse_reverse
+          (selectedProjectionPaddedTailCleanupSelectedHitBits false L)]
+      rw [hhitRev]
+      simp
+    change
+      (current ::
+          List.append hitLeftRest
+            (selectedProjectionPaddedTailCleanupSelectedConfigBits
+              false L).reverse).reverse =
+        List.append
+          (selectedProjectionPaddedTailCleanupSelectedConfigBits false L)
+          (selectedProjectionPaddedTailCleanupSelectedHitBits false L)
+    rw [List.reverse_cons]
+    simp [List.reverse_append, hhit, List.append_assoc]
+  have hdeleteLen :
+      (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+        false L).length =
+        Nat.succ deletedTail.length := by
+    simp [selectedProjectionPaddedTailCleanupUnselectedConfigBits,
+      hdeleted]
+  have htargetBits :
+      List.append pref (leftBit :: (current :: leftRest).reverse) =
+        false :: false :: rest := by
+    have htarget :
+        selectedProjectionPaddedTailCleanupTargetBits false L =
+          List.append pref (leftBit :: (current :: leftRest).reverse) := by
+      rw [selectedProjectionPaddedTailCleanupTargetBits_eq_selectedFields,
+        hpref, hpayload]
+      simp [payload, List.append_assoc]
+    rw [← htarget]
+    exact hbits
+  have hsourceCells :
+      selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosedLeftCells
+          L =
+        rightEndSentinelGapCompactorSourceLeftCells
+          (List.append (pref.reverse.map some) [none])
+          leftBit current leftRest deletedTail.length 2 := by
+    rw [rightEndSentinelGapCompactorSourceLeftCells_eq_split]
+    rw [selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosedLeftCells]
+    rw [hdeleteLen, hpayload, ← hpref]
+    simp [payload, List.map_append, List.append_assoc]
+  have hmarker :
+      sentinelFalseMarkerRightEndGapCompactorDescription.HaltsFromTape
+        (rightEndCompactionSourceTapeWithRightPadding
+          (selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosedLeftCells
+            L)
+          (List.append (List.replicate 3 (none : Option Bool))
+            (List.replicate
+              (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                false L)
+              (none : Option Bool))))
+        (leadingBlankLeftShiftTargetTapeWithPadding
+          [none] (false :: rest)
+          (none ::
+            sentinelGapCompactorFinalPadding
+              (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                false L).length.pred
+              2
+              (List.append (List.replicate 3 (none : Option Bool))
+                (List.replicate
+                  (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                    false L)
+                  (none : Option Bool))))) := by
+    rw [hsourceCells, hdeleteLen]
+    simpa using
+      sentinelFalseMarkerRightEndGapCompactorDescription_haltsFrom_rightEndGapSourceWithRightPadding
+        deletedTail.length pref (false :: rest) leftBit current leftRest
+        0
+        (List.append (List.replicate 3 (none : Option Bool))
+          (List.replicate
+            (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+              false L)
+            (none : Option Bool)))
+        htargetBits
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      sentinelFalseMarkerRightEndGapCompactorDescription_subroutineReady
+      falseMarkerTargetRestoreDescription_subroutineReady
+      hmarker
+      (by
+        rw [sentinelGapCompactorFinalPadding_cons_cons_right]
+        exact
+          leadingBlankLeftShiftTargetTapeWithPadding_move_left_move_right_padding_cons_cons
+            [none] (false :: rest) none none
+            (none ::
+              List.append
+                (List.replicate
+                  (0 +
+                    (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                      false L).length.pred)
+                  (none : Option Bool))
+                (List.append (List.replicate 3 (none : Option Bool))
+                  (List.replicate
+                    (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                      false L)
+                    (none : Option Bool)))))
+      (selectedProjectionPaddedTailCleanupFalseMarkerRestoreDescription_haltsFrom
+        (useAccept := false) L false rest
+        (none ::
+          sentinelGapCompactorFinalPadding
+            (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+              false L).length.pred
+            2
+            (List.append (List.replicate 3 (none : Option Bool))
+              (List.replicate
+                (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                  false L)
+                (none : Option Bool))))
+        hbits
+        (selectedProjectionPaddedTailCleanupRejectFalseMarkerRestorePadding_eq_parsed
+          L))
+
+theorem selectedProjectionPaddedTailCleanupDeletedAcceptRightEnd_to_equivOutput_withLayoutExtraScratch
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupFalseMarkerToEquivOutputDescription.HaltsFromTape
+      (rightEndCompactionSourceTapeWithRightPadding
+        (selectedProjectionPaddedTailCleanupDeletedAcceptRightEndLeftCells L)
+        (List.replicate
+          (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+            true L)
+          (none : Option Bool)))
+      (SelectedProjectionEquivEmitterPaddedOutputTape true L) := by
+  rcases selectedProjectionPaddedTailCleanupKeptPrefix_true_append_last
+      L with
+    ⟨pref, leftBit, hpref⟩
+  rcases selectedProjectionPaddedTailCleanupSelectedHit_true_reverse_cons
+      L with
+    ⟨current, leftRest, hhitRev⟩
+  rcases
+      CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_cons_false
+        L.rejectConfig [] with
+    ⟨deletedTail, hdeleted⟩
+  rcases
+      selectedProjectionPaddedTailCleanupTargetBits_false_cons_cons
+        true L with
+    ⟨rest, hbits⟩
+  have hhit : (current :: leftRest).reverse =
+      selectedProjectionPaddedTailCleanupSelectedHitBits true L := by
+    rw [← hhitRev]
+    simp
+  have hdeleteLen :
+      (selectedProjectionPaddedTailCleanupUnselectedConfigBits true L).length =
+        Nat.succ deletedTail.length := by
+    simp [selectedProjectionPaddedTailCleanupUnselectedConfigBits,
+      hdeleted]
+  have htargetBits :
+      List.append pref (leftBit :: (current :: leftRest).reverse) =
+        false :: false :: rest := by
+    have htarget :
+        selectedProjectionPaddedTailCleanupTargetBits true L =
+          List.append pref (leftBit :: (current :: leftRest).reverse) := by
+      rw [selectedProjectionPaddedTailCleanupTargetBits_eq_kept,
+        hpref, selectedProjectionPaddedTailCleanupKeptSuffixBits, hhit]
+      simp [List.append_assoc]
+    rw [← htarget]
+    exact hbits
+  have hsourceCells :
+      selectedProjectionPaddedTailCleanupDeletedAcceptRightEndLeftCells L =
+        rightEndSentinelGapCompactorSourceLeftCells
+          (List.append (pref.reverse.map some) [none])
+          leftBit current leftRest deletedTail.length 5 := by
+    rw [rightEndSentinelGapCompactorSourceLeftCells_eq_split]
+    rw [selectedProjectionPaddedTailCleanupDeletedAcceptRightEndLeftCells]
+    rw [hdeleteLen]
+    rw [← hhit]
+    rw [← hpref]
+    simp [selectedProjectionPaddedTailCleanupKeptPrefixBits,
+      List.map_append, List.append_assoc]
+  have hmarker :
+      sentinelFalseMarkerRightEndGapCompactorDescription.HaltsFromTape
+        (rightEndCompactionSourceTapeWithRightPadding
+          (selectedProjectionPaddedTailCleanupDeletedAcceptRightEndLeftCells L)
+          (List.replicate
+            (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+              true L)
+            (none : Option Bool)))
+        (leadingBlankLeftShiftTargetTapeWithPadding
+          [none] (false :: rest)
+          (none ::
+            sentinelGapCompactorFinalPadding
+              (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                true L).length.pred
+              5
+              (List.replicate
+                (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                  true L)
+                (none : Option Bool)))) := by
+    rw [hsourceCells, hdeleteLen]
+    simpa using
+      sentinelFalseMarkerRightEndGapCompactorDescription_haltsFrom_rightEndGapSourceWithRightPadding
+        deletedTail.length pref (false :: rest) leftBit current leftRest
+        3
+        (List.replicate
+          (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+            true L)
+          (none : Option Bool))
+        htargetBits
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      sentinelFalseMarkerRightEndGapCompactorDescription_subroutineReady
+      falseMarkerTargetRestoreDescription_subroutineReady
+      hmarker
+      (by
+        rw [sentinelGapCompactorFinalPadding_cons_cons_right]
+        exact
+          leadingBlankLeftShiftTargetTapeWithPadding_move_left_move_right_padding_cons_cons
+            [none] (false :: rest) none none
+            (none ::
+              List.append
+                (List.replicate
+                  (3 +
+                    (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+                      true L).length.pred)
+                  (none : Option Bool))
+                (List.replicate
+                  (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                    true L)
+                  (none : Option Bool))))
+      (selectedProjectionPaddedTailCleanupFalseMarkerRestoreDescription_haltsFrom
+        (useAccept := true) L false rest
+        (none ::
+          sentinelGapCompactorFinalPadding
+            (selectedProjectionPaddedTailCleanupUnselectedConfigBits
+              true L).length.pred
+            5
+            (List.replicate
+              (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+                true L)
+              (none : Option Bool)))
+        hbits
+        (selectedProjectionPaddedTailCleanupAcceptFalseMarkerRestorePadding_eq_parsed
+          L))
+
 def selectedProjectionPaddedTailCleanupSentinelRewindDescription :
     MachineDescription :=
   SeqViaCanonical leftMoveOnceDescription
