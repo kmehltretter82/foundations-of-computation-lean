@@ -1082,6 +1082,33 @@ theorem rightEdgeRewindDescription_haltsFrom_acceptAfterPadding_tapeAtCells
       L (List.replicate 5 (none : Option Bool))]
   exact rightEdgeRewindDescription_haltsFrom_acceptAfterPadding L
 
+theorem rightEdgeRewindDescription_haltsFrom_acceptAfterPadding_splitKeptPrefix
+    (L : DovetailLayout) :
+    exists hitTail : Word Bool,
+    exists pref : Word Bool,
+    exists leftBit : Bool,
+      selectedProjectionPaddedTailCleanupKeptPrefixBits true L =
+          List.append pref [leftBit] ∧
+      CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          L.acceptHit [] =
+        false :: hitTail ∧
+      rightEdgeRewindDescription.HaltsFromTape
+        (selectedHitOtherFlagErasedAfterPaddingTape true L)
+        (tapeAtCells [none]
+          (List.append (pref.map some)
+            (some leftBit ::
+              List.append
+                ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                  L.rejectConfig []).map some)
+                (List.append ((false :: hitTail).map some)
+                  (none ::
+                    List.replicate 5 (none : Option Bool)))))) := by
+  rcases postPaddingAcceptSourceWithFivePadding_splitKeptPrefix L with
+    ⟨hitTail, pref, leftBit, hpref, hhit, htape⟩
+  refine ⟨hitTail, pref, leftBit, hpref, hhit, ?_⟩
+  rw [← htape]
+  exact rightEdgeRewindDescription_haltsFrom_acceptAfterPadding L
+
 theorem rightEndCompactionSourceTape_move_left_move_right_eq_withRightPadding
     (leftCells : List (Option Bool)) :
     Tape.move Direction.left
