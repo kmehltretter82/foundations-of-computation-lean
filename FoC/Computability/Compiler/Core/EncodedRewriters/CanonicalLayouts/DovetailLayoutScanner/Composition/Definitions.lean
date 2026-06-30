@@ -180,6 +180,17 @@ def transitionRemainderHandoffConfigWithBase
             baseLeft)
           (suffixBits.map some)) }
 
+def transitionRemainderHandoffConfigWithBaseAndRight
+    (baseLeft : List (Option Bool)) (suffixBits : Word Bool)
+    (rightPadding : List (Option Bool)) : Configuration :=
+  { state := TransitionRemainderPrefixScannerDescription.halt
+    tape :=
+      Tape.move Direction.left
+        (tapeAtCells
+          (List.append (transitionRemainderBits.reverse.map some)
+            baseLeft)
+          (List.append (suffixBits.map some) rightPadding)) }
+
 theorem run_transitionRemainderPrefix_raw_to_handoff_withBase
     (baseLeft : List (Option Bool)) (b : Bool)
     (suffixTail : Word Bool) :
@@ -194,6 +205,26 @@ theorem run_transitionRemainderPrefix_raw_to_handoff_withBase
   cases b <;> cases suffixTail <;>
     simp [TransitionRemainderPrefixScannerDescription,
       transitionRemainderHandoffConfigWithBase,
+      transitionRemainderBits, config, tapeAtCells, keepMove,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
+      Tape.moveLeft, Tape.moveRight]
+
+theorem run_transitionRemainderPrefix_raw_to_handoff_withBaseAndRight
+    (baseLeft : List (Option Bool)) (b : Bool)
+    (suffixTail : Word Bool) (rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      TransitionRemainderPrefixScannerDescription.runConfig steps
+          (config 30 baseLeft
+            (some false :: some false :: some true ::
+              some b :: List.append (suffixTail.map some) rightPadding)) =
+        transitionRemainderHandoffConfigWithBaseAndRight baseLeft
+          (b :: suffixTail) rightPadding := by
+  refine ⟨4, ?_⟩
+  cases b <;>
+    simp [TransitionRemainderPrefixScannerDescription,
+      transitionRemainderHandoffConfigWithBaseAndRight,
       transitionRemainderBits, config, tapeAtCells, keepMove,
       runConfig, stepConfig,
       lookupTransition, Matches,
@@ -216,6 +247,23 @@ theorem transitionRemainderHandoffConfigWithBase_move_right
       (some true)
       (some false :: some false :: baseLeft)
       (some b) (suffixTail.map some)
+
+theorem transitionRemainderHandoffConfigWithBaseAndRight_move_right
+    (baseLeft : List (Option Bool)) (b : Bool)
+    (suffixTail : Word Bool) (rightPadding : List (Option Bool)) :
+    Tape.move Direction.right
+        (transitionRemainderHandoffConfigWithBaseAndRight baseLeft
+          (b :: suffixTail) rightPadding).tape =
+      tapeAtCells
+        (List.append (transitionRemainderBits.reverse.map some)
+          baseLeft)
+        (List.append ((b :: suffixTail).map some) rightPadding) := by
+  unfold transitionRemainderHandoffConfigWithBaseAndRight transitionRemainderBits
+  simpa [List.append_assoc] using
+    FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+      (some true)
+      (some false :: some false :: baseLeft)
+      (some b) (List.append (suffixTail.map some) rightPadding)
 
 def ReturnToFirstMarkerDescription : MachineDescription where
   stateCount := 20

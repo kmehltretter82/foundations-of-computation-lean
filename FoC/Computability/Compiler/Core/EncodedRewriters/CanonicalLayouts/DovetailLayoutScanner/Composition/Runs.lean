@@ -148,6 +148,109 @@ theorem run_finalHitFlags_raw_to_handoff_withBase
         boolFinalScannerDescription_subroutineReady
         hArun hBReach
 
+theorem run_finalHitFlags_raw_to_handoff_withBaseAndRight
+    (acceptHit rejectHit : Bool)
+    (baseLeft rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      FHFS.runConfig steps
+          { state := FHFS.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((boolFieldBits acceptHit
+                    (boolFieldBits rejectHit [])).map some)
+                  (none :: rightPadding)) } =
+        { state := FHFS.halt
+          tape :=
+            (boolFinalHandoffConfigWithBaseAndRight rejectHit
+              (List.append
+                ((cellCodeBits (some acceptHit)).reverse.map some)
+                baseLeft)
+              (none :: rightPadding)).tape } := by
+  rcases cellCodeBits_cons_false (some rejectHit) with
+    ⟨tail, htail⟩
+  rcases run_boolOnlySuffix_raw_to_handoff_withBaseAndRight
+      acceptHit baseLeft false tail (none :: rightPadding) with
+    ⟨acceptSteps, haccept⟩
+  let baseAfterAccept :=
+    List.append ((cellCodeBits (some acceptHit)).reverse.map some)
+      baseLeft
+  let Tmid :=
+    boolOnlySuffixHandoffConfigWithBaseAndRight acceptHit baseLeft
+      (false :: tail) (none :: rightPadding)
+  have hArun :
+      BSS.runConfig acceptSteps
+          { state := BSS.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((boolFieldBits acceptHit
+                    (boolFieldBits rejectHit [])).map some)
+                  (none :: rightPadding)) } =
+        { state := BSS.halt
+          tape := Tmid.tape } := by
+    change
+      BSS.runConfig acceptSteps
+          (config 10 baseLeft
+            (List.append
+              ((boolFieldBits acceptHit
+                (boolFieldBits rejectHit [])).map some)
+              (none :: rightPadding))) =
+        Tmid
+    rw [show
+        List.append
+          ((boolFieldBits acceptHit
+            (boolFieldBits rejectHit [])).map some)
+          (none :: rightPadding) =
+          List.append ((cellCodeBits (some acceptHit)).map some)
+            (List.append (some false :: tail.map some)
+              (none :: rightPadding)) by
+      change
+        List.append
+          ((cellFieldBits (some acceptHit)
+            (cellFieldBits (some rejectHit) [])).map some)
+          (none :: rightPadding) =
+          List.append ((cellCodeBits (some acceptHit)).map some)
+            (List.append (some false :: tail.map some)
+              (none :: rightPadding))
+      simp [cellFieldBits, htail, List.map_append, List.append_assoc]]
+    simpa [Tmid] using haccept
+  have hBReach :
+      exists nB : Nat,
+        BFS.runConfig nB
+            { state := BFS.start
+              tape := Tape.move Direction.right Tmid.tape } =
+          { state := BFS.halt
+            tape :=
+              (boolFinalHandoffConfigWithBaseAndRight rejectHit
+                baseAfterAccept (none :: rightPadding)).tape } := by
+    rcases run_boolFinal_raw_to_handoff_withBaseAndRight
+        rejectHit baseAfterAccept rightPadding with
+      ⟨finalSteps, hfinal⟩
+    have hmove :
+        Tape.move Direction.right Tmid.tape =
+          tapeAtCells baseAfterAccept
+            (List.append ((cellCodeBits (some rejectHit)).map some)
+              (none :: rightPadding)) := by
+      simpa [Tmid, baseAfterAccept, htail, List.append_assoc] using
+        boolOnlySuffixHandoffConfigWithBaseAndRight_move_right
+          acceptHit baseLeft false tail (none :: rightPadding)
+    exact
+      runConfig_reaches_from_move_eq
+        (B := BFS)
+        (handoffMove := Direction.right)
+        hmove
+        (by simpa [config] using hfinal)
+  simpa [FinalHitFlagsScannerDescription, Tmid, baseAfterAccept]
+    using
+      seqSubroutine_runConfig_exists
+        (A := BSS)
+        (B := BFS)
+        (handoffMove := Direction.right)
+        boolSuffixScannerDescription_subroutineReady
+        boolFinalScannerDescription_subroutineReady
+        hArun hBReach
+
 theorem run_cellThenCellList_raw_to_handoff_withBase
     (head : Option Bool) (right baseLeft : List (Option Bool))
     (suffixTail : Word Bool) :
@@ -905,6 +1008,134 @@ theorem run_rejectConfigAndFinalFlags_raw_to_handoff_withBase
       finalHitFlagsScannerDescription_subroutineReady
       hArun hBReach
 
+theorem run_rejectConfigAndFinalFlags_raw_to_handoff_withBaseAndRight
+    (rejectConfig : Configuration)
+    (acceptHit rejectHit : Bool)
+    (baseLeft rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      RCF.runConfig steps
+          { state := RCF.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((configurationFieldBits rejectConfig
+                    (boolFieldBits acceptHit
+                      (boolFieldBits rejectHit []))).map some)
+                  (none :: rightPadding)) } =
+        { state := RCF.halt
+          tape :=
+            (boolFinalHandoffConfigWithBaseAndRight rejectHit
+              (List.append
+                ((cellCodeBits (some acceptHit)).reverse.map some)
+                (configurationRestoredLeftWithBase rejectConfig
+                  baseLeft))
+              (none :: rightPadding)).tape } := by
+  rcases cellFieldBits_cons_false (some acceptHit)
+      (boolFieldBits rejectHit []) with
+    ⟨flagsTail, hflagsTail⟩
+  rcases run_configurationSuffix_raw_to_handoff_withBaseAndRight
+      rejectConfig baseLeft flagsTail (none :: rightPadding) with
+    ⟨configSteps, hconfig⟩
+  let TmidTape : Tape Bool :=
+    (cellListCanonicalHandoffConfigWithBaseAndRight rejectConfig.tape.right
+      (List.append ((cellCodeBits rejectConfig.tape.head).reverse.map some)
+        (cellListCanonicalRestoredLeftWithBase rejectConfig.tape.left
+          (List.append ((stageNatBits rejectConfig.state).reverse.map some)
+            baseLeft)))
+      (false :: flagsTail) (none :: rightPadding)).tape
+  have hArun :
+      CFS.runConfig configSteps
+          { state := CFS.start
+            tape :=
+            tapeAtCells baseLeft
+                (List.append
+                  ((configurationFieldBits rejectConfig
+                    (boolFieldBits acceptHit
+                      (boolFieldBits rejectHit []))).map some)
+                  (none :: rightPadding)) } =
+        { state := CFS.halt
+          tape := TmidTape } := by
+    rw [show
+        List.append
+          ((configurationFieldBits rejectConfig
+            (boolFieldBits acceptHit
+              (boolFieldBits rejectHit []))).map some)
+          (none :: rightPadding) =
+          List.append
+            ((configurationFieldBits rejectConfig
+              (false :: flagsTail)).map some)
+            (none :: rightPadding) by
+      have hflagsBits :
+          boolFieldBits acceptHit (boolFieldBits rejectHit []) =
+            false :: flagsTail := by
+        simpa [boolFieldBits] using hflagsTail
+      rw [hflagsBits]]
+    simpa [TmidTape] using hconfig
+  have hBReach :
+      exists nB : Nat,
+        FHFS.runConfig nB
+            { state := FHFS.start
+              tape := Tape.move Direction.right TmidTape } =
+          { state := FHFS.halt
+            tape :=
+              (boolFinalHandoffConfigWithBaseAndRight rejectHit
+                (List.append
+                  ((cellCodeBits (some acceptHit)).reverse.map some)
+                  (configurationRestoredLeftWithBase rejectConfig
+                    baseLeft))
+                (none :: rightPadding)).tape } := by
+    rcases run_finalHitFlags_raw_to_handoff_withBaseAndRight
+        acceptHit rejectHit
+        (configurationRestoredLeftWithBase rejectConfig baseLeft)
+        rightPadding with
+      ⟨flagSteps, hflags⟩
+    have hmove :
+        Tape.move Direction.right TmidTape =
+          tapeAtCells
+            (configurationRestoredLeftWithBase rejectConfig baseLeft)
+            (List.append
+              ((boolFieldBits acceptHit
+                (boolFieldBits rejectHit [])).map some)
+              (none :: rightPadding)) := by
+      have hraw :
+          Tape.move Direction.right TmidTape =
+            tapeAtCells
+              (configurationRestoredLeftWithBase rejectConfig baseLeft)
+              (List.append ((false :: flagsTail).map some)
+                (none :: rightPadding)) := by
+        simpa [TmidTape, configurationRestoredLeftWithBase] using
+          cellListCanonicalHandoffConfigWithBaseAndRight_move_right
+            rejectConfig.tape.right
+            (List.append
+              ((cellCodeBits rejectConfig.tape.head).reverse.map some)
+              (cellListCanonicalRestoredLeftWithBase rejectConfig.tape.left
+                (List.append
+                  ((stageNatBits rejectConfig.state).reverse.map some)
+                  baseLeft)))
+            false flagsTail (none :: rightPadding)
+      rw [hraw]
+      have hflagsCells :
+          (false :: flagsTail).map some =
+            (boolFieldBits acceptHit
+              (boolFieldBits rejectHit [])).map some := by
+        simpa [boolFieldBits] using
+          congrArg (fun bits => bits.map some) hflagsTail.symm
+      simp [hflagsCells]
+    exact
+      runConfig_reaches_from_move_eq
+        (B := FHFS)
+        (handoffMove := Direction.right)
+        hmove
+        (by simpa using hflags)
+  simpa [RejectConfigAndFinalFlagsScannerDescription, TmidTape] using
+    seqSubroutine_runConfig_exists
+      (A := CFS)
+      (B := FHFS)
+      (handoffMove := Direction.right)
+      configurationSuffixScannerDescription_subroutineReady
+      finalHitFlagsScannerDescription_subroutineReady
+      hArun hBReach
+
 theorem run_configurationsAndFinalFlags_raw_to_handoff_withBase
     (acceptConfig rejectConfig : Configuration)
     (acceptHit rejectHit : Bool)
@@ -998,6 +1229,137 @@ theorem run_configurationsAndFinalFlags_raw_to_handoff_withBase
                   ((stageNatBits acceptConfig.state).reverse.map some)
                   baseLeft)))
             false rejectTail
+      rw [hraw]
+      have hrejectCells :
+          (false :: rejectTail).map some =
+            (configurationFieldBits rejectConfig
+              (boolFieldBits acceptHit
+                (boolFieldBits rejectHit []))).map some := by
+        simpa using
+          congrArg (fun bits => bits.map some) hrejectTail.symm
+      simp [hrejectCells]
+    exact
+      runConfig_reaches_from_move_eq
+        (B := RCF)
+        (handoffMove := Direction.right)
+        hmove
+        (by simpa using hreject)
+  simpa [ConfigurationsAndFinalFlagsScannerDescription, TmidTape] using
+    seqSubroutine_runConfig_exists
+      (A := CFS)
+      (B := RCF)
+      (handoffMove := Direction.right)
+      configurationSuffixScannerDescription_subroutineReady
+      rejectConfigAndFinalFlagsScannerDescription_subroutineReady
+      hArun hBReach
+
+theorem run_configurationsAndFinalFlags_raw_to_handoff_withBaseAndRight
+    (acceptConfig rejectConfig : Configuration)
+    (acceptHit rejectHit : Bool)
+    (baseLeft rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      CFFS.runConfig steps
+          { state := CFFS.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((configurationFieldBits acceptConfig
+                    (configurationFieldBits rejectConfig
+                      (boolFieldBits acceptHit
+                        (boolFieldBits rejectHit [])))).map some)
+                  (none :: rightPadding)) } =
+        { state := CFFS.halt
+          tape :=
+            (boolFinalHandoffConfigWithBaseAndRight rejectHit
+              (List.append
+                ((cellCodeBits (some acceptHit)).reverse.map some)
+                (configurationRestoredLeftWithBase rejectConfig
+                  (configurationRestoredLeftWithBase acceptConfig
+                    baseLeft)))
+              (none :: rightPadding)).tape } := by
+  rcases configurationFieldBits_cons_false rejectConfig
+      (boolFieldBits acceptHit (boolFieldBits rejectHit [])) with
+    ⟨rejectTail, hrejectTail⟩
+  rcases run_configurationSuffix_raw_to_handoff_withBaseAndRight
+      acceptConfig baseLeft rejectTail (none :: rightPadding) with
+    ⟨acceptSteps, haccept⟩
+  let TmidTape : Tape Bool :=
+    (cellListCanonicalHandoffConfigWithBaseAndRight acceptConfig.tape.right
+      (List.append ((cellCodeBits acceptConfig.tape.head).reverse.map some)
+        (cellListCanonicalRestoredLeftWithBase acceptConfig.tape.left
+          (List.append ((stageNatBits acceptConfig.state).reverse.map some)
+            baseLeft)))
+      (false :: rejectTail) (none :: rightPadding)).tape
+  have hArun :
+      CFS.runConfig acceptSteps
+          { state := CFS.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((configurationFieldBits acceptConfig
+                    (configurationFieldBits rejectConfig
+                      (boolFieldBits acceptHit
+                        (boolFieldBits rejectHit [])))).map some)
+                  (none :: rightPadding)) } =
+        { state := CFS.halt
+          tape := TmidTape } := by
+    rw [show
+        List.append
+          ((configurationFieldBits acceptConfig
+            (configurationFieldBits rejectConfig
+              (boolFieldBits acceptHit
+                (boolFieldBits rejectHit [])))).map some)
+          (none :: rightPadding) =
+          List.append
+            ((configurationFieldBits acceptConfig
+              (false :: rejectTail)).map some)
+            (none :: rightPadding) by
+      rw [hrejectTail]]
+    simpa [TmidTape] using haccept
+  have hBReach :
+      exists nB : Nat,
+        RCF.runConfig nB
+            { state := RCF.start
+              tape := Tape.move Direction.right TmidTape } =
+          { state := RCF.halt
+            tape :=
+              (boolFinalHandoffConfigWithBaseAndRight rejectHit
+                (List.append
+                  ((cellCodeBits (some acceptHit)).reverse.map some)
+                  (configurationRestoredLeftWithBase rejectConfig
+                    (configurationRestoredLeftWithBase acceptConfig
+                      baseLeft)))
+                (none :: rightPadding)).tape } := by
+    rcases run_rejectConfigAndFinalFlags_raw_to_handoff_withBaseAndRight
+        rejectConfig acceptHit rejectHit
+        (configurationRestoredLeftWithBase acceptConfig baseLeft)
+        rightPadding with
+      ⟨rejectSteps, hreject⟩
+    have hmove :
+        Tape.move Direction.right TmidTape =
+          tapeAtCells
+            (configurationRestoredLeftWithBase acceptConfig baseLeft)
+            (List.append
+              ((configurationFieldBits rejectConfig
+                (boolFieldBits acceptHit
+                  (boolFieldBits rejectHit []))).map some)
+              (none :: rightPadding)) := by
+      have hraw :
+          Tape.move Direction.right TmidTape =
+            tapeAtCells
+              (configurationRestoredLeftWithBase acceptConfig baseLeft)
+              (List.append ((false :: rejectTail).map some)
+                (none :: rightPadding)) := by
+        simpa [TmidTape, configurationRestoredLeftWithBase] using
+          cellListCanonicalHandoffConfigWithBaseAndRight_move_right
+            acceptConfig.tape.right
+            (List.append
+              ((cellCodeBits acceptConfig.tape.head).reverse.map some)
+              (cellListCanonicalRestoredLeftWithBase acceptConfig.tape.left
+                (List.append
+                  ((stageNatBits acceptConfig.state).reverse.map some)
+                  baseLeft)))
+            false rejectTail (none :: rightPadding)
       rw [hraw]
       have hrejectCells :
           (false :: rejectTail).map some =
@@ -1138,6 +1500,136 @@ theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
         configurationsAndFinalFlagsScannerDescription_subroutineReady
         hArun hBReach
 
+theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBaseAndRight
+    (stage : Nat)
+    (acceptConfig rejectConfig : Configuration)
+    (acceptHit rejectHit : Bool)
+    (baseLeft rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      SCFFS.runConfig steps
+          { state := SCFFS.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((List.append (stageNatBits stage)
+                    (configurationFieldBits acceptConfig
+                      (configurationFieldBits rejectConfig
+                        (boolFieldBits acceptHit
+                          (boolFieldBits rejectHit []))))).map some)
+                  (none :: rightPadding)) } =
+        { state := SCFFS.halt
+          tape :=
+            (boolFinalHandoffConfigWithBaseAndRight rejectHit
+              (List.append
+                ((cellCodeBits (some acceptHit)).reverse.map some)
+                (configurationRestoredLeftWithBase rejectConfig
+                  (configurationRestoredLeftWithBase acceptConfig
+                    (List.append ((stageNatBits stage).reverse.map some)
+                      baseLeft))))
+              (none :: rightPadding)).tape } := by
+  rcases configurationFieldBits_cons_false acceptConfig
+      (configurationFieldBits rejectConfig
+        (boolFieldBits acceptHit (boolFieldBits rejectHit []))) with
+    ⟨acceptTail, hacceptTail⟩
+  rcases DovetailStagePrefix.run_nonemptyNatSuffix_raw_to_handoff_withBaseAndRight
+      stage baseLeft false acceptTail (none :: rightPadding) with
+    ⟨stageSteps, hstage⟩
+  let TmidTape : Tape Bool :=
+    (DovetailStagePrefix.nonemptyNatSuffixHandoffConfigWithBaseAndRight
+      stage baseLeft (false :: acceptTail) (none :: rightPadding)).tape
+  let baseAfterStage : List (Option Bool) :=
+    List.append ((stageNatBits stage).reverse.map some) baseLeft
+  have hArun :
+      NNSS.runConfig
+          stageSteps
+          { state :=
+              NNSS.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((List.append (stageNatBits stage)
+                    (configurationFieldBits acceptConfig
+                      (configurationFieldBits rejectConfig
+                        (boolFieldBits acceptHit
+                          (boolFieldBits rejectHit []))))).map some)
+                  (none :: rightPadding)) } =
+        { state := NNSS.halt
+          tape := TmidTape } := by
+    rw [show
+        List.append
+          ((List.append (stageNatBits stage)
+            (configurationFieldBits acceptConfig
+              (configurationFieldBits rejectConfig
+                (boolFieldBits acceptHit
+                  (boolFieldBits rejectHit []))))).map some)
+          (none :: rightPadding) =
+          List.append
+            ((List.append (stageNatBits stage)
+              (false :: acceptTail)).map some)
+            (none :: rightPadding) by
+      rw [hacceptTail]]
+    simpa [TmidTape] using hstage
+  have hBReach :
+      exists nB : Nat,
+        CFFS.runConfig nB
+            { state := CFFS.start
+              tape := Tape.move Direction.right TmidTape } =
+          { state := CFFS.halt
+            tape :=
+              (boolFinalHandoffConfigWithBaseAndRight rejectHit
+                (List.append
+                  ((cellCodeBits (some acceptHit)).reverse.map some)
+                  (configurationRestoredLeftWithBase rejectConfig
+                    (configurationRestoredLeftWithBase acceptConfig
+                      baseAfterStage)))
+                (none :: rightPadding)).tape } := by
+    rcases run_configurationsAndFinalFlags_raw_to_handoff_withBaseAndRight
+        acceptConfig rejectConfig acceptHit rejectHit
+        baseAfterStage rightPadding with
+      ⟨configSteps, hconfigs⟩
+    have hmove :
+        Tape.move Direction.right TmidTape =
+          tapeAtCells baseAfterStage
+            (List.append
+              ((configurationFieldBits acceptConfig
+                (configurationFieldBits rejectConfig
+                  (boolFieldBits acceptHit
+                    (boolFieldBits rejectHit [])))).map some)
+              (none :: rightPadding)) := by
+      have hraw :
+          Tape.move Direction.right TmidTape =
+            tapeAtCells baseAfterStage
+              (List.append ((false :: acceptTail).map some)
+                (none :: rightPadding)) := by
+        simpa [TmidTape, baseAfterStage] using
+          DovetailStagePrefix.nonemptyNatSuffixHandoffConfigWithBaseAndRight_move_right
+            stage baseLeft false acceptTail (none :: rightPadding)
+      rw [hraw]
+      have hacceptCells :
+          (false :: acceptTail).map some =
+            (configurationFieldBits acceptConfig
+              (configurationFieldBits rejectConfig
+                (boolFieldBits acceptHit
+                  (boolFieldBits rejectHit [])))).map some := by
+        simpa using
+          congrArg (fun bits => bits.map some) hacceptTail.symm
+      simp [hacceptCells]
+    exact
+      runConfig_reaches_from_move_eq
+        (B := CFFS)
+        (handoffMove := Direction.right)
+        hmove
+        (by simpa [baseAfterStage] using hconfigs)
+  simpa [SCFFS, TmidTape,
+    baseAfterStage] using
+      seqSubroutine_runConfig_exists
+        (A := NNSS)
+        (B := CFFS)
+        (handoffMove := Direction.right)
+        DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
+        configurationsAndFinalFlagsScannerDescription_subroutineReady
+        hArun hBReach
+
 theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
     (input : Word Bool) (stage : Nat)
     (acceptConfig rejectConfig : Configuration)
@@ -1244,6 +1736,152 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
           boolWordCanonicalHandoffConfigWithBase] using
           cellListCanonicalHandoffConfigWithBase_move_right
             (input.map some) baseLeft false inputSuffixTail
+      rw [hraw]
+      have hsuffixCells :
+          (false :: inputSuffixTail).map some =
+            (List.append (stageNatBits stage) stageSuffix).map some := by
+        rw [hstageTail]
+        simp [inputSuffixTail, List.map_append]
+      simp [hsuffixCells]
+    exact
+      runConfig_reaches_from_move_eq
+        (B := SCFFS)
+        (handoffMove := Direction.right)
+        hmove
+        (by simpa [baseAfterInput, stageSuffix] using hstage)
+  simpa [ISCFFS,
+    TmidTape, baseAfterInput] using
+      seqSubroutine_runConfig_exists
+        (A := BWSS)
+        (B := SCFFS)
+        (handoffMove := Direction.right)
+        boolWordSuffixScannerDescription_subroutineReady
+        stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
+        hArun hBReach
+
+theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBaseAndRight
+    (input : Word Bool) (stage : Nat)
+    (acceptConfig rejectConfig : Configuration)
+    (acceptHit rejectHit : Bool)
+    (baseLeft rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      ISCFFS.runConfig
+          steps
+          { state :=
+              ISCFFS.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((boolWordFieldBits input
+                    (List.append (stageNatBits stage)
+                      (configurationFieldBits acceptConfig
+                        (configurationFieldBits rejectConfig
+                          (boolFieldBits acceptHit
+                            (boolFieldBits rejectHit [])))))).map some)
+                  (none :: rightPadding)) } =
+        { state :=
+            ISCFFS.halt
+          tape :=
+            (boolFinalHandoffConfigWithBaseAndRight rejectHit
+              (List.append
+                ((cellCodeBits (some acceptHit)).reverse.map some)
+                (configurationRestoredLeftWithBase rejectConfig
+                  (configurationRestoredLeftWithBase acceptConfig
+                    (List.append ((stageNatBits stage).reverse.map some)
+                      (cellListCanonicalRestoredLeftWithBase
+                        (input.map some) baseLeft)))))
+              (none :: rightPadding)).tape } := by
+  let stageSuffix : Word Bool :=
+    configurationFieldBits acceptConfig
+      (configurationFieldBits rejectConfig
+        (boolFieldBits acceptHit (boolFieldBits rejectHit [])))
+  rcases stageNatBits_cons_false stage with ⟨stageTail, hstageTail⟩
+  let inputSuffixTail : Word Bool :=
+    List.append stageTail stageSuffix
+  rcases run_boolWordSuffix_raw_to_canonical_handoff_withBaseAndRight
+      input baseLeft inputSuffixTail (none :: rightPadding) with
+    ⟨inputSteps, hinput⟩
+  let TmidTape : Tape Bool :=
+    (boolWordCanonicalHandoffConfigWithBaseAndRight input baseLeft
+      (false :: inputSuffixTail) (none :: rightPadding)).tape
+  let baseAfterInput : List (Option Bool) :=
+    cellListCanonicalRestoredLeftWithBase (input.map some) baseLeft
+  have hArun :
+      BWSS.runConfig inputSteps
+          { state := BWSS.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((boolWordFieldBits input
+                    (List.append (stageNatBits stage)
+                      (configurationFieldBits acceptConfig
+                        (configurationFieldBits rejectConfig
+                          (boolFieldBits acceptHit
+                            (boolFieldBits rejectHit [])))))).map some)
+                  (none :: rightPadding)) } =
+        { state := BWSS.halt
+          tape := TmidTape } := by
+    change
+      BWSS.runConfig inputSteps
+          (config 100 baseLeft
+            (List.append
+              ((boolWordFieldBits input
+                (List.append (stageNatBits stage)
+                  stageSuffix)).map some)
+              (none :: rightPadding))) =
+        { state := BWSS.halt
+          tape := TmidTape }
+    rw [show
+        List.append
+          ((boolWordFieldBits input
+            (List.append (stageNatBits stage) stageSuffix)).map some)
+          (none :: rightPadding) =
+          List.append ((stageNatBits input.length).map some)
+            (List.append ((cellsCodeBits (input.map some)).map some)
+              (some false ::
+                List.append (inputSuffixTail.map some)
+                  (none :: rightPadding))) by
+      rw [hstageTail]
+      simp [boolWordFieldBits, cellListFieldBits, inputSuffixTail,
+        stageSuffix, List.map_append, List.append_assoc]]
+    simpa [TmidTape, boolWordCanonicalHandoffConfigWithBaseAndRight] using
+      hinput
+  have hBReach :
+      exists nB : Nat,
+        SCFFS.runConfig nB
+            { state :=
+                SCFFS.start
+              tape := Tape.move Direction.right TmidTape } =
+          { state := SCFFS.halt
+            tape :=
+              (boolFinalHandoffConfigWithBaseAndRight rejectHit
+                (List.append
+                  ((cellCodeBits (some acceptHit)).reverse.map some)
+                  (configurationRestoredLeftWithBase rejectConfig
+                    (configurationRestoredLeftWithBase acceptConfig
+                      (List.append ((stageNatBits stage).reverse.map some)
+                        baseAfterInput))))
+                (none :: rightPadding)).tape } := by
+    rcases run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBaseAndRight
+        stage acceptConfig rejectConfig acceptHit rejectHit
+        baseAfterInput rightPadding with
+      ⟨stageSteps, hstage⟩
+    have hmove :
+        Tape.move Direction.right TmidTape =
+          tapeAtCells baseAfterInput
+            (List.append
+              ((List.append (stageNatBits stage) stageSuffix).map some)
+              (none :: rightPadding)) := by
+      have hraw :
+          Tape.move Direction.right TmidTape =
+            tapeAtCells baseAfterInput
+              (List.append ((false :: inputSuffixTail).map some)
+                (none :: rightPadding)) := by
+        simpa [TmidTape, baseAfterInput,
+          boolWordCanonicalHandoffConfigWithBaseAndRight] using
+          cellListCanonicalHandoffConfigWithBaseAndRight_move_right
+            (input.map some) baseLeft false inputSuffixTail
+            (none :: rightPadding)
       rw [hraw]
       have hsuffixCells :
           (false :: inputSuffixTail).map some =
@@ -1421,6 +2059,176 @@ theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase
                           baseLeft))))))).tape } :=
   run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
     L baseLeft
+
+theorem run_markedDovetailLayoutBody_raw_to_handoff_withBaseAndRight_phaseChain
+    (L : DovetailLayout)
+    (baseLeft rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      MDBS.runConfig steps
+          { state := MDBS.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((List.append transitionRemainderBits
+                    (boolWordFieldBits L.input
+                      (List.append (stageNatBits L.stage)
+                        (configurationFieldBits L.acceptConfig
+                          (configurationFieldBits L.rejectConfig
+                            (boolFieldBits L.acceptHit
+                              (boolFieldBits L.rejectHit []))))))).map
+                    some)
+                  (none :: rightPadding)) } =
+        { state := MDBS.halt
+          tape :=
+            (boolFinalHandoffConfigWithBaseAndRight L.rejectHit
+              (List.append
+                ((cellCodeBits (some L.acceptHit)).reverse.map some)
+                (configurationRestoredLeftWithBase L.rejectConfig
+                  (configurationRestoredLeftWithBase L.acceptConfig
+                    (List.append ((stageNatBits L.stage).reverse.map some)
+                      (cellListCanonicalRestoredLeftWithBase
+                        (L.input.map some)
+                        (List.append
+                          (transitionRemainderBits.reverse.map some)
+                          baseLeft))))))
+              (none :: rightPadding)).tape } := by
+  let inputSuffix : Word Bool :=
+    List.append (stageNatBits L.stage)
+      (configurationFieldBits L.acceptConfig
+        (configurationFieldBits L.rejectConfig
+          (boolFieldBits L.acceptHit
+            (boolFieldBits L.rejectHit []))))
+  rcases cellListFieldBits_cons_false (L.input.map some)
+      inputSuffix with
+    ⟨inputTail, hinputTail⟩
+  rcases run_transitionRemainderPrefix_raw_to_handoff_withBaseAndRight
+      baseLeft false inputTail (none :: rightPadding) with
+    ⟨transitionSteps, htransition⟩
+  let TmidTape : Tape Bool :=
+    (transitionRemainderHandoffConfigWithBaseAndRight baseLeft
+      (false :: inputTail) (none :: rightPadding)).tape
+  let baseAfterTransition : List (Option Bool) :=
+    List.append (transitionRemainderBits.reverse.map some) baseLeft
+  have hArun :
+      TRP.runConfig
+          transitionSteps
+          { state := TRP.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((List.append transitionRemainderBits
+                    (boolWordFieldBits L.input inputSuffix)).map some)
+                  (none :: rightPadding)) } =
+        { state := TRP.halt
+          tape := TmidTape } := by
+    rw [show
+        List.append
+          ((List.append transitionRemainderBits
+            (boolWordFieldBits L.input inputSuffix)).map some)
+          (none :: rightPadding) =
+          some false :: some false :: some true ::
+            some false ::
+              List.append (inputTail.map some) (none :: rightPadding) by
+      have hinputBits :
+          boolWordFieldBits L.input inputSuffix = false :: inputTail := by
+        simpa [boolWordFieldBits] using hinputTail
+      rw [hinputBits]
+      simp [transitionRemainderBits]]
+    simpa [TmidTape] using htransition
+  have hBReach :
+      exists nB : Nat,
+        ISCFFS.runConfig nB
+            { state :=
+                ISCFFS.start
+              tape := Tape.move Direction.right TmidTape } =
+          { state :=
+              ISCFFS.halt
+            tape :=
+              (boolFinalHandoffConfigWithBaseAndRight L.rejectHit
+                (List.append
+                  ((cellCodeBits (some L.acceptHit)).reverse.map some)
+                  (configurationRestoredLeftWithBase L.rejectConfig
+                    (configurationRestoredLeftWithBase L.acceptConfig
+                      (List.append ((stageNatBits L.stage).reverse.map some)
+                        (cellListCanonicalRestoredLeftWithBase
+                          (L.input.map some)
+                          baseAfterTransition)))))
+                (none :: rightPadding)).tape } := by
+    rcases
+        run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBaseAndRight
+          L.input L.stage L.acceptConfig L.rejectConfig
+          L.acceptHit L.rejectHit baseAfterTransition rightPadding with
+      ⟨inputSteps, hinput⟩
+    have hmove :
+        Tape.move Direction.right TmidTape =
+          tapeAtCells baseAfterTransition
+            (List.append
+              ((boolWordFieldBits L.input inputSuffix).map some)
+              (none :: rightPadding)) := by
+      have hraw :
+          Tape.move Direction.right TmidTape =
+            tapeAtCells baseAfterTransition
+              (List.append ((false :: inputTail).map some)
+                (none :: rightPadding)) := by
+        simpa [TmidTape, baseAfterTransition] using
+          transitionRemainderHandoffConfigWithBaseAndRight_move_right
+            baseLeft false inputTail (none :: rightPadding)
+      rw [hraw]
+      have hinputCells :
+          (false :: inputTail).map some =
+            (boolWordFieldBits L.input inputSuffix).map some := by
+        simpa using
+          congrArg (fun bits => bits.map some) hinputTail.symm
+      simp [hinputCells]
+    exact
+      runConfig_reaches_from_move_eq
+        (B := ISCFFS)
+        (handoffMove := Direction.right)
+        hmove
+        (by simpa [baseAfterTransition, inputSuffix] using hinput)
+  simpa [MarkedDovetailLayoutBodyScannerDescription, TmidTape,
+    baseAfterTransition] using
+      rightHandoffSequential_runConfig_exists
+        (A := TRP)
+        (B := ISCFFS)
+        transitionRemainderPrefixScannerDescription_subroutineReady
+        inputStageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
+        hArun hBReach
+
+theorem run_markedDovetailLayoutBody_raw_to_handoff_withBaseAndRight
+    (L : DovetailLayout)
+    (baseLeft rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      MDBS.runConfig steps
+          { state := MDBS.start
+            tape :=
+              tapeAtCells baseLeft
+                (List.append
+                  ((List.append transitionRemainderBits
+                    (boolWordFieldBits L.input
+                      (List.append (stageNatBits L.stage)
+                        (configurationFieldBits L.acceptConfig
+                          (configurationFieldBits L.rejectConfig
+                            (boolFieldBits L.acceptHit
+                              (boolFieldBits L.rejectHit []))))))).map
+                    some)
+                  (none :: rightPadding)) } =
+        { state := MDBS.halt
+          tape :=
+            (boolFinalHandoffConfigWithBaseAndRight L.rejectHit
+              (List.append
+                ((cellCodeBits (some L.acceptHit)).reverse.map some)
+                (configurationRestoredLeftWithBase L.rejectConfig
+                  (configurationRestoredLeftWithBase L.acceptConfig
+                    (List.append ((stageNatBits L.stage).reverse.map some)
+                      (cellListCanonicalRestoredLeftWithBase
+                        (L.input.map some)
+                        (List.append
+                          (transitionRemainderBits.reverse.map some)
+                          baseLeft))))))
+              (none :: rightPadding)).tape } :=
+  run_markedDovetailLayoutBody_raw_to_handoff_withBaseAndRight_phaseChain
+    L baseLeft rightPadding
 
 theorem run_markedDovetailLayoutBody_return_to_checkedHandoff
     (L : DovetailLayout) :

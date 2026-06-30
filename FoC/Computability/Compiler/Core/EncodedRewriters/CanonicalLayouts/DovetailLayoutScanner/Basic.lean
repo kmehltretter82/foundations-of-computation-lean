@@ -795,6 +795,18 @@ def boolOnlySuffixHandoffConfigWithBase
             baseLeft)
           (suffixBits.map some)) }
 
+def boolOnlySuffixHandoffConfigWithBaseAndRight
+    (flag : Bool) (baseLeft : List (Option Bool))
+    (suffixBits : Word Bool)
+    (rightPadding : List (Option Bool)) : Configuration :=
+  { state := BSS.halt
+    tape :=
+      Tape.move Direction.left
+        (tapeAtCells
+          (List.append ((cellCodeBits (some flag)).reverse.map some)
+            baseLeft)
+          (List.append (suffixBits.map some) rightPadding)) }
+
 theorem run_boolOnlySuffix_raw_to_handoff_withBase
     (flag : Bool) (baseLeft : List (Option Bool))
     (b : Bool) (suffixTail : Word Bool) :
@@ -809,6 +821,31 @@ theorem run_boolOnlySuffix_raw_to_handoff_withBase
   cases flag <;> cases b <;>
     simp [BoolSuffixScannerDescription,
       boolOnlySuffixHandoffConfigWithBase, cellCodeBits,
+      config, tapeAtCells, keepMove,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, encodeCell,
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput,
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+      Tape.moveRight]
+
+theorem run_boolOnlySuffix_raw_to_handoff_withBaseAndRight
+    (flag : Bool) (baseLeft : List (Option Bool))
+    (b : Bool) (suffixTail : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      BSS.runConfig steps
+          (config 10 baseLeft
+            (List.append ((cellCodeBits (some flag)).map some)
+              (List.append (some b :: suffixTail.map some)
+                rightPadding))) =
+        boolOnlySuffixHandoffConfigWithBaseAndRight flag baseLeft
+          (b :: suffixTail) rightPadding := by
+  refine ⟨5, ?_⟩
+  cases flag <;> cases b <;>
+    simp [BoolSuffixScannerDescription,
+      boolOnlySuffixHandoffConfigWithBaseAndRight, cellCodeBits,
       config, tapeAtCells, keepMove,
       runConfig, stepConfig,
       lookupTransition, Matches,
@@ -844,6 +881,34 @@ theorem boolOnlySuffixHandoffConfigWithBase_move_right
         (some false)
         (some true :: some true :: some false :: baseLeft)
         (some b) (suffixTail.map some)
+
+theorem boolOnlySuffixHandoffConfigWithBaseAndRight_move_right
+    (flag : Bool) (baseLeft : List (Option Bool))
+    (b : Bool) (suffixTail : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    Tape.move Direction.right
+        (boolOnlySuffixHandoffConfigWithBaseAndRight flag baseLeft
+          (b :: suffixTail) rightPadding).tape =
+      tapeAtCells
+        (List.append ((cellCodeBits (some flag)).reverse.map some)
+          baseLeft)
+        (List.append ((b :: suffixTail).map some) rightPadding) := by
+  unfold boolOnlySuffixHandoffConfigWithBaseAndRight
+  cases flag
+  · simpa [cellCodeBits, encodeCell,
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput, List.append_assoc] using
+      DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+        (some true)
+        (some false :: some true :: some false :: baseLeft)
+        (some b) (List.append (suffixTail.map some) rightPadding)
+  · simpa [cellCodeBits, encodeCell,
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput, List.append_assoc] using
+      DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+        (some false)
+        (some true :: some true :: some false :: baseLeft)
+        (some b) (List.append (suffixTail.map some) rightPadding)
 
 def BoolFinalScannerDescription : MachineDescription where
   stateCount := 100
@@ -895,6 +960,17 @@ def boolFinalHandoffConfigWithBase
             baseLeft)
           []) }
 
+def boolFinalHandoffConfigWithBaseAndRight
+    (flag : Bool) (baseLeft rightPadding : List (Option Bool)) :
+    Configuration :=
+  { state := BFS.halt
+    tape :=
+      Tape.move Direction.left
+        (tapeAtCells
+          (List.append ((cellCodeBits (some flag)).reverse.map some)
+            baseLeft)
+          rightPadding) }
+
 theorem run_boolFinal_raw_to_handoff_withBase
     (flag : Bool) (baseLeft : List (Option Bool)) :
     exists steps : Nat,
@@ -915,6 +991,28 @@ theorem run_boolFinal_raw_to_handoff_withBase
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
       Tape.moveRight]
 
+theorem run_boolFinal_raw_to_handoff_withBaseAndRight
+    (flag : Bool) (baseLeft rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      BFS.runConfig steps
+          (config 10 baseLeft
+            (List.append ((cellCodeBits (some flag)).map some)
+              (none :: rightPadding))) =
+        boolFinalHandoffConfigWithBaseAndRight flag baseLeft
+          (none :: rightPadding) := by
+  refine ⟨5, ?_⟩
+  cases flag <;>
+    simp [BoolFinalScannerDescription,
+      boolFinalHandoffConfigWithBaseAndRight, cellCodeBits,
+      config, tapeAtCells, keepMove,
+      runConfig, stepConfig,
+      lookupTransition, Matches,
+      transition, encodeCell,
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput,
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+      Tape.moveRight]
+
 theorem boolFinalHandoffConfigWithBase_move_right
     (flag : Bool) (baseLeft : List (Option Bool)) :
     Tape.move Direction.right
@@ -925,6 +1023,22 @@ theorem boolFinalHandoffConfigWithBase_move_right
         [] := by
   cases flag <;>
     simp [boolFinalHandoffConfigWithBase, cellCodeBits,
+      tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight,
+      encodeCell,
+      encodeCodeWordAsInput,
+      encodeCodeSymbolAsInput]
+
+theorem boolFinalHandoffConfigWithBaseAndRight_move_right
+    (flag : Bool) (baseLeft rightPadding : List (Option Bool)) :
+    Tape.move Direction.right
+        (boolFinalHandoffConfigWithBaseAndRight
+          flag baseLeft rightPadding).tape =
+      tapeAtCells
+        (List.append ((cellCodeBits (some flag)).reverse.map some)
+          baseLeft)
+        rightPadding := by
+  cases flag <;> cases rightPadding <;>
+    simp [boolFinalHandoffConfigWithBaseAndRight, cellCodeBits,
       tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight,
       encodeCell,
       encodeCodeWordAsInput,
