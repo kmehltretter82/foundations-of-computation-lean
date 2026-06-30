@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoundaryEraser
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayloadScan
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.PhaseAdapters
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Composition.Runs
 
@@ -124,6 +125,65 @@ theorem configurationFieldBoundaryEraserDescription_haltsFrom
       (leftBoundaryEraserDescription_haltsFromTape
         baseLeft (configurationFieldBits cfg [])
         (some false) (suffixTail.map some))
+
+def configurationFieldBoundaryEraseAndPayloadScanDescription :
+    MachineDescription :=
+  SeqViaCanonical
+    configurationFieldBoundaryEraserDescription
+    rightBlankGapPayloadScanDescription
+
+theorem configurationFieldBoundaryEraseAndPayloadScanDescription_subroutineReady :
+    configurationFieldBoundaryEraseAndPayloadScanDescription.SubroutineReady :=
+  SeqViaCanonical_subroutineReady
+    configurationFieldBoundaryEraserDescription_subroutineReady
+    rightBlankGapPayloadScanDescription_subroutineReady
+
+theorem leftBoundaryEraserTargetTape_eq_gapPayloadScanSource
+    (cfg : Configuration)
+    (baseLeft : List (Option Bool)) (suffixTail : Word Bool) :
+    leftBoundaryEraserTargetTape baseLeft
+        (configurationFieldBits cfg [])
+        (some false) (suffixTail.map some) =
+      rightBlankGapPayloadScanSourceTapeImplicit
+        (none :: baseLeft)
+        (configurationFieldBits cfg []).length false suffixTail := by
+  simp [leftBoundaryEraserTargetTape,
+    rightBlankGapPayloadScanSourceTapeImplicit]
+
+theorem configurationFieldBits_length_pos
+    (cfg : Configuration) :
+    0 < (configurationFieldBits cfg []).length := by
+  rcases configurationFieldBits_cons_false cfg [] with
+    ⟨tail, htail⟩
+  rw [htail]
+  simp
+
+theorem configurationFieldBoundaryEraseAndPayloadScanDescription_haltsFrom
+    (cfg : Configuration)
+    (baseLeft : List (Option Bool)) (suffixTail : Word Bool) :
+    configurationFieldBoundaryEraseAndPayloadScanDescription.HaltsFromTape
+      (tapeAtCells (none :: baseLeft)
+        ((configurationFieldBits cfg
+          (false :: suffixTail)).map some))
+      (rightBlankGapPayloadScanTargetTapeImplicit
+        (none :: baseLeft)
+        (configurationFieldBits cfg []).length false suffixTail) := by
+  exact
+    SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      configurationFieldBoundaryEraserDescription_subroutineReady
+      rightBlankGapPayloadScanDescription_subroutineReady
+      (configurationFieldBoundaryEraserDescription_haltsFrom
+        cfg baseLeft suffixTail)
+      (by
+        rw [leftBoundaryEraserTargetTape_eq_gapPayloadScanSource]
+        exact
+          rightBlankGapPayloadScanSourceTapeImplicit_move_left_move_right
+            (none :: baseLeft)
+            (configurationFieldBits cfg []).length false suffixTail
+            (configurationFieldBits_length_pos cfg))
+      (rightBlankGapPayloadScanDescription_haltsFromTapeImplicit
+        (none :: baseLeft)
+        (configurationFieldBits cfg []).length false suffixTail)
 
 end SelectedProjectionPaddedTailCleanup
 end BoundedLayoutRunner
