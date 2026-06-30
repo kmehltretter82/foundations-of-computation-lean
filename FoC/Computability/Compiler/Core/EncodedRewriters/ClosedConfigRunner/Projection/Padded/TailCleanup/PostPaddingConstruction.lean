@@ -1391,6 +1391,57 @@ theorem postPaddingOutputPrefixStageConfigScannerDescription_acceptSourceBits_ha
     rw [postPaddingAcceptConfigRestoredBase_eq_keptPrefix_reverse] at hmove
     exact hmove
 
+theorem postPaddingOutputPrefixStageConfigScannerDescription_acceptSourceBits_handoff_splitKeptPrefix
+    (L : DovetailLayout) :
+    exists scannerTail : Word Bool,
+    exists hitTail : Word Bool,
+    exists pref : Word Bool,
+    exists leftBit : Bool,
+      selectedProjectionPaddedTailCleanupKeptPrefixBits true L =
+          List.append pref [leftBit] ∧
+      CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          L.acceptHit [] =
+        false :: hitTail ∧
+      postPaddingOutputPrefixStageConfigScannerDescription.HaltsFromTape
+        (tapeAtCells [none]
+          ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+            true L).map some))
+        (postPaddingOutputPrefixStageConfigScannerTargetTape
+          (ParsedLayoutBits L) L.stage L.acceptConfig [none]
+          scannerTail) ∧
+      Tape.move Direction.right
+          (postPaddingOutputPrefixStageConfigScannerTargetTape
+            (ParsedLayoutBits L) L.stage L.acceptConfig [none]
+            scannerTail) =
+        tapeAtCells
+          (some leftBit ::
+            List.append (pref.reverse.map some) [none])
+          ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+            L.rejectConfig (false :: hitTail)).map some) := by
+  rcases selectedProjectionPaddedTailCleanupKeptPrefix_true_append_last
+      L with
+    ⟨pref, leftBit, hpref⟩
+  rcases
+      CanonicalLayouts.DovetailLayoutScanner.cellFieldBits_cons_false
+        (some L.acceptHit) [] with
+    ⟨hitTail, hhitTail⟩
+  rcases
+      postPaddingOutputPrefixStageConfigScannerDescription_acceptSourceBits_handoff
+        L with
+    ⟨scannerTail, hscan, hmove⟩
+  refine ⟨scannerTail, hitTail, pref, leftBit, hpref, ?_, hscan, ?_⟩
+  · simpa [CanonicalLayouts.DovetailLayoutScanner.boolFieldBits] using
+      hhitTail
+  · rw [hmove, hpref]
+    have hhit :
+        CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            L.acceptHit [] =
+          false :: hitTail := by
+      simpa [CanonicalLayouts.DovetailLayoutScanner.boolFieldBits] using
+        hhitTail
+    rw [hhit]
+    simp [List.reverse_append]
+
 theorem postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_rejectSourceBits
     (L : DovetailLayout) :
     exists suffixTail : Word Bool,
