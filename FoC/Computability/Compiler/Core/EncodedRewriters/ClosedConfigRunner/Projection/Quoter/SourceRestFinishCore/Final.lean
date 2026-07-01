@@ -1205,6 +1205,22 @@ theorem
         mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells_eq_prefixQuotedSeparatedBits
           w sourceRestBits stage
 
+theorem
+    assemblySourceRestLiveTailEmitterEmittedPrefix_append_quoteRest_eq_targetPrefix
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    List.append
+        (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+        (assemblySourceRestLiveTailEmitterQuoteRest p) =
+      assemblySourceRestFinishTargetPrefixBits
+        p.w p.sourceRestBits p.stage := by
+  cases p with
+  | mk w sourceRestBits stage =>
+      rw [assemblySourceRestLiveTailEmitterEmittedPrefix,
+        assemblySourceRestLiveTailEmitterQuoteRest]
+      exact
+        (assemblySourceRestFinishTargetPrefixBits_eq_prefixQuote_append_restQuote
+          w sourceRestBits stage).symm
+
 def MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec
     (finish : MachineDescription) : Prop :=
   MixedOptionCellQuoteLiveTailEmitterFamilySpec
