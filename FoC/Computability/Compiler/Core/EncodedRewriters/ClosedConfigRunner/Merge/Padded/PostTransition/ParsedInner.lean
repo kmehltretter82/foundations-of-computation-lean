@@ -29,7 +29,31 @@ theorem selectedMergePaddedEmitterAfterHitPaddedParsedInnerConstruction
     (useAccept : Bool) :
     SelectedMergePaddedEmitterAfterHitPaddedParsedInnerConstruction
       useAccept := by
-  sorry
+  have htransport :
+      SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportConstruction
+        useAccept := by
+    sorry
+  rcases htransport with ⟨transport, htransportReady, htransportHalts⟩
+  refine
+    ⟨CommonGround.FiniteTransducers.canonicalSeqDescription
+        SelectedMergePaddedEmitterParsedInnerPrefixCleanupDescription
+        transport,
+      ?_⟩
+  constructor
+  · exact
+      CommonGround.FiniteTransducers.canonicalSeqDescription_subroutineReady
+        selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_subroutineReady
+        htransportReady
+  · intro p
+    exact
+      CommonGround.FiniteTransducers.canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+        selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_subroutineReady
+        htransportReady
+        (selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_haltsFromParsedTape
+          p)
+        (SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_move_left_move_right
+          p)
+        (htransportHalts p)
 
 end BoundedLayoutRunner
 end EncodedRewriters
