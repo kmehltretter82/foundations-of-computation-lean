@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail.JoinerRuns
 
 set_option doc.verso true
 
@@ -8,7 +8,9 @@ set_option doc.verso true
 This module contains the assembly-specific packaging for the live-tail joiner.
 The separated tape does not carry enough structure to support the arbitrary
 stage/source joiner route, so this construction remains tied to the assembly
-source-rest family whose prefix and raw-tail boundary are known.
+source-rest family whose prefix and raw-tail boundary are known.  The reusable
+tape-shape facts and the impossibility guardrail live in
+{module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail.JoinerRuns`.
 -/
 
 namespace FoC
@@ -100,4 +102,3 @@ end EncodedRewriters
 
 end Computability
 end FoC
-

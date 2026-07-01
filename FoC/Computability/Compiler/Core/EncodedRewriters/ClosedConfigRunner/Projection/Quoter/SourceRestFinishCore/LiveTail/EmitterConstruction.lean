@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail.EmitterRuns
 
 set_option doc.verso true
 
@@ -7,9 +7,10 @@ set_option doc.verso true
 
 This module contains the assembly-specific packaging for the live-tail emitter.
 The raw tape-shape definitions and exact source/target shape lemmas remain in
-the live-tail core module.  Keeping this layer separate leaves the core module
-as reusable local theory, while this file carries the finite-machine leaf that
-must eventually build the emitter family for the assembly source-rest route.
+{module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail.EmitterRuns`.
+Keeping this layer separate leaves the run module as reusable local theory,
+while this file carries the finite-machine leaf that must eventually build the
+emitter family for the assembly source-rest route.
 -/
 
 namespace FoC
@@ -91,4 +92,3 @@ end EncodedRewriters
 
 end Computability
 end FoC
-
