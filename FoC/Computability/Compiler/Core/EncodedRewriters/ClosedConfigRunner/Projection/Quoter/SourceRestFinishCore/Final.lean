@@ -1254,28 +1254,46 @@ theorem
   rw [mixedOptionCellQuoteLiveTailJoinedTape,
     assemblySourceRestFinishQuoteRestJoinedTape]
 
-def MixedOptionCellQuoteLiveTailJoinerSpec
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_arbitrarySplit_ambiguous :
+    mixedOptionCellQuoteLiveTailSeparatedTape [false] [true] [] =
+      mixedOptionCellQuoteLiveTailSeparatedTape [] [false, true] [] := by
+  native_decide
+
+theorem mixedOptionCellQuoteLiveTailJoinedTape_arbitrarySplit_not_ambiguous :
+    mixedOptionCellQuoteLiveTailJoinedTape [false] [true] [] ≠
+      mixedOptionCellQuoteLiveTailJoinedTape [] [false, true] [] := by
+  native_decide
+
+def MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestSpec
     (finish : MachineDescription) : Prop :=
   finish.SubroutineReady ∧
-    forall (emittedPrefix rawTail quoteRest : Word Bool),
-      rawTail ≠ [] ->
-        finish.HaltsFromTape
-          (mixedOptionCellQuoteLiveTailSeparatedTape
-            emittedPrefix rawTail quoteRest)
-          (mixedOptionCellQuoteLiveTailJoinedTape
-            emittedPrefix rawTail quoteRest)
+    forall (w sourceRestBits : Word Bool) (stage : Nat),
+      finish.HaltsFromTape
+        (mixedOptionCellQuoteLiveTailSeparatedTape
+          (assemblySourceRestFinishPrefixQuoteOutputBits
+            w sourceRestBits stage)
+          (assemblySourceRestFinishRawTailBits sourceRestBits stage)
+          (preservingCellPassCellBits sourceRestBits))
+        (mixedOptionCellQuoteLiveTailJoinedTape
+          (assemblySourceRestFinishPrefixQuoteOutputBits
+            w sourceRestBits stage)
+          (assemblySourceRestFinishRawTailBits sourceRestBits stage)
+          (preservingCellPassCellBits sourceRestBits))
 
-def MixedOptionCellQuoteLiveTailJoinerConstruction : Prop :=
+def MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest :
+    Prop :=
   exists finish : MachineDescription,
-    MixedOptionCellQuoteLiveTailJoinerSpec finish
+    MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestSpec finish
 
 /--
-Reusable finite-table obligation for joining a reusable quote-rest field in
-front of a nonempty live tail.  This is the first extraction point for the
-mixed option-cell quote/live-tail emitter suggested in the project plan.
+Specialized finite-table obligation for joining the reusable quote-rest field
+in front of the source-rest live tail.  The arbitrary split version is too
+strong: the separated source tape does not carry a delimiter between the
+already-emitted prefix and the live tail, so this first construction stays with
+the assembly source-rest family required by the plan.
 -/
 theorem mixedOptionCellQuoteLiveTailJoinerConstruction :
-    MixedOptionCellQuoteLiveTailJoinerConstruction := by
+    MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest := by
   sorry
 
 def MixedParserStackPrefixQuotedSeparatedFinisherAssemblySourceRestSpec
@@ -1328,7 +1346,8 @@ def
 
 theorem
     MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailJoiner
-    (hjoin : MixedOptionCellQuoteLiveTailJoinerConstruction) :
+    (hjoin :
+      MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest) :
     MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest := by
   rcases hjoin with ⟨finish, hfinish⟩
   refine ⟨finish, hfinish.left, ?_⟩
@@ -1336,18 +1355,7 @@ theorem
   rw [MixedParserStackWholeSourceAfterRawTailScanTape_eq_mixedOptionCellQuoteLiveTailSeparatedTape]
   rw [MixedParserStackRewriterWholeSourceTargetTape_eq_quoteRestJoinedTape]
   rw [← mixedOptionCellQuoteLiveTailJoinedTape_eq_assemblyQuoteRestJoinedTape]
-  exact
-    hfinish.right
-      (assemblySourceRestFinishPrefixQuoteOutputBits
-        w sourceRestBits stage)
-      (assemblySourceRestFinishRawTailBits sourceRestBits stage)
-      (preservingCellPassCellBits sourceRestBits)
-      (by
-        rcases assemblySourceRestFinishRawTailBits_cons_exists
-            sourceRestBits stage with
-          ⟨head, rawTailRest, hraw⟩
-        rw [hraw]
-        simp)
+  exact hfinish.right w sourceRestBits stage
 
 theorem
     MixedParserStackWholeSourceFinisherConstructionForAssemblySourceRest_of_prefixSeparated_and_join
