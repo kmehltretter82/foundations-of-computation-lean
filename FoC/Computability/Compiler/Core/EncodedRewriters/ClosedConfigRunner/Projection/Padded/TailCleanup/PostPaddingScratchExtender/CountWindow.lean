@@ -245,6 +245,48 @@ theorem scratchCounterAppendBlanksDescription_haltsFrom_scratchCountWindowWithPo
         (selectedProjectionPaddedTailCleanupScratchCountBits_length_pos
           useAccept L)
 
+/--
+The scratch-count materializer starts at the still-encoded count-window source
+tape.  This tape names the source from the count split directly, separating it
+from the raw counter window below.
+-/
+def selectedProjectionPaddedTailCleanupEncodedCountWindowTape
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    Tape Bool :=
+  tapeAtCells [none]
+    (selectedProjectionPaddedTailCleanupEncodedCountWindowSourceCells
+      useAccept L extraScratch)
+
+theorem selectedProjectionPaddedTailCleanupEncodedCountWindowTape_eq_baseSourceTapeWithExtraScratch
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    selectedProjectionPaddedTailCleanupEncodedCountWindowTape
+        useAccept L extraScratch =
+      selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+        useAccept L extraScratch := by
+  rw [selectedProjectionPaddedTailCleanupEncodedCountWindowTape]
+  exact
+    (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_countSplit
+      useAccept L extraScratch).symm
+
+theorem selectedProjectionPaddedTailCleanupEncodedCountWindowTape_normalizedOutput
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    Tape.normalizedOutput
+        (selectedProjectionPaddedTailCleanupEncodedCountWindowTape
+          useAccept L extraScratch) =
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+        useAccept L := by
+  rw [
+    selectedProjectionPaddedTailCleanupEncodedCountWindowTape_eq_baseSourceTapeWithExtraScratch]
+  exact
+    selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_normalizedOutput
+      useAccept L extraScratch
+
+/--
+The materializer/restorer leaf is not a suffix scanner wrapper.  It must bridge
+between an encoded count-window tape, whose selected layout fields are still
+length-prefixed input cells, and the raw counter tape, where the parsed-layout
+bits have been split into skipped and counted regions.
+-/
 def SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerSpec
     (useAccept : Bool) (materializer : MachineDescription) : Prop :=
   materializer.SubroutineReady ∧
@@ -266,6 +308,58 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowRestorerSpec
           useAccept L
           (selectedProjectionPaddedTailCleanupScratchCountBits
             useAccept L).length)
+
+theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerSpec_iff_encodedCountWindowTape
+    (useAccept : Bool) (materializer : MachineDescription) :
+    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerSpec
+        useAccept materializer ↔
+      materializer.SubroutineReady ∧
+        forall L : DovetailLayout,
+          materializer.HaltsFromTape
+            (selectedProjectionPaddedTailCleanupEncodedCountWindowTape
+              useAccept L 0)
+            (selectedProjectionPaddedTailCleanupScratchCountCounterSourceTapeWithPostCountTail
+              useAccept L 0) := by
+  constructor
+  · intro h
+    refine ⟨h.left, ?_⟩
+    intro L
+    rw [
+      selectedProjectionPaddedTailCleanupEncodedCountWindowTape_eq_baseSourceTapeWithExtraScratch]
+    exact h.right L
+  · intro h
+    refine ⟨h.left, ?_⟩
+    intro L
+    rw [←
+      selectedProjectionPaddedTailCleanupEncodedCountWindowTape_eq_baseSourceTapeWithExtraScratch]
+    exact h.right L
+
+theorem selectedProjectionPaddedTailCleanupScratchCountWindowRestorerSpec_iff_encodedCountWindowTape
+    (useAccept : Bool) (restorer : MachineDescription) :
+    SelectedProjectionPaddedTailCleanupScratchCountWindowRestorerSpec
+        useAccept restorer ↔
+      restorer.SubroutineReady ∧
+        forall L : DovetailLayout,
+          restorer.HaltsFromTape
+            (selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail
+              useAccept L 0)
+            (selectedProjectionPaddedTailCleanupEncodedCountWindowTape
+              useAccept L
+              (selectedProjectionPaddedTailCleanupScratchCountBits
+                useAccept L).length) := by
+  constructor
+  · intro h
+    refine ⟨h.left, ?_⟩
+    intro L
+    rw [
+      selectedProjectionPaddedTailCleanupEncodedCountWindowTape_eq_baseSourceTapeWithExtraScratch]
+    exact h.right L
+  · intro h
+    refine ⟨h.left, ?_⟩
+    intro L
+    rw [←
+      selectedProjectionPaddedTailCleanupEncodedCountWindowTape_eq_baseSourceTapeWithExtraScratch]
+    exact h.right L
 
 def SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction :
     Prop :=
@@ -347,7 +441,12 @@ uses it to append the branch-specific scratch padding.
 -/
 theorem selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction := by
-  sorry
+  have hwindows :
+      SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction := by
+    sorry
+  exact
+    selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction_of_countWindowMaterializers
+      hwindows
 
 theorem selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction :=
