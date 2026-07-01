@@ -608,6 +608,26 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSource
       FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceSpec_configRunner
         D afterRight
 
+def FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceSpec_configRunner
+    (D body : MachineDescription) : Prop :=
+  body.SubroutineReady ∧
+    forall L : SimulatorLayout,
+      body.HaltsFromTape
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
+          L)
+        (CommonGround.FiniteTransducers.FSTTargetTape
+          (FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner
+            D L)
+          (FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner
+            L))
+
+def FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_configRunner :
+    Prop :=
+  forall D : MachineDescription,
+    exists body : MachineDescription,
+      FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceSpec_configRunner
+        D body
+
 def FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceSpec_configRunner
     (D rightBody : MachineDescription) : Prop :=
   rightBody.SubroutineReady ∧
@@ -1171,10 +1191,63 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRig
       D L] using
     hrightBody.right L
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner :
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_of_source_configRunner
+    (hsource :
+      FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_configRunner) :
     FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner := by
   intro D
+  rcases hsource D with ⟨body, hbody⟩
+  refine ⟨seqSubroutine ExactIdentityDescription body Direction.left, ?_⟩
+  constructor
+  · exact
+      seqSubroutine_subroutineReady
+        CommonGround.Identity.exactIdentityDescription_subroutineReady
+        hbody.left
+  · intro L
+    have hidentityRun :=
+      CommonGround.Identity.exactIdentityDescription_run_from_start
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+          L)
+    have hidentity :
+        ExactIdentityDescription.HaltsFromTape
+          (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+            L)
+          (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+            L) := by
+      rcases hidentityRun with ⟨n, hn⟩
+      exact ⟨n, by
+        constructor
+        · exact congrArg Configuration.state hn
+        · exact congrArg Configuration.tape hn⟩
+    have hleft :
+        Tape.move Direction.left
+            (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+              L) =
+          fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
+            L := by
+      rw [
+        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner]
+      exact
+        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_move_left_move_right_configRunner
+          L
+    exact
+      seqSubroutine_haltsFromTape_of_haltsFromTape
+        CommonGround.Identity.exactIdentityDescription_subroutineReady
+        hbody.left
+        hidentity
+        (by
+          rw [hleft]
+          exact runConfig_eq_halt_of_haltsFromTape (hbody.right L))
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_configRunner := by
+  intro D
   sorry
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_of_source_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_configRunner
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner :
     FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner :=
