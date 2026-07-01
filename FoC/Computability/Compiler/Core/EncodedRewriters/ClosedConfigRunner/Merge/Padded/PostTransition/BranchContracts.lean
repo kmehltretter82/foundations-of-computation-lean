@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.Core
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.NestedLayoutShape
 
 set_option doc.verso true
 
@@ -7,9 +7,11 @@ set_option doc.verso true
 
 This module contains the construction-family contracts and branch-composition
 adapters for the padded merge post-transition phase.  The lower-level source
-scanner and exact tape-shape facts stay in
+scanner stays in
 {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.Core`;
-the finite leaves for nested-layout parsing and accepting/rejecting inner
+the source-fields and nested-layout parsed tape facts stay in
+{module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.NestedLayoutShape`.
+The finite leaves for nested-layout parsing and accepting/rejecting inner
 emission import this module.
 -/
 
