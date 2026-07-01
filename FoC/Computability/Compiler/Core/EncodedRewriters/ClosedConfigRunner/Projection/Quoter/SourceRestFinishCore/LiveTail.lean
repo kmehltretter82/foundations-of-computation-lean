@@ -1410,19 +1410,6 @@ theorem mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction :
     MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction := by
   sorry
 
-/--
-Reusable emitter obligation for the specialized assembly parser-prefix grammar.
-It quotes the defaulted mixed option-cell prefix and stage prefix, leaves the
-live raw tail to the right, and keeps the already-computed quote-rest separated
-for the live-tail joiner.
--/
-theorem
-    mixedOptionCellQuoteLiveTailEmitterConstruction_for_assemblySourceRest :
-    MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest := by
-  exact
-    MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest_of_family
-      mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction
-
 theorem
     MixedParserStackWholeSourcePrefixQuotedSeparatedTape_eq_gapPayloadScanSource
     (w sourceRestBits : Word Bool) (stage : Nat)
@@ -2723,19 +2710,6 @@ theorem
 theorem mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :
     MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction := by
   sorry
-
-/--
-Specialized finite-table obligation for joining the reusable quote-rest field
-in front of the source-rest live tail.  The arbitrary stage/source version is
-too strong: the separated source tape does not carry a delimiter between an
-arbitrary emitted prefix and the stage prefix, so this construction stays with
-the assembly source-rest family required by the plan.
--/
-theorem mixedOptionCellQuoteLiveTailJoinerConstruction :
-    MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest := by
-  exact
-    MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest_of_family
-      mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction
 end SelectedProjectionInputQuoterFiniteLeaf
 
 end BoundedLayoutRunner
