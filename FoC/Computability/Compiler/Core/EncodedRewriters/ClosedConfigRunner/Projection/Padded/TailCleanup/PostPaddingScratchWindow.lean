@@ -276,6 +276,46 @@ theorem selectedProjectionPaddedTailCleanupParsedLayoutBoolWordBits_split
             useAccept L).map some))
         (encodeCodeWordAsInput suffix))
 
+theorem selectedProjectionPaddedTailCleanupOutputPrefixBits_split
+    (useAccept : Bool) (L : DovetailLayout) :
+    SelectedProjectionTailProjector.outputPrefixBits L =
+      List.append
+        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            (ParsedLayoutBits L).length)
+          (List.append
+            (cellsCodeBits
+              ((selectedProjectionPaddedTailCleanupScratchSkippedBits
+                useAccept L).map some))
+            (cellsCodeBits
+              ((selectedProjectionPaddedTailCleanupScratchCountBits
+                useAccept L).map some)))) := by
+  rw [SelectedProjectionTailProjector.outputPrefixBits]
+  rw [
+    selectedProjectionPaddedTailCleanupParsedLayoutBoolWordBits_split
+      useAccept L []]
+  simp [encodeCodeWordAsInput]
+
+theorem selectedProjectionPaddedTailCleanupOutputPrefixCells_split
+    (useAccept : Bool) (L : DovetailLayout) :
+    (SelectedProjectionTailProjector.outputPrefixBits L).map some =
+      List.append
+        ((encodeCodeSymbolAsInput MachineCodeSymbol.header).map some)
+        (List.append
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            (ParsedLayoutBits L).length).map some)
+          (List.append
+            ((cellsCodeBits
+              ((selectedProjectionPaddedTailCleanupScratchSkippedBits
+                useAccept L).map some)).map some)
+            ((cellsCodeBits
+              ((selectedProjectionPaddedTailCleanupScratchCountBits
+                useAccept L).map some)).map some))) := by
+  rw [selectedProjectionPaddedTailCleanupOutputPrefixBits_split
+    useAccept L]
+  simp [List.map_append]
+
 theorem selectedProjectionPaddedTailCleanupScratchCountBits_length
     (useAccept : Bool) (L : DovetailLayout) :
     (selectedProjectionPaddedTailCleanupScratchCountBits
