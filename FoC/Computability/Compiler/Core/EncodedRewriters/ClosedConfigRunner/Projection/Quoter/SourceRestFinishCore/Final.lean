@@ -883,6 +883,19 @@ theorem assemblySourceRestFinishRightPayloadBits_eq_stageInputTailPrefix_append_
   rw [assemblySourceRestFinishRightPayloadBits_eq_markerRight_append_rawTail]
   rw [assemblySourceRestFinishParserMarkerRightBits_eq_stageInputTailPrefix]
 
+theorem
+    assemblySourceRestFinishRightPayloadBits_eq_stageInputSecondBitTail_append_sourceRest
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    assemblySourceRestFinishRightPayloadBits w sourceRestBits stage =
+      List.append
+        (DovetailInitialLayoutInitializer.stageInputSecondBitTail w stage)
+        sourceRestBits := by
+  rw [assemblySourceRestFinishRightPayloadBits_eq_stageInputTailPrefix_append_rawTail]
+  rw [assemblySourceRestFinishRawTailBits]
+  rw [
+    DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTail_eq_prefix_stageNat]
+  simp [List.append_assoc]
+
 theorem assemblySourceRestFinishQuotedPrefixBits_eq_marker_chunks
     (w : Word Bool) (stage : Nat) :
     assemblySourceRestFinishQuotedPrefixBits w stage =
@@ -1104,6 +1117,85 @@ def assemblySourceRestLiveTailEmitterEmittedPrefix
     (p : AssemblySourceRestLiveTailEmitterParam) : Word Bool :=
   assemblySourceRestFinishPrefixQuoteOutputBits
     p.w p.sourceRestBits p.stage
+
+def assemblySourceRestLiveTailEmitterSourceBits
+    (p : AssemblySourceRestLiveTailEmitterParam) : Word Bool :=
+  mixedOptionCellQuoteLiveTailEmitterSourceBits
+    (assemblySourceRestLiveTailEmitterLeftRev p)
+    (assemblySourceRestLiveTailEmitterQuoteScan p)
+    (assemblySourceRestLiveTailEmitterRawTail p)
+    (assemblySourceRestLiveTailEmitterQuoteRest p)
+
+def assemblySourceRestLiveTailEmitterTargetBits
+    (p : AssemblySourceRestLiveTailEmitterParam) : Word Bool :=
+  mixedOptionCellQuoteLiveTailEmitterTargetBits
+    (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+    (assemblySourceRestLiveTailEmitterRawTail p)
+    (assemblySourceRestLiveTailEmitterQuoteRest p)
+
+theorem
+    assemblySourceRestLiveTailEmitterQuoteScan_append_stageNatBits_eq_stageInputSecondBitTail
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    List.append
+        (assemblySourceRestLiveTailEmitterQuoteScan p)
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          p.stage) =
+      DovetailInitialLayoutInitializer.stageInputSecondBitTail p.w p.stage := by
+  cases p with
+  | mk w sourceRestBits stage =>
+      rw [assemblySourceRestLiveTailEmitterQuoteScan]
+      rw [assemblySourceRestFinishParserMarkerRightBits_eq_stageInputTailPrefix]
+      rw [
+        DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTail_eq_prefix_stageNat]
+
+theorem
+    assemblySourceRestLiveTailEmitterQuoteScan_append_rawTail_eq_rightPayload
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    List.append
+        (assemblySourceRestLiveTailEmitterQuoteScan p)
+        (assemblySourceRestLiveTailEmitterRawTail p) =
+      assemblySourceRestFinishRightPayloadBits
+        p.w p.sourceRestBits p.stage := by
+  cases p with
+  | mk w sourceRestBits stage =>
+      rw [assemblySourceRestLiveTailEmitterQuoteScan,
+        assemblySourceRestLiveTailEmitterRawTail]
+      rw [assemblySourceRestFinishRightPayloadBits_eq_markerRight_append_rawTail]
+
+theorem
+    assemblySourceRestLiveTailEmitterSourceBits_eq_defaultedSource
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    assemblySourceRestLiveTailEmitterSourceBits p =
+      false ::
+        List.append
+          (assemblySourceRestFinishSourceBits p.w p.sourceRestBits p.stage)
+          (false ::
+            List.append
+              (assemblySourceRestLiveTailEmitterQuoteRest p)
+              [false]) := by
+  cases p with
+  | mk w sourceRestBits stage =>
+      rw [assemblySourceRestLiveTailEmitterSourceBits]
+      rw [
+        ← mixedOptionCellQuoteLiveTailEmitterSplitSourceTape_defaultedCells_eq_sourceBits]
+      exact
+        mixedOptionCellQuoteLiveTailEmitterSplitSourceTape_defaultedCells_assembly
+          w sourceRestBits (preservingCellPassCellBits sourceRestBits) stage
+
+theorem
+    assemblySourceRestLiveTailEmitterTargetBits_eq_prefixQuotedSeparated
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    assemblySourceRestLiveTailEmitterTargetBits p =
+      assemblySourceRestFinishPrefixQuotedSeparatedBits
+        p.w p.sourceRestBits p.stage := by
+  cases p with
+  | mk w sourceRestBits stage =>
+      rw [assemblySourceRestLiveTailEmitterTargetBits]
+      rw [
+        ← mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells_eq_targetBits]
+      exact
+        mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells_eq_prefixQuotedSeparatedBits
+          w sourceRestBits stage
 
 def MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec
     (finish : MachineDescription) : Prop :=
