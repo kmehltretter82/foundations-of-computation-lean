@@ -75,6 +75,36 @@ def SelectedMergePaddedEmitterParsedInnerOuterConfigHitBits
     p.S.config
     (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits p.S.hit [])
 
+def SelectedMergePaddedEmitterParsedInnerSourceLeftCells
+    (p : SelectedMergeEmitterPayload) : List (Option Bool) :=
+  (((SelectedMergePaddedEmitterOuterHitSuffixBits p).reverse.map some) ++
+    (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
+      p.S.config
+      (List.append
+        ((FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          p.S.stage).reverse.map some)
+        (SelectedMergePaddedEmitterNestedLayoutParsedLeft p))))
+
+def SelectedMergePaddedEmitterParsedInnerSourceCells
+    (p : SelectedMergeEmitterPayload) : List (Option Bool) :=
+  List.append
+    (SelectedMergePaddedEmitterParsedInnerSourceLeftCells p).reverse
+    [none, none]
+
+def SelectedMergePaddedEmitterParsedInnerTargetPaddingCells
+    (p : SelectedMergeEmitterPayload) : List (Option Bool) :=
+  List.replicate (SimulatorLayout.asBoolInput p.S).length none
+
+def SelectedMergePaddedEmitterParsedInnerTargetCells
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    List (Option Bool) :=
+  List.append
+    ((SelectedMergePaddedEmitterParsedInnerOutputPrefixBits p).map some)
+    (List.append
+      ((SelectedMergePaddedEmitterParsedInnerTargetFieldTailBits
+        useAccept p).map some)
+      (SelectedMergePaddedEmitterParsedInnerTargetPaddingCells p))
+
 theorem
     SelectedMergePaddedEmitterParsedInnerOuterSuffixBits_eq_stage_outerConfigHit
     (p : SelectedMergeEmitterPayload) :
@@ -90,6 +120,33 @@ theorem
     CanonicalLayouts.DovetailLayoutScanner.cellListFieldBits,
     CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
     CanonicalLayouts.DovetailLayoutScanner.boolFieldBits]
+
+theorem
+    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_cells_eq_sourceWindow
+    (p : SelectedMergeEmitterPayload) :
+    Tape.cells
+        (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p) =
+      SelectedMergePaddedEmitterParsedInnerSourceCells p := by
+  rw [SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape,
+    SelectedMergePaddedEmitterParsedInnerSourceCells,
+    SelectedMergePaddedEmitterParsedInnerSourceLeftCells]
+  simp [DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells]
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerSourceCells_filterMap_eq_sourceBits
+    (p : SelectedMergeEmitterPayload) :
+    (SelectedMergePaddedEmitterParsedInnerSourceCells p).filterMap
+        (fun cell => cell) =
+      SelectedMergePaddedEmitterParsedInnerSourceBits p := by
+  have hcells :=
+    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_cells_eq_sourceWindow
+      p
+  have hnorm :=
+    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_normalizedOutput_eq_sourceBits
+      p
+  rw [Tape.normalizedOutput] at hnorm
+  rw [hcells] at hnorm
+  exact hnorm
 
 theorem
     SelectedMergePaddedEmitterParsedInnerSourceBits_eq_markedPrefix_fieldTail
@@ -253,6 +310,33 @@ theorem
       CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
       CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
       encodeCodeWordAsInput, List.append_assoc]
+
+theorem
+    SelectedMergePaddedEmitterDecodedHandoffTape_cells_eq_targetWindow
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    Tape.cells (SelectedMergePaddedEmitterDecodedHandoffTape useAccept p) =
+      SelectedMergePaddedEmitterParsedInnerTargetCells useAccept p := by
+  rw [SelectedMergePaddedEmitterDecodedHandoffTape_cells_eq_bits]
+  rw [SelectedMergePaddedEmitterDecodedHandoffBits_eq_outputPrefix_fieldTail]
+  simp [SelectedMergePaddedEmitterParsedInnerTargetCells,
+    SelectedMergePaddedEmitterParsedInnerTargetPaddingCells, List.map_append,
+    List.append_assoc]
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerTargetCells_filterMap_eq_bits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    (SelectedMergePaddedEmitterParsedInnerTargetCells useAccept p).filterMap
+        (fun cell => cell) =
+      SelectedMergePaddedEmitterDecodedHandoffBits useAccept p := by
+  have hcells :=
+    SelectedMergePaddedEmitterDecodedHandoffTape_cells_eq_targetWindow
+      useAccept p
+  have hnorm :=
+    SelectedMergePaddedEmitterDecodedHandoffTape_normalizedOutput_eq_bits
+      useAccept p
+  rw [Tape.normalizedOutput] at hnorm
+  rw [hcells] at hnorm
+  exact hnorm
 
 end BoundedLayoutRunner
 end EncodedRewriters
