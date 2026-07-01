@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.TerminalCore.Rewind
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedParser.Return
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.TerminalCore.RightShiftedSource
 
 set_option doc.verso true
 
@@ -12,6 +12,8 @@ right-scratch, and final body layers.  The pure terminal tape-shape facts stay i
 {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.TerminalCore.Core`.
 The terminal rewind finite-machine construction stays in
 {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.TerminalCore.Rewind`.
+The terminal source-to-right-shifted-source handoff stays in
+{module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.TerminalCore.RightShiftedSource`.
 -/
 
 namespace FoC
@@ -210,104 +212,6 @@ def FixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction
     exists post : MachineDescription,
       FixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreSpec_configRunner
         D post
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_move_left_move_right_configRunner
-    (L : SimulatorLayout) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
-            L)) =
-      fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
-        L := by
-  have hlen : 1 <= (SimulatorLayout.asBoolInput L).length := by
-    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
-    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
-      encodeCodeSymbolAsInput]
-  cases hbits : SimulatorLayout.asBoolInput L with
-  | nil =>
-      simp [hbits] at hlen
-  | cons first rest =>
-      cases rest with
-      | nil =>
-          cases first <;>
-            simp [
-              fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
-              DovetailInitialLayoutInitializer.tapeAtCells,
-              Tape.move, Tape.moveLeft, Tape.moveRight, hbits]
-      | cons second tail =>
-          cases first <;> cases second <;>
-            simp [
-              fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
-              DovetailInitialLayoutInitializer.tapeAtCells,
-              Tape.move, Tape.moveLeft, Tape.moveRight, hbits]
-
-theorem fixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_haltsFrom_terminalSource_configRunner
-    (L : SimulatorLayout) :
-    FixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_configRunner.HaltsFromTape
-      (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
-        L)
-      (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
-        L) := by
-  have hlen : 2 <= (SimulatorLayout.asBoolInput L).length := by
-    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
-    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
-      encodeCodeSymbolAsInput]
-  cases hbits : SimulatorLayout.asBoolInput L with
-  | nil =>
-      simp [hbits] at hlen
-  | cons first rest =>
-      cases rest with
-      | nil =>
-          simp [hbits] at hlen
-      | cons second tail =>
-          refine ⟨3, ?_⟩
-          constructor
-          · cases tail <;> cases first <;> cases second <;>
-              simp [
-                fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
-                FixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_configRunner,
-                DovetailInitialLayoutInitializer.tapeAtCells,
-                runConfig, stepConfig, lookupTransition, Matches,
-                DovetailInitialLayoutInitializer.StageInputMarkedScanner.keepMove,
-                transition, Tape.read, Tape.write, Tape.move,
-                Tape.moveLeft, Tape.moveRight, hbits]
-          · cases tail <;> cases first <;> cases second <;>
-              simp [
-                fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner,
-                fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
-                FixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_configRunner,
-                DovetailInitialLayoutInitializer.tapeAtCells,
-                runConfig, stepConfig, lookupTransition, Matches,
-                DovetailInitialLayoutInitializer.StageInputMarkedScanner.keepMove,
-                transition, Tape.read, Tape.write, Tape.move,
-                Tape.moveLeft, Tape.moveRight, hbits]
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_move_left_move_right_configRunner
-    (L : SimulatorLayout) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
-            L)) =
-      fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
-        L := by
-  have hlen : 2 <= (SimulatorLayout.asBoolInput L).length := by
-    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
-    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
-      encodeCodeSymbolAsInput]
-  cases hbits : SimulatorLayout.asBoolInput L with
-  | nil =>
-      simp [hbits] at hlen
-  | cons first rest =>
-      cases rest with
-      | nil =>
-          simp [hbits] at hlen
-      | cons second tail =>
-          cases tail <;> cases first <;> cases second <;>
-            simp [
-              fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner,
-              fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
-              DovetailInitialLayoutInitializer.tapeAtCells,
-              Tape.move, Tape.moveLeft, Tape.moveRight, hbits]
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_of_afterTerminalRightShiftedSource_configRunner
     (hafterRight :
