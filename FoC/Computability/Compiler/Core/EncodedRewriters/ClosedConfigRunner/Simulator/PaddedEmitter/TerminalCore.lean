@@ -608,6 +608,26 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSource
       FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceSpec_configRunner
         D afterRight
 
+def FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetSpec_configRunner
+    (D body : MachineDescription) : Prop :=
+  body.SubroutineReady ∧
+    forall L : SimulatorLayout,
+      body.HaltsFromTape
+        (CommonGround.FiniteTransducers.FSTSourceTape
+          (SimulatorLayout.asBoolInput L) 1)
+        (CommonGround.FiniteTransducers.FSTTargetTape
+          (FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner
+            D L)
+          (FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner
+            L))
+
+def FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_configRunner :
+    Prop :=
+  forall D : MachineDescription,
+    exists body : MachineDescription,
+      FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetSpec_configRunner
+        D body
+
 def FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceSpec_configRunner
     (D body : MachineDescription) : Prop :=
   body.SubroutineReady ∧
@@ -1239,10 +1259,28 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightS
           rw [hleft]
           exact runConfig_eq_halt_of_haltsFromTape (hbody.right L))
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_configRunner :
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_of_FSTSource_configRunner
+    (hfst :
+      FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_configRunner) :
     FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_configRunner := by
   intro D
+  rcases hfst D with ⟨body, hbody⟩
+  refine ⟨body, hbody.left, ?_⟩
+  intro L
+  simpa [
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_eq_FSTSourceTape_configRunner
+      L] using
+    hbody.right L
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_configRunner := by
+  intro D
   sorry
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_of_FSTSource_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_configRunner
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner :
     FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner :=
