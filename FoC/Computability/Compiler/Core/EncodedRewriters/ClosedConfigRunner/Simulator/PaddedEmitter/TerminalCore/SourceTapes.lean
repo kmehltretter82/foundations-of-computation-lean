@@ -1,5 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.Shape
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedParser
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.SourceShapeCore
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Basic
 
 set_option doc.verso true
@@ -110,18 +109,6 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_contextL
       simp [hbits] at hlen
   | cons bit rest =>
       simp [Tape.input, Tape.contextLength]
-
-theorem fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner
-    (L : SimulatorLayout) :
-    SimulatorLayout.asBoolInput L =
-      encodeCodeWordAsInput
-        (MachineCodeSymbol.header ::
-          encodeBoolWordAppend L.input
-            (encodeNatAppend L.stage
-              (encodeConfigurationAppend L.config
-                (encodeBoolAppend L.hit [])))) := by
-  simp [SimulatorLayout.asBoolInput, SimulatorLayout.encode,
-    SimulatorLayout.encodeAppend]
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_normalizedOutput_eq_fields_configRunner
     (L : SimulatorLayout) :
