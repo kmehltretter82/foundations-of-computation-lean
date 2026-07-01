@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.Adapters
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.ParsedInner
 
 set_option doc.verso true
 
@@ -11,6 +12,8 @@ implementation is split by responsibility:
 - {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.Specs`
   contains the construction-family contracts for the nested-layout parser and
   accepting/rejecting inner emitters.
+- {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.ParsedInner`
+  contains the branch-parametric parsed-inner finite-machine leaf.
 - {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.Adapters`
   contains the branch-composition adapters that connect those finite leaves to
   the post-transition padded construction.

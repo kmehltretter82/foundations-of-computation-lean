@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.Specs
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.ParsedInner
 
 set_option doc.verso true
 
@@ -16,12 +16,12 @@ namespace BoundedLayoutRunner
 -/
 
 /--
-Finite-machine leaf that rewrites the parsed nested layout plus outer source
-fields into the decoded rejecting-merge field order.
+Compatibility name for the rejecting branch of the branch-parametric parsed
+inner emitter.
 -/
 theorem selectedMergePaddedEmitterAfterHitPaddedRejectParsedInnerConstruction :
     SelectedMergePaddedEmitterAfterHitPaddedRejectParsedInnerConstruction := by
-  sorry
+  exact selectedMergePaddedEmitterAfterHitPaddedParsedInnerConstruction false
 
 end BoundedLayoutRunner
 end EncodedRewriters
