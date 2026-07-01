@@ -500,6 +500,58 @@ theorem
     CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyRestoredBitsRev_reverse,
     Function.comp_def]
 
+def SelectedMergePaddedEmitterParsedInnerOuterSuffixBits
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  List.append
+    (FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+      p.S.stage)
+    (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+      p.S.config
+      (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+        p.S.hit []))
+
+def SelectedMergePaddedEmitterParsedInnerSourceBits
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  List.append
+    (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+    (List.append
+      (CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits
+        p.L)
+      (SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p))
+
+theorem SelectedMergePaddedEmitterParsedInnerSourceBits_eq_nestedFields
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerSourceBits p =
+      List.append
+        (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+        (List.append
+          CanonicalLayouts.DovetailLayoutScanner.transitionRemainderBits
+          (CanonicalLayouts.DovetailLayoutScanner.boolWordFieldBits
+            p.L.input
+            (List.append
+              (FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                p.L.stage)
+              (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                p.L.acceptConfig
+                (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+                  p.L.rejectConfig
+                  (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+                    p.L.acceptHit
+                    (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+                      p.L.rejectHit
+                      (SelectedMergePaddedEmitterParsedInnerOuterSuffixBits
+                        p)))))))) := by
+  simp [SelectedMergePaddedEmitterParsedInnerSourceBits,
+    SelectedMergePaddedEmitterParsedInnerOuterSuffixBits,
+    CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits,
+    CanonicalLayouts.DovetailLayoutScanner.boolWordFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.cellListFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.tapeFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+    List.append_assoc]
+
 theorem
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_normalizedOutput_eq_markedBody
     (p : SelectedMergeEmitterPayload) :
@@ -588,6 +640,23 @@ theorem
     encodeCodeWordAsInput, encodeCodeSymbolAsInput, Function.comp_def,
     List.append_assoc]
     using hcfgWithHit
+
+theorem
+    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_normalizedOutput_eq_sourceBits
+    (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput
+        (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p) =
+      SelectedMergePaddedEmitterParsedInnerSourceBits p := by
+  rw [
+    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_normalizedOutput_eq_markedBody]
+  simp [SelectedMergePaddedEmitterParsedInnerSourceBits,
+    SelectedMergePaddedEmitterParsedInnerOuterSuffixBits,
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.tapeFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.cellListFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+    List.append_assoc]
 
 theorem
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_move_left_move_right

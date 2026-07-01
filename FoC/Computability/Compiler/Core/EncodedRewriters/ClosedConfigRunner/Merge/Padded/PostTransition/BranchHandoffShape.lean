@@ -69,6 +69,10 @@ def SelectedMergePaddedEmitterDecodedHandoffTape
   else
     SelectedMergePaddedEmitterRejectDecodedHandoffTape p
 
+def SelectedMergePaddedEmitterDecodedHandoffBits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) : Word Bool :=
+  SelectedMergePaddedEmitterTargetBits useAccept p
+
 theorem SelectedMergePaddedEmitterDecodedHandoffTape_eq_outputTape
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterDecodedHandoffTape useAccept p =
@@ -76,6 +80,73 @@ theorem SelectedMergePaddedEmitterDecodedHandoffTape_eq_outputTape
   cases useAccept
   · exact SelectedMergePaddedEmitterRejectDecodedHandoffTape_eq_outputTape p
   · exact SelectedMergePaddedEmitterAcceptDecodedHandoffTape_eq_outputTape p
+
+theorem SelectedMergePaddedEmitterDecodedHandoffBits_eq_outputCode
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterDecodedHandoffBits useAccept p =
+      encodeCodeWordAsInput
+        (SelectedMergeOutputCode useAccept p.S p.L) := by
+  rw [SelectedMergePaddedEmitterDecodedHandoffBits,
+    SelectedMergePaddedEmitterTargetBits_eq_outputCode]
+
+theorem SelectedMergePaddedEmitterDecodedHandoffBits_true_eq_fields
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterDecodedHandoffBits true p =
+      encodeCodeWordAsInput
+        (MachineCodeSymbol.transition ::
+          encodeBoolWordAppend p.L.input
+            (encodeNatAppend p.L.stage
+              (encodeConfigurationAppend p.S.config
+                (encodeConfigurationAppend p.L.rejectConfig
+                  (encodeBoolAppend p.S.hit
+                    (encodeBoolAppend p.L.rejectHit [])))))) := by
+  rw [SelectedMergePaddedEmitterDecodedHandoffBits,
+    SelectedMergePaddedEmitterTargetBits_true_eq_fields]
+
+theorem SelectedMergePaddedEmitterDecodedHandoffBits_false_eq_fields
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterDecodedHandoffBits false p =
+      encodeCodeWordAsInput
+        (MachineCodeSymbol.transition ::
+          encodeBoolWordAppend p.L.input
+            (encodeNatAppend p.L.stage
+              (encodeConfigurationAppend p.L.acceptConfig
+                (encodeConfigurationAppend p.S.config
+                  (encodeBoolAppend p.L.acceptHit
+                    (encodeBoolAppend p.S.hit [])))))) := by
+  rw [SelectedMergePaddedEmitterDecodedHandoffBits,
+    SelectedMergePaddedEmitterTargetBits_false_eq_fields]
+
+theorem SelectedMergePaddedEmitterDecodedHandoffTape_eq_tapeAtCells_bits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterDecodedHandoffTape useAccept p =
+      DovetailInitialLayoutInitializer.tapeAtCells []
+        (List.append
+          ((SelectedMergePaddedEmitterDecodedHandoffBits
+            useAccept p).map some)
+          (List.replicate (SimulatorLayout.asBoolInput p.S).length none)) := by
+  rw [SelectedMergePaddedEmitterDecodedHandoffTape_eq_outputTape,
+    SelectedMergeEquivEmitterPaddedOutputTape_eq_tapeAtCells_targetBits]
+  rfl
+
+theorem SelectedMergePaddedEmitterDecodedHandoffTape_normalizedOutput_eq_bits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput
+        (SelectedMergePaddedEmitterDecodedHandoffTape useAccept p) =
+      SelectedMergePaddedEmitterDecodedHandoffBits useAccept p := by
+  rw [SelectedMergePaddedEmitterDecodedHandoffTape_eq_outputTape,
+    SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_targetBits]
+  rfl
+
+theorem SelectedMergePaddedEmitterDecodedHandoffTape_cells_eq_bits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    Tape.cells (SelectedMergePaddedEmitterDecodedHandoffTape useAccept p) =
+      List.append
+        ((SelectedMergePaddedEmitterDecodedHandoffBits useAccept p).map some)
+        (List.replicate (SimulatorLayout.asBoolInput p.S).length none) := by
+  rw [SelectedMergePaddedEmitterDecodedHandoffTape_eq_outputTape,
+    SelectedMergeEquivEmitterPaddedOutputTape_cells_eq_targetBits]
+  rfl
 
 theorem SelectedMergePaddedEmitterAcceptDecodedHandoffTape_cells_eq_fields
     (p : SelectedMergeEmitterPayload) :
