@@ -2150,6 +2150,63 @@ theorem
   rw [assemblySourceRestFinishRawTailBits_map_some]
 
 theorem
+    mixedOptionCellQuoteLiveTailSeparatedTape_cells_assembly_sourceRestCons
+    (w : Word Bool) (bit : Bool) (sourceRestTail : Word Bool)
+    (stage : Nat) :
+    Tape.cells
+        (mixedOptionCellQuoteLiveTailSeparatedTape
+          (assemblySourceRestFinishPrefixQuoteOutputBits
+            w (bit :: sourceRestTail) stage)
+          (assemblySourceRestFinishRawTailBits
+            (bit :: sourceRestTail) stage)
+          (preservingCellPassCellBits (bit :: sourceRestTail))) =
+      List.append
+        ((assemblySourceRestFinishPrefixQuoteOutputBits
+          w (bit :: sourceRestTail) stage).map some)
+        (List.append
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).map some)
+          (some bit ::
+            List.append (sourceRestTail.map some)
+              (none ::
+                List.append
+                  ((if bit then preservingCellPassOneBits
+                    else preservingCellPassZeroBits).map some)
+                  (List.append
+                    ((preservingCellPassCellBits sourceRestTail).map some)
+                    [none])))) := by
+  rw [mixedOptionCellQuoteLiveTailSeparatedTape_cells_assembly_stageSplit]
+  rw [preservingCellPassCellBits_cons_chunk_map_some]
+  simp [List.append_assoc]
+
+theorem
+    mixedOptionCellQuoteLiveTailJoinedTape_cells_assembly_sourceRestCons
+    (w : Word Bool) (bit : Bool) (sourceRestTail : Word Bool)
+    (stage : Nat) :
+    Tape.cells
+        (mixedOptionCellQuoteLiveTailJoinedTape
+          (assemblySourceRestFinishPrefixQuoteOutputBits
+            w (bit :: sourceRestTail) stage)
+          (assemblySourceRestFinishRawTailBits
+            (bit :: sourceRestTail) stage)
+          (preservingCellPassCellBits (bit :: sourceRestTail))) =
+      List.append
+        ((assemblySourceRestFinishPrefixQuoteOutputBits
+          w (bit :: sourceRestTail) stage).map some)
+        (List.append
+          ((if bit then preservingCellPassOneBits
+            else preservingCellPassZeroBits).map some)
+          (List.append
+            ((preservingCellPassCellBits sourceRestTail).map some)
+            (List.append
+              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                stage).map some)
+              (some bit :: sourceRestTail.map some)))) := by
+  rw [mixedOptionCellQuoteLiveTailJoinedTape_cells_assembly_stageSplit]
+  rw [preservingCellPassCellBits_cons_chunk_map_some]
+  simp [List.append_assoc]
+
+theorem
     mixedOptionCellQuoteLiveTailSeparatedTape_eq_assembly_stageSplit
     (w sourceRestBits : Word Bool) (stage : Nat)
     (head : Bool) (stageTail : Word Bool)

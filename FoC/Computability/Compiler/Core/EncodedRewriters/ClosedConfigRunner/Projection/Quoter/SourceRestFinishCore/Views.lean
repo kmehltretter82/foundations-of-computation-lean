@@ -633,6 +633,24 @@ theorem preservingCellPassCellBits_append_bool
                 (preservingCellPassCellBits suffix)
         rw [ih]
 
+theorem preservingCellPassCellBits_cons_chunk
+    (bit : Bool) (rest : Word Bool) :
+    preservingCellPassCellBits (bit :: rest) =
+      List.append
+        (if bit then preservingCellPassOneBits
+          else preservingCellPassZeroBits)
+        (preservingCellPassCellBits rest) := by
+  cases bit <;> rfl
+
+theorem preservingCellPassCellBits_cons_chunk_map_some
+    (bit : Bool) (rest : Word Bool) :
+    (preservingCellPassCellBits (bit :: rest)).map some =
+      List.append
+        ((if bit then preservingCellPassOneBits
+          else preservingCellPassZeroBits).map some)
+        ((preservingCellPassCellBits rest).map some) := by
+  cases bit <;> rfl
+
 theorem assemblySourceRestFinishSourcePrefixBits_eq_split_defaulted
     (w : Word Bool) (stage : Nat)
     (prefixCells : List (Option Bool))
