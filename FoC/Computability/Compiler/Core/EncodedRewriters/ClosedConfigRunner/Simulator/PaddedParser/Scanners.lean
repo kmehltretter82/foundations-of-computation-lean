@@ -75,6 +75,20 @@ def fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBase_configRunn
             baseLeft)
           (suffixBits.map some)) }
 
+def fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_configRunner
+    (baseLeft : List (Option Bool)) (suffixBits : Word Bool)
+    (rightPadding : List (Option Bool)) : Configuration :=
+  { state :=
+      FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.halt
+    tape :=
+      Tape.move Direction.left
+        (DovetailInitialLayoutInitializer.tapeAtCells
+          (List.append
+            (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.reverse.map
+              some)
+            baseLeft)
+          (List.append (suffixBits.map some) rightPadding)) }
+
 theorem fixedDescriptionBoundedSimulatorHeaderPrefix_run_raw_to_handoff_withBase_configRunner
     (baseLeft : List (Option Bool)) (b : Bool)
     (suffixTail : Word Bool) :
@@ -101,6 +115,32 @@ theorem fixedDescriptionBoundedSimulatorHeaderPrefix_run_raw_to_handoff_withBase
       lookupTransition, Matches, transition, encodeCodeSymbolAsInput,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
 
+theorem fixedDescriptionBoundedSimulatorHeaderPrefix_run_raw_to_handoff_withBaseAndRight_configRunner
+    (baseLeft : List (Option Bool)) (b : Bool)
+    (suffixTail : Word Bool) (rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.runConfig
+          steps
+          (DovetailInitialLayoutInitializer.config
+            FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.start
+            baseLeft
+            (List.append
+              (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.map
+                some)
+              (some b :: List.append (suffixTail.map some) rightPadding))) =
+        fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_configRunner
+          baseLeft (b :: suffixTail) rightPadding := by
+  refine ⟨5, ?_⟩
+  cases b <;>
+    simp [FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner,
+      fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_configRunner,
+      fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
+      DovetailInitialLayoutInitializer.config,
+      DovetailInitialLayoutInitializer.tapeAtCells, keepMove, runConfig,
+      stepConfig,
+      lookupTransition, Matches, transition, encodeCodeSymbolAsInput,
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
+
 theorem fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBase_move_right_configRunner
     (baseLeft : List (Option Bool)) (b : Bool)
     (suffixTail : Word Bool) :
@@ -115,6 +155,25 @@ theorem fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBase_move_r
         ((b :: suffixTail).map some) := by
   cases b <;>
     simp [fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBase_configRunner,
+      fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
+      encodeCodeSymbolAsInput,
+      DovetailInitialLayoutInitializer.tapeAtCells,
+      Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_move_right_configRunner
+    (baseLeft : List (Option Bool)) (b : Bool)
+    (suffixTail : Word Bool) (rightPadding : List (Option Bool)) :
+    Tape.move Direction.right
+        (fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_configRunner
+          baseLeft (b :: suffixTail) rightPadding).tape =
+      DovetailInitialLayoutInitializer.tapeAtCells
+        (List.append
+          (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.reverse.map
+            some)
+          baseLeft)
+        (List.append ((b :: suffixTail).map some) rightPadding) := by
+  cases b <;>
+    simp [fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_configRunner,
       fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
       encodeCodeSymbolAsInput,
       DovetailInitialLayoutInitializer.tapeAtCells,
