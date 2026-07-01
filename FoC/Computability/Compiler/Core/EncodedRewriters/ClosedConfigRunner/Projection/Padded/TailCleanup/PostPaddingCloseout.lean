@@ -562,39 +562,6 @@ def SelectedProjectionPaddedTailCleanupPostPaddingBaseSourceMaterializerSpec
         (selectedHitOtherFlagErasedAfterPaddingTape useAccept L)
         (selectedProjectionPaddedTailCleanupBaseSourceTape useAccept L)
 
-def SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
-    (useAccept : Bool) (allocator : MachineDescription) : Prop :=
-  allocator.SubroutineReady ∧
-    forall L : DovetailLayout,
-      allocator.HaltsFromTape
-        (selectedProjectionPaddedTailCleanupBaseSourceTape useAccept L)
-        (selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
-          useAccept L)
-
-def SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec
-    (useAccept : Bool) (extender : MachineDescription) : Prop :=
-  extender.SubroutineReady ∧
-    forall L : DovetailLayout,
-      extender.HaltsFromTape
-        (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
-          useAccept L 0)
-        (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
-          useAccept L
-          (selectedProjectionPaddedTailCleanupSentinelExtraScratch
-            useAccept L))
-
-def SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderSpec
-    (useAccept : Bool) (extender : MachineDescription) : Prop :=
-  extender.SubroutineReady ∧
-    forall L : DovetailLayout,
-      extender.HaltsFromTape
-        (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
-          useAccept L 0)
-        (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
-          useAccept L
-          (selectedProjectionPaddedTailCleanupScratchCountBits
-            useAccept L).length)
-
 def SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec
     (useAccept : Bool) (materializer : MachineDescription) : Prop :=
   materializer.SubroutineReady ∧
@@ -620,78 +587,6 @@ def SelectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction :
       exists allocator : MachineDescription,
         SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
           useAccept allocator
-
-def SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :
-    Prop :=
-  forall useAccept : Bool,
-    exists allocator : MachineDescription,
-      SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
-        useAccept allocator
-
-def SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction :
-    Prop :=
-  forall useAccept : Bool,
-    exists extender : MachineDescription,
-      SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec
-        useAccept extender
-
-def SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction :
-    Prop :=
-  forall useAccept : Bool,
-    exists extender : MachineDescription,
-      SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderSpec
-        useAccept extender
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec_of_countExtenderSpec
-    {useAccept : Bool} {extender : MachineDescription}
-    (hextender :
-      SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderSpec
-        useAccept extender) :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec
-      useAccept extender := by
-  constructor
-  · exact hextender.left
-  · intro L
-    simpa [
-      selectedProjectionPaddedTailCleanupScratchCountBits_length]
-      using hextender.right L
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction_of_countExtenders
-    (h :
-      SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction := by
-  intro useAccept
-  rcases h useAccept with ⟨extender, hextender⟩
-  exact
-    ⟨extender,
-      selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec_of_countExtenderSpec
-        hextender⟩
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec_of_extenderSpec
-    {useAccept : Bool} {extender : MachineDescription}
-    (hextender :
-      SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec
-        useAccept extender) :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
-      useAccept extender := by
-  constructor
-  · exact hextender.left
-  · intro L
-    simpa [
-      selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_zero,
-      selectedProjectionPaddedTailCleanupBaseSourceTapeWithLayoutExtraScratch]
-      using hextender.right L
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_extenders
-    (h :
-      SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction := by
-  intro useAccept
-  rcases h useAccept with ⟨extender, hextender⟩
-  exact
-    ⟨extender,
-      selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec_of_extenderSpec
-        hextender⟩
 
 theorem selectedProjectionPaddedTailCleanupAcceptBaseSourceMaterializerSpec :
     SelectedProjectionPaddedTailCleanupPostPaddingBaseSourceMaterializerSpec
@@ -837,10 +732,7 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction :
   exact
     selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializers
       (selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_scratchAllocators
-        (selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_extenders
-          (selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction_of_countExtenders
-            (by
-              sorry))))
+        selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction)
 
 def selectedHitOtherFlagErasedPostEraseFromPostPadding
     (useAccept : Bool) (postPadding : MachineDescription) :
