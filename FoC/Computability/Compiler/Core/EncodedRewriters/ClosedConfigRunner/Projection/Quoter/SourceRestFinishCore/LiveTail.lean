@@ -1877,6 +1877,35 @@ theorem mixedOptionCellQuoteLiveTailSeparatedTape_right_rawTailLast
   rw [mixedOptionCellQuoteLiveTailSeparatedTape_eq_rawTailLast]
   simp [tapeAtCells]
 
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_move_right_rawTailLast
+    (emittedPrefix rawTailInit quoteRest : Word Bool) (last : Bool) :
+    Tape.move Direction.right
+        (mixedOptionCellQuoteLiveTailSeparatedTape
+          emittedPrefix (List.append rawTailInit [last]) quoteRest) =
+      tapeAtCells
+        (some last ::
+          List.append (rawTailInit.reverse.map some)
+            (emittedPrefix.reverse.map some))
+        (none :: List.append (quoteRest.map some) [none]) := by
+  rw [mixedOptionCellQuoteLiveTailSeparatedTape_eq_rawTailLast]
+  simp [tapeAtCells, Tape.move, Tape.moveRight]
+
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_move_right_right_rawTailLast_quoteRestCons
+    (emittedPrefix rawTailInit quoteTail : Word Bool)
+    (last quoteHead : Bool) :
+    Tape.move Direction.right
+        (Tape.move Direction.right
+          (mixedOptionCellQuoteLiveTailSeparatedTape
+            emittedPrefix (List.append rawTailInit [last])
+            (quoteHead :: quoteTail))) =
+      tapeAtCells
+        (none :: some last ::
+          List.append (rawTailInit.reverse.map some)
+            (emittedPrefix.reverse.map some))
+        (some quoteHead :: List.append (quoteTail.map some) [none]) := by
+  rw [mixedOptionCellQuoteLiveTailSeparatedTape_move_right_rawTailLast]
+  simp [tapeAtCells, Tape.move, Tape.moveRight]
+
 theorem mixedOptionCellQuoteLiveTailJoinedTape_cells_cons
     (emittedPrefix quoteRest : Word Bool)
     (head : Bool) (rawTailRest : Word Bool) :
@@ -2058,6 +2087,22 @@ theorem preservingCellPassCellBits_sourceRest_length
     (preservingCellPassCellBits sourceRestBits).length =
       4 * sourceRestBits.length :=
   preservingCellPassCellBits_length sourceRestBits
+
+theorem preservingCellPassCellBits_eq_nil_iff
+    (bits : Word Bool) :
+    preservingCellPassCellBits bits = [] ↔ bits = [] := by
+  constructor
+  · intro hbits
+    cases bits with
+    | nil =>
+        rfl
+    | cons bit rest =>
+        cases bit <;>
+          simp [preservingCellPassCellBits, preservingCellPassZeroBits,
+            preservingCellPassOneBits] at hbits
+  · intro hbits
+    rw [hbits]
+    rfl
 
 theorem
     mixedOptionCellQuoteLiveTailSeparatedTape_cells_assembly_stageSplit
