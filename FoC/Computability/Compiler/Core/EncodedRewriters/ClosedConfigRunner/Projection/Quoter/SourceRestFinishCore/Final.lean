@@ -1375,6 +1375,32 @@ theorem rightBlankGapPayloadScanTargetTape_defaultedCells
   simp [List.reverse_append, List.map_reverse, List.map_append,
     List.append_assoc, optionBitDefaultFalse, Function.comp_def]
 
+theorem rightBlankGapPayloadScanTargetTape_cells
+    (baseLeft : List (Option Bool)) (gap : Nat)
+    (current : Bool) (payloadRest : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (CommonGround.FiniteTransducers.rightBlankGapPayloadScanTargetTape
+          baseLeft gap current payloadRest padding) =
+      List.append baseLeft.reverse
+        (List.append (List.replicate gap (none : Option Bool))
+          (some current ::
+            List.append (payloadRest.map some) (none :: padding))) := by
+  rw [CommonGround.FiniteTransducers.rightBlankGapPayloadScanTargetTape]
+  rw [show
+      List.append ((current :: payloadRest).reverse.map some)
+          (List.append (List.replicate gap (none : Option Bool)) baseLeft) =
+        List.append (payloadRest.reverse.map some)
+          (some current ::
+            List.append (List.replicate gap (none : Option Bool))
+              baseLeft) by
+    simp [List.reverse_cons, List.map_append, List.append_assoc]]
+  rw [commonGround_tapeAtCells_move_left_cells_append_cons_right_cons
+    (payloadRest.reverse.map some)
+    (List.append (List.replicate gap (none : Option Bool)) baseLeft)
+    padding (some current) none]
+  simp [List.reverse_append, List.map_reverse, List.append_assoc]
+
 theorem
     MixedParserStackWholeSourceAfterRawTailScanTape_move_right_eq_rightEndSource
     (w sourceRestBits : Word Bool) (stage : Nat)
@@ -1525,6 +1551,33 @@ def mixedOptionCellQuoteLiveTailJoinedTape
     ((List.append emittedPrefix quoteRest).reverse.map some)
     (rawTail.map some)
 
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_cells_cons
+    (emittedPrefix quoteRest : Word Bool)
+    (head : Bool) (rawTailRest : Word Bool) :
+    Tape.cells
+        (mixedOptionCellQuoteLiveTailSeparatedTape
+          emittedPrefix (head :: rawTailRest) quoteRest) =
+      List.append (emittedPrefix.map some)
+        (List.append ((head :: rawTailRest).map some)
+          (none :: List.append (quoteRest.map some) [none])) := by
+  rw [mixedOptionCellQuoteLiveTailSeparatedTape]
+  rw [rightBlankGapPayloadScanTargetTape_cells]
+  simp [List.map_reverse]
+
+theorem mixedOptionCellQuoteLiveTailJoinedTape_cells_cons
+    (emittedPrefix quoteRest : Word Bool)
+    (head : Bool) (rawTailRest : Word Bool) :
+    Tape.cells
+        (mixedOptionCellQuoteLiveTailJoinedTape
+          emittedPrefix (head :: rawTailRest) quoteRest) =
+      List.append (emittedPrefix.map some)
+        (List.append (quoteRest.map some)
+          ((head :: rawTailRest).map some)) := by
+  cases rawTailRest <;>
+    simp [mixedOptionCellQuoteLiveTailJoinedTape,
+      tapeAtCells, Tape.cells, List.map_reverse, List.map_append,
+      List.append_assoc]
+
 theorem mixedOptionCellQuoteLiveTailSeparatedTape_defaultedCells
     (emittedPrefix rawTail quoteRest : Word Bool) :
     List.map optionBitDefaultFalse
@@ -1585,6 +1638,63 @@ theorem
       contradiction
   | cons head rawTailRest =>
       simp [mixedOptionCellQuoteLiveTailSeparatedTape]
+
+theorem
+    mixedOptionCellQuoteLiveTailSeparatedTape_cells_assembly
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (mixedOptionCellQuoteLiveTailSeparatedTape
+          (assemblySourceRestFinishPrefixQuoteOutputBits
+            w sourceRestBits stage)
+          (assemblySourceRestFinishRawTailBits sourceRestBits stage)
+          (preservingCellPassCellBits sourceRestBits)) =
+      List.append
+        ((assemblySourceRestFinishPrefixQuoteOutputBits
+          w sourceRestBits stage).map some)
+        (List.append
+          ((assemblySourceRestFinishRawTailBits
+            sourceRestBits stage).map some)
+          (none ::
+            List.append
+              ((preservingCellPassCellBits sourceRestBits).map some)
+              [none])) := by
+  rcases assemblySourceRestFinishRawTailBits_cons_exists
+      sourceRestBits stage with
+    ⟨head, rawTailRest, hraw⟩
+  rw [hraw]
+  exact
+    mixedOptionCellQuoteLiveTailSeparatedTape_cells_cons
+      (assemblySourceRestFinishPrefixQuoteOutputBits
+        w sourceRestBits stage)
+      (preservingCellPassCellBits sourceRestBits)
+      head rawTailRest
+
+theorem
+    mixedOptionCellQuoteLiveTailJoinedTape_cells_assembly
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (mixedOptionCellQuoteLiveTailJoinedTape
+          (assemblySourceRestFinishPrefixQuoteOutputBits
+            w sourceRestBits stage)
+          (assemblySourceRestFinishRawTailBits sourceRestBits stage)
+          (preservingCellPassCellBits sourceRestBits)) =
+      List.append
+        ((assemblySourceRestFinishPrefixQuoteOutputBits
+          w sourceRestBits stage).map some)
+        (List.append
+          ((preservingCellPassCellBits sourceRestBits).map some)
+          ((assemblySourceRestFinishRawTailBits
+            sourceRestBits stage).map some)) := by
+  rcases assemblySourceRestFinishRawTailBits_cons_exists
+      sourceRestBits stage with
+    ⟨head, rawTailRest, hraw⟩
+  rw [hraw]
+  exact
+    mixedOptionCellQuoteLiveTailJoinedTape_cells_cons
+      (assemblySourceRestFinishPrefixQuoteOutputBits
+        w sourceRestBits stage)
+      (preservingCellPassCellBits sourceRestBits)
+      head rawTailRest
 
 theorem
     mixedOptionCellQuoteLiveTailJoinedTape_eq_assemblyQuoteRestJoinedTape
