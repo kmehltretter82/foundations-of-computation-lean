@@ -209,6 +209,138 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_move_left_
               ScratchPaddedOutputTape, inputWithTrailingBlankPadding,
               houtput, Tape.move, Tape.moveLeft, Tape.moveRight]
 
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_eq_FSTTargetTape_configRunner
+    (D : MachineDescription) (L : SimulatorLayout) :
+    FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_configRunner
+        D L =
+      CommonGround.FiniteTransducers.FSTTargetTape
+        (FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner
+          D L)
+        (FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner
+          L) := by
+  have hlen :=
+    fixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_length_ge_two_configRunner
+      D L
+  cases houtput :
+      FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner
+        D L with
+  | nil =>
+      simp [houtput] at hlen
+  | cons first rest =>
+      cases rest with
+      | nil =>
+          simp [houtput] at hlen
+      | cons second tail =>
+          cases first <;> cases second <;>
+            simp [
+              FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_configRunner,
+              FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner,
+              ScratchPaddedOutputTape,
+              CommonGround.FiniteTransducers.FSTTargetTape,
+              inputWithTrailingBlankPadding,
+              CommonGround.FiniteTransducers.inputWithTrailingBlankPadding,
+              FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner,
+              houtput,
+              Tape.move, Tape.moveRight]
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_eq_tapeAtCells_cons_cons_configRunner
+    (D : MachineDescription) (L : SimulatorLayout) :
+    exists first : Bool,
+    exists second : Bool,
+    exists rest : Word Bool,
+      FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner
+          D L =
+        first :: second :: rest ∧
+        FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_configRunner
+            D L =
+          DovetailInitialLayoutInitializer.tapeAtCells [some first]
+            (some second :: List.append (rest.map some)
+              (List.replicate
+                (Tape.contextLength
+                  (Tape.input (FixedDescriptionBoundedSimulatorInput L)))
+                none)) := by
+  have hlen :=
+    fixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_length_ge_two_configRunner
+      D L
+  cases houtput :
+      FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner
+        D L with
+  | nil =>
+      simp [houtput] at hlen
+  | cons first rest =>
+      cases rest with
+      | nil =>
+          simp [houtput] at hlen
+      | cons second tail =>
+          refine ⟨first, second, tail, ?_, ?_⟩
+          · rfl
+          · cases first <;> cases second <;>
+              simp [
+                FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_configRunner,
+                FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner,
+                ScratchPaddedOutputTape, inputWithTrailingBlankPadding,
+                FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner,
+                DovetailInitialLayoutInitializer.tapeAtCells,
+                houtput, Tape.move, Tape.moveRight]
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_cells_eq_outputBits_configRunner
+    (D : MachineDescription) (L : SimulatorLayout) :
+    Tape.cells
+        (FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_configRunner
+          D L) =
+      List.append
+        ((FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner
+          D L).map some)
+        (List.replicate
+          (Tape.contextLength
+            (Tape.input (FixedDescriptionBoundedSimulatorInput L)))
+          none) := by
+  have hlen :=
+    fixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_length_ge_two_configRunner
+      D L
+  cases houtput :
+      FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner
+        D L with
+  | nil =>
+      simp [houtput] at hlen
+  | cons first rest =>
+      cases rest with
+      | nil =>
+          simp [houtput] at hlen
+      | cons second tail =>
+          cases first <;> cases second <;>
+            simp [
+              FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_configRunner,
+              FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner,
+              ScratchPaddedOutputTape, inputWithTrailingBlankPadding,
+              FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner,
+              houtput, Tape.cells, Tape.move, Tape.moveRight]
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_cells_eq_fields_configRunner
+    (D : MachineDescription) (L : SimulatorLayout) :
+    Tape.cells
+        (FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_configRunner
+          D L) =
+      List.append
+        ((encodeCodeWordAsInput
+          (MachineCodeSymbol.header ::
+            encodeBoolWordAppend L.input
+              (encodeNatAppend L.stage
+                (encodeConfigurationAppend
+                  (D.runConfig L.stage L.config)
+                  (encodeBoolAppend
+                    (L.hit ||
+                      SimulatorLayout.hitsFromConfigByBool
+                        D L.config L.stage)
+                    []))))).map some)
+        (List.replicate
+          (Tape.contextLength
+            (Tape.input (FixedDescriptionBoundedSimulatorInput L)))
+          none) := by
+  rw [
+    fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_cells_eq_outputBits_configRunner,
+    fixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_eq_fields_configRunner]
+
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_eq_tapeAtCells_cons_configRunner
     (D : MachineDescription) (L : SimulatorLayout) :
     exists first : Bool,
@@ -475,6 +607,26 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSource
     exists afterRight : MachineDescription,
       FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceSpec_configRunner
         D afterRight
+
+def FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceSpec_configRunner
+    (D rightBody : MachineDescription) : Prop :=
+  rightBody.SubroutineReady ∧
+    forall L : SimulatorLayout,
+      rightBody.HaltsFromTape
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+          L)
+        (CommonGround.FiniteTransducers.FSTTargetTape
+          (FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner
+            D L)
+          (FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner
+            L))
+
+def FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner :
+    Prop :=
+  forall D : MachineDescription,
+    exists rightBody : MachineDescription,
+      FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceSpec_configRunner
+        D rightBody
 
 def FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceSpec_configRunner
     (D rightBody : MachineDescription) : Prop :=
@@ -1006,10 +1158,28 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSo
         (hrightD.right L)
         hidentity
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner :
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_of_FSTTarget_configRunner
+    (hfst :
+      FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner) :
     FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner := by
   intro D
+  rcases hfst D with ⟨rightBody, hrightBody⟩
+  refine ⟨rightBody, hrightBody.left, ?_⟩
+  intro L
+  simpa [
+    fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_eq_FSTTargetTape_configRunner
+      D L] using
+    hrightBody.right L
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner := by
+  intro D
   sorry
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_of_FSTTarget_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_configRunner :
     FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_configRunner :=
