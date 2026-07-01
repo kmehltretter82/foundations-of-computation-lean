@@ -1221,6 +1221,46 @@ theorem
         (assemblySourceRestFinishTargetPrefixBits_eq_prefixQuote_append_restQuote
           w sourceRestBits stage).symm
 
+theorem
+    assemblySourceRestLiveTailEmitterSourceTape_eq_defaultedInternalMarkerTape
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
+        (assemblySourceRestLiveTailEmitterLeftRev p)
+        (assemblySourceRestLiveTailEmitterQuoteScan p)
+        (assemblySourceRestLiveTailEmitterRawTail p)
+        (assemblySourceRestLiveTailEmitterQuoteRest p) =
+      MixedParserStackRewriterDefaultedInternalMarkerTape
+        p.w p.sourceRestBits
+        (preservingCellPassCellBits p.sourceRestBits) p.stage := by
+  cases p with
+  | mk w sourceRestBits stage =>
+      rw [assemblySourceRestLiveTailEmitterLeftRev,
+        assemblySourceRestLiveTailEmitterQuoteScan,
+        assemblySourceRestLiveTailEmitterRawTail,
+        assemblySourceRestLiveTailEmitterQuoteRest]
+      exact
+        (MixedParserStackRewriterDefaultedInternalMarkerTape_eq_mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
+          w sourceRestBits (preservingCellPassCellBits sourceRestBits)
+          stage).symm
+
+theorem
+    assemblySourceRestLiveTailEmitterTargetTape_eq_prefixQuotedSeparatedTape
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    mixedOptionCellQuoteLiveTailEmitterTargetTape
+        (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+        (assemblySourceRestLiveTailEmitterRawTail p)
+        (assemblySourceRestLiveTailEmitterQuoteRest p) =
+      MixedParserStackWholeSourcePrefixQuotedSeparatedTape
+        p.w p.sourceRestBits p.stage := by
+  cases p with
+  | mk w sourceRestBits stage =>
+      rw [assemblySourceRestLiveTailEmitterEmittedPrefix,
+        assemblySourceRestLiveTailEmitterRawTail,
+        assemblySourceRestLiveTailEmitterQuoteRest]
+      exact
+        (MixedParserStackWholeSourcePrefixQuotedSeparatedTape_eq_mixedOptionCellQuoteLiveTailEmitterTargetTape
+          w sourceRestBits stage).symm
+
 def MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec
     (finish : MachineDescription) : Prop :=
   MixedOptionCellQuoteLiveTailEmitterFamilySpec
@@ -2100,6 +2140,55 @@ theorem
       assemblySourceRestFinishTargetBits w sourceRestBits stage := by
   rw [mixedOptionCellQuoteLiveTailJoinedTape_defaultedCells_assembly]
   rw [assemblySourceRestFinishTargetBits]
+
+theorem
+    assemblySourceRestLiveTailJoinerSeparatedTape_eq_afterRawTailScanTape
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    mixedOptionCellQuoteLiveTailSeparatedTape
+        (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+        (assemblySourceRestLiveTailEmitterRawTail p)
+        (assemblySourceRestLiveTailEmitterQuoteRest p) =
+      MixedParserStackWholeSourceAfterRawTailScanTape
+        p.w p.sourceRestBits p.stage := by
+  cases p with
+  | mk w sourceRestBits stage =>
+      rw [assemblySourceRestLiveTailEmitterEmittedPrefix,
+        assemblySourceRestLiveTailEmitterRawTail,
+        assemblySourceRestLiveTailEmitterQuoteRest]
+      exact
+        (MixedParserStackWholeSourceAfterRawTailScanTape_eq_mixedOptionCellQuoteLiveTailSeparatedTape
+          w sourceRestBits stage).symm
+
+theorem
+    assemblySourceRestLiveTailJoinerJoinedTape_eq_quoteRestJoinedTape
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    mixedOptionCellQuoteLiveTailJoinedTape
+        (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+        (assemblySourceRestLiveTailEmitterRawTail p)
+        (assemblySourceRestLiveTailEmitterQuoteRest p) =
+      assemblySourceRestFinishQuoteRestJoinedTape
+        p.w p.sourceRestBits p.stage := by
+  cases p with
+  | mk w sourceRestBits stage =>
+      rw [assemblySourceRestLiveTailEmitterEmittedPrefix,
+        assemblySourceRestLiveTailEmitterRawTail,
+        assemblySourceRestLiveTailEmitterQuoteRest]
+      exact
+        mixedOptionCellQuoteLiveTailJoinedTape_eq_assemblyQuoteRestJoinedTape
+          w sourceRestBits stage
+
+theorem
+    assemblySourceRestLiveTailJoinerJoinedTape_eq_targetTape
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    mixedOptionCellQuoteLiveTailJoinedTape
+        (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+        (assemblySourceRestLiveTailEmitterRawTail p)
+        (assemblySourceRestLiveTailEmitterQuoteRest p) =
+      assemblySourceRestFinishTargetTape
+        p.w p.sourceRestBits p.stage := by
+  rw [
+    assemblySourceRestLiveTailJoinerJoinedTape_eq_quoteRestJoinedTape,
+    assemblySourceRestFinishQuoteRestJoinedTape_eq_targetTape]
 
 theorem mixedOptionCellQuoteLiveTailSeparatedTape_arbitrarySplit_ambiguous :
     mixedOptionCellQuoteLiveTailSeparatedTape [false] [true] [] =
