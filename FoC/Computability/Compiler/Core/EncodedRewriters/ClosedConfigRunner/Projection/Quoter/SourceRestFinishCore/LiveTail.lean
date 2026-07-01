@@ -2088,22 +2088,6 @@ theorem preservingCellPassCellBits_sourceRest_length
       4 * sourceRestBits.length :=
   preservingCellPassCellBits_length sourceRestBits
 
-theorem preservingCellPassCellBits_eq_nil_iff
-    (bits : Word Bool) :
-    preservingCellPassCellBits bits = [] ↔ bits = [] := by
-  constructor
-  · intro hbits
-    cases bits with
-    | nil =>
-        rfl
-    | cons bit rest =>
-        cases bit <;>
-          simp [preservingCellPassCellBits, preservingCellPassZeroBits,
-            preservingCellPassOneBits] at hbits
-  · intro hbits
-    rw [hbits]
-    rfl
-
 theorem
     mixedOptionCellQuoteLiveTailSeparatedTape_cells_assembly_stageSplit
     (w sourceRestBits : Word Bool) (stage : Nat) :
@@ -2169,15 +2153,14 @@ theorem
           (some bit ::
             List.append (sourceRestTail.map some)
               (none ::
-                List.append
-                  ((if bit then preservingCellPassOneBits
-                    else preservingCellPassZeroBits).map some)
-                  (List.append
-                    ((preservingCellPassCellBits sourceRestTail).map some)
-                    [none])))) := by
+                some false :: some true :: some bit ::
+                  some (if bit then false else true) ::
+                    List.append
+                      ((preservingCellPassCellBits sourceRestTail).map some)
+                      [none]))) := by
   rw [mixedOptionCellQuoteLiveTailSeparatedTape_cells_assembly_stageSplit]
-  rw [preservingCellPassCellBits_cons_chunk_map_some]
-  simp [List.append_assoc]
+  rw [preservingCellPassCellBits_cons_explicit_map_some]
+  simp
 
 theorem
     mixedOptionCellQuoteLiveTailJoinedTape_cells_assembly_sourceRestCons
@@ -2194,17 +2177,16 @@ theorem
         ((assemblySourceRestFinishPrefixQuoteOutputBits
           w (bit :: sourceRestTail) stage).map some)
         (List.append
-          ((if bit then preservingCellPassOneBits
-            else preservingCellPassZeroBits).map some)
+          (some false :: some true :: some bit ::
+            some (if bit then false else true) ::
+              (preservingCellPassCellBits sourceRestTail).map some)
           (List.append
-            ((preservingCellPassCellBits sourceRestTail).map some)
-            (List.append
-              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                stage).map some)
-              (some bit :: sourceRestTail.map some)))) := by
+            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              stage).map some)
+            (some bit :: sourceRestTail.map some))) := by
   rw [mixedOptionCellQuoteLiveTailJoinedTape_cells_assembly_stageSplit]
-  rw [preservingCellPassCellBits_cons_chunk_map_some]
-  simp [List.append_assoc]
+  rw [preservingCellPassCellBits_cons_explicit_map_some]
+  simp
 
 theorem
     mixedOptionCellQuoteLiveTailSeparatedTape_eq_assembly_stageSplit

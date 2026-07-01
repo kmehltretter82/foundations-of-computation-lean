@@ -651,6 +651,37 @@ theorem preservingCellPassCellBits_cons_chunk_map_some
         ((preservingCellPassCellBits rest).map some) := by
   cases bit <;> rfl
 
+theorem preservingCellPassCellBits_cons_explicit
+    (bit : Bool) (rest : Word Bool) :
+    preservingCellPassCellBits (bit :: rest) =
+      false :: true :: bit :: (if bit then false else true) ::
+        preservingCellPassCellBits rest := by
+  cases bit <;> rfl
+
+theorem preservingCellPassCellBits_cons_explicit_map_some
+    (bit : Bool) (rest : Word Bool) :
+    (preservingCellPassCellBits (bit :: rest)).map some =
+      some false :: some true :: some bit ::
+        some (if bit then false else true) ::
+          (preservingCellPassCellBits rest).map some := by
+  cases bit <;> rfl
+
+theorem preservingCellPassCellBits_eq_nil_iff
+    (bits : Word Bool) :
+    preservingCellPassCellBits bits = [] ↔ bits = [] := by
+  constructor
+  · intro hbits
+    cases bits with
+    | nil =>
+        rfl
+    | cons bit rest =>
+        cases bit <;>
+          simp [preservingCellPassCellBits, preservingCellPassZeroBits,
+            preservingCellPassOneBits] at hbits
+  · intro hbits
+    rw [hbits]
+    rfl
+
 theorem assemblySourceRestFinishSourcePrefixBits_eq_split_defaulted
     (w : Word Bool) (stage : Nat)
     (prefixCells : List (Option Bool))
