@@ -741,12 +741,39 @@ def mixedOptionCellQuoteLiveTailEmitterSourceTape
     (List.append (scanInput.map some)
       (none :: List.append (quoteRest.map some) [none]))
 
+def mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
+    (leftRev : List (Option Bool))
+    (quoteScan rawTail quoteRest : Word Bool) : Tape Bool :=
+  tapeAtCells leftRev
+    (List.append (quoteScan.map some)
+      (List.append (rawTail.map some)
+        (none :: List.append (quoteRest.map some) [none])))
+
+theorem mixedOptionCellQuoteLiveTailEmitterSourceTape_eq_split
+    (leftRev : List (Option Bool))
+    (quoteScan rawTail quoteRest : Word Bool) :
+    mixedOptionCellQuoteLiveTailEmitterSourceTape
+        leftRev (List.append quoteScan rawTail) quoteRest =
+      mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
+        leftRev quoteScan rawTail quoteRest := by
+  rw [mixedOptionCellQuoteLiveTailEmitterSourceTape,
+    mixedOptionCellQuoteLiveTailEmitterSplitSourceTape]
+  simp [List.map_append, List.append_assoc]
+
 def mixedOptionCellQuoteLiveTailEmitterTargetTape
     (emittedPrefix rawTail quoteRest : Word Bool) : Tape Bool :=
   tapeAtCells
     (emittedPrefix.reverse.map some)
     (List.append (rawTail.map some)
       (none :: List.append (quoteRest.map some) [none]))
+
+theorem assemblySourceRestFinishRightPayloadBits_eq_markerRight_append_rawTail
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    assemblySourceRestFinishRightPayloadBits w sourceRestBits stage =
+      List.append (assemblySourceRestFinishParserMarkerRightBits w)
+        (assemblySourceRestFinishRawTailBits sourceRestBits stage) := by
+  rw [assemblySourceRestFinishRightPayloadBits,
+    assemblySourceRestFinishRawTailBits]
 
 theorem
     MixedParserStackRewriterDefaultedInternalMarkerTape_eq_mixedOptionCellQuoteLiveTailEmitterSourceTape
@@ -763,6 +790,24 @@ theorem
         quoteRestBits := by
   rw [MixedParserStackRewriterDefaultedInternalMarkerTape,
     mixedOptionCellQuoteLiveTailEmitterSourceTape]
+
+theorem
+    MixedParserStackRewriterDefaultedInternalMarkerTape_eq_mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
+    (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
+    MixedParserStackRewriterDefaultedInternalMarkerTape
+        w sourceRestBits quoteRestBits stage =
+      mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
+        (some false ::
+          List.append
+            (List.reverse assemblySourceRestFinishParserMarkerLeftCells)
+            [none])
+        (assemblySourceRestFinishParserMarkerRightBits w)
+        (assemblySourceRestFinishRawTailBits sourceRestBits stage)
+        quoteRestBits := by
+  rw [
+    MixedParserStackRewriterDefaultedInternalMarkerTape_eq_mixedOptionCellQuoteLiveTailEmitterSourceTape]
+  rw [assemblySourceRestFinishRightPayloadBits_eq_markerRight_append_rawTail]
+  rw [mixedOptionCellQuoteLiveTailEmitterSourceTape_eq_split]
 
 theorem
     MixedParserStackWholeSourcePrefixQuotedSeparatedTape_eq_mixedOptionCellQuoteLiveTailEmitterTargetTape
@@ -785,13 +830,13 @@ def MixedOptionCellQuoteLiveTailEmitterForAssemblySourceRestSpec
   finish.SubroutineReady ∧
     forall (w sourceRestBits : Word Bool) (stage : Nat),
       finish.HaltsFromTape
-        (mixedOptionCellQuoteLiveTailEmitterSourceTape
+        (mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
           (some false ::
             List.append
               (List.reverse assemblySourceRestFinishParserMarkerLeftCells)
               [none])
-          (assemblySourceRestFinishRightPayloadBits
-            w sourceRestBits stage)
+          (assemblySourceRestFinishParserMarkerRightBits w)
+          (assemblySourceRestFinishRawTailBits sourceRestBits stage)
           (preservingCellPassCellBits sourceRestBits))
         (mixedOptionCellQuoteLiveTailEmitterTargetTape
           (assemblySourceRestFinishPrefixQuoteOutputBits
@@ -1259,7 +1304,7 @@ theorem
   rcases hemitter with ⟨finish, hfinish⟩
   refine ⟨finish, hfinish.left, ?_⟩
   intro w sourceRestBits stage
-  rw [MixedParserStackRewriterDefaultedInternalMarkerTape_eq_mixedOptionCellQuoteLiveTailEmitterSourceTape]
+  rw [MixedParserStackRewriterDefaultedInternalMarkerTape_eq_mixedOptionCellQuoteLiveTailEmitterSplitSourceTape]
   rw [MixedParserStackWholeSourcePrefixQuotedSeparatedTape_eq_mixedOptionCellQuoteLiveTailEmitterTargetTape]
   exact hfinish.right w sourceRestBits stage
 
