@@ -1434,6 +1434,19 @@ theorem assemblySourceRestFinishRawTailBits_cons_exists
   rw [assemblySourceRestFinishRawTailBits, hstage]
   simp
 
+theorem assemblySourceRestFinishRawTailBits_lastSplit_exists
+    (sourceRestBits : Word Bool) (stage : Nat) :
+    exists rawTailInit : Word Bool,
+    exists last : Bool,
+      assemblySourceRestFinishRawTailBits sourceRestBits stage =
+        List.append rawTailInit [last] := by
+  rcases assemblySourceRestFinishRawTailBits_cons_exists
+      sourceRestBits stage with
+    ⟨head, rest, hraw⟩
+  rcases exists_reverse_append_singleton_of_cons head rest with
+    ⟨scanRev, last, hsplit⟩
+  exact ⟨scanRev.reverse, last, by rw [hraw, hsplit]⟩
+
 theorem
     MixedParserStackWholeSourcePrefixQuotedSeparatedTape_eq_gapPayloadScanSource
     (w sourceRestBits : Word Bool) (stage : Nat)
@@ -1816,6 +1829,53 @@ theorem mixedOptionCellQuoteLiveTailSeparatedTape_cells_cons
   rw [mixedOptionCellQuoteLiveTailSeparatedTape]
   rw [rightBlankGapPayloadScanTargetTape_cells]
   simp [List.map_reverse]
+
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_eq_rawTailLast
+    (emittedPrefix rawTailInit quoteRest : Word Bool) (last : Bool) :
+    mixedOptionCellQuoteLiveTailSeparatedTape
+        emittedPrefix (List.append rawTailInit [last]) quoteRest =
+      tapeAtCells
+        (List.append (rawTailInit.reverse.map some)
+          (emittedPrefix.reverse.map some))
+        (some last :: none ::
+          List.append (quoteRest.map some) [none]) := by
+  cases rawTailInit with
+  | nil =>
+      simp [mixedOptionCellQuoteLiveTailSeparatedTape,
+        CommonGround.FiniteTransducers.rightBlankGapPayloadScanTargetTape,
+        tapeAtCells, CommonGround.FiniteTransducers.tapeAtCells,
+        Tape.move, Tape.moveLeft]
+  | cons head tail =>
+      simp [mixedOptionCellQuoteLiveTailSeparatedTape,
+        CommonGround.FiniteTransducers.rightBlankGapPayloadScanTargetTape,
+        tapeAtCells, CommonGround.FiniteTransducers.tapeAtCells,
+        Tape.move, Tape.moveLeft, List.reverse_append, List.map_append,
+        List.append_assoc]
+
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_head_rawTailLast
+    (emittedPrefix rawTailInit quoteRest : Word Bool) (last : Bool) :
+    (mixedOptionCellQuoteLiveTailSeparatedTape
+        emittedPrefix (List.append rawTailInit [last]) quoteRest).head =
+      some last := by
+  rw [mixedOptionCellQuoteLiveTailSeparatedTape_eq_rawTailLast]
+  simp [tapeAtCells]
+
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_left_rawTailLast
+    (emittedPrefix rawTailInit quoteRest : Word Bool) (last : Bool) :
+    (mixedOptionCellQuoteLiveTailSeparatedTape
+        emittedPrefix (List.append rawTailInit [last]) quoteRest).left =
+      List.append (rawTailInit.reverse.map some)
+        (emittedPrefix.reverse.map some) := by
+  rw [mixedOptionCellQuoteLiveTailSeparatedTape_eq_rawTailLast]
+  simp [tapeAtCells]
+
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_right_rawTailLast
+    (emittedPrefix rawTailInit quoteRest : Word Bool) (last : Bool) :
+    (mixedOptionCellQuoteLiveTailSeparatedTape
+        emittedPrefix (List.append rawTailInit [last]) quoteRest).right =
+      none :: List.append (quoteRest.map some) [none] := by
+  rw [mixedOptionCellQuoteLiveTailSeparatedTape_eq_rawTailLast]
+  simp [tapeAtCells]
 
 theorem mixedOptionCellQuoteLiveTailJoinedTape_cells_cons
     (emittedPrefix quoteRest : Word Bool)
