@@ -52,6 +52,13 @@ def scanRightToBlankLeftHaltTape
   Tape.move Direction.left
     (tapeAtCells (List.append (bits.reverse.map some) leftRev) [none])
 
+def scanRightToBlankLeftHaltTapeWithRight
+    (leftRev : List (Option Bool)) (bits : Word Bool)
+    (right : List (Option Bool)) : Tape Bool :=
+  Tape.move Direction.left
+    (tapeAtCells (List.append (bits.reverse.map some) leftRev)
+      (none :: right))
+
 theorem scanRightToBlankLeftDescription_run
     (leftRev : List (Option Bool)) (bits : Word Bool) :
     scanRightToBlankLeftDescription.runConfig (bits.length + 1)
@@ -92,6 +99,54 @@ theorem scanRightToBlankLeftDescription_haltsFromTape
       (scanRightToBlankLeftHaltTape leftRev bits) := by
   refine ⟨bits.length + 1, ?_⟩
   have hrun := scanRightToBlankLeftDescription_run leftRev bits
+  constructor
+  · simpa [config] using congrArg Configuration.state hrun
+  · simpa [config] using congrArg Configuration.tape hrun
+
+theorem scanRightToBlankLeftDescription_run_withRight
+    (leftRev : List (Option Bool)) (bits : Word Bool)
+    (right : List (Option Bool)) :
+    scanRightToBlankLeftDescription.runConfig (bits.length + 1)
+        (config scanRightToBlankLeftDescription.start leftRev
+          (List.append (bits.map some) (none :: right))) =
+      { state := scanRightToBlankLeftDescription.halt
+        tape := scanRightToBlankLeftHaltTapeWithRight leftRev bits right } := by
+  induction bits generalizing leftRev with
+  | nil =>
+      simp [scanRightToBlankLeftDescription,
+        scanRightToBlankLeftHaltTapeWithRight, config, tapeAtCells,
+        runConfig, stepConfig, lookupTransition, Matches, transition,
+        Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+  | cons bit rest ih =>
+      rw [show (bit :: rest).length + 1 = 1 + (rest.length + 1) by
+        simp
+        omega]
+      rw [runConfig_add]
+      have hstep :
+          scanRightToBlankLeftDescription.runConfig 1
+              (config scanRightToBlankLeftDescription.start leftRev
+                (List.append ((bit :: rest).map some) (none :: right))) =
+            config scanRightToBlankLeftDescription.start (some bit :: leftRev)
+              (List.append (rest.map some) (none :: right)) := by
+        cases bit <;>
+          cases rest <;>
+          simp [scanRightToBlankLeftDescription, config, tapeAtCells,
+            runConfig, stepConfig, lookupTransition, Matches, transition,
+            Tape.read, Tape.write, Tape.move, Tape.moveRight]
+      rw [hstep]
+      simpa [scanRightToBlankLeftHaltTapeWithRight, List.reverse_cons,
+        List.map_append, List.append_assoc] using ih (some bit :: leftRev)
+
+theorem scanRightToBlankLeftDescription_haltsFromTape_withRight
+    (leftRev : List (Option Bool)) (bits : Word Bool)
+    (right : List (Option Bool)) :
+    scanRightToBlankLeftDescription.HaltsFromTape
+      (tapeAtCells leftRev
+        (List.append (bits.map some) (none :: right)))
+      (scanRightToBlankLeftHaltTapeWithRight leftRev bits right) := by
+  refine ⟨bits.length + 1, ?_⟩
+  have hrun :=
+    scanRightToBlankLeftDescription_run_withRight leftRev bits right
   constructor
   · simpa [config] using congrArg Configuration.state hrun
   · simpa [config] using congrArg Configuration.tape hrun

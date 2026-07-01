@@ -526,6 +526,70 @@ theorem assemblySkeletonDescription_run_prefix_to_stageInput_tail_cells
           w stage).map some)
         sourceRestCells)
 
+theorem assemblySkeletonDescription_run_prefix_to_marked_tail_cells_withBase
+    (leftBase tailCells : List (Option Bool)) :
+    ASM.runConfig 6
+        (config ASM.start leftBase
+          (List.append
+            (List.map some
+              (List.append
+                (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+                [false, false]))
+            tailCells)) =
+      markedTailStartConfigWithBaseCells
+        (List.append transitionPrefixLeftTail leftBase)
+        tailCells := by
+  cases tailCells <;>
+    simp [ASM, AssemblySkeletonDescription,
+      SIMS,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription,
+      markedTailStartConfigWithBaseCells, transitionPrefixLeftTail,
+      encodeCodeSymbolAsInput, config, tapeAtCells,
+      runConfig, stepConfig, lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
+      Tape.moveRight]
+
+theorem assemblySkeletonDescription_run_prefix_to_stageInput_tail_cells_withBase
+    (leftBase : List (Option Bool))
+    (w : Word Bool) (stage : Nat)
+    (sourceRestCells : List (Option Bool)) :
+    ASM.runConfig 6
+        (config ASM.start leftBase
+          (List.append
+            (List.map some
+              (List.append
+                (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+                (DovetailInitialLayoutInitializer.stageInputBits
+                  w stage)))
+            sourceRestCells)) =
+      markedTailStartConfigWithBaseCells
+        (List.append transitionPrefixLeftTail leftBase)
+        (List.append
+          ((DovetailInitialLayoutInitializer.stageInputSecondBitTail
+            w stage).map some)
+          sourceRestCells) := by
+  rw [DovetailInitialLayoutInitializer.stageInputBits_eq_false_false_tail]
+  rw [show
+      List.append
+          (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+          (false :: false ::
+            DovetailInitialLayoutInitializer.stageInputSecondBitTail
+              w stage) =
+        List.append
+          (List.append
+            (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+            [false, false])
+          (DovetailInitialLayoutInitializer.stageInputSecondBitTail
+            w stage) by
+      simp [encodeCodeSymbolAsInput]]
+  simpa [List.map_append, List.append_assoc] using
+    assemblySkeletonDescription_run_prefix_to_marked_tail_cells_withBase
+      leftBase
+      (List.append
+        ((DovetailInitialLayoutInitializer.stageInputSecondBitTail
+          w stage).map some)
+        sourceRestCells)
+
 theorem assemblyPrefixDescription_run_prefix_to_marked_tail
     (tail : Word Bool) :
     AP.runConfig 6
@@ -602,6 +666,70 @@ theorem assemblyPrefixDescription_run_prefix_to_stageInput_tail_cells
       simp [encodeCodeSymbolAsInput]]
   simpa [List.map_append, List.append_assoc] using
     assemblyPrefixDescription_run_prefix_to_marked_tail_cells
+      (List.append
+        ((DovetailInitialLayoutInitializer.stageInputSecondBitTail
+          w stage).map some)
+        sourceRestCells)
+
+theorem assemblyPrefixDescription_run_prefix_to_marked_tail_cells_withBase
+    (leftBase tailCells : List (Option Bool)) :
+    AP.runConfig 6
+        (config AP.start leftBase
+          (List.append
+            (List.map some
+              (List.append
+                (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+                [false, false]))
+            tailCells)) =
+      markedTailStartConfigWithBaseCells
+        (List.append transitionPrefixLeftTail leftBase)
+        tailCells := by
+  cases tailCells <;>
+    simp [AP, AssemblyPrefixDescription,
+      SIMS,
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription,
+      markedTailStartConfigWithBaseCells, transitionPrefixLeftTail,
+      encodeCodeSymbolAsInput, config, tapeAtCells,
+      runConfig, stepConfig, lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move,
+      Tape.moveRight]
+
+theorem assemblyPrefixDescription_run_prefix_to_stageInput_tail_cells_withBase
+    (leftBase : List (Option Bool))
+    (w : Word Bool) (stage : Nat)
+    (sourceRestCells : List (Option Bool)) :
+    AP.runConfig 6
+        (config AP.start leftBase
+          (List.append
+            (List.map some
+              (List.append
+                (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+                (DovetailInitialLayoutInitializer.stageInputBits
+                  w stage)))
+            sourceRestCells)) =
+      markedTailStartConfigWithBaseCells
+        (List.append transitionPrefixLeftTail leftBase)
+        (List.append
+          ((DovetailInitialLayoutInitializer.stageInputSecondBitTail
+            w stage).map some)
+          sourceRestCells) := by
+  rw [DovetailInitialLayoutInitializer.stageInputBits_eq_false_false_tail]
+  rw [show
+      List.append
+          (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+          (false :: false ::
+            DovetailInitialLayoutInitializer.stageInputSecondBitTail
+              w stage) =
+        List.append
+          (List.append
+            (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+            [false, false])
+          (DovetailInitialLayoutInitializer.stageInputSecondBitTail
+            w stage) by
+      simp [encodeCodeSymbolAsInput]]
+  simpa [List.map_append, List.append_assoc] using
+    assemblyPrefixDescription_run_prefix_to_marked_tail_cells_withBase
+      leftBase
       (List.append
         ((DovetailInitialLayoutInitializer.stageInputSecondBitTail
           w stage).map some)
