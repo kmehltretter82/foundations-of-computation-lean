@@ -201,6 +201,12 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_move_left_
               ScratchPaddedOutputTape, inputWithTrailingBlankPadding,
               houtput, Tape.move, Tape.moveLeft, Tape.moveRight]
 
+def fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+    (L : SimulatorLayout) : Tape Bool :=
+  Tape.move Direction.right
+    (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
+      L)
+
 def FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindSpec_configRunner
     (rewind : MachineDescription) : Prop :=
   rewind.SubroutineReady ∧
@@ -233,6 +239,23 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_configRunner :
   forall D : MachineDescription,
     exists body : MachineDescription,
       FixedDescriptionBoundedSimulatorPaddedEmitterBodySpec_configRunner D body
+
+def FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceSpec_configRunner
+    (D afterRight : MachineDescription) : Prop :=
+  afterRight.SubroutineReady ∧
+    forall L : SimulatorLayout,
+      afterRight.HaltsFromTape
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+          L)
+        (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
+          D L)
+
+def FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_configRunner :
+    Prop :=
+  forall D : MachineDescription,
+    exists afterRight : MachineDescription,
+      FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceSpec_configRunner
+        D afterRight
 
 def FixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreSpec_configRunner
     (D post : MachineDescription) : Prop :=
@@ -608,10 +631,109 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_move_lef
               DovetailInitialLayoutInitializer.tapeAtCells,
               Tape.move, Tape.moveLeft, Tape.moveRight, hbits]
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_configRunner :
+theorem fixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_haltsFrom_terminalSource_configRunner
+    (L : SimulatorLayout) :
+    FixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_configRunner.HaltsFromTape
+      (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
+        L)
+      (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+        L) := by
+  have hlen : 2 <= (SimulatorLayout.asBoolInput L).length := by
+    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
+    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
+      encodeCodeSymbolAsInput]
+  cases hbits : SimulatorLayout.asBoolInput L with
+  | nil =>
+      simp [hbits] at hlen
+  | cons first rest =>
+      cases rest with
+      | nil =>
+          simp [hbits] at hlen
+      | cons second tail =>
+          refine ⟨3, ?_⟩
+          constructor
+          · cases tail <;> cases first <;> cases second <;>
+              simp [
+                fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
+                FixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_configRunner,
+                DovetailInitialLayoutInitializer.tapeAtCells,
+                runConfig, stepConfig, lookupTransition, Matches,
+                DovetailInitialLayoutInitializer.StageInputMarkedScanner.keepMove,
+                transition, Tape.read, Tape.write, Tape.move,
+                Tape.moveLeft, Tape.moveRight, hbits]
+          · cases tail <;> cases first <;> cases second <;>
+              simp [
+                fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner,
+                fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
+                FixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_configRunner,
+                DovetailInitialLayoutInitializer.tapeAtCells,
+                runConfig, stepConfig, lookupTransition, Matches,
+                DovetailInitialLayoutInitializer.StageInputMarkedScanner.keepMove,
+                transition, Tape.read, Tape.write, Tape.move,
+                Tape.moveLeft, Tape.moveRight, hbits]
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_move_left_move_right_configRunner
+    (L : SimulatorLayout) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+            L)) =
+      fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+        L := by
+  have hlen : 2 <= (SimulatorLayout.asBoolInput L).length := by
+    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
+    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
+      encodeCodeSymbolAsInput]
+  cases hbits : SimulatorLayout.asBoolInput L with
+  | nil =>
+      simp [hbits] at hlen
+  | cons first rest =>
+      cases rest with
+      | nil =>
+          simp [hbits] at hlen
+      | cons second tail =>
+          cases tail <;> cases first <;> cases second <;>
+            simp [
+              fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner,
+              fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
+              DovetailInitialLayoutInitializer.tapeAtCells,
+              Tape.move, Tape.moveLeft, Tape.moveRight, hbits]
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_of_afterTerminalRightShiftedSource_configRunner
+    (hafterRight :
+      FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_configRunner) :
     FixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_configRunner := by
   intro D
+  rcases hafterRight D with ⟨afterRight, hafterRightD⟩
+  refine
+    ⟨SeqViaCanonical
+      FixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_configRunner
+      afterRight, ?_⟩
+  constructor
+  · exact
+      SeqViaCanonical_subroutineReady
+        fixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_subroutineReady_configRunner
+        hafterRightD.left
+  · intro L
+    exact
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        fixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_subroutineReady_configRunner
+        hafterRightD.left
+        (fixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_haltsFrom_terminalSource_configRunner
+          L)
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_move_left_move_right_configRunner
+          L)
+        (hafterRightD.right L)
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_configRunner := by
+  intro D
   sorry
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_of_afterTerminalRightShiftedSource_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_configRunner
 
 theorem fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_of_rewind_body_configRunner
     (hrewind :
