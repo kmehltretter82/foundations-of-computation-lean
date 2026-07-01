@@ -1696,6 +1696,101 @@ theorem
       (preservingCellPassCellBits sourceRestBits)
       head rawTailRest
 
+theorem assemblySourceRestFinishRawTailBits_eq_stageNat_append_sourceRest
+    (sourceRestBits : Word Bool) (stage : Nat) :
+    assemblySourceRestFinishRawTailBits sourceRestBits stage =
+      List.append
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          stage)
+        sourceRestBits := by
+  rfl
+
+theorem assemblySourceRestFinishRawTailBits_length
+    (sourceRestBits : Word Bool) (stage : Nat) :
+    (assemblySourceRestFinishRawTailBits sourceRestBits stage).length =
+      (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+        stage).length + sourceRestBits.length := by
+  simp [assemblySourceRestFinishRawTailBits]
+
+theorem assemblySourceRestFinishRawTailBits_map_some
+    (sourceRestBits : Word Bool) (stage : Nat) :
+    (assemblySourceRestFinishRawTailBits sourceRestBits stage).map some =
+      List.append
+        ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          stage).map some)
+        (sourceRestBits.map some) := by
+  simp [assemblySourceRestFinishRawTailBits, List.map_append]
+
+theorem assemblySourceRestFinishRawTailBits_take_stageNatBits
+    (sourceRestBits : Word Bool) (stage : Nat) :
+    List.take
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          stage).length
+        (assemblySourceRestFinishRawTailBits sourceRestBits stage) =
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+        stage := by
+  simp [assemblySourceRestFinishRawTailBits]
+
+theorem assemblySourceRestFinishRawTailBits_drop_stageNatBits
+    (sourceRestBits : Word Bool) (stage : Nat) :
+    List.drop
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          stage).length
+        (assemblySourceRestFinishRawTailBits sourceRestBits stage) =
+      sourceRestBits := by
+  simp [assemblySourceRestFinishRawTailBits]
+
+theorem preservingCellPassCellBits_sourceRest_length
+    (sourceRestBits : Word Bool) :
+    (preservingCellPassCellBits sourceRestBits).length =
+      4 * sourceRestBits.length :=
+  preservingCellPassCellBits_length sourceRestBits
+
+theorem
+    mixedOptionCellQuoteLiveTailSeparatedTape_cells_assembly_stageSplit
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (mixedOptionCellQuoteLiveTailSeparatedTape
+          (assemblySourceRestFinishPrefixQuoteOutputBits
+            w sourceRestBits stage)
+          (assemblySourceRestFinishRawTailBits sourceRestBits stage)
+          (preservingCellPassCellBits sourceRestBits)) =
+      List.append
+        ((assemblySourceRestFinishPrefixQuoteOutputBits
+          w sourceRestBits stage).map some)
+        (List.append
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).map some)
+          (List.append (sourceRestBits.map some)
+            (none ::
+              List.append
+                ((preservingCellPassCellBits sourceRestBits).map some)
+                [none]))) := by
+  rw [mixedOptionCellQuoteLiveTailSeparatedTape_cells_assembly]
+  rw [assemblySourceRestFinishRawTailBits_map_some]
+  simp [List.append_assoc]
+
+theorem
+    mixedOptionCellQuoteLiveTailJoinedTape_cells_assembly_stageSplit
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (mixedOptionCellQuoteLiveTailJoinedTape
+          (assemblySourceRestFinishPrefixQuoteOutputBits
+            w sourceRestBits stage)
+          (assemblySourceRestFinishRawTailBits sourceRestBits stage)
+          (preservingCellPassCellBits sourceRestBits)) =
+      List.append
+        ((assemblySourceRestFinishPrefixQuoteOutputBits
+          w sourceRestBits stage).map some)
+        (List.append
+          ((preservingCellPassCellBits sourceRestBits).map some)
+          (List.append
+            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              stage).map some)
+            (sourceRestBits.map some))) := by
+  rw [mixedOptionCellQuoteLiveTailJoinedTape_cells_assembly]
+  rw [assemblySourceRestFinishRawTailBits_map_some]
+
 theorem
     mixedOptionCellQuoteLiveTailJoinedTape_eq_assemblyQuoteRestJoinedTape
     (w sourceRestBits : Word Bool) (stage : Nat) :
