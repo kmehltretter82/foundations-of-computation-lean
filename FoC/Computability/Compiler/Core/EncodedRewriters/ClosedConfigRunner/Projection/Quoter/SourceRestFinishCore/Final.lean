@@ -1071,6 +1071,87 @@ theorem
         ((preservingCellPassCellBits sourceRestBits).map some)
         [none])
 
+def mixedOptionCellQuoteLiveTailSeparatedTape
+    (emittedPrefix rawTail quoteRest : Word Bool) : Tape Bool :=
+  match rawTail with
+  | [] =>
+      tapeAtCells
+        (emittedPrefix.reverse.map some)
+        (none :: List.append (quoteRest.map some) [none])
+  | head :: rawTailRest =>
+      CommonGround.FiniteTransducers.rightBlankGapPayloadScanTargetTape
+        (emittedPrefix.reverse.map some)
+        0 head rawTailRest
+        (List.append (quoteRest.map some) [none])
+
+def mixedOptionCellQuoteLiveTailJoinedTape
+    (emittedPrefix rawTail quoteRest : Word Bool) : Tape Bool :=
+  tapeAtCells
+    ((List.append emittedPrefix quoteRest).reverse.map some)
+    (rawTail.map some)
+
+theorem
+    MixedParserStackWholeSourceAfterRawTailScanTape_eq_mixedOptionCellQuoteLiveTailSeparatedTape
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    MixedParserStackWholeSourceAfterRawTailScanTape
+        w sourceRestBits stage =
+      mixedOptionCellQuoteLiveTailSeparatedTape
+        (assemblySourceRestFinishPrefixQuoteOutputBits
+          w sourceRestBits stage)
+        (assemblySourceRestFinishRawTailBits sourceRestBits stage)
+        (preservingCellPassCellBits sourceRestBits) := by
+  rw [MixedParserStackWholeSourceAfterRawTailScanTape]
+  rw [MixedParserStackRewriterPrefixQuote_eq_assemblyQuotedPrefix]
+  rw [MixedParserStackRewriterLengthHeader_eq_assemblyLengthHeader]
+  rw [assemblySourceRestFinishPrefixQuoteOutputBits]
+  cases hraw :
+      assemblySourceRestFinishRawTailBits sourceRestBits stage with
+  | nil =>
+      rcases assemblySourceRestFinishRawTailBits_cons_exists
+          sourceRestBits stage with
+        ⟨head, rawTailRest, hcons⟩
+      rw [hraw] at hcons
+      contradiction
+  | cons head rawTailRest =>
+      simp [mixedOptionCellQuoteLiveTailSeparatedTape]
+
+theorem
+    mixedOptionCellQuoteLiveTailJoinedTape_eq_assemblyQuoteRestJoinedTape
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    mixedOptionCellQuoteLiveTailJoinedTape
+        (assemblySourceRestFinishPrefixQuoteOutputBits
+          w sourceRestBits stage)
+        (assemblySourceRestFinishRawTailBits sourceRestBits stage)
+        (preservingCellPassCellBits sourceRestBits) =
+      assemblySourceRestFinishQuoteRestJoinedTape
+        w sourceRestBits stage := by
+  rw [mixedOptionCellQuoteLiveTailJoinedTape,
+    assemblySourceRestFinishQuoteRestJoinedTape]
+
+def MixedOptionCellQuoteLiveTailJoinerSpec
+    (finish : MachineDescription) : Prop :=
+  finish.SubroutineReady ∧
+    forall (emittedPrefix rawTail quoteRest : Word Bool),
+      rawTail ≠ [] ->
+        finish.HaltsFromTape
+          (mixedOptionCellQuoteLiveTailSeparatedTape
+            emittedPrefix rawTail quoteRest)
+          (mixedOptionCellQuoteLiveTailJoinedTape
+            emittedPrefix rawTail quoteRest)
+
+def MixedOptionCellQuoteLiveTailJoinerConstruction : Prop :=
+  exists finish : MachineDescription,
+    MixedOptionCellQuoteLiveTailJoinerSpec finish
+
+/--
+Reusable finite-table obligation for joining a reusable quote-rest field in
+front of a nonempty live tail.  This is the first extraction point for the
+mixed option-cell quote/live-tail emitter suggested in the project plan.
+-/
+theorem mixedOptionCellQuoteLiveTailJoinerConstruction :
+    MixedOptionCellQuoteLiveTailJoinerConstruction := by
+  sorry
+
 def MixedParserStackPrefixQuotedSeparatedFinisherAssemblySourceRestSpec
     (finish : MachineDescription) : Prop :=
   finish.SubroutineReady ∧
@@ -1106,6 +1187,29 @@ def
     Prop :=
   exists finish : MachineDescription,
     MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestSpec finish
+
+theorem
+    MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailJoiner
+    (hjoin : MixedOptionCellQuoteLiveTailJoinerConstruction) :
+    MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest := by
+  rcases hjoin with ⟨finish, hfinish⟩
+  refine ⟨finish, hfinish.left, ?_⟩
+  intro w sourceRestBits stage
+  rw [MixedParserStackWholeSourceAfterRawTailScanTape_eq_mixedOptionCellQuoteLiveTailSeparatedTape]
+  rw [MixedParserStackRewriterWholeSourceTargetTape_eq_quoteRestJoinedTape]
+  rw [← mixedOptionCellQuoteLiveTailJoinedTape_eq_assemblyQuoteRestJoinedTape]
+  exact
+    hfinish.right
+      (assemblySourceRestFinishPrefixQuoteOutputBits
+        w sourceRestBits stage)
+      (assemblySourceRestFinishRawTailBits sourceRestBits stage)
+      (preservingCellPassCellBits sourceRestBits)
+      (by
+        rcases assemblySourceRestFinishRawTailBits_cons_exists
+            sourceRestBits stage with
+          ⟨head, rawTailRest, hraw⟩
+        rw [hraw]
+        simp)
 
 theorem
     MixedParserStackWholeSourceFinisherConstructionForAssemblySourceRest_of_prefixSeparated_and_join
@@ -1165,8 +1269,9 @@ leaves {lit}`stageBits ++ sourceRestBits` as the live right tail.
 -/
 theorem
     mixedParserStackAfterRawTailScanJoinFinisherConstruction_for_assemblySourceRest :
-    MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest := by
-  sorry
+    MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest :=
+  MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailJoiner
+    mixedOptionCellQuoteLiveTailJoinerConstruction
 
 /--
 Core finite-machine obligation for the mixed parser-stack whole-source finisher.
