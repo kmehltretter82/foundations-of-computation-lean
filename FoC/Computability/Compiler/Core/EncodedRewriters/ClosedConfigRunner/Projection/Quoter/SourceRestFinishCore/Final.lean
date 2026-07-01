@@ -821,6 +821,43 @@ theorem mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells
   simp [List.map_append, List.map_map,
     optionBitDefaultFalse, optionBitDefaultFalse_map_some]
 
+def mixedOptionCellQuoteLiveTailEmitterSourceBits
+    (leftRev : List (Option Bool))
+    (quoteScan rawTail quoteRest : Word Bool) : Word Bool :=
+  List.append (List.map optionBitDefaultFalse leftRev.reverse)
+    (List.append quoteScan
+      (List.append rawTail
+        (false :: List.append quoteRest [false])))
+
+def mixedOptionCellQuoteLiveTailEmitterTargetBits
+    (emittedPrefix rawTail quoteRest : Word Bool) : Word Bool :=
+  List.append emittedPrefix
+    (List.append rawTail
+      (false :: List.append quoteRest [false]))
+
+theorem mixedOptionCellQuoteLiveTailEmitterSplitSourceTape_defaultedCells_eq_sourceBits
+    (leftRev : List (Option Bool))
+    (quoteScan rawTail quoteRest : Word Bool) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
+            leftRev quoteScan rawTail quoteRest)) =
+      mixedOptionCellQuoteLiveTailEmitterSourceBits
+        leftRev quoteScan rawTail quoteRest := by
+  rw [mixedOptionCellQuoteLiveTailEmitterSplitSourceTape_defaultedCells]
+  rfl
+
+theorem mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells_eq_targetBits
+    (emittedPrefix rawTail quoteRest : Word Bool) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (mixedOptionCellQuoteLiveTailEmitterTargetTape
+            emittedPrefix rawTail quoteRest)) =
+      mixedOptionCellQuoteLiveTailEmitterTargetBits
+        emittedPrefix rawTail quoteRest := by
+  rw [mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells]
+  rfl
+
 theorem assemblySourceRestFinishRightPayloadBits_eq_markerRight_append_rawTail
     (w sourceRestBits : Word Bool) (stage : Nat) :
     assemblySourceRestFinishRightPayloadBits w sourceRestBits stage =
@@ -1024,6 +1061,102 @@ def MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest :
     Prop :=
   exists finish : MachineDescription,
     MixedOptionCellQuoteLiveTailEmitterForAssemblySourceRestSpec finish
+
+def MixedOptionCellQuoteLiveTailEmitterFamilySpec
+    {ι : Type}
+    (sourceLeftRev : ι -> List (Option Bool))
+    (quoteScan rawTail quoteRest emittedPrefix : ι -> Word Bool)
+    (finish : MachineDescription) : Prop :=
+  finish.SubroutineReady ∧
+    forall p : ι,
+      finish.HaltsFromTape
+        (mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
+          (sourceLeftRev p) (quoteScan p) (rawTail p) (quoteRest p))
+        (mixedOptionCellQuoteLiveTailEmitterTargetTape
+          (emittedPrefix p) (rawTail p) (quoteRest p))
+
+structure AssemblySourceRestLiveTailEmitterParam where
+  w : Word Bool
+  sourceRestBits : Word Bool
+  stage : Nat
+
+def assemblySourceRestLiveTailEmitterLeftRev
+    (_p : AssemblySourceRestLiveTailEmitterParam) :
+    List (Option Bool) :=
+  some false ::
+    List.append
+      (List.reverse assemblySourceRestFinishParserMarkerLeftCells)
+      [none]
+
+def assemblySourceRestLiveTailEmitterQuoteScan
+    (p : AssemblySourceRestLiveTailEmitterParam) : Word Bool :=
+  assemblySourceRestFinishParserMarkerRightBits p.w
+
+def assemblySourceRestLiveTailEmitterRawTail
+    (p : AssemblySourceRestLiveTailEmitterParam) : Word Bool :=
+  assemblySourceRestFinishRawTailBits p.sourceRestBits p.stage
+
+def assemblySourceRestLiveTailEmitterQuoteRest
+    (p : AssemblySourceRestLiveTailEmitterParam) : Word Bool :=
+  preservingCellPassCellBits p.sourceRestBits
+
+def assemblySourceRestLiveTailEmitterEmittedPrefix
+    (p : AssemblySourceRestLiveTailEmitterParam) : Word Bool :=
+  assemblySourceRestFinishPrefixQuoteOutputBits
+    p.w p.sourceRestBits p.stage
+
+def MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec
+    (finish : MachineDescription) : Prop :=
+  MixedOptionCellQuoteLiveTailEmitterFamilySpec
+    assemblySourceRestLiveTailEmitterLeftRev
+    assemblySourceRestLiveTailEmitterQuoteScan
+    assemblySourceRestLiveTailEmitterRawTail
+    assemblySourceRestLiveTailEmitterQuoteRest
+    assemblySourceRestLiveTailEmitterEmittedPrefix
+    finish
+
+def MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction :
+    Prop :=
+  exists finish : MachineDescription,
+    MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec finish
+
+theorem
+    MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec_iff_assemblySpec
+    (finish : MachineDescription) :
+    MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec finish ↔
+      MixedOptionCellQuoteLiveTailEmitterForAssemblySourceRestSpec finish := by
+  constructor
+  · intro hfinish
+    refine ⟨hfinish.left, ?_⟩
+    intro w sourceRestBits stage
+    exact hfinish.right
+      { w := w, sourceRestBits := sourceRestBits, stage := stage }
+  · intro hfinish
+    refine ⟨hfinish.left, ?_⟩
+    intro p
+    cases p with
+    | mk w sourceRestBits stage =>
+        exact hfinish.right w sourceRestBits stage
+
+theorem
+    MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest_of_family
+    (h : MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction) :
+    MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest := by
+  rcases h with ⟨finish, hfinish⟩
+  exact
+    ⟨finish,
+      (MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec_iff_assemblySpec
+        finish).mp hfinish⟩
+
+theorem
+    MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction_of_assembly
+    (h : MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest) :
+    MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction := by
+  rcases h with ⟨finish, hfinish⟩
+  exact
+    ⟨finish,
+      (MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec_iff_assemblySpec
+        finish).mpr hfinish⟩
 
 /--
 Reusable emitter obligation for the specialized assembly parser-prefix grammar.
