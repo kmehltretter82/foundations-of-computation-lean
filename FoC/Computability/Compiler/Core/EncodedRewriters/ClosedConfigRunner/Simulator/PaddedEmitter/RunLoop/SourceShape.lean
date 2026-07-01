@@ -1,4 +1,5 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.Terminal
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.PaddedIdentity
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.TerminalCore
 
 set_option doc.verso true
 
@@ -391,18 +392,6 @@ theorem sourceLeftMoveOnceDescription_haltsFrom_rightShiftedSource_configRunner
       (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
         (SimulatorLayout.asBoolInput L))
 
-theorem fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner
-    (L : SimulatorLayout) :
-    SimulatorLayout.asBoolInput L =
-      encodeCodeWordAsInput
-        (MachineCodeSymbol.header ::
-          encodeBoolWordAppend L.input
-            (encodeNatAppend L.stage
-              (encodeConfigurationAppend L.config
-                (encodeBoolAppend L.hit [])))) := by
-  simp [SimulatorLayout.asBoolInput, SimulatorLayout.encode,
-    SimulatorLayout.encodeAppend]
-
 theorem
     fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_normalizedOutput_eq_fields_configRunner
     (L : SimulatorLayout) :
@@ -471,43 +460,6 @@ theorem
     fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTarget_cells_configRunner,
     fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner]
 
-theorem fixedDescriptionBoundedSimulatorOutput_length_ge_header_configRunner
-    (D : MachineDescription) (L : SimulatorLayout) :
-    4 <= (FixedDescriptionBoundedSimulatorOutput D L).length := by
-  rw [FixedDescriptionBoundedSimulatorOutput]
-  rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
-  simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
-    encodeCodeSymbolAsInput]
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_eq_tapeAtCells_cons_configRunner
-    (D : MachineDescription) (L : SimulatorLayout) :
-    exists first : Bool,
-    exists rest : Word Bool,
-      FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner
-          D L =
-        first :: rest ∧
-        FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
-            D L =
-          DovetailInitialLayoutInitializer.tapeAtCells []
-            (some first :: List.append (rest.map some)
-              (List.replicate
-                (Tape.contextLength
-                  (Tape.input (FixedDescriptionBoundedSimulatorInput L)))
-                none)) := by
-  have hlen :=
-    fixedDescriptionBoundedSimulatorOutput_length_ge_header_configRunner
-      D L
-  cases houtput : FixedDescriptionBoundedSimulatorOutput D L with
-  | nil =>
-      simp [houtput] at hlen
-  | cons first rest =>
-      refine ⟨first, rest, ?_, ?_⟩
-      · simp [FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner,
-          houtput]
-      rw [
-        fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_eq_tapeAtCells_configRunner]
-      simp [houtput, inputWithTrailingBlankPaddingCells]
-
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_contextLength_ge_afterRight_source_configRunner
     (D : MachineDescription) (L : SimulatorLayout) :
     Tape.contextLength
@@ -539,69 +491,6 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_contextLength_g
             DovetailInitialLayoutInitializer.tapeAtCells,
             Tape.contextLength, Tape.input, hinput, houtputBits] at *
           omega
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_cells_configRunner
-    (D : MachineDescription) (L : SimulatorLayout) :
-    Tape.cells
-        (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
-          D L) =
-      inputWithTrailingBlankPaddingCells
-        (FixedDescriptionBoundedSimulatorOutput D L)
-        (Tape.contextLength
-          (Tape.input (FixedDescriptionBoundedSimulatorInput L))) := by
-  rw [fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_eq_tapeAtCells_configRunner]
-  cases houtput : FixedDescriptionBoundedSimulatorOutput D L with
-  | nil =>
-      simp [inputWithTrailingBlankPaddingCells,
-        DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells]
-  | cons bit rest =>
-      cases bit <;>
-        simp [inputWithTrailingBlankPaddingCells,
-          DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells]
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_cells_eq_outputBits_configRunner
-    (D : MachineDescription) (L : SimulatorLayout) :
-    Tape.cells
-        (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
-          D L) =
-      List.append
-        ((FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner
-          D L).map some)
-        (List.replicate
-          (Tape.contextLength
-            (Tape.input (FixedDescriptionBoundedSimulatorInput L)))
-          none) := by
-  rw [fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_cells_configRunner]
-  simp [FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner,
-    FixedDescriptionBoundedSimulatorOutput,
-    SimulatorLayout.asBoolInput, SimulatorLayout.encode,
-    SimulatorLayout.encodeAppend,
-    inputWithTrailingBlankPaddingCells, encodeCodeWordAsInput,
-    encodeCodeSymbolAsInput]
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_cells_eq_fields_configRunner
-    (D : MachineDescription) (L : SimulatorLayout) :
-    Tape.cells
-        (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
-          D L) =
-      List.append
-        ((encodeCodeWordAsInput
-          (MachineCodeSymbol.header ::
-            encodeBoolWordAppend L.input
-              (encodeNatAppend L.stage
-                (encodeConfigurationAppend
-                  (D.runConfig L.stage L.config)
-                  (encodeBoolAppend
-                    (L.hit ||
-                      SimulatorLayout.hitsFromConfigByBool
-                        D L.config L.stage)
-                    []))))).map some)
-        (List.replicate
-          (Tape.contextLength
-            (Tape.input (FixedDescriptionBoundedSimulatorInput L)))
-          none) := by
-  rw [fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_cells_eq_outputBits_configRunner]
-  rw [fixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_eq_fields_configRunner]
 
 def sourceScanRightToBlankLeftDescription_configRunner : MachineDescription where
   stateCount := 2
@@ -689,6 +578,38 @@ theorem sourceRightEndLeftTape_move_right_eq_terminal_with_blank_configRunner
   | cons cell rest =>
       simp [DovetailInitialLayoutInitializer.tapeAtCells,
         Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem sourceRightEndLeftTape_move_right_eq_terminalCore_configRunner
+    (L : SimulatorLayout) :
+    Tape.move Direction.right
+        (sourceRightEndLeftTape_configRunner
+          (SimulatorLayout.asBoolInput L)) =
+      fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner
+        true L := by
+  simpa [fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner]
+    using
+      sourceRightEndLeftTape_move_right_eq_terminal_with_blank_configRunner
+        (SimulatorLayout.asBoolInput L)
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_true_move_right_move_left_configRunner
+    (L : SimulatorLayout) :
+    Tape.move Direction.right
+        (Tape.move Direction.left
+          (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner
+            true L)) =
+      fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner
+        true L := by
+  cases hleft : (SimulatorLayout.asBoolInput L).reverse.map some with
+  | nil =>
+      simp [
+        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner,
+        DovetailInitialLayoutInitializer.tapeAtCells,
+        Tape.move, Tape.moveLeft, Tape.moveRight, hleft]
+  | cons cell rest =>
+      simp [
+        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner,
+        DovetailInitialLayoutInitializer.tapeAtCells,
+        Tape.move, Tape.moveLeft, Tape.moveRight, hleft]
 
 theorem sourceRightEndLeftTape_move_right_equiv_terminal_configRunner
     (bits : Word Bool) :
@@ -948,7 +869,38 @@ into this shape.
 -/
 theorem finiteMachineCore : Construction := by
   intro D
-  sorry
+  rcases
+      fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_configRunner
+        D with
+    ⟨post, hpost⟩
+  refine
+    ⟨SeqViaCanonicalLeft
+      CommonGround.FiniteTransducers.rightMoveOnceDescription post, ?_⟩
+  constructor
+  · exact
+      SeqViaCanonicalLeft_subroutineReady
+        CommonGround.FiniteTransducers.rightMoveOnceDescription_subroutineReady
+        hpost.left
+  · intro L
+    have hright :
+        CommonGround.FiniteTransducers.rightMoveOnceDescription.HaltsFromTape
+          (sourceRightEndLeftTape_configRunner
+            (SimulatorLayout.asBoolInput L))
+          (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner
+            true L) := by
+      simpa [sourceRightEndLeftTape_move_right_eq_terminalCore_configRunner L]
+        using
+          CommonGround.FiniteTransducers.rightMoveOnceDescription_haltsFromTape
+            (sourceRightEndLeftTape_configRunner
+              (SimulatorLayout.asBoolInput L))
+    exact
+      SeqViaCanonicalLeft_haltsFromTape_of_haltsFromTape
+        CommonGround.FiniteTransducers.rightMoveOnceDescription_subroutineReady
+        hpost.left
+        hright
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_true_move_right_move_left_configRunner
+          L)
+        (hpost.right true L)
 
 end AfterSourceRightEndLeft
 

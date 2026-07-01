@@ -75,6 +75,20 @@ def fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBase_configRunn
             baseLeft)
           (suffixBits.map some)) }
 
+def fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_configRunner
+    (baseLeft : List (Option Bool)) (suffixBits : Word Bool)
+    (rightPadding : List (Option Bool)) : Configuration :=
+  { state :=
+      FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.halt
+    tape :=
+      Tape.move Direction.left
+        (DovetailInitialLayoutInitializer.tapeAtCells
+          (List.append
+            (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.reverse.map
+              some)
+            baseLeft)
+          (List.append (suffixBits.map some) rightPadding)) }
+
 theorem fixedDescriptionBoundedSimulatorHeaderPrefix_run_raw_to_handoff_withBase_configRunner
     (baseLeft : List (Option Bool)) (b : Bool)
     (suffixTail : Word Bool) :
@@ -101,6 +115,32 @@ theorem fixedDescriptionBoundedSimulatorHeaderPrefix_run_raw_to_handoff_withBase
       lookupTransition, Matches, transition, encodeCodeSymbolAsInput,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
 
+theorem fixedDescriptionBoundedSimulatorHeaderPrefix_run_raw_to_handoff_withBaseAndRight_configRunner
+    (baseLeft : List (Option Bool)) (b : Bool)
+    (suffixTail : Word Bool) (rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.runConfig
+          steps
+          (DovetailInitialLayoutInitializer.config
+            FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.start
+            baseLeft
+            (List.append
+              (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.map
+                some)
+              (some b :: List.append (suffixTail.map some) rightPadding))) =
+        fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_configRunner
+          baseLeft (b :: suffixTail) rightPadding := by
+  refine ⟨5, ?_⟩
+  cases b <;>
+    simp [FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner,
+      fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_configRunner,
+      fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
+      DovetailInitialLayoutInitializer.config,
+      DovetailInitialLayoutInitializer.tapeAtCells, keepMove, runConfig,
+      stepConfig,
+      lookupTransition, Matches, transition, encodeCodeSymbolAsInput,
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
+
 theorem fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBase_move_right_configRunner
     (baseLeft : List (Option Bool)) (b : Bool)
     (suffixTail : Word Bool) :
@@ -115,6 +155,25 @@ theorem fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBase_move_r
         ((b :: suffixTail).map some) := by
   cases b <;>
     simp [fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBase_configRunner,
+      fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
+      encodeCodeSymbolAsInput,
+      DovetailInitialLayoutInitializer.tapeAtCells,
+      Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_move_right_configRunner
+    (baseLeft : List (Option Bool)) (b : Bool)
+    (suffixTail : Word Bool) (rightPadding : List (Option Bool)) :
+    Tape.move Direction.right
+        (fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_configRunner
+          baseLeft (b :: suffixTail) rightPadding).tape =
+      DovetailInitialLayoutInitializer.tapeAtCells
+        (List.append
+          (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.reverse.map
+            some)
+          baseLeft)
+        (List.append ((b :: suffixTail).map some) rightPadding) := by
+  cases b <;>
+    simp [fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_configRunner,
       fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
       encodeCodeSymbolAsInput,
       DovetailInitialLayoutInitializer.tapeAtCells,
@@ -253,6 +312,115 @@ theorem run_fixedDescriptionBoundedSimulatorConfigHit_raw_to_handoff_withBase_co
                   ((stageNatBits cfg.state).reverse.map some)
                   baseLeft)))
             false hitTail
+      rw [hraw]
+      have hhitCells :
+          (false :: hitTail).map some =
+            (cellCodeBits (some hit)).map some := by
+        simpa using congrArg (fun bits => bits.map some) hhitTail.symm
+      simp [hhitCells]
+    exact
+      runConfig_reaches_from_move_eq
+        (B := BoolFinalScannerDescription)
+        (handoffMove := Direction.right)
+        hmove
+        (by simpa [DovetailInitialLayoutInitializer.config] using hfinal)
+  simpa [FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner,
+    TmidTape] using
+      seqSubroutine_runConfig_exists
+        (A := ConfigurationSuffixScannerDescription)
+        (B := BoolFinalScannerDescription)
+        (handoffMove := Direction.right)
+        configurationSuffixScannerDescription_subroutineReady
+        boolFinalScannerDescription_subroutineReady
+        hArun hBReach
+
+theorem run_fixedDescriptionBoundedSimulatorConfigHit_raw_to_handoff_withBaseAndRightBlank_configRunner
+    (cfg : Configuration) (hit : Bool)
+    (baseLeft rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.runConfig
+          steps
+          { state :=
+              FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.start
+            tape :=
+              DovetailInitialLayoutInitializer.tapeAtCells baseLeft
+                (List.append
+                  ((configurationFieldBits cfg
+                    (boolFieldBits hit [])).map some)
+                  (none :: rightPadding)) } =
+        { state :=
+            FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.halt
+          tape :=
+            (boolFinalHandoffConfigWithBaseAndRight hit
+              (configurationRestoredLeftWithBase cfg baseLeft)
+              (none :: rightPadding)).tape } := by
+  rcases cellCodeBits_cons_false (some hit) with ⟨hitTail, hhitTail⟩
+  rcases run_configurationSuffix_raw_to_handoff_withBaseAndRight
+      cfg baseLeft hitTail (none :: rightPadding) with
+    ⟨configSteps, hconfig⟩
+  let TmidTape : Tape Bool :=
+    (cellListCanonicalHandoffConfigWithBaseAndRight cfg.tape.right
+      (List.append ((cellCodeBits cfg.tape.head).reverse.map some)
+        (cellListCanonicalRestoredLeftWithBase cfg.tape.left
+          (List.append ((stageNatBits cfg.state).reverse.map some)
+            baseLeft)))
+      (false :: hitTail) (none :: rightPadding)).tape
+  have hArun :
+      ConfigurationSuffixScannerDescription.runConfig configSteps
+          { state := ConfigurationSuffixScannerDescription.start
+            tape :=
+              DovetailInitialLayoutInitializer.tapeAtCells baseLeft
+                (List.append
+                  ((configurationFieldBits cfg
+                    (boolFieldBits hit [])).map some)
+                  (none :: rightPadding)) } =
+        { state := ConfigurationSuffixScannerDescription.halt
+          tape := TmidTape } := by
+    rw [show
+        List.append
+            ((configurationFieldBits cfg
+              (boolFieldBits hit [])).map some)
+            (none :: rightPadding) =
+          List.append
+            ((configurationFieldBits cfg (false :: hitTail)).map some)
+            (none :: rightPadding) by
+      simp [boolFieldBits, cellFieldBits, hhitTail]]
+    simpa [TmidTape] using hconfig
+  have hBReach :
+      exists nB : Nat,
+        BoolFinalScannerDescription.runConfig nB
+            { state := BoolFinalScannerDescription.start
+              tape := Tape.move Direction.right TmidTape } =
+          { state := BoolFinalScannerDescription.halt
+            tape :=
+              (boolFinalHandoffConfigWithBaseAndRight hit
+                (configurationRestoredLeftWithBase cfg baseLeft)
+                (none :: rightPadding)).tape } := by
+    rcases run_boolFinal_raw_to_handoff_withBaseAndRight
+        hit (configurationRestoredLeftWithBase cfg baseLeft) rightPadding with
+      ⟨finalSteps, hfinal⟩
+    have hmove :
+        Tape.move Direction.right TmidTape =
+          DovetailInitialLayoutInitializer.tapeAtCells
+            (configurationRestoredLeftWithBase cfg baseLeft)
+            (List.append ((cellCodeBits (some hit)).map some)
+              (none :: rightPadding)) := by
+      have hraw :
+          Tape.move Direction.right TmidTape =
+            DovetailInitialLayoutInitializer.tapeAtCells
+              (configurationRestoredLeftWithBase cfg baseLeft)
+              (List.append ((false :: hitTail).map some)
+                (none :: rightPadding)) := by
+        simpa [TmidTape, configurationRestoredLeftWithBase] using
+          cellListCanonicalHandoffConfigWithBaseAndRight_move_right
+            cfg.tape.right
+            (List.append
+              ((cellCodeBits cfg.tape.head).reverse.map some)
+              (cellListCanonicalRestoredLeftWithBase cfg.tape.left
+                (List.append
+                  ((stageNatBits cfg.state).reverse.map some)
+                  baseLeft)))
+            false hitTail (none :: rightPadding)
       rw [hraw]
       have hhitCells :
           (false :: hitTail).map some =
@@ -472,6 +640,116 @@ theorem run_fixedDescriptionBoundedSimulatorStageConfigHit_raw_to_handoff_withBa
         simpa [TmidTape, baseAfterStage] using
           nonemptyNatSuffixHandoffConfigWithBase_move_right
             stage baseLeft false cfgTail
+      rw [hraw]
+      have hcfgCells :
+          (false :: cfgTail).map some =
+            (configurationFieldBits cfg (boolFieldBits hit [])).map some := by
+        simpa using congrArg (fun bits => bits.map some) hcfgTail.symm
+      simp [hcfgCells]
+    exact
+      runConfig_reaches_from_move_eq
+        (B := FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner)
+        (handoffMove := Direction.right)
+        hmove
+        hconfig
+  simpa [FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner,
+    TmidTape, baseAfterStage] using
+      seqSubroutine_runConfig_exists
+        (A := NonemptyNatSuffixScannerDescription)
+        (B := FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner)
+        (handoffMove := Direction.right)
+        nonemptyNatSuffixScannerDescription_subroutineReady
+        fixedDescriptionBoundedSimulatorConfigHitScannerDescription_subroutineReady_configRunner
+        hArun hBReach
+
+theorem run_fixedDescriptionBoundedSimulatorStageConfigHit_raw_to_handoff_withBaseAndRightBlank_configRunner
+    (stage : Nat) (cfg : Configuration) (hit : Bool)
+    (baseLeft rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner.runConfig
+          steps
+          { state :=
+              FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner.start
+            tape :=
+              DovetailInitialLayoutInitializer.tapeAtCells baseLeft
+                (List.append
+                  ((List.append (stageNatBits stage)
+                    (configurationFieldBits cfg
+                      (boolFieldBits hit []))).map some)
+                  (none :: rightPadding)) } =
+        { state :=
+            FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner.halt
+          tape :=
+            (boolFinalHandoffConfigWithBaseAndRight hit
+              (configurationRestoredLeftWithBase cfg
+                (List.append ((stageNatBits stage).reverse.map some)
+                  baseLeft))
+              (none :: rightPadding)).tape } := by
+  rcases configurationFieldBits_cons_false cfg (boolFieldBits hit []) with
+    ⟨cfgTail, hcfgTail⟩
+  rcases run_nonemptyNatSuffix_raw_to_handoff_withBaseAndRight
+      stage baseLeft false cfgTail (none :: rightPadding) with
+    ⟨stageSteps, hstage⟩
+  let TmidTape : Tape Bool :=
+    (nonemptyNatSuffixHandoffConfigWithBaseAndRight
+      stage baseLeft (false :: cfgTail) (none :: rightPadding)).tape
+  let baseAfterStage : List (Option Bool) :=
+    List.append ((stageNatBits stage).reverse.map some) baseLeft
+  have hArun :
+      NonemptyNatSuffixScannerDescription.runConfig stageSteps
+          { state := NonemptyNatSuffixScannerDescription.start
+            tape :=
+              DovetailInitialLayoutInitializer.tapeAtCells baseLeft
+                (List.append
+                  ((List.append (stageNatBits stage)
+                    (configurationFieldBits cfg
+                      (boolFieldBits hit []))).map some)
+                  (none :: rightPadding)) } =
+        { state := NonemptyNatSuffixScannerDescription.halt
+          tape := TmidTape } := by
+    rw [show
+        List.append
+            ((List.append (stageNatBits stage)
+              (configurationFieldBits cfg
+                (boolFieldBits hit []))).map some)
+            (none :: rightPadding) =
+          List.append
+            ((List.append (stageNatBits stage)
+              (false :: cfgTail)).map some)
+            (none :: rightPadding) by
+      rw [hcfgTail]]
+    simpa [TmidTape] using hstage
+  have hBReach :
+      exists nB : Nat,
+        FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.runConfig
+            nB
+            { state :=
+                FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.start
+              tape := Tape.move Direction.right TmidTape } =
+          { state :=
+              FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.halt
+            tape :=
+              (boolFinalHandoffConfigWithBaseAndRight hit
+                (configurationRestoredLeftWithBase cfg baseAfterStage)
+                (none :: rightPadding)).tape } := by
+    rcases
+        run_fixedDescriptionBoundedSimulatorConfigHit_raw_to_handoff_withBaseAndRightBlank_configRunner
+          cfg hit baseAfterStage rightPadding with
+      ⟨configSteps, hconfig⟩
+    have hmove :
+        Tape.move Direction.right TmidTape =
+          DovetailInitialLayoutInitializer.tapeAtCells baseAfterStage
+            (List.append
+              ((configurationFieldBits cfg (boolFieldBits hit [])).map some)
+              (none :: rightPadding)) := by
+      have hraw :
+          Tape.move Direction.right TmidTape =
+            DovetailInitialLayoutInitializer.tapeAtCells baseAfterStage
+              (List.append ((false :: cfgTail).map some)
+                (none :: rightPadding)) := by
+        simpa [TmidTape, baseAfterStage] using
+          nonemptyNatSuffixHandoffConfigWithBaseAndRight_move_right
+            stage baseLeft false cfgTail (none :: rightPadding)
       rw [hraw]
       have hcfgCells :
           (false :: cfgTail).map some =
@@ -751,6 +1029,139 @@ theorem run_fixedDescriptionBoundedSimulatorLayoutPayload_raw_to_handoff_withBas
         fixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_subroutineReady_configRunner
         hArun hBReach
 
+theorem run_fixedDescriptionBoundedSimulatorLayoutPayload_raw_to_handoff_withBaseAndRightBlank_configRunner
+    (L : SimulatorLayout) (baseLeft rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner.runConfig
+          steps
+          { state :=
+              FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner.start
+            tape :=
+              DovetailInitialLayoutInitializer.tapeAtCells baseLeft
+                (List.append
+                  ((boolWordFieldBits L.input
+                    (List.append (stageNatBits L.stage)
+                      (configurationFieldBits L.config
+                        (boolFieldBits L.hit [])))).map some)
+                  (none :: rightPadding)) } =
+        { state :=
+            FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner.halt
+          tape :=
+            (boolFinalHandoffConfigWithBaseAndRight L.hit
+              (configurationRestoredLeftWithBase L.config
+                (List.append ((stageNatBits L.stage).reverse.map some)
+                  (cellListCanonicalRestoredLeftWithBase
+                    (L.input.map some) baseLeft)))
+              (none :: rightPadding)).tape } := by
+  let stageSuffix : Word Bool :=
+    configurationFieldBits L.config (boolFieldBits L.hit [])
+  rcases stageNatBits_cons_false L.stage with ⟨stageTail, hstageTail⟩
+  let inputSuffixTail : Word Bool :=
+    List.append stageTail stageSuffix
+  rcases run_boolWordSuffix_raw_to_canonical_handoff_withBaseAndRight
+      L.input baseLeft inputSuffixTail (none :: rightPadding) with
+    ⟨inputSteps, hinput⟩
+  let TmidTape : Tape Bool :=
+    (boolWordCanonicalHandoffConfigWithBaseAndRight L.input baseLeft
+      (false :: inputSuffixTail) (none :: rightPadding)).tape
+  let baseAfterInput : List (Option Bool) :=
+    cellListCanonicalRestoredLeftWithBase (L.input.map some) baseLeft
+  have hArun :
+      BoolWordSuffixScannerDescription.runConfig inputSteps
+          { state := BoolWordSuffixScannerDescription.start
+            tape :=
+              DovetailInitialLayoutInitializer.tapeAtCells baseLeft
+                (List.append
+                  ((boolWordFieldBits L.input
+                    (List.append (stageNatBits L.stage)
+                      (configurationFieldBits L.config
+                        (boolFieldBits L.hit [])))).map some)
+                  (none :: rightPadding)) } =
+        { state := BoolWordSuffixScannerDescription.halt
+          tape := TmidTape } := by
+    change
+      BoolWordSuffixScannerDescription.runConfig inputSteps
+          (DovetailInitialLayoutInitializer.config
+            BoolWordSuffixScannerDescription.start baseLeft
+            (List.append
+              ((boolWordFieldBits L.input
+                (List.append (stageNatBits L.stage) stageSuffix)).map some)
+              (none :: rightPadding))) =
+        { state := BoolWordSuffixScannerDescription.halt
+          tape := TmidTape }
+    rw [show
+        List.append
+            ((boolWordFieldBits L.input
+              (List.append (stageNatBits L.stage) stageSuffix)).map some)
+            (none :: rightPadding) =
+          List.append ((stageNatBits L.input.length).map some)
+            (List.append ((cellsCodeBits (L.input.map some)).map some)
+              (some false ::
+                List.append (inputSuffixTail.map some)
+                  (none :: rightPadding))) by
+      rw [hstageTail]
+      simp [boolWordFieldBits, cellListFieldBits, inputSuffixTail,
+        stageSuffix, List.map_append, List.append_assoc]]
+    simpa [TmidTape, boolWordCanonicalHandoffConfigWithBaseAndRight] using
+      hinput
+  have hBReach :
+      exists nB : Nat,
+        FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner.runConfig
+            nB
+            { state :=
+                FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner.start
+              tape := Tape.move Direction.right TmidTape } =
+          { state :=
+              FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner.halt
+            tape :=
+              (boolFinalHandoffConfigWithBaseAndRight L.hit
+                (configurationRestoredLeftWithBase L.config
+                  (List.append ((stageNatBits L.stage).reverse.map some)
+                    baseAfterInput))
+                (none :: rightPadding)).tape } := by
+    rcases
+        run_fixedDescriptionBoundedSimulatorStageConfigHit_raw_to_handoff_withBaseAndRightBlank_configRunner
+          L.stage L.config L.hit baseAfterInput rightPadding with
+      ⟨stageSteps, hstage⟩
+    have hmove :
+        Tape.move Direction.right TmidTape =
+          DovetailInitialLayoutInitializer.tapeAtCells baseAfterInput
+            (List.append
+              ((List.append (stageNatBits L.stage) stageSuffix).map some)
+              (none :: rightPadding)) := by
+      have hraw :
+          Tape.move Direction.right TmidTape =
+            DovetailInitialLayoutInitializer.tapeAtCells baseAfterInput
+              (List.append ((false :: inputSuffixTail).map some)
+                (none :: rightPadding)) := by
+        simpa [TmidTape, baseAfterInput,
+          boolWordCanonicalHandoffConfigWithBaseAndRight] using
+          cellListCanonicalHandoffConfigWithBaseAndRight_move_right
+            (L.input.map some) baseLeft false inputSuffixTail
+            (none :: rightPadding)
+      rw [hraw]
+      have hsuffixCells :
+          (false :: inputSuffixTail).map some =
+            (List.append (stageNatBits L.stage) stageSuffix).map some := by
+        rw [hstageTail]
+        simp [inputSuffixTail, List.map_append]
+      simp [hsuffixCells]
+    exact
+      runConfig_reaches_from_move_eq
+        (B := FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner)
+        (handoffMove := Direction.right)
+        hmove
+        (by simpa [baseAfterInput, stageSuffix] using hstage)
+  simpa [FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner,
+    TmidTape, baseAfterInput] using
+      seqSubroutine_runConfig_exists
+        (A := BoolWordSuffixScannerDescription)
+        (B := FixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_configRunner)
+        (handoffMove := Direction.right)
+        boolWordSuffixScannerDescription_subroutineReady
+        fixedDescriptionBoundedSimulatorStageConfigHitScannerDescription_subroutineReady_configRunner
+        hArun hBReach
+
 theorem fixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_runConfig_code_inv_configRunner
     (baseLeft : List (Option Bool)) (code : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}
@@ -884,6 +1295,18 @@ def fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBase_configRunne
             (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.reverse.map
               some)
             baseLeft))))).tape
+
+def fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBaseAndRight_configRunner
+    (L : SimulatorLayout) (baseLeft rightPadding : List (Option Bool)) : Tape Bool :=
+  (boolFinalHandoffConfigWithBaseAndRight L.hit
+    (configurationRestoredLeftWithBase L.config
+      (List.append ((stageNatBits L.stage).reverse.map some)
+        (cellListCanonicalRestoredLeftWithBase (L.input.map some)
+          (List.append
+            (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.reverse.map
+              some)
+            baseLeft))))
+    (none :: rightPadding)).tape
 
 theorem fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBase_normalizedOutput_configRunner
     (L : SimulatorLayout) (baseLeft : List (Option Bool)) :
@@ -1045,6 +1468,130 @@ theorem run_fixedDescriptionBoundedSimulatorLayoutScanner_raw_to_handoff_withBas
           simpa [baseAfterHeader, payloadBits,
             fixedDescriptionBoundedSimulatorLayoutPayloadBits_configRunner,
             fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBase_configRunner]
+            using hpayload)
+  simpa [FixedDescriptionBoundedSimulatorLayoutScannerDescription_configRunner,
+    TmidTape] using
+      seqSubroutine_runConfig_exists
+        (A := FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner)
+        (B := FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner)
+        (handoffMove := Direction.right)
+        fixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_subroutineReady_configRunner
+        fixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_subroutineReady_configRunner
+        hArun hBReach
+
+theorem run_fixedDescriptionBoundedSimulatorLayoutScanner_raw_to_handoff_withBaseAndRightBlank_configRunner
+    (L : SimulatorLayout) (baseLeft rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      FixedDescriptionBoundedSimulatorLayoutScannerDescription_configRunner.runConfig
+          steps
+          { state :=
+              FixedDescriptionBoundedSimulatorLayoutScannerDescription_configRunner.start
+            tape :=
+              DovetailInitialLayoutInitializer.tapeAtCells baseLeft
+                (List.append ((SimulatorLayout.asBoolInput L).map some)
+                  (none :: rightPadding)) } =
+        { state :=
+            FixedDescriptionBoundedSimulatorLayoutScannerDescription_configRunner.halt
+          tape :=
+            fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBaseAndRight_configRunner
+              L baseLeft rightPadding } := by
+  let payloadBits : Word Bool :=
+    fixedDescriptionBoundedSimulatorLayoutPayloadBits_configRunner L
+  rcases
+      cellListFieldBits_cons_false (L.input.map some)
+        (List.append (stageNatBits L.stage)
+          (configurationFieldBits L.config (boolFieldBits L.hit []))) with
+    ⟨payloadTail, hpayloadTail⟩
+  rcases
+      fixedDescriptionBoundedSimulatorHeaderPrefix_run_raw_to_handoff_withBaseAndRight_configRunner
+        baseLeft false payloadTail (none :: rightPadding) with
+    ⟨headerSteps, hheader⟩
+  let TmidTape : Tape Bool :=
+    (fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_configRunner
+      baseLeft (false :: payloadTail) (none :: rightPadding)).tape
+  let baseAfterHeader : List (Option Bool) :=
+    List.append
+      (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.reverse.map
+        some)
+      baseLeft
+  have hpayloadEq :
+      payloadBits = false :: payloadTail := by
+    simpa [payloadBits,
+      fixedDescriptionBoundedSimulatorLayoutPayloadBits_configRunner,
+      boolWordFieldBits] using hpayloadTail
+  have hArun :
+      FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.runConfig
+          headerSteps
+          { state :=
+              FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.start
+            tape :=
+              DovetailInitialLayoutInitializer.tapeAtCells baseLeft
+                (List.append ((SimulatorLayout.asBoolInput L).map some)
+                  (none :: rightPadding)) } =
+        { state :=
+            FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.halt
+          tape := TmidTape } := by
+    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
+    rw [show
+        fixedDescriptionBoundedSimulatorLayoutPayloadBits_configRunner L =
+          false :: payloadTail by
+      simpa [payloadBits] using hpayloadEq]
+    simp [List.map_append, List.append_assoc]
+    change
+      FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.runConfig
+          headerSteps
+          (DovetailInitialLayoutInitializer.config
+            FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.start
+            baseLeft
+            (List.append
+              (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.map
+                some)
+              (some false ::
+                List.append (payloadTail.map some)
+                  (none :: rightPadding)))) =
+        { state :=
+            FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.halt
+          tape := TmidTape }
+    simpa [TmidTape] using hheader
+  have hBReach :
+      exists nB : Nat,
+        FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner.runConfig
+            nB
+            { state :=
+                FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner.start
+              tape := Tape.move Direction.right TmidTape } =
+          { state :=
+              FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner.halt
+            tape :=
+              fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBaseAndRight_configRunner
+                L baseLeft rightPadding } := by
+    rcases
+        run_fixedDescriptionBoundedSimulatorLayoutPayload_raw_to_handoff_withBaseAndRightBlank_configRunner
+          L baseAfterHeader rightPadding with
+      ⟨payloadSteps, hpayload⟩
+    have hmove :
+        Tape.move Direction.right TmidTape =
+          DovetailInitialLayoutInitializer.tapeAtCells baseAfterHeader
+            (List.append (payloadBits.map some) (none :: rightPadding)) := by
+      have hraw :
+          Tape.move Direction.right TmidTape =
+            DovetailInitialLayoutInitializer.tapeAtCells baseAfterHeader
+              (List.append ((false :: payloadTail).map some)
+                (none :: rightPadding)) := by
+        simpa [TmidTape, baseAfterHeader] using
+          fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_move_right_configRunner
+            baseLeft false payloadTail (none :: rightPadding)
+      rw [hraw]
+      simp [hpayloadEq]
+    exact
+      runConfig_reaches_from_move_eq
+        (B := FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner)
+        (handoffMove := Direction.right)
+        hmove
+        (by
+          simpa [baseAfterHeader, payloadBits,
+            fixedDescriptionBoundedSimulatorLayoutPayloadBits_configRunner,
+            fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBaseAndRight_configRunner]
             using hpayload)
   simpa [FixedDescriptionBoundedSimulatorLayoutScannerDescription_configRunner,
     TmidTape] using

@@ -24,10 +24,28 @@ def SeqViaCanonical
       ExactIdentityDescription Direction.right)
     B Direction.left
 
+def SeqViaCanonicalLeft
+    (A B : MachineDescription) : MachineDescription :=
+  seqSubroutine
+    (seqSubroutine A
+      ExactIdentityDescription Direction.left)
+    B Direction.right
+
 theorem SeqViaCanonical_subroutineReady
     {A B : MachineDescription}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady) :
     (SeqViaCanonical A B).SubroutineReady := by
+  have hid : ExactIdentityDescription.SubroutineReady :=
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
+  exact
+    seqSubroutine_subroutineReady
+      (seqSubroutine_subroutineReady hA hid)
+      hB
+
+theorem SeqViaCanonicalLeft_subroutineReady
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady) :
+    (SeqViaCanonicalLeft A B).SubroutineReady := by
   have hid : ExactIdentityDescription.SubroutineReady :=
     CommonGround.Identity.exactIdentityDescription_subroutineReady
   exact
@@ -163,6 +181,49 @@ theorem SeqViaCanonical_haltsFromTape_of_haltsFromTape
     seqSubroutine_haltsFromTape_of_haltsFromTape
       (A := seqSubroutine A identity Direction.right)
       (B := B) (handoffMove := Direction.left)
+      (seqSubroutine_subroutineReady hA hid)
+      hB hAid hBReach
+
+theorem SeqViaCanonicalLeft_haltsFromTape_of_haltsFromTape
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin : Tape Bool} {Tin2 Tmid Tout : Tape Bool}
+    (hAmid : A.HaltsFromTape Tin Tmid)
+    (hbridge :
+      Tape.move Direction.right (Tape.move Direction.left Tmid) = Tin2)
+    (hBout : B.HaltsFromTape Tin2 Tout) :
+    (SeqViaCanonicalLeft A B).HaltsFromTape Tin Tout := by
+  let identity := ExactIdentityDescription
+  have hid : identity.SubroutineReady :=
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
+  have hAid :
+      (seqSubroutine A identity Direction.left).HaltsFromTape
+        Tin (Tape.move Direction.left Tmid) := by
+    exact
+      seqSubroutine_haltsFromTape_of_haltsFromTape
+        (A := A) (B := identity) (handoffMove := Direction.left)
+        hA hid hAmid
+        (CommonGround.Identity.exactIdentityDescription_run_from_start
+          (Tape.move Direction.left Tmid))
+  have hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start
+              tape :=
+                Tape.move Direction.right
+                  (Tape.move Direction.left Tmid) } =
+          { state := B.halt
+            tape := Tout } := by
+    rcases
+        runConfig_eq_halt_of_haltsFromTape
+          hBout with
+      ⟨nB, hBRun⟩
+    refine ⟨nB, ?_⟩
+    simpa [hbridge] using hBRun
+  simpa [SeqViaCanonicalLeft, identity] using
+    seqSubroutine_haltsFromTape_of_haltsFromTape
+      (A := seqSubroutine A identity Direction.left)
+      (B := B) (handoffMove := Direction.right)
       (seqSubroutine_subroutineReady hA hid)
       hB hAid hBReach
 
