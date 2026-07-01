@@ -1906,6 +1906,28 @@ theorem mixedOptionCellQuoteLiveTailSeparatedTape_move_right_right_rawTailLast_q
   rw [mixedOptionCellQuoteLiveTailSeparatedTape_move_right_rawTailLast]
   simp [tapeAtCells, Tape.move, Tape.moveRight]
 
+theorem
+    mixedOptionCellQuoteLiveTailSeparatedTape_move_right_right_rawTailLast_preservingCons
+    (emittedPrefix rawTailInit sourceRestTail : Word Bool)
+    (last bit : Bool) :
+    Tape.move Direction.right
+        (Tape.move Direction.right
+          (mixedOptionCellQuoteLiveTailSeparatedTape
+            emittedPrefix (List.append rawTailInit [last])
+            (preservingCellPassCellBits (bit :: sourceRestTail)))) =
+      tapeAtCells
+        (none :: some last ::
+          List.append (rawTailInit.reverse.map some)
+            (emittedPrefix.reverse.map some))
+        (some false :: some true :: some bit ::
+          some (if bit then false else true) ::
+            List.append
+              ((preservingCellPassCellBits sourceRestTail).map some)
+              [none]) := by
+  rw [mixedOptionCellQuoteLiveTailSeparatedTape_move_right_rawTailLast]
+  rw [preservingCellPassCellBits_cons_explicit_map_some]
+  simp [tapeAtCells, Tape.move, Tape.moveRight]
+
 theorem mixedOptionCellQuoteLiveTailJoinedTape_cells_cons
     (emittedPrefix quoteRest : Word Bool)
     (head : Bool) (rawTailRest : Word Bool) :
