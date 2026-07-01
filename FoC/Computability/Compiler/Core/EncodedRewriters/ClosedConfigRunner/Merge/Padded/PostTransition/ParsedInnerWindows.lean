@@ -77,6 +77,74 @@ def SelectedMergePaddedEmitterParsedInnerOuterConfigHitBits
     p.S.config
     (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits p.S.hit [])
 
+def SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+    p.L.acceptConfig []
+
+def SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+    p.L.rejectConfig []
+
+def SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  CanonicalLayouts.DovetailLayoutScanner.boolFieldBits p.L.acceptHit []
+
+def SelectedMergePaddedEmitterParsedInnerRejectHitFieldBits
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  CanonicalLayouts.DovetailLayoutScanner.boolFieldBits p.L.rejectHit []
+
+def SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+    p.S.stage
+
+def SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+    p.S.config []
+
+def SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  CanonicalLayouts.DovetailLayoutScanner.boolFieldBits p.S.hit []
+
+def SelectedMergePaddedEmitterParsedInnerSourceFieldTailExpandedBits
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  List.append
+    (SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits p)
+    (List.append
+      (SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits p)
+      (List.append
+        (SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits p)
+        (List.append
+          (SelectedMergePaddedEmitterParsedInnerRejectHitFieldBits p)
+          (List.append
+            (SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p)
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+              (SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits
+                p))))))
+
+def SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) : Word Bool :=
+  if useAccept then
+    List.append
+      (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+      (List.append
+        (SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits p)
+        (List.append
+          (SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits p)
+          (SelectedMergePaddedEmitterParsedInnerRejectHitFieldBits p)))
+  else
+    List.append
+      (SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits p)
+      (List.append
+        (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+        (List.append
+          (SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits p)
+          (SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits p)))
+
 def SelectedMergePaddedEmitterParsedInnerSourceLeftCells
     (p : SelectedMergeEmitterPayload) : List (Option Bool) :=
   (((SelectedMergePaddedEmitterOuterHitSuffixBits p).reverse.map some) ++
@@ -254,6 +322,82 @@ theorem
     CanonicalLayouts.DovetailLayoutScanner.cellListFieldBits,
     CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
     CanonicalLayouts.DovetailLayoutScanner.boolFieldBits]
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerOuterConfigHitBits_eq_fields
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerOuterConfigHitBits p =
+      List.append
+        (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+        (SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits p) := by
+  exact
+    (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
+      p.S.config
+      (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+        p.S.hit [])).symm
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerOuterSuffixBits_eq_expanded
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p =
+      List.append
+        (SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p)
+        (List.append
+          (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+          (SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits p)) := by
+  rw [
+    SelectedMergePaddedEmitterParsedInnerOuterSuffixBits_eq_stage_outerConfigHit,
+    SelectedMergePaddedEmitterParsedInnerOuterConfigHitBits_eq_fields]
+  simp [SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits]
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerSourceFieldTailExpandedBits_eq_sourceFieldTailBits
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerSourceFieldTailExpandedBits p =
+      SelectedMergePaddedEmitterParsedInnerSourceFieldTailBits p := by
+  rw [SelectedMergePaddedEmitterParsedInnerSourceFieldTailExpandedBits]
+  rw [← SelectedMergePaddedEmitterParsedInnerOuterSuffixBits_eq_expanded]
+  rw [SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits,
+    SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits,
+    SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits,
+    SelectedMergePaddedEmitterParsedInnerRejectHitFieldBits]
+  rw [
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
+      p.L.acceptConfig]
+  rw [
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
+      p.L.rejectConfig]
+  rw [show
+      List.append
+          (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            p.L.rejectHit [])
+          (SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p) =
+        CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          p.L.rejectHit
+          (SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p) by
+    simpa [CanonicalLayouts.DovetailLayoutScanner.boolFieldBits] using
+      CanonicalLayouts.DovetailLayoutScanner.cellFieldBits_append_nil
+        (some p.L.rejectHit)
+        (SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p)]
+  rw [show
+      List.append
+          (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            p.L.acceptHit [])
+          (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            p.L.rejectHit
+            (SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p)) =
+        CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          p.L.acceptHit
+          (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            p.L.rejectHit
+            (SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p)) by
+    simpa [CanonicalLayouts.DovetailLayoutScanner.boolFieldBits] using
+      CanonicalLayouts.DovetailLayoutScanner.cellFieldBits_append_nil
+        (some p.L.acceptHit)
+        (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          p.L.rejectHit
+          (SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p))]
+  simp [SelectedMergePaddedEmitterParsedInnerSourceFieldTailBits]
 
 theorem
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_cells_eq_sourceWindow
@@ -470,6 +614,91 @@ theorem
   rfl
 
 theorem
+    SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits_true_eq_targetFieldTailBits
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits true p =
+      SelectedMergePaddedEmitterParsedInnerTargetFieldTailBits true p := by
+  rw [SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits]
+  simp only [if_true]
+  rw [SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits,
+    SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits,
+    SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits,
+    SelectedMergePaddedEmitterParsedInnerRejectHitFieldBits]
+  rw [
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
+      p.S.config]
+  rw [
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
+      p.L.rejectConfig]
+  rw [show
+      List.append
+          (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            p.S.hit [])
+          (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            p.L.rejectHit []) =
+        CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          p.S.hit
+          (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            p.L.rejectHit []) by
+    simpa [CanonicalLayouts.DovetailLayoutScanner.boolFieldBits] using
+      CanonicalLayouts.DovetailLayoutScanner.cellFieldBits_append_nil
+        (some p.S.hit)
+        (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          p.L.rejectHit [])]
+  rfl
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits_false_eq_targetFieldTailBits
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits false p =
+      SelectedMergePaddedEmitterParsedInnerTargetFieldTailBits false p := by
+  rw [SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits]
+  rw [SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits,
+    SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits,
+    SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits,
+    SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits]
+  rw [
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
+      p.L.acceptConfig]
+  rw [
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
+      p.S.config]
+  rw [show
+      List.append
+          (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            p.L.acceptHit [])
+          (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            p.S.hit []) =
+        CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          p.L.acceptHit
+          (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            p.S.hit []) by
+    simpa [CanonicalLayouts.DovetailLayoutScanner.boolFieldBits] using
+      CanonicalLayouts.DovetailLayoutScanner.cellFieldBits_append_nil
+        (some p.L.acceptHit)
+        (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+          p.S.hit [])]
+  rw [
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
+      p.S.config]
+  simp [SelectedMergePaddedEmitterParsedInnerTargetFieldTailBits_false]
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits_eq_targetFieldTailBits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits
+        useAccept p =
+      SelectedMergePaddedEmitterParsedInnerTargetFieldTailBits
+        useAccept p := by
+  cases useAccept
+  · exact
+      SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits_false_eq_targetFieldTailBits
+        p
+  · exact
+      SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits_true_eq_targetFieldTailBits
+        p
+
+theorem
     SelectedMergePaddedEmitterDecodedHandoffBits_eq_outputPrefix_fieldTail
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterDecodedHandoffBits useAccept p =
@@ -514,6 +743,18 @@ theorem
       CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
       encodeCodeWordAsInput,
       List.append_assoc]
+
+theorem
+    SelectedMergePaddedEmitterDecodedHandoffBits_eq_outputPrefix_expandedTarget
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterDecodedHandoffBits useAccept p =
+      List.append
+        (SelectedMergePaddedEmitterParsedInnerOutputPrefixBits p)
+        (SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits
+          useAccept p) := by
+  rw [SelectedMergePaddedEmitterDecodedHandoffBits_eq_outputPrefix_fieldTail]
+  rw [
+    SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits_eq_targetFieldTailBits]
 
 theorem
     SelectedMergePaddedEmitterParsedInnerTargetTailBits_eq_outputPrefixTail
@@ -801,6 +1042,20 @@ theorem
     SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits,
     SelectedMergePaddedEmitterParsedInnerOutputPrefixBits,
     List.append_assoc]
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_normalizedOutput_expandedSource
+    (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput
+        (SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape p) =
+      List.append
+        (SelectedMergePaddedEmitterParsedInnerOutputPrefixBits p)
+        (SelectedMergePaddedEmitterParsedInnerSourceFieldTailExpandedBits
+          p) := by
+  rw [
+    SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_normalizedOutput]
+  rw [
+    SelectedMergePaddedEmitterParsedInnerSourceFieldTailExpandedBits_eq_sourceFieldTailBits]
 
 theorem
     SelectedMergePaddedEmitterDecodedHandoffTape_cells_eq_split
