@@ -341,6 +341,31 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_cells_eq_f
     fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_cells_eq_outputBits_configRunner,
     fixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_eq_fields_configRunner]
 
+def FixedDescriptionBoundedSimulatorPaddedEmitterFieldOutputBits_configRunner
+    (D : MachineDescription) (L : SimulatorLayout) : Word Bool :=
+  encodeCodeWordAsInput
+    (MachineCodeSymbol.header ::
+      encodeBoolWordAppend L.input
+        (encodeNatAppend L.stage
+          (encodeConfigurationAppend
+            (D.runConfig L.stage L.config)
+            (encodeBoolAppend
+              (L.hit ||
+                SimulatorLayout.hitsFromConfigByBool
+                  D L.config L.stage)
+              []))))
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_eq_fieldOutputBits_configRunner
+    (D : MachineDescription) (L : SimulatorLayout) :
+    FixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_configRunner
+        D L =
+      FixedDescriptionBoundedSimulatorPaddedEmitterFieldOutputBits_configRunner
+        D L := by
+  simpa [
+    FixedDescriptionBoundedSimulatorPaddedEmitterFieldOutputBits_configRunner] using
+    fixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_eq_fields_configRunner
+      D L
+
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_eq_tapeAtCells_cons_configRunner
     (D : MachineDescription) (L : SimulatorLayout) :
     exists first : Bool,
@@ -607,6 +632,26 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSource
     exists afterRight : MachineDescription,
       FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceSpec_configRunner
         D afterRight
+
+def FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetSpec_configRunner
+    (D body : MachineDescription) : Prop :=
+  body.SubroutineReady ∧
+    forall L : SimulatorLayout,
+      body.HaltsFromTape
+        (CommonGround.FiniteTransducers.FSTSourceTape
+          (SimulatorLayout.asBoolInput L) 1)
+        (CommonGround.FiniteTransducers.FSTTargetTape
+          (FixedDescriptionBoundedSimulatorPaddedEmitterFieldOutputBits_configRunner
+            D L)
+          (FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner
+            L))
+
+def FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetConstruction_configRunner :
+    Prop :=
+  forall D : MachineDescription,
+    exists body : MachineDescription,
+      FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetSpec_configRunner
+        D body
 
 def FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetSpec_configRunner
     (D body : MachineDescription) : Prop :=
@@ -1272,10 +1317,28 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSource
       L] using
     hbody.right L
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_configRunner :
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_of_fields_configRunner
+    (hfields :
+      FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetConstruction_configRunner) :
     FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_configRunner := by
   intro D
+  rcases hfields D with ⟨body, hbody⟩
+  refine ⟨body, hbody.left, ?_⟩
+  intro L
+  simpa [
+    fixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_eq_fieldOutputBits_configRunner
+      D L] using
+    hbody.right L
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetConstruction_configRunner := by
+  intro D
   sorry
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_of_fields_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetConstruction_configRunner
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_configRunner :
     FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_configRunner :=
