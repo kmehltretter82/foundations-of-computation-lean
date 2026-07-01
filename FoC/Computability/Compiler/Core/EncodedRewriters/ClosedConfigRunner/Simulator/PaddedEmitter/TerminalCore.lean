@@ -92,6 +92,26 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_contextL
         hbits]
       omega
 
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_contextLength_eq_scratchWidth_configRunner
+    (L : SimulatorLayout) :
+    Tape.contextLength
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
+          L) =
+      FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner L + 2 := by
+  rw [
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_contextLength_configRunner,
+    FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner,
+    FixedDescriptionBoundedSimulatorInput]
+  have hlen : 1 <= (SimulatorLayout.asBoolInput L).length := by
+    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
+    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
+      encodeCodeSymbolAsInput]
+  cases hbits : SimulatorLayout.asBoolInput L with
+  | nil =>
+      simp [hbits] at hlen
+  | cons bit rest =>
+      simp [Tape.input, Tape.contextLength]
+
 theorem fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner
     (L : SimulatorLayout) :
     SimulatorLayout.asBoolInput L =
