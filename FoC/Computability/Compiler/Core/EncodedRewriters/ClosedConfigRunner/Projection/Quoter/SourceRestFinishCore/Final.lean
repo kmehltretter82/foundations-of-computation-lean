@@ -775,6 +775,58 @@ theorem assemblySourceRestFinishRightPayloadBits_eq_markerRight_append_rawTail
   rw [assemblySourceRestFinishRightPayloadBits,
     assemblySourceRestFinishRawTailBits]
 
+theorem assemblySourceRestFinishParserMarkerRightBits_eq_stageInputTailPrefix
+    (w : Word Bool) :
+    assemblySourceRestFinishParserMarkerRightBits w =
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTailPrefix
+        w := by
+  cases w <;> rfl
+
+theorem assemblySourceRestFinishRightPayloadBits_eq_stageInputTailPrefix_append_rawTail
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    assemblySourceRestFinishRightPayloadBits w sourceRestBits stage =
+      List.append
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTailPrefix
+          w)
+        (assemblySourceRestFinishRawTailBits sourceRestBits stage) := by
+  rw [assemblySourceRestFinishRightPayloadBits_eq_markerRight_append_rawTail]
+  rw [assemblySourceRestFinishParserMarkerRightBits_eq_stageInputTailPrefix]
+
+theorem assemblySourceRestFinishQuotedPrefixBits_eq_marker_chunks
+    (w : Word Bool) (stage : Nat) :
+    assemblySourceRestFinishQuotedPrefixBits w stage =
+      List.append
+        (mixedParserStackQuotedCellsBits
+          assemblySourceRestFinishParserMarkerLeftCells)
+        (List.append preservingCellPassZeroBits
+          (List.append
+            (preservingCellPassCellBits
+              (assemblySourceRestFinishParserMarkerRightBits w))
+            (preservingCellPassCellBits
+              (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                stage)))) := by
+  rw [← MixedParserStackRewriterPrefixQuote_eq_assemblyQuotedPrefix]
+  rw [MixedParserStackRewriterPrefixQuote_marker_split]
+  rw [mixedParserStackQuotedCellsBits_markerRight_eq_bits]
+
+theorem assemblySourceRestFinishPrefixQuoteOutputBits_eq_marker_chunks
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    assemblySourceRestFinishPrefixQuoteOutputBits w sourceRestBits stage =
+      List.append
+        (assemblySourceRestFinishLengthHeaderBits w sourceRestBits stage)
+        (List.append
+          (mixedParserStackQuotedCellsBits
+            assemblySourceRestFinishParserMarkerLeftCells)
+          (List.append preservingCellPassZeroBits
+            (List.append
+              (preservingCellPassCellBits
+                (assemblySourceRestFinishParserMarkerRightBits w))
+              (preservingCellPassCellBits
+                (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                  stage))))) := by
+  rw [assemblySourceRestFinishPrefixQuoteOutputBits]
+  rw [assemblySourceRestFinishQuotedPrefixBits_eq_marker_chunks]
+
 theorem
     MixedParserStackRewriterDefaultedInternalMarkerTape_eq_mixedOptionCellQuoteLiveTailEmitterSourceTape
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
