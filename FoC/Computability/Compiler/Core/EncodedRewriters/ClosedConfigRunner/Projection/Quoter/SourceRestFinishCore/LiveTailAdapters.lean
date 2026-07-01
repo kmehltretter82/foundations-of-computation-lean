@@ -1,4 +1,5 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail.EmitterConstruction
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail.JoinerConstruction
 
 set_option doc.verso true
 
@@ -6,8 +7,8 @@ set_option doc.verso true
 # Live-tail assembly adapters
 
 This module keeps the assembly-specific export adapters separate from the
-finite-table live-tail leaves.  The leaves remain in the live-tail module; this
-module only turns the generic family constructions into the concrete
+finite-table live-tail leaves.  The leaves live in the live-tail construction
+modules; this module only turns the generic family constructions into concrete
 assembly/source-rest constructions consumed by the final assembly module.
 -/
 
