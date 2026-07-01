@@ -297,6 +297,43 @@ def selectedProjectionPaddedTailCleanupPostCountTailCells
   else
     selectedProjectionPaddedTailCleanupRejectPostCountTailCells L extraScratch
 
+def selectedProjectionPaddedTailCleanupEncodedHeaderCells :
+    List (Option Bool) :=
+  (encodeCodeSymbolAsInput MachineCodeSymbol.header).map some
+
+def selectedProjectionPaddedTailCleanupEncodedLayoutLengthCells
+    (L : DovetailLayout) : List (Option Bool) :=
+  (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+    (ParsedLayoutBits L).length).map some
+
+def selectedProjectionPaddedTailCleanupEncodedScratchSkippedCells
+    (useAccept : Bool) (L : DovetailLayout) : List (Option Bool) :=
+  (cellsCodeBits
+    ((selectedProjectionPaddedTailCleanupScratchSkippedBits
+      useAccept L).map some)).map some
+
+def selectedProjectionPaddedTailCleanupEncodedScratchCountCells
+    (useAccept : Bool) (L : DovetailLayout) : List (Option Bool) :=
+  (cellsCodeBits
+    ((selectedProjectionPaddedTailCleanupScratchCountBits
+      useAccept L).map some)).map some
+
+def selectedProjectionPaddedTailCleanupEncodedCountWindowSourceCells
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    List (Option Bool) :=
+  List.append
+    selectedProjectionPaddedTailCleanupEncodedHeaderCells
+    (List.append
+      (selectedProjectionPaddedTailCleanupEncodedLayoutLengthCells L)
+      (List.append
+        (selectedProjectionPaddedTailCleanupEncodedScratchSkippedCells
+          useAccept L)
+        (List.append
+          (selectedProjectionPaddedTailCleanupEncodedScratchCountCells
+            useAccept L)
+          (selectedProjectionPaddedTailCleanupPostCountTailCells
+            useAccept L extraScratch))))
+
 def selectedProjectionPaddedTailCleanupAfterOutputPrefixScanTape
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
     Tape Bool :=
@@ -347,29 +384,22 @@ theorem selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch_
     selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch
         L extraScratch =
       tapeAtCells [none]
-        (List.append
-          ((encodeCodeSymbolAsInput MachineCodeSymbol.header).map some)
-          (List.append
-            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-              (ParsedLayoutBits L).length).map some)
-            (List.append
-              ((cellsCodeBits
-                ((selectedProjectionPaddedTailCleanupScratchSkippedBits
-                  true L).map some)).map some)
-              (List.append
-                ((cellsCodeBits
-                  ((selectedProjectionPaddedTailCleanupScratchCountBits
-                    true L).map some)).map some)
-                (selectedProjectionPaddedTailCleanupAcceptPostCountTailCells
-                  L extraScratch))))) := by
+        (selectedProjectionPaddedTailCleanupEncodedCountWindowSourceCells
+          true L extraScratch) := by
   simp [
     selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch,
+    selectedProjectionPaddedTailCleanupEncodedCountWindowSourceCells,
+    selectedProjectionPaddedTailCleanupEncodedHeaderCells,
+    selectedProjectionPaddedTailCleanupEncodedLayoutLengthCells,
+    selectedProjectionPaddedTailCleanupEncodedScratchSkippedCells,
+    selectedProjectionPaddedTailCleanupEncodedScratchCountCells,
     selectedProjectionPaddedTailCleanupPostPaddingSourceBits_true_eq_selected_unselected,
     selectedProjectionPaddedTailCleanupPrefixBits,
-    selectedProjectionPaddedTailCleanupAcceptPostCountTailCells,
     List.map_append, List.append_assoc]
   rw [selectedProjectionPaddedTailCleanupOutputPrefixCells_split true L]
-  simp [selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells,
+  simp [selectedProjectionPaddedTailCleanupPostCountTailCells,
+    selectedProjectionPaddedTailCleanupAcceptPostCountTailCells,
+    selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells,
     List.append_assoc]
 
 theorem selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch_countSplit
@@ -377,28 +407,21 @@ theorem selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch_
     selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch
         L extraScratch =
       tapeAtCells [none]
-        (List.append
-          ((encodeCodeSymbolAsInput MachineCodeSymbol.header).map some)
-          (List.append
-            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-              (ParsedLayoutBits L).length).map some)
-            (List.append
-              ((cellsCodeBits
-                ((selectedProjectionPaddedTailCleanupScratchSkippedBits
-                  false L).map some)).map some)
-              (List.append
-                ((cellsCodeBits
-                  ((selectedProjectionPaddedTailCleanupScratchCountBits
-                    false L).map some)).map some)
-                (selectedProjectionPaddedTailCleanupRejectPostCountTailCells
-                  L extraScratch))))) := by
+        (selectedProjectionPaddedTailCleanupEncodedCountWindowSourceCells
+          false L extraScratch) := by
   simp [
     selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch,
+    selectedProjectionPaddedTailCleanupEncodedCountWindowSourceCells,
+    selectedProjectionPaddedTailCleanupEncodedHeaderCells,
+    selectedProjectionPaddedTailCleanupEncodedLayoutLengthCells,
+    selectedProjectionPaddedTailCleanupEncodedScratchSkippedCells,
+    selectedProjectionPaddedTailCleanupEncodedScratchCountCells,
     selectedProjectionPaddedTailCleanupPrefixBits,
-    selectedProjectionPaddedTailCleanupRejectPostCountTailCells,
     List.map_append, List.append_assoc]
   rw [selectedProjectionPaddedTailCleanupOutputPrefixCells_split false L]
-  simp [selectedProjectionPaddedTailCleanupRejectAfterStageTailCells,
+  simp [selectedProjectionPaddedTailCleanupPostCountTailCells,
+    selectedProjectionPaddedTailCleanupRejectPostCountTailCells,
+    selectedProjectionPaddedTailCleanupRejectAfterStageTailCells,
     List.append_assoc]
 
 theorem selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_countSplit
@@ -406,21 +429,8 @@ theorem selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_countS
     selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
         useAccept L extraScratch =
       tapeAtCells [none]
-        (List.append
-          ((encodeCodeSymbolAsInput MachineCodeSymbol.header).map some)
-          (List.append
-            ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-              (ParsedLayoutBits L).length).map some)
-            (List.append
-              ((cellsCodeBits
-                ((selectedProjectionPaddedTailCleanupScratchSkippedBits
-                  useAccept L).map some)).map some)
-              (List.append
-                ((cellsCodeBits
-                  ((selectedProjectionPaddedTailCleanupScratchCountBits
-                    useAccept L).map some)).map some)
-                (selectedProjectionPaddedTailCleanupPostCountTailCells
-                  useAccept L extraScratch))))) := by
+        (selectedProjectionPaddedTailCleanupEncodedCountWindowSourceCells
+          useAccept L extraScratch) := by
   cases useAccept
   · exact
       selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch_countSplit
