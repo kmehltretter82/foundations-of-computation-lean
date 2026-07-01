@@ -93,6 +93,40 @@ def selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCoun
           (selectedProjectionPaddedTailCleanupPostCountTailCells
             useAccept L extraScratch)))
 
+theorem selectedProjectionPaddedTailCleanupScratchCountCounterSourceTapeWithPostCountTail_move_left_move_right
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (selectedProjectionPaddedTailCleanupScratchCountCounterSourceTapeWithPostCountTail
+            useAccept L extraScratch)) =
+      selectedProjectionPaddedTailCleanupScratchCountCounterSourceTapeWithPostCountTail
+        useAccept L extraScratch := by
+  unfold selectedProjectionPaddedTailCleanupScratchCountCounterSourceTapeWithPostCountTail
+  cases hcount :
+      selectedProjectionPaddedTailCleanupScratchCountBits useAccept L with
+  | nil =>
+      simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+  | cons bit rest =>
+      cases rest <;>
+        simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail_move_left_move_right
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail
+            useAccept L extraScratch)) =
+      selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail
+        useAccept L extraScratch := by
+  unfold selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail
+  cases hcount :
+      selectedProjectionPaddedTailCleanupScratchCountBits useAccept L with
+  | nil =>
+      simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+  | cons bit rest =>
+      cases rest <;>
+        simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
 theorem selectedProjectionPaddedTailCleanupScratchCountCounterSourceTape_normalizedOutput
     (useAccept : Bool) (L : DovetailLayout) :
     Tape.normalizedOutput
@@ -210,6 +244,102 @@ theorem scratchCounterAppendBlanksDescription_haltsFrom_scratchCountWindowWithPo
           useAccept L extraScratch)
         (selectedProjectionPaddedTailCleanupScratchCountBits_length_pos
           useAccept L)
+
+def SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerSpec
+    (useAccept : Bool) (materializer : MachineDescription) : Prop :=
+  materializer.SubroutineReady ∧
+    forall L : DovetailLayout,
+      materializer.HaltsFromTape
+        (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+          useAccept L 0)
+        (selectedProjectionPaddedTailCleanupScratchCountCounterSourceTapeWithPostCountTail
+          useAccept L 0)
+
+def SelectedProjectionPaddedTailCleanupScratchCountWindowRestorerSpec
+    (useAccept : Bool) (restorer : MachineDescription) : Prop :=
+  restorer.SubroutineReady ∧
+    forall L : DovetailLayout,
+      restorer.HaltsFromTape
+        (selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail
+          useAccept L 0)
+        (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+          useAccept L
+          (selectedProjectionPaddedTailCleanupScratchCountBits
+            useAccept L).length)
+
+def SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction :
+    Prop :=
+  forall useAccept : Bool,
+    exists materializer : MachineDescription,
+    exists restorer : MachineDescription,
+      SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerSpec
+        useAccept materializer ∧
+      SelectedProjectionPaddedTailCleanupScratchCountWindowRestorerSpec
+        useAccept restorer
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderSpec_of_countWindowMaterializerAndRestorer
+    {useAccept : Bool} {materializer restorer : MachineDescription}
+    (hmaterializer :
+      SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerSpec
+        useAccept materializer)
+    (hrestorer :
+      SelectedProjectionPaddedTailCleanupScratchCountWindowRestorerSpec
+        useAccept restorer) :
+    SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderSpec
+      useAccept
+      (canonicalSeqDescription
+        (canonicalSeqDescription materializer
+          scratchCounterAppendBlanksDescription)
+        restorer) := by
+  constructor
+  · exact
+      canonicalSeqDescription_subroutineReady
+        (canonicalSeqDescription_subroutineReady
+          hmaterializer.left
+          scratchCounterAppendBlanksDescription_subroutineReady)
+        hrestorer.left
+  · intro L
+    have hcounterSeq :
+        (canonicalSeqDescription materializer
+          scratchCounterAppendBlanksDescription).HaltsFromTape
+          (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+            useAccept L 0)
+          (selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail
+            useAccept L 0) := by
+      exact
+        canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+          hmaterializer.left
+          scratchCounterAppendBlanksDescription_subroutineReady
+          (hmaterializer.right L)
+          (selectedProjectionPaddedTailCleanupScratchCountCounterSourceTapeWithPostCountTail_move_left_move_right
+            useAccept L 0)
+          (scratchCounterAppendBlanksDescription_haltsFrom_scratchCountWindowWithPostCountTail
+            useAccept L 0)
+    exact
+      canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+        (canonicalSeqDescription_subroutineReady
+          hmaterializer.left
+          scratchCounterAppendBlanksDescription_subroutineReady)
+        hrestorer.left
+        hcounterSeq
+        (selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail_move_left_move_right
+          useAccept L 0)
+        (hrestorer.right L)
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction_of_countWindowMaterializers
+    (h :
+      SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction := by
+  intro useAccept
+  rcases h useAccept with
+    ⟨materializer, restorer, hmaterializer, hrestorer⟩
+  exact
+    ⟨canonicalSeqDescription
+        (canonicalSeqDescription materializer
+          scratchCounterAppendBlanksDescription)
+        restorer,
+      selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderSpec_of_countWindowMaterializerAndRestorer
+        hmaterializer hrestorer⟩
 
 /--
 Finite-machine leaf that exposes the selected branch scratch-count window and
