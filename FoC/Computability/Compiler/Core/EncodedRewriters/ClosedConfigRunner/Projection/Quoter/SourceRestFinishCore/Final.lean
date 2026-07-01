@@ -1158,6 +1158,10 @@ theorem
       (MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec_iff_assemblySpec
         finish).mpr hfinish⟩
 
+theorem mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction :
+    MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction := by
+  sorry
+
 /--
 Reusable emitter obligation for the specialized assembly parser-prefix grammar.
 It quotes the defaulted mixed option-cell prefix and stage prefix, leaves the
@@ -1167,7 +1171,9 @@ for the live-tail joiner.
 theorem
     mixedOptionCellQuoteLiveTailEmitterConstruction_for_assemblySourceRest :
     MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest := by
-  sorry
+  exact
+    MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest_of_family
+      mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction
 
 theorem assemblySourceRestFinishRawTailBits_cons_exists
     (sourceRestBits : Word Bool) (stage : Nat) :
@@ -1911,6 +1917,73 @@ def MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest :
   exists finish : MachineDescription,
     MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestSpec finish
 
+def MixedOptionCellQuoteLiveTailJoinerFamilySpec
+    {ι : Type}
+    (emittedPrefix rawTail quoteRest : ι -> Word Bool)
+    (finish : MachineDescription) : Prop :=
+  finish.SubroutineReady ∧
+    forall p : ι,
+      finish.HaltsFromTape
+        (mixedOptionCellQuoteLiveTailSeparatedTape
+          (emittedPrefix p) (rawTail p) (quoteRest p))
+        (mixedOptionCellQuoteLiveTailJoinedTape
+          (emittedPrefix p) (rawTail p) (quoteRest p))
+
+def MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec
+    (finish : MachineDescription) : Prop :=
+  MixedOptionCellQuoteLiveTailJoinerFamilySpec
+    assemblySourceRestLiveTailEmitterEmittedPrefix
+    assemblySourceRestLiveTailEmitterRawTail
+    assemblySourceRestLiveTailEmitterQuoteRest
+    finish
+
+def MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :
+    Prop :=
+  exists finish : MachineDescription,
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec finish
+
+theorem
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec_iff_assemblySpec
+    (finish : MachineDescription) :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec finish ↔
+      MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestSpec finish := by
+  constructor
+  · intro hfinish
+    refine ⟨hfinish.left, ?_⟩
+    intro w sourceRestBits stage
+    exact hfinish.right
+      { w := w, sourceRestBits := sourceRestBits, stage := stage }
+  · intro hfinish
+    refine ⟨hfinish.left, ?_⟩
+    intro p
+    cases p with
+    | mk w sourceRestBits stage =>
+        exact hfinish.right w sourceRestBits stage
+
+theorem
+    MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest_of_family
+    (h : MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction) :
+    MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest := by
+  rcases h with ⟨finish, hfinish⟩
+  exact
+    ⟨finish,
+      (MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec_iff_assemblySpec
+        finish).mp hfinish⟩
+
+theorem
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction_of_assembly
+    (h : MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest) :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction := by
+  rcases h with ⟨finish, hfinish⟩
+  exact
+    ⟨finish,
+      (MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec_iff_assemblySpec
+        finish).mpr hfinish⟩
+
+theorem mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction := by
+  sorry
+
 /--
 Specialized finite-table obligation for joining the reusable quote-rest field
 in front of the source-rest live tail.  The arbitrary split version is too
@@ -1920,7 +1993,9 @@ the assembly source-rest family required by the plan.
 -/
 theorem mixedOptionCellQuoteLiveTailJoinerConstruction :
     MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest := by
-  sorry
+  exact
+    MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest_of_family
+      mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction
 
 def MixedParserStackPrefixQuotedSeparatedFinisherAssemblySourceRestSpec
     (finish : MachineDescription) : Prop :=
