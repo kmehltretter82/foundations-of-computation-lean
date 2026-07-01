@@ -197,6 +197,121 @@ theorem selectedProjectionPaddedTailCleanupBaseSourceTapeWithLayoutExtraScratch
       selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithLayoutExtraScratch
         L
 
+theorem selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch_normalizedOutput
+    (L : DovetailLayout) (extraScratch : Nat) :
+    Tape.normalizedOutput
+        (selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch
+          L extraScratch) =
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits true L := by
+  simp [
+    selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch,
+    tapeAtCells_normalizedOutput, Function.comp_def]
+
+theorem selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch_normalizedOutput
+    (L : DovetailLayout) (extraScratch : Nat) :
+    Tape.normalizedOutput
+        (selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch
+          L extraScratch) =
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits false L := by
+  simp [
+    selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch,
+    selectedProjectionPaddedTailCleanupPostPaddingSourceBits,
+    Function.comp_def, tapeAtCells_normalizedOutput, List.append_assoc]
+
+theorem selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_normalizedOutput
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    Tape.normalizedOutput
+        (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+          useAccept L extraScratch) =
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+        useAccept L := by
+  cases useAccept
+  · exact
+      selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch_normalizedOutput
+        L extraScratch
+  · exact
+      selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch_normalizedOutput
+        L extraScratch
+
+theorem selectedProjectionPaddedTailCleanupBaseSourceTape_normalizedOutput
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (selectedProjectionPaddedTailCleanupBaseSourceTape useAccept L) =
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+        useAccept L := by
+  simpa [
+    selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_zero]
+    using
+      selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_normalizedOutput
+        useAccept L 0
+
+theorem selectedProjectionPaddedTailCleanupLayoutScratchSourceTape_normalizedOutput
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
+          useAccept L) =
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits
+        useAccept L := by
+  simpa [
+    selectedProjectionPaddedTailCleanupBaseSourceTapeWithLayoutExtraScratch]
+    using
+      selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_normalizedOutput
+        useAccept L
+        (selectedProjectionPaddedTailCleanupSentinelExtraScratch
+          useAccept L)
+
+theorem selectedProjectionPaddedTailCleanupLayoutScratchSourceTape_move_left_move_right
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
+            useAccept L)) =
+      selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
+        useAccept L := by
+  cases useAccept
+  · simp [
+      selectedProjectionPaddedTailCleanupLayoutScratchSourceTape,
+      selectedProjectionPaddedTailCleanupRejectLayoutScratchSourceTape,
+      selectedProjectionPaddedTailCleanupPrefixBits,
+      SelectedProjectionTailProjector.outputPrefixBits,
+      encodeCodeSymbolAsInput, tapeAtCells, Tape.move,
+      Tape.moveLeft, Tape.moveRight, List.append_assoc]
+  · simp [
+      selectedProjectionPaddedTailCleanupLayoutScratchSourceTape,
+      selectedProjectionPaddedTailCleanupAcceptLayoutScratchSourceTape,
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits,
+      selectedProjectionPaddedTailCleanupPrefixBits,
+      SelectedProjectionTailProjector.outputPrefixBits,
+      encodeCodeSymbolAsInput, tapeAtCells, Tape.move,
+      Tape.moveLeft, Tape.moveRight, List.map_append,
+      List.append_assoc]
+
+theorem selectedProjectionPaddedTailCleanupBaseSourceTape_move_left_move_right
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (selectedProjectionPaddedTailCleanupBaseSourceTape
+            useAccept L)) =
+      selectedProjectionPaddedTailCleanupBaseSourceTape
+        useAccept L := by
+  cases useAccept
+  · simp [
+      selectedProjectionPaddedTailCleanupBaseSourceTape,
+      selectedProjectionPaddedTailCleanupRejectBaseSourceTape,
+      selectedProjectionPaddedTailCleanupPrefixBits,
+      SelectedProjectionTailProjector.outputPrefixBits,
+      encodeCodeSymbolAsInput, tapeAtCells, Tape.move,
+      Tape.moveLeft, Tape.moveRight, List.append_assoc]
+  · simp [
+      selectedProjectionPaddedTailCleanupBaseSourceTape,
+      selectedProjectionPaddedTailCleanupAcceptBaseSourceTape,
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits,
+      selectedProjectionPaddedTailCleanupPrefixBits,
+      SelectedProjectionTailProjector.outputPrefixBits,
+      encodeCodeSymbolAsInput, tapeAtCells, Tape.move,
+      Tape.moveLeft, Tape.moveRight, List.map_append,
+      List.append_assoc]
+
 def SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
     (useAccept : Bool) (allocator : MachineDescription) : Prop :=
   allocator.SubroutineReady ∧
@@ -332,6 +447,30 @@ def selectedProjectionPaddedTailCleanupScratchCountCounterTargetTape
           ((selectedProjectionPaddedTailCleanupScratchCountBits
             useAccept L).length + 1)
           (none : Option Bool)))
+
+theorem selectedProjectionPaddedTailCleanupScratchCountCounterSourceTape_normalizedOutput
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (selectedProjectionPaddedTailCleanupScratchCountCounterSourceTape
+          useAccept L) =
+      ParsedLayoutBits L := by
+  simpa [selectedProjectionPaddedTailCleanupScratchCountCounterSourceTape,
+    tapeAtCells_normalizedOutput, List.filterMap_append,
+    Function.comp_def, List.append_assoc] using
+      (selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count
+        useAccept L).symm
+
+theorem selectedProjectionPaddedTailCleanupScratchCountCounterTargetTape_normalizedOutput
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (selectedProjectionPaddedTailCleanupScratchCountCounterTargetTape
+          useAccept L) =
+      ParsedLayoutBits L := by
+  simpa [selectedProjectionPaddedTailCleanupScratchCountCounterTargetTape,
+    tapeAtCells_normalizedOutput, List.filterMap_append,
+    Function.comp_def, List.append_assoc] using
+      (selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count
+        useAccept L).symm
 
 /--
 Executable core of the post-padding scratch extender after the branch-specific

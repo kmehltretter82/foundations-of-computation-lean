@@ -311,58 +311,6 @@ theorem selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription_haltsF
         selectedProjectionPaddedTailCleanupAcceptSourceToEquivOutputDescription_haltsFrom_source
           L
 
-theorem selectedProjectionPaddedTailCleanupLayoutScratchSourceTape_move_left_move_right
-    (useAccept : Bool) (L : DovetailLayout) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
-            useAccept L)) =
-      selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
-        useAccept L := by
-  cases useAccept
-  · simp [
-      selectedProjectionPaddedTailCleanupLayoutScratchSourceTape,
-      selectedProjectionPaddedTailCleanupRejectLayoutScratchSourceTape,
-      selectedProjectionPaddedTailCleanupPrefixBits,
-      SelectedProjectionTailProjector.outputPrefixBits,
-      encodeCodeSymbolAsInput, tapeAtCells, Tape.move,
-      Tape.moveLeft, Tape.moveRight, List.append_assoc]
-  · simp [
-      selectedProjectionPaddedTailCleanupLayoutScratchSourceTape,
-      selectedProjectionPaddedTailCleanupAcceptLayoutScratchSourceTape,
-      selectedProjectionPaddedTailCleanupPostPaddingSourceBits,
-      selectedProjectionPaddedTailCleanupPrefixBits,
-      SelectedProjectionTailProjector.outputPrefixBits,
-      encodeCodeSymbolAsInput, tapeAtCells, Tape.move,
-      Tape.moveLeft, Tape.moveRight, List.map_append,
-      List.append_assoc]
-
-theorem selectedProjectionPaddedTailCleanupBaseSourceTape_move_left_move_right
-    (useAccept : Bool) (L : DovetailLayout) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (selectedProjectionPaddedTailCleanupBaseSourceTape
-            useAccept L)) =
-      selectedProjectionPaddedTailCleanupBaseSourceTape
-        useAccept L := by
-  cases useAccept
-  · simp [
-      selectedProjectionPaddedTailCleanupBaseSourceTape,
-      selectedProjectionPaddedTailCleanupRejectBaseSourceTape,
-      selectedProjectionPaddedTailCleanupPrefixBits,
-      SelectedProjectionTailProjector.outputPrefixBits,
-      encodeCodeSymbolAsInput, tapeAtCells, Tape.move,
-      Tape.moveLeft, Tape.moveRight, List.append_assoc]
-  · simp [
-      selectedProjectionPaddedTailCleanupBaseSourceTape,
-      selectedProjectionPaddedTailCleanupAcceptBaseSourceTape,
-      selectedProjectionPaddedTailCleanupPostPaddingSourceBits,
-      selectedProjectionPaddedTailCleanupPrefixBits,
-      SelectedProjectionTailProjector.outputPrefixBits,
-      encodeCodeSymbolAsInput, tapeAtCells, Tape.move,
-      Tape.moveLeft, Tape.moveRight, List.map_append,
-      List.append_assoc]
-
 def leftMoveCurrentAcrossFourBlankGapDescription :
     MachineDescription where
   stateCount := 5
