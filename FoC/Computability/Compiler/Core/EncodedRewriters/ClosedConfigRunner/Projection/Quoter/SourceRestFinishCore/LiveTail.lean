@@ -1903,6 +1903,42 @@ theorem
   rw [preservingCellPassCellBits_cons_explicit_map_some]
   simp [tapeAtCells, Tape.move, Tape.moveRight]
 
+theorem
+    mixedOptionCellQuoteLiveTailSeparatedTape_move_right_right_assembly_sourceRestCons
+    (w sourceRestTail : Word Bool) (bit : Bool) (stage : Nat) :
+    exists rawTailInit : Word Bool,
+    exists last : Bool,
+      assemblySourceRestFinishRawTailBits (bit :: sourceRestTail) stage =
+        List.append rawTailInit [last] ∧
+      Tape.move Direction.right
+          (Tape.move Direction.right
+            (mixedOptionCellQuoteLiveTailSeparatedTape
+              (assemblySourceRestFinishPrefixQuoteOutputBits
+                w (bit :: sourceRestTail) stage)
+              (assemblySourceRestFinishRawTailBits
+                (bit :: sourceRestTail) stage)
+              (preservingCellPassCellBits (bit :: sourceRestTail)))) =
+        tapeAtCells
+          (none :: some last ::
+            List.append (rawTailInit.reverse.map some)
+              ((assemblySourceRestFinishPrefixQuoteOutputBits
+                w (bit :: sourceRestTail) stage).reverse.map some))
+          (some false :: some true :: some bit ::
+            some (if bit then false else true) ::
+              List.append
+                ((preservingCellPassCellBits sourceRestTail).map some)
+                [none]) := by
+  rcases assemblySourceRestFinishRawTailBits_lastSplit_exists
+      (bit :: sourceRestTail) stage with
+    ⟨rawTailInit, last, hraw⟩
+  refine ⟨rawTailInit, last, hraw, ?_⟩
+  rw [hraw]
+  exact
+    mixedOptionCellQuoteLiveTailSeparatedTape_move_right_right_rawTailLast_preservingCons
+      (assemblySourceRestFinishPrefixQuoteOutputBits
+        w (bit :: sourceRestTail) stage)
+      rawTailInit sourceRestTail last bit
+
 theorem mixedOptionCellQuoteLiveTailJoinedTape_cells_cons
     (emittedPrefix quoteRest : Word Bool)
     (head : Bool) (rawTailRest : Word Bool) :
