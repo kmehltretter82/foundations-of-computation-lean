@@ -376,6 +376,23 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSource
       FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceSpec_configRunner
         D afterRight
 
+def FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceSpec_configRunner
+    (D rightBody : MachineDescription) : Prop :=
+  rightBody.SubroutineReady ∧
+    forall L : SimulatorLayout,
+      rightBody.HaltsFromTape
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+          L)
+        (FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_configRunner
+          D L)
+
+def FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner :
+    Prop :=
+  forall D : MachineDescription,
+    exists rightBody : MachineDescription,
+      FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceSpec_configRunner
+        D rightBody
+
 def FixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreSpec_configRunner
     (D post : MachineDescription) : Prop :=
   post.SubroutineReady ∧
@@ -844,10 +861,60 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_of_afterTe
           L)
         (hafterRightD.right L)
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_configRunner :
+def fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchCloseout_configRunner
+    (rightBody : MachineDescription) : MachineDescription :=
+  seqSubroutine rightBody ExactIdentityDescription Direction.left
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_of_rightScratch_configRunner
+    (hright :
+      FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner) :
     FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_configRunner := by
   intro D
+  rcases hright D with ⟨rightBody, hrightD⟩
+  refine
+    ⟨fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchCloseout_configRunner
+      rightBody, ?_⟩
+  constructor
+  · exact
+      seqSubroutine_subroutineReady
+        hrightD.left
+        CommonGround.Identity.exactIdentityDescription_subroutineReady
+  · intro L
+    have hidentity :
+        exists nB : Nat,
+          ExactIdentityDescription.runConfig nB
+              { state := ExactIdentityDescription.start,
+                tape :=
+                  Tape.move Direction.left
+                    (FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_configRunner
+                      D L) } =
+            { state := ExactIdentityDescription.halt,
+              tape :=
+                FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
+                  D L } := by
+      simpa [
+        fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_move_left_configRunner
+          D L] using
+        CommonGround.Identity.exactIdentityDescription_run_from_start
+          (Tape.move Direction.left
+            (FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_configRunner
+              D L))
+    simpa [fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchCloseout_configRunner] using
+      seqSubroutine_haltsFromTape_of_haltsFromTape
+        hrightD.left
+        CommonGround.Identity.exactIdentityDescription_subroutineReady
+        (hrightD.right L)
+        hidentity
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner := by
+  intro D
   sorry
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_of_rightScratch_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_configRunner :
     FixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_configRunner :=
