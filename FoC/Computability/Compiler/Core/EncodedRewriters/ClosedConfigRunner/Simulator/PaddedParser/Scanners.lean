@@ -1296,6 +1296,18 @@ def fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBase_configRunne
               some)
             baseLeft))))).tape
 
+def fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBaseAndRight_configRunner
+    (L : SimulatorLayout) (baseLeft rightPadding : List (Option Bool)) : Tape Bool :=
+  (boolFinalHandoffConfigWithBaseAndRight L.hit
+    (configurationRestoredLeftWithBase L.config
+      (List.append ((stageNatBits L.stage).reverse.map some)
+        (cellListCanonicalRestoredLeftWithBase (L.input.map some)
+          (List.append
+            (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.reverse.map
+              some)
+            baseLeft))))
+    (none :: rightPadding)).tape
+
 theorem fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBase_normalizedOutput_configRunner
     (L : SimulatorLayout) (baseLeft : List (Option Bool)) :
     Tape.normalizedOutput
@@ -1456,6 +1468,130 @@ theorem run_fixedDescriptionBoundedSimulatorLayoutScanner_raw_to_handoff_withBas
           simpa [baseAfterHeader, payloadBits,
             fixedDescriptionBoundedSimulatorLayoutPayloadBits_configRunner,
             fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBase_configRunner]
+            using hpayload)
+  simpa [FixedDescriptionBoundedSimulatorLayoutScannerDescription_configRunner,
+    TmidTape] using
+      seqSubroutine_runConfig_exists
+        (A := FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner)
+        (B := FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner)
+        (handoffMove := Direction.right)
+        fixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_subroutineReady_configRunner
+        fixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_subroutineReady_configRunner
+        hArun hBReach
+
+theorem run_fixedDescriptionBoundedSimulatorLayoutScanner_raw_to_handoff_withBaseAndRightBlank_configRunner
+    (L : SimulatorLayout) (baseLeft rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      FixedDescriptionBoundedSimulatorLayoutScannerDescription_configRunner.runConfig
+          steps
+          { state :=
+              FixedDescriptionBoundedSimulatorLayoutScannerDescription_configRunner.start
+            tape :=
+              DovetailInitialLayoutInitializer.tapeAtCells baseLeft
+                (List.append ((SimulatorLayout.asBoolInput L).map some)
+                  (none :: rightPadding)) } =
+        { state :=
+            FixedDescriptionBoundedSimulatorLayoutScannerDescription_configRunner.halt
+          tape :=
+            fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBaseAndRight_configRunner
+              L baseLeft rightPadding } := by
+  let payloadBits : Word Bool :=
+    fixedDescriptionBoundedSimulatorLayoutPayloadBits_configRunner L
+  rcases
+      cellListFieldBits_cons_false (L.input.map some)
+        (List.append (stageNatBits L.stage)
+          (configurationFieldBits L.config (boolFieldBits L.hit []))) with
+    ⟨payloadTail, hpayloadTail⟩
+  rcases
+      fixedDescriptionBoundedSimulatorHeaderPrefix_run_raw_to_handoff_withBaseAndRight_configRunner
+        baseLeft false payloadTail (none :: rightPadding) with
+    ⟨headerSteps, hheader⟩
+  let TmidTape : Tape Bool :=
+    (fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_configRunner
+      baseLeft (false :: payloadTail) (none :: rightPadding)).tape
+  let baseAfterHeader : List (Option Bool) :=
+    List.append
+      (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.reverse.map
+        some)
+      baseLeft
+  have hpayloadEq :
+      payloadBits = false :: payloadTail := by
+    simpa [payloadBits,
+      fixedDescriptionBoundedSimulatorLayoutPayloadBits_configRunner,
+      boolWordFieldBits] using hpayloadTail
+  have hArun :
+      FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.runConfig
+          headerSteps
+          { state :=
+              FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.start
+            tape :=
+              DovetailInitialLayoutInitializer.tapeAtCells baseLeft
+                (List.append ((SimulatorLayout.asBoolInput L).map some)
+                  (none :: rightPadding)) } =
+        { state :=
+            FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.halt
+          tape := TmidTape } := by
+    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
+    rw [show
+        fixedDescriptionBoundedSimulatorLayoutPayloadBits_configRunner L =
+          false :: payloadTail by
+      simpa [payloadBits] using hpayloadEq]
+    simp [List.map_append, List.append_assoc]
+    change
+      FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.runConfig
+          headerSteps
+          (DovetailInitialLayoutInitializer.config
+            FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.start
+            baseLeft
+            (List.append
+              (fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner.map
+                some)
+              (some false ::
+                List.append (payloadTail.map some)
+                  (none :: rightPadding)))) =
+        { state :=
+            FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.halt
+          tape := TmidTape }
+    simpa [TmidTape] using hheader
+  have hBReach :
+      exists nB : Nat,
+        FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner.runConfig
+            nB
+            { state :=
+                FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner.start
+              tape := Tape.move Direction.right TmidTape } =
+          { state :=
+              FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner.halt
+            tape :=
+              fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBaseAndRight_configRunner
+                L baseLeft rightPadding } := by
+    rcases
+        run_fixedDescriptionBoundedSimulatorLayoutPayload_raw_to_handoff_withBaseAndRightBlank_configRunner
+          L baseAfterHeader rightPadding with
+      ⟨payloadSteps, hpayload⟩
+    have hmove :
+        Tape.move Direction.right TmidTape =
+          DovetailInitialLayoutInitializer.tapeAtCells baseAfterHeader
+            (List.append (payloadBits.map some) (none :: rightPadding)) := by
+      have hraw :
+          Tape.move Direction.right TmidTape =
+            DovetailInitialLayoutInitializer.tapeAtCells baseAfterHeader
+              (List.append ((false :: payloadTail).map some)
+                (none :: rightPadding)) := by
+        simpa [TmidTape, baseAfterHeader] using
+          fixedDescriptionBoundedSimulatorHeaderPrefixHandoffConfigWithBaseAndRight_move_right_configRunner
+            baseLeft false payloadTail (none :: rightPadding)
+      rw [hraw]
+      simp [hpayloadEq]
+    exact
+      runConfig_reaches_from_move_eq
+        (B := FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner)
+        (handoffMove := Direction.right)
+        hmove
+        (by
+          simpa [baseAfterHeader, payloadBits,
+            fixedDescriptionBoundedSimulatorLayoutPayloadBits_configRunner,
+            fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBaseAndRight_configRunner]
             using hpayload)
   simpa [FixedDescriptionBoundedSimulatorLayoutScannerDescription_configRunner,
     TmidTape] using
