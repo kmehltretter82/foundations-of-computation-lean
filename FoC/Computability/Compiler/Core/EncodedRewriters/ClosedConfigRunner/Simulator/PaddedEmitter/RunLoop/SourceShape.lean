@@ -392,18 +392,6 @@ theorem sourceLeftMoveOnceDescription_haltsFrom_rightShiftedSource_configRunner
       (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
         (SimulatorLayout.asBoolInput L))
 
-theorem fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner
-    (L : SimulatorLayout) :
-    SimulatorLayout.asBoolInput L =
-      encodeCodeWordAsInput
-        (MachineCodeSymbol.header ::
-          encodeBoolWordAppend L.input
-            (encodeNatAppend L.stage
-              (encodeConfigurationAppend L.config
-                (encodeBoolAppend L.hit [])))) := by
-  simp [SimulatorLayout.asBoolInput, SimulatorLayout.encode,
-    SimulatorLayout.encodeAppend]
-
 theorem
     fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_normalizedOutput_eq_fields_configRunner
     (L : SimulatorLayout) :

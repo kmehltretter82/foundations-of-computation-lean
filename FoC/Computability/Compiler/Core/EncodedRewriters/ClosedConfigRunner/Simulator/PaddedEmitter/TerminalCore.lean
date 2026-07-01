@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.Shape
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedParser
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Basic
 
 set_option doc.verso true
 
@@ -33,6 +34,108 @@ def fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
     (L : SimulatorLayout) : Tape Bool :=
   DovetailInitialLayoutInitializer.tapeAtCells [none]
     (List.append ((SimulatorLayout.asBoolInput L).map some) [none])
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_eq_FSTSourceTape_configRunner
+    (L : SimulatorLayout) :
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner L =
+    CommonGround.FiniteTransducers.FSTSourceTape
+        (SimulatorLayout.asBoolInput L) 1 := by
+  dsimp [
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
+    CommonGround.FiniteTransducers.FSTSourceTape,
+    DovetailInitialLayoutInitializer.tapeAtCells,
+    CommonGround.FiniteTransducers.tapeAtCells]
+  rfl
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_cells_configRunner
+    (L : SimulatorLayout) :
+    Tape.cells
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
+          L) =
+      none :: List.append ((SimulatorLayout.asBoolInput L).map some) [none] := by
+  cases hbits : SimulatorLayout.asBoolInput L with
+  | nil =>
+      simp [
+        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
+        DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells, hbits]
+  | cons bit rest =>
+      simp [
+        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
+        DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells, hbits]
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_normalizedOutput_configRunner
+    (L : SimulatorLayout) :
+    Tape.normalizedOutput
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
+          L) =
+      SimulatorLayout.asBoolInput L := by
+  rw [Tape.normalizedOutput,
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_cells_configRunner]
+  simp [Function.comp_def]
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_contextLength_configRunner
+    (L : SimulatorLayout) :
+    Tape.contextLength
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
+          L) =
+      (SimulatorLayout.asBoolInput L).length + 1 := by
+  cases hbits : SimulatorLayout.asBoolInput L with
+  | nil =>
+      simp [
+        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
+        DovetailInitialLayoutInitializer.tapeAtCells, Tape.contextLength,
+        hbits]
+  | cons bit rest =>
+      simp [
+        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
+        DovetailInitialLayoutInitializer.tapeAtCells, Tape.contextLength,
+        hbits]
+      omega
+
+theorem fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner
+    (L : SimulatorLayout) :
+    SimulatorLayout.asBoolInput L =
+      encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          encodeBoolWordAppend L.input
+            (encodeNatAppend L.stage
+              (encodeConfigurationAppend L.config
+                (encodeBoolAppend L.hit [])))) := by
+  simp [SimulatorLayout.asBoolInput, SimulatorLayout.encode,
+    SimulatorLayout.encodeAppend]
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_normalizedOutput_eq_fields_configRunner
+    (L : SimulatorLayout) :
+    Tape.normalizedOutput
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
+          L) =
+      encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          encodeBoolWordAppend L.input
+            (encodeNatAppend L.stage
+              (encodeConfigurationAppend L.config
+                (encodeBoolAppend L.hit [])))) := by
+  rw [
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_normalizedOutput_configRunner,
+    fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner]
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_cells_eq_fields_configRunner
+    (L : SimulatorLayout) :
+    Tape.cells
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
+          L) =
+      none ::
+        List.append
+          ((encodeCodeWordAsInput
+            (MachineCodeSymbol.header ::
+              encodeBoolWordAppend L.input
+                (encodeNatAppend L.stage
+                  (encodeConfigurationAppend L.config
+                    (encodeBoolAppend L.hit []))))).map some)
+          [none] := by
+  rw [
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_cells_configRunner,
+    fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner]
 
 def FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindSpec_configRunner
     (rewind : MachineDescription) : Prop :=
