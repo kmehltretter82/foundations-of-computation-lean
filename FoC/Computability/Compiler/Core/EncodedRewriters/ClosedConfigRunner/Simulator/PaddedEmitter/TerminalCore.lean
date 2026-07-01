@@ -283,6 +283,49 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceT
               Tape.contextLength, Tape.move, Tape.moveRight, hbits] <;>
             omega
 
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_eq_tapeAtCells_cons_cons_configRunner
+    (L : SimulatorLayout) (first second : Bool) (rest : Word Bool)
+    (hbits : SimulatorLayout.asBoolInput L = first :: second :: rest) :
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+        L =
+      DovetailInitialLayoutInitializer.tapeAtCells
+        [some first, none]
+        (some second :: List.append (rest.map some) [none]) := by
+  cases first <;> cases second <;>
+    simp [
+      fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner,
+      fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
+      DovetailInitialLayoutInitializer.tapeAtCells,
+      Tape.move, Tape.moveRight, hbits]
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_exists_tapeAtCells_cons_cons_configRunner
+    (L : SimulatorLayout) :
+    exists first : Bool,
+    exists second : Bool,
+    exists rest : Word Bool,
+      SimulatorLayout.asBoolInput L = first :: second :: rest ∧
+        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+            L =
+          DovetailInitialLayoutInitializer.tapeAtCells
+            [some first, none]
+            (some second :: List.append (rest.map some) [none]) := by
+  have hlen : 2 <= (SimulatorLayout.asBoolInput L).length := by
+    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
+    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
+      encodeCodeSymbolAsInput]
+  cases hbits : SimulatorLayout.asBoolInput L with
+  | nil =>
+      simp [hbits] at hlen
+  | cons first rest =>
+      cases rest with
+      | nil =>
+          simp [hbits] at hlen
+      | cons second tail =>
+          refine ⟨first, second, tail, rfl, ?_⟩
+          exact
+            fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_eq_tapeAtCells_cons_cons_configRunner
+              L first second tail hbits
+
 def FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindSpec_configRunner
     (rewind : MachineDescription) : Prop :=
   rewind.SubroutineReady ∧
