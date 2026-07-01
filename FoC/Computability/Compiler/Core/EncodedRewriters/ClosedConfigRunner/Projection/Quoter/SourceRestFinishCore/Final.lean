@@ -2083,6 +2083,41 @@ theorem mixedOptionCellQuoteLiveTailJoinedTape_arbitrarySplit_not_ambiguous :
       mixedOptionCellQuoteLiveTailJoinedTape [] [false, true] [] := by
   native_decide
 
+def mixedOptionCellQuoteLiveTailStageSourceRawTail
+    (sourceRestBits : Word Bool) (stage : Nat) : Word Bool :=
+  List.append
+    (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+      stage)
+    sourceRestBits
+
+theorem
+    mixedOptionCellQuoteLiveTailStageSourceRawTail_eq_assemblyRawTail
+    (sourceRestBits : Word Bool) (stage : Nat) :
+    mixedOptionCellQuoteLiveTailStageSourceRawTail sourceRestBits stage =
+      assemblySourceRestFinishRawTailBits sourceRestBits stage := by
+  rfl
+
+def MixedOptionCellQuoteLiveTailStageSourceJoinerSpec
+    (finish : MachineDescription) : Prop :=
+  finish.SubroutineReady ∧
+    forall (emittedPrefix sourceRestBits : Word Bool) (stage : Nat),
+      finish.HaltsFromTape
+        (mixedOptionCellQuoteLiveTailSeparatedTape
+          emittedPrefix
+          (mixedOptionCellQuoteLiveTailStageSourceRawTail
+            sourceRestBits stage)
+          (preservingCellPassCellBits sourceRestBits))
+        (mixedOptionCellQuoteLiveTailJoinedTape
+          emittedPrefix
+          (mixedOptionCellQuoteLiveTailStageSourceRawTail
+            sourceRestBits stage)
+          (preservingCellPassCellBits sourceRestBits))
+
+def MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction :
+    Prop :=
+  exists finish : MachineDescription,
+    MixedOptionCellQuoteLiveTailStageSourceJoinerSpec finish
+
 def MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestSpec
     (finish : MachineDescription) : Prop :=
   finish.SubroutineReady ∧
@@ -2167,9 +2202,29 @@ theorem
       (MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec_iff_assemblySpec
         finish).mpr hfinish⟩
 
+theorem mixedOptionCellQuoteLiveTailStageSourceJoinerConstruction :
+    MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction := by
+  sorry
+
+theorem
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction_of_stageSource
+    (h : MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction) :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction := by
+  rcases h with ⟨finish, hfinish⟩
+  refine ⟨finish, hfinish.left, ?_⟩
+  intro p
+  cases p with
+  | mk w sourceRestBits stage =>
+      exact hfinish.right
+        (assemblySourceRestFinishPrefixQuoteOutputBits
+          w sourceRestBits stage)
+        sourceRestBits stage
+
 theorem mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :
     MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction := by
-  sorry
+  exact
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction_of_stageSource
+      mixedOptionCellQuoteLiveTailStageSourceJoinerConstruction
 
 /--
 Specialized finite-table obligation for joining the reusable quote-rest field
