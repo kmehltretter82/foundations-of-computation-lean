@@ -85,6 +85,61 @@ theorem mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction :
     MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction := by
   sorry
 
+/--
+Reusable emitter obligation for the specialized assembly parser-prefix grammar.
+It quotes the defaulted mixed option-cell prefix and stage prefix, leaves the
+live raw tail to the right, and keeps the already-computed quote-rest separated
+for the live-tail joiner.
+-/
+theorem
+    mixedOptionCellQuoteLiveTailEmitterConstruction_for_assemblySourceRest :
+    MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest := by
+  exact
+    MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest_of_family
+      mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction
+
+def MixedParserStackPrefixQuotedSeparatedFinisherAssemblySourceRestSpec
+    (finish : MachineDescription) : Prop :=
+  finish.SubroutineReady ∧
+    forall (w sourceRestBits : Word Bool) (stage : Nat),
+      finish.HaltsFromTape
+        (MixedParserStackRewriterDefaultedInternalMarkerTape
+          w sourceRestBits
+          (preservingCellPassCellBits sourceRestBits)
+          stage)
+        (MixedParserStackWholeSourcePrefixQuotedSeparatedTape
+          w sourceRestBits stage)
+
+def
+    MixedParserStackPrefixQuotedSeparatedFinisherConstructionForAssemblySourceRest :
+    Prop :=
+  exists finish : MachineDescription,
+    MixedParserStackPrefixQuotedSeparatedFinisherAssemblySourceRestSpec finish
+
+theorem
+    MixedParserStackPrefixQuotedSeparatedFinisherConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailEmitter
+    (hemitter :
+      MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest) :
+    MixedParserStackPrefixQuotedSeparatedFinisherConstructionForAssemblySourceRest := by
+  rcases hemitter with ⟨finish, hfinish⟩
+  refine ⟨finish, hfinish.left, ?_⟩
+  intro w sourceRestBits stage
+  rw [MixedParserStackRewriterDefaultedInternalMarkerTape_eq_mixedOptionCellQuoteLiveTailEmitterSplitSourceTape]
+  rw [MixedParserStackWholeSourcePrefixQuotedSeparatedTape_eq_mixedOptionCellQuoteLiveTailEmitterTargetTape]
+  exact hfinish.right w sourceRestBits stage
+
+/--
+Finite-machine obligation for Phase 1 and Phase 2 of the mixed parser-stack
+finisher.  It emits the header and quoted parser-prefix/stage prefix, leaves
+the live raw tail on the right, and keeps the reusable source-rest quote behind
+the structural blank for the final join phase.
+-/
+theorem
+    mixedParserStackPrefixQuotedSeparatedFinisherConstruction_for_assemblySourceRest :
+    MixedParserStackPrefixQuotedSeparatedFinisherConstructionForAssemblySourceRest :=
+  MixedParserStackPrefixQuotedSeparatedFinisherConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailEmitter
+    mixedOptionCellQuoteLiveTailEmitterConstruction_for_assemblySourceRest
+
 end SelectedProjectionInputQuoterFiniteLeaf
 
 end BoundedLayoutRunner
