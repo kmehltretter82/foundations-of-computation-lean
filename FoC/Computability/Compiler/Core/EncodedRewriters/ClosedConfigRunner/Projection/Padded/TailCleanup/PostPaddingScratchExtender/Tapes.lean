@@ -134,42 +134,62 @@ def selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
     selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch
       L extraScratch
 
+def selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells
+    (L : DovetailLayout) (extraScratch : Nat) : List (Option Bool) :=
+  List.append
+    ((selectedProjectionPaddedTailCleanupSelectedConfigBits
+      true L).map some)
+    (List.append
+      ((selectedProjectionPaddedTailCleanupUnselectedConfigBits
+        true L).map some)
+      (List.append
+        ((selectedProjectionPaddedTailCleanupSelectedHitBits
+          true L).map some)
+        (none ::
+          List.append (List.replicate 5 (none : Option Bool))
+            (List.replicate extraScratch (none : Option Bool)))))
+
+def selectedProjectionPaddedTailCleanupRejectAfterStageTailCells
+    (L : DovetailLayout) (extraScratch : Nat) : List (Option Bool) :=
+  List.append
+    ((selectedProjectionPaddedTailCleanupUnselectedConfigBits
+      false L).map some)
+    (List.append
+      ((selectedProjectionPaddedTailCleanupSelectedConfigBits
+        false L).map some)
+      (List.append
+        (List.replicate 4 (none : Option Bool))
+        (List.append
+          ((selectedProjectionPaddedTailCleanupSelectedHitBits
+            false L).map some)
+          (none :: none ::
+            List.replicate extraScratch (none : Option Bool)))))
+
+def selectedProjectionPaddedTailCleanupAfterStageTailCells
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    List (Option Bool) :=
+  if useAccept then
+    selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells
+      L extraScratch
+  else
+    selectedProjectionPaddedTailCleanupRejectAfterStageTailCells
+      L extraScratch
+
 def selectedProjectionPaddedTailCleanupAcceptPostCountTailCells
     (L : DovetailLayout) (extraScratch : Nat) : List (Option Bool) :=
   List.append
     ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
       L.stage).map some)
-    (List.append
-      ((selectedProjectionPaddedTailCleanupSelectedConfigBits
-        true L).map some)
-      (List.append
-        ((selectedProjectionPaddedTailCleanupUnselectedConfigBits
-          true L).map some)
-        (List.append
-          ((selectedProjectionPaddedTailCleanupSelectedHitBits
-            true L).map some)
-          (none ::
-            List.append (List.replicate 5 (none : Option Bool))
-              (List.replicate extraScratch (none : Option Bool))))))
+    (selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells
+      L extraScratch)
 
 def selectedProjectionPaddedTailCleanupRejectPostCountTailCells
     (L : DovetailLayout) (extraScratch : Nat) : List (Option Bool) :=
   List.append
     ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
       L.stage).map some)
-    (List.append
-      ((selectedProjectionPaddedTailCleanupUnselectedConfigBits
-        false L).map some)
-      (List.append
-        ((selectedProjectionPaddedTailCleanupSelectedConfigBits
-          false L).map some)
-        (List.append
-          (List.replicate 4 (none : Option Bool))
-          (List.append
-            ((selectedProjectionPaddedTailCleanupSelectedHitBits
-              false L).map some)
-            (none :: none ::
-              List.replicate extraScratch (none : Option Bool))))))
+    (selectedProjectionPaddedTailCleanupRejectAfterStageTailCells
+      L extraScratch)
 
 def selectedProjectionPaddedTailCleanupPostCountTailCells
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
@@ -178,6 +198,17 @@ def selectedProjectionPaddedTailCleanupPostCountTailCells
     selectedProjectionPaddedTailCleanupAcceptPostCountTailCells L extraScratch
   else
     selectedProjectionPaddedTailCleanupRejectPostCountTailCells L extraScratch
+
+def selectedProjectionPaddedTailCleanupAfterOutputPrefixScanTape
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    Tape Bool :=
+  (boolWordCanonicalHandoffConfigWithBaseAndRight
+    (ParsedLayoutBits L)
+    (postPaddingOutputPrefixHeaderBase [none])
+    (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+      L.stage)
+    (selectedProjectionPaddedTailCleanupAfterStageTailCells
+      useAccept L extraScratch)).tape
 
 theorem selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch_countSplit
     (L : DovetailLayout) (extraScratch : Nat) :
@@ -206,7 +237,8 @@ theorem selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch_
     selectedProjectionPaddedTailCleanupAcceptPostCountTailCells,
     List.map_append, List.append_assoc]
   rw [selectedProjectionPaddedTailCleanupOutputPrefixCells_split true L]
-  simp [List.append_assoc]
+  simp [selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells,
+    List.append_assoc]
 
 theorem selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch_countSplit
     (L : DovetailLayout) (extraScratch : Nat) :
@@ -234,7 +266,8 @@ theorem selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch_
     selectedProjectionPaddedTailCleanupRejectPostCountTailCells,
     List.map_append, List.append_assoc]
   rw [selectedProjectionPaddedTailCleanupOutputPrefixCells_split false L]
-  simp [List.append_assoc]
+  simp [selectedProjectionPaddedTailCleanupRejectAfterStageTailCells,
+    List.append_assoc]
 
 theorem selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_countSplit
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
@@ -263,6 +296,45 @@ theorem selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_countS
   · exact
       selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch_countSplit
         L extraScratch
+
+theorem selectedProjectionPaddedTailCleanupOutputPrefixScanner_haltsFrom_baseSourceTapeWithExtraScratch
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    postPaddingOutputPrefixScannerDescription.HaltsFromTape
+      (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+        useAccept L extraScratch)
+      (selectedProjectionPaddedTailCleanupAfterOutputPrefixScanTape
+        useAccept L extraScratch) := by
+  rcases stageNatBits_cons_false L.stage with
+    ⟨stageTail, hstage⟩
+  cases useAccept
+  · simpa [
+      selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch,
+      selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch,
+      selectedProjectionPaddedTailCleanupAfterOutputPrefixScanTape,
+      selectedProjectionPaddedTailCleanupAfterStageTailCells,
+      selectedProjectionPaddedTailCleanupRejectAfterStageTailCells,
+      selectedProjectionPaddedTailCleanupPrefixBits,
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits_false_eq_unselected_selected,
+      SelectedProjectionTailProjector.outputPrefixBits,
+      hstage, List.map_append, List.append_assoc] using
+        postPaddingOutputPrefixScannerDescription_haltsFrom_withRight
+          (ParsedLayoutBits L) stageTail [none]
+          (selectedProjectionPaddedTailCleanupRejectAfterStageTailCells
+            L extraScratch)
+  · simpa [
+      selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch,
+      selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch,
+      selectedProjectionPaddedTailCleanupAfterOutputPrefixScanTape,
+      selectedProjectionPaddedTailCleanupAfterStageTailCells,
+      selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells,
+      selectedProjectionPaddedTailCleanupPrefixBits,
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits_true_eq_selected_unselected,
+      SelectedProjectionTailProjector.outputPrefixBits,
+      hstage, List.map_append, List.append_assoc] using
+        postPaddingOutputPrefixScannerDescription_haltsFrom_withRight
+          (ParsedLayoutBits L) stageTail [none]
+          (selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells
+            L extraScratch)
 
 theorem selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch_zero
     (L : DovetailLayout) :
