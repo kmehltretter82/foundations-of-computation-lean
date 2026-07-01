@@ -73,6 +73,10 @@ def SelectedMergePaddedEmitterDecodedHandoffBits
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) : Word Bool :=
   SelectedMergePaddedEmitterTargetBits useAccept p
 
+def SelectedMergePaddedEmitterParsedInnerTargetTailBits
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) : Word Bool :=
+  SelectedMergePaddedEmitterOutputTailBits useAccept p
+
 theorem SelectedMergePaddedEmitterDecodedHandoffTape_eq_outputTape
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterDecodedHandoffTape useAccept p =
@@ -88,6 +92,42 @@ theorem SelectedMergePaddedEmitterDecodedHandoffBits_eq_outputCode
         (SelectedMergeOutputCode useAccept p.S p.L) := by
   rw [SelectedMergePaddedEmitterDecodedHandoffBits,
     SelectedMergePaddedEmitterTargetBits_eq_outputCode]
+
+theorem SelectedMergePaddedEmitterDecodedHandoffBits_eq_transition_targetTail
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterDecodedHandoffBits useAccept p =
+      List.append (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+        (SelectedMergePaddedEmitterParsedInnerTargetTailBits
+          useAccept p) := by
+  rw [SelectedMergePaddedEmitterDecodedHandoffBits,
+    SelectedMergePaddedEmitterTargetBits_eq_transition_outputTail]
+  rfl
+
+theorem SelectedMergePaddedEmitterParsedInnerTargetTailBits_true
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerTargetTailBits true p =
+      encodeCodeWordAsInput
+        (encodeBoolWordAppend p.L.input
+          (encodeNatAppend p.L.stage
+            (encodeConfigurationAppend p.S.config
+              (encodeConfigurationAppend p.L.rejectConfig
+                (encodeBoolAppend p.S.hit
+                  (encodeBoolAppend p.L.rejectHit [])))))) := by
+  rw [SelectedMergePaddedEmitterParsedInnerTargetTailBits,
+    SelectedMergePaddedEmitterOutputTailBits_true]
+
+theorem SelectedMergePaddedEmitterParsedInnerTargetTailBits_false
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerTargetTailBits false p =
+      encodeCodeWordAsInput
+        (encodeBoolWordAppend p.L.input
+          (encodeNatAppend p.L.stage
+            (encodeConfigurationAppend p.L.acceptConfig
+              (encodeConfigurationAppend p.S.config
+                (encodeBoolAppend p.L.acceptHit
+                  (encodeBoolAppend p.S.hit [])))))) := by
+  rw [SelectedMergePaddedEmitterParsedInnerTargetTailBits,
+    SelectedMergePaddedEmitterOutputTailBits_false]
 
 theorem SelectedMergePaddedEmitterDecodedHandoffBits_true_eq_fields
     (p : SelectedMergeEmitterPayload) :

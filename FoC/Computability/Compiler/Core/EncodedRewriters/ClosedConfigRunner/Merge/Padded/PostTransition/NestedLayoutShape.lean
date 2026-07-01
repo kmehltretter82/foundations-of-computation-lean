@@ -510,14 +510,25 @@ def SelectedMergePaddedEmitterParsedInnerOuterSuffixBits
       (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
         p.S.hit []))
 
+def SelectedMergePaddedEmitterParsedInnerSourceTailBits
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  List.append
+      (CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits
+        p.L)
+      (SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p)
+
 def SelectedMergePaddedEmitterParsedInnerSourceBits
     (p : SelectedMergeEmitterPayload) : Word Bool :=
   List.append
     (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
-    (List.append
-      (CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits
-        p.L)
-      (SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p))
+    (SelectedMergePaddedEmitterParsedInnerSourceTailBits p)
+
+theorem SelectedMergePaddedEmitterParsedInnerSourceBits_eq_transition_tail
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerSourceBits p =
+      List.append (encodeCodeSymbolAsInput MachineCodeSymbol.transition)
+        (SelectedMergePaddedEmitterParsedInnerSourceTailBits p) := by
+  rfl
 
 theorem SelectedMergePaddedEmitterParsedInnerSourceBits_eq_nestedFields
     (p : SelectedMergeEmitterPayload) :
@@ -542,6 +553,7 @@ theorem SelectedMergePaddedEmitterParsedInnerSourceBits_eq_nestedFields
                       (SelectedMergePaddedEmitterParsedInnerOuterSuffixBits
                         p)))))))) := by
   simp [SelectedMergePaddedEmitterParsedInnerSourceBits,
+    SelectedMergePaddedEmitterParsedInnerSourceTailBits,
     SelectedMergePaddedEmitterParsedInnerOuterSuffixBits,
     CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits,
     CanonicalLayouts.DovetailLayoutScanner.boolWordFieldBits,
@@ -650,6 +662,7 @@ theorem
   rw [
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_normalizedOutput_eq_markedBody]
   simp [SelectedMergePaddedEmitterParsedInnerSourceBits,
+    SelectedMergePaddedEmitterParsedInnerSourceTailBits,
     SelectedMergePaddedEmitterParsedInnerOuterSuffixBits,
     CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits,
     CanonicalLayouts.DovetailLayoutScanner.tapeFieldBits,
