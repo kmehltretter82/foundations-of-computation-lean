@@ -21,4 +21,7 @@ implementation is split by responsibility:
   contains the source-fields and nested-layout parsed tape facts.
 - {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.BranchHandoffShape`
   contains the accepting/rejecting decoded handoff target facts.
+- {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.ParsedInnerWindows`
+  names the marked source windows and unmarked branch target windows used by
+  the parsed-inner field replacement leaf.
 -/
