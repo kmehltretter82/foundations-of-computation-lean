@@ -207,6 +207,82 @@ def fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_
     (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
       L)
 
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_normalizedOutput_configRunner
+    (L : SimulatorLayout) :
+    Tape.normalizedOutput
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+          L) =
+      SimulatorLayout.asBoolInput L := by
+  rw [
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner,
+    Tape.normalizedOutput_move,
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_normalizedOutput_configRunner]
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_cells_configRunner
+    (L : SimulatorLayout) :
+    Tape.cells
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+          L) =
+      none :: List.append ((SimulatorLayout.asBoolInput L).map some) [none] := by
+  have hlen : 1 <= (SimulatorLayout.asBoolInput L).length := by
+    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
+    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
+      encodeCodeSymbolAsInput]
+  cases hbits : SimulatorLayout.asBoolInput L with
+  | nil =>
+      simp [hbits] at hlen
+  | cons first rest =>
+      cases first <;> cases rest <;>
+        simp [
+          fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner,
+          fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
+          DovetailInitialLayoutInitializer.tapeAtCells,
+          Tape.cells, Tape.move, Tape.moveRight, hbits]
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_cells_eq_fields_configRunner
+    (L : SimulatorLayout) :
+    Tape.cells
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+          L) =
+      none ::
+        List.append
+          ((encodeCodeWordAsInput
+            (MachineCodeSymbol.header ::
+              encodeBoolWordAppend L.input
+                (encodeNatAppend L.stage
+                  (encodeConfigurationAppend L.config
+                    (encodeBoolAppend L.hit []))))).map some)
+          [none] := by
+  rw [
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_cells_configRunner,
+    fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner]
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_contextLength_configRunner
+    (L : SimulatorLayout) :
+    Tape.contextLength
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
+          L) =
+      (SimulatorLayout.asBoolInput L).length + 1 := by
+  have hlen : 2 <= (SimulatorLayout.asBoolInput L).length := by
+    rw [fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_header_payloadBits_configRunner]
+    simp [fixedDescriptionBoundedSimulatorHeaderPrefixBits_configRunner,
+      encodeCodeSymbolAsInput]
+  cases hbits : SimulatorLayout.asBoolInput L with
+  | nil =>
+      simp [hbits] at hlen
+  | cons first rest =>
+      cases rest with
+      | nil =>
+          simp [hbits] at hlen
+      | cons second tail =>
+          cases first <;> cases second <;>
+            simp [
+              fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner,
+              fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
+              DovetailInitialLayoutInitializer.tapeAtCells,
+              Tape.contextLength, Tape.move, Tape.moveRight, hbits] <;>
+            omega
+
 def FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindSpec_configRunner
     (rewind : MachineDescription) : Prop :=
   rewind.SubroutineReady ∧
