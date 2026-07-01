@@ -29,31 +29,58 @@ theorem selectedMergePaddedEmitterAfterHitPaddedParsedInnerConstruction
     (useAccept : Bool) :
     SelectedMergePaddedEmitterAfterHitPaddedParsedInnerConstruction
       useAccept := by
-  have htransport :
-      SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportConstruction
+  have hcloseoutTransport :
+      SelectedMergePaddedEmitterParsedInnerPostPrefixCloseoutAndFieldTransportConstruction
         useAccept := by
     sorry
-  rcases htransport with ⟨transport, htransportReady, htransportHalts⟩
+  rcases hcloseoutTransport with
+    ⟨closer, transport, hcloser, htransport⟩
+  have hprefixCloser :
+      (CommonGround.FiniteTransducers.canonicalSeqDescription
+        SelectedMergePaddedEmitterParsedInnerPrefixCleanupDescription
+        closer).SubroutineReady ∧
+        forall p : SelectedMergeEmitterPayload,
+          (CommonGround.FiniteTransducers.canonicalSeqDescription
+            SelectedMergePaddedEmitterParsedInnerPrefixCleanupDescription
+            closer).HaltsFromTape
+            (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p)
+            (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p) := by
+    constructor
+    · exact
+        CommonGround.FiniteTransducers.canonicalSeqDescription_subroutineReady
+          selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_subroutineReady
+          hcloser.left
+    · intro p
+      exact
+        CommonGround.FiniteTransducers.canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+          selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_subroutineReady
+          hcloser.left
+          (selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_haltsFromParsedTape
+            p)
+          (SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_move_left_move_right
+            p)
+          (hcloser.right p)
   refine
     ⟨CommonGround.FiniteTransducers.canonicalSeqDescription
-        SelectedMergePaddedEmitterParsedInnerPrefixCleanupDescription
+        (CommonGround.FiniteTransducers.canonicalSeqDescription
+          SelectedMergePaddedEmitterParsedInnerPrefixCleanupDescription
+          closer)
         transport,
       ?_⟩
   constructor
   · exact
       CommonGround.FiniteTransducers.canonicalSeqDescription_subroutineReady
-        selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_subroutineReady
-        htransportReady
+        hprefixCloser.left
+        htransport.left
   · intro p
     exact
       CommonGround.FiniteTransducers.canonicalSeqDescription_haltsFromTape_of_haltsFromTape
-        selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_subroutineReady
-        htransportReady
-        (selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_haltsFromParsedTape
+        hprefixCloser.left
+        htransport.left
+        (hprefixCloser.right p)
+        (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape_move_left_move_right
           p)
-        (SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_move_left_move_right
-          p)
-        (htransportHalts p)
+        (htransport.right p)
 
 end BoundedLayoutRunner
 end EncodedRewriters

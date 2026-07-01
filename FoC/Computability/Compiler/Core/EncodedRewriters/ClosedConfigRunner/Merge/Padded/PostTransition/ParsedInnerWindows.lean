@@ -339,19 +339,38 @@ def SelectedMergePaddedEmitterParsedInnerPostPrefixTargetBits
     (SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits
       useAccept p)
 
+def SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape
+    (p : SelectedMergeEmitterPayload) : Tape Bool :=
+  CommonGround.FiniteTransducers.leadingBlankLeftShiftTargetTapeWithPadding
+    [none]
+    (SelectedMergePaddedEmitterParsedInnerPostPrefixSourceBits p)
+    (List.replicate
+      (SelectedMergePaddedEmitterParsedInnerRemainderDeleteBits.length + 1)
+      (none : Option Bool))
+
+def SelectedMergePaddedEmitterParsedInnerPostPrefixGapCloseSpec
+    (closer : MachineDescription) : Prop :=
+  closer.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      closer.HaltsFromTape
+        (SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape p)
+        (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p)
+
 def SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportSpec
     (useAccept : Bool) (transport : MachineDescription) : Prop :=
   transport.SubroutineReady ∧
     forall p : SelectedMergeEmitterPayload,
       transport.HaltsFromTape
-        (SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape p)
+        (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p)
         (SelectedMergePaddedEmitterDecodedHandoffTape useAccept p)
 
-def SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportConstruction
+def SelectedMergePaddedEmitterParsedInnerPostPrefixCloseoutAndFieldTransportConstruction
     (useAccept : Bool) : Prop :=
+  exists closer : MachineDescription,
   exists transport : MachineDescription,
-    SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportSpec
-      useAccept transport
+    SelectedMergePaddedEmitterParsedInnerPostPrefixGapCloseSpec closer ∧
+      SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportSpec
+        useAccept transport
 
 theorem
     SelectedMergePaddedEmitterParsedInnerOuterSuffixBits_eq_stage_outerConfigHit
@@ -1385,6 +1404,51 @@ theorem
   rw [
     SelectedMergePaddedEmitterParsedInnerPostPrefixSourceBits,
     SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_normalizedOutput_expandedSource]
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape_cells
+    (p : SelectedMergeEmitterPayload) :
+    Tape.cells
+        (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p) =
+      CommonGround.FiniteTransducers.leadingBlankLeftShiftTargetCellsWithPadding
+        [none]
+        (SelectedMergePaddedEmitterParsedInnerPostPrefixSourceBits p)
+        (List.replicate
+          (SelectedMergePaddedEmitterParsedInnerRemainderDeleteBits.length + 1)
+          (none : Option Bool)) := by
+  rw [SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape]
+  rw [
+    CommonGround.FiniteTransducers.leadingBlankLeftShiftTargetTapeWithPadding_cells]
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape_normalizedOutput
+    (p : SelectedMergeEmitterPayload) :
+    Tape.normalizedOutput
+        (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p) =
+      SelectedMergePaddedEmitterParsedInnerPostPrefixSourceBits p := by
+  rw [SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape]
+  rw [
+    CommonGround.FiniteTransducers.leadingBlankLeftShiftTargetTapeWithPadding_normalizedOutput]
+  simp
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape_move_left_move_right
+    (p : SelectedMergeEmitterPayload) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p)) =
+      SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p := by
+  simpa [
+    SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape,
+    SelectedMergePaddedEmitterParsedInnerRemainderDeleteBits,
+    List.replicate]
+    using
+      CommonGround.FiniteTransducers.leadingBlankLeftShiftTargetTapeWithPadding_move_left_move_right_padding_cons_cons
+        ([none] : List (Option Bool))
+        (SelectedMergePaddedEmitterParsedInnerPostPrefixSourceBits p)
+        (none : Option Bool)
+        (none : Option Bool)
+        [none, none]
 
 theorem
     SelectedMergePaddedEmitterDecodedHandoffTape_cells_eq_split
