@@ -931,6 +931,26 @@ theorem assemblySourceRestFinishPrefixQuoteOutputBits_eq_marker_chunks
   rw [assemblySourceRestFinishPrefixQuoteOutputBits]
   rw [assemblySourceRestFinishQuotedPrefixBits_eq_marker_chunks]
 
+theorem assemblySourceRestFinishPrefixQuoteOutputBits_map_some_eq_marker_chunks
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    (assemblySourceRestFinishPrefixQuoteOutputBits
+      w sourceRestBits stage).map some =
+      List.append
+        ((assemblySourceRestFinishLengthHeaderBits
+          w sourceRestBits stage).map some)
+        (List.append
+          ((mixedParserStackQuotedCellsBits
+            assemblySourceRestFinishParserMarkerLeftCells).map some)
+          (List.append (preservingCellPassZeroBits.map some)
+            (List.append
+              ((preservingCellPassCellBits
+                (assemblySourceRestFinishParserMarkerRightBits w)).map some)
+              ((preservingCellPassCellBits
+                (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                  stage)).map some)))) := by
+  rw [assemblySourceRestFinishPrefixQuoteOutputBits_eq_marker_chunks]
+  simp [List.map_append]
+
 theorem
     MixedParserStackRewriterDefaultedInternalMarkerTape_eq_mixedOptionCellQuoteLiveTailEmitterSourceTape
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
@@ -1004,6 +1024,32 @@ theorem
     w sourceRestBits quoteRestBits stage
 
 theorem
+    mixedOptionCellQuoteLiveTailEmitterSplitSourceTape_cells_assembly_stageSplit
+    (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
+          (some false ::
+            List.append
+              (List.reverse assemblySourceRestFinishParserMarkerLeftCells)
+              [none])
+          (assemblySourceRestFinishParserMarkerRightBits w)
+          (assemblySourceRestFinishRawTailBits sourceRestBits stage)
+          quoteRestBits) =
+      none ::
+        List.append assemblySourceRestFinishParserMarkerLeftCells
+          (some false ::
+            List.append
+              ((assemblySourceRestFinishParserMarkerRightBits w).map some)
+              (List.append
+                ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                  stage).map some)
+                (List.append (sourceRestBits.map some)
+                  (none :: List.append (quoteRestBits.map some) [none])))) := by
+  rw [mixedOptionCellQuoteLiveTailEmitterSplitSourceTape_cells]
+  simp [assemblySourceRestFinishRawTailBits, List.reverse_append,
+    List.map_append, List.append_assoc]
+
+theorem
     mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells_assembly
     (w sourceRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
@@ -1026,6 +1072,30 @@ theorem
   exact
     MixedParserStackWholeSourcePrefixQuotedSeparatedTape_defaultedCells_computed
       w sourceRestBits stage
+
+theorem
+    mixedOptionCellQuoteLiveTailEmitterTargetTape_cells_assembly_stageSplit
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    Tape.cells
+        (mixedOptionCellQuoteLiveTailEmitterTargetTape
+          (assemblySourceRestFinishPrefixQuoteOutputBits
+            w sourceRestBits stage)
+          (assemblySourceRestFinishRawTailBits sourceRestBits stage)
+          (preservingCellPassCellBits sourceRestBits)) =
+      List.append
+        ((assemblySourceRestFinishPrefixQuoteOutputBits
+          w sourceRestBits stage).map some)
+        (List.append
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).map some)
+          (List.append (sourceRestBits.map some)
+            (none ::
+              List.append
+                ((preservingCellPassCellBits sourceRestBits).map some)
+                [none]))) := by
+  rw [mixedOptionCellQuoteLiveTailEmitterTargetTape_cells]
+  simp [assemblySourceRestFinishRawTailBits, List.map_append,
+    List.append_assoc]
 
 def assemblySourceRestFinishPrefixQuotedSeparatedBits
     (w sourceRestBits : Word Bool) (stage : Nat) : Word Bool :=
