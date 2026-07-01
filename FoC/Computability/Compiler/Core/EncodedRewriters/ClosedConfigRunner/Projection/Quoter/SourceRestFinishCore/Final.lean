@@ -1088,6 +1088,14 @@ def MixedOptionCellQuoteLiveTailEmitterFamilySpec
         (mixedOptionCellQuoteLiveTailEmitterTargetTape
           (emittedPrefix p) (rawTail p) (quoteRest p))
 
+def MixedOptionCellQuoteLiveTailEmitterFamilyConstruction
+    {ι : Type}
+    (sourceLeftRev : ι -> List (Option Bool))
+    (quoteScan rawTail quoteRest emittedPrefix : ι -> Word Bool) : Prop :=
+  exists finish : MachineDescription,
+    MixedOptionCellQuoteLiveTailEmitterFamilySpec
+      sourceLeftRev quoteScan rawTail quoteRest emittedPrefix finish
+
 structure AssemblySourceRestLiveTailEmitterParam where
   w : Word Bool
   sourceRestBits : Word Bool
@@ -1209,8 +1217,12 @@ def MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec
 
 def MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction :
     Prop :=
-  exists finish : MachineDescription,
-    MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec finish
+  MixedOptionCellQuoteLiveTailEmitterFamilyConstruction
+    assemblySourceRestLiveTailEmitterLeftRev
+    assemblySourceRestLiveTailEmitterQuoteScan
+    assemblySourceRestLiveTailEmitterRawTail
+    assemblySourceRestLiveTailEmitterQuoteRest
+    assemblySourceRestLiveTailEmitterEmittedPrefix
 
 theorem
     MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec_iff_assemblySpec
@@ -2251,6 +2263,13 @@ def MixedOptionCellQuoteLiveTailJoinerFamilySpec
         (mixedOptionCellQuoteLiveTailJoinedTape
           (emittedPrefix p) (rawTail p) (quoteRest p))
 
+def MixedOptionCellQuoteLiveTailJoinerFamilyConstruction
+    {ι : Type}
+    (emittedPrefix rawTail quoteRest : ι -> Word Bool) : Prop :=
+  exists finish : MachineDescription,
+    MixedOptionCellQuoteLiveTailJoinerFamilySpec
+      emittedPrefix rawTail quoteRest finish
+
 def MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec
     (finish : MachineDescription) : Prop :=
   MixedOptionCellQuoteLiveTailJoinerFamilySpec
@@ -2261,8 +2280,10 @@ def MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec
 
 def MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :
     Prop :=
-  exists finish : MachineDescription,
-    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec finish
+  MixedOptionCellQuoteLiveTailJoinerFamilyConstruction
+    assemblySourceRestLiveTailEmitterEmittedPrefix
+    assemblySourceRestLiveTailEmitterRawTail
+    assemblySourceRestLiveTailEmitterQuoteRest
 
 theorem
     MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec_iff_assemblySpec
