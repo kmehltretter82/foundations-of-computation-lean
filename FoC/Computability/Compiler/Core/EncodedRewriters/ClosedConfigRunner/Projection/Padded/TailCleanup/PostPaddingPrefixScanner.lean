@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.FixedSkips
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.Erase
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingFieldEraser
 
 set_option doc.verso true
@@ -117,6 +118,19 @@ theorem postPaddingOutputPrefixAfterStageBase_eq_bits_reverse
           (postPaddingOutputPrefixHeaderBase baseLeft)) := by
   rw [postPaddingOutputPrefixAfterStageBase,
     postPaddingOutputPrefixStageHandoffBase_eq_bits_reverse]
+
+theorem postPaddingOutputPrefixAfterStageBase_eq_prefixBits_reverse
+    (L : DovetailLayout) :
+    postPaddingOutputPrefixAfterStageBase
+        (ParsedLayoutBits L) L.stage [none] =
+      List.append
+        ((selectedProjectionPaddedTailCleanupPrefixBits L).reverse.map some)
+        [none] := by
+  rw [postPaddingOutputPrefixAfterStageBase_eq_bits_reverse]
+  rw [selectedProjectionPaddedTailCleanupPrefixBits]
+  rw [SelectedProjectionTailProjector.outputPrefixBits]
+  simp [postPaddingOutputPrefixHeaderBase, List.reverse_append,
+    List.map_append, List.append_assoc]
 
 def postPaddingOutputPrefixStageConfigScannerDescription :
     MachineDescription :=

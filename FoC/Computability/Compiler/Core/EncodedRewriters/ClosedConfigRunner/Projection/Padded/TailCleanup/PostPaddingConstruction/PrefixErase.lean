@@ -23,19 +23,6 @@ namespace SelectedProjectionPaddedTailCleanup
 
 open CanonicalLayouts.DovetailLayoutScanner
 
-theorem postPaddingOutputPrefixAfterStageBase_eq_prefixBits_reverse
-    (L : DovetailLayout) :
-    postPaddingOutputPrefixAfterStageBase
-        (ParsedLayoutBits L) L.stage [none] =
-      List.append
-        ((selectedProjectionPaddedTailCleanupPrefixBits L).reverse.map some)
-        [none] := by
-  rw [postPaddingOutputPrefixAfterStageBase_eq_bits_reverse]
-  rw [selectedProjectionPaddedTailCleanupPrefixBits]
-  rw [SelectedProjectionTailProjector.outputPrefixBits]
-  simp [postPaddingOutputPrefixHeaderBase, List.reverse_append,
-    List.map_append, List.append_assoc]
-
 theorem postPaddingOutputPrefixStageScannerDescription_rejectSourceBits_handoff_withRight
     (L : DovetailLayout) (rightPadding : List (Option Bool)) :
     exists fieldTail : Word Bool,

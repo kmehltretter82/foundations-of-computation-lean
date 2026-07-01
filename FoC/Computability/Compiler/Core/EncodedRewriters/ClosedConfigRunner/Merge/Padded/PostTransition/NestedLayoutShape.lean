@@ -77,8 +77,9 @@ theorem SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceLeftBitsRev_tapeAt
       CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
           parsedCells (List.append transitionBase [none]) =
         List.append parsedRestored [none] := by
-    exact cellListCanonicalRestoredLeftWithBase_append_base
-      parsedCells transitionBase [none]
+    exact
+      CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase_append_base
+        parsedCells transitionBase [none]
   have hcfg :
       CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
           p.S.config
@@ -88,7 +89,7 @@ theorem SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceLeftBitsRev_tapeAt
             p.S.config (List.append stageBase parsedRestored))
           [none] := by
     simpa [List.append_assoc] using
-      configurationRestoredLeftWithBase_append_base
+      CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase_append_base
         p.S.config (List.append stageBase parsedRestored) [none]
   have hparsed :
       parsedRestored =

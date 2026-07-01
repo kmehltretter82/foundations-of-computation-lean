@@ -547,6 +547,36 @@ theorem selectedProjectionPaddedTailCleanupOutputPrefixStageScanner_haltsFrom_ba
     simp [DovetailInitialLayoutInitializer.tapeAtCells, tapeAtCells]
     rfl
 
+theorem selectedProjectionPaddedTailCleanupOutputPrefixStageScanner_haltsFrom_baseSourceTapeWithExtraScratch_prefixBase
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    exists fieldTail : Word Bool,
+    exists rightPadding : List (Option Bool),
+      selectedProjectionPaddedTailCleanupAfterStageTailCells
+          useAccept L extraScratch =
+        List.append ((false :: fieldTail).map some) rightPadding ∧
+      postPaddingOutputPrefixStageScannerDescription.HaltsFromTape
+        (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+          useAccept L extraScratch)
+        (postPaddingOutputPrefixStageScannerTargetTapeWithRight
+          (ParsedLayoutBits L) L.stage [none] fieldTail rightPadding) ∧
+      Tape.move Direction.right
+          (postPaddingOutputPrefixStageScannerTargetTapeWithRight
+            (ParsedLayoutBits L) L.stage [none] fieldTail rightPadding) =
+        tapeAtCells
+          (List.append
+            ((selectedProjectionPaddedTailCleanupPrefixBits L).reverse.map
+              some)
+            [none])
+          (selectedProjectionPaddedTailCleanupAfterStageTailCells
+            useAccept L extraScratch) := by
+  rcases
+      selectedProjectionPaddedTailCleanupOutputPrefixStageScanner_haltsFrom_baseSourceTapeWithExtraScratch
+        useAccept L extraScratch with
+    ⟨fieldTail, rightPadding, htail, hrun, hmove⟩
+  refine ⟨fieldTail, rightPadding, htail, hrun, ?_⟩
+  rw [hmove]
+  rw [postPaddingOutputPrefixAfterStageBase_eq_prefixBits_reverse]
+
 theorem selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch_zero
     (L : DovetailLayout) :
     selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch

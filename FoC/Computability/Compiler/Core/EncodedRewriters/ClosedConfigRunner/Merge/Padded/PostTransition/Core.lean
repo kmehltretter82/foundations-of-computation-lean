@@ -545,35 +545,6 @@ theorem selectedMergePaddedEmitterAfterConfigPaddedTape_move_right
   simpa [CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase,
     List.append_assoc] using hmove
 
-theorem cellListCanonicalRestoredLeftWithBase_append_base
-    (cells baseLeft extra : List (Option Bool)) :
-    CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
-        cells (List.append baseLeft extra) =
-      List.append
-        (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
-          cells baseLeft)
-        extra := by
-  simp [
-    CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase,
-    CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalFinishStartLeftWithBase,
-    List.append_assoc]
-
-theorem configurationRestoredLeftWithBase_append_base
-    (cfg : Configuration) (baseLeft extra : List (Option Bool)) :
-    CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
-        cfg (List.append baseLeft extra) =
-      List.append
-        (CanonicalLayouts.DovetailLayoutScanner.configurationRestoredLeftWithBase
-          cfg baseLeft)
-        extra := by
-  rw [←
-    CanonicalLayouts.DovetailLayoutScanner.configurationRestoredBitsRev_map_some_withBase
-      cfg (List.append baseLeft extra)]
-  rw [←
-    CanonicalLayouts.DovetailLayoutScanner.configurationRestoredBitsRev_map_some_withBase
-      cfg baseLeft]
-  simp [List.append_assoc]
-
 theorem selectedMergePaddedEmitterHitScanner_runConfig_withRight
     (b : Bool) (left rightCells : List (Option Bool)) :
     SelectedMergePaddedEmitterHitScannerDescription.runConfig 4

@@ -529,6 +529,27 @@ theorem cellListCanonicalRestoredBitsRev_map_some_withBase
     cellListCanonicalLengthPrefixBitsRev_map_some,
     List.map_append, List.map_reverse, List.append_assoc]
 
+theorem cellListCanonicalFinishStartLeftWithBase_append_base
+    (cells baseLeft extra : List (Option Bool)) :
+    cellListCanonicalFinishStartLeftWithBase
+        cells (List.append baseLeft extra) =
+      List.append
+        (cellListCanonicalFinishStartLeftWithBase cells baseLeft)
+        extra := by
+  unfold cellListCanonicalFinishStartLeftWithBase
+  simp [List.append_assoc]
+
+theorem cellListCanonicalRestoredLeftWithBase_append_base
+    (cells baseLeft extra : List (Option Bool)) :
+    cellListCanonicalRestoredLeftWithBase
+        cells (List.append baseLeft extra) =
+      List.append
+        (cellListCanonicalRestoredLeftWithBase cells baseLeft)
+        extra := by
+  unfold cellListCanonicalRestoredLeftWithBase
+  rw [cellListCanonicalFinishStartLeftWithBase_append_base]
+  simp [List.append_assoc]
+
 theorem cellListFieldBits_append_nil
     (cells : List (Option Bool)) (suffixBits : Word Bool) :
     List.append (cellListFieldBits cells []) suffixBits =
@@ -702,6 +723,19 @@ theorem configurationRestoredBitsRev_map_some_withBase
     _ = configurationRestoredLeftWithBase cfg baseLeft := by
           simpa [configurationRestoredLeftWithBase, baseAfterState,
             baseAfterLeft] using hright
+
+theorem configurationRestoredLeftWithBase_append_base
+    (cfg : Configuration) (baseLeft extra : List (Option Bool)) :
+    configurationRestoredLeftWithBase
+        cfg (List.append baseLeft extra) =
+      List.append
+        (configurationRestoredLeftWithBase cfg baseLeft)
+        extra := by
+  rw [←
+    configurationRestoredBitsRev_map_some_withBase
+      cfg (List.append baseLeft extra)]
+  rw [← configurationRestoredBitsRev_map_some_withBase cfg baseLeft]
+  simp [List.append_assoc]
 
 theorem configurationRestoredBitsRev_reverse
     (cfg : Configuration) :
