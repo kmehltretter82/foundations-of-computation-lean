@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.DeleteWindow
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.SentinelGapCompactor
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.BranchHandoffShape
 
 set_option doc.verso true
@@ -287,6 +287,48 @@ def SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits
         p.L.stage))
     (SelectedMergePaddedEmitterParsedInnerSourceFieldTailBits p)
 
+def SelectedMergePaddedEmitterParsedInnerPostPrefixGapBaseTail :
+    List (Option Bool) :=
+  [some false, some false, some false, none]
+
+def SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixCurrent
+    (p : SelectedMergeEmitterPayload) : Bool :=
+  SelectedMergePaddedEmitterParsedInnerRightStackCurrent
+    (SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits p)
+
+def SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixLeftRest
+    (p : SelectedMergeEmitterPayload) : Word Bool :=
+  SelectedMergePaddedEmitterParsedInnerRightStackRest
+    (SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits p)
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits_ne_nil
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits p ≠ [] := by
+  intro h
+  have hlen := congrArg List.length h
+  simp [SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits,
+    CanonicalLayouts.DovetailLayoutScanner.boolWordFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.cellListFieldBits,
+    FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits] at hlen
+  rcases hlen with ⟨hprefix, _⟩
+  cases hinput : p.L.input with
+  | nil =>
+      simp [hinput, encodeNat, encodeCodeWordAsInput,
+        encodeCodeSymbolAsInput] at hprefix
+  | cons head tail =>
+      simp [hinput, encodeNat] at hprefix
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixCurrentRest_reverse
+    (p : SelectedMergeEmitterPayload) :
+    (SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixCurrent p ::
+        SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixLeftRest p).reverse =
+      SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits p := by
+  exact
+    SelectedMergePaddedEmitterParsedInnerRightStackCurrentRest_reverse
+      (SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits_ne_nil p)
+
 def SelectedMergePaddedEmitterParsedInnerRemainderDeleteDescription :
     MachineDescription :=
   CommonGround.FiniteTransducers.generatedDeleteWindowDescription
@@ -347,6 +389,10 @@ def SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape
     (List.replicate
       (SelectedMergePaddedEmitterParsedInnerRemainderDeleteBits.length + 1)
       (none : Option Bool))
+
+def SelectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription :
+    MachineDescription :=
+  CommonGround.FiniteTransducers.sentinelGapCompactorDescription
 
 def SelectedMergePaddedEmitterParsedInnerPostPrefixGapCloseSpec
     (closer : MachineDescription) : Prop :=
@@ -1324,6 +1370,52 @@ theorem
       (by simp [CommonGround.FiniteTransducers.tapeAtCells])
 
 theorem
+    SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_eq_postPrefixGapCloseSource
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape p =
+      CommonGround.FiniteTransducers.rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+        (CommonGround.FiniteTransducers.rightBlankLocalGapBaseLeft 2
+          (some true ::
+            SelectedMergePaddedEmitterParsedInnerPostPrefixGapBaseTail))
+        (SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixCurrent
+          p)
+        (SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixLeftRest
+          p)
+        1
+        [none] := by
+  rw [SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape]
+  rw [SelectedMergePaddedEmitterParsedInnerSourceBits_eq_remainderDeleteSplit]
+  rw [
+    CommonGround.FiniteTransducers.FSTStatefulOptionAppendTargetTapeWithPadding]
+  rw [CommonGround.FiniteTransducers.deleteWindowCellsFrom_split
+    SelectedMergePaddedEmitterParsedInnerRemainderDeletePrefixBits.length
+    SelectedMergePaddedEmitterParsedInnerRemainderDeleteBits.length
+    SelectedMergePaddedEmitterParsedInnerRemainderDeletePrefixBits
+    SelectedMergePaddedEmitterParsedInnerRemainderDeleteBits
+    (SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits p)
+    rfl rfl]
+  have hbitsRev :
+      (SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits
+        p).reverse =
+        SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixCurrent p ::
+          SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixLeftRest
+            p := by
+    rw [←
+      SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixCurrentRest_reverse]
+    simp
+  simp [
+    CommonGround.FiniteTransducers.rightBlankLocalGapCompactorSourceTapeWithBaseAndRight,
+    CommonGround.FiniteTransducers.rightBlankLocalGapBaseLeft,
+    SelectedMergePaddedEmitterParsedInnerPostPrefixGapBaseTail,
+    SelectedMergePaddedEmitterParsedInnerRemainderDeletePrefixBits,
+    SelectedMergePaddedEmitterParsedInnerRemainderDeleteBits,
+    CanonicalLayouts.DovetailLayoutScanner.transitionRemainderBits,
+    encodeCodeSymbolAsInput,
+    hbitsRev,
+    ← List.map_reverse,
+    List.append_assoc]
+
+theorem
     SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_cells
     (p : SelectedMergeEmitterPayload) :
     Tape.cells
@@ -1449,6 +1541,72 @@ theorem
         (none : Option Bool)
         (none : Option Bool)
         [none, none]
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape_eq_postPrefixGapCloseTarget
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p =
+      CommonGround.FiniteTransducers.leadingBlankLeftShiftTargetTapeWithPadding
+        (some true ::
+          SelectedMergePaddedEmitterParsedInnerPostPrefixGapBaseTail)
+        (SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits p)
+        (CommonGround.FiniteTransducers.sentinelGapCompactorFinalPadding
+          2 1 [none]) := by
+  simp [SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape,
+    SelectedMergePaddedEmitterParsedInnerPostPrefixGapBaseTail,
+    SelectedMergePaddedEmitterParsedInnerPostPrefixSourceBits,
+    SelectedMergePaddedEmitterParsedInnerOutputPrefixBits,
+    SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits,
+    SelectedMergePaddedEmitterParsedInnerRemainderDeleteBits,
+    CommonGround.FiniteTransducers.leadingBlankLeftShiftTargetTapeWithPadding,
+    CommonGround.FiniteTransducers.sentinelGapCompactorFinalPadding,
+    CanonicalLayouts.DovetailLayoutScanner.transitionRemainderBits,
+    SelectedMergePaddedEmitterParsedInnerSourceFieldTailExpandedBits_eq_sourceFieldTailBits,
+    encodeCodeSymbolAsInput, List.append_assoc]
+
+theorem
+    selectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription_subroutineReady :
+    SelectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription.SubroutineReady := by
+  exact
+    CommonGround.FiniteTransducers.sentinelGapCompactorDescription_subroutineReady
+
+theorem
+    selectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription_haltsFromTape
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription.HaltsFromTape
+      (SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape p)
+      (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p) := by
+  rw [
+    SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_eq_postPrefixGapCloseSource]
+  rw [
+    SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape_eq_postPrefixGapCloseTarget]
+  have hbits :=
+    SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixCurrentRest_reverse
+      p
+  simpa [SelectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription,
+    hbits]
+    using
+      CommonGround.FiniteTransducers.sentinelGapCompactorDescription_haltsFromTape_gapBase
+        2
+        SelectedMergePaddedEmitterParsedInnerPostPrefixGapBaseTail
+        true
+        (SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixCurrent
+          p)
+        (SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixLeftRest
+          p)
+        0
+        [none]
+
+theorem selectedMergePaddedEmitterParsedInnerPostPrefixGapCloseSpec :
+    SelectedMergePaddedEmitterParsedInnerPostPrefixGapCloseSpec
+      SelectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription := by
+  constructor
+  · exact
+      selectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription_subroutineReady
+  · intro p
+    exact
+      selectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription_haltsFromTape
+        p
 
 theorem
     SelectedMergePaddedEmitterDecodedHandoffTape_cells_eq_split

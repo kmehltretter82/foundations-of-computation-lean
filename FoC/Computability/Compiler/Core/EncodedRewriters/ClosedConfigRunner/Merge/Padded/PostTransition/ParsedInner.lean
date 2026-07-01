@@ -29,12 +29,18 @@ theorem selectedMergePaddedEmitterAfterHitPaddedParsedInnerConstruction
     (useAccept : Bool) :
     SelectedMergePaddedEmitterAfterHitPaddedParsedInnerConstruction
       useAccept := by
-  have hcloseoutTransport :
-      SelectedMergePaddedEmitterParsedInnerPostPrefixCloseoutAndFieldTransportConstruction
-        useAccept := by
+  have htransportConstruction :
+      exists transport : MachineDescription,
+        SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportSpec
+          useAccept transport := by
     sorry
-  rcases hcloseoutTransport with
-    ⟨closer, transport, hcloser, htransport⟩
+  rcases htransportConstruction with ⟨transport, htransport⟩
+  let closer :=
+    SelectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription
+  have hcloser :
+      SelectedMergePaddedEmitterParsedInnerPostPrefixGapCloseSpec closer := by
+    simpa [closer] using
+      selectedMergePaddedEmitterParsedInnerPostPrefixGapCloseSpec
   have hprefixCloser :
       (CommonGround.FiniteTransducers.canonicalSeqDescription
         SelectedMergePaddedEmitterParsedInnerPrefixCleanupDescription
