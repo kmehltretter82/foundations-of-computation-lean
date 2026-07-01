@@ -175,6 +175,104 @@ def selectedProjectionPaddedTailCleanupAfterStageTailCells
     selectedProjectionPaddedTailCleanupRejectAfterStageTailCells
       L extraScratch
 
+theorem selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells_fieldSplit
+    (L : DovetailLayout) (extraScratch : Nat) :
+    exists fieldTail : Word Bool,
+      selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells
+          L extraScratch =
+        List.append ((false :: fieldTail).map some)
+          (none ::
+            List.append (List.replicate 5 (none : Option Bool))
+              (List.replicate extraScratch (none : Option Bool))) := by
+  let wordTail :=
+    List.append
+      (selectedProjectionPaddedTailCleanupUnselectedConfigBits true L)
+      (selectedProjectionPaddedTailCleanupSelectedHitBits true L)
+  rcases configurationFieldBits_cons_false L.acceptConfig wordTail with
+    ⟨fieldTail, hfield⟩
+  refine ⟨fieldTail, ?_⟩
+  have hword :
+      List.append
+          (selectedProjectionPaddedTailCleanupSelectedConfigBits true L)
+          wordTail =
+        false :: fieldTail := by
+    simpa [wordTail,
+      selectedProjectionPaddedTailCleanupSelectedConfigBits]
+      using
+        (configurationFieldBits_append_nil
+          L.acceptConfig wordTail).trans hfield
+  rw [selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells]
+  rw [← hword]
+  simp [wordTail, List.map_append, List.append_assoc]
+
+theorem selectedProjectionPaddedTailCleanupRejectAfterStageTailCells_fieldSplit
+    (L : DovetailLayout) (extraScratch : Nat) :
+    exists fieldTail : Word Bool,
+      selectedProjectionPaddedTailCleanupRejectAfterStageTailCells
+          L extraScratch =
+        List.append ((false :: fieldTail).map some)
+          (List.append (List.replicate 4 (none : Option Bool))
+            (List.append
+              ((selectedProjectionPaddedTailCleanupSelectedHitBits
+                false L).map some)
+              (none :: none ::
+                List.replicate extraScratch (none : Option Bool)))) := by
+  let wordTail := selectedProjectionPaddedTailCleanupSelectedConfigBits false L
+  rcases configurationFieldBits_cons_false L.acceptConfig wordTail with
+    ⟨fieldTail, hfield⟩
+  refine ⟨fieldTail, ?_⟩
+  have hword :
+      List.append
+          (selectedProjectionPaddedTailCleanupUnselectedConfigBits false L)
+          wordTail =
+        false :: fieldTail := by
+    simpa [wordTail,
+      selectedProjectionPaddedTailCleanupUnselectedConfigBits]
+      using
+        (configurationFieldBits_append_nil
+          L.acceptConfig wordTail).trans hfield
+  rw [selectedProjectionPaddedTailCleanupRejectAfterStageTailCells]
+  rw [← hword]
+  simp [wordTail, List.map_append, List.append_assoc]
+
+theorem selectedProjectionPaddedTailCleanupAfterStageTailCells_fieldSplit
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    exists fieldTail : Word Bool,
+    exists rightPadding : List (Option Bool),
+      selectedProjectionPaddedTailCleanupAfterStageTailCells
+          useAccept L extraScratch =
+        List.append ((false :: fieldTail).map some) rightPadding := by
+  cases useAccept
+  · rcases
+      selectedProjectionPaddedTailCleanupRejectAfterStageTailCells_fieldSplit
+        L extraScratch with
+      ⟨fieldTail, hfieldTail⟩
+    exact
+      ⟨fieldTail,
+        List.append (List.replicate 4 (none : Option Bool))
+          (List.append
+            ((selectedProjectionPaddedTailCleanupSelectedHitBits
+              false L).map some)
+            (none :: none ::
+              List.replicate extraScratch (none : Option Bool))),
+        by
+          simpa [
+            selectedProjectionPaddedTailCleanupAfterStageTailCells]
+            using hfieldTail⟩
+  · rcases
+      selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells_fieldSplit
+        L extraScratch with
+      ⟨fieldTail, hfieldTail⟩
+    exact
+      ⟨fieldTail,
+        none ::
+          List.append (List.replicate 5 (none : Option Bool))
+            (List.replicate extraScratch (none : Option Bool)),
+        by
+          simpa [
+            selectedProjectionPaddedTailCleanupAfterStageTailCells]
+            using hfieldTail⟩
+
 def selectedProjectionPaddedTailCleanupAcceptPostCountTailCells
     (L : DovetailLayout) (extraScratch : Nat) : List (Option Bool) :=
   List.append
@@ -209,6 +307,40 @@ def selectedProjectionPaddedTailCleanupAfterOutputPrefixScanTape
       L.stage)
     (selectedProjectionPaddedTailCleanupAfterStageTailCells
       useAccept L extraScratch)).tape
+
+theorem selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_afterStageTail
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+        useAccept L extraScratch =
+      tapeAtCells [none]
+        (List.append
+          ((encodeCodeSymbolAsInput MachineCodeSymbol.header).map some)
+          (List.append
+            ((encodeCodeWordAsInput
+              (encodeBoolWordAppend (ParsedLayoutBits L) [])).map some)
+            (List.append
+              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                L.stage).map some)
+              (selectedProjectionPaddedTailCleanupAfterStageTailCells
+                useAccept L extraScratch)))) := by
+  cases useAccept
+  · simp [
+      selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch,
+      selectedProjectionPaddedTailCleanupRejectBaseSourceTapeWithExtraScratch,
+      selectedProjectionPaddedTailCleanupAfterStageTailCells,
+      selectedProjectionPaddedTailCleanupRejectAfterStageTailCells,
+      selectedProjectionPaddedTailCleanupPrefixBits,
+      SelectedProjectionTailProjector.outputPrefixBits,
+      List.map_append, List.append_assoc]
+  · simp [
+      selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch,
+      selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch,
+      selectedProjectionPaddedTailCleanupAfterStageTailCells,
+      selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells,
+      selectedProjectionPaddedTailCleanupPostPaddingSourceBits_true_eq_selected_unselected,
+      selectedProjectionPaddedTailCleanupPrefixBits,
+      SelectedProjectionTailProjector.outputPrefixBits,
+      List.map_append, List.append_assoc]
 
 theorem selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch_countSplit
     (L : DovetailLayout) (extraScratch : Nat) :
@@ -335,6 +467,85 @@ theorem selectedProjectionPaddedTailCleanupOutputPrefixScanner_haltsFrom_baseSou
           (ParsedLayoutBits L) stageTail [none]
           (selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells
             L extraScratch)
+
+theorem selectedProjectionPaddedTailCleanupAfterOutputPrefixScanTape_move_right
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    Tape.move Direction.right
+        (selectedProjectionPaddedTailCleanupAfterOutputPrefixScanTape
+          useAccept L extraScratch) =
+      tapeAtCells
+        (cellListCanonicalRestoredLeftWithBase
+          ((ParsedLayoutBits L).map some)
+          (postPaddingOutputPrefixHeaderBase [none]))
+        (List.append
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            L.stage).map some)
+          (selectedProjectionPaddedTailCleanupAfterStageTailCells
+            useAccept L extraScratch)) := by
+  rcases stageNatBits_cons_false L.stage with
+    ⟨stageTail, hstage⟩
+  cases useAccept
+  · simpa [
+      selectedProjectionPaddedTailCleanupAfterOutputPrefixScanTape,
+      selectedProjectionPaddedTailCleanupAfterStageTailCells,
+      boolWordCanonicalHandoffConfigWithBaseAndRight,
+      hstage,
+      List.append_assoc] using
+        cellListCanonicalHandoffConfigWithBaseAndRight_move_right
+          ((ParsedLayoutBits L).map some)
+          (postPaddingOutputPrefixHeaderBase [none])
+          false stageTail
+          (selectedProjectionPaddedTailCleanupRejectAfterStageTailCells
+            L extraScratch)
+  · simpa [
+      selectedProjectionPaddedTailCleanupAfterOutputPrefixScanTape,
+      selectedProjectionPaddedTailCleanupAfterStageTailCells,
+      boolWordCanonicalHandoffConfigWithBaseAndRight,
+      hstage,
+      List.append_assoc] using
+        cellListCanonicalHandoffConfigWithBaseAndRight_move_right
+          ((ParsedLayoutBits L).map some)
+          (postPaddingOutputPrefixHeaderBase [none])
+          false stageTail
+          (selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells
+            L extraScratch)
+
+theorem selectedProjectionPaddedTailCleanupOutputPrefixStageScanner_haltsFrom_baseSourceTapeWithExtraScratch
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    exists fieldTail : Word Bool,
+    exists rightPadding : List (Option Bool),
+      selectedProjectionPaddedTailCleanupAfterStageTailCells
+          useAccept L extraScratch =
+        List.append ((false :: fieldTail).map some) rightPadding ∧
+      postPaddingOutputPrefixStageScannerDescription.HaltsFromTape
+        (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
+          useAccept L extraScratch)
+        (postPaddingOutputPrefixStageScannerTargetTapeWithRight
+          (ParsedLayoutBits L) L.stage [none] fieldTail rightPadding) ∧
+      Tape.move Direction.right
+          (postPaddingOutputPrefixStageScannerTargetTapeWithRight
+            (ParsedLayoutBits L) L.stage [none] fieldTail rightPadding) =
+        tapeAtCells
+          (postPaddingOutputPrefixAfterStageBase
+            (ParsedLayoutBits L) L.stage [none])
+          (selectedProjectionPaddedTailCleanupAfterStageTailCells
+            useAccept L extraScratch) := by
+  rcases
+      selectedProjectionPaddedTailCleanupAfterStageTailCells_fieldSplit
+        useAccept L extraScratch with
+    ⟨fieldTail, rightPadding, htail⟩
+  refine ⟨fieldTail, rightPadding, htail, ?_, ?_⟩
+  · rw [
+      selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_afterStageTail,
+      htail]
+    simpa [List.map_append, List.append_assoc] using
+      postPaddingOutputPrefixStageScannerDescription_haltsFrom_raw_withRight
+        (ParsedLayoutBits L) L.stage [none] fieldTail rightPadding
+  · rw [
+      postPaddingOutputPrefixStageScannerTarget_move_right_eq_configSource_withRight,
+      ← htail]
+    simp [DovetailInitialLayoutInitializer.tapeAtCells, tapeAtCells]
+    rfl
 
 theorem selectedProjectionPaddedTailCleanupAcceptBaseSourceTapeWithExtraScratch_zero
     (L : DovetailLayout) :
