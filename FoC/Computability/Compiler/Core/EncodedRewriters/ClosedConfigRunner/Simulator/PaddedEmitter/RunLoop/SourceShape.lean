@@ -1,4 +1,5 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.Terminal
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.PaddedIdentity
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.TerminalCore
 
 set_option doc.verso true
 
@@ -690,6 +691,38 @@ theorem sourceRightEndLeftTape_move_right_eq_terminal_with_blank_configRunner
       simp [DovetailInitialLayoutInitializer.tapeAtCells,
         Tape.move, Tape.moveLeft, Tape.moveRight]
 
+theorem sourceRightEndLeftTape_move_right_eq_terminalCore_configRunner
+    (L : SimulatorLayout) :
+    Tape.move Direction.right
+        (sourceRightEndLeftTape_configRunner
+          (SimulatorLayout.asBoolInput L)) =
+      fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner
+        true L := by
+  simpa [fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner]
+    using
+      sourceRightEndLeftTape_move_right_eq_terminal_with_blank_configRunner
+        (SimulatorLayout.asBoolInput L)
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_true_move_right_move_left_configRunner
+    (L : SimulatorLayout) :
+    Tape.move Direction.right
+        (Tape.move Direction.left
+          (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner
+            true L)) =
+      fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner
+        true L := by
+  cases hleft : (SimulatorLayout.asBoolInput L).reverse.map some with
+  | nil =>
+      simp [
+        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner,
+        DovetailInitialLayoutInitializer.tapeAtCells,
+        Tape.move, Tape.moveLeft, Tape.moveRight, hleft]
+  | cons cell rest =>
+      simp [
+        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner,
+        DovetailInitialLayoutInitializer.tapeAtCells,
+        Tape.move, Tape.moveLeft, Tape.moveRight, hleft]
+
 theorem sourceRightEndLeftTape_move_right_equiv_terminal_configRunner
     (bits : Word Bool) :
     Tape.Equiv
@@ -948,7 +981,38 @@ into this shape.
 -/
 theorem finiteMachineCore : Construction := by
   intro D
-  sorry
+  rcases
+      fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_configRunner
+        D with
+    ⟨post, hpost⟩
+  refine
+    ⟨SeqViaCanonicalLeft
+      CommonGround.FiniteTransducers.rightMoveOnceDescription post, ?_⟩
+  constructor
+  · exact
+      SeqViaCanonicalLeft_subroutineReady
+        CommonGround.FiniteTransducers.rightMoveOnceDescription_subroutineReady
+        hpost.left
+  · intro L
+    have hright :
+        CommonGround.FiniteTransducers.rightMoveOnceDescription.HaltsFromTape
+          (sourceRightEndLeftTape_configRunner
+            (SimulatorLayout.asBoolInput L))
+          (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner
+            true L) := by
+      simpa [sourceRightEndLeftTape_move_right_eq_terminalCore_configRunner L]
+        using
+          CommonGround.FiniteTransducers.rightMoveOnceDescription_haltsFromTape
+            (sourceRightEndLeftTape_configRunner
+              (SimulatorLayout.asBoolInput L))
+    exact
+      SeqViaCanonicalLeft_haltsFromTape_of_haltsFromTape
+        CommonGround.FiniteTransducers.rightMoveOnceDescription_subroutineReady
+        hpost.left
+        hright
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_true_move_right_move_left_configRunner
+          L)
+        (hpost.right true L)
 
 end AfterSourceRightEndLeft
 

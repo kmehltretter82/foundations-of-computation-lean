@@ -356,11 +356,12 @@ theorems.  This is the current baseline for cleanup and proof work.
   The surrounding declarations are exact-tape adapters; the remaining core
   proof is the mixed parser-stack/source-rest rewrite.
 * Fixed-description padded simulator emitter:
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.FixedDescriptionBoundedSimulator.PaddedEmitter.AfterSourceRightEndLeft.finiteMachineCore)}`FixedDescriptionBoundedSimulator.PaddedEmitter.AfterSourceRightEndLeft.finiteMachineCore`
+  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_configRunner)}`fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_configRunner`
   lives in
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.RunLoop.SourceShape`.
-  This is the non-circular simulator/emitter leaf after scanner and rewind
-  phases have established the right-end source shape.
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.TerminalCore`.
+  This is the non-circular simulator/emitter leaf for the exact terminal
+  shapes.  The source-shape and run-loop modules are adapter glue over this
+  target.
 * Controller stage invocation:
   {lit}`controllerStageAttemptWitnessedInvocationConstruction_leaf` lives in
   {module}`FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerInvocation`.

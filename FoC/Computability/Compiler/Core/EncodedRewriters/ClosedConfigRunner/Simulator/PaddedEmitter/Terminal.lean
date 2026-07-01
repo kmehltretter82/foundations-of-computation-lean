@@ -1,5 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.Shape
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedParser
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.TerminalCore
 
 set_option doc.verso true
 
@@ -78,6 +77,26 @@ theorem fixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstructi
         (fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBase_move_right_eq_terminal_configRunner
           L)
         (hpost.right L)
+
+namespace FixedDescriptionBoundedSimulator
+namespace PaddedEmitter
+namespace Terminal
+
+theorem construction :
+    FixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalConstruction_configRunner := by
+  intro D
+  rcases
+      fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_configRunner
+        D with
+    ⟨post, hpost⟩
+  exact
+    ⟨post, hpost.left, fun L => by
+      simpa [fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner]
+        using hpost.right false L⟩
+
+end Terminal
+end PaddedEmitter
+end FixedDescriptionBoundedSimulator
 
 end BoundedLayoutRunner
 end EncodedRewriters
