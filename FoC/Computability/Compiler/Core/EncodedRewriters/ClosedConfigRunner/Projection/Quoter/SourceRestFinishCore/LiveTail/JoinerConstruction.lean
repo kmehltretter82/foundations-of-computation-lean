@@ -77,6 +77,21 @@ theorem
       (MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec_iff_assemblySpec
         finish).mpr hfinish⟩
 
+/--
+Guardrail for the live-tail joiner construction.  The arbitrary stage/source
+joiner route is inconsistent: the separated tape can erase the boundary between
+the emitted prefix and the stage/source tail while the target tape still
+depends on that boundary.  The assembly construction must therefore use the
+assembly-specific prefix and raw-tail shape.
+-/
+theorem mixedOptionCellQuoteLiveTailStageSourceJoinerConstruction_impossible :
+    ¬ MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction :=
+  not_MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction
+
+/--
+Logical adapter only.  This theorem is useful when reading old attempts, but
+the guardrail above proves that its premise cannot be supplied.
+-/
 theorem
     MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction_of_stageSource
     (h : MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction) :
