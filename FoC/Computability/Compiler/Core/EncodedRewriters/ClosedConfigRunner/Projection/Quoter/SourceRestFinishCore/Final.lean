@@ -2230,6 +2230,69 @@ def MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction :
   exists finish : MachineDescription,
     MixedOptionCellQuoteLiveTailStageSourceJoinerSpec finish
 
+theorem
+    mixedOptionCellQuoteLiveTailStageSourceJoiner_source_ambiguous :
+    mixedOptionCellQuoteLiveTailSeparatedTape
+        DovetailInitialLayoutInitializer.StageInputMarkedScanner.tickBits
+        (mixedOptionCellQuoteLiveTailStageSourceRawTail [false] 0)
+        (preservingCellPassCellBits [false]) =
+      mixedOptionCellQuoteLiveTailSeparatedTape
+        []
+        (mixedOptionCellQuoteLiveTailStageSourceRawTail [false] 1)
+        (preservingCellPassCellBits [false]) := by
+  native_decide
+
+theorem
+    mixedOptionCellQuoteLiveTailStageSourceJoiner_target_not_ambiguous :
+    mixedOptionCellQuoteLiveTailJoinedTape
+        DovetailInitialLayoutInitializer.StageInputMarkedScanner.tickBits
+        (mixedOptionCellQuoteLiveTailStageSourceRawTail [false] 0)
+        (preservingCellPassCellBits [false]) ≠
+      mixedOptionCellQuoteLiveTailJoinedTape
+        []
+        (mixedOptionCellQuoteLiveTailStageSourceRawTail [false] 1)
+        (preservingCellPassCellBits [false]) := by
+  native_decide
+
+theorem
+    not_MixedOptionCellQuoteLiveTailStageSourceJoinerSpec
+    (finish : MachineDescription) :
+    ¬ MixedOptionCellQuoteLiveTailStageSourceJoinerSpec finish := by
+  intro hfinish
+  have hleft :=
+    hfinish.right
+      DovetailInitialLayoutInitializer.StageInputMarkedScanner.tickBits
+      [false] 0
+  have hright :=
+    hfinish.right [] [false] 1
+  have hright_from_left :
+      finish.HaltsFromTape
+        (mixedOptionCellQuoteLiveTailSeparatedTape
+          DovetailInitialLayoutInitializer.StageInputMarkedScanner.tickBits
+          (mixedOptionCellQuoteLiveTailStageSourceRawTail [false] 0)
+          (preservingCellPassCellBits [false]))
+        (mixedOptionCellQuoteLiveTailJoinedTape
+          []
+          (mixedOptionCellQuoteLiveTailStageSourceRawTail [false] 1)
+          (preservingCellPassCellBits [false])) := by
+    simpa [
+      mixedOptionCellQuoteLiveTailStageSourceJoiner_source_ambiguous]
+      using hright
+  have htargets :=
+    MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+      hfinish.left.right hleft hright_from_left
+  exact
+    mixedOptionCellQuoteLiveTailStageSourceJoiner_target_not_ambiguous
+      htargets
+
+theorem
+    not_MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction :
+    ¬ MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction := by
+  intro hconstruction
+  rcases hconstruction with ⟨finish, hfinish⟩
+  exact
+    not_MixedOptionCellQuoteLiveTailStageSourceJoinerSpec finish hfinish
+
 def MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestSpec
     (finish : MachineDescription) : Prop :=
   finish.SubroutineReady ∧
@@ -2323,10 +2386,6 @@ theorem
       (MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec_iff_assemblySpec
         finish).mpr hfinish⟩
 
-theorem mixedOptionCellQuoteLiveTailStageSourceJoinerConstruction :
-    MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction := by
-  sorry
-
 theorem
     MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction_of_stageSource
     (h : MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction) :
@@ -2343,15 +2402,13 @@ theorem
 
 theorem mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :
     MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction := by
-  exact
-    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction_of_stageSource
-      mixedOptionCellQuoteLiveTailStageSourceJoinerConstruction
+  sorry
 
 /--
 Specialized finite-table obligation for joining the reusable quote-rest field
-in front of the source-rest live tail.  The arbitrary split version is too
-strong: the separated source tape does not carry a delimiter between the
-already-emitted prefix and the live tail, so this first construction stays with
+in front of the source-rest live tail.  The arbitrary stage/source version is
+too strong: the separated source tape does not carry a delimiter between an
+arbitrary emitted prefix and the stage prefix, so this construction stays with
 the assembly source-rest family required by the plan.
 -/
 theorem mixedOptionCellQuoteLiveTailJoinerConstruction :
