@@ -1,6 +1,7 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.Construction
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Compaction
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayloadScan
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
 
 set_option doc.verso true
 
@@ -1938,6 +1939,21 @@ theorem
       (assemblySourceRestFinishPrefixQuoteOutputBits
         w (bit :: sourceRestTail) stage)
       rawTailInit sourceRestTail last bit
+
+theorem
+    scanRightToBlankLeftHaltTapeWithRight_move_right_eq_localGapSource
+    (baseLeft : List (Option Bool)) (current : Bool)
+    (leftRest : Word Bool) (rightPadding : List (Option Bool)) :
+    Tape.move Direction.right
+        (scanRightToBlankLeftHaltTapeWithRight
+          (none :: baseLeft) ((current :: leftRest).reverse)
+          rightPadding) =
+      CommonGround.FiniteTransducers.rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+        baseLeft current leftRest 0 rightPadding := by
+  simp [scanRightToBlankLeftHaltTapeWithRight,
+    CommonGround.FiniteTransducers.rightBlankLocalGapCompactorSourceTapeWithBaseAndRight,
+    tapeAtCells, CommonGround.FiniteTransducers.tapeAtCells,
+    Tape.move, Tape.moveLeft, Tape.moveRight]
 
 theorem mixedOptionCellQuoteLiveTailJoinedTape_cells_cons
     (emittedPrefix quoteRest : Word Bool)
