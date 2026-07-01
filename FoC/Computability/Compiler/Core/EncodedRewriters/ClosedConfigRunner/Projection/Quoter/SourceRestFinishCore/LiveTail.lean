@@ -1422,31 +1422,6 @@ theorem
     MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest_of_family
       mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction
 
-theorem assemblySourceRestFinishRawTailBits_cons_exists
-    (sourceRestBits : Word Bool) (stage : Nat) :
-    exists head : Bool,
-    exists rest : Word Bool,
-      assemblySourceRestFinishRawTailBits sourceRestBits stage =
-        head :: rest := by
-  rcases SelectedProjectionTailProjector.stageNatBits_cons_cons stage with
-    ⟨head, next, right, hstage⟩
-  refine ⟨head, next :: List.append right sourceRestBits, ?_⟩
-  rw [assemblySourceRestFinishRawTailBits, hstage]
-  simp
-
-theorem assemblySourceRestFinishRawTailBits_lastSplit_exists
-    (sourceRestBits : Word Bool) (stage : Nat) :
-    exists rawTailInit : Word Bool,
-    exists last : Bool,
-      assemblySourceRestFinishRawTailBits sourceRestBits stage =
-        List.append rawTailInit [last] := by
-  rcases assemblySourceRestFinishRawTailBits_cons_exists
-      sourceRestBits stage with
-    ⟨head, rest, hraw⟩
-  rcases exists_reverse_append_singleton_of_cons head rest with
-    ⟨scanRev, last, hsplit⟩
-  exact ⟨scanRev.reverse, last, by rw [hraw, hsplit]⟩
-
 theorem
     MixedParserStackWholeSourcePrefixQuotedSeparatedTape_eq_gapPayloadScanSource
     (w sourceRestBits : Word Bool) (stage : Nat)
@@ -2059,56 +2034,6 @@ theorem
         w sourceRestBits stage)
       (preservingCellPassCellBits sourceRestBits)
       head rawTailRest
-
-theorem assemblySourceRestFinishRawTailBits_eq_stageNat_append_sourceRest
-    (sourceRestBits : Word Bool) (stage : Nat) :
-    assemblySourceRestFinishRawTailBits sourceRestBits stage =
-      List.append
-        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-          stage)
-        sourceRestBits := by
-  rfl
-
-theorem assemblySourceRestFinishRawTailBits_length
-    (sourceRestBits : Word Bool) (stage : Nat) :
-    (assemblySourceRestFinishRawTailBits sourceRestBits stage).length =
-      (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-        stage).length + sourceRestBits.length := by
-  simp [assemblySourceRestFinishRawTailBits]
-
-theorem assemblySourceRestFinishRawTailBits_map_some
-    (sourceRestBits : Word Bool) (stage : Nat) :
-    (assemblySourceRestFinishRawTailBits sourceRestBits stage).map some =
-      List.append
-        ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-          stage).map some)
-        (sourceRestBits.map some) := by
-  simp [assemblySourceRestFinishRawTailBits, List.map_append]
-
-theorem assemblySourceRestFinishRawTailBits_take_stageNatBits
-    (sourceRestBits : Word Bool) (stage : Nat) :
-    List.take
-        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-          stage).length
-        (assemblySourceRestFinishRawTailBits sourceRestBits stage) =
-      DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-        stage := by
-  simp [assemblySourceRestFinishRawTailBits]
-
-theorem assemblySourceRestFinishRawTailBits_drop_stageNatBits
-    (sourceRestBits : Word Bool) (stage : Nat) :
-    List.drop
-        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-          stage).length
-        (assemblySourceRestFinishRawTailBits sourceRestBits stage) =
-      sourceRestBits := by
-  simp [assemblySourceRestFinishRawTailBits]
-
-theorem preservingCellPassCellBits_sourceRest_length
-    (sourceRestBits : Word Bool) :
-    (preservingCellPassCellBits sourceRestBits).length =
-      4 * sourceRestBits.length :=
-  preservingCellPassCellBits_length sourceRestBits
 
 theorem
     mixedOptionCellQuoteLiveTailSeparatedTape_cells_assembly_stageSplit
