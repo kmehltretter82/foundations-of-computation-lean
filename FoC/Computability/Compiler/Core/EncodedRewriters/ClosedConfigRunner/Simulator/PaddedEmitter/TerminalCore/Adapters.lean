@@ -167,6 +167,19 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSource
       L] using
     hbody.right L
 
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalSourceConstruction_of_FSTSourceToField_configRunner
+    (hfields :
+      FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetConstruction_configRunner) :
+    FixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalSourceConstruction_configRunner := by
+  intro D
+  rcases hfields D with ⟨body, hbody⟩
+  refine ⟨body, hbody.left, ?_⟩
+  intro L
+  simpa [
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_eq_FSTSourceTape_configRunner
+      L] using
+    hbody.right L
+
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_of_fields_configRunner
     (hfields :
       FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetConstruction_configRunner) :
