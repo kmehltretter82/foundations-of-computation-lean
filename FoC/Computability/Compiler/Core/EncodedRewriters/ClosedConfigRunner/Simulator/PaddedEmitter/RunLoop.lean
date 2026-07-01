@@ -18,227 +18,6 @@ namespace BoundedLayoutRunner
 
 open CommonGround.SeqComposition
 
-def FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner :
-    MachineDescription where
-  stateCount := 3
-  start := 0
-  halt := 2
-  transitions :=
-    [ transition 0 none none Direction.left 1
-    , transition 0 (some false) (some false) Direction.left 1
-    , transition 0 (some true) (some true) Direction.left 1
-    , transition 1 (some false) (some false) Direction.left 1
-    , transition 1 (some true) (some true) Direction.left 1
-    , transition 1 none none Direction.right 2 ]
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_wellFormed_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l :=
-        FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner.transitions)
-      (stateCount :=
-        FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l :=
-        FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner.transitions)
-      (by decide)
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_haltTransitionFree_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l :=
-      FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner.transitions)
-    (state :=
-      FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner.halt)
-    (by decide)
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_subroutineReady_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner.SubroutineReady :=
-  ⟨fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_wellFormed_configRunner,
-    fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_haltTransitionFree_configRunner⟩
-
-private abbrev FDBSPaddedEmitterSourceRewind_configRunner :=
-  FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_run_scan_configRunner
-    (leftBits : Word Bool) (current : Bool)
-    (rightCells : List (Option Bool)) :
-    FDBSPaddedEmitterSourceRewind_configRunner.runConfig
-        (leftBits.length + 1)
-        { state := 1
-          tape :=
-            DovetailInitialLayoutInitializer.tapeAtCells
-              (leftBits.map some)
-              (some current :: rightCells) } =
-      { state := 1
-        tape :=
-          DovetailInitialLayoutInitializer.tapeAtCells []
-            (none ::
-              List.append
-                ((List.append leftBits.reverse [current]).map some)
-                rightCells) } := by
-  induction leftBits generalizing current rightCells with
-  | nil =>
-      cases current <;>
-        simp [FDBSPaddedEmitterSourceRewind_configRunner,
-          FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner,
-          DovetailInitialLayoutInitializer.tapeAtCells, runConfig,
-          stepConfig, lookupTransition, Matches, transition,
-          Tape.read, Tape.move, Tape.moveLeft, Tape.write]
-  | cons next rest ih =>
-      rw [show (next :: rest).length + 1 = 1 + (rest.length + 1) by
-        simp
-        omega]
-      rw [runConfig_add]
-      have hstep :
-          FDBSPaddedEmitterSourceRewind_configRunner.runConfig 1
-              { state := 1
-                tape :=
-                  DovetailInitialLayoutInitializer.tapeAtCells
-                    ((next :: rest).map some)
-                    (some current :: rightCells) } =
-            { state := 1
-              tape :=
-                DovetailInitialLayoutInitializer.tapeAtCells
-                  (rest.map some)
-                  (some next :: some current :: rightCells) } := by
-        cases current <;>
-          simp [FDBSPaddedEmitterSourceRewind_configRunner,
-            FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner,
-            DovetailInitialLayoutInitializer.tapeAtCells, runConfig,
-            stepConfig, lookupTransition, Matches, transition,
-            Tape.read, Tape.move, Tape.moveLeft, Tape.write]
-      rw [hstep]
-      simpa [List.append_assoc] using
-        ih next (some current :: rightCells)
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_step_finish_configRunner
-    (bits : Word Bool) :
-    FDBSPaddedEmitterSourceRewind_configRunner.runConfig 1
-        { state := 1
-          tape :=
-            DovetailInitialLayoutInitializer.tapeAtCells []
-              (none :: List.append (bits.map some) [none]) } =
-      { state := FDBSPaddedEmitterSourceRewind_configRunner.halt
-        tape :=
-          FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
-            bits } := by
-  cases bits with
-  | nil =>
-      simp [FDBSPaddedEmitterSourceRewind_configRunner,
-        FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner,
-        FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner,
-        DovetailInitialLayoutInitializer.tapeAtCells, runConfig,
-        stepConfig, lookupTransition, Matches, transition,
-        Tape.read, Tape.move, Tape.moveRight, Tape.write]
-  | cons bit rest =>
-      cases bit <;>
-        simp [FDBSPaddedEmitterSourceRewind_configRunner,
-          FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner,
-          FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner,
-          DovetailInitialLayoutInitializer.tapeAtCells, runConfig,
-          stepConfig, lookupTransition, Matches, transition,
-          Tape.read, Tape.move, Tape.moveRight, Tape.write]
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_run_from_leftStack_configRunner
-    (leftStack : Word Bool) :
-    FDBSPaddedEmitterSourceRewind_configRunner.runConfig
-        (leftStack.length + 2)
-        { state := FDBSPaddedEmitterSourceRewind_configRunner.start
-          tape :=
-            DovetailInitialLayoutInitializer.tapeAtCells
-              (leftStack.map some) [] } =
-      { state := FDBSPaddedEmitterSourceRewind_configRunner.halt
-        tape :=
-          DovetailInitialLayoutInitializer.tapeAtCells [none]
-            (List.append (leftStack.reverse.map some) [none]) } := by
-  cases leftStack with
-  | nil =>
-      simp [FDBSPaddedEmitterSourceRewind_configRunner,
-        FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner,
-        DovetailInitialLayoutInitializer.tapeAtCells, runConfig,
-        stepConfig, lookupTransition, Matches, transition,
-        Tape.read, Tape.move, Tape.moveLeft, Tape.moveRight, Tape.write]
-  | cons current rest =>
-      rw [show (current :: rest).length + 2 =
-        1 + ((rest.length + 1) + 1) by
-        simp
-        omega]
-      rw [runConfig_add]
-      have hstart :
-          FDBSPaddedEmitterSourceRewind_configRunner.runConfig 1
-              { state := FDBSPaddedEmitterSourceRewind_configRunner.start
-                tape :=
-                  DovetailInitialLayoutInitializer.tapeAtCells
-                    ((current :: rest).map some) [] } =
-            { state := 1
-              tape :=
-                DovetailInitialLayoutInitializer.tapeAtCells
-                  (rest.map some) [some current, none] } := by
-        cases current <;>
-          simp [FDBSPaddedEmitterSourceRewind_configRunner,
-            FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner,
-            DovetailInitialLayoutInitializer.tapeAtCells, runConfig,
-            stepConfig, lookupTransition, Matches, transition,
-            Tape.read, Tape.move, Tape.moveLeft, Tape.write]
-      rw [hstart]
-      rw [show (rest.length + 1) + 1 = (rest.length + 1) + 1 by rfl]
-      rw [runConfig_add]
-      rw [
-        fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_run_scan_configRunner
-          rest current [none]]
-      simpa [
-        FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner,
-        List.map_append, List.append_assoc] using
-        fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_step_finish_configRunner
-          (List.append rest.reverse [current])
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_run_configRunner
-    (bits : Word Bool) :
-    FDBSPaddedEmitterSourceRewind_configRunner.runConfig (bits.length + 2)
-        { state := FDBSPaddedEmitterSourceRewind_configRunner.start
-          tape :=
-            FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindSourceTape_configRunner
-              bits } =
-      { state := FDBSPaddedEmitterSourceRewind_configRunner.halt
-        tape :=
-          FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
-            bits } := by
-  simpa [
-    FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindSourceTape_configRunner,
-    FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner] using
-    fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_run_from_leftStack_configRunner
-      bits.reverse
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_haltsFromTape_configRunner
-    (bits : Word Bool) :
-    FDBSPaddedEmitterSourceRewind_configRunner.HaltsFromTape
-      (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindSourceTape_configRunner
-        bits)
-      (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
-        bits) := by
-  refine ⟨bits.length + 2, ?_⟩
-  constructor
-  · rw [
-      fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_run_configRunner]
-  · rw [
-      fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_run_configRunner]
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewind_halts_terminal_configRunner
-    (L : SimulatorLayout) :
-    FDBSPaddedEmitterSourceRewind_configRunner.HaltsFromTape
-      (DovetailInitialLayoutInitializer.tapeAtCells
-        ((SimulatorLayout.asBoolInput L).reverse.map some) [])
-      (DovetailInitialLayoutInitializer.tapeAtCells [none]
-        (List.append ((SimulatorLayout.asBoolInput L).map some) [none])) := by
-  simpa [
-    FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindSourceTape_configRunner,
-    FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner] using
-    fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_haltsFromTape_configRunner
-      (SimulatorLayout.asBoolInput L)
-
 namespace FixedDescriptionBoundedSimulator
 namespace PaddedEmitter
 
@@ -413,7 +192,7 @@ namespace RunLoop
 def fromPostRewind
     (postRewind : MachineDescription) : MachineDescription :=
   SeqViaCanonical
-    FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_configRunner
+    FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindDescription_configRunner
     postRewind
 
 theorem spec_of_postRewind
@@ -424,17 +203,36 @@ theorem spec_of_postRewind
   constructor
   · exact
       SeqViaCanonical_subroutineReady
-        fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_subroutineReady_configRunner
+        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindDescription_subroutineReady_configRunner
         hpostRewind.left
   · intro L
+    have hrewindRun :
+        FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindDescription_configRunner.HaltsFromTape
+          (DovetailInitialLayoutInitializer.tapeAtCells
+            ((SimulatorLayout.asBoolInput L).reverse.map some) [])
+          (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
+            L) := by
+      simpa [fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner]
+        using
+          fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindDescription_haltsFromTape_configRunner
+            false L
+    have hbridge :
+        Tape.move Direction.left
+            (Tape.move Direction.right
+              (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
+                L)) =
+          FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
+            (SimulatorLayout.asBoolInput L) := by
+      rw [
+        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_move_left_move_right_configRunner
+          L]
+      rfl
     exact
       SeqViaCanonical_haltsFromTape_of_haltsFromTape
-        fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindDescription_subroutineReady_configRunner
+        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindDescription_subroutineReady_configRunner
         hpostRewind.left
-        (fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewind_halts_terminal_configRunner
-          L)
-        (SourceRewindTargetTape.move_left_move_right_simulator_configRunner
-          L)
+        hrewindRun
+        hbridge
         (hpostRewind.right L)
 
 theorem construction_of_postRewind
