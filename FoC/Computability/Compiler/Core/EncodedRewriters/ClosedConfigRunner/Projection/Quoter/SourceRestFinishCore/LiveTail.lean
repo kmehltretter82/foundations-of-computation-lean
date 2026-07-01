@@ -931,6 +931,23 @@ theorem assemblySourceRestFinishPrefixQuoteOutputBits_eq_marker_chunks
   rw [assemblySourceRestFinishPrefixQuoteOutputBits]
   rw [assemblySourceRestFinishQuotedPrefixBits_eq_marker_chunks]
 
+theorem assemblySourceRestFinishPrefixQuoteOutputBits_headerPrefix
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    exists rest : Word Bool,
+      assemblySourceRestFinishPrefixQuoteOutputBits w sourceRestBits stage =
+        List.append
+          (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+          rest := by
+  refine
+    ⟨List.append
+      (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+        ((assemblySourceRestFinishSourcePrefixBits w stage).length +
+          sourceRestBits.length))
+      (assemblySourceRestFinishQuotedPrefixBits w stage), ?_⟩
+  rw [assemblySourceRestFinishPrefixQuoteOutputBits,
+    assemblySourceRestFinishLengthHeaderBits]
+  simp [List.append_assoc]
+
 theorem assemblySourceRestFinishPrefixQuoteOutputBits_map_some_eq_marker_chunks
     (w sourceRestBits : Word Bool) (stage : Nat) :
     (assemblySourceRestFinishPrefixQuoteOutputBits
