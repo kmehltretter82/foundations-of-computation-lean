@@ -334,6 +334,115 @@ theorem run_fixedDescriptionBoundedSimulatorConfigHit_raw_to_handoff_withBase_co
         boolFinalScannerDescription_subroutineReady
         hArun hBReach
 
+theorem run_fixedDescriptionBoundedSimulatorConfigHit_raw_to_handoff_withBaseAndRightBlank_configRunner
+    (cfg : Configuration) (hit : Bool)
+    (baseLeft rightPadding : List (Option Bool)) :
+    exists steps : Nat,
+      FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.runConfig
+          steps
+          { state :=
+              FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.start
+            tape :=
+              DovetailInitialLayoutInitializer.tapeAtCells baseLeft
+                (List.append
+                  ((configurationFieldBits cfg
+                    (boolFieldBits hit [])).map some)
+                  (none :: rightPadding)) } =
+        { state :=
+            FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.halt
+          tape :=
+            (boolFinalHandoffConfigWithBaseAndRight hit
+              (configurationRestoredLeftWithBase cfg baseLeft)
+              (none :: rightPadding)).tape } := by
+  rcases cellCodeBits_cons_false (some hit) with ⟨hitTail, hhitTail⟩
+  rcases run_configurationSuffix_raw_to_handoff_withBaseAndRight
+      cfg baseLeft hitTail (none :: rightPadding) with
+    ⟨configSteps, hconfig⟩
+  let TmidTape : Tape Bool :=
+    (cellListCanonicalHandoffConfigWithBaseAndRight cfg.tape.right
+      (List.append ((cellCodeBits cfg.tape.head).reverse.map some)
+        (cellListCanonicalRestoredLeftWithBase cfg.tape.left
+          (List.append ((stageNatBits cfg.state).reverse.map some)
+            baseLeft)))
+      (false :: hitTail) (none :: rightPadding)).tape
+  have hArun :
+      ConfigurationSuffixScannerDescription.runConfig configSteps
+          { state := ConfigurationSuffixScannerDescription.start
+            tape :=
+              DovetailInitialLayoutInitializer.tapeAtCells baseLeft
+                (List.append
+                  ((configurationFieldBits cfg
+                    (boolFieldBits hit [])).map some)
+                  (none :: rightPadding)) } =
+        { state := ConfigurationSuffixScannerDescription.halt
+          tape := TmidTape } := by
+    rw [show
+        List.append
+            ((configurationFieldBits cfg
+              (boolFieldBits hit [])).map some)
+            (none :: rightPadding) =
+          List.append
+            ((configurationFieldBits cfg (false :: hitTail)).map some)
+            (none :: rightPadding) by
+      simp [boolFieldBits, cellFieldBits, hhitTail]]
+    simpa [TmidTape] using hconfig
+  have hBReach :
+      exists nB : Nat,
+        BoolFinalScannerDescription.runConfig nB
+            { state := BoolFinalScannerDescription.start
+              tape := Tape.move Direction.right TmidTape } =
+          { state := BoolFinalScannerDescription.halt
+            tape :=
+              (boolFinalHandoffConfigWithBaseAndRight hit
+                (configurationRestoredLeftWithBase cfg baseLeft)
+                (none :: rightPadding)).tape } := by
+    rcases run_boolFinal_raw_to_handoff_withBaseAndRight
+        hit (configurationRestoredLeftWithBase cfg baseLeft) rightPadding with
+      ⟨finalSteps, hfinal⟩
+    have hmove :
+        Tape.move Direction.right TmidTape =
+          DovetailInitialLayoutInitializer.tapeAtCells
+            (configurationRestoredLeftWithBase cfg baseLeft)
+            (List.append ((cellCodeBits (some hit)).map some)
+              (none :: rightPadding)) := by
+      have hraw :
+          Tape.move Direction.right TmidTape =
+            DovetailInitialLayoutInitializer.tapeAtCells
+              (configurationRestoredLeftWithBase cfg baseLeft)
+              (List.append ((false :: hitTail).map some)
+                (none :: rightPadding)) := by
+        simpa [TmidTape, configurationRestoredLeftWithBase] using
+          cellListCanonicalHandoffConfigWithBaseAndRight_move_right
+            cfg.tape.right
+            (List.append
+              ((cellCodeBits cfg.tape.head).reverse.map some)
+              (cellListCanonicalRestoredLeftWithBase cfg.tape.left
+                (List.append
+                  ((stageNatBits cfg.state).reverse.map some)
+                  baseLeft)))
+            false hitTail (none :: rightPadding)
+      rw [hraw]
+      have hhitCells :
+          (false :: hitTail).map some =
+            (cellCodeBits (some hit)).map some := by
+        simpa using congrArg (fun bits => bits.map some) hhitTail.symm
+      simp [hhitCells]
+    exact
+      runConfig_reaches_from_move_eq
+        (B := BoolFinalScannerDescription)
+        (handoffMove := Direction.right)
+        hmove
+        (by simpa [DovetailInitialLayoutInitializer.config] using hfinal)
+  simpa [FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner,
+    TmidTape] using
+      seqSubroutine_runConfig_exists
+        (A := ConfigurationSuffixScannerDescription)
+        (B := BoolFinalScannerDescription)
+        (handoffMove := Direction.right)
+        configurationSuffixScannerDescription_subroutineReady
+        boolFinalScannerDescription_subroutineReady
+        hArun hBReach
+
 theorem fixedDescriptionBoundedSimulatorConfigHitScannerDescription_runConfig_code_inv_configRunner
     (baseLeft : List (Option Bool)) (code : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}
