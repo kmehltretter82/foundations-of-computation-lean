@@ -105,6 +105,28 @@ def SelectedMergePaddedEmitterParsedInnerTargetCells
         useAccept p).map some)
       (SelectedMergePaddedEmitterParsedInnerTargetPaddingCells p))
 
+def SelectedMergePaddedEmitterParsedInnerSourceSplitCells
+    (p : SelectedMergeEmitterPayload) : List (Option Bool) :=
+  List.append
+    [none]
+    (List.append
+      ((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some)
+      (List.append
+        [none]
+        (List.append
+          ((SelectedMergePaddedEmitterParsedInnerSourceTailBits p).map some)
+          [none, none])))
+
+def SelectedMergePaddedEmitterParsedInnerTargetSplitCells
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    List (Option Bool) :=
+  List.append
+    ((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some)
+    (List.append
+      ((SelectedMergePaddedEmitterParsedInnerTargetTailBits
+        useAccept p).map some)
+      (SelectedMergePaddedEmitterParsedInnerTargetPaddingCells p))
+
 theorem
     SelectedMergePaddedEmitterParsedInnerOuterSuffixBits_eq_stage_outerConfigHit
     (p : SelectedMergeEmitterPayload) :
@@ -147,6 +169,85 @@ theorem
   rw [Tape.normalizedOutput] at hnorm
   rw [hcells] at hnorm
   exact hnorm
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerSourceCells_eq_split
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerSourceCells p =
+      SelectedMergePaddedEmitterParsedInnerSourceSplitCells p := by
+  have hmarked :
+      ((CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyRestoredBitsRev
+        p.L).map some).reverse =
+        (CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits
+          p.L).map some := by
+    rw [← List.map_reverse]
+    rw [CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyRestoredBitsRev_reverse]
+  have hcfg :
+      ((CanonicalLayouts.DovetailLayoutScanner.configurationRestoredBitsRev
+        p.S.config).map some).reverse =
+        (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+          p.S.config []).map some := by
+    rw [← List.map_reverse]
+    rw [CanonicalLayouts.DovetailLayoutScanner.configurationRestoredBitsRev_reverse]
+  have hcfgAppend :
+      List.append
+          (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+            p.S.config [])
+          (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits p.S.hit []) =
+        CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+          p.S.config
+          (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            p.S.hit []) :=
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
+      p.S.config
+      (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits p.S.hit [])
+  have hcfgCellAppend :
+      List.append
+          (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+            p.S.config [])
+          (CanonicalLayouts.DovetailLayoutScanner.cellCodeBits
+            (some p.S.hit)) =
+        CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+          p.S.config
+          (CanonicalLayouts.DovetailLayoutScanner.cellCodeBits
+            (some p.S.hit)) := by
+    simpa [CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+      CanonicalLayouts.DovetailLayoutScanner.cellFieldBits] using
+      hcfgAppend
+  have hcfgCellAppendMap :
+      List.append
+          ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+            p.S.config []).map some)
+          ((CanonicalLayouts.DovetailLayoutScanner.cellCodeBits
+            (some p.S.hit)).map some) =
+        (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+          p.S.config
+          (CanonicalLayouts.DovetailLayoutScanner.cellCodeBits
+            (some p.S.hit))).map some := by
+    simpa [List.map_append] using
+      congrArg (fun bits => bits.map some) hcfgCellAppend
+  rw [SelectedMergePaddedEmitterParsedInnerSourceCells,
+    SelectedMergePaddedEmitterParsedInnerSourceLeftCells]
+  rw [←
+    CanonicalLayouts.DovetailLayoutScanner.configurationRestoredBitsRev_map_some_withBase]
+  rw [SelectedMergePaddedEmitterNestedLayoutParsedLeft_eq_markedBodyRestoredBitsRev]
+  simp [SelectedMergePaddedEmitterParsedInnerSourceSplitCells,
+    SelectedMergePaddedEmitterParsedInnerSourceTailBits,
+    SelectedMergePaddedEmitterParsedInnerOuterSuffixBits,
+    SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft,
+    SelectedMergePaddedEmitterOuterTransitionBaseLeft,
+    SelectedMergePaddedEmitterOuterHitSuffixBits,
+    SelectedMergePaddedEmitterOuterHitSuffixCode,
+    hmarked, hcfg,
+    CanonicalLayouts.DovetailLayoutScanner.boolBits_eq_encodeBoolAppend,
+    CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+    encodeCodeWordAsInput,
+    List.reverse_append, List.map_append, List.map_reverse,
+    List.append_assoc]
+  simpa [List.append_assoc] using
+    congrArg (fun cells => List.append cells [none, none])
+      hcfgCellAppendMap
 
 theorem
     SelectedMergePaddedEmitterParsedInnerSourceBits_eq_markedPrefix_fieldTail
@@ -337,6 +438,35 @@ theorem
   rw [Tape.normalizedOutput] at hnorm
   rw [hcells] at hnorm
   exact hnorm
+
+theorem
+    SelectedMergePaddedEmitterParsedInnerTargetCells_eq_split
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerTargetCells useAccept p =
+      SelectedMergePaddedEmitterParsedInnerTargetSplitCells useAccept p := by
+  rw [SelectedMergePaddedEmitterParsedInnerTargetCells,
+    SelectedMergePaddedEmitterParsedInnerTargetSplitCells]
+  rw [SelectedMergePaddedEmitterParsedInnerTargetTailBits_eq_outputPrefixTail]
+  simp [SelectedMergePaddedEmitterParsedInnerOutputPrefixBits,
+    List.map_append, List.append_assoc]
+
+theorem
+    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_cells_eq_split
+    (p : SelectedMergeEmitterPayload) :
+    Tape.cells
+        (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p) =
+      SelectedMergePaddedEmitterParsedInnerSourceSplitCells p := by
+  rw [
+    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_cells_eq_sourceWindow,
+    SelectedMergePaddedEmitterParsedInnerSourceCells_eq_split]
+
+theorem
+    SelectedMergePaddedEmitterDecodedHandoffTape_cells_eq_split
+    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
+    Tape.cells (SelectedMergePaddedEmitterDecodedHandoffTape useAccept p) =
+      SelectedMergePaddedEmitterParsedInnerTargetSplitCells useAccept p := by
+  rw [SelectedMergePaddedEmitterDecodedHandoffTape_cells_eq_targetWindow,
+    SelectedMergePaddedEmitterParsedInnerTargetCells_eq_split]
 
 end BoundedLayoutRunner
 end EncodedRewriters
