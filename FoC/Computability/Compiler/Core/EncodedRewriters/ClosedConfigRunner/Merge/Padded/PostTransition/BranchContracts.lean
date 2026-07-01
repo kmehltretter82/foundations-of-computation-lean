@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.NestedLayoutShape
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.BranchHandoffShape
 
 set_option doc.verso true
 
@@ -11,6 +11,8 @@ scanner stays in
 {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.Core`;
 the source-fields and nested-layout parsed tape facts stay in
 {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.NestedLayoutShape`.
+The decoded accepting/rejecting handoff target facts stay in
+{module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.BranchHandoffShape`.
 The finite leaves for nested-layout parsing and accepting/rejecting inner
 emission import this module.
 -/
@@ -180,63 +182,6 @@ theorem selectedMergePaddedEmitterAfterTransitionPaddedConstruction_of_branches
   cases useAccept
   · exact hReject
   · exact hAccept
-
-def SelectedMergePaddedEmitterAcceptDecodedHandoffTape
-    (p : SelectedMergeEmitterPayload) : Tape Bool :=
-  DovetailInitialLayoutInitializer.tapeAtCells []
-    (List.append
-      ((encodeCodeWordAsInput
-        (MachineCodeSymbol.transition ::
-          encodeBoolWordAppend p.L.input
-            (encodeNatAppend p.L.stage
-              (encodeConfigurationAppend p.S.config
-                (encodeConfigurationAppend p.L.rejectConfig
-                  (encodeBoolAppend p.S.hit
-                    (encodeBoolAppend p.L.rejectHit []))))))).map some)
-      (List.replicate (SimulatorLayout.asBoolInput p.S).length none))
-
-def SelectedMergePaddedEmitterRejectDecodedHandoffTape
-    (p : SelectedMergeEmitterPayload) : Tape Bool :=
-  DovetailInitialLayoutInitializer.tapeAtCells []
-    (List.append
-      ((encodeCodeWordAsInput
-        (MachineCodeSymbol.transition ::
-          encodeBoolWordAppend p.L.input
-            (encodeNatAppend p.L.stage
-              (encodeConfigurationAppend p.L.acceptConfig
-                (encodeConfigurationAppend p.S.config
-                  (encodeBoolAppend p.L.acceptHit
-                    (encodeBoolAppend p.S.hit []))))))).map some)
-      (List.replicate (SimulatorLayout.asBoolInput p.S).length none))
-
-theorem SelectedMergePaddedEmitterAcceptDecodedHandoffTape_eq_outputTape
-    (p : SelectedMergeEmitterPayload) :
-    SelectedMergePaddedEmitterAcceptDecodedHandoffTape p =
-      SelectedMergeEquivEmitterPaddedOutputTape true p := by
-  rw [SelectedMergePaddedEmitterAcceptDecodedHandoffTape,
-    SelectedMergeEquivEmitterPaddedOutputTape_true_eq_tapeAtCells_fields]
-
-theorem SelectedMergePaddedEmitterRejectDecodedHandoffTape_eq_outputTape
-    (p : SelectedMergeEmitterPayload) :
-    SelectedMergePaddedEmitterRejectDecodedHandoffTape p =
-      SelectedMergeEquivEmitterPaddedOutputTape false p := by
-  rw [SelectedMergePaddedEmitterRejectDecodedHandoffTape,
-    SelectedMergeEquivEmitterPaddedOutputTape_false_eq_tapeAtCells_fields]
-
-def SelectedMergePaddedEmitterDecodedHandoffTape
-    (useAccept : Bool) (p : SelectedMergeEmitterPayload) : Tape Bool :=
-  if useAccept then
-    SelectedMergePaddedEmitterAcceptDecodedHandoffTape p
-  else
-    SelectedMergePaddedEmitterRejectDecodedHandoffTape p
-
-theorem SelectedMergePaddedEmitterDecodedHandoffTape_eq_outputTape
-    (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
-    SelectedMergePaddedEmitterDecodedHandoffTape useAccept p =
-      SelectedMergeEquivEmitterPaddedOutputTape useAccept p := by
-  cases useAccept
-  · exact SelectedMergePaddedEmitterRejectDecodedHandoffTape_eq_outputTape p
-  · exact SelectedMergePaddedEmitterAcceptDecodedHandoffTape_eq_outputTape p
 
 def SelectedMergePaddedEmitterAfterHitPaddedDecodedSpec
     (useAccept : Bool) (emitter : MachineDescription) : Prop :=
