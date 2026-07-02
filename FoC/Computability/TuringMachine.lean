@@ -547,6 +547,45 @@ theorem step_deterministic {M : TuringMachine symbol state}
           cases hAction
           rfl
 
+theorem computesIn_succ_iff_of_transition_eq_some
+    {M : TuringMachine symbol state}
+    {n : Nat} {c e : Configuration symbol state}
+    {write : Option symbol} {dir : Direction} {nextState : state}
+    (htransition :
+      M.transition c.state (Tape.read c.tape) =
+        some (write, dir, nextState)) :
+    ComputesIn M (n + 1) c e <->
+      ComputesIn M n
+        { state := nextState,
+          tape := Tape.move dir (Tape.write write c.tape) } e := by
+  constructor
+  · intro hcomp
+    rcases computesIn_succ_iff.mp hcomp with
+      ⟨d, hstep, htail⟩
+    have hd :
+        d =
+          { state := nextState,
+            tape := Tape.move dir (Tape.write write c.tape) } := by
+      exact step_deterministic hstep (Step.mk htransition)
+    cases hd
+    exact htail
+  · intro htail
+    exact ComputesIn.succ (Step.mk htransition) htail
+
+theorem computesIn_succ_iff_false_of_transition_eq_none
+    {M : TuringMachine symbol state}
+    {n : Nat} {c e : Configuration symbol state}
+    (htransition :
+      M.transition c.state (Tape.read c.tape) = none) :
+    ComputesIn M (n + 1) c e <-> False := by
+  constructor
+  · intro hcomp
+    rcases computesIn_succ_iff.mp hcomp with
+      ⟨d, hstep, _htail⟩
+    exact not_step_of_transition_eq_none htransition hstep
+  · intro hfalse
+    cases hfalse
+
 theorem haltsFromIn_succ_of_step {M : TuringMachine symbol state}
     {n : Nat} {c d : Configuration symbol state}
     (hstep : Step M c d) (htail : HaltsFromIn M n d) :
@@ -597,6 +636,31 @@ theorem haltsFromIn_succ_transition_iff
         (Step.mk haction)
         htail
 
+theorem haltsFromIn_succ_iff_of_transition_eq_some
+    {M : TuringMachine symbol state}
+    {n : Nat} {c : Configuration symbol state}
+    {write : Option symbol} {dir : Direction} {nextState : state}
+    (htransition :
+      M.transition c.state (Tape.read c.tape) =
+        some (write, dir, nextState)) :
+    HaltsFromIn M (n + 1) c <->
+      HaltsFromIn M n
+        { state := nextState,
+          tape := Tape.move dir (Tape.write write c.tape) } := by
+  exact haltsFromIn_succ_iff_of_step (Step.mk htransition)
+
+theorem haltsFromIn_succ_iff_false_of_transition_eq_none
+    {M : TuringMachine symbol state}
+    {n : Nat} {c : Configuration symbol state}
+    (htransition :
+      M.transition c.state (Tape.read c.tape) = none) :
+    HaltsFromIn M (n + 1) c <-> False := by
+  constructor
+  · intro hhalt
+    exact not_haltsFromIn_succ_of_transition_eq_none htransition hhalt
+  · intro hfalse
+    cases hfalse
+
 theorem haltsOnInputIn_succ_iff_of_step
     {M : TuringMachine symbol state}
     {n : Nat} {w : Word symbol}
@@ -622,6 +686,31 @@ theorem haltsOnInputIn_succ_transition_iff
   simpa [HaltsOnInputIn, initial] using
     (haltsFromIn_succ_transition_iff
       (M := M) (n := n) (c := initial M w))
+
+theorem haltsOnInputIn_succ_iff_of_transition_eq_some
+    {M : TuringMachine symbol state}
+    {n : Nat} {w : Word symbol}
+    {write : Option symbol} {dir : Direction} {nextState : state}
+    (htransition :
+      M.transition M.start (Tape.read (Tape.input w)) =
+        some (write, dir, nextState)) :
+    HaltsOnInputIn M (n + 1) w <->
+      HaltsFromIn M n
+        { state := nextState,
+          tape := Tape.move dir (Tape.write write (Tape.input w)) } := by
+  simpa [HaltsOnInputIn, initial] using
+    (haltsFromIn_succ_iff_of_transition_eq_some
+      (M := M) (n := n) (c := initial M w) htransition)
+
+theorem haltsOnInputIn_succ_iff_false_of_transition_eq_none
+    {M : TuringMachine symbol state}
+    {n : Nat} {w : Word symbol}
+    (htransition :
+      M.transition M.start (Tape.read (Tape.input w)) = none) :
+    HaltsOnInputIn M (n + 1) w <-> False := by
+  simpa [HaltsOnInputIn, initial] using
+    (haltsFromIn_succ_iff_false_of_transition_eq_none
+      (M := M) (n := n) (c := initial M w) htransition)
 
 theorem no_step_from_halted {M : TuringMachine symbol state}
     (hstop : HaltingTransitionsDisabled M)
