@@ -1491,6 +1491,65 @@ def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerCo
         PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerRealizes
           enumerator emitter classifier
 
+def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOutputTape
+    (b : Bool) : Tape Bool :=
+  Tape.output [b]
+
+def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerSpec
+    (enumerator emitter classifier : MachineDescription) : Prop :=
+  classifier.SubroutineReady ∧
+    (forall w : Word Bool,
+      forall result : Word Bool,
+      forall b : Bool,
+        enumerator.HaltsWithOutput w
+            (encodeCodeWordAsInput (encodeBoolWord result)) ->
+        emitter.HaltsWithOutput
+            (encodeCodeWordAsInput (encodeBoolWord result)) [b] ->
+          classifier.HaltsWithTape w
+            (PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOutputTape
+              b)) ∧
+      forall w : Word Bool,
+      forall b : Bool,
+        classifier.HaltsWithOutput w [b] ->
+          exists result : Word Bool,
+            enumerator.HaltsWithOutput w
+                (encodeCodeWordAsInput (encodeBoolWord result)) ∧
+              emitter.HaltsWithOutput
+                (encodeCodeWordAsInput (encodeBoolWord result)) [b]
+
+def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerSpecConstruction :
+    Prop :=
+  forall enumerator emitter : MachineDescription,
+    enumerator.SubroutineReady ->
+    PairedRecognizerDovetailControllerBoolWordRawOutputEmitterRealizes
+      emitter ->
+      exists classifier : MachineDescription,
+        PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerSpec
+          enumerator emitter classifier
+
+theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction_of_spec
+    (h :
+      PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerSpecConstruction) :
+    PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction := by
+  intro enumerator emitter henumerator hemitter
+  rcases h enumerator emitter henumerator hemitter with
+    ⟨classifier, hclassifier⟩
+  refine ⟨classifier, ?_⟩
+  constructor
+  · exact hclassifier.left.left
+  · intro w b
+    constructor
+    · exact hclassifier.right.right w b
+    · intro hforward
+      rcases hforward with ⟨result, henum, hemit⟩
+      have hTape :=
+        hclassifier.right.left w result b henum hemit
+      have houtput :=
+        haltsWithOutput_of_haltsWithTape hTape
+      simpa [
+        PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOutputTape,
+        Tape.normalizedOutput_output] using houtput
+
 theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction_of_sequencer_emitter
     (hsequencer :
       PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction)

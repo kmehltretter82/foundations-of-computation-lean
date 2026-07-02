@@ -548,12 +548,18 @@ private theorem pairedRecognizerDovetailControllerStageAttemptFuelPairEnumerator
   pairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction_of_bounded
     pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction_finite_leaf
 
-private theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction := by
+private theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerSpecConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerSpecConstruction := by
   intro enumerator emitter henumerator hemitter
   -- Remaining finite-table obligation: invoke the enumerator and feed each
-  -- encoded boolean-word result to the raw-output emitter.
+  -- encoded boolean-word result to the raw-output emitter, halting on the
+  -- exact singleton Boolean output tape.
   sorry
+
+private theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction :=
+  pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction_of_spec
+    pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerSpecConstruction_finite_leaf
 
 private theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction_finite_leaf :
     PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction :=
