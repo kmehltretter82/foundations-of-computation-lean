@@ -27,6 +27,35 @@ def PairedRecognizerDovetailControllerStageAttemptFuelInputCode
   DovetailLayout.stageInputCodeAppend w limit
     (encodeNatAppend fuel [])
 
+def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+    (attempt : MachineDescription)
+    (w : Word Bool) (limit fuel : Nat) : SimulatorLayout :=
+  SimulatorLayout.initial attempt
+    (encodeCodeWordAsInput
+      (PairedRecognizerDovetailStageInputCode w limit))
+    fuel
+
+def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCode
+    (attempt : MachineDescription)
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match DovetailLayout.decodeStageInput tokens with
+  | none => none
+  | some ((w, limit), suffix) =>
+      match decodeNat suffix with
+      | none => none
+      | some (fuel, []) =>
+          some
+            (SimulatorLayout.encode
+              (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+                attempt w limit fuel))
+      | some (_, _ :: _) => none
+
+def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
+    (attempt : MachineDescription) : TapeCodePrimitive where
+  transform :=
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCode attempt
+
 theorem pairedRecognizerDovetailControllerStageAttemptFuelInputCode_decodeStageInput
     (w : Word Bool) (limit fuel : Nat) :
     DovetailLayout.decodeStageInput
@@ -35,6 +64,51 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelInputCode_decodeStageI
       some ((w, limit), encodeNatAppend fuel []) := by
   exact DovetailLayout.decodeStageInput_stageInputCodeAppend
     w limit (encodeNatAppend fuel [])
+
+theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCode_encode
+    (attempt : MachineDescription)
+    (w : Word Bool) (limit fuel : Nat) :
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCode attempt
+        (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+          w limit fuel) =
+      some
+        (SimulatorLayout.encode
+          (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+            attempt w limit fuel)) := by
+  simp [PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCode,
+    pairedRecognizerDovetailControllerStageAttemptFuelInputCode_decodeStageInput,
+    decodeNat_encodeNatAppend]
+
+theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive_encode
+    (attempt : MachineDescription)
+    (w : Word Bool) (limit fuel : Nat) :
+    (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
+        attempt).transform
+        (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+          w limit fuel) =
+      some
+        (SimulatorLayout.encode
+          (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+            attempt w limit fuel)) :=
+  pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCode_encode
+    attempt w limit fuel
+
+theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout_haltsWithOutputIn_iff
+    (attempt : MachineDescription)
+    (w : Word Bool) (limit fuel : Nat) (out : Word Bool) :
+    let L :=
+      PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+        attempt w limit fuel
+    ((SimulatorLayout.run attempt L.stage L).config.state = attempt.halt ∧
+        Tape.normalizedOutput
+          (SimulatorLayout.run attempt L.stage L).config.tape = out) <->
+      attempt.HaltsWithOutputIn fuel
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailStageInputCode w limit))
+        out := by
+  simp [PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout,
+    MachineDescription.HaltsWithOutputIn, SimulatorLayout.initial,
+    SimulatorLayout.run]
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelInputCode_injective
     {w1 w2 : Word Bool} {limit1 limit2 fuel1 fuel2 : Nat}
