@@ -440,6 +440,280 @@ theorem codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff
     (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_iff
       tokens ([] : Word MachineCodeSymbol))
 
+theorem codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff_decodeNat
+    (tokens : Word MachineCodeSymbol) :
+    CodePrefixDecodedBoundedSimulatorCode.transform tokens =
+        some ([] : Word MachineCodeSymbol) <->
+      exists stage : Nat,
+      exists encoded : Word MachineCodeSymbol,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens = some (stage, encoded) ∧
+          MachineDescription.decodeDescriptionPrefix encoded =
+            some (D, input) ∧
+          D.HaltsIn stage
+            (MachineDescription.encodeCodeWordAsInput input) := by
+  constructor
+  · intro h
+    rcases
+        (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff
+          tokens).mp h with
+      ⟨stage, encoded, D, input, htokens, hdecode, hhalts⟩
+    subst tokens
+    exact
+      ⟨stage, encoded, D, input,
+        codePrefixRecognizerStageCode_decodeNat encoded stage,
+        hdecode, hhalts⟩
+  · intro h
+    rcases h with
+      ⟨stage, encoded, D, input, hstage, hdecode, hhalts⟩
+    exact
+      (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff
+        tokens).mpr
+        ⟨stage, encoded, D, input,
+          codePrefixRecognizerStageCode_eq_of_decodeNat hstage,
+          hdecode, hhalts⟩
+
+theorem codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff_decodeNat_encodeDescription
+    (tokens : Word MachineCodeSymbol) :
+    CodePrefixDecodedBoundedSimulatorCode.transform tokens =
+        some ([] : Word MachineCodeSymbol) <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          D.HaltsIn stage
+            (MachineDescription.encodeCodeWordAsInput input) := by
+  constructor
+  · intro h
+    rcases
+        (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff_decodeNat
+          tokens).mp h with
+      ⟨stage, encoded, D, input, hstage, hdecode, hhalts⟩
+    have hencoded :
+        encoded = List.append (MachineDescription.encodeDescription D)
+          input :=
+      MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+        hdecode
+    exact
+      ⟨stage, D, input, by simpa [hencoded] using hstage, hhalts⟩
+  · intro h
+    rcases h with ⟨stage, D, input, hstage, hhalts⟩
+    exact
+      (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff_decodeNat
+        tokens).mpr
+        ⟨stage,
+          List.append (MachineDescription.encodeDescription D) input,
+          D, input, hstage,
+          MachineDescription.decodeDescriptionPrefix_encodeDescription_append
+            D input,
+          hhalts⟩
+
+theorem codePrefixDecodedBoundedSimulatorCode_transform_eq_none_of_decodeNat_none
+    {tokens : Word MachineCodeSymbol}
+    (hstage : MachineDescription.decodeNat tokens = none) :
+    CodePrefixDecodedBoundedSimulatorCode.transform tokens = none := by
+  classical
+  simp [CodePrefixDecodedBoundedSimulatorCode, hstage]
+
+theorem codePrefixDecodedBoundedSimulatorCode_transform_eq_none_of_decodeDescriptionPrefix_none
+    {tokens encoded : Word MachineCodeSymbol} {stage : Nat}
+    (hstage :
+      MachineDescription.decodeNat tokens = some (stage, encoded))
+    (hdecode :
+      MachineDescription.decodeDescriptionPrefix encoded = none) :
+    CodePrefixDecodedBoundedSimulatorCode.transform tokens = none := by
+  classical
+  simp [CodePrefixDecodedBoundedSimulatorCode, hstage, hdecode]
+
+theorem codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff_of_decodeNat_decodeDescriptionPrefix
+    {tokens encoded input : Word MachineCodeSymbol}
+    {stage : Nat} {D : MachineDescription}
+    (hstage :
+      MachineDescription.decodeNat tokens = some (stage, encoded))
+    (hdecode :
+      MachineDescription.decodeDescriptionPrefix encoded =
+        some (D, input)) :
+    CodePrefixDecodedBoundedSimulatorCode.transform tokens =
+        some ([] : Word MachineCodeSymbol) <->
+      D.HaltsIn stage
+        (MachineDescription.encodeCodeWordAsInput input) := by
+  classical
+  by_cases hhalts :
+      D.HaltsIn stage
+        (MachineDescription.encodeCodeWordAsInput input)
+  · constructor
+    · intro _h
+      exact hhalts
+    · intro _h
+      simp [CodePrefixDecodedBoundedSimulatorCode,
+        hstage, hdecode, hhalts]
+      rfl
+  · constructor
+    · intro h
+      have hfalse : False := by
+        simp [CodePrefixDecodedBoundedSimulatorCode,
+          hstage, hdecode, hhalts] at h
+      exact False.elim hfalse
+    · intro h
+      exact False.elim (hhalts h)
+
+theorem codePrefixDecodedBoundedSimulatorCode_transform_eq_none_of_decodeNat_decodeDescriptionPrefix_not_halts
+    {tokens encoded input : Word MachineCodeSymbol}
+    {stage : Nat} {D : MachineDescription}
+    (hstage :
+      MachineDescription.decodeNat tokens = some (stage, encoded))
+    (hdecode :
+      MachineDescription.decodeDescriptionPrefix encoded =
+        some (D, input))
+    (hhalts :
+      ¬ D.HaltsIn stage
+        (MachineDescription.encodeCodeWordAsInput input)) :
+    CodePrefixDecodedBoundedSimulatorCode.transform tokens = none := by
+  classical
+  simp [CodePrefixDecodedBoundedSimulatorCode, hstage, hdecode, hhalts]
+
+def CodePrefixDecodedBoundedSimulatorParsedCodeMachineSpec
+    (simulator : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall tokens : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput simulator tokens <->
+      exists stage : Nat,
+      exists encoded : Word MachineCodeSymbol,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens = some (stage, encoded) ∧
+          MachineDescription.decodeDescriptionPrefix encoded =
+            some (D, input) ∧
+          D.HaltsIn stage
+            (MachineDescription.encodeCodeWordAsInput input)
+
+def CodePrefixDecodedBoundedSimulatorParsedCodeMachineConstruction : Prop :=
+  exists state : Type,
+  exists simulator : TuringMachine MachineCodeSymbol state,
+    CodePrefixDecodedBoundedSimulatorParsedCodeMachineSpec simulator
+
+def CodePrefixDecodedBoundedSimulatorNormalizedCodeMachineSpec
+    (simulator : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall tokens : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput simulator tokens <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          D.HaltsIn stage
+            (MachineDescription.encodeCodeWordAsInput input)
+
+def CodePrefixDecodedBoundedSimulatorNormalizedCodeMachineConstruction :
+    Prop :=
+  exists state : Type,
+  exists simulator : TuringMachine MachineCodeSymbol state,
+    CodePrefixDecodedBoundedSimulatorNormalizedCodeMachineSpec simulator
+
+theorem codePrefixDecodedBoundedSimulatorCodeMachineSpec_of_parsedCodeMachineSpec
+    {simulator : TuringMachine MachineCodeSymbol state}
+    (hsimulator :
+      CodePrefixDecodedBoundedSimulatorParsedCodeMachineSpec simulator) :
+    CodePrefixDecodedBoundedSimulatorCodeMachineSpec simulator := by
+  intro tokens
+  exact Iff.trans (hsimulator tokens)
+    (Iff.symm
+      (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff_decodeNat
+        tokens))
+
+theorem codePrefixDecodedBoundedSimulatorParsedCodeMachineSpec_of_codeMachineSpec
+    {simulator : TuringMachine MachineCodeSymbol state}
+    (hsimulator :
+      CodePrefixDecodedBoundedSimulatorCodeMachineSpec simulator) :
+    CodePrefixDecodedBoundedSimulatorParsedCodeMachineSpec simulator := by
+  intro tokens
+  exact Iff.trans (hsimulator tokens)
+    (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff_decodeNat
+      tokens)
+
+theorem codePrefixDecodedBoundedSimulatorNormalizedCodeMachineSpec_of_codeMachineSpec
+    {simulator : TuringMachine MachineCodeSymbol state}
+    (hsimulator :
+      CodePrefixDecodedBoundedSimulatorCodeMachineSpec simulator) :
+    CodePrefixDecodedBoundedSimulatorNormalizedCodeMachineSpec simulator := by
+  intro tokens
+  exact Iff.trans (hsimulator tokens)
+    (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff_decodeNat_encodeDescription
+      tokens)
+
+theorem codePrefixDecodedBoundedSimulatorCodeMachineSpec_of_normalizedCodeMachineSpec
+    {simulator : TuringMachine MachineCodeSymbol state}
+    (hsimulator :
+      CodePrefixDecodedBoundedSimulatorNormalizedCodeMachineSpec simulator) :
+    CodePrefixDecodedBoundedSimulatorCodeMachineSpec simulator := by
+  intro tokens
+  exact Iff.trans (hsimulator tokens)
+    (Iff.symm
+      (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff_decodeNat_encodeDescription
+        tokens))
+
+theorem codePrefixDecodedBoundedSimulatorParsedCodeMachineSpec_of_normalizedCodeMachineSpec
+    {simulator : TuringMachine MachineCodeSymbol state}
+    (hsimulator :
+      CodePrefixDecodedBoundedSimulatorNormalizedCodeMachineSpec simulator) :
+    CodePrefixDecodedBoundedSimulatorParsedCodeMachineSpec simulator := by
+  exact
+    codePrefixDecodedBoundedSimulatorParsedCodeMachineSpec_of_codeMachineSpec
+      (codePrefixDecodedBoundedSimulatorCodeMachineSpec_of_normalizedCodeMachineSpec
+        hsimulator)
+
+theorem codePrefixDecodedBoundedSimulatorNormalizedCodeMachineSpec_of_parsedCodeMachineSpec
+    {simulator : TuringMachine MachineCodeSymbol state}
+    (hsimulator :
+      CodePrefixDecodedBoundedSimulatorParsedCodeMachineSpec simulator) :
+    CodePrefixDecodedBoundedSimulatorNormalizedCodeMachineSpec simulator := by
+  exact
+    codePrefixDecodedBoundedSimulatorNormalizedCodeMachineSpec_of_codeMachineSpec
+      (codePrefixDecodedBoundedSimulatorCodeMachineSpec_of_parsedCodeMachineSpec
+        hsimulator)
+
+theorem codePrefixDecodedBoundedSimulatorCodeMachineConstruction_of_parsed
+    (hparsed :
+      CodePrefixDecodedBoundedSimulatorParsedCodeMachineConstruction) :
+    CodePrefixDecodedBoundedSimulatorCodeMachineConstruction := by
+  rcases hparsed with ⟨state, simulator, hsimulator⟩
+  exact
+    ⟨state, simulator,
+      codePrefixDecodedBoundedSimulatorCodeMachineSpec_of_parsedCodeMachineSpec
+        hsimulator⟩
+
+theorem codePrefixDecodedBoundedSimulatorParsedCodeMachineConstruction_of_codeMachine
+    (hcode : CodePrefixDecodedBoundedSimulatorCodeMachineConstruction) :
+    CodePrefixDecodedBoundedSimulatorParsedCodeMachineConstruction := by
+  rcases hcode with ⟨state, simulator, hsimulator⟩
+  exact
+    ⟨state, simulator,
+      codePrefixDecodedBoundedSimulatorParsedCodeMachineSpec_of_codeMachineSpec
+        hsimulator⟩
+
+theorem codePrefixDecodedBoundedSimulatorParsedCodeMachineConstruction_of_normalized
+    (hnormalized :
+      CodePrefixDecodedBoundedSimulatorNormalizedCodeMachineConstruction) :
+    CodePrefixDecodedBoundedSimulatorParsedCodeMachineConstruction := by
+  rcases hnormalized with ⟨state, simulator, hsimulator⟩
+  exact
+    ⟨state, simulator,
+      codePrefixDecodedBoundedSimulatorParsedCodeMachineSpec_of_normalizedCodeMachineSpec
+        hsimulator⟩
+
+theorem codePrefixDecodedBoundedSimulatorNormalizedCodeMachineConstruction_of_parsed
+    (hparsed :
+      CodePrefixDecodedBoundedSimulatorParsedCodeMachineConstruction) :
+    CodePrefixDecodedBoundedSimulatorNormalizedCodeMachineConstruction := by
+  rcases hparsed with ⟨state, simulator, hsimulator⟩
+  exact
+    ⟨state, simulator,
+      codePrefixDecodedBoundedSimulatorNormalizedCodeMachineSpec_of_parsedCodeMachineSpec
+        hsimulator⟩
+
 theorem codePrefixDecodedBoundedSimulatorCodeMachineSpec_iff_semanticMachineSpec
     (simulator : TuringMachine MachineCodeSymbol state) :
     CodePrefixDecodedBoundedSimulatorCodeMachineSpec simulator <->
@@ -597,13 +871,35 @@ theorem codePrefixDecodedBoundedSimulatorDescriptionDecoderConstruction_core :
           encoded encoded).mpr htransform)
 
 /--
-Raw finite-machine leaf for the decoded bounded simulator primitive.  This is
-the transition-table obligation: build a machine whose halting behavior agrees
-with the semantic tape-code primitive on every staged input.
+Normalized finite-machine leaf for the decoded bounded simulator primitive.
+This is the operational transition-table obligation: parse the unary stage
+prefix, parse a canonical encoded description prefix from the payload, and
+accept exactly when the decoded table halts at that exact stage.
+-/
+theorem codePrefixDecodedBoundedSimulatorNormalizedCodeMachineFiniteLeaf :
+    CodePrefixDecodedBoundedSimulatorNormalizedCodeMachineConstruction := by
+  sorry
+
+/--
+Parsed finite-machine leaf for the decoded bounded simulator primitive.  The
+decoder-prefix contract is now an adapter around the normalized encoded-shape
+obligation.
+-/
+theorem codePrefixDecodedBoundedSimulatorParsedCodeMachineFiniteLeaf :
+    CodePrefixDecodedBoundedSimulatorParsedCodeMachineConstruction := by
+  exact
+    codePrefixDecodedBoundedSimulatorParsedCodeMachineConstruction_of_normalized
+      codePrefixDecodedBoundedSimulatorNormalizedCodeMachineFiniteLeaf
+
+/--
+Raw finite-machine leaf for the decoded bounded simulator primitive.  The
+code-primitive contract is a thin adapter around the parsed operational leaf.
 -/
 theorem codePrefixDecodedBoundedSimulatorCodeMachineFiniteLeaf :
     CodePrefixDecodedBoundedSimulatorCodeMachineConstruction := by
-  sorry
+  exact
+    codePrefixDecodedBoundedSimulatorCodeMachineConstruction_of_parsed
+      codePrefixDecodedBoundedSimulatorParsedCodeMachineFiniteLeaf
 
 /--
 Semantic finite-machine leaf for the decoded bounded simulator primitive.  The
