@@ -520,12 +520,18 @@ private theorem pairedRecognizerDovetailControllerStageAttemptFuelPairEnumerator
   -- invoke the exact-fuel runner, and expose each boolean-word result.
   sorry
 
-private theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction := by
-  intro enumerator henumerator
-  -- Remaining finite-table obligation: classify enumerated boolean-word
-  -- results through the controller raw-output convention.
+private theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction := by
+  intro enumerator emitter henumerator hemitter
+  -- Remaining finite-table obligation: invoke the enumerator and feed each
+  -- encoded boolean-word result to the raw-output emitter.
   sorry
+
+private theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction :=
+  pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction_of_sequencer_emitter
+    pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction_finite_leaf
+    pairedRecognizerDovetailControllerBoolWordRawOutputEmitterConstruction_scaffold
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction_finite_leaf :
     PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction :=

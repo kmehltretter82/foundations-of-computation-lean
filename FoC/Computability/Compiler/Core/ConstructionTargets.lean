@@ -1084,6 +1084,50 @@ def PairedRecognizerDovetailControllerBoolWordRawOutputEmitterConstruction :
     PairedRecognizerDovetailControllerBoolWordRawOutputEmitterRealizes
       emitter
 
+def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerRealizes
+    (enumerator emitter classifier : MachineDescription) : Prop :=
+  classifier.WellFormed ∧
+    forall w : Word Bool, forall b : Bool,
+      classifier.HaltsWithOutput w [b] <->
+        exists result : Word Bool,
+          enumerator.HaltsWithOutput w
+              (encodeCodeWordAsInput (encodeBoolWord result)) ∧
+            emitter.HaltsWithOutput
+              (encodeCodeWordAsInput (encodeBoolWord result)) [b]
+
+def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction :
+    Prop :=
+  forall enumerator emitter : MachineDescription,
+    enumerator.SubroutineReady ->
+    PairedRecognizerDovetailControllerBoolWordRawOutputEmitterRealizes
+      emitter ->
+      exists classifier : MachineDescription,
+        PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerRealizes
+          enumerator emitter classifier
+
+theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction_of_sequencer_emitter
+    (hsequencer :
+      PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction)
+    (hemitter :
+      PairedRecognizerDovetailControllerBoolWordRawOutputEmitterConstruction) :
+    PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction := by
+  intro enumerator henumerator
+  rcases hemitter with ⟨emitter, hemits⟩
+  rcases hsequencer enumerator emitter henumerator hemits with
+    ⟨classifier, hclassifier⟩
+  refine ⟨classifier, ?_⟩
+  constructor
+  · exact hclassifier.left
+  · intro w b
+    exact Iff.trans (hclassifier.right w b) <| by
+      constructor
+      · intro h
+        rcases h with ⟨result, henum, hemit⟩
+        exact ⟨result, henum, (hemits.right result b).mp hemit⟩
+      · intro h
+        rcases h with ⟨result, henum, hraw⟩
+        exact ⟨result, henum, (hemits.right result b).mpr hraw⟩
+
 def PairedRecognizerDovetailControllerContinueRealizes
     (continuer : MachineDescription) : Prop :=
   continuer.SubroutineReady ∧
