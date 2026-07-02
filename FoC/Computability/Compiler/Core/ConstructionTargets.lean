@@ -509,6 +509,13 @@ def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes
           (encodeCodeWordAsInput
             (encodeBoolWord result))
 
+def PairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction :
+    Prop :=
+  forall attempt : MachineDescription,
+    exists runner : MachineDescription,
+      PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes
+        attempt runner
+
 def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerConstruction :
     Prop :=
   forall attempt : MachineDescription,
@@ -516,6 +523,13 @@ def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerConstruction :
       exists runner : MachineDescription,
         PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes
           attempt runner
+
+theorem pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerConstruction_of_unconditional
+    (hrunner :
+      PairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction) :
+    PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerConstruction := by
+  intro attempt _hattempt
+  exact hrunner attempt
 
 def PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction :
     Prop :=
@@ -525,6 +539,13 @@ def PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction :
       exists runner : MachineDescription,
         PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes
           attempt runner
+
+theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_of_unconditional
+    (hrunner :
+      PairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction) :
+    PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction := by
+  intro attempt _invoker _hinvoker
+  exact hrunner attempt
 
 def PairedRecognizerDovetailControllerStageAttemptFuelPairSearchRealizes
     (runner decider : MachineDescription) : Prop :=
