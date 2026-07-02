@@ -1456,6 +1456,29 @@ theorem toTuringMachine_haltsOnInput_iff {D : MachineDescription}
         · change D.stateOfNat final.state = D.stateOfNat D.halt
           rw [hn]
 
+theorem haltsIn_of_toTuringMachine_haltsOnInputIn
+    {D : MachineDescription}
+    (hD : D.WellFormed) (n : Nat) (w : Word Bool) :
+    TuringMachine.HaltsOnInputIn D.toTuringMachine n w ->
+      D.HaltsIn n w := by
+  intro htm
+  rcases htm with ⟨final, hcomp, hhalt⟩
+  have hrun := toTuringMachine_computesIn_to_runConfig
+    (D := D) hD (n := n) (c := D.initial w)
+    hD.right.left hcomp
+  rw [hrun] at hhalt
+  change D.stateOfNat (D.runConfig n (D.initial w)).state =
+    D.stateOfNat D.halt at hhalt
+  have hval := congrArg Fin.val hhalt
+  rw [stateOfNat_val_of_lt
+      (Nat.lt_trans
+        (runConfig_state_bound hD hD.right.left)
+        (Nat.lt_succ_self D.stateCount)),
+    stateOfNat_val_of_lt
+      (Nat.lt_trans hD.right.right.left
+        (Nat.lt_succ_self D.stateCount))] at hval
+  exact hval
+
 theorem toTuringMachine_haltsWithOutput_iff {D : MachineDescription}
     (hD : D.WellFormed) (w out : Word Bool) :
     TuringMachine.HaltsWithOutput D.toTuringMachine w out <->
@@ -1496,6 +1519,29 @@ theorem toTuringMachine_haltsWithOutput_iff {D : MachineDescription}
             rw [hn.left]
           · change Tape.normalizedOutput final.tape = out
             exact hn.right
+
+theorem haltsWithOutputIn_of_toTuringMachine_haltsWithOutputIn
+    {D : MachineDescription}
+    (hD : D.WellFormed) (n : Nat) (w out : Word Bool) :
+    TuringMachine.HaltsWithOutputIn D.toTuringMachine n w out ->
+      D.HaltsWithOutputIn n w out := by
+  intro htm
+  rcases htm with ⟨final, hcomp, hhalt, htape⟩
+  have hrun := toTuringMachine_computesIn_to_runConfig
+    (D := D) hD (n := n) (c := D.initial w)
+    hD.right.left hcomp
+  rw [hrun] at hhalt htape
+  change D.stateOfNat (D.runConfig n (D.initial w)).state =
+    D.stateOfNat D.halt at hhalt
+  have hval := congrArg Fin.val hhalt
+  rw [stateOfNat_val_of_lt
+      (Nat.lt_trans
+        (runConfig_state_bound hD hD.right.left)
+        (Nat.lt_succ_self D.stateCount)),
+    stateOfNat_val_of_lt
+      (Nat.lt_trans hD.right.right.left
+        (Nat.lt_succ_self D.stateCount))] at hval
+  exact ⟨hval, htape⟩
 
 theorem stepConfig_equiv
     {D : MachineDescription} {c d : MachineDescription.Configuration}

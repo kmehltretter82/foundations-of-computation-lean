@@ -217,6 +217,90 @@ theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWi
       hinvoker)
     w b
 
+theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutputIn_iff_of_functional
+    (attempt : MachineDescription)
+    (hfunctional :
+      PairedRecognizerDovetailStageAttemptOutputFunctional attempt)
+    (w : Word Bool) (b : Bool) :
+    ProgramHaltsWithOutput
+        (PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
+          attempt) w [b] <->
+      exists limit : Nat,
+      exists fuel : Nat,
+      exists result : Word Bool,
+        attempt.HaltsWithOutputIn fuel
+          (encodeCodeWordAsInput
+            (PairedRecognizerDovetailStageInputCode w limit))
+          (encodeCodeWordAsInput
+            (encodeBoolWord result)) ∧
+        PairedRecognizerDovetailControllerRawOutput result = some [b] := by
+  constructor
+  · intro h
+    rcases
+        (pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutput_iff_of_functional
+          attempt hfunctional w b).mp h with
+      ⟨limit, result, hattempt, hraw⟩
+    rcases
+        MachineDescription.haltsWithOutput_iff_exists_haltsWithOutputIn.mp
+          hattempt with
+      ⟨fuel, hfuel⟩
+    exact ⟨limit, fuel, result, hfuel, hraw⟩
+  · intro h
+    rcases h with ⟨limit, fuel, result, hattempt, hraw⟩
+    exact
+      (pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutput_iff_of_functional
+        attempt hfunctional w b).mpr
+        ⟨limit, result,
+          MachineDescription.haltsWithOutput_iff_exists_haltsWithOutputIn.mpr
+            ⟨fuel, hattempt⟩,
+          hraw⟩
+
+theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutputIn_iff
+    (attempt : MachineDescription)
+    (hattemptReady : attempt.SubroutineReady)
+    (w : Word Bool) (b : Bool) :
+    ProgramHaltsWithOutput
+        (PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
+          attempt) w [b] <->
+      exists limit : Nat,
+      exists fuel : Nat,
+      exists result : Word Bool,
+        attempt.HaltsWithOutputIn fuel
+          (encodeCodeWordAsInput
+            (PairedRecognizerDovetailStageInputCode w limit))
+          (encodeCodeWordAsInput
+            (encodeBoolWord result)) ∧
+        PairedRecognizerDovetailControllerRawOutput result = some [b] :=
+  pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutputIn_iff_of_functional
+    attempt
+    (pairedRecognizerDovetailStageAttemptOutputFunctional_of_subroutineReady
+      hattemptReady)
+    w b
+
+theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutputIn_iff_of_protectedInvocation
+    {attempt invoker : MachineDescription}
+    (hinvoker :
+      PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+        attempt invoker)
+    (w : Word Bool) (b : Bool) :
+    ProgramHaltsWithOutput
+        (PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
+          attempt) w [b] <->
+      exists limit : Nat,
+      exists fuel : Nat,
+      exists result : Word Bool,
+        attempt.HaltsWithOutputIn fuel
+          (encodeCodeWordAsInput
+            (PairedRecognizerDovetailStageInputCode w limit))
+          (encodeCodeWordAsInput
+            (encodeBoolWord result)) ∧
+        PairedRecognizerDovetailControllerRawOutput result = some [b] :=
+  pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutputIn_iff_of_functional
+    attempt
+    (pairedRecognizerDovetailStageAttemptOutputFunctional_of_protectedInvocation
+      hinvoker)
+    w b
+
 theorem Search.controllerCompilerOfDeciderOfFunctional
     (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple)
     (attempt : MachineDescription)
