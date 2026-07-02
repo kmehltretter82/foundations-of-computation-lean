@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.CodeRightShifted
 import FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerInvocation
 
 set_option doc.verso true
@@ -469,12 +470,24 @@ private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeC
   -- inputs into the simulator-layout code-word handoff form.
   sorry
 
-private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_finite_leaf :
-    FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction := by
-  intro attempt
-  -- Remaining finite-table obligation: run the fixed-description bounded
-  -- simulator on an already-parsed simulator layout and return a code word.
+private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_finite_leaf :
+    FixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction := by
+  -- Remaining finite-table obligation: recognize and normalize complete
+  -- simulator-layout code words into the handoff shape.
   sorry
+
+private theorem fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_finite_leaf :
+    FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction := by
+  intro attempt
+  -- Remaining finite-table obligation: run the fixed description on an
+  -- already-parsed simulator layout and return from the right handoff.
+  sorry
+
+private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_finite_leaf :
+    FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction :=
+  fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_parser_rightHandoffStep
+    fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_finite_leaf
+    fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_finite_leaf
 
 private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_finite_leaf :
     PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction := by

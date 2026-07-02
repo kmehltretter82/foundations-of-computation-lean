@@ -667,5 +667,19 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_specCons
     ⟨runner,
       fixedDescriptionBoundedSimulatorCodeRightShifted_of_spec hrunner⟩
 
+theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_parser_rightHandoffStep
+    (hparser : FixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction)
+    (hstep :
+      FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction) :
+    FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction := by
+  exact
+    fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_specConstruction
+      (fixedDescriptionBoundedSimulatorCodeRightShiftedSpecConstruction_of_parserEmitter
+        ⟨hparser,
+          fixedDescriptionBoundedSimulatorCodeRightShiftedEmitterConstruction_of_canonical
+            (fixedDescriptionBoundedSimulatorCanonicalConstruction_of_phaseConstruction
+              (fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_rightHandoffStepPhase
+                hstep))⟩)
+
 end Computability
 end FoC
