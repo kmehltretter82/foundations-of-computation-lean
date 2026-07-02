@@ -69,6 +69,27 @@ inductive Step (M : TuringMachine symbol state) :
       Step M c
         { state := nextState, tape := Tape.move dir (Tape.write write c.tape) }
 
+theorem step_iff_transition_eq_some
+    {M : TuringMachine symbol state}
+    {c d : Configuration symbol state} :
+    Step M c d <->
+      exists write : Option symbol,
+      exists dir : Direction,
+      exists nextState : state,
+        M.transition c.state (Tape.read c.tape) =
+            some (write, dir, nextState) ∧
+          d =
+            { state := nextState,
+              tape := Tape.move dir (Tape.write write c.tape) } := by
+  constructor
+  · intro hstep
+    cases hstep with
+    | mk haction =>
+        exact ⟨_, _, _, haction, rfl⟩
+  · intro h
+    rcases h with ⟨write, dir, nextState, haction, rfl⟩
+    exact Step.mk haction
+
 /-!
 # Finite-state reindexing
 
@@ -173,6 +194,37 @@ theorem computes_of_indexed_computes
       exact Computes.refl _
   | step hstep _ ih =>
       exact Computes.step (step_of_indexed_step hstep) ih
+
+theorem indexed_computesIn_of_computesIn
+    {M : TuringMachine symbol state}
+    {n : Nat} {c d : Configuration symbol state}
+    (hcomp : ComputesIn M n c d) :
+    ComputesIn (indexed M) n
+      { state := Foundation.FiniteType.indexOf M.statesFinite c.state,
+        tape := c.tape }
+      { state := Foundation.FiniteType.indexOf M.statesFinite d.state,
+        tape := d.tape } := by
+  induction hcomp with
+  | zero c =>
+      exact ComputesIn.zero _
+  | succ hstep _ ih =>
+      exact ComputesIn.succ (indexed_step_of_step hstep) ih
+
+theorem computesIn_of_indexed_computesIn
+    {M : TuringMachine symbol state}
+    {n : Nat}
+    {c d : Configuration symbol (Fin M.statesFinite.elems.length)}
+    (hcomp : ComputesIn (indexed M) n c d) :
+    ComputesIn M n
+      { state := Foundation.FiniteType.valueOf M.statesFinite c.state,
+        tape := c.tape }
+      { state := Foundation.FiniteType.valueOf M.statesFinite d.state,
+        tape := d.tape } := by
+  induction hcomp with
+  | zero c =>
+      exact ComputesIn.zero _
+  | succ hstep _ ih =>
+      exact ComputesIn.succ (step_of_indexed_step hstep) ih
 
 /-!
 # Exact tape-window invariants
@@ -343,6 +395,129 @@ theorem indexed_haltsOnInput_iff
   simpa [HaltsOnInput, initial, indexed] using
     indexed_haltsFrom_iff (M := M) (c := initial M w)
 
+theorem indexed_haltsFromIn_iff
+    (M : TuringMachine symbol state) (n : Nat)
+    (c : Configuration symbol state) :
+    HaltsFromIn (indexed M) n
+        { state := Foundation.FiniteType.indexOf M.statesFinite c.state,
+          tape := c.tape } <->
+      HaltsFromIn M n c := by
+  constructor
+  · intro hhalt
+    rcases hhalt with ⟨final, hcomp, hfinal⟩
+    have hcompOriginal :=
+      computesIn_of_indexed_computesIn (M := M) hcomp
+    have hstate :
+        Foundation.FiniteType.valueOf M.statesFinite final.state =
+          M.halt := by
+      have hindex :
+          final.state =
+            Foundation.FiniteType.indexOf M.statesFinite M.halt := by
+        simpa [Halted, indexed] using hfinal
+      rw [hindex, Foundation.FiniteType.valueOf_indexOf]
+    exact
+      ⟨{ state :=
+            Foundation.FiniteType.valueOf M.statesFinite final.state,
+          tape := final.tape },
+        by
+          simpa [Foundation.FiniteType.valueOf_indexOf] using
+            hcompOriginal,
+        by
+          simp [Halted, hstate]⟩
+  · intro hhalt
+    rcases hhalt with ⟨final, hcomp, hfinal⟩
+    have hcompIndexed :=
+      indexed_computesIn_of_computesIn (M := M) hcomp
+    exact
+      ⟨{ state := Foundation.FiniteType.indexOf M.statesFinite final.state,
+          tape := final.tape },
+        hcompIndexed,
+        by
+          have hstate : final.state = M.halt := by
+            simpa [Halted] using hfinal
+          simp [Halted, indexed, hstate]⟩
+
+theorem indexed_haltsOnInputIn_iff
+    (M : TuringMachine symbol state) (n : Nat) (w : Word symbol) :
+    HaltsOnInputIn (indexed M) n w <-> HaltsOnInputIn M n w := by
+  simpa [HaltsOnInputIn, initial, indexed] using
+    indexed_haltsFromIn_iff (M := M) (n := n) (c := initial M w)
+
+theorem computesIn_succ_iff {M : TuringMachine symbol state}
+    {n : Nat} {c e : Configuration symbol state} :
+    ComputesIn M (n + 1) c e <->
+      exists d : Configuration symbol state,
+        Step M c d ∧ ComputesIn M n d e := by
+  constructor
+  · intro h
+    cases h with
+    | succ hstep hrest =>
+        exact ⟨_, hstep, hrest⟩
+  · intro h
+    rcases h with ⟨d, hstep, hrest⟩
+    exact ComputesIn.succ hstep hrest
+
+theorem haltsFromIn_zero_iff {M : TuringMachine symbol state}
+    {c : Configuration symbol state} :
+    HaltsFromIn M 0 c <-> Halted M c := by
+  constructor
+  · intro h
+    rcases h with ⟨final, hcomp, hhalt⟩
+    cases hcomp
+    exact hhalt
+  · intro h
+    exact ⟨c, ComputesIn.zero c, h⟩
+
+theorem haltsOnInputIn_zero_iff {M : TuringMachine symbol state}
+    {w : Word symbol} :
+    HaltsOnInputIn M 0 w <-> Halted M (initial M w) := by
+  exact haltsFromIn_zero_iff
+
+theorem haltsFromIn_succ_iff {M : TuringMachine symbol state}
+    {n : Nat} {c : Configuration symbol state} :
+    HaltsFromIn M (n + 1) c <->
+      exists d : Configuration symbol state,
+        Step M c d ∧ HaltsFromIn M n d := by
+  constructor
+  · intro h
+    rcases h with ⟨final, hcomp, hhalt⟩
+    rcases computesIn_succ_iff.mp hcomp with
+      ⟨d, hstep, hrest⟩
+    exact ⟨d, hstep, final, hrest, hhalt⟩
+  · intro h
+    rcases h with ⟨d, hstep, final, hrest, hhalt⟩
+    exact ⟨final, ComputesIn.succ hstep hrest, hhalt⟩
+
+theorem haltsOnInputIn_succ_iff {M : TuringMachine symbol state}
+    {n : Nat} {w : Word symbol} :
+    HaltsOnInputIn M (n + 1) w <->
+      exists d : Configuration symbol state,
+        Step M (initial M w) d ∧ HaltsFromIn M n d := by
+  exact haltsFromIn_succ_iff
+
+theorem not_step_of_transition_eq_none
+    {M : TuringMachine symbol state}
+    {c d : Configuration symbol state}
+    (htransition :
+      M.transition c.state (Tape.read c.tape) = none) :
+    ¬ Step M c d := by
+  intro hstep
+  cases hstep with
+  | mk haction =>
+      rw [htransition] at haction
+      cases haction
+
+theorem not_haltsFromIn_succ_of_transition_eq_none
+    {M : TuringMachine symbol state}
+    {n : Nat} {c : Configuration symbol state}
+    (htransition :
+      M.transition c.state (Tape.read c.tape) = none) :
+    ¬ HaltsFromIn M (n + 1) c := by
+  intro hhalt
+  rcases haltsFromIn_succ_iff.mp hhalt with
+    ⟨d, hstep, _htail⟩
+  exact not_step_of_transition_eq_none htransition hstep
+
 /-!
 # Computation algebra
 
@@ -371,6 +546,38 @@ theorem step_deterministic {M : TuringMachine symbol state}
           have hAction : _ := Eq.trans hcdAction.symm hceAction
           cases hAction
           rfl
+
+theorem haltsFromIn_succ_of_step {M : TuringMachine symbol state}
+    {n : Nat} {c d : Configuration symbol state}
+    (hstep : Step M c d) (htail : HaltsFromIn M n d) :
+    HaltsFromIn M (n + 1) c := by
+  exact haltsFromIn_succ_iff.mpr ⟨d, hstep, htail⟩
+
+theorem haltsFromIn_tail_of_step {M : TuringMachine symbol state}
+    {n : Nat} {c d : Configuration symbol state}
+    (hstep : Step M c d) (hhalt : HaltsFromIn M (n + 1) c) :
+    HaltsFromIn M n d := by
+  rcases haltsFromIn_succ_iff.mp hhalt with
+    ⟨next, hstepNext, htail⟩
+  have hnext : d = next := step_deterministic hstep hstepNext
+  cases hnext
+  exact htail
+
+theorem haltsFromIn_succ_iff_of_step {M : TuringMachine symbol state}
+    {n : Nat} {c d : Configuration symbol state}
+    (hstep : Step M c d) :
+    HaltsFromIn M (n + 1) c <-> HaltsFromIn M n d := by
+  constructor
+  · exact haltsFromIn_tail_of_step hstep
+  · exact haltsFromIn_succ_of_step hstep
+
+theorem haltsOnInputIn_succ_iff_of_step
+    {M : TuringMachine symbol state}
+    {n : Nat} {w : Word symbol}
+    {d : Configuration symbol state}
+    (hstep : Step M (initial M w) d) :
+    HaltsOnInputIn M (n + 1) w <-> HaltsFromIn M n d := by
+  exact haltsFromIn_succ_iff_of_step hstep
 
 theorem no_step_from_halted {M : TuringMachine symbol state}
     (hstop : HaltingTransitionsDisabled M)

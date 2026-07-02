@@ -49,6 +49,70 @@ theorem nestedCodePrefixRecognizerStageCode_decodeNat_inner
       some (inner, input) := by
   simp [codePrefixRecognizerStageCode_decodeNat]
 
+theorem nestedCodePrefixRecognizerStageCode_eq_of_decodeNat_outer_inner
+    {tokens innerCode input : Word MachineCodeSymbol}
+    {inner outer : Nat}
+    (houter :
+      MachineDescription.decodeNat tokens =
+        some (outer, innerCode))
+    (hinner :
+      MachineDescription.decodeNat innerCode =
+        some (inner, input)) :
+    tokens = NestedCodePrefixRecognizerStageCode input inner outer := by
+  have htokens :
+      tokens = CodePrefixRecognizerStageCode innerCode outer :=
+    codePrefixRecognizerStageCode_eq_of_decodeNat houter
+  have hinnerCode :
+      innerCode = CodePrefixRecognizerStageCode input inner :=
+    codePrefixRecognizerStageCode_eq_of_decodeNat hinner
+  rw [htokens, hinnerCode]
+  rfl
+
+theorem nestedCodePrefixRecognizerStageCode_decodeNat_outer_eq_some_iff
+    {tokens input : Word MachineCodeSymbol}
+    {inner outer : Nat} :
+    MachineDescription.decodeNat tokens =
+        some (outer, CodePrefixRecognizerStageCode input inner) <->
+      tokens =
+        NestedCodePrefixRecognizerStageCode input inner outer := by
+  constructor
+  · intro h
+    exact
+      nestedCodePrefixRecognizerStageCode_eq_of_decodeNat_outer_inner
+        h
+        (nestedCodePrefixRecognizerStageCode_decodeNat_inner
+          input inner)
+  · intro h
+    rw [h]
+    exact
+      nestedCodePrefixRecognizerStageCode_decodeNat_outer
+        input inner outer
+
+theorem nestedCodePrefixRecognizerStageCode_decodeNat_pair_iff
+    {tokens input : Word MachineCodeSymbol}
+    {inner outer : Nat} :
+    (exists innerCode : Word MachineCodeSymbol,
+      MachineDescription.decodeNat tokens =
+          some (outer, innerCode) ∧
+        MachineDescription.decodeNat innerCode =
+          some (inner, input)) <->
+      tokens =
+        NestedCodePrefixRecognizerStageCode input inner outer := by
+  constructor
+  · intro h
+    rcases h with ⟨innerCode, houter, hinner⟩
+    exact
+      nestedCodePrefixRecognizerStageCode_eq_of_decodeNat_outer_inner
+        houter hinner
+  · intro h
+    subst tokens
+    exact
+      ⟨CodePrefixRecognizerStageCode input inner,
+        nestedCodePrefixRecognizerStageCode_decodeNat_outer
+          input inner outer,
+        nestedCodePrefixRecognizerStageCode_decodeNat_inner
+          input inner⟩
+
 theorem nestedCodePrefixRecognizerStageCode_injective
     {input₁ input₂ : Word MachineCodeSymbol}
     {inner₁ inner₂ outer₁ outer₂ : Nat}
@@ -412,6 +476,21 @@ theorem exists_bounded_pair_iff_exists_pair
   exact CommonGround.exists_bounded_pair_iff_exists_pair P
 
 /--
+Generic triple-bounding algebra for dovetail drivers: existential search over
+a raw triple is equivalent to existential search under some finite outer
+limit.
+-/
+theorem exists_bounded_triple_iff_exists_triple
+    (P : Nat -> Nat -> Nat -> Prop) :
+    (exists limit : Nat,
+      exists m : Nat,
+      exists n : Nat,
+      exists fuel : Nat,
+        m ≤ limit ∧ n ≤ limit ∧ fuel ≤ limit ∧ P m n fuel) <->
+      exists m : Nat, exists n : Nat, exists fuel : Nat, P m n fuel := by
+  exact CommonGround.exists_bounded_triple_iff_exists_triple P
+
+/--
 Search over an explicit fuel component is the same as unbounded halting for
 the selected generated input.
 -/
@@ -461,6 +540,96 @@ theorem exists_bounded_pair_haltsOnInputIn_iff_exists_haltsOnInput
           TuringMachine.HaltsOnInputIn M fuel (inputOf m)))
       (exists_pair_haltsOnInputIn_iff_exists_haltsOnInput
         M inputOf)
+
+/--
+Search over two generated indices and an explicit simulation fuel is the same
+as unbounded halting for some generated pair input.
+-/
+theorem exists_triple_haltsOnInputIn_iff_exists_pair_haltsOnInput
+    {symbol : Type u} {state : Type v}
+    (M : TuringMachine symbol state)
+    (inputOf : Nat -> Nat -> Word symbol) :
+    (exists m : Nat,
+      exists n : Nat,
+      exists fuel : Nat,
+        TuringMachine.HaltsOnInputIn M fuel (inputOf m n)) <->
+      exists m : Nat,
+      exists n : Nat,
+        TuringMachine.HaltsOnInput M (inputOf m n) := by
+  constructor
+  · intro h
+    rcases h with ⟨m, n, fuel, hfuel⟩
+    exact
+      ⟨m, n,
+        TuringMachine.halts_on_input_in_to_halts_on_input
+          (n := fuel) hfuel⟩
+  · intro h
+    rcases h with ⟨m, n, hhalt⟩
+    rcases
+        TuringMachine.halts_on_input_to_halts_on_input_in hhalt with
+      ⟨fuel, hfuel⟩
+    exact ⟨m, n, fuel, hfuel⟩
+
+/--
+Bounded dovetailing over two generated indices and an explicit fuel is
+equivalent to unbounded halting for some generated pair input.
+-/
+theorem exists_bounded_triple_haltsOnInputIn_iff_exists_pair_haltsOnInput
+    {symbol : Type u} {state : Type v}
+    (M : TuringMachine symbol state)
+    (inputOf : Nat -> Nat -> Word symbol) :
+    (exists limit : Nat,
+      exists m : Nat,
+      exists n : Nat,
+      exists fuel : Nat,
+        m ≤ limit ∧
+          n ≤ limit ∧
+          fuel ≤ limit ∧
+          TuringMachine.HaltsOnInputIn M fuel (inputOf m n)) <->
+      exists m : Nat,
+      exists n : Nat,
+        TuringMachine.HaltsOnInput M (inputOf m n) := by
+  exact
+    Iff.trans
+      (exists_bounded_triple_iff_exists_triple
+        (fun m n fuel =>
+          TuringMachine.HaltsOnInputIn M fuel (inputOf m n)))
+      (exists_triple_haltsOnInputIn_iff_exists_pair_haltsOnInput
+        M inputOf)
+
+/--
+For a fixed public budget on the generated indices, adding a hidden exact fuel
+component is equivalent to ordinary halting of the generated pair input.
+-/
+theorem exists_bounded_pair_haltsOnInputIn_iff_exists_bounded_pair_haltsOnInput
+    {symbol : Type u} {state : Type v}
+    (M : TuringMachine symbol state)
+    (inputOf : Nat -> Nat -> Word symbol)
+    (budget : Nat) :
+    (exists m : Nat,
+      exists n : Nat,
+      exists fuel : Nat,
+        m ≤ budget ∧
+          n ≤ budget ∧
+          TuringMachine.HaltsOnInputIn M fuel (inputOf m n)) <->
+      exists m : Nat,
+      exists n : Nat,
+        m ≤ budget ∧
+          n ≤ budget ∧
+          TuringMachine.HaltsOnInput M (inputOf m n) := by
+  constructor
+  · intro h
+    rcases h with ⟨m, n, fuel, hm, hn, hfuel⟩
+    exact
+      ⟨m, n, hm, hn,
+        TuringMachine.halts_on_input_in_to_halts_on_input
+          (n := fuel) hfuel⟩
+  · intro h
+    rcases h with ⟨m, n, hm, hn, hhalt⟩
+    rcases
+        TuringMachine.halts_on_input_to_halts_on_input_in hhalt with
+      ⟨fuel, hfuel⟩
+    exact ⟨m, n, fuel, hm, hn, hfuel⟩
 
 /--
 Two explicit fuel witnesses for the same input are equivalent to unbounded
