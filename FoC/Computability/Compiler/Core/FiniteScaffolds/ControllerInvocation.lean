@@ -373,17 +373,13 @@ theorem pairedRecognizerDovetailStageAttemptInvocationConstructionData_of_protec
 /--
 Finite-machine leaf for the framed protected stage-attempt wrapper.  This is
 the remaining transition-table obligation after CommonGround has named the
-protected/framed/witnessed controller-invocation contracts; it halts on the
-exact controller-layout output tape.
+protected/framed/witnessed controller-invocation contracts; it emits the
+controller layout with the simulated boolean-word result installed as
+normalized output.
 -/
-private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationExactConstructionData_finite_leaf :
-    PairedRecognizerDovetailStageAttemptFramedRunInvocationExactConstructionData := by
-  sorry
-
 private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf :
-    PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :=
-  pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_exact
-    pairedRecognizerDovetailStageAttemptFramedRunInvocationExactConstructionData_finite_leaf
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData := by
+  sorry
 
 /--
 Finite-machine leaf for witnessed controller stage-attempt invocation.  This is
