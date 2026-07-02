@@ -505,12 +505,18 @@ private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_fin
     fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_finite_leaf
     fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_finite_leaf
 
-private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction := by
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpecConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpecConstruction := by
   intro attempt
-  -- Remaining finite-table obligation: decode the final simulator layout and
-  -- emit the raw output exactly when the simulated attempt halted.
+  -- Remaining finite-table obligation: recognize complete halted simulator
+  -- layouts whose normalized tape output is a code word, and emit that code
+  -- word as the canonical output.
   sorry
+
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction :=
+  pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_spec
+    pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpecConstruction_finite_leaf
 
 private theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineConstruction_finite_leaf :
     PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineConstruction :=

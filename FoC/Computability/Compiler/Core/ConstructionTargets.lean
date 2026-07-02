@@ -655,6 +655,119 @@ def PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstr
           attempt)
         extractor
 
+def PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+    (attempt : MachineDescription) : Type :=
+  { pair : SimulatorLayout × Word MachineCodeSymbol //
+      pair.1.config.state = attempt.halt ∧
+        Tape.normalizedOutput pair.1.config.tape =
+          encodeCodeWordAsInput pair.2 }
+
+def PairedRecognizerDovetailControllerStageAttemptFuelOutputInputCode
+    {attempt : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt) :
+    Word MachineCodeSymbol :=
+  SimulatorLayout.encode i.1.1
+
+def PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode
+    {attempt : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt) :
+    Word MachineCodeSymbol :=
+  i.1.2
+
+def PairedRecognizerDovetailControllerStageAttemptFuelOutputTape
+    {attempt : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt) :
+    Tape Bool :=
+  CommonGround.CodeWordEmitters.ExactOutputTape
+    PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode i
+
+def PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpec
+    (attempt extractor : MachineDescription) : Prop :=
+  extractor.SubroutineReady ∧
+    (forall i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt,
+        extractor.HaltsWithTape
+          (encodeCodeWordAsInput
+            (PairedRecognizerDovetailControllerStageAttemptFuelOutputInputCode
+              i))
+          (PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i)) ∧
+      forall code : Word MachineCodeSymbol,
+      forall T : Tape Bool,
+        extractor.HaltsWithTape (encodeCodeWordAsInput code) T ->
+          exists i :
+            PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+              attempt,
+            code =
+              PairedRecognizerDovetailControllerStageAttemptFuelOutputInputCode
+                i ∧
+            T =
+              PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i
+
+def PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpecConstruction :
+    Prop :=
+  forall attempt : MachineDescription,
+    exists extractor : MachineDescription,
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpec
+        attempt extractor
+
+theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_spec
+    (h :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpecConstruction) :
+    PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction := by
+  intro attempt
+  rcases h attempt with ⟨extractor, hextractor⟩
+  refine ⟨extractor, ?_⟩
+  exact
+    CommonGround.CodeWordEmitters.outputCompiled_of_indexed_tape_spec
+      (P :=
+        PairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive
+          attempt)
+      (runner := extractor)
+      hextractor.left.left
+      hextractor.left.right
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputInputCode
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputTape
+      (by
+        intro i
+        exact
+          CommonGround.CodeWordEmitters.exactOutputTape_normalizedOutput
+            PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode i)
+      (by
+        intro i
+        exact hextractor.right.left i)
+      (by
+        intro code T hhalt
+        exact hextractor.right.right code T hhalt)
+      (by
+        intro code out
+        constructor
+        · intro htransform
+          rcases
+              (pairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive_transform_eq_some_iff
+                attempt code out).mp htransform with
+            ⟨L, hcode, hstate, houtput⟩
+          exact
+            ⟨⟨(L, out), ⟨hstate, houtput⟩⟩, hcode, rfl⟩
+        · intro hindexed
+          rcases hindexed with ⟨i, hcode, hout⟩
+          rcases i with ⟨pair, hpair⟩
+          rcases pair with ⟨L, indexedOut⟩
+          dsimp at hcode hout hpair
+          exact
+            (pairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive_transform_eq_some_iff
+              attempt code out).mpr
+              ⟨L, hcode, hpair.left, by
+                rw [hout]
+                exact hpair.right⟩)
+
 def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction :
     Prop :=
   forall attempt : MachineDescription,

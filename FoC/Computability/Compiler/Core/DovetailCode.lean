@@ -256,6 +256,39 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive_ru
   pairedRecognizerDovetailControllerStageAttemptFuelOutputCode_run_iff
     attempt w limit fuel out
 
+theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive_transform_eq_some_iff
+    (attempt : MachineDescription)
+    (code out : Word MachineCodeSymbol) :
+    (PairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive
+        attempt).transform code = some out <->
+      exists L : SimulatorLayout,
+        code = SimulatorLayout.encode L ∧
+          L.config.state = attempt.halt ∧
+          Tape.normalizedOutput L.config.tape =
+            encodeCodeWordAsInput out := by
+  constructor
+  · intro h
+    unfold PairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive at h
+    unfold PairedRecognizerDovetailControllerStageAttemptFuelOutputCode at h
+    cases hdecode : SimulatorLayout.decodeComplete code with
+    | none =>
+        simp [hdecode] at h
+    | some L =>
+        by_cases hstate : L.config.state = attempt.halt
+        · simp [hdecode, hstate] at h
+          refine
+            ⟨L, SimulatorLayout.decodeComplete_eq_some_encode hdecode,
+              hstate, ?_⟩
+          exact (decodeCodeWordAsInput_eq_some_iff _ _).mp h
+        · simp [hdecode, hstate] at h
+  · intro h
+    rcases h with ⟨L, hcode, hstate, houtput⟩
+    subst code
+    simp [PairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive,
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputCode,
+      SimulatorLayout.decodeComplete_encode, hstate,
+      (decodeCodeWordAsInput_eq_some_iff _ _).mpr houtput]
+
 theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCode_run_boolWord_iff
     (attempt : MachineDescription)
     (w result : Word Bool) (limit fuel : Nat) :
