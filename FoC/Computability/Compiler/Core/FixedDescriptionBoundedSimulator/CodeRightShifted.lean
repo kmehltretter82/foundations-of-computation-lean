@@ -621,6 +621,82 @@ theorem fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_codeRightSh
       (Fragment.handoff Direction.left) :=
   fixedDescriptionBoundedSimulatorReturnFromRightHandoffPhaseRealizes
 
+theorem fixedDescriptionBoundedSimulatorHandoffTape_move_left_right
+    (L : SimulatorLayout) :
+    Tape.move Direction.left
+        (FixedDescriptionBoundedSimulatorHandoffTape Direction.right L) =
+      FixedDescriptionBoundedSimulatorLayoutTape L := by
+  simpa [FixedDescriptionBoundedSimulatorHandoffTape,
+    FixedDescriptionBoundedSimulatorLayoutTape,
+    SimulatorLayout.tape,
+    CommonGround.SimulatorLayouts.handoffTape,
+    CommonGround.LayoutTapes.HandoffTape,
+    CommonGround.LayoutTapes.InputTape] using
+    CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape L
+
+theorem fixedDescriptionBoundedSimulatorPhaseRealizes_of_canonicalSpec
+    {D sim : MachineDescription}
+    (hsim : FixedDescriptionBoundedSimulatorCanonicalSpec D sim) :
+    FixedDescriptionBoundedSimulatorPhaseRealizes
+      FixedDescriptionBoundedSimulatorLayoutTape
+      FixedDescriptionBoundedSimulatorLayoutTape
+      (fun L => SimulatorLayout.run D L.stage L)
+      sim.asFragment := by
+  constructor
+  · exact asFragment_wellFormed hsim.left
+  · intro L
+    rcases runConfig_eq_halt_of_haltsWithTape (hsim.right.left L) with
+      ⟨n, hrun⟩
+    have hrunFragment :
+        sim.asFragment.toDescription.runConfig n
+            { state := sim.asFragment.entry,
+              tape := FixedDescriptionBoundedSimulatorLayoutTape L } =
+          { state := sim.asFragment.exit,
+            tape :=
+              FixedDescriptionBoundedSimulatorLayoutTape
+                (SimulatorLayout.run D L.stage L) } := by
+      simpa [asFragment_toDescription, asFragment,
+        FixedDescriptionBoundedSimulatorInput,
+        FixedDescriptionBoundedSimulatorCanonicalOutputTape,
+        FixedDescriptionBoundedSimulatorLayoutTape,
+        SimulatorLayout.tape] using hrun
+    rcases firstReaches_halt_of_runConfig_eq
+        (D := sim.asFragment.toDescription)
+        (c :=
+          { state := sim.asFragment.entry,
+            tape := FixedDescriptionBoundedSimulatorLayoutTape L })
+        (T :=
+          FixedDescriptionBoundedSimulatorLayoutTape
+            (SimulatorLayout.run D L.stage L))
+        (Fragment.toDescription_haltTransitionFree
+          (asFragment_wellFormed hsim.left))
+        hrunFragment with
+      ⟨m, _hmle, hmrun, hmfirst⟩
+    exact ⟨m, hmrun, hmfirst⟩
+
+theorem fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_of_canonical
+    (hcanonical : FixedDescriptionBoundedSimulatorCanonicalConstruction) :
+    FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction := by
+  intro D
+  rcases hcanonical D with ⟨sim, hsim⟩
+  refine ⟨Fragment.seq Fragment.halt sim.asFragment Direction.left, ?_⟩
+  refine fixedDescriptionBoundedSimulatorPhaseRealizes_seq
+    (entryTape := FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
+    (midTape := FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
+    (exitTape := FixedDescriptionBoundedSimulatorLayoutTape)
+    (phaseA := id)
+    (phaseB := fun L => SimulatorLayout.run D L.stage L)
+    (A := Fragment.halt)
+    (B := sim.asFragment)
+    (handoffMove := Direction.left)
+    ?_ ?_
+  · exact
+      fixedDescriptionBoundedSimulatorHaltPhaseRealizes
+        (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
+  · simpa [id, fixedDescriptionBoundedSimulatorHandoffTape_move_left_right]
+      using fixedDescriptionBoundedSimulatorPhaseRealizes_of_canonicalSpec
+        hsim
+
 theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_rightHandoffStepPhase
     (hstep :
       FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction) :

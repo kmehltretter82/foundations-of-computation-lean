@@ -157,6 +157,12 @@ theorem fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_configRunne
       (Fragment.handoff Direction.left) :=
   fixedDescriptionBoundedSimulatorReturnFromRightHandoffPhaseRealizes
 
+theorem fixedDescriptionBoundedSimulatorStepPhaseConstruction_of_canonical_configRunner
+    (hcanonical : FixedDescriptionBoundedSimulatorCanonicalConstruction) :
+    FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_of_canonical
+    hcanonical
+
 theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_stepPhase_configRunner
     (hstep :
       FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner) :
