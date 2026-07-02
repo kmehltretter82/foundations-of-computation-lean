@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module locates the selected hit flag inside the padded projection tail.
+It defines the one-field left skip, the right-end tape at the hit location, and
+run lemmas that hand the marked position to the erasing stages.
+-/
+
 namespace FoC
 namespace Computability
 

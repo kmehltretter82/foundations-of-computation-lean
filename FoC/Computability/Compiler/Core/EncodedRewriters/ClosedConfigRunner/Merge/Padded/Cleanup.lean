@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge
 
 set_option doc.verso true
 
+/-!
+This module packages the padded merge emitter cleanup after a selected
+transition has been processed. It connects the post-transition route,
+hit-rewind route, and final right-handoff into the exact-shape construction
+used by the closed configuration runner.
+-/
+
 namespace FoC
 namespace Computability
 

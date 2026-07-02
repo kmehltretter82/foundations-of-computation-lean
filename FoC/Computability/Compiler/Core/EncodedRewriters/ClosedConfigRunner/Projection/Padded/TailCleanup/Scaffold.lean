@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module assembles the padded selected-projection tail cleanup from its
+source rewind, hit detection, erasure, post-padding, and closeout stages. It is
+the scaffold that turns the named component constructions into the exact-shape
+construction consumed by the padded projection emitter.
+-/
+
 namespace FoC
 namespace Computability
 

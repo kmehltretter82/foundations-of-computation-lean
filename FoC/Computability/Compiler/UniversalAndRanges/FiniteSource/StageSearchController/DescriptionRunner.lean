@@ -3,6 +3,12 @@ import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchCon
 
 set_option doc.verso true
 
+/-!
+This module defines the description runner used inside the budget checker for
+finite-source stage search. It gives a finite state space, the runner tape
+layout, and the machine steps that simulate one decoded description run.
+-/
+
 namespace FoC
 namespace Computability
 

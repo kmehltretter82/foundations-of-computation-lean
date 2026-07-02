@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.ControllerResultContinue.GuardProjection.
 
 set_option doc.verso true
 
+/-!
+This module builds the rewind stage used after the result-none guard has been
+recognized. It proves the finite control for moving back across the guarded
+projection tape and packages the exact tapes used by the later stage-input
+handoff.
+-/
+
 namespace FoC
 namespace Computability
 

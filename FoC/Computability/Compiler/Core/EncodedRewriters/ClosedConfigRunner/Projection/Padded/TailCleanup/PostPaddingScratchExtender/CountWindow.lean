@@ -23,6 +23,12 @@ namespace SelectedProjectionPaddedTailCleanup
 
 open CanonicalLayouts.DovetailLayoutScanner
 
+/-!
+The source and target tapes expose the scratch-count field as a local counted
+window. The extra-tail variants keep the same local shape while preserving the
+post-count scratch suffix needed by the final cleanup route.
+-/
+
 def selectedProjectionPaddedTailCleanupScratchCountCounterSourceTape
     (useAccept : Bool) (L : DovetailLayout) : Tape Bool :=
   tapeAtCells

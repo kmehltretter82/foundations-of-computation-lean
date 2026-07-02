@@ -16,6 +16,13 @@ open MachineDescription
 
 namespace ControllerStageInputProjection
 
+/-!
+This base file starts with raw transition and tape-shape constructors. Later
+projection phases reuse these definitions so their exact-run lemmas can talk
+about local tape views, marked code cells, and repeated encoded fields without
+unfolding the full controller layout each time.
+-/
+
 def keep
     (source : Nat) (cell : Bool) (target : Nat) :
     TransitionDescription :=

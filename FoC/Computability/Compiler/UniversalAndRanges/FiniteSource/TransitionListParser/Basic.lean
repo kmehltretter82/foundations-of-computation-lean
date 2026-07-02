@@ -105,6 +105,13 @@ def finite : Foundation.FiniteType TransitionListParserState where
 
 end TransitionListParserState
 
+/-!
+The transition function is written as small named moves rather than a single
+large match expression. This keeps the later soundness proof aligned with the
+parser phases: consume one unary count tick, parse one transition record, mark
+the current suffix, and return left to the count prefix.
+-/
+
 def transitionListParserKeep
     (cell : Option MachineCodeSymbol)
     (dir : Direction)

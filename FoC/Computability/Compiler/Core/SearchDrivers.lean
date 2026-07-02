@@ -12,6 +12,13 @@ namespace Computability
 open Languages
 open MachineDescription
 
+/-!
+The search drivers are noncomputable programs extracted from machine-level
+constructions. They choose the first stage limit where the compiled attempt
+emits a canonical Boolean result, then rely on functionality lemmas to show
+that this search agrees with the intended recognizer behavior.
+-/
+
 noncomputable def PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
     (attempt : MachineDescription) :
     StagedProgram Bool Bool :=

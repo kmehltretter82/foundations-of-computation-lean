@@ -23,6 +23,13 @@ open MachineDescription
 namespace EncodedRewriters
 namespace TotalOutputEmitter
 
+/-!
+The emitter tracks only the last relevant hit boundary while scanning the
+encoded simulator layout. This finite summary is enough to decide whether the
+total-output primitive emits the empty word, the singleton true word, or the
+singleton false word.
+-/
+
 def OutputCode
     (L : DovetailLayout) : Word MachineCodeSymbol :=
   encodeBoolWord
@@ -52,6 +59,13 @@ def Spec
 def FiniteDescriptionConstruction : Prop :=
   exists emitter : MachineDescription,
     Spec emitter
+
+/-!
+The boundary state below is the finite memory of the scanner. The explicit
+encode/decode functions let the later transition table store this memory in
+ordinary numeric states while keeping the proof side phrased by cases on a
+small semantic datatype.
+-/
 
 inductive HitBoundary where
   | other

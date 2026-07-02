@@ -4,6 +4,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module supplies bridge moves between the post-padding framework and the
+field erasers. The central helper crosses the fixed blank block to align the
+head for the reject and accept cleanup routes.
+-/
+
 namespace FoC
 namespace Computability
 

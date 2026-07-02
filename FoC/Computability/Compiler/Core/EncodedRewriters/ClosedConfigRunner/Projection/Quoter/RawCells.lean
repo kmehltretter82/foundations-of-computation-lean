@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module connects the quoter assembly prefix with the source-rest finisher
+and raw-cell quotation loops. It proves lookup and run equivalences that let
+the assembly prefix reuse scanner behavior below the quoter control states.
+-/
+
 namespace FoC
 namespace Computability
 

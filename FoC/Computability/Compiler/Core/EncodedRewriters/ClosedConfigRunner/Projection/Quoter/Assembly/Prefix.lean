@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module defines the fixed prefix of the selected-projection input quoter
+assembly machine. It gives the skeleton and prefix descriptions, proves their
+finite transition-table obligations, and relates early runs to the scanner
+subroutine.
+-/
+
 namespace FoC
 namespace Computability
 

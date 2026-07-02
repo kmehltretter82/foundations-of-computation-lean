@@ -24,6 +24,13 @@ open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
+/-!
+The initializer specifications use a right-shifted output convention. The
+lemmas in this first block justify that convention for encoded code words:
+moving right exposes the normalized output, and the standard handoff move
+returns the tape to the canonical input position.
+-/
+
 theorem tape_normalizedOutput_move_right_input
     (w : Word Bool) :
     Tape.normalizedOutput
@@ -392,6 +399,13 @@ def FiniteDescriptionConstruction :
     exists initializer : MachineDescription,
       RightShiftedSpec
         accept reject initializer
+
+/-!
+The remaining statements are specification glue. They expand the initializer
+output code, prove uniqueness for halt-transition-free descriptions, and move
+between code-level construction statements and the right-shifted machine-level
+contract used by the compiled implementation.
+-/
 
 theorem outputCode_eq_expanded
     (accept reject : MachineDescription)

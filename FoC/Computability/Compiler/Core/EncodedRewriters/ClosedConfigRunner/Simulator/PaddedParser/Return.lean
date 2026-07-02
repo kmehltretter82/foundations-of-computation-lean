@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simul
 
 set_option doc.verso true
 
+/-!
+This module proves the return-to-input route for the padded simulator parser
+inside the closed configuration runner. It builds the configuration-runner
+description and shows that it returns control to the right-shifted input layout.
+-/
+
 namespace FoC
 namespace Computability
 

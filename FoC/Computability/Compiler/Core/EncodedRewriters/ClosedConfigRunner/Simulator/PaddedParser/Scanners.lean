@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simul
 
 set_option doc.verso true
 
+/-!
+This module builds the header-prefix scanners for the padded simulator parser.
+It proves the raw-to-handoff runs that align the parser with the canonical
+dovetail-layout scanner and the configuration-runner return route.
+-/
+
 namespace FoC
 namespace Computability
 

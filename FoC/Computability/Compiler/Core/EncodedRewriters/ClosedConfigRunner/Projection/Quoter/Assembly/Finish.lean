@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module proves the finishing runs for the selected-projection input quoter
+assembly. It restores the marked tail, appends the closing blank, and connects
+the assembly skeleton to the final quoter handoff tapes.
+-/
+
 namespace FoC
 namespace Computability
 

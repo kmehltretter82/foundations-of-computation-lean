@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.ControllerResultContinue.GuardProjection.
 
 set_option doc.verso true
 
+/-!
+This module composes the guard-projection scanner and rewind stage with the
+stage-input continuation component. The main result is the compiled description
+that turns a result-none controller state back into the encoded stage-input
+layout expected by the next controller pass.
+-/
+
 namespace FoC
 namespace Computability
 

@@ -3,6 +3,13 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module assembles the padded selected-projection emitter from the input
+quoter and tail-cleanup components. It states the checked and unchecked padded
+emitter contracts and proves the bridge from component constructions to the
+public selected-projection construction.
+-/
+
 namespace FoC
 namespace Computability
 

@@ -12,6 +12,13 @@ namespace Computability
 open Languages
 open MachineDescription
 
+/-!
+The first group of definitions is purely semantic: it names the code-level
+transforms that the compiled finite machines must realize. These transforms
+parse stage inputs, run a bounded simulator for an exact fuel value, and then
+decode the simulator output back to a Boolean result word.
+-/
+
 def PairedRecognizerDovetailLayoutCode
     (accept reject : MachineDescription) :
     TapeCodePrimitive :=
@@ -82,6 +89,12 @@ def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCode
       (FixedDescriptionBoundedSimulatorCode attempt))
     (PairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive
       attempt)
+
+/-!
+The following lemmas are the executable contracts for the semantic transforms
+above. They are stated against encoded words rather than tapes, so later
+finite-machine proofs can reuse them when closing handoff obligations.
+-/
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelInputCode_decodeStageInput
     (w : Word Bool) (limit fuel : Nat) :

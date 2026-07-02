@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module defines the exact source and target tape shapes for selected
+projection input quotation. The lemmas connect those tapes to parsed checked
+layouts and to the normalized-output contract used by the padded projection
+emitter.
+-/
+
 namespace FoC
 namespace Computability
 

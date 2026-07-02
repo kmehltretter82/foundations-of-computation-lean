@@ -28,6 +28,13 @@ open MachineDescription
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
 
+/-!
+Selected projection has several compatible surfaces. The canonical contract is
+phrased as a code-word emitter; the checked and equivalence contracts are
+machine-description adapters used when the source tape already carries parsed
+layout checks or padding.
+-/
+
 def SelectedProjectionEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
@@ -279,6 +286,13 @@ def RejectProjectionCheckedEmitterConstruction : Prop :=
 def SelectedProjectionCheckedEmitterSideConstruction : Prop :=
   AcceptProjectionCheckedEmitterConstruction ∧
     RejectProjectionCheckedEmitterConstruction
+
+/-!
+The equivalence contracts below are used when a component is allowed to produce
+the same normalized output with a larger tape context. These adapters are the
+reason padded projection can be assembled from small finite leaves without
+forcing every intermediate tape to have the final exact context length.
+-/
 
 theorem selectedProjectionCheckedEmitterConstruction_of_sides
     (h : SelectedProjectionCheckedEmitterSideConstruction) :

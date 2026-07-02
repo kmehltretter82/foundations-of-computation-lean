@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module defines the source rewind step for padded selected-projection tail
+cleanup. It extracts the source bits from a parsed dovetail layout, builds the
+rewind machine, and proves the scan and finish runs that start cleanup.
+-/
+
 namespace FoC
 namespace Computability
 

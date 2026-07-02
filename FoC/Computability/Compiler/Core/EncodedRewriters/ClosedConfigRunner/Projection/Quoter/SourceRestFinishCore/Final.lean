@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module closes the source-rest finisher construction used by the input
+quoter. It combines the live-tail adapters with the reusable and raw-bool
+source-start routes and exposes the final finite-leaf construction the quoter
+assembly imports.
+-/
+
 namespace FoC
 namespace Computability
 

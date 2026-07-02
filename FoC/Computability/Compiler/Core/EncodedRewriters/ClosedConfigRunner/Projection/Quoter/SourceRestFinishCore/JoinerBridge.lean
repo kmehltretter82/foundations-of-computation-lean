@@ -3,6 +3,12 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapComp
 
 set_option doc.verso true
 
+/-!
+This module bridges quoted source-rest tails to the local gap expected by the
+joiner. It instantiates the one-gap compactor on the source-rest layout and
+proves the handoff from scanner output to the live-tail joiner route.
+-/
+
 namespace FoC
 namespace Computability
 

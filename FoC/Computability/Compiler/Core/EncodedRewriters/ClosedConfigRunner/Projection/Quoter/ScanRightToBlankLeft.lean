@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module defines the small scan-right-to-blank-left helper used after input
+quotation. It moves to the right blank, steps back left, and proves both plain
+and with-right-tail run lemmas for the assembly handoff.
+-/
+
 namespace FoC
 namespace Computability
 

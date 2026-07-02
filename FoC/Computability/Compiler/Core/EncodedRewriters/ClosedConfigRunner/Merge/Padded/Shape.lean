@@ -3,6 +3,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module defines the padded output and input tape shapes for the selected
+merge emitter. It relates those tapes to parsed dovetail-layout fields and
+records the normalized-output and context-length facts used by merge cleanup.
+-/
+
 namespace FoC
 namespace Computability
 

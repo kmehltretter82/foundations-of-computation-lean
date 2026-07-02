@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module packages the selected-projection input quoter construction. It
+states the exact-shape specification, proves that the finite-leaf assembly
+satisfies the public quoter contract, and exposes the scaffold construction
+used by padded projection.
+-/
+
 namespace FoC
 namespace Computability
 

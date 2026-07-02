@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module provides the small erasers used once the selected hit flag has been
+found in the padded tail. The finite machines erase boolean fields on either
+side of the current cell while preserving the handoff shape for later cleanup.
+-/
+
 namespace FoC
 namespace Computability
 

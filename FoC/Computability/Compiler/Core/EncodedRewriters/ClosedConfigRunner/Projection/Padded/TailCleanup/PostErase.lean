@@ -5,6 +5,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module connects hit-flag erasure to the right-edge rewind and fixed-window
+delete transducers. It proves that the erased hit position can be normalized
+into the source tape expected by the later post-padding cleanup routes.
+-/
+
 namespace FoC
 namespace Computability
 

@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Dovetai
 
 set_option doc.verso true
 
+/-!
+This module proves run lemmas for the composed dovetail-layout scanner. It
+threads the primitive scanners through their right-handoff configurations and
+records the exact intermediate tapes used by the checked layout scanner.
+-/
+
 namespace FoC
 namespace Computability
 

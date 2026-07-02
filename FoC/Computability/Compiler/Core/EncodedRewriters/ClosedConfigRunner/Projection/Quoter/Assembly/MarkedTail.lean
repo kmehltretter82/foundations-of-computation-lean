@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module proves the assembly runs that scan a marked tail after the stage
+natural field has been emitted. It records both skeleton and prefix-description
+runs up to the state that resumes raw-cell quotation.
+-/
+
 namespace FoC
 namespace Computability
 

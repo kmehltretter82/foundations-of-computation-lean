@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module constructs the marker counter used while extending scratch padding
+in the selected-projection cleanup. It defines the marker block, proves the
+local tape movement lemmas, and packages the finite transducer that appends the
+counter markers.
+-/
+
 namespace FoC
 namespace Computability
 

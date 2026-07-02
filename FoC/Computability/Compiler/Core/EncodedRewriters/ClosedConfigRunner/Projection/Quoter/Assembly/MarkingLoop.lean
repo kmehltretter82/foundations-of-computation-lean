@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module proves the marking loop for the selected-projection input quoter
+assembly. The loop marks the current source-rest cell, advances through the
+tail, and hands control to the marked-tail stage once all cells are processed.
+-/
+
 namespace FoC
 namespace Computability
 

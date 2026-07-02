@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge
 
 set_option doc.verso true
 
+/-!
+This module builds the header scanner for the padded selected merge emitter.
+It proves readiness and exact run lemmas for rewriting the outer header before
+the route enters the shared cleanup machinery.
+-/
+
 namespace FoC
 namespace Computability
 

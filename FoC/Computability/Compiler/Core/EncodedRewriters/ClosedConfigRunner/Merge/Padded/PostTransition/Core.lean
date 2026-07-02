@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge
 
 set_option doc.verso true
 
+/-!
+This module records the tape shape immediately after the padded selected merge
+emitter has copied the transition payload. The lemmas identify the emitted
+source bits, normalized output, and padding context used by later cleanup
+routes.
+-/
+
 namespace FoC
 namespace Computability
 

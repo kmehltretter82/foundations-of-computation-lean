@@ -537,6 +537,13 @@ theorem identityTransducer_runsToOutput
     identityTransducer.RunsToOutput input input := by
   exact identityTransducer_run input
 
+/-!
+The small example transducers below are used as calibration points for the
+compiler layer. Each one has both a pure finite-transducer run theorem and a
+lowered machine description, so later generated descriptions can be compared
+against hand-written transition tables.
+-/
+
 def identityPreservingScanDescription : MachineDescription :=
   identityTransducer.preservingScanDescription
 

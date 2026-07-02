@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Sou
 
 set_option doc.verso true
 
+/-!
+This module records the context tapes used after the finite-source normalizer
+has selected a transition block. It restores the marked prefix and proves the
+handoff from mark-position context to the saved-transition phase.
+-/
+
 namespace FoC
 namespace Computability
 

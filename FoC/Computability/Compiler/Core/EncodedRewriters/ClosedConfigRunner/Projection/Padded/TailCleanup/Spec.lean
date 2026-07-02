@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module states the contracts for padded selected-projection tail cleanup.
+It separates the emitter-facing specification, the cleanup subroutine
+specification, and the exact-shape construction that links the two.
+-/
+
 namespace FoC
 namespace Computability
 

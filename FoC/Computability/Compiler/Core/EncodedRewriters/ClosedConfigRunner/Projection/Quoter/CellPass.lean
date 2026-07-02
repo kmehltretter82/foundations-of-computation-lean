@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module builds the finite cell-pass machine used by the selected-projection
+input quoter. It preserves cell payloads while copying the encoded zero and one
+cell forms needed by later assembly runs.
+-/
+
 namespace FoC
 namespace Computability
 

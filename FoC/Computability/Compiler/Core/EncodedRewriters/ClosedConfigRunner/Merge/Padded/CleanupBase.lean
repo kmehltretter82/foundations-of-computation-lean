@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge
 
 set_option doc.verso true
 
+/-!
+This module contains the local cleanup machines shared by the padded selected
+merge emitter. It defines the one-step left move, source rewind tapes, and
+basic tape-shape lemmas used before the post-transition cleanup modules split
+into specialized routes.
+-/
+
 namespace FoC
 namespace Computability
 

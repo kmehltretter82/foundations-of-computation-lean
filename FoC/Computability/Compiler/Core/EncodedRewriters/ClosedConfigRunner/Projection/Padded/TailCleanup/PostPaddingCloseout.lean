@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module closes the accept branch of padded selected-projection tail
+cleanup. It combines scratch extension, deletion of the reject side, and the
+final finite-transducer bridge to produce the selected equivalence output.
+-/
+
 namespace FoC
 namespace Computability
 

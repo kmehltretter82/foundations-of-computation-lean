@@ -2,6 +2,13 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Finit
 
 set_option doc.verso true
 
+/-!
+This module fixes the padded output shape for selected projection. It connects
+the padded tape view with the raw selected-projection output bits, normalized
+output, and trailing-blank padding conventions used by the quoter and cleanup
+stages.
+-/
+
 namespace FoC
 namespace Computability
 

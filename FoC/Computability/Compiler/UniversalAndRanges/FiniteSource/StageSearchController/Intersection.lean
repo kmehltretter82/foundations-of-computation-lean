@@ -3,6 +3,13 @@ import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchCon
 
 set_option doc.verso true
 
+/-!
+This module combines the description runner with the generated call search to
+form the budget-checker intersection route. It defines the paired fuel code,
+selected run obligation, and equivalence lemmas that connect bounded pairs to
+the controller search.
+-/
+
 namespace FoC
 namespace Computability
 

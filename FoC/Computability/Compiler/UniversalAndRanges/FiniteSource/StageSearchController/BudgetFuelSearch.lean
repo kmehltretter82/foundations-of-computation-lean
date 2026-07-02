@@ -3,6 +3,13 @@ import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchCon
 
 set_option doc.verso true
 
+/-!
+This module packages the budget-and-fuel search layer for the finite-source
+stage-search controller. It defines the dovetail witness relation, enumerator
+construction, raw search obligations, and bounded-attempt obligations used by
+the controller closeout.
+-/
+
 namespace FoC
 namespace Computability
 

@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module handles the reject-side route after the padded projection cleanup
+has identified the gap. It erases the reject prefix, moves to the right edge,
+and proves the bridge lemmas needed by the post-padding framework.
+-/
+
 namespace FoC
 namespace Computability
 

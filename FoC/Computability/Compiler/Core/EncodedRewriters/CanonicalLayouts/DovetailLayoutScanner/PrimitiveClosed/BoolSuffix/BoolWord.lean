@@ -2,6 +2,12 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Dovetai
 
 set_option doc.verso true
 
+/-!
+This module proves closed inversion and run lemmas for the bool-word suffix
+scanner. It isolates the arithmetic and tape-shape facts needed when a raw bit
+suffix is known to come from an encoded boolean word.
+-/
+
 namespace FoC
 namespace Computability
 

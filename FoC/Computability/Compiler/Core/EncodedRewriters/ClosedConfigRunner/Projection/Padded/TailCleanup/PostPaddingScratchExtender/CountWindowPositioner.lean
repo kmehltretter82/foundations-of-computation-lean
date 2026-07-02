@@ -3,6 +3,13 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Proje
 
 set_option doc.verso true
 
+/-!
+This module positions the head at the counted suffix used by scratch extension.
+It states the handoff specifications for locating and restoring the count
+window and connects the generic counted-suffix transducers to the padded
+tail-cleanup layout.
+-/
+
 namespace FoC
 namespace Computability
 
