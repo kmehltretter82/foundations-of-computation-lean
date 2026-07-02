@@ -256,6 +256,10 @@ def StageAttemptFramedRealizes
     StageAttemptFramedForwardSpec attempt invoker ∧
       StageAttemptFramedClosedSpec attempt invoker
 
+abbrev FramedSubroutineInvocationRealizes :
+    MachineDescription -> MachineDescription -> Prop :=
+  StageAttemptFramedRealizes
+
 def StageAttemptProtectedRealizes
     (attempt invoker : MachineDescription) : Prop :=
   invoker.SubroutineReady ∧
@@ -482,6 +486,9 @@ def StageAttemptFramedConstruction : Prop :=
     attempt.SubroutineReady ->
       exists invoker : MachineDescription,
         StageAttemptFramedRealizes attempt invoker
+
+abbrev FramedSubroutineInvocationConstruction : Prop :=
+  StageAttemptFramedConstruction
 
 def StageAttemptProtectedConstruction : Prop :=
   forall attempt : MachineDescription,
