@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.Controller
+import FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters
 import FoC.Computability.Compiler.Core.CommonGround.Layouts
 import FoC.Computability.Compiler.Core.CommonGround.SearchAlgebra
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Basic
@@ -536,6 +537,98 @@ def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedC
         (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
           attempt)
         parser
+
+def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape
+    (attempt : MachineDescription)
+    (w : Word Bool) (limit fuel : Nat) : Tape Bool :=
+  Tape.move Direction.right
+    (Tape.input
+      (encodeCodeWordAsInput
+        (SimulatorLayout.encode
+          (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+            attempt w limit fuel))))
+
+def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpec
+    (attempt runner : MachineDescription) : Prop :=
+  runner.SubroutineReady ∧
+    (forall w : Word Bool,
+      forall limit fuel : Nat,
+        runner.HaltsWithTape
+          (encodeCodeWordAsInput
+            (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+              w limit fuel))
+          (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape
+            attempt w limit fuel)) ∧
+      forall code : Word MachineCodeSymbol,
+      forall T : Tape Bool,
+        runner.HaltsWithTape (encodeCodeWordAsInput code) T ->
+          exists w : Word Bool,
+          exists limit fuel : Nat,
+            code =
+              PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+                w limit fuel ∧
+            T =
+              PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape
+                attempt w limit fuel
+
+def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction :
+    Prop :=
+  forall attempt : MachineDescription,
+    exists runner : MachineDescription,
+      PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpec
+        attempt runner
+
+theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_of_spec
+    (h :
+      PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction) :
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction := by
+  intro attempt
+  rcases h attempt with ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  exact
+    CommonGround.CodeWordEmitters.rightShiftedOutputCompiled_of_indexed_tape_spec
+      (P :=
+        PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
+          attempt)
+      (runner := runner)
+      hrunner.left.left
+      hrunner.left.right
+      (fun i : Sigma (fun _ : Word Bool => Nat × Nat) =>
+        PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+          i.1 i.2.1 i.2.2)
+      (fun i : Sigma (fun _ : Word Bool => Nat × Nat) =>
+        SimulatorLayout.encode
+          (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+            attempt i.1 i.2.1 i.2.2))
+      (fun i : Sigma (fun _ : Word Bool => Nat × Nat) =>
+        PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape
+          attempt i.1 i.2.1 i.2.2)
+      (by
+        intro i
+        rfl)
+      (by
+        intro i
+        exact hrunner.right.left i.1 i.2.1 i.2.2)
+      (by
+        intro code T hhalt
+        rcases hrunner.right.right code T hhalt with
+          ⟨w, limit, fuel, hcode, hT⟩
+        exact ⟨⟨w, (limit, fuel)⟩, hcode, hT⟩)
+      (by
+        intro code out
+        constructor
+        · intro htransform
+          rcases
+              (pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive_transform_eq_some_iff
+                attempt code out).mp htransform with
+            ⟨w, limit, fuel, hcode, hout⟩
+          exact ⟨⟨w, (limit, fuel)⟩, hcode, hout⟩
+        · intro hindexed
+          rcases hindexed with ⟨i, hcode, hout⟩
+          exact
+            (pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive_transform_eq_some_iff
+              attempt code out).mpr
+              ⟨i.1, i.2.1, i.2.2, hcode, hout⟩)
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_of_rightShifted
     (h :

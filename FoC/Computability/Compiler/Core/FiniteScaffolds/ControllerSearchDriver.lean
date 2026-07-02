@@ -463,12 +463,18 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstru
       pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes_of_searchDriver
         hdriver hinitializer hinvoker hemitter hcontinuer⟩
 
-private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction := by
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction := by
   intro attempt
-  -- Remaining finite-table obligation: parse generated `(w, limit, fuel)`
-  -- inputs and emit the simulator-layout code word in right-shifted form.
+  -- Remaining finite-table obligation: recognize generated `(w, limit, fuel)`
+  -- inputs and emit the corresponding simulator-layout code word one cell
+  -- right of the canonical output.
   sorry
+
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction :=
+  pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_of_spec
+    pairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction_finite_leaf
 
 private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_finite_leaf :
     PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction :=

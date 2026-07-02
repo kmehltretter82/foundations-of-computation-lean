@@ -120,6 +120,60 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
   pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCode_encode
     attempt w limit fuel
 
+theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive_transform_eq_some_iff
+    (attempt : MachineDescription)
+    (code out : Word MachineCodeSymbol) :
+    (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
+        attempt).transform code = some out <->
+      exists w : Word Bool,
+      exists limit : Nat,
+      exists fuel : Nat,
+        code =
+          PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+            w limit fuel ∧
+        out =
+          SimulatorLayout.encode
+            (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+              attempt w limit fuel) := by
+  constructor
+  · intro h
+    unfold PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive at h
+    unfold PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCode at h
+    cases hstage : DovetailLayout.decodeStageInput code with
+    | none =>
+        simp [hstage] at h
+    | some decoded =>
+        rcases decoded with ⟨inputStage, suffix⟩
+        rcases inputStage with ⟨w, limit⟩
+        cases hfuel : decodeNat suffix with
+        | none =>
+            simp [hstage, hfuel] at h
+        | some decodedFuel =>
+            rcases decodedFuel with ⟨fuel, rest⟩
+            cases rest with
+            | nil =>
+                simp [hstage, hfuel] at h
+                cases h
+                have hcode :
+                    code =
+                      DovetailLayout.stageInputCodeAppend
+                        w limit suffix :=
+                  DovetailLayout.decodeStageInput_eq_some_stageInputCodeAppend
+                    hstage
+                have hsuffix :
+                    suffix = encodeNatAppend fuel [] :=
+                  decodeNat_eq_some_encodeNatAppend hfuel
+                refine ⟨w, limit, fuel, ?_, rfl⟩
+                rw [hcode, hsuffix]
+                rfl
+            | cons _ _ =>
+                simp [hstage, hfuel] at h
+  · intro h
+    rcases h with ⟨w, limit, fuel, rfl, rfl⟩
+    exact
+      pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive_encode
+        attempt w limit fuel
+
 theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive_transform_eq_some_cons
     {attempt : MachineDescription} {code out : Word MachineCodeSymbol}
     (h :
