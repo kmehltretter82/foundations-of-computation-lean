@@ -303,7 +303,7 @@ finite-construction proofs.
   be solved through description decoding, transition-list parsing, and bounded
   simulator facts.
 
-At this cleanup checkpoint, the project is expected to build with twenty-three
+At this cleanup checkpoint, the project is expected to build with twenty
 intentional proof-hole warnings under {lit}`FoC/Computability`.  If that
 changes, update this page together with the construction target or helper
 theorem that changed the proof surface.  Parent planning notes that still
@@ -389,20 +389,17 @@ theorems.  This is the current baseline for cleanup and proof work.
   {lit}`pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf`
   lives in
   {module}`FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerInvocation`.
-  The five controller search warnings live in
+  The two controller search warnings live in
   {module}`FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerSearchDriver`:
-  {lit}`pairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction_finite_leaf`,
-  {lit}`simulatorLayoutClosedRecognizerConstruction_finite_leaf`,
-  {lit}`fixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner_finite_leaf`,
-  {lit}`pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpecConstruction_finite_leaf`,
+  {lit}`pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineOutputLevelConstruction_finite_leaf`
   and
   {lit}`pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction_finite_leaf`.
-  Audit the fixed-description right-handoff route before trying to prove this
-  cluster.
+  The former right-handoff fixed-simulator leaves are no longer on the
+  controller critical path.
 
 ## Controller Fixed-Simulator Route Audit
 
-The controller search driver still contains the old exact/right-handoff
+The controller search driver used to contain the old exact/right-handoff
 fixed-simulator route:
 
 * {lit}`fixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner_finite_leaf`
@@ -423,11 +420,17 @@ distinguishes the live target from that old context-length obstruction.
 The cleanup route is therefore the padded/equivalence route unless a later
 commit adds such a feasibility lemma.  The controller exact-fuel runner should
 be refactored to use an output-level or padded/equivalence simulator subroutine
-boundary, then extract the normalized halted simulator-layout output.  Do not
-spend proof effort on
+boundary, then extract the normalized halted simulator-layout output.
+
+The controller driver has been rerouted to the output-level leaf
+{lit}`pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineOutputLevelConstruction_finite_leaf`.
+That leaf is the correct remaining proof target for the exact-fuel runner.  It
+should be implemented from the generated fuel-input scanner, the
+padded/equivalence fixed-description simulator boundary, and the normalized
+halted-layout output extractor.  Do not reintroduce
 {lit}`fixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner_finite_leaf`
-or on the parser/right-handoff adapter without first changing that route or
-proving the context-length feasibility condition.
+or the parser/right-handoff adapter unless a context-length feasibility lemma
+is first proved.
 
 ## Construction Route Classification
 
@@ -460,12 +463,12 @@ The current construction surface is intentionally split by role.
   {lit}`SelectedProjectionPrimitiveRightShiftedConstruction`, and the selected
   merge exact/right-shifted scaffold chain is not an active target. The live
   route is the padded/equivalence finite-description route.
-* Broad finite-machine construction leaves: the twenty-three real build
+* Broad finite-machine construction leaves: the twenty real build
   warnings are the four generated code-prefix search leaves, the decoded
   bounded simulator normalized-machine leaf, three CommonGround finite
   transducer leaves, six padded/equivalence rewriter leaves, two live-tail
   source-rest leaves, the fixed-description padded simulator terminal emitter
-  leaf, and six controller invocation/search leaves. Prose mentions of proof
+  leaf, and three controller invocation/search leaves. Prose mentions of proof
   holes in this page are navigation notes, not declaration warnings.
 
 ## Proof Navigation Rules

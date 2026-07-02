@@ -464,88 +464,31 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstru
       pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes_of_searchDriver
         hdriver hinitializer hinvoker hemitter hcontinuer⟩
 
-private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction := by
-  intro attempt
-  -- Remaining finite-table obligation: recognize generated `(w, limit, fuel)`
-  -- inputs and emit the corresponding simulator-layout code word one cell
-  -- right of the canonical output.
-  sorry
-
-private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction :=
-  pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_of_spec
-    pairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction_finite_leaf
-
-private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction :=
-  pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_of_rightShifted
-    pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_finite_leaf
-
-private theorem simulatorLayoutClosedRecognizerConstruction_finite_leaf :
-    CommonGround.SimulatorLayouts.ClosedRecognizerConstruction := by
-  -- Remaining finite-table obligation: recognize complete simulator-layout
-  -- code words and halt on the canonical right-handoff tape.
-  sorry
-
-private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction_finite_leaf :
-    FixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction :=
-  fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction_of_closedRecognizer
-    simulatorLayoutClosedRecognizerConstruction_finite_leaf
-
-private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_finite_leaf :
-    FixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction :=
-  fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_of_primitive
-    fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction_finite_leaf
-
 /-
-Route-audit note: do not try to fill this as a routine finite-table leaf.  The
-contract below is the exact right-handoff-to-canonical layout shape, then it is
-adapted by `fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_parser_rightHandoffStep`.
-Unless a context-length feasibility lemma is added, the controller exact-fuel
-runner should be rerouted through the padded/equivalence simulator boundary.
+Output-level exact-fuel runner leaf for controller search.
+
+This is the replacement for the old local chain
+`generated simulator-layout emitter -> fixed-description right-handoff
+simulator -> halted-layout extractor`.  The remaining implementation should
+compose the generated fuel-input scanner with the padded/equivalence
+fixed-description simulator boundary, then extract the normalized halted-layout
+code output.  It must not be discharged through
+`FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction` or
+`fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_parser_rightHandoffStep`.
 -/
-private theorem fixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner_finite_leaf :
-    EncodedRewriters.BoundedLayoutRunner.FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner := by
-  intro attempt
-  -- Remaining finite-table obligation: run the fixed description on an
-  -- already-parsed simulator layout and return from the right handoff.
-  sorry
-
-private theorem fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_finite_leaf :
-    FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction :=
-  fixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner_finite_leaf
-
-private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_finite_leaf :
-    FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction :=
-  fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_parser_rightHandoffStep
-    fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_finite_leaf
-    fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_finite_leaf
-
-private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpecConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpecConstruction := by
-  intro attempt
-  -- Remaining finite-table obligation: recognize complete halted simulator
-  -- layouts whose normalized tape output is a code word, and emit that code
-  -- word as normalized output.
-  sorry
-
-private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction :=
-  pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_outputSpec
-    pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpecConstruction_finite_leaf
-
-private theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineConstruction_finite_leaf :
+private theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineOutputLevelConstruction_finite_leaf :
     PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineConstruction :=
-  pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineConstruction_of_components
-    pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_finite_leaf
-    fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_finite_leaf
-    pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_finite_leaf
+  by
+    intro attempt invoker hinvoker
+    -- Remaining output-level finite-machine obligation.  Use `hinvoker` only
+    -- for protected invocation compatibility; the simulator boundary should be
+    -- the padded/equivalence route described above.
+    sorry
 
 theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf :
     PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction :=
   pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_of_codeSubroutine
-    pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineConstruction_finite_leaf
+    pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineOutputLevelConstruction_finite_leaf
 
 private theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction_finite_leaf :
     PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction := by
