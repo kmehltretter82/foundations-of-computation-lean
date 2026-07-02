@@ -303,10 +303,11 @@ finite-construction proofs.
   be solved through description decoding, transition-list parsing, and bounded
   simulator facts.
 
-At this cleanup checkpoint, the project is expected to build with eleven
-intentional proof-hole warnings under {lit}`FoC/Computability`. If that
+At this cleanup checkpoint, the project is expected to build with twenty-three
+intentional proof-hole warnings under {lit}`FoC/Computability`.  If that
 changes, update this page together with the construction target or helper
-theorem that changed the proof surface.
+theorem that changed the proof surface.  Parent planning notes that still
+mention older eleven- or seventeen-hole baselines are historical.
 
 ## Current Finite-Machine Leaf Index
 
@@ -319,11 +320,19 @@ theorems.  This is the current baseline for cleanup and proof work.
   {name (full := FoC.Computability.codePrefixBoundedNestedPairEnumeratorFiniteLeaf)}`codePrefixBoundedNestedPairEnumeratorFiniteLeaf`,
   and
   {name (full := FoC.Computability.codePrefixExactFuelProductRunnerFiniteLeaf)}`codePrefixExactFuelProductRunnerFiniteLeaf`.
-  These four leaves live in
-  {module}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch`
+  These four public leaves are now split across
+  {module}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.ExactFuel`,
+  {module}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.PairEnumerator`,
+  and
+  {module}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.Product`
   and should be treated as the first universal finite-source cleanup cluster:
   exact-fuel invocation, unbounded generated-pair enumeration, bounded
-  generated-pair enumeration, and product exact-fuel invocation.
+  generated-pair enumeration, and product exact-fuel invocation.  The active
+  warning declarations are the concrete {lit}`Fin`-state leaves
+  {lit}`codePrefixExactFuelRunnerFinStateFiniteLeaf`,
+  {lit}`codePrefixNestedPairEnumeratorFinStateFiniteLeaf`,
+  {lit}`codePrefixBoundedNestedPairEnumeratorFinStateFiniteLeaf`, and
+  {lit}`codePrefixExactFuelProductRunnerFinStateFiniteLeaf`.
   The ordinary generated-call parser is now named separately by
   {name (full := FoC.Computability.codePrefixGeneratedCallParserConstruction_finite)}`codePrefixGeneratedCallParserConstruction_finite`;
   it uses
@@ -331,48 +340,65 @@ theorems.  This is the current baseline for cleanup and proof work.
   to expose a concrete state type but intentionally preserves only ordinary
   halting, not exact-fuel halting.
 * Decoded bounded simulator:
-  {name (full := FoC.Computability.codePrefixDecodedBoundedSimulatorSemanticMachineFiniteLeaf)}`codePrefixDecodedBoundedSimulatorSemanticMachineFiniteLeaf`
+  {lit}`codePrefixDecodedBoundedSimulatorNormalizedCodeMachineFiniteLeaf`
   lives in
   {module}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.DecodedBoundedSimulator`.
-  Prove it from the local stage-code, description-prefix, transition-list, and
-  bounded-simulator facts; do not import the aggregate finite-source closeout
-  back into this leaf.
-* Selected-projection padded tail cleanup:
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction)}`SelectedProjectionPaddedTailCleanup.selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction`
+  The semantic and parsed code-machine leaves are adapters around this
+  normalized encoded-shape obligation.  Prove it from the local stage-code,
+  description-prefix, transition-list, and bounded-simulator facts; do not
+  import the aggregate finite-source closeout back into this leaf.
+* Common finite transducers:
+  {lit}`countedSuffixBoundaryLocatorConstruction_core`,
+  {lit}`countWindowRawSourceEncoderConstruction_core`, and
+  {lit}`countedSuffixExtraBlankRestorerConstruction_core` live under
+  {module}`FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers`.
+  These are reusable counted-suffix and count-window machines, not
+  branch-specific selected-projection facts.
+* Selected-projection padded scratch-count cleanup:
+  {lit}`rejectPostFieldHandoff_remainingGapsConstruction_core` and
+  {lit}`acceptPostFieldRewoundToDecodedPrefixConstruction_core` live in
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindowConstructions`.
+  They should consume the reusable finite transducers above and remain part of
+  the padded/equivalence route.
+* Selected-merge padded post-transition parsing:
+  {lit}`selectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction`,
+  {lit}`selectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction`,
+  {lit}`selectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportRejectConstruction`,
+  and
+  {lit}`selectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportAcceptConstruction`
+  live in the split
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition`
+  submodules.  They are embedded materializer, restorer, and branch transport
+  machines for the active padded selected-merge route.
+* Selected-projection source-rest live-tail finish:
+  {lit}`mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction` and
+  {lit}`mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction` live in
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail.EmitterConstruction`
+  and
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail.JoinerConstruction`.
+  The joiner is intentionally assembly-specific; the arbitrary stage/source
+  joiner is guarded as impossible.
+* Fixed-description padded simulator terminal emitter:
+  {lit}`fixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchConstruction_core_configRunner`
   lives in
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostErase`.
-  It is a padded-output construction leaf, not an exact selected-projection
-  tail projector.
-* Selected-merge padded emitter:
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.selectedMergePaddedEmitterAfterTransitionPaddedCoreConstruction)}`selectedMergePaddedEmitterAfterTransitionPaddedCoreConstruction`
+  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.TerminalCore.RunConfigEmitter`.
+  This is the non-circular terminal run-config field emitter for the padded
+  simulator route.  Source-shape, right-shifted-source, and terminal rewind
+  modules are adapter glue over this target.
+* Controller stage invocation and search:
+  {lit}`pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf`
   lives in
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.Cleanup`.
-  It belongs to the active equivalence route; the exact/right-shifted merge
-  route is obsolete for the context-length reason recorded below.
-* Selected-projection source-rest finish:
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.assemblySourceRestFinishLeftBoundaryCoreConstruction)}`SelectedProjectionInputQuoterFiniteLeaf.assemblySourceRestFinishLeftBoundaryCoreConstruction`
-  lives in
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.Construction`.
-  The surrounding declarations are exact-tape adapters; the remaining core
-  proof is the mixed parser-stack/source-rest rewrite.
-* Fixed-description padded simulator emitter:
-  {name (full := FoC.Computability.EncodedRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_configRunner)}`fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_configRunner`
-  lives in
-  {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.TerminalCore`.
-  This is the non-circular simulator/emitter leaf for the exact terminal
-  shapes.  The source-shape and run-loop modules are adapter glue over this
-  target.
-* Controller stage invocation:
-  {lit}`controllerStageAttemptWitnessedInvocationConstruction_leaf` lives in
   {module}`FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerInvocation`.
-  It composes the controller-stage input encoder and witnessed total-attempt
-  machine; it is not a semantic staged-program shortcut.
-* Controller finite-loop sequencer:
-  {lit}`pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstructionData_finite_leaf`
-  lives in
-  {module}`FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerSearchDriver`.
-  It is the finite controller search driver that preserves input/register
-  layout across attempts and branches only through protected singleton output.
+  The five controller search warnings live in
+  {module}`FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerSearchDriver`:
+  {lit}`pairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction_finite_leaf`,
+  {lit}`simulatorLayoutClosedRecognizerConstruction_finite_leaf`,
+  {lit}`fixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner_finite_leaf`,
+  {lit}`pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpecConstruction_finite_leaf`,
+  and
+  {lit}`pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction_finite_leaf`.
+  Audit the fixed-description right-handoff route before trying to prove this
+  cluster.
 
 ## Construction Route Classification
 
@@ -405,12 +431,13 @@ The current construction surface is intentionally split by role.
   {lit}`SelectedProjectionPrimitiveRightShiftedConstruction`, and the selected
   merge exact/right-shifted scaffold chain is not an active target. The live
   route is the padded/equivalence finite-description route.
-* Broad finite-machine construction leaves: the eleven real build warnings are
-  the four generated code-prefix search leaves, the decoded bounded simulator
-  semantic-machine leaf, three padded/equivalence rewriter leaves, the
-  fixed-description padded simulator emitter leaf, and two controller-loop
-  leaves. Prose mentions of proof holes in this page are navigation notes, not
-  declaration warnings.
+* Broad finite-machine construction leaves: the twenty-three real build
+  warnings are the four generated code-prefix search leaves, the decoded
+  bounded simulator normalized-machine leaf, three CommonGround finite
+  transducer leaves, six padded/equivalence rewriter leaves, two live-tail
+  source-rest leaves, the fixed-description padded simulator terminal emitter
+  leaf, and six controller invocation/search leaves. Prose mentions of proof
+  holes in this page are navigation notes, not declaration warnings.
 
 ## Proof Navigation Rules
 
