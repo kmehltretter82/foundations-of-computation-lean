@@ -44,6 +44,86 @@ def fin (n : Nat) : FiniteType (Fin n) where
   elems := List.finRange n
   complete := List.mem_finRange
 
+def unit : FiniteType Unit where
+  elems := [()]
+  complete := by
+    intro x
+    cases x
+    simp
+
+def bool : FiniteType Bool where
+  elems := [false, true]
+  complete := by
+    intro x
+    cases x <;> simp
+
+def option (finite : FiniteType alpha) : FiniteType (Option alpha) where
+  elems := none :: finite.elems.map some
+  complete := by
+    intro x
+    cases x with
+    | none =>
+        simp
+    | some x =>
+        simp
+        exact finite.complete x
+
+def sum (left : FiniteType alpha) (right : FiniteType beta) :
+    FiniteType (Sum alpha beta) where
+  elems := left.elems.map Sum.inl ++ right.elems.map Sum.inr
+  complete := by
+    intro x
+    cases x with
+    | inl x =>
+        simp
+        exact left.complete x
+    | inr x =>
+        simp
+        exact right.complete x
+
+def pairElems : List alpha -> List beta -> List (alpha × beta)
+  | [], _ => []
+  | x :: xs, ys => (ys.map fun y => (x, y)) ++ pairElems xs ys
+
+theorem pair_mem {xs : List alpha} {ys : List beta}
+    {x : alpha} {y : beta} (hx : x ∈ xs) (hy : y ∈ ys) :
+    (x, y) ∈ pairElems xs ys := by
+  induction xs with
+  | nil =>
+      cases hx
+  | cons z zs ih =>
+      cases hx with
+      | head =>
+          simp [pairElems, hy]
+      | tail _ htail =>
+          exact List.mem_append.mpr (Or.inr (ih htail))
+
+def prod (left : FiniteType alpha) (right : FiniteType beta) :
+    FiniteType (alpha × beta) where
+  elems := pairElems left.elems right.elems
+  complete := by
+    intro x
+    exact pair_mem (left.complete x.1) (right.complete x.2)
+
+def product (left : FiniteType alpha) (right : FiniteType beta) :
+    FiniteType (alpha × beta) :=
+  prod left right
+
+def sigma {beta : alpha -> Type v}
+    (base : FiniteType alpha)
+    (fiber : forall a : alpha, FiniteType (beta a)) :
+    FiniteType (Sigma beta) where
+  elems :=
+    base.elems.flatMap
+      (fun a => (fiber a).elems.map (fun b => Sigma.mk a b))
+  complete := by
+    intro x
+    rcases x with ⟨a, b⟩
+    exact
+      List.mem_flatMap.mpr
+        ⟨a, base.complete a,
+          List.mem_map.mpr ⟨b, (fiber a).complete b, rfl⟩⟩
+
 noncomputable def indexOf
     (finite : FiniteType alpha) (x : alpha) : Fin finite.elems.length :=
   let h : ∃ i, ∃ hlt : i < finite.elems.length,

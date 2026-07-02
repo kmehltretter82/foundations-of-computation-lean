@@ -406,15 +406,8 @@ theorem finiteStateValueOf_indexOf
   exact Foundation.FiniteType.valueOf_indexOf finite state
 
 def budgetCheckerDescriptionRunnerIndexedStateFinite (n : Nat) :
-    Foundation.FiniteType (Option (Fin n)) where
-  elems := none :: (List.finRange n).map some
-  complete := by
-    intro state
-    cases state with
-    | none =>
-        simp
-    | some index =>
-        simp
+    Foundation.FiniteType (Option (Fin n)) :=
+  Foundation.FiniteType.option (Foundation.FiniteType.fin n)
 
 noncomputable def budgetCheckerDescriptionRunnerIndexedMachine
     (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState) :

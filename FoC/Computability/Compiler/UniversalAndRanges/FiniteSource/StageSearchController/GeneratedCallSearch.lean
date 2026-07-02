@@ -203,6 +203,72 @@ def CodePrefixExactFuelRunnerConstruction
         TuringMachine.HaltsOnInputIn M fuel input
 
 /--
+Concrete-state version of the exact-fuel runner leaf.  This is the remaining
+finite-table target after reindexing arbitrary finite machines to {lit}`Fin n`
+state spaces.
+-/
+def CodePrefixExactFuelRunnerFinStateConstruction : Prop :=
+  forall n : Nat,
+    forall M : TuringMachine MachineCodeSymbol (Fin n),
+      CodePrefixExactFuelRunnerConstruction M
+
+/--
+It is enough to build the exact-fuel runner for the indexed copy of a fixed
+finite-state machine.
+-/
+theorem codePrefixExactFuelRunnerConstruction_of_indexed
+    {machineState : Type u}
+    (M : TuringMachine MachineCodeSymbol machineState)
+    (hindexed :
+      CodePrefixExactFuelRunnerConstruction (TuringMachine.indexed M)) :
+    CodePrefixExactFuelRunnerConstruction M := by
+  rcases hindexed with ⟨runnerState, runner, hrunner⟩
+  refine ⟨runnerState, runner, ?_⟩
+  intro input fuel
+  exact Iff.trans (hrunner input fuel)
+    (TuringMachine.indexed_haltsOnInputIn_iff M fuel input)
+
+/--
+Conversely, any exact-fuel runner for the original machine also serves the
+indexed copy.  This keeps later constructions free to move across the indexed
+boundary in either direction.
+-/
+theorem codePrefixExactFuelRunnerConstruction_indexed_of
+    {machineState : Type u}
+    (M : TuringMachine MachineCodeSymbol machineState)
+    (h :
+      CodePrefixExactFuelRunnerConstruction M) :
+    CodePrefixExactFuelRunnerConstruction (TuringMachine.indexed M) := by
+  rcases h with ⟨runnerState, runner, hrunner⟩
+  refine ⟨runnerState, runner, ?_⟩
+  intro input fuel
+  exact Iff.trans (hrunner input fuel)
+    (Iff.symm (TuringMachine.indexed_haltsOnInputIn_iff
+      M fuel input))
+
+/--
+Consequently, a construction for all concrete {lit}`Fin n` state spaces
+suffices for the general exact-fuel runner leaf.
+-/
+theorem codePrefixExactFuelRunnerConstruction_of_finStateConstruction
+    {machineState : Type u}
+    (M : TuringMachine MachineCodeSymbol machineState)
+    (hFin : CodePrefixExactFuelRunnerFinStateConstruction) :
+    CodePrefixExactFuelRunnerConstruction M := by
+  exact
+    codePrefixExactFuelRunnerConstruction_of_indexed M
+      (hFin M.statesFinite.elems.length (TuringMachine.indexed M))
+
+/--
+Remaining concrete finite-table leaf for exact-fuel simulation over concrete
+indexed state spaces.
+-/
+theorem codePrefixExactFuelRunnerFinStateFiniteLeaf :
+    CodePrefixExactFuelRunnerFinStateConstruction := by
+  intro n M
+  sorry
+
+/--
 Finite-machine leaf for {name}`CodePrefixExactFuelRunnerConstruction`.
 This is the shared exact-fuel runner promised by the generated-call helper
 plan.
@@ -211,7 +277,9 @@ theorem codePrefixExactFuelRunnerFiniteLeaf
     {machineState : Type u}
     (M : TuringMachine MachineCodeSymbol machineState) :
     CodePrefixExactFuelRunnerConstruction M := by
-  sorry
+  exact
+    codePrefixExactFuelRunnerConstruction_of_finStateConstruction
+      M codePrefixExactFuelRunnerFinStateFiniteLeaf
 
 /--
 Specialization of an exact-fuel runner to a nested generated call.  The outer
@@ -253,6 +321,37 @@ def CodePrefixNestedExactFuelSearchConstruction
             (CodePrefixRecognizerStageCode input inner)
 
 /--
+Nested exact-fuel search can be reduced to the indexed copy of the wrapped
+machine.
+-/
+theorem codePrefixNestedExactFuelSearchConstruction_of_indexed
+    {machineState : Type u}
+    (M : TuringMachine MachineCodeSymbol machineState)
+    (hindexed :
+      CodePrefixNestedExactFuelSearchConstruction
+        (TuringMachine.indexed M)) :
+    CodePrefixNestedExactFuelSearchConstruction M := by
+  rcases hindexed with ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input
+  constructor
+  · intro hhalt
+    rcases (hsearcher input).mp hhalt with
+      ⟨inner, outer, hindexedHalt⟩
+    exact
+      ⟨inner, outer,
+        (TuringMachine.indexed_haltsOnInputIn_iff
+          M outer (CodePrefixRecognizerStageCode input inner)).mp
+          hindexedHalt⟩
+  · intro htarget
+    rcases htarget with ⟨inner, outer, hhalt⟩
+    exact (hsearcher input).mpr
+      ⟨inner, outer,
+        (TuringMachine.indexed_haltsOnInputIn_iff
+          M outer (CodePrefixRecognizerStageCode input inner)).mpr
+          hhalt⟩
+
+/--
 Unbounded generated-pair enumerator.  The concrete machine preserves the raw
 input, enumerates two unary natural parameters, rebuilds the nested generated
 call, and invokes the supplied selected runner.
@@ -270,13 +369,79 @@ def CodePrefixNestedPairEnumeratorConstruction
             (NestedCodePrefixRecognizerStageCode input inner outer)
 
 /--
+Concrete-state generated-pair enumerator target.  Proving this for all
+{lit}`Fin n` selected recognizers is enough for the public arbitrary-state
+leaf.
+-/
+def CodePrefixNestedPairEnumeratorFinStateConstruction : Prop :=
+  forall n : Nat,
+    forall selected : TuringMachine MachineCodeSymbol (Fin n),
+      CodePrefixNestedPairEnumeratorConstruction selected
+
+/--
+It is enough to prove generated-pair enumeration for the indexed copy of the
+selected recognizer.
+-/
+theorem codePrefixNestedPairEnumeratorConstruction_of_indexed
+    {selectedState : Type u}
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hindexed :
+      CodePrefixNestedPairEnumeratorConstruction
+        (TuringMachine.indexed selected)) :
+    CodePrefixNestedPairEnumeratorConstruction selected := by
+  rcases hindexed with ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input
+  constructor
+  · intro hhalt
+    rcases (hsearcher input).mp hhalt with
+      ⟨inner, outer, hindexedHalt⟩
+    exact
+      ⟨inner, outer,
+        (TuringMachine.indexed_haltsOnInput_iff selected
+          (NestedCodePrefixRecognizerStageCode input inner outer)).mp
+          hindexedHalt⟩
+  · intro htarget
+    rcases htarget with ⟨inner, outer, hhalt⟩
+    exact (hsearcher input).mpr
+      ⟨inner, outer,
+        (TuringMachine.indexed_haltsOnInput_iff selected
+          (NestedCodePrefixRecognizerStageCode input inner outer)).mpr
+          hhalt⟩
+
+/--
+A generated-pair enumerator for every concrete {lit}`Fin n` recognizer state
+space suffices for arbitrary selected recognizers.
+-/
+theorem codePrefixNestedPairEnumeratorConstruction_of_finStateConstruction
+    {selectedState : Type u}
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hFin : CodePrefixNestedPairEnumeratorFinStateConstruction) :
+    CodePrefixNestedPairEnumeratorConstruction selected := by
+  exact
+    codePrefixNestedPairEnumeratorConstruction_of_indexed selected
+      (hFin selected.statesFinite.elems.length
+        (TuringMachine.indexed selected))
+
+/--
+Remaining concrete finite-table leaf for unbounded generated-pair
+enumeration over indexed selected recognizers.
+-/
+theorem codePrefixNestedPairEnumeratorFinStateFiniteLeaf :
+    CodePrefixNestedPairEnumeratorFinStateConstruction := by
+  intro n selected
+  sorry
+
+/--
 Finite-machine leaf for unbounded generated-pair enumeration.
 -/
 theorem codePrefixNestedPairEnumeratorFiniteLeaf
     {selectedState : Type u}
     (selected : TuringMachine MachineCodeSymbol selectedState) :
     CodePrefixNestedPairEnumeratorConstruction selected := by
-  sorry
+  exact
+    codePrefixNestedPairEnumeratorConstruction_of_finStateConstruction
+      selected codePrefixNestedPairEnumeratorFinStateFiniteLeaf
 
 /--
 Composition of the exact-fuel runner and unbounded generated-pair enumerator.
@@ -329,6 +494,70 @@ def CodePrefixBoundedNestedPairEnumeratorConstruction
               (NestedCodePrefixRecognizerStageCode input inner outer)
 
 /--
+Concrete-state bounded generated-pair enumerator target.  The public arbitrary
+state construction follows by indexing the supplied selected recognizer.
+-/
+def CodePrefixBoundedNestedPairEnumeratorFinStateConstruction : Prop :=
+  forall n : Nat,
+    forall selected : TuringMachine MachineCodeSymbol (Fin n),
+      CodePrefixBoundedNestedPairEnumeratorConstruction selected
+
+/--
+The bounded generated-pair enumerator is also stable under replacing the
+selected recognizer by its indexed copy.
+-/
+theorem codePrefixBoundedNestedPairEnumeratorConstruction_of_indexed
+    {selectedState : Type u}
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hindexed :
+      CodePrefixBoundedNestedPairEnumeratorConstruction
+        (TuringMachine.indexed selected)) :
+    CodePrefixBoundedNestedPairEnumeratorConstruction selected := by
+  rcases hindexed with ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input budget
+  constructor
+  · intro hhalt
+    rcases (hsearcher input budget).mp hhalt with
+      ⟨inner, outer, hinner, houter, hindexedHalt⟩
+    exact
+      ⟨inner, outer, hinner, houter,
+        (TuringMachine.indexed_haltsOnInput_iff selected
+          (NestedCodePrefixRecognizerStageCode input inner outer)).mp
+          hindexedHalt⟩
+  · intro htarget
+    rcases htarget with ⟨inner, outer, hinner, houter, hhalt⟩
+    exact (hsearcher input budget).mpr
+      ⟨inner, outer, hinner, houter,
+        (TuringMachine.indexed_haltsOnInput_iff selected
+          (NestedCodePrefixRecognizerStageCode input inner outer)).mpr
+          hhalt⟩
+
+/--
+The bounded pair enumerator can likewise be proved only for concrete
+{lit}`Fin n` selected recognizers and then transported to arbitrary finite
+state types.
+-/
+theorem codePrefixBoundedNestedPairEnumeratorConstruction_of_finStateConstruction
+    {selectedState : Type u}
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hFin : CodePrefixBoundedNestedPairEnumeratorFinStateConstruction) :
+    CodePrefixBoundedNestedPairEnumeratorConstruction selected := by
+  exact
+    codePrefixBoundedNestedPairEnumeratorConstruction_of_indexed selected
+      (hFin selected.statesFinite.elems.length
+        (TuringMachine.indexed selected))
+
+/--
+Remaining concrete finite-table leaf for bounded generated-pair enumeration
+over indexed selected recognizers.
+-/
+theorem codePrefixBoundedNestedPairEnumeratorFinStateFiniteLeaf :
+    CodePrefixBoundedNestedPairEnumeratorFinStateConstruction := by
+  intro n selected
+  sorry
+
+/--
 Bounded search over generated inner inputs and exact outer fuels for a wrapped
 machine.
 -/
@@ -349,13 +578,46 @@ def CodePrefixBoundedNestedExactFuelSearchConstruction
               (CodePrefixRecognizerStageCode input inner)
 
 /--
+The bounded nested exact-fuel search construction is likewise stable when the
+wrapped machine is replaced by its indexed copy.
+-/
+theorem codePrefixBoundedNestedExactFuelSearchConstruction_of_indexed
+    {machineState : Type u}
+    (M : TuringMachine MachineCodeSymbol machineState)
+    (hindexed :
+      CodePrefixBoundedNestedExactFuelSearchConstruction
+        (TuringMachine.indexed M)) :
+    CodePrefixBoundedNestedExactFuelSearchConstruction M := by
+  rcases hindexed with ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input budget
+  constructor
+  · intro hhalt
+    rcases (hsearcher input budget).mp hhalt with
+      ⟨inner, outer, hinner, houter, hindexedHalt⟩
+    exact
+      ⟨inner, outer, hinner, houter,
+        (TuringMachine.indexed_haltsOnInputIn_iff
+          M outer (CodePrefixRecognizerStageCode input inner)).mp
+          hindexedHalt⟩
+  · intro htarget
+    rcases htarget with ⟨inner, outer, hinner, houter, hhalt⟩
+    exact (hsearcher input budget).mpr
+      ⟨inner, outer, hinner, houter,
+        (TuringMachine.indexed_haltsOnInputIn_iff
+          M outer (CodePrefixRecognizerStageCode input inner)).mpr
+          hhalt⟩
+
+/--
 Finite-machine leaf for bounded generated-pair enumeration.
 -/
 theorem codePrefixBoundedNestedPairEnumeratorFiniteLeaf
     {selectedState : Type u}
     (selected : TuringMachine MachineCodeSymbol selectedState) :
     CodePrefixBoundedNestedPairEnumeratorConstruction selected := by
-  sorry
+  exact
+    codePrefixBoundedNestedPairEnumeratorConstruction_of_finStateConstruction
+      selected codePrefixBoundedNestedPairEnumeratorFinStateFiniteLeaf
 
 /--
 Composition of the exact-fuel runner and bounded generated-pair enumerator.
@@ -407,6 +669,74 @@ def CodePrefixExactFuelProductRunnerConstruction
           TuringMachine.HaltsOnInputIn right rightFuel input
 
 /--
+Concrete-state product exact-fuel runner target.  This is the remaining
+finite-table target after both recognizers have been reindexed to {lit}`Fin`
+state spaces.
+-/
+def CodePrefixExactFuelProductRunnerFinStateConstruction : Prop :=
+  forall leftN rightN : Nat,
+    forall left : TuringMachine MachineCodeSymbol (Fin leftN),
+    forall right : TuringMachine MachineCodeSymbol (Fin rightN),
+      CodePrefixExactFuelProductRunnerConstruction left right
+
+/--
+The product runner can be built against indexed copies of the two input
+recognizers and then transported back to the original state types.
+-/
+theorem codePrefixExactFuelProductRunnerConstruction_of_indexed
+    {leftState : Type uStage} {rightState : Type uDescription}
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState)
+    (hindexed :
+      CodePrefixExactFuelProductRunnerConstruction
+        (TuringMachine.indexed left) (TuringMachine.indexed right)) :
+    CodePrefixExactFuelProductRunnerConstruction left right := by
+  rcases hindexed with ⟨selectedState, selected, hselected⟩
+  refine ⟨selectedState, selected, ?_⟩
+  intro input leftFuel rightFuel
+  constructor
+  · intro hhalt
+    rcases (hselected input leftFuel rightFuel).mp hhalt with
+      ⟨hleft, hright⟩
+    exact
+      ⟨(TuringMachine.indexed_haltsOnInputIn_iff
+          left leftFuel input).mp hleft,
+        (TuringMachine.indexed_haltsOnInputIn_iff
+          right rightFuel input).mp hright⟩
+  · intro htarget
+    rcases htarget with ⟨hleft, hright⟩
+    exact (hselected input leftFuel rightFuel).mpr
+      ⟨(TuringMachine.indexed_haltsOnInputIn_iff
+          left leftFuel input).mpr hleft,
+        (TuringMachine.indexed_haltsOnInputIn_iff
+          right rightFuel input).mpr hright⟩
+
+/--
+For the product exact-fuel runner, it is enough to solve the case where both
+input recognizers use concrete {lit}`Fin` state spaces.
+-/
+theorem codePrefixExactFuelProductRunnerConstruction_of_finStateConstruction
+    {leftState : Type uStage} {rightState : Type uDescription}
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState)
+    (hFin : CodePrefixExactFuelProductRunnerFinStateConstruction) :
+    CodePrefixExactFuelProductRunnerConstruction left right := by
+  exact
+    codePrefixExactFuelProductRunnerConstruction_of_indexed left right
+      (hFin left.statesFinite.elems.length
+        right.statesFinite.elems.length
+        (TuringMachine.indexed left) (TuringMachine.indexed right))
+
+/--
+Remaining concrete finite-table leaf for the product exact-fuel runner over
+indexed recognizers.
+-/
+theorem codePrefixExactFuelProductRunnerFinStateFiniteLeaf :
+    CodePrefixExactFuelProductRunnerFinStateConstruction := by
+  intro leftN rightN left right
+  sorry
+
+/--
 Finite-machine leaf for the product exact-fuel runner.
 -/
 theorem codePrefixExactFuelProductRunnerFiniteLeaf
@@ -414,7 +744,9 @@ theorem codePrefixExactFuelProductRunnerFiniteLeaf
     (left : TuringMachine MachineCodeSymbol leftState)
     (right : TuringMachine MachineCodeSymbol rightState) :
     CodePrefixExactFuelProductRunnerConstruction left right := by
-  sorry
+  exact
+    codePrefixExactFuelProductRunnerConstruction_of_finStateConstruction
+      left right codePrefixExactFuelProductRunnerFinStateFiniteLeaf
 
 /--
 Unbounded product search over exact left/right fuel witnesses for a preserved
