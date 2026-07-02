@@ -464,28 +464,16 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstru
       pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes_of_searchDriver
         hdriver hinitializer hinvoker hemitter hcontinuer⟩
 
-/-
-Output-level exact-fuel runner leaf for controller search.
-
-This is the replacement for the old local chain
-`generated simulator-layout emitter -> fixed-description right-handoff
-simulator -> halted-layout extractor`.  The remaining implementation should
-compose the generated fuel-input scanner with the padded/equivalence
-fixed-description simulator boundary, then extract the normalized halted-layout
-code output.  The controller search driver needs the semantic exact-fuel runner
-contract below, not the stronger code-primitive output-compiled contract.  It
-must not be discharged through
-`FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction` or
-`fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_parser_rightHandoffStep`.
--/
-theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf :
-    PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction :=
+private theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_finite_leaf :
+    PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction :=
   by
     intro attempt invoker hinvoker
-    -- Remaining output-level finite-machine obligation.  Use `hinvoker` only
-    -- for protected invocation compatibility; the simulator boundary should be
-    -- the padded/equivalence route described above.
     sorry
+
+theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf :
+    PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction :=
+  pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_of_forward_closed
+    pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_finite_leaf
 
 private theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction_finite_leaf :
     PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction := by

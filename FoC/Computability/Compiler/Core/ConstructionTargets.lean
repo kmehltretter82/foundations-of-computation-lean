@@ -513,6 +513,58 @@ def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes
           (encodeCodeWordAsInput
             (encodeBoolWord result))
 
+def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerForwardSpec
+    (attempt runner : MachineDescription) : Prop :=
+  forall w : Word Bool,
+  forall limit fuel : Nat,
+  forall result : Word Bool,
+    attempt.HaltsWithOutputIn fuel
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailStageInputCode w limit))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result)) ->
+      runner.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+            w limit fuel))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result))
+
+def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerClosedSpec
+    (attempt runner : MachineDescription) : Prop :=
+  forall w : Word Bool,
+  forall limit fuel : Nat,
+  forall result : Word Bool,
+    runner.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+            w limit fuel))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result)) ->
+      attempt.HaltsWithOutputIn fuel
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailStageInputCode w limit))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result))
+
+theorem pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes_of_forward_closed
+    {attempt runner : MachineDescription}
+    (hready : runner.SubroutineReady)
+    (hforward :
+      PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerForwardSpec
+        attempt runner)
+    (hclosed :
+      PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerClosedSpec
+        attempt runner) :
+    PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes
+      attempt runner := by
+  constructor
+  · exact hready
+  · intro w limit fuel result
+    constructor
+    · exact hclosed w limit fuel result
+    · exact hforward w limit fuel result
+
 def PairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction :
     Prop :=
   forall attempt : MachineDescription,
@@ -985,12 +1037,36 @@ def PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction :
         PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes
           attempt runner
 
+def PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction :
+    Prop :=
+  forall attempt invoker : MachineDescription,
+    CommonGround.ControllerInvocation.StageAttemptProtectedRealizes
+      attempt invoker ->
+      exists runner : MachineDescription,
+        runner.SubroutineReady ∧
+          PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerForwardSpec
+            attempt runner ∧
+          PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerClosedSpec
+            attempt runner
+
 theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_of_unconditional
     (hrunner :
       PairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction) :
     PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction := by
   intro attempt _invoker _hinvoker
   exact hrunner attempt
+
+theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_of_forward_closed
+    (hrunner :
+      PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction) :
+    PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction := by
+  intro attempt invoker hinvoker
+  rcases hrunner attempt invoker hinvoker with
+    ⟨runner, hready, hforward, hclosed⟩
+  exact
+    ⟨runner,
+      pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes_of_forward_closed
+        hready hforward hclosed⟩
 
 theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_of_codeSubroutine
     (hcode :
