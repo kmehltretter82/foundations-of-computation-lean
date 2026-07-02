@@ -160,6 +160,78 @@ private def pairedRecognizerDovetailFiniteStageLoopStageLayout
     DovetailControllerLayout :=
   { input := w, stage := limit, result := [] }
 
+private theorem pairedRecognizerDovetailFiniteStageLoopProtected_rawOutput_bool_functional
+    {attempt invoker : MachineDescription}
+    (hinvoker :
+      PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+        attempt invoker)
+    {w : Word Bool} {limit : Nat}
+    {result1 result2 : Word Bool} {b1 b2 : Bool}
+    (h1 :
+      attempt.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailStageInputCode w limit))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result1)))
+    (h2 :
+      attempt.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailStageInputCode w limit))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result2)))
+    (hraw1 :
+      PairedRecognizerDovetailControllerRawOutput result1 =
+        some [b1])
+    (hraw2 :
+      PairedRecognizerDovetailControllerRawOutput result2 =
+        some [b2]) :
+    b1 = b2 := by
+  exact
+    pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutput_bool_functional
+      hinvoker
+      (pairedRecognizerDovetailFiniteStageLoopStageLayout w limit)
+      (by
+        simpa [pairedRecognizerDovetailFiniteStageLoopStageLayout,
+          PairedRecognizerDovetailControllerStageInputCode,
+          PairedRecognizerDovetailStageInputCode] using h1)
+      (by
+        simpa [pairedRecognizerDovetailFiniteStageLoopStageLayout,
+          PairedRecognizerDovetailControllerStageInputCode,
+          PairedRecognizerDovetailStageInputCode] using h2)
+      hraw1 hraw2
+
+private theorem pairedRecognizerDovetailFiniteStageLoopProtected_rawOutput_true_false_conflict
+    {attempt invoker : MachineDescription}
+    (hinvoker :
+      PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+        attempt invoker)
+    {w : Word Bool} {limit : Nat}
+    {resultTrue resultFalse : Word Bool}
+    (htrue :
+      attempt.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailStageInputCode w limit))
+        (encodeCodeWordAsInput
+          (encodeBoolWord resultTrue)))
+    (hfalse :
+      attempt.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailStageInputCode w limit))
+        (encodeCodeWordAsInput
+          (encodeBoolWord resultFalse)))
+    (hrawTrue :
+      PairedRecognizerDovetailControllerRawOutput resultTrue =
+        some [true])
+    (hrawFalse :
+      PairedRecognizerDovetailControllerRawOutput resultFalse =
+        some [false]) :
+    False := by
+  have hbool :
+      true = false :=
+    pairedRecognizerDovetailFiniteStageLoopProtected_rawOutput_bool_functional
+      hinvoker htrue hfalse hrawTrue hrawFalse
+  cases hbool
+
 private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerForwardSpec
     (initializer invoker emitter decider : MachineDescription) : Prop :=
   forall w : Word Bool,

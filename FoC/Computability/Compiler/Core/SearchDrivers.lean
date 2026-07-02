@@ -34,9 +34,55 @@ noncomputable def PairedRecognizerDovetailTotalStageAttemptControllerSearchProgr
           else
             none }
 
-theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutput_iff
+def PairedRecognizerDovetailStageAttemptOutputFunctional
+    (attempt : MachineDescription) : Prop :=
+  forall w : Word Bool,
+  forall limit : Nat,
+  forall result1 result2 : Word Bool,
+    attempt.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailStageInputCode w limit))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result1)) ->
+    attempt.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailStageInputCode w limit))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result2)) ->
+      result1 = result2
+
+theorem pairedRecognizerDovetailStageAttemptOutputFunctional_of_subroutineReady
+    {attempt : MachineDescription}
+    (hattemptReady : attempt.SubroutineReady) :
+    PairedRecognizerDovetailStageAttemptOutputFunctional attempt := by
+  intro w limit result1 result2 h1 h2
+  exact
+    haltsWithOutput_encodedBoolWord_functional
+      hattemptReady h1 h2
+
+theorem pairedRecognizerDovetailStageAttemptOutputFunctional_of_protectedInvocation
+    {attempt invoker : MachineDescription}
+    (hinvoker :
+      PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+        attempt invoker) :
+    PairedRecognizerDovetailStageAttemptOutputFunctional attempt := by
+  intro w limit result1 result2 h1 h2
+  exact
+    pairedRecognizerDovetailStageAttemptProtectedInvocation_attempt_output_functional
+      hinvoker
+      ({ input := w, stage := limit, result := [] } :
+        DovetailControllerLayout)
+      (by
+        simpa [PairedRecognizerDovetailControllerStageInputCode,
+          PairedRecognizerDovetailStageInputCode] using h1)
+      (by
+        simpa [PairedRecognizerDovetailControllerStageInputCode,
+          PairedRecognizerDovetailStageInputCode] using h2)
+
+theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutput_iff_of_functional
     (attempt : MachineDescription)
-    (hattemptReady : attempt.SubroutineReady)
+    (hfunctional :
+      PairedRecognizerDovetailStageAttemptOutputFunctional attempt)
     (w : Word Bool) (b : Bool) :
     ProgramHaltsWithOutput
         (PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
@@ -101,15 +147,8 @@ theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWi
             (encodeCodeWordAsInput
               (encodeBoolWord [true])) := by
         intro htrue
-        have hencoded :
-            encodeBoolWord [false] =
-              encodeBoolWord [true] := by
-          exact encodeCodeWordAsInput_injective
-            (haltsWithOutput_functional_of_haltTransitionFree
-              hattemptReady.right
-              hattempt htrue)
         have hbool : [false] = [true] :=
-          encodeBoolWord_injective hencoded
+          hfunctional w limit [false] [true] hattempt htrue
         cases hbool
       rw [show
           (PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
@@ -134,10 +173,58 @@ theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWi
     · simp [PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram,
         hattempt]
 
-theorem Search.controllerCompilerOfDecider
-    (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
-    PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction := by
-  intro _accept _reject attempt _hattemptReady
+theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutput_iff
+    (attempt : MachineDescription)
+    (hattemptReady : attempt.SubroutineReady)
+    (w : Word Bool) (b : Bool) :
+    ProgramHaltsWithOutput
+        (PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
+          attempt) w [b] <->
+      exists limit : Nat,
+      exists result : Word Bool,
+        attempt.HaltsWithOutput
+          (encodeCodeWordAsInput
+            (PairedRecognizerDovetailStageInputCode w limit))
+          (encodeCodeWordAsInput
+            (encodeBoolWord result)) ∧
+        PairedRecognizerDovetailControllerRawOutput result = some [b] :=
+  pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutput_iff_of_functional
+    attempt
+    (pairedRecognizerDovetailStageAttemptOutputFunctional_of_subroutineReady
+      hattemptReady)
+    w b
+
+theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutput_iff_of_protectedInvocation
+    {attempt invoker : MachineDescription}
+    (hinvoker :
+      PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+        attempt invoker)
+    (w : Word Bool) (b : Bool) :
+    ProgramHaltsWithOutput
+        (PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
+          attempt) w [b] <->
+      exists limit : Nat,
+      exists result : Word Bool,
+        attempt.HaltsWithOutput
+          (encodeCodeWordAsInput
+            (PairedRecognizerDovetailStageInputCode w limit))
+          (encodeCodeWordAsInput
+            (encodeBoolWord result)) ∧
+        PairedRecognizerDovetailControllerRawOutput result = some [b] :=
+  pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutput_iff_of_functional
+    attempt
+    (pairedRecognizerDovetailStageAttemptOutputFunctional_of_protectedInvocation
+      hinvoker)
+    w b
+
+theorem Search.controllerCompilerOfDeciderOfFunctional
+    (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple)
+    (attempt : MachineDescription)
+    (hfunctional :
+      PairedRecognizerDovetailStageAttemptOutputFunctional attempt) :
+    exists decider : MachineDescription,
+      PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
+        attempt decider := by
   rcases hcompile
       (PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
         attempt) with
@@ -147,8 +234,32 @@ theorem Search.controllerCompilerOfDecider
   · exact hdecider.left
   · intro w b
     exact Iff.trans (hdecider.right w b)
-      (pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutput_iff
-        attempt _hattemptReady w b)
+      (pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutput_iff_of_functional
+        attempt hfunctional w b)
+
+theorem Search.controllerCompilerOfDeciderOfProtectedInvocation
+    (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple)
+    {attempt invoker : MachineDescription}
+    (hinvoker :
+      PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+        attempt invoker) :
+    exists decider : MachineDescription,
+      PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
+        attempt decider :=
+  Search.controllerCompilerOfDeciderOfFunctional
+    hcompile attempt
+    (pairedRecognizerDovetailStageAttemptOutputFunctional_of_protectedInvocation
+      hinvoker)
+
+theorem Search.controllerCompilerOfDecider
+    (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
+    PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction := by
+  intro _accept _reject attempt hattemptReady
+  exact
+    Search.controllerCompilerOfDeciderOfFunctional
+      hcompile attempt
+      (pairedRecognizerDovetailStageAttemptOutputFunctional_of_subroutineReady
+        hattemptReady)
 
 noncomputable def PairedRecognizerDovetailStageAttemptSearchProgram
     (accept reject attempt : MachineDescription) :
