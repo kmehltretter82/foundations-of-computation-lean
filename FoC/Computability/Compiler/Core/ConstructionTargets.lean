@@ -1068,6 +1068,22 @@ def PairedRecognizerDovetailControllerResultEmitterConstruction :
   exists emitter : MachineDescription,
     PairedRecognizerDovetailControllerResultEmitterRealizes emitter
 
+def PairedRecognizerDovetailControllerBoolWordRawOutputEmitterRealizes
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall result : Word Bool,
+    forall b : Bool,
+      emitter.HaltsWithOutput
+          (encodeCodeWordAsInput (encodeBoolWord result))
+          [b] <->
+        PairedRecognizerDovetailControllerRawOutput result = some [b]
+
+def PairedRecognizerDovetailControllerBoolWordRawOutputEmitterConstruction :
+    Prop :=
+  exists emitter : MachineDescription,
+    PairedRecognizerDovetailControllerBoolWordRawOutputEmitterRealizes
+      emitter
+
 def PairedRecognizerDovetailControllerContinueRealizes
     (continuer : MachineDescription) : Prop :=
   continuer.SubroutineReady ∧

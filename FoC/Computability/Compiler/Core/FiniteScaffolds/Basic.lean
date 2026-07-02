@@ -109,6 +109,12 @@ theorem encodedControllerResultEmitterRewriterConstruction_scaffold :
     EncodedControllerResultEmitterRewriterConstruction :=
   encodedControllerResultEmitterRewriterConstruction_of_description
 
+theorem pairedRecognizerDovetailControllerBoolWordRawOutputEmitterConstruction_scaffold :
+    PairedRecognizerDovetailControllerBoolWordRawOutputEmitterConstruction :=
+  ⟨DovetailControllerResultEmitterDescription,
+    dovetailControllerResultEmitterDescription_subroutineReady,
+    dovetailControllerResultEmitterDescription_haltsWithOutput_encodeBoolWord_iff⟩
+
 /--
 Controller-result continuation data in the generic forward/closed primitive
 format used by the code-word subroutine adapter.

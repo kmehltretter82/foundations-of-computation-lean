@@ -900,6 +900,16 @@ private theorem controllerResultEmitterScanBoundary_controllerEncode_output_iff
         (PairedRecognizerDovetailControllerStageInputCode C))
       C.result b
 
+private theorem controllerResultEmitterScanBoundary_encodeBoolWord_output_iff
+    (result : Word Bool) (b : Bool) :
+    (controllerResultEmitterScanBoundary
+        (encodeBoolWord result)).output = [b] <->
+      result = [b] := by
+  unfold controllerResultEmitterScanBoundary
+  exact
+    controllerResultEmitterScanBoundaryFrom_encodeBoolWord_output_iff
+      ControllerResultEmitterBoundary.other result b
+
 theorem dovetailControllerResultEmitterDescription_haltsWithOutput_iff
     (C : DovetailControllerLayout) (b : Bool) :
     DovetailControllerResultEmitterDescription.HaltsWithOutput
@@ -943,6 +953,47 @@ theorem dovetailControllerResultEmitterDescription_haltsWithOutput_iff
     simpa [houtput] using
       dovetailControllerResultEmitterDescription_haltsWithOutput_code
         (DovetailControllerLayout.encode C)
+
+theorem dovetailControllerResultEmitterDescription_haltsWithOutput_encodeBoolWord_iff
+    (result : Word Bool) (b : Bool) :
+    DovetailControllerResultEmitterDescription.HaltsWithOutput
+        (encodeCodeWordAsInput (encodeBoolWord result))
+        [b] <->
+      PairedRecognizerDovetailControllerRawOutput result = some [b] := by
+  constructor
+  · intro h
+    have hcanonical :
+        DovetailControllerResultEmitterDescription.HaltsWithOutput
+          (encodeCodeWordAsInput (encodeBoolWord result))
+          (controllerResultEmitterScanBoundary
+            (encodeBoolWord result)).output :=
+      dovetailControllerResultEmitterDescription_haltsWithOutput_code
+        (encodeBoolWord result)
+    have houtput :
+        [b] =
+          (controllerResultEmitterScanBoundary
+            (encodeBoolWord result)).output :=
+      haltsWithOutput_functional_of_haltTransitionFree
+        dovetailControllerResultEmitterDescription_haltTransitionFree
+        h hcanonical
+    have hresult : result = [b] :=
+      (controllerResultEmitterScanBoundary_encodeBoolWord_output_iff
+        result b).mp houtput.symm
+    exact
+      (DovetailControllerLayout.rawOutput_eq_some_singleton_iff
+        result b).mpr hresult
+  · intro hraw
+    have hresult : result = [b] :=
+      (DovetailControllerLayout.rawOutput_eq_some_singleton_iff
+        result b).mp hraw
+    have houtput :
+        (controllerResultEmitterScanBoundary
+          (encodeBoolWord result)).output = [b] :=
+      (controllerResultEmitterScanBoundary_encodeBoolWord_output_iff
+        result b).mpr hresult
+    simpa [houtput] using
+      dovetailControllerResultEmitterDescription_haltsWithOutput_code
+        (encodeBoolWord result)
 
 theorem encodedControllerResultEmitterRewriterConstruction_of_description :
     EncodedControllerResultEmitterRewriterConstruction :=
