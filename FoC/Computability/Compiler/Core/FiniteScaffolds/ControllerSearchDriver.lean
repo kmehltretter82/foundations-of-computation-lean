@@ -530,12 +530,18 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction
   pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_of_codeSubroutine
     pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineConstruction_finite_leaf
 
-private theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction := by
+private theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorSpecConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorSpecConstruction := by
   intro runner hrunner
   -- Remaining finite-table obligation: enumerate bounded `(limit, fuel)`
-  -- pairs, invoke the exact-fuel runner, and expose each boolean-word result.
+  -- pairs, invoke the exact-fuel runner, and halt on the canonical tape for
+  -- each boolean-word result.
   sorry
+
+private theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction :=
+  pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction_of_spec
+    pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorSpecConstruction_finite_leaf
 
 private theorem pairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction_finite_leaf :
     PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction :=

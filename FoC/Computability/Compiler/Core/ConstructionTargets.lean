@@ -992,6 +992,139 @@ def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConst
         PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRealizes
           runner enumerator
 
+structure PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+    (runner : MachineDescription) where
+  input : Word Bool
+  searchLimit : Nat
+  limit : Nat
+  fuel : Nat
+  result : Word Bool
+  limit_le_searchLimit : limit <= searchLimit
+  fuel_le_searchLimit : fuel <= searchLimit
+  runner_halts :
+    runner.HaltsWithOutput
+      (encodeCodeWordAsInput
+        (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+          input limit fuel))
+      (encodeCodeWordAsInput (encodeBoolWord result))
+
+def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
+    {runner : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner) :
+    Word MachineCodeSymbol :=
+  encodeBoolWord i.result
+
+def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape
+    {runner : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner) :
+    Tape Bool :=
+  CommonGround.CodeWordEmitters.ExactOutputTape
+    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
+    i
+
+def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorSpec
+    (runner enumerator : MachineDescription) : Prop :=
+  enumerator.SubroutineReady ∧
+    (forall i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner,
+        enumerator.HaltsWithTape
+          i.input
+          (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape
+            i)) ∧
+      forall w : Word Bool,
+      forall T : Tape Bool,
+        enumerator.HaltsWithTape w T ->
+          exists i :
+            PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+              runner,
+            w = i.input ∧
+            T =
+              PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape
+                i
+
+def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorSpecConstruction :
+    Prop :=
+  forall runner : MachineDescription,
+    runner.SubroutineReady ->
+      exists enumerator : MachineDescription,
+        PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorSpec
+          runner enumerator
+
+theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction_of_spec
+    (h :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorSpecConstruction) :
+    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction := by
+  intro runner hrunner
+  rcases h runner hrunner with ⟨enumerator, henumerator⟩
+  refine ⟨enumerator, ?_⟩
+  constructor
+  · exact henumerator.left
+  · intro w result
+    constructor
+    · intro hhalt
+      rcases hhalt with ⟨n, hn⟩
+      let T : Tape Bool :=
+        (enumerator.runConfig n (enumerator.initial w)).tape
+      have hTape : enumerator.HaltsWithTape w T := by
+        exact ⟨n, ⟨hn.left, rfl⟩⟩
+      rcases henumerator.right.right w T hTape with
+        ⟨i, hinput, hT⟩
+      have hactual :
+          Tape.normalizedOutput T =
+            encodeCodeWordAsInput (encodeBoolWord result) := by
+        simpa [T] using hn.right
+      have hexpected :
+          Tape.normalizedOutput T =
+            encodeCodeWordAsInput (encodeBoolWord i.result) := by
+        rw [hT]
+        exact
+          CommonGround.CodeWordEmitters.exactOutputTape_normalizedOutput
+            PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
+            i
+      have hencoded :
+          encodeBoolWord result = encodeBoolWord i.result := by
+        exact
+          encodeCodeWordAsInput_injective
+            (hactual.symm.trans hexpected)
+      have hresult : result = i.result :=
+        encodeBoolWord_injective hencoded
+      refine
+        ⟨i.searchLimit, i.limit, i.fuel,
+          i.limit_le_searchLimit, i.fuel_le_searchLimit, ?_⟩
+      simpa [hinput, hresult] using i.runner_halts
+    · intro hbounded
+      rcases hbounded with
+        ⟨searchLimit, limit, fuel, hlimit, hfuel, hrun⟩
+      let i :
+          PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+            runner :=
+        { input := w
+          searchLimit := searchLimit
+          limit := limit
+          fuel := fuel
+          result := result
+          limit_le_searchLimit := hlimit
+          fuel_le_searchLimit := hfuel
+          runner_halts := hrun }
+      have houtput :=
+        haltsWithOutput_of_haltsWithTape
+          (henumerator.right.left i)
+      have hnormalized :
+          Tape.normalizedOutput
+              (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape
+                i) =
+            encodeCodeWordAsInput (encodeBoolWord result) := by
+        exact
+          CommonGround.CodeWordEmitters.exactOutputTape_normalizedOutput
+            PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
+            i
+      simpa [hnormalized] using houtput
+
 theorem pairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction_of_bounded
     (hbounded :
       PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction) :
