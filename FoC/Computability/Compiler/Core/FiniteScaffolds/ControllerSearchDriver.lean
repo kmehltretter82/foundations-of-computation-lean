@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.CodeRightShifted
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedParser.Contracts
 import FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerInvocation
 
 set_option doc.verso true
@@ -481,23 +482,32 @@ private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeC
   pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_of_rightShifted
     pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_finite_leaf
 
-private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction_finite_leaf :
-    FixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction := by
-  -- Remaining finite-table obligation: recognize and normalize complete
-  -- simulator-layout code words in right-shifted output form.
+private theorem simulatorLayoutClosedRecognizerConstruction_finite_leaf :
+    CommonGround.SimulatorLayouts.ClosedRecognizerConstruction := by
+  -- Remaining finite-table obligation: recognize complete simulator-layout
+  -- code words and halt on the canonical right-handoff tape.
   sorry
+
+private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction_finite_leaf :
+    FixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction :=
+  fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction_of_closedRecognizer
+    simulatorLayoutClosedRecognizerConstruction_finite_leaf
 
 private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_finite_leaf :
     FixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction :=
   fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_of_primitive
     fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction_finite_leaf
 
-private theorem fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_finite_leaf :
-    FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction := by
+private theorem fixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner_finite_leaf :
+    EncodedRewriters.BoundedLayoutRunner.FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner := by
   intro attempt
   -- Remaining finite-table obligation: run the fixed description on an
   -- already-parsed simulator layout and return from the right handoff.
   sorry
+
+private theorem fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_finite_leaf :
+    FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction :=
+  fixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner_finite_leaf
 
 private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_finite_leaf :
     FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction :=
