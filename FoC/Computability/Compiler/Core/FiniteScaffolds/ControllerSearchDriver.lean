@@ -390,13 +390,18 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstru
       pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes_of_searchDriver
         hdriver hinitializer hinvoker hemitter hcontinuer⟩
 
-theorem pairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction_finite_leaf :
-    PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction := by
+theorem pairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction_finite_leaf :
+    PairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction := by
   intro attempt invoker hinvoker
   -- Remaining finite-table obligation: build the unbounded controller search
-  -- driver for the protected stage-attempt machine using the protected
-  -- invocation contract for output functionality.
+  -- driver over `(limit, fuel, result)` witnesses for the protected
+  -- stage-attempt machine.
   sorry
+
+theorem pairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction_finite_leaf :
+    PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction :=
+  pairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction_of_fuel
+    pairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction_finite_leaf
 
 private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstructionData_finite_leaf :
     forall attempt initializer invoker emitter continuer : MachineDescription,

@@ -335,13 +335,36 @@ theorem Search.controllerCompilerOfDeciderOfProtectedInvocation
     (pairedRecognizerDovetailStageAttemptOutputFunctional_of_protectedInvocation
       hinvoker)
 
+theorem Search.protectedControllerFuelSearchDriverConstructionOfDecider
+    (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
+    PairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction := by
+  intro attempt invoker hinvoker
+  rcases hcompile
+      (PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
+        attempt) with
+    ⟨decider, hdecider⟩
+  refine ⟨decider, ?_⟩
+  constructor
+  · exact hdecider.left
+  · intro w b
+    exact Iff.trans (hdecider.right w b)
+      (pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutputIn_iff_of_protectedInvocation
+        hinvoker w b)
+
+theorem Search.protectedControllerSearchDriverConstructionOfFuel
+    (hcompile :
+      PairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction) :
+    PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction :=
+  pairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction_of_fuel
+    hcompile
+
 theorem Search.protectedControllerSearchDriverConstructionOfDecider
     (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
     PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction := by
-  intro attempt invoker hinvoker
   exact
-    Search.controllerCompilerOfDeciderOfProtectedInvocation
-      hcompile hinvoker
+    Search.protectedControllerSearchDriverConstructionOfFuel
+      (Search.protectedControllerFuelSearchDriverConstructionOfDecider
+        hcompile)
 
 theorem Search.controllerCompilerOfDecider
     (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :

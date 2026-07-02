@@ -476,12 +476,36 @@ def PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
               (encodeBoolWord result)) ∧
           PairedRecognizerDovetailControllerRawOutput result = some [b]
 
+def PairedRecognizerDovetailTotalStageAttemptControllerFuelSearchDriverRealizes
+    (attempt decider : MachineDescription) : Prop :=
+  decider.WellFormed ∧
+    forall w : Word Bool, forall b : Bool,
+      decider.HaltsWithOutput w [b] <->
+        exists limit : Nat,
+        exists fuel : Nat,
+        exists result : Word Bool,
+          attempt.HaltsWithOutputIn fuel
+            (encodeCodeWordAsInput
+              (PairedRecognizerDovetailStageInputCode w limit))
+            (encodeCodeWordAsInput
+              (encodeBoolWord result)) ∧
+          PairedRecognizerDovetailControllerRawOutput result = some [b]
+
 def PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :
     Prop :=
   forall _accept _reject attempt : MachineDescription,
     attempt.SubroutineReady ->
       exists decider : MachineDescription,
         PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
+          attempt decider
+
+def PairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction :
+    Prop :=
+  forall attempt invoker : MachineDescription,
+    CommonGround.ControllerInvocation.StageAttemptProtectedRealizes
+      attempt invoker ->
+      exists decider : MachineDescription,
+        PairedRecognizerDovetailTotalStageAttemptControllerFuelSearchDriverRealizes
           attempt decider
 
 def PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction :
@@ -492,6 +516,40 @@ def PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruct
       exists decider : MachineDescription,
         PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
           attempt decider
+
+theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes_of_fuel
+    {attempt decider : MachineDescription}
+    (hdriver :
+      PairedRecognizerDovetailTotalStageAttemptControllerFuelSearchDriverRealizes
+        attempt decider) :
+    PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
+      attempt decider := by
+  constructor
+  · exact hdriver.left
+  · intro w b
+    exact Iff.trans (hdriver.right w b) <| by
+      constructor
+      · intro h
+        rcases h with ⟨limit, fuel, result, hattempt, hraw⟩
+        exact ⟨limit, result, ⟨fuel, hattempt⟩, hraw⟩
+      · intro h
+        rcases h with ⟨limit, result, hattempt, hraw⟩
+        rcases
+            MachineDescription.haltsWithOutput_iff_exists_haltsWithOutputIn.mp
+              hattempt with
+          ⟨fuel, hfuel⟩
+        exact ⟨limit, fuel, result, hfuel, hraw⟩
+
+theorem pairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction_of_fuel
+    (hcompile :
+      PairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction) :
+    PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction := by
+  intro attempt invoker hinvoker
+  rcases hcompile attempt invoker hinvoker with ⟨decider, hdecider⟩
+  exact
+    ⟨decider,
+      pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes_of_fuel
+        hdecider⟩
 
 def PairedRecognizerDovetailFiniteStageLoopControllerConstruction :
     Prop :=
