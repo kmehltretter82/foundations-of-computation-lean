@@ -235,6 +235,39 @@ theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutput_functi
     rw [← hraw1, hraw2]
   exact Option.some.inj hsome
 
+theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutputIn_functional
+    {attempt invoker : MachineDescription}
+    (hinvoker :
+      PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+        attempt invoker)
+    (C : DovetailControllerLayout)
+    {result1 result2 out1 out2 : Word Bool} {n1 n2 : Nat}
+    (h1 :
+      attempt.HaltsWithOutputIn n1
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result1)))
+    (h2 :
+      attempt.HaltsWithOutputIn n2
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result2)))
+    (hraw1 :
+      PairedRecognizerDovetailControllerRawOutput result1 = some out1)
+    (hraw2 :
+      PairedRecognizerDovetailControllerRawOutput result2 = some out2) :
+    out1 = out2 := by
+  have hresult :
+      result1 = result2 :=
+    pairedRecognizerDovetailStageAttemptProtectedInvocation_attempt_outputIn_functional
+      hinvoker C h1 h2
+  subst result2
+  have hsome : some out1 = some out2 := by
+    rw [← hraw1, hraw2]
+  exact Option.some.inj hsome
+
 theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutput_bool_functional
     {attempt invoker : MachineDescription}
     (hinvoker :
@@ -262,6 +295,37 @@ theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutput_bool_f
   have hraw :
       [b1] = [b2] :=
     pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutput_functional
+      hinvoker C h1 h2 hraw1 hraw2
+  cases hraw
+  rfl
+
+theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutputIn_bool_functional
+    {attempt invoker : MachineDescription}
+    (hinvoker :
+      PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+        attempt invoker)
+    (C : DovetailControllerLayout)
+    {result1 result2 : Word Bool} {b1 b2 : Bool} {n1 n2 : Nat}
+    (h1 :
+      attempt.HaltsWithOutputIn n1
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result1)))
+    (h2 :
+      attempt.HaltsWithOutputIn n2
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result2)))
+    (hraw1 :
+      PairedRecognizerDovetailControllerRawOutput result1 = some [b1])
+    (hraw2 :
+      PairedRecognizerDovetailControllerRawOutput result2 = some [b2]) :
+    b1 = b2 := by
+  have hraw :
+      [b1] = [b2] :=
+    pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutputIn_functional
       hinvoker C h1 h2 hraw1 hraw2
   cases hraw
   rfl

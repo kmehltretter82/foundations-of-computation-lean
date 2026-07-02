@@ -584,6 +584,27 @@ theorem haltsWithOutput_controllerRawOutput_functional
     rw [← hraw1, hraw2]
   exact Option.some.inj hraw
 
+theorem haltsWithOutputIn_controllerRawOutput_functional
+    {D : MachineDescription} {input : Word Bool}
+    {result1 result2 out1 out2 : Word Bool} {n1 n2 : Nat}
+    (hD : D.SubroutineReady)
+    (h1 :
+      D.HaltsWithOutputIn n1 input
+        (encodeCodeWordAsInput (encodeBoolWord result1)))
+    (h2 :
+      D.HaltsWithOutputIn n2 input
+        (encodeCodeWordAsInput (encodeBoolWord result2)))
+    (hraw1 : DovetailControllerLayout.rawOutput? result1 = some out1)
+    (hraw2 : DovetailControllerLayout.rawOutput? result2 = some out2) :
+    out1 = out2 := by
+  have hresult :
+      result1 = result2 :=
+    haltsWithOutputIn_encodedBoolWord_functional hD h1 h2
+  subst result2
+  have hraw : some out1 = some out2 := by
+    rw [← hraw1, hraw2]
+  exact Option.some.inj hraw
+
 theorem haltsWithTape_functional_of_haltTransitionFree
     {D : MachineDescription} {w : Word Bool} {T₁ T₂ : Tape Bool}
     (hD : D.HaltTransitionFree)
