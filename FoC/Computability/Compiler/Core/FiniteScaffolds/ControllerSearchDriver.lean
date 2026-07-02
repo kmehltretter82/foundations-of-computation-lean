@@ -1,6 +1,4 @@
-import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.CodeRightShifted
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedParser.Contracts
-import FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerInvocation
+import FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerFuelPairSearch
 
 set_option doc.verso true
 
@@ -463,41 +461,6 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstru
     ⟨decider,
       pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes_of_searchDriver
         hdriver hinitializer hinvoker hemitter hcontinuer⟩
-
-private theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_finite_leaf :
-    PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction :=
-  by
-    intro attempt invoker hinvoker
-    sorry
-
-theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf :
-    PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction :=
-  pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_of_forward_closed
-    pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_finite_leaf
-
-private theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction := by
-  intro runner hrunner
-  -- Remaining finite-table obligation: enumerate bounded `(limit, fuel)`
-  -- pairs, invoke the exact-fuel runner, and halt one cell right of the
-  -- corresponding encoded boolean-word output.
-  sorry
-
-private theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction :=
-  pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction_of_rightShiftedSpec
-    pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction_finite_leaf
-
-private theorem pairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction :=
-  pairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction_of_bounded
-    pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction_finite_leaf
-
-theorem pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction :=
-  pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction_of_boundedRightShiftedEnumerator_emitter
-    pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction_finite_leaf
-    pairedRecognizerDovetailControllerBoolWordRawOutputEmitterConstruction_scaffold
 
 theorem pairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction_finite_leaf :
     PairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction := by

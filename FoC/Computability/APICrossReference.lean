@@ -389,10 +389,13 @@ theorems.  This is the current baseline for cleanup and proof work.
   {lit}`pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf`
   lives in
   {module}`FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerInvocation`.
-  The two controller search warnings live in
-  {module}`FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerSearchDriver`:
-  {lit}`pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf`
+  The output-level exact-fuel simulator leaves live in
+  {module}`FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerOutputLevelSimulator`:
+  {lit}`pairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction_finite_leaf`
   and
+  {lit}`pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpecConstruction_finite_leaf`.
+  The bounded fuel-pair enumerator warning lives in
+  {module}`FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerFuelPairSearch`:
   {lit}`pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction_finite_leaf`.
   The former right-handoff fixed-simulator leaves are no longer on the
   controller critical path.
