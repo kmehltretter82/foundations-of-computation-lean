@@ -98,7 +98,11 @@ indexed state spaces.
 theorem codePrefixExactFuelRunnerFinStateFiniteLeaf :
     CodePrefixExactFuelRunnerFinStateConstruction := by
   intro n M
-  sorry
+  cases n with
+  | zero =>
+      exact False.elim (Fin.elim0 M.start)
+  | succ n =>
+      sorry
 
 /--
 Finite-machine leaf for {name}`CodePrefixExactFuelRunnerConstruction`.

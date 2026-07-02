@@ -102,7 +102,15 @@ indexed recognizers.
 theorem codePrefixExactFuelProductRunnerFinStateFiniteLeaf :
     CodePrefixExactFuelProductRunnerFinStateConstruction := by
   intro leftN rightN left right
-  sorry
+  cases leftN with
+  | zero =>
+      exact False.elim (Fin.elim0 left.start)
+  | succ leftN =>
+      cases rightN with
+      | zero =>
+          exact False.elim (Fin.elim0 right.start)
+      | succ rightN =>
+          sorry
 
 /--
 Finite-machine leaf for the product exact-fuel runner.

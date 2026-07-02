@@ -95,7 +95,11 @@ enumeration over indexed selected recognizers.
 theorem codePrefixNestedPairEnumeratorFinStateFiniteLeaf :
     CodePrefixNestedPairEnumeratorFinStateConstruction := by
   intro n selected
-  sorry
+  cases n with
+  | zero =>
+      exact False.elim (Fin.elim0 selected.start)
+  | succ n =>
+      sorry
 
 /--
 Finite-machine leaf for unbounded generated-pair enumeration.
@@ -220,7 +224,11 @@ over indexed selected recognizers.
 theorem codePrefixBoundedNestedPairEnumeratorFinStateFiniteLeaf :
     CodePrefixBoundedNestedPairEnumeratorFinStateConstruction := by
   intro n selected
-  sorry
+  cases n with
+  | zero =>
+      exact False.elim (Fin.elim0 selected.start)
+  | succ n =>
+      sorry
 
 /--
 Bounded search over generated inner inputs and exact outer fuels for a wrapped
