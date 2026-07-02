@@ -498,6 +498,13 @@ private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstructi
   fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_of_primitive
     fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction_finite_leaf
 
+/-
+Route-audit note: do not try to fill this as a routine finite-table leaf.  The
+contract below is the exact right-handoff-to-canonical layout shape, then it is
+adapted by `fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_parser_rightHandoffStep`.
+Unless a context-length feasibility lemma is added, the controller exact-fuel
+runner should be rerouted through the padded/equivalence simulator boundary.
+-/
 private theorem fixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner_finite_leaf :
     EncodedRewriters.BoundedLayoutRunner.FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner := by
   intro attempt

@@ -400,6 +400,35 @@ theorems.  This is the current baseline for cleanup and proof work.
   Audit the fixed-description right-handoff route before trying to prove this
   cluster.
 
+## Controller Fixed-Simulator Route Audit
+
+The controller search driver still contains the old exact/right-handoff
+fixed-simulator route:
+
+* {lit}`fixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner_finite_leaf`
+  proves
+  {lit}`FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner`;
+* that is immediately repackaged as
+  {lit}`FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction`;
+* the exact-fuel runner then uses
+  {lit}`fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_parser_rightHandoffStep`.
+
+This should not be approached as an ordinary finite-table proof obligation.
+The current config-runner step-phase target has the same critical shape as the
+historically refuted right-handoff family: start from the simulator-layout
+right handoff, run the fixed description, and return to the canonical layout
+tape.  There is no current feasibility lemma in this file family that
+distinguishes the live target from that old context-length obstruction.
+
+The cleanup route is therefore the padded/equivalence route unless a later
+commit adds such a feasibility lemma.  The controller exact-fuel runner should
+be refactored to use an output-level or padded/equivalence simulator subroutine
+boundary, then extract the normalized halted simulator-layout output.  Do not
+spend proof effort on
+{lit}`fixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner_finite_leaf`
+or on the parser/right-handoff adapter without first changing that route or
+proving the context-length feasibility condition.
+
 ## Construction Route Classification
 
 The current construction surface is intentionally split by role.
