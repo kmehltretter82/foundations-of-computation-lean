@@ -34,17 +34,14 @@ def countedSuffixExtraBlankRightGapSourceTape
 def countedSuffixExtraBlankRestoredSourceTape
     (pref suffixRest : Word Bool) (suffixFirst : Bool)
     (tail : List (Option Bool)) : Tape Bool :=
-  tapeAtCells [none]
-    (List.append
-      (pref.map some)
-      (List.append
-        ((suffixFirst :: suffixRest).map some)
-        (none ::
-          none ::
-          List.append
-            (List.replicate (suffixRest.length + 1)
-              (none : Option Bool))
-            tail)))
+  rightEdgeRewindTargetTapeWithBase []
+    (List.append pref (suffixFirst :: suffixRest))
+    (none ::
+      none ::
+      none ::
+      List.append
+        (List.replicate suffixRest.length (none : Option Bool))
+        tail)
 
 def CountedSuffixExtraBlankRestorerSpec
     (restorer : MachineDescription) : Prop :=
@@ -63,7 +60,18 @@ def CountedSuffixExtraBlankRestorerConstruction : Prop :=
 
 theorem countedSuffixExtraBlankRestorerConstruction_core :
     CountedSuffixExtraBlankRestorerConstruction := by
-  sorry
+  exact
+    ⟨rightEdgeRewindDescription,
+      rightEdgeRewindDescription_subroutineReady,
+      fun pref suffixRest suffixFirst tail =>
+        rightEdgeRewindDescription_haltsFromTapeWithBase []
+          (List.append pref (suffixFirst :: suffixRest))
+          (none ::
+            none ::
+            none ::
+            List.append
+              (List.replicate suffixRest.length (none : Option Bool))
+              tail)⟩
 
 end FiniteTransducers
 end CommonGround

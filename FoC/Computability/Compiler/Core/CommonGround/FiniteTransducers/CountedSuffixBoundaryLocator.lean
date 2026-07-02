@@ -44,13 +44,15 @@ def CountedSuffixBoundaryLocatorSpec
     (locator : MachineDescription) : Prop :=
   locator.SubroutineReady ∧
     forall (pref suffixRest : Word Bool)
-      (suffixFirst : Bool) (guard : Option Bool)
+      (suffixFirst guardBit tailFirst : Bool)
       (tail : List (Option Bool)),
       locator.HaltsFromTape
         (countedSuffixBoundaryLocatorSourceTape
-          pref (suffixFirst :: suffixRest) guard tail)
+          pref (suffixFirst :: suffixRest) (some guardBit)
+          (some tailFirst :: tail))
         (countedSuffixBoundaryLocatorTargetTape
-          pref (suffixFirst :: suffixRest) guard tail)
+          pref (suffixFirst :: suffixRest) (some guardBit)
+          (some tailFirst :: tail))
 
 def CountedSuffixBoundaryLocatorConstruction : Prop :=
   exists locator : MachineDescription,

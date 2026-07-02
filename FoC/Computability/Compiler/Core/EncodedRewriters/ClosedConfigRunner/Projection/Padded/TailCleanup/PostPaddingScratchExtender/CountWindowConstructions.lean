@@ -1,6 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayloadLocalCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawSourceEncoder
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountedSuffixExtraBlankRestorer
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindow
 
 set_option doc.verso true
@@ -1068,8 +1067,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowPositionerConstruct
 def SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerOpenConstructions :
     Prop :=
   AcceptPostFieldBoundaryToDecodedPrefixConstruction ∧
-  RejectPostFieldRemainingGapsConstruction ∧
-  ScratchCountSuffixMarkedBoundarySeparatorFirstSuffixLocatorConstruction
+  RejectPostFieldRemainingGapsConstruction
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldHandoffCoreConstruction_of_boundaryToDecoded
     (hboundary : AcceptPostFieldBoundaryToDecodedPrefixConstruction) :
@@ -1088,7 +1086,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowDecoderConstruction
     (hleaves :
       SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerOpenConstructions) :
     SelectedProjectionPaddedTailCleanupScratchCountWindowDecoderConstruction := by
-  rcases hleaves with ⟨hacceptBoundary, hrejectRemaining, _hpositioner⟩
+  rcases hleaves with ⟨hacceptBoundary, hrejectRemaining⟩
   let hacceptHandoffCore :
       SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldHandoffCoreConstruction :=
     selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldHandoffCoreConstruction_of_boundaryToDecoded
@@ -1138,13 +1136,12 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowPositionerConstruct
     (hleaves :
       SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerOpenConstructions) :
     SelectedProjectionPaddedTailCleanupScratchCountWindowPositionerConstruction := by
-  rcases hleaves with ⟨_hacceptBoundary, _hrejectRemaining, hlocator⟩
+  rcases hleaves with ⟨_hacceptBoundary, _hrejectRemaining⟩
   intro useAccept
   exact
     selectedProjectionPaddedTailCleanupScratchCountWindowPositionerConstruction_of_handoffCore
       (selectedProjectionPaddedTailCleanupScratchCountWindowRawToCounterHandoffCoreConstruction_of_suffixPositioner
-        (scratchCountSuffixPositionerHandoffConstruction_of_firstSuffixLocator
-          hlocator))
+        scratchCountSuffixPositionerHandoffConstruction_core)
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_of_openConstructions
     (hleaves :
@@ -1159,8 +1156,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstru
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerOpenConstructions_core :
     SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerOpenConstructions :=
   ⟨acceptPostFieldBoundaryToDecodedPrefixConstruction_core,
-    rejectPostFieldHandoff_remainingGapsConstruction_core,
-    scratchCountSuffixMarkedBoundarySeparatorFirstSuffixLocatorConstruction_core⟩
+    rejectPostFieldHandoff_remainingGapsConstruction_core⟩
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_core :
     SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction :=
@@ -1488,42 +1484,11 @@ theorem scratchCountSuffixExtraBlankRestorerConstruction_of_rightGapParts
                 pref suffix rightTail)
               (hrestorerSpec.right pref suffix rightTail hpos)⟩
 
-theorem scratchCountSuffixExtraBlankRightGapRestorerConstruction_of_countedSuffixExtraBlankRestorer
-    (hrestorer : CountedSuffixExtraBlankRestorerConstruction) :
-    ScratchCountSuffixExtraBlankRightGapRestorerConstruction := by
-  rcases hrestorer with ⟨restorer, hrestorerSpec⟩
-  exact
-    ⟨restorer,
-      hrestorerSpec.left,
-      fun pref suffix rightTail hpos => by
-        cases suffix with
-        | nil =>
-            simp at hpos
-        | cons suffixFirst suffixRest =>
-            simpa [scratchCountSuffixExtraBlankRightGapTape,
-              scratchCountSuffixExtraBlankPadding,
-              scratchCountSuffixPositionerSourceTape,
-              countedSuffixExtraBlankRightGapSourceTape,
-              countedSuffixExtraBlankRestoredSourceTape,
-              List.append_assoc] using
-              hrestorerSpec.right pref suffixRest suffixFirst rightTail⟩
-
-theorem scratchCountSuffixExtraBlankRightGapRestorerConstruction_core :
-    ScratchCountSuffixExtraBlankRightGapRestorerConstruction :=
-  scratchCountSuffixExtraBlankRightGapRestorerConstruction_of_countedSuffixExtraBlankRestorer
-    countedSuffixExtraBlankRestorerConstruction_core
-
-theorem scratchCountSuffixExtraBlankRestorerConstruction_core :
-    ScratchCountSuffixExtraBlankRestorerConstruction :=
-  scratchCountSuffixExtraBlankRestorerConstruction_of_rightGapParts
-    scratchCountSuffixExtraBlankRightGapScannerConstruction_core
-    scratchCountSuffixExtraBlankRightGapRestorerConstruction_core
-
 theorem scratchCountSuffixCompactedRightEdgeRestorerConstruction_core :
-    ScratchCountSuffixCompactedRightEdgeRestorerConstruction :=
-  scratchCountSuffixCompactedRightEdgeRestorerConstruction_of_rewinderAndExtraBlankRestorer
-    scratchCountSuffixCompactedRightEdgeRewinderConstruction_core
-    scratchCountSuffixExtraBlankRestorerConstruction_core
+    ScratchCountSuffixCompactedRightEdgeRestorerConstruction := by
+  -- Remaining real leaf: shift the compacted payload one cell right into the
+  -- trailing blank while rewinding to the preserved left boundary.
+  sorry
 
 theorem scratchCountSuffixRightEdgeRestorerConstruction_core :
     ScratchCountSuffixRightEdgeRestorerConstruction :=

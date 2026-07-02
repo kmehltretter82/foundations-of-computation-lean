@@ -1620,8 +1620,8 @@ theorem scratchCountSuffixMarkedBoundarySeparatorFirstSuffixLocatorConstruction_
           countedSuffixBoundaryLocatorSourceTape,
           countedSuffixBoundaryLocatorTargetTape,
           countedSuffixBoundaryLocatorPadding] using
-          hlocatorSpec.right pref suffixRest suffixFirst (some true)
-            (some first :: rightTail)⟩
+          hlocatorSpec.right pref suffixRest suffixFirst true first
+            rightTail⟩
 
 theorem scratchCountSuffixMarkedBoundarySeparatorFirstSuffixLocatorConstruction_core :
     ScratchCountSuffixMarkedBoundarySeparatorFirstSuffixLocatorConstruction :=
@@ -2393,8 +2393,8 @@ theorem scratchCountSuffixPositionerHandoffConstruction_of_firstSuffixLocator
 
 theorem scratchCountSuffixPositionerHandoffConstruction_core :
     ScratchCountSuffixPositionerHandoffConstruction :=
-  scratchCountSuffixPositionerHandoffConstruction_of_firstSuffixLocator
-    scratchCountSuffixMarkedBoundarySeparatorFirstSuffixLocatorConstruction_core
+  scratchCountSuffixPositionerHandoffConstruction_of_boundaryPositioner
+    scratchCountSuffixBoundaryPositionerConstruction_core
 
 end SelectedProjectionPaddedTailCleanup
 end BoundedLayoutRunner
