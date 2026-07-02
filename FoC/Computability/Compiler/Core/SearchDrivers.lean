@@ -335,6 +335,14 @@ theorem Search.controllerCompilerOfDeciderOfProtectedInvocation
     (pairedRecognizerDovetailStageAttemptOutputFunctional_of_protectedInvocation
       hinvoker)
 
+theorem Search.protectedControllerSearchDriverConstructionOfDecider
+    (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
+    PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction := by
+  intro attempt invoker hinvoker
+  exact
+    Search.controllerCompilerOfDeciderOfProtectedInvocation
+      hcompile hinvoker
+
 theorem Search.controllerCompilerOfDecider
     (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
     PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction := by

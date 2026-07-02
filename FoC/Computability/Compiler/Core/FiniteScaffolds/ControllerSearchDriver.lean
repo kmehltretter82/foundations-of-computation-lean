@@ -316,12 +316,7 @@ private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes
 
 private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerSearchDriverData :
     Prop :=
-  forall attempt invoker : MachineDescription,
-    PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
-      attempt invoker ->
-    exists decider : MachineDescription,
-      PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
-        attempt decider
+  PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction
 
 private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes_of_searchDriver
     {attempt initializer invoker emitter continuer decider : MachineDescription}
@@ -395,6 +390,14 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstru
       pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes_of_searchDriver
         hdriver hinitializer hinvoker hemitter hcontinuer⟩
 
+theorem pairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction_finite_leaf :
+    PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction := by
+  intro attempt invoker hinvoker
+  -- Remaining finite-table obligation: build the unbounded controller search
+  -- driver for the protected stage-attempt machine using the protected
+  -- invocation contract for output functionality.
+  sorry
+
 private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstructionData_finite_leaf :
     forall attempt initializer invoker emitter continuer : MachineDescription,
       PairedRecognizerDovetailControllerInputInitializerRealizes
@@ -410,11 +413,8 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstru
           initializer invoker emitter continuer decider := by
   apply
     pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstructionData_of_searchDriver
-  intro attempt invoker hinvoker
-  -- Remaining finite-table obligation: build the unbounded controller search
-  -- driver for the protected stage-attempt machine using the protected
-  -- invocation contract for output functionality.
-  sorry
+  exact
+    pairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction_finite_leaf
 
 /--
 Finite-machine leaf for sequencing initializer, protected invocation, result

@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround.Controller
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Basic
 
 set_option doc.verso true
@@ -479,6 +480,15 @@ def PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConst
     Prop :=
   forall _accept _reject attempt : MachineDescription,
     attempt.SubroutineReady ->
+      exists decider : MachineDescription,
+        PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
+          attempt decider
+
+def PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction :
+    Prop :=
+  forall attempt invoker : MachineDescription,
+    CommonGround.ControllerInvocation.StageAttemptProtectedRealizes
+      attempt invoker ->
       exists decider : MachineDescription,
         PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
           attempt decider
