@@ -391,7 +391,7 @@ theorems.  This is the current baseline for cleanup and proof work.
   {module}`FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerInvocation`.
   The two controller search warnings live in
   {module}`FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerSearchDriver`:
-  {lit}`pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineOutputLevelConstruction_finite_leaf`
+  {lit}`pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf`
   and
   {lit}`pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction_finite_leaf`.
   The former right-handoff fixed-simulator leaves are no longer on the
@@ -423,11 +423,13 @@ be refactored to use an output-level or padded/equivalence simulator subroutine
 boundary, then extract the normalized halted simulator-layout output.
 
 The controller driver has been rerouted to the output-level leaf
-{lit}`pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineOutputLevelConstruction_finite_leaf`.
-That leaf is the correct remaining proof target for the exact-fuel runner.  It
-should be implemented from the generated fuel-input scanner, the
-padded/equivalence fixed-description simulator boundary, and the normalized
-halted-layout output extractor.  Do not reintroduce
+{lit}`pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf`.
+That semantic leaf is the correct remaining proof target for the exact-fuel
+runner; the controller search path does not require the stronger
+{lit}`TapeCodePrimitiveOutputCompiledSubroutineByDescription` code-primitive
+contract here.  It should be implemented from the generated fuel-input
+scanner, the padded/equivalence fixed-description simulator boundary, and the
+normalized halted-layout output extractor.  Do not reintroduce
 {lit}`fixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner_finite_leaf`
 or the parser/right-handoff adapter unless a context-length feasibility lemma
 is first proved.

@@ -472,23 +472,20 @@ This is the replacement for the old local chain
 simulator -> halted-layout extractor`.  The remaining implementation should
 compose the generated fuel-input scanner with the padded/equivalence
 fixed-description simulator boundary, then extract the normalized halted-layout
-code output.  It must not be discharged through
+code output.  The controller search driver needs the semantic exact-fuel runner
+contract below, not the stronger code-primitive output-compiled contract.  It
+must not be discharged through
 `FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction` or
 `fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_parser_rightHandoffStep`.
 -/
-private theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineOutputLevelConstruction_finite_leaf :
-    PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineConstruction :=
+theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf :
+    PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction :=
   by
     intro attempt invoker hinvoker
     -- Remaining output-level finite-machine obligation.  Use `hinvoker` only
     -- for protected invocation compatibility; the simulator boundary should be
     -- the padded/equivalence route described above.
     sorry
-
-theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf :
-    PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction :=
-  pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_of_codeSubroutine
-    pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineOutputLevelConstruction_finite_leaf
 
 private theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction_finite_leaf :
     PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction := by
