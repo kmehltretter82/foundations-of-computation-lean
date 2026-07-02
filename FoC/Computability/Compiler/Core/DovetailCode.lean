@@ -21,6 +21,41 @@ def PairedRecognizerDovetailStageInputCode
     (w : Word Bool) (stage : Nat) : Word MachineCodeSymbol :=
   DovetailLayout.stageInputCode w stage
 
+def PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+    (w : Word Bool) (limit fuel : Nat) :
+    Word MachineCodeSymbol :=
+  DovetailLayout.stageInputCodeAppend w limit
+    (encodeNatAppend fuel [])
+
+theorem pairedRecognizerDovetailControllerStageAttemptFuelInputCode_decodeStageInput
+    (w : Word Bool) (limit fuel : Nat) :
+    DovetailLayout.decodeStageInput
+        (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+          w limit fuel) =
+      some ((w, limit), encodeNatAppend fuel []) := by
+  exact DovetailLayout.decodeStageInput_stageInputCodeAppend
+    w limit (encodeNatAppend fuel [])
+
+theorem pairedRecognizerDovetailControllerStageAttemptFuelInputCode_injective
+    {w1 w2 : Word Bool} {limit1 limit2 fuel1 fuel2 : Nat}
+    (h :
+      PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+          w1 limit1 fuel1 =
+        PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+          w2 limit2 fuel2) :
+    w1 = w2 ∧ limit1 = limit2 ∧ fuel1 = fuel2 := by
+  have hdecode := congrArg DovetailLayout.decodeStageInput h
+  rw [pairedRecognizerDovetailControllerStageAttemptFuelInputCode_decodeStageInput,
+    pairedRecognizerDovetailControllerStageAttemptFuelInputCode_decodeStageInput] at hdecode
+  have hdecoded :=
+    Option.some.inj hdecode
+  have hpair := Prod.ext_iff.mp hdecoded
+  have hwlimit := Prod.ext_iff.mp hpair.left
+  have hsuffix := hpair.right
+  have hfuelDecode := congrArg decodeNat hsuffix
+  simp [decodeNat_encodeNatAppend] at hfuelDecode
+  exact ⟨hwlimit.left, hwlimit.right, hfuelDecode⟩
+
 def PairedRecognizerDovetailInitialLayoutCode
     (accept reject : MachineDescription) :
     TapeCodePrimitive :=

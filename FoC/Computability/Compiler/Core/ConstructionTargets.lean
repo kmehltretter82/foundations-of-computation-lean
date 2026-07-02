@@ -491,6 +491,41 @@ def PairedRecognizerDovetailTotalStageAttemptControllerFuelSearchDriverRealizes
               (encodeBoolWord result)) ∧
           PairedRecognizerDovetailControllerRawOutput result = some [b]
 
+def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes
+    (attempt runner : MachineDescription) : Prop :=
+  runner.SubroutineReady ∧
+    forall w : Word Bool,
+    forall limit fuel : Nat,
+    forall result : Word Bool,
+      runner.HaltsWithOutput
+          (encodeCodeWordAsInput
+            (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+              w limit fuel))
+          (encodeCodeWordAsInput
+            (encodeBoolWord result)) <->
+        attempt.HaltsWithOutputIn fuel
+          (encodeCodeWordAsInput
+            (PairedRecognizerDovetailStageInputCode w limit))
+          (encodeCodeWordAsInput
+            (encodeBoolWord result))
+
+def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerConstruction :
+    Prop :=
+  forall attempt : MachineDescription,
+    attempt.SubroutineReady ->
+      exists runner : MachineDescription,
+        PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes
+          attempt runner
+
+def PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction :
+    Prop :=
+  forall attempt invoker : MachineDescription,
+    CommonGround.ControllerInvocation.StageAttemptProtectedRealizes
+      attempt invoker ->
+      exists runner : MachineDescription,
+        PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes
+          attempt runner
+
 def PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :
     Prop :=
   forall _accept _reject attempt : MachineDescription,
