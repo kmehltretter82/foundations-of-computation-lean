@@ -513,12 +513,25 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction
   pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_of_codeSubroutine
     pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineConstruction_finite_leaf
 
-theorem pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction := by
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction := by
   intro runner hrunner
   -- Remaining finite-table obligation: enumerate `(limit, fuel)` pairs,
-  -- invoke the exact-fuel runner, and classify singleton raw outputs.
+  -- invoke the exact-fuel runner, and expose each boolean-word result.
   sorry
+
+private theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction := by
+  intro enumerator henumerator
+  -- Remaining finite-table obligation: classify enumerated boolean-word
+  -- results through the controller raw-output convention.
+  sorry
+
+theorem pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction :=
+  pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction_of_enumerator_classifier
+    pairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction_finite_leaf
+    pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction_finite_leaf
 
 theorem pairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction_finite_leaf :
     PairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction := by

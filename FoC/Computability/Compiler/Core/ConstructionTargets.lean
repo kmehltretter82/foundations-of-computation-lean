@@ -731,6 +731,47 @@ def PairedRecognizerDovetailControllerStageAttemptFuelPairSearchRealizes
               (encodeBoolWord result)) ∧
           PairedRecognizerDovetailControllerRawOutput result = some [b]
 
+def PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorRealizes
+    (runner enumerator : MachineDescription) : Prop :=
+  enumerator.SubroutineReady ∧
+    forall w : Word Bool, forall result : Word Bool,
+      enumerator.HaltsWithOutput w
+          (encodeCodeWordAsInput (encodeBoolWord result)) <->
+        exists limit : Nat,
+        exists fuel : Nat,
+          runner.HaltsWithOutput
+            (encodeCodeWordAsInput
+              (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+                w limit fuel))
+            (encodeCodeWordAsInput
+              (encodeBoolWord result))
+
+def PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction :
+    Prop :=
+  forall runner : MachineDescription,
+    runner.SubroutineReady ->
+      exists enumerator : MachineDescription,
+        PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorRealizes
+          runner enumerator
+
+def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierRealizes
+    (enumerator classifier : MachineDescription) : Prop :=
+  classifier.WellFormed ∧
+    forall w : Word Bool, forall b : Bool,
+      classifier.HaltsWithOutput w [b] <->
+        exists result : Word Bool,
+          enumerator.HaltsWithOutput w
+              (encodeCodeWordAsInput (encodeBoolWord result)) ∧
+            PairedRecognizerDovetailControllerRawOutput result = some [b]
+
+def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction :
+    Prop :=
+  forall enumerator : MachineDescription,
+    enumerator.SubroutineReady ->
+      exists classifier : MachineDescription,
+        PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierRealizes
+          enumerator classifier
+
 def PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction :
     Prop :=
   forall runner : MachineDescription,
@@ -738,6 +779,35 @@ def PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction :
       exists decider : MachineDescription,
         PairedRecognizerDovetailControllerStageAttemptFuelPairSearchRealizes
           runner decider
+
+theorem pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction_of_enumerator_classifier
+    (henumerator :
+      PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction)
+    (hclassifier :
+      PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction) :
+    PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction := by
+  intro runner hrunner
+  rcases henumerator runner hrunner with ⟨enumerator, henumeratorSpec⟩
+  rcases hclassifier enumerator henumeratorSpec.left with
+    ⟨classifier, hclassifierSpec⟩
+  refine ⟨classifier, ?_⟩
+  constructor
+  · exact hclassifierSpec.left
+  · intro w b
+    exact Iff.trans (hclassifierSpec.right w b) <| by
+      constructor
+      · intro h
+        rcases h with ⟨result, henum, hraw⟩
+        rcases (henumeratorSpec.right w result).mp henum with
+          ⟨limit, fuel, hrun⟩
+        exact ⟨limit, fuel, result, hrun, hraw⟩
+      · intro h
+        rcases h with ⟨limit, fuel, result, hrun, hraw⟩
+        exact
+          ⟨result,
+            (henumeratorSpec.right w result).mpr
+              ⟨limit, fuel, hrun⟩,
+            hraw⟩
 
 def PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :
     Prop :=
