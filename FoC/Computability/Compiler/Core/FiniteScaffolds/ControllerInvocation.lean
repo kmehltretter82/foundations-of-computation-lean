@@ -141,43 +141,9 @@ theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_attempt_output_f
         (encodeCodeWordAsInput
           (encodeBoolWord result2))) :
     result1 = result2 := by
-  have hinv1 :
-      invoker.HaltsWithOutput
-        (encodeCodeWordAsInput
-          (DovetailControllerLayout.encode C))
-        (encodeCodeWordAsInput
-          (DovetailControllerLayout.encode
-            (DovetailControllerLayout.withResult C result1))) :=
-    (hinvoker.right C result1).mpr h1
-  have hinv2 :
-      invoker.HaltsWithOutput
-        (encodeCodeWordAsInput
-          (DovetailControllerLayout.encode C))
-        (encodeCodeWordAsInput
-          (DovetailControllerLayout.encode
-            (DovetailControllerLayout.withResult C result2))) :=
-    (hinvoker.right C result2).mpr h2
-  have hbits :
-      encodeCodeWordAsInput
-          (DovetailControllerLayout.encode
-            (DovetailControllerLayout.withResult C result1)) =
-        encodeCodeWordAsInput
-          (DovetailControllerLayout.encode
-            (DovetailControllerLayout.withResult C result2)) :=
-    haltsWithOutput_functional_of_subroutineReady
-      hinvoker.left hinv1 hinv2
-  have hcode :
-      DovetailControllerLayout.encode
-          (DovetailControllerLayout.withResult C result1) =
-        DovetailControllerLayout.encode
-          (DovetailControllerLayout.withResult C result2) :=
-    encodeCodeWordAsInput_injective hbits
-  have hlayout :
-      DovetailControllerLayout.withResult C result1 =
-        DovetailControllerLayout.withResult C result2 :=
-    DovetailControllerLayout.encode_injective hcode
-  have hresult := congrArg DovetailControllerLayout.result hlayout
-  simpa [DovetailControllerLayout.withResult] using hresult
+  exact
+    CommonGround.ControllerInvocation.stageAttemptProtected_attempt_output_functional
+      hinvoker C h1 h2
 
 theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_attempt_outputIn_functional
     {attempt invoker : MachineDescription}
@@ -199,8 +165,8 @@ theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_attempt_outputIn
         (encodeCodeWordAsInput
           (encodeBoolWord result2))) :
     result1 = result2 :=
-  pairedRecognizerDovetailStageAttemptProtectedInvocation_attempt_output_functional
-    hinvoker C ⟨n1, h1⟩ ⟨n2, h2⟩
+  CommonGround.ControllerInvocation.stageAttemptProtected_attempt_outputIn_functional
+    hinvoker C h1 h2
 
 theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutput_functional
     {attempt invoker : MachineDescription}
@@ -226,14 +192,9 @@ theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutput_functi
     (hraw2 :
       PairedRecognizerDovetailControllerRawOutput result2 = some out2) :
     out1 = out2 := by
-  have hresult :
-      result1 = result2 :=
-    pairedRecognizerDovetailStageAttemptProtectedInvocation_attempt_output_functional
-      hinvoker C h1 h2
-  subst result2
-  have hsome : some out1 = some out2 := by
-    rw [← hraw1, hraw2]
-  exact Option.some.inj hsome
+  exact
+    CommonGround.ControllerInvocation.stageAttemptProtected_rawOutput_functional
+      hinvoker C h1 h2 hraw1 hraw2
 
 theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutputIn_functional
     {attempt invoker : MachineDescription}
@@ -259,14 +220,9 @@ theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutputIn_func
     (hraw2 :
       PairedRecognizerDovetailControllerRawOutput result2 = some out2) :
     out1 = out2 := by
-  have hresult :
-      result1 = result2 :=
-    pairedRecognizerDovetailStageAttemptProtectedInvocation_attempt_outputIn_functional
-      hinvoker C h1 h2
-  subst result2
-  have hsome : some out1 = some out2 := by
-    rw [← hraw1, hraw2]
-  exact Option.some.inj hsome
+  exact
+    CommonGround.ControllerInvocation.stageAttemptProtected_rawOutputIn_functional
+      hinvoker C h1 h2 hraw1 hraw2
 
 theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutput_bool_functional
     {attempt invoker : MachineDescription}
@@ -292,12 +248,9 @@ theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutput_bool_f
     (hraw2 :
       PairedRecognizerDovetailControllerRawOutput result2 = some [b2]) :
     b1 = b2 := by
-  have hraw :
-      [b1] = [b2] :=
-    pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutput_functional
+  exact
+    CommonGround.ControllerInvocation.stageAttemptProtected_rawOutput_bool_functional
       hinvoker C h1 h2 hraw1 hraw2
-  cases hraw
-  rfl
 
 theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutputIn_bool_functional
     {attempt invoker : MachineDescription}
@@ -323,12 +276,9 @@ theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutputIn_bool
     (hraw2 :
       PairedRecognizerDovetailControllerRawOutput result2 = some [b2]) :
     b1 = b2 := by
-  have hraw :
-      [b1] = [b2] :=
-    pairedRecognizerDovetailStageAttemptProtectedInvocation_rawOutputIn_functional
+  exact
+    CommonGround.ControllerInvocation.stageAttemptProtected_rawOutputIn_bool_functional
       hinvoker C h1 h2 hraw1 hraw2
-  cases hraw
-  rfl
 
 /--
 Construction target for the protected core: preserve/reconstruct the controller

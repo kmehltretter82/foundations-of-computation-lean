@@ -274,6 +274,203 @@ def StageAttemptProtectedRealizes
           (encodeCodeWordAsInput
             (encodeBoolWord result))
 
+theorem stageAttemptProtected_attempt_output_functional
+    {attempt invoker : MachineDescription}
+    (hinvoker : StageAttemptProtectedRealizes attempt invoker)
+    (C : DovetailControllerLayout)
+    {result1 result2 : Word Bool}
+    (h1 :
+      attempt.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result1)))
+    (h2 :
+      attempt.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result2))) :
+    result1 = result2 := by
+  have hinv1 :
+      invoker.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode C))
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.withResult C result1))) :=
+    (hinvoker.right C result1).mpr h1
+  have hinv2 :
+      invoker.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode C))
+        (encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.withResult C result2))) :=
+    (hinvoker.right C result2).mpr h2
+  have hbits :
+      encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.withResult C result1)) =
+        encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.withResult C result2)) :=
+    haltsWithOutput_functional_of_subroutineReady
+      hinvoker.left hinv1 hinv2
+  have hcode :
+      DovetailControllerLayout.encode
+          (DovetailControllerLayout.withResult C result1) =
+        DovetailControllerLayout.encode
+          (DovetailControllerLayout.withResult C result2) :=
+    encodeCodeWordAsInput_injective hbits
+  have hlayout :
+      DovetailControllerLayout.withResult C result1 =
+        DovetailControllerLayout.withResult C result2 :=
+    DovetailControllerLayout.encode_injective hcode
+  have hresult := congrArg DovetailControllerLayout.result hlayout
+  simpa [DovetailControllerLayout.withResult] using hresult
+
+theorem stageAttemptProtected_attempt_outputIn_functional
+    {attempt invoker : MachineDescription}
+    (hinvoker : StageAttemptProtectedRealizes attempt invoker)
+    (C : DovetailControllerLayout)
+    {result1 result2 : Word Bool} {n1 n2 : Nat}
+    (h1 :
+      attempt.HaltsWithOutputIn n1
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result1)))
+    (h2 :
+      attempt.HaltsWithOutputIn n2
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result2))) :
+    result1 = result2 :=
+  stageAttemptProtected_attempt_output_functional
+    hinvoker C ⟨n1, h1⟩ ⟨n2, h2⟩
+
+theorem stageAttemptProtected_rawOutput_functional
+    {attempt invoker : MachineDescription}
+    (hinvoker : StageAttemptProtectedRealizes attempt invoker)
+    (C : DovetailControllerLayout)
+    {result1 result2 out1 out2 : Word Bool}
+    (h1 :
+      attempt.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result1)))
+    (h2 :
+      attempt.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result2)))
+    (hraw1 :
+      PairedRecognizerDovetailControllerRawOutput result1 = some out1)
+    (hraw2 :
+      PairedRecognizerDovetailControllerRawOutput result2 = some out2) :
+    out1 = out2 := by
+  have hresult :
+      result1 = result2 :=
+    stageAttemptProtected_attempt_output_functional
+      hinvoker C h1 h2
+  subst result2
+  have hsome : some out1 = some out2 := by
+    rw [← hraw1, hraw2]
+  exact Option.some.inj hsome
+
+theorem stageAttemptProtected_rawOutputIn_functional
+    {attempt invoker : MachineDescription}
+    (hinvoker : StageAttemptProtectedRealizes attempt invoker)
+    (C : DovetailControllerLayout)
+    {result1 result2 out1 out2 : Word Bool} {n1 n2 : Nat}
+    (h1 :
+      attempt.HaltsWithOutputIn n1
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result1)))
+    (h2 :
+      attempt.HaltsWithOutputIn n2
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result2)))
+    (hraw1 :
+      PairedRecognizerDovetailControllerRawOutput result1 = some out1)
+    (hraw2 :
+      PairedRecognizerDovetailControllerRawOutput result2 = some out2) :
+    out1 = out2 := by
+  have hresult :
+      result1 = result2 :=
+    stageAttemptProtected_attempt_outputIn_functional
+      hinvoker C h1 h2
+  subst result2
+  have hsome : some out1 = some out2 := by
+    rw [← hraw1, hraw2]
+  exact Option.some.inj hsome
+
+theorem stageAttemptProtected_rawOutput_bool_functional
+    {attempt invoker : MachineDescription}
+    (hinvoker : StageAttemptProtectedRealizes attempt invoker)
+    (C : DovetailControllerLayout)
+    {result1 result2 : Word Bool} {b1 b2 : Bool}
+    (h1 :
+      attempt.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result1)))
+    (h2 :
+      attempt.HaltsWithOutput
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result2)))
+    (hraw1 :
+      PairedRecognizerDovetailControllerRawOutput result1 = some [b1])
+    (hraw2 :
+      PairedRecognizerDovetailControllerRawOutput result2 = some [b2]) :
+    b1 = b2 := by
+  have hraw :
+      [b1] = [b2] :=
+    stageAttemptProtected_rawOutput_functional
+      hinvoker C h1 h2 hraw1 hraw2
+  cases hraw
+  rfl
+
+theorem stageAttemptProtected_rawOutputIn_bool_functional
+    {attempt invoker : MachineDescription}
+    (hinvoker : StageAttemptProtectedRealizes attempt invoker)
+    (C : DovetailControllerLayout)
+    {result1 result2 : Word Bool} {b1 b2 : Bool} {n1 n2 : Nat}
+    (h1 :
+      attempt.HaltsWithOutputIn n1
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result1)))
+    (h2 :
+      attempt.HaltsWithOutputIn n2
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result2)))
+    (hraw1 :
+      PairedRecognizerDovetailControllerRawOutput result1 = some [b1])
+    (hraw2 :
+      PairedRecognizerDovetailControllerRawOutput result2 = some [b2]) :
+    b1 = b2 := by
+  have hraw :
+      [b1] = [b2] :=
+    stageAttemptProtected_rawOutputIn_functional
+      hinvoker C h1 h2 hraw1 hraw2
+  cases hraw
+  rfl
+
 def StageAttemptWitnessedConstruction : Prop :=
   forall attempt : MachineDescription,
     attempt.SubroutineReady ->
