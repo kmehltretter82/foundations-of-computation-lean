@@ -571,6 +571,32 @@ theorem haltsFromIn_succ_iff_of_step {M : TuringMachine symbol state}
   · exact haltsFromIn_tail_of_step hstep
   · exact haltsFromIn_succ_of_step hstep
 
+theorem haltsFromIn_succ_transition_iff
+    {M : TuringMachine symbol state}
+    {n : Nat} {c : Configuration symbol state} :
+    HaltsFromIn M (n + 1) c <->
+      exists write : Option symbol,
+      exists dir : Direction,
+      exists nextState : state,
+        M.transition c.state (Tape.read c.tape) =
+          some (write, dir, nextState) ∧
+          HaltsFromIn M n
+            { state := nextState,
+              tape := Tape.move dir (Tape.write write c.tape) } := by
+  constructor
+  · intro hhalt
+    rcases haltsFromIn_succ_iff.mp hhalt with
+      ⟨d, hstep, htail⟩
+    cases hstep with
+    | mk haction =>
+        exact ⟨_, _, _, haction, htail⟩
+  · intro h
+    rcases h with ⟨write, dir, nextState, haction, htail⟩
+    exact
+      haltsFromIn_succ_of_step
+        (Step.mk haction)
+        htail
+
 theorem haltsOnInputIn_succ_iff_of_step
     {M : TuringMachine symbol state}
     {n : Nat} {w : Word symbol}
@@ -578,6 +604,24 @@ theorem haltsOnInputIn_succ_iff_of_step
     (hstep : Step M (initial M w) d) :
     HaltsOnInputIn M (n + 1) w <-> HaltsFromIn M n d := by
   exact haltsFromIn_succ_iff_of_step hstep
+
+theorem haltsOnInputIn_succ_transition_iff
+    {M : TuringMachine symbol state}
+    {n : Nat} {w : Word symbol} :
+    HaltsOnInputIn M (n + 1) w <->
+      exists write : Option symbol,
+      exists dir : Direction,
+      exists nextState : state,
+        M.transition M.start (Tape.read (Tape.input w)) =
+          some (write, dir, nextState) ∧
+          HaltsFromIn M n
+            { state := nextState,
+              tape :=
+                Tape.move dir
+                  (Tape.write write (Tape.input w)) } := by
+  simpa [HaltsOnInputIn, initial] using
+    (haltsFromIn_succ_transition_iff
+      (M := M) (n := n) (c := initial M w))
 
 theorem no_step_from_halted {M : TuringMachine symbol state}
     (hstop : HaltingTransitionsDisabled M)

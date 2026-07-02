@@ -281,6 +281,49 @@ theorem codePrefixExactFuelRunnerFiniteLeaf
     codePrefixExactFuelRunnerConstruction_of_finStateConstruction
       M codePrefixExactFuelRunnerFinStateFiniteLeaf
 
+theorem codePrefixExactFuelRunner_haltsOnInput_zero_iff
+    {machineState : Type u} {runnerState : Type v}
+    {M : TuringMachine MachineCodeSymbol machineState}
+    {runner : TuringMachine MachineCodeSymbol runnerState}
+    (hrunner :
+      forall input : Word MachineCodeSymbol,
+      forall fuel : Nat,
+        TuringMachine.HaltsOnInput runner
+            (CodePrefixRecognizerStageCode input fuel) <->
+          TuringMachine.HaltsOnInputIn M fuel input)
+    (input : Word MachineCodeSymbol) :
+    TuringMachine.HaltsOnInput runner
+        (CodePrefixRecognizerStageCode input 0) <->
+      TuringMachine.Halted M (TuringMachine.initial M input) := by
+  exact Iff.trans (hrunner input 0)
+    TuringMachine.haltsOnInputIn_zero_iff
+
+theorem codePrefixExactFuelRunner_haltsOnInput_succ_transition_iff
+    {machineState : Type u} {runnerState : Type v}
+    {M : TuringMachine MachineCodeSymbol machineState}
+    {runner : TuringMachine MachineCodeSymbol runnerState}
+    (hrunner :
+      forall input : Word MachineCodeSymbol,
+      forall fuel : Nat,
+        TuringMachine.HaltsOnInput runner
+            (CodePrefixRecognizerStageCode input fuel) <->
+          TuringMachine.HaltsOnInputIn M fuel input)
+    (input : Word MachineCodeSymbol) (fuel : Nat) :
+    TuringMachine.HaltsOnInput runner
+        (CodePrefixRecognizerStageCode input (fuel + 1)) <->
+      exists write : Option MachineCodeSymbol,
+      exists dir : Direction,
+      exists nextState : machineState,
+        M.transition M.start (Tape.read (Tape.input input)) =
+          some (write, dir, nextState) ∧
+          TuringMachine.HaltsFromIn M fuel
+            { state := nextState,
+              tape :=
+                Tape.move dir
+                  (Tape.write write (Tape.input input)) } := by
+  exact Iff.trans (hrunner input (fuel + 1))
+    TuringMachine.haltsOnInputIn_succ_transition_iff
+
 /--
 Specialization of an exact-fuel runner to a nested generated call.  The outer
 bound is the exact fuel for the wrapped machine, and the inner generated call
@@ -303,6 +346,59 @@ theorem codePrefixExactFuelRunner_haltsOnNested_iff
         (CodePrefixRecognizerStageCode input inner) := by
   simpa [NestedCodePrefixRecognizerStageCode] using
     hrunner (CodePrefixRecognizerStageCode input inner) outer
+
+theorem codePrefixExactFuelRunner_haltsOnNested_zero_iff
+    {machineState : Type u} {runnerState : Type v}
+    {M : TuringMachine MachineCodeSymbol machineState}
+    {runner : TuringMachine MachineCodeSymbol runnerState}
+    (hrunner :
+      forall input : Word MachineCodeSymbol,
+      forall fuel : Nat,
+        TuringMachine.HaltsOnInput runner
+            (CodePrefixRecognizerStageCode input fuel) <->
+          TuringMachine.HaltsOnInputIn M fuel input)
+    (input : Word MachineCodeSymbol) (inner : Nat) :
+    TuringMachine.HaltsOnInput runner
+        (NestedCodePrefixRecognizerStageCode input inner 0) <->
+      TuringMachine.Halted M
+        (TuringMachine.initial M
+          (CodePrefixRecognizerStageCode input inner)) := by
+  simpa [NestedCodePrefixRecognizerStageCode] using
+    codePrefixExactFuelRunner_haltsOnInput_zero_iff
+      hrunner (CodePrefixRecognizerStageCode input inner)
+
+theorem codePrefixExactFuelRunner_haltsOnNested_succ_transition_iff
+    {machineState : Type u} {runnerState : Type v}
+    {M : TuringMachine MachineCodeSymbol machineState}
+    {runner : TuringMachine MachineCodeSymbol runnerState}
+    (hrunner :
+      forall input : Word MachineCodeSymbol,
+      forall fuel : Nat,
+        TuringMachine.HaltsOnInput runner
+            (CodePrefixRecognizerStageCode input fuel) <->
+          TuringMachine.HaltsOnInputIn M fuel input)
+    (input : Word MachineCodeSymbol) (inner outerFuel : Nat) :
+    TuringMachine.HaltsOnInput runner
+        (NestedCodePrefixRecognizerStageCode input inner
+          (outerFuel + 1)) <->
+      exists write : Option MachineCodeSymbol,
+      exists dir : Direction,
+      exists nextState : machineState,
+        M.transition M.start
+            (Tape.read
+              (Tape.input
+                (CodePrefixRecognizerStageCode input inner))) =
+          some (write, dir, nextState) ∧
+          TuringMachine.HaltsFromIn M outerFuel
+            { state := nextState,
+              tape :=
+                Tape.move dir
+                  (Tape.write write
+                    (Tape.input
+                      (CodePrefixRecognizerStageCode input inner))) } := by
+  simpa [NestedCodePrefixRecognizerStageCode] using
+    codePrefixExactFuelRunner_haltsOnInput_succ_transition_iff
+      hrunner (CodePrefixRecognizerStageCode input inner) outerFuel
 
 /--
 Unbounded search over generated inner inputs and exact outer fuels for a
