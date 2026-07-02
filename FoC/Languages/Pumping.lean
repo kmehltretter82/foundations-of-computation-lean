@@ -165,10 +165,12 @@ theorem word_split_prefix_eq_take (w : Word alpha) {i j : Nat}
     _ = Word.Concat (List.take i w) (List.take (j - i) (List.drop i w)) := by
       rw [List.take_append]
       rw [List.length_take]
-      have hmini : min i (List.length w) = i := by omega
+      have hmini : min i (List.length w) = i :=
+        Nat.min_eq_left hiw
       rw [hmini]
       rw [List.take_take]
-      have hminji : min j i = i := by omega
+      have hminji : min j i = i :=
+        Nat.min_eq_right hij
       rw [hminji]
       rfl
 
@@ -249,12 +251,14 @@ theorem dfa_pumpingLength (M : DFA alpha state) :
                 have htakeI : List.take i pref = List.take i w := by
                   unfold pref
                   rw [List.take_take]
-                  have hmin : min i n = i := by omega
+                  have hmin : min i n = i := by
+                    exact Nat.min_eq_left hiLeN
                   rw [hmin]
                 have htakeJ : List.take j pref = List.take j w := by
                   unfold pref
                   rw [List.take_take]
-                  have hmin : min j n = j := by omega
+                  have hmin : min j n = j := by
+                    exact Nat.min_eq_left hjLeN
                   rw [hmin]
                 have hrunI : DFA.RunFrom M M.start (List.take i w) = q := by
                   simpa [htakeI] using hrunIPref

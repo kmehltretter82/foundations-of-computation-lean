@@ -708,7 +708,8 @@ theorem squareBlock_take_before_first_b_count_b {p q l : Nat}
           (Word.Concat (Word.Symbol Section01.AB.b)
             (Word.Concat (Word.RepeatSymbol Section01.AB.a q) (Word.Symbol Section01.AB.b))))) = 0
   rw [ht]
-  have hmin : min l p = l := by omega
+  have hmin : min l p = l :=
+    Nat.min_eq_left (by simpa [Word.RepeatSymbol] using hle)
   rw [show List.take l (Word.RepeatSymbol Section01.AB.a p) =
       Word.RepeatSymbol Section01.AB.a l by
     simp [Word.RepeatSymbol, hmin]]
@@ -722,12 +723,15 @@ theorem squareBlock_take_middle {p q l : Nat}
           (Word.RepeatSymbol Section01.AB.a (l - p - 1))) := by
   unfold squareBlockWord
   simp [Word.Concat, Word.RepeatSymbol, Word.Symbol, List.take_append, List.take_replicate]
-  have hmin1 : min l p = p := by omega
+  have hmin1 : min l p = p :=
+    Nat.min_eq_right (by lia)
   rw [hmin1]
   have hpos : l - p = (l - p - 1) + 1 := by lia
   rw [hpos]
   simp [List.take_append, List.take_replicate]
-  have hmin2 : min (l - p - 1) q = l - p - 1 := by omega
+  have hmin2 : min (l - p - 1) q = l - p - 1 := by
+    apply Nat.min_eq_left
+    lia
   rw [hmin2]
   have hzero : l - p - 1 - q = 0 := by lia
   rw [hzero]

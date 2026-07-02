@@ -901,7 +901,9 @@ theorem anbncn_take_before_c_count_c_zero (K l : Nat)
         (List.append (Word.RepeatSymbol ABC.a K)
           (List.append (Word.RepeatSymbol ABC.b K) (Word.RepeatSymbol ABC.c K)))) = 0
   simp [List.take_append, Word.RepeatSymbol, List.take_replicate]
-  have hzero : min (l - K - K) K = 0 := by omega
+  have hzero : min (l - K - K) K = 0 := by
+    rw [Nat.min_eq_left (by lia)]
+    lia
   rw [hzero]
   change Word.Count ABC.c
       (Word.Concat (Word.RepeatSymbol ABC.a (min l K))
