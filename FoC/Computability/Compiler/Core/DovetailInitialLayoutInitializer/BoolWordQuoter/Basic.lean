@@ -293,7 +293,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_phaseC
         ((List.append preAfterDone cellBits).length + 5) =
       tickSteps + (doneSteps + (cellSteps +
         ((List.append preAfterDone cellBits).length + 5))) by
-      omega]
+      lia]
   rw [runConfig_add]
   rw [show
       config 0

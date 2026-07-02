@@ -77,7 +77,7 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
           initial] using
           congrArg Configuration.state
             (hrun.symm.trans hn)
-      omega
+      lia
   | cons b rest =>
       cases b
       · cases rest with
@@ -125,7 +125,7 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                   simpa [c1, MarkFirstTransitionBitDescription] using
                     congrArg Configuration.state
                       (hrunFinal.symm.trans hn)
-                omega
+                lia
         | cons c tail =>
             cases c
             · refine ⟨tail, rfl, ?_⟩
@@ -153,7 +153,7 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                                 (false :: false :: tail)) =
                             config MFTB.halt []
                               (none :: some false :: tail.map some) := by
-                        rw [show Nat.succ (Nat.succ k) = 2 + k by omega]
+                        rw [show Nat.succ (Nat.succ k) = 2 + k by lia]
                         rw [runConfig_add]
                         have h2 :
                             MFTB.runConfig 2
@@ -231,7 +231,7 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                     simpa [c1, MarkFirstTransitionBitDescription] using
                       congrArg Configuration.state
                         (hrunFinal.symm.trans hn)
-                  omega
+                  lia
       · have hstep :
             MFTB.stepConfig
                 (MFTB.initial (true :: rest)) =
@@ -247,7 +247,7 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
             initial] using
             congrArg Configuration.state
               (hrun.symm.trans hn)
-        omega
+        lia
 
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_marker_inv
     {bits : Word Bool} {Tout : Tape Bool}

@@ -51,7 +51,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTarget_contextL
     simp [
       FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner,
       DovetailInitialLayoutInitializer.tapeAtCells, Tape.contextLength] <;>
-    omega
+    lia
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTarget_normalizedOutput_configRunner
     (w : Word Bool) :
@@ -292,7 +292,7 @@ theorem contextLength_configRunner
               FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner,
               DovetailInitialLayoutInitializer.tapeAtCells,
               Tape.contextLength, Tape.move, Tape.moveRight] <;>
-            omega
+            lia
 
 theorem simulator_contextLength_configRunner
     (L : SimulatorLayout) :

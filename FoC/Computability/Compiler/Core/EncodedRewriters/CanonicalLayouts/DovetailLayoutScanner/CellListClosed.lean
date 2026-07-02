@@ -63,7 +63,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
           (by rfl)
           (by
             change (120 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest ih =>
       cases symbol with
       | header =>
@@ -97,7 +97,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (122 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -129,7 +129,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (122 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           simp [decodeNat] at hdecode
           cases hrest : decodeNat rest with
@@ -187,7 +187,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | zero =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -219,7 +219,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | one =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -251,7 +251,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | moveLeft =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -283,7 +283,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -313,7 +313,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                   Tape.read])
               (by
                 change (120 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -341,7 +341,7 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
           (by rfl)
           (by
             change (130 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest =>
       cases symbol with
       | header =>
@@ -375,7 +375,7 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -407,7 +407,7 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -439,7 +439,7 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | done =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -471,7 +471,7 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | blank =>
           simp [decodeCell] at hdecode
       | zero =>
@@ -522,7 +522,7 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                   Tape.read])
               (by
                 change (145 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -554,7 +554,7 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (135 : Nat) ≠ 999
-                omega)
+                lia)
 
 def cellListMarkingTailConfig
     (baseLeft marked : List (Option Bool))
@@ -640,7 +640,7 @@ theorem cellListMarkingTail_mark_one
   rw [runConfig_add]
   rw [cellListMarkingTail_to_first_payload]
   rw [show 6 + (scanRev.length + 4) + 4 =
-      6 + ((scanRev.length + 4) + 4) by omega]
+      6 + ((scanRev.length + 4) + 4) by lia]
   rw [runConfig_add]
   have hcellBits :
       (encodeCodeWordAsInput
@@ -1106,7 +1106,7 @@ theorem cellListCanonicalFinishStartConfigWithBase_nil_suffix_ne_halt
       stepConfig, lookupTransition,
       Matches, transition, Tape.read]
   · change (150 : Nat) ≠ 999
-    omega
+    lia
 
 theorem cellListCanonicalFinishStartConfigWithBase_moveRight_suffix_ne_halt
     (cells baseLeft : List (Option Bool)) (tail : Word Bool) (n : Nat) :

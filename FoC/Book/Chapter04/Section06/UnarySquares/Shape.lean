@@ -112,7 +112,7 @@ theorem square_no_t_occurrence_absurd
   rw [hcount, sententialCountNonterminal_append,
     sententialCountNonterminal_append] at hc
   simp [SententialCountNonterminal, squareN, ggNonterminal] at hc
-  omega
+  lia
 
 theorem squareBForm_count_t (n : Nat) :
     SententialCountNonterminal SquareNT.t (squareBForm n) = 0 := by
@@ -215,7 +215,7 @@ theorem squareGrowForm_stop_shape
     SquareDerivationShape (u ++ v) := by
   have hocc := squareGrowForm_t_occurrence n h
   rw [hocc.left, hocc.right]
-  have hbalance : 0 + n = n := by omega
+  have hbalance : 0 + n = n := by lia
   simpa [squareProcessForm, squareRows_zero_eq_markerAForm,
     List.append_assoc] using
     SquareDerivationShape.process n n 0 hbalance

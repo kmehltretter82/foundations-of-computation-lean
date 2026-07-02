@@ -1431,7 +1431,7 @@ theorem boundedSimulatorCanonicalInputParserMachine_halts_scan_only_acc
                       · have hbudget :
                             Nat.succ scanned + stage =
                               scanned + (stage + 1) := by
-                          omega
+                          lia
                         simpa [hbudget] using hpair
               | done =>
                   cases hstep with

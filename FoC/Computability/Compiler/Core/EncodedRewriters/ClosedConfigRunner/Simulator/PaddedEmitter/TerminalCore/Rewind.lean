@@ -109,7 +109,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindDescription_r
   | cons next rest ih =>
       rw [show (next :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           FDBSPaddedEmitterTerminalRewind_configRunner.runConfig 1
@@ -161,7 +161,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindDescription_r
   | cons next rest ih =>
       rw [show (next :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           FDBSPaddedEmitterTerminalRewind_configRunner.runConfig 1
@@ -234,7 +234,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindDescription_r
       rw [show (current :: rest).length + 2 =
         1 + ((rest.length + 1) + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstart :
           FDBSPaddedEmitterTerminalRewind_configRunner.runConfig 1
@@ -286,7 +286,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindDescription_r
       rw [show (current :: rest).length + 2 =
         1 + ((rest.length + 1) + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstart :
           FDBSPaddedEmitterTerminalRewind_configRunner.runConfig 1

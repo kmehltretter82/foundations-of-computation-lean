@@ -161,7 +161,7 @@ theorem two_mul_sum_identity (n : Nat) :
         _ = (n + 1) * (n + 1 + 1) := by
                 simp [Nat.left_distrib, Nat.right_distrib,
                   Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
-                omega
+                lia
 
 /-!
 Theorem 1.12 gives the closed form for the sum of the first {lit}`n` positive
@@ -170,7 +170,7 @@ integers.
 theorem sum_identity_closed_form (n : Nat) :
     SumUpTo (fun i => i) n = n * (n + 1) / 2 := by
   have h := two_mul_sum_identity n
-  omega
+  lia
 
 theorem even_sum_closed_form (n : Nat) :
     SumUpTo (fun i => 2 * i) n = n * (n + 1) := by
@@ -186,18 +186,18 @@ theorem even_sum_closed_form (n : Nat) :
         _ = (n + 1) * (n + 1 + 1) := by
                 simp [Nat.left_distrib, Nat.right_distrib,
                   Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
-                omega
+                lia
 
 theorem weighted_power_algebra (n p : Nat) :
     n * p + 1 + (n + 2) * p = (n + 1) * (p * 2) + 1 := by
   calc
     n * p + 1 + (n + 2) * p = (n * p + (n + 2) * p) + 1 := by
-      omega
+      lia
     _ = (n + (n + 2)) * p + 1 := by
       rw [← Nat.add_mul]
     _ = ((n + 1) * 2) * p + 1 := by
       have h : n + (n + 2) = (n + 1) * 2 := by
-        omega
+        lia
       rw [h]
     _ = (n + 1) * (p * 2) + 1 := by
       rw [Nat.mul_assoc, Nat.mul_comm 2 p, ← Nat.mul_assoc]
@@ -242,7 +242,7 @@ theorem geometric_two_sum (n : Nat) :
                 rw [show 2 ^ (n + 1 + 1) = 2 ^ (n + 1) * 2 by
                   rw [Nat.pow_succ]]
                 have hpos : 0 < 2 ^ (n + 1) := Nat.pow_pos (by decide : 0 < 2)
-                omega
+                lia
 
 /-!
 Exercise 2 is recorded in a division-free natural-number form, avoiding a field
@@ -267,7 +267,7 @@ theorem geometric_successor_base_sum (b n : Nat) :
                   rw [Nat.pow_succ]]
                 have hpos : 0 < (b + 1) ^ (n + 1) := Nat.pow_pos (Nat.succ_pos b)
                 simp [Nat.add_mul, Nat.mul_comm]
-                omega
+                lia
 
 /-!
 Exercise 6 states the classic identity that the sum of the first {lit}`n` odd
@@ -287,7 +287,7 @@ theorem odd_sum_square (n : Nat) :
         _ = (n + 1) * (n + 1) := by
                 simp [Nat.left_distrib, Nat.right_distrib,
                   Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
-                omega
+                lia
 
 end NatSum
 

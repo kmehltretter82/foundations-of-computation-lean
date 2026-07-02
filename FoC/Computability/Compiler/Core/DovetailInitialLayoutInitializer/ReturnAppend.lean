@@ -245,7 +245,7 @@ theorem returnToCurrentMarkerDescription_run
           Tape.move, Tape.moveLeft, Tape.moveRight]
   | cons b rest ih =>
       simp only [List.map_cons, List.length_cons, List.reverse_cons]
-      rw [show Nat.succ rest.length + 2 = (rest.length + 2) + 1 by omega]
+      rw [show Nat.succ rest.length + 2 = (rest.length + 2) + 1 by lia]
       rw [runConfig]
       rw [returnToCurrentMarkerDescription_step_scan]
       simpa [List.append_assoc] using ih b (some current :: right)
@@ -863,7 +863,7 @@ theorem
   | cons bit rest ih =>
       simp only [List.map_cons, List.length_cons, List.reverse_cons]
       rw [show rest.length + 1 + 2 = (rest.length + 2) + 1 by
-        omega]
+        lia]
       rw [runConfig]
       rw [inputTapeRightCellsDirectCopierDescription_step_return24]
       simpa [List.append_assoc] using ih bit (some current :: right)
@@ -1106,7 +1106,7 @@ theorem returnToTransitionMarkerDescription_run
           Tape.move, Tape.moveLeft, Tape.moveRight]
   | cons b rest ih =>
       simp only [List.map_cons, List.length_cons, List.reverse_cons]
-      rw [show Nat.succ rest.length + 3 = (rest.length + 3) + 1 by omega]
+      rw [show Nat.succ rest.length + 3 = (rest.length + 3) + 1 by lia]
       rw [runConfig]
       rw [returnToTransitionMarkerDescription_step_scan]
       simpa [List.append_assoc] using ih b (some current :: right)

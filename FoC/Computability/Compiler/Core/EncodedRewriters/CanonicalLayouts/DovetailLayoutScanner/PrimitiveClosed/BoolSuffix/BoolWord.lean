@@ -24,15 +24,15 @@ theorem runConfig_forward_inv
   by_cases h_le : k ≤ n
   · exists n - k
     constructor
-    · omega
-    · have h_add : n = k + (n - k) := by omega
+    · lia
+    · have h_add : n = k + (n - k) := by lia
       rw [h_add, runConfig_add] at h_halt
       rw [h_forward] at h_halt
       exact h_halt
   · exists 0
     constructor
-    · omega
-    · have h_add : k = n + (k - n) := by omega
+    · lia
+    · have h_add : k = n + (k - n) := by lia
       rw [h_add, runConfig_add] at h_forward
       rw [h_halt] at h_forward
       have h_halt2 := runConfig_halt h_free Tout (k - n)
@@ -49,7 +49,7 @@ theorem runConfig_halt_extend
     D.runConfig n c = { state := D.halt, tape := Tout } := by
   let rem := n - m
   have hn : n = m + rem := by
-    omega
+    lia
   rw [hn, runConfig_add, h_halt]
   exact runConfig_halt h_free Tout rem
 
@@ -92,7 +92,7 @@ theorem runConfig_forward_inv_lt
     · have hlt : first < k := Nat.lt_of_not_ge hle
       let rem := k - first
       have hk_eq : k = first + rem := by
-        omega
+        lia
       have hhalt_at_k :
           D.runConfig k c0 = { state := D.halt, tape := Tout } := by
         rw [hk_eq, runConfig_add, hfirst]
@@ -104,9 +104,9 @@ theorem runConfig_forward_inv_lt
         simp [hc1eq]
       exact False.elim (hc1 hstate)
   refine ⟨first - k, ?_, ?_⟩
-  · omega
+  · lia
   · have hfirst_eq : first = k + (first - k) := by
-      omega
+      lia
     rw [hfirst_eq, runConfig_add] at hfirst
     rw [h_forward] at hfirst
     exact hfirst
@@ -392,7 +392,7 @@ theorem boolWordSuffixScannerDescription_runConfig_120_inv
               runConfig_forward_inv_lt BoolWordSuffixScannerDescription
                 c0 c1 n 4 h hprefix
                 boolWordSuffixScannerDescription_haltTransitionFree
-                hc1 (by omega) with
+                hc1 (by lia) with
             ⟨m, hm_lt, hm_halt⟩
           rcases ih m hm_lt
               (List.append (tickBits.reverse.map some) baseLeft)
@@ -417,7 +417,7 @@ theorem boolWordSuffixScannerDescription_runConfig_120_inv
                   (tail'.map some))
                 m n
                 boolWordSuffixScannerDescription_haltTransitionFree
-                (by omega) hrun
+                (by lia) hrun
             simpa [stageNatBits_succ, tickBits,
               encodeCodeSymbolAsInput, List.reverse_append,
               List.map_append, List.append_assoc] using hrun_n
@@ -732,7 +732,7 @@ theorem boolWordSuffixScannerDescription_runConfig_130_inv
               runConfig_forward_inv_lt BoolWordSuffixScannerDescription
                 c0 c1 n 4 h hprefix
                 boolWordSuffixScannerDescription_haltTransitionFree
-                hc1 (by omega) with
+                hc1 (by lia) with
             ⟨m, hm_lt, hm_halt⟩
           rcases ih m hm_lt
               (List.append ((markedCellCodeBits cell).reverse.map some)
@@ -766,7 +766,7 @@ theorem boolWordSuffixScannerDescription_runConfig_130_inv
                   (tail'.map some))
                 m n
                 boolWordSuffixScannerDescription_haltTransitionFree
-                (by omega) hrun
+                (by lia) hrun
             simpa [markedCellsCodeBits, List.reverse_append,
               List.map_append, List.append_assoc] using hrun_n)
 

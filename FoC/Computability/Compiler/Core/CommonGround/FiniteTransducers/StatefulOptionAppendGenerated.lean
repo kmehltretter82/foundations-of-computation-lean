@@ -105,25 +105,25 @@ theorem statefulOptionAppendStateTransitions_wellFormed
   · subst t
     constructor <;>
       simp [statefulOptionAppendHalt,
-        statefulOptionAppendWriterStart] <;> omega
+        statefulOptionAppendWriterStart] <;> lia
   · subst t
     constructor
     · simp [statefulOptionAppendHalt,
         statefulOptionAppendWriterStart]
-      omega
+      lia
     · have hlt := hnext state false hstate
       simp [statefulOptionAppendHalt,
         statefulOptionAppendWriterStart]
-      omega
+      lia
   · subst t
     constructor
     · simp [statefulOptionAppendHalt,
         statefulOptionAppendWriterStart]
-      omega
+      lia
     · have hlt := hnext state true hstate
       simp [statefulOptionAppendHalt,
         statefulOptionAppendWriterStart]
-      omega
+      lia
 
 theorem statefulOptionAppendPrefix_source_lt_writerStart
     (scanStateCount : Nat)
@@ -290,7 +290,7 @@ theorem statefulOptionAppendTransitions_deterministic
         scanStateCount next emit t ht
     have husource : u.source = t.source := hkey.left.symm
     simp [statefulOptionAppendWriterStart] at htsource hubounds
-    omega
+    lia
   · have htbounds :=
       copyAppendWordWriteTransitionsFrom_source_bounds
         (statefulOptionAppendWriterStart scanStateCount)
@@ -300,7 +300,7 @@ theorem statefulOptionAppendTransitions_deterministic
         scanStateCount next emit u hu
     have htsource : t.source = u.source := hkey.left
     simp [statefulOptionAppendWriterStart] at husourceLt htbounds
-    omega
+    lia
   · exact
       copyAppendWordWriteTransitionsFrom_deterministic
         (statefulOptionAppendWriterStart scanStateCount) final
@@ -331,14 +331,14 @@ theorem statefulOptionAppendTransitions_haltTransitionFree
         scanStateCount next emit t ht
     simp [statefulOptionAppendHalt,
       statefulOptionAppendWriterStart] at hsource hlt
-    omega
+    lia
   · have hbounds :=
       copyAppendWordWriteTransitionsFrom_source_bounds
         (statefulOptionAppendWriterStart scanStateCount)
         (statefulOptionAppendHalt scanStateCount final) final t ht
     simp [statefulOptionAppendHalt,
       statefulOptionAppendWriterStart] at hsource hbounds
-    omega
+    lia
 
 end FiniteTransducer
 
@@ -371,7 +371,7 @@ theorem generatedStatefulOptionAppendDescription_wellFormed
   · simp [generatedStatefulOptionAppendDescription,
       FiniteTransducer.statefulOptionAppendHalt,
       FiniteTransducer.statefulOptionAppendWriterStart]
-    omega
+    lia
   · simp [generatedStatefulOptionAppendDescription]
   · intro t ht
     exact

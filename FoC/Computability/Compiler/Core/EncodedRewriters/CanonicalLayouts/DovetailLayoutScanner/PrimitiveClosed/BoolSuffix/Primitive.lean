@@ -410,7 +410,7 @@ private theorem boolSuffixScannerDescription_runConfig_nil_ne_halt
           hlookup, Tape.read])
       (by
         change (10 : Nat) ≠ 99
-        omega)
+        lia)
 
 private theorem boolSuffixScannerDescription_runConfig_true_start_ne_halt
     (baseLeft rest : List (Option Bool)) (n : Nat) :
@@ -439,7 +439,7 @@ private theorem boolSuffixScannerDescription_runConfig_true_start_ne_halt
           hlookup, Tape.read])
       (by
         change (10 : Nat) ≠ 99
-        omega)
+        lia)
 
 private theorem boolSuffixScannerDescription_runConfig_false_false_ne_halt
     (baseLeft rest : List (Option Bool)) (n : Nat) :
@@ -824,7 +824,7 @@ private theorem boolFinalScannerDescription_runConfig_nil_ne_halt
           hlookup, Tape.read])
       (by
         change (10 : Nat) ≠ 99
-        omega)
+        lia)
 
 private theorem boolFinalScannerDescription_runConfig_true_start_ne_halt
     (baseLeft rest : List (Option Bool)) (n : Nat) :
@@ -853,7 +853,7 @@ private theorem boolFinalScannerDescription_runConfig_true_start_ne_halt
           hlookup, Tape.read])
       (by
         change (10 : Nat) ≠ 99
-        omega)
+        lia)
 
 private theorem boolFinalScannerDescription_runConfig_false_false_ne_halt
     (baseLeft rest : List (Option Bool)) (n : Nat) :

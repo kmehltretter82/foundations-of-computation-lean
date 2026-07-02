@@ -38,7 +38,7 @@ theorem hanoiMoveCount_closed_form (n : Nat) :
       simp [hanoiMoveCount, ih]
       rw [Nat.pow_succ]
       have hpos : 0 < 2 ^ n := Nat.pow_pos (by decide : 0 < 2)
-      omega
+      lia
 
 /-!
 The move list itself is also recursive: move the top stack to the spare peg,
@@ -75,7 +75,7 @@ theorem hanoiMoves_length (n : Nat) (source target spare : Peg) :
   | zero => rfl
   | succ n ih =>
       simp [hanoiMoves, hanoiMoveCount, ih]
-      omega
+      lia
 
 /-!
 # Binary Trees
@@ -139,7 +139,7 @@ theorem treeSum_eq_intListSum (t : BinaryTree) :
   | empty => rfl
   | node left value right ihl ihr =>
       simp [treeSum, treeValues, intListSum_append, intListSum, ihl, ihr]
-      omega
+      lia
 
 theorem nodeCount_empty : nodeCount BinaryTree.empty = 0 :=
   rfl

@@ -159,14 +159,14 @@ theorem four_digit_divisible_by_three_iff_digit_sum_divisible_by_three
         exists k - (333 * d1 + 33 * d2 + 3 * d3)
         unfold fourDigitValue at hk
         unfold digitSum
-        omega
+        lia
   · intro h
     cases h with
     | intro k hk =>
         exists 333 * d1 + 33 * d2 + 3 * d3 + k
         unfold digitSum at hk
         unfold fourDigitValue
-        omega
+        lia
 
 /-!
 # Rational and Real Arithmetic

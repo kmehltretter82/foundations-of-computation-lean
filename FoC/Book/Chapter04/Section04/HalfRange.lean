@@ -241,7 +241,7 @@ theorem halfRangePDA_push_pairs (pairs : Nat) (rest : Word Section01.AB)
             Section01.AB.a :: Section01.AB.a ::
               Word.RepeatSymbol Section01.AB.a (2 * pairs) := by
         simp [Word.RepeatSymbol]
-        rw [show 2 * (pairs + 1) = 2 * pairs + 1 + 1 by omega]
+        rw [show 2 * (pairs + 1) = 2 * pairs + 1 + 1 by lia]
         rw [List.replicate_succ]
         rw [List.replicate_succ]
       rw [hprefix]
@@ -338,10 +338,10 @@ theorem halfRangePDA_accepts_range_words {n m : Nat}
   let singles := 2 * m - n
   have hn : n = 2 * pairs + singles := by
     simp [pairs, singles]
-    omega
+    lia
   have hm : m = pairs + singles := by
     simp [pairs, singles]
-    omega
+    lia
   exists HalfRangePDAState.pop
   constructor
   · rfl
@@ -435,9 +435,9 @@ theorem halfRangePDA_computes_final_shape_config
                       exists n + 1
                       exists m + 1
                       constructor
-                      · omega
+                      · lia
                       constructor
-                      · omega
+                      · lia
                       · simp [Word.Length, Word.Concat, Word.RepeatSymbol] at hm ⊢
                         rw [hm.right.right]
                         simp [Section01.replicate_succ_eq_cons,
@@ -450,9 +450,9 @@ theorem halfRangePDA_computes_final_shape_config
                       exists n + 1
                       exists m
                       constructor
-                      · omega
+                      · lia
                       constructor
-                      · omega
+                      · lia
                       · simp [Word.Length, Word.Concat, Word.RepeatSymbol] at hm ⊢
                         rw [hm.right.right]
                         simp [Section01.replicate_succ_eq_cons]
@@ -464,9 +464,9 @@ theorem halfRangePDA_computes_final_shape_config
                       exists n + 1
                       exists m + 1
                       constructor
-                      · omega
+                      · lia
                       constructor
-                      · omega
+                      · lia
                       · simp [Word.Length, Word.Concat, Word.RepeatSymbol] at hm ⊢
                         rw [hm.right.right]
                         simp [Section01.replicate_succ_eq_cons,
@@ -481,7 +481,7 @@ theorem halfRangePDA_computes_final_shape_config
           cases htrans with
           | startPop =>
               have hpop := ih hfinal
-              exact ⟨0, 0, by omega, by omega,
+              exact ⟨0, 0, by lia, by lia,
                 by
                   simpa [HalfRangeAcceptedTail, HalfRangeReadyTail,
                     Word.Concat, Word.RepeatSymbol, Word.Length] using hpop⟩

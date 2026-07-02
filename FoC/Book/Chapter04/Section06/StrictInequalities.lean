@@ -169,7 +169,7 @@ theorem strictMoreB_yields_preserves_margin
                               SententialCountTerminal,
                               SententialCountNonterminal, moreBN, moreBT,
                               ggNonterminal, ggTerminal] at hmargin ⊢ <;>
-                            omega
+                            lia
 
 theorem strictMoreB_derives_preserves_margin
     {x y : SententialForm EqualCountTerminal StrictMoreBNT}
@@ -230,7 +230,7 @@ theorem strictMoreB_tail_more_word (extra : Nat) :
     EqualCountTerminal.b :: strictMoreBTailWord extra =
       strictMoreBTailWord (extra + 1) := by
   unfold strictMoreBTailWord
-  rw [show extra + 1 + 1 = (extra + 1) + 1 by omega]
+  rw [show extra + 1 + 1 = (extra + 1) + 1 by lia]
   rfl
 
 theorem strictMoreB_wrap_word (n extra : Nat) :
@@ -246,7 +246,7 @@ theorem strictMoreB_wrap_word (n extra : Nat) :
           (Word.RepeatSymbol EqualCountTerminal.b (n + extra + 1))
           [EqualCountTerminal.b] := by
     have hnat : n + 1 + extra + 1 = (n + extra + 1) + 1 := by
-      omega
+      lia
     rw [hnat, repeatSymbol_succ_eq_append]
   rw [hb]
   simp [Word.Concat, List.append_assoc]
@@ -849,7 +849,7 @@ theorem strictABCGreater_yields_preserves_margin
                               SententialCountNonterminal,
                               strictABCGreaterN, strictABCGreaterT,
                               ggNonterminal, ggTerminal] at hmargin ⊢ <;>
-                            omega
+                            lia
 
 theorem strictABCGreater_derives_preserves_margin
     {x y : SententialForm EqualCountTerminal StrictABCGreaterNT}

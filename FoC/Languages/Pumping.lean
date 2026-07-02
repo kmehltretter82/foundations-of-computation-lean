@@ -123,7 +123,7 @@ theorem word_split_reconstruct (w : Word alpha) {i j : Nat}
         exact (List.take_append_drop (j - i) (List.drop i w)).symm
       _ = Word.Concat (List.take (j - i) (List.drop i w)) (List.drop j w) := by
         rw [List.drop_drop]
-        have hsum : i + (j - i) = j := by omega
+        have hsum : i + (j - i) = j := by lia
         rw [hsum]
   calc
     w = Word.Concat (List.take i w) (List.drop i w) := by
@@ -138,7 +138,7 @@ theorem word_split_middle_length (w : Word alpha) {i j : Nat}
   have hj' : j <= List.length w := by simpa [Word.Length] using hj
   change (List.take (j - i) (List.drop i w)).length = j - i
   rw [List.length_take, List.length_drop]
-  have hle : j - i <= List.length w - i := by omega
+  have hle : j - i <= List.length w - i := by lia
   exact Nat.min_eq_left hle
 
 theorem word_split_prefix_length (w : Word alpha) {i j : Nat}
@@ -148,9 +148,9 @@ theorem word_split_prefix_length (w : Word alpha) {i j : Nat}
   rw [Word.length_concat, word_split_middle_length w hj]
   change (List.take i w).length + (j - i) = j
   rw [List.length_take]
-  have hi : i <= List.length w := by omega
+  have hi : i <= List.length w := by lia
   rw [Nat.min_eq_left hi]
-  omega
+  lia
 
 theorem word_split_prefix_eq_take (w : Word alpha) {i j : Nat}
     (hij : i <= j) (hj : j <= Word.Length w) :
@@ -158,7 +158,7 @@ theorem word_split_prefix_eq_take (w : Word alpha) {i j : Nat}
       Word.Concat (List.take i w) (List.take (j - i) (List.drop i w)) := by
   have hiw : i <= List.length w := by
     have hj' : j <= List.length w := by simpa [Word.Length] using hj
-    omega
+    lia
   calc
     List.take j w = List.take j (List.take i w ++ List.drop i w) := by
       rw [List.take_append_drop i w]
@@ -192,7 +192,7 @@ theorem dfa_pumpingLength (M : DFA alpha state) :
     PumpingLength (DFA.Language M) (M.statesFinite.elems.length + 1) := by
   classical
   constructor
-  · omega
+  · lia
   · intro w hw hlen
     let n := M.statesFinite.elems.length + 1
     let pref : Word alpha := List.take n w
@@ -208,7 +208,7 @@ theorem dfa_pumpingLength (M : DFA alpha state) :
     have hmore : M.statesFinite.elems.length < states.length := by
       rw [hstatesLen]
       simp [n]
-      omega
+      lia
     have hall : forall q, q ∈ states -> q ∈ M.statesFinite.elems := by
       intro q hq
       exact prefixStatesFrom_all_mem M M.start pref hq
@@ -224,8 +224,8 @@ theorem dfa_pumpingLength (M : DFA alpha state) :
                 have hgetj : states[j]? = some q := hq.right.right.right
                 have hjLeN : j <= n := by
                   rw [hstatesLen] at hjStates
-                  omega
-                have hiLeN : i <= n := by omega
+                  lia
+                have hiLeN : i <= n := by lia
                 have hjLePref : j <= Word.Length pref := by
                   rw [hprefLen]
                   exact hjLeN
@@ -265,7 +265,7 @@ theorem dfa_pumpingLength (M : DFA alpha state) :
                 let z : Word alpha := List.drop j w
                 have hjLeW : j <= Word.Length w := by
                   have hnle : n <= Word.Length w := hlen
-                  omega
+                  lia
                 have hxyTake :
                     List.take j w = Word.Concat x y := by
                   simpa [x, y] using
@@ -306,7 +306,7 @@ theorem dfa_pumpingLength (M : DFA alpha state) :
                     simpa [y] using
                       word_split_middle_length (alpha := alpha) w hjLeW
                   rw [hlenY]
-                  omega
+                  lia
                 · intro k
                   change M.accept
                     (DFA.RunFrom M M.start

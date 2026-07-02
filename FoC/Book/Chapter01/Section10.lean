@@ -76,7 +76,7 @@ theorem fib_lt_two_pow : forall n, fib n < 2 ^ n
         Nat.add_lt_add h1 h2
       have hbound : 2 ^ (n + 1) + 2 ^ n < 2 ^ (n + 2) := by
         rw [Nat.pow_succ, Nat.pow_succ]
-        omega
+        lia
       exact Nat.lt_trans hsum hbound
 
 /-!
@@ -98,25 +98,25 @@ private theorem scaledFibLower_recurrence (n : Nat) :
       4 * (Section08.fib (n + 6) * 2 ^ (n + 5))
   rw [Section08.fib_succ_succ]
   rw [show 2 ^ ((n + 5) + 2) = 2 ^ (n + 5) * 4 by
-    rw [show (n + 5) + 2 = (n + 5) + 1 + 1 by omega]
+    rw [show (n + 5) + 2 = (n + 5) + 1 + 1 by lia]
     rw [Nat.pow_succ, Nat.pow_succ]
-    omega]
+    lia]
   rw [show 2 ^ ((n + 5) + 1) = 2 ^ (n + 5) * 2 by rw [Nat.pow_succ]]
   simp [Nat.left_distrib, Nat.mul_assoc, Nat.mul_comm]
-  omega
+  lia
 
 private theorem pow_three_step_bound (n : Nat) :
     3 ^ (n + 7) < 2 * 3 ^ (n + 6) + 4 * 3 ^ (n + 5) := by
-  rw [show n + 7 = (n + 5) + 2 by omega]
-  rw [show n + 6 = (n + 5) + 1 by omega]
+  rw [show n + 7 = (n + 5) + 2 by lia]
+  rw [show n + 6 = (n + 5) + 1 by lia]
   rw [show 3 ^ ((n + 5) + 2) = 3 ^ (n + 5) * 9 by
-    rw [show (n + 5) + 2 = (n + 5) + 1 + 1 by omega]
+    rw [show (n + 5) + 2 = (n + 5) + 1 + 1 by lia]
     rw [Nat.pow_succ, Nat.pow_succ]
-    omega]
+    lia]
   rw [show 3 ^ ((n + 5) + 1) = 3 ^ (n + 5) * 3 by rw [Nat.pow_succ]]
   have hpos : 0 < 3 ^ (n + 5) := Nat.pow_pos (by decide : 0 < 3)
   simp [Nat.mul_comm]
-  omega
+  lia
 
 private theorem fib_lower_bound_scaled_shifted : forall n, 3 ^ (n + 5) < scaledFibLower n
   | 0 => by decide

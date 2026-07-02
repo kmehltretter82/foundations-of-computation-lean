@@ -92,7 +92,7 @@ theorem haltsWithTape_functional_of_haltTransitionFree
     intro n m Tn Tm hle hn hm
     let d := m - n
     have hm_eq : m = n + d := by
-      omega
+      lia
     have hconfig_n :
         D.runConfig n c₀ =
           { state := D.halt, tape := Tn } := by
@@ -122,7 +122,7 @@ theorem haltsWithTape_functional_of_haltTransitionFree
     exact htape_m.symm
   by_cases hle : n₁ ≤ n₂
   · exact hordered hle h₁ h₂
-  · have hle' : n₂ ≤ n₁ := by omega
+  · have hle' : n₂ ≤ n₁ := by lia
     exact (hordered hle' h₂ h₁).symm
 
 theorem runConfig_halt_tape_functional_of_haltTransitionFree
@@ -141,7 +141,7 @@ theorem runConfig_halt_tape_functional_of_haltTransitionFree
     intro n m Tn Tm hle hn hm
     let d := m - n
     have hm_eq : m = n + d := by
-      omega
+      lia
     have hrunm :
         D.runConfig m c = D.runConfig d (D.runConfig n c) := by
       rw [hm_eq, runConfig_add]
@@ -159,7 +159,7 @@ theorem runConfig_halt_tape_functional_of_haltTransitionFree
     exact htape_m.symm
   by_cases hle : n₁ ≤ n₂
   · exact hordered hle h₁ h₂
-  · have hle' : n₂ ≤ n₁ := by omega
+  · have hle' : n₂ ≤ n₁ := by lia
     exact (hordered hle' h₂ h₁).symm
 
 theorem encodeConfigurationAppend_initial
@@ -704,7 +704,7 @@ theorem repeatedCells_length
         chunk.length * (n + 1)
       simp [List.length_append, ih]
       rw [Nat.mul_succ]
-      omega
+      lia
 
 theorem repeatedCells_reverse
     (chunk : List (Option Bool)) (n : Nat) :

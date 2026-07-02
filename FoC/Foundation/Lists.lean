@@ -84,7 +84,7 @@ theorem list_nodup_length_le_of_subset {α : Type u} [DecidableEq α]
       have hlen := List.length_erase_of_mem hyxs
       have hxpos : 0 < xs.length := List.length_pos_iff_exists_mem.mpr ⟨y, hyxs⟩
       simp
-      omega
+      lia
 
 theorem list_nodup_map_of_injective_on_list {α : Type u} {β : Type v}
     {xs : List α} {f : α -> β}
@@ -164,15 +164,15 @@ theorem list_duplicate_indices_of_split {α : Type u}
   exists pre.length
   exists pre.length + 1 + mid.length
   constructor
-  · omega
+  · lia
   constructor
   · simp [List.length_append]
-    omega
+    lia
   constructor
   · simp
   · have hj : pre.length + 1 + mid.length = (pre ++ [a] ++ mid).length := by
       simp [List.length_append]
-      omega
+      lia
     rw [hj]
     have hlist :
         pre ++ [a] ++ mid ++ [a] ++ post =
@@ -181,7 +181,7 @@ theorem list_duplicate_indices_of_split {α : Type u}
     rw [hlist]
     rw [List.getElem?_append_right (l₁ := pre ++ [a] ++ mid) (l₂ := [a] ++ post)]
     · simp
-    · omega
+    · lia
 
 theorem list_duplicate_indices_of_length_gt {α : Type u} [DecidableEq α]
     {xs elems : List α}
@@ -191,7 +191,7 @@ theorem list_duplicate_indices_of_length_gt {α : Type u} [DecidableEq α]
   have hnot : ¬ xs.Nodup := by
     intro hnd
     have hle := list_nodup_length_le_of_subset hnd hall
-    omega
+    lia
   cases list_not_nodup_exists_duplicate_split hnot with
   | intro pre hpre =>
       cases hpre with

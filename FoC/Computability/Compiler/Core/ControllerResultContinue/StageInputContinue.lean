@@ -345,7 +345,7 @@ theorem stageInputContinueCheckedRewriterDescription_run_scan
   | cons b rest ih =>
       rw [show (b :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         StageInputContinueCheckedRewriterDescription.runConfig rest.length
@@ -478,7 +478,7 @@ theorem stageInputContinueCheckedRewriterDescription_haltsFromTape_prefixBits
         { state := StageInputContinueCheckedRewriterDescription.halt
           tape := stageInputContinueOutputTape outputBits } := by
     rw [show 5 + scanBits.length + 10 =
-        5 + (scanBits.length + 10) by omega]
+        5 + (scanBits.length + 10) by lia]
     rw [runConfig_add]
     have hheader :
         StageInputContinueCheckedRewriterDescription.runConfig 5
@@ -503,7 +503,7 @@ theorem stageInputContinueCheckedRewriterDescription_haltsFromTape_prefixBits
               b (List.append rest stageInputContinueDoneBits)
     rw [hheader]
     rw [show scanBits.length + 10 = scanBits.length + (1 + (1 + 8)) by
-      omega]
+      lia]
     rw [runConfig_add]
     have hscan :
         StageInputContinueCheckedRewriterDescription.runConfig scanBits.length

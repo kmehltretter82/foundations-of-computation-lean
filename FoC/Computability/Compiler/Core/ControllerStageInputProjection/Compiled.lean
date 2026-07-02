@@ -38,7 +38,7 @@ theorem run_result_marked_suffix_to_state350
   have hsteps :
       8 * marked.length + 4 =
         4 * marked.length + (4 + 4 * marked.length) := by
-    omega
+    lia
   rw [hsteps, runConfig_add]
   simp only [projectionBoolWordWorkCells]
   rw [run_state300_marked_ticks]
@@ -100,7 +100,7 @@ theorem run_result_suffix_to_state350_acc
                 rest := by
         simp [projectionResultSuffixRejectCost, projectionInputMarkStepCost,
           Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
-        omega
+        lia
       rw [hcost, runConfig_add]
       rw [run_result_mark_one]
       rw [ih]
@@ -181,7 +181,7 @@ theorem encodeAppend_nonempty_suffix_ne_halt
   · rw [show
         4 + projectionInputBoolWordCost input + (4 * stage + 12) =
           4 + (projectionInputBoolWordCost input + (4 * stage + 12)) by
-        omega]
+        lia]
     rw [runConfig_add]
     change
       Description.runConfig
@@ -286,7 +286,7 @@ theorem decode_none_ne_halt
         state_ne_halt_of_stepConfig_none
           (n := n) (by rfl) (by
             change (0 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest =>
       cases symbol with
       | header =>
@@ -393,49 +393,49 @@ theorem decode_none_ne_halt
             ne_halt_of_reaches_stepConfig_none
               (k := 3) (by rfl) (by
                 change (3 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           exact
             ne_halt_of_reaches_stepConfig_none
               (k := 2) (by rfl) (by
                 change (2 : Nat) ≠ 999
-                omega)
+                lia)
       | done =>
           exact
             ne_halt_of_reaches_stepConfig_none
               (k := 2) (by rfl) (by
                 change (2 : Nat) ≠ 999
-                omega)
+                lia)
       | blank =>
           exact
             ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (1 : Nat) ≠ 999
-                omega)
+                lia)
       | zero =>
           exact
             ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (1 : Nat) ≠ 999
-                omega)
+                lia)
       | one =>
           exact
             ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (1 : Nat) ≠ 999
-                omega)
+                lia)
       | moveLeft =>
           exact
             ne_halt_of_reaches_stepConfig_none
               (k := 1) (by rfl) (by
                 change (1 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             state_ne_halt_of_stepConfig_none
               (n := n) (by rfl) (by
                 change (0 : Nat) ≠ 999
-                omega)
+                lia)
 
  /-- {name}`decodeComplete_of_halting_run` establishes the halting condition in this construction. -/
 theorem decodeComplete_of_halting_run

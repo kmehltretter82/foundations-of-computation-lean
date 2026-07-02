@@ -274,7 +274,7 @@ theorem sourceRewindDescription_run_scan
   | cons next rest ih =>
       rw [show (next :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [MachineDescription.runConfig_add]
       have hstep :
           sourceRewindDescription.runConfig 1
@@ -331,7 +331,7 @@ theorem sourceRewindDescription_run_scan_boundary
   | cons next rest ih =>
       rw [show (next :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [MachineDescription.runConfig_add]
       have hstep :
           sourceRewindDescription.runConfig 1
@@ -443,7 +443,7 @@ theorem sourceRewindDescription_run_from_leftStack
       rw [show (current :: rest).length + 2 =
         1 + ((rest.length + 1) + 1) by
         simp
-        omega]
+        lia]
       rw [MachineDescription.runConfig_add]
       have hstart :
           sourceRewindDescription.runConfig 1
@@ -497,7 +497,7 @@ theorem sourceRewindDescription_run_from_leftStack_padded
       rw [show (current :: rest).length + 2 =
         1 + ((rest.length + 1) + 1) by
         simp
-        omega]
+        lia]
       rw [MachineDescription.runConfig_add]
       have hstart :
           sourceRewindDescription.runConfig 1
@@ -552,7 +552,7 @@ theorem sourceRewindDescription_run_from_leftStack_boundary_padded
       rw [show (current :: rest).length + 2 =
         1 + (rest.length + 2) by
         simp
-        omega]
+        lia]
       rw [MachineDescription.runConfig_add]
       have hstart :
           sourceRewindDescription.runConfig 1
@@ -576,7 +576,7 @@ theorem sourceRewindDescription_run_from_leftStack_boundary_padded
             MachineDescription.transition,
             Tape.read, Tape.move, Tape.moveLeft, Tape.write]
       rw [hstart]
-      rw [show rest.length + 2 = (rest.length + 1) + 1 by omega]
+      rw [show rest.length + 2 = (rest.length + 1) + 1 by lia]
       rw [MachineDescription.runConfig_add]
       rw [sourceRewindDescription_run_scan_boundary]
       simpa [rewindTargetPaddedTape, List.map_append,

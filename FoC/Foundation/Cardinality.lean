@@ -137,7 +137,7 @@ theorem not_injective_of_cardinality_lt_maps_to {A : FSet alpha} {B : FSet beta}
         intro x y _hx _hy hxy
         exact hf hxy)
       hmap
-  omega
+  lia
 
 theorem pigeonhole_collision_of_cardinality_lt {A : FSet alpha} {B : FSet beta}
     {m n : Nat} [DecidableEq beta]
@@ -161,7 +161,7 @@ theorem pigeonhole_collision_of_cardinality_lt {A : FSet alpha} {B : FSet beta}
               (And.intro hEq hxy))))
   have hle : m <= n :=
     cardinality_le_of_injective_maps_to hA hB f hinjOn hmap
-  omega
+  lia
 
 end FSet
 
@@ -205,7 +205,7 @@ right.
 theorem union_cardinality_by_parts (leftOnly both rightOnly : Nat) :
     leftOnly + both + rightOnly =
       (leftOnly + both) + (both + rightOnly) - both := by
-  omega
+  lia
 
 /-!
 # Powersets
@@ -228,7 +228,7 @@ theorem length_sublists {alpha : Type u} (xs : List alpha) :
   | nil => rfl
   | cons x xs ih =>
       simp [Sublists, ih, Nat.pow_succ]
-      omega
+      lia
 
 /-!
 # Function spaces

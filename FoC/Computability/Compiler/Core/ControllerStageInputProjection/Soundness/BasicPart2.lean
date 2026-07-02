@@ -418,7 +418,7 @@ theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
               state_ne_halt_of_stepConfig_none
                 (n := m) (by rfl) (by
                   change (150 : Nat) ≠ 999
-                  omega)
+                  lia)
       | cons symbol suffix =>
           cases symbol with
           | header =>
@@ -529,7 +529,7 @@ theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
                   ne_halt_of_reaches_stepConfig_none
                     (k := 1) (by rfl) (by
                       change (151 : Nat) ≠ 999
-                      omega)
+                      lia)
           | zero =>
               apply
                 ne_halt_of_reaches_ne_halt_region
@@ -553,7 +553,7 @@ theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
                   ne_halt_of_reaches_stepConfig_none
                     (k := 1) (by rfl) (by
                       change (151 : Nat) ≠ 999
-                      omega)
+                      lia)
           | one =>
               apply
                 ne_halt_of_reaches_ne_halt_region
@@ -577,7 +577,7 @@ theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
                   ne_halt_of_reaches_stepConfig_none
                     (k := 1) (by rfl) (by
                       change (151 : Nat) ≠ 999
-                      omega)
+                      lia)
           | moveLeft =>
               apply
                 ne_halt_of_reaches_ne_halt_region
@@ -601,7 +601,7 @@ theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
                   ne_halt_of_reaches_stepConfig_none
                     (k := 1) (by rfl) (by
                       change (151 : Nat) ≠ 999
-                      omega)
+                      lia)
           | moveRight =>
               apply
                 ne_halt_of_reaches_ne_halt_region
@@ -625,7 +625,7 @@ theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
                   state_ne_halt_of_stepConfig_none
                     (n := m) (by rfl) (by
                       change (150 : Nat) ≠ 999
-                      omega)
+                      lia)
   | cons b restInput ih =>
       apply
         ne_halt_of_reaches_ne_halt_region
@@ -673,7 +673,7 @@ theorem run_state200_stage_nat_result_decodeBoolWord_none_ne_halt
             ne_halt_of_reaches_stepConfig_none
               (k := 4) (by rfl) (by
                 change (210 : Nat) ≠ 999
-                omega)
+                lia)
       | cons symbol rest =>
           cases symbol with
           | moveRight =>
@@ -681,7 +681,7 @@ theorem run_state200_stage_nat_result_decodeBoolWord_none_ne_halt
                 ne_halt_of_reaches_stepConfig_none
                   (k := 4) (by rfl) (by
                     change (210 : Nat) ≠ 999
-                    omega)
+                    lia)
           | header =>
               apply
                 ne_halt_of_reaches_ne_halt_region
@@ -821,7 +821,7 @@ theorem run_state350_code_symbol_ne_halt
   cases n with
   | zero =>
       change (350 : Nat) ≠ 999
-      omega
+      lia
   | succ n =>
       cases symbol <;>
         simp [projectionCodeCells, encodeCodeWordAsInput,

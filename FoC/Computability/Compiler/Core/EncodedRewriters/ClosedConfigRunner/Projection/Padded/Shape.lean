@@ -424,7 +424,7 @@ theorem sourceFieldBits_length_le_parsedLayoutBits
             (sourceSuffix L)))
   rw [encodeCodeWordAsInput_append]
   simp [encodeCodeWordAsInput]
-  omega
+  lia
 
 theorem outputPrefixBits_length_ge_parsedLayoutBits
     (L : DovetailLayout) :
@@ -443,7 +443,7 @@ theorem outputPrefixBits_length_ge_parsedLayoutBits
           (encodeBoolWordAppend
             (ParsedLayoutBits L) [])).length := by
     rw [encodeCodeWordAsInput_length]
-    omega
+    lia
   have hprefix :
       (encodeCodeWordAsInput
           (encodeBoolWordAppend
@@ -701,7 +701,7 @@ theorem SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_source
         CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
         CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
         List.length_append] at hsourceLen ⊢
-      <;> omega
+      <;> lia
   have htarget :
       (SelectedProjectionTailProjector.outputAllBits useAccept L).length +
           (ParsedLayoutBits L).length - 1 <=
@@ -765,7 +765,7 @@ theorem dovetailScanner_finalHitFlagsRestoredLeftWithBase_length
     CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
     CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
     List.length_append]
-  omega
+  lia
 
 theorem
     SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_sourceScannerRightHandoff
@@ -807,7 +807,7 @@ theorem
         CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
         CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
         hstage, List.length_append] at hsourceLen ⊢
-      <;> omega
+      <;> lia
   have hsource :
       Tape.contextLength
           (SelectedProjectionTailProjector.sourceScannerRightHandoffTape L
@@ -815,7 +815,7 @@ theorem
               some)) <=
         (SelectedProjectionTailProjector.outputAllBits useAccept L).length +
           (ParsedLayoutBits L).length - 1 := by
-    omega
+    lia
   have htarget :
       (SelectedProjectionTailProjector.outputAllBits useAccept L).length +
           (ParsedLayoutBits L).length - 1 <=

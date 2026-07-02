@@ -166,7 +166,7 @@ theorem rightEdgeScanDescription_run_scan
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         rightEdgeScanDescription.runConfig rest.length
@@ -376,7 +376,7 @@ theorem rightEdgeRewindDescription_run_scan
   | cons next rest ih =>
       rw [show (next :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           rightEdgeRewindDescription.runConfig 1
@@ -423,7 +423,7 @@ theorem rightEdgeRewindDescription_run_scan_withBoundary
   | cons next rest ih =>
       rw [show (next :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           rightEdgeRewindDescription.runConfig 1
@@ -487,7 +487,7 @@ theorem rightEdgeRewindDescription_run_from_leftStack
       rw [show (current :: rest).length + 2 =
         1 + ((rest.length + 1) + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstart :
           rightEdgeRewindDescription.runConfig 1
@@ -538,7 +538,7 @@ theorem rightEdgeRewindDescription_run_from_lastBitStack
       rw [show (next :: rest).length + 2 =
         1 + ((rest.length + 1) + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstart :
           rightEdgeRewindDescription.runConfig 1
@@ -591,7 +591,7 @@ theorem rightEdgeRewindDescription_run_from_lastBitBoundary
       rw [show (next :: rest).length + 2 =
         1 + ((rest.length + 1) + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstart :
           rightEdgeRewindDescription.runConfig 1

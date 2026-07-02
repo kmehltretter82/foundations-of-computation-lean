@@ -117,7 +117,7 @@ theorem FixedDescriptionBoundedSimulatorPaddedTape_contextLength_ge_padding
   cases w <;>
     simp [FixedDescriptionBoundedSimulatorPaddedTape,
       Tape.contextLength, List.length_append] <;>
-    omega
+    lia
 
 def FixedDescriptionBoundedSimulatorPaddedOutputTape
     (D : MachineDescription)

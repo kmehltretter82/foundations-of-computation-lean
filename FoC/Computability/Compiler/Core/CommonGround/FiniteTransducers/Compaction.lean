@@ -92,7 +92,7 @@ theorem filterMap_length_le
   | nil =>
       simp
   | cons cell rest ih =>
-      cases cell <;> simp [ih] <;> omega
+      cases cell <;> simp [ih] <;> lia
 
 theorem rightScratchOutputCells_filterMap
     (output : Word Bool) (scratchWidth : Nat) :
@@ -144,7 +144,7 @@ theorem compactedCellsWithScratch_length
       cells.length + extraScratch := by
   have hle := filterMap_length_le cells
   rw [compactedCellsWithScratch, rightScratchOutputCells_length]
-  omega
+  lia
 
 theorem compactedCellsWithScratch_of_filterMap_length
     (cells : List (Option Bool)) (output : Word Bool)
@@ -157,7 +157,7 @@ theorem compactedCellsWithScratch_of_filterMap_length
   have hscratch :
       cells.length - output.length + extraScratch =
         baseScratch + extraScratch := by
-    omega
+    lia
   rw [hscratch]
 
 theorem rightEndCompactionVisibleCells_filterMap
@@ -242,7 +242,7 @@ theorem compactedCellsWithScratch_twoChunks
   apply compactedCellsWithScratch_of_filterMap_length
   · simp [List.filterMap_append, Function.comp_def]
   · simp
-    omega
+    lia
 
 theorem compactedCellsWithScratch_threeChunks
     (leftBlanks firstGapBlanks secondGapBlanks trailingBlanks
@@ -272,7 +272,7 @@ theorem compactedCellsWithScratch_threeChunks
   apply compactedCellsWithScratch_of_filterMap_length
   · simp [List.filterMap_append, Function.comp_def]
   · simp
-    omega
+    lia
 
 end FiniteTransducers
 end CommonGround

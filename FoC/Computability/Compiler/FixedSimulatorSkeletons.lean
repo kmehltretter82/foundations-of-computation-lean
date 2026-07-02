@@ -185,7 +185,7 @@ theorem fixedDescriptionBoundedSimulatorHaltPhaseRealizes
     constructor
     · rfl
     · intro k hk
-      omega
+      lia
 
 theorem fixedDescriptionBoundedSimulatorPhaseRealizes_seq
     {entryTape midTape exitTape :

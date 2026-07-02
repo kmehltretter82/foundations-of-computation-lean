@@ -629,7 +629,7 @@ theorem assemblySourceRestFinishSourcePrefixBits_length_eq_fields
       4 + (DovetailInitialLayoutInitializer.stageInputBits w stage).length := by
   rw [assemblySourceRestFinishSourcePrefixBits_eq_fields]
   simp [encodeCodeSymbolAsInput]
-  omega
+  lia
 
 theorem assemblySourceRestFinishSourceBits_length_eq_prefix_add
     (w sourceRestBits : Word Bool) (stage : Nat) :
@@ -941,7 +941,7 @@ theorem assemblySourceRestFinishTargetPrefixBits_length_eq_headerQuote
         4 * (assemblySourceRestFinishSourceBits w sourceRestBits stage).length := by
   rw [assemblySourceRestFinishTargetPrefixBits_eq_headerQuote]
   simp [encodeCodeSymbolAsInput, preservingCellPassCellBits_length]
-  omega
+  lia
 
 theorem assemblySourceRestFinishTargetPrefixBits_length_eq_splitQuote
     (w sourceRestBits : Word Bool) (stage : Nat) :
@@ -954,7 +954,7 @@ theorem assemblySourceRestFinishTargetPrefixBits_length_eq_splitQuote
   rw [assemblySourceRestFinishTargetPrefixBits_eq_splitQuote]
   simp [encodeCodeSymbolAsInput, preservingCellPassCellBits_length,
     Nat.add_assoc]
-  omega
+  lia
 
 /-!
 **Exact source, boundary, and target tapes.**  These definitions pin down the

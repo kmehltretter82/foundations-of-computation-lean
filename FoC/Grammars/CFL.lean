@@ -480,7 +480,7 @@ theorem finiteProduction_generated_hasPumpingProperty
                   intro A rhs hprod
                   have hlt := hB.right A rhs hprod
                   simp [C]
-                  omega
+                  lia
                 have hPowLen :
                     C ^ (G.nonterminalsFinite.elems.length + 1) <=
                       Word.Length (CFG.ParseTree.frontier minTree) := by
@@ -488,7 +488,7 @@ theorem finiteProduction_generated_hasPumpingProperty
                   exact Nat.le_trans (Nat.le_succ _) hlen
                 have hheight :=
                   CFG.ParseTree.height_gt_nonterminals_of_frontier_length_ge
-                    (G := G) (B := C) (by simp [C]; omega) hBoundC
+                    (G := G) (B := C) (by simp [C]; lia) hBoundC
                     minTree hPowLen
                 cases CFG.ParseTree.exists_duplicate_root_subtrees_near_bottom_frontier_bound
                     (G := G) (B := C) (by simp [C]) hBoundC
@@ -532,7 +532,7 @@ theorem finiteProduction_generated_hasPumpingProperty
                                                         exact
                                                           hlower.right.right.right.right.right.right
                                                       simp [K]
-                                                      omega
+                                                      lia
                                                     · intro n
                                                       exact hv.right.right.right n
 

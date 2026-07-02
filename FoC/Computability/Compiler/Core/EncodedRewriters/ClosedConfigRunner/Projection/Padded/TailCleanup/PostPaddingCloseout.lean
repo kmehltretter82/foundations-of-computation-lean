@@ -64,7 +64,7 @@ theorem selectedProjectionPaddedTailCleanupAcceptSourceToEquivOutputDescription_
       selectedProjectionPaddedTailCleanupSentinelExtraScratch_pos_true L
     cases hextra :
         selectedProjectionPaddedTailCleanupSentinelExtraScratch true L with
-    | zero => omega
+    | zero => lia
     | succ extra =>
         simpa [rightPadding, hextra, List.replicate_succ] using
           rightEndCompactionSourceTapeWithRightPadding_move_left_move_right_cons

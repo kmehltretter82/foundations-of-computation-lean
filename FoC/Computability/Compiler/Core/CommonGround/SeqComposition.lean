@@ -123,7 +123,7 @@ theorem runConfig_state_ne_halt_of_later_ne_halt
     (hlater : (D.runConfig k c).state ≠ D.halt) :
     (D.runConfig n c).state ≠ D.halt := by
   intro hhalt
-  have hk : k = n + (k - n) := by omega
+  have hk : k = n + (k - n) := by lia
   have hcfg :
       D.runConfig n c =
         { state := D.halt, tape := (D.runConfig n c).tape } := by
@@ -147,7 +147,7 @@ theorem runConfig_state_ne_halt_of_reaches_stuck
   by_cases hle : k ≤ n
   · intro hhalt
     let rem := n - k
-    have hn : n = k + rem := by omega
+    have hn : n = k + rem := by lia
     have hrun :
         D.runConfig n c = D.runConfig rem stuck := by
       rw [hn, runConfig_add, hprefix]
@@ -161,7 +161,7 @@ theorem runConfig_state_ne_halt_of_reaches_stuck
     exact hstuck hstate
   · intro hhalt
     let rem := k - n
-    have hk : k = n + rem := by omega
+    have hk : k = n + rem := by lia
     have hrunHalt :
         D.runConfig n c =
           { state := D.halt, tape := (D.runConfig n c).tape } := by
@@ -196,7 +196,7 @@ theorem runConfig_state_ne_halt_of_reaches_ne_halt_region
         (by
           rw [hprefix]
           exact hmid 0)
-  · have hn : n = k + (n - k) := by omega
+  · have hn : n = k + (n - k) := by lia
     rw [hn, runConfig_add, hprefix]
     exact hmid (n - k)
 

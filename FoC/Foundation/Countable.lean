@@ -270,7 +270,7 @@ integers go to even codes and negative successors go to odd codes.
 -/
 theorem intCode_injective : Fn.Injective IntCode := by
   intro x y h
-  cases x <;> cases y <;> simp [IntCode] at h ⊢ <;> omega
+  cases x <;> cases y <;> simp [IntCode] at h ⊢ <;> lia
 
 theorem nat_encodable : EncodableByNat Nat := by
   exists fun n => n
@@ -299,21 +299,21 @@ theorem pairCode_injective_left {a c b d : Nat}
       cases c with
       | zero =>
           simp [PairCode] at h
-          omega
+          lia
       | succ c =>
           simp [PairCode] at h
-          omega
+          lia
   | succ a ih =>
       cases c with
       | zero =>
           simp [PairCode] at h
-          omega
+          lia
       | succ c =>
           simp [PairCode] at h
-          have hprev : PairCode a b = PairCode c d := by omega
+          have hprev : PairCode a b = PairCode c d := by lia
           cases ih hprev with
           | intro ha hb =>
-              constructor <;> omega
+              constructor <;> lia
 
 theorem pairCode_injective : Fn.Injective (fun p : Nat × Nat => PairCode p.1 p.2) := by
   intro p q h
@@ -363,7 +363,7 @@ theorem listCode_injective {code : alpha -> Nat}
               PairCode (code x) (ListCode code xs) =
                 PairCode (code y) (ListCode code ys) := by
             simp [ListCode] at h
-            omega
+            lia
           rcases pairCode_injective_left hpair with ⟨hhead, htail⟩
           have hxy : x = y := hcode hhead
           have hxsys : xs = ys := ih htail

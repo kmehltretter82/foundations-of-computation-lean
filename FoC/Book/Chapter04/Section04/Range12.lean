@@ -81,7 +81,7 @@ theorem range12PDA_push_as_with_extra (n extra : Nat) (hextra : extra <= n)
           Word.Concat (AnBnPDAStackWord (n + extra)) stack } := by
   induction n generalizing extra stack with
   | zero =>
-      have hextraZero : extra = 0 := by omega
+      have hextraZero : extra = 0 := by lia
       subst extra
       simp [Word.Concat, Word.RepeatSymbol, AnBnPDAStackWord]
       exact PDA.Computes.refl _
@@ -99,7 +99,7 @@ theorem range12PDA_push_as_with_extra (n extra : Nat) (hextra : extra <= n)
             exact PDA.Step.read (M := Range12PDA)
               (unread := Word.Concat (Word.RepeatSymbol Section01.AB.a n) rest)
               (restStack := stack) Range12PDATransition.pushOne
-          have hrest := ih 0 (by omega) (AnBnPDAStack.marker :: stack)
+          have hrest := ih 0 (by lia) (AnBnPDAStack.marker :: stack)
           have htarget :
               Word.Concat (AnBnPDAStackWord n)
                   (AnBnPDAStack.marker :: stack) =
@@ -121,13 +121,13 @@ theorem range12PDA_push_as_with_extra (n extra : Nat) (hextra : extra <= n)
             exact PDA.Step.read (M := Range12PDA)
               (unread := Word.Concat (Word.RepeatSymbol Section01.AB.a n) rest)
               (restStack := stack) Range12PDATransition.pushTwo
-          have hrest := ih extra (by omega)
+          have hrest := ih extra (by lia)
             (AnBnPDAStack.marker :: AnBnPDAStack.marker :: stack)
           have htarget :
               Word.Concat (AnBnPDAStackWord (n + extra))
                   (AnBnPDAStack.marker :: AnBnPDAStack.marker :: stack) =
                 Word.Concat (AnBnPDAStackWord (n + 1 + (extra + 1))) stack := by
-            have hnat : n + extra + 2 = n + 1 + (extra + 1) := by omega
+            have hnat : n + extra + 2 = n + 1 + (extra + 1) := by lia
             simp [AnBnPDAStackWord, Word.Concat, Word.RepeatSymbol]
             rw [← hnat]
             rw [Section01.replicate_succ_eq_append AnBnPDAStack.marker
@@ -180,10 +180,10 @@ theorem range12PDA_accepts_range_words {n m : Nat}
   let extra := m - n
   have hm : m = n + extra := by
     simp [extra]
-    omega
+    lia
   have hextra : extra <= n := by
     simp [extra]
-    omega
+    lia
   exists Range12PDAState.pop
   constructor
   · rfl
@@ -268,9 +268,9 @@ theorem range12PDA_push_accepts_only_config
                     exists n + 1
                     exists k + 1
                     constructor
-                    · omega
+                    · lia
                     constructor
-                    · omega
+                    · lia
                     · simp [Word.Concat, Word.RepeatSymbol, Word.Length] at hk ⊢
                       rw [hk.right.right]
                       simp [Section01.replicate_succ_eq_cons,
@@ -282,9 +282,9 @@ theorem range12PDA_push_accepts_only_config
                     exists n + 1
                     exists k + 2
                     constructor
-                    · omega
+                    · lia
                     constructor
-                    · omega
+                    · lia
                     · simp [Word.Concat, Word.RepeatSymbol, Word.Length] at hk ⊢
                       rw [hk.right.right]
                       simp [Section01.replicate_succ_eq_cons,
@@ -295,9 +295,9 @@ theorem range12PDA_push_accepts_only_config
           exists 0
           exists 0
           constructor
-          · omega
+          · lia
           constructor
-          · omega
+          · lia
           · have hpop := range12PDA_pop_accepts_only_config hrest rfl hfinal
             simpa [Word.Concat, Word.RepeatSymbol, Word.Length] using hpop
 

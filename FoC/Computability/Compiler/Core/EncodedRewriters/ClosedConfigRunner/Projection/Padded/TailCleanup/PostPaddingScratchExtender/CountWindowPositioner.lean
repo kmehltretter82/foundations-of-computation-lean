@@ -225,7 +225,7 @@ theorem rightSecondCellTrueMarkerDescription_run
           tape := T } =
       { state := rightSecondCellTrueMarkerDescription.halt
         tape := rightSecondCellTrueMarkerTargetTape T } := by
-  rw [show 4 = 1 + (1 + (1 + 1)) by omega]
+  rw [show 4 = 1 + (1 + (1 + 1)) by lia]
   rw [runConfig_add]
   rw [rightSecondCellTrueMarkerDescription_step_start]
   rw [runConfig_add]
@@ -1290,7 +1290,7 @@ theorem firstSuffixLocalStasher_run_scan_false
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change FirstSuffixLocalStasher.runConfig rest.length
           (FirstSuffixLocalStasher.runConfig 1
@@ -1343,7 +1343,7 @@ theorem firstSuffixLocalStasher_run_scan_true
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change FirstSuffixLocalStasher.runConfig rest.length
           (FirstSuffixLocalStasher.runConfig 1
@@ -1495,7 +1495,7 @@ theorem firstSuffixLocalStasher_run_false
         tape :=
           firstSuffixLocalStasherTargetTape
             left false suffixRest tail } := by
-  rw [show suffixRest.length + 5 = 1 + (suffixRest.length + 4) by omega,
+  rw [show suffixRest.length + 5 = 1 + (suffixRest.length + 4) by lia,
     runConfig_add]
   rw [firstSuffixLocalStasher_start_false]
   rw [show suffixRest.length + 4 = suffixRest.length + 4 by rfl,
@@ -1515,7 +1515,7 @@ theorem firstSuffixLocalStasher_run_true
         tape :=
           firstSuffixLocalStasherTargetTape
             left true suffixRest tail } := by
-  rw [show suffixRest.length + 5 = 1 + (suffixRest.length + 4) by omega,
+  rw [show suffixRest.length + 5 = 1 + (suffixRest.length + 4) by lia,
     runConfig_add]
   rw [firstSuffixLocalStasher_start_true]
   rw [show suffixRest.length + 4 = suffixRest.length + 4 by rfl,
@@ -1822,7 +1822,7 @@ theorem prefixGapRestorer_run_scan_false
       rw [show (next :: rest).length + 3 =
         1 + (rest.length + 3) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           PrefixGapRestorer.runConfig 1
@@ -1896,7 +1896,7 @@ theorem prefixGapRestorer_run_restore_false_from_leftStack
       rw [show (current :: rest).length + 3 =
         1 + (rest.length + 3) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           PrefixGapRestorer.runConfig 1
@@ -2040,7 +2040,7 @@ theorem prefixGapRestorer_run_scan_true
       rw [show (next :: rest).length + 3 =
         1 + (rest.length + 3) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           PrefixGapRestorer.runConfig 1
@@ -2114,7 +2114,7 @@ theorem prefixGapRestorer_run_restore_true_from_leftStack
       rw [show (current :: rest).length + 3 =
         1 + (rest.length + 3) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           PrefixGapRestorer.runConfig 1

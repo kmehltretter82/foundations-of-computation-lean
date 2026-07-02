@@ -337,7 +337,7 @@ theorem append_singleton_eq_append_singleton {α : Type}
     u = p ∧ x = y := by
   have hlen := congrArg List.length h
   simp at hlen
-  have huLen : u.length = p.length := by omega
+  have huLen : u.length = p.length := by lia
   have hu : u = p := by
     have htakeLeft : (u ++ [x]).take p.length = u := by
       rw [← huLen]

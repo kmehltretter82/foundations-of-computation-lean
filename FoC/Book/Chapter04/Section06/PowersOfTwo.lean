@@ -235,13 +235,13 @@ theorem powerTwo_duplicate_markers_derives
       have hmarkers :
           powerTwoMarkerForm ((n + 1) + (n + 1)) =
             [A, A] ++ powerTwoMarkerForm (n + n) := by
-        have hnat : (n + 1) + (n + 1) = 2 + (n + n) := by omega
+        have hnat : (n + 1) + (n + 1) = 2 + (n + n) := by lia
         rw [hnat]
         simpa [powerTwoMarkerForm, A] using
           repeatSymbol_add_eq_concat (powN PowerTwoNT.markA) 2 (n + n)
       have hsuccFront :
           powerTwoMarkerForm (n + 1) = [A] ++ powerTwoMarkerForm n := by
-        have hnat : n + 1 = Nat.succ n := by omega
+        have hnat : n + 1 = Nat.succ n := by lia
         unfold powerTwoMarkerForm
         rw [hnat]
         rfl
@@ -369,7 +369,7 @@ theorem powerTwo_control_derives_pow (n : Nat) :
       have hall := GeneralGrammar.derives_trans ih hpass
       have hpow : 2 ^ (n + 1) = 2 ^ n + 2 ^ n := by
         rw [Nat.pow_succ]
-        omega
+        lia
       simpa [hpow] using hall
 
 /-!

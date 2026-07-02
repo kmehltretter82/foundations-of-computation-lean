@@ -133,7 +133,7 @@ theorem leftBoundaryEraserDescription_run_loop
   | cons next rest ih =>
       rw [show (next :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       cases current <;>
         simp [leftBoundaryEraserDescription, runConfig, stepConfig,
@@ -164,7 +164,7 @@ theorem leftBoundaryEraserDescription_run_nonempty
               (List.replicate (leftRev.length + 1)
                 (none : Option Bool))
               (suffixHead :: suffixTail)) } := by
-  rw [show leftRev.length + 2 = (leftRev.length + 1) + 1 by omega]
+  rw [show leftRev.length + 2 = (leftRev.length + 1) + 1 by lia]
   rw [runConfig_add]
   have hloop :=
     leftBoundaryEraserDescription_run_loop
@@ -224,7 +224,7 @@ theorem leftBoundaryEraserDescription_haltsFromTape
       have hfieldLen : field.length = leftRev.length + 1 := by
         have hlen := congrArg List.length hrev
         simp at hlen
-        omega
+        lia
       have hsource :
           leftBoundaryEraserSourceTape
               baseLeft field suffixHead suffixTail =

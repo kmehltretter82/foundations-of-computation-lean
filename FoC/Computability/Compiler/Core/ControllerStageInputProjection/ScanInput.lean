@@ -256,7 +256,7 @@ theorem run_scan140_step
                       | some b =>
                           cases b <;> rfl
                   | succ count =>
-                      have hfalse : False := by omega
+                      have hfalse : False := by lia
                       exact False.elim hfalse
   | cons next more =>
       cases count with
@@ -292,7 +292,7 @@ theorem run_scan140_step
                       | some b =>
                           cases b <;> rfl
                   | succ count =>
-                      have hfalse : False := by omega
+                      have hfalse : False := by lia
                       exact False.elim hfalse
 
 theorem run_scan140_cells
@@ -318,7 +318,7 @@ theorem run_scan140_cells
         projectionScanCountStep_le_three hcount cell
       rw [show (cell :: rest).length = 1 + rest.length by
         simp
-        omega,
+        lia,
         runConfig_add]
       change
         Description.runConfig
@@ -378,7 +378,7 @@ theorem run_scan140_cells_to_boundary
         (List.append [none, none, none, none] base)
         (List.append cellsRev.reverse tail)
   rw [run_scan140_cells
-    cellsRev 0 (by omega) hsafe
+    cellsRev 0 (by lia) hsafe
     (List.append ([none, none, none] : List (Option Bool)) base) none tail]
   rw [hcount]
   simpa [List.append_assoc] using
@@ -437,7 +437,7 @@ theorem run_scan160_step
                       | some b =>
                           cases b <;> rfl
                   | succ count =>
-                      have hfalse : False := by omega
+                      have hfalse : False := by lia
                       exact False.elim hfalse
   | cons next more =>
       cases count with
@@ -473,7 +473,7 @@ theorem run_scan160_step
                       | some b =>
                           cases b <;> rfl
                   | succ count =>
-                      have hfalse : False := by omega
+                      have hfalse : False := by lia
                       exact False.elim hfalse
 
 theorem run_scan160_cells
@@ -499,7 +499,7 @@ theorem run_scan160_cells
         projectionScanCountStep_le_three hcount cell
       rw [show (cell :: rest).length = 1 + rest.length by
         simp
-        omega,
+        lia,
         runConfig_add]
       change
         Description.runConfig
@@ -559,7 +559,7 @@ theorem run_scan160_cells_to_boundary
         (List.append [none, none, none, none] base)
         (List.append cellsRev.reverse tail)
   rw [run_scan160_cells
-    cellsRev 0 (by omega) hsafe
+    cellsRev 0 (by lia) hsafe
     (List.append ([none, none, none] : List (Option Bool)) base) none tail]
   rw [hcount]
   simpa [List.append_assoc] using
@@ -599,7 +599,7 @@ theorem run_state100_marked_ticks
   | zero =>
       rfl
   | succ count ih =>
-      have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
+      have hsteps : 4 * (count + 1) = 4 + 4 * count := by lia
       rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * count)
@@ -675,7 +675,7 @@ theorem run_state120_ticks
   | zero =>
       rfl
   | succ count ih =>
-      have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
+      have hsteps : 4 * (count + 1) = 4 + 4 * count := by lia
       rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * count)
@@ -779,7 +779,7 @@ theorem run_state130_marked_payload
   | cons b rest ih =>
       have hsteps : 4 * (b :: rest).length = 4 + 4 * rest.length := by
         simp
-        omega
+        lia
       rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * rest.length)
@@ -872,7 +872,7 @@ theorem run_state150_marked_payload
   | cons b rest ih =>
       have hsteps : 4 * (b :: rest).length = 4 + 4 * rest.length := by
         simp
-        omega
+        lia
       rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * rest.length)
@@ -929,7 +929,7 @@ theorem run_state170_marked_ticks
   | zero =>
       rfl
   | succ count ih =>
-      have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
+      have hsteps : 4 * (count + 1) = 4 + 4 * count := by lia
       rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * count)
@@ -1037,7 +1037,7 @@ theorem run_state180_marked_payload
   | cons b rest ih =>
       have hsteps : 4 * (b :: rest).length = 4 + 4 * rest.length := by
         simp
-        omega
+        lia
       rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * rest.length)
@@ -1266,7 +1266,7 @@ theorem projectionInputMarkScanBackCellsRev_length
       projectionMarkedBoolPayloadCells_length,
       projectionMarkedTickCodeCells, projectionDoneCodeCells,
       encodeCodeSymbolAsInput] <;>
-    omega
+    lia
 
 def projectionInputFinishScanBackCellsRev
     (marked : Word Bool) : List (Option Bool) :=
@@ -1316,7 +1316,7 @@ theorem projectionInputFinishScanBackCellsRev_length
     projectionMarkedBoolPayloadCells_length,
     projectionRepeatedCells_length, projectionMarkedTickCodeCells,
     projectionDoneCodeCells, encodeCodeSymbolAsInput]
-  omega
+  lia
 
 def projectionInputFinishSuffixTail
     (stage : Nat) (result : Word Bool) : List (Option Bool) :=

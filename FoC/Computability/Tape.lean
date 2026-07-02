@@ -237,14 +237,14 @@ theorem contextLength_move_write_ge (dir : Direction) (cell : Option symbol)
               simp [contextLength, move, moveLeft, write]
           | cons leftHead leftTail =>
               simp [contextLength, move, moveLeft, write]
-              omega
+              lia
       | right =>
           cases right with
           | nil =>
               simp [contextLength, move, moveRight, write]
           | cons rightHead rightTail =>
               simp [contextLength, move, moveRight, write]
-              omega
+              lia
 
 theorem read_input_cons (a : symbol) (rest : Word symbol) :
     read (input (a :: rest)) = some a :=

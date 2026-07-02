@@ -1257,7 +1257,7 @@ theorem run_cellList_state120_stageNat
         run_cellList_state120_done left right
   | succ n ih =>
       rw [show 4 * (n + 1) + 4 =
-          4 + (4 * n + 4) by omega]
+          4 + (4 * n + 4) by lia]
       rw [runConfig_add]
       rw [show
           List.append ((stageNatBits (n + 1)).map some) right =
@@ -1316,7 +1316,7 @@ theorem run_cellList_state130_markedCells
       rfl
   | cons cell rest ih =>
       rw [show 4 * (cell :: rest).length =
-          4 + 4 * rest.length by simp; omega]
+          4 + 4 * rest.length by simp; lia]
       rw [runConfig_add]
       rw [show
           List.append ((markedCellsCodeBits (cell :: rest)).map some)
@@ -1356,7 +1356,7 @@ theorem run_cellList_state140_returnToLengthMarker
       rw [show (b :: rest).length + 4 =
           1 + (rest.length + 4) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         CLSS.runConfig (rest.length + 4)
@@ -1438,7 +1438,7 @@ theorem run_cellList_state150_markedCells
       rfl
   | cons cell rest ih =>
       rw [show 4 * (cell :: rest).length =
-          4 + 4 * rest.length by simp; omega]
+          4 + 4 * rest.length by simp; lia]
       rw [runConfig_add]
       rw [show
           List.append ((markedCellsCodeBits (cell :: rest)).map some)
@@ -1906,7 +1906,7 @@ theorem run_cellList_raw_marking_loop_from_state100
         ⟨recSteps, hrec⟩
       refine ⟨4 + markSteps + recSteps, ?_⟩
       rw [show 4 + markSteps + recSteps =
-          4 + (markSteps + recSteps) by omega]
+          4 + (markSteps + recSteps) by lia]
       rw [runConfig_add]
       rw [show
           (stageNatBits (cell :: rest).length).map some =
@@ -2002,7 +2002,7 @@ theorem run_cellList_raw_marking_loop_from_state100_withBase
         ⟨recSteps, hrec⟩
       refine ⟨4 + markSteps + recSteps, ?_⟩
       rw [show 4 + markSteps + recSteps =
-          4 + (markSteps + recSteps) by omega]
+          4 + (markSteps + recSteps) by lia]
       rw [runConfig_add]
       rw [show
           (stageNatBits (cell :: rest).length).map some =
@@ -2101,7 +2101,7 @@ theorem run_cellList_raw_marking_loop_from_state100_withBaseAndRight
         ⟨recSteps, hrec⟩
       refine ⟨4 + markSteps + recSteps, ?_⟩
       rw [show 4 + markSteps + recSteps =
-          4 + (markSteps + recSteps) by omega]
+          4 + (markSteps + recSteps) by lia]
       rw [runConfig_add]
       rw [show
           (stageNatBits (cell :: rest).length).map some =
@@ -2259,7 +2259,7 @@ theorem run_cellList_marking_loop_from_state120
         ⟨recSteps, hrec⟩
       refine ⟨markSteps + 4 + recSteps, ?_⟩
       rw [show markSteps + 4 + recSteps =
-          markSteps + (4 + recSteps) by omega]
+          markSteps + (4 + recSteps) by lia]
       rw [runConfig_add]
       rw [hmark]
       rw [runConfig_add]

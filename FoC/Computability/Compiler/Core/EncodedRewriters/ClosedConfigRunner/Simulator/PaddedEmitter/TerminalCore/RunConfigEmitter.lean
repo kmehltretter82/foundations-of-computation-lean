@@ -132,7 +132,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceToRightEndLef
   | cons bit rest ih =>
       rw [show (bit :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           FixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceToRightEndLeftDescription_configRunner.runConfig

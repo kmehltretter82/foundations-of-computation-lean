@@ -363,17 +363,17 @@ theorem toCFG_emptyRead_of_step_emptyStack
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hpop
       simp [Word.Concat] at hlen
-      omega
+      lia
     have hrestNil : restStack = [] := by
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hpop
       simp [Word.Concat] at hlen
-      omega
+      lia
     have hpushNil : push = [] := by
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hpush
       simp [Word.Concat, hrestNil] at hlen
-      omega
+      lia
     have htransition' : M.transition p (some a) [] q [] := by
       simpa [hp, hq, ha, hunread, hpopNil, hpushNil] using htransition
     have hbody :=
@@ -447,17 +447,17 @@ theorem toCFG_emptyEpsilon_of_step_emptyStack
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hpop
       simp [Word.Concat] at hlen
-      omega
+      lia
     have hrestNil : restStack = [] := by
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hpop
       simp [Word.Concat] at hlen
-      omega
+      lia
     have hpushNil : push = [] := by
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hpush
       simp [Word.Concat, hrestNil] at hlen
-      omega
+      lia
     have htransition' : M.transition p none [] q [] := by
       simpa [hp, hq, hunread, hpopNil, hpushNil] using htransition
     have hbody :=
@@ -517,7 +517,7 @@ theorem toCFG_betweenRead_of_step_topPop
     · have hsourceLen := congrArg List.length hsourceStack
       have htargetLen := congrArg List.length htargetStack
       simp [Word.Concat, hpopEmpty] at hsourceLen htargetLen
-      omega
+      lia
     · rcases hpopSingle with ⟨B, hpopSingle⟩
       have hsourceCons : A :: tail = B :: restStack := by
         simpa [Word.Concat, hpopSingle] using hsourceStack
@@ -528,7 +528,7 @@ theorem toCFG_betweenRead_of_step_topPop
         have hrestLen := congrArg List.length hrest
         have hlen := congrArg List.length htargetStack
         simp [Word.Concat] at hrestLen hlen
-        omega
+        lia
       have htransition' : M.transition p (some a) [A] q [] := by
         simpa [hp, hq, ha, hunread, hpopSingle, hA, hpushNil] using
           htransition
@@ -604,7 +604,7 @@ theorem toCFG_betweenEpsilon_of_step_topPop
     · have hsourceLen := congrArg List.length hsourceStack
       have htargetLen := congrArg List.length htargetStack
       simp [Word.Concat, hpopEmpty] at hsourceLen htargetLen
-      omega
+      lia
     · rcases hpopSingle with ⟨B, hpopSingle⟩
       have hsourceCons : A :: tail = B :: restStack := by
         simpa [Word.Concat, hpopSingle] using hsourceStack
@@ -615,7 +615,7 @@ theorem toCFG_betweenEpsilon_of_step_topPop
         have hrestLen := congrArg List.length hrest
         have hlen := congrArg List.length htargetStack
         simp [Word.Concat] at hrestLen hlen
-        omega
+        lia
       have htransition' : M.transition p none [A] q [] := by
         simpa [hp, hq, hunread, hpopSingle, hA, hpushNil] using
           htransition
@@ -776,7 +776,7 @@ theorem step_sourceStack_empty_or_single_of_step_to_emptyStack
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length htargetStack
       simp [Word.Concat] at hlen
-      omega
+      lia
     rcases hnorm p' (some a) pop q' push htransition with
       hpopNil | hpopSingle
     · left
@@ -798,7 +798,7 @@ theorem step_sourceStack_empty_or_single_of_step_to_emptyStack
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length htargetStack
       simp [Word.Concat] at hlen
-      omega
+      lia
     rcases hnorm p' none pop q' push htransition with
       hpopNil | hpopSingle
     · left
@@ -884,7 +884,7 @@ theorem toCFG_emptyDerives_of_computesIn_atMostOne_emptyStack
           exact toCFG_emptyDerives_of_computesIn_one_emptyStack
             (M := M) (presentation := presentation) hcomp
       | succ n =>
-          omega
+          lia
 
 theorem toCFG_betweenDerives_of_computesIn_one_topPop
     {M : PDA input stack state} {presentation : FinitePresentation M}
@@ -953,12 +953,12 @@ theorem toCFG_emptyDerives_of_computesIn_two_emptyStack
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have hrestNil : restStack = [] := by
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have htransition' :
         M.transition p (some a) [] r push := by
       simpa [hp, hpopNil] using htransition
@@ -1052,12 +1052,12 @@ theorem toCFG_emptyDerives_of_computesIn_two_emptyStack
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have hrestNil : restStack = [] := by
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have htransition' :
         M.transition p none [] r push := by
       simpa [hp, hpopNil] using htransition
@@ -1166,7 +1166,7 @@ theorem toCFG_emptyDerives_of_computesIn_atMostTwo_emptyStack
               exact toCFG_emptyDerives_of_computesIn_two_emptyStack
                 (M := M) (presentation := presentation) hnorm hcomp
           | succ n =>
-              omega
+              lia
 
 /-!
 The summary-computation predicates are custom induction principles for the

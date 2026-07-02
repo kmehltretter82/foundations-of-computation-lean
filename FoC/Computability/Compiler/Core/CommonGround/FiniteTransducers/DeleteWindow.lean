@@ -95,17 +95,17 @@ theorem deleteWindowAfter_before
   | cons bit rest ih =>
       have hstateLt : state < keep := by
         simp at h
-        omega
+        lia
       have hltBoundary :
           state < deleteWindowBoundary keep delete := by
         simp [deleteWindowBoundary]
-        omega
+        lia
       have hrest : state + 1 + rest.length ≤ keep := by
         simp at h
-        omega
+        lia
       have hih := ih (state + 1) hrest
       simp [statefulOptionAfter, deleteWindowNext, hltBoundary, hih]
-      omega
+      lia
 
 theorem deleteWindowOutput_before
     (keep delete state : Nat) (input : Word Bool)
@@ -121,21 +121,21 @@ theorem deleteWindowOutput_before
   | cons bit rest ih =>
       have hstateLt : state < keep := by
         simp at h
-        omega
+        lia
       have hnotDelete :
           ¬ (keep ≤ state ∧
             state < deleteWindowBoundary keep delete) := by
         intro hdel
-        omega
+        lia
       have hnotKeep : ¬ keep ≤ state := by
-        omega
+        lia
       have hltBoundary :
           state < deleteWindowBoundary keep delete := by
         simp [deleteWindowBoundary]
-        omega
+        lia
       have hrest : state + 1 + rest.length ≤ keep := by
         simp at h
-        omega
+        lia
       have hih := ih (state + 1) hrest
       simp [statefulOptionOutputFrom, deleteWindowEmit,
         hnotKeep, optionEmitWord, deleteWindowNext, hltBoundary,
@@ -155,14 +155,14 @@ theorem deleteWindowCells_before
   | cons bit rest ih =>
       have hnotKeep : ¬ keep ≤ state := by
         simp at h
-        omega
+        lia
       have hltBoundary :
           state < deleteWindowBoundary keep delete := by
         simp [deleteWindowBoundary]
-        omega
+        lia
       have hrest : state + 1 + rest.length ≤ keep := by
         simp at h
-        omega
+        lia
       have hih := ih (state + 1) hrest
       simp [statefulOptionCellsFrom, deleteWindowEmit,
         hnotKeep, deleteWindowNext, hltBoundary, hih]
@@ -181,13 +181,13 @@ theorem deleteWindowAfter_delete
       have hltBoundary :
           state < deleteWindowBoundary keep delete := by
         simp at hlen
-        omega
-      have hgeNext : keep ≤ state + 1 := by omega
+        lia
+      have hgeNext : keep ≤ state + 1 := by lia
       have hlenNext :
           state + 1 + rest.length =
             deleteWindowBoundary keep delete := by
         simp at hlen
-        omega
+        lia
       have hih := ih (state + 1) hgeNext hlenNext
       simp [statefulOptionAfter, deleteWindowNext, hltBoundary, hih]
 
@@ -207,17 +207,17 @@ theorem deleteWindowOutput_delete
       have hltBoundary :
           state < deleteWindowBoundary keep delete := by
         simp at hlen
-        omega
+        lia
       have hdelete :
           keep ≤ state ∧
             state < deleteWindowBoundary keep delete :=
         ⟨hge, hltBoundary⟩
-      have hgeNext : keep ≤ state + 1 := by omega
+      have hgeNext : keep ≤ state + 1 := by lia
       have hlenNext :
           state + 1 + rest.length =
             deleteWindowBoundary keep delete := by
         simp at hlen
-        omega
+        lia
       have hih := ih (state + 1) hgeNext hlenNext
       simp [statefulOptionOutputFrom, deleteWindowEmit, hdelete,
         optionEmitWord, deleteWindowNext, hih]
@@ -238,17 +238,17 @@ theorem deleteWindowCells_delete
       have hltBoundary :
           state < deleteWindowBoundary keep delete := by
         simp at hlen
-        omega
+        lia
       have hdelete :
           keep ≤ state ∧
             state < deleteWindowBoundary keep delete :=
         ⟨hge, hltBoundary⟩
-      have hgeNext : keep ≤ state + 1 := by omega
+      have hgeNext : keep ≤ state + 1 := by lia
       have hlenNext :
           state + 1 + rest.length =
             deleteWindowBoundary keep delete := by
         simp at hlen
-        omega
+        lia
       have hih := ih (state + 1) hgeNext hlenNext
       change
         statefulOptionCellsFrom
@@ -287,7 +287,7 @@ theorem deleteWindowOutput_suffix
             deleteWindowBoundary keep delete <
               deleteWindowBoundary keep delete) := by
         intro hdel
-        omega
+        lia
       simp [statefulOptionOutputFrom, deleteWindowEmit,
         optionEmitWord, deleteWindowNext, ih]
 
@@ -307,7 +307,7 @@ theorem deleteWindowCells_suffix
             deleteWindowBoundary keep delete <
               deleteWindowBoundary keep delete) := by
         intro hdel
-        omega
+        lia
       simp [statefulOptionCellsFrom, deleteWindowEmit,
         deleteWindowNext, ih]
 
@@ -329,13 +329,13 @@ theorem deleteWindowOutputFrom_split
           (deleteWindowEmit keep delete)
           0 pref =
         pref := by
-    exact deleteWindowOutput_before keep delete 0 pref (by omega)
+    exact deleteWindowOutput_before keep delete 0 pref (by lia)
   have hprefixAfter :
       statefulOptionAfter
           (deleteWindowNext keep delete)
           0 pref =
         keep := by
-    have h := deleteWindowAfter_before keep delete 0 pref (by omega)
+    have h := deleteWindowAfter_before keep delete 0 pref (by lia)
     simpa [hpref] using h
   rw [hprefixOut, hprefixAfter]
   rw [statefulOptionOutputFrom_append]
@@ -381,13 +381,13 @@ theorem deleteWindowCellsFrom_split
           (deleteWindowEmit keep delete)
           0 pref =
         pref.map some := by
-    exact deleteWindowCells_before keep delete 0 pref (by omega)
+    exact deleteWindowCells_before keep delete 0 pref (by lia)
   have hprefixAfter :
       statefulOptionAfter
           (deleteWindowNext keep delete)
           0 pref =
         keep := by
-    have h := deleteWindowAfter_before keep delete 0 pref (by omega)
+    have h := deleteWindowAfter_before keep delete 0 pref (by lia)
     simpa [hpref] using h
   rw [hprefixCells, hprefixAfter]
   rw [statefulOptionCellsFrom_append]

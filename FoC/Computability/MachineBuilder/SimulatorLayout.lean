@@ -292,7 +292,7 @@ theorem hitsFromConfigByBool_eq_true_iff
           (haltedFromConfigInBool_eq_true_iff D c 0).mp h⟩
       · intro h
         rcases h with ⟨n, hnle, hhalt⟩
-        have hn : n = 0 := by omega
+        have hn : n = 0 := by lia
         cases hn
         exact (haltedFromConfigInBool_eq_true_iff D c 0).mpr hhalt
   | succ limit ih =>
@@ -316,7 +316,7 @@ theorem hitsFromConfigByBool_eq_true_iff
         · have hprev : hitsFromConfigByBool D c limit = true :=
             ih.mpr ⟨n, hn, hhalt⟩
           simp [hitsFromConfigByBool, hprev]
-        · have hnEq : n = limit + 1 := by omega
+        · have hnEq : n = limit + 1 := by lia
           cases hnEq
           have hnow :
               haltedFromConfigInBool D c (limit + 1) = true :=

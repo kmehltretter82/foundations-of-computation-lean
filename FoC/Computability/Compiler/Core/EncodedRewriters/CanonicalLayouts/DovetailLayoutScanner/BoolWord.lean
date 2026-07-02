@@ -219,7 +219,7 @@ theorem run_boolWordSuffix_state120_stageNat
         run_boolWordSuffix_state120_done left right
   | succ n ih =>
       rw [show 4 * (n + 1) + 4 =
-          4 + (4 * n + 4) by omega]
+          4 + (4 * n + 4) by lia]
       rw [runConfig_add]
       rw [show
           List.append ((stageNatBits (n + 1)).map some) right =
@@ -269,7 +269,7 @@ theorem run_boolWordSuffix_state130_markedBits
       rfl
   | cons bit rest ih =>
       rw [show 4 * (bit :: rest).length =
-          4 + 4 * rest.length by simp; omega]
+          4 + 4 * rest.length by simp; lia]
       rw [runConfig_add]
       rw [show
           List.append
@@ -311,7 +311,7 @@ theorem run_boolWordSuffix_state140_returnToLengthMarker
       rw [show (b :: rest).length + 4 =
           1 + (rest.length + 4) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         BWSS.runConfig (rest.length + 4)
@@ -380,7 +380,7 @@ theorem run_boolWordSuffix_state150_markedBits
       rfl
   | cons bit rest ih =>
       rw [show 4 * (bit :: rest).length =
-          4 + 4 * rest.length by simp; omega]
+          4 + 4 * rest.length by simp; lia]
       rw [runConfig_add]
       rw [show
           List.append
@@ -549,7 +549,7 @@ theorem run_boolWordSuffix_raw_marking_loop_from_state100_withBase
         ⟨recSteps, hrec⟩
       refine ⟨4 + markSteps + recSteps, ?_⟩
       rw [show 4 + markSteps + recSteps =
-          4 + (markSteps + recSteps) by omega]
+          4 + (markSteps + recSteps) by lia]
       rw [runConfig_add]
       rw [show
           (stageNatBits (bit :: rest).length).map some =
@@ -671,7 +671,7 @@ theorem run_boolWordSuffix_raw_marking_loop_from_state100_withBaseAndRight
         ⟨recSteps, hrec⟩
       refine ⟨4 + markSteps + recSteps, ?_⟩
       rw [show 4 + markSteps + recSteps =
-          4 + (markSteps + recSteps) by omega]
+          4 + (markSteps + recSteps) by lia]
       rw [runConfig_add]
       rw [show
           (stageNatBits (bit :: rest).length).map some =

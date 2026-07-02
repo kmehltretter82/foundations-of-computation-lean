@@ -265,7 +265,7 @@ theorem copyAppendWordWriteTransitionsFrom_source_bounds
         constructor <;> simp
       · have htail := ih (source + 1) t ht
         constructor
-        · omega
+        · lia
         · simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using
             htail.right
 
@@ -286,8 +286,8 @@ theorem copyAppendWordWriteTransitionsFrom_wellFormed
       · subst t
         constructor
         · simp
-          omega
-        · cases rest <;> simp <;> omega
+          lia
+        · cases rest <;> simp <;> lia
       · have htail := ih (source + 1) t
           (by
             simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using ht)
@@ -318,13 +318,13 @@ theorem copyAppendWordWriteTransitionsFrom_deterministic
           copyAppendWordWriteTransitionsFrom_source_bounds (source + 1)
             (source + (bit :: rest).length) rest u hu
         have husource : u.source = source := hkey.left.symm
-        omega
+        lia
       · subst u
         have htbounds :=
           copyAppendWordWriteTransitionsFrom_source_bounds (source + 1)
             (source + (bit :: rest).length) rest t ht
         have htsource : t.source = source := hkey.left
-        omega
+        lia
       · exact ih (source + 1) t u
           (by
             simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using ht)
@@ -915,7 +915,7 @@ theorem erasePreservingScanDescription_run_scan
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         erasePreservingScanDescription.runConfig rest.length
@@ -1072,7 +1072,7 @@ theorem boolOutputDescription_run_scan_tapeAtCells
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         (BoolOutputDescription out).runConfig rest.length
@@ -1302,7 +1302,7 @@ theorem appendFixedFourBitsRightDescription_run_scan_tapeAtCells
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         (AppendFixedFourBitsRightDescription b0 b1 b2 b3).runConfig

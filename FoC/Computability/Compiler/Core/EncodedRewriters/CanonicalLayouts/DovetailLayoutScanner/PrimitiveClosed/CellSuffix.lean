@@ -57,7 +57,7 @@ private theorem cellSuffixScannerDescription_runConfig_nil_ne_halt
           hlookup, Tape.read])
       (by
         change (10 : Nat) ≠ 99
-        omega)
+        lia)
 
 private theorem cellSuffixScannerDescription_runConfig_true_start_ne_halt
     (baseLeft rest : List (Option Bool)) (n : Nat) :
@@ -91,7 +91,7 @@ private theorem cellSuffixScannerDescription_runConfig_true_start_ne_halt
           hlookup, Tape.read])
       (by
         change (10 : Nat) ≠ 99
-        omega)
+        lia)
 
 private theorem cellSuffixScannerDescription_runConfig_false_false_ne_halt
     (baseLeft rest : List (Option Bool)) (n : Nat) :

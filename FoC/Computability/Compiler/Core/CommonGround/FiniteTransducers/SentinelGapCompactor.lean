@@ -130,7 +130,7 @@ theorem sentinelGapCompactorDescription_run_scan_right_scratch
           Tape.moveLeft, tapeAtCells]
   | succ paddingScratch ih =>
       rw [show paddingScratch + 1 + 1 =
-          1 + (paddingScratch + 1) by omega]
+          1 + (paddingScratch + 1) by lia]
       rw [runConfig_add]
       have hstep :
           sentinelGapCompactorDescription.runConfig 1
@@ -182,7 +182,7 @@ theorem sentinelGapCompactorDescription_run_scan_payload
       rw [show (bit :: rest).length + 1 =
           1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           sentinelGapCompactorDescription.runConfig 1
@@ -243,7 +243,7 @@ theorem sentinelGapCompactorDescription_run_scan_to_gap_predecessor
                 rightPadding)) } := by
   rw [show paddingScratch + leftRest.length + 3 =
       (paddingScratch + 1) + (1 + (leftRest.length + 1)) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [sentinelGapCompactorDescription_run_scan_right_scratch]
   rw [replicate_none_append_none_cons]
@@ -377,7 +377,7 @@ theorem sentinelGapCompactorDescription_run_continue_shift_loop
       rw [show 3 * (bit :: rest).length + 1 =
           3 + (3 * rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       rw [sentinelGapCompactorDescription_run_continue_shift_bit]
       simpa [List.append_assoc] using
@@ -397,7 +397,7 @@ theorem sentinelGapCompactorDescription_run_continue_shift_to_target
           leadingBlankLeftShiftTargetTapeWithPadding
             baseLeft bits padding } := by
   rw [show 3 * bits.length + 2 =
-      1 + (3 * bits.length + 1) by omega]
+      1 + (3 * bits.length + 1) by lia]
   rw [runConfig_add]
   rw [sentinelGapCompactorDescription_run_continue_shift_start]
   simpa using
@@ -485,7 +485,7 @@ theorem sentinelGapCompactorDescription_run_final_shift_loop
       rw [show 3 * (bit :: rest).length + 1 =
           3 + (3 * rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       rw [sentinelGapCompactorDescription_run_final_shift_bit]
       simpa [List.append_assoc] using
@@ -505,7 +505,7 @@ theorem sentinelGapCompactorDescription_run_final_shift_to_target
           leadingBlankLeftShiftTargetTapeWithPadding
             baseLeft bits padding } := by
   rw [show 3 * bits.length + 2 =
-      1 + (3 * bits.length + 1) by omega]
+      1 + (3 * bits.length + 1) by lia]
   rw [runConfig_add]
   rw [sentinelGapCompactorDescription_run_final_shift_start]
   simpa using
@@ -632,7 +632,7 @@ theorem replicate_none_append_replicate_none
             (List.replicate n (none : Option Bool)) =
         List.replicate (Nat.succ m + n) (none : Option Bool)
       rw [ih]
-      rw [show Nat.succ m + n = (m + n) + 1 by omega]
+      rw [show Nat.succ m + n = (m + n) + 1 by lia]
       rw [List.replicate_succ]
 
 theorem sentinelGapCompactorFinalPadding_replicate
@@ -651,7 +651,7 @@ theorem sentinelGapCompactorFinalPadding_replicate
       rw [replicate_none_append_replicate_none]
       rw [ih]
       congr 1
-      omega
+      lia
 
 theorem sentinelGapCompactorFinalPadding_eq_replicate_append
     (gap paddingTail : Nat) (rightPadding : List (Option Bool)) :
@@ -687,7 +687,7 @@ theorem sentinelGapCompactorFinalPadding_eq_replicate_append
             congr 1
             rw [replicate_none_append_replicate_none]
             congr 1
-            omega
+            lia
 
 theorem replicate_add_two_none
     (n : Nat) :
@@ -697,7 +697,7 @@ theorem replicate_add_two_none
   | zero =>
       rfl
   | succ n ih =>
-      rw [show Nat.succ n + 2 = (n + 2) + 1 by omega]
+      rw [show Nat.succ n + 2 = (n + 2) + 1 by lia]
       rw [List.replicate_succ]
       rw [ih]
       rw [List.replicate_succ]

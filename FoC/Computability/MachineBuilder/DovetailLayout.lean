@@ -560,7 +560,7 @@ theorem hitsByBool_eq_true_iff
           (haltsInBool_eq_true_iff D 0 w).mp h⟩
       · intro h
         rcases h with ⟨n, hnle, hhalt⟩
-        have hn : n = 0 := by omega
+        have hn : n = 0 := by lia
         cases hn
         exact (haltsInBool_eq_true_iff D 0 w).mpr hhalt
   | succ limit ih =>
@@ -583,7 +583,7 @@ theorem hitsByBool_eq_true_iff
         · have hprev : hitsByBool D w limit = true :=
             ih.mpr ⟨n, hn, hhalt⟩
           simp [hitsByBool, hprev]
-        · have hnEq : n = limit + 1 := by omega
+        · have hnEq : n = limit + 1 := by lia
           cases hnEq
           have hnow : haltsInBool D (limit + 1) w = true :=
             (haltsInBool_eq_true_iff D (limit + 1) w).mpr hhalt

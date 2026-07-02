@@ -126,21 +126,21 @@ theorem
         taggedBranchTrueOffset,
         taggedBranchFalseOffset,
         taggedBranchBlankOffset]
-      omega
+      lia
     constructor
     · simp [RestoreFirstBitTaggedBrancherDescription,
         taggedBranchStateCount,
         taggedBranchTrueOffset,
         taggedBranchFalseOffset,
         taggedBranchBlankOffset]
-      omega
+      lia
     constructor
     · simp [RestoreFirstBitTaggedBrancherDescription,
         taggedBranchStateCount,
         taggedBranchTrueOffset,
         taggedBranchFalseOffset,
         taggedBranchBlankOffset]
-      omega
+      lia
     constructor
     · intro t ht
       simp [RestoreFirstBitTaggedBrancherDescription,
@@ -163,28 +163,28 @@ theorem
           ⟨base, hbase, rfl⟩
       · constructor
         · simp
-          omega
+          lia
         · by_cases hstart : blankBranch.start = blankBranch.halt
           · simp [hstart]
-            omega
+            lia
           · simp [hstart]
-            omega
+            lia
       · constructor
         · simp
-          omega
+          lia
         · by_cases hstart : falseBranch.start = falseBranch.halt
           · simp [hstart]
-            omega
+            lia
           · simp [hstart]
-            omega
+            lia
       · constructor
         · simp
-          omega
+          lia
         · by_cases hstart : trueBranch.start = trueBranch.halt
           · simp [hstart]
-            omega
+            lia
           · simp [hstart]
-            omega
+            lia
       · have hbaseWF :=
           hblank.left.right.right.right.left base hbase
         have hbaseSource : base.source < blankBranch.stateCount :=
@@ -196,21 +196,21 @@ theorem
             2 + base.source <
               2 + blankBranch.stateCount +
                 falseBranch.stateCount + trueBranch.stateCount
-          omega
+          lia
         · by_cases htarget : base.target = blankBranch.halt
           · simpa [htarget] using
               (show
                 1 <
                   2 + blankBranch.stateCount +
                     falseBranch.stateCount + trueBranch.stateCount by
-                omega)
+                lia)
           · change
               (if base.target = blankBranch.halt then 1
                 else 2 + base.target) <
                 2 + blankBranch.stateCount +
                   falseBranch.stateCount + trueBranch.stateCount
             simp [htarget]
-            omega
+            lia
       · have hbaseWF :=
           hfalse.left.right.right.right.left base hbase
         have hbaseSource : base.source < falseBranch.stateCount :=
@@ -222,21 +222,21 @@ theorem
             2 + blankBranch.stateCount + base.source <
               2 + blankBranch.stateCount +
                 falseBranch.stateCount + trueBranch.stateCount
-          omega
+          lia
         · by_cases htarget : base.target = falseBranch.halt
           · simpa [htarget] using
               (show
                 1 <
                   2 + blankBranch.stateCount +
                     falseBranch.stateCount + trueBranch.stateCount by
-                omega)
+                lia)
           · change
               (if base.target = falseBranch.halt then 1
                 else 2 + blankBranch.stateCount + base.target) <
                 2 + blankBranch.stateCount +
                   falseBranch.stateCount + trueBranch.stateCount
             simp [htarget]
-            omega
+            lia
       · have hbaseWF :=
           htrue.left.right.right.right.left base hbase
         have hbaseSource : base.source < trueBranch.stateCount :=
@@ -249,14 +249,14 @@ theorem
                 base.source <
               2 + blankBranch.stateCount +
                 falseBranch.stateCount + trueBranch.stateCount
-          omega
+          lia
         · by_cases htarget : base.target = trueBranch.halt
           · simpa [htarget] using
               (show
                 1 <
                   2 + blankBranch.stateCount +
                     falseBranch.stateCount + trueBranch.stateCount by
-                omega)
+                lia)
           · change
               (if base.target = trueBranch.halt then 1
                 else 2 + blankBranch.stateCount +
@@ -264,7 +264,7 @@ theorem
                 2 + blankBranch.stateCount +
                   falseBranch.stateCount + trueBranch.stateCount
             simp [htarget]
-            omega
+            lia
     · intro t u ht hu hkey
       simp [RestoreFirstBitTaggedBrancherDescription,
         taggedBranchStateCount,
@@ -283,21 +283,21 @@ theorem
             ⟨baseU, hbaseU, rfl⟩ <;>
           simp [TransitionDescription.SameKey,
             TransitionDescription.SameAction] at hkey ⊢ <;>
-          try omega
+          try lia
       · rcases hu with rfl | rfl | rfl |
             ⟨baseU, hbaseU, rfl⟩ |
             ⟨baseU, hbaseU, rfl⟩ |
             ⟨baseU, hbaseU, rfl⟩ <;>
           simp [TransitionDescription.SameKey,
             TransitionDescription.SameAction] at hkey ⊢ <;>
-          try omega
+          try lia
       · rcases hu with rfl | rfl | rfl |
             ⟨baseU, hbaseU, rfl⟩ |
             ⟨baseU, hbaseU, rfl⟩ |
             ⟨baseU, hbaseU, rfl⟩ <;>
           simp [TransitionDescription.SameKey,
             TransitionDescription.SameAction] at hkey ⊢ <;>
-          try omega
+          try lia
       · rcases hu with rfl | rfl | rfl |
             ⟨baseU, hbaseU, rfl⟩ |
             ⟨baseU, hbaseU, rfl⟩ |
@@ -317,13 +317,13 @@ theorem
           have hbaseTSource :
               baseT.source < blankBranch.stateCount :=
             (hblank.left.right.right.right.left baseT hbaseT).left
-          omega
+          lia
         · simp [TransitionDescription.SameKey,
             TransitionDescription.SameAction] at hkey ⊢
           have hbaseTSource :
               baseT.source < blankBranch.stateCount :=
             (hblank.left.right.right.right.left baseT hbaseT).left
-          omega
+          lia
       · rcases hu with rfl | rfl | rfl |
             ⟨baseU, hbaseU, rfl⟩ |
             ⟨baseU, hbaseU, rfl⟩ |
@@ -336,7 +336,7 @@ theorem
           have hbaseUSource :
               baseU.source < blankBranch.stateCount :=
             (hblank.left.right.right.right.left baseU hbaseU).left
-          omega
+          lia
         · simp [TransitionDescription.SameKey,
             TransitionDescription.SameAction] at hkey ⊢
           have hsame :=
@@ -349,7 +349,7 @@ theorem
           have hbaseTSource :
               baseT.source < falseBranch.stateCount :=
             (hfalse.left.right.right.right.left baseT hbaseT).left
-          omega
+          lia
       · rcases hu with rfl | rfl | rfl |
             ⟨baseU, hbaseU, rfl⟩ |
             ⟨baseU, hbaseU, rfl⟩ |
@@ -362,13 +362,13 @@ theorem
           have hbaseUSource :
               baseU.source < blankBranch.stateCount :=
             (hblank.left.right.right.right.left baseU hbaseU).left
-          omega
+          lia
         · simp [TransitionDescription.SameKey,
             TransitionDescription.SameAction] at hkey ⊢
           have hbaseUSource :
               baseU.source < falseBranch.stateCount :=
             (hfalse.left.right.right.right.left baseU hbaseU).left
-          omega
+          lia
         · simp [TransitionDescription.SameKey,
             TransitionDescription.SameAction] at hkey ⊢
           have hsame :=
@@ -387,7 +387,7 @@ theorem
     rcases ht with rfl | rfl | rfl |
         ⟨base, _hbase, rfl⟩ |
         ⟨base, _hbase, rfl⟩ |
-        ⟨base, _hbase, rfl⟩ <;> simp <;> omega
+        ⟨base, _hbase, rfl⟩ <;> simp <;> lia
 
 theorem
     restoreFirstBitTaggedBrancherDescription_lookup_blank
@@ -428,7 +428,7 @@ theorem
       taggedBranchBlankOffset,
       taggedBranchFalseOffset,
       taggedBranchTrueOffset]
-    omega
+    lia
   have hfindFalse :
       List.find?
           (Matches
@@ -454,7 +454,7 @@ theorem
       exact hpair.left
     simp [taggedBranchBlankOffset,
       taggedBranchFalseOffset] at hsource
-    omega
+    lia
   have hfindTrue :
       List.find?
           (Matches
@@ -483,7 +483,7 @@ theorem
     simp [taggedBranchBlankOffset,
       taggedBranchFalseOffset,
       taggedBranchTrueOffset] at hsource
-    omega
+    lia
   have hpredicate :
       (Matches
           (taggedBranchBlankOffset + state) cell ∘
@@ -499,7 +499,7 @@ theorem
       · have hoffset :
           taggedBranchBlankOffset + t.source =
             taggedBranchBlankOffset + state := by
-          omega
+          lia
         have hleft :
             (taggedBranchBlankOffset + t.source ==
                 taggedBranchBlankOffset + state) = true := by
@@ -512,7 +512,7 @@ theorem
       · have hoffset :
           taggedBranchBlankOffset + t.source ≠
             taggedBranchBlankOffset + state := by
-          omega
+          lia
         have hleft :
             (taggedBranchBlankOffset + t.source ==
                 taggedBranchBlankOffset + state) = false := by
@@ -808,7 +808,7 @@ theorem
       taggedBranchBlankOffset,
       taggedBranchFalseOffset,
       taggedBranchTrueOffset]
-    omega
+    lia
   have hfindBlank :
       List.find?
           (Matches
@@ -834,7 +834,7 @@ theorem
       exact hpair.left
     simp [taggedBranchBlankOffset,
       taggedBranchFalseOffset] at hsource
-    omega
+    lia
   have hfindTrue :
       List.find?
           (Matches
@@ -863,7 +863,7 @@ theorem
     simp [taggedBranchBlankOffset,
       taggedBranchFalseOffset,
       taggedBranchTrueOffset] at hsource
-    omega
+    lia
   have hpredicate :
       (Matches
           (taggedBranchFalseOffset blankBranch + state) cell ∘
@@ -880,7 +880,7 @@ theorem
       · have hoffset :
           taggedBranchFalseOffset blankBranch + t.source =
             taggedBranchFalseOffset blankBranch + state := by
-          omega
+          lia
         have hleft :
             (taggedBranchFalseOffset blankBranch + t.source ==
                 taggedBranchFalseOffset blankBranch + state) =
@@ -894,7 +894,7 @@ theorem
       · have hoffset :
           taggedBranchFalseOffset blankBranch + t.source ≠
             taggedBranchFalseOffset blankBranch + state := by
-          omega
+          lia
         have hleft :
             (taggedBranchFalseOffset blankBranch + t.source ==
                 taggedBranchFalseOffset blankBranch + state) =
@@ -1211,7 +1211,7 @@ theorem
       taggedBranchBlankOffset,
       taggedBranchFalseOffset,
       taggedBranchTrueOffset]
-    omega
+    lia
   have hfindBlank :
       List.find?
           (Matches
@@ -1241,7 +1241,7 @@ theorem
     simp [taggedBranchBlankOffset,
       taggedBranchFalseOffset,
       taggedBranchTrueOffset] at hsource
-    omega
+    lia
   have hfindFalse :
       List.find?
           (Matches
@@ -1271,7 +1271,7 @@ theorem
     simp [taggedBranchBlankOffset,
       taggedBranchFalseOffset,
       taggedBranchTrueOffset] at hsource
-    omega
+    lia
   have hpredicate :
       (Matches
           (taggedBranchTrueOffset blankBranch falseBranch +
@@ -1293,7 +1293,7 @@ theorem
                 t.source =
             taggedBranchTrueOffset blankBranch falseBranch +
                 state := by
-          omega
+          lia
         have hleft :
             (taggedBranchTrueOffset blankBranch falseBranch +
                   t.source ==
@@ -1310,7 +1310,7 @@ theorem
                 t.source ≠
             taggedBranchTrueOffset blankBranch falseBranch +
                 state := by
-          omega
+          lia
         have hleft :
             (taggedBranchTrueOffset blankBranch falseBranch +
                   t.source ==

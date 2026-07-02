@@ -216,7 +216,7 @@ theorem assemblySkeletonDescription_run_finish_scan_left_to_append_tailBits_with
       List.map_append, List.reverse_append, List.append_assoc]
   refine ⟨bits.length + 3, ?_⟩
   rw [show bits.length + 3 = bits.length + (1 + (1 + 1)) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [hstart]
   rw [assemblySkeletonDescription_run_state160_bits_to_boundary]
@@ -258,7 +258,7 @@ theorem assemblySkeletonDescription_run_finish_scan_left_to_append_tailCells_wit
       List.map_append, List.reverse_append, List.append_assoc]
   refine ⟨bits.length + 3, ?_⟩
   rw [show bits.length + 3 = bits.length + (1 + (1 + 1)) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [hstart]
   rw [assemblySkeletonDescription_run_state160_bits_to_boundary]
@@ -327,7 +327,7 @@ theorem assemblySkeletonDescription_run_append_blank_to_state200_tailBits_withBa
       (b :: rest)
   refine ⟨tailPrefix.length + 2, ?_⟩
   rw [show tailPrefix.length + 2 = tailPrefix.length + (1 + 1) by
-    omega]
+    lia]
   rw [runConfig_add]
   unfold appendBlankStartConfigWithTailBitsAndBase
   change
@@ -363,7 +363,7 @@ theorem assemblySkeletonDescription_run_append_blank_to_state200_tailCells_withB
       (b :: rest)
   refine ⟨tailPrefix.length + 2, ?_⟩
   rw [show tailPrefix.length + 2 = tailPrefix.length + (1 + 1) by
-    omega]
+    lia]
   rw [runConfig_add]
   unfold appendBlankStartConfigWithTailCellsAndBase
   change
@@ -407,7 +407,7 @@ theorem assemblySkeletonDescription_run_finish_tail_false_false_to_state200_with
       (4 * (b :: rest).length + 2) + scanSteps + appendSteps =
         (4 * (b :: rest).length + 2) +
           (scanSteps + appendSteps) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [assemblySkeletonDescription_run_finish_restore_cells_tailBits_withBase]
   rw [runConfig_add]
@@ -438,7 +438,7 @@ theorem assemblySkeletonDescription_run_finish_cells_false_false_to_state200_wit
       (4 * (b :: rest).length + 2) + scanSteps + appendSteps =
         (4 * (b :: rest).length + 2) +
           (scanSteps + appendSteps) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [assemblySkeletonDescription_run_finish_restore_cells_tailCells_withBase]
   rw [runConfig_add]
@@ -478,7 +478,7 @@ theorem assemblyPrefixDescription_run_state150_markedCells_core
   | cons b rest ih =>
       rw [show 4 * (b :: rest).length = 4 + 4 * rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       rw [show
           List.append ((markedCellsBits (b :: rest)).map some) right =
@@ -546,7 +546,7 @@ theorem assemblyPrefixDescription_run_state160_bits_to_boundary_core
   | cons b rest ih =>
       rw [show (b :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       cases rest with
       | nil =>
@@ -631,7 +631,7 @@ theorem assemblyPrefixDescription_run_finish_scan_left_to_append_tailCells_withB
       List.map_append, List.reverse_append, List.append_assoc]
   refine ⟨bits.length + 3, ?_⟩
   rw [show bits.length + 3 = bits.length + (1 + (1 + 1)) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [hstart]
   rw [assemblyPrefixDescription_run_state160_bits_to_boundary_core]
@@ -670,7 +670,7 @@ theorem assemblyPrefixDescription_run_state180_bits_core
               (some b :: List.append (rest.map some) right)) =
           config 180
             (List.append ((b :: rest).reverse.map some) left) right
-      rw [show rest.length + 1 = 1 + rest.length by omega]
+      rw [show rest.length + 1 = 1 + rest.length by lia]
       rw [runConfig_add]
       rw [assemblyPrefixDescription_run_state180_some_core]
       rw [ih]
@@ -701,7 +701,7 @@ theorem assemblyPrefixDescription_run_append_blank_to_state200_tailCells_withBas
   let tailPrefix := stageInputSecondBitTailPrefix (b :: rest)
   refine ⟨tailPrefix.length + 2, ?_⟩
   rw [show tailPrefix.length + 2 = tailPrefix.length + (1 + 1) by
-    omega]
+    lia]
   rw [runConfig_add]
   unfold appendBlankStartConfigWithTailCellsAndBase
   change
@@ -743,7 +743,7 @@ theorem assemblyPrefixDescription_run_finish_cells_false_false_to_state200_withB
       (4 * (b :: rest).length + 2) + scanSteps + appendSteps =
         (4 * (b :: rest).length + 2) +
           (scanSteps + appendSteps) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [assemblyPrefixDescription_run_finish_restore_cells_tailCells_withBase_core]
   rw [runConfig_add]
@@ -1050,7 +1050,7 @@ theorem assemblySkeletonDescription_run_nonempty_stageInput_to_sourceRest_bounda
   rw [show
       6 + (6 + (markSteps + finishSteps + (4 * stage + 4))) =
         6 + (6 + (markSteps + (finishSteps + (4 * stage + 4)))) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [assemblySkeletonDescription_run_prefix_to_stageInput_tail]
   rw [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTail_cons]
@@ -1191,7 +1191,7 @@ theorem assemblySkeletonDescription_run_nonempty_stageInput_to_sourceRest_bounda
   rw [show
       6 + (6 + (markSteps + finishSteps + (4 * stage + 4))) =
         6 + (6 + (markSteps + (finishSteps + (4 * stage + 4)))) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [assemblySkeletonDescription_run_prefix_to_stageInput_tail_cells]
   rw [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTail_cons]
@@ -1325,7 +1325,7 @@ theorem assemblySkeletonDescription_run_nonempty_stageInput_to_sourceRest_bounda
   rw [show
       6 + (6 + (markSteps + finishSteps + (4 * stage + 4))) =
         6 + (6 + (markSteps + (finishSteps + (4 * stage + 4)))) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [assemblySkeletonDescription_run_prefix_to_stageInput_tail_cells_withBase]
   rw [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTail_cons]
@@ -1486,7 +1486,7 @@ theorem assemblyPrefixDescription_run_nonempty_stageInput_to_sourceRest_boundary
   rw [show
       6 + (6 + (markSteps + finishSteps + (4 * stage + 4))) =
         6 + (6 + (markSteps + (finishSteps + (4 * stage + 4)))) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [assemblyPrefixDescription_run_prefix_to_stageInput_tail_cells_withBase]
   rw [stageInputSecondBitTail_cons]

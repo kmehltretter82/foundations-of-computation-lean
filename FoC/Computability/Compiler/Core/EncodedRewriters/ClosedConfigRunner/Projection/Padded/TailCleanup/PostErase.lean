@@ -1217,7 +1217,7 @@ theorem selectedProjectionPaddedTailCleanupDeletedAcceptRightEndTargetTape_eq
       selectedProjectionPaddedTailCleanupTargetBits_eq_selectedFields,
       List.length_append, List.map_append, List.replicate,
       List.append_assoc] at hscratch ⊢
-    omega
+    lia
   rw [rightEndCompactionTargetTape,
     selectedProjectionPaddedTailCleanupTargetTape_eq_FSTTargetTape,
     hfilter, hwidth]
@@ -1333,7 +1333,7 @@ theorem selectedProjectionPaddedTailCleanupDeletedRejectRightEndTargetTape_eq
       selectedProjectionPaddedTailCleanupTargetBits_eq_selectedFields,
       List.length_append, List.replicate,
       List.append_assoc] at hscratch ⊢
-    omega
+    lia
   rw [rightEndCompactionTargetTape,
     selectedProjectionPaddedTailCleanupTargetTape_eq_FSTTargetTape,
     hfilter, hwidth]

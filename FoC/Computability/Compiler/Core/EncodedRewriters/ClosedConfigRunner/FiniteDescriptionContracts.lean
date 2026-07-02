@@ -157,7 +157,7 @@ theorem simulatorLayoutRightOutput_contextLength_ge_input
         encodeCodeSymbolAsInput,
         Tape.input, Tape.move, Tape.moveRight, Tape.contextLength,
         encodeCodeWordAsInput_length]
-      omega
+      lia
 
 def SelectedProjectionConfig
     (useAccept : Bool)

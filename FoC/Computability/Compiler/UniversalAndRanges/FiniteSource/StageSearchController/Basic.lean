@@ -73,9 +73,9 @@ theorem codePrefixStageSearchControllerProgram_accepts
       ⟨fuel, hsimFuel⟩
     refine ⟨stage + fuel, ?_⟩
     have hstageLe : stage ≤ stage + fuel := by
-      omega
+      lia
     have hfuelLe : fuel ≤ stage + fuel := by
-      omega
+      lia
     simp [codePrefixStageSearchControllerProgram, hdecode]
     exact
       ⟨D, input, stage, hstageLe, fuel, hfuelLe, rfl, rfl, hsimFuel⟩

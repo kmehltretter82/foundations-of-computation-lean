@@ -86,7 +86,7 @@ theorem sourceRewindDescription_run_scan
   | cons next rest ih =>
       rw [show (next :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           sourceRewindDescription.runConfig 1
@@ -151,7 +151,7 @@ theorem sourceRewindDescription_run_from_leftStack
       rw [show (current :: rest).length + 2 =
         1 + ((rest.length + 1) + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstart :
           sourceRewindDescription.runConfig 1
@@ -357,7 +357,7 @@ theorem sourceRightEndDescription_run_scan
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         sourceRightEndDescription.runConfig rest.length

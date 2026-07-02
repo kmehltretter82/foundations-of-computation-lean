@@ -280,7 +280,7 @@ theorem appendInputTapeHeadRouterDescription_run_state8_false
       rw [show beforeRevBits.length + 8 * 0 + 15 =
         7 + (nextBefore.length + 3) by
           simp [nextBefore]
-          omega]
+          lia]
       rw [runConfig_add]
       rw [hprefix]
       simpa [nextBefore,
@@ -316,7 +316,7 @@ theorem appendInputTapeHeadRouterDescription_run_state8_false
       rw [show beforeRevBits.length + 8 * (n + 1) + 15 =
         4 + (nextBefore.length + 8 * n + 15) by
           simp [nextBefore]
-          omega]
+          lia]
       rw [runConfig_add]
       rw [hprefix]
       simpa [nextBefore,
@@ -363,7 +363,7 @@ theorem appendInputTapeHeadRouterDescription_run_state8_true
       rw [show beforeRevBits.length + 8 * 0 + 15 =
         7 + (nextBefore.length + 3) by
           simp [nextBefore]
-          omega]
+          lia]
       rw [runConfig_add]
       rw [hprefix]
       simpa [nextBefore,
@@ -399,7 +399,7 @@ theorem appendInputTapeHeadRouterDescription_run_state8_true
       rw [show beforeRevBits.length + 8 * (n + 1) + 15 =
         4 + (nextBefore.length + 8 * n + 15) by
           simp [nextBefore]
-          omega]
+          lia]
       rw [runConfig_add]
       rw [hprefix]
       simpa [nextBefore,
@@ -541,7 +541,7 @@ theorem appendInputTapeHeadRouterDescription_spec :
       rw [show 8 * rest.length + 29 =
         8 + (beforeRevBits.length + 8 * rest.length + 15) by
           simp [beforeRevBits]
-          omega]
+          lia]
       rw [runConfig_add]
       rw [hprefix]
       have hscan :=
@@ -638,7 +638,7 @@ theorem appendInputTapeHeadRouterDescription_spec :
       rw [show 8 * rest.length + 29 =
         8 + (beforeRevBits.length + 8 * rest.length + 15) by
           simp [beforeRevBits]
-          omega]
+          lia]
       rw [runConfig_add]
       rw [hprefix]
       have hscan :=

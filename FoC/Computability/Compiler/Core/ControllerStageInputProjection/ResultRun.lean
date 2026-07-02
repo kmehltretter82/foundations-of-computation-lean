@@ -68,7 +68,7 @@ theorem run_scan340_step
                       | some b =>
                           cases b <;> rfl
                   | succ count =>
-                      have hfalse : False := by omega
+                      have hfalse : False := by lia
                       exact False.elim hfalse
   | cons next more =>
       cases count with
@@ -104,7 +104,7 @@ theorem run_scan340_step
                       | some b =>
                           cases b <;> rfl
                   | succ count =>
-                      have hfalse : False := by omega
+                      have hfalse : False := by lia
                       exact False.elim hfalse
 theorem run_scan340_cells
     (cellsRev : List (Option Bool)) (count : Nat) (hcount : count ≤ 3)
@@ -129,7 +129,7 @@ theorem run_scan340_cells
         projectionScanCountStep_le_three hcount cell
       rw [show (cell :: rest).length = 1 + rest.length by
         simp
-        omega,
+        lia,
         runConfig_add]
       change
         Description.runConfig
@@ -187,7 +187,7 @@ theorem run_scan340_cells_to_boundary
         (List.append [none, none, none, none] base)
         (List.append cellsRev.reverse tail)
   rw [run_scan340_cells
-    cellsRev 0 (by omega) hsafe
+    cellsRev 0 (by lia) hsafe
     (List.append ([none, none, none] : List (Option Bool)) base) none tail]
   rw [hcount]
   simpa [List.append_assoc] using
@@ -225,7 +225,7 @@ theorem run_state300_marked_ticks
   | zero =>
       rfl
   | succ count ih =>
-      have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
+      have hsteps : 4 * (count + 1) = 4 + 4 * count := by lia
       rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * count)
@@ -298,7 +298,7 @@ theorem run_state320_ticks
   | zero =>
       rfl
   | succ count ih =>
-      have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
+      have hsteps : 4 * (count + 1) = 4 + 4 * count := by lia
       rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * count)
@@ -414,7 +414,7 @@ theorem run_state330_marked_payload
   | cons b rest ih =>
       have hsteps : 4 * (b :: rest).length = 4 + 4 * rest.length := by
         simp
-        omega
+        lia
       rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * rest.length)
@@ -508,7 +508,7 @@ theorem run_state350_marked_payload
   | cons b rest ih =>
       have hsteps : 4 * (b :: rest).length = 4 + 4 * rest.length := by
         simp
-        omega
+        lia
       rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * rest.length)
@@ -574,7 +574,7 @@ theorem run_scan360_step
                       | some b =>
                           cases b <;> rfl
                   | succ count =>
-                      have hfalse : False := by omega
+                      have hfalse : False := by lia
                       exact False.elim hfalse
   | cons next more =>
       cases count with
@@ -610,7 +610,7 @@ theorem run_scan360_step
                       | some b =>
                           cases b <;> rfl
                   | succ count =>
-                      have hfalse : False := by omega
+                      have hfalse : False := by lia
                       exact False.elim hfalse
 theorem run_scan360_cells
     (cellsRev : List (Option Bool)) (count : Nat) (hcount : count ≤ 3)
@@ -635,7 +635,7 @@ theorem run_scan360_cells
         projectionScanCountStep_le_three hcount cell
       rw [show (cell :: rest).length = 1 + rest.length by
         simp
-        omega,
+        lia,
         runConfig_add]
       change
         Description.runConfig
@@ -695,7 +695,7 @@ theorem run_scan360_cells_to_boundary
         (List.append projectionDoneCodeCells.reverse base)
         (List.append cellsRev.reverse tail)
   rw [run_scan360_cells
-    cellsRev 0 (by omega) hsafe
+    cellsRev 0 (by lia) hsafe
     (List.append ([none, none, none] : List (Option Bool)) base) none tail]
   rw [hcount]
   simpa [List.append_assoc] using
@@ -758,7 +758,7 @@ theorem projectionResultFinishScanBackCellsRev_length
     projectionMarkedBoolPayloadCells_length,
     projectionRepeatedCells_length, projectionMarkedTickCodeCells,
     projectionDoneCodeCells, encodeCodeSymbolAsInput]
-  omega
+  lia
 theorem run_result_tail_to_first_payload
     (marked : Word Bool) (restCount : Nat)
     (payload : List (Option Bool))
@@ -776,7 +776,7 @@ theorem run_result_tail_to_first_payload
       8 * marked.length + 4 * restCount + 8 =
         4 * marked.length +
           (4 + (4 * restCount + (4 + 4 * marked.length))) by
-    omega,
+    lia,
     runConfig_add]
   simp only [projectionResultTailWorkCells]
   rw [run_state300_marked_ticks]
@@ -786,7 +786,7 @@ theorem run_result_tail_to_first_payload
         List.append projectionTickCodeCells
           (projectionCodeCells
             (List.replicate restCount MachineCodeSymbol.tick)) := by
-    rw [show restCount + 1 = Nat.succ restCount by omega]
+    rw [show restCount + 1 = Nat.succ restCount by lia]
     rfl
   rw [runConfig_add]
   rw [htickCells]
@@ -843,7 +843,7 @@ theorem run_result_mark_one_tail
                 7)))))) := by
     rw [projectionInputMarkScanBackCellsRev_length]
     simp [projectionResultMarkTailStepCost, hrestLen]
-    omega
+    lia
   rw [hcost, runConfig_add]
   change
     Description.runConfig
@@ -869,7 +869,7 @@ theorem run_result_mark_one_tail
         List.append projectionTickCodeCells
           (projectionCodeCells
             (List.replicate restCount MachineCodeSymbol.tick)) := by
-    rw [show restCount + 1 = Nat.succ restCount by omega]
+    rw [show restCount + 1 = Nat.succ restCount by lia]
     rfl
   rw [runConfig_add]
   rw [htickCells]
@@ -1044,7 +1044,7 @@ theorem run_input_tail_to_first_payload
       8 * marked.length + 4 * restCount + 8 =
         4 * marked.length +
           (4 + (4 * restCount + (4 + 4 * marked.length))) by
-    omega,
+    lia,
     runConfig_add]
   simp only [projectionResultTailWorkCells]
   rw [run_state100_marked_ticks]
@@ -1054,7 +1054,7 @@ theorem run_input_tail_to_first_payload
         List.append projectionTickCodeCells
           (projectionCodeCells
             (List.replicate restCount MachineCodeSymbol.tick)) := by
-    rw [show restCount + 1 = Nat.succ restCount by omega]
+    rw [show restCount + 1 = Nat.succ restCount by lia]
     rfl
   rw [runConfig_add]
   rw [htickCells]
@@ -1111,7 +1111,7 @@ theorem run_input_mark_one_tail
                 7)))))) := by
     rw [projectionInputMarkScanBackCellsRev_length]
     simp [projectionResultMarkTailStepCost, hrestLen]
-    omega
+    lia
   rw [hcost, runConfig_add]
   change
     Description.runConfig
@@ -1137,7 +1137,7 @@ theorem run_input_mark_one_tail
         List.append projectionTickCodeCells
           (projectionCodeCells
             (List.replicate restCount MachineCodeSymbol.tick)) := by
-    rw [show restCount + 1 = Nat.succ restCount by omega]
+    rw [show restCount + 1 = Nat.succ restCount by lia]
     rfl
   rw [runConfig_add]
   rw [htickCells]
@@ -1316,7 +1316,7 @@ theorem run_result_mark_one
                 7)))))) := by
     rw [projectionInputMarkScanBackCellsRev_length]
     simp [projectionInputMarkStepCost]
-    omega
+    lia
   rw [hcost, runConfig_add]
   change
     Description.runConfig
@@ -1346,7 +1346,7 @@ theorem run_result_mark_one
         List.append projectionTickCodeCells
           (projectionCodeCells
             (List.replicate rest.length MachineCodeSymbol.tick))
-    rw [show rest.length + 1 = Nat.succ rest.length by omega]
+    rw [show rest.length + 1 = Nat.succ rest.length by lia]
     rfl
   rw [runConfig_add]
   rw [htickCells]
@@ -1533,7 +1533,7 @@ theorem run_result_finish_marked
             (1 + ((projectionResultFinishScanBackCellsRev marked).length +
               7)))) := by
     rw [projectionResultFinishScanBackCellsRev_length]
-    omega
+    lia
   have hnil :
       projectionCodeCells ([] : Word MachineCodeSymbol) = [] := rfl
   rw [hcost, runConfig_add]
@@ -1652,7 +1652,7 @@ theorem run_result_bool_word_acc
               projectionResultRemainingCost (List.append marked [b]) rest := by
         simp [projectionResultRemainingCost, projectionInputMarkStepCost,
           Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
-        omega
+        lia
       rw [hcost, runConfig_add]
       rw [run_result_mark_one]
       rw [ih]

@@ -67,7 +67,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
           (by rfl)
           (by
             change (120 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest ih =>
       cases symbol with
       | header =>
@@ -101,7 +101,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (122 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -133,7 +133,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (122 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           simp [decodeNat] at hdecode
           cases hrest : decodeNat rest with
@@ -190,7 +190,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | zero =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -222,7 +222,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | one =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -254,7 +254,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | moveLeft =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -286,7 +286,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -316,7 +316,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                   Tape.read])
               (by
                 change (120 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -344,7 +344,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
           (by rfl)
           (by
             change (130 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest =>
       cases symbol with
       | header =>
@@ -378,7 +378,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -410,7 +410,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -442,7 +442,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | done =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -474,7 +474,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | blank =>
           simp [decodeCell] at hdecode
       | zero =>
@@ -513,7 +513,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                   Tape.moveRight])
               (by
                 change (145 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             primitive_runConfig_state_ne_halt_of_reaches_stuck
@@ -545,7 +545,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (135 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem boolWordSuffixScannerDescription_runConfig_state130_blank_cell_ne_halt
     (suffix : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -585,7 +585,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state130_blank_cell_ne_halt
           Tape.moveRight])
       (by
         change (139 : Nat) ≠ 999
-        omega)
+        lia)
 
 def boolWordMarkingTailConfig
     (baseLeft : List (Option Bool)) (marked : Word Bool)
@@ -673,7 +673,7 @@ theorem boolWordMarkingTail_mark_one
   rw [runConfig_add]
   rw [boolWordMarkingTail_to_first_payload]
   rw [show 6 + (scanRev.length + 4) + 4 =
-      6 + ((scanRev.length + 4) + 4) by omega]
+      6 + ((scanRev.length + 4) + 4) by lia]
   rw [runConfig_add]
   have hcellBits :
       (encodeCodeWordAsInput
@@ -1027,7 +1027,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_tick_decodeBoolWord_
                 decodeCells_eq_some_encodeCellsAppend
                   hcells
               have hlengthTail : cells.length - 1 = remainingTail := by
-                omega
+                lia
               rw [hcellsShape.right]
               simpa [boolWordMarkingTailConfig, hlengthTail] using
                 boolWordMarkingTail_cellsToWord_none_ne_halt
@@ -1289,7 +1289,7 @@ theorem boolWordSuffixScannerDescription_runConfig_finish_moveRight_suffix_ne_ha
       transition, writeMove, Tape.read, Tape.write,
       Tape.move, Tape.moveRight]
     change (152 : Nat) ≠ 999
-    omega
+    lia
   exact
     primitive_runConfig_state_ne_halt_of_reaches_stuck
       BWSS_htf

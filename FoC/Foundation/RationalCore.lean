@@ -68,7 +68,7 @@ theorem two_dvd_of_two_dvd_square {n : Nat} (h : 2 ∣ n * n) : 2 ∣ n := by
   rw [Nat.mul_mod] at h
   have hlt : n % 2 < 2 := Nat.mod_lt n (by decide : 0 < 2)
   have hcases : n % 2 = 0 ∨ n % 2 = 1 := by
-    omega
+    lia
   cases hcases with
   | inl h0 => exact h0
   | inr h1 =>
@@ -84,7 +84,7 @@ theorem three_dvd_of_three_dvd_square {n : Nat} (h : 3 ∣ n * n) : 3 ∣ n := b
   rw [Nat.mul_mod] at h
   have hlt : n % 3 < 3 := Nat.mod_lt n (by decide : 0 < 3)
   have hcases : n % 3 = 0 ∨ n % 3 = 1 ∨ n % 3 = 2 := by
-    omega
+    lia
   cases hcases with
   | inl h0 => exact h0
   | inr hrest =>

@@ -95,10 +95,10 @@ theorem code_injective {terminalCode : term -> Nat}
     Foundation.Fn.Injective (Code terminalCode nonterminalCode) := by
   intro x y h
   cases x <;> cases y <;> simp [Code] at h ⊢
-  · exact hterminal (by omega)
-  · omega
-  · omega
-  · exact hnonterminal (by omega)
+  · exact hterminal (by lia)
+  · lia
+  · lia
+  · exact hnonterminal (by lia)
 
 theorem encodable
     (hterminal : Foundation.Countability.EncodableByNat term)
@@ -437,13 +437,13 @@ theorem finiteProductions_rhs_length_bound
   | intro rules hrules =>
       exists ProductionList.MaxRhsLength rules + 1
       constructor
-      · omega
+      · lia
       · intro A rhs hprod
         cases (hrules A rhs).mp hprod with
         | intro rule hrule =>
             have hlen := ProductionList.rhs_length_le_max hrule.left
             rw [← hrule.right.right]
-            omega
+            lia
 
 
 end CFG

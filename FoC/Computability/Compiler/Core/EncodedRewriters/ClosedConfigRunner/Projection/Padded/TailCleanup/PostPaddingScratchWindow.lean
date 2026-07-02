@@ -74,12 +74,12 @@ theorem selectedProjectionPaddedTailCleanupSentinelExtraScratch_pos_true
     rw [hsplit]
     simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch,
       selectedProjectionPaddedTailCleanupUnselectedConfigBits]
-    omega
+    lia
   have hbase_lt_parsed :
       selectedProjectionPaddedTailCleanupSentinelBaseScratch true L <
         (ParsedLayoutBits L).length := Nat.lt_of_lt_of_le hlt hsource
   rw [selectedProjectionPaddedTailCleanupSentinelExtraScratch]
-  omega
+  lia
 
 theorem selectedProjectionPaddedTailCleanupSentinelExtraScratch_pos_false
     (L : DovetailLayout) :
@@ -132,12 +132,12 @@ theorem selectedProjectionPaddedTailCleanupSentinelExtraScratch_pos_false
     rw [hsplit]
     simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch,
       selectedProjectionPaddedTailCleanupUnselectedConfigBits]
-    omega
+    lia
   have hbase_lt_parsed :
       selectedProjectionPaddedTailCleanupSentinelBaseScratch false L <
         (ParsedLayoutBits L).length := Nat.lt_of_lt_of_le hlt hsource
   rw [selectedProjectionPaddedTailCleanupSentinelExtraScratch]
-  omega
+  lia
 
 theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_eq_unselected_length_add_seven
     (useAccept : Bool) (L : DovetailLayout) :
@@ -148,7 +148,7 @@ theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_eq_unselected_len
     selectedProjectionPaddedTailCleanupUnselectedConfigBits_length_pos
       useAccept L
   simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch]
-  omega
+  lia
 
 theorem selectedProjectionPaddedTailCleanupUnselectedLength_add_seven_add_extraScratch
     (useAccept : Bool) (L : DovetailLayout)

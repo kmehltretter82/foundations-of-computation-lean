@@ -282,7 +282,7 @@ theorem assemblySkeletonDescription_run_state200_stageNat_to_state210
           left right
   | succ stage ih =>
       rw [show 4 * (stage + 1) + 4 = 4 + (4 * stage + 4) by
-        omega]
+        lia]
       rw [runConfig_add]
       rw [show
           (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
@@ -398,7 +398,7 @@ theorem assemblyPrefixDescription_run_state200_stageNat_to_state210
           left right
   | succ stage ih =>
       rw [show 4 * (stage + 1) + 4 = 4 + (4 * stage + 4) by
-        omega]
+        lia]
       rw [runConfig_add]
       rw [show
           (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits

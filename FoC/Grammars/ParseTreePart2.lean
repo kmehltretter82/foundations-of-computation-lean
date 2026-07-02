@@ -46,7 +46,7 @@ theorem ParseTree.loop_derivation_from_repeated_selected_subtrees_nonempty
               have hinside :=
                 ParseTree.later_selected_subtree_in_selected_subtree
                   tree (Nat.le_of_lt hij) hupper hlower
-              have hpos : 0 < j - i := by omega
+              have hpos : 0 < j - i := by lia
               have hlt :=
                 ParseTree.selected_subtree_nodeCount_lt_of_pos_index
                   upperTree hpos hinside
@@ -65,7 +65,7 @@ theorem ParseTree.loop_derivation_from_repeated_selected_subtrees_nonempty
               simp [NonterminalSubtree.nodeCount] at hlt
               change ParseTree.nodeCount upperTree <=
                 ParseTree.nodeCount lowerTree at hle
-              omega
+              lia
             · exact Or.inl hxempty
           · exact hz.right
 
@@ -262,11 +262,11 @@ theorem ParseTree.exists_duplicate_root_subtrees_near_bottom
     rw [show suffix.length = roots.length - offset by simp [suffix]]
     rw [hrootsLen]
     simp [offset]
-    omega
+    lia
   have hsuffixLong :
       G.nonterminalsFinite.elems.length < suffix.length := by
     rw [hsuffixLen]
-    omega
+    lia
   have hall : forall A, A ∈ suffix -> A ∈ G.nonterminalsFinite.elems := by
     intro A hA
     have hRootMem : A ∈ roots := List.mem_of_mem_drop hA
@@ -303,12 +303,12 @@ theorem ParseTree.exists_duplicate_root_subtrees_near_bottom
                       exists upper
                       exists lower
                       constructor
-                      · omega
+                      · lia
                       constructor
                       · have hqLen : q < suffix.length := hA.right.left
                         rw [hsuffixLen] at hqLen
                         simp [offset]
-                        omega
+                        lia
                       constructor
                       · exact hUpper.left
                       constructor
@@ -319,7 +319,7 @@ theorem ParseTree.exists_duplicate_root_subtrees_near_bottom
                           ParseTree.longestNonterminalSubtree_height_at_index
                             tree hUpper.left
                         simp [offset] at hUpperHeight
-                        omega
+                        lia
 
 mutual
 
@@ -527,20 +527,20 @@ theorem ParseTree.height_gt_nonterminals_of_frontier_length_ge
   · exact hheight
   have hheightLe :
       ParseTree.height tree <= G.nonterminalsFinite.elems.length := by
-    omega
+    lia
   have hFront :=
-    ParseTree.frontier_length_le_pow (by omega : 0 < B) hBound tree
+    ParseTree.frontier_length_le_pow (by lia : 0 < B) hBound tree
   have hPowLe :
       B ^ ParseTree.height tree <=
         B ^ G.nonterminalsFinite.elems.length :=
-    Nat.pow_le_pow_right (by omega : 0 < B) hheightLe
+    Nat.pow_le_pow_right (by lia : 0 < B) hheightLe
   have hPowLt :
       B ^ G.nonterminalsFinite.elems.length <
         B ^ (G.nonterminalsFinite.elems.length + 1) := by
     rw [Nat.pow_succ]
     have hpos :
         0 < B ^ G.nonterminalsFinite.elems.length :=
-      Nat.pow_pos (by omega : 0 < B)
+      Nat.pow_pos (by lia : 0 < B)
     have hmul :
         B ^ G.nonterminalsFinite.elems.length * 1 <
           B ^ G.nonterminalsFinite.elems.length * B := by
@@ -550,7 +550,7 @@ theorem ParseTree.height_gt_nonterminals_of_frontier_length_ge
       Word.Length (ParseTree.frontier tree) <
         B ^ (G.nonterminalsFinite.elems.length + 1) :=
     Nat.lt_of_le_of_lt (Nat.le_trans hFront hPowLe) hPowLt
-  omega
+  lia
 
 theorem ParseTree.exists_duplicate_root_subtrees_near_bottom_frontier_bound
     [DecidableEq nonterminal]

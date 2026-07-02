@@ -88,7 +88,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_contextL
         fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
         DovetailInitialLayoutInitializer.tapeAtCells, Tape.contextLength,
         hbits]
-      omega
+      lia
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_contextLength_eq_scratchWidth_configRunner
     (L : SimulatorLayout) :

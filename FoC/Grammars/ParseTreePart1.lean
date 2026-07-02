@@ -605,7 +605,7 @@ theorem ParseForest.longestNonterminalPath_length
       · simp [ParseForest.longestNonterminalPath, ParseForest.height, hlt, hRest]
         exact (Nat.max_eq_right (Nat.le_of_lt hlt)).symm
       · simp [ParseForest.longestNonterminalPath, ParseForest.height, hlt, hTree]
-        have hle : ParseForest.height rest <= ParseTree.height tree := by omega
+        have hle : ParseForest.height rest <= ParseTree.height tree := by lia
         exact (Nat.max_eq_left hle).symm
 
 end
@@ -637,7 +637,7 @@ theorem ParseForest.longestNonterminalSubtrees_length
       · simp [ParseForest.longestNonterminalSubtrees, ParseForest.height, hlt, hRest]
         exact (Nat.max_eq_right (Nat.le_of_lt hlt)).symm
       · simp [ParseForest.longestNonterminalSubtrees, ParseForest.height, hlt, hTree]
-        have hle : ParseForest.height rest <= ParseTree.height tree := by omega
+        have hle : ParseForest.height rest <= ParseTree.height tree := by lia
         exact (Nat.max_eq_left hle).symm
 
 end
@@ -664,7 +664,7 @@ theorem ParseTree.longestNonterminalSubtree_height_at_index
           have hChild :=
             ParseForest.longestNonterminalSubtree_height_at_index children hget
           simp [ParseTree.height]
-          omega
+          lia
 
 theorem ParseForest.longestNonterminalSubtree_height_at_index
     {G : CFG terminal nonterminal}
@@ -690,7 +690,7 @@ theorem ParseForest.longestNonterminalSubtree_height_at_index
         have hTree :=
           ParseTree.longestNonterminalSubtree_height_at_index tree hget
         have hle : ParseForest.height rest <= ParseTree.height tree := by
-          omega
+          lia
         have hmax :
             Nat.max (ParseTree.height tree) (ParseForest.height rest) =
               ParseTree.height tree :=
@@ -767,7 +767,7 @@ theorem ParseTree.later_selected_subtree_in_selected_subtree
       (List.drop i (ParseTree.longestNonterminalSubtrees tree))[j - i]? =
         some lower := by
     rw [List.getElem?_drop]
-    have hsum : i + (j - i) = j := by omega
+    have hsum : i + (j - i) = j := by lia
     rw [hsum]
     exact hlower
   rw [hsuffix] at hdrop
@@ -831,7 +831,7 @@ theorem ParseTree.selected_subtree_nodeCount_le
           have hle :=
             ParseForest.selected_subtree_nodeCount_le children hget
           simp [ParseTree.nodeCount]
-          omega
+          lia
 
 theorem ParseForest.selected_subtree_nodeCount_le
     {G : CFG terminal nonterminal}
@@ -848,12 +848,12 @@ theorem ParseForest.selected_subtree_nodeCount_le
         have hle :=
           ParseForest.selected_subtree_nodeCount_le rest hget
         simp [ParseForest.nodeCount]
-        omega
+        lia
       · simp [ParseForest.longestNonterminalSubtrees, hlt] at hget
         have hle :=
           ParseTree.selected_subtree_nodeCount_le tree hget
         simp [ParseForest.nodeCount]
-        omega
+        lia
 
 end
 
@@ -870,13 +870,13 @@ theorem ParseTree.selected_subtree_nodeCount_lt_of_pos_index
   | node A rhs hprod children =>
       cases i with
       | zero =>
-          omega
+          lia
       | succ i =>
           simp [ParseTree.longestNonterminalSubtrees] at hget
           have hle :=
             ParseForest.selected_subtree_nodeCount_le children hget
           simp [ParseTree.nodeCount]
-          omega
+          lia
 
 mutual
 
@@ -922,7 +922,7 @@ theorem ParseTree.exists_replace_selected_subtree
               constructor
               · exact hnewChildren.left
               · simp [ParseTree.nodeCount]
-                omega
+                lia
 
 theorem ParseForest.exists_replace_selected_subtree
     {G : CFG terminal nonterminal}
@@ -950,7 +950,7 @@ theorem ParseForest.exists_replace_selected_subtree
             constructor
             · simp [ParseForest.frontier, hnewRest.left, Word.Concat]
             · simp [ParseForest.nodeCount]
-              omega
+              lia
       · simp [ParseForest.longestNonterminalSubtrees, hlt] at hget
         cases ParseTree.exists_replace_selected_subtree
             tree hget replacement hfront with
@@ -959,7 +959,7 @@ theorem ParseForest.exists_replace_selected_subtree
             constructor
             · simp [ParseForest.frontier, hnewTree.left, Word.Concat]
             · simp [ParseForest.nodeCount]
-              omega
+              lia
 
 end
 
@@ -980,7 +980,7 @@ theorem ParseTree.selected_subtree_minimal_for_frontier
   by_cases hle : ParseTree.nodeCount subtree.2 <= ParseTree.nodeCount other
   · exact hle
   · have hlt : ParseTree.nodeCount other < ParseTree.nodeCount subtree.2 := by
-      omega
+      lia
     cases ParseTree.exists_replace_selected_subtree
         tree hget other hfront with
     | intro newTree hnewTree =>
@@ -997,7 +997,7 @@ theorem ParseTree.selected_subtree_minimal_for_frontier
               _ = ParseTree.nodeCount tree + ParseTree.nodeCount other := hcountEq
           exact Nat.lt_of_add_lt_add_right haddLt
         have hminLe := hminimal newTree hnewTree.left
-        omega
+        lia
 
 end CFG
 end Grammars

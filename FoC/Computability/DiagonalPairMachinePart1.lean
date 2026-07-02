@@ -696,7 +696,7 @@ theorem concreteDiagonalPairMap_length
       (List.map PairCodeSymbol.right w)).length =
         w.length + 1 + w.length
   simp [List.length_append]
-  omega
+  lia
 
 theorem concreteDiagonalPairMap_outputEncode_eq_replicate
     (w : Word ConcreteMachineCodeSymbol) :
@@ -814,7 +814,7 @@ theorem concrete_diagonal_pair_map_computable_noninjective :
         congr 1
         simp [finalMarkers, returnRev, List.length_append,
           Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
-        omega
+        lia
 
 theorem concrete_diagonal_pair_map_computable :
     ConcreteDiagonalPairMapComputable :=

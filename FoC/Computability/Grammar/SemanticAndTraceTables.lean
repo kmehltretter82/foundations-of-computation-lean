@@ -85,8 +85,8 @@ theorem semanticLanguageGrammar_yields_from_start
     simpa [hlhs] using hx
   have hlen := congrArg List.length hx'
   simp at hlen
-  have huLen : u.length = 0 := by omega
-  have hvLen : v.length = 0 := by omega
+  have huLen : u.length = 0 := by lia
+  have hvLen : v.length = 0 := by lia
   have hu : u = [] := by
     apply List.eq_nil_of_length_eq_zero
     exact huLen

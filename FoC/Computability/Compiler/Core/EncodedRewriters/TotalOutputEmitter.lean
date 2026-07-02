@@ -690,7 +690,7 @@ theorem run_code_from
   | cons symbol rest ih =>
       rw [show 4 * (symbol :: rest).length = 4 + 4 * rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       simp only [encodeCodeWordAsInput]
       have happ :
@@ -729,7 +729,7 @@ theorem run_code_from
       rw [ih]
       simp [scanBoundaryFrom]
       congr 1
-      omega
+      lia
 
 def finalTape (erased : Nat) (boundary : HitBoundary) :
     Tape Bool :=
@@ -767,7 +767,7 @@ theorem run_code_halt
             (scanBoundary code)).length =
         4 * code.length +
           (1 + (totalOutputEmitterBoundaryOutputBits
-            (scanBoundary code)).length) by omega]
+            (scanBoundary code)).length) by lia]
   rw [runConfig_add]
   have hinitial :
       Description.initial

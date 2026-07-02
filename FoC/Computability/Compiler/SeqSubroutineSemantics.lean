@@ -73,7 +73,7 @@ theorem lookup_seq_left
         have hsource :
             A.stateCount + base.source = state :=
           hmatchPair.left
-        omega
+        lia
       simpa [hfindA, hfindH, List.find?_eq_none] using hfindB
 
 theorem stepConfig_seq_left
@@ -219,7 +219,7 @@ theorem lookup_seq_right
           t.source = A.stateCount + state ∧ t.read = cell := by
         simpa [MachineDescription.Matches] using hmatch
       exact hmatchPair.left
-    omega
+    lia
   have hfindH :
       List.find? (MachineDescription.Matches
           (A.stateCount + state) cell)
@@ -236,21 +236,21 @@ theorem lookup_seq_right
           simpa [MachineDescription.Matches] using hmatch
         exact hmatchPair.left
       have hAexit : A.exit < A.stateCount := hA.right.right.left
-      omega
+      lia
     · have hsource : A.exit = A.stateCount + state := by
         have hmatchPair :
             A.exit = A.stateCount + state ∧ some false = cell := by
           simpa [MachineDescription.Matches] using hmatch
         exact hmatchPair.left
       have hAexit : A.exit < A.stateCount := hA.right.right.left
-      omega
+      lia
     · have hsource : A.exit = A.stateCount + state := by
         have hmatchPair :
             A.exit = A.stateCount + state ∧ some true = cell := by
           simpa [MachineDescription.Matches] using hmatch
         exact hmatchPair.left
       have hAexit : A.exit < A.stateCount := hA.right.right.left
-      omega
+      lia
   have hpredicate :
       (MachineDescription.Matches (A.stateCount + state) cell ∘
           TransitionDescription.offsetStates A.stateCount) =
@@ -262,7 +262,7 @@ theorem lookup_seq_right
       by_cases hsource : t.source = state
       · have hoffset :
             A.stateCount + t.source = A.stateCount + state := by
-          omega
+          lia
         have hleft :
             (A.stateCount + t.source == A.stateCount + state) =
               true := by
@@ -274,7 +274,7 @@ theorem lookup_seq_right
         rw [hleft, hright]
       · have hoffset :
             A.stateCount + t.source ≠ A.stateCount + state := by
-          omega
+          lia
         have hleft :
             (A.stateCount + t.source == A.stateCount + state) =
               false := by
@@ -541,17 +541,17 @@ theorem seq_firstReaches
       have hbad :
           A.stateCount + B.exit < A.stateCount := by
         simpa [Fragment.seq] using hexitBound
-      omega
+      lia
     · have hnA_le_k : nA ≤ k := Nat.le_of_not_gt hkLeft
       let d : Nat := k - nA
       have hk_eq : k = nA + d := by
-        omega
+        lia
       have hd_bound : d < 1 + nB := by
-        omega
+        lia
       cases hd : d with
       | zero =>
           have hk_nA : k = nA := by
-            omega
+            lia
           have hstateBound :
               ((seq A B handoffMove).toDescription.runConfig k
                 startSeq).state < A.stateCount := by
@@ -564,12 +564,12 @@ theorem seq_firstReaches
           have hbad :
               A.stateCount + B.exit < A.stateCount := by
             simpa [Fragment.seq] using hexitBound
-          omega
+          lia
       | succ j =>
           have hj_bound : j < nB := by
-            omega
+            lia
           have hk_succ : k = nA + (1 + j) := by
-            omega
+            lia
           have hseqk :
               (seq A B handoffMove).toDescription.runConfig k
                   startSeq =
@@ -697,7 +697,7 @@ theorem seq_reaches_inv
         exact hstateBound
       have hbad : A.stateCount + B.exit < A.stateCount := by
         simpa [Fragment.seq] using hexitBound
-      omega
+      lia
   rcases hhit with ⟨k, hklt, hkstate⟩
   let Tmid : Tape Bool :=
     (A.toDescription.runConfig k startA).tape
@@ -716,7 +716,7 @@ theorem seq_reaches_inv
   have hnA_lt_n : nA < n := Nat.lt_of_le_of_lt hnA_le_k hklt
   let nB : Nat := n - (nA + 1)
   have hn_eq : n = nA + (1 + nB) := by
-    omega
+    lia
   have hseqA :
       (seq A B handoffMove).toDescription.runConfig nA startSeq =
         { state := A.exit, tape := Tmid } := by

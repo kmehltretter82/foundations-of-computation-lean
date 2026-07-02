@@ -187,7 +187,7 @@ theorem inputWithTrailingBlankPadding_contextLength_ge_input
   cases outputBits <;> cases inputBits <;>
     simp [inputWithTrailingBlankPadding, Tape.input, Tape.blank,
       Tape.contextLength] <;>
-    omega
+    lia
 
 theorem inputWithTrailingBlankPadding_move_right_contextLength_ge_pred
     (w : Word Bool) (padding : Nat) :
@@ -214,11 +214,11 @@ theorem inputWithTrailingBlankPadding_move_right_contextLength_ge_pred
           | succ padding =>
               simp [inputWithTrailingBlankPadding, Tape.contextLength,
                 Tape.move, Tape.moveRight, List.replicate_succ]
-              omega
+              lia
       | cons bit' rest =>
           simp [inputWithTrailingBlankPadding, Tape.contextLength,
             Tape.move, Tape.moveRight]
-          omega
+          lia
 
 theorem inputWithTrailingBlankPadding_move_right_normalizedOutput
     (w : Word Bool) (padding : Nat) :
@@ -326,7 +326,7 @@ theorem tape_contextLength_le_move_right
   | mk left head right =>
       cases right <;>
         simp [Tape.contextLength, Tape.move, Tape.moveRight] <;>
-        omega
+        lia
 
 end BoundedLayoutRunner
 end EncodedRewriters

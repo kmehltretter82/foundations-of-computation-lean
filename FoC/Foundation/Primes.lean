@@ -61,7 +61,7 @@ theorem divides_mul_left {a b : Nat} (h : NatPred.Divides a b) (c : Nat) :
 theorem factor_lt_left {n a b : Nat}
     (hnab : n = a * b) (ha : 1 < a) (hb : 1 < b) : a < n := by
   have hapos : a > 0 := by
-    omega
+    lia
   have hmul : a * 1 < a * b := Nat.mul_lt_mul_of_pos_left hb hapos
   rw [Nat.mul_one] at hmul
   rw [hnab]
@@ -70,7 +70,7 @@ theorem factor_lt_left {n a b : Nat}
 theorem factor_lt_right {n a b : Nat}
     (hnab : n = a * b) (ha : 1 < a) (hb : 1 < b) : b < n := by
   have hbpos : b > 0 := by
-    omega
+    lia
   have hmul : 1 * b < a * b := Nat.mul_lt_mul_of_pos_right ha hbpos
   rw [Nat.one_mul] at hmul
   rw [hnab]
@@ -91,15 +91,15 @@ theorem nonprime_factorization {n : Nat} (hn : 1 < n) (hnp : ¬ Prime n) :
       · have ha0 : a ≠ 0 := by
           intro h0
           rw [h0] at hab
-          omega
+          lia
         have hb0 : b ≠ 0 := by
           intro h0
           rw [h0] at hab
-          omega
+          lia
         have hapos : 1 < a := by
-          omega
+          lia
         have hbpos : 1 < b := by
-          omega
+          lia
         exfalso
         exact hno (Exists.intro a
           (Exists.intro b (And.intro hab (And.intro hapos hbpos))))
@@ -163,7 +163,7 @@ theorem product_pos_of_allPrime {ps : List Nat}
       | intro hp hrest =>
           exact Nat.mul_pos (by
             have hpgt := prime_gt_one hp
-            omega) (ih hrest)
+            lia) (ih hrest)
 
 theorem divides_product_of_mem {p : Nat} {ps : List Nat}
     (hmem : p ∈ ps) : NatPred.Divides p (Product ps) := by
@@ -193,7 +193,7 @@ theorem not_divides_product_succ {p m : Nat}
           have hmod_right : (p * b) % p = 0 :=
             Nat.mul_mod_right p b
           rw [hb, hmod_right] at hmod_left
-          omega
+          lia
 
 /-!
 # Euclid-style infinitude
@@ -208,7 +208,7 @@ theorem exists_prime_not_in_list (ps : List Nat) (hps : AllPrime ps) :
     product_pos_of_allPrime hps
   have hn : 1 < n := by
     dsimp [n]
-    omega
+    lia
   cases prime_divisor_exists n hn with
   | intro p hpdata =>
       exists p

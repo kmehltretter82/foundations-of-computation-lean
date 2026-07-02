@@ -56,7 +56,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_contextLength_g
             inputWithTrailingBlankPaddingCells,
             DovetailInitialLayoutInitializer.tapeAtCells,
             Tape.contextLength, Tape.input, hinput, houtputBits] at *
-          omega
+          lia
 
 def sourceScanRightToBlankLeftDescription_configRunner : MachineDescription where
   stateCount := 2
@@ -268,7 +268,7 @@ theorem sourceRightEndLeftTape_contextLength_configRunner
               DovetailInitialLayoutInitializer.tapeAtCells,
               Tape.contextLength, Tape.move, Tape.moveLeft, hrest,
               List.append_assoc] <;>
-            omega
+            lia
 
 theorem sourceRightEndLeftTape_simulator_contextLength_configRunner
     (L : SimulatorLayout) :
@@ -320,7 +320,7 @@ theorem sourceScanRightToBlankLeftDescription_run_configRunner
   | cons bit rest ih =>
       rw [show (bit :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           sourceScanRightToBlankLeftDescription_configRunner.runConfig 1

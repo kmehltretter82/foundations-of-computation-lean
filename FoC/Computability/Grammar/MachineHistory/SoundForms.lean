@@ -102,9 +102,9 @@ theorem singleton_context_eq_of_containsNonterminal
   | cons a rest =>
       have hlen := congrArg List.length hx
       simp at hlen
-      have huLen : u.length = 0 := by omega
-      have hvLen : v.length = 0 := by omega
-      have hrestLen : rest.length = 0 := by omega
+      have huLen : u.length = 0 := by lia
+      have hvLen : v.length = 0 := by lia
+      have hrestLen : rest.length = 0 := by lia
       have hu : u = [] := List.eq_nil_of_length_eq_zero huLen
       have hv : v = [] := List.eq_nil_of_length_eq_zero hvLen
       have hrest : rest = [] := List.eq_nil_of_length_eq_zero hrestLen

@@ -131,7 +131,7 @@ theorem rightBlankGapPayloadScanSourceTapeImplicit_move_left_move_right
         baseLeft gap current payloadRest := by
   cases gap with
   | zero =>
-      omega
+      lia
   | succ gap =>
       cases gap with
       | zero =>
@@ -174,7 +174,7 @@ theorem rightBlankGapPayloadScanDescription_run_gap
   | zero =>
       rfl
   | succ gap ih =>
-      rw [show gap + 1 = 1 + gap by omega]
+      rw [show gap + 1 = 1 + gap by lia]
       rw [runConfig_add]
       have hstep :
           rightBlankGapPayloadScanDescription.runConfig 1
@@ -209,7 +209,7 @@ theorem rightBlankGapPayloadScanDescription_run_gap
         rw [rightBlankGapPayloadScanDescription_step_gap_blank]
         rfl
       rw [hstep]
-      rw [show 1 + gap = gap + 1 by omega]
+      rw [show 1 + gap = gap + 1 by lia]
       rw [← gapPayloadScan_replicate_none_append_none_cons gap
         baseLeft]
       simpa [rightBlankGapPayloadScanSourceTape,
@@ -234,7 +234,7 @@ theorem rightBlankGapPayloadScanDescription_run_gap_implicit
   | zero =>
       rfl
   | succ gap ih =>
-      rw [show gap + 1 = 1 + gap by omega]
+      rw [show gap + 1 = 1 + gap by lia]
       rw [runConfig_add]
       have hstep :
           rightBlankGapPayloadScanDescription.runConfig 1
@@ -267,7 +267,7 @@ theorem rightBlankGapPayloadScanDescription_run_gap_implicit
         rw [rightBlankGapPayloadScanDescription_step_gap_blank]
         rfl
       rw [hstep]
-      rw [show 1 + gap = gap + 1 by omega]
+      rw [show 1 + gap = gap + 1 by lia]
       rw [← gapPayloadScan_replicate_none_append_none_cons gap
         baseLeft]
       simpa [rightBlankGapPayloadScanSourceTapeImplicit,
@@ -341,7 +341,7 @@ theorem rightBlankGapPayloadScanDescription_run_payload
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         rightBlankGapPayloadScanDescription.runConfig rest.length
@@ -385,7 +385,7 @@ theorem rightBlankGapPayloadScanDescription_run_payload_implicit
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         rightBlankGapPayloadScanDescription.runConfig rest.length
@@ -445,7 +445,7 @@ theorem rightBlankGapPayloadScanDescription_run_to_target
           rightBlankGapPayloadScanTargetTape
             baseLeft gap current payloadRest padding } := by
   rw [show gap + payloadRest.length + 2 =
-      gap + (1 + (payloadRest.length + 1)) by omega]
+      gap + (1 + (payloadRest.length + 1)) by lia]
   rw [runConfig_add]
   rw [rightBlankGapPayloadScanDescription_run_gap]
   rw [runConfig_add]
@@ -485,7 +485,7 @@ theorem rightBlankGapPayloadScanDescription_run_to_target_implicit
           rightBlankGapPayloadScanTargetTapeImplicit
             baseLeft gap current payloadRest } := by
   rw [show gap + payloadRest.length + 2 =
-      gap + (1 + (payloadRest.length + 1)) by omega]
+      gap + (1 + (payloadRest.length + 1)) by lia]
   rw [runConfig_add]
   rw [rightBlankGapPayloadScanDescription_run_gap_implicit]
   rw [runConfig_add]

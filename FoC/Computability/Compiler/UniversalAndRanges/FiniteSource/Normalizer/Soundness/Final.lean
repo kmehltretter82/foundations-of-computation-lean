@@ -225,7 +225,7 @@ theorem codePrefixParserNormalizerMachine_haltsWithOutput_encodeDescriptionAppen
                 prefixLeft 1 parsedPrefix transitions input hpre
             have hlen :
                 1 + transitions.length = transitions.length + 1 := by
-              omega
+              lia
             have htransAppend :
                 MachineDescription.encodeTransitionsAppend transitions input =
                   List.append

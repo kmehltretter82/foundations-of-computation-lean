@@ -111,7 +111,7 @@ theorem run_marking_loop_from_state120_with_tailBits
         ⟨recSteps, hrec⟩
       refine ⟨markSteps + 4 + recSteps, ?_⟩
       rw [show markSteps + 4 + recSteps =
-          markSteps + (4 + recSteps) by omega]
+          markSteps + (4 + recSteps) by lia]
       rw [runConfig_add]
       rw [hmark]
       rw [runConfig_add]
@@ -204,7 +204,7 @@ theorem run_finish_scan_left_to_append_tailBits
       List.reverse_append, List.append_assoc]
   refine ⟨bits.length + 3, ?_⟩
   rw [show bits.length + 3 = bits.length + (1 + (1 + 1)) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [hstart]
   rw [run_state160_bits_to_boundary]
@@ -228,7 +228,7 @@ theorem run_append_blank_to_state200_tailBits
   let tailPrefix := stageInputSecondBitTailPrefix (b :: rest)
   refine ⟨tailPrefix.length + 2, ?_⟩
   rw [show tailPrefix.length + 2 = tailPrefix.length + (1 + 1) by
-    omega]
+    lia]
   rw [runConfig_add]
   unfold appendBlankStartConfigWithTailBits
   change
@@ -266,7 +266,7 @@ theorem run_finish_tail_false_false_to_state200
       (4 * (b :: rest).length + 2) + scanSteps + appendSteps =
         (4 * (b :: rest).length + 2) +
           (scanSteps + appendSteps) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [run_finish_restore_cells_tailBits]
   rw [runConfig_add]
@@ -660,7 +660,7 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
             rfl
             (by
               change (150 : Nat) ≠ 999
-              omega)
+              lia)
       have hhalt :
           (SIMS.runConfig finishRem
             (finishStartConfigWithTailBits (b :: restW)

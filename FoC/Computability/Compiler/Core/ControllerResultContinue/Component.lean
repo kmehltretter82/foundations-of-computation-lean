@@ -155,7 +155,7 @@ theorem stageInputContinueBoundaryRewriterDescription_run_scan
   | cons b rest ih =>
       rw [show (b :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         StageInputContinueBoundaryRewriterDescription.runConfig rest.length
@@ -269,7 +269,7 @@ theorem stageInputContinueBoundaryRewriterDescription_haltsFromTape_prefixBits
         { state := StageInputContinueBoundaryRewriterDescription.halt
           tape := stageInputContinueOutputTape outputBits } := by
     rw [show 4 + scanBits.length + 10 =
-        4 + (scanBits.length + 10) by omega]
+        4 + (scanBits.length + 10) by lia]
     rw [runConfig_add]
     have hheader :
         StageInputContinueBoundaryRewriterDescription.runConfig 4
@@ -285,7 +285,7 @@ theorem stageInputContinueBoundaryRewriterDescription_haltsFromTape_prefixBits
             (List.append (inputBits.map some) [none])
     rw [hheader]
     rw [show scanBits.length + 10 =
-        scanBits.length + (1 + (1 + 8)) by omega]
+        scanBits.length + (1 + (1 + 8)) by lia]
     rw [runConfig_add]
     have hscan :
         StageInputContinueBoundaryRewriterDescription.runConfig
@@ -412,7 +412,7 @@ theorem none_cons_replicate_none_append_none
         none :: none ::
             List.append (List.replicate n (none : Option Bool)) [none] =
           List.replicate (n + 1 + 2) none
-      rw [show n + 1 + 2 = (n + 2) + 1 by omega]
+      rw [show n + 1 + 2 = (n + 2) + 1 by lia]
       rw [List.replicate_succ]
       exact congrArg (fun xs => none :: xs) ih
 
@@ -553,7 +553,7 @@ theorem replicate_none_append_replicate
       simp
   | succ m ih =>
       rw [List.replicate_succ]
-      rw [show (m + 1) + n = (m + n) + 1 by omega]
+      rw [show (m + 1) + n = (m + n) + 1 by lia]
       rw [List.replicate_succ]
       exact congrArg (fun xs => none :: xs) ih
 
@@ -601,7 +601,7 @@ theorem projectionFinalTape_move_left_eq_tailBlock
     have hnat :
         4 * result.length + 4 + 4 * result.length =
           8 * result.length + 4 := by
-      omega
+      lia
     rw [hnat]
   have htape :
       ControllerStageInputProjection.finalTape
@@ -738,7 +738,7 @@ theorem projectionTailRewindDescription_run_blanks
   | zero =>
       simp [runConfig]
   | succ n ih =>
-      rw [show (n + 1) = 1 + n by omega]
+      rw [show (n + 1) = 1 + n by lia]
       rw [runConfig_add]
       change
         ProjectionTailRewindDescription.runConfig n
@@ -756,12 +756,12 @@ theorem projectionTailRewindDescription_run_blanks
       have hrep :
           List.append (List.replicate (1 + n) none) leftRev =
             none :: List.append (List.replicate n none) leftRev := by
-        simpa [show 1 + n = n + 1 by omega] using
+        simpa [show 1 + n = n + 1 by lia] using
           replicate_none_succ_append n leftRev
       rw [hrep]
       rw [projectionTailRewindDescription_run_blank]
       rw [ih]
-      rw [show 1 + n + 1 = n + 1 + 1 by omega]
+      rw [show 1 + n + 1 = n + 1 + 1 by lia]
       simp [List.replicate_succ', List.append_assoc]
 
 theorem projectionTailRewindDescription_run_scan_to_first_bit
@@ -784,7 +784,7 @@ theorem projectionTailRewindDescription_run_scan_to_first_bit
   induction bitsLeftRev generalizing headBit right with
   | nil =>
       simp only [List.length_nil, List.map_nil, List.reverse_nil]
-      rw [show 0 + 2 = 1 + 1 by omega]
+      rw [show 0 + 2 = 1 + 1 by lia]
       rw [runConfig_add]
       change
         ProjectionTailRewindDescription.runConfig 1
@@ -804,7 +804,7 @@ theorem projectionTailRewindDescription_run_scan_to_first_bit
       rw [show (bit :: rest).length + 2 =
           1 + (rest.length + 2) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         ProjectionTailRewindDescription.runConfig
@@ -847,7 +847,7 @@ theorem projectionTailRewindDescription_run_from_last_bit
   cases bitsLeftRev with
   | nil =>
       simp only [List.length_nil, List.map_nil, List.reverse_nil]
-      rw [show 0 + 2 = 1 + 1 by omega]
+      rw [show 0 + 2 = 1 + 1 by lia]
       rw [runConfig_add]
       change
         ProjectionTailRewindDescription.runConfig 1
@@ -867,7 +867,7 @@ theorem projectionTailRewindDescription_run_from_last_bit
       rw [show (bit :: rest).length + 2 =
           1 + (rest.length + 2) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         ProjectionTailRewindDescription.runConfig
@@ -913,7 +913,7 @@ theorem projectionTailRewindDescription_run_tail_block
                 none :: List.append
                   (List.replicate trail none) right)) } := by
   rw [show trail + 1 + (bitsLeftRev.length + 2) =
-      trail + (1 + (bitsLeftRev.length + 2)) by omega]
+      trail + (1 + (bitsLeftRev.length + 2)) by lia]
   rw [runConfig_add]
   rw [projectionTailRewindDescription_run_blanks]
   rw [runConfig_add]

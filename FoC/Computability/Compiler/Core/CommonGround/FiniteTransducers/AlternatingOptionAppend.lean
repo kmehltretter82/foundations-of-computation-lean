@@ -375,7 +375,7 @@ theorem generatedAlternatingOptionAppendDescription_run_scan
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         (generatedAlternatingOptionAppendDescription emit0 emit1 final).runConfig
@@ -477,7 +477,7 @@ theorem generatedAlternatingOptionAppendDescription_run_to_target
           FSTAlternatingOptionAppendTargetTape
             emit0 emit1 input final leftScratch } := by
   rw [show input.length + 1 + final.length =
-      (input.length + 1) + final.length by omega]
+      (input.length + 1) + final.length by lia]
   rw [runConfig_add]
   rw [generatedAlternatingOptionAppendDescription_run_to_writer_start]
   rw [generatedAlternatingOptionAppendDescription_writerRuns]
@@ -505,7 +505,7 @@ theorem generatedAlternatingOptionAppendDescription_wellFormed
         generatedAlternatingOptionAppendDescription] at ht ⊢
       rcases ht with ht | ht | ht | ht | ht | ht <;> subst t <;>
         constructor <;>
-        simp <;> omega
+        simp <;> lia
     · have htwf :=
         FiniteTransducer.copyAppendWordWriteTransitionsFrom_wellFormed
           FiniteTransducer.alternatingOptionAppendWriterStart final t ht
@@ -528,7 +528,7 @@ theorem generatedAlternatingOptionAppendDescription_wellFormed
         FiniteTransducer.alternatingOptionAppendPrefix_source_lt_writerStart
           emit0 emit1 final t ht
       have husource : u.source = t.source := hkey.left.symm
-      omega
+      lia
     · have htbounds :=
         FiniteTransducer.copyAppendWordWriteTransitionsFrom_source_bounds
           FiniteTransducer.alternatingOptionAppendWriterStart
@@ -537,7 +537,7 @@ theorem generatedAlternatingOptionAppendDescription_wellFormed
         FiniteTransducer.alternatingOptionAppendPrefix_source_lt_writerStart
           emit0 emit1 final u hu
       have htsource : t.source = u.source := hkey.left
-      omega
+      lia
     · exact
         FiniteTransducer.copyAppendWordWriteTransitionsFrom_deterministic
           FiniteTransducer.alternatingOptionAppendWriterStart final
@@ -564,7 +564,7 @@ theorem generatedAlternatingOptionAppendDescription_haltTransitionFree
     simp [generatedAlternatingOptionAppendDescription,
       FiniteTransducer.alternatingOptionAppendHalt,
       FiniteTransducer.alternatingOptionAppendWriterStart] at hsource
-    omega
+    lia
   · have hbounds :=
       FiniteTransducer.copyAppendWordWriteTransitionsFrom_source_bounds
         FiniteTransducer.alternatingOptionAppendWriterStart
@@ -573,7 +573,7 @@ theorem generatedAlternatingOptionAppendDescription_haltTransitionFree
     simp [generatedAlternatingOptionAppendDescription,
       FiniteTransducer.alternatingOptionAppendHalt,
       FiniteTransducer.alternatingOptionAppendWriterStart] at hsource
-    omega
+    lia
 
 theorem generatedAlternatingOptionAppendDescription_subroutineReady
     (emit0 emit1 : Bool -> Option Bool) (final : Word Bool) :
@@ -606,7 +606,7 @@ theorem generatedAlternatingOptionAppendDescription_statefulContract
               generatedAlternatingOptionAppendDescription_step_bit
                 emit0 emit1 final true bit left right
         | succ state =>
-            omega
+            lia
   · intro state left hstate
     cases state with
     | zero =>
@@ -622,7 +622,7 @@ theorem generatedAlternatingOptionAppendDescription_statefulContract
               generatedAlternatingOptionAppendDescription_step_blank
                 emit0 emit1 final true left
         | succ state =>
-            omega
+            lia
   · intro left
     exact generatedAlternatingOptionAppendDescription_writerRuns
       emit0 emit1 final left

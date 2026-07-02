@@ -114,7 +114,7 @@ theorem SelectedMergePaddedEmitterAfterTransitionPaddedTape_contextLength
   rw [htail]
   simp [DovetailInitialLayoutInitializer.tapeAtCells, Tape.contextLength,
     encodeCodeSymbolAsInput]
-  omega
+  lia
 
 theorem SelectedMergePaddedEmitterAfterHitSourceBits_length_eq_inputBits
     (p : SelectedMergeEmitterPayload) :
@@ -139,7 +139,7 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_afterTransiti
       ScratchPaddedOutputTape, inputWithTrailingBlankPadding,
       selectedMergeOutputCode_eq_fields, encodeCodeWordAsInput,
       encodeCodeSymbolAsInput, Tape.contextLength] <;>
-    omega
+    lia
 
 theorem
     SelectedMergePaddedEmitterAfterTransitionPaddedTape_normalizedOutput_eq_fields

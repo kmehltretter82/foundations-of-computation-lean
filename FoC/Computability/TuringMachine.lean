@@ -279,7 +279,7 @@ theorem computesIn_empty_not_exact_output_single {M : TuringMachine symbol state
       have hzero : Tape.contextLength final.tape = 0 := by
         rw [htape]
         exact Tape.contextLength_output_single a
-      omega
+      lia
 
 /-!
 # Halting and accepted languages

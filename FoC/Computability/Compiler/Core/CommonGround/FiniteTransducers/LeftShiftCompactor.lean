@@ -223,7 +223,7 @@ theorem leadingBlankLeftShiftDescription_run_loop
       rw [show 3 * (bit :: rest).length + 1 =
           3 + (3 * rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       rw [leadingBlankLeftShiftDescription_run_bit]
       simpa [List.append_assoc] using
@@ -238,7 +238,7 @@ theorem leadingBlankLeftShiftDescription_run_to_target
       { state := leadingBlankLeftShiftDescription.halt
         tape := leadingBlankLeftShiftTargetTape baseLeft bits } := by
   rw [show 3 * bits.length + 2 =
-      1 + (3 * bits.length + 1) by omega]
+      1 + (3 * bits.length + 1) by lia]
   rw [runConfig_add]
   rw [leadingBlankLeftShiftDescription_run_start]
   simpa using
@@ -334,7 +334,7 @@ theorem leadingBlankLeftShiftDescription_run_loop_withPadding
       rw [show 3 * (bit :: rest).length + 1 =
           3 + (3 * rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       rw [leadingBlankLeftShiftDescription_run_bit_withPadding]
       simpa [List.append_assoc] using
@@ -354,7 +354,7 @@ theorem leadingBlankLeftShiftDescription_run_to_target_withPadding
           leadingBlankLeftShiftTargetTapeWithPadding
             baseLeft bits padding } := by
   rw [show 3 * bits.length + 2 =
-      1 + (3 * bits.length + 1) by omega]
+      1 + (3 * bits.length + 1) by lia]
   rw [runConfig_add]
   rw [leadingBlankLeftShiftDescription_run_start_withPadding]
   simpa using

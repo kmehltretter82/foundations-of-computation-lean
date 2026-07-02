@@ -1019,7 +1019,7 @@ theorem resultNoneGuardScannerDescription_run_code_from
   | cons symbol rest ih =>
       rw [show 4 * (symbol :: rest).length = 4 + 4 * rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       simp only [encodeCodeWordAsInput]
       have happ :

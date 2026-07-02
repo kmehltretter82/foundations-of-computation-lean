@@ -323,7 +323,7 @@ theorem orderedABCD_yields_preserves_balanced
                               SententialCountTerminal,
                               SententialCountNonterminal, ordered4N,
                               ordered4T, ggNonterminal, ggTerminal] at hbalanced ⊢ <;>
-                            omega
+                            lia
 
 theorem orderedABCD_derives_preserves_balanced
     {x y : SententialForm FourCountTerminal OrderedABCDNT}

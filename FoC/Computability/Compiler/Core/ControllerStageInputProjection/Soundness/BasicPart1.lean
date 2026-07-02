@@ -96,7 +96,7 @@ theorem haltsWithTape_encode
                 ((4 * stage + 12) +
                   (projectionResultBoolWordCost result +
                     (8 * result.length + 5)))) by
-        omega]
+        lia]
     rw [runConfig_add]
     change
       Description.runConfig
@@ -197,7 +197,7 @@ theorem haltsWithTape_encode
           (List.append (projectionAllMarkedBoolWordCells result) [none])) =
         projectionConfig 999 finalLeftRev []
     rw [show 8 * result.length + 5 = (8 * result.length + 4) + 1 by
-      omega,
+      lia,
       runConfig_add]
     rw [run_cleanup_all_marked_to_tail]
     rfl
@@ -249,7 +249,7 @@ theorem haltsWithOutput_encode
                 ((4 * stage + 12) +
                   (projectionResultBoolWordCost result +
                     (8 * result.length + 5)))) by
-        omega]
+        lia]
     rw [runConfig_add]
     change
       Description.runConfig
@@ -350,7 +350,7 @@ theorem haltsWithOutput_encode
           (List.append (projectionAllMarkedBoolWordCells result) [none])) =
         projectionConfig 999 finalLeftRev []
     rw [show 8 * result.length + 5 = (8 * result.length + 4) + 1 by
-      omega,
+      lia,
       runConfig_add]
     rw [run_cleanup_all_marked_to_tail]
     rfl
@@ -548,7 +548,7 @@ theorem run_state200_decodeNat_none_ne_halt
             exact stepConfig_projectionConfig_nil_none
               lookupTransition_200_none _) (by
             change (200 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest ih =>
       cases symbol with
       | header =>
@@ -560,7 +560,7 @@ theorem run_state200_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_202_false _ _) (by
                 change (202 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -570,7 +570,7 @@ theorem run_state200_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_202_false _ _) (by
                 change (202 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           cases hrest : decodeNat rest with
           | none =>
@@ -606,7 +606,7 @@ theorem run_state200_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_201_true _ _) (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | zero =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -616,7 +616,7 @@ theorem run_state200_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_201_true _ _) (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | one =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -626,7 +626,7 @@ theorem run_state200_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_201_true _ _) (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | moveLeft =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -636,7 +636,7 @@ theorem run_state200_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_201_true _ _) (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -646,7 +646,7 @@ theorem run_state200_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_200_true _ _) (by
                 change (200 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem run_state120_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -663,7 +663,7 @@ theorem run_state120_decodeNat_none_ne_halt
             exact stepConfig_projectionConfig_nil_none
               lookupTransition_120_none _) (by
             change (120 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest ih =>
       cases symbol with
       | header =>
@@ -675,7 +675,7 @@ theorem run_state120_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_122_false _ _) (by
                 change (122 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -685,7 +685,7 @@ theorem run_state120_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_122_false _ _) (by
                 change (122 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           cases hrest : decodeNat rest with
           | none =>
@@ -722,7 +722,7 @@ theorem run_state120_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_121_true _ _) (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | zero =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -732,7 +732,7 @@ theorem run_state120_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_121_true _ _) (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | one =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -742,7 +742,7 @@ theorem run_state120_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_121_true _ _) (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | moveLeft =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -752,7 +752,7 @@ theorem run_state120_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_121_true _ _) (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -762,7 +762,7 @@ theorem run_state120_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_120_true _ _) (by
                 change (120 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem run_state100_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -779,7 +779,7 @@ theorem run_state100_decodeNat_none_ne_halt
             exact stepConfig_projectionConfig_nil_none
               lookupTransition_100_none _) (by
             change (100 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest ih =>
       cases symbol with
       | header =>
@@ -791,7 +791,7 @@ theorem run_state100_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_102_false _ _) (by
                 change (102 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -801,7 +801,7 @@ theorem run_state100_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_102_false _ _) (by
                 change (102 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           cases hrest : decodeNat rest with
           | none =>
@@ -842,7 +842,7 @@ theorem run_state100_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_101_true _ _) (by
                 change (101 : Nat) ≠ 999
-                omega)
+                lia)
       | zero =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -852,7 +852,7 @@ theorem run_state100_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_101_true _ _) (by
                 change (101 : Nat) ≠ 999
-                omega)
+                lia)
       | one =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -862,7 +862,7 @@ theorem run_state100_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_101_true _ _) (by
                 change (101 : Nat) ≠ 999
-                omega)
+                lia)
       | moveLeft =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -872,7 +872,7 @@ theorem run_state100_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_101_true _ _) (by
                 change (101 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -882,7 +882,7 @@ theorem run_state100_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_100_true _ _) (by
                 change (100 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem run_state320_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -899,7 +899,7 @@ theorem run_state320_decodeNat_none_ne_halt
             exact stepConfig_projectionConfig_nil_none
               lookupTransition_320_none _) (by
             change (320 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest ih =>
       cases symbol with
       | header =>
@@ -911,7 +911,7 @@ theorem run_state320_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_322_false _ _) (by
                 change (322 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -921,7 +921,7 @@ theorem run_state320_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_322_false _ _) (by
                 change (322 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           cases hrest : decodeNat rest with
           | none =>
@@ -958,7 +958,7 @@ theorem run_state320_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_321_true _ _) (by
                 change (321 : Nat) ≠ 999
-                omega)
+                lia)
       | zero =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -968,7 +968,7 @@ theorem run_state320_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_321_true _ _) (by
                 change (321 : Nat) ≠ 999
-                omega)
+                lia)
       | one =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -978,7 +978,7 @@ theorem run_state320_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_321_true _ _) (by
                 change (321 : Nat) ≠ 999
-                omega)
+                lia)
       | moveLeft =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -988,7 +988,7 @@ theorem run_state320_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_321_true _ _) (by
                 change (321 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -998,7 +998,7 @@ theorem run_state320_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_320_true _ _) (by
                 change (320 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem run_state300_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -1015,7 +1015,7 @@ theorem run_state300_decodeNat_none_ne_halt
             exact stepConfig_projectionConfig_nil_none
               lookupTransition_300_none _) (by
             change (300 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest ih =>
       cases symbol with
       | header =>
@@ -1027,7 +1027,7 @@ theorem run_state300_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_302_false _ _) (by
                 change (302 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -1037,7 +1037,7 @@ theorem run_state300_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_302_false _ _) (by
                 change (302 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           cases hrest : decodeNat rest with
           | none =>
@@ -1076,7 +1076,7 @@ theorem run_state300_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_301_true _ _) (by
                 change (301 : Nat) ≠ 999
-                omega)
+                lia)
       | zero =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -1086,7 +1086,7 @@ theorem run_state300_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_301_true _ _) (by
                 change (301 : Nat) ≠ 999
-                omega)
+                lia)
       | one =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -1096,7 +1096,7 @@ theorem run_state300_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_301_true _ _) (by
                 change (301 : Nat) ≠ 999
-                omega)
+                lia)
       | moveLeft =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -1106,7 +1106,7 @@ theorem run_state300_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_301_true _ _) (by
                 change (301 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -1116,7 +1116,7 @@ theorem run_state300_decodeNat_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_300_true _ _) (by
                 change (300 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem run_state330_decodeCell_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -1133,7 +1133,7 @@ theorem run_state330_decodeCell_none_ne_halt
             exact stepConfig_projectionConfig_nil_none
               lookupTransition_330_none _) (by
             change (330 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest =>
       cases symbol with
       | header =>
@@ -1145,7 +1145,7 @@ theorem run_state330_decodeCell_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_331_false _ _) (by
                 change (331 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -1155,7 +1155,7 @@ theorem run_state330_decodeCell_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_331_false _ _) (by
                 change (331 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -1165,7 +1165,7 @@ theorem run_state330_decodeCell_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_331_false _ _) (by
                 change (331 : Nat) ≠ 999
-                omega)
+                lia)
       | done =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -1175,7 +1175,7 @@ theorem run_state330_decodeCell_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_331_false _ _) (by
                 change (331 : Nat) ≠ 999
-                omega)
+                lia)
       | blank =>
           simp [decodeCell] at hdecode
       | zero =>
@@ -1191,7 +1191,7 @@ theorem run_state330_decodeCell_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_334_true _ _) (by
                 change (334 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -1201,7 +1201,7 @@ theorem run_state330_decodeCell_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_330_true _ _) (by
                 change (330 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem run_state330_blank_cell_ne_halt
     (suffix : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -1219,7 +1219,7 @@ theorem run_state330_blank_cell_ne_halt
         exact stepConfig_projectionConfig_cons_none
           lookupTransition_333_false _ _) (by
         change (333 : Nat) ≠ 999
-        omega)
+        lia)
 
 theorem run_state130_decodeCell_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -1236,7 +1236,7 @@ theorem run_state130_decodeCell_none_ne_halt
             exact stepConfig_projectionConfig_nil_none
               lookupTransition_130_none _) (by
             change (130 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest =>
       cases symbol with
       | header =>
@@ -1248,7 +1248,7 @@ theorem run_state130_decodeCell_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_131_false _ _) (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -1258,7 +1258,7 @@ theorem run_state130_decodeCell_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_131_false _ _) (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -1268,7 +1268,7 @@ theorem run_state130_decodeCell_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_131_false _ _) (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | done =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -1278,7 +1278,7 @@ theorem run_state130_decodeCell_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_131_false _ _) (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | blank =>
           simp [decodeCell] at hdecode
       | zero =>
@@ -1294,7 +1294,7 @@ theorem run_state130_decodeCell_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_134_true _ _) (by
                 change (134 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             ne_halt_of_reaches_stepConfig_none
@@ -1304,7 +1304,7 @@ theorem run_state130_decodeCell_none_ne_halt
                 exact stepConfig_projectionConfig_cons_none
                   lookupTransition_130_true _ _) (by
                 change (130 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem run_state130_blank_cell_ne_halt
     (suffix : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -1322,7 +1322,7 @@ theorem run_state130_blank_cell_ne_halt
         exact stepConfig_projectionConfig_cons_none
           lookupTransition_133_false _ _) (by
         change (133 : Nat) ≠ 999
-        omega)
+        lia)
 
 theorem run_result_tail_decodeCells_none_ne_halt
     (marked : Word Bool) (len : Nat)

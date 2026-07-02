@@ -713,7 +713,7 @@ theorem stackSummaryComputesIn_split_append_of_eq
         apply List.eq_nil_of_length_eq_zero
         have hlen := congrArg List.length heq
         simp [Word.Concat] at hlen
-        omega
+        lia
       have hright : right = [] := by
         simpa [Word.Concat, hleft] using heq.symm
       refine ⟨0, 0, q, unread, ?_, ?_, ?_⟩

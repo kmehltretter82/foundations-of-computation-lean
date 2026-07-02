@@ -100,7 +100,7 @@ theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_add_extraScratch
         selectedProjectionPaddedTailCleanupSentinelExtraScratch useAccept L =
       (ParsedLayoutBits L).length := by
   rw [selectedProjectionPaddedTailCleanupSentinelExtraScratch]
-  omega
+  lia
 
 theorem selectedProjectionPaddedTailCleanupUnselectedConfigBits_length_pos
     (useAccept : Bool) (L : DovetailLayout) :
@@ -164,7 +164,7 @@ theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_true
   rw [hsplit]
   simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch,
     selectedProjectionPaddedTailCleanupUnselectedConfigBits]
-  omega
+  lia
 
 theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_false
     (L : DovetailLayout) :
@@ -211,7 +211,7 @@ theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_false
   rw [hsplit]
   simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch,
     selectedProjectionPaddedTailCleanupUnselectedConfigBits]
-  omega
+  lia
 
 theorem selectedProjectionPaddedTailCleanupAcceptRightEndScratchWidth_eq_parsed
     (L : DovetailLayout) :
@@ -229,7 +229,7 @@ theorem selectedProjectionPaddedTailCleanupAcceptRightEndScratchWidth_eq_parsed
     selectedProjectionPaddedTailCleanupUnselectedConfigBits_length_pos
       true L
   simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch] at hbase
-  omega
+  lia
 
 theorem selectedProjectionPaddedTailCleanupRejectFixedGapScratchWidth_eq_parsed
     (L : DovetailLayout) :
@@ -247,7 +247,7 @@ theorem selectedProjectionPaddedTailCleanupRejectFixedGapScratchWidth_eq_parsed
     selectedProjectionPaddedTailCleanupUnselectedConfigBits_length_pos
       false L
   simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch] at hbase
-  omega
+  lia
 
 theorem selectedProjectionPaddedTailCleanupDeletedAcceptRightEnd_to_acceptSentinelTarget
     (L : DovetailLayout) :
@@ -352,7 +352,7 @@ theorem selectedProjectionPaddedTailCleanupAcceptSentinelTargetTape_cells
                     (selectedProjectionPaddedTailCleanupUnselectedConfigBits
                       true L) -
                   1)))) by
-    omega]
+    lia]
   simp [List.replicate_succ]
 
 theorem selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithExtraScratch_cells
@@ -407,7 +407,7 @@ theorem selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithExtraScra
                       true L) -
                   1) +
                 extraScratch))) by
-    omega]
+    lia]
   simp [List.replicate_succ]
 
 theorem selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithExtraScratch_cells_eq_parsed
@@ -519,7 +519,7 @@ theorem selectedProjectionPaddedTailCleanupRejectSentinelTargetTape_cells
                       false L) -
                   1) +
                 3))) by
-    omega]
+    lia]
   simp [List.replicate_succ]
 
 theorem selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithExtraScratch_cells
@@ -599,7 +599,7 @@ theorem selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithExtraScra
                       false L) -
                   1) +
                 (3 + extraScratch)))) by
-    omega]
+    lia]
   simp [List.replicate_succ]
 
 theorem selectedProjectionPaddedTailCleanupRejectSentinelTargetTapeWithExtraScratch_cells_eq_parsed
@@ -802,7 +802,7 @@ theorem selectedProjectionPaddedTailCleanupAcceptFalseMarkerRestorePadding_eq_pa
         selectedProjectionPaddedTailCleanupSentinelBaseScratch true L +
           selectedProjectionPaddedTailCleanupSentinelExtraScratch true L by
     simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch]
-    omega]
+    lia]
   rw [
     selectedProjectionPaddedTailCleanupSentinelBaseScratch_add_extraScratch
       true L
@@ -908,7 +908,7 @@ theorem selectedProjectionPaddedTailCleanupRejectFalseMarkerRestorePadding_eq_pa
         selectedProjectionPaddedTailCleanupSentinelBaseScratch false L +
           selectedProjectionPaddedTailCleanupSentinelExtraScratch false L by
     simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch]
-    omega]
+    lia]
   rw [
     selectedProjectionPaddedTailCleanupSentinelBaseScratch_add_extraScratch
       false L
@@ -1483,7 +1483,7 @@ theorem selectedProjectionPaddedTailCleanupAcceptRewindTargetTape_cells
                       (selectedProjectionPaddedTailCleanupUnselectedConfigBits
                         true L) -
                     1)))) by
-      omega]
+      lia]
     simp [List.replicate_succ]
   rw [hpad]
 
@@ -1550,7 +1550,7 @@ theorem selectedProjectionPaddedTailCleanupRejectRewindTargetTape_cells
                         false L) -
                     1) +
                   3))) by
-      omega]
+      lia]
     simp [List.replicate_succ]
   rw [hpad]
 

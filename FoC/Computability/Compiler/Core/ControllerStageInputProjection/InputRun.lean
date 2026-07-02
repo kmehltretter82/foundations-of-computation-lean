@@ -55,7 +55,7 @@ theorem run_input_mark_one
                 7)))))) := by
     rw [projectionInputMarkScanBackCellsRev_length]
     simp [projectionInputMarkStepCost]
-    omega
+    lia
   rw [hcost, runConfig_add]
   change
     Description.runConfig
@@ -85,7 +85,7 @@ theorem run_input_mark_one
         List.append projectionTickCodeCells
           (projectionCodeCells
             (List.replicate rest.length MachineCodeSymbol.tick))
-    rw [show rest.length + 1 = Nat.succ rest.length by omega]
+    rw [show rest.length + 1 = Nat.succ rest.length by lia]
     rfl
   rw [runConfig_add]
   rw [htickCells]
@@ -306,7 +306,7 @@ theorem run_input_finish_marked_suffix
             (2 + ((projectionInputFinishScanBackCellsRev marked).length + 7 +
               (4 * marked.length + (4 + (4 * marked.length + 2))))))) := by
     rw [projectionInputFinishScanBackCellsRev_length]
-    omega
+    lia
   have hnil :
       projectionCodeCells ([] : Word MachineCodeSymbol) = [] := rfl
   rw [hcost, runConfig_add]
@@ -366,7 +366,7 @@ theorem run_input_finish_marked_suffix
           (4 * marked.length + (4 + (4 * marked.length + 2))) =
         ((projectionInputFinishScanBackCellsRev marked).length + 7) +
           (4 * marked.length + (4 + (4 * marked.length + 2))) by
-    omega,
+    lia,
     runConfig_add]
   rw [show
       projectionConfig 160
@@ -442,7 +442,7 @@ theorem run_input_finish_marked
             (2 + ((projectionInputFinishScanBackCellsRev marked).length + 7 +
               (4 * marked.length + (4 + (4 * marked.length + 2))))))) := by
     rw [projectionInputFinishScanBackCellsRev_length]
-    omega
+    lia
   have hnil :
       projectionCodeCells ([] : Word MachineCodeSymbol) = [] := rfl
   rw [hcost, runConfig_add]
@@ -502,7 +502,7 @@ theorem run_input_finish_marked
           (4 * marked.length + (4 + (4 * marked.length + 2))) =
         ((projectionInputFinishScanBackCellsRev marked).length + 7) +
           (4 * marked.length + (4 + (4 * marked.length + 2))) by
-    omega,
+    lia,
     runConfig_add]
   rw [show
       projectionConfig 160
@@ -575,7 +575,7 @@ theorem run_input_finish_marked_false_false_tail
             (2 + ((projectionInputFinishScanBackCellsRev marked).length + 7 +
               (4 * marked.length + (4 + (4 * marked.length + 2))))))) := by
     rw [projectionInputFinishScanBackCellsRev_length]
-    omega
+    lia
   rw [hcost, runConfig_add]
   simp only [projectionResultTailWorkCells]
   rw [run_state100_marked_ticks]
@@ -628,7 +628,7 @@ theorem run_input_finish_marked_false_false_tail
           (4 * marked.length + (4 + (4 * marked.length + 2))) =
         ((projectionInputFinishScanBackCellsRev marked).length + 7) +
           (4 * marked.length + (4 + (4 * marked.length + 2))) by
-    omega,
+    lia,
     runConfig_add]
   rw [show
       projectionConfig 160
@@ -695,7 +695,7 @@ theorem run_input_finish_marked_to_state150_tail
         (projectionCodeCells suffix) := by
   rw [show 8 * marked.length + 4 =
       4 * marked.length + (4 + 4 * marked.length) by
-    omega,
+    lia,
     runConfig_add]
   simp only [projectionBoolWordWorkCells]
   rw [run_state100_marked_ticks]
@@ -755,7 +755,7 @@ theorem run_input_bool_word_acc
               projectionInputRemainingCost (List.append marked [b]) rest := by
         simp [projectionInputRemainingCost, projectionInputMarkStepCost,
           Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
-        omega
+        lia
       rw [hcost, runConfig_add]
       rw [run_input_mark_one]
       rw [ih]
@@ -818,7 +818,7 @@ theorem run_input_bool_word_acc_suffix
               projectionInputRemainingCost (List.append marked [b]) rest := by
         simp [projectionInputRemainingCost, projectionInputMarkStepCost,
           Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
-        omega
+        lia
       rw [hcost, runConfig_add]
       rw [run_input_mark_one]
       rw [ih]
@@ -880,7 +880,7 @@ theorem run_input_bool_word_acc_false_false_suffix
               projectionInputRemainingCost (List.append marked [b]) rest := by
         simp [projectionInputRemainingCost, projectionInputMarkStepCost,
           Nat.mul_add, Nat.add_mul, Nat.mul_assoc]
-        omega
+        lia
       rw [hcost, runConfig_add]
       rw [run_input_mark_one]
       rw [ih (List.append marked [b]) baseLeftRev]

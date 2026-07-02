@@ -57,7 +57,7 @@ theorem cantorNumerator_lt_pow_four (s : DigitStream) (n : Nat) :
   | succ n ih =>
       simp [cantorNumerator, Nat.pow_succ]
       have hd := cantorDigit_lt_four (s n)
-      omega
+      lia
 
 theorem streamPartial_lt_one (s : DigitStream) (n : Nat) :
     streamPartial s n < (1 : QRat) := by
@@ -83,7 +83,7 @@ theorem cantorNumerator_suffix_lt (s : DigitStream) (m k : Nat) :
       calc
         4 * cantorNumerator s (m + k) + cantorDigit (s (m + k))
             < 4 * (cantorNumerator s m * 4 ^ k + 4 ^ k) := by
-              omega
+              lia
         _ = cantorNumerator s m * 4 ^ (k + 1) + 4 ^ (k + 1) := by
               simp [Nat.pow_succ, Nat.mul_add, Nat.mul_assoc, Nat.mul_comm]
 
@@ -92,7 +92,7 @@ theorem cantorNumerator_prefix_scaled_le (s : DigitStream) (m k : Nat) :
   induction k with
   | zero => simp
   | succ k ih =>
-      rw [show m + (k + 1) = (m + k) + 1 by omega]
+      rw [show m + (k + 1) = (m + k) + 1 by lia]
       simp only [cantorNumerator]
       calc
         cantorNumerator s m * 4 ^ (k + 1)
@@ -119,7 +119,7 @@ theorem cross_lt_probe_of_prefix_scaled_le {N P n k : Nat}
   have hscale : 4 * (N * 4 ^ k) ≤ 4 * P := by
     exact Nat.mul_le_mul_left 4 h
   have hstrict : 4 * (N * 4 ^ k) < 4 * P + 1 := by
-    omega
+    lia
   have hpos : 0 < 4 ^ n := Nat.pow_pos (by decide : 0 < 4)
   have hmul := (Nat.mul_lt_mul_right hpos).mpr hstrict
   calc
@@ -146,7 +146,7 @@ theorem streamProbe_lt_partial_of_true {s : DigitStream} {m : Nat}
     cantorNumerator_succ_true htrue
   unfold streamProbe streamPartial
   rw [hnum]
-  exact QRat.natFrac_lt_natFrac (pow_four_pos (m + 1)) (by omega)
+  exact QRat.natFrac_lt_natFrac (pow_four_pos (m + 1)) (by lia)
 
 theorem streamPartial_lt_probe_of_false {s : DigitStream} {m : Nat}
     (hfalse : s m = false) (n : Nat) :
@@ -161,10 +161,10 @@ theorem streamPartial_lt_probe_of_false {s : DigitStream} {m : Nat}
       simpa [hmk] using hprefix
     have hcross := cross_lt_probe_of_prefix_scaled_le (N := cantorNumerator s n)
       (P := cantorNumerator s m) (n := n) (k := k) hprefix'
-    have hden : n + k + 1 = m + 1 := by omega
+    have hden : n + k + 1 = m + 1 := by lia
     exact QRat.natFrac_lt_of_cross (pow_four_pos n) (pow_four_pos (m + 1))
       (by simpa [hden] using hcross)
-  · have hle : m + 1 ≤ n := by omega
+  · have hle : m + 1 ≤ n := by lia
     let k := n - (m + 1)
     have hnk : m + 1 + k = n := by
       dsimp [k]

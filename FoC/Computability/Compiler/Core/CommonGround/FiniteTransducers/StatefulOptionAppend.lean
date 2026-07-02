@@ -147,7 +147,7 @@ theorem statefulOptionAppendTransducer_wellFormed
   refine ⟨?_, ?_, ?_, ?_⟩
   · simp [statefulOptionAppendTransducer]
   · simp [statefulOptionAppendTransducer]
-    omega
+    lia
   · simp [statefulOptionAppendTransducer]
   intro state read target out hstep
   by_cases hstate : state < scanStateCount
@@ -163,7 +163,7 @@ theorem statefulOptionAppendTransducer_wellFormed
         rw [← htarget]
         have hlt := hnext state bit hstate
         simp [statefulOptionAppendTransducer]
-        omega
+        lia
   · simp [statefulOptionAppendTransducer, hstate] at hstep
 
 theorem statefulOptionAfter_lt
@@ -201,7 +201,7 @@ theorem statefulOptionAppendTransducer_run_state
           final) := by
   induction input generalizing state with
   | nil =>
-      have hnot : state ≠ scanStateCount := by omega
+      have hnot : state ≠ scanStateCount := by lia
       simp [FiniteTransducer.run, statefulOptionAppendTransducer,
         hstate, hnot, statefulOptionOutputFrom]
       rfl
@@ -211,8 +211,8 @@ theorem statefulOptionAppendTransducer_run_state
       rw [FiniteTransducer.run]
       have hnextState : next state bit < scanStateCount :=
         hnext state bit hstate
-      have hnot : state ≠ scanStateCount := by omega
-      have hnextNot : next state bit ≠ scanStateCount := by omega
+      have hnot : state ≠ scanStateCount := by lia
+      have hnextNot : next state bit ≠ scanStateCount := by lia
       simp [statefulOptionAppendTransducer, hstate,
         hnot, hnextNot,
         statefulOptionOutputFrom, optionEmitWord]
@@ -533,7 +533,7 @@ theorem StatefulOptionAppendMachineContract.run_scan
       intro state left hstate
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         D.runConfig rest.length
@@ -590,7 +590,7 @@ theorem StatefulOptionAppendMachineContract.run_scan_withPadding
       intro state left padding hstate
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         D.runConfig rest.length
@@ -685,7 +685,7 @@ theorem StatefulOptionAppendMachineContract.run_to_target
           FSTStatefulOptionAppendTargetTape
             next emit start input final leftScratch } := by
   rw [show input.length + 1 + final.length =
-      (input.length + 1) + final.length by omega]
+      (input.length + 1) + final.length by lia]
   rw [runConfig_add]
   rw [h.run_to_writer_start hnext start input leftScratch hstart]
   rw [h.writer_runs]
@@ -714,7 +714,7 @@ theorem StatefulOptionAppendMachineContract.run_to_target_from_tapeAtCells
           FSTStatefulOptionAppendTargetTapeFromLeft
             next emit start input final left } := by
   rw [show input.length + 1 + final.length =
-      (input.length + 1) + final.length by omega]
+      (input.length + 1) + final.length by lia]
   rw [runConfig_add]
   rw [runConfig_add D input.length 1
     { state := start

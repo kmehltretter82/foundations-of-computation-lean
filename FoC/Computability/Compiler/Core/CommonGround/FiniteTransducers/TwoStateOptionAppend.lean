@@ -239,7 +239,7 @@ theorem generatedTwoStateOptionAppendDescription_wellFormed
     simp [generatedTwoStateOptionAppendDescription,
       FiniteTransducer.twoStateOptionAppendHalt,
       FiniteTransducer.twoStateOptionAppendWriterStart]
-    omega
+    lia
   · simp [generatedTwoStateOptionAppendDescription]
   · intro t ht
     simp [generatedTwoStateOptionAppendDescription,
@@ -255,7 +255,7 @@ theorem generatedTwoStateOptionAppendDescription_wellFormed
         constructor <;>
         cases next0 false <;> cases next0 true <;>
         cases next1 false <;> cases next1 true <;>
-        simp <;> omega
+        simp <;> lia
     · have htwf :=
         FiniteTransducer.copyAppendWordWriteTransitionsFrom_wellFormed
           FiniteTransducer.twoStateOptionAppendWriterStart final t ht
@@ -278,7 +278,7 @@ theorem generatedTwoStateOptionAppendDescription_wellFormed
         FiniteTransducer.twoStateOptionAppendPrefix_source_lt_writerStart
           next0 next1 emit0 emit1 final t ht
       have husource : u.source = t.source := hkey.left.symm
-      omega
+      lia
     · have htbounds :=
         FiniteTransducer.copyAppendWordWriteTransitionsFrom_source_bounds
           FiniteTransducer.twoStateOptionAppendWriterStart
@@ -287,7 +287,7 @@ theorem generatedTwoStateOptionAppendDescription_wellFormed
         FiniteTransducer.twoStateOptionAppendPrefix_source_lt_writerStart
           next0 next1 emit0 emit1 final u hu
       have htsource : t.source = u.source := hkey.left
-      omega
+      lia
     · exact
         FiniteTransducer.copyAppendWordWriteTransitionsFrom_deterministic
           FiniteTransducer.twoStateOptionAppendWriterStart final
@@ -318,7 +318,7 @@ theorem generatedTwoStateOptionAppendDescription_haltTransitionFree
     simp [generatedTwoStateOptionAppendDescription,
       FiniteTransducer.twoStateOptionAppendHalt,
       FiniteTransducer.twoStateOptionAppendWriterStart] at hsource
-    omega
+    lia
   · have hbounds :=
       FiniteTransducer.copyAppendWordWriteTransitionsFrom_source_bounds
         FiniteTransducer.twoStateOptionAppendWriterStart
@@ -327,7 +327,7 @@ theorem generatedTwoStateOptionAppendDescription_haltTransitionFree
     simp [generatedTwoStateOptionAppendDescription,
       FiniteTransducer.twoStateOptionAppendHalt,
       FiniteTransducer.twoStateOptionAppendWriterStart] at hsource
-    omega
+    lia
 
 theorem generatedTwoStateOptionAppendDescription_subroutineReady
     (start : Bool)
@@ -369,7 +369,7 @@ theorem generatedTwoStateOptionAppendDescription_statefulContract
               generatedTwoStateOptionAppendDescription_step_bit
                 start next0 next1 emit0 emit1 final true bit left right
         | succ state =>
-            omega
+            lia
   · intro state left hstate
     cases state with
     | zero =>
@@ -385,7 +385,7 @@ theorem generatedTwoStateOptionAppendDescription_statefulContract
               generatedTwoStateOptionAppendDescription_step_blank
                 start next0 next1 emit0 emit1 final true left
         | succ state =>
-            omega
+            lia
   · intro left
     exact generatedTwoStateOptionAppendDescription_writerRuns
       start next0 next1 emit0 emit1 final left

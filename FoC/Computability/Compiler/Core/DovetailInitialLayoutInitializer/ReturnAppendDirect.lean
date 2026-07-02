@@ -300,7 +300,7 @@ theorem
   | cons bit rest ih =>
       simp only [List.map_cons, List.length_cons, List.reverse_cons]
       rw [show rest.length + 1 + 2 = (rest.length + 2) + 1 by
-        omega]
+        lia]
       rw [runConfig]
       rw [inputTapeRightCellsDirectCopierDescription_step_return34]
       simpa [List.append_assoc] using ih bit (some current :: right)
@@ -633,7 +633,7 @@ theorem
   | cons bit rest ih =>
       simp only [List.map_cons, List.length_cons, List.reverse_cons]
       rw [show rest.length + 1 + 2 = (rest.length + 2) + 1 by
-        omega]
+        lia]
       rw [runConfig]
       rw [inputTapeRightCellsDirectCopierDescription_step_return64]
       simpa [List.append_assoc] using ih bit (some current :: right)
@@ -850,7 +850,7 @@ theorem
   | cons bit rest ih =>
       simp only [List.map_cons, List.length_cons, List.reverse_cons]
       rw [show rest.length + 1 + 2 = (rest.length + 2) + 1 by
-        omega]
+        lia]
       rw [runConfig]
       rw [inputTapeRightCellsDirectCopierDescription_step_return74]
       simpa [List.append_assoc] using ih bit (some current :: right)
@@ -1021,7 +1021,7 @@ theorem
   | cons bit rest ih =>
       simp only [List.map_cons, List.length_cons, List.reverse_cons]
       rw [show rest.length + 1 + 3 = (rest.length + 3) + 1 by
-        omega]
+        lia]
       rw [runConfig]
       rw [inputTapeRightCellsDirectCopierDescription_step_return80]
       simpa [List.append_assoc] using ih bit (some current :: right)
@@ -1039,7 +1039,7 @@ theorem
           ((List.append pre (false :: false :: tail)).map some)) := by
   rw [show pre.length + 5 = 2 + (pre.reverse.length + 3) by
     simp
-    omega]
+    lia]
   rw [runConfig_add]
   have hprefix :
       ITCD.runConfig 2
@@ -1457,7 +1457,7 @@ theorem
         ((List.append preAfterDone cellBits).length + 5) =
       tickSteps + (doneSteps + (cellSteps +
         ((List.append preAfterDone cellBits).length + 5))) by
-      omega]
+      lia]
   rw [runConfig_add]
   rw [show
       config 0

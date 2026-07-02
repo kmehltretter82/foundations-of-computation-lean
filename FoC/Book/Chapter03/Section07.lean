@@ -144,7 +144,7 @@ theorem pump_two_count_symbol [DecidableEq alpha]
   rw [show Word.RepeatWord y 2 = Word.Concat y y by
     simp [Word.RepeatWord, Word.Concat]]
   repeat rw [Word.count_concat]
-  omega
+  lia
 
 /-!
 # Backreference Language
@@ -200,7 +200,7 @@ theorem anbanWord_injective {p q r s : Nat}
           cases ih htail' with
           | intro hpr hqs =>
               constructor
-              · omega
+              · lia
               · exact hqs
 
 theorem anban_members_have_equal_blocks {p q : Nat}
@@ -292,7 +292,7 @@ theorem anbanWord_delete_initial_a
   unfold Section03.anbanWord
   rw [← Word.concat_assoc]
   rw [repeatSymbol_concat_same]
-  have harith : lenx + (n - lenxy) = n - leny := by omega
+  have harith : lenx + (n - lenxy) = n - leny := by lia
   rw [harith]
 
 theorem anban_no_pumping_property :
@@ -328,8 +328,8 @@ theorem anban_no_pumping_property :
                       have hyLe : Word.Length y <= n := by
                         have hyLeXY : Word.Length y <= Word.Length (Word.Concat x y) := by
                           simp [Word.length_concat]
-                        omega
-                      omega
+                        lia
+                      lia
 
 theorem anban_not_regular_from_pumping_lemma
     (pumpingLemma : Pumping.PumpingLemmaConclusion Section03.anbanLanguage) :
@@ -377,7 +377,7 @@ theorem ablock_word_count_a (aCount bCount : Nat) :
         (Word.RepeatSymbol Section01.AB.b bCount)) = aCount := by
   rw [Word.count_concat, Word.count_repeatSymbol_same]
   rw [Word.count_repeatSymbol_different]
-  · omega
+  · lia
   · intro h
     cases h
 
@@ -387,7 +387,7 @@ theorem ablock_word_count_b (aCount bCount : Nat) :
         (Word.RepeatSymbol Section01.AB.b bCount)) = bCount := by
   rw [Word.count_concat, Word.count_repeatSymbol_same]
   rw [Word.count_repeatSymbol_different]
-  · omega
+  · lia
   · intro h
     cases h
 
@@ -421,7 +421,7 @@ theorem ab_count_a_pos_of_length_pos_count_b_zero {w : Word Section01.AB}
       cases c with
       | a =>
           simp [Word.Count]
-          omega
+          lia
       | b =>
           simp [Word.Count] at hb
 
@@ -494,7 +494,7 @@ theorem ablock_prefix_before_boundary_count_b_zero
     exact Word.count_repeatSymbol_different (by intro h; cases h)
       (Word.Length (Word.Concat x y))
   rw [Word.count_concat] at hbxy
-  omega
+  lia
 
 theorem anbn_prefix_before_boundary_count_b_zero
     {x y z : Word Section01.AB} {n : Nat}
@@ -536,7 +536,7 @@ theorem anbn_pump_zero_unequal_counts
   rw [Word.count_concat, Word.count_concat] at hcountAOriginal
   rw [Word.count_concat, Word.count_concat] at hcountBOriginal
   rw [Word.count_concat, Word.count_concat] at hcountsZero
-  omega
+  lia
 
 theorem anbn_no_pumping_property :
     ¬ Pumping.HasPumpingProperty anbnLanguage := by
@@ -684,7 +684,7 @@ theorem squareBlock_length (p q : Nat) :
     Word.Length (squareBlockWord p q) = p + q + 2 := by
   unfold squareBlockWord
   simp [Word.Length, Word.Concat, Word.RepeatSymbol, Word.Symbol]
-  omega
+  lia
 
 theorem squareBlock_take_before_first_b_count_b {p q l : Nat}
     (hl : l <= p) :
@@ -724,12 +724,12 @@ theorem squareBlock_take_middle {p q l : Nat}
   simp [Word.Concat, Word.RepeatSymbol, Word.Symbol, List.take_append, List.take_replicate]
   have hmin1 : min l p = p := by omega
   rw [hmin1]
-  have hpos : l - p = (l - p - 1) + 1 := by omega
+  have hpos : l - p = (l - p - 1) + 1 := by lia
   rw [hpos]
   simp [List.take_append, List.take_replicate]
   have hmin2 : min (l - p - 1) q = l - p - 1 := by omega
   rw [hmin2]
-  have hzero : l - p - 1 - q = 0 := by omega
+  have hzero : l - p - 1 - q = 0 := by lia
   rw [hzero]
   simp
 
@@ -740,14 +740,14 @@ theorem squareBlock_drop_middle {p q l : Nat}
         (Word.Symbol Section01.AB.b) := by
   unfold squareBlockWord
   simp [Word.Concat, Word.RepeatSymbol, Word.Symbol, List.drop_append, List.drop_replicate]
-  have hpzero : p - l = 0 := by omega
+  have hpzero : p - l = 0 := by lia
   rw [hpzero]
-  have hdropP : l - p = (l - p - 1) + 1 := by omega
+  have hdropP : l - p = (l - p - 1) + 1 := by lia
   rw [hdropP]
   simp [List.drop_append, List.drop_replicate]
-  have harith : q - (l - p - 1) = p + q + 1 - l := by omega
+  have harith : q - (l - p - 1) = p + q + 1 - l := by lia
   rw [harith]
-  have hzero : l - p - 1 - q = 0 := by omega
+  have hzero : l - p - 1 - q = 0 := by lia
   rw [hzero]
   simp
 
@@ -788,7 +788,7 @@ theorem single_b_block_eq_trailing_b {p r s : Nat}
           cases ih htail' with
           | intro hps hr =>
               constructor
-              · omega
+              · lia
               · exact hr
 
 theorem square_block_members_have_equal_a_blocks {u : Word Section01.AB}
@@ -811,11 +811,11 @@ theorem square_block_members_have_equal_a_blocks {u : Word Section01.AB}
   have hcount : Word.Count Section01.AB.b u = 1 := by
     have hc := congrArg (Word.Count Section01.AB.b) h
     rw [Word.count_concat, squareBlock_count_b p q] at hc
-    omega
+    lia
   have hlen : p + q + 2 = 2 * l := by
     have hl := congrArg Word.Length h
     rw [Word.length_concat, squareBlock_length p q] at hl
-    omega
+    lia
   have hlpos : 0 < l := by
     cases u with
     | nil =>
@@ -825,12 +825,12 @@ theorem square_block_members_have_equal_a_blocks {u : Word Section01.AB}
   have hp : p < l := by
     by_cases hplt : p < l
     · exact hplt
-    · have hle : l <= p := by omega
+    · have hle : l <= p := by lia
       have hczero : Word.Count Section01.AB.b u = 0 := by
         rw [huPrefix]
         exact squareBlock_take_before_first_b_count_b hle
-      omega
-  have hlmid : l <= p + q + 1 := by omega
+      lia
+  have hlmid : l <= p + q + 1 := by lia
   have hshape :
       Word.Concat (Word.RepeatSymbol Section01.AB.a p)
           (Word.Concat (Word.Symbol Section01.AB.b)
@@ -842,7 +842,7 @@ theorem square_block_members_have_equal_a_blocks {u : Word Section01.AB}
     rw [← huPrefix, ← huSuffix]
   cases single_b_block_eq_trailing_b hshape with
   | intro _ _ =>
-      omega
+      lia
 
 theorem squareBlock_delete_initial_a
     {x y z : Word Section01.AB} {n : Nat}
@@ -926,7 +926,7 @@ theorem squareBlock_delete_initial_a
   unfold squareBlockWord
   rw [← Word.concat_assoc]
   rw [repeatSymbol_concat_same]
-  have harith : lenx + (n - lenxy) = n - leny := by omega
+  have harith : lenx + (n - lenxy) = n - leny := by lia
   rw [harith]
 
 theorem square_no_pumping_property :
@@ -944,7 +944,7 @@ theorem square_no_pumping_property :
         simp [List.append_assoc]
       have hwLength : n <= Word.Length w := by
         simp [w, squareBlock_length]
-        omega
+        lia
       have hdec := hn.right w hwMem hwLength
       cases hdec with
       | intro x hx =>
@@ -968,8 +968,8 @@ theorem square_no_pumping_property :
                           have hyLe : Word.Length y <= n := by
                             have hyLeXY : Word.Length y <= Word.Length (Word.Concat x y) := by
                               simp [Word.length_concat]
-                            omega
-                          omega
+                            lia
+                          lia
 
 theorem square_not_regular_from_pumping_lemma
     (pumpingLemma : Pumping.PumpingLemmaConclusion squareLanguage) :
@@ -1119,7 +1119,7 @@ theorem mirror_block_members_have_equal_a_blocks {u : Word Section01.AB}
           cases mirror_strip_a h with
           | intro _ hv =>
               have hpq := ih hv.right
-              omega
+              lia
 
 theorem mirrorBlock_delete_initial_a
     {x y z : Word Section01.AB} {n : Nat}
@@ -1210,7 +1210,7 @@ theorem mirrorBlock_delete_initial_a
   rw [← Word.concat_assoc]
   rw [repeatSymbol_concat_same]
   have harith : lenx + (n - lenxy) = n - leny := by
-    omega
+    lia
   rw [harith]
 
 theorem reverse_square_no_pumping_property :
@@ -1253,8 +1253,8 @@ theorem reverse_square_no_pumping_property :
                           have hyLe : Word.Length y <= n := by
                             have hyLeXY : Word.Length y <= Word.Length (Word.Concat x y) := by
                               simp [Word.length_concat]
-                            omega
-                          omega
+                            lia
+                          lia
 
 theorem reverse_square_not_regular_from_pumping_lemma
     (pumpingLemma : Pumping.PumpingLemmaConclusion reverseSquareLanguage) :
@@ -1332,7 +1332,7 @@ theorem more_bs_block_pump_two_not_mem
   rw [pump_two_count_symbol Section01.AB.a x y z,
     pump_two_count_symbol Section01.AB.b x y z,
     hcountAOriginal, hcountBOriginal, hbY] at hcountLess
-  omega
+  lia
 
 theorem more_bs_block_no_pumping_property :
     ¬ Pumping.HasPumpingProperty moreBsBlockLanguage := by
@@ -1346,7 +1346,7 @@ theorem more_bs_block_no_pumping_property :
         exists n
         exists n + 1
         constructor
-        · omega
+        · lia
         · rfl
       have hwLength : n <= Word.Length w := by
         simp [w, Word.length_concat, Word.length_repeatSymbol]

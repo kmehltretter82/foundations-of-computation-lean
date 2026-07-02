@@ -329,7 +329,7 @@ theorem restoreStageInputSecondBitDescription_run_succ
           tape := stageInputSecondBitMarkedTape w stage } =
       { state := RSIB.halt
         tape := Tape.input (stageInputBits w stage) } := by
-  rw [show n + 1 = 1 + n by omega]
+  rw [show n + 1 = 1 + n by lia]
   rw [runConfig_add]
   rw [restoreStageInputSecondBitDescription_run]
   exact
@@ -344,7 +344,7 @@ theorem restoreStageInputSecondBitDescription_run_checked_succ
           tape := stageInputSecondBitMarkedCheckedTape w stage } =
       { state := RSIB.halt
         tape := stageInputCheckedInputTape w stage } := by
-  rw [show n + 1 = 1 + n by omega]
+  rw [show n + 1 = 1 + n by lia]
   rw [runConfig_add]
   rw [restoreStageInputSecondBitDescription_run_checked]
   exact
@@ -451,7 +451,7 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
           initial] using
           congrArg Configuration.state
             (hrun.symm.trans hn)
-      omega
+      lia
   | cons b rest =>
       cases b
       · cases rest with
@@ -508,7 +508,7 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                     using
                     congrArg Configuration.state
                       (hrunFinal.symm.trans hn)
-                omega
+                lia
         | cons c tail =>
             cases c
             · refine ⟨tail, rfl, ?_⟩
@@ -553,7 +553,7 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                                       (none :: tail.map some) } := by
                             rw [show
                               Nat.succ (Nat.succ (Nat.succ k)) =
-                                3 + k by omega]
+                                3 + k by lia]
                             rw [runConfig_add]
                             rw [markStageInputSecondBitDescription_run_bits
                               tail]
@@ -633,7 +633,7 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                       using
                       congrArg Configuration.state
                         (hrunFinal.symm.trans hn)
-                  omega
+                  lia
       · have hstep :
             MSIB.stepConfig
                 (MSIB.initial
@@ -651,7 +651,7 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
             initial] using
             congrArg Configuration.state
               (hrun.symm.trans hn)
-        omega
+        lia
 
 def StageInputMarkedScannerSpec
     (scanner : MachineDescription) : Prop :=
@@ -876,7 +876,7 @@ theorem stageInputRecognizerSpec_of_markedCore
             simpa [B, RestoreStageInputSecondBitDescription,
               runConfig] using
               congrArg Configuration.state hBRunMarked
-          omega
+          lia
       | succ nB =>
           have htarget :
               B.runConfig (nB + 1)

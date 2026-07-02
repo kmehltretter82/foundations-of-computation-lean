@@ -402,7 +402,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceT
               fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner,
               DovetailInitialLayoutInitializer.tapeAtCells,
               Tape.contextLength, Tape.move, Tape.moveRight, hbits] <;>
-            omega
+            lia
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_eq_tapeAtCells_cons_cons_configRunner
     (L : SimulatorLayout) (first second : Bool) (rest : Word Bool)

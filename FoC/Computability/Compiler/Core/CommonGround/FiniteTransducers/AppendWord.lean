@@ -47,7 +47,7 @@ theorem find?_matches_none_of_sources_lt
     simp at hmatch
     exact hmatch.left
   have hlt := hsource t ht
-  omega
+  lia
 
 theorem copyAppendWordWriteTransitionsFrom_step_with_pre
     (pre : List TransitionDescription) (source startState halt : Nat)
@@ -108,7 +108,7 @@ theorem copyAppendWordWriteTransitionsFrom_run_with_pre
       intro halt D
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :=
         copyAppendWordWriteTransitionsFrom_step_with_pre
@@ -141,7 +141,7 @@ theorem copyAppendWordWriteTransitionsFrom_run_with_pre
             simp at ht
             rcases ht with ht | ht
             · have hlt := hpre t ht
-              omega
+              lia
             · subst t
               simp [first]
           have htail :=
@@ -220,7 +220,7 @@ theorem generatedAppendWordDescription_run_scan
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         (generatedAppendWordDescription final).runConfig rest.length
@@ -467,7 +467,7 @@ theorem generatedAppendWordDescription_wellFormed
               FiniteTransducer.copyAppendWordHalt (bit :: next :: more) =
                 1 + (next :: more).length := by
             simp [FiniteTransducer.copyAppendWordHalt]
-            omega
+            lia
           refine ⟨?_, ?_, ?_, ?_, ?_⟩
           · simp [generatedAppendWordDescription,
               FiniteTransducer.copyAppendWordHalt]
@@ -516,7 +516,7 @@ theorem generatedAppendWordDescription_wellFormed
                   FiniteTransducer.copyAppendWordWriteTransitionsFrom_source_bounds
                     1 (1 + (next :: more).length) (next :: more) u hu'
                 have husource : u.source = 0 := hkey.left.symm
-                omega
+                lia
             · simp [first, scanFalse, scanTrue,
                 FiniteTransducer.copyAppendWordScanFalseTransition,
                 FiniteTransducer.copyAppendWordScanTrueTransition] at hu
@@ -530,7 +530,7 @@ theorem generatedAppendWordDescription_wellFormed
                   FiniteTransducer.copyAppendWordWriteTransitionsFrom_source_bounds
                     1 (1 + (next :: more).length) (next :: more) t ht'
                 have htsource : t.source = 0 := hkey.left
-                omega
+                lia
             · have ht' :
                 t ∈ FiniteTransducer.copyAppendWordWriteTransitionsFrom
                   1 (1 + (next :: more).length) (next :: more) := by
@@ -577,7 +577,7 @@ theorem generatedAppendWordDescription_haltTransitionFree
               FiniteTransducer.copyAppendWordHalt (bit :: next :: more) =
                 1 + (next :: more).length := by
             simp [FiniteTransducer.copyAppendWordHalt]
-            omega
+            lia
           intro t ht
           rw [htrans] at ht
           rcases List.mem_append.mp ht with ht | ht
@@ -598,7 +598,7 @@ theorem generatedAppendWordDescription_haltTransitionFree
             have hsourceEq :
                 t.source = 1 + (next :: more).length := by
               simpa [generatedAppendWordDescription, hhalt] using hsource
-            omega
+            lia
 
 theorem generatedAppendWordDescription_subroutineReady
     (final : Word Bool) :
@@ -623,7 +623,7 @@ theorem generatedAppendWordDescription_writerRuns
               FiniteTransducer.copyAppendWordHalt (bit :: next :: more) =
                 1 + (next :: more).length by
             simp [FiniteTransducer.copyAppendWordHalt]
-            omega]
+            lia]
           rw [runConfig_add]
           rw [generatedAppendWordDescription_step_blank]
           let first : TransitionDescription :=

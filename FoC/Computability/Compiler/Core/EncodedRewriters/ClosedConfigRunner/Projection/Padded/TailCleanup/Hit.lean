@@ -237,7 +237,7 @@ theorem acceptHitFromRewindDescription_run_scan
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         acceptHitFromRewindDescription.runConfig rest.length
@@ -302,7 +302,7 @@ theorem acceptHitFromRewindDescription_run_to_selectedHit
       { state := acceptHitFromRewindDescription.halt
         tape := selectedHitRightEndTape true L } := by
   rw [show (sourceBits L).length + 5 =
-      ((sourceBits L).length + 1) + 4 by omega]
+      ((sourceBits L).length + 1) + 4 by lia]
   rw [runConfig_add]
   rw [acceptHitFromRewindDescription_run_to_rejectHit]
   by_cases hreject : L.rejectHit <;>

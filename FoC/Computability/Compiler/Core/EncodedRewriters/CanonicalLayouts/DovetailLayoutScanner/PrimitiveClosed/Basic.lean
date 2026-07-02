@@ -701,7 +701,7 @@ theorem natSuffixScannerDescription_runConfig_nonblank_suffix_inv
     rcases
         DovetailStagePrefix.stageNatBits_reverse_map_some_cons stage with
       ⟨tail, htail⟩
-    rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by omega]
+    rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by lia]
     rw [runConfig_add]
     have hprefix :=
       DovetailStagePrefix.natSuffix_run_state200_stageNat_to_state210

@@ -40,7 +40,7 @@ theorem scanner_marked_done_tail_decodeNat_none_ne_halt
             rfl)
           (by
             change (150 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol suffix =>
       cases symbol with
       | header =>
@@ -122,7 +122,7 @@ theorem scanner_marked_done_tail_decodeNat_none_ne_halt
                   Tape.moveRight])
               (by
                 change (151 : Nat) ≠ 999
-                omega)
+                lia)
       | zero =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -143,7 +143,7 @@ theorem scanner_marked_done_tail_decodeNat_none_ne_halt
                   Tape.moveRight])
               (by
                 change (151 : Nat) ≠ 999
-                omega)
+                lia)
       | one =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -164,7 +164,7 @@ theorem scanner_marked_done_tail_decodeNat_none_ne_halt
                   Tape.moveRight])
               (by
                 change (151 : Nat) ≠ 999
-                omega)
+                lia)
       | moveLeft =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -185,7 +185,7 @@ theorem scanner_marked_done_tail_decodeNat_none_ne_halt
                   Tape.moveRight])
               (by
                 change (151 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -206,7 +206,7 @@ theorem scanner_marked_done_tail_decodeNat_none_ne_halt
                   Tape.moveRight])
               (by
                 change (152 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem scanner_marked_done_tail_decodeNat_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}

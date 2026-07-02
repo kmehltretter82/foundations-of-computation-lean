@@ -329,7 +329,7 @@ theorem fourCount_yields_preserves_balanced
                               SententialCountTerminal,
                               SententialCountNonterminal, fcN, fcT,
                               ggNonterminal, ggTerminal] at hbalanced ⊢ <;>
-                            omega
+                            lia
 
 theorem fourCount_derives_preserves_balanced
     {x y : SententialForm FourCountTerminal FourCountNT}
@@ -917,7 +917,7 @@ theorem fourCount_marker_bag_to_marker_word_derives
               have haRest :
                   Word.Count FourCountTerminal.a rest <= aRest := by
                 simp [Word.Count] at ha
-                omega
+                lia
               have hbRest :
                   Word.Count FourCountTerminal.b rest <= bCount := by
                 simpa [Word.Count] using hb
@@ -946,7 +946,7 @@ theorem fourCount_marker_bag_to_marker_word_derives
                   aRest + 1 -
                       (1 + Word.Count FourCountTerminal.a rest) =
                     aRest - Word.Count FourCountTerminal.a rest := by
-                omega
+                lia
               have hrepA :
                   List.replicate (aRest + 1) (fcN FourCountNT.markA) =
                     fcN FourCountNT.markA :: fourCountAForm aRest := by
@@ -965,7 +965,7 @@ theorem fourCount_marker_bag_to_marker_word_derives
               have hbRest :
                   Word.Count FourCountTerminal.b rest <= bRest := by
                 simp [Word.Count] at hb
-                omega
+                lia
               have hcRest :
                   Word.Count FourCountTerminal.c rest <= cCount := by
                 simpa [Word.Count] using hc
@@ -1002,7 +1002,7 @@ theorem fourCount_marker_bag_to_marker_word_derives
                   bRest + 1 -
                       (1 + Word.Count FourCountTerminal.b rest) =
                     bRest - Word.Count FourCountTerminal.b rest := by
-                omega
+                lia
               simpa [fourCountMarkerBag, fourCountBForm,
                 fourCountMarkerWord, fourCountMarkerOfTerminal,
                 Word.Count, hsubB, List.append_assoc] using hall
@@ -1020,7 +1020,7 @@ theorem fourCount_marker_bag_to_marker_word_derives
               have hcRest :
                   Word.Count FourCountTerminal.c rest <= cRest := by
                 simp [Word.Count] at hc
-                omega
+                lia
               have hdRest :
                   Word.Count FourCountTerminal.d rest <= dCount := by
                 simpa [Word.Count] using hd
@@ -1067,7 +1067,7 @@ theorem fourCount_marker_bag_to_marker_word_derives
                   cRest + 1 -
                       (1 + Word.Count FourCountTerminal.c rest) =
                     cRest - Word.Count FourCountTerminal.c rest := by
-                omega
+                lia
               simpa [fourCountMarkerBag, fourCountCForm,
                 fourCountMarkerWord, fourCountMarkerOfTerminal,
                 Word.Count, hsubC, List.append_assoc] using hall
@@ -1088,7 +1088,7 @@ theorem fourCount_marker_bag_to_marker_word_derives
               have hdRest :
                   Word.Count FourCountTerminal.d rest <= dRest := by
                 simp [Word.Count] at hd
-                omega
+                lia
               have hmoveCs :
                   GeneralGrammar.Derives FourCountGrammar
                     (fourCountMarkerBag aCount bCount cCount (dRest + 1))
@@ -1145,7 +1145,7 @@ theorem fourCount_marker_bag_to_marker_word_derives
                   dRest + 1 -
                       (1 + Word.Count FourCountTerminal.d rest) =
                     dRest - Word.Count FourCountTerminal.d rest := by
-                omega
+                lia
               simpa [fourCountMarkerBag, fourCountDForm,
                 fourCountMarkerWord, fourCountMarkerOfTerminal,
                 Word.Count, hsubD, List.append_assoc] using hall

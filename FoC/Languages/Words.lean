@@ -133,7 +133,7 @@ theorem count_concat [DecidableEq alpha] (a : alpha) (x y : Word alpha) :
       · simp [Count, h]
         have ih' : Count a (List.append x y) = Count a x + Count a y := ih
         change 1 + Count a (List.append x y) = 1 + Count a x + Count a y
-        omega
+        lia
       · simp [Count, h]
         simpa using ih
 

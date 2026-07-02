@@ -228,7 +228,7 @@ theorem codePrefixParserBranchMachine_haltsWithOutput_encodeDescriptionAppend
               hhalt, ?_⟩
           have hlen :
               1 + rest.length = rest.length + 1 := by
-            omega
+            lia
           have htransAppend :
               MachineDescription.encodeTransitionsAppend rest input =
                 List.append

@@ -87,7 +87,7 @@ theorem not_even_of_odd {n : Int} (hodd : Odd n) : ¬ Even n := by
   | intro k hk =>
       cases heven with
       | intro l hl =>
-          omega
+          lia
 
 theorem even_add {m n : Int} (hm : Even m) (hn : Even n) : Even (m + n) := by
   cases hm with
@@ -111,7 +111,7 @@ theorem odd_add_odd_even {m n : Int} (hm : Odd m) (hn : Odd n) : Even (m + n) :=
       | intro l hl =>
           exists k + l + 1
           rw [hk, hl]
-          omega
+          lia
 
 theorem odd_mul {m n : Int} (hm : Odd m) (hn : Odd n) : Odd (m * n) := by
   cases hm with
@@ -145,7 +145,7 @@ theorem odd_square {n : Int} (h : Odd n) : Odd (n * n) := by
       rw [hk]
       simp [Int.mul_add, Int.mul_comm, Int.mul_left_comm,
         Int.add_assoc, Int.add_comm, Int.add_left_comm]
-      omega
+      lia
 
 theorem odd_square_not_even {n : Int} (h : Odd n) : ¬ Even (n * n) :=
   not_even_of_odd (odd_square h)
@@ -154,7 +154,7 @@ theorem not_four_divides_two : ¬ Divides 4 2 := by
   intro h
   cases h with
   | intro k hk =>
-      omega
+      lia
 
 end IntPred
 

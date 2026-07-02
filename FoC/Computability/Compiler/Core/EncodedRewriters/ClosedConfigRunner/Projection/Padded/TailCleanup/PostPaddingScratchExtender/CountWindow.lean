@@ -751,7 +751,7 @@ theorem sourceRewindDescription_run_from_leftStack_withRight
       rw [show (current :: rest).length + 2 =
         1 + ((rest.length + 1) + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstart :
           sourceRewindDescription.runConfig 1

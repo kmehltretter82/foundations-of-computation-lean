@@ -85,13 +85,13 @@ theorem runConfig_halt_after_prefix
   by_cases hle : pref ≤ steps
   · refine ⟨steps - pref, ?_⟩
     have hsteps_eq : steps = pref + (steps - pref) := by
-      omega
+      lia
     rw [hsteps_eq, runConfig_add] at hsteps
     rw [hprefix] at hsteps
     exact hsteps
   · let rem := pref - steps
     have hprefix_eq : pref = steps + rem := by
-      omega
+      lia
     have hprefix_halt :
         D.runConfig pref c = { state := D.halt, tape := T } := by
       rw [hprefix_eq, runConfig_add, hsteps]
@@ -344,7 +344,7 @@ theorem state120_natPrefixFailure_ne_halt
             rfl)
           (by
             change (120 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest ih =>
       cases symbol with
       | header =>
@@ -365,7 +365,7 @@ theorem state120_natPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (122 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -384,7 +384,7 @@ theorem state120_natPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (122 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           simp [decodeNat] at hdecode
           cases hrest : decodeNat rest with
@@ -428,7 +428,7 @@ theorem state120_natPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | zero =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -447,7 +447,7 @@ theorem state120_natPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | one =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -466,7 +466,7 @@ theorem state120_natPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | moveLeft =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -485,7 +485,7 @@ theorem state120_natPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (121 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -504,7 +504,7 @@ theorem state120_natPrefixFailure_ne_halt
                   Tape.read])
               (by
                 change (120 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem run_state120_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -530,7 +530,7 @@ theorem state130_cellPrefixFailure_ne_halt
             rfl)
           (by
             change (130 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest =>
       cases symbol with
       | header =>
@@ -551,7 +551,7 @@ theorem state130_cellPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -570,7 +570,7 @@ theorem state130_cellPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -589,7 +589,7 @@ theorem state130_cellPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | done =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -608,7 +608,7 @@ theorem state130_cellPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (131 : Nat) ≠ 999
-                omega)
+                lia)
       | blank =>
           simp [decodeCell] at hdecode
       | zero =>
@@ -634,7 +634,7 @@ theorem state130_cellPrefixFailure_ne_halt
                   Tape.moveRight])
               (by
                 change (145 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -653,7 +653,7 @@ theorem state130_cellPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (135 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem run_state130_decodeCell_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -690,7 +690,7 @@ theorem run_state130_blank_cell_ne_halt
           Tape.moveRight])
       (by
         change (139 : Nat) ≠ 999
-        omega)
+        lia)
 
 def markingTailConfig
     (marked : Word Bool) (remainingCells : Nat)
@@ -759,7 +759,7 @@ theorem run_marking_tail_mark_one
   rw [runConfig_add]
   rw [run_marking_tail_to_first_payload]
   rw [show 6 + (scanRev.length + 4) + 4 =
-      6 + ((scanRev.length + 4) + 4) by omega]
+      6 + ((scanRev.length + 4) + 4) by lia]
   rw [runConfig_add]
   have hcellBits :
       (encodeCodeWordAsInput
@@ -1152,7 +1152,7 @@ theorem run_state200_stageNat_to_state210
         run_state200_done_to_state210 left right
   | succ stage ih =>
       rw [show 4 * (stage + 1) + 4 =
-          4 + (4 * stage + 4) by omega]
+          4 + (4 * stage + 4) by lia]
       rw [runConfig_add]
       rw [show
           (stageNatBits (stage + 1)).map some =
@@ -1202,7 +1202,7 @@ theorem run_state210_encoded_cons_ne_halt
           Tape.read])
       (by
         change (210 : Nat) ≠ 999
-        omega)
+        lia)
 
 theorem run_state200_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -1219,7 +1219,7 @@ theorem run_state200_decodeNat_none_ne_halt
             rfl)
           (by
             change (200 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest ih =>
       cases symbol with
       | header =>
@@ -1240,7 +1240,7 @@ theorem run_state200_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (202 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -1259,7 +1259,7 @@ theorem run_state200_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (202 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           simp [decodeNat] at hdecode
           cases hrest : decodeNat rest with
@@ -1303,7 +1303,7 @@ theorem run_state200_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | zero =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -1322,7 +1322,7 @@ theorem run_state200_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | one =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -1341,7 +1341,7 @@ theorem run_state200_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | moveLeft =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -1360,7 +1360,7 @@ theorem run_state200_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             scanner_ne_halt_of_reaches_stepConfig_none
@@ -1379,7 +1379,7 @@ theorem run_state200_decodeNat_none_ne_halt
                   Tape.read])
               (by
                 change (200 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem state200_nonemptySuffixFailure_ne_halt
     (stage : Nat) (symbol : MachineCodeSymbol)

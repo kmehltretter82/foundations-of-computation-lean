@@ -238,12 +238,12 @@ theorem assemblyPrefixDescription_runConfig_eq_skeleton_of_trace_ne_210
 theorem assemblySkeletonDescription_lookupTransition_eq_scanner
     (state : Nat) (read : Option Bool) (hstate : state < 1800) :
     ASM.lookupTransition state read = SIMS.lookupTransition state read := by
-  have h1800' : 1800 ≠ state := by omega
-  have h1801' : 1801 ≠ state := by omega
-  have h1802' : 1802 ≠ state := by omega
-  have h1803' : 1803 ≠ state := by omega
-  have h1804' : 1804 ≠ state := by omega
-  have h1805' : 1805 ≠ state := by omega
+  have h1800' : 1800 ≠ state := by lia
+  have h1801' : 1801 ≠ state := by lia
+  have h1802' : 1802 ≠ state := by lia
+  have h1803' : 1803 ≠ state := by lia
+  have h1804' : 1804 ≠ state := by lia
+  have h1805' : 1805 ≠ state := by lia
   cases read <;>
     simp [ASM, AssemblySkeletonDescription, lookupTransition, Matches,
       transition, h1800', h1801', h1802', h1803', h1804', h1805']
@@ -266,7 +266,7 @@ theorem assemblySkeletonDescription_runConfig_eq_scanner
       simp only [runConfig]
       have hlt1800 : c.state < 1800 := by
         have hs : SIMS.stateCount = 1000 := rfl
-        omega
+        lia
       rw [assemblySkeletonDescription_stepConfig_eq_scanner c hlt1800]
       cases hstep : SIMS.stepConfig c with
       | none => rfl

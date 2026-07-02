@@ -1557,7 +1557,7 @@ theorem controllerInitialRawBoolWordHeaderEmitterDescription_run_phaseChain
         (1 + ((outputBits.length + 1) + 7)) =
       headerSteps + (countSteps + (doneSteps + (cellSteps +
         (1 + ((outputBits.length + 1) + 7))))) by
-      omega]
+      lia]
   rw [runConfig_add]
   rw [hheader]
   rw [runConfig_add]

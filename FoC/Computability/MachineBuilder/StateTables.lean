@@ -171,7 +171,7 @@ theorem extendStates_wellFormed
   constructor
   · have hpos : 0 < D.stateCount := hD.left
     change 0 < D.stateCount + extra
-    omega
+    lia
   constructor
   · exact Nat.lt_add_right extra hD.right.left
   constructor
@@ -248,7 +248,7 @@ theorem offsetStates_wellFormed
   constructor
   · have hpos : 0 < D.stateCount := hD.left
     change 0 < offset + D.stateCount
-    omega
+    lia
   constructor
   · exact Nat.add_lt_add_left hD.right.left offset
   constructor
@@ -386,7 +386,7 @@ theorem sharedExitRetargetTransitions_source_lt
     ⟨base, hbase, hsource⟩
   rw [hsource]
   have hbaseSource := (hD.right.right.right.left base hbase).left
-  omega
+  lia
 
 theorem sharedExitRetargetTransitions_offset_le_source
     {offset oldHalt commonHalt : Nat}
@@ -398,7 +398,7 @@ theorem sharedExitRetargetTransitions_offset_le_source
   rcases sharedExitRetargetTransitions_source_eq ht with
     ⟨base, _hbase, hsource⟩
   rw [hsource]
-  omega
+  lia
 
 def sharedExitRetargetConfiguration
     (offset oldHalt commonHalt : Nat)
@@ -433,7 +433,7 @@ theorem disjointUnion_wellFormed
   constructor
   · have hpos : 0 < A.stateCount := hA.left
     change 0 < A.stateCount + B.stateCount
-    omega
+    lia
   constructor
   · exact Nat.lt_add_right B.stateCount hA.right.left
   constructor
@@ -463,7 +463,7 @@ theorem disjointUnion_wellFormed
             have htBound := (hA.right.right.right.left t htA).left
             have hsource : t.source = A.stateCount + baseU.source :=
               hkey.left
-            omega
+            lia
     | inr htB =>
         rcases htB with ⟨baseT, hbaseT, rfl⟩
         cases hu with
@@ -471,7 +471,7 @@ theorem disjointUnion_wellFormed
             have huBound := (hA.right.right.right.left u huA).left
             have hsource : A.stateCount + baseT.source = u.source :=
               hkey.left
-            omega
+            lia
         | inr huB =>
             rcases huB with ⟨baseU, hbaseU, rfl⟩
             exact
@@ -499,7 +499,7 @@ theorem disjointUnion_haltTransitionFree
       have hsourceEq : A.stateCount + base.source = A.halt := by
         simpa [TransitionDescription.offsetStates, disjointUnion] using
           hsource
-      omega
+      lia
 
 theorem disjointUnion_subroutineReady
     {A B : MachineDescription}
@@ -807,13 +807,13 @@ theorem singleAction_wellFormed
     (singleAction read write move).WellFormed := by
   constructor
   · change 0 < 2
-    omega
+    lia
   constructor
   · change 0 < 2
-    omega
+    lia
   constructor
   · change 1 < 2
-    omega
+    lia
   constructor
   · intro t ht
     simp [singleAction, transition,
@@ -821,9 +821,9 @@ theorem singleAction_wellFormed
     cases ht
     constructor
     · change 0 < 2
-      omega
+      lia
     · change 1 < 2
-      omega
+      lia
   constructor
   · intro t u ht hu hkey
     simp [singleAction, transition] at ht hu
@@ -834,7 +834,7 @@ theorem singleAction_wellFormed
     simp [singleAction, transition] at ht
     cases ht
     change 0 ≠ 1
-    omega
+    lia
 
 theorem writeThenMove_wellFormed
     (read write : Option Bool) (move : Direction) :
@@ -854,23 +854,23 @@ theorem handoff_wellFormed (move : Direction) :
     (handoff move).WellFormed := by
   constructor
   · change 0 < 2
-    omega
+    lia
   constructor
   · change 0 < 2
-    omega
+    lia
   constructor
   · change 1 < 2
-    omega
+    lia
   constructor
   · intro t ht
     exact handoffTransitions_wellFormed
       (stateCount := 2) (source := 0) (target := 1)
-      (move := move) (by omega) (by omega) t ht
+      (move := move) (by lia) (by lia) t ht
   constructor
   · exact handoffTransitions_deterministic 0 1 move
   · exact branchOnCell_no_source (source := 0) (state := 1)
       (blankTarget := 1) (falseTarget := 1) (trueTarget := 1)
-      (move := move) (by omega)
+      (move := move) (by lia)
 
 theorem preserveMove_wellFormed (move : Direction) :
     (preserveMove move).WellFormed :=
@@ -906,7 +906,7 @@ theorem handoff_firstReaches
   constructor
   · exact handoff_runConfig_one move T
   · intro k hk
-    have hk0 : k = 0 := by omega
+    have hk0 : k = 0 := by lia
     cases hk0
     change (handoff move).entry ≠ (handoff move).exit
     cases move <;> decide
@@ -924,7 +924,7 @@ theorem offsetStates_wellFormed
   rcases hF with ⟨hpos, hentry, hexit, htrans, hdet, hexitStops⟩
   constructor
   · change 0 < offset + F.stateCount
-    omega
+    lia
   constructor
   · exact Nat.add_lt_add_left hentry offset
   constructor
@@ -966,7 +966,7 @@ theorem disjointUnion_wellFormed
   rcases hB with ⟨hBpos, _hBentry, _hBexit, hBtrans, hBdet, _hBexitStops⟩
   constructor
   · change 0 < A.stateCount + B.stateCount
-    omega
+    lia
   constructor
   · exact Nat.lt_add_right B.stateCount hAentry
   constructor
@@ -997,7 +997,7 @@ theorem disjointUnion_wellFormed
             have htBound := (hAtrans t htA).left
             have hsource : t.source = A.stateCount + baseU.source :=
               hkey.left
-            omega
+            lia
     | inr htB =>
         rcases htB with ⟨baseT, hbaseT, rfl⟩
         cases hu with
@@ -1005,7 +1005,7 @@ theorem disjointUnion_wellFormed
             have huBound := (hAtrans u huA).left
             have hsource : A.stateCount + baseT.source = u.source :=
               hkey.left
-            omega
+            lia
         | inr huB =>
             rcases huB with ⟨baseU, hbaseU, rfl⟩
             exact TransitionDescription.offsetStates_sameAction
@@ -1025,7 +1025,7 @@ theorem disjointUnion_wellFormed
         have hEq : A.stateCount + base.source = A.exit := by
           simpa [TransitionDescription.offsetStates, disjointUnion]
             using hsource
-        omega
+        lia
 
 def seq (A B : Fragment) (handoffMove : Direction) : Fragment where
   stateCount := A.stateCount + B.stateCount
@@ -1047,7 +1047,7 @@ theorem seq_wellFormed
     ⟨hBpos, hBentry, hBexit, hBtrans, hBdet, hBexitStops⟩
   constructor
   · change 0 < A.stateCount + B.stateCount
-    omega
+    lia
   constructor
   · exact Nat.lt_add_right B.stateCount hAentry
   constructor
@@ -1065,7 +1065,7 @@ theorem seq_wellFormed
         (source := A.exit)
         (target := A.stateCount + B.entry)
         (move := handoffMove)
-        (by omega) (by omega) t htH
+        (by lia) (by lia) t htH
     · rcases htB with ⟨base, hbase, rfl⟩
       exact TransitionDescription.wellFormed_offsetStates
         (offset := A.stateCount) (hBtrans base hbase)
@@ -1088,7 +1088,7 @@ theorem seq_wellFormed
         have htBound := (hAtrans t htA).left
         have hsource :
             t.source = A.stateCount + baseU.source := hkey.left
-        omega
+        lia
     · rcases hu with huA | huH | huB
       · simp [handoffTransitions, branchOnCell, preserveTransition,
           transition] at htH
@@ -1108,31 +1108,31 @@ theorem seq_wellFormed
         rcases htH with rfl | rfl | rfl
         · have hsource :
               A.exit = A.stateCount + baseU.source := hkey.left
-          omega
+          lia
         · have hsource :
               A.exit = A.stateCount + baseU.source := hkey.left
-          omega
+          lia
         · have hsource :
               A.exit = A.stateCount + baseU.source := hkey.left
-          omega
+          lia
     · rcases htB with ⟨baseT, hbaseT, rfl⟩
       rcases hu with huA | huH | huB
       · have huBound := (hAtrans u huA).left
         have hsource :
             A.stateCount + baseT.source = u.source := hkey.left
-        omega
+        lia
       · simp [handoffTransitions, branchOnCell, preserveTransition,
           transition] at huH
         rcases huH with rfl | rfl | rfl
         · have hsource :
               A.stateCount + baseT.source = A.exit := hkey.left
-          omega
+          lia
         · have hsource :
               A.stateCount + baseT.source = A.exit := hkey.left
-          omega
+          lia
         · have hsource :
               A.stateCount + baseT.source = A.exit := hkey.left
-          omega
+          lia
       · rcases huB with ⟨baseU, hbaseU, rfl⟩
         exact TransitionDescription.offsetStates_sameAction
           A.stateCount baseT baseU
@@ -1145,13 +1145,13 @@ theorem seq_wellFormed
       have htBound := (hAtrans t htA).left
       have hsource' : t.source = A.stateCount + B.exit := by
         simpa [seq] using hsource
-      omega
+      lia
     · exact branchOnCell_no_source (source := A.exit)
         (state := A.stateCount + B.exit)
         (blankTarget := A.stateCount + B.entry)
         (falseTarget := A.stateCount + B.entry)
         (trueTarget := A.stateCount + B.entry)
-        (move := handoffMove) (by omega) t htH
+        (move := handoffMove) (by lia) t htH
     · rcases htB with ⟨base, hbase, rfl⟩
       intro hsource
       have hbaseSource : base.source = B.exit :=

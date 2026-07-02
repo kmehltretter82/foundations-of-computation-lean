@@ -114,7 +114,7 @@ theorem squareMiddlePotential_leading_terminal_a
   simp [squareMiddlePotential, squareMiddleInversions,
     squareMiddleInversionsFrom, SententialCountTerminal, squareT,
     ggTerminal]
-  omega
+  lia
 
 def squareMiddleCreditFrom (seenB : Nat)
     (middle : SententialForm SquareTerminal SquareNT) : Nat :=
@@ -134,7 +134,7 @@ theorem squareMiddleCreditFrom_moveBA
       simp [squareMiddleCreditFrom,
         squareMiddleInversionsFrom, SententialCountTerminal, squareN,
         squareT, ggNonterminal, ggTerminal]
-      omega
+      lia
   | cons head tail ih =>
       cases head with
       | terminal tok =>
@@ -143,7 +143,7 @@ theorem squareMiddleCreditFrom_moveBA
           simp [squareMiddleCreditFrom, squareMiddleInversionsFrom,
             SententialCountTerminal, squareN, squareT, ggNonterminal,
             ggTerminal] at htail ⊢
-          omega
+          lia
       | nonterminal A =>
           cases A
           · simpa [squareMiddleCreditFrom, squareMiddleInversionsFrom,
@@ -165,7 +165,7 @@ theorem squareMiddleCreditFrom_moveBA
             simp [squareMiddleCreditFrom, squareMiddleInversionsFrom,
               SententialCountTerminal, squareN, squareT, ggNonterminal,
               ggTerminal] at htail ⊢
-            omega
+            lia
 
 theorem squareMiddlePotential_moveBA
     (left right : SententialForm SquareTerminal SquareNT) :
@@ -198,7 +198,7 @@ theorem squareMiddleCreditFrom_moveBa
           simp [squareMiddleCreditFrom, squareMiddleInversionsFrom,
             SententialCountTerminal, squareN, squareT, ggNonterminal,
             ggTerminal] at htail ⊢
-          omega
+          lia
       | nonterminal A =>
           cases A
           · simpa [squareMiddleCreditFrom, squareMiddleInversionsFrom,
@@ -220,7 +220,7 @@ theorem squareMiddleCreditFrom_moveBa
             simp [squareMiddleCreditFrom, squareMiddleInversionsFrom,
               SententialCountTerminal, squareN, squareT, ggNonterminal,
               ggTerminal] at htail ⊢
-            omega
+            lia
 
 theorem squareMiddlePotential_moveBa
     (left right : SententialForm SquareTerminal SquareNT) :
@@ -246,7 +246,7 @@ theorem squareMiddleInversionsFrom_markerAForm
         seenB * (n + 1)
       simp [squareMiddleInversionsFrom, squareN, ggNonterminal, ih,
         Nat.mul_succ]
-      omega
+      lia
 
 theorem squareMiddleInversionsFrom_bForm_append_markerAForm
     (seenB bCount aCount : Nat) :
@@ -264,7 +264,7 @@ theorem squareMiddleInversionsFrom_bForm_append_markerAForm
         (seenB + (bCount + 1)) * aCount
       have htail := ih (seenB + 1)
       have hnat : seenB + 1 + bCount = seenB + (bCount + 1) := by
-        omega
+        lia
       simp [squareMiddleInversionsFrom, squareN, ggNonterminal] at htail ⊢
       simpa [hnat] using htail
 

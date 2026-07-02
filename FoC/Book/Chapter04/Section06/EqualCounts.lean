@@ -254,7 +254,7 @@ theorem equalCount_yields_preserves_balanced
                               SententialCountTerminal,
                               SententialCountNonterminal, ecN, ecT,
                               ggNonterminal, ggTerminal] at hbalanced ⊢ <;>
-                            omega
+                            lia
 
 theorem equalCount_derives_preserves_balanced
     {x y : SententialForm EqualCountTerminal EqualCountNT}
@@ -629,7 +629,7 @@ theorem equalCount_marker_bag_to_marker_word_derives
               have haRest :
                   Word.Count EqualCountTerminal.a rest <= aRest := by
                 simp [Word.Count] at ha
-                omega
+                lia
               have hbRest :
                   Word.Count EqualCountTerminal.b rest <= bCount := by
                 simpa [Word.Count] using hb
@@ -654,7 +654,7 @@ theorem equalCount_marker_bag_to_marker_word_derives
                   aRest + 1 -
                       (1 + Word.Count EqualCountTerminal.a rest) =
                     aRest - Word.Count EqualCountTerminal.a rest := by
-                omega
+                lia
               have hrepA :
                   List.replicate (aRest + 1) (ecN EqualCountNT.markA) =
                     ecN EqualCountNT.markA :: equalCountAForm aRest := by
@@ -673,7 +673,7 @@ theorem equalCount_marker_bag_to_marker_word_derives
               have hbRest :
                   Word.Count EqualCountTerminal.b rest <= bRest := by
                 simp [Word.Count] at hb
-                omega
+                lia
               have hcRest :
                   Word.Count EqualCountTerminal.c rest <= cCount := by
                 simpa [Word.Count] using hc
@@ -705,7 +705,7 @@ theorem equalCount_marker_bag_to_marker_word_derives
                   bRest + 1 -
                       (1 + Word.Count EqualCountTerminal.b rest) =
                     bRest - Word.Count EqualCountTerminal.b rest := by
-                omega
+                lia
               simpa [equalCountMarkerBag, equalCountBForm,
                 equalCountMarkerWord, equalCountMarkerOfTerminal,
                 Word.Count, hsubB, List.append_assoc] using hall
@@ -723,7 +723,7 @@ theorem equalCount_marker_bag_to_marker_word_derives
               have hcRest :
                   Word.Count EqualCountTerminal.c rest <= cRest := by
                 simp [Word.Count] at hc
-                omega
+                lia
               have hmoveBs :
                   GeneralGrammar.Derives EqualCountGrammar
                     (equalCountMarkerBag aCount bCount (cRest + 1))
@@ -762,7 +762,7 @@ theorem equalCount_marker_bag_to_marker_word_derives
                   cRest + 1 -
                       (1 + Word.Count EqualCountTerminal.c rest) =
                     cRest - Word.Count EqualCountTerminal.c rest := by
-                omega
+                lia
               simpa [equalCountMarkerBag, equalCountCForm,
                 equalCountMarkerWord, equalCountMarkerOfTerminal,
                 Word.Count, hsubC, List.append_assoc] using hall

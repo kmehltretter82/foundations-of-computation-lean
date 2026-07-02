@@ -21,8 +21,8 @@ theorem assemblyPrefixDescription_lookupTransition_eq_scanner_of_state_lt_210
     AssemblyPrefixDescription.lookupTransition state read =
       DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription.lookupTransition
         state read := by
-  have hne : state ≠ 210 := by omega
-  have hlt : state < 1800 := by omega
+  have hne : state ≠ 210 := by lia
+  have hlt : state < 1800 := by lia
   rw [assemblyPrefixDescription_lookupTransition_eq_skeleton
     state read hne]
   exact assemblySkeletonDescription_lookupTransition_eq_scanner
@@ -162,7 +162,7 @@ theorem assemblyPrefixDescription_run_state120_stageNat
         assemblyPrefixDescription_run_state120_done left right
   | succ n ih =>
       rw [show 4 * (n + 1) + 4 = 4 + (4 * n + 4) by
-        omega]
+        lia]
       rw [runConfig_add]
       rw [show
           List.append ((stageNatBits (n + 1)).map some) right =
@@ -203,7 +203,7 @@ theorem assemblyPrefixDescription_run_state130_markedCells
   | cons b rest ih =>
       rw [show 4 * (b :: rest).length = 4 + 4 * rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       rw [show
           List.append ((markedCellsBits (b :: rest)).map some) right =
@@ -251,7 +251,7 @@ theorem assemblyPrefixDescription_run_state140_returnToLengthMarker
   | cons b rest ih =>
       rw [show (b :: rest).length + 4 = 1 + (rest.length + 4) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         AssemblyPrefixDescription.runConfig (rest.length + 4)
@@ -365,7 +365,7 @@ theorem assemblyPrefixDescription_run_marking_loop_from_state120_withBase_cells
         ⟨recSteps, hrec⟩
       refine ⟨markSteps + 4 + recSteps, ?_⟩
       rw [show markSteps + 4 + recSteps = markSteps + (4 + recSteps) by
-        omega]
+        lia]
       rw [runConfig_add]
       rw [hmark]
       rw [runConfig_add]
@@ -443,7 +443,7 @@ theorem assemblyPrefixDescription_run_state150_markedCells
   | cons b rest ih =>
       rw [show 4 * (b :: rest).length = 4 + 4 * rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       rw [show
           List.append ((markedCellsBits (b :: rest)).map some) right =
@@ -511,7 +511,7 @@ theorem assemblyPrefixDescription_run_state160_bits_to_boundary
   | cons b rest ih =>
       rw [show (b :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       cases rest with
       | nil =>
@@ -596,7 +596,7 @@ theorem assemblyPrefixDescription_run_finish_scan_left_to_append_tailCells_withB
       List.map_append, List.reverse_append, List.append_assoc]
   refine ⟨bits.length + 3, ?_⟩
   rw [show bits.length + 3 = bits.length + (1 + (1 + 1)) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [hstart]
   rw [assemblyPrefixDescription_run_state160_bits_to_boundary]
@@ -636,7 +636,7 @@ theorem assemblyPrefixDescription_run_state180_bits
           config 180
             (List.append ((b :: rest).reverse.map some) left) right
       rw [show rest.length + 1 = 1 + rest.length by
-        omega]
+        lia]
       rw [runConfig_add]
       rw [assemblyPrefixDescription_run_state180_some]
       rw [ih]
@@ -667,7 +667,7 @@ theorem assemblyPrefixDescription_run_append_blank_to_state200_tailCells_withBas
   let tailPrefix := stageInputSecondBitTailPrefix (b :: rest)
   refine ⟨tailPrefix.length + 2, ?_⟩
   rw [show tailPrefix.length + 2 = tailPrefix.length + (1 + 1) by
-    omega]
+    lia]
   rw [runConfig_add]
   unfold appendBlankStartConfigWithTailCellsAndBase
   change
@@ -709,7 +709,7 @@ theorem assemblyPrefixDescription_run_finish_cells_false_false_to_state200_withB
       (4 * (b :: rest).length + 2) + scanSteps + appendSteps =
         (4 * (b :: rest).length + 2) +
           (scanSteps + appendSteps) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [assemblyPrefixDescription_run_finish_restore_cells_tailCells_withBase]
   rw [runConfig_add]
@@ -751,7 +751,7 @@ theorem assemblyPrefixDescription_run_nonempty_stageInput_to_sourceRest_boundary
   rw [show
       6 + (6 + (markSteps + finishSteps + (4 * stage + 4))) =
         6 + (6 + (markSteps + (finishSteps + (4 * stage + 4)))) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [assemblyPrefixDescription_run_prefix_to_stageInput_tail_cells]
   rw [stageInputSecondBitTail_cons]

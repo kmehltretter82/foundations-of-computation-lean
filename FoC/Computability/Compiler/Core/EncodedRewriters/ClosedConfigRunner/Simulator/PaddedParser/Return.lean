@@ -124,7 +124,7 @@ theorem fixedDescriptionBoundedSimulatorReturnToRightShiftedInputDescription_run
                 Tape.moveLeft, Tape.moveRight]
   | cons leftBit rest ih =>
       simp only [List.length_cons]
-      rw [show Nat.succ rest.length + 3 = (rest.length + 3) + 1 by omega]
+      rw [show Nat.succ rest.length + 3 = (rest.length + 3) + 1 by lia]
       rw [runConfig]
       cases current
       · simpa [FDBSReturnToRightShiftedInput_configRunner,
@@ -153,7 +153,7 @@ theorem fixedDescriptionBoundedSimulator_reverse_two_split_configRunner
       have hlen : w.length = 0 := by
         have := congrArg List.length hr
         simpa using this
-      omega
+      lia
   | cons last rest =>
       cases hrest : rest with
       | nil =>
@@ -161,7 +161,7 @@ theorem fixedDescriptionBoundedSimulator_reverse_two_split_configRunner
             have := congrArg List.length hr
             simp [hrest] at this
             simpa using this
-          omega
+          lia
       | cons penult middleRev =>
           refine ⟨last, penult, middleRev, ?_, ?_⟩
           · rfl

@@ -232,7 +232,7 @@ theorem assemblySkeletonDescription_run_marking_loop_from_state120_withBase
         ⟨recSteps, hrec⟩
       refine ⟨markSteps + 4 + recSteps, ?_⟩
       rw [show markSteps + 4 + recSteps =
-          markSteps + (4 + recSteps) by omega]
+          markSteps + (4 + recSteps) by lia]
       rw [runConfig_add]
       rw [hmark]
       rw [runConfig_add]
@@ -331,7 +331,7 @@ theorem assemblySkeletonDescription_run_marking_loop_from_state120_withBase_cell
         ⟨recSteps, hrec⟩
       refine ⟨markSteps + 4 + recSteps, ?_⟩
       rw [show markSteps + 4 + recSteps =
-          markSteps + (4 + recSteps) by omega]
+          markSteps + (4 + recSteps) by lia]
       rw [runConfig_add]
       rw [hmark]
       rw [runConfig_add]
@@ -502,7 +502,7 @@ theorem assemblyPrefixDescription_run_state120_stageNat_core
       simpa [stageNatBits_zero] using
         assemblyPrefixDescription_run_state120_done_core left right
   | succ n ih =>
-      rw [show 4 * (n + 1) + 4 = 4 + (4 * n + 4) by omega]
+      rw [show 4 * (n + 1) + 4 = 4 + (4 * n + 4) by lia]
       rw [runConfig_add]
       rw [show
           List.append ((stageNatBits (n + 1)).map some) right =
@@ -543,7 +543,7 @@ theorem assemblyPrefixDescription_run_state130_markedCells_core
   | cons b rest ih =>
       rw [show 4 * (b :: rest).length = 4 + 4 * rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       rw [show
           List.append ((markedCellsBits (b :: rest)).map some) right =
@@ -591,7 +591,7 @@ theorem assemblyPrefixDescription_run_state140_returnToLengthMarker_core
   | cons b rest ih =>
       rw [show (b :: rest).length + 4 = 1 + (rest.length + 4) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         AP.runConfig (rest.length + 4)
@@ -704,7 +704,7 @@ theorem assemblyPrefixDescription_run_marking_loop_from_state120_withBase_cells_
         ⟨recSteps, hrec⟩
       refine ⟨markSteps + 4 + recSteps, ?_⟩
       rw [show markSteps + 4 + recSteps = markSteps + (4 + recSteps) by
-        omega]
+        lia]
       rw [runConfig_add]
       rw [hmark]
       rw [runConfig_add]

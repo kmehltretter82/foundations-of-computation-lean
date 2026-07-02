@@ -112,17 +112,17 @@ theorem emptySummaryComputesIn_of_step_emptyStack
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have hrestNil : restStack = [] := by
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have hpushNil : push = [] := by
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hpushStack
       simp [Word.Concat, hrestNil] at hlen
-      omega
+      lia
     have htransition' : M.transition p (some a) [] q [] := by
       simpa [hp, hq, hpopNil, hpushNil] using htransition
     have hsummary : EmptySummaryComputesIn M 1 p (a :: unread) q unread := by
@@ -160,17 +160,17 @@ theorem emptySummaryComputesIn_of_step_emptyStack
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have hrestNil : restStack = [] := by
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have hpushNil : push = [] := by
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hpushStack
       simp [Word.Concat, hrestNil] at hlen
-      omega
+      lia
     have htransition' : M.transition p none [] q [] := by
       simpa [hp, hq, hpopNil, hpushNil] using htransition
     have hsummary : EmptySummaryComputesIn M 1 p unread q unread := by
@@ -252,7 +252,7 @@ theorem stackSummaryComputesIn_of_step_topPop
     · have hsourceLen := congrArg List.length hsourceStack
       have htargetLen := congrArg List.length htargetStack
       simp [Word.Concat, hpopNil] at hsourceLen htargetLen
-      omega
+      lia
     · rcases hpopSingle with ⟨B, hpopSingle⟩
       have hsourceCons : A :: tail = B :: restStack := by
         simpa [Word.Concat, hpopSingle] using hsourceStack
@@ -263,7 +263,7 @@ theorem stackSummaryComputesIn_of_step_topPop
         have hrestLen := congrArg List.length hrest
         have hlen := congrArg List.length htargetStack
         simp [Word.Concat] at hrestLen hlen
-        omega
+        lia
       have htransition' : M.transition p (some a) [A] q [] := by
         simpa [hp, hq, hpopSingle, hA, hpushNil] using htransition
       have hsummary : StackSummaryComputesIn M 1 p [A] (a :: unread) q unread := by
@@ -297,7 +297,7 @@ theorem stackSummaryComputesIn_of_step_topPop
     · have hsourceLen := congrArg List.length hsourceStack
       have htargetLen := congrArg List.length htargetStack
       simp [Word.Concat, hpopNil] at hsourceLen htargetLen
-      omega
+      lia
     · rcases hpopSingle with ⟨B, hpopSingle⟩
       have hsourceCons : A :: tail = B :: restStack := by
         simpa [Word.Concat, hpopSingle] using hsourceStack
@@ -308,7 +308,7 @@ theorem stackSummaryComputesIn_of_step_topPop
         have hrestLen := congrArg List.length hrest
         have hlen := congrArg List.length htargetStack
         simp [Word.Concat] at hrestLen hlen
-        omega
+        lia
       have htransition' : M.transition p none [A] q [] := by
         simpa [hp, hq, hpopSingle, hA, hpushNil] using htransition
       have hsummary : StackSummaryComputesIn M 1 p [A] unread q unread := by
@@ -364,12 +364,12 @@ theorem emptySummaryComputesIn_of_computesIn_two_emptyStack
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have hrestNil : restStack = [] := by
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have htransition' :
         M.transition p (some a) [] r push := by
       simpa [hp, hpopNil] using htransition
@@ -432,12 +432,12 @@ theorem emptySummaryComputesIn_of_computesIn_two_emptyStack
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have hrestNil : restStack = [] := by
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have htransition' :
         M.transition p none [] r push := by
       simpa [hp, hpopNil] using htransition
@@ -507,7 +507,7 @@ theorem emptySummaryComputesIn_of_computesIn_atMostTwo_emptyStack
               exact emptySummaryComputesIn_of_computesIn_two_emptyStack
                 hnorm hcomp
           | succ n =>
-              omega
+              lia
 
 /-!
 Once a summary predicate is available, the proof returns to CFG syntax. Stack
@@ -1061,12 +1061,12 @@ theorem emptySummaryComputesIn_of_step_emptyStack_of_stackThenEmptySummaryComple
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have hrestNil : restStack = [] := by
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have htransition' : M.transition p (some a) [] r push := by
       simpa [hp, hpopNil] using htransition
     have hrest' : ComputesIn M n
@@ -1096,12 +1096,12 @@ theorem emptySummaryComputesIn_of_step_emptyStack_of_stackThenEmptySummaryComple
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have hrestNil : restStack = [] := by
       apply List.eq_nil_of_length_eq_zero
       have hlen := congrArg List.length hstack
       simp [Word.Concat] at hlen
-      omega
+      lia
     have htransition' : M.transition p none [] r push := by
       simpa [hp, hpopNil] using htransition
     have hrest' : ComputesIn M n

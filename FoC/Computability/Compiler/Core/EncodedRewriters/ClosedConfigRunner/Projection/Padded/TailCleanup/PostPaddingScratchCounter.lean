@@ -192,7 +192,7 @@ theorem scratchCounterPreservingMarkerAppendDescription_run_scan_source_false
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           SCPMA.runConfig 1
@@ -233,7 +233,7 @@ theorem scratchCounterPreservingMarkerAppendDescription_run_scan_source_true
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           SCPMA.runConfig 1
@@ -276,7 +276,7 @@ theorem scratchCounterPreservingMarkerAppendDescription_run_scan_markers_false
   | zero =>
       rfl
   | succ markers ih =>
-      rw [show markers + 1 = 1 + markers by omega]
+      rw [show markers + 1 = 1 + markers by lia]
       rw [runConfig_add]
       have hstep :
           SCPMA.runConfig 1
@@ -359,7 +359,7 @@ theorem scratchCounterPreservingMarkerAppendDescription_run_scan_markers_true
   | zero =>
       rfl
   | succ markers ih =>
-      rw [show markers + 1 = 1 + markers by omega]
+      rw [show markers + 1 = 1 + markers by lia]
       rw [runConfig_add]
       have hstep :
           SCPMA.runConfig 1
@@ -542,7 +542,7 @@ theorem scratchCounterPreservingMarkerAppendDescription_run_rewind_markers_false
           transition, tapeAtCells, Tape.read, Tape.write,
           Tape.move, Tape.moveLeft]
   | succ markers ih =>
-      rw [show markers + 1 + 1 = 1 + (markers + 1) by omega]
+      rw [show markers + 1 + 1 = 1 + (markers + 1) by lia]
       rw [runConfig_add]
       have hstep :
           SCPMA.runConfig 1
@@ -603,7 +603,7 @@ theorem scratchCounterPreservingMarkerAppendDescription_run_rewind_markers_false
                     (List.replicate (1 + (markers + 1))
                       (some false : Option Bool))
                     right) } := by
-            rw [show 1 + (markers + 1) = markers + 1 + 1 by omega]
+            rw [show 1 + (markers + 1) = markers + 1 + 1 by lia]
             rw [scratchCounter_replicate_false_append_cons
               (markers + 1) right]
 
@@ -634,7 +634,7 @@ theorem scratchCounterPreservingMarkerAppendDescription_run_rewind_markers_true
           transition, tapeAtCells, Tape.read, Tape.write,
           Tape.move, Tape.moveLeft]
   | succ markers ih =>
-      rw [show markers + 1 + 1 = 1 + (markers + 1) by omega]
+      rw [show markers + 1 + 1 = 1 + (markers + 1) by lia]
       rw [runConfig_add]
       have hstep :
           SCPMA.runConfig 1
@@ -695,7 +695,7 @@ theorem scratchCounterPreservingMarkerAppendDescription_run_rewind_markers_true
                     (List.replicate (1 + (markers + 1))
                       (some false : Option Bool))
                     right) } := by
-            rw [show 1 + (markers + 1) = markers + 1 + 1 by omega]
+            rw [show 1 + (markers + 1) = markers + 1 + 1 by lia]
             rw [scratchCounter_replicate_false_append_cons
               (markers + 1) right]
 
@@ -726,7 +726,7 @@ theorem scratchCounterPreservingMarkerAppendDescription_run_restore_source_false
       rw [show (next :: rest).length + 2 =
           1 + (rest.length + 2) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           SCPMA.runConfig 1
@@ -777,7 +777,7 @@ theorem scratchCounterPreservingMarkerAppendDescription_run_restore_source_false
       rw [show (current :: rest).length + 2 =
           1 + (rest.length + 2) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           SCPMA.runConfig 1
@@ -830,7 +830,7 @@ theorem scratchCounterPreservingMarkerAppendDescription_run_restore_source_true_
       rw [show (next :: rest).length + 2 =
           1 + (rest.length + 2) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           SCPMA.runConfig 1
@@ -881,7 +881,7 @@ theorem scratchCounterPreservingMarkerAppendDescription_run_restore_source_true
       rw [show (current :: rest).length + 2 =
           1 + (rest.length + 2) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           SCPMA.runConfig 1
@@ -1396,7 +1396,7 @@ theorem scratchCounterMarkerEraseDescription_run_markers_withRight
           runConfig, stepConfig, lookupTransition, Matches, transition,
           tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveRight]
   | succ markers ih =>
-      rw [show markers + 1 + 1 = 1 + (markers + 1) by omega]
+      rw [show markers + 1 + 1 = 1 + (markers + 1) by lia]
       rw [runConfig_add]
       have hstep :
           SCME.runConfig 1
@@ -1453,7 +1453,7 @@ theorem scratchCounterMarkerEraseDescription_run_markers_withRight
                     (none : Option Bool))
                   leftRev)
                 suffix } := by
-            rw [show 1 + (markers + 1) = markers + 1 + 1 by omega]
+            rw [show 1 + (markers + 1) = markers + 1 + 1 by lia]
             rw [scratchCounter_replicate_none_append_cons
               (markers + 1) leftRev]
 
@@ -1542,7 +1542,7 @@ theorem scratchCounterMarkerInitDescription_run_scan_source
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           SCMI.runConfig 1
@@ -1588,7 +1588,7 @@ theorem scratchCounterMarkerInitDescription_run_rewind_leftStack
   | cons bit rest ih =>
       rw [show (bit :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           SCMI.runConfig 1
@@ -1792,7 +1792,7 @@ theorem scratchCounterMarkerCleanupLeftDescription_run_scan_markers
           runConfig, stepConfig, lookupTransition, Matches, transition,
           tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
   | succ markers ih =>
-      rw [show markers + 1 + 1 = 1 + (markers + 1) by omega]
+      rw [show markers + 1 + 1 = 1 + (markers + 1) by lia]
       rw [runConfig_add]
       have hstep :
           SCMCL.runConfig 1
@@ -1883,7 +1883,7 @@ theorem scratchCounterMarkerCleanupLeftDescription_run_erase_markers
           runConfig, stepConfig, lookupTransition, Matches, transition,
           tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
   | succ markers ih =>
-      rw [show markers + 1 + 1 = 1 + (markers + 1) by omega]
+      rw [show markers + 1 + 1 = 1 + (markers + 1) by lia]
       rw [runConfig_add]
       have hstep :
           SCMCL.runConfig 1
@@ -1947,7 +1947,7 @@ theorem scratchCounterMarkerCleanupLeftDescription_run_erase_markers
                       (List.replicate (1 + (markers + 1))
                         (none : Option Bool))
                       suffix)) } := by
-            rw [show 1 + (markers + 1) = markers + 1 + 1 by omega]
+            rw [show 1 + (markers + 1) = markers + 1 + 1 by lia]
             rw [scratchCounter_replicate_none_append_cons
               (markers + 1) suffix]
 
@@ -1976,7 +1976,7 @@ theorem scratchCounterMarkerCleanupLeftDescription_run_rewind_leftStack
   | cons bit rest ih =>
       rw [show (bit :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           SCMCL.runConfig 1

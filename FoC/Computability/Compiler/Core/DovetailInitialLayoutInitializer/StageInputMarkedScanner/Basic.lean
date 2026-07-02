@@ -178,7 +178,7 @@ theorem markedCellsBits_length
       rfl
   | cons _ rest ih =>
       simp [markedCellsBits, markedCellBits_length, ih]
-      omega
+      lia
 
 theorem stageInputSecondBitTail_nil
     (stage : Nat) :
@@ -284,7 +284,7 @@ theorem stageNatBits_length (stage : Nat) :
       rfl
   | succ stage ih =>
       simp [stageNatBits_succ, ih]
-      omega
+      lia
 
 /-!
 The final stage-number scan starts by consuming the two leading false bits of
@@ -489,7 +489,7 @@ theorem run_state150_markedCells
       rfl
   | cons b rest ih =>
       rw [show 4 * (b :: rest).length =
-          4 + 4 * rest.length by simp; omega]
+          4 + 4 * rest.length by simp; lia]
       rw [runConfig_add]
       rw [show
           List.append ((markedCellsBits (b :: rest)).map some)
@@ -582,7 +582,7 @@ theorem run_state180_bits
               (some b :: List.append (rest.map some) right)) =
           config 180
             (List.append ((b :: rest).reverse.map some) left) right
-      rw [show rest.length + 1 = 1 + rest.length by omega]
+      rw [show rest.length + 1 = 1 + rest.length by lia]
       rw [runConfig_add]
       rw [run_state180_some]
       rw [ih]
@@ -686,7 +686,7 @@ theorem run_state120_stageNat
         run_state120_done left right
   | succ n ih =>
       rw [show 4 * (n + 1) + 4 =
-          4 + (4 * n + 4) by omega]
+          4 + (4 * n + 4) by lia]
       rw [runConfig_add]
       rw [show
           List.append ((stageNatBits (n + 1)).map some) right =
@@ -734,7 +734,7 @@ theorem run_state130_markedCells
       rfl
   | cons b rest ih =>
       rw [show 4 * (b :: rest).length =
-          4 + 4 * rest.length by simp; omega]
+          4 + 4 * rest.length by simp; lia]
       rw [runConfig_add]
       rw [show
           List.append ((markedCellsBits (b :: rest)).map some)
@@ -791,7 +791,7 @@ theorem run_state140_returnToLengthMarker
       rw [show (b :: rest).length + 4 =
           1 + (rest.length + 4) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         SIMS.runConfig (rest.length + 4)
@@ -890,7 +890,7 @@ theorem run_state220_bits_to_boundary
       rfl
   | cons b rest ih =>
       rw [show (b :: rest).length = rest.length + 1 by simp]
-      rw [show rest.length + 1 = 1 + rest.length by omega]
+      rw [show rest.length + 1 = 1 + rest.length by lia]
       rw [runConfig_add]
       cases rest with
       | nil =>
@@ -957,7 +957,7 @@ theorem run_state200_stageNat_end
         run_state200_done_end pre boundary leftTail
   | succ stage ih =>
       rw [show 4 * (stage + 1) + 5 =
-          4 + (4 * stage + 5) by omega]
+          4 + (4 * stage + 5) by lia]
       rw [runConfig_add]
       rw [show
           (stageNatBits (stage + 1)).map some =
@@ -1081,7 +1081,7 @@ theorem run_start_nil
   rw [show 30 + 8 * stage =
       18 + ((4 * stage + 5) + (bitsToLeft.length + 1)) by
     simp [bitsToLeft, pre, stageNatBits_length]
-    omega]
+    lia]
   rw [runConfig_add]
   rw [run_start_nil_to_state200]
   rw [runConfig_add]
@@ -1280,7 +1280,7 @@ theorem run_marking_loop_from_state120
         ⟨recSteps, hrec⟩
       refine ⟨markSteps + 4 + recSteps, ?_⟩
       rw [show markSteps + 4 + recSteps =
-          markSteps + (4 + recSteps) by omega]
+          markSteps + (4 + recSteps) by lia]
       rw [runConfig_add]
       rw [hmark]
       rw [runConfig_add]
@@ -1482,7 +1482,7 @@ theorem run_state160_bits_to_boundary
   | cons b rest ih =>
       rw [show (b :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       cases rest with
       | nil =>
@@ -1667,7 +1667,7 @@ theorem run_finish_scan_left_to_append
   refine ⟨bits.length + 3, appendBlankStartConfig (b :: rest) stage,
     ?_, rfl⟩
   rw [show bits.length + 3 = bits.length + (1 + (1 + 1)) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [hstart]
   rw [run_state160_bits_to_boundary]
@@ -1694,7 +1694,7 @@ theorem run_finish_append_blank
   rw [show
       tailPrefix.length + 2 + (4 * stage + 5) =
         tailPrefix.length + (1 + (1 + (4 * stage + 5))) by
-    omega]
+    lia]
   rw [runConfig_add]
   change
     SIMS.runConfig
@@ -1788,7 +1788,7 @@ theorem run_forward_finish
   rw [show
       restoreSteps + scanSteps + appendSteps + boundarySteps =
         restoreSteps + (scanSteps + (appendSteps + boundarySteps)) by
-    omega]
+    lia]
   rw [runConfig_add]
   rw [hrestore]
   rw [runConfig_add]

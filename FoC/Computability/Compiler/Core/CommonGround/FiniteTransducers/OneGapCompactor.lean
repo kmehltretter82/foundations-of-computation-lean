@@ -191,7 +191,7 @@ theorem rightEdgeRewindDescription_run_scan_withBoundaryBase
       rw [show (next :: rest).length + 1 =
         1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           rightEdgeRewindDescription.runConfig 1
@@ -258,7 +258,7 @@ theorem rightEdgeRewindDescription_run_from_boundaryStack
       rw [show (current :: rest).length + 2 =
         1 + ((rest.length + 1) + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstart :
           rightEdgeRewindDescription.runConfig 1
@@ -477,7 +477,7 @@ theorem rightBlankRewindDescription_run_to_gap_from_leftStack
           Tape.moveLeft, Tape.moveRight, List.reverse_append]
   | succ paddingScratch ih =>
       rw [show paddingScratch + 1 + 2 =
-        1 + (paddingScratch + 2) by omega]
+        1 + (paddingScratch + 2) by lia]
       rw [runConfig_add]
       have hstep :
           rightBlankRewindDescription.runConfig 1

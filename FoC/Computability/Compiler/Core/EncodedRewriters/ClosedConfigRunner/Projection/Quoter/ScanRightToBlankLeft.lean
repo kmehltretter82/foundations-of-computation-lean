@@ -75,7 +75,7 @@ theorem scanRightToBlankLeftDescription_run
   | cons bit rest ih =>
       rw [show (bit :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           scanRightToBlankLeftDescription.runConfig 1
@@ -120,7 +120,7 @@ theorem scanRightToBlankLeftDescription_run_withRight
   | cons bit rest ih =>
       rw [show (bit :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           scanRightToBlankLeftDescription.runConfig 1
@@ -266,7 +266,7 @@ theorem scanLeftToBlankLeftDescription_run_scanRev
   | cons prev rest ih =>
       rw [show (prev :: rest).length + 2 = 1 + (rest.length + 2) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           scanLeftToBlankLeftDescription.runConfig 1

@@ -244,7 +244,7 @@ theorem generatedOptionAppendWordDescription_run_scan
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       change
         (generatedOptionAppendWordDescription emit final).runConfig rest.length
@@ -313,7 +313,7 @@ theorem generatedOptionAppendWordDescription_writerRuns
               FiniteTransducer.copyAppendWordHalt (bit :: next :: more) =
                 1 + (next :: more).length by
             simp [FiniteTransducer.copyAppendWordHalt]
-            omega]
+            lia]
           rw [runConfig_add]
           rw [generatedOptionAppendWordDescription_step_blank]
           let first : TransitionDescription :=
@@ -446,7 +446,7 @@ theorem generatedOptionAppendWordDescription_wellFormed
               FiniteTransducer.copyAppendWordHalt (bit :: next :: more) =
                 1 + (next :: more).length := by
             simp [FiniteTransducer.copyAppendWordHalt]
-            omega
+            lia
           refine ⟨?_, ?_, ?_, ?_, ?_⟩
           · simp [generatedOptionAppendWordDescription,
               FiniteTransducer.copyAppendWordHalt]
@@ -493,7 +493,7 @@ theorem generatedOptionAppendWordDescription_wellFormed
                   FiniteTransducer.copyAppendWordWriteTransitionsFrom_source_bounds
                     1 (1 + (next :: more).length) (next :: more) u hu'
                 have husource : u.source = 0 := hkey.left.symm
-                omega
+                lia
             · simp [first, scanFalse, scanTrue,
                 FiniteTransducer.optionAppendWordScanFalseTransition,
                 FiniteTransducer.optionAppendWordScanTrueTransition] at hu
@@ -507,7 +507,7 @@ theorem generatedOptionAppendWordDescription_wellFormed
                   FiniteTransducer.copyAppendWordWriteTransitionsFrom_source_bounds
                     1 (1 + (next :: more).length) (next :: more) t ht'
                 have htsource : t.source = 0 := hkey.left
-                omega
+                lia
             · have ht' :
                 t ∈ FiniteTransducer.copyAppendWordWriteTransitionsFrom
                   1 (1 + (next :: more).length) (next :: more) := by
@@ -591,7 +591,7 @@ theorem generatedOptionAppendWordDescription_haltTransitionFree
               FiniteTransducer.copyAppendWordHalt (bit :: next :: more) =
                 1 + (next :: more).length := by
             simp [FiniteTransducer.copyAppendWordHalt]
-            omega
+            lia
           intro t ht
           rw [htrans] at ht
           rcases List.mem_append.mp ht with ht | ht
@@ -612,7 +612,7 @@ theorem generatedOptionAppendWordDescription_haltTransitionFree
             have hsourceEq :
                 t.source = 1 + (next :: more).length := by
               simpa [generatedOptionAppendWordDescription, hhalt] using hsource
-            omega
+            lia
 
 theorem generatedOptionAppendWordDescription_subroutineReady
     (emit : Bool -> Option Bool) (final : Word Bool) :

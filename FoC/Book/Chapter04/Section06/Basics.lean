@@ -323,7 +323,7 @@ theorem sententialCountTerminal_append [DecidableEq terminal]
   induction x with
   | nil => simp [SententialCountTerminal]
   | cons s rest ih =>
-      cases s <;> simp [SententialCountTerminal, ih] <;> omega
+      cases s <;> simp [SententialCountTerminal, ih] <;> lia
 
 theorem sententialCountNonterminal_append [DecidableEq nonterminal]
     (A : nonterminal) (x y : SententialForm terminal nonterminal) :
@@ -332,7 +332,7 @@ theorem sententialCountNonterminal_append [DecidableEq nonterminal]
   induction x with
   | nil => simp [SententialCountNonterminal]
   | cons s rest ih =>
-      cases s <;> simp [SententialCountNonterminal, ih] <;> omega
+      cases s <;> simp [SententialCountNonterminal, ih] <;> lia
 
 theorem sententialCountTerminal_terminalWord [DecidableEq terminal]
     (a : terminal) (w : Word terminal) :
@@ -365,7 +365,7 @@ theorem sententialCountNonterminal_terminal_absurd
   have hzero : SententialCountNonterminal A sf = 0 := by
     rw [hsf]
     exact sententialCountNonterminal_terminalWord A w
-  omega
+  lia
 
 theorem sentential_no_nonterminal_occurrence_absurd
     [DecidableEq nonterminal]
@@ -376,7 +376,7 @@ theorem sentential_no_nonterminal_occurrence_absurd
   rw [hcount, sententialCountNonterminal_append,
     sententialCountNonterminal_append] at hc
   simp [SententialCountNonterminal, ggNonterminal] at hc
-  omega
+  lia
 
 theorem sentential_no_terminal_occurrence_absurd
     [DecidableEq terminal]
@@ -387,7 +387,7 @@ theorem sentential_no_terminal_occurrence_absurd
   rw [hcount, sententialCountTerminal_append,
     sententialCountTerminal_append] at hc
   simp [SententialCountTerminal, ggTerminal] at hc
-  omega
+  lia
 
 theorem sentential_unique_nonterminal_occurrence
     [DecidableEq nonterminal]
@@ -487,7 +487,7 @@ theorem word_count_concat [DecidableEq terminal]
         (if b = a then 1 else 0) + Word.Count a rest +
           Word.Count a y
       rw [ih]
-      omega
+      lia
 
 theorem word_count_repeat_same [DecidableEq terminal] (a : terminal) (n : Nat) :
     Word.Count a (Word.RepeatSymbol a n) = n := by
@@ -497,7 +497,7 @@ theorem word_count_repeat_same [DecidableEq terminal] (a : terminal) (n : Nat) :
   | succ n ih =>
       change Word.Count a (a :: Word.RepeatSymbol a n) = n + 1
       simp [Word.Count, ih]
-      omega
+      lia
 
 theorem word_count_repeat_of_ne [DecidableEq terminal]
     {a b : terminal} (h : b ≠ a) (n : Nat) :

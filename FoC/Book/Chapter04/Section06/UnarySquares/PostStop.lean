@@ -50,7 +50,7 @@ theorem squarePostStopLocal_initial (n : Nat) :
   · exact squareMiddleClean_append (squareBForm_clean n)
       (squareMarkerAForm_clean n)
   · rw [squareMiddlePotential_initial_stopped]
-    omega
+    lia
 
 theorem squarePostStop_initial (n : Nat) :
     SquarePostStopState n
@@ -65,7 +65,7 @@ theorem squarePostStop_initial (n : Nat) :
   · exact squareMiddleClean_append (squareBForm_clean n)
       (squareMarkerAForm_clean n)
   · rw [squareMiddlePotential_initial_stopped]
-    omega
+    lia
 
 theorem squareGrowForm_stop_post_state
     {u v : SententialForm SquareTerminal SquareNT} (n : Nat)
@@ -804,7 +804,7 @@ theorem squarePostStop_moveDa
   constructor
   · exact hclean
   · rw [squareMiddlePotential_leading_terminal_a] at hbalance
-    omega
+    lia
 
 theorem squareTerminalAForm_succ_eq_append (n : Nat) :
     squareTerminalAForm (n + 1) =
@@ -866,7 +866,7 @@ theorem squarePostStopLocal_moveDa
   · exact hlocal.left
   · have hbalance := hlocal.right
     rw [squareMiddlePotential_leading_terminal_a] at hbalance
-    omega
+    lia
 
 theorem squarePostStop_finish_word
     {n emitted : Nat}
@@ -874,7 +874,7 @@ theorem squarePostStop_finish_word
     Word.RepeatSymbol SquareTerminal.a emitted ∈ squareLanguage := by
   simp [squareMiddlePotential, squareMiddleInversions,
     squareMiddleInversionsFrom, SententialCountTerminal] at hbalance
-  have hemitted : emitted = n * n := by omega
+  have hemitted : emitted = n * n := by lia
   exists n
   simp [squareWord, hemitted]
 

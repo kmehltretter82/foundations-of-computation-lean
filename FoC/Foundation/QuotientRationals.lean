@@ -102,7 +102,7 @@ prove compatibility with the standard {lit}`Rat` interpretation.
 def ofInt (n : Int) : RatPair where
   num := n
   den := 1
-  den_pos := by omega
+  den_pos := by lia
 
 def ofNat (n : Nat) : RatPair :=
   ofInt n
@@ -1099,14 +1099,14 @@ theorem exists_natFrac_one_lt {d : QRat} (hd : (0 : QRat) < d) :
     change RatPair.RawLt (RatPair.ofInt 0) p at hd
     unfold RatPair.RawLt RatPair.ofInt at hd
     simpa using hd
-  have hden_lt : (p.den : Int) < (p.den : Int) + 1 := by omega
+  have hden_lt : (p.den : Int) < (p.den : Int) + 1 := by lia
   have hle : (p.den : Int) + 1 ≤ p.num * ((p.den : Int) + 1) := by
     calc
-      (p.den : Int) + 1 = 1 * ((p.den : Int) + 1) := by omega
+      (p.den : Int) + 1 = 1 * ((p.den : Int) + 1) := by lia
       _ ≤ p.num * ((p.den : Int) + 1) := by
           apply Int.mul_le_mul_of_nonneg_right
-          · omega
-          · omega
+          · lia
+          · lia
   exact Int.lt_of_lt_of_le hden_lt hle
 
 theorem one_gt_natFrac {a d : Nat} (hd : 0 < d) (h : a < d) :
@@ -1205,14 +1205,14 @@ theorem sqrtTwoApproxNum_pos (n : Nat) : 0 < sqrtTwoApproxNum n := by
   | zero => decide
   | succ n ih =>
       simp [sqrtTwoApproxNum]
-      omega
+      lia
 
 theorem sqrtTwoApproxDen_pos (n : Nat) : 0 < sqrtTwoApproxDen n := by
   induction n with
   | zero => decide
   | succ n ih =>
       simp [sqrtTwoApproxDen]
-      omega
+      lia
 
 theorem sqrtTwoApproxDen_linear_growth (n : Nat) :
     n + 1 ≤ sqrtTwoApproxDen n := by
@@ -1220,11 +1220,11 @@ theorem sqrtTwoApproxDen_linear_growth (n : Nat) :
   | zero => decide
   | succ n ih =>
       simp [sqrtTwoApproxDen]
-      omega
+      lia
 
 theorem sqrtTwoApproxDen_gt_self (n : Nat) : n < sqrtTwoApproxDen n := by
   have h := sqrtTwoApproxDen_linear_growth n
-  omega
+  lia
 
 def sqrtTwoApprox (n : Nat) : QRat :=
   natFrac (sqrtTwoApproxNum n) (sqrtTwoApproxDen n) (sqrtTwoApproxDen_pos n)
@@ -1241,7 +1241,7 @@ theorem sqrtTwoApprox_num_square_lt_two_den_square (n : Nat) :
     sqrtTwoApproxNum n * sqrtTwoApproxNum n <
       2 * sqrtTwoApproxDen n * sqrtTwoApproxDen n := by
   have h := sqrtTwoApprox_pell n
-  omega
+  lia
 
 theorem sqrtTwoApprox_square_lt_two (n : Nat) :
     sqrtTwoApprox n * sqrtTwoApprox n < (2 : QRat) := by
@@ -1310,14 +1310,14 @@ theorem sqrtThreeApproxNum_pos (n : Nat) : 0 < sqrtThreeApproxNum n := by
   | zero => decide
   | succ n ih =>
       simp [sqrtThreeApproxNum]
-      omega
+      lia
 
 theorem sqrtThreeApproxDen_pos (n : Nat) : 0 < sqrtThreeApproxDen n := by
   induction n with
   | zero => decide
   | succ n ih =>
       simp [sqrtThreeApproxDen]
-      omega
+      lia
 
 theorem sqrtThreeApproxDen_linear_growth (n : Nat) :
     n + 1 ≤ sqrtThreeApproxDen n := by
@@ -1325,11 +1325,11 @@ theorem sqrtThreeApproxDen_linear_growth (n : Nat) :
   | zero => decide
   | succ n ih =>
       simp [sqrtThreeApproxDen]
-      omega
+      lia
 
 theorem sqrtThreeApproxDen_gt_self (n : Nat) : n < sqrtThreeApproxDen n := by
   have h := sqrtThreeApproxDen_linear_growth n
-  omega
+  lia
 
 def sqrtThreeApprox (n : Nat) : QRat :=
   natFrac (sqrtThreeApproxNum n) (sqrtThreeApproxDen n) (sqrtThreeApproxDen_pos n)
@@ -1346,7 +1346,7 @@ theorem sqrtThreeApprox_num_square_lt_three_den_square (n : Nat) :
     sqrtThreeApproxNum n * sqrtThreeApproxNum n <
       3 * sqrtThreeApproxDen n * sqrtThreeApproxDen n := by
   have h := sqrtThreeApprox_pell n
-  omega
+  lia
 
 theorem sqrtThreeApprox_square_lt_three (n : Nat) :
     sqrtThreeApprox n * sqrtThreeApprox n < (3 : QRat) := by

@@ -337,7 +337,7 @@ theorem run_returnToFirstMarker_scan
   | cons bit rest ih =>
       rw [show (bit :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       have hstep :
           ReturnToFirstMarkerDescription.runConfig 1
               (returnToFirstMarkerScanConfig (bit :: rest) scanned) =
@@ -363,7 +363,7 @@ theorem run_returnToFirstMarker_from_reversedBits
       { state := ReturnToFirstMarkerDescription.halt
         tape :=
           restoredCheckedHandoffTapeFromTail prefixRev.reverse } := by
-  rw [show prefixRev.length + 2 = 1 + (prefixRev.length + 1) by omega]
+  rw [show prefixRev.length + 2 = 1 + (prefixRev.length + 1) by lia]
   rw [runConfig_add]
   cases prefixRev with
   | nil =>

@@ -82,22 +82,22 @@ theorem two_to_even_power_minus_one_divisible_by_three (n : Nat) :
       | intro k hk =>
           exists 4 * k + 1
           have hpow : 2 ^ (2 * (n + 1)) = 4 * 2 ^ (2 * n) := by
-            rw [show 2 * (n + 1) = 2 * n + 2 by omega]
+            rw [show 2 * (n + 1) = 2 * n + 2 by lia]
             rw [show 2 ^ (2 * n + 2) = 2 ^ (2 * n) * 4 by
-              rw [show 2 * n + 2 = 2 * n + 1 + 1 by omega]
+              rw [show 2 * n + 2 = 2 * n + 1 + 1 by lia]
               rw [Nat.pow_succ, Nat.pow_succ]
-              omega]
-            omega
+              lia]
+            lia
           have hpos : 0 < 2 ^ (2 * n) := Nat.pow_pos (by decide : 0 < 2)
           calc
             2 ^ (2 * (n + 1)) - 1 = 4 * 2 ^ (2 * n) - 1 := by
               rw [hpow]
             _ = 4 * (2 ^ (2 * n) - 1) + 3 := by
-              omega
+              lia
             _ = 4 * (3 * k) + 3 := by
               rw [hk]
             _ = 3 * (4 * k + 1) := by
-              omega
+              lia
 
 /-!
 # Recursive Numerical Definitions

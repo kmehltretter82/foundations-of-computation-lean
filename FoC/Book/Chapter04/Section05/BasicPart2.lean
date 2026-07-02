@@ -473,7 +473,7 @@ theorem anbnCstar_word_count_a (n k : Nat) :
   rw [Word.count_repeatSymbol_same]
   rw [Word.count_repeatSymbol_different (a := ABC.a) (b := ABC.b)]
   rw [Word.count_repeatSymbol_different (a := ABC.a) (b := ABC.c)]
-  · omega
+  · lia
   · intro h
     cases h
   · intro h
@@ -486,7 +486,7 @@ theorem anbnCstar_word_count_b (n k : Nat) :
   rw [Word.count_repeatSymbol_different (a := ABC.b) (b := ABC.a)]
   rw [Word.count_repeatSymbol_same]
   rw [Word.count_repeatSymbol_different (a := ABC.b) (b := ABC.c)]
-  · omega
+  · lia
   · intro h
     cases h
   · intro h
@@ -499,7 +499,7 @@ theorem anbnCstar_word_count_c (n k : Nat) :
   rw [Word.count_repeatSymbol_different (a := ABC.c) (b := ABC.a)]
   rw [Word.count_repeatSymbol_different (a := ABC.c) (b := ABC.b)]
   rw [Word.count_repeatSymbol_same]
-  · omega
+  · lia
   · intro h
     cases h
   · intro h
@@ -512,7 +512,7 @@ theorem astarBnCn_word_count_a (k n : Nat) :
   rw [Word.count_repeatSymbol_same]
   rw [Word.count_repeatSymbol_different (a := ABC.a) (b := ABC.b)]
   rw [Word.count_repeatSymbol_different (a := ABC.a) (b := ABC.c)]
-  · omega
+  · lia
   · intro h
     cases h
   · intro h
@@ -525,7 +525,7 @@ theorem astarBnCn_word_count_b (k n : Nat) :
   rw [Word.count_repeatSymbol_different (a := ABC.b) (b := ABC.a)]
   rw [Word.count_repeatSymbol_same]
   rw [Word.count_repeatSymbol_different (a := ABC.b) (b := ABC.c)]
-  · omega
+  · lia
   · intro h
     cases h
   · intro h
@@ -538,7 +538,7 @@ theorem astarBnCn_word_count_c (k n : Nat) :
   rw [Word.count_repeatSymbol_different (a := ABC.c) (b := ABC.a)]
   rw [Word.count_repeatSymbol_different (a := ABC.c) (b := ABC.b)]
   rw [Word.count_repeatSymbol_same]
-  · omega
+  · lia
   · intro h
     cases h
   · intro h
@@ -573,7 +573,7 @@ theorem anbnCstar_inter_astarBnCn_exact :
       rw [anbnCstar_word_count_c n k,
         astarBnCn_word_count_c i j] at hcount
       exact hcount
-    have hk : k = n := by omega
+    have hk : k = n := by lia
     exists n
     rw [hleft, hk, anbnCstarWord_diagonal]
   · intro hw
@@ -776,7 +776,7 @@ theorem cfl_pumped_two_count_symbol [DecidableEq terminal]
   rw [show Word.RepeatWord z 2 = Word.Concat z z by
     simp [Word.RepeatWord, Word.Concat]]
   repeat rw [Word.count_concat]
-  omega
+  lia
 
 /-!
 # Pumping {lit}`a^n b^n c^n`
@@ -798,7 +798,7 @@ theorem anbncn_block_count_a (n : Nat) :
   rw [Word.count_concat, Word.count_repeatSymbol_same]
   rw [Word.count_concat, Word.count_repeatSymbol_different,
     Word.count_repeatSymbol_different]
-  · omega
+  · lia
   · intro h
     cases h
   · intro h
@@ -811,7 +811,7 @@ theorem anbncn_block_count_b (n : Nat) :
   rw [Word.count_repeatSymbol_different (a := ABC.b) (b := ABC.a)]
   rw [Word.count_concat, Word.count_repeatSymbol_same]
   rw [Word.count_repeatSymbol_different (a := ABC.b) (b := ABC.c)]
-  · omega
+  · lia
   · intro h
     cases h
   · intro h
@@ -825,7 +825,7 @@ theorem anbncn_block_count_c (n : Nat) :
   rw [Word.count_concat]
   rw [Word.count_repeatSymbol_different (a := ABC.c) (b := ABC.b)]
   rw [Word.count_repeatSymbol_same]
-  · omega
+  · lia
   · intro h
     cases h
   · intro h
@@ -835,7 +835,7 @@ theorem anbncn_block_length (n : Nat) :
     Word.Length (anbncnBlockWord n) = 3 * n := by
   unfold anbncnBlockWord
   simp [Word.length_concat, Word.length_repeatSymbol]
-  omega
+  lia
 
 theorem anbncn_members_have_equal_counts {w : Word ABC}
     (hw : w ∈ anbncnLanguage) :
@@ -860,7 +860,7 @@ theorem abc_count_sum_pos_of_nonempty {w : Word ABC}
   | nil =>
       exact False.elim (h rfl)
   | cons head tail =>
-      cases head <;> simp [Word.Count] <;> omega
+      cases head <;> simp [Word.Count] <;> lia
 
 theorem anbncn_drop_after_a_count_a_zero (K l : Nat) (hl : K <= l) :
     Word.Count ABC.a (List.drop l (anbncnBlockWord K)) = 0 := by
@@ -870,7 +870,7 @@ theorem anbncn_drop_after_a_count_a_zero (K l : Nat) (hl : K <= l) :
         (List.append (Word.RepeatSymbol ABC.a K)
           (Word.Concat (Word.RepeatSymbol ABC.b K) (Word.RepeatSymbol ABC.c K)))) = 0
   simp [List.drop_append, Word.RepeatSymbol, List.drop_replicate]
-  have hzero : K - l = 0 := by omega
+  have hzero : K - l = 0 := by lia
   rw [hzero]
   change Word.Count ABC.a
       (List.drop (l - K)
@@ -936,7 +936,7 @@ theorem anbncn_middle_after_a_count_a_zero
     rw [htail]
     exact anbncn_drop_after_a_count_a_zero K (Word.Length u) hu
   rw [Word.count_concat] at hcountTail
-  omega
+  lia
 
 theorem anbncn_middle_before_c_count_c_zero
     {u middle v : Word ABC} {K : Nat}
@@ -965,7 +965,7 @@ theorem anbncn_middle_before_c_count_c_zero
     exact anbncn_take_before_c_count_c_zero K
       (Word.Length (Word.Concat u middle)) hprefix
   rw [Word.count_concat] at hcountPrefix
-  omega
+  lia
 
 theorem anbncn_short_middle_count_a_or_c_zero
     {u middle v : Word ABC} {K : Nat}
@@ -975,10 +975,10 @@ theorem anbncn_short_middle_count_a_or_c_zero
   by_cases hu : K <= Word.Length u
   · exact Or.inl (anbncn_middle_after_a_count_a_zero hword hu)
   · apply Or.inr
-    have huLt : Word.Length u < K := by omega
+    have huLt : Word.Length u < K := by lia
     have hprefix : Word.Length (Word.Concat u middle) <= 2 * K := by
       rw [Word.length_concat]
-      omega
+      lia
     exact anbncn_middle_before_c_count_c_zero hword hprefix
 
 theorem cfl_pumped_two_count (s : ABC) (u x y z v : Word ABC) :
@@ -1011,13 +1011,13 @@ theorem anbncn_xz_count_a_or_c_zero
       unfold CFL.Concat3 at ha
       rw [Word.count_concat, Word.count_concat] at ha
       rw [Word.count_concat]
-      omega
+      lia
   | inr hc =>
       apply Or.inr
       unfold CFL.Concat3 at hc
       rw [Word.count_concat, Word.count_concat] at hc
       rw [Word.count_concat]
-      omega
+      lia
 
 theorem anbncn_xz_nonempty {x z : Word ABC}
     (h : x ≠ Word.Empty ∨ z ≠ Word.Empty) :
@@ -1073,13 +1073,13 @@ theorem anbncn_pump_two_not_mem
     abc_count_sum_pos_of_nonempty hxzNonempty
   cases anbncn_xz_count_a_or_c_zero hword hshort with
   | inl ha0 =>
-      have hb0 : Word.Count ABC.b (Word.Concat x z) = 0 := by omega
-      have hc0 : Word.Count ABC.c (Word.Concat x z) = 0 := by omega
-      omega
+      have hb0 : Word.Count ABC.b (Word.Concat x z) = 0 := by lia
+      have hc0 : Word.Count ABC.c (Word.Concat x z) = 0 := by lia
+      lia
   | inr hc0 =>
-      have hb0 : Word.Count ABC.b (Word.Concat x z) = 0 := by omega
-      have ha0 : Word.Count ABC.a (Word.Concat x z) = 0 := by omega
-      omega
+      have hb0 : Word.Count ABC.b (Word.Concat x z) = 0 := by lia
+      have ha0 : Word.Count ABC.a (Word.Concat x z) = 0 := by lia
+      lia
 
 theorem anbncn_bad_word_family :
     CFLPumpingBadWordFamily anbncnLanguage := by
@@ -1089,7 +1089,7 @@ theorem anbncn_bad_word_family :
     exists K
   have hwLength : K <= Word.Length w := by
     simp [w, anbncn_block_length]
-    omega
+    lia
   refine ⟨w, hwMem, hwLength, ?_⟩
   intro u x y z v hword hnonempty hshort
   exact ⟨2, anbncn_pump_two_not_mem hword hnonempty hshort⟩
@@ -1163,13 +1163,13 @@ theorem duplicateSeedWord_length (n : Nat) :
     Word.Length (duplicateSeedWord n) = 2 * n + 2 := by
   unfold duplicateSeedWord
   simp [Word.Length, Word.Concat, Word.RepeatSymbol, Word.Symbol]
-  omega
+  lia
 
 theorem duplicateBadWord_length (n : Nat) :
     Word.Length (duplicateBadWord n) = 4 * n + 4 := by
   unfold duplicateBadWord
   rw [Word.length_concat, duplicateSeedWord_length]
-  omega
+  lia
 
 theorem duplicate_word_count_even
     (sym : Section01.AB) {w : Word Section01.AB}
@@ -1178,7 +1178,7 @@ theorem duplicate_word_count_even
   rcases hw with ⟨u, hu⟩
   exists Word.Count sym u
   rw [hu, Word.count_concat]
-  omega
+  lia
 
 theorem duplicate_word_not_count_b_five {w : Word Section01.AB}
     (hcount : Word.Count Section01.AB.b w = 5) :
@@ -1186,7 +1186,7 @@ theorem duplicate_word_not_count_b_five {w : Word Section01.AB}
   intro hw
   rcases duplicate_word_count_even Section01.AB.b hw with ⟨n, hn⟩
   rw [hcount] at hn
-  omega
+  lia
 
 theorem duplicate_pump_two_not_mem_of_xz_count_b_one
     {u x y z v : Word Section01.AB} {K : Nat}
@@ -1202,7 +1202,7 @@ theorem duplicate_xz_count_b_le_middle_count_b
       Word.Count Section01.AB.b (CFL.Concat3 x y z) := by
   unfold CFL.Concat3
   repeat rw [Word.count_concat]
-  omega
+  lia
 
 theorem duplicate_pump_two_not_mem_of_xz_count_b_pos_le_one
     {u x y z v : Word Section01.AB} {K : Nat}
@@ -1211,7 +1211,7 @@ theorem duplicate_pump_two_not_mem_of_xz_count_b_pos_le_one
     (hle : Word.Count Section01.AB.b (Word.Concat x z) <= 1) :
     ¬ CFL.Pumped u x y z v 2 ∈ duplicateWordLanguage := by
   have hcount : Word.Count Section01.AB.b (Word.Concat x z) = 1 := by
-    omega
+    lia
   exact duplicate_pump_two_not_mem_of_xz_count_b_one hword hcount
 
 theorem duplicate_pump_two_not_mem_of_middle_count_b_le_one

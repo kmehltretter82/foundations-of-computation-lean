@@ -259,7 +259,7 @@ theorem markedPrefix_run_state200_stageNat_to_state210
           run_state200_done_to_state210 left right
   | succ stage ih =>
       rw [show 4 * (stage + 1) + 4 = 4 + (4 * stage + 4) by
-        omega]
+        lia]
       rw [runConfig_add]
       rw [show
           (stageNatBits (stage + 1)).map some =
@@ -338,7 +338,7 @@ theorem markedPrefix_run_state200_stageNat_handoff
   rcases stageNatBits_reverse_map_some_cons stage with
     ⟨tail, htail⟩
   refine ⟨tail, ?_⟩
-  rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by omega]
+  rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by lia]
   rw [runConfig_add]
   rw [markedPrefix_run_state200_stageNat_to_state210]
   rw [htail]
@@ -468,7 +468,7 @@ theorem nonemptyNatSuffix_run_state200_stageNat_to_state210
         nonemptyNatSuffix_run_state200_done_to_state210 left right
   | succ stage ih =>
       rw [show 4 * (stage + 1) + 4 = 4 + (4 * stage + 4) by
-        omega]
+        lia]
       rw [runConfig_add]
       rw [show
           (stageNatBits (stage + 1)).map some =
@@ -527,7 +527,7 @@ theorem run_nonemptyNatSuffix_raw_to_handoff_withBase
   rcases stageNatBits_reverse_map_some_cons stage with
     ⟨tail, htail⟩
   refine ⟨4 * stage + 5, ?_⟩
-  rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by omega]
+  rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by lia]
   rw [runConfig_add]
   rw [nonemptyNatSuffix_run_state200_stageNat_to_state210]
   rw [htail]
@@ -551,7 +551,7 @@ theorem run_nonemptyNatSuffix_raw_to_handoff_withBaseAndRight
   rcases stageNatBits_reverse_map_some_cons stage with
     ⟨tail, htail⟩
   refine ⟨4 * stage + 5, ?_⟩
-  rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by omega]
+  rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by lia]
   rw [runConfig_add]
   rw [nonemptyNatSuffix_run_state200_stageNat_to_state210]
   rw [htail]
@@ -699,7 +699,7 @@ theorem nonemptyNatSuffixScannerDescription_ne_halt_of_reaches_ne_halt_region
   · intro hhalt
     let rem := k - n
     have hk : k = n + rem := by
-      omega
+      lia
     have hcfg :
         NonemptyNatSuffixScannerDescription.runConfig
             n c =
@@ -724,7 +724,7 @@ theorem nonemptyNatSuffixScannerDescription_ne_halt_of_reaches_ne_halt_region
     rw [hrun] at hhaltAtK
     exact hmid 0 hhaltAtK
   · have hn : n = k + (n - k) := by
-      omega
+      lia
     rw [hn, runConfig_add, hrun]
     exact hmid (n - k)
 
@@ -758,7 +758,7 @@ theorem nonemptyNatSuffixScannerDescription_runConfig_encodeNat_empty_ne_halt
         (List.append ((stageNatBits stage).reverse.map some) leftRev))
       (by
         change (210 : Nat) ≠ 999
-        omega)
+        lia)
 
 theorem nonemptyNatSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -787,7 +787,7 @@ theorem nonemptyNatSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
           (by rfl)
           (by
             change (200 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest ih =>
       cases symbol with
       | header =>
@@ -824,7 +824,7 @@ theorem nonemptyNatSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (202 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
@@ -859,7 +859,7 @@ theorem nonemptyNatSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (202 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           simp [decodeNat] at hdecode
           cases hrest : decodeNat rest with
@@ -920,7 +920,7 @@ theorem nonemptyNatSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | zero =>
           exact
             CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
@@ -955,7 +955,7 @@ theorem nonemptyNatSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | one =>
           exact
             CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
@@ -990,7 +990,7 @@ theorem nonemptyNatSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | moveLeft =>
           exact
             CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
@@ -1025,7 +1025,7 @@ theorem nonemptyNatSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
@@ -1057,7 +1057,7 @@ theorem nonemptyNatSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
                   Tape.read])
               (by
                 change (200 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem nonemptyNatSuffixScannerDescription_runConfig_code_inv
     (baseLeft : List (Option Bool)) (code : Word MachineCodeSymbol)
@@ -1139,7 +1139,7 @@ theorem run_natSuffix_raw_to_handoff_withBase
   rcases stageNatBits_reverse_map_some_cons stage with
     ⟨tail, htail⟩
   refine ⟨4 * stage + 5, ?_⟩
-  rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by omega]
+  rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by lia]
   rw [runConfig_add]
   rw [natSuffix_run_state200_stageNat_to_state210]
   rw [htail]
@@ -1163,7 +1163,7 @@ theorem run_natSuffix_raw_to_handoff_withBaseAndRight
   rcases stageNatBits_reverse_map_some_cons stage with
     ⟨tail, htail⟩
   refine ⟨4 * stage + 5, ?_⟩
-  rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by omega]
+  rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by lia]
   rw [runConfig_add]
   rw [natSuffix_run_state200_stageNat_to_state210]
   rw [htail]
@@ -1227,7 +1227,7 @@ theorem natSuffixScannerDescription_ne_halt_of_reaches_ne_halt_region
   · intro hhalt
     let rem := k - n
     have hk : k = n + rem := by
-      omega
+      lia
     have hcfg :
         NatSuffixScannerDescription.runConfig
             n c =
@@ -1252,7 +1252,7 @@ theorem natSuffixScannerDescription_ne_halt_of_reaches_ne_halt_region
     rw [hrun] at hhaltAtK
     exact hmid 0 hhaltAtK
   · have hn : n = k + (n - k) := by
-      omega
+      lia
     rw [hn, runConfig_add, hrun]
     exact hmid (n - k)
 
@@ -1283,7 +1283,7 @@ theorem natSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
           (by rfl)
           (by
             change (200 : Nat) ≠ 999
-            omega)
+            lia)
   | cons symbol rest ih =>
       cases symbol with
       | header =>
@@ -1320,7 +1320,7 @@ theorem natSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (202 : Nat) ≠ 999
-                omega)
+                lia)
       | transition =>
           exact
             CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
@@ -1355,7 +1355,7 @@ theorem natSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (202 : Nat) ≠ 999
-                omega)
+                lia)
       | tick =>
           simp [decodeNat] at hdecode
           cases hrest : decodeNat rest with
@@ -1416,7 +1416,7 @@ theorem natSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | zero =>
           exact
             CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
@@ -1451,7 +1451,7 @@ theorem natSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | one =>
           exact
             CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
@@ -1486,7 +1486,7 @@ theorem natSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | moveLeft =>
           exact
             CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
@@ -1521,7 +1521,7 @@ theorem natSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (201 : Nat) ≠ 999
-                omega)
+                lia)
       | moveRight =>
           exact
             CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
@@ -1553,7 +1553,7 @@ theorem natSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
                   Tape.read])
               (by
                 change (200 : Nat) ≠ 999
-                omega)
+                lia)
 
 theorem natSuffixScannerDescription_runConfig_code_inv
     (baseLeft : List (Option Bool)) (code : Word MachineCodeSymbol)

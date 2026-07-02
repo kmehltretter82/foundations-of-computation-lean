@@ -428,7 +428,7 @@ theorem square_process_all_b_derives
       have hrest := ih (rowWidth + 1)
       have hall := GeneralGrammar.derives_trans hpass hrest
       have hnat : rowWidth + (remaining + 1) = rowWidth + 1 + remaining := by
-        omega
+        lia
       simpa [squareProcessForm, hnat, List.append_assoc] using hall
 
 theorem square_move_d_right_over_terminal_as
@@ -469,7 +469,7 @@ theorem square_terminal_rows_append (rowWidth rows : Nat) :
         (Word.RepeatSymbol SquareTerminal.a (rowWidth * (rows + 1))) := by
   have hnat : rowWidth * (rows + 1) = rowWidth + rowWidth * rows := by
     rw [Nat.mul_succ]
-    omega
+    lia
   rw [hnat]
   simp [squareTerminalAForm, SententialForm.terminalWord,
     Word.RepeatSymbol, List.replicate_append_replicate]

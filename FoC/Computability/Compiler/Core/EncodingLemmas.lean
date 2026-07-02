@@ -220,13 +220,13 @@ theorem encodeCellsAppend_length
           simp [encodeCellsAppend,
             encodeCellAppend,
             encodeCell, ih]
-          omega
+          lia
       | some b =>
           cases b <;>
             simp [encodeCellsAppend,
               encodeCellAppend,
               encodeCell, ih] <;>
-            omega
+            lia
 
 theorem encodeCellListAppend_length_ge
     (cells : List (Option Bool)) (suffix : Word MachineCodeSymbol) :

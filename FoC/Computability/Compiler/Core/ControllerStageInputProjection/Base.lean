@@ -128,7 +128,7 @@ theorem projectionRepeatedCells_length
         chunk.length * (n + 1)
       simp [List.length_append, ih]
       rw [Nat.mul_succ]
-      omega
+      lia
 
 theorem projectionRepeatedCells_reverse
     (chunk : List (Option Bool)) (n : Nat) :
@@ -165,7 +165,7 @@ theorem projectionBoolPayloadCells_length
       cases b <;>
         simp [projectionBoolPayloadCells, projectionBoolCellCodeCells,
           encodeCodeSymbolAsInput, ih] <;>
-        omega
+        lia
 
 theorem projectionMarkedBoolPayloadCells_length
     (w : Word Bool) :
@@ -177,7 +177,7 @@ theorem projectionMarkedBoolPayloadCells_length
       cases b <;>
         simp [projectionMarkedBoolPayloadCells,
           projectionMarkedBoolCellCodeCells, ih] <;>
-        omega
+        lia
 
 @[simp] theorem projectionBoolPayloadCells_append
     (left right : Word Bool) :
@@ -320,7 +320,7 @@ theorem projectionCodeCells_replicate_tick
           List.replicate (n + 1) MachineCodeSymbol.tick =
             MachineCodeSymbol.tick ::
               List.replicate n MachineCodeSymbol.tick := by
-        rw [show n + 1 = Nat.succ n by omega]
+        rw [show n + 1 = Nat.succ n by lia]
         rfl
       rw [hrep]
       simp [projectionCodeCells, projectionRepeatedCells,
@@ -358,7 +358,7 @@ theorem projectionCodeCells_encodeNatAppend
             List.replicate (n + 1) MachineCodeSymbol.tick =
               MachineCodeSymbol.tick ::
                 List.replicate n MachineCodeSymbol.tick := by
-          rw [show n + 1 = Nat.succ n by omega]
+          rw [show n + 1 = Nat.succ n by lia]
           rfl
         rw [hrep']
         rfl
@@ -693,7 +693,7 @@ theorem run_stage_nat
           cases b <;> rfl
   | succ stage ih =>
       have hsteps : 4 * (stage + 1) + 12 = 4 + (4 * stage + 12) := by
-        omega
+        lia
       rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * stage + 12)
@@ -702,7 +702,7 @@ theorem run_stage_nat
               (projectionCodeCells
                 (encodeNatAppend (stage + 1)
                   (encodeBoolWord result))))) = _
-      have hsucc : stage + 1 = Nat.succ stage := by omega
+      have hsucc : stage + 1 = Nat.succ stage := by lia
       have hcells :
           projectionCodeCells
               (encodeNatAppend (stage + 1)
@@ -742,7 +742,7 @@ theorem run_stage_nat_bool_word_suffix
           cases b <;> rfl
   | succ stage ih =>
       have hsteps : 4 * (stage + 1) + 12 = 4 + (4 * stage + 12) := by
-        omega
+        lia
       rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * stage + 12)
@@ -752,7 +752,7 @@ theorem run_stage_nat_bool_word_suffix
                 (encodeNatAppend (stage + 1)
                   (encodeBoolWordAppend result suffix))))) =
         _
-      have hsucc : stage + 1 = Nat.succ stage := by omega
+      have hsucc : stage + 1 = Nat.succ stage := by lia
       have hcells :
           projectionCodeCells
               (encodeNatAppend (stage + 1)
@@ -799,7 +799,7 @@ theorem run_cleanup_marked_ticks
   | zero =>
       rfl
   | succ count ih =>
-      have hsteps : 4 * (count + 1) = 4 + 4 * count := by omega
+      have hsteps : 4 * (count + 1) = 4 + 4 * count := by lia
       rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * count)
@@ -823,7 +823,7 @@ theorem run_cleanup_marked_ticks
                   tail)))) = _
       rw [run_cleanup_marked_tick]
       rw [ih]
-      rw [show 4 + 4 * count = 4 * count + 4 by omega]
+      rw [show 4 + 4 * count = 4 * count + 4 by lia]
       have hrep :
           List.replicate (4 * count + 4) (none : Option Bool) =
             List.append (List.replicate (4 * count) (none : Option Bool))
@@ -883,7 +883,7 @@ theorem run_cleanup_marked_payload
       have hsteps :
           4 * (b :: rest).length + 1 = 4 + (4 * rest.length + 1) := by
         simp
-        omega
+        lia
       rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * rest.length + 1)
@@ -897,7 +897,7 @@ theorem run_cleanup_marked_payload
       rw [run_cleanup_marked_payload_cell]
       rw [ih]
       rw [show 4 + (4 * rest.length + 1) =
-          (4 * rest.length + 1) + 4 by omega]
+          (4 * rest.length + 1) + 4 by lia]
       have hrep :
           List.replicate (4 * rest.length + 1 + 4)
               (none : Option Bool) =
@@ -925,7 +925,7 @@ theorem run_cleanup_marked_payload_to_tail
       have hsteps :
           4 * (b :: rest).length = 4 + 4 * rest.length := by
         simp
-        omega
+        lia
       rw [hsteps, runConfig_add]
       change Description.runConfig
           (4 * rest.length)
@@ -949,7 +949,7 @@ theorem run_cleanup_marked_payload_to_tail
         (tail := List.append (projectionMarkedBoolPayloadCells rest) tail)]
       rw [ih]
       rw [show 4 + 4 * rest.length =
-          4 * rest.length + 4 by omega]
+          4 * rest.length + 4 by lia]
       have hrep :
           List.replicate (4 * rest.length + 4)
               (none : Option Bool) =
@@ -975,7 +975,7 @@ theorem run_cleanup_all_marked_to_tail
   have hsteps :
       8 * w.length + 4 =
         4 * w.length + (4 + 4 * w.length) := by
-    omega
+    lia
   rw [hsteps, runConfig_add]
   change Description.runConfig
       (4 + 4 * w.length)
@@ -1069,7 +1069,7 @@ theorem run_cleanup_code_suffix_ne_halt
   cases n with
   | zero =>
       change (380 : Nat) ≠ 999
-      omega
+      lia
   | succ n =>
       cases symbol <;>
         simp [projectionCodeCells, encodeCodeWordAsInput,
@@ -1139,7 +1139,7 @@ theorem run_cleanup_all_marked_code_suffix_after_prefix_ne_halt
         (List.append (projectionAllMarkedBoolWordCells w)
           (projectionCodeCells (symbol :: suffix))))).state ≠
       Description.halt := by
-  rw [show 8 * w.length + 4 + n = (8 * w.length + 4) + n by omega,
+  rw [show 8 * w.length + 4 + n = (8 * w.length + 4) + n by lia,
     runConfig_add]
   rw [run_cleanup_all_marked_to_tail]
   exact
@@ -1164,7 +1164,7 @@ theorem run_cleanup_all_marked
   have hsteps :
       8 * w.length + 5 =
         4 * w.length + (4 + (4 * w.length + 1)) := by
-    omega
+    lia
   rw [hsteps, runConfig_add]
   change Description.runConfig
       (4 + (4 * w.length + 1))

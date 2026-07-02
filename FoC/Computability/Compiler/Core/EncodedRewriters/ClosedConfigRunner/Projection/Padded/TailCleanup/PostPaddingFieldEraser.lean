@@ -288,7 +288,7 @@ theorem rightBlankGapPayloadScanSourceTape_move_left_move_right
         baseLeft gap current payloadRest padding := by
   cases gap with
   | zero =>
-      omega
+      lia
   | succ gap =>
       cases gap with
       | zero =>
@@ -572,7 +572,7 @@ theorem restoreBoundaryBitFromBoundaryAndPayloadScanDescription_haltsFromTape_po
         (some bit :: baseLeft) gap current payloadRest padding) := by
   cases gap with
   | zero =>
-      omega
+      lia
   | succ gap =>
       exact
         restoreBoundaryBitFromBoundaryAndPayloadScanDescription_haltsFromTape

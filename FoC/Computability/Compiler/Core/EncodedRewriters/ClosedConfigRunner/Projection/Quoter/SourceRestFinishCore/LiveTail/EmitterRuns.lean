@@ -246,7 +246,7 @@ theorem
   | cons prev rest ih =>
       rw [show (prev :: rest).length + 1 = 1 + (rest.length + 1) by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       have hstep :
           mixedParserStackSeekLeftBoundaryDescription.runConfig 1
@@ -325,7 +325,7 @@ theorem
                 (none ::
                   List.append (scanRev.reverse.map some)
                     (some current :: right))) } := by
-  rw [show scanRev.length + 7 = (scanRev.length + 1) + 6 by omega]
+  rw [show scanRev.length + 7 = (scanRev.length + 1) + 6 by lia]
   rw [runConfig_add]
   rw [
     mixedParserStackSeekLeftBoundaryDescription_run_payloadRev_withSentinel]

@@ -105,7 +105,7 @@ theorem resultNoneGuardRewindDescription_run_left_scan
   | cons b rest ih =>
       rw [show (b :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       cases b
       · have hstep :
@@ -166,7 +166,7 @@ theorem resultNoneGuardRewindDescription_run_scanned
           tape := resultNoneGuardScannedBlankTape bits.reverse } =
       { state := ResultNoneGuardRewindDescription.halt
         tape := resultNoneGuardRewindFinalTape bits } := by
-  rw [show bits.length + 4 = 2 + (bits.length + 2) by omega]
+  rw [show bits.length + 4 = 2 + (bits.length + 2) by lia]
   rw [runConfig_add]
   rw [resultNoneGuardRewindDescription_run_start]
   rw [show bits.length + 2 = bits.reverse.length + 2 by simp]
@@ -496,7 +496,7 @@ theorem resultNoneGuardScanRewindDescription_run_code_from
   | cons symbol rest ih =>
       rw [show 4 * (symbol :: rest).length = 4 + 4 * rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       simp only [encodeCodeWordAsInput]
       have happ :
@@ -639,7 +639,7 @@ theorem resultNoneGuardScanRewindDescription_run_rewind_left_scan
   | cons b rest ih =>
       rw [show (b :: rest).length = 1 + rest.length by
         simp
-        omega]
+        lia]
       rw [runConfig_add]
       cases b
       · have hstep :
@@ -702,7 +702,7 @@ theorem resultNoneGuardScanRewindDescription_run_rewind_scanned
           tape := resultNoneGuardScannedBlankTape bits.reverse } =
       { state := ResultNoneGuardScanRewindDescription.halt
         tape := resultNoneGuardRewindFinalTape bits } := by
-  rw [show bits.length + 4 = 2 + (bits.length + 2) by omega]
+  rw [show bits.length + 4 = 2 + (bits.length + 2) by lia]
   rw [runConfig_add]
   rw [resultNoneGuardScanRewindDescription_run_rewind_start]
   rw [show bits.length + 2 = bits.reverse.length + 2 by simp]
@@ -737,7 +737,7 @@ theorem resultNoneGuardScanRewindDescription_run_code_halt_of_accepts
           (encodeCodeWordAsInput code).length + 4 =
         4 * code.length +
           (1 + ((encodeCodeWordAsInput code).length + 4)) by
-    omega]
+    lia]
   rw [runConfig_add]
   have hinitial :
       ResultNoneGuardScanRewindDescription.initial

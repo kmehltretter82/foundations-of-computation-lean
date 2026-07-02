@@ -56,7 +56,7 @@ theorem checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits_length_ge_three
   unfold checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits
   unfold inputTapeRightCellsDirectCopierDoneBits
   simp [encodeCodeSymbolAsInput, List.length_append]
-  omega
+  lia
 
 theorem checkedNonemptyBoolWordQuoteNativeHaltTape_contextLength_gt_exact
     (b : Bool) (rest : Word Bool) (stage : Nat)
@@ -73,7 +73,7 @@ theorem checkedNonemptyBoolWordQuoteNativeHaltTape_contextLength_gt_exact
     checkedNonemptyBoolWordQuoteExactBits_eq,
     encodeCodeSymbolAsInput, tapeAtCells,
     Tape.input, Tape.contextLength, List.length_append] at *
-  omega
+  lia
 
 theorem checkedNonemptyBoolWordQuoteNativeHaltTape_not_run_exactInput
     (D : MachineDescription) (n : Nat)
@@ -122,7 +122,7 @@ theorem checkedNonemptyBoolWordQuoteNativeHaltTape_not_run_exactInput
             (checkedNonemptyBoolWordQuoteExactBits
               b rest stage suffix)) := by
     simpa [hfinal] using hmono
-  omega
+  lia
 
 end DovetailInitialLayoutInitializer
 end Computability

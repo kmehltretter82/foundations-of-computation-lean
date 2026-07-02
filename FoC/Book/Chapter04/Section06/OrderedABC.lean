@@ -249,7 +249,7 @@ theorem orderedABC_yields_preserves_balanced
                               SententialCountTerminal,
                               SententialCountNonterminal, orderedN,
                               orderedT, ggNonterminal, ggTerminal] at hbalanced ⊢ <;>
-                            omega
+                            lia
 
 theorem orderedABC_derives_preserves_balanced
     {x y : SententialForm EqualCountTerminal OrderedABCNT}
@@ -874,9 +874,9 @@ theorem orderedABCShape_equal_counts_language
     rw [hword]
     exact orderedABCShapeWord_count_c aCount bCount cCount
   have hab : aCount = bCount := by
-    omega
+    lia
   have hbc : bCount = cCount := by
-    omega
+    lia
   exists aCount
   rw [hword, orderedABCBlockWord_eq_shape, hab, hbc]
 
