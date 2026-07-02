@@ -118,21 +118,8 @@ only needed to expose the public closed/forward specification.
 -/
 def PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
     (attempt invoker : MachineDescription) : Prop :=
-  invoker.SubroutineReady ∧
-    forall C : DovetailControllerLayout,
-    forall result : Word Bool,
-      invoker.HaltsWithOutput
-          (encodeCodeWordAsInput
-            (DovetailControllerLayout.encode C))
-          (encodeCodeWordAsInput
-            (DovetailControllerLayout.encode
-              (DovetailControllerLayout.withResult
-                C result))) <->
-        attempt.HaltsWithOutput
-          (encodeCodeWordAsInput
-            (PairedRecognizerDovetailControllerStageInputCode C))
-          (encodeCodeWordAsInput
-            (encodeBoolWord result))
+  CommonGround.ControllerInvocation.StageAttemptProtectedRealizes
+    attempt invoker
 
 theorem pairedRecognizerDovetailStageAttemptProtectedInvocation_attempt_output_functional
     {attempt invoker : MachineDescription}
@@ -286,11 +273,7 @@ then emit the controller layout with the attempt result installed.
 -/
 def PairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData :
     Prop :=
-  forall attempt : MachineDescription,
-    attempt.SubroutineReady ->
-      exists invoker : MachineDescription,
-        PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
-          attempt invoker
+  CommonGround.ControllerInvocation.StageAttemptProtectedConstruction
 
 def PairedRecognizerDovetailStageAttemptFramedRunInvocationForwardSpec
     (attempt invoker : MachineDescription) : Prop :=
@@ -335,33 +318,16 @@ private def PairedRecognizerDovetailStageAttemptWitnessedRunInvocationConstructi
 private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_protected
     (h :
       PairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData) :
-    PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData := by
-  intro attempt hattempt
-  rcases h attempt hattempt with ⟨invoker, hinvoker⟩
-  refine ⟨invoker, ?_⟩
-  constructor
-  · exact hinvoker.left
-  · constructor
-    · intro C result hrun
-      exact (hinvoker.right C result).mpr hrun
-    · intro C result hrun
-      exact (hinvoker.right C result).mp hrun
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :=
+  CommonGround.ControllerInvocation.stageAttemptFramedConstruction_of_protected
+    h
 
 theorem pairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData_of_framedRun
     (h :
       PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData) :
-    PairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData := by
-  intro attempt hattempt
-  rcases h attempt hattempt with ⟨invoker, hinvoker⟩
-  refine ⟨invoker, ?_⟩
-  constructor
-  · exact hinvoker.left
-  · intro C result
-    constructor
-    · intro hrun
-      exact hinvoker.right.right C result hrun
-    · intro hrun
-      exact hinvoker.right.left C result hrun
+    PairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData :=
+  CommonGround.ControllerInvocation.stageAttemptProtectedConstruction_of_framed
+    h
 
 theorem pairedRecognizerDovetailStageAttemptInvocationConstructionData_of_protected
     (h :
@@ -381,34 +347,27 @@ theorem pairedRecognizerDovetailStageAttemptInvocationConstructionData_of_protec
     · exact (hinvoker.right C result).mp hrun
 
 /--
+Finite-machine leaf for the framed protected stage-attempt wrapper.  This is
+the remaining transition-table obligation after CommonGround has named the
+protected/framed/witnessed controller-invocation contracts.
+-/
+private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf :
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData := by
+  sorry
+
+/--
 Finite-machine leaf for witnessed controller stage-attempt invocation.  This is
-the concrete transition-table obligation after CommonGround has named the
-controller-layout encodings and the witnessed-run contract.
+now packaging around the framed protected wrapper construction.
 -/
 private theorem controllerStageAttemptWitnessedInvocationConstruction_leaf :
     CommonGround.ControllerInvocation.StageAttemptWitnessedConstruction := by
-  sorry
+  exact
+    CommonGround.ControllerInvocation.stageAttemptWitnessedConstruction_of_framed
+      pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf
 
 private theorem pairedRecognizerDovetailStageAttemptWitnessedRunInvocationConstructionData_finite_leaf :
     PairedRecognizerDovetailStageAttemptWitnessedRunInvocationConstructionData :=
   controllerStageAttemptWitnessedInvocationConstruction_leaf
-
-/--
-Finite-machine leaf for the framed protected stage-attempt wrapper.  This is
-packaging around the witnessed-run leaf: the public framed contract uses an
-existential run witness in its forward half.
--/
-private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf :
-    PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData := by
-  intro attempt hattempt
-  rcases
-      pairedRecognizerDovetailStageAttemptWitnessedRunInvocationConstructionData_finite_leaf
-        attempt hattempt with
-    ⟨invoker, hready, hforward, hclosed⟩
-  refine ⟨invoker, hready, ?_, hclosed⟩
-  intro C result hrun
-  rcases hrun with ⟨n, hn⟩
-  exact hforward C result n hn
 
 /-- Protected packaging of the framed stage-attempt wrapper leaf. -/
 private theorem pairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData_finite_leaf :

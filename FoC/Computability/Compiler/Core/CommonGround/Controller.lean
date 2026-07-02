@@ -256,6 +256,24 @@ def StageAttemptFramedRealizes
     StageAttemptFramedForwardSpec attempt invoker ∧
       StageAttemptFramedClosedSpec attempt invoker
 
+def StageAttemptProtectedRealizes
+    (attempt invoker : MachineDescription) : Prop :=
+  invoker.SubroutineReady ∧
+    forall C : DovetailControllerLayout,
+    forall result : Word Bool,
+      invoker.HaltsWithOutput
+          (encodeCodeWordAsInput
+            (DovetailControllerLayout.encode C))
+          (encodeCodeWordAsInput
+            (DovetailControllerLayout.encode
+              (DovetailControllerLayout.withResult
+                C result))) <->
+        attempt.HaltsWithOutput
+          (encodeCodeWordAsInput
+            (PairedRecognizerDovetailControllerStageInputCode C))
+          (encodeCodeWordAsInput
+            (encodeBoolWord result))
+
 def StageAttemptWitnessedConstruction : Prop :=
   forall attempt : MachineDescription,
     attempt.SubroutineReady ->
@@ -267,6 +285,12 @@ def StageAttemptFramedConstruction : Prop :=
     attempt.SubroutineReady ->
       exists invoker : MachineDescription,
         StageAttemptFramedRealizes attempt invoker
+
+def StageAttemptProtectedConstruction : Prop :=
+  forall attempt : MachineDescription,
+    attempt.SubroutineReady ->
+      exists invoker : MachineDescription,
+        StageAttemptProtectedRealizes attempt invoker
 
 abbrev ControllerStageAttemptWitnessedConstruction : Prop :=
   StageAttemptWitnessedConstruction
@@ -307,6 +331,30 @@ theorem stageAttemptWitnessedRealizes_of_framed
       stageAttemptWitnessedForwardSpec_of_framed h.right.left,
       h.right.right⟩
 
+theorem stageAttemptFramedRealizes_of_protected
+    {attempt invoker : MachineDescription}
+    (h : StageAttemptProtectedRealizes attempt invoker) :
+    StageAttemptFramedRealizes attempt invoker := by
+  refine ⟨h.left, ?_, ?_⟩
+  · intro C result hrun
+    exact (h.right C result).mpr hrun
+  · intro C result hrun
+    exact (h.right C result).mp hrun
+
+theorem stageAttemptProtectedRealizes_of_framed
+    {attempt invoker : MachineDescription}
+    (h : StageAttemptFramedRealizes attempt invoker) :
+    StageAttemptProtectedRealizes attempt invoker := by
+  constructor
+  · exact h.left
+  · intro C result
+    constructor
+    · intro hrun
+      rcases h.right.right C result hrun with ⟨n, hn⟩
+      exact ⟨n, hn⟩
+    · intro hrun
+      exact h.right.left C result hrun
+
 theorem stageAttemptFramedConstruction_of_witnessed
     (h : StageAttemptWitnessedConstruction) :
     StageAttemptFramedConstruction := by
@@ -320,6 +368,20 @@ theorem stageAttemptWitnessedConstruction_of_framed
   intro attempt hattempt
   rcases h attempt hattempt with ⟨invoker, hinvoker⟩
   exact ⟨invoker, stageAttemptWitnessedRealizes_of_framed hinvoker⟩
+
+theorem stageAttemptFramedConstruction_of_protected
+    (h : StageAttemptProtectedConstruction) :
+    StageAttemptFramedConstruction := by
+  intro attempt hattempt
+  rcases h attempt hattempt with ⟨invoker, hinvoker⟩
+  exact ⟨invoker, stageAttemptFramedRealizes_of_protected hinvoker⟩
+
+theorem stageAttemptProtectedConstruction_of_framed
+    (h : StageAttemptFramedConstruction) :
+    StageAttemptProtectedConstruction := by
+  intro attempt hattempt
+  rcases h attempt hattempt with ⟨invoker, hinvoker⟩
+  exact ⟨invoker, stageAttemptProtectedRealizes_of_framed hinvoker⟩
 
 end ControllerInvocation
 
