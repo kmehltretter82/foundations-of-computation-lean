@@ -670,6 +670,9 @@ def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerConstruction :
         PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes
           attempt runner
 
+abbrev ControllerStageAttemptExactFuelRunnerConstruction : Prop :=
+  PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerConstruction
+
 theorem pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerConstruction_of_unconditional
     (hrunner :
       PairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction) :
@@ -754,6 +757,9 @@ def PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction
         PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorRealizes
           runner enumerator
 
+abbrev ControllerStageAttemptFuelPairEnumeratorConstruction : Prop :=
+  PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction
+
 def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierRealizes
     (enumerator classifier : MachineDescription) : Prop :=
   classifier.WellFormed ∧
@@ -772,6 +778,9 @@ def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstructio
         PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierRealizes
           enumerator classifier
 
+abbrev ControllerStageAttemptRawOutputClassifierConstruction : Prop :=
+  PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction
+
 def PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction :
     Prop :=
   forall runner : MachineDescription,
@@ -779,6 +788,9 @@ def PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction :
       exists decider : MachineDescription,
         PairedRecognizerDovetailControllerStageAttemptFuelPairSearchRealizes
           runner decider
+
+abbrev ControllerStageAttemptSearchDriverConstruction : Prop :=
+  PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction_of_enumerator_classifier
     (henumerator :
@@ -862,6 +874,9 @@ def PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruct
       exists decider : MachineDescription,
         PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
           attempt decider
+
+abbrev ControllerStageAttemptProtectedSearchDriverConstruction : Prop :=
+  PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction
 
 theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes_of_fuel
     {attempt decider : MachineDescription}
