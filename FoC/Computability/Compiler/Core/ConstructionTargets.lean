@@ -526,6 +526,30 @@ def PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction :
         PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes
           attempt runner
 
+def PairedRecognizerDovetailControllerStageAttemptFuelPairSearchRealizes
+    (runner decider : MachineDescription) : Prop :=
+  decider.WellFormed ∧
+    forall w : Word Bool, forall b : Bool,
+      decider.HaltsWithOutput w [b] <->
+        exists limit : Nat,
+        exists fuel : Nat,
+        exists result : Word Bool,
+          runner.HaltsWithOutput
+            (encodeCodeWordAsInput
+              (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+                w limit fuel))
+            (encodeCodeWordAsInput
+              (encodeBoolWord result)) ∧
+          PairedRecognizerDovetailControllerRawOutput result = some [b]
+
+def PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction :
+    Prop :=
+  forall runner : MachineDescription,
+    runner.SubroutineReady ->
+      exists decider : MachineDescription,
+        PairedRecognizerDovetailControllerStageAttemptFuelPairSearchRealizes
+          runner decider
+
 def PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :
     Prop :=
   forall _accept _reject attempt : MachineDescription,
@@ -542,6 +566,34 @@ def PairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConst
       exists decider : MachineDescription,
         PairedRecognizerDovetailTotalStageAttemptControllerFuelSearchDriverRealizes
           attempt decider
+
+theorem pairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction_of_exactFuelRunner_and_pairSearch
+    (hrunner :
+      PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction)
+    (hsearch :
+      PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction) :
+    PairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction := by
+  intro attempt invoker hinvoker
+  rcases hrunner attempt invoker hinvoker with
+    ⟨runner, hrunnerSpec⟩
+  rcases hsearch runner hrunnerSpec.left with
+    ⟨decider, hdecider⟩
+  refine ⟨decider, ?_⟩
+  constructor
+  · exact hdecider.left
+  · intro w b
+    exact Iff.trans (hdecider.right w b) <| by
+      constructor
+      · intro h
+        rcases h with ⟨limit, fuel, result, hrun, hraw⟩
+        exact
+          ⟨limit, fuel, result,
+            (hrunnerSpec.right w limit fuel result).mp hrun, hraw⟩
+      · intro h
+        rcases h with ⟨limit, fuel, result, hattempt, hraw⟩
+        exact
+          ⟨limit, fuel, result,
+            (hrunnerSpec.right w limit fuel result).mpr hattempt, hraw⟩
 
 def PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction :
     Prop :=

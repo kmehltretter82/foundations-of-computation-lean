@@ -462,13 +462,26 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstru
       pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes_of_searchDriver
         hdriver hinitializer hinvoker hemitter hcontinuer⟩
 
+theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf :
+    PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction := by
+  intro attempt invoker hinvoker
+  -- Remaining finite-table obligation: build the exact-fuel runner for a
+  -- protected stage-attempt machine on generated `(w, limit, fuel)` inputs.
+  sorry
+
+theorem pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction := by
+  intro runner hrunner
+  -- Remaining finite-table obligation: enumerate `(limit, fuel)` pairs,
+  -- invoke the exact-fuel runner, and classify singleton raw outputs.
+  sorry
+
 theorem pairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction_finite_leaf :
     PairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction := by
-  intro attempt invoker hinvoker
-  -- Remaining finite-table obligation: build the unbounded controller search
-  -- driver over `(limit, fuel, result)` witnesses for the protected
-  -- stage-attempt machine.
-  sorry
+  exact
+    pairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction_of_exactFuelRunner_and_pairSearch
+      pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf
+      pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction_finite_leaf
 
 theorem pairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction_finite_leaf :
     PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction :=
