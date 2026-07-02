@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.Controller
 import FoC.Computability.Compiler.Core.CommonGround.Layouts
+import FoC.Computability.Compiler.Core.CommonGround.SearchAlgebra
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Basic
 import FoC.Computability.Compiler.Core.TapeCodePrimitiveSequencing
 
@@ -759,6 +760,52 @@ def PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction
 
 abbrev ControllerStageAttemptFuelPairEnumeratorConstruction : Prop :=
   PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction
+
+def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRealizes
+    (runner enumerator : MachineDescription) : Prop :=
+  enumerator.SubroutineReady ∧
+    forall w : Word Bool, forall result : Word Bool,
+      enumerator.HaltsWithOutput w
+          (encodeCodeWordAsInput (encodeBoolWord result)) <->
+        exists searchLimit : Nat,
+        exists limit : Nat,
+        exists fuel : Nat,
+          limit <= searchLimit ∧ fuel <= searchLimit ∧
+            runner.HaltsWithOutput
+              (encodeCodeWordAsInput
+                (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+                  w limit fuel))
+              (encodeCodeWordAsInput
+                (encodeBoolWord result))
+
+def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction :
+    Prop :=
+  forall runner : MachineDescription,
+    runner.SubroutineReady ->
+      exists enumerator : MachineDescription,
+        PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRealizes
+          runner enumerator
+
+theorem pairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction_of_bounded
+    (hbounded :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction) :
+    PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction := by
+  intro runner hrunner
+  rcases hbounded runner hrunner with ⟨enumerator, henumerator⟩
+  refine ⟨enumerator, ?_⟩
+  constructor
+  · exact henumerator.left
+  · intro w result
+    exact Iff.trans (henumerator.right w result) <| by
+      simpa using
+        (CommonGround.exists_bounded_pair_iff_exists_pair
+          (fun limit fuel =>
+            runner.HaltsWithOutput
+              (encodeCodeWordAsInput
+                (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+                  w limit fuel))
+              (encodeCodeWordAsInput
+                (encodeBoolWord result))))
 
 def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierRealizes
     (enumerator classifier : MachineDescription) : Prop :=
