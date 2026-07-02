@@ -935,12 +935,12 @@ theorem
 theorem mixedOptionCellQuoteLiveTailSeparatedTape_arbitrarySplit_ambiguous :
     mixedOptionCellQuoteLiveTailSeparatedTape [false] [true] [] =
       mixedOptionCellQuoteLiveTailSeparatedTape [] [false, true] [] := by
-  native_decide
+  decide
 
 theorem mixedOptionCellQuoteLiveTailJoinedTape_arbitrarySplit_not_ambiguous :
     mixedOptionCellQuoteLiveTailJoinedTape [false] [true] [] ≠
       mixedOptionCellQuoteLiveTailJoinedTape [] [false, true] [] := by
-  native_decide
+  decide
 
 def mixedOptionCellQuoteLiveTailStageSourceRawTail
     (sourceRestBits : Word Bool) (stage : Nat) : Word Bool :=
@@ -1087,7 +1087,7 @@ theorem
         []
         (mixedOptionCellQuoteLiveTailStageSourceRawTail [false] 1)
         (preservingCellPassCellBits [false]) := by
-  native_decide
+  decide
 
 theorem
     mixedOptionCellQuoteLiveTailStageSourceJoiner_target_not_ambiguous :
@@ -1099,7 +1099,7 @@ theorem
         []
         (mixedOptionCellQuoteLiveTailStageSourceRawTail [false] 1)
         (preservingCellPassCellBits [false]) := by
-  native_decide
+  decide
 
 theorem
     not_MixedOptionCellQuoteLiveTailStageSourceJoinerSpec

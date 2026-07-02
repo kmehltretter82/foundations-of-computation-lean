@@ -502,7 +502,7 @@ theorem generatedEraseAppendWordDescription_haltTransitionFree
       exact transition_notFrom_of_all
         (l := (generatedEraseAppendWordDescription []).transitions)
         (state := (generatedEraseAppendWordDescription []).halt)
-        (by native_decide)
+        (by decide)
   | cons bit rest =>
       cases rest with
       | nil =>
@@ -510,11 +510,11 @@ theorem generatedEraseAppendWordDescription_haltTransitionFree
           · exact transition_notFrom_of_all
               (l := (generatedEraseAppendWordDescription [false]).transitions)
               (state := (generatedEraseAppendWordDescription [false]).halt)
-              (by native_decide)
+              (by decide)
           · exact transition_notFrom_of_all
               (l := (generatedEraseAppendWordDescription [true]).transitions)
               (state := (generatedEraseAppendWordDescription [true]).halt)
-              (by native_decide)
+              (by decide)
       | cons next more =>
           let first : TransitionDescription :=
             { source := 0

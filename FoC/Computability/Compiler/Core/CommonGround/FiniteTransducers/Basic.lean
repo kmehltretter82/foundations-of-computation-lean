@@ -546,17 +546,17 @@ theorem identityPreservingScanDescription_wellFormed :
   · exact transition_wellFormed_of_all
       (l := identityPreservingScanDescription.transitions)
       (stateCount := identityPreservingScanDescription.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := identityPreservingScanDescription.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem identityPreservingScanDescription_haltTransitionFree :
     identityPreservingScanDescription.HaltTransitionFree := by
   exact transition_notFrom_of_all
     (l := identityPreservingScanDescription.transitions)
     (state := identityPreservingScanDescription.halt)
-    (by native_decide)
+    (by decide)
 
 theorem identityPreservingScanDescription_subroutineReady :
     identityPreservingScanDescription.SubroutineReady :=
@@ -844,7 +844,7 @@ def erasePreservingScanManualDescription : MachineDescription where
 theorem erasePreservingScanDescription_eq_manual :
     erasePreservingScanDescription =
       erasePreservingScanManualDescription := by
-  native_decide
+  decide
 
 theorem erasePreservingScanDescription_wellFormed :
     erasePreservingScanDescription.WellFormed := by
@@ -852,17 +852,17 @@ theorem erasePreservingScanDescription_wellFormed :
   · exact transition_wellFormed_of_all
       (l := erasePreservingScanDescription.transitions)
       (stateCount := erasePreservingScanDescription.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := erasePreservingScanDescription.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem erasePreservingScanDescription_haltTransitionFree :
     erasePreservingScanDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := erasePreservingScanDescription.transitions)
     (state := erasePreservingScanDescription.halt)
-    (by native_decide)
+    (by decide)
 
 theorem erasePreservingScanDescription_subroutineReady :
     erasePreservingScanDescription.SubroutineReady :=
@@ -1146,7 +1146,7 @@ def generatedConstantBitDescription (out : Bool) : MachineDescription :=
 theorem generatedConstantBitDescription_eq_boolOutput
     (out : Bool) :
     generatedConstantBitDescription out = BoolOutputDescription out := by
-  cases out <;> native_decide
+  cases out <;> decide
 
 theorem generatedConstantBitDescription_wellFormed
     (out : Bool) :

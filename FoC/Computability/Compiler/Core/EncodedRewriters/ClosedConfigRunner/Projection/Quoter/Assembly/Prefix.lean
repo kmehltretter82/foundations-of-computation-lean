@@ -73,17 +73,17 @@ theorem assemblySkeletonDescription_wellFormed :
   · exact transition_wellFormed_of_all
       (l := ASM.transitions)
       (stateCount := ASM.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := ASM.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem assemblySkeletonDescription_haltTransitionFree :
     ASM.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := ASM.transitions)
     (state := ASM.halt)
-    (by native_decide)
+    (by decide)
 
 theorem assemblySkeletonDescription_subroutineReady :
     ASM.SubroutineReady :=
@@ -96,17 +96,17 @@ theorem assemblyPrefixDescription_wellFormed :
   · exact transition_wellFormed_of_all
       (l := AP.transitions)
       (stateCount := AP.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := AP.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem assemblyPrefixDescription_haltTransitionFree :
     AP.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := AP.transitions)
     (state := AP.halt)
-    (by native_decide)
+    (by decide)
 
 theorem assemblyPrefixDescription_subroutineReady :
     AP.SubroutineReady :=

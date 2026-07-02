@@ -326,17 +326,17 @@ theorem generatedAppendWordDescription_empty_wellFormed :
   · exact transition_wellFormed_of_all
       (l := (generatedAppendWordDescription []).transitions)
       (stateCount := (generatedAppendWordDescription []).stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := (generatedAppendWordDescription []).transitions)
-      (by native_decide)
+      (by decide)
 
 theorem generatedAppendWordDescription_empty_haltTransitionFree :
     (generatedAppendWordDescription []).HaltTransitionFree :=
   transition_notFrom_of_all
     (l := (generatedAppendWordDescription []).transitions)
     (state := (generatedAppendWordDescription []).halt)
-    (by native_decide)
+    (by decide)
 
 theorem generatedAppendWordDescription_empty_subroutineReady :
     (generatedAppendWordDescription []).SubroutineReady :=
@@ -375,17 +375,17 @@ theorem generatedAppendWordDescription_singleton_wellFormed
   · exact transition_wellFormed_of_all
       (l := (generatedAppendWordDescription [false]).transitions)
       (stateCount := (generatedAppendWordDescription [false]).stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := (generatedAppendWordDescription [false]).transitions)
-      (by native_decide)
+      (by decide)
   · exact transition_wellFormed_of_all
       (l := (generatedAppendWordDescription [true]).transitions)
       (stateCount := (generatedAppendWordDescription [true]).stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := (generatedAppendWordDescription [true]).transitions)
-      (by native_decide)
+      (by decide)
 
 theorem generatedAppendWordDescription_singleton_haltTransitionFree
     (bit : Bool) :
@@ -394,11 +394,11 @@ theorem generatedAppendWordDescription_singleton_haltTransitionFree
   · exact transition_notFrom_of_all
       (l := (generatedAppendWordDescription [false]).transitions)
       (state := (generatedAppendWordDescription [false]).halt)
-      (by native_decide)
+      (by decide)
   · exact transition_notFrom_of_all
       (l := (generatedAppendWordDescription [true]).transitions)
       (state := (generatedAppendWordDescription [true]).halt)
-      (by native_decide)
+      (by decide)
 
 theorem generatedAppendWordDescription_singleton_subroutineReady
     (bit : Bool) :
@@ -501,7 +501,7 @@ theorem generatedAppendWordDescription_wellFormed
             · have hprefixDet :=
                 transition_deterministic_of_all
                   (l := [first, scanFalse, scanTrue])
-                  (by cases bit <;> native_decide)
+                  (by cases bit <;> decide)
               exact hprefixDet t u ht hu hkey
             · simp [first, scanFalse, scanTrue,
                 FiniteTransducer.copyAppendWordScanFalseTransition,
@@ -688,14 +688,14 @@ theorem generatedAppendFixedFourBitsDescription_eq_appendFixedFour
     generatedAppendFixedFourBitsDescription b0 b1 b2 b3 =
       AppendFixedFourBitsRightDescription b0 b1 b2 b3 := by
   cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-    native_decide
+    decide
 
 theorem generatedAppendWordDescription_fixedFour_eq_generated
     (b0 b1 b2 b3 : Bool) :
     generatedAppendWordDescription [b0, b1, b2, b3] =
       generatedAppendFixedFourBitsDescription b0 b1 b2 b3 := by
   cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-    native_decide
+    decide
 
 theorem generatedAppendWordDescription_fixedFour_eq_appendFixedFour
     (b0 b1 b2 b3 : Bool) :
