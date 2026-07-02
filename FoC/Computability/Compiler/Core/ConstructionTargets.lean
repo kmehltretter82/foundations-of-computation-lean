@@ -516,6 +516,37 @@ def PairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerCo
       PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes
         attempt runner
 
+def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction :
+    Prop :=
+  forall attempt : MachineDescription,
+    exists runner : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCode
+          attempt)
+        runner
+
+theorem pairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction_of_codeSubroutine
+    (hcode :
+      PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction) :
+    PairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction := by
+  intro attempt
+  rcases hcode attempt with ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  constructor
+  · exact
+      tapeCodePrimitiveOutputCompiledSubroutineByDescription_subroutineReady
+        hrunner
+  · intro w limit fuel result
+    exact
+      Iff.trans
+        (tapeCodePrimitiveOutputCompiledSubroutineByDescription_haltsWithOutput_iff
+          hrunner
+          (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+            w limit fuel)
+          (encodeBoolWord result))
+        (pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCode_transform_boolWord_iff
+          attempt w result limit fuel)
+
 def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerConstruction :
     Prop :=
   forall attempt : MachineDescription,

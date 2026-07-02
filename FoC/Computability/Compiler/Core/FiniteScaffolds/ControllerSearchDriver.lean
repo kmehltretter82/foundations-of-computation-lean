@@ -462,12 +462,17 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstru
       pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes_of_searchDriver
         hdriver hinitializer hinvoker hemitter hcontinuer⟩
 
-private theorem pairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction := by
+private theorem pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction := by
   intro attempt
-  -- Remaining finite-table obligation: build the exact-fuel runner for a
-  -- stage-attempt machine on generated `(w, limit, fuel)` inputs.
+  -- Remaining finite-table obligation: compile the composed exact-fuel
+  -- code primitive for generated `(w, limit, fuel)` inputs.
   sorry
+
+private theorem pairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction :=
+  pairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction_of_codeSubroutine
+    pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction_finite_leaf
 
 theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf :
     PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction :=
