@@ -570,6 +570,17 @@ def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineC
           attempt)
         runner
 
+def PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineConstruction :
+    Prop :=
+  forall attempt invoker : MachineDescription,
+    CommonGround.ControllerInvocation.StageAttemptProtectedRealizes
+      attempt invoker ->
+      exists runner : MachineDescription,
+        TapeCodePrimitiveOutputCompiledSubroutineByDescription
+          (PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCode
+            attempt)
+          runner
+
 theorem pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction_of_components
     (hparser :
       PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction)
@@ -609,6 +620,25 @@ theorem pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubrout
   simpa [PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCode] using
     tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose_outputCompiled
       hprefix houtput
+
+theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineConstruction_of_components
+    (hparser :
+      PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction)
+    (hsimulator : FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction)
+    (houtput :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction) :
+    PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineConstruction := by
+  intro attempt _invoker _hinvoker
+  exact
+    pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction_of_components
+      hparser hsimulator houtput attempt
+
+theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineConstruction_of_unconditional
+    (hcode :
+      PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction) :
+    PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineConstruction := by
+  intro attempt _invoker _hinvoker
+  exact hcode attempt
 
 theorem pairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction_of_codeSubroutine
     (hcode :
@@ -662,6 +692,28 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction
     PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction := by
   intro attempt _invoker _hinvoker
   exact hrunner attempt
+
+theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_of_codeSubroutine
+    (hcode :
+      PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerCodeSubroutineConstruction) :
+    PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction := by
+  intro attempt invoker hinvoker
+  rcases hcode attempt invoker hinvoker with ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  constructor
+  · exact
+      tapeCodePrimitiveOutputCompiledSubroutineByDescription_subroutineReady
+        hrunner
+  · intro w limit fuel result
+    exact
+      Iff.trans
+        (tapeCodePrimitiveOutputCompiledSubroutineByDescription_haltsWithOutput_iff
+          hrunner
+          (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+            w limit fuel)
+          (encodeBoolWord result))
+        (pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCode_transform_boolWord_iff
+          attempt w result limit fuel)
 
 def PairedRecognizerDovetailControllerStageAttemptFuelPairSearchRealizes
     (runner decider : MachineDescription) : Prop :=
