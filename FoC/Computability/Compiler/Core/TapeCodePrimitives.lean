@@ -239,6 +239,79 @@ theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_transform_eq_some
     P.transform code = some out :=
   (h.left.right code out).mp hD
 
+theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_haltsFromTape_equiv_input
+    {P : TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : TapeCodePrimitiveOutputCompiledSubroutineByDescription P D)
+    {code out : Word MachineCodeSymbol}
+    {Tin : Tape Bool}
+    (hin :
+      Tape.Equiv Tin
+        (Tape.input (encodeCodeWordAsInput code)))
+    (hp : P.transform code = some out) :
+    exists T : Tape Bool,
+      D.HaltsFromTape Tin T ∧
+        Tape.normalizedOutput T = encodeCodeWordAsInput out := by
+  rcases
+      tapeCodePrimitiveOutputCompiledSubroutineByDescription_haltsWithOutput_of_transform_eq_some
+        h hp with
+    ⟨n, hn⟩
+  let Texact : Tape Bool :=
+    (D.runConfig n
+      (D.initial (encodeCodeWordAsInput code))).tape
+  have hExact :
+      D.HaltsFromTape
+        (Tape.input (encodeCodeWordAsInput code)) Texact := by
+    refine ⟨n, ?_⟩
+    constructor
+    · exact hn.left
+    · rfl
+  rcases
+      HaltsFromTapeEquiv_of_input_equiv
+        (D := D) (Tape.Equiv.symm hin) hExact with
+    ⟨Tactual, hactual, hTactual⟩
+  refine ⟨Tactual, hactual, ?_⟩
+  rw [Tape.Equiv.normalizedOutput_eq hTactual]
+  simpa [Texact] using hn.right
+
+theorem tapeCodePrimitiveOutputCompiledSubroutineByDescription_transform_eq_some_of_haltsFromTape_equiv_input
+    {P : TapeCodePrimitive}
+    {D : MachineDescription}
+    (h : TapeCodePrimitiveOutputCompiledSubroutineByDescription P D)
+    {code out : Word MachineCodeSymbol}
+    {Tin T : Tape Bool}
+    (hin :
+      Tape.Equiv Tin
+        (Tape.input (encodeCodeWordAsInput code)))
+    (hD : D.HaltsFromTape Tin T)
+    (houtput :
+      Tape.normalizedOutput T = encodeCodeWordAsInput out) :
+    P.transform code = some out := by
+  rcases
+      HaltsFromTapeEquiv_of_input_equiv
+        (D := D) hin hD with
+    ⟨Tactual, hactual, hTactual⟩
+  have hOut :
+      D.HaltsWithOutput
+        (encodeCodeWordAsInput code)
+        (encodeCodeWordAsInput out) := by
+    rcases hactual with ⟨n, hn⟩
+    refine ⟨n, ?_⟩
+    constructor
+    · exact hn.left
+    · change
+        Tape.normalizedOutput
+            (D.runConfig n
+              { state := D.start,
+                tape := Tape.input (encodeCodeWordAsInput code) }).tape =
+          encodeCodeWordAsInput out
+      rw [hn.right]
+      rw [Tape.Equiv.normalizedOutput_eq hTactual]
+      exact houtput
+  exact
+    tapeCodePrimitiveOutputCompiledSubroutineByDescription_transform_eq_some_of_haltsWithOutput
+      h hOut
+
 theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_outputRealized
     {P : TapeCodePrimitive}
     {D : MachineDescription} {handoffMove : Direction}
