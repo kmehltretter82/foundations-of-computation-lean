@@ -315,6 +315,16 @@ def PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :
     Prop :=
   CommonGround.ControllerInvocation.FramedSubroutineInvocationConstruction
 
+def PairedRecognizerDovetailStageAttemptFramedRunInvocationExactConstructionData :
+    Prop :=
+  CommonGround.ControllerInvocation.StageAttemptFramedExactConstruction
+
+private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_exact
+    (h :
+      PairedRecognizerDovetailStageAttemptFramedRunInvocationExactConstructionData) :
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :=
+  CommonGround.ControllerInvocation.stageAttemptFramedConstruction_of_exact h
+
 private def PairedRecognizerDovetailStageAttemptWitnessedRunInvocationForwardSpec
     (attempt invoker : MachineDescription) : Prop :=
   CommonGround.ControllerInvocation.StageAttemptWitnessedForwardSpec
@@ -363,11 +373,17 @@ theorem pairedRecognizerDovetailStageAttemptInvocationConstructionData_of_protec
 /--
 Finite-machine leaf for the framed protected stage-attempt wrapper.  This is
 the remaining transition-table obligation after CommonGround has named the
-protected/framed/witnessed controller-invocation contracts.
+protected/framed/witnessed controller-invocation contracts; it halts on the
+exact controller-layout output tape.
 -/
-private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf :
-    PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData := by
+private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationExactConstructionData_finite_leaf :
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationExactConstructionData := by
   sorry
+
+private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf :
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :=
+  pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_exact
+    pairedRecognizerDovetailStageAttemptFramedRunInvocationExactConstructionData_finite_leaf
 
 /--
 Finite-machine leaf for witnessed controller stage-attempt invocation.  This is

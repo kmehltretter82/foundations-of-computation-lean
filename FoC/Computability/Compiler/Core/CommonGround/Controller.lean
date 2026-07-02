@@ -502,6 +502,72 @@ abbrev ControllerStageAttemptWitnessedConstruction : Prop :=
 abbrev ControllerStageAttemptFramedInvocationConstruction : Prop :=
   StageAttemptFramedConstruction
 
+def StageAttemptFramedOutputTape
+    (C : DovetailControllerLayout) (result : Word Bool) :
+    Tape Bool :=
+  Tape.output
+    (encodeCodeWordAsInput
+      (DovetailControllerLayout.encode
+        (DovetailControllerLayout.withResult C result)))
+
+theorem stageAttemptFramedOutputTape_normalizedOutput
+    (C : DovetailControllerLayout) (result : Word Bool) :
+    Tape.normalizedOutput
+        (StageAttemptFramedOutputTape C result) =
+      encodeCodeWordAsInput
+        (DovetailControllerLayout.encode
+          (DovetailControllerLayout.withResult C result)) := by
+  exact
+    Tape.normalizedOutput_output
+      (encodeCodeWordAsInput
+        (DovetailControllerLayout.encode
+          (DovetailControllerLayout.withResult C result)))
+
+def StageAttemptFramedExactSpec
+    (attempt invoker : MachineDescription) : Prop :=
+  invoker.SubroutineReady ∧
+    (forall C : DovetailControllerLayout,
+      forall result : Word Bool,
+      forall n : Nat,
+        attempt.HaltsWithOutputIn n
+          (encodeCodeWordAsInput
+            (PairedRecognizerDovetailControllerStageInputCode C))
+          (encodeCodeWordAsInput
+            (encodeBoolWord result)) ->
+          invoker.HaltsWithTape
+            (encodeCodeWordAsInput
+              (DovetailControllerLayout.encode C))
+            (StageAttemptFramedOutputTape C result)) ∧
+      StageAttemptFramedClosedSpec attempt invoker
+
+def StageAttemptFramedExactConstruction : Prop :=
+  forall attempt : MachineDescription,
+    attempt.SubroutineReady ->
+      exists invoker : MachineDescription,
+        StageAttemptFramedExactSpec attempt invoker
+
+theorem stageAttemptFramedRealizes_of_exact
+    {attempt invoker : MachineDescription}
+    (h : StageAttemptFramedExactSpec attempt invoker) :
+    StageAttemptFramedRealizes attempt invoker := by
+  constructor
+  · exact h.left
+  constructor
+  · intro C result hrun
+    rcases hrun with ⟨n, hn⟩
+    have hTape := h.right.left C result n hn
+    have houtput := haltsWithOutput_of_haltsWithTape hTape
+    simpa [StageAttemptFramedOutputTape,
+      Tape.normalizedOutput_output] using houtput
+  · exact h.right.right
+
+theorem stageAttemptFramedConstruction_of_exact
+    (h : StageAttemptFramedExactConstruction) :
+    StageAttemptFramedConstruction := by
+  intro attempt hattempt
+  rcases h attempt hattempt with ⟨invoker, hinvoker⟩
+  exact ⟨invoker, stageAttemptFramedRealizes_of_exact hinvoker⟩
+
 theorem stageAttemptFramedForwardSpec_of_witnessed
     {attempt invoker : MachineDescription}
     (h : StageAttemptWitnessedForwardSpec attempt invoker) :
