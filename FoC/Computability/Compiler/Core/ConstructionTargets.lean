@@ -527,6 +527,31 @@ def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoff
           attempt)
         parser tapeCodePrimitiveCodeWordHandoffMove
 
+def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction :
+    Prop :=
+  forall attempt : MachineDescription,
+    exists parser : MachineDescription,
+      EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
+          attempt)
+        parser
+
+theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_of_rightShifted
+    (h :
+      PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction) :
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction := by
+  intro attempt
+  rcases h attempt with ⟨parser, hparser⟩
+  exact
+    ⟨parser,
+      EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
+        hparser
+        (by
+          intro code out htransform
+          exact
+            pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive_transform_eq_some_cons
+              htransform)⟩
+
 def PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction :
     Prop :=
   forall attempt : MachineDescription,

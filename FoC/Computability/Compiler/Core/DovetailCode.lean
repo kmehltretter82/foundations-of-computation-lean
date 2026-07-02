@@ -120,6 +120,35 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
   pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCode_encode
     attempt w limit fuel
 
+theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive_transform_eq_some_cons
+    {attempt : MachineDescription} {code out : Word MachineCodeSymbol}
+    (h :
+      (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
+        attempt).transform code = some out) :
+    exists symbol : MachineCodeSymbol,
+    exists tail : Word MachineCodeSymbol,
+      out = symbol :: tail := by
+  unfold PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive at h
+  unfold PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCode at h
+  cases hstage : DovetailLayout.decodeStageInput code with
+  | none =>
+      simp [hstage] at h
+  | some decoded =>
+      rcases decoded with ⟨input, suffix⟩
+      rcases input with ⟨w, limit⟩
+      cases hfuel : decodeNat suffix with
+      | none =>
+          simp [hstage, hfuel] at h
+      | some decodedFuel =>
+          rcases decodedFuel with ⟨fuel, rest⟩
+          cases rest with
+          | nil =>
+              simp [hstage, hfuel] at h
+              cases h
+              exact ⟨MachineCodeSymbol.header, _, rfl⟩
+          | cons _ _ =>
+              simp [hstage, hfuel] at h
+
 theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout_haltsWithOutputIn_iff
     (attempt : MachineDescription)
     (w : Word Bool) (limit fuel : Nat) (out : Word Bool) :

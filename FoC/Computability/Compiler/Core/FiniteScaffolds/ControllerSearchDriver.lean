@@ -463,12 +463,17 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstru
       pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes_of_searchDriver
         hdriver hinitializer hinvoker hemitter hcontinuer⟩
 
-private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction := by
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction := by
   intro attempt
   -- Remaining finite-table obligation: parse generated `(w, limit, fuel)`
-  -- inputs into the simulator-layout code-word handoff form.
+  -- inputs and emit the simulator-layout code word in right-shifted form.
   sorry
+
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction :=
+  pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_of_rightShifted
+    pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_finite_leaf
 
 private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_finite_leaf :
     FixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction := by
