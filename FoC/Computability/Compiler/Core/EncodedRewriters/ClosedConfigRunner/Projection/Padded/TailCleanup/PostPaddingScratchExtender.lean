@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindow
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindowConstructions
 
 set_option doc.verso true
 
@@ -15,6 +15,7 @@ implementation is split by responsibility:
 - `PostPaddingScratchExtender.Adapters` contains the logical adapters from
   count-sized extension to allocator construction.
 - `PostPaddingScratchExtender.CountWindow` contains the scratch-count counter
-  tapes, checked counter run, and the remaining finite-machine leaf that exposes
-  the branch scratch-count window.
+  tapes, checked counter run, and shared composition lemmas.
+- `PostPaddingScratchExtender.CountWindowConstructions` contains the executable
+  construction leaves for the scratch-count materializer and restorer.
 -/

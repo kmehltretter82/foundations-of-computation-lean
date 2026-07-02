@@ -22,6 +22,39 @@ are compatibility wrappers over this shared obligation.
 -/
 
 /--
+Finite-machine leaf that transports the restored source fields after the parsed
+inner prefix gap has been closed.
+-/
+theorem selectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportRejectConstruction :
+    exists transport : MachineDescription,
+      SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportSpec
+        false transport := by
+  sorry
+
+/--
+Accepting branch of the parsed-inner post-prefix transport leaf.
+-/
+theorem selectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportAcceptConstruction :
+    exists transport : MachineDescription,
+      SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportSpec
+        true transport := by
+  sorry
+
+/--
+Branch-parametric glue over the accepting and rejecting transport leaves.
+-/
+theorem selectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportConstruction
+    (useAccept : Bool) :
+    exists transport : MachineDescription,
+      SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportSpec
+        useAccept transport := by
+  cases useAccept
+  · exact
+      selectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportRejectConstruction
+  · exact
+      selectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportAcceptConstruction
+
+/--
 Finite-machine leaf that rewrites the parsed nested layout plus outer source
 fields into the decoded merge field order selected by {name}`useAccept`.
 -/
@@ -29,12 +62,10 @@ theorem selectedMergePaddedEmitterAfterHitPaddedParsedInnerConstruction
     (useAccept : Bool) :
     SelectedMergePaddedEmitterAfterHitPaddedParsedInnerConstruction
       useAccept := by
-  have htransportConstruction :
-      exists transport : MachineDescription,
-        SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportSpec
-          useAccept transport := by
-    sorry
-  rcases htransportConstruction with ⟨transport, htransport⟩
+  rcases
+      selectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportConstruction
+        useAccept with
+    ⟨transport, htransport⟩
   let closer :=
     SelectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription
   have hcloser :

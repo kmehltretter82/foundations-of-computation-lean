@@ -108,6 +108,17 @@ def SelectedMergePaddedEmitterNestedLayoutWindowRestorerSpec
         (SelectedMergePaddedEmitterNestedLayoutRawParsedTape p)
         (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p)
 
+def SelectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction :
+    Prop :=
+  exists materializer : MachineDescription,
+    SelectedMergePaddedEmitterNestedLayoutWindowMaterializerSpec
+      materializer
+
+def SelectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction :
+    Prop :=
+  exists restorer : MachineDescription,
+    SelectedMergePaddedEmitterNestedLayoutWindowRestorerSpec restorer
+
 def SelectedMergePaddedEmitterNestedLayoutWindowMaterializerAndRestorerConstruction :
     Prop :=
   exists materializer : MachineDescription,
@@ -177,14 +188,41 @@ theorem selectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction_o
       SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec_of_windowMaterializerAndRestorer
         hmaterializer hrestorer⟩
 
+theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializerAndRestorerConstruction_of_parts
+    (hmaterializer :
+      SelectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction)
+    (hrestorer :
+      SelectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction) :
+    SelectedMergePaddedEmitterNestedLayoutWindowMaterializerAndRestorerConstruction := by
+  rcases hmaterializer with ⟨materializer, hmaterializerSpec⟩
+  rcases hrestorer with ⟨restorer, hrestorerSpec⟩
+  exact ⟨materializer, restorer, hmaterializerSpec, hrestorerSpec⟩
+
 /--
 Finite-machine leaf that exposes the nested raw layout field from the restored
-outer source fields and restores the checked scanner result to the parsed
+outer source fields.
+-/
+theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction :
+    SelectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction := by
+  sorry
+
+/--
+Finite-machine leaf that restores the checked scanner result to the parsed
 source-fields shape.
+-/
+theorem selectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction :
+    SelectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction := by
+  sorry
+
+/--
+Checked glue over the nested-layout materializer and restorer leaves.
 -/
 theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializerAndRestorerConstruction :
     SelectedMergePaddedEmitterNestedLayoutWindowMaterializerAndRestorerConstruction := by
-  sorry
+  exact
+    selectedMergePaddedEmitterNestedLayoutWindowMaterializerAndRestorerConstruction_of_parts
+      selectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction
+      selectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction
 
 /--
 Common finite-machine leaf that parses the nested layout code word after the
