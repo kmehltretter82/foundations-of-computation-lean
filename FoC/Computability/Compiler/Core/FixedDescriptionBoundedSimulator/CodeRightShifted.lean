@@ -544,6 +544,44 @@ theorem fixedDescriptionBoundedSimulatorCode_transform_eq_some_iff
       FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode,
       fixedDescriptionBoundedSimulatorCodeRightShiftedRunLayout_eq_run]
 
+theorem fixedDescriptionBoundedSimulatorCode_outputRealized_of_equivSpec
+    {D runner : MachineDescription}
+    (hrunner : FixedDescriptionBoundedSimulatorEquivSpec D runner) :
+    TapeCodePrimitiveOutputRealizedByDescription
+      (FixedDescriptionBoundedSimulatorCode D) runner := by
+  constructor
+  · exact hrunner.left.left
+  · intro code out htransform
+    rcases
+        (fixedDescriptionBoundedSimulatorCode_transform_eq_some_iff
+          D code out).mp htransform with
+      ⟨L, hdecode, hout⟩
+    have hinput :
+        code = SimulatorLayout.encode L :=
+      CommonGround.SimulatorLayouts.decode_eq_some_encode hdecode
+    subst code
+    subst out
+    have hhalt :=
+      haltsWithOutput_of_haltsWithTapeEquiv (hrunner.right.left L)
+    simpa [
+      FixedDescriptionBoundedSimulatorInput,
+      FixedDescriptionBoundedSimulatorOutput,
+      FixedDescriptionBoundedSimulatorCanonicalOutputTape,
+      FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode,
+      fixedDescriptionBoundedSimulatorCodeRightShiftedRunLayout_eq_run,
+      SimulatorLayout.tape_normalizedOutput] using hhalt
+
+theorem fixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction_of_equiv
+    (h :
+      FixedDescriptionBoundedSimulatorEquivConstruction) :
+    FixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction := by
+  intro D
+  rcases h D with ⟨runner, hrunner⟩
+  exact
+    ⟨runner,
+      fixedDescriptionBoundedSimulatorCode_outputRealized_of_equivSpec
+        hrunner⟩
+
 theorem fixedDescriptionBoundedSimulatorCodeRightShifted_of_spec
     {D runner : MachineDescription}
     (hrunner :
