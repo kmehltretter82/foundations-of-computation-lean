@@ -475,11 +475,16 @@ private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeC
   pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_of_rightShifted
     pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_finite_leaf
 
-private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_finite_leaf :
-    FixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction := by
+private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction_finite_leaf :
+    FixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction := by
   -- Remaining finite-table obligation: recognize and normalize complete
-  -- simulator-layout code words into the handoff shape.
+  -- simulator-layout code words in right-shifted output form.
   sorry
+
+private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_finite_leaf :
+    FixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction :=
+  fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_of_primitive
+    fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction_finite_leaf
 
 private theorem fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_finite_leaf :
     FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction := by
