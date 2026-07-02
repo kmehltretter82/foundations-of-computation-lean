@@ -244,7 +244,9 @@ private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes
 
 private def PairedRecognizerDovetailFiniteStageLoopProtectedSequencerSearchDriverData :
     Prop :=
-  forall attempt : MachineDescription,
+  forall attempt invoker : MachineDescription,
+    PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+      attempt invoker ->
     exists decider : MachineDescription,
       PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
         attempt decider
@@ -315,7 +317,7 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstru
           initializer invoker emitter continuer decider := by
   intro attempt initializer invoker emitter continuer
     hinitializer hinvoker hemitter hcontinuer
-  rcases hsearch attempt with ⟨decider, hdriver⟩
+  rcases hsearch attempt invoker hinvoker with ⟨decider, hdriver⟩
   exact
     ⟨decider,
       pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes_of_searchDriver
@@ -336,9 +338,10 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstru
           initializer invoker emitter continuer decider := by
   apply
     pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstructionData_of_searchDriver
-  intro attempt
+  intro attempt invoker hinvoker
   -- Remaining finite-table obligation: build the unbounded controller search
-  -- driver for the protected stage-attempt machine.
+  -- driver for the protected stage-attempt machine using the protected
+  -- invocation contract for output functionality.
   sorry
 
 /--

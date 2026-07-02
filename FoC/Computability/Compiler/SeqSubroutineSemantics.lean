@@ -1087,6 +1087,124 @@ theorem seqSubroutine_haltsWithOutput_of_haltsWithTape
     · simpa [MachineDescription.HaltsWithOutputIn] using
         congrArg (fun c => Tape.normalizedOutput c.tape) hn⟩
 
+theorem seqSubroutine_haltsWithOutput_forward
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {input : Word Bool} {Tmid Tout : Tape Bool} {out : Word Bool}
+    (hAhalt : A.HaltsWithTape input Tmid)
+    (hBhalt :
+      B.HaltsFromTape (Tape.move handoffMove Tmid) Tout)
+    (hout : Tape.normalizedOutput Tout = out) :
+    (seqSubroutine A B handoffMove).HaltsWithOutput input out := by
+  rcases runConfig_eq_halt_of_haltsFromTape hBhalt with
+    ⟨nB, hBRun⟩
+  have hseq :
+      (seqSubroutine A B handoffMove).HaltsWithOutput input
+        (Tape.normalizedOutput Tout) :=
+    seqSubroutine_haltsWithOutput_of_haltsWithTape
+      hA hB hAhalt ⟨nB, hBRun⟩
+  simpa [hout] using hseq
+
+theorem seqSubroutine_haltsFromTape_closed_exists_mid
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tout : Tape Bool}
+    (hseq :
+      (seqSubroutine A B handoffMove).HaltsFromTape Tin Tout) :
+    exists Tmid : Tape Bool,
+      A.HaltsFromTape Tin Tmid ∧
+        B.HaltsFromTape (Tape.move handoffMove Tmid) Tout := by
+  rcases seqSubroutine_haltsFromTape_inv hA hB hseq with
+    ⟨Tmid, hAhalt, nB, hBRun⟩
+  refine ⟨Tmid, hAhalt, ⟨nB, ?_⟩⟩
+  constructor
+  · simpa [HaltsFromTapeIn] using
+      congrArg Configuration.state hBRun
+  · simpa [HaltsFromTapeIn] using
+      congrArg Configuration.tape hBRun
+
+theorem seqSubroutine_haltsWithOutput_closed_exists_mid
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {input out : Word Bool}
+    (hseq :
+      (seqSubroutine A B handoffMove).HaltsWithOutput input out) :
+    exists Tmid Tout : Tape Bool,
+      A.HaltsWithTape input Tmid ∧
+        B.HaltsFromTape (Tape.move handoffMove Tmid) Tout ∧
+          Tape.normalizedOutput Tout = out := by
+  rcases hseq with ⟨n, hn⟩
+  let final :=
+    (seqSubroutine A B handoffMove).runConfig n
+      ((seqSubroutine A B handoffMove).initial input)
+  have hseqTape :
+      (seqSubroutine A B handoffMove).HaltsWithTape input
+        final.tape := by
+    refine ⟨n, ?_⟩
+    constructor
+    · simpa [HaltsWithTapeIn, final] using hn.left
+    · simp [final]
+  have hout : Tape.normalizedOutput final.tape = out := by
+    simpa [HaltsWithOutputIn, final] using hn.right
+  rcases seqSubroutine_haltsWithTape_inv hA hB hseqTape with
+    ⟨Tmid, hAhalt, nB, hBRun⟩
+  refine ⟨Tmid, final.tape, hAhalt, ?_, hout⟩
+  refine ⟨nB, ?_⟩
+  constructor
+  · simpa [HaltsFromTapeIn] using
+      congrArg Configuration.state hBRun
+  · simpa [HaltsFromTapeIn] using
+      congrArg Configuration.tape hBRun
+
+theorem seqSubroutine_haltsWithOutputIn_closed_exists_mid_steps
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {input out : Word Bool} {n : Nat}
+    (hseq :
+      (seqSubroutine A B handoffMove).HaltsWithOutputIn n input out) :
+    exists Tmid Tout : Tape Bool,
+    exists nA nB : Nat,
+      A.runConfig nA { state := A.start, tape := Tape.input input } =
+        { state := A.halt, tape := Tmid } ∧
+      (forall k : Nat,
+        k < nA ->
+          (A.runConfig k
+            { state := A.start, tape := Tape.input input }).state ≠
+              A.halt) ∧
+      B.runConfig nB
+          { state := B.start,
+            tape := Tape.move handoffMove Tmid } =
+        { state := B.halt, tape := Tout } ∧
+      Tape.normalizedOutput Tout = out := by
+  cases hfinal :
+      (seqSubroutine A B handoffMove).runConfig n
+        ((seqSubroutine A B handoffMove).initial input) with
+  | mk state tape =>
+      have hstate :
+          state = (seqSubroutine A B handoffMove).halt := by
+        simpa [HaltsWithOutputIn, hfinal] using hseq.left
+      have hout : Tape.normalizedOutput tape = out := by
+        simpa [HaltsWithOutputIn, hfinal] using hseq.right
+      have hrun :
+          (seqSubroutine A B handoffMove).runConfig n
+              { state := (seqSubroutine A B handoffMove).start,
+                tape := Tape.input input } =
+            { state := (seqSubroutine A B handoffMove).halt,
+              tape := tape } := by
+        change
+          (seqSubroutine A B handoffMove).runConfig n
+              ((seqSubroutine A B handoffMove).initial input) =
+            { state := (seqSubroutine A B handoffMove).halt,
+              tape := tape }
+        rw [hfinal, hstate]
+      rcases seqSubroutine_runConfig_inv hA hB hrun with
+        ⟨Tmid, hAData, hBData⟩
+      rcases hAData with ⟨nA, hARun, hAFirst⟩
+      rcases hBData with ⟨nB, hBRun⟩
+      exact
+        ⟨Tmid, tape, nA, nB,
+          hARun, hAFirst, hBRun, hout⟩
+
 end MachineDescription
 
 end Computability

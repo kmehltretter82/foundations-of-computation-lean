@@ -40,16 +40,19 @@ export EncodedRewriters.CanonicalLayouts.Controller
 
 export DovetailControllerLayout
   ( encodeAppend
+    encode_injective
     decodeComplete
     decodeComplete_encode
     decodeComplete_eq_some_encode
     initial
     stageInputCode
+    stageInputCode_injective_on_input_stage
     withResult
     nextStage
     rawOutput?
     rawOutput_nil
     rawOutput_singleton
+    rawOutput_none_iff
     rawOutput_eq_some_singleton_iff
     continueResultCode
     continueResultCodePrimitive
@@ -59,6 +62,10 @@ export DovetailControllerLayout
     continueResultCode_encode_of_rawOutput_eq_some
     continueResultCode_encode_eq_some_iff
     continueResultCodePrimitive_encode_eq_some_iff )
+
+export FoC.Computability
+  ( pairedRecognizerDovetailControllerStageInputCode_injective_on_input_stage
+    pairedRecognizerDovetailControllerRawOutput_none_iff )
 
 def initialSuffix : Word MachineCodeSymbol :=
   encodeNatAppend 0
@@ -201,6 +208,24 @@ def StageAttemptWitnessedForwardSpec
           (DovetailControllerLayout.withResult
             C result)))
 
+def StageAttemptFramedForwardSpec
+    (attempt invoker : MachineDescription) : Prop :=
+  forall C : DovetailControllerLayout,
+  forall result : Word Bool,
+    (exists n : Nat,
+      attempt.HaltsWithOutputIn n
+        (encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageInputCode C))
+        (encodeCodeWordAsInput
+          (encodeBoolWord result))) ->
+    invoker.HaltsWithOutput
+      (encodeCodeWordAsInput
+        (DovetailControllerLayout.encode C))
+      (encodeCodeWordAsInput
+        (DovetailControllerLayout.encode
+          (DovetailControllerLayout.withResult
+            C result)))
+
 def StageAttemptFramedClosedSpec
     (attempt invoker : MachineDescription) : Prop :=
   forall C : DovetailControllerLayout,
@@ -225,11 +250,76 @@ def StageAttemptWitnessedRealizes
     StageAttemptWitnessedForwardSpec attempt invoker ∧
       StageAttemptFramedClosedSpec attempt invoker
 
+def StageAttemptFramedRealizes
+    (attempt invoker : MachineDescription) : Prop :=
+  invoker.SubroutineReady ∧
+    StageAttemptFramedForwardSpec attempt invoker ∧
+      StageAttemptFramedClosedSpec attempt invoker
+
 def StageAttemptWitnessedConstruction : Prop :=
   forall attempt : MachineDescription,
     attempt.SubroutineReady ->
       exists invoker : MachineDescription,
         StageAttemptWitnessedRealizes attempt invoker
+
+def StageAttemptFramedConstruction : Prop :=
+  forall attempt : MachineDescription,
+    attempt.SubroutineReady ->
+      exists invoker : MachineDescription,
+        StageAttemptFramedRealizes attempt invoker
+
+abbrev ControllerStageAttemptWitnessedConstruction : Prop :=
+  StageAttemptWitnessedConstruction
+
+abbrev ControllerStageAttemptFramedInvocationConstruction : Prop :=
+  StageAttemptFramedConstruction
+
+theorem stageAttemptFramedForwardSpec_of_witnessed
+    {attempt invoker : MachineDescription}
+    (h : StageAttemptWitnessedForwardSpec attempt invoker) :
+    StageAttemptFramedForwardSpec attempt invoker := by
+  intro C result hrun
+  rcases hrun with ⟨n, hn⟩
+  exact h C result n hn
+
+theorem stageAttemptWitnessedForwardSpec_of_framed
+    {attempt invoker : MachineDescription}
+    (h : StageAttemptFramedForwardSpec attempt invoker) :
+    StageAttemptWitnessedForwardSpec attempt invoker := by
+  intro C result n hn
+  exact h C result ⟨n, hn⟩
+
+theorem stageAttemptFramedRealizes_of_witnessed
+    {attempt invoker : MachineDescription}
+    (h : StageAttemptWitnessedRealizes attempt invoker) :
+    StageAttemptFramedRealizes attempt invoker := by
+  exact
+    ⟨h.left,
+      stageAttemptFramedForwardSpec_of_witnessed h.right.left,
+      h.right.right⟩
+
+theorem stageAttemptWitnessedRealizes_of_framed
+    {attempt invoker : MachineDescription}
+    (h : StageAttemptFramedRealizes attempt invoker) :
+    StageAttemptWitnessedRealizes attempt invoker := by
+  exact
+    ⟨h.left,
+      stageAttemptWitnessedForwardSpec_of_framed h.right.left,
+      h.right.right⟩
+
+theorem stageAttemptFramedConstruction_of_witnessed
+    (h : StageAttemptWitnessedConstruction) :
+    StageAttemptFramedConstruction := by
+  intro attempt hattempt
+  rcases h attempt hattempt with ⟨invoker, hinvoker⟩
+  exact ⟨invoker, stageAttemptFramedRealizes_of_witnessed hinvoker⟩
+
+theorem stageAttemptWitnessedConstruction_of_framed
+    (h : StageAttemptFramedConstruction) :
+    StageAttemptWitnessedConstruction := by
+  intro attempt hattempt
+  rcases h attempt hattempt with ⟨invoker, hinvoker⟩
+  exact ⟨invoker, stageAttemptWitnessedRealizes_of_framed hinvoker⟩
 
 end ControllerInvocation
 

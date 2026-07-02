@@ -67,6 +67,14 @@ def PairedRecognizerDovetailControllerStageInputCode
     Word MachineCodeSymbol :=
   DovetailControllerLayout.stageInputCode C
 
+theorem pairedRecognizerDovetailControllerStageInputCode_injective_on_input_stage
+    {C1 C2 : DovetailControllerLayout}
+    (h :
+      PairedRecognizerDovetailControllerStageInputCode C1 =
+        PairedRecognizerDovetailControllerStageInputCode C2) :
+    C1.input = C2.input ∧ C1.stage = C2.stage :=
+  DovetailControllerLayout.stageInputCode_injective_on_input_stage h
+
 def PairedRecognizerDovetailControllerStageInputCodePrimitive :
     TapeCodePrimitive where
   transform := fun tokens =>
@@ -77,6 +85,13 @@ def PairedRecognizerDovetailControllerStageInputCodePrimitive :
 def PairedRecognizerDovetailControllerRawOutput
     (result : Word Bool) : Option (Word Bool) :=
   DovetailControllerLayout.rawOutput? result
+
+theorem pairedRecognizerDovetailControllerRawOutput_none_iff
+    (result : Word Bool) :
+    PairedRecognizerDovetailControllerRawOutput result = none <->
+      result = [] ∨
+        exists b b' tail, result = b :: b' :: tail :=
+  DovetailControllerLayout.rawOutput_none_iff result
 
 def PairedRecognizerDovetailControllerRawOutputCode :
     TapeCodePrimitive :=

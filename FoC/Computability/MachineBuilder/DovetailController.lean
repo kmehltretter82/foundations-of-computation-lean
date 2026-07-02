@@ -141,6 +141,13 @@ theorem decodeComplete_eq_some_encode
           | cons _ _ =>
               simp [hdecode] at h
 
+theorem encode_injective :
+    Function.Injective encode := by
+  intro C1 C2 h
+  have hdecode : some C1 = some C2 := by
+    simpa [decodeComplete_encode] using congrArg decodeComplete h
+  exact Option.some.inj hdecode
+
 def initial (w : Word Bool) : DovetailControllerLayout where
   input := w
   stage := 0
@@ -149,6 +156,15 @@ def initial (w : Word Bool) : DovetailControllerLayout where
 def stageInputCode (C : DovetailControllerLayout) :
     Word MachineCodeSymbol :=
   DovetailLayout.stageInputCode C.input C.stage
+
+theorem stageInputCode_injective_on_input_stage
+    {C1 C2 : DovetailControllerLayout}
+    (h : stageInputCode C1 = stageInputCode C2) :
+    C1.input = C2.input ∧ C1.stage = C2.stage := by
+  have hdecode :=
+    congrArg DovetailLayout.decodeStageInputComplete h
+  simpa [stageInputCode,
+    DovetailLayout.decodeStageInputComplete_stageInputCode] using hdecode
 
 def withResult (C : DovetailControllerLayout)
     (result : Word Bool) : DovetailControllerLayout :=
@@ -260,6 +276,27 @@ theorem rawOutput_nil :
 theorem rawOutput_singleton (b : Bool) :
     rawOutput? [b] = some [b] :=
   rfl
+
+theorem rawOutput_none_iff
+    (result : Word Bool) :
+    rawOutput? result = none <->
+      result = [] ∨
+        exists b b' tail, result = b :: b' :: tail := by
+  constructor
+  · intro h
+    cases result with
+    | nil =>
+        exact Or.inl rfl
+    | cons b rest =>
+        cases rest with
+        | nil =>
+            simp [rawOutput?] at h
+        | cons b' tail =>
+            exact Or.inr ⟨b, b', tail, rfl⟩
+  · intro h
+    rcases h with rfl | ⟨b, b', tail, rfl⟩
+    · rfl
+    · rfl
 
 theorem rawOutputCode_encodeBoolWord
     (result : Word Bool) :

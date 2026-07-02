@@ -336,6 +336,12 @@ def HaltsWithOutput (D : MachineDescription)
     (w out : Word Bool) : Prop :=
   exists n : Nat, D.HaltsWithOutputIn n w out
 
+theorem haltsWithOutput_iff_exists_haltsWithOutputIn
+    {D : MachineDescription} {w out : Word Bool} :
+    D.HaltsWithOutput w out <->
+      exists fuel : Nat, D.HaltsWithOutputIn fuel w out := by
+  rfl
+
 def HaltsWithExactOutput (D : MachineDescription)
     (w out : Word Bool) : Prop :=
   exists n : Nat, D.HaltsWithExactOutputIn n w out
@@ -488,6 +494,95 @@ theorem haltsWithOutput_functional_of_haltTransitionFree
   · exact hordered hle h₁ h₂
   · have hle' : n₂ ≤ n₁ := by omega
     exact (hordered hle' h₂ h₁).symm
+
+theorem haltsWithOutputIn_functional_of_haltTransitionFree
+    {D : MachineDescription} {w out1 out2 : Word Bool}
+    {n1 n2 : Nat}
+    (hD : D.HaltTransitionFree)
+    (h1 : D.HaltsWithOutputIn n1 w out1)
+    (h2 : D.HaltsWithOutputIn n2 w out2) :
+    out1 = out2 :=
+  haltsWithOutput_functional_of_haltTransitionFree
+    hD ⟨n1, h1⟩ ⟨n2, h2⟩
+
+theorem haltsWithOutputIn_functional_of_subroutineReady
+    {D : MachineDescription} {w out1 out2 : Word Bool}
+    {n1 n2 : Nat}
+    (hD : D.SubroutineReady)
+    (h1 : D.HaltsWithOutputIn n1 w out1)
+    (h2 : D.HaltsWithOutputIn n2 w out2) :
+    out1 = out2 :=
+  haltsWithOutputIn_functional_of_haltTransitionFree
+    hD.right h1 h2
+
+theorem haltsWithOutput_functional_of_subroutineReady
+    {D : MachineDescription} {w out1 out2 : Word Bool}
+    (hD : D.SubroutineReady)
+    (h1 : D.HaltsWithOutput w out1)
+    (h2 : D.HaltsWithOutput w out2) :
+    out1 = out2 :=
+  haltsWithOutput_functional_of_haltTransitionFree hD.right h1 h2
+
+theorem haltsWithOutputIn_encodedBoolWord_functional
+    {D : MachineDescription} {input : Word Bool}
+    {result1 result2 : Word Bool} {n1 n2 : Nat}
+    (hD : D.SubroutineReady)
+    (h1 :
+      D.HaltsWithOutputIn n1 input
+        (encodeCodeWordAsInput (encodeBoolWord result1)))
+    (h2 :
+      D.HaltsWithOutputIn n2 input
+        (encodeCodeWordAsInput (encodeBoolWord result2))) :
+    result1 = result2 := by
+  have hencodedInput :
+      encodeCodeWordAsInput (encodeBoolWord result1) =
+        encodeCodeWordAsInput (encodeBoolWord result2) :=
+    haltsWithOutputIn_functional_of_subroutineReady hD h1 h2
+  have hencoded :
+      encodeBoolWord result1 = encodeBoolWord result2 :=
+    encodeCodeWordAsInput_injective hencodedInput
+  exact encodeBoolWord_injective hencoded
+
+theorem haltsWithOutput_encodedBoolWord_functional
+    {D : MachineDescription} {input : Word Bool}
+    {result1 result2 : Word Bool}
+    (hD : D.SubroutineReady)
+    (h1 :
+      D.HaltsWithOutput input
+        (encodeCodeWordAsInput (encodeBoolWord result1)))
+    (h2 :
+      D.HaltsWithOutput input
+        (encodeCodeWordAsInput (encodeBoolWord result2))) :
+    result1 = result2 := by
+  have hencodedInput :
+      encodeCodeWordAsInput (encodeBoolWord result1) =
+        encodeCodeWordAsInput (encodeBoolWord result2) :=
+    haltsWithOutput_functional_of_subroutineReady hD h1 h2
+  have hencoded :
+      encodeBoolWord result1 = encodeBoolWord result2 :=
+    encodeCodeWordAsInput_injective hencodedInput
+  exact encodeBoolWord_injective hencoded
+
+theorem haltsWithOutput_controllerRawOutput_functional
+    {D : MachineDescription} {input : Word Bool}
+    {result1 result2 out1 out2 : Word Bool}
+    (hD : D.SubroutineReady)
+    (h1 :
+      D.HaltsWithOutput input
+        (encodeCodeWordAsInput (encodeBoolWord result1)))
+    (h2 :
+      D.HaltsWithOutput input
+        (encodeCodeWordAsInput (encodeBoolWord result2)))
+    (hraw1 : DovetailControllerLayout.rawOutput? result1 = some out1)
+    (hraw2 : DovetailControllerLayout.rawOutput? result2 = some out2) :
+    out1 = out2 := by
+  have hresult :
+      result1 = result2 :=
+    haltsWithOutput_encodedBoolWord_functional hD h1 h2
+  subst result2
+  have hraw : some out1 = some out2 := by
+    rw [← hraw1, hraw2]
+  exact Option.some.inj hraw
 
 theorem haltsWithTape_functional_of_haltTransitionFree
     {D : MachineDescription} {w : Word Bool} {T₁ T₂ : Tape Bool}

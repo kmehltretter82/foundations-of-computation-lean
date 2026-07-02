@@ -6,6 +6,7 @@ import FoC.Computability.Compiler.Core.CommonGround.Identity
 import FoC.Computability.Compiler.Core.CommonGround.Layouts
 import FoC.Computability.Compiler.Core.CommonGround.Scanners
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
+import FoC.Computability.Compiler.Core.CommonGround.SearchAlgebra
 
 set_option doc.verso true
 
@@ -19,6 +20,7 @@ by construction proofs:
 * {module}`FoC.Computability.Compiler.Core.CommonGround.Identity`
 * {module}`FoC.Computability.Compiler.Core.CommonGround.Layouts`
 * {module}`FoC.Computability.Compiler.Core.CommonGround.Scanners`
+* {module}`FoC.Computability.Compiler.Core.CommonGround.SearchAlgebra`
 * {module}`FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers`
 * {module}`FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters`
 * {module}`FoC.Computability.Compiler.Core.CommonGround.Controller`

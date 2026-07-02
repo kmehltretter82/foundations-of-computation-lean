@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallHandoff
+import FoC.Computability.Compiler.Core.CommonGround.SearchAlgebra
 
 set_option doc.verso true
 
@@ -408,15 +409,7 @@ theorem exists_bounded_pair_iff_exists_pair
       exists n : Nat,
         m ≤ limit ∧ n ≤ limit ∧ P m n) <->
       exists m : Nat, exists n : Nat, P m n := by
-  constructor
-  · intro h
-    rcases h with ⟨_limit, m, n, _hm, _hn, hp⟩
-    exact ⟨m, n, hp⟩
-  · intro h
-    rcases h with ⟨m, n, hp⟩
-    exact
-      ⟨Nat.max m n, m, n,
-        Nat.le_max_left m n, Nat.le_max_right m n, hp⟩
+  exact CommonGround.exists_bounded_pair_iff_exists_pair P
 
 /--
 Search over an explicit fuel component is the same as unbounded halting for

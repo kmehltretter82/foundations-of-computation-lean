@@ -149,21 +149,8 @@ def PairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData :
 
 def PairedRecognizerDovetailStageAttemptFramedRunInvocationForwardSpec
     (attempt invoker : MachineDescription) : Prop :=
-  forall C : DovetailControllerLayout,
-  forall result : Word Bool,
-    (exists n : Nat,
-      attempt.HaltsWithOutputIn n
-        (encodeCodeWordAsInput
-          (PairedRecognizerDovetailControllerStageInputCode C))
-        (encodeCodeWordAsInput
-          (encodeBoolWord result))) ->
-    invoker.HaltsWithOutput
-      (encodeCodeWordAsInput
-        (DovetailControllerLayout.encode C))
-      (encodeCodeWordAsInput
-        (DovetailControllerLayout.encode
-          (DovetailControllerLayout.withResult
-            C result)))
+  CommonGround.ControllerInvocation.StageAttemptFramedForwardSpec
+    attempt invoker
 
 def PairedRecognizerDovetailStageAttemptFramedRunInvocationClosedSpec
     (attempt invoker : MachineDescription) : Prop :=
@@ -179,19 +166,12 @@ the controller layout with exactly the simulated boolean-word result installed.
 -/
 def PairedRecognizerDovetailStageAttemptFramedRunInvocationRealizes
     (attempt invoker : MachineDescription) : Prop :=
-  invoker.SubroutineReady ∧
-    PairedRecognizerDovetailStageAttemptFramedRunInvocationForwardSpec
-      attempt invoker ∧
-    PairedRecognizerDovetailStageAttemptFramedRunInvocationClosedSpec
-      attempt invoker
+  CommonGround.ControllerInvocation.StageAttemptFramedRealizes
+    attempt invoker
 
 def PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :
     Prop :=
-  forall attempt : MachineDescription,
-    attempt.SubroutineReady ->
-      exists invoker : MachineDescription,
-        PairedRecognizerDovetailStageAttemptFramedRunInvocationRealizes
-          attempt invoker
+  CommonGround.ControllerInvocation.StageAttemptFramedConstruction
 
 private def PairedRecognizerDovetailStageAttemptWitnessedRunInvocationForwardSpec
     (attempt invoker : MachineDescription) : Prop :=
