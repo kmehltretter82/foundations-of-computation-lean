@@ -462,12 +462,33 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtectedSequencerConstru
       pairedRecognizerDovetailFiniteStageLoopProtectedSequencerRealizes_of_searchDriver
         hdriver hinitializer hinvoker hemitter hcontinuer⟩
 
-private theorem pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction := by
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction := by
   intro attempt
-  -- Remaining finite-table obligation: compile the composed exact-fuel
-  -- code primitive for generated `(w, limit, fuel)` inputs.
+  -- Remaining finite-table obligation: parse generated `(w, limit, fuel)`
+  -- inputs into the simulator-layout code-word handoff form.
   sorry
+
+private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_finite_leaf :
+    FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction := by
+  intro attempt
+  -- Remaining finite-table obligation: run the fixed-description bounded
+  -- simulator on an already-parsed simulator layout and return a code word.
+  sorry
+
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction := by
+  intro attempt
+  -- Remaining finite-table obligation: decode the final simulator layout and
+  -- emit the raw output exactly when the simulated attempt halted.
+  sorry
+
+private theorem pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction :=
+  pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction_of_components
+    pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_finite_leaf
+    fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_finite_leaf
+    pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_finite_leaf
 
 private theorem pairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction_finite_leaf :
     PairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction :=

@@ -1,5 +1,7 @@
 import FoC.Computability.Compiler.Core.CommonGround.Controller
+import FoC.Computability.Compiler.Core.CommonGround.Layouts
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Basic
+import FoC.Computability.Compiler.Core.TapeCodePrimitiveSequencing
 
 set_option doc.verso true
 
@@ -516,6 +518,24 @@ def PairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerCo
       PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes
         attempt runner
 
+def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction :
+    Prop :=
+  forall attempt : MachineDescription,
+    exists parser : MachineDescription,
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
+          attempt)
+        parser tapeCodePrimitiveCodeWordHandoffMove
+
+def PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction :
+    Prop :=
+  forall attempt : MachineDescription,
+    exists extractor : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive
+          attempt)
+        extractor
+
 def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction :
     Prop :=
   forall attempt : MachineDescription,
@@ -524,6 +544,46 @@ def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineC
         (PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCode
           attempt)
         runner
+
+theorem pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction_of_components
+    (hparser :
+      PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction)
+    (hsimulator : FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction)
+    (houtput :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction) :
+    PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction := by
+  intro attempt
+  rcases hparser attempt with ⟨parser, hparser⟩
+  rcases hsimulator attempt with ⟨simulator, hsimulator⟩
+  rcases houtput attempt with ⟨extractor, houtput⟩
+  have hsimulatorClosed :
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (FixedDescriptionBoundedSimulatorCode attempt)
+        simulator tapeCodePrimitiveCodeWordHandoffMove :=
+    EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
+      hsimulator
+      (by
+        intro code out htransform
+        exact
+          CommonGround.SimulatorLayouts.runCodePrimitive_transform_eq_some_cons
+            htransform)
+  have hprefix :
+      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
+        (TapeCodePrimitive.compose
+          (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
+            attempt)
+          (FixedDescriptionBoundedSimulatorCode attempt))
+        (seqSubroutine parser simulator tapeCodePrimitiveCodeWordHandoffMove)
+        tapeCodePrimitiveCodeWordHandoffMove :=
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose
+      hparser hsimulatorClosed
+  refine
+    ⟨seqSubroutine
+      (seqSubroutine parser simulator tapeCodePrimitiveCodeWordHandoffMove)
+      extractor tapeCodePrimitiveCodeWordHandoffMove, ?_⟩
+  simpa [PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCode] using
+    tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose_outputCompiled
+      hprefix houtput
 
 theorem pairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction_of_codeSubroutine
     (hcode :
