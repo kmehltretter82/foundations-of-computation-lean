@@ -986,6 +986,97 @@ theorem decodedBoundedSimulatorTransitionLoopIterateWorkStepCode_encode
     decodedBoundedSimulatorTransitionLoopIterateWorkStepCode_encodeAppend
       fuel D stage config []
 
+theorem decodedBoundedSimulatorTransitionLoopIterateWorkStepCode_output_decode_of_decode
+    {tokens out : Word MachineCodeSymbol}
+    {D : MachineDescription} {stage : Nat}
+    {config : MachineDescription.Configuration}
+    {suffix : Word MachineCodeSymbol}
+    (fuel : Nat)
+    (hdecode :
+      decodedBoundedSimulatorTransitionLoopWorkDecode tokens =
+        some (D, stage, config, suffix))
+    (hiter :
+      decodedBoundedSimulatorTransitionLoopIterateWorkStepCode fuel tokens =
+        some out) :
+    decodedBoundedSimulatorTransitionLoopWorkDecode out =
+      some
+        (D,
+          (decodedBoundedSimulatorTransitionLoopIterateStepTarget
+            fuel D stage config).fst,
+          (decodedBoundedSimulatorTransitionLoopIterateStepTarget
+            fuel D stage config).snd,
+          suffix) := by
+  induction fuel generalizing tokens out D stage config suffix with
+  | zero =>
+      simp [decodedBoundedSimulatorTransitionLoopIterateWorkStepCode] at hiter
+      subst out
+      simpa [decodedBoundedSimulatorTransitionLoopIterateStepTarget] using
+        hdecode
+  | succ fuel ih =>
+      simp [decodedBoundedSimulatorTransitionLoopIterateWorkStepCode] at hiter
+      cases hstep :
+          decodedBoundedSimulatorTransitionLoopWorkStepCode tokens with
+      | none =>
+          simp [hstep] at hiter
+      | some mid =>
+          simp [hstep] at hiter
+          have hmidDecode :
+              decodedBoundedSimulatorTransitionLoopWorkDecode mid =
+                some
+                  (D,
+                    (decodedBoundedSimulatorTransitionLoopStepTarget
+                      stage D config).fst,
+                    (decodedBoundedSimulatorTransitionLoopStepTarget
+                      stage D config).snd,
+                    suffix) :=
+            decodedBoundedSimulatorTransitionLoopWorkStepCode_output_decode_of_decode
+              hdecode hstep
+          have hfinal := ih hmidDecode hiter
+          simpa [decodedBoundedSimulatorTransitionLoopIterateStepTarget] using
+            hfinal
+
+theorem decodedBoundedSimulatorTransitionLoopIterateWorkStepCode_preserves_final_of_decode
+    {tokens out : Word MachineCodeSymbol}
+    {D : MachineDescription} {stage : Nat}
+    {config : MachineDescription.Configuration}
+    {suffix : Word MachineCodeSymbol}
+    (fuel : Nat)
+    (hdecode :
+      decodedBoundedSimulatorTransitionLoopWorkDecode tokens =
+        some (D, stage, config, suffix))
+    (hiter :
+      decodedBoundedSimulatorTransitionLoopIterateWorkStepCode fuel tokens =
+        some out) :
+    exists nextStage : Nat,
+    exists nextConfig : MachineDescription.Configuration,
+      decodedBoundedSimulatorTransitionLoopWorkDecode out =
+        some (D, nextStage, nextConfig, suffix) ∧
+        decodedBoundedSimulatorTransitionLoopFromConfig stage D config =
+          decodedBoundedSimulatorTransitionLoopFromConfig
+            nextStage D nextConfig := by
+  induction fuel generalizing tokens out D stage config suffix with
+  | zero =>
+      simp [decodedBoundedSimulatorTransitionLoopIterateWorkStepCode] at hiter
+      subst out
+      exact ⟨stage, config, hdecode, rfl⟩
+  | succ fuel ih =>
+      simp [decodedBoundedSimulatorTransitionLoopIterateWorkStepCode] at hiter
+      cases hstep :
+          decodedBoundedSimulatorTransitionLoopWorkStepCode tokens with
+      | none =>
+          simp [hstep] at hiter
+      | some mid =>
+          simp [hstep] at hiter
+          rcases
+              decodedBoundedSimulatorTransitionLoopWorkStepCode_preserves_final_of_decode
+                hdecode hstep with
+            ⟨nextStage, nextConfig, hmidDecode, hpresStep⟩
+          rcases ih hmidDecode hiter with
+            ⟨finalStage, finalConfig, hfinalDecode, hpresTail⟩
+          exact
+            ⟨finalStage, finalConfig, hfinalDecode,
+              hpresStep.trans hpresTail⟩
+
 theorem decodedBoundedSimulatorTransitionLoopIterateStepTarget_preserves_final
     (fuel stage : Nat) (D : MachineDescription)
     (config : MachineDescription.Configuration) :
