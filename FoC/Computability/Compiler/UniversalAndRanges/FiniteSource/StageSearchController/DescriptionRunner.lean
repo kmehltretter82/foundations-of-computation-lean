@@ -515,6 +515,17 @@ theorem codePrefixStageSearchControllerBudgetCheckerDescriptionRunnerObligation_
     (budgetCheckerDescriptionRunnerMachine_haltsOnInput_stage_iff
       descriptionDecoder encoded budget)
 
+theorem codePrefixStageSearchControllerBudgetCheckerDescriptionRunnerObligation_core_state
+    {descriptionState : Type}
+    (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState) :
+    CodePrefixStageSearchControllerBudgetCheckerDescriptionRunnerObligation
+      descriptionDecoder := by
+  refine ⟨BCRS descriptionState, BCRM descriptionDecoder, ?_⟩
+  intro encoded budget
+  exact
+    budgetCheckerDescriptionRunnerMachine_haltsOnInput_stage_iff
+      descriptionDecoder encoded budget
+
 /--
 Finite-machine leaf for the bounded stage/fuel simulator search used by the
 budget checker.

@@ -185,5 +185,11 @@ theorem codePrefixGeneratedCallParserConstruction_finite
       (TuringMachine.indexed_haltsOnInput_iff runner tokens)
       (hrunner tokens)
 
+theorem codePrefixGeneratedCallParserConstruction_finite_state
+    {selectedState : Type}
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    CodePrefixGeneratedCallParserConstruction selected := by
+  exact boundedSimulatorCanonicalInputParserMachine_construction selected
+
 end Computability
 end FoC
