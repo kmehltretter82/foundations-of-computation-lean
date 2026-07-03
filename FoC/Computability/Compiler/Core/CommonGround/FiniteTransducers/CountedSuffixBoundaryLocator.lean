@@ -1028,7 +1028,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_loop_step
             LeftAdvance, countedSuffixBoundaryLeftAdvanceDescription,
             runConfig, stepConfig, lookupTransition, Matches, transition,
             Tape.read, Tape.write, Tape.move, Tape.moveRight,
-            tapeAtCells, List.map_append, List.append_assoc]
+            tapeAtCells]
     | cons head rest =>
         have hlen : rest.length + 1 = processedRev.length := by
           have h := congrArg List.length hrev
@@ -1064,8 +1064,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_loop_step
         some last ::
           List.append (processedRev.map some)
             (none :: some current :: baseLeft) := by
-    simp [processed, List.reverse_append, List.map_append,
-      List.append_assoc]
+    simp [processed, List.reverse_append]
   have hright :
       List.append
           (List.replicate (leftStack.length + 1)
@@ -1096,7 +1095,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_loop_step
           (List.replicate leftStack.length (none : Option Bool))
           tail)]
     simp [countedSuffixBoundaryLeftAdvanceLoopTape,
-      countedSuffixBoundaryLeftAdvanceTape, baseLeft, processed,
+      countedSuffixBoundaryLeftAdvanceTape, baseLeft,
       List.map_append, List.reverse_append, List.append_assoc,
       List.replicate_succ]
   · rw [
@@ -1117,7 +1116,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_loop_step
           (List.replicate leftStack.length (none : Option Bool))
           tail)]
     simp [countedSuffixBoundaryLeftAdvanceLoopTape,
-      countedSuffixBoundaryLeftAdvanceTape, baseLeft, processed,
+      countedSuffixBoundaryLeftAdvanceTape, baseLeft,
       List.map_append, List.reverse_append, List.append_assoc,
       List.replicate_succ]
 
@@ -1243,7 +1242,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_scan_bits
         countedSuffixBoundaryLeftAdvanceDescription, runConfig,
         stepConfig, lookupTransition, Matches, transition,
         Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-        tapeAtCells, List.replicate_succ]
+        tapeAtCells]
   rw [hstep]
   exact
     countedSuffixBoundaryLeftAdvanceDescription_run_done_scan_finish
@@ -1595,8 +1594,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_done
       countedSuffixBoundaryLeftAdvanceDescription_run_done_false
         baseLeft processedRev last tailFirst tail]
     simp [countedSuffixBoundaryLeftAdvancedTape, baseLeft,
-      processed, List.map_append, List.reverse_append,
-      List.append_assoc]
+      List.map_append, List.append_assoc]
   · rw [
       countedSuffixBoundaryLeftAdvanceDescription_run_scan_count_true
         (none ::
@@ -1609,8 +1607,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_done
       countedSuffixBoundaryLeftAdvanceDescription_run_done_true
         baseLeft processedRev last tailFirst tail]
     simp [countedSuffixBoundaryLeftAdvancedTape, baseLeft,
-      processed, List.map_append, List.reverse_append,
-      List.append_assoc]
+      List.map_append, List.append_assoc]
 
 theorem countedSuffixBoundaryLeftAdvanceDescription_haltsFromTape
     (pref leftStack : Word Bool) (last guardBit tailFirst : Bool)
