@@ -41,6 +41,185 @@ noncomputable def PairedRecognizerDovetailTotalStageAttemptControllerSearchProgr
           else
             none }
 
+def pairedRecognizerDovetailTotalStageAttemptOutputIn
+    (attempt : MachineDescription) (w : Word Bool)
+    (b : Bool) (limit fuel : Nat) : Prop :=
+  attempt.HaltsWithOutputIn fuel
+    (encodeCodeWordAsInput
+      (PairedRecognizerDovetailStageInputCode w limit))
+    (encodeCodeWordAsInput
+      (encodeBoolWord [b]))
+
+def pairedRecognizerDovetailTotalStageAttemptOutputFuelHit
+    (attempt : MachineDescription) (w : Word Bool)
+    (b : Bool) (limit : Nat) : Nat -> Bool
+  | 0 =>
+      decide
+        (attempt.HaltsWithOutputIn 0
+          (encodeCodeWordAsInput
+            (PairedRecognizerDovetailStageInputCode w limit))
+          (encodeCodeWordAsInput
+            (encodeBoolWord [b])))
+  | fuel + 1 =>
+      decide
+        (attempt.HaltsWithOutputIn (fuel + 1)
+          (encodeCodeWordAsInput
+            (PairedRecognizerDovetailStageInputCode w limit))
+          (encodeCodeWordAsInput
+            (encodeBoolWord [b]))) ||
+        pairedRecognizerDovetailTotalStageAttemptOutputFuelHit
+          attempt w b limit fuel
+
+theorem pairedRecognizerDovetailTotalStageAttemptOutputFuelHit_eq_true_iff
+    (attempt : MachineDescription) (w : Word Bool)
+    (b : Bool) (limit fuelBudget : Nat) :
+    pairedRecognizerDovetailTotalStageAttemptOutputFuelHit
+        attempt w b limit fuelBudget = true <->
+      exists fuel : Nat,
+        fuel ≤ fuelBudget ∧
+          pairedRecognizerDovetailTotalStageAttemptOutputIn
+            attempt w b limit fuel := by
+  induction fuelBudget with
+  | zero =>
+      simp [pairedRecognizerDovetailTotalStageAttemptOutputFuelHit,
+        pairedRecognizerDovetailTotalStageAttemptOutputIn]
+  | succ fuelBudget ih =>
+      by_cases hcurrent :
+          pairedRecognizerDovetailTotalStageAttemptOutputIn
+            attempt w b limit (fuelBudget + 1)
+      · constructor
+        · intro _hhit
+          exact ⟨fuelBudget + 1, by lia, hcurrent⟩
+        · intro _hwitness
+          have hcurrent' :
+              attempt.HaltsWithOutputIn (fuelBudget + 1)
+                (encodeCodeWordAsInput
+                  (PairedRecognizerDovetailStageInputCode w limit))
+                (encodeCodeWordAsInput
+                  (encodeBoolWord [b])) := by
+            simpa [pairedRecognizerDovetailTotalStageAttemptOutputIn]
+              using hcurrent
+          simp [pairedRecognizerDovetailTotalStageAttemptOutputFuelHit,
+            hcurrent']
+      · have hcurrent' :
+            ¬ attempt.HaltsWithOutputIn (fuelBudget + 1)
+                (encodeCodeWordAsInput
+                  (PairedRecognizerDovetailStageInputCode w limit))
+                (encodeCodeWordAsInput
+                  (encodeBoolWord [b])) := by
+          intro h
+          exact hcurrent (by
+            simpa [pairedRecognizerDovetailTotalStageAttemptOutputIn]
+              using h)
+        simp [pairedRecognizerDovetailTotalStageAttemptOutputFuelHit,
+          hcurrent', ih]
+        constructor
+        · intro h
+          rcases h with ⟨fuel, hfuel, hhalt⟩
+          exact ⟨fuel, by lia, hhalt⟩
+        · intro h
+          rcases h with ⟨fuel, hfuel, hhalt⟩
+          by_cases hlast : fuel = fuelBudget + 1
+          · subst fuel
+            exact False.elim (hcurrent hhalt)
+          · exact ⟨fuel, by lia, hhalt⟩
+
+def pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit
+    (attempt : MachineDescription) (w : Word Bool)
+    (b : Bool) (fuelBudget : Nat) : Nat -> Bool
+  | 0 =>
+      pairedRecognizerDovetailTotalStageAttemptOutputFuelHit
+        attempt w b 0 fuelBudget
+  | limit + 1 =>
+      pairedRecognizerDovetailTotalStageAttemptOutputFuelHit
+          attempt w b (limit + 1) fuelBudget ||
+        pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit
+          attempt w b fuelBudget limit
+
+theorem pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit_eq_true_iff
+    (attempt : MachineDescription) (w : Word Bool)
+    (b : Bool) (limitBudget fuelBudget : Nat) :
+    pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit
+        attempt w b fuelBudget limitBudget = true <->
+      exists limit : Nat,
+      exists fuel : Nat,
+        limit ≤ limitBudget ∧
+          fuel ≤ fuelBudget ∧
+          pairedRecognizerDovetailTotalStageAttemptOutputIn
+            attempt w b limit fuel := by
+  induction limitBudget with
+  | zero =>
+      simp [pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit,
+        pairedRecognizerDovetailTotalStageAttemptOutputFuelHit_eq_true_iff]
+  | succ limitBudget ih =>
+      simp [pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit,
+        pairedRecognizerDovetailTotalStageAttemptOutputFuelHit_eq_true_iff,
+        ih]
+      constructor
+      · intro h
+        rcases h with hlast | hprev
+        · rcases hlast with ⟨fuel, hfuel, hhalt⟩
+          exact ⟨limitBudget + 1, by lia, fuel, hfuel, hhalt⟩
+        · rcases hprev with ⟨limit, hlimit, fuel, hfuel, hhalt⟩
+          exact ⟨limit, by lia, fuel, hfuel, hhalt⟩
+      · intro h
+        rcases h with ⟨limit, hlimit, fuel, hfuel, hhalt⟩
+        by_cases hlast : limit = limitBudget + 1
+        · subst limit
+          exact Or.inl ⟨fuel, hfuel, hhalt⟩
+        · exact Or.inr ⟨limit, by lia, fuel, hfuel, hhalt⟩
+
+def PairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram
+    (attempt : MachineDescription) :
+    StagedProgram Bool Bool :=
+  { run := fun w budget =>
+      if pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit
+          attempt w true budget budget = true then
+        some [true]
+      else if pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit
+          attempt w false budget budget = true then
+        some [false]
+      else
+        none }
+
+theorem pairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram_run_true_iff
+    (attempt : MachineDescription) (w : Word Bool) (budget : Nat) :
+    (PairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram
+        attempt).run w budget = some [true] <->
+      exists limit : Nat,
+      exists fuel : Nat,
+        limit ≤ budget ∧
+          fuel ≤ budget ∧
+          pairedRecognizerDovetailTotalStageAttemptOutputIn
+            attempt w true limit fuel := by
+  by_cases hhit :
+      pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit
+        attempt w true budget budget = true
+  · constructor
+    · intro _hrun
+      exact
+        (pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit_eq_true_iff
+          attempt w true budget budget).mp hhit
+    · intro _hwitness
+      simp [PairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram,
+        hhit]
+      rfl
+  · constructor
+    · intro hrun
+      by_cases hfalse :
+          pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit
+            attempt w false budget budget = true
+      · simp [PairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram,
+          hhit, hfalse] at hrun
+        cases hrun
+      · simp [PairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram,
+          hhit, hfalse] at hrun
+    · intro hwitness
+      exact False.elim
+        (hhit
+          ((pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit_eq_true_iff
+            attempt w true budget budget).mpr hwitness))
+
 def PairedRecognizerDovetailStageAttemptOutputFunctional
     (attempt : MachineDescription) : Prop :=
   forall w : Word Bool,

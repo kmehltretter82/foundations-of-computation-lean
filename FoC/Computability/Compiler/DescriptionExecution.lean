@@ -322,15 +322,53 @@ def HaltsWithOutputIn (D : MachineDescription)
   let final := D.runConfig n (D.initial w)
   final.state = D.halt ∧ Tape.normalizedOutput final.tape = out
 
+instance (D : MachineDescription) (n : Nat) (w out : Word Bool) :
+    Decidable (D.HaltsWithOutputIn n w out) := by
+  let final := D.runConfig n (D.initial w)
+  let normalized : List Bool := final.tape.normalizedOutput
+  let expected : List Bool := out
+  have hstateDec : Decidable (final.state = D.halt) := inferInstance
+  have houtDec : Decidable (normalized = expected) := inferInstance
+  cases hstateDec with
+  | isTrue hstate =>
+      cases houtDec with
+      | isTrue hout =>
+        exact isTrue (by
+        dsimp [HaltsWithOutputIn, final]
+        exact ⟨hstate, by
+          change (final.tape.normalizedOutput : List Bool) = (out : List Bool)
+          exact hout⟩)
+      | isFalse hout =>
+        exact isFalse (by
+        intro h
+        rcases h with ⟨_hstate, hout'⟩
+        exact hout (by
+          change (final.tape.normalizedOutput : List Bool) = (out : List Bool)
+          exact hout'))
+  | isFalse hstate =>
+      exact isFalse (by
+      intro h
+      exact hstate h.left)
+
 def HaltsWithExactOutputIn (D : MachineDescription)
     (n : Nat) (w out : Word Bool) : Prop :=
   let final := D.runConfig n (D.initial w)
   final.state = D.halt ∧ final.tape = Tape.output out
 
+instance (D : MachineDescription) (n : Nat) (w out : Word Bool) :
+    Decidable (D.HaltsWithExactOutputIn n w out) := by
+  dsimp [HaltsWithExactOutputIn]
+  infer_instance
+
 def HaltsWithTapeIn (D : MachineDescription)
     (n : Nat) (w : Word Bool) (T : Tape Bool) : Prop :=
   let final := D.runConfig n (D.initial w)
   final.state = D.halt ∧ final.tape = T
+
+instance (D : MachineDescription) (n : Nat) (w : Word Bool) (T : Tape Bool) :
+    Decidable (D.HaltsWithTapeIn n w T) := by
+  dsimp [HaltsWithTapeIn]
+  infer_instance
 
 def HaltsWithOutput (D : MachineDescription)
     (w out : Word Bool) : Prop :=
